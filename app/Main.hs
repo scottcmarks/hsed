@@ -1,16 +1,18 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TemplateHaskell   #-}
 module Main (main) where
 
-import Import
-import Run
-import RIO.Process
-import Options.Applicative.Simple
+import           Options.Applicative.Simple
+import           RIO.Process
+
 import qualified Paths_hsed
+
+import           System.SED.Common.Import
+import           System.SED.TPer.Run
 
 main :: IO ()
 main = do
-  (options, ()) <- simpleOptions
+  (opts, ()) <- simpleOptions
     $(simpleVersion Paths_hsed.version)
     "Header for command line arguments"
     "Program description, also for command line arguments"
@@ -21,12 +23,8 @@ main = do
                   )
     )
     empty
-  lo <- logOptionsHandle stderr (optionsVerbose options)
+  lo <- logOptionsHandle stderr (opts ^. verbose)
   pc <- mkDefaultProcessContext
   withLogFunc lo $ \lf ->
-    let app = App
-          { appLogFunc = lf
-          , appProcessContext = pc
-          , appOptions = options
-          }
+    let app = makeApp lf pc opts
      in runRIO app run

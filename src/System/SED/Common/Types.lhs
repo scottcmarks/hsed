@@ -1,5 +1,13 @@
+\documentstyle{article}
+\begin{document}
+\chapter{Types}
+
+Define the types used in SEDs, and in the hsed program in particular.
+
+
+\begin{code}
 {-|
-Module      : Types
+Module      : System.SED.Common.Types
 Description : hsed types, field lenses, field types
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -11,31 +19,41 @@ Constructors and lenses.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
+
 {-# LANGUAGE TemplateHaskell   #-}
-module Types where
+
+module System.SED.Common.Types where
 
 import           Control.Lens               (makeLenses)
+import           Data.Array
 import           Data.Attoparsec.ByteString
 import           Data.Bits
-import           Data.ByteString            hiding (take)
-import           RIO                        hiding (foldr, take)
+import           Data.ByteString            hiding (take, map, unsnoc)
+import qualified Data.ByteString as B       (map)
+import           RIO                        hiding (foldr, map, length, mask,
+                                                    reverse, take)
+import qualified RIO as R                   (map)
 import           RIO.Process
-
+import Text.Printf
 
 -- | Command line arguments
 data Options = Options
   { _verbose :: !Bool
   } deriving (Show)
-
 makeLenses ''Options
 
+-- | Global command environment
 data App = App
   { _logFunc        :: !LogFunc
   , _processContext :: !ProcessContext
   , _options        :: !Options
   }
-
 makeLenses ''App
+makeApp :: LogFunc -> ProcessContext -> Options -> App
+makeApp = App
+
+instance HasLogFunc App where logFuncL = logFunc
+\end{code}
 
 {-*
 3.2.1.3 Messaging Data Types
@@ -47,6 +65,53 @@ interface, the types used in method parameter and result values are described us
 vectors, etc.
   b. N length integer values are whole numbers that are either signed or unsigned.
 
+\begin{code}
+
+rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
+rollUp f (d, ds) = foldl roll (f d) ds
+  where
+    x `roll` d' = shiftL x 8 .|. f d'
+
+byteStringToNatural :: ByteString -> Natural
+byteStringToNatural = (maybe 0 (rollUp natural)) . uncons
+
+byteStringToInteger :: ByteString -> Integer
+byteStringToInteger = (maybe 0 rollUp') . uncons
+  where rollUp' dds@(d,_) =
+            if 0x00 == (0x80 .&. d)
+            then rollUp integer dds
+            else complement $ rollUp (integer.complement) dds
+
+naturalToByteString :: Natural -> ByteString
+naturalToByteString n = if n == 0 then singleton 0x00 else reverse $ unfoldr unroll n
+  where unroll n' = if n' == 0 then Nothing else Just (fromIntegral n', shiftR n' 8)
+
+integerToByteString :: Integer -> ByteString
+integerToByteString i =
+    if 0 <= i
+    then                  nonnegativeToByteString              i
+    else B.map complement $ nonnegativeToByteString $ complement i
+  where
+    nonnegativeToByteString nn =
+        let bs = naturalToByteString $ natural nn
+          in if (0x00 == 0x80 .&. head bs)
+                then bs
+                else cons 0x00 bs
+
+
+byte :: Integral a => a -> Word8
+byte = fromIntegral
+
+int :: Integral a => a -> Int
+int = fromIntegral
+
+integer :: Integral a => a -> Integer
+integer = fromIntegral
+
+natural :: Integral a => a -> Natural
+natural = fromIntegral
+
+\end{code}
 
 Due to the nature of method parameters and results, there are two additional constructs defined for
 messaging that serve as grouping mechanisms for the basic types: Named values and List values.
@@ -127,170 +192,163 @@ Tokens 0xE4-0xEF, 0xF4-0xF7 and 0xFD-0xFE are reserved for use by TCG.
 An SSC MAY define support for only a subset of the available tokens, as well as
 the behavior of the TPer when unsupported tokens are transmitted by the host.
 -}
+\begin{code}
 
 data Token = SignedAtom { _fromInteger :: Integer }
-           | UnsignedAtom { _fromInteger :: Integer }
-           | FinalBytestring { _fromByteString :: ByteString }
-           | ContinuedBytestring {_fromByteString :: ByteString }
-           | Empty
+           | UnsignedAtom { _fromNatural :: Natural }
+           | ByteSequence { _fromByteString :: ByteString }
+           | ContinuedByteSequence {_fromByteString :: ByteString }
+           | EmptyAtom
            | StartList | EndList | StartName | EndName
            | Call | EndOfData | EndOfSession | StartTransaction | EndTransaction
-           | ReservedToken { _fromByte :: Word8 }
-
-parseSignedTinyAtom :: Parser Token
-parseSignedTinyAtom = satisfy isSignedTinyAtom <&> makeSignedTinyAtom
-  where
-    isSignedTinyAtom = (0x40 ==) . (0xC0 .&.)
-    makeSignedTinyAtom b = SignedAtom $ toInteger i
-      where lowerBits = (0x1F .&. b)
-            signBit = 0x20
-            signBits = if 0 == (b .&. signBit) then 0 else (negate signBit)
-            i = signBits + lowerBits
-
-rollUp :: Word8 -> ByteString -> Integer
-rollUp h t = foldr roll (fromIntegral h) t
-           where
-             roll :: Word8 -> Integer -> Integer
-             roll a b = shiftL b 8 + fromIntegral a
-
-byteStringToSignedInteger :: ByteString -> Integer
-byteStringToSignedInteger = (maybe 0 (uncurry rollUp')) . uncons
-                          where rollUp' h t =
-                                    let n = rollUp (h .&. 0x7F) t
-                                    in if 0 == (h .&. 0x80) then n else -n
-
-byteStringToUnsignedInteger :: ByteString -> Integer
-byteStringToUnsignedInteger = (maybe 0 (uncurry rollUp)) . uncons
+    deriving (Show,Eq)
 
 
-parseShortAtomByteString ::
-    Word8
- -> String
- -> Parser ByteString
-parseShortAtomByteString tag msg =
-    satisfy isTaggedShortAtom >>= parseDataBytes
-  where
-    isTaggedShortAtom = (tag ==) . (0xF0 .&.)
-    dataLength = fromInteger . toInteger . (0x0F .&.)
-    parseDataBytes b = do
-        let l = dataLength b
-        when (0 == l) $ fail $  "Illegal zero length in " ++ msg ++ " Short Atom"
-        take l
 
-parseMediumAtomByteString ::
-    Word8
- -> String
- -> Parser ByteString
-parseMediumAtomByteString tag msg = undefined
-  --   satisfy isTaggedMediumAtom >>= parseDataBytes
-  -- where
-  --   isTaggedMediumAtom = (tag ==) . (0xF0 .&.)
-  --   dataLength = fromInteger . toInteger . (0x0F .&.(
-  --   parseDataBytes b = do
-  --       let l = dataLength b
-  --       when (0 == l) $ fail $  "Illegal zero length in " ++ msg ++ " Medium Atom"
-  --       take l
-
-
-parseSignedShortAtom :: Parser Token
-parseSignedShortAtom = parseShortAtomByteString 0x90 "signed"
-                   <&> SignedAtom . byteStringToSignedInteger
-
-
-parseSignedMediumAtom :: Parser Token
-parseSignedMediumAtom = parseMediumAtomByteString 0x90 "signed"
-                   <&> SignedAtom . byteStringToSignedInteger
-
-
-parseSignedLongAtom :: Parser Token
-parseSignedLongAtom = undefined
-
-parseSignedAtom :: Parser Token
-parseSignedAtom = parseSignedTinyAtom
-              <|> parseSignedShortAtom
-              <|> parseSignedMediumAtom
-              <|> parseSignedLongAtom
-
-
-parseUnsignedTinyAtom :: Parser Token
-parseUnsignedTinyAtom = satisfy isUnsignedTinyAtom <&> makeUnsignedTinyAtom
-  where
-    isUnsignedTinyAtom b = (b .&. 0xC0) == 0x00
-    makeUnsignedTinyAtom b = UnsignedAtom $ toInteger b
-
-parseUnsignedShortAtom :: Parser Token
-parseUnsignedShortAtom = parseShortAtomByteString 0x80 "unsigned"
-                     <&> UnsignedAtom . byteStringToUnsignedInteger
-
-
-parseUnsignedMediumAtom :: Parser Token
-parseUnsignedMediumAtom = undefined
-
-parseUnsignedLongAtom :: Parser Token
-parseUnsignedLongAtom = undefined
-
-parseUnsignedAtom :: Parser Token
-parseUnsignedAtom = parseUnsignedTinyAtom
-                <|> parseUnsignedShortAtom
-                <|> parseUnsignedMediumAtom
-                <|> parseUnsignedLongAtom
-
-
-parseFinalBytestring :: Parser Token
-parseFinalBytestring = undefined
-
-parseContinuedBytestring :: Parser Token
-parseContinuedBytestring = undefined
-
-parseEmpty :: Parser Token
-parseEmpty = undefined
-
-parseStartList :: Parser Token
-parseStartList = undefined
-
-parseEndList :: Parser Token
-parseEndList = undefined
-
-parseStartName :: Parser Token
-parseStartName = undefined
-
-parseEndName :: Parser Token
-parseEndName = undefined
-
-parseCall :: Parser Token
-parseCall = undefined
-
-parseEndOfData :: Parser Token
-parseEndOfData = undefined
-
-parseEndOfSession :: Parser Token
-parseEndOfSession = undefined
-
-parseStartTransaction :: Parser Token
-parseStartTransaction = undefined
-
-parseEndTransaction :: Parser Token
-parseEndTransaction = undefined
-
-parseReservedToken :: Parser Token
-parseReservedToken = undefined
-
+-- | Parse a Token.
+--   Dispatch on the first byte, which is the tag, plus some more info.
+--   256 thunks continue the parsing to a Parser Token
 parseToken :: Parser Token
-parseToken = parseSignedAtom
-         <|> parseUnsignedAtom
-         <|> parseFinalBytestring
-         <|> parseContinuedBytestring
-         <|> parseEmpty
-         <|> parseStartList
-         <|> parseEndList
-         <|> parseStartName
-         <|> parseEndName
-         <|> parseCall
-         <|> parseEndOfData
-         <|> parseEndOfSession
-         <|> parseStartTransaction
-         <|> parseEndTransaction
-         <|> parseReservedToken
+parseToken = pTag >>= (dispatch !)
+  where
+      pTag = anyWord8
+      bnds = (minBound,maxBound)
+      dispatch = listArray bnds $ (flip R.map) (range bnds) p
+      p b
+        | inRange (0x00,0x3F) b = pTinyUnsigned   b
+        | inRange (0x40,0x7F) b = pTinySigned     b
+        |          0x80  ==   b = failLengthZero "Short"
+        | inRange (0x81,0x8F) b = pShortUnsigned  b
+        |          0x90  ==   b = failLengthZero "Short"
+        | inRange (0x91,0x9F) b = pShortSigned    b
+        |          0xA0  ==   b = pure (ByteSequence mempty)
+        | inRange (0xA1,0xAF) b = pShortBytes     b
+        |          0xB0  ==   b = failLengthZero "Short"
+        | inRange (0xB1,0xBF) b = pShortCBytes    b
+        | inRange (0xC0,0xC7) b = pMediumUnsigned b
+        | inRange (0xC8,0xCF) b = pMediumSigned   b
+        | inRange (0xD0,0xD7) b = pMediumBytes    b
+        | inRange (0xD8,0xDF) b = pMediumCBytes   b
+        |          0xE0  ==   b = pLongUnsigned
+        |          0xE1  ==   b = pLongSigned
+        |          0xE2  ==   b = pLongBytes
+        |          0xE3  ==   b = pLongCBytes
+        |          0xF0  ==   b = pure StartList
+        |          0xF1  ==   b = pure EndList
+        |          0xF2  ==   b = pure StartName
+        |          0xF3  ==   b = pure EndName
+        |          0xF8  ==   b = pure Call
+        |          0xF9  ==   b = pure EndOfData
+        |          0xFA  ==   b = pure EndOfSession
+        |          0xFB  ==   b = pure StartTransaction
+        |          0xFC  ==   b = pure EndTransaction
+        |          0xFF  ==   b = pure EmptyAtom
+        | otherwise             = failTCGReserved b
+
+      -- parsers and constructors
+      pTinyUnsigned   b = pTiny   b <&> tinyUnsigned <&> UnsignedAtom
+      pTinySigned     b = pTiny   b <&> tinySigned   <&> SignedAtom
+
+      pShortUnsigned  b = pShort  b <&> unsigned     <&> UnsignedAtom
+      pShortSigned    b = pShort  b <&> signed       <&> SignedAtom
+      pShortBytes     b = pShort  b                  <&> ByteSequence
+      pShortCBytes    b = pShort  b                  <&> ContinuedByteSequence
+
+      pMediumUnsigned b = pMedium b <&> unsigned     <&> UnsignedAtom
+      pMediumSigned   b = pMedium b <&> signed       <&> SignedAtom
+      pMediumBytes    b = pMedium b                  <&> ByteSequence
+      pMediumCBytes   b = pMedium b                  <&> ContinuedByteSequence
+
+      pLongUnsigned     = pLong     <&> unsigned     <&> UnsignedAtom
+      pLongSigned       = pLong     <&> signed       <&> SignedAtom
+      pLongBytes        = pLong                      <&> ByteSequence
+      pLongCBytes       = pLong                      <&> ContinuedByteSequence
+
+      -- layout parsers
+      pTiny   :: Word8 -> Parser Word8
+      pTiny   b = pure b
+
+      pShort  :: Word8 -> Parser ByteString
+      pShort  b = pure (0x3F .&. b)
+                           <&> int                        >>= take
+
+      pMedium :: Word8 -> Parser ByteString
+      pMedium b = anyWord8 <&> int
+                           <&> (.|. ((`shiftL` 8) $ int $ 0x07 .&. b))
+                           >>= checkLength "Medium"         >>= take
+
+      pLong   ::          Parser ByteString
+      pLong     = take 3   <&> fromIntegral.unsigned
+                           >>= checkLength "Long"           >>= take
+
+      -- conversion to Integral
+      tinyUnsigned b = natural (0x3F .&. b)
+      tinySigned   b = if 0 == (0x20 .&. b) then integer d else integer d - 0x20
+        where d = 0x1F .&. b
+      unsigned :: ByteString -> Natural
+      unsigned = byteStringToNatural
+      signed :: ByteString -> Integer
+      signed   = byteStringToInteger
+
+      -- zero length checks for Medium and Long lengths
+      -- (Short lengths are checked syntacticaly, and Tiny has only the tag)
+      failLengthZero    = fail . (<> " Atom with length 0")
+      checkLength sz  l = if 0 < l then pure l else failLengthZero sz
+      failTCGReserved   = fail . printf "TCG Reserved Token Type 0x%02X"
+
+generateToken :: Token -> ByteString
+generateToken = go
+  where
+    go (UnsignedAtom          n ) = unsigned n
+    go (SignedAtom            i ) = signed   i
+    go (ByteSequence          bs) = bytes   bs
+    go (ContinuedByteSequence bs) = cbytes  bs
+    go  EmptyAtom                 = singleton 0xFF
+    go  StartList                 = singleton 0xF0
+    go  EndList                   = singleton 0xF1
+    go  StartName                 = singleton 0xF2
+    go  EndName                   = singleton 0xF3
+    go  Call                      = singleton 0xF8
+    go  EndOfData                 = singleton 0xF9
+    go  EndOfSession              = singleton 0xFA
+    go  StartTransaction          = singleton 0xFB
+    go  EndTransaction            = singleton 0xFC
+    unsigned :: Natural -> ByteString
+    unsigned n =
+        if inRange(0,0x3F) n
+        then singleton (0x00 .|. (0x3F .&. (byte n)))
+        else tlv 0 0 $ naturalToByteString n
+    signed   :: Integer -> ByteString
+    signed   i =
+        if inRange(-32,31) i
+        then singleton (0x40 .|. (0x3F .&. (byte i)))
+        else tlv 0 1 $ integerToByteString i
+    byte0 :: Int -> ByteString
+    byte0 = singleton . byte
+    byte1 :: Int -> ByteString
+    byte1 = byte0 . (`shiftR` 8)
+    byte2 :: Int -> ByteString
+    byte2 = byte0 . (`shiftR` 16)
+    bytes   bs = tlv 1 0 bs
+    cbytes  bs = tlv 1 1 bs
+    tlv :: Word8 -> Word8 -> ByteString -> ByteString
+    tlv _B _S bs = tl' _B _S (length bs) <> bs
+    tl' :: Word8 -> Word8 -> Int -> ByteString
+    tl' _B _S l
+        | l <= 0x0F =            -- Small
+              (singleton $ 0x80 .|. _BS `shiftL` 4 .|. byte l)
+        | l <= 0x7FF =           -- Medium
+              (singleton $ 0xC0 .|. _BS `shiftL` 3 .|. byte (l `shiftR` 8))
+           <> byte0 l
+        | l <= 0xFFFFFFFFFFFF =  -- Long
+              (singleton $ 0xE0 .|. _BS)
+           <> byte2 l <> byte1 l <> byte0 l
+        | otherwise = error "Generated Atom byte sequence impossibly long!"
+      where _BS = shiftL _B 1 .|. _S
+
+
+\end{code}
+
 {-*
 3.2.2.3.1 Simple Tokens -- Atoms Overview
 
@@ -588,7 +646,7 @@ Meaning
 
 Success
 
->0x00
+ >0x00
 
 Reserved
 
@@ -642,7 +700,7 @@ Commit
 
 Abort
 
->0x01
+ >0x01
 
 Reserved
 
@@ -749,3 +807,5 @@ If empty atoms are supported, then they SHALL NOT be unexpected tokens.
 
 
 -}
+
+\end{document}

@@ -11,8 +11,8 @@ extra-source-files:
 - ChangeLog.md
 
 # Metadata used when publishing your package
-# synopsis:            Short description of your package
-# category:            Web
+# synopsis:            TCG SWG Self-Encrypting Drive library
+# category:            System
 
 # To avoid duplicated efforts in documentation and dealing with the
 # complications of embedding Haddock markup inside cabal files, it is
@@ -22,6 +22,12 @@ description:         Please see the README on Github at <https://github.com/scot
 dependencies:
 - base >= 4.10 && < 10
 - rio >= 0.1.1.0
+- array
+- attoparsec
+- bytestring
+- either
+- lens
+- word8
 
 ghc-options:
 - -Wall
@@ -34,12 +40,13 @@ library:
   source-dirs: src
 
 executables:
-  hsed-exe:
+  hsed:
     main:                Main.hs
     source-dirs:         app
     dependencies:
     - hsed
     - optparse-simple
+    - cborg
 
     ghc-options:
     - -threaded
@@ -53,6 +60,8 @@ tests:
     dependencies:
     - hsed
     - hspec
+    - QuickCheck
+    - quickcheck-instances
 
     ghc-options:
     - -threaded

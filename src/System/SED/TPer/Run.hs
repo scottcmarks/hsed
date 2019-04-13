@@ -1,8 +1,8 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module Run (run) where
+module System.SED.TPer.Run (run) where
 
-import Import
+import           System.SED.Common.Import
 
 run :: RIO App ()
 run = do

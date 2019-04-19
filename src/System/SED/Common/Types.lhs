@@ -269,17 +269,17 @@ parseToken = pTag >>= (dispatch !)
       pTiny   b = pure b
 
       pShort  :: Word8 -> Parser ByteString
-      pShort  b = pure (0x3F .&. b)
-                           <&> int                        >>= take
+      pShort  b = pure (0x0F .&. b)
+                           <&> int                  >>= takeFor "Short"
 
       pMedium :: Word8 -> Parser ByteString
       pMedium b = anyWord8 <&> int
                            <&> (.|. ((`shiftL` 8) $ int $ 0x07 .&. b))
-                           >>= checkLength "Medium"         >>= take
+                           >>= checkLength "Medium" >>= takeFor "Medium"
 
       pLong   ::          Parser ByteString
       pLong     = take 3   <&> fromIntegral.unsigned
-                           >>= checkLength "Long"           >>= take
+                           >>= checkLength "Long"   >>= takeFor "Long"
 
       -- conversion to Integral
       tinyUnsigned b = natural (0x3F .&. b)
@@ -292,9 +292,18 @@ parseToken = pTag >>= (dispatch !)
 
       -- zero length checks for Medium and Long lengths
       -- (Short lengths are checked syntacticaly, and Tiny has only the tag)
-      failLengthZero    = fail . (<> " Atom with length 0")
+      failLengthZero    = fail . (<> " Atom with illegal length 0")
       checkLength sz  l = if 0 < l then pure l else failLengthZero sz
       failTCGReserved   = fail . printf "TCG Reserved Token Type 0x%02X"
+      takeFor :: String -> Int -> Parser ByteString
+      takeFor     sz  l = take l
+                          <?> mconcat
+                                  [ "Needed "
+                                  , (show l)
+                                  , if l==1 then " byte for " else " bytes for "
+                                  , sz
+                                  , " Token"
+                                  ]
 
 generateToken :: Token -> ByteString
 generateToken = go

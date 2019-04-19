@@ -270,16 +270,19 @@ parseToken = pTag >>= (dispatch !)
 
       pShort  :: Word8 -> Parser ByteString
       pShort  b = pure (0x0F .&. b)
-                           <&> int                  >>= takeFor "Short"
+                 <&> int
+                 >>= takeFor "Short"
 
       pMedium :: Word8 -> Parser ByteString
-      pMedium b = anyWord8 <&> int
-                           <&> (.|. ((`shiftL` 8) $ int $ 0x07 .&. b))
-                           >>= checkLength "Medium" >>= takeFor "Medium"
+      pMedium b = takeLengthFor "Medium" 1
+                 <&> (.|. ((`shiftL` 8) $ int $ 0x07 .&. b))
+                 >>= checkLength "Medium"
+                 >>= takeFor "Medium"
 
       pLong   ::          Parser ByteString
-      pLong     = take 3   <&> fromIntegral.unsigned
-                           >>= checkLength "Long"   >>= takeFor "Long"
+      pLong     = takeLengthFor "Long" 3
+                 >>= checkLength "Long"
+                 >>= takeFor "Long"
 
       -- conversion to Integral
       tinyUnsigned b = natural (0x3F .&. b)
@@ -295,6 +298,17 @@ parseToken = pTag >>= (dispatch !)
       failLengthZero    = fail . (<> " Atom with illegal length 0")
       checkLength sz  l = if 0 < l then pure l else failLengthZero sz
       failTCGReserved   = fail . printf "TCG Reserved Token Type 0x%02X"
+      takeLengthFor :: String -> Int -> Parser Int
+      takeLengthFor sz  l = take' <&> fromIntegral . unsigned
+        where
+          take' = take l
+              <?> mconcat
+                  [ "Needed "
+                  , (show l)
+                  , if l==1 then " byte for " else " bytes for "
+                  , sz
+                  , " Token length"
+                  ]
       takeFor :: String -> Int -> Parser ByteString
       takeFor     sz  l = take l
                           <?> mconcat

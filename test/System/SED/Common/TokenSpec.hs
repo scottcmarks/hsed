@@ -1,95 +1,39 @@
 {-|
-Module      : System.SED.Common.TypesSpec
+Module      : System.SED.Common.TokenSpec
 Description : Test specifications for System.SED.Common.Types
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Test specifications for System.SED.Common.Types
+Test specifications for System.SED.Common.Token
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module System.SED.Common.TypesSpec (spec) where
+module System.SED.Common.TokenSpec (spec) where
 
-import           Data.Attoparsec.ByteString           hiding (takeWhile)
-import           Data.Bits
+
 import           Data.ByteString
--- import           Data.ByteString.Arbitrary
-import           Data.Either.Combinators
+import           Data.Either
 import           Data.Ix
 import           Data.Word
-import           Numeric.Natural
 import           RIO                                  hiding (null)
 
 import           System.SED.Common.Import             hiding (null)
+import           System.SED.Common.StreamItem
+import           System.SED.Common.Token              ()
 
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
-import           Test.QuickCheck                      hiding ((.&.))
+import           Test.QuickCheck                      hiding (generate, (.&.))
 import           Test.QuickCheck.Instances.ByteString ()
+import           Test.QuickCheck.Instances.Natural    ()
 import           Text.Printf
-
-instance Arbitrary Natural where
-  arbitrary = arbitrarySizedNatural
-  shrink    = shrinkMapBy abs id shrinkIntegral
-
--- | fail on 'mempty', succeed on 'singleton' @b0@, test longer with @pred@
-validFirstTwo :: ByteString -> (Word8 -> Word8 -> Bool) -> Bool
-validFirstTwo bs pred = case uncons bs of
-  Nothing -> False
-  Just(b0,bs') -> case uncons bs' of
-    Nothing    -> True
-    Just(b1,_) -> pred b0 (b1 .&. 0x80)
-
--- | if two or more bytes, the first one should not be a redundant 0x00
-validNatural :: ByteString -> Bool
-validNatural bs = validFirstTwo bs $ \b0 b1 ->
-  case (b0, b1) of
-      (0x00,    _) -> False
-      (   _,    _) -> True
-
--- | if two or more bytes, the first one should not be a redundant sign propagation
-validInteger :: ByteString -> Bool
-validInteger bs = validFirstTwo bs $ \b0 b1 ->
-  case (b0, b1) of
-      (0x00, 0x00) -> False
-      (0xFF, 0x80) -> False
-      (   _,    _) -> True
-
 
 -- | test suite
 spec :: Spec
 spec = do
-  describe "byteStringToNatural" $ do
-    prop "is the inverse of naturalToBytestring" $
-      (\n -> (byteStringToNatural . naturalToByteString) n `shouldBe` (n :: Natural))
-    prop "is inverted by naturalToBytestring when the input is valid" $
-      (\bs -> validNatural bs ==>
-                (naturalToByteString . byteStringToNatural) bs `shouldBe` (bs :: ByteString))
-
-    -- FIXME: gives up after ~50 tests; 1000 discarded
-    -- prop "is not inverted by naturalToBytestring when the input is not valid" $
-    --   (\bs -> (not . validNatural) bs ==>
-    --             (naturalToByteString . byteStringToNatural) bs `shouldNotBe` (bs :: ByteString))
-
-    it "is not inverted by naturalToBytestring when the input is \"\\x00\\x80\" (not valid)" $
-          ( (naturalToByteString . byteStringToNatural) (fromString "\x00\x80")
-          `shouldNotBe`
-            (fromString "\x00\x80") )
-    it "is trimmed by naturalToBytestring when the input is \"\\x00\\x80\" (not valid)" $
-          ( (naturalToByteString . byteStringToNatural) (fromString "\x00\x80")
-          `shouldBe`
-            (fromString "\x80"))
-
-  describe "byteStringToInteger" $ do
-    prop "is the inverse of integerToByteString" $
-      (\i -> (byteStringToInteger . integerToByteString) i `shouldBe` (i :: Integer))
-    prop "is inverted by integerToByteString" $
-      (\bs -> validInteger bs ==>
-                (integerToByteString . byteStringToInteger) bs `shouldBe` (bs :: ByteString))
-
   describe "parseToken" $ do
     prop "is the inverse of generateToken for an unsigned byte" $
       (\b -> inRange (0,63) b ==>
@@ -111,11 +55,11 @@ spec = do
       pg (SignedAtom 32) `shouldBe` Just (SignedAtom 32)
 
     prop "is the inverse of generateToken for a ByteString" $
-      (\bs -> pg (ByteSequence bs) `shouldBe` Just (ByteSequence bs))
+      (\bs -> pg (Bytes bs) `shouldBe` Just (Bytes bs))
 
     prop "is the inverse of generateToken for a continued ByteString" $
       (\bs -> (not . null) bs ==>
-        pg (ContinuedByteSequence bs) `shouldBe` Just (ContinuedByteSequence bs))
+        pg (ContinuedBytes bs) `shouldBe` Just (ContinuedBytes bs))
 
     it "is the inverse of generateToken for StartList" $
       pg StartList `shouldBe` Just StartList
@@ -150,135 +94,135 @@ spec = do
 
     -- * Length checks
     it "will fail if not given enough input" $
-        parseString "\x91"
+        parseTokenString "\x91"
       `shouldBe`
         Left "Needed 1 byte for Short Token: not enough input"
 
     it "does not allow a zero-length Short Unsigned Token" $
-        parseString "\x80"
+        parseTokenString "\x80"
       `shouldBe`
         Left "Failed reading: Short Atom with illegal length 0"
     it "does not allow a zero-length Short Signed Token" $
-        parseString "\x90"
+        parseTokenString "\x90"
       `shouldBe`
         Left "Failed reading: Short Atom with illegal length 0"
     it "allows a zero-length Short Bytes Token" $
-        parseString "\xA0"
+        parseTokenString "\xA0"
       `shouldBe`
-        Right (ByteSequence mempty)
+        (Right $ Datum $ Final $ Bytes mempty)
     it "does not allow a zero-length Short Continued Bytes Token" $
-        parseString "\xB0"
+        parseTokenString "\xB0"
       `shouldBe`
         Left "Failed reading: Short Atom with illegal length 0"
     it "does not allow a zero-length Short Continued Bytes Token" $
-        parseString "\xB0"
+        parseTokenString "\xB0"
       `shouldBe`
         Left "Failed reading: Short Atom with illegal length 0"
 
     it "must have one length byte for Medium Unsigned Token" $
-        parseString "\xC0"
+        parseTokenString "\xC0"
       `shouldBe`
         Left "Needed 1 byte for Medium Token length: not enough input"
     it "does not allow a zero-length Medium Unsigned Token" $
-        parseString "\xC0\x00"
+        parseTokenString "\xC0\x00"
       `shouldBe`
         Left "Failed reading: Medium Atom with illegal length 0"
     it "must have one length byte for Medium Signed Token" $
-        parseString "\xC8"
+        parseTokenString "\xC8"
       `shouldBe`
         Left "Needed 1 byte for Medium Token length: not enough input"
     it "does not allow a zero-length Medium Signed Token" $
-        parseString "\xC8\x00"
+        parseTokenString "\xC8\x00"
       `shouldBe`
         Left "Failed reading: Medium Atom with illegal length 0"
     it "must have one length byte for Medium Byte Sequence Token" $
-        parseString "\xD0"
+        parseTokenString "\xD0"
       `shouldBe`
         Left "Needed 1 byte for Medium Token length: not enough input"
     it "does not allow a zero-length Medium Byte Sequence Token" $
-        parseString "\xD0\x00"
+        parseTokenString "\xD0\x00"
       `shouldBe`
         Left "Failed reading: Medium Atom with illegal length 0"
     it "must have one length byte for Medium Continued Byte Sequence Token" $
-        parseString "\xD8"
+        parseTokenString "\xD8"
       `shouldBe`
         Left "Needed 1 byte for Medium Token length: not enough input"
     it "does not allow a zero-length Medium Continued Byte Sequence Token" $
-        parseString "\xD8\x00"
+        parseTokenString "\xD8\x00"
       `shouldBe`
         Left "Failed reading: Medium Atom with illegal length 0"
 
     it "must have three length bytes for Long Unsigned Token" $
-        parseString "\xE0"
+        parseTokenString "\xE0"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Unsigned Token" $
-        parseString "\xE0\x00"
+        parseTokenString "\xE0\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Unsigned Token" $
-        parseString "\xE0\x00\x00"
+        parseTokenString "\xE0\x00\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "does not allow a zero-length Long Unsigned Token" $
-        parseString "\xE0\x00\x00\x00"
+        parseTokenString "\xE0\x00\x00\x00"
       `shouldBe`
         Left "Failed reading: Long Atom with illegal length 0"
 
     it "must have three length bytes for Long Signed Token" $
-        parseString "\xE1"
+        parseTokenString "\xE1"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Signed Token" $
-        parseString "\xE1\x00"
+        parseTokenString "\xE1\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Signed Token" $
-        parseString "\xE1\x00\x00"
+        parseTokenString "\xE1\x00\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "does not allow a zero-length Long Signed Token" $
-        parseString "\xE1\x00\x00\x00"
+        parseTokenString "\xE1\x00\x00\x00"
       `shouldBe`
         Left "Failed reading: Long Atom with illegal length 0"
 
     it "must have three length bytes for Long Byte Sequence Token" $
-        parseString "\xE2"
+        parseTokenString "\xE2"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Byte Sequence Token" $
-        parseString "\xE2\x00"
+        parseTokenString "\xE2\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Byte Sequence Token" $
-        parseString "\xE2\x00\x00"
+        parseTokenString "\xE2\x00\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "does not allow a zero-length Long Byte Sequence Token" $
-        parseString "\xE2\x00\x00\x00"
+        parseTokenString "\xE2\x00\x00\x00"
       `shouldBe`
         Left "Failed reading: Long Atom with illegal length 0"
 
     it "must have three length bytes for Long Continued Byte Sequence Token" $
-        parseString "\xE3"
+        parseTokenString "\xE3"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Continued Byte Sequence Token" $
-        parseString "\xE3\x00"
+        parseTokenString "\xE3\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "must have three length bytes for Long Continued Byte Sequence Token" $
-        parseString "\xE3\x00\x00"
+        parseTokenString "\xE3\x00\x00"
       `shouldBe`
         Left "Needed 3 bytes for Long Token length: not enough input"
     it "does not allow a zero-length Long Continued Byte Sequence Token" $
-        parseString "\xE3\x00\x00\x00"
+        parseTokenString "\xE3\x00\x00\x00"
       `shouldBe`
         Left "Failed reading: Long Atom with illegal length 0"
 
     it "fails on TCG Reserved tags E4-EF,FD,FE" $
       forAll tagsReservedForTCG $
-          (\b -> parseTok (singleton b)
+          (\b -> parseTokenByteString (singleton b)
         `shouldBe`
           Left (printf "Failed reading: TCG Reserved Token Type 0x%02X" b))
 
@@ -290,24 +234,14 @@ spec = do
 
 
 tagsReservedForTCG :: Gen Word8
-tagsReservedForTCG =
-    let bs = unpack $ fromString "\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xFD\xFE"
-    in elements bs
+tagsReservedForTCG = elements . unpack . fromString $
+    "\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xFD\xFE"
 
-maybeGenerate :: Maybe Token -> Maybe ByteString
-maybeGenerate = (maybe Nothing (Just . generateToken))
+parseTokenByteString :: ByteString -> Either String Token
+parseTokenByteString = parseByteString
 
-parseTok :: ByteString -> Either String Token
-parseTok = parseOnly parseToken
-
-parseString :: String -> Either String Token
-parseString = parseTok . fromString
-
-maybeParse :: ByteString -> Maybe Token
-maybeParse = rightToMaybe . parseTok
+parseTokenString :: String -> Either String Token
+parseTokenString = parseString
 
 gp :: ByteString -> Maybe ByteString
-gp = maybeGenerate . maybeParse
-
-pg :: Token -> Maybe Token
-pg = maybeParse . generateToken
+gp = maybeGenerate . (maybeParse :: ByteString -> Maybe Token)

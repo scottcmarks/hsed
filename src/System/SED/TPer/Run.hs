@@ -2,7 +2,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module System.SED.TPer.Run (run) where
 
-import           System.SED.Common.Import
+import           Hsed.App
+import           RIO
 
 run :: RIO App ()
 run = do

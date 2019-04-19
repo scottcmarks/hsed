@@ -8,3 +8,28 @@ does a SelfEncryptingDrive instance map ComPacket -> Either ComPacket IOError
 definitely have an acquire-use-release pattern
 - acquire device as in acquire "disk3"
 - release device
+
+
+data Final = Uint | Int | Bytes
+
+data Datum = Final | ContinuedBytes
+
+data Sequence = StartName | EndName | StartList | EndList
+
+data Control = Call | EndOfData | EndOfSession | StartTransaction | EndTransaction
+
+data Empty = EmptyAtom
+
+data Token = Datum | Sequence | Control | Empty
+
+---- parse(Token) ---
+
+data NamedValue = NamedValue Name Value -- StartName >> Name Value << EndName
+
+newtype Name = Final
+
+data List = [Value] -- StartList >> many Value << EndList
+
+data Value = Final | NamedValue | List
+
+--- parse(Value) ---

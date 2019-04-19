@@ -3,11 +3,12 @@
 module Main (main) where
 
 import           Options.Applicative.Simple
+import           RIO
 import           RIO.Process
 
 import qualified Paths_hsed
 
-import           System.SED.Common.Import
+import           Hsed.App
 import           System.SED.TPer.Run
 
 main :: IO ()

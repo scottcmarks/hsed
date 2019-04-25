@@ -19,25 +19,42 @@ Datatypes for Tokens.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TemplateHaskell, FlexibleInstances  #-}
 
-module System.SED.Common.Token where
+module System.SED.Common.Token
+  (
+  --   Final(..)
+  -- ,
+    Token(..)
+  , IsToken(..)
+
+  , rawTokenSource
+  , removeEmpty
+  , combineContinued
+  , tokenSource
+
+  )
+
+where
 
 import           Data.Array
-import           Data.Attoparsec.ByteString hiding (parse)
+import           Data.Attoparsec.ByteString hiding (takeWhile)
 import           Data.Bits
-import           Data.ByteString            hiding (take, map, unsnoc)
+import           Data.ByteString            hiding (ByteString, take, takeWhile,
+                                                    map, unsnoc)
+import           Data.Conduit
+import           Data.Conduit.Attoparsec
+import           Data.Conduit.Combinators   (takeWhile)
 import           RIO                        hiding (foldr, map, length, mask,
-                                                    reverse, take)
+                                                    null, reverse, take, takeWhile)
 import qualified RIO as R                   (map)
+import           Test.QuickCheck hiding(generate,(.&.))
+import           Test.QuickCheck.Instances.Natural ()
+import           Test.QuickCheck.Instances.ByteString ()
 import           Text.Printf
 
 import           System.SED.Common.Integral
 import           System.SED.Common.StreamItem
-
-import           Test.QuickCheck hiding(generate,(.&.))
-import           Test.QuickCheck.Instances.Natural ()
-import           Test.QuickCheck.Instances.ByteString ()
 
 
 \end{code}
@@ -123,69 +140,43 @@ the behavior of the TPer when unsupported tokens are transmitted by the host.
 -}
 \begin{code}
 
-data Final = UnsignedAtom Natural | SignedAtom Integer | Bytes ByteString
+data Token =
+    Unsigned Natural
+  | Signed Integer
+  | Bytes ByteString
+  | ContinuedBytes ByteString
+  | StartName
+  | EndName
+  | StartList
+  | EndList
+  | Call
+  | EndOfData
+  | EndOfSession
+  | StartTransaction
+  | EndTransaction
+  | Empty
     deriving (Show,Eq)
 
-data Datum = Final Final | ContinuedBytes ByteString
-    deriving (Show,Eq)
 
-data Sequence = StartName | EndName | StartList | EndList
-    deriving (Show,Eq)
+class (Show a) => IsToken a where
+    fromToken :: Token -> Maybe a
 
-data Control = Call | EndOfData | EndOfSession | StartTransaction | EndTransaction
-    deriving (Show,Eq)
+    token :: a -> Token
+    token = fromMaybe <$> (error . ("Not a Token" <>) . show) <*> mtoken
 
-data Empty = EmptyAtom
-    deriving (Show,Eq)
-
-data Token = Datum Datum | Sequence Sequence | Control Control | Empty Empty
-    deriving (Show,Eq)
+    mtoken :: a -> Maybe Token
+    mtoken = Just . token
 
 
+instance IsToken Token where
+    token = id
+    fromToken = Just
 
 -- * Instances of StreamItem.
---   All except Token delegate (indirectly for Final) to Token
-
-
-instance StreamItem Final where
-    parse      = parse >>= fromDatum
-      where
-        fromDatum (Final f) = pure f
-        fromDatum _         = fail "Final"
-    generate = generate . Final
-
-
-instance StreamItem Datum where
-    parse      = parse >>= fromToken
-      where
-        fromToken (Datum d) = pure d
-        fromToken _         = fail "Datum"
-    generate = generate . Datum
-
-
-instance StreamItem Sequence where
-    parse      = parse >>= fromToken
-      where
-        fromToken (Sequence s) = pure s
-        fromToken _            = fail "Sequence"
-    generate = generate . Sequence
-
-instance StreamItem Control where
-    parse      = parse >>= fromToken
-      where
-        fromToken (Control c) = pure c
-        fromToken _           = fail "Control"
-    generate = generate . Control
-
-instance StreamItem Empty where
-    parse      = parse >>= fromToken
-      where
-        fromToken (Empty e) = pure e
-        fromToken _         = fail "Empty"
-    generate = generate . Empty
+--
 
 instance StreamItem Token where
-    parse     = parseToken
+    parser    = tokenParser
     generate  = generateToken
 
 
@@ -194,8 +185,8 @@ instance StreamItem Token where
 -- | Parse a Token.
 --   Dispatch on the first byte, which is the tag, plus some more info.
 --   256 thunks continue the parsing to a Parser Token
-parseToken :: Parser Token
-parseToken = pTag >>= (dispatch !)
+tokenParser :: Parser Token
+tokenParser = pTag >>= (dispatch !)
   where
       pTag = anyWord8
       bnds = (minBound,maxBound)
@@ -207,7 +198,7 @@ parseToken = pTag >>= (dispatch !)
         | inRange (0x81,0x8F) b = pShortUnsigned  b
         |          0x90  ==   b = failLengthZero "Short"
         | inRange (0x91,0x9F) b = pShortSigned    b
-        |          0xA0  ==   b = pure mempty <&> bytesToken
+        |          0xA0  ==   b = pure mempty <&> Bytes
         | inRange (0xA1,0xAF) b = pShortBytes     b
         |          0xB0  ==   b = failLengthZero "Short"
         | inRange (0xB1,0xBF) b = pShortCBytes    b
@@ -219,36 +210,36 @@ parseToken = pTag >>= (dispatch !)
         |          0xE1  ==   b = pLongSigned
         |          0xE2  ==   b = pLongBytes
         |          0xE3  ==   b = pLongCBytes
-        |          0xF0  ==   b = pure (Sequence StartList )
-        |          0xF1  ==   b = pure (Sequence EndList   )
-        |          0xF2  ==   b = pure (Sequence StartName )
-        |          0xF3  ==   b = pure (Sequence EndName   )
-        |          0xF8  ==   b = pure (Control Call            )
-        |          0xF9  ==   b = pure (Control EndOfData       )
-        |          0xFA  ==   b = pure (Control EndOfSession    )
-        |          0xFB  ==   b = pure (Control StartTransaction)
-        |          0xFC  ==   b = pure (Control EndTransaction  )
-        |          0xFF  ==   b = pure (Empty   EmptyAtom       )
+        |          0xF0  ==   b = pure StartList
+        |          0xF1  ==   b = pure EndList
+        |          0xF2  ==   b = pure StartName
+        |          0xF3  ==   b = pure EndName
+        |          0xF8  ==   b = pure Call
+        |          0xF9  ==   b = pure EndOfData
+        |          0xFA  ==   b = pure EndOfSession
+        |          0xFB  ==   b = pure StartTransaction
+        |          0xFC  ==   b = pure EndTransaction
+        |          0xFF  ==   b = pure Empty
         | otherwise             = failTCGReserved b
 
       -- parsers and constructors
-      pTinyUnsigned   b = pTiny   b <&> tinyUnsigned <&> unsignedToken
-      pTinySigned     b = pTiny   b <&> tinySigned   <&> signedToken
+      pTinyUnsigned   b = pTiny   b <&> tinyUnsigned   <&> Unsigned
+      pTinySigned     b = pTiny   b <&> tinySigned     <&> Signed
 
-      pShortUnsigned  b = pShort  b <&> unsigned     <&> unsignedToken
-      pShortSigned    b = pShort  b <&> signed       <&> signedToken
-      pShortBytes     b = pShort  b                  <&> bytesToken
-      pShortCBytes    b = pShort  b                  <&> cbytesToken
+      pShortUnsigned  b = pShort  b <&> fromByteString <&> Unsigned
+      pShortSigned    b = pShort  b <&> fromByteString <&> Signed
+      pShortBytes     b = pShort  b                    <&> Bytes
+      pShortCBytes    b = pShort  b                    <&> ContinuedBytes
 
-      pMediumUnsigned b = pMedium b <&> unsigned     <&> unsignedToken
-      pMediumSigned   b = pMedium b <&> signed       <&> signedToken
-      pMediumBytes    b = pMedium b                  <&> bytesToken
-      pMediumCBytes   b = pMedium b                  <&> cbytesToken
+      pMediumUnsigned b = pMedium b <&> fromByteString <&> Unsigned
+      pMediumSigned   b = pMedium b <&> fromByteString <&> Signed
+      pMediumBytes    b = pMedium b                    <&> Bytes
+      pMediumCBytes   b = pMedium b                    <&> ContinuedBytes
 
-      pLongUnsigned     = pLong     <&> unsigned     <&> unsignedToken
-      pLongSigned       = pLong     <&> signed       <&> signedToken
-      pLongBytes        = pLong                      <&> bytesToken
-      pLongCBytes       = pLong                      <&> cbytesToken
+      pLongUnsigned     = pLong     <&> fromByteString <&> Unsigned
+      pLongSigned       = pLong     <&> fromByteString <&> Signed
+      pLongBytes        = pLong                        <&> Bytes
+      pLongCBytes       = pLong                        <&> ContinuedBytes
 
       -- layout parsers
       pTiny   :: Word8 -> Parser Word8
@@ -274,16 +265,6 @@ parseToken = pTag >>= (dispatch !)
       tinyUnsigned b = natural (0x3F .&. b)
       tinySigned   b = if 0 == (0x20 .&. b) then integer d else integer d - 0x20
         where d = 0x1F .&. b
-      unsigned :: ByteString -> Natural
-      unsigned = byteStringToNatural
-      signed :: ByteString -> Integer
-      signed   = byteStringToInteger
-
-      finalDatum  = Final <&> Datum
-      unsignedToken = UnsignedAtom   <&> finalDatum
-      signedToken   = SignedAtom     <&> finalDatum
-      bytesToken    = Bytes          <&> finalDatum
-      cbytesToken   = ContinuedBytes <&> Datum
 
       -- zero length checks for Medium and Long lengths
       -- (Short lengths are checked syntacticaly, and Tiny has only the tag)
@@ -291,9 +272,8 @@ parseToken = pTag >>= (dispatch !)
       checkLength   sz  l = if 0 < l then pure l else failLengthZero sz
       failTCGReserved     = fail . printf "TCG Reserved Token Type 0x%02X"
       takeLengthFor :: String -> Int -> Parser Int
-      takeLengthFor sz  l = take' <&> fromIntegral . unsigned
-        where
-          take' = take l <?> lengthError sz l
+      takeLengthFor sz l = take' <&> byteStringToNatural  <&> int
+        where take' = take l <?> lengthError sz l
       takeFor :: String -> Int -> Parser ByteString
       takeFor       sz  l = take l <?> bytesError sz l
       szerror sz1 l sz2= mconcat
@@ -310,42 +290,32 @@ parseToken = pTag >>= (dispatch !)
 generateToken :: Token -> ByteString
 generateToken = go
   where
-    go (Datum    (Final (UnsignedAtom  n ))) = unsigned n
-    go (Datum    (Final (SignedAtom    i ))) = signed   i
-    go (Datum    (Final (Bytes         bs))) = bytes   bs
-    go (Datum    (ContinuedBytes       bs )) = cbytes  bs
-    go (Empty    (EmptyAtom               )) = singleton 0xFF
-    go (Sequence (StartList               )) = singleton 0xF0
-    go (Sequence (EndList                 )) = singleton 0xF1
-    go (Sequence (StartName               )) = singleton 0xF2
-    go (Sequence (EndName                 )) = singleton 0xF3
-    go (Control  (Call                    )) = singleton 0xF8
-    go (Control  (EndOfData               )) = singleton 0xF9
-    go (Control  (EndOfSession            )) = singleton 0xFA
-    go (Control  (StartTransaction        )) = singleton 0xFB
-    go (Control  (EndTransaction          )) = singleton 0xFC
-    unsigned :: Natural -> ByteString
-    unsigned n =
-        if inRange(0,63) n
-        then singleton (0x00 .|. (0x3F .&. (byte n)))
-        else tlv 0 0 $ naturalToByteString n
-    signed   :: Integer -> ByteString
-    signed   i =
-        if inRange(-32,31) i
-        then singleton (0x40 .|. (0x3F .&. (byte i)))
-        else tlv 0 1 $ integerToByteString i
-    byte0 :: Int -> ByteString
-    byte0 = singleton . byte
-    byte1 :: Int -> ByteString
-    byte1 = byte0 . (`shiftR` 8)
-    byte2 :: Int -> ByteString
-    byte2 = byte0 . (`shiftR` 16)
-    bytes   bs = tlv 1 0 bs
-    cbytes  bs = tlv 1 1 bs
-    tlv :: Word8 -> Word8 -> ByteString -> ByteString
-    tlv _B _S bs = tl' _B _S (length bs) <> bs
-    tl' :: Word8 -> Word8 -> Int -> ByteString
-    tl' _B _S l
+    go (Unsigned       n ) = unsigned n
+    go (Signed         i ) = signed   i
+    go (Bytes          bs) = bytes   bs
+    go (ContinuedBytes bs) = cbytes  bs
+    go Empty               = singleton 0xFF
+    go StartList           = singleton 0xF0
+    go EndList             = singleton 0xF1
+    go StartName           = singleton 0xF2
+    go EndName             = singleton 0xF3
+    go Call                = singleton 0xF8
+    go EndOfData           = singleton 0xF9
+    go EndOfSession        = singleton 0xFA
+    go StartTransaction    = singleton 0xFB
+    go EndTransaction      = singleton 0xFC
+
+    unsigned n
+        | inRange(0,63) n   = singleton (0x00 .|. (0x3F .&. (byte n)))
+        | otherwise         = tlv 0 0 $ naturalToByteString n
+    signed   i
+        | inRange(-32,31) i = singleton (0x40 .|. (0x3F .&. (byte i)))
+        | otherwise         = tlv 0 1 $ integerToByteString i
+    bytes   bs              = tlv 1 0 bs
+    cbytes  bs              = tlv 1 1 bs
+
+    tlv _B _S bs = tl _B _S (length bs) <> bs
+    tl _B _S l
         | l <= 0x0F =            -- Small
               (singleton $ 0x80 .|. _BS `shiftL` 4 .|. byte l)
         | l <= 0x7FF =           -- Medium
@@ -356,54 +326,52 @@ generateToken = go
            <> byte2 l <> byte1 l <> byte0 l
         | otherwise = error "Generated Atom byte sequence impossibly long!"
       where _BS = shiftL _B 1 .|. _S
-
-
-
-isFinal :: Token -> Bool
-isFinal (Datum (Final _)) = True
-isFinal _                 = False
-
+            byte0 = singleton . byte
+            byte1 = byte0 . (`shiftR` 8)
+            byte2 = byte0 . (`shiftR` 16)
 
 -- * Arbitrary instances for testing
 --
-instance Arbitrary Final where
-    arbitrary = frequency $
-        [ (10, UnsignedAtom <$> arbitrary)
-        , (10, SignedAtom   <$> arbitrary)
-        , (15, Bytes        <$> arbitrary)
-        ]
-
-instance Arbitrary Datum where
-    arbitrary = frequency $
-        [ (35, Final          <$> arbitrary)
-        , ( 5, ContinuedBytes <$> arbitrary)
-        ]
-
-instance Arbitrary Sequence where
-    arbitrary = elements [ StartName
-                         , EndName
-                         , StartList
-                         , EndList
-                         ]
-
-instance Arbitrary Control where
-    arbitrary = elements [ Call
-                         , EndOfData
-                         , EndOfSession
-                         , StartTransaction
-                         , EndTransaction
-                         ]
-
-instance Arbitrary Empty where
-    arbitrary = pure EmptyAtom
 
 instance Arbitrary Token where
     arbitrary = frequency $
-        [ (40, Datum    <$> arbitrary)
-        , ( 1, Empty    <$> arbitrary)
-        , (20, Sequence <$> arbitrary)
-        , ( 9, Control  <$> arbitrary)
+        [ (10, Unsigned       <$> arbitrary)
+        , (10, Signed         <$> arbitrary)
+        , (15, Bytes          <$> arbitrary)
+        , ( 5, ContinuedBytes <$> arbitrary)
+        , ( 3, pure StartName)
+        , ( 3, pure EndName)
+        , ( 3, pure StartList)
+        , ( 3, pure EndList)
+        , ( 1, pure EndOfData)
+        , ( 1, pure EndOfSession)
+        , ( 1, pure StartTransaction)
+        , ( 1, pure EndTransaction)
         ]
+
+rawTokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m ()
+rawTokenSource = conduitParser parser
+
+removeEmpty :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
+removeEmpty = takeWhile ((/= Empty) . snd)
+
+combineContinued :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
+combineContinued = loop Nothing
+  where
+    loop mpacc = await >>= examine mpacc
+       where
+         examine  Nothing            (Just (pos, ContinuedBytes bs))  =  loop  $ Just (pos, bs)
+         examine  (Just (pos, acc))  (Just (_  , ContinuedBytes bs))  =  loop  $ Just (pos, append acc bs)
+         examine  Nothing            (Just (pos, t))                  =  yield $ (pos, t)
+         examine  (Just (pos, acc))  (Just (_  , Bytes bs         ))  =  yield $ (pos, Bytes (append acc bs))
+         examine  Nothing            Nothing                          =  pure  $ ()
+         examine  _                  Nothing                          =  error $ "ContinuedBytes not finished"
+         examine  _                  _                                =  error $ "ContinuedBytes followed by non-Bytes"
+
+tokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m ()
+tokenSource = rawTokenSource .| removeEmpty .| combineContinued
+
+
 
 \end{code}
 
@@ -417,7 +385,7 @@ contain up to 2047 bytes of data; or long atoms which have a 4-byte header and
 which contain up to 16,777,215 bytes of data.
 
 Tiny atoms only represent integers, whereas short, medium, and long atoms are
-used to represent integers or bytes (with the ÒBÓ bit set).
+used to represent integers or bytes (with the `B' bit set).
 
 A continued value is used to represent a long byte sequence when the total
 length is not known in advance. A continued value is represented by a sequence

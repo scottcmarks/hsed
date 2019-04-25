@@ -1,6 +1,6 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module System.SED.TPer.Run (run) where
+module System.SED.Host.Run (run) where
 
 import           RIO
 
@@ -9,4 +9,4 @@ import           System.SED.Common.Import ()
 
 run :: RIO App ()
 run = do
-  logInfo "We're inside the SED TPer application!"
+  logInfo "We're inside the SED Host application!"

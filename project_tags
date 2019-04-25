@@ -1,0 +1,358 @@
+
+./Setup.hs,15
+main main1,2
+
+./app/Main.hs,39
+module Main Main2,3
+main main13,14
+
+./test/System/SED/Common/IntegralSpec.hs,194
+module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec13,14
+validFirstTwo validFirstTwo30,31
+validNatural validNatural38,39
+validInteger validInteger45,46
+spec spec54,55
+
+./test/System/SED/Common/ValueSpec.hs,87
+module System.SED.Common.ValueSpec System.SED.Common.ValueSpec13,14
+spec spec24,25
+
+./test/System/SED/Common/TokenSpec.hs,375
+module System.SED.Common.TokenSpec System.SED.Common.TokenSpec13,14
+spec spec33,34
+maybeIsPrefixOf maybeIsPrefixOf236,237
+maybeParsesEq maybeParsesEq239,240
+(<(<||>)242,243
+tagsReservedForTCG tagsReservedForTCG246,247
+tokenParserByteString tokenParserByteString250,251
+tokenParserString tokenParserString253,254
+p p256,257
+gp gp259,260
+_pgp _pgp263,264
+
+./test/Spec.hs,0
+
+./dev/DevMain.hs,43
+module DevMain DevMain4,5
+dev dev14,15
+
+./src/System/SED/TPer/Run.hs,66
+module System.SED.TPer.Run System.SED.TPer.Run2,3
+run run9,10
+
+./src/System/SED/Host/Run.hs,66
+module System.SED.Host.Run System.SED.Host.Run2,3
+run run9,10
+
+./src/System/SED/Common/Call.lhs,1351
+module System.SED.Common.Call System.SED.Common.Call22,23
+data MethodHeader MethodHeader198,199
+data MethodHeader = MethodHeader{ MethodHeader{198,199
+data MethodHeader = MethodHeader{ _invokingID _invokingID198,199
+                                , _methodID _methodID199,200
+data Parameters Parameters203,204
+data Parameters = Parameters Parameters203,204
+data Parameters = Parameters { _required:_required203,204
+                             , _optional:_optional204,205
+data MethodCall MethodCall207,208
+data MethodCall = MethodCall MethodCall207,208
+data MethodCall = MethodCall { _header _header207,208
+                             , _parameters _parameters208,209
+                             , _statusCode _statusCode209,210
+instance StreamItem StreamItem MethodHeader214,215
+    parser parser215,216
+    generate generate216,217
+instance StreamItem StreamItem Parameters218,219
+    parser parser219,220
+    generate generate220,221
+d d222,223
+instance StreamItem StreamItem MethodCall225,226
+    parser parser226,227
+    generate generate240,241
+instance Arbitrary Arbitrary MethodHeader252,253
+    arbitrary arbitrary253,254
+instance Arbitrary Arbitrary Parameters255,256
+    arbitrary arbitrary256,257
+instance Arbitrary Arbitrary MethodCall258,259
+    arbitrary arbitrary259,260
+
+./src/System/SED/Common/Tables.lhs,951
+module System.SED.Common.Tables System.SED.Common.Tables23,24
+newtype TableName TableName294,295
+instance IsString IsString TableName296,297
+    fromString fromString297,298
+newtype TemplateName TemplateName299,300
+instance IsString IsString TemplateName301,302
+    fromString fromString302,303
+data    TableDef TableDef304,305
+data    TableDef     = TableDef TableDef304,305
+tdef tdef307,308
+tableDefs tableDefs315,316
+instance Arbitrary Arbitrary TableDef365,366
+    arbitrary arbitrary366,367
+_TABLE_ID _TABLE_ID369,370
+lookupByName lookupByName372,373
+lookupById lookupById377,378
+tableIdByName tableIdByName383,384
+tableNameById tableNameById386,387
+tableId tableId389,390
+tableDescriptorObjectUIDById tableDescriptorObjectUIDById392,393
+tableUIDById tableUIDById395,396
+tableUIDByName tableUIDByName398,399
+tableDescriptorObjectUIDByName tableDescriptorObjectUIDByName401,402
+_Table _Table404,405
+
+./src/System/SED/Common/StreamItem.lhs,415
+module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25
+class StreamItem StreamItem46,47
+    parser parser47,48
+    generate generate49,50
+    parseByteString parseByteString51,52
+    parseString parseString54,55
+    maybeParse maybeParse57,58
+    pg pg61,62
+    typeIsa typeIsa64,65
+    typeIsMaybea typeIsMaybea67,68
+    maybeGenerate maybeGenerate70,71
+require require85,86
+
+./src/System/SED/Common/Integral.lhs,800
+module System.SED.Common.IntegralSystem.SED.Common.Integral24,25
+rollUp rollUp49,50
+byteStringToNatural byteStringToNatural54,55
+byteStringToInteger byteStringToInteger57,58
+naturalToByteString naturalToByteString64,65
+integerToByteString integerToByteString68,69
+word8 word882,83
+char char85,86
+ordw ordw88,89
+byte byte91,92
+int int94,95
+integer integer97,98
+natural natural100,101
+class IsByteString IsByteString103,104
+    fromByteString fromByteString104,105
+    toByteString toByteString105,106
+instance IsByteString IsByteString Integer107,108
+    fromByteString fromByteString108,109
+    toByteString toByteString109,110
+instance IsByteString IsByteString Natural111,112
+    fromByteString fromByteString112,113
+    toByteString toByteString113,114
+
+./src/System/SED/Common/UID.lhs,810
+module System.SED.Common.UID System.SED.Common.UID22,23
+data HalfUID HalfUID61,62
+data HalfUID = HalfUID{_b3,HalfUID{_b361,62
+data HalfUID = HalfUID{_b3,_b2,_b1,_b0:_b061,62
+data UID UID64,65
+data UID = UID{_hi,UID{_hi64,65
+data UID = UID{_hi,_lo:_lo64,65
+instance StreamItem StreamItem HalfUID67,68
+    parser parser68,69
+    generate generate69,70
+instance StreamItem StreamItem UID71,72
+    parser parser72,73
+    generate generate85,86
+instance IsToken IsToken UID88,89
+    token token89,90
+    fromToken fromToken90,91
+instance Arbitrary Arbitrary HalfUID93,94
+    arbitrary arbitrary94,95
+instance Arbitrary Arbitrary UID96,97
+    arbitrary arbitrary97,98
+halfUID halfUID99,100
+uid uid102,103
+thisSP thisSP111,112
+_SMUID _SMUID115,116
+_NULL _NULL119,120
+
+./src/System/SED/Common/Types.lhs,61
+module System.SED.Common.TypesSystem.SED.Common.Types21,22
+
+./src/System/SED/Common/Token.lhs,1162
+module System.SED.Common.TokenSystem.SED.Common.Token23,24
+data Token Token142,143
+    Unsigned Unsigned143,144
+  | Signed Signed144,145
+  | Bytes Bytes145,146
+  | ContinuedBytes ContinuedBytes146,147
+  | StartNameStartName147,148
+  | EndNameEndName148,149
+  | StartListStartList149,150
+  | EndListEndList150,151
+  | CallCall151,152
+  | EndOfDataEndOfData152,153
+  | EndOfSessionEndOfSession153,154
+  | StartTransactionStartTransaction154,155
+  | EndTransactionEndTransaction155,156
+  | EmptyEmpty156,157
+class (Show a) => IsToken IsToken160,161
+    fromToken fromToken161,162
+    token token163,164
+    mtoken mtoken166,167
+instance IsToken IsToken Token170,171
+    token token171,172
+    fromToken fromToken172,173
+instance StreamItem StreamItem Token177,178
+    parser parser178,179
+    generate generate179,180
+tokenParser tokenParser187,188
+generateToken generateToken289,290
+instance Arbitrary Arbitrary Token335,336
+    arbitrary arbitrary336,337
+rawTokenSource rawTokenSource351,352
+removeEmpty removeEmpty354,355
+combineContinued combineContinued357,358
+tokenSource tokenSource370,371
+
+./src/System/SED/Common/Import.hs,61
+module System.SED.Common.ImportSystem.SED.Common.Import1,2
+
+./src/System/SED/Common/Value.lhs,3453
+module System.SED.Common.Value System.SED.Common.Value23,24
+newtype Datum Datum42,43
+class (Show v) => IsDatum IsDatum45,46
+    datum datum46,47
+    mdatum mdatum49,50
+instance IsDatum IsDatum Datum52,53
+    datum datum53,54
+instance IsDatum IsDatum Token55,56
+    mdatum mdatum56,57
+isDatumToken isDatumToken60,61
+instance IsToken IsToken Datum66,67
+    token token67,68
+    fromToken fromToken68,69
+instance IsDatum IsDatum Natural70,71
+    datum datum71,72
+udatum udatum73,74
+instance IsDatum IsDatum Integer76,77
+    datum datum77,78
+sdatum sdatum79,80
+instance IsDatum IsDatum ByteString82,83
+    datum datum83,84
+bdatum bdatum85,86
+instance IsDatum IsDatum String88,89
+    datum datum89,90
+newtype Name Name91,92
+class (Show d) => IsName IsName94,95
+    name name95,96
+    mname mname98,99
+instance IsName IsName Name101,102
+    name name102,103
+instance IsName IsName Datum104,105
+    name name105,106
+instance IsName IsName Token107,108
+    name name108,109
+instance IsName IsName Natural110,111
+    name name111,112
+instance IsName IsName Integer113,114
+    name name114,115
+instance IsName IsName ByteString116,117
+    name name117,118
+instance IsName IsName String119,120
+    name name120,121
+instance IsDatum IsDatum Name122,123
+    datum datum123,124
+instance IsToken IsToken Name125,126
+    token token126,127
+    fromToken fromToken127,128
+data NamedValue NamedValue130,131
+data NamedValue = NamedValue NamedValue130,131
+(.(.:)133,134
+n n134,135
+instance IsName IsName NamedValue137,138
+    name name138,139
+newtype List List140,141
+data Value Value143,144
+data Value = D D143,144
+           | N N144,145
+           | L L145,146
+class IsValue IsValue148,149
+    value value149,150
+    mvalue mvalue150,151
+instance IsValue IsValue Value153,154
+    value value154,155
+instance IsValue IsValue Datum156,157
+    value value157,158
+instance IsValue IsValue NamedValue159,160
+    value value160,161
+instance IsValue IsValue List162,163
+    value value163,164
+instance IsValue IsValue Token165,166
+    value value166,167
+instance IsValue IsValue Natural168,169
+    value value169,170
+instance IsValue IsValue Integer171,172
+    value value172,173
+instance IsValue IsValue ByteString174,175
+    value value175,176
+instance IsValue IsValue String177,178
+    value value178,179
+instance IsToken IsToken Value180,181
+    mtoken mtoken181,182
+    fromToken fromToken183,184
+instance StreamItem StreamItem Datum186,187
+    parser parser187,188
+    generate generate188,189
+instance StreamItem StreamItem Name190,191
+    parser parser191,192
+    generate generate192,193
+instance StreamItem StreamItem NamedValue195,196
+    parser parser196,197
+    generate generate199,200
+instance StreamItem StreamItem List205,206
+    parser parser206,207
+    generate generate209,210
+instance StreamItem StreamItem Value214,215
+    parser parser215,216
+    generate generate218,219
+instance Arbitrary Arbitrary Datum223,224
+    arbitrary arbitrary224,225
+instance Arbitrary Arbitrary Name232,233
+    arbitrary arbitrary233,234
+instance Arbitrary Arbitrary NamedValue235,236
+    arbitrary arbitrary236,237
+instance Arbitrary Arbitrary List238,239
+    arbitrary arbitrary239,240
+instance Arbitrary Arbitrary Value241,242
+    arbitrary arbitrary242,243
+
+./src/System/SED/Common/Hex.lhs,659
+module System.SED.Common.HexSystem.SED.Common.Hex23,24
+hexDigit hexDigit38,39
+hexDigits hexDigits41,42
+hexValue hexValue44,45
+hexCharSyntax hexCharSyntax47,48
+class HasHex HasHex51,52
+    hex hex52,53
+    fromHex fromHex53,54
+instance HasHex HasHex Word855,56
+    hex hex56,57
+    fromHex fromHex58,59
+instance HasHex HasHex Char63,64
+    hex hex64,65
+    fromHex fromHex65,66
+instance HasHex HasHex [Word8]67,68
+    hex hex68,69
+    fromHex fromHex69,70
+instance HasHex HasHex ByteString73,74
+    hex hex74,75
+    fromHex fromHex75,76
+instance HasHex HasHex String77,78
+    hex hex78,79
+    fromHex fromHex79,80
+
+./src/Hsed/App.lhs,391
+module Hsed.AppHsed.App24,25
+data Options Options32,33
+data Options = OptionsOptions32,33
+  { _verbose _verbose33,34
+data App App38,39
+data App = AppApp38,39
+  { _logFunc _logFunc39,40
+  , _processContext _processContext40,41
+  , _options _options41,42
+makeApp makeApp44,45
+instance HasLogFunc HasLogFunc App47,48
+instance HasLogFunc App where logFuncL logFuncL47,48

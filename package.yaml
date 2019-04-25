@@ -25,12 +25,15 @@ dependencies:
 - array
 - attoparsec
 - bytestring
+- conduit
+- conduit-extra
 - either
+- hspec
 - lens
 - word8
 - QuickCheck
 - quickcheck-instances
-# - bytestring-arbitrary
+
 
 ghc-options:
 - -Wall
@@ -63,7 +66,6 @@ tests:
     source-dirs:         test
     dependencies:
     - hsed
-    - hspec
 
     ghc-options:
     - -threaded

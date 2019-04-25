@@ -6,10 +6,10 @@ import           Options.Applicative.Simple
 import           RIO
 import           RIO.Process
 
-import qualified Paths_hsed
-
 import           Hsed.App
-import           System.SED.TPer.Run
+import qualified Paths_hsed
+import           System.SED.Host.Run        as Host ()
+import           System.SED.TPer.Run        as TPer (run)
 
 main :: IO ()
 main = do
@@ -28,4 +28,4 @@ main = do
   pc <- mkDefaultProcessContext
   withLogFunc lo $ \lf ->
     let app = makeApp lf pc opts
-     in runRIO app run
+     in runRIO app TPer.run

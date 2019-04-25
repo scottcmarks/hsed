@@ -27,10 +27,11 @@ module System.SED.Common.Integral
 where
 
 import           Data.Bits
-import           Data.ByteString            hiding (take, map, unsnoc)
-import qualified Data.ByteString as B       (map)
-import           RIO                        hiding (foldr, map, length, mask,
-                                                    reverse, take)
+import           Data.ByteString      hiding (take, map, unsnoc)
+import qualified Data.ByteString as B (map)
+import           Data.Char            (chr, ord)
+import           RIO                   hiding (foldr, map, length, mask,
+                                               reverse, take)
 
 \end{code}
 
@@ -68,15 +69,25 @@ naturalToByteString n = if n == 0 then singleton 0x00 else reverse $ unfoldr unr
 integerToByteString :: Integer -> ByteString
 integerToByteString i =
     if 0 <= i
-    then                  nonnegativeToByteString              i
+    then                    nonnegativeToByteString              i
     else B.map complement $ nonnegativeToByteString $ complement i
   where
     nonnegativeToByteString nn =
-        let bs = naturalToByteString $ natural nn
+        let bs = toByteString $ natural nn
           in if (0x00 == 0x80 .&. head bs)
                 then bs
                 else cons 0x00 bs
 
+
+
+word8 :: (Integral a) => a -> Word8
+word8 = fromIntegral
+
+char :: Word8 -> Char
+char = chr . int
+
+ordw :: Char -> Word8
+ordw = word8 . ord
 
 byte :: Integral a => a -> Word8
 byte = fromIntegral
@@ -89,5 +100,17 @@ integer = fromIntegral
 
 natural :: Integral a => a -> Natural
 natural = fromIntegral
+
+class IsByteString a where
+    fromByteString :: ByteString -> a
+    toByteString   :: a -> ByteString
+
+instance IsByteString Integer where
+    fromByteString = byteStringToInteger
+    toByteString   = integerToByteString
+
+instance IsByteString Natural where
+    fromByteString = byteStringToNatural
+    toByteString   = naturalToByteString
 
 \end{code}

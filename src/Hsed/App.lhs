@@ -1,6 +1,6 @@
 \documentstyle{article}
 \begin{document}
-\chapter{Types}
+\chapter{App}
 
 Define the types used in SEDs, and in the hsed program in particular.
 

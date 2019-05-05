@@ -1,6 +1,6 @@
 \documentstyle{article}
 \begin{document}
-\chapter{Tables}
+\chapter{TableUIDs}
 
 Tables
 
@@ -8,26 +8,86 @@ Tables
 \begin{code}
 {-|
 Module      : System.SED.Common.Tables
-Description : SED tables
+Description : SED table UIDs
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Tables.
+Table UIDs.
 
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module System.SED.Common.Tables where
+module System.SED.Common.TableUIDs (
+                                     -- * Table UIDs
+                                     uTableTable
+                                   , uSPInfoTable
+                                   , uSPTemplatesTable
+                                   , uColumnTable
+                                   , uTypeTable
+                                   , uMethodIDTable
+                                   , uAccessControlTable
+                                   , uACETable
+                                   , uAuthorityTable
+                                   , uCertificatesTable
+                                   , uC_PINTable
+                                   , uC_RSA_1024Table
+                                   , uC_RSA_2048Table
+                                   , uC_AES_128Table
+                                   , uC_AES_256Table
+                                   , uC_EC_160Table
+                                   , uC_EC_192Table
+                                   , uC_EC_224Table
+                                   , uC_EC_256Table
+                                   , uC_EC_384Table
+                                   , uC_EC_521Table
+                                   , uC_EC_163Table
+                                   , uC_EC_233Table
+                                   , uC_EC_283Table
+                                   , uC_HMAC_160Table
+                                   , uC_HMAC_256Table
+                                   , uC_HMAC_384Table
+                                   , uC_HMAC_512Table
+                                   , uSecretProtectTable
+                                   , uTPerInfoTable
+                                   , uCryptoSuiteTable
+                                   , uTemplateTable
+                                   , uSPTable
+                                   , uClockTimeTable
+                                   , uH_SHA_1Table
+                                   , uH_SHA_256Table
+                                   , uH_SHA_384Table
+                                   , uH_SHA_512Table
+                                   , uLogTable
+                                   , uLogListTable
+                                   , uLockingInfoTable
+                                   , uLockingTable
+                                   , uMBRControlTable
+                                   , uMBRTable
+                                   , uK_AES_128Table
+                                   , uK_AES_256Table
+
+                                   -- * Table HalfUIDs
+                                   , hNull
+                                   , hTable
+
+                                   -- * Utilty functions
+                                   , tableHalfUIDFromName             -- | HalfUID for table
+                                   , tableNameFromHalfUID             -- | Name for table by HalfUID
+                                   , tableUIDFromName                 -- | Table UID for table
+                                   , tableDescriptorObjectUIDFromName -- | Table Table Row UID for table
+                                   )
+where
 
 import           Data.List                    (find)
 import           RIO
 import           Test.QuickCheck              hiding (generate)
 
 import           System.SED.Common.UID
+import           System.SED.Common.Table
 
 \end{code}
 3.2.5 Tables
@@ -56,12 +116,12 @@ allocated for that table.
 
 End Informative Content
 
-A table name or table column name MAY be up to 32 bytes in length. By convention, the names
+A table name or table column name MAY be up to 32 bytes in length. From convention, the names
 assigned in this document consist of ASCII characters, the first of which is a letter and others are
 letters, digits or underscores. Adjacent underscores do not occur. All names are case sensitive.
 
 Within an SP, tables MAY be created and deleted. For each table, rows MAY be created and deleted
-(except within a Byte table Ð see 3.2.5.1), but columns are created only when the table is created.
+(except within a Fromte table Ð see 3.2.5.1), but columns are created only when the table is created.
 Tables MAY contain zero or more rows. A specific Security Subsystem Class MAY disallow the
 creation of any of these.
 
@@ -81,10 +141,10 @@ an SP, then access to the table columns that represent that functionality MAY be
 
 There are two kinds of tables:
 
-a. Byte table. Byte tables provide raw data storage. A byte table has one unnamed column
+a. Fromte table. Fromte tables provide raw data storage. A byte table has one unnamed column
 of type bytes_1. The address of the first row in a byte table is 0. Upon creation, the value
 of all cells in a byte table SHALL be 0x00. The rows of a byte table SHALL NOT be
-allocated or freed (i.e. via CreateRow or DeleteRow). Byte table rows are addressed by
+allocated or freed (i.e. via CreateRow or DeleteRow). Fromte table rows are addressed by
 row number.
 b. Object table. Object tables provide storage for data that binds a set of methods and
 access controls to that data. When a table is created it SHALL be allocated a fixed number
@@ -112,7 +172,7 @@ ACLs are applied to the methods capable of manipulating that objectÕs data (see
 
 End Informative Content
 
-3.2.5.3 Unique Identifiers (UIDs)
+3.2.5.3 Unique HalfUIDentifiers (UIDs)
 
 Each object table has a column named UID. This column contains an 8-byte unique identifier for that
 row. Each row has an SP-wide unique value in this column. This value is never shared with another
@@ -292,16 +352,6 @@ The TPer is not required to keep rows of the table sorted by these unique values
 
 \begin{code}
 
-newtype TableName    = TableName ByteString
-    deriving (Eq, Show)
-instance IsString TableName where
-    fromString = TableName . fromString
-
-newtype TemplateName = TemplateName ByteString
-    deriving (Eq, Show)
-instance IsString TemplateName where
-    fromString = TemplateName . fromString
-
 data    TableDef     = TableDef HalfUID TableName TemplateName
     deriving (Eq, Show)
 
@@ -359,51 +409,192 @@ tableDefs = --    HalfUID        TableName        TemplateName
     , tdef  0x00 0x00 0x08 0x02  "Locking"        "Locking"
     , tdef  0x00 0x00 0x08 0x03  "MBRControl"     "Locking"
     , tdef  0x00 0x00 0x08 0x04  "MBR"            "Locking"
-    , tdef  0x00 0x00 0x08 0x05  "K_AES"          "Locking"
-    , tdef  0x00 0x00 0x08 0x06  "K_AES"          "Locking"
+    , tdef  0x00 0x00 0x08 0x05  "K_AES_128"      "Locking"
+    , tdef  0x00 0x00 0x08 0x06  "K_AES_256"      "Locking"
     ]
 
 instance Arbitrary TableDef where
     arbitrary = elements tableDefs
 
 
-_TABLE_ID :: HalfUID
-_TABLE_ID = HalfUID 0x00 0x00 0x00 0x00
+errorNoTableDef :: (Show s) => s -> e
+errorNoTableDef = error . ("Could not find table def for " <>) . show
 
-lookupByName :: TableName -> TableDef
-lookupByName n = case find (\(TableDef _ n' _) -> n == n' ) tableDefs of
-  Just d  -> d
-  Nothing -> error $ "Could not find table def for " <> show n
+tableHalfUIDFromName :: TableName -> HalfUID
+tableHalfUIDFromName n = case find (\(TableDef _ n' _) -> n == n' ) tableDefs of
+  Just (TableDef h _ _) ->h
+  Nothing -> errorNoTableDef n
 
-lookupById :: HalfUID -> TableDef
-lookupById h = case find (\(TableDef h' _ _) -> h == h') tableDefs of
-  Just d -> d
-  Nothing -> error $ "Could not find table def for " <> show h
+tableNameFromHalfUID :: HalfUID -> TableName
+tableNameFromHalfUID h = case find (\(TableDef h' _ _) -> h == h') tableDefs of
+  Just (TableDef _ n _) -> n
+  Nothing -> errorNoTableDef h
+
+tableDescriptorObjectUIDFromHalfUID :: HalfUID -> UID
+tableDescriptorObjectUIDFromHalfUID h = UID hTable h
+
+tableUIDFromHalfUID :: HalfUID -> UID
+tableUIDFromHalfUID h = UID h hNull
+
+-- | Table UID for table
+tableUIDFromName :: TableName -> UID
+tableUIDFromName = tableUIDFromHalfUID . tableHalfUIDFromName
+
+-- | Row UID for the description of a table as a row in the Table Table
+tableDescriptorObjectUIDFromName :: TableName -> UID
+tableDescriptorObjectUIDFromName = tableDescriptorObjectUIDFromHalfUID . tableHalfUIDFromName
 
 
-tableIdByName :: TableName -> HalfUID
-tableIdByName n = h where (TableDef h _ _) = lookupByName n
+-- * HalfUIDs used to identify tables in Table UIDs and
+-- Table Table Descriptor Object UIDs (Table Table row UIDs)
 
-tableNameById :: HalfUID -> TableName
-tableNameById h = n where (TableDef _ n _) = lookupById h
+hNull :: HalfUID
+hNull = HalfUID 0x00 0x00 0x00 0x00
 
-tableId :: HalfUID
-tableId = tableIdByName "Table"
+hTable :: HalfUID
+hTable = tableHalfUIDFromName "Table"
 
-tableDescriptorObjectUIDById :: HalfUID -> UID
-tableDescriptorObjectUIDById h = UID tableId h
 
-tableUIDById :: HalfUID -> UID
-tableUIDById h = UID h _TABLE_ID
+-- * Table UIDs
+--
+uTableTable :: UID
+uTableTable = tableUIDFromName "Table"
 
-tableUIDByName :: TableName -> UID
-tableUIDByName = tableUIDById . tableIdByName
+uSPInfoTable :: UID
+uSPInfoTable = tableUIDFromName "SPInfo"
 
-tableDescriptorObjectUIDByName :: TableName -> UID
-tableDescriptorObjectUIDByName = tableDescriptorObjectUIDById . tableIdByName
+uSPTemplatesTable :: UID
+uSPTemplatesTable = tableUIDFromName "SPTemplates"
 
-_Table :: UID
-_Table = tableUIDByName "Table"
+uColumnTable :: UID
+uColumnTable = tableUIDFromName "Column"
+
+uTypeTable :: UID
+uTypeTable = tableUIDFromName "Type"
+
+uMethodIDTable :: UID
+uMethodIDTable = tableUIDFromName "MethodID"
+
+uAccessControlTable :: UID
+uAccessControlTable = tableUIDFromName "AccessControl"
+
+uACETable :: UID
+uACETable = tableUIDFromName "ACE"
+
+uAuthorityTable :: UID
+uAuthorityTable = tableUIDFromName "Authority"
+
+uCertificatesTable :: UID
+uCertificatesTable = tableUIDFromName "Certificates"
+
+uC_PINTable :: UID
+uC_PINTable = tableUIDFromName "C_PIN"
+
+uC_RSA_1024Table :: UID
+uC_RSA_1024Table = tableUIDFromName "C_RSA_1024"
+
+uC_RSA_2048Table :: UID
+uC_RSA_2048Table = tableUIDFromName "C_RSA_2048"
+
+uC_AES_128Table :: UID
+uC_AES_128Table = tableUIDFromName "C_AES_128"
+
+uC_AES_256Table :: UID
+uC_AES_256Table = tableUIDFromName "C_AES_256"
+
+uC_EC_160Table :: UID
+uC_EC_160Table = tableUIDFromName "C_EC_160"
+
+uC_EC_192Table :: UID
+uC_EC_192Table = tableUIDFromName "C_EC_192"
+
+uC_EC_224Table :: UID
+uC_EC_224Table = tableUIDFromName "C_EC_224"
+
+uC_EC_256Table :: UID
+uC_EC_256Table = tableUIDFromName "C_EC_256"
+
+uC_EC_384Table :: UID
+uC_EC_384Table = tableUIDFromName "C_EC_384"
+
+uC_EC_521Table :: UID
+uC_EC_521Table = tableUIDFromName "C_EC_521"
+
+uC_EC_163Table :: UID
+uC_EC_163Table = tableUIDFromName "C_EC_163"
+
+uC_EC_233Table :: UID
+uC_EC_233Table = tableUIDFromName "C_EC_233"
+
+uC_EC_283Table :: UID
+uC_EC_283Table = tableUIDFromName "C_EC_283"
+
+uC_HMAC_160Table :: UID
+uC_HMAC_160Table = tableUIDFromName "C_HMAC_160"
+
+uC_HMAC_256Table :: UID
+uC_HMAC_256Table = tableUIDFromName "C_HMAC_256"
+
+uC_HMAC_384Table :: UID
+uC_HMAC_384Table = tableUIDFromName "C_HMAC_384"
+
+uC_HMAC_512Table :: UID
+uC_HMAC_512Table = tableUIDFromName "C_HMAC_512"
+
+uSecretProtectTable :: UID
+uSecretProtectTable = tableUIDFromName "SecretProtect"
+
+uTPerInfoTable :: UID
+uTPerInfoTable = tableUIDFromName "TPerInfo"
+
+uCryptoSuiteTable :: UID
+uCryptoSuiteTable = tableUIDFromName "CryptoSuite"
+
+uTemplateTable :: UID
+uTemplateTable = tableUIDFromName "Template"
+
+uSPTable :: UID
+uSPTable = tableUIDFromName "SP"
+
+uClockTimeTable :: UID
+uClockTimeTable = tableUIDFromName "ClockTime"
+
+uH_SHA_1Table :: UID
+uH_SHA_1Table = tableUIDFromName "H_SHA_1"
+
+uH_SHA_256Table :: UID
+uH_SHA_256Table = tableUIDFromName "H_SHA_256"
+
+uH_SHA_384Table :: UID
+uH_SHA_384Table = tableUIDFromName "H_SHA_384"
+
+uH_SHA_512Table :: UID
+uH_SHA_512Table = tableUIDFromName "H_SHA_512"
+
+uLogTable :: UID
+uLogTable = tableUIDFromName "Log"
+
+uLogListTable :: UID
+uLogListTable = tableUIDFromName "LogList"
+
+uLockingInfoTable :: UID
+uLockingInfoTable = tableUIDFromName "LockingInfo"
+
+uLockingTable :: UID
+uLockingTable = tableUIDFromName "Locking"
+
+uMBRControlTable :: UID
+uMBRControlTable = tableUIDFromName "MBRControl"
+
+uMBRTable :: UID
+uMBRTable = tableUIDFromName "MBR"
+
+uK_AES_128Table :: UID
+uK_AES_128Table = tableUIDFromName "K_AES_128"
+
+uK_AES_256Table :: UID
+uK_AES_256Table = tableUIDFromName "K_AES_256"
+
 
 \end{code}
 \end{document}

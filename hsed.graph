@@ -1,7 +1,7 @@
 digraph G {
 size="6,4";
 ratio="fill";
-u13[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
+u14[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
 subgraph cluster_0 {
 label="Hsed";
 color="#0000000F";
@@ -30,21 +30,22 @@ u6[label="UID",style="filled",fillcolor="#bbffff",penwidth="0"];
 u7[label="Hex",style="filled",fillcolor="#bbffff",penwidth="0"];
 u8[label="Import",style="filled",fillcolor="#bbffff",penwidth="0"];
 u9[label="Types",style="filled",fillcolor="#bbffff",penwidth="0"];
-u10[label="Tables",style="filled",fillcolor="#bbffff",penwidth="0"];
+u10[label="Table",style="filled",fillcolor="#bbffff",penwidth="0"];
+u11[label="TableUIDs",style="filled",fillcolor="#bbffff",penwidth="0"];
 
 }
 subgraph cluster_4 {
 label="Host";
 color="#0000000F";
 style="filled";
-u11[label="Run",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u12[label="Run",style="filled",fillcolor="#ffbbff",penwidth="0"];
 
 }
 subgraph cluster_5 {
 label="TPer";
 color="#0000000F";
 style="filled";
-u12[label="Run",style="filled",fillcolor="#77ff77",penwidth="0"];
+u13[label="Run",style="filled",fillcolor="#77ff77",penwidth="0"];
 
 }
 
@@ -70,13 +71,17 @@ u9 -> u4;
 u9 -> u5;
 u9 -> u6;
 u9 -> u7;
+u9 -> u10;
+u9 -> u11;
 u10 -> u6;
-u11 -> u0;
-u11 -> u8;
+u11 -> u6;
+u11 -> u10;
 u12 -> u0;
 u12 -> u8;
 u13 -> u0;
-u13 -> u11;
-u13 -> u12;
+u13 -> u8;
+u14 -> u0;
+u14 -> u12;
+u14 -> u13;
 
 }

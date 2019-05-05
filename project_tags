@@ -76,31 +76,69 @@ instance Arbitrary Arbitrary Parameters255,256
 instance Arbitrary Arbitrary MethodCall258,259
     arbitrary arbitrary259,260
 
-./src/System/SED/Common/Tables.lhs,951
-module System.SED.Common.Tables System.SED.Common.Tables23,24
-newtype TableName TableName294,295
-instance IsString IsString TableName296,297
-    fromString fromString297,298
-newtype TemplateName TemplateName299,300
-instance IsString IsString TemplateName301,302
-    fromString fromString302,303
-data    TableDef TableDef304,305
-data    TableDef     = TableDef TableDef304,305
-tdef tdef307,308
-tableDefs tableDefs315,316
-instance Arbitrary Arbitrary TableDef365,366
-    arbitrary arbitrary366,367
-_TABLE_ID _TABLE_ID369,370
-lookupByName lookupByName372,373
-lookupById lookupById377,378
-tableIdByName tableIdByName383,384
-tableNameById tableNameById386,387
-tableId tableId389,390
-tableDescriptorObjectUIDById tableDescriptorObjectUIDById392,393
-tableUIDById tableUIDById395,396
-tableUIDByName tableUIDByName398,399
-tableDescriptorObjectUIDByName tableDescriptorObjectUIDByName401,402
-_Table _Table404,405
+./src/System/SED/Common/TableUIDs.lhs,2528
+module System.SED.Common.TableUIDs System.SED.Common.TableUIDs23,24
+data    TableDef TableDef354,355
+data    TableDef     = TableDef TableDef354,355
+tdef tdef357,358
+tableDefs tableDefs365,366
+instance Arbitrary Arbitrary TableDef415,416
+    arbitrary arbitrary416,417
+errorNoTableDef errorNoTableDef419,420
+tableHalfUIDFromName tableHalfUIDFromName422,423
+tableNameFromHalfUID tableNameFromHalfUID427,428
+tableDescriptorObjectUIDFromHalfUID tableDescriptorObjectUIDFromHalfUID432,433
+tableUIDFromHalfUID tableUIDFromHalfUID435,436
+tableUIDFromName tableUIDFromName439,440
+tableDescriptorObjectUIDFromName tableDescriptorObjectUIDFromName443,444
+hNull hNull450,451
+hTable hTable453,454
+uTableTable uTableTable459,460
+uSPInfoTable uSPInfoTable462,463
+uSPTemplatesTable uSPTemplatesTable465,466
+uColumnTable uColumnTable468,469
+uTypeTable uTypeTable471,472
+uMethodIDTable uMethodIDTable474,475
+uAccessControlTable uAccessControlTable477,478
+uACETable uACETable480,481
+uAuthorityTable uAuthorityTable483,484
+uCertificatesTable uCertificatesTable486,487
+uC_PINTable uC_PINTable489,490
+uC_RSA_1024Table uC_RSA_1024Table492,493
+uC_RSA_2048Table uC_RSA_2048Table495,496
+uC_AES_128Table uC_AES_128Table498,499
+uC_AES_256Table uC_AES_256Table501,502
+uC_EC_160Table uC_EC_160Table504,505
+uC_EC_192Table uC_EC_192Table507,508
+uC_EC_224Table uC_EC_224Table510,511
+uC_EC_256Table uC_EC_256Table513,514
+uC_EC_384Table uC_EC_384Table516,517
+uC_EC_521Table uC_EC_521Table519,520
+uC_EC_163Table uC_EC_163Table522,523
+uC_EC_233Table uC_EC_233Table525,526
+uC_EC_283Table uC_EC_283Table528,529
+uC_HMAC_160Table uC_HMAC_160Table531,532
+uC_HMAC_256Table uC_HMAC_256Table534,535
+uC_HMAC_384Table uC_HMAC_384Table537,538
+uC_HMAC_512Table uC_HMAC_512Table540,541
+uSecretProtectTable uSecretProtectTable543,544
+uTPerInfoTable uTPerInfoTable546,547
+uCryptoSuiteTable uCryptoSuiteTable549,550
+uTemplateTable uTemplateTable552,553
+uSPTable uSPTable555,556
+uClockTimeTable uClockTimeTable558,559
+uH_SHA_1Table uH_SHA_1Table561,562
+uH_SHA_256Table uH_SHA_256Table564,565
+uH_SHA_384Table uH_SHA_384Table567,568
+uH_SHA_512Table uH_SHA_512Table570,571
+uLogTable uLogTable573,574
+uLogListTable uLogListTable576,577
+uLockingInfoTable uLockingInfoTable579,580
+uLockingTable uLockingTable582,583
+uMBRControlTable uMBRControlTable585,586
+uMBRTable uMBRTable588,589
+uK_AES_128Table uK_AES_128Table591,592
+uK_AES_256Table uK_AES_256Table594,595
 
 ./src/System/SED/Common/StreamItem.lhs,415
 module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25
@@ -140,7 +178,7 @@ instance IsByteString IsByteString Natural111,112
     fromByteString fromByteString112,113
     toByteString toByteString113,114
 
-./src/System/SED/Common/UID.lhs,810
+./src/System/SED/Common/UID.lhs,812
 module System.SED.Common.UID System.SED.Common.UID22,23
 data HalfUID HalfUID61,62
 data HalfUID = HalfUID{_b3,HalfUID{_b361,62
@@ -163,9 +201,33 @@ instance Arbitrary Arbitrary UID96,97
     arbitrary arbitrary97,98
 halfUID halfUID99,100
 uid uid102,103
-thisSP thisSP111,112
-_SMUID _SMUID115,116
-_NULL _NULL119,120
+uThisSP uThisSP111,112
+uSMUID uSMUID115,116
+uNULL uNULL119,120
+
+./src/System/SED/Common/Table.lhs,1067
+module System.SED.Common.Table System.SED.Common.Table23,24
+newtype TableName TableName190,191
+instance IsString IsString TableName192,193
+    fromString fromString193,194
+newtype TemplateName TemplateName195,196
+instance IsString IsString TemplateName197,198
+    fromString fromString198,199
+data Table Table200,201
+data Table = Table Table200,201
+data Table = Table { _tableName _tableName200,201
+                   , _tableHalfUID _tableHalfUID201,202
+                   , _tableColumns _tableColumns202,203
+                   , _tableRows _tableRows203,204
+data TableRow TableRow207,208
+data TableRow = TableRow TableRow207,208
+data TableColumn TableColumn351,352
+data TableColumn = TableColumn TableColumn351,352
+data TableColumn = TableColumn { _columnNumber _columnNumber351,352
+                               , _columnName _columnName352,353
+                               , _columnIsUnique _columnIsUnique353,354
+                               , _columnType _columnType354,355
+newtype ColumnType ColumnType358,359
 
 ./src/System/SED/Common/Types.lhs,61
 module System.SED.Common.TypesSystem.SED.Common.Types21,22

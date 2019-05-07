@@ -22,7 +22,10 @@ Special Purpose UIDs.
 
 module System.SED.Common.SpecialPurposeUIDs where
 
+import           Data.Word
+
 import           System.SED.Common.UID
+
 
 \end{code}
 

@@ -23,6 +23,8 @@ Table column types.
 
 module System.SED.Common.ColumnTypes where
 
+import           Control.Monad.Loops
+import           Data.Functor
 import           RIO                          hiding (foldr, map, length, mask,
                                                       reverse, take)
 import           Test.QuickCheck              hiding (generate)
@@ -3944,11 +3946,8 @@ data Core = Core
 
 data Implementation = Implementation { __AC_elementSize :: Int }
 
-class IsSSC a where
-    _AC_elementMinSize  :: Maybe (Core_AC_element -> Bool)
 
-data SSC = SSC { __AC_elementPredicate :: Maybe (Core_AC_element -> Bool) }
-
+data SSC = SSC { __AC_elementMinSize :: Maybe Int }
 
 data Core_ACE_expression = Core_ACE_expression
 
@@ -3958,26 +3957,49 @@ newtype Core_AC_element = Core_AC_element [Core_ACE_expression]
 _AC_elementSize :: TPer Int
 _AC_elementSize = __AC_elementSize <$> asks implementation
 
-_AC_elementPredicate :: TPer (Maybe (Core_AC_element -> Bool))
-_AC_elementPredicate = __AC_elementPredicate <$> asks ssc
+_AC_elementMinSize :: TPer (Maybe Int)
+_AC_elementMinSize = __AC_elementMinSize <$> asks ssc
+
+
+
+
 
 implementationDependant_AC_elementSize :: Int
-implementationDependant_AC_elementSize = 16
+implementationDependant_AC_elementSize = 32
 
 i :: Implementation
 i = Implementation { __AC_elementSize = implementationDependant_AC_elementSize }
 
-ssc_AC_elementPredicate :: Maybe (Core_AC_element -> Bool)
-ssc_AC_elementPredicate = Just $ const True  -- or Nothing, for the same effect
+ssc_AC_elementMinSize :: Maybe Int
+ssc_AC_elementMinSize = Just 23 -- Opal.  Or, Nothing would work.
+
+s :: SSC
+s = SSC { __AC_elementMinSize = ssc_AC_elementMinSize }
 
 c :: Core
 c = Core
 
-s :: SSC
-s = SSC { __AC_elementPredicate = ssc_AC_elementPredicate }
-
 env :: Env
 env = Env c i s
+
+
+valid :: TPer Bool
+valid = andM validityChecks
+
+validityChecks :: [TPer Bool]
+validityChecks =
+    [ _AC_elementSizeValid
+    , pure True -- FIXME: more checks
+    ]
+
+_AC_elementSizeValid :: TPer Bool
+_AC_elementSizeValid = do
+    maybeMinSize <-_AC_elementMinSize
+    case maybeMinSize of
+      Just minSize -> do
+          size <- _AC_elementSize
+          pure $ minSize <= size
+      Nothing -> pure False
 
 
 

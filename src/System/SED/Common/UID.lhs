@@ -62,8 +62,14 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 data HalfUID = HalfUID{_b3,_b2,_b1,_b0::Word8} -- not an independent Token
     deriving(Show,Eq)
 
+hNull :: HalfUID
+hNull = HalfUID 0x00 0x00 0x00 0x00
+
 data UID = UID{_hi,_lo::HalfUID} -- is isomorphic to Bytes(...8 bytes...)
     deriving(Show,Eq)
+
+uNull :: UID
+uNull = UID hNull hNull
 
 instance StreamItem HalfUID where
     parser = HalfUID <$> anyWord8 <*> anyWord8 <*> anyWord8 <*> anyWord8

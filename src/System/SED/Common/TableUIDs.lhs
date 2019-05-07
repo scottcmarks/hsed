@@ -87,7 +87,7 @@ import           RIO
 import           Test.QuickCheck              hiding (generate)
 
 import           System.SED.Common.UID
-import           System.SED.Common.Table
+-- import           System.SED.Common.Table
 
 \end{code}
 3.2.5 Tables
@@ -352,6 +352,17 @@ The TPer is not required to keep rows of the table sorted by these unique values
 
 \begin{code}
 
+newtype TableName = TableName ByteString
+    deriving (Eq, Show)
+instance IsString TableName where
+    fromString = TableName . fromString
+
+newtype TemplateName = TemplateName ByteString
+    deriving (Eq, Show)
+instance IsString TemplateName where
+    fromString = TemplateName . fromString
+
+
 data    TableDef     = TableDef HalfUID TableName TemplateName
     deriving (Eq, Show)
 
@@ -447,9 +458,6 @@ tableDescriptorObjectUIDFromName = tableDescriptorObjectUIDFromHalfUID . tableHa
 
 -- * HalfUIDs used to identify tables in Table UIDs and
 -- Table Table Descriptor Object UIDs (Table Table row UIDs)
-
-hNull :: HalfUID
-hNull = HalfUID 0x00 0x00 0x00 0x00
 
 hTable :: HalfUID
 hTable = tableHalfUIDFromName "Table"

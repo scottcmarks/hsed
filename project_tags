@@ -76,69 +76,74 @@ instance Arbitrary Arbitrary Parameters255,256
 instance Arbitrary Arbitrary MethodCall258,259
     arbitrary arbitrary259,260
 
-./src/System/SED/Common/TableUIDs.lhs,2528
+./src/System/SED/Common/TableUIDs.lhs,2752
 module System.SED.Common.TableUIDs System.SED.Common.TableUIDs23,24
-data    TableDef TableDef354,355
-data    TableDef     = TableDef TableDef354,355
-tdef tdef357,358
-tableDefs tableDefs365,366
-instance Arbitrary Arbitrary TableDef415,416
-    arbitrary arbitrary416,417
-errorNoTableDef errorNoTableDef419,420
-tableHalfUIDFromName tableHalfUIDFromName422,423
-tableNameFromHalfUID tableNameFromHalfUID427,428
-tableDescriptorObjectUIDFromHalfUID tableDescriptorObjectUIDFromHalfUID432,433
-tableUIDFromHalfUID tableUIDFromHalfUID435,436
-tableUIDFromName tableUIDFromName439,440
-tableDescriptorObjectUIDFromName tableDescriptorObjectUIDFromName443,444
-hNull hNull450,451
-hTable hTable453,454
-uTableTable uTableTable459,460
-uSPInfoTable uSPInfoTable462,463
-uSPTemplatesTable uSPTemplatesTable465,466
-uColumnTable uColumnTable468,469
-uTypeTable uTypeTable471,472
-uMethodIDTable uMethodIDTable474,475
-uAccessControlTable uAccessControlTable477,478
-uACETable uACETable480,481
-uAuthorityTable uAuthorityTable483,484
-uCertificatesTable uCertificatesTable486,487
-uC_PINTable uC_PINTable489,490
-uC_RSA_1024Table uC_RSA_1024Table492,493
-uC_RSA_2048Table uC_RSA_2048Table495,496
-uC_AES_128Table uC_AES_128Table498,499
-uC_AES_256Table uC_AES_256Table501,502
-uC_EC_160Table uC_EC_160Table504,505
-uC_EC_192Table uC_EC_192Table507,508
-uC_EC_224Table uC_EC_224Table510,511
-uC_EC_256Table uC_EC_256Table513,514
-uC_EC_384Table uC_EC_384Table516,517
-uC_EC_521Table uC_EC_521Table519,520
-uC_EC_163Table uC_EC_163Table522,523
-uC_EC_233Table uC_EC_233Table525,526
-uC_EC_283Table uC_EC_283Table528,529
-uC_HMAC_160Table uC_HMAC_160Table531,532
-uC_HMAC_256Table uC_HMAC_256Table534,535
-uC_HMAC_384Table uC_HMAC_384Table537,538
-uC_HMAC_512Table uC_HMAC_512Table540,541
-uSecretProtectTable uSecretProtectTable543,544
-uTPerInfoTable uTPerInfoTable546,547
-uCryptoSuiteTable uCryptoSuiteTable549,550
-uTemplateTable uTemplateTable552,553
-uSPTable uSPTable555,556
-uClockTimeTable uClockTimeTable558,559
-uH_SHA_1Table uH_SHA_1Table561,562
-uH_SHA_256Table uH_SHA_256Table564,565
-uH_SHA_384Table uH_SHA_384Table567,568
-uH_SHA_512Table uH_SHA_512Table570,571
-uLogTable uLogTable573,574
-uLogListTable uLogListTable576,577
-uLockingInfoTable uLockingInfoTable579,580
-uLockingTable uLockingTable582,583
-uMBRControlTable uMBRControlTable585,586
-uMBRTable uMBRTable588,589
-uK_AES_128Table uK_AES_128Table591,592
-uK_AES_256Table uK_AES_256Table594,595
+newtype TableName TableName354,355
+instance IsString IsString TableName356,357
+    fromString fromString357,358
+newtype TemplateName TemplateName359,360
+instance IsString IsString TemplateName361,362
+    fromString fromString362,363
+data    TableDef TableDef365,366
+data    TableDef     = TableDef TableDef365,366
+tdef tdef368,369
+tableDefs tableDefs376,377
+instance Arbitrary Arbitrary TableDef426,427
+    arbitrary arbitrary427,428
+errorNoTableDef errorNoTableDef430,431
+tableHalfUIDFromName tableHalfUIDFromName433,434
+tableNameFromHalfUID tableNameFromHalfUID438,439
+tableDescriptorObjectUIDFromHalfUID tableDescriptorObjectUIDFromHalfUID443,444
+tableUIDFromHalfUID tableUIDFromHalfUID446,447
+tableUIDFromName tableUIDFromName450,451
+tableDescriptorObjectUIDFromName tableDescriptorObjectUIDFromName454,455
+hTable hTable461,462
+uTableTable uTableTable467,468
+uSPInfoTable uSPInfoTable470,471
+uSPTemplatesTable uSPTemplatesTable473,474
+uColumnTable uColumnTable476,477
+uTypeTable uTypeTable479,480
+uMethodIDTable uMethodIDTable482,483
+uAccessControlTable uAccessControlTable485,486
+uACETable uACETable488,489
+uAuthorityTable uAuthorityTable491,492
+uCertificatesTable uCertificatesTable494,495
+uC_PINTable uC_PINTable497,498
+uC_RSA_1024Table uC_RSA_1024Table500,501
+uC_RSA_2048Table uC_RSA_2048Table503,504
+uC_AES_128Table uC_AES_128Table506,507
+uC_AES_256Table uC_AES_256Table509,510
+uC_EC_160Table uC_EC_160Table512,513
+uC_EC_192Table uC_EC_192Table515,516
+uC_EC_224Table uC_EC_224Table518,519
+uC_EC_256Table uC_EC_256Table521,522
+uC_EC_384Table uC_EC_384Table524,525
+uC_EC_521Table uC_EC_521Table527,528
+uC_EC_163Table uC_EC_163Table530,531
+uC_EC_233Table uC_EC_233Table533,534
+uC_EC_283Table uC_EC_283Table536,537
+uC_HMAC_160Table uC_HMAC_160Table539,540
+uC_HMAC_256Table uC_HMAC_256Table542,543
+uC_HMAC_384Table uC_HMAC_384Table545,546
+uC_HMAC_512Table uC_HMAC_512Table548,549
+uSecretProtectTable uSecretProtectTable551,552
+uTPerInfoTable uTPerInfoTable554,555
+uCryptoSuiteTable uCryptoSuiteTable557,558
+uTemplateTable uTemplateTable560,561
+uSPTable uSPTable563,564
+uClockTimeTable uClockTimeTable566,567
+uH_SHA_1Table uH_SHA_1Table569,570
+uH_SHA_256Table uH_SHA_256Table572,573
+uH_SHA_384Table uH_SHA_384Table575,576
+uH_SHA_512Table uH_SHA_512Table578,579
+uLogTable uLogTable581,582
+uLogListTable uLogListTable584,585
+uLockingInfoTable uLockingInfoTable587,588
+uLockingTable uLockingTable590,591
+uMBRControlTable uMBRControlTable593,594
+uMBRTable uMBRTable596,597
+uK_AES_128Table uK_AES_128Table599,600
+uK_AES_256Table uK_AES_256Table602,603
 
 ./src/System/SED/Common/StreamItem.lhs,415
 module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25
@@ -178,29 +183,31 @@ instance IsByteString IsByteString Natural111,112
     fromByteString fromByteString112,113
     toByteString toByteString113,114
 
-./src/System/SED/Common/UID.lhs,743
+./src/System/SED/Common/UID.lhs,789
 module System.SED.Common.UID System.SED.Common.UID22,23
 data HalfUID HalfUID61,62
 data HalfUID = HalfUID{_b3,HalfUID{_b361,62
 data HalfUID = HalfUID{_b3,_b2,_b1,_b0:_b061,62
-data UID UID64,65
-data UID = UID{_hi,UID{_hi64,65
-data UID = UID{_hi,_lo:_lo64,65
-instance StreamItem StreamItem HalfUID67,68
-    parser parser68,69
-    generate generate69,70
-instance StreamItem StreamItem UID71,72
-    parser parser72,73
-    generate generate85,86
-instance IsToken IsToken UID88,89
-    token token89,90
-    fromToken fromToken90,91
-instance Arbitrary Arbitrary HalfUID93,94
-    arbitrary arbitrary94,95
-instance Arbitrary Arbitrary UID96,97
-    arbitrary arbitrary97,98
-halfUID halfUID99,100
-uid uid102,103
+hNull hNull64,65
+data UID UID67,68
+data UID = UID{_hi,UID{_hi67,68
+data UID = UID{_hi,_lo:_lo67,68
+uNull uNull70,71
+instance StreamItem StreamItem HalfUID73,74
+    parser parser74,75
+    generate generate75,76
+instance StreamItem StreamItem UID77,78
+    parser parser78,79
+    generate generate91,92
+instance IsToken IsToken UID94,95
+    token token95,96
+    fromToken fromToken96,97
+instance Arbitrary Arbitrary HalfUID99,100
+    arbitrary arbitrary100,101
+instance Arbitrary Arbitrary UID102,103
+    arbitrary arbitrary103,104
+halfUID halfUID105,106
+uid uid108,109
 
 ./src/System/SED/Common/Table.lhs,1067
 module System.SED.Common.Table System.SED.Common.Table23,24
@@ -268,35 +275,36 @@ tokenSource tokenSource370,371
 ./src/System/SED/Common/Import.hs,61
 module System.SED.Common.ImportSystem.SED.Common.Import1,2
 
-./src/System/SED/Common/ColumnTypes.lhs,1237
+./src/System/SED/Common/ColumnTypes.lhs,1260
 module System.SED.Common.ColumnTypes System.SED.Common.ColumnTypes23,24
-type TPer TPer3935,3936
-data Env Env3937,3938
-data Env = Env Env3937,3938
-data Env = Env { core core3937,3938
-               , implementation implementation3938,3939
-               , ssc ssc3939,3940
-data Core Core3942,3943
-data Core = CoreCore3942,3943
-data Implementation Implementation3944,3945
-data Implementation = Implementation Implementation3944,3945
-data Implementation = Implementation { __AC_elementSize __AC_elementSize3944,3945
-class IsSSC IsSSC3946,3947
-    _AC_elementMinSize _AC_elementMinSize3947,3948
+type TPer TPer3937,3938
+data Env Env3939,3940
+data Env = Env Env3939,3940
+data Env = Env { core core3939,3940
+               , implementation implementation3940,3941
+               , ssc ssc3941,3942
+data Core Core3944,3945
+data Core = CoreCore3944,3945
+data Implementation Implementation3946,3947
+data Implementation = Implementation Implementation3946,3947
+data Implementation = Implementation { __AC_elementSize __AC_elementSize3946,3947
 data SSC SSC3949,3950
 data SSC = SSC SSC3949,3950
-data SSC = SSC { __AC_elementPredicate __AC_elementPredicate3949,3950
-data Core_ACE_expression Core_ACE_expression3952,3953
-data Core_ACE_expression = Core_ACE_expressionCore_ACE_expression3952,3953
-newtype Core_AC_element Core_AC_element3954,3955
-_AC_elementSize _AC_elementSize3957,3958
-_AC_elementPredicate _AC_elementPredicate3960,3961
-implementationDependant_AC_elementSize implementationDependant_AC_elementSize3963,3964
-i i3966,3967
-ssc_AC_elementPredicate ssc_AC_elementPredicate3969,3970
-c c3972,3973
+data SSC = SSC { __AC_elementMinSize __AC_elementMinSize3949,3950
+data Core_ACE_expression Core_ACE_expression3951,3952
+data Core_ACE_expression = Core_ACE_expressionCore_ACE_expression3951,3952
+newtype Core_AC_element Core_AC_element3953,3954
+_AC_elementSize _AC_elementSize3956,3957
+_AC_elementMinSize _AC_elementMinSize3959,3960
+implementationDependant_AC_elementSize implementationDependant_AC_elementSize3966,3967
+i i3969,3970
+ssc_AC_elementMinSize ssc_AC_elementMinSize3972,3973
 s s3975,3976
-env env3978,3979
+c c3978,3979
+env env3981,3982
+valid valid3985,3986
+validityChecks validityChecks3988,3989
+_AC_elementSizeValid _AC_elementSizeValid3994,3995
 
 ./src/System/SED/Common/Value.lhs,3453
 module System.SED.Common.Value System.SED.Common.Value23,24
@@ -407,44 +415,6 @@ instance Arbitrary Arbitrary List238,239
 instance Arbitrary Arbitrary Value241,242
     arbitrary arbitrary242,243
 
-./src/System/SED/Common/Cardinal.lhs,1445
-module System.SED.Common.ColumnTypes System.SED.Common.ColumnTypes23,24
-data Zero Zero3880,3881
-data Zero = ZeroZero3880,3881
-data Succ Succ3881,3882
-data Succ a = Succ Succ3881,3882
-type One One3883,3884
-type Two Two3884,3885
-type Three Three3885,3886
-type Four Four3886,3887
-type Five Five3887,3888
-type Six Six3888,3889
-type Seven Seven3889,3890
-type Eight Eight3890,3891
-class Cardinal Cardinal3892,3893
-    c2num c2num3893,3894
-cpred cpred3895,3896
-instance Cardinal Cardinal Zero3898,3899
-    c2num c2num3899,3900
-instance (C(Cardinal c) => Cardinal (Succ c)3900,3901
-    c2num c2num3901,3902
-data Type Type3904,3905
-data Type = Base_TypeBase_Type3904,3905
-          | Simple_TypeSimple_Type3905,3906
-          | Enumeration_TypeEnumeration_Type3908,3909
-          | Alternative_TypeAlternative_Type3910,3911
-          | List_TypeList_Type3912,3913
-          | Restricted_Reference_TypeRestricted_Reference_Type3915,3916
-          | General_Reference_TypeGeneral_Reference_Type3916,3917
-          | Named_Value_TypeNamed_Value_Type3917,3918
-          | Struct_TypeStruct_Type3918,3919
-          | Set_TypeSet_Type3919,3920
-data Base_Type Base_Type3922,3923
-data Base_Type = Signed_IntegerSigned_Integer3922,3923
-               | Unsigned_IntegerUnsigned_Integer3923,3924
-               | Fixed_Bytes Fixed_Bytes3924,3925
-               | Max_Bytes Max_Bytes3925,3926
-
 ./src/System/SED/Common/Hex.lhs,659
 module System.SED.Common.HexSystem.SED.Common.Hex23,24
 hexDigit hexDigit38,39
@@ -470,19 +440,19 @@ instance HasHex HasHex String77,78
     hex hex78,79
     fromHex fromHex79,80
 
-./src/System/SED/Common/SpecialPurposeUIDs.lhs,483
+./src/System/SED/Common/SpecialPurposeUIDs.lhs,485
 module System.SED.Common.SpecialPurposeUIDs System.SED.Common.SpecialPurposeUIDs22,23
-uNULL uNULL51,52
-uThisSP uThisSP55,56
-uSMUID uSMUID59,60
-uSMMethodUID uSMMethodUID63,64
-uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID67,68
-uProperties uProperties89,90
-uStartSession uStartSession92,93
-uSyncSession uSyncSession95,96
-uStartTrustedSession uStartTrustedSession98,99
-uSyncTrustedSession uSyncTrustedSession101,102
-uCloseSession uCloseSession104,105
+uNULL uNULL54,55
+uThisSP uThisSP58,59
+uSMUID uSMUID62,63
+uSMMethodUID uSMMethodUID66,67
+uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID70,71
+uProperties uProperties92,93
+uStartSession uStartSession95,96
+uSyncSession uSyncSession98,99
+uStartTrustedSession uStartTrustedSession101,102
+uSyncTrustedSession uSyncTrustedSession104,105
+uCloseSession uCloseSession107,108
 
 ./src/Hsed/App.lhs,391
 module Hsed.AppHsed.App24,25

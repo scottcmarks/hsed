@@ -30,6 +30,7 @@ dependencies:
 - either
 - hspec
 - lens
+- monad-loops
 - word8
 - QuickCheck
 - quickcheck-instances

@@ -27,10 +27,10 @@ import           Control.Monad.Loops
 import           Data.Functor
 import           RIO                          hiding (foldr, map, length, mask,
                                                       reverse, take)
-import           Test.QuickCheck              hiding (generate)
+-- import           Test.QuickCheck              hiding (generate)
 
-import           System.SED.Common.StreamItem
-import           System.SED.Common.Token
+-- import           System.SED.Common.StreamItem
+-- import           System.SED.Common.Token
 
 \end{code}
 

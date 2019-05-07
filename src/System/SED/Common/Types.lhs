@@ -23,6 +23,7 @@ module System.SED.Common.Types
   ( module System.SED.Common.Call
   , module System.SED.Common.Hex
   , module System.SED.Common.Integral
+  , module System.SED.Common.SpecialPurposeUIDs
   , module System.SED.Common.StreamItem
   , module System.SED.Common.Table
   , module System.SED.Common.TableUIDs
@@ -35,6 +36,7 @@ where
 import           System.SED.Common.Call
 import           System.SED.Common.Hex
 import           System.SED.Common.Integral
+import           System.SED.Common.SpecialPurposeUIDs
 import           System.SED.Common.StreamItem
 import           System.SED.Common.Table
 import           System.SED.Common.TableUIDs

@@ -3933,22 +3933,26 @@ monad with getters.  Even so, each such "*" needs to be translated as e.g. "AC_e
 
 \begin{code}
 
+type TPer a = Reader Env a
+
+data Env = Env { core           :: Core
+               , implementation :: Implementation
+               , ssc            :: SSC
+               }
+
 data Core = Core
 
 data Implementation = Implementation { __AC_elementSize :: Int }
 
-data Core_ACE_expression = Core_ACE_expression
-
-newtype Core_AC_element = Core_AC_element [Core_ACE_expression]
+class IsSSC a where
+    _AC_elementMinSize  :: Maybe (Core_AC_element -> Bool)
 
 data SSC = SSC { __AC_elementPredicate :: Maybe (Core_AC_element -> Bool) }
 
-data Env = Env { core :: Core
-               , implementation:: Implementation
-               , ssc :: SSC}
 
-type TPer' a = Env -> a
-type TPer a = Reader Env a
+data Core_ACE_expression = Core_ACE_expression
+
+newtype Core_AC_element = Core_AC_element [Core_ACE_expression]
 
 
 _AC_elementSize :: TPer Int

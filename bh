@@ -2,9 +2,10 @@
 cd ~/hsed
 echo "clean ..." && stack clean && rm -rf .stack-work &&  \
 echo "maketags ..." && maketags && \
-echo "build ..." && stack build --haddock --test && \
+echo "build ..." && stack build --haddock && \
+echo "test ..." && stack test && \
 echo "install ..." && stack install && \
-echo -e "some sort of testifying here ...\n"
+echo -e "some sort of testifying here ...\n" && \
 echo "maketags again ..." && maketags && \
 echo "graphs ..." && \
   (2>/dev/null graphmod | tee hsed.graph | dot -Tpdf > hsed.pdf) && open hsed.pdf && \

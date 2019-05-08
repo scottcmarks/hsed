@@ -8,7 +8,7 @@ bytestrings used to represent them.
 
 \begin{code}
 {-|
-Module      : System.SED.Common.Integral
+Module      : Extras.Integral
 Description : SED tokens
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -22,7 +22,7 @@ Conversions for numbers used in tokens.
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
-module System.SED.Common.Integral
+module Extras.Integral
 
 where
 

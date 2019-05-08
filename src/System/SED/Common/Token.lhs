@@ -19,12 +19,9 @@ Datatypes for Tokens.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell, FlexibleInstances  #-}
 
 module System.SED.Common.Token
   (
-  --   Final(..)
-  -- ,
     Token(..)
   , IsToken(..)
 
@@ -32,7 +29,6 @@ module System.SED.Common.Token
   , removeEmpty
   , combineContinued
   , tokenSource
-
   )
 
 where
@@ -45,6 +41,7 @@ import           Data.ByteString            hiding (ByteString, take, takeWhile,
 import           Data.Conduit
 import           Data.Conduit.Attoparsec
 import           Data.Conduit.Combinators   (takeWhile)
+import           GHC.Natural
 import           RIO                        hiding (foldr, map, length, mask,
                                                     null, reverse, take, takeWhile)
 import qualified RIO as R                   (map)
@@ -53,7 +50,7 @@ import           Test.QuickCheck.Instances.Natural ()
 import           Test.QuickCheck.Instances.ByteString ()
 import           Text.Printf
 
-import           System.SED.Common.Integral
+import           Extras.Integral
 import           System.SED.Common.StreamItem
 
 
@@ -155,8 +152,7 @@ data Token =
   | StartTransaction
   | EndTransaction
   | Empty
-    deriving (Show,Eq)
-
+  deriving (Eq,Show)
 
 class (Show a) => IsToken a where
     fromToken :: Token -> Maybe a
@@ -178,7 +174,6 @@ instance IsToken Token where
 instance StreamItem Token where
     parser    = tokenParser
     generate  = generateToken
-
 
 
 

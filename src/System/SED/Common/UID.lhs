@@ -18,15 +18,26 @@ Datatypes for UIDs and HalfUIDs.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE DerivingVia         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 
 module System.SED.Common.UID where
 
 import           Data.Attoparsec.ByteString
+import           Data.Maybe(fromJust)
+import           GHC.TypeNats
 import           RIO
-import           RIO.ByteString               hiding (length,map)
+import           RIO.ByteString               hiding (count,length,map)
 import           Test.QuickCheck              hiding (generate)
 
+import           Extras.Bytes
+import qualified Extras.Bytes as Bytes
+import           Extras.Hex
 import           System.SED.Common.StreamItem
 -- import           System.SED.Common.Integral
 import           System.SED.Common.Token
@@ -59,58 +70,84 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 
 \begin{code}
 
-data HalfUID = HalfUID{_b3,_b2,_b1,_b0::Word8} -- not an independent Token
-    deriving(Show,Eq)
 
-hNull :: HalfUID
-hNull = HalfUID 0x00 0x00 0x00 0x00
+-- | Type-level to value-level for all Integrals, from the Natural
+intVal :: (Num b, KnownNat n) => proxy n -> b
+intVal p = fromIntegral $ (natVal p)
 
-data UID = UID{_hi,_lo::HalfUID} -- is isomorphic to Bytes(...8 bytes...)
-    deriving(Show,Eq)
 
-uNull :: UID
-uNull = UID hNull hNull
+fixed :: (KnownNat n) => ByteString -> Fixed_bytes n
+fixed = fromJust . create
 
-instance StreamItem HalfUID where
-    parser = HalfUID <$> anyWord8 <*> anyWord8 <*> anyWord8 <*> anyWord8
-    generate (HalfUID b3 b2 b1 b0) = pack [b3, b2, b1, b0]
+fpack :: (KnownNat n) => [Word8] -> Fixed_bytes n
+fpack = fixed . pack
 
-instance StreamItem UID where
+instance (KnownNat n) => IsToken (Fixed_bytes n) where
+    token  = Bytes . unwrap
+    fromToken (Bytes bs) = Just $ fixed bs
+    fromToken _ = Nothing
+
+instance (KnownNat n) => StreamItem (Fixed_bytes n) where
     parser = do
         tok <- parser
         case tok of
-            Bytes bs -> uidbs $ unpack bs
-            _        -> fail $ "Wrong token type for UID: " <> show tok
-          where uidbs (u3:u2:u1:u0:l3:l2:l1:l0:[]) =
-                    pure $ uid u3 u2 u1 u0 l3 l2 l1 l0
-                uidbs w8s =
-                    fail $ mconcat [ "Bytes for UID of wrong length = "
-                                   , show (length w8s)
-                                   , ": "
-                                   , show w8s
-                                   ]
+            Bytes bs -> pure $ fixed bs
+            _        -> fail $ mconcat [ "Wrong token type for Fixed_bytes "
+                                       , show (intVal (Proxy :: Proxy n) :: Int)
+                                       , ": "
+                                       , show tok
+                                       ]
     generate = generate . token
 
-
-instance IsToken UID where
-    token (UID hi lo) = Bytes $ generate hi <> generate lo
-    fromToken = undefined
+instance (KnownNat n) => Arbitrary (Fixed_bytes n) where
+    arbitrary = fpack <$> count (intVal (Proxy :: Proxy n)) arbitrary
 
 
-instance Arbitrary HalfUID where
-    arbitrary = HalfUID <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
 
-instance Arbitrary UID where
-    arbitrary = UID <$> arbitrary <*> arbitrary
+newtype HalfUID = HalfUID (Fixed_bytes 4)
+    deriving(Eq,Ord)
+    deriving(IsToken,StreamItem,Arbitrary) via (Fixed_bytes 4)
+instance Show(HalfUID) where
+    show (HalfUID fb) = mconcat $ "halfUID" : RIO.concat (map h (unpack $ unwrap fb))
+       where h w = [" 0x", hex w]
 
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
-halfUID = HalfUID
+halfUID b3 b2 b1 b0 = HalfUID $ fpack [b3, b2, b1, b0]
+
+
+newtype UID = UID (Fixed_bytes 8)
+    deriving(Eq,Ord)
+    deriving(IsToken,StreamItem,Arbitrary) via (Fixed_bytes 8)
+instance Show(UID) where
+    show (UID fb) = mconcat $ "uid" : RIO.concat (map h (unpack $ unwrap fb))
+       where h w = [" 0x", hex w]
 
 uid ::
     Word8 -> Word8 -> Word8 -> Word8
  -> Word8 -> Word8 -> Word8 -> Word8
  -> UID
-uid u3 u2 u1 u0 l3 l2 l1 l0 =
-    UID (HalfUID u3 u2 u1 u0) (HalfUID l3 l2 l1 l0)
+uid u3 u2 u1 u0 l3 l2 l1 l0 = UID $ fpack [u3, u2, u1, u0, l3, l2, l1, l0]
+
+
+uidUpper :: UID -> HalfUID
+uidUpper (UID fb) = (HalfUID (Bytes.take fb))
+
+uidLower :: UID -> HalfUID
+uidLower (UID fb) = (HalfUID (Bytes.drop fb))
+
+uidPlus :: HalfUID -> HalfUID -> UID
+uidPlus (HalfUID fbl) (HalfUID fbr) = (UID (Bytes.append fbl fbr))
+
+(+:+) :: HalfUID -> HalfUID -> UID
+(+:+) = uidPlus
+infix +:+
+
+hNull :: HalfUID
+hNull = halfUID 0x00 0x00 0x00 0x00
+
+uNull :: UID
+uNull = hNull +:+ hNull
+
+
 \end{code}
 \end{document}

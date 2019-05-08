@@ -4,128 +4,169 @@ digraph G {
 	];
 	subgraph cluster_0 {
 		graph [color="#0000000F",
-			label=Hsed,
+			label=Extras,
 			style=filled
 		];
 		u0		 [fillcolor="#ffffbb",
-			label=App,
+			label=Bytes,
+			penwidth=0,
+			style=filled];
+		u1		 [fillcolor="#ffffbb",
+			label=Hex,
+			penwidth=0,
+			style=filled];
+		u2		 [fillcolor="#ffffbb",
+			label=Integral,
+			penwidth=0,
+			style=filled];
+		u3		 [fillcolor="#ffffbb",
+			label=GitVersion,
 			penwidth=0,
 			style=filled];
 	}
 	subgraph cluster_1 {
 		graph [color="#0000000F",
+			label=Hsed,
+			style=filled
+		];
+		u4		 [fillcolor="#bbbbff",
+			label=App,
+			penwidth=0,
+			style=filled];
+	}
+	subgraph cluster_2 {
+		graph [color="#0000000F",
 			label=System,
 			style=filled
 		];
-		subgraph cluster_2 {
+		subgraph cluster_3 {
 			graph [color="#0000000F",
 				label=SED,
 				style=filled
 			];
-			subgraph cluster_3 {
+			subgraph cluster_4 {
 				graph [color="#0000000F",
 					label=Common,
 					style=filled
 				];
-				u1				 [fillcolor="#bbffff",
+				subgraph cluster_5 {
+					graph [color="#0000000F",
+						label=ColumnTypes,
+						style=filled
+					];
+					u10					 [fillcolor="#ffbbff",
+						label=ColumnTypes,
+						style="filled,bold"];
+					u14					 [fillcolor="#77ff77",
+						label=TH,
+						penwidth=0,
+						style=filled];
+				}
+				subgraph cluster_6 {
+					graph [color="#0000000F",
+						label=TableUIDs,
+						style=filled
+					];
+					u11					 [fillcolor="#ffbbff",
+						label=TableUIDs,
+						style="filled,bold"];
+					u12					 [fillcolor="#ffff77",
+						label=TH,
+						penwidth=0,
+						style=filled];
+				}
+				u5				 [fillcolor="#ffbbff",
 					label=Call,
 					penwidth=0,
 					style=filled];
-				u2				 [fillcolor="#bbffff",
+				u6				 [fillcolor="#ffbbff",
 					label=StreamItem,
 					penwidth=0,
 					style=filled];
-				u3				 [fillcolor="#bbffff",
+				u7				 [fillcolor="#ffbbff",
 					label=Token,
 					penwidth=0,
 					style=filled];
-				u4				 [fillcolor="#bbffff",
-					label=Integral,
-					penwidth=0,
-					style=filled];
-				u5				 [fillcolor="#bbffff",
+				u8				 [fillcolor="#ffbbff",
 					label=Value,
 					penwidth=0,
 					style=filled];
-				u6				 [fillcolor="#bbffff",
+				u9				 [fillcolor="#ffbbff",
 					label=UID,
 					penwidth=0,
 					style=filled];
-				u7				 [fillcolor="#bbffff",
-					label=ColumnTypes,
-					penwidth=0,
-					style=filled];
-				u8				 [fillcolor="#bbffff",
-					label=Hex,
-					penwidth=0,
-					style=filled];
-				u9				 [fillcolor="#bbffff",
-					label=Import,
-					penwidth=0,
-					style=filled];
-				u10				 [fillcolor="#bbffff",
-					label=Types,
-					penwidth=0,
-					style=filled];
-				u11				 [fillcolor="#bbffff",
-					label=SpecialPurposeUIDs,
-					penwidth=0,
-					style=filled];
-				u12				 [fillcolor="#bbffff",
+				u13				 [fillcolor="#ffbbff",
 					label=Table,
 					penwidth=0,
 					style=filled];
-				u13				 [fillcolor="#bbffff",
-					label=TableUIDs,
+				u15				 [fillcolor="#ffbbff",
+					label=Format,
+					penwidth=0,
+					style=filled];
+				u16				 [fillcolor="#ffbbff",
+					label=Import,
+					penwidth=0,
+					style=filled];
+				u17				 [fillcolor="#ffbbff",
+					label=Types,
+					penwidth=0,
+					style=filled];
+				u18				 [fillcolor="#ffbbff",
+					label=SpecialPurposeUIDs,
 					penwidth=0,
 					style=filled];
 			}
-			subgraph cluster_4 {
+			subgraph cluster_7 {
 				graph [color="#0000000F",
 					label=Host,
 					style=filled
 				];
-				u14				 [fillcolor="#ffbbff",
+				u19				 [fillcolor="#7777ff",
 					label=Run,
 					penwidth=0,
 					style=filled];
 			}
-			subgraph cluster_5 {
+			subgraph cluster_8 {
 				graph [color="#0000000F",
 					label=TPer,
 					style=filled
 				];
-				u15				 [fillcolor="#77ff77",
+				u20				 [fillcolor="#ff7777",
 					label=Run,
 					penwidth=0,
 					style=filled];
 			}
 		}
 	}
-	u16	 [fillcolor="#bbffbb",
+	u21	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u16 -> u14;
-	u16 -> u15;
-	u1 -> u5;
-	u1 -> u6;
-	u3 -> u2;
-	u3 -> u4;
-	u5 -> u3;
-	u6 -> u3;
-	u8 -> u4;
-	u9 -> u10;
-	u10 -> u1;
-	u10 -> u8;
+	u21 -> u3;
+	u21 -> u19;
+	u21 -> u20;
+	u0 -> u1;
+	u1 -> u2;
+	u5 -> u8;
+	u5 -> u9;
+	u7 -> u2;
+	u7 -> u6;
+	u8 -> u7;
+	u9 -> u0;
+	u9 -> u7;
+	u13 -> u9;
+	u16 -> u17;
+	u17 -> u5;
+	u17 -> u18;
+	u17 -> u10;
+	u18 -> u9;
 	u10 -> u11;
-	u10 -> u12;
-	u10 -> u13;
-	u11 -> u6;
-	u12 -> u6;
-	u13 -> u6;
-	u14 -> u0;
+	u14 -> u3;
 	u14 -> u9;
-	u15 -> u0;
-	u15 -> u9;
+	u11 -> u12;
+	u12 -> u13;
+	u19 -> u4;
+	u19 -> u16;
+	u20 -> u4;
+	u20 -> u16;
 }

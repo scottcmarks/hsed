@@ -19,18 +19,30 @@ Table column types.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances, PolyKinds, KindSignatures   #-}
+{-# LANGUAGE DataKinds, GADTs, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances,
+             PolyKinds, KindSignatures #-}
+{-# LANGUAGE MagicHash, NoImplicitPrelude, TypeFamilies, UnboxedTuples,
+             MultiParamTypeClasses, RoleAnnotations, CPP, TypeOperators,
+             PolyKinds #-}
 
 module System.SED.Common.ColumnTypes where
 
 import           Control.Monad.Loops
 import           Data.Functor
+import           Data.Map                     (fromList)
+import           Data.Set                     (map)
+import           GHC.TypeNats
 import           RIO                          hiding (foldr, map, length, mask,
                                                       reverse, take)
 -- import           Test.QuickCheck              hiding (generate)
 
--- import           System.SED.Common.StreamItem
--- import           System.SED.Common.Token
+import           Extras.Bytes
+-- import           System.SED.Common.ColumnTypes.TH
+import           System.SED.Common.TableUIDs
+import           System.SED.Common.UID
 
 \end{code}
 
@@ -104,9 +116,30 @@ directly. Base Types SHALL always have a Size column value of 0 in the Type tabl
 
 
 
-a. 0 Ð this is the Format code indicating that this is a Base_Type.
+    a. 0 Ð this is the Format code indicating that this is a Base_Type.
+\begin{code}
 
+{-
+Type
+    Base_Type                    =  0
+    Simple_Type                  =  1 bytes_8 uinteger_2
+    Enumeration_Type             =  2 1*(uinteger_2 uinteger_2)
+    Alternative_Type             =  3 2*bytes_8
+    List_Type                    =  4 uinteger_2 bytes_8
+    Restricted_Reference_Type{5} =  5 1*bytes_8
+    Restricted_Reference_Type{6} =  6 1*bytes_8
+    General_Reference_Type{7}    =  7
+    General_Reference_Type{8}    =  8
+    General_Reference_Type{9}    =  9
+    General_Reference_Table_Type = 10 table_kind
+    Named_Value_Name_Type        = 11 1*32bytes bytes_8
+    Name_Value_Integer_Type      = 12 integer_2 bytes_8
+    Name_Value_Uinteger_Type     = 13 uinteger_2 bytes_8
+    Struct_Type                  = 14 1*bytes_8
+    Set_Type                     = 15 1*(uinteger_2 uinteger_2)
+-}
 
+\end{code}
 
 b. Simple_Type. The Simple_Type format defines an instance of one of the Base_Type
 types. The Simple_Type always includes a uinteger in the format column, which defines
@@ -416,753 +449,18 @@ respectively) to enclose the values in the Set.
 
 Example: F0 tokenized_value tokenized_value F1
 
-5.1.3 Column Types
 
-This section describes each of the column types in the Template Reference sections of the Core
-Specification. The UID, Name, and Format columns identify the column values of the Type table. These
-values SHALL comprise the Type table for every SP, prior to any personalization. These types SHALL
-NOT be able to be changed or deleted by the host.
+--------------------------------------------snip--------------------------------------------
 
-Included in this section are descriptions of the column types for each column of each table defined in
-this specification, as well as descriptions of each of the component types of the column types.
-Component types are types that have entries in the Type table, but are not referenced directly as
-column types. They are used to make up other types that do represent column types.
-
-The UID column in the description table in each section SHALL be the UID for that type.
-
-The Name column specifies the name for that type.
-
-The Format column identifies the structure of the associated type. The first value in the Format column
-is the name of that type's Format code. Additional values listed in the column are determined by the
-type's format code. For readability, the names of Type objects are used in place of their UID, and
-commas are used to separate values.
-
-An asterisk (*) in any of the descriptive tables indicates SSC-specific or implementation-specific values.
-
-5.1.3.1 AC_element
-
-An AC_element is a list type made up of ACE_expressions. The size of the AC_element list is
-implementation-dependant. A minimum size restriction MAY be defined by an SSC.
-
-Table 46 AC_element
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 08 01
-
-AC_element
-
-List_Type,
-*,
-ACE_expression
-
-
-
-
-
-
-
-5.1.3.2 ACE_columns
-
-This Set type identifies the columns to which an ACE applies. The values are: 0=Column0,
-1=Column1, 2=Column2, etc. Each value in the set maps to a "Column Number". The size of the set is
-SSC/implementation dependant based on the maximum number of columns allowed in a table. For
-tables created from templates, the table descriptions in this specification indicate the ordering of the
-columns, such that the first column listed in a table description is "Column0", the second is "Column1",
-etc. For object tables created using the CreateTable method, the UID column SHALL be Column
-Number 0, the first column defined in the Columns parameter of CreateTable SHALL be Column
-Number 1, etc.
-
-Table 47 ACE_columns
-
-
-UID
-
-Name
-
-Format
-
-
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 1A 03
-
-ACE_columns
-
-Set_Type,
-0,
-*
-
-
-
-
-
-5.1.3.3 ACE_expression
-
-This is an alternative type where the options are either a uidref to an Authority object or one of the
-boolean_ACE (AND = 0 and OR = 1) options. This type is used within the AC_element list to form a
-postfix Boolean expression of Authorities.
-
-Table 48 ACE_expression
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 06 01
-
-ACE_expression
-
-Alternative_Type,
-
-Authority_object_ref,
-boolean_ACE
-
-
-
-
-
-5.1.3.4 ACE_object_ref
-
-This type describes a uidref to an object contained in the ACE table.
-
-Table 49 ACE_object_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 04
-
-ACE_object_ref
-
-Restricted_Reference_Type{6},
-uidref{ACETableUID}
-
-
-
-
-
-5.1.3.5 ACL
-
-The ACL type is a list of uidrefs to ACE objects. The length of the list, and therefore the number of
-ACEs that MAY be included in a single Access Control List, is SSC/implementation dependant.
-
-Table 50 ACL
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 08 02
-
-ACL
-
-List_Type,
-*,
-ACE_object_ref
-
-
-
-
-
-5.1.3.6 adv_key_mode
-
-This enumeration type defines the behavior of the NextKey column.
-
-Table 51 adv_key_mode
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 0F
-
-adv_key_mode
-
-Enumeration_Type,
-0,
-7
-
-
-
-
-
-The enumeration values are associated with key behaviors as defined in Table 52.
-
-
-Table 52 adv_key_mode Enumeration Values
-
-
-Enumeration Value
-
-Behavior
-
-0
-
-Wait for AdvKey_Req
-
-1
-
-Auto-advance keys
-
-2-7
-
-Reserved
-
-
-
-
-
-5.1.3.7 attr_flags
-
-This set type describes the types of attributes available for the AttributeFlags column of the Column
-table.
-
-Table 53 attr_flags
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 1A 04
-
-attr_flags
-
-Set_Type,
-0,
-31
-
-
-
-
-
-The set values are associated with column behaviors as defined in Table 54.
-
-Table 54 attr_flags Set Values
-
-
-Set Value
-
-Behavior
-
-0
-
-Get Not Permitted
-
-1
-
-Set Not Permitted
-
-2-31
-
-Reserved
-
-
-
-
-
-5.1.3.8 auth_method
-
-This enumeration type is used to represent the authentication methods that MAY be used to
-authenticate authorities (see 5.3.4.1.3).
-
-Table 55 auth_method
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 08
-
-auth_method
-
-Enumeration_Type,
-0,
-23
-
-
-
-
-
-The enumeration values are associated with authentication methods as defined in Table 56.
-
-Table 56 auth_method Enumeration Values
-
-
-Enumeration Value
-
-Authentication Method
-
-0
-
-None
-
-1
-
-Password
-
-2
-
-Exchange
-
-3
-
-Sign
-
-
-
-
-Enumeration Value
-
-Authentication Method
-
-4
-
-SymK
-
-5
-
-HMAC
-
-6
-
-TPerSign
-
-7
-
-TPerExchange
-
-8-23
-
-Reserved
-
-
-
-5.1.3.9 Authority_object_ref
-
-The Authority_object_ref type describes a uidref to an object in the Authority table.
-
-Table 57 Authority_object_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 05
-
-Authority_object_ref
-
-Restricted_Reference_Type{6},
-uidref {AuthorityTableUID}
-
-
-
-
-
-5.1.3.10 boolean
-
-The boolean column type is an enumeration used to represent True or False.
-
-Table 58 boolean
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 01
-
-boolean
-
-Enumeration_Type,
-0,
-1
-
-
-
-
-
-The enumeration values are associated as defined in Table 59.
-
-Table 59 boolean Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-False
-
-1
-
-True
-
-
-
-
-
-5.1.3.11 boolean_ACE
-
-This enumeration is used to identify the Boolean operators "And", "Or", and "Not".
-
-Table 60 boolean_ACE
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 0E
-
-boolean_ACE
-
-Enumeration_Type,
-0,
-2
-
-
-
-
-
-The enumeration values are associated with Boolean operators as defined in Table 61.
-
-
-Table 61 boolean_ACE Enumeration Values
-
-
-Enumeration Value
-
-Operator
-
-0
-
-And
-
-1
-
-Or
-
-2
-
-Not
-
-
-
-
-
-5.1.3.12 byte_row_ref
-
-Type used for referencing a row in a byte table.
-
-Table 62 byte_row_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0F 01
-
-byte_row_ref
-
-General_Reference_Type {7}
-
-
-
-
-
-5.1.3.13 byte_table_ref
-
-This is a reference type that SHALL be used specifically for uidrefs to byte tables. When performing
-type checking, as part of that type checking the TPer SHALL validate that this uidref is to a table that is
-a byte table.
-
-Table 63 byte_table_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 10 01
-
-byte_table_ref
-
-General_Reference_Table_Type,
-2
-
-
-
-
-
-5.1.3.14 bytes
-
-This type represents the bytes base type, and is used to represent a value made up of a fixed-size
-sequence of bytes.
-
-Table 64 bytes
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 00 02
-
-bytes
-
-Base_Type
-
-
-
-
-
-5.1.3.15 bytes_4
-
-This is a bytes type with a size requirement of 4.
-
-Table 65 bytes_4
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 38
-
-bytes_4
-
-Simple_Type,
-
-bytes,
-
-4
-
-
-
-
-
-
-5.1.3.16 bytes_12
-
-This is a bytes type with a size requirement of 12.
-
-Table 66 bytes_12
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 01
-
-bytes_12
-
-Simple_Type,
-
-bytes,
-
-12
-
-
-
-
-
-5.1.3.17 bytes_16
-
-This is a bytes type with a size requirement of 16.
-
-Table 67 bytes_16
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 02
-
-bytes_16
-
-Simple_Type,
-
-bytes,
-
-16
-
-
-
-
-
-5.1.3.18 bytes_20
-
-This is a bytes type with a size requirement of 20.
-
-Table 68 bytes_20
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 36
-
-bytes_20
-
-Simple_Type,
-
-bytes,
-
-20
-
-
-
-
-
-5.1.3.19 bytes_32
-
-This is a bytes type with a size requirement of 32.
-
-Table 69 bytes_32
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 05
-
-bytes_32
-
-Simple_Type,
-
-bytes,
-
-32
-
-
-
-
-
-5.1.3.20 bytes_48
-
-This is a bytes type with a size requirement of 48.
-
-Table 70 bytes_48
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 37
-
-bytes_48
-
-Simple_Type,
-
-bytes,
-
-48
-
-
-
-
-Simple_Type,
-
-bytes,
-
-64
-Restricted_Reference_Type{6},
-uidref {CertificatesTableUID}
 Enumeration_Type,
 0,
 3
-
-
-
-5.1.3.21 bytes_64
-
-This is a bytes type with a size requirement of 64.
-
-Table 71 bytes_64
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 06
-
-bytes_64
-
-
-
-
 
 5.1.3.22 Certificates_object_ref
 
 The Certificates_object_ref type describes a uidref to an object in the Certificates table.
 
-Table 72 Certificates_object _ref
+Table 72 Certificates_object_ref
 
 
 UID
@@ -1175,6 +473,8 @@ Format
 
 Certificates_object_ref
 
+Restricted_Reference_Type{6},
+uidref {CertificatesTableUID}
 
 
 
@@ -1266,9 +566,8 @@ Month,
 Day,
 Hour,
 Minute,
-
 Seconds,
-Fractoin
+Fraction
 
 
 
@@ -3941,18 +3240,92 @@ data Env = Env { core           :: Core
                , implementation :: Implementation
                , ssc            :: SSC
                }
+    deriving (Show, Eq, Read)
 
 data Core = Core
+    deriving (Show, Eq, Read)
 
-data Implementation = Implementation { __AC_elementSize :: Int }
+data Implementation = Implementation { __AC_elementSize :: Int
+                                     , __max_columns    :: Int
+                                     }
+    deriving (Show, Eq, Read)
+
+data SSC = SSC { __AC_elementMinSize :: Maybe Int
+               , __min_max_columns   :: Maybe Int
+               }
+    deriving (Show, Eq, Read)
+
+\end{code}
+
+5.1.3 Column Types
+
+This section describes each of the column types in the Template Reference sections of the Core
+Specification. The UID, Name, and Format columns identify the column values of the Type table. These
+values SHALL comprise the Type table for every SP, prior to any personalization. These types SHALL
+NOT be able to be changed or deleted by the host.
+
+Included in this section are descriptions of the column types for each column of each table defined in
+this specification, as well as descriptions of each of the component types of the column types.
+Component types are types that have entries in the Type table, but are not referenced directly as
+column types. They are used to make up other types that do represent column types.
+
+The UID column in the description table in each section SHALL be the UID for that type.
+
+The Name column specifies the name for that type.
+
+The Format column identifies the structure of the associated type. The first value in the Format column
+is the name of that type's Format code. Additional values listed in the column are determined by the
+type's format code. For readability, the names of Type objects are used in place of their UID, and
+commas are used to separate values.
+
+An asterisk (*) in any of the descriptive tables indicates SSC-specific or implementation-specific values.
+\begin{code}
+
+\end{code}
+5.1.3.1 AC_element
+
+An AC_element is a list type made up of ACE_expressions. The size of the AC_element list is
+implementation-dependant. A minimum size restriction MAY be defined by an SSC.
 
 
-data SSC = SSC { __AC_elementMinSize :: Maybe Int }
 
-data Core_ACE_expression = Core_ACE_expression
++---------------------------------------------------------------+
+|                      Table 46 AC_element                      |
++------------------------+----------+---------------------------+
+|UID                     |Name      |Format                     |
++------------------------+----------+---------------------------+
+|00 00 00 05 00 00 08 01 |AC_element|List_Type,                 |
+|                        |          |*,                         |
+|                        |          |ACE_expression             |
++------------------------+----------+---------------------------+
+
+
+
+\begin{code}
 
 newtype Core_AC_element = Core_AC_element [Core_ACE_expression]
 
+uCore_AC_element' :: UID
+uCore_AC_element' = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01
+
+
+columnTypeNames :: [String]
+columnTypeNames =
+    [
+        "AC_element"
+    ]
+
+columnTypeUIDs :: [UID]
+columnTypeUIDs =
+    [
+        uCore_AC_element'
+    ]
+
+columnTypeName' :: Map UID String
+columnTypeName' = fromList $ zip columnTypeUIDs columnTypeNames
+
+columnTypeUID'  :: Map String UID
+columnTypeUID'  = fromList $ zip columnTypeNames columnTypeUIDs
 
 _AC_elementSize :: TPer Int
 _AC_elementSize = __AC_elementSize <$> asks implementation
@@ -3960,27 +3333,767 @@ _AC_elementSize = __AC_elementSize <$> asks implementation
 _AC_elementMinSize :: TPer (Maybe Int)
 _AC_elementMinSize = __AC_elementMinSize <$> asks ssc
 
+\end{code}
+5.1.3.2 ACE_columns
 
+This Set type identifies the columns to which an ACE applies. The values are: 0=Column0,
+1=Column1, 2=Column2, etc. Each value in the set maps to a "Column Number". The size of the set is
+SSC/implementation dependant based on the maximum number of columns allowed in a table. For
+tables created from templates, the table descriptions in this specification indicate the ordering of the
+columns, such that the first column listed in a table description is "Column0", the second is "Column1",
+etc. For object tables created using the CreateTable method, the UID column SHALL be Column
+Number 0, the first column defined in the Columns parameter of CreateTable SHALL be Column
+Number 1, etc.
+
+    +------------------------------------------------+
+    |              Table 47 ACE_columns              |
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 1A 03|ACE_columns|Set_Type,   |
+    |                       |           |0,          |
+    |                       |           |*           |
+    +-----------------------+-----------+------------+
+
+\begin{code}
+
+
+newtype Core_ACE_columns = Core_ACE_columns (Set Int)
+
+_ACE_columnsSetSize :: TPer Int
+_ACE_columnsSetSize = max_columns
+
+\end{code}
+5.1.3.3 ACE_expression
+
+This is an alternative type where the options are either a uidref to an Authority object or one of the
+boolean_ACE (AND = 0 and OR = 1) options. This type is used within the AC_element list to form a
+postfix Boolean expression of Authorities.
+
+    +------------------------------------------------------------+
+    |                  Table 48 ACE_expression                   |
+    +-----------------------+--------------+---------------------+
+    |UID                    |Name          |Format               |
+    +-----------------------+--------------+---------------------+
+    |00 00 00 05 00 00 06 01|ACE_expression|Alternative_Type,    |
+    |                       |              |Authority_object_ref,|
+    |                       |              |boolean_ACE          |
+    +-----------------------+--------------+---------------------+
+
+\begin{code}
+
+data Core_ACE_expression = Core_ACE_expression_Authority_object_ref Core_Authority_object_ref
+                         | Core_ACE_expression_boolean_ACE          Core_boolean_ACE
+
+_ACE_expressionSetSize :: TPer Int
+_ACE_expressionSetSize = max_columns
+
+\end{code}
+5.1.3.4 ACE_object_ref
+
+This type describes a uidref to an object contained in the ACE table.
+
+    +--------------------------------------------------------------------+
+    |                      Table 49 ACE_object_ref                       |
+    +-----------------------+--------------+-----------------------------+
+    |UID                    |Name          |Format                       |
+    +-----------------------+--------------+-----------------------------+
+    |00 00 00 05 00 00 0C 04|ACE_object_ref|Restricted_Reference_Type{6},|
+    |                       |              |uidref{ACETableUID}          |
+    +-----------------------+--------------+-----------------------------+
+
+\begin{code}
+
+
+-- FIXME -- type level prgramming
+
+
+newtype Core_ACE_object_ref = Core_ACE_object_ref (Core_uidref ->
+                                                   Maybe Core_Restricted_Reference_Type_Object)
+mkCore_ACE_object_ref ::
+    Core_uidref
+ -> Maybe Core_Restricted_Reference_Type_Object
+mkCore_ACE_object_ref = mkCore_Restricted_object_ref_To uACETable
+
+\end{code}
+5.1.3.5 ACL
+
+The ACL type is a list of uidrefs to ACE objects. The length of the list, and therefore the number of
+ACEs that MAY be included in a single Access Control List, is SSC/implementation dependant.
+
+
+    +--------------------------------------------+
+    |                Table 50 ACL                |
+    +-----------------------+-----+--------------+
+    |UID                    |Name |Format        |
+    +-----------------------+-----+--------------+
+    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |
+    |                       |     |*,            |
+    |                       |     |ACE_object_ref|
+    +-----------------------+-----+--------------+
+
+\begin{code}
+
+data Core_ACL = Core_ACL [Core_ACE_object_ref]
+
+
+-- FIXME -- length check?
+
+\end{code}
+5.1.3.6 adv_key_mode
+
+This enumeration type defines the behavior of the NextKey column.
+
+    +------------------------------------------------------+
+    |                Table 51 adv_key_mode                 |
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |7                |
+    +-----------------------+------------+-----------------+
+
+The enumeration values are associated with key behaviors as defined in Table 52.
+
+
+    +----------------------------------------+
+    |Table 52 adv_key_mode Enumeration Values|
+    +------------------+---------------------+
+    |Enumeration Value |Behavior             |
+    +------------------+---------------------+
+    |0                 |Wait for AdvKey_Req  |
+    +------------------+---------------------+
+    |1                 |Auto-advance keys    |
+    +------------------+---------------------+
+    |2-7               |Reserved             |
+    +------------------+---------------------+
+
+
+\begin{code}
+
+data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
+                       | Core_adv_key_mode_Auto_advance_keys
+                       | Core_adv_key_mode_Reserved_2
+                       | Core_adv_key_mode_Reserved_3
+                       | Core_adv_key_mode_Reserved_4
+                       | Core_adv_key_mode_Reserved_5
+                       | Core_adv_key_mode_Reserved_6
+                       | Core_adv_key_mode_Reserved_7
+    deriving(Enum,Eq,Ord,Show)
+
+
+\end{code}
+5.1.3.7 attr_flags
+
+This set type describes the types of attributes available for the AttributeFlags column of the Column
+table.
+
+    +--------------------------------------------+
+    |            Table 53 attr_flags             |
+    +-----------------------+----------+---------+
+    |UID                    |Name      |Format   |
+    +-----------------------+----------+---------+
+    |00 00 00 05 00 00 1A 04|attr_flags|Set_Type,|
+    |                       |          |0,       |
+    |                       |          |31       |
+    +-----------------------+----------+---------+
+
+The set values are associated with column behaviors as defined in Table 54.
+
+    +----------------------------------------+
+    |     Table 54 attr_flags Set Values     |
+    +------------------+---------------------+
+    |Set Value         |Behavior             |
+    +------------------+---------------------+
+    |0                 |Get Not Permitted    |
+    +------------------+---------------------+
+    |1                 |Set Not Permitted    |
+    +------------------+---------------------+
+    |2-31              |Reserved             |
+    +------------------+---------------------+
+
+
+\begin{code}
+
+data Core_attr_flags = Core_attr_flags (Set Core_attr_flags_Set_Values)
+    deriving(Eq,Ord,Show)
+data Core_attr_flags_Set_Values = Core_attr_flags_Set_Values_Get_Not_Permitted
+                                | Core_attr_flags_Set_Values_Set_Not_Permitted
+                                | Core_attr_flags_Set_Values_Reserved_02
+                                | Core_attr_flags_Set_Values_Reserved_03
+                                | Core_attr_flags_Set_Values_Reserved_04
+                                | Core_attr_flags_Set_Values_Reserved_05
+                                | Core_attr_flags_Set_Values_Reserved_06
+                                | Core_attr_flags_Set_Values_Reserved_07
+                                | Core_attr_flags_Set_Values_Reserved_08
+                                | Core_attr_flags_Set_Values_Reserved_09
+                                | Core_attr_flags_Set_Values_Reserved_10
+                                | Core_attr_flags_Set_Values_Reserved_11
+                                | Core_attr_flags_Set_Values_Reserved_12
+                                | Core_attr_flags_Set_Values_Reserved_13
+                                | Core_attr_flags_Set_Values_Reserved_14
+                                | Core_attr_flags_Set_Values_Reserved_15
+                                | Core_attr_flags_Set_Values_Reserved_16
+                                | Core_attr_flags_Set_Values_Reserved_17
+                                | Core_attr_flags_Set_Values_Reserved_18
+                                | Core_attr_flags_Set_Values_Reserved_19
+                                | Core_attr_flags_Set_Values_Reserved_20
+                                | Core_attr_flags_Set_Values_Reserved_21
+                                | Core_attr_flags_Set_Values_Reserved_22
+                                | Core_attr_flags_Set_Values_Reserved_23
+                                | Core_attr_flags_Set_Values_Reserved_24
+                                | Core_attr_flags_Set_Values_Reserved_25
+                                | Core_attr_flags_Set_Values_Reserved_26
+                                | Core_attr_flags_Set_Values_Reserved_27
+                                | Core_attr_flags_Set_Values_Reserved_28
+                                | Core_attr_flags_Set_Values_Reserved_29
+                                | Core_attr_flags_Set_Values_Reserved_30
+                                | Core_attr_flags_Set_Values_Reserved_31
+    deriving(Enum,Eq,Ord,Show)
+
+
+\end{code}
+5.1.3.8 auth_method
+
+This enumeration type is used to represent the authentication methods that MAY be used to
+authenticate authorities (see 5.3.4.1.3).
+
+
+    +------------------------------------------------------+
+    |                 Table 55 auth_method                 |
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 08|auth_method |Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |23               |
+    +-----------------------+------------+-----------------+
+
+The enumeration values are associated with authentication methods as defined in Table 56.
+
+
+
+    +----------------------------------------+
+    |Table 56 auth_method Enumeration Values |
+    +------------------+---------------------+
+    |Enumeration Value |Authentication Method|
+    +------------------+---------------------+
+    |0                 |None                 |
+    +------------------+---------------------+
+    |1                 |Password             |
+    +------------------+---------------------+
+    |2                 |Exchange             |
+    +------------------+---------------------+
+    |3                 |Sign                 |
+    +------------------+---------------------+
+    |4                 |SymK                 |
+    +------------------+---------------------+
+    |5                 |HMAC                 |
+    +------------------+---------------------+
+    |6                 |TPerSign             |
+    +------------------+---------------------+
+    |7                 |TPerExchange         |
+    +------------------+---------------------+
+    |8-23              |Reserved             |
+    +------------------+---------------------+
+
+
+\begin{code}
+
+data Core_auth_method = Core_auth_method_None
+                      | Core_auth_method_Password
+                      | Core_auth_method_Exchange
+                      | Core_auth_method_Sign
+                      | Core_auth_method_SymK
+                      | Core_auth_method_HMAC
+                      | Core_auth_method_TperSign
+                      | Core_auth_method_TPerExchange
+                      | Core_auth_method_Reserved_8
+                      | Core_auth_method_Reserved_9
+                      | Core_auth_method_Reserved_10
+                      | Core_auth_method_Reserved_11
+                      | Core_auth_method_Reserved_12
+                      | Core_auth_method_Reserved_13
+                      | Core_auth_method_Reserved_14
+                      | Core_auth_method_Reserved_15
+                      | Core_auth_method_Reserved_16
+                      | Core_auth_method_Reserved_17
+                      | Core_auth_method_Reserved_18
+                      | Core_auth_method_Reserved_19
+                      | Core_auth_method_Reserved_20
+                      | Core_auth_method_Reserved_21
+                      | Core_auth_method_Reserved_22
+                      | Core_auth_method_Reserved_23
+    deriving(Enum,Eq,Ord,Show)
+
+
+\end{code}
+
+5.1.3.9 Authority_object_ref
+
+The Authority_object_ref type describes a uidref to an object in the Authority table.
+
+    +--------------------------------------------------------------------------+
+    |                   Table 57 Authority_object_ref                          |
+    +-----------------------+--------------------+-----------------------------+
+    |UID                    |Name                |Format                       |
+    +-----------------------+--------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 05|Authority_object_ref|Restricted_Reference_Type{6},|
+    |                       |                    |uidref{AuthorityTableUID}    |
+    +-----------------------+--------------------+-----------------------------+
+
+\begin{code}
+
+
+-- FIXME -- type level prgramming
+
+
+newtype Core_Authority_object_ref =
+    Core_Authority_object_ref (Core_uidref
+                              -> Maybe Core_Restricted_Reference_Type_Object)
+
+mkCore_Authority_object_ref ::
+    Core_uidref
+ -> Maybe Core_Restricted_Reference_Type_Object
+mkCore_Authority_object_ref = mkCore_Restricted_object_ref_To uAuthorityTable
+
+\end{code}
+
+
+
+5.1.3.10 boolean
+The boolean column type is an enumeration used to represent True or False.
+
+
+    +------------------------------------------------------+
+    |                   Table 58 boolean                   |
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 01|boolean     |Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |1                |
+    +-----------------------+------------+-----------------+
+
+The enumeration values are associated as defined in Table 59.
+
+
+
+    +------------------------------------+
+    |Table 59 boolean Enumeration Values |
+    +------------------+-----------------+
+    |Enumeration Value |Associated Value |
+    +------------------+-----------------+
+    |0                 |False            |
+    +------------------+-----------------+
+    |1                 |True             |
+    +------------------+-----------------+
+
+
+
+\begin{code}
+
+type Core_boolean = Bool
+
+\end{code}
+
+
+5.1.3.11 boolean_ACE
+
+This enumeration is used to identify the Boolean operators "And", "Or", and "Not".
+
+
+    +------------------------------------------------------+
+    |                 Table 60 boolean_ACE                 |
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 0E|boolean_ACE |Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |2                |
+    +-----------------------+------------+-----------------+
+
+The enumeration values are associated with Boolean operators as defined in Table 61.
+
+    +----------------------------------------+
+    |Table 61 boolean_ACE Enumeration Values |
+    +------------------+---------------------+
+    |Enumeration Value |Associated Value     |
+    +------------------+---------------------+
+    |0                 |And                  |
+    +------------------+---------------------+
+    |1                 |Or                   |
+    +------------------+---------------------+
+    |2                 |Not                  |
+    +------------------+---------------------+
+
+
+
+\begin{code}
+
+data Core_boolean_ACE = And | Or | Not
+    deriving (Show, Enum, Eq, Read)
+
+\end{code}
+
+
+5.1.3.12 byte_row_ref
+
+Type used for referencing a row in a byte table.
+
+    +-----------------------------------------------------------------+
+    |                      Table 62 byte_row_ref                      |
+    +-----------------------+-------------+---------------------------+
+    |UID                    |Name         |Format                     |
+    +-----------------------+-------------+---------------------------+
+    |00 00 00 05 00 00 0F 01|byte-row-ref |General_Reference_Type {7} |
+    +-----------------------+-------------+---------------------------+
+
+
+\begin{code}
+
+type Core_byte_row_ref = Core_General_Reference_Type_Byte_Row
+
+\end{code}
+5.1.3.13 byte_table_ref
+
+This is a reference type that SHALL be used specifically for uidrefs to byte tables. When performing
+type checking, as part of that type checking the TPer SHALL validate that this uidref is to a table that is
+a byte table.
+
+    +-------------------------------------------------------------------+
+    |                     Table 63 byte_table_ref                       |
+    +-----------------------+--------------+----------------------------+
+    |UID                    |Name          |Format                      |
+    +-----------------------+--------------+----------------------------+
+    |00 00 00 05 00 00 10 01|byte-table-ref|General_Reference_Table_Type|
+    |                       |              |2                           |
+    +-----------------------+--------------+----------------------------+
+
+
+\begin{code}
+
+type Core_byte_table_ref = 'General_Reference_Table_Type_Byte
+
+\end{code}
+
+
+5.1.3.14 bytes
+
+This type represents the bytes base type, and is used to represent a value made up of a fixed-size
+sequence of bytes.
+
+    +-----------------------------------------+
+    |             Table 64 bytes              |
+    +-----------------------+------+----------+
+    |UID                    |Name  |Format    |
+    +-----------------------+------+----------+
+    |00 00 00 05 00 00 00 02|bytes |Base_Type |
+    +-----------------------+------+----------+
+
+
+\begin{code}
+
+newtype Core_bytes n = Core_bytes (Fixed_bytes n)
+    deriving (Eq,Ord,IsString)
+instance (KnownNat n) => Show (Core_bytes n) where
+    show (Core_bytes bs) = show bs
+
+\end{code}
+
+
+5.1.3.15 bytes_4
+
+This is a bytes type with a size requirement of 4.
+
+    +-----------------------------------------------------+
+    |             Table 65 bytes_4                        |
+    +-----------------------+-------+---------------------+
+    |UID                    |Name   |Format               |
+    +-----------------------+-------+---------------------+
+    |00 00 00 05 00 00 02 38|bytes_4|Simple_Type,         |
+    |                       |       |bytes,               |
+    |                       |       |4                    |
+    +-----------------------+-------+---------------------+
+
+\begin{code}
+
+type Core_bytes_4 = Core_bytes 4
+
+\end{code}
+
+
+5.1.3.16 bytes_12
+
+This is a bytes type with a size requirement of 12.
+
+    +------------------------------------------------------+
+    |                  Table 66 bytes_12                   |
+    +-----------------------+--------+---------------------+
+    |UID                    |Name    |Format               |
+    +-----------------------+--------+---------------------+
+    |00 00 00 05 00 00 02 01|bytes_12|Simple_Type,         |
+    |                       |        |bytes,               |
+    |                       |        |12                   |
+    +-----------------------+--------+---------------------+
+
+\begin{code}
+
+type Core_bytes_12 = Core_bytes 12
+
+\end{code}
+
+
+5.1.3.17 bytes_16
+
+This is a bytes type with a size requirement of 16.
+
+    +------------------------------------------------------+
+    |                  Table 67 bytes_16                   |
+    +-----------------------+--------+---------------------+
+    |UID                    |Name    |Format               |
+    +-----------------------+--------+---------------------+
+    |00 00 00 05 00 00 02 02|bytes_16|Simple_Type,         |
+    |                       |        |bytes,               |
+    |                       |        |16                   |
+    +-----------------------+--------+---------------------+
+
+\begin{code}
+
+type Core_bytes_16 = Core_bytes 16
+
+\end{code}
+
+
+5.1.3.18 bytes_20
+
+This is a bytes type with a size requirement of 20.
+
+    +------------------------------------------------------+
+    |                  Table 68 bytes_20                   |
+    +-----------------------+--------+---------------------+
+    |UID                    |Name    |Format               |
+    +-----------------------+--------+---------------------+
+    |00 00 00 05 00 00 02 36|bytes_20|Simple_Type,         |
+    |                       |        |bytes,               |
+    |                       |        |20                   |
+    +-----------------------+--------+---------------------+
+
+\begin{code}
+
+type Core_bytes_20 = Core_bytes 20
+
+\end{code}
+
+
+
+5.1.3.19 bytes_32
+
+This is a bytes type with a size requirement of 32.
+
+    +------------------------------------------------------+
+    |                  Table 69 bytes_32                   |
+    +-----------------------+--------+---------------------+
+    |UID                    |Name    |Format               |
+    +-----------------------+--------+---------------------+
+    |00 00 00 05 00 00 02 05|bytes_32|Simple_Type,         |
+    |                       |        |bytes,               |
+    |                       |        |32                   |
+    +-----------------------+--------+---------------------+
+
+\begin{code}
+
+type Core_bytes_32 = Core_bytes 32
+
+\end{code}
+
+
+5.1.3.20 bytes_48
+
+This is a bytes type with a size requirement of 48.
+
+    +------------------------------------------------------+
+    |                  Table 70 bytes_48                   |
+    +-----------------------+--------+---------------------+
+    |UID                    |Name    |Format               |
+    +-----------------------+--------+---------------------+
+    |00 00 00 05 00 00 02 37|bytes_48|Simple_Type,         |
+    |                       |        |bytes,               |
+    |                       |        |48                   |
+    +-----------------------+--------+---------------------+
+
+\begin{code}
+
+type Core_bytes_48 = Core_bytes 48
+
+\end{code}
+
+
+
+
+5.1.3.21 bytes_64
+
+This is a bytes type with a size requirement of 64.
+
+    +------------------------------------------------------+
+    |                  Table 71 bytes_64                   |
+    +-----------------------+--------+---------------------+
+    |UID                    |Name    |Format               |
+    +-----------------------+--------+---------------------+
+    |00 00 00 05 00 00 02 06|bytes_64|Simple_Type,         |
+    |                       |        |bytes,               |
+    |                       |        |64                   |
+    +-----------------------+--------+---------------------+
+
+\begin{code}
+
+type Core_bytes_64 = Core_bytes 64
+
+\end{code}
+
+5.1.3.22 Certificates_object_ref
+
+The Certificates_object_ref type describes a uidref to an object in the Certificates table.
+
+    +-----------------------------------------------------------------------------+
+    |                      Table 72 Certificates_object_ref                       |
+    +-----------------------+-----------------------+-----------------------------+
+    |UID                    |Name                   |Format                       |
+    +-----------------------+-----------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 06|Certificates_object_ref|Restricted_Reference_Type{6},|
+    |                       |                       |uidref{CertificatesTableUID} |
+    +-----------------------+-----------------------+-----------------------------+
+
+\begin{code}
+
+
+-- FIXME -- type level prgramming
+
+
+newtype Core_Certificates_object_ref =
+    Core_Certificates_object_ref (Core_uidref
+                              -> Maybe Core_Restricted_Reference_Type_Object)
+
+mkCore_Certificates_object_ref ::
+    Core_uidref
+ -> Maybe Core_Restricted_Reference_Type_Object
+mkCore_Certificates_object_ref = mkCore_Restricted_object_ref_To uCertificatesTable
+
+\end{code}
+
+
+
+
+\begin{code}
+
+
+
+\end{code}
+
+
+
+
+
+
+\begin{code}
+
+
+
+type Core_uidref               = UID
 
 
 
 implementationDependant_AC_elementSize :: Int
 implementationDependant_AC_elementSize = 32
 
-i :: Implementation
-i = Implementation { __AC_elementSize = implementationDependant_AC_elementSize }
+implementationDependant_max_columns :: Int
+implementationDependant_max_columns = 32
+
+imp' :: Implementation
+imp' = Implementation { __AC_elementSize =
+                         implementationDependant_AC_elementSize
+                      , __max_columns =
+                         implementationDependant_max_columns
+                      }
 
 ssc_AC_elementMinSize :: Maybe Int
 ssc_AC_elementMinSize = Just 23 -- Opal.  Or, Nothing would work.
 
-s :: SSC
-s = SSC { __AC_elementMinSize = ssc_AC_elementMinSize }
+ssc_min_max_columns :: Maybe Int
+ssc_min_max_columns = Nothing -- Opal doesn't have CreateTable, so ...
 
-c :: Core
-c = Core
+_max_columns :: TPer Int
+_max_columns = __max_columns <$> asks implementation
+
+_min_max_columns :: TPer (Maybe Int)
+_min_max_columns = __min_max_columns <$> asks ssc
+
+
+
+ssc' :: SSC
+ssc' = SSC { __AC_elementMinSize = ssc_AC_elementMinSize
+           , __min_max_columns   = ssc_min_max_columns
+           }
+
+
+
+
+core' :: Core
+core' = Core
+
+
+
+
+newtype Core_General_Reference_Type_Byte_Row =
+        Core_General_Reference_Type_Byte_Row Natural -- FIXME?  Core_something?
+
+newtype Core_General_Reference_Type_Object =
+        Core_General_Reference_Type_Object Core_uidref
+
+mkCore_General_object_ref :: Core_uidref -> Maybe Core_General_Reference_Type_Object
+mkCore_General_object_ref objectUID =
+    Just $ Core_General_Reference_Type_Object objectUID
+
+data Core_table_kind = ByteTable | ObjectTable
+
+-- GADT for references to tables
+data General_Reference_Table_Type (a::Core_table_kind) c where
+  General_Reference_Table_Type_Byte   :: Core_uidref -> General_Reference_Table_Type 'ByteTable   Core_uidref
+  General_Reference_Table_Type_Object :: Core_uidref -> General_Reference_Table_Type 'ObjectTable Core_uidref
+
+
+---    deriving (Eq, Show, Ord)
+
+
+type Core_Reference_UID_List = Set UID
+
+data Core_Restricted_Reference_Type_Object =
+     Core_Restricted_Reference_Type_Object Core_Reference_UID_List Core_uidref
+
+mkCore_Restricted_object_ref ::
+    Core_Reference_UID_List
+ -> Core_uidref
+ -> Maybe Core_Restricted_Reference_Type_Object
+mkCore_Restricted_object_ref tableUIDs objectUID
+    | uidUpper objectUID `elem` map uidLower tableUIDs =
+          Just $ Core_Restricted_Reference_Type_Object tableUIDs objectUID
+    | otherwise =
+          Nothing
+
+mkCore_Restricted_object_ref_To ::
+    Core_uidref
+ -> Core_uidref
+ -> Maybe Core_Restricted_Reference_Type_Object
+mkCore_Restricted_object_ref_To tableUID = mkCore_Restricted_object_ref [tableUID]
+
+
+
 
 env :: Env
-env = Env c i s
+env = Env core' imp' ssc'
+
+
 
 
 valid :: TPer Bool
@@ -4000,6 +4113,11 @@ _AC_elementSizeValid = do
           size <- _AC_elementSize
           pure $ minSize <= size
       Nothing -> pure False
+
+max_columns :: TPer Int
+max_columns = do
+    maxColumns <- _max_columns
+    _min_max_columns >>= (pure . (min maxColumns) . (maybe 0 id))
 
 
 

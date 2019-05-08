@@ -91,21 +91,21 @@ uC_PINCharSetUnrestrictedUID = uid  0x00 0x00 0x00 0x00B  0x00 0x00 0x00 0x01
 
 \begin{code}
 uProperties          :: UID
-uProperties                  = uSMMethodUID 01
+uProperties                  = uSMMethodUID 0x01
 
 uStartSession        :: UID
-uStartSession                = uSMMethodUID 02
+uStartSession                = uSMMethodUID 0x02
 
 uSyncSession         :: UID
-uSyncSession                 = uSMMethodUID 03
+uSyncSession                 = uSMMethodUID 0x03
 
 uStartTrustedSession :: UID
-uStartTrustedSession         = uSMMethodUID 04
+uStartTrustedSession         = uSMMethodUID 0x04
 
 uSyncTrustedSession  :: UID
-uSyncTrustedSession          = uSMMethodUID 05
+uSyncTrustedSession          = uSMMethodUID 0x05
 
 uCloseSession        :: UID
-uCloseSession                = uSMMethodUID 06
+uCloseSession                = uSMMethodUID 0x06
 \end{code}
 \end{document}

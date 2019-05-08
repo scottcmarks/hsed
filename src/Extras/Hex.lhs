@@ -6,7 +6,7 @@ Define hex input and output functions
 
 \begin{code}
 {-|
-Module      : System.SED.Common.Hex
+Module      : Extras.Hex
 Description : hex input and output of bytes
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -21,7 +21,7 @@ Hex encode/decoding.
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module System.SED.Common.Hex
+module Extras.Hex
 where
 
 
@@ -33,7 +33,7 @@ import Data.ByteString                 as B (pack, unpack)
 import qualified Data.ByteString.Char8 as C (unpack)
 
 
-import System.SED.Common.Integral
+import Extras.Integral
 
 
 hexDigit :: Word8 -> Char

@@ -24,11 +24,11 @@ data Token = Datum | Sequence | Control | Empty
 
 ---- parse(Token) ---
 
-data NamedValue = NamedValue Name Value -- StartName >> Name Value << EndName
+data NamedValue = NamedValue Name Value -- StartName *> Name Value <* EndName
 
 newtype Name = Final
 
-data List = [Value] -- StartList >> many Value << EndList
+data List = [Value] -- StartList *> many Value <* EndList
 
 data Value = Final | NamedValue | List
 

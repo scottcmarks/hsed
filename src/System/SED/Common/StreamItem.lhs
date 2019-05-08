@@ -65,23 +65,6 @@ class StreamItem a where
     typeIsa :: a -> a
     typeIsa = id
 
-    typeIsMaybea :: Maybe a -> Maybe a
-    typeIsMaybea = id
-
-    maybeGenerate :: Maybe a -> Maybe ByteString
-    maybeGenerate = (fmap generate)
-
---     hex :: a -> String
---     hex     = (hex :: ByteString -> String) . generate
-
---     fromHex' :: String -> Maybe a
---     fromHex' = (>>= maybeParse) . (fromHex :: String -> Maybe ByteString)
-
--- _hex' :: (StreamItem a) => a -> String
--- _hex' = hex . generate
-
--- _fromHex' :: (StreamItem a) => String -> Maybe a
--- _fromHex' =  (>>= maybeParse) . fromHex
 
 require :: (StreamItem a, Show a, Eq a) => a -> Parser a
 require t = parser >>= onlyt

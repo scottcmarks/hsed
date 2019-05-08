@@ -20,6 +20,7 @@ Table
 
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module System.SED.Common.Table where
 
@@ -188,15 +189,11 @@ The TPer is not required to keep rows of the table sorted by these unique values
 
 \begin{code}
 
-newtype TableName    = TableName ByteString
-    deriving (Eq, Show)
-instance IsString TableName where
-    fromString = TableName . fromString
+newtype TableName    = TableName    ByteString deriving (Eq, IsString)
+instance Show TableName where show (TableName bs) = show bs
 
-newtype TemplateName = TemplateName ByteString
-    deriving (Eq, Show)
-instance IsString TemplateName where
-    fromString = TemplateName . fromString
+newtype TemplateName = TemplateName ByteString deriving (Eq, IsString)
+instance Show TemplateName where show (TemplateName bs) = show bs
 
 data Table = Table { _tableName    :: TableName
                    , _tableHalfUID :: HalfUID

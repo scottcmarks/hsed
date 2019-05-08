@@ -4,7 +4,7 @@ main main1,2
 
 ./app/Main.hs,39
 module Main Main2,3
-main main13,14
+main main14,15
 
 ./test/System/SED/Common/IntegralSpec.hs,194
 module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec13,14
@@ -30,11 +30,15 @@ p p256,257
 gp gp259,260
 _pgp _pgp263,264
 
+./test/System/SED/Common/ColumnTypes/THSpec.hs,105
+module System.SED.Common.ColumnTypes.THSpec System.SED.Common.ColumnTypes.THSpec13,14
+spec spec22,23
+
 ./test/Spec.hs,0
 
 ./dev/DevMain.hs,43
-module DevMain DevMain4,5
-dev dev14,15
+module DevMain DevMain6,7
+dev dev35,36
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3
@@ -76,76 +80,12 @@ instance Arbitrary Arbitrary Parameters255,256
 instance Arbitrary Arbitrary MethodCall258,259
     arbitrary arbitrary259,260
 
-./src/System/SED/Common/TableUIDs.lhs,2752
-module System.SED.Common.TableUIDs System.SED.Common.TableUIDs23,24
-newtype TableName TableName354,355
-instance IsString IsString TableName356,357
-    fromString fromString357,358
-newtype TemplateName TemplateName359,360
-instance IsString IsString TemplateName361,362
-    fromString fromString362,363
-data    TableDef TableDef365,366
-data    TableDef     = TableDef TableDef365,366
-tdef tdef368,369
-tableDefs tableDefs376,377
-instance Arbitrary Arbitrary TableDef426,427
-    arbitrary arbitrary427,428
-errorNoTableDef errorNoTableDef430,431
-tableHalfUIDFromName tableHalfUIDFromName433,434
-tableNameFromHalfUID tableNameFromHalfUID438,439
-tableDescriptorObjectUIDFromHalfUID tableDescriptorObjectUIDFromHalfUID443,444
-tableUIDFromHalfUID tableUIDFromHalfUID446,447
-tableUIDFromName tableUIDFromName450,451
-tableDescriptorObjectUIDFromName tableDescriptorObjectUIDFromName454,455
-hTable hTable461,462
-uTableTable uTableTable467,468
-uSPInfoTable uSPInfoTable470,471
-uSPTemplatesTable uSPTemplatesTable473,474
-uColumnTable uColumnTable476,477
-uTypeTable uTypeTable479,480
-uMethodIDTable uMethodIDTable482,483
-uAccessControlTable uAccessControlTable485,486
-uACETable uACETable488,489
-uAuthorityTable uAuthorityTable491,492
-uCertificatesTable uCertificatesTable494,495
-uC_PINTable uC_PINTable497,498
-uC_RSA_1024Table uC_RSA_1024Table500,501
-uC_RSA_2048Table uC_RSA_2048Table503,504
-uC_AES_128Table uC_AES_128Table506,507
-uC_AES_256Table uC_AES_256Table509,510
-uC_EC_160Table uC_EC_160Table512,513
-uC_EC_192Table uC_EC_192Table515,516
-uC_EC_224Table uC_EC_224Table518,519
-uC_EC_256Table uC_EC_256Table521,522
-uC_EC_384Table uC_EC_384Table524,525
-uC_EC_521Table uC_EC_521Table527,528
-uC_EC_163Table uC_EC_163Table530,531
-uC_EC_233Table uC_EC_233Table533,534
-uC_EC_283Table uC_EC_283Table536,537
-uC_HMAC_160Table uC_HMAC_160Table539,540
-uC_HMAC_256Table uC_HMAC_256Table542,543
-uC_HMAC_384Table uC_HMAC_384Table545,546
-uC_HMAC_512Table uC_HMAC_512Table548,549
-uSecretProtectTable uSecretProtectTable551,552
-uTPerInfoTable uTPerInfoTable554,555
-uCryptoSuiteTable uCryptoSuiteTable557,558
-uTemplateTable uTemplateTable560,561
-uSPTable uSPTable563,564
-uClockTimeTable uClockTimeTable566,567
-uH_SHA_1Table uH_SHA_1Table569,570
-uH_SHA_256Table uH_SHA_256Table572,573
-uH_SHA_384Table uH_SHA_384Table575,576
-uH_SHA_512Table uH_SHA_512Table578,579
-uLogTable uLogTable581,582
-uLogListTable uLogListTable584,585
-uLockingInfoTable uLockingInfoTable587,588
-uLockingTable uLockingTable590,591
-uMBRControlTable uMBRControlTable593,594
-uMBRTable uMBRTable596,597
-uK_AES_128Table uK_AES_128Table599,600
-uK_AES_256Table uK_AES_256Table602,603
+./src/System/SED/Common/TableUIDs.lhs,155
+module System.SED.Common.TableUIDsSystem.SED.Common.TableUIDs47,48
+lookupTableHalfUID lookupTableHalfUID178,179
+lookupTableUID lookupTableUID183,184
 
-./src/System/SED/Common/StreamItem.lhs,415
+./src/System/SED/Common/StreamItem.lhs,339
 module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25
 class StreamItem StreamItem46,47
     parser parser47,48
@@ -155,12 +95,521 @@ class StreamItem StreamItem46,47
     maybeParse maybeParse57,58
     pg pg61,62
     typeIsa typeIsa64,65
-    typeIsMaybea typeIsMaybea67,68
-    maybeGenerate maybeGenerate70,71
-require require85,86
+require require68,69
 
-./src/System/SED/Common/Integral.lhs,800
-module System.SED.Common.IntegralSystem.SED.Common.Integral24,25
+./src/System/SED/Common/UID.lhs,796
+module System.SED.Common.UID System.SED.Common.UID28,29
+intVal intVal74,75
+fixed fixed78,79
+fpack fpack81,82
+instance (K(KnownNat n) => IsToken (Fixed_bytes n)84,85
+    token token85,86
+    fromToken fromToken86,87
+instance (K(KnownNat n) => StreamItem (Fixed_bytes n)89,90
+    parser parser90,91
+    generate generate99,100
+instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)101,102
+    arbitrary arbitrary102,103
+newtype HalfUID HalfUID106,107
+instance Show(Show (HalfUID)109,110
+    show show110,111
+halfUID halfUID113,114
+newtype UID UID117,118
+instance Show(Show (UID)120,121
+    show show121,122
+uid uid124,125
+uidUpper uidUpper131,132
+uidLower uidLower134,135
+uidPlus uidPlus137,138
+(+(+:+)140,141
+hNull hNull144,145
+uNull uNull147,148
+
+./src/System/SED/Common/Format.lhs,2482
+module System.SED.Common.FormatSystem.SED.Common.Format33,34
+data Core_table_kind Core_table_kind45,46
+    Object_table Object_table47,48
+    Byte_table Byte_table48,49
+data Core_uinteger_2 Core_uinteger_253,54
+data Core_uinteger_2   = Core_uinteger_2Core_uinteger_253,54
+data Core_integer_2 Core_integer_254,55
+data Core_integer_2    = Core_integer_2Core_integer_254,55
+data Core_uidref Core_uidref55,56
+data Core_uidref       = Core_uidrefCore_uidref55,56
+data Core_max_bytes_32 Core_max_bytes_3256,57
+data Core_max_bytes_32 = Core_max_bytes_32Core_max_bytes_3256,57
+newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only58,59
+newtype Core_uidref_non_Base_Type_only Core_uidref_non_Base_Type_only59,60
+newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only60,61
+newtype Core_uidref_Object_table_only Core_uidref_Object_table_only61,62
+data Core_Type Core_Type63,64
+        Base_Type Base_Type65,66
+        Simple_Type Simple_Type66,67
+        Enumeration_Type Enumeration_Type67,68
+        Alternative_Type Alternative_Type68,69
+        List_Type List_Type69,70
+        Restricted_Reference_Type'5 Restricted_Reference_Type'570,71
+        Restricted_Reference_Type'6 Restricted_Reference_Type'671,72
+        General_Reference_Type'7 General_Reference_Type'772,73
+        General_Reference_Type'8 General_Reference_Type'873,74
+        General_Reference_Type'9 General_Reference_Type'974,75
+        General_Reference_Table_Type General_Reference_Table_Type75,76
+        Named_Value_Name_Type Named_Value_Name_Type76,77
+        Named_Value_Integer_Type Named_Value_Integer_Type77,78
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type78,79
+        Struct_Type Struct_Type79,80
+        Set_Type Set_Type80,81
+instance (K(KnownNat n) => Show (Core_Type n)82,83
+    where show show83,84
+class IsFormatItem IsFormatItem85,86
+    encode encode86,87
+    decode decode88,89
+instance (K(KnownNat n) => IsFormatItem (Core_Type n)91,92
+    encode encode92,93
+instance (I(IsFormatItem a) => IsFormatItem ([a])95,96
+    encode encode96,97
+instance IsFormatItem(IsFormatItem (Core_uinteger_2)97,98
+    encode encode98,99
+instance IsFormatItem(IsFormatItem (Core_integer_2)99,100
+    encode encode100,101
+instance IsFormatItem(IsFormatItem (Core_uidref)101,102
+    encode encode102,103
+instance IsFormatItem(IsFormatItem (Core_max_bytes_32)103,104
+    encode encode104,105
+
+./src/System/SED/Common/Table.lhs,1082
+module System.SED.Common.Table System.SED.Common.Table24,25
+newtype TableName TableName191,192
+instance Show Show TableName192,193
+instance Show TableName where show show192,193
+newtype TemplateName TemplateName194,195
+instance Show Show TemplateName195,196
+instance Show TemplateName where show show195,196
+data Table Table197,198
+data Table = Table Table197,198
+data Table = Table { _tableName _tableName197,198
+                   , _tableHalfUID _tableHalfUID198,199
+                   , _tableColumns _tableColumns199,200
+                   , _tableRows _tableRows200,201
+data TableRow TableRow204,205
+data TableRow = TableRow TableRow204,205
+data TableColumn TableColumn348,349
+data TableColumn = TableColumn TableColumn348,349
+data TableColumn = TableColumn { _columnNumber _columnNumber348,349
+                               , _columnName _columnName349,350
+                               , _columnIsUnique _columnIsUnique350,351
+                               , _columnType _columnType351,352
+newtype ColumnType ColumnType355,356
+
+./src/System/SED/Common/Types.lhs,61
+module System.SED.Common.TypesSystem.SED.Common.Types21,22
+
+./src/System/SED/Common/TableUIDs/TH.lhs,971
+module System.SED.Common.TableUIDs.TH System.SED.Common.TableUIDs.TH24,25
+import import45,46
+t240 t24065,66
+t240Decs t240Decs73,74
+table240Parser table240Parser93,94
+data UIDRow UIDRow106,107
+data UIDRow = UIDRow UIDRow106,107
+uidRow uidRow109,110
+mkUIDRow mkUIDRow120,121
+pUID1 pUID1131,132
+pUID2 pUID2134,135
+pTableName pTableName137,138
+pTemplateName pTemplateName140,141
+pUIDField pUIDField143,144
+pTrimmedField pTrimmedField150,151
+pField pField154,155
+title title158,159
+header header161,162
+rowSep rowSep164,165
+pieceLengths pieceLengths167,168
+rowSepString rowSepString170,171
+dSig dSig174,175
+dVal dVal177,178
+dUIDRow dUIDRow180,181
+data UIDRowDecs UIDRowDecs210,211
+data UIDRowDecs = UIDRowDecs UIDRowDecs210,211
+instance Semigroup Semigroup UIDRowDecs213,214
+  where (U(UIDRowDecsu1eh1eu1)214,215
+instance Monoid Monoid UIDRowDecs217,218
+  where mempty mempty218,219
+getPosition getPosition220,221
+
+./src/System/SED/Common/Token.lhs,1162
+module System.SED.Common.TokenSystem.SED.Common.Token22,23
+data Token Token139,140
+    Unsigned Unsigned140,141
+  | Signed Signed141,142
+  | Bytes Bytes142,143
+  | ContinuedBytes ContinuedBytes143,144
+  | StartNameStartName144,145
+  | EndNameEndName145,146
+  | StartListStartList146,147
+  | EndListEndList147,148
+  | CallCall148,149
+  | EndOfDataEndOfData149,150
+  | EndOfSessionEndOfSession150,151
+  | StartTransactionStartTransaction151,152
+  | EndTransactionEndTransaction152,153
+  | EmptyEmpty153,154
+class (Show a) => IsToken IsToken156,157
+    fromToken fromToken157,158
+    token token159,160
+    mtoken mtoken162,163
+instance IsToken IsToken Token166,167
+    token token167,168
+    fromToken fromToken168,169
+instance StreamItem StreamItem Token173,174
+    parser parser174,175
+    generate generate175,176
+tokenParser tokenParser182,183
+generateToken generateToken284,285
+instance Arbitrary Arbitrary Token330,331
+    arbitrary arbitrary331,332
+rawTokenSource rawTokenSource346,347
+removeEmpty removeEmpty349,350
+combineContinued combineContinued352,353
+tokenSource tokenSource365,366
+
+./src/System/SED/Common/Import.hs,61
+module System.SED.Common.ImportSystem.SED.Common.Import1,2
+
+./src/System/SED/Common/ColumnTypes.lhs,11805
+module System.SED.Common.ColumnTypes System.SED.Common.ColumnTypes30,31
+type TPer TPer3236,3237
+data Env Env3238,3239
+data Env = Env Env3238,3239
+data Env = Env { core core3238,3239
+               , implementation implementation3239,3240
+               , ssc ssc3240,3241
+data Core Core3244,3245
+data Core = CoreCore3244,3245
+data Implementation Implementation3247,3248
+data Implementation = Implementation Implementation3247,3248
+data Implementation = Implementation { __AC_elementSize __AC_elementSize3247,3248
+                                     , __max_columns __max_columns3248,3249
+data SSC SSC3252,3253
+data SSC = SSC SSC3252,3253
+data SSC = SSC { __AC_elementMinSize __AC_elementMinSize3252,3253
+               , __min_max_columns __min_max_columns3253,3254
+newtype Core_AC_element Core_AC_element3305,3306
+uCore_AC_element' uCore_AC_element'3307,3308
+columnTypeNames columnTypeNames3311,3312
+columnTypeUIDs columnTypeUIDs3317,3318
+columnTypeName' columnTypeName'3323,3324
+columnTypeUID' columnTypeUID'3326,3327
+_AC_elementSize _AC_elementSize3329,3330
+_AC_elementMinSize _AC_elementMinSize3332,3333
+newtype Core_ACE_columns Core_ACE_columns3360,3361
+_ACE_columnsSetSize _ACE_columnsSetSize3362,3363
+data Core_ACE_expression Core_ACE_expression3384,3385
+data Core_ACE_expression = Core_ACE_expression_Authority_object_ref Core_ACE_expression_Authority_object_ref3384,3385
+                         | Core_ACE_expression_boolean_ACE Core_ACE_expression_boolean_ACE3385,3386
+_ACE_expressionSetSize _ACE_expressionSetSize3387,3388
+newtype Core_ACE_object_ref Core_ACE_object_ref3410,3411
+mkCore_ACE_object_ref mkCore_ACE_object_ref3412,3413
+data Core_ACL Core_ACL3436,3437
+data Core_ACL = Core_ACL Core_ACL3436,3437
+data Core_adv_key_mode Core_adv_key_mode3474,3475
+data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_ReqCore_adv_key_mode_Wait_for_AdvKey_Req3474,3475
+                       | Core_adv_key_mode_Auto_advance_keysCore_adv_key_mode_Auto_advance_keys3475,3476
+                       | Core_adv_key_mode_Reserved_2Core_adv_key_mode_Reserved_23476,3477
+                       | Core_adv_key_mode_Reserved_3Core_adv_key_mode_Reserved_33477,3478
+                       | Core_adv_key_mode_Reserved_4Core_adv_key_mode_Reserved_43478,3479
+                       | Core_adv_key_mode_Reserved_5Core_adv_key_mode_Reserved_53479,3480
+                       | Core_adv_key_mode_Reserved_6Core_adv_key_mode_Reserved_63480,3481
+                       | Core_adv_key_mode_Reserved_7Core_adv_key_mode_Reserved_73481,3482
+data Core_attr_flags Core_attr_flags3518,3519
+data Core_attr_flags = Core_attr_flags Core_attr_flags3518,3519
+data Core_attr_flags_Set_Values Core_attr_flags_Set_Values3520,3521
+data Core_attr_flags_Set_Values = Core_attr_flags_Set_Values_Get_Not_PermittedCore_attr_flags_Set_Values_Get_Not_Permitted3520,3521
+                                | Core_attr_flags_Set_Values_Set_Not_PermittedCore_attr_flags_Set_Values_Set_Not_Permitted3521,3522
+                                | Core_attr_flags_Set_Values_Reserved_02Core_attr_flags_Set_Values_Reserved_023522,3523
+                                | Core_attr_flags_Set_Values_Reserved_03Core_attr_flags_Set_Values_Reserved_033523,3524
+                                | Core_attr_flags_Set_Values_Reserved_04Core_attr_flags_Set_Values_Reserved_043524,3525
+                                | Core_attr_flags_Set_Values_Reserved_05Core_attr_flags_Set_Values_Reserved_053525,3526
+                                | Core_attr_flags_Set_Values_Reserved_06Core_attr_flags_Set_Values_Reserved_063526,3527
+                                | Core_attr_flags_Set_Values_Reserved_07Core_attr_flags_Set_Values_Reserved_073527,3528
+                                | Core_attr_flags_Set_Values_Reserved_08Core_attr_flags_Set_Values_Reserved_083528,3529
+                                | Core_attr_flags_Set_Values_Reserved_09Core_attr_flags_Set_Values_Reserved_093529,3530
+                                | Core_attr_flags_Set_Values_Reserved_10Core_attr_flags_Set_Values_Reserved_103530,3531
+                                | Core_attr_flags_Set_Values_Reserved_11Core_attr_flags_Set_Values_Reserved_113531,3532
+                                | Core_attr_flags_Set_Values_Reserved_12Core_attr_flags_Set_Values_Reserved_123532,3533
+                                | Core_attr_flags_Set_Values_Reserved_13Core_attr_flags_Set_Values_Reserved_133533,3534
+                                | Core_attr_flags_Set_Values_Reserved_14Core_attr_flags_Set_Values_Reserved_143534,3535
+                                | Core_attr_flags_Set_Values_Reserved_15Core_attr_flags_Set_Values_Reserved_153535,3536
+                                | Core_attr_flags_Set_Values_Reserved_16Core_attr_flags_Set_Values_Reserved_163536,3537
+                                | Core_attr_flags_Set_Values_Reserved_17Core_attr_flags_Set_Values_Reserved_173537,3538
+                                | Core_attr_flags_Set_Values_Reserved_18Core_attr_flags_Set_Values_Reserved_183538,3539
+                                | Core_attr_flags_Set_Values_Reserved_19Core_attr_flags_Set_Values_Reserved_193539,3540
+                                | Core_attr_flags_Set_Values_Reserved_20Core_attr_flags_Set_Values_Reserved_203540,3541
+                                | Core_attr_flags_Set_Values_Reserved_21Core_attr_flags_Set_Values_Reserved_213541,3542
+                                | Core_attr_flags_Set_Values_Reserved_22Core_attr_flags_Set_Values_Reserved_223542,3543
+                                | Core_attr_flags_Set_Values_Reserved_23Core_attr_flags_Set_Values_Reserved_233543,3544
+                                | Core_attr_flags_Set_Values_Reserved_24Core_attr_flags_Set_Values_Reserved_243544,3545
+                                | Core_attr_flags_Set_Values_Reserved_25Core_attr_flags_Set_Values_Reserved_253545,3546
+                                | Core_attr_flags_Set_Values_Reserved_26Core_attr_flags_Set_Values_Reserved_263546,3547
+                                | Core_attr_flags_Set_Values_Reserved_27Core_attr_flags_Set_Values_Reserved_273547,3548
+                                | Core_attr_flags_Set_Values_Reserved_28Core_attr_flags_Set_Values_Reserved_283548,3549
+                                | Core_attr_flags_Set_Values_Reserved_29Core_attr_flags_Set_Values_Reserved_293549,3550
+                                | Core_attr_flags_Set_Values_Reserved_30Core_attr_flags_Set_Values_Reserved_303550,3551
+                                | Core_attr_flags_Set_Values_Reserved_31Core_attr_flags_Set_Values_Reserved_313551,3552
+data Core_auth_method Core_auth_method3603,3604
+data Core_auth_method = Core_auth_method_NoneCore_auth_method_None3603,3604
+                      | Core_auth_method_PasswordCore_auth_method_Password3604,3605
+                      | Core_auth_method_ExchangeCore_auth_method_Exchange3605,3606
+                      | Core_auth_method_SignCore_auth_method_Sign3606,3607
+                      | Core_auth_method_SymKCore_auth_method_SymK3607,3608
+                      | Core_auth_method_HMACCore_auth_method_HMAC3608,3609
+                      | Core_auth_method_TperSignCore_auth_method_TperSign3609,3610
+                      | Core_auth_method_TPerExchangeCore_auth_method_TPerExchange3610,3611
+                      | Core_auth_method_Reserved_8Core_auth_method_Reserved_83611,3612
+                      | Core_auth_method_Reserved_9Core_auth_method_Reserved_93612,3613
+                      | Core_auth_method_Reserved_10Core_auth_method_Reserved_103613,3614
+                      | Core_auth_method_Reserved_11Core_auth_method_Reserved_113614,3615
+                      | Core_auth_method_Reserved_12Core_auth_method_Reserved_123615,3616
+                      | Core_auth_method_Reserved_13Core_auth_method_Reserved_133616,3617
+                      | Core_auth_method_Reserved_14Core_auth_method_Reserved_143617,3618
+                      | Core_auth_method_Reserved_15Core_auth_method_Reserved_153618,3619
+                      | Core_auth_method_Reserved_16Core_auth_method_Reserved_163619,3620
+                      | Core_auth_method_Reserved_17Core_auth_method_Reserved_173620,3621
+                      | Core_auth_method_Reserved_18Core_auth_method_Reserved_183621,3622
+                      | Core_auth_method_Reserved_19Core_auth_method_Reserved_193622,3623
+                      | Core_auth_method_Reserved_20Core_auth_method_Reserved_203623,3624
+                      | Core_auth_method_Reserved_21Core_auth_method_Reserved_213624,3625
+                      | Core_auth_method_Reserved_22Core_auth_method_Reserved_223625,3626
+                      | Core_auth_method_Reserved_23Core_auth_method_Reserved_233626,3627
+newtype Core_Authority_object_ref Core_Authority_object_ref3651,3652
+mkCore_Authority_object_ref mkCore_Authority_object_ref3655,3656
+type Core_boolean Core_boolean3696,3697
+data Core_boolean_ACE Core_boolean_ACE3734,3735
+data Core_boolean_ACE = And And3734,3735
+data Core_boolean_ACE = And | Or Or3734,3735
+data Core_boolean_ACE = And | Or | NotNot3734,3735
+type Core_byte_row_ref Core_byte_row_ref3755,3756
+type Core_byte_table_ref Core_byte_table_ref3776,3777
+newtype Core_bytes Core_bytes3797,3798
+instance (K(KnownNat n) => Show (Core_bytes n)3799,3800
+    show show3800,3801
+type Core_bytes_4 Core_bytes_43821,3822
+type Core_bytes_12 Core_bytes_123842,3843
+type Core_bytes_16 Core_bytes_163863,3864
+type Core_bytes_20 Core_bytes_203884,3885
+type Core_bytes_32 Core_bytes_323906,3907
+type Core_bytes_48 Core_bytes_483927,3928
+type Core_bytes_64 Core_bytes_643950,3951
+newtype Core_Certificates_object_ref Core_Certificates_object_ref3973,3974
+mkCore_Certificates_object_ref mkCore_Certificates_object_ref3977,3978
+type Core_uidref Core_uidref4002,4003
+implementationDependant_AC_elementSize implementationDependant_AC_elementSize4006,4007
+implementationDependant_max_columns implementationDependant_max_columns4009,4010
+imp' imp'4012,4013
+ssc_AC_elementMinSize ssc_AC_elementMinSize4019,4020
+ssc_min_max_columns ssc_min_max_columns4022,4023
+_max_columns _max_columns4025,4026
+_min_max_columns _min_max_columns4028,4029
+ssc' ssc'4033,4034
+core' core'4041,4042
+newtype Core_General_Reference_Type_Byte_Row Core_General_Reference_Type_Byte_Row4047,4048
+newtype Core_General_Reference_Type_Object Core_General_Reference_Type_Object4050,4051
+mkCore_General_object_ref mkCore_General_object_ref4053,4054
+data Core_table_kind Core_table_kind4057,4058
+data Core_table_kind = ByteTable ByteTable4057,4058
+data Core_table_kind = ByteTable | ObjectTableObjectTable4057,4058
+data General_Reference_Table_Type General_Reference_Table_Type4060,4061
+data General_Reference_Table_Type (a:a4060,4061
+  General_Reference_Table_Type_Byte General_Reference_Table_Type_Byte4061,4062
+  General_Reference_Table_Type_Object General_Reference_Table_Type_Object4062,4063
+data General_Reference_Table_Type (a:a4060,4061
+type Core_Reference_UID_List Core_Reference_UID_List4068,4069
+data Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object4070,4071
+     Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object4071,4072
+mkCore_Restricted_object_ref mkCore_Restricted_object_ref4073,4074
+    | uidUpper objectUID `elem`elem4078,4079
+mkCore_Restricted_object_ref_To mkCore_Restricted_object_ref_To4083,4084
+env env4092,4093
+valid valid4098,4099
+validityChecks validityChecks4101,4102
+_AC_elementSizeValid _AC_elementSizeValid4107,4108
+max_columns max_columns4116,4117
+
+./src/System/SED/Common/ColumnTypes/TH.lhs,217
+module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH33,34
+qAC_element qAC_element105,106
+qColumnTypeTableRow qColumnTypeTableRow109,110
+data Core_ACE_expression'Core_ACE_expression'154,155
+
+./src/System/SED/Common/Value.lhs,3494
+module System.SED.Common.Value System.SED.Common.Value23,24
+newtype Datum Datum42,43
+class (Show v) => IsDatum IsDatum45,46
+    datum datum46,47
+    mdatum mdatum49,50
+instance IsDatum IsDatum Datum52,53
+    datum datum53,54
+instance IsDatum IsDatum Token55,56
+    mdatum mdatum56,57
+maybeDatumToken maybeDatumToken58,59
+isDatumToken isDatumToken65,66
+instance IsToken IsToken Datum69,70
+    token token70,71
+    fromToken fromToken71,72
+instance IsDatum IsDatum Natural73,74
+    datum datum74,75
+udatum udatum76,77
+instance IsDatum IsDatum Integer79,80
+    datum datum80,81
+sdatum sdatum82,83
+instance IsDatum IsDatum ByteString85,86
+    datum datum86,87
+bdatum bdatum88,89
+instance IsDatum IsDatum String91,92
+    datum datum92,93
+newtype Name Name94,95
+class (Show d) => IsName IsName97,98
+    name name98,99
+    mname mname101,102
+instance IsName IsName Name104,105
+    name name105,106
+instance IsName IsName Datum107,108
+    name name108,109
+instance IsName IsName Token110,111
+    name name111,112
+instance IsName IsName Natural113,114
+    name name114,115
+instance IsName IsName Integer116,117
+    name name117,118
+instance IsName IsName ByteString119,120
+    name name120,121
+instance IsName IsName String122,123
+    name name123,124
+instance IsDatum IsDatum Name125,126
+    datum datum126,127
+instance IsToken IsToken Name128,129
+    token token129,130
+    fromToken fromToken130,131
+data NamedValue NamedValue133,134
+data NamedValue = NamedValue NamedValue133,134
+(.(.:)136,137
+n n137,138
+instance IsName IsName NamedValue140,141
+    name name141,142
+newtype List List143,144
+data Value Value146,147
+data Value = D D146,147
+           | N N147,148
+           | L L148,149
+class IsValue IsValue151,152
+    value value152,153
+    mvalue mvalue153,154
+instance IsValue IsValue Value156,157
+    value value157,158
+instance IsValue IsValue Datum159,160
+    value value160,161
+instance IsValue IsValue NamedValue162,163
+    value value163,164
+instance IsValue IsValue List165,166
+    value value166,167
+instance IsValue IsValue Token168,169
+    value value169,170
+instance IsValue IsValue Natural171,172
+    value value172,173
+instance IsValue IsValue Integer174,175
+    value value175,176
+instance IsValue IsValue ByteString177,178
+    value value178,179
+instance IsValue IsValue String180,181
+    value value181,182
+instance IsToken IsToken Value183,184
+    mtoken mtoken184,185
+    fromToken fromToken186,187
+instance StreamItem StreamItem Datum189,190
+    parser parser190,191
+    generate generate191,192
+instance StreamItem StreamItem Name193,194
+    parser parser194,195
+    generate generate195,196
+instance StreamItem StreamItem NamedValue198,199
+    parser parser199,200
+    generate generate202,203
+instance StreamItem StreamItem List208,209
+    parser parser209,210
+    generate generate212,213
+instance StreamItem StreamItem Value217,218
+    parser parser218,219
+    generate generate221,222
+instance Arbitrary Arbitrary Datum226,227
+    arbitrary arbitrary227,228
+instance Arbitrary Arbitrary Name235,236
+    arbitrary arbitrary236,237
+instance Arbitrary Arbitrary NamedValue238,239
+    arbitrary arbitrary239,240
+instance Arbitrary Arbitrary List241,242
+    arbitrary arbitrary242,243
+instance Arbitrary Arbitrary Value244,245
+    arbitrary arbitrary245,246
+
+./src/System/SED/Common/SpecialPurposeUIDs.lhs,485
+module System.SED.Common.SpecialPurposeUIDs System.SED.Common.SpecialPurposeUIDs22,23
+uNULL uNULL54,55
+uThisSP uThisSP58,59
+uSMUID uSMUID62,63
+uSMMethodUID uSMMethodUID66,67
+uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID70,71
+uProperties uProperties92,93
+uStartSession uStartSession95,96
+uSyncSession uSyncSession98,99
+uStartTrustedSession uStartTrustedSession101,102
+uSyncTrustedSession uSyncTrustedSession104,105
+uCloseSession uCloseSession107,108
+
+./src/Hsed/App.lhs,391
+module Hsed.AppHsed.App23,24
+data Options Options31,32
+data Options = OptionsOptions31,32
+  { _verbose _verbose32,33
+data App App37,38
+data App = AppApp37,38
+  { _logFunc _logFunc38,39
+  , _processContext _processContext39,40
+  , _options _options40,41
+makeApp makeApp43,44
+instance HasLogFunc HasLogFunc App46,47
+instance HasLogFunc App where logFuncL logFuncL46,47
+
+./src/Extras/Bytes.lhs,735
+module Extras.BytesExtras.Bytes35,36
+data Fixed_bytes Fixed_bytes61,62
+data Fixed_bytes n = Fixed_bytes Fixed_bytes61,62
+instance (K(KnownNat n) => IsString (Fixed_bytes n)64,65
+    fromString fromString65,66
+instance (K(KnownNat n) => IsString (S-Static ShortByteString n)67,68
+    fromString fromString68,69
+instance HasHex HasHex ShortByteString77,78
+    hex hex78,79
+    fromHex fromHex79,80
+instance (K(KnownNat n) => HasHex (S-Static ShortByteString n)81,82
+    hex hex82,83
+    fromHex fromHex83,84
+instance (K(KnownNat n) => HasHex (Fixed_bytes n)85,86
+    hex hex86,87
+    fromHex fromHex87,88
+unwrap unwrap89,90
+create create92,93
+take take95,96
+drop drop99,100
+append append103,104
+
+./src/Extras/GitVersion.hs,139
+module Extras.GitVersion Extras.GitVersion14,15
+plainVersion plainVersion31,32
+gitBranch gitBranch38,39
+gitVersion gitVersion54,55
+
+./src/Extras/Integral.lhs,778
+module Extras.IntegralExtras.Integral24,25
 rollUp rollUp49,50
 byteStringToNatural byteStringToNatural54,55
 byteStringToInteger byteStringToInteger57,58
@@ -183,240 +632,8 @@ instance IsByteString IsByteString Natural111,112
     fromByteString fromByteString112,113
     toByteString toByteString113,114
 
-./src/System/SED/Common/UID.lhs,789
-module System.SED.Common.UID System.SED.Common.UID22,23
-data HalfUID HalfUID61,62
-data HalfUID = HalfUID{_b3,HalfUID{_b361,62
-data HalfUID = HalfUID{_b3,_b2,_b1,_b0:_b061,62
-hNull hNull64,65
-data UID UID67,68
-data UID = UID{_hi,UID{_hi67,68
-data UID = UID{_hi,_lo:_lo67,68
-uNull uNull70,71
-instance StreamItem StreamItem HalfUID73,74
-    parser parser74,75
-    generate generate75,76
-instance StreamItem StreamItem UID77,78
-    parser parser78,79
-    generate generate91,92
-instance IsToken IsToken UID94,95
-    token token95,96
-    fromToken fromToken96,97
-instance Arbitrary Arbitrary HalfUID99,100
-    arbitrary arbitrary100,101
-instance Arbitrary Arbitrary UID102,103
-    arbitrary arbitrary103,104
-halfUID halfUID105,106
-uid uid108,109
-
-./src/System/SED/Common/Table.lhs,1067
-module System.SED.Common.Table System.SED.Common.Table23,24
-newtype TableName TableName190,191
-instance IsString IsString TableName192,193
-    fromString fromString193,194
-newtype TemplateName TemplateName195,196
-instance IsString IsString TemplateName197,198
-    fromString fromString198,199
-data Table Table200,201
-data Table = Table Table200,201
-data Table = Table { _tableName _tableName200,201
-                   , _tableHalfUID _tableHalfUID201,202
-                   , _tableColumns _tableColumns202,203
-                   , _tableRows _tableRows203,204
-data TableRow TableRow207,208
-data TableRow = TableRow TableRow207,208
-data TableColumn TableColumn351,352
-data TableColumn = TableColumn TableColumn351,352
-data TableColumn = TableColumn { _columnNumber _columnNumber351,352
-                               , _columnName _columnName352,353
-                               , _columnIsUnique _columnIsUnique353,354
-                               , _columnType _columnType354,355
-newtype ColumnType ColumnType358,359
-
-./src/System/SED/Common/Types.lhs,61
-module System.SED.Common.TypesSystem.SED.Common.Types21,22
-
-./src/System/SED/Common/Token.lhs,1162
-module System.SED.Common.TokenSystem.SED.Common.Token23,24
-data Token Token142,143
-    Unsigned Unsigned143,144
-  | Signed Signed144,145
-  | Bytes Bytes145,146
-  | ContinuedBytes ContinuedBytes146,147
-  | StartNameStartName147,148
-  | EndNameEndName148,149
-  | StartListStartList149,150
-  | EndListEndList150,151
-  | CallCall151,152
-  | EndOfDataEndOfData152,153
-  | EndOfSessionEndOfSession153,154
-  | StartTransactionStartTransaction154,155
-  | EndTransactionEndTransaction155,156
-  | EmptyEmpty156,157
-class (Show a) => IsToken IsToken160,161
-    fromToken fromToken161,162
-    token token163,164
-    mtoken mtoken166,167
-instance IsToken IsToken Token170,171
-    token token171,172
-    fromToken fromToken172,173
-instance StreamItem StreamItem Token177,178
-    parser parser178,179
-    generate generate179,180
-tokenParser tokenParser187,188
-generateToken generateToken289,290
-instance Arbitrary Arbitrary Token335,336
-    arbitrary arbitrary336,337
-rawTokenSource rawTokenSource351,352
-removeEmpty removeEmpty354,355
-combineContinued combineContinued357,358
-tokenSource tokenSource370,371
-
-./src/System/SED/Common/Import.hs,61
-module System.SED.Common.ImportSystem.SED.Common.Import1,2
-
-./src/System/SED/Common/ColumnTypes.lhs,1260
-module System.SED.Common.ColumnTypes System.SED.Common.ColumnTypes23,24
-type TPer TPer3937,3938
-data Env Env3939,3940
-data Env = Env Env3939,3940
-data Env = Env { core core3939,3940
-               , implementation implementation3940,3941
-               , ssc ssc3941,3942
-data Core Core3944,3945
-data Core = CoreCore3944,3945
-data Implementation Implementation3946,3947
-data Implementation = Implementation Implementation3946,3947
-data Implementation = Implementation { __AC_elementSize __AC_elementSize3946,3947
-data SSC SSC3949,3950
-data SSC = SSC SSC3949,3950
-data SSC = SSC { __AC_elementMinSize __AC_elementMinSize3949,3950
-data Core_ACE_expression Core_ACE_expression3951,3952
-data Core_ACE_expression = Core_ACE_expressionCore_ACE_expression3951,3952
-newtype Core_AC_element Core_AC_element3953,3954
-_AC_elementSize _AC_elementSize3956,3957
-_AC_elementMinSize _AC_elementMinSize3959,3960
-implementationDependant_AC_elementSize implementationDependant_AC_elementSize3966,3967
-i i3969,3970
-ssc_AC_elementMinSize ssc_AC_elementMinSize3972,3973
-s s3975,3976
-c c3978,3979
-env env3981,3982
-valid valid3985,3986
-validityChecks validityChecks3988,3989
-_AC_elementSizeValid _AC_elementSizeValid3994,3995
-
-./src/System/SED/Common/Value.lhs,3453
-module System.SED.Common.Value System.SED.Common.Value23,24
-newtype Datum Datum42,43
-class (Show v) => IsDatum IsDatum45,46
-    datum datum46,47
-    mdatum mdatum49,50
-instance IsDatum IsDatum Datum52,53
-    datum datum53,54
-instance IsDatum IsDatum Token55,56
-    mdatum mdatum56,57
-isDatumToken isDatumToken60,61
-instance IsToken IsToken Datum66,67
-    token token67,68
-    fromToken fromToken68,69
-instance IsDatum IsDatum Natural70,71
-    datum datum71,72
-udatum udatum73,74
-instance IsDatum IsDatum Integer76,77
-    datum datum77,78
-sdatum sdatum79,80
-instance IsDatum IsDatum ByteString82,83
-    datum datum83,84
-bdatum bdatum85,86
-instance IsDatum IsDatum String88,89
-    datum datum89,90
-newtype Name Name91,92
-class (Show d) => IsName IsName94,95
-    name name95,96
-    mname mname98,99
-instance IsName IsName Name101,102
-    name name102,103
-instance IsName IsName Datum104,105
-    name name105,106
-instance IsName IsName Token107,108
-    name name108,109
-instance IsName IsName Natural110,111
-    name name111,112
-instance IsName IsName Integer113,114
-    name name114,115
-instance IsName IsName ByteString116,117
-    name name117,118
-instance IsName IsName String119,120
-    name name120,121
-instance IsDatum IsDatum Name122,123
-    datum datum123,124
-instance IsToken IsToken Name125,126
-    token token126,127
-    fromToken fromToken127,128
-data NamedValue NamedValue130,131
-data NamedValue = NamedValue NamedValue130,131
-(.(.:)133,134
-n n134,135
-instance IsName IsName NamedValue137,138
-    name name138,139
-newtype List List140,141
-data Value Value143,144
-data Value = D D143,144
-           | N N144,145
-           | L L145,146
-class IsValue IsValue148,149
-    value value149,150
-    mvalue mvalue150,151
-instance IsValue IsValue Value153,154
-    value value154,155
-instance IsValue IsValue Datum156,157
-    value value157,158
-instance IsValue IsValue NamedValue159,160
-    value value160,161
-instance IsValue IsValue List162,163
-    value value163,164
-instance IsValue IsValue Token165,166
-    value value166,167
-instance IsValue IsValue Natural168,169
-    value value169,170
-instance IsValue IsValue Integer171,172
-    value value172,173
-instance IsValue IsValue ByteString174,175
-    value value175,176
-instance IsValue IsValue String177,178
-    value value178,179
-instance IsToken IsToken Value180,181
-    mtoken mtoken181,182
-    fromToken fromToken183,184
-instance StreamItem StreamItem Datum186,187
-    parser parser187,188
-    generate generate188,189
-instance StreamItem StreamItem Name190,191
-    parser parser191,192
-    generate generate192,193
-instance StreamItem StreamItem NamedValue195,196
-    parser parser196,197
-    generate generate199,200
-instance StreamItem StreamItem List205,206
-    parser parser206,207
-    generate generate209,210
-instance StreamItem StreamItem Value214,215
-    parser parser215,216
-    generate generate218,219
-instance Arbitrary Arbitrary Datum223,224
-    arbitrary arbitrary224,225
-instance Arbitrary Arbitrary Name232,233
-    arbitrary arbitrary233,234
-instance Arbitrary Arbitrary NamedValue235,236
-    arbitrary arbitrary236,237
-instance Arbitrary Arbitrary List238,239
-    arbitrary arbitrary239,240
-instance Arbitrary Arbitrary Value241,242
-    arbitrary arbitrary242,243
-
-./src/System/SED/Common/Hex.lhs,659
-module System.SED.Common.HexSystem.SED.Common.Hex23,24
+./src/Extras/Hex.lhs,637
+module Extras.HexExtras.Hex23,24
 hexDigit hexDigit38,39
 hexDigits hexDigits41,42
 hexValue hexValue44,45
@@ -439,31 +656,3 @@ instance HasHex HasHex ByteString73,74
 instance HasHex HasHex String77,78
     hex hex78,79
     fromHex fromHex79,80
-
-./src/System/SED/Common/SpecialPurposeUIDs.lhs,485
-module System.SED.Common.SpecialPurposeUIDs System.SED.Common.SpecialPurposeUIDs22,23
-uNULL uNULL54,55
-uThisSP uThisSP58,59
-uSMUID uSMUID62,63
-uSMMethodUID uSMMethodUID66,67
-uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID70,71
-uProperties uProperties92,93
-uStartSession uStartSession95,96
-uSyncSession uSyncSession98,99
-uStartTrustedSession uStartTrustedSession101,102
-uSyncTrustedSession uSyncTrustedSession104,105
-uCloseSession uCloseSession107,108
-
-./src/Hsed/App.lhs,391
-module Hsed.AppHsed.App24,25
-data Options Options32,33
-data Options = OptionsOptions32,33
-  { _verbose _verbose33,34
-data App App38,39
-data App = AppApp38,39
-  { _logFunc _logFunc39,40
-  , _processContext _processContext40,41
-  , _options _options41,42
-makeApp makeApp44,45
-instance HasLogFunc HasLogFunc App47,48
-instance HasLogFunc App where logFuncL logFuncL47,48

@@ -19,7 +19,6 @@ Constructors and lenses.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Hsed.App
@@ -46,4 +45,6 @@ makeApp :: LogFunc -> ProcessContext -> Options -> App
 makeApp = App
 
 instance HasLogFunc App where logFuncL = logFunc
+
+
 \end{code}

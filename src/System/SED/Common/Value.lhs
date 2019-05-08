@@ -54,19 +54,22 @@ instance IsDatum Datum where
     datum = id
 
 instance IsDatum Token where
-    mdatum t
-        | isDatumToken t = Just . Datum $ t
-        | otherwise    = Nothing
+    mdatum = (Datum <$>) . maybeDatumToken
+
+maybeDatumToken ::Token -> Maybe Token
+maybeDatumToken t@Unsigned{} = Just t
+maybeDatumToken t@Signed  {} = Just t
+maybeDatumToken t@Bytes   {} = Just t
+maybeDatumToken _            = Nothing
+
 
 isDatumToken :: Token -> Bool
-isDatumToken (Unsigned _) = True
-isDatumToken (Signed   _) = True
-isDatumToken (Bytes    _) = True
-isDatumToken _            = False
+isDatumToken = isJust . maybeDatumToken
+
 
 instance IsToken Datum where
     token (Datum v) = v
-    fromToken v = Just $ Datum v
+    fromToken = mdatum
 
 instance IsDatum Natural where
     datum = udatum

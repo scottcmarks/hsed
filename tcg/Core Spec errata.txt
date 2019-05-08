@@ -1,0 +1,32 @@
+5.1.1 b. uinteger. Unsigned integer. To differentiate among the type sizes, a size identifier is specified with the type, i.e. a one-byte integer is denoted as uinteger_1, etc.
+"one-byte integer" should be "one-byte unsigned integer" to make a clear distinction from the otherwise identical languague in "a. integer. Signed integer."
+
+"Type = Base_Type / Simple_Type / Enumeration_Type / Alternative_Type / List_Type /
+ Restricted_Reference_Type / General_Reference_Type / Named_Value_Type /
+ Struct_Type / Set_Type" does not match the subsequent list, including no
+mention of General_Reference_Table_Type
+
+Named_Value_Name_Type = 11 1*32bytes bytes_8
+Name_Value_Integer_Type = 12 integer_2 bytes_8
+Name_Value_Uinteger_Type = 13 uinteger_2 bytes_8
+
+Why is the first one "Named_Value_..." and the next two "Name_Value_..."
+The latter two are later refered to as Named_Value_...
+
+Not an error, exactly, and probably immutable at this point, but ..
+Simple_Type has the pattern <uid,size>, whereas all the other two-parameter
+types are <size,(uid|[uid])>.  Messes with the rhythm.
+
+
+"c. Enumeration_Type. This is a n unsigned integer in a specific range." should be
+"c. Enumeration_Type. This is an unsigned integer in a specific range."
+
+no "Table 71-3/4 bytes_8" or bytes_8 in the Types table.
+This is presumably because UID is also bytes_8, and because there happen to be
+no types using "raw" bytes_8 instead of uid variants.  Since this is the case,
+we should eliminate the term "bytes_8" in favor of "uid" or "uidref" as
+appropriate.
+
+Table 72 "Certificates_object _ref" should be "Certificates_object_ref"
+
+Table 75 "Fractoin" should be "Fraction"

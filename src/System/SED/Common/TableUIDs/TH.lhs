@@ -25,11 +25,12 @@ TableUIDs Template Haskell.
 module System.SED.Common.TableUIDs.TH (t240)
 where
 
-import           Control.Applicative                  (many, pure, (<$>),
-                                                       (<*), (<*>), (*>))
-import           Data.Attoparsec.ByteString           (Parser, (<?>),
-                                                       parseOnly, take)
-import           Data.Attoparsec.ByteString.Char8     (char, endOfInput, endOfLine,
+import           Control.Applicative                  (many, (<$>), (<*),
+                                                       (<*>), (*>))
+import           Data.Attoparsec.ByteString           (Parser, parseOnly,
+                                                       skipWhile, take,
+                                                       (<?>))
+import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine,
                                                        hexadecimal, isSpace_w8,
                                                        skipSpace, string)
 import           Data.ByteString                      (ByteString, spanEnd,
@@ -42,7 +43,6 @@ import           Data.List                            ((!!), concat, foldl,
                                                        init, map)
 import           Data.Map                             (Map, fromList)
 import           Data.String                          (fromString)
-import           Data.Tuple                           (fst,snd)
 import           GHC.Base                             (Eq(..), Semigroup,
                                                        Monoid, Int, String,
                                                        Maybe(..), (.), (++),
@@ -51,57 +51,55 @@ import           GHC.Base                             (Eq(..), Semigroup,
 import           GHC.Err                              (error,undefined)
 import           GHC.Real                             (toInteger)
 import           GHC.Show                             (Show(..))
-import           Language.Haskell.TH                  (loc_start, loc_filename,
-                                                       location, mkName,
+import           Language.Haskell.TH                  (mkName,
                                                        Body(..), Lit(..), Type(..),
                                                        Exp(..), Dec(..), Pat(..),
-                                                       Name, DecsQ, Q)
+                                                       Name)
 import           Language.Haskell.TH.Quote            (QuasiQuoter(..))
+import           Language.Haskell.TH.Syntax           (returnQ)
 import           Extras.Bytes                         (unwrap)
 import           System.SED.Common.Table              (TableName(..),TemplateName(..))
 import           System.SED.Common.UID                (HalfUID(..),UID(..),
                                                        halfUID, uid, fpack,
                                                        uidUpper, uidLower)
 
+-- | Bespoke Quasiquoter for Table 240
 t240 :: QuasiQuoter
 t240 = QuasiQuoter
     { quoteExp = undefined
     , quotePat = undefined
-    , quoteDec = t240Decs
+    , quoteDec = returnQ <$> t240Decs
     , quoteType = undefined
     }
 
-t240Decs :: String -> DecsQ
-t240Decs s =
-    do
-        (_filename, _line, _column) <- getPosition
-        let (UIDRowDecs us ehs eus) =
+t240Decs :: String -> [Dec]
+t240Decs s =        concat [ us,
+                             mapd (mkName "nameHalfUID") ''HalfUID ehs,
+                             mapd (mkName "nameUID")     ''UID     eus]
+    where
+      -- | approx. [d| $n :: $t ; $n = $v |]
+      mapd n t v =
+                [ SigD n (AppT (AppT (ConT ''Map) (ConT t)) (ConT ''String))
+                , ValD (VarP n) (NormalB (AppE (VarE 'fromList) (ListE v))) []
+                ]
+      (UIDRowDecs us ehs eus) =
                 foldr gather mempty
               $ either error id
               $ parseOnly table240Parser
               $ fromString s
               where row `gather` decs = decs <> dUIDRow row
-            hmap = mkName "nameHalfUID"
-            umap = mkName "nameUID"
-            mapd n t v =
-                [ SigD n (AppT (AppT (ConT ''Map) (ConT t)) (ConT ''String))
-                , ValD (VarP n) (NormalB (AppE (VarE 'fromList) (ListE v))) []
-                ]
-        pure $ concat [ us, mapd hmap ''HalfUID ehs, mapd umap ''UID eus]
-
-
-
-table240Parser :: Parser [UIDRow]
-table240Parser = skipSpace
+      table240Parser = skipSpace
               *> title
               *> rowSep
               *> header
               *> header
               *> rowSep
-              *> many (uidRow <* rowSep)
-              <* many (many (char ' ') <* endOfLine)
-              <* endOfInput
+              *> many (uidRow <* rowSep)    <*    -- <-- the data
+                 many (spaces <* endOfLine) <*
+                 endOfInput
              <?> "Table 240"
+      spaces = skipWhile (== 32)
+
 
 
 data UIDRow = UIDRow UID UID HalfUID TableName TemplateName
@@ -110,10 +108,10 @@ data UIDRow = UIDRow UID UID HalfUID TableName TemplateName
 uidRow :: Parser UIDRow
 uidRow = string "    |"
       *> ( mkUIDRow
-        <$> pUID1          <* string "|"
-        <*> pUID2          <* string "|"
-        <*> pTableName     <* string "|"
-        <*> pTemplateName  <* string "|"
+        <$> pTableObjectUID <* string "|"
+        <*> pTableUID       <* string "|"
+        <*> pTableName      <* string "|"
+        <*> pTemplateName   <* string "|"
          )
      <*  endOfLine
      <?> "UID Row"
@@ -129,11 +127,11 @@ mkUIDRow u1 u2 ta te = case u1 `matches` u2 of
               let h = uidLower u1'
               in if h == uidUpper u2' then Just h else Nothing
 
-pUID1 :: Parser UID
-pUID1 =  pUIDField 1
+pTableObjectUID :: Parser UID
+pTableObjectUID =  pUIDField 1
 
-pUID2 :: Parser UID
-pUID2 =  pUIDField 2
+pTableUID :: Parser UID
+pTableUID =  pUIDField 2
 
 pTableName    :: Parser TableName
 pTableName    = TableName    <$> pTrimmedField 3
@@ -218,15 +216,6 @@ instance Semigroup UIDRowDecs
 instance Monoid UIDRowDecs
   where mempty = UIDRowDecs [] [] []
 
-getPosition :: Q (String, Int, Int) -- TODO: Use me or lose me
-getPosition = transPos <$> location where
-  transPos loc = (loc_filename loc,
-                  fst (loc_start loc),
-                  snd (loc_start loc))
 
-
-
-\end{code}
-\begin{code}
 \end{code}
 \end{document}

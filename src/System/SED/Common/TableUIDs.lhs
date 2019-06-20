@@ -57,8 +57,7 @@ import           System.SED.Common.UID          (HalfUID, UID)
 
 
 -- * Table HalfUID, UIDs, and Object UIDs
---
--- For each row of the table (after the header row), define the indicated constants.
+-- **** For each row of the table (after the header row), define the indicated constants.
 -- For example, from the second row, we define
 --   hSPInfo :: HalfUID
 --   uSPInfoTable :: UID
@@ -67,7 +66,10 @@ import           System.SED.Common.UID          (HalfUID, UID)
 --   hSPInfo -> "SPInfo"
 --   uSPInfoTable -> "SPInfo Table"
 --   uSPInfoTableObject -> "SPInfo Table Object"
--- 't240' is a QuasiQuoter to parse the Table 240 contents below.
+--
+
+--
+
 
 [t240|
 

@@ -1,0 +1,52 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-glyph">\</span><span class="hs-identifier">documentstyle</span><span class="hs-special">{</span><span class="hs-identifier">article</span><span class="hs-special">}</span><span>
+</span><a name="line-2"></a><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><a name="line-3"></a><span class="hs-glyph">\</span><span class="hs-identifier">chapter</span><span class="hs-special">{</span><span class="hs-identifier">Types</span><span class="hs-special">}</span><span>
+</span><a name="line-4"></a><span>
+</span><a name="line-5"></a><span class="hs-identifier">Define</span><span> </span><span class="hs-identifier">the</span><span> </span><span class="hs-identifier">SED</span><span> </span><span class="hs-identifier">Stream</span><span> </span><span class="hs-identifier">Protocol</span><span> </span><span class="hs-identifier">Token</span><span> </span><span class="hs-identifier">types</span><span class="hs-operator">.</span><span>
+</span><a name="line-6"></a><span>
+</span><a name="line-7"></a><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><a name="line-8"></a><span class="hs-comment">{-|
+Module      : System.SED.Common.Types
+Description : hsed types, field lenses, field types
+Copyright   : (c) Magnolia Heights R&amp;D, 2019
+License     : All rights reserved
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+Datatypes for @hsed@.
+
+-}</span><span>
+</span><a name="line-19"></a><span>
+</span><a name="line-20"></a><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
+</span><a name="line-21"></a><span>
+</span><a name="line-22"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.Common.Types</span><span>
+</span><a name="line-23"></a><span>  </span><span class="hs-special">(</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="Extras.Bytes.html"><span class="hs-identifier">Extras.Bytes</span></a><span>
+</span><a name="line-24"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="Extras.Hex.html"><span class="hs-identifier">Extras.Hex</span></a><span>
+</span><a name="line-25"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="Extras.Integral.html"><span class="hs-identifier">Extras.Integral</span></a><span>
+</span><a name="line-26"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.Call.html"><span class="hs-identifier">System.SED.Common.Call</span></a><span>
+</span><a name="line-27"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.ColumnTypes.html"><span class="hs-identifier">System.SED.Common.ColumnTypes</span></a><span>
+</span><a name="line-28"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.SpecialPurposeUIDs.html"><span class="hs-identifier">System.SED.Common.SpecialPurposeUIDs</span></a><span>
+</span><a name="line-29"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.StreamItem.html"><span class="hs-identifier">System.SED.Common.StreamItem</span></a><span>
+</span><a name="line-30"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.Table.html"><span class="hs-identifier">System.SED.Common.Table</span></a><span>
+</span><a name="line-31"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.TableUIDs.html"><span class="hs-identifier">System.SED.Common.TableUIDs</span></a><span>
+</span><a name="line-32"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.Token.html"><span class="hs-identifier">System.SED.Common.Token</span></a><span>
+</span><a name="line-33"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.UID.html"><span class="hs-identifier">System.SED.Common.UID</span></a><span>
+</span><a name="line-34"></a><span>  </span><span class="hs-special">,</span><span> </span><span class="hs-keyword">module</span><span> </span><a href="System.SED.Common.Value.html"><span class="hs-identifier">System.SED.Common.Value</span></a><span>
+</span><a name="line-35"></a><span>  </span><span class="hs-special">)</span><span>
+</span><a name="line-36"></a><span class="hs-keyword">where</span><span>
+</span><a name="line-37"></a><span>
+</span><a name="line-38"></a><span class="hs-keyword">import</span><span>           </span><a href="Extras.Bytes.html"><span class="hs-identifier">Extras.Bytes</span></a><span>
+</span><a name="line-39"></a><span class="hs-keyword">import</span><span>           </span><a href="Extras.Hex.html"><span class="hs-identifier">Extras.Hex</span></a><span>
+</span><a name="line-40"></a><span class="hs-keyword">import</span><span>           </span><a href="Extras.Integral.html"><span class="hs-identifier">Extras.Integral</span></a><span>
+</span><a name="line-41"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.Call.html"><span class="hs-identifier">System.SED.Common.Call</span></a><span>
+</span><a name="line-42"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.ColumnTypes.html"><span class="hs-identifier">System.SED.Common.ColumnTypes</span></a><span>
+</span><a name="line-43"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.SpecialPurposeUIDs.html"><span class="hs-identifier">System.SED.Common.SpecialPurposeUIDs</span></a><span>
+</span><a name="line-44"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.StreamItem.html"><span class="hs-identifier">System.SED.Common.StreamItem</span></a><span>
+</span><a name="line-45"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.Table.html"><span class="hs-identifier">System.SED.Common.Table</span></a><span>
+</span><a name="line-46"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.TableUIDs.html"><span class="hs-identifier">System.SED.Common.TableUIDs</span></a><span>
+</span><a name="line-47"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.Token.html"><span class="hs-identifier">System.SED.Common.Token</span></a><span>
+</span><a name="line-48"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.UID.html"><span class="hs-identifier">System.SED.Common.UID</span></a><span>
+</span><a name="line-49"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.Value.html"><span class="hs-identifier">System.SED.Common.Value</span></a><span>
+</span><a name="line-50"></a><span>
+</span><a name="line-51"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><a name="line-52"></a></pre></body></html>

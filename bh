@@ -2,7 +2,7 @@
 cd ~/hsed
 echo "clean ..." && stack clean && rm -rf .stack-work &&  \
 echo "maketags ..." && maketags && \
-echo "build ..." && stack build --haddock && \
+echo "build ..." && stack build --haddock --haddock-arguments="-o doc" && \
 echo "test ..." && stack test && \
 echo "install ..." && stack install && \
 echo -e "some sort of testifying here ...\n" && \

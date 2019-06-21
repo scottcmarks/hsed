@@ -1,0 +1,51 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-glyph">\</span><span class="hs-identifier">documentstyle</span><span class="hs-special">{</span><span class="hs-identifier">article</span><span class="hs-special">}</span><span>
+</span><a name="line-2"></a><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><a name="line-3"></a><span class="hs-glyph">\</span><span class="hs-identifier">chapter</span><span class="hs-special">{</span><span class="hs-identifier">App</span><span class="hs-special">}</span><span>
+</span><a name="line-4"></a><span>
+</span><a name="line-5"></a><span class="hs-identifier">Define</span><span> </span><span class="hs-identifier">the</span><span> </span><span class="hs-identifier">types</span><span> </span><span class="hs-identifier">used</span><span> </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">SEDs</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">and</span><span> </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">the</span><span> </span><span class="hs-identifier">hsed</span><span> </span><span class="hs-identifier">program</span><span> </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">particular</span><span class="hs-operator">.</span><span>
+</span><a name="line-6"></a><span>
+</span><a name="line-7"></a><span>
+</span><a name="line-8"></a><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><a name="line-9"></a><span class="hs-comment">{-|
+Module      : Hsed.App
+Description : hsed types, field lenses, field types
+Copyright   : (c) Magnolia Heights R&amp;D, 2019
+License     : All rights reserved
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+Datatypes for @hsed@ main.
+Constructors and lenses.
+-}</span><span>
+</span><a name="line-20"></a><span>
+</span><a name="line-21"></a><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
+</span><a name="line-22"></a><span class="hs-pragma">{-# LANGUAGE TemplateHaskell   #-}</span><span>
+</span><a name="line-23"></a><span>
+</span><a name="line-24"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hsed.App</span><span>
+</span><a name="line-25"></a><span class="hs-keyword">where</span><span>
+</span><a name="line-26"></a><span>
+</span><a name="line-27"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Control.Lens</span><span>
+</span><a name="line-28"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">RIO</span><span>
+</span><a name="line-29"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">RIO.Process</span><span>
+</span><a name="line-30"></a><span>
+</span><a name="line-31"></a><span class="hs-comment">-- | Command line arguments</span><span>
+</span><a name="line-32"></a><span class="hs-keyword">data</span><span> </span><a name="Options"><a href="Hsed.App.html#Options"><span class="hs-identifier">Options</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a name="Options"><a href="Hsed.App.html#Options"><span class="hs-identifier">Options</span></a></a><span>
+</span><a name="line-33"></a><span>  </span><span class="hs-special">{</span><span> </span><a name="_verbose"><a href="Hsed.App.html#_verbose"><span class="hs-identifier">_verbose</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-identifier hs-type">Bool</span><span>
+</span><a name="line-34"></a><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">Show</span><span class="hs-special">)</span><span>
+</span><a name="line-35"></a><span class="hs-identifier hs-var">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier hs-var">Options</span><span>
+</span><a name="line-36"></a><span>
+</span><a name="line-37"></a><span class="hs-comment">-- | Global command environment</span><span>
+</span><a name="line-38"></a><span class="hs-keyword">data</span><span> </span><a name="App"><a href="Hsed.App.html#App"><span class="hs-identifier">App</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a name="App"><a href="Hsed.App.html#App"><span class="hs-identifier">App</span></a></a><span>
+</span><a name="line-39"></a><span>  </span><span class="hs-special">{</span><span> </span><a name="_logFunc"><a href="Hsed.App.html#_logFunc"><span class="hs-identifier">_logFunc</span></a></a><span>        </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-identifier hs-type">LogFunc</span><span>
+</span><a name="line-40"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_processContext"><a href="Hsed.App.html#_processContext"><span class="hs-identifier">_processContext</span></a></a><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="hs-identifier hs-type">ProcessContext</span><span>
+</span><a name="line-41"></a><span>  </span><span class="hs-special">,</span><span> </span><a name="_options"><a href="Hsed.App.html#_options"><span class="hs-identifier">_options</span></a></a><span>        </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><a href="Hsed.App.html#Options"><span class="hs-identifier hs-type">Options</span></a><span>
+</span><a name="line-42"></a><span>  </span><span class="hs-special">}</span><span>
+</span><a name="line-43"></a><span class="hs-identifier hs-var">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier hs-var">App</span><span>
+</span><a name="line-44"></a><span class="hs-identifier">makeApp</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">LogFunc</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">ProcessContext</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Hsed.App.html#Options"><span class="hs-identifier hs-type">Options</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a><span>
+</span><a name="line-45"></a><a name="makeApp"><a href="Hsed.App.html#makeApp"><span class="hs-identifier">makeApp</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Hsed.App.html#App"><span class="hs-identifier hs-var">App</span></a><span>
+</span><a name="line-46"></a><span>
+</span><a name="line-47"></a><span class="hs-keyword">instance</span><span> </span><span class="hs-identifier hs-type">HasLogFunc</span><span> </span><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a><span> </span><span class="hs-keyword">where</span><span> </span><a name="local-8214565720323828107"><span class="hs-identifier">logFuncL</span></a><span> </span><span class="hs-glyph">=</span><span> </span><a href="Hsed.App.html#logFunc"><span class="hs-identifier hs-var">logFunc</span></a><span>
+</span><a name="line-48"></a><span>
+</span><a name="line-49"></a><span>
+</span><a name="line-50"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><a name="line-51"></a></pre></body></html>

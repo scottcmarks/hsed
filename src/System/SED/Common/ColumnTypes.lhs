@@ -3345,8 +3345,7 @@ etc. For object tables created using the CreateTable method, the UID column SHAL
 Number 0, the first column defined in the Columns parameter of CreateTable SHALL be Column
 Number 1, etc.
 
-    +------------------------------------------------+
-    |              Table 47 ACE_columns              |
+                   Table 47 ACE_columns
     +-----------------------+-----------+------------+
     |UID                    |Name       |Format      |
     +-----------------------+-----------+------------+
@@ -3370,8 +3369,7 @@ This is an alternative type where the options are either a uidref to an Authorit
 boolean_ACE (AND = 0 and OR = 1) options. This type is used within the AC_element list to form a
 postfix Boolean expression of Authorities.
 
-    +------------------------------------------------------------+
-    |                  Table 48 ACE_expression                   |
+                       Table 48 ACE_expression
     +-----------------------+--------------+---------------------+
     |UID                    |Name          |Format               |
     +-----------------------+--------------+---------------------+
@@ -3393,8 +3391,7 @@ _ACE_expressionSetSize = max_columns
 
 This type describes a uidref to an object contained in the ACE table.
 
-    +--------------------------------------------------------------------+
-    |                      Table 49 ACE_object_ref                       |
+                           Table 49 ACE_object_ref
     +-----------------------+--------------+-----------------------------+
     |UID                    |Name          |Format                       |
     +-----------------------+--------------+-----------------------------+
@@ -3422,8 +3419,7 @@ The ACL type is a list of uidrefs to ACE objects. The length of the list, and th
 ACEs that MAY be included in a single Access Control List, is SSC/implementation dependant.
 
 
-    +--------------------------------------------+
-    |                Table 50 ACL                |
+                     Table 50 ACL
     +-----------------------+-----+--------------+
     |UID                    |Name |Format        |
     +-----------------------+-----+--------------+
@@ -3444,8 +3440,7 @@ data Core_ACL = Core_ACL [Core_ACE_object_ref]
 
 This enumeration type defines the behavior of the NextKey column.
 
-    +------------------------------------------------------+
-    |                Table 51 adv_key_mode                 |
+                     Table 51 adv_key_mode
     +-----------------------+------------+-----------------+
     |UID                    |Name        |Format           |
     +-----------------------+------------+-----------------+
@@ -3489,8 +3484,7 @@ data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
 This set type describes the types of attributes available for the AttributeFlags column of the Column
 table.
 
-    +--------------------------------------------+
-    |            Table 53 attr_flags             |
+                 Table 53 attr_flags
     +-----------------------+----------+---------+
     |UID                    |Name      |Format   |
     +-----------------------+----------+---------+
@@ -3560,8 +3554,7 @@ This enumeration type is used to represent the authentication methods that MAY b
 authenticate authorities (see 5.3.4.1.3).
 
 
-    +------------------------------------------------------+
-    |                 Table 55 auth_method                 |
+                      Table 55 auth_method
     +-----------------------+------------+-----------------+
     |UID                    |Name        |Format           |
     +-----------------------+------------+-----------------+
@@ -3634,8 +3627,7 @@ data Core_auth_method = Core_auth_method_None
 
 The Authority_object_ref type describes a uidref to an object in the Authority table.
 
-    +--------------------------------------------------------------------------+
-    |                   Table 57 Authority_object_ref                          |
+                        Table 57 Authority_object_ref
     +-----------------------+--------------------+-----------------------------+
     |UID                    |Name                |Format                       |
     +-----------------------+--------------------+-----------------------------+
@@ -3666,8 +3658,7 @@ mkCore_Authority_object_ref = mkCore_Restricted_object_ref_To uAuthorityTable
 The boolean column type is an enumeration used to represent True or False.
 
 
-    +------------------------------------------------------+
-    |                   Table 58 boolean                   |
+                        Table 58 boolean
     +-----------------------+------------+-----------------+
     |UID                    |Name        |Format           |
     +-----------------------+------------+-----------------+
@@ -3704,8 +3695,7 @@ type Core_boolean = Bool
 This enumeration is used to identify the Boolean operators "And", "Or", and "Not".
 
 
-    +------------------------------------------------------+
-    |                 Table 60 boolean_ACE                 |
+                      Table 60 boolean_ACE
     +-----------------------+------------+-----------------+
     |UID                    |Name        |Format           |
     +-----------------------+------------+-----------------+
@@ -3742,8 +3732,7 @@ data Core_boolean_ACE = And | Or | Not
 
 Type used for referencing a row in a byte table.
 
-    +-----------------------------------------------------------------+
-    |                      Table 62 byte_row_ref                      |
+                           Table 62 byte_row_ref
     +-----------------------+-------------+---------------------------+
     |UID                    |Name         |Format                     |
     +-----------------------+-------------+---------------------------+
@@ -3762,8 +3751,7 @@ This is a reference type that SHALL be used specifically for uidrefs to byte tab
 type checking, as part of that type checking the TPer SHALL validate that this uidref is to a table that is
 a byte table.
 
-    +-------------------------------------------------------------------+
-    |                     Table 63 byte_table_ref                       |
+                          Table 63 byte_table_ref
     +-----------------------+--------------+----------------------------+
     |UID                    |Name          |Format                      |
     +-----------------------+--------------+----------------------------+
@@ -3784,8 +3772,7 @@ type Core_byte_table_ref = 'General_Reference_Table_Type_Byte
 This type represents the bytes base type, and is used to represent a value made up of a fixed-size
 sequence of bytes.
 
-    +-----------------------------------------+
-    |             Table 64 bytes              |
+                  Table 64 bytes
     +-----------------------+------+----------+
     |UID                    |Name  |Format    |
     +-----------------------+------+----------+
@@ -3807,8 +3794,7 @@ instance (KnownNat n) => Show (Core_bytes n) where
 
 This is a bytes type with a size requirement of 4.
 
-    +-----------------------------------------------------+
-    |             Table 65 bytes_4                        |
+                  Table 65 bytes_4
     +-----------------------+-------+---------------------+
     |UID                    |Name   |Format               |
     +-----------------------+-------+---------------------+
@@ -3828,8 +3814,7 @@ type Core_bytes_4 = Core_bytes 4
 
 This is a bytes type with a size requirement of 12.
 
-    +------------------------------------------------------+
-    |                  Table 66 bytes_12                   |
+                       Table 66 bytes_12
     +-----------------------+--------+---------------------+
     |UID                    |Name    |Format               |
     +-----------------------+--------+---------------------+
@@ -3849,8 +3834,7 @@ type Core_bytes_12 = Core_bytes 12
 
 This is a bytes type with a size requirement of 16.
 
-    +------------------------------------------------------+
-    |                  Table 67 bytes_16                   |
+                       Table 67 bytes_16
     +-----------------------+--------+---------------------+
     |UID                    |Name    |Format               |
     +-----------------------+--------+---------------------+
@@ -3870,8 +3854,7 @@ type Core_bytes_16 = Core_bytes 16
 
 This is a bytes type with a size requirement of 20.
 
-    +------------------------------------------------------+
-    |                  Table 68 bytes_20                   |
+                       Table 68 bytes_20
     +-----------------------+--------+---------------------+
     |UID                    |Name    |Format               |
     +-----------------------+--------+---------------------+
@@ -3892,8 +3875,7 @@ type Core_bytes_20 = Core_bytes 20
 
 This is a bytes type with a size requirement of 32.
 
-    +------------------------------------------------------+
-    |                  Table 69 bytes_32                   |
+                       Table 69 bytes_32
     +-----------------------+--------+---------------------+
     |UID                    |Name    |Format               |
     +-----------------------+--------+---------------------+
@@ -3913,8 +3895,7 @@ type Core_bytes_32 = Core_bytes 32
 
 This is a bytes type with a size requirement of 48.
 
-    +------------------------------------------------------+
-    |                  Table 70 bytes_48                   |
+                       Table 70 bytes_48
     +-----------------------+--------+---------------------+
     |UID                    |Name    |Format               |
     +-----------------------+--------+---------------------+
@@ -3936,8 +3917,7 @@ type Core_bytes_48 = Core_bytes 48
 
 This is a bytes type with a size requirement of 64.
 
-    +------------------------------------------------------+
-    |                  Table 71 bytes_64                   |
+                       Table 71 bytes_64
     +-----------------------+--------+---------------------+
     |UID                    |Name    |Format               |
     +-----------------------+--------+---------------------+
@@ -3956,8 +3936,7 @@ type Core_bytes_64 = Core_bytes 64
 
 The Certificates_object_ref type describes a uidref to an object in the Certificates table.
 
-    +-----------------------------------------------------------------------------+
-    |                      Table 72 Certificates_object_ref                       |
+                           Table 72 Certificates_object_ref
     +-----------------------+-----------------------+-----------------------------+
     |UID                    |Name                   |Format                       |
     +-----------------------+-----------------------+-----------------------------+

@@ -1,18 +1,16 @@
 :load dev/DevMain.hs
-:set -ddump-splices
 :set -fno-warn-type-defaults
 :set -fno-warn-unused-imports
 :set -XDataKinds
 :set -XOverloadedStrings
 :set -XTemplateHaskell
-:def $ (pure . (":! bash -l -c " ++) . show)
-:def | (pure . (":! bash -l -c " ++) . show)
+:set -XQuasiQuotes
 
 import System.IO
 putStrLn "loading script ..."
 --------------------------------------------------------------------------------
 
-$( [| putStrLn "This is hsed!" |] )  $([|..|]) is a sort of identity
+$( [| putStrLn "This is hsed!" |] )  -- $([|..|]) is a sort of identity
 
 
 import           Language.Haskell.TH
@@ -21,6 +19,9 @@ import           Language.Haskell.TH.PprLib
 import           Data.Function((&))
 import           Data.Functor((<&>))
 import           System.SED.Common.TableUIDs
+import           Data.Attoparsec.ByteString
+import           GHC.Base((.),(<*),(<*>),(*>),(>>=))
+import           GHC.Show(Show(..))
 
 pQ = (ppr <$>) . runQ
 hw = [| putStrLn "Hello, world!" |]
@@ -31,7 +32,9 @@ $( hw )  -- echoed by -ddump-splices
 showQ = (\h -> h & pQ <&> show >>= putStrLn)
 hw & showQ
 
-import Text.HereDoc
+import Text.Heredoc
+
+:{
 table240 = [here|
 
 
@@ -134,11 +137,34 @@ table240 = [here|
     |00 00 00 01 00 00 08 06 |00 00 08 06 00 00 00 00 |K_AES_256     |Locking |
     +------------------------+------------------------+--------------+--------+
 
-|]
+ |]
+:}
 
-parserTest table240Parser table240
+
+:set -ddump-splices
+
+:{
+table50 = [here|
+
+                     Table 50 ACL
+    +-----------------------+-----+--------------+
+    |UID                    |Name |Format        |
+    +-----------------------+-----+--------------+
+    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |
+    |                       |     |*,            |
+    |                       |     |ACE_object_ref|
+    +-----------------------+-----+--------------+
+
+|]
+:}
+
+
+
 
 putStrLn "Buh-bye now."
 
 --------------------------------------------------------------------------------
+import GHC.Base((++))
+:def $ (pure . (":! bash -l -c " ++) . show)
+:def | (pure . (":! bash -l -c " ++) . show)
 putStrLn ".. script loaded."

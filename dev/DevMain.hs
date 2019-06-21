@@ -8,25 +8,25 @@ module DevMain where
 
 import           Data.Attoparsec.ByteString       hiding (takeWhile)
 import           Data.Attoparsec.ByteString.Char8
-import           Data.ByteString                  hiding (putStrLn, takeWhile)
+import           Data.ByteString                  hiding (putStrLn, take,
+                                                   takeWhile)
 import           Data.Functor                     ((<$>))
 import           Data.Map.Internal                (Map (..), fromList)
 import           Data.String                      (IsString (..))
 import           Data.Version
 import           GHC                              ()
-import           GHC.Base                         (String, liftA2, many, pure,
-                                                   undefined, ($), (*>), (<*),
-                                                   (<*>), (==))
+import           GHC.Base                         (Int, String, liftA2, many,
+                                                   mapM, pure, undefined, ($),
+                                                   (*>), (<*), (<*>), (==))
 import           GHC.List                         (zip, (!!))
 import           GHC.Tuple                        ()
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
 import           Language.Haskell.TH.PprLib       hiding (char, (<>))
 import           Language.Haskell.TH.Syntax
--- import           RIO                              hiding (takeWhile)
 import           Text.PrettyPrint                 hiding (char, (<>))
 
-import           Extras.Bytes
+import           Extras.Bytes                     hiding (take)
 import           Extras.GitVersion                (gitVersion)
 import           Extras.Hex
 import           Extras.Integral                  hiding (char)
@@ -40,11 +40,6 @@ import           System.SED.Common.UID
 
 dev :: IO ()
 dev = putStrLn "dev"
-
-qAC_element
-
--- qUIDRow uidrow
-
 
 title :: Parser ByteString
 title = string "Table 50 ACL"
@@ -65,33 +60,30 @@ blankLines :: Parser ()
 blankLines = many (spaces *> endOfLine) *> pure ()
     <?> "blank lines"
 
-header :: Parser ()
-header = undefined :: Parser ()
+data TypeTableRow = TypeTableRow TypeUIDField TypeName FormatString
 
-data TypeTableRow TypeUIDField TypeName FormatString
+type TypeUIDField = ByteString
 
-newtype TypeUIDField = TypeUIDField ByteString
+type TypeName = ByteString
 
-newtype TypeName = TypeName ByteString
-
-newtype FormatString = FormatString ByteString
+type FormatString = ByteString
 
 
 tableRowFields :: [Int] -> Parser [ByteString]
-typeTableRow lengths = do
-    _leader:fields <- takeField <$> lengths
-    pure fields
-  where
-    takeField len = take len <* char '|'
+tableRowFields lengths =
+    do
+        _leader:fields <- mapM takeField lengths
+        pure fields
+    where
+       takeField len = take len <* char '|'
 
-
+header :: [Int] -> Parser ()
+header lengths = tableRowFields lengths *> pure ()
 
 typeTableRow :: [Int] -> Parser TypeTableRow
 typeTableRow lengths = do
-    _leader:fields <- takeField <$> lengths
-    pure fields
-  where
-    takeField len = take len <* char '|'
+    [_leader, uidField, typeName, formatString] <- tableRowFields lengths
+    pure $ TypeTableRow uidField typeName formatString
 
 
 typeTableParser :: Parser [TypeTableRow]
@@ -99,11 +91,10 @@ typeTableParser = do
     _ <- skipSpace
     _ <- title
     pieceLengths <- rowSep
-
-               *> _ <- header
-               *> _ <- rowSep
-               *> _ <- many (typeTableRow)        <*    -- <-- the data
-                  _ <- rowSep                     <*
-                  _ <- many (spaces <* endOfLine) <*
-                  endOfInput
-              <?> "Table 240"
+    _ <- header pieceLengths
+    _ <- rowSep
+    rows <- many $ typeTableRow pieceLengths
+    _ <- rowSep
+    _ <- many $ spaces <* endOfLine
+    _ <- endOfInput
+    pure rows

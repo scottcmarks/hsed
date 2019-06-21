@@ -36,19 +36,24 @@ spec spec22,23
 
 ./test/Spec.hs,0
 
-./dev/DevMain.hs,317
+./dev/DevMain.hs,515
 module DevMain DevMain6,7
 import import16,17
 dev dev40,41
 title title48,49
-spaces spaces51,52
-rowSepFields rowSepFields54,55
-rowSep rowSep58,59
-blankLines blankLines64,65
+spaces spaces52,53
+rowSepFieldLengths rowSepFieldLengths55,56
+rowSep rowSep59,60
+blankLines blankLines63,64
 header header67,68
-data TypeTableRowTypeTableRow70,71
-typeTableRow typeTableRow72,73
-typeTableParser typeTableParser76,77
+data TypeTableRow TypeTableRow70,71
+newtype TypeUIDField TypeUIDField72,73
+newtype TypeName TypeName74,75
+newtype FormatString FormatString76,77
+tableRowFields tableRowFields79,80
+typeTableRow typeTableRow80,81
+typeTableRow typeTableRow88,89
+typeTableParser typeTableParser96,97
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3

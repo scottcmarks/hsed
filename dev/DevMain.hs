@@ -47,41 +47,63 @@ qAC_element
 
 
 title :: Parser ByteString
-title = string "Table 50 ACL" :: Parser ByteString
+title = string "Table 50 ACL"
+    <?> "Table title"
 
 spaces :: Parser ByteString
-spaces = takeWhile (== ' ') :: Parser ByteString
+spaces = takeWhile (== ' ')
 
-rowSepFields :: Parser [ByteString]
-rowSepFields = char8 '+' *> many ( takeWhile (== '-') <* char '+' )
-           <?> "row separator fields"
+rowSepFieldLengths :: Parser [Int]
+rowSepFieldLengths = char8 '+' *> many (length <$> takeWhile (== '-') <*  char '+' )
+    <?> "row separator fields"
 
-rowSep :: Parser [ByteString]
-rowSep = (:)
-     <$> spaces
-     <*> rowSepFields <* endOfLine
-     <?> "row separator"
+rowSep :: Parser [Int]
+rowSep = (:) <$> (length <$> spaces) <*> rowSepFieldLengths <* endOfLine
+    <?> "row separator"
 
 blankLines :: Parser ()
-blankLines = many (spaces *> endOfLine) *> pure () <?> "blank lines" :: Parser ()
+blankLines = many (spaces *> endOfLine) *> pure ()
+    <?> "blank lines"
 
 header :: Parser ()
 header = undefined :: Parser ()
 
-data TypeTableRow
+data TypeTableRow TypeUIDField TypeName FormatString
 
-typeTableRow :: Parser TypeTableRow
-typeTableRow = undefined :: Parser TypeTableRow
+newtype TypeUIDField = TypeUIDField ByteString
+
+newtype TypeName = TypeName ByteString
+
+newtype FormatString = FormatString ByteString
+
+
+tableRowFields :: [Int] -> Parser [ByteString]
+typeTableRow lengths = do
+    _leader:fields <- takeField <$> lengths
+    pure fields
+  where
+    takeField len = take len <* char '|'
+
+
+
+typeTableRow :: [Int] -> Parser TypeTableRow
+typeTableRow lengths = do
+    _leader:fields <- takeField <$> lengths
+    pure fields
+  where
+    takeField len = take len <* char '|'
 
 
 typeTableParser :: Parser [TypeTableRow]
-typeTableParser = skipSpace
-               *> title
-               *> rowSep
-               *> header
-               *> rowSep
-               *> many (typeTableRow)        <*    -- <-- the data
-                  rowSep <*
-                  many (spaces <* endOfLine) <*
+typeTableParser = do
+    _ <- skipSpace
+    _ <- title
+    pieceLengths <- rowSep
+
+               *> _ <- header
+               *> _ <- rowSep
+               *> _ <- many (typeTableRow)        <*    -- <-- the data
+                  _ <- rowSep                     <*
+                  _ <- many (spaces <* endOfLine) <*
                   endOfInput
               <?> "Table 240"

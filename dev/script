@@ -137,11 +137,9 @@ table240 = [here|
     |00 00 00 01 00 00 08 06 |00 00 08 06 00 00 00 00 |K_AES_256     |Locking |
     +------------------------+------------------------+--------------+--------+
 
- |]
+ |] ::ByteString
 :}
 
-
-:set -ddump-splices
 
 :{
 table50 = [here|
@@ -155,11 +153,16 @@ table50 = [here|
     |                       |     |ACE_object_ref|
     +-----------------------+-----+--------------+
 
-|]
+|] ::ByteString
 :}
 
+t50sep = "    +-----------------------+-----+--------------+\n" ::ByteString
+thead  = "    |UID                    |Name |Format        |\n" ::ByteString
+trow1  = "    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |\n" ::ByteString
+trow2  = "    |                       |     |*,            |\n" ::ByteString
+trow3  = "    |                       |     |ACE_object_ref|\n" ::ByteString
 
-
+lengths = fromRight [] $  parseOnly (skipSpace *> title *> rowSep) table50
 
 putStrLn "Buh-bye now."
 

@@ -62,6 +62,7 @@ import           System.SED.Common.Table              (TableName(..),TemplateNam
 import           System.SED.Common.UID                (HalfUID(..),UID(..),
                                                        halfUID, uid, fpack,
                                                        uidUpper, uidLower)
+import           System.SED.Common.Util               (trimTrailingWhitespace)
 
 -- | Bespoke Quasiquoter for Table 240
 t240 :: QuasiQuoter
@@ -148,7 +149,6 @@ pUIDField i = hexUID <$> pField i
 
 pTrimmedField :: Int -> Parser ByteString
 pTrimmedField i = trimTrailingWhitespace <$> pField i
-  where trimTrailingWhitespace s = case spanEnd isSpace_w8 s of (s',_) -> s'
 
 pField :: Int -> Parser ByteString
 pField i = take (pieceLengths !! i)

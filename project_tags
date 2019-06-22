@@ -36,24 +36,26 @@ spec spec22,23
 
 ./test/Spec.hs,0
 
-./dev/DevMain.hs,515
+./dev/DevMain.hs,617
 module DevMain DevMain6,7
-import import16,17
-dev dev40,41
-title title48,49
-spaces spaces52,53
-rowSepFieldLengths rowSepFieldLengths55,56
-rowSep rowSep59,60
-blankLines blankLines63,64
-header header67,68
-data TypeTableRow TypeTableRow70,71
-newtype TypeUIDField TypeUIDField72,73
-newtype TypeName TypeName74,75
-newtype FormatString FormatString76,77
-tableRowFields tableRowFields79,80
-typeTableRow typeTableRow80,81
-typeTableRow typeTableRow88,89
-typeTableParser typeTableParser96,97
+import import19,20
+dev dev44,45
+typeTableParser typeTableParser50,51
+typeTableRow typeTableRow58,59
+title title64,65
+spaces spaces68,69
+rowSepFieldLengths rowSepFieldLengths71,72
+rowSep rowSep75,76
+blankLines blankLines79,80
+tableRowFields tableRowFields83,84
+data TypeTableRow TypeTableRow94,95
+data TypeTableRow = TypeTableRow TypeTableRow94,95
+instance Semigroup Semigroup TypeTableRow97,98
+    (T(TypeTableRowu1n1f1)98,99
+type TypeUIDField TypeUIDField101,102
+type TypeName TypeName103,104
+type FormatString FormatString105,106
+header header108,109
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3
@@ -219,21 +221,25 @@ newtype ColumnType ColumnType355,356
 ./src/System/SED/Common/Types.lhs,61
 module System.SED.Common.TypesSystem.SED.Common.Types21,22
 
+./src/System/SED/Common/Util.lhs,113
+module System.SED.Common.Util System.SED.Common.Util22,23
+trimTrailingWhitespace trimTrailingWhitespace27,28
+
 ./src/System/SED/Common/TableUIDs/TH.lhs,929
 module System.SED.Common.TableUIDs.TH System.SED.Common.TableUIDs.TH24,25
 import import45,46
-t240 t24066,67
-t240Decs t240Decs74,75
-data UIDRow UIDRow104,105
-data UIDRow = UIDRow UIDRow104,105
-uidRow uidRow107,108
-mkUIDRow mkUIDRow118,119
-pTableObjectUID pTableObjectUID129,130
-pTableUID pTableUID132,133
-pTableName pTableName135,136
-pTemplateName pTemplateName138,139
-pUIDField pUIDField141,142
-pTrimmedField pTrimmedField148,149
+t240 t24067,68
+t240Decs t240Decs75,76
+data UIDRow UIDRow105,106
+data UIDRow = UIDRow UIDRow105,106
+uidRow uidRow108,109
+mkUIDRow mkUIDRow119,120
+pTableObjectUID pTableObjectUID130,131
+pTableUID pTableUID133,134
+pTableName pTableName136,137
+pTemplateName pTemplateName139,140
+pUIDField pUIDField142,143
+pTrimmedField pTrimmedField149,150
 pField pField152,153
 title title156,157
 header header159,160

@@ -40,8 +40,8 @@ import           System.SED.Common.ColumnTypes.TH
 import           System.SED.Common.TableUIDs
 import           System.SED.Common.TableUIDs.TH
 import           System.SED.Common.UID
-import           System.SED.Common.Util           (trimTrailingWhitespace)
-
+import           System.SED.Common.Util           (hexUID,
+                                                   trimTrailingWhitespace)
 
 
 dev :: IO ()
@@ -50,12 +50,13 @@ dev = putStrLn "dev"
 
 
 
-typeTableParser :: Parser TypeTableRow
+typeTableParser :: Parser (UID, ByteString, ByteString)
 typeTableParser = do
     pieceLengths <- skipSpace *> title *> rowSep
     rows         <- header pieceLengths *> rowSep *> many1 (typeTableRow pieceLengths)
     _            <- rowSep *> blankLines *> endOfInput
-    pure $ sconcat $ NE.fromList rows
+    case sconcat $ NE.fromList rows of
+      (TypeTableRow u n f) -> pure $ ((hexUID u), n, f)
 
 
 typeTableRow :: [Int] -> Parser TypeTableRow

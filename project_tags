@@ -41,21 +41,21 @@ module DevMain DevMain6,7
 import import19,20
 dev dev46,47
 typeTableParser typeTableParser52,53
-typeTableRow typeTableRow60,61
-title title69,70
-spaces spaces73,74
-rowSepFieldLengths rowSepFieldLengths76,77
-rowSep rowSep81,82
-blankLines blankLines85,86
-tableRowFields tableRowFields89,90
-data TypeTableRow TypeTableRow100,101
-data TypeTableRow = TypeTableRow TypeTableRow100,101
-instance Semigroup Semigroup TypeTableRow103,104
-    (T(TypeTableRowu1n1f1)104,105
-type TypeUIDField TypeUIDField107,108
-type TypeName TypeName109,110
-type FormatString FormatString111,112
-header header114,115
+typeTableRow typeTableRow61,62
+title title70,71
+spaces spaces74,75
+rowSepFieldLengths rowSepFieldLengths77,78
+rowSep rowSep82,83
+blankLines blankLines86,87
+tableRowFields tableRowFields90,91
+data TypeTableRow TypeTableRow101,102
+data TypeTableRow = TypeTableRow TypeTableRow101,102
+instance Semigroup Semigroup TypeTableRow104,105
+    (T(TypeTableRowu1n1f1)105,106
+type TypeUIDField TypeUIDField108,109
+type TypeName TypeName110,111
+type FormatString FormatString112,113
+header header115,116
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3

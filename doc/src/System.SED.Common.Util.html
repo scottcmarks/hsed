@@ -1,0 +1,34 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-glyph">\</span><span class="hs-identifier">documentstyle</span><span class="hs-special">{</span><span class="hs-identifier">article</span><span class="hs-special">}</span><span>
+</span><a name="line-2"></a><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><a name="line-3"></a><span class="hs-glyph">\</span><span class="hs-identifier">chapter</span><span class="hs-special">{</span><span class="hs-identifier">Util</span><span class="hs-special">}</span><span>
+</span><a name="line-4"></a><span>
+</span><a name="line-5"></a><span class="hs-identifier">Utilities</span><span>
+</span><a name="line-6"></a><span>
+</span><a name="line-7"></a><span>
+</span><a name="line-8"></a><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><a name="line-9"></a><span class="hs-comment">{-|
+Module      : System.SED.Common.Util
+Description : Utilities
+Copyright   : (c) Magnolia Heights R&amp;D, 2019
+License     : All rights reserved
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+Utilities
+
+-}</span><span>
+</span><a name="line-20"></a><span>
+</span><a name="line-21"></a><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude   #-}</span><span>
+</span><a name="line-22"></a><span>
+</span><a name="line-23"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.Common.Util</span><span> </span><span class="hs-keyword">where</span><span>
+</span><a name="line-24"></a><span>
+</span><a name="line-25"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">Data.Attoparsec.ByteString.Char8</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-var">isSpace_w8</span><span class="hs-special">)</span><span>
+</span><a name="line-26"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">RIO.ByteString</span><span> </span><span class="hs-special">(</span><span class="hs-identifier hs-type">ByteString</span><span class="hs-special">,</span><span> </span><span class="hs-identifier hs-var">spanEnd</span><span class="hs-special">)</span><span>
+</span><a name="line-27"></a><span>
+</span><a name="line-28"></a><span class="hs-identifier">trimTrailingWhitespace</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">ByteString</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">ByteString</span><span>
+</span><a name="line-29"></a><a name="trimTrailingWhitespace"><a href="System.SED.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier">trimTrailingWhitespace</span></a></a><span> </span><a name="local-6989586621679239804"><a href="#local-6989586621679239804"><span class="hs-identifier">s</span></a></a><span> </span><span class="hs-glyph">=</span><span>
+</span><a name="line-30"></a><span>    </span><span class="hs-keyword">case</span><span> </span><span class="hs-identifier hs-var">spanEnd</span><span> </span><span class="hs-identifier hs-var">isSpace_w8</span><span> </span><a href="#local-6989586621679239804"><span class="hs-identifier hs-var">s</span></a><span> </span><span class="hs-keyword">of</span><span> </span><span class="hs-special">(</span><a name="local-6989586621679239805"><a href="#local-6989586621679239805"><span class="hs-identifier">s'</span></a></a><span class="hs-special">,</span><span class="hs-identifier">_</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><a href="#local-6989586621679239805"><span class="hs-identifier hs-var">s'</span></a><span>
+</span><a name="line-31"></a><span>
+</span><a name="line-32"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><a name="line-33"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><a name="line-34"></a></pre></body></html>

@@ -320,6 +320,17 @@ data Core_ACE_expression'
 
 -- | Utilities
 module System.SED.Common.Util
+
+-- | Convert to a UID from a string of eight hex digit pairs divided by a
+--   single space
+--   
+--   E.g. "01 02 03 04 05 06 07 08"
+--   
+--   Throws an error on any other input. This means that if used in a
+--   quasiquoter, the malformed string will not compile.
+hexUID :: ByteString -> UID
+
+-- | Trim trailing whitespace from e.g. a field in a quasiquoted table
 trimTrailingWhitespace :: ByteString -> ByteString
 
 

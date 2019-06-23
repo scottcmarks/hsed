@@ -75,8 +75,9 @@ spaces :: Parser ByteString
 spaces = takeWhile (== ' ')
 
 rowSepFieldLengths :: Parser [Int]
-rowSepFieldLengths = char8 '+' *> many (length <$> takeWhile (== '-') <*  char '+' )
-    <?> "row separator fields"
+rowSepFieldLengths =
+      char8 '+' *> many (length <$> takeWhile (== '-') <*  char8 '+' )
+  <?> "row separator fields"
 
 rowSep :: Parser [Int]
 rowSep = (:) <$> (length <$> spaces) <*> rowSepFieldLengths <* endOfLine

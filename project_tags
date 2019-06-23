@@ -36,7 +36,7 @@ spec spec22,23
 
 ./test/Spec.hs,0
 
-./dev/DevMain.hs,623
+./dev/DevMain.hs,625
 module DevMain DevMain6,7
 import import19,20
 dev dev46,47
@@ -45,17 +45,17 @@ typeTableRow typeTableRow60,61
 title title69,70
 spaces spaces73,74
 rowSepFieldLengths rowSepFieldLengths76,77
-rowSep rowSep80,81
-blankLines blankLines84,85
-tableRowFields tableRowFields88,89
-data TypeTableRow TypeTableRow99,100
-data TypeTableRow = TypeTableRow TypeTableRow99,100
-instance Semigroup Semigroup TypeTableRow102,103
-    (T(TypeTableRowu1n1f1)103,104
-type TypeUIDField TypeUIDField106,107
-type TypeName TypeName108,109
-type FormatString FormatString110,111
-header header113,114
+rowSep rowSep81,82
+blankLines blankLines85,86
+tableRowFields tableRowFields89,90
+data TypeTableRow TypeTableRow100,101
+data TypeTableRow = TypeTableRow TypeTableRow100,101
+instance Semigroup Semigroup TypeTableRow103,104
+    (T(TypeTableRowu1n1f1)104,105
+type TypeUIDField TypeUIDField107,108
+type TypeName TypeName109,110
+type FormatString FormatString111,112
+header header114,115
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3
@@ -221,9 +221,10 @@ newtype ColumnType ColumnType355,356
 ./src/System/SED/Common/Types.lhs,61
 module System.SED.Common.TypesSystem.SED.Common.Types21,22
 
-./src/System/SED/Common/Util.lhs,113
-module System.SED.Common.Util System.SED.Common.Util22,23
-trimTrailingWhitespace trimTrailingWhitespace27,28
+./src/System/SED/Common/Util.lhs,134
+module System.SED.Common.Util System.SED.Common.Util23,24
+hexUID hexUID42,43
+trimTrailingWhitespace trimTrailingWhitespace46,47
 
 ./src/System/SED/Common/TableUIDs/TH.lhs,929
 module System.SED.Common.TableUIDs.TH System.SED.Common.TableUIDs.TH24,25

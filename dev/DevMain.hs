@@ -40,6 +40,8 @@ import           System.SED.Common.ColumnTypes.TH
 import           System.SED.Common.TableUIDs
 import           System.SED.Common.TableUIDs.TH
 import           System.SED.Common.UID
+import           System.SED.Common.Util           (trimTrailingWhitespace)
+
 
 
 dev :: IO ()
@@ -60,7 +62,10 @@ typeTableRow :: [Int] -> Parser TypeTableRow
 typeTableRow lengths =
     do
         [uidField, typeName, formatString] <- tableRowFields lengths
-        pure $ TypeTableRow uidField typeName formatString
+        pure $ TypeTableRow
+                 uidField
+                 (trimTrailingWhitespace typeName)
+                 (trimTrailingWhitespace formatString)
 
 title :: Parser ByteString
 title = string "Table 50 ACL" <* endOfLine

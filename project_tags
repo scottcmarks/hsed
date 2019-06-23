@@ -36,26 +36,26 @@ spec spec22,23
 
 ./test/Spec.hs,0
 
-./dev/DevMain.hs,617
+./dev/DevMain.hs,623
 module DevMain DevMain6,7
 import import19,20
-dev dev44,45
-typeTableParser typeTableParser50,51
-typeTableRow typeTableRow58,59
-title title64,65
-spaces spaces68,69
-rowSepFieldLengths rowSepFieldLengths71,72
-rowSep rowSep75,76
-blankLines blankLines79,80
-tableRowFields tableRowFields83,84
-data TypeTableRow TypeTableRow94,95
-data TypeTableRow = TypeTableRow TypeTableRow94,95
-instance Semigroup Semigroup TypeTableRow97,98
-    (T(TypeTableRowu1n1f1)98,99
-type TypeUIDField TypeUIDField101,102
-type TypeName TypeName103,104
-type FormatString FormatString105,106
-header header108,109
+dev dev46,47
+typeTableParser typeTableParser52,53
+typeTableRow typeTableRow60,61
+title title69,70
+spaces spaces73,74
+rowSepFieldLengths rowSepFieldLengths76,77
+rowSep rowSep80,81
+blankLines blankLines84,85
+tableRowFields tableRowFields88,89
+data TypeTableRow TypeTableRow99,100
+data TypeTableRow = TypeTableRow TypeTableRow99,100
+instance Semigroup Semigroup TypeTableRow102,103
+    (T(TypeTableRowu1n1f1)103,104
+type TypeUIDField TypeUIDField106,107
+type TypeName TypeName108,109
+type FormatString FormatString110,111
+header header113,114
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3
@@ -454,11 +454,11 @@ validityChecks validityChecks4080,4081
 _AC_elementSizeValid _AC_elementSizeValid4086,4087
 max_columns max_columns4095,4096
 
-./src/System/SED/Common/ColumnTypes/TH.lhs,217
+./src/System/SED/Common/ColumnTypes/TH.lhs,214
 module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH33,34
-qAC_element qAC_element105,106
-qColumnTypeTableRow qColumnTypeTableRow109,110
-data Core_ACE_expression'Core_ACE_expression'154,155
+qAC_element qAC_element95,96
+qColumnTypeTableRow qColumnTypeTableRow99,100
+data Core_ACE_expression'Core_ACE_expression'144,145
 
 ./src/System/SED/Common/Value.lhs,3494
 module System.SED.Common.Value System.SED.Common.Value23,24

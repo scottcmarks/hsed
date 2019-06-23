@@ -49,16 +49,6 @@ import           Extras.Integral
 import qualified Paths_hsed
 import           System.IO
 
-
--- import           Control.Monad.Loops
--- import           Data.Functor
--- import           Data.Set                     (map)
--- import           GHC.TypeNats
--- import           RIO                          hiding (foldr, map, length, mask, reverse, take)
--- import           Test.QuickCheck              hiding (generate)
-
--- import           Extras.Bytes
--- import           System.SED.Common.TableUIDs
 import           System.SED.Common.UID
 
 

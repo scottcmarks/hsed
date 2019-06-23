@@ -30,11 +30,11 @@ import           Control.Applicative                  (many, (<$>), (<*),
 import           Data.Attoparsec.ByteString           (Parser, parseOnly,
                                                        skipWhile, take,
                                                        (<?>))
-import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine,
-                                                       hexadecimal, isSpace_w8,
-                                                       skipSpace, string)
-import           Data.ByteString                      (ByteString, spanEnd,
-                                                       length, unpack)
+import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine, hexadecimal, skipSpace, string)
+
+
+import           Data.ByteString                      (ByteString, length, unpack)
+
 import           Data.ByteString.Char8                (split)
 import qualified Data.ByteString.Char8 as C           (unpack)
 import           Data.Either                          (either)
@@ -141,11 +141,11 @@ pTemplateName :: Parser TemplateName
 pTemplateName = TemplateName <$> pTrimmedField 4
 
 pUIDField :: Int -> Parser UID
-pUIDField i = hexUID <$> pField i
+pUIDField i = hexUID <$> pTrimmedField i
   where hexUID = UID
                  . fpack
                  . (map ((either error id) . (parseOnly hexadecimal)))
-                 . init . split ' '
+                 . split ' '
 
 pTrimmedField :: Int -> Parser ByteString
 pTrimmedField i = trimTrailingWhitespace <$> pField i

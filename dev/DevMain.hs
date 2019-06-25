@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
@@ -18,9 +19,9 @@ import           Data.String                      (IsString (..))
 import           Data.Version
 import           GHC                              ()
 import           GHC.Base                         (Int, Semigroup (..), String,
-                                                   liftA2, many, mapM, pure,
-                                                   undefined, ($), (*>), (++),
-                                                   (<*), (<*>), (==))
+                                                   error, liftA2, many, mapM,
+                                                   pure, undefined, ($), (*>),
+                                                   (++), (<*), (<*>), (==))
 import           GHC.List                         (zip, (!!))
 import           GHC.Show                         (Show (..))
 import           GHC.Tuple                        ()
@@ -50,23 +51,21 @@ dev = putStrLn "dev"
 
 
 
-typeTableParser :: Parser (UID, ByteString, ByteString)
+typeTableParser :: Parser (UID, TypeName, [FormatString])
 typeTableParser = do
     pieceLengths <- skipSpace *> title *> rowSep
     rows         <- header pieceLengths *> rowSep *> many1 (typeTableRow pieceLengths)
     _            <- rowSep *> blankLines *> endOfInput
     case sconcat $ NE.fromList rows of
-      (TypeTableRow u n f) -> pure $ ((hexUID u), n, f)
-
+      (TypeTableRow u n fs) -> pure $ ((hexUID u), n, fs)
 
 typeTableRow :: [Int] -> Parser TypeTableRow
 typeTableRow lengths =
     do
         [uidField, typeName, formatString] <- tableRowFields lengths
-        pure $ TypeTableRow
-                 uidField
-                 (trimTrailingWhitespace typeName)
-                 (trimTrailingWhitespace formatString)
+        pure $ TypeTableRow uidField typeName [trimComma formatString]
+  where trimComma bs = if last bs == ordw ',' then init bs else bs
+
 
 title :: Parser ByteString
 title = string "Table 50 ACL" <* endOfLine
@@ -94,12 +93,12 @@ tableRowFields lengths =
         [_leader, uidField, typeName, formatString] <- (mapM takeField lengths <* endOfLine)
         pure [uidField, typeName, formatString]
     where
-       takeField len = take len <* char '|'
+       takeField len = trimTrailingWhitespace <$> take len <* char '|'
 
 
 
 
-data TypeTableRow = TypeTableRow TypeUIDField TypeName FormatString
+data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
     deriving (Show)
 
 instance Semigroup TypeTableRow where

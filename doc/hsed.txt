@@ -311,13 +311,6 @@ uSyncTrustedSession :: UID
 uCloseSession :: UID
 
 
--- | Template Haskell for parsing Table column types in Section 5.1.3.
-module System.SED.Common.ColumnTypes.TH
-qAC_element :: DecsQ
-qColumnTypeTableRow :: String -> DecsQ
-data Core_ACE_expression'
-
-
 -- | Utilities
 module System.SED.Common.Util
 
@@ -714,6 +707,29 @@ instance GHC.Read.Read System.SED.Common.ColumnTypes.Core
 instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core
 instance GHC.Show.Show System.SED.Common.ColumnTypes.Core
 instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.Common.ColumnTypes.Core_bytes n)
+
+
+-- | Template Haskell for parsing Table column types in Section 5.1.3.
+module System.SED.Common.ColumnTypes.TH
+qAC_element :: DecsQ
+qColumnTypeTableRow :: String -> DecsQ
+data Core_ACE_expression'
+typeTableParser :: Parser (UID, TypeName, [FormatString])
+typeTableRow :: [Int] -> Parser TypeTableRow
+title :: Parser ByteString
+spaces :: Parser ByteString
+rowSepFieldLengths :: Parser [Int]
+rowSep :: Parser [Int]
+blankLines :: Parser ()
+tableRowFields :: [Int] -> Parser [ByteString]
+data TypeTableRow
+TypeTableRow :: TypeUIDField -> TypeName -> [FormatString] -> TypeTableRow
+type TypeUIDField = ByteString
+type TypeName = ByteString
+type FormatString = ByteString
+header :: [Int] -> Parser ()
+instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRow
+instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRow
 
 
 -- | Datatypes for Tokens.

@@ -17,12 +17,15 @@ import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
 import           Language.Haskell.TH.PprLib
 import           Data.ByteString(ByteString)
-import           Data.Function((&))
-import           Data.Functor((<&>))
+import           Data.Either(fromRight)
+import           Data.Function(($),(&))
+import           Data.Functor((<$>),(<&>))
 import           System.SED.Common.TableUIDs
 import           Data.Attoparsec.ByteString
-import           GHC.Base((.),(<*),(<*>),(*>),(>>=))
+import           Data.Attoparsec.ByteString.Char8(skipSpace)
+import           GHC.Base(pure,(.),(<*),(<*>),(*>),(>>=))
 import           GHC.Show(Show(..))
+import           System.SED.Common.ColumnTypes.TH
 
 pQ = (ppr <$>) . runQ
 hw = [| putStrLn "Hello, world!" |]
@@ -35,11 +38,6 @@ hw & showQ
 
 import Text.Heredoc
 
--- :{
--- table240 = [here|
--- #include "~/hsed/tcg/Table240.txt"
---  |] ::ByteString
--- :}
 
 :{
 table50 = [here|

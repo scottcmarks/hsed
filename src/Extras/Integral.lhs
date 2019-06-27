@@ -21,17 +21,25 @@ Conversions for numbers used in tokens.
 
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE DerivingVia         #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 
 module Extras.Integral
-
 where
 
+import           Data.Attoparsec.ByteString   ()
+import           GHC.TypeNats
+import           RIO.ByteString               hiding (count,length,map)
 import           Data.Bits
 import           Data.ByteString      hiding (take, map, unsnoc)
 import qualified Data.ByteString as B (map)
 import           Data.Char            (chr, ord)
-import           RIO                   hiding (foldr, map, length, mask,
-                                               reverse, take)
+import           RIO                  hiding (foldr, map, length, mask,
+                                              replicate, reverse, take)
 
 \end{code}
 
@@ -65,6 +73,12 @@ byteStringToInteger = (maybe 0 rollUp') . uncons
 naturalToByteString :: Natural -> ByteString
 naturalToByteString n = if n == 0 then singleton 0x00 else reverse $ unfoldr unroll n
   where unroll n' = if n' == 0 then Nothing else Just (fromIntegral n', shiftR n' 8)
+
+-- | Type-level to value-level for all Integrals, from the Natural
+intVal :: (Num b, KnownNat n) => proxy n -> b
+intVal p = fromIntegral $ (natVal p)
+
+
 
 integerToByteString :: Integer -> ByteString
 integerToByteString i =

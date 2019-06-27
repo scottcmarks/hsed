@@ -3182,25 +3182,43 @@ Enumeration_Type,
 
 -- data Type = Base_Type
 --           | Simple_Type
---               Fixed_Bytes_8  -- actually uidref for Base_Type
+--               Fixed_bytes_8  -- actually uidref for Base_Type
 --               Unsigned_Integer_2 -- size of the instantiation of the Base_Type
 --           | Enumeration_Type
 --               [(Unsigned_Integer_2, Unsigned_Integer_2)]
 --           | Alternative_Type
---               [Fixed_Bytes_8] -- actually uidref for non-Base_Type Type
+--               [Fixed_bytes_8] -- actually uidrefs for non-Base_Type Type
 --           | List_Type
 --               Unsigned_Integer_2
---               Fixed_Bytes_8
---           | Restricted_Reference_Type
---           | General_Reference_Type
---           | Named_Value_Type
+--               Fixed_bytes_8  -- actually uidref for non-Base_Type Type of elements
+--           | Restricted_Reference_Type_Byte_Table
+--               [Fixed_bytes_8] -- actually Byte Table uidrefs
+--           | Restricted_Reference_Type_Object_Table
+--               [Fixed_bytes_8] -- actually Object Table uidrefs
+--           | General_Reference_Type_Byte_Table_Row_Number
+--           | General_Reference_Type_Object_UID
+--           | General_Reference_Type_Table_UID
+--           | General_Reference_Table_Type
+--               Table_Kind -- uinteger*2 = 1 -> Object Table UID
+--                                          2 -> Byte Table UID
+--           | Named_Value_Name_Type
+--               Max_Bytes_32 -- name
+--               Fixed_bytes_8 -- actually uidref for non-Base_Type Type
+--           | Named_Value_Integer_Type
+--               Integer_2 -- name
+--               Fixed_bytes_8 -- actually uidref for non-Base_Type Type
+--           | Named_Value_Uinteger_Type
+--               Uinteger_2 -- name
+--               Fixed_bytes_8 -- actually uidref for non-Base_Type Type
 --           | Struct_Type
+--               [Fixed_bytes_8] -- actually uidrefs for non-Base_Type Type of elements
 --           | Set_Type
+--               [(Uinteger_2, Uinteger_2)] -- inclusive ranges of values
 
 
 -- data Base_Type = Signed_Integer
 --                | Unsigned_Integer
---                | Fixed_Bytes Int
+--                | Fixed_bytes Int
 --                | Max_Bytes Int
 
 

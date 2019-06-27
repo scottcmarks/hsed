@@ -29,7 +29,6 @@ Datatypes for UIDs and HalfUIDs.
 module System.SED.Common.UID where
 
 import           Data.Attoparsec.ByteString
-import           Data.Maybe(fromJust)
 import           GHC.TypeNats
 import           RIO
 import           RIO.ByteString               hiding (count,length,map)
@@ -38,6 +37,7 @@ import           Test.QuickCheck              hiding (generate)
 import           Extras.Bytes
 import qualified Extras.Bytes as Bytes
 import           Extras.Hex
+import           Extras.Integral
 import           System.SED.Common.StreamItem
 -- import           System.SED.Common.Integral
 import           System.SED.Common.Token
@@ -69,19 +69,6 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 
 
 \begin{code}
-
-
--- | Type-level to value-level for all Integrals, from the Natural
-intVal :: (Num b, KnownNat n) => proxy n -> b
-intVal p = fromIntegral $ (natVal p)
-
-
-fixed :: (KnownNat n) => ByteString -> Fixed_bytes n
-fixed = fromJust . create
-
-fpack :: (KnownNat n) => [Word8] -> Fixed_bytes n
-fpack = fixed . pack
-
 instance (KnownNat n) => IsToken (Fixed_bytes n) where
     token  = Bytes . unwrap
     fromToken (Bytes bs) = Just $ fixed bs

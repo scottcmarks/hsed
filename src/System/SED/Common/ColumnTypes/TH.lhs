@@ -59,7 +59,7 @@ import           Data.Map.Internal                (Map (..), fromList)
 import           Data.String                      (IsString (..))
 import           Data.Version
 import           GHC                              ()
-import           GHC.Base                         (Int, Semigroup (..), String,
+import           GHC.Base                         (mconcat, Int, Semigroup (..), String,
                                                    error, liftA2, many, mapM,
                                                    pure, undefined, ($), (*>),
                                                    (++), (<*), (<*>), (==))
@@ -193,8 +193,8 @@ typeTableParser = do
 typeTableRow :: [Int] -> Parser TypeTableRow
 typeTableRow lengths =
     do
-        [uidField, typeName, formatString] <- tableRowFields lengths
-        pure $ TypeTableRow uidField typeName [trimComma formatString]
+        [uidField, typeName, format] <- tableRowFields lengths
+        pure $ TypeTableRow uidField typeName [trimComma format]
   where trimComma bs = if last bs == ordw ',' then init bs else bs
 
 
@@ -221,8 +221,8 @@ blankLines = many (spaces *> endOfLine) *> pure ()
 tableRowFields :: [Int] -> Parser [ByteString]
 tableRowFields lengths =
     do
-        [_leader, uidField, typeName, formatString] <- (mapM takeField lengths <* endOfLine)
-        pure [uidField, typeName, formatString]
+        [_leader, uidField, typeName, format] <- (mapM takeField lengths <* endOfLine)
+        pure [uidField, typeName, format]
     where
        takeField len = trimTrailingWhitespace <$> take len <* char '|'
 
@@ -247,15 +247,19 @@ header :: [Int] -> Parser ()
 header lengths = tableRowFields lengths *> pure ()
     <?> ("header " ++ show lengths)
 
+
+formatString :: TypeTableRow -> ByteString
+formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) = mconcat [ "L"
+                                                                          ]
+formatString t = error $ mconcat [ "No case for "
+                                 , show t
+                                 , "?"
+                                 ]
+
+
+
+
+
+
 \end{code}
-
-
-
--- Default values for Name and UID mappings
-
-\begin{code}
-
-
-\end{code}
-
 \end{document}

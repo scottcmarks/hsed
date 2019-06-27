@@ -31,7 +31,9 @@ import           Data.Tuple(fst)
 import           GHC.Base(id, map, (.), ($))
 import           GHC.Err(error)
 
-import  System.SED.Common.UID
+import           Extras.Bytes(fpack)
+
+import           System.SED.Common.UID
 
 -- | Convert to a UID from a string of eight hex digit pairs divided by a single space
 --

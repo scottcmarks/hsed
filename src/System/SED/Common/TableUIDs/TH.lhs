@@ -57,11 +57,10 @@ import           Language.Haskell.TH                  (mkName,
                                                        Name)
 import           Language.Haskell.TH.Quote            (QuasiQuoter(..))
 import           Language.Haskell.TH.Syntax           (returnQ)
-import           Extras.Bytes                         (unwrap)
+import           Extras.Bytes                         ( fpack,unwrap)
 import           System.SED.Common.Table              (TableName(..),TemplateName(..))
 import           System.SED.Common.UID                (HalfUID(..),UID(..),
-                                                       halfUID, uid, fpack,
-                                                       uidUpper, uidLower)
+                                                       halfUID, uid,uidUpper, uidLower)
 import           System.SED.Common.Util               (trimTrailingWhitespace)
 
 -- | Bespoke Quasiquoter for Table 240

@@ -42,22 +42,26 @@ module Extras.Bytes
   , take
   , drop
   , append
+  , fixed
+  , fpack
+  , naturalToFixedBytes
   )
 where
 
-import RIO((<$>), ($), ($!), Eq, Ord, Show(..), error, (.), mconcat)
-
-import Data.ByteString hiding (take, drop, append)
-import Data.ByteString.Short
-import Data.Maybe(Maybe(..))
-import Data.Proxy
-import qualified Data.StaticText as S(Static(..),create,take,drop,append)
+import           RIO                   (otherwise, (<=), Int, Natural, Eq, Ord, Show(..), error, mconcat,
+                                        (<$>), ($), ($!), (.), (-))
+import           Data.ByteString       hiding (take, drop, append)
+import           Data.ByteString.Short hiding (length, pack)
+import           Data.Maybe            (fromJust, Maybe(..))
+import           Data.Proxy
+import qualified Data.StaticText as S  (Static(..),create,take,drop,append)
 import qualified Data.StaticText.Class as SC
-import Data.String (IsString(..))
-
-import GHC.TypeNats
+import           Data.String           (IsString(..))
+import           GHC.TypeNats
+import           GHC.Word
 
 import Extras.Hex
+import Extras.Integral
 
 data Fixed_bytes n = Fixed_bytes !(S.Static ShortByteString n)
     deriving (Eq, Ord, Show)
@@ -103,6 +107,31 @@ drop (Fixed_bytes sbs) = (Fixed_bytes (S.drop sbs))
 
 append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
 append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (S.append sbsl sbsr))
+
+
+fixed :: (KnownNat n) => ByteString -> Fixed_bytes n
+fixed = fromJust . create
+
+fpack :: (KnownNat n) => [Word8] -> Fixed_bytes n
+fpack = fixed . pack
+
+naturalToFixedBytes :: (KnownNat n) => Natural -> Fixed_bytes n
+naturalToFixedBytes nat = fixed $ mconcat [ initialZeros ,  natBytes]
+  where
+    initialZeros = replicate nZerosNeeded 0
+    nZerosNeeded
+        | natLen <= len = len - natLen
+        | otherwise = error $ mconcat [ show nat
+                                      , " is too large to represent in "
+                                      , show len
+                                      , " bytes"
+                                          ]
+    natLen   = length natBytes :: Int
+    len = 2
+    natBytes = naturalToByteString nat
+
+
+
 
 \end{code}
 \end{document}

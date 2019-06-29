@@ -18,23 +18,19 @@ Datatypes for Tokens.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE ExplicitNamespaces #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
--- {-# LANGUAGE NoImplicitPrelude #-}
--- {-# LANGUAGE TemplateHaskell   #-}
--- {-# LANGUAGE DataKinds           #-}
--- {-# LANGUAGE DeriveAnyClass      #-}
--- {-# LANGUAGE DerivingVia         #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
+{-# LANGUAGE NoImplicitPrelude    #-}
+{-# LANGUAGE ExplicitNamespaces    #-}
+{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS_GHC -Wno-orphans       #-}
 
 module Extras.Bytes
   (
     Fixed_bytes(..)
+  , HasFixed_bytes(..)
   , S.Static
   , unwrap
   , create
@@ -43,7 +39,7 @@ module Extras.Bytes
   , append
   , fixed
   , fpack
-  , naturalToFixedBytes
+  , naturalToFixed_bytes
   )
 where
 
@@ -56,8 +52,7 @@ import           Data.Proxy            (Proxy(..))
 import qualified Data.StaticText as S  (createRight, drop, take, Static,append,create)
 import qualified Data.StaticText.Class as SC (unwrap)
 import           Data.String           (IsString(..))
-import           GHC.Base              (error, mconcat, (.), ($), ($!))
-
+import           GHC.Base              (undefined, error, mconcat, (.), ($), ($!))
 import           GHC.Classes           (Eq(..),Ord(..))
 import           GHC.Maybe             (Maybe(..))
 import           GHC.Natural           (Natural(..))
@@ -67,7 +62,7 @@ import           GHC.TypeNats          (type (+), type (<=), KnownNat,
 import           GHC.Word              (Word8)
 
 import Extras.Hex                      (HasHex(..))
-import Extras.Integral                 (naturalToByteString)
+import Extras.Integral
 
 data Fixed_bytes n = Fixed_bytes !(S.Static ShortByteString n)
     deriving (Eq, Ord, Show)
@@ -84,6 +79,25 @@ instance (KnownNat n) => IsString (S.Static ShortByteString n) where
                                   , show s
                                   ]
 
+class (KnownNat n) => HasFixed_bytes n a where
+    toFixed_bytes   :: a -> Fixed_bytes n
+    fromFixed_bytes :: Fixed_bytes n -> a
+
+instance (KnownNat n) => HasFixed_bytes n Natural where
+    toFixed_bytes nat =
+        let fbs = (createRight . naturalToByteString) nat
+            nat' = fixed_bytesToNatural fbs
+            n' = natVal (Proxy :: Proxy n)
+        in if nat == nat'
+           then fbs
+           else error $ mconcat
+                        [ "Can not represent "
+                        , show nat
+                        , " in a value of type Fixed_bytes "
+                        , show n'
+                        ]
+
+    fromFixed_bytes = byteStringToNatural . unwrap
 
 instance HasHex ShortByteString  where
     hex = hex . fromShort
@@ -122,10 +136,11 @@ fixed = fromJust . create
 fpack :: (KnownNat n) => [Word8] -> Fixed_bytes n
 fpack = fixed . pack
 
-naturalToFixedBytes :: (KnownNat n) => Natural -> Fixed_bytes n
-naturalToFixedBytes = createRight . naturalToByteString
+fixed_bytesToNatural :: (KnownNat n) => Fixed_bytes n -> Natural
+fixed_bytesToNatural = fromFixed_bytes
 
-
+naturalToFixed_bytes :: (KnownNat n) => Natural -> Fixed_bytes n
+naturalToFixed_bytes = toFixed_bytes
 
 \end{code}
 \end{document}

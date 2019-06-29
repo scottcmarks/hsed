@@ -200,7 +200,7 @@ typeTableRow lengths =
 
 title :: Parser ByteString
 title = string "Table 50 ACL" <* endOfLine
-    <?> "Table title"
+  <?> "Table title"
 
 spaces :: Parser ByteString
 spaces = takeWhile (== ' ')
@@ -212,11 +212,11 @@ rowSepFieldLengths =
 
 rowSep :: Parser [Int]
 rowSep = (:) <$> (length <$> spaces) <*> rowSepFieldLengths <* endOfLine
-    <?> "row separator"
+  <?> "row separator"
 
 blankLines :: Parser ()
 blankLines = many (spaces *> endOfLine) *> pure ()
-    <?> "blank lines"
+  <?> "blank lines"
 
 tableRowFields :: [Int] -> Parser [ByteString]
 tableRowFields lengths =
@@ -245,7 +245,7 @@ type FormatString = ByteString
 
 header :: [Int] -> Parser ()
 header lengths = tableRowFields lengths *> pure ()
-    <?> ("header " ++ show lengths)
+  <?> ("header " ++ show lengths)
 
 
 formatString :: TypeTableRow -> ByteString

@@ -36,7 +36,7 @@ byteStringToInteger :: ByteString -> Integer
 naturalToByteString :: Natural -> ByteString
 
 -- | Type-level to value-level for all Integrals, from the Natural
-intVal :: (Num b, KnownNat n) => proxy n -> b
+intVal :: (Num b, KnownNat n) => Proxy n -> b
 integerToByteString :: Integer -> ByteString
 word8 :: Integral a => a -> Word8
 char :: Word8 -> Char

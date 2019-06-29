@@ -75,10 +75,8 @@ naturalToByteString n = if n == 0 then singleton 0x00 else reverse $ unfoldr unr
   where unroll n' = if n' == 0 then Nothing else Just (fromIntegral n', shiftR n' 8)
 
 -- | Type-level to value-level for all Integrals, from the Natural
-intVal :: (Num b, KnownNat n) => proxy n -> b
+intVal :: (Num b, KnownNat n) => Proxy n -> b
 intVal p = fromIntegral $ (natVal p)
-
-
 
 integerToByteString :: Integer -> ByteString
 integerToByteString i =

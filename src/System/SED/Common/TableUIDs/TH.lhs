@@ -51,17 +51,23 @@ import           GHC.Base                             (Eq(..), Semigroup,
 import           GHC.Err                              (error,undefined)
 import           GHC.Real                             (toInteger)
 import           GHC.Show                             (Show(..))
+import GHC.TypeNats (KnownNat) -- FIXME
+
+
 import           Language.Haskell.TH                  (mkName,
                                                        Body(..), Lit(..), Type(..),
                                                        Exp(..), Dec(..), Pat(..),
                                                        Name)
 import           Language.Haskell.TH.Quote            (QuasiQuoter(..))
 import           Language.Haskell.TH.Syntax           (returnQ)
-import           Extras.Bytes                         ( fpack,unwrap)
+-- import           Extras.Bytes                         (fpack,unwrap) -- FIXME
 import           System.SED.Common.Table              (TableName(..),TemplateName(..))
 import           System.SED.Common.UID                (HalfUID(..),UID(..),
                                                        halfUID, uid,uidUpper, uidLower)
 import           System.SED.Common.Util               (trimTrailingWhitespace)
+
+import Extras.Bytes(Fixed_bytes(..)) -- FIXME
+import GHC.Word(Word8) -- FIXME
 
 -- | Bespoke Quasiquoter for Table 240
 t240 :: QuasiQuoter
@@ -138,6 +144,11 @@ pTableName    = TableName    <$> pTrimmedField 3
 
 pTemplateName :: Parser TemplateName
 pTemplateName = TemplateName <$> pTrimmedField 4
+
+fpack :: [Word8] -> Fixed_bytes n     -- FIXME
+fpack = undefined                     -- FIXME
+unwrap :: Fixed_bytes n -> ByteString -- FIXME
+unwrap = undefined                    -- FIXME
 
 pUIDField :: Int -> Parser UID
 pUIDField i = hexUID <$> pTrimmedField i

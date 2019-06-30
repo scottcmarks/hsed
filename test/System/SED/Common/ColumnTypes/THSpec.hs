@@ -9,7 +9,6 @@ Stability   : experimental
 Test specifications for System.SED.Common.ColumnTypes.TH
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module System.SED.Common.ColumnTypes.THSpec (spec) where
 

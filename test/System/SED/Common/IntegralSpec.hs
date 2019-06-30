@@ -9,7 +9,6 @@ Stability   : experimental
 Test specifications for System.SED.Common.Integral
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module System.SED.Common.IntegralSpec (spec) where
 

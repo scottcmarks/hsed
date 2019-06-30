@@ -3423,12 +3423,12 @@ This type describes a uidref to an object contained in the ACE table.
 -- FIXME -- type level prgramming
 
 
-newtype Core_ACE_object_ref = Core_ACE_object_ref (Core_uidref ->
-                                                   Maybe Core_Restricted_Reference_Type_Object)
-mkCore_ACE_object_ref ::
-    Core_uidref
- -> Maybe Core_Restricted_Reference_Type_Object
-mkCore_ACE_object_ref = mkCore_Restricted_object_ref_To uACETable
+-- newtype Core_ACE_object_ref = Core_ACE_object_ref (Core_uidref ->
+--                                                    Maybe Core_Restricted_Reference_Type_Object)
+-- mkCore_ACE_object_ref ::
+--     Core_uidref
+--  -> Maybe Core_Restricted_Reference_Type_Object
+-- mkCore_ACE_object_ref = mkCore_Restricted_object_ref_To uACETable
 
 \end{code}
 5.1.3.5 ACL
@@ -3448,7 +3448,7 @@ ACEs that MAY be included in a single Access Control List, is SSC/implementation
 
 \begin{code}
 
-data Core_ACL = Core_ACL [Core_ACE_object_ref]
+-- data Core_ACL = Core_ACL [Core_ACE_object_ref]
 
 
 -- FIXME -- length check?
@@ -3663,10 +3663,10 @@ newtype Core_Authority_object_ref =
     Core_Authority_object_ref (Core_uidref
                               -> Maybe Core_Restricted_Reference_Type_Object)
 
-mkCore_Authority_object_ref ::
-    Core_uidref
- -> Maybe Core_Restricted_Reference_Type_Object
-mkCore_Authority_object_ref = mkCore_Restricted_object_ref_To uAuthorityTable
+-- mkCore_Authority_object_ref ::
+--     Core_uidref
+--  -> Maybe Core_Restricted_Reference_Type_Object
+-- mkCore_Authority_object_ref = mkCore_Restricted_object_ref_To uAuthorityTable
 
 \end{code}
 
@@ -3972,10 +3972,10 @@ newtype Core_Certificates_object_ref =
     Core_Certificates_object_ref (Core_uidref
                               -> Maybe Core_Restricted_Reference_Type_Object)
 
-mkCore_Certificates_object_ref ::
-    Core_uidref
- -> Maybe Core_Restricted_Reference_Type_Object
-mkCore_Certificates_object_ref = mkCore_Restricted_object_ref_To uCertificatesTable
+-- mkCore_Certificates_object_ref ::
+--     Core_uidref
+--  -> Maybe Core_Restricted_Reference_Type_Object
+-- mkCore_Certificates_object_ref = mkCore_Restricted_object_ref_To uCertificatesTable
 
 \end{code}
 

@@ -9,7 +9,6 @@ Stability   : experimental
 Test specifications for System.SED.Common.Token
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 module System.SED.Common.TokenSpec (spec) where
 

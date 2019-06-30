@@ -19,21 +19,32 @@ Hex encode/decoding.
 
 {-# LANGUAGE NoImplicitPrelude    #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Extras.Hex
 where
 
-
-import Data.List             (elemIndex)
-import Prelude               ((!!))
-import RIO
--- import qualified RIO             as R (unpack)
-import Data.ByteString                 as B (pack, unpack)
+import           Data.ByteString            (ByteString)
+import qualified Data.ByteString       as B (pack, unpack)
 import qualified Data.ByteString.Char8 as C (unpack)
+import           Data.ByteString.Short      (ShortByteString, fromShort, toShort)
+import           Data.Foldable              (concatMap)
+import           Data.Functor               ((<$>))
+import           Data.List                  (elemIndex)
+import           Data.StaticText            (create, Static, unwrap)
+import           Data.String                (IsString(..))
 
+import           GHC.Base                   (String, fmap, join, pure, (.), ($), (<*>), (++))
+import           GHC.List                   ((!!))
+import           GHC.Maybe                  (Maybe(..))
+import           GHC.Num                    ((+), (*))
+import           GHC.Real                   (divMod, fromIntegral)
+import           GHC.TypeNats               (KnownNat)
+import           GHC.Types                  (Char(..))
+import           GHC.Word                   (Word8)
 
-import Extras.Integral
+import           Extras.Integral
 
 
 hexDigit :: Word8 -> Char
@@ -45,8 +56,8 @@ hexDigits = "0123456789ABCDEF"
 hexValue :: Char -> Maybe Word8
 hexValue d = fromIntegral <$> elemIndex d hexDigits
 
-hexCharSyntax :: HasHex a => a -> String
-hexCharSyntax n = "\\x" ++ hex n
+hexWord8Syntax :: HasHex a => a -> String
+hexWord8Syntax n = "0x" ++ hex n
 
 
 class HasHex a where
@@ -73,11 +84,18 @@ instance HasHex [Word8] where
 
 instance HasHex ByteString where
     hex = hex . B.unpack
-    fromHex = fmap pack . fromHex
+    fromHex = fmap B.pack . fromHex
 
 instance HasHex String where
     hex = hex . (fromString::String -> ByteString)
     fromHex = fmap C.unpack . fromHex
 
+instance HasHex ShortByteString  where
+    hex = hex . fromShort
+    fromHex hs = toShort <$> fromHex hs
+
+instance (KnownNat n) => HasHex (Static ShortByteString n) where
+    hex = hex . unwrap
+    fromHex hs = join $ create <$> fromHex hs
 
 \end{code}

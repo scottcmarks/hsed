@@ -25,7 +25,6 @@ Conversions for numbers used in tokens.
 {-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -Wno-orphans #-}
 
 
 module Extras.Integral

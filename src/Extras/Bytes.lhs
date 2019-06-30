@@ -18,129 +18,153 @@ Datatypes for Tokens.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude    #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE ExplicitNamespaces    #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# OPTIONS_GHC -Wno-orphans       #-}
+{-# LANGUAGE DataKinds             #-}
 
 module Extras.Bytes
   (
     Fixed_bytes(..)
   , HasFixed_bytes(..)
-  , S.Static
-  , unwrap
-  , create
   , take
   , drop
   , append
-  , fixed
-  , fpack
-  , naturalToFixed_bytes
   )
 where
 
-import           Data.ByteString       (ByteString, pack)
-import           Data.ByteString.Short (ShortByteString, fromShort, toShort)
-import           Data.Foldable         ()
-import           Data.Functor          ((<$>))
-import           Data.Maybe            (fromJust)
-import           Data.Proxy            (Proxy(..))
-import qualified Data.StaticText as S  (createRight, drop, take, Static,append,create)
-import qualified Data.StaticText.Class as SC (unwrap)
-import           Data.String           (IsString(..))
-import           GHC.Base              (undefined, error, mconcat, (.), ($), ($!))
-import           GHC.Classes           (Eq(..),Ord(..))
-import           GHC.Maybe             (Maybe(..))
-import           GHC.Natural           (Natural(..))
-import           GHC.Show              (Show(..))
-import           GHC.TypeNats          (type (+), type (<=), KnownNat,
-                                        natVal)
-import           GHC.Word              (Word8)
+import           Control.Monad(replicateM)
 
-import Extras.Hex                      (HasHex(..))
-import Extras.Integral
+import           Data.ByteString            (ByteString, pack)
+import           Data.ByteString.Short      (ShortByteString, fromShort, toShort, unpack)
+import qualified Data.ByteString.Short as S (length)
+import qualified Data.Foldable         as F (length)
+import           Data.Functor               ((<$>))
+import           Data.Proxy                 (Proxy(..))
+import           Data.StaticText            (Static, create, unwrap)
+import qualified Data.StaticText       as T (append, drop, take)
+import           Data.String                (IsString(..))
 
-data Fixed_bytes n = Fixed_bytes !(S.Static ShortByteString n)
-    deriving (Eq, Ord, Show)
+import           GHC.Base                   (String, error, mconcat, (.), ($), ($!))
+import           GHC.Classes                (Eq(..),Ord(..))
+import           GHC.Maybe                  (Maybe(..))
+import           GHC.Natural                (Natural(..))
+import           GHC.Show                   (Show(..), showParen, showString)
+import           GHC.TypeNats               (type (+), type (<=), KnownNat,
+                                             natVal)
+import           GHC.Types                  (Nat)
+import           GHC.Word                   (Word8)
 
+import           Test.QuickCheck (Arbitrary(..), Gen, arbitrary)
+
+
+import           Extras.Hex                 (HasHex(..))
+import           Extras.Hex                 ()
+import           Extras.Integral            (byteStringToNatural,
+                                             naturalToByteString,
+                                             intVal)
+
+data Fixed_bytes (n :: Nat) = Fixed_bytes !(Static ShortByteString n)
+    deriving (Eq, Ord)
+
+-- | Show instances
+--
+instance (KnownNat n) => Show (Fixed_bytes n) where
+    showsPrec d (Fixed_bytes sbs) = showParen (app_prec < d) $
+            showString "fpack "
+          . showList (unpack $ unwrap sbs)
+          . showString " :: Fixed_bytes "
+          . showString (show (natVal (Proxy :: Proxy n)))
+         where app_prec = 10
+
+-- | ISString instances, allowing string literal denotations
+--
 instance (KnownNat n) => IsString (Fixed_bytes n) where
-    fromString s = Fixed_bytes $! fromString s
-
-instance (KnownNat n) => IsString (S.Static ShortByteString n) where
-    fromString s = case S.create (fromString s) of
+    fromString s = Fixed_bytes $! case create (fromString s) of
                       Just ssbs -> ssbs
                       Nothing -> error $
                           mconcat [ show (natVal (Proxy :: Proxy n))
                                   , " is not the length of "
                                   , show s
+                                  , " (which is of length "
+                                  , show (F.length s)
+                                  , ")"
                                   ]
 
+-- | Arbitrary instance, allowing quick check testing
+--
+instance (KnownNat n) => Arbitrary (Fixed_bytes n) where
+    arbitrary = (toFixed_bytes :: [Word8] -> Fixed_bytes n)
+            <$> replicateM (intVal (Proxy :: Proxy n)) (arbitrary :: Gen Word8)
+
+
+
+
+-- | HasFixed_bytes class and instances for conversion to/from Fixed_bytes n
+--
 class (KnownNat n) => HasFixed_bytes n a where
     toFixed_bytes   :: a -> Fixed_bytes n
     fromFixed_bytes :: Fixed_bytes n -> a
 
 instance (KnownNat n) => HasFixed_bytes n Natural where
     toFixed_bytes nat =
-        let fbs = (createRight . naturalToByteString) nat
-            nat' = fixed_bytesToNatural fbs
-            n' = natVal (Proxy :: Proxy n)
-        in if nat == nat'
+        let fbs = (toFixed_bytes . naturalToByteString) nat
+        in if nat == fromFixed_bytes fbs
            then fbs
            else error $ mconcat
                         [ "Can not represent "
                         , show nat
-                        , " in a value of type Fixed_bytes "
-                        , show n'
+                        , " by a value of type Fixed_bytes "
+                        , show (natVal (Proxy :: Proxy n))
                         ]
+    fromFixed_bytes = byteStringToNatural . fromFixed_bytes
 
-    fromFixed_bytes = byteStringToNatural . unwrap
+instance (KnownNat n) => HasFixed_bytes n (Static ShortByteString n) where
+    toFixed_bytes sbs = Fixed_bytes sbs
+    fromFixed_bytes (Fixed_bytes sbs)  = sbs
 
-instance HasHex ShortByteString  where
-    hex = hex . fromShort
-    fromHex hs = toShort <$> fromHex hs
+instance (KnownNat n) => HasFixed_bytes n ShortByteString where
+    toFixed_bytes sbs =
+        case (create sbs) :: Maybe (Static ShortByteString n) of
+          Just ssbs -> toFixed_bytes ssbs
+          Nothing   -> error $ mconcat [ show (natVal (Proxy :: Proxy n))
+                                       , " is not the length of "
+                                       , show sbs
+                                       , " (which is of length "
+                                       , show (S.length sbs)
+                                       , ")"
+                                       ]
+    fromFixed_bytes fbs =
+        unwrap (fromFixed_bytes fbs :: Static ShortByteString n)
 
-instance (KnownNat n) => HasHex (S.Static ShortByteString n) where
-    hex = hex . SC.unwrap
-    fromHex hs =  fromString <$> fromHex hs
+instance (KnownNat n) => HasFixed_bytes n ByteString where
+    toFixed_bytes = toFixed_bytes . toShort
+    fromFixed_bytes = fromShort . fromFixed_bytes
+
+instance (KnownNat n) => HasFixed_bytes n [Word8] where
+    toFixed_bytes = toFixed_bytes . pack
+    fromFixed_bytes = unpack . fromFixed_bytes
+
+
+-- | HasHex instances for conversion to/from Fixed_bytes n
+--
 
 instance (KnownNat n) => HasHex (Fixed_bytes n) where
-    hex (Fixed_bytes bs) = hex bs
+    hex (Fixed_bytes ssbs) = (hex :: Static ShortByteString n -> String) ssbs
     fromHex hs = fromString <$> fromHex hs
 
-unwrap :: Fixed_bytes n -> ByteString
-unwrap (Fixed_bytes sbs) = fromShort $ SC.unwrap sbs
-
-create :: (KnownNat n) => ByteString -> Maybe (Fixed_bytes n)
-create bs = Fixed_bytes <$> S.create (toShort bs)
-
-createRight :: (KnownNat n) => ByteString -> Fixed_bytes n
-createRight = Fixed_bytes <$> S.createRight 0 . toShort
-
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
-take (Fixed_bytes sbs) = (Fixed_bytes (S.take sbs))
+take (Fixed_bytes sbs) = (Fixed_bytes (T.take sbs))
 
 drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
-drop (Fixed_bytes sbs) = (Fixed_bytes (S.drop sbs))
+drop (Fixed_bytes sbs) = (Fixed_bytes (T.drop sbs))
 
 append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
-append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (S.append sbsl sbsr))
-
-
-fixed :: (KnownNat n) => ByteString -> Fixed_bytes n
-fixed = fromJust . create
-
-fpack :: (KnownNat n) => [Word8] -> Fixed_bytes n
-fpack = fixed . pack
-
-fixed_bytesToNatural :: (KnownNat n) => Fixed_bytes n -> Natural
-fixed_bytesToNatural = fromFixed_bytes
-
-naturalToFixed_bytes :: (KnownNat n) => Natural -> Fixed_bytes n
-naturalToFixed_bytes = toFixed_bytes
+append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (T.append sbsl sbsr))
 
 \end{code}
 \end{document}

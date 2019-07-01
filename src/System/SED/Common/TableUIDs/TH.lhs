@@ -27,22 +27,25 @@ where
 
 import           Control.Applicative                  (many, (<$>), (<*),
                                                        (<*>), (*>))
+
 import           Data.Attoparsec.ByteString           (Parser, parseOnly,
                                                        skipWhile, take,
                                                        (<?>))
-import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine, hexadecimal, skipSpace, string)
-
-
-import           Data.ByteString                      (ByteString, length, unpack)
+import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine,
+                                                       hexadecimal, skipSpace,
+                                                       string)
+import           Data.ByteString                      (ByteString, length)
+import qualified Data.ByteString                 as B (pack, unpack)
 
 import           Data.ByteString.Char8                (split)
-import qualified Data.ByteString.Char8 as C           (unpack)
+import qualified Data.ByteString.Char8           as C (unpack)
 import           Data.Either                          (either)
 import           Data.Foldable                        (foldr, mapM_)
 import           Data.List                            ((!!), concat, foldl,
                                                        init, map)
 import           Data.Map                             (Map, fromList)
 import           Data.String                          (fromString)
+
 import           GHC.Base                             (Eq(..), Semigroup,
                                                        Monoid, Int, String,
                                                        Maybe(..), (.), (++),
@@ -51,7 +54,6 @@ import           GHC.Base                             (Eq(..), Semigroup,
 import           GHC.Err                              (error,undefined)
 import           GHC.Real                             (toInteger)
 import           GHC.Show                             (Show(..))
-import GHC.TypeNats (KnownNat) -- FIXME
 
 
 import           Language.Haskell.TH                  (mkName,
@@ -60,14 +62,15 @@ import           Language.Haskell.TH                  (mkName,
                                                        Name)
 import           Language.Haskell.TH.Quote            (QuasiQuoter(..))
 import           Language.Haskell.TH.Syntax           (returnQ)
--- import           Extras.Bytes                         (fpack,unwrap) -- FIXME
+
+
+import           Extras.Bytes(fpack, funpack) -- FIXME
+
 import           System.SED.Common.Table              (TableName(..),TemplateName(..))
 import           System.SED.Common.UID                (HalfUID(..),UID(..),
-                                                       halfUID, uid,uidUpper, uidLower)
+                                                       halfUID, uid,
+                                                       uidUpper, uidLower)
 import           System.SED.Common.Util               (trimTrailingWhitespace)
-
-import Extras.Bytes(Fixed_bytes(..)) -- FIXME
-import GHC.Word(Word8) -- FIXME
 
 -- | Bespoke Quasiquoter for Table 240
 t240 :: QuasiQuoter
@@ -145,15 +148,11 @@ pTableName    = TableName    <$> pTrimmedField 3
 pTemplateName :: Parser TemplateName
 pTemplateName = TemplateName <$> pTrimmedField 4
 
-fpack :: [Word8] -> Fixed_bytes n     -- FIXME
-fpack = undefined                     -- FIXME
-unwrap :: Fixed_bytes n -> ByteString -- FIXME
-unwrap = undefined                    -- FIXME
-
 pUIDField :: Int -> Parser UID
 pUIDField i = hexUID <$> pTrimmedField i
   where hexUID = UID
                  . fpack
+                 . B.pack
                  . (map ((either error id) . (parseOnly hexadecimal)))
                  . split ' '
 
@@ -188,33 +187,26 @@ dVal n e = ValD (VarP n) (NormalB e) []
 
 dUIDRow :: UIDRow -> UIDRowDecs
 dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateName _templateName)) =
-    let table :: String
+    UIDRowDecs
+    [ dSig o ''UID     , dVal o $ eUID     objectUID
+    , dSig u ''UID     , dVal u $ eUID     tableUID
+    , dSig h ''HalfUID , dVal h $ eHalfUID tableHalfUID
+    ]
+    [ eValP h $ table
+    ]
+    [ eValP u $ table ++ " Table"
+    , eValP o $ table ++ " Table Object"
+    ]
+  where eHalfUID (HalfUID fb) = foldl arg (VarE 'halfUID) $ B.unpack $ funpack fb
+          where arg e b = AppE e (LitE (IntegerL (toInteger b)))
+        eUID     (UID fb)    = foldl arg (VarE 'uid) $ B.unpack $ funpack fb
+          where arg e b = AppE e (LitE (IntegerL (toInteger b)))
+        eValP hn ts =  TupE [VarE hn, LitE (StringL ts)]
         table = C.unpack tableName
-        vn :: String -> String -> Name
         vn p t = mkName $ mconcat [ p, table, t]
         h = vn "h" ""
         u = vn "u" "Table"
-        uo = vn "u" "TableObject"
-    in UIDRowDecs
-           [ dSig uo ''UID
-           , dVal uo $ eUID objectUID
-           , dSig u ''UID
-           , dVal u $ eUID tableUID
-           , dSig h ''HalfUID
-           , dVal h $ eHalfUID tableHalfUID
-           ]
-           [ eValP h $ table
-           ]
-           [ eValP u $ table ++ " Table"
-           , eValP uo $ table ++ " Table Object"
-           ]
-
-  where eHalfUID (HalfUID fb) = foldl arg (VarE 'halfUID) $ unpack $ unwrap fb
-          where arg e b = AppE e (LitE (IntegerL (toInteger b)))
-        eUID (UID fb) = foldl arg (VarE 'uid) $ unpack $ unwrap fb
-          where arg e b = AppE e (LitE (IntegerL (toInteger b)))
-        eValP hn ts =
-            TupE [VarE hn, LitE (StringL ts)]
+        o = vn "u" "TableObject"
 
 data UIDRowDecs = UIDRowDecs [Dec] [Exp] [Exp]
     deriving(Eq,Show)

@@ -68,4 +68,6 @@ putStrLn "Buh-bye now."
 import GHC.Base((++))
 :def! $ (pure . (":! bash -l -c " ++) . show)
 :def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
+:def! H (pure . (":! bash -l -c \"./h\"" ++) . show)
+:def! P (pure . (":! bash -l -c \"./hp\"" ++) . show)
 putStrLn ".. script loaded."

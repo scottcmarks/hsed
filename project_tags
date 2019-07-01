@@ -202,38 +202,36 @@ module System.SED.Common.Util System.SED.Common.Util24,25
 hexUID hexUID45,46
 trimTrailingWhitespace trimTrailingWhitespace49,50
 
-./src/System/SED/Common/TableUIDs/TH.lhs,973
+./src/System/SED/Common/TableUIDs/TH.lhs,929
 module System.SED.Common.TableUIDs.TH System.SED.Common.TableUIDs.TH24,25
-import import45,46
-t240 t24072,73
-t240Decs t240Decs80,81
-data UIDRow UIDRow110,111
-data UIDRow = UIDRow UIDRow110,111
-uidRow uidRow113,114
-mkUIDRow mkUIDRow124,125
-pTableObjectUID pTableObjectUID135,136
-pTableUID pTableUID138,139
-pTableName pTableName141,142
-pTemplateName pTemplateName144,145
-fpack fpack147,148
-unwrap unwrap149,150
-pUIDField pUIDField152,153
-pTrimmedField pTrimmedField159,160
-pField pField162,163
-title title166,167
-header header169,170
-rowSep rowSep172,173
-pieceLengths pieceLengths175,176
-rowSepString rowSepString178,179
-dSig dSig182,183
-dVal dVal185,186
-dUIDRow dUIDRow188,189
-data UIDRowDecs UIDRowDecs218,219
-data UIDRowDecs = UIDRowDecs UIDRowDecs218,219
-instance Semigroup Semigroup UIDRowDecs221,222
-  where (U(UIDRowDecsu1eh1eu1)222,223
-instance Monoid Monoid UIDRowDecs225,226
-  where mempty mempty226,227
+import import48,49
+t240 t24075,76
+t240Decs t240Decs83,84
+data UIDRow UIDRow113,114
+data UIDRow = UIDRow UIDRow113,114
+uidRow uidRow116,117
+mkUIDRow mkUIDRow127,128
+pTableObjectUID pTableObjectUID138,139
+pTableUID pTableUID141,142
+pTableName pTableName144,145
+pTemplateName pTemplateName147,148
+pUIDField pUIDField150,151
+pTrimmedField pTrimmedField158,159
+pField pField161,162
+title title165,166
+header header168,169
+rowSep rowSep171,172
+pieceLengths pieceLengths174,175
+rowSepString rowSepString177,178
+dSig dSig181,182
+dVal dVal184,185
+dUIDRow dUIDRow187,188
+data UIDRowDecs UIDRowDecs210,211
+data UIDRowDecs = UIDRowDecs UIDRowDecs210,211
+instance Semigroup Semigroup UIDRowDecs213,214
+  where (U(UIDRowDecsu1eh1eu1)214,215
+instance Monoid Monoid UIDRowDecs217,218
+  where mempty mempty218,219
 
 ./src/System/SED/Common/Token.lhs,1162
 module System.SED.Common.TokenSystem.SED.Common.Token22,23

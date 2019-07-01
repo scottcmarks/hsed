@@ -168,13 +168,8 @@ append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
 append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (T.append sbsl sbsr))
 
 
-
-
-
-
 fpack :: (KnownNat n) => ByteString -> Fixed_bytes n
 fpack = toFixed_bytes
-
 
 funpack :: (KnownNat n) => Fixed_bytes n -> ByteString
 funpack = fromFixed_bytes

@@ -7,32 +7,32 @@ module Main Main2,3
 main main14,15
 
 ./test/System/SED/Common/IntegralSpec.hs,194
-module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec13,14
-validFirstTwo validFirstTwo30,31
-validNatural validNatural38,39
-validInteger validInteger45,46
-spec spec54,55
+module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec12,13
+validFirstTwo validFirstTwo29,30
+validNatural validNatural37,38
+validInteger validInteger44,45
+spec spec53,54
 
 ./test/System/SED/Common/ValueSpec.hs,87
 module System.SED.Common.ValueSpec System.SED.Common.ValueSpec13,14
 spec spec24,25
 
 ./test/System/SED/Common/TokenSpec.hs,375
-module System.SED.Common.TokenSpec System.SED.Common.TokenSpec13,14
-spec spec33,34
-maybeIsPrefixOf maybeIsPrefixOf236,237
-maybeParsesEq maybeParsesEq239,240
-(<(<||>)242,243
-tagsReservedForTCG tagsReservedForTCG246,247
-tokenParserByteString tokenParserByteString250,251
-tokenParserString tokenParserString253,254
-p p256,257
-gp gp259,260
-_pgp _pgp263,264
+module System.SED.Common.TokenSpec System.SED.Common.TokenSpec12,13
+spec spec32,33
+maybeIsPrefixOf maybeIsPrefixOf235,236
+maybeParsesEq maybeParsesEq238,239
+(<(<||>)241,242
+tagsReservedForTCG tagsReservedForTCG245,246
+tokenParserByteString tokenParserByteString249,250
+tokenParserString tokenParserString252,253
+p p255,256
+gp gp258,259
+_pgp _pgp262,263
 
 ./test/System/SED/Common/ColumnTypes/THSpec.hs,105
-module System.SED.Common.ColumnTypes.THSpec System.SED.Common.ColumnTypes.THSpec13,14
-spec spec22,23
+module System.SED.Common.ColumnTypes.THSpec System.SED.Common.ColumnTypes.THSpec12,13
+spec spec21,22
 
 ./test/Spec.hs,0
 
@@ -49,41 +49,39 @@ module System.SED.Host.Run System.SED.Host.Run2,3
 run run9,10
 
 ./src/System/SED/Common/Call.lhs,1351
-module System.SED.Common.Call System.SED.Common.Call22,23
-data MethodHeader MethodHeader198,199
-data MethodHeader = MethodHeader{ MethodHeader{198,199
-data MethodHeader = MethodHeader{ _invokingID _invokingID198,199
-                                , _methodID _methodID199,200
-data Parameters Parameters203,204
-data Parameters = Parameters Parameters203,204
-data Parameters = Parameters { _required:_required203,204
-                             , _optional:_optional204,205
-data MethodCall MethodCall207,208
-data MethodCall = MethodCall MethodCall207,208
-data MethodCall = MethodCall { _header _header207,208
-                             , _parameters _parameters208,209
-                             , _statusCode _statusCode209,210
-instance StreamItem StreamItem MethodHeader214,215
-    parser parser215,216
-    generate generate216,217
-instance StreamItem StreamItem Parameters218,219
-    parser parser219,220
-    generate generate220,221
-d d222,223
-instance StreamItem StreamItem MethodCall225,226
-    parser parser226,227
-    generate generate240,241
-instance Arbitrary Arbitrary MethodHeader252,253
-    arbitrary arbitrary253,254
-instance Arbitrary Arbitrary Parameters255,256
-    arbitrary arbitrary256,257
-instance Arbitrary Arbitrary MethodCall258,259
-    arbitrary arbitrary259,260
+module System.SED.Common.Call System.SED.Common.Call23,24
+data MethodHeader MethodHeader199,200
+data MethodHeader = MethodHeader{ MethodHeader{199,200
+data MethodHeader = MethodHeader{ _invokingID _invokingID199,200
+                                , _methodID _methodID200,201
+data Parameters Parameters204,205
+data Parameters = Parameters Parameters204,205
+data Parameters = Parameters { _required:_required204,205
+                             , _optional:_optional205,206
+data MethodCall MethodCall208,209
+data MethodCall = MethodCall MethodCall208,209
+data MethodCall = MethodCall { _header _header208,209
+                             , _parameters _parameters209,210
+                             , _statusCode _statusCode210,211
+instance StreamItem StreamItem MethodHeader215,216
+    parser parser216,217
+    generate generate217,218
+instance StreamItem StreamItem Parameters219,220
+    parser parser220,221
+    generate generate221,222
+d d223,224
+instance StreamItem StreamItem MethodCall226,227
+    parser parser227,228
+    generate generate241,242
+instance Arbitrary Arbitrary MethodHeader253,254
+    arbitrary arbitrary254,255
+instance Arbitrary Arbitrary Parameters256,257
+    arbitrary arbitrary257,258
+instance Arbitrary Arbitrary MethodCall259,260
+    arbitrary arbitrary260,261
 
-./src/System/SED/Common/TableUIDs.lhs,155
+./src/System/SED/Common/TableUIDs.lhs,69
 module System.SED.Common.TableUIDsSystem.SED.Common.TableUIDs47,48
-lookupTableHalfUID lookupTableHalfUID180,181
-lookupTableUID lookupTableUID185,186
 
 ./src/System/SED/Common/StreamItem.lhs,339
 module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25
@@ -97,30 +95,28 @@ class StreamItem StreamItem46,47
     typeIsa typeIsa64,65
 require require68,69
 
-./src/System/SED/Common/UID.lhs,726
+./src/System/SED/Common/UID.lhs,635
 module System.SED.Common.UID System.SED.Common.UID28,29
-instance (K(KnownNat n) => IsToken (Fixed_bytes n)71,72
-    token token72,73
-    fromToken fromToken73,74
-instance (K(KnownNat n) => StreamItem (Fixed_bytes n)76,77
-    parser parser77,78
-    generate generate86,87
-instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)88,89
-    arbitrary arbitrary89,90
-newtype HalfUID HalfUID93,94
-instance Show(Show (HalfUID)96,97
-    show show97,98
-halfUID halfUID100,101
-newtype UID UID104,105
-instance Show(Show (UID)107,108
-    show show108,109
-uid uid111,112
-uidUpper uidUpper118,119
-uidLower uidLower121,122
-uidPlus uidPlus124,125
-(+(+:+)127,128
-hNull hNull131,132
-uNull uNull134,135
+showFixed_bytesHex showFixed_bytesHex78,79
+showFixed_bytes showFixed_bytes83,84
+newtype HalfUID HalfUID87,88
+instance Show Show HalfUID90,91
+    show show91,92
+instance Arbitrary Arbitrary HalfUID92,93
+    arbitrary arbitrary93,94
+halfUID halfUID95,96
+newtype UID UID99,100
+instance Show Show UID102,103
+    show show103,104
+instance Arbitrary Arbitrary UID104,105
+    arbitrary arbitrary105,106
+uid uid107,108
+uidUpper uidUpper114,115
+uidLower uidLower117,118
+uidPlus uidPlus120,121
+(+(+:+)123,124
+hNull hNull127,128
+uNull uNull130,131
 
 ./src/System/SED/Common/Format.lhs,2482
 module System.SED.Common.FormatSystem.SED.Common.Format33,34
@@ -202,40 +198,42 @@ newtype ColumnType ColumnType355,356
 module System.SED.Common.TypesSystem.SED.Common.Types21,22
 
 ./src/System/SED/Common/Util.lhs,134
-module System.SED.Common.Util System.SED.Common.Util23,24
-hexUID hexUID44,45
-trimTrailingWhitespace trimTrailingWhitespace48,49
+module System.SED.Common.Util System.SED.Common.Util24,25
+hexUID hexUID45,46
+trimTrailingWhitespace trimTrailingWhitespace49,50
 
-./src/System/SED/Common/TableUIDs/TH.lhs,929
+./src/System/SED/Common/TableUIDs/TH.lhs,973
 module System.SED.Common.TableUIDs.TH System.SED.Common.TableUIDs.TH24,25
 import import45,46
-t240 t24066,67
-t240Decs t240Decs74,75
-data UIDRow UIDRow104,105
-data UIDRow = UIDRow UIDRow104,105
-uidRow uidRow107,108
-mkUIDRow mkUIDRow118,119
-pTableObjectUID pTableObjectUID129,130
-pTableUID pTableUID132,133
-pTableName pTableName135,136
-pTemplateName pTemplateName138,139
-pUIDField pUIDField141,142
-pTrimmedField pTrimmedField148,149
-pField pField151,152
-title title155,156
-header header158,159
-rowSep rowSep161,162
-pieceLengths pieceLengths164,165
-rowSepString rowSepString167,168
-dSig dSig171,172
-dVal dVal174,175
-dUIDRow dUIDRow177,178
-data UIDRowDecs UIDRowDecs207,208
-data UIDRowDecs = UIDRowDecs UIDRowDecs207,208
-instance Semigroup Semigroup UIDRowDecs210,211
-  where (U(UIDRowDecsu1eh1eu1)211,212
-instance Monoid Monoid UIDRowDecs214,215
-  where mempty mempty215,216
+t240 t24072,73
+t240Decs t240Decs80,81
+data UIDRow UIDRow110,111
+data UIDRow = UIDRow UIDRow110,111
+uidRow uidRow113,114
+mkUIDRow mkUIDRow124,125
+pTableObjectUID pTableObjectUID135,136
+pTableUID pTableUID138,139
+pTableName pTableName141,142
+pTemplateName pTemplateName144,145
+fpack fpack147,148
+unwrap unwrap149,150
+pUIDField pUIDField152,153
+pTrimmedField pTrimmedField159,160
+pField pField162,163
+title title166,167
+header header169,170
+rowSep rowSep172,173
+pieceLengths pieceLengths175,176
+rowSepString rowSepString178,179
+dSig dSig182,183
+dVal dVal185,186
+dUIDRow dUIDRow188,189
+data UIDRowDecs UIDRowDecs218,219
+data UIDRowDecs = UIDRowDecs UIDRowDecs218,219
+instance Semigroup Semigroup UIDRowDecs221,222
+  where (U(UIDRowDecsu1eh1eu1)222,223
+instance Monoid Monoid UIDRowDecs225,226
+  where mempty mempty226,227
 
 ./src/System/SED/Common/Token.lhs,1162
 module System.SED.Common.TokenSystem.SED.Common.Token22,23
@@ -276,7 +274,7 @@ tokenSource tokenSource365,366
 ./src/System/SED/Common/Import.hs,61
 module System.SED.Common.ImportSystem.SED.Common.Import1,2
 
-./src/System/SED/Common/ColumnTypes.lhs,11805
+./src/System/SED/Common/ColumnTypes.lhs,11472
 module System.SED.Common.ColumnTypes System.SED.Common.ColumnTypes30,31
 type TPer TPer3254,3255
 data Env Env3256,3257
@@ -308,10 +306,6 @@ data Core_ACE_expression Core_ACE_expression3400,3401
 data Core_ACE_expression = Core_ACE_expression_Authority_object_ref Core_ACE_expression_Authority_object_ref3400,3401
                          | Core_ACE_expression_boolean_ACE Core_ACE_expression_boolean_ACE3401,3402
 _ACE_expressionSetSize _ACE_expressionSetSize3403,3404
-newtype Core_ACE_object_ref Core_ACE_object_ref3425,3426
-mkCore_ACE_object_ref mkCore_ACE_object_ref3427,3428
-data Core_ACL Core_ACL3450,3451
-data Core_ACL = Core_ACL Core_ACL3450,3451
 data Core_adv_key_mode Core_adv_key_mode3487,3488
 data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_ReqCore_adv_key_mode_Wait_for_AdvKey_Req3487,3488
                        | Core_adv_key_mode_Auto_advance_keysCore_adv_key_mode_Auto_advance_keys3488,3489
@@ -382,7 +376,6 @@ data Core_auth_method = Core_auth_method_NoneCore_auth_method_None3614,3615
                       | Core_auth_method_Reserved_22Core_auth_method_Reserved_223636,3637
                       | Core_auth_method_Reserved_23Core_auth_method_Reserved_233637,3638
 newtype Core_Authority_object_ref Core_Authority_object_ref3661,3662
-mkCore_Authority_object_ref mkCore_Authority_object_ref3665,3666
 type Core_boolean Core_boolean3705,3706
 data Core_boolean_ACE Core_boolean_ACE3742,3743
 data Core_boolean_ACE = And And3742,3743
@@ -401,7 +394,6 @@ type Core_bytes_32 Core_bytes_323906,3907
 type Core_bytes_48 Core_bytes_483926,3927
 type Core_bytes_64 Core_bytes_643948,3949
 newtype Core_Certificates_object_ref Core_Certificates_object_ref3970,3971
-mkCore_Certificates_object_ref mkCore_Certificates_object_ref3974,3975
 type Core_uidref Core_uidref3999,4000
 implementationDependant_AC_elementSize implementationDependant_AC_elementSize4003,4004
 implementationDependant_max_columns implementationDependant_max_columns4006,4007
@@ -583,6 +575,15 @@ uStartTrustedSession uStartTrustedSession101,102
 uSyncTrustedSession uSyncTrustedSession104,105
 uCloseSession uCloseSession107,108
 
+./src/System/SED/Common/Instances.lhs,297
+module System.SED.Common.Instances System.SED.Common.Instances27,28
+instance (K(KnownNat n) => IsToken (Fixed_bytes n)52,53
+    token token53,54
+    fromToken fromToken54,55
+instance (K(KnownNat n) => StreamItem (Fixed_bytes n)57,58
+    parser parser58,59
+    generate generate67,68
+
 ./src/Hsed/App.lhs,391
 module Hsed.AppHsed.App23,24
 data Options Options31,32
@@ -597,33 +598,43 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Extras/Bytes.lhs,886
-module Extras.BytesExtras.Bytes34,35
-import import64,65
-data Fixed_bytes Fixed_bytes71,72
-data Fixed_bytes n = Fixed_bytes Fixed_bytes71,72
-instance (K(KnownNat n) => IsString (Fixed_bytes n)74,75
-    fromString fromString75,76
-instance (K(KnownNat n) => IsString (S-Static ShortByteString n)77,78
-    fromString fromString78,79
-instance HasHex HasHex ShortByteString87,88
-    hex hex88,89
-    fromHex fromHex89,90
-instance (K(KnownNat n) => HasHex (S-Static ShortByteString n)91,92
-    hex hex92,93
-    fromHex fromHex93,94
-instance (K(KnownNat n) => HasHex (Fixed_bytes n)95,96
-    hex hex96,97
-    fromHex fromHex97,98
-unwrap unwrap99,100
-create create102,103
-createRight createRight105,106
-take take108,109
-drop drop111,112
-append append114,115
-fixed fixed118,119
-fpack fpack121,122
-naturalToFixedBytes naturalToFixedBytes124,125
+./src/Extras/Bytes.lhs,1554
+module Extras.BytesExtras.Bytes29,30
+import import57,58
+data Fixed_bytes Fixed_bytes72,73
+data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes72,73
+instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)75,76
+    arbitrary arbitrary76,77
+instance (K(KnownNat n) => Show (Fixed_bytes n)80,81
+    showsPrec showsPrec81,82
+instance (K(KnownNat n) => IsString (Fixed_bytes n)90,91
+    fromString fromString91,92
+class (KnownNat n) => HasFixed_bytes HasFixed_bytes106,107
+    toFixed_bytes toFixed_bytes107,108
+    fromFixed_bytes fromFixed_bytes108,109
+instance (K(KnownNat n) => HasFixed_bytes n Natural110,111
+    toFixed_bytes toFixed_bytes111,112
+    fromFixed_bytes fromFixed_bytes121,122
+instance (K(KnownNat n) => HasFixed_bytes n (Static ShortByteString n)123,124
+    toFixed_bytes toFixed_bytes124,125
+    fromFixed_bytes fromFixed_bytes125,126
+instance (K(KnownNat n) => HasFixed_bytes n ShortByteString127,128
+    toFixed_bytes toFixed_bytes128,129
+    fromFixed_bytes fromFixed_bytes138,139
+instance (K(KnownNat n) => HasFixed_bytes n ByteString141,142
+    toFixed_bytes toFixed_bytes142,143
+    fromFixed_bytes fromFixed_bytes143,144
+instance (K(KnownNat n) => HasFixed_bytes n [Word8]145,146
+    toFixed_bytes toFixed_bytes146,147
+    fromFixed_bytes fromFixed_bytes147,148
+instance (K(KnownNat n) => HasHex (Fixed_bytes n)153,154
+    hex hex154,155
+    fromHex fromHex155,156
+take take160,161
+drop drop163,164
+append append166,167
+fpack fpack174,175
+funpack funpack178,179
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion14,15
@@ -631,52 +642,58 @@ plainVersion plainVersion31,32
 gitBranch gitBranch38,39
 gitVersion gitVersion54,55
 
-./src/Extras/Integral.lhs,807
-module Extras.IntegralExtras.Integral30,31
-rollUp rollUp57,58
-byteStringToNatural byteStringToNatural62,63
-byteStringToInteger byteStringToInteger65,66
-naturalToByteString naturalToByteString72,73
-intVal intVal77,78
-integerToByteString integerToByteString80,81
-word8 word894,95
-char char97,98
-ordw ordw100,101
-byte byte103,104
-int int106,107
-integer integer109,110
-natural natural112,113
-class IsByteString IsByteString115,116
-    fromByteString fromByteString116,117
-    toByteString toByteString117,118
-instance IsByteString IsByteString Integer119,120
-    fromByteString fromByteString120,121
-    toByteString toByteString121,122
-instance IsByteString IsByteString Natural123,124
-    fromByteString fromByteString124,125
-    toByteString toByteString125,126
+./src/Extras/Integral.lhs,806
+module Extras.IntegralExtras.Integral29,30
+rollUp rollUp56,57
+byteStringToNatural byteStringToNatural61,62
+byteStringToInteger byteStringToInteger64,65
+naturalToByteString naturalToByteString71,72
+intVal intVal76,77
+integerToByteString integerToByteString79,80
+word8 word893,94
+char char96,97
+ordw ordw99,100
+byte byte102,103
+int int105,106
+integer integer108,109
+natural natural111,112
+class IsByteString IsByteString114,115
+    fromByteString fromByteString115,116
+    toByteString toByteString116,117
+instance IsByteString IsByteString Integer118,119
+    fromByteString fromByteString119,120
+    toByteString toByteString120,121
+instance IsByteString IsByteString Natural122,123
+    fromByteString fromByteString123,124
+    toByteString toByteString124,125
 
-./src/Extras/Hex.lhs,637
-module Extras.HexExtras.Hex23,24
-hexDigit hexDigit38,39
-hexDigits hexDigits41,42
-hexValue hexValue44,45
-hexCharSyntax hexCharSyntax47,48
-class HasHex HasHex51,52
-    hex hex52,53
-    fromHex fromHex53,54
-instance HasHex HasHex Word855,56
-    hex hex56,57
-    fromHex fromHex58,59
-instance HasHex HasHex Char63,64
-    hex hex64,65
-    fromHex fromHex65,66
-instance HasHex HasHex [Word8]67,68
-    hex hex68,69
+./src/Extras/Hex.lhs,845
+module Extras.HexExtras.Hex24,25
+hexDigit hexDigit49,50
+hexDigits hexDigits52,53
+hexValue hexValue55,56
+hexWord8Syntax hexWord8Syntax58,59
+class HasHex HasHex62,63
+    hex hex63,64
+    fromHex fromHex64,65
+instance HasHex HasHex Word866,67
+    hex hex67,68
     fromHex fromHex69,70
-instance HasHex HasHex ByteString73,74
-    hex hex74,75
-    fromHex fromHex75,76
-instance HasHex HasHex String77,78
-    hex hex78,79
-    fromHex fromHex79,80
+instance HasHex HasHex Char74,75
+    hex hex75,76
+    fromHex fromHex76,77
+instance HasHex HasHex [Word8]78,79
+    hex hex79,80
+    fromHex fromHex80,81
+instance HasHex HasHex ByteString84,85
+    hex hex85,86
+    fromHex fromHex86,87
+instance HasHex HasHex String88,89
+    hex hex89,90
+    fromHex fromHex90,91
+instance HasHex HasHex ShortByteString92,93
+    hex hex93,94
+    fromHex fromHex94,95
+instance (K(KnownNat n) => HasHex (Static ShortByteString n)96,97
+    hex hex97,98
+    fromHex fromHex98,99

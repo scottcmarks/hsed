@@ -19,6 +19,7 @@ Datatypes for Tokens.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DeriveAnyClass    #-}
 
 module System.SED.Common.Call where
 

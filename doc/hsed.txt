@@ -57,7 +57,7 @@ module Extras.Hex
 hexDigit :: Word8 -> Char
 hexDigits :: [Char]
 hexValue :: Char -> Maybe Word8
-hexCharSyntax :: HasHex a => a -> String
+hexWord8Syntax :: HasHex a => a -> String
 class HasHex a
 hex :: HasHex a => a -> String
 fromHex :: HasHex a => String -> Maybe a
@@ -66,33 +66,38 @@ instance Extras.Hex.HasHex GHC.Types.Char
 instance Extras.Hex.HasHex [GHC.Word.Word8]
 instance Extras.Hex.HasHex Data.ByteString.Internal.ByteString
 instance Extras.Hex.HasHex GHC.Base.String
+instance Extras.Hex.HasHex Data.ByteString.Short.Internal.ShortByteString
+instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
 
 
 -- | Datatypes for Tokens.
 module Extras.Bytes
-data Fixed_bytes n
-Fixed_bytes :: !Static ShortByteString n -> Fixed_bytes n
+data Fixed_bytes (n :: Nat)
+Fixed_bytes :: !Static ShortByteString n -> Fixed_bytes
 
--- | Data family which wraps values of the underlying type giving them a
---   type-level length. <tt>Static t 6</tt> means a value of type
---   <tt>t</tt> of length 6.
-data family Static a (i :: Nat) :: Type
-unwrap :: Fixed_bytes n -> ByteString
-create :: KnownNat n => ByteString -> Maybe (Fixed_bytes n)
+-- | HasFixed_bytes class and instances for conversion to/from Fixed_bytes
+--   n
+class (KnownNat n) => HasFixed_bytes n a
+toFixed_bytes :: HasFixed_bytes n a => a -> Fixed_bytes n
+fromFixed_bytes :: HasFixed_bytes n a => Fixed_bytes n -> a
+
+-- | Static ShortByteString n methods lifted to Fixed_bytes n
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
-fixed :: KnownNat n => ByteString -> Fixed_bytes n
-fpack :: KnownNat n => [Word8] -> Fixed_bytes n
-naturalToFixedBytes :: KnownNat n => Natural -> Fixed_bytes n
-instance GHC.Show.Show (Extras.Bytes.Fixed_bytes n)
+fpack :: KnownNat n => ByteString -> Fixed_bytes n
+funpack :: KnownNat n => Fixed_bytes n -> ByteString
 instance GHC.Classes.Ord (Extras.Bytes.Fixed_bytes n)
 instance GHC.Classes.Eq (Extras.Bytes.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n GHC.Natural.Natural
+instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
+instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n Data.ByteString.Short.Internal.ShortByteString
+instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n Data.ByteString.Internal.ByteString
+instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n [GHC.Word.Word8]
+instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (Extras.Bytes.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (Extras.Bytes.Fixed_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (Extras.Bytes.Fixed_bytes n)
 instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
-instance Extras.Hex.HasHex Data.ByteString.Short.Internal.ShortByteString
-instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
 
 
 -- | Datatypes for <tt>hsed</tt> main. Constructors and lenses.
@@ -218,8 +223,16 @@ instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Token.Token
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Token.Token
 
 
+-- | Orphan instances.
+module System.SED.Common.Instances
+instance GHC.TypeNats.KnownNat n => System.SED.Common.Token.IsToken (Extras.Bytes.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.Common.StreamItem.StreamItem (Extras.Bytes.Fixed_bytes n)
+
+
 -- | Datatypes for UIDs and HalfUIDs.
 module System.SED.Common.UID
+showFixed_bytesHex :: KnownNat n => Fixed_bytes n -> [String]
+showFixed_bytes :: KnownNat n => String -> Fixed_bytes n -> String
 newtype HalfUID
 HalfUID :: Fixed_bytes 4 -> HalfUID
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
@@ -233,21 +246,18 @@ uidPlus :: HalfUID -> HalfUID -> UID
 infix 9 +:+
 hNull :: HalfUID
 uNull :: UID
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.UID.UID
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.UID.UID
 instance System.SED.Common.Token.IsToken System.SED.Common.UID.UID
 instance GHC.Classes.Ord System.SED.Common.UID.UID
 instance GHC.Classes.Eq System.SED.Common.UID.UID
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.UID.HalfUID
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.UID.HalfUID
 instance System.SED.Common.Token.IsToken System.SED.Common.UID.HalfUID
 instance GHC.Classes.Ord System.SED.Common.UID.HalfUID
 instance GHC.Classes.Eq System.SED.Common.UID.HalfUID
 instance GHC.Show.Show System.SED.Common.UID.UID
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.UID.UID
 instance GHC.Show.Show System.SED.Common.UID.HalfUID
-instance GHC.TypeNats.KnownNat n => System.SED.Common.Token.IsToken (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => System.SED.Common.StreamItem.StreamItem (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (Extras.Bytes.Fixed_bytes n)
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.UID.HalfUID
 
 
 -- | Table
@@ -364,152 +374,6 @@ instance GHC.Base.Monoid System.SED.Common.TableUIDs.TH.UIDRowDecs
 --   create comments for Haddock to see; hence the names themselves must
 --   suffice as documentation.
 module System.SED.Common.TableUIDs
-nameUID :: Map UID String
-nameHalfUID :: Map HalfUID String
-hTable :: HalfUID
-uTableTable :: UID
-uTableTableObject :: UID
-hSPInfo :: HalfUID
-uSPInfoTable :: UID
-uSPInfoTableObject :: UID
-hSPTemplates :: HalfUID
-uSPTemplatesTable :: UID
-uSPTemplatesTableObject :: UID
-hColumn :: HalfUID
-uColumnTable :: UID
-uColumnTableObject :: UID
-hType :: HalfUID
-uTypeTable :: UID
-uTypeTableObject :: UID
-hMethodID :: HalfUID
-uMethodIDTable :: UID
-uMethodIDTableObject :: UID
-hAccessControl :: HalfUID
-uAccessControlTable :: UID
-uAccessControlTableObject :: UID
-hACE :: HalfUID
-uACETable :: UID
-uACETableObject :: UID
-hAuthority :: HalfUID
-uAuthorityTable :: UID
-uAuthorityTableObject :: UID
-hCertificates :: HalfUID
-uCertificatesTable :: UID
-uCertificatesTableObject :: UID
-hC_PIN :: HalfUID
-uC_PINTable :: UID
-uC_PINTableObject :: UID
-hC_RSA_1024 :: HalfUID
-uC_RSA_1024Table :: UID
-uC_RSA_1024TableObject :: UID
-hC_RSA_2048 :: HalfUID
-uC_RSA_2048Table :: UID
-uC_RSA_2048TableObject :: UID
-hC_AES_128 :: HalfUID
-uC_AES_128Table :: UID
-uC_AES_128TableObject :: UID
-hC_AES_256 :: HalfUID
-uC_AES_256Table :: UID
-uC_AES_256TableObject :: UID
-hC_EC_160 :: HalfUID
-uC_EC_160Table :: UID
-uC_EC_160TableObject :: UID
-hC_EC_192 :: HalfUID
-uC_EC_192Table :: UID
-uC_EC_192TableObject :: UID
-hC_EC_224 :: HalfUID
-uC_EC_224Table :: UID
-uC_EC_224TableObject :: UID
-hC_EC_256 :: HalfUID
-uC_EC_256Table :: UID
-uC_EC_256TableObject :: UID
-hC_EC_384 :: HalfUID
-uC_EC_384Table :: UID
-uC_EC_384TableObject :: UID
-hC_EC_521 :: HalfUID
-uC_EC_521Table :: UID
-uC_EC_521TableObject :: UID
-hC_EC_163 :: HalfUID
-uC_EC_163Table :: UID
-uC_EC_163TableObject :: UID
-hC_EC_233 :: HalfUID
-uC_EC_233Table :: UID
-uC_EC_233TableObject :: UID
-hC_EC_283 :: HalfUID
-uC_EC_283Table :: UID
-uC_EC_283TableObject :: UID
-hC_HMAC_160 :: HalfUID
-uC_HMAC_160Table :: UID
-uC_HMAC_160TableObject :: UID
-hC_HMAC_256 :: HalfUID
-uC_HMAC_256Table :: UID
-uC_HMAC_256TableObject :: UID
-hC_HMAC_384 :: HalfUID
-uC_HMAC_384Table :: UID
-uC_HMAC_384TableObject :: UID
-hC_HMAC_512 :: HalfUID
-uC_HMAC_512Table :: UID
-uC_HMAC_512TableObject :: UID
-hSecretProtect :: HalfUID
-uSecretProtectTable :: UID
-uSecretProtectTableObject :: UID
-hTPerInfo :: HalfUID
-uTPerInfoTable :: UID
-uTPerInfoTableObject :: UID
-hCryptoSuite :: HalfUID
-uCryptoSuiteTable :: UID
-uCryptoSuiteTableObject :: UID
-hTemplate :: HalfUID
-uTemplateTable :: UID
-uTemplateTableObject :: UID
-hSP :: HalfUID
-uSPTable :: UID
-uSPTableObject :: UID
-hClockTime :: HalfUID
-uClockTimeTable :: UID
-uClockTimeTableObject :: UID
-hH_SHA_1 :: HalfUID
-uH_SHA_1Table :: UID
-uH_SHA_1TableObject :: UID
-hH_SHA_256 :: HalfUID
-uH_SHA_256Table :: UID
-uH_SHA_256TableObject :: UID
-hH_SHA_384 :: HalfUID
-uH_SHA_384Table :: UID
-uH_SHA_384TableObject :: UID
-hH_SHA_512 :: HalfUID
-uH_SHA_512Table :: UID
-uH_SHA_512TableObject :: UID
-hLog :: HalfUID
-uLogTable :: UID
-uLogTableObject :: UID
-hLogList :: HalfUID
-uLogListTable :: UID
-uLogListTableObject :: UID
-hLockingInfo :: HalfUID
-uLockingInfoTable :: UID
-uLockingInfoTableObject :: UID
-hLocking :: HalfUID
-uLockingTable :: UID
-uLockingTableObject :: UID
-hMBRControl :: HalfUID
-uMBRControlTable :: UID
-uMBRControlTableObject :: UID
-hMBR :: HalfUID
-uMBRTable :: UID
-uMBRTableObject :: UID
-hK_AES_128 :: HalfUID
-uK_AES_128Table :: UID
-uK_AES_128TableObject :: UID
-hK_AES_256 :: HalfUID
-uK_AES_256Table :: UID
-uK_AES_256TableObject :: UID
-
--- | Look up the name of a Table <a>HalfUID</a>
-lookupTableHalfUID :: HalfUID -> Maybe String
-
--- | Look up the name of a Table <a>UID</a> or a Table object <a>UID</a>
-lookupTableUID :: UID -> Maybe String
 
 
 -- | Table column types.
@@ -546,11 +410,6 @@ data Core_ACE_expression
 Core_ACE_expression_Authority_object_ref :: Core_Authority_object_ref -> Core_ACE_expression
 Core_ACE_expression_boolean_ACE :: Core_boolean_ACE -> Core_ACE_expression
 _ACE_expressionSetSize :: TPer Int
-newtype Core_ACE_object_ref
-Core_ACE_object_ref :: (Core_uidref -> Maybe Core_Restricted_Reference_Type_Object) -> Core_ACE_object_ref
-mkCore_ACE_object_ref :: Core_uidref -> Maybe Core_Restricted_Reference_Type_Object
-data Core_ACL
-Core_ACL :: [Core_ACE_object_ref] -> Core_ACL
 data Core_adv_key_mode
 Core_adv_key_mode_Wait_for_AdvKey_Req :: Core_adv_key_mode
 Core_adv_key_mode_Auto_advance_keys :: Core_adv_key_mode
@@ -622,7 +481,6 @@ Core_auth_method_Reserved_22 :: Core_auth_method
 Core_auth_method_Reserved_23 :: Core_auth_method
 newtype Core_Authority_object_ref
 Core_Authority_object_ref :: (Core_uidref -> Maybe Core_Restricted_Reference_Type_Object) -> Core_Authority_object_ref
-mkCore_Authority_object_ref :: Core_uidref -> Maybe Core_Restricted_Reference_Type_Object
 type Core_boolean = Bool
 data Core_boolean_ACE
 And :: Core_boolean_ACE
@@ -641,7 +499,6 @@ type Core_bytes_48 = Core_bytes 48
 type Core_bytes_64 = Core_bytes 64
 newtype Core_Certificates_object_ref
 Core_Certificates_object_ref :: (Core_uidref -> Maybe Core_Restricted_Reference_Type_Object) -> Core_Certificates_object_ref
-mkCore_Certificates_object_ref :: Core_uidref -> Maybe Core_Restricted_Reference_Type_Object
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

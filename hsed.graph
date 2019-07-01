@@ -1,7 +1,7 @@
 digraph G {
 size="6,4";
 ratio="fill";
-u22[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
+u23[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
 subgraph cluster_0 {
 label="Extras";
 color="#0000000F";
@@ -36,26 +36,27 @@ u6[label="StreamItem",style="filled",fillcolor="#ffbbff",penwidth="0"];
 u7[label="Token",style="filled",fillcolor="#ffbbff",penwidth="0"];
 u8[label="Value",style="filled",fillcolor="#ffbbff",penwidth="0"];
 u9[label="UID",style="filled",fillcolor="#ffbbff",penwidth="0"];
-u13[label="Table",style="filled",fillcolor="#ffbbff",penwidth="0"];
-u14[label="Util",style="filled",fillcolor="#ffbbff",penwidth="0"];
-u16[label="Format",style="filled",fillcolor="#ffbbff",penwidth="0"];
-u17[label="Import",style="filled",fillcolor="#ffbbff",penwidth="0"];
-u18[label="Types",style="filled",fillcolor="#ffbbff",penwidth="0"];
-u19[label="SpecialPurposeUIDs",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u10[label="Instances",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u14[label="Table",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u15[label="Util",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u17[label="Format",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u18[label="Import",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u19[label="Types",style="filled",fillcolor="#ffbbff",penwidth="0"];
+u20[label="SpecialPurposeUIDs",style="filled",fillcolor="#ffbbff",penwidth="0"];
 subgraph cluster_5 {
 label="ColumnTypes";
 color="#0000000F";
 style="filled";
-u10[label="ColumnTypes",style="filled,bold",fillcolor="#ffbbff"];
-u15[label="TH",style="filled",fillcolor="#77ff77",penwidth="0"];
+u11[label="ColumnTypes",style="filled,bold",fillcolor="#ffbbff"];
+u16[label="TH",style="filled",fillcolor="#77ff77",penwidth="0"];
 
 }
 subgraph cluster_6 {
 label="TableUIDs";
 color="#0000000F";
 style="filled";
-u11[label="TableUIDs",style="filled,bold",fillcolor="#ffbbff"];
-u12[label="TH",style="filled",fillcolor="#ffff77",penwidth="0"];
+u12[label="TableUIDs",style="filled,bold",fillcolor="#ffbbff"];
+u13[label="TH",style="filled",fillcolor="#ffff77",penwidth="0"];
 
 }
 
@@ -64,14 +65,14 @@ subgraph cluster_7 {
 label="Host";
 color="#0000000F";
 style="filled";
-u20[label="Run",style="filled",fillcolor="#7777ff",penwidth="0"];
+u21[label="Run",style="filled",fillcolor="#7777ff",penwidth="0"];
 
 }
 subgraph cluster_8 {
 label="TPer";
 color="#0000000F";
 style="filled";
-u21[label="Run",style="filled",fillcolor="#ff7777",penwidth="0"];
+u22[label="Run",style="filled",fillcolor="#ff7777",penwidth="0"];
 
 }
 
@@ -91,48 +92,51 @@ u8 -> u6;
 u8 -> u7;
 u9 -> u0;
 u9 -> u1;
-u9 -> u2;
 u9 -> u6;
 u9 -> u7;
+u9 -> u10;
 u10 -> u0;
-u10 -> u9;
-u10 -> u11;
+u10 -> u2;
+u10 -> u6;
+u10 -> u7;
+u11 -> u0;
 u11 -> u9;
 u11 -> u12;
-u12 -> u0;
 u12 -> u9;
 u12 -> u13;
-u12 -> u14;
+u13 -> u0;
 u13 -> u9;
-u14 -> u0;
+u13 -> u14;
+u13 -> u15;
 u14 -> u9;
-u15 -> u0;
-u15 -> u1;
-u15 -> u2;
-u15 -> u3;
 u15 -> u9;
-u15 -> u14;
-u17 -> u18;
-u18 -> u0;
-u18 -> u1;
-u18 -> u2;
-u18 -> u5;
-u18 -> u6;
-u18 -> u7;
-u18 -> u8;
-u18 -> u9;
-u18 -> u10;
-u18 -> u11;
-u18 -> u13;
+u16 -> u0;
+u16 -> u1;
+u16 -> u2;
+u16 -> u3;
+u16 -> u9;
+u16 -> u15;
 u18 -> u19;
+u19 -> u0;
+u19 -> u1;
+u19 -> u2;
+u19 -> u5;
+u19 -> u6;
+u19 -> u7;
+u19 -> u8;
 u19 -> u9;
-u20 -> u4;
-u20 -> u17;
+u19 -> u11;
+u19 -> u12;
+u19 -> u14;
+u19 -> u20;
+u20 -> u9;
 u21 -> u4;
-u21 -> u17;
-u22 -> u3;
+u21 -> u18;
 u22 -> u4;
-u22 -> u20;
-u22 -> u21;
+u22 -> u18;
+u23 -> u3;
+u23 -> u4;
+u23 -> u21;
+u23 -> u22;
 
 }

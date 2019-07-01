@@ -28,16 +28,17 @@ Datatypes for Tokens.
 {-# LANGUAGE DataKinds             #-}
 
 module Extras.Bytes
-  (
-    Fixed_bytes(..)
-  , HasFixed_bytes(..)
-  , take
-  , drop
-  , append
-  )
+  -- (
+  --   Fixed_bytes(..)
+  -- , HasFixed_bytes(..)
+  -- , take
+  -- , drop
+  -- , append
+  -- , fpack
+  -- , funpack
+  -- )
 where
 
-import           Control.Monad(replicateM)
 
 import           Data.ByteString            (ByteString, pack)
 import           Data.ByteString.Short      (ShortByteString, fromShort, toShort, unpack)
@@ -49,7 +50,7 @@ import           Data.StaticText            (Static, create, unwrap)
 import qualified Data.StaticText       as T (append, drop, take)
 import           Data.String                (IsString(..))
 
-import           GHC.Base                   (String, error, mconcat, (.), ($), ($!))
+import           GHC.Base                   (undefined, error, mconcat, (.), ($), ($!))
 import           GHC.Classes                (Eq(..),Ord(..))
 import           GHC.Maybe                  (Maybe(..))
 import           GHC.Natural                (Natural(..))
@@ -59,17 +60,21 @@ import           GHC.TypeNats               (type (+), type (<=), KnownNat,
 import           GHC.Types                  (Nat)
 import           GHC.Word                   (Word8)
 
-import           Test.QuickCheck (Arbitrary(..), Gen, arbitrary)
+import           Test.QuickCheck (Arbitrary(..))
+import           Test.QuickCheck.Instances.ByteString ()
 
 
 import           Extras.Hex                 (HasHex(..))
 import           Extras.Hex                 ()
-import           Extras.Integral            (byteStringToNatural,
-                                             naturalToByteString,
-                                             intVal)
+import           Extras.Integral            (byteStringToNatural, naturalToByteString)
+
+
 
 data Fixed_bytes (n :: Nat) = Fixed_bytes !(Static ShortByteString n)
     deriving (Eq, Ord)
+
+instance (KnownNat n) => Arbitrary (Fixed_bytes n) where
+    arbitrary = fpack <$> arbitrary
 
 -- | Show instances
 --
@@ -94,13 +99,6 @@ instance (KnownNat n) => IsString (Fixed_bytes n) where
                                   , show (F.length s)
                                   , ")"
                                   ]
-
--- | Arbitrary instance, allowing quick check testing
---
-instance (KnownNat n) => Arbitrary (Fixed_bytes n) where
-    arbitrary = (toFixed_bytes :: [Word8] -> Fixed_bytes n)
-            <$> replicateM (intVal (Proxy :: Proxy n)) (arbitrary :: Gen Word8)
-
 
 
 
@@ -154,8 +152,11 @@ instance (KnownNat n) => HasFixed_bytes n [Word8] where
 --
 
 instance (KnownNat n) => HasHex (Fixed_bytes n) where
-    hex (Fixed_bytes ssbs) = (hex :: Static ShortByteString n -> String) ssbs
+    hex (Fixed_bytes ssbs) = undefined ssbs -- FIXME  (hex :: Static ShortByteString n -> String) ssbs
     fromHex hs = fromString <$> fromHex hs
+
+-- | Static ShortByteString n methods lifted to Fixed_bytes n
+
 
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 take (Fixed_bytes sbs) = (Fixed_bytes (T.take sbs))
@@ -165,6 +166,18 @@ drop (Fixed_bytes sbs) = (Fixed_bytes (T.drop sbs))
 
 append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
 append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (T.append sbsl sbsr))
+
+
+
+
+
+
+fpack :: (KnownNat n) => ByteString -> Fixed_bytes n
+fpack = toFixed_bytes
+
+
+funpack :: (KnownNat n) => Fixed_bytes n -> ByteString
+funpack = fromFixed_bytes
 
 \end{code}
 \end{document}

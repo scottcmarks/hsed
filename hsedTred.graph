@@ -54,10 +54,10 @@ digraph G {
 						label=ColumnTypes,
 						style=filled
 					];
-					u10					 [fillcolor="#ffbbff",
+					u11					 [fillcolor="#ffbbff",
 						label=ColumnTypes,
 						style="filled,bold"];
-					u15					 [fillcolor="#77ff77",
+					u16					 [fillcolor="#77ff77",
 						label=TH,
 						penwidth=0,
 						style=filled];
@@ -67,10 +67,10 @@ digraph G {
 						label=TableUIDs,
 						style=filled
 					];
-					u11					 [fillcolor="#ffbbff",
+					u12					 [fillcolor="#ffbbff",
 						label=TableUIDs,
 						style="filled,bold"];
-					u12					 [fillcolor="#ffff77",
+					u13					 [fillcolor="#ffff77",
 						label=TH,
 						penwidth=0,
 						style=filled];
@@ -95,27 +95,31 @@ digraph G {
 					label=UID,
 					penwidth=0,
 					style=filled];
-				u13				 [fillcolor="#ffbbff",
-					label=Table,
+				u10				 [fillcolor="#ffbbff",
+					label=Instances,
 					penwidth=0,
 					style=filled];
 				u14				 [fillcolor="#ffbbff",
+					label=Table,
+					penwidth=0,
+					style=filled];
+				u15				 [fillcolor="#ffbbff",
 					label=Util,
 					penwidth=0,
 					style=filled];
-				u16				 [fillcolor="#ffbbff",
+				u17				 [fillcolor="#ffbbff",
 					label=Format,
 					penwidth=0,
 					style=filled];
-				u17				 [fillcolor="#ffbbff",
+				u18				 [fillcolor="#ffbbff",
 					label=Import,
 					penwidth=0,
 					style=filled];
-				u18				 [fillcolor="#ffbbff",
+				u19				 [fillcolor="#ffbbff",
 					label=Types,
 					penwidth=0,
 					style=filled];
-				u19				 [fillcolor="#ffbbff",
+				u20				 [fillcolor="#ffbbff",
 					label=SpecialPurposeUIDs,
 					penwidth=0,
 					style=filled];
@@ -125,7 +129,7 @@ digraph G {
 					label=Host,
 					style=filled
 				];
-				u20				 [fillcolor="#7777ff",
+				u21				 [fillcolor="#7777ff",
 					label=Run,
 					penwidth=0,
 					style=filled];
@@ -135,20 +139,20 @@ digraph G {
 					label=TPer,
 					style=filled
 				];
-				u21				 [fillcolor="#ff7777",
+				u22				 [fillcolor="#ff7777",
 					label=Run,
 					penwidth=0,
 					style=filled];
 			}
 		}
 	}
-	u22	 [fillcolor="#bbffbb",
+	u23	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u22 -> u3;
-	u22 -> u20;
-	u22 -> u21;
+	u23 -> u3;
+	u23 -> u21;
+	u23 -> u22;
 	u0 -> u1;
 	u1 -> u2;
 	u5 -> u8;
@@ -156,23 +160,24 @@ digraph G {
 	u7 -> u2;
 	u7 -> u6;
 	u8 -> u7;
-	u9 -> u0;
-	u9 -> u7;
-	u13 -> u9;
+	u9 -> u10;
+	u10 -> u0;
+	u10 -> u7;
 	u14 -> u9;
-	u17 -> u18;
-	u18 -> u5;
+	u15 -> u9;
 	u18 -> u19;
-	u18 -> u10;
-	u19 -> u9;
-	u10 -> u11;
-	u15 -> u3;
-	u15 -> u14;
+	u19 -> u5;
+	u19 -> u20;
+	u19 -> u11;
+	u20 -> u9;
 	u11 -> u12;
+	u16 -> u3;
+	u16 -> u15;
 	u12 -> u13;
-	u12 -> u14;
-	u20 -> u4;
-	u20 -> u17;
+	u13 -> u14;
+	u13 -> u15;
 	u21 -> u4;
-	u21 -> u17;
+	u21 -> u18;
+	u22 -> u4;
+	u22 -> u18;
 }

@@ -633,8 +633,8 @@ instance (K(KnownNat n) => HasHex (Fixed_bytes n)153,154
 take take160,161
 drop drop163,164
 append append166,167
-fpack fpack174,175
-funpack funpack178,179
+fpack fpack170,171
+funpack funpack173,174
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion14,15

@@ -31,11 +31,11 @@ import           Control.Applicative                  (many, (<$>), (<*),
 import           Data.Attoparsec.ByteString           (Parser, parseOnly,
                                                        skipWhile, take,
                                                        (<?>))
-import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine,
-                                                       hexadecimal, skipSpace,
-                                                       string)
+import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine, skipSpace, string)
+
+
 import           Data.ByteString                      (ByteString, length)
-import qualified Data.ByteString                 as B (pack, unpack)
+import qualified Data.ByteString                 as B (unpack)
 
 import           Data.ByteString.Char8                (split)
 import qualified Data.ByteString.Char8           as C (unpack)
@@ -64,13 +64,13 @@ import           Language.Haskell.TH.Quote            (QuasiQuoter(..))
 import           Language.Haskell.TH.Syntax           (returnQ)
 
 
-import           Extras.Bytes(fpack, funpack) -- FIXME
+import           Extras.Bytes(funpack)
 
 import           System.SED.Common.Table              (TableName(..),TemplateName(..))
 import           System.SED.Common.UID                (HalfUID(..),UID(..),
                                                        halfUID, uid,
                                                        uidUpper, uidLower)
-import           System.SED.Common.Util               (trimTrailingWhitespace)
+import           System.SED.Common.Util               (hexUID, trimTrailingWhitespace)
 
 -- | Bespoke Quasiquoter for Table 240
 t240 :: QuasiQuoter
@@ -150,11 +150,6 @@ pTemplateName = TemplateName <$> pTrimmedField 4
 
 pUIDField :: Int -> Parser UID
 pUIDField i = hexUID <$> pTrimmedField i
-  where hexUID = UID
-                 . fpack
-                 . B.pack
-                 . (map ((either error id) . (parseOnly hexadecimal)))
-                 . split ' '
 
 pTrimmedField :: Int -> Parser ByteString
 pTrimmedField i = trimTrailingWhitespace <$> pField i

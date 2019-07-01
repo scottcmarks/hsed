@@ -65,9 +65,10 @@ lengths = fromRight [] $  parseOnly (skipSpace *> title *> rowSep) table50
 putStrLn "Buh-bye now."
 
 --------------------------------------------------------------------------------
-import GHC.Base((++))
+import GHC.Base(const, (++))
 :def! $ (pure . (":! bash -l -c " ++) . show)
 :def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
+:def! D (pure . const (":set -ddump-splices") )
 :def! H (pure . (":! bash -l -c \"./h\"" ++) . show)
 :def! P (pure . (":! bash -l -c \"./hp\"" ++) . show)
 putStrLn ".. script loaded."

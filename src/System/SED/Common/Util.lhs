@@ -21,18 +21,17 @@ Utilities
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 
-{-# OPTIONS_GHC -Wno-unused-imports #-}  -- FIXME
+-- {-# OPTIONS_GHC -Wno-unused-imports #-}  -- FIXME
 module System.SED.Common.Util where
 
 import           Data.Attoparsec.ByteString.Char8 (hexadecimal, parseOnly, isSpace_w8)
-import           Data.ByteString ( ByteString, spanEnd)
+import           Data.ByteString ( ByteString, spanEnd, pack)
 import           Data.ByteString.Char8 (split)
 import           Data.Either(either)
 import           Data.Tuple(fst)
 import           GHC.Base(id, map, (.), ($))
 import           GHC.Err(error)
-import RIO(undefined) -- FIXME
--- import           Extras.Bytes(fpack)
+import           Extras.Bytes(fpack)
 
 import           System.SED.Common.UID
 
@@ -44,7 +43,7 @@ import           System.SED.Common.UID
 --   This means that if used in a quasiquoter, the malformed string will not compile.
 --
 hexUID :: ByteString -> UID
-hexUID = undefined -- UID . fpack . map (either error id . parseOnly hexadecimal) . split ' '
+hexUID = UID . fpack . pack . map (either error id . parseOnly hexadecimal) . split ' '
 
 -- | Trim trailing whitespace from e.g. a field in a quasiquoted table
 trimTrailingWhitespace :: ByteString -> ByteString

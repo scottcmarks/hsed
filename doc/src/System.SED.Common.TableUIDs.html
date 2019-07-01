@@ -70,8 +70,7 @@ comments for Haddock to see; hence the names themselves must suffice as document
 </span><a name="line-70"></a><span>
 </span><a name="line-71"></a><span class="hs-comment">--</span><span>
 </span><a name="line-72"></a><span>
-</span><a name="line-73"></a><span class="hs-comment">{-   -- FIXME
-[t240|
+</span><a name="line-73"></a><span class="">[t240|
 
 
                               Table 240   Table UIDs
@@ -172,20 +171,20 @@ comments for Haddock to see; hence the names themselves must suffice as document
     |00 00 00 01 00 00 08 06 |00 00 08 06 00 00 00 00 |K_AES_256     |Locking |
     +------------------------+------------------------+--------------+--------+
 
-|]
-
--- * Safe accessor functions for the generated `Map's
-
--- | Look up the name of a Table `HalfUID'
---
-lookupTableHalfUID :: HalfUID -&gt; Maybe String
-lookupTableHalfUID = flip lookup $ nameHalfUID  -- &lt;-- defined in t240 TH
-
--- | Look up the name of a Table `UID' or a Table object `UID'
---
-lookupTableUID :: UID -&gt; Maybe String
-lookupTableUID = flip lookup $ nameUID          -- &lt;-- defined in t240 TH
--}</span><span> </span><span class="hs-comment">-- FIXME</span><span>
-</span><a name="line-189"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
-</span><a name="line-190"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
-</span><a name="line-191"></a></pre></body></html>
+|]</span><span>
+</span><a name="line-175"></a><span>
+</span><a name="line-176"></a><span class="hs-comment">-- * Safe accessor functions for the generated `Map's</span><span>
+</span><a name="line-177"></a><span>
+</span><a name="line-178"></a><span class="hs-comment">-- | Look up the name of a Table `HalfUID'</span><span>
+</span><a name="line-179"></a><span class="hs-comment">--</span><span>
+</span><a name="line-180"></a><span class="hs-identifier">lookupTableHalfUID</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="System.SED.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-identifier hs-type">String</span><span>
+</span><a name="line-181"></a><a name="lookupTableHalfUID"><a href="System.SED.Common.TableUIDs.html#lookupTableHalfUID"><span class="hs-identifier">lookupTableHalfUID</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">flip</span><span> </span><span class="hs-identifier hs-var">lookup</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="System.SED.Common.TableUIDs.html#nameHalfUID"><span class="hs-identifier hs-var">nameHalfUID</span></a><span>  </span><span class="hs-comment">-- &lt;-- defined in t240 TH</span><span>
+</span><a name="line-182"></a><span>
+</span><a name="line-183"></a><span class="hs-comment">-- | Look up the name of a Table `UID' or a Table object `UID'</span><span>
+</span><a name="line-184"></a><span class="hs-comment">--</span><span>
+</span><a name="line-185"></a><span class="hs-identifier">lookupTableUID</span><span> </span><span class="hs-glyph">::</span><span> </span><a href="System.SED.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-identifier hs-type">Maybe</span><span> </span><span class="hs-identifier hs-type">String</span><span>
+</span><a name="line-186"></a><a name="lookupTableUID"><a href="System.SED.Common.TableUIDs.html#lookupTableUID"><span class="hs-identifier">lookupTableUID</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-identifier hs-var">flip</span><span> </span><span class="hs-identifier hs-var">lookup</span><span> </span><span class="hs-operator hs-var">$</span><span> </span><a href="System.SED.Common.TableUIDs.html#nameUID"><span class="hs-identifier hs-var">nameUID</span></a><span>          </span><span class="hs-comment">-- &lt;-- defined in t240 TH</span><span>
+</span><a name="line-187"></a><span>
+</span><a name="line-188"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><a name="line-189"></a><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><a name="line-190"></a></pre></body></html>

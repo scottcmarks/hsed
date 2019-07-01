@@ -80,8 +80,10 @@ instance Arbitrary Arbitrary Parameters256,257
 instance Arbitrary Arbitrary MethodCall259,260
     arbitrary arbitrary260,261
 
-./src/System/SED/Common/TableUIDs.lhs,69
+./src/System/SED/Common/TableUIDs.lhs,155
 module System.SED.Common.TableUIDsSystem.SED.Common.TableUIDs47,48
+lookupTableHalfUID lookupTableHalfUID179,180
+lookupTableUID lookupTableUID184,185
 
 ./src/System/SED/Common/StreamItem.lhs,339
 module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25

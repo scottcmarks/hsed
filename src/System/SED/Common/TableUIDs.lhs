@@ -70,7 +70,6 @@ import           System.SED.Common.UID          (HalfUID, UID)
 
 --
 
-{-   -- FIXME
 [t240|
 
 
@@ -185,6 +184,6 @@ lookupTableHalfUID = flip lookup $ nameHalfUID  -- <-- defined in t240 TH
 --
 lookupTableUID :: UID -> Maybe String
 lookupTableUID = flip lookup $ nameUID          -- <-- defined in t240 TH
--} -- FIXME
+
 \end{code}
 \end{document}

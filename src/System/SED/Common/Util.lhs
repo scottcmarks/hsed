@@ -21,7 +21,7 @@ Utilities
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 
--- {-# OPTIONS_GHC -Wno-unused-imports #-}  -- FIXME
+
 module System.SED.Common.Util where
 
 import           Data.Attoparsec.ByteString.Char8 (hexadecimal, parseOnly, isSpace_w8)

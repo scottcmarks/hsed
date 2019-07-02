@@ -60,7 +60,17 @@ trow1  = "    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |\n" ::ByteString
 trow2  = "    |                       |     |*,            |\n" ::ByteString
 trow3  = "    |                       |     |ACE_object_ref|\n" ::ByteString
 
-lengths = fromRight [] $  parseOnly (skipSpace *> title *> rowSep) table50
+:{
+lengths = fromRight []
+        $ parseOnly
+              ( skipSpace
+             *> title
+             *> rowSep <*
+                endOfInput
+            <?> "Type Table initial segment"
+              )
+              table50
+:}
 
 putStrLn "Buh-bye now."
 

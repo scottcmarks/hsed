@@ -194,7 +194,7 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     ]
   where eHalfUID (HalfUID fb) = foldl arg (VarE 'halfUID) $ B.unpack $ funpack fb
           where arg e b = AppE e (LitE (IntegerL (toInteger b)))
-        eUID     (UID fb)    = foldl arg (VarE 'uid) $ B.unpack $ funpack fb
+        eUID     (UID     fb) = foldl arg (VarE 'uid    ) $ B.unpack $ funpack fb
           where arg e b = AppE e (LitE (IntegerL (toInteger b)))
         eValP hn ts =  TupE [VarE hn, LitE (StringL ts)]
         table = C.unpack tableName

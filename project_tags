@@ -421,35 +421,35 @@ data Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Objec
 mkCore_Restricted_object_ref mkCore_Restricted_object_ref4070,4071
     | uidUpper objectUID `elem`elem4075,4076
 mkCore_Restricted_object_ref_To mkCore_Restricted_object_ref_To4080,4081
-env env4089,4090
-valid valid4095,4096
-validityChecks validityChecks4098,4099
-_AC_elementSizeValid _AC_elementSizeValid4104,4105
-max_columns max_columns4113,4114
+env env4088,4089
+valid valid4093,4094
+validityChecks validityChecks4096,4097
+_AC_elementSizeValid _AC_elementSizeValid4102,4103
+max_columns max_columns4111,4112
 
 ./src/System/SED/Common/ColumnTypes/TH.lhs,850
 module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH33,34
-import import61,62
-qAC_element qAC_element129,130
-qColumnTypeTableRow qColumnTypeTableRow133,134
-data Core_ACE_expression'Core_ACE_expression'178,179
-typeTableParser typeTableParser184,185
-typeTableRow typeTableRow192,193
-title title200,201
-spaces spaces204,205
-rowSepFieldLengths rowSepFieldLengths207,208
-rowSep rowSep212,213
-blankLines blankLines216,217
-tableRowFields tableRowFields220,221
-data TypeTableRow TypeTableRow231,232
-data TypeTableRow = TypeTableRow TypeTableRow231,232
-instance Semigroup Semigroup TypeTableRow234,235
-    (T(TypeTableRowu1n1f1)235,236
-type TypeUIDField TypeUIDField238,239
-type TypeName TypeName240,241
-type FormatString FormatString242,243
-header header245,246
-formatString formatString250,251
+import import62,63
+qAC_element qAC_element130,131
+qColumnTypeTableRow qColumnTypeTableRow134,135
+data Core_ACE_expression'Core_ACE_expression'180,181
+typeTableParser typeTableParser186,187
+typeTableRow typeTableRow194,195
+title title202,203
+spaces spaces206,207
+rowSepFieldLengths rowSepFieldLengths209,210
+rowSep rowSep214,215
+blankLines blankLines218,219
+tableRowFields tableRowFields222,223
+data TypeTableRow TypeTableRow228,229
+data TypeTableRow = TypeTableRow TypeTableRow228,229
+instance Semigroup Semigroup TypeTableRow231,232
+    (T(TypeTableRowu1n1f1)232,233
+type TypeUIDField TypeUIDField235,236
+type TypeName TypeName237,238
+type FormatString FormatString239,240
+header header242,243
+formatString formatString247,248
 
 ./src/System/SED/Common/Value.lhs,3494
 module System.SED.Common.Value System.SED.Common.Value23,24

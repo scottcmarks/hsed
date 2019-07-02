@@ -4043,7 +4043,7 @@ core' = Core
 
 
 newtype Core_General_Reference_Type_Byte_Row =
-        Core_General_Reference_Type_Byte_Row Natural -- FIXME?  Core_something?
+        Core_General_Reference_Type_Byte_Row Natural
 
 newtype Core_General_Reference_Type_Object =
         Core_General_Reference_Type_Object Core_uidref
@@ -4086,10 +4086,8 @@ mkCore_Restricted_object_ref_To tableUID = mkCore_Restricted_object_ref [tableUI
 
 
 
-
 env :: Env
 env = Env core' imp' ssc'
-
 
 
 

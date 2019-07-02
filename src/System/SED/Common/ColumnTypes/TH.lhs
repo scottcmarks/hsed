@@ -50,9 +50,10 @@ module System.SED.Common.ColumnTypes.TH where
 
 import           Data.Attoparsec.ByteString       hiding (takeWhile)
 import           Data.Attoparsec.ByteString.Char8
-import           Data.ByteString                  hiding (putStrLn, take,
-                                                          takeWhile, zip)
+import           Data.ByteString                  hiding (foldr, putStrLn, take,
+                                                          takeWhile, tail, zip)
 import           Data.Either                      (fromRight)
+import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
 import qualified Data.List.NonEmpty               as NE (fromList)
 import           Data.Map.Internal                (Map (..), fromList)
@@ -63,14 +64,14 @@ import           GHC.Base                         (mconcat, Int, Semigroup (..),
                                                    error, liftA2, many, mapM,
                                                    pure, undefined, ($), (*>),
                                                    (++), (<*), (<*>), (==))
-import           GHC.List                         (zip, (!!))
+import           GHC.List                         (tail, zip, (!!))
 import           GHC.Show                         (Show (..))
 import           GHC.Tuple                        ()
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
-import           Language.Haskell.TH.PprLib       hiding (char, (<>))
+import           Language.Haskell.TH.PprLib       hiding (char, (<>), empty)
 import           Language.Haskell.TH.Syntax
-import           Text.PrettyPrint                 hiding (char, (<>))
+import           Text.PrettyPrint                 hiding (char, (<>), empty)
 
 import           Extras.Bytes                     hiding (take)
 import           Extras.GitVersion                (gitVersion)
@@ -158,6 +159,7 @@ qColumnTypeTableRow typeNameString  =
             uCore_AC_element'
         ]
 
+
     columnTypeName' :: Map UID String
     columnTypeName' = fromList $ zip columnTypeUIDs columnTypeNames
 
@@ -186,8 +188,8 @@ typeTableParser :: Parser (UID, TypeName, [FormatString])
 typeTableParser = do
     pieceLengths <- skipSpace *> title *> rowSep
     rows         <- header pieceLengths *> rowSep *> many1 (typeTableRow pieceLengths)
-    _            <- rowSep *> blankLines *> endOfInput
-    case sconcat $ NE.fromList rows of
+    ()           <- rowSep *> blankLines *> endOfInput
+    case foldr (<>) (TypeTableRow empty empty []) rows of
       (TypeTableRow u n fs) -> pure $ ((hexUID u), n, fs)
 
 typeTableRow :: [Int] -> Parser TypeTableRow
@@ -219,15 +221,10 @@ blankLines = many (spaces *> endOfLine) *> pure ()
   <?> "blank lines"
 
 tableRowFields :: [Int] -> Parser [ByteString]
-tableRowFields lengths =
-    do
-        [_leader, uidField, typeName, format] <- (mapM takeField lengths <* endOfLine)
-        pure [uidField, typeName, format]
+tableRowFields lengths = tail <$> parseLine
     where
-       takeField len = trimTrailingWhitespace <$> take len <* char '|'
-
-
-
+      parseLine = (mapM takeField lengths <* endOfLine) <?> "Type Table row fields"
+      takeField len = trimTrailingWhitespace <$> take len <* char '|'
 
 data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
     deriving (Show)
@@ -249,12 +246,9 @@ header lengths = tableRowFields lengths *> pure ()
 
 
 formatString :: TypeTableRow -> ByteString
-formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) = mconcat [ "L"
+formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) = mconcat [ "L" -- FIXME
                                                                           ]
-formatString t = error $ mconcat [ "No case for "
-                                 , show t
-                                 , "?"
-                                 ]
+formatString t = error $ mconcat [ "No case for ", show t, "?" ]
 
 
 

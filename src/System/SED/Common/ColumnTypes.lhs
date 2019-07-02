@@ -28,8 +28,7 @@ Table column types.
              MultiParamTypeClasses, RoleAnnotations, CPP, TypeOperators,
              PolyKinds #-}
 {-# OPTIONS_GHC -ddump-splices #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
-
+{-# OPTIONS_GHC -Wno-unused-imports #-}  -- FIXME
 
 module System.SED.Common.ColumnTypes where
 
@@ -40,10 +39,10 @@ import           Data.Set                     (map)
 import           GHC.TypeNats
 import           RIO                          hiding (foldr, map, length, mask,
                                                       reverse, take)
--- import           Test.QuickCheck              hiding (generate)
+import           Test.QuickCheck              hiding (generate)
 
 import           Extras.Bytes
--- import           System.SED.Common.ColumnTypes.TH
+import           System.SED.Common.ColumnTypes.TH
 import           System.SED.Common.TableUIDs
 import           System.SED.Common.UID
 

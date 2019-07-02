@@ -54,23 +54,8 @@ table50 = [here|
 |] ::ByteString
 :}
 
-t50sep = "    +-----------------------+-----+--------------+\n" ::ByteString
-thead  = "    |UID                    |Name |Format        |\n" ::ByteString
-trow1  = "    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |\n" ::ByteString
-trow2  = "    |                       |     |*,            |\n" ::ByteString
-trow3  = "    |                       |     |ACE_object_ref|\n" ::ByteString
-
-:{
-lengths = fromRight []
-        $ parseOnly
-              ( skipSpace
-             *> title
-             *> rowSep <*
-                endOfInput
-            <?> "Type Table initial segment"
-              )
-              table50
-:}
+putStrLn "table50 ====>"
+print $ fromRight (error "Left") $ parseOnly typeTableParser table50
 
 putStrLn "Buh-bye now."
 

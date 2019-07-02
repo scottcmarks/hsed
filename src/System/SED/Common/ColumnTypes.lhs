@@ -27,6 +27,9 @@ Table column types.
 {-# LANGUAGE MagicHash, NoImplicitPrelude, TypeFamilies, UnboxedTuples,
              MultiParamTypeClasses, RoleAnnotations, CPP, TypeOperators,
              PolyKinds #-}
+{-# OPTIONS_GHC -ddump-splices #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
+
 
 module System.SED.Common.ColumnTypes where
 

@@ -298,6 +298,15 @@ instance GHC.Show.Show System.SED.Common.Table.TemplateName
 instance GHC.Show.Show System.SED.Common.Table.TableName
 
 
+-- | Template Haskell utilities.
+module System.SED.Common.THUtil
+dSig :: Name -> Name -> Dec
+dVal :: Name -> Exp -> Dec
+eHalfUID :: HalfUID -> Exp
+eUID :: UID -> Exp
+eValP :: Name -> String -> Exp
+
+
 -- | Special Purpose UIDs.
 module System.SED.Common.SpecialPurposeUIDs
 
@@ -341,7 +350,7 @@ trimTrailingWhitespace :: ByteString -> ByteString
 -- | TableUIDs Template Haskell.
 module System.SED.Common.TableUIDs.TH
 
--- | Bespoke Quasiquoter for Table 240
+-- | Bespoke QuasiQuoter for Table 240
 t240 :: QuasiQuoter
 instance GHC.Show.Show System.SED.Common.TableUIDs.TH.UIDRowDecs
 instance GHC.Classes.Eq System.SED.Common.TableUIDs.TH.UIDRowDecs
@@ -524,6 +533,12 @@ lookupTableUID :: UID -> Maybe String
 
 -- | Template Haskell for parsing Table column types in Section 5.1.3.
 module System.SED.Common.ColumnTypes.TH
+
+-- | QuasiQuoter for Type Table row tables.
+--   
+--   Each row of the Type Table is in its own table in the Core Spec.
+ttype :: QuasiQuoter
+ttypeDecs :: String -> [Dec]
 qAC_element :: DecsQ
 qColumnTypeTableRow :: String -> DecsQ
 data Core_ACE_expression'

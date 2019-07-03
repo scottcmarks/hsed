@@ -67,10 +67,10 @@ digraph G {
 						label=TableUIDs,
 						style=filled
 					];
-					u14					 [fillcolor="#ffbbff",
+					u15					 [fillcolor="#ffbbff",
 						label=TableUIDs,
 						style="filled,bold"];
-					u15					 [fillcolor="#ffff77",
+					u16					 [fillcolor="#ffff77",
 						label=TH,
 						penwidth=0,
 						style=filled];
@@ -100,26 +100,30 @@ digraph G {
 					penwidth=0,
 					style=filled];
 				u13				 [fillcolor="#ffbbff",
+					label=THUtil,
+					penwidth=0,
+					style=filled];
+				u14				 [fillcolor="#ffbbff",
 					label=Util,
 					penwidth=0,
 					style=filled];
-				u16				 [fillcolor="#ffbbff",
+				u17				 [fillcolor="#ffbbff",
 					label=Table,
 					penwidth=0,
 					style=filled];
-				u17				 [fillcolor="#ffbbff",
+				u18				 [fillcolor="#ffbbff",
 					label=Format,
 					penwidth=0,
 					style=filled];
-				u18				 [fillcolor="#ffbbff",
+				u19				 [fillcolor="#ffbbff",
 					label=Import,
 					penwidth=0,
 					style=filled];
-				u19				 [fillcolor="#ffbbff",
+				u20				 [fillcolor="#ffbbff",
 					label=Types,
 					penwidth=0,
 					style=filled];
-				u20				 [fillcolor="#ffbbff",
+				u21				 [fillcolor="#ffbbff",
 					label=SpecialPurposeUIDs,
 					penwidth=0,
 					style=filled];
@@ -129,7 +133,7 @@ digraph G {
 					label=Host,
 					style=filled
 				];
-				u21				 [fillcolor="#7777ff",
+				u22				 [fillcolor="#7777ff",
 					label=Run,
 					penwidth=0,
 					style=filled];
@@ -139,19 +143,19 @@ digraph G {
 					label=TPer,
 					style=filled
 				];
-				u22				 [fillcolor="#ff7777",
+				u23				 [fillcolor="#ff7777",
 					label=Run,
 					penwidth=0,
 					style=filled];
 			}
 		}
 	}
-	u23	 [fillcolor="#bbffbb",
+	u24	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u23 -> u21;
-	u23 -> u22;
+	u24 -> u22;
+	u24 -> u23;
 	u0 -> u1;
 	u1 -> u2;
 	u5 -> u8;
@@ -163,21 +167,24 @@ digraph G {
 	u10 -> u0;
 	u10 -> u7;
 	u13 -> u9;
-	u16 -> u9;
-	u18 -> u19;
-	u19 -> u5;
+	u14 -> u9;
+	u17 -> u9;
 	u19 -> u20;
-	u19 -> u11;
-	u20 -> u9;
+	u20 -> u5;
+	u20 -> u21;
+	u20 -> u11;
+	u21 -> u9;
 	u11 -> u12;
-	u11 -> u14;
+	u11 -> u15;
 	u12 -> u3;
 	u12 -> u13;
-	u14 -> u15;
-	u15 -> u13;
+	u12 -> u14;
 	u15 -> u16;
-	u21 -> u4;
-	u21 -> u18;
+	u16 -> u13;
+	u16 -> u14;
+	u16 -> u17;
 	u22 -> u4;
-	u22 -> u18;
+	u22 -> u19;
+	u23 -> u4;
+	u23 -> u19;
 }

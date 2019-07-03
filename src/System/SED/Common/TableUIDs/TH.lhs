@@ -67,12 +67,13 @@ import           Language.Haskell.TH.Syntax           (returnQ)
 import           Extras.Bytes(funpack)
 
 import           System.SED.Common.Table              (TableName(..),TemplateName(..))
+import           System.SED.Common.THUtil
 import           System.SED.Common.UID                (HalfUID(..),UID(..),
                                                        halfUID, uid,
                                                        uidUpper, uidLower)
 import           System.SED.Common.Util               (hexUID, trimTrailingWhitespace)
 
--- | Bespoke Quasiquoter for Table 240
+-- | Bespoke QuasiQuoter for Table 240
 t240 :: QuasiQuoter
 t240 = QuasiQuoter
     { quoteExp = undefined
@@ -174,12 +175,6 @@ rowSepString :: ByteString
 rowSepString = "    +------------------------+------------------------+--------------+--------+"
 
 
-dSig :: Name -> Name -> Dec
-dSig n t = SigD n (ConT t)
-
-dVal :: Name -> Exp -> Dec
-dVal n e = ValD (VarP n) (NormalB e) []
-
 dUIDRow :: UIDRow -> UIDRowDecs
 dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateName _templateName)) =
     UIDRowDecs
@@ -192,12 +187,7 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     [ eValP u $ table ++ " Table"
     , eValP o $ table ++ " Table Object"
     ]
-  where eHalfUID (HalfUID fb) = foldl arg (VarE 'halfUID) $ B.unpack $ funpack fb
-          where arg e b = AppE e (LitE (IntegerL (toInteger b)))
-        eUID     (UID     fb) = foldl arg (VarE 'uid    ) $ B.unpack $ funpack fb
-          where arg e b = AppE e (LitE (IntegerL (toInteger b)))
-        eValP hn ts =  TupE [VarE hn, LitE (StringL ts)]
-        table = C.unpack tableName
+  where table = C.unpack tableName
         vn p t = mkName $ mconcat [ p, table, t]
         h = vn "h" ""
         u = vn "u" "Table"

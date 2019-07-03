@@ -70,6 +70,7 @@ import           GHC.Tuple                        ()
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
 import           Language.Haskell.TH.PprLib       hiding (char, (<>), empty)
+import           Language.Haskell.TH.Quote
 import           Language.Haskell.TH.Syntax
 import           Text.PrettyPrint                 hiding (char, (<>), empty)
 
@@ -79,6 +80,7 @@ import           Extras.Hex
 import           Extras.Integral                  hiding (char)
 import qualified Paths_hsed
 import           System.IO                        hiding (char8)
+import           System.SED.Common.THUtil
 import           System.SED.Common.UID
 import           System.SED.Common.Util           (hexUID,
                                                    trimTrailingWhitespace)
@@ -126,7 +128,19 @@ An asterisk (*) in any of the descriptive tables indicates SSC-specific or imple
 
 \begin{code}
 
+-- | QuasiQuoter for Type Table row tables.
+--
+--   Each row of the Type Table is in its own table in the Core Spec.
+ttype :: QuasiQuoter
+ttype = QuasiQuoter
+    { quoteExp = undefined
+    , quotePat = undefined
+    , quoteDec = returnQ <$> ttypeDecs
+    , quoteType = undefined
+    }
 
+ttypeDecs :: String -> [Dec]
+ttypeDecs = undefined
 
 qAC_element :: DecsQ
 qAC_element = qColumnTypeTableRow "AC_element"

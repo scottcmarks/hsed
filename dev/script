@@ -24,7 +24,10 @@ import           System.SED.Common.TableUIDs
 import           Data.Attoparsec.ByteString
 import           Data.Attoparsec.ByteString.Char8(skipSpace)
 import           GHC.Base(pure,(.),(<*),(<*>),(*>),(>>=))
+import           GHC.Err(error)
 import           GHC.Show(Show(..))
+import           System.SED.Common.UID
+
 import           System.SED.Common.ColumnTypes.TH
 
 pQ = (ppr <$>) . runQ

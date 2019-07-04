@@ -33,16 +33,12 @@ import           Data.Attoparsec.ByteString           (Parser, parseOnly,
                                                        (<?>))
 import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine,
                                                        skipSpace, string)
-
-
 import           Data.ByteString                      (ByteString, length)
-
 import           Data.ByteString.Char8                (split)
 import qualified Data.ByteString.Char8           as C (unpack)
 import           Data.Either                          (either)
 import           Data.Foldable                        (foldr, mapM_)
 import           Data.List                            ((!!), concat, init, map)
-
 import           Data.Map                             (Map, fromList)
 import           Data.String                          (fromString)
 
@@ -54,12 +50,8 @@ import           GHC.Base                             (Eq(..), Semigroup,
 import           GHC.Err                              (error,undefined)
 import           GHC.Show                             (Show(..))
 
-
 import           Language.Haskell.TH                  (mkName, Body(..), Type(..),
                                                        Exp(..), Dec(..), Pat(..))
-
-
-
 import           Language.Haskell.TH.Quote            (QuasiQuoter(..))
 import           Language.Haskell.TH.Syntax           (returnQ)
 
@@ -89,7 +81,7 @@ t240Decs s = concat [ us
                     , mapd (mkName "nameUID")     ''UID     eus
                     ]
   where
-    -- | approx. [d| $n :: $t ; $n = $v |]
+    -- | approx. [d| $n :: Map $t String; $n = fromList $v |]
     mapd n t v =
         [ SigD n (AppT (AppT (ConT ''Map) (ConT t)) (ConT ''String))
         , ValD (VarP n) (NormalB (AppE (VarE 'fromList) (ListE v))) []

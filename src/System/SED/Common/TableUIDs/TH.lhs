@@ -31,7 +31,8 @@ import           Control.Applicative                  (many, (<$>), (<*),
 import           Data.Attoparsec.ByteString           (Parser, parseOnly,
                                                        skipWhile, take,
                                                        (<?>))
-import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine, skipSpace, string)
+import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine,
+                                                       skipSpace, string)
 
 
 import           Data.ByteString                      (ByteString, length)
@@ -54,7 +55,8 @@ import           GHC.Err                              (error,undefined)
 import           GHC.Show                             (Show(..))
 
 
-import           Language.Haskell.TH                  (mkName, Body(..), Type(..), Exp(..), Dec(..), Pat(..))
+import           Language.Haskell.TH                  (mkName, Body(..), Type(..),
+                                                       Exp(..), Dec(..), Pat(..))
 
 
 
@@ -63,9 +65,11 @@ import           Language.Haskell.TH.Syntax           (returnQ)
 
 
 
-import           System.SED.Common.Table              (TableName(..),TemplateName(..))
+import           System.SED.Common.Table              (TableName(..),
+                                                       TemplateName(..))
 import           System.SED.Common.THUtil
-import           System.SED.Common.UID                (HalfUID(..), UID(..), uidUpper, uidLower)
+import           System.SED.Common.UID                (HalfUID(..), UID(..),
+                                                       uidUpper, uidLower)
 
 
 import           System.SED.Common.Util               (hexUID, trimTrailingWhitespace)
@@ -85,28 +89,28 @@ t240Decs s = concat [ us
                     , mapd (mkName "nameUID")     ''UID     eus
                     ]
   where
-      -- | approx. [d| $n :: $t ; $n = $v |]
-      mapd n t v =
-                [ SigD n (AppT (AppT (ConT ''Map) (ConT t)) (ConT ''String))
-                , ValD (VarP n) (NormalB (AppE (VarE 'fromList) (ListE v))) []
-                ]
-      (UIDRowDecs us ehs eus) =
-                foldr gather mempty
-              $ either error id
-              $ parseOnly table240Parser
-              $ fromString s
-              where row `gather` decs = decs <> dUIDRow row
-      table240Parser = skipSpace
-              *> title
-              *> rowSep
-              *> header
-              *> header
-              *> rowSep
-              *> many (uidRow <* rowSep)    <*    -- <-- the data
-                 many (spaces <* endOfLine) <*
-                 endOfInput
-             <?> "Table 240"
-      spaces = skipWhile (== 32)
+    -- | approx. [d| $n :: $t ; $n = $v |]
+    mapd n t v =
+        [ SigD n (AppT (AppT (ConT ''Map) (ConT t)) (ConT ''String))
+        , ValD (VarP n) (NormalB (AppE (VarE 'fromList) (ListE v))) []
+        ]
+    (UIDRowDecs us ehs eus) =
+        foldr gather mempty
+      $ either error id
+      $ parseOnly table240Parser
+      $ fromString s
+      where row `gather` decs = decs <> dUIDRow row
+    table240Parser = skipSpace
+                  *> title
+                  *> rowSep
+                  *> header
+                  *> header
+                  *> rowSep
+                  *> many (uidRow <* rowSep)    <*    -- <-- the data
+                     many (spaces <* endOfLine) <*
+                     endOfInput
+                 <?> "Table 240"
+    spaces = skipWhile (== 32)
 
 
 

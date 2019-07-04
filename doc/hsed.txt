@@ -304,6 +304,7 @@ dSig :: Name -> Name -> Dec
 dVal :: Name -> Exp -> Dec
 eHalfUID :: HalfUID -> Exp
 eUID :: UID -> Exp
+eID :: KnownNat n => Name -> Fixed_bytes n -> Exp
 eValP :: Name -> String -> Exp
 
 

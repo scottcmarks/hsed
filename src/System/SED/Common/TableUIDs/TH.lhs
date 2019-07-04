@@ -84,7 +84,7 @@ t240Decs s = concat [ us
         [ SigD n (AppT (AppT (ConT ''Map) (ConT t)) (ConT ''String))
         , ValD (VarP n) (NormalB (AppE (VarE 'fromList) (ListE v))) []
         ]
-    (UIDRowDecs us ehs eus) =
+    UIDRowDecs us ehs eus =
         foldr gather mempty $ parseTable table240Parser s
       where row `gather` decs = decs <> dUIDRow row
             table240Parser = skipSpace
@@ -177,10 +177,10 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     , eValP o $ table ++ " Table Object"
     ]
   where table = C.unpack tableName
-        vn p t = mkName $ mconcat [ p, table, t]
-        h = vn "h" ""
-        u = vn "u" "Table"
-        o = vn "u" "TableObject"
+        p `tn` t = mkName $ mconcat [ p, table, t]
+        h = "h" `tn` ""
+        u = "u" `tn` "Table"
+        o = "u" `tn` "TableObject"
 
 data UIDRowDecs = UIDRowDecs [Dec] [Exp] [Exp]
     deriving(Eq,Show)

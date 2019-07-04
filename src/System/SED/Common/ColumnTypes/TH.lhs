@@ -27,7 +27,7 @@ Template Haskell for parsing Table column types in Section 5.1.3.
 {-# LANGUAGE MagicHash, NoImplicitPrelude, TypeFamilies, UnboxedTuples,
              MultiParamTypeClasses, RoleAnnotations, CPP, TypeOperators,
              PolyKinds #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 {-# OPTIONS_GHC -Wno-unused-imports #-} -- FIXME
 
@@ -52,6 +52,7 @@ import           Data.Attoparsec.ByteString       hiding (takeWhile)
 import           Data.Attoparsec.ByteString.Char8
 import           Data.ByteString                  hiding (foldr, putStrLn, tail,
                                                           take, takeWhile, zip)
+import           Data.ByteString.Char8       as C (unpack)
 import           Data.Either                      (either, Either, fromRight)
 import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
@@ -60,7 +61,7 @@ import           Data.Map.Internal                (Map (..), fromList)
 import           Data.String                      (IsString (..))
 import           Data.Version
 import           GHC                              ()
-import           GHC.Base                         ((.), id, mconcat, Int, Semigroup (..), String,
+import           GHC.Base                         (Monoid(..), Eq, (.), id, mconcat, Int, Semigroup (..), String,
                                                    error, liftA2, many, mapM,
                                                    pure, undefined, ($), (*>),
                                                    (++), (<*), (<*>), (==))
@@ -140,24 +141,18 @@ ttype = QuasiQuoter
     }
 
 ttypeDecs :: String -> [Dec]
-ttypeDecs = undefined
+ttypeDecs s = ds
+  where
+    TypeTableRowDecs ds =
+        dTypeTableRow $ parseTable typeTableParser s
 
 
-
-
-data Core_ACE_expression'
-
-
-parseTypeTable :: String -> (UID, TypeName, [FormatString])
-parseTypeTable = parseTable typeTableParser
-
-typeTableParser :: Parser (UID, TypeName, [FormatString])
+typeTableParser :: Parser TypeTableRow
 typeTableParser = do
     pieceLengths <- skipSpace *> title *> rowSep
-    rows         <- header pieceLengths *> rowSep *> many1 (typeTableRow pieceLengths)
+    rows         <- header pieceLengths *> rowSep *> many1 (typeTableRow pieceLengths) -- <-- the data
     ()           <- rowSep *> blankLines *> endOfInput
-    case foldr (<>) (TypeTableRow empty empty []) rows of
-      (TypeTableRow u n fs) -> pure $ ((hexUID u), n, fs)
+    pure $ foldr (<>) (TypeTableRow empty empty []) rows
 
 typeTableRow :: [Int] -> Parser TypeTableRow
 typeTableRow lengths =
@@ -165,6 +160,12 @@ typeTableRow lengths =
         [uidField, typeName, format] <- tableRowFields lengths
         pure $ TypeTableRow uidField typeName [trimComma format]
   where trimComma bs = if last bs == ordw ',' then init bs else bs
+
+dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
+dTypeTableRow (TypeTableRow u n _fs) =
+    TypeTableRowDecs [dSig typeName ''UID, dVal typeName $ eUID typeUID]
+  where typeName = mkName $ mconcat ["u", C.unpack n, "Type"]
+        typeUID = hexUID u
 
 
 title :: Parser ByteString
@@ -218,8 +219,16 @@ formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) = mconcat [ "L" 
 formatString t = error $ mconcat [ "No case for ", show t, "?" ]
 
 
+data TypeTableRowDecs =  TypeTableRowDecs [Dec]
+  deriving(Eq, Show)
 
 
+instance Semigroup TypeTableRowDecs
+  where (TypeTableRowDecs d1) <> (TypeTableRowDecs d2) =
+            TypeTableRowDecs (d1<>d2)
+
+instance Monoid TypeTableRowDecs
+  where mempty = TypeTableRowDecs []
 
 
 \end{code}

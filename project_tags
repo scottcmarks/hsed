@@ -435,30 +435,35 @@ validityChecks validityChecks4098,4099
 _AC_elementSizeValid _AC_elementSizeValid4104,4105
 max_columns max_columns4113,4114
 
-./src/System/SED/Common/ColumnTypes/TH.lhs,857
+./src/System/SED/Common/ColumnTypes/TH.lhs,1091
 module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH33,34
-import import62,63
-ttype ttype133,134
-ttypeDecs ttypeDecs141,142
-data Core_ACE_expression'Core_ACE_expression'147,148
-parseTypeTable parseTypeTable150,151
-typeTableParser typeTableParser153,154
-typeTableRow typeTableRow161,162
-title title169,170
-spaces spaces173,174
-rowSepFieldLengths rowSepFieldLengths176,177
-rowSep rowSep181,182
-blankLines blankLines185,186
-tableRowFields tableRowFields189,190
-data TypeTableRow TypeTableRow195,196
-data TypeTableRow = TypeTableRow TypeTableRow195,196
-instance Semigroup Semigroup TypeTableRow198,199
-    (T(TypeTableRowu1n1f1)199,200
-type TypeUIDField TypeUIDField202,203
-type TypeName TypeName204,205
-type FormatString FormatString206,207
-header header209,210
-formatString formatString214,215
+import import63,64
+ttype ttype134,135
+ttypeDecs ttypeDecs142,143
+typeTableParser typeTableParser149,150
+typeTableRow typeTableRow156,157
+dTypeTableRow dTypeTableRow163,164
+title title170,171
+spaces spaces174,175
+rowSepFieldLengths rowSepFieldLengths177,178
+rowSep rowSep182,183
+blankLines blankLines186,187
+tableRowFields tableRowFields190,191
+data TypeTableRow TypeTableRow196,197
+data TypeTableRow = TypeTableRow TypeTableRow196,197
+instance Semigroup Semigroup TypeTableRow199,200
+    (T(TypeTableRowu1n1f1)200,201
+type TypeUIDField TypeUIDField203,204
+type TypeName TypeName205,206
+type FormatString FormatString207,208
+header header210,211
+formatString formatString215,216
+data TypeTableRowDecs TypeTableRowDecs221,222
+data TypeTableRowDecs =  TypeTableRowDecs TypeTableRowDecs221,222
+instance Semigroup Semigroup TypeTableRowDecs225,226
+  where (T(TypeTableRowDecsd1)226,227
+instance Monoid Monoid TypeTableRowDecs229,230
+  where mempty mempty230,231
 
 ./src/System/SED/Common/Value.lhs,3494
 module System.SED.Common.Value System.SED.Common.Value23,24

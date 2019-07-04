@@ -557,10 +557,9 @@ module System.SED.Common.ColumnTypes.TH
 --   Each row of the Type Table is in its own table in the Core Spec.
 ttype :: QuasiQuoter
 ttypeDecs :: String -> [Dec]
-data Core_ACE_expression'
-parseTypeTable :: String -> (UID, TypeName, [FormatString])
-typeTableParser :: Parser (UID, TypeName, [FormatString])
+typeTableParser :: Parser TypeTableRow
 typeTableRow :: [Int] -> Parser TypeTableRow
+dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
 title :: Parser ByteString
 spaces :: Parser ByteString
 rowSepFieldLengths :: Parser [Int]
@@ -574,7 +573,13 @@ type TypeName = ByteString
 type FormatString = ByteString
 header :: [Int] -> Parser ()
 formatString :: TypeTableRow -> ByteString
+data TypeTableRowDecs
+TypeTableRowDecs :: [Dec] -> TypeTableRowDecs
+instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
+instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRow
+instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
+instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRow
 
 

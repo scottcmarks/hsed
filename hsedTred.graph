@@ -154,6 +154,7 @@ digraph G {
 		label=Main,
 		penwidth=0,
 		style=filled];
+	u24 -> u3;
 	u24 -> u22;
 	u24 -> u23;
 	u0 -> u1;
@@ -176,7 +177,6 @@ digraph G {
 	u21 -> u9;
 	u11 -> u12;
 	u11 -> u15;
-	u12 -> u3;
 	u12 -> u13;
 	u12 -> u14;
 	u15 -> u16;

@@ -28,25 +28,23 @@ where
 import           Control.Applicative                  (many, (<$>), (<*),
                                                        (<*>), (*>))
 
-import           Data.Attoparsec.ByteString           (Parser, parseOnly,
-                                                       skipWhile, take,
-                                                       (<?>))
+import           Data.Attoparsec.ByteString           (Parser, take, (<?>))
+
+
 import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine,
                                                        skipSpace, string)
 import           Data.ByteString                      (ByteString, length)
 import           Data.ByteString.Char8                (split)
 import qualified Data.ByteString.Char8           as C (unpack)
-import           Data.Either                          (either)
 import           Data.Foldable                        (foldr, mapM_)
 import           Data.List                            ((!!), concat, init, map)
 import           Data.Map                             (Map, fromList)
-import           Data.String                          (fromString)
 
-import           GHC.Base                             (Eq(..), Semigroup,
-                                                       Monoid, Int, String,
-                                                       Maybe(..), (.), (++),
-                                                       (==), (<>), ($), id,
-                                                       mconcat, mempty)
+import           GHC.Base                             (Eq(..), Semigroup, Monoid, Int, String, Maybe(..), (.), (++), (==), (<>), ($), mconcat, mempty)
+
+
+
+
 import           GHC.Err                              (error,undefined)
 import           GHC.Show                             (Show(..))
 
@@ -87,22 +85,19 @@ t240Decs s = concat [ us
         , ValD (VarP n) (NormalB (AppE (VarE 'fromList) (ListE v))) []
         ]
     (UIDRowDecs us ehs eus) =
-        foldr gather mempty
-      $ either error id
-      $ parseOnly table240Parser
-      $ fromString s
+        foldr gather mempty $ parseTable table240Parser s
       where row `gather` decs = decs <> dUIDRow row
-    table240Parser = skipSpace
-                  *> title
-                  *> rowSep
-                  *> header
-                  *> header
-                  *> rowSep
-                  *> many (uidRow <* rowSep)    <*    -- <-- the data
-                     many (spaces <* endOfLine) <*
-                     endOfInput
-                 <?> "Table 240"
-    spaces = skipWhile (== 32)
+            table240Parser = skipSpace
+                          *> title
+                          *> rowSep
+                          *> header
+                          *> header
+                          *> rowSep
+                          *> many (uidRow <* rowSep)    <*    -- <-- the data
+                             skipSpace <* -- many (spaces <* endOfLine) <*
+                             endOfInput
+                         <?> "Table 240"
+
 
 
 

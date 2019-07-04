@@ -300,11 +300,28 @@ instance GHC.Show.Show System.SED.Common.Table.TableName
 
 -- | Template Haskell utilities.
 module System.SED.Common.THUtil
+
+-- | Run a table parser (any parser, really) producing a result or throwing
+--   an error. This is safe only in TH code, where an error is a
+--   compilation error.
+parseTable :: Parser c -> String -> c
+
+-- | Signature declaration, essentially [d| $n :: $t |]
 dSig :: Name -> Name -> Dec
+
+-- | Value declaration, essentially [d| $n = $e |]
 dVal :: Name -> Exp -> Dec
+
+-- | HalfUID as Exp
 eHalfUID :: HalfUID -> Exp
+
+-- | UID as Exp
 eUID :: UID -> Exp
+
+-- | Wrap a Fixed_bytes n
 eID :: KnownNat n => Name -> Fixed_bytes n -> Exp
+
+-- | (Name, String) pair as Exp
 eValP :: Name -> String -> Exp
 
 
@@ -540,9 +557,8 @@ module System.SED.Common.ColumnTypes.TH
 --   Each row of the Type Table is in its own table in the Core Spec.
 ttype :: QuasiQuoter
 ttypeDecs :: String -> [Dec]
-qAC_element :: DecsQ
-qColumnTypeTableRow :: String -> DecsQ
 data Core_ACE_expression'
+parseTypeTable :: String -> (UID, TypeName, [FormatString])
 typeTableParser :: Parser (UID, TypeName, [FormatString])
 typeTableRow :: [Int] -> Parser TypeTableRow
 title :: Parser ByteString

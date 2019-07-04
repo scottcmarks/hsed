@@ -29,7 +29,7 @@ Template Haskell for parsing Table column types in Section 5.1.3.
              PolyKinds #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-{-# OPTIONS_GHC -Wno-unused-imports #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-} -- FIXME
 
 module System.SED.Common.ColumnTypes.TH where
 
@@ -50,9 +50,9 @@ module System.SED.Common.ColumnTypes.TH where
 
 import           Data.Attoparsec.ByteString       hiding (takeWhile)
 import           Data.Attoparsec.ByteString.Char8
-import           Data.ByteString                  hiding (foldr, putStrLn, take,
-                                                          takeWhile, tail, zip)
-import           Data.Either                      (fromRight)
+import           Data.ByteString                  hiding (foldr, putStrLn, tail,
+                                                          take, takeWhile, zip)
+import           Data.Either                      (either, Either, fromRight)
 import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
 import qualified Data.List.NonEmpty               as NE (fromList)
@@ -60,7 +60,7 @@ import           Data.Map.Internal                (Map (..), fromList)
 import           Data.String                      (IsString (..))
 import           Data.Version
 import           GHC                              ()
-import           GHC.Base                         (mconcat, Int, Semigroup (..), String,
+import           GHC.Base                         ((.), id, mconcat, Int, Semigroup (..), String,
                                                    error, liftA2, many, mapM,
                                                    pure, undefined, ($), (*>),
                                                    (++), (<*), (<*>), (==))
@@ -75,7 +75,7 @@ import           Language.Haskell.TH.Syntax
 import           Text.PrettyPrint                 hiding (char, (<>), empty)
 
 import           Extras.Bytes                     hiding (take)
-import           Extras.GitVersion                (gitVersion)
+-- import           Extras.GitVersion                (gitVersion)
 import           Extras.Hex
 import           Extras.Integral                  hiding (char)
 
@@ -142,61 +142,14 @@ ttype = QuasiQuoter
 ttypeDecs :: String -> [Dec]
 ttypeDecs = undefined
 
-qAC_element :: DecsQ
-qAC_element = qColumnTypeTableRow "AC_element"
 
-
-qColumnTypeTableRow :: String -> DecsQ
-qColumnTypeTableRow typeNameString  =
-    let coreTypeNameString = "Core_" ++ typeNameString ++ "'"
-        _coreTypeName = varE $ mkName coreTypeNameString
-        uidNameString = "u" ++ coreTypeNameString
-        _uidName =varE $  mkName uidNameString
-
-    in [d|
-
---    data $coreTypeName = $coreTypeName [Core_ACE_expression']
-
-    uCore_AC_element' :: UID
-    uCore_AC_element' = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01
-
-
-    columnTypeNames :: [String]
-    columnTypeNames =
-        [
-            $(stringE typeNameString)
-        ]
-
-    columnTypeUIDs :: [UID]
-    columnTypeUIDs =
-        [
-            uCore_AC_element'
-        ]
-
-
-    columnTypeName' :: Map UID String
-    columnTypeName' = fromList $ zip columnTypeUIDs columnTypeNames
-
-    columnTypeUID'  :: Map String UID
-    columnTypeUID'  = fromList $ zip columnTypeNames columnTypeUIDs
-
-
-
-    -- _AC_elementSize' :: TPer Int
-    -- _AC_elementSize' = __AC_elementSize <$> asks implementation
-
-    -- _AC_elementMinSize' :: TPer (Maybe Int)
-    -- _AC_elementMinSize' = __AC_elementMinSize <$> asks ssc
-              |]
-
---------
 
 
 data Core_ACE_expression'
 
 
-
-
+parseTypeTable :: String -> (UID, TypeName, [FormatString])
+parseTypeTable = parseTable typeTableParser
 
 typeTableParser :: Parser (UID, TypeName, [FormatString])
 typeTableParser = do

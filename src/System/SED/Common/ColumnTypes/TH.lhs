@@ -78,7 +78,7 @@ import           Extras.Bytes                     hiding (take)
 import           Extras.GitVersion                (gitVersion)
 import           Extras.Hex
 import           Extras.Integral                  hiding (char)
-import qualified Paths_hsed
+
 import           System.IO                        hiding (char8)
 import           System.SED.Common.THUtil
 import           System.SED.Common.UID

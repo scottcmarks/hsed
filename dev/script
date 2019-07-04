@@ -29,6 +29,7 @@ import           GHC.Err(error)
 import           GHC.Show(Show(..))
 import           System.SED.Common.UID
 
+import           System.SED.Common.THUtil
 import           System.SED.Common.ColumnTypes.TH
 
 pQ = (ppr <$>) . runQ
@@ -59,7 +60,7 @@ table50 = [here|
 :}
 
 putStrLn "table50 ====>"
-print $ parseTypeTable table50
+print $ parseTable typeTableParser table50
 
 putStrLn "Buh-bye now."
 

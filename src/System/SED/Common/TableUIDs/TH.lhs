@@ -35,14 +35,13 @@ import           Data.Attoparsec.ByteString.Char8     (endOfInput, endOfLine, sk
 
 
 import           Data.ByteString                      (ByteString, length)
-import qualified Data.ByteString                 as B (unpack)
 
 import           Data.ByteString.Char8                (split)
 import qualified Data.ByteString.Char8           as C (unpack)
 import           Data.Either                          (either)
 import           Data.Foldable                        (foldr, mapM_)
-import           Data.List                            ((!!), concat, foldl,
-                                                       init, map)
+import           Data.List                            ((!!), concat, init, map)
+
 import           Data.Map                             (Map, fromList)
 import           Data.String                          (fromString)
 
@@ -52,25 +51,23 @@ import           GHC.Base                             (Eq(..), Semigroup,
                                                        (==), (<>), ($), id,
                                                        mconcat, mempty)
 import           GHC.Err                              (error,undefined)
-import           GHC.Real                             (toInteger)
 import           GHC.Show                             (Show(..))
 
 
-import           Language.Haskell.TH                  (mkName,
-                                                       Body(..), Lit(..), Type(..),
-                                                       Exp(..), Dec(..), Pat(..),
-                                                       Name)
+import           Language.Haskell.TH                  (mkName, Body(..), Type(..), Exp(..), Dec(..), Pat(..))
+
+
+
 import           Language.Haskell.TH.Quote            (QuasiQuoter(..))
 import           Language.Haskell.TH.Syntax           (returnQ)
 
 
-import           Extras.Bytes(funpack)
 
 import           System.SED.Common.Table              (TableName(..),TemplateName(..))
 import           System.SED.Common.THUtil
-import           System.SED.Common.UID                (HalfUID(..),UID(..),
-                                                       halfUID, uid,
-                                                       uidUpper, uidLower)
+import           System.SED.Common.UID                (HalfUID(..), UID(..), uidUpper, uidLower)
+
+
 import           System.SED.Common.Util               (hexUID, trimTrailingWhitespace)
 
 -- | Bespoke QuasiQuoter for Table 240
@@ -83,10 +80,11 @@ t240 = QuasiQuoter
     }
 
 t240Decs :: String -> [Dec]
-t240Decs s =        concat [ us,
-                             mapd (mkName "nameHalfUID") ''HalfUID ehs,
-                             mapd (mkName "nameUID")     ''UID     eus]
-    where
+t240Decs s = concat [ us
+                    , mapd (mkName "nameHalfUID") ''HalfUID ehs
+                    , mapd (mkName "nameUID")     ''UID     eus
+                    ]
+  where
       -- | approx. [d| $n :: $t ; $n = $v |]
       mapd n t v =
                 [ SigD n (AppT (AppT (ConT ''Map) (ConT t)) (ConT ''String))

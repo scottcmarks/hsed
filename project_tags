@@ -82,8 +82,8 @@ instance Arbitrary Arbitrary MethodCall259,260
 
 ./src/System/SED/Common/TableUIDs.lhs,155
 module System.SED.Common.TableUIDsSystem.SED.Common.TableUIDs47,48
-lookupTableHalfUID lookupTableHalfUID178,179
-lookupTableUID lookupTableUID183,184
+lookupTableHalfUID lookupTableHalfUID177,178
+lookupTableUID lookupTableUID182,183
 
 ./src/System/SED/Common/StreamItem.lhs,339
 module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25
@@ -214,32 +214,32 @@ trimTrailingWhitespace trimTrailingWhitespace48,49
 
 ./src/System/SED/Common/TableUIDs/TH.lhs,891
 module System.SED.Common.TableUIDs.TH System.SED.Common.TableUIDs.TH24,25
-import import48,49
-t240 t24076,77
-t240Decs t240Decs84,85
-data UIDRow UIDRow114,115
-data UIDRow = UIDRow UIDRow114,115
-uidRow uidRow117,118
-mkUIDRow mkUIDRow128,129
-pTableObjectUID pTableObjectUID139,140
-pTableUID pTableUID142,143
-pTableName pTableName145,146
-pTemplateName pTemplateName148,149
-pUIDField pUIDField151,152
-pTrimmedField pTrimmedField154,155
-pField pField157,158
-title title161,162
-header header164,165
-rowSep rowSep167,168
-pieceLengths pieceLengths170,171
-rowSepString rowSepString173,174
-dUIDRow dUIDRow177,178
-data UIDRowDecs UIDRowDecs195,196
-data UIDRowDecs = UIDRowDecs UIDRowDecs195,196
-instance Semigroup Semigroup UIDRowDecs198,199
-  where (U(UIDRowDecsu1eh1eu1)199,200
-instance Monoid Monoid UIDRowDecs202,203
-  where mempty mempty203,204
+import import47,48
+t240 t24073,74
+t240Decs t240Decs81,82
+data UIDRow UIDRow112,113
+data UIDRow = UIDRow UIDRow112,113
+uidRow uidRow115,116
+mkUIDRow mkUIDRow126,127
+pTableObjectUID pTableObjectUID137,138
+pTableUID pTableUID140,141
+pTableName pTableName143,144
+pTemplateName pTemplateName146,147
+pUIDField pUIDField149,150
+pTrimmedField pTrimmedField152,153
+pField pField155,156
+title title159,160
+header header162,163
+rowSep rowSep165,166
+pieceLengths pieceLengths168,169
+rowSepString rowSepString171,172
+dUIDRow dUIDRow175,176
+data UIDRowDecs UIDRowDecs193,194
+data UIDRowDecs = UIDRowDecs UIDRowDecs193,194
+instance Semigroup Semigroup UIDRowDecs196,197
+  where (U(UIDRowDecsu1eh1eu1)197,198
+instance Monoid Monoid UIDRowDecs200,201
+  where mempty mempty201,202
 
 ./src/System/SED/Common/Token.lhs,1162
 module System.SED.Common.TokenSystem.SED.Common.Token22,23

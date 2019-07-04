@@ -66,7 +66,6 @@ import           System.SED.Common.UID          (HalfUID, UID)
 --   hSPInfo -> "SPInfo"
 --   uSPInfoTable -> "SPInfo Table"
 --   uSPInfoTableObject -> "SPInfo Table Object"
---
 
 
 [t240|

@@ -27,17 +27,17 @@ module System.SED.Common.ColumnTypes.TH where
 
 
 import           Data.Attoparsec.ByteString       (Parser, endOfInput, many1, string,
-                                                   take, takeWhile, (<?>))
-import           Data.Attoparsec.ByteString.Char8 (char8, endOfLine,
+                                                   take, takeTill, takeWhile, (<?>))
+import           Data.Attoparsec.ByteString.Char8 (char8, endOfLine, isEndOfLine,
                                                    isHorizontalSpace, skipSpace)
-import           Data.ByteString                  (ByteString, empty, init, last,
-                                                   length)
+import           Data.ByteString                  (ByteString, append, empty, init,
+                                                   last, length)
 import           Data.ByteString.Char8            (unpack)
 import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
 import           Data.String                      (String)
 
-import           GHC.Base                         (ord, Eq, Int, Monoid(..), Semigroup(..),
+import           GHC.Base                         (Eq, Int, Monoid(..), Semigroup(..),
                                                    error, pure, mapM, many, undefined,
                                                    ($), (*>), (<*), (<*>), (==))
 import           GHC.List                         (tail, (++))
@@ -133,8 +133,8 @@ dTypeTableRow (TypeTableRow u n _fs) =
         typeUID = hexUID u
 
 
-title :: Parser [ByteString]
-title = ((:) <$> string "Table 50 ACL" <*> pure []) <* endOfLine
+title :: Parser ByteString
+title = (append <$> string "Table " <*> takeTill isEndOfLine) <* endOfLine
   <?> "Table title"
 
 spaces :: Parser ByteString

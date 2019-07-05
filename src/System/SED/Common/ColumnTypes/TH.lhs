@@ -37,7 +37,7 @@ import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
 import           Data.String                      (String)
 
-import           GHC.Base                         (Eq, Int, Monoid(..), Semigroup(..),
+import           GHC.Base                         (ord, Eq, Int, Monoid(..), Semigroup(..),
                                                    error, pure, mapM, many, undefined,
                                                    ($), (*>), (<*), (<*>), (==))
 import           GHC.List                         (tail, (++))
@@ -142,11 +142,13 @@ spaces = takeWhile isHorizontalSpace
 
 rowSepFieldLengths :: Parser [Int]
 rowSepFieldLengths =
-      char8 '+' *> many (length <$> takeWhile isHorizontalSpace <*  char8 '+' )
+      (char8 '+' <?> "initial")
+   *> many (length <$> takeWhile (== ordw '-')
+                   <* (char8 '+' <?> "trailing"))
   <?> "row separator fields"
 
 rowSep :: Parser [Int]
-rowSep = (:) <$> (length <$> spaces) <*> rowSepFieldLengths <* endOfLine
+rowSep = ( (:) <$> (length <$> spaces) <*> rowSepFieldLengths ) <* endOfLine
   <?> "row separator"
 
 blankLines :: Parser ()

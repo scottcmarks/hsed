@@ -18,14 +18,14 @@ Table column types.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE DataKinds                  #-}
+{-# LANGUAGE OverloadedLists            #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
+{-# LANGUAGE QuasiQuotes                #-}
+{-# LANGUAGE KindSignatures             #-}
+{-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedLists            #-}
 
@@ -3468,18 +3468,6 @@ ACEs that MAY be included in a single Access Control List, is SSC/implementation
 
 |]
 
-[ttype|
-                     Table 51 adv_key_mode
-    +-----------------------+------------+-----------------+
-    |UID                    |Name        |Format           |
-    +-----------------------+------------+-----------------+
-    |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
-    |                       |            |0,               |
-    |                       |            |7                |
-    +-----------------------+------------+-----------------+
-
-|]
-
 
 -- data Core_ACL = Core_ACL [Core_ACE_object_ref]
 
@@ -3492,7 +3480,19 @@ ACEs that MAY be included in a single Access Control List, is SSC/implementation
 This enumeration type defines the behavior of the NextKey column.
 
 \begin{code}
--- Temporarily moved up a bit -- FIXME
+
+[ttype|
+                     Table 51 adv_key_mode
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |7                |
+    +-----------------------+------------+-----------------+
+
+|]
+
 \end{code}
 The enumeration values are associated with key behaviors as defined in Table 52.
 
@@ -3529,6 +3529,9 @@ data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
 This set type describes the types of attributes available for the AttributeFlags column of the Column
 table.
 
+\begin{code}
+
+[ttype|
                  Table 53 attr_flags
     +-----------------------+----------+---------+
     |UID                    |Name      |Format   |
@@ -3537,6 +3540,9 @@ table.
     |                       |          |0,       |
     |                       |          |31       |
     +-----------------------+----------+---------+
+
+|]
+\end{code}
 
 The set values are associated with column behaviors as defined in Table 54.
 
@@ -3598,6 +3604,9 @@ data Core_attr_flags_Set_Values = Core_attr_flags_Set_Values_Get_Not_Permitted
 This enumeration type is used to represent the authentication methods that MAY be used to
 authenticate authorities (see 5.3.4.1.3).
 
+\begin{code}
+
+[ttype|
 
                       Table 55 auth_method
     +-----------------------+------------+-----------------+
@@ -3607,7 +3616,9 @@ authenticate authorities (see 5.3.4.1.3).
     |                       |            |0,               |
     |                       |            |23               |
     +-----------------------+------------+-----------------+
+|]
 
+\end{code}
 The enumeration values are associated with authentication methods as defined in Table 56.
 
 

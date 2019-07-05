@@ -628,6 +628,7 @@ Core_adv_key_mode_Reserved_4 :: Core_adv_key_mode
 Core_adv_key_mode_Reserved_5 :: Core_adv_key_mode
 Core_adv_key_mode_Reserved_6 :: Core_adv_key_mode
 Core_adv_key_mode_Reserved_7 :: Core_adv_key_mode
+uattr_flagsType :: UID
 data Core_attr_flags
 Core_attr_flags :: Set Core_attr_flags_Set_Values -> Core_attr_flags
 data Core_attr_flags_Set_Values
@@ -663,6 +664,7 @@ Core_attr_flags_Set_Values_Reserved_28 :: Core_attr_flags_Set_Values
 Core_attr_flags_Set_Values_Reserved_29 :: Core_attr_flags_Set_Values
 Core_attr_flags_Set_Values_Reserved_30 :: Core_attr_flags_Set_Values
 Core_attr_flags_Set_Values_Reserved_31 :: Core_attr_flags_Set_Values
+uauth_methodType :: UID
 data Core_auth_method
 Core_auth_method_None :: Core_auth_method
 Core_auth_method_Password :: Core_auth_method

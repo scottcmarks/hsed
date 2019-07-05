@@ -617,6 +617,10 @@ data Core_ACE_expression
 Core_ACE_expression_Authority_object_ref :: Core_Authority_object_ref -> Core_ACE_expression
 Core_ACE_expression_boolean_ACE :: Core_boolean_ACE -> Core_ACE_expression
 _ACE_expressionSetSize :: TPer Int
+
+-- | ]
+--   
+--   ]
 data Core_adv_key_mode
 Core_adv_key_mode_Wait_for_AdvKey_Req :: Core_adv_key_mode
 Core_adv_key_mode_Auto_advance_keys :: Core_adv_key_mode

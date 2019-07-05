@@ -3438,7 +3438,7 @@ This type describes a uidref to an object contained in the ACE table.
 The ACL type is a list of uidrefs to ACE objects. The length of the list, and therefore the number of
 ACEs that MAY be included in a single Access Control List, is SSC/implementation dependant.
 
--- \begin{code}
+\begin{code}
 
 
 
@@ -3455,30 +3455,32 @@ ACEs that MAY be included in a single Access Control List, is SSC/implementation
 
 -- |]
 
+-- [ttype|
+--                      Table 51 adv_key_mode
+--     +-----------------------+------------+-----------------+
+--     |UID                    |Name        |Format           |
+--     +-----------------------+------------+-----------------+
+--     |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
+--     |                       |            |0,               |
+--     |                       |            |7                |
+--     +-----------------------+------------+-----------------+
 
--- -- data Core_ACL = Core_ACL [Core_ACE_object_ref]
+-- |]
 
 
--- -- FIXME -- length check?
+-- data Core_ACL = Core_ACL [Core_ACE_object_ref]
 
--- \end{code}
 
+-- FIXME -- length check?
+
+\end{code}
 5.1.3.6 adv_key_mode
 
 This enumeration type defines the behavior of the NextKey column.
 
--- \begin{code}
--- [ttype|
-                     Table 51 adv_key_mode
-    +-----------------------+------------+-----------------+
-    |UID                    |Name        |Format           |
-    +-----------------------+------------+-----------------+
-    |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
-    |                       |            |0,               |
-    |                       |            |7                |
-    +-----------------------+------------+-----------------+
--- |]
--- \end{code}
+\begin{code}
+-- Temporarily moved up a bit -- FIXME
+\end{code}
 The enumeration values are associated with key behaviors as defined in Table 52.
 
 

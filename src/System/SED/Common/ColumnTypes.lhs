@@ -38,11 +38,11 @@ import           Data.Set                     (map)
 import           GHC.TypeNats
 import           RIO                          hiding (foldr, map, length, mask,
                                                       reverse, take)
-import           Test.QuickCheck              ()
+import           Test.QuickCheck              () -- FIXME
 
 import           Extras.Bytes
 import           System.SED.Common.ColumnTypes.TH
-import           System.SED.Common.TableUIDs  ()
+import           System.SED.Common.TableUIDs  () -- FIXME
 import           System.SED.Common.UID
 
 \end{code}

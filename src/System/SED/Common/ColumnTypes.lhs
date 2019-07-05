@@ -20,6 +20,7 @@ Table column types.
 
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE QuasiQuotes #-}
@@ -31,19 +32,33 @@ Table column types.
 
 module System.SED.Common.ColumnTypes where
 
-import           Control.Monad.Loops
-import           Data.Functor
-import           Data.Map                     (fromList)
-import           Data.Set                     (map)
-import           GHC.TypeNats
-import           RIO                          hiding (foldr, map, length, mask,
-                                                      reverse, take)
-import           Test.QuickCheck              () -- FIXME
+import           Control.Monad.Loops              (andM)
+import           Control.Monad.Trans.Reader       (Reader)
+import           Control.Monad.Reader.Class       (asks)
+import           Data.Foldable                    (elem)
+import           Data.Functor                     ((<$>))
+import           Data.Map                         (Map, fromList)
+import           Data.Maybe                       (maybe)
+import           Data.Set                         (Set)
+import           Data.String                      (IsString(..), String)
 
-import           Extras.Bytes
-import           System.SED.Common.ColumnTypes.TH
-import           System.SED.Common.TableUIDs  () -- FIXME
-import           System.SED.Common.UID
+import           GHC.Base                         (id, otherwise, pure, ($), (.), (>>=))
+import           GHC.Classes                      (Eq(..), Ord(..))
+import           GHC.Enum                         (Enum(..))
+import           GHC.List                         (map, zip)
+import           GHC.Maybe                        (Maybe(..))
+import           GHC.Natural                      (Natural(..))
+import           GHC.Read                         (Read(..))
+import           GHC.Show                         (Show(..))
+import           GHC.Types                        (Bool(..),Int(..))
+import           GHC.TypeNats                     (KnownNat)
+
+import           Test.QuickCheck                  () -- FIXME
+
+import           Extras.Bytes                     (Fixed_bytes)
+import           System.SED.Common.ColumnTypes.TH (ttype)
+import           System.SED.Common.TableUIDs      () -- FIXME
+import           System.SED.Common.UID            (UID, uid, uidUpper, uidLower)
 
 \end{code}
 
@@ -4075,7 +4090,7 @@ data General_Reference_Table_Type (a::Core_table_kind) c where
 ---    deriving (Eq, Show, Ord)
 
 
-type Core_Reference_UID_List = Set UID
+type Core_Reference_UID_List = [UID]
 
 data Core_Restricted_Reference_Type_Object =
      Core_Restricted_Reference_Type_Object Core_Reference_UID_List Core_uidref

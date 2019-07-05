@@ -36,10 +36,12 @@ dependencies:
 - hspec
 - lens
 - monad-loops
+- mtl
 - pretty
 - regex-pcre-builtin
 - static-text
 - template-haskell
+- transformers
 - word8
 - QuickCheck
 - quickcheck-instances

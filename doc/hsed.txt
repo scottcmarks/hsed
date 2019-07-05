@@ -729,7 +729,7 @@ ObjectTable :: Core_table_kind
 data General_Reference_Table_Type (a :: Core_table_kind) c
 [General_Reference_Table_Type_Byte] :: Core_uidref -> General_Reference_Table_Type  'ByteTable Core_uidref
 [General_Reference_Table_Type_Object] :: Core_uidref -> General_Reference_Table_Type  'ObjectTable Core_uidref
-type Core_Reference_UID_List = Set UID
+type Core_Reference_UID_List = [UID]
 data Core_Restricted_Reference_Type_Object
 Core_Restricted_Reference_Type_Object :: Core_Reference_UID_List -> Core_uidref -> Core_Restricted_Reference_Type_Object
 mkCore_Restricted_object_ref :: Core_Reference_UID_List -> Core_uidref -> Maybe Core_Restricted_Reference_Type_Object

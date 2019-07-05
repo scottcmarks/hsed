@@ -460,10 +460,10 @@ header header175,176
 formatString formatString180,181
 data TypeTableRowDecs TypeTableRowDecs186,187
 data TypeTableRowDecs =  TypeTableRowDecs TypeTableRowDecs186,187
-instance Semigroup Semigroup TypeTableRowDecs190,191
-  where (T(TypeTableRowDecsd1)191,192
-instance Monoid Monoid TypeTableRowDecs194,195
-  where mempty mempty195,196
+instance Semigroup Semigroup TypeTableRowDecs189,190
+  where (T(TypeTableRowDecsd1)190,191
+instance Monoid Monoid TypeTableRowDecs193,194
+  where mempty mempty194,195
 
 ./src/System/SED/Common/Value.lhs,3494
 module System.SED.Common.Value System.SED.Common.Value23,24

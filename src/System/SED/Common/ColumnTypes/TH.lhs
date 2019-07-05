@@ -187,7 +187,6 @@ formatString t = error $ mconcat [ "No case for ", show t, "?" ]
 data TypeTableRowDecs =  TypeTableRowDecs [Dec]
   deriving(Eq, Show)
 
-
 instance Semigroup TypeTableRowDecs
   where (TypeTableRowDecs d1) <> (TypeTableRowDecs d2) =
             TypeTableRowDecs (d1<>d2)

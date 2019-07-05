@@ -19,16 +19,15 @@ Table column types.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DataKinds, GADTs, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances,
-             PolyKinds, KindSignatures #-}
-{-# LANGUAGE MagicHash, NoImplicitPrelude, TypeFamilies, UnboxedTuples,
-             MultiParamTypeClasses, RoleAnnotations, CPP, TypeOperators,
-             PolyKinds #-}
-{-# OPTIONS_GHC -ddump-splices #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}  -- FIXME
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedLists            #-}
+
 
 module System.SED.Common.ColumnTypes where
 
@@ -39,11 +38,11 @@ import           Data.Set                     (map)
 import           GHC.TypeNats
 import           RIO                          hiding (foldr, map, length, mask,
                                                       reverse, take)
-import           Test.QuickCheck              hiding (generate)
+import           Test.QuickCheck              ()
 
 import           Extras.Bytes
 import           System.SED.Common.ColumnTypes.TH
-import           System.SED.Common.TableUIDs
+import           System.SED.Common.TableUIDs  ()
 import           System.SED.Common.UID
 
 \end{code}
@@ -3441,31 +3440,30 @@ ACEs that MAY be included in a single Access Control List, is SSC/implementation
 \begin{code}
 
 
+[ttype|
 
--- [ttype|
+                     Table 50 ACL
+    +-----------------------+-----+--------------+
+    |UID                    |Name |Format        |
+    +-----------------------+-----+--------------+
+    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |
+    |                       |     |*,            |
+    |                       |     |ACE_object_ref|
+    +-----------------------+-----+--------------+
 
---                      Table 50 ACL
---     +-----------------------+-----+--------------+
---     |UID                    |Name |Format        |
---     +-----------------------+-----+--------------+
---     |00 00 00 05 00 00 08 02|ACL  |List_Type,    |
---     |                       |     |*,            |
---     |                       |     |ACE_object_ref|
---     +-----------------------+-----+--------------+
+|]
 
--- |]
+[ttype|
+                     Table 51 adv_key_mode
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |7                |
+    +-----------------------+------------+-----------------+
 
--- [ttype|
---                      Table 51 adv_key_mode
---     +-----------------------+------------+-----------------+
---     |UID                    |Name        |Format           |
---     +-----------------------+------------+-----------------+
---     |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
---     |                       |            |0,               |
---     |                       |            |7                |
---     +-----------------------+------------+-----------------+
-
--- |]
+|]
 
 
 -- data Core_ACL = Core_ACL [Core_ACE_object_ref]

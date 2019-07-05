@@ -1,0 +1,4 @@
+#!/bin/bash
+cd ~/hsed
+  (2>/dev/null graphmod | tee hsed.graph | dot -Tpdf > hsed.pdf) && open hsed.pdf && \
+  (tred hsed.graph | tee hsedTred.graph | dot -Tpdf > hsedTred.pdf) && open hsedTred.pdf

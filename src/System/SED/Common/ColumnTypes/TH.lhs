@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 \documentstyle{article}
 \begin{document}
 \chapter{ColumnTypes Template Haskell}
@@ -19,75 +20,39 @@ Template Haskell for parsing Table column types in Section 5.1.3.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE DataKinds, GADTs, GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances,
-             PolyKinds, KindSignatures #-}
-{-# LANGUAGE MagicHash, NoImplicitPrelude, TypeFamilies, UnboxedTuples,
-             MultiParamTypeClasses, RoleAnnotations, CPP, TypeOperators,
-             PolyKinds #-}
-{-# LANGUAGE DeriveAnyClass #-}
-
-{-# OPTIONS_GHC -Wno-unused-imports #-} -- FIXME
+{-# LANGUAGE TemplateHaskell   #-}
 
 module System.SED.Common.ColumnTypes.TH where
 
--- import           Data.Map
--- import           GHC
--- import           GHC.Base
--- import           GHC.Tuple
--- import           Language.Haskell.TH
--- import           Language.Haskell.TH.Syntax
--- import           RIO
 
--- import           Extras.Bytes
--- import           Extras.GitVersion                (gitVersion)
--- import           Extras.Hex
--- import           Extras.Integral
--- import qualified Paths_hsed
-
-
-import           Data.Attoparsec.ByteString       hiding (takeWhile)
-import           Data.Attoparsec.ByteString.Char8
-import           Data.ByteString                  hiding (foldr, putStrLn, tail,
-                                                          take, takeWhile, zip)
-import           Data.ByteString.Char8       as C (unpack)
-import           Data.Either                      (either, Either, fromRight)
+import           Data.Attoparsec.ByteString       (Parser, endOfInput, many1, string,
+                                                   take, takeWhile, (<?>))
+import           Data.Attoparsec.ByteString.Char8 (char8, endOfLine,
+                                                   isHorizontalSpace, skipSpace)
+import           Data.ByteString                  (ByteString, empty, init, last,
+                                                   length)
+import           Data.ByteString.Char8            (unpack)
 import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
-import qualified Data.List.NonEmpty               as NE (fromList)
-import           Data.Map.Internal                (Map (..), fromList)
-import           Data.String                      (IsString (..))
-import           Data.Version
-import           GHC                              ()
-import           GHC.Base                         (Monoid(..), Eq, (.), id, mconcat, Int, Semigroup (..), String,
-                                                   error, liftA2, many, mapM,
-                                                   pure, undefined, ($), (*>),
-                                                   (++), (<*), (<*>), (==))
-import           GHC.List                         (tail, zip, (!!))
-import           GHC.Show                         (Show (..))
-import           GHC.Tuple                        ()
-import           Language.Haskell.TH
-import           Language.Haskell.TH.Ppr
-import           Language.Haskell.TH.PprLib       hiding (char, (<>), empty)
-import           Language.Haskell.TH.Quote
-import           Language.Haskell.TH.Syntax
-import           Text.PrettyPrint                 hiding (char, (<>), empty)
+import           Data.String                      (String)
 
-import           Extras.Bytes                     hiding (take)
--- import           Extras.GitVersion                (gitVersion)
-import           Extras.Hex
-import           Extras.Integral                  hiding (char)
+import           GHC.Base                         (Eq, Int, Monoid(..), Semigroup(..),
+                                                   error, pure, mapM, many, undefined,
+                                                   ($), (*>), (<*), (<*>), (==))
+import           GHC.List                         (tail, (++))
+import           GHC.Show                         (show, Show)
 
-import           System.IO                        hiding (char8)
-import           System.SED.Common.THUtil
-import           System.SED.Common.UID
-import           System.SED.Common.Util           (hexUID,
-                                                   trimTrailingWhitespace)
+import           Language.Haskell.TH.Quote        (QuasiQuoter(..), quoteType,
+                                                   quoteDec, quotePat, quoteExp)
+import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
 
 
-import           System.SED.Common.UID
+import           Extras.Integral                  (ordw)
+
+import           System.SED.Common.THUtil         (eUID, dVal, dSig, parseTable)
+import           System.SED.Common.UID            (UID)
+import           System.SED.Common.Util           (trimTrailingWhitespace, hexUID)
 
 
 \end{code}
@@ -164,20 +129,20 @@ typeTableRow lengths =
 dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
 dTypeTableRow (TypeTableRow u n _fs) =
     TypeTableRowDecs [dSig typeName ''UID, dVal typeName $ eUID typeUID]
-  where typeName = mkName $ mconcat ["u", C.unpack n, "Type"]
+  where typeName = mkName $ mconcat ["u", unpack n, "Type"]
         typeUID = hexUID u
 
 
-title :: Parser ByteString
-title = string "Table 50 ACL" <* endOfLine
+title :: Parser [ByteString]
+title = ((:) <$> string "Table 50 ACL" <*> pure []) <* endOfLine
   <?> "Table title"
 
 spaces :: Parser ByteString
-spaces = takeWhile (== ' ')
+spaces = takeWhile isHorizontalSpace
 
 rowSepFieldLengths :: Parser [Int]
 rowSepFieldLengths =
-      char8 '+' *> many (length <$> takeWhile (== '-') <*  char8 '+' )
+      char8 '+' *> many (length <$> takeWhile isHorizontalSpace <*  char8 '+' )
   <?> "row separator fields"
 
 rowSep :: Parser [Int]
@@ -192,7 +157,7 @@ tableRowFields :: [Int] -> Parser [ByteString]
 tableRowFields lengths = tail <$> parseLine
     where
       parseLine = (mapM takeField lengths <* endOfLine) <?> "Type Table row fields"
-      takeField len = trimTrailingWhitespace <$> take len <* char '|'
+      takeField len = trimTrailingWhitespace <$> take len <* char8 '|'
 
 data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
     deriving (Show)

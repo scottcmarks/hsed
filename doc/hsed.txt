@@ -560,7 +560,7 @@ ttypeDecs :: String -> [Dec]
 typeTableParser :: Parser TypeTableRow
 typeTableRow :: [Int] -> Parser TypeTableRow
 dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
-title :: Parser ByteString
+title :: Parser [ByteString]
 spaces :: Parser ByteString
 rowSepFieldLengths :: Parser [Int]
 rowSep :: Parser [Int]

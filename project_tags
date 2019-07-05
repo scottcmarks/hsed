@@ -435,35 +435,35 @@ validityChecks validityChecks4098,4099
 _AC_elementSizeValid _AC_elementSizeValid4104,4105
 max_columns max_columns4113,4114
 
-./src/System/SED/Common/ColumnTypes/TH.lhs,1091
-module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH33,34
-import import63,64
-ttype ttype134,135
-ttypeDecs ttypeDecs142,143
-typeTableParser typeTableParser149,150
-typeTableRow typeTableRow156,157
-dTypeTableRow dTypeTableRow163,164
-title title170,171
-spaces spaces174,175
-rowSepFieldLengths rowSepFieldLengths177,178
-rowSep rowSep182,183
-blankLines blankLines186,187
-tableRowFields tableRowFields190,191
-data TypeTableRow TypeTableRow196,197
-data TypeTableRow = TypeTableRow TypeTableRow196,197
-instance Semigroup Semigroup TypeTableRow199,200
-    (T(TypeTableRowu1n1f1)200,201
-type TypeUIDField TypeUIDField203,204
-type TypeName TypeName205,206
-type FormatString FormatString207,208
-header header210,211
-formatString formatString215,216
-data TypeTableRowDecs TypeTableRowDecs221,222
-data TypeTableRowDecs =  TypeTableRowDecs TypeTableRowDecs221,222
-instance Semigroup Semigroup TypeTableRowDecs225,226
-  where (T(TypeTableRowDecsd1)226,227
-instance Monoid Monoid TypeTableRowDecs229,230
-  where mempty mempty230,231
+./src/System/SED/Common/ColumnTypes/TH.lhs,1090
+module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH25,26
+import import39,40
+ttype ttype99,100
+ttypeDecs ttypeDecs107,108
+typeTableParser typeTableParser114,115
+typeTableRow typeTableRow121,122
+dTypeTableRow dTypeTableRow128,129
+title title135,136
+spaces spaces139,140
+rowSepFieldLengths rowSepFieldLengths142,143
+rowSep rowSep147,148
+blankLines blankLines151,152
+tableRowFields tableRowFields155,156
+data TypeTableRow TypeTableRow161,162
+data TypeTableRow = TypeTableRow TypeTableRow161,162
+instance Semigroup Semigroup TypeTableRow164,165
+    (T(TypeTableRowu1n1f1)165,166
+type TypeUIDField TypeUIDField168,169
+type TypeName TypeName170,171
+type FormatString FormatString172,173
+header header175,176
+formatString formatString180,181
+data TypeTableRowDecs TypeTableRowDecs186,187
+data TypeTableRowDecs =  TypeTableRowDecs TypeTableRowDecs186,187
+instance Semigroup Semigroup TypeTableRowDecs190,191
+  where (T(TypeTableRowDecsd1)191,192
+instance Monoid Monoid TypeTableRowDecs194,195
+  where mempty mempty195,196
 
 ./src/System/SED/Common/Value.lhs,3494
 module System.SED.Common.Value System.SED.Common.Value23,24

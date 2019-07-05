@@ -26,7 +26,7 @@ module System.SED.Common.THUtil
 where
 
 import           Data.Attoparsec.ByteString      (Parser, parseOnly)
-import qualified Data.ByteString            as B (unpack)
+import           Data.ByteString                 (unpack)
 import           Data.Either                     (either)
 import           Data.List                       (foldl)
 import           Data.String                     (IsString (..))
@@ -71,7 +71,7 @@ eUID (UID fb) = eID 'uid fb
 
 -- | Wrap a Fixed_bytes n
 eID :: (KnownNat n) => Name -> Fixed_bytes n -> Exp
-eID wrapperName = foldl arg (VarE wrapperName) . B.unpack . funpack
+eID wrapperName = foldl arg (VarE wrapperName) . unpack . funpack
   where arg e b = AppE e (LitE (IntegerL (toInteger b)))
 
 -- | (Name, String) pair as Exp

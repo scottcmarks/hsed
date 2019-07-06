@@ -21,6 +21,11 @@ types are <size,(uid|[uid])>.  Messes with the rhythm.
 "c. Enumeration_Type. This is a n unsigned integer in a specific range." should be
 "c. Enumeration_Type. This is an unsigned integer in a specific range."
 
+5.1.3.13ff Table 63 ff
+dashes in names should be underscores, e.g. byte-table-ref s/b byte_table_ref
+Seems to be more a problem in pdftxt than in the original.
+
+
 no "Table 71-3/4 bytes_8" or bytes_8 in the Types table.
 This is presumably because UID is also bytes_8, and because there happen to be
 no types using "raw" bytes_8 instead of uid variants.  Since this is the case,

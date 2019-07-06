@@ -32,20 +32,18 @@ Table column types.
 
 module System.SED.Common.ColumnTypes where
 
-import           Control.Monad.Loops              (andM)
 import           Control.Monad.Trans.Reader       (Reader)
 import           Control.Monad.Reader.Class       (asks)
 import           Data.Foldable                    (elem)
 import           Data.Functor                     ((<$>))
-import           Data.Map                         (Map, fromList)
 import           Data.Maybe                       (maybe)
 import           Data.Set                         (Set)
-import           Data.String                      (IsString(..), String)
+import           Data.String                      (IsString(..))
 
 import           GHC.Base                         (id, otherwise, pure, ($), (.), (>>=))
 import           GHC.Classes                      (Eq(..), Ord(..))
 import           GHC.Enum                         (Enum(..))
-import           GHC.List                         (map, zip)
+import           GHC.List                         (map)
 import           GHC.Maybe                        (Maybe(..))
 import           GHC.Natural                      (Natural(..))
 import           GHC.Read                         (Read(..))
@@ -58,7 +56,7 @@ import           Test.QuickCheck                  () -- FIXME
 import           Extras.Bytes                     (Fixed_bytes)
 import           System.SED.Common.ColumnTypes.TH (ttype)
 import           System.SED.Common.TableUIDs      () -- FIXME
-import           System.SED.Common.UID            (UID, uid, uidUpper, uidLower)
+import           System.SED.Common.UID            (UID, uidUpper, uidLower)
 
 \end{code}
 
@@ -467,185 +465,6 @@ Example: F0 tokenized_value tokenized_value F1
 
 
 --------------------------------------------snip--------------------------------------------
-
-Enumeration_Type,
-0,
-3
-
-5.1.3.22 Certificates_object_ref
-
-The Certificates_object_ref type describes a uidref to an object in the Certificates table.
-
-Table 72 Certificates_object_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 06
-
-Certificates_object_ref
-
-Restricted_Reference_Type{6},
-uidref {CertificatesTableUID}
-
-
-
-
-5.1.3.23 clock_kind
-
-This enumeration type is used to define the type of clock currently active.
-
-Table 73 clock_kind
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 0B
-
-clock_kind
-
-
-
-
-
-The enumeration values are associated as defined in Table 74.
-
-Table 74 clock_kind Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-Timer
-
-1
-
-Low
-
-2
-
-High
-
-3
-
-LowAndHigh
-
-
-
-
-
-5.1.3.24 clock_time
-
-This is a struct type made up of name-value pairs, and is used to represent time. Any value not
-supplied is treated as 0.
-
-If the host has supplied a trusted time since powerup, that time is used; otherwise a monotonic counter
-is used.
-
-The clock_time type represents times in either Generalized Time or UTC Time. Using this type to
-represent UTC Time requires 0Õs (zeroes) in fields where Generalized time requires a value but UTC
-Time does not (i.e. 2006 in UTC Time would be represented as 0006). Per the definition for the
-component types, the names for these name-value types are 0x00 (for the Year), 0x01 (for the Month),
-
-
-0x02 (for the Day), 0x03 (for the Hour), 0x04 (for the Minute), 0x05 (for the Seconds), and 0x06 (for the
-Fraction).
-
-Table 75 clock_time
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 18 05
-
-clock_time
-
-Struct_Type,
-
-Year,
-Month,
-Day,
-Hour,
-Minute,
-Seconds,
-Fraction
-
-
-
-
-
-5.1.3.25 Column_object _ref
-
-The Column_object _ref type describes a uidref to an object in the Column table.
-
-Table 76 Column_object _ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 07
-
-Column_object_ref
-
-Restricted_Reference_Type{6},
-
-uidref {ColumnTable_UID}
-
-
-
-
-
-5.1.3.26 cred_object_uidref
-
-The cred_object_uidref type is a restricted reference type that SHALL be used specifically for uidrefs to
-credential objects. When performing type checking, as part of that type checking the TPer SHALL
-validate that this uidref is to an object in a credential (C_*) table.
-
-In the Format column of Table 77, the * is used to indicate the entire range of that particular type of
-credential table.
-
-Table 77 cred_object_uidref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 0B
-
-cred_object_uidref
-
-Restricted_Reference_Type{6},
-uidref {C_PINTableUID},
-uidref {C_AES_*TableUID},
-uidref {C_RSA_*TableUID},
-uidref{C_EC_*TableUID},
-uidref{C_HMAC_*TableUID}
-
-
-
-
 
 5.1.3.27 date
 
@@ -3337,35 +3156,35 @@ implementation-dependant. A minimum size restriction MAY be defined by an SSC.
 
 \begin{code}
 
-newtype Core_AC_element = Core_AC_element [Core_ACE_expression]
+-- newtype Core_AC_element = Core_AC_element [Core_ACE_expression]
 
-uCore_AC_element' :: UID
-uCore_AC_element' = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01
+-- uCore_AC_element' :: UID
+-- uCore_AC_element' = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01
 
 
-columnTypeNames :: [String]
-columnTypeNames =
-    [
-        "AC_element"
-    ]
+-- columnTypeNames :: [String]
+-- columnTypeNames =
+--     [
+--         "AC_element"
+--     ]
 
-columnTypeUIDs :: [UID]
-columnTypeUIDs =
-    [
-        uCore_AC_element'
-    ]
+-- columnTypeUIDs :: [UID]
+-- columnTypeUIDs =
+--     [
+--         uCore_AC_element'
+--     ]
 
-columnTypeName' :: Map UID String
-columnTypeName' = fromList $ zip columnTypeUIDs columnTypeNames
+-- columnTypeName' :: Map UID String
+-- columnTypeName' = fromList $ zip columnTypeUIDs columnTypeNames
 
-columnTypeUID'  :: Map String UID
-columnTypeUID'  = fromList $ zip columnTypeNames columnTypeUIDs
+-- columnTypeUID'  :: Map String UID
+-- columnTypeUID'  = fromList $ zip columnTypeNames columnTypeUIDs
 
-_AC_elementSize :: TPer Int
-_AC_elementSize = __AC_elementSize <$> asks implementation
+-- _AC_elementSize :: TPer Int
+-- _AC_elementSize = __AC_elementSize <$> asks implementation
 
-_AC_elementMinSize :: TPer (Maybe Int)
-_AC_elementMinSize = __AC_elementMinSize <$> asks ssc
+-- _AC_elementMinSize :: TPer (Maybe Int)
+-- _AC_elementMinSize = __AC_elementMinSize <$> asks ssc
 
 \end{code}
 5.1.3.2 ACE_columns
@@ -3414,11 +3233,11 @@ postfix Boolean expression of Authorities.
 
 \begin{code}
 
-data Core_ACE_expression = Core_ACE_expression_Authority_object_ref Core_Authority_object_ref
-                         | Core_ACE_expression_boolean_ACE          Core_boolean_ACE
+-- data Core_ACE_expression = Core_ACE_expression_Authority_object_ref Core_Authority_object_ref
+--                          | Core_ACE_expression_boolean_ACE          Core_boolean_ACE
 
-_ACE_expressionSetSize :: TPer Int
-_ACE_expressionSetSize = max_columns
+-- _ACE_expressionSetSize :: TPer Int
+-- _ACE_expressionSetSize = max_columns
 
 \end{code}
 5.1.3.4 ACE_object_ref
@@ -3682,6 +3501,10 @@ data Core_auth_method = Core_auth_method_None
 5.1.3.9 Authority_object_ref
 
 The Authority_object_ref type describes a uidref to an object in the Authority table.
+\begin{code}
+
+[ttype|
+
 
                         Table 57 Authority_object_ref
     +-----------------------+--------------------+-----------------------------+
@@ -3690,6 +3513,9 @@ The Authority_object_ref type describes a uidref to an object in the Authority t
     |00 00 00 05 00 00 0C 05|Authority_object_ref|Restricted_Reference_Type{6},|
     |                       |                    |uidref{AuthorityTableUID}    |
     +-----------------------+--------------------+-----------------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -3697,9 +3523,9 @@ The Authority_object_ref type describes a uidref to an object in the Authority t
 -- FIXME -- type level prgramming
 
 
-newtype Core_Authority_object_ref =
-    Core_Authority_object_ref (Core_uidref
-                              -> Maybe Core_Restricted_Reference_Type_Object)
+-- newtype Core_Authority_object_ref =
+--     Core_Authority_object_ref (Core_uidref
+--                               -> Maybe Core_Restricted_Reference_Type_Object)
 
 -- mkCore_Authority_object_ref ::
 --     Core_uidref
@@ -3713,6 +3539,10 @@ newtype Core_Authority_object_ref =
 5.1.3.10 boolean
 The boolean column type is an enumeration used to represent True or False.
 
+\begin{code}
+
+[ttype|
+
 
                         Table 58 boolean
     +-----------------------+------------+-----------------+
@@ -3723,6 +3553,9 @@ The boolean column type is an enumeration used to represent True or False.
     |                       |            |1                |
     +-----------------------+------------+-----------------+
 
+|]
+
+\end{code}
 The enumeration values are associated as defined in Table 59.
 
 
@@ -3750,6 +3583,10 @@ type Core_boolean = Bool
 
 This enumeration is used to identify the Boolean operators "And", "Or", and "Not".
 
+\begin{code}
+
+[ttype|
+
 
                       Table 60 boolean_ACE
     +-----------------------+------------+-----------------+
@@ -3760,10 +3597,13 @@ This enumeration is used to identify the Boolean operators "And", "Or", and "Not
     |                       |            |2                |
     +-----------------------+------------+-----------------+
 
+|]
+
+\end{code}
 The enumeration values are associated with Boolean operators as defined in Table 61.
 
-    +----------------------------------------+
-    |Table 61 boolean_ACE Enumeration Values |
+
+    Table 61 boolean_ACE Enumeration Values
     +------------------+---------------------+
     |Enumeration Value |Associated Value     |
     +------------------+---------------------+
@@ -3787,13 +3627,20 @@ data Core_boolean_ACE = And | Or | Not
 5.1.3.12 byte_row_ref
 
 Type used for referencing a row in a byte table.
+\begin{code}
+
+[ttype|
+
 
                            Table 62 byte_row_ref
     +-----------------------+-------------+---------------------------+
     |UID                    |Name         |Format                     |
     +-----------------------+-------------+---------------------------+
-    |00 00 00 05 00 00 0F 01|byte-row-ref |General_Reference_Type {7} |
+    |00 00 00 05 00 00 0F 01|byte_row_ref |General_Reference_Type {7} |
     +-----------------------+-------------+---------------------------+
+|]
+
+\end{code}
 
 
 \begin{code}
@@ -3806,19 +3653,26 @@ type Core_byte_row_ref = Core_General_Reference_Type_Byte_Row
 This is a reference type that SHALL be used specifically for uidrefs to byte tables. When performing
 type checking, as part of that type checking the TPer SHALL validate that this uidref is to a table that is
 a byte table.
+\begin{code}
+
+[ttype|
+
 
                           Table 63 byte_table_ref
     +-----------------------+--------------+----------------------------+
     |UID                    |Name          |Format                      |
     +-----------------------+--------------+----------------------------+
-    |00 00 00 05 00 00 10 01|byte-table-ref|General_Reference_Table_Type|
+    |00 00 00 05 00 00 10 01|byte_table_ref|General_Reference_Table_Type|
     |                       |              |2                           |
     +-----------------------+--------------+----------------------------+
 
+|]
+
+\end{code}
 
 \begin{code}
 
-type Core_byte_table_ref = 'General_Reference_Table_Type_Byte
+-- type Core_byte_table_ref = 'General_Reference_Table_Type_Byte
 
 \end{code}
 
@@ -3827,6 +3681,10 @@ type Core_byte_table_ref = 'General_Reference_Table_Type_Byte
 
 This type represents the bytes base type, and is used to represent a value made up of a fixed-size
 sequence of bytes.
+\begin{code}
+
+[ttype|
+
 
                   Table 64 bytes
     +-----------------------+------+----------+
@@ -3834,6 +3692,9 @@ sequence of bytes.
     +-----------------------+------+----------+
     |00 00 00 05 00 00 00 02|bytes |Base_Type |
     +-----------------------+------+----------+
+|]
+
+\end{code}
 
 
 \begin{code}
@@ -3849,6 +3710,10 @@ instance (KnownNat n) => Show (Core_bytes n) where
 5.1.3.15 bytes_4
 
 This is a bytes type with a size requirement of 4.
+\begin{code}
+
+[ttype|
+
 
                   Table 65 bytes_4
     +-----------------------+-------+---------------------+
@@ -3859,6 +3724,9 @@ This is a bytes type with a size requirement of 4.
     |                       |       |4                    |
     +-----------------------+-------+---------------------+
 
+|]
+
+\end{code}
 \begin{code}
 
 type Core_bytes_4 = Core_bytes 4
@@ -3869,6 +3737,10 @@ type Core_bytes_4 = Core_bytes 4
 5.1.3.16 bytes_12
 
 This is a bytes type with a size requirement of 12.
+\begin{code}
+
+[ttype|
+
 
                        Table 66 bytes_12
     +-----------------------+--------+---------------------+
@@ -3878,6 +3750,9 @@ This is a bytes type with a size requirement of 12.
     |                       |        |bytes,               |
     |                       |        |12                   |
     +-----------------------+--------+---------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -3889,6 +3764,10 @@ type Core_bytes_12 = Core_bytes 12
 5.1.3.17 bytes_16
 
 This is a bytes type with a size requirement of 16.
+\begin{code}
+
+[ttype|
+
 
                        Table 67 bytes_16
     +-----------------------+--------+---------------------+
@@ -3898,6 +3777,9 @@ This is a bytes type with a size requirement of 16.
     |                       |        |bytes,               |
     |                       |        |16                   |
     +-----------------------+--------+---------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -3909,6 +3791,10 @@ type Core_bytes_16 = Core_bytes 16
 5.1.3.18 bytes_20
 
 This is a bytes type with a size requirement of 20.
+\begin{code}
+
+[ttype|
+
 
                        Table 68 bytes_20
     +-----------------------+--------+---------------------+
@@ -3918,6 +3804,9 @@ This is a bytes type with a size requirement of 20.
     |                       |        |bytes,               |
     |                       |        |20                   |
     +-----------------------+--------+---------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -3930,6 +3819,10 @@ type Core_bytes_20 = Core_bytes 20
 5.1.3.19 bytes_32
 
 This is a bytes type with a size requirement of 32.
+\begin{code}
+
+[ttype|
+
 
                        Table 69 bytes_32
     +-----------------------+--------+---------------------+
@@ -3939,6 +3832,9 @@ This is a bytes type with a size requirement of 32.
     |                       |        |bytes,               |
     |                       |        |32                   |
     +-----------------------+--------+---------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -3950,6 +3846,10 @@ type Core_bytes_32 = Core_bytes 32
 5.1.3.20 bytes_48
 
 This is a bytes type with a size requirement of 48.
+\begin{code}
+
+[ttype|
+
 
                        Table 70 bytes_48
     +-----------------------+--------+---------------------+
@@ -3959,6 +3859,9 @@ This is a bytes type with a size requirement of 48.
     |                       |        |bytes,               |
     |                       |        |48                   |
     +-----------------------+--------+---------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -3972,6 +3875,10 @@ type Core_bytes_48 = Core_bytes 48
 5.1.3.21 bytes_64
 
 This is a bytes type with a size requirement of 64.
+\begin{code}
+
+[ttype|
+
 
                        Table 71 bytes_64
     +-----------------------+--------+---------------------+
@@ -3981,6 +3888,9 @@ This is a bytes type with a size requirement of 64.
     |                       |        |bytes,               |
     |                       |        |64                   |
     +-----------------------+--------+---------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -3991,6 +3901,9 @@ type Core_bytes_64 = Core_bytes 64
 5.1.3.22 Certificates_object_ref
 
 The Certificates_object_ref type describes a uidref to an object in the Certificates table.
+\begin{code}
+
+[ttype|
 
                            Table 72 Certificates_object_ref
     +-----------------------+-----------------------+-----------------------------+
@@ -3999,6 +3912,9 @@ The Certificates_object_ref type describes a uidref to an object in the Certific
     |00 00 00 05 00 00 0C 06|Certificates_object_ref|Restricted_Reference_Type{6},|
     |                       |                       |uidref{CertificatesTableUID} |
     +-----------------------+-----------------------+-----------------------------+
+|]
+
+\end{code}
 
 \begin{code}
 
@@ -4019,12 +3935,174 @@ newtype Core_Certificates_object_ref =
 
 
 
+5.1.3.23 clock_kind
+
+This enumeration type is used to define the type of clock currently active.
+\begin{code}
+
+[ttype|
+
+                     Table 73 clock_kind
+    +-----------------------+-----------+-----------------+
+    |UID                    |Name       |Format           |
+    +-----------------------+-----------+-----------------+
+    |00 00 00 05 00 00 04 0B|clock_kind |Enumeration_Type,|
+    |                       |           |0,               |
+    |                       |           |3                |
+    +-----------------------+-----------+-----------------+
+|]
+
+\end{code}
 
 \begin{code}
 
 
+-- FIXME -- type level prgramming
+
+
+-- newtype Core_Certificates_object_ref =
+--     Core_Certificates_object_ref (Core_uidref
+--                               -> Maybe Core_Restricted_Reference_Type_Object)
+
+-- mkCore_Certificates_object_ref ::
+--     Core_uidref
+--  -> Maybe Core_Restricted_Reference_Type_Object
+-- mkCore_Certificates_object_ref = mkCore_Restricted_object_ref_To uCertificatesTable
 
 \end{code}
+
+
+
+
+
+The enumeration values are associated as defined in Table 74.
+
+
+
+    +---------------------------------------+
+    |Table 74 clock_kind Enumeration Values |
+    +------------------+--------------------+
+    |Enumeration Value |Associated Value    |
+    +------------------+--------------------+
+    |0                 |Timer               |
+    +------------------+--------------------+
+    |1                 |Low                 |
+    +------------------+--------------------+
+    |2                 |High                |
+    +------------------+--------------------+
+    |3                 |LowAndHigh          |
+    +------------------+--------------------+
+
+
+
+
+
+
+5.1.3.24 clock_time
+
+This is a struct type made up of name-value pairs, and is used to represent time. Any value not
+supplied is treated as 0.
+
+If the host has supplied a trusted time since powerup, that time is used; otherwise a monotonic counter
+is used.
+
+The clock_time type represents times in either Generalized Time or UTC Time. Using this type to
+represent UTC Time requires 0's (zeroes) in fields where Generalized time requires a value but UTC
+Time does not (i.e. 2006 in UTC Time would be represented as 0006). Per the definition for the
+component types, the names for these name-value types are 0x00 (for the Year), 0x01 (for the Month),
+0x02 (for the Day), 0x03 (for the Hour), 0x04 (for the Minute), 0x05 (for the Seconds), and 0x06 (for the
+Fraction).
+
+\begin{code}
+
+[ttype|
+
+                     Table 75 clock_time
+    +-----------------------+-----------+-----------------+
+    |UID                    |Name       |Format           |
+    +-----------------------+-----------+-----------------+
+    |00 00 00 05 00 00 18 05|clock_time |Struct_Type,     |
+    |                       |           |Year,            |
+    |                       |           |Month,           |
+    |                       |           |Day,             |
+    |                       |           |Hour,            |
+    |                       |           |Minute,          |
+    |                       |           |Seconds,         |
+    |                       |           |Fraction         |
+    +-----------------------+-----------+-----------------+
+
+|]
+
+\end{code}
+
+
+5.1.3.25 Column_object_ref
+
+The Column_object_ref type describes a uidref to an object in the Column table.
+
+\begin{code}
+
+[ttype|
+
+                         Table 76 Column_object_ref
+    +-----------------------+-----------------+-----------------------------+
+    |UID                    |Name             |Format                       |
+    +-----------------------+-----------------+-----------------------------+
+    |00 00 00 05 00 00 0C 07|Column_object_ref|Restricted_Reference_Type{6},|
+    |                       |                 |uidref {ColumnTable_UID}     |
+    +-----------------------+-----------------+-----------------------------+
+
+|]
+
+\end{code}
+
+
+5.1.3.26 cred_object_uidref
+
+The cred_object_uidref type is a restricted reference type that SHALL be used specifically for uidrefs to
+credential objects. When performing type checking, as part of that type checking the TPer SHALL
+validate that this uidref is to an object in a credential (C_*) table.
+
+In the Format column of Table 77, the * is used to indicate the entire range of that particular type of
+credential table.
+
+
+
+\begin{code}
+
+[ttype|
+
+                          Table 77 cred_object_uidref
+    +-----------------------+-------------------+-----------------------------+
+    |UID                    |Name               |Format                       |
+    +-----------------------+-------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 0B|cred_object_uidref |Restricted_Reference_Type{6},|
+    |                       |                   |uidref {C_PINTableUID},      |
+    |                       |                   |uidref {C_AES_*TableUID},    |
+    |                       |                   |uidref {C_RSA_*TableUID},    |
+    |                       |                   |uidref{C_EC_*TableUID},      |
+    |                       |                   |uidref{C_HMAC_*TableUID}     |
+    +-----------------------+-------------------+-----------------------------+
+
+|]
+
+
+
+
+
+
+\end{code}
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -4129,23 +4207,23 @@ env = Env core' imp' ssc'
 
 
 
-valid :: TPer Bool
-valid = andM validityChecks
+-- valid :: TPer Bool
+-- valid = andM validityChecks
 
-validityChecks :: [TPer Bool]
-validityChecks =
-    [ _AC_elementSizeValid
-    , pure True -- FIXME: more checks
-    ]
+-- validityChecks :: [TPer Bool]
+-- validityChecks =
+--     [ _AC_elementSizeValid
+--     , pure True -- FIXME: more checks
+--     ]
 
-_AC_elementSizeValid :: TPer Bool
-_AC_elementSizeValid = do
-    maybeMinSize <-_AC_elementMinSize
-    case maybeMinSize of
-      Just minSize -> do
-          size <- _AC_elementSize
-          pure $ minSize <= size
-      Nothing -> pure False
+-- _AC_elementSizeValid :: TPer Bool
+-- _AC_elementSizeValid = do
+--     maybeMinSize <-_AC_elementMinSize
+--     case maybeMinSize of
+--       Just minSize -> do
+--           size <- _AC_elementSize
+--           pure $ minSize <= size
+--       Nothing -> pure False
 
 max_columns :: TPer Int
 max_columns = do

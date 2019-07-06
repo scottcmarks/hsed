@@ -601,22 +601,9 @@ data SSC
 SSC :: Maybe Int -> Maybe Int -> SSC
 [__AC_elementMinSize] :: SSC -> Maybe Int
 [__min_max_columns] :: SSC -> Maybe Int
-newtype Core_AC_element
-Core_AC_element :: [Core_ACE_expression] -> Core_AC_element
-uCore_AC_element' :: UID
-columnTypeNames :: [String]
-columnTypeUIDs :: [UID]
-columnTypeName' :: Map UID String
-columnTypeUID' :: Map String UID
-_AC_elementSize :: TPer Int
-_AC_elementMinSize :: TPer (Maybe Int)
 newtype Core_ACE_columns
 Core_ACE_columns :: Set Int -> Core_ACE_columns
 _ACE_columnsSetSize :: TPer Int
-data Core_ACE_expression
-Core_ACE_expression_Authority_object_ref :: Core_Authority_object_ref -> Core_ACE_expression
-Core_ACE_expression_boolean_ACE :: Core_boolean_ACE -> Core_ACE_expression
-_ACE_expressionSetSize :: TPer Int
 uACLType :: UID
 uadv_key_modeType :: UID
 data Core_adv_key_mode
@@ -690,26 +677,42 @@ Core_auth_method_Reserved_20 :: Core_auth_method
 Core_auth_method_Reserved_21 :: Core_auth_method
 Core_auth_method_Reserved_22 :: Core_auth_method
 Core_auth_method_Reserved_23 :: Core_auth_method
-newtype Core_Authority_object_ref
-Core_Authority_object_ref :: (Core_uidref -> Maybe Core_Restricted_Reference_Type_Object) -> Core_Authority_object_ref
+uAuthority_object_refType :: UID
+ubooleanType :: UID
 type Core_boolean = Bool
+uboolean_ACEType :: UID
 data Core_boolean_ACE
 And :: Core_boolean_ACE
 Or :: Core_boolean_ACE
 Not :: Core_boolean_ACE
+ubyte_row_refType :: UID
 type Core_byte_row_ref = Core_General_Reference_Type_Byte_Row
-type Core_byte_table_ref =  'General_Reference_Table_Type_Byte
+ubyte_table_refType :: UID
+ubytesType :: UID
 newtype Core_bytes n
 Core_bytes :: Fixed_bytes n -> Core_bytes n
+ubytes_4Type :: UID
 type Core_bytes_4 = Core_bytes 4
+ubytes_12Type :: UID
 type Core_bytes_12 = Core_bytes 12
+ubytes_16Type :: UID
 type Core_bytes_16 = Core_bytes 16
+ubytes_20Type :: UID
 type Core_bytes_20 = Core_bytes 20
+ubytes_32Type :: UID
 type Core_bytes_32 = Core_bytes 32
+ubytes_48Type :: UID
 type Core_bytes_48 = Core_bytes 48
+ubytes_64Type :: UID
 type Core_bytes_64 = Core_bytes 64
+uCertificates_object_refType :: UID
 newtype Core_Certificates_object_ref
 Core_Certificates_object_ref :: (Core_uidref -> Maybe Core_Restricted_Reference_Type_Object) -> Core_Certificates_object_ref
+uclock_kindType :: UID
+uclock_timeType :: UID
+uColumn_object_refType :: UID
+ucred_object_uidrefType :: UID
+udateType :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int
@@ -737,9 +740,6 @@ Core_Restricted_Reference_Type_Object :: Core_Reference_UID_List -> Core_uidref 
 mkCore_Restricted_object_ref :: Core_Reference_UID_List -> Core_uidref -> Maybe Core_Restricted_Reference_Type_Object
 mkCore_Restricted_object_ref_To :: Core_uidref -> Core_uidref -> Maybe Core_Restricted_Reference_Type_Object
 env :: Env
-valid :: TPer Bool
-validityChecks :: [TPer Bool]
-_AC_elementSizeValid :: TPer Bool
 max_columns :: TPer Int
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.Common.ColumnTypes.Core_bytes n)
 instance GHC.Classes.Ord (System.SED.Common.ColumnTypes.Core_bytes n)

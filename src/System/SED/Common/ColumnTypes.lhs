@@ -465,33 +465,30 @@ Example: F0 tokenized_value tokenized_value F1
 
 
 --------------------------------------------snip--------------------------------------------
+--------------------------------------------------------------------------------
+section
 
-5.1.3.27 date
+text
 
-The date type represents the date portion of the time from the system clock. This is a set of name-
-value pairs, with the names 0x00 (for the Year), 0x01 (for the Month), and 0x02 (for the Day).
+-- \begin{code}
 
-Table 78 date
+[ttype|
 
+                     Table etc.
+    +-----------------------+----+-----------------+
+    |UID                    |Name|Format           |
+    +-----------------------+----+-----------------+
+    |00 00 00 05 00 00 18 04|date|Struct_Type,     |
+    |                       |    |Year,            |
+    |                       |    |Month,           |
+    |                       |    |Day              |
+    +-----------------------+----+-----------------+
 
-UID
+|]
 
-Name
-
-Format
-
-00 00 00 05 00 00 18 04
-
-date
-
-Struct_Type, Year,
-Month,
-Day
-
-
-
-
-
+-- \end{code}
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 5.1.3.28 Day
 
@@ -4086,21 +4083,32 @@ credential table.
 
 |]
 
+\end{code}
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+5.1.3.27 date
 
+The date type represents the date portion of the time from the system clock. This is a set of name-value pairs, with the names 0x00 (for the Year), 0x01 (for the Month), and 0x02 (for the Day).
 
+\begin{code}
 
+[ttype|
 
+                     Table 78 date
+    +-----------------------+----+-----------------+
+    |UID                    |Name|Format           |
+    +-----------------------+----+-----------------+
+    |00 00 00 05 00 00 18 04|date|Struct_Type,     |
+    |                       |    |Year,            |
+    |                       |    |Month,           |
+    |                       |    |Day              |
+    +-----------------------+----+-----------------+
+
+|]
 
 \end{code}
-
-
-
-
-
-
-
-
-
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
 

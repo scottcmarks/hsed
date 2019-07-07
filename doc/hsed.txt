@@ -715,6 +715,11 @@ ucred_object_uidrefType :: UID
 udateType :: UID
 uDayType :: UID
 uday_enumType :: UID
+uenc_supportedType :: UID
+ufeedback_sizeType :: UID
+uFractionType :: UID
+ufraction_enumType :: UID
+ugen_statusType :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

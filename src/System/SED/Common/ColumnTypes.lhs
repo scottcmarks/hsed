@@ -488,80 +488,6 @@ text
 
 -- \end{code}
 --------------------------------------------------------------------------------
-5.1.3.29 day_enum
-
-Used in association with the Day name-value pair.
-
-Table 80 day_enum
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 18
-
-day_enum
-
-Enumeration_Type,
-1,
-31
-Enumeration_Type,
-0,
-15
-
-
---------------------------------------------------------------------------------
-
-
-5.1.3.30 enc_supported
-
-This enumeration type is used to define the types of user data encryption supported by the TPer.
-
-Table 81 enc_supported
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 1D
-
-enc_supported
-
-
-
-
-
-The enumeration values are associated as defined in Table 82.
-
-Table 82 enc_supported Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-None
-
-1
-
-Media Encryption
-
-2-15
-
-Reserved
-
-
-
-
-
 5.1.3.31 feedback_size
 
 This uinteger type represents the feedback sizes for AES used in CFB mode. If AES Mode is CFB, this
@@ -576,15 +502,6 @@ Name
 
 Format
 
-
-
-
-UID
-
-Name
-
-Format
-
 00 00 00 05 00 00 02 14
 
 feedback_size
@@ -592,11 +509,7 @@ feedback_size
 Simple_Type,
 uinteger,
 2
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.32 Fraction
 
 Name-value pair that has a Name of "6" and takes fraction enum as the value.
@@ -4093,19 +4006,70 @@ Name-value pair that has a Name of "2" and takes day_enum as the value.
     |UID                    |Name|Format                   |
     +-----------------------+----+-------------------------+
     |00 00 00 05 00 00 14 03|Day |Name_Value_Uinteger_Type,|
-    |                       |    |2, day_enum              |
-    |                       |    |                         |
-    |                       |    |                         |
+    |                       |    |2,                       |
+    |                       |    |day_enum                 |
     +-----------------------+----+-------------------------+
 
 |]
 
 \end{code}
 
+5.1.3.29 day_enum
+
+Used in association with the Day name-value pair.
+
+\begin{code}
+
+[ttype|
+
+                         Table 80 day_enum
+    +-----------------------+--------+-----------------+
+    |UID                    |Name    |Format           |
+    +-----------------------+--------+-----------------+
+    |00 00 00 05 00 00 04 18|day_enum|Enumeration_Type,|
+    |                       |        |1,               |
+    |                       |        |31               |
+    +-----------------------+--------+-----------------+
+
+|]
+
+\end{code}
 
 
+5.1.3.30 enc_supported
 
+This enumeration type is used to define the types of user data encryption
+supported by the TPer.
 
+-- \begin{code}
+
+[ttype|
+
+                         Table 81 enc_supported
+    +-----------------------+-------------+-----------------+
+    |UID                    |Name         |Format           |
+    +-----------------------+-------------+-----------------+
+    |00 00 00 05 00 00 04 1D|enc_supported|Enumeration_Type,|
+    |                       |             |0,               |
+    |                       |             |15               |
+    +-----------------------+-------------+-----------------+
+
+|]
+
+-- \end{code}
+
+The enumeration values are associated as defined in Table 82.
+
+        Table 82 enc_supported Enumes
+    +-----------------+----------------+
+    |Enumeration Value|Associated Value|
+    +-----------------+----------------+
+    |0                |None            |
+    +-----------------+----------------+
+    |1                |Media Encryption|
+    +-----------------+----------------+
+    |2-15             |Reserved        |
+    +-----------------+----------------+
 
 
 

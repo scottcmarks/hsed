@@ -488,35 +488,6 @@ text
 
 -- \end{code}
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-5.1.3.28 Day
-
-Name-value pair that has a Name of "2" and takes day_enum as the value.
-
-Table 79 Day
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 14 03
-
-Day
-
-Name_Value_Uinteger_Type,
-
-2,
-
-day_enum
-
-
-
-
-
 5.1.3.29 day_enum
 
 Used in association with the Day name-value pair.
@@ -542,7 +513,7 @@ Enumeration_Type,
 15
 
 
-
+--------------------------------------------------------------------------------
 
 
 5.1.3.30 enc_supported
@@ -4084,8 +4055,8 @@ credential table.
 |]
 
 \end{code}
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+
+
 5.1.3.27 date
 
 The date type represents the date portion of the time from the system clock. This is a set of name-value pairs, with the names 0x00 (for the Year), 0x01 (for the Month), and 0x02 (for the Day).
@@ -4107,8 +4078,29 @@ The date type represents the date portion of the time from the system clock. Thi
 |]
 
 \end{code}
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+
+
+5.1.3.28 Day
+
+Name-value pair that has a Name of "2" and takes day_enum as the value.
+
+\begin{code}
+
+[ttype|
+
+                         Table 79 Day
+    +-----------------------+----+-------------------------+
+    |UID                    |Name|Format                   |
+    +-----------------------+----+-------------------------+
+    |00 00 00 05 00 00 14 03|Day |Name_Value_Uinteger_Type,|
+    |                       |    |2, day_enum              |
+    |                       |    |                         |
+    |                       |    |                         |
+    +-----------------------+----+-------------------------+
+
+|]
+
+\end{code}
 
 
 

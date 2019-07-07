@@ -488,117 +488,7 @@ text
 
 -- \end{code}
 --------------------------------------------------------------------------------
-5.1.3.35 hash_protocol
-
-This enumeration type determines the hash algorithm to be used when creating a digital signature.
-
-Table 88 hash_protocol
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 0D
-
-hash_protocol
-
-Enumeration_Type,
-0,
-15
-
-
-
-
-
-The enumeration values are associated as defined in Table 89.
-
-Table 89 hash_protocol Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-None
-
-1
-
-SHA 1
-
-2
-
-SHA 256
-
-3
-
-SHA 384
-
-4
-
-SHA 512
-
-5-15
-
-Reserved
 --------------------------------------------------------------------------------
-
-
-
-
-
-
-5.1.3.36 Hour
-
-Name-value pair that has a Name of "3" and takes hour_enum as the value.
-
-Table 90 Hour
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 14 04
-
-Hour
-
-Name_Value_Uinteger_Type,
-3,
-
-hour_enum
-
-
-
-
-
-5.1.3.37 hour_enum
-
-Used in association with the Hour name-value pair.
-
-Table 91 hour_enum
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 19
-
-hour_enum
-
-Enumeration_Type,
-0,
-23
-
 
 
 
@@ -4004,7 +3894,7 @@ PAUSED state, value 32-63 are valid for the PENDING state (see 5.7.3.3).
 
 
 
---------------------------------------------------------------------------------
+
 5.1.3.35 hash_protocol
 
 This enumeration type determines the hash algorithm to be used when creating a digital signature.
@@ -4026,13 +3916,6 @@ This enumeration type determines the hash algorithm to be used when creating a d
 |]
 
 \end{code}
---------------------------------------------------------------------------------
-
-
-
-
-
-
 
 
 
@@ -4057,10 +3940,54 @@ The enumeration values are associated as defined in Table 89.
     +------------------+----------------------+
 
 
+5.1.3.36 Hour
+
+Name-value pair that has a Name of "3" and takes hour_enum as the value.
+
+\begin{code}
+
+[ttype|
+
+                         Table 90 Hour
+    +-----------------------+----+-------------------------+
+    |UID                    |Name|Format                   |
+    +-----------------------+----+-------------------------+
+    |00 00 00 05 00 00 14 04|Hour|Name_Value_Uinteger_Type,|
+    |                       |    |3,                       |
+    |                       |    |hour_enum                |
+    +-----------------------+----+-------------------------+
+
+|]
+
+\end{code}
+
+
+5.1.3.37 hour_enum
+
+Used in association with the Hour name-value pair.
+
+\begin{code}
+
+[ttype|
+
+                     Table 91 hour_enum
+    +-----------------------+-------------+-----------------+
+    |UID                    |Name         |Format           |
+    +-----------------------+-------------+-----------------+
+    |00 00 00 05 00 00 04 19|hour_enum    |Enumeration_Type,|
+    |                       |             |0,               |
+    |                       |             |23               |
+    +-----------------------+-------------+-----------------+
+
+|]
+\end{code}
+
 
 
 
 --------------------------------------------------------------------------------
+
+
 \begin{code}
 
 

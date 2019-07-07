@@ -488,146 +488,6 @@ text
 
 -- \end{code}
 --------------------------------------------------------------------------------
-
-
-
-
-
-5.1.3.34 gen_status
-
-This set type is used to identify the general status of the re-encryption process.
-
-Table 86 gen_status
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 1A 02
-
-gen_status
-
-Set_Type,
-0,
-63
-
-
-
-
-
-The enumeration values are associated as defined in table Table 87. Values 0-31 are valid for the
-PAUSED state, value 32-63 are valid for the PENDING state (see 5.7.3.3).
-
-Table 87 gen_status Enumeration Values
-
-
-Column
-Value
-
-Associated Value
-
-Meaning
-
-0
-
-None
-
-
-
-1
-
-pending_tper_error
-
-Last ReEncryptState value was PENDING AND a
-TPer_Error_Detect condition was detected
-
-2
-
-active_tper_error
-
-Last ReEncryptState value was ACTIVE AND a
-TPer_Error_Detect condition was detected
-
-3
-
-active_pause_requested
-
-Last ReEncryptState value was ACTIVE AND PAUSE_req
-was detected
-
-
-
-
-Column
-Value
-
-Associated Value
-
-Meaning
-
-4
-
-pend_pause_requested
-
-Last ReEncryptState value was PENDING AND a
-PAUSE_req value was detected
-
-5
-
-pend_reset_stop_detect
-
-A reset condition AND its associated ContOnReset
-configuration does not allow re-encryption to continue AND
-last state was PENDING
-
-6
-
-key_error
-
-ReEncryptState value was PENDING AND valid keys were
-not found in any C_* table OR insufficient access control
-granted for reading C_* table.
-
-7 to 31
-
-reserved
-
-
-
-32
-
-wait_AvailableKeys
-
-keys are not available
-
-33
-
-wait_for_TPer_resources
-
-TPer_Ready condition is not True
-
-34
-
-active_reset_stop_detect
-
-A reset condition AND its associated ContOnReset
-configuration does not allow re-encryption to continue AND
-last ReEncryptState value was ACTIVE
-
-34-63
-
-reserved
-
-
-
-
-
---------------------------------------------------------------------------------
-
-
 5.1.3.35 hash_protocol
 
 This enumeration type determines the hash algorithm to be used when creating a digital signature.
@@ -685,6 +545,7 @@ SHA 512
 5-15
 
 Reserved
+--------------------------------------------------------------------------------
 
 
 
@@ -4143,6 +4004,57 @@ PAUSED state, value 32-63 are valid for the PENDING state (see 5.7.3.3).
 
 
 
+--------------------------------------------------------------------------------
+5.1.3.35 hash_protocol
+
+This enumeration type determines the hash algorithm to be used when creating a digital signature.
+
+\begin{code}
+
+[ttype|
+
+                     Table 88 hash_protocol
+    +-----------------------+-------------+-----------------+
+    |UID                    |Name         |Format           |
+    +-----------------------+-------------+-----------------+
+    |00 00 00 05 00 00 04 0D|hash_protocol|Enumeration_Type,|
+    |                       |             |0,               |
+    |                       |             |15               |
+    |                       |             |                 |
+    +-----------------------+-------------+-----------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+The enumeration values are associated as defined in Table 89.
+
+    +-----------------------------------------+
+    |Table 89 hash_protocol Enumeration Values|
+    +------------------+----------------------+
+    |Enumeration Value |Associated Value      |
+    +------------------+----------------------+
+    |0                 |None                  |
+    +------------------+----------------------+
+    |1                 |SHA 1                 |
+    +------------------+----------------------+
+    |2                 |SHA 256               |
+    +------------------+----------------------+
+    |3                 |SHA 384               |
+    +------------------+----------------------+
+    |4                 |SHA 512               |
+    +------------------+----------------------+
+    |5-15              |Reserved              |
+    +------------------+----------------------+
 
 
 

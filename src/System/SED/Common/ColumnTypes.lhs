@@ -488,7 +488,6 @@ text
 
 -- \end{code}
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
 
 
 
@@ -569,6 +568,7 @@ integer,
 
 
 
+--------------------------------------------------------------------------------
 5.1.3.41 key_128
 
 This is an alternative type, with options for various key sizes.
@@ -3980,6 +3980,71 @@ Used in association with the Hour name-value pair.
     +-----------------------+-------------+-----------------+
 
 |]
+\end{code}
+
+
+
+5.1.3.38 integer
+
+This is the base type used to represent a signed integer.
+
+\begin{code}
+
+[ttype|
+
+                  Table 92 integer
+    +-----------------------+-------+----------+
+    |UID                    |Name   |Format    |
+    +-----------------------+-------+----------+
+    |00 00 00 05 00 00 00 04|integer|Base_Type |
+    +-----------------------+-------+----------+
+
+|]
+
+\end{code}
+
+
+5.1.3.39 integer_1
+
+This is an integer type with a size limit of 1 byte.
+
+\begin{code}
+
+[ttype|
+
+                   Table 93 integer_1
+    +-----------------------+---------+------------+
+    |UID                    |Name     |Format      |
+    +-----------------------+---------+------------+
+    |00 00 00 05 00 00 02 10|integer_1|Simple_Type,|
+    |                       |         |integer,    |
+    |                       |         |1           |
+    +-----------------------+---------+------------+
+
+|]
+
+\end{code}
+
+
+5.1.3.40 integer_2
+
+This is an integer type with a size limit of 2 bytes.
+
+\begin{code}
+
+[ttype|
+
+                   Table 94 integer_2
+    +-----------------------+---------+------------+
+    |UID                    |Name     |Format      |
+    +-----------------------+---------+------------+
+    |00 00 00 05 00 00 02 15|integer_2|Simple_Type,|
+    |                       |         |integer,    |
+    |                       |         |2           |
+    +-----------------------+---------+------------+
+
+|]
+
 \end{code}
 
 

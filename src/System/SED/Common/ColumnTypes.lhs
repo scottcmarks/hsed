@@ -488,54 +488,6 @@ text
 
 -- \end{code}
 --------------------------------------------------------------------------------
-5.1.3.31 feedback_size
-
-This uinteger type represents the feedback sizes for AES used in CFB mode. If AES Mode is CFB, this
-SHALL be between 1 and the block length.
-
-Table 83 feedback_size
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 14
-
-feedback_size
-
-Simple_Type,
-uinteger,
-2
---------------------------------------------------------------------------------
-5.1.3.32 Fraction
-
-Name-value pair that has a Name of "6" and takes fraction enum as the value.
-
-Table 84 Fraction
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 14 07
-
-Fraction
-
-Name_Value_Uinteger_Type,
-6,
-
-fraction_enum
-
-
-
-
-
 5.1.3.33 fraction_enum
 
 Used in association with the Fraction name-value pair.
@@ -556,6 +508,7 @@ fraction_enum
 Enumeration_Type,
 0,
 999
+--------------------------------------------------------------------------------
 
 
 
@@ -4070,6 +4023,78 @@ The enumeration values are associated as defined in Table 82.
     +-----------------+----------------+
     |2-15             |Reserved        |
     +-----------------+----------------+
+
+
+
+
+5.1.3.31 feedback_size
+
+This uinteger type represents the feedback sizes for AES used in CFB mode. If AES Mode is CFB, this
+SHALL be between 1 and the block length.
+
+-- \begin{code}
+
+[ttype|
+
+                     Table 83 feedback_size
+    +-----------------------+-------------+-----------------+
+    |UID                    |Name         |Format           |
+    +-----------------------+-------------+-----------------+
+    |00 00 00 05 00 00 18 04|feedback_size|Simple_Type,     |
+    |                       |             |uinteger,        |
+    |                       |             |2                |
+    +-----------------------+-------------+-----------------+
+
+|]
+
+-- \end{code}
+
+5.1.3.32 Fraction
+
+Name-value pair that has a Name of "6" and takes fraction enum as the value.
+
+-- \begin{code}
+
+[ttype|
+
+                     Table 84 Fraction
+    +-----------------------+---------+-------------------------+
+    |UID                    |Name     |Format                   |
+    +-----------------------+---------+-------------------------+
+    |00 00 00 05 00 00 14 07|Fraction |Name_Value_Uinteger_Type |
+    |                       |         |6,                       |
+    |                       |         |fraction_enum            |
+    +-----------------------+---------+-------------------------+
+
+|]
+
+-- \end{code}
+
+5.1.3.33 fraction_enum
+
+Used in association with the Fraction name-value pair.
+
+-- \begin{code}
+
+[ttype|
+
+                     Table 85 fraction_enum
+    +-----------------------+-------------+-----------------+
+    |UID                    |Name         |Format           |
+    +-----------------------+-------------+-----------------+
+    |00 00 00 05 00 00 18 04|fraction_enum|Enumeration_Type,|
+    |                       |             |0,               |
+    |                       |             |999              |
+    +-----------------------+-------------+-----------------+
+
+|]
+
+-- \end{code}
+
+
+
+
+
 
 
 

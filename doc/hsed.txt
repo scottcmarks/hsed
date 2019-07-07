@@ -713,6 +713,8 @@ uclock_timeType :: UID
 uColumn_object_refType :: UID
 ucred_object_uidrefType :: UID
 udateType :: UID
+uDayType :: UID
+uday_enumType :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

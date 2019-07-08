@@ -729,6 +729,13 @@ uinteger_1Type :: UID
 uinteger_2Type :: UID
 ukey_128Type :: UID
 ukey_256Type :: UID
+ukeys_avail_condsType :: UID
+ulagType :: UID
+ulast_reenc_statType :: UID
+ulife_cycle_stateType :: UID
+uLogList_object_refType :: UID
+ulog_row_refType :: UID
+ulog_selectType :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

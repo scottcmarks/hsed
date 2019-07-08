@@ -470,155 +470,25 @@ section
 
 text
 
--- \begin{code}
+\begin{code}
 
 [ttype|
 
                      Table etc.
-    +-----------------------+----+-----------------+
-    |UID                    |Name|Format           |
-    +-----------------------+----+-----------------+
-    |00 00 00 05 00 00 18 04|date|Struct_Type,     |
-    |                       |    |Year,            |
-    |                       |    |Month,           |
-    |                       |    |Day              |
-    +-----------------------+----+-----------------+
+    +-----------------------+-------+--------------+
+    |UID                    |Name   |Format        |
+    +-----------------------+-------+--------------+
+    |00 00 00 00 00 00 00 00|example|Core_Type,    |
+    |                       |       |count,        |
+    |                       |       |options       |
+    +-----------------------+-------+--------------+
 
 |]
 
--- \end{code}
+\end{code}
+
 --------------------------------------------------------------------------------
-
-
-
-
-5.1.3.38 integer
-
-This is the base type used to represent a signed integer.
-
-Table 92 integer
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 00 04
-
-integer
-
-Base_Type
-
-
-
-
-
-5.1.3.39 integer_1
-
-This is an integer type with a size limit of 1 byte.
-
-Table 93 integer_1
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 10
-
-integer_1
-
-Simple_Type,
-integer,
-
-1
-
-
-
-
-
-5.1.3.40 integer_2
-
-This is an integer type with a size limit of 2 bytes.
-
-Table 94 integer_2
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 15
-
-integer_2
-
-Simple_Type,
-integer,
-
-2
-
-
-
-
-
-
 --------------------------------------------------------------------------------
-5.1.3.41 key_128
-
-This is an alternative type, with options for various key sizes.
-
-Table 95 key_128
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 06 02
-
-key_128
-
-Alternative_Type,
-bytes_16,
-bytes_32
-
-
-
-
-
-5.1.3.42 key_256
-
-This is an alternative type, with options for various key sizes.
-
-Table 96 key_256
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 06 03
-
-key_256
-
-Alternative_Type,
-bytes_32,
-bytes_64
-
-
-
-
-
 5.1.3.43 keys_avail_conds
 
 This enumeration describes the conditions required to assert KeysAvailable in the Locking table.
@@ -1109,7 +979,7 @@ The enumeration values and their associations defined in Table 179.
 
 5.1.3.56 Minute
 
-Name-value pair that has a Name of "" and takes minute_enum as the value.
+Name-value pair that has a Name of "4" and takes minute_enum as the value.
 
 Table 114 Minute
 
@@ -4047,6 +3917,53 @@ This is an integer type with a size limit of 2 bytes.
 
 \end{code}
 
+
+--------------------------------------------------------------------------------
+5.1.3.41 key_128
+
+This is an alternative type, with options for various key sizes.section
+
+text
+
+\begin{code}
+
+[ttype|
+
+                     Table 95 key_128
+    +-----------------------+-------+-----------------+
+    |UID                    |Name   |Format           |
+    +-----------------------+-------+-----------------+
+    |00 00 00 05 00 00 06 02|key_128|Alternative_Type,|
+    |                       |       |bytes_16,        |
+    |                       |       |bytes_32         |
+    +-----------------------+-------+-----------------+
+
+|]
+
+\end{code}
+
+
+5.1.3.42 key_256
+
+This is an alternative type, with options for various key sizes.
+
+
+\begin{code}
+
+[ttype|
+
+                     Table 96 key_256
+    +-----------------------+-------+-----------------+
+    |UID                    |Name   |Format           |
+    +-----------------------+-------+-----------------+
+    |00 00 00 05 00 00 06 03|key_256|Alternative_Type,|
+    |                       |       |bytes_32,        |
+    |                       |       |bytes_64         |
+    +-----------------------+-------+-----------------+
+
+|]
+
+\end{code}
 
 
 

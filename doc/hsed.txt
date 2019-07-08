@@ -585,6 +585,7 @@ instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRow
 
 -- | Table column types.
 module System.SED.Common.ColumnTypes
+uexampleType :: UID
 type TPer a = Reader Env a
 data Env
 Env :: Core -> Implementation -> SSC -> Env
@@ -723,6 +724,11 @@ ugen_statusType :: UID
 uhash_protocolType :: UID
 uHourType :: UID
 uhour_enumType :: UID
+uintegerType :: UID
+uinteger_1Type :: UID
+uinteger_2Type :: UID
+ukey_128Type :: UID
+ukey_256Type :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

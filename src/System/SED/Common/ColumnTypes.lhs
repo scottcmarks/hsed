@@ -34,13 +34,15 @@ module System.SED.Common.ColumnTypes where
 
 import           Control.Monad.Trans.Reader       (Reader)
 import           Control.Monad.Reader.Class       (asks)
+
 import           Data.Foldable                    (elem)
 import           Data.Functor                     ((<$>))
 import           Data.Maybe                       (maybe)
 import           Data.Set                         (Set)
 import           Data.String                      (IsString(..))
 
-import           GHC.Base                         (id, otherwise, pure, ($), (.), (>>=))
+import           GHC.Base                         (id, otherwise, pure,
+                                                   ($), (.), (>>=))
 import           GHC.Classes                      (Eq(..), Ord(..))
 import           GHC.Enum                         (Enum(..))
 import           GHC.List                         (map)
@@ -53,7 +55,9 @@ import           GHC.TypeNats                     (KnownNat)
 
 import           Test.QuickCheck                  () -- FIXME
 
+
 import           Extras.Bytes                     (Fixed_bytes)
+
 import           System.SED.Common.ColumnTypes.TH (ttype)
 import           System.SED.Common.TableUIDs      () -- FIXME
 import           System.SED.Common.UID            (UID, uidUpper, uidLower)
@@ -487,340 +491,24 @@ text
 
 \end{code}
 
+
+
+The enumeration values are associated as defined in Table foo.
+
+                Table foo
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |0                |                   |
+    +-----------------+-------------------+
+    |1                |                   |
+    +-----------------+-------------------+
+    |2                |                   |
+    +-----------------+-------------------+
+    |3                |                   |
+    +-----------------+-------------------+
+
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-5.1.3.43 keys_avail_conds
-
-This enumeration describes the conditions required to assert KeysAvailable in the Locking table.
-
-Table 97 keys_avail_conds
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 10
-
-keys_avail_conds
-
-Enumeration_Type,
-0,
-7
-
-
-
-
-
-The enumeration values are associated as defined in Table 98.
-
-Table 98 keys_avail_conds Enumeration Values
-
-
-Enumeration
-Value
-
-Associated Value
-
-0
-
-None
-
-1
-
-Authentication of an authority with Set access to any of the ReadLocked,
-WriteLocked, ReadLockEnabled or WriteLockEnabled columns for that LBA range
-
-2-7
-
-Reserved
-
-
-
-
-
-5.1.3.44 lag
-
-A struct made up of 2 uinteger_2 name-value types, used to define the lag when setting time. The two
-types represent seconds and fraction of seconds. The names required, as defined by the component
-types, are 0x05 ("Seconds") for the first value and 0x06 ("Fraction") for the second. The "Fraction" value
-is a number of milliseconds.
-
-Table 99 lag
-
-
-UID
-
-Name
-
-Format
-
-
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 18 02
-
-lag
-
-Struct_Type,
-Seconds,
-Fraction
-
-
-
-
-
-5.1.3.45 last_reenc_stat
-
-This enumeration identifies the last attempted re-encryption step.
-
-Table 100 last_reenc_stat
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 11
-
-last_reenc_stat
-
-Enumeration_Type,
-0,
-7
-
-
-
-
-
-The enumeration values are associated as defined in Table 101.
-
-Table 101 last_reenc_stat Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-Success
-
-1
-
-Read Error
-
-2
-
-Write Error
-
-3
-
-Verify Eror
-
-4-7
-
-Reserved
-
-
-
-
-
-5.1.3.46 life_cycle_state
-
-This enumeration is used to represent the current life cycle state of the SP.
-
-Table 102 life_cycle_state
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 05
-
-life_cycle_state
-
-Enumeration_Type,
-0,
-15
-
-
-
-
-
-The enumeration values are associated as defined in Table 103.
-
-Table 103 life_cycle_state Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-Issued
-
-1
-
-Issued-Disabled
-
-2
-
-Issued-Frozen
-
-3
-
-Issued-Disabled-Frozen
-
-4
-
-Issued-Failed
-
-
-
-
-Enumeration Value
-
-Associated Value
-
-5-7
-
-Unassigned
-
-8-13
-
-Reserved for SSC Usage
-
-14-15
-
-Unassigned
-
-
-
-
-
-5.1.3.47 LogList_object_ref
-
-The LogList_object_ref type describes a uidref to an object in the LogList table.
-
-Table 104 LogList_object_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 0D
-
-LogList_object_ref
-
-Restricted_Reference_Type{6},
-uidref {LogListTableUID}
-
-
-
-
-
-5.1.3.48 log_row_ref
-
-This type SHALL be used specifically for rows in Log tables. When performing type checking, as part of
-that type checking the TPer SHALL validate that this is the uid of a row in a Log table.
-
-The * in the Format column of Table 105 indicates that other Log tables besides the default log MAY
-exist in a particular SP, and that the Format column value for this type also includes those.
-
-Table 105 log_row_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 0A
-
-log_row_ref
-
-Restricted_Reference_Type {6},
-uidref{LogTableUID},
-*
-
-
-
-
-
-5.1.3.49 log_select
-
-This enumeration is used to identify the scope of the logging for an access control association or
-authority authentication.
-
-Table 106 log_select
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 0C
-
-log_select
-
-Enumeration_Type,
-0,
-3
-
-
-
-
-
-The enumeration values are associated as defined in Table 107.
-
-Table 107 log_select Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-None
-
-1
-
-LogSuccess
-
-2
-
-LogFail
-
-3
-
-LogAlways
-
-
-
-
-
 
 5.1.3.50 max_bytes
 
@@ -3918,7 +3606,6 @@ This is an integer type with a size limit of 2 bytes.
 \end{code}
 
 
---------------------------------------------------------------------------------
 5.1.3.41 key_128
 
 This is an alternative type, with options for various key sizes.section
@@ -3967,9 +3654,245 @@ This is an alternative type, with options for various key sizes.
 
 
 
+
+5.1.3.43 keys_avail_conds
+
+This enumeration describes the conditions required to assert KeysAvailable in the Locking table.
+
+\begin{code}
+
+[ttype|
+
+                      Table 97 keys_avail_conds
+    +-----------------------+----------------+-----------------+
+    |UID                    |Name            |Format           |
+    +-----------------------+----------------+-----------------+
+    |00 00 00 05 00 00 04 10|keys_avail_conds|Enumeration_Type,|
+    |                       |                |0,               |
+    |                       |                |7                |
+    +-----------------------+----------------+-----------------+
+
+|]
+
+\end{code}
+
+
+The enumeration values are associated as defined in Table 98.
+
+
+                          Table 98 keys_avail_conds Enumeration Values
+    +-----------+---------------------------------------------------------------------------+
+    |Enumeration|Associated Value                                                           |
+    |Value      |                                                                           |
+    +-----------+---------------------------------------------------------------------------+
+    |0          |None                                                                       |
+    +-----------+---------------------------------------------------------------------------+
+    |1          |Authentication of an authority with Set access to any of the ReadLocked,   |
+    |           |WriteLocked, ReadLockEnabled or WriteLockEnabled columns for that LBA range|
+    +-----------+---------------------------------------------------------------------------+
+    |2-7        |Reserved                                                                   |
+    +-----------+---------------------------------------------------------------------------+
+
+
+
+5.1.3.44 lag
+
+A struct made up of 2 uinteger_2 name-value types, used to define the lag when setting time. The two
+types represent seconds and fraction of seconds. The names required, as defined by the component
+types, are 0x05 ("Seconds") for the first value and 0x06 ("Fraction") for the second. The "Fraction" value
+is a number of milliseconds.
+
+\begin{code}
+
+[ttype|
+
+                   Table 99 lag
+    +-----------------------+----+------------+
+    |UID                    |Name|Format      |
+    +-----------------------+----+------------+
+    |00 00 00 05 00 00 18 02|lag |Struct_Type,|
+    |                       |    |Seconds,    |
+    |                       |    |Fraction    |
+    +-----------------------+----+------------+
+
+|]
+
+\end{code}
+
+5.1.3.45 last_reenc_stat
+
+This enumeration identifies the last attempted re-encryption step.
+
+\begin{code}
+
+[ttype|
+
+                     Table 100 last_reenc_stat
+    +-----------------------+---------------+-----------------+
+    |UID                    |Name           |Format           |
+    +-----------------------+---------------+-----------------+
+    |00 00 00 05 00 00 04 11|last_reenc_stat|Enumeration_Type,|
+    |                       |               |0,               |
+    |                       |               |7                |
+    +-----------------------+---------------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values are associated as defined in Table 101.
+
+     Table 101 last_reenc_stat Enumeration Values
+    +-----------------+--------------------------+
+    |Enumeration Value|Associated Value          |
+    +-----------------+--------------------------+
+    |0                |Success                   |
+    +-----------------+--------------------------+
+    |1                |Read Error                |
+    +-----------------+--------------------------+
+    |2                |Write Error               |
+    +-----------------+--------------------------+
+    |3                |Verify Error              |
+    +-----------------+--------------------------+
+    |4-7              |Reserved                  |
+    +-----------------+--------------------------+
+
+
+5.1.3.46 life_cycle_state
+
+This enumeration is used to represent the current life cycle state of the SP.
+
+\begin{code}
+
+[ttype|
+
+                     Table 102 life_cycle_state
+    +-----------------------+----------------+-----------------+
+    |UID                    |Name            |Format           |
+    +-----------------------+----------------+-----------------+
+    |00 00 00 05 00 00 04 05|life_cycle_state|Enumeration_Type,|
+    |                       |                |0,               |
+    |                       |                |15               |
+    +-----------------------+----------------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values are associated as defined in Table 103.
+
+    Table 103 life_cycle_state Enumeration Values
+    +-----------------+--------------------------+
+    |Enumeration Value|Associated Value          |
+    +-----------------+--------------------------+
+    |0                |Issued                    |
+    +-----------------+--------------------------+
+    |1                |Issued-Disabled           |
+    +-----------------+--------------------------+
+    |2                |Issued-Frozen             |
+    +-----------------+--------------------------+
+    |3                |Issued-Disabled-Frozen    |
+    +-----------------+--------------------------+
+    |4                |Issued-Failed             |
+    +-----------------+--------------------------+
+    |5-7              |Unassigned                |
+    +-----------------+--------------------------+
+    |8-13             |Reserved for SSC Usage    |
+    +-----------------+--------------------------+
+    |14-15            |Unassigned                |
+    +-----------------+--------------------------+
+
+5.1.3.47 LogList_object_ref
+
+The LogList_object_ref type describes a uidref to an object in the LogList table.
+
+\begin{code}
+
+[ttype|
+
+                              Table 104 LogList_object_ref
+    +-----------------------+-------------------------+-----------------------------+
+    |UID                    |Name                     |Format                       |
+    +-----------------------+-------------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 0D|LogList_object_ref       |Restricted_Reference_Type{6},|
+    |                       |                         |uidref {LogListTableUID}     |
+    +-----------------------+-------------------------+-----------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.48 log_row_ref
+
+This type SHALL be used specifically for rows in Log tables. When performing type checking, as part of
+that type checking the TPer SHALL validate that this is the uid of a row in a Log table.
+
+The * in the Format column of Table 105 indicates that other Log tables besides the default log MAY
+exist in a particular SP, and that the Format column value for this type also includes those.
+
+\begin{code}
+
+[ttype|
+
+                        Table 105 log_row_ref
+    +-----------------------+-----------+-------------------------+
+    |UID                    |Name       |Format                   |
+    +-----------------------+-----------+-------------------------+
+    |00 00 00 05 00 00 0C 0A|log_row_ref|Restricted_Reference_Type|
+    |                       |           |{6},                     |
+    |                       |           |uidref{LogTableUID},     |
+    |                       |           |*                        |
+    +-----------------------+-----------+-------------------------+
+
+|]
+
+\end{code}
+
+
+5.1.3.49 log_select
+
+This enumeration is used to identify the scope of the logging for an access control association or
+authority authentication.
+
+\begin{code}
+
+[ttype|
+
+                     Table 106 log_select
+    +-----------------------+----------+-----------------+
+    |UID                    |Name      |Format           |
+    +-----------------------+----------+-----------------+
+    |00 00 00 05 00 00 04 0C|log_select|Enumeration_Type,|
+    |                       |          |0,               |
+    |                       |          |3                |
+    +-----------------------+----------+-----------------+
+
+|]
+
+\end{code}
+
+
+The enumeration values are associated as defined in Table 107.
+
+    Table 107 log_select Enumeration Values
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |0                |None               |
+    +-----------------+-------------------+
+    |1                |LogSuccess         |
+    +-----------------+-------------------+
+    |2                |LogFail            |
+    +-----------------+-------------------+
+    |3                |LogAlways          |
+    +-----------------+-------------------+
 --------------------------------------------------------------------------------
 
 
+
+
+
+--------------------------------------------------------------------------------
 \begin{code}
 
 

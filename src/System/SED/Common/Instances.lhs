@@ -19,8 +19,9 @@ Orphan instances.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE NoImplicitPrelude    #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE TypeApplications     #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 
@@ -61,7 +62,7 @@ instance (KnownNat n) => StreamItem (Fixed_bytes n) where
         case tok of
             Bytes bs -> pure $ fpack bs
             _        -> fail $ mconcat [ "Wrong token type for Fixed_bytes "
-                                       , show (intVal (Proxy :: Proxy n) :: Int)
+                                       , show (intVal (Proxy @n) ::Int)
                                        , ": "
                                        , show tok
                                        ]

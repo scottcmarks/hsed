@@ -479,13 +479,13 @@ text
 [ttype|
 
                      Table etc.
-    +-----------------------+-------+--------------+
-    |UID                    |Name   |Format        |
-    +-----------------------+-------+--------------+
-    |00 00 00 00 00 00 00 00|example|Core_Type,    |
-    |                       |       |count,        |
-    |                       |       |options       |
-    +-----------------------+-------+--------------+
+    +-----------------------+----------+--------------+
+    |UID                    |Name      |Format        |
+    +-----------------------+----------+--------------+
+    |00 00 00 00 00 00 00 00|example'  |Core_Type,    |
+    |                       |          |count,        |
+    |                       |          |options       |
+    +-----------------------+----------+--------------+
 
 |]
 
@@ -509,214 +509,7 @@ The enumeration values are associated as defined in Table foo.
     +-----------------+-------------------+
 
 --------------------------------------------------------------------------------
-
-5.1.3.50 max_bytes
-
-This is the base type that is used to represent a bytes value that is equal to or less than the size
-specified for the type instance.
-
-Table 108 max_bytes
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 00 03
-
-max_bytes
-
-Base_Type
-
-
-
-
-
-5.1.3.51 max_bytes_32
-
-This is a max bytes type that provides a maximum size of 32.
-
-Table 109 max_bytes_32
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 0D
-
-max_bytes_32
-
-Simple_Type,
-max_bytes,
-
-32
-
-
-
-
-
-5.1.3.52 max_bytes_64
-
-This is a max bytes type that provides a maximum size of 64.
-
-Table 110 max_bytes_64
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 0E
-
-max_bytes_64
-
-Simple_Type,
-max_bytes,
-
-64
-
-
-
-
-
-5.1.3.53 mediakey_obj_uidref
-
-This is a restricted reference type that SHALL be used specifically for uidrefs to media encryption key
-objects (in the K_* tables). When performing type checking, as part of that type checking the TPer
-SHALL validate that this uidref is to an object in a media encryption key table.
-
-Table 111 mediakey_obj_uidref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 0C
-
-mediakey_object_uidref
-
-Restricted_Reference_Type{6},
-uidref {K_AES_128TableUID},
-uidref {K_AES_256TableUID}
-
-
-
-
-
-5.1.3.54 MethodID_object _ref
-
-The MethodID_object _ref type describes a uidref to an object in the MethodID table.
-
-Table 112 MethodID_object _ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 03
-
-MethodID_object_ref
-
-Restricted_Reference_Type{6},
-uidref {MethodIDTableUID}
-
-
-
-
-
-
-5.1.3.55 messaging_type
-
-This enumeration is used to describe the options for selecting secure messaging.
-
-Table 113 messaging_type
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 04
-
-messaging_type
-
-Enumeration_Type,
-0,
-255
-
-
-
-
-
-The enumeration values and their associations defined in Table 179.
-
-5.1.3.56 Minute
-
-Name-value pair that has a Name of "4" and takes minute_enum as the value.
-
-Table 114 Minute
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 14 05
-
-Minute
-
-Name_Value_Uinteger_Type,
-
-4,
-
-minute_enum
-
-
-
-
-
-5.1.3.57 minute_enum
-
-Used in association with the Minute name-value pair.
-
-Table 115 minute_enum
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 1A
-
-minute_enum
-
-Enumeration_Type,
-0,
-59
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.58 Month
 
 Name-value pair that has a Name of "1" and takes month_enum as the value.
@@ -3886,7 +3679,180 @@ The enumeration values are associated as defined in Table 107.
     +-----------------+-------------------+
     |3                |LogAlways          |
     +-----------------+-------------------+
+
+
+5.1.3.50 max_bytes
+
+This is the base type that is used to represent a bytes value that is equal to or less than the size
+specified for the type instance.
+
+\begin{code}
+
+[ttype|
+
+                 Table 108 max_bytes
+    +-----------------------+---------+---------+
+    |UID                    |Name     |Format   |
+    +-----------------------+---------+---------+
+    |00 00 00 05 00 00 00 03|max_bytes|Base_Type|
+    +-----------------------+---------+---------+
+
+|]
+
+\end{code}
+
+5.1.3.51 max_bytes_32
+
+This is a max bytes type that provides a maximum size of 32.
+
+\begin{code}
+
+[ttype|
+
+                  Table 109 max_bytes_32
+    +-----------------------+------------+------------+
+    |UID                    |Name        |Format      |
+    +-----------------------+------------+------------+
+    |00 00 00 05 00 00 02 0D|max_bytes_32|Simple_Type,|
+    |                       |            |max_bytes,  |
+    |                       |            |32          |
+    +-----------------------+------------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.52 max_bytes_64
+
+This is a max bytes type that provides a maximum size of 64.
+
+\begin{code}
+
+[ttype|
+
+                  Table 110 max_bytes_64
+    +-----------------------+------------+------------+
+    |UID                    |Name        |Format      |
+    +-----------------------+------------+------------+
+    |00 00 00 05 00 00 02 0E|max_bytes_64|Simple_Type,|
+    |                       |            |max_bytes,  |
+    |                       |            |64          |
+    +-----------------------+------------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.53 mediakey_obj_uidref
+
+This is a restricted reference type that SHALL be used specifically for uidrefs to media encryption key
+objects (in the K_* tables). When performing type checking, as part of that type checking the TPer
+SHALL validate that this uidref is to an object in a media encryption key table.
+
+\begin{code}
+
+[ttype|
+
+                            Table 111 mediakey_obj_uidref
+    +-----------------------+----------------------+-----------------------------+
+    |UID                    |Name                  |Format                       |
+    +-----------------------+----------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 0C|mediakey_object_uidref|Restricted_Reference_Type{6},|
+    |                       |                      |uidref {K_AES_128TableUID},  |
+    |                       |                      |uidref {K_AES_256TableUID}   |
+    +-----------------------+----------------------+-----------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.54 MethodID_object _ref
+
+The MethodID_object _ref type describes a uidref to an object in the MethodID table.
+
+\begin{code}
+
+[ttype|
+
+    Table 112 MethodID_object _ref
+    +-----------------------+-------------------+-----------------------------+
+    |UID                    |Name               |Format                       |
+    +-----------------------+-------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 03|MethodID_object_ref|Restricted_Reference_Type{6},|
+    |                       |                   |uidref {MethodIDTableUID}    |
+    +-----------------------+-------------------+-----------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.55 messaging_type
+
+This enumeration is used to describe the options for selecting secure messaging.
+
+\begin{code}
+
+[ttype|
+
+    Table 113 messaging_type
+    +-----------------------+--------------+-----------------+
+    |UID                    |Name          |Format           |
+    +-----------------------+--------------+-----------------+
+    |00 00 00 05 00 00 04 04|messaging_type|Enumeration_Type,|
+    |                       |              |0,               |
+    |                       |              |255              |
+    +-----------------------+--------------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values and their associations defined in Table 179.
 --------------------------------------------------------------------------------
+5.1.3.56 Minute
+
+Name-value pair that has a Name of "4" and takes minute_enum as the value.
+
+\begin{code}
+
+[ttype|
+
+                         Table 114 Minute
+    +-----------------------+------+-------------------------+
+    |UID                    |Name  |Format                   |
+    +-----------------------+------+-------------------------+
+    |00 00 00 05 00 00 14 05|Minute|Name_Value_Uinteger_Type,|
+    |                       |      |4,                       |
+    |                       |      |minute_enum              |
+    +-----------------------+------+-------------------------+
+
+|]
+
+\end{code}
+
+
+5.1.3.57 minute_enum
+
+Used in association with the Minute name-value pair.
+
+\begin{code}
+
+[ttype|
+
+                     Table 115 minute_enum
+    +-----------------------+-----------+-----------------+
+    |UID                    |Name       |Format           |
+    +-----------------------+-----------+-----------------+
+    |00 00 00 05 00 00 04 1A|minute_enum|Enumeration_Type,|
+    |                       |           |0,               |
+    |                       |           |59               |
+    +-----------------------+-----------+-----------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
+
 
 
 

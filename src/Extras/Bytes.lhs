@@ -20,9 +20,10 @@ Datatypes for Tokens.
 
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE ExplicitNamespaces    #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DataKinds             #-}
@@ -83,7 +84,7 @@ instance (KnownNat n) => Show (Fixed_bytes n) where
             showString "fpack "
           . showList (unpack $ unwrap sbs)
           . showString " :: Fixed_bytes "
-          . showString (show (natVal (Proxy :: Proxy n)))
+          . showString (show (natVal (Proxy @n)))
          where app_prec = 10
 
 -- | ISString instances, allowing string literal denotations
@@ -92,7 +93,7 @@ instance (KnownNat n) => IsString (Fixed_bytes n) where
     fromString s = Fixed_bytes $! case create (fromString s) of
                       Just ssbs -> ssbs
                       Nothing -> error $
-                          mconcat [ show (natVal (Proxy :: Proxy n))
+                          mconcat [ show (natVal (Proxy @n))
                                   , " is not the length of "
                                   , show s
                                   , " (which is of length "
@@ -117,7 +118,7 @@ instance (KnownNat n) => HasFixed_bytes n Natural where
                         [ "Can not represent "
                         , show nat
                         , " by a value of type Fixed_bytes "
-                        , show (natVal (Proxy :: Proxy n))
+                        , show (natVal (Proxy @n))
                         ]
     fromFixed_bytes = byteStringToNatural . fromFixed_bytes
 
@@ -129,7 +130,7 @@ instance (KnownNat n) => HasFixed_bytes n ShortByteString where
     toFixed_bytes sbs =
         case (create sbs) :: Maybe (Static ShortByteString n) of
           Just ssbs -> toFixed_bytes ssbs
-          Nothing   -> error $ mconcat [ show (natVal (Proxy :: Proxy n))
+          Nothing   -> error $ mconcat [ show (natVal (Proxy @n))
                                        , " is not the length of "
                                        , show sbs
                                        , " (which is of length "

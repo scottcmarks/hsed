@@ -389,35 +389,35 @@ type Core_bytes_32 Core_bytes_322437,2438
 type Core_bytes_48 Core_bytes_482464,2465
 type Core_bytes_64 Core_bytes_642493,2494
 newtype Core_Certificates_object_ref Core_Certificates_object_ref2521,2522
-type Core_uidref Core_uidref3696,3697
-implementationDependant_AC_elementSize implementationDependant_AC_elementSize3700,3701
-implementationDependant_max_columns implementationDependant_max_columns3703,3704
-imp' imp'3706,3707
-ssc_AC_elementMinSize ssc_AC_elementMinSize3713,3714
-ssc_min_max_columns ssc_min_max_columns3716,3717
-_max_columns _max_columns3719,3720
-_min_max_columns _min_max_columns3722,3723
-ssc' ssc'3727,3728
-core' core'3735,3736
-newtype Core_General_Reference_Type_Byte_Row Core_General_Reference_Type_Byte_Row3741,3742
-newtype Core_General_Reference_Type_Object Core_General_Reference_Type_Object3744,3745
-mkCore_General_object_ref mkCore_General_object_ref3747,3748
-data Core_table_kind Core_table_kind3751,3752
-data Core_table_kind = ByteTable ByteTable3751,3752
-data Core_table_kind = ByteTable | ObjectTableObjectTable3751,3752
-data General_Reference_Table_Type General_Reference_Table_Type3754,3755
-data General_Reference_Table_Type (a:a3754,3755
-  General_Reference_Table_Type_Byte General_Reference_Table_Type_Byte3755,3756
-  General_Reference_Table_Type_Object General_Reference_Table_Type_Object3756,3757
-data General_Reference_Table_Type (a:a3754,3755
-type Core_Reference_UID_List Core_Reference_UID_List3762,3763
-data Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3764,3765
-     Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3765,3766
-mkCore_Restricted_object_ref mkCore_Restricted_object_ref3767,3768
-    | uidUpper objectUID `elem`elem3772,3773
-mkCore_Restricted_object_ref_To mkCore_Restricted_object_ref_To3777,3778
-env env3785,3786
-max_columns max_columns3808,3809
+type Core_uidref Core_uidref3720,3721
+implementationDependant_AC_elementSize implementationDependant_AC_elementSize3724,3725
+implementationDependant_max_columns implementationDependant_max_columns3727,3728
+imp' imp'3730,3731
+ssc_AC_elementMinSize ssc_AC_elementMinSize3737,3738
+ssc_min_max_columns ssc_min_max_columns3740,3741
+_max_columns _max_columns3743,3744
+_min_max_columns _min_max_columns3746,3747
+ssc' ssc'3751,3752
+core' core'3759,3760
+newtype Core_General_Reference_Type_Byte_Row Core_General_Reference_Type_Byte_Row3765,3766
+newtype Core_General_Reference_Type_Object Core_General_Reference_Type_Object3768,3769
+mkCore_General_object_ref mkCore_General_object_ref3771,3772
+data Core_table_kind Core_table_kind3775,3776
+data Core_table_kind = ByteTable ByteTable3775,3776
+data Core_table_kind = ByteTable | ObjectTableObjectTable3775,3776
+data General_Reference_Table_Type General_Reference_Table_Type3778,3779
+data General_Reference_Table_Type (a:a3778,3779
+  General_Reference_Table_Type_Byte General_Reference_Table_Type_Byte3779,3780
+  General_Reference_Table_Type_Object General_Reference_Table_Type_Object3780,3781
+data General_Reference_Table_Type (a:a3778,3779
+type Core_Reference_UID_List Core_Reference_UID_List3786,3787
+data Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3788,3789
+     Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3789,3790
+mkCore_Restricted_object_ref mkCore_Restricted_object_ref3791,3792
+    | uidUpper objectUID `elem`elem3796,3797
+mkCore_Restricted_object_ref_To mkCore_Restricted_object_ref_To3801,3802
+env env3809,3810
+max_columns max_columns3832,3833
 
 ./src/System/SED/Common/ColumnTypes/TH.lhs,1090
 module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH25,26

@@ -3663,7 +3663,6 @@ The enumeration values are associated as defined in Table 121.
     |5-15             |Reserved           |
     +-----------------+-------------------+
 
---------------------------------------------------------------------------------
 5.1.3.63 password
 
 This max bytes type, with a size limitation of 32, is used in the C_PIN table.
@@ -3685,6 +3684,31 @@ This max bytes type, with a size limitation of 32, is used in the C_PIN table.
 
 \end{code}
 --------------------------------------------------------------------------------
+5.1.3.64 protect_types
+
+This set is used to identify the protection mechanisms in operation when a column is identified as
+hidden.
+
+\begin{code}
+
+[ttype|
+
+                   Table 123 protect_types
+    +-----------------------+-------------+--------------+
+    |UID                    |Name         |Format        |
+    +-----------------------+-------------+--------------+
+    |00 00 00 05 00 00 1A 05|protect_types|Set_Type,     |
+    |                       |             |0,            |
+    |                       |             |255           |
+    +-----------------------+-------------+--------------+
+
+|]
+
+\end{code}
+
+The empty set indicates that keys are not hidden. The values of the set are all applied to the protected
+value. The set values are assigned in [3].
+
 
 
 

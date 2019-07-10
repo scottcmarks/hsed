@@ -470,6 +470,22 @@ Example: F0 tokenized_value tokenized_value F1
 
 --------------------------------------------snip--------------------------------------------
 --------------------------------------------------------------------------------
+text
+
+                Table foo
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |0                |                   |
+    +-----------------+-------------------+
+    |1                |                   |
+    +-----------------+-------------------+
+    |2                |                   |
+    +-----------------+-------------------+
+    |3                |                   |
+    +-----------------+-------------------+
+
+--------------------------------------------------------------------------------
 section
 
 text
@@ -490,227 +506,7 @@ text
 |]
 
 \end{code}
-
-
-
-The enumeration values are associated as defined in Table foo.
-
-                Table foo
-    +-----------------+-------------------+
-    |Enumeration Value|Associated Value   |
-    +-----------------+-------------------+
-    |0                |                   |
-    +-----------------+-------------------+
-    |1                |                   |
-    +-----------------+-------------------+
-    |2                |                   |
-    +-----------------+-------------------+
-    |3                |                   |
-    +-----------------+-------------------+
-
 --------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-5.1.3.58 Month
-
-Name-value pair that has a Name of "1" and takes month_enum as the value.
-
-Table 116 Month
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 14 02
-
-Month
-
-Name_Value_Uinteger_Type,
-
-1,
-
-month_enum
-
-
-
-
-
-
-
-5.1.3.59 month_enum
-
-Used in association with the Month name-value pair.
-
-Table 117 month_enum
-
-
-UID
-
-Name
-
-Format
-
-
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 17
-
-month_enum
-
-Enumeration_Type,
-1,
-12
-
-
-
-
-
-5.1.3.60 name
-
-This max bytes type, with a size limitation of 32, is used to represent names.
-
-Table 118 name
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 0B
-
-name
-
-Simple_Type,
-max_bytes,
-32
-
-
-
-
-
-5.1.3.61 object_ref
-
-Type used for referencing an object in an object table.
-
-Table 119 object_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0F 02
-
-object_ref
-
-General_Reference_Type {8}
-
-
-
-
-
-5.1.3.62 padding_type
-
-This enumeration is used to identify the type of padding used with RSA encryption. RSAES-PKCS1-
-v1_5 or RSAES-OAEP (see [18]) SHALL be used for RSA encryption. RSASSA-PKCS1-v1_5 or
-RSASSA-PSS (see [18]) SHALL be used for RSA signing.
-
-Table 120 padding_type
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 06
-
-padding_type
-
-Enumeration_Type,
-0,
-15
-
-
-
-
-
-The enumeration values are associated as defined in Table 121.
-
-Table 121 padding_type Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-None
-
-1
-
-None
-
-2
-
-RSAES-PKCS1-v1_5
-
-3
-
-RSAES-OAEP
-
-4
-
-RSASSA-PKCS1-v1_5
-
-5-15
-
-Reserved
-
-
-
-
-
-
-5.1.3.63 password
-
-This max bytes type, with a size limitation of 32, is used in the C_PIN table.
-
-Table 122 password
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 0C
-
-password
-
-Simple_Type,
-max_bytes,
-32
-
-
-
-
-
 5.1.3.64 protect_types
 
 This set is used to identify the protection mechanisms in operation when a column is identified as
@@ -732,14 +528,10 @@ protect_types
 Set_Type,
 0,
 255
-
-
-
-
-
 The empty set indicates that keys are not hidden. The values of the set are all applied to the protected
 value. The set values are assigned in [3].
 
+--------------------------------------------------------------------------------
 5.1.3.65 reencrypt_request
 
 This enumeration is used to identify the host re-encryption request value.
@@ -767,6 +559,7 @@ Enumeration_Type,
 
 The enumeration values are associated as defined in 5.7.2.2.14.
 
+--------------------------------------------------------------------------------
 5.1.3.66 reencrypt_state
 
 This enumeration type identifies the present re-encryption state for an LBA range.
@@ -828,6 +621,7 @@ Reserved
 
 
 
+--------------------------------------------------------------------------------
 5.1.3.67 reset_types
 
 This Set type identifies the various TCG reset options available.
@@ -886,6 +680,7 @@ Vendor Unique
 
 
 
+--------------------------------------------------------------------------------
 5.1.3.68 Seconds
 
 Name-value pair that has a Name of "5" and takes seconds_enum as the value.
@@ -906,14 +701,7 @@ Seconds
 Name_Value_Uinteger_Type,
 5,
 seconds_enum
-
-
-
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.69 seconds_enum
 
 Used in association with the Seconds name-value pair.
@@ -934,11 +722,7 @@ seconds_enum
 Enumeration_Type,
 0,
 59
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.70 SPTemplates_object _ref
 
 The SPTemplates_object _ref type describes a uidref to an object in the SPTemplates table.
@@ -958,11 +742,7 @@ SPTemplates_object_ref
 
 Restricted_Reference_Type{6},
 uidref{SPTemplatesTableUID}
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.71 SSC
 
 This is a list of names used to represent the SSCs that a TPer supports.
@@ -983,11 +763,7 @@ SSC
 List_Type,
 *,
 name
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.72 symmetric_mode
 
 Defines the mode to be used with an AES credential.
@@ -1081,10 +857,7 @@ XEX
 
 Reserved
 
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.73 symmetric_mode_media
 
 Defines the modes availableto be used with AES for user data encryption.
@@ -1180,6 +953,7 @@ Media Encryption
 
 
 
+--------------------------------------------------------------------------------
 5.1.3.74 table_kind
 
 Defines the kinds of tables.
@@ -1230,6 +1004,7 @@ Reserved
 
 
 
+--------------------------------------------------------------------------------
 5.1.3.75 table_or_object_ref
 
 This alternative type defines a reference to either the uid of a table or the uid of some object, or the UID
@@ -1256,6 +1031,7 @@ table_ref
 
 
 
+--------------------------------------------------------------------------------
 5.1.3.76 Table_object _ref
 
 The Table_object _ref type describes a uidref to an object in the Table table.
@@ -1275,11 +1051,7 @@ Table_object_ref
 
 Restricted_Reference_Type{6},
 uidref {TableTableUID}
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.77 table_ref
 
 Type used for referencing a table.
@@ -1298,14 +1070,8 @@ Format
 table_ref
 
 General_Reference_Type {9}
+--------------------------------------------------------------------------------
 
-
-
-
-
-
-
-
 5.1.3.78 Template_object _ref
 
 The Template_object _ref type describes a uidref to an object in the Admin SP's Template table.
@@ -1325,11 +1091,7 @@ Template_object_ref
 
 Restricted_Reference_Type{6},
 uidref {TemplateTableUID}
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.79 type_def
 
 The type_def type describes the format of the Type table's Format column. The value in the Format
@@ -1352,11 +1114,7 @@ type_def
 Simple_Type,
 max_bytes,
 *
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.80 Type_object _ref
 
 The Type_object _ref type describes a uidref to an object in the Type table.
@@ -1376,11 +1134,7 @@ Type_object_ref
 
 Restricted_Reference_Type{6},
 uidref {TypeTableUID}
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.81 uid
 
 This is the type used for the UID column of object tables.
@@ -1401,11 +1155,7 @@ uid
 Simple_Type,
 bytes,
 8
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.82 uinteger
 
 This is the base type that is used to represent an unsigned integer.
@@ -1424,10 +1174,7 @@ Format
 uinteger
 
 Base_Type
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.83 uinteger_1
 
 This is a uinteger type with a size restriction of 1 byte.
@@ -1449,11 +1196,7 @@ Simple_Type,
 
 uinteger,
 1
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.84 uinteger_128
 
 This is a uinteger type with a size restriction of 128 bytes.
@@ -1475,11 +1218,7 @@ Simple_Type,
 
 uinteger,
 128
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.85 uinteger_2
 
 This is a uinteger type with a size restriction of 2 bytes.
@@ -1501,11 +1240,7 @@ Simple_Type,
 
 uinteger,
 2
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.86 uinteger_20
 
 This is a uinteger type with a size restriction of 20 bytes.
@@ -1527,11 +1262,7 @@ Simple_Type,
 
 uinteger,
 20
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.87 uinteger_21
 
 This is a uinteger type with a size restriction of 21 bytes.
@@ -1553,12 +1284,7 @@ Simple_Type,
 
 uinteger,
 21
-
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.88 uinteger_24
 
 This is a uinteger type with a size restriction of 24 bytes.
@@ -1580,11 +1306,7 @@ Simple_Type,
 
 uinteger,
 24
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.89 uinteger_256
 
 This is a uinteger type with a size restriction of 256 bytes.
@@ -1606,11 +1328,7 @@ Simple_Type,
 
 uinteger,
 256
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.90 uinteger_28
 
 This is a uinteger type with a size restriction of 28 bytes.
@@ -1632,11 +1350,7 @@ Simple_Type,
 
 uinteger,
 28
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.91 uinteger_30
 
 This is a uinteger type with a size restriction of 30 bytes.
@@ -1658,11 +1372,7 @@ Simple_Type,
 
 uinteger,
 30
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.92 uinteger_36
 
 This is a uinteger type with a size restriction of 36 bytes.
@@ -1684,12 +1394,7 @@ Simple_Type,
 
 uinteger,
 36
-
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.93 uinteger_4
 
 This is a uinteger type with a size restriction of 4 bytes.
@@ -1711,11 +1416,7 @@ Simple_Type,
 
 uinteger,
 4
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.94 uinteger_48
 
 This is a uinteger type with a size restriction of 48 bytes.
@@ -1737,11 +1438,7 @@ Simple_Type,
 
 uinteger,
 48
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.95 uinteger_64
 
 This is a uinteger type with a size restriction of 64 bytes.
@@ -1763,11 +1460,7 @@ Simple_Type,
 
 uinteger,
 64
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.96 uinteger_66
 
 This is a uinteger type with a size restriction of 66 bytes.
@@ -1789,11 +1482,7 @@ Simple_Type,
 
 uinteger,
 66
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.97 uinteger_8
 
 This is a uinteger type with a size restriction of 8 bytes.
@@ -1815,12 +1504,8 @@ Simple_Type,
 
 uinteger,
 8
+--------------------------------------------------------------------------------
 
-
-
-
-
-
 5.1.3.98 verify_mode
 
 This enumeration type defines the verification operation the TPer SHALL perform during the re-
@@ -1867,11 +1552,7 @@ Verify enabled
 2-7
 
 Reserved
-
-
-
-
-
+--------------------------------------------------------------------------------
 5.1.3.99 Year
 
 Name-value pair that has a Name of "0" and takes year_enum as the value.
@@ -1919,17 +1600,17 @@ year_enum
 Enumeration_Type,
 1970,
 9999
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
 
+--------------------------------------------------------------------------------
 
 
 
-
-
-
-
-
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 -- data Type = Base_Type
 --           | Simple_Type
@@ -3851,9 +3532,159 @@ Used in association with the Minute name-value pair.
 |]
 
 \end{code}
+
+5.1.3.58 Month
+
+Name-value pair that has a Name of "1" and takes month_enum as the value.
+
+\begin{code}
+
+[ttype|
+
+                     Table 116 Month
+    +-----------------------+-----+-------------------------+
+    |UID                    |Name |Format                   |
+    +-----------------------+-----+-------------------------+
+    |00 00 00 05 00 00 14 02|Month|Name_Value_Uinteger_Type,|
+    |                       |     |1,                       |
+    |                       |     |month_enum               |
+    +-----------------------+-----+-------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.59 month_enum
+
+Used in association with the Month name-value pair.
+
+\begin{code}
+
+[ttype|
+
+                     Table 117 month_enum
+    +-----------------------+------------------+-----------------+
+    |UID                    |Name              |Format           |
+    +-----------------------+------------------+-----------------+
+    |00 00 00 05 00 00 04 17|month_enum        |Enumeration_Type,|
+    |                       |                  |1,               |
+    |                       |                  |12               |
+    +-----------------------+------------------+-----------------+
+
+|]
+
+\end{code}
+
 --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+5.1.3.60 name
 
+This max bytes type, with a size limitation of 32, is used to represent names.
 
+\begin{code}
+
+[ttype|
+
+                  Table 118 name
+    +-----------------------+----+------------+
+    |UID                    |Name|Format      |
+    +-----------------------+----+------------+
+    |00 00 00 05 00 00 02 0B|name|Simple_Type,|
+    |                       |    |max_bytes,  |
+    |                       |    |32          |
+    +-----------------------+----+------------+
+
+|]
+
+\end{code}
+
+5.1.3.61 object_ref
+
+Type used for referencing an object in an object table.
+
+\begin{code}
+
+[ttype|
+
+                     Table etc.
+    +-----------------------+------------------+----------------------+
+    |UID                    |Name              |Format                |
+    +-----------------------+------------------+----------------------+
+    |00 00 00 05 00 00 0F 02|object_ref        |General_Reference_Type|
+    |                       |                  |{8}                   |
+    |                       |                  |                      |
+    +-----------------------+------------------+----------------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+5.1.3.62 padding_type
+
+This enumeration is used to identify the type of padding used with RSA encryption. RSAES-PKCS1-
+v1_5 or RSAES-OAEP (see [18]) SHALL be used for RSA encryption. RSASSA-PKCS1-v1_5 or
+RSASSA-PSS (see [18]) SHALL be used for RSA signing.
+
+\begin{code}
+
+[ttype|
+
+                     Table 120 padding_type
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 06|padding_type|Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |15               |
+    +-----------------------+------------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values are associated as defined in Table 121.
+
+    Table 121 padding_type Enumeration Values
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |0                |None               |
+    +-----------------+-------------------+
+    |1                |None               |
+    +-----------------+-------------------+
+    |2                |RSAES-PKCS1-v1_5   |
+    +-----------------+-------------------+
+    |3                |RSAES-OAEP         |
+    +-----------------+-------------------+
+    |4                |RSASSA-PKCS1-v1_5  |
+    +-----------------+-------------------+
+    |5-15             |Reserved           |
+    +-----------------+-------------------+
+
+--------------------------------------------------------------------------------
+5.1.3.63 password
+
+This max bytes type, with a size limitation of 32, is used in the C_PIN table.
+
+\begin{code}
+
+[ttype|
+
+                   Table 122 password
+    +-----------------------+--------+------------+
+    |UID                    |Name    |Format      |
+    +-----------------------+--------+------------+
+    |00 00 00 05 00 00 02 0C|password|Simple_Type,|
+    |                       |        |max_bytes,  |
+    |                       |        |32          |
+    +-----------------------+--------+------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
 
 
 

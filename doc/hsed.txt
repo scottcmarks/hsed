@@ -754,6 +754,13 @@ uprotect_typesType :: UID
 ureencrypt_requestType :: UID
 ureencrypt_stateType :: UID
 ureset_typesType :: UID
+uSecondsType :: UID
+useconds_enumType :: UID
+uSPTemplates_object_refType :: UID
+uSSCType :: UID
+usymmetric_modeType :: UID
+usymmetric_mode_mediaType :: UID
+utable_kindType :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

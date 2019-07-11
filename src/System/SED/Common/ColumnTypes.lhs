@@ -507,330 +507,6 @@ text
 
 \end{code}
 --------------------------------------------------------------------------------
-5.1.3.68 Seconds
-
-Name-value pair that has a Name of "5" and takes seconds_enum as the value.
-
-Table 129 Seconds
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 14 06
-
-Seconds
-
-Name_Value_Uinteger_Type,
-5,
-seconds_enum
---------------------------------------------------------------------------------
-5.1.3.69 seconds_enum
-
-Used in association with the Seconds name-value pair.
-
-Table 130 seconds_enum
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 1B
-
-seconds_enum
-
-Enumeration_Type,
-0,
-59
---------------------------------------------------------------------------------
-5.1.3.70 SPTemplates_object _ref
-
-The SPTemplates_object _ref type describes a uidref to an object in the SPTemplates table.
-
-Table 131 SPTemplates_object _ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 01
-
-SPTemplates_object_ref
-
-Restricted_Reference_Type{6},
-uidref{SPTemplatesTableUID}
---------------------------------------------------------------------------------
-5.1.3.71 SSC
-
-This is a list of names used to represent the SSCs that a TPer supports.
-
-Table 132 SSC
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 08 03
-
-SSC
-
-List_Type,
-*,
-name
---------------------------------------------------------------------------------
-5.1.3.72 symmetric_mode
-
-Defines the mode to be used with an AES credential.
-
-Table 133 symmetric_mode
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 0A
-
-symmetric_mode
-
-Enumeration_Type,
-0,
-23
-
-
-
-
-
-The enumeration values are associated as defined in Table 134.
-
-Table 134 symmetric_mode Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-ECB
-
-1
-
-CBC
-
-2
-
-CFB
-
-3
-
-OFB
-
-
-
-
-Enumeration Value
-
-Associated Value
-
-4
-
-GCM
-
-5
-
-CTR
-
-6
-
-CCM
-
-7
-
-XTS
-
-8
-
-LRW
-
-9
-
-EME
-
-10
-
-CMC
-
-11
-
-XEX
-
-12-23
-
-Reserved
-
---------------------------------------------------------------------------------
-5.1.3.73 symmetric_mode_media
-
-Defines the modes availableto be used with AES for user data encryption.
-
-Table 135 symmetric_mode_media
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 03
-
-symmetric_mode_media
-
-Enumeration_Type,
-0,
-23
-
-
-
-
-
-The enumeration values are associated as defined in Table 134.
-
-Table 136 symmetric_mode_media Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-ECB
-
-1
-
-CBC
-
-2
-
-CFB
-
-3
-
-OFB
-
-4
-
-GCM
-
-5
-
-CTR
-
-6
-
-CCM
-
-7
-
-XTS
-
-8
-
-LRW
-
-9
-
-EME
-
-10
-
-CMC
-
-11
-
-XEX
-
-12-22
-
-Reserved
-
-23
-
-Media Encryption
-
-
-
-
-
-
---------------------------------------------------------------------------------
-5.1.3.74 table_kind
-
-Defines the kinds of tables.
-
-Table 137 table_kind
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 15
-
-table_kind
-
-Enumeration_Type,
-1,
-8
-
-
-
-
-
-The enumeration values are associated as defined in Table 138.
-
-Table 138 table_kind Enumeration Values
-
-
-Enumeration Value
-
-Table Type
-
-1
-
-Object
-
-2
-
-Byte
-
-3-8
-
-Reserved
-
-
-
-
-
---------------------------------------------------------------------------------
 5.1.3.75 table_or_object_ref
 
 This alternative type defines a reference to either the uid of a table or the uid of some object, or the UID
@@ -3640,6 +3316,237 @@ The Set values are associated as defined in Table 128.
     +-----------------+----------------+
     |16-31            |Vendor Unique   |
     +-----------------+----------------+
+
+5.1.3.68 Seconds
+
+Name-value pair that has a Name of "5" and takes seconds_enum as the value.
+
+
+\begin{code}
+
+[ttype|
+
+                       Table 129 Seconds
+    +-----------------------+-------+-------------------------+
+    |UID                    |Name   |Format                   |
+    +-----------------------+-------+-------------------------+
+    |00 00 00 00 00 00 00 00|Seconds|Name_Value_Uinteger_Type,|
+    |                       |       |5,                       |
+    |                       |       |seconds_enum             |
+    +-----------------------+-------+-------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.69 seconds_enum
+
+Used in association with the Seconds name-value pair.
+
+\begin{code}
+
+[ttype|
+
+                     Table 130 seconds_enum
+    +-----------------------+------------+-----------------+
+    |UID                    |Name        |Format           |
+    +-----------------------+------------+-----------------+
+    |00 00 00 05 00 00 04 1B|seconds_enum|Enumeration_Type,|
+    |                       |            |0,               |
+    |                       |            |59               |
+    +-----------------------+------------+-----------------+
+
+|]
+
+\end{code}
+
+5.1.3.70 SPTemplates_object_ref
+
+The SPTemplates_object_ref type describes a uidref to an object in the SPTemplates table.
+
+\begin{code}
+
+[ttype|
+
+                     Table 131 SPTemplates_object_ref
+    +-----------------------+----------------------+-----------------------------+
+    |UID                    |Name                  |Format                       |
+    +-----------------------+----------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 01|SPTemplates_object_ref|Restricted_Reference_Type{6},|
+    |                       |                      |uidref{SPTemplatesTableUID}  |
+    +-----------------------+----------------------+-----------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.71 SSC
+
+This is a list of names used to represent the SSCs that a TPer supports.
+
+\begin{code}
+
+[ttype|
+
+                     Table 132 SSC
+    +-----------------------+----+--------------+
+    |UID                    |Name|Format        |
+    +-----------------------+----+--------------+
+    |00 00 00 05 00 00 08 03|SSC |List_Type,    |
+    |                       |    |*,            |
+    |                       |    |name          |
+    +-----------------------+----+--------------+
+
+|]
+
+\end{code}
+
+5.1.3.72 symmetric_mode
+
+Defines the mode to be used with an AES credential.
+
+\begin{code}
+
+[ttype|
+
+                     Table 133 symmetric_mode
+    +-----------------------+--------------+-----------------+
+    |UID                    |Name          |Format           |
+    +-----------------------+--------------+-----------------+
+    |00 00 00 05 00 00 04 0A|symmetric_mode|Enumeration_Type,|
+    |                       |              |0,               |
+    |                       |              |23               |
+    +-----------------------+--------------+-----------------+
+
+|]
+
+\end{code}
+
+
+The enumeration values are associated as defined in Table 134.
+
+ Table 134 symmetric_mode Enumeration Values
+    +-----------------+----------------+
+    |Enumeration Value|Associated Value|
+    +-----------------+----------------+
+    |0                |ECB             |
+    +-----------------+----------------+
+    |1                |CBC             |
+    +-----------------+----------------+
+    |2                |CFB             |
+    +-----------------+----------------+
+    |3                |OFB             |
+    +-----------------+----------------+
+    |4                |GCM             |
+    +-----------------+----------------+
+    |5                |CTR             |
+    +-----------------+----------------+
+    |6                |CCM             |
+    +-----------------+----------------+
+    |7                |XTS             |
+    +-----------------+----------------+
+    |8                |LRW             |
+    +-----------------+----------------+
+    |9                |EME             |
+    +-----------------+----------------+
+    |10               |CMC             |
+    +-----------------+----------------+
+    |11               |XEX             |
+    +-----------------+----------------+
+    |12-23            |Reserved        |
+    +-----------------+----------------+
+
+5.1.3.73 symmetric_mode_media
+
+Defines the modes availableto be used with AES for user data encryption.
+
+\begin{code}
+
+[ttype|
+
+                     Table 135 symmetric_mode_media
+    +-----------------------+--------------------+-----------------+
+    |UID                    |Name                |Format           |
+    +-----------------------+--------------------+-----------------+
+    |00 00 00 05 00 00 04 03|symmetric_mode_media|Enumeration_Type,|
+    |                       |                    |0,               |
+    |                       |                    |23               |
+    +-----------------------+--------------------+-----------------+
+
+|]
+
+\end{code}
+
+
+The enumeration values are associated as defined in Table 134.
+
+Table 136 symmetric_mode_media Enumeration Values
+    +-----------------+-----------------+
+    |Enumeration Value|Associated Value |
+    +-----------------+-----------------+
+    |0                |ECB              |
+    +-----------------+-----------------+
+    |1                |CBC              |
+    +-----------------+-----------------+
+    |2                |CFB              |
+    +-----------------+-----------------+
+    |3                |OFB              |
+    +-----------------+-----------------+
+    |4                |GCM              |
+    +-----------------+-----------------+
+    |5                |CTR              |
+    +-----------------+-----------------+
+    |6                |CCM              |
+    +-----------------+-----------------+
+    |7                |XTS              |
+    +-----------------+-----------------+
+    |8                |LRW              |
+    +-----------------+-----------------+
+    |9                |EME              |
+    +-----------------+-----------------+
+    |10               |CMC              |
+    +-----------------+-----------------+
+    |11               |XEX              |
+    +-----------------+-----------------+
+    |12-22            |Reserved         |
+    +-----------------+-----------------+
+    |23               |Media Encryption |
+    +-----------------+-----------------+
+
+5.1.3.74 table_kind
+
+Defines the kinds of tables.
+
+\begin{code}
+
+[ttype|
+
+                     Table 137 table_kind
+    +-----------------------+----------+-----------------+
+    |UID                    |Name      |Format           |
+    +-----------------------+----------+-----------------+
+    |00 00 00 05 00 00 04 15|table_kind|Enumeration_Type,|
+    |                       |          |1,               |
+    |                       |          |8                |
+    +-----------------------+----------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values are associated as defined in Table 138.
+
+    Table 138 table_kind Enumeration Values
+    +-----------------+-------------------+
+    |Enumeration Value|Table Type         |
+    +-----------------+-------------------+
+    |1                |Object             |
+    +-----------------+-------------------+
+    |2                |Byte               |
+    +-----------------+-------------------+
+    |3-8              |Reserved           |
+    +-----------------+-------------------+
+
 --------------------------------------------------------------------------------
 
 

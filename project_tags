@@ -285,139 +285,139 @@ module System.SED.Common.ImportSystem.SED.Common.Import1,2
 ./src/System/SED/Common/ColumnTypes.lhs,10556
 module System.SED.Common.ColumnTypes System.SED.Common.ColumnTypes32,33
 import import43,44
-type TPer TPer1188,1189
-data Env Env1190,1191
-data Env = Env Env1190,1191
-data Env = Env { core core1190,1191
-               , implementation implementation1191,1192
-               , ssc ssc1192,1193
-data Core Core1196,1197
-data Core = CoreCore1196,1197
-data Implementation Implementation1199,1200
-data Implementation = Implementation Implementation1199,1200
-data Implementation = Implementation { __AC_elementSize __AC_elementSize1199,1200
-                                     , __max_columns __max_columns1200,1201
-data SSC SSC1204,1205
-data SSC = SSC SSC1204,1205
-data SSC = SSC { __AC_elementMinSize __AC_elementMinSize1204,1205
-               , __min_max_columns __min_max_columns1205,1206
-newtype Core_ACE_columns Core_ACE_columns1311,1312
-_ACE_columnsSetSize _ACE_columnsSetSize1313,1314
-data Core_adv_key_mode Core_adv_key_mode1432,1433
-data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_ReqCore_adv_key_mode_Wait_for_AdvKey_Req1432,1433
-                       | Core_adv_key_mode_Auto_advance_keysCore_adv_key_mode_Auto_advance_keys1433,1434
-                       | Core_adv_key_mode_Reserved_2Core_adv_key_mode_Reserved_21434,1435
-                       | Core_adv_key_mode_Reserved_3Core_adv_key_mode_Reserved_31435,1436
-                       | Core_adv_key_mode_Reserved_4Core_adv_key_mode_Reserved_41436,1437
-                       | Core_adv_key_mode_Reserved_5Core_adv_key_mode_Reserved_51437,1438
-                       | Core_adv_key_mode_Reserved_6Core_adv_key_mode_Reserved_61438,1439
-                       | Core_adv_key_mode_Reserved_7Core_adv_key_mode_Reserved_71439,1440
-data Core_attr_flags Core_attr_flags1481,1482
-data Core_attr_flags = Core_attr_flags Core_attr_flags1481,1482
-data Core_attr_flags_Set_Values Core_attr_flags_Set_Values1483,1484
-data Core_attr_flags_Set_Values = Core_attr_flags_Set_Values_Get_Not_PermittedCore_attr_flags_Set_Values_Get_Not_Permitted1483,1484
-                                | Core_attr_flags_Set_Values_Set_Not_PermittedCore_attr_flags_Set_Values_Set_Not_Permitted1484,1485
-                                | Core_attr_flags_Set_Values_Reserved_02Core_attr_flags_Set_Values_Reserved_021485,1486
-                                | Core_attr_flags_Set_Values_Reserved_03Core_attr_flags_Set_Values_Reserved_031486,1487
-                                | Core_attr_flags_Set_Values_Reserved_04Core_attr_flags_Set_Values_Reserved_041487,1488
-                                | Core_attr_flags_Set_Values_Reserved_05Core_attr_flags_Set_Values_Reserved_051488,1489
-                                | Core_attr_flags_Set_Values_Reserved_06Core_attr_flags_Set_Values_Reserved_061489,1490
-                                | Core_attr_flags_Set_Values_Reserved_07Core_attr_flags_Set_Values_Reserved_071490,1491
-                                | Core_attr_flags_Set_Values_Reserved_08Core_attr_flags_Set_Values_Reserved_081491,1492
-                                | Core_attr_flags_Set_Values_Reserved_09Core_attr_flags_Set_Values_Reserved_091492,1493
-                                | Core_attr_flags_Set_Values_Reserved_10Core_attr_flags_Set_Values_Reserved_101493,1494
-                                | Core_attr_flags_Set_Values_Reserved_11Core_attr_flags_Set_Values_Reserved_111494,1495
-                                | Core_attr_flags_Set_Values_Reserved_12Core_attr_flags_Set_Values_Reserved_121495,1496
-                                | Core_attr_flags_Set_Values_Reserved_13Core_attr_flags_Set_Values_Reserved_131496,1497
-                                | Core_attr_flags_Set_Values_Reserved_14Core_attr_flags_Set_Values_Reserved_141497,1498
-                                | Core_attr_flags_Set_Values_Reserved_15Core_attr_flags_Set_Values_Reserved_151498,1499
-                                | Core_attr_flags_Set_Values_Reserved_16Core_attr_flags_Set_Values_Reserved_161499,1500
-                                | Core_attr_flags_Set_Values_Reserved_17Core_attr_flags_Set_Values_Reserved_171500,1501
-                                | Core_attr_flags_Set_Values_Reserved_18Core_attr_flags_Set_Values_Reserved_181501,1502
-                                | Core_attr_flags_Set_Values_Reserved_19Core_attr_flags_Set_Values_Reserved_191502,1503
-                                | Core_attr_flags_Set_Values_Reserved_20Core_attr_flags_Set_Values_Reserved_201503,1504
-                                | Core_attr_flags_Set_Values_Reserved_21Core_attr_flags_Set_Values_Reserved_211504,1505
-                                | Core_attr_flags_Set_Values_Reserved_22Core_attr_flags_Set_Values_Reserved_221505,1506
-                                | Core_attr_flags_Set_Values_Reserved_23Core_attr_flags_Set_Values_Reserved_231506,1507
-                                | Core_attr_flags_Set_Values_Reserved_24Core_attr_flags_Set_Values_Reserved_241507,1508
-                                | Core_attr_flags_Set_Values_Reserved_25Core_attr_flags_Set_Values_Reserved_251508,1509
-                                | Core_attr_flags_Set_Values_Reserved_26Core_attr_flags_Set_Values_Reserved_261509,1510
-                                | Core_attr_flags_Set_Values_Reserved_27Core_attr_flags_Set_Values_Reserved_271510,1511
-                                | Core_attr_flags_Set_Values_Reserved_28Core_attr_flags_Set_Values_Reserved_281511,1512
-                                | Core_attr_flags_Set_Values_Reserved_29Core_attr_flags_Set_Values_Reserved_291512,1513
-                                | Core_attr_flags_Set_Values_Reserved_30Core_attr_flags_Set_Values_Reserved_301513,1514
-                                | Core_attr_flags_Set_Values_Reserved_31Core_attr_flags_Set_Values_Reserved_311514,1515
-data Core_auth_method Core_auth_method1570,1571
-data Core_auth_method = Core_auth_method_NoneCore_auth_method_None1570,1571
-                      | Core_auth_method_PasswordCore_auth_method_Password1571,1572
-                      | Core_auth_method_ExchangeCore_auth_method_Exchange1572,1573
-                      | Core_auth_method_SignCore_auth_method_Sign1573,1574
-                      | Core_auth_method_SymKCore_auth_method_SymK1574,1575
-                      | Core_auth_method_HMACCore_auth_method_HMAC1575,1576
-                      | Core_auth_method_TperSignCore_auth_method_TperSign1576,1577
-                      | Core_auth_method_TPerExchangeCore_auth_method_TPerExchange1577,1578
-                      | Core_auth_method_Reserved_8Core_auth_method_Reserved_81578,1579
-                      | Core_auth_method_Reserved_9Core_auth_method_Reserved_91579,1580
-                      | Core_auth_method_Reserved_10Core_auth_method_Reserved_101580,1581
-                      | Core_auth_method_Reserved_11Core_auth_method_Reserved_111581,1582
-                      | Core_auth_method_Reserved_12Core_auth_method_Reserved_121582,1583
-                      | Core_auth_method_Reserved_13Core_auth_method_Reserved_131583,1584
-                      | Core_auth_method_Reserved_14Core_auth_method_Reserved_141584,1585
-                      | Core_auth_method_Reserved_15Core_auth_method_Reserved_151585,1586
-                      | Core_auth_method_Reserved_16Core_auth_method_Reserved_161586,1587
-                      | Core_auth_method_Reserved_17Core_auth_method_Reserved_171587,1588
-                      | Core_auth_method_Reserved_18Core_auth_method_Reserved_181588,1589
-                      | Core_auth_method_Reserved_19Core_auth_method_Reserved_191589,1590
-                      | Core_auth_method_Reserved_20Core_auth_method_Reserved_201590,1591
-                      | Core_auth_method_Reserved_21Core_auth_method_Reserved_211591,1592
-                      | Core_auth_method_Reserved_22Core_auth_method_Reserved_221592,1593
-                      | Core_auth_method_Reserved_23Core_auth_method_Reserved_231593,1594
-type Core_boolean Core_boolean1675,1676
-data Core_boolean_ACE Core_boolean_ACE1719,1720
-data Core_boolean_ACE = And And1719,1720
-data Core_boolean_ACE = And | Or Or1719,1720
-data Core_boolean_ACE = And | Or | NotNot1719,1720
-type Core_byte_row_ref Core_byte_row_ref1746,1747
-newtype Core_bytes Core_bytes1800,1801
-instance (K(KnownNat n) => Show (Core_bytes n)1802,1803
-    show show1803,1804
-type Core_bytes_4 Core_bytes_41830,1831
-type Core_bytes_12 Core_bytes_121857,1858
-type Core_bytes_16 Core_bytes_161884,1885
-type Core_bytes_20 Core_bytes_201911,1912
-type Core_bytes_32 Core_bytes_321939,1940
-type Core_bytes_48 Core_bytes_481966,1967
-type Core_bytes_64 Core_bytes_641995,1996
-newtype Core_Certificates_object_ref Core_Certificates_object_ref2023,2024
-type Core_uidref Core_uidref3560,3561
-implementationDependant_AC_elementSize implementationDependant_AC_elementSize3564,3565
-implementationDependant_max_columns implementationDependant_max_columns3567,3568
-imp' imp'3570,3571
-ssc_AC_elementMinSize ssc_AC_elementMinSize3577,3578
-ssc_min_max_columns ssc_min_max_columns3580,3581
-_max_columns _max_columns3583,3584
-_min_max_columns _min_max_columns3586,3587
-ssc' ssc'3591,3592
-core' core'3599,3600
-newtype Core_General_Reference_Type_Byte_Row Core_General_Reference_Type_Byte_Row3605,3606
-newtype Core_General_Reference_Type_Object Core_General_Reference_Type_Object3608,3609
-mkCore_General_object_ref mkCore_General_object_ref3611,3612
-data Core_table_kind Core_table_kind3615,3616
-data Core_table_kind = ByteTable ByteTable3615,3616
-data Core_table_kind = ByteTable | ObjectTableObjectTable3615,3616
-data General_Reference_Table_Type General_Reference_Table_Type3618,3619
-data General_Reference_Table_Type (a:a3618,3619
-  General_Reference_Table_Type_Byte General_Reference_Table_Type_Byte3619,3620
-  General_Reference_Table_Type_Object General_Reference_Table_Type_Object3620,3621
-data General_Reference_Table_Type (a:a3618,3619
-type Core_Reference_UID_List Core_Reference_UID_List3626,3627
-data Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3628,3629
-     Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3629,3630
-mkCore_Restricted_object_ref mkCore_Restricted_object_ref3631,3632
-    | uidUpper objectUID `elem`elem3636,3637
-mkCore_Restricted_object_ref_To mkCore_Restricted_object_ref_To3641,3642
-env env3649,3650
-max_columns max_columns3672,3673
+type TPer TPer1078,1079
+data Env Env1080,1081
+data Env = Env Env1080,1081
+data Env = Env { core core1080,1081
+               , implementation implementation1081,1082
+               , ssc ssc1082,1083
+data Core Core1086,1087
+data Core = CoreCore1086,1087
+data Implementation Implementation1089,1090
+data Implementation = Implementation Implementation1089,1090
+data Implementation = Implementation { __AC_elementSize __AC_elementSize1089,1090
+                                     , __max_columns __max_columns1090,1091
+data SSC SSC1094,1095
+data SSC = SSC SSC1094,1095
+data SSC = SSC { __AC_elementMinSize __AC_elementMinSize1094,1095
+               , __min_max_columns __min_max_columns1095,1096
+newtype Core_ACE_columns Core_ACE_columns1201,1202
+_ACE_columnsSetSize _ACE_columnsSetSize1203,1204
+data Core_adv_key_mode Core_adv_key_mode1322,1323
+data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_ReqCore_adv_key_mode_Wait_for_AdvKey_Req1322,1323
+                       | Core_adv_key_mode_Auto_advance_keysCore_adv_key_mode_Auto_advance_keys1323,1324
+                       | Core_adv_key_mode_Reserved_2Core_adv_key_mode_Reserved_21324,1325
+                       | Core_adv_key_mode_Reserved_3Core_adv_key_mode_Reserved_31325,1326
+                       | Core_adv_key_mode_Reserved_4Core_adv_key_mode_Reserved_41326,1327
+                       | Core_adv_key_mode_Reserved_5Core_adv_key_mode_Reserved_51327,1328
+                       | Core_adv_key_mode_Reserved_6Core_adv_key_mode_Reserved_61328,1329
+                       | Core_adv_key_mode_Reserved_7Core_adv_key_mode_Reserved_71329,1330
+data Core_attr_flags Core_attr_flags1371,1372
+data Core_attr_flags = Core_attr_flags Core_attr_flags1371,1372
+data Core_attr_flags_Set_Values Core_attr_flags_Set_Values1373,1374
+data Core_attr_flags_Set_Values = Core_attr_flags_Set_Values_Get_Not_PermittedCore_attr_flags_Set_Values_Get_Not_Permitted1373,1374
+                                | Core_attr_flags_Set_Values_Set_Not_PermittedCore_attr_flags_Set_Values_Set_Not_Permitted1374,1375
+                                | Core_attr_flags_Set_Values_Reserved_02Core_attr_flags_Set_Values_Reserved_021375,1376
+                                | Core_attr_flags_Set_Values_Reserved_03Core_attr_flags_Set_Values_Reserved_031376,1377
+                                | Core_attr_flags_Set_Values_Reserved_04Core_attr_flags_Set_Values_Reserved_041377,1378
+                                | Core_attr_flags_Set_Values_Reserved_05Core_attr_flags_Set_Values_Reserved_051378,1379
+                                | Core_attr_flags_Set_Values_Reserved_06Core_attr_flags_Set_Values_Reserved_061379,1380
+                                | Core_attr_flags_Set_Values_Reserved_07Core_attr_flags_Set_Values_Reserved_071380,1381
+                                | Core_attr_flags_Set_Values_Reserved_08Core_attr_flags_Set_Values_Reserved_081381,1382
+                                | Core_attr_flags_Set_Values_Reserved_09Core_attr_flags_Set_Values_Reserved_091382,1383
+                                | Core_attr_flags_Set_Values_Reserved_10Core_attr_flags_Set_Values_Reserved_101383,1384
+                                | Core_attr_flags_Set_Values_Reserved_11Core_attr_flags_Set_Values_Reserved_111384,1385
+                                | Core_attr_flags_Set_Values_Reserved_12Core_attr_flags_Set_Values_Reserved_121385,1386
+                                | Core_attr_flags_Set_Values_Reserved_13Core_attr_flags_Set_Values_Reserved_131386,1387
+                                | Core_attr_flags_Set_Values_Reserved_14Core_attr_flags_Set_Values_Reserved_141387,1388
+                                | Core_attr_flags_Set_Values_Reserved_15Core_attr_flags_Set_Values_Reserved_151388,1389
+                                | Core_attr_flags_Set_Values_Reserved_16Core_attr_flags_Set_Values_Reserved_161389,1390
+                                | Core_attr_flags_Set_Values_Reserved_17Core_attr_flags_Set_Values_Reserved_171390,1391
+                                | Core_attr_flags_Set_Values_Reserved_18Core_attr_flags_Set_Values_Reserved_181391,1392
+                                | Core_attr_flags_Set_Values_Reserved_19Core_attr_flags_Set_Values_Reserved_191392,1393
+                                | Core_attr_flags_Set_Values_Reserved_20Core_attr_flags_Set_Values_Reserved_201393,1394
+                                | Core_attr_flags_Set_Values_Reserved_21Core_attr_flags_Set_Values_Reserved_211394,1395
+                                | Core_attr_flags_Set_Values_Reserved_22Core_attr_flags_Set_Values_Reserved_221395,1396
+                                | Core_attr_flags_Set_Values_Reserved_23Core_attr_flags_Set_Values_Reserved_231396,1397
+                                | Core_attr_flags_Set_Values_Reserved_24Core_attr_flags_Set_Values_Reserved_241397,1398
+                                | Core_attr_flags_Set_Values_Reserved_25Core_attr_flags_Set_Values_Reserved_251398,1399
+                                | Core_attr_flags_Set_Values_Reserved_26Core_attr_flags_Set_Values_Reserved_261399,1400
+                                | Core_attr_flags_Set_Values_Reserved_27Core_attr_flags_Set_Values_Reserved_271400,1401
+                                | Core_attr_flags_Set_Values_Reserved_28Core_attr_flags_Set_Values_Reserved_281401,1402
+                                | Core_attr_flags_Set_Values_Reserved_29Core_attr_flags_Set_Values_Reserved_291402,1403
+                                | Core_attr_flags_Set_Values_Reserved_30Core_attr_flags_Set_Values_Reserved_301403,1404
+                                | Core_attr_flags_Set_Values_Reserved_31Core_attr_flags_Set_Values_Reserved_311404,1405
+data Core_auth_method Core_auth_method1460,1461
+data Core_auth_method = Core_auth_method_NoneCore_auth_method_None1460,1461
+                      | Core_auth_method_PasswordCore_auth_method_Password1461,1462
+                      | Core_auth_method_ExchangeCore_auth_method_Exchange1462,1463
+                      | Core_auth_method_SignCore_auth_method_Sign1463,1464
+                      | Core_auth_method_SymKCore_auth_method_SymK1464,1465
+                      | Core_auth_method_HMACCore_auth_method_HMAC1465,1466
+                      | Core_auth_method_TperSignCore_auth_method_TperSign1466,1467
+                      | Core_auth_method_TPerExchangeCore_auth_method_TPerExchange1467,1468
+                      | Core_auth_method_Reserved_8Core_auth_method_Reserved_81468,1469
+                      | Core_auth_method_Reserved_9Core_auth_method_Reserved_91469,1470
+                      | Core_auth_method_Reserved_10Core_auth_method_Reserved_101470,1471
+                      | Core_auth_method_Reserved_11Core_auth_method_Reserved_111471,1472
+                      | Core_auth_method_Reserved_12Core_auth_method_Reserved_121472,1473
+                      | Core_auth_method_Reserved_13Core_auth_method_Reserved_131473,1474
+                      | Core_auth_method_Reserved_14Core_auth_method_Reserved_141474,1475
+                      | Core_auth_method_Reserved_15Core_auth_method_Reserved_151475,1476
+                      | Core_auth_method_Reserved_16Core_auth_method_Reserved_161476,1477
+                      | Core_auth_method_Reserved_17Core_auth_method_Reserved_171477,1478
+                      | Core_auth_method_Reserved_18Core_auth_method_Reserved_181478,1479
+                      | Core_auth_method_Reserved_19Core_auth_method_Reserved_191479,1480
+                      | Core_auth_method_Reserved_20Core_auth_method_Reserved_201480,1481
+                      | Core_auth_method_Reserved_21Core_auth_method_Reserved_211481,1482
+                      | Core_auth_method_Reserved_22Core_auth_method_Reserved_221482,1483
+                      | Core_auth_method_Reserved_23Core_auth_method_Reserved_231483,1484
+type Core_boolean Core_boolean1565,1566
+data Core_boolean_ACE Core_boolean_ACE1609,1610
+data Core_boolean_ACE = And And1609,1610
+data Core_boolean_ACE = And | Or Or1609,1610
+data Core_boolean_ACE = And | Or | NotNot1609,1610
+type Core_byte_row_ref Core_byte_row_ref1636,1637
+newtype Core_bytes Core_bytes1690,1691
+instance (K(KnownNat n) => Show (Core_bytes n)1692,1693
+    show show1693,1694
+type Core_bytes_4 Core_bytes_41720,1721
+type Core_bytes_12 Core_bytes_121747,1748
+type Core_bytes_16 Core_bytes_161774,1775
+type Core_bytes_20 Core_bytes_201801,1802
+type Core_bytes_32 Core_bytes_321829,1830
+type Core_bytes_48 Core_bytes_481856,1857
+type Core_bytes_64 Core_bytes_641885,1886
+newtype Core_Certificates_object_ref Core_Certificates_object_ref1913,1914
+type Core_uidref Core_uidref3556,3557
+implementationDependant_AC_elementSize implementationDependant_AC_elementSize3560,3561
+implementationDependant_max_columns implementationDependant_max_columns3563,3564
+imp' imp'3566,3567
+ssc_AC_elementMinSize ssc_AC_elementMinSize3573,3574
+ssc_min_max_columns ssc_min_max_columns3576,3577
+_max_columns _max_columns3579,3580
+_min_max_columns _min_max_columns3582,3583
+ssc' ssc'3587,3588
+core' core'3595,3596
+newtype Core_General_Reference_Type_Byte_Row Core_General_Reference_Type_Byte_Row3601,3602
+newtype Core_General_Reference_Type_Object Core_General_Reference_Type_Object3604,3605
+mkCore_General_object_ref mkCore_General_object_ref3607,3608
+data Core_table_kind Core_table_kind3611,3612
+data Core_table_kind = ByteTable ByteTable3611,3612
+data Core_table_kind = ByteTable | ObjectTableObjectTable3611,3612
+data General_Reference_Table_Type General_Reference_Table_Type3614,3615
+data General_Reference_Table_Type (a:a3614,3615
+  General_Reference_Table_Type_Byte General_Reference_Table_Type_Byte3615,3616
+  General_Reference_Table_Type_Object General_Reference_Table_Type_Object3616,3617
+data General_Reference_Table_Type (a:a3614,3615
+type Core_Reference_UID_List Core_Reference_UID_List3622,3623
+data Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3624,3625
+     Core_Restricted_Reference_Type_Object Core_Restricted_Reference_Type_Object3625,3626
+mkCore_Restricted_object_ref mkCore_Restricted_object_ref3627,3628
+    | uidUpper objectUID `elem`elem3632,3633
+mkCore_Restricted_object_ref_To mkCore_Restricted_object_ref_To3637,3638
+env env3645,3646
+max_columns max_columns3668,3669
 
 ./src/System/SED/Common/ColumnTypes/TH.lhs,1090
 module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH25,26

@@ -761,6 +761,11 @@ uSSCType :: UID
 usymmetric_modeType :: UID
 usymmetric_mode_mediaType :: UID
 utable_kindType :: UID
+utable_or_object_refType :: UID
+uTable_object_refType :: UID
+utable_refType :: UID
+uTemplate_object_refType :: UID
+utype_defType :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

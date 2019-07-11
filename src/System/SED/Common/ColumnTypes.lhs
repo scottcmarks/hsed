@@ -507,116 +507,6 @@ text
 
 \end{code}
 --------------------------------------------------------------------------------
-5.1.3.75 table_or_object_ref
-
-This alternative type defines a reference to either the uid of a table or the uid of some object, or the UID
-of "ThisSP".
-
-Table 139 table_or_object_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 06 06
-
-table_or_object_ref
-
-Alternative_Type,
-object_ref,
-table_ref
-
-
-
-
-
---------------------------------------------------------------------------------
-5.1.3.76 Table_object _ref
-
-The Table_object _ref type describes a uidref to an object in the Table table.
-
-Table 140 Table_object _ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 09
-
-Table_object_ref
-
-Restricted_Reference_Type{6},
-uidref {TableTableUID}
---------------------------------------------------------------------------------
-5.1.3.77 table_ref
-
-Type used for referencing a table.
-
-Table 141 table_ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0F 03
-
-table_ref
-
-General_Reference_Type {9}
---------------------------------------------------------------------------------
-
-5.1.3.78 Template_object _ref
-
-The Template_object _ref type describes a uidref to an object in the Admin SP's Template table.
-
-Table 142 Template_object _ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 08
-
-Template_object_ref
-
-Restricted_Reference_Type{6},
-uidref {TemplateTableUID}
---------------------------------------------------------------------------------
-5.1.3.79 type_def
-
-The type_def type describes the format of the Type table's Format column. The value in the Format
-column of this type SHALL be encoded and parseable based on the notation description of the type
-formats (see 5.1.1).
-
-Table 143 type_def
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 03
-
-type_def
-
-Simple_Type,
-max_bytes,
-*
---------------------------------------------------------------------------------
 5.1.3.80 Type_object _ref
 
 The Type_object _ref type describes a uidref to an object in the Type table.
@@ -3547,8 +3437,114 @@ The enumeration values are associated as defined in Table 138.
     |3-8              |Reserved           |
     +-----------------+-------------------+
 
---------------------------------------------------------------------------------
+5.1.3.75 table_or_object_ref
 
+This alternative type defines a reference to either the uid of a table or the
+uid of some object, or the UID of "ThisSP".
+
+\begin{code}
+
+[ttype|
+
+                     Table 139 table_or_object_ref
+    +-----------------------+-------------------+-----------------+
+    |UID                    |Name               |Format           |
+    +-----------------------+-------------------+-----------------+
+    |00 00 00 05 00 00 06 06|table_or_object_ref|Alternative_Type,|
+    |                       |                   |object_ref,      |
+    |                       |                   |table_ref        |
+    +-----------------------+-------------------+-----------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+5.1.3.76 Table_object_ref
+
+The Table_object_ref type describes a uidref to an object in the Table table.
+
+
+
+\begin{code}
+
+[ttype|
+
+                        Table 140 Table_object_ref
+    +-----------------------+----------------+-----------------------------+
+    |UID                    |Name            |Format                       |
+    +-----------------------+----------------+-----------------------------+
+    |00 00 00 05 00 00 0C 09|Table_object_ref|Restricted_Reference_Type{6},|
+    |                       |                |uidref {TableTableUID}       |
+    +-----------------------+----------------+-----------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.77 table_ref
+
+Type used for referencing a table.
+
+\begin{code}
+
+[ttype|
+
+                        Table 141 table_ref
+    +-----------------------+---------+-------------------------+
+    |UID                    |Name     |Format                   |
+    +-----------------------+---------+-------------------------+
+    |00 00 00 05 00 00 0F 03|table_ref|General_Reference_Type{9}|
+    +-----------------------+---------+-------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.78 Template_object_ref
+
+The Template_object_ref type describes a uidref to an object in the Admin SP's Template table.
+
+\begin{code}
+
+[ttype|
+
+                 Table 142 Template_object_ref
+    +-----------------------+-------------------+-----------------------------+
+    |UID                    |Name               |Format                       |
+    +-----------------------+-------------------+-----------------------------+
+    |00 00 00 05 00 00 0C 08|Template_object_ref|Restricted_Reference_Type{6},|
+    |                       |                   |uidref{TemplateTableUID}     |
+    |                       |                   |                             |
+    +-----------------------+-------------------+-----------------------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
+5.1.3.79 type_def
+
+The type_def type describes the format of the Type table's Format column. The
+value in the Format column of this type SHALL be encoded and parseable based
+on the notation description of the type formats (see 5.1.1).
+
+\begin{code}
+
+[ttype|
+
+                   Table 143 type_def
+    +-----------------------+--------+------------+
+    |UID                    |Name    |Format      |
+    +-----------------------+--------+------------+
+    |00 00 00 05 00 00 02 03|type_def|Simple_Type,|
+    |                       |        |max_bytes,  |
+    |                       |        |*           |
+    +-----------------------+--------+------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
 
 
 

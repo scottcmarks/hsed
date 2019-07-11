@@ -486,523 +486,6 @@ text
     +-----------------+-------------------+
 
 --------------------------------------------------------------------------------
-section
-
-text
-
-\begin{code}
-
-[ttype|
-
-                     Table etc.
-    +-----------------------+----------+--------------+
-    |UID                    |Name      |Format        |
-    +-----------------------+----------+--------------+
-    |00 00 00 00 00 00 00 00|example'  |Core_Type,    |
-    |                       |          |count,        |
-    |                       |          |options       |
-    +-----------------------+----------+--------------+
-
-|]
-
-\end{code}
---------------------------------------------------------------------------------
-5.1.3.80 Type_object _ref
-
-The Type_object _ref type describes a uidref to an object in the Type table.
-
-Table 144 Type_object _ref
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 0C 02
-
-Type_object_ref
-
-Restricted_Reference_Type{6},
-uidref {TypeTableUID}
---------------------------------------------------------------------------------
-5.1.3.81 uid
-
-This is the type used for the UID column of object tables.
-
-Table 145 uid
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 09
-
-uid
-
-Simple_Type,
-bytes,
-8
---------------------------------------------------------------------------------
-5.1.3.82 uinteger
-
-This is the base type that is used to represent an unsigned integer.
-
-Table 146 uinteger
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 00 05
-
-uinteger
-
-Base_Type
---------------------------------------------------------------------------------
-5.1.3.83 uinteger_1
-
-This is a uinteger type with a size restriction of 1 byte.
-
-Table 147 uinteger_1
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 11
-
-uinteger_1
-
-Simple_Type,
-
-uinteger,
-1
---------------------------------------------------------------------------------
-5.1.3.84 uinteger_128
-
-This is a uinteger type with a size restriction of 128 bytes.
-
-Table 148 uinteger_128
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 12
-
-uinteger_128
-
-Simple_Type,
-
-uinteger,
-128
---------------------------------------------------------------------------------
-5.1.3.85 uinteger_2
-
-This is a uinteger type with a size restriction of 2 bytes.
-
-Table 149 uinteger_2
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 15
-
-uinteger_2
-
-Simple_Type,
-
-uinteger,
-2
---------------------------------------------------------------------------------
-5.1.3.86 uinteger_20
-
-This is a uinteger type with a size restriction of 20 bytes.
-
-Table 150 uinteger_20
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 16
-
-uinteger_20
-
-Simple_Type,
-
-uinteger,
-20
---------------------------------------------------------------------------------
-5.1.3.87 uinteger_21
-
-This is a uinteger type with a size restriction of 21 bytes.
-
-Table 151 uinteger_21
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 17
-
-uinteger_21
-
-Simple_Type,
-
-uinteger,
-21
---------------------------------------------------------------------------------
-5.1.3.88 uinteger_24
-
-This is a uinteger type with a size restriction of 24 bytes.
-
-Table 152 uinteger_24
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 18
-
-uinteger_24
-
-Simple_Type,
-
-uinteger,
-24
---------------------------------------------------------------------------------
-5.1.3.89 uinteger_256
-
-This is a uinteger type with a size restriction of 256 bytes.
-
-Table 153 uinteger_256
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 19
-
-uinteger_256
-
-Simple_Type,
-
-uinteger,
-256
---------------------------------------------------------------------------------
-5.1.3.90 uinteger_28
-
-This is a uinteger type with a size restriction of 28 bytes.
-
-Table 154 uinteger_28
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 1A
-
-uinteger_28
-
-Simple_Type,
-
-uinteger,
-28
---------------------------------------------------------------------------------
-5.1.3.91 uinteger_30
-
-This is a uinteger type with a size restriction of 30 bytes.
-
-Table 155 uinteger_30
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 1B
-
-uinteger_30
-
-Simple_Type,
-
-uinteger,
-30
---------------------------------------------------------------------------------
-5.1.3.92 uinteger_36
-
-This is a uinteger type with a size restriction of 36 bytes.
-
-Table 156 uinteger_36
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 1F
-
-uinteger_36
-
-Simple_Type,
-
-uinteger,
-36
---------------------------------------------------------------------------------
-5.1.3.93 uinteger_4
-
-This is a uinteger type with a size restriction of 4 bytes.
-
-Table 157 uinteger_4
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 20
-
-uinteger_4
-
-Simple_Type,
-
-uinteger,
-4
---------------------------------------------------------------------------------
-5.1.3.94 uinteger_48
-
-This is a uinteger type with a size restriction of 48 bytes.
-
-Table 158 uinteger_48
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 23
-
-uinteger_48
-
-Simple_Type,
-
-uinteger,
-48
---------------------------------------------------------------------------------
-5.1.3.95 uinteger_64
-
-This is a uinteger type with a size restriction of 64 bytes.
-
-Table 159 uinteger_64
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 24
-
-uinteger_64
-
-Simple_Type,
-
-uinteger,
-64
---------------------------------------------------------------------------------
-5.1.3.96 uinteger_66
-
-This is a uinteger type with a size restriction of 66 bytes.
-
-Table 160 uinteger_66
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 27
-
-uinteger_66
-
-Simple_Type,
-
-uinteger,
-66
---------------------------------------------------------------------------------
-5.1.3.97 uinteger_8
-
-This is a uinteger type with a size restriction of 8 bytes.
-
-Table 161 uinteger_8
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 02 25
-
-uinteger_8
-
-Simple_Type,
-
-uinteger,
-8
---------------------------------------------------------------------------------
-
-5.1.3.98 verify_mode
-
-This enumeration type defines the verification operation the TPer SHALL perform during the re-
-encryption process after a sector has been written with the new encryption key.
-
-Table 162 verify_mode
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 12
-
-verify_mode
-
-Enumeration_Type,
-0,
-7
-
-
-
-
-
-The enumeration values are associated as defined in Table 163.
-
-Table 163 verify_mode Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-0
-
-No verify
-
-1
-
-Verify enabled
-
-2-7
-
-Reserved
---------------------------------------------------------------------------------
-5.1.3.99 Year
-
-Name-value pair that has a Name of "0" and takes year_enum as the value.
-
-Table 164 Year
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 14 01
-
-Year
-
-Name_Value_Uinteger_Type,
-0,
-year_enum
-
-
-
-
-
-
-
-5.1.3.100 year_enum
-
-Used in association with the Year name-value pair.
-
-Table 165 year_enum
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 16
-
-year_enum
-
-Enumeration_Type,
-1970,
-9999
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-
-
---------------------------------------------------------------------------------
-
-
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
 
 -- data Type = Base_Type
 --           | Simple_Type
@@ -3544,10 +3027,478 @@ on the notation description of the type formats (see 5.1.1).
 |]
 
 \end{code}
+
+5.1.3.80 Type_object_ref
+
+The Type_object_ref type describes a uidref to an object in the Type table.
+
+\begin{code}
+
+[ttype|
+
+                     Table 144 Type_object_ref
+    +-----------------------+---------------+-----------------------------+
+    |UID                    |Name           |Format                       |
+    +-----------------------+---------------+-----------------------------+
+    |00 00 00 05 00 00 0C 02|Type_object_ref|Restricted_Reference_Type{6},|
+    |                       |               |uidref {TypeTableUID}        |
+    |                       |               |                             |
+    +-----------------------+---------------+-----------------------------+
+
+|]
+
+\end{code}
+
+5.1.3.81 uid
+
+This is the type used for the UID column of object tables.
+
+\begin{code}
+
+[ttype|
+
+                     Table 145 uid
+    +-----------------------+----------+--------------+
+    |UID                    |Name      |Format        |
+    +-----------------------+----------+--------------+
+    |00 00 00 05 00 00 02 09|uid       |Simple_Type,  |
+    |                       |          |bytes,        |
+    |                       |          |8             |
+    +-----------------------+----------+--------------+
+
+|]
+
+\end{code}
+
+5.1.3.82 uinteger
+
+This is the base type that is used to represent an unsigned integer.
+
+\begin{code}
+
+[ttype|
+
+                  Table 146 uinteger
+    +-----------------------+--------+---------+
+    |UID                    |Name    |Format   |
+    +-----------------------+--------+---------+
+    |00 00 00 05 00 00 00 05|uinteger|Base_Type|
+    |                       |        |         |
+    |                       |        |         |
+    +-----------------------+--------+---------+
+
+|]
+
+\end{code}
+
+5.1.3.83 uinteger_1
+
+This is a uinteger type with a size restriction of 1 byte.
+
+\begin{code}
+
+[ttype|
+
+                     Table 147 uinteger_1
+    +-----------------------+----------+------------+
+    |UID                    |Name      |Format      |
+    +-----------------------+----------+------------+
+    |00 00 00 05 00 00 02 11|uinteger_1|Simple_Type,|
+    |                       |          |uinteger,   |
+    |                       |          |1           |
+    +-----------------------+----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.84 uinteger_128
+
+This is a uinteger type with a size restriction of 128 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 148 uinteger_128
+    +-----------------------+------------+------------+
+    |UID                    |Name        |Format      |
+    +-----------------------+------------+------------+
+    |00 00 00 05 00 00 02 12|uinteger_128|Simple_Type,|
+    |                       |            |uinteger,   |
+    |                       |            |128         |
+    +-----------------------+------------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.85 uinteger_2
+
+This is a uinteger type with a size restriction of 2 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 149 uinteger_2
+    +-----------------------+----------+------------+
+    |UID                    |Name      |Format      |
+    +-----------------------+----------+------------+
+    |00 00 00 05 00 00 02 15|uinteger_2|Simple_Type,|
+    |                       |          |uinteger, 2 |
+    |                       |          |            |
+    +-----------------------+----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.86 uinteger_20
+
+This is a uinteger type with a size restriction of 20 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 150 uinteger_20
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 16|uinteger_20|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |20          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.87 uinteger_21
+
+This is a uinteger type with a size restriction of 21 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 151 uinteger_21
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 17|uinteger_21|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |21          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.88 uinteger_24
+
+This is a uinteger type with a size restriction of 24 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 152 uinteger_24
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 18|uinteger_24|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |24          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.89 uinteger_256
+
+This is a uinteger type with a size restriction of 256 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 153 uinteger_256
+    +-----------------------+------------+------------+
+    |UID                    |Name        |Format      |
+    +-----------------------+------------+------------+
+    |00 00 00 05 00 00 02 19|uinteger_256|Simple_Type,|
+    |                       |            |uinteger,   |
+    |                       |            |256         |
+    +-----------------------+------------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.90 uinteger_28
+
+This is a uinteger type with a size restriction of 28 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 154 uinteger_28
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 1A|uinteger_28|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |28          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.91 uinteger_30
+
+This is a uinteger type with a size restriction of 30 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 155 uinteger_30
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 1B|uinteger_30|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |30          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.92 uinteger_36
+
+This is a uinteger type with a size restriction of 36 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 156 uinteger_36
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 1F|uinteger_36|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |36          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.93 uinteger_4
+
+This is a uinteger type with a size restriction of 4 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 147 uinteger_1
+    +-----------------------+----------+------------+
+    |UID                    |Name      |Format      |
+    +-----------------------+----------+------------+
+    |00 00 00 05 00 00 02 20|uinteger_4|Simple_Type,|
+    |                       |          |uinteger,   |
+    |                       |          |4           |
+    +-----------------------+----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.94 uinteger_48
+
+This is a uinteger type with a size restriction of 48 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 158 uinteger_48
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 23|uinteger_48|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |48          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.95 uinteger_64
+
+This is a uinteger type with a size restriction of 64 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 159 uinteger_64
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 24|uinteger_64|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |64          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.96 uinteger_66
+
+This is a uinteger type with a size restriction of 66 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 160 uinteger_66
+    +-----------------------+-----------+------------+
+    |UID                    |Name       |Format      |
+    +-----------------------+-----------+------------+
+    |00 00 00 05 00 00 02 27|uinteger_66|Simple_Type,|
+    |                       |           |uinteger,   |
+    |                       |           |66          |
+    +-----------------------+-----------+------------+
+
+|]
+
+\end{code}
+
+5.1.3.97 uinteger_8
+
+This is a uinteger type with a size restriction of 8 bytes.
+
+\begin{code}
+
+[ttype|
+
+                     Table 160 uinteger_8
+    +-----------------------+----------+------------+
+    |UID                    |Name      |Format      |
+    +-----------------------+----------+------------+
+    |00 00 00 05 00 00 02 25|uinteger_8|Simple_Type,|
+    |                       |          |uinteger,   |
+    |                       |          |8           |
+    +-----------------------+----------+------------+
+
+|]
+
+\end{code}
 --------------------------------------------------------------------------------
+text
 
+                Table foo
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |0                |                   |
+    +-----------------+-------------------+
+    |1                |                   |
+    +-----------------+-------------------+
+    |2                |                   |
+    +-----------------+-------------------+
+    |3                |                   |
+    +-----------------+-------------------+
 
+--------------------------------------------------------------------------------
+5.1.3.98 verify_mode
 
+This enumeration type defines the verification operation the TPer SHALL perform
+during the re-encryption process after a sector has been written with the new
+encryption key.
+
+\begin{code}
+
+[ttype|
+
+                     Table 162 verify_mode
+    +-----------------------+-----------+-----------------+
+    |UID                    |Name       |Format           |
+    +-----------------------+-----------+-----------------+
+    |00 00 00 05 00 00 04 12|verify_mode|Enumeration_Type,|
+    |                       |           |0,               |
+    |                       |           |7                |
+    +-----------------------+-----------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values are associated as defined in Table 163.
+
+    Table 163 verify_mode Enumeration Values
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |0                |No verify          |
+    +-----------------+-------------------+
+    |1                |Verify enabled     |
+    +-----------------+-------------------+
+    |2-7              |Reserved           |
+    +-----------------+-------------------+
+--------------------------------------------------------------------------------
+5.1.3.99 Year
+
+Name-value pair that has a Name of "0" and takes year_enum as the value.
+
+\begin{code}
+
+[ttype|
+
+                     Table 164 Year
+    +-----------------------+----------+-------------------------+
+    |UID                    |Name      |Format                   |
+    +-----------------------+----------+-------------------------+
+    |00 00 00 05 00 00 14 01|Year      |Name_Value_Uinteger_Type,|
+    |                       |          |0,                       |
+    |                       |          |year_enum                |
+    +-----------------------+----------+-------------------------+
+
+|]
+
+\end{code}
+5.1.3.100 year_enum
+
+Used in association with the Year name-value pair.
+
+\begin{code}
+
+[ttype|
+
+                     Table 165 year_enum
+    +-----------------------+---------+-----------------+
+    |UID                    |Name     |Format           |
+    +-----------------------+---------+-----------------+
+    |00 00 00 05 00 00 04 16|year_enum|Enumeration_Type,|
+    |                       |         |1970,            |
+    |                       |         |9999             |
+    +-----------------------+---------+-----------------+
+
+|]
+
+\end{code}
+--------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------
 \begin{code}

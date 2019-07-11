@@ -49,3 +49,6 @@ Table 131 "SPTemplates_object _ref" should be "SPTemplates_object_ref" (no space
 5.1.3.78 "Template_object _ref" should be "Template_object_ref"
 
 5.1.3.80 "Type_object _ref" should be "Type_object_ref"
+
+5.1.3.81 Not really an erratum, but ... uid is the only use in the Core Spec
+for bytes_8, but collapsing the two concepts is notationally awkward.

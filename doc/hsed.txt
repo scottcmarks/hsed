@@ -751,6 +751,9 @@ uobject_refType :: UID
 upadding_typeType :: UID
 upasswordType :: UID
 uprotect_typesType :: UID
+ureencrypt_requestType :: UID
+ureencrypt_stateType :: UID
+ureset_typesType :: UID
 type Core_uidref = UID
 implementationDependant_AC_elementSize :: Int
 implementationDependant_max_columns :: Int

@@ -507,180 +507,6 @@ text
 
 \end{code}
 --------------------------------------------------------------------------------
-5.1.3.64 protect_types
-
-This set is used to identify the protection mechanisms in operation when a column is identified as
-hidden.
-
-Table 123 protect_types
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 1A 05
-
-protect_types
-
-Set_Type,
-0,
-255
-The empty set indicates that keys are not hidden. The values of the set are all applied to the protected
-value. The set values are assigned in [3].
-
---------------------------------------------------------------------------------
-5.1.3.65 reencrypt_request
-
-This enumeration is used to identify the host re-encryption request value.
-
-Table 124 reencrypt_request
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 13
-
-reencrypt_request
-
-Enumeration_Type,
-1,
-16
-
-
-
-
-
-The enumeration values are associated as defined in 5.7.2.2.14.
-
---------------------------------------------------------------------------------
-5.1.3.66 reencrypt_state
-
-This enumeration type identifies the present re-encryption state for an LBA range.
-
-Table 125 reencrypt_state
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 04 14
-
-reencrypt_state
-
-Enumeration_Type,
-1,
-16
-
-
-
-
-
-
-The enumeration values are associated as defined in Table 126.
-
-Table 126 reencrypt_state Enumeration Values
-
-
-Enumeration Value
-
-Associated Value
-
-1
-
-Idle
-
-2
-
-Pending
-
-3
-
-Active
-
-4
-
-Completed
-
-5
-
-Paused
-
-6-16
-
-Reserved
-
-
-
---------------------------------------------------------------------------------
-5.1.3.67 reset_types
-
-This Set type identifies the various TCG reset options available.
-
-Table 127 reset_types
-
-
-UID
-
-Name
-
-Format
-
-00 00 00 05 00 00 1A 01
-
-reset_types
-
-Set_Type,
-0,
-31
-
-
-
-
-
-The Set values are associated as defined in Table 128.
-
-Table 128 reset_types Set Values
-
-
-Set Value
-
-Associated Value
-
-0
-
-Power Cycle
-
-1
-
-Hardware
-
-2
-
-HotPlug
-
-3-15
-
-Reserved
-
-16-31
-
-Vendor Unique
-
-
-
-
-
---------------------------------------------------------------------------------
 5.1.3.68 Seconds
 
 Name-value pair that has a Name of "5" and takes seconds_enum as the value.
@@ -3708,6 +3534,113 @@ hidden.
 
 The empty set indicates that keys are not hidden. The values of the set are all applied to the protected
 value. The set values are assigned in [3].
+--------------------------------------------------------------------------------
+5.1.3.65 reencrypt_request
+
+This enumeration is used to identify the host re-encryption request value.
+
+
+
+
+
+\begin{code}
+
+[ttype|
+
+                     Table 124 reencrypt_request
+    +-----------------------+-----------------+-----------------+
+    |UID                    |Name             |Format           |
+    +-----------------------+-----------------+-----------------+
+    |00 00 00 05 00 00 04 13|reencrypt_request|Enumeration_Type,|
+    |                       |                 |1,               |
+    |                       |                 |16               |
+    +-----------------------+-----------------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values are associated as defined in 5.7.2.2.14.
+
+5.1.3.66 reencrypt_state
+
+This enumeration type identifies the present re-encryption state for an LBA range.
+
+\begin{code}
+
+[ttype|
+
+                     Table 125 reencrypt_state
+    +-----------------------+---------------+-----------------+
+    |UID                    |Name           |Format           |
+    +-----------------------+---------------+-----------------+
+    |00 00 00 05 00 00 04 14|reencrypt_state|Enumeration_Type,|
+    |                       |               |1,               |
+    |                       |               |16               |
+    +-----------------------+---------------+-----------------+
+
+|]
+
+\end{code}
+
+The enumeration values are associated as defined in Table 126.
+
+   Table 126 reencrypt_state Enumeration Values
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |1                |Idle               |
+    +-----------------+-------------------+
+    |2                |Pending            |
+    +-----------------+-------------------+
+    |3                |Active             |
+    +-----------------+-------------------+
+    |4                |Completed          |
+    +-----------------+-------------------+
+    |5                |Paused             |
+    +-----------------+-------------------+
+    |6-16             |Reserved           |
+    +-----------------+-------------------+
+
+5.1.3.67 reset_types
+
+This Set type identifies the various TCG reset options available.
+
+\begin{code}
+
+[ttype|
+
+                     Table 127 reset_types
+    +-----------------------+-----------+--------------+
+    |UID                    |Name       |Format        |
+    +-----------------------+-----------+--------------+
+    |00 00 00 05 00 00 1A 01|reset_types|Set_Type,     |
+    |                       |           |0,            |
+    |                       |           |31            |
+    +-----------------------+-----------+--------------+
+
+|]
+
+\end{code}
+
+The Set values are associated as defined in Table 128.
+
+
+    Table 128 reset_types Set Values
+    +-----------------+----------------+
+    |Enumeration Value|Associated Value|
+    +-----------------+----------------+
+    |0                |Power Cycle     |
+    +-----------------+----------------+
+    |1                |Hardware        |
+    +-----------------+----------------+
+    |2                |HotPlug         |
+    +-----------------+----------------+
+    |3-15             |Reserved        |
+    +-----------------+----------------+
+    |16-31            |Vendor Unique   |
+    +-----------------+----------------+
+--------------------------------------------------------------------------------
 
 
 

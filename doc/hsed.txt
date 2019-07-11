@@ -585,129 +585,28 @@ instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRow
 
 -- | Table column types.
 module System.SED.Common.ColumnTypes
-type TPer a = Reader Env a
-data Env
-Env :: Core -> Implementation -> SSC -> Env
-[core] :: Env -> Core
-[implementation] :: Env -> Implementation
-[ssc] :: Env -> SSC
-data Core
-Core :: Core
-data Implementation
-Implementation :: Int -> Int -> Implementation
-[__AC_elementSize] :: Implementation -> Int
-[__max_columns] :: Implementation -> Int
-data SSC
-SSC :: Maybe Int -> Maybe Int -> SSC
-[__AC_elementMinSize] :: SSC -> Maybe Int
-[__min_max_columns] :: SSC -> Maybe Int
-newtype Core_ACE_columns
-Core_ACE_columns :: Set Int -> Core_ACE_columns
-_ACE_columnsSetSize :: TPer Int
+uAC_elementType :: UID
+uACE_columnsType :: UID
+uACE_expressionType :: UID
+uACE_object_refType :: UID
 uACLType :: UID
 uadv_key_modeType :: UID
-data Core_adv_key_mode
-Core_adv_key_mode_Wait_for_AdvKey_Req :: Core_adv_key_mode
-Core_adv_key_mode_Auto_advance_keys :: Core_adv_key_mode
-Core_adv_key_mode_Reserved_2 :: Core_adv_key_mode
-Core_adv_key_mode_Reserved_3 :: Core_adv_key_mode
-Core_adv_key_mode_Reserved_4 :: Core_adv_key_mode
-Core_adv_key_mode_Reserved_5 :: Core_adv_key_mode
-Core_adv_key_mode_Reserved_6 :: Core_adv_key_mode
-Core_adv_key_mode_Reserved_7 :: Core_adv_key_mode
 uattr_flagsType :: UID
-data Core_attr_flags
-Core_attr_flags :: Set Core_attr_flags_Set_Values -> Core_attr_flags
-data Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Get_Not_Permitted :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Set_Not_Permitted :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_02 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_03 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_04 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_05 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_06 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_07 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_08 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_09 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_10 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_11 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_12 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_13 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_14 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_15 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_16 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_17 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_18 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_19 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_20 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_21 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_22 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_23 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_24 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_25 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_26 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_27 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_28 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_29 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_30 :: Core_attr_flags_Set_Values
-Core_attr_flags_Set_Values_Reserved_31 :: Core_attr_flags_Set_Values
 uauth_methodType :: UID
-data Core_auth_method
-Core_auth_method_None :: Core_auth_method
-Core_auth_method_Password :: Core_auth_method
-Core_auth_method_Exchange :: Core_auth_method
-Core_auth_method_Sign :: Core_auth_method
-Core_auth_method_SymK :: Core_auth_method
-Core_auth_method_HMAC :: Core_auth_method
-Core_auth_method_TperSign :: Core_auth_method
-Core_auth_method_TPerExchange :: Core_auth_method
-Core_auth_method_Reserved_8 :: Core_auth_method
-Core_auth_method_Reserved_9 :: Core_auth_method
-Core_auth_method_Reserved_10 :: Core_auth_method
-Core_auth_method_Reserved_11 :: Core_auth_method
-Core_auth_method_Reserved_12 :: Core_auth_method
-Core_auth_method_Reserved_13 :: Core_auth_method
-Core_auth_method_Reserved_14 :: Core_auth_method
-Core_auth_method_Reserved_15 :: Core_auth_method
-Core_auth_method_Reserved_16 :: Core_auth_method
-Core_auth_method_Reserved_17 :: Core_auth_method
-Core_auth_method_Reserved_18 :: Core_auth_method
-Core_auth_method_Reserved_19 :: Core_auth_method
-Core_auth_method_Reserved_20 :: Core_auth_method
-Core_auth_method_Reserved_21 :: Core_auth_method
-Core_auth_method_Reserved_22 :: Core_auth_method
-Core_auth_method_Reserved_23 :: Core_auth_method
 uAuthority_object_refType :: UID
 ubooleanType :: UID
-type Core_boolean = Bool
 uboolean_ACEType :: UID
-data Core_boolean_ACE
-And :: Core_boolean_ACE
-Or :: Core_boolean_ACE
-Not :: Core_boolean_ACE
 ubyte_row_refType :: UID
-type Core_byte_row_ref = Core_General_Reference_Type_Byte_Row
 ubyte_table_refType :: UID
 ubytesType :: UID
-newtype Core_bytes n
-Core_bytes :: Fixed_bytes n -> Core_bytes n
 ubytes_4Type :: UID
-type Core_bytes_4 = Core_bytes 4
 ubytes_12Type :: UID
-type Core_bytes_12 = Core_bytes 12
 ubytes_16Type :: UID
-type Core_bytes_16 = Core_bytes 16
 ubytes_20Type :: UID
-type Core_bytes_20 = Core_bytes 20
 ubytes_32Type :: UID
-type Core_bytes_32 = Core_bytes 32
 ubytes_48Type :: UID
-type Core_bytes_48 = Core_bytes 48
 ubytes_64Type :: UID
-type Core_bytes_64 = Core_bytes 64
 uCertificates_object_refType :: UID
-newtype Core_Certificates_object_ref
-Core_Certificates_object_ref :: (Core_uidref -> Maybe Core_Restricted_Reference_Type_Object) -> Core_Certificates_object_ref
 uclock_kindType :: UID
 uclock_timeType :: UID
 uColumn_object_refType :: UID
@@ -786,69 +685,6 @@ uuinteger_8Type :: UID
 uverify_modeType :: UID
 uYearType :: UID
 uyear_enumType :: UID
-type Core_uidref = UID
-implementationDependant_AC_elementSize :: Int
-implementationDependant_max_columns :: Int
-imp' :: Implementation
-ssc_AC_elementMinSize :: Maybe Int
-ssc_min_max_columns :: Maybe Int
-_max_columns :: TPer Int
-_min_max_columns :: TPer (Maybe Int)
-ssc' :: SSC
-core' :: Core
-newtype Core_General_Reference_Type_Byte_Row
-Core_General_Reference_Type_Byte_Row :: Natural -> Core_General_Reference_Type_Byte_Row
-newtype Core_General_Reference_Type_Object
-Core_General_Reference_Type_Object :: Core_uidref -> Core_General_Reference_Type_Object
-mkCore_General_object_ref :: Core_uidref -> Maybe Core_General_Reference_Type_Object
-data Core_table_kind
-ByteTable :: Core_table_kind
-ObjectTable :: Core_table_kind
-data General_Reference_Table_Type (a :: Core_table_kind) c
-[General_Reference_Table_Type_Byte] :: Core_uidref -> General_Reference_Table_Type  'ByteTable Core_uidref
-[General_Reference_Table_Type_Object] :: Core_uidref -> General_Reference_Table_Type  'ObjectTable Core_uidref
-type Core_Reference_UID_List = [UID]
-data Core_Restricted_Reference_Type_Object
-Core_Restricted_Reference_Type_Object :: Core_Reference_UID_List -> Core_uidref -> Core_Restricted_Reference_Type_Object
-mkCore_Restricted_object_ref :: Core_Reference_UID_List -> Core_uidref -> Maybe Core_Restricted_Reference_Type_Object
-mkCore_Restricted_object_ref_To :: Core_uidref -> Core_uidref -> Maybe Core_Restricted_Reference_Type_Object
-env :: Env
-max_columns :: TPer Int
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.Common.ColumnTypes.Core_bytes n)
-instance GHC.Classes.Ord (System.SED.Common.ColumnTypes.Core_bytes n)
-instance GHC.Classes.Eq (System.SED.Common.ColumnTypes.Core_bytes n)
-instance GHC.Read.Read System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_attr_flags_Set_Values
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_attr_flags_Set_Values
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_attr_flags_Set_Values
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_attr_flags_Set_Values
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Read.Read System.SED.Common.ColumnTypes.Env
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Env
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Env
-instance GHC.Read.Read System.SED.Common.ColumnTypes.SSC
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.SSC
-instance GHC.Show.Show System.SED.Common.ColumnTypes.SSC
-instance GHC.Read.Read System.SED.Common.ColumnTypes.Implementation
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Implementation
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Implementation
-instance GHC.Read.Read System.SED.Common.ColumnTypes.Core
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.Common.ColumnTypes.Core_bytes n)
 
 
 -- | Datatypes for Tokens.

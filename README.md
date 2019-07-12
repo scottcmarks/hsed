@@ -1,4 +1,18 @@
 # hsed
+Short-term TODO list
+
+Finish ColumnTypes
+- Parse Format field of Type Table row tables
+- add rows to monad
+- generate Type Table at the end
+- Template Haskell for Enumeration tables (one special case)
+
+Type checking on Set methods
+
+Generating the TPer and SSC overlapping specs
+
+
+Long-term notes:
 command parsing and generation all functional
 device itself must be in IO(SelfEncryptingDrive), because successive reads will return different answers
 - other processes can affect answers

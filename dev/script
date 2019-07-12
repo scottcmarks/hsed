@@ -2,16 +2,13 @@
 :set -fno-warn-type-defaults
 :set -fno-warn-unused-imports
 :set -XDataKinds
-:set -XOverloadedStrings
 :set -XTemplateHaskell
 :set -XQuasiQuotes
+:set -XOverloadedStrings
 
 import System.IO
 putStrLn "loading script ..."
 --------------------------------------------------------------------------------
-
-$( [| putStrLn "This is hsed!" |] )  -- $([|..|]) is a sort of identity
-
 
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
@@ -34,16 +31,11 @@ import           System.SED.Common.THUtil
 import           System.SED.Common.ColumnTypes.TH
 
 pQ = (ppr <$>) . runQ
-hw = [| putStrLn "Hello, world!" |]
-pQ hw
-
-$( hw )  -- echoed by -ddump-splices
-
 showQ = (\h -> h & pQ <&> show >>= putStrLn)
-hw & showQ
 
 import Text.Heredoc
 
+pT = ppr . ttypeDecs
 
 :{
 table50 = [here|
@@ -61,11 +53,12 @@ table50 = [here|
 :}
 
 putStrLn "table50 ====>"
-ppr $ ttypeDecs table50
+pT table50
 
 
 :{
 table51 = [here|
+
                      Table 51 adv_key_mode
     +-----------------------+------------+-----------------+
     |UID                    |Name        |Format           |
@@ -74,12 +67,34 @@ table51 = [here|
     |                       |            |0,               |
     |                       |            |7                |
     +-----------------------+------------+-----------------+
+
 |] :: String
 :}
 putStrLn "table51 ====>"
-ppr $ ttypeDecs table51
+pT table51
 
+-- pE = ppr . tenumDecs
 
+:{
+table52 = [here|
+
+     Table 52 adv_key_mode Enumeration Values
+    +------------------+---------------------+
+    |Enumeration Value |Behavior             |
+    +------------------+---------------------+
+    |0                 |Wait for AdvKey_Req  |
+    +------------------+---------------------+
+    |1                 |Auto-advance keys    |
+    +------------------+---------------------+
+    |2-7               |Reserved             |
+    +------------------+---------------------+
+
+|] :: String
+:}
+-- putStrLn "table52 ====>"
+-- pE table52
+putStrLn "table52 ="
+putStrLn table52
 
 putStrLn "Buh-bye now."
 

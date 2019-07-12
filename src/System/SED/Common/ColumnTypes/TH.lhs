@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 \documentstyle{article}
 \begin{document}
 \chapter{ColumnTypes Template Haskell}
@@ -27,11 +26,13 @@ module System.SED.Common.ColumnTypes.TH where
 
 
 import           Data.Attoparsec.ByteString       (Parser, endOfInput, many1, string,
-                                                   take, takeTill, takeWhile, (<?>))
-import           Data.Attoparsec.ByteString.Char8 (char8, endOfLine, isEndOfLine,
-                                                   isHorizontalSpace, skipSpace)
+                                                   take, takeTill, takeWhile, (<?>),
+                                                   inClass, satisfy)
+import           Data.Attoparsec.ByteString.Char8 (digit, char8, endOfLine,
+                                                   isEndOfLine, isHorizontalSpace,
+                                                   skipSpace)
 import           Data.ByteString                  (ByteString, append, empty, init,
-                                                   last, length)
+                                                   last, length, pack)
 import           Data.ByteString.Char8            (unpack)
 import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
@@ -114,7 +115,7 @@ ttypeDecs s = ds
 
 typeTableParser :: Parser TypeTableRow
 typeTableParser = do
-    pieceLengths <- skipSpace *> title *> rowSep
+    pieceLengths <- skipSpace *> typeTableTitle *> rowSep
     rows         <- header pieceLengths *> rowSep *> many1 (typeTableRow pieceLengths) -- <-- the data
     ()           <- rowSep *> blankLines *> endOfInput
     pure $ foldr (<>) (TypeTableRow empty empty []) rows
@@ -133,9 +134,9 @@ dTypeTableRow (TypeTableRow u n _fs) =
         typeUID = hexUID u
 
 
-title :: Parser ByteString
-title = (append <$> string "Table " <*> takeTill isEndOfLine) <* endOfLine
-  <?> "Table title"
+typeTableTitle :: Parser ByteString
+typeTableTitle = (append <$> string "Table " <*> takeTill isEndOfLine) <* endOfLine
+  <?> "Table typeTableTitle"
 
 spaces :: Parser ByteString
 spaces = takeWhile isHorizontalSpace
@@ -180,9 +181,15 @@ header lengths = tableRowFields lengths *> pure ()
   <?> ("header " ++ show lengths)
 
 
+
+
+
+
+
 formatString :: TypeTableRow -> ByteString
-formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) = mconcat [ "L" -- FIXME
-                                                                          ]
+formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) =
+    mconcat [ "L" -- FIXME
+            ]
 formatString t = error $ mconcat [ "No case for ", show t, "?" ]
 
 
@@ -196,6 +203,68 @@ instance Semigroup TypeTableRowDecs
 instance Monoid TypeTableRowDecs
   where mempty = TypeTableRowDecs []
 
+
+
+
+
+
+-- | QuasiQuoter for Type Table enum tables.
+--
+--   Some enumerations are explicated by tables following the Type Tables that refer to them.
+tenum :: QuasiQuoter
+tenum = QuasiQuoter
+    { quoteExp = undefined
+    , quotePat = undefined
+    , quoteDec = returnQ <$> tenumDecs
+    , quoteType = undefined
+    }
+
+
+tenumDecs :: String -> [Dec]
+tenumDecs s = ds
+  where
+    EnumDecs ds =
+        dEnum $ parseTable enumTableParser s
+
+dEnum :: (ByteString, [EnumRow]) -> EnumDecs
+dEnum = undefined
+-- dEnum (n, enumValueLabelPairs) =
+--     EnumDecs [dSig enumName ''UID, dVal enumName $ eUID typeUID]
+--   where enumName = mkName $ mconcat ["u", unpack n, "Type"]
+--         typeUID = hexUID u
+
+
+enumTableParser :: Parser (ByteString, [EnumRow])
+enumTableParser = do
+    enumType <- skipSpace *> enumTableTitle
+    pieceLengths <- rowSep
+    rows         <- header pieceLengths *> rowSep  *> many1 (enumTableRow pieceLengths) -- <-- the data
+    ()           <- rowSep *> blankLines *> endOfInput
+    pure $ (enumType, rows)
+
+data EnumRow = EnumRow
+    deriving (Show)
+
+enumTableTitle :: Parser ByteString
+enumTableTitle = do
+    _ <- string "Table " *> many1 digit *> string " "
+    nameChars <- many1 idChar
+    _ <- takeTill isEndOfLine <* endOfLine
+    pure $ pack nameChars
+  where idChar = satisfy $ inClass "a-zA-Z0-9_"
+
+enumTableRow :: [Int] -> Parser EnumRow
+enumTableRow = undefined
+
+data EnumDecs =  EnumDecs [Dec]
+  deriving(Eq, Show)
+
+instance Semigroup EnumDecs
+  where (EnumDecs d1) <> (EnumDecs d2) =
+            EnumDecs (d1<>d2)
+
+instance Monoid EnumDecs
+  where mempty = EnumDecs []
 
 \end{code}
 \end{document}

@@ -560,7 +560,7 @@ ttypeDecs :: String -> [Dec]
 typeTableParser :: Parser TypeTableRow
 typeTableRow :: [Int] -> Parser TypeTableRow
 dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
-title :: Parser ByteString
+typeTableTitle :: Parser ByteString
 spaces :: Parser ByteString
 rowSepFieldLengths :: Parser [Int]
 rowSep :: Parser [Int]
@@ -575,9 +575,29 @@ header :: [Int] -> Parser ()
 formatString :: TypeTableRow -> ByteString
 data TypeTableRowDecs
 TypeTableRowDecs :: [Dec] -> TypeTableRowDecs
+
+-- | QuasiQuoter for Type Table enum tables.
+--   
+--   Some enumerations are explicated by tables following the Type Tables
+--   that refer to them.
+tenum :: QuasiQuoter
+tenumDecs :: String -> [Dec]
+dEnum :: (ByteString, [EnumRow]) -> EnumDecs
+enumTableParser :: Parser (ByteString, [EnumRow])
+data EnumRow
+EnumRow :: EnumRow
+enumTableTitle :: Parser ByteString
+enumTableRow :: [Int] -> Parser EnumRow
+data EnumDecs
+EnumDecs :: [Dec] -> EnumDecs
+instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.EnumDecs
+instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.EnumDecs
+instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.EnumRow
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRow
+instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.EnumDecs
+instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.EnumDecs
 instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRow

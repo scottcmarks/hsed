@@ -25,6 +25,10 @@ import           Data.Attoparsec.ByteString.Char8(parse,skipSpace)
 import           GHC.Base(pure,(.),(<*),(<*>),(*>),(>>=))
 import           GHC.Err(error)
 import           GHC.Show(Show(..))
+import           Data.ByteString.Char8(pack)
+import           GHC.Classes(Ord(..))
+
+
 import           System.SED.Common.UID
 
 import           System.SED.Common.THUtil
@@ -96,6 +100,7 @@ table52 = [here|
 putStrLn "table52 ="
 putStrLn table52
 
+bs52 = pack table52
 putStrLn "Buh-bye now."
 
 --------------------------------------------------------------------------------

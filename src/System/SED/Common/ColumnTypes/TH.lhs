@@ -21,26 +21,33 @@ Template Haskell for parsing Table column types in Section 5.1.3.
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DerivingVia       #-}
 
 module System.SED.Common.ColumnTypes.TH where
 
 
-import           Data.Attoparsec.ByteString       (Parser, endOfInput, many1, string,
-                                                   take, takeTill, takeWhile, (<?>),
-                                                   inClass, satisfy)
-import           Data.Attoparsec.ByteString.Char8 (digit, char8, endOfLine,
-                                                   isEndOfLine, isHorizontalSpace,
+import           Data.Attoparsec.ByteString       (Parser, endOfInput, inClass,
+                                                   many1, parseOnly, skipWhile,
+                                                   string, take, takeTill, takeWhile,
+                                                   (<?>))
+import           Data.Attoparsec.ByteString.Char8 (decimal, char8, endOfLine,
+                                                   isDigit_w8, isEndOfLine,
+                                                   isHorizontalSpace,
                                                    skipSpace)
+import           Data.Attoparsec.Combinator       (option)
 import           Data.ByteString                  (ByteString, append, empty, init,
-                                                   last, length, pack)
+                                                   last, length)
 import           Data.ByteString.Char8            (unpack)
+import           Data.Either                      (either)
 import           Data.Foldable                    (foldr)
 import           Data.Functor                     ((<$>))
 import           Data.String                      (String)
 
 import           GHC.Base                         (Eq, Int, Monoid(..), Semigroup(..),
-                                                   error, pure, mapM, many, undefined,
+                                                   error, id, pure, mapM, many,
+                                                   undefined,
                                                    ($), (*>), (<*), (<*>), (==))
+import           GHC.Enum                         (enumFromTo)
 import           GHC.List                         (tail, (++))
 import           GHC.Show                         (show, Show)
 
@@ -159,7 +166,7 @@ blankLines = many (spaces *> endOfLine) *> pure ()
 tableRowFields :: [Int] -> Parser [ByteString]
 tableRowFields lengths = tail <$> parseLine
     where
-      parseLine = (mapM takeField lengths <* endOfLine) <?> "Type Table row fields"
+      parseLine = (mapM takeField lengths <* endOfLine) <?> "Table row fields"
       takeField len = trimTrailingWhitespace <$> take len <* char8 '|'
 
 data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
@@ -238,33 +245,34 @@ enumTableParser :: Parser (ByteString, [EnumRow])
 enumTableParser = do
     enumType <- skipSpace *> enumTableTitle
     pieceLengths <- rowSep
-    rows         <- header pieceLengths *> rowSep  *> many1 (enumTableRow pieceLengths) -- <-- the data
-    ()           <- rowSep *> blankLines *> endOfInput
-    pure $ (enumType, rows)
+    _            <- header pieceLengths *> rowSep
+    rows         <- many1 (enumTableRow pieceLengths <* rowSep) -- <-- the data
+    ()           <- blankLines *> endOfInput
+    pure (enumType, rows)
 
-data EnumRow = EnumRow
+
+data EnumRow = EnumRow ByteString [Int]
     deriving (Show)
 
 enumTableTitle :: Parser ByteString
-enumTableTitle = do
-    _ <- string "Table " *> many1 digit *> string " "
-    nameChars <- many1 idChar
-    _ <- takeTill isEndOfLine <* endOfLine
-    pure $ pack nameChars
-  where idChar = satisfy $ inClass "a-zA-Z0-9_"
+enumTableTitle = "Table " *> skipWhile isDigit_w8 *> " "
+                          *> takeWhile idChar <*
+                             takeTill isEndOfLine <* endOfLine
+             <?> "Enum Table Title"
+  where idChar = inClass "a-zA-Z0-9_"
 
 enumTableRow :: [Int] -> Parser EnumRow
-enumTableRow = undefined
+enumTableRow lengths = do
+    [sv,n] <- tableRowFields lengths
+    let ev = either error id  $ parseOnly pRange sv
+    pure $ EnumRow n ev
+  where pRange = do
+            v1 <- dInt
+            option [v1] (enumFromTo v1 <$> ("-" *> dInt))
+        dInt = decimal :: Parser Int
 
-data EnumDecs =  EnumDecs [Dec]
-  deriving(Eq, Show)
-
-instance Semigroup EnumDecs
-  where (EnumDecs d1) <> (EnumDecs d2) =
-            EnumDecs (d1<>d2)
-
-instance Monoid EnumDecs
-  where mempty = EnumDecs []
+newtype EnumDecs = EnumDecs [Dec]
+  deriving(Eq, Show, Semigroup, Monoid) via [Dec]
 
 \end{code}
 \end{document}

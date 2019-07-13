@@ -585,19 +585,19 @@ tenumDecs :: String -> [Dec]
 dEnum :: (ByteString, [EnumRow]) -> EnumDecs
 enumTableParser :: Parser (ByteString, [EnumRow])
 data EnumRow
-EnumRow :: EnumRow
+EnumRow :: ByteString -> [Int] -> EnumRow
 enumTableTitle :: Parser ByteString
 enumTableRow :: [Int] -> Parser EnumRow
-data EnumDecs
+newtype EnumDecs
 EnumDecs :: [Dec] -> EnumDecs
+instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.EnumDecs
+instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.EnumDecs
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.EnumDecs
 instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.EnumDecs
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.EnumRow
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRow
-instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.EnumDecs
-instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.EnumDecs
 instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRow

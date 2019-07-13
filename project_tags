@@ -285,49 +285,44 @@ module System.SED.Common.ImportSystem.SED.Common.Import1,2
 ./src/System/SED/Common/ColumnTypes.lhs,73
 module System.SED.Common.ColumnTypesSystem.SED.Common.ColumnTypes23,24
 
-./src/System/SED/Common/ColumnTypes/TH.lhs,1591
-module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH24,25
-import import40,41
-ttype ttype100,101
-ttypeDecs ttypeDecs108,109
-typeTableParser typeTableParser115,116
-typeTableRow typeTableRow122,123
-dTypeTableRow dTypeTableRow129,130
-typeTableTitle typeTableTitle136,137
-spaces spaces140,141
-rowSepFieldLengths rowSepFieldLengths143,144
-rowSep rowSep150,151
-blankLines blankLines154,155
-tableRowFields tableRowFields158,159
-data TypeTableRow TypeTableRow164,165
-data TypeTableRow = TypeTableRow TypeTableRow164,165
-instance Semigroup Semigroup TypeTableRow167,168
-    (T(TypeTableRowu1n1f1)168,169
-type TypeUIDField TypeUIDField171,172
-type TypeName TypeName173,174
-type FormatString FormatString175,176
-header header178,179
-formatString formatString188,189
-data TypeTableRowDecs TypeTableRowDecs195,196
-data TypeTableRowDecs =  TypeTableRowDecs TypeTableRowDecs195,196
-instance Semigroup Semigroup TypeTableRowDecs198,199
-  where (T(TypeTableRowDecsd1)199,200
-instance Monoid Monoid TypeTableRowDecs202,203
-  where mempty mempty203,204
-tenum tenum213,214
-tenumDecs tenumDecs222,223
-dEnum dEnum228,229
-enumTableParser enumTableParser236,237
-data EnumRow EnumRow244,245
-data EnumRow = EnumRowEnumRow244,245
-enumTableTitle enumTableTitle247,248
-enumTableRow enumTableRow255,256
-data EnumDecs EnumDecs258,259
-data EnumDecs =  EnumDecs EnumDecs258,259
-instance Semigroup Semigroup EnumDecs261,262
-  where (E(EnumDecsd1)262,263
-instance Monoid Monoid EnumDecs265,266
-  where mempty mempty266,267
+./src/System/SED/Common/ColumnTypes/TH.lhs,1400
+module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH25,26
+import import45,46
+ttype ttype107,108
+ttypeDecs ttypeDecs115,116
+typeTableParser typeTableParser122,123
+typeTableRow typeTableRow129,130
+dTypeTableRow dTypeTableRow136,137
+typeTableTitle typeTableTitle143,144
+spaces spaces147,148
+rowSepFieldLengths rowSepFieldLengths150,151
+rowSep rowSep157,158
+blankLines blankLines161,162
+tableRowFields tableRowFields165,166
+data TypeTableRow TypeTableRow171,172
+data TypeTableRow = TypeTableRow TypeTableRow171,172
+instance Semigroup Semigroup TypeTableRow174,175
+    (T(TypeTableRowu1n1f1)175,176
+type TypeUIDField TypeUIDField178,179
+type TypeName TypeName180,181
+type FormatString FormatString182,183
+header header185,186
+formatString formatString195,196
+data TypeTableRowDecs TypeTableRowDecs202,203
+data TypeTableRowDecs =  TypeTableRowDecs TypeTableRowDecs202,203
+instance Semigroup Semigroup TypeTableRowDecs205,206
+  where (T(TypeTableRowDecsd1)206,207
+instance Monoid Monoid TypeTableRowDecs209,210
+  where mempty mempty210,211
+tenum tenum220,221
+tenumDecs tenumDecs229,230
+dEnum dEnum235,236
+enumTableParser enumTableParser243,244
+data EnumRow EnumRow253,254
+data EnumRow = EnumRow EnumRow253,254
+enumTableTitle enumTableTitle256,257
+enumTableRow enumTableRow263,264
+newtype EnumDecs EnumDecs273,274
 
 ./src/System/SED/Common/Value.lhs,3494
 module System.SED.Common.Value System.SED.Common.Value23,24

@@ -2,28 +2,6 @@ digraph G {
 	graph [ratio=fill,
 		size="6,4"
 	];
-	subgraph cluster_0 {
-		graph [color="#0000000F",
-			label=Extras,
-			style=filled
-		];
-		u0		 [fillcolor="#ffffbb",
-			label=Bytes,
-			penwidth=0,
-			style=filled];
-		u1		 [fillcolor="#ffffbb",
-			label=Hex,
-			penwidth=0,
-			style=filled];
-		u2		 [fillcolor="#ffffbb",
-			label=Integral,
-			penwidth=0,
-			style=filled];
-		u3		 [fillcolor="#ffffbb",
-			label=GitVersion,
-			penwidth=0,
-			style=filled];
-	}
 	subgraph cluster_1 {
 		graph [color="#0000000F",
 			label=Hsed,
@@ -149,6 +127,28 @@ digraph G {
 					style=filled];
 			}
 		}
+	}
+	subgraph cluster_0 {
+		graph [color="#0000000F",
+			label=Extras,
+			style=filled
+		];
+		u0		 [fillcolor="#ffffbb",
+			label=Bytes,
+			penwidth=0,
+			style=filled];
+		u1		 [fillcolor="#ffffbb",
+			label=Hex,
+			penwidth=0,
+			style=filled];
+		u2		 [fillcolor="#ffffbb",
+			label=Integral,
+			penwidth=0,
+			style=filled];
+		u3		 [fillcolor="#ffffbb",
+			label=GitVersion,
+			penwidth=0,
+			style=filled];
 	}
 	u24	 [fillcolor="#bbffbb",
 		label=Main,

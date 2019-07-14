@@ -305,6 +305,7 @@ module System.SED.Common.THUtil
 --   an error. This is safe only in TH code, where an error is a
 --   compilation error.
 parseTable :: Parser c -> String -> c
+dData :: Name -> [Name] -> [Name] -> Dec
 
 -- | Signature declaration, essentially [d| $n :: $t |]
 dSig :: Name -> Name -> Dec

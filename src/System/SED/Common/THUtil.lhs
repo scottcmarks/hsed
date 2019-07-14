@@ -31,15 +31,14 @@ import           Data.Either                     (either)
 import           Data.List                       (foldl)
 import           Data.String                     (IsString (..))
 
-import           GHC.Base                        (String, id, (.))
+import           GHC.Base                        (Maybe(..), String, id, map, (.))
 import           GHC.Err                         (error)
 import           GHC.Real                        (toInteger)
 import           GHC.TypeNats                    (KnownNat)
 
-import           Language.Haskell.TH             (Body(..), Lit(..),
-                                                  Type(..), Exp(..),
-                                                  Dec(..), Pat(..),
-                                                  Name)
+import           Language.Haskell.TH             (Body(..), Con(..), Dec(..),
+                                                  DerivClause(..), Exp(..), Lit(..),
+                                                  Name, Pat(..), Type(..))
 
 import           Extras.Bytes                    (Fixed_bytes(..), funpack)
 
@@ -52,6 +51,9 @@ import           System.SED.Common.UID           (HalfUID(..), UID(..),
 parseTable :: Parser c -> String -> c
 parseTable tableParser = either error id . parseOnly tableParser . fromString
 
+dData :: Name -> [Name] -> [Name] -> Dec
+dData n cs ds =  DataD [] n [] Nothing (map (`NormalC` []) cs)
+                       [DerivClause Nothing (map ConT ds)]
 
 -- | Signature declaration, essentially [d| $n :: $t |]
 dSig :: Name -> Name -> Dec

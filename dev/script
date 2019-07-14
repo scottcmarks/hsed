@@ -5,6 +5,7 @@
 :set -XTemplateHaskell
 :set -XQuasiQuotes
 :set -XOverloadedStrings
+:set prompt-cont ""
 
 import System.IO
 putStrLn "loading script ..."
@@ -13,20 +14,21 @@ putStrLn "loading script ..."
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
 import           Language.Haskell.TH.PprLib
-import           Data.Attoparsec.ByteString.Char8(isEndOfLine)
+import           Data.Attoparsec.ByteString hiding(parse)
+import           Data.Attoparsec.ByteString.Char8(parse,skipSpace,isEndOfLine)
 import           Data.ByteString(ByteString)
+import           Data.ByteString.Char8(pack)
 import           Data.Either(fromRight)
 import           Data.Function(($),(&))
 import           Data.Functor((<$>),(<&>))
 import           Data.String(String, fromString)
 import           System.SED.Common.TableUIDs
-import           Data.Attoparsec.ByteString hiding(parse)
-import           Data.Attoparsec.ByteString.Char8(parse,skipSpace)
-import           GHC.Base(pure,(.),(<*),(<*>),(*>),(>>=))
+import           GHC.Base(map, pure,(.),(<*),(<*>),(*>),(>>=))
+import           GHC.Enum(Bounded(..), Enum(..))
 import           GHC.Err(error)
+import           GHC.Classes(Eq(..), Ord(..))
+import           GHC.Maybe(Maybe(..))
 import           GHC.Show(Show(..))
-import           Data.ByteString.Char8(pack)
-import           GHC.Classes(Ord(..))
 
 
 import           System.SED.Common.UID
@@ -101,6 +103,61 @@ putStrLn "table52 ="
 putStrLn table52
 
 bs52 = pack table52
+
+parseOnly enumTableParser bs52
+
+:{
+decs = [d|
+  data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
+                         | Core_adv_key_mode_Auto_advance_keys
+                         | Core_adv_key_mode_Reserved_2
+                         | Core_adv_key_mode_Reserved_3
+                         | Core_adv_key_mode_Reserved_4
+                         | Core_adv_key_mode_Reserved_5
+                         | Core_adv_key_mode_Reserved_6
+                         | Core_adv_key_mode_Reserved_7
+      deriving (Bounded, Enum, Eq, Ord, Show)
+         |]
+:}
+
+runQ decs
+showQ decs
+
+:{
+data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
+                       | Core_adv_key_mode_Auto_advance_keys
+                       | Core_adv_key_mode_Reserved_2
+                       | Core_adv_key_mode_Reserved_3
+                       | Core_adv_key_mode_Reserved_4
+                       | Core_adv_key_mode_Reserved_5
+                       | Core_adv_key_mode_Reserved_6
+                       | Core_adv_key_mode_Reserved_7
+    deriving (Bounded, Enum, Eq, Ord, Show)
+:}
+
+:{
+ppr $ dData (mkName "Core_adv_key_mode")
+             (map mkName [ "Core_adv_key_mode_Wait_for_AdvKey_Req"
+                         , "Core_adv_key_mode_Auto_advance_keys"
+                         , "Core_adv_key_mode_Reserved_2"
+                         , "Core_adv_key_mode_Reserved_3"
+                         , "Core_adv_key_mode_Reserved_4"
+                         , "Core_adv_key_mode_Reserved_5"
+                         , "Core_adv_key_mode_Reserved_6"
+                         , "Core_adv_key_mode_Reserved_7"
+                         ])
+             (map mkName [ "Bounded"
+                         , "Enum"
+                         , "Eq"
+                         , "Ord"
+                         , "Show"
+                         ])
+:}
+
+fromEnum (minBound :: Core_adv_key_mode )
+
+fromEnum (maxBound :: Core_adv_key_mode )
+
 putStrLn "Buh-bye now."
 
 --------------------------------------------------------------------------------

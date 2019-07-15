@@ -305,6 +305,9 @@ module System.SED.Common.THUtil
 --   an error. This is safe only in TH code, where an error is a
 --   compilation error.
 parseTable :: Parser c -> String -> c
+
+-- | Data declaration, essentially [d| data $n $c0 | $c1 ... deriving
+--   ($d0,$d1,...) |]
 dData :: Name -> [Name] -> [Name] -> Dec
 
 -- | Signature declaration, essentially [d| $n :: $t |]
@@ -583,18 +586,12 @@ TypeTableRowDecs :: [Dec] -> TypeTableRowDecs
 --   that refer to them.
 tenum :: QuasiQuoter
 tenumDecs :: String -> [Dec]
-dEnum :: (ByteString, [EnumRow]) -> EnumDecs
-enumTableParser :: Parser (ByteString, [EnumRow])
+dEnum :: (String, [EnumRow]) -> [Dec]
+enumTableParser :: Parser (String, [EnumRow])
 data EnumRow
-EnumRow :: ByteString -> [Int] -> EnumRow
-enumTableTitle :: Parser ByteString
+EnumRow :: String -> [Int] -> EnumRow
+enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
-newtype EnumDecs
-EnumDecs :: [Dec] -> EnumDecs
-instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.EnumDecs
-instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.EnumDecs
-instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.EnumDecs
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.EnumDecs
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.EnumRow
 instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.TypeTableRowDecs

@@ -14,11 +14,13 @@ putStrLn "loading script ..."
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
 import           Language.Haskell.TH.PprLib
+import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
 import           Data.Attoparsec.ByteString hiding(parse)
 import           Data.Attoparsec.ByteString.Char8(parse,skipSpace,isEndOfLine)
 import           Data.ByteString(ByteString)
-import           Data.ByteString.Char8(pack)
-import           Data.Either(fromRight)
+import           Data.ByteString.Char8(pack, unpack)
+import           Data.Either(Either(..),fromRight)
+import           Data.Foldable(concatMap, mapM_)
 import           Data.Function(($),(&))
 import           Data.Functor((<$>),(<&>))
 import           Data.String(String, fromString)
@@ -104,7 +106,9 @@ putStrLn table52
 
 bs52 = pack table52
 
-parseOnly enumTableParser bs52
+(enumName, enumRows) = fromRight (error "Left") $  parseOnly enumTableParser bs52
+putStrLn enumName
+mapM_ (putStrLn . show) enumRows
 
 :{
 decs = [d|
@@ -137,22 +141,24 @@ data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
 
 :{
 ppr $ dData (mkName "Core_adv_key_mode")
-             (map mkName [ "Core_adv_key_mode_Wait_for_AdvKey_Req"
-                         , "Core_adv_key_mode_Auto_advance_keys"
-                         , "Core_adv_key_mode_Reserved_2"
-                         , "Core_adv_key_mode_Reserved_3"
-                         , "Core_adv_key_mode_Reserved_4"
-                         , "Core_adv_key_mode_Reserved_5"
-                         , "Core_adv_key_mode_Reserved_6"
-                         , "Core_adv_key_mode_Reserved_7"
-                         ])
-             (map mkName [ "Bounded"
-                         , "Enum"
-                         , "Eq"
-                         , "Ord"
-                         , "Show"
-                         ])
+            (map mkName [ "Core_adv_key_mode_Wait_for_AdvKey_Req"
+                        , "Core_adv_key_mode_Auto_advance_keys"
+                        , "Core_adv_key_mode_Reserved_2"
+                        , "Core_adv_key_mode_Reserved_3"
+                        , "Core_adv_key_mode_Reserved_4"
+                        , "Core_adv_key_mode_Reserved_5"
+                        , "Core_adv_key_mode_Reserved_6"
+                        , "Core_adv_key_mode_Reserved_7"
+                        ])
+            (map mkName [ "Bounded"
+                        , "Enum"
+                        , "Eq"
+                        , "Ord"
+                        , "Show"
+                        ])
 :}
+
+showQ $ (returnQ <$> tenumDecs) table52
 
 fromEnum (minBound :: Core_adv_key_mode )
 

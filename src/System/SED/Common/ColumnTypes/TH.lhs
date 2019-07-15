@@ -36,20 +36,22 @@ import           Data.Attoparsec.ByteString.Char8 (decimal, char8, endOfLine,
                                                    skipSpace)
 import           Data.Attoparsec.Combinator       (option)
 import           Data.ByteString                  (ByteString, append, empty, init,
-                                                   last, length)
+                                                   intercalate, last, length, splitWith)
 import           Data.ByteString.Char8            (unpack)
 import           Data.Either                      (either)
-import           Data.Foldable                    (foldr)
+import           Data.Foldable                    (concatMap, foldr)
 import           Data.Functor                     ((<$>))
 import           Data.String                      (String)
+import           Data.Tuple                       (snd)
 
-import           GHC.Base                         (Eq, Int, Monoid(..), Semigroup(..),
-                                                   error, id, pure, mapM, many,
+import           GHC.Base                         (Eq, Monoid(..), Semigroup(..),
+                                                   error, id, pure, map, mapM, many,
                                                    undefined,
-                                                   ($), (*>), (<*), (<*>), (==))
+                                                   (.), ($), (*>), (<*), (<*>), (==), (||))
 import           GHC.Enum                         (enumFromTo)
 import           GHC.List                         (tail, (++))
 import           GHC.Show                         (show, Show)
+import           GHC.Types                        (Int)
 
 import           Language.Haskell.TH.Quote        (QuasiQuoter(..), quoteType,
                                                    quoteDec, quotePat, quoteExp)
@@ -58,7 +60,7 @@ import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
 
 import           Extras.Integral                  (ordw)
 
-import           System.SED.Common.THUtil         (eUID, dVal, dSig, parseTable)
+import           System.SED.Common.THUtil         (dData, dSig, dVal, eUID, parseTable)
 import           System.SED.Common.UID            (UID)
 import           System.SED.Common.Util           (trimTrailingWhitespace, hexUID)
 
@@ -73,7 +75,6 @@ values SHALL comprise the Type table for every SP, prior to any personalization.
 NOT be able to be changed or deleted by the host.
 
 Included in this section are descriptions of the column types for each column of each table defined in
-this specification, as well as descriptions of each of the component types of the column types.
 Component types are types that have entries in the Type table, but are not referenced directly as
 column types. They are used to make up other types that do represent column types.
 
@@ -228,20 +229,27 @@ tenum = QuasiQuoter
 
 
 tenumDecs :: String -> [Dec]
-tenumDecs s = ds
-  where
-    EnumDecs ds =
-        dEnum $ parseTable enumTableParser s
+tenumDecs = dEnum <$> parseTable enumTableParser
 
-dEnum :: (ByteString, [EnumRow]) -> EnumDecs
-dEnum = undefined
--- dEnum (n, enumValueLabelPairs) =
---     EnumDecs [dSig enumName ''UID, dVal enumName $ eUID typeUID]
---   where enumName = mkName $ mconcat ["u", unpack n, "Type"]
---         typeUID = hexUID u
+dEnum :: (String, [EnumRow]) -> [Dec]
+dEnum (enumName, enumRows) = [dData name constructors derivations]
+  where coreName = "Core_" <> enumName
+        name = mkName $ coreName
+        constructors = map (mkName . snd) $ enumRowsValueLabelPairs
+        derivations = map mkName [ "Bounded"
+                                 , "Enum"
+                                 , "Eq"
+                                 , "Ord"
+                                 , "Show"
+                                 ]
+        enumRowsValueLabelPairs = concatMap enumRowValueLabelPairs enumRows  -- FIXME: missing values should be NA
 
+        enumRowValueLabelPairs :: EnumRow -> [(Int, String)]
+        enumRowValueLabelPairs (EnumRow n [v]) = [(v, mconcat[coreName, "_", n])]
+        enumRowValueLabelPairs (EnumRow n vs) = map pairUp vs
+          where pairUp v = (v, mconcat[coreName, "_", n, "_", show v])
 
-enumTableParser :: Parser (ByteString, [EnumRow])
+enumTableParser :: Parser (String, [EnumRow])
 enumTableParser = do
     enumType <- skipSpace *> enumTableTitle
     pieceLengths <- rowSep
@@ -250,29 +258,28 @@ enumTableParser = do
     ()           <- blankLines *> endOfInput
     pure (enumType, rows)
 
-
-data EnumRow = EnumRow ByteString [Int]
+data EnumRow = EnumRow String [Int]
     deriving (Show)
 
-enumTableTitle :: Parser ByteString
-enumTableTitle = "Table " *> skipWhile isDigit_w8 *> " "
-                          *> takeWhile idChar <*
-                             takeTill isEndOfLine <* endOfLine
+enumTableTitle :: Parser String
+enumTableTitle = unpack <$> ("Table " *> skipWhile isDigit_w8 *> " "
+                                      *> takeWhile idChar <*
+                                         takeTill isEndOfLine <* endOfLine)
              <?> "Enum Table Title"
   where idChar = inClass "a-zA-Z0-9_"
+
 
 enumTableRow :: [Int] -> Parser EnumRow
 enumTableRow lengths = do
     [sv,n] <- tableRowFields lengths
     let ev = either error id  $ parseOnly pRange sv
-    pure $ EnumRow n ev
+    pure $ EnumRow (scrub n) ev
   where pRange = do
             v1 <- dInt
             option [v1] (enumFromTo v1 <$> ("-" *> dInt))
         dInt = decimal :: Parser Int
-
-newtype EnumDecs = EnumDecs [Dec]
-  deriving(Eq, Show, Semigroup, Monoid) via [Dec]
+        scrub n = unpack $ intercalate "_" $ splitWith scrubbed n
+        scrubbed c = c == 32 || c == 45
 
 \end{code}
 \end{document}

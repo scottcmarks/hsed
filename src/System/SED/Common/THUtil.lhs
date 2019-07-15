@@ -29,7 +29,7 @@ import           Data.Attoparsec.ByteString      (Parser, parseOnly)
 import           Data.ByteString                 (unpack)
 import           Data.Either                     (either)
 import           Data.List                       (foldl)
-import           Data.String                     (IsString (..))
+import           Data.String                     (IsString(..))
 
 import           GHC.Base                        (Maybe(..), String, id, map, (.))
 import           GHC.Err                         (error)
@@ -51,6 +51,7 @@ import           System.SED.Common.UID           (HalfUID(..), UID(..),
 parseTable :: Parser c -> String -> c
 parseTable tableParser = either error id . parseOnly tableParser . fromString
 
+-- | Data declaration, essentially [d| data $n $c0 | $c1 ... deriving ($d0,$d1,...) |]
 dData :: Name -> [Name] -> [Name] -> Dec
 dData n cs ds =  DataD [] n [] Nothing (map (`NormalC` []) cs)
                        [DerivClause Nothing (map ConT ds)]

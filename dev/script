@@ -15,27 +15,33 @@ import           Language.Haskell.TH
 import           Language.Haskell.TH.Ppr
 import           Language.Haskell.TH.PprLib
 import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
+
 import           Data.Attoparsec.ByteString hiding(parse)
 import           Data.Attoparsec.ByteString.Char8(parse,skipSpace,isEndOfLine)
 import           Data.ByteString(ByteString)
 import           Data.ByteString.Char8(pack, unpack)
-import           Data.Either(Either(..),fromRight)
-import           Data.Foldable(concatMap, mapM_)
+import           Data.Either(Either(..),either,fromRight)
+import           Data.Foldable(concatMap, mapM_, maximum)
 import           Data.Function(($),(&))
 import           Data.Functor((<$>),(<&>))
+import           Data.List(maximum, (\\))
+import           Data.Map(fromList, fromListWith)
 import           Data.String(String, fromString)
-import           System.SED.Common.TableUIDs
-import           GHC.Base(map, pure,(.),(<*),(<*>),(*>),(>>=))
+import           Data.Tuple(fst, snd)
+
+import           GHC.Arr(range)
+import           GHC.Base(id, map, mconcat, pure,(.),(<*),(<*>),(*>),(>>=))
 import           GHC.Enum(Bounded(..), Enum(..))
 import           GHC.Err(error)
 import           GHC.Classes(Eq(..), Ord(..))
 import           GHC.Maybe(Maybe(..))
 import           GHC.Show(Show(..))
+import           GHC.Types(Int)
 
 
-import           System.SED.Common.UID
-
+import           System.SED.Common.TableUIDs
 import           System.SED.Common.THUtil
+import           System.SED.Common.UID
 import           System.SED.Common.ColumnTypes.TH
 
 pQ = (ppr <$>) . runQ
@@ -44,24 +50,6 @@ showQ = (\h -> h & pQ <&> show >>= putStrLn)
 import Text.Heredoc
 
 pT = ppr . ttypeDecs
-
-:{
-table50 = [here|
-
-                     Table 50 ACL
-    +-----------------------+-----+--------------+
-    |UID                    |Name |Format        |
-    +-----------------------+-----+--------------+
-    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |
-    |                       |     |*,            |
-    |                       |     |ACE_object_ref|
-    +-----------------------+-----+--------------+
-
-|] :: String
-:}
-
-putStrLn "table50 ====>"
-pT table50
 
 
 :{
@@ -99,70 +87,73 @@ table52 = [here|
 
 |] :: String
 :}
--- putStrLn "table52 ====>"
--- pE table52
-putStrLn "table52 ="
-putStrLn table52
 
-bs52 = pack table52
+:{
+table121 = [here|
 
-(enumName, enumRows) = fromRight (error "Left") $  parseOnly enumTableParser bs52
+    Table 121 padding_type Enumeration Values
+    +-----------------+-------------------+
+    |Enumeration Value|Associated Value   |
+    +-----------------+-------------------+
+    |0                |None               |
+    +-----------------+-------------------+
+    |1                |None               |
+    +-----------------+-------------------+
+    |2                |RSAES-PKCS1-v1_5   |
+    +-----------------+-------------------+
+    |3                |RSAES-OAEP         |
+    +-----------------+-------------------+
+    |4                |RSASSA-PKCS1-v1_5  |
+    +-----------------+-------------------+
+    |5-15             |Reserved           |
+    +-----------------+-------------------+
+|]
+:}
+
+bs121 = pack table121
+
+(enumName, enumRows) = either error id $ parseOnly enumTableParser bs121
 putStrLn enumName
 mapM_ (putStrLn . show) enumRows
+coreName = "Core_" ++ enumName
+putStrLn coreName
 
 :{
-decs = [d|
-  data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
-                         | Core_adv_key_mode_Auto_advance_keys
-                         | Core_adv_key_mode_Reserved_2
-                         | Core_adv_key_mode_Reserved_3
-                         | Core_adv_key_mode_Reserved_4
-                         | Core_adv_key_mode_Reserved_5
-                         | Core_adv_key_mode_Reserved_6
-                         | Core_adv_key_mode_Reserved_7
-      deriving (Bounded, Enum, Eq, Ord, Show)
-         |]
+enumRowValueLabelPairs :: EnumRow -> [(String, [Int])]
+enumRowValueLabelPairs (EnumRow n vs) = map pairUp vs
+  where pairUp v = (mconcat[coreName, "_", n], [v])
 :}
 
-runQ decs
-showQ decs
+givenPairs = concatMap enumRowValueLabelPairs enumRows
+putStr $ "givenPairs=" ++ show givenPairs ++ "\n"
 
-:{
-data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req
-                       | Core_adv_key_mode_Auto_advance_keys
-                       | Core_adv_key_mode_Reserved_2
-                       | Core_adv_key_mode_Reserved_3
-                       | Core_adv_key_mode_Reserved_4
-                       | Core_adv_key_mode_Reserved_5
-                       | Core_adv_key_mode_Reserved_6
-                       | Core_adv_key_mode_Reserved_7
-    deriving (Bounded, Enum, Eq, Ord, Show)
-:}
+mapM_ print givenPairs
 
-:{
-ppr $ dData (mkName "Core_adv_key_mode")
-            (map mkName [ "Core_adv_key_mode_Wait_for_AdvKey_Req"
-                        , "Core_adv_key_mode_Auto_advance_keys"
-                        , "Core_adv_key_mode_Reserved_2"
-                        , "Core_adv_key_mode_Reserved_3"
-                        , "Core_adv_key_mode_Reserved_4"
-                        , "Core_adv_key_mode_Reserved_5"
-                        , "Core_adv_key_mode_Reserved_6"
-                        , "Core_adv_key_mode_Reserved_7"
-                        ])
-            (map mkName [ "Bounded"
-                        , "Enum"
-                        , "Eq"
-                        , "Ord"
-                        , "Show"
-                        ])
-:}
+givenRange = concatMap snd givenPairs
 
-showQ $ (returnQ <$> tenumDecs) table52
+maxv = maximum givenRange
 
-fromEnum (minBound :: Core_adv_key_mode )
+fullRange = range(0,maxv)
 
-fromEnum (maxBound :: Core_adv_key_mode )
+missingValues = fullRange \\ givenRange
+
+putStr $ "missingValues=" ++ show missingValues ++ "\n"
+
+fillInPairs = map (\v -> (mconcat[coreName, "_NA"]::String, [v])) missingValues
+
+putStr $ "fillInPairs=" ++ show fillInPairs ++ "\n"
+
+fullPairs = fillInPairs ++ givenPairs
+
+putStr $ "fullPairs=" ++ show fullPairs ++ "\n"
+
+
+consolidatedPairs = fromListWith (flip(++)) fullPairs :: Map String [Int]
+mapM_ print $ toList consolidatedPairs
+
+-- t52QDecs = (returnQ <$> tenumDecs) table52
+
+-- showQ $ t52QDecs
 
 putStrLn "Buh-bye now."
 

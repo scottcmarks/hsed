@@ -35,22 +35,25 @@ import           Data.Attoparsec.ByteString.Char8 (decimal, char8, endOfLine,
                                                    isHorizontalSpace,
                                                    skipSpace)
 import           Data.Attoparsec.Combinator       (option)
-import           Data.ByteString                  (ByteString, append, empty, init,
-                                                   intercalate, last, length, splitWith)
+import           Data.ByteString                  (ByteString, append, empty, filter,
+                                                   init, intercalate, last, length,
+                                                   splitWith)
 import           Data.ByteString.Char8            (unpack)
 import           Data.Either                      (either)
 import           Data.Foldable                    (concatMap, foldr)
 import           Data.Functor                     ((<$>))
+import           Data.List                        (transpose)
 import           Data.String                      (String)
 import           Data.Tuple                       (snd)
 
-import           GHC.Base                         (Eq, Monoid(..), Semigroup(..),
+import           GHC.Base                         (Monoid(..), Semigroup(..),
                                                    error, id, pure, map, mapM, many,
                                                    undefined,
                                                    (.), ($), (*>), (<*), (<*>), (==), (||))
-import           GHC.Enum                         (enumFromTo)
+import           GHC.Classes                      (Eq(..), Ord(..))
+import           GHC.Enum                         (Bounded(..), Enum(..), enumFromTo)
 import           GHC.List                         (tail, (++))
-import           GHC.Show                         (show, Show)
+import           GHC.Show                         (show, Show(..))
 import           GHC.Types                        (Int)
 
 import           Language.Haskell.TH.Quote        (QuasiQuoter(..), quoteType,
@@ -88,17 +91,6 @@ type's format code. For readability, the names of Type objects are used in place
 commas are used to separate values.
 
 An asterisk (*) in any of the descriptive tables indicates SSC-specific or implementation-specific values.
-
-+-------------------------------------------------+
-|               Table 46 AC_element               |
-+-----------------------+----------+--------------+
-|UID                    |Name      |Format        |
-+-----------------------+----------+--------------+
-|00 00 00 05 00 00 08 01|AC_element|List_Type,    |
-|                       |          |*,            |
-|                       |          |ACE_expression|
-+-----------------------+----------+--------------+
-
 
 
 \begin{code}
@@ -167,7 +159,8 @@ blankLines = many (spaces *> endOfLine) *> pure ()
 tableRowFields :: [Int] -> Parser [ByteString]
 tableRowFields lengths = tail <$> parseLine
     where
-      parseLine = (mapM takeField lengths <* endOfLine) <?> "Table row fields"
+      parseLine = map mconcat <$> transpose <$> many1 (mapM takeField lengths <* endOfLine)
+          <?> "Table row fields"
       takeField len = trimTrailingWhitespace <$> take len <* char8 '|'
 
 data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
@@ -185,7 +178,7 @@ type FormatString = ByteString
 
 
 header :: [Int] -> Parser ()
-header lengths = tableRowFields lengths *> pure ()
+header lengths = many1 (tableRowFields lengths) *> pure ()
   <?> ("header " ++ show lengths)
 
 
@@ -236,12 +229,12 @@ dEnum (enumName, enumRows) = [dData name constructors derivations]
   where coreName = "Core_" <> enumName
         name = mkName $ coreName
         constructors = map (mkName . snd) $ enumRowsValueLabelPairs
-        derivations = map mkName [ "Bounded"
-                                 , "Enum"
-                                 , "Eq"
-                                 , "Ord"
-                                 , "Show"
-                                 ]
+        derivations = [ ''Bounded
+                      , ''Enum
+                      , ''Eq
+                      , ''Ord
+                      , ''Show
+                      ]
         enumRowsValueLabelPairs = concatMap enumRowValueLabelPairs enumRows  -- FIXME: missing values should be NA
 
         enumRowValueLabelPairs :: EnumRow -> [(Int, String)]
@@ -278,8 +271,9 @@ enumTableRow lengths = do
             v1 <- dInt
             option [v1] (enumFromTo v1 <$> ("-" *> dInt))
         dInt = decimal :: Parser Int
-        scrub n = unpack $ intercalate "_" $ splitWith scrubbed n
-        scrubbed c = c == 32 || c == 45
+        scrub n = unpack $ intercalate "_" $ splitWith scrubbed $ filter notComma n
+        scrubbed c = c == 32 || c == 45   -- ^ space or dash
+        notComma c = c /= 44 -- ^ comma
 
 \end{code}
 \end{document}

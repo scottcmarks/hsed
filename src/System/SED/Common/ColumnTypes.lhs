@@ -124,7 +124,11 @@ module System.SED.Common.ColumnTypes
   , uyear_enumType
   )
 where
-import           System.SED.Common.ColumnTypes.TH (ttype)
+import           GHC.Classes                      (Eq(..), Ord(..))
+import           GHC.Enum                         (Bounded(..), Enum(..))
+import           GHC.Show                         (Show(..))
+
+import           System.SED.Common.ColumnTypes.TH (tenum, ttype)
 
 \end{code}
 
@@ -769,10 +773,11 @@ This enumeration type defines the behavior of the NextKey column.
 |]
 
 \end{code}
+
 The enumeration values are associated with key behaviors as defined in Table 52.
+\begin{code}
 
-
-
+[tenum|
      Table 52 adv_key_mode Enumeration Values
     +------------------+---------------------+
     |Enumeration Value |Behavior             |
@@ -783,7 +788,8 @@ The enumeration values are associated with key behaviors as defined in Table 52.
     +------------------+---------------------+
     |2-7               |Reserved             |
     +------------------+---------------------+
-
+|]
+\end{code}
 
 5.1.3.7 attr_flags
 
@@ -807,6 +813,9 @@ table.
 
 The set values are associated with column behaviors as defined in Table 54.
 
+\begin{code}
+
+[tenum|
           Table 54 attr_flags Set Values
     +------------------+---------------------+
     |Set Value         |Behavior             |
@@ -817,6 +826,8 @@ The set values are associated with column behaviors as defined in Table 54.
     +------------------+---------------------+
     |2-31              |Reserved             |
     +------------------+---------------------+
+|]
+\end{code}
 
 
 5.1.3.8 auth_method
@@ -844,6 +855,9 @@ The enumeration values are associated with authentication methods as defined in 
 
 
 
+\begin{code}
+
+[tenum|
      Table 56 auth_method Enumeration Values
     +------------------+---------------------+
     |Enumeration Value |Authentication Method|
@@ -866,6 +880,8 @@ The enumeration values are associated with authentication methods as defined in 
     +------------------+---------------------+
     |8-23              |Reserved             |
     +------------------+---------------------+
+|]
+\end{code}
 
 
 5.1.3.9 Authority_object_ref
@@ -909,11 +925,11 @@ The boolean column type is an enumeration used to represent True or False.
 |]
 
 \end{code}
+
 The enumeration values are associated as defined in Table 59.
 
-
-
-
+\begin{code}
+[tenum|
      Table 59 boolean Enumeration Values
     +------------------+-----------------+
     |Enumeration Value |Associated Value |
@@ -922,6 +938,8 @@ The enumeration values are associated as defined in Table 59.
     +------------------+-----------------+
     |1                 |True             |
     +------------------+-----------------+
+|]
+\end{code}
 
 
 5.1.3.11 boolean_ACE
@@ -947,6 +965,9 @@ This enumeration is used to identify the Boolean operators "And", "Or", and "Not
 \end{code}
 The enumeration values are associated with Boolean operators as defined in Table 61.
 
+\begin{code}
+
+[tenum|
 
     Table 61 boolean_ACE Enumeration Values
     +------------------+---------------------+
@@ -958,6 +979,8 @@ The enumeration values are associated with Boolean operators as defined in Table
     +------------------+---------------------+
     |2                 |Not                  |
     +------------------+---------------------+
+|]
+\end{code}
 
 
 5.1.3.12 byte_row_ref
@@ -1203,6 +1226,9 @@ This enumeration type is used to define the type of clock currently active.
 
 The enumeration values are associated as defined in Table 74.
 
+\begin{code}
+
+[tenum|
 
       Table 74 clock_kind Enumeration Values
     +------------------+--------------------+
@@ -1216,6 +1242,8 @@ The enumeration values are associated as defined in Table 74.
     +------------------+--------------------+
     |3                 |LowAndHigh          |
     +------------------+--------------------+
+|]
+\end{code}
 
 
 
@@ -1404,6 +1432,9 @@ supported by the TPer.
 
 The enumeration values are associated as defined in Table 82.
 
+\begin{code}
+
+[tenum|
         Table 82 enc_supported Enumes
     +-----------------+----------------+
     |Enumeration Value|Associated Value|
@@ -1414,6 +1445,8 @@ The enumeration values are associated as defined in Table 82.
     +-----------------+----------------+
     |2-15             |Reserved        |
     +-----------------+----------------+
+|]
+\end{code}
 
 
 
@@ -1507,7 +1540,7 @@ This set type is used to identify the general status of the re-encryption proces
 The enumeration values are associated as defined in table Table 87. Values 0-31 are valid for the
 PAUSED state, value 32-63 are valid for the PENDING state (see 5.7.3.3).
 
-
+-- FIXME: [tenum'| .. |]
                                    Table 87 gen_status Enumeration Values
     +-------+----------------------------------------+----------------------------------------------------+
     |Column |Associated Value                        |Meaning                                             |
@@ -1576,6 +1609,9 @@ This enumeration type determines the hash algorithm to be used when creating a d
 
 The enumeration values are associated as defined in Table 89.
 
+\begin{code}
+
+[tenum|
      Table 89 hash_protocol Enumeration Values
     +------------------+----------------------+
     |Enumeration Value |Associated Value      |
@@ -1592,6 +1628,8 @@ The enumeration values are associated as defined in Table 89.
     +------------------+----------------------+
     |5-15              |Reserved              |
     +------------------+----------------------+
+|]
+\end{code}
 
 
 5.1.3.36 Hour
@@ -1776,6 +1814,9 @@ This enumeration describes the conditions required to assert KeysAvailable in th
 The enumeration values are associated as defined in Table 98.
 
 
+\begin{code}
+
+[tenum|
                           Table 98 keys_avail_conds Enumeration Values
     +-----------+---------------------------------------------------------------------------+
     |Enumeration|Associated Value                                                           |
@@ -1788,6 +1829,8 @@ The enumeration values are associated as defined in Table 98.
     +-----------+---------------------------------------------------------------------------+
     |2-7        |Reserved                                                                   |
     +-----------+---------------------------------------------------------------------------+
+|]
+\end{code}
 
 
 
@@ -1837,6 +1880,9 @@ This enumeration identifies the last attempted re-encryption step.
 \end{code}
 
 The enumeration values are associated as defined in Table 101.
+\begin{code}
+
+[tenum|
 
      Table 101 last_reenc_stat Enumeration Values
     +-----------------+--------------------------+
@@ -1852,6 +1898,8 @@ The enumeration values are associated as defined in Table 101.
     +-----------------+--------------------------+
     |4-7              |Reserved                  |
     +-----------------+--------------------------+
+|]
+\end{code}
 
 
 5.1.3.46 life_cycle_state
@@ -1877,6 +1925,10 @@ This enumeration is used to represent the current life cycle state of the SP.
 
 The enumeration values are associated as defined in Table 103.
 
+\begin{code}
+
+[tenum|
+
     Table 103 life_cycle_state Enumeration Values
     +-----------------+--------------------------+
     |Enumeration Value|Associated Value          |
@@ -1897,6 +1949,8 @@ The enumeration values are associated as defined in Table 103.
     +-----------------+--------------------------+
     |14-15            |Unassigned                |
     +-----------------+--------------------------+
+|]
+\end{code}
 
 5.1.3.47 LogList_object_ref
 
@@ -1970,6 +2024,9 @@ authority authentication.
 
 The enumeration values are associated as defined in Table 107.
 
+\begin{code}
+
+[tenum|
     Table 107 log_select Enumeration Values
     +-----------------+-------------------+
     |Enumeration Value|Associated Value   |
@@ -1982,6 +2039,8 @@ The enumeration values are associated as defined in Table 107.
     +-----------------+-------------------+
     |3                |LogAlways          |
     +-----------------+-------------------+
+|]
+\end{code}
 
 
 5.1.3.50 max_bytes
@@ -2228,7 +2287,7 @@ Type used for referencing an object in an object table.
 
 [ttype|
 
-                     Table etc.
+                     Table 119 object_ref
     +-----------------------+------------------+----------------------+
     |UID                    |Name              |Format                |
     +-----------------------+------------------+----------------------+
@@ -2240,9 +2299,7 @@ Type used for referencing an object in an object table.
 |]
 
 \end{code}
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
+
 5.1.3.62 padding_type
 
 This enumeration is used to identify the type of padding used with RSA encryption. RSAES-PKCS1-
@@ -2268,6 +2325,9 @@ RSASSA-PSS (see [18]) SHALL be used for RSA signing.
 
 The enumeration values are associated as defined in Table 121.
 
+\begin{code}
+
+[tenum|
     Table 121 padding_type Enumeration Values
     +-----------------+-------------------+
     |Enumeration Value|Associated Value   |
@@ -2284,6 +2344,8 @@ The enumeration values are associated as defined in Table 121.
     +-----------------+-------------------+
     |5-15             |Reserved           |
     +-----------------+-------------------+
+|]
+\end{code}
 
 5.1.3.63 password
 
@@ -2381,6 +2443,9 @@ This enumeration type identifies the present re-encryption state for an LBA rang
 
 The enumeration values are associated as defined in Table 126.
 
+\begin{code}
+
+[tenum|
    Table 126 reencrypt_state Enumeration Values
     +-----------------+-------------------+
     |Enumeration Value|Associated Value   |
@@ -2397,6 +2462,8 @@ The enumeration values are associated as defined in Table 126.
     +-----------------+-------------------+
     |6-16             |Reserved           |
     +-----------------+-------------------+
+|]
+\end{code}
 
 5.1.3.67 reset_types
 
@@ -2422,6 +2489,9 @@ This Set type identifies the various TCG reset options available.
 The Set values are associated as defined in Table 128.
 
 
+\begin{code}
+
+[tenum|
     Table 128 reset_types Set Values
     +-----------------+----------------+
     |Enumeration Value|Associated Value|
@@ -2436,6 +2506,8 @@ The Set values are associated as defined in Table 128.
     +-----------------+----------------+
     |16-31            |Vendor Unique   |
     +-----------------+----------------+
+|]
+\end{code}
 
 5.1.3.68 Seconds
 
@@ -2542,8 +2614,11 @@ Defines the mode to be used with an AES credential.
 
 \end{code}
 
-
 The enumeration values are associated as defined in Table 134.
+
+\begin{code}
+
+[tenum|
 
  Table 134 symmetric_mode Enumeration Values
     +-----------------+----------------+
@@ -2575,6 +2650,8 @@ The enumeration values are associated as defined in Table 134.
     +-----------------+----------------+
     |12-23            |Reserved        |
     +-----------------+----------------+
+|]
+\end{code}
 
 5.1.3.73 symmetric_mode_media
 
@@ -2599,6 +2676,10 @@ Defines the modes availableto be used with AES for user data encryption.
 
 
 The enumeration values are associated as defined in Table 134.
+
+\begin{code}
+
+[tenum|
 
 Table 136 symmetric_mode_media Enumeration Values
     +-----------------+-----------------+
@@ -2632,6 +2713,8 @@ Table 136 symmetric_mode_media Enumeration Values
     +-----------------+-----------------+
     |23               |Media Encryption |
     +-----------------+-----------------+
+|]
+\end{code}
 
 5.1.3.74 table_kind
 
@@ -2656,6 +2739,9 @@ Defines the kinds of tables.
 
 The enumeration values are associated as defined in Table 138.
 
+\begin{code}
+
+[tenum|
     Table 138 table_kind Enumeration Values
     +-----------------+-------------------+
     |Enumeration Value|Table Type         |
@@ -2666,6 +2752,8 @@ The enumeration values are associated as defined in Table 138.
     +-----------------+-------------------+
     |3-8              |Reserved           |
     +-----------------+-------------------+
+|]
+\end{code}
 
 5.1.3.75 table_or_object_ref
 
@@ -3151,23 +3239,7 @@ This is a uinteger type with a size restriction of 8 bytes.
 |]
 
 \end{code}
---------------------------------------------------------------------------------
-text
 
-                Table foo
-    +-----------------+-------------------+
-    |Enumeration Value|Associated Value   |
-    +-----------------+-------------------+
-    |0                |                   |
-    +-----------------+-------------------+
-    |1                |                   |
-    +-----------------+-------------------+
-    |2                |                   |
-    +-----------------+-------------------+
-    |3                |                   |
-    +-----------------+-------------------+
-
---------------------------------------------------------------------------------
 5.1.3.98 verify_mode
 
 This enumeration type defines the verification operation the TPer SHALL perform
@@ -3193,7 +3265,11 @@ encryption key.
 
 The enumeration values are associated as defined in Table 163.
 
-    Table 163 verify_mode Enumeration Values
+\begin{code}
+
+[tenum|
+
+   Table 163 verify_mode Enumeration Values
     +-----------------+-------------------+
     |Enumeration Value|Associated Value   |
     +-----------------+-------------------+
@@ -3203,7 +3279,9 @@ The enumeration values are associated as defined in Table 163.
     +-----------------+-------------------+
     |2-7              |Reserved           |
     +-----------------+-------------------+
---------------------------------------------------------------------------------
+|]
+\end{code}
+
 5.1.3.99 Year
 
 Name-value pair that has a Name of "0" and takes year_enum as the value.

@@ -25,12 +25,12 @@ import           Data.Foldable(concatMap, mapM_, maximum)
 import           Data.Function(($),(&))
 import           Data.Functor((<$>),(<&>))
 import           Data.List(maximum, (\\))
-import           Data.Map(fromList, fromListWith)
+import           Data.Map(Map, fromList, fromListWith, toList)
 import           Data.String(String, fromString)
 import           Data.Tuple(fst, snd)
 
 import           GHC.Arr(range)
-import           GHC.Base(id, map, mconcat, pure,(.),(<*),(<*>),(*>),(>>=))
+import           GHC.Base(flip, id, map, mconcat, pure,(.),(++),(<*),(<*>),(*>),(>>=))
 import           GHC.Enum(Bounded(..), Enum(..))
 import           GHC.Err(error)
 import           GHC.Classes(Eq(..), Ord(..))
@@ -119,37 +119,39 @@ coreName = "Core_" ++ enumName
 putStrLn coreName
 
 :{
-enumRowValueLabelPairs :: EnumRow -> [(String, [Int])]
-enumRowValueLabelPairs (EnumRow n vs) = map pairUp vs
-  where pairUp v = (mconcat[coreName, "_", n], [v])
+enumRowValueLabelPairs :: EnumRow -> (String, [Int])
+enumRowValueLabelPairs (EnumRow n vs) = (mconcat[coreName, "_", n], vs)
 :}
 
-givenPairs = concatMap enumRowValueLabelPairs enumRows
-putStr $ "givenPairs=" ++ show givenPairs ++ "\n"
+givenPairs = map enumRowValueLabelPairs enumRows
+putStrLn $ "givenPairs=" ++ show givenPairs
 
 mapM_ print givenPairs
 
-givenRange = concatMap snd givenPairs
+givenValues = concatMap (\(EnumRow _ vs) -> vs) enumRows
 
-maxv = maximum givenRange
+maxv = maximum givenValues
 
 fullRange = range(0,maxv)
 
-missingValues = fullRange \\ givenRange
+missingValues = fullRange \\ givenValues
 
-putStr $ "missingValues=" ++ show missingValues ++ "\n"
+fullPairs = if missingValues /= [] then (mconcat[coreName, "_NA"]::String, missingValues) : givenPairs else givenPairs
 
-fillInPairs = map (\v -> (mconcat[coreName, "_NA"]::String, [v])) missingValues
-
-putStr $ "fillInPairs=" ++ show fillInPairs ++ "\n"
-
-fullPairs = fillInPairs ++ givenPairs
-
-putStr $ "fullPairs=" ++ show fullPairs ++ "\n"
+putStrLn ("fullPairs=" ++ show fullPairs)
 
 
-consolidatedPairs = fromListWith (flip(++)) fullPairs :: Map String [Int]
-mapM_ print $ toList consolidatedPairs
+consolidatedPairs = toList $ fromListWith (flip(++)) fullPairs
+putStrLn "consolidatedPairs:"
+mapM_ print consolidatedPairs
+
+:{
+genEnum :: (String, [Int]) -> [(String, Int)]
+genEnum (n, (v:vs)) = (n,v) : map (\v->(mconcat[n, "_", show v],v)) vs
+genEnum (_, []) = error "No values"
+:}
+
+mapM_ print $ concatMap genEnum consolidatedPairs
 
 -- t52QDecs = (returnQ <$> tenumDecs) table52
 

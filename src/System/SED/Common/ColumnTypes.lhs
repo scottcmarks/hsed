@@ -22,112 +22,7 @@ Table column types.
 {-# LANGUAGE QuasiQuotes                #-}
 
 module System.SED.Common.ColumnTypes
-  ( uAC_elementType
-  , uACE_columnsType
-  , uACE_expressionType
-  , uACE_object_refType
-  , uACLType
-  , uadv_key_modeType
-  , uattr_flagsType
-  , uauth_methodType
-  , uAuthority_object_refType
-  , ubooleanType
-  , uboolean_ACEType
-  , ubyte_row_refType
-  , ubyte_table_refType
-  , ubytesType
-  , ubytes_4Type
-  , ubytes_12Type
-  , ubytes_16Type
-  , ubytes_20Type
-  , ubytes_32Type
-  , ubytes_48Type
-  , ubytes_64Type
-  , uCertificates_object_refType
-  , uclock_kindType
-  , uclock_timeType
-  , uColumn_object_refType
-  , ucred_object_uidrefType
-  , udateType
-  , uDayType
-  , uday_enumType
-  , uenc_supportedType
-  , ufeedback_sizeType
-  , uFractionType
-  , ufraction_enumType
-  , ugen_statusType
-  , uhash_protocolType
-  , uHourType
-  , uhour_enumType
-  , uintegerType
-  , uinteger_1Type
-  , uinteger_2Type
-  , ukey_128Type
-  , ukey_256Type
-  , ukeys_avail_condsType
-  , ulagType
-  , ulast_reenc_statType
-  , ulife_cycle_stateType
-  , uLogList_object_refType
-  , ulog_row_refType
-  , ulog_selectType
-  , umax_bytesType
-  , umax_bytes_32Type
-  , umax_bytes_64Type
-  , umediakey_object_uidrefType
-  , uMethodID_object_refType
-  , umessaging_typeType
-  , uMinuteType
-  , uminute_enumType
-  , uMonthType
-  , umonth_enumType
-  , unameType
-  , uobject_refType
-  , upadding_typeType
-  , upasswordType
-  , uprotect_typesType
-  , ureencrypt_requestType
-  , ureencrypt_stateType
-  , ureset_typesType
-  , uSecondsType
-  , useconds_enumType
-  , uSPTemplates_object_refType
-  , uSSCType
-  , usymmetric_modeType
-  , usymmetric_mode_mediaType
-  , utable_kindType
-  , utable_or_object_refType
-  , uTable_object_refType
-  , utable_refType
-  , uTemplate_object_refType
-  , utype_defType
-  , uType_object_refType
-  , uuidType
-  , uuintegerType
-  , uuinteger_1Type
-  , uuinteger_128Type
-  , uuinteger_2Type
-  , uuinteger_20Type
-  , uuinteger_21Type
-  , uuinteger_24Type
-  , uuinteger_256Type
-  , uuinteger_28Type
-  , uuinteger_30Type
-  , uuinteger_36Type
-  , uuinteger_4Type
-  , uuinteger_48Type
-  , uuinteger_64Type
-  , uuinteger_66Type
-  , uuinteger_8Type
-  , uverify_modeType
-  , uYearType
-  , uyear_enumType
-  )
 where
-import           GHC.Classes                      (Eq(..), Ord(..))
-import           GHC.Enum                         (Bounded(..), Enum(..))
-import           GHC.Show                         (Show(..))
-
 import           System.SED.Common.ColumnTypes.TH (tenum, ttype)
 
 \end{code}
@@ -606,6 +501,9 @@ with the notes -- "The size of the AC_element list is implementation-dependant."
 The issues of implementation-dependant information and SSC-defined information would seem to call out for a Reader
 monad with getters.  Even so, each such "*" needs to be translated as e.g. "AC_elementSize" to name the getter.
 
+Noted later: 2019 July 18
+Used Template Haskell to define identifiers for the type UIDs as well as the enums
+referenced by some of them and defined here.  It's incomplete in that the Format column is just ignored! So handling "*" is definitely part of that FIXME.
 
 5.1.3 Column Types
 

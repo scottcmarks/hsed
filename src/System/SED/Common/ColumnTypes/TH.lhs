@@ -40,16 +40,19 @@ import           Data.ByteString                  (ByteString, append, empty, fi
                                                    splitWith)
 import           Data.ByteString.Char8            (unpack)
 import           Data.Either                      (either)
-import           Data.Foldable                    (concatMap, foldr)
+import           Data.Foldable                    (concatMap, foldr, maximum)
 import           Data.Functor                     ((<$>))
-import           Data.List                        (transpose)
+import           Data.List                        (sortOn, (\\), transpose)
+import           Data.Map                         (fromListWith, toList)
 import           Data.String                      (String)
-import           Data.Tuple                       (snd)
+import           Data.Tuple                       (snd, fst)
 
-import           GHC.Base                         (Monoid(..), Semigroup(..),
+import           GHC.Arr(range)
+import           GHC.Base                         (flip, Monoid(..), Semigroup(..),
                                                    error, id, pure, map, mapM, many,
                                                    undefined,
-                                                   (.), ($), (*>), (<*), (<*>), (==), (||))
+                                                   (.), ($), (*>), (<*), (<*>), (==),
+                                                   (||))
 import           GHC.Classes                      (Eq(..), Ord(..))
 import           GHC.Enum                         (Bounded(..), Enum(..), enumFromTo)
 import           GHC.List                         (tail, (++))
@@ -226,30 +229,36 @@ tenumDecs = dEnum <$> parseTable enumTableParser
 
 dEnum :: (String, [EnumRow]) -> [Dec]
 dEnum (enumName, enumRows) = [dData name constructors derivations]
-  where coreName = "Core_" <> enumName
-        name = mkName $ coreName
-        constructors = map (mkName . snd) $ enumRowsValueLabelPairs
-        derivations = [ ''Bounded
-                      , ''Enum
-                      , ''Eq
-                      , ''Ord
-                      , ''Show
-                      ]
-        enumRowsValueLabelPairs = concatMap enumRowValueLabelPairs enumRows  -- FIXME: missing values should be NA
+  where name = mkName $ coreName
+        constructors = map (mkName . fst) $ enumRowsValueLabelPairs
+        derivations = [ ''Bounded, ''Enum, ''Eq, ''Ord, ''Show ]
+        coreName = "Core_" <> enumName
+        enumRowsValueLabelPairs = concatMap genEnum consolidatedPairs
+        genEnum :: (String, [Int]) -> [(String, Int)]
+        genEnum (n, (v:vs)) = (n,v) : map (\v'->(mconcat[n, "_", show v'],v')) vs
+        genEnum (_, []) = error "No values"
+        consolidatedPairs = sortOn snd $ toList $ fromListWith (flip(++)) fullPairs
+        fullPairs =
+            if missingValues /= []
+            then (mconcat[coreName, "_NA"]::String, missingValues) : givenPairs
+            else givenPairs
+        missingValues = fullRange \\ givenValues
+        givenPairs = map enumRowValueLabelPairs enumRows
+        enumRowValueLabelPairs :: EnumRow -> (String, [Int])
+        enumRowValueLabelPairs (EnumRow n vs) = (mconcat[coreName, "_", n], vs)
+        givenValues = concatMap (\(EnumRow _ vs) -> vs) enumRows
+        maxv = maximum givenValues
+        fullRange = range(0,maxv)
 
-        enumRowValueLabelPairs :: EnumRow -> [(Int, String)]
-        enumRowValueLabelPairs (EnumRow n [v]) = [(v, mconcat[coreName, "_", n])]
-        enumRowValueLabelPairs (EnumRow n vs) = map pairUp vs
-          where pairUp v = (v, mconcat[coreName, "_", n, "_", show v])
 
 enumTableParser :: Parser (String, [EnumRow])
 enumTableParser = do
     enumType <- skipSpace *> enumTableTitle
     pieceLengths <- rowSep
     _            <- header pieceLengths *> rowSep
-    rows         <- many1 (enumTableRow pieceLengths <* rowSep) -- <-- the data
+    enumRows     <- many1 (enumTableRow pieceLengths <* rowSep) -- <-- the data
     ()           <- blankLines *> endOfInput
-    pure (enumType, rows)
+    pure (enumType, enumRows)
 
 data EnumRow = EnumRow String [Int]
     deriving (Show)
@@ -267,13 +276,19 @@ enumTableRow lengths = do
     [sv,n] <- tableRowFields lengths
     let ev = either error id  $ parseOnly pRange sv
     pure $ EnumRow (scrub n) ev
-  where pRange = do
-            v1 <- dInt
-            option [v1] (enumFromTo v1 <$> ("-" *> dInt))
-        dInt = decimal :: Parser Int
-        scrub n = unpack $ intercalate "_" $ splitWith scrubbed $ filter notComma n
-        scrubbed c = c == 32 || c == 45   -- ^ space or dash
-        notComma c = c /= 44 -- ^ comma
+  where
+      pRange = do
+          v1 <- dInt
+          option [v1] (enumFromTo v1 <$> ("-" *> dInt))
+      dInt = decimal :: Parser Int
+      scrub n = unpack
+          $ intercalate "_"
+          $ splitWith scrubbed
+          $ filter notComma n
+      scrubbed c = c == 32 || c == 45
+      -- ^ space or dash
+      notComma c = c /= 44
+      -- ^ comma
 
 \end{code}
 \end{document}

@@ -131,13 +131,14 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/Common/Format.lhs,2482
+./src/System/SED/Common/Format.lhs,2572
 module System.SED.Common.FormatSystem.SED.Common.Format33,34
 data Core_table_kind Core_table_kind45,46
     Object_table Object_table47,48
     Byte_table Byte_table48,49
 data Core_uinteger_2 Core_uinteger_253,54
-data Core_uinteger_2   = Core_uinteger_2Core_uinteger_253,54
+data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_253,54
+data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_253,54
 data Core_integer_2 Core_integer_254,55
 data Core_integer_2    = Core_integer_2Core_integer_254,55
 data Core_uidref Core_uidref55,56

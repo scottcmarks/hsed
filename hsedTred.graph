@@ -44,16 +44,6 @@ digraph G {
 				label=SED,
 				style=filled
 			];
-			subgraph cluster_7 {
-				graph [color="#0000000F",
-					label=Host,
-					style=filled
-				];
-				u22				 [fillcolor="#7777ff",
-					label=Run,
-					penwidth=0,
-					style=filled];
-			}
 			subgraph cluster_4 {
 				graph [color="#0000000F",
 					label=Common,
@@ -135,6 +125,16 @@ digraph G {
 					style=filled];
 				u19				 [fillcolor="#ffbbff",
 					label=Table,
+					penwidth=0,
+					style=filled];
+			}
+			subgraph cluster_7 {
+				graph [color="#0000000F",
+					label=Host,
+					style=filled
+				];
+				u22				 [fillcolor="#7777ff",
+					label=Run,
 					penwidth=0,
 					style=filled];
 			}

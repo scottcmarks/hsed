@@ -18,7 +18,7 @@
 # resolver: ./custom-snapshot.yaml
 # resolver: https://example.com/snapshots/2018-01-01.yaml
 # -- scm -- was resolver: lts-13.1
-resolver: lts-13.28
+resolver: lts-13.29
 
 # User packages to be built.
 # Various formats can be used as shown in the example below.
@@ -35,10 +35,14 @@ resolver: lts-13.28
 #  - wai
 packages:
 - .
+#
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
 # extra-deps: []
+extra-deps:
+  - git: https://github.com/xldenis/abnf.git
+    commit: e50d8589ec735a4a1a94654cf1a94493e227701d
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

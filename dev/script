@@ -1,161 +1,103 @@
 :load dev/DevMain.hs
-:set -fno-warn-type-defaults
-:set -fno-warn-unused-imports
-:set -XDataKinds
-:set -XTemplateHaskell
 :set -XQuasiQuotes
 :set -XOverloadedStrings
 :set prompt-cont ""
+
+import Data.Functor((<$>))
+import GHC.Base(pure,(.),($),(*>),(<*>),(<*))
+import GHC.Classes((<))
+import GHC.List(filter)
+import GHC.Show(show)
+import Text.Megaparsec(parse)
 
 import System.IO
 putStrLn "loading script ..."
 --------------------------------------------------------------------------------
 
-import           Language.Haskell.TH
-import           Language.Haskell.TH.Ppr
-import           Language.Haskell.TH.PprLib
-import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
-
-import           Data.Attoparsec.ByteString hiding(parse)
-import           Data.Attoparsec.ByteString.Char8(parse,skipSpace,isEndOfLine)
-import           Data.ByteString(ByteString)
-import           Data.ByteString.Char8(pack, unpack)
-import           Data.Either(Either(..),either,fromRight)
-import           Data.Foldable(concatMap, mapM_, maximum)
-import           Data.Function(($),(&))
-import           Data.Functor((<$>),(<&>))
-import           Data.List(maximum, (\\))
-import           Data.Map(Map, fromList, fromListWith, toList)
-import           Data.String(String, fromString)
-import           Data.Tuple(fst, snd)
-
-import           GHC.Arr(range)
-import           GHC.Base(flip, id, map, mconcat, pure,(.),(++),(<*),(<*>),(*>),(>>=))
-import           GHC.Enum(Bounded(..), Enum(..))
-import           GHC.Err(error)
-import           GHC.Classes(Eq(..), Ord(..))
-import           GHC.Maybe(Maybe(..))
-import           GHC.Show(Show(..))
-import           GHC.Types(Int)
-
-
-import           System.SED.Common.TableUIDs
-import           System.SED.Common.THUtil
-import           System.SED.Common.UID
-import           System.SED.Common.ColumnTypes.TH
-
-pQ = (ppr <$>) . runQ
-showQ = (\h -> h & pQ <&> show >>= putStrLn)
 
 import Text.Heredoc
 
-pT = ppr . ttypeDecs
-
-
-:{
-table51 = [here|
-
-                     Table 51 adv_key_mode
-    +-----------------------+------------+-----------------+
-    |UID                    |Name        |Format           |
-    +-----------------------+------------+-----------------+
-    |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|
-    |                       |            |0,               |
-    |                       |            |7                |
-    +-----------------------+------------+-----------------+
-
-|] :: String
-:}
-putStrLn "table51 ====>"
-pT table51
-
--- pE = ppr . tenumDecs
+import Data.Text(Text, length, lines, unlines, replace)
 
 :{
-table52 = [here|
 
-     Table 52 adv_key_mode Enumeration Values
-    +------------------+---------------------+
-    |Enumeration Value |Behavior             |
-    +------------------+---------------------+
-    |0                 |Wait for AdvKey_Req  |
-    +------------------+---------------------+
-    |1                 |Auto-advance keys    |
-    +------------------+---------------------+
-    |2-7               |Reserved             |
-    +------------------+---------------------+
+  {-
+  (from RFC 5234)
 
-|] :: String
+     [T]he version of a ruleset included in a
+     specification might need preprocessing to ensure that it can
+     be interpreted by an ABNF parser.
+  -}
+
+removeEmptyLines :: Text -> Text
+removeEmptyLines = unlines . filter ((0 <) . length) . lines
+
+preprocessABNF :: Text -> Text
+preprocessABNF = replace "_" "-" . removeEmptyLines
+
+
+
+coreTypesNonstandardABNF = [here|
+Type = Base_Type / Simple_Type / Enumeration_Type / Alternative_Type / List_Type /
+Restricted_Reference_Type / General_Reference_Type / Named_Value_Type / Struct_Type
+/ Set_Type
+
+
+table_kind = 1/2
+
+
+Base_Type = 0
+
+Simple_Type = 1 bytes_8 uinteger_2
+
+Enumeration_Type = 2 1*(uinteger_2 uinteger_2)
+
+Alternative_Type = 3 2*bytes_8
+
+List_Type = 4 uinteger_2 bytes_8
+
+Restricted_Reference_Type = 5/6 1*bytes_8
+
+General_Reference_Type = 7/8/9
+
+General_Reference_Table_Type = 10 table_kind
+
+Named_Value_Name_Type = 11 1*32bytes bytes_8
+
+Name_Value_Integer_Type = 12 integer_2 bytes_8
+
+Name_Value_Uinteger_Type = 13 uinteger_2 bytes_8
+
+Struct_Type = 14 1*bytes_8
+
+Set_Type = 15 1*(uinteger_2 uinteger_2)
+
+|] :: Text
+
+coreTypesABNF =[here|
+Type = Base-Type / Simple-Type / Enumeration-Type / Alternative-Type / List-Type / Restricted-Reference-Type / General-Reference-Type / Named-Value-Type / Struct-Type / Set-Type
+table-kind = %d1 / %d2
+Base-Type = %d0
+Simple-Type = %d1 bytes-8 uinteger-2
+Enumeration-Type = %d2 1*(uinteger-2 uinteger-2)
+Alternative-Type = %d3 2*bytes-8
+List-Type = %d4 uinteger-2 bytes-8
+Restricted-Reference-Type = %d5 / %d6 1*bytes-8
+General-Reference-Type = %d7 / %d8 / %d9
+General-Reference-Table-Type = %d10 table-kind
+Named-Value-Name-Type = %d11 1*32bytes bytes-8
+Name-Value-Integer-Type = %d12 integer-2 bytes-8
+Name-Value-Uinteger-Type = %d13 uinteger-2 bytes-8
+Struct-Type = %d14 1*bytes-8
+Set-Type = %d15 1*(uinteger-2 uinteger-2)
+|] :: Text
+
+
 :}
 
-:{
-table121 = [here|
+import Text.ABNF
 
-    Table 121 padding_type Enumeration Values
-    +-----------------+-------------------+
-    |Enumeration Value|Associated Value   |
-    +-----------------+-------------------+
-    |0                |None               |
-    +-----------------+-------------------+
-    |1                |None               |
-    +-----------------+-------------------+
-    |2                |RSAES-PKCS1-v1_5   |
-    +-----------------+-------------------+
-    |3                |RSAES-OAEP         |
-    +-----------------+-------------------+
-    |4                |RSASSA-PKCS1-v1_5  |
-    +-----------------+-------------------+
-    |5-15             |Reserved           |
-    +-----------------+-------------------+
-|]
-:}
-
-bs121 = pack table121
-
-(enumName, enumRows) = either error id $ parseOnly enumTableParser bs121
-putStrLn enumName
-mapM_ (putStrLn . show) enumRows
-coreName = "Core_" ++ enumName
-putStrLn coreName
-
-:{
-enumRowValueLabelPairs :: EnumRow -> (String, [Int])
-enumRowValueLabelPairs (EnumRow n vs) = (mconcat[coreName, "_", n], vs)
-:}
-
-givenPairs = map enumRowValueLabelPairs enumRows
-putStrLn $ "givenPairs=" ++ show givenPairs
-
-mapM_ print givenPairs
-
-givenValues = concatMap (\(EnumRow _ vs) -> vs) enumRows
-
-maxv = maximum givenValues
-
-fullRange = range(0,maxv)
-
-missingValues = fullRange \\ givenValues
-
-fullPairs = if missingValues /= [] then (mconcat[coreName, "_NA"]::String, missingValues) : givenPairs else givenPairs
-
-putStrLn ("fullPairs=" ++ show fullPairs)
-
-
-consolidatedPairs = toList $ fromListWith (flip(++)) fullPairs
-putStrLn "consolidatedPairs:"
-mapM_ print consolidatedPairs
-
-:{
-genEnum :: (String, [Int]) -> [(String, Int)]
-genEnum (n, (v:vs)) = (n,v) : map (\v->(mconcat[n, "_", show v],v)) vs
-genEnum (_, []) = error "No values"
-:}
-
-mapM_ print $ concatMap genEnum consolidatedPairs
-
--- t52QDecs = (returnQ <$> tenumDecs) table52
-
--- showQ $ t52QDecs
+parseABNF "~/hsed/dev/script FIXME" coreTypesABNF
 
 putStrLn "Buh-bye now."
 

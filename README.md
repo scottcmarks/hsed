@@ -11,6 +11,17 @@ Type checking on Set methods
 
 Generating the TPer and SSC overlapping specs
 
+Further thoughts on Formats...
+
+Most immediately, can parse the field and generate the byte encoding of the type which is the reification of the described Core_Type.
+Current thought is that the parsing could produce something like a Proxy (<Core_Type>) (e.g. Proxy Enumeration_Type).
+Since we want to subsequently generate the byte encoding, looks like the parsing result should be a StreamItem (i.e. have parse and generate methods).
+
+format column
+
+
+
+
 
 Long-term notes:
 command parsing and generation all functional

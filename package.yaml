@@ -35,17 +35,19 @@ dependencies:
 - heredoc
 - hspec
 - lens
+- megaparsec
 - monad-loops
 - mtl
 - pretty
 - regex-pcre-builtin
 - static-text
 - template-haskell
+- text
 - transformers
 - word8
 - QuickCheck
 - quickcheck-instances
-
+- abnf
 
 ghc-options:
 - -Wall

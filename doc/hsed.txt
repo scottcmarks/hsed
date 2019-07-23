@@ -129,7 +129,8 @@ data Core_table_kind :: Nat -> *
 [Object_table] :: Core_table_kind 1
 [Byte_table] :: Core_table_kind 2
 data Core_uinteger_2
-Core_uinteger_2 :: Core_uinteger_2
+Core_uinteger_2 :: Int -> Core_uinteger_2
+[fromCore_uinteger_2] :: Core_uinteger_2 -> Int
 data Core_integer_2
 Core_integer_2 :: Core_integer_2
 data Core_uidref

@@ -21,9 +21,9 @@ Formats.
 {-# LANGUAGE NoImplicitPrelude
            , DataKinds
            , KindSignatures
-           -- , ScopedTypeVariables
+           , ScopedTypeVariables
            , GADTs
-           -- , PolyKinds
+           , PolyKinds
            , FlexibleInstances
            , StandaloneDeriving
            , OverloadedStrings
@@ -51,7 +51,7 @@ deriving instance Show (Core_table_kind n)
 deriving instance Eq (Core_table_kind n)
 
 
-data Core_uinteger_2   = Core_uinteger_2
+data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
 data Core_integer_2    = Core_integer_2
 data Core_uidref       = Core_uidref
 data Core_max_bytes_32 = Core_max_bytes_32

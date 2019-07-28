@@ -8,12 +8,11 @@ import Data.Foldable(foldr)
 import Data.Functor((<$>))
 import Data.Text(cons, snoc, pack, unpack)
 import GHC.Arr(range)
-import GHC.Base(map,pure,(.),($),(*>),(<*>),(<*))
+import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
 import GHC.Classes((<))
 import GHC.List(filter)
 import GHC.Show(show)
-import Text.Megaparsec(parse)
-
+import Text.Megaparsec(parse,errorBundlePretty)
 import System.IO
 putStrLn "loading script ..."
 --------------------------------------------------------------------------------
@@ -21,6 +20,9 @@ putStrLn "loading script ..."
 
 import Text.Heredoc
 import Data.Text(Text, length, lines, unlines, replace, pack, unpack)
+import Data.Foldable(mapM_)
+import Text.ABNF
+import Text.ABNF.PrettyPrinter
 
 :{
 
@@ -40,16 +42,14 @@ preprocessABNF = replace "_" "-"
                . removeEmptyLines
                . ((flip (foldr replacer)) pairs)
   where
-    replacer (s, i) = replace (item (s, i) " ") (item (s, i) " %d")
-    item (s, i) = (s `cons`) .  (`snoc` i)
-    pairs = [(s, i) | s <- "=/", i <- range ('0','9')]
+    replacer (s, i) = replace (item (s, i) "") (item (s, i) "%d")
+    item (s, i) = (s <>) .  (`snoc` i)
+    pairs = [(s, i) | s <- ["= ","/"], i <- range ('0','9')]
 
 
 
 coreTypesTCGABNF = [here|
-Type = Base_Type / Simple_Type / Enumeration_Type / Alternative_Type / List_Type /
-Restricted_Reference_Type / General_Reference_Type / Named_Value_Type / Struct_Type
-/ Set_Type
+Type = Base_Type / Simple_Type / Enumeration_Type / Alternative_Type / List_Type / Restricted_Reference_Type / General_Reference_Type / Named_Value_Type / Struct_Type / Set_Type
 
 
 table_kind = 1/2
@@ -83,42 +83,28 @@ Set_Type = 15 1*(uinteger_2 uinteger_2)
 
 |] :: Text
 
-coreTypesABNF =[here|
-Type = Base-Type / Simple-Type / Enumeration-Type / Alternative-Type / List-Type / Restricted-Reference-Type / General-Reference-Type / Named-Value-Type / Struct-Type / Set-Type
-table-kind = %d1 / %d2
-Base-Type = %d0
-Simple-Type =  %d1 bytes-8 uinteger-2
-Enumeration-Type = %d2 1*(uinteger-2 uinteger-2)
-Alternative-Type = %d3 2*bytes-8
-List-Type = %d4 uinteger-2 bytes-8
-Restricted-Reference-Type = %d5 / %d6 1*bytes-8
-General-Reference-Type = %d7 / %d8 / %d9
-General-Reference-Table-Type = %d10 table-kind
-Named-Value-Name-Type = %d11 1*32bytes bytes-8
-Name-Value-Integer-Type = %d12 integer-2 bytes-8
-Name-Value-Uinteger-Type = %d13 uinteger-2 bytes-8
-Struct-Type = %d14 1*bytes-8
-Set-Type = %d15 1*(uinteger-2 uinteger-2)
-|] :: Text
 
 correctABNFToTCGABNF :: Text -> Text
 correctABNFToTCGABNF = replace "-" "_" . replace "%d" ""
 
-coreTypesTCGABNF' :: Text
-coreTypesTCGABNF' = correctABNFToTCGABNF coreTypesABNF
+
 :}
 
-import Text.ABNF
-import Text.ABNF.PrettyPrinter
-import Data.Foldable(mapM_)
+mapM_ (putStrLn . unpack) [ "coreTypesTCGABNF =" , coreTypesTCGABNF , "" , "preprocessABNF coreTypesTCGABNF =>" , preprocessABNF coreTypesTCGABNF ]
 
 :{
-case parseABNF "~/hsed/dev/script FIXME" coreTypesABNF of
-  Left _peb -> putStrLn "failed"
-  Right rules -> mapM_ putStrLn [ show rules
+case parseABNF "~/hsed/dev/script FIXME" $ preprocessABNF coreTypesTCGABNF of
+  Left peb -> mapM_ putStrLn [ "failed"
+                             , ""
+                             , errorBundlePretty peb
+                             ]
+  Right rules -> mapM_ putStrLn [ "success"
                                 , ""
+--                                , show rules
+--                                , ""
                                 , unpack $ correctABNFToTCGABNF $ pack
-                                         $ prettyShow rules]
+                                         $ prettyShow rules
+                                ]
 :}
 
 

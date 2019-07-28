@@ -34,17 +34,17 @@ import Text.ABNF.PrettyPrinter
      be interpreted by an ABNF parser.
   -}
 
-removeEmptyLines :: Text -> Text
-removeEmptyLines = unlines . filter ((0 <) . length) . lines
-
 preprocessABNF :: Text -> Text
 preprocessABNF = replace "_" "-"
+               . fixDecimalLiterals
                . removeEmptyLines
-               . ((flip (foldr replacer)) pairs)
   where
-    replacer (s, i) = replace (item (s, i) "") (item (s, i) "%d")
-    item (s, i) = (s <>) .  (`snoc` i)
+    fixDecimalLiterals = (flip (foldr replacer)) pairs
+    replacer (s, i) = replace (item "") (item "%d")
+      where
+        item = (s <>) . (`snoc` i)
     pairs = [(s, i) | s <- ["= ","/"], i <- range ('0','9')]
+    removeEmptyLines = unlines . filter ((0 <) . length) . lines
 
 
 
@@ -93,18 +93,16 @@ correctABNFToTCGABNF = replace "-" "_" . replace "%d" ""
 mapM_ (putStrLn . unpack) [ "coreTypesTCGABNF =" , coreTypesTCGABNF , "" , "preprocessABNF coreTypesTCGABNF =>" , preprocessABNF coreTypesTCGABNF ]
 
 :{
-case parseABNF "~/hsed/dev/script FIXME" $ preprocessABNF coreTypesTCGABNF of
-  Left peb -> mapM_ putStrLn [ "failed"
-                             , ""
-                             , errorBundlePretty peb
-                             ]
-  Right rules -> mapM_ putStrLn [ "success"
-                                , ""
---                                , show rules
---                                , ""
-                                , unpack $ correctABNFToTCGABNF $ pack
-                                         $ prettyShow rules
-                                ]
+mapM_ putStrLn $ case parseABNF "~/hsed/dev/script FIXME" $ preprocessABNF coreTypesTCGABNF of
+  Right rules -> [ "success"
+                 , ""
+                 , unpack $ correctABNFToTCGABNF $ pack
+                          $ prettyShow rules
+                 ]
+  Left peb -> [ "failed"
+              , ""
+              , errorBundlePretty peb
+              ]
 :}
 
 

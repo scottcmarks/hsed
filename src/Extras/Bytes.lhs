@@ -74,6 +74,16 @@ import           Extras.Integral            (byteStringToNatural, naturalToByteS
 data Fixed_bytes (n :: Nat) = Fixed_bytes !(Static ShortByteString n)
     deriving (Eq, Ord)
 
+take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
+take (Fixed_bytes sbs) = (Fixed_bytes (T.take sbs))
+
+drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
+drop (Fixed_bytes sbs) = (Fixed_bytes (T.drop sbs))
+
+append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
+append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (T.append sbsl sbsr))
+
+
 instance (KnownNat n) => Arbitrary (Fixed_bytes n) where
     arbitrary = fpack <$> arbitrary
 
@@ -157,17 +167,6 @@ instance (KnownNat n) => HasHex (Fixed_bytes n) where
     fromHex hs = fromString <$> fromHex hs
 
 -- | Static ShortByteString n methods lifted to Fixed_bytes n
-
-
-take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
-take (Fixed_bytes sbs) = (Fixed_bytes (T.take sbs))
-
-drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
-drop (Fixed_bytes sbs) = (Fixed_bytes (T.drop sbs))
-
-append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
-append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (T.append sbsl sbsr))
-
 
 fpack :: (KnownNat n) => ByteString -> Fixed_bytes n
 fpack = toFixed_bytes

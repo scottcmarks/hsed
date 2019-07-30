@@ -29,18 +29,31 @@ Formats.
            , OverloadedStrings
 #-}
 
-
+{-# LANGUAGE FlexibleContexts
+#-}
 
 module System.SED.Common.Format
     where
 
-import Data.ByteString
+import Data.ByteString(ByteString,singleton)
 import Data.Maybe
 import GHC.Base
 -- import GHC.Natural
 import GHC.Real
 import GHC.Show
 import GHC.TypeNats
+
+import System.SED.Common.UID
+
+data Max_bytes :: Nat -> *
+deriving instance Show(Max_bytes n)
+deriving instance Eq(Max_bytes n)
+
+class IsFormatItem a where
+    encode :: a -> ByteString
+    encode _ct = undefined
+    decode :: ByteString -> Maybe a
+    decode _bs = undefined
 
 
 data Core_table_kind :: Nat -> *
@@ -50,11 +63,13 @@ data Core_table_kind :: Nat -> *
 deriving instance Show (Core_table_kind n)
 deriving instance Eq (Core_table_kind n)
 
+instance (KnownNat n) => IsFormatItem(Core_table_kind n)
+    where encode ct = singleton (fromIntegral (natVal ct))
 
 data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
 data Core_integer_2    = Core_integer_2
-data Core_uidref       = Core_uidref
-data Core_max_bytes_32 = Core_max_bytes_32
+data Core_uidref       = Core_uidref {fromCore_uidref::UID}
+data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32::Max_bytes 32} -- FIXME:  Need
 
 newtype Core_uidref_Base_Type_only     = Core_uidref_Base_Type_only     Core_uidref
 newtype Core_uidref_non_Base_Type_only = Core_uidref_non_Base_Type_only Core_uidref
@@ -67,13 +82,13 @@ data Core_Type :: Nat -> *
         Simple_Type                  :: Core_uidref_Base_Type_only -> Core_uinteger_2         -> Core_Type  1
         Enumeration_Type             :: [(Core_uinteger_2, Core_uinteger_2)]                  -> Core_Type  2 -- 1 <= length
         Alternative_Type             ::                      [Core_uidref_non_Base_Type_only] -> Core_Type  3 -- 2 <= length
-        List_Type                    :: Core_uinteger_2   -> [Core_uidref_non_Base_Type_only] -> Core_Type  4
+        List_Type                    :: Core_uinteger_2   ->  Core_uidref_non_Base_Type_only  -> Core_Type  4
         Restricted_Reference_Type'5  ::                      [Core_uidref_Byte_table_only]    -> Core_Type  5
         Restricted_Reference_Type'6  ::                      [Core_uidref_Object_table_only]  -> Core_Type  6
         General_Reference_Type'7     ::                                                          Core_Type  7
         General_Reference_Type'8     ::                                                          Core_Type  8
         General_Reference_Type'9     ::                                                          Core_Type  9
-        General_Reference_Table_Type :: Core_table_kind n                                     -> Core_Type 10
+        General_Reference_Table_Type :: (KnownNat k) => Core_table_kind k                     -> Core_Type 10
         Named_Value_Name_Type        :: Core_max_bytes_32 ->  Core_uidref_non_Base_Type_only  -> Core_Type 11
         Named_Value_Integer_Type     :: Core_integer_2    ->  Core_uidref_non_Base_Type_only  -> Core_Type 12
         Named_Value_Uinteger_Type    :: Core_uinteger_2   ->  Core_uidref_non_Base_Type_only  -> Core_Type 13
@@ -83,15 +98,32 @@ data Core_Type :: Nat -> *
 instance (KnownNat n) => Show (Core_Type n)
     where show ct = "{- Core_Type " <> show (natVal ct) <> " -}"
 
-class IsFormatItem a where
-    encode :: a -> ByteString
-    encode _ct = undefined
-    decode :: ByteString -> Maybe a
-    decode _bs = undefined
-
 instance (KnownNat n) => IsFormatItem(Core_Type n) where
     encode ct = singleton (fromIntegral (natVal ct)) <> encodeData ct
-      where encodeData _ct = mempty
+      where encodeData :: Core_Type n -> ByteString
+            encodeData Base_Type = mempty
+            encodeData (Simple_Type base_uidref size) = encode base_uidref <> encode size
+            encodeData (Enumeration_Type ranges) = encodeRanges ranges
+            encodeData (Alternative_Type alternatives) = encodeCore_uidref_non_Base_Type_onlys alternatives
+            encodeData (List_Type size elementType) = encode size <> encode elementType
+            encodeData (Restricted_Reference_Type'5 uidrefs) = encodeCore_uidref_Byte_table_onlys uidrefs
+            encodeData (Restricted_Reference_Type'6 uidrefs) = encodeCore_uidref_Object_table_onlys uidrefs
+            encodeData General_Reference_Type'7 = mempty
+            encodeData General_Reference_Type'8 = mempty
+            encodeData General_Reference_Type'9 = mempty
+            encodeData (General_Reference_Table_Type k) = encode k
+            encodeData _ct = mempty
+
+            encodeRanges ranges =
+                "<length of range list>" <> mconcat ( map encodeRange ranges )
+              where encodeRange (start, stop) = "(" <> encode start <> ".." <> encode stop <> ")"
+            encodeCore_uidref_non_Base_Type_onlys us =
+                "<length of list>" <> encode us
+            encodeCore_uidref_Byte_table_onlys us =
+                "<length of list>" <> encode us
+            encodeCore_uidref_Object_table_onlys us =
+                "<length of list>" <> encode us
+
 
 instance (IsFormatItem a) => IsFormatItem([a]) where
     encode = mconcat . fmap encode
@@ -103,7 +135,14 @@ instance IsFormatItem(Core_uidref      ) where
     encode _ = "<uidref>"
 instance IsFormatItem(Core_max_bytes_32) where
     encode _ = "<max_bytes_32>"
-
+instance IsFormatItem(Core_uidref_Base_Type_only) where
+    encode (Core_uidref_Base_Type_only _base_uidref) = "<uidref_Base_Type_only>"
+instance IsFormatItem(Core_uidref_non_Base_Type_only) where
+    encode (Core_uidref_non_Base_Type_only _base_uidref) = "<uidref_non_Base_Type_only>"
+instance IsFormatItem(Core_uidref_Byte_table_only) where
+    encode (Core_uidref_Byte_table_only _base_uidref) = "<uidref_Byte_table_only>"
+instance IsFormatItem(Core_uidref_Object_table_only) where
+    encode (Core_uidref_Object_table_only _base_uidref) = "<uidref_Object_table_only>"
 
 -- newtype Non_Base_Type_uidref = Non_Base_Type_uidref Core_uidref
 --     deriving (Eq,Ord,Show)

@@ -4,100 +4,34 @@
 :set prompt-cont ""
 
 import Data.Either(Either(..))
-import Data.Foldable(foldr)
+import Data.Foldable(mapM_)
 import Data.Functor((<$>))
 import Data.Text(cons, snoc, pack, unpack)
 import GHC.Arr(range)
 import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
 import GHC.Classes((<))
-import GHC.List(filter)
 import GHC.Show(show)
-import Text.Megaparsec(parse,errorBundlePretty)
 import System.IO
 putStrLn "loading script ..."
 --------------------------------------------------------------------------------
+import Text.Megaparsec(parse,errorBundlePretty)
+import Text.ABNF.ABNF.Parser(parseABNF)
+import Text.ABNF.PrettyPrinter(prettyShow)
 
-
-import Text.Heredoc
-import Data.Text(Text, length, lines, unlines, replace, pack, unpack)
-import Data.Foldable(mapM_)
-import Text.ABNF
-import Text.ABNF.PrettyPrinter
 
 :{
 
-  {-
-  (from RFC 5234)
-
-     [T]he version of a ruleset included in a
-     specification might need preprocessing to ensure that it can
-     be interpreted by an ABNF parser.
-  -}
-
-preprocessABNF :: Text -> Text
-preprocessABNF = replace "_" "-"
-               . fixDecimalLiterals
-               . removeEmptyLines
-  where
-    fixDecimalLiterals = (flip (foldr replacer)) pairs
-    replacer (s, i) = replace (item "") (item "%d")
-      where
-        item = (s <>) . (`snoc` i)
-    pairs = [(s, i) | s <- ["= ","/"], i <- range ('0','9')]
-    removeEmptyLines = unlines . filter ((0 <) . length) . lines
-
-
-
-coreTypesTCGABNF = [here|
-Type = Base_Type / Simple_Type / Enumeration_Type / Alternative_Type / List_Type / Restricted_Reference_Type / General_Reference_Type / Named_Value_Type / Struct_Type / Set_Type
-
-
-table_kind = 1/2
-
-
-Base_Type = 0
-
-Simple_Type = 1 bytes_8 uinteger_2
-
-Enumeration_Type = 2 1*(uinteger_2 uinteger_2)
-
-Alternative_Type = 3 2*bytes_8
-
-List_Type = 4 uinteger_2 bytes_8
-
-Restricted_Reference_Type = 5/6 1*bytes_8
-
-General_Reference_Type = 7/8/9
-
-General_Reference_Table_Type = 10 table_kind
-
-Named_Value_Name_Type = 11 1*32bytes bytes_8
-
-Name_Value_Integer_Type = 12 integer_2 bytes_8
-
-Name_Value_Uinteger_Type = 13 uinteger_2 bytes_8
-
-Struct_Type = 14 1*bytes_8
-
-Set_Type = 15 1*(uinteger_2 uinteger_2)
-
-|] :: Text
-
-
-correctABNFToTCGABNF :: Text -> Text
-correctABNFToTCGABNF = replace "-" "_" . replace "%d" ""
-
-
+mapM_ (putStrLn . unpack) [ "coreTypesTCGABNF =" , coreTypesTCGABNF
+                          , ""
+                          , "correctABNFFromTCGABNF coreTypesTCGABNF =>" , correctABNFFromTCGABNF coreTypesTCGABNF
+                          ]
 :}
-
-mapM_ (putStrLn . unpack) [ "coreTypesTCGABNF =" , coreTypesTCGABNF , "" , "preprocessABNF coreTypesTCGABNF =>" , preprocessABNF coreTypesTCGABNF ]
 
 :{
 mapM_ putStrLn $ case parseABNF "~/hsed/dev/script FIXME" $ preprocessABNF coreTypesTCGABNF of
   Right rules -> [ "success"
                  , ""
-                 , unpack $ correctABNFToTCGABNF $ pack
-                          $ prettyShow rules
+                 , correctABNFToTCGABNF $ prettyShow rules
                  ]
   Left peb -> [ "failed"
               , ""
@@ -105,10 +39,10 @@ mapM_ putStrLn $ case parseABNF "~/hsed/dev/script FIXME" $ preprocessABNF coreT
               ]
 :}
 
-
 putStrLn "Buh-bye now."
 
 --------------------------------------------------------------------------------
+
 import GHC.Base(const, (++))
 :def! $ (pure . (":! bash -l -c " ++) . show)
 :def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)

@@ -103,9 +103,9 @@ instance (KnownNat n) => IsFormatItem(Core_Type n) where
       where encodeData :: Core_Type n -> ByteString
             encodeData Base_Type = mempty
             encodeData (Simple_Type base_uidref size) = encode base_uidref <> encode size
-            encodeData (Enumeration_Type ranges) = encodeRanges ranges
+            encodeData (Enumeration_Type ranges) = encode ranges
             encodeData (Alternative_Type alternatives) = encode alternatives
-            encodeData (List_Type size elementType) = encode size <> encode elementType
+            encodeData (List_Type maxSize elementType) = encode maxSize <> encode elementType
             encodeData (Restricted_Reference_Type'5 uidrefs) = encode uidrefs
             encodeData (Restricted_Reference_Type'6 uidrefs) = encode uidrefs
             encodeData General_Reference_Type'7 = mempty
@@ -116,14 +116,13 @@ instance (KnownNat n) => IsFormatItem(Core_Type n) where
             encodeData (Named_Value_Integer_Type  int  uidref) = encode int  <> encode uidref
             encodeData (Named_Value_Uinteger_Type uint uidref) = encode uint <> encode uidref
             encodeData (Struct_Type flds ) = encode flds
-            encodeData (Set_Type ranges) = encodeRanges ranges
-
-            encodeRanges ranges = mconcat ( map encodeRange ranges )
-              where encodeRange (start, stop) = encode start <> encode stop
+            encodeData (Set_Type ranges) = encode ranges
 
 
 instance (IsFormatItem a) => IsFormatItem([a]) where
     encode = mconcat . fmap encode
+instance (IsFormatItem a) => IsFormatItem(a,a) where
+    encode (start, stop) = encode start <> encode stop
 instance IsFormatItem(Core_uinteger_2  ) where
     encode _ = "<uinteger_2>"
 instance IsFormatItem(Core_integer_2   ) where

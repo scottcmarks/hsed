@@ -36,7 +36,7 @@ spec spec21,22
 
 ./test/Spec.hs,0
 
-./dev/DevMain.hs,881
+./dev/DevMain.hs,834
 module DevMain DevMain11,12
 dev dev24,25
 preprocessABNF preprocessABNF37,38
@@ -58,8 +58,6 @@ Name_Value_Uinteger_Type Name_Value_Uinteger_Type72,73
 Struct_Type Struct_Type74,75
 Set_Type Set_Type76,77
 correctABNFToTCGABNF correctABNFToTCGABNF81,82
-data (K(84,85
-    Base_Type Base_Type85,86
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3
@@ -152,7 +150,7 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/Common/Format.lhs,3297
+./src/System/SED/Common/Format.lhs,3384
 module System.SED.Common.FormatSystem.SED.Common.Format34,35
 data Max_bytes Max_bytes47,48
 class IsFormatItem IsFormatItem51,52
@@ -199,24 +197,26 @@ instance (K(KnownNat n) => Show (Core_Type n)97,98
     where show show98,99
 instance (K(KnownNat n) => IsFormatItem (Core_Type n)100,101
     encode encode101,102
-instance (I(IsFormatItem a) => IsFormatItem ([a])124,125
-    encode encode125,126
-instance IsFormatItem(IsFormatItem (Core_uinteger_2)126,127
-    encode encode127,128
-instance IsFormatItem(IsFormatItem (Core_integer_2)128,129
-    encode encode129,130
-instance IsFormatItem(IsFormatItem (Core_uidref)130,131
-    encode encode131,132
-instance IsFormatItem(IsFormatItem (Core_max_bytes_32)132,133
-    encode encode133,134
-instance IsFormatItem(IsFormatItem (Core_uidref_Base_Type_only)134,135
-    encode encode135,136
-instance IsFormatItem(IsFormatItem (Core_uidref_non_Base_Type_only)136,137
-    encode encode137,138
-instance IsFormatItem(IsFormatItem (Core_uidref_Byte_table_only)138,139
-    encode encode139,140
-instance IsFormatItem(IsFormatItem (Core_uidref_Object_table_only)140,141
-    encode encode141,142
+instance (I(IsFormatItem a) => IsFormatItem ([a])121,122
+    encode encode122,123
+instance (I(IsFormatItem a) => IsFormatItem (a, a)123,124
+    encode encode124,125
+instance IsFormatItem(IsFormatItem (Core_uinteger_2)125,126
+    encode encode126,127
+instance IsFormatItem(IsFormatItem (Core_integer_2)127,128
+    encode encode128,129
+instance IsFormatItem(IsFormatItem (Core_uidref)129,130
+    encode encode130,131
+instance IsFormatItem(IsFormatItem (Core_max_bytes_32)131,132
+    encode encode132,133
+instance IsFormatItem(IsFormatItem (Core_uidref_Base_Type_only)133,134
+    encode encode134,135
+instance IsFormatItem(IsFormatItem (Core_uidref_non_Base_Type_only)135,136
+    encode encode136,137
+instance IsFormatItem(IsFormatItem (Core_uidref_Byte_table_only)137,138
+    encode encode138,139
+instance IsFormatItem(IsFormatItem (Core_uidref_Object_table_only)139,140
+    encode encode140,141
 
 ./src/System/SED/Common/Table.lhs,1082
 module System.SED.Common.Table System.SED.Common.Table24,25

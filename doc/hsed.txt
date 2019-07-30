@@ -362,6 +362,7 @@ instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_int
 instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uinteger_2
 instance GHC.TypeNats.KnownNat n => System.SED.Common.Format.IsFormatItem (System.SED.Common.Format.Core_table_kind n)
 instance System.SED.Common.Format.IsFormatItem a => System.SED.Common.Format.IsFormatItem [a]
+instance System.SED.Common.Format.IsFormatItem a => System.SED.Common.Format.IsFormatItem (a, a)
 
 
 -- | Utilities

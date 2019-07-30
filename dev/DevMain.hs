@@ -81,6 +81,3 @@ Set_Type = 15 1*(uinteger_2 uinteger_2)
 
 correctABNFToTCGABNF :: String -> String
 correctABNFToTCGABNF = unpack . replace "-" "_" . replace "%d" "" . pack
-
-data (KnownNat n) => CoreType n where
-    Base_Type :: CoreType 0

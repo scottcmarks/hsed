@@ -104,25 +104,22 @@ instance (KnownNat n) => IsFormatItem(Core_Type n) where
             encodeData Base_Type = mempty
             encodeData (Simple_Type base_uidref size) = encode base_uidref <> encode size
             encodeData (Enumeration_Type ranges) = encodeRanges ranges
-            encodeData (Alternative_Type alternatives) = encodeCore_uidref_non_Base_Type_onlys alternatives
+            encodeData (Alternative_Type alternatives) = encode alternatives
             encodeData (List_Type size elementType) = encode size <> encode elementType
-            encodeData (Restricted_Reference_Type'5 uidrefs) = encodeCore_uidref_Byte_table_onlys uidrefs
-            encodeData (Restricted_Reference_Type'6 uidrefs) = encodeCore_uidref_Object_table_onlys uidrefs
+            encodeData (Restricted_Reference_Type'5 uidrefs) = encode uidrefs
+            encodeData (Restricted_Reference_Type'6 uidrefs) = encode uidrefs
             encodeData General_Reference_Type'7 = mempty
             encodeData General_Reference_Type'8 = mempty
             encodeData General_Reference_Type'9 = mempty
             encodeData (General_Reference_Table_Type k) = encode k
-            encodeData _ct = mempty
+            encodeData (Named_Value_Name_Type     name uidref) = encode name <> encode uidref
+            encodeData (Named_Value_Integer_Type  int  uidref) = encode int  <> encode uidref
+            encodeData (Named_Value_Uinteger_Type uint uidref) = encode uint <> encode uidref
+            encodeData (Struct_Type flds ) = encode flds
+            encodeData (Set_Type ranges) = encodeRanges ranges
 
-            encodeRanges ranges =
-                "<length of range list>" <> mconcat ( map encodeRange ranges )
-              where encodeRange (start, stop) = "(" <> encode start <> ".." <> encode stop <> ")"
-            encodeCore_uidref_non_Base_Type_onlys us =
-                "<length of list>" <> encode us
-            encodeCore_uidref_Byte_table_onlys us =
-                "<length of list>" <> encode us
-            encodeCore_uidref_Object_table_onlys us =
-                "<length of list>" <> encode us
+            encodeRanges ranges = mconcat ( map encodeRange ranges )
+              where encodeRange (start, stop) = encode start <> encode stop
 
 
 instance (IsFormatItem a) => IsFormatItem([a]) where

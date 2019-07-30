@@ -36,9 +36,30 @@ spec spec21,22
 
 ./test/Spec.hs,0
 
-./dev/DevMain.hs,43
-module DevMain DevMain7,8
-dev dev11,12
+./dev/DevMain.hs,881
+module DevMain DevMain11,12
+dev dev24,25
+preprocessABNF preprocessABNF37,38
+correctABNFFromTCGABNF correctABNFFromTCGABNF40,41
+coreTypesTCGABNF coreTypesTCGABNF44,45
+Type Type46,47
+table_kind table_kind49,50
+Base_Type Base_Type52,53
+Simple_Type Simple_Type54,55
+Enumeration_Type Enumeration_Type56,57
+Alternative_Type Alternative_Type58,59
+List_Type List_Type60,61
+Restricted_Reference_Type Restricted_Reference_Type62,63
+General_Reference_Type General_Reference_Type64,65
+General_Reference_Table_Type General_Reference_Table_Type66,67
+Named_Value_Name_Type Named_Value_Name_Type68,69
+Name_Value_Integer_Type Name_Value_Integer_Type70,71
+Name_Value_Uinteger_Type Name_Value_Uinteger_Type72,73
+Struct_Type Struct_Type74,75
+Set_Type Set_Type76,77
+correctABNFToTCGABNF correctABNFToTCGABNF81,82
+data (K(84,85
+    Base_Type Base_Type85,86
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3
@@ -131,58 +152,71 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/Common/Format.lhs,2572
-module System.SED.Common.FormatSystem.SED.Common.Format33,34
-data Core_table_kind Core_table_kind45,46
-    Object_table Object_table47,48
-    Byte_table Byte_table48,49
-data Core_uinteger_2 Core_uinteger_253,54
-data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_253,54
-data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_253,54
-data Core_integer_2 Core_integer_254,55
-data Core_integer_2    = Core_integer_2Core_integer_254,55
-data Core_uidref Core_uidref55,56
-data Core_uidref       = Core_uidrefCore_uidref55,56
-data Core_max_bytes_32 Core_max_bytes_3256,57
-data Core_max_bytes_32 = Core_max_bytes_32Core_max_bytes_3256,57
-newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only58,59
-newtype Core_uidref_non_Base_Type_only Core_uidref_non_Base_Type_only59,60
-newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only60,61
-newtype Core_uidref_Object_table_only Core_uidref_Object_table_only61,62
-data Core_Type Core_Type63,64
-        Base_Type Base_Type65,66
-        Simple_Type Simple_Type66,67
-        Enumeration_Type Enumeration_Type67,68
-        Alternative_Type Alternative_Type68,69
-        List_Type List_Type69,70
-        Restricted_Reference_Type'5 Restricted_Reference_Type'570,71
-        Restricted_Reference_Type'6 Restricted_Reference_Type'671,72
-        General_Reference_Type'7 General_Reference_Type'772,73
-        General_Reference_Type'8 General_Reference_Type'873,74
-        General_Reference_Type'9 General_Reference_Type'974,75
-        General_Reference_Table_Type General_Reference_Table_Type75,76
-        Named_Value_Name_Type Named_Value_Name_Type76,77
-        Named_Value_Integer_Type Named_Value_Integer_Type77,78
-        Named_Value_Uinteger_Type Named_Value_Uinteger_Type78,79
-        Struct_Type Struct_Type79,80
-        Set_Type Set_Type80,81
-instance (K(KnownNat n) => Show (Core_Type n)82,83
-    where show show83,84
-class IsFormatItem IsFormatItem85,86
-    encode encode86,87
-    decode decode88,89
-instance (K(KnownNat n) => IsFormatItem (Core_Type n)91,92
-    encode encode92,93
-instance (I(IsFormatItem a) => IsFormatItem ([a])95,96
-    encode encode96,97
-instance IsFormatItem(IsFormatItem (Core_uinteger_2)97,98
-    encode encode98,99
-instance IsFormatItem(IsFormatItem (Core_integer_2)99,100
-    encode encode100,101
-instance IsFormatItem(IsFormatItem (Core_uidref)101,102
-    encode encode102,103
-instance IsFormatItem(IsFormatItem (Core_max_bytes_32)103,104
-    encode encode104,105
+./src/System/SED/Common/Format.lhs,3297
+module System.SED.Common.FormatSystem.SED.Common.Format34,35
+data Max_bytes Max_bytes47,48
+class IsFormatItem IsFormatItem51,52
+    encode encode52,53
+    decode decode54,55
+data Core_table_kind Core_table_kind58,59
+    Object_table Object_table60,61
+    Byte_table Byte_table61,62
+instance (K(KnownNat n) => IsFormatItem (Core_table_kind n)65,66
+    where encode encode66,67
+data Core_uinteger_2 Core_uinteger_268,69
+data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_268,69
+data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_268,69
+data Core_integer_2 Core_integer_269,70
+data Core_integer_2    = Core_integer_2Core_integer_269,70
+data Core_uidref Core_uidref70,71
+data Core_uidref       = Core_uidref Core_uidref70,71
+data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref70,71
+data Core_max_bytes_32 Core_max_bytes_3271,72
+data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3271,72
+data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3271,72
+newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only73,74
+newtype Core_uidref_non_Base_Type_only Core_uidref_non_Base_Type_only74,75
+newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only75,76
+newtype Core_uidref_Object_table_only Core_uidref_Object_table_only76,77
+data Core_Type Core_Type78,79
+        Base_Type Base_Type80,81
+        Simple_Type Simple_Type81,82
+        Enumeration_Type Enumeration_Type82,83
+        Alternative_Type Alternative_Type83,84
+        List_Type List_Type84,85
+        Restricted_Reference_Type'5 Restricted_Reference_Type'585,86
+        Restricted_Reference_Type'6 Restricted_Reference_Type'686,87
+        General_Reference_Type'7 General_Reference_Type'787,88
+        General_Reference_Type'8 General_Reference_Type'888,89
+        General_Reference_Type'9 General_Reference_Type'989,90
+        General_Reference_Table_Type General_Reference_Table_Type90,91
+        Named_Value_Name_Type Named_Value_Name_Type91,92
+        Named_Value_Integer_Type Named_Value_Integer_Type92,93
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type93,94
+        Struct_Type Struct_Type94,95
+        Set_Type Set_Type95,96
+instance (K(KnownNat n) => Show (Core_Type n)97,98
+    where show show98,99
+instance (K(KnownNat n) => IsFormatItem (Core_Type n)100,101
+    encode encode101,102
+instance (I(IsFormatItem a) => IsFormatItem ([a])124,125
+    encode encode125,126
+instance IsFormatItem(IsFormatItem (Core_uinteger_2)126,127
+    encode encode127,128
+instance IsFormatItem(IsFormatItem (Core_integer_2)128,129
+    encode encode129,130
+instance IsFormatItem(IsFormatItem (Core_uidref)130,131
+    encode encode131,132
+instance IsFormatItem(IsFormatItem (Core_max_bytes_32)132,133
+    encode encode133,134
+instance IsFormatItem(IsFormatItem (Core_uidref_Base_Type_only)134,135
+    encode encode135,136
+instance IsFormatItem(IsFormatItem (Core_uidref_non_Base_Type_only)136,137
+    encode encode137,138
+instance IsFormatItem(IsFormatItem (Core_uidref_Byte_table_only)138,139
+    encode encode139,140
+instance IsFormatItem(IsFormatItem (Core_uidref_Object_table_only)140,141
+    encode encode141,142
 
 ./src/System/SED/Common/Table.lhs,1082
 module System.SED.Common.Table System.SED.Common.Table24,25
@@ -472,43 +506,43 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Extras/Bytes.lhs,1554
+./src/Extras/Bytes.lhs,1552
 module Extras.BytesExtras.Bytes30,31
 import import58,59
 data Fixed_bytes Fixed_bytes73,74
 data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes73,74
-instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)76,77
-    arbitrary arbitrary77,78
-instance (K(KnownNat n) => Show (Fixed_bytes n)81,82
-    showsPrec showsPrec82,83
-instance (K(KnownNat n) => IsString (Fixed_bytes n)91,92
-    fromString fromString92,93
-class (KnownNat n) => HasFixed_bytes HasFixed_bytes107,108
-    toFixed_bytes toFixed_bytes108,109
-    fromFixed_bytes fromFixed_bytes109,110
-instance (K(KnownNat n) => HasFixed_bytes n Natural111,112
-    toFixed_bytes toFixed_bytes112,113
-    fromFixed_bytes fromFixed_bytes122,123
-instance (K(KnownNat n) => HasFixed_bytes n (Static ShortByteString n)124,125
-    toFixed_bytes toFixed_bytes125,126
-    fromFixed_bytes fromFixed_bytes126,127
-instance (K(KnownNat n) => HasFixed_bytes n ShortByteString128,129
-    toFixed_bytes toFixed_bytes129,130
-    fromFixed_bytes fromFixed_bytes139,140
-instance (K(KnownNat n) => HasFixed_bytes n ByteString142,143
-    toFixed_bytes toFixed_bytes143,144
-    fromFixed_bytes fromFixed_bytes144,145
-instance (K(KnownNat n) => HasFixed_bytes n [Word8]146,147
-    toFixed_bytes toFixed_bytes147,148
-    fromFixed_bytes fromFixed_bytes148,149
-instance (K(KnownNat n) => HasHex (Fixed_bytes n)154,155
-    hex hex155,156
-    fromHex fromHex156,157
-take take161,162
-drop drop164,165
-append append167,168
-fpack fpack171,172
-funpack funpack174,175
+take take76,77
+drop drop79,80
+append append82,83
+instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)86,87
+    arbitrary arbitrary87,88
+instance (K(KnownNat n) => Show (Fixed_bytes n)91,92
+    showsPrec showsPrec92,93
+instance (K(KnownNat n) => IsString (Fixed_bytes n)101,102
+    fromString fromString102,103
+class (KnownNat n) => HasFixed_bytes HasFixed_bytes117,118
+    toFixed_bytes toFixed_bytes118,119
+    fromFixed_bytes fromFixed_bytes119,120
+instance (K(KnownNat n) => HasFixed_bytes n Natural121,122
+    toFixed_bytes toFixed_bytes122,123
+    fromFixed_bytes fromFixed_bytes132,133
+instance (K(KnownNat n) => HasFixed_bytes n (Static ShortByteString n)134,135
+    toFixed_bytes toFixed_bytes135,136
+    fromFixed_bytes fromFixed_bytes136,137
+instance (K(KnownNat n) => HasFixed_bytes n ShortByteString138,139
+    toFixed_bytes toFixed_bytes139,140
+    fromFixed_bytes fromFixed_bytes149,150
+instance (K(KnownNat n) => HasFixed_bytes n ByteString152,153
+    toFixed_bytes toFixed_bytes153,154
+    fromFixed_bytes fromFixed_bytes154,155
+instance (K(KnownNat n) => HasFixed_bytes n [Word8]156,157
+    toFixed_bytes toFixed_bytes157,158
+    fromFixed_bytes fromFixed_bytes158,159
+instance (K(KnownNat n) => HasHex (Fixed_bytes n)164,165
+    hex hex165,166
+    fromHex fromHex166,167
+fpack fpack170,171
+funpack funpack173,174
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion14,15

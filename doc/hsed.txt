@@ -74,6 +74,9 @@ instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Data.StaticText.Class.Sta
 module Extras.Bytes
 data Fixed_bytes (n :: Nat)
 Fixed_bytes :: !Static ShortByteString n -> Fixed_bytes
+take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
+drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
+append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
 
 -- | HasFixed_bytes class and instances for conversion to/from Fixed_bytes
 --   n
@@ -82,9 +85,6 @@ toFixed_bytes :: HasFixed_bytes n a => a -> Fixed_bytes n
 fromFixed_bytes :: HasFixed_bytes n a => Fixed_bytes n -> a
 
 -- | Static ShortByteString n methods lifted to Fixed_bytes n
-take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
-drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
-append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
 fpack :: KnownNat n => ByteString -> Fixed_bytes n
 funpack :: KnownNat n => Fixed_bytes n -> ByteString
 instance GHC.Classes.Ord (Extras.Bytes.Fixed_bytes n)
@@ -121,59 +121,6 @@ logFunc :: Lens' App LogFunc
 makeApp :: LogFunc -> ProcessContext -> Options -> App
 instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
-
-
--- | Formats.
-module System.SED.Common.Format
-data Core_table_kind :: Nat -> *
-[Object_table] :: Core_table_kind 1
-[Byte_table] :: Core_table_kind 2
-data Core_uinteger_2
-Core_uinteger_2 :: Int -> Core_uinteger_2
-[fromCore_uinteger_2] :: Core_uinteger_2 -> Int
-data Core_integer_2
-Core_integer_2 :: Core_integer_2
-data Core_uidref
-Core_uidref :: Core_uidref
-data Core_max_bytes_32
-Core_max_bytes_32 :: Core_max_bytes_32
-newtype Core_uidref_Base_Type_only
-Core_uidref_Base_Type_only :: Core_uidref -> Core_uidref_Base_Type_only
-newtype Core_uidref_non_Base_Type_only
-Core_uidref_non_Base_Type_only :: Core_uidref -> Core_uidref_non_Base_Type_only
-newtype Core_uidref_Byte_table_only
-Core_uidref_Byte_table_only :: Core_uidref -> Core_uidref_Byte_table_only
-newtype Core_uidref_Object_table_only
-Core_uidref_Object_table_only :: Core_uidref -> Core_uidref_Object_table_only
-data Core_Type :: Nat -> *
-[Base_Type] :: Core_Type 0
-[Simple_Type] :: Core_uidref_Base_Type_only -> Core_uinteger_2 -> Core_Type 1
-[Enumeration_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Core_Type 2
-[Alternative_Type] :: [Core_uidref_non_Base_Type_only] -> Core_Type 3
-[List_Type] :: Core_uinteger_2 -> [Core_uidref_non_Base_Type_only] -> Core_Type 4
-[Restricted_Reference_Type'5] :: [Core_uidref_Byte_table_only] -> Core_Type 5
-[Restricted_Reference_Type'6] :: [Core_uidref_Object_table_only] -> Core_Type 6
-[General_Reference_Type'7] :: Core_Type 7
-[General_Reference_Type'8] :: Core_Type 8
-[General_Reference_Type'9] :: Core_Type 9
-[General_Reference_Table_Type] :: Core_table_kind n -> Core_Type 10
-[Named_Value_Name_Type] :: Core_max_bytes_32 -> Core_uidref_non_Base_Type_only -> Core_Type 11
-[Named_Value_Integer_Type] :: Core_integer_2 -> Core_uidref_non_Base_Type_only -> Core_Type 12
-[Named_Value_Uinteger_Type] :: Core_uinteger_2 -> Core_uidref_non_Base_Type_only -> Core_Type 13
-[Struct_Type] :: [Core_uidref_non_Base_Type_only] -> Core_Type 14
-[Set_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Core_Type 15
-class IsFormatItem a
-encode :: IsFormatItem a => a -> ByteString
-decode :: IsFormatItem a => ByteString -> Maybe a
-instance GHC.Show.Show (System.SED.Common.Format.Core_table_kind n)
-instance GHC.Classes.Eq (System.SED.Common.Format.Core_table_kind n)
-instance GHC.TypeNats.KnownNat n => System.SED.Common.Format.IsFormatItem (System.SED.Common.Format.Core_Type n)
-instance System.SED.Common.Format.IsFormatItem a => System.SED.Common.Format.IsFormatItem [a]
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uinteger_2
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_integer_2
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_max_bytes_32
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.Common.Format.Core_Type n)
 
 
 -- | Parse and generate stream items.
@@ -352,6 +299,69 @@ uSyncSession :: UID
 uStartTrustedSession :: UID
 uSyncTrustedSession :: UID
 uCloseSession :: UID
+
+
+-- | Formats.
+module System.SED.Common.Format
+data Max_bytes :: Nat -> *
+class IsFormatItem a
+encode :: IsFormatItem a => a -> ByteString
+decode :: IsFormatItem a => ByteString -> Maybe a
+data Core_table_kind :: Nat -> *
+[Object_table] :: Core_table_kind 1
+[Byte_table] :: Core_table_kind 2
+data Core_uinteger_2
+Core_uinteger_2 :: Int -> Core_uinteger_2
+[fromCore_uinteger_2] :: Core_uinteger_2 -> Int
+data Core_integer_2
+Core_integer_2 :: Core_integer_2
+data Core_uidref
+Core_uidref :: UID -> Core_uidref
+[fromCore_uidref] :: Core_uidref -> UID
+data Core_max_bytes_32
+Core_max_bytes_32 :: Max_bytes 32 -> Core_max_bytes_32
+[fromCore_max_bytes_32] :: Core_max_bytes_32 -> Max_bytes 32
+newtype Core_uidref_Base_Type_only
+Core_uidref_Base_Type_only :: Core_uidref -> Core_uidref_Base_Type_only
+newtype Core_uidref_non_Base_Type_only
+Core_uidref_non_Base_Type_only :: Core_uidref -> Core_uidref_non_Base_Type_only
+newtype Core_uidref_Byte_table_only
+Core_uidref_Byte_table_only :: Core_uidref -> Core_uidref_Byte_table_only
+newtype Core_uidref_Object_table_only
+Core_uidref_Object_table_only :: Core_uidref -> Core_uidref_Object_table_only
+data Core_Type :: Nat -> *
+[Base_Type] :: Core_Type 0
+[Simple_Type] :: Core_uidref_Base_Type_only -> Core_uinteger_2 -> Core_Type 1
+[Enumeration_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Core_Type 2
+[Alternative_Type] :: [Core_uidref_non_Base_Type_only] -> Core_Type 3
+[List_Type] :: Core_uinteger_2 -> Core_uidref_non_Base_Type_only -> Core_Type 4
+[Restricted_Reference_Type'5] :: [Core_uidref_Byte_table_only] -> Core_Type 5
+[Restricted_Reference_Type'6] :: [Core_uidref_Object_table_only] -> Core_Type 6
+[General_Reference_Type'7] :: Core_Type 7
+[General_Reference_Type'8] :: Core_Type 8
+[General_Reference_Type'9] :: Core_Type 9
+[General_Reference_Table_Type] :: KnownNat k => Core_table_kind k -> Core_Type 10
+[Named_Value_Name_Type] :: Core_max_bytes_32 -> Core_uidref_non_Base_Type_only -> Core_Type 11
+[Named_Value_Integer_Type] :: Core_integer_2 -> Core_uidref_non_Base_Type_only -> Core_Type 12
+[Named_Value_Uinteger_Type] :: Core_uinteger_2 -> Core_uidref_non_Base_Type_only -> Core_Type 13
+[Struct_Type] :: [Core_uidref_non_Base_Type_only] -> Core_Type 14
+[Set_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Core_Type 15
+instance GHC.Show.Show (System.SED.Common.Format.Max_bytes n)
+instance GHC.Classes.Eq (System.SED.Common.Format.Max_bytes n)
+instance GHC.Show.Show (System.SED.Common.Format.Core_table_kind n)
+instance GHC.Classes.Eq (System.SED.Common.Format.Core_table_kind n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.Common.Format.Core_Type n)
+instance GHC.TypeNats.KnownNat n => System.SED.Common.Format.IsFormatItem (System.SED.Common.Format.Core_Type n)
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_Object_table_only
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_Byte_table_only
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_non_Base_Type_only
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_Base_Type_only
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_max_bytes_32
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_integer_2
+instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uinteger_2
+instance GHC.TypeNats.KnownNat n => System.SED.Common.Format.IsFormatItem (System.SED.Common.Format.Core_table_kind n)
+instance System.SED.Common.Format.IsFormatItem a => System.SED.Common.Format.IsFormatItem [a]
 
 
 -- | Utilities

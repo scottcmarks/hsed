@@ -1,19 +1,28 @@
+:set -Wno-type-defaults
+:set prompt-cont ""
+
 :load dev/DevMain.hs
 :set -XQuasiQuotes
 :set -XOverloadedStrings
-:set prompt-cont ""
 
+import System.IO
+putStrLn "loading script ..."
+--------------------------------------------------------------------------------
+
+import Data.ByteString(head,tail)
 import Data.Either(Either(..))
 import Data.Foldable(mapM_)
 import Data.Functor((<$>))
+import Data.Maybe(Maybe(..))
 import Data.Text(cons, snoc, pack, unpack)
 import GHC.Arr(range)
 import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
 import GHC.Classes((<))
+import GHC.Err(undefined)
 import GHC.Show(show)
-import System.IO
-putStrLn "loading script ..."
+
 --------------------------------------------------------------------------------
+
 import Text.Megaparsec(parse,errorBundlePretty)
 import Text.ABNF.ABNF.Parser(parseABNF)
 import Text.ABNF.PrettyPrinter(prettyShow)

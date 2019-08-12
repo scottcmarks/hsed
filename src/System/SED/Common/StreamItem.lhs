@@ -73,5 +73,12 @@ require t = parser >>= onlyt
         | x == t = pure t
         | otherwise = fail $ "Looking for " <> show t <> ", but saw " <> show x
 
+instance (StreamItem a) => StreamItem([a]) where
+    parser = undefined
+    generate = mconcat . fmap generate
+instance (StreamItem a) => StreamItem(a,a) where
+    parser = undefined
+    generate (f, s) = generate f <> generate s
+
 \end{code}
 \end{document}

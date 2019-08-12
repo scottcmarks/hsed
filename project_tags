@@ -104,7 +104,7 @@ module System.SED.Common.TableUIDsSystem.SED.Common.TableUIDs47,48
 lookupTableHalfUID lookupTableHalfUID177,178
 lookupTableUID lookupTableUID182,183
 
-./src/System/SED/Common/StreamItem.lhs,339
+./src/System/SED/Common/StreamItem.lhs,554
 module System.SED.Common.StreamItem System.SED.Common.StreamItem24,25
 class StreamItem StreamItem46,47
     parser parser47,48
@@ -115,6 +115,12 @@ class StreamItem StreamItem46,47
     pg pg61,62
     typeIsa typeIsa64,65
 require require68,69
+instance (S(StreamItem a) => StreamItem ([a])75,76
+    parser parser76,77
+    generate generate77,78
+instance (S(StreamItem a) => StreamItem (a, a)78,79
+    parser parser79,80
+    generate generate80,81
 
 ./src/System/SED/Common/UID.lhs,635
 module System.SED.Common.UID System.SED.Common.UID28,29
@@ -150,73 +156,74 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/Common/Format.lhs,3384
+./src/System/SED/Common/Format.lhs,3417
 module System.SED.Common.FormatSystem.SED.Common.Format34,35
-data Max_bytes Max_bytes47,48
-class IsFormatItem IsFormatItem51,52
-    encode encode52,53
-    decode decode54,55
-data Core_table_kind Core_table_kind58,59
-    Object_table Object_table60,61
-    Byte_table Byte_table61,62
-instance (K(KnownNat n) => IsFormatItem (Core_table_kind n)65,66
-    where encode encode66,67
-data Core_uinteger_2 Core_uinteger_268,69
-data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_268,69
-data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_268,69
-data Core_integer_2 Core_integer_269,70
-data Core_integer_2    = Core_integer_2Core_integer_269,70
-data Core_uidref Core_uidref70,71
-data Core_uidref       = Core_uidref Core_uidref70,71
-data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref70,71
-data Core_max_bytes_32 Core_max_bytes_3271,72
-data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3271,72
-data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3271,72
-newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only73,74
+data Max_bytes Max_bytes51,52
+instance StreamItem StreamItem Core_table_kind55,56
+    where generate generate56,57
+data Core_table_kind Core_table_kind60,61
+data Core_table_kind = Object_table Object_table60,61
+data Core_table_kind = Object_table | Byte_tableByte_table60,61
+data Core_uinteger_2 Core_uinteger_263,64
+data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_263,64
+data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_263,64
+data Core_integer_2 Core_integer_265,66
+data Core_integer_2    = Core_integer_2 Core_integer_265,66
+data Core_integer_2    = Core_integer_2 {fromCore_integer_2:fromCore_integer_265,66
+data Core_uidref Core_uidref67,68
+data Core_uidref       = Core_uidref Core_uidref67,68
+data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref67,68
+data Core_max_bytes_32 Core_max_bytes_3269,70
+data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3269,70
+data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3269,70
+newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only72,73
 newtype Core_uidref_non_Base_Type_only Core_uidref_non_Base_Type_only74,75
-newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only75,76
-newtype Core_uidref_Object_table_only Core_uidref_Object_table_only76,77
-data Core_Type Core_Type78,79
-        Base_Type Base_Type80,81
-        Simple_Type Simple_Type81,82
-        Enumeration_Type Enumeration_Type82,83
-        Alternative_Type Alternative_Type83,84
-        List_Type List_Type84,85
-        Restricted_Reference_Type'5 Restricted_Reference_Type'585,86
-        Restricted_Reference_Type'6 Restricted_Reference_Type'686,87
-        General_Reference_Type'7 General_Reference_Type'787,88
-        General_Reference_Type'8 General_Reference_Type'888,89
-        General_Reference_Type'9 General_Reference_Type'989,90
-        General_Reference_Table_Type General_Reference_Table_Type90,91
-        Named_Value_Name_Type Named_Value_Name_Type91,92
-        Named_Value_Integer_Type Named_Value_Integer_Type92,93
-        Named_Value_Uinteger_Type Named_Value_Uinteger_Type93,94
-        Struct_Type Struct_Type94,95
-        Set_Type Set_Type95,96
-instance (K(KnownNat n) => Show (Core_Type n)97,98
-    where show show98,99
-instance (K(KnownNat n) => IsFormatItem (Core_Type n)100,101
-    encode encode101,102
-instance (I(IsFormatItem a) => IsFormatItem ([a])121,122
-    encode encode122,123
-instance (I(IsFormatItem a) => IsFormatItem (a, a)123,124
-    encode encode124,125
-instance IsFormatItem(IsFormatItem (Core_uinteger_2)125,126
-    encode encode126,127
-instance IsFormatItem(IsFormatItem (Core_integer_2)127,128
-    encode encode128,129
-instance IsFormatItem(IsFormatItem (Core_uidref)129,130
-    encode encode130,131
-instance IsFormatItem(IsFormatItem (Core_max_bytes_32)131,132
-    encode encode132,133
-instance IsFormatItem(IsFormatItem (Core_uidref_Base_Type_only)133,134
-    encode encode134,135
-instance IsFormatItem(IsFormatItem (Core_uidref_non_Base_Type_only)135,136
-    encode encode136,137
-instance IsFormatItem(IsFormatItem (Core_uidref_Byte_table_only)137,138
-    encode encode138,139
-instance IsFormatItem(IsFormatItem (Core_uidref_Object_table_only)139,140
-    encode encode140,141
+newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only76,77
+newtype Core_uidref_Object_table_only Core_uidref_Object_table_only78,79
+data Core_Type Core_Type81,82
+        Base_Type Base_Type83,84
+        Simple_Type Simple_Type84,85
+        Enumeration_Type Enumeration_Type85,86
+        Alternative_Type Alternative_Type86,87
+        List_Type List_Type87,88
+        Restricted_Reference_Type'5 Restricted_Reference_Type'588,89
+        Restricted_Reference_Type'6 Restricted_Reference_Type'689,90
+        General_Reference_Type'7 General_Reference_Type'790,91
+        General_Reference_Type'8 General_Reference_Type'891,92
+        General_Reference_Type'9 General_Reference_Type'992,93
+        General_Reference_Table_Type General_Reference_Table_Type93,94
+        Named_Value_Name_Type Named_Value_Name_Type94,95
+        Named_Value_Integer_Type Named_Value_Integer_Type95,96
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type96,97
+        Struct_Type Struct_Type97,98
+        Set_Type Set_Type98,99
+instance (K(KnownNat n) => StreamItem (Core_Type n)103,104
+    generate generate104,105
+    parser parser122,123
+instance StreamItem(StreamItem (Core_uinteger_2)149,150
+    parser parser150,151
+    generate generate151,152
+instance StreamItem(StreamItem (Core_integer_2)152,153
+    parser parser153,154
+    generate generate154,155
+instance StreamItem(StreamItem (Core_uidref)155,156
+    parser parser156,157
+    generate generate157,158
+instance StreamItem(StreamItem (Core_max_bytes_32)158,159
+    parser parser159,160
+    generate generate160,161
+instance StreamItem(StreamItem (Core_uidref_Base_Type_only)161,162
+    parser parser162,163
+    generate generate163,164
+instance StreamItem(StreamItem (Core_uidref_non_Base_Type_only)164,165
+    parser parser165,166
+    generate generate166,167
+instance StreamItem(StreamItem (Core_uidref_Byte_table_only)167,168
+    parser parser168,169
+    generate generate169,170
+instance StreamItem(StreamItem (Core_uidref_Object_table_only)170,171
+    parser parser171,172
+    generate generate172,173
 
 ./src/System/SED/Common/Table.lhs,1082
 module System.SED.Common.Table System.SED.Common.Table24,25

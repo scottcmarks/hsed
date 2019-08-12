@@ -35,11 +35,11 @@ Formats.
 module System.SED.Common.Format
     where
 
-import Data.ByteString(ByteString,head,singleton)
+import            Data.Attoparsec.ByteString (anyWord8)
+import Data.ByteString(ByteString, singleton)
 import Data.Functor((<$>))
 import GHC.Enum(Enum(..))
-import GHC.Maybe(Maybe(..))
-import GHC.Base((<*>), const, error, (<>), fmap, (.), mconcat, mempty, undefined, Eq(..), Int)
+import GHC.Base((<>), (.), mempty, undefined, Eq(..), Int)
 -- import GHC.Natural
 import GHC.Real(fromIntegral)
 import GHC.Show(Show)
@@ -47,24 +47,19 @@ import GHC.TypeNats(natVal, KnownNat)
 import GHC.Types(Nat)
 
 import System.SED.Common.UID(UID(..))
+import System.SED.Common.StreamItem
 
 data Max_bytes :: Nat -> *
 deriving instance Show(Max_bytes n)
 deriving instance Eq(Max_bytes n)
 
-class IsFormatItem a where
-    encode :: a -> ByteString
-    encode _ct = undefined
-    decode :: ByteString -> Maybe a
-    decode _bs = undefined
+instance StreamItem Core_table_kind
+    where generate = singleton . fromIntegral . succ . fromEnum
+          parser = toEnum <$> pred <$> fromIntegral <$> anyWord8
 
 
 data Core_table_kind = Object_table | Byte_table
     deriving (Enum, Eq, Show)
-
-instance IsFormatItem Core_table_kind
-    where encode = singleton . fromIntegral . succ . fromEnum
-          decode = Just . toEnum . pred . fromIntegral . head
 
 data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
     deriving (Eq,Show)
@@ -106,71 +101,76 @@ data Core_Type :: Nat -> *
 deriving instance Show (Core_Type n)
 deriving instance Eq (Core_Type n)
 
-instance (KnownNat n) => IsFormatItem(Core_Type n) where
-    encode ct = singleton (fromIntegral (natVal ct)) <> encodeData ct
-      where encodeData :: Core_Type n -> ByteString
-            encodeData Base_Type = mempty
-            encodeData (Simple_Type base_uidref size) = encode base_uidref <> encode size
-            encodeData (Enumeration_Type ranges) = encode ranges
-            encodeData (Alternative_Type alternatives) = encode alternatives
-            encodeData (List_Type maxSize elementType) = encode maxSize <> encode elementType
-            encodeData (Restricted_Reference_Type'5 uidrefs) = encode uidrefs
-            encodeData (Restricted_Reference_Type'6 uidrefs) = encode uidrefs
-            encodeData General_Reference_Type'7 = mempty
-            encodeData General_Reference_Type'8 = mempty
-            encodeData General_Reference_Type'9 = mempty
-            encodeData (General_Reference_Table_Type k) = encode k
-            encodeData (Named_Value_Name_Type     name uidref) = encode name <> encode uidref
-            encodeData (Named_Value_Integer_Type  int  uidref) = encode int  <> encode uidref
-            encodeData (Named_Value_Uinteger_Type uint uidref) = encode uint <> encode uidref
-            encodeData (Struct_Type flds ) = encode flds
-            encodeData (Set_Type ranges) = encode ranges
-    decode bs' =
-        case bs' of
-          "" ->  error "Can't decode empty bytestring"
-          bs -> decoder
-      where
-        decoder :: ByteString -> Maybe (Core_Type n)
-        decoder =
-          ( case (head bs) of
-            0 -> Just <$> const Base_Type
-            1 -> Just <$> Simple_Type                    <$> decode <*> decode
-            2 -> Just <$> Enumeration_Type               <$> decode
-            3 -> Just <$> Alternative_Type               <$> decode
-            4 -> Just <$> List_Type                      <$> decode <*> decode
-            5 -> Just <$> Restricted_Reference_Type'5    <$> decode
-            6 -> Just <$> Restricted_Reference_Type'6    <$> decode
-            7 -> Just <$> const General_Reference_Type'7
-            8 -> Just <$> const General_Reference_Type'8
-            9 -> Just <$> const General_Reference_Type'9
-            10 -> Just <$> General_Reference_Table_Type   <$> decode
-            11 -> Just <$> Named_Value_Name_Type          <$> decode <*> decode
-            12 -> Just <$> Named_Value_Integer_Type       <$> decode <*> decode
-            13 -> Just <$> Named_Value_Uinteger_Type      <$> decode <*> decode
-            14 -> Just <$> Struct_Type                    <$> decode
-            15 -> Just <$> Set_Type                       <$> decode
-            _ -> error "Illegal Core_Type tag"
-          )
-instance (IsFormatItem a) => IsFormatItem([a]) where
-    encode = mconcat . fmap encode
-instance (IsFormatItem a) => IsFormatItem(a,a) where
-    encode (start, stop) = encode start <> encode stop
-instance IsFormatItem(Core_uinteger_2  ) where
-    encode _ = "<uinteger_2>"
-instance IsFormatItem(Core_integer_2   ) where
-    encode _ = "<integer_2>"
-instance IsFormatItem(Core_uidref      ) where
-    encode _ = "<uidref>"
-instance IsFormatItem(Core_max_bytes_32) where
-    encode _ = "<max_bytes_32>"
-instance IsFormatItem(Core_uidref_Base_Type_only) where
-    encode (Core_uidref_Base_Type_only _base_uidref) = "<uidref_Base_Type_only>"
-instance IsFormatItem(Core_uidref_non_Base_Type_only) where
-    encode (Core_uidref_non_Base_Type_only _base_uidref) = "<uidref_non_Base_Type_only>"
-instance IsFormatItem(Core_uidref_Byte_table_only) where
-    encode (Core_uidref_Byte_table_only _base_uidref) = "<uidref_Byte_table_only>"
-instance IsFormatItem(Core_uidref_Object_table_only) where
-    encode (Core_uidref_Object_table_only _base_uidref) = "<uidref_Object_table_only>"
+instance (KnownNat n) => StreamItem(Core_Type n) where
+    generate ct = singleton (fromIntegral (natVal ct)) <> generateData ct
+      where generateData :: Core_Type n -> ByteString
+            generateData Base_Type = mempty
+            generateData (Simple_Type base_uidref size) = generate base_uidref <> generate size
+            generateData (Enumeration_Type ranges) = generate ranges
+            generateData (Alternative_Type alternatives) = generate alternatives
+            generateData (List_Type maxSize elementType) = generate maxSize <> generate elementType
+            generateData (Restricted_Reference_Type'5 uidrefs) = generate uidrefs
+            generateData (Restricted_Reference_Type'6 uidrefs) = generate uidrefs
+            generateData General_Reference_Type'7 = mempty
+            generateData General_Reference_Type'8 = mempty
+            generateData General_Reference_Type'9 = mempty
+            generateData (General_Reference_Table_Type k) = generate k
+            generateData (Named_Value_Name_Type     name uidref) = generate name <> generate uidref
+            generateData (Named_Value_Integer_Type  int  uidref) = generate int  <> generate uidref
+            generateData (Named_Value_Uinteger_Type uint uidref) = generate uint <> generate uidref
+            generateData (Struct_Type flds ) = generate flds
+            generateData (Set_Type ranges) = generate ranges
+    parser = undefined
+    -- maybeParse bs' =
+    --     case bs' of
+    --       "" ->  error "Can't maybeParse empty bytestring"
+    --       bs -> maybeParser (head bs) bs
+    --   where
+    --     maybeParser :: Word8 -> ByteString -> Maybe (Core_Type n)
+    --     maybeParser hd = undefined hd
+          -- ( case hd of
+          --   0 -> Just <$> const Base_Type
+          --   1 -> Just <$> Simple_Type                    <$> maybeParse <*> maybeParse
+          --   2 -> Just <$> Enumeration_Type               <$> maybeParse
+          --   3 -> Just <$> Alternative_Type               <$> maybeParse
+          --   4 -> Just <$> List_Type                      <$> maybeParse <*> maybeParse
+          --   5 -> Just <$> Restricted_Reference_Type'5    <$> maybeParse
+          --   6 -> Just <$> Restricted_Reference_Type'6    <$> maybeParse
+          --   7 -> Just <$> const General_Reference_Type'7
+          --   8 -> Just <$> const General_Reference_Type'8
+          --   9 -> Just <$> const General_Reference_Type'9
+          --   10 -> Just <$> General_Reference_Table_Type   <$> maybeParse
+          --   11 -> Just <$> Named_Value_Name_Type          <$> maybeParse <*> maybeParse
+          --   12 -> Just <$> Named_Value_Integer_Type       <$> maybeParse <*> maybeParse
+          --   13 -> Just <$> Named_Value_Uinteger_Type      <$> maybeParse <*> maybeParse
+          --   14 -> Just <$> Struct_Type                    <$> maybeParse
+          --   15 -> Just <$> Set_Type                       <$> maybeParse
+          --   _ -> error "Illegal Core_Type tag"
+          -- )
+instance StreamItem(Core_uinteger_2  ) where
+    parser = undefined
+    generate _ = "<uinteger_2>"
+instance StreamItem(Core_integer_2   ) where
+    parser = undefined
+    generate _ = "<integer_2>"
+instance StreamItem(Core_uidref      ) where
+    parser = undefined
+    generate _ = "<uidref>"
+instance StreamItem(Core_max_bytes_32) where
+    parser = undefined
+    generate _ = "<max_bytes_32>"
+instance StreamItem(Core_uidref_Base_Type_only) where
+    parser = undefined
+    generate (Core_uidref_Base_Type_only _base_uidref) = "<uidref_Base_Type_only>"
+instance StreamItem(Core_uidref_non_Base_Type_only) where
+    parser = undefined
+    generate (Core_uidref_non_Base_Type_only _base_uidref) = "<uidref_non_Base_Type_only>"
+instance StreamItem(Core_uidref_Byte_table_only) where
+    parser = undefined
+    generate (Core_uidref_Byte_table_only _base_uidref) = "<uidref_Byte_table_only>"
+instance StreamItem(Core_uidref_Object_table_only) where
+    parser = undefined
+    generate (Core_uidref_Object_table_only _base_uidref) = "<uidref_Object_table_only>"
 
 -- newtype Non_Base_Type_uidref = Non_Base_Type_uidref Core_uidref
 --     deriving (Eq,Ord,Show)

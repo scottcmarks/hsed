@@ -137,6 +137,8 @@ pg :: StreamItem a => a -> Maybe a
 typeIsa :: StreamItem a => a -> a
 type Parser = Parser ByteString
 require :: (StreamItem a, Show a, Eq a) => a -> Parser a
+instance System.SED.Common.StreamItem.StreamItem a => System.SED.Common.StreamItem.StreamItem [a]
+instance System.SED.Common.StreamItem.StreamItem a => System.SED.Common.StreamItem.StreamItem (a, a)
 
 
 -- | Datatypes for Tokens.
@@ -304,17 +306,15 @@ uCloseSession :: UID
 -- | Formats.
 module System.SED.Common.Format
 data Max_bytes :: Nat -> *
-class IsFormatItem a
-encode :: IsFormatItem a => a -> ByteString
-decode :: IsFormatItem a => ByteString -> Maybe a
-data Core_table_kind :: Nat -> *
-[Object_table] :: Core_table_kind 1
-[Byte_table] :: Core_table_kind 2
+data Core_table_kind
+Object_table :: Core_table_kind
+Byte_table :: Core_table_kind
 data Core_uinteger_2
 Core_uinteger_2 :: Int -> Core_uinteger_2
 [fromCore_uinteger_2] :: Core_uinteger_2 -> Int
 data Core_integer_2
-Core_integer_2 :: Core_integer_2
+Core_integer_2 :: Int -> Core_integer_2
+[fromCore_integer_2] :: Core_integer_2 -> Int
 data Core_uidref
 Core_uidref :: UID -> Core_uidref
 [fromCore_uidref] :: Core_uidref -> UID
@@ -340,29 +340,45 @@ data Core_Type :: Nat -> *
 [General_Reference_Type'7] :: Core_Type 7
 [General_Reference_Type'8] :: Core_Type 8
 [General_Reference_Type'9] :: Core_Type 9
-[General_Reference_Table_Type] :: KnownNat k => Core_table_kind k -> Core_Type 10
+[General_Reference_Table_Type] :: Core_table_kind -> Core_Type 10
 [Named_Value_Name_Type] :: Core_max_bytes_32 -> Core_uidref_non_Base_Type_only -> Core_Type 11
 [Named_Value_Integer_Type] :: Core_integer_2 -> Core_uidref_non_Base_Type_only -> Core_Type 12
 [Named_Value_Uinteger_Type] :: Core_uinteger_2 -> Core_uidref_non_Base_Type_only -> Core_Type 13
 [Struct_Type] :: [Core_uidref_non_Base_Type_only] -> Core_Type 14
 [Set_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Core_Type 15
+instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Object_table_only
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Object_table_only
+instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Byte_table_only
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Byte_table_only
+instance GHC.Show.Show System.SED.Common.Format.Core_uidref_non_Base_Type_only
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_non_Base_Type_only
+instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Base_Type_only
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Base_Type_only
+instance GHC.Show.Show System.SED.Common.Format.Core_max_bytes_32
+instance GHC.Classes.Eq System.SED.Common.Format.Core_max_bytes_32
+instance GHC.Show.Show System.SED.Common.Format.Core_uidref
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref
+instance GHC.Show.Show System.SED.Common.Format.Core_integer_2
+instance GHC.Classes.Eq System.SED.Common.Format.Core_integer_2
+instance GHC.Show.Show System.SED.Common.Format.Core_uinteger_2
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uinteger_2
+instance GHC.Show.Show System.SED.Common.Format.Core_table_kind
+instance GHC.Classes.Eq System.SED.Common.Format.Core_table_kind
+instance GHC.Enum.Enum System.SED.Common.Format.Core_table_kind
 instance GHC.Show.Show (System.SED.Common.Format.Max_bytes n)
 instance GHC.Classes.Eq (System.SED.Common.Format.Max_bytes n)
-instance GHC.Show.Show (System.SED.Common.Format.Core_table_kind n)
-instance GHC.Classes.Eq (System.SED.Common.Format.Core_table_kind n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.Common.Format.Core_Type n)
-instance GHC.TypeNats.KnownNat n => System.SED.Common.Format.IsFormatItem (System.SED.Common.Format.Core_Type n)
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_Object_table_only
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_Byte_table_only
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_non_Base_Type_only
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref_Base_Type_only
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_max_bytes_32
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uidref
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_integer_2
-instance System.SED.Common.Format.IsFormatItem System.SED.Common.Format.Core_uinteger_2
-instance GHC.TypeNats.KnownNat n => System.SED.Common.Format.IsFormatItem (System.SED.Common.Format.Core_table_kind n)
-instance System.SED.Common.Format.IsFormatItem a => System.SED.Common.Format.IsFormatItem [a]
-instance System.SED.Common.Format.IsFormatItem a => System.SED.Common.Format.IsFormatItem (a, a)
+instance GHC.Show.Show (System.SED.Common.Format.Core_Type n)
+instance GHC.Classes.Eq (System.SED.Common.Format.Core_Type n)
+instance GHC.TypeNats.KnownNat n => System.SED.Common.StreamItem.StreamItem (System.SED.Common.Format.Core_Type n)
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Object_table_only
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Byte_table_only
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_non_Base_Type_only
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Base_Type_only
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_max_bytes_32
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_integer_2
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uinteger_2
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_table_kind
 
 
 -- | Utilities
@@ -2243,6 +2259,30 @@ show :: Show a => a -> String
 --   to be calculated.
 class Typeable (a :: k)
 
+-- | When a value is bound in <tt>do</tt>-notation, the pattern on the left
+--   hand side of <tt>&lt;-</tt> might not match. In this case, this class
+--   provides a function to recover.
+--   
+--   A <a>Monad</a> without a <a>MonadFail</a> instance may only be used in
+--   conjunction with pattern that always match, such as newtypes, tuples,
+--   data types with only a single data constructor, and irrefutable
+--   patterns (<tt>~pat</tt>).
+--   
+--   Instances of <a>MonadFail</a> should satisfy the following law:
+--   <tt>fail s</tt> should be a left zero for <tt>&gt;&gt;=</tt>,
+--   
+--   <pre>
+--   fail s &gt;&gt;= f  =  fail s
+--   </pre>
+--   
+--   If your <a>Monad</a> is also <tt>MonadPlus</tt>, a popular definition
+--   is
+--   
+--   <pre>
+--   fail _ = mzero
+--   </pre>
+class Monad m => MonadFail (m :: Type -> Type)
+
 -- | Class for string-like datastructures; used by the overloaded string
 --   extension (-XOverloadedStrings in GHC).
 class IsString a
@@ -2631,24 +2671,6 @@ class Semigroup a
 
 -- | An associative operation.
 (<>) :: Semigroup a => a -> a -> a
-
--- | Reduce a non-empty list with <tt>&lt;&gt;</tt>
---   
---   The default definition should be sufficient, but this can be
---   overridden for efficiency.
-sconcat :: Semigroup a => NonEmpty a -> a
-
--- | Repeat a value <tt>n</tt> times.
---   
---   Given that this works on a <a>Semigroup</a> it is allowed to fail if
---   you request 0 or fewer repetitions, and the default definition will do
---   so.
---   
---   By making this a member of the class, idempotent semigroups and
---   monoids can upgrade this to execute in <i>O(1)</i> by picking
---   <tt>stimes = <tt>stimesIdempotent</tt></tt> or <tt>stimes =
---   <a>stimesIdempotentMonoid</a></tt> respectively.
-stimes :: (Semigroup a, Integral b) => b -> a -> a
 infixr 6 <>
 
 -- | The class of monoids (types with an associative binary operation that
@@ -2996,6 +3018,29 @@ data CallStack
 --   are values of type <a>String</a>.
 type String = [Char]
 
+-- | The strict state-transformer monad. A computation of type
+--   <tt><a>ST</a> s a</tt> transforms an internal state indexed by
+--   <tt>s</tt>, and returns a value of type <tt>a</tt>. The <tt>s</tt>
+--   parameter is either
+--   
+--   <ul>
+--   <li>an uninstantiated type variable (inside invocations of
+--   <a>runST</a>), or</li>
+--   <li><a>RealWorld</a> (inside invocations of <a>stToIO</a>).</li>
+--   </ul>
+--   
+--   It serves to keep the internal states of different invocations of
+--   <a>runST</a> separate from each other and from invocations of
+--   <a>stToIO</a>.
+--   
+--   The <a>&gt;&gt;=</a> and <a>&gt;&gt;</a> operations are strict in the
+--   state (though not in values stored in the state). For example,
+--   
+--   <pre>
+--   <a>runST</a> (writeSTRef _|_ v &gt;&gt;= f) = _|_
+--   </pre>
+data ST s a
+
 -- | Promote a function to a monad.
 liftM :: Monad m => (a1 -> r) -> m a1 -> m r
 
@@ -3223,6 +3268,27 @@ class Monad m => MonadIO (m :: Type -> Type)
 -- | Lift a computation from the <a>IO</a> monad.
 liftIO :: MonadIO m => IO a -> m a
 
+-- | Direct <a>MonadPlus</a> equivalent of <a>filter</a>.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   The <a>filter</a> function is just <a>mfilter</a> specialized to the
+--   list monad:
+--   
+--   <pre>
+--   <a>filter</a> = ( <a>mfilter</a> :: (a -&gt; Bool) -&gt; [a] -&gt; [a] )
+--   </pre>
+--   
+--   An example using <a>mfilter</a> with the <a>Maybe</a> monad:
+--   
+--   <pre>
+--   &gt;&gt;&gt; mfilter odd (Just 1)
+--   Just 1
+--   &gt;&gt;&gt; mfilter odd (Just 2)
+--   Nothing
+--   </pre>
+mfilter :: MonadPlus m => (a -> Bool) -> m a -> m a
+
 -- | Strict version of <a>&lt;$&gt;</a>.
 (<$!>) :: Monad m => (a -> b) -> m a -> m b
 infixl 4 <$!>
@@ -3323,6 +3389,37 @@ for :: (Traversable t, Applicative f) => t a -> (a -> f b) -> f (t b)
 -- | One or none.
 optional :: Alternative f => f a -> f (Maybe a)
 
+-- | The basic arrow class.
+--   
+--   Instances should satisfy the following laws:
+--   
+--   <ul>
+--   <li><pre><a>arr</a> id = <a>id</a></pre></li>
+--   <li><pre><a>arr</a> (f &gt;&gt;&gt; g) = <a>arr</a> f &gt;&gt;&gt;
+--   <a>arr</a> g</pre></li>
+--   <li><pre><a>first</a> (<a>arr</a> f) = <a>arr</a> (<a>first</a>
+--   f)</pre></li>
+--   <li><pre><a>first</a> (f &gt;&gt;&gt; g) = <a>first</a> f &gt;&gt;&gt;
+--   <a>first</a> g</pre></li>
+--   <li><pre><a>first</a> f &gt;&gt;&gt; <a>arr</a> <a>fst</a> =
+--   <a>arr</a> <a>fst</a> &gt;&gt;&gt; f</pre></li>
+--   <li><pre><a>first</a> f &gt;&gt;&gt; <a>arr</a> (<a>id</a> *** g) =
+--   <a>arr</a> (<a>id</a> *** g) &gt;&gt;&gt; <a>first</a> f</pre></li>
+--   <li><pre><a>first</a> (<a>first</a> f) &gt;&gt;&gt; <a>arr</a>
+--   <tt>assoc</tt> = <a>arr</a> <tt>assoc</tt> &gt;&gt;&gt; <a>first</a>
+--   f</pre></li>
+--   </ul>
+--   
+--   where
+--   
+--   <pre>
+--   assoc ((a,b),c) = (a,(b,c))
+--   </pre>
+--   
+--   The other combinators have sensible default definitions, which may be
+--   overridden for efficiency.
+class Category a => Arrow (a :: Type -> Type -> Type)
+
 -- | Send the first component of the input through the argument arrow, and
 --   copy the rest unchanged to the output.
 first :: Arrow a => a b c -> a (b, d) (c, d)
@@ -3339,7 +3436,6 @@ second :: Arrow a => a b c -> a (d, b) (d, c)
 --   The default definition may be overridden with a more efficient version
 --   if desired.
 (***) :: Arrow a => a b c -> a b' c' -> a (b, b') (c, c')
-infixr 3 ***
 
 -- | Fanout: send the input to both argument arrows and combine their
 --   output.
@@ -3347,6 +3443,7 @@ infixr 3 ***
 --   The default definition may be overridden with a more efficient version
 --   if desired.
 (&&&) :: Arrow a => a b c -> a b c' -> a b (c, c')
+infixr 3 ***
 infixr 3 &&&
 
 -- | Identity functor and monad. (a non-strict monad)
@@ -3881,6 +3978,16 @@ lefts :: () => [Either a b] -> [a]
 --   </pre>
 comparing :: Ord a => (b -> a) -> b -> b -> Ordering
 
+-- | The <a>Down</a> type allows you to reverse sort order conveniently. A
+--   value of type <tt><a>Down</a> a</tt> contains a value of type
+--   <tt>a</tt> (represented as <tt><a>Down</a> a</tt>). If <tt>a</tt> has
+--   an <tt><a>Ord</a></tt> instance associated with it then comparing two
+--   values thus wrapped will give you the opposite of their normal sort
+--   order. This is particularly useful when sorting in generalised list
+--   comprehensions, as in: <tt>then sortWith by <a>Down</a> x</tt>
+newtype Down a
+Down :: a -> Down a
+
 -- | <a>Proxy</a> is a type that holds no data, but has a phantom parameter
 --   of arbitrary type (or even kind). Its use is to provide type
 --   information, even though there is no value available of that type (or
@@ -3916,6 +4023,15 @@ Proxy :: Proxy
 -- | Left-to-right composition
 (>>>) :: Category cat => cat a b -> cat b c -> cat a c
 infixr 1 >>>
+
+-- | A class for categories. Instances should satisfy the laws
+--   
+--   <pre>
+--   f <a>.</a> <a>id</a>  =  f  -- (right identity)
+--   <a>id</a> <a>.</a> f  =  f  -- (left identity)
+--   f <a>.</a> (g <a>.</a> h)  =  (f <a>.</a> g) <a>.</a> h  -- (associativity)
+--   </pre>
+class Category (cat :: k -> k -> Type)
 
 -- | See <a>openFile</a>
 data IOMode
@@ -3959,6 +4075,11 @@ byteSwap32 :: Word32 -> Word32
 
 -- | Swap bytes in <a>Word16</a>.
 byteSwap16 :: Word16 -> Word16
+
+-- | Return the value computed by a state transformer computation. The
+--   <tt>forall</tt> ensures that the internal state used by the <a>ST</a>
+--   computation is inaccessible to the rest of the program.
+runST :: () => (forall s. () => ST s a) -> a
 
 -- | Case analysis for the <a>Bool</a> type. <tt><a>bool</a> x y p</tt>
 --   evaluates to <tt>x</tt> when <tt>p</tt> is <a>False</a>, and evaluates
@@ -4262,6 +4383,18 @@ infixr 8 ^^
 infixr 8 ^
 odd :: Integral a => a -> Bool
 even :: Integral a => a -> Bool
+
+-- | <a>zipWith</a> generalises <a>zip</a> by zipping with the function
+--   given as the first argument, instead of a tupling function. For
+--   example, <tt><a>zipWith</a> (+)</tt> is applied to two lists to
+--   produce the list of corresponding sums.
+--   
+--   <a>zipWith</a> is right-lazy:
+--   
+--   <pre>
+--   zipWith f [] _|_ = []
+--   </pre>
+zipWith :: () => (a -> b -> c) -> [a] -> [b] -> [c]
 
 -- | <a>lookup</a> <tt>key assocs</tt> looks up a key in an association
 --   list.
@@ -4713,6 +4846,11 @@ liftA3 :: Applicative f => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
 --   <a>fmap</a> in a <a>Functor</a> instance.
 liftA :: Applicative f => (a -> b) -> f a -> f b
 
+-- | Non-empty (and non-strict) list type.
+data NonEmpty a
+(:|) :: a -> [a] -> NonEmpty a
+infixr 5 :|
+
 -- | A special case of <a>error</a>. It is expected that compilers will
 --   recognize this and insert error messages which are more appropriate to
 --   the context in which <a>undefined</a> appears.
@@ -4886,6 +5024,9 @@ data IntSet
 -- | A Map from keys <tt>k</tt> to values <tt>a</tt>.
 data Map k a
 
+-- | General-purpose finite sequences.
+data Seq a
+
 -- | A set of values <tt>a</tt>.
 data Set a
 
@@ -4940,6 +5081,26 @@ force :: NFData a => a -> a
 --   applied to it.
 ($!!) :: NFData a => (a -> b) -> a -> b
 infixr 0 $!!
+
+-- | <a>deepseq</a>: fully evaluates the first argument, before returning
+--   the second.
+--   
+--   The name <a>deepseq</a> is used to illustrate the relationship to
+--   <a>seq</a>: where <a>seq</a> is shallow in the sense that it only
+--   evaluates the top level of its argument, <a>deepseq</a> traverses the
+--   entire data structure evaluating it completely.
+--   
+--   <a>deepseq</a> can be useful for forcing pending exceptions,
+--   eradicating space leaks, or forcing lazy I/O to happen. It is also
+--   useful in conjunction with parallel Strategies (see the
+--   <tt>parallel</tt> package).
+--   
+--   There is no guarantee about the ordering of evaluation. The
+--   implementation may evaluate the components of the structure in any
+--   order or in parallel. To impose an actual order on evaluation, use
+--   <tt>pseq</tt> from <a>Control.Parallel</a> in the <tt>parallel</tt>
+--   package.
+deepseq :: NFData a => a -> b -> b
 
 -- | A class of types that can be fully evaluated.
 class NFData a
@@ -5525,9 +5686,6 @@ fromEitherM :: (Exception e, MonadIO m) => m (Either e a) -> m a
 
 -- | Unlifted version of <a>withFile</a>.
 withFile :: MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m a) -> m a
-
--- | Unlifted version of <a>withBinaryFile</a>.
-withBinaryFile :: MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m a) -> m a
 
 -- | Lifted version of <a>hClose</a>
 hClose :: MonadIO m => Handle -> m ()
@@ -6374,7 +6532,13 @@ writeSomeRef :: MonadIO m => SomeRef a -> a -> m ()
 
 -- | Read from a SomeRef
 readSomeRef :: MonadIO m => SomeRef a -> m a
+
+-- | Abstract <a>RIO</a> to an arbitrary <a>MonadReader</a> instance, which
+--   can handle IO.
 liftRIO :: (MonadIO m, MonadReader env m) => RIO env a -> m a
+
+-- | Using the environment run in IO the action that requires that
+--   environment.
 runRIO :: MonadIO m => env -> RIO env a -> m a
 
 -- | The Reader+IO monad. This is different from a <a>ReaderT</a> because:
@@ -6422,15 +6586,138 @@ newURef :: (PrimMonad m, Unbox a) => a -> m (URef (PrimState m) a)
 --   <a>https://stackoverflow.com/questions/27261813/why-is-my-little-stref-int-require-allocating-gigabytes</a>.
 --   
 --   The first parameter is the state token type, the same as would be used
---   for the <tt>ST</tt> monad. If you're using an <a>IO</a>-based monad,
---   you can use the convenience <a>IOURef</a> type synonym instead.
+--   for the <a>ST</a> monad. If you're using an <a>IO</a>-based monad, you
+--   can use the convenience <a>IOURef</a> type synonym instead.
 data URef s a
 
 -- | Helpful type synonym for using a <a>URef</a> from an <a>IO</a>-based
 --   stack.
 type IOURef = URef PrimState IO
-decodeUtf8Lenient :: ByteString -> Text
-tshow :: Show a => a -> Text
+
+-- | Yield an immutable copy of the underlying mutable vector. The
+--   difference from <a>dequeToVector</a> is that the the copy will be
+--   performed with a more efficient <tt>memcpy</tt>, rather than element
+--   by element. The downside is that the resulting vector type must be the
+--   one that corresponds to the mutable one that is used in the
+--   <a>Deque</a>.
+--   
+--   <h4><b>Example</b></h4>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :set -XTypeApplications
+--   
+--   &gt;&gt;&gt; import qualified RIO.Vector.Unboxed as U
+--   
+--   &gt;&gt;&gt; d &lt;- newDeque @U.MVector @Int
+--   
+--   &gt;&gt;&gt; mapM_ (pushFrontDeque d) [0..10]
+--   
+--   &gt;&gt;&gt; freezeDeque @U.Vector d
+--   [10,9,8,7,6,5,4,3,2,1,0]
+--   </pre>
+freezeDeque :: (Vector v a, PrimMonad m) => Deque (Mutable v) (PrimState m) a -> m (v a)
+
+-- | Convert to an immutable vector of any type. If resulting pure vector
+--   corresponds to the mutable one used by the <a>Deque</a>, it will be
+--   more efficient to use <a>freezeDeque</a> instead.
+--   
+--   <h4><b>Example</b></h4>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :set -XTypeApplications
+--   
+--   &gt;&gt;&gt; import qualified RIO.Vector.Unboxed as U
+--   
+--   &gt;&gt;&gt; import qualified RIO.Vector.Storable as S
+--   
+--   &gt;&gt;&gt; d &lt;- newDeque @U.MVector @Int
+--   
+--   &gt;&gt;&gt; mapM_ (pushFrontDeque d) [0..10]
+--   
+--   &gt;&gt;&gt; dequeToVector @S.Vector d
+--   [10,9,8,7,6,5,4,3,2,1,0]
+--   </pre>
+dequeToVector :: (Vector v' a, MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (v' a)
+
+-- | Convert a <a>Deque</a> into a list. Does not modify the <a>Deque</a>.
+dequeToList :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m [a]
+
+-- | Fold over a <a>Deque</a>, starting at the end. Does not modify the
+--   <a>Deque</a>.
+foldrDeque :: (MVector v a, PrimMonad m) => (a -> acc -> m acc) -> acc -> Deque v (PrimState m) a -> m acc
+
+-- | Fold over a <a>Deque</a>, starting at the beginning. Does not modify
+--   the <a>Deque</a>.
+foldlDeque :: (MVector v a, PrimMonad m) => (acc -> a -> m acc) -> acc -> Deque v (PrimState m) a -> m acc
+
+-- | Push a new value to the end of the <a>Deque</a>
+pushBackDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> a -> m ()
+
+-- | Push a new value to the beginning of the <a>Deque</a>
+pushFrontDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> a -> m ()
+
+-- | Pop the first value from the end of the <a>Deque</a>
+popBackDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (Maybe a)
+
+-- | Pop the first value from the beginning of the <a>Deque</a>
+popFrontDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (Maybe a)
+
+-- | <i>O(1)</i> - Get the number of elements that is currently in the
+--   <a>Deque</a>
+getDequeSize :: PrimMonad m => Deque v (PrimState m) a -> m Int
+
+-- | Create a new, empty <a>Deque</a>
+newDeque :: (MVector v a, PrimMonad m) => m (Deque v (PrimState m) a)
+
+-- | Helper function to assist with type inference, forcing usage of a
+--   boxed vector.
+asBDeque :: () => BDeque s a -> BDeque s a
+
+-- | Helper function to assist with type inference, forcing usage of a
+--   storable vector.
+asSDeque :: () => SDeque s a -> SDeque s a
+
+-- | Helper function to assist with type inference, forcing usage of an
+--   unboxed vector.
+asUDeque :: () => UDeque s a -> UDeque s a
+
+-- | A double-ended queue supporting any underlying vector type and any
+--   monad.
+--   
+--   This implements a circular double-ended queue with exponential growth.
+data Deque (v :: Type -> Type -> Type) s a
+
+-- | A <a>Deque</a> specialized to unboxed vectors.
+type UDeque = Deque MVector
+
+-- | A <a>Deque</a> specialized to storable vectors.
+type SDeque = Deque MVector
+
+-- | A <a>Deque</a> specialized to boxed vectors.
+type BDeque = Deque MVector
+
+-- | Read a file in UTF8 encoding, throwing an exception on invalid
+--   character encoding.
+--   
+--   This function will use OS-specific line ending handling.
+readFileUtf8 :: MonadIO m => FilePath -> m Text
+
+-- | Same as <a>writeFile</a>, but generalized to <a>MonadIO</a>
+writeFileBinary :: MonadIO m => FilePath -> ByteString -> m ()
+
+-- | Same as <a>readFile</a>, but generalized to <a>MonadIO</a>
+readFileBinary :: MonadIO m => FilePath -> m ByteString
+hPutBuilder :: MonadIO m => Handle -> Builder -> m ()
+
+-- | Write a file in UTF8 encoding
+--   
+--   This function will use OS-specific line ending handling.
+writeFileUtf8 :: MonadIO m => FilePath -> Text -> m ()
+
+-- | Lazily get the contents of a file. Unlike <a>readFile</a>, this
+--   ensures that if an exception is thrown, the file handle is closed
+--   immediately.
+withLazyFile :: MonadUnliftIO m => FilePath -> (ByteString -> m a) -> m a
 
 -- | Disable logging capabilities in a given sub-routine
 --   
@@ -6452,18 +6739,18 @@ displayCallStack :: CallStack -> Utf8Builder
 
 -- | Use code location in the log output.
 --   
---   Default: true if in verbose mode, false otherwise.
+--   Default: <a>True</a> if in verbose mode, <a>False</a> otherwise.
 setLogUseLoc :: Bool -> LogOptions -> LogOptions
 
 -- | Use ANSI color codes in the log output.
 --   
---   Default: true if in verbose mode <i>and</i> the <a>Handle</a> is a
---   terminal device.
+--   Default: <a>True</a> if in verbose mode <i>and</i> the <a>Handle</a>
+--   is a terminal device.
 setLogUseColor :: Bool -> LogOptions -> LogOptions
 
 -- | Include the time when printing log messages.
 --   
---   Default: true in debug mode, false otherwise.
+--   Default: <a>True</a> in debug mode, <a>False</a> otherwise.
 setLogUseTime :: Bool -> LogOptions -> LogOptions
 
 -- | Do we treat output as a terminal. If <tt>True</tt>, we will enabled
@@ -6505,7 +6792,7 @@ setLogMinLevel :: LogLevel -> LogOptions -> LogOptions
 --   let isVerbose = False -- get from the command line instead
 --   logOptions' &lt;- logOptionsHandle stderr isVerbose
 --   let logOptions = setLogUseTime True logOptions'
---   withLogFunc logOptions $ lf -&gt; do
+--   withLogFunc logOptions $ \lf -&gt; do
 --     let app = App -- application specific environment
 --           { appLogFunc = lf
 --           , appOtherStuff = ...
@@ -6522,8 +6809,6 @@ withLogFunc :: MonadUnliftIO m => LogOptions -> (LogFunc -> m a) -> m a
 --   Intended for use if you want to deal with the teardown of
 --   <a>LogFunc</a> yourself, otherwise prefer the <a>withLogFunc</a>
 --   function instead.
---   
---   @since 0.1.3.0
 newLogFunc :: (MonadIO n, MonadIO m) => LogOptions -> n (LogFunc, m ())
 
 -- | Create a <a>LogOptions</a> value from the given <a>Handle</a> and
@@ -6631,6 +6916,9 @@ data LogFunc
 -- | Configuration for how to create a <a>LogFunc</a>. Intended to be used
 --   with the <a>withLogFunc</a> function.
 data LogOptions
+decodeUtf8Lenient :: ByteString -> Text
+tshow :: Show a => a -> Text
+yieldThread :: MonadIO m => m ()
 fromStrictBytes :: ByteString -> LByteString
 toStrictBytes :: LByteString -> ByteString
 sappend :: Semigroup s => s -> s -> s
@@ -6639,6 +6927,7 @@ type SVector = Vector
 type GVector = Vector
 type LByteString = ByteString
 type LText = Text
+view :: MonadReader s m => Getting a s a -> m a
 
 -- | Helper function to force an action to run in <a>IO</a>. Especially
 --   useful for overly general contexts, like hspec tests.
@@ -6684,30 +6973,20 @@ fromFirst :: () => a -> First a -> a
 -- | Apply a function to a <a>Left</a> constructor
 mapLeft :: () => (a1 -> a2) -> Either a1 b -> Either a2 b
 
--- | Read a file in UTF8 encoding, throwing an exception on invalid
---   character encoding.
+-- | Lifted version of "System.Exit.exitWith".
 --   
---   This function will use OS-specific line ending handling.
-readFileUtf8 :: MonadIO m => FilePath -> m Text
+--   @since 0.1.9.0.
+exitWith :: MonadIO m => ExitCode -> m a
 
--- | Same as <a>writeFile</a>, but generalized to <a>MonadIO</a>
-writeFileBinary :: MonadIO m => FilePath -> ByteString -> m ()
-
--- | Same as <a>readFile</a>, but generalized to <a>MonadIO</a>
-readFileBinary :: MonadIO m => FilePath -> m ByteString
-hPutBuilder :: MonadIO m => Handle -> Builder -> m ()
-
--- | Write a file in UTF8 encoding
+-- | Lifted version of "System.Exit.exitSuccess".
 --   
---   This function will use OS-specific line ending handling.
-writeFileUtf8 :: MonadIO m => FilePath -> Text -> m ()
+--   @since 0.1.9.0.
+exitSuccess :: MonadIO m => m a
 
--- | Lazily get the contents of a file. Unlike <a>readFile</a>, this
---   ensures that if an exception is thrown, the file handle is closed
---   immediately.
-withLazyFile :: MonadUnliftIO m => FilePath -> (ByteString -> m a) -> m a
-yieldThread :: MonadIO m => m ()
-view :: MonadReader s m => Getting a s a -> m a
+-- | Lifted version of "System.Exit.exitFailure".
+--   
+--   @since 0.1.9.0.
+exitFailure :: MonadIO m => m a
 
 -- | Write the given <a>Utf8Builder</a> value to a file.
 writeFileUtf8Builder :: MonadIO m => FilePath -> Utf8Builder -> m ()
@@ -6744,6 +7023,9 @@ display :: Display a => a -> Utf8Builder
 -- | Display data as <a>Text</a>, which will also be used for
 --   <a>display</a> if it is not overriden.
 textDisplay :: Display a => a -> Text
+
+-- | Unlifted version of <a>withBinaryFile</a>.
+withBinaryFile :: MonadUnliftIO m => FilePath -> IOMode -> (Handle -> m a) -> m a
 
 -- | Lifted version of <a>myThreadId</a>.
 myThreadId :: MonadIO m => m ThreadId

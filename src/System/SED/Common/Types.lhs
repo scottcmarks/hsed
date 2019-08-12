@@ -20,9 +20,9 @@ Datatypes for @hsed@.
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module System.SED.Common.Types
-  ( module Extras.Bytes
-  , module Extras.Hex
+  ( module Extras.Hex
   , module Extras.Integral
+  , module Extras.Sized
   , module System.SED.Common.Call
   , module System.SED.Common.ColumnTypes
   , module System.SED.Common.SpecialPurposeUIDs
@@ -35,9 +35,9 @@ module System.SED.Common.Types
   )
 where
 
-import           Extras.Bytes
 import           Extras.Hex
 import           Extras.Integral
+import           Extras.Sized
 import           System.SED.Common.Call
 import           System.SED.Common.ColumnTypes
 import           System.SED.Common.SpecialPurposeUIDs

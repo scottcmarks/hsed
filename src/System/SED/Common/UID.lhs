@@ -41,9 +41,9 @@ import           GHC.Word(Word8(..))
 
 import           Test.QuickCheck (Arbitrary(..))
 
-import           Extras.Bytes ()
-import           Extras.Bytes (Fixed_bytes(..), take, drop, append, fpack, funpack)
 import           Extras.Hex (hex)
+import           Extras.Sized ()
+import           Extras.Sized (Fixed_bytes(..), take, drop, append, fpack, funpack)
 import           System.SED.Common.Instances()
 import           System.SED.Common.StreamItem (StreamItem(..))
 import           System.SED.Common.Token (IsToken(..))

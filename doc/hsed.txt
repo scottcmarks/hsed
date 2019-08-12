@@ -71,7 +71,7 @@ instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Data.StaticText.Class.Sta
 
 
 -- | Datatypes for Tokens.
-module Extras.Bytes
+module Extras.Sized
 data Fixed_bytes (n :: Nat)
 Fixed_bytes :: !Static ShortByteString n -> Fixed_bytes
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
@@ -87,17 +87,17 @@ fromFixed_bytes :: HasFixed_bytes n a => Fixed_bytes n -> a
 -- | Static ShortByteString n methods lifted to Fixed_bytes n
 fpack :: KnownNat n => ByteString -> Fixed_bytes n
 funpack :: KnownNat n => Fixed_bytes n -> ByteString
-instance GHC.Classes.Ord (Extras.Bytes.Fixed_bytes n)
-instance GHC.Classes.Eq (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n GHC.Natural.Natural
-instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
-instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n Data.ByteString.Short.Internal.ShortByteString
-instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n Data.ByteString.Internal.ByteString
-instance GHC.TypeNats.KnownNat n => Extras.Bytes.HasFixed_bytes n [GHC.Word.Word8]
-instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Extras.Bytes.Fixed_bytes n)
+instance GHC.Classes.Ord (Extras.Sized.Fixed_bytes n)
+instance GHC.Classes.Eq (Extras.Sized.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n GHC.Natural.Natural
+instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
+instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n Data.ByteString.Short.Internal.ShortByteString
+instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n Data.ByteString.Internal.ByteString
+instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n [GHC.Word.Word8]
+instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (Extras.Sized.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (Extras.Sized.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (Extras.Sized.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Extras.Sized.Fixed_bytes n)
 
 
 -- | Datatypes for <tt>hsed</tt> main. Constructors and lenses.
@@ -175,8 +175,8 @@ instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Token.Token
 
 -- | Orphan instances.
 module System.SED.Common.Instances
-instance GHC.TypeNats.KnownNat n => System.SED.Common.Token.IsToken (Extras.Bytes.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => System.SED.Common.StreamItem.StreamItem (Extras.Bytes.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.Common.Token.IsToken (Extras.Sized.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.Common.StreamItem.StreamItem (Extras.Sized.Fixed_bytes n)
 
 
 -- | Datatypes for UIDs and HalfUIDs.

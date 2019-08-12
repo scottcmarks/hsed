@@ -40,7 +40,7 @@ import           Language.Haskell.TH             (Body(..), Con(..), Dec(..),
                                                   DerivClause(..), Exp(..), Lit(..),
                                                   Name, Pat(..), Type(..))
 
-import           Extras.Bytes                    (Fixed_bytes(..), funpack)
+import           Extras.Sized                    (Fixed_bytes(..), funpack)
 
 import           System.SED.Common.UID           (HalfUID(..), UID(..),
                                                   halfUID, uid)

@@ -513,8 +513,39 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Extras/Bytes.lhs,1552
-module Extras.BytesExtras.Bytes30,31
+./src/Extras/GitVersion.hs,139
+module Extras.GitVersion Extras.GitVersion14,15
+plainVersion plainVersion31,32
+gitBranch gitBranch38,39
+gitVersion gitVersion54,55
+
+./src/Extras/Integral.lhs,806
+module Extras.IntegralExtras.Integral29,30
+rollUp rollUp56,57
+byteStringToNatural byteStringToNatural61,62
+byteStringToInteger byteStringToInteger64,65
+naturalToByteString naturalToByteString71,72
+intVal intVal76,77
+integerToByteString integerToByteString79,80
+word8 word893,94
+char char96,97
+ordw ordw99,100
+byte byte102,103
+int int105,106
+integer integer108,109
+natural natural111,112
+class IsByteString IsByteString114,115
+    fromByteString fromByteString115,116
+    toByteString toByteString116,117
+instance IsByteString IsByteString Integer118,119
+    fromByteString fromByteString119,120
+    toByteString toByteString120,121
+instance IsByteString IsByteString Natural122,123
+    fromByteString fromByteString123,124
+    toByteString toByteString124,125
+
+./src/Extras/Sized.lhs,1552
+module Extras.SizedExtras.Sized30,31
 import import58,59
 data Fixed_bytes Fixed_bytes73,74
 data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes73,74
@@ -550,37 +581,6 @@ instance (K(KnownNat n) => HasHex (Fixed_bytes n)164,165
     fromHex fromHex166,167
 fpack fpack170,171
 funpack funpack173,174
-
-./src/Extras/GitVersion.hs,139
-module Extras.GitVersion Extras.GitVersion14,15
-plainVersion plainVersion31,32
-gitBranch gitBranch38,39
-gitVersion gitVersion54,55
-
-./src/Extras/Integral.lhs,806
-module Extras.IntegralExtras.Integral29,30
-rollUp rollUp56,57
-byteStringToNatural byteStringToNatural61,62
-byteStringToInteger byteStringToInteger64,65
-naturalToByteString naturalToByteString71,72
-intVal intVal76,77
-integerToByteString integerToByteString79,80
-word8 word893,94
-char char96,97
-ordw ordw99,100
-byte byte102,103
-int int105,106
-integer integer108,109
-natural natural111,112
-class IsByteString IsByteString114,115
-    fromByteString fromByteString115,116
-    toByteString toByteString116,117
-instance IsByteString IsByteString Integer118,119
-    fromByteString fromByteString119,120
-    toByteString toByteString120,121
-instance IsByteString IsByteString Natural122,123
-    fromByteString fromByteString123,124
-    toByteString toByteString124,125
 
 ./src/Extras/Hex.lhs,845
 module Extras.HexExtras.Hex24,25

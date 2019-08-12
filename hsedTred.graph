@@ -8,7 +8,7 @@ digraph G {
 			style=filled
 		];
 		u0		 [fillcolor="#ffffbb",
-			label=Bytes,
+			label=GitVersion,
 			penwidth=0,
 			style=filled];
 		u1		 [fillcolor="#ffffbb",
@@ -20,7 +20,7 @@ digraph G {
 			penwidth=0,
 			style=filled];
 		u3		 [fillcolor="#ffffbb",
-			label=GitVersion,
+			label=Sized,
 			penwidth=0,
 			style=filled];
 	}
@@ -154,18 +154,18 @@ digraph G {
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u24 -> u3;
+	u24 -> u0;
 	u24 -> u22;
 	u24 -> u23;
-	u0 -> u1;
 	u1 -> u2;
+	u3 -> u1;
 	u5 -> u8;
 	u5 -> u9;
 	u7 -> u2;
 	u7 -> u6;
 	u8 -> u7;
 	u9 -> u10;
-	u10 -> u0;
+	u10 -> u3;
 	u10 -> u7;
 	u13 -> u9;
 	u14 -> u9;

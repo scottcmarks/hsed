@@ -37,9 +37,9 @@ import           GHC.Types(Int)
 import           GHC.TypeNats(KnownNat)
 
 
-import           Extras.Bytes ()
-import           Extras.Bytes (Fixed_bytes(..), fpack, funpack)
 import           Extras.Integral (intVal)
+import           Extras.Sized ()
+import           Extras.Sized (Fixed_bytes(..), fpack, funpack)
 import           System.SED.Common.StreamItem (StreamItem(..))
 -- import           System.SED.Common.Integral
 import           System.SED.Common.Token (Token(..),IsToken(..))

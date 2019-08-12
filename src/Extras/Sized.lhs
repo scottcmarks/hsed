@@ -7,8 +7,8 @@ Define the fixed-length ByteStrings used by the TPer
 
 \begin{code}
 {-|
-Module      : Extras.Bytes
-Description : Fixed-Length ByteStrings
+Module      : Extras.Sized
+Description : Fixed- and Bounded-Length ByteStrings and Nums
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -28,7 +28,7 @@ Datatypes for Tokens.
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DataKinds             #-}
 
-module Extras.Bytes
+module Extras.Sized
   -- (
   --   Fixed_bytes(..)
   -- , HasFixed_bytes(..)
@@ -173,6 +173,7 @@ fpack = toFixed_bytes
 
 funpack :: (KnownNat n) => Fixed_bytes n -> ByteString
 funpack = fromFixed_bytes
+
 
 \end{code}
 \end{document}

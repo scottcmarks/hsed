@@ -73,7 +73,7 @@ require t = parser >>= onlyt
         | x == t = pure t
         | otherwise = fail $ "Looking for " <> show t <> ", but saw " <> show x
 
-instance (StreamItem a) => StreamItem([a]) where
+instance (StreamItem a) => StreamItem([a]) where  -- TODO: Token should use these
     parser = undefined
     generate = mconcat . fmap generate
 instance (StreamItem a) => StreamItem(a,a) where

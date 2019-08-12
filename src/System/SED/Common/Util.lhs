@@ -31,7 +31,7 @@ import           Data.Either(either)
 import           Data.Tuple(fst)
 import           GHC.Base(id, map, (.), ($))
 import           GHC.Err(error)
-import           Extras.Bytes(fpack)
+import           Extras.Sized(fpack)
 
 import           System.SED.Common.UID
 

@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 \documentstyle{article}
 \begin{document}
 \chapter{Formats}
@@ -39,7 +40,7 @@ import            Data.Attoparsec.ByteString (anyWord8)
 import Data.ByteString(ByteString, singleton)
 import Data.Functor((<$>))
 import GHC.Enum(Enum(..))
-import GHC.Base((<>), (.), mempty, undefined, Eq(..), Int)
+import GHC.Base(error, (<>), (.), mempty, undefined, Eq(..), Int)
 -- import GHC.Natural
 import GHC.Real(fromIntegral)
 import GHC.Show(Show)
@@ -101,6 +102,15 @@ data Core_Type :: Nat -> *
 deriving instance Show (Core_Type n)
 deriving instance Eq (Core_Type n)
 
+data Some_Core_Type = forall (n :: Nat). KnownNat n => Some_Core_Type (Core_Type n)
+
+deriving instance Show (Some_Core_Type)
+-- deriving instance Eq (Some_Core_Type)
+
+instance StreamItem(Some_Core_Type) where
+    generate = undefined
+    parser = undefined
+
 instance (KnownNat n) => StreamItem(Core_Type n) where
     generate ct = singleton (fromIntegral (natVal ct)) <> generateData ct
       where generateData :: Core_Type n -> ByteString
@@ -120,7 +130,11 @@ instance (KnownNat n) => StreamItem(Core_Type n) where
             generateData (Named_Value_Uinteger_Type uint uidref) = generate uint <> generate uidref
             generateData (Struct_Type flds ) = generate flds
             generateData (Set_Type ranges) = generate ranges
-    parser = undefined
+    parser = do tag <- anyWord8
+                case tag of
+                  _ -> error "Unknown tag"
+
+
     -- maybeParse bs' =
     --     case bs' of
     --       "" ->  error "Can't maybeParse empty bytestring"

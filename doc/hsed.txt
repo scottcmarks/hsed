@@ -373,7 +373,6 @@ instance GHC.Show.Show (System.SED.Common.Format.Core_Type n)
 instance GHC.Classes.Eq (System.SED.Common.Format.Core_Type n)
 instance GHC.Show.Show System.SED.Common.Format.Some_Core_Type
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Some_Core_Type
-instance GHC.TypeNats.KnownNat n => System.SED.Common.StreamItem.StreamItem (System.SED.Common.Format.Core_Type n)
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Object_table_only
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Byte_table_only
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_non_Base_Type_only

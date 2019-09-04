@@ -21,6 +21,7 @@ Formats.
 
 {-# LANGUAGE NoImplicitPrelude
            , DataKinds
+           , DeriveAnyClass
            , KindSignatures
            , ScopedTypeVariables
            , GADTs
@@ -36,11 +37,11 @@ Formats.
 module System.SED.Common.Format
     where
 
-import            Data.Attoparsec.ByteString (anyWord8)
+import            Data.Attoparsec.ByteString (many1, anyWord8)
 import Data.ByteString(ByteString, singleton)
 import Data.Functor((<$>))
 import GHC.Enum(Enum(..))
-import GHC.Base(error, (<>), (.), mempty, undefined, Eq(..), Int)
+import GHC.Base((<*>), pure, error, (<>), (.), mempty, undefined, Eq(..), Int)
 -- import GHC.Natural
 import GHC.Real(fromIntegral)
 import GHC.Show(Show)
@@ -63,7 +64,7 @@ data Core_table_kind = Object_table | Byte_table
     deriving (Enum, Eq, Show)
 
 data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
-    deriving (Eq,Show)
+    deriving (Eq,Show) -- , StreamItem) -- FIXME
 data Core_integer_2    = Core_integer_2 {fromCore_integer_2::Int}
     deriving (Eq,Show)
 data Core_uidref       = Core_uidref {fromCore_uidref::UID}
@@ -108,11 +109,7 @@ deriving instance Show (Some_Core_Type)
 -- deriving instance Eq (Some_Core_Type)
 
 instance StreamItem(Some_Core_Type) where
-    generate = undefined
-    parser = undefined
-
-instance (KnownNat n) => StreamItem(Core_Type n) where
-    generate ct = singleton (fromIntegral (natVal ct)) <> generateData ct
+    generate (Some_Core_Type ct) = singleton (fromIntegral (natVal ct)) <> generateData ct
       where generateData :: Core_Type n -> ByteString
             generateData Base_Type = mempty
             generateData (Simple_Type base_uidref size) = generate base_uidref <> generate size
@@ -132,35 +129,43 @@ instance (KnownNat n) => StreamItem(Core_Type n) where
             generateData (Set_Type ranges) = generate ranges
     parser = do tag <- anyWord8
                 case tag of
-                  _ -> error "Unknown tag"
+                   0 -> Some_Core_Type <$>
+                          pure Base_Type
+                   1 -> Some_Core_Type <$>
+                          (Simple_Type <$> parser <*> parser)
+                   2 -> Some_Core_Type <$>
+                          (Enumeration_Type <$> many1 ( (,) <$> parser <*> parser))
+                   3 -> Some_Core_Type <$>
+                          (Alternative_Type <$> ( (:) <$> parser <*> many1 parser))
+                   4 -> Some_Core_Type <$>
+                          (List_Type <$> parser <*> parser)
+                   5 -> Some_Core_Type <$>
+                          (Restricted_Reference_Type'5 <$> many1 parser)
+                   6 -> Some_Core_Type <$>
+                          (Restricted_Reference_Type'6 <$> many1 parser)
+                   7 -> Some_Core_Type <$>
+                          pure General_Reference_Type'7
+                   8 -> Some_Core_Type <$>
+                          pure General_Reference_Type'8
+                   9 -> Some_Core_Type <$>
+                          pure General_Reference_Type'9
+                   10 -> Some_Core_Type <$>
+                          (General_Reference_Table_Type <$> parser)
+                   11 -> Some_Core_Type <$>
+                          (Named_Value_Name_Type <$> parser <*> parser)
+                   12 -> Some_Core_Type <$>
+                          (Named_Value_Integer_Type <$> parser <*> parser)
+                   13 -> Some_Core_Type <$>
+                          (Named_Value_Uinteger_Type <$> parser <*> parser)
+                   14 -> Some_Core_Type <$>
+                          (Struct_Type <$> many1 parser)
+                   15 -> Some_Core_Type <$>
+                          (Set_Type <$> many1 ( (,) <$> parser <*> parser))
+                   _ -> error "Unknown tag"
 
 
-    -- maybeParse bs' =
-    --     case bs' of
-    --       "" ->  error "Can't maybeParse empty bytestring"
-    --       bs -> maybeParser (head bs) bs
-    --   where
-    --     maybeParser :: Word8 -> ByteString -> Maybe (Core_Type n)
-    --     maybeParser hd = undefined hd
-          -- ( case hd of
-          --   0 -> Just <$> const Base_Type
-          --   1 -> Just <$> Simple_Type                    <$> maybeParse <*> maybeParse
-          --   2 -> Just <$> Enumeration_Type               <$> maybeParse
-          --   3 -> Just <$> Alternative_Type               <$> maybeParse
-          --   4 -> Just <$> List_Type                      <$> maybeParse <*> maybeParse
-          --   5 -> Just <$> Restricted_Reference_Type'5    <$> maybeParse
-          --   6 -> Just <$> Restricted_Reference_Type'6    <$> maybeParse
-          --   7 -> Just <$> const General_Reference_Type'7
-          --   8 -> Just <$> const General_Reference_Type'8
-          --   9 -> Just <$> const General_Reference_Type'9
-          --   10 -> Just <$> General_Reference_Table_Type   <$> maybeParse
-          --   11 -> Just <$> Named_Value_Name_Type          <$> maybeParse <*> maybeParse
-          --   12 -> Just <$> Named_Value_Integer_Type       <$> maybeParse <*> maybeParse
-          --   13 -> Just <$> Named_Value_Uinteger_Type      <$> maybeParse <*> maybeParse
-          --   14 -> Just <$> Struct_Type                    <$> maybeParse
-          --   15 -> Just <$> Set_Type                       <$> maybeParse
-          --   _ -> error "Illegal Core_Type tag"
-          -- )
+
+
 instance StreamItem(Core_uinteger_2  ) where
     parser = undefined
     generate _ = "<uinteger_2>"

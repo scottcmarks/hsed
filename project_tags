@@ -156,80 +156,77 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/Common/Format.lhs,3665
-module System.SED.Common.FormatSystem.SED.Common.Format35,36
-data Max_bytes Max_bytes52,53
-instance StreamItem StreamItem Core_table_kind56,57
-    where generate generate57,58
-data Core_table_kind Core_table_kind61,62
-data Core_table_kind = Object_table Object_table61,62
-data Core_table_kind = Object_table | Byte_tableByte_table61,62
-data Core_uinteger_2 Core_uinteger_264,65
-data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_264,65
-data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_264,65
-data Core_integer_2 Core_integer_266,67
-data Core_integer_2    = Core_integer_2 Core_integer_266,67
-data Core_integer_2    = Core_integer_2 {fromCore_integer_2:fromCore_integer_266,67
-data Core_uidref Core_uidref68,69
-data Core_uidref       = Core_uidref Core_uidref68,69
-data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref68,69
-data Core_max_bytes_32 Core_max_bytes_3270,71
-data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3270,71
-data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3270,71
-newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only73,74
-newtype Core_uidref_non_Base_Type_only Core_uidref_non_Base_Type_only75,76
-newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only77,78
-newtype Core_uidref_Object_table_only Core_uidref_Object_table_only79,80
-data Core_Type Core_Type82,83
-        Base_Type Base_Type84,85
-        Simple_Type Simple_Type85,86
-        Enumeration_Type Enumeration_Type86,87
-        Alternative_Type Alternative_Type87,88
-        List_Type List_Type88,89
-        Restricted_Reference_Type'5 Restricted_Reference_Type'589,90
-        Restricted_Reference_Type'6 Restricted_Reference_Type'690,91
-        General_Reference_Type'7 General_Reference_Type'791,92
-        General_Reference_Type'8 General_Reference_Type'892,93
-        General_Reference_Type'9 General_Reference_Type'993,94
-        General_Reference_Table_Type General_Reference_Table_Type94,95
-        Named_Value_Name_Type Named_Value_Name_Type95,96
-        Named_Value_Integer_Type Named_Value_Integer_Type96,97
-        Named_Value_Uinteger_Type Named_Value_Uinteger_Type97,98
-        Struct_Type Struct_Type98,99
-        Set_Type Set_Type99,100
-data Some_Core_Type Some_Core_Type104,105
-data Some_Core_Type = forall forall104,105
-data Some_Core_Type = forall (n n104,105
-instance StreamItem(StreamItem (Some_Core_Type)109,110
-    generate generate110,111
-    parser parser111,112
-instance (K(KnownNat n) => StreamItem (Core_Type n)113,114
-    generate generate114,115
-    parser parser132,133
-instance StreamItem(StreamItem (Core_uinteger_2)163,164
-    parser parser164,165
-    generate generate165,166
-instance StreamItem(StreamItem (Core_integer_2)166,167
-    parser parser167,168
-    generate generate168,169
-instance StreamItem(StreamItem (Core_uidref)169,170
-    parser parser170,171
-    generate generate171,172
-instance StreamItem(StreamItem (Core_max_bytes_32)172,173
-    parser parser173,174
-    generate generate174,175
-instance StreamItem(StreamItem (Core_uidref_Base_Type_only)175,176
-    parser parser176,177
-    generate generate177,178
-instance StreamItem(StreamItem (Core_uidref_non_Base_Type_only)178,179
-    parser parser179,180
-    generate generate180,181
-instance StreamItem(StreamItem (Core_uidref_Byte_table_only)181,182
-    parser parser182,183
-    generate generate183,184
-instance StreamItem(StreamItem (Core_uidref_Object_table_only)184,185
-    parser parser185,186
-    generate generate186,187
+./src/System/SED/Common/Format.lhs,3548
+module System.SED.Common.FormatSystem.SED.Common.Format36,37
+data Max_bytes Max_bytes53,54
+instance StreamItem StreamItem Core_table_kind57,58
+    where generate generate58,59
+data Core_table_kind Core_table_kind62,63
+data Core_table_kind = Object_table Object_table62,63
+data Core_table_kind = Object_table | Byte_tableByte_table62,63
+data Core_uinteger_2 Core_uinteger_265,66
+data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_265,66
+data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_265,66
+data Core_integer_2 Core_integer_267,68
+data Core_integer_2    = Core_integer_2 Core_integer_267,68
+data Core_integer_2    = Core_integer_2 {fromCore_integer_2:fromCore_integer_267,68
+data Core_uidref Core_uidref69,70
+data Core_uidref       = Core_uidref Core_uidref69,70
+data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref69,70
+data Core_max_bytes_32 Core_max_bytes_3271,72
+data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3271,72
+data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3271,72
+newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only74,75
+newtype Core_uidref_non_Base_Type_only Core_uidref_non_Base_Type_only76,77
+newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only78,79
+newtype Core_uidref_Object_table_only Core_uidref_Object_table_only80,81
+data Core_Type Core_Type83,84
+        Base_Type Base_Type85,86
+        Simple_Type Simple_Type86,87
+        Enumeration_Type Enumeration_Type87,88
+        Alternative_Type Alternative_Type88,89
+        List_Type List_Type89,90
+        Restricted_Reference_Type'5 Restricted_Reference_Type'590,91
+        Restricted_Reference_Type'6 Restricted_Reference_Type'691,92
+        General_Reference_Type'7 General_Reference_Type'792,93
+        General_Reference_Type'8 General_Reference_Type'893,94
+        General_Reference_Type'9 General_Reference_Type'994,95
+        General_Reference_Table_Type General_Reference_Table_Type95,96
+        Named_Value_Name_Type Named_Value_Name_Type96,97
+        Named_Value_Integer_Type Named_Value_Integer_Type97,98
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type98,99
+        Struct_Type Struct_Type99,100
+        Set_Type Set_Type100,101
+data Some_Core_Type Some_Core_Type105,106
+data Some_Core_Type = forall forall105,106
+data Some_Core_Type = forall (n n105,106
+instance StreamItem(StreamItem (Some_Core_Type)110,111
+    generate generate111,112
+    parser parser129,130
+instance StreamItem(StreamItem (Core_uinteger_2)168,169
+    parser parser169,170
+    generate generate170,171
+instance StreamItem(StreamItem (Core_integer_2)171,172
+    parser parser172,173
+    generate generate173,174
+instance StreamItem(StreamItem (Core_uidref)174,175
+    parser parser175,176
+    generate generate176,177
+instance StreamItem(StreamItem (Core_max_bytes_32)177,178
+    parser parser178,179
+    generate generate179,180
+instance StreamItem(StreamItem (Core_uidref_Base_Type_only)180,181
+    parser parser181,182
+    generate generate182,183
+instance StreamItem(StreamItem (Core_uidref_non_Base_Type_only)183,184
+    parser parser184,185
+    generate generate185,186
+instance StreamItem(StreamItem (Core_uidref_Byte_table_only)186,187
+    parser parser187,188
+    generate generate188,189
+instance StreamItem(StreamItem (Core_uidref_Object_table_only)189,190
+    parser parser190,191
+    generate generate191,192
 
 ./src/System/SED/Common/Table.lhs,1082
 module System.SED.Common.Table System.SED.Common.Table24,25

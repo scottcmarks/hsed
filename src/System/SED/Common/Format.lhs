@@ -72,61 +72,61 @@ data Core_uidref       = Core_uidref {fromCore_uidref::UID}
 data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32::Max_bytes 32} -- FIXME:  Need non-bogus max_bytes
     deriving (Eq,Show)
 
-newtype Core_uidref_Base_Type_only     = Core_uidref_Base_Type_only     Core_uidref
+newtype Core_uidref_Base_Type     = Core_uidref_Base_Type     Core_uidref
     deriving (Eq,Show)
-newtype Core_uidref_non_Base_Type_only = Core_uidref_non_Base_Type_only Core_uidref
+newtype Core_uidref_non_Base_Type = Core_uidref_non_Base_Type Core_uidref
     deriving (Eq,Show)
-newtype Core_uidref_Byte_table_only    = Core_uidref_Byte_table_only    Core_uidref
+newtype Core_uidref_Byte_table    = Core_uidref_Byte_table    Core_uidref
     deriving (Eq,Show)
-newtype Core_uidref_Object_table_only  = Core_uidref_Object_table_only  Core_uidref
+newtype Core_uidref_Object_table  = Core_uidref_Object_table  Core_uidref
     deriving (Eq,Show)
 
-data Core_Type :: Nat -> *
+data Known_Core_Type :: Nat -> *
     where
-        Base_Type                    ::                                                          Core_Type  0
-        Simple_Type                  :: Core_uidref_Base_Type_only -> Core_uinteger_2         -> Core_Type  1
-        Enumeration_Type             :: [(Core_uinteger_2, Core_uinteger_2)]                  -> Core_Type  2 -- 1 <= length
-        Alternative_Type             ::                      [Core_uidref_non_Base_Type_only] -> Core_Type  3 -- 2 <= length
-        List_Type                    :: Core_uinteger_2   ->  Core_uidref_non_Base_Type_only  -> Core_Type  4
-        Restricted_Reference_Type'5  ::                      [Core_uidref_Byte_table_only]    -> Core_Type  5
-        Restricted_Reference_Type'6  ::                      [Core_uidref_Object_table_only]  -> Core_Type  6
-        General_Reference_Type'7     ::                                                          Core_Type  7
-        General_Reference_Type'8     ::                                                          Core_Type  8
-        General_Reference_Type'9     ::                                                          Core_Type  9
-        General_Reference_Table_Type :: Core_table_kind                                       -> Core_Type 10
-        Named_Value_Name_Type        :: Core_max_bytes_32 ->  Core_uidref_non_Base_Type_only  -> Core_Type 11
-        Named_Value_Integer_Type     :: Core_integer_2    ->  Core_uidref_non_Base_Type_only  -> Core_Type 12
-        Named_Value_Uinteger_Type    :: Core_uinteger_2   ->  Core_uidref_non_Base_Type_only  -> Core_Type 13
-        Struct_Type                  ::                      [Core_uidref_non_Base_Type_only] -> Core_Type 14 -- 1 <= length
-        Set_Type                     :: [(Core_uinteger_2, Core_uinteger_2)]                  -> Core_Type 15 -- 1 <= length
+        Base_Type                    ::                                                     Known_Core_Type  0
+        Simple_Type                  :: Core_uidref_Base_Type -> Core_uinteger_2         -> Known_Core_Type  1
+        Enumeration_Type             :: [(Core_uinteger_2, Core_uinteger_2)]             -> Known_Core_Type  2 -- 1 <= length
+        Alternative_Type             ::                      [Core_uidref_non_Base_Type] -> Known_Core_Type  3 -- 2 <= length
+        List_Type                    :: Core_uinteger_2   ->  Core_uidref_non_Base_Type  -> Known_Core_Type  4
+        Restricted_Reference_Type'5  ::                      [Core_uidref_Byte_table]    -> Known_Core_Type  5
+        Restricted_Reference_Type'6  ::                      [Core_uidref_Object_table]  -> Known_Core_Type  6
+        General_Reference_Type'7     ::                                                     Known_Core_Type  7
+        General_Reference_Type'8     ::                                                     Known_Core_Type  8
+        General_Reference_Type'9     ::                                                     Known_Core_Type  9
+        General_Reference_Table_Type :: Core_table_kind                                  -> Known_Core_Type 10
+        Named_Value_Name_Type        :: Core_max_bytes_32 ->  Core_uidref_non_Base_Type  -> Known_Core_Type 11
+        Named_Value_Integer_Type     :: Core_integer_2    ->  Core_uidref_non_Base_Type  -> Known_Core_Type 12
+        Named_Value_Uinteger_Type    :: Core_uinteger_2   ->  Core_uidref_non_Base_Type  -> Known_Core_Type 13
+        Struct_Type                  ::                      [Core_uidref_non_Base_Type] -> Known_Core_Type 14 -- 1 <= length
+        Set_Type                     :: [(Core_uinteger_2, Core_uinteger_2)]             -> Known_Core_Type 15 -- 1 <= length
 
-deriving instance Show (Core_Type n)
-deriving instance Eq (Core_Type n)
+deriving instance Show (Known_Core_Type n)
+deriving instance Eq (Known_Core_Type n)
 
-data Some_Core_Type = forall (n :: Nat). KnownNat n => Some_Core_Type (Core_Type n)
+data Some_Core_Type = forall (n :: Nat). KnownNat n => Some_Core_Type (Known_Core_Type n)
 
 deriving instance Show (Some_Core_Type)
 -- deriving instance Eq (Some_Core_Type)
 
 instance StreamItem(Some_Core_Type) where
-    generate (Some_Core_Type ct) = singleton (fromIntegral (natVal ct)) <> generateData ct
-      where generateData :: Core_Type n -> ByteString
-            generateData Base_Type = mempty
-            generateData (Simple_Type base_uidref size) = generate base_uidref <> generate size
-            generateData (Enumeration_Type ranges) = generate ranges
-            generateData (Alternative_Type alternatives) = generate alternatives
-            generateData (List_Type maxSize elementType) = generate maxSize <> generate elementType
-            generateData (Restricted_Reference_Type'5 uidrefs) = generate uidrefs
-            generateData (Restricted_Reference_Type'6 uidrefs) = generate uidrefs
-            generateData General_Reference_Type'7 = mempty
-            generateData General_Reference_Type'8 = mempty
-            generateData General_Reference_Type'9 = mempty
-            generateData (General_Reference_Table_Type k) = generate k
-            generateData (Named_Value_Name_Type     name uidref) = generate name <> generate uidref
-            generateData (Named_Value_Integer_Type  int  uidref) = generate int  <> generate uidref
-            generateData (Named_Value_Uinteger_Type uint uidref) = generate uint <> generate uidref
-            generateData (Struct_Type flds ) = generate flds
-            generateData (Set_Type ranges) = generate ranges
+    generate (Some_Core_Type ct) = singleton (fromIntegral (natVal ct)) <> genFields ct
+      where genFields :: Known_Core_Type n -> ByteString
+            genFields Base_Type = mempty
+            genFields (Simple_Type base_uidref size) = generate base_uidref <> generate size
+            genFields (Enumeration_Type ranges) = generate ranges
+            genFields (Alternative_Type alternatives) = generate alternatives
+            genFields (List_Type maxSize elementType) = generate maxSize <> generate elementType
+            genFields (Restricted_Reference_Type'5 uidrefs) = generate uidrefs
+            genFields (Restricted_Reference_Type'6 uidrefs) = generate uidrefs
+            genFields General_Reference_Type'7 = mempty
+            genFields General_Reference_Type'8 = mempty
+            genFields General_Reference_Type'9 = mempty
+            genFields (General_Reference_Table_Type k) = generate k
+            genFields (Named_Value_Name_Type     name uidref) = generate name <> generate uidref
+            genFields (Named_Value_Integer_Type  int  uidref) = generate int  <> generate uidref
+            genFields (Named_Value_Uinteger_Type uint uidref) = generate uint <> generate uidref
+            genFields (Struct_Type flds ) = generate flds
+            genFields (Set_Type ranges) = generate ranges
     parser = do tag <- anyWord8
                 case tag of
                    0 -> Some_Core_Type <$>
@@ -178,18 +178,18 @@ instance StreamItem(Core_uidref      ) where
 instance StreamItem(Core_max_bytes_32) where
     parser = undefined
     generate _ = "<max_bytes_32>"
-instance StreamItem(Core_uidref_Base_Type_only) where
+instance StreamItem(Core_uidref_Base_Type) where
     parser = undefined
-    generate (Core_uidref_Base_Type_only _base_uidref) = "<uidref_Base_Type_only>"
-instance StreamItem(Core_uidref_non_Base_Type_only) where
+    generate (Core_uidref_Base_Type _base_uidref) = "<uidref_Base_Type>"
+instance StreamItem(Core_uidref_non_Base_Type) where
     parser = undefined
-    generate (Core_uidref_non_Base_Type_only _base_uidref) = "<uidref_non_Base_Type_only>"
-instance StreamItem(Core_uidref_Byte_table_only) where
+    generate (Core_uidref_non_Base_Type _base_uidref) = "<uidref_non_Base_Type>"
+instance StreamItem(Core_uidref_Byte_table) where
     parser = undefined
-    generate (Core_uidref_Byte_table_only _base_uidref) = "<uidref_Byte_table_only>"
-instance StreamItem(Core_uidref_Object_table_only) where
+    generate (Core_uidref_Byte_table _base_uidref) = "<uidref_Byte_table>"
+instance StreamItem(Core_uidref_Object_table) where
     parser = undefined
-    generate (Core_uidref_Object_table_only _base_uidref) = "<uidref_Object_table_only>"
+    generate (Core_uidref_Object_table _base_uidref) = "<uidref_Object_table>"
 
 -- newtype Non_Base_Type_uidref = Non_Base_Type_uidref Core_uidref
 --     deriving (Eq,Ord,Show)

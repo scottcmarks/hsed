@@ -156,7 +156,7 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/Common/Format.lhs,3548
+./src/System/SED/Common/Format.lhs,3500
 module System.SED.Common.FormatSystem.SED.Common.Format36,37
 data Max_bytes Max_bytes53,54
 instance StreamItem StreamItem Core_table_kind57,58
@@ -176,11 +176,11 @@ data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref69,70
 data Core_max_bytes_32 Core_max_bytes_3271,72
 data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3271,72
 data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3271,72
-newtype Core_uidref_Base_Type_only Core_uidref_Base_Type_only74,75
-newtype Core_uidref_non_Base_Type_only Core_uidref_non_Base_Type_only76,77
-newtype Core_uidref_Byte_table_only Core_uidref_Byte_table_only78,79
-newtype Core_uidref_Object_table_only Core_uidref_Object_table_only80,81
-data Core_Type Core_Type83,84
+newtype Core_uidref_Base_Type Core_uidref_Base_Type74,75
+newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type76,77
+newtype Core_uidref_Byte_table Core_uidref_Byte_table78,79
+newtype Core_uidref_Object_table Core_uidref_Object_table80,81
+data Known_Core_Type Known_Core_Type83,84
         Base_Type Base_Type85,86
         Simple_Type Simple_Type86,87
         Enumeration_Type Enumeration_Type87,88
@@ -215,16 +215,16 @@ instance StreamItem(StreamItem (Core_uidref)174,175
 instance StreamItem(StreamItem (Core_max_bytes_32)177,178
     parser parser178,179
     generate generate179,180
-instance StreamItem(StreamItem (Core_uidref_Base_Type_only)180,181
+instance StreamItem(StreamItem (Core_uidref_Base_Type)180,181
     parser parser181,182
     generate generate182,183
-instance StreamItem(StreamItem (Core_uidref_non_Base_Type_only)183,184
+instance StreamItem(StreamItem (Core_uidref_non_Base_Type)183,184
     parser parser184,185
     generate generate185,186
-instance StreamItem(StreamItem (Core_uidref_Byte_table_only)186,187
+instance StreamItem(StreamItem (Core_uidref_Byte_table)186,187
     parser parser187,188
     generate generate188,189
-instance StreamItem(StreamItem (Core_uidref_Object_table_only)189,190
+instance StreamItem(StreamItem (Core_uidref_Object_table)189,190
     parser parser190,191
     generate generate191,192
 

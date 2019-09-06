@@ -44,7 +44,7 @@ Thus this:
     Struct_Type = 14 1*bytes_8
     Set_Type = 15 1*(uinteger_2 uinteger_2)
 
-should probably be this:
+should probably at least be this:
 
     Type = Base-Type / Simple-Type / Enumeration-Type / Alternative-Type / List-Type / Restricted-Reference-Type / General-Reference-Type / General-Reference-Table-Type / Named-Value-Type / Struct-Type / Set-Type
     table-kind = %d1/%d2
@@ -61,6 +61,48 @@ should probably be this:
     Name-Value-Uinteger-Type = %d13 uinteger-2 bytes-8
     Struct-Type = %d14 1*bytes-8
     Set-Type = %d15 1*(uinteger-2 uinteger-2)
+
+Furthermore, the use of implementation details in this list requires an "out-of-band" semantic description in following text.
+It would probably be much more useful to use something like this:
+
+    Type = Base-Type / Simple-Type / Enumeration-Type / Alternative-Type / List-Type / Restricted-Reference-Type / General-Reference-Type / General-Reference-Table-Type / Named-Value-Type / Struct-Type / Set-Type
+
+    Base-Type = %d0
+    Simple-Type = %d1 Base-Type-uidref uinteger-2
+    Enumeration-Type = %d2 1*(uinteger-2 uinteger-2)
+    Alternative-Type = %d3 2*Non-Base-Type-uidref
+    List-Type = %d4 uinteger-2 Non-Base-Type-uidref
+    Byte-Table-Restricted-Reference-Type = %d5 1*Byte-Table-uidref
+    Object-Table-Restricted-Reference-Type = d6 1*Object-Table-uidref
+    Byte-Table-Row-Number-Type = %d7
+    Object-UID-Type = %d8
+    Table-UID-Type = %d9
+    Table-Reference-Type = %d10 table-kind
+    Name-Value-Name-Type = %d11 1*32bytes Non-Base-Type-uidref
+    Name-Value-Integer-Type = %d12 integer-2 Non-Base-Type-uidref
+    Name-Value-Uinteger-Type = %d13 uinteger-2 Non-Base-Type-uidref
+    Struct-Type = %d14 1*Non-Base-Type-uidref
+    Set-Type = %d15 1*(uinteger-2 uinteger-2)
+
+    Base-Type-uidref = uidref
+    Non-Base-Type-uidref = uidref
+    Byte-Table-uidref = uidref
+    Object-Table-uidref = uidref
+
+    uidref = bytes-8
+    table-kind = %d1/%d2
+
+However, changing to the names above would require changing the
+corresponding entries in the subsequent tables describing Type table
+entries.
+
+(In the Haskell implementation, "Template Haskell" translation is
+applied to the suggested replacement ABNF, and the corresponding
+translation of the Type table entry tables maps from the published Core
+Spec usage to the suggested names, further modified to be Haskell
+identifiers legal for their context (initial lowercase for Haskell value
+identifiers, initial uppercase for Haskell type, class,
+etc. identifiers.)
 
 "c. Enumeration_Type. This is a n unsigned integer in a specific range." should be
 "c. Enumeration_Type. This is an unsigned integer in a specific range."
@@ -87,6 +129,10 @@ Table 101 "Eror" should be "Error"
 Table 131 "SPTemplates_object _ref" should be "SPTemplates_object_ref" (no space)
 
 5.1.3.73 "Table 134" should be "Table 136"
+
+5.1.3.74 "Table 137" -- table_kind is defined to be 1/2.
+This enumeration adds values 3-8 as "Reserved" -- why?
+All other references to table_kind are explicitly 1 (Object table) or 2 (Byte table).
 
 5.1.3.76 "Table_object _ref" should be "Table_object_ref"
 

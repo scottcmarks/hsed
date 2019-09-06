@@ -22,6 +22,7 @@ Formats.
 {-# LANGUAGE NoImplicitPrelude
            , DataKinds
            , DeriveAnyClass
+           , DeriveDataTypeable
            , KindSignatures
            , ScopedTypeVariables
            , GADTs
@@ -60,7 +61,7 @@ instance StreamItem Core_table_kind
           parser = toEnum <$> pred <$> fromIntegral <$> anyWord8
 
 
-data Core_table_kind = Object_table | Byte_table
+data Core_table_kind = Object_Table | Byte_Table
     deriving (Enum, Eq, Show)
 
 data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
@@ -76,9 +77,9 @@ newtype Core_uidref_Base_Type     = Core_uidref_Base_Type     Core_uidref
     deriving (Eq,Show)
 newtype Core_uidref_non_Base_Type = Core_uidref_non_Base_Type Core_uidref
     deriving (Eq,Show)
-newtype Core_uidref_Byte_table    = Core_uidref_Byte_table    Core_uidref
+newtype Core_uidref_Byte_Table    = Core_uidref_Byte_Table    Core_uidref
     deriving (Eq,Show)
-newtype Core_uidref_Object_table  = Core_uidref_Object_table  Core_uidref
+newtype Core_uidref_Object_Table  = Core_uidref_Object_Table  Core_uidref
     deriving (Eq,Show)
 
 data Known_Core_Type :: Nat -> *
@@ -88,8 +89,8 @@ data Known_Core_Type :: Nat -> *
         Enumeration_Type             :: [(Core_uinteger_2, Core_uinteger_2)]             -> Known_Core_Type  2 -- 1 <= length
         Alternative_Type             ::                      [Core_uidref_non_Base_Type] -> Known_Core_Type  3 -- 2 <= length
         List_Type                    :: Core_uinteger_2   ->  Core_uidref_non_Base_Type  -> Known_Core_Type  4
-        Restricted_Reference_Type'5  ::                      [Core_uidref_Byte_table]    -> Known_Core_Type  5
-        Restricted_Reference_Type'6  ::                      [Core_uidref_Object_table]  -> Known_Core_Type  6
+        Restricted_Reference_Type'5  ::                      [Core_uidref_Byte_Table]    -> Known_Core_Type  5
+        Restricted_Reference_Type'6  ::                      [Core_uidref_Object_Table]  -> Known_Core_Type  6
         General_Reference_Type'7     ::                                                     Known_Core_Type  7
         General_Reference_Type'8     ::                                                     Known_Core_Type  8
         General_Reference_Type'9     ::                                                     Known_Core_Type  9
@@ -106,7 +107,7 @@ deriving instance Eq (Known_Core_Type n)
 data Some_Core_Type = forall (n :: Nat). KnownNat n => Some_Core_Type (Known_Core_Type n)
 
 deriving instance Show (Some_Core_Type)
--- deriving instance Eq (Some_Core_Type)
+
 
 instance StreamItem(Some_Core_Type) where
     generate (Some_Core_Type ct) = singleton (fromIntegral (natVal ct)) <> genFields ct
@@ -184,37 +185,12 @@ instance StreamItem(Core_uidref_Base_Type) where
 instance StreamItem(Core_uidref_non_Base_Type) where
     parser = undefined
     generate (Core_uidref_non_Base_Type _base_uidref) = "<uidref_non_Base_Type>"
-instance StreamItem(Core_uidref_Byte_table) where
+instance StreamItem(Core_uidref_Byte_Table) where
     parser = undefined
-    generate (Core_uidref_Byte_table _base_uidref) = "<uidref_Byte_table>"
-instance StreamItem(Core_uidref_Object_table) where
+    generate (Core_uidref_Byte_Table _base_uidref) = "<uidref_Byte_Table>"
+instance StreamItem(Core_uidref_Object_Table) where
     parser = undefined
-    generate (Core_uidref_Object_table _base_uidref) = "<uidref_Object_table>"
+    generate (Core_uidref_Object_Table _base_uidref) = "<uidref_Object_Table>"
 
--- newtype Non_Base_Type_uidref = Non_Base_Type_uidref Core_uidref
---     deriving (Eq,Ord,Show)
--- isNon_Base_Type_uidref :: Core_uidref -> Bool
--- isNon_Base_Type_uidref u = u >> True -- FIXME
--- mkNon_Base_Type_uidref :: Core_uidref -> Non_Base_Type_uidref
--- mkNon_Base_Type_uidref u = assert (isNon_Base_Type_uidref u) (Non_Base_Type_uidref u)
--- unNon_Base_Type_uidref :: Non_Base_Type_uidref -> Core_uidref
--- unNon_Base_Type_uidref (Non_Base_Type_uidref u) = u
-
-{-
-table_kind = 1|2
-Base_Type = 0
-Simple_Type = 1 bytes_8 uinteger_2
-Enumeration_Type = 2 1*(uinteger_2 uinteger_2)
-Alternative_Type = 3 2*bytes_8
-List_Type = 4 uinteger_2 bytes_8
-Restricted_Reference_Type = 5|6 1*bytes_8
-General_Reference_Type = 7|8|9
-General_Reference_Table_Type = 10 table_kind
-Named_Value_Name_Type = 11 1*32bytes bytes_8
-Name_Value_Integer_Type = 12 integer_2 bytes_8
-Name_Value_Uinteger_Type = 13 uinteger_2 bytes_8
-Struct_Type = 14 1*bytes_8
-Set_Type = 15 1*(uinteger_2 uinteger_2)
--}
 \end{code}
 \end{document}

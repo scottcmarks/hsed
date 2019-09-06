@@ -307,8 +307,8 @@ uCloseSession :: UID
 module System.SED.Common.Format
 data Max_bytes :: Nat -> *
 data Core_table_kind
-Object_table :: Core_table_kind
-Byte_table :: Core_table_kind
+Object_Table :: Core_table_kind
+Byte_Table :: Core_table_kind
 data Core_uinteger_2
 Core_uinteger_2 :: Int -> Core_uinteger_2
 [fromCore_uinteger_2] :: Core_uinteger_2 -> Int
@@ -325,18 +325,18 @@ newtype Core_uidref_Base_Type
 Core_uidref_Base_Type :: Core_uidref -> Core_uidref_Base_Type
 newtype Core_uidref_non_Base_Type
 Core_uidref_non_Base_Type :: Core_uidref -> Core_uidref_non_Base_Type
-newtype Core_uidref_Byte_table
-Core_uidref_Byte_table :: Core_uidref -> Core_uidref_Byte_table
-newtype Core_uidref_Object_table
-Core_uidref_Object_table :: Core_uidref -> Core_uidref_Object_table
+newtype Core_uidref_Byte_Table
+Core_uidref_Byte_Table :: Core_uidref -> Core_uidref_Byte_Table
+newtype Core_uidref_Object_Table
+Core_uidref_Object_Table :: Core_uidref -> Core_uidref_Object_Table
 data Known_Core_Type :: Nat -> *
 [Base_Type] :: Known_Core_Type 0
 [Simple_Type] :: Core_uidref_Base_Type -> Core_uinteger_2 -> Known_Core_Type 1
 [Enumeration_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Known_Core_Type 2
 [Alternative_Type] :: [Core_uidref_non_Base_Type] -> Known_Core_Type 3
 [List_Type] :: Core_uinteger_2 -> Core_uidref_non_Base_Type -> Known_Core_Type 4
-[Restricted_Reference_Type'5] :: [Core_uidref_Byte_table] -> Known_Core_Type 5
-[Restricted_Reference_Type'6] :: [Core_uidref_Object_table] -> Known_Core_Type 6
+[Restricted_Reference_Type'5] :: [Core_uidref_Byte_Table] -> Known_Core_Type 5
+[Restricted_Reference_Type'6] :: [Core_uidref_Object_Table] -> Known_Core_Type 6
 [General_Reference_Type'7] :: Known_Core_Type 7
 [General_Reference_Type'8] :: Known_Core_Type 8
 [General_Reference_Type'9] :: Known_Core_Type 9
@@ -348,10 +348,10 @@ data Known_Core_Type :: Nat -> *
 [Set_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Known_Core_Type 15
 data Some_Core_Type
 Some_Core_Type :: Known_Core_Type n -> Some_Core_Type
-instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Object_table
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Object_table
-instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Byte_table
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Byte_table
+instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Object_Table
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Object_Table
+instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Byte_Table
+instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Byte_Table
 instance GHC.Show.Show System.SED.Common.Format.Core_uidref_non_Base_Type
 instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_non_Base_Type
 instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Base_Type
@@ -373,8 +373,8 @@ instance GHC.Show.Show (System.SED.Common.Format.Known_Core_Type n)
 instance GHC.Classes.Eq (System.SED.Common.Format.Known_Core_Type n)
 instance GHC.Show.Show System.SED.Common.Format.Some_Core_Type
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Some_Core_Type
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Object_table
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Byte_table
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Object_Table
+instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Byte_Table
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_non_Base_Type
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Base_Type
 instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_max_bytes_32

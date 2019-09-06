@@ -6740,6 +6740,11 @@ logFuncUseColorL :: HasLogFunc env => SimpleGetter env Bool
 --   TODO Consider showing the entire call stack instead.
 displayCallStack :: CallStack -> Utf8Builder
 
+-- | Set format method for messages
+--   
+--   Default: <a>id</a>
+setLogFormat :: (Utf8Builder -> Utf8Builder) -> LogOptions -> LogOptions
+
 -- | Use code location in the log output.
 --   
 --   Default: <a>True</a> if in verbose mode, <a>False</a> otherwise.

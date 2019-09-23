@@ -10,12 +10,14 @@ Git info appended to a version string
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
 module Extras.GitVersion (gitBranch, gitVersion, plainVersion)
 where
 
 import           Data.Either                (Either(..))
+import           Data.Function              ((&))
 import           Data.Version               (Version(..), showVersion)
 import           GitHash                    (giBranch, giDirty,
                                              giHash, tGitInfoCwdTry)
@@ -37,16 +39,13 @@ plainVersion version = [|"Version " ++ $(TH.lift $ showVersion version)|]
 --
 -- @$(gitVersion …)@ @::@ 'String'
 gitBranch :: Q Exp
-gitBranch =
-    case giResult of
+gitBranch = $$tGitInfoCwdTry & \case
       Left s -> error $ "Accessing git info: " <> s
       Right gi -> [| concat [ giBranch gi, " ", take 7 $ giHash gi
                             , if giDirty gi then " (dirty)" else ""
                             ]
 
                   |]
-  where
-    giResult = $$tGitInfoCwdTry
 
 
 -- | Generate a string like @Version 1.2 [feature/foo 12e45b7 (dirty)]@.

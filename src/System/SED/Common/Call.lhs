@@ -230,8 +230,8 @@ instance StreamItem MethodCall where
         mh        <- parser
         p         <- parser
         EndOfData <- parser
-        s         <- parser
-        case s of
+        status    <- parser
+        case status of
           (List [ D (Datum (Unsigned sc))
                 , D (Datum (Unsigned  0))
                 , D (Datum (Unsigned  0))]) ->
@@ -239,6 +239,7 @@ instance StreamItem MethodCall where
           (List l) ->
               fail $ "Status code list should be 3 uintegers, \
                      \with the second and third being zero, but is " <> show l
+
     generate (MethodCall mh p sc) =
           generate Call
        <> generate mh

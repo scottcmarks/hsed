@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-type-defaults #-}
+{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 \documentstyle{article}
 \begin{document}
 \chapter{Formats}
@@ -35,6 +36,8 @@ Formats.
 {-# LANGUAGE FlexibleContexts
 #-}
 
+{-# LANGUAGE LambdaCase        #-}
+
 module System.SED.Common.Format
     where
 
@@ -42,7 +45,7 @@ import            Data.Attoparsec.ByteString (many1, anyWord8)
 import Data.ByteString(ByteString, singleton)
 import Data.Functor((<$>))
 import GHC.Enum(Enum(..))
-import GHC.Base((<*>), pure, error, (<>), (.), mempty, undefined, Eq(..), Int)
+import GHC.Base((>>=), (<*>), pure, error, (<>), (.), mempty, undefined, Eq(..), Int)
 -- import GHC.Natural
 import GHC.Real(fromIntegral)
 import GHC.Show(Show)
@@ -128,41 +131,24 @@ instance StreamItem(Some_Core_Type) where
             genFields (Named_Value_Uinteger_Type uint uidref) = generate uint <> generate uidref
             genFields (Struct_Type flds ) = generate flds
             genFields (Set_Type ranges) = generate ranges
-    parser = do tag <- anyWord8
-                case tag of
-                   0 -> Some_Core_Type <$>
-                          pure Base_Type
-                   1 -> Some_Core_Type <$>
-                          (Simple_Type <$> parser <*> parser)
-                   2 -> Some_Core_Type <$>
-                          (Enumeration_Type <$> many1 ( (,) <$> parser <*> parser))
-                   3 -> Some_Core_Type <$>
-                          (Alternative_Type <$> ( (:) <$> parser <*> many1 parser))
-                   4 -> Some_Core_Type <$>
-                          (List_Type <$> parser <*> parser)
-                   5 -> Some_Core_Type <$>
-                          (Restricted_Reference_Type'5 <$> many1 parser)
-                   6 -> Some_Core_Type <$>
-                          (Restricted_Reference_Type'6 <$> many1 parser)
-                   7 -> Some_Core_Type <$>
-                          pure General_Reference_Type'7
-                   8 -> Some_Core_Type <$>
-                          pure General_Reference_Type'8
-                   9 -> Some_Core_Type <$>
-                          pure General_Reference_Type'9
-                   10 -> Some_Core_Type <$>
-                          (General_Reference_Table_Type <$> parser)
-                   11 -> Some_Core_Type <$>
-                          (Named_Value_Name_Type <$> parser <*> parser)
-                   12 -> Some_Core_Type <$>
-                          (Named_Value_Integer_Type <$> parser <*> parser)
-                   13 -> Some_Core_Type <$>
-                          (Named_Value_Uinteger_Type <$> parser <*> parser)
-                   14 -> Some_Core_Type <$>
-                          (Struct_Type <$> many1 parser)
-                   15 -> Some_Core_Type <$>
-                          (Set_Type <$> many1 ( (,) <$> parser <*> parser))
-                   _ -> error "Unknown tag"
+    parser = anyWord8 >>= \case
+        00 -> Some_Core_Type <$> pure Base_Type
+        01 -> Some_Core_Type <$> (Simple_Type <$> parser <*> parser)
+        02 -> Some_Core_Type <$> (Enumeration_Type <$> many1 ( (,) <$> parser <*> parser))
+        03 -> Some_Core_Type <$> (Alternative_Type <$> ( (:) <$> parser <*> many1 parser))
+        04 -> Some_Core_Type <$> (List_Type <$> parser <*> parser)
+        05 -> Some_Core_Type <$> (Restricted_Reference_Type'5 <$> many1 parser)
+        06 -> Some_Core_Type <$> (Restricted_Reference_Type'6 <$> many1 parser)
+        07 -> Some_Core_Type <$> pure General_Reference_Type'7
+        08 -> Some_Core_Type <$> pure General_Reference_Type'8
+        09 -> Some_Core_Type <$> pure General_Reference_Type'9
+        10 -> Some_Core_Type <$> (General_Reference_Table_Type <$> parser)
+        11 -> Some_Core_Type <$> (Named_Value_Name_Type <$> parser <*> parser)
+        12 -> Some_Core_Type <$> (Named_Value_Integer_Type <$> parser <*> parser)
+        13 -> Some_Core_Type <$> (Named_Value_Uinteger_Type <$> parser <*> parser)
+        14 -> Some_Core_Type <$> (Struct_Type <$> many1 parser)
+        15 -> Some_Core_Type <$> (Set_Type <$> many1 ( (,) <$> parser <*> parser))
+        _ -> error "Unknown tag"
 
 
 

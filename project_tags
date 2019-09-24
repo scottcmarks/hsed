@@ -519,9 +519,9 @@ instance HasLogFunc App where logFuncL logFuncL46,47
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16
-plainVersion plainVersion33,34
-gitBranch gitBranch40,41
-gitVersion gitVersion53,54
+plainVersion plainVersion32,33
+gitBranch gitBranch39,40
+gitVersion gitVersion52,53
 
 ./src/Extras/Integral.lhs,806
 module Extras.IntegralExtras.Integral29,30

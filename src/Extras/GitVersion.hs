@@ -17,7 +17,6 @@ module Extras.GitVersion (gitBranch, gitVersion, plainVersion)
 where
 
 import           Data.Either                (Either(..))
-import           Data.Function              ((&))
 import           Data.Version               (Version(..), showVersion)
 import           GitHash                    (giBranch, giDirty,
                                              giHash, tGitInfoCwdTry)
@@ -39,7 +38,7 @@ plainVersion version = [|"Version " ++ $(TH.lift $ showVersion version)|]
 --
 -- @$(gitVersion …)@ @::@ 'String'
 gitBranch :: Q Exp
-gitBranch = $$tGitInfoCwdTry & \case
+gitBranch = case $$tGitInfoCwdTry of
       Left s -> error $ "Accessing git info: " <> s
       Right gi -> [| concat [ giBranch gi, " ", take 7 $ giHash gi
                             , if giDirty gi then " (dirty)" else ""

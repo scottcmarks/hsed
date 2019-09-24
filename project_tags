@@ -7,11 +7,11 @@ module Main Main2,3
 main main14,15
 
 ./test/System/SED/Common/IntegralSpec.hs,194
-module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec12,13
-validFirstTwo validFirstTwo29,30
-validNatural validNatural37,38
+module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec13,14
+validFirstTwo validFirstTwo30,31
+validNatural validNatural38,39
 validInteger validInteger44,45
-spec spec53,54
+spec spec52,53
 
 ./test/System/SED/Common/ValueSpec.hs,87
 module System.SED.Common.ValueSpec System.SED.Common.ValueSpec13,14

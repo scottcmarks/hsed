@@ -8,6 +8,7 @@ Stability   : experimental
 
 Test specifications for System.SED.Common.Integral
 -}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module System.SED.Common.IntegralSpec (spec) where
@@ -27,24 +28,22 @@ import           Test.QuickCheck.Instances.ByteString ()
 
 
 -- | fail on 'mempty', succeed on 'singleton' @b0@, test longer with @pred@
-validFirstTwo :: ByteString -> (Word8 -> Word8 -> Bool) -> Bool
+validFirstTwo :: ByteString -> ((Word8, Word8) -> Bool) -> Bool
 validFirstTwo bs pred = case uncons bs of
   Nothing -> False
   Just(b0,bs') -> case uncons bs' of
     Nothing    -> True
-    Just(b1,_) -> pred b0 (b1 .&. 0x80)
+    Just(b1,_) -> pred (b0, (b1 .&. 0x80))
 
 -- | if two or more bytes, the first one should not be a redundant 0x00
 validNatural :: ByteString -> Bool
-validNatural bs = validFirstTwo bs $ \b0 b1 ->
-  case (b0, b1) of
+validNatural bs = validFirstTwo bs $ \case
       (0x00,    _) -> False
       (   _,    _) -> True
 
 -- | if two or more bytes, the first one should not be a redundant sign propagation
 validInteger :: ByteString -> Bool
-validInteger bs = validFirstTwo bs $ \b0 b1 ->
-  case (b0, b1) of
+validInteger bs = validFirstTwo bs $ \case
       (0x00, 0x00) -> False
       (0xFF, 0x80) -> False
       (   _,    _) -> True

@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
 \documentstyle{article}
 \begin{document}
 \chapter{Formats}

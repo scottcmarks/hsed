@@ -37,27 +37,27 @@ spec spec21,22
 ./test/Spec.hs,0
 
 ./dev/DevMain.hs,834
-module DevMain DevMain11,12
-dev dev24,25
-preprocessABNF preprocessABNF37,38
-correctABNFFromTCGABNF correctABNFFromTCGABNF40,41
-coreTypesTCGABNF coreTypesTCGABNF44,45
-Type Type46,47
-table_kind table_kind49,50
-Base_Type Base_Type52,53
-Simple_Type Simple_Type54,55
-Enumeration_Type Enumeration_Type56,57
-Alternative_Type Alternative_Type58,59
-List_Type List_Type60,61
-Restricted_Reference_Type Restricted_Reference_Type62,63
-General_Reference_Type General_Reference_Type64,65
-General_Reference_Table_Type General_Reference_Table_Type66,67
-Named_Value_Name_Type Named_Value_Name_Type68,69
-Name_Value_Integer_Type Name_Value_Integer_Type70,71
-Name_Value_Uinteger_Type Name_Value_Uinteger_Type72,73
-Struct_Type Struct_Type74,75
-Set_Type Set_Type76,77
-correctABNFToTCGABNF correctABNFToTCGABNF81,82
+module DevMain DevMain10,11
+dev dev23,24
+preprocessABNF preprocessABNF36,37
+correctABNFFromTCGABNF correctABNFFromTCGABNF39,40
+coreTypesTCGABNF coreTypesTCGABNF43,44
+Type Type45,46
+table_kind table_kind48,49
+Base_Type Base_Type51,52
+Simple_Type Simple_Type53,54
+Enumeration_Type Enumeration_Type55,56
+Alternative_Type Alternative_Type57,58
+List_Type List_Type59,60
+Restricted_Reference_Type Restricted_Reference_Type61,62
+General_Reference_Type General_Reference_Type63,64
+General_Reference_Table_Type General_Reference_Table_Type65,66
+Named_Value_Name_Type Named_Value_Name_Type67,68
+Name_Value_Integer_Type Name_Value_Integer_Type69,70
+Name_Value_Uinteger_Type Name_Value_Uinteger_Type71,72
+Struct_Type Struct_Type73,74
+Set_Type Set_Type75,76
+correctABNFToTCGABNF correctABNFToTCGABNF80,81
 
 ./src/System/SED/TPer/Run.hs,66
 module System.SED.TPer.Run System.SED.TPer.Run2,3
@@ -156,78 +156,78 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/Common/Format.lhs,3529
-module System.SED.Common.FormatSystem.SED.Common.Format40,41
-import import47,48
-data Max_bytes Max_bytes57,58
-instance StreamItem StreamItem Core_table_kind61,62
-    where generate generate62,63
-data Core_table_kind Core_table_kind66,67
-data Core_table_kind = Object_Table Object_Table66,67
-data Core_table_kind = Object_Table | Byte_TableByte_Table66,67
-data Core_uinteger_2 Core_uinteger_269,70
-data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_269,70
-data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_269,70
-data Core_integer_2 Core_integer_271,72
-data Core_integer_2    = Core_integer_2 Core_integer_271,72
-data Core_integer_2    = Core_integer_2 {fromCore_integer_2:fromCore_integer_271,72
-data Core_uidref Core_uidref73,74
-data Core_uidref       = Core_uidref Core_uidref73,74
-data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref73,74
-data Core_max_bytes_32 Core_max_bytes_3275,76
-data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3275,76
-data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3275,76
-newtype Core_uidref_Base_Type Core_uidref_Base_Type78,79
-newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type80,81
-newtype Core_uidref_Byte_Table Core_uidref_Byte_Table82,83
-newtype Core_uidref_Object_Table Core_uidref_Object_Table84,85
-data Known_Core_Type Known_Core_Type87,88
-        Base_Type Base_Type89,90
-        Simple_Type Simple_Type90,91
-        Enumeration_Type Enumeration_Type91,92
-        Alternative_Type Alternative_Type92,93
-        List_Type List_Type93,94
-        Restricted_Reference_Type'5 Restricted_Reference_Type'594,95
-        Restricted_Reference_Type'6 Restricted_Reference_Type'695,96
-        General_Reference_Type'7 General_Reference_Type'796,97
-        General_Reference_Type'8 General_Reference_Type'897,98
-        General_Reference_Type'9 General_Reference_Type'998,99
-        General_Reference_Table_Type General_Reference_Table_Type99,100
-        Named_Value_Name_Type Named_Value_Name_Type100,101
-        Named_Value_Integer_Type Named_Value_Integer_Type101,102
-        Named_Value_Uinteger_Type Named_Value_Uinteger_Type102,103
-        Struct_Type Struct_Type103,104
-        Set_Type Set_Type104,105
-data Some_Core_Type Some_Core_Type109,110
-data Some_Core_Type = forall forall109,110
-data Some_Core_Type = forall (n n109,110
-instance StreamItem(StreamItem (Some_Core_Type)114,115
-    generate generate115,116
-    parser parser133,134
-instance StreamItem(StreamItem (Core_uinteger_2)155,156
-    parser parser156,157
-    generate generate157,158
-instance StreamItem(StreamItem (Core_integer_2)158,159
-    parser parser159,160
-    generate generate160,161
-instance StreamItem(StreamItem (Core_uidref)161,162
-    parser parser162,163
-    generate generate163,164
-instance StreamItem(StreamItem (Core_max_bytes_32)164,165
-    parser parser165,166
-    generate generate166,167
-instance StreamItem(StreamItem (Core_uidref_Base_Type)167,168
-    parser parser168,169
-    generate generate169,170
-instance StreamItem(StreamItem (Core_uidref_non_Base_Type)170,171
-    parser parser171,172
-    generate generate172,173
-instance StreamItem(StreamItem (Core_uidref_Byte_Table)173,174
-    parser parser174,175
-    generate generate175,176
-instance StreamItem(StreamItem (Core_uidref_Object_Table)176,177
-    parser parser177,178
-    generate generate178,179
+./src/System/SED/Common/Format.lhs,3525
+module System.SED.Common.FormatSystem.SED.Common.Format38,39
+import import45,46
+data Max_bytes Max_bytes55,56
+instance StreamItem StreamItem Core_table_kind59,60
+    where generate generate60,61
+data Core_table_kind Core_table_kind64,65
+data Core_table_kind = Object_Table Object_Table64,65
+data Core_table_kind = Object_Table | Byte_TableByte_Table64,65
+data Core_uinteger_2 Core_uinteger_267,68
+data Core_uinteger_2   = Core_uinteger_2 Core_uinteger_267,68
+data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_267,68
+data Core_integer_2 Core_integer_269,70
+data Core_integer_2    = Core_integer_2 Core_integer_269,70
+data Core_integer_2    = Core_integer_2 {fromCore_integer_2:fromCore_integer_269,70
+data Core_uidref Core_uidref71,72
+data Core_uidref       = Core_uidref Core_uidref71,72
+data Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref71,72
+data Core_max_bytes_32 Core_max_bytes_3273,74
+data Core_max_bytes_32 = Core_max_bytes_32 Core_max_bytes_3273,74
+data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3273,74
+newtype Core_uidref_Base_Type Core_uidref_Base_Type76,77
+newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type78,79
+newtype Core_uidref_Byte_Table Core_uidref_Byte_Table80,81
+newtype Core_uidref_Object_Table Core_uidref_Object_Table82,83
+data Known_Core_Type Known_Core_Type85,86
+        Base_Type Base_Type87,88
+        Simple_Type Simple_Type88,89
+        Enumeration_Type Enumeration_Type89,90
+        Alternative_Type Alternative_Type90,91
+        List_Type List_Type91,92
+        Restricted_Reference_Type'5 Restricted_Reference_Type'592,93
+        Restricted_Reference_Type'6 Restricted_Reference_Type'693,94
+        General_Reference_Type'7 General_Reference_Type'794,95
+        General_Reference_Type'8 General_Reference_Type'895,96
+        General_Reference_Type'9 General_Reference_Type'996,97
+        General_Reference_Table_Type General_Reference_Table_Type97,98
+        Named_Value_Name_Type Named_Value_Name_Type98,99
+        Named_Value_Integer_Type Named_Value_Integer_Type99,100
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type100,101
+        Struct_Type Struct_Type101,102
+        Set_Type Set_Type102,103
+data Some_Core_Type Some_Core_Type107,108
+data Some_Core_Type = forall forall107,108
+data Some_Core_Type = forall (n n107,108
+instance StreamItem(StreamItem (Some_Core_Type)112,113
+    generate generate113,114
+    parser parser131,132
+instance StreamItem(StreamItem (Core_uinteger_2)153,154
+    parser parser154,155
+    generate generate155,156
+instance StreamItem(StreamItem (Core_integer_2)156,157
+    parser parser157,158
+    generate generate158,159
+instance StreamItem(StreamItem (Core_uidref)159,160
+    parser parser160,161
+    generate generate161,162
+instance StreamItem(StreamItem (Core_max_bytes_32)162,163
+    parser parser163,164
+    generate generate164,165
+instance StreamItem(StreamItem (Core_uidref_Base_Type)165,166
+    parser parser166,167
+    generate generate167,168
+instance StreamItem(StreamItem (Core_uidref_non_Base_Type)168,169
+    parser parser169,170
+    generate generate170,171
+instance StreamItem(StreamItem (Core_uidref_Byte_Table)171,172
+    parser parser172,173
+    generate generate173,174
+instance StreamItem(StreamItem (Core_uidref_Object_Table)174,175
+    parser parser175,176
+    generate generate176,177
 
 ./src/System/SED/Common/Table.lhs,1082
 module System.SED.Common.Table System.SED.Common.Table24,25
@@ -517,6 +517,100 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
+./src/Data/SizedText/Class.hs,2250
+module Data.SizedText.ClassData.SizedText.Class11,12
+class IsSizedText IsSizedText42,43
+  data Sized Sized46,47
+  type Elem Elem49,50
+  unsafeCreate unsafeCreate65,66
+  unwrap unwrap68,69
+  length length70,71
+  append append71,72
+  replicate replicate72,73
+  map map73,74
+  take take74,75
+  drop drop75,76
+instance (S(Show a, IsSizedText a) => Show (Sized a l u)78,79
+  show show79,80
+  showsPrec showsPrec80,81
+instance IsSizedText IsSizedText [a]82,83
+  type Elem Elem83,84
+  data Sized Sized85,86
+  data Sized [a] l u = List List85,86
+  unsafeCreate unsafeCreate88,89
+  unwrap unwrap89,90
+  length length91,92
+  append append92,93
+  replicate replicate93,94
+  map map94,95
+  take take95,96
+  drop drop96,97
+instance IsSizedText IsSizedText T-Text100,101
+  type Elem Elem101,102
+  data Sized Sized103,104
+  data Sized T.Text l u = Text Text103,104
+  unsafeCreate unsafeCreate106,107
+  unwrap unwrap107,108
+  length length109,110
+  append append110,111
+  replicate replicate111,112
+  map map112,113
+  take take113,114
+  drop drop114,115
+instance IsSizedText IsSizedText B-ByteString119,120
+  type Elem Elem120,121
+  data Sized Sized122,123
+  data Sized B.ByteString l u = ByteString ByteString122,123
+  unsafeCreate unsafeCreate125,126
+  unwrap unwrap126,127
+  length length128,129
+  append append129,130
+  replicate replicate130,131
+  map map131,132
+  take take132,133
+  drop drop133,134
+instance IsSizedText IsSizedText BS-ShortByteString137,138
+  type Elem Elem138,139
+  data Sized Sized140,141
+  data Sized BS.ShortByteString l u = ByteStringS ByteStringS140,141
+  unsafeCreate unsafeCreate143,144
+  unwrap unwrap144,145
+  length length146,147
+  append append147,148
+  replicate replicate148,149
+  map map149,150
+  take take150,151
+  drop drop151,152
+instance IsSizedText IsSizedText (V-Vector a)156,157
+  type Elem Elem157,158
+  data Sized Sized159,160
+  data Sized (V.Vector a) l u = Vector Vector159,160
+  unsafeCreate unsafeCreate162,163
+  unwrap unwrap163,164
+  length length165,166
+  append append166,167
+  replicate replicate167,168
+  map map168,169
+  take take169,170
+  drop drop170,171
+
+./src/Data/SizedText.hs,391
+module Data.SizedTextData.SizedText24,25
+createLeft createLeft82,83
+createRight createRight103,104
+create create126,127
+append append143,144
+replicate replicate152,153
+map map164,165
+take take174,175
+drop drop187,188
+bounds bounds198,199
+length length209,210
+padLeft padLeft216,217
+padRight padRight223,224
+fromStatic fromStatic229,230
+toStatic toStatic232,233
+
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16
 plainVersion plainVersion32,33
@@ -548,43 +642,43 @@ instance IsByteString IsByteString Natural122,123
     fromByteString fromByteString123,124
     toByteString toByteString124,125
 
-./src/Extras/Sized.lhs,1552
+./src/Extras/Sized.lhs,1557
 module Extras.SizedExtras.Sized30,31
-import import58,59
-data Fixed_bytes Fixed_bytes73,74
-data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes73,74
-take take76,77
-drop drop79,80
-append append82,83
-instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)86,87
-    arbitrary arbitrary87,88
-instance (K(KnownNat n) => Show (Fixed_bytes n)91,92
-    showsPrec showsPrec92,93
-instance (K(KnownNat n) => IsString (Fixed_bytes n)101,102
-    fromString fromString102,103
-class (KnownNat n) => HasFixed_bytes HasFixed_bytes117,118
-    toFixed_bytes toFixed_bytes118,119
-    fromFixed_bytes fromFixed_bytes119,120
-instance (K(KnownNat n) => HasFixed_bytes n Natural121,122
-    toFixed_bytes toFixed_bytes122,123
-    fromFixed_bytes fromFixed_bytes132,133
-instance (K(KnownNat n) => HasFixed_bytes n (Static ShortByteString n)134,135
-    toFixed_bytes toFixed_bytes135,136
-    fromFixed_bytes fromFixed_bytes136,137
-instance (K(KnownNat n) => HasFixed_bytes n ShortByteString138,139
-    toFixed_bytes toFixed_bytes139,140
-    fromFixed_bytes fromFixed_bytes149,150
-instance (K(KnownNat n) => HasFixed_bytes n ByteString152,153
-    toFixed_bytes toFixed_bytes153,154
-    fromFixed_bytes fromFixed_bytes154,155
-instance (K(KnownNat n) => HasFixed_bytes n [Word8]156,157
-    toFixed_bytes toFixed_bytes157,158
-    fromFixed_bytes fromFixed_bytes158,159
-instance (K(KnownNat n) => HasHex (Fixed_bytes n)164,165
-    hex hex165,166
-    fromHex fromHex166,167
-fpack fpack170,171
-funpack funpack173,174
+import import56,57
+data Fixed_bytes Fixed_bytes70,71
+data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes70,71
+take take73,74
+drop drop76,77
+append append79,80
+instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)83,84
+    arbitrary arbitrary84,85
+instance (K(KnownNat n) => Show (Fixed_bytes n)88,89
+    showsPrec showsPrec89,90
+instance (K(KnownNat n) => IsString (Fixed_bytes n)98,99
+    fromString fromString99,100
+class (KnownNat n) => HasFixed_bytes HasFixed_bytes114,115
+    toFixed_bytes toFixed_bytes115,116
+    fromFixed_bytes fromFixed_bytes116,117
+instance (K(KnownNat n) => HasFixed_bytes n Natural118,119
+    toFixed_bytes toFixed_bytes119,120
+    fromFixed_bytes fromFixed_bytes129,130
+instance (K(KnownNat n) => HasFixed_bytes n (T-Static S-ShortByteString n)131,132
+    toFixed_bytes toFixed_bytes132,133
+    fromFixed_bytes fromFixed_bytes133,134
+instance (K(KnownNat n) => HasFixed_bytes n S-ShortByteString135,136
+    toFixed_bytes toFixed_bytes136,137
+    fromFixed_bytes fromFixed_bytes146,147
+instance (K(KnownNat n) => HasFixed_bytes n B-ByteString149,150
+    toFixed_bytes toFixed_bytes150,151
+    fromFixed_bytes fromFixed_bytes151,152
+instance (K(KnownNat n) => HasFixed_bytes n [Word8]153,154
+    toFixed_bytes toFixed_bytes154,155
+    fromFixed_bytes fromFixed_bytes155,156
+instance (K(KnownNat n) => HasHex (Fixed_bytes n)161,162
+    hex hex162,163
+    fromHex fromHex163,164
+fpack fpack167,168
+funpack funpack170,171
 
 ./src/Extras/Hex.lhs,845
 module Extras.HexExtras.Hex24,25

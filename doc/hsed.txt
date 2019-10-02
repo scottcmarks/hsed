@@ -8,6 +8,199 @@
 @version 0.1.0.1
 
 
+-- | Use this module when you need to add an <a>IsSizedText</a> instance to
+--   a type.
+module Data.SizedText.Class
+
+-- | Class of types which can be assigned a type-level minimum and maximum
+--   length.
+class IsSizedText a where {
+    
+    -- | Data family which wraps values of the underlying type giving them a
+    --   type-level length. <tt>Sized t 6 10</tt> means a value of type
+    --   <tt>t</tt> of length between 6 and 10.
+    data family Sized a (l :: Nat) (u :: Nat);
+    
+    -- | Basic element type. For <tt>IsSizedText [a]</tt>, this is <tt>a</tt>.
+    type family Elem a;
+}
+
+-- | Simply wrap a value in a Sized as is, assuming any length.
+--   
+--   <b>WARNING</b> Use it only when you know what you're doing.
+--   
+--   For example, an expression like
+--   
+--   <pre>
+--   unsafeCreate "somestring" :: Sized String 50 100
+--   </pre>
+--   
+--   will typecheck, although the stored length information will not match
+--   actual string size. This may result in wrong behaviour of all
+--   functions defined for <a>IsSizedText</a>.
+--   
+--   When writing new <a>IsSizedText</a> instances, make this simply apply
+--   the constructor of <a>Sized</a>.
+unsafeCreate :: IsSizedText a => a -> Sized a l u
+
+-- | Forget type-level length, obtaining the underlying value.
+unwrap :: IsSizedText a => Sized a l u -> a
+length :: IsSizedText a => a -> Int
+append :: IsSizedText a => a -> a -> a
+replicate :: IsSizedText a => Int -> Elem a -> a
+map :: IsSizedText a => (Elem a -> Elem a) -> a -> a
+take :: IsSizedText a => Int -> a -> a
+drop :: IsSizedText a => Int -> a -> a
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedText.Class.Sized [a] l u)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedText.Class.Sized [a] l u)
+instance (GHC.Show.Show a, Data.SizedText.Class.IsSizedText a) => GHC.Show.Show (Data.SizedText.Class.Sized a l u)
+instance Data.SizedText.Class.IsSizedText [a]
+
+
+-- | sized-text combinators are defined for members of <a>IsSizedText</a>
+--   class. The package includes <a>IsSizedText</a> instances for several
+--   common types.
+--   
+--   This module is meant to be imported qualifed, e.g.
+--   
+--   <pre>
+--   import qualified Data.SizedText as S
+--   </pre>
+module Data.SizedText
+
+-- | Safely create a C.Sized, possibly altering the source to match target
+--   length. If target maximum length is less than the source length, the
+--   source gets truncated. If target minimum length is less than the
+--   source length, the source is padded using the provided basic element.
+--   Elements on the left are preferred.
+--   
+--   <pre>
+--   &gt;&gt;&gt; createLeft ' ' "foobarbaz" :: C.Sized String 0 6
+--   "foobar"
+--   
+--   &gt;&gt;&gt; createLeft '#' "foobarbaz" :: C.Sized String 12 20
+--   "foobarbaz###"
+--   </pre>
+createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
+
+-- | Just like <a>createLeft</a>, except that elements on the right are
+--   preferred.
+--   
+--   <pre>
+--   &gt;&gt;&gt; createRight '@' "foobarbaz" :: Sized String 0 6
+--   "barbaz"
+--   
+--   &gt;&gt;&gt; createRight '!' "foobarbaz" :: C.Sized String 12 20
+--   "!!!foobarbaz"
+--   </pre>
+createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
+
+-- | Attempt to safely create a C.Sized if it matches target length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; create "foobar" :: Maybe (C.Sized String 6 10)
+--   Just "foobar"
+--   
+--   &gt;&gt;&gt; create "barbaz" :: Maybe (C.Sized String 0 4)
+--   Nothing
+--   </pre>
+--   
+--   This is safer than <a>unsafeCreate</a> and unlike with
+--   <a>createLeft</a> / <a>createRight</a> the source value is left
+--   unchanged. However, this implies a further run-time check for Nothing
+--   values.
+create :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => a -> Maybe (Sized a l u)
+
+-- | Construct a new C.Sized of maximum length from a basic element.
+--   
+--   <pre>
+--   &gt;&gt;&gt; replicate '=' :: C.Sized String 5 10
+--   "=========="
+--   </pre>
+replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> Sized a l u
+
+-- | Append two C.Sizeds together.
+--   
+--   <pre>
+--   &gt;&gt;&gt; append $(st "foo") $(st "bar") :: C.Sized String 6 6
+--   "foobar"
+--   </pre>
+append :: forall a l1 u1 l2 u2. IsSizedText a => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + u1) (l2 + u2)
+
+-- | Reduce C.Sized length, preferring elements on the left.
+--   
+--   <pre>
+--   &gt;&gt;&gt; take $(st "Foobar") :: C.Sized String 3
+--   "Foo"
+--   </pre>
+take :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
+
+-- | Reduce C.Sized length, preferring elements on the right.
+--   
+--   <pre>
+--   &gt;&gt;&gt; drop $(st "Foobar") :: C.Sized String 2
+--   "ar"
+--   </pre>
+drop :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
+
+-- | Map a C.Sized to a C.Sized of the same length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; map toUpper $(st "Hello") :: C.Sized String 5 5
+--   "HELLO"
+--   </pre>
+map :: IsSizedText a => (Elem a -> Elem a) -> Sized a l u -> Sized a l u
+
+-- | Fill a C.Sized with extra elements up to target length, padding
+--   original elements to the left.
+padLeft :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1, u1 <= u2) => Elem a -> Sized a l1 u1 -> Sized a l2 u2
+
+-- | Like <a>padLeft</a>, but original elements are padded to the right.
+padRight :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1, u1 <= u2) => Elem a -> Sized a l1 u1 -> Sized a l2 u2
+
+-- | Obtain length bounds from the type.
+bounds :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Sized a l u -> (Int, Int)
+
+-- | Obtain value-level length. Consult the actual data value.
+length :: forall a l u. (KnownNat l, KnownNat u) => Sized a l u -> Int
+fromStatic :: (IsStaticText a, IsSizedText a) => Static a i -> Sized a i i
+toStatic :: (IsSizedText a, IsStaticText a) => Sized a i i -> Static a i
+
+-- | Data family which wraps values of the underlying type giving them a
+--   type-level length. <tt>Sized t 6 10</tt> means a value of type
+--   <tt>t</tt> of length between 6 and 10.
+data family Sized a (l :: Nat) (u :: Nat)
+
+-- | Class of types which can be assigned a type-level minimum and maximum
+--   length.
+class IsSizedText a where {
+    
+    -- | Basic element type. For <tt>IsSizedText [a]</tt>, this is <tt>a</tt>.
+    type family Elem a;
+}
+
+-- | Simply wrap a value in a Sized as is, assuming any length.
+--   
+--   <b>WARNING</b> Use it only when you know what you're doing.
+--   
+--   For example, an expression like
+--   
+--   <pre>
+--   unsafeCreate "somestring" :: Sized String 50 100
+--   </pre>
+--   
+--   will typecheck, although the stored length information will not match
+--   actual string size. This may result in wrong behaviour of all
+--   functions defined for <a>IsSizedText</a>.
+--   
+--   When writing new <a>IsSizedText</a> instances, make this simply apply
+--   the constructor of <a>Sized</a>.
+unsafeCreate :: IsSizedText a => a -> Sized a l u
+
+-- | Forget type-level length, obtaining the underlying value.
+unwrap :: IsSizedText a => Sized a l u -> a
+
+
 -- | Git info appended to a version string
 module Extras.GitVersion
 
@@ -84,7 +277,7 @@ class (KnownNat n) => HasFixed_bytes n a
 toFixed_bytes :: HasFixed_bytes n a => a -> Fixed_bytes n
 fromFixed_bytes :: HasFixed_bytes n a => Fixed_bytes n -> a
 
--- | Static ShortByteString n methods lifted to Fixed_bytes n
+-- | T.Static S.ShortByteString n methods lifted to Fixed_bytes n
 fpack :: KnownNat n => ByteString -> Fixed_bytes n
 funpack :: KnownNat n => Fixed_bytes n -> ByteString
 instance GHC.Classes.Ord (Extras.Sized.Fixed_bytes n)

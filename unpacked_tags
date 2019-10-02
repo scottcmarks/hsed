@@ -9447,6 +9447,115 @@ data FileTypeFileType93,94
     | FTDirectorySym FTDirectorySym97,98
     | FTOtherFTOther98,99
 
+/Users/scott/unpackedHackagePackages/static-text-0.2.0.4/Setup.hs,15
+main main1,2
+
+/Users/scott/unpackedHackagePackages/static-text-0.2.0.4/README.lhs,0
+
+/Users/scott/unpackedHackagePackages/static-text-0.2.0.4/tests/Main.hs,84
+mkPacket mkPacket11,12
+message message25,26
+tests tests28,29
+main main34,35
+
+/Users/scott/unpackedHackagePackages/static-text-0.2.0.4/tests/doctest-driver.hs,0
+
+/Users/scott/unpackedHackagePackages/static-text-0.2.0.4/src/Data/StaticText.hs,310
+module Data.StaticTextData.StaticText24,25
+createLeft createLeft79,80
+createRight createRight97,98
+create create118,119
+append append133,134
+replicate replicate142,143
+map map154,155
+take take164,165
+drop drop177,178
+length length188,189
+padLeft padLeft195,196
+padRight padRight203,204
+
+/Users/scott/unpackedHackagePackages/static-text-0.2.0.4/src/Data/StaticText/Class.hs,2271
+module Data.StaticText.ClassData.StaticText.Class11,12
+class IsStaticText IsStaticText42,43
+  data Static Static46,47
+  type Elem Elem49,50
+  unsafeCreate unsafeCreate65,66
+  unwrap unwrap68,69
+  length length70,71
+  append append71,72
+  replicate replicate72,73
+  map map73,74
+  take take74,75
+  drop drop75,76
+instance (S(Show a, IsStaticText a) => Show (Static a i)78,79
+  show show79,80
+  showsPrec showsPrec80,81
+instance IsStaticText IsStaticText [a]83,84
+  type Elem Elem84,85
+  data Static Static86,87
+  data Static [a] i = List List86,87
+  unsafeCreate unsafeCreate89,90
+  unwrap unwrap90,91
+  length length92,93
+  append append93,94
+  replicate replicate94,95
+  map map95,96
+  take take96,97
+  drop drop97,98
+instance IsStaticText IsStaticText T-Text101,102
+  type Elem Elem102,103
+  data Static Static104,105
+  data Static T.Text i = Text Text104,105
+  unsafeCreate unsafeCreate107,108
+  unwrap unwrap108,109
+  length length110,111
+  append append111,112
+  replicate replicate112,113
+  map map113,114
+  take take114,115
+  drop drop115,116
+instance IsStaticText IsStaticText B-ByteString120,121
+  type Elem Elem121,122
+  data Static Static123,124
+  data Static B.ByteString i = ByteString ByteString123,124
+  unsafeCreate unsafeCreate126,127
+  unwrap unwrap127,128
+  length length129,130
+  append append130,131
+  replicate replicate131,132
+  map map132,133
+  take take133,134
+  drop drop134,135
+instance IsStaticText IsStaticText BS-ShortByteString138,139
+  type Elem Elem139,140
+  data Static Static141,142
+  data Static BS.ShortByteString i = ByteStringS ByteStringS141,142
+  unsafeCreate unsafeCreate144,145
+  unwrap unwrap145,146
+  length length147,148
+  append append148,149
+  replicate replicate149,150
+  map map150,151
+  take take151,152
+  drop drop152,153
+instance IsStaticText IsStaticText (V-Vector a)157,158
+  type Elem Elem158,159
+  data Static Static160,161
+  data Static (V.Vector a) i = Vector Vector160,161
+  unsafeCreate unsafeCreate163,164
+  unwrap unwrap164,165
+  length length166,167
+  append append167,168
+  replicate replicate168,169
+  map map169,170
+  take take170,171
+  drop drop171,172
+
+/Users/scott/unpackedHackagePackages/static-text-0.2.0.4/src/Data/StaticText/TH.hs,89
+module Data.StaticText.THData.StaticText.TH10,11
+newtype LitS LitS27,28
+st st41,42
+
 /Users/scott/unpackedHackagePackages/blaze-markup-0.8.2.2/Setup.hs,15
 main main1,2
 

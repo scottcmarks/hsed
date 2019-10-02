@@ -41,37 +41,34 @@ module Extras.Sized
 where
 
 
-import           Data.ByteString            (ByteString, pack)
-import           Data.ByteString.Short      (ShortByteString, fromShort, toShort, unpack)
-import qualified Data.ByteString.Short as S (length)
+import qualified Data.ByteString       as B (ByteString, pack)
+import qualified Data.ByteString.Short as S (ShortByteString, fromShort, length, toShort, unpack)
 import qualified Data.Foldable         as F (length)
 import           Data.Functor               ((<$>))
 import           Data.Proxy                 (Proxy(..))
-import           Data.StaticText            (Static, create, unwrap)
-import qualified Data.StaticText       as T (append, drop, take)
+import qualified Data.StaticText       as T (Static, append, create, drop, take, unwrap)
 import           Data.String                (IsString(..))
 
 import           GHC.Base                   (undefined, error, mconcat, (.), ($), ($!))
 import           GHC.Classes                (Eq(..),Ord(..))
 import           GHC.Maybe                  (Maybe(..))
-import           GHC.Natural                (Natural(..))
+import           GHC.Natural                (Natural)
 import           GHC.Show                   (Show(..), showParen, showString)
 import           GHC.TypeNats               (type (+), type (<=), KnownNat,
                                              natVal)
 import           GHC.Types                  (Nat)
 import           GHC.Word                   (Word8)
 
-import           Test.QuickCheck (Arbitrary(..))
+import           Test.QuickCheck            (Arbitrary(..))
 import           Test.QuickCheck.Instances.ByteString ()
 
 
 import           Extras.Hex                 (HasHex(..))
-import           Extras.Hex                 ()
 import           Extras.Integral            (byteStringToNatural, naturalToByteString)
 
 
 
-data Fixed_bytes (n :: Nat) = Fixed_bytes !(Static ShortByteString n)
+data Fixed_bytes (n :: Nat) = Fixed_bytes !(T.Static S.ShortByteString n)
     deriving (Eq, Ord)
 
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
@@ -92,7 +89,7 @@ instance (KnownNat n) => Arbitrary (Fixed_bytes n) where
 instance (KnownNat n) => Show (Fixed_bytes n) where
     showsPrec d (Fixed_bytes sbs) = showParen (app_prec < d) $
             showString "fpack "
-          . showList (unpack $ unwrap sbs)
+          . showList (S.unpack $ T.unwrap sbs)
           . showString " :: Fixed_bytes "
           . showString (show (natVal (Proxy @n)))
          where app_prec = 10
@@ -100,7 +97,7 @@ instance (KnownNat n) => Show (Fixed_bytes n) where
 -- | ISString instances, allowing string literal denotations
 --
 instance (KnownNat n) => IsString (Fixed_bytes n) where
-    fromString s = Fixed_bytes $! case create (fromString s) of
+    fromString s = Fixed_bytes $! case T.create (fromString s) of
                       Just ssbs -> ssbs
                       Nothing -> error $
                           mconcat [ show (natVal (Proxy @n))
@@ -132,13 +129,13 @@ instance (KnownNat n) => HasFixed_bytes n Natural where
                         ]
     fromFixed_bytes = byteStringToNatural . fromFixed_bytes
 
-instance (KnownNat n) => HasFixed_bytes n (Static ShortByteString n) where
+instance (KnownNat n) => HasFixed_bytes n (T.Static S.ShortByteString n) where
     toFixed_bytes sbs = Fixed_bytes sbs
     fromFixed_bytes (Fixed_bytes sbs)  = sbs
 
-instance (KnownNat n) => HasFixed_bytes n ShortByteString where
+instance (KnownNat n) => HasFixed_bytes n S.ShortByteString where
     toFixed_bytes sbs =
-        case (create sbs) :: Maybe (Static ShortByteString n) of
+        case (T.create sbs) :: Maybe (T.Static S.ShortByteString n) of
           Just ssbs -> toFixed_bytes ssbs
           Nothing   -> error $ mconcat [ show (natVal (Proxy @n))
                                        , " is not the length of "
@@ -148,30 +145,30 @@ instance (KnownNat n) => HasFixed_bytes n ShortByteString where
                                        , ")"
                                        ]
     fromFixed_bytes fbs =
-        unwrap (fromFixed_bytes fbs :: Static ShortByteString n)
+        T.unwrap (fromFixed_bytes fbs :: T.Static S.ShortByteString n)
 
-instance (KnownNat n) => HasFixed_bytes n ByteString where
-    toFixed_bytes = toFixed_bytes . toShort
-    fromFixed_bytes = fromShort . fromFixed_bytes
+instance (KnownNat n) => HasFixed_bytes n B.ByteString where
+    toFixed_bytes = toFixed_bytes . S.toShort
+    fromFixed_bytes = S.fromShort . fromFixed_bytes
 
 instance (KnownNat n) => HasFixed_bytes n [Word8] where
-    toFixed_bytes = toFixed_bytes . pack
-    fromFixed_bytes = unpack . fromFixed_bytes
+    toFixed_bytes = toFixed_bytes . B.pack
+    fromFixed_bytes = S.unpack . fromFixed_bytes
 
 
 -- | HasHex instances for conversion to/from Fixed_bytes n
 --
 
 instance (KnownNat n) => HasHex (Fixed_bytes n) where
-    hex (Fixed_bytes ssbs) = undefined ssbs -- FIXME  (hex :: Static ShortByteString n -> String) ssbs
+    hex (Fixed_bytes ssbs) = undefined ssbs -- FIXME  (hex :: T.Static S.ShortByteString n -> String) ssbs
     fromHex hs = fromString <$> fromHex hs
 
--- | Static ShortByteString n methods lifted to Fixed_bytes n
+-- | T.Static S.ShortByteString n methods lifted to Fixed_bytes n
 
-fpack :: (KnownNat n) => ByteString -> Fixed_bytes n
+fpack :: (KnownNat n) => B.ByteString -> Fixed_bytes n
 fpack = toFixed_bytes
 
-funpack :: (KnownNat n) => Fixed_bytes n -> ByteString
+funpack :: (KnownNat n) => Fixed_bytes n -> B.ByteString
 funpack = fromFixed_bytes
 
 

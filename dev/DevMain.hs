@@ -3,7 +3,6 @@
 {-# LANGUAGE QuasiQuotes       #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
--- {-# OPTIONS_GHC -fno-warn-type-defaults #-}
 -- {-# OPTIONS_GHC -Wno-unused-imports #-}
 {-# OPTIONS_GHC -Wunticked-promoted-constructors #-}
 

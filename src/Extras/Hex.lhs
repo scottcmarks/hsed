@@ -79,7 +79,7 @@ instance HasHex Char where
 instance HasHex [Word8] where
     hex = concatMap hex
     fromHex (hi:lo:bs) = (:) <$> fromHex [hi,lo] <*> fromHex bs
-    fromHex []         = Just [] -- could also be Nothing
+    fromHex []         = Just []
     fromHex [_hi]      = Nothing -- odd number of hex digits
 
 instance HasHex ByteString where

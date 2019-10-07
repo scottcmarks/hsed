@@ -22,6 +22,7 @@ description:         Please see the README on Github at <https://github.com/scot
 dependencies:
 - base >= 4.10 && < 10
 - rio >= 0.1.1.0
+- abnf
 - array
 - attoparsec
 - bytestring
@@ -44,10 +45,10 @@ dependencies:
 - template-haskell
 - text
 - transformers
+- vector
 - word8
 - QuickCheck
 - quickcheck-instances
-- abnf
 
 ghc-options:
 - -Wall

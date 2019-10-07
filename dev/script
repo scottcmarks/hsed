@@ -4,6 +4,7 @@
 :load dev/DevMain.hs
 :set -XQuasiQuotes
 :set -XOverloadedStrings
+:set -XDataKinds
 
 import System.IO
 putStrLn "loading script ..."

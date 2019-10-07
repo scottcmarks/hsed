@@ -53,8 +53,20 @@ take :: IsSizedText a => Int -> a -> a
 drop :: IsSizedText a => Int -> a -> a
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedText.Class.Sized [a] l u)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedText.Class.Sized [a] l u)
+instance GHC.Classes.Ord (Data.SizedText.Class.Sized Data.Text.Internal.Text l u)
+instance GHC.Classes.Eq (Data.SizedText.Class.Sized Data.Text.Internal.Text l u)
+instance GHC.Classes.Ord (Data.SizedText.Class.Sized Data.ByteString.Internal.ByteString l u)
+instance GHC.Classes.Eq (Data.SizedText.Class.Sized Data.ByteString.Internal.ByteString l u)
+instance GHC.Classes.Ord (Data.SizedText.Class.Sized Data.ByteString.Short.Internal.ShortByteString l u)
+instance GHC.Classes.Eq (Data.SizedText.Class.Sized Data.ByteString.Short.Internal.ShortByteString l u)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedText.Class.Sized (Data.Vector.Vector a) l u)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedText.Class.Sized (Data.Vector.Vector a) l u)
 instance (GHC.Show.Show a, Data.SizedText.Class.IsSizedText a) => GHC.Show.Show (Data.SizedText.Class.Sized a l u)
 instance Data.SizedText.Class.IsSizedText [a]
+instance Data.SizedText.Class.IsSizedText Data.Text.Internal.Text
+instance Data.SizedText.Class.IsSizedText Data.ByteString.Internal.ByteString
+instance Data.SizedText.Class.IsSizedText Data.ByteString.Short.Internal.ShortByteString
+instance Data.SizedText.Class.IsSizedText (Data.Vector.Vector a)
 
 
 -- | sized-text combinators are defined for members of <a>IsSizedText</a>
@@ -125,7 +137,7 @@ replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> 
 --   &gt;&gt;&gt; append $(st "foo") $(st "bar") :: C.Sized String 6 6
 --   "foobar"
 --   </pre>
-append :: forall a l1 u1 l2 u2. IsSizedText a => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + u1) (l2 + u2)
+append :: forall a l1 u1 l2 u2. IsSizedText a => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + l2) (u1 + u2)
 
 -- | Reduce C.Sized length, preferring elements on the left.
 --   
@@ -153,16 +165,16 @@ map :: IsSizedText a => (Elem a -> Elem a) -> Sized a l u -> Sized a l u
 
 -- | Fill a C.Sized with extra elements up to target length, padding
 --   original elements to the left.
-padLeft :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1, u1 <= u2) => Elem a -> Sized a l1 u1 -> Sized a l2 u2
+padLeft :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (u2 + u1), l2 <= l1, u1 <= u2) => Elem a -> Sized a l1 u1 -> Sized a l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
-padRight :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1, u1 <= u2) => Elem a -> Sized a l1 u1 -> Sized a l2 u2
+padRight :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (u1 + u2), l2 <= l1, u1 <= u2) => Elem a -> Sized a l1 u1 -> Sized a l2 u2
 
 -- | Obtain length bounds from the type.
 bounds :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Sized a l u -> (Int, Int)
 
 -- | Obtain value-level length. Consult the actual data value.
-length :: forall a l u. (KnownNat l, KnownNat u) => Sized a l u -> Int
+length :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Sized a l u -> Int
 fromStatic :: (IsStaticText a, IsSizedText a) => Static a i -> Sized a i i
 toStatic :: (IsSizedText a, IsStaticText a) => Sized a i i -> Static a i
 

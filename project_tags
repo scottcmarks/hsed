@@ -517,82 +517,82 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/SizedText/Class.hs,2250
+./src/Data/SizedText/Class.hs,2251
 module Data.SizedText.ClassData.SizedText.Class11,12
-class IsSizedText IsSizedText42,43
-  data Sized Sized46,47
-  type Elem Elem49,50
-  unsafeCreate unsafeCreate65,66
-  unwrap unwrap68,69
-  length length70,71
-  append append71,72
-  replicate replicate72,73
-  map map73,74
-  take take74,75
-  drop drop75,76
-instance (S(Show a, IsSizedText a) => Show (Sized a l u)78,79
-  show show79,80
-  showsPrec showsPrec80,81
-instance IsSizedText IsSizedText [a]82,83
-  type Elem Elem83,84
-  data Sized Sized85,86
-  data Sized [a] l u = List List85,86
-  unsafeCreate unsafeCreate88,89
-  unwrap unwrap89,90
-  length length91,92
-  append append92,93
-  replicate replicate93,94
-  map map94,95
-  take take95,96
-  drop drop96,97
-instance IsSizedText IsSizedText T-Text100,101
-  type Elem Elem101,102
-  data Sized Sized103,104
-  data Sized T.Text l u = Text Text103,104
-  unsafeCreate unsafeCreate106,107
-  unwrap unwrap107,108
-  length length109,110
-  append append110,111
-  replicate replicate111,112
-  map map112,113
-  take take113,114
-  drop drop114,115
-instance IsSizedText IsSizedText B-ByteString119,120
-  type Elem Elem120,121
-  data Sized Sized122,123
-  data Sized B.ByteString l u = ByteString ByteString122,123
-  unsafeCreate unsafeCreate125,126
-  unwrap unwrap126,127
-  length length128,129
-  append append129,130
-  replicate replicate130,131
-  map map131,132
-  take take132,133
-  drop drop133,134
-instance IsSizedText IsSizedText BS-ShortByteString137,138
-  type Elem Elem138,139
-  data Sized Sized140,141
-  data Sized BS.ShortByteString l u = ByteStringS ByteStringS140,141
-  unsafeCreate unsafeCreate143,144
-  unwrap unwrap144,145
-  length length146,147
-  append append147,148
-  replicate replicate148,149
-  map map149,150
-  take take150,151
-  drop drop151,152
-instance IsSizedText IsSizedText (V-Vector a)156,157
-  type Elem Elem157,158
-  data Sized Sized159,160
-  data Sized (V.Vector a) l u = Vector Vector159,160
-  unsafeCreate unsafeCreate162,163
-  unwrap unwrap163,164
-  length length165,166
-  append append166,167
-  replicate replicate167,168
-  map map168,169
-  take take169,170
-  drop drop170,171
+class IsSizedText IsSizedText45,46
+  data Sized Sized49,50
+  type Elem Elem52,53
+  unsafeCreate unsafeCreate68,69
+  unwrap unwrap71,72
+  length length73,74
+  append append74,75
+  replicate replicate75,76
+  map map76,77
+  take take77,78
+  drop drop78,79
+instance (S(Show a, IsSizedText a) => Show (Sized a l u)81,82
+  show show82,83
+  showsPrec showsPrec83,84
+instance IsSizedText IsSizedText [a]85,86
+  type Elem Elem86,87
+  data Sized Sized88,89
+  data Sized [a] l u = List List88,89
+  unsafeCreate unsafeCreate91,92
+  unwrap unwrap92,93
+  length length94,95
+  append append95,96
+  replicate replicate96,97
+  map map97,98
+  take take98,99
+  drop drop99,100
+instance IsSizedText IsSizedText T-Text103,104
+  type Elem Elem104,105
+  data Sized Sized106,107
+  data Sized T.Text l u = Text Text106,107
+  unsafeCreate unsafeCreate109,110
+  unwrap unwrap110,111
+  length length112,113
+  append append113,114
+  replicate replicate114,115
+  map map115,116
+  take take116,117
+  drop drop117,118
+instance IsSizedText IsSizedText B-ByteString122,123
+  type Elem Elem123,124
+  data Sized Sized125,126
+  data Sized B.ByteString l u = ByteString ByteString125,126
+  unsafeCreate unsafeCreate128,129
+  unwrap unwrap129,130
+  length length131,132
+  append append132,133
+  replicate replicate133,134
+  map map134,135
+  take take135,136
+  drop drop136,137
+instance IsSizedText IsSizedText BS-ShortByteString140,141
+  type Elem Elem141,142
+  data Sized Sized143,144
+  data Sized BS.ShortByteString l u = ByteStringS ByteStringS143,144
+  unsafeCreate unsafeCreate146,147
+  unwrap unwrap147,148
+  length length149,150
+  append append150,151
+  replicate replicate151,152
+  map map152,153
+  take take153,154
+  drop drop154,155
+instance IsSizedText IsSizedText (V-Vector a)159,160
+  type Elem Elem160,161
+  data Sized Sized162,163
+  data Sized (V.Vector a) l u = Vector Vector162,163
+  unsafeCreate unsafeCreate165,166
+  unwrap unwrap166,167
+  length length168,169
+  append append169,170
+  replicate replicate170,171
+  map map171,172
+  take take172,173
+  drop drop173,174
 
 ./src/Data/SizedText.hs,391
 module Data.SizedTextData.SizedText24,25

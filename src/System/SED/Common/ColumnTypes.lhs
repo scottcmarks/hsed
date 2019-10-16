@@ -1231,8 +1231,8 @@ credential table.
     |                       |                   |uidref {C_PINTableUID},      |
     |                       |                   |uidref {C_AES_*TableUID},    |
     |                       |                   |uidref {C_RSA_*TableUID},    |
-    |                       |                   |uidref{C_EC_*TableUID},      |
-    |                       |                   |uidref{C_HMAC_*TableUID}     |
+    |                       |                   |uidref {C_EC_*TableUID},     |
+    |                       |                   |uidref {C_HMAC_*TableUID}    |
     +-----------------------+-------------------+-----------------------------+
 
 |]

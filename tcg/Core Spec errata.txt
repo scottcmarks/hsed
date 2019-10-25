@@ -142,3 +142,22 @@ All other references to table_kind are explicitly 1 (Object table) or 2 (Byte ta
 
 5.1.3.81 Not really an erratum, but ... uid is the only use in the Core Spec
 for bytes_8, but collapsing the two concepts is notationally awkward.
+
+
+5.1.4.2.13 package_purpose is a type that has valid values in the range of
+integers from 1-32. The messaging stream description includes 0x00 as reserved,
+rather than illegal:
+
+These integers have the following values:
+   a. 1 = Issuance
+   b. 2 = Key Wrapping
+   c. 3 = Backup
+   d. 4-32 = reserved
+Format:
+   uinteger
+In the messaging stream, these values SHALL be represented as follows:
+   a. 0x00 is reserved
+   b. 0x01 represents Issuance
+   c. 0x02 represents Key Wrapping
+   d. 0x03 represents Backup
+   e. 0x04 – 0x20 are reserved

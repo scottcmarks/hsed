@@ -1,4 +1,2 @@
 #!/bin/bash
-./bh && git commit -am Update && git push && stack install
-hsed --version
-git log -1 | cat
+./bh && git commit -am Update && git push && stack build && stack install && hsed --version && git log -1 | cat

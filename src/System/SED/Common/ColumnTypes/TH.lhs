@@ -51,8 +51,7 @@ import           GHC.Arr(range)
 import           GHC.Base                         (flip, Monoid(..), Semigroup(..),
                                                    error, id, pure, map, mapM, many,
                                                    undefined,
-                                                   (.), ($), (*>), (<*), (<*>), (==),
-                                                   (||))
+                                                   (.), ($), (*>), (<*), (<*>), (||))
 import           GHC.Classes                      (Eq(..), Ord(..))
 import           GHC.Enum                         (Bounded(..), Enum(..), enumFromTo)
 import           GHC.List                         (tail, (++))

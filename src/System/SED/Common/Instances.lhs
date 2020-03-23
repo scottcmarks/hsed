@@ -28,10 +28,11 @@ Orphan instances.
 
 module System.SED.Common.Instances where
 
+import           Control.Monad(fail)
 import           Data.Attoparsec.ByteString()
 import           Data.Maybe(Maybe(..))
 import           Data.Proxy(Proxy(..))
-import           GHC.Base(($), (.), fail, mconcat, pure)
+import           GHC.Base(($), (.), mconcat, pure)
 import           GHC.Show(Show(..))
 import           GHC.Types(Int)
 import           GHC.TypeNats(KnownNat)

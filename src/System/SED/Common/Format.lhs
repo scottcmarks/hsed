@@ -42,6 +42,7 @@ module System.SED.Common.Format
 import            Data.Attoparsec.ByteString (many1, anyWord8)
 import Data.ByteString(ByteString, singleton)
 import Data.Functor((<$>))
+import Data.Kind(Type)
 import GHC.Enum(Enum(..))
 import GHC.Base((>>=), (<*>), pure, error, (<>), (.), mempty, undefined, Eq(..), Int)
 -- import GHC.Natural
@@ -53,7 +54,7 @@ import GHC.Types(Nat)
 import System.SED.Common.UID(UID(..))
 import System.SED.Common.StreamItem
 
-data Max_bytes :: Nat -> *
+data Max_bytes :: Nat -> Type
 deriving instance Show(Max_bytes n)
 deriving instance Eq(Max_bytes n)
 
@@ -83,7 +84,7 @@ newtype Core_uidref_Byte_Table    = Core_uidref_Byte_Table    Core_uidref
 newtype Core_uidref_Object_Table  = Core_uidref_Object_Table  Core_uidref
     deriving (Eq,Show)
 
-data Known_Core_Type :: Nat -> *
+data Known_Core_Type :: Nat -> Type
     where
         Base_Type                    ::                                                     Known_Core_Type  0
         Simple_Type                  :: Core_uidref_Base_Type -> Core_uinteger_2         -> Known_Core_Type  1

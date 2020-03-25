@@ -171,7 +171,7 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     , dSig u ''UID     , dVal u $ eUID     tableUID
     , dSig h ''HalfUID , dVal h $ eHalfUID tableHalfUID
     ]
-    [ eValP h $ table
+    [ eValP h table
     ]
     [ eValP u $ table ++ " Table"
     , eValP o $ table ++ " Table Object"

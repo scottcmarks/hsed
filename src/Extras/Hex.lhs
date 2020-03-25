@@ -20,7 +20,7 @@ Hex encode/decoding.
 {-# LANGUAGE NoImplicitPrelude    #-}
 {-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE ScopedTypeVariables  #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+
 
 module Extras.Hex
 where
@@ -35,7 +35,8 @@ import           Data.List                  (elemIndex)
 import           Data.StaticText            (create, Static, unwrap)
 import           Data.String                (IsString(..))
 
-import           GHC.Base                   (String, fmap, join, pure, (.), ($), (<*>), (++))
+import           GHC.Base                   (String, fmap, pure,
+                                             (.), ($), (<*>), (++), (=<<))
 import           GHC.List                   ((!!))
 import           GHC.Maybe                  (Maybe(..))
 import           GHC.Num                    ((+), (*))
@@ -50,8 +51,8 @@ import           Extras.Integral
 hexDigit :: Word8 -> Char
 hexDigit = (hexDigits !!) . fromIntegral
 
-hexDigits :: [Char]
-hexDigits = "0123456789ABCDEF"
+hexDigits :: String
+hexDigits = "0123456789ABCDEF0123456789abcdef"
 
 hexValue :: Char -> Maybe Word8
 hexValue d = fromIntegral <$> elemIndex d hexDigits
@@ -96,6 +97,6 @@ instance HasHex ShortByteString  where
 
 instance (KnownNat n) => HasHex (Static ShortByteString n) where
     hex = hex . unwrap
-    fromHex hs = join $ create <$> fromHex hs
+    fromHex hs = create =<< fromHex hs
 
 \end{code}

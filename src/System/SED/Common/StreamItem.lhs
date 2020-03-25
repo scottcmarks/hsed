@@ -20,7 +20,6 @@ Parse and generate stream items.
 
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TemplateHaskell   #-}
 
 module System.SED.Common.StreamItem (StreamItem(..), Parser, require)
 
@@ -73,7 +72,7 @@ require t = parser >>= onlyt
         | x == t = pure t
         | otherwise = fail $ "Looking for " <> show t <> ", but saw " <> show x
 
-instance (StreamItem a) => StreamItem([a]) where  -- TODO: Token should use these
+instance (StreamItem a) => StreamItem [a] where  -- TODO: Token should use these
     parser = undefined
     generate = mconcat . fmap generate
 instance (StreamItem a) => StreamItem(a,a) where

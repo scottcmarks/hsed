@@ -10968,6 +10968,703 @@ instance (M(Monad m) => Monad (StateT s m)1406,1407
 instance (F(Fail-MonadFail m) => Fail-MonadFail (StateT s m)1419,1420
     fail fail1420,1421
 
+/Users/scott/unpackedHackagePackages/intero-0.1.40/Setup.hs,15
+main main1,2
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/test/Main.hs,531
+module Main Main4,5
+main main19,20
+spec spec26,27
+argsparser argsparser40,41
+maybeModuleStr maybeModuleStr61,62
+basics basics69,70
+load load91,92
+bytecode bytecode134,135
+types types157,158
+alltypes alltypes241,242
+ghc8_2 ghc8_2265,266
+use use273,274
+definition definition337,338
+completion completion384,385
+locAtMultiple locAtMultiple468,469
+locAt locAt484,485
+uses uses491,492
+typeAt typeAt504,505
+atFile atFile518,519
+eval eval539,540
+withIntero withIntero551,552
+issue issue609,610
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/GhciTags.hs,1017
+module GhciTags GhciTags9,10
+createCTagsWithLineNumbersCmd createCTagsWithLineNumbersCmd43,44
+createCTagsWithRegExesCmd createCTagsWithRegExesCmd48,49
+createETagsFileCmd createETagsFileCmd53,54
+data TagsKind TagsKind56,57
+data TagsKind = ETags ETags56,57
+data TagsKind = ETags | CTagsWithLineNumbers CTagsWithLineNumbers56,57
+data TagsKind = ETags | CTagsWithLineNumbers | CTagsWithRegExesCTagsWithRegExes56,57
+ghciCreateTagsFile ghciCreateTagsFile58,59
+createTagsFile createTagsFile70,71
+listModuleTags listModuleTags80,81
+data TagInfo TagInfo114,115
+data TagInfo = TagInfoTagInfo114,115
+  { tagExported tagExported115,116
+  , tagKind tagKind116,117
+  , tagName tagName117,118
+  , tagFile tagFile118,119
+  , tagLine tagLine119,120
+  , tagCol tagCol120,121
+  , tagSrcInfo tagSrcInfo121,122
+tagInfo tagInfo126,127
+collateAndWriteTags collateAndWriteTags135,136
+makeTagGroupsWithSrcInfo makeTagGroupsWithSrcInfo159,160
+showCTag showCTag180,181
+showETag showETag198,199
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/Main.hs,3665
+module Main Main13,14
+main main100,101
+main' main'176,177
+ghciUI ghciUI292,293
+partition_args partition_args304,305
+looks_like_an_input looks_like_an_input339,340
+checkOptions checkOptions351,352
+verifyOutputFiles verifyOutputFiles403,404
+type Mode Mode425,426
+type PostStartupMode PostStartupMode426,427
+data PreStartupModePreStartupMode428,429
+  = ShowVersion ShowVersion429,430
+  | ShowNumVersion ShowNumVersion430,431
+  | ShowSupportedExtensions ShowSupportedExtensions431,432
+  | ShowOptions ShowOptions432,433
+showVersionMode, showNumVersionMode, showSupportedExtensionsMode, showOptionsMode showOptionsMode434,435
+showVersionMode, showNumVersionMode, showSupportedExtensionsMode,showSupportedExtensionsMode434,435
+showVersionMode, showNumVersionMode,showNumVersionMode434,435
+showVersionMode,showVersionMode434,435
+showNumVersionMode showNumVersionMode436,437
+showSupportedExtensionsMode showSupportedExtensionsMode437,438
+showOptionsMode showOptionsMode438,439
+mkPreStartupMode mkPreStartupMode440,441
+isShowVersionMode isShowVersionMode443,444
+isShowNumVersionMode isShowNumVersionMode447,448
+data PreLoadModePreLoadMode451,452
+  = ShowGhcUsage ShowGhcUsage452,453
+  | ShowGhciUsage ShowGhciUsage453,454
+  | ShowInfo ShowInfo454,455
+  | PrintWithDynFlags PrintWithDynFlags455,456
+showGhcUsageMode, showGhciUsageMode, showInfoMode showInfoMode457,458
+showGhcUsageMode, showGhciUsageMode,showGhciUsageMode457,458
+showGhcUsageMode,showGhcUsageMode457,458
+showGhciUsageMode showGhciUsageMode459,460
+showInfoMode showInfoMode460,461
+printSetting printSetting462,463
+mkPreLoadMode mkPreLoadMode467,468
+isShowGhcUsageMode isShowGhcUsageMode470,471
+isShowGhciUsageMode isShowGhciUsageMode474,475
+data PostLoadModePostLoadMode478,479
+  = ShowInterface ShowInterface479,480
+  | DoMkDependHS DoMkDependHS480,481
+  | StopBefore StopBefore481,482
+  | DoMake DoMake483,484
+  | DoInteractive DoInteractive484,485
+  | DoEval DoEval485,486
+  | DoAbiHash DoAbiHash486,487
+doMkDependHSMode, doMakeMode, doInteractiveMode, doAbiHashMode doAbiHashMode488,489
+doMkDependHSMode, doMakeMode, doInteractiveMode,doInteractiveMode488,489
+doMkDependHSMode, doMakeMode,doMakeMode488,489
+doMkDependHSMode,doMkDependHSMode488,489
+doMakeMode doMakeMode490,491
+doInteractiveMode doInteractiveMode491,492
+doAbiHashMode doAbiHashMode492,493
+showInterfaceMode showInterfaceMode494,495
+stopBeforeMode stopBeforeMode497,498
+doEvalMode doEvalMode500,501
+mkPostLoadMode mkPostLoadMode503,504
+isDoInteractiveMode isDoInteractiveMode506,507
+isStopLnMode isStopLnMode510,511
+isDoMakeMode isDoMakeMode514,515
+isInteractiveMode isInteractiveMode519,520
+isInterpretiveMode isInterpretiveMode525,526
+needsInputsMode needsInputsMode530,531
+isLinkMode isLinkMode538,539
+isCompManagerMode isCompManagerMode545,546
+parseModeFlags parseModeFlags554,555
+type ModeM ModeM574,575
+mode_flags mode_flags578,579
+setMode setMode642,643
+flagMismatchErr flagMismatchErr682,683
+addFlag addFlag686,687
+doMake doMake695,696
+doShowIface doShowIface732,733
+showBanner showBanner740,741
+showInfo showInfo760,761
+showSupportedExtensions showSupportedExtensions765,766
+showVersion showVersion768,769
+showOptions showOptions771,772
+showGhcUsage showGhcUsage796,797
+showGhciUsage showGhciUsage799,800
+showUsage showUsage802,803
+dumpFinalStats dumpFinalStats813,814
+dumpFastStringStats dumpFastStringStats817,818
+countFS countFS836,837
+abiHash abiHash863,864
+unknownFlagsErr unknownFlagsErr903,904
+as as936,937
+compat_allFlags compat_allFlags943,944
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/Completion.hs,2827
+module CompletionCompletion10,11
+data CompletableModule CompletableModule52,53
+  CompletableModule CompletableModule53,54
+data Declaration Declaration57,58
+data Declaration = DeclarationDeclaration57,58
+  { declarationBind declarationBind58,59
+  , declarationRealSrcSpan declarationRealSrcSpan62,63
+  , declarationParsedModule declarationParsedModule64,65
+  , declarationRenamedModule declarationRenamedModule67,68
+  , declarationModuleInfo declarationModuleInfo69,70
+  , declarationTypecheckedModule declarationTypecheckedModule70,71
+  , declarationGlobalRdrEnv declarationGlobalRdrEnv72,73
+instance Show Show Declaration75,76
+  showsPrec showsPrec76,77
+newtype DeclarationId DeclarationId83,84
+newtype LineNumber LineNumber87,88
+data Hole Hole92,93
+data Hole = HoleHole92,93
+  { holeRealSrcSpan holeRealSrcSpan93,94
+  , holeName holeName94,95
+  , holeType holeType95,96
+  , holeDf holeDf96,97
+  , holeDeclaration holeDeclaration97,98
+instance Show Show Hole100,101
+  showsPrec showsPrec101,102
+data Substitution Substitution108,109
+data Substitution = SubstitutionSubstitution108,109
+  { substitutionReplacement substitutionReplacement109,110
+  , substitutionString substitutionString110,111
+  , substitutionType substitutionType111,112
+instance Show Show Substitution114,115
+  showsPrec showsPrec115,116
+getCompletableModule getCompletableModule124,125
+declarationByLine declarationByLine130,131
+declarationHoles declarationHoles148,149
+holeSubstitutions holeSubstitutions195,196
+typeSpecificity typeSpecificity240,241
+makeReplacementString makeReplacementString251,252
+greltQualification greltQualification272,273
+greltUnqualified greltUnqualified279,280
+data StringEquality StringEquality288,289
+data StringEquality = StringEqualityStringEquality288,289
+  { _stringEqualityDf _stringEqualityDf289,290
+  , _stringEqualityType _stringEqualityType290,291
+instance Show Show StringEquality292,293
+  show show293,294
+instance Eq Eq StringEquality294,295
+  StringEquality StringEquality295,296
+instance Ord Ord StringEquality297,298
+  compare compare298,299
+getWellTypedFills getWellTypedFills305,306
+unifies' unifies'332,333
+unifies unifies349,350
+isAny isAny390,391
+data T T393,394
+data T = T T393,394
+instance Show Show T394,395
+  showsPrec showsPrec395,396
+normalize normalize420,421
+makeTypeVariable makeTypeVariable442,443
+tryWellTypedFill tryWellTypedFill450,451
+fillHole fillHole467,468
+rdrNameToLHsExpr rdrNameToLHsExpr482,483
+rdrNameToHsExpr rdrNameToHsExpr493,494
+typecheckModuleNoDeferring typecheckModuleNoDeferring504,505
+_parsedModuleToBag _parsedModuleToBag521,522
+renamedSourceToBag renamedSourceToBag535,536
+realSpans realSpans549,550
+getRealSrcSpan getRealSrcSpan557,558
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/GhciInfo.hs,719
+module GhciInfo GhciInfo6,7
+collectInfo collectInfo43,44
+getModInfo getModInfo81,82
+typecheckModuleSilent typecheckModuleSilent94,95
+getModuleLocation getModuleLocation123,124
+processAllTypeCheckedModule processAllTypeCheckedModule129,130
+getTypeLHsBind getTypeLHsBind145,146
+getTypeLHsExpr getTypeLHsExpr169,170
+getTypeLPat getTypeLPat199,200
+listifyAllSpans listifyAllSpans217,218
+listifyStaged listifyStaged223,224
+data StageStage246,247
+  = ParserParser247,248
+  | RenamerRenamer248,249
+  | TypeCheckerTypeChecker249,250
+everythingStaged everythingStaged255,256
+  | (const False `Data.Generics.extQ`Data.Generics.extQ257,258
+toSpanInfo toSpanInfo270,271
+showppr showppr283,284
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/GhciTypes.hs,788
+module GhciTypes GhciTypes2,3
+data ModInfo ModInfo11,12
+  ModInfo ModInfo12,13
+  ModInfo {modinfoSummary modinfoSummary12,13
+          ,modinfoSpans modinfoSpans15,16
+          ,modinfoInfo modinfoInfo19,20
+          ,modinfoLastUpdate modinfoLastUpdate22,23
+          ,modinfoImports modinfoImports24,25
+          ,modinfoLocation modinfoLocation26,27
+data SpanInfo SpanInfo32,33
+  SpanInfo SpanInfo33,34
+  SpanInfo {spaninfoStartLine spaninfoStartLine33,34
+           ,spaninfoStartCol spaninfoStartCol35,36
+           ,spaninfoEndLine spaninfoEndLine37,38
+           ,spaninfoEndCol spaninfoEndCol39,40
+           ,spaninfoType spaninfoType41,42
+           ,spaninfoVar spaninfoVar43,44
+instance Outputable Outputable SpanInfo50,51
+  ppr ppr51,52
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/Intero/Compat.hs,512
+module Intero.CompatIntero.Compat4,5
+ghc_tyConFlavour ghc_tyConFlavour34,35
+ghc_defaultDynFlags ghc_defaultDynFlags48,49
+ghc_getInfo ghc_getInfo55,56
+ghc_getModuleGraph ghc_getModuleGraph62,63
+ghc_topSortModuleGraph ghc_topSortModuleGraph69,70
+type StageReaderName StageReaderName77,78
+type StageReaderRdrName StageReaderRdrName83,84
+type StageReaderId StageReaderId89,90
+ghc_mkWarn ghc_mkWarn95,96
+ghc_mkErr ghc_mkErr103,104
+ghc_errMsg ghc_errMsg111,112
+ghc_warnMsg ghc_warnMsg119,120
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/GhciMonad.hs,3725
+module GhciMonad GhciMonad15,16
+type Command Command76,77
+data GHCiState GHCiState78,79
+data GHCiState = GHCiStateGHCiState78,79
+        progname progname80,81
+        args args81,82
+        prompt prompt82,83
+        prompt2 prompt283,84
+        editor editor84,85
+        stop stop85,86
+        options options86,87
+        line_number line_number87,88
+        break_ctr break_ctr88,89
+        breaks breaks89,90
+        tickarrays tickarrays90,91
+        ghci_commands ghci_commands95,96
+        last_command last_command98,99
+        cmdqueue cmdqueue99,100
+        remembered_ctx remembered_ctx101,102
+        transient_ctx transient_ctx111,112
+        ghc_e ghc_e118,119
+        short_help short_help121,122
+        long_help long_help122,123
+        mod_infos mod_infos125,126
+        rdrNamesInScope rdrNamesInScope126,127
+        ghci_work_directory ghci_work_directory128,129
+        ghc_work_directory ghc_work_directory132,133
+type TickArray TickArray139,140
+data GHCiOptionGHCiOption141,142
+        = ShowTiming ShowTiming142,143
+        | ShowType ShowType143,144
+        | RevertCAFs RevertCAFs144,145
+        | Multiline Multiline145,146
+data BreakLocationBreakLocation148,149
+   = BreakLocationBreakLocation149,150
+   { breakModule breakModule150,151
+   , breakLoc breakLoc151,152
+   , breakTick breakTick152,153
+   , onBreakCmd onBreakCmd153,154
+instance Eq Eq BreakLocation156,157
+  loc1 loc1157,158
+prettyLocations prettyLocations160,161
+instance Outputable Outputable BreakLocation164,165
+   ppr ppr165,166
+recordBreak recordBreak170,171
+newtype GHCi GHCi185,186
+newtype GHCi a = GHCi { unGHCi unGHCi185,186
+reflectGHCi reflectGHCi187,188
+reifyGHCi reifyGHCi190,191
+startGHCi startGHCi198,199
+instance Functor Functor GHCi201,202
+    fmap fmap202,203
+instance Applicative Applicative GHCi204,205
+    pure pure205,206
+    (<(<*>)206,207
+instance Monad Monad GHCi208,209
+  (G(GHCim)209,210
+  return return210,211
+getGHCiState getGHCiState212,213
+setGHCiState setGHCiState214,215
+modifyGHCiState modifyGHCiState216,217
+liftGhc liftGhc219,220
+instance MonadIO MonadIO GHCi222,223
+  liftIO liftIO223,224
+instance HasDynFlags HasDynFlags GHCi225,226
+  getDynFlags getDynFlags226,227
+instance GhcMonad GhcMonad GHCi228,229
+  setSession setSession229,230
+  getSession getSession230,231
+instance HasDynFlags HasDynFlags (InputT GHCi)232,233
+  getDynFlags getDynFlags233,234
+instance GhcMonad GhcMonad (InputT GHCi)235,236
+  setSession setSession236,237
+  getSession getSession237,238
+instance ExceptionMonad ExceptionMonad GHCi239,240
+  gcatch gcatch240,241
+  gmask gmask241,242
+instance Haskeline.MonadException Haskeline-MonadException Ghc248,249
+  controlIO controlIO249,250
+instance Haskeline.MonadException Haskeline-MonadException GHCi253,254
+  controlIO controlIO254,255
+instance ExceptionMonad ExceptionMonad (InputT GHCi)258,259
+  gcatch gcatch259,260
+  gmask gmask260,261
+isOptionSet isOptionSet262,263
+setOption setOption267,268
+unsetOption unsetOption272,273
+printForUserNeverQualify printForUserNeverQualify277,278
+printForUserModInfo printForUserModInfo282,283
+printForUser printForUser289,290
+printForUserPartWay printForUserPartWay295,296
+runStmt runStmt303,304
+runStmt runStmt315,316
+runDecls runDecls328,329
+resume resume339,340
+resume resume348,349
+timeIt timeIt361,362
+printTimes printTimes379,380
+revertCAFs revertCAFs390,391
+initInterpBuffering initInterpBuffering423,424
+flushInterpBuffers flushInterpBuffers449,450
+turnOffBuffering turnOffBuffering454,455
+getHandle getHandle459,460
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/GhciFind.hs,1159
+module GhciFindGhciFind7,8
+findQualifiedSource findQualifiedSource38,39
+findCompletions findCompletions60,61
+findCompletions findCompletions69,70
+findLocalizedCompletions findLocalizedCompletions116,117
+findNameUses findNameUses134,135
+findNameUses findNameUses143,144
+reliableNameEquality reliableNameEquality188,189
+stripSurrounding stripSurrounding193,194
+overlaps overlaps201,202
+findLoc findLoc211,212
+findLoc findLoc220,221
+findImportLoc findImportLoc248,249
+getModuleImportedAt getModuleImportedAt254,255
+findName findName261,262
+findName findName270,271
+resolveNameFromModule resolveNameFromModule293,294
+resolveName resolveName333,334
+data FindTypeFindType340,341
+  = FindTypeFail FindTypeFail341,342
+  | FindType FindType342,343
+  | FindTyThing FindTyThing344,345
+findType findType348,349
+findType findType357,358
+resolveSpanInfo resolveSpanInfo397,398
+compareSpanInfoStart compareSpanInfoStart404,405
+containsSpanInfo containsSpanInfo411,412
+containsSrcSpan containsSrcSpan415,416
+contains contains420,421
+guessModule guessModule426,427
+lookupNamesInContext lookupNamesInContext452,453
+
+/Users/scott/unpackedHackagePackages/intero-0.1.40/src/InteractiveUI.hs,11099
+module InteractiveUI InteractiveUI18,19
+pprTyThing', pprTyThingInContext' pprTyThingInContext'169,170
+pprTyThing',pprTyThing'169,170
+pprTyThingInContext' pprTyThingInContext'172,173
+pprTyThing' pprTyThing'174,175
+pprTyThingInContext' pprTyThingInContext'175,176
+modulePackage modulePackage179,180
+packageString packageString182,183
+modulePackage modulePackage184,185
+packageString packageString187,188
+modulePackage modulePackage189,190
+packageString packageString193,194
+modulePackage modulePackage195,196
+data GhciSettings GhciSettings201,202
+data GhciSettings = GhciSettings GhciSettings201,202
+        availableCommands availableCommands202,203
+        shortHelpText shortHelpText203,204
+        fullHelpText fullHelpText204,205
+        defPrompt defPrompt205,206
+        defPrompt2 defPrompt2206,207
+defaultGhciSettings defaultGhciSettings209,210
+ghciWelcomeMsg ghciWelcomeMsg219,220
+versionString versionString224,225
+cmdName cmdName232,233
+ghciCommands ghciCommands237,238
+fillCmd fillCmd305,306
+withFillInput withFillInput348,349
+readOnlyCommands readOnlyCommands354,355
+word_break_chars word_break_chars371,372
+flagWordBreakChars flagWordBreakChars377,378
+keepGoing keepGoing381,382
+keepGoing' keepGoing'384,385
+keepGoingPaths keepGoingPaths387,388
+defShortHelpText defShortHelpText394,395
+completions completions397,398
+completionsHelpText completionsHelpText413,414
+defFullHelpText defFullHelpText416,417
+findEditor findEditor529,530
+default_progname, default_prompt, default_prompt2, default_stop default_stop542,543
+default_progname, default_prompt, default_prompt2,default_prompt2542,543
+default_progname, default_prompt,default_prompt542,543
+default_progname,default_progname542,543
+default_prompt default_prompt544,545
+default_prompt2 default_prompt2545,546
+default_stop default_stop546,547
+default_args default_args548,549
+compat_ExtendedDefaultRules compat_ExtendedDefaultRules553,554
+compat_AlternativeLayoutRule compat_AlternativeLayoutRule563,564
+compat_ImplicitPrelude compat_ImplicitPrelude573,574
+compat_MonomorphismRestriction compat_MonomorphismRestriction583,584
+interactiveUI interactiveUI592,593
+runServer runServer680,681
+listenOnLoopback listenOnLoopback728,729
+withGhcAppData withGhcAppData741,742
+runGHCi runGHCi750,751
+runSingleInput runSingleInput838,839
+runGHCiInput runGHCiInput855,856
+nextInputLine nextInputLine867,868
+checkPerms checkPerms887,888
+incrementLineNo incrementLineNo909,910
+fileLoop fileLoop915,916
+mkPrompt mkPrompt936,937
+queryQueue queryQueue983,984
+installInteractivePrint installInteractivePrint992,993
+runCommands runCommands1004,1005
+runCommands' runCommands'1007,1008
+runOneCommand runOneCommand1027,1028
+checkInputForLayout checkInputForLayout1129,1130
+enqueueCommands enqueueCommands1173,1174
+declPrefixes declPrefixes1180,1181
+runStmt runStmt1185,1186
+afterRunStmt afterRunStmt1219,1220
+afterRunStmt afterRunStmt1250,1251
+toBreakIdAndLocation toBreakIdAndLocation1282,1283
+printStoppedAtBreakInfo printStoppedAtBreakInfo1293,1294
+printTypeOfNames printTypeOfNames1303,1304
+compareNames compareNames1307,1308
+printTypeOfName printTypeOfName1311,1312
+data MaybeCommand MaybeCommand1319,1320
+data MaybeCommand = GotCommand GotCommand1319,1320
+data MaybeCommand = GotCommand Command | BadCommand BadCommand1319,1320
+data MaybeCommand = GotCommand Command | BadCommand | NoLastCommandNoLastCommand1319,1320
+specialCommand specialCommand1322,1323
+shellEscape shellEscape1339,1340
+lookupCommand lookupCommand1342,1343
+lookupCommand' lookupCommand'1356,1357
+getCurrentBreakSpan getCurrentBreakSpan1379,1380
+getCurrentBreakModule getCurrentBreakModule1393,1394
+noArgs noArgs1412,1413
+withSandboxOnly withSandboxOnly1416,1417
+help help1427,1428
+intro intro1436,1437
+info info1457,1458
+infoThing infoThing1465,1466
+filterOutChildren filterOutChildren1475,1476
+pprInfo pprInfo1484,1485
+runMain runMain1498,1499
+runRun runRun1510,1511
+doWithArgs doWithArgs1515,1516
+moveCommand moveCommand1522,1523
+moveUpdatingTime moveUpdatingTime1528,1529
+sleepCommand sleepCommand1543,1544
+changeDirectory changeDirectory1554,1555
+trySuccess trySuccess1576,1577
+changeDirectoryGHC changeDirectoryGHC1587,1588
+editFile editFile1599,1600
+chooseEditFile chooseEditFile1620,1621
+defineMacro defineMacro1646,1647
+runMacro runMacro1677,1678
+undefineMacro undefineMacro1690,1691
+cmdCmd cmdCmd1704,1705
+checkModule checkModule1718,1719
+loadModule loadModule1741,1742
+loadModule_ loadModule_1744,1745
+loadModule' loadModule'1747,1748
+addModule addModule1769,1770
+reloadModule reloadModule1782,1783
+doLoad doLoad1790,1791
+afterLoad afterLoad1822,1823
+setContextAfterLoad setContextAfterLoad1834,1835
+setContextKeepingPackageModules setContextKeepingPackageModules1878,1879
+keepPackageImports keepPackageImports1902,1903
+modulesLoadedMsg modulesLoadedMsg1915,1916
+typeOfExpr typeOfExpr1935,1936
+typeAt typeAt1950,1951
+findAllUses findAllUses1972,1973
+allTypes allTypes2005,2006
+locationAt locationAt2040,2041
+completeAt completeAt2067,2068
+parseSpan parseSpan2085,2086
+kindOfType kindOfType2119,2120
+quit quit2131,2132
+scriptCmd scriptCmd2140,2141
+runScript runScript2146,2147
+isSafeCmd isSafeCmd2176,2177
+isSafeModule isSafeModule2186,2187
+extensionsCmd extensionsCmd2249,2250
+dynFlagsEnabledExtensions dynFlagsEnabledExtensions2260,2261
+browseCmd browseCmd2280,2281
+guessCurrentModule guessCurrentModule2293,2294
+guessCurrentModule guessCurrentModule2309,2310
+browseModule browseModule2322,2323
+moduleCmd moduleCmd2403,2404
+addModulesToContext addModulesToContext2432,2433
+addModulesToContext_ addModulesToContext_2436,2437
+remModulesFromContext remModulesFromContext2441,2442
+setContext setContext2457,2458
+addImportToContext addImportToContext2463,2464
+addII addII2470,2471
+restoreContextOnFailure restoreContextOnFailure2491,2492
+checkAdd checkAdd2501,2502
+checkAdd checkAdd2518,2519
+setGHCContextFromGHCiState setGHCContextFromGHCiState2549,2550
+mkIIModule mkIIModule2572,2573
+mkIIDecl mkIIDecl2575,2576
+iiModules iiModules2578,2579
+iiModuleName iiModuleName2581,2582
+preludeModuleName preludeModuleName2585,2586
+implicitPreludeImport implicitPreludeImport2588,2589
+isPreludeImport isPreludeImport2591,2592
+addNotSubsumed addNotSubsumed2595,2596
+  | any (`iiSubsumes`iiSubsumes2598,2599
+filterSubsumed filterSubsumed2603,2604
+iiSubsumes iiSubsumes2620,2621
+setCmd setCmd2652,2653
+setiCmd setiCmd2673,2674
+showOptions showOptions2681,2682
+showDynFlags showDynFlags2695,2696
+setArgs, setOptions setOptions2743,2744
+setArgs,setArgs2743,2744
+setProg, setEditor, setStop setStop2744,2745
+setProg, setEditor,setEditor2744,2745
+setProg,setProg2744,2745
+setArgs setArgs2746,2747
+setProg setProg2750,2751
+setEditor setEditor2754,2755
+setStop setStop2758,2759
+setPrompt setPrompt2775,2776
+setPrompt2 setPrompt22781,2782
+setPrompt_ setPrompt_2787,2788
+setOptions setOptions2800,2801
+newDynFlags newDynFlags2807,2808
+unsetOptions unsetOptions2858,2859
+isMinus isMinus2889,2890
+isPlus isPlus2893,2894
+setOpt, unsetOpt unsetOpt2897,2898
+setOpt,setOpt2897,2898
+unsetOpt unsetOpt2904,2905
+strToGHCiOpt strToGHCiOpt2909,2910
+optToStr optToStr2916,2917
+showCmd showCmd2926,2927
+showiCmd showiCmd2954,2955
+showImports showImports2962,2963
+showModules showModules2983,2984
+getLoadedModules getLoadedModules2990,2991
+showBindings showBindings2995,2996
+printTyThing printTyThing3020,3021
+showBkptTable showBkptTable3023,3024
+showContext showContext3028,3029
+showPackages showPackages3037,3038
+showPaths showPaths3070,3071
+showLanguages showLanguages3083,3084
+showiLanguages showiLanguages3086,3087
+showLanguages' showLanguages'3089,3090
+completeCmd completeCmd3122,3123
+ghciCompleteWord ghciCompleteWord3169,3170
+completeGhciCommand completeGhciCommand3186,3187
+completeMacro completeMacro3196,3197
+completeIdentifier completeIdentifier3200,3201
+completeModule completeModule3205,3206
+completeSetModule completeSetModule3212,3213
+completeHomeModule completeHomeModule3224,3225
+listHomeModules listHomeModules3226,3227
+completeSetOptions completeSetOptions3234,3235
+completeSeti completeSeti3239,3240
+completeShowOptions completeShowOptions3243,3244
+completeShowiOptions completeShowiOptions3249,3250
+completeHomeModuleOrFile completeHomeModuleOrFile3252,3253
+unionComplete unionComplete3256,3257
+wrapCompleter wrapCompleter3262,3263
+wrapIdentCompleter wrapIdentCompleter3266,3267
+wrapIdentCompleterWithModifier wrapIdentCompleterWithModifier3269,3270
+allExposedModules allExposedModules3275,3276
+completeExpression completeExpression3285,3286
+completeCmdSet completeCmdSet3291,3292
+updateFirst updateFirst3312,3313
+sprintCmd, printCmd, forceCmd forceCmd3321,3322
+sprintCmd, printCmd,printCmd3321,3322
+sprintCmd,sprintCmd3321,3322
+printCmd printCmd3323,3324
+forceCmd forceCmd3324,3325
+pprintCommand pprintCommand3326,3327
+stepCmd stepCmd3330,3331
+stepLocalCmd stepLocalCmd3336,3337
+stepModuleCmd stepModuleCmd3350,3351
+enclosingTickSpan enclosingTickSpan3364,3365
+traceCmd traceCmd3376,3377
+continueCmd continueCmd3383,3384
+doContinue doContinue3387,3388
+abandonCmd abandonCmd3393,3394
+deleteCmd deleteCmd3398,3399
+historyCmd historyCmd3415,3416
+bold bold3443,3444
+backCmd backCmd3447,3448
+forwardCmd forwardCmd3460,3461
+breakCmd breakCmd3476,3477
+breakSwitch breakSwitch3479,3480
+breakByModule breakByModule3510,3511
+breakByModuleLine breakByModuleLine3517,3518
+breakSyntax breakSyntax3524,3525
+findBreakAndSet findBreakAndSet3527,3528
+findBreakByLine findBreakByLine3560,3561
+findBreakByCoord findBreakByCoord3578,3579
+do_bold do_bold3609,3610
+start_bold start_bold3614,3615
+end_bold end_bold3616,3617
+listCmd listCmd3623,3624
+listCmd' listCmd'3626,3627
+list2 list23648,3649
+listModuleLine listModuleLine3682,3683
+listAround listAround3702,3703
+getTickArray getTickArray3772,3773
+discardTickArrays discardTickArrays3784,3785
+mkTickArray mkTickArray3789,3790
+discardActiveBreakPoints discardActiveBreakPoints3802,3803
+deleteBreak deleteBreak3808,3809
+turnOffBreak turnOffBreak3820,3821
+getModBreak getModBreak3827,3828
+setBreakFlag setBreakFlag3839,3840
+handler handler3865,3866
+showException showException3872,3873
+ghciHandle ghciHandle3895,3896
+ghciTry ghciTry3900,3901
+tryBool tryBool3903,3904
+lookupModule lookupModule3913,3914
+lookupModuleName lookupModuleName3916,3917
+isHomeModule isHomeModule3919,3920
+expandPath expandPath3930,3931
+expandPathIO expandPathIO3933,3934
+wantInterpretedModule wantInterpretedModule3942,3943
+wantInterpretedModuleName wantInterpretedModuleName3945,3946
+wantNameFromInterpretedModule wantNameFromInterpretedModule3957,3958
+sl_fs sl_fs3980,3981
+compat_allFlags compat_allFlags3985,3986
+
 /Users/scott/unpackedHackagePackages/ansi-wl-pprint-0.6.8.2/Setup.lhs,16
  main main2,3
 

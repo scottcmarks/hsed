@@ -19,7 +19,6 @@ Utilities
 -}
 
 {-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedStrings   #-}
 
 
 module System.SED.Common.Util where

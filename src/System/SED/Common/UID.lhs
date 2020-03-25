@@ -20,7 +20,7 @@ Datatypes for UIDs and HalfUIDs.
 
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE DeriveAnyClass      #-}
+{-# LANGUAGE DerivingStrategies  #-}
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -42,7 +42,6 @@ import           GHC.Word(Word8(..))
 import           Test.QuickCheck (Arbitrary(..))
 
 import           Extras.Hex (hex)
-import           Extras.Sized ()
 import           Extras.Sized (Fixed_bytes(..), take, drop, append, fpack, funpack)
 import           System.SED.Common.Instances()
 import           System.SED.Common.StreamItem (StreamItem(..))

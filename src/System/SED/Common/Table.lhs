@@ -19,7 +19,6 @@ Table
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module System.SED.Common.Table where
@@ -202,7 +201,7 @@ data Table = Table { _tableName    :: TableName
                    }
     deriving (Eq, Show)
 
-data TableRow = TableRow ()
+newtype TableRow = TableRow ()
     deriving (Eq, Show)
 
 \end{code}

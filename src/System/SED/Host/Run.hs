@@ -8,5 +8,5 @@ import           Hsed.App
 import           System.SED.Common.Import ()
 
 run :: RIO App ()
-run = do
+run =
   logInfo "We're inside the SED Host application!"

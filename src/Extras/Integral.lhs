@@ -19,10 +19,8 @@ Conversions for numbers used in tokens.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE DeriveAnyClass      #-}
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -60,10 +58,10 @@ rollUp f (d, ds) = foldl roll (f d) ds
     x `roll` d' = shiftL x 8 .|. f d'
 
 byteStringToNatural :: ByteString -> Natural
-byteStringToNatural = (maybe 0 (rollUp natural)) . uncons
+byteStringToNatural = maybe 0 (rollUp natural) . uncons
 
 byteStringToInteger :: ByteString -> Integer
-byteStringToInteger = (maybe 0 rollUp') . uncons
+byteStringToInteger = maybe 0 rollUp' . uncons
   where rollUp' dds@(d,_) =
             if 0x00 == (0x80 .&. d)
             then rollUp integer dds
@@ -75,7 +73,7 @@ naturalToByteString n = if n == 0 then singleton 0x00 else reverse $ unfoldr unr
 
 -- | Type-level to value-level for all Integrals, from the Natural
 intVal :: (Num b, KnownNat n) => Proxy n -> b
-intVal p = fromIntegral $ (natVal p)
+intVal p = fromIntegral $ natVal p
 
 integerToByteString :: Integer -> ByteString
 integerToByteString i =
@@ -85,10 +83,9 @@ integerToByteString i =
   where
     nonnegativeToByteString nn =
         let bs = toByteString $ natural nn
-          in if (0x00 == 0x80 .&. head bs)
+          in if 0x00 == 0x80 .&. head bs
                 then bs
                 else cons 0x00 bs
-
 
 
 word8 :: (Integral a) => a -> Word8

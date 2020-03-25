@@ -121,7 +121,7 @@ createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -
 --   <a>createLeft</a> / <a>createRight</a> the source value is left
 --   unchanged. However, this implies a further run-time check for Nothing
 --   values.
-create :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => a -> Maybe (Sized a l u)
+create :: forall a (l :: Nat) (u :: Nat). (IsSizedText a, KnownNat l, KnownNat u) => a -> Maybe (Sized a l u)
 
 -- | Construct a new C.Sized of maximum length from a basic element.
 --   
@@ -260,7 +260,7 @@ instance Extras.Integral.IsByteString GHC.Natural.Natural
 -- | Hex encode/decoding.
 module Extras.Hex
 hexDigit :: Word8 -> Char
-hexDigits :: [Char]
+hexDigits :: String
 hexValue :: Char -> Maybe Word8
 hexWord8Syntax :: HasHex a => a -> String
 class HasHex a
@@ -278,7 +278,7 @@ instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Data.StaticText.Class.Sta
 -- | Datatypes for Tokens.
 module Extras.Sized
 data Fixed_bytes (n :: Nat)
-Fixed_bytes :: !Static ShortByteString n -> Fixed_bytes
+Fixed_bytes :: !Static ShortByteString n -> Fixed_bytes (n :: Nat)
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
@@ -309,9 +309,9 @@ instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Extras.Sized.Fixed_bytes 
 module Hsed.App
 
 -- | Command line arguments
-data Options
-Options :: !Bool -> Options
-[_verbose] :: Options -> !Bool
+newtype Options
+Options :: Bool -> Options
+[_verbose] :: Options -> Bool
 verbose :: Iso' Options Bool
 
 -- | Global command environment
@@ -427,7 +427,7 @@ Table :: TableName -> HalfUID -> [TableColumn] -> [TableRow] -> Table
 [_tableHalfUID] :: Table -> HalfUID
 [_tableColumns] :: Table -> [TableColumn]
 [_tableRows] :: Table -> [TableRow]
-data TableRow
+newtype TableRow
 TableRow :: () -> TableRow
 data TableColumn
 TableColumn :: Int -> ByteString -> Bool -> ColumnType -> TableColumn
@@ -510,20 +510,20 @@ uCloseSession :: UID
 
 -- | Formats.
 module System.SED.Common.Format
-data Max_bytes :: Nat -> *
+data Max_bytes :: Nat -> Type
 data Core_table_kind
 Object_Table :: Core_table_kind
 Byte_Table :: Core_table_kind
-data Core_uinteger_2
+newtype Core_uinteger_2
 Core_uinteger_2 :: Int -> Core_uinteger_2
 [fromCore_uinteger_2] :: Core_uinteger_2 -> Int
-data Core_integer_2
+newtype Core_integer_2
 Core_integer_2 :: Int -> Core_integer_2
 [fromCore_integer_2] :: Core_integer_2 -> Int
-data Core_uidref
+newtype Core_uidref
 Core_uidref :: UID -> Core_uidref
 [fromCore_uidref] :: Core_uidref -> UID
-data Core_max_bytes_32
+newtype Core_max_bytes_32
 Core_max_bytes_32 :: Max_bytes 32 -> Core_max_bytes_32
 [fromCore_max_bytes_32] :: Core_max_bytes_32 -> Max_bytes 32
 newtype Core_uidref_Base_Type
@@ -534,7 +534,7 @@ newtype Core_uidref_Byte_Table
 Core_uidref_Byte_Table :: Core_uidref -> Core_uidref_Byte_Table
 newtype Core_uidref_Object_Table
 Core_uidref_Object_Table :: Core_uidref -> Core_uidref_Object_Table
-data Known_Core_Type :: Nat -> *
+data Known_Core_Type :: Nat -> Type
 [Base_Type] :: Known_Core_Type 0
 [Simple_Type] :: Core_uidref_Base_Type -> Core_uinteger_2 -> Known_Core_Type 1
 [Enumeration_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Known_Core_Type 2
@@ -813,7 +813,7 @@ type TypeName = ByteString
 type FormatString = ByteString
 header :: [Int] -> Parser ()
 formatString :: TypeTableRow -> ByteString
-data TypeTableRowDecs
+newtype TypeTableRowDecs
 TypeTableRowDecs :: [Dec] -> TypeTableRowDecs
 
 -- | QuasiQuoter for Type Table enum tables.
@@ -1448,7 +1448,7 @@ module System.SED.Common.Import
 --   </pre>
 --   
 --   If the first list is not finite, the result is the first list.
-(++) :: () => [a] -> [a] -> [a]
+(++) :: [a] -> [a] -> [a]
 infixr 5 ++
 
 -- | The value of <tt>seq a b</tt> is bottom if <tt>a</tt> is bottom, and
@@ -1465,17 +1465,24 @@ infixr 5 ++
 --   evaluated before <tt>a</tt>. If you need to guarantee a specific order
 --   of evaluation, you must use the function <tt>pseq</tt> from the
 --   "parallel" package.
-seq :: () => a -> b -> b
+seq :: a -> b -> b
+infixr 0 `seq`
 
--- | <a>filter</a>, applied to a predicate and a list, returns the list of
---   those elements that satisfy the predicate; i.e.,
+-- | <i>O(n)</i>. <a>filter</a>, applied to a predicate and a list, returns
+--   the list of those elements that satisfy the predicate; i.e.,
 --   
 --   <pre>
 --   filter p xs = [ x | x &lt;- xs, p x]
 --   </pre>
-filter :: () => (a -> Bool) -> [a] -> [a]
+--   
+--   <pre>
+--   &gt;&gt;&gt; filter odd [1, 2, 3]
+--   [1,3]
+--   </pre>
+filter :: (a -> Bool) -> [a] -> [a]
 
--- | <a>zip</a> takes two lists and returns a list of corresponding pairs.
+-- | <i>O(min(m,n))</i>. <a>zip</a> takes two lists and returns a list of
+--   corresponding pairs.
 --   
 --   <pre>
 --   zip [1, 2] ['a', 'b'] = [(1, 'a'), (2, 'b')]
@@ -1495,13 +1502,16 @@ filter :: () => (a -> Bool) -> [a] -> [a]
 --   zip [] _|_ = []
 --   zip _|_ [] = _|_
 --   </pre>
-zip :: () => [a] -> [b] -> [(a, b)]
+--   
+--   <a>zip</a> is capable of list fusion, but it is restricted to its
+--   first list argument and its resulting list.
+zip :: [a] -> [b] -> [(a, b)]
 
 -- | Extract the first component of a pair.
-fst :: () => (a, b) -> a
+fst :: (a, b) -> a
 
 -- | Extract the second component of a pair.
-snd :: () => (a, b) -> b
+snd :: (a, b) -> b
 
 -- | <a>otherwise</a> is defined as the value <a>True</a>. It helps to make
 --   guards more readable. eg.
@@ -1513,7 +1523,7 @@ snd :: () => (a, b) -> b
 otherwise :: Bool
 
 -- | If the first argument evaluates to <a>True</a>, then the result is the
---   second argument. Otherwise an <tt>AssertionFailed</tt> exception is
+--   second argument. Otherwise an <a>AssertionFailed</a> exception is
 --   raised, containing a <a>String</a> with the source file and line
 --   number of the call to <a>assert</a>.
 --   
@@ -1522,16 +1532,20 @@ otherwise :: Bool
 --   <tt>-O</tt> or the <tt>-fignore-asserts</tt> option is given). When
 --   assertions are turned off, the first argument to <a>assert</a> is
 --   ignored, and the second argument is returned as the result.
-assert :: () => Bool -> a -> a
+assert :: Bool -> a -> a
 
--- | <a>map</a> <tt>f xs</tt> is the list obtained by applying <tt>f</tt>
---   to each element of <tt>xs</tt>, i.e.,
+-- | <i>O(n)</i>. <a>map</a> <tt>f xs</tt> is the list obtained by applying
+--   <tt>f</tt> to each element of <tt>xs</tt>, i.e.,
 --   
 --   <pre>
 --   map f [x1, x2, ..., xn] == [f x1, f x2, ..., f xn]
 --   map f [x1, x2, ...] == [f x1, f x2, ...]
 --   </pre>
-map :: () => (a -> b) -> [a] -> [b]
+--   
+--   <pre>
+--   &gt;&gt;&gt; map (+1) [1, 2, 3]
+--   </pre>
+map :: (a -> b) -> [a] -> [b]
 
 -- | Application operator. This operator is redundant, since ordinary
 --   application <tt>(f x)</tt> means the same as <tt>(f <a>$</a> x)</tt>.
@@ -1545,9 +1559,10 @@ map :: () => (a -> b) -> [a] -> [b]
 --   It is also useful in higher-order situations, such as <tt><a>map</a>
 --   (<a>$</a> 0) xs</tt>, or <tt><a>zipWith</a> (<a>$</a>) fs xs</tt>.
 --   
---   Note that <tt>($)</tt> is levity-polymorphic in its result type, so
---   that foo $ True where foo :: Bool -&gt; Int# is well-typed
-($) :: () => (a -> b) -> a -> b
+--   Note that <tt>(<a>$</a>)</tt> is levity-polymorphic in its result
+--   type, so that <tt>foo <a>$</a> True</tt> where <tt>foo :: Bool -&gt;
+--   Int#</tt> is well-typed.
+($) :: forall (r :: RuntimeRep) a (b :: TYPE r). (a -> b) -> a -> b
 infixr 0 $
 
 -- | general coercion from integral types
@@ -1718,11 +1733,12 @@ infix 4 /=
 -- | Trigonometric and hyperbolic functions and related functions.
 --   
 --   The Haskell Report defines no laws for <a>Floating</a>. However,
---   '(+)', '(*)' and <a>exp</a> are customarily expected to define an
---   exponential field and have the following properties:
+--   <tt>(<a>+</a>)</tt>, <tt>(<a>*</a>)</tt> and <a>exp</a> are
+--   customarily expected to define an exponential field and have the
+--   following properties:
 --   
 --   <ul>
---   <li><tt>exp (a + b)</tt> = @exp a * exp b</li>
+--   <li><tt>exp (a + b)</tt> = <tt>exp a * exp b</tt></li>
 --   <li><tt>exp (fromInteger 0)</tt> = <tt>fromInteger 1</tt></li>
 --   </ul>
 class Fractional a => Floating a
@@ -1749,8 +1765,8 @@ infixr 8 **
 -- | Fractional numbers, supporting real division.
 --   
 --   The Haskell Report defines no laws for <a>Fractional</a>. However,
---   '(+)' and '(*)' are customarily expected to define a division ring and
---   have the following properties:
+--   <tt>(<a>+</a>)</tt> and <tt>(<a>*</a>)</tt> are customarily expected
+--   to define a division ring and have the following properties:
 --   
 --   <ul>
 --   <li><i><b><a>recip</a> gives the multiplicative inverse</b></i> <tt>x
@@ -1762,10 +1778,10 @@ infixr 8 **
 --   <tt>base</tt> do.
 class Num a => Fractional a
 
--- | fractional division
+-- | Fractional division.
 (/) :: Fractional a => a -> a -> a
 
--- | reciprocal fraction
+-- | Reciprocal fraction.
 recip :: Fractional a => a -> a
 
 -- | Conversion from a <a>Rational</a> (that is <tt><a>Ratio</a>
@@ -1779,9 +1795,9 @@ infixl 7 /
 --   
 --   The Haskell Report defines no laws for <a>Integral</a>. However,
 --   <a>Integral</a> instances are customarily expected to define a
---   Euclidean domain and have the following properties for the 'div'/'mod'
---   and 'quot'/'rem' pairs, given suitable Euclidean functions <tt>f</tt>
---   and <tt>g</tt>:
+--   Euclidean domain and have the following properties for the
+--   <a>div</a>/<a>mod</a> and <a>quot</a>/<a>rem</a> pairs, given suitable
+--   Euclidean functions <tt>f</tt> and <tt>g</tt>:
 --   
 --   <ul>
 --   <li><tt>x</tt> = <tt>y * quot x y + rem x y</tt> with <tt>rem x y</tt>
@@ -1836,13 +1852,16 @@ infixl 7 `mod`
 --   of actions. Haskell's <tt>do</tt> expressions provide a convenient
 --   syntax for writing monadic expressions.
 --   
---   Instances of <a>Monad</a> should satisfy the following laws:
+--   Instances of <a>Monad</a> should satisfy the following:
 --   
 --   <ul>
---   <li><pre><a>return</a> a <a>&gt;&gt;=</a> k = k a</pre></li>
---   <li><pre>m <a>&gt;&gt;=</a> <a>return</a> = m</pre></li>
---   <li><pre>m <a>&gt;&gt;=</a> (\x -&gt; k x <a>&gt;&gt;=</a> h) = (m
---   <a>&gt;&gt;=</a> k) <a>&gt;&gt;=</a> h</pre></li>
+--   <li><i>Left identity</i> <tt><a>return</a> a <a>&gt;&gt;=</a> k = k
+--   a</tt></li>
+--   <li><i>Right identity</i> <tt>m <a>&gt;&gt;=</a> <a>return</a> =
+--   m</tt></li>
+--   <li><i>Associativity</i> <tt>m <a>&gt;&gt;=</a> (\x -&gt; k x
+--   <a>&gt;&gt;=</a> h) = (m <a>&gt;&gt;=</a> k) <a>&gt;&gt;=</a>
+--   h</tt></li>
 --   </ul>
 --   
 --   Furthermore, the <a>Monad</a> and <a>Applicative</a> operations should
@@ -1879,15 +1898,6 @@ class Applicative m => Monad (m :: Type -> Type)
 
 -- | Inject a value into the monadic type.
 return :: Monad m => a -> m a
-
--- | Fail with a message. This operation is not part of the mathematical
---   definition of a monad, but is invoked on pattern-match failure in a
---   <tt>do</tt> expression.
---   
---   As part of the MonadFail proposal (MFP), this function is moved to its
---   own class <tt>MonadFail</tt> (see <a>Control.Monad.Fail</a> for more
---   details). The definition here will be removed in a future release.
-fail :: Monad m => String -> m a
 infixl 1 >>=
 infixl 1 >>
 
@@ -2027,7 +2037,7 @@ gmapT :: Data a => (forall b. Data b => b -> b) -> a -> a
 gmapQl :: Data a => (r -> r' -> r) -> r -> (forall d. Data d => d -> r') -> a -> r
 
 -- | A generic query with a right-associative binary operator
-gmapQr :: Data a => (r' -> r -> r) -> r -> (forall d. Data d => d -> r') -> a -> r
+gmapQr :: forall r r'. Data a => (r' -> r -> r) -> r -> (forall d. Data d => d -> r') -> a -> r
 
 -- | A generic query that processes the immediate subterms and returns a
 --   list of results. The list is given in the same order as originally
@@ -2050,16 +2060,21 @@ gmapMp :: (Data a, MonadPlus m) => (forall d. Data d => d -> m d) -> a -> m a
 -- | Transformation of one immediate subterm with success
 gmapMo :: (Data a, MonadPlus m) => (forall d. Data d => d -> m d) -> a -> m a
 
--- | The <a>Functor</a> class is used for types that can be mapped over.
---   Instances of <a>Functor</a> should satisfy the following laws:
+-- | A type <tt>f</tt> is a Functor if it provides a function <tt>fmap</tt>
+--   which, given any types <tt>a</tt> and <tt>b</tt> lets you apply any
+--   function from <tt>(a -&gt; b)</tt> to turn an <tt>f a</tt> into an
+--   <tt>f b</tt>, preserving the structure of <tt>f</tt>. Furthermore
+--   <tt>f</tt> needs to adhere to the following:
 --   
---   <pre>
---   fmap id  ==  id
---   fmap (f . g)  ==  fmap f . fmap g
---   </pre>
+--   <ul>
+--   <li><i>Identity</i> <tt><a>fmap</a> <a>id</a> == <a>id</a></tt></li>
+--   <li><i>Composition</i> <tt><a>fmap</a> (f . g) == <a>fmap</a> f .
+--   <a>fmap</a> g</tt></li>
+--   </ul>
 --   
---   The instances of <a>Functor</a> for lists, <a>Maybe</a> and <a>IO</a>
---   satisfy these laws.
+--   Note, that the second law follows from the free theorem of the type
+--   <a>fmap</a> and the first law, so you need only check that the former
+--   condition holds.
 class Functor (f :: Type -> Type)
 fmap :: Functor f => (a -> b) -> f a -> f b
 
@@ -2071,32 +2086,32 @@ infixl 4 <$
 
 -- | Basic numeric class.
 --   
---   The Haskell Report defines no laws for <a>Num</a>. However, '(+)' and
---   '(*)' are customarily expected to define a ring and have the following
---   properties:
+--   The Haskell Report defines no laws for <a>Num</a>. However,
+--   <tt>(<a>+</a>)</tt> and <tt>(<a>*</a>)</tt> are customarily expected
+--   to define a ring and have the following properties:
 --   
 --   <ul>
---   <li><i><b>Associativity of (+)</b></i> <tt>(x + y) + z</tt> = <tt>x +
---   (y + z)</tt></li>
---   <li><i><b>Commutativity of (+)</b></i> <tt>x + y</tt> = <tt>y +
---   x</tt></li>
---   <li><i><b><tt>fromInteger 0</tt> is the additive identity</b></i>
---   <tt>x + fromInteger 0</tt> = <tt>x</tt></li>
+--   <li><i><b>Associativity of <tt>(<a>+</a>)</tt></b></i> <tt>(x + y) +
+--   z</tt> = <tt>x + (y + z)</tt></li>
+--   <li><i><b>Commutativity of <tt>(<a>+</a>)</tt></b></i> <tt>x + y</tt>
+--   = <tt>y + x</tt></li>
+--   <li><i><b><tt><a>fromInteger</a> 0</tt> is the additive
+--   identity</b></i> <tt>x + fromInteger 0</tt> = <tt>x</tt></li>
 --   <li><i><b><a>negate</a> gives the additive inverse</b></i> <tt>x +
 --   negate x</tt> = <tt>fromInteger 0</tt></li>
---   <li><i><b>Associativity of (*)</b></i> <tt>(x * y) * z</tt> = <tt>x *
---   (y * z)</tt></li>
---   <li><i><b><tt>fromInteger 1</tt> is the multiplicative
+--   <li><i><b>Associativity of <tt>(<a>*</a>)</tt></b></i> <tt>(x * y) *
+--   z</tt> = <tt>x * (y * z)</tt></li>
+--   <li><i><b><tt><a>fromInteger</a> 1</tt> is the multiplicative
 --   identity</b></i> <tt>x * fromInteger 1</tt> = <tt>x</tt> and
 --   <tt>fromInteger 1 * x</tt> = <tt>x</tt></li>
---   <li><i><b>Distributivity of (*) with respect to (+)</b></i> <tt>a * (b
---   + c)</tt> = <tt>(a * b) + (a * c)</tt> and <tt>(b + c) * a</tt> =
---   <tt>(b * a) + (c * a)</tt></li>
+--   <li><i><b>Distributivity of <tt>(<a>*</a>)</tt> with respect to
+--   <tt>(<a>+</a>)</tt></b></i> <tt>a * (b + c)</tt> = <tt>(a * b) + (a *
+--   c)</tt> and <tt>(b + c) * a</tt> = <tt>(b * a) + (c * a)</tt></li>
 --   </ul>
 --   
 --   Note that it <i>isn't</i> customarily expected that a type instance of
 --   both <a>Num</a> and <a>Ord</a> implement an ordered ring. Indeed, in
---   <tt>base</tt> only <a>Integer</a> and <tt>Rational</tt> do.
+--   <tt>base</tt> only <a>Integer</a> and <a>Rational</a> do.
 class Num a
 (+) :: Num a => a -> a -> a
 (-) :: Num a => a -> a -> a
@@ -2173,8 +2188,8 @@ max :: Ord a => a -> a -> a
 min :: Ord a => a -> a -> a
 infix 4 >=
 infix 4 >
-infix 4 <
 infix 4 <=
+infix 4 <
 
 -- | Parsing of <a>String</a>s, producing values.
 --   
@@ -2312,8 +2327,8 @@ decodeFloat :: RealFloat a => a -> (Integer, Int)
 
 -- | <a>encodeFloat</a> performs the inverse of <a>decodeFloat</a> in the
 --   sense that for finite <tt>x</tt> with the exception of <tt>-0.0</tt>,
---   <tt><tt>uncurry</tt> <a>encodeFloat</a> (<a>decodeFloat</a> x) =
---   x</tt>. <tt><a>encodeFloat</a> m n</tt> is one of the two closest
+--   <tt><a>uncurry</a> <a>encodeFloat</a> (<a>decodeFloat</a> x) = x</tt>.
+--   <tt><a>encodeFloat</a> m n</tt> is one of the two closest
 --   representable floating-point numbers to <tt>m*b^^n</tt> (or
 --   <tt>±Infinity</tt> if overflow occurs); usually the closer, but if
 --   <tt>m</tt> contains too many bits, the result may be rounded in the
@@ -2477,19 +2492,19 @@ class Typeable (a :: k)
 --   patterns (<tt>~pat</tt>).
 --   
 --   Instances of <a>MonadFail</a> should satisfy the following law:
---   <tt>fail s</tt> should be a left zero for <tt>&gt;&gt;=</tt>,
+--   <tt>fail s</tt> should be a left zero for <a>&gt;&gt;=</a>,
 --   
 --   <pre>
 --   fail s &gt;&gt;= f  =  fail s
 --   </pre>
 --   
---   If your <a>Monad</a> is also <tt>MonadPlus</tt>, a popular definition
---   is
+--   If your <a>Monad</a> is also <a>MonadPlus</a>, a popular definition is
 --   
 --   <pre>
 --   fail _ = mzero
 --   </pre>
 class Monad m => MonadFail (m :: Type -> Type)
+fail :: MonadFail m => String -> m a
 
 -- | Class for string-like datastructures; used by the overloaded string
 --   extension (-XOverloadedStrings in GHC).
@@ -2514,20 +2529,20 @@ fromString :: IsString a => String -> a
 --   </pre>
 --   
 --   <pre>
---   <a>liftA2</a> f x y = f <tt>&lt;$&gt;</tt> x <a>&lt;*&gt;</a> y
+--   <a>liftA2</a> f x y = f <a>&lt;$&gt;</a> x <a>&lt;*&gt;</a> y
 --   </pre>
 --   
 --   Further, any definition must satisfy the following:
 --   
 --   <ul>
---   <li><i><i>identity</i></i> <pre><a>pure</a> <a>id</a> <a>&lt;*&gt;</a>
---   v = v</pre></li>
---   <li><i><i>composition</i></i> <pre><a>pure</a> (.) <a>&lt;*&gt;</a> u
+--   <li><i>Identity</i> <pre><a>pure</a> <a>id</a> <a>&lt;*&gt;</a> v =
+--   v</pre></li>
+--   <li><i>Composition</i> <pre><a>pure</a> (.) <a>&lt;*&gt;</a> u
 --   <a>&lt;*&gt;</a> v <a>&lt;*&gt;</a> w = u <a>&lt;*&gt;</a> (v
 --   <a>&lt;*&gt;</a> w)</pre></li>
---   <li><i><i>homomorphism</i></i> <pre><a>pure</a> f <a>&lt;*&gt;</a>
+--   <li><i>Homomorphism</i> <pre><a>pure</a> f <a>&lt;*&gt;</a>
 --   <a>pure</a> x = <a>pure</a> (f x)</pre></li>
---   <li><i><i>interchange</i></i> <pre>u <a>&lt;*&gt;</a> <a>pure</a> y =
+--   <li><i>Interchange</i> <pre>u <a>&lt;*&gt;</a> <a>pure</a> y =
 --   <a>pure</a> (<a>$</a> y) <a>&lt;*&gt;</a> u</pre></li>
 --   </ul>
 --   
@@ -2709,7 +2724,7 @@ foldr :: Foldable t => (a -> b -> b) -> b -> t a -> b
 --   identical to,
 --   
 --   <pre>
---   foldl f z = <a>foldl'</a> f z . <a>toList</a>
+--   foldl' f z = <a>foldl'</a> f z . <a>toList</a>
 --   </pre>
 foldl' :: Foldable t => (b -> a -> b) -> b -> t a -> b
 
@@ -2744,26 +2759,25 @@ infix 4 `elem`
 --   A definition of <a>traverse</a> must satisfy the following laws:
 --   
 --   <ul>
---   <li><i><i>naturality</i></i> <tt>t . <a>traverse</a> f =
---   <a>traverse</a> (t . f)</tt> for every applicative transformation
---   <tt>t</tt></li>
---   <li><i><i>identity</i></i> <tt><a>traverse</a> Identity =
---   Identity</tt></li>
---   <li><i><i>composition</i></i> <tt><a>traverse</a> (Compose .
---   <a>fmap</a> g . f) = Compose . <a>fmap</a> (<a>traverse</a> g) .
---   <a>traverse</a> f</tt></li>
+--   <li><i>Naturality</i> <tt>t . <a>traverse</a> f = <a>traverse</a> (t .
+--   f)</tt> for every applicative transformation <tt>t</tt></li>
+--   <li><i>Identity</i> <tt><a>traverse</a> <a>Identity</a> =
+--   <a>Identity</a></tt></li>
+--   <li><i>Composition</i> <tt><a>traverse</a> (<a>Compose</a> .
+--   <a>fmap</a> g . f) = <a>Compose</a> . <a>fmap</a> (<a>traverse</a> g)
+--   . <a>traverse</a> f</tt></li>
 --   </ul>
 --   
 --   A definition of <a>sequenceA</a> must satisfy the following laws:
 --   
 --   <ul>
---   <li><i><i>naturality</i></i> <tt>t . <a>sequenceA</a> =
---   <a>sequenceA</a> . <a>fmap</a> t</tt> for every applicative
---   transformation <tt>t</tt></li>
---   <li><i><i>identity</i></i> <tt><a>sequenceA</a> . <a>fmap</a> Identity
---   = Identity</tt></li>
---   <li><i><i>composition</i></i> <tt><a>sequenceA</a> . <a>fmap</a>
---   Compose = Compose . <a>fmap</a> <a>sequenceA</a> .
+--   <li><i>Naturality</i> <tt>t . <a>sequenceA</a> = <a>sequenceA</a> .
+--   <a>fmap</a> t</tt> for every applicative transformation
+--   <tt>t</tt></li>
+--   <li><i>Identity</i> <tt><a>sequenceA</a> . <a>fmap</a> <a>Identity</a>
+--   = <a>Identity</a></tt></li>
+--   <li><i>Composition</i> <tt><a>sequenceA</a> . <a>fmap</a>
+--   <a>Compose</a> = <a>Compose</a> . <a>fmap</a> <a>sequenceA</a> .
 --   <a>sequenceA</a></tt></li>
 --   </ul>
 --   
@@ -2775,34 +2789,14 @@ infix 4 `elem`
 --   
 --   preserving the <a>Applicative</a> operations, i.e.
 --   
---   <ul>
---   <li><pre>t (<a>pure</a> x) = <a>pure</a> x</pre></li>
---   <li><pre>t (x <a>&lt;*&gt;</a> y) = t x <a>&lt;*&gt;</a> t
---   y</pre></li>
---   </ul>
---   
---   and the identity functor <tt>Identity</tt> and composition of functors
---   <tt>Compose</tt> are defined as
---   
 --   <pre>
---   newtype Identity a = Identity a
---   
---   instance Functor Identity where
---     fmap f (Identity x) = Identity (f x)
---   
---   instance Applicative Identity where
---     pure x = Identity x
---     Identity f &lt;*&gt; Identity x = Identity (f x)
---   
---   newtype Compose f g a = Compose (f (g a))
---   
---   instance (Functor f, Functor g) =&gt; Functor (Compose f g) where
---     fmap f (Compose x) = Compose (fmap (fmap f) x)
---   
---   instance (Applicative f, Applicative g) =&gt; Applicative (Compose f g) where
---     pure x = Compose (pure (pure x))
---     Compose f &lt;*&gt; Compose x = Compose ((&lt;*&gt;) &lt;$&gt; f &lt;*&gt; x)
+--   t (<a>pure</a> x) = <a>pure</a> x
+--   t (f <a>&lt;*&gt;</a> x) = t f <a>&lt;*&gt;</a> t x
 --   </pre>
+--   
+--   and the identity functor <a>Identity</a> and composition functors
+--   <a>Compose</a> are from <a>Data.Functor.Identity</a> and
+--   <a>Data.Functor.Compose</a>.
 --   
 --   (The naturality law is implied by parametricity.)
 --   
@@ -2862,18 +2856,18 @@ sequence :: (Traversable t, Monad m) => t (m a) -> m (t a)
 --   A <a>Generic</a> instance must satisfy the following laws:
 --   
 --   <pre>
---   <a>from</a> . <a>to</a> ≡ <tt>id</tt>
---   <a>to</a> . <a>from</a> ≡ <tt>id</tt>
+--   <a>from</a> . <a>to</a> ≡ <a>id</a>
+--   <a>to</a> . <a>from</a> ≡ <a>id</a>
 --   </pre>
 class Generic a
 
 -- | The class of semigroups (types with an associative binary operation).
 --   
---   Instances should satisfy the associativity law:
+--   Instances should satisfy the following:
 --   
 --   <ul>
---   <li><pre>x <a>&lt;&gt;</a> (y <a>&lt;&gt;</a> z) = (x <a>&lt;&gt;</a>
---   y) <a>&lt;&gt;</a> z</pre></li>
+--   <li><i>Associativity</i> <tt>x <a>&lt;&gt;</a> (y <a>&lt;&gt;</a> z) =
+--   (x <a>&lt;&gt;</a> y) <a>&lt;&gt;</a> z</tt></li>
 --   </ul>
 class Semigroup a
 
@@ -2882,15 +2876,18 @@ class Semigroup a
 infixr 6 <>
 
 -- | The class of monoids (types with an associative binary operation that
---   has an identity). Instances should satisfy the following laws:
+--   has an identity). Instances should satisfy the following:
 --   
 --   <ul>
---   <li><pre>x <a>&lt;&gt;</a> <a>mempty</a> = x</pre></li>
---   <li><pre><a>mempty</a> <a>&lt;&gt;</a> x = x</pre></li>
---   <li><tt>x <a>&lt;&gt;</a> (y <a>&lt;&gt;</a> z) = (x <a>&lt;&gt;</a>
---   y) <a>&lt;&gt;</a> z</tt> (<a>Semigroup</a> law)</li>
---   <li><pre><a>mconcat</a> = <a>foldr</a> '(&lt;&gt;)'
---   <a>mempty</a></pre></li>
+--   <li><i>Right identity</i> <tt>x <a>&lt;&gt;</a> <a>mempty</a> =
+--   x</tt></li>
+--   <li><i>Left identity</i> <tt><a>mempty</a> <a>&lt;&gt;</a> x =
+--   x</tt></li>
+--   <li><i>Associativity</i> <tt>x <a>&lt;&gt;</a> (y <a>&lt;&gt;</a> z) =
+--   (x <a>&lt;&gt;</a> y) <a>&lt;&gt;</a> z</tt> (<a>Semigroup</a>
+--   law)</li>
+--   <li><i>Concatenation</i> <tt><a>mconcat</a> = <a>foldr</a>
+--   (<a>&lt;&gt;</a>) <a>mempty</a></tt></li>
 --   </ul>
 --   
 --   The method names refer to the monoid of lists under concatenation, but
@@ -2899,7 +2896,7 @@ infixr 6 <>
 --   Some types can be viewed as a monoid in more than one way, e.g. both
 --   addition and multiplication on numbers. In such cases we often define
 --   <tt>newtype</tt>s and make those instances of <a>Monoid</a>, e.g.
---   <tt>Sum</tt> and <tt>Product</tt>.
+--   <a>Sum</a> and <a>Product</a>.
 --   
 --   <b>NOTE</b>: <a>Semigroup</a> is a superclass of <a>Monoid</a> since
 --   <i>base-4.11.0.0</i>.
@@ -2911,7 +2908,7 @@ mempty :: Monoid a => a
 -- | An associative operation
 --   
 --   <b>NOTE</b>: This method is redundant and has the default
---   implementation <tt><a>mappend</a> = '(&lt;&gt;)'</tt> since
+--   implementation <tt><a>mappend</a> = (<a>&lt;&gt;</a>)</tt> since
 --   <i>base-4.11.0.0</i>.
 mappend :: Monoid a => a -> a -> a
 
@@ -2935,8 +2932,8 @@ True :: Bool
 --   
 --   To convert a <a>Char</a> to or from the corresponding <a>Int</a> value
 --   defined by Unicode, use <a>toEnum</a> and <a>fromEnum</a> from the
---   <a>Enum</a> class respectively (or equivalently <tt>ord</tt> and
---   <tt>chr</tt>).
+--   <a>Enum</a> class respectively (or equivalently <a>ord</a> and
+--   <a>chr</a>).
 data Char
 
 -- | Double-precision floating point numbers. It is desirable that this
@@ -2985,8 +2982,8 @@ data Integer
 --   1267650600228229401496703205376
 --   </pre>
 --   
---   Operations whose result would be negative <tt><tt>throw</tt>
---   (<tt>Underflow</tt> :: <tt>ArithException</tt>)</tt>,
+--   Operations whose result would be negative <tt><a>throw</a>
+--   (<a>Underflow</a> :: <a>ArithException</a>)</tt>,
 --   
 --   <pre>
 --   &gt;&gt;&gt; -1 :: Natural
@@ -2999,7 +2996,7 @@ data Natural
 --   (represented as <tt><a>Just</a> a</tt>), or it is empty (represented
 --   as <a>Nothing</a>). Using <a>Maybe</a> is a good way to deal with
 --   errors or exceptional cases without resorting to drastic measures such
---   as <tt>error</tt>.
+--   as <a>error</a>.
 --   
 --   The <a>Maybe</a> type is also a monad. It is a simple kind of error
 --   monad, where all errors are represented by <a>Nothing</a>. A richer
@@ -3027,8 +3024,8 @@ type Rational = Ratio Integer
 --   called at some point, directly or indirectly, from <tt>Main.main</tt>.
 --   
 --   <a>IO</a> is a monad, so <a>IO</a> actions can be combined using
---   either the do-notation or the <tt>&gt;&gt;</tt> and <tt>&gt;&gt;=</tt>
---   operations from the <tt>Monad</tt> class.
+--   either the do-notation or the <a>&gt;&gt;</a> and <a>&gt;&gt;=</a>
+--   operations from the <a>Monad</a> class.
 data IO a
 
 -- | A <a>Word</a> is an unsigned integral type, with the same size as
@@ -3226,10 +3223,10 @@ data CallStack
 --   are values of type <a>String</a>.
 type String = [Char]
 
--- | The strict state-transformer monad. A computation of type
---   <tt><a>ST</a> s a</tt> transforms an internal state indexed by
---   <tt>s</tt>, and returns a value of type <tt>a</tt>. The <tt>s</tt>
---   parameter is either
+-- | The strict <a>ST</a> monad. The <a>ST</a> monad allows for destructive
+--   updates, but is escapable (unlike IO). A computation of type
+--   <tt><a>ST</a> s a</tt> returns a value of type <tt>a</tt>, and execute
+--   in "thread" <tt>s</tt>. The <tt>s</tt> parameter is either
 --   
 --   <ul>
 --   <li>an uninstantiated type variable (inside invocations of
@@ -3257,7 +3254,7 @@ liftM :: Monad m => (a1 -> r) -> m a1 -> m r
 --   <pre>
 --   id x = x
 --   </pre>
-id :: () => a -> a
+id :: a -> a
 
 -- | Case analysis for the <a>Either</a> type. If the value is
 --   <tt><a>Left</a> a</tt>, apply the first function to <tt>a</tt>; if it
@@ -3268,8 +3265,8 @@ id :: () => a -> a
 --   We create two values of type <tt><a>Either</a> <a>String</a>
 --   <a>Int</a></tt>, one using the <a>Left</a> constructor and another
 --   using the <a>Right</a> constructor. Then we apply "either" the
---   <tt>length</tt> function (if we have a <a>String</a>) or the
---   "times-two" function (if we have an <a>Int</a>):
+--   <a>length</a> function (if we have a <a>String</a>) or the "times-two"
+--   function (if we have an <a>Int</a>):
 --   
 --   <pre>
 --   &gt;&gt;&gt; let s = Left "foo" :: Either String Int
@@ -3282,7 +3279,7 @@ id :: () => a -> a
 --   &gt;&gt;&gt; either length (*2) n
 --   6
 --   </pre>
-either :: () => (a -> c) -> (b -> c) -> Either a b -> c
+either :: (a -> c) -> (b -> c) -> Either a b -> c
 
 -- | See examples in <a>Control.Monad.Reader</a>. Note, the partially
 --   applied function type <tt>(-&gt;) r</tt> is a simple reader monad. See
@@ -3294,6 +3291,10 @@ ask :: MonadReader r m => m r
 
 -- | Executes a computation in a modified environment.
 local :: MonadReader r m => (r -> r) -> m a -> m a
+
+-- | A handle managing output to the Haskell program's standard output
+--   channel.
+stdout :: Handle
 
 -- | Haskell defines operations to read and write characters from and to
 --   files, represented by values of type <tt>Handle</tt>. Each value of
@@ -3341,37 +3342,37 @@ data ThreadId
 
 -- | A version of <a>waitBoth</a> that can be used inside an STM
 --   transaction.
-waitBothSTM :: () => Async a -> Async b -> STM (a, b)
+waitBothSTM :: Async a -> Async b -> STM (a, b)
 
 -- | A version of <a>waitEither_</a> that can be used inside an STM
 --   transaction.
-waitEitherSTM_ :: () => Async a -> Async b -> STM ()
+waitEitherSTM_ :: Async a -> Async b -> STM ()
 
 -- | A version of <a>waitEither</a> that can be used inside an STM
 --   transaction.
-waitEitherSTM :: () => Async a -> Async b -> STM (Either a b)
+waitEitherSTM :: Async a -> Async b -> STM (Either a b)
 
 -- | A version of <a>waitEitherCatch</a> that can be used inside an STM
 --   transaction.
-waitEitherCatchSTM :: () => Async a -> Async b -> STM (Either (Either SomeException a) (Either SomeException b))
+waitEitherCatchSTM :: Async a -> Async b -> STM (Either (Either SomeException a) (Either SomeException b))
 
 -- | A version of <a>waitAny</a> that can be used inside an STM
 --   transaction.
-waitAnySTM :: () => [Async a] -> STM (Async a, a)
+waitAnySTM :: [Async a] -> STM (Async a, a)
 
 -- | A version of <a>waitAnyCatch</a> that can be used inside an STM
 --   transaction.
-waitAnyCatchSTM :: () => [Async a] -> STM (Async a, Either SomeException a)
+waitAnyCatchSTM :: [Async a] -> STM (Async a, Either SomeException a)
 
 -- | A version of <a>poll</a> that can be used inside an STM transaction.
-pollSTM :: () => Async a -> STM (Maybe (Either SomeException a))
+pollSTM :: Async a -> STM (Maybe (Either SomeException a))
 
 -- | A version of <a>waitCatch</a> that can be used inside an STM
 --   transaction.
-waitCatchSTM :: () => Async a -> STM (Either SomeException a)
+waitCatchSTM :: Async a -> STM (Either SomeException a)
 
 -- | A version of <a>wait</a> that can be used inside an STM transaction.
-waitSTM :: () => Async a -> STM a
+waitSTM :: Async a -> STM a
 
 -- | An asynchronous action spawned by <a>async</a> or <a>withAsync</a>.
 --   Asynchronous actions are executed in a separate thread, and operations
@@ -3396,7 +3397,7 @@ data Text
 --   of the equations:
 --   
 --   <ul>
---   <li><pre><a>some</a> v = (:) <tt>&lt;$&gt;</tt> v <a>&lt;*&gt;</a>
+--   <li><pre><a>some</a> v = (:) <a>&lt;$&gt;</a> v <a>&lt;*&gt;</a>
 --   <a>many</a> v</pre></li>
 --   <li><pre><a>many</a> v = <a>some</a> v <a>&lt;|&gt;</a> <a>pure</a>
 --   []</pre></li>
@@ -3450,7 +3451,7 @@ mplus :: MonadPlus m => m a -> m a -> m a
 --   :}
 --   5
 --   </pre>
-absurd :: () => Void -> a
+absurd :: Void -> a
 
 -- | Uninhabited data type
 data Void
@@ -3510,7 +3511,7 @@ replicateM_ :: Applicative m => Int -> m a -> m ()
 -- | Like <a>foldM</a>, but discards the result.
 foldM_ :: (Foldable t, Monad m) => (b -> a -> m b) -> b -> t a -> m ()
 
--- | The <a>foldM</a> function is analogous to <tt>foldl</tt>, except that
+-- | The <a>foldM</a> function is analogous to <a>foldl</a>, except that
 --   its result is encapsulated in a monad. Note that <a>foldM</a> works
 --   from left-to-right over the list arguments. This could be an issue
 --   where <tt>(<a>&gt;&gt;</a>)</tt> and the `folded function' are not
@@ -3583,7 +3584,7 @@ infixr 1 <=<
 (>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
 infixr 1 >=>
 
--- | This generalizes the list-based <tt>filter</tt> function.
+-- | This generalizes the list-based <a>filter</a> function.
 filterM :: Applicative m => (a -> m Bool) -> [a] -> m [a]
 
 -- | <a>forM</a> is <a>mapM</a> with its arguments flipped. For a version
@@ -3613,9 +3614,8 @@ optional :: Alternative f => f a -> f (Maybe a)
 --   <a>arr</a> <a>fst</a> &gt;&gt;&gt; f</pre></li>
 --   <li><pre><a>first</a> f &gt;&gt;&gt; <a>arr</a> (<a>id</a> *** g) =
 --   <a>arr</a> (<a>id</a> *** g) &gt;&gt;&gt; <a>first</a> f</pre></li>
---   <li><pre><a>first</a> (<a>first</a> f) &gt;&gt;&gt; <a>arr</a>
---   <tt>assoc</tt> = <a>arr</a> <tt>assoc</tt> &gt;&gt;&gt; <a>first</a>
---   f</pre></li>
+--   <li><pre><a>first</a> (<a>first</a> f) &gt;&gt;&gt; <a>arr</a> assoc =
+--   <a>arr</a> assoc &gt;&gt;&gt; <a>first</a> f</pre></li>
 --   </ul>
 --   
 --   where
@@ -3668,13 +3668,13 @@ stderr :: Handle
 stdin :: Handle
 
 -- | Write the supplied value into a <a>TVar</a>.
-writeTVar :: () => TVar a -> a -> STM ()
+writeTVar :: TVar a -> a -> STM ()
 
 -- | Return the current value stored in a <a>TVar</a>.
-readTVar :: () => TVar a -> STM a
+readTVar :: TVar a -> STM a
 
 -- | Create a new <a>TVar</a> holding a value supplied
-newTVar :: () => a -> STM (TVar a)
+newTVar :: a -> STM (TVar a)
 
 -- | A monad supporting atomic memory transactions.
 data STM a
@@ -3684,7 +3684,7 @@ data TVar a
 
 -- | Superclass for asynchronous exceptions.
 data SomeAsyncException
-[SomeAsyncException] :: forall e. Exception e => e -> SomeAsyncException
+SomeAsyncException :: e -> SomeAsyncException
 
 -- | Defines the exit codes that a program can return.
 data ExitCode
@@ -3696,10 +3696,6 @@ ExitSuccess :: ExitCode
 --   of the code is operating-system dependent. In particular, some values
 --   may be prohibited (e.g. 0 on a POSIX-compliant system).
 ExitFailure :: Int -> ExitCode
-
--- | A handle managing output to the Haskell program's standard output
---   channel.
-stdout :: Handle
 
 -- | Three kinds of buffering are supported: line-buffering,
 --   block-buffering or no-buffering. These modes have the following
@@ -3753,8 +3749,7 @@ LineBuffering :: BufferMode
 --   otherwise implementation-dependent.
 BlockBuffering :: Maybe Int -> BufferMode
 
--- | A mode that determines the effect of <tt>hSeek</tt> <tt>hdl mode
---   i</tt>.
+-- | A mode that determines the effect of <a>hSeek</a> <tt>hdl mode i</tt>.
 data SeekMode
 
 -- | A mutable variable in the <a>IO</a> monad
@@ -3869,9 +3864,9 @@ fromException :: Exception e => SomeException -> Maybe e
 displayException :: Exception e => e -> String
 
 -- | The <a>Const</a> functor.
-newtype Const a (b :: k) :: forall k. () => Type -> k -> Type
-Const :: a -> Const a
-[getConst] :: Const a -> a
+newtype Const a (b :: k)
+Const :: a -> Const a (b :: k)
+[getConst] :: Const a (b :: k) -> a
 
 -- | <a>notElem</a> is the negation of <a>elem</a>.
 notElem :: (Foldable t, Eq a) => a -> t a -> Bool
@@ -3911,7 +3906,10 @@ msum :: (Foldable t, MonadPlus m) => t (m a) -> m a
 
 -- | The sum of a collection of actions, generalizing <a>concat</a>.
 --   
---   asum [Just <a>Hello</a>, Nothing, Just <a>World</a>] Just <a>Hello</a>
+--   <pre>
+--   &gt;&gt;&gt; asum [Just "Hello", Nothing, Just "World"]
+--   Just "Hello"
+--   </pre>
 asum :: (Foldable t, Alternative f) => t (f a) -> f a
 
 -- | Evaluate each monadic action in the structure from left to right, and
@@ -4079,7 +4077,7 @@ readMaybe :: Read a => String -> Maybe a
 --   &gt;&gt;&gt; report (Right 1)
 --   SUCCESS
 --   </pre>
-isRight :: () => Either a b -> Bool
+isRight :: Either a b -> Bool
 
 -- | Return <a>True</a> if the given value is a <a>Left</a>-value,
 --   <a>False</a> otherwise.
@@ -4115,7 +4113,7 @@ isRight :: () => Either a b -> Bool
 --   &gt;&gt;&gt; report (Left "parse error")
 --   ERROR
 --   </pre>
-isLeft :: () => Either a b -> Bool
+isLeft :: Either a b -> Bool
 
 -- | Partitions a list of <a>Either</a> into two lists. All the <a>Left</a>
 --   elements are extracted, in order, to the first component of the
@@ -4142,7 +4140,7 @@ isLeft :: () => Either a b -> Bool
 --   &gt;&gt;&gt; partitionEithers list == (lefts list, rights list)
 --   True
 --   </pre>
-partitionEithers :: () => [Either a b] -> ([a], [b])
+partitionEithers :: [Either a b] -> ([a], [b])
 
 -- | Extracts from a list of <a>Either</a> all the <a>Right</a> elements.
 --   All the <a>Right</a> elements are extracted in order.
@@ -4157,7 +4155,7 @@ partitionEithers :: () => [Either a b] -> ([a], [b])
 --   &gt;&gt;&gt; rights list
 --   [3,7]
 --   </pre>
-rights :: () => [Either a b] -> [b]
+rights :: [Either a b] -> [b]
 
 -- | Extracts from a list of <a>Either</a> all the <a>Left</a> elements.
 --   All the <a>Left</a> elements are extracted in order.
@@ -4172,7 +4170,7 @@ rights :: () => [Either a b] -> [b]
 --   &gt;&gt;&gt; lefts list
 --   ["foo","bar","baz"]
 --   </pre>
-lefts :: () => [Either a b] -> [a]
+lefts :: [Either a b] -> [a]
 
 -- | <pre>
 --   comparing p x y = compare (p x) (p y)
@@ -4202,7 +4200,7 @@ Down :: a -> Down a
 --   it may be too costly to create one).
 --   
 --   Historically, <tt><a>Proxy</a> :: <a>Proxy</a> a</tt> is a safer
---   alternative to the <tt>'undefined :: a'</tt> idiom.
+--   alternative to the <tt><a>undefined</a> :: a</tt> idiom.
 --   
 --   <pre>
 --   &gt;&gt;&gt; Proxy :: Proxy (Void, Int -&gt; Int)
@@ -4225,20 +4223,21 @@ Down :: a -> Down a
 --   &gt;&gt;&gt; Proxy :: Proxy complicatedStructure
 --   Proxy
 --   </pre>
-data Proxy (t :: k) :: forall k. () => k -> Type
-Proxy :: Proxy
+data Proxy (t :: k)
+Proxy :: Proxy (t :: k)
 
 -- | Left-to-right composition
-(>>>) :: Category cat => cat a b -> cat b c -> cat a c
+(>>>) :: forall k cat (a :: k) (b :: k) (c :: k). Category cat => cat a b -> cat b c -> cat a c
 infixr 1 >>>
 
 -- | A class for categories. Instances should satisfy the laws
 --   
---   <pre>
---   f <a>.</a> <a>id</a>  =  f  -- (right identity)
---   <a>id</a> <a>.</a> f  =  f  -- (left identity)
---   f <a>.</a> (g <a>.</a> h)  =  (f <a>.</a> g) <a>.</a> h  -- (associativity)
---   </pre>
+--   <ul>
+--   <li><i>Right identity</i> <tt>f <a>.</a> <a>id</a> = f</tt></li>
+--   <li><i>Left identity</i> <tt><a>id</a> <a>.</a> f = f</tt></li>
+--   <li><i>Associativity</i> <tt>f <a>.</a> (g <a>.</a> h) = (f <a>.</a>
+--   g) <a>.</a> h</tt></li>
+--   </ul>
 class Category (cat :: k -> k -> Type)
 
 -- | See <a>openFile</a>
@@ -4284,287 +4283,6 @@ byteSwap32 :: Word32 -> Word32
 -- | Swap bytes in <a>Word16</a>.
 byteSwap16 :: Word16 -> Word16
 
--- | Return the value computed by a state transformer computation. The
---   <tt>forall</tt> ensures that the internal state used by the <a>ST</a>
---   computation is inaccessible to the rest of the program.
-runST :: () => (forall s. () => ST s a) -> a
-
--- | Case analysis for the <a>Bool</a> type. <tt><a>bool</a> x y p</tt>
---   evaluates to <tt>x</tt> when <tt>p</tt> is <a>False</a>, and evaluates
---   to <tt>y</tt> when <tt>p</tt> is <a>True</a>.
---   
---   This is equivalent to <tt>if p then y else x</tt>; that is, one can
---   think of it as an if-then-else construct with its arguments reordered.
---   
---   <h4><b>Examples</b></h4>
---   
---   Basic usage:
---   
---   <pre>
---   &gt;&gt;&gt; bool "foo" "bar" True
---   "bar"
---   
---   &gt;&gt;&gt; bool "foo" "bar" False
---   "foo"
---   </pre>
---   
---   Confirm that <tt><a>bool</a> x y p</tt> and <tt>if p then y else
---   x</tt> are equivalent:
---   
---   <pre>
---   &gt;&gt;&gt; let p = True; x = "bar"; y = "foo"
---   
---   &gt;&gt;&gt; bool x y p == if p then y else x
---   True
---   
---   &gt;&gt;&gt; let p = False
---   
---   &gt;&gt;&gt; bool x y p == if p then y else x
---   True
---   </pre>
-bool :: () => a -> a -> Bool -> a
-
--- | <a>&amp;</a> is a reverse application operator. This provides
---   notational convenience. Its precedence is one higher than that of the
---   forward application operator <a>$</a>, which allows <a>&amp;</a> to be
---   nested in <a>$</a>.
---   
---   <pre>
---   &gt;&gt;&gt; 5 &amp; (+1) &amp; show
---   "6"
---   </pre>
-(&) :: () => a -> (a -> b) -> b
-infixl 1 &
-
--- | <tt><a>on</a> b u x y</tt> runs the binary function <tt>b</tt>
---   <i>on</i> the results of applying unary function <tt>u</tt> to two
---   arguments <tt>x</tt> and <tt>y</tt>. From the opposite perspective, it
---   transforms two inputs and combines the outputs.
---   
---   <pre>
---   ((+) `<a>on</a>` f) x y = f x + f y
---   </pre>
---   
---   Typical usage: <tt><a>sortBy</a> (<tt>compare</tt> `on`
---   <tt>fst</tt>)</tt>.
---   
---   Algebraic properties:
---   
---   <ul>
---   <li><pre>(*) `on` <a>id</a> = (*) -- (if (*) ∉ {⊥, <a>const</a>
---   ⊥})</pre></li>
---   <li><pre>((*) `on` f) `on` g = (*) `on` (f . g)</pre></li>
---   <li><pre><a>flip</a> on f . <a>flip</a> on g = <a>flip</a> on (g .
---   f)</pre></li>
---   </ul>
-on :: () => (b -> b -> c) -> (a -> b) -> a -> a -> c
-infixl 0 `on`
-
--- | <tt><a>fix</a> f</tt> is the least fixed point of the function
---   <tt>f</tt>, i.e. the least defined <tt>x</tt> such that <tt>f x =
---   x</tt>.
---   
---   For example, we can write the factorial function using direct
---   recursion as
---   
---   <pre>
---   &gt;&gt;&gt; let fac n = if n &lt;= 1 then 1 else n * fac (n-1) in fac 5
---   120
---   </pre>
---   
---   This uses the fact that Haskell’s <tt>let</tt> introduces recursive
---   bindings. We can rewrite this definition using <a>fix</a>,
---   
---   <pre>
---   &gt;&gt;&gt; fix (\rec n -&gt; if n &lt;= 1 then 1 else n * rec (n-1)) 5
---   120
---   </pre>
---   
---   Instead of making a recursive call, we introduce a dummy parameter
---   <tt>rec</tt>; when used within <a>fix</a>, this parameter then refers
---   to <tt>fix'</tt> argument, hence the recursion is reintroduced.
-fix :: () => (a -> a) -> a
-
--- | <tt><a>void</a> value</tt> discards or ignores the result of
---   evaluation, such as the return value of an <a>IO</a> action.
---   
---   <h4><b>Examples</b></h4>
---   
---   Replace the contents of a <tt><tt>Maybe</tt> <tt>Int</tt></tt> with
---   unit:
---   
---   <pre>
---   &gt;&gt;&gt; void Nothing
---   Nothing
---   
---   &gt;&gt;&gt; void (Just 3)
---   Just ()
---   </pre>
---   
---   Replace the contents of an <tt><tt>Either</tt> <tt>Int</tt>
---   <tt>Int</tt></tt> with unit, resulting in an <tt><tt>Either</tt>
---   <tt>Int</tt> '()'</tt>:
---   
---   <pre>
---   &gt;&gt;&gt; void (Left 8675309)
---   Left 8675309
---   
---   &gt;&gt;&gt; void (Right 8675309)
---   Right ()
---   </pre>
---   
---   Replace every element of a list with unit:
---   
---   <pre>
---   &gt;&gt;&gt; void [1,2,3]
---   [(),(),()]
---   </pre>
---   
---   Replace the second element of a pair with unit:
---   
---   <pre>
---   &gt;&gt;&gt; void (1,2)
---   (1,())
---   </pre>
---   
---   Discard the result of an <a>IO</a> action:
---   
---   <pre>
---   &gt;&gt;&gt; mapM print [1,2]
---   1
---   2
---   [(),()]
---   
---   &gt;&gt;&gt; void $ mapM print [1,2]
---   1
---   2
---   </pre>
-void :: Functor f => f a -> f ()
-
--- | Flipped version of <a>&lt;$</a>.
---   
---   <h4><b>Examples</b></h4>
---   
---   Replace the contents of a <tt><tt>Maybe</tt> <tt>Int</tt></tt> with a
---   constant <tt>String</tt>:
---   
---   <pre>
---   &gt;&gt;&gt; Nothing $&gt; "foo"
---   Nothing
---   
---   &gt;&gt;&gt; Just 90210 $&gt; "foo"
---   Just "foo"
---   </pre>
---   
---   Replace the contents of an <tt><tt>Either</tt> <tt>Int</tt>
---   <tt>Int</tt></tt> with a constant <tt>String</tt>, resulting in an
---   <tt><tt>Either</tt> <tt>Int</tt> <tt>String</tt></tt>:
---   
---   <pre>
---   &gt;&gt;&gt; Left 8675309 $&gt; "foo"
---   Left 8675309
---   
---   &gt;&gt;&gt; Right 8675309 $&gt; "foo"
---   Right "foo"
---   </pre>
---   
---   Replace each element of a list with a constant <tt>String</tt>:
---   
---   <pre>
---   &gt;&gt;&gt; [1,2,3] $&gt; "foo"
---   ["foo","foo","foo"]
---   </pre>
---   
---   Replace the second element of a pair with a constant <tt>String</tt>:
---   
---   <pre>
---   &gt;&gt;&gt; (1,2) $&gt; "foo"
---   (1,"foo")
---   </pre>
-($>) :: Functor f => f a -> b -> f b
-infixl 4 $>
-
--- | Flipped version of <a>&lt;$&gt;</a>.
---   
---   <pre>
---   (<a>&lt;&amp;&gt;</a>) = <a>flip</a> <a>fmap</a>
---   </pre>
---   
---   <h4><b>Examples</b></h4>
---   
---   Apply <tt>(+1)</tt> to a list, a <a>Just</a> and a <a>Right</a>:
---   
---   <pre>
---   &gt;&gt;&gt; Just 2 &lt;&amp;&gt; (+1)
---   Just 3
---   </pre>
---   
---   <pre>
---   &gt;&gt;&gt; [1,2,3] &lt;&amp;&gt; (+1)
---   [2,3,4]
---   </pre>
---   
---   <pre>
---   &gt;&gt;&gt; Right 3 &lt;&amp;&gt; (+1)
---   Right 4
---   </pre>
-(<&>) :: Functor f => f a -> (a -> b) -> f b
-infixl 1 <&>
-
--- | An infix synonym for <a>fmap</a>.
---   
---   The name of this operator is an allusion to <tt>$</tt>. Note the
---   similarities between their types:
---   
---   <pre>
---    ($)  ::              (a -&gt; b) -&gt;   a -&gt;   b
---   (&lt;$&gt;) :: Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
---   </pre>
---   
---   Whereas <tt>$</tt> is function application, <a>&lt;$&gt;</a> is
---   function application lifted over a <a>Functor</a>.
---   
---   <h4><b>Examples</b></h4>
---   
---   Convert from a <tt><tt>Maybe</tt> <tt>Int</tt></tt> to a
---   <tt><tt>Maybe</tt> <tt>String</tt></tt> using <tt>show</tt>:
---   
---   <pre>
---   &gt;&gt;&gt; show &lt;$&gt; Nothing
---   Nothing
---   
---   &gt;&gt;&gt; show &lt;$&gt; Just 3
---   Just "3"
---   </pre>
---   
---   Convert from an <tt><tt>Either</tt> <tt>Int</tt> <tt>Int</tt></tt> to
---   an <tt><tt>Either</tt> <tt>Int</tt></tt> <tt>String</tt> using
---   <tt>show</tt>:
---   
---   <pre>
---   &gt;&gt;&gt; show &lt;$&gt; Left 17
---   Left 17
---   
---   &gt;&gt;&gt; show &lt;$&gt; Right 17
---   Right "17"
---   </pre>
---   
---   Double each element of a list:
---   
---   <pre>
---   &gt;&gt;&gt; (*2) &lt;$&gt; [1,2,3]
---   [2,4,6]
---   </pre>
---   
---   Apply <tt>even</tt> to the second element of a pair:
---   
---   <pre>
---   &gt;&gt;&gt; even &lt;$&gt; (2,2)
---   (2,True)
---   </pre>
-(<$>) :: Functor f => (a -> b) -> f a -> f b
-infixl 4 <$>
-
 -- | <tt><a>lcm</a> x y</tt> is the smallest positive integer that both
 --   <tt>x</tt> and <tt>y</tt> divide.
 lcm :: Integral a => a -> a -> a
@@ -4592,25 +4310,43 @@ infixr 8 ^
 odd :: Integral a => a -> Bool
 even :: Integral a => a -> Bool
 
--- | <a>zipWith</a> generalises <a>zip</a> by zipping with the function
---   given as the first argument, instead of a tupling function. For
---   example, <tt><a>zipWith</a> (+)</tt> is applied to two lists to
---   produce the list of corresponding sums.
+-- | Return the value computed by a state thread. The <tt>forall</tt>
+--   ensures that the internal state used by the <a>ST</a> computation is
+--   inaccessible to the rest of the program.
+runST :: (forall s. () => ST s a) -> a
+
+-- | <i>O(min(m,n))</i>. <a>zipWith</a> generalises <a>zip</a> by zipping
+--   with the function given as the first argument, instead of a tupling
+--   function. For example, <tt><a>zipWith</a> (+)</tt> is applied to two
+--   lists to produce the list of corresponding sums:
+--   
+--   <pre>
+--   &gt;&gt;&gt; zipWith (+) [1, 2, 3] [4, 5, 6]
+--   [5,7,9]
+--   </pre>
 --   
 --   <a>zipWith</a> is right-lazy:
 --   
 --   <pre>
 --   zipWith f [] _|_ = []
 --   </pre>
-zipWith :: () => (a -> b -> c) -> [a] -> [b] -> [c]
+--   
+--   <a>zipWith</a> is capable of list fusion, but it is restricted to its
+--   first list argument and its resulting list.
+zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
 
--- | <a>lookup</a> <tt>key assocs</tt> looks up a key in an association
---   list.
+-- | <i>O(n)</i>. <a>lookup</a> <tt>key assocs</tt> looks up a key in an
+--   association list.
+--   
+--   <pre>
+--   &gt;&gt;&gt; lookup 2 [(1, "first"), (2, "second"), (3, "third")]
+--   Just "second"
+--   </pre>
 lookup :: Eq a => a -> [(a, b)] -> Maybe b
 
 -- | <a>reverse</a> <tt>xs</tt> returns the elements of <tt>xs</tt> in
 --   reverse order. <tt>xs</tt> must be finite.
-reverse :: () => [a] -> [a]
+reverse :: [a] -> [a]
 
 -- | <a>break</a>, applied to a predicate <tt>p</tt> and a list
 --   <tt>xs</tt>, returns a tuple where first element is longest prefix
@@ -4625,7 +4361,7 @@ reverse :: () => [a] -> [a]
 --   
 --   <a>break</a> <tt>p</tt> is equivalent to <tt><a>span</a> (<a>not</a> .
 --   p)</tt>.
-break :: () => (a -> Bool) -> [a] -> ([a], [a])
+break :: (a -> Bool) -> [a] -> ([a], [a])
 
 -- | <a>span</a>, applied to a predicate <tt>p</tt> and a list <tt>xs</tt>,
 --   returns a tuple where first element is longest prefix (possibly empty)
@@ -4640,7 +4376,7 @@ break :: () => (a -> Bool) -> [a] -> ([a], [a])
 --   
 --   <a>span</a> <tt>p xs</tt> is equivalent to <tt>(<a>takeWhile</a> p xs,
 --   <a>dropWhile</a> p xs)</tt>
-span :: () => (a -> Bool) -> [a] -> ([a], [a])
+span :: (a -> Bool) -> [a] -> ([a], [a])
 
 -- | <a>dropWhile</a> <tt>p xs</tt> returns the suffix remaining after
 --   <a>takeWhile</a> <tt>p xs</tt>:
@@ -4650,7 +4386,7 @@ span :: () => (a -> Bool) -> [a] -> ([a], [a])
 --   dropWhile (&lt; 9) [1,2,3] == []
 --   dropWhile (&lt; 0) [1,2,3] == [1,2,3]
 --   </pre>
-dropWhile :: () => (a -> Bool) -> [a] -> [a]
+dropWhile :: (a -> Bool) -> [a] -> [a]
 
 -- | <a>takeWhile</a>, applied to a predicate <tt>p</tt> and a list
 --   <tt>xs</tt>, returns the longest prefix (possibly empty) of
@@ -4661,13 +4397,13 @@ dropWhile :: () => (a -> Bool) -> [a] -> [a]
 --   takeWhile (&lt; 9) [1,2,3] == [1,2,3]
 --   takeWhile (&lt; 0) [1,2,3] == []
 --   </pre>
-takeWhile :: () => (a -> Bool) -> [a] -> [a]
+takeWhile :: (a -> Bool) -> [a] -> [a]
 
 -- | <a>replicate</a> <tt>n x</tt> is a list of length <tt>n</tt> with
 --   <tt>x</tt> the value of every element. It is an instance of the more
 --   general <a>genericReplicate</a>, in which <tt>n</tt> may be of any
 --   integral type.
-replicate :: () => Int -> a -> [a]
+replicate :: Int -> a -> [a]
 
 -- | The <a>mapMaybe</a> function is a version of <a>map</a> which can
 --   throw out elements. In particular, the functional argument returns
@@ -4699,7 +4435,7 @@ replicate :: () => Int -> a -> [a]
 --   &gt;&gt;&gt; mapMaybe Just [1,2,3]
 --   [1,2,3]
 --   </pre>
-mapMaybe :: () => (a -> Maybe b) -> [a] -> [b]
+mapMaybe :: (a -> Maybe b) -> [a] -> [b]
 
 -- | The <a>catMaybes</a> function takes a list of <a>Maybe</a>s and
 --   returns a list of all the <a>Just</a> values.
@@ -4727,7 +4463,7 @@ mapMaybe :: () => (a -> Maybe b) -> [a] -> [b]
 --   &gt;&gt;&gt; catMaybes $ [readMaybe x :: Maybe Int | x &lt;- ["1", "Foo", "3"] ]
 --   [1,3]
 --   </pre>
-catMaybes :: () => [Maybe a] -> [a]
+catMaybes :: [Maybe a] -> [a]
 
 -- | The <a>listToMaybe</a> function returns <a>Nothing</a> on an empty
 --   list or <tt><a>Just</a> a</tt> where <tt>a</tt> is the first element
@@ -4769,10 +4505,10 @@ catMaybes :: () => [Maybe a] -> [a]
 --   &gt;&gt;&gt; maybeToList $ listToMaybe [1,2,3]
 --   [1]
 --   </pre>
-listToMaybe :: () => [a] -> Maybe a
+listToMaybe :: [a] -> Maybe a
 
 -- | The <a>maybeToList</a> function returns an empty list when given
---   <a>Nothing</a> or a singleton list when not given <a>Nothing</a>.
+--   <a>Nothing</a> or a singleton list when given <a>Just</a>.
 --   
 --   <h4><b>Examples</b></h4>
 --   
@@ -4800,7 +4536,7 @@ listToMaybe :: () => [a] -> Maybe a
 --   &gt;&gt;&gt; sum $ maybeToList (readMaybe "")
 --   0
 --   </pre>
-maybeToList :: () => Maybe a -> [a]
+maybeToList :: Maybe a -> [a]
 
 -- | The <a>fromMaybe</a> function takes a default value and and
 --   <a>Maybe</a> value. If the <a>Maybe</a> is <a>Nothing</a>, it returns
@@ -4821,7 +4557,7 @@ maybeToList :: () => Maybe a -> [a]
 --   ""
 --   </pre>
 --   
---   Read an integer from a string using <tt>readMaybe</tt>. If we fail to
+--   Read an integer from a string using <a>readMaybe</a>. If we fail to
 --   parse an integer, we want to return <tt>0</tt> by default:
 --   
 --   <pre>
@@ -4833,7 +4569,7 @@ maybeToList :: () => Maybe a -> [a]
 --   &gt;&gt;&gt; fromMaybe 0 (readMaybe "")
 --   0
 --   </pre>
-fromMaybe :: () => a -> Maybe a -> a
+fromMaybe :: a -> Maybe a -> a
 
 -- | The <a>isNothing</a> function returns <a>True</a> iff its argument is
 --   <a>Nothing</a>.
@@ -4863,7 +4599,7 @@ fromMaybe :: () => a -> Maybe a -> a
 --   &gt;&gt;&gt; isNothing (Just Nothing)
 --   False
 --   </pre>
-isNothing :: () => Maybe a -> Bool
+isNothing :: Maybe a -> Bool
 
 -- | The <a>isJust</a> function returns <a>True</a> iff its argument is of
 --   the form <tt>Just _</tt>.
@@ -4893,7 +4629,7 @@ isNothing :: () => Maybe a -> Bool
 --   &gt;&gt;&gt; isJust (Just Nothing)
 --   True
 --   </pre>
-isJust :: () => Maybe a -> Bool
+isJust :: Maybe a -> Bool
 
 -- | The <a>maybe</a> function takes a default value, a function, and a
 --   <a>Maybe</a> value. If the <a>Maybe</a> value is <a>Nothing</a>, the
@@ -4914,7 +4650,7 @@ isJust :: () => Maybe a -> Bool
 --   False
 --   </pre>
 --   
---   Read an integer from a string using <tt>readMaybe</tt>. If we succeed,
+--   Read an integer from a string using <a>readMaybe</a>. If we succeed,
 --   return twice the integer; that is, apply <tt>(*2)</tt> to it. If
 --   instead we fail to parse an integer, return <tt>0</tt> by default:
 --   
@@ -4928,10 +4664,10 @@ isJust :: () => Maybe a -> Bool
 --   0
 --   </pre>
 --   
---   Apply <tt>show</tt> to a <tt>Maybe Int</tt>. If we have <tt>Just
---   n</tt>, we want to show the underlying <a>Int</a> <tt>n</tt>. But if
---   we have <a>Nothing</a>, we return the empty string instead of (for
---   example) "Nothing":
+--   Apply <a>show</a> to a <tt>Maybe Int</tt>. If we have <tt>Just n</tt>,
+--   we want to show the underlying <a>Int</a> <tt>n</tt>. But if we have
+--   <a>Nothing</a>, we return the empty string instead of (for example)
+--   "Nothing":
 --   
 --   <pre>
 --   &gt;&gt;&gt; maybe "" show (Just 5)
@@ -4940,7 +4676,281 @@ isJust :: () => Maybe a -> Bool
 --   &gt;&gt;&gt; maybe "" show Nothing
 --   ""
 --   </pre>
-maybe :: () => b -> (a -> b) -> Maybe a -> b
+maybe :: b -> (a -> b) -> Maybe a -> b
+
+-- | Case analysis for the <a>Bool</a> type. <tt><a>bool</a> x y p</tt>
+--   evaluates to <tt>x</tt> when <tt>p</tt> is <a>False</a>, and evaluates
+--   to <tt>y</tt> when <tt>p</tt> is <a>True</a>.
+--   
+--   This is equivalent to <tt>if p then y else x</tt>; that is, one can
+--   think of it as an if-then-else construct with its arguments reordered.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   Basic usage:
+--   
+--   <pre>
+--   &gt;&gt;&gt; bool "foo" "bar" True
+--   "bar"
+--   
+--   &gt;&gt;&gt; bool "foo" "bar" False
+--   "foo"
+--   </pre>
+--   
+--   Confirm that <tt><a>bool</a> x y p</tt> and <tt>if p then y else
+--   x</tt> are equivalent:
+--   
+--   <pre>
+--   &gt;&gt;&gt; let p = True; x = "bar"; y = "foo"
+--   
+--   &gt;&gt;&gt; bool x y p == if p then y else x
+--   True
+--   
+--   &gt;&gt;&gt; let p = False
+--   
+--   &gt;&gt;&gt; bool x y p == if p then y else x
+--   True
+--   </pre>
+bool :: a -> a -> Bool -> a
+
+-- | <a>&amp;</a> is a reverse application operator. This provides
+--   notational convenience. Its precedence is one higher than that of the
+--   forward application operator <a>$</a>, which allows <a>&amp;</a> to be
+--   nested in <a>$</a>.
+--   
+--   <pre>
+--   &gt;&gt;&gt; 5 &amp; (+1) &amp; show
+--   "6"
+--   </pre>
+(&) :: a -> (a -> b) -> b
+infixl 1 &
+
+-- | <tt><a>on</a> b u x y</tt> runs the binary function <tt>b</tt>
+--   <i>on</i> the results of applying unary function <tt>u</tt> to two
+--   arguments <tt>x</tt> and <tt>y</tt>. From the opposite perspective, it
+--   transforms two inputs and combines the outputs.
+--   
+--   <pre>
+--   ((+) `<a>on</a>` f) x y = f x + f y
+--   </pre>
+--   
+--   Typical usage: <tt><a>sortBy</a> (<a>compare</a> `on`
+--   <a>fst</a>)</tt>.
+--   
+--   Algebraic properties:
+--   
+--   <ul>
+--   <li><pre>(*) `on` <a>id</a> = (*) -- (if (*) ∉ {⊥, <a>const</a>
+--   ⊥})</pre></li>
+--   <li><pre>((*) `on` f) `on` g = (*) `on` (f . g)</pre></li>
+--   <li><pre><a>flip</a> on f . <a>flip</a> on g = <a>flip</a> on (g .
+--   f)</pre></li>
+--   </ul>
+on :: (b -> b -> c) -> (a -> b) -> a -> a -> c
+infixl 0 `on`
+
+-- | <tt><a>fix</a> f</tt> is the least fixed point of the function
+--   <tt>f</tt>, i.e. the least defined <tt>x</tt> such that <tt>f x =
+--   x</tt>.
+--   
+--   For example, we can write the factorial function using direct
+--   recursion as
+--   
+--   <pre>
+--   &gt;&gt;&gt; let fac n = if n &lt;= 1 then 1 else n * fac (n-1) in fac 5
+--   120
+--   </pre>
+--   
+--   This uses the fact that Haskell’s <tt>let</tt> introduces recursive
+--   bindings. We can rewrite this definition using <a>fix</a>,
+--   
+--   <pre>
+--   &gt;&gt;&gt; fix (\rec n -&gt; if n &lt;= 1 then 1 else n * rec (n-1)) 5
+--   120
+--   </pre>
+--   
+--   Instead of making a recursive call, we introduce a dummy parameter
+--   <tt>rec</tt>; when used within <a>fix</a>, this parameter then refers
+--   to <a>fix</a> argument, hence the recursion is reintroduced.
+fix :: (a -> a) -> a
+
+-- | <tt><a>void</a> value</tt> discards or ignores the result of
+--   evaluation, such as the return value of an <a>IO</a> action.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   Replace the contents of a <tt><a>Maybe</a> <a>Int</a></tt> with unit:
+--   
+--   <pre>
+--   &gt;&gt;&gt; void Nothing
+--   Nothing
+--   
+--   &gt;&gt;&gt; void (Just 3)
+--   Just ()
+--   </pre>
+--   
+--   Replace the contents of an <tt><a>Either</a> <a>Int</a>
+--   <a>Int</a></tt> with unit, resulting in an <tt><a>Either</a>
+--   <a>Int</a> <tt>()</tt></tt>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; void (Left 8675309)
+--   Left 8675309
+--   
+--   &gt;&gt;&gt; void (Right 8675309)
+--   Right ()
+--   </pre>
+--   
+--   Replace every element of a list with unit:
+--   
+--   <pre>
+--   &gt;&gt;&gt; void [1,2,3]
+--   [(),(),()]
+--   </pre>
+--   
+--   Replace the second element of a pair with unit:
+--   
+--   <pre>
+--   &gt;&gt;&gt; void (1,2)
+--   (1,())
+--   </pre>
+--   
+--   Discard the result of an <a>IO</a> action:
+--   
+--   <pre>
+--   &gt;&gt;&gt; mapM print [1,2]
+--   1
+--   2
+--   [(),()]
+--   
+--   &gt;&gt;&gt; void $ mapM print [1,2]
+--   1
+--   2
+--   </pre>
+void :: Functor f => f a -> f ()
+
+-- | Flipped version of <a>&lt;$</a>.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   Replace the contents of a <tt><a>Maybe</a> <a>Int</a></tt> with a
+--   constant <a>String</a>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; Nothing $&gt; "foo"
+--   Nothing
+--   
+--   &gt;&gt;&gt; Just 90210 $&gt; "foo"
+--   Just "foo"
+--   </pre>
+--   
+--   Replace the contents of an <tt><a>Either</a> <a>Int</a>
+--   <a>Int</a></tt> with a constant <a>String</a>, resulting in an
+--   <tt><a>Either</a> <a>Int</a> <a>String</a></tt>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; Left 8675309 $&gt; "foo"
+--   Left 8675309
+--   
+--   &gt;&gt;&gt; Right 8675309 $&gt; "foo"
+--   Right "foo"
+--   </pre>
+--   
+--   Replace each element of a list with a constant <a>String</a>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; [1,2,3] $&gt; "foo"
+--   ["foo","foo","foo"]
+--   </pre>
+--   
+--   Replace the second element of a pair with a constant <a>String</a>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; (1,2) $&gt; "foo"
+--   (1,"foo")
+--   </pre>
+($>) :: Functor f => f a -> b -> f b
+infixl 4 $>
+
+-- | Flipped version of <a>&lt;$&gt;</a>.
+--   
+--   <pre>
+--   (<a>&lt;&amp;&gt;</a>) = <a>flip</a> <a>fmap</a>
+--   </pre>
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   Apply <tt>(+1)</tt> to a list, a <a>Just</a> and a <a>Right</a>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; Just 2 &lt;&amp;&gt; (+1)
+--   Just 3
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; [1,2,3] &lt;&amp;&gt; (+1)
+--   [2,3,4]
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; Right 3 &lt;&amp;&gt; (+1)
+--   Right 4
+--   </pre>
+(<&>) :: Functor f => f a -> (a -> b) -> f b
+infixl 1 <&>
+
+-- | An infix synonym for <a>fmap</a>.
+--   
+--   The name of this operator is an allusion to <a>$</a>. Note the
+--   similarities between their types:
+--   
+--   <pre>
+--    ($)  ::              (a -&gt; b) -&gt;   a -&gt;   b
+--   (&lt;$&gt;) :: Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+--   </pre>
+--   
+--   Whereas <a>$</a> is function application, <a>&lt;$&gt;</a> is function
+--   application lifted over a <a>Functor</a>.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   Convert from a <tt><a>Maybe</a> <a>Int</a></tt> to a <tt><a>Maybe</a>
+--   <a>String</a></tt> using <a>show</a>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; show &lt;$&gt; Nothing
+--   Nothing
+--   
+--   &gt;&gt;&gt; show &lt;$&gt; Just 3
+--   Just "3"
+--   </pre>
+--   
+--   Convert from an <tt><a>Either</a> <a>Int</a> <a>Int</a></tt> to an
+--   <tt><a>Either</a> <a>Int</a></tt> <a>String</a> using <a>show</a>:
+--   
+--   <pre>
+--   &gt;&gt;&gt; show &lt;$&gt; Left 17
+--   Left 17
+--   
+--   &gt;&gt;&gt; show &lt;$&gt; Right 17
+--   Right "17"
+--   </pre>
+--   
+--   Double each element of a list:
+--   
+--   <pre>
+--   &gt;&gt;&gt; (*2) &lt;$&gt; [1,2,3]
+--   [2,4,6]
+--   </pre>
+--   
+--   Apply <a>even</a> to the second element of a pair:
+--   
+--   <pre>
+--   &gt;&gt;&gt; even &lt;$&gt; (2,2)
+--   (2,True)
+--   </pre>
+(<$>) :: Functor f => (a -> b) -> f a -> f b
+infixl 4 <$>
 
 -- | <a>uncurry</a> converts a curried function to a function on pairs.
 --   
@@ -4960,7 +4970,7 @@ maybe :: () => b -> (a -> b) -> Maybe a -> b
 --   &gt;&gt;&gt; map (uncurry max) [(1,2), (3,4), (6,8)]
 --   [2,4,8]
 --   </pre>
-uncurry :: () => (a -> b -> c) -> (a, b) -> c
+uncurry :: (a -> b -> c) -> (a, b) -> c
 
 -- | <a>curry</a> converts an uncurried function to a curried function.
 --   
@@ -4970,7 +4980,7 @@ uncurry :: () => (a -> b -> c) -> (a, b) -> c
 --   &gt;&gt;&gt; curry fst 1 2
 --   1
 --   </pre>
-curry :: () => ((a, b) -> c) -> a -> b -> c
+curry :: ((a, b) -> c) -> a -> b -> c
 
 -- | An <a>MVar</a> (pronounced "em-var") is a synchronising variable, used
 --   for communication between concurrent threads. It can be thought of as
@@ -4989,12 +4999,12 @@ subtract :: Num a => a -> a -> a
 --   usually used as an infix operator, and its typing forces its first
 --   argument (which is usually overloaded) to have the same type as the
 --   second.
-asTypeOf :: () => a -> a -> a
+asTypeOf :: a -> a -> a
 
 -- | Strict (call-by-value) application operator. It takes a function and
 --   an argument, evaluates the argument to weak head normal form (WHNF),
 --   then calls the function with that value.
-($!) :: () => (a -> b) -> a -> b
+($!) :: forall (r :: RuntimeRep) a (b :: TYPE r). (a -> b) -> a -> b
 infixr 0 $!
 
 -- | <tt><a>flip</a> f</tt> takes its (first) two arguments in the reverse
@@ -5004,10 +5014,10 @@ infixr 0 $!
 --   &gt;&gt;&gt; flip (++) "hello" "world"
 --   "worldhello"
 --   </pre>
-flip :: () => (a -> b -> c) -> b -> a -> c
+flip :: (a -> b -> c) -> b -> a -> c
 
 -- | Function composition.
-(.) :: () => (b -> c) -> (a -> b) -> a -> c
+(.) :: (b -> c) -> (a -> b) -> a -> c
 infixr 9 .
 
 -- | <tt>const x</tt> is a unary function which evaluates to <tt>x</tt> for
@@ -5022,7 +5032,7 @@ infixr 9 .
 --   &gt;&gt;&gt; map (const 42) [0..3]
 --   [42,42,42,42]
 --   </pre>
-const :: () => a -> b -> a
+const :: a -> b -> a
 
 -- | Promote a function to a monad, scanning the monadic arguments from
 --   left to right. For example,
@@ -5062,10 +5072,10 @@ infixr 5 :|
 -- | A special case of <a>error</a>. It is expected that compilers will
 --   recognize this and insert error messages which are more appropriate to
 --   the context in which <a>undefined</a> appears.
-undefined :: HasCallStack => a
+undefined :: forall (r :: RuntimeRep) (a :: TYPE r). HasCallStack => a
 
 -- | <a>error</a> stops execution and displays an error message.
-error :: HasCallStack => [Char] -> a
+error :: forall (r :: RuntimeRep) (a :: TYPE r). HasCallStack => [Char] -> a
 
 -- | Request a CallStack.
 --   
@@ -5079,7 +5089,7 @@ type HasCallStack = ?callStack :: CallStack
 --   hierarchy. When an exception of type <tt>e</tt> is thrown, behind the
 --   scenes it is encapsulated in a <tt>SomeException</tt>.
 data SomeException
-[SomeException] :: forall e. Exception e => e -> SomeException
+SomeException :: e -> SomeException
 
 -- | Boolean "and"
 (&&) :: Bool -> Bool -> Bool
@@ -5129,8 +5139,8 @@ toShort :: ByteString -> ShortByteString
 --   <tt>&gt;&gt;=</tt> passes the inherited environment to both
 --   subcomputations.
 newtype ReaderT r (m :: Type -> Type) a
-ReaderT :: (r -> m a) -> ReaderT r a
-[runReaderT] :: ReaderT r a -> r -> m a
+ReaderT :: (r -> m a) -> ReaderT r (m :: Type -> Type) a
+[runReaderT] :: ReaderT r (m :: Type -> Type) a -> r -> m a
 
 -- | Monads which allow their actions to be run in <a>IO</a>.
 --   
@@ -5180,11 +5190,14 @@ withRunInIO :: MonadUnliftIO m => ((forall a. () => m a -> IO a) -> IO b) -> m b
 class Monad m => PrimMonad (m :: Type -> Type) where {
     
     -- | State token type
-    type family PrimState (m :: Type -> Type) :: Type;
+    type family PrimState (m :: Type -> Type);
 }
 
 -- | Execute a primitive operation
 primitive :: PrimMonad m => (State# (PrimState m) -> (# State# (PrimState m), a #)) -> m a
+
+-- | State token type
+type family PrimState (m :: Type -> Type)
 
 -- | The class of monad transformers. Instances should satisfy the
 --   following laws, which state that <a>lift</a> is a monad
@@ -5230,6 +5243,12 @@ data IntMap a
 data IntSet
 
 -- | A Map from keys <tt>k</tt> to values <tt>a</tt>.
+--   
+--   The <a>Semigroup</a> operation for <a>Map</a> is <a>union</a>, which
+--   prefers values from the left operand. If <tt>m1</tt> maps a key
+--   <tt>k</tt> to a value <tt>a1</tt>, and <tt>m2</tt> maps the same key
+--   to a different value <tt>a2</tt>, then their union <tt>m1 &lt;&gt;
+--   m2</tt> maps <tt>k</tt> to <tt>a1</tt>.
 data Map k a
 
 -- | General-purpose finite sequences.
@@ -5314,7 +5333,7 @@ deepseq :: NFData a => a -> b -> b
 class NFData a
 
 -- | <a>rnf</a> should reduce its argument to normal form (that is, fully
---   evaluate all sub-components), and then return '()'.
+--   evaluate all sub-components), and then return <tt>()</tt>.
 --   
 --   <h3><a>Generic</a> <a>NFData</a> deriving</h3>
 --   
@@ -5449,7 +5468,7 @@ type Reader r = ReaderT r Identity
 --   &gt;&gt;&gt; [1,2,3] &amp; lens undefined (\s b -&gt; b : tail s) .~ 10
 --   [10,2,3]
 --   </pre>
-lens :: () => (s -> a) -> (s -> b -> t) -> Lens s t a b
+lens :: (s -> a) -> (s -> b -> t) -> Lens s t a b
 
 -- | <a>to</a> creates a getter from any function:
 --   
@@ -5480,7 +5499,7 @@ lens :: () => (s -> a) -> (s -> b -> t) -> Lens s t a b
 --   <pre>
 --   value ^. _1 . to field . at 2
 --   </pre>
-to :: () => (s -> a) -> SimpleGetter s a
+to :: (s -> a) -> SimpleGetter s a
 
 -- | (<a>^.</a>) applies a getter to a value; in other words, it gets a
 --   value out of a structure using a getter (which can be a lens,
@@ -5511,7 +5530,7 @@ to :: () => (s -> a) -> SimpleGetter s a
 --   <tt>MonadReader</tt>). If you need the general version, you can get it
 --   from <a>microlens-mtl</a>; otherwise there's <a>view</a> available in
 --   <a>Lens.Micro.Extras</a>.
-(^.) :: () => s -> Getting a s a -> a
+(^.) :: s -> Getting a s a -> a
 infixl 8 ^.
 
 -- | <a>set</a> is a synonym for (<a>.~</a>).
@@ -5529,7 +5548,7 @@ infixl 8 ^.
 --   <a>set</a> <a>mapped</a> :: <a>Functor</a> f =&gt; a -&gt; f b -&gt; f a
 --   <a>set</a> <a>mapped</a> = (<a>&lt;$</a>)
 --   </pre>
-set :: () => ASetter s t a b -> b -> s -> t
+set :: ASetter s t a b -> b -> s -> t
 
 -- | <a>over</a> is a synonym for (<a>%~</a>).
 --   
@@ -5554,11 +5573,11 @@ set :: () => ASetter s t a b -> b -> s -> t
 --   &gt;&gt;&gt; over _2 show (10,20)
 --   (10,"20")
 --   </pre>
-over :: () => ASetter s t a b -> (a -> b) -> s -> t
+over :: ASetter s t a b -> (a -> b) -> s -> t
 
 -- | <a>sets</a> creates an <a>ASetter</a> from an ordinary function. (The
 --   only thing it does is wrapping and unwrapping <a>Identity</a>.)
-sets :: () => ((a -> b) -> s -> t) -> ASetter s t a b
+sets :: ((a -> b) -> s -> t) -> ASetter s t a b
 
 -- | <tt>ASetter s t a b</tt> is something that turns a function modifying
 --   a value into a function modifying a <i>structure</i>. If you ignore
@@ -5661,7 +5680,7 @@ asks :: MonadReader r m => (r -> a) -> m a
 
 -- | Runs a <tt>Reader</tt> and extracts the final value from it. (The
 --   inverse of <a>reader</a>.)
-runReader :: () => Reader r a -> r -> a
+runReader :: Reader r a -> r -> a
 
 -- | Lifted <a>newChan</a>.
 newChan :: MonadIO m => m (Chan a)
@@ -5696,18 +5715,18 @@ StringException :: String -> CallStack -> StringException
 --   
 --   This is intended to be created via <a>toAsyncException</a>.
 data AsyncExceptionWrapper
-[AsyncExceptionWrapper] :: forall e. Exception e => e -> AsyncExceptionWrapper
+AsyncExceptionWrapper :: e -> AsyncExceptionWrapper
 
 -- | Wrap up an asynchronous exception to be treated as a synchronous
 --   exception.
 --   
 --   This is intended to be created via <a>toSyncException</a>.
 data SyncExceptionWrapper
-[SyncExceptionWrapper] :: forall e. Exception e => e -> SyncExceptionWrapper
+SyncExceptionWrapper :: e -> SyncExceptionWrapper
 
 -- | Generalized version of <a>Handler</a>.
 data Handler (m :: Type -> Type) a
-[Handler] :: forall (m :: Type -> Type) a e. Exception e => (e -> m a) -> Handler m a
+Handler :: (e -> m a) -> Handler (m :: Type -> Type) a
 
 -- | Unlifted <a>catch</a>, but will not catch asynchronous exceptions.
 catch :: (MonadUnliftIO m, Exception e) => m a -> (e -> m a) -> m a
@@ -5772,7 +5791,7 @@ tryJust :: (MonadUnliftIO m, Exception e) => (e -> Maybe b) -> m a -> m (Either 
 --   
 --   The expression may still have bottom values within it; you may instead
 --   want to use <a>pureTryDeep</a>.
-pureTry :: () => a -> Either SomeException a
+pureTry :: a -> Either SomeException a
 
 -- | Evaluate the value to NF and catch any synchronous exceptions.
 pureTryDeep :: NFData a => a -> Either SomeException a
@@ -5860,7 +5879,7 @@ throwString :: (MonadIO m, HasCallStack) => String -> m a
 
 -- | Smart constructor for a <a>StringException</a> that deals with the
 --   call stack.
-stringException :: HasCallStack -> String -> StringException
+stringException :: HasCallStack => String -> StringException
 
 -- | Throw an asynchronous exception to another thread.
 --   
@@ -6027,8 +6046,8 @@ data Conc (m :: Type -> Type) a
 
 -- | Unlifted <a>Concurrently</a>.
 newtype Concurrently (m :: Type -> Type) a
-Concurrently :: m a -> Concurrently a
-[runConcurrently] :: Concurrently a -> m a
+Concurrently :: m a -> Concurrently (m :: Type -> Type) a
+[runConcurrently] :: Concurrently (m :: Type -> Type) a -> m a
 
 -- | Unlifted <a>async</a>.
 async :: MonadUnliftIO m => m a -> m (Async a)
@@ -6150,7 +6169,7 @@ mapConcurrently_ :: (MonadUnliftIO m, Foldable f) => (a -> m b) -> f a -> m ()
 -- | Construct a value of type <a>Conc</a> from an action. Compose these
 --   values using the typeclass instances (most commonly <a>Applicative</a>
 --   and <a>Alternative</a>) and then run with <a>runConc</a>.
-conc :: () => m a -> Conc m a
+conc :: m a -> Conc m a
 
 -- | Run a <a>Conc</a> value on multiple threads.
 runConc :: MonadUnliftIO m => Conc m a -> m a
@@ -6344,7 +6363,7 @@ memoizeMVar :: MonadUnliftIO m => m a -> m (Memoized a)
 atomically :: MonadIO m => STM a -> m a
 
 -- | Renamed <a>retry</a> for unqualified export
-retrySTM :: () => STM a
+retrySTM :: STM a
 
 -- | Renamed <a>check</a> for unqualified export
 checkSTM :: Bool -> STM ()
@@ -6464,50 +6483,50 @@ askRunInIO :: MonadUnliftIO m => m (m a -> IO a)
 --   datatype (instead of simply using a <tt>forall</tt>) due to lack of
 --   support in GHC for impredicative types.
 newtype UnliftIO (m :: Type -> Type)
-UnliftIO :: (forall a. () => m a -> IO a) -> UnliftIO
-[unliftIO] :: UnliftIO -> forall a. () => m a -> IO a
+UnliftIO :: (forall a. () => m a -> IO a) -> UnliftIO (m :: Type -> Type)
+[unliftIO] :: UnliftIO (m :: Type -> Type) -> forall a. () => m a -> IO a
 
 -- | <a>TBQueue</a> is an abstract type representing a bounded FIFO
 --   channel.
 data TBQueue a
 
 -- | Builds and returns a new instance of <a>TBQueue</a>.
-newTBQueue :: () => Natural -> STM (TBQueue a)
+newTBQueue :: Natural -> STM (TBQueue a)
 
 -- | Write a value to a <a>TBQueue</a>; blocks if the queue is full.
-writeTBQueue :: () => TBQueue a -> a -> STM ()
+writeTBQueue :: TBQueue a -> a -> STM ()
 
 -- | Read the next value from the <a>TBQueue</a>.
-readTBQueue :: () => TBQueue a -> STM a
+readTBQueue :: TBQueue a -> STM a
 
 -- | A version of <a>readTBQueue</a> which does not retry. Instead it
 --   returns <tt>Nothing</tt> if no value is available.
-tryReadTBQueue :: () => TBQueue a -> STM (Maybe a)
+tryReadTBQueue :: TBQueue a -> STM (Maybe a)
 
 -- | Get the next value from the <tt>TBQueue</tt> without removing it,
 --   retrying if the channel is empty.
-peekTBQueue :: () => TBQueue a -> STM a
+peekTBQueue :: TBQueue a -> STM a
 
 -- | A version of <a>peekTBQueue</a> which does not retry. Instead it
 --   returns <tt>Nothing</tt> if no value is available.
-tryPeekTBQueue :: () => TBQueue a -> STM (Maybe a)
+tryPeekTBQueue :: TBQueue a -> STM (Maybe a)
 
 -- | Put a data item back onto a channel, where it will be the next item
 --   read. Blocks if the queue is full.
-unGetTBQueue :: () => TBQueue a -> a -> STM ()
+unGetTBQueue :: TBQueue a -> a -> STM ()
 
 -- | Returns <a>True</a> if the supplied <a>TBQueue</a> is empty.
-isEmptyTBQueue :: () => TBQueue a -> STM Bool
+isEmptyTBQueue :: TBQueue a -> STM Bool
 
 -- | Returns <a>True</a> if the supplied <a>TBQueue</a> is full.
-isFullTBQueue :: () => TBQueue a -> STM Bool
+isFullTBQueue :: TBQueue a -> STM Bool
 
 -- | <a>TChan</a> is an abstract type representing an unbounded FIFO
 --   channel.
 data TChan a
 
 -- | Build and return a new instance of <a>TChan</a>
-newTChan :: () => STM (TChan a)
+newTChan :: STM (TChan a)
 
 -- | Create a write-only <a>TChan</a>. More precisely, <a>readTChan</a>
 --   will <a>retry</a> even after items have been written to the channel.
@@ -6529,42 +6548,42 @@ newTChan :: () => STM (TChan a)
 --   is that if it is only written to and never read, items will pile up in
 --   memory. By using <a>newBroadcastTChan</a> to create the broadcast
 --   channel, items can be garbage collected after clients have seen them.
-newBroadcastTChan :: () => STM (TChan a)
+newBroadcastTChan :: STM (TChan a)
 
 -- | Write a value to a <a>TChan</a>.
-writeTChan :: () => TChan a -> a -> STM ()
+writeTChan :: TChan a -> a -> STM ()
 
 -- | Read the next value from the <a>TChan</a>.
-readTChan :: () => TChan a -> STM a
+readTChan :: TChan a -> STM a
 
 -- | A version of <a>readTChan</a> which does not retry. Instead it returns
 --   <tt>Nothing</tt> if no value is available.
-tryReadTChan :: () => TChan a -> STM (Maybe a)
+tryReadTChan :: TChan a -> STM (Maybe a)
 
 -- | Get the next value from the <tt>TChan</tt> without removing it,
 --   retrying if the channel is empty.
-peekTChan :: () => TChan a -> STM a
+peekTChan :: TChan a -> STM a
 
 -- | A version of <a>peekTChan</a> which does not retry. Instead it returns
 --   <tt>Nothing</tt> if no value is available.
-tryPeekTChan :: () => TChan a -> STM (Maybe a)
+tryPeekTChan :: TChan a -> STM (Maybe a)
 
 -- | Duplicate a <a>TChan</a>: the duplicate channel begins empty, but data
 --   written to either channel from then on will be available from both.
 --   Hence this creates a kind of broadcast channel, where data written by
 --   anyone is seen by everyone else.
-dupTChan :: () => TChan a -> STM (TChan a)
+dupTChan :: TChan a -> STM (TChan a)
 
 -- | Put a data item back onto a channel, where it will be the next item
 --   read.
-unGetTChan :: () => TChan a -> a -> STM ()
+unGetTChan :: TChan a -> a -> STM ()
 
 -- | Returns <a>True</a> if the supplied <a>TChan</a> is empty.
-isEmptyTChan :: () => TChan a -> STM Bool
+isEmptyTChan :: TChan a -> STM Bool
 
 -- | Clone a <a>TChan</a>: similar to dupTChan, but the cloned channel
 --   starts with the same content available as the original channel.
-cloneTChan :: () => TChan a -> STM (TChan a)
+cloneTChan :: TChan a -> STM (TChan a)
 
 -- | A <a>TMVar</a> is a synchronising variable, used for communication
 --   between concurrent threads. It can be thought of as a box, which may
@@ -6572,89 +6591,89 @@ cloneTChan :: () => TChan a -> STM (TChan a)
 data TMVar a
 
 -- | Create a <a>TMVar</a> which contains the supplied value.
-newTMVar :: () => a -> STM (TMVar a)
+newTMVar :: a -> STM (TMVar a)
 
 -- | Create a <a>TMVar</a> which is initially empty.
-newEmptyTMVar :: () => STM (TMVar a)
+newEmptyTMVar :: STM (TMVar a)
 
 -- | Return the contents of the <a>TMVar</a>. If the <a>TMVar</a> is
 --   currently empty, the transaction will <a>retry</a>. After a
 --   <a>takeTMVar</a>, the <a>TMVar</a> is left empty.
-takeTMVar :: () => TMVar a -> STM a
+takeTMVar :: TMVar a -> STM a
 
 -- | A version of <a>takeTMVar</a> that does not <a>retry</a>. The
 --   <a>tryTakeTMVar</a> function returns <a>Nothing</a> if the
 --   <a>TMVar</a> was empty, or <tt><a>Just</a> a</tt> if the <a>TMVar</a>
 --   was full with contents <tt>a</tt>. After <a>tryTakeTMVar</a>, the
 --   <a>TMVar</a> is left empty.
-tryTakeTMVar :: () => TMVar a -> STM (Maybe a)
+tryTakeTMVar :: TMVar a -> STM (Maybe a)
 
 -- | Put a value into a <a>TMVar</a>. If the <a>TMVar</a> is currently
 --   full, <a>putTMVar</a> will <a>retry</a>.
-putTMVar :: () => TMVar a -> a -> STM ()
+putTMVar :: TMVar a -> a -> STM ()
 
 -- | A version of <a>putTMVar</a> that does not <a>retry</a>. The
 --   <a>tryPutTMVar</a> function attempts to put the value <tt>a</tt> into
 --   the <a>TMVar</a>, returning <a>True</a> if it was successful, or
 --   <a>False</a> otherwise.
-tryPutTMVar :: () => TMVar a -> a -> STM Bool
+tryPutTMVar :: TMVar a -> a -> STM Bool
 
 -- | This is a combination of <a>takeTMVar</a> and <a>putTMVar</a>; ie. it
 --   takes the value from the <a>TMVar</a>, puts it back, and also returns
 --   it.
-readTMVar :: () => TMVar a -> STM a
+readTMVar :: TMVar a -> STM a
 
 -- | A version of <a>readTMVar</a> which does not retry. Instead it returns
 --   <tt>Nothing</tt> if no value is available.
-tryReadTMVar :: () => TMVar a -> STM (Maybe a)
+tryReadTMVar :: TMVar a -> STM (Maybe a)
 
 -- | Swap the contents of a <a>TMVar</a> for a new value.
-swapTMVar :: () => TMVar a -> a -> STM a
+swapTMVar :: TMVar a -> a -> STM a
 
 -- | Check whether a given <a>TMVar</a> is empty.
-isEmptyTMVar :: () => TMVar a -> STM Bool
+isEmptyTMVar :: TMVar a -> STM Bool
 
 -- | <a>TQueue</a> is an abstract type representing an unbounded FIFO
 --   channel.
 data TQueue a
 
 -- | Build and returns a new instance of <a>TQueue</a>
-newTQueue :: () => STM (TQueue a)
+newTQueue :: STM (TQueue a)
 
 -- | Write a value to a <a>TQueue</a>.
-writeTQueue :: () => TQueue a -> a -> STM ()
+writeTQueue :: TQueue a -> a -> STM ()
 
 -- | Read the next value from the <a>TQueue</a>.
-readTQueue :: () => TQueue a -> STM a
+readTQueue :: TQueue a -> STM a
 
 -- | A version of <a>readTQueue</a> which does not retry. Instead it
 --   returns <tt>Nothing</tt> if no value is available.
-tryReadTQueue :: () => TQueue a -> STM (Maybe a)
+tryReadTQueue :: TQueue a -> STM (Maybe a)
 
 -- | Get the next value from the <tt>TQueue</tt> without removing it,
 --   retrying if the channel is empty.
-peekTQueue :: () => TQueue a -> STM a
+peekTQueue :: TQueue a -> STM a
 
 -- | A version of <a>peekTQueue</a> which does not retry. Instead it
 --   returns <tt>Nothing</tt> if no value is available.
-tryPeekTQueue :: () => TQueue a -> STM (Maybe a)
+tryPeekTQueue :: TQueue a -> STM (Maybe a)
 
 -- | Put a data item back onto a channel, where it will be the next item
 --   read.
-unGetTQueue :: () => TQueue a -> a -> STM ()
+unGetTQueue :: TQueue a -> a -> STM ()
 
 -- | Returns <a>True</a> if the supplied <a>TQueue</a> is empty.
-isEmptyTQueue :: () => TQueue a -> STM Bool
+isEmptyTQueue :: TQueue a -> STM Bool
 
 -- | Mutate the contents of a <a>TVar</a>. <i>N.B.</i>, this version is
 --   non-strict.
-modifyTVar :: () => TVar a -> (a -> a) -> STM ()
+modifyTVar :: TVar a -> (a -> a) -> STM ()
 
 -- | Strict version of <a>modifyTVar</a>.
-modifyTVar' :: () => TVar a -> (a -> a) -> STM ()
+modifyTVar' :: TVar a -> (a -> a) -> STM ()
 
 -- | Swap the contents of a <a>TVar</a> for a new value.
-swapTVar :: () => TVar a -> a -> STM a
+swapTVar :: TVar a -> a -> STM a
 
 traceDisplayStack :: Display a => a -> b -> b
 
@@ -6692,15 +6711,15 @@ traceShowId :: Show a => a -> a
 
 traceShow :: Show a => a -> b -> b
 
-traceStack :: () => Text -> a -> a
+traceStack :: Text -> a -> a
 
 traceMarkerIO :: MonadIO m => Text -> m ()
 
-traceMarker :: () => Text -> a -> a
+traceMarker :: Text -> a -> a
 
 traceEventIO :: MonadIO m => Text -> m ()
 
-traceEvent :: () => Text -> a -> a
+traceEvent :: Text -> a -> a
 
 traceM :: Applicative f => Text -> f ()
 
@@ -6708,7 +6727,7 @@ traceIO :: MonadIO m => Text -> m ()
 
 traceId :: Text -> Text
 
-trace :: () => Text -> a -> a
+trace :: Text -> a -> a
 
 -- | Run with a default configured <tt>SimpleApp</tt>, consisting of:
 --   
@@ -6719,6 +6738,11 @@ trace :: () => Text -> a -> a
 --   <li>Default process context</li>
 --   </ul>
 runSimpleApp :: MonadIO m => RIO SimpleApp a -> m a
+
+-- | Constructor for <a>SimpleApp</a>. In case when <a>ProcessContext</a>
+--   is not supplied <a>mkDefaultProcessContext</a> will be used to create
+--   it.
+mkSimpleApp :: MonadIO m => LogFunc -> Maybe ProcessContext -> m SimpleApp
 
 -- | A simple, non-customizable environment type for <tt>RIO</tt>, which
 --   provides common functionality. If it's insufficient for your needs,
@@ -6740,6 +6764,9 @@ writeSomeRef :: MonadIO m => SomeRef a -> a -> m ()
 
 -- | Read from a SomeRef
 readSomeRef :: MonadIO m => SomeRef a -> m a
+
+-- | Lift one RIO env to another.
+mapRIO :: (outer -> inner) -> RIO inner a -> RIO outer a
 
 -- | Abstract <a>RIO</a> to an arbitrary <a>MonadReader</a> instance, which
 --   can handle IO.
@@ -6845,49 +6872,49 @@ freezeDeque :: (Vector v a, PrimMonad m) => Deque (Mutable v) (PrimState m) a ->
 --   &gt;&gt;&gt; dequeToVector @S.Vector d
 --   [10,9,8,7,6,5,4,3,2,1,0]
 --   </pre>
-dequeToVector :: (Vector v' a, MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (v' a)
+dequeToVector :: forall v' a (v :: Type -> Type -> Type) m. (Vector v' a, MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (v' a)
 
 -- | Convert a <a>Deque</a> into a list. Does not modify the <a>Deque</a>.
-dequeToList :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m [a]
+dequeToList :: forall (v :: Type -> Type -> Type) a m. (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m [a]
 
 -- | Fold over a <a>Deque</a>, starting at the end. Does not modify the
 --   <a>Deque</a>.
-foldrDeque :: (MVector v a, PrimMonad m) => (a -> acc -> m acc) -> acc -> Deque v (PrimState m) a -> m acc
+foldrDeque :: forall (v :: Type -> Type -> Type) a m acc. (MVector v a, PrimMonad m) => (a -> acc -> m acc) -> acc -> Deque v (PrimState m) a -> m acc
 
 -- | Fold over a <a>Deque</a>, starting at the beginning. Does not modify
 --   the <a>Deque</a>.
-foldlDeque :: (MVector v a, PrimMonad m) => (acc -> a -> m acc) -> acc -> Deque v (PrimState m) a -> m acc
+foldlDeque :: forall (v :: Type -> Type -> Type) a m acc. (MVector v a, PrimMonad m) => (acc -> a -> m acc) -> acc -> Deque v (PrimState m) a -> m acc
 
 -- | Push a new value to the end of the <a>Deque</a>
-pushBackDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> a -> m ()
+pushBackDeque :: forall (v :: Type -> Type -> Type) a m. (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> a -> m ()
 
 -- | Push a new value to the beginning of the <a>Deque</a>
-pushFrontDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> a -> m ()
+pushFrontDeque :: forall (v :: Type -> Type -> Type) a m. (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> a -> m ()
 
 -- | Pop the first value from the end of the <a>Deque</a>
-popBackDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (Maybe a)
+popBackDeque :: forall (v :: Type -> Type -> Type) a m. (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (Maybe a)
 
 -- | Pop the first value from the beginning of the <a>Deque</a>
-popFrontDeque :: (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (Maybe a)
+popFrontDeque :: forall (v :: Type -> Type -> Type) a m. (MVector v a, PrimMonad m) => Deque v (PrimState m) a -> m (Maybe a)
 
 -- | <i>O(1)</i> - Get the number of elements that is currently in the
 --   <a>Deque</a>
-getDequeSize :: PrimMonad m => Deque v (PrimState m) a -> m Int
+getDequeSize :: forall m (v :: Type -> Type -> Type) a. PrimMonad m => Deque v (PrimState m) a -> m Int
 
 -- | Create a new, empty <a>Deque</a>
-newDeque :: (MVector v a, PrimMonad m) => m (Deque v (PrimState m) a)
+newDeque :: forall (v :: Type -> Type -> Type) a m. (MVector v a, PrimMonad m) => m (Deque v (PrimState m) a)
 
 -- | Helper function to assist with type inference, forcing usage of a
 --   boxed vector.
-asBDeque :: () => BDeque s a -> BDeque s a
+asBDeque :: BDeque s a -> BDeque s a
 
 -- | Helper function to assist with type inference, forcing usage of a
 --   storable vector.
-asSDeque :: () => SDeque s a -> SDeque s a
+asSDeque :: SDeque s a -> SDeque s a
 
 -- | Helper function to assist with type inference, forcing usage of an
 --   unboxed vector.
-asUDeque :: () => UDeque s a -> UDeque s a
+asUDeque :: UDeque s a -> UDeque s a
 
 -- | A double-ended queue supporting any underlying vector type and any
 --   monad.
@@ -6922,10 +6949,37 @@ hPutBuilder :: MonadIO m => Handle -> Builder -> m ()
 --   This function will use OS-specific line ending handling.
 writeFileUtf8 :: MonadIO m => FilePath -> Text -> m ()
 
+-- | Lazily read a file in UTF8 encoding.
+withLazyFileUtf8 :: MonadUnliftIO m => FilePath -> (Text -> m a) -> m a
+
 -- | Lazily get the contents of a file. Unlike <a>readFile</a>, this
 --   ensures that if an exception is thrown, the file handle is closed
 --   immediately.
 withLazyFile :: MonadUnliftIO m => FilePath -> (ByteString -> m a) -> m a
+
+-- | Make a <a>GLogFunc</a> via classic <a>LogFunc</a>. Use this if you'd
+--   like to log your generic data type via the classic RIO terminal
+--   logger.
+gLogFuncClassic :: (HasLogLevel msg, HasLogSource msg, Display msg) => LogFunc -> GLogFunc msg
+
+-- | Log a value generically.
+glog :: (MonadIO m, HasCallStack, HasGLogFunc env, MonadReader env m) => GMsg env -> m ()
+
+-- | Make a custom generic logger. With this you could, for example, write
+--   to a database or a log digestion service. For example:
+--   
+--   <pre>
+--   mkGLogFunc (\stack msg -&gt; send (Data.Aeson.encode (JsonLog stack msg)))
+--   </pre>
+mkGLogFunc :: (CallStack -> msg -> IO ()) -> GLogFunc msg
+
+-- | A contramap. Use this to wrap sub-loggers via <a>mapRIO</a>.
+--   
+--   If you are on base &gt; 4.12.0, you can just use <a>contramap</a>.
+contramapGLogFunc :: (a -> b) -> GLogFunc b -> GLogFunc a
+
+-- | A vesion of <a>contramapMaybeGLogFunc</a> which supports filering.
+contramapMaybeGLogFunc :: (a -> Maybe b) -> GLogFunc b -> GLogFunc a
 
 -- | Disable logging capabilities in a given sub-routine
 --   
@@ -7129,6 +7183,34 @@ data LogFunc
 -- | Configuration for how to create a <a>LogFunc</a>. Intended to be used
 --   with the <a>withLogFunc</a> function.
 data LogOptions
+type family GMsg env
+
+-- | An app is capable of generic logging if it implements this.
+class HasGLogFunc env where {
+    type family GMsg env;
+}
+gLogFuncL :: HasGLogFunc env => Lens' env (GLogFunc (GMsg env))
+
+-- | A generic logger of some type <tt>msg</tt>.
+--   
+--   Your <tt>GLocFunc</tt> can re-use the existing classical logging
+--   framework of RIO, and/or implement additional transforms, filters.
+--   Alternatively, you may log to a JSON source in a database, or anywhere
+--   else as needed. You can decide how to log levels or severities based
+--   on the constructors in your type. You will normally determine this in
+--   your main app entry point.
+data GLogFunc msg
+
+-- | Level, if any, of your logs. If unknown, use <tt>LogOther</tt>. Use
+--   for your generic log data types that want to sit inside the classic
+--   log framework.
+class HasLogLevel msg
+getLogLevel :: HasLogLevel msg => msg -> LogLevel
+
+-- | Source of a log. This can be whatever you want. Use for your generic
+--   log data types that want to sit inside the classic log framework.
+class HasLogSource msg
+getLogSource :: HasLogSource msg => msg -> LogSource
 decodeUtf8Lenient :: ByteString -> Text
 tshow :: Show a => a -> Text
 yieldThread :: MonadIO m => m ()
@@ -7144,7 +7226,7 @@ view :: MonadReader s m => Getting a s a -> m a
 
 -- | Helper function to force an action to run in <a>IO</a>. Especially
 --   useful for overly general contexts, like hspec tests.
-asIO :: () => IO a -> IO a
+asIO :: IO a -> IO a
 
 -- | Run the second value if the first value returns <a>False</a>
 unlessM :: Monad m => m Bool -> m () -> m ()
@@ -7181,10 +7263,10 @@ forMaybeA :: Applicative f => [a] -> (a -> f (Maybe b)) -> f [b]
 mapMaybeA :: Applicative f => (a -> f (Maybe b)) -> [a] -> f [b]
 
 -- | Get a <a>First</a> value with a default fallback
-fromFirst :: () => a -> First a -> a
+fromFirst :: a -> First a -> a
 
 -- | Apply a function to a <a>Left</a> constructor
-mapLeft :: () => (a1 -> a2) -> Either a1 b -> Either a2 b
+mapLeft :: (a1 -> a2) -> Either a1 b -> Either a2 b
 
 -- | Lifted version of "System.Exit.exitWith".
 --   

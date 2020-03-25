@@ -161,8 +161,9 @@ blankLines = many (spaces *> endOfLine) *> pure ()
 tableRowFields :: [Int] -> Parser [ByteString]
 tableRowFields lengths = tail <$> parseLine
     where
-      parseLine = map mconcat <$> transpose <$> many1 (mapM takeField lengths <* endOfLine)
-          <?> "Table row fields"
+      parseLine = map mconcat . transpose
+                    <$> many1 (mapM takeField lengths <* endOfLine)
+                          <?> "Table row fields"
       takeField len = trimTrailingWhitespace <$> take len <* char8 '|'
 
 data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
@@ -170,7 +171,7 @@ data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
 
 instance Semigroup TypeTableRow where
     (TypeTableRow u1 n1 f1) <> (TypeTableRow _u2 _n2 f2) =
-        (TypeTableRow u1 n1 (f1 <> f2))
+        TypeTableRow u1 n1 (f1 <> f2)
 
 type TypeUIDField = ByteString
 
@@ -196,7 +197,7 @@ formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) =
 formatString t = error $ mconcat [ "No case for ", show t, "?" ]
 
 
-data TypeTableRowDecs =  TypeTableRowDecs [Dec]
+newtype TypeTableRowDecs =  TypeTableRowDecs [Dec]
   deriving(Eq, Show)
 
 instance Semigroup TypeTableRowDecs
@@ -228,8 +229,8 @@ tenumDecs = dEnum <$> parseTable enumTableParser
 
 dEnum :: (String, [EnumRow]) -> [Dec]
 dEnum (enumName, enumRows) = [dData name constructors derivations]
-  where name = mkName $ coreName
-        constructors = map (mkName . fst) $ enumRowsValueLabelPairs
+  where name = mkName coreName
+        constructors = map (mkName . fst) enumRowsValueLabelPairs
         derivations = [ ''Bounded, ''Enum, ''Eq, ''Ord, ''Show ]
         coreName = "Core_" <> enumName
         enumRowsValueLabelPairs = concatMap genEnum consolidatedPairs

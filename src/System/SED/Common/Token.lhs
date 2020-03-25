@@ -185,7 +185,7 @@ tokenParser = pTag >>= (dispatch !)
   where
       pTag = anyWord8
       bnds = (minBound,maxBound)
-      dispatch = listArray bnds $ (flip R.map) (range bnds) p
+      dispatch = listArray bnds $ R.map p (range bnds)
       p b
         | inRange (0x00,0x3F) b = pTinyUnsigned   b
         | inRange (0x40,0x7F) b = pTinySigned     b
@@ -238,7 +238,7 @@ tokenParser = pTag >>= (dispatch !)
 
       -- layout parsers
       pTiny   :: Word8 -> Parser Word8
-      pTiny   b = pure b
+      pTiny     = pure
 
       pShort  :: Word8 -> Parser ByteString
       pShort  b = pure (0x0F .&. b)
@@ -273,7 +273,7 @@ tokenParser = pTag >>= (dispatch !)
       takeFor       sz  l = take l <?> bytesError sz l
       szerror sz1 l sz2= mconcat
                     [ "Needed "
-                    , (show l)
+                    , show l
                     , if l==1 then " byte for " else " bytes for "
                     , sz1
                     , " "
@@ -301,23 +301,23 @@ generateToken = go
     go EndTransaction      = singleton 0xFC
 
     unsigned n
-        | inRange(0,63) n   = singleton (0x00 .|. (0x3F .&. (byte n)))
+        | inRange(0,63) n   = singleton (0x00 .|. 0x3F .&. byte n)
         | otherwise         = tlv 0 0 $ naturalToByteString n
     signed   i
-        | inRange(-32,31) i = singleton (0x40 .|. (0x3F .&. (byte i)))
+        | inRange(-32,31) i = singleton (0x40 .|. 0x3F .&. byte i)
         | otherwise         = tlv 0 1 $ integerToByteString i
-    bytes   bs              = tlv 1 0 bs
-    cbytes  bs              = tlv 1 1 bs
+    bytes                   = tlv 1 0
+    cbytes                  = tlv 1 1
 
     tlv _B _S bs = tl _B _S (length bs) <> bs
     tl _B _S l
         | l <= 0x0F =            -- Small
-              (singleton $ 0x80 .|. _BS `shiftL` 4 .|. byte l)
+              singleton $ 0x80 .|. _BS `shiftL` 4 .|. byte l
         | l <= 0x7FF =           -- Medium
-              (singleton $ 0xC0 .|. _BS `shiftL` 3 .|. byte (l `shiftR` 8))
+              singleton (0xC0 .|. _BS `shiftL` 3 .|. byte (l `shiftR` 8))
            <> byte0 l
         | l <= 0xFFFFFFFFFFFF =  -- Long
-              (singleton $ 0xE0 .|. _BS)
+              singleton (0xE0 .|. _BS)
            <> byte2 l <> byte1 l <> byte0 l
         | otherwise = error "Generated Atom byte sequence impossibly long!"
       where _BS = shiftL _B 1 .|. _S
@@ -329,7 +329,7 @@ generateToken = go
 --
 
 instance Arbitrary Token where
-    arbitrary = frequency $
+    arbitrary = frequency
         [ (10, Unsigned       <$> arbitrary)
         , (10, Signed         <$> arbitrary)
         , (15, Bytes          <$> arbitrary)
@@ -357,11 +357,11 @@ combineContinued = loop Nothing
        where
          examine  Nothing            (Just (pos, ContinuedBytes bs))  =  loop  $ Just (pos, bs)
          examine  (Just (pos, acc))  (Just (_  , ContinuedBytes bs))  =  loop  $ Just (pos, append acc bs)
-         examine  Nothing            (Just (pos, t))                  =  yield $ (pos, t)
-         examine  (Just (pos, acc))  (Just (_  , Bytes bs         ))  =  yield $ (pos, Bytes (append acc bs))
-         examine  Nothing            Nothing                          =  pure  $ ()
-         examine  _                  Nothing                          =  error $ "ContinuedBytes not finished"
-         examine  _                  _                                =  error $ "ContinuedBytes followed by non-Bytes"
+         examine  Nothing            (Just (pos, t))                  =  yield (pos, t)
+         examine  (Just (pos, acc))  (Just (_  , Bytes bs         ))  =  yield (pos, Bytes (append acc bs))
+         examine  Nothing            Nothing                          =  pure  ()
+         examine  _                  Nothing                          =  error "ContinuedBytes not finished"
+         examine  _                  _                                =  error "ContinuedBytes followed by non-Bytes"
 
 tokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m ()
 tokenSource = rawTokenSource .| removeEmpty .| combineContinued

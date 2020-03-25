@@ -112,7 +112,7 @@ instance IsSizedText T.Text where
 
   length = T.length
   append = T.append
-  replicate = \n c -> T.replicate n (T.singleton c)
+  replicate n c = T.replicate n (T.singleton c)
   map = T.map
   take = T.take
   drop = T.drop

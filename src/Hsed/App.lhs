@@ -29,8 +29,8 @@ import           RIO
 import           RIO.Process
 
 -- | Command line arguments
-data Options = Options
-  { _verbose :: !Bool
+newtype Options = Options
+  { _verbose :: Bool
   } deriving (Show)
 makeLenses ''Options
 

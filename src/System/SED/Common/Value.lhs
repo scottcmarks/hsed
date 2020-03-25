@@ -19,7 +19,8 @@ Datatypes for Tokens.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE TemplateHaskell, TypeSynonymInstances, FlexibleInstances, PolyKinds, KindSignatures   #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE PolyKinds         #-}
 
 module System.SED.Common.Value where
 
@@ -184,7 +185,7 @@ instance IsValue String where
 instance IsToken Value where
     mtoken (D (Datum d)) = mtoken d
     mtoken _ = Nothing
-    fromToken t = mvalue t
+    fromToken = mvalue
 
 
 instance StreamItem Datum where
@@ -200,7 +201,7 @@ instance StreamItem NamedValue where
     parser = require StartName
           *> (NamedValue <$> parser <*> parser) <*
              require EndName
-    generate (NamedValue n v) = do
+    generate (NamedValue n v) =
         generate StartName
      <> generate n
      <> generate v
@@ -210,7 +211,7 @@ instance StreamItem List where
     parser = require StartList
           *> (List <$> many parser) <*
              require EndList
-    generate (List values) = do
+    generate (List values) =
         generate StartList
      <> mconcat (generate <$> values)
      <> generate EndList

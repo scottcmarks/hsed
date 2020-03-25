@@ -69,7 +69,6 @@ import qualified Data.StaticText      as S
 -- >>> :set -XOverloadedStrings
 -- >>> import Data.Char (toUpper)
 
-
 -- | Safely create a C.Sized, possibly altering the source to match
 -- target length. If target maximum length is less than the source length,
 -- the source gets truncated. If target minimum length is less than
@@ -80,6 +79,7 @@ import qualified Data.StaticText      as S
 -- "foobar"
 -- >>> createLeft '#' "foobarbaz" :: C.Sized String 12 20
 -- "foobarbaz###"
+
 createLeft :: forall a l u.
               (C.IsSizedText a, KnownNat l, KnownNat u) =>
               C.Elem a -> a -> C.Sized a l u
@@ -124,7 +124,7 @@ createRight e s =
 -- This is safer than 'C.unsafeCreate' and unlike with 'createLeft' /
 -- 'createRight' the source value is left unchanged. However, this
 -- implies a further run-time check for Nothing values.
-create :: forall a l u.
+create :: forall a (l :: Nat) (u :: Nat).
               (C.IsSizedText a, KnownNat l, KnownNat u) =>
           a -> Maybe (C.Sized a l u)
 create s =
@@ -133,8 +133,9 @@ create s =
   else Nothing
   where
     len = C.length s
-    lt = fromIntegral $ natVal (Proxy :: Proxy l)
-    ut = fromIntegral $ natVal (Proxy :: Proxy u)
+    lt  = fromIntegral $ natVal (Proxy :: Proxy l)
+    ut  = fromIntegral $ natVal (Proxy :: Proxy u)
+
 
 
 -- | Append two C.Sizeds together.

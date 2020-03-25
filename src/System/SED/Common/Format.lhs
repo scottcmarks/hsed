@@ -20,9 +20,6 @@ Formats.
 
 {-# LANGUAGE NoImplicitPrelude
            , DataKinds
-           , DeriveAnyClass
-           , DeriveDataTypeable
-           , KindSignatures
            , ScopedTypeVariables
            , GADTs
            , PolyKinds
@@ -60,19 +57,19 @@ deriving instance Eq(Max_bytes n)
 
 instance StreamItem Core_table_kind
     where generate = singleton . fromIntegral . succ . fromEnum
-          parser = toEnum <$> pred <$> fromIntegral <$> anyWord8
+          parser = (toEnum . pred <$> fromIntegral) <$> anyWord8
 
 
 data Core_table_kind = Object_Table | Byte_Table
     deriving (Enum, Eq, Show)
 
-data Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
+newtype Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
     deriving (Eq,Show) -- , StreamItem) -- FIXME
-data Core_integer_2    = Core_integer_2 {fromCore_integer_2::Int}
+newtype Core_integer_2    = Core_integer_2 {fromCore_integer_2::Int}
     deriving (Eq,Show)
-data Core_uidref       = Core_uidref {fromCore_uidref::UID}
+newtype Core_uidref       = Core_uidref {fromCore_uidref::UID}
     deriving (Eq,Show)
-data Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32::Max_bytes 32} -- FIXME:  Need non-bogus max_bytes
+newtype Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32::Max_bytes 32} -- FIXME:  Need non-bogus max_bytes
     deriving (Eq,Show)
 
 newtype Core_uidref_Base_Type     = Core_uidref_Base_Type     Core_uidref
@@ -108,10 +105,10 @@ deriving instance Eq (Known_Core_Type n)
 
 data Some_Core_Type = forall (n :: Nat). KnownNat n => Some_Core_Type (Known_Core_Type n)
 
-deriving instance Show (Some_Core_Type)
+deriving instance Show Some_Core_Type
 
 
-instance StreamItem(Some_Core_Type) where
+instance StreamItem Some_Core_Type where
     generate (Some_Core_Type ct) = singleton (fromIntegral (natVal ct)) <> genFields ct
       where genFields :: Known_Core_Type n -> ByteString
             genFields Base_Type = mempty
@@ -152,28 +149,28 @@ instance StreamItem(Some_Core_Type) where
 
 
 
-instance StreamItem(Core_uinteger_2  ) where
+instance StreamItem Core_uinteger_2   where
     parser = undefined
     generate _ = "<uinteger_2>"
-instance StreamItem(Core_integer_2   ) where
+instance StreamItem Core_integer_2    where
     parser = undefined
     generate _ = "<integer_2>"
-instance StreamItem(Core_uidref      ) where
+instance StreamItem Core_uidref       where
     parser = undefined
     generate _ = "<uidref>"
-instance StreamItem(Core_max_bytes_32) where
+instance StreamItem Core_max_bytes_32 where
     parser = undefined
     generate _ = "<max_bytes_32>"
-instance StreamItem(Core_uidref_Base_Type) where
+instance StreamItem Core_uidref_Base_Type where
     parser = undefined
     generate (Core_uidref_Base_Type _base_uidref) = "<uidref_Base_Type>"
-instance StreamItem(Core_uidref_non_Base_Type) where
+instance StreamItem Core_uidref_non_Base_Type where
     parser = undefined
     generate (Core_uidref_non_Base_Type _base_uidref) = "<uidref_non_Base_Type>"
-instance StreamItem(Core_uidref_Byte_Table) where
+instance StreamItem Core_uidref_Byte_Table where
     parser = undefined
     generate (Core_uidref_Byte_Table _base_uidref) = "<uidref_Byte_Table>"
-instance StreamItem(Core_uidref_Object_Table) where
+instance StreamItem Core_uidref_Object_Table where
     parser = undefined
     generate (Core_uidref_Object_Table _base_uidref) = "<uidref_Object_Table>"
 

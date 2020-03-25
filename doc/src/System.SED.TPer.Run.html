@@ -1,13 +1,18 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
-</span><a name="line-2"></a><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
-</span><a name="line-3"></a><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.TPer.Run</span><span> </span><span class="hs-special">(</span><a href="System.SED.TPer.Run.html#run"><span class="hs-identifier hs-var">run</span></a><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><a name="line-4"></a><span>
-</span><a name="line-5"></a><span class="hs-keyword">import</span><span>           </span><span class="hs-identifier">RIO</span><span>
-</span><a name="line-6"></a><span>
-</span><a name="line-7"></a><span class="hs-keyword">import</span><span>           </span><a href="Hsed.App.html"><span class="hs-identifier">Hsed.App</span></a><span>
-</span><a name="line-8"></a><span class="hs-keyword">import</span><span>           </span><a href="System.SED.Common.Import.html"><span class="hs-identifier">System.SED.Common.Import</span></a><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><a name="line-9"></a><span>
-</span><a name="line-10"></a><span class="hs-identifier">run</span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-identifier hs-type">RIO</span><span> </span><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><a name="line-11"></a><a name="run"><a href="System.SED.TPer.Run.html#run"><span class="hs-identifier">run</span></a></a><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><a name="line-12"></a><span>  </span><span class="hs-identifier hs-var">logInfo</span><span> </span><span class="hs-string">&quot;We're inside the SED TPer application!&quot;</span><span>
-</span><a name="line-13"></a></pre></body></html>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-3"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.TPer.Run</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.TPer.Run.html#run"><span class="hs-identifier">run</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">RIO</span></span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Hsed.App.html"><span class="hs-identifier">Hsed.App</span></a></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.Common.Import.html"><span class="hs-identifier">System.SED.Common.Import</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="annot"><a href="System.SED.TPer.Run.html#run"><span class="hs-identifier hs-type">run</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">RIO</span></span><span> </span><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-11"></span><span id="run"><span class="annot"><span class="annottext">run :: RIO App ()
+</span><a href="System.SED.TPer.Run.html#run"><span class="hs-identifier hs-var hs-var">run</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-12"></span><span>  </span><span class="annot"><span class="annottext">Utf8Builder -&gt; RIO App ()
+forall (m :: * -&gt; *) env.
+(MonadIO m, MonadReader env m, HasLogFunc env, HasCallStack) =&gt;
+Utf8Builder -&gt; m ()
+</span><span class="hs-identifier hs-var">logInfo</span></span><span> </span><span class="annot"><span class="hs-string">&quot;We're inside the SED TPer application!&quot;</span></span><span>
+</span><span id="line-13"></span></pre></body></html>

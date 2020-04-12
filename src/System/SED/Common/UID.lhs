@@ -20,7 +20,6 @@ Datatypes for UIDs and HalfUIDs.
 
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE DerivingStrategies  #-}
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 

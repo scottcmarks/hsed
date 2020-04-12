@@ -87,9 +87,8 @@ createLeft e s =
   C.unsafeCreate $
   C.take ut $
   C.append s $
-  C.replicate (lt - len) e
+  C.replicate (lt - C.length s) e
   where
-    len = C.length s
     lt = fromIntegral $ natVal (Proxy :: Proxy l)
     ut = fromIntegral $ natVal (Proxy :: Proxy u)
 

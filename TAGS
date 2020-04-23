@@ -1,0 +1,799 @@
+
+./Setup.hs,15
+main main1,2
+
+./app/Main.hs,39
+module Main Main2,3
+main main14,15
+
+./test/System/SED/Common/IntegralSpec.hs,194
+module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec13,14
+validFirstTwo validFirstTwo30,31
+validNatural validNatural38,39
+validInteger validInteger44,45
+spec spec52,53
+
+./test/System/SED/Common/ValueSpec.hs,87
+module System.SED.Common.ValueSpec System.SED.Common.ValueSpec13,14
+spec spec24,25
+
+./test/System/SED/Common/TokenSpec.hs,375
+module System.SED.Common.TokenSpec System.SED.Common.TokenSpec12,13
+spec spec32,33
+maybeIsPrefixOf maybeIsPrefixOf235,236
+maybeParsesEq maybeParsesEq238,239
+(<(<||>)241,242
+tagsReservedForTCG tagsReservedForTCG245,246
+tokenParserByteString tokenParserByteString249,250
+tokenParserString tokenParserString252,253
+p p255,256
+gp gp258,259
+_pgp _pgp262,263
+
+./test/System/SED/Common/ColumnTypes/THSpec.hs,105
+module System.SED.Common.ColumnTypes.THSpec System.SED.Common.ColumnTypes.THSpec12,13
+spec spec21,22
+
+./test/Spec.hs,0
+
+./dev/DevMain.hs,834
+module DevMain DevMain10,11
+dev dev23,24
+preprocessABNF preprocessABNF36,37
+correctABNFFromTCGABNF correctABNFFromTCGABNF39,40
+coreTypesTCGABNF coreTypesTCGABNF43,44
+Type Type45,46
+table_kind table_kind48,49
+Base_Type Base_Type51,52
+Simple_Type Simple_Type53,54
+Enumeration_Type Enumeration_Type55,56
+Alternative_Type Alternative_Type57,58
+List_Type List_Type59,60
+Restricted_Reference_Type Restricted_Reference_Type61,62
+General_Reference_Type General_Reference_Type63,64
+General_Reference_Table_Type General_Reference_Table_Type65,66
+Named_Value_Name_Type Named_Value_Name_Type67,68
+Name_Value_Integer_Type Name_Value_Integer_Type69,70
+Name_Value_Uinteger_Type Name_Value_Uinteger_Type71,72
+Struct_Type Struct_Type73,74
+Set_Type Set_Type75,76
+correctABNFToTCGABNF correctABNFToTCGABNF80,81
+
+./src/System/SED/TPer/Run.hs,66
+module System.SED.TPer.Run System.SED.TPer.Run2,3
+run run9,10
+
+./src/System/SED/Host/Run.hs,66
+module System.SED.Host.Run System.SED.Host.Run2,3
+run run9,10
+
+./src/System/SED/Common/Call.lhs,1351
+module System.SED.Common.Call System.SED.Common.Call23,24
+data MethodHeader MethodHeader199,200
+data MethodHeader = MethodHeader{ MethodHeader{199,200
+data MethodHeader = MethodHeader{ _invokingID _invokingID199,200
+                                , _methodID _methodID200,201
+data Parameters Parameters204,205
+data Parameters = Parameters Parameters204,205
+data Parameters = Parameters { _required:_required204,205
+                             , _optional:_optional205,206
+data MethodCall MethodCall208,209
+data MethodCall = MethodCall MethodCall208,209
+data MethodCall = MethodCall { _header _header208,209
+                             , _parameters _parameters209,210
+                             , _statusCode _statusCode210,211
+instance StreamItem StreamItem MethodHeader215,216
+    parser parser216,217
+    generate generate217,218
+instance StreamItem StreamItem Parameters219,220
+    parser parser220,221
+    generate generate221,222
+d d223,224
+instance StreamItem StreamItem MethodCall226,227
+    parser parser227,228
+    generate generate242,243
+instance Arbitrary Arbitrary MethodHeader254,255
+    arbitrary arbitrary255,256
+instance Arbitrary Arbitrary Parameters257,258
+    arbitrary arbitrary258,259
+instance Arbitrary Arbitrary MethodCall260,261
+    arbitrary arbitrary261,262
+
+./src/System/SED/Common/TableUIDs.lhs,155
+module System.SED.Common.TableUIDsSystem.SED.Common.TableUIDs47,48
+lookupTableHalfUID lookupTableHalfUID177,178
+lookupTableUID lookupTableUID182,183
+
+./src/System/SED/Common/StreamItem.lhs,552
+module System.SED.Common.StreamItem System.SED.Common.StreamItem23,24
+class StreamItem StreamItem45,46
+    parser parser46,47
+    generate generate48,49
+    parseByteString parseByteString50,51
+    parseString parseString53,54
+    maybeParse maybeParse56,57
+    pg pg60,61
+    typeIsa typeIsa63,64
+require require67,68
+instance (S(StreamItem a) => StreamItem [a]74,75
+    parser parser75,76
+    generate generate76,77
+instance (S(StreamItem a) => StreamItem (a, a)77,78
+    parser parser78,79
+    generate generate79,80
+
+./src/System/SED/Common/UID.lhs,634
+module System.SED.Common.UID System.SED.Common.UID27,28
+showFixed_bytesHex showFixed_bytesHex76,77
+showFixed_bytes showFixed_bytes81,82
+newtype HalfUID HalfUID85,86
+instance Show Show HalfUID88,89
+    show show89,90
+instance Arbitrary Arbitrary HalfUID90,91
+    arbitrary arbitrary91,92
+halfUID halfUID93,94
+newtype UID UID97,98
+instance Show Show UID100,101
+    show show101,102
+instance Arbitrary Arbitrary UID102,103
+    arbitrary arbitrary103,104
+uid uid105,106
+uidUpper uidUpper112,113
+uidLower uidLower115,116
+uidPlus uidPlus118,119
+(+(+:+)121,122
+hNull hNull125,126
+uNull uNull128,129
+
+./src/System/SED/Common/THUtil.lhs,221
+module System.SED.Common.THUtilSystem.SED.Common.THUtil24,25
+parseTable parseTable50,51
+dData dData54,55
+dSig dSig59,60
+dVal dVal63,64
+eHalfUID eHalfUID67,68
+eUID eUID71,72
+eID eID75,76
+eValP eValP80,81
+
+./src/System/SED/Common/Format.lhs,3277
+module System.SED.Common.FormatSystem.SED.Common.Format35,36
+import import43,44
+data Max_bytes Max_bytes53,54
+instance StreamItem StreamItem Core_table_kind57,58
+    where generate generate58,59
+data Core_table_kind Core_table_kind62,63
+data Core_table_kind = Object_Table Object_Table62,63
+data Core_table_kind = Object_Table | Byte_TableByte_Table62,63
+newtype Core_uinteger_2 Core_uinteger_265,66
+newtype Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_265,66
+newtype Core_integer_2 Core_integer_267,68
+newtype Core_integer_2    = Core_integer_2 {fromCore_integer_2:fromCore_integer_267,68
+newtype Core_uidref Core_uidref69,70
+newtype Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref69,70
+newtype Core_max_bytes_32 Core_max_bytes_3271,72
+newtype Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3271,72
+newtype Core_uidref_Base_Type Core_uidref_Base_Type74,75
+newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type76,77
+newtype Core_uidref_Byte_Table Core_uidref_Byte_Table78,79
+newtype Core_uidref_Object_Table Core_uidref_Object_Table80,81
+data Known_Core_Type Known_Core_Type83,84
+        Base_Type Base_Type85,86
+        Simple_Type Simple_Type86,87
+        Enumeration_Type Enumeration_Type87,88
+        Alternative_Type Alternative_Type88,89
+        List_Type List_Type89,90
+        Restricted_Reference_Type'5 Restricted_Reference_Type'590,91
+        Restricted_Reference_Type'6 Restricted_Reference_Type'691,92
+        General_Reference_Type'7 General_Reference_Type'792,93
+        General_Reference_Type'8 General_Reference_Type'893,94
+        General_Reference_Type'9 General_Reference_Type'994,95
+        General_Reference_Table_Type General_Reference_Table_Type95,96
+        Named_Value_Name_Type Named_Value_Name_Type96,97
+        Named_Value_Integer_Type Named_Value_Integer_Type97,98
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type98,99
+        Struct_Type Struct_Type99,100
+        Set_Type Set_Type100,101
+data Some_Core_Type Some_Core_Type105,106
+data Some_Core_Type = forall forall105,106
+data Some_Core_Type = forall (n n105,106
+instance StreamItem StreamItem Some_Core_Type110,111
+    generate generate111,112
+    parser parser129,130
+instance StreamItem StreamItem Core_uinteger_2151,152
+    parser parser152,153
+    generate generate153,154
+instance StreamItem StreamItem Core_integer_2154,155
+    parser parser155,156
+    generate generate156,157
+instance StreamItem StreamItem Core_uidref157,158
+    parser parser158,159
+    generate generate159,160
+instance StreamItem StreamItem Core_max_bytes_32160,161
+    parser parser161,162
+    generate generate162,163
+instance StreamItem StreamItem Core_uidref_Base_Type163,164
+    parser parser164,165
+    generate generate165,166
+instance StreamItem StreamItem Core_uidref_non_Base_Type166,167
+    parser parser167,168
+    generate generate168,169
+instance StreamItem StreamItem Core_uidref_Byte_Table169,170
+    parser parser170,171
+    generate generate171,172
+instance StreamItem StreamItem Core_uidref_Object_Table172,173
+    parser parser173,174
+    generate generate174,175
+
+./src/System/SED/Common/Table.lhs,1042
+module System.SED.Common.Table System.SED.Common.Table23,24
+newtype TableName TableName190,191
+instance Show Show TableName191,192
+instance Show TableName where show show191,192
+newtype TemplateName TemplateName193,194
+instance Show Show TemplateName194,195
+instance Show TemplateName where show show194,195
+data Table Table196,197
+data Table = Table Table196,197
+data Table = Table { _tableName _tableName196,197
+                   , _tableHalfUID _tableHalfUID197,198
+                   , _tableColumns _tableColumns198,199
+                   , _tableRows _tableRows199,200
+newtype TableRow TableRow203,204
+data TableColumn TableColumn347,348
+data TableColumn = TableColumn TableColumn347,348
+data TableColumn = TableColumn { _columnNumber _columnNumber347,348
+                               , _columnName _columnName348,349
+                               , _columnIsUnique _columnIsUnique349,350
+                               , _columnType _columnType350,351
+newtype ColumnType ColumnType354,355
+
+./src/System/SED/Common/Types.lhs,61
+module System.SED.Common.TypesSystem.SED.Common.Types21,22
+
+./src/System/SED/Common/Util.lhs,134
+module System.SED.Common.Util System.SED.Common.Util23,24
+hexUID hexUID43,44
+trimTrailingWhitespace trimTrailingWhitespace47,48
+
+./src/System/SED/Common/TableUIDs/TH.lhs,891
+module System.SED.Common.TableUIDs.TH System.SED.Common.TableUIDs.TH24,25
+import import42,43
+t240 t24067,68
+t240Decs t240Decs75,76
+data UIDRow UIDRow103,104
+data UIDRow = UIDRow UIDRow103,104
+uidRow uidRow106,107
+mkUIDRow mkUIDRow117,118
+pTableObjectUID pTableObjectUID128,129
+pTableUID pTableUID131,132
+pTableName pTableName134,135
+pTemplateName pTemplateName137,138
+pUIDField pUIDField140,141
+pTrimmedField pTrimmedField143,144
+pField pField146,147
+title title150,151
+header header153,154
+rowSep rowSep156,157
+pieceLengths pieceLengths159,160
+rowSepString rowSepString162,163
+dUIDRow dUIDRow166,167
+data UIDRowDecs UIDRowDecs184,185
+data UIDRowDecs = UIDRowDecs UIDRowDecs184,185
+instance Semigroup Semigroup UIDRowDecs187,188
+  where (U(UIDRowDecsu1eh1eu1)188,189
+instance Monoid Monoid UIDRowDecs191,192
+  where mempty mempty192,193
+
+./src/System/SED/Common/Token.lhs,1162
+module System.SED.Common.TokenSystem.SED.Common.Token22,23
+data Token Token139,140
+    Unsigned Unsigned140,141
+  | Signed Signed141,142
+  | Bytes Bytes142,143
+  | ContinuedBytes ContinuedBytes143,144
+  | StartNameStartName144,145
+  | EndNameEndName145,146
+  | StartListStartList146,147
+  | EndListEndList147,148
+  | CallCall148,149
+  | EndOfDataEndOfData149,150
+  | EndOfSessionEndOfSession150,151
+  | StartTransactionStartTransaction151,152
+  | EndTransactionEndTransaction152,153
+  | EmptyEmpty153,154
+class (Show a) => IsToken IsToken156,157
+    fromToken fromToken157,158
+    token token159,160
+    mtoken mtoken162,163
+instance IsToken IsToken Token166,167
+    token token167,168
+    fromToken fromToken168,169
+instance StreamItem StreamItem Token173,174
+    parser parser174,175
+    generate generate175,176
+tokenParser tokenParser182,183
+generateToken generateToken284,285
+instance Arbitrary Arbitrary Token330,331
+    arbitrary arbitrary331,332
+rawTokenSource rawTokenSource346,347
+removeEmpty removeEmpty349,350
+combineContinued combineContinued352,353
+tokenSource tokenSource365,366
+
+./src/System/SED/Common/Import.hs,61
+module System.SED.Common.ImportSystem.SED.Common.Import1,2
+
+./src/System/SED/Common/ColumnTypes.lhs,73
+module System.SED.Common.ColumnTypesSystem.SED.Common.ColumnTypes23,24
+
+./src/System/SED/Common/ColumnTypes/TH.lhs,1279
+module System.SED.Common.ColumnTypes.TH System.SED.Common.ColumnTypes.TH25,26
+ttype ttype102,103
+ttypeDecs ttypeDecs110,111
+typeTableParser typeTableParser117,118
+typeTableRow typeTableRow124,125
+dTypeTableRow dTypeTableRow131,132
+typeTableTitle typeTableTitle138,139
+spaces spaces142,143
+rowSepFieldLengths rowSepFieldLengths145,146
+rowSep rowSep152,153
+blankLines blankLines156,157
+tableRowFields tableRowFields160,161
+data TypeTableRow TypeTableRow168,169
+data TypeTableRow = TypeTableRow TypeTableRow168,169
+instance Semigroup Semigroup TypeTableRow171,172
+    (T(TypeTableRowu1n1f1)172,173
+type TypeUIDField TypeUIDField175,176
+type TypeName TypeName177,178
+type FormatString FormatString179,180
+header header182,183
+formatString formatString192,193
+newtype TypeTableRowDecs TypeTableRowDecs199,200
+instance Semigroup Semigroup TypeTableRowDecs202,203
+  where (T(TypeTableRowDecsd1)203,204
+instance Monoid Monoid TypeTableRowDecs206,207
+  where mempty mempty207,208
+tenum tenum217,218
+tenumDecs tenumDecs226,227
+dEnum dEnum229,230
+enumTableParser enumTableParser253,254
+data EnumRow EnumRow262,263
+data EnumRow = EnumRow EnumRow262,263
+enumTableTitle enumTableTitle265,266
+enumTableRow enumTableRow273,274
+
+./src/System/SED/Common/Value.lhs,3495
+module System.SED.Common.Value System.SED.Common.Value24,25
+newtype Datum Datum43,44
+class (Show v) => IsDatum IsDatum46,47
+    datum datum47,48
+    mdatum mdatum50,51
+instance IsDatum IsDatum Datum53,54
+    datum datum54,55
+instance IsDatum IsDatum Token56,57
+    mdatum mdatum57,58
+maybeDatumToken maybeDatumToken59,60
+isDatumToken isDatumToken66,67
+instance IsToken IsToken Datum70,71
+    token token71,72
+    fromToken fromToken72,73
+instance IsDatum IsDatum Natural74,75
+    datum datum75,76
+udatum udatum77,78
+instance IsDatum IsDatum Integer80,81
+    datum datum81,82
+sdatum sdatum83,84
+instance IsDatum IsDatum ByteString86,87
+    datum datum87,88
+bdatum bdatum89,90
+instance IsDatum IsDatum String92,93
+    datum datum93,94
+newtype Name Name95,96
+class (Show d) => IsName IsName98,99
+    name name99,100
+    mname mname102,103
+instance IsName IsName Name105,106
+    name name106,107
+instance IsName IsName Datum108,109
+    name name109,110
+instance IsName IsName Token111,112
+    name name112,113
+instance IsName IsName Natural114,115
+    name name115,116
+instance IsName IsName Integer117,118
+    name name118,119
+instance IsName IsName ByteString120,121
+    name name121,122
+instance IsName IsName String123,124
+    name name124,125
+instance IsDatum IsDatum Name126,127
+    datum datum127,128
+instance IsToken IsToken Name129,130
+    token token130,131
+    fromToken fromToken131,132
+data NamedValue NamedValue134,135
+data NamedValue = NamedValue NamedValue134,135
+(.(.:)137,138
+n n138,139
+instance IsName IsName NamedValue141,142
+    name name142,143
+newtype List List144,145
+data Value Value147,148
+data Value = D D147,148
+           | N N148,149
+           | L L149,150
+class IsValue IsValue152,153
+    value value153,154
+    mvalue mvalue154,155
+instance IsValue IsValue Value157,158
+    value value158,159
+instance IsValue IsValue Datum160,161
+    value value161,162
+instance IsValue IsValue NamedValue163,164
+    value value164,165
+instance IsValue IsValue List166,167
+    value value167,168
+instance IsValue IsValue Token169,170
+    value value170,171
+instance IsValue IsValue Natural172,173
+    value value173,174
+instance IsValue IsValue Integer175,176
+    value value176,177
+instance IsValue IsValue ByteString178,179
+    value value179,180
+instance IsValue IsValue String181,182
+    value value182,183
+instance IsToken IsToken Value184,185
+    mtoken mtoken185,186
+    fromToken fromToken187,188
+instance StreamItem StreamItem Datum190,191
+    parser parser191,192
+    generate generate192,193
+instance StreamItem StreamItem Name194,195
+    parser parser195,196
+    generate generate196,197
+instance StreamItem StreamItem NamedValue199,200
+    parser parser200,201
+    generate generate203,204
+instance StreamItem StreamItem List209,210
+    parser parser210,211
+    generate generate213,214
+instance StreamItem StreamItem Value218,219
+    parser parser219,220
+    generate generate222,223
+instance Arbitrary Arbitrary Datum227,228
+    arbitrary arbitrary228,229
+instance Arbitrary Arbitrary Name236,237
+    arbitrary arbitrary237,238
+instance Arbitrary Arbitrary NamedValue239,240
+    arbitrary arbitrary240,241
+instance Arbitrary Arbitrary List242,243
+    arbitrary arbitrary243,244
+instance Arbitrary Arbitrary Value245,246
+    arbitrary arbitrary246,247
+
+./src/System/SED/Common/SpecialPurposeUIDs.lhs,485
+module System.SED.Common.SpecialPurposeUIDs System.SED.Common.SpecialPurposeUIDs22,23
+uNULL uNULL54,55
+uThisSP uThisSP58,59
+uSMUID uSMUID62,63
+uSMMethodUID uSMMethodUID66,67
+uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID70,71
+uProperties uProperties92,93
+uStartSession uStartSession95,96
+uSyncSession uSyncSession98,99
+uStartTrustedSession uStartTrustedSession101,102
+uSyncTrustedSession uSyncTrustedSession104,105
+uCloseSession uCloseSession107,108
+
+./src/System/SED/Common/Instances.lhs,297
+module System.SED.Common.Instances System.SED.Common.Instances28,29
+instance (K(KnownNat n) => IsToken (Fixed_bytes n)54,55
+    token token55,56
+    fromToken fromToken56,57
+instance (K(KnownNat n) => StreamItem (Fixed_bytes n)59,60
+    parser parser60,61
+    generate generate69,70
+
+./src/Hsed/App.lhs,357
+module Hsed.AppHsed.App23,24
+newtype Options Options31,32
+  { _verbose _verbose32,33
+data App App37,38
+data App = AppApp37,38
+  { _logFunc _logFunc38,39
+  , _processContext _processContext39,40
+  , _options _options40,41
+makeApp makeApp43,44
+instance HasLogFunc HasLogFunc App46,47
+instance HasLogFunc App where logFuncL logFuncL46,47
+
+./src/Data/SizedText/Class.hs,2251
+module Data.SizedText.ClassData.SizedText.Class11,12
+class IsSizedText IsSizedText45,46
+  data Sized Sized49,50
+  type Elem Elem52,53
+  unsafeCreate unsafeCreate68,69
+  unwrap unwrap71,72
+  length length73,74
+  append append74,75
+  replicate replicate75,76
+  map map76,77
+  take take77,78
+  drop drop78,79
+instance (S(Show a, IsSizedText a) => Show (Sized a l u)81,82
+  show show82,83
+  showsPrec showsPrec83,84
+instance IsSizedText IsSizedText [a]85,86
+  type Elem Elem86,87
+  data Sized Sized88,89
+  data Sized [a] l u = List List88,89
+  unsafeCreate unsafeCreate91,92
+  unwrap unwrap92,93
+  length length94,95
+  append append95,96
+  replicate replicate96,97
+  map map97,98
+  take take98,99
+  drop drop99,100
+instance IsSizedText IsSizedText T-Text103,104
+  type Elem Elem104,105
+  data Sized Sized106,107
+  data Sized T.Text l u = Text Text106,107
+  unsafeCreate unsafeCreate109,110
+  unwrap unwrap110,111
+  length length112,113
+  append append113,114
+  replicate replicate114,115
+  map map115,116
+  take take116,117
+  drop drop117,118
+instance IsSizedText IsSizedText B-ByteString122,123
+  type Elem Elem123,124
+  data Sized Sized125,126
+  data Sized B.ByteString l u = ByteString ByteString125,126
+  unsafeCreate unsafeCreate128,129
+  unwrap unwrap129,130
+  length length131,132
+  append append132,133
+  replicate replicate133,134
+  map map134,135
+  take take135,136
+  drop drop136,137
+instance IsSizedText IsSizedText BS-ShortByteString140,141
+  type Elem Elem141,142
+  data Sized Sized143,144
+  data Sized BS.ShortByteString l u = ByteStringS ByteStringS143,144
+  unsafeCreate unsafeCreate146,147
+  unwrap unwrap147,148
+  length length149,150
+  append append150,151
+  replicate replicate151,152
+  map map152,153
+  take take153,154
+  drop drop154,155
+instance IsSizedText IsSizedText (V-Vector a)159,160
+  type Elem Elem160,161
+  data Sized Sized162,163
+  data Sized (V.Vector a) l u = Vector Vector162,163
+  unsafeCreate unsafeCreate165,166
+  unwrap unwrap166,167
+  length length168,169
+  append append169,170
+  replicate replicate170,171
+  map map171,172
+  take take172,173
+  drop drop173,174
+
+./src/Data/SizedText/Class_flymake.hs,2251
+module Data.SizedText.ClassData.SizedText.Class11,12
+class IsSizedText IsSizedText45,46
+  data Sized Sized49,50
+  type Elem Elem52,53
+  unsafeCreate unsafeCreate68,69
+  unwrap unwrap71,72
+  length length73,74
+  append append74,75
+  replicate replicate75,76
+  map map76,77
+  take take77,78
+  drop drop78,79
+instance (S(Show a, IsSizedText a) => Show (Sized a l u)81,82
+  show show82,83
+  showsPrec showsPrec83,84
+instance IsSizedText IsSizedText [a]85,86
+  type Elem Elem86,87
+  data Sized Sized88,89
+  data Sized [a] l u = List List88,89
+  unsafeCreate unsafeCreate91,92
+  unwrap unwrap92,93
+  length length94,95
+  append append95,96
+  replicate replicate96,97
+  map map97,98
+  take take98,99
+  drop drop99,100
+instance IsSizedText IsSizedText T-Text103,104
+  type Elem Elem104,105
+  data Sized Sized106,107
+  data Sized T.Text l u = Text Text106,107
+  unsafeCreate unsafeCreate109,110
+  unwrap unwrap110,111
+  length length112,113
+  append append113,114
+  replicate replicate114,115
+  map map115,116
+  take take116,117
+  drop drop117,118
+instance IsSizedText IsSizedText B-ByteString122,123
+  type Elem Elem123,124
+  data Sized Sized125,126
+  data Sized B.ByteString l u = ByteString ByteString125,126
+  unsafeCreate unsafeCreate128,129
+  unwrap unwrap129,130
+  length length131,132
+  append append132,133
+  replicate replicate133,134
+  map map134,135
+  take take135,136
+  drop drop136,137
+instance IsSizedText IsSizedText BS-ShortByteString140,141
+  type Elem Elem141,142
+  data Sized Sized143,144
+  data Sized BS.ShortByteString l u = ByteStringS ByteStringS143,144
+  unsafeCreate unsafeCreate146,147
+  unwrap unwrap147,148
+  length length149,150
+  append append150,151
+  replicate replicate151,152
+  map map152,153
+  take take153,154
+  drop drop154,155
+instance IsSizedText IsSizedText (V-Vector a)159,160
+  type Elem Elem160,161
+  data Sized Sized162,163
+  data Sized (V.Vector a) l u = Vector Vector162,163
+  unsafeCreate unsafeCreate165,166
+  unwrap unwrap166,167
+  length length168,169
+  append append169,170
+  replicate replicate170,171
+  map map171,172
+  take take172,173
+  drop drop173,174
+
+./src/Data/SizedText.hs,391
+module Data.SizedTextData.SizedText24,25
+createLeft createLeft78,79
+createRight createRight100,101
+create create123,124
+append append141,142
+replicate replicate150,151
+map map162,163
+take take172,173
+drop drop185,186
+bounds bounds196,197
+length length207,208
+padLeft padLeft214,215
+padRight padRight221,222
+fromStatic fromStatic227,228
+toStatic toStatic230,231
+
+./src/Data/SizedText_flymake.hs,391
+module Data.SizedTextData.SizedText24,25
+createLeft createLeft78,79
+createRight createRight100,101
+create create123,124
+append append141,142
+replicate replicate150,151
+map map162,163
+take take172,173
+drop drop185,186
+bounds bounds196,197
+length length207,208
+padLeft padLeft214,215
+padRight padRight221,222
+fromStatic fromStatic227,228
+toStatic toStatic230,231
+
+./src/Extras/GitVersion.hs,139
+module Extras.GitVersion Extras.GitVersion15,16
+plainVersion plainVersion32,33
+gitBranch gitBranch39,40
+gitVersion gitVersion52,53
+
+./src/Extras/Integral.lhs,804
+module Extras.IntegralExtras.Integral27,28
+rollUp rollUp54,55
+byteStringToNatural byteStringToNatural59,60
+byteStringToInteger byteStringToInteger62,63
+naturalToByteString naturalToByteString69,70
+intVal intVal74,75
+integerToByteString integerToByteString77,78
+word8 word890,91
+char char93,94
+ordw ordw96,97
+byte byte99,100
+int int102,103
+integer integer105,106
+natural natural108,109
+class IsByteString IsByteString111,112
+    fromByteString fromByteString112,113
+    toByteString toByteString113,114
+instance IsByteString IsByteString Integer115,116
+    fromByteString fromByteString116,117
+    toByteString toByteString117,118
+instance IsByteString IsByteString Natural119,120
+    fromByteString fromByteString120,121
+    toByteString toByteString121,122
+
+./src/Extras/Sized.lhs,1557
+module Extras.SizedExtras.Sized30,31
+import import56,57
+data Fixed_bytes Fixed_bytes70,71
+data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes70,71
+take take73,74
+drop drop76,77
+append append79,80
+instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)83,84
+    arbitrary arbitrary84,85
+instance (K(KnownNat n) => Show (Fixed_bytes n)88,89
+    showsPrec showsPrec89,90
+instance (K(KnownNat n) => IsString (Fixed_bytes n)98,99
+    fromString fromString99,100
+class (KnownNat n) => HasFixed_bytes HasFixed_bytes114,115
+    toFixed_bytes toFixed_bytes115,116
+    fromFixed_bytes fromFixed_bytes116,117
+instance (K(KnownNat n) => HasFixed_bytes n Natural118,119
+    toFixed_bytes toFixed_bytes119,120
+    fromFixed_bytes fromFixed_bytes129,130
+instance (K(KnownNat n) => HasFixed_bytes n (T-Static S-ShortByteString n)131,132
+    toFixed_bytes toFixed_bytes132,133
+    fromFixed_bytes fromFixed_bytes133,134
+instance (K(KnownNat n) => HasFixed_bytes n S-ShortByteString135,136
+    toFixed_bytes toFixed_bytes136,137
+    fromFixed_bytes fromFixed_bytes146,147
+instance (K(KnownNat n) => HasFixed_bytes n B-ByteString149,150
+    toFixed_bytes toFixed_bytes150,151
+    fromFixed_bytes fromFixed_bytes151,152
+instance (K(KnownNat n) => HasFixed_bytes n [Word8]153,154
+    toFixed_bytes toFixed_bytes154,155
+    fromFixed_bytes fromFixed_bytes155,156
+instance (K(KnownNat n) => HasHex (Fixed_bytes n)161,162
+    hex hex162,163
+    fromHex fromHex163,164
+fpack fpack167,168
+funpack funpack170,171
+
+./src/Extras/Hex.lhs,867
+module Extras.HexExtras.Hex24,25
+import import37,38
+hexDigit hexDigit50,51
+hexDigits hexDigits53,54
+hexValue hexValue56,57
+hexWord8Syntax hexWord8Syntax59,60
+class HasHex HasHex63,64
+    hex hex64,65
+    fromHex fromHex65,66
+instance HasHex HasHex Word867,68
+    hex hex68,69
+    fromHex fromHex70,71
+instance HasHex HasHex Char75,76
+    hex hex76,77
+    fromHex fromHex77,78
+instance HasHex HasHex [Word8]79,80
+    hex hex80,81
+    fromHex fromHex81,82
+instance HasHex HasHex ByteString85,86
+    hex hex86,87
+    fromHex fromHex87,88
+instance HasHex HasHex String89,90
+    hex hex90,91
+    fromHex fromHex91,92
+instance HasHex HasHex ShortByteString93,94
+    hex hex94,95
+    fromHex fromHex95,96
+instance (K(KnownNat n) => HasHex (Static ShortByteString n)97,98
+    hex hex98,99
+    fromHex fromHex99,100

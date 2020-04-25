@@ -586,22 +586,26 @@ instance IsSizedText IsSizedText (V-Vector a)159,160
   take take172,173
   drop drop173,174
 
-./src/Data/SizedText.hs,390
-module Data.SizedTextData.SizedText24,25
-createLeft createLeft78,79
-createRight createRight99,100
-create create122,123
-append append140,141
-replicate replicate149,150
-map map161,162
-take take171,172
-drop drop184,185
-bounds bounds195,196
-length length206,207
-padLeft padLeft213,214
-padRight padRight220,221
-fromStatic fromStatic226,227
-toStatic toStatic229,230
+./src/Data/SizedText.hs,479
+module Data.SizedTextData.SizedText21,22
+createLeft createLeft64,65
+createRight createRight81,82
+create create103,104
+append append120,121
+replicate replicate131,132
+map map143,144
+take take151,152
+take take162,163
+drop drop170,171
+drop drop181,182
+bounds bounds187,188
+length length197,198
+padLeft padLeft205,206
+padLeft padLeft219,220
+padRight padRight222,223
+padRight padRight236,237
+fromStatic fromStatic238,239
+toStatic toStatic242,243
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

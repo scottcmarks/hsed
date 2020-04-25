@@ -69,6 +69,28 @@ instance Data.SizedText.Class.IsSizedText Data.ByteString.Short.Internal.ShortBy
 instance Data.SizedText.Class.IsSizedText (Data.Vector.Vector a)
 
 
+-- | Template Haskell helpers for SizedText.
+module Data.SizedText.TH
+
+-- | Type-safe Sized constructor macro for string literals.
+--   
+--   Example:
+--   
+--   <pre>
+--   $(sz "Foobar")
+--   </pre>
+--   
+--   compiles to
+--   
+--   <pre>
+--   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 6 6
+--   </pre>
+--   
+--   where 6 is the string length obtained at compile time.
+sz :: LitS -> Q Exp
+instance Data.String.IsString Data.SizedText.TH.LitS
+
+
 -- | sized-text combinators are defined for members of <a>IsSizedText</a>
 --   class. The package includes <a>IsSizedText</a> instances for several
 --   common types.
@@ -82,16 +104,27 @@ module Data.SizedText
 createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
 -- | Just like <a>createLeft</a>, except that elements on the right are
---   preferred.
+--   preferred. &gt;&gt;&gt; createRight '@' "foobarbaz" :: C.Sized String
+--   0 6 "barbaz" &gt;&gt;&gt; createRight <tt>#</tt> "foobarbaz" ::
+--   C.Sized String 12 20 "###foobarbaz"
+createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
+
+-- | Type-safe Sized constructor macro for string literals.
+--   
+--   Example:
 --   
 --   <pre>
---   &gt;&gt;&gt; createRight '@' "foobarbaz" :: C.Sized String 0 6
---   "barbaz"
---   
---   &gt;&gt;&gt; createRight '#' "foobarbaz" :: C.Sized String 12 20
---   "###foobarbaz"
+--   $(sz "Foobar")
 --   </pre>
-createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
+--   
+--   compiles to
+--   
+--   <pre>
+--   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 6 6
+--   </pre>
+--   
+--   where 6 is the string length obtained at compile time.
+sz :: LitS -> Q Exp
 
 -- | Attempt to safely create a C.Sized if it matches target length.
 --   
@@ -120,15 +153,23 @@ replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> 
 -- | Append two C.Sizeds together.
 --   
 --   <pre>
---   &gt;&gt;&gt; append $(st "foo") $(st "bar") :: C.Sized String 6 6
+--   &gt;&gt;&gt; append $(sz "foo") $(sz "bar") :: C.Sized String 6 6
 --   "foobar"
+--   
+--   &gt;&gt;&gt; :set -fno-warn-type-defaults
+--   
+--   &gt;&gt;&gt; append $(sz "Hello, ") $(sz "world!")
+--   "Hello, world!"
+--   
+--   &gt;&gt;&gt; :type it
+--   it :: (C.IsSizedText a, Data.String.IsString a) =&gt; C.Sized a 13 13
 --   </pre>
 append :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2) => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + l2) (u1 + u2)
 
 -- | Reduce C.Sized length, preferring elements on the left.
 --   
 --   <pre>
---   &gt;&gt;&gt; take $(st "Foobar") :: C.Sized String 3
+--   &gt;&gt;&gt; take $(sz "Foobar") :: C.Sized String 3
 --   "Foo"
 --   </pre>
 take :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
@@ -136,7 +177,7 @@ take :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat
 -- | Reduce C.Sized length, preferring elements on the right.
 --   
 --   <pre>
---   &gt;&gt;&gt; drop $(st "Foobar") :: C.Sized String 2
+--   &gt;&gt;&gt; drop $(sz "Foobar") :: C.Sized String 2
 --   "ar"
 --   </pre>
 drop :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
@@ -144,7 +185,7 @@ drop :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat
 -- | Map a C.Sized to a C.Sized of the same length.
 --   
 --   <pre>
---   &gt;&gt;&gt; map toUpper $(st "Hello") :: C.Sized String 5 5
+--   &gt;&gt;&gt; map toUpper $(sz "Hello") :: C.Sized String 5 5
 --   "HELLO"
 --   </pre>
 map :: IsSizedText a => (Elem a -> Elem a) -> Sized a l u -> Sized a l u

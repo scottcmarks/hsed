@@ -69,16 +69,12 @@ import qualified Data.StaticText      as S
 -- >>> :set -XOverloadedStrings
 -- >>> import Data.Char (toUpper)
 
--- | Safely create a C.Sized, possibly altering the source to match
--- target length. If target maximum length is less than the source length,
--- the source gets truncated. If target minimum length is less than
--- the source length, the source is padded using the provided basic element.
--- Elements on the left are preferred.
+-- | Elements on the left are preferred.
 --
 -- >>> createLeft ' ' "foobarbaz" :: C.Sized String 0 6
 -- "foobar"
--- >>> createLeft '#' "foobarbaz" :: C.Sized String 12 20
--- "foobarbaz###"
+-- >>> createLeft '@' "foobarbaz" :: C.Sized String 12 20
+-- "foobarbaz@@@"
 
 createLeft :: forall a l u.
               (C.IsSizedText a, KnownNat l, KnownNat u) =>
@@ -96,10 +92,11 @@ createLeft e s =
 
 -- | Just like 'createLeft', except that elements on the right are preferred.
 --
--- >>> createRight '@' "foobarbaz" :: Sized String 0 6
+-- >>> createRight '@' "foobarbaz" :: C.Sized String 0 6
 -- "barbaz"
--- >>> createRight '!' "foobarbaz" :: C.Sized String 12 20
--- "!!!foobarbaz"
+-- >>> createRight '#' "foobarbaz" :: C.Sized String 12 20
+-- "###foobarbaz"
+
 createRight :: forall a l u.
               (C.IsSizedText a, KnownNat l, KnownNat u) =>
               C.Elem a -> a -> C.Sized a l u
@@ -120,7 +117,7 @@ createRight e s =
 -- >>> create "barbaz" :: Maybe (C.Sized String 0 4)
 -- Nothing
 --
--- This is safer than 'C.unsafeCreate' and unlike with 'createLeft' /
+-- This is safer than 'C.unsafeCreate' and unlike with 'createLeft'
 -- 'createRight' the source value is left unchanged. However, this
 -- implies a further run-time check for Nothing values.
 create :: forall a (l :: Nat) (u :: Nat).

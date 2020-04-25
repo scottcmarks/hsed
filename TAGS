@@ -586,116 +586,22 @@ instance IsSizedText IsSizedText (V-Vector a)159,160
   take take172,173
   drop drop173,174
 
-./src/Data/SizedText/Class_flymake.hs,2251
-module Data.SizedText.ClassData.SizedText.Class11,12
-class IsSizedText IsSizedText45,46
-  data Sized Sized49,50
-  type Elem Elem52,53
-  unsafeCreate unsafeCreate68,69
-  unwrap unwrap71,72
-  length length73,74
-  append append74,75
-  replicate replicate75,76
-  map map76,77
-  take take77,78
-  drop drop78,79
-instance (S(Show a, IsSizedText a) => Show (Sized a l u)81,82
-  show show82,83
-  showsPrec showsPrec83,84
-instance IsSizedText IsSizedText [a]85,86
-  type Elem Elem86,87
-  data Sized Sized88,89
-  data Sized [a] l u = List List88,89
-  unsafeCreate unsafeCreate91,92
-  unwrap unwrap92,93
-  length length94,95
-  append append95,96
-  replicate replicate96,97
-  map map97,98
-  take take98,99
-  drop drop99,100
-instance IsSizedText IsSizedText T-Text103,104
-  type Elem Elem104,105
-  data Sized Sized106,107
-  data Sized T.Text l u = Text Text106,107
-  unsafeCreate unsafeCreate109,110
-  unwrap unwrap110,111
-  length length112,113
-  append append113,114
-  replicate replicate114,115
-  map map115,116
-  take take116,117
-  drop drop117,118
-instance IsSizedText IsSizedText B-ByteString122,123
-  type Elem Elem123,124
-  data Sized Sized125,126
-  data Sized B.ByteString l u = ByteString ByteString125,126
-  unsafeCreate unsafeCreate128,129
-  unwrap unwrap129,130
-  length length131,132
-  append append132,133
-  replicate replicate133,134
-  map map134,135
-  take take135,136
-  drop drop136,137
-instance IsSizedText IsSizedText BS-ShortByteString140,141
-  type Elem Elem141,142
-  data Sized Sized143,144
-  data Sized BS.ShortByteString l u = ByteStringS ByteStringS143,144
-  unsafeCreate unsafeCreate146,147
-  unwrap unwrap147,148
-  length length149,150
-  append append150,151
-  replicate replicate151,152
-  map map152,153
-  take take153,154
-  drop drop154,155
-instance IsSizedText IsSizedText (V-Vector a)159,160
-  type Elem Elem160,161
-  data Sized Sized162,163
-  data Sized (V.Vector a) l u = Vector Vector162,163
-  unsafeCreate unsafeCreate165,166
-  unwrap unwrap166,167
-  length length168,169
-  append append169,170
-  replicate replicate170,171
-  map map171,172
-  take take172,173
-  drop drop173,174
-
-./src/Data/SizedText.hs,391
+./src/Data/SizedText.hs,390
 module Data.SizedTextData.SizedText24,25
 createLeft createLeft78,79
-createRight createRight100,101
-create create123,124
-append append141,142
-replicate replicate150,151
-map map162,163
-take take172,173
-drop drop185,186
-bounds bounds196,197
-length length207,208
-padLeft padLeft214,215
-padRight padRight221,222
-fromStatic fromStatic227,228
-toStatic toStatic230,231
-
-./src/Data/SizedText_flymake.hs,391
-module Data.SizedTextData.SizedText24,25
-createLeft createLeft78,79
-createRight createRight100,101
-create create123,124
-append append141,142
-replicate replicate150,151
-map map162,163
-take take172,173
-drop drop185,186
-bounds bounds196,197
-length length207,208
-padLeft padLeft214,215
-padRight padRight221,222
-fromStatic fromStatic227,228
-toStatic toStatic230,231
+createRight createRight99,100
+create create122,123
+append append140,141
+replicate replicate149,150
+map map161,162
+take take171,172
+drop drop184,185
+bounds bounds195,196
+length length206,207
+padLeft padLeft213,214
+padRight padRight220,221
+fromStatic fromStatic226,227
+toStatic toStatic229,230
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

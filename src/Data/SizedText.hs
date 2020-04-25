@@ -20,14 +20,16 @@ This module is meant to be imported qualifed, e.g.
 
 -}
 module Data.SizedText
-  ( -- * Constructing sized texts
+  (
+    -- * Constructing sized texts
     --
     -- | See also 'C.unsafeCreate'
     createLeft
   , createRight
-    -- , st
+  , sz
   , create
   , replicate
+
     -- * Working with sized texts
   , append
   , take
@@ -50,6 +52,7 @@ import           Prelude              hiding (drop, length, map, replicate,
 
 import           Data.Proxy
 import qualified Data.SizedText.Class as C (Elem, IsSizedText (..), Sized)
+import           Data.SizedText.TH
 import qualified Data.StaticText      as S
 
 -- $setup
@@ -74,7 +77,6 @@ createLeft e s =
     ut = fromIntegral $ natVal (Proxy :: Proxy u)
 
 -- | Just like 'createLeft', except that elements on the right are preferred.
---
 -- >>> createRight '@' "foobarbaz" :: C.Sized String 0 6
 -- "barbaz"
 -- >>> createRight '#' "foobarbaz" :: C.Sized String 12 20
@@ -116,11 +118,15 @@ create s =
 
 -- | Append two C.Sizeds together.
 --
--- >>> append $(st "foo") $(st "bar") :: C.Sized String 6 6
+-- >>> append $(sz "foo") $(sz "bar") :: C.Sized String 6 6
 -- "foobar"
+-- >>> :set -fno-warn-type-defaults
+-- >>> append $(sz "Hello, ") $(sz "world!")
+-- "Hello, world!"
+-- >>> :type it
+-- it :: (C.IsSizedText a, Data.String.IsString a) => C.Sized a 13 13
 append ::
-     forall a l1 u1 l2 u2.
-     (C.IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2)
+     forall a l1 u1 l2 u2. (C.IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2)
   => C.Sized a l1 u1
   -> C.Sized a l2 u2
   -> C.Sized a (l1 + l2) (u1 + u2)
@@ -140,7 +146,7 @@ replicate e = C.unsafeCreate $ C.replicate t e
 
 -- | Map a C.Sized to a C.Sized of the same length.
 --
--- >>> map toUpper $(st "Hello") :: C.Sized String 5 5
+-- >>> map toUpper $(sz "Hello") :: C.Sized String 5 5
 -- "HELLO"
 map ::
      C.IsSizedText a => (C.Elem a -> C.Elem a) -> C.Sized a l u -> C.Sized a l u
@@ -148,7 +154,7 @@ map f s = C.unsafeCreate $ C.map f $ C.unwrap s
 
 -- | Reduce C.Sized length, preferring elements on the left.
 --
--- >>> take $(st "Foobar") :: C.Sized String 3
+-- >>> take $(sz "Foobar") :: C.Sized String 3
 -- "Foo"
 take ::
      forall a l1 u1 l2 u2.
@@ -167,7 +173,7 @@ take s = C.unsafeCreate $ C.take t $ C.unwrap s
 
 -- | Reduce C.Sized length, preferring elements on the right.
 --
--- >>> drop $(st "Foobar") :: C.Sized String 2
+-- >>> drop $(sz "Foobar") :: C.Sized String 2
 -- "ar"
 drop ::
      forall a l1 u1 l2 u2.

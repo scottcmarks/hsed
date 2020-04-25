@@ -1,0 +1,178 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: ec784bb989253c096c4299638a8d29675b03a6c2cc13bfaae833e0fe547aee07
+
+name:           hsed
+version:        0.1.0.1
+description:    Please see the README on Github at <https://github.com/scottcmarks/hsed#readme>
+homepage:       https://github.com/scottcmarks/hsed#readme
+bug-reports:    https://github.com/scottcmarks/hsed/issues
+author:         Scott Marks
+maintainer:     scott@magnolia-heights.com
+copyright:      Magnolia Heights R&D
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/scottcmarks/hsed
+
+library
+  exposed-modules:
+      Data.SizedText
+      Data.SizedText.Class
+      Extras.GitVersion
+      Extras.Hex
+      Extras.Integral
+      Extras.Sized
+      Hsed.App
+      System.SED.Common.Call
+      System.SED.Common.ColumnTypes
+      System.SED.Common.ColumnTypes.TH
+      System.SED.Common.Format
+      System.SED.Common.Import
+      System.SED.Common.Instances
+      System.SED.Common.SpecialPurposeUIDs
+      System.SED.Common.StreamItem
+      System.SED.Common.Table
+      System.SED.Common.TableUIDs
+      System.SED.Common.TableUIDs.TH
+      System.SED.Common.THUtil
+      System.SED.Common.Token
+      System.SED.Common.Types
+      System.SED.Common.UID
+      System.SED.Common.Util
+      System.SED.Common.Value
+      System.SED.Host.Run
+      System.SED.TPer.Run
+  other-modules:
+      Paths_hsed
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -optP-Wno-nonportable-include-path
+  build-depends:
+      QuickCheck
+    , abnf
+    , array
+    , attoparsec
+    , base >=4.10 && <10
+    , bytestring
+    , conduit
+    , conduit-extra
+    , containers
+    , either
+    , ghc
+    , ghc-prim
+    , githash
+    , heredoc
+    , hspec
+    , lens
+    , megaparsec
+    , monad-loops
+    , mtl
+    , pretty
+    , quickcheck-instances
+    , regex-pcre-builtin
+    , rio >=0.1.1.0
+    , static-text
+    , template-haskell
+    , text
+    , transformers
+    , vector
+    , word8
+  default-language: Haskell2010
+
+executable hsed
+  main-is: Main.hs
+  other-modules:
+      Paths_hsed
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -optP-Wno-nonportable-include-path -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , abnf
+    , array
+    , attoparsec
+    , base >=4.10 && <10
+    , bytestring
+    , cborg
+    , conduit
+    , conduit-extra
+    , containers
+    , either
+    , ghc
+    , ghc-prim
+    , githash
+    , heredoc
+    , hsed
+    , hspec
+    , lens
+    , megaparsec
+    , monad-loops
+    , mtl
+    , optparse-simple
+    , pretty
+    , quickcheck-instances
+    , regex-pcre-builtin
+    , rio >=0.1.1.0
+    , static-text
+    , template-haskell
+    , text
+    , transformers
+    , vector
+    , word8
+  default-language: Haskell2010
+
+test-suite hsed-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      System.SED.Common.ColumnTypes.THSpec
+      System.SED.Common.IntegralSpec
+      System.SED.Common.TokenSpec
+      System.SED.Common.ValueSpec
+      Paths_hsed
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Wincomplete-record-updates -Wincomplete-uni-patterns -Wredundant-constraints -optP-Wno-nonportable-include-path -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      QuickCheck
+    , abnf
+    , array
+    , attoparsec
+    , base >=4.10 && <10
+    , bytestring
+    , conduit
+    , conduit-extra
+    , containers
+    , either
+    , ghc
+    , ghc-prim
+    , githash
+    , heredoc
+    , hsed
+    , hspec
+    , lens
+    , megaparsec
+    , monad-loops
+    , mtl
+    , pretty
+    , quickcheck-instances
+    , regex-pcre-builtin
+    , rio >=0.1.1.0
+    , static-text
+    , template-haskell
+    , text
+    , transformers
+    , vector
+    , word8
+  default-language: Haskell2010

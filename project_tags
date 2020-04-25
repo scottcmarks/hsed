@@ -123,27 +123,27 @@ instance (S(StreamItem a) => StreamItem (a, a)77,78
     generate generate79,80
 
 ./src/System/SED/Common/UID.lhs,634
-module System.SED.Common.UID System.SED.Common.UID28,29
-showFixed_bytesHex showFixed_bytesHex77,78
-showFixed_bytes showFixed_bytes82,83
-newtype HalfUID HalfUID86,87
-instance Show Show HalfUID89,90
-    show show90,91
-instance Arbitrary Arbitrary HalfUID91,92
-    arbitrary arbitrary92,93
-halfUID halfUID94,95
-newtype UID UID98,99
-instance Show Show UID101,102
-    show show102,103
-instance Arbitrary Arbitrary UID103,104
-    arbitrary arbitrary104,105
-uid uid106,107
-uidUpper uidUpper113,114
-uidLower uidLower116,117
-uidPlus uidPlus119,120
-(+(+:+)122,123
-hNull hNull126,127
-uNull uNull129,130
+module System.SED.Common.UID System.SED.Common.UID27,28
+showFixed_bytesHex showFixed_bytesHex76,77
+showFixed_bytes showFixed_bytes81,82
+newtype HalfUID HalfUID85,86
+instance Show Show HalfUID88,89
+    show show89,90
+instance Arbitrary Arbitrary HalfUID90,91
+    arbitrary arbitrary91,92
+halfUID halfUID93,94
+newtype UID UID97,98
+instance Show Show UID100,101
+    show show101,102
+instance Arbitrary Arbitrary UID102,103
+    arbitrary arbitrary103,104
+uid uid105,106
+uidUpper uidUpper112,113
+uidLower uidLower115,116
+uidPlus uidPlus118,119
+(+(+:+)121,122
+hNull hNull125,126
+uNull uNull128,129
 
 ./src/System/SED/Common/THUtil.lhs,221
 module System.SED.Common.THUtilSystem.SED.Common.THUtil24,25
@@ -586,22 +586,26 @@ instance IsSizedText IsSizedText (V-Vector a)159,160
   take take172,173
   drop drop173,174
 
-./src/Data/SizedText.hs,391
-module Data.SizedTextData.SizedText24,25
-createLeft createLeft82,83
-createRight createRight103,104
-create create126,127
-append append144,145
-replicate replicate153,154
-map map165,166
-take take175,176
-drop drop188,189
-bounds bounds199,200
-length length210,211
-padLeft padLeft217,218
-padRight padRight224,225
-fromStatic fromStatic230,231
-toStatic toStatic233,234
+./src/Data/SizedText.hs,479
+module Data.SizedTextData.SizedText21,22
+createLeft createLeft64,65
+createRight createRight81,82
+create create103,104
+append append120,121
+replicate replicate131,132
+map map143,144
+take take151,152
+take take162,163
+drop drop170,171
+drop drop181,182
+bounds bounds187,188
+length length197,198
+padLeft padLeft205,206
+padLeft padLeft219,220
+padRight padRight222,223
+padRight padRight236,237
+fromStatic fromStatic238,239
+toStatic toStatic242,243
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

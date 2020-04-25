@@ -79,31 +79,17 @@ instance Data.SizedText.Class.IsSizedText (Data.Vector.Vector a)
 --   import qualified Data.SizedText as S
 --   </pre>
 module Data.SizedText
-
--- | Safely create a C.Sized, possibly altering the source to match target
---   length. If target maximum length is less than the source length, the
---   source gets truncated. If target minimum length is less than the
---   source length, the source is padded using the provided basic element.
---   Elements on the left are preferred.
---   
---   <pre>
---   &gt;&gt;&gt; createLeft ' ' "foobarbaz" :: C.Sized String 0 6
---   "foobar"
---   
---   &gt;&gt;&gt; createLeft '#' "foobarbaz" :: C.Sized String 12 20
---   "foobarbaz###"
---   </pre>
 createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
 -- | Just like <a>createLeft</a>, except that elements on the right are
 --   preferred.
 --   
 --   <pre>
---   &gt;&gt;&gt; createRight '@' "foobarbaz" :: Sized String 0 6
+--   &gt;&gt;&gt; createRight '@' "foobarbaz" :: C.Sized String 0 6
 --   "barbaz"
 --   
---   &gt;&gt;&gt; createRight '!' "foobarbaz" :: C.Sized String 12 20
---   "!!!foobarbaz"
+--   &gt;&gt;&gt; createRight '#' "foobarbaz" :: C.Sized String 12 20
+--   "###foobarbaz"
 --   </pre>
 createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
@@ -118,7 +104,7 @@ createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -
 --   </pre>
 --   
 --   This is safer than <a>unsafeCreate</a> and unlike with
---   <a>createLeft</a> / <a>createRight</a> the source value is left
+--   <a>createLeft</a> <a>createRight</a> the source value is left
 --   unchanged. However, this implies a further run-time check for Nothing
 --   values.
 create :: forall a (l :: Nat) (u :: Nat). (IsSizedText a, KnownNat l, KnownNat u) => a -> Maybe (Sized a l u)
@@ -137,7 +123,7 @@ replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> 
 --   &gt;&gt;&gt; append $(st "foo") $(st "bar") :: C.Sized String 6 6
 --   "foobar"
 --   </pre>
-append :: forall a l1 u1 l2 u2. IsSizedText a => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + l2) (u1 + u2)
+append :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2) => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + l2) (u1 + u2)
 
 -- | Reduce C.Sized length, preferring elements on the left.
 --   

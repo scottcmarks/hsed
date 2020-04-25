@@ -20,15 +20,15 @@ This module is meant to be imported qualifed, e.g.
 
 -}
 module Data.SizedText
-   -- * Constructing sized texts
-   --
-   -- | See also 'C.unsafeCreate'
-  ( createLeft
+  ( -- * Constructing sized texts
+    --
+    -- | See also 'C.unsafeCreate'
+    createLeft
   , createRight
-   -- , st
+    -- , st
   , create
   , replicate
-   -- * Working with sized texts
+    -- * Working with sized texts
   , append
   , take
   , drop

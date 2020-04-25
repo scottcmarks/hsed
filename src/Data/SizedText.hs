@@ -119,7 +119,8 @@ create s =
 -- >>> append $(st "foo") $(st "bar") :: C.Sized String 6 6
 -- "foobar"
 append ::
-     forall a l1 u1 l2 u2. (C.IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2)
+     forall a l1 u1 l2 u2.
+     (C.IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2)
   => C.Sized a l1 u1
   -> C.Sized a l2 u2
   -> C.Sized a (l1 + l2) (u1 + u2)

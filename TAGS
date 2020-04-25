@@ -592,20 +592,20 @@ createLeft createLeft64,65
 createRight createRight81,82
 create create103,104
 append append120,121
-replicate replicate131,132
-map map143,144
-take take151,152
-take take162,163
-drop drop170,171
-drop drop181,182
-bounds bounds187,188
-length length197,198
-padLeft padLeft205,206
-padLeft padLeft219,220
-padRight padRight222,223
-padRight padRight236,237
-fromStatic fromStatic238,239
-toStatic toStatic242,243
+replicate replicate132,133
+map map144,145
+take take152,153
+take take163,164
+drop drop171,172
+drop drop182,183
+bounds bounds188,189
+length length198,199
+padLeft padLeft206,207
+padLeft padLeft220,221
+padRight padRight223,224
+padRight padRight237,238
+fromStatic fromStatic239,240
+toStatic toStatic243,244
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

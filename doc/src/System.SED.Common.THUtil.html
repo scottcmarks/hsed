@@ -48,10 +48,10 @@ Template Haskell utilities.
 </span><span id="line-48"></span><span>
 </span><span id="line-49"></span><span class="hs-comment">-- | Run a table parser (any parser, really) producing a result or throwing an error.</span><span>
 </span><span id="line-50"></span><span class="hs-comment">--   This is safe only in TH code, where an error is a compilation error.</span><span>
-</span><span id="line-51"></span><span id="local-6989586621679505160"><span class="annot"><a href="System.SED.Common.THUtil.html#parseTable"><span class="hs-identifier hs-type">parseTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621679505160"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679505160"><span class="hs-identifier hs-type">c</span></a></span></span><span>
+</span><span id="line-51"></span><span id="local-6989586621679515990"><span class="annot"><a href="System.SED.Common.THUtil.html#parseTable"><span class="hs-identifier hs-type">parseTable</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621679515990"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679515990"><span class="hs-identifier hs-type">c</span></a></span></span><span>
 </span><span id="line-52"></span><span id="parseTable"><span class="annot"><span class="annottext">parseTable :: Parser c -&gt; String -&gt; c
-</span><a href="System.SED.Common.THUtil.html#parseTable"><span class="hs-identifier hs-var hs-var">parseTable</span></a></span></span><span> </span><span id="local-6989586621679505158"><span class="annot"><span class="annottext">tableParser :: Parser c
-</span><a href="#local-6989586621679505158"><span class="hs-identifier hs-var">tableParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; c) -&gt; (c -&gt; c) -&gt; Either String c -&gt; c
+</span><a href="System.SED.Common.THUtil.html#parseTable"><span class="hs-identifier hs-var hs-var">parseTable</span></a></span></span><span> </span><span id="local-6989586621679515988"><span class="annot"><span class="annottext">tableParser :: Parser c
+</span><a href="#local-6989586621679515988"><span class="hs-identifier hs-var">tableParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; c) -&gt; (c -&gt; c) -&gt; Either String c -&gt; c
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; c
 forall a. HasCallStack =&gt; String -&gt; a
@@ -63,7 +63,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Parser c -&gt; ByteString -&gt; Either String c
 forall a. Parser a -&gt; ByteString -&gt; Either String a
 </span><span class="hs-identifier hs-var">parseOnly</span></span><span> </span><span class="annot"><span class="annottext">Parser c
-</span><a href="#local-6989586621679505158"><span class="hs-identifier hs-var">tableParser</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Either String c)
+</span><a href="#local-6989586621679515988"><span class="hs-identifier hs-var">tableParser</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Either String c)
 -&gt; (String -&gt; ByteString) -&gt; String -&gt; Either String c
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
@@ -73,10 +73,10 @@ forall a. IsString a =&gt; String -&gt; a
 </span><span id="line-54"></span><span class="hs-comment">-- | Data declaration, essentially [d| data $n $c0 | $c1 ... deriving ($d0,$d1,...) |]</span><span>
 </span><span id="line-55"></span><span class="annot"><a href="System.SED.Common.THUtil.html#dData"><span class="hs-identifier hs-type">dData</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span>
 </span><span id="line-56"></span><span id="dData"><span class="annot"><span class="annottext">dData :: Name -&gt; [Name] -&gt; [Name] -&gt; Dec
-</span><a href="System.SED.Common.THUtil.html#dData"><span class="hs-identifier hs-var hs-var">dData</span></a></span></span><span> </span><span id="local-6989586621679505156"><span class="annot"><span class="annottext">n :: Name
-</span><a href="#local-6989586621679505156"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679505155"><span class="annot"><span class="annottext">cs :: [Name]
-</span><a href="#local-6989586621679505155"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span id="local-6989586621679505154"><span class="annot"><span class="annottext">ds :: [Name]
-</span><a href="#local-6989586621679505154"><span class="hs-identifier hs-var">ds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>  </span><span class="annot"><span class="annottext">Cxt
+</span><a href="System.SED.Common.THUtil.html#dData"><span class="hs-identifier hs-var hs-var">dData</span></a></span></span><span> </span><span id="local-6989586621679515986"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679515986"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679515985"><span class="annot"><span class="annottext">cs :: [Name]
+</span><a href="#local-6989586621679515985"><span class="hs-identifier hs-var">cs</span></a></span></span><span> </span><span id="local-6989586621679515984"><span class="annot"><span class="annottext">ds :: [Name]
+</span><a href="#local-6989586621679515984"><span class="hs-identifier hs-var">ds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>  </span><span class="annot"><span class="annottext">Cxt
 -&gt; Name
 -&gt; [TyVarBndr]
 -&gt; Maybe Kind
@@ -84,13 +84,13 @@ forall a. IsString a =&gt; String -&gt; a
 -&gt; [DerivClause]
 -&gt; Dec
 </span><span class="hs-identifier hs-var">DataD</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505156"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe Kind
+</span><a href="#local-6989586621679515986"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe Kind
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Name -&gt; Con) -&gt; [Name] -&gt; [Con]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; [BangType] -&gt; Con
 </span><span class="hs-operator hs-var">`NormalC`</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621679505155"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679515985"><span class="hs-identifier hs-var">cs</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-57"></span><span>                       </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Maybe DerivStrategy -&gt; Cxt -&gt; DerivClause
 </span><span class="hs-identifier hs-var">DerivClause</span></span><span> </span><span class="annot"><span class="annottext">Maybe DerivStrategy
 forall a. Maybe a
@@ -98,62 +98,62 @@ forall a. Maybe a
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Kind
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621679505154"><span class="hs-identifier hs-var">ds</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621679515984"><span class="hs-identifier hs-var">ds</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-comment">-- | Signature declaration, essentially [d| $n :: $t |]</span><span>
 </span><span id="line-60"></span><span class="annot"><a href="System.SED.Common.THUtil.html#dSig"><span class="hs-identifier hs-type">dSig</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span>
 </span><span id="line-61"></span><span id="dSig"><span class="annot"><span class="annottext">dSig :: Name -&gt; Name -&gt; Dec
-</span><a href="System.SED.Common.THUtil.html#dSig"><span class="hs-identifier hs-var hs-var">dSig</span></a></span></span><span> </span><span id="local-6989586621679505148"><span class="annot"><span class="annottext">n :: Name
-</span><a href="#local-6989586621679505148"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679505147"><span class="annot"><span class="annottext">t :: Name
-</span><a href="#local-6989586621679505147"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Kind -&gt; Dec
+</span><a href="System.SED.Common.THUtil.html#dSig"><span class="hs-identifier hs-var hs-var">dSig</span></a></span></span><span> </span><span id="local-6989586621679515978"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679515978"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679515977"><span class="annot"><span class="annottext">t :: Name
+</span><a href="#local-6989586621679515977"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Kind -&gt; Dec
 </span><span class="hs-identifier hs-var">SigD</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505148"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Kind
+</span><a href="#local-6989586621679515978"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Kind
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505147"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679515977"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="hs-comment">-- | Value declaration, essentially [d| $n = $e |]</span><span>
 </span><span id="line-64"></span><span class="annot"><a href="System.SED.Common.THUtil.html#dVal"><span class="hs-identifier hs-type">dVal</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span>
 </span><span id="line-65"></span><span id="dVal"><span class="annot"><span class="annottext">dVal :: Name -&gt; Exp -&gt; Dec
-</span><a href="System.SED.Common.THUtil.html#dVal"><span class="hs-identifier hs-var hs-var">dVal</span></a></span></span><span> </span><span id="local-6989586621679505144"><span class="annot"><span class="annottext">n :: Name
-</span><a href="#local-6989586621679505144"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679505143"><span class="annot"><span class="annottext">e :: Exp
-</span><a href="#local-6989586621679505143"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Pat -&gt; Body -&gt; [Dec] -&gt; Dec
+</span><a href="System.SED.Common.THUtil.html#dVal"><span class="hs-identifier hs-var hs-var">dVal</span></a></span></span><span> </span><span id="local-6989586621679515974"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679515974"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679515973"><span class="annot"><span class="annottext">e :: Exp
+</span><a href="#local-6989586621679515973"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Pat -&gt; Body -&gt; [Dec] -&gt; Dec
 </span><span class="hs-identifier hs-var">ValD</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Pat
 </span><span class="hs-identifier hs-var">VarP</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505144"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Body
+</span><a href="#local-6989586621679515974"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Body
 </span><span class="hs-identifier hs-var">NormalB</span></span><span> </span><span class="annot"><span class="annottext">Exp
-</span><a href="#local-6989586621679505143"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621679515973"><span class="hs-identifier hs-var">e</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-66"></span><span>
 </span><span id="line-67"></span><span class="hs-comment">-- | HalfUID as Exp</span><span>
 </span><span id="line-68"></span><span class="annot"><a href="System.SED.Common.THUtil.html#eHalfUID"><span class="hs-identifier hs-type">eHalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-69"></span><span id="eHalfUID"><span class="annot"><span class="annottext">eHalfUID :: HalfUID -&gt; Exp
-</span><a href="System.SED.Common.THUtil.html#eHalfUID"><span class="hs-identifier hs-var hs-var">eHalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679505137"><span class="annot"><span class="annottext">fb :: Fixed_bytes 4
-</span><a href="#local-6989586621679505137"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Fixed_bytes 4 -&gt; Exp
+</span><a href="System.SED.Common.THUtil.html#eHalfUID"><span class="hs-identifier hs-var hs-var">eHalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679515967"><span class="annot"><span class="annottext">fb :: Fixed_bytes 4
+</span><a href="#local-6989586621679515967"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Fixed_bytes 4 -&gt; Exp
 forall (n :: Nat). KnownNat n =&gt; Name -&gt; Fixed_bytes n -&gt; Exp
 </span><a href="System.SED.Common.THUtil.html#eID"><span class="hs-identifier hs-var">eID</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">halfUID</span><span> </span><span class="annot"><span class="annottext">Fixed_bytes 4
-</span><a href="#local-6989586621679505137"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><a href="#local-6989586621679515967"><span class="hs-identifier hs-var">fb</span></a></span><span>
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- | UID as Exp</span><span>
 </span><span id="line-72"></span><span class="annot"><a href="System.SED.Common.THUtil.html#eUID"><span class="hs-identifier hs-type">eUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-73"></span><span id="eUID"><span class="annot"><span class="annottext">eUID :: UID -&gt; Exp
-</span><a href="System.SED.Common.THUtil.html#eUID"><span class="hs-identifier hs-var hs-var">eUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679505133"><span class="annot"><span class="annottext">fb :: Fixed_bytes 8
-</span><a href="#local-6989586621679505133"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Fixed_bytes 8 -&gt; Exp
+</span><a href="System.SED.Common.THUtil.html#eUID"><span class="hs-identifier hs-var hs-var">eUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679515963"><span class="annot"><span class="annottext">fb :: Fixed_bytes 8
+</span><a href="#local-6989586621679515963"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Fixed_bytes 8 -&gt; Exp
 forall (n :: Nat). KnownNat n =&gt; Name -&gt; Fixed_bytes n -&gt; Exp
 </span><a href="System.SED.Common.THUtil.html#eID"><span class="hs-identifier hs-var">eID</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">uid</span><span> </span><span class="annot"><span class="annottext">Fixed_bytes 8
-</span><a href="#local-6989586621679505133"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><a href="#local-6989586621679515963"><span class="hs-identifier hs-var">fb</span></a></span><span>
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- | Wrap a Fixed_bytes n</span><span>
-</span><span id="line-76"></span><span id="local-6989586621679505180"><span class="annot"><a href="System.SED.Common.THUtil.html#eID"><span class="hs-identifier hs-type">eID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679505180"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Extras.Sized.html#Fixed_bytes"><span class="hs-identifier hs-type">Fixed_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679505180"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span></span><span>
+</span><span id="line-76"></span><span id="local-6989586621679516010"><span class="annot"><a href="System.SED.Common.THUtil.html#eID"><span class="hs-identifier hs-type">eID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679516010"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Extras.Sized.html#Fixed_bytes"><span class="hs-identifier hs-type">Fixed_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679516010"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span></span><span>
 </span><span id="line-77"></span><span id="eID"><span class="annot"><span class="annottext">eID :: Name -&gt; Fixed_bytes n -&gt; Exp
-</span><a href="System.SED.Common.THUtil.html#eID"><span class="hs-identifier hs-var hs-var">eID</span></a></span></span><span> </span><span id="local-6989586621679505132"><span class="annot"><span class="annottext">wrapperName :: Name
-</span><a href="#local-6989586621679505132"><span class="hs-identifier hs-var">wrapperName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Word8 -&gt; Exp) -&gt; Exp -&gt; [Word8] -&gt; Exp
+</span><a href="System.SED.Common.THUtil.html#eID"><span class="hs-identifier hs-var hs-var">eID</span></a></span></span><span> </span><span id="local-6989586621679515962"><span class="annot"><span class="annottext">wrapperName :: Name
+</span><a href="#local-6989586621679515962"><span class="hs-identifier hs-var">wrapperName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Word8 -&gt; Exp) -&gt; Exp -&gt; [Word8] -&gt; Exp
 forall (t :: * -&gt; *) b a.
 Foldable t =&gt;
 (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
 </span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Word8 -&gt; Exp
 forall a. Integral a =&gt; Exp -&gt; a -&gt; Exp
-</span><a href="#local-6989586621679505131"><span class="hs-identifier hs-var">arg</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
+</span><a href="#local-6989586621679515961"><span class="hs-identifier hs-var">arg</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505132"><span class="hs-identifier hs-var">wrapperName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; Exp)
+</span><a href="#local-6989586621679515962"><span class="hs-identifier hs-var">wrapperName</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; Exp)
 -&gt; (Fixed_bytes n -&gt; [Word8]) -&gt; Fixed_bytes n -&gt; Exp
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; [Word8]
@@ -163,30 +163,30 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Fixed_bytes n -&gt; ByteString
 forall (n :: Nat). KnownNat n =&gt; Fixed_bytes n -&gt; ByteString
 </span><a href="Extras.Sized.html#funpack"><span class="hs-identifier hs-var">funpack</span></a></span><span>
-</span><span id="line-78"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679505131"><span class="annot"><span class="annottext">arg :: Exp -&gt; a -&gt; Exp
-</span><a href="#local-6989586621679505131"><span class="hs-identifier hs-var hs-var">arg</span></a></span></span><span> </span><span id="local-6989586621679505129"><span class="annot"><span class="annottext">e :: Exp
-</span><a href="#local-6989586621679505129"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621679505128"><span class="annot"><span class="annottext">b :: a
-</span><a href="#local-6989586621679505128"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><span id="line-78"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679515961"><span class="annot"><span class="annottext">arg :: Exp -&gt; a -&gt; Exp
+</span><a href="#local-6989586621679515961"><span class="hs-identifier hs-var hs-var">arg</span></a></span></span><span> </span><span id="local-6989586621679515959"><span class="annot"><span class="annottext">e :: Exp
+</span><a href="#local-6989586621679515959"><span class="hs-identifier hs-var">e</span></a></span></span><span> </span><span id="local-6989586621679515958"><span class="annot"><span class="annottext">b :: a
+</span><a href="#local-6989586621679515958"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="annot"><span class="annottext">Exp
-</span><a href="#local-6989586621679505129"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
+</span><a href="#local-6989586621679515959"><span class="hs-identifier hs-var">e</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
 </span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Lit
 </span><span class="hs-identifier hs-var">IntegerL</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; Integer
 forall a. Integral a =&gt; a -&gt; Integer
 </span><span class="hs-identifier hs-var">toInteger</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679505128"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679515958"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-comment">-- | (Name, String) pair as Exp</span><span>
 </span><span id="line-81"></span><span class="annot"><a href="System.SED.Common.THUtil.html#eValP"><span class="hs-identifier hs-type">eValP</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-82"></span><span id="eValP"><span class="annot"><span class="annottext">eValP :: Name -&gt; String -&gt; Exp
-</span><a href="System.SED.Common.THUtil.html#eValP"><span class="hs-identifier hs-var hs-var">eValP</span></a></span></span><span> </span><span id="local-6989586621679505123"><span class="annot"><span class="annottext">hn :: Name
-</span><a href="#local-6989586621679505123"><span class="hs-identifier hs-var">hn</span></a></span></span><span> </span><span id="local-6989586621679505122"><span class="annot"><span class="annottext">ts :: String
-</span><a href="#local-6989586621679505122"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Exp] -&gt; Exp
+</span><a href="System.SED.Common.THUtil.html#eValP"><span class="hs-identifier hs-var hs-var">eValP</span></a></span></span><span> </span><span id="local-6989586621679515953"><span class="annot"><span class="annottext">hn :: Name
+</span><a href="#local-6989586621679515953"><span class="hs-identifier hs-var">hn</span></a></span></span><span> </span><span id="local-6989586621679515952"><span class="annot"><span class="annottext">ts :: String
+</span><a href="#local-6989586621679515952"><span class="hs-identifier hs-var">ts</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Exp] -&gt; Exp
 </span><span class="hs-identifier hs-var">TupE</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505123"><span class="hs-identifier hs-var">hn</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Lit -&gt; Exp
+</span><a href="#local-6989586621679515953"><span class="hs-identifier hs-var">hn</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Lit -&gt; Exp
 </span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Lit
 </span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679505122"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621679515952"><span class="hs-identifier hs-var">ts</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
 </span><span id="line-83"></span><span>
 </span><span id="line-84"></span><span>
 </span><span id="line-85"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>

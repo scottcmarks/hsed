@@ -59,4 +59,8 @@ import GHC.Base(const, (++))
 :def! D (pure . const (":set -ddump-splices") )
 :def! H (pure . (":! bash -l -c \"./h\"" ++) . show)
 :def! P (pure . (":! bash -l -c \"./hp\"" ++) . show)
+:set -XDataKinds
+:set -XTemplateHaskell
+:set -XOverloadedStrings
+import Data.Char (toUpper)
 putStrLn ".. script loaded."

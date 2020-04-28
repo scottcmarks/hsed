@@ -9,11 +9,11 @@ digraph G {
 		];
 		subgraph cluster_1 {
 			graph [color="#0000000F",
-				label=SizedText,
+				label=SizedStaticText,
 				style=filled
 			];
 			u0			 [fillcolor="#ffffbb",
-				label=SizedText,
+				label=SizedStaticText,
 				style="filled,bold"];
 			u1			 [fillcolor="#bbbbff",
 				label=Class,
@@ -24,193 +24,212 @@ digraph G {
 				penwidth=0,
 				style=filled];
 		}
+		subgraph cluster_2 {
+			graph [color="#0000000F",
+				label=SizedText,
+				style=filled
+			];
+			u3			 [fillcolor="#ffffbb",
+				label=SizedText,
+				style="filled,bold"];
+			u4			 [fillcolor="#ffbbbb",
+				label=Class,
+				penwidth=0,
+				style=filled];
+			u5			 [fillcolor="#ffbbbb",
+				label=TH,
+				penwidth=0,
+				style=filled];
+		}
 	}
-	subgraph cluster_2 {
+	subgraph cluster_3 {
 		graph [color="#0000000F",
 			label=Extras,
 			style=filled
 		];
-		u3		 [fillcolor="#ffbbbb",
+		u6		 [fillcolor="#bbffff",
 			label=GitVersion,
 			penwidth=0,
 			style=filled];
-		u4		 [fillcolor="#ffbbbb",
+		u7		 [fillcolor="#bbffff",
 			label=Hex,
 			penwidth=0,
 			style=filled];
-		u5		 [fillcolor="#ffbbbb",
+		u8		 [fillcolor="#bbffff",
 			label=Integral,
 			penwidth=0,
 			style=filled];
-		u6		 [fillcolor="#ffbbbb",
+		u9		 [fillcolor="#bbffff",
 			label=Sized,
-			penwidth=0,
-			style=filled];
-	}
-	subgraph cluster_3 {
-		graph [color="#0000000F",
-			label=Hsed,
-			style=filled
-		];
-		u7		 [fillcolor="#bbffff",
-			label=App,
 			penwidth=0,
 			style=filled];
 	}
 	subgraph cluster_4 {
 		graph [color="#0000000F",
+			label=Hsed,
+			style=filled
+		];
+		u10		 [fillcolor="#ffbbff",
+			label=App,
+			penwidth=0,
+			style=filled];
+	}
+	subgraph cluster_5 {
+		graph [color="#0000000F",
 			label=System,
 			style=filled
 		];
-		subgraph cluster_5 {
+		subgraph cluster_6 {
 			graph [color="#0000000F",
 				label=SED,
 				style=filled
 			];
-			subgraph cluster_6 {
+			subgraph cluster_7 {
 				graph [color="#0000000F",
 					label=Common,
 					style=filled
 				];
-				subgraph cluster_7 {
-					graph [color="#0000000F",
-						label=ColumnTypes,
-						style=filled
-					];
-					u14					 [fillcolor="#ffff77",
-						label=ColumnTypes,
-						style="filled,bold"];
-					u15					 [fillcolor="#7777ff",
-						label=TH,
-						penwidth=0,
-						style=filled];
-				}
 				subgraph cluster_8 {
 					graph [color="#0000000F",
-						label=TableUIDs,
+						label=ColumnTypes,
 						style=filled
 					];
-					u23					 [fillcolor="#ffff77",
-						label=TableUIDs,
+					u17					 [fillcolor="#7777ff",
+						label=ColumnTypes,
 						style="filled,bold"];
-					u24					 [fillcolor="#ff7777",
+					u18					 [fillcolor="#ff7777",
 						label=TH,
 						penwidth=0,
 						style=filled];
 				}
-				u8				 [fillcolor="#ffff77",
+				subgraph cluster_9 {
+					graph [color="#0000000F",
+						label=TableUIDs,
+						style=filled
+					];
+					u26					 [fillcolor="#7777ff",
+						label=TableUIDs,
+						style="filled,bold"];
+					u27					 [fillcolor="#77ffff",
+						label=TH,
+						penwidth=0,
+						style=filled];
+				}
+				u11				 [fillcolor="#7777ff",
 					label=Call,
 					penwidth=0,
 					style=filled];
-				u9				 [fillcolor="#ffff77",
+				u12				 [fillcolor="#7777ff",
 					label=StreamItem,
 					penwidth=0,
 					style=filled];
-				u10				 [fillcolor="#ffff77",
+				u13				 [fillcolor="#7777ff",
 					label=Token,
 					penwidth=0,
 					style=filled];
-				u11				 [fillcolor="#ffff77",
+				u14				 [fillcolor="#7777ff",
 					label=Value,
 					penwidth=0,
 					style=filled];
-				u12				 [fillcolor="#ffff77",
+				u15				 [fillcolor="#7777ff",
 					label=UID,
 					penwidth=0,
 					style=filled];
-				u13				 [fillcolor="#ffff77",
+				u16				 [fillcolor="#7777ff",
 					label=Instances,
 					penwidth=0,
 					style=filled];
-				u16				 [fillcolor="#ffff77",
+				u19				 [fillcolor="#7777ff",
 					label=THUtil,
 					penwidth=0,
 					style=filled];
-				u17				 [fillcolor="#ffff77",
+				u20				 [fillcolor="#7777ff",
 					label=Util,
 					penwidth=0,
 					style=filled];
-				u18				 [fillcolor="#ffff77",
+				u21				 [fillcolor="#7777ff",
 					label=Format,
 					penwidth=0,
 					style=filled];
-				u19				 [fillcolor="#ffff77",
+				u22				 [fillcolor="#7777ff",
 					label=Import,
 					penwidth=0,
 					style=filled];
-				u20				 [fillcolor="#ffff77",
+				u23				 [fillcolor="#7777ff",
 					label=Types,
 					penwidth=0,
 					style=filled];
-				u21				 [fillcolor="#ffff77",
+				u24				 [fillcolor="#7777ff",
 					label=SpecialPurposeUIDs,
 					penwidth=0,
 					style=filled];
-				u22				 [fillcolor="#ffff77",
+				u25				 [fillcolor="#7777ff",
 					label=Table,
-					penwidth=0,
-					style=filled];
-			}
-			subgraph cluster_9 {
-				graph [color="#0000000F",
-					label=Host,
-					style=filled
-				];
-				u25				 [fillcolor="#77ffff",
-					label=Run,
 					penwidth=0,
 					style=filled];
 			}
 			subgraph cluster_10 {
 				graph [color="#0000000F",
+					label=Host,
+					style=filled
+				];
+				u28				 [fillcolor="#ff77ff",
+					label=Run,
+					penwidth=0,
+					style=filled];
+			}
+			subgraph cluster_11 {
+				graph [color="#0000000F",
 					label=TPer,
 					style=filled
 				];
-				u26				 [fillcolor="#ff77ff",
+				u29				 [fillcolor="#33ff33",
 					label=Run,
 					penwidth=0,
 					style=filled];
 			}
 		}
 	}
-	u27	 [fillcolor="#bbffbb",
+	u30	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u27 -> u3;
-	u27 -> u25;
-	u27 -> u26;
+	u30 -> u6;
+	u30 -> u28;
+	u30 -> u29;
 	u0 -> u2;
 	u2 -> u1;
-	u4 -> u5;
-	u6 -> u4;
-	u8 -> u11;
-	u8 -> u12;
-	u10 -> u5;
-	u10 -> u9;
-	u11 -> u10;
-	u12 -> u13;
-	u13 -> u6;
-	u13 -> u10;
-	u16 -> u12;
-	u17 -> u12;
-	u18 -> u12;
-	u19 -> u20;
-	u20 -> u8;
-	u20 -> u21;
-	u20 -> u14;
-	u20 -> u23;
-	u21 -> u12;
-	u22 -> u12;
-	u14 -> u15;
+	u3 -> u5;
+	u5 -> u4;
+	u7 -> u8;
+	u9 -> u7;
+	u11 -> u14;
+	u11 -> u15;
+	u13 -> u8;
+	u13 -> u12;
+	u14 -> u13;
 	u15 -> u16;
-	u15 -> u17;
+	u16 -> u9;
+	u16 -> u13;
+	u19 -> u15;
+	u20 -> u15;
+	u21 -> u15;
+	u22 -> u23;
+	u23 -> u11;
 	u23 -> u24;
-	u24 -> u16;
-	u24 -> u17;
-	u24 -> u22;
-	u25 -> u7;
-	u25 -> u19;
-	u26 -> u7;
-	u26 -> u19;
+	u23 -> u17;
+	u23 -> u26;
+	u24 -> u15;
+	u25 -> u15;
+	u17 -> u18;
+	u18 -> u19;
+	u18 -> u20;
+	u26 -> u27;
+	u27 -> u19;
+	u27 -> u20;
+	u27 -> u25;
+	u28 -> u10;
+	u28 -> u22;
+	u29 -> u10;
+	u29 -> u22;
 }

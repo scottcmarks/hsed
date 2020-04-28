@@ -60,7 +60,8 @@ import qualified Data.StaticText      as S
 -- >>> :set -XTemplateHaskell
 -- >>> :set -XOverloadedStrings
 -- >>> import Data.Char (toUpper)
---
+
+-- | Elements on the left are preferred.
 -- >>> createLeft ' ' "foobarbaz" :: C.Sized String 0 6
 -- "foobar"
 -- >>> createLeft '@' "foobarbaz" :: C.Sized String 12 20

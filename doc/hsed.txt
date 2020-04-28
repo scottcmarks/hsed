@@ -8,6 +8,251 @@
 @version 0.1.0.1
 
 
+-- | Use this module when you need to add an <a>IsSizedStaticText</a>
+--   instance to a type.
+module Data.SizedStaticText.Class
+
+-- | Class of types which can be assigned a type-level minimum and maximum
+--   length.
+class IsSizedStaticText a where {
+    
+    -- | Data family which wraps values of the underlying type giving them
+    --   type-level length bounds. <tt>SizedStatic t 6 10</tt> means a value of
+    --   type <tt>t</tt> of length between 6 and 10.
+    data family SizedStatic a (l :: Nat) (u :: Nat);
+    
+    -- | Basic element type. For <tt>IsSizedStaticText [a]</tt>, this is
+    --   <tt>a</tt>.
+    type family Elem a;
+}
+
+-- | Simply wrap a value in a SizedStatic as is, assuming any length.
+--   
+--   <b>WARNING</b> Use it only when you know what you're doing.
+--   
+--   For example, an expression like
+--   
+--   <pre>
+--   unsafeCreate "somestring" :: SizedStatic String 50 100
+--   </pre>
+--   
+--   will typecheck, although the stored length information will not match
+--   actual string size. This may result in wrong behaviour of all
+--   functions defined for <a>IsSizedStaticText</a>.
+--   
+--   When writing new <a>IsSizedStaticText</a> instances, make this simply
+--   apply the constructor of <a>SizedStatic</a>.
+unsafeCreate :: IsSizedStaticText a => a -> SizedStatic a l u
+
+-- | Obtain the underlying value.
+unwrap :: IsSizedStaticText a => SizedStatic a l u -> a
+length :: IsSizedStaticText a => a -> Int
+append :: IsSizedStaticText a => a -> a -> a
+replicate :: IsSizedStaticText a => Int -> Elem a -> a
+map :: IsSizedStaticText a => (Elem a -> Elem a) -> a -> a
+take :: IsSizedStaticText a => Int -> a -> a
+drop :: IsSizedStaticText a => Int -> a -> a
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedStaticText.Class.SizedStatic [a] l u)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedStaticText.Class.SizedStatic [a] l u)
+instance GHC.Classes.Ord (Data.SizedStaticText.Class.SizedStatic Data.Text.Internal.Text l u)
+instance GHC.Classes.Eq (Data.SizedStaticText.Class.SizedStatic Data.Text.Internal.Text l u)
+instance GHC.Classes.Ord (Data.SizedStaticText.Class.SizedStatic Data.ByteString.Internal.ByteString l u)
+instance GHC.Classes.Eq (Data.SizedStaticText.Class.SizedStatic Data.ByteString.Internal.ByteString l u)
+instance GHC.Classes.Ord (Data.SizedStaticText.Class.SizedStatic Data.ByteString.Short.Internal.ShortByteString l u)
+instance GHC.Classes.Eq (Data.SizedStaticText.Class.SizedStatic Data.ByteString.Short.Internal.ShortByteString l u)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedStaticText.Class.SizedStatic (Data.Vector.Vector a) l u)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedStaticText.Class.SizedStatic (Data.Vector.Vector a) l u)
+instance (GHC.Show.Show a, Data.SizedStaticText.Class.IsSizedStaticText a) => GHC.Show.Show (Data.SizedStaticText.Class.SizedStatic a l u)
+instance Data.SizedStaticText.Class.IsSizedStaticText [a]
+instance Data.SizedStaticText.Class.IsSizedStaticText Data.Text.Internal.Text
+instance Data.SizedStaticText.Class.IsSizedStaticText Data.ByteString.Internal.ByteString
+instance Data.SizedStaticText.Class.IsSizedStaticText Data.ByteString.Short.Internal.ShortByteString
+instance Data.SizedStaticText.Class.IsSizedStaticText (Data.Vector.Vector a)
+
+
+-- | Template Haskell helpers for SizedStaticText.
+module Data.SizedStaticText.TH
+
+-- | Type-safe SizedStatic constructor macro for string literals.
+--   
+--   Example:
+--   
+--   <pre>
+--   $(sz "Foobar")
+--   </pre>
+--   
+--   compiles to
+--   
+--   <pre>
+--   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedStaticText a) =&gt; SizedStatic a 6 6
+--   </pre>
+--   
+--   where 6 is the string length obtained at compile time.
+sz :: LitS -> Q Exp
+instance Data.String.IsString Data.SizedStaticText.TH.LitS
+
+
+-- | sized-text combinators are defined for members of
+--   <a>IsSizedStaticText</a> class. The package includes
+--   <a>IsSizedStaticText</a> instances for several common types.
+--   
+--   This module is meant to be imported qualifed, e.g.
+--   
+--   <pre>
+--   import qualified Data.SizedStaticText as S
+--   </pre>
+module Data.SizedStaticText
+
+-- | Elements on the left are preferred. &gt;&gt;&gt; createLeft ' '
+--   "foobarbaz" :: SizedStatic String 0 6 "foobar" &gt;&gt;&gt; createLeft
+--   '@' "foobarbaz" :: SizedStatic String 12 20 "foobarbaz@@@"
+createLeft :: forall a l u. (IsSizedStaticText a, KnownNat l, KnownNat u, l <= u) => Elem a -> a -> SizedStatic a l u
+
+-- | Just like <a>createLeft</a>, except that elements on the right are
+--   preferred. &gt;&gt;&gt; createRight '@' "foobarbaz" :: SizedStatic
+--   String 0 6 "barbaz" &gt;&gt;&gt; createRight <tt>#</tt> "foobarbaz" ::
+--   SizedStatic String 12 20 "###foobarbaz"
+createRight :: forall a l u. (IsSizedStaticText a, KnownNat l, KnownNat u, l <= u) => Elem a -> a -> SizedStatic a l u
+
+-- | Type-safe SizedStatic constructor macro for string literals.
+--   
+--   Example:
+--   
+--   <pre>
+--   $(sz "Foobar")
+--   </pre>
+--   
+--   compiles to
+--   
+--   <pre>
+--   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedStaticText a) =&gt; SizedStatic a 6 6
+--   </pre>
+--   
+--   where 6 is the string length obtained at compile time.
+sz :: LitS -> Q Exp
+
+-- | Attempt to safely create a SizedStatic if it matches target length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; create "foobar" :: Maybe (SizedStatic String 6 10)
+--   Just "foobar"
+--   
+--   &gt;&gt;&gt; create "barbaz" :: Maybe (SizedStatic String 0 4)
+--   Nothing
+--   </pre>
+--   
+--   This is safer than <a>unsafeCreate</a> and unlike with
+--   <a>createLeft</a> <a>createRight</a> the source value is left
+--   unchanged. However, this implies a further run-time check for Nothing
+--   values.
+create :: forall a (l :: Nat) (u :: Nat). (IsSizedStaticText a, KnownNat l, KnownNat u, l <= u) => a -> Maybe (SizedStatic a l u)
+
+-- | Construct a new SizedStatic of maximum length from a basic element.
+--   
+--   <pre>
+--   &gt;&gt;&gt; replicate '=' :: SizedStatic String 5 10
+--   "=========="
+--   </pre>
+replicate :: forall a l u. (IsSizedStaticText a, KnownNat l, KnownNat u, l <= u) => Elem a -> SizedStatic a l u
+
+-- | Append two SizedStatics together.
+--   
+--   <pre>
+--   &gt;&gt;&gt; append $(sz "foo") $(sz "bar") :: SizedStatic String 6 6
+--   "foobar"
+--   
+--   &gt;&gt;&gt; :set -fno-warn-type-defaults
+--   
+--   &gt;&gt;&gt; append $(sz "Hello, ") $(sz "world!")
+--   "Hello, world!"
+--   
+--   &gt;&gt;&gt; :type it
+--   it
+--     :: (IsSizedStaticText a, Data.String.IsString a) =&gt;
+--        SizedStatic a 13 13
+--   </pre>
+append :: forall a l1 u1 l2 u2. (IsSizedStaticText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (l1 + l2), KnownNat (u1 + u2)) => SizedStatic a l1 u1 -> SizedStatic a l2 u2 -> SizedStatic a (l1 + l2) (u1 + u2)
+
+-- | Reduce SizedStatic length, preferring elements on the left.
+--   
+--   <pre>
+--   &gt;&gt;&gt; take $(sz "Foobar") :: SizedStatic String 1 3
+--   "Foo"
+--   </pre>
+take :: forall a l1 u1 l2 u2. (IsSizedStaticText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => SizedStatic a l1 u1 -> SizedStatic a l2 u2
+
+-- | Reduce SizedStatic length, preferring elements on the right.
+--   
+--   <pre>
+--   &gt;&gt;&gt; drop $(sz "Foobar") :: SizedStatic String 0 2
+--   "ar"
+--   </pre>
+drop :: forall a l1 u1 l2 u2. (IsSizedStaticText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => SizedStatic a l1 u1 -> SizedStatic a l2 u2
+
+-- | Map a SizedStatic to a SizedStatic of the same length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; map toUpper $(sz "Hello") :: SizedStatic String 5 5
+--   "HELLO"
+--   </pre>
+map :: IsSizedStaticText a => (Elem a -> Elem a) -> SizedStatic a l u -> SizedStatic a l u
+
+-- | Fill a SizedStatic with extra elements up to target length, padding
+--   original elements to the left.
+padLeft :: forall a l1 u1 l2 u2. (IsSizedStaticText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (u2 + u1), l2 <= l1, u1 <= u2) => Elem a -> SizedStatic a l1 u1 -> SizedStatic a l2 u2
+
+-- | Like <a>padLeft</a>, but original elements are padded to the right.
+padRight :: forall a l1 u1 l2 u2. (IsSizedStaticText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (u1 + u2), l2 <= l1, u1 <= u2) => Elem a -> SizedStatic a l1 u1 -> SizedStatic a l2 u2
+
+-- | Obtain length bounds from the type.
+bounds :: forall a l u. (IsSizedStaticText a, KnownNat l, KnownNat u) => SizedStatic a l u -> (Int, Int)
+
+-- | Obtain value-level length. Consult the actual data value.
+--   
+--   <pre>
+--   &gt;&gt;&gt; length $ (take $(sz "password") :: SizedStatic String 4 32)
+--   8
+--   </pre>
+length :: forall a l u. (IsSizedStaticText a, KnownNat l, KnownNat u) => SizedStatic a l u -> Int
+fromStatic :: (IsStaticText a, IsSizedStaticText a) => Static a i -> SizedStatic a i i
+toStatic :: (IsSizedStaticText a, IsStaticText a) => SizedStatic a i i -> Static a i
+
+-- | Data family which wraps values of the underlying type giving them
+--   type-level length bounds. <tt>SizedStatic t 6 10</tt> means a value of
+--   type <tt>t</tt> of length between 6 and 10.
+data family SizedStatic a (l :: Nat) (u :: Nat)
+
+-- | Class of types which can be assigned a type-level minimum and maximum
+--   length.
+class IsSizedStaticText a where {
+    
+    -- | Basic element type. For <tt>IsSizedStaticText [a]</tt>, this is
+    --   <tt>a</tt>.
+    type family Elem a;
+}
+
+-- | Simply wrap a value in a SizedStatic as is, assuming any length.
+--   
+--   <b>WARNING</b> Use it only when you know what you're doing.
+--   
+--   For example, an expression like
+--   
+--   <pre>
+--   unsafeCreate "somestring" :: SizedStatic String 50 100
+--   </pre>
+--   
+--   will typecheck, although the stored length information will not match
+--   actual string size. This may result in wrong behaviour of all
+--   functions defined for <a>IsSizedStaticText</a>.
+--   
+--   When writing new <a>IsSizedStaticText</a> instances, make this simply
+--   apply the constructor of <a>SizedStatic</a>.
+unsafeCreate :: IsSizedStaticText a => a -> SizedStatic a l u
+
+-- | Obtain the underlying value.
+unwrap :: IsSizedStaticText a => SizedStatic a l u -> a
+
+
 -- | Use this module when you need to add an <a>IsSizedText</a> instance to
 --   a type.
 module Data.SizedText.Class
@@ -101,6 +346,10 @@ instance Data.String.IsString Data.SizedText.TH.LitS
 --   import qualified Data.SizedText as S
 --   </pre>
 module Data.SizedText
+
+-- | Elements on the left are preferred. &gt;&gt;&gt; createLeft ' '
+--   "foobarbaz" :: C.Sized String 0 6 "foobar" &gt;&gt;&gt; createLeft '@'
+--   "foobarbaz" :: C.Sized String 12 20 "foobarbaz@@@"
 createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
 -- | Just like <a>createLeft</a>, except that elements on the right are

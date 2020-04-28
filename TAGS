@@ -591,26 +591,129 @@ module Data.SizedText.THData.SizedText.TH10,11
 newtype LitS LitS27,28
 sz sz41,42
 
+./src/Data/SizedStaticText/Class.hs,2451
+module Data.SizedStaticText.ClassData.SizedStaticText.Class12,13
+class IsSizedStaticText IsSizedStaticText46,47
+  data SizedStatic SizedStatic50,51
+  type Elem Elem53,54
+  unsafeCreate unsafeCreate69,70
+  unwrap unwrap72,73
+  length length74,75
+  append append75,76
+  replicate replicate76,77
+  map map77,78
+  take take78,79
+  drop drop79,80
+instance (S(Show a, IsSizedStaticText a) => Show (SizedStatic a l u)82,83
+  show show83,84
+  showsPrec showsPrec84,85
+instance IsSizedStaticText IsSizedStaticText [a]86,87
+  type Elem Elem87,88
+  data SizedStatic SizedStatic89,90
+  data SizedStatic [a] l u = List List89,90
+  unsafeCreate unsafeCreate92,93
+  unwrap unwrap93,94
+  length length95,96
+  append append96,97
+  replicate replicate97,98
+  map map98,99
+  take take99,100
+  drop drop100,101
+instance IsSizedStaticText IsSizedStaticText T-Text104,105
+  type Elem Elem105,106
+  data SizedStatic SizedStatic107,108
+  data SizedStatic T.Text l u = Text Text107,108
+  unsafeCreate unsafeCreate110,111
+  unwrap unwrap111,112
+  length length113,114
+  append append114,115
+  replicate replicate115,116
+  map map116,117
+  take take117,118
+  drop drop118,119
+instance IsSizedStaticText IsSizedStaticText B-ByteString123,124
+  type Elem Elem124,125
+  data SizedStatic SizedStatic126,127
+  data SizedStatic B.ByteString l u = ByteString ByteString126,127
+  unsafeCreate unsafeCreate129,130
+  unwrap unwrap130,131
+  length length132,133
+  append append133,134
+  replicate replicate134,135
+  map map135,136
+  take take136,137
+  drop drop137,138
+instance IsSizedStaticText IsSizedStaticText BS-ShortByteString141,142
+  type Elem Elem142,143
+  data SizedStatic SizedStatic144,145
+  data SizedStatic BS.ShortByteString l u = ByteStringS ByteStringS144,145
+  unsafeCreate unsafeCreate147,148
+  unwrap unwrap148,149
+  length length150,151
+  append append151,152
+  replicate replicate152,153
+  map map153,154
+  take take154,155
+  drop drop155,156
+instance IsSizedStaticText IsSizedStaticText (V-Vector a)160,161
+  type Elem Elem161,162
+  data SizedStatic SizedStatic163,164
+  data SizedStatic (V.Vector a) l u = Vector Vector163,164
+  unsafeCreate unsafeCreate166,167
+  unwrap unwrap167,168
+  length length169,170
+  append append170,171
+  replicate replicate171,172
+  map map172,173
+  take take173,174
+  drop drop174,175
+
+./src/Data/SizedStaticText/TH.hs,99
+module Data.SizedStaticText.THData.SizedStaticText.TH10,11
+newtype LitS LitS27,28
+sz sz41,42
+
 ./src/Data/SizedText.hs,479
 module Data.SizedTextData.SizedText21,22
-createLeft createLeft67,68
-createRight createRight83,84
-create create105,106
-append append127,128
-replicate replicate138,139
-map map150,151
-take take158,159
+createLeft createLeft68,69
+createRight createRight84,85
+create create106,107
+append append128,129
+replicate replicate139,140
+map map151,152
+take take159,160
+take take170,171
+drop drop178,179
+drop drop189,190
+bounds bounds195,196
+length length205,206
+padLeft padLeft213,214
+padLeft padLeft227,228
+padRight padRight230,231
+padRight padRight244,245
+fromStatic fromStatic246,247
+toStatic toStatic250,251
+
+./src/Data/SizedStaticText.hs,491
+module Data.SizedStaticTextData.SizedStaticText22,23
+createLeft createLeft75,76
+createRight createRight91,92
+create create113,114
+append append137,138
+replicate replicate149,150
+map map161,162
 take take169,170
-drop drop177,178
+take take180,181
 drop drop188,189
-bounds bounds194,195
-length length204,205
-padLeft padLeft212,213
+drop drop199,200
+bounds bounds205,206
+length length218,219
 padLeft padLeft226,227
-padRight padRight229,230
+padLeft padLeft240,241
 padRight padRight243,244
-fromStatic fromStatic245,246
-toStatic toStatic249,250
+padRight padRight257,258
+fromStatic fromStatic259,260
+toStatic toStatic262,263
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

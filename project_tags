@@ -586,10 +586,10 @@ instance IsSizedText IsSizedText (V-Vector a)159,160
   take take172,173
   drop drop173,174
 
-./src/Data/SizedText/TH.hs,87
-module Data.SizedText.THData.SizedText.TH10,11
-newtype LitS LitS27,28
-sz sz41,42
+./src/Data/SizedText/TH.hs,86
+module Data.SizedText.THData.SizedText.TH9,10
+newtype LitS LitS23,24
+sz sz38,39
 
 ./src/Data/SizedStaticText/Class.hs,2451
 module Data.SizedStaticText.ClassData.SizedStaticText.Class12,13

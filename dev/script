@@ -63,4 +63,28 @@ import GHC.Base(const, (++))
 :set -XTemplateHaskell
 :set -XOverloadedStrings
 import Data.Char (toUpper)
+
+
+
+:load src/Data/SizedText/TH.hs
+:load src/Data/SizedText.hs
+import Data.ByteString hiding(take,length,putStrLn)
+:i take
+:t take $(sz "Hello")
+:t take $(sz "Hello") :: C.Sized ByteString 4 32
+take $(sz "Hello") :: C.Sized ByteString 4 32
+length (take $(sz "Hello") :: C.Sized ByteString 4 32)
+take $(sz "Hello") :: C.Sized ByteString 4 32
+take $(sz "Hello") :: C.Sized ByteString 4 4
+take $(sz "HelloHelloHelloHelloHelloHelloHello") :: C.Sized ByteString 4 32
+:i create
+:i ByteString
+"Hello" :: ByteString
+create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 32)
+create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 32)
+create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 4)
+create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 8 32)
+$(sz "Hello")
+
+
 putStrLn ".. script loaded."

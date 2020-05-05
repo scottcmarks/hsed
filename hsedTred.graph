@@ -168,22 +168,22 @@ digraph G {
 					penwidth=0,
 					style=filled];
 			}
-			subgraph cluster_10 {
-				graph [color="#0000000F",
-					label=Host,
-					style=filled
-				];
-				u28				 [fillcolor="#ff77ff",
-					label=Run,
-					penwidth=0,
-					style=filled];
-			}
 			subgraph cluster_11 {
 				graph [color="#0000000F",
 					label=TPer,
 					style=filled
 				];
 				u29				 [fillcolor="#33ff33",
+					label=Run,
+					penwidth=0,
+					style=filled];
+			}
+			subgraph cluster_10 {
+				graph [color="#0000000F",
+					label=Host,
+					style=filled
+				];
+				u28				 [fillcolor="#ff77ff",
 					label=Run,
 					penwidth=0,
 					style=filled];

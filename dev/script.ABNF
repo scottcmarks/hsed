@@ -5,11 +5,6 @@
 :set -XQuasiQuotes
 :set -XOverloadedStrings
 :set -XDataKinds
-:set -XTemplateHaskell
-:set -XRankNTypes
-:set -XGADTs
-:set -XStandaloneDeriving
-:set -XKindSignatures
 
 import System.IO
 putStrLn "loading script ..."
@@ -26,22 +21,54 @@ import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
 import GHC.Classes((<))
 import GHC.Err(undefined)
 import GHC.Show(show)
+
+--------------------------------------------------------------------------------
+
+import Text.Megaparsec(parse,errorBundlePretty)
+import Text.ABNF.ABNF.Parser(parseABNF)
+import Text.ABNF.PrettyPrinter(prettyShow)
+
+
+:{
+
+mapM_ (putStrLn . unpack) [ "coreTypesTCGABNF =" , coreTypesTCGABNF
+                          , ""
+                          , "correctABNFFromTCGABNF coreTypesTCGABNF =>" , correctABNFFromTCGABNF coreTypesTCGABNF
+                          ]
+:}
+
+:{
+mapM_ putStrLn $ case parseABNF "~/hsed/dev/script FIXME" $ preprocessABNF coreTypesTCGABNF of
+  Right rules -> [ "success"
+                 , ""
+                 , correctABNFToTCGABNF $ prettyShow rules
+                 ]
+  Left peb -> [ "failed"
+              , ""
+              , errorBundlePretty peb
+              ]
+:}
+
+putStrLn "Buh-bye now."
+
+--------------------------------------------------------------------------------
+
 import GHC.Base(const, (++))
 :def! $ (pure . (":! bash -l -c " ++) . show)
 :def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
 :def! D (pure . const (":set -ddump-splices") )
 :def! H (pure . (":! bash -l -c \"./h\"" ++) . show)
 :def! P (pure . (":! bash -l -c \"./hp\"" ++) . show)
-
---------------------------------------------------------------------------------
-
-
+:set -XDataKinds
+:set -XTemplateHaskell
+:set -XOverloadedStrings
 import Data.Char (toUpper)
+
+
 
 :load src/Data/SizedText/TH.hs
 :load src/Data/SizedText.hs
 import Data.ByteString hiding(take,length,putStrLn)
-
 :i take
 :t take $(sz "Hello")
 :t take $(sz "Hello") :: C.Sized ByteString 4 32
@@ -59,36 +86,5 @@ create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 4)
 create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 8 32)
 $(sz "Hello")
 
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-$(sz "foo")
-:t it
-type TCG_bytes n = C.Sized ByteString n n
-type TCG_maxbytes n = C.Sized ByteString 0 n
-type TCG_bytes_8 = TCG_bytes 8
-type TCG_maxbytes_8 = TCG_maxbytes 8
-
-import GHC.Word(Word8)
-import Data.ByteString.Internal(c2w)
-fill = c2w '_'
-b = createLeft fill "bolo" :: TCG_bytes_8
-b
-:i b
-length b
-
-data TCG_some_maxbytes =  forall (n :: Nat) .  TCG_some_maxbytes(TCG_maxbytes n)
-data TCG_some_bytes =  forall (n :: Nat) .  TCG_some_bytes(TCG_bytes n)
--- instance Show TCG_some_bytes where show (TCG_some_bytes tb) = show tb
-deriving instance Show TCG_some_bytes
-
-sb = TCG_some_bytes b
-sb
-:t sb
-
-putStrLn "Buh-bye now."
-
-
---------------------------------------------------------------------------------
 
 putStrLn ".. script loaded."

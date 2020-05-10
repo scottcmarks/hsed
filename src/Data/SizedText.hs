@@ -61,6 +61,13 @@ import qualified Data.StaticText      as S
 -- >>> :set -XOverloadedStrings
 -- >>> import Data.Char (toUpper)
 
+-- | Extract type-level Nat as a value-level Int
+-- >>> fInV (Proxy :: Proxy 5)
+-- 5
+fInV :: (KnownNat n) => proxy n -> Int
+fInV = fromIntegral . natVal
+
+
 -- | Elements on the left are preferred.
 -- >>> createLeft ' ' "foobarbaz" :: C.Sized String 0 6
 -- "foobar"
@@ -74,8 +81,8 @@ createLeft ::
 createLeft e s =
   C.unsafeCreate $ C.take ut $ C.append s $ C.replicate (lt - C.length s) e
   where
-    lt = fromIntegral $ natVal (Proxy :: Proxy l)
-    ut = fromIntegral $ natVal (Proxy :: Proxy u)
+    lt = fInV (Proxy :: Proxy l)
+    ut = fInV (Proxy :: Proxy u)
 
 -- | Just like 'createLeft', except that elements on the right are preferred.
 -- >>> createRight '@' "foobarbaz" :: C.Sized String 0 6
@@ -91,8 +98,8 @@ createRight e s =
   C.unsafeCreate $ C.drop (len - ut) $ C.append (C.replicate (lt - len) e) s
   where
     len = C.length s
-    lt = fromIntegral $ natVal (Proxy :: Proxy l)
-    ut = fromIntegral $ natVal (Proxy :: Proxy u)
+    lt = fInV (Proxy :: Proxy l)
+    ut = fInV (Proxy :: Proxy u)
 
 -- | Attempt to safely create a C.Sized if it matches target length.
 --
@@ -114,8 +121,8 @@ create s =
     else Nothing
   where
     len = C.length s
-    lt = fromIntegral $ natVal (Proxy :: Proxy l)
-    ut = fromIntegral $ natVal (Proxy :: Proxy u)
+    lt = fInV (Proxy :: Proxy l)
+    ut = fInV (Proxy :: Proxy u)
 
 -- | Append two C.Sizeds together.
 --
@@ -143,7 +150,7 @@ replicate ::
   -> C.Sized a l u
 replicate e = C.unsafeCreate $ C.replicate t e
   where
-    t = fromIntegral $ natVal (Proxy :: Proxy u)
+    t = fInV (Proxy :: Proxy u)
 
 -- | Map a C.Sized to a C.Sized of the same length.
 --
@@ -170,7 +177,7 @@ take ::
   -> C.Sized a l2 u2
 take s = C.unsafeCreate $ C.take t $ C.unwrap s
   where
-    t = fromIntegral $ natVal (Proxy :: Proxy u2)
+    t = fInV (Proxy :: Proxy u2)
 
 -- | Reduce C.Sized length, preferring elements on the right.
 --
@@ -190,17 +197,17 @@ drop ::
 drop s = C.unsafeCreate $ C.drop (C.length s' - t) s'
   where
     s' = C.unwrap s
-    t = fromIntegral $ natVal (Proxy :: Proxy u2)
+    t = fInV (Proxy :: Proxy u2)
 
 -- | Obtain length bounds from the type.
 bounds ::
      forall a l u. (C.IsSizedText a, KnownNat l, KnownNat u)
   => C.Sized a l u
   -> (Int, Int)
-bounds _ = (fromIntegral lower, fromIntegral upper) -- FIXME: Bounds type from Ix?
+bounds _ = (lower, upper) -- FIXME: Bounds type from Ix?
   where
-    lower = natVal (Proxy :: Proxy l)
-    upper = natVal (Proxy :: Proxy u)
+    lower = fInV (Proxy :: Proxy l)
+    upper = fInV (Proxy :: Proxy u)
 
 -- | Obtain value-level length.  Consult the actual data value.
 length ::

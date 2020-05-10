@@ -77,12 +77,14 @@ b
 :i b
 length b
 
-data TCG_some_maxbytes =  forall (n :: Nat) .  TCG_some_maxbytes(TCG_maxbytes n)
-data TCG_some_bytes =  forall (n :: Nat) .  TCG_some_bytes(TCG_bytes n)
--- instance Show TCG_some_bytes where show (TCG_some_bytes tb) = show tb
-deriving instance Show TCG_some_bytes
+newtype TCG_some_bytes    =  TCG_some_bytes ByteString    deriving (Eq,Show)
+newtype TCG_some_maxbytes =  TCG_some_maxbytes ByteString deriving (Eq,Show)
 
-sb = TCG_some_bytes b
+import Data.String(IsString(..))
+instance IsString TCG_some_bytes    where fromString = TCG_some_bytes . fromString
+instance IsString TCG_some_maxbytes where fromString = TCG_some_maxbytes . fromString
+
+sb = "lobo" :: TCG_some_bytes
 sb
 :t sb
 

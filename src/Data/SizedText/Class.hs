@@ -68,7 +68,7 @@ class IsSizedText a where
   -- the constructor of "Sized".
   unsafeCreate :: a -> Sized a l u
 
-  -- | Forget type-level length, obtaining the underlying value.
+  -- | Forget type-level minimum and maximum length, obtaining the underlying value.
   unwrap :: Sized a l u -> a
 
   length :: a -> Int

@@ -288,7 +288,8 @@ class IsSizedText a where {
 --   the constructor of <a>Sized</a>.
 unsafeCreate :: IsSizedText a => a -> Sized a l u
 
--- | Forget type-level length, obtaining the underlying value.
+-- | Forget type-level minimum and maximum length, obtaining the underlying
+--   value.
 unwrap :: IsSizedText a => Sized a l u -> a
 length :: IsSizedText a => a -> Int
 append :: IsSizedText a => a -> a -> a
@@ -485,7 +486,8 @@ class IsSizedText a where {
 --   the constructor of <a>Sized</a>.
 unsafeCreate :: IsSizedText a => a -> Sized a l u
 
--- | Forget type-level length, obtaining the underlying value.
+-- | Forget type-level minimum and maximum length, obtaining the underlying
+--   value.
 unwrap :: IsSizedText a => Sized a l u -> a
 
 

@@ -673,26 +673,27 @@ module Data.SizedStaticText.THData.SizedStaticText.TH10,11
 newtype LitS LitS27,28
 sz sz41,42
 
-./src/Data/SizedText.hs,479
+./src/Data/SizedText.hs,496
 module Data.SizedTextData.SizedText21,22
-createLeft createLeft68,69
-createRight createRight84,85
-create create106,107
-append append128,129
-replicate replicate139,140
-map map151,152
-take take159,160
-take take170,171
-drop drop178,179
-drop drop189,190
-bounds bounds195,196
-length length205,206
-padLeft padLeft213,214
-padLeft padLeft227,228
-padRight padRight230,231
-padRight padRight244,245
-fromStatic fromStatic246,247
-toStatic toStatic250,251
+fInV fInV66,67
+createLeft createLeft75,76
+createRight createRight91,92
+create create113,114
+append append135,136
+replicate replicate146,147
+map map158,159
+take take166,167
+take take177,178
+drop drop185,186
+drop drop196,197
+bounds bounds202,203
+length length212,213
+padLeft padLeft220,221
+padLeft padLeft234,235
+padRight padRight237,238
+padRight padRight251,252
+fromStatic fromStatic253,254
+toStatic toStatic257,258
 
 ./src/Data/SizedStaticText.hs,491
 module Data.SizedStaticTextData.SizedStaticText22,23

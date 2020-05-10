@@ -88,6 +88,22 @@ sb = "lobo" :: TCG_some_bytes
 sb
 :t sb
 
+"lobolobo" :: TCG_some_bytes
+:t it
+it :: TCG_some_bytes
+
+$(sz "bolo____") :: TCG_bytes_8
+:t it
+length it
+
+take b :: TCG_bytes 4
+:t it
+bounds it
+
+take b :: TCG_maxbytes 5
+:t it
+bounds it
+
 putStrLn "Buh-bye now."
 
 

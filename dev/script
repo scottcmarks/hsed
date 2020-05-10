@@ -64,9 +64,16 @@ $(sz "Hello")
 
 $(sz "foo")
 :t it
-type TCG_bytes n = C.Sized ByteString n n
-type TCG_maxbytes n = C.Sized ByteString 0 n
-type TCG_bytes_8 = TCG_bytes 8
+
+
+import Data.String(IsString(..))
+import Data.SizedText.Class(IsSizedText(Sized))
+
+type TCG_some_bytes    = ByteString
+type TCG_some_maxbytes = ByteString
+type TCG_bytes    n = Sized TCG_some_bytes    n n
+type TCG_maxbytes n = Sized TCG_some_maxbytes 0 n
+type TCG_bytes_8    = TCG_bytes    8
 type TCG_maxbytes_8 = TCG_maxbytes 8
 
 import GHC.Word(Word8)
@@ -76,13 +83,6 @@ b = createLeft fill "bolo" :: TCG_bytes_8
 b
 :i b
 length b
-
-newtype TCG_some_bytes    =  TCG_some_bytes ByteString    deriving (Eq,Show)
-newtype TCG_some_maxbytes =  TCG_some_maxbytes ByteString deriving (Eq,Show)
-
-import Data.String(IsString(..))
-instance IsString TCG_some_bytes    where fromString = TCG_some_bytes . fromString
-instance IsString TCG_some_maxbytes where fromString = TCG_some_maxbytes . fromString
 
 sb = "lobo" :: TCG_some_bytes
 sb

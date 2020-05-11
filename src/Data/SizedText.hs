@@ -1,10 +1,16 @@
-{-# LANGUAGE CPP                 #-}
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE InstanceSigs        #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies        #-}
-{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE CPP                   #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE ExplicitNamespaces    #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE InstanceSigs          #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeApplications      #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
+
 #if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -Wno-redundant-constraints #-}
 #endif
@@ -59,10 +65,11 @@ import qualified Data.StaticText      as S
 -- >>> :set -XDataKinds
 -- >>> :set -XTemplateHaskell
 -- >>> :set -XOverloadedStrings
+-- >>> :set -XTypeApplications
 -- >>> import Data.Char (toUpper)
 
 -- | Extract type-level Nat as a value-level Int
--- >>> fInV (Proxy :: Proxy 5)
+-- >>> fInV (Proxy @5)
 -- 5
 fInV :: (KnownNat n) => proxy n -> Int
 fInV = fromIntegral . natVal
@@ -81,8 +88,8 @@ createLeft ::
 createLeft e s =
   C.unsafeCreate $ C.take ut $ C.append s $ C.replicate (lt - C.length s) e
   where
-    lt = fInV (Proxy :: Proxy l)
-    ut = fInV (Proxy :: Proxy u)
+    lt = fInV (Proxy @l)
+    ut = fInV (Proxy @u)
 
 -- | Just like 'createLeft', except that elements on the right are preferred.
 -- >>> createRight '@' "foobarbaz" :: C.Sized String 0 6
@@ -98,8 +105,8 @@ createRight e s =
   C.unsafeCreate $ C.drop (len - ut) $ C.append (C.replicate (lt - len) e) s
   where
     len = C.length s
-    lt = fInV (Proxy :: Proxy l)
-    ut = fInV (Proxy :: Proxy u)
+    lt = fInV (Proxy @l)
+    ut = fInV (Proxy @u)
 
 -- | Attempt to safely create a C.Sized if it matches target length.
 --
@@ -121,8 +128,8 @@ create s =
     else Nothing
   where
     len = C.length s
-    lt = fInV (Proxy :: Proxy l)
-    ut = fInV (Proxy :: Proxy u)
+    lt = fInV (Proxy @l)
+    ut = fInV (Proxy @u)
 
 -- | Append two C.Sizeds together.
 --
@@ -150,7 +157,7 @@ replicate ::
   -> C.Sized a l u
 replicate e = C.unsafeCreate $ C.replicate t e
   where
-    t = fInV (Proxy :: Proxy u)
+    t = fInV (Proxy @u)
 
 -- | Map a C.Sized to a C.Sized of the same length.
 --
@@ -177,7 +184,7 @@ take ::
   -> C.Sized a l2 u2
 take s = C.unsafeCreate $ C.take t $ C.unwrap s
   where
-    t = fInV (Proxy :: Proxy u2)
+    t = fInV (Proxy @u2)
 
 -- | Reduce C.Sized length, preferring elements on the right.
 --
@@ -197,7 +204,7 @@ drop ::
 drop s = C.unsafeCreate $ C.drop (C.length s' - t) s'
   where
     s' = C.unwrap s
-    t = fInV (Proxy :: Proxy u2)
+    t = fInV (Proxy @u2)
 
 -- | Obtain length bounds from the type.
 bounds ::
@@ -206,8 +213,8 @@ bounds ::
   -> (Int, Int)
 bounds _ = (lower, upper) -- FIXME: Bounds type from Ix?
   where
-    lower = fInV (Proxy :: Proxy l)
-    upper = fInV (Proxy :: Proxy u)
+    lower = fInV (Proxy @l)
+    upper = fInV (Proxy @u)
 
 -- | Obtain value-level length.  Consult the actual data value.
 length ::

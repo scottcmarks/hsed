@@ -509,7 +509,7 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/SizedText/Class.hs,2251
+./src/Data/SizedText/Class.hs,2259
 module Data.SizedText.ClassData.SizedText.Class11,12
 class IsSizedText IsSizedText45,46
   data Sized Sized49,50
@@ -564,7 +564,7 @@ instance IsSizedText IsSizedText B-ByteString122,123
 instance IsSizedText IsSizedText BS-ShortByteString140,141
   type Elem Elem141,142
   data Sized Sized143,144
-  data Sized BS.ShortByteString l u = ByteStringS ByteStringS143,144
+  data Sized BS.ShortByteString l u = ShortByteString ShortByteString143,144
   unsafeCreate unsafeCreate146,147
   unwrap unwrap147,148
   length length149,150

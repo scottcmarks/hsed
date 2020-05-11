@@ -141,11 +141,11 @@ instance IsSizedText B.ByteString where
 instance IsSizedText BS.ShortByteString where
   type Elem BS.ShortByteString = Word8
 
-  data Sized BS.ShortByteString l u = ByteStringS BS.ShortByteString
+  data Sized BS.ShortByteString l u = ShortByteString BS.ShortByteString
     deriving (Eq, Ord)
 
-  unsafeCreate = ByteStringS
-  unwrap (ByteStringS t) = t
+  unsafeCreate = ShortByteString
+  unwrap (ShortByteString t) = t
 
   length = BS.length
   append a b = BS.toShort $ B.append (BS.fromShort a) (BS.fromShort b)

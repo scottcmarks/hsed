@@ -97,7 +97,7 @@ sz :: LitS -> Q Exp
 -- | Construct &gt; unsafeCreate <a>Foobar</a> :: forall a. (IsString a,
 --   IsSizedText a) =&gt; typef a l u where l and u are the type-level
 --   KnownNat versions of the bounds of s
-szfe :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
+unsafeCreateExp :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
 instance Data.String.IsString Data.SizedText.TH.LitS
 
 

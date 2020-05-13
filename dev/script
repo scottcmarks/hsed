@@ -111,49 +111,20 @@ import Language.Haskell.TH.PprLib
 :load src/Data/SizedText.hs
 :show modules
 :t sz
-:t runQ . sz
-:t ppr
-:t runQ . sz
-:load Data.SizedText.TH
-:t runQ . sz
-:i LitS
-:t runQ . sz . LitS
-:t runQ . sz . LitS :: String -> IO Exp
-:t sz  "foo"
-:t runQ $ sz  "foo"
-:t ppr <$> (runQ $ sz  "foo" :: IO Exp)
-:t ppr <$> (runQ . sz)  "foo" :: IO Doc
-:t ppr <$> runQ (sz "foo") :: IO Doc
-ppr <$> runQ (sz "foo") :: IO Doc
-ppr <$> (runQ . sz) "foo" :: IO Doc
-:t ppr <$> (runQ . sz) "foo" :: IO Doc
-:t ppr <$> runQ (sz "foo") :: IO Doc
-:t ppr <$> runQ
-import Language.Haskell.TH.Syntax
-:t ppr <$> runQ
-:t ppr <$> runQ
-:set -XAllowAmbiguousTypes
-:set -XFlexibleContexts
-:t ppr <$> runQ (sz "foo") :: IO Doc
-ppr <$> runQ (sz "foo") :: IO Doc
-:t (\s -> ppr <$> runQ (sz s)) :: LitS -> IO Doc
-:t (\s -> ppr <$> runQ (sz s)) "foo" :: IO Doc
-:t runQ
 :t (sz "goo")
-:t ppr <$> (sz "goo")
-:t sz
 :t ppr
 :t ppr <$> sz "goo"
+:t runQ
 :t runQ $ ppr <$> sz "goo"
 runQ $ ppr <$> sz "goo"
-:load Data.SizedText.TH
-runQ $ ppr <$> sz "goo"
+
+:t st
+:t (st "goo")
+:t ppr
+:t ppr <$> st "goo"
+:t runQ
+:t runQ $ ppr <$> st "goo"
 runQ $ ppr <$> st "goo"
-
-
-
-
-
 
 
 putStrLn "Buh-bye now."

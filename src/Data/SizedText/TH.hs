@@ -10,7 +10,7 @@ Template Haskell helpers for SizedText.
 module Data.SizedText.TH
   ( st
   , sz
-  , szfe
+  , unsafeCreateExp
   ) where
 
 import           Prelude
@@ -42,7 +42,7 @@ sz :: LitS -> Q Exp
 sz (LitS s) = do
   at <- newName "a"
   let len = P.length s
-  return $ szfe uqType at 0 len s
+  return $ unsafeCreateExp uqType at 0 len s
 
 
 -- > $(st "Foobar")
@@ -56,14 +56,14 @@ st :: LitS -> Q Exp
 st (LitS s) = do
   at <- newName "a"
   let len = P.length s
-  return $ szfe uqType at len len s
+  return $ unsafeCreateExp uqType at len len s
 
 
 -- | Construct
 -- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => typef a l u
 --   where l and u are the type-level KnownNat versions of the bounds of s
-szfe :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
-szfe typef at l u s =
+unsafeCreateExp :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
+unsafeCreateExp typef at l u s =
     SigE
       (AppE (VarE 'unsafeCreate) (LitE $ StringL s))
       (ForallT
@@ -75,7 +75,8 @@ szfe typef at l u s =
 #endif
        typef at l u) -- create the final type expression, e.g. Sized a l u
 
--- | Create the final expression for Sized a l l
+
+-- | Create the final expression for Sized a l u
 --
 uqType ::
     Name -- name of the wrapped type, e.g. ByteString

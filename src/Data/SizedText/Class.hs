@@ -1,6 +1,7 @@
-{-# LANGUAGE CPP          #-}
-{-# LANGUAGE DataKinds    #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE CPP               #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 {-|
 
@@ -11,6 +12,7 @@ type.
 
 module Data.SizedText.Class
        ( IsSizedText(..)
+       , Static
        )
 
 where
@@ -173,3 +175,7 @@ instance IsSizedText (V.Vector a) where
   take = V.take
   drop = V.drop
 #endif
+
+
+-- | Class of types which can be assigned a type-level fixed length.
+type Static a (l :: Nat) = Sized a l l

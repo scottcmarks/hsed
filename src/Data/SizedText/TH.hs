@@ -8,7 +8,9 @@ Template Haskell helpers for SizedText.
 
 -}
 module Data.SizedText.TH
-  ( sz
+  ( st
+  , sz
+  , szfe
   ) where
 
 import           Prelude
@@ -25,7 +27,7 @@ newtype LitS =
   LitS String
   deriving (IsString)
 
--- | Type-safe Sized constructor macro for string literals.
+-- | Type-safe Sized constructor macros for string literals.
 --
 -- Example:
 --
@@ -33,14 +35,35 @@ newtype LitS =
 --
 -- compiles to
 --
--- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => Sized a 6 6
+-- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => Sized a 0 6
 --
 -- where 6 is the string length obtained at compile time.
 sz :: LitS -> Q Exp
 sz (LitS s) = do
   at <- newName "a"
-  let len = LitT $ NumTyLit (fromIntegral $ P.length s)
-  return $
+  let len = P.length s
+  return $ szfe uqType at 0 len s
+
+
+-- > $(st "Foobar")
+--
+-- compiles to
+--
+-- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => Sized a 6 6
+--
+
+st :: LitS -> Q Exp
+st (LitS s) = do
+  at <- newName "a"
+  let len = P.length s
+  return $ szfe uqType at len len s
+
+
+-- | Construct
+-- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => typef a l u
+--   where l and u are the type-level KnownNat versions of the bounds of s
+szfe :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
+szfe typef at l u s =
     SigE
       (AppE (VarE 'unsafeCreate) (LitE $ StringL s))
       (ForallT
@@ -50,4 +73,14 @@ sz (LitS s) = do
 #else
          [ClassP ''IsString [VarT at], ClassP ''IsSizedText [VarT at]] $
 #endif
-       AppT (AppT (AppT (ConT ''Sized) (VarT at)) len) len)
+       typef at l u) -- create the final type expression, e.g. Sized a l u
+
+-- | Create the final expression for Sized a l l
+--
+uqType ::
+    Name -- name of the wrapped type, e.g. ByteString
+ -> Int  -- type-level value for the min length
+ -> Int  -- type-level value for the max length
+ -> Type -- type expression Sized l u
+uqType a l u = AppT (AppT (AppT (ConT ''Sized) (VarT a)) (wx l)) (wx u)
+  where wx = LitT . NumTyLit . fromIntegral

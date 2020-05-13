@@ -43,13 +43,13 @@ import Data.Char (toUpper)
 import Data.ByteString hiding(take,length,putStrLn)
 
 :i take
-:t take $(sz "Hello")
-:t take $(sz "Hello") :: C.Sized ByteString 4 32
-take $(sz "Hello") :: C.Sized ByteString 4 32
-length (take $(sz "Hello") :: C.Sized ByteString 4 32)
-take $(sz "Hello") :: C.Sized ByteString 4 32
-take $(sz "Hello") :: C.Sized ByteString 4 4
-take $(sz "HelloHelloHelloHelloHelloHelloHello") :: C.Sized ByteString 4 32
+:t take $(st "Hello")
+:t take $(st "Hello") :: C.Sized ByteString 4 32
+take $(st "Hello") :: C.Sized ByteString 4 32
+length (take $(st "Hello") :: C.Sized ByteString 4 32)
+take $(st "Hello") :: C.Sized ByteString 4 32
+take $(st "Hello") :: C.Sized ByteString 4 4
+take $(st "HelloHelloHelloHelloHelloHelloHello") :: C.Sized ByteString 4 32
 :i create
 :i ByteString
 "Hello" :: ByteString
@@ -57,12 +57,12 @@ create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 32)
 create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 32)
 create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 4)
 create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 8 32)
-$(sz "Hello")
+$(st "Hello")
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-$(sz "foo")
+$(st "foo")
 :t it
 
 
@@ -92,7 +92,7 @@ sb
 :t it
 it :: TCG_some_bytes
 
-$(sz "bolo____") :: TCG_bytes_8
+$(st "bolo____") :: TCG_bytes_8
 :t it
 length it
 
@@ -103,6 +103,58 @@ bounds it
 take b :: TCG_maxbytes 5
 :t it
 bounds it
+
+
+import Language.Haskell.TH
+import Language.Haskell.TH.Ppr
+import Language.Haskell.TH.PprLib
+:load src/Data/SizedText.hs
+:show modules
+:t sz
+:t runQ . sz
+:t ppr
+:t runQ . sz
+:load Data.SizedText.TH
+:t runQ . sz
+:i LitS
+:t runQ . sz . LitS
+:t runQ . sz . LitS :: String -> IO Exp
+:t sz  "foo"
+:t runQ $ sz  "foo"
+:t ppr <$> (runQ $ sz  "foo" :: IO Exp)
+:t ppr <$> (runQ . sz)  "foo" :: IO Doc
+:t ppr <$> runQ (sz "foo") :: IO Doc
+ppr <$> runQ (sz "foo") :: IO Doc
+ppr <$> (runQ . sz) "foo" :: IO Doc
+:t ppr <$> (runQ . sz) "foo" :: IO Doc
+:t ppr <$> runQ (sz "foo") :: IO Doc
+:t ppr <$> runQ
+import Language.Haskell.TH.Syntax
+:t ppr <$> runQ
+:t ppr <$> runQ
+:set -XAllowAmbiguousTypes
+:set -XFlexibleContexts
+:t ppr <$> runQ (sz "foo") :: IO Doc
+ppr <$> runQ (sz "foo") :: IO Doc
+:t (\s -> ppr <$> runQ (sz s)) :: LitS -> IO Doc
+:t (\s -> ppr <$> runQ (sz s)) "foo" :: IO Doc
+:t runQ
+:t (sz "goo")
+:t ppr <$> (sz "goo")
+:t sz
+:t ppr
+:t ppr <$> sz "goo"
+:t runQ $ ppr <$> sz "goo"
+runQ $ ppr <$> sz "goo"
+:load Data.SizedText.TH
+runQ $ ppr <$> sz "goo"
+runQ $ ppr <$> st "goo"
+
+
+
+
+
+
 
 putStrLn "Buh-bye now."
 

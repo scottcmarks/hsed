@@ -52,6 +52,9 @@ replicate :: IsSizedText a => Int -> Elem a -> a
 map :: IsSizedText a => (Elem a -> Elem a) -> a -> a
 take :: IsSizedText a => Int -> a -> a
 drop :: IsSizedText a => Int -> a -> a
+
+-- | Class of types which can be assigned a type-level fixed length.
+type Static a (l :: Nat) = Sized a l l
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedText.Class.Sized [a] l u)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedText.Class.Sized [a] l u)
 instance GHC.Classes.Ord (Data.SizedText.Class.Sized Data.Text.Internal.Text l u)
@@ -72,8 +75,9 @@ instance Data.SizedText.Class.IsSizedText (Data.Vector.Vector a)
 
 -- | Template Haskell helpers for SizedText.
 module Data.SizedText.TH
+st :: LitS -> Q Exp
 
--- | Type-safe Sized constructor macro for string literals.
+-- | Type-safe Sized constructor macros for string literals.
 --   
 --   Example:
 --   
@@ -84,11 +88,16 @@ module Data.SizedText.TH
 --   compiles to
 --   
 --   <pre>
---   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 6 6
+--   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 0 6
 --   </pre>
 --   
 --   where 6 is the string length obtained at compile time.
 sz :: LitS -> Q Exp
+
+-- | Construct &gt; unsafeCreate <a>Foobar</a> :: forall a. (IsString a,
+--   IsSizedText a) =&gt; typef a l u where l and u are the type-level
+--   KnownNat versions of the bounds of s
+szfe :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
 instance Data.String.IsString Data.SizedText.TH.LitS
 
 
@@ -114,7 +123,7 @@ createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a ->
 --   C.Sized String 12 20 "###foobarbaz"
 createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
--- | Type-safe Sized constructor macro for string literals.
+-- | Type-safe Sized constructor macros for string literals.
 --   
 --   Example:
 --   
@@ -125,7 +134,7 @@ createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -
 --   compiles to
 --   
 --   <pre>
---   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 6 6
+--   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 0 6
 --   </pre>
 --   
 --   where 6 is the string length obtained at compile time.
@@ -207,8 +216,6 @@ bounds :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Sized a l u -
 
 -- | Obtain value-level length. Consult the actual data value.
 length :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Sized a l u -> Int
-fromStatic :: (IsStaticText a, IsSizedText a) => Static a i -> Sized a i i
-toStatic :: (IsSizedText a, IsStaticText a) => Sized a i i -> Static a i
 
 -- | Data family which wraps values of the underlying type giving them a
 --   type-level length. <tt>Sized t 6 10</tt> means a value of type
@@ -244,6 +251,7 @@ unsafeCreate :: IsSizedText a => a -> Sized a l u
 -- | Forget type-level minimum and maximum length, obtaining the underlying
 --   value.
 unwrap :: IsSizedText a => Sized a l u -> a
+instance (Data.String.IsString a, Data.SizedText.Class.IsSizedText a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.String.IsString (Data.SizedText.Class.Sized a l u)
 
 
 -- | Git info appended to a version string

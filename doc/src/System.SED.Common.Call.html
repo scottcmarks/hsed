@@ -202,7 +202,7 @@ Datatypes for Tokens.
 </span><span id="line-201"></span><span>                                </span><span class="hs-special">,</span><span> </span><span id="_methodID"><span class="annot"><span class="annottext">MethodHeader -&gt; UID
 </span><a href="System.SED.Common.Call.html#_methodID"><span class="hs-identifier hs-var hs-var">_methodID</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span>
 </span><span id="line-202"></span><span>                                </span><span class="hs-special">}</span><span>
-</span><span id="line-203"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679508100"><span id="local-6989586621679508102"><span id="local-6989586621679508104"><span class="annot"><span class="annottext">Int -&gt; MethodHeader -&gt; ShowS
+</span><span id="line-203"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679508542"><span id="local-6989586621679508544"><span id="local-6989586621679508546"><span class="annot"><span class="annottext">Int -&gt; MethodHeader -&gt; ShowS
 [MethodHeader] -&gt; ShowS
 MethodHeader -&gt; String
 (Int -&gt; MethodHeader -&gt; ShowS)
@@ -217,7 +217,7 @@ show :: MethodHeader -&gt; String
 $cshow :: MethodHeader -&gt; String
 showsPrec :: Int -&gt; MethodHeader -&gt; ShowS
 $cshowsPrec :: Int -&gt; MethodHeader -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679508095"><span id="local-6989586621679508097"><span class="annot"><span class="annottext">MethodHeader -&gt; MethodHeader -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679508537"><span id="local-6989586621679508539"><span class="annot"><span class="annottext">MethodHeader -&gt; MethodHeader -&gt; Bool
 (MethodHeader -&gt; MethodHeader -&gt; Bool)
 -&gt; (MethodHeader -&gt; MethodHeader -&gt; Bool) -&gt; Eq MethodHeader
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -232,7 +232,7 @@ $c== :: MethodHeader -&gt; MethodHeader -&gt; Bool
 </span><span id="line-206"></span><span>                             </span><span class="hs-special">,</span><span> </span><span id="_optional"><span class="annot"><span class="annottext">Parameters -&gt; [NamedValue]
 </span><a href="System.SED.Common.Call.html#_optional"><span class="hs-identifier hs-var hs-var">_optional</span></a></span></span><span class="hs-glyph">::</span><span class="hs-special">[</span><span class="annot"><a href="System.SED.Common.Value.html#NamedValue"><span class="hs-identifier hs-type">NamedValue</span></a></span><span class="hs-special">]</span><span>  </span><span class="hs-comment">-- FIXME: OptionalParameter, because the Name must be (Unsigned i), i &lt;- 0..</span><span>
 </span><span id="line-207"></span><span>                             </span><span class="hs-special">}</span><span>
-</span><span id="line-208"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679508085"><span id="local-6989586621679508087"><span id="local-6989586621679508089"><span class="annot"><span class="annottext">Int -&gt; Parameters -&gt; ShowS
+</span><span id="line-208"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679508527"><span id="local-6989586621679508529"><span id="local-6989586621679508531"><span class="annot"><span class="annottext">Int -&gt; Parameters -&gt; ShowS
 [Parameters] -&gt; ShowS
 Parameters -&gt; String
 (Int -&gt; Parameters -&gt; ShowS)
@@ -247,7 +247,7 @@ show :: Parameters -&gt; String
 $cshow :: Parameters -&gt; String
 showsPrec :: Int -&gt; Parameters -&gt; ShowS
 $cshowsPrec :: Int -&gt; Parameters -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679508081"><span id="local-6989586621679508083"><span class="annot"><span class="annottext">Parameters -&gt; Parameters -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679508523"><span id="local-6989586621679508525"><span class="annot"><span class="annottext">Parameters -&gt; Parameters -&gt; Bool
 (Parameters -&gt; Parameters -&gt; Bool)
 -&gt; (Parameters -&gt; Parameters -&gt; Bool) -&gt; Eq Parameters
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -263,7 +263,7 @@ $c== :: Parameters -&gt; Parameters -&gt; Bool
 </span><span id="line-211"></span><span>                             </span><span class="hs-special">,</span><span> </span><span id="_statusCode"><span class="annot"><span class="annottext">MethodCall -&gt; Natural
 </span><a href="System.SED.Common.Call.html#_statusCode"><span class="hs-identifier hs-var hs-var">_statusCode</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span>
 </span><span id="line-212"></span><span>                             </span><span class="hs-special">}</span><span>
-</span><span id="line-213"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679508071"><span id="local-6989586621679508073"><span id="local-6989586621679508075"><span class="annot"><span class="annottext">Int -&gt; MethodCall -&gt; ShowS
+</span><span id="line-213"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679508513"><span id="local-6989586621679508515"><span id="local-6989586621679508517"><span class="annot"><span class="annottext">Int -&gt; MethodCall -&gt; ShowS
 [MethodCall] -&gt; ShowS
 MethodCall -&gt; String
 (Int -&gt; MethodCall -&gt; ShowS)
@@ -278,7 +278,7 @@ show :: MethodCall -&gt; String
 $cshow :: MethodCall -&gt; String
 showsPrec :: Int -&gt; MethodCall -&gt; ShowS
 $cshowsPrec :: Int -&gt; MethodCall -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679508067"><span id="local-6989586621679508069"><span class="annot"><span class="annottext">MethodCall -&gt; MethodCall -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679508509"><span id="local-6989586621679508511"><span class="annot"><span class="annottext">MethodCall -&gt; MethodCall -&gt; Bool
 (MethodCall -&gt; MethodCall -&gt; Bool)
 -&gt; (MethodCall -&gt; MethodCall -&gt; Bool) -&gt; Eq MethodCall
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -289,8 +289,8 @@ $c== :: MethodCall -&gt; MethodCall -&gt; Bool
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-214"></span><span>
 </span><span id="line-215"></span><span>
-</span><span id="line-216"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508055"><span id="local-6989586621679508057"><span id="local-6989586621679508059"><span id="local-6989586621679508061"><span id="local-6989586621679508063"><span class="annot"><a href="System.SED.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-type">MethodHeader</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-217"></span><span>    </span><span id="local-6989586621679508053"><span class="annot"><span class="annottext">parser :: Parser MethodHeader
+</span><span id="line-216"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508497"><span id="local-6989586621679508499"><span id="local-6989586621679508501"><span id="local-6989586621679508503"><span id="local-6989586621679508505"><span class="annot"><a href="System.SED.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-type">MethodHeader</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-217"></span><span>    </span><span id="local-6989586621679508495"><span class="annot"><span class="annottext">parser :: Parser MethodHeader
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; UID -&gt; MethodHeader
 </span><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-var">MethodHeader</span></a></span><span> </span><span class="annot"><span class="annottext">(UID -&gt; UID -&gt; MethodHeader)
 -&gt; Parser ByteString UID -&gt; Parser ByteString (UID -&gt; MethodHeader)
@@ -303,22 +303,22 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString UID
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
-</span><span id="line-218"></span><span>    </span><span id="local-6989586621679508050"><span class="annot"><span class="annottext">generate :: MethodHeader -&gt; ByteString
-</span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-type">MethodHeader</span></a></span><span> </span><span id="local-6989586621679508048"><span class="annot"><span class="annottext">i :: UID
-</span><a href="#local-6989586621679508048"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621679508047"><span class="annot"><span class="annottext">m :: UID
-</span><a href="#local-6989586621679508047"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; ByteString
+</span><span id="line-218"></span><span>    </span><span id="local-6989586621679508492"><span class="annot"><span class="annottext">generate :: MethodHeader -&gt; ByteString
+</span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-type">MethodHeader</span></a></span><span> </span><span id="local-6989586621679508490"><span class="annot"><span class="annottext">i :: UID
+</span><a href="#local-6989586621679508490"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span id="local-6989586621679508489"><span class="annot"><span class="annottext">m :: UID
+</span><a href="#local-6989586621679508489"><span class="hs-identifier hs-var">m</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679508048"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="#local-6989586621679508490"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679508047"><span class="hs-identifier hs-var">m</span></a></span><span>
+</span><a href="#local-6989586621679508489"><span class="hs-identifier hs-var">m</span></a></span><span>
 </span><span id="line-219"></span><span>
-</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508035"><span id="local-6989586621679508037"><span id="local-6989586621679508039"><span id="local-6989586621679508041"><span id="local-6989586621679508043"><span class="annot"><a href="System.SED.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-type">Parameters</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-221"></span><span>    </span><span id="local-6989586621679508034"><span class="annot"><span class="annottext">parser :: Parser Parameters
-</span><a href="#local-6989586621679508034"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; [NamedValue] -&gt; Parameters
+</span><span id="line-220"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508477"><span id="local-6989586621679508479"><span id="local-6989586621679508481"><span id="local-6989586621679508483"><span id="local-6989586621679508485"><span class="annot"><a href="System.SED.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-type">Parameters</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-221"></span><span>    </span><span id="local-6989586621679508476"><span class="annot"><span class="annottext">parser :: Parser Parameters
+</span><a href="#local-6989586621679508476"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; [NamedValue] -&gt; Parameters
 </span><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-var">Parameters</span></a></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; [NamedValue] -&gt; Parameters)
 -&gt; Parser ByteString [Value]
 -&gt; Parser ByteString ([NamedValue] -&gt; Parameters)
@@ -335,10 +335,10 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><span class="hs-identifier hs-var">many</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString NamedValue
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
-</span><span id="line-222"></span><span>    </span><span id="local-6989586621679508032"><span class="annot"><span class="annottext">generate :: Parameters -&gt; ByteString
-</span><a href="#local-6989586621679508032"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-type">Parameters</span></a></span><span> </span><span id="local-6989586621679508031"><span class="annot"><span class="annottext">r :: [Value]
-</span><a href="#local-6989586621679508031"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span id="local-6989586621679508030"><span class="annot"><span class="annottext">o :: [NamedValue]
-</span><a href="#local-6989586621679508030"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
+</span><span id="line-222"></span><span>    </span><span id="local-6989586621679508474"><span class="annot"><span class="annottext">generate :: Parameters -&gt; ByteString
+</span><a href="#local-6989586621679508474"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-type">Parameters</span></a></span><span> </span><span id="local-6989586621679508473"><span class="annot"><span class="annottext">r :: [Value]
+</span><a href="#local-6989586621679508473"><span class="hs-identifier hs-var">r</span></a></span></span><span> </span><span id="local-6989586621679508472"><span class="annot"><span class="annottext">o :: [NamedValue]
+</span><a href="#local-6989586621679508472"><span class="hs-identifier hs-var">o</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="annot"><span class="annottext">([ByteString] -&gt; ByteString) -&gt; [ByteString] -&gt; ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -347,14 +347,14 @@ forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">Value -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621679508031"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; [ByteString] -&gt; [ByteString]
+</span><a href="#local-6989586621679508473"><span class="hs-identifier hs-var">r</span></a></span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; [ByteString] -&gt; [ByteString]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">(NamedValue -&gt; ByteString) -&gt; [NamedValue] -&gt; [ByteString]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">NamedValue -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[NamedValue]
-</span><a href="#local-6989586621679508030"><span class="hs-identifier hs-var">o</span></a></span><span>
+</span><a href="#local-6989586621679508472"><span class="hs-identifier hs-var">o</span></a></span><span>
 </span><span id="line-223"></span><span>
 </span><span id="line-224"></span><span class="annot"><a href="System.SED.Common.Call.html#d"><span class="hs-identifier hs-type">d</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.Common.Value.html#Value"><span class="hs-identifier hs-type">Value</span></a></span><span>
 </span><span id="line-225"></span><span id="d"><span class="annot"><span class="annottext">d :: Natural -&gt; Value
@@ -367,33 +367,33 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Token
 </span><a href="System.SED.Common.Token.html#Unsigned"><span class="hs-identifier hs-var">Unsigned</span></a></span><span>
 </span><span id="line-226"></span><span>
-</span><span id="line-227"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508013"><span id="local-6989586621679508015"><span id="local-6989586621679508017"><span id="local-6989586621679508019"><span id="local-6989586621679508021"><span class="annot"><a href="System.SED.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-type">MethodCall</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-228"></span><span>    </span><span id="local-6989586621679508012"><span class="annot"><span class="annottext">parser :: Parser MethodCall
-</span><a href="#local-6989586621679508012"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-227"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508455"><span id="local-6989586621679508457"><span id="local-6989586621679508459"><span id="local-6989586621679508461"><span id="local-6989586621679508463"><span class="annot"><a href="System.SED.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-type">MethodCall</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-228"></span><span>    </span><span id="local-6989586621679508454"><span class="annot"><span class="annottext">parser :: Parser MethodCall
+</span><a href="#local-6989586621679508454"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
 </span><span id="line-229"></span><span>        </span><span class="annot"><span class="annottext">Token
 </span><a href="System.SED.Common.Token.html#Call"><span class="hs-identifier hs-var">Call</span></a></span><span>      </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Token
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
-</span><span id="line-230"></span><span>        </span><span id="local-6989586621679508010"><span class="annot"><span class="annottext">MethodHeader
-</span><a href="#local-6989586621679508010"><span class="hs-identifier hs-var">mh</span></a></span></span><span>        </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser MethodHeader
+</span><span id="line-230"></span><span>        </span><span id="local-6989586621679508452"><span class="annot"><span class="annottext">MethodHeader
+</span><a href="#local-6989586621679508452"><span class="hs-identifier hs-var">mh</span></a></span></span><span>        </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser MethodHeader
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
-</span><span id="line-231"></span><span>        </span><span id="local-6989586621679508009"><span class="annot"><span class="annottext">Parameters
-</span><a href="#local-6989586621679508009"><span class="hs-identifier hs-var">p</span></a></span></span><span>         </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Parameters
+</span><span id="line-231"></span><span>        </span><span id="local-6989586621679508451"><span class="annot"><span class="annottext">Parameters
+</span><a href="#local-6989586621679508451"><span class="hs-identifier hs-var">p</span></a></span></span><span>         </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Parameters
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-232"></span><span>        </span><span class="annot"><span class="annottext">Token
 </span><a href="System.SED.Common.Token.html#EndOfData"><span class="hs-identifier hs-var">EndOfData</span></a></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Token
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
-</span><span id="line-233"></span><span>        </span><span id="local-6989586621679508007"><span class="annot"><span class="annottext">List
-</span><a href="#local-6989586621679508007"><span class="hs-identifier hs-var">status</span></a></span></span><span>    </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser List
+</span><span id="line-233"></span><span>        </span><span id="local-6989586621679508449"><span class="annot"><span class="annottext">List
+</span><a href="#local-6989586621679508449"><span class="hs-identifier hs-var">status</span></a></span></span><span>    </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser List
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
 </span><span id="line-234"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">List
-</span><a href="#local-6989586621679508007"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-235"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#List"><span class="hs-identifier hs-type">List</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><a href="System.SED.Common.Value.html#D"><span class="hs-identifier hs-type">D</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#Datum"><span class="hs-identifier hs-type">Datum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Token.html#Unsigned"><span class="hs-identifier hs-type">Unsigned</span></a></span><span> </span><span id="local-6989586621679508005"><span class="annot"><span class="annottext">sc :: Natural
-</span><a href="#local-6989586621679508005"><span class="hs-identifier hs-var">sc</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679508449"><span class="hs-identifier hs-var">status</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-235"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#List"><span class="hs-identifier hs-type">List</span></a></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><a href="System.SED.Common.Value.html#D"><span class="hs-identifier hs-type">D</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#Datum"><span class="hs-identifier hs-type">Datum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Token.html#Unsigned"><span class="hs-identifier hs-type">Unsigned</span></a></span><span> </span><span id="local-6989586621679508447"><span class="annot"><span class="annottext">sc :: Natural
+</span><a href="#local-6989586621679508447"><span class="hs-identifier hs-var">sc</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-236"></span><span>                </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.Common.Value.html#D"><span class="hs-identifier hs-type">D</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#Datum"><span class="hs-identifier hs-type">Datum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Token.html#Unsigned"><span class="hs-identifier hs-type">Unsigned</span></a></span><span>  </span><span class="hs-number">0</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-237"></span><span>                </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.Common.Value.html#D"><span class="hs-identifier hs-type">D</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#Datum"><span class="hs-identifier hs-type">Datum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Token.html#Unsigned"><span class="hs-identifier hs-type">Unsigned</span></a></span><span>  </span><span class="hs-number">0</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-238"></span><span>              </span><span class="annot"><span class="annottext">MethodCall -&gt; Parser MethodCall
@@ -403,11 +403,11 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MethodHeader -&gt; Parameters -&gt; Natural -&gt; MethodCall
 </span><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-var">MethodCall</span></a></span><span> </span><span class="annot"><span class="annottext">MethodHeader
-</span><a href="#local-6989586621679508010"><span class="hs-identifier hs-var">mh</span></a></span><span> </span><span class="annot"><span class="annottext">Parameters
-</span><a href="#local-6989586621679508009"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621679508005"><span class="hs-identifier hs-var">sc</span></a></span><span>
-</span><span id="line-239"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#List"><span class="hs-identifier hs-type">List</span></a></span><span> </span><span id="local-6989586621679508004"><span class="annot"><span class="annottext">l :: [Value]
-</span><a href="#local-6989586621679508004"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
+</span><a href="#local-6989586621679508452"><span class="hs-identifier hs-var">mh</span></a></span><span> </span><span class="annot"><span class="annottext">Parameters
+</span><a href="#local-6989586621679508451"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679508447"><span class="hs-identifier hs-var">sc</span></a></span><span>
+</span><span id="line-239"></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Value.html#List"><span class="hs-identifier hs-type">List</span></a></span><span> </span><span id="local-6989586621679508446"><span class="annot"><span class="annottext">l :: [Value]
+</span><a href="#local-6989586621679508446"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span>
 </span><span id="line-240"></span><span>              </span><span class="annot"><span class="annottext">String -&gt; Parser MethodCall
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser MethodCall) -&gt; String -&gt; Parser MethodCall
@@ -418,13 +418,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">[Value]
-</span><a href="#local-6989586621679508004"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><a href="#local-6989586621679508446"><span class="hs-identifier hs-var">l</span></a></span><span>
 </span><span id="line-242"></span><span>
-</span><span id="line-243"></span><span>    </span><span id="local-6989586621679508002"><span class="annot"><span class="annottext">generate :: MethodCall -&gt; ByteString
-</span><a href="#local-6989586621679508002"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-type">MethodCall</span></a></span><span> </span><span id="local-6989586621679508001"><span class="annot"><span class="annottext">mh :: MethodHeader
-</span><a href="#local-6989586621679508001"><span class="hs-identifier hs-var">mh</span></a></span></span><span> </span><span id="local-6989586621679508000"><span class="annot"><span class="annottext">p :: Parameters
-</span><a href="#local-6989586621679508000"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679507999"><span class="annot"><span class="annottext">sc :: Natural
-</span><a href="#local-6989586621679507999"><span class="hs-identifier hs-var">sc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-243"></span><span>    </span><span id="local-6989586621679508444"><span class="annot"><span class="annottext">generate :: MethodCall -&gt; ByteString
+</span><a href="#local-6989586621679508444"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-type">MethodCall</span></a></span><span> </span><span id="local-6989586621679508443"><span class="annot"><span class="annottext">mh :: MethodHeader
+</span><a href="#local-6989586621679508443"><span class="hs-identifier hs-var">mh</span></a></span></span><span> </span><span id="local-6989586621679508442"><span class="annot"><span class="annottext">p :: Parameters
+</span><a href="#local-6989586621679508442"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679508441"><span class="annot"><span class="annottext">sc :: Natural
+</span><a href="#local-6989586621679508441"><span class="hs-identifier hs-var">sc</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-244"></span><span>          </span><span class="annot"><span class="annottext">Token -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Token
@@ -434,13 +434,13 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">MethodHeader -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">MethodHeader
-</span><a href="#local-6989586621679508001"><span class="hs-identifier hs-var">mh</span></a></span><span>
+</span><a href="#local-6989586621679508443"><span class="hs-identifier hs-var">mh</span></a></span><span>
 </span><span id="line-246"></span><span>       </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parameters -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Parameters
-</span><a href="#local-6989586621679508000"><span class="hs-identifier hs-var">p</span></a></span><span>
+</span><a href="#local-6989586621679508442"><span class="hs-identifier hs-var">p</span></a></span><span>
 </span><span id="line-247"></span><span>       </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Token -&gt; ByteString
@@ -456,7 +456,7 @@ forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.Common.Value.html#D"><span class="hs-identifier hs-var">D</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Token -&gt; Datum
 </span><a href="System.SED.Common.Value.html#Datum"><span class="hs-identifier hs-var">Datum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural -&gt; Token
 </span><a href="System.SED.Common.Token.html#Unsigned"><span class="hs-identifier hs-var">Unsigned</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
-</span><a href="#local-6989586621679507999"><span class="hs-identifier hs-var">sc</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679508441"><span class="hs-identifier hs-var">sc</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-249"></span><span>                          </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Datum -&gt; Value
 </span><a href="System.SED.Common.Value.html#D"><span class="hs-identifier hs-var">D</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Token -&gt; Datum
 </span><a href="System.SED.Common.Value.html#Datum"><span class="hs-identifier hs-var">Datum</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural -&gt; Token
@@ -469,8 +469,8 @@ forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><span id="line-252"></span><span>
 </span><span id="line-253"></span><span>
 </span><span id="line-254"></span><span>
-</span><span id="line-255"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679507996"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-type">MethodHeader</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-256"></span><span>    </span><span id="local-6989586621679507994"><span class="annot"><span class="annottext">arbitrary :: Gen MethodHeader
+</span><span id="line-255"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508438"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-type">MethodHeader</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-256"></span><span>    </span><span id="local-6989586621679508436"><span class="annot"><span class="annottext">arbitrary :: Gen MethodHeader
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; UID -&gt; MethodHeader
 </span><a href="System.SED.Common.Call.html#MethodHeader"><span class="hs-identifier hs-var">MethodHeader</span></a></span><span> </span><span class="annot"><span class="annottext">(UID -&gt; UID -&gt; MethodHeader)
 -&gt; Gen UID -&gt; Gen (UID -&gt; MethodHeader)
@@ -483,9 +483,9 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall a. Arbitrary a =&gt; Gen a
 </span><span class="hs-identifier hs-var">arbitrary</span></span><span>
 </span><span id="line-257"></span><span>
-</span><span id="line-258"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679507990"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-type">Parameters</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-259"></span><span>    </span><span id="local-6989586621679507989"><span class="annot"><span class="annottext">arbitrary :: Gen Parameters
-</span><a href="#local-6989586621679507989"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; [NamedValue] -&gt; Parameters
+</span><span id="line-258"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508432"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-type">Parameters</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-259"></span><span>    </span><span id="local-6989586621679508431"><span class="annot"><span class="annottext">arbitrary :: Gen Parameters
+</span><a href="#local-6989586621679508431"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Value] -&gt; [NamedValue] -&gt; Parameters
 </span><a href="System.SED.Common.Call.html#Parameters"><span class="hs-identifier hs-var">Parameters</span></a></span><span> </span><span class="annot"><span class="annottext">([Value] -&gt; [NamedValue] -&gt; Parameters)
 -&gt; Gen [Value] -&gt; Gen ([NamedValue] -&gt; Parameters)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -498,9 +498,9 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f
 forall a. Arbitrary a =&gt; Gen a
 </span><span class="hs-identifier hs-var">arbitrary</span></span><span>
 </span><span id="line-260"></span><span>
-</span><span id="line-261"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679507986"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-type">MethodCall</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-262"></span><span>    </span><span id="local-6989586621679507985"><span class="annot"><span class="annottext">arbitrary :: Gen MethodCall
-</span><a href="#local-6989586621679507985"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MethodHeader -&gt; Parameters -&gt; Natural -&gt; MethodCall
+</span><span id="line-261"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679508428"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-type">MethodCall</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-262"></span><span>    </span><span id="local-6989586621679508427"><span class="annot"><span class="annottext">arbitrary :: Gen MethodCall
+</span><a href="#local-6989586621679508427"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MethodHeader -&gt; Parameters -&gt; Natural -&gt; MethodCall
 </span><a href="System.SED.Common.Call.html#MethodCall"><span class="hs-identifier hs-var">MethodCall</span></a></span><span> </span><span class="annot"><span class="annottext">(MethodHeader -&gt; Parameters -&gt; Natural -&gt; MethodCall)
 -&gt; Gen MethodHeader -&gt; Gen (Parameters -&gt; Natural -&gt; MethodCall)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b

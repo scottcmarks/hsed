@@ -45,8 +45,6 @@ module Data.SizedText
   , padRight
   , bounds
   , length
-  , fromStatic
-  , toStatic
     -- * C.IsSizedText class
   , C.Sized
   , C.IsSizedText(Elem, unsafeCreate, unwrap)
@@ -59,7 +57,8 @@ import           Prelude              hiding (drop, length, map, replicate,
 import           Data.Proxy
 import qualified Data.SizedText.Class as C (Elem, IsSizedText (..), Sized)
 import           Data.SizedText.TH
-import qualified Data.StaticText      as S
+import           Data.String          (IsString (..))
+
 
 -- $setup
 -- >>> :set -XDataKinds
@@ -258,9 +257,8 @@ padRight ::
   -> C.Sized a l2 u2
 padRight pad = take . (`append` (replicate pad :: C.Sized a 0 u2))
 
-fromStatic ::
-     (S.IsStaticText a, C.IsSizedText a) => S.Static a i -> C.Sized a i i
-fromStatic = C.unsafeCreate . S.unwrap
 
-toStatic :: (C.IsSizedText a, S.IsStaticText a) => C.Sized a i i -> S.Static a i
-toStatic = S.unsafeCreate . C.unwrap
+
+
+instance forall a l u. (IsString a, C.IsSizedText a, KnownNat l, KnownNat u) => IsString(C.Sized a l u)
+  where fromString s =  maybe (error "error") id  (create (fromString s))

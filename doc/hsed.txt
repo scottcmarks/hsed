@@ -167,23 +167,26 @@ replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> 
 -- | Append two C.Sizeds together.
 --   
 --   <pre>
---   &gt;&gt;&gt; append $(sz "foo") $(sz "bar") :: C.Sized String 6 6
---   "foobar"
+--   &gt;&gt;&gt; :type append $(sz "foo") $(st "bear")
+--   append $(sz "foo") $(st "bear")
+--     :: (C.IsSizedText a, IsString a) =&gt; C.Sized a 4 7
 --   
---   &gt;&gt;&gt; :set -fno-warn-type-defaults
+--   &gt;&gt;&gt; append $(sz "foo") $(st "bear")
+--   "foobear"
 --   
---   &gt;&gt;&gt; append $(sz "Hello, ") $(sz "world!")
+--   &gt;&gt;&gt; :type append $(st "Hello, ") $(sz "world!")
+--   append $(st "Hello, ") $(sz "world!")
+--     :: (C.IsSizedText a, IsString a) =&gt; C.Sized a 7 13
+--   
+--   &gt;&gt;&gt; append $(st "Hello, ") $(sz "world!")
 --   "Hello, world!"
---   
---   &gt;&gt;&gt; :type it
---   it :: (C.IsSizedText a, Data.String.IsString a) =&gt; C.Sized a 13 13
 --   </pre>
 append :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2) => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + l2) (u1 + u2)
 
 -- | Reduce C.Sized length, preferring elements on the left.
 --   
 --   <pre>
---   &gt;&gt;&gt; take $(sz "Foobar") :: C.Sized String 3
+--   &gt;&gt;&gt; take $(sz "Foobar") :: C.Sized String 0 3
 --   "Foo"
 --   </pre>
 take :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
@@ -191,7 +194,10 @@ take :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat
 -- | Reduce C.Sized length, preferring elements on the right.
 --   
 --   <pre>
---   &gt;&gt;&gt; drop $(sz "Foobar") :: C.Sized String 2
+--   &gt;&gt;&gt; drop $(st "Foobar") :: C.Sized String 2 2
+--   "ar"
+--   
+--   &gt;&gt;&gt; drop $(sz "Foobar") :: C.Sized String 0 2
 --   "ar"
 --   </pre>
 drop :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
@@ -199,7 +205,7 @@ drop :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat
 -- | Map a C.Sized to a C.Sized of the same length.
 --   
 --   <pre>
---   &gt;&gt;&gt; map toUpper $(sz "Hello") :: C.Sized String 5 5
+--   &gt;&gt;&gt; map toUpper $(st "Hello") :: C.Sized String 5 5
 --   "HELLO"
 --   </pre>
 map :: IsSizedText a => (Elem a -> Elem a) -> Sized a l u -> Sized a l u

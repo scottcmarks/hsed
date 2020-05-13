@@ -1,4 +1,6 @@
 
+./doc-tests/DocTest.hs,0
+
 ./Setup.hs,15
 main main1,2
 
@@ -6,18 +8,18 @@ main main1,2
 module Main Main2,3
 main main14,15
 
-./test/System/SED/Common/IntegralSpec.hs,194
+./spec-tests/System/SED/Common/IntegralSpec.hs,194
 module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec13,14
 validFirstTwo validFirstTwo30,31
 validNatural validNatural38,39
 validInteger validInteger44,45
 spec spec52,53
 
-./test/System/SED/Common/ValueSpec.hs,87
+./spec-tests/System/SED/Common/ValueSpec.hs,87
 module System.SED.Common.ValueSpec System.SED.Common.ValueSpec13,14
 spec spec24,25
 
-./test/System/SED/Common/TokenSpec.hs,375
+./spec-tests/System/SED/Common/TokenSpec.hs,375
 module System.SED.Common.TokenSpec System.SED.Common.TokenSpec12,13
 spec spec32,33
 maybeIsPrefixOf maybeIsPrefixOf235,236
@@ -30,11 +32,11 @@ p p255,256
 gp gp258,259
 _pgp _pgp262,263
 
-./test/System/SED/Common/ColumnTypes/THSpec.hs,105
+./spec-tests/System/SED/Common/ColumnTypes/THSpec.hs,105
 module System.SED.Common.ColumnTypes.THSpec System.SED.Common.ColumnTypes.THSpec12,13
 spec spec21,22
 
-./test/Spec.hs,0
+./spec-tests/Spec.hs,0
 
 ./dev/DevMain.hs,834
 module DevMain DevMain10,11
@@ -595,27 +597,27 @@ st st54,55
 unsafeCreateExp unsafeCreateExp64,65
 uqType uqType80,81
 
-./src/Data/SizedText.hs,598
+./src/Data/SizedText.hs,604
 module Data.SizedTextData.SizedText27,28
-fInV fInV72,73
+fromNat fromNat72,73
 createLeft createLeft81,82
 createRight createRight97,98
 create create119,120
-append append141,142
-replicate replicate152,153
-map map164,165
-take take172,173
-take take183,184
-drop drop191,192
-drop drop202,203
-bounds bounds208,209
-length length218,219
-padLeft padLeft226,227
-padLeft padLeft240,241
-padRight padRight243,244
-padRight padRight257,258
-instance forall forall a l u- (IsString a, C-IsSizedText a, KnownNat l, KnownNat u) => IsString (C-Sized a l u)262,263
-  where fromString fromString263,264
+append append144,145
+replicate replicate155,156
+map map167,168
+take take175,176
+take take186,187
+drop drop196,197
+drop drop207,208
+bounds bounds213,214
+length length223,224
+padLeft padLeft231,232
+padLeft padLeft245,246
+padRight padRight248,249
+padRight padRight262,263
+instance forall forall a l u- (IsString a, C-IsSizedText a, KnownNat l, KnownNat u) => IsString (C-Sized a l u)267,268
+  where fromString fromString268,269
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

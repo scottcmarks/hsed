@@ -76,11 +76,23 @@ executables:
     - -with-rtsopts=-N
 
 tests:
-  hsed-test:
+  hsed-spec-test:
     main:                Spec.hs
-    source-dirs:         test
+    source-dirs:         spec-tests
     dependencies:
     - hsed
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+  hsed-doc-test:
+    main:                DocTest.hs
+    source-dirs:         doc-tests
+    dependencies:
+    - hsed
+    - doctest
 
     ghc-options:
     - -threaded

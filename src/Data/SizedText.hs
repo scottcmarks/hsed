@@ -68,10 +68,10 @@ import           Data.String          (IsString (..))
 -- >>> import Data.Char (toUpper)
 
 -- | Extract type-level Nat as a value-level Int
--- >>> fInV (Proxy @5)
+-- >>> fromNat (Proxy @5)
 -- 5
-fInV :: (KnownNat n) => proxy n -> Int
-fInV = fromIntegral . natVal
+fromNat :: (KnownNat n) => proxy n -> Int
+fromNat = fromIntegral . natVal
 
 
 -- | Elements on the left are preferred.
@@ -87,8 +87,8 @@ createLeft ::
 createLeft e s =
   C.unsafeCreate $ C.take ut $ C.append s $ C.replicate (lt - C.length s) e
   where
-    lt = fInV (Proxy @l)
-    ut = fInV (Proxy @u)
+    lt = fromNat (Proxy @l)
+    ut = fromNat (Proxy @u)
 
 -- | Just like 'createLeft', except that elements on the right are preferred.
 -- >>> createRight '@' "foobarbaz" :: C.Sized String 0 6
@@ -104,8 +104,8 @@ createRight e s =
   C.unsafeCreate $ C.drop (len - ut) $ C.append (C.replicate (lt - len) e) s
   where
     len = C.length s
-    lt = fInV (Proxy @l)
-    ut = fInV (Proxy @u)
+    lt = fromNat (Proxy @l)
+    ut = fromNat (Proxy @u)
 
 -- | Attempt to safely create a C.Sized if it matches target length.
 --
@@ -127,18 +127,21 @@ create s =
     else Nothing
   where
     len = C.length s
-    lt = fInV (Proxy @l)
-    ut = fInV (Proxy @u)
+    lt = fromNat (Proxy @l)
+    ut = fromNat (Proxy @u)
 
 -- | Append two C.Sizeds together.
 --
--- >>> append $(sz "foo") $(sz "bar") :: C.Sized String 6 6
--- "foobar"
--- >>> :set -fno-warn-type-defaults
--- >>> append $(sz "Hello, ") $(sz "world!")
+-- >>> :type append $(sz "foo") $(st "bear")
+-- append $(sz "foo") $(st "bear")
+--   :: (C.IsSizedText a, IsString a) => C.Sized a 4 7
+-- >>> append $(sz "foo") $(st "bear")
+-- "foobear"
+-- >>> :type append $(st "Hello, ") $(sz "world!")
+-- append $(st "Hello, ") $(sz "world!")
+--   :: (C.IsSizedText a, IsString a) => C.Sized a 7 13
+-- >>> append $(st "Hello, ") $(sz "world!")
 -- "Hello, world!"
--- >>> :type it
--- it :: (C.IsSizedText a, Data.String.IsString a) => C.Sized a 13 13
 append ::
      forall a l1 u1 l2 u2. (C.IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2)
   => C.Sized a l1 u1
@@ -156,11 +159,11 @@ replicate ::
   -> C.Sized a l u
 replicate e = C.unsafeCreate $ C.replicate t e
   where
-    t = fInV (Proxy @u)
+    t = fromNat (Proxy @u)
 
 -- | Map a C.Sized to a C.Sized of the same length.
 --
--- >>> map toUpper $(sz "Hello") :: C.Sized String 5 5
+-- >>> map toUpper $(st "Hello") :: C.Sized String 5 5
 -- "HELLO"
 map ::
      C.IsSizedText a => (C.Elem a -> C.Elem a) -> C.Sized a l u -> C.Sized a l u
@@ -168,7 +171,7 @@ map f s = C.unsafeCreate $ C.map f $ C.unwrap s
 
 -- | Reduce C.Sized length, preferring elements on the left.
 --
--- >>> take $(sz "Foobar") :: C.Sized String 3
+-- >>> take $(sz "Foobar") :: C.Sized String 0 3
 -- "Foo"
 take ::
      forall a l1 u1 l2 u2.
@@ -183,11 +186,13 @@ take ::
   -> C.Sized a l2 u2
 take s = C.unsafeCreate $ C.take t $ C.unwrap s
   where
-    t = fInV (Proxy @u2)
+    t = fromNat (Proxy @u2)
 
 -- | Reduce C.Sized length, preferring elements on the right.
 --
--- >>> drop $(sz "Foobar") :: C.Sized String 2
+-- >>> drop $(st "Foobar") :: C.Sized String 2 2
+-- "ar"
+-- >>> drop $(sz "Foobar") :: C.Sized String 0 2
 -- "ar"
 drop ::
      forall a l1 u1 l2 u2.
@@ -203,7 +208,7 @@ drop ::
 drop s = C.unsafeCreate $ C.drop (C.length s' - t) s'
   where
     s' = C.unwrap s
-    t = fInV (Proxy @u2)
+    t = fromNat (Proxy @u2)
 
 -- | Obtain length bounds from the type.
 bounds ::
@@ -212,8 +217,8 @@ bounds ::
   -> (Int, Int)
 bounds _ = (lower, upper) -- FIXME: Bounds type from Ix?
   where
-    lower = fInV (Proxy @l)
-    upper = fInV (Proxy @u)
+    lower = fromNat (Proxy @l)
+    upper = fromNat (Proxy @u)
 
 -- | Obtain value-level length.  Consult the actual data value.
 length ::

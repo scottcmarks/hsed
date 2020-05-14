@@ -11,166 +11,151 @@ Template Haskell helpers for SizedText.
 </span><span id="line-11"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#st"><span class="hs-identifier">st</span></a></span><span>
 </span><span id="line-12"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#sz"><span class="hs-identifier">sz</span></a></span><span>
 </span><span id="line-13"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier">unsafeCreateExp</span></a></span><span>
-</span><span id="line-14"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>              </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">length</span></span><span class="hs-special">)</span><span>
-</span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.SizedText.Class.html"><span class="hs-identifier">Data.SizedText.Class</span></a></span><span>
-</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>
-</span><span id="line-21"></span><span>
-</span><span id="line-22"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span>
-</span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-comment">-- | A type with IsString instance to allow string literals in 'sz'</span><span>
-</span><span id="line-25"></span><span class="hs-comment">-- argument without quoting.</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">newtype</span><span> </span><span id="LitS"><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-27"></span><span>  </span><span id="LitS"><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679505796"><span class="annot"><span class="annottext">String -&gt; LitS
+</span><span id="line-14"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#typeFromInt"><span class="hs-identifier">typeFromInt</span></a></span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>
+</span><span id="line-18"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>              </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">P</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">length</span></span><span class="hs-special">)</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.SizedText.Class.html"><span class="hs-identifier">Data.SizedText.Class</span></a></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span>
+</span><span id="line-24"></span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- $setup</span><span>
+</span><span id="line-27"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XDataKinds</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XTemplateHaskell</span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XOverloadedStrings</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -Wno-type-defaults</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- | A type with IsString instance to allow string literals in 'sz'</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- argument without quoting.</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">newtype</span><span> </span><span id="LitS"><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-36"></span><span>  </span><span id="LitS"><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-37"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679505727"><span class="annot"><span class="annottext">String -&gt; LitS
 (String -&gt; LitS) -&gt; IsString LitS
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; LitS
 $cfromString :: String -&gt; LitS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-29"></span><span>
-</span><span id="line-30"></span><span class="hs-comment">-- | Type-safe Sized constructor macros for string literals.</span><span>
-</span><span id="line-31"></span><span class="hs-comment">--</span><span>
-</span><span id="line-32"></span><span class="hs-comment">-- Example:</span><span>
-</span><span id="line-33"></span><span class="hs-comment">--</span><span>
-</span><span id="line-34"></span><span class="hs-comment">-- &gt; $(sz &quot;Foobar&quot;)</span><span>
-</span><span id="line-35"></span><span class="hs-comment">--</span><span>
-</span><span id="line-36"></span><span class="hs-comment">-- compiles to</span><span>
-</span><span id="line-37"></span><span class="hs-comment">--</span><span>
-</span><span id="line-38"></span><span class="hs-comment">-- &gt; unsafeCreate &quot;Foobar&quot; :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 0 6</span><span>
-</span><span id="line-39"></span><span class="hs-comment">--</span><span>
-</span><span id="line-40"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
-</span><span id="line-41"></span><span class="annot"><a href="Data.SizedText.TH.html#sz"><span class="hs-identifier hs-type">sz</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-42"></span><span id="sz"><span class="annot"><span class="annottext">sz :: LitS -&gt; Q Exp
-</span><a href="Data.SizedText.TH.html#sz"><span class="hs-identifier hs-var hs-var">sz</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679505794"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679505794"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-43"></span><span>  </span><span id="local-6989586621679505793"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505793"><span class="hs-identifier hs-var">at</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | Type-safe constructor for bounded-length string literals: Sized a l u</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- Data.SizedText.Class.unsafeCreate &quot;Foobar&quot; :: forall a_0 . (Data.String.IsString a_0,</span><span>
+</span><span id="line-41"></span><span class="hs-comment">--                                                             Data.SizedText.Class.IsSizedText a_0) =&gt;</span><span>
+</span><span id="line-42"></span><span class="hs-comment">--                                               Data.SizedText.Class.Sized a_0 3 6</span><span>
+</span><span id="line-43"></span><span class="hs-comment">--</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; sb 3 6 &quot;Foobar&quot;</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- Data.SizedText.Class.unsafeCreate &quot;Foobar&quot; :: forall a_0 . (Data.String.IsString a_0,</span><span>
+</span><span id="line-46"></span><span class="hs-comment">--                                                             Data.SizedText.Class.IsSizedText a_0) =&gt;</span><span>
+</span><span id="line-47"></span><span class="hs-comment">--                                               Data.SizedText.Class.Sized a_0 3 6</span><span>
+</span><span id="line-48"></span><span class="hs-comment">--</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- &gt;&gt;&gt; :t sb 3 6 &quot;Foobar&quot;</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- sb 3 6 &quot;Foobar&quot; :: Q Exp</span><span>
+</span><span id="line-51"></span><span class="annot"><a href="Data.SizedText.TH.html#sb"><span class="hs-identifier hs-type">sb</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-52"></span><span id="sb"><span class="annot"><span class="annottext">sb :: Int -&gt; Int -&gt; String -&gt; Q Exp
+</span><a href="Data.SizedText.TH.html#sb"><span class="hs-identifier hs-var hs-var">sb</span></a></span></span><span> </span><span id="local-6989586621679505724"><span class="annot"><span class="annottext">l :: Int
+</span><a href="#local-6989586621679505724"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679505723"><span class="annot"><span class="annottext">u :: Int
+</span><a href="#local-6989586621679505723"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679505722"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679505722"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-53"></span><span>  </span><span id="local-6989586621679505721"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679505721"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
 </span><span class="hs-identifier hs-var">newName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;a&quot;</span></span><span>
-</span><span id="line-44"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679505792"><span class="annot"><span class="annottext">len :: Int
-</span><a href="#local-6989586621679505792"><span class="hs-identifier hs-var hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
-forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
-</span><span class="hs-identifier hs-var">P.length</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679505794"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-45"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
+</span><span id="line-54"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679505720"><span class="annot"><span class="annottext">tl :: Type
+</span><a href="#local-6989586621679505720"><span class="hs-identifier hs-var hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Type
+</span><a href="Data.SizedText.TH.html#typeFromInt"><span class="hs-identifier hs-var">typeFromInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679505724"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-55"></span><span>      </span><span id="local-6989586621679505719"><span class="annot"><span class="annottext">tu :: Type
+</span><a href="#local-6989586621679505719"><span class="hs-identifier hs-var hs-var">tu</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Type
+</span><a href="Data.SizedText.TH.html#typeFromInt"><span class="hs-identifier hs-var">typeFromInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679505723"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-56"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Int -&gt; Int -&gt; Type) -&gt; Name -&gt; Int -&gt; Int -&gt; String -&gt; Exp
-</span><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var">unsafeCreateExp</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Int -&gt; Int -&gt; Type
-</span><a href="Data.SizedText.TH.html#uqType"><span class="hs-identifier hs-var">uqType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505793"><span class="hs-identifier hs-var">at</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679505792"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679505794"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span>
-</span><span id="line-48"></span><span class="hs-comment">-- &gt; $(st &quot;Foobar&quot;)</span><span>
-</span><span id="line-49"></span><span class="hs-comment">--</span><span>
-</span><span id="line-50"></span><span class="hs-comment">-- compiles to</span><span>
-</span><span id="line-51"></span><span class="hs-comment">--</span><span>
-</span><span id="line-52"></span><span class="hs-comment">-- &gt; unsafeCreate &quot;Foobar&quot; :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 6 6</span><span>
-</span><span id="line-53"></span><span class="hs-comment">--</span><span>
-</span><span id="line-54"></span><span>
-</span><span id="line-55"></span><span class="annot"><a href="Data.SizedText.TH.html#st"><span class="hs-identifier hs-type">st</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-56"></span><span id="st"><span class="annot"><span class="annottext">st :: LitS -&gt; Q Exp
-</span><a href="Data.SizedText.TH.html#st"><span class="hs-identifier hs-var hs-var">st</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679505790"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679505790"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-57"></span><span>  </span><span id="local-6989586621679505789"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505789"><span class="hs-identifier hs-var">at</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
-</span><span class="hs-identifier hs-var">newName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;a&quot;</span></span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679505788"><span class="annot"><span class="annottext">len :: Int
-</span><a href="#local-6989586621679505788"><span class="hs-identifier hs-var hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Type -&gt; Type -&gt; Type)
+-&gt; Name -&gt; Type -&gt; Type -&gt; String -&gt; Exp
+</span><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var">unsafeCreateExp</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Type -&gt; Type -&gt; Type
+</span><a href="Data.SizedText.TH.html#universallyQuantifiedSizedType"><span class="hs-identifier hs-var">universallyQuantifiedSizedType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679505721"><span class="hs-identifier hs-var">ta</span></a></span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679505720"><span class="hs-identifier hs-var">tl</span></a></span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679505719"><span class="hs-identifier hs-var">tu</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679505722"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- | Type-safe constructor for bounded-length string literals: Sized a 0 l</span><span>
+</span><span id="line-60"></span><span class="hs-comment">--</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- &gt;&gt;&gt; $(sz &quot;Foobar&quot;)</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- &quot;Foobar&quot;</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- &gt;&gt;&gt; szFoo = $(sz &quot;Foobar&quot;)</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- &gt;&gt;&gt; :type szFoo</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- szFoo :: (IsString a, IsSizedText a) =&gt; Sized a 0 6</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; sz &quot;Foobar&quot;</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- Data.SizedText.Class.unsafeCreate &quot;Foobar&quot; :: forall a_0 . (Data.String.IsString a_0,</span><span>
+</span><span id="line-70"></span><span class="hs-comment">--                                                             Data.SizedText.Class.IsSizedText a_0) =&gt;</span><span>
+</span><span id="line-71"></span><span class="hs-comment">--                                               Data.SizedText.Class.Sized a_0 0 6</span><span>
+</span><span id="line-72"></span><span class="hs-comment">--</span><span>
+</span><span id="line-73"></span><span class="hs-comment">-- &gt;&gt;&gt; :t sz &quot;Foobar&quot;</span><span>
+</span><span id="line-74"></span><span class="hs-comment">-- sz &quot;Foobar&quot; :: Q Exp</span><span>
+</span><span id="line-75"></span><span class="hs-comment">--</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
+</span><span id="line-77"></span><span class="annot"><a href="Data.SizedText.TH.html#sz"><span class="hs-identifier hs-type">sz</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-78"></span><span id="sz"><span class="annot"><span class="annottext">sz :: LitS -&gt; Q Exp
+</span><a href="Data.SizedText.TH.html#sz"><span class="hs-identifier hs-var hs-var">sz</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679505717"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679505717"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; String -&gt; Q Exp
+</span><a href="Data.SizedText.TH.html#sb"><span class="hs-identifier hs-var">sb</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679505716"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679505717"><span class="hs-identifier hs-var">s</span></a></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679505716"><span class="annot"><span class="annottext">l :: Int
+</span><a href="#local-6989586621679505716"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">P.length</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679505790"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-59"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
-forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
-</span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Name -&gt; Int -&gt; Int -&gt; Type) -&gt; Name -&gt; Int -&gt; Int -&gt; String -&gt; Exp
-</span><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var">unsafeCreateExp</span></a></span><span> </span><span class="annot"><span class="annottext">Name -&gt; Int -&gt; Int -&gt; Type
-</span><a href="Data.SizedText.TH.html#uqType"><span class="hs-identifier hs-var">uqType</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505789"><span class="hs-identifier hs-var">at</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679505788"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679505788"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679505790"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span class="hs-comment">-- | Construct</span><span>
-</span><span id="line-63"></span><span class="hs-comment">-- &gt; unsafeCreate &quot;Foobar&quot; :: forall a. (IsString a, IsSizedText a) =&gt; typef a l u</span><span>
-</span><span id="line-64"></span><span class="hs-comment">--   where l and u are the type-level KnownNat versions of the bounds of s</span><span>
-</span><span id="line-65"></span><span class="annot"><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier hs-type">unsafeCreateExp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-66"></span><span id="unsafeCreateExp"><span class="annot"><span class="annottext">unsafeCreateExp :: (Name -&gt; Int -&gt; Int -&gt; Type) -&gt; Name -&gt; Int -&gt; Int -&gt; String -&gt; Exp
-</span><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var hs-var">unsafeCreateExp</span></a></span></span><span> </span><span id="local-6989586621679505787"><span class="annot"><span class="annottext">typef :: Name -&gt; Int -&gt; Int -&gt; Type
-</span><a href="#local-6989586621679505787"><span class="hs-identifier hs-var">typef</span></a></span></span><span> </span><span id="local-6989586621679505786"><span class="annot"><span class="annottext">at :: Name
-</span><a href="#local-6989586621679505786"><span class="hs-identifier hs-var">at</span></a></span></span><span> </span><span id="local-6989586621679505785"><span class="annot"><span class="annottext">l :: Int
-</span><a href="#local-6989586621679505785"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679505784"><span class="annot"><span class="annottext">u :: Int
-</span><a href="#local-6989586621679505784"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679505783"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679505783"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-67"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Type -&gt; Exp
-</span><span class="hs-identifier hs-var">SigE</span></span><span>
-</span><span id="line-68"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
-</span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
-</span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">unsafeCreate</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
-</span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="annot"><span class="annottext">(Lit -&gt; Exp) -&gt; Lit -&gt; Exp
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Lit
-</span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679505783"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-69"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TyVarBndr] -&gt; Cxt -&gt; Type -&gt; Type
-</span><span class="hs-identifier hs-var">ForallT</span></span><span>
-</span><span id="line-70"></span><span>         </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; TyVarBndr
-</span><span class="hs-identifier hs-var">PlainTV</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505786"><span class="hs-identifier hs-var">at</span></a></span><span class="hs-special">]</span><span class="hs-cpp">
-#if MIN_VERSION_template_haskell(2,10,0)
-</span><span>         </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
-</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
-</span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsString</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
-</span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505786"><span class="hs-identifier hs-var">at</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
-</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
-</span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsSizedText</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
-</span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505786"><span class="hs-identifier hs-var">at</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(Type -&gt; Type) -&gt; Type -&gt; Type
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span class="hs-cpp">
-#else
-</span><span>         </span><span class="hs-special">[</span><span class="hs-identifier">ClassP</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsString</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">VarT</span><span> </span><span class="hs-identifier">at</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">ClassP</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsSizedText</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">VarT</span><span> </span><span class="hs-identifier">at</span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-operator">$</span><span class="hs-cpp">
-#endif
-</span><span>       </span><span class="annot"><span class="annottext">Name -&gt; Int -&gt; Int -&gt; Type
-</span><a href="#local-6989586621679505787"><span class="hs-identifier hs-var">typef</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505786"><span class="hs-identifier hs-var">at</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679505785"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679505784"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- create the final type expression, e.g. Sized a l u</span><span>
-</span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span class="hs-comment">-- | Create the final expression for Sized a l u</span><span>
-</span><span id="line-80"></span><span class="hs-comment">--</span><span>
-</span><span id="line-81"></span><span class="annot"><a href="Data.SizedText.TH.html#uqType"><span class="hs-identifier hs-type">uqType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
-</span><span id="line-82"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-comment">-- name of the wrapped type, e.g. ByteString</span><span>
-</span><span id="line-83"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>  </span><span class="hs-comment">-- type-level value for the min length</span><span>
-</span><span id="line-84"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>  </span><span class="hs-comment">-- type-level value for the max length</span><span>
-</span><span id="line-85"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-comment">-- type expression Sized l u</span><span>
-</span><span id="line-86"></span><span id="uqType"><span class="annot"><span class="annottext">uqType :: Name -&gt; Int -&gt; Int -&gt; Type
-</span><a href="Data.SizedText.TH.html#uqType"><span class="hs-identifier hs-var hs-var">uqType</span></a></span></span><span> </span><span id="local-6989586621679505772"><span class="annot"><span class="annottext">a :: Name
-</span><a href="#local-6989586621679505772"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679505771"><span class="annot"><span class="annottext">l :: Int
-</span><a href="#local-6989586621679505771"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679505770"><span class="annot"><span class="annottext">u :: Int
-</span><a href="#local-6989586621679505770"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
-</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
-</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
-</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
-</span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Sized</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
-</span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679505772"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Type
-</span><a href="#local-6989586621679505769"><span class="hs-identifier hs-var">wx</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679505771"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Type
-</span><a href="#local-6989586621679505769"><span class="hs-identifier hs-var">wx</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679505770"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-87"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679505769"><span class="annot"><span class="annottext">wx :: Int -&gt; Type
-</span><a href="#local-6989586621679505769"><span class="hs-identifier hs-var hs-var">wx</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TyLit -&gt; Type
+</span><a href="#local-6989586621679505717"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-comment">-- | Type-safe constructor for fixed-length string literals: Sized a l l</span><span>
+</span><span id="line-82"></span><span class="hs-comment">--</span><span>
+</span><span id="line-83"></span><span class="hs-comment">-- &gt;&gt;&gt; $(st &quot;Foobar&quot;)</span><span>
+</span><span id="line-84"></span><span class="hs-comment">-- &quot;Foobar&quot;</span><span>
+</span><span id="line-85"></span><span class="hs-comment">--</span><span>
+</span><span id="line-86"></span><span class="hs-comment">-- &gt;&gt;&gt; stFoo = $(st &quot;Foobar&quot;)</span><span>
+</span><span id="line-87"></span><span class="hs-comment">-- &gt;&gt;&gt; :type stFoo</span><span>
+</span><span id="line-88"></span><span class="hs-comment">-- stFoo :: (IsString a, IsSizedText a) =&gt; Sized a 6 6</span><span>
+</span><span id="line-89"></span><span class="hs-comment">--</span><span>
+</span><span id="line-90"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; st &quot;Foobar&quot;</span><span>
+</span><span id="line-91"></span><span class="hs-comment">-- Data.SizedText.Class.unsafeCreate &quot;Foobar&quot; :: forall a_0 . (Data.String.IsString a_0,</span><span>
+</span><span id="line-92"></span><span class="hs-comment">--                                                             Data.SizedText.Class.IsSizedText a_0) =&gt;</span><span>
+</span><span id="line-93"></span><span class="hs-comment">--                                               Data.SizedText.Class.Sized a_0 6 6</span><span>
+</span><span id="line-94"></span><span class="hs-comment">--</span><span>
+</span><span id="line-95"></span><span class="hs-comment">-- &gt;&gt;&gt; :t st &quot;Foobar&quot;</span><span>
+</span><span id="line-96"></span><span class="hs-comment">-- st &quot;Foobar&quot; :: Q Exp</span><span>
+</span><span id="line-97"></span><span class="hs-comment">--</span><span>
+</span><span id="line-98"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
+</span><span id="line-99"></span><span class="hs-comment">--</span><span>
+</span><span id="line-100"></span><span class="annot"><a href="Data.SizedText.TH.html#st"><span class="hs-identifier hs-type">st</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-101"></span><span id="st"><span class="annot"><span class="annottext">st :: LitS -&gt; Q Exp
+</span><a href="Data.SizedText.TH.html#st"><span class="hs-identifier hs-var hs-var">st</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SizedText.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679505715"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679505715"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; String -&gt; Q Exp
+</span><a href="Data.SizedText.TH.html#sb"><span class="hs-identifier hs-var">sb</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679505714"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679505714"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679505715"><span class="hs-identifier hs-var">s</span></a></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679505714"><span class="annot"><span class="annottext">l :: Int
+</span><a href="#local-6989586621679505714"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
+forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
+</span><span class="hs-identifier hs-var">P.length</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679505715"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-102"></span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- | Transform a data-level Int to a Type value</span><span>
+</span><span id="line-104"></span><span class="hs-comment">--</span><span>
+</span><span id="line-105"></span><span class="hs-comment">-- &gt;&gt;&gt; typeFromInt 3</span><span>
+</span><span id="line-106"></span><span class="hs-comment">-- LitT (NumTyLit 3)</span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- &gt;&gt;&gt; ppr $ typeFromInt 3</span><span>
+</span><span id="line-108"></span><span class="hs-comment">-- 3</span><span>
+</span><span id="line-109"></span><span class="annot"><a href="Data.SizedText.TH.html#typeFromInt"><span class="hs-identifier hs-type">typeFromInt</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-110"></span><span id="typeFromInt"><span class="annot"><span class="annottext">typeFromInt :: Int -&gt; Type
+</span><a href="Data.SizedText.TH.html#typeFromInt"><span class="hs-identifier hs-var hs-var">typeFromInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">TyLit -&gt; Type
 </span><span class="hs-identifier hs-var">LitT</span></span><span> </span><span class="annot"><span class="annottext">(TyLit -&gt; Type) -&gt; (Int -&gt; TyLit) -&gt; Int -&gt; Type
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; TyLit
@@ -179,4 +164,90 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span>
-</span><span id="line-88"></span></pre></body></html>
+</span><span id="line-111"></span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- | Construct</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- &gt; unsafeCreate &quot;Foobar&quot; :: forall a. (IsString a, IsSizedText a) =&gt; typef a l u</span><span>
+</span><span id="line-114"></span><span class="hs-comment">--   where l and u are the type-level KnownNat versions of the bounds of s</span><span>
+</span><span id="line-115"></span><span class="hs-comment">--</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- &gt;&gt;&gt; at &lt;- runQ $ newName &quot;a&quot;</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedSizedType at (typeFromInt 0) (typeFromInt 4) &quot;Boo!&quot;</span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- Data.SizedText.Class.unsafeCreate &quot;Boo!&quot; :: forall a_0 . (Data.String.IsString a_0,</span><span>
+</span><span id="line-119"></span><span class="hs-comment">--                                                           Data.SizedText.Class.IsSizedText a_0) =&gt;</span><span>
+</span><span id="line-120"></span><span class="hs-comment">--                                             Data.SizedText.Class.Sized a_0 0 4</span><span>
+</span><span id="line-121"></span><span class="annot"><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier hs-type">unsafeCreateExp</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-122"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- type expression constructor</span><span>
+</span><span id="line-123"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span>   </span><span class="hs-comment">-- name of the wrapped type, e.g. ByteString</span><span>
+</span><span id="line-124"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>   </span><span class="hs-comment">-- type-level value for the min length</span><span>
+</span><span id="line-125"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>   </span><span class="hs-comment">-- type-level value for the max lengthName</span><span>
+</span><span id="line-126"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-comment">-- literal IsString value to be wrapped</span><span>
+</span><span id="line-127"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>    </span><span class="hs-comment">-- type express  unsafeCreate &lt;s&gt; :: forall a ...</span><span>
+</span><span id="line-128"></span><span id="unsafeCreateExp"><span class="annot"><span class="annottext">unsafeCreateExp :: (Name -&gt; Type -&gt; Type -&gt; Type)
+-&gt; Name -&gt; Type -&gt; Type -&gt; String -&gt; Exp
+</span><a href="Data.SizedText.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var hs-var">unsafeCreateExp</span></a></span></span><span> </span><span id="local-6989586621679505710"><span class="annot"><span class="annottext">typef :: Name -&gt; Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679505710"><span class="hs-identifier hs-var">typef</span></a></span></span><span> </span><span id="local-6989586621679505709"><span class="annot"><span class="annottext">at :: Name
+</span><a href="#local-6989586621679505709"><span class="hs-identifier hs-var">at</span></a></span></span><span> </span><span id="local-6989586621679505708"><span class="annot"><span class="annottext">l :: Type
+</span><a href="#local-6989586621679505708"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679505707"><span class="annot"><span class="annottext">u :: Type
+</span><a href="#local-6989586621679505707"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679505706"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679505706"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-129"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Type -&gt; Exp
+</span><span class="hs-identifier hs-var">SigE</span></span><span>
+</span><span id="line-130"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
+</span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">unsafeCreate</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
+</span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="annot"><span class="annottext">(Lit -&gt; Exp) -&gt; Lit -&gt; Exp
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Lit
+</span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679505706"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TyVarBndr] -&gt; Cxt -&gt; Type -&gt; Type
+</span><span class="hs-identifier hs-var">ForallT</span></span><span>
+</span><span id="line-132"></span><span>         </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; TyVarBndr
+</span><span class="hs-identifier hs-var">PlainTV</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679505709"><span class="hs-identifier hs-var">at</span></a></span><span class="hs-special">]</span><span class="hs-cpp">
+#if MIN_VERSION_template_haskell(2,10,0)
+</span><span>         </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsString</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679505709"><span class="hs-identifier hs-var">at</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsSizedText</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679505709"><span class="hs-identifier hs-var">at</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(Type -&gt; Type) -&gt; Type -&gt; Type
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span class="hs-cpp">
+#else
+</span><span>         </span><span class="hs-special">[</span><span class="hs-identifier">ClassP</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsString</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">VarT</span><span> </span><span class="hs-identifier">at</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">ClassP</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsSizedText</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">VarT</span><span> </span><span class="hs-identifier">at</span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-operator">$</span><span class="hs-cpp">
+#endif
+</span><span>       </span><span class="annot"><span class="annottext">Name -&gt; Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679505710"><span class="hs-identifier hs-var">typef</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679505709"><span class="hs-identifier hs-var">at</span></a></span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679505708"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679505707"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- create the final type expression, e.g. Sized a l u</span><span>
+</span><span id="line-139"></span><span>
+</span><span id="line-140"></span><span>
+</span><span id="line-141"></span><span class="hs-comment">-- | Create the final expression for Sized a l u</span><span>
+</span><span id="line-142"></span><span class="hs-comment">--</span><span>
+</span><span id="line-143"></span><span class="hs-comment">-- &gt;&gt;&gt; universallyQuantifiedSizedType (mkName &quot;a&quot;) (typeFromInt 3) (typeFromInt 6)</span><span>
+</span><span id="line-144"></span><span class="hs-comment">-- AppT (AppT (AppT (ConT Data.SizedText.Class.Sized) (VarT a)) (LitT (NumTyLit 3))) (LitT (NumTyLit 6))</span><span>
+</span><span id="line-145"></span><span class="hs-comment">-- &gt;&gt;&gt; ppr $ universallyQuantifiedSizedType (mkName &quot;a&quot;) (typeFromInt 3) (typeFromInt 6)</span><span>
+</span><span id="line-146"></span><span class="hs-comment">-- Data.SizedText.Class.Sized a 3 6</span><span>
+</span><span id="line-147"></span><span class="annot"><a href="Data.SizedText.TH.html#universallyQuantifiedSizedType"><span class="hs-identifier hs-type">universallyQuantifiedSizedType</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-148"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-comment">-- name of the wrapped type, e.g. ByteString</span><span>
+</span><span id="line-149"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>  </span><span class="hs-comment">-- type-level value for the min length</span><span>
+</span><span id="line-150"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>  </span><span class="hs-comment">-- type-level value for the max length</span><span>
+</span><span id="line-151"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>  </span><span class="hs-comment">-- type expression Sized l u</span><span>
+</span><span id="line-152"></span><span id="universallyQuantifiedSizedType"><span class="annot"><span class="annottext">universallyQuantifiedSizedType :: Name -&gt; Type -&gt; Type -&gt; Type
+</span><a href="Data.SizedText.TH.html#universallyQuantifiedSizedType"><span class="hs-identifier hs-var hs-var">universallyQuantifiedSizedType</span></a></span></span><span> </span><span id="local-6989586621679505695"><span class="annot"><span class="annottext">a :: Name
+</span><a href="#local-6989586621679505695"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679505694"><span class="annot"><span class="annottext">l :: Type
+</span><a href="#local-6989586621679505694"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679505693"><span class="annot"><span class="annottext">u :: Type
+</span><a href="#local-6989586621679505693"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Sized</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679505695"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679505694"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679505693"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-153"></span></pre></body></html>

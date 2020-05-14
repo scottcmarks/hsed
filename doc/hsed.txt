@@ -107,20 +107,60 @@ instance (Data.String.IsString a, Data.SizedText.Class.IsSizedText a, GHC.TypeNa
 
 -- | Template Haskell helpers for SizedText.
 module Data.SizedText.TH
-st :: LitS -> Q Exp
 
--- | Type-safe Sized constructor macros for string literals.
---   
---   Example:
+-- | Type-safe constructor for fixed-length string literals: Sized a l l
 --   
 --   <pre>
---   $(sz "Foobar")
+--   &gt;&gt;&gt; $(st "Foobar")
+--   "Foobar"
 --   </pre>
 --   
---   compiles to
+--   <pre>
+--   &gt;&gt;&gt; stFoo = $(st "Foobar")
+--   
+--   &gt;&gt;&gt; :type stFoo
+--   stFoo :: (IsString a, IsSizedText a) =&gt; Sized a 6 6
+--   </pre>
 --   
 --   <pre>
---   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 0 6
+--   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; st "Foobar"
+--   Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                               Data.SizedText.Class.IsSizedText a_0) =&gt;
+--                                                 Data.SizedText.Class.Sized a_0 6 6
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :t st "Foobar"
+--   st "Foobar" :: Q Exp
+--   </pre>
+--   
+--   where 6 is the string length obtained at compile time.
+st :: LitS -> Q Exp
+
+-- | Type-safe constructor for bounded-length string literals: Sized a 0 l
+--   
+--   <pre>
+--   &gt;&gt;&gt; $(sz "Foobar")
+--   "Foobar"
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; szFoo = $(sz "Foobar")
+--   
+--   &gt;&gt;&gt; :type szFoo
+--   szFoo :: (IsString a, IsSizedText a) =&gt; Sized a 0 6
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; sz "Foobar"
+--   Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                               Data.SizedText.Class.IsSizedText a_0) =&gt;
+--                                                 Data.SizedText.Class.Sized a_0 0 6
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :t sz "Foobar"
+--   sz "Foobar" :: Q Exp
 --   </pre>
 --   
 --   where 6 is the string length obtained at compile time.
@@ -129,7 +169,27 @@ sz :: LitS -> Q Exp
 -- | Construct &gt; unsafeCreate <a>Foobar</a> :: forall a. (IsString a,
 --   IsSizedText a) =&gt; typef a l u where l and u are the type-level
 --   KnownNat versions of the bounds of s
-unsafeCreateExp :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
+--   
+--   <pre>
+--   &gt;&gt;&gt; at &lt;- runQ $ newName "a"
+--   
+--   &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedSizedType at (typeFromInt 0) (typeFromInt 4) "Boo!"
+--   Data.SizedText.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.String.IsString a_0,
+--                                                             Data.SizedText.Class.IsSizedText a_0) =&gt;
+--                                               Data.SizedText.Class.Sized a_0 0 4
+--   </pre>
+unsafeCreateExp :: (Name -> Type -> Type -> Type) -> Name -> Type -> Type -> String -> Exp
+
+-- | Transform a data-level Int to a Type value
+--   
+--   <pre>
+--   &gt;&gt;&gt; typeFromInt 3
+--   LitT (NumTyLit 3)
+--   
+--   &gt;&gt;&gt; ppr $ typeFromInt 3
+--   3
+--   </pre>
+typeFromInt :: Int -> Type
 instance Data.String.IsString Data.SizedText.TH.LitS
 
 
@@ -155,18 +215,30 @@ createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a ->
 --   String 12 20 "###foobarbaz"
 createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
--- | Type-safe Sized constructor macros for string literals.
---   
---   Example:
+-- | Type-safe constructor for bounded-length string literals: Sized a 0 l
 --   
 --   <pre>
---   $(sz "Foobar")
+--   &gt;&gt;&gt; $(sz "Foobar")
+--   "Foobar"
 --   </pre>
 --   
---   compiles to
+--   <pre>
+--   &gt;&gt;&gt; szFoo = $(sz "Foobar")
+--   
+--   &gt;&gt;&gt; :type szFoo
+--   szFoo :: (IsString a, IsSizedText a) =&gt; Sized a 0 6
+--   </pre>
 --   
 --   <pre>
---   unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) =&gt; Sized a 0 6
+--   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; sz "Foobar"
+--   Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                               Data.SizedText.Class.IsSizedText a_0) =&gt;
+--                                                 Data.SizedText.Class.Sized a_0 0 6
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :t sz "Foobar"
+--   sz "Foobar" :: Q Exp
 --   </pre>
 --   
 --   where 6 is the string length obtained at compile time.
@@ -199,8 +271,6 @@ replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> 
 -- | Append two C.Sizeds together.
 --   
 --   <pre>
---   &gt;&gt;&gt; :set -Wno-type-defaults
---   
 --   &gt;&gt;&gt; :type append $(sz "foo") $(st "bear")
 --   append $(sz "foo") $(st "bear")
 --     :: (C.IsSizedText a, IsString a) =&gt; C.Sized a 4 7

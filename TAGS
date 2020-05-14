@@ -595,13 +595,15 @@ instance forall forall a l u- (IsString a, IsSizedText a, KnownNat l, KnownNat 
   where fromString fromString271,272
 type Static Static278,279
 
-./src/Data/SizedText/TH.hs,159
+./src/Data/SizedText/TH.hs,258
 module Data.SizedText.THData.SizedText.TH9,10
-newtype LitS LitS25,26
-sz sz40,41
-st st54,55
-unsafeCreateExp unsafeCreateExp64,65
-uqType uqType80,81
+newtype LitS LitS34,35
+sb sb50,51
+sz sz76,77
+st st99,100
+typeFromInt typeFromInt108,109
+unsafeCreateExp unsafeCreateExp120,121
+universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
 ./src/Data/SizedText.hs,334
 module Data.SizedTextData.SizedText27,28

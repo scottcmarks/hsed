@@ -11,6 +11,7 @@ module Data.SizedText.TH
   ( st
   , sz
   , unsafeCreateExp
+  , typeFromInt
   ) where
 
 import           Prelude
@@ -21,48 +22,109 @@ import           Data.String
 
 import           Language.Haskell.TH
 
+
+-- $setup
+-- >>> :set -XDataKinds
+-- >>> :set -XTemplateHaskell
+-- >>> :set -XOverloadedStrings
+-- >>> :set -Wno-type-defaults
+
+
 -- | A type with IsString instance to allow string literals in 'sz'
 -- argument without quoting.
 newtype LitS =
   LitS String
   deriving (IsString)
 
--- | Type-safe Sized constructor macros for string literals.
+-- | Type-safe constructor for bounded-length string literals: Sized a l u
+-- Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                             Data.SizedText.Class.IsSizedText a_0) =>
+--                                               Data.SizedText.Class.Sized a_0 3 6
 --
--- Example:
+-- >>> runQ $ ppr <$> sb 3 6 "Foobar"
+-- Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                             Data.SizedText.Class.IsSizedText a_0) =>
+--                                               Data.SizedText.Class.Sized a_0 3 6
 --
--- > $(sz "Foobar")
+-- >>> :t sb 3 6 "Foobar"
+-- sb 3 6 "Foobar" :: Q Exp
+sb :: Int -> Int -> String -> Q Exp
+sb l u s = do
+  ta <- newName "a"
+  let tl = typeFromInt l
+      tu = typeFromInt u
+  return $ unsafeCreateExp universallyQuantifiedSizedType ta tl tu s
+
+
+-- | Type-safe constructor for bounded-length string literals: Sized a 0 l
 --
--- compiles to
+-- >>> $(sz "Foobar")
+-- "Foobar"
 --
--- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => Sized a 0 6
+-- >>> szFoo = $(sz "Foobar")
+-- >>> :type szFoo
+-- szFoo :: (IsString a, IsSizedText a) => Sized a 0 6
+--
+-- >>> runQ $ ppr <$> sz "Foobar"
+-- Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                             Data.SizedText.Class.IsSizedText a_0) =>
+--                                               Data.SizedText.Class.Sized a_0 0 6
+--
+-- >>> :t sz "Foobar"
+-- sz "Foobar" :: Q Exp
 --
 -- where 6 is the string length obtained at compile time.
 sz :: LitS -> Q Exp
-sz (LitS s) = do
-  at <- newName "a"
-  let len = P.length s
-  return $ unsafeCreateExp uqType at 0 len s
+sz (LitS s) = sb 0 l s  where l = P.length s
 
 
--- > $(st "Foobar")
+-- | Type-safe constructor for fixed-length string literals: Sized a l l
 --
--- compiles to
+-- >>> $(st "Foobar")
+-- "Foobar"
 --
--- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => Sized a 6 6
+-- >>> stFoo = $(st "Foobar")
+-- >>> :type stFoo
+-- stFoo :: (IsString a, IsSizedText a) => Sized a 6 6
 --
-
+-- >>> runQ $ ppr <$> st "Foobar"
+-- Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                             Data.SizedText.Class.IsSizedText a_0) =>
+--                                               Data.SizedText.Class.Sized a_0 6 6
+--
+-- >>> :t st "Foobar"
+-- st "Foobar" :: Q Exp
+--
+-- where 6 is the string length obtained at compile time.
+--
 st :: LitS -> Q Exp
-st (LitS s) = do
-  at <- newName "a"
-  let len = P.length s
-  return $ unsafeCreateExp uqType at len len s
+st (LitS s) = sb l l s  where l = P.length s
 
+-- | Transform a data-level Int to a Type value
+--
+-- >>> typeFromInt 3
+-- LitT (NumTyLit 3)
+-- >>> ppr $ typeFromInt 3
+-- 3
+typeFromInt :: Int -> Type
+typeFromInt = LitT . NumTyLit . fromIntegral
 
 -- | Construct
 -- > unsafeCreate "Foobar" :: forall a. (IsString a, IsSizedText a) => typef a l u
 --   where l and u are the type-level KnownNat versions of the bounds of s
-unsafeCreateExp :: (Name -> Int -> Int -> Type) -> Name -> Int -> Int -> String -> Exp
+--
+-- >>> at <- runQ $ newName "a"
+-- >>> ppr $ unsafeCreateExp universallyQuantifiedSizedType at (typeFromInt 0) (typeFromInt 4) "Boo!"
+-- Data.SizedText.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.String.IsString a_0,
+--                                                           Data.SizedText.Class.IsSizedText a_0) =>
+--                                             Data.SizedText.Class.Sized a_0 0 4
+unsafeCreateExp ::
+    (Name -> Type -> Type -> Type) -- type expression constructor
+ -> Name   -- name of the wrapped type, e.g. ByteString
+ -> Type   -- type-level value for the min length
+ -> Type   -- type-level value for the max lengthName
+ -> String -- literal IsString value to be wrapped
+ -> Exp    -- type express  unsafeCreate <s> :: forall a ...
 unsafeCreateExp typef at l u s =
     SigE
       (AppE (VarE 'unsafeCreate) (LitE $ StringL s))
@@ -78,10 +140,13 @@ unsafeCreateExp typef at l u s =
 
 -- | Create the final expression for Sized a l u
 --
-uqType ::
+-- >>> universallyQuantifiedSizedType (mkName "a") (typeFromInt 3) (typeFromInt 6)
+-- AppT (AppT (AppT (ConT Data.SizedText.Class.Sized) (VarT a)) (LitT (NumTyLit 3))) (LitT (NumTyLit 6))
+-- >>> ppr $ universallyQuantifiedSizedType (mkName "a") (typeFromInt 3) (typeFromInt 6)
+-- Data.SizedText.Class.Sized a 3 6
+universallyQuantifiedSizedType ::
     Name -- name of the wrapped type, e.g. ByteString
- -> Int  -- type-level value for the min length
- -> Int  -- type-level value for the max length
- -> Type -- type expression Sized l u
-uqType a l u = AppT (AppT (AppT (ConT ''Sized) (VarT a)) (wx l)) (wx u)
-  where wx = LitT . NumTyLit . fromIntegral
+ -> Type  -- type-level value for the min length
+ -> Type  -- type-level value for the max length
+ -> Type  -- type expression Sized l u
+universallyQuantifiedSizedType a l u = AppT (AppT (AppT (ConT ''Sized) (VarT a)) l) u

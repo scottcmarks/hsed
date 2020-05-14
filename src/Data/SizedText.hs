@@ -65,6 +65,7 @@ import           Data.SizedText.TH
 -- >>> :set -XTemplateHaskell
 -- >>> :set -XOverloadedStrings
 -- >>> :set -XTypeApplications
+-- >>> :set -Wno-type-defaults
 -- >>> import           Data.Proxy
 -- >>> import           Data.Char(toUpper)
 -- >>> import           Data.String          (IsString (..))
@@ -72,7 +73,6 @@ import           Data.SizedText.TH
 
 -- | Append two C.Sizeds together.
 --
--- >>> :set -Wno-type-defaults
 -- >>> :type append $(sz "foo") $(st "bear")
 -- append $(sz "foo") $(st "bear")
 --   :: (C.IsSizedText a, IsString a) => C.Sized a 4 7

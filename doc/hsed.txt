@@ -59,6 +59,33 @@ type Static a (l :: Nat) = Sized a l l
 -- | Extract type-level Nat as a value-level Int &gt;&gt;&gt; fromNat
 --   (Proxy @5) 5
 fromNat :: KnownNat n => proxy n -> Int
+
+-- | Elements on the left are preferred. &gt;&gt;&gt; createLeft ' '
+--   "foobarbaz" :: Sized String 0 6 "foobar" &gt;&gt;&gt; createLeft '@'
+--   "foobarbaz" :: Sized String 12 20 "foobarbaz@@@"
+createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
+
+-- | Just like <a>createLeft</a>, except that elements on the right are
+--   preferred. &gt;&gt;&gt; createRight '@' "foobarbaz" :: Sized String 0
+--   6 "barbaz" &gt;&gt;&gt; createRight <tt>#</tt> "foobarbaz" :: Sized
+--   String 12 20 "###foobarbaz"
+createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
+
+-- | Attempt to safely create a Sized if it matches target length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; create "foobar" :: Maybe (Sized String 6 10)
+--   Just "foobar"
+--   
+--   &gt;&gt;&gt; create "barbaz" :: Maybe (Sized String 0 4)
+--   Nothing
+--   </pre>
+--   
+--   This is safer than <a>unsafeCreate</a> and unlike with
+--   <a>createLeft</a> <a>createRight</a> the source value is left
+--   unchanged. However, this implies a further run-time check for Nothing
+--   values.
+create :: forall a (l :: Nat) (u :: Nat). (IsSizedText a, KnownNat l, KnownNat u) => a -> Maybe (Sized a l u)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedText.Class.Sized [a] l u)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedText.Class.Sized [a] l u)
 instance GHC.Classes.Ord (Data.SizedText.Class.Sized Data.Text.Internal.Text l u)
@@ -117,14 +144,14 @@ instance Data.String.IsString Data.SizedText.TH.LitS
 module Data.SizedText
 
 -- | Elements on the left are preferred. &gt;&gt;&gt; createLeft ' '
---   "foobarbaz" :: C.Sized String 0 6 "foobar" &gt;&gt;&gt; createLeft '@'
---   "foobarbaz" :: C.Sized String 12 20 "foobarbaz@@@"
+--   "foobarbaz" :: Sized String 0 6 "foobar" &gt;&gt;&gt; createLeft '@'
+--   "foobarbaz" :: Sized String 12 20 "foobarbaz@@@"
 createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
 -- | Just like <a>createLeft</a>, except that elements on the right are
---   preferred. &gt;&gt;&gt; createRight '@' "foobarbaz" :: C.Sized String
---   0 6 "barbaz" &gt;&gt;&gt; createRight <tt>#</tt> "foobarbaz" ::
---   C.Sized String 12 20 "###foobarbaz"
+--   preferred. &gt;&gt;&gt; createRight '@' "foobarbaz" :: Sized String 0
+--   6 "barbaz" &gt;&gt;&gt; createRight <tt>#</tt> "foobarbaz" :: Sized
+--   String 12 20 "###foobarbaz"
 createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
 -- | Type-safe Sized constructor macros for string literals.
@@ -144,13 +171,13 @@ createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -
 --   where 6 is the string length obtained at compile time.
 sz :: LitS -> Q Exp
 
--- | Attempt to safely create a C.Sized if it matches target length.
+-- | Attempt to safely create a Sized if it matches target length.
 --   
 --   <pre>
---   &gt;&gt;&gt; create "foobar" :: Maybe (C.Sized String 6 10)
+--   &gt;&gt;&gt; create "foobar" :: Maybe (Sized String 6 10)
 --   Just "foobar"
 --   
---   &gt;&gt;&gt; create "barbaz" :: Maybe (C.Sized String 0 4)
+--   &gt;&gt;&gt; create "barbaz" :: Maybe (Sized String 0 4)
 --   Nothing
 --   </pre>
 --   

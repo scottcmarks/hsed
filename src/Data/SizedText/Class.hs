@@ -1,8 +1,10 @@
-{-# LANGUAGE CPP               #-}
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeApplications  #-}
-{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE CPP                 #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleInstances   #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
 
 {-|
 
@@ -15,12 +17,18 @@ module Data.SizedText.Class
        ( IsSizedText(..)
        , Static
        , fromNat
+       , createLeft
+       , createRight
+       , create
        )
 
 where
 
-import           Prelude
+import           Prelude               hiding (drop, length, replicate, take)
 import qualified Prelude               as P
+
+import           Data.Proxy
+import           Data.String           (IsString (..))
 
 #define WITH_BS
 #ifdef WITH_BS
@@ -46,11 +54,10 @@ import           GHC.TypeLits
 #endif
 
 -- $setup
--- >>> -- :set -XDataKinds
--- >>> -- :set -XTemplateHaskell
--- >>> -- :set -XOverloadedStrings
+-- >>> :set -XDataKinds
+-- >>> :set -XTemplateHaskell
+-- >>> :set -XOverloadedStrings
 -- >>> :set -XTypeApplications
--- >>> import Data.Char (toUpper)
 -- >>> import           Data.Proxy
 
 
@@ -191,6 +198,81 @@ instance IsSizedText (V.Vector a) where
   take = V.take
   drop = V.drop
 #endif
+
+
+
+
+-- | Elements on the left are preferred.
+-- >>> createLeft ' ' "foobarbaz" :: Sized String 0 6
+-- "foobar"
+-- >>> createLeft '@' "foobarbaz" :: Sized String 12 20
+-- "foobarbaz@@@"
+createLeft ::
+     forall a l u. (IsSizedText a, KnownNat l, KnownNat u)
+  => Elem a
+  -> a
+  -> Sized a l u
+createLeft e s =
+  unsafeCreate $ take ut $ append s $ replicate (lt - length s) e
+  where
+    lt = fromNat (Proxy @l)
+    ut = fromNat (Proxy @u)
+
+-- | Just like 'createLeft', except that elements on the right are preferred.
+-- >>> createRight '@' "foobarbaz" :: Sized String 0 6
+-- "barbaz"
+-- >>> createRight '#' "foobarbaz" :: Sized String 12 20
+-- "###foobarbaz"
+createRight ::
+     forall a l u. (IsSizedText a, KnownNat l, KnownNat u)
+  => Elem a
+  -> a
+  -> Sized a l u
+createRight e s =
+  unsafeCreate $ drop (len - ut) $ append (replicate (lt - len) e) s
+  where
+    len = length s
+    lt = fromNat (Proxy @l)
+    ut = fromNat (Proxy @u)
+
+-- | Attempt to safely create a Sized if it matches target length.
+--
+-- >>> create "foobar" :: Maybe (Sized String 6 10)
+-- Just "foobar"
+-- >>> create "barbaz" :: Maybe (Sized String 0 4)
+-- Nothing
+--
+-- This is safer than 'unsafeCreate' and unlike with 'createLeft'
+-- 'createRight' the source value is left unchanged. However, this
+-- implies a further run-time check for Nothing values.
+create ::
+     forall a (l :: Nat) (u :: Nat). (IsSizedText a, KnownNat l, KnownNat u)
+  => a
+  -> Maybe (Sized a l u)
+create s =
+  if lt <= len && len <= ut
+    then Just $ unsafeCreate s
+    else Nothing
+  where
+    len = length s
+    lt = fromNat (Proxy @l)
+    ut = fromNat (Proxy @u)
+
+
+
+
+
+
+
+
+
+
+
+instance forall a l u. (IsString a, IsSizedText a, KnownNat l, KnownNat u) => IsString(Sized a l u)
+  where fromString s =  maybe (error "error") id  (create (fromString s))
+
+
+
 
 
 -- | Class of types which can be assigned a type-level fixed length.

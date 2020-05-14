@@ -511,7 +511,7 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/SizedText/Class.hs,2435
+./src/Data/SizedText/Class.hs,2591
 module Data.SizedText.ClassData.SizedText.Class15,16
 fromNat fromNat66,67
 class IsSizedText IsSizedText70,71
@@ -588,10 +588,12 @@ instance IsSizedText IsSizedText (V-Vector a)184,185
   map map196,197
   take take197,198
   drop drop198,199
-createLeft createLeft217,218
-createRight createRight233,234
-create create255,256
-type Static Static280,281
+createLeft createLeft209,210
+createRight createRight225,226
+create create247,248
+instance forall forall a l u- (IsString a, IsSizedText a, KnownNat l, KnownNat u) => IsString (Sized a l u)270,271
+  where fromString fromString271,272
+type Static Static278,279
 
 ./src/Data/SizedText/TH.hs,159
 module Data.SizedText.THData.SizedText.TH9,10
@@ -601,23 +603,21 @@ st st54,55
 unsafeCreateExp unsafeCreateExp64,65
 uqType uqType80,81
 
-./src/Data/SizedText.hs,493
+./src/Data/SizedText.hs,334
 module Data.SizedTextData.SizedText27,28
-append append76,77
-replicate replicate87,88
-map map99,100
-take take107,108
-take take118,119
-drop drop128,129
-drop drop139,140
-bounds bounds145,146
-length length155,156
-padLeft padLeft163,164
-padLeft padLeft177,178
-padRight padRight180,181
-padRight padRight194,195
-instance forall forall a l u- (IsString a, C-IsSizedText a, KnownNat l, KnownNat u) => IsString (C-Sized a l u)199,200
-  where fromString fromString200,201
+append append85,86
+replicate replicate96,97
+map map108,109
+take take116,117
+take take127,128
+drop drop137,138
+drop drop148,149
+bounds bounds154,155
+length length164,165
+padLeft padLeft172,173
+padLeft padLeft186,187
+padRight padRight189,190
+padRight padRight203,204
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

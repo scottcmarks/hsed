@@ -2,6 +2,29 @@ digraph G {
 	graph [ratio=fill,
 		size="6,4"
 	];
+	subgraph cluster_0 {
+		graph [color="#0000000F",
+			label=Data,
+			style=filled
+		];
+		subgraph cluster_1 {
+			graph [color="#0000000F",
+				label=SizedText,
+				style=filled
+			];
+			u0			 [fillcolor="#ffffbb",
+				label=SizedText,
+				style="filled,bold"];
+			u1			 [fillcolor="#bbbbff",
+				label=Class,
+				penwidth=0,
+				style=filled];
+			u2			 [fillcolor="#bbbbff",
+				label=TH,
+				penwidth=0,
+				style=filled];
+		}
+	}
 	subgraph cluster_2 {
 		graph [color="#0000000F",
 			label=Extras,
@@ -148,29 +171,6 @@ digraph G {
 					penwidth=0,
 					style=filled];
 			}
-		}
-	}
-	subgraph cluster_0 {
-		graph [color="#0000000F",
-			label=Data,
-			style=filled
-		];
-		subgraph cluster_1 {
-			graph [color="#0000000F",
-				label=SizedText,
-				style=filled
-			];
-			u0			 [fillcolor="#ffffbb",
-				label=SizedText,
-				style="filled,bold"];
-			u1			 [fillcolor="#bbbbff",
-				label=Class,
-				penwidth=0,
-				style=filled];
-			u2			 [fillcolor="#bbbbff",
-				label=TH,
-				penwidth=0,
-				style=filled];
 		}
 	}
 	u27	 [fillcolor="#bbffbb",

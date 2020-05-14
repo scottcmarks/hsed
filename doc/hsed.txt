@@ -102,6 +102,7 @@ instance Data.SizedText.Class.IsSizedText Data.Text.Internal.Text
 instance Data.SizedText.Class.IsSizedText Data.ByteString.Internal.ByteString
 instance Data.SizedText.Class.IsSizedText Data.ByteString.Short.Internal.ShortByteString
 instance Data.SizedText.Class.IsSizedText (Data.Vector.Vector a)
+instance (Data.String.IsString a, Data.SizedText.Class.IsSizedText a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.String.IsString (Data.SizedText.Class.Sized a l u)
 
 
 -- | Template Haskell helpers for SizedText.
@@ -290,7 +291,6 @@ unsafeCreate :: IsSizedText a => a -> Sized a l u
 -- | Forget type-level minimum and maximum length, obtaining the underlying
 --   value.
 unwrap :: IsSizedText a => Sized a l u -> a
-instance (Data.String.IsString a, Data.SizedText.Class.IsSizedText a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.String.IsString (Data.SizedText.Class.Sized a l u)
 
 
 -- | Git info appended to a version string

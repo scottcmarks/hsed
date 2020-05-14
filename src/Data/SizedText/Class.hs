@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP               #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeApplications  #-}
 {-# LANGUAGE TypeFamilies      #-}
 
 {-|
@@ -13,6 +14,7 @@ type.
 module Data.SizedText.Class
        ( IsSizedText(..)
        , Static
+       , fromNat
        )
 
 where
@@ -43,6 +45,20 @@ import           GHC.TypeLits          hiding (Text)
 import           GHC.TypeLits
 #endif
 
+-- $setup
+-- >>> -- :set -XDataKinds
+-- >>> -- :set -XTemplateHaskell
+-- >>> -- :set -XOverloadedStrings
+-- >>> :set -XTypeApplications
+-- >>> import Data.Char (toUpper)
+-- >>> import           Data.Proxy
+
+
+-- | Extract type-level Nat as a value-level Int
+-- >>> fromNat (Proxy @5)
+-- 5
+fromNat :: (KnownNat n) => proxy n -> Int
+fromNat = fromIntegral . natVal
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
 class IsSizedText a where

@@ -55,6 +55,7 @@ import           Prelude              hiding (drop, length, map, replicate,
                                        take)
 
 import           Data.Proxy
+import           Data.SizedText.Class (fromNat)
 import qualified Data.SizedText.Class as C (Elem, IsSizedText (..), Sized)
 import           Data.SizedText.TH
 import           Data.String          (IsString (..))
@@ -66,12 +67,6 @@ import           Data.String          (IsString (..))
 -- >>> :set -XOverloadedStrings
 -- >>> :set -XTypeApplications
 -- >>> import Data.Char (toUpper)
-
--- | Extract type-level Nat as a value-level Int
--- >>> fromNat (Proxy @5)
--- 5
-fromNat :: (KnownNat n) => proxy n -> Int
-fromNat = fromIntegral . natVal
 
 
 -- | Elements on the left are preferred.
@@ -132,6 +127,7 @@ create s =
 
 -- | Append two C.Sizeds together.
 --
+-- >>> :set -Wno-type-defaults
 -- >>> :type append $(sz "foo") $(st "bear")
 -- append $(sz "foo") $(st "bear")
 --   :: (C.IsSizedText a, IsString a) => C.Sized a 4 7

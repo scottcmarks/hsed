@@ -55,6 +55,10 @@ drop :: IsSizedText a => Int -> a -> a
 
 -- | Class of types which can be assigned a type-level fixed length.
 type Static a (l :: Nat) = Sized a l l
+
+-- | Extract type-level Nat as a value-level Int &gt;&gt;&gt; fromNat
+--   (Proxy @5) 5
+fromNat :: KnownNat n => proxy n -> Int
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.SizedText.Class.Sized [a] l u)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.SizedText.Class.Sized [a] l u)
 instance GHC.Classes.Ord (Data.SizedText.Class.Sized Data.Text.Internal.Text l u)
@@ -167,6 +171,8 @@ replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> 
 -- | Append two C.Sizeds together.
 --   
 --   <pre>
+--   &gt;&gt;&gt; :set -Wno-type-defaults
+--   
 --   &gt;&gt;&gt; :type append $(sz "foo") $(st "bear")
 --   append $(sz "foo") $(st "bear")
 --     :: (C.IsSizedText a, IsString a) =&gt; C.Sized a 4 7

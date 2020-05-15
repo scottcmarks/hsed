@@ -32,7 +32,7 @@ import           Data.ByteString.Short      (ShortByteString, fromShort, toShort
 import           Data.Foldable              (concatMap)
 import           Data.Functor               ((<$>))
 import           Data.List                  (elemIndex)
-import           Data.StaticText            (create, Static, unwrap)
+import           Data.SizedText             (create, Static, unwrap)
 import           Data.String                (IsString(..))
 
 import           GHC.Base                   (String, fmap, pure,

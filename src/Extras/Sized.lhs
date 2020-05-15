@@ -1,3 +1,15 @@
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE DerivingVia #-}
+{-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 \documentstyle{article}
 \begin{document}
 \chapter{Bytes}
@@ -21,12 +33,18 @@ Datatypes for Tokens.
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE ExplicitNamespaces    #-}
 {-# LANGUAGE TypeApplications      #-}
-{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DerivingStrategies    #-}
+{-# LANGUAGE StandaloneDeriving    #-}
+
+
+
 
 module Extras.Sized
   -- (
@@ -46,7 +64,7 @@ import qualified Data.ByteString.Short as S (ShortByteString, fromShort, length,
 import qualified Data.Foldable         as F (length)
 import           Data.Functor               ((<$>))
 import           Data.Proxy                 (Proxy(..))
-import qualified Data.StaticText       as T (Static, append, create, drop, take, unwrap)
+import qualified Data.SizedText        as T (Static, append, create, drop, take, unwrap)
 import           Data.String                (IsString(..))
 
 import           GHC.Base                   (undefined, error, mconcat, (.), ($), ($!))
@@ -71,13 +89,14 @@ import           Extras.Integral            (byteStringToNatural, naturalToByteS
 data Fixed_bytes (n :: Nat) = Fixed_bytes !(T.Static S.ShortByteString n)
     deriving (Eq, Ord)
 
+
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 take (Fixed_bytes sbs) = (Fixed_bytes (T.take sbs))
 
 drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 drop (Fixed_bytes sbs) = (Fixed_bytes (T.drop sbs))
 
-append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
+append :: (KnownNat m, KnownNat n) => Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
 append (Fixed_bytes sbsl) (Fixed_bytes sbsr) = (Fixed_bytes (T.append sbsl sbsr))
 
 
@@ -94,7 +113,7 @@ instance (KnownNat n) => Show (Fixed_bytes n) where
           . showString (show (natVal (Proxy @n)))
          where app_prec = 10
 
--- | ISString instances, allowing string literal denotations
+-- | IsString instances, allowing string literal denotations
 --
 instance (KnownNat n) => IsString (Fixed_bytes n) where
     fromString s = Fixed_bytes $! case T.create (fromString s) of

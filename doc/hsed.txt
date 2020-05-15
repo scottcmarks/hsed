@@ -417,6 +417,9 @@ unsafeCreate :: IsSizedText a => a -> Sized a l u
 --   value.
 unwrap :: IsSizedText a => Sized a l u -> a
 
+-- | Class of types which can be assigned a type-level fixed length.
+type Static a (l :: Nat) = Sized a l l
+
 
 -- | Git info appended to a version string
 module Extras.GitVersion
@@ -477,7 +480,7 @@ instance Extras.Hex.HasHex [GHC.Word.Word8]
 instance Extras.Hex.HasHex Data.ByteString.Internal.ByteString
 instance Extras.Hex.HasHex GHC.Base.String
 instance Extras.Hex.HasHex Data.ByteString.Short.Internal.ShortByteString
-instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
+instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Data.SizedText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
 
 
 -- | Datatypes for Tokens.
@@ -486,7 +489,7 @@ data Fixed_bytes (n :: Nat)
 Fixed_bytes :: !Static ShortByteString n -> Fixed_bytes (n :: Nat)
 take :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
 drop :: (KnownNat m, KnownNat n, n <= m) => Fixed_bytes m -> Fixed_bytes n
-append :: Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
+append :: (KnownNat m, KnownNat n) => Fixed_bytes m -> Fixed_bytes n -> Fixed_bytes (m + n)
 
 -- | HasFixed_bytes class and instances for conversion to/from Fixed_bytes
 --   n
@@ -500,7 +503,7 @@ funpack :: KnownNat n => Fixed_bytes n -> ByteString
 instance GHC.Classes.Ord (Extras.Sized.Fixed_bytes n)
 instance GHC.Classes.Eq (Extras.Sized.Fixed_bytes n)
 instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n GHC.Natural.Natural
-instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n (Data.StaticText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
+instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n (Data.SizedText.Class.Static Data.ByteString.Short.Internal.ShortByteString n)
 instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n Data.ByteString.Short.Internal.ShortByteString
 instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n Data.ByteString.Internal.ByteString
 instance GHC.TypeNats.KnownNat n => Extras.Sized.HasFixed_bytes n [GHC.Word.Word8]

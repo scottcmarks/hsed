@@ -50,6 +50,9 @@ module Data.SizedText
     -- * C.IsSizedText class
   , C.Sized
   , C.IsSizedText(Elem, unsafeCreate, unwrap)
+
+    -- * C.Static class C.Static a l == C.Sized a l l
+  , C.Static
   ) where
 
 import           GHC.TypeLits
@@ -59,7 +62,7 @@ import           Prelude              hiding (drop, length, map, replicate,
 import           Data.Proxy
 import           Data.SizedText.Class (Sized, create, createLeft, createRight,
                                        fromNat)
-import qualified Data.SizedText.Class as C (Elem, IsSizedText (..))
+import qualified Data.SizedText.Class as C (Elem, IsSizedText (..), Static)
 import           Data.SizedText.TH
 
 

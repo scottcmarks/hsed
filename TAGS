@@ -607,19 +607,19 @@ universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
 ./src/Data/SizedText.hs,334
 module Data.SizedTextData.SizedText27,28
-append append85,86
-replicate replicate96,97
-map map108,109
-take take116,117
-take take127,128
-drop drop137,138
-drop drop148,149
-bounds bounds154,155
-length length164,165
-padLeft padLeft172,173
-padLeft padLeft186,187
-padRight padRight189,190
-padRight padRight203,204
+append append87,88
+replicate replicate98,99
+map map110,111
+take take118,119
+take take129,130
+drop drop139,140
+drop drop150,151
+bounds bounds156,157
+length length166,167
+padLeft padLeft174,175
+padLeft padLeft188,189
+padRight padRight191,192
+padRight padRight205,206
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

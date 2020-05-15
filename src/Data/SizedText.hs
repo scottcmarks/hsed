@@ -32,9 +32,10 @@ module Data.SizedText
     -- | See also 'C.unsafeCreate'
     createLeft
   , createRight
-  , sz
   , create
   , replicate
+  , st
+  , sz
 
     -- * Working with sized texts
   , append
@@ -45,6 +46,7 @@ module Data.SizedText
   , padRight
   , bounds
   , length
+
     -- * C.IsSizedText class
   , C.Sized
   , C.IsSizedText(Elem, unsafeCreate, unwrap)

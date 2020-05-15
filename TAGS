@@ -605,21 +605,21 @@ typeFromInt typeFromInt108,109
 unsafeCreateExp unsafeCreateExp120,121
 universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
-./src/Data/SizedText.hs,334
+./src/Data/SizedText.hs,336
 module Data.SizedTextData.SizedText27,28
-append append87,88
-replicate replicate98,99
-map map110,111
-take take118,119
-take take129,130
-drop drop139,140
-drop drop150,151
-bounds bounds156,157
-length length166,167
-padLeft padLeft174,175
-padLeft padLeft188,189
-padRight padRight191,192
-padRight padRight205,206
+append append91,92
+replicate replicate102,103
+map map114,115
+take take140,141
+take take151,152
+drop drop161,162
+drop drop172,173
+bounds bounds178,179
+length length188,189
+padLeft padLeft196,197
+padLeft padLeft210,211
+padRight padRight213,214
+padRight padRight227,228
 
 ./src/Extras/GitVersion.hs,139
 module Extras.GitVersion Extras.GitVersion15,16

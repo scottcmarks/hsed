@@ -40,7 +40,7 @@ import Data.Char (toUpper)
 
 :load src/Data/SizedText/TH.hs
 :load src/Data/SizedText.hs
-import Data.ByteString hiding(take,length,putStrLn)
+import Data.ByteString (ByteString)
 
 :i take
 :t take $(st "Hello")

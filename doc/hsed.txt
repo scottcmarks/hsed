@@ -215,6 +215,59 @@ createLeft :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a ->
 --   String 12 20 "###foobarbaz"
 createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> a -> Sized a l u
 
+-- | Attempt to safely create a Sized if it matches target length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; create "foobar" :: Maybe (Sized String 6 10)
+--   Just "foobar"
+--   
+--   &gt;&gt;&gt; create "barbaz" :: Maybe (Sized String 0 4)
+--   Nothing
+--   </pre>
+--   
+--   This is safer than <a>unsafeCreate</a> and unlike with
+--   <a>createLeft</a> <a>createRight</a> the source value is left
+--   unchanged. However, this implies a further run-time check for Nothing
+--   values.
+create :: forall a (l :: Nat) (u :: Nat). (IsSizedText a, KnownNat l, KnownNat u) => a -> Maybe (Sized a l u)
+
+-- | Construct a new Sized of maximum length from a basic element.
+--   
+--   <pre>
+--   &gt;&gt;&gt; replicate '=' :: Sized String 5 10
+--   "=========="
+--   </pre>
+replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> Sized a l u
+
+-- | Type-safe constructor for fixed-length string literals: Sized a l l
+--   
+--   <pre>
+--   &gt;&gt;&gt; $(st "Foobar")
+--   "Foobar"
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; stFoo = $(st "Foobar")
+--   
+--   &gt;&gt;&gt; :type stFoo
+--   stFoo :: (IsString a, IsSizedText a) =&gt; Sized a 6 6
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; st "Foobar"
+--   Data.SizedText.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
+--                                                               Data.SizedText.Class.IsSizedText a_0) =&gt;
+--                                                 Data.SizedText.Class.Sized a_0 6 6
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :t st "Foobar"
+--   st "Foobar" :: Q Exp
+--   </pre>
+--   
+--   where 6 is the string length obtained at compile time.
+st :: LitS -> Q Exp
+
 -- | Type-safe constructor for bounded-length string literals: Sized a 0 l
 --   
 --   <pre>
@@ -244,78 +297,80 @@ createRight :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -
 --   where 6 is the string length obtained at compile time.
 sz :: LitS -> Q Exp
 
--- | Attempt to safely create a Sized if it matches target length.
---   
---   <pre>
---   &gt;&gt;&gt; create "foobar" :: Maybe (Sized String 6 10)
---   Just "foobar"
---   
---   &gt;&gt;&gt; create "barbaz" :: Maybe (Sized String 0 4)
---   Nothing
---   </pre>
---   
---   This is safer than <a>unsafeCreate</a> and unlike with
---   <a>createLeft</a> <a>createRight</a> the source value is left
---   unchanged. However, this implies a further run-time check for Nothing
---   values.
-create :: forall a (l :: Nat) (u :: Nat). (IsSizedText a, KnownNat l, KnownNat u) => a -> Maybe (Sized a l u)
-
--- | Construct a new C.Sized of maximum length from a basic element.
---   
---   <pre>
---   &gt;&gt;&gt; replicate '=' :: C.Sized String 5 10
---   "=========="
---   </pre>
-replicate :: forall a l u. (IsSizedText a, KnownNat l, KnownNat u) => Elem a -> Sized a l u
-
--- | Append two C.Sizeds together.
+-- | Append two Sizeds together. append $(sz "foo") $(st "bear") ::
+--   (C.IsSizedText a, IsString a) =&gt; Sized a 4 7
 --   
 --   <pre>
 --   &gt;&gt;&gt; :type append $(sz "foo") $(st "bear")
 --   append $(sz "foo") $(st "bear")
---     :: (C.IsSizedText a, IsString a) =&gt; C.Sized a 4 7
+--     :: (C.IsSizedText a, IsString a) =&gt; Sized a 4 7
 --   
 --   &gt;&gt;&gt; append $(sz "foo") $(st "bear")
 --   "foobear"
 --   
 --   &gt;&gt;&gt; :type append $(st "Hello, ") $(sz "world!")
 --   append $(st "Hello, ") $(sz "world!")
---     :: (C.IsSizedText a, IsString a) =&gt; C.Sized a 7 13
+--     :: (C.IsSizedText a, IsString a) =&gt; Sized a 7 13
 --   
 --   &gt;&gt;&gt; append $(st "Hello, ") $(sz "world!")
 --   "Hello, world!"
 --   </pre>
 append :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2) => Sized a l1 u1 -> Sized a l2 u2 -> Sized a (l1 + l2) (u1 + u2)
 
--- | Reduce C.Sized length, preferring elements on the left.
+-- | Reduce Sized length, preferring elements on the left.
 --   
 --   <pre>
---   &gt;&gt;&gt; take $(sz "Foobar") :: C.Sized String 0 3
+--   &gt;&gt;&gt; take $(sz "Foobar") :: Sized String 0 3
 --   "Foo"
+--   
+--   &gt;&gt;&gt; :t take $(st "Hello")
+--   take $(st "Hello")
+--     :: (C.IsSizedText a, KnownNat l2, KnownNat u2, IsString a,
+--         (l2 &lt;=? 5) ~ 'True) =&gt;
+--        Sized a l2 u2
+--   
+--   &gt;&gt;&gt; :t take $(st "Hello") :: Sized ByteString 4 32
+--   take $(st "Hello") :: Sized ByteString 4 32
+--     :: Sized ByteString 4 32
+--   
+--   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; length (take $(st "Hello") :: Sized ByteString 4 32)
+--   5
+--   
+--   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 4
+--   "Hell"
+--   
+--   &gt;&gt;&gt; take $(st "HelloHelloHelloHelloHelloHelloHello") :: Sized ByteString 4 32
+--   "HelloHelloHelloHelloHelloHelloHe"
 --   </pre>
 take :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
 
--- | Reduce C.Sized length, preferring elements on the right.
+-- | Reduce Sized length, preferring elements on the right.
 --   
 --   <pre>
---   &gt;&gt;&gt; drop $(st "Foobar") :: C.Sized String 2 2
+--   &gt;&gt;&gt; drop $(st "Foobar") :: Sized String 2 2
 --   "ar"
 --   
---   &gt;&gt;&gt; drop $(sz "Foobar") :: C.Sized String 0 2
+--   &gt;&gt;&gt; drop $(sz "Foobar") :: Sized String 0 2
 --   "ar"
 --   </pre>
 drop :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, l2 <= l1) => Sized a l1 u1 -> Sized a l2 u2
 
--- | Map a C.Sized to a C.Sized of the same length.
+-- | Map a Sized to a Sized of the same length.
 --   
 --   <pre>
---   &gt;&gt;&gt; map toUpper $(st "Hello") :: C.Sized String 5 5
+--   &gt;&gt;&gt; map toUpper $(st "Hello") :: Sized String 5 5
 --   "HELLO"
 --   </pre>
 map :: IsSizedText a => (Elem a -> Elem a) -> Sized a l u -> Sized a l u
 
--- | Fill a C.Sized with extra elements up to target length, padding
---   original elements to the left.
+-- | Fill a Sized with extra elements up to target length, padding original
+--   elements to the left.
 padLeft :: forall a l1 u1 l2 u2. (IsSizedText a, KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (u2 + u1), l2 <= l1, u1 <= u2) => Elem a -> Sized a l1 u1 -> Sized a l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.

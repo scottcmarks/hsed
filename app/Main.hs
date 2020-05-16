@@ -6,11 +6,11 @@ import           Options.Applicative.Simple
 import           RIO
 import           RIO.Process
 
-import           Extras.GitVersion          (gitVersion)
+import           GitHash.Extras.GitVersion          (gitVersion)
 import           Hsed.App
 import qualified Paths_hsed
-import           System.SED.Host.Run        as Host ()
-import           System.SED.TPer.Run        as TPer (run)
+import           System.SED.MCTP.Host.Run        as Host ()
+import           System.SED.MCTP.TPer.Run        as TPer (run)
 
 main :: IO ()
 main = do

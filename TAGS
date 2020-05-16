@@ -289,39 +289,39 @@ instance Monoid Monoid UIDRowDecs191,192
 
 ./src/System/SED/Common/Token.lhs,1162
 module System.SED.Common.TokenSystem.SED.Common.Token22,23
-data Token Token139,140
-    Unsigned Unsigned140,141
-  | Signed Signed141,142
-  | Bytes Bytes142,143
-  | ContinuedBytes ContinuedBytes143,144
-  | StartNameStartName144,145
-  | EndNameEndName145,146
-  | StartListStartList146,147
-  | EndListEndList147,148
-  | CallCall148,149
-  | EndOfDataEndOfData149,150
-  | EndOfSessionEndOfSession150,151
-  | StartTransactionStartTransaction151,152
-  | EndTransactionEndTransaction152,153
-  | EmptyEmpty153,154
-class (Show a) => IsToken IsToken156,157
-    fromToken fromToken157,158
-    token token159,160
-    mtoken mtoken162,163
-instance IsToken IsToken Token166,167
-    token token167,168
-    fromToken fromToken168,169
-instance StreamItem StreamItem Token173,174
-    parser parser174,175
-    generate generate175,176
-tokenParser tokenParser182,183
-generateToken generateToken284,285
-instance Arbitrary Arbitrary Token330,331
-    arbitrary arbitrary331,332
-rawTokenSource rawTokenSource346,347
-removeEmpty removeEmpty349,350
-combineContinued combineContinued352,353
-tokenSource tokenSource365,366
+data Token Token138,139
+    Unsigned Unsigned139,140
+  | Signed Signed140,141
+  | Bytes Bytes141,142
+  | ContinuedBytes ContinuedBytes142,143
+  | StartNameStartName143,144
+  | EndNameEndName144,145
+  | StartListStartList145,146
+  | EndListEndList146,147
+  | CallCall147,148
+  | EndOfDataEndOfData148,149
+  | EndOfSessionEndOfSession149,150
+  | StartTransactionStartTransaction150,151
+  | EndTransactionEndTransaction151,152
+  | EmptyEmpty152,153
+class (Show a) => IsToken IsToken155,156
+    fromToken fromToken156,157
+    token token158,159
+    mtoken mtoken161,162
+instance IsToken IsToken Token165,166
+    token token166,167
+    fromToken fromToken167,168
+instance StreamItem StreamItem Token172,173
+    parser parser173,174
+    generate generate174,175
+tokenParser tokenParser181,182
+generateToken generateToken283,284
+instance Arbitrary Arbitrary Token329,330
+    arbitrary arbitrary330,331
+rawTokenSource rawTokenSource345,346
+removeEmpty removeEmpty348,349
+combineContinued combineContinued351,352
+tokenSource tokenSource364,365
 
 ./src/System/SED/Common/Import.hs,61
 module System.SED.Common.ImportSystem.SED.Common.Import1,2
@@ -652,43 +652,43 @@ instance IsByteString IsByteString Natural119,120
     fromByteString fromByteString120,121
     toByteString toByteString121,122
 
-./src/Extras/Sized.lhs,1568
-module Extras.SizedExtras.Sized48,49
-import import74,75
-data Fixed_bytes Fixed_bytes88,89
-data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes88,89
-take take92,93
-drop drop95,96
-append append98,99
-instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)102,103
-    arbitrary arbitrary103,104
-instance (K(KnownNat n) => Show (Fixed_bytes n)107,108
-    showsPrec showsPrec108,109
-instance (K(KnownNat n) => IsString (Fixed_bytes n)117,118
-    fromString fromString118,119
-class (KnownNat n) => HasFixed_bytes HasFixed_bytes133,134
-    toFixed_bytes toFixed_bytes134,135
-    fromFixed_bytes fromFixed_bytes135,136
-instance (K(KnownNat n) => HasFixed_bytes n Natural137,138
-    toFixed_bytes toFixed_bytes138,139
-    fromFixed_bytes fromFixed_bytes148,149
-instance (K(KnownNat n) => HasFixed_bytes n (T-Static S-ShortByteString n)150,151
-    toFixed_bytes toFixed_bytes151,152
-    fromFixed_bytes fromFixed_bytes152,153
-instance (K(KnownNat n) => HasFixed_bytes n S-ShortByteString154,155
-    toFixed_bytes toFixed_bytes155,156
+./src/Extras/Sized.lhs,1561
+module Extras.SizedExtras.Sized39,40
+import import65,66
+data Fixed_bytes Fixed_bytes79,80
+data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes79,80
+take take83,84
+drop drop86,87
+append append89,90
+instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)93,94
+    arbitrary arbitrary94,95
+instance (K(KnownNat n) => Show (Fixed_bytes n)98,99
+    showsPrec showsPrec99,100
+instance (K(KnownNat n) => IsString (Fixed_bytes n)108,109
+    fromString fromString109,110
+class (KnownNat n) => HasFixed_bytes HasFixed_bytes124,125
+    toFixed_bytes toFixed_bytes125,126
+    fromFixed_bytes fromFixed_bytes126,127
+instance (K(KnownNat n) => HasFixed_bytes n Natural128,129
+    toFixed_bytes toFixed_bytes129,130
+    fromFixed_bytes fromFixed_bytes139,140
+instance (K(KnownNat n) => HasFixed_bytes n (T-Static S-ShortByteString n)141,142
+    toFixed_bytes toFixed_bytes142,143
+    fromFixed_bytes fromFixed_bytes143,144
+instance (K(KnownNat n) => HasFixed_bytes n S-ShortByteString145,146
+    toFixed_bytes toFixed_bytes146,147
+    fromFixed_bytes fromFixed_bytes156,157
+instance (K(KnownNat n) => HasFixed_bytes n B-ByteString159,160
+    toFixed_bytes toFixed_bytes160,161
+    fromFixed_bytes fromFixed_bytes161,162
+instance (K(KnownNat n) => HasFixed_bytes n [Word8]163,164
+    toFixed_bytes toFixed_bytes164,165
     fromFixed_bytes fromFixed_bytes165,166
-instance (K(KnownNat n) => HasFixed_bytes n B-ByteString168,169
-    toFixed_bytes toFixed_bytes169,170
-    fromFixed_bytes fromFixed_bytes170,171
-instance (K(KnownNat n) => HasFixed_bytes n [Word8]172,173
-    toFixed_bytes toFixed_bytes173,174
-    fromFixed_bytes fromFixed_bytes174,175
-instance (K(KnownNat n) => HasHex (Fixed_bytes n)180,181
-    hex hex181,182
-    fromHex fromHex182,183
-fpack fpack186,187
-funpack funpack189,190
+instance (K(KnownNat n) => HasHex (Fixed_bytes n)171,172
+    hex hex172,173
+    fromHex fromHex173,174
+fpack fpack177,178
+funpack funpack180,181
 
 ./src/Extras/Hex.lhs,867
 module Extras.HexExtras.Hex24,25

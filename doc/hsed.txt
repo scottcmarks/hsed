@@ -421,26 +421,6 @@ unwrap :: IsSizedText a => Sized a l u -> a
 type Static a (l :: Nat) = Sized a l l
 
 
--- | Git info appended to a version string
-module Extras.GitVersion
-
--- | Generate a string like <tt>feature/foo 12c45b7 (dirty)</tt>.
---   
---   <tt>$(gitVersion …)</tt> <tt>::</tt> <tt>String</tt>
-gitBranch :: Q Exp
-
--- | Generate a string like <tt>Version 1.2 [feature/foo 12e45b7
---   (dirty)]</tt>.
---   
---   <tt>$(gitVersion …)</tt> <tt>::</tt> <tt>String</tt>
-gitVersion :: Version -> Q Exp
-
--- | Generate a string like <tt>Version 1.2)</tt>.
---   
---   <tt>$(plainVersion …)</tt> <tt>::</tt> <tt>String</tt>
-plainVersion :: Version -> Q Exp
-
-
 -- | Conversions for numbers used in tokens.
 module Extras.Integral
 rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
@@ -537,7 +517,7 @@ instance GHC.Show.Show Hsed.App.Options
 
 
 -- | Parse and generate stream items.
-module System.SED.Common.StreamItem
+module System.SED.MCTP.Common.StreamItem
 class StreamItem a
 parser :: StreamItem a => Parser a
 generate :: StreamItem a => a -> ByteString
@@ -550,12 +530,12 @@ pg :: StreamItem a => a -> Maybe a
 typeIsa :: StreamItem a => a -> a
 type Parser = Parser ByteString
 require :: (StreamItem a, Show a, Eq a) => a -> Parser a
-instance System.SED.Common.StreamItem.StreamItem a => System.SED.Common.StreamItem.StreamItem [a]
-instance System.SED.Common.StreamItem.StreamItem a => System.SED.Common.StreamItem.StreamItem (a, a)
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem [a]
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a, a)
 
 
 -- | Datatypes for Tokens.
-module System.SED.Common.Token
+module System.SED.MCTP.Common.Token
 data Token
 Unsigned :: Natural -> Token
 Signed :: Integer -> Token
@@ -579,21 +559,21 @@ rawTokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m (
 removeEmpty :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
 combineContinued :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
 tokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m ()
-instance GHC.Show.Show System.SED.Common.Token.Token
-instance GHC.Classes.Eq System.SED.Common.Token.Token
-instance System.SED.Common.Token.IsToken System.SED.Common.Token.Token
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Token.Token
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Token.Token
+instance GHC.Show.Show System.SED.MCTP.Common.Token.Token
+instance GHC.Classes.Eq System.SED.MCTP.Common.Token.Token
+instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.Token.Token
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Token.Token
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Token.Token
 
 
 -- | Orphan instances.
-module System.SED.Common.Instances
-instance GHC.TypeNats.KnownNat n => System.SED.Common.Token.IsToken (Extras.Sized.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => System.SED.Common.StreamItem.StreamItem (Extras.Sized.Fixed_bytes n)
+module System.SED.MCTP.Common.Instances
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (Extras.Sized.Fixed_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (Extras.Sized.Fixed_bytes n)
 
 
 -- | Datatypes for UIDs and HalfUIDs.
-module System.SED.Common.UID
+module System.SED.MCTP.Common.UID
 showFixed_bytesHex :: KnownNat n => Fixed_bytes n -> [String]
 showFixed_bytes :: KnownNat n => String -> Fixed_bytes n -> String
 newtype HalfUID
@@ -609,22 +589,22 @@ uidPlus :: HalfUID -> HalfUID -> UID
 infix 9 +:+
 hNull :: HalfUID
 uNull :: UID
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.UID.UID
-instance System.SED.Common.Token.IsToken System.SED.Common.UID.UID
-instance GHC.Classes.Ord System.SED.Common.UID.UID
-instance GHC.Classes.Eq System.SED.Common.UID.UID
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.UID.HalfUID
-instance System.SED.Common.Token.IsToken System.SED.Common.UID.HalfUID
-instance GHC.Classes.Ord System.SED.Common.UID.HalfUID
-instance GHC.Classes.Eq System.SED.Common.UID.HalfUID
-instance GHC.Show.Show System.SED.Common.UID.UID
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.UID.UID
-instance GHC.Show.Show System.SED.Common.UID.HalfUID
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.UID.HalfUID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.UID
+instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.UID.UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.UID.UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.HalfUID
+instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID
+instance GHC.Classes.Ord System.SED.MCTP.Common.UID.HalfUID
+instance GHC.Classes.Eq System.SED.MCTP.Common.UID.HalfUID
+instance GHC.Show.Show System.SED.MCTP.Common.UID.UID
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
+instance GHC.Show.Show System.SED.MCTP.Common.UID.HalfUID
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.HalfUID
 
 
 -- | Table
-module System.SED.Common.Table
+module System.SED.MCTP.Common.Table
 newtype TableName
 TableName :: ByteString -> TableName
 newtype TemplateName
@@ -645,24 +625,24 @@ TableColumn :: Int -> ByteString -> Bool -> ColumnType -> TableColumn
 [_columnType] :: TableColumn -> ColumnType
 newtype ColumnType
 ColumnType :: () -> ColumnType
-instance GHC.Show.Show System.SED.Common.Table.Table
-instance GHC.Classes.Eq System.SED.Common.Table.Table
-instance GHC.Show.Show System.SED.Common.Table.TableColumn
-instance GHC.Classes.Eq System.SED.Common.Table.TableColumn
-instance GHC.Show.Show System.SED.Common.Table.ColumnType
-instance GHC.Classes.Eq System.SED.Common.Table.ColumnType
-instance GHC.Show.Show System.SED.Common.Table.TableRow
-instance GHC.Classes.Eq System.SED.Common.Table.TableRow
-instance Data.String.IsString System.SED.Common.Table.TemplateName
-instance GHC.Classes.Eq System.SED.Common.Table.TemplateName
-instance Data.String.IsString System.SED.Common.Table.TableName
-instance GHC.Classes.Eq System.SED.Common.Table.TableName
-instance GHC.Show.Show System.SED.Common.Table.TemplateName
-instance GHC.Show.Show System.SED.Common.Table.TableName
+instance GHC.Show.Show System.SED.MCTP.Common.Table.Table
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.Table
+instance GHC.Show.Show System.SED.MCTP.Common.Table.TableColumn
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableColumn
+instance GHC.Show.Show System.SED.MCTP.Common.Table.ColumnType
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.ColumnType
+instance GHC.Show.Show System.SED.MCTP.Common.Table.TableRow
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableRow
+instance Data.String.IsString System.SED.MCTP.Common.Table.TemplateName
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TemplateName
+instance Data.String.IsString System.SED.MCTP.Common.Table.TableName
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableName
+instance GHC.Show.Show System.SED.MCTP.Common.Table.TemplateName
+instance GHC.Show.Show System.SED.MCTP.Common.Table.TableName
 
 
 -- | Template Haskell utilities.
-module System.SED.Common.THUtil
+module System.SED.MCTP.Common.THUtil
 
 -- | Run a table parser (any parser, really) producing a result or throwing
 --   an error. This is safe only in TH code, where an error is a
@@ -693,7 +673,7 @@ eValP :: Name -> String -> Exp
 
 
 -- | Special Purpose UIDs.
-module System.SED.Common.SpecialPurposeUIDs
+module System.SED.MCTP.Common.SpecialPurposeUIDs
 
 -- | Indicate that no object is being referenced.
 uNULL :: UID
@@ -717,7 +697,7 @@ uCloseSession :: UID
 
 
 -- | Formats.
-module System.SED.Common.Format
+module System.SED.MCTP.Common.Format
 data Max_bytes :: Nat -> Type
 data Core_table_kind
 Object_Table :: Core_table_kind
@@ -761,44 +741,44 @@ data Known_Core_Type :: Nat -> Type
 [Set_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Known_Core_Type 15
 data Some_Core_Type
 Some_Core_Type :: Known_Core_Type n -> Some_Core_Type
-instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Object_Table
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Object_Table
-instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Byte_Table
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Byte_Table
-instance GHC.Show.Show System.SED.Common.Format.Core_uidref_non_Base_Type
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_non_Base_Type
-instance GHC.Show.Show System.SED.Common.Format.Core_uidref_Base_Type
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref_Base_Type
-instance GHC.Show.Show System.SED.Common.Format.Core_max_bytes_32
-instance GHC.Classes.Eq System.SED.Common.Format.Core_max_bytes_32
-instance GHC.Show.Show System.SED.Common.Format.Core_uidref
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uidref
-instance GHC.Show.Show System.SED.Common.Format.Core_integer_2
-instance GHC.Classes.Eq System.SED.Common.Format.Core_integer_2
-instance GHC.Show.Show System.SED.Common.Format.Core_uinteger_2
-instance GHC.Classes.Eq System.SED.Common.Format.Core_uinteger_2
-instance GHC.Show.Show System.SED.Common.Format.Core_table_kind
-instance GHC.Classes.Eq System.SED.Common.Format.Core_table_kind
-instance GHC.Enum.Enum System.SED.Common.Format.Core_table_kind
-instance GHC.Show.Show (System.SED.Common.Format.Max_bytes n)
-instance GHC.Classes.Eq (System.SED.Common.Format.Max_bytes n)
-instance GHC.Show.Show (System.SED.Common.Format.Known_Core_Type n)
-instance GHC.Classes.Eq (System.SED.Common.Format.Known_Core_Type n)
-instance GHC.Show.Show System.SED.Common.Format.Some_Core_Type
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Some_Core_Type
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Object_Table
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Byte_Table
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_non_Base_Type
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref_Base_Type
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_max_bytes_32
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uidref
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_integer_2
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_uinteger_2
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Format.Core_table_kind
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Object_Table
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Object_Table
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Base_Type
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Base_Type
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_max_bytes_32
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_max_bytes_32
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_integer_2
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_integer_2
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uinteger_2
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uinteger_2
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_table_kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_table_kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.Format.Core_table_kind
+instance GHC.Show.Show (System.SED.MCTP.Common.Format.Max_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Format.Max_bytes n)
+instance GHC.Show.Show (System.SED.MCTP.Common.Format.Known_Core_Type n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Format.Known_Core_Type n)
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Some_Core_Type
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Some_Core_Type
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_Object_Table
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_Base_Type
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_max_bytes_32
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_integer_2
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uinteger_2
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_table_kind
 
 
 -- | Utilities
-module System.SED.Common.Util
+module System.SED.MCTP.Common.Util
 
 -- | Convert to a UID from a string of eight hex digit pairs divided by a
 --   single space
@@ -814,15 +794,15 @@ trimTrailingWhitespace :: ByteString -> ByteString
 
 
 -- | TableUIDs Template Haskell.
-module System.SED.Common.TableUIDs.TH
+module System.SED.MCTP.Common.TableUIDs.TH
 
 -- | Bespoke QuasiQuoter for Table 240
 t240 :: QuasiQuoter
-instance GHC.Show.Show System.SED.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Classes.Eq System.SED.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Classes.Eq System.SED.Common.TableUIDs.TH.UIDRow
-instance GHC.Base.Semigroup System.SED.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Base.Monoid System.SED.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Show.Show System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRow
+instance GHC.Base.Semigroup System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Base.Monoid System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
 
 
 -- | Table UIDs as specified in Table 240.
@@ -848,7 +828,7 @@ instance GHC.Base.Monoid System.SED.Common.TableUIDs.TH.UIDRowDecs
 --   Unfortunately, Template Haskell can neither see manual comments nor
 --   create comments for Haddock to see; hence the names themselves must
 --   suffice as documentation.
-module System.SED.Common.TableUIDs
+module System.SED.MCTP.Common.TableUIDs
 nameUID :: Map UID String
 nameHalfUID :: Map HalfUID String
 hTable :: HalfUID
@@ -998,7 +978,7 @@ lookupTableUID :: UID -> Maybe String
 
 
 -- | Template Haskell for parsing Table column types in Section 5.1.3.
-module System.SED.Common.ColumnTypes.TH
+module System.SED.MCTP.Common.ColumnTypes.TH
 
 -- | QuasiQuoter for Type Table row tables.
 --   
@@ -1036,17 +1016,17 @@ data EnumRow
 EnumRow :: String -> [Int] -> EnumRow
 enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
-instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.EnumRow
-instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Show.Show System.SED.Common.ColumnTypes.TH.TypeTableRow
-instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Base.Monoid System.SED.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Base.Semigroup System.SED.Common.ColumnTypes.TH.TypeTableRow
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.TH.EnumRow
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRow
+instance GHC.Base.Semigroup System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
+instance GHC.Base.Monoid System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
+instance GHC.Base.Semigroup System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRow
 
 
 -- | Table column types.
-module System.SED.Common.ColumnTypes
+module System.SED.MCTP.Common.ColumnTypes
 uAC_elementType :: UID
 uACE_columnsType :: UID
 uACE_expressionType :: UID
@@ -1437,105 +1417,105 @@ Core_verify_mode_Reserved_6 :: Core_verify_mode
 Core_verify_mode_Reserved_7 :: Core_verify_mode
 uYearType :: UID
 uyear_enumType :: UID
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_verify_mode
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_verify_mode
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_verify_mode
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_verify_mode
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_verify_mode
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_table_kind
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_table_kind
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_table_kind
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_table_kind
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_table_kind
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_reset_types
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_reset_types
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_reset_types
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_reset_types
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_reset_types
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_padding_type
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_padding_type
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_padding_type
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_padding_type
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_padding_type
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_log_select
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_log_select
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_log_select
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_log_select
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_log_select
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_enc_supported
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_enc_supported
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_enc_supported
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_enc_supported
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_enc_supported
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_clock_kind
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_clock_kind
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_clock_kind
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_clock_kind
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_clock_kind
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_boolean
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_boolean
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_boolean
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_boolean
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_boolean
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_auth_method
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_attr_flags
-instance GHC.Show.Show System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Classes.Ord System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Classes.Eq System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Enum.Enum System.SED.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Enum.Bounded System.SED.Common.ColumnTypes.Core_adv_key_mode
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_table_kind
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_table_kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_table_kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_table_kind
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_table_kind
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_reset_types
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_reset_types
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_reset_types
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_reset_types
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_reset_types
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_padding_type
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_padding_type
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_padding_type
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_padding_type
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_padding_type
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_log_select
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_log_select
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_log_select
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_log_select
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_log_select
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_boolean
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_boolean
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_boolean
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_boolean
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_boolean
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_auth_method
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_auth_method
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_auth_method
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_auth_method
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_auth_method
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
+instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
 
 
 -- | Datatypes for Tokens.
-module System.SED.Common.Value
+module System.SED.MCTP.Common.Value
 newtype Datum
 Datum :: Token -> Datum
 class (Show v) => IsDatum v
@@ -1564,57 +1544,57 @@ L :: List -> Value
 class IsValue a
 value :: IsValue a => a -> Value
 mvalue :: IsValue a => a -> Maybe Value
-instance GHC.Classes.Eq System.SED.Common.Value.NamedValue
-instance GHC.Show.Show System.SED.Common.Value.NamedValue
-instance GHC.Classes.Eq System.SED.Common.Value.List
-instance GHC.Show.Show System.SED.Common.Value.List
-instance GHC.Classes.Eq System.SED.Common.Value.Value
-instance GHC.Show.Show System.SED.Common.Value.Value
-instance GHC.Classes.Eq System.SED.Common.Value.Name
-instance GHC.Show.Show System.SED.Common.Value.Name
-instance GHC.Classes.Eq System.SED.Common.Value.Datum
-instance GHC.Show.Show System.SED.Common.Value.Datum
-instance System.SED.Common.Value.IsValue System.SED.Common.Value.Value
-instance System.SED.Common.Value.IsValue System.SED.Common.Value.Datum
-instance System.SED.Common.Value.IsValue System.SED.Common.Value.NamedValue
-instance System.SED.Common.Value.IsValue System.SED.Common.Value.List
-instance System.SED.Common.Value.IsValue System.SED.Common.Token.Token
-instance System.SED.Common.Value.IsValue GHC.Natural.Natural
-instance System.SED.Common.Value.IsValue GHC.Integer.Type.Integer
-instance System.SED.Common.Value.IsValue Data.ByteString.Internal.ByteString
-instance System.SED.Common.Value.IsValue GHC.Base.String
-instance System.SED.Common.Token.IsToken System.SED.Common.Value.Value
-instance System.SED.Common.Value.IsName System.SED.Common.Value.NamedValue
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Value.NamedValue
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Value.List
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Value.Value
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Value.NamedValue
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Value.List
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Value.Value
-instance System.SED.Common.Value.IsName System.SED.Common.Value.Name
-instance System.SED.Common.Value.IsName System.SED.Common.Value.Datum
-instance System.SED.Common.Value.IsName System.SED.Common.Token.Token
-instance System.SED.Common.Value.IsName GHC.Natural.Natural
-instance System.SED.Common.Value.IsName GHC.Integer.Type.Integer
-instance System.SED.Common.Value.IsName Data.ByteString.Internal.ByteString
-instance System.SED.Common.Value.IsName GHC.Base.String
-instance System.SED.Common.Token.IsToken System.SED.Common.Value.Name
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Value.Name
-instance System.SED.Common.Value.IsDatum System.SED.Common.Value.Name
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Value.Name
-instance System.SED.Common.Value.IsDatum System.SED.Common.Value.Datum
-instance System.SED.Common.Value.IsDatum System.SED.Common.Token.Token
-instance System.SED.Common.Token.IsToken System.SED.Common.Value.Datum
-instance System.SED.Common.Value.IsDatum GHC.Natural.Natural
-instance System.SED.Common.Value.IsDatum GHC.Integer.Type.Integer
-instance System.SED.Common.Value.IsDatum Data.ByteString.Internal.ByteString
-instance System.SED.Common.Value.IsDatum GHC.Base.String
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Value.Datum
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Value.Datum
+instance GHC.Classes.Eq System.SED.MCTP.Common.Value.NamedValue
+instance GHC.Show.Show System.SED.MCTP.Common.Value.NamedValue
+instance GHC.Classes.Eq System.SED.MCTP.Common.Value.List
+instance GHC.Show.Show System.SED.MCTP.Common.Value.List
+instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Value
+instance GHC.Show.Show System.SED.MCTP.Common.Value.Value
+instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Name
+instance GHC.Show.Show System.SED.MCTP.Common.Value.Name
+instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Datum
+instance GHC.Show.Show System.SED.MCTP.Common.Value.Datum
+instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Value.Value
+instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Value.Datum
+instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Value.NamedValue
+instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Value.List
+instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Token.Token
+instance System.SED.MCTP.Common.Value.IsValue GHC.Natural.Natural
+instance System.SED.MCTP.Common.Value.IsValue GHC.Integer.Type.Integer
+instance System.SED.MCTP.Common.Value.IsValue Data.ByteString.Internal.ByteString
+instance System.SED.MCTP.Common.Value.IsValue GHC.Base.String
+instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.Value.Value
+instance System.SED.MCTP.Common.Value.IsName System.SED.MCTP.Common.Value.NamedValue
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Value.NamedValue
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Value.List
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Value.Value
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Value.NamedValue
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Value.List
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Value.Value
+instance System.SED.MCTP.Common.Value.IsName System.SED.MCTP.Common.Value.Name
+instance System.SED.MCTP.Common.Value.IsName System.SED.MCTP.Common.Value.Datum
+instance System.SED.MCTP.Common.Value.IsName System.SED.MCTP.Common.Token.Token
+instance System.SED.MCTP.Common.Value.IsName GHC.Natural.Natural
+instance System.SED.MCTP.Common.Value.IsName GHC.Integer.Type.Integer
+instance System.SED.MCTP.Common.Value.IsName Data.ByteString.Internal.ByteString
+instance System.SED.MCTP.Common.Value.IsName GHC.Base.String
+instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.Value.Name
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Value.Name
+instance System.SED.MCTP.Common.Value.IsDatum System.SED.MCTP.Common.Value.Name
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Value.Name
+instance System.SED.MCTP.Common.Value.IsDatum System.SED.MCTP.Common.Value.Datum
+instance System.SED.MCTP.Common.Value.IsDatum System.SED.MCTP.Common.Token.Token
+instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.Value.Datum
+instance System.SED.MCTP.Common.Value.IsDatum GHC.Natural.Natural
+instance System.SED.MCTP.Common.Value.IsDatum GHC.Integer.Type.Integer
+instance System.SED.MCTP.Common.Value.IsDatum Data.ByteString.Internal.ByteString
+instance System.SED.MCTP.Common.Value.IsDatum GHC.Base.String
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Value.Datum
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Value.Datum
 
 
 -- | Datatypes for Tokens.
-module System.SED.Common.Call
+module System.SED.MCTP.Common.Call
 data MethodHeader
 MethodHeader :: UID -> UID -> MethodHeader
 [_invokingID] :: MethodHeader -> UID
@@ -1629,24 +1609,24 @@ MethodCall :: MethodHeader -> Parameters -> Natural -> MethodCall
 [_parameters] :: MethodCall -> Parameters
 [_statusCode] :: MethodCall -> Natural
 d :: Natural -> Value
-instance GHC.Classes.Eq System.SED.Common.Call.MethodCall
-instance GHC.Show.Show System.SED.Common.Call.MethodCall
-instance GHC.Classes.Eq System.SED.Common.Call.Parameters
-instance GHC.Show.Show System.SED.Common.Call.Parameters
-instance GHC.Classes.Eq System.SED.Common.Call.MethodHeader
-instance GHC.Show.Show System.SED.Common.Call.MethodHeader
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Call.MethodCall
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Call.MethodCall
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Call.Parameters
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Call.Parameters
-instance System.SED.Common.StreamItem.StreamItem System.SED.Common.Call.MethodHeader
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.Common.Call.MethodHeader
+instance GHC.Classes.Eq System.SED.MCTP.Common.Call.MethodCall
+instance GHC.Show.Show System.SED.MCTP.Common.Call.MethodCall
+instance GHC.Classes.Eq System.SED.MCTP.Common.Call.Parameters
+instance GHC.Show.Show System.SED.MCTP.Common.Call.Parameters
+instance GHC.Classes.Eq System.SED.MCTP.Common.Call.MethodHeader
+instance GHC.Show.Show System.SED.MCTP.Common.Call.MethodHeader
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Call.MethodCall
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Call.MethodCall
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Call.Parameters
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Call.Parameters
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Call.MethodHeader
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Call.MethodHeader
 
 
 -- | Datatypes for <tt>hsed</tt>.
-module System.SED.Common.Types
+module System.SED.MCTP.Common.Types
 
-module System.SED.Common.Import
+module System.SED.MCTP.Common.Import
 
 -- | Append two lists, i.e.,
 --   
@@ -7583,8 +7563,8 @@ encodeUtf8Builder :: Text -> Builder
 -- | Encode text using UTF-8 encoding.
 encodeUtf8 :: Text -> ByteString
 
-module System.SED.Host.Run
+module System.SED.MCTP.Host.Run
 run :: RIO App ()
 
-module System.SED.TPer.Run
+module System.SED.MCTP.TPer.Run
 run :: RIO App ()

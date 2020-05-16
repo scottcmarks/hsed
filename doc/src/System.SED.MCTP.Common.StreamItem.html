@@ -1,0 +1,171 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-glyph">\</span><span class="hs-identifier">documentstyle</span><span class="hs-special">{</span><span class="hs-identifier">article</span><span class="hs-special">}</span><span>
+</span><span id="line-2"></span><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><span id="line-3"></span><span class="hs-glyph">\</span><span class="hs-identifier">chapter</span><span class="hs-special">{</span><span class="hs-identifier">Stream</span><span> </span><span class="hs-identifier">Items</span><span class="hs-special">}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-identifier">Parse</span><span> </span><span class="hs-identifier">and</span><span> </span><span class="hs-identifier">generate</span><span> </span><span class="hs-identifier">stream</span><span> </span><span class="hs-identifier">items</span><span class="hs-operator">.</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><span id="line-9"></span><span class="hs-comment">{-|
+Module      : System.SED.MCTP.Common.StreamItem
+Description : SED tokens
+Copyright   : (c) Magnolia Heights R&amp;D, 2019
+License     : All rights reserved
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+Parse and generate stream items.
+
+-}</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
+</span><span id="line-22"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances #-}</span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.MCTP.Common.StreamItem</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier">StreamItem</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Parser</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#require"><span class="hs-identifier">require</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>            </span><span class="annot"><span class="hs-identifier">Data.Attoparsec.ByteString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Parser</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">parseOnly</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>            </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span>            </span><span class="annot"><span class="hs-identifier">Data.Either.Combinators</span></span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span>            </span><span class="annot"><span class="hs-identifier">RIO</span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span class="hs-identifier">Due</span><span> </span><span class="hs-identifier">to</span><span> </span><span class="hs-identifier">the</span><span> </span><span class="hs-identifier">nature</span><span> </span><span class="hs-keyword">of</span><span> </span><span class="hs-identifier">method</span><span> </span><span class="hs-identifier">parameters</span><span> </span><span class="hs-identifier">and</span><span> </span><span class="hs-identifier">results</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">there</span><span> </span><span class="hs-identifier">are</span><span> </span><span class="hs-identifier">two</span><span> </span><span class="hs-identifier">additional</span><span> </span><span class="hs-identifier">constructs</span><span> </span><span class="hs-identifier">defined</span><span> </span><span class="hs-identifier">for</span><span>
+</span><span id="line-37"></span><span class="hs-identifier">messaging</span><span> </span><span class="hs-identifier">that</span><span> </span><span class="hs-identifier">serve</span><span> </span><span class="hs-keyword">as</span><span> </span><span class="hs-identifier">grouping</span><span> </span><span class="hs-identifier">mechanisms</span><span> </span><span class="hs-identifier">for</span><span> </span><span class="hs-identifier">the</span><span> </span><span class="hs-identifier">basic</span><span> </span><span class="hs-identifier">types</span><span class="hs-glyph">:</span><span> </span><span class="hs-identifier">Named</span><span> </span><span class="hs-identifier">values</span><span> </span><span class="hs-identifier">and</span><span> </span><span class="hs-identifier">List</span><span> </span><span class="hs-identifier">values</span><span class="hs-operator">.</span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-identifier">a</span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">Named</span><span> </span><span class="hs-identifier">values</span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">The</span><span> </span><span class="hs-identifier">name</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">a</span><span> </span><span class="hs-identifier">byte</span><span class="hs-glyph">-</span><span class="hs-identifier">string</span><span class="hs-operator">/</span><span class="hs-identifier">integer</span><span class="hs-operator">/</span><span class="hs-identifier">uinteger</span><span> </span><span class="hs-identifier">value</span><span class="hs-special">)</span><span> </span><span class="hs-identifier">followed</span><span> </span><span class="hs-identifier">by</span><span> </span><span class="hs-identifier">its</span><span> </span><span class="hs-identifier">value</span><span> </span><span class="hs-special">(</span><span class="hs-identifier">any</span><span>
+</span><span id="line-40"></span><span class="hs-identifier">messaging</span><span> </span><span class="hs-keyword">type</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">i</span><span class="hs-operator">.</span><span class="hs-identifier">e</span><span class="hs-operator">.</span><span> </span><span class="hs-identifier">byte</span><span class="hs-glyph">-</span><span class="hs-identifier">string</span><span> </span><span class="hs-identifier">values</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">N</span><span> </span><span class="hs-identifier">length</span><span> </span><span class="hs-identifier">signed</span><span> </span><span class="hs-identifier">or</span><span> </span><span class="hs-identifier">unsigned</span><span> </span><span class="hs-identifier">integer</span><span> </span><span class="hs-identifier">values</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">list</span><span> </span><span class="hs-identifier">values</span><span class="hs-special">,</span><span>
+</span><span id="line-41"></span><span class="hs-identifier">or</span><span> </span><span class="hs-identifier">Named</span><span> </span><span class="hs-identifier">values</span><span class="hs-special">)</span><span class="hs-operator">.</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><span id="line-44"></span><span>
+</span><span id="line-45"></span><span>
+</span><span id="line-46"></span><span class="hs-keyword">class</span><span> </span><span id="StreamItem"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-var">StreamItem</span></a></span></span><span> </span><span id="local-6989586621679504635"><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-47"></span><span>    </span><span id="parser"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-type">parser</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span>    </span><span id="generate"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-type">generate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span>    </span><span id="parseByteString"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#parseByteString"><span class="hs-identifier hs-type">parseByteString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-52"></span><span>    </span><span id="local-6989586621679504595"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#parseByteString"><span class="hs-identifier hs-var hs-var">parseByteString</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser a -&gt; ByteString -&gt; Either String a
+forall a. Parser a -&gt; ByteString -&gt; Either String a
+</span><span class="hs-identifier hs-var">parseOnly</span></span><span> </span><span class="annot"><span class="annottext">Parser a
+forall a. StreamItem a =&gt; Parser a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span></span><span>
+</span><span id="line-53"></span><span>
+</span><span id="line-54"></span><span>    </span><span id="parseString"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#parseString"><span class="hs-identifier hs-type">parseString</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-55"></span><span>    </span><span id="local-6989586621679504593"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#parseString"><span class="hs-identifier hs-var hs-var">parseString</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String a
+forall a. StreamItem a =&gt; ByteString -&gt; Either String a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parseByteString"><span class="hs-identifier hs-var">parseByteString</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Either String a)
+-&gt; (String -&gt; ByteString) -&gt; String -&gt; Either String a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
+forall a. IsString a =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">fromString</span></span></span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span>    </span><span id="maybeParse"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#maybeParse"><span class="hs-identifier hs-type">maybeParse</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-58"></span><span>    </span><span id="local-6989586621679504590"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#maybeParse"><span class="hs-identifier hs-var hs-var">maybeParse</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Either String a -&gt; Maybe a
+forall a b. Either a b -&gt; Maybe b
+</span><span class="hs-identifier hs-var">rightToMaybe</span></span><span> </span><span class="annot"><span class="annottext">(Either String a -&gt; Maybe a)
+-&gt; (ByteString -&gt; Either String a) -&gt; ByteString -&gt; Maybe a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String a
+forall a. StreamItem a =&gt; ByteString -&gt; Either String a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parseByteString"><span class="hs-identifier hs-var">parseByteString</span></a></span></span><span>
+</span><span id="line-59"></span><span>
+</span><span id="line-60"></span><span>    </span><span class="hs-comment">-- | reduction to canonical form; should never fail by returning Nothing</span><span>
+</span><span id="line-61"></span><span>    </span><span id="pg"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#pg"><span class="hs-identifier hs-type">pg</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621679504587"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#pg"><span class="hs-identifier hs-var hs-var">pg</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe a
+forall a. StreamItem a =&gt; ByteString -&gt; Maybe a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#maybeParse"><span class="hs-identifier hs-var">maybeParse</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Maybe a) -&gt; (a -&gt; ByteString) -&gt; a -&gt; Maybe a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span></span><span>
+</span><span id="line-63"></span><span>
+</span><span id="line-64"></span><span>    </span><span id="typeIsa"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#typeIsa"><span class="hs-identifier hs-type">typeIsa</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679504635"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-65"></span><span>    </span><span id="local-6989586621679504585"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#typeIsa"><span class="hs-identifier hs-var hs-var">typeIsa</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span></span><span>
+</span><span id="line-66"></span><span>
+</span><span id="line-67"></span><span>
+</span><span id="line-68"></span><span id="local-6989586621679504583"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#require"><span class="hs-identifier hs-type">require</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679504583"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679504583"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621679504583"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679504583"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="#local-6989586621679504583"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-69"></span><span id="require"><span class="annot"><span class="annottext">require :: a -&gt; Parser a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#require"><span class="hs-identifier hs-var hs-var">require</span></a></span></span><span> </span><span id="local-6989586621679504582"><span class="annot"><span class="annottext">t :: a
+</span><a href="#local-6989586621679504582"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser a
+forall a. StreamItem a =&gt; Parser a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser a -&gt; (a -&gt; Parser a) -&gt; Parser a
+forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</span><span class="hs-operator hs-var">&gt;&gt;=</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Parser a
+forall (f :: * -&gt; *). MonadFail f =&gt; a -&gt; f a
+</span><a href="#local-6989586621679504581"><span class="hs-identifier hs-var">onlyt</span></a></span><span>
+</span><span id="line-70"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-71"></span><span>    </span><span id="local-6989586621679504581"><span class="annot"><span class="annottext">onlyt :: a -&gt; f a
+</span><a href="#local-6989586621679504581"><span class="hs-identifier hs-var hs-var">onlyt</span></a></span></span><span> </span><span id="local-6989586621679504580"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679504580"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-72"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679504580"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+forall a. Eq a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679504582"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; f a
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679504582"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-73"></span><span>        </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; f a
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; f a) -&gt; String -&gt; f a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Looking for &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679504582"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;, but saw &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679504580"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span id="local-6989586621679504578"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679504566"><span id="local-6989586621679504568"><span id="local-6989586621679504570"><span id="local-6989586621679504572"><span id="local-6989586621679504574"><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679504578"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="#local-6989586621679504578"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">]</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>  </span><span class="hs-comment">-- TODO: Token should use these</span><span>
+</span><span id="line-76"></span><span>    </span><span id="local-6989586621679504564"><span class="annot"><span class="annottext">parser :: Parser [a]
+</span><a href="#local-6989586621679504564"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser [a]
+forall a. HasCallStack =&gt; a
+</span><span class="hs-identifier hs-var">undefined</span></span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679504562"><span class="annot"><span class="annottext">generate :: [a] -&gt; ByteString
+</span><a href="#local-6989586621679504562"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="annot"><span class="annottext">([ByteString] -&gt; ByteString)
+-&gt; ([a] -&gt; [ByteString]) -&gt; [a] -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; ByteString) -&gt; [a] -&gt; [ByteString]
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span></span><span>
+</span><span id="line-78"></span><span id="local-6989586621679504561"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679504549"><span id="local-6989586621679504551"><span id="local-6989586621679504553"><span id="local-6989586621679504555"><span id="local-6989586621679504557"><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679504561"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679504561"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span class="annot"><a href="#local-6989586621679504561"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621679504548"><span class="annot"><span class="annottext">parser :: Parser (a, a)
+</span><a href="#local-6989586621679504548"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (a, a)
+forall a. HasCallStack =&gt; a
+</span><span class="hs-identifier hs-var">undefined</span></span><span>
+</span><span id="line-80"></span><span>    </span><span id="local-6989586621679504547"><span class="annot"><span class="annottext">generate :: (a, a) -&gt; ByteString
+</span><a href="#local-6989586621679504547"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679504546"><span class="annot"><span class="annottext">f :: a
+</span><a href="#local-6989586621679504546"><span class="hs-identifier hs-var">f</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679504545"><span class="annot"><span class="annottext">s :: a
+</span><a href="#local-6989586621679504545"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679504546"><span class="hs-identifier hs-var">f</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+forall a. Semigroup a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679504545"><span class="hs-identifier hs-var">s</span></a></span></span><span>
+</span><span id="line-81"></span><span>
+</span><span id="line-82"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><span id="line-83"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><span id="line-84"></span></pre></body></html>

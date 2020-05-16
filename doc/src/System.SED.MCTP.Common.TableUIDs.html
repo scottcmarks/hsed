@@ -1,0 +1,208 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-glyph">\</span><span class="hs-identifier">documentstyle</span><span class="hs-special">{</span><span class="hs-identifier">article</span><span class="hs-special">}</span><span>
+</span><span id="line-2"></span><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><span id="line-3"></span><span class="hs-glyph">\</span><span class="hs-identifier">chapter</span><span class="hs-special">{</span><span class="hs-identifier">TableUIDs</span><span> </span><span class="hs-comment">--  Table 240}</span><span>
+</span><span id="line-4"></span><span>
+</span><span id="line-5"></span><span class="hs-identifier">Table</span><span> </span><span class="hs-identifier">UIDs</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><span id="line-9"></span><span class="hs-comment">{-|
+Module      : System.SED.MCTP.Common.TablesUIDs
+Description : SED table UIDs
+Copyright   : (c) Magnolia Heights R&amp;D, 2019
+License     : All rights reserved
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+Table UIDs as specified in Table 240.
+
+The specification for each table is translated to three constant
+declarations.  For instance, the information on the @AccessControl@
+table becomes
+
+@
+    --| The HalfUID that identifies the AccessControl table
+    hAccessControl :: HalfUID
+    hAccessControl = halfUID 0x00 0x00 0x00 0x07
+
+    --| The UID that identifies the AccessControl table itself
+    uAccessControlTable :: UID
+    uAccessControlTable = uid 0x00 0x00 0x00 0x07 0x00 0x00 0x00 0x00
+
+    --| The UID that identifies the AccessControl table entry in the Table Table
+    uAccessControlTableObject :: UID
+    uAccessControlTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x07
+@
+
+Unfortunately, Template Haskell can neither see manual comments nor create
+comments for Haddock to see; hence the names themselves must suffice as documentation.
+
+
+-}</span><span>
+</span><span id="line-42"></span><span>
+</span><span id="line-43"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
+</span><span id="line-44"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings #-}</span><span>
+</span><span id="line-45"></span><span class="hs-pragma">{-# LANGUAGE QuasiQuotes       #-}</span><span>
+</span><span id="line-46"></span><span class="hs-pragma">{-# LANGUAGE Trustworthy       #-}</span><span>
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.MCTP.Common.TableUIDs</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-50"></span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lookup</span></span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">flip</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Maybe</span></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Maybe</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html"><span class="hs-identifier">System.SED.MCTP.Common.TableUIDs.TH</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#t240"><span class="hs-identifier">t240</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html"><span class="hs-identifier">System.SED.MCTP.Common.UID</span></a></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier">HalfUID</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier">UID</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-56"></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- * Table HalfUID, UIDs, and Object UIDs</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- **** For each row of the table (after the header row), define the indicated constants.</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- For example, from the second row, we define</span><span>
+</span><span id="line-62"></span><span class="hs-comment">--   hSPInfo :: HalfUID</span><span>
+</span><span id="line-63"></span><span class="hs-comment">--   uSPInfoTable :: UID</span><span>
+</span><span id="line-64"></span><span class="hs-comment">--   uSPInfoTableObject :: UID</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- together with informtion to map between the above and name strings</span><span>
+</span><span id="line-66"></span><span class="hs-comment">--   hSPInfo -&gt; &quot;SPInfo&quot;</span><span>
+</span><span id="line-67"></span><span class="hs-comment">--   uSPInfoTable -&gt; &quot;SPInfo Table&quot;</span><span>
+</span><span id="line-68"></span><span class="hs-comment">--   uSPInfoTableObject -&gt; &quot;SPInfo Table Object&quot;</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span id="nameUID"><span id="nameHalfUID"><span id="hTable"><span id="uTableTable"><span id="uTableTableObject"><span id="hSPInfo"><span id="uSPInfoTable"><span id="uSPInfoTableObject"><span id="hSPTemplates"><span id="uSPTemplatesTable"><span id="uSPTemplatesTableObject"><span id="hColumn"><span id="uColumnTable"><span id="uColumnTableObject"><span id="hType"><span id="uTypeTable"><span id="uTypeTableObject"><span id="hMethodID"><span id="uMethodIDTable"><span id="uMethodIDTableObject"><span id="hAccessControl"><span id="uAccessControlTable"><span id="uAccessControlTableObject"><span id="hACE"><span id="uACETable"><span id="uACETableObject"><span id="hAuthority"><span id="uAuthorityTable"><span id="uAuthorityTableObject"><span id="hCertificates"><span id="uCertificatesTable"><span id="uCertificatesTableObject"><span id="hC_PIN"><span id="uC_PINTable"><span id="uC_PINTableObject"><span id="hC_RSA_1024"><span id="uC_RSA_1024Table"><span id="uC_RSA_1024TableObject"><span id="hC_RSA_2048"><span id="uC_RSA_2048Table"><span id="uC_RSA_2048TableObject"><span id="hC_AES_128"><span id="uC_AES_128Table"><span id="uC_AES_128TableObject"><span id="hC_AES_256"><span id="uC_AES_256Table"><span id="uC_AES_256TableObject"><span id="hC_EC_160"><span id="uC_EC_160Table"><span id="uC_EC_160TableObject"><span id="hC_EC_192"><span id="uC_EC_192Table"><span id="uC_EC_192TableObject"><span id="hC_EC_224"><span id="uC_EC_224Table"><span id="uC_EC_224TableObject"><span id="hC_EC_256"><span id="uC_EC_256Table"><span id="uC_EC_256TableObject"><span id="hC_EC_384"><span id="uC_EC_384Table"><span id="uC_EC_384TableObject"><span id="hC_EC_521"><span id="uC_EC_521Table"><span id="uC_EC_521TableObject"><span id="hC_EC_163"><span id="uC_EC_163Table"><span id="uC_EC_163TableObject"><span id="hC_EC_233"><span id="uC_EC_233Table"><span id="uC_EC_233TableObject"><span id="hC_EC_283"><span id="uC_EC_283Table"><span id="uC_EC_283TableObject"><span id="hC_HMAC_160"><span id="uC_HMAC_160Table"><span id="uC_HMAC_160TableObject"><span id="hC_HMAC_256"><span id="uC_HMAC_256Table"><span id="uC_HMAC_256TableObject"><span id="hC_HMAC_384"><span id="uC_HMAC_384Table"><span id="uC_HMAC_384TableObject"><span id="hC_HMAC_512"><span id="uC_HMAC_512Table"><span id="uC_HMAC_512TableObject"><span id="hSecretProtect"><span id="uSecretProtectTable"><span id="uSecretProtectTableObject"><span id="hTPerInfo"><span id="uTPerInfoTable"><span id="uTPerInfoTableObject"><span id="hCryptoSuite"><span id="uCryptoSuiteTable"><span id="uCryptoSuiteTableObject"><span id="hTemplate"><span id="uTemplateTable"><span id="uTemplateTableObject"><span id="hSP"><span id="uSPTable"><span id="uSPTableObject"><span id="hClockTime"><span id="uClockTimeTable"><span id="uClockTimeTableObject"><span id="hH_SHA_1"><span id="uH_SHA_1Table"><span id="uH_SHA_1TableObject"><span id="hH_SHA_256"><span id="uH_SHA_256Table"><span id="uH_SHA_256TableObject"><span id="hH_SHA_384"><span id="uH_SHA_384Table"><span id="uH_SHA_384TableObject"><span id="hH_SHA_512"><span id="uH_SHA_512Table"><span id="uH_SHA_512TableObject"><span id="hLog"><span id="uLogTable"><span id="uLogTableObject"><span id="hLogList"><span id="uLogListTable"><span id="uLogListTableObject"><span id="hLockingInfo"><span id="uLockingInfoTable"><span id="uLockingInfoTableObject"><span id="hLocking"><span id="uLockingTable"><span id="uLockingTableObject"><span id="hMBRControl"><span id="uMBRControlTable"><span id="uMBRControlTableObject"><span id="hMBR"><span id="uMBRTable"><span id="uMBRTableObject"><span id="hK_AES_128"><span id="uK_AES_128Table"><span id="uK_AES_128TableObject"><span id="hK_AES_256"><span id="uK_AES_256Table"><span id="uK_AES_256TableObject"></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><span class="">[t240|
+
+
+                              Table 240   Table UIDs
+    +------------------------+------------------------+--------------+--------+
+    |UID of Table Descriptor |UID of Table            |Table Name    |Template|
+    |Object                  |                        |              |        |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 01 |00 00 00 01 00 00 00 00 |Table         |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 02 |00 00 00 02 00 00 00 00 |SPInfo        |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 03 |00 00 00 03 00 00 00 00 |SPTemplates   |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 04 |00 00 00 04 00 00 00 00 |Column        |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 05 |00 00 00 05 00 00 00 00 |Type          |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 06 |00 00 00 06 00 00 00 00 |MethodID      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 07 |00 00 00 07 00 00 00 00 |AccessControl |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 08 |00 00 00 08 00 00 00 00 |ACE           |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 09 |00 00 00 09 00 00 00 00 |Authority     |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 0A |00 00 00 0A 00 00 00 00 |Certificates  |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 0B |00 00 00 0B 00 00 00 00 |C_PIN         |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 0C |00 00 00 0C 00 00 00 00 |C_RSA_1024    |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 0D |00 00 00 0D 00 00 00 00 |C_RSA_2048    |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 0E |00 00 00 0E 00 00 00 00 |C_AES_128     |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 0F |00 00 00 0F 00 00 00 00 |C_AES_256     |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 10 |00 00 00 10 00 00 00 00 |C_EC_160      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 11 |00 00 00 11 00 00 00 00 |C_EC_192      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 12 |00 00 00 12 00 00 00 00 |C_EC_224      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 13 |00 00 00 13 00 00 00 00 |C_EC_256      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 14 |00 00 00 14 00 00 00 00 |C_EC_384      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 15 |00 00 00 15 00 00 00 00 |C_EC_521      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 16 |00 00 00 16 00 00 00 00 |C_EC_163      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 17 |00 00 00 17 00 00 00 00 |C_EC_233      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 18 |00 00 00 18 00 00 00 00 |C_EC_283      |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 19 |00 00 00 19 00 00 00 00 |C_HMAC_160    |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 1A |00 00 00 1A 00 00 00 00 |C_HMAC_256    |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 1B |00 00 00 1B 00 00 00 00 |C_HMAC_384    |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 1C |00 00 00 1C 00 00 00 00 |C_HMAC_512    |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 00 1D |00 00 00 1D 00 00 00 00 |SecretProtect |Base    |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 02 01 |00 00 02 01 00 00 00 00 |TPerInfo      |Admin   |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 02 03 |00 00 02 03 00 00 00 00 |CryptoSuite   |Admin   |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 02 04 |00 00 02 04 00 00 00 00 |Template      |Admin   |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 02 05 |00 00 02 05 00 00 00 00 |SP            |Admin   |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 04 01 |00 00 04 01 00 00 00 00 |ClockTime     |Clock   |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 06 01 |00 00 06 01 00 00 00 00 |H_SHA_1       |Crypto  |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 06 02 |00 00 06 02 00 00 00 00 |H_SHA_256     |Crypto  |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 06 03 |00 00 06 03 00 00 00 00 |H_SHA_384     |Crypto  |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 06 04 |00 00 06 04 00 00 00 00 |H_SHA_512     |Crypto  |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 0A 01 |00 00 0A 01 00 00 00 00 |Log           |Log     |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 0A 02 |00 00 0A 02 00 00 00 00 |LogList       |Log     |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 08 01 |00 00 08 01 00 00 00 00 |LockingInfo   |Locking |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 08 02 |00 00 08 02 00 00 00 00 |Locking       |Locking |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 08 03 |00 00 08 03 00 00 00 00 |MBRControl    |Locking |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 08 04 |00 00 08 04 00 00 00 00 |MBR           |Locking |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 08 05 |00 00 08 05 00 00 00 00 |K_AES_128     |Locking |
+    +------------------------+------------------------+--------------+--------+
+    |00 00 00 01 00 00 08 06 |00 00 08 06 00 00 00 00 |K_AES_256     |Locking |
+    +------------------------+------------------------+--------------+--------+
+
+|]</span><span>
+</span><span id="line-173"></span><span>
+</span><span id="line-174"></span><span class="hs-comment">-- * Safe accessor functions for the generated `Map's</span><span>
+</span><span id="line-175"></span><span>
+</span><span id="line-176"></span><span class="hs-comment">-- | Look up the name of a Table `HalfUID'</span><span>
+</span><span id="line-177"></span><span class="hs-comment">--</span><span>
+</span><span id="line-178"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableHalfUID"><span class="hs-identifier hs-type">lookupTableHalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-179"></span><span id="lookupTableHalfUID"><span class="annot"><span class="annottext">lookupTableHalfUID :: HalfUID -&gt; Maybe String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableHalfUID"><span class="hs-identifier hs-var hs-var">lookupTableHalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HalfUID -&gt; Map HalfUID String -&gt; Maybe String)
+-&gt; Map HalfUID String -&gt; HalfUID -&gt; Maybe String
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Map HalfUID String -&gt; Maybe String
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">(Map HalfUID String -&gt; HalfUID -&gt; Maybe String)
+-&gt; Map HalfUID String -&gt; HalfUID -&gt; Maybe String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Map HalfUID String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#nameHalfUID"><span class="hs-identifier hs-var">nameHalfUID</span></a></span><span>  </span><span class="hs-comment">-- &lt;-- defined in t240 TH</span><span>
+</span><span id="line-180"></span><span>
+</span><span id="line-181"></span><span class="hs-comment">-- | Look up the name of a Table `UID' or a Table object `UID'</span><span>
+</span><span id="line-182"></span><span class="hs-comment">--</span><span>
+</span><span id="line-183"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableUID"><span class="hs-identifier hs-type">lookupTableUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-184"></span><span id="lookupTableUID"><span class="annot"><span class="annottext">lookupTableUID :: UID -&gt; Maybe String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableUID"><span class="hs-identifier hs-var hs-var">lookupTableUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UID -&gt; Map UID String -&gt; Maybe String)
+-&gt; Map UID String -&gt; UID -&gt; Maybe String
+forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
+</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; Map UID String -&gt; Maybe String
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">(Map UID String -&gt; UID -&gt; Maybe String)
+-&gt; Map UID String -&gt; UID -&gt; Maybe String
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Map UID String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#nameUID"><span class="hs-identifier hs-var">nameUID</span></a></span><span>          </span><span class="hs-comment">-- &lt;-- defined in t240 TH</span><span>
+</span><span id="line-185"></span><span>
+</span><span id="line-186"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
+</span><span id="line-187"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
+</span><span id="line-188"></span></pre></body></html>

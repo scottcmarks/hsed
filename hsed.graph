@@ -7,121 +7,159 @@ label="Data";
 color="#0000000F";
 style="filled";
 subgraph cluster_1 {
-label="SizedText";
+label="ByteString";
 color="#0000000F";
 style="filled";
-u0[label="SizedText",style="filled,bold",fillcolor="#ffffbb"];
-u1[label="Class",style="filled",fillcolor="#bbbbff",penwidth="0"];
-u2[label="TH",style="filled",fillcolor="#bbbbff",penwidth="0"];
-
-}
+u0[label="Integral",style="filled",fillcolor="#bbbbff",penwidth="0"];
 
 }
 subgraph cluster_2 {
-label="Extras";
+label="SizedText";
 color="#0000000F";
 style="filled";
-u3[label="GitVersion",style="filled",fillcolor="#ffbbbb",penwidth="0"];
-u4[label="Hex",style="filled",fillcolor="#ffbbbb",penwidth="0"];
-u5[label="Integral",style="filled",fillcolor="#ffbbbb",penwidth="0"];
-u6[label="Sized",style="filled",fillcolor="#ffbbbb",penwidth="0"];
+u1[label="SizedText",style="filled,bold",fillcolor="#ffffbb"];
+u3[label="Class",style="filled",fillcolor="#ffbbbb",penwidth="0"];
+u4[label="TH",style="filled",fillcolor="#ffbbbb",penwidth="0"];
+
+}
 
 }
 subgraph cluster_3 {
-label="Hsed";
+label="Extras";
 color="#0000000F";
 style="filled";
-u7[label="App",style="filled",fillcolor="#bbffff",penwidth="0"];
+u5[label="Hex",style="filled",fillcolor="#bbffff",penwidth="0"];
+u6[label="Sized",style="filled",fillcolor="#bbffff",penwidth="0"];
 
 }
 subgraph cluster_4 {
-label="System";
+label="GHC";
 color="#0000000F";
 style="filled";
 subgraph cluster_5 {
-label="SED";
+label="TypeLits";
 color="#0000000F";
 style="filled";
+u2[label="Extras",style="filled",fillcolor="#77ff77",penwidth="0"];
+
+}
+
+}
 subgraph cluster_6 {
-label="Common";
+label="GitHash";
 color="#0000000F";
 style="filled";
-u8[label="Call",style="filled",fillcolor="#ffff77",penwidth="0"];
-u9[label="StreamItem",style="filled",fillcolor="#ffff77",penwidth="0"];
-u10[label="Token",style="filled",fillcolor="#ffff77",penwidth="0"];
-u11[label="Value",style="filled",fillcolor="#ffff77",penwidth="0"];
-u12[label="UID",style="filled",fillcolor="#ffff77",penwidth="0"];
-u13[label="Instances",style="filled",fillcolor="#ffff77",penwidth="0"];
-u16[label="THUtil",style="filled",fillcolor="#ffff77",penwidth="0"];
-u17[label="Util",style="filled",fillcolor="#ffff77",penwidth="0"];
-u18[label="Format",style="filled",fillcolor="#ffff77",penwidth="0"];
-u19[label="Import",style="filled",fillcolor="#ffff77",penwidth="0"];
-u20[label="Types",style="filled",fillcolor="#ffff77",penwidth="0"];
-u21[label="SpecialPurposeUIDs",style="filled",fillcolor="#ffff77",penwidth="0"];
-u22[label="Table",style="filled",fillcolor="#ffff77",penwidth="0"];
 subgraph cluster_7 {
-label="ColumnTypes";
+label="Extras";
 color="#0000000F";
 style="filled";
-u14[label="ColumnTypes",style="filled,bold",fillcolor="#ffff77"];
-u15[label="TH",style="filled",fillcolor="#7777ff",penwidth="0"];
+u28[label="GitVersion",style="filled",fillcolor="#7777ff",penwidth="0"];
+
+}
 
 }
 subgraph cluster_8 {
-label="TableUIDs";
+label="Hsed";
 color="#0000000F";
 style="filled";
-u23[label="TableUIDs",style="filled,bold",fillcolor="#ffff77"];
-u24[label="TH",style="filled",fillcolor="#ff7777",penwidth="0"];
-
-}
+u7[label="App",style="filled",fillcolor="#ff7777",penwidth="0"];
 
 }
 subgraph cluster_9 {
+label="System";
+color="#0000000F";
+style="filled";
+subgraph cluster_10 {
+label="SED";
+color="#0000000F";
+style="filled";
+subgraph cluster_11 {
+label="MCTP";
+color="#0000000F";
+style="filled";
+subgraph cluster_12 {
+label="Common";
+color="#0000000F";
+style="filled";
+u8[label="Call",style="filled",fillcolor="#bbff77",penwidth="0"];
+u9[label="StreamItem",style="filled",fillcolor="#bbff77",penwidth="0"];
+u10[label="Token",style="filled",fillcolor="#bbff77",penwidth="0"];
+u11[label="Value",style="filled",fillcolor="#bbff77",penwidth="0"];
+u12[label="UID",style="filled",fillcolor="#bbff77",penwidth="0"];
+u13[label="Instances",style="filled",fillcolor="#bbff77",penwidth="0"];
+u16[label="THUtil",style="filled",fillcolor="#bbff77",penwidth="0"];
+u17[label="Util",style="filled",fillcolor="#bbff77",penwidth="0"];
+u18[label="Format",style="filled",fillcolor="#bbff77",penwidth="0"];
+u19[label="Import",style="filled",fillcolor="#bbff77",penwidth="0"];
+u20[label="Types",style="filled",fillcolor="#bbff77",penwidth="0"];
+u21[label="SpecialPurposeUIDs",style="filled",fillcolor="#bbff77",penwidth="0"];
+u22[label="Table",style="filled",fillcolor="#bbff77",penwidth="0"];
+subgraph cluster_13 {
+label="ColumnTypes";
+color="#0000000F";
+style="filled";
+u14[label="ColumnTypes",style="filled,bold",fillcolor="#bbff77"];
+u15[label="TH",style="filled",fillcolor="#3333ff",penwidth="0"];
+
+}
+subgraph cluster_14 {
+label="TableUIDs";
+color="#0000000F";
+style="filled";
+u23[label="TableUIDs",style="filled,bold",fillcolor="#bbff77"];
+u24[label="TH",style="filled",fillcolor="#ff3333",penwidth="0"];
+
+}
+
+}
+subgraph cluster_15 {
 label="Host";
 color="#0000000F";
 style="filled";
-u25[label="Run",style="filled",fillcolor="#77ffff",penwidth="0"];
+u25[label="Run",style="filled",fillcolor="#77bbff",penwidth="0"];
 
 }
-subgraph cluster_10 {
+subgraph cluster_16 {
 label="TPer";
 color="#0000000F";
 style="filled";
-u26[label="Run",style="filled",fillcolor="#ff77ff",penwidth="0"];
+u26[label="Run",style="filled",fillcolor="#ff77bb",penwidth="0"];
 
 }
 
 }
 
 }
-u0 -> u1;
-u0 -> u2;
-u2 -> u1;
-u4 -> u0;
-u4 -> u5;
+
+}
+u1 -> u2;
+u1 -> u3;
+u1 -> u4;
+u4 -> u3;
+u5 -> u0;
+u5 -> u1;
 u6 -> u0;
-u6 -> u4;
+u6 -> u1;
 u6 -> u5;
 u8 -> u9;
 u8 -> u10;
 u8 -> u11;
 u8 -> u12;
-u10 -> u5;
+u10 -> u0;
 u10 -> u9;
 u11 -> u9;
 u11 -> u10;
-u12 -> u4;
+u12 -> u5;
 u12 -> u6;
 u12 -> u9;
 u12 -> u10;
 u12 -> u13;
-u13 -> u5;
+u13 -> u2;
 u13 -> u6;
 u13 -> u9;
 u13 -> u10;
 u14 -> u15;
-u15 -> u5;
+u15 -> u0;
 u15 -> u12;
 u15 -> u16;
 u15 -> u17;
@@ -132,7 +170,8 @@ u17 -> u12;
 u18 -> u9;
 u18 -> u12;
 u19 -> u20;
-u20 -> u4;
+u20 -> u0;
+u20 -> u2;
 u20 -> u5;
 u20 -> u6;
 u20 -> u8;
@@ -156,9 +195,9 @@ u25 -> u7;
 u25 -> u19;
 u26 -> u7;
 u26 -> u19;
-u27 -> u3;
 u27 -> u7;
 u27 -> u25;
 u27 -> u26;
+u27 -> u28;
 
 }

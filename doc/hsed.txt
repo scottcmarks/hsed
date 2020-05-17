@@ -29,32 +29,13 @@ instance Data.ByteString.Integral.IsByteString GHC.Integer.Type.Integer
 instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
 
 
--- | Conversions for numbers used in tokens.
-module Extras.Integral
-rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
-byteStringToNatural :: ByteString -> Natural
-byteStringToInteger :: ByteString -> Integer
-naturalToByteString :: Natural -> ByteString
-integerToByteString :: Integer -> ByteString
-word8 :: Integral a => a -> Word8
-char :: Word8 -> Char
-ordw :: Char -> Word8
-byte :: Integral a => a -> Word8
-int :: Integral a => a -> Int
-integer :: Integral a => a -> Integer
-natural :: Integral a => a -> Natural
-class IsByteString a
-fromByteString :: IsByteString a => ByteString -> a
-toByteString :: IsByteString a => a -> ByteString
-instance Extras.Integral.IsByteString GHC.Integer.Type.Integer
-instance Extras.Integral.IsByteString GHC.Natural.Natural
-
-
 -- | Conversions from type-level Nat to value-level Num
 module GHC.TypeLits.Extras
 
--- | Type-level Nat to value-level Num &gt;&gt;&gt; :set -XTypeApplications
---   &gt;&gt;&gt; fromNat (Proxy @5) 5
+-- | Type-level Nat to value-level Num &gt;&gt;&gt; :set -XDataKinds
+--   &gt;&gt;&gt; :set -XTypeApplications &gt;&gt;&gt; import
+--   Data.Proxy(Proxy(..)) &gt;&gt;&gt; import GHC.Types (Int) &gt;&gt;&gt;
+--   fromNat (Proxy @5) :: Int 5
 fromNat :: (Num b, KnownNat n) => proxy n -> b
 
 

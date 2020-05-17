@@ -35,10 +35,10 @@ import           Data.Proxy(Proxy(..))
 import           GHC.Base(($), (.), mconcat, pure)
 import           GHC.Show(Show(..))
 import           GHC.Types(Int)
-import           GHC.TypeNats(KnownNat)
+import           GHC.TypeLits(KnownNat)
 
 
-import           Extras.Integral (intVal)
+import           GHC.TypeLits.Extras (fromNat)
 import           Extras.Sized ()
 import           Extras.Sized (Fixed_bytes(..), fpack, funpack)
 import           System.SED.MCTP.Common.StreamItem (StreamItem(..))
@@ -63,7 +63,7 @@ instance (KnownNat n) => StreamItem (Fixed_bytes n) where
         case tok of
             Bytes bs -> pure $ fpack bs
             _        -> fail $ mconcat [ "Wrong token type for Fixed_bytes "
-                                       , show (intVal (Proxy @n) ::Int)
+                                       , show (fromNat (Proxy @n) ::Int)
                                        , ": "
                                        , show tok
                                        ]

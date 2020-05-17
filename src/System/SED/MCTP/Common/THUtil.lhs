@@ -34,7 +34,7 @@ import           Data.String                     (IsString(..))
 import           GHC.Base                        (Maybe(..), String, id, map, (.))
 import           GHC.Err                         (error)
 import           GHC.Real                        (toInteger)
-import           GHC.TypeNats                    (KnownNat)
+import           GHC.TypeLits                    (KnownNat)
 
 import           Language.Haskell.TH             (Body(..), Con(..), Dec(..),
                                                   DerivClause(..), Exp(..), Lit(..),

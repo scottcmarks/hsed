@@ -20,9 +20,10 @@ Datatypes for @hsed@.
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module System.SED.MCTP.Common.Types
-  ( module Extras.Hex
-  , module Extras.Integral
+  ( module Data.ByteString.Integral
+  , module Extras.Hex
   , module Extras.Sized
+  , module GHC.TypeLits.Extras
   , module System.SED.MCTP.Common.Call
   , module System.SED.MCTP.Common.ColumnTypes
   , module System.SED.MCTP.Common.SpecialPurposeUIDs
@@ -35,9 +36,10 @@ module System.SED.MCTP.Common.Types
   )
 where
 
+import           Data.ByteString.Integral
 import           Extras.Hex
-import           Extras.Integral
 import           Extras.Sized
+import           GHC.TypeLits.Extras
 import           System.SED.MCTP.Common.Call
 import           System.SED.MCTP.Common.ColumnTypes
 import           System.SED.MCTP.Common.SpecialPurposeUIDs

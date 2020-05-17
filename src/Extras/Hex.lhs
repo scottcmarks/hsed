@@ -41,11 +41,11 @@ import           GHC.List                   ((!!))
 import           GHC.Maybe                  (Maybe(..))
 import           GHC.Num                    ((+), (*))
 import           GHC.Real                   (divMod, fromIntegral)
-import           GHC.TypeNats               (KnownNat)
+import           GHC.TypeLits               (KnownNat)
 import           GHC.Types                  (Char(..))
 import           GHC.Word                   (Word8)
 
-import           Extras.Integral
+import           Data.ByteString.Integral
 
 
 hexDigit :: Word8 -> Char

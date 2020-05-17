@@ -14,19 +14,19 @@ gitVersion gitVersion52,53
 module Main Main2,3
 main main14,15
 
-./spec-tests/System/SED/Common/IntegralSpec.hs,194
-module System.SED.Common.IntegralSpec System.SED.Common.IntegralSpec13,14
+./spec-tests/System/SED/MCTP/Common/IntegralSpec.hs,204
+module System.SED.MCTP.Common.IntegralSpec System.SED.MCTP.Common.IntegralSpec13,14
 validFirstTwo validFirstTwo30,31
 validNatural validNatural38,39
 validInteger validInteger44,45
 spec spec52,53
 
-./spec-tests/System/SED/Common/ValueSpec.hs,87
-module System.SED.Common.ValueSpec System.SED.Common.ValueSpec13,14
+./spec-tests/System/SED/MCTP/Common/ValueSpec.hs,97
+module System.SED.MCTP.Common.ValueSpec System.SED.MCTP.Common.ValueSpec13,14
 spec spec24,25
 
-./spec-tests/System/SED/Common/TokenSpec.hs,375
-module System.SED.Common.TokenSpec System.SED.Common.TokenSpec12,13
+./spec-tests/System/SED/MCTP/Common/TokenSpec.hs,385
+module System.SED.MCTP.Common.TokenSpec System.SED.MCTP.Common.TokenSpec12,13
 spec spec32,33
 maybeIsPrefixOf maybeIsPrefixOf235,236
 maybeParsesEq maybeParsesEq238,239
@@ -38,8 +38,8 @@ p p255,256
 gp gp258,259
 _pgp _pgp262,263
 
-./spec-tests/System/SED/Common/ColumnTypes/THSpec.hs,105
-module System.SED.Common.ColumnTypes.THSpec System.SED.Common.ColumnTypes.THSpec12,13
+./spec-tests/System/SED/MCTP/Common/ColumnTypes/THSpec.hs,115
+module System.SED.MCTP.Common.ColumnTypes.THSpec System.SED.MCTP.Common.ColumnTypes.THSpec12,13
 spec spec21,22
 
 ./spec-tests/Spec.hs,0
@@ -504,6 +504,10 @@ instance (K(KnownNat n) => StreamItem (Fixed_bytes n)59,60
     parser parser60,61
     generate generate69,70
 
+./src/GHC/TypeLits/Extras.hs,76
+module GHC.TypeLits.ExtrasGHC.TypeLits.Extras20,21
+fromNat fromNat38,39
+
 ./src/Hsed/App.lhs,357
 module Hsed.AppHsed.App23,24
 newtype Options Options31,32
@@ -517,89 +521,112 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/SizedText/Class.hs,2591
+./src/Data/ByteString/Integral.hs,793
+module Data.ByteString.IntegralData.ByteString.Integral21,22
+rollUp rollUp46,47
+byteStringToNatural byteStringToNatural51,52
+byteStringToInteger byteStringToInteger54,55
+naturalToByteString naturalToByteString61,62
+integerToByteString integerToByteString65,66
+word8 word878,79
+char char81,82
+ordw ordw84,85
+byte byte87,88
+int int90,91
+integer integer93,94
+natural natural96,97
+class IsByteString IsByteString99,100
+    fromByteString fromByteString100,101
+    toByteString toByteString101,102
+instance IsByteString IsByteString Integer103,104
+    fromByteString fromByteString104,105
+    toByteString toByteString105,106
+instance IsByteString IsByteString Natural107,108
+    fromByteString fromByteString108,109
+    toByteString toByteString109,110
+
+./src/Data/SizedText/Class.hs,2559
 module Data.SizedText.ClassData.SizedText.Class15,16
-fromNat fromNat66,67
-class IsSizedText IsSizedText70,71
-  data Sized Sized74,75
-  type Elem Elem77,78
-  unsafeCreate unsafeCreate93,94
-  unwrap unwrap96,97
-  length length98,99
-  append append99,100
-  replicate replicate100,101
-  map map101,102
-  take take102,103
-  drop drop103,104
-instance (S(Show a, IsSizedText a) => Show (Sized a l u)106,107
-  show show107,108
-  showsPrec showsPrec108,109
-instance IsSizedText IsSizedText [a]110,111
-  type Elem Elem111,112
-  data Sized Sized113,114
-  data Sized [a] l u = List List113,114
-  unsafeCreate unsafeCreate116,117
-  unwrap unwrap117,118
-  length length119,120
-  append append120,121
-  replicate replicate121,122
-  map map122,123
-  take take123,124
-  drop drop124,125
-instance IsSizedText IsSizedText T-Text128,129
-  type Elem Elem129,130
-  data Sized Sized131,132
-  data Sized T.Text l u = Text Text131,132
-  unsafeCreate unsafeCreate134,135
-  unwrap unwrap135,136
-  length length137,138
-  append append138,139
-  replicate replicate139,140
-  map map140,141
-  take take141,142
-  drop drop142,143
-instance IsSizedText IsSizedText B-ByteString147,148
-  type Elem Elem148,149
-  data Sized Sized150,151
-  data Sized B.ByteString l u = ByteString ByteString150,151
-  unsafeCreate unsafeCreate153,154
-  unwrap unwrap154,155
-  length length156,157
-  append append157,158
-  replicate replicate158,159
-  map map159,160
-  take take160,161
-  drop drop161,162
-instance IsSizedText IsSizedText BS-ShortByteString165,166
-  type Elem Elem166,167
-  data Sized Sized168,169
-  data Sized BS.ShortByteString l u = ShortByteString ShortByteString168,169
-  unsafeCreate unsafeCreate171,172
-  unwrap unwrap172,173
-  length length174,175
-  append append175,176
-  replicate replicate176,177
-  map map177,178
-  take take178,179
-  drop drop179,180
-instance IsSizedText IsSizedText (V-Vector a)184,185
-  type Elem Elem185,186
-  data Sized Sized187,188
-  data Sized (V.Vector a) l u = Vector Vector187,188
-  unsafeCreate unsafeCreate190,191
-  unwrap unwrap191,192
-  length length193,194
-  append append194,195
-  replicate replicate195,196
-  map map196,197
-  take take197,198
-  drop drop198,199
-createLeft createLeft209,210
-createRight createRight225,226
-create create247,248
-instance forall forall a l u- (IsString a, IsSizedText a, KnownNat l, KnownNat u) => IsString (Sized a l u)270,271
-  where fromString fromString271,272
-type Static Static278,279
+class IsSizedText IsSizedText64,65
+  data Sized Sized68,69
+  type Elem Elem71,72
+  unsafeCreate unsafeCreate87,88
+  unwrap unwrap90,91
+  length length92,93
+  append append93,94
+  replicate replicate94,95
+  map map95,96
+  take take96,97
+  drop drop97,98
+instance (S(Show a, IsSizedText a) => Show (Sized a l u)100,101
+  show show101,102
+  showsPrec showsPrec102,103
+instance IsSizedText IsSizedText [a]104,105
+  type Elem Elem105,106
+  data Sized Sized107,108
+  data Sized [a] l u = List List107,108
+  unsafeCreate unsafeCreate110,111
+  unwrap unwrap111,112
+  length length113,114
+  append append114,115
+  replicate replicate115,116
+  map map116,117
+  take take117,118
+  drop drop118,119
+instance IsSizedText IsSizedText T-Text122,123
+  type Elem Elem123,124
+  data Sized Sized125,126
+  data Sized T.Text l u = Text Text125,126
+  unsafeCreate unsafeCreate128,129
+  unwrap unwrap129,130
+  length length131,132
+  append append132,133
+  replicate replicate133,134
+  map map134,135
+  take take135,136
+  drop drop136,137
+instance IsSizedText IsSizedText B-ByteString141,142
+  type Elem Elem142,143
+  data Sized Sized144,145
+  data Sized B.ByteString l u = ByteString ByteString144,145
+  unsafeCreate unsafeCreate147,148
+  unwrap unwrap148,149
+  length length150,151
+  append append151,152
+  replicate replicate152,153
+  map map153,154
+  take take154,155
+  drop drop155,156
+instance IsSizedText IsSizedText BS-ShortByteString159,160
+  type Elem Elem160,161
+  data Sized Sized162,163
+  data Sized BS.ShortByteString l u = ShortByteString ShortByteString162,163
+  unsafeCreate unsafeCreate165,166
+  unwrap unwrap166,167
+  length length168,169
+  append append169,170
+  replicate replicate170,171
+  map map171,172
+  take take172,173
+  drop drop173,174
+instance IsSizedText IsSizedText (V-Vector a)178,179
+  type Elem Elem179,180
+  data Sized Sized181,182
+  data Sized (V.Vector a) l u = Vector Vector181,182
+  unsafeCreate unsafeCreate184,185
+  unwrap unwrap185,186
+  length length187,188
+  append append188,189
+  replicate replicate189,190
+  map map190,191
+  take take191,192
+  drop drop192,193
+createLeft createLeft203,204
+createRight createRight219,220
+create create241,242
+instance forall forall a l u- (IsString a, IsSizedText a, KnownNat l, KnownNat u) => IsString (Sized a l u)264,265
+  where fromString fromString265,266
+type Static Static272,273
 
 ./src/Data/SizedText/TH.hs,258
 module Data.SizedText.THData.SizedText.TH9,10
@@ -626,31 +653,6 @@ padLeft padLeft199,200
 padLeft padLeft213,214
 padRight padRight216,217
 padRight padRight230,231
-
-./src/Extras/Integral.lhs,804
-module Extras.IntegralExtras.Integral27,28
-rollUp rollUp54,55
-byteStringToNatural byteStringToNatural59,60
-byteStringToInteger byteStringToInteger62,63
-naturalToByteString naturalToByteString69,70
-intVal intVal74,75
-integerToByteString integerToByteString77,78
-word8 word890,91
-char char93,94
-ordw ordw96,97
-byte byte99,100
-int int102,103
-integer integer105,106
-natural natural108,109
-class IsByteString IsByteString111,112
-    fromByteString fromByteString112,113
-    toByteString toByteString113,114
-instance IsByteString IsByteString Integer115,116
-    fromByteString fromByteString116,117
-    toByteString toByteString117,118
-instance IsByteString IsByteString Natural119,120
-    fromByteString fromByteString120,121
-    toByteString toByteString121,122
 
 ./src/Extras/Sized.lhs,1561
 module Extras.SizedExtras.Sized39,40

@@ -50,7 +50,7 @@ import           Test.QuickCheck.Instances.Natural ()
 import           Test.QuickCheck.Instances.ByteString ()
 import           Text.Printf
 
-import           Extras.Integral
+import           Data.ByteString.Integral
 import           System.SED.MCTP.Common.StreamItem
 
 

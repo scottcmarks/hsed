@@ -16,7 +16,6 @@ type.
 module Data.SizedText.Class
        ( IsSizedText(..)
        , Static
-       , fromNat
        , createLeft
        , createRight
        , create
@@ -34,6 +33,7 @@ import           Data.String           (IsString (..))
 #ifdef WITH_BS
 import qualified Data.ByteString       as B
 import qualified Data.ByteString.Short as BS
+import           GHC.TypeLits.Extras   (fromNat)
 import           GHC.Word
 #endif
 
@@ -60,12 +60,6 @@ import           GHC.TypeLits
 -- >>> :set -XTypeApplications
 -- >>> import           Data.Proxy
 
-
--- | Extract type-level Nat as a value-level Int
--- >>> fromNat (Proxy @5)
--- 5
-fromNat :: (KnownNat n) => proxy n -> Int
-fromNat = fromIntegral . natVal
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
 class IsSizedText a where

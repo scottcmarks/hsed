@@ -63,7 +63,7 @@ import           GHC.Classes                (Eq(..),Ord(..))
 import           GHC.Maybe                  (Maybe(..))
 import           GHC.Natural                (Natural)
 import           GHC.Show                   (Show(..), showParen, showString)
-import           GHC.TypeNats               (type (+), type (<=), KnownNat,
+import           GHC.TypeLits               (type (+), type (<=), KnownNat,
                                              natVal)
 import           GHC.Types                  (Nat)
 import           GHC.Word                   (Word8)
@@ -72,8 +72,8 @@ import           Test.QuickCheck            (Arbitrary(..))
 import           Test.QuickCheck.Instances.ByteString ()
 
 
+import           Data.ByteString.Integral   (byteStringToNatural, naturalToByteString)
 import           Extras.Hex                 (HasHex(..))
-import           Extras.Integral            (byteStringToNatural, naturalToByteString)
 
 
 

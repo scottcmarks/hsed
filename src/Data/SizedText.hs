@@ -56,12 +56,12 @@ module Data.SizedText
   ) where
 
 import           GHC.TypeLits
+import           GHC.TypeLits.Extras  (fromNat)
 import           Prelude              hiding (drop, length, map, replicate,
                                        take)
 
 import           Data.Proxy
-import           Data.SizedText.Class (Sized, create, createLeft, createRight,
-                                       fromNat)
+import           Data.SizedText.Class (Sized, create, createLeft, createRight)
 import qualified Data.SizedText.Class as C (Elem, IsSizedText (..), Static)
 import           Data.SizedText.TH
 

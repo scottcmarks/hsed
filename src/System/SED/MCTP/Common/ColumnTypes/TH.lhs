@@ -63,11 +63,11 @@ import           Language.Haskell.TH.Quote        (QuasiQuoter(..), quoteType,
 import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
 
 
-import           Extras.Integral                  (ordw)
+import           Data.ByteString.Integral         (ordw)
 
-import           System.SED.MCTP.Common.THUtil         (dData, dSig, dVal, eUID, parseTable)
-import           System.SED.MCTP.Common.UID            (UID)
-import           System.SED.MCTP.Common.Util           (trimTrailingWhitespace, hexUID)
+import           System.SED.MCTP.Common.THUtil    (dData, dSig, dVal, eUID, parseTable)
+import           System.SED.MCTP.Common.UID       (UID)
+import           System.SED.MCTP.Common.Util      (trimTrailingWhitespace, hexUID)
 
 
 \end{code}

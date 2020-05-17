@@ -45,7 +45,7 @@ import GHC.Base((>>=), (<*>), pure, error, (<>), (.), mempty, undefined, Eq(..),
 -- import GHC.Natural
 import GHC.Real(fromIntegral)
 import GHC.Show(Show)
-import GHC.TypeNats(natVal, KnownNat)
+import GHC.TypeLits(natVal, KnownNat)
 import GHC.Types(Nat)
 
 import System.SED.MCTP.Common.UID(UID(..))

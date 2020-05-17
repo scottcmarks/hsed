@@ -8,6 +8,56 @@
 @version 0.1.0.1
 
 
+-- | Conversions between numbers and bytestrings used to represent them.
+module Data.ByteString.Integral
+rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
+byteStringToNatural :: ByteString -> Natural
+byteStringToInteger :: ByteString -> Integer
+naturalToByteString :: Natural -> ByteString
+integerToByteString :: Integer -> ByteString
+word8 :: Integral a => a -> Word8
+char :: Word8 -> Char
+ordw :: Char -> Word8
+byte :: Integral a => a -> Word8
+int :: Integral a => a -> Int
+integer :: Integral a => a -> Integer
+natural :: Integral a => a -> Natural
+class IsByteString a
+fromByteString :: IsByteString a => ByteString -> a
+toByteString :: IsByteString a => a -> ByteString
+instance Data.ByteString.Integral.IsByteString GHC.Integer.Type.Integer
+instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
+
+
+-- | Conversions for numbers used in tokens.
+module Extras.Integral
+rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
+byteStringToNatural :: ByteString -> Natural
+byteStringToInteger :: ByteString -> Integer
+naturalToByteString :: Natural -> ByteString
+integerToByteString :: Integer -> ByteString
+word8 :: Integral a => a -> Word8
+char :: Word8 -> Char
+ordw :: Char -> Word8
+byte :: Integral a => a -> Word8
+int :: Integral a => a -> Int
+integer :: Integral a => a -> Integer
+natural :: Integral a => a -> Natural
+class IsByteString a
+fromByteString :: IsByteString a => ByteString -> a
+toByteString :: IsByteString a => a -> ByteString
+instance Extras.Integral.IsByteString GHC.Integer.Type.Integer
+instance Extras.Integral.IsByteString GHC.Natural.Natural
+
+
+-- | Conversions from type-level Nat to value-level Num
+module GHC.TypeLits.Extras
+
+-- | Type-level Nat to value-level Num &gt;&gt;&gt; :set -XTypeApplications
+--   &gt;&gt;&gt; fromNat (Proxy @5) 5
+fromNat :: (Num b, KnownNat n) => proxy n -> b
+
+
 -- | Use this module when you need to add an <a>IsSizedText</a> instance to
 --   a type.
 module Data.SizedText.Class
@@ -55,10 +105,6 @@ drop :: IsSizedText a => Int -> a -> a
 
 -- | Class of types which can be assigned a type-level fixed length.
 type Static a (l :: Nat) = Sized a l l
-
--- | Extract type-level Nat as a value-level Int &gt;&gt;&gt; fromNat
---   (Proxy @5) 5
-fromNat :: KnownNat n => proxy n -> Int
 
 -- | Elements on the left are preferred. &gt;&gt;&gt; createLeft ' '
 --   "foobarbaz" :: Sized String 0 6 "foobar" &gt;&gt;&gt; createLeft '@'
@@ -419,30 +465,6 @@ unwrap :: IsSizedText a => Sized a l u -> a
 
 -- | Class of types which can be assigned a type-level fixed length.
 type Static a (l :: Nat) = Sized a l l
-
-
--- | Conversions for numbers used in tokens.
-module Extras.Integral
-rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
-byteStringToNatural :: ByteString -> Natural
-byteStringToInteger :: ByteString -> Integer
-naturalToByteString :: Natural -> ByteString
-
--- | Type-level to value-level for all Integrals, from the Natural
-intVal :: (Num b, KnownNat n) => Proxy n -> b
-integerToByteString :: Integer -> ByteString
-word8 :: Integral a => a -> Word8
-char :: Word8 -> Char
-ordw :: Char -> Word8
-byte :: Integral a => a -> Word8
-int :: Integral a => a -> Int
-integer :: Integral a => a -> Integer
-natural :: Integral a => a -> Natural
-class IsByteString a
-fromByteString :: IsByteString a => ByteString -> a
-toByteString :: IsByteString a => a -> ByteString
-instance Extras.Integral.IsByteString GHC.Integer.Type.Integer
-instance Extras.Integral.IsByteString GHC.Natural.Natural
 
 
 -- | Hex encode/decoding.

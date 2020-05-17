@@ -35,7 +35,7 @@ import           Data.String(String)
 import           GHC.Base(($), mconcat)
 import           GHC.Classes(Eq(..),Ord(..))
 import           GHC.Show(Show(..))
-import           GHC.TypeNats(KnownNat)
+import           GHC.TypeLits(KnownNat)
 import           GHC.Word(Word8(..))
 
 import           Test.QuickCheck (Arbitrary(..))

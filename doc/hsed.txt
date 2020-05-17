@@ -453,7 +453,6 @@ module Extras.Hex
 hexDigit :: Word8 -> Char
 hexDigits :: String
 hexValue :: Char -> Maybe Word8
-hexWord8Syntax :: HasHex a => a -> String
 class HasHex a
 hex :: HasHex a => a -> String
 fromHex :: HasHex a => String -> Maybe a

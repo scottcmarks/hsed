@@ -36,10 +36,10 @@ import           Data.SizedText             (create, Static, unwrap)
 import           Data.String                (IsString(..))
 
 import           GHC.Base                   (String, fmap, pure,
-                                             (.), ($), (<*>), (++), (=<<))
+                                             (<=), (.), ($), (<*>), (=<<))
 import           GHC.List                   ((!!))
 import           GHC.Maybe                  (Maybe(..))
-import           GHC.Num                    ((+), (*))
+import           GHC.Num                    ((+), (-), (*))
 import           GHC.Real                   (divMod, fromIntegral)
 import           GHC.TypeLits               (KnownNat)
 import           GHC.Types                  (Char(..))
@@ -55,10 +55,7 @@ hexDigits :: String
 hexDigits = "0123456789ABCDEF0123456789abcdef"
 
 hexValue :: Char -> Maybe Word8
-hexValue d = fromIntegral <$> elemIndex d hexDigits
-
-hexWord8Syntax :: HasHex a => a -> String
-hexWord8Syntax n = "0x" ++ hex n
+hexValue d = fromIntegral . (\i -> if 16 <= i then i - 16 else i) <$> elemIndex d hexDigits
 
 
 class HasHex a where

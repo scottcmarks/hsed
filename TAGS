@@ -654,30 +654,6 @@ padLeft padLeft213,214
 padRight padRight216,217
 padRight padRight230,231
 
-./src/Extras/Integral.lhs,780
-module Extras.IntegralExtras.Integral27,28
-rollUp rollUp54,55
-byteStringToNatural byteStringToNatural59,60
-byteStringToInteger byteStringToInteger62,63
-naturalToByteString naturalToByteString69,70
-integerToByteString integerToByteString73,74
-word8 word886,87
-char char89,90
-ordw ordw92,93
-byte byte95,96
-int int98,99
-integer integer101,102
-natural natural104,105
-class IsByteString IsByteString107,108
-    fromByteString fromByteString108,109
-    toByteString toByteString109,110
-instance IsByteString IsByteString Integer111,112
-    fromByteString fromByteString112,113
-    toByteString toByteString113,114
-instance IsByteString IsByteString Natural115,116
-    fromByteString fromByteString116,117
-    toByteString toByteString117,118
-
 ./src/Extras/Sized.lhs,1561
 module Extras.SizedExtras.Sized39,40
 import import65,66
@@ -716,34 +692,33 @@ instance (K(KnownNat n) => HasHex (Fixed_bytes n)171,172
 fpack fpack177,178
 funpack funpack180,181
 
-./src/Extras/Hex.lhs,867
+./src/Extras/Hex.lhs,829
 module Extras.HexExtras.Hex24,25
 import import37,38
 hexDigit hexDigit50,51
 hexDigits hexDigits53,54
 hexValue hexValue56,57
-hexWord8Syntax hexWord8Syntax59,60
-class HasHex HasHex63,64
-    hex hex64,65
-    fromHex fromHex65,66
-instance HasHex HasHex Word867,68
-    hex hex68,69
-    fromHex fromHex70,71
-instance HasHex HasHex Char75,76
-    hex hex76,77
-    fromHex fromHex77,78
-instance HasHex HasHex [Word8]79,80
-    hex hex80,81
-    fromHex fromHex81,82
-instance HasHex HasHex ByteString85,86
-    hex hex86,87
-    fromHex fromHex87,88
-instance HasHex HasHex String89,90
-    hex hex90,91
-    fromHex fromHex91,92
-instance HasHex HasHex ShortByteString93,94
-    hex hex94,95
-    fromHex fromHex95,96
-instance (K(KnownNat n) => HasHex (Static ShortByteString n)97,98
-    hex hex98,99
-    fromHex fromHex99,100
+class HasHex HasHex60,61
+    hex hex61,62
+    fromHex fromHex62,63
+instance HasHex HasHex Word864,65
+    hex hex65,66
+    fromHex fromHex67,68
+instance HasHex HasHex Char72,73
+    hex hex73,74
+    fromHex fromHex74,75
+instance HasHex HasHex [Word8]76,77
+    hex hex77,78
+    fromHex fromHex78,79
+instance HasHex HasHex ByteString82,83
+    hex hex83,84
+    fromHex fromHex84,85
+instance HasHex HasHex String86,87
+    hex hex87,88
+    fromHex fromHex88,89
+instance HasHex HasHex ShortByteString90,91
+    hex hex91,92
+    fromHex fromHex92,93
+instance (K(KnownNat n) => HasHex (Static ShortByteString n)94,95
+    hex hex95,96
+    fromHex fromHex96,97

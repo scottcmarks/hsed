@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-comment">{-
+Conversions between numbers used in tokens and
+bytestrings used to represent them.
+-}</span><span>
+</span><span id="line-5"></span><span>
+</span><span id="line-6"></span><span class="hs-comment">{-|
+Module      : GHC.TypeList.Extras
+Description : Type-level to value-level
+Copyright   : (c) Magnolia Heights R&amp;D, 2019
+License     : All rights reserved
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+Conversions from type-level Nat to value-level Num
+
+-}</span><span>
+</span><span id="line-17"></span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">GHC.TypeLits.Extras</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span>
+</span><span id="line-23"></span><span>      </span><span class="annot"><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier">fromNat</span></a></span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>     </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Num</span></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Num</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Real</span></span><span>     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fromIntegral</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.TypeLits</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KnownNat</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">natVal</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- | Type-level Nat to value-level Num</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XTypeApplications</span><span>
+</span><span id="line-34"></span><span class="hs-comment">-- &gt;&gt;&gt; fromNat (Proxy @5)</span><span>
+</span><span id="line-35"></span><span class="hs-comment">-- 5</span><span>
+</span><span id="line-36"></span><span id="local-6989586621679503821"><span id="local-6989586621679503822"><span id="local-6989586621679503823"><span class="annot"><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-type">fromNat</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679503823"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679503822"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503821"><span class="hs-identifier hs-type">proxy</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679503822"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503823"><span class="hs-identifier hs-type">b</span></a></span></span></span></span><span>
+</span><span id="line-37"></span><span id="fromNat"><span class="annot"><span class="annottext">fromNat :: proxy n -&gt; b
+</span><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-var hs-var">fromNat</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; b
+forall a b. (Integral a, Num b) =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; b) -&gt; (proxy n -&gt; Integer) -&gt; proxy n -&gt; b
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">proxy n -&gt; Integer
+forall (n :: Nat) (proxy :: Nat -&gt; *).
+KnownNat n =&gt;
+proxy n -&gt; Integer
+</span><span class="hs-identifier hs-var">natVal</span></span><span>
+</span><span id="line-38"></span></pre></body></html>

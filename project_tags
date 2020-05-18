@@ -682,31 +682,31 @@ instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)93,94
     arbitrary arbitrary94,95
 instance (K(KnownNat n) => Show (Fixed_bytes n)98,99
     showsPrec showsPrec99,100
-instance (K(KnownNat n) => IsString (Fixed_bytes n)108,109
-    fromString fromString109,110
-class (KnownNat n) => HasFixed_bytes HasFixed_bytes124,125
-    toFixed_bytes toFixed_bytes125,126
-    fromFixed_bytes fromFixed_bytes126,127
-instance (K(KnownNat n) => HasFixed_bytes n Natural128,129
-    toFixed_bytes toFixed_bytes129,130
-    fromFixed_bytes fromFixed_bytes139,140
-instance (K(KnownNat n) => HasFixed_bytes n (T-Static S-ShortByteString n)141,142
-    toFixed_bytes toFixed_bytes142,143
-    fromFixed_bytes fromFixed_bytes143,144
-instance (K(KnownNat n) => HasFixed_bytes n S-ShortByteString145,146
-    toFixed_bytes toFixed_bytes146,147
-    fromFixed_bytes fromFixed_bytes156,157
-instance (K(KnownNat n) => HasFixed_bytes n B-ByteString159,160
-    toFixed_bytes toFixed_bytes160,161
-    fromFixed_bytes fromFixed_bytes161,162
-instance (K(KnownNat n) => HasFixed_bytes n [Word8]163,164
-    toFixed_bytes toFixed_bytes164,165
-    fromFixed_bytes fromFixed_bytes165,166
-instance (K(KnownNat n) => HasHex (Fixed_bytes n)171,172
-    hex hex172,173
-    fromHex fromHex173,174
-fpack fpack177,178
-funpack funpack180,181
+instance (K(KnownNat n) => IsString (Fixed_bytes n)106,107
+    fromString fromString107,108
+class (KnownNat n) => HasFixed_bytes HasFixed_bytes122,123
+    toFixed_bytes toFixed_bytes123,124
+    fromFixed_bytes fromFixed_bytes124,125
+instance (K(KnownNat n) => HasFixed_bytes n Natural126,127
+    toFixed_bytes toFixed_bytes127,128
+    fromFixed_bytes fromFixed_bytes137,138
+instance (K(KnownNat n) => HasFixed_bytes n (T-Static S-ShortByteString n)139,140
+    toFixed_bytes toFixed_bytes140,141
+    fromFixed_bytes fromFixed_bytes141,142
+instance (K(KnownNat n) => HasFixed_bytes n S-ShortByteString143,144
+    toFixed_bytes toFixed_bytes144,145
+    fromFixed_bytes fromFixed_bytes154,155
+instance (K(KnownNat n) => HasFixed_bytes n B-ByteString157,158
+    toFixed_bytes toFixed_bytes158,159
+    fromFixed_bytes fromFixed_bytes159,160
+instance (K(KnownNat n) => HasFixed_bytes n [Word8]161,162
+    toFixed_bytes toFixed_bytes162,163
+    fromFixed_bytes fromFixed_bytes163,164
+instance (K(KnownNat n) => HasHex (Fixed_bytes n)169,170
+    hex hex170,171
+    fromHex fromHex171,172
+fpack fpack175,176
+funpack funpack178,179
 
 ./src/Extras/Hex.lhs,829
 module Extras.HexExtras.Hex24,25

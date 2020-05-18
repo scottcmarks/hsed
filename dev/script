@@ -126,6 +126,33 @@ runQ $ ppr <$> sz "goo"
 :t runQ $ ppr <$> st "goo"
 runQ $ ppr <$> st "goo"
 
+:set -package hsed
+:set -XOverloadedStrings
+:set -XDataKinds
+
+:load src/System/SED/MCTP/Common/UID.hs
+
+import Data.SizedText.Class
+import Data.ByteString.Short
+import Extras.Sized
+
+
+:i UID
+:i Fixed_bytes
+:i IsString
+:t hNull
+let (HalfUID fb) = hNull in fb
+Data.ByteString.Short.pack [0,0,0,0]
+"\NUL\NUL\NUL\NUL" :: ShortByteString
+"\NUL\NUL\NUL\NUL" :: Fixed_bytes 4
+import Data.Maybe
+:t Just "\NUL\NUL\NUL\NUL"
+-- "\NUL\NUL\NUL\NUL" :: Fixed_bytes 3
+"\NUL\NUL\NUL\NUL" :: Fixed_bytes 4
+-- "\NUL\NUL\NUL\NUL" :: Fixed_bytes 5
+HalfUID "\NUL\NUL\NUL\NUL"
+-- HalfUID "\NUL\NUL\NUL\NUL\NUL"
+HalfUID "BobT" == halfUID 0x42 0x6F 0x62 0x54
 
 putStrLn "Buh-bye now."
 
@@ -133,3 +160,6 @@ putStrLn "Buh-bye now."
 --------------------------------------------------------------------------------
 
 putStrLn ".. script loaded."
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

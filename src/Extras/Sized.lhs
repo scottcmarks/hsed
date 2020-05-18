@@ -62,7 +62,7 @@ import           GHC.Base                   (undefined, error, mconcat, (.), ($)
 import           GHC.Classes                (Eq(..),Ord(..))
 import           GHC.Maybe                  (Maybe(..))
 import           GHC.Natural                (Natural)
-import           GHC.Show                   (Show(..), showParen, showString)
+import           GHC.Show                   (Show(..), showString, shows)
 import           GHC.TypeLits               (type (+), type (<=), KnownNat,
                                              natVal)
 import           GHC.Types                  (Nat)
@@ -97,12 +97,10 @@ instance (KnownNat n) => Arbitrary (Fixed_bytes n) where
 -- | Show instances
 --
 instance (KnownNat n) => Show (Fixed_bytes n) where
-    showsPrec d (Fixed_bytes sbs) = showParen (app_prec < d) $
-            showString "fpack "
-          . showList (S.unpack $ T.unwrap sbs)
-          . showString " :: Fixed_bytes "
-          . showString (show (natVal (Proxy @n)))
-         where app_prec = 10
+    showsPrec _ (Fixed_bytes sbs) =
+        shows sbs
+      . showString " :: Fixed_bytes "
+      . shows (natVal (Proxy @n))
 
 -- | IsString instances, allowing string literal denotations
 --
@@ -113,7 +111,7 @@ instance (KnownNat n) => IsString (Fixed_bytes n) where
                           mconcat [ show (natVal (Proxy @n))
                                   , " is not the length of "
                                   , show s
-                                  , " (which is of length "
+                                  , " (which length is "
                                   , show (F.length s)
                                   , ")"
                                   ]

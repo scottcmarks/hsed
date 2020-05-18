@@ -130,29 +130,6 @@ instance (S(StreamItem a) => StreamItem (a, a)77,78
     parser parser78,79
     generate generate79,80
 
-./src/System/SED/MCTP/Common/UID.lhs,644
-module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID27,28
-showFixed_bytesHex showFixed_bytesHex76,77
-showFixed_bytes showFixed_bytes81,82
-newtype HalfUID HalfUID85,86
-instance Show Show HalfUID88,89
-    show show89,90
-instance Arbitrary Arbitrary HalfUID90,91
-    arbitrary arbitrary91,92
-halfUID halfUID93,94
-newtype UID UID97,98
-instance Show Show UID100,101
-    show show101,102
-instance Arbitrary Arbitrary UID102,103
-    arbitrary arbitrary103,104
-uid uid105,106
-uidUpper uidUpper112,113
-uidLower uidLower115,116
-uidPlus uidPlus118,119
-(+(+:+)121,122
-hNull hNull125,126
-uNull uNull128,129
-
 ./src/System/SED/MCTP/Common/THUtil.lhs,231
 module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil24,25
 parseTable parseTable50,51
@@ -255,6 +232,29 @@ data TableColumn = TableColumn { _columnNumber _columnNumber347,348
                                , _columnIsUnique _columnIsUnique349,350
                                , _columnType _columnType350,351
 newtype ColumnType ColumnType354,355
+
+./src/System/SED/MCTP/Common/UID.hs,634
+module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID19,20
+showFixed_bytesHex showFixed_bytesHex69,70
+showFixed_bytes showFixed_bytes74,75
+newtype HalfUID HalfUID78,79
+instance Show Show HalfUID81,82
+    show show82,83
+instance Arbitrary Arbitrary HalfUID83,84
+    arbitrary arbitrary84,85
+halfUID halfUID86,87
+newtype UID UID90,91
+instance Show Show UID93,94
+    show show94,95
+instance Arbitrary Arbitrary UID95,96
+    arbitrary arbitrary96,97
+uid uid98,99
+uidUpper uidUpper105,106
+uidLower uidLower108,109
+uidPlus uidPlus111,112
+(+(+:+)114,115
+hNull hNull118,119
+uNull uNull121,122
 
 ./src/System/SED/MCTP/Common/Types.lhs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types21,22
@@ -544,6 +544,22 @@ instance IsByteString IsByteString Integer103,104
 instance IsByteString IsByteString Natural107,108
     fromByteString fromByteString108,109
     toByteString toByteString109,110
+
+./src/Data/Hex.hs,337
+module Data.Hex(Data.Hex14,15
+class Hex Hex21,22
+    hex hex23,24
+    unhex unhex25,26
+instance Hex Hex String28,29
+    hex hex29,30
+    unhex unhex33,34
+c c40,41
+instance Hex Hex B-ByteString65,66
+    hex hex66,67
+    unhex unhex67,68
+instance Hex Hex L-ByteString69,70
+    hex hex70,71
+    unhex unhex71,72
 
 ./src/Data/SizedText/Class.hs,2559
 module Data.SizedText.ClassData.SizedText.Class15,16

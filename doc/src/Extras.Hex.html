@@ -65,83 +65,83 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span class="annot"><a href="Extras.Hex.html#hexValue"><span class="hs-identifier hs-type">hexValue</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
 </span><span id="line-58"></span><span id="hexValue"><span class="annot"><span class="annottext">hexValue :: Char -&gt; Maybe Word8
-</span><a href="Extras.Hex.html#hexValue"><span class="hs-identifier hs-var hs-var">hexValue</span></a></span></span><span> </span><span id="local-6989586621679503858"><span class="annot"><span class="annottext">d :: Char
-</span><a href="#local-6989586621679503858"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Word8
+</span><a href="Extras.Hex.html#hexValue"><span class="hs-identifier hs-var hs-var">hexValue</span></a></span></span><span> </span><span id="local-6989586621679504530"><span class="annot"><span class="annottext">d :: Char
+</span><a href="#local-6989586621679504530"><span class="hs-identifier hs-var">d</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Word8
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Word8) -&gt; (Int -&gt; Int) -&gt; Int -&gt; Word8
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679503857"><span class="annot"><span class="annottext">i :: Int
-</span><a href="#local-6989586621679503857"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="hs-number">16</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679504529"><span class="annot"><span class="annottext">i :: Int
+</span><a href="#local-6989586621679504529"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="hs-number">16</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503857"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503857"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621679504529"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679504529"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="hs-number">16</span></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503857"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Word8) -&gt; Maybe Int -&gt; Maybe Word8
+</span><a href="#local-6989586621679504529"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Word8) -&gt; Maybe Int -&gt; Maybe Word8
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; String -&gt; Maybe Int
 forall a. Eq a =&gt; a -&gt; [a] -&gt; Maybe Int
 </span><span class="hs-identifier hs-var">elemIndex</span></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621679503858"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679504530"><span class="hs-identifier hs-var">d</span></a></span><span> </span><span class="annot"><span class="annottext">String
 </span><a href="Extras.Hex.html#hexDigits"><span class="hs-identifier hs-var">hexDigits</span></a></span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">class</span><span> </span><span id="HasHex"><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-var">HasHex</span></a></span></span><span> </span><span id="local-6989586621679503910"><span class="annot"><a href="#local-6989586621679503910"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>    </span><span id="hex"><span class="annot"><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-type">hex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679503910"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-63"></span><span>    </span><span id="fromHex"><span class="annot"><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-type">fromHex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679503910"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-61"></span><span class="hs-keyword">class</span><span> </span><span id="HasHex"><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-var">HasHex</span></a></span></span><span> </span><span id="local-6989586621679504582"><span class="annot"><a href="#local-6989586621679504582"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>    </span><span id="hex"><span class="annot"><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-type">hex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679504582"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-63"></span><span>    </span><span id="fromHex"><span class="annot"><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-type">fromHex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="#local-6989586621679504582"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-64"></span><span>
 </span><span id="line-65"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-66"></span><span>    </span><span id="local-6989586621679503851"><span class="annot"><span class="annottext">hex :: Word8 -&gt; String
-</span><a href="#local-6989586621679503851"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span id="local-6989586621679503850"><span class="annot"><span class="annottext">w :: Word8
-</span><a href="#local-6989586621679503850"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; (Word8, Word8)
+</span><span id="line-66"></span><span>    </span><span id="local-6989586621679504523"><span class="annot"><span class="annottext">hex :: Word8 -&gt; String
+</span><a href="#local-6989586621679504523"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span id="local-6989586621679504522"><span class="annot"><span class="annottext">w :: Word8
+</span><a href="#local-6989586621679504522"><span class="hs-identifier hs-var">w</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; (Word8, Word8)
 forall a. Integral a =&gt; a -&gt; a -&gt; (a, a)
 </span><span class="hs-identifier hs-var">divMod</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679503850"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="hs-number">16</span></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-67"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621679503849"><span class="annot"><span class="annottext">q :: Word8
-</span><a href="#local-6989586621679503849"><span class="hs-identifier hs-var">q</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679503848"><span class="annot"><span class="annottext">r :: Word8
-</span><a href="#local-6989586621679503848"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Char
+</span><a href="#local-6989586621679504522"><span class="hs-identifier hs-var">w</span></a></span><span> </span><span class="annot"><span class="hs-number">16</span></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-67"></span><span>      </span><span class="hs-special">(</span><span id="local-6989586621679504521"><span class="annot"><span class="annottext">q :: Word8
+</span><a href="#local-6989586621679504521"><span class="hs-identifier hs-var">q</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679504520"><span class="annot"><span class="annottext">r :: Word8
+</span><a href="#local-6989586621679504520"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Char
 </span><a href="Extras.Hex.html#hexDigit"><span class="hs-identifier hs-var">hexDigit</span></a></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Char) -&gt; [Word8] -&gt; String
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679503849"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679503848"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621679503847"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe Word8
-</span><a href="#local-6989586621679503847"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-special">[</span><span id="local-6989586621679503846"><span class="annot"><span class="annottext">hi :: Char
-</span><a href="#local-6989586621679503846"><span class="hs-identifier hs-var">hi</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679503845"><span class="annot"><span class="annottext">lo :: Char
-</span><a href="#local-6989586621679503845"><span class="hs-identifier hs-var">lo</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679503844"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679503844"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Maybe Word8
+</span><a href="#local-6989586621679504521"><span class="hs-identifier hs-var">q</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679504520"><span class="hs-identifier hs-var">r</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-68"></span><span>    </span><span id="local-6989586621679504519"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe Word8
+</span><a href="#local-6989586621679504519"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-special">[</span><span id="local-6989586621679504518"><span class="annot"><span class="annottext">hi :: Char
+</span><a href="#local-6989586621679504518"><span class="hs-identifier hs-var">hi</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679504517"><span class="annot"><span class="annottext">lo :: Char
+</span><a href="#local-6989586621679504517"><span class="hs-identifier hs-var">lo</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679504516"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679504516"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Maybe Word8
 </span><a href="Extras.Hex.html#hexValue"><span class="hs-identifier hs-var">hexValue</span></a></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621679503846"><span class="hs-identifier hs-var">hi</span></a></span><span>
-</span><span id="line-69"></span><span>                         </span><span id="local-6989586621679503843"><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679503843"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Maybe Word8
+</span><a href="#local-6989586621679504518"><span class="hs-identifier hs-var">hi</span></a></span><span>
+</span><span id="line-69"></span><span>                         </span><span id="local-6989586621679504515"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679504515"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; Maybe Word8
 </span><a href="Extras.Hex.html#hexValue"><span class="hs-identifier hs-var">hexValue</span></a></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621679503845"><span class="hs-identifier hs-var">lo</span></a></span><span>
+</span><a href="#local-6989586621679504517"><span class="hs-identifier hs-var">lo</span></a></span><span>
 </span><span id="line-70"></span><span>                         </span><span class="annot"><span class="annottext">Word8 -&gt; Maybe Word8
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Maybe Word8) -&gt; Word8 -&gt; Maybe Word8
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679503844"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8
+</span><a href="#local-6989586621679504516"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="hs-number">16</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679503843"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><a href="#local-6989586621679504515"><span class="hs-identifier hs-var">l</span></a></span><span>
 </span><span id="line-71"></span><span>    </span><span class="annot"><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="hs-identifier">_</span><span>       </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe Word8
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-72"></span><span>
 </span><span id="line-73"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-74"></span><span>    </span><span id="local-6989586621679503840"><span class="annot"><span class="annottext">hex :: Char -&gt; String
-</span><a href="#local-6989586621679503840"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; String
+</span><span id="line-74"></span><span>    </span><span id="local-6989586621679504512"><span class="annot"><span class="annottext">hex :: Char -&gt; String
+</span><a href="#local-6989586621679504512"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; String
 forall a. HasHex a =&gt; a -&gt; String
 </span><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-var">hex</span></a></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; String) -&gt; (Char -&gt; Word8) -&gt; Char -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Word8
 </span><a href="Data.ByteString.Integral.html#ordw"><span class="hs-identifier hs-var">ordw</span></a></span><span>
-</span><span id="line-75"></span><span>    </span><span id="local-6989586621679503838"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe Char
-</span><a href="#local-6989586621679503838"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Char) -&gt; Maybe Word8 -&gt; Maybe Char
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621679504510"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe Char
+</span><a href="#local-6989586621679504510"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Char) -&gt; Maybe Word8 -&gt; Maybe Char
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Char
 </span><a href="Data.ByteString.Integral.html#char"><span class="hs-identifier hs-var">char</span></a></span><span> </span><span class="annot"><span class="annottext">(Maybe Word8 -&gt; Maybe Char)
@@ -152,48 +152,48 @@ forall a. HasHex a =&gt; String -&gt; Maybe a
 </span><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span>
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span class="hs-special">]</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-78"></span><span>    </span><span id="local-6989586621679503834"><span class="annot"><span class="annottext">hex :: [Word8] -&gt; String
-</span><a href="#local-6989586621679503834"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; String) -&gt; [Word8] -&gt; String
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621679504506"><span class="annot"><span class="annottext">hex :: [Word8] -&gt; String
+</span><a href="#local-6989586621679504506"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; String) -&gt; [Word8] -&gt; String
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; String
 forall a. HasHex a =&gt; a -&gt; String
 </span><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-var">hex</span></a></span><span>
-</span><span id="line-79"></span><span>    </span><span id="local-6989586621679503833"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe [Word8]
-</span><a href="#local-6989586621679503833"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679503832"><span class="annot"><span class="annottext">hi :: Char
-</span><a href="#local-6989586621679503832"><span class="hs-identifier hs-var">hi</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679503831"><span class="annot"><span class="annottext">lo :: Char
-</span><a href="#local-6989586621679503831"><span class="hs-identifier hs-var">lo</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679503830"><span class="annot"><span class="annottext">bs :: String
-</span><a href="#local-6989586621679503830"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; [Word8] -&gt; [Word8])
+</span><span id="line-79"></span><span>    </span><span id="local-6989586621679504505"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe [Word8]
+</span><a href="#local-6989586621679504505"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679504504"><span class="annot"><span class="annottext">hi :: Char
+</span><a href="#local-6989586621679504504"><span class="hs-identifier hs-var">hi</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679504503"><span class="annot"><span class="annottext">lo :: Char
+</span><a href="#local-6989586621679504503"><span class="hs-identifier hs-var">lo</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679504502"><span class="annot"><span class="annottext">bs :: String
+</span><a href="#local-6989586621679504502"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">:</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; [Word8] -&gt; [Word8])
 -&gt; Maybe Word8 -&gt; Maybe ([Word8] -&gt; [Word8])
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe Word8
 forall a. HasHex a =&gt; String -&gt; Maybe a
 </span><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621679503832"><span class="hs-identifier hs-var">hi</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621679503831"><span class="hs-identifier hs-var">lo</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe ([Word8] -&gt; [Word8]) -&gt; Maybe [Word8] -&gt; Maybe [Word8]
+</span><a href="#local-6989586621679504504"><span class="hs-identifier hs-var">hi</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">Char
+</span><a href="#local-6989586621679504503"><span class="hs-identifier hs-var">lo</span></a></span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">Maybe ([Word8] -&gt; [Word8]) -&gt; Maybe [Word8] -&gt; Maybe [Word8]
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe [Word8]
 forall a. HasHex a =&gt; String -&gt; Maybe a
 </span><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679503830"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621679504502"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-80"></span><span>    </span><span class="annot"><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>         </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Word8] -&gt; Maybe [Word8]
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-81"></span><span>    </span><span class="annot"><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="hs-special">[</span><span id="local-6989586621679503829"><span class="annot"><span class="annottext">_hi :: Char
-</span><a href="#local-6989586621679503829"><span class="hs-identifier hs-var">_hi</span></a></span></span><span class="hs-special">]</span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe [Word8]
+</span><span id="line-81"></span><span>    </span><span class="annot"><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="hs-special">[</span><span id="local-6989586621679504501"><span class="annot"><span class="annottext">_hi :: Char
+</span><a href="#local-6989586621679504501"><span class="hs-identifier hs-var">_hi</span></a></span></span><span class="hs-special">]</span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe [Word8]
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span> </span><span class="hs-comment">-- odd number of hex digits</span><span>
 </span><span id="line-82"></span><span>
 </span><span id="line-83"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-84"></span><span>    </span><span id="local-6989586621679503826"><span class="annot"><span class="annottext">hex :: ByteString -&gt; String
-</span><a href="#local-6989586621679503826"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Word8] -&gt; String
+</span><span id="line-84"></span><span>    </span><span id="local-6989586621679504498"><span class="annot"><span class="annottext">hex :: ByteString -&gt; String
+</span><a href="#local-6989586621679504498"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Word8] -&gt; String
 forall a. HasHex a =&gt; a -&gt; String
 </span><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-var">hex</span></a></span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; String)
 -&gt; (ByteString -&gt; [Word8]) -&gt; ByteString -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; [Word8]
 </span><span class="hs-identifier hs-var">B.unpack</span></span><span>
-</span><span id="line-85"></span><span>    </span><span id="local-6989586621679503825"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe ByteString
-</span><a href="#local-6989586621679503825"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; ByteString) -&gt; Maybe [Word8] -&gt; Maybe ByteString
+</span><span id="line-85"></span><span>    </span><span id="local-6989586621679504497"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe ByteString
+</span><a href="#local-6989586621679504497"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; ByteString) -&gt; Maybe [Word8] -&gt; Maybe ByteString
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">[Word8] -&gt; ByteString
 </span><span class="hs-identifier hs-var">B.pack</span></span><span> </span><span class="annot"><span class="annottext">(Maybe [Word8] -&gt; Maybe ByteString)
@@ -204,8 +204,8 @@ forall a. HasHex a =&gt; String -&gt; Maybe a
 </span><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span>
 </span><span id="line-86"></span><span>
 </span><span id="line-87"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621679503822"><span class="annot"><span class="annottext">hex :: String -&gt; String
-</span><a href="#local-6989586621679503822"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><span id="line-88"></span><span>    </span><span id="local-6989586621679504494"><span class="annot"><span class="annottext">hex :: String -&gt; String
+</span><a href="#local-6989586621679504494"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 forall a. HasHex a =&gt; a -&gt; String
 </span><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-var">hex</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; String)
 -&gt; (String -&gt; ByteString) -&gt; String -&gt; String
@@ -213,8 +213,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; ByteString
 forall a. IsString a =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">fromString</span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-89"></span><span>    </span><span id="local-6989586621679503821"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe String
-</span><a href="#local-6989586621679503821"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; String) -&gt; Maybe ByteString -&gt; Maybe String
+</span><span id="line-89"></span><span>    </span><span id="local-6989586621679504493"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe String
+</span><a href="#local-6989586621679504493"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; String) -&gt; Maybe ByteString -&gt; Maybe String
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-identifier hs-var">fmap</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">C.unpack</span></span><span> </span><span class="annot"><span class="annottext">(Maybe ByteString -&gt; Maybe String)
@@ -225,28 +225,28 @@ forall a. HasHex a =&gt; String -&gt; Maybe a
 </span><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span>
 </span><span id="line-90"></span><span>
 </span><span id="line-91"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShortByteString</span></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-92"></span><span>    </span><span id="local-6989586621679503818"><span class="annot"><span class="annottext">hex :: ShortByteString -&gt; String
-</span><a href="#local-6989586621679503818"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621679504490"><span class="annot"><span class="annottext">hex :: ShortByteString -&gt; String
+</span><a href="#local-6989586621679504490"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 forall a. HasHex a =&gt; a -&gt; String
 </span><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-var">hex</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; String)
 -&gt; (ShortByteString -&gt; ByteString) -&gt; ShortByteString -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ShortByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">fromShort</span></span><span>
-</span><span id="line-93"></span><span>    </span><span id="local-6989586621679503817"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe ShortByteString
-</span><a href="#local-6989586621679503817"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span id="local-6989586621679503816"><span class="annot"><span class="annottext">hs :: String
-</span><a href="#local-6989586621679503816"><span class="hs-identifier hs-var">hs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ShortByteString
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621679504489"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe ShortByteString
+</span><a href="#local-6989586621679504489"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span id="local-6989586621679504488"><span class="annot"><span class="annottext">hs :: String
+</span><a href="#local-6989586621679504488"><span class="hs-identifier hs-var">hs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ShortByteString
 </span><span class="hs-identifier hs-var">toShort</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ShortByteString)
 -&gt; Maybe ByteString -&gt; Maybe ShortByteString
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe ByteString
 forall a. HasHex a =&gt; String -&gt; Maybe a
 </span><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679503816"><span class="hs-identifier hs-var">hs</span></a></span><span>
+</span><a href="#local-6989586621679504488"><span class="hs-identifier hs-var">hs</span></a></span><span>
 </span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span id="local-6989586621679503815"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679503815"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SizedText.Class.html#Static"><span class="hs-identifier hs-type">Static</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShortByteString</span></span><span> </span><span class="annot"><a href="#local-6989586621679503815"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-96"></span><span>    </span><span id="local-6989586621679503812"><span class="annot"><span class="annottext">hex :: Static ShortByteString n -&gt; String
-</span><a href="#local-6989586621679503812"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShortByteString -&gt; String
+</span><span id="line-95"></span><span id="local-6989586621679504487"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679504487"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Extras.Hex.html#HasHex"><span class="hs-identifier hs-type">HasHex</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.SizedText.Class.html#Static"><span class="hs-identifier hs-type">Static</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ShortByteString</span></span><span> </span><span class="annot"><a href="#local-6989586621679504487"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-96"></span><span>    </span><span id="local-6989586621679504484"><span class="annot"><span class="annottext">hex :: Static ShortByteString n -&gt; String
+</span><a href="#local-6989586621679504484"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShortByteString -&gt; String
 forall a. HasHex a =&gt; a -&gt; String
 </span><a href="Extras.Hex.html#hex"><span class="hs-identifier hs-var">hex</span></a></span><span> </span><span class="annot"><span class="annottext">(ShortByteString -&gt; String)
 -&gt; (Static ShortByteString n -&gt; ShortByteString)
@@ -256,9 +256,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Static ShortByteString n -&gt; ShortByteString
 forall a (l :: Nat) (u :: Nat). IsSizedText a =&gt; Sized a l u -&gt; a
 </span><a href="Data.SizedText.Class.html#unwrap"><span class="hs-identifier hs-var">unwrap</span></a></span><span>
-</span><span id="line-97"></span><span>    </span><span id="local-6989586621679503811"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe (Static ShortByteString n)
-</span><a href="#local-6989586621679503811"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span id="local-6989586621679503810"><span class="annot"><span class="annottext">hs :: String
-</span><a href="#local-6989586621679503810"><span class="hs-identifier hs-var">hs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShortByteString -&gt; Maybe (Static ShortByteString n)
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621679504483"><span class="annot"><span class="annottext">fromHex :: String -&gt; Maybe (Static ShortByteString n)
+</span><a href="#local-6989586621679504483"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromHex</span></a></span></span><span> </span><span id="local-6989586621679504482"><span class="annot"><span class="annottext">hs :: String
+</span><a href="#local-6989586621679504482"><span class="hs-identifier hs-var">hs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ShortByteString -&gt; Maybe (Static ShortByteString n)
 forall a (l :: Nat) (u :: Nat).
 (IsSizedText a, KnownNat l, KnownNat u) =&gt;
 a -&gt; Maybe (Sized a l u)
@@ -268,7 +268,7 @@ forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; m a -&gt; m b
 </span><span class="hs-operator hs-var">=&lt;&lt;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Maybe ShortByteString
 forall a. HasHex a =&gt; String -&gt; Maybe a
 </span><a href="Extras.Hex.html#fromHex"><span class="hs-identifier hs-var">fromHex</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679503810"><span class="hs-identifier hs-var">hs</span></a></span></span><span>
+</span><a href="#local-6989586621679504482"><span class="hs-identifier hs-var">hs</span></a></span></span><span>
 </span><span id="line-98"></span><span>
 </span><span id="line-99"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
 </span><span id="line-100"></span></pre></body></html>

@@ -29,6 +29,22 @@ instance Data.ByteString.Integral.IsByteString GHC.Integer.Type.Integer
 instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
 
 
+-- | Convert strings into hexadecimal and back.
+module Data.Hex
+
+-- | Convert strings into hexadecimal and back.
+class Hex t
+
+-- | Convert string into hexadecimal.
+hex :: Hex t => t -> t
+
+-- | Convert from hexadecimal and fail on invalid input.
+unhex :: (Hex t, MonadFail m) => t -> m t
+instance Data.Hex.Hex GHC.Base.String
+instance Data.Hex.Hex Data.ByteString.Internal.ByteString
+instance Data.Hex.Hex Data.ByteString.Lazy.Internal.ByteString
+
+
 -- | Conversions from type-level Nat to value-level Num
 module GHC.TypeLits.Extras
 

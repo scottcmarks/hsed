@@ -536,7 +536,7 @@ instance GHC.Show.Show Hsed.App.Options
 
 -- | Formats.
 module System.SED.MCTP.Common.BaseTypes
-type Core_integer n = Sized Integer n
+type Core_integer n = Sized Integer n n
 type Core_uinteger n = Sized Natural n n
 type Core_bytes n = Sized ByteString n n
 type Core_maxbytes n = Sized ByteString 0 n

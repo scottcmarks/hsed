@@ -534,6 +534,14 @@ instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
 
 
+-- | Formats.
+module System.SED.MCTP.Common.BaseTypes
+type Core_integer n = Sized Integer n
+type Core_uinteger n = Sized Natural n n
+type Core_bytes n = Sized ByteString n n
+type Core_maxbytes n = Sized ByteString 0 n
+
+
 -- | Parse and generate stream items.
 module System.SED.MCTP.Common.StreamItem
 class StreamItem a

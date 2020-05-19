@@ -5,4 +5,4 @@ extra-deps:
 - git: https://github.com/xldenis/abnf.git
   commit: e50d8589ec735a4a1a94654cf1a94493e227701d
 - static-text-0.2.0.4@sha256:3da14d6456cf58eacb2dd4882f4a7a7e30200fd009a336893e1d12199f7f792b,2749
-resolver: lts-15.12
+resolver: lts-15.13

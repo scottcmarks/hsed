@@ -256,6 +256,13 @@ uidPlus uidPlus111,112
 hNull hNull118,119
 uNull uNull121,122
 
+./src/System/SED/MCTP/Common/BaseTypes.hs,231
+module System.SED.MCTP.Common.BaseTypesSystem.SED.MCTP.Common.BaseTypes17,18
+type Core_integer Core_integer33,34
+type Core_uinteger Core_uinteger34,35
+type Core_bytes Core_bytes35,36
+type Core_maxbytes Core_maxbytes36,37
+
 ./src/System/SED/MCTP/Common/Types.lhs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types21,22
 

@@ -19,82 +19,82 @@
 </span><span id="line-19"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString.Lazy.Char8</span></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">L</span></span><span>
 </span><span id="line-20"></span><span>
 </span><span id="line-21"></span><span class="hs-comment">-- | Convert strings into hexadecimal and back.</span><span>
-</span><span id="line-22"></span><span class="hs-keyword">class</span><span> </span><span id="Hex"><span class="annot"><a href="Data.Hex.html#Hex"><span class="hs-identifier hs-var">Hex</span></a></span></span><span> </span><span id="local-6989586621679503630"><span class="annot"><a href="#local-6989586621679503630"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span class="hs-keyword">class</span><span> </span><span id="Hex"><span class="annot"><a href="Data.Hex.html#Hex"><span class="hs-identifier hs-var">Hex</span></a></span></span><span> </span><span id="local-6989586621679503819"><span class="annot"><a href="#local-6989586621679503819"><span class="hs-identifier hs-type">t</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-23"></span><span>    </span><span class="hs-comment">-- | Convert string into hexadecimal.</span><span>
-</span><span id="line-24"></span><span>    </span><span id="hex"><span class="annot"><a href="Data.Hex.html#hex"><span class="hs-identifier hs-type">hex</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679503630"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503630"><span class="hs-identifier hs-type">t</span></a></span><span>
+</span><span id="line-24"></span><span>    </span><span id="hex"><span class="annot"><a href="Data.Hex.html#hex"><span class="hs-identifier hs-type">hex</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679503819"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503819"><span class="hs-identifier hs-type">t</span></a></span><span>
 </span><span id="line-25"></span><span>    </span><span class="hs-comment">-- | Convert from hexadecimal and fail on invalid input.</span><span>
-</span><span id="line-26"></span><span>    </span><span id="local-6989586621679503632"><span id="unhex"><span class="annot"><a href="Data.Hex.html#unhex"><span class="hs-identifier hs-type">unhex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679503632"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503630"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503632"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679503630"><span class="hs-identifier hs-type">t</span></a></span></span><span>  </span><span class="hs-comment">-- scm -- was Monad</span><span>
+</span><span id="line-26"></span><span>    </span><span id="local-6989586621679503821"><span id="unhex"><span class="annot"><a href="Data.Hex.html#unhex"><span class="hs-identifier hs-type">unhex</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679503821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503819"><span class="hs-identifier hs-type">t</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503821"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679503819"><span class="hs-identifier hs-type">t</span></a></span></span><span>  </span><span class="hs-comment">-- scm -- was Monad</span><span>
 </span><span id="line-27"></span><span>
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Hex.html#Hex"><span class="hs-identifier hs-type">Hex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-30"></span><span>    </span><span id="local-6989586621679503595"><span class="annot"><span class="annottext">hex :: String -&gt; String
-</span><a href="#local-6989586621679503595"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; String) -&gt; String -&gt; String
+</span><span id="line-30"></span><span>    </span><span id="local-6989586621679503784"><span class="annot"><span class="annottext">hex :: String -&gt; String
+</span><a href="#local-6989586621679503784"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Char -&gt; String) -&gt; String -&gt; String
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">Prelude.concatMap</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; String
 forall a. Enum a =&gt; a -&gt; String
-</span><a href="#local-6989586621679503593"><span class="hs-identifier hs-var">w</span></a></span><span>
-</span><span id="line-31"></span><span>        </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679503593"><span class="annot"><span class="annottext">w :: a -&gt; String
-</span><a href="#local-6989586621679503593"><span class="hs-identifier hs-var hs-var">w</span></a></span></span><span> </span><span id="local-6989586621679503592"><span class="annot"><span class="annottext">ch :: a
-</span><a href="#local-6989586621679503592"><span class="hs-identifier hs-var">ch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679503591"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679503591"><span class="hs-identifier hs-var hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;0123456789ABCDEF&quot;</span></span><span>
-</span><span id="line-32"></span><span>                         </span><span class="hs-special">(</span><span id="local-6989586621679503590"><span class="annot"><span class="annottext">h :: Int
-</span><a href="#local-6989586621679503590"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679503589"><span class="annot"><span class="annottext">l :: Int
-</span><a href="#local-6989586621679503589"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Int
+</span><a href="#local-6989586621679503782"><span class="hs-identifier hs-var">w</span></a></span><span>
+</span><span id="line-31"></span><span>        </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679503782"><span class="annot"><span class="annottext">w :: a -&gt; String
+</span><a href="#local-6989586621679503782"><span class="hs-identifier hs-var hs-var">w</span></a></span></span><span> </span><span id="local-6989586621679503781"><span class="annot"><span class="annottext">ch :: a
+</span><a href="#local-6989586621679503781"><span class="hs-identifier hs-var">ch</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679503780"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679503780"><span class="hs-identifier hs-var hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;0123456789ABCDEF&quot;</span></span><span>
+</span><span id="line-32"></span><span>                         </span><span class="hs-special">(</span><span id="local-6989586621679503779"><span class="annot"><span class="annottext">h :: Int
+</span><a href="#local-6989586621679503779"><span class="hs-identifier hs-var">h</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679503778"><span class="annot"><span class="annottext">l :: Int
+</span><a href="#local-6989586621679503778"><span class="hs-identifier hs-var">l</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Int
 forall a. Enum a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">fromEnum</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679503592"><span class="hs-identifier hs-var">ch</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; (Int, Int)
+</span><a href="#local-6989586621679503781"><span class="hs-identifier hs-var">ch</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; (Int, Int)
 forall a. Integral a =&gt; a -&gt; a -&gt; (a, a)
 </span><span class="hs-operator hs-var">`divMod`</span></span><span> </span><span class="annot"><span class="hs-number">16</span></span><span>
 </span><span id="line-33"></span><span>                     </span><span class="hs-keyword">in</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679503591"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Int -&gt; Char
+</span><a href="#local-6989586621679503780"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Int -&gt; Char
 forall a. [a] -&gt; Int -&gt; a
 </span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503590"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679503591"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Int -&gt; Char
+</span><a href="#local-6989586621679503779"><span class="hs-identifier hs-var">h</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679503780"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; Int -&gt; Char
 forall a. [a] -&gt; Int -&gt; a
 </span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503589"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-34"></span><span>    </span><span id="local-6989586621679503585"><span class="annot"><span class="annottext">unhex :: String -&gt; m String
-</span><a href="#local-6989586621679503585"><span class="hs-identifier hs-var hs-var hs-var hs-var">unhex</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; m String
+</span><a href="#local-6989586621679503778"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-34"></span><span>    </span><span id="local-6989586621679503774"><span class="annot"><span class="annottext">unhex :: String -&gt; m String
+</span><a href="#local-6989586621679503774"><span class="hs-identifier hs-var hs-var hs-var hs-var">unhex</span></a></span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; m String
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
-</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Data.Hex.html#unhex"><span class="hs-identifier hs-var">unhex</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679503584"><span class="annot"><span class="annottext">a :: Char
-</span><a href="#local-6989586621679503584"><span class="hs-identifier hs-var">a</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679503583"><span class="annot"><span class="annottext">b :: Char
-</span><a href="#local-6989586621679503583"><span class="hs-identifier hs-var">b</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679503582"><span class="annot"><span class="annottext">r :: String
-</span><a href="#local-6989586621679503582"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679503581"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503581"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; m Int
+</span><span id="line-35"></span><span>    </span><span class="annot"><a href="Data.Hex.html#unhex"><span class="hs-identifier hs-var">unhex</span></a></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679503773"><span class="annot"><span class="annottext">a :: Char
+</span><a href="#local-6989586621679503773"><span class="hs-identifier hs-var">a</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679503772"><span class="annot"><span class="annottext">b :: Char
+</span><a href="#local-6989586621679503772"><span class="hs-identifier hs-var">b</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679503771"><span class="annot"><span class="annottext">r :: String
+</span><a href="#local-6989586621679503771"><span class="hs-identifier hs-var">r</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span> </span><span id="local-6989586621679503770"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679503770"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; m Int
 forall (m :: * -&gt; *). MonadFail m =&gt; Char -&gt; m Int
 </span><a href="Data.Hex.html#c"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621679503584"><span class="hs-identifier hs-var">a</span></a></span><span>
-</span><span id="line-36"></span><span>                       </span><span id="local-6989586621679503579"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503579"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; m Int
+</span><a href="#local-6989586621679503773"><span class="hs-identifier hs-var">a</span></a></span><span>
+</span><span id="line-36"></span><span>                       </span><span id="local-6989586621679503768"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679503768"><span class="hs-identifier hs-var">y</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Char -&gt; m Int
 forall (m :: * -&gt; *). MonadFail m =&gt; Char -&gt; m Int
 </span><a href="Data.Hex.html#c"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">Char
-</span><a href="#local-6989586621679503583"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><a href="#local-6989586621679503772"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-37"></span><span>                       </span><span class="annot"><span class="annottext">(String -&gt; String) -&gt; m String -&gt; m String
 forall (m :: * -&gt; *) a1 r. Monad m =&gt; (a1 -&gt; r) -&gt; m a1 -&gt; m r
 </span><span class="hs-identifier hs-var">liftM</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Char
 forall a. Enum a =&gt; Int -&gt; a
 </span><span class="hs-identifier hs-var">toEnum</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503581"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
+</span><a href="#local-6989586621679503770"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="hs-number">16</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Int
 forall a. Num a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679503579"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Char -&gt; String -&gt; String
+</span><a href="#local-6989586621679503768"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Char -&gt; String -&gt; String
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(m String -&gt; m String) -&gt; m String -&gt; m String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; m String
 forall t (m :: * -&gt; *). (Hex t, MonadFail m) =&gt; t -&gt; m t
 </span><a href="Data.Hex.html#unhex"><span class="hs-identifier hs-var">unhex</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679503582"><span class="hs-identifier hs-var">r</span></a></span><span>
+</span><a href="#local-6989586621679503771"><span class="hs-identifier hs-var">r</span></a></span><span>
 </span><span id="line-38"></span><span>    </span><span class="annot"><a href="Data.Hex.html#unhex"><span class="hs-identifier hs-var">unhex</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-identifier">_</span><span class="hs-special">]</span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; m String
 forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Non-even length&quot;</span></span><span>
 </span><span id="line-39"></span><span>
 </span><span id="line-40"></span><span>
-</span><span id="line-41"></span><span id="local-6989586621679503619"><span class="annot"><a href="Data.Hex.html#c"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679503619"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503619"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>  </span><span class="hs-comment">-- scm -- was Monad</span><span>
+</span><span id="line-41"></span><span id="local-6989586621679503808"><span class="annot"><a href="Data.Hex.html#c"><span class="hs-identifier hs-type">c</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">MonadFail</span></span><span> </span><span class="annot"><a href="#local-6989586621679503808"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Char</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679503808"><span class="hs-identifier hs-type">m</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span></span><span>  </span><span class="hs-comment">-- scm -- was Monad</span><span>
 </span><span id="line-42"></span><span id="c"><span class="annot"><span class="annottext">c :: Char -&gt; m Int
 </span><a href="Data.Hex.html#c"><span class="hs-identifier hs-var hs-var">c</span></a></span></span><span> </span><span class="hs-char">'0'</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; m Int
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -167,8 +167,8 @@ forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
 </span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Invalid hex digit!&quot;</span></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Hex.html#Hex"><span class="hs-identifier hs-type">Hex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-67"></span><span>    </span><span id="local-6989586621679503572"><span class="annot"><span class="annottext">hex :: ByteString -&gt; ByteString
-</span><a href="#local-6989586621679503572"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
+</span><span id="line-67"></span><span>    </span><span id="local-6989586621679503761"><span class="annot"><span class="annottext">hex :: ByteString -&gt; ByteString
+</span><a href="#local-6989586621679503761"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
 </span><span class="hs-identifier hs-var">B.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString)
 -&gt; (ByteString -&gt; String) -&gt; ByteString -&gt; ByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -179,9 +179,9 @@ forall t. Hex t =&gt; t -&gt; t
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">B.unpack</span></span><span>
-</span><span id="line-68"></span><span>    </span><span id="local-6989586621679503568"><span class="annot"><span class="annottext">unhex :: ByteString -&gt; m ByteString
-</span><a href="#local-6989586621679503568"><span class="hs-identifier hs-var hs-var hs-var hs-var">unhex</span></a></span></span><span> </span><span id="local-6989586621679503567"><span class="annot"><span class="annottext">x :: ByteString
-</span><a href="#local-6989586621679503567"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString) -&gt; m String -&gt; m ByteString
+</span><span id="line-68"></span><span>    </span><span id="local-6989586621679503757"><span class="annot"><span class="annottext">unhex :: ByteString -&gt; m ByteString
+</span><a href="#local-6989586621679503757"><span class="hs-identifier hs-var hs-var hs-var hs-var">unhex</span></a></span></span><span> </span><span id="local-6989586621679503756"><span class="annot"><span class="annottext">x :: ByteString
+</span><a href="#local-6989586621679503756"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString) -&gt; m String -&gt; m ByteString
 forall (m :: * -&gt; *) a1 r. Monad m =&gt; (a1 -&gt; r) -&gt; m a1 -&gt; m r
 </span><span class="hs-identifier hs-var">liftM</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
 </span><span class="hs-identifier hs-var">B.pack</span></span><span> </span><span class="annot"><span class="annottext">(m String -&gt; m ByteString) -&gt; m String -&gt; m ByteString
@@ -192,11 +192,11 @@ forall t (m :: * -&gt; *). (Hex t, MonadFail m) =&gt; t -&gt; m t
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">B.unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679503567"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621679503756"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Hex.html#Hex"><span class="hs-identifier hs-type">Hex</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">L.ByteString</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-71"></span><span>    </span><span id="local-6989586621679503564"><span class="annot"><span class="annottext">hex :: ByteString -&gt; ByteString
-</span><a href="#local-6989586621679503564"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
+</span><span id="line-71"></span><span>    </span><span id="local-6989586621679503753"><span class="annot"><span class="annottext">hex :: ByteString -&gt; ByteString
+</span><a href="#local-6989586621679503753"><span class="hs-identifier hs-var hs-var hs-var hs-var">hex</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
 </span><span class="hs-identifier hs-var">L.pack</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString)
 -&gt; (ByteString -&gt; String) -&gt; ByteString -&gt; ByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
@@ -207,9 +207,9 @@ forall t. Hex t =&gt; t -&gt; t
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">L.unpack</span></span><span>
-</span><span id="line-72"></span><span>    </span><span id="local-6989586621679503561"><span class="annot"><span class="annottext">unhex :: ByteString -&gt; m ByteString
-</span><a href="#local-6989586621679503561"><span class="hs-identifier hs-var hs-var hs-var hs-var">unhex</span></a></span></span><span> </span><span id="local-6989586621679503560"><span class="annot"><span class="annottext">x :: ByteString
-</span><a href="#local-6989586621679503560"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString) -&gt; m String -&gt; m ByteString
+</span><span id="line-72"></span><span>    </span><span id="local-6989586621679503750"><span class="annot"><span class="annottext">unhex :: ByteString -&gt; m ByteString
+</span><a href="#local-6989586621679503750"><span class="hs-identifier hs-var hs-var hs-var hs-var">unhex</span></a></span></span><span> </span><span id="local-6989586621679503749"><span class="annot"><span class="annottext">x :: ByteString
+</span><a href="#local-6989586621679503749"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString) -&gt; m String -&gt; m ByteString
 forall (m :: * -&gt; *) a1 r. Monad m =&gt; (a1 -&gt; r) -&gt; m a1 -&gt; m r
 </span><span class="hs-identifier hs-var">liftM</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
 </span><span class="hs-identifier hs-var">L.pack</span></span><span> </span><span class="annot"><span class="annottext">(m String -&gt; m ByteString) -&gt; m String -&gt; m ByteString
@@ -220,5 +220,5 @@ forall t (m :: * -&gt; *). (Hex t, MonadFail m) =&gt; t -&gt; m t
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">L.unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679503560"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><a href="#local-6989586621679503749"><span class="hs-identifier hs-var">x</span></a></span><span>
 </span><span id="line-73"></span></pre></body></html>

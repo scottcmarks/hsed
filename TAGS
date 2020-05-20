@@ -107,6 +107,40 @@ instance Arbitrary Arbitrary Parameters257,258
 instance Arbitrary Arbitrary MethodCall260,261
     arbitrary arbitrary261,262
 
+./src/System/SED/MCTP/Common/Simple_Type.hs,1429
+module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16
+type Core_bytes_4 Core_bytes_422,23
+type Core_bytes_12 Core_bytes_1223,24
+type Core_bytes_16 Core_bytes_1624,25
+type Core_bytes_20 Core_bytes_2025,26
+type Core_bytes_32 Core_bytes_3226,27
+type Core_bytes_48 Core_bytes_4827,28
+type Core_bytes_64 Core_bytes_6428,29
+type Core_feedback_size Core_feedback_size30,31
+type Core_integer_1 Core_integer_132,33
+type Core_integer_2 Core_integer_233,34
+type Core_max_bytes_32 Core_max_bytes_3235,36
+type Core_name Core_name36,37
+type Core_password Core_password37,38
+type Core_type_def_max_size Core_type_def_max_size38,39
+type Core_type_def Core_type_def39,40
+type Core_uid Core_uid41,42
+type Core_uinteger_1 Core_uinteger_143,44
+type Core_uinteger_128 Core_uinteger_12844,45
+type Core_uinteger_2 Core_uinteger_245,46
+type Core_uinteger_20 Core_uinteger_2046,47
+type Core_uinteger_21 Core_uinteger_2147,48
+type Core_uinteger_24 Core_uinteger_2448,49
+type Core_uinteger_256 Core_uinteger_25649,50
+type Core_uinteger_28 Core_uinteger_2850,51
+type Core_uinteger_30 Core_uinteger_3051,52
+type Core_uinteger_36 Core_uinteger_3652,53
+type Core_uinteger_4 Core_uinteger_453,54
+type Core_uinteger_48 Core_uinteger_4854,55
+type Core_uinteger_64 Core_uinteger_6455,56
+type Core_uinteger_66 Core_uinteger_6656,57
+type Core_uinteger_8 Core_uinteger_857,58
+
 ./src/System/SED/MCTP/Common/TableUIDs.lhs,165
 module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs47,48
 lookupTableHalfUID lookupTableHalfUID177,178
@@ -256,13 +290,6 @@ uidPlus uidPlus111,112
 hNull hNull118,119
 uNull uNull121,122
 
-./src/System/SED/MCTP/Common/BaseTypes.hs,231
-module System.SED.MCTP.Common.BaseTypesSystem.SED.MCTP.Common.BaseTypes17,18
-type Core_integer Core_integer33,34
-type Core_uinteger Core_uinteger34,35
-type Core_bytes Core_bytes35,36
-type Core_maxbytes Core_maxbytes36,37
-
 ./src/System/SED/MCTP/Common/Types.lhs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types21,22
 
@@ -341,6 +368,13 @@ module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
+
+./src/System/SED/MCTP/Common/Base_Type.hs,233
+module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type15,16
+type Core_integer Core_integer31,32
+type Core_uinteger Core_uinteger32,33
+type Core_bytes Core_bytes33,34
+type Core_max_bytes Core_max_bytes34,35
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26

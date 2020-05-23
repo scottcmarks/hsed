@@ -23,13 +23,13 @@ module System.SED.MCTP.Common.Base_Type
   )
 where
 
-import           Data.ByteString (ByteString)
-import           Data.SizedText  (Sized)
-import           GHC.Num         (Integer)
-import           Numeric.Natural (Natural)
+import           Data.BoundedSize (BoundedSize)
+import           Data.ByteString  (ByteString)
+import           GHC.Num          (Integer)
+import           Numeric.Natural  (Natural)
 
 
-type Core_integer   n = Sized Integer    n n
-type Core_uinteger  n = Sized Natural    n n
-type Core_bytes     n = Sized ByteString n n
-type Core_max_bytes n = Sized ByteString 0 n
+type Core_integer   n = BoundedSize Integer    n n
+type Core_uinteger  n = BoundedSize Natural    n n
+type Core_bytes     n = BoundedSize ByteString n n
+type Core_max_bytes n = BoundedSize ByteString 0 n

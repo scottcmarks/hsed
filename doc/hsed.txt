@@ -547,7 +547,8 @@ unsafeCreate :: IsBoundedSize a l u => a -> BoundedSize a l u
 --   value.
 unwrap :: IsBoundedSize a l u => BoundedSize a l u -> a
 size :: IsBoundedSize a l u => a -> Int
-predicate :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => BoundedSize a l u -> Bool
+predicate :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => BoundedSize a l u -> Either String (BoundedSize a l u)
+safeCreate :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => a -> Either String (BoundedSize a l u)
 create :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => a -> Maybe (BoundedSize a l u)
 
 -- | Class of types which can be assigned a fixed type-level size.
@@ -745,10 +746,10 @@ instance GHC.Show.Show Hsed.App.Options
 
 -- | Formats.
 module System.SED.MCTP.Common.Base_Type
-type Core_integer n = Sized Integer n n
-type Core_uinteger n = Sized Natural n n
-type Core_bytes n = Sized ByteString n n
-type Core_max_bytes n = Sized ByteString 0 n
+type Core_integer n = BoundedSize Integer n n
+type Core_uinteger n = BoundedSize Natural n n
+type Core_bytes n = BoundedSize ByteString n n
+type Core_max_bytes n = BoundedSize ByteString 0 n
 
 
 -- | Formats.

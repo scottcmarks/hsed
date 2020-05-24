@@ -103,10 +103,6 @@ type FixedSize l a = (IsBoundedSize l l a) => BoundedSize l l a
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
 class (IsBoundedSize l u a) => IsBoundedSizeText l u a where
-  -- | Data family which wraps values of the underlying Text-like type giving
-  -- them a type-level length. @BoundedSizeText t 6 10@ means a value of type @t@ of
-  -- length between 6 and 10.
-
   -- | Basic element type. For @IsBoundedSizeTextText [a]@, this is @a@.
   type Elem a
 

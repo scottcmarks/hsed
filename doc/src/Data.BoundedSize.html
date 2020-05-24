@@ -1,0 +1,81 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE CPP                   #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DataKinds             #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE ExplicitNamespaces    #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts      #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE InstanceSigs          #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude     #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables   #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications      #-}</span><span>
+</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies          #-}</span><span>
+</span><span id="line-12"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators         #-}</span><span class="hs-cpp">
+
+#if __GLASGOW_HASKELL__ &gt;= 800
+</span><span class="hs-pragma">{-# OPTIONS_GHC -Wno-redundant-constraints #-}</span><span class="hs-cpp">
+#endif
+</span><span class="hs-comment">{-|
+
+sized-text combinators are defined for members of 'C.IsBoundedSize'
+class. The package includes 'C.IsBoundedSize' instances for several
+common types.
+
+This module is meant to be imported qualifed, e.g.
+
+&gt; import qualified Data.BoundedSize as S
+
+-}</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.BoundedSize</span><span>
+</span><span id="line-29"></span><span>  </span><span class="hs-special">(</span><span>
+</span><span id="line-30"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Constructing bounded-size values</span></span><span>
+</span><span id="line-31"></span><span>    </span><span class="hs-comment">--</span><span>
+</span><span id="line-32"></span><span>    </span><span class="annot"><span class="hs-comment">-- | See also 'C.unsafeCreate'</span></span><span>
+</span><span id="line-33"></span><span>    </span><span class="annot"><a href="Data.BoundedSize.Class.html#create"><span class="hs-identifier">C.create</span></a></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span>    </span><span class="annot"><span class="hs-comment">-- * Working with bounded-size values</span></span><span>
+</span><span id="line-36"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.html#size"><span class="hs-identifier">size</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>    </span><span class="annot"><span class="hs-comment">-- * C.IsBoundedSize class</span></span><span>
+</span><span id="line-39"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier">C.BoundedSize</span></a></span><span>
+</span><span id="line-40"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier">C.IsBoundedSize</span></a></span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#unwrap"><span class="hs-identifier">unwrap</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span>
+</span><span id="line-42"></span><span>    </span><span class="annot"><span class="hs-comment">-- * C.FixedSize class @C.FixedSize a l == C.BoundedSize a l l</span></span><span>
+</span><span id="line-43"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier">C.FixedSize</span></a></span><span>
+</span><span id="line-44"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#Elem"><span class="hs-identifier">C.Elem</span></a></span><span>
+</span><span id="line-45"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-46"></span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>               </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">undefined</span></span><span class="hs-special">)</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Types</span></span><span>              </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- import           GHC.TypeLits.Extras  (fromNat)</span><span>
+</span><span id="line-50"></span><span class="hs-comment">-- import           Prelude              hiding (drop, length, map, replicate,</span><span>
+</span><span id="line-51"></span><span class="hs-comment">--                                        take)</span><span>
+</span><span id="line-52"></span><span>
+</span><span id="line-53"></span><span class="hs-comment">-- import           Data.Proxy</span><span>
+</span><span id="line-54"></span><span class="hs-comment">-- import           Data.BoundedSize.Class (Sized, create, createLeft, createRight)</span><span>
+</span><span id="line-55"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html"><span class="hs-identifier">Data.BoundedSize.Class</span></a></span><span> </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">C</span></span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- import           Data.BoundedSize.TH</span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span>
+</span><span id="line-59"></span><span class="hs-comment">-- -- $setup</span><span>
+</span><span id="line-60"></span><span class="hs-comment">-- -- &gt;&gt;&gt; :set -XDataKinds</span><span>
+</span><span id="line-61"></span><span class="hs-comment">-- -- &gt;&gt;&gt; :set -XTemplateHaskell</span><span>
+</span><span id="line-62"></span><span class="hs-comment">-- -- &gt;&gt;&gt; :set -XOverloadedStrings</span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- -- &gt;&gt;&gt; :set -XTypeApplications</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- -- &gt;&gt;&gt; :set -Wno-type-defaults</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- -- &gt;&gt;&gt; import           Data.Proxy</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- -- &gt;&gt;&gt; import           Data.ByteString      (ByteString)</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- -- &gt;&gt;&gt; import           Data.Char(toUpper)</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- -- &gt;&gt;&gt; import           Data.String          (IsString (..))</span><span>
+</span><span id="line-69"></span><span>
+</span><span id="line-70"></span><span>
+</span><span id="line-71"></span><span>
+</span><span id="line-72"></span><span class="hs-comment">-- | Obtain value-level size.  Consult the actual data value.</span><span>
+</span><span id="line-73"></span><span class="annot"><a href="Data.BoundedSize.html#size"><span class="hs-identifier hs-type">size</span></a></span><span> </span><span class="hs-glyph">::</span><span>
+</span><span id="line-74"></span><span>     </span><span class="hs-keyword">forall</span><span> </span><span id="local-6989586621679511221"><span class="annot"><a href="#local-6989586621679511221"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="local-6989586621679511220"><span class="annot"><a href="#local-6989586621679511220"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679511219"><span class="annot"><a href="#local-6989586621679511219"><span class="hs-identifier hs-type">u</span></a></span></span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">C.IsBoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679511221"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679511220"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679511219"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">C.BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679511221"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679511220"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679511219"><span class="hs-identifier hs-type">u</span></a></span><span>
+</span><span id="line-76"></span><span>  </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
+</span><span id="line-77"></span><span id="size"><span class="annot"><span class="annottext">size :: BoundedSize a l u -&gt; Int
+</span><a href="Data.BoundedSize.html#size"><span class="hs-identifier hs-var hs-var">size</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">BoundedSize a l u -&gt; Int
+forall a. HasCallStack =&gt; a
+</span><span class="hs-identifier hs-var">undefined</span></span><span>
+</span><span id="line-78"></span></pre></body></html>

@@ -14,22 +14,30 @@ Formats.
 -}
 
 module System.SED.MCTP.Common.Base_Type
-  (
-    Core_integer
-  , Core_uinteger
-  , Core_bytes
-  , Core_max_bytes
-
+  ( Core_some_integer  (..)
+  , Core_some_uinteger (..)
+  , Core_some_bytes    (..)
+  , Core_some_maxbytes (..)
+  , Core_integer       (..)
+  , Core_uinteger      (..)
+  , Core_bytes         (..)
+  , Core_max_bytes     (..)
   )
 where
 
 import           Data.BoundedSize (BoundedSize)
 import           Data.ByteString  (ByteString)
+import           GHC.Base         (Int)
 import           GHC.Num          (Integer)
 import           Numeric.Natural  (Natural)
 
 
-type Core_integer   n = BoundedSize Integer    n n
-type Core_uinteger  n = BoundedSize Natural    n n
-type Core_bytes     n = BoundedSize ByteString n n
-type Core_max_bytes n = BoundedSize ByteString 0 n
+newtype Core_some_integer  = Core_some_integer  Integer
+newtype Core_some_uinteger = Core_some_uinteger Natural
+newtype Core_some_bytes    = Core_some_bytes    ByteString
+newtype Core_some_maxbytes = Core_some_maxbytes ByteString
+
+newtype Core_integer   n = Core_integer   (BoundedSize Core_some_integer  n n)
+newtype Core_uinteger  n = Core_uinteger  (BoundedSize Core_some_uinteger n n)
+newtype Core_bytes     n = Core_bytes     (BoundedSize Core_some_bytes    n n)
+newtype Core_max_bytes n = Core_max_bytes (BoundedSize Core_some_maxbytes 0 n)

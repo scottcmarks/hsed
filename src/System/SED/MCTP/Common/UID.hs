@@ -32,7 +32,6 @@ import           GHC.Word                          (Word8 (..))
 
 import           Test.QuickCheck                   (Arbitrary (..))
 
--- import           Data.Hex (hex)
 import           Extras.Hex                        (hex)
 import           Extras.Sized                      (Fixed_bytes (..), append,
                                                     drop, fpack, funpack, take)

@@ -269,26 +269,26 @@ newtype ColumnType ColumnType354,355
 
 ./src/System/SED/MCTP/Common/UID.hs,634
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID19,20
-showFixed_bytesHex showFixed_bytesHex69,70
-showFixed_bytes showFixed_bytes74,75
-newtype HalfUID HalfUID78,79
-instance Show Show HalfUID81,82
-    show show82,83
-instance Arbitrary Arbitrary HalfUID83,84
-    arbitrary arbitrary84,85
-halfUID halfUID86,87
-newtype UID UID90,91
-instance Show Show UID93,94
-    show show94,95
-instance Arbitrary Arbitrary UID95,96
-    arbitrary arbitrary96,97
-uid uid98,99
-uidUpper uidUpper105,106
-uidLower uidLower108,109
-uidPlus uidPlus111,112
-(+(+:+)114,115
-hNull hNull118,119
-uNull uNull121,122
+showFixed_bytesHex showFixed_bytesHex68,69
+showFixed_bytes showFixed_bytes73,74
+newtype HalfUID HalfUID77,78
+instance Show Show HalfUID80,81
+    show show81,82
+instance Arbitrary Arbitrary HalfUID82,83
+    arbitrary arbitrary83,84
+halfUID halfUID85,86
+newtype UID UID89,90
+instance Show Show UID92,93
+    show show93,94
+instance Arbitrary Arbitrary UID94,95
+    arbitrary arbitrary95,96
+uid uid97,98
+uidUpper uidUpper104,105
+uidLower uidLower107,108
+uidPlus uidPlus110,111
+(+(+:+)113,114
+hNull hNull117,118
+uNull uNull120,121
 
 ./src/System/SED/MCTP/Common/Types.lhs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types21,22
@@ -369,12 +369,16 @@ module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
 
-./src/System/SED/MCTP/Common/Base_Type.hs,233
+./src/System/SED/MCTP/Common/Base_Type.hs,449
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type15,16
-type Core_integer Core_integer31,32
-type Core_uinteger Core_uinteger32,33
-type Core_bytes Core_bytes33,34
-type Core_max_bytes Core_max_bytes34,35
+newtype Core_some_integer Core_some_integer34,35
+newtype Core_some_uinteger Core_some_uinteger35,36
+newtype Core_some_bytes Core_some_bytes36,37
+newtype Core_some_maxbytes Core_some_maxbytes37,38
+newtype Core_integer Core_integer39,40
+newtype Core_uinteger Core_uinteger40,41
+newtype Core_bytes Core_bytes41,42
+newtype Core_max_bytes Core_max_bytes42,43
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26
@@ -652,6 +656,10 @@ instance Hex Hex L-ByteString69,70
     hex hex70,71
     unhex unhex71,72
 
+./src/Data/If.hs,43
+module Data.If Data.If14,15
+(?(?)22,23
+
 ./src/Data/SizedText/Class.hs,2559
 module Data.SizedText.ClassData.SizedText.Class15,16
 class IsSizedText IsSizedText64,65
@@ -745,9 +753,45 @@ typeFromInt typeFromInt108,109
 unsafeCreateExp unsafeCreateExp120,121
 universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
-./src/Data/BoundedSize.hs,64
-module Data.BoundedSizeData.BoundedSize27,28
-size size72,73
+./src/Data/BoundedSize.hs,1525
+module Data.BoundedSizeData.BoundedSize31,32
+class IsBoundedSize IsBoundedSize104,105
+  data BoundedSize BoundedSize108,109
+  unsafeCreate unsafeCreate124,125
+  unwrap unwrap127,128
+  size size130,131
+  predicate predicate132,133
+  safeCreate safeCreate134,135
+  create create137,138
+type FixedSize FixedSize143,144
+class (IsBoundedSize a l u) => IsBoundedSizeText IsBoundedSizeText148,149
+  type Elem Elem154,155
+  length length156,157
+  append append158,159
+  replicate replicate159,160
+  map map160,161
+  take take161,162
+  drop drop162,163
+instance forall forall a l u- (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText a l u) => IsString (BoundedSize a l u)166,167
+  where fromString fromString167,168
+type FixedSizeText FixedSizeText172,173
+instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSize B-ByteString l u174,175
+  data BoundedSize BoundedSize175,176
+  data BoundedSize B.ByteString l u = ByteString ByteString175,176
+  unsafeCreate unsafeCreate177,178
+  unwrap unwrap178,179
+  size size179,180
+  predicate predicate180,181
+instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSizeText B-ByteString l u191,192
+  type Elem Elem192,193
+  length length193,194
+  append append194,195
+  replicate replicate195,196
+  map map196,197
+  take take197,198
+  drop drop198,199
+instance forall forall a l u- (Show a, KnownNat l, KnownNat u, IsBoundedSize a l u) => Show (BoundedSize a l u)200,201
+    show show201,202
 
 ./src/Data/SizedText.hs,336
 module Data.SizedTextData.SizedText27,28
@@ -764,6 +808,44 @@ padLeft padLeft199,200
 padLeft padLeft213,214
 padRight padRight216,217
 padRight padRight230,231
+
+./src/Data/Smart.hs,1561
+module Data.SmartData.Smart26,27
+class Smart Smart50,51
+    type ErrorMessage ErrorMessage51,52
+    unwrap unwrap54,55
+    unsafeCreate unsafeCreate71,72
+    predicate predicate75,76
+    safeCreate safeCreate79,80
+    create create83,84
+class IsBoundedSize IsBoundedSize88,89
+    data BoundedSize BoundedSize92,93
+    size size93,94
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize96,97
+type FixedSize FixedSize98,99
+class (IsBoundedSize l u a) => IsBoundedSizeText IsBoundedSizeText103,104
+  type Elem Elem109,110
+  length length111,112
+  append append113,114
+  replicate replicate114,115
+  map map115,116
+  take take116,117
+  drop drop117,118
+class (IsBoundedSizeText l l a) => IsFixedSizeText IsFixedSizeText119,120
+type FixedSizeText FixedSizeText121,122
+instance forall forall l u- IsBoundedSize l u B-ByteString123,124
+    data BoundedSize BoundedSize124,125
+    data BoundedSize l u B.ByteString = ByteString ByteString124,125
+    size size126,127
+instance forall forall l u- (KnownNat l, KnownNat u) => Smart (BoundedSize l u) B-ByteString128,129
+    type ErrorMessage ErrorMessage129,130
+    unsafeCreate unsafeCreate130,131
+    unwrap unwrap131,132
+    predicate predicate132,133
+instance forall forall l u a- (KnownNat l, KnownNat u, Show a, Smart (BoundedSize l u) a) => Show (BoundedSize l u a)143,144
+    show show144,145
+instance forall forall l u-Smart (BoundedSize l u) B-ByteString => IsString (BoundedSize l u B-ByteString)146,147
+    fromString fromString147,148
 
 ./src/Extras/Sized.lhs,1561
 module Extras.SizedExtras.Sized39,40

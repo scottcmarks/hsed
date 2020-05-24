@@ -46,6 +46,7 @@ import           GHC.Base            (Eq (..), Int, Nat, Ord (..), const, error,
 import           GHC.Show            (Show (..))
 import           GHC.TypeLits        (KnownNat)
 import           GHC.TypeLits.Extras (fromNat)
+import           GHC.Word            (Word8 (..))
 
 
 class Smart c a where
@@ -87,9 +88,9 @@ class Smart c a where
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
 class IsBoundedSize (l::Nat) (u::Nat) a where
-  -- | Data family which wraps values of the underlying type giving
-  -- them a type-level size. @BoundedSize 6 10 t@ means a value of type @t@ of
-  -- size between 6 and 10.
+    -- | Data family which wraps values of the underlying type giving
+    -- them a type-level size. @BoundedSize 6 10 t@ means a value of type @t@ of
+    -- size between 6 and 10.
     data BoundedSize l u a
     size :: a -> Int
 
@@ -146,3 +147,12 @@ instance forall l u a. (KnownNat l, KnownNat u, Show a, Smart (BoundedSize l u) 
 
 instance forall l u.Smart (BoundedSize l u) B.ByteString => IsString (BoundedSize l u B.ByteString) where
     fromString = either error id . safeCreate . fromString
+
+instance forall l u. IsBoundedSizeText l u B.ByteString where
+  type Elem B.ByteString = Word8
+  length = B.length
+  append = B.append
+  replicate = B.replicate
+  map = B.map
+  take = B.take
+  drop = B.drop

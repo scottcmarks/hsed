@@ -15,7 +15,7 @@ digraph G {
 			u0			 [fillcolor="#ffffbb",
 				label=BoundedSize,
 				style="filled,bold"];
-			u1			 [fillcolor="#bbbbff",
+			u2			 [fillcolor="#bbbbff",
 				label=Class,
 				penwidth=0,
 				style=filled];
@@ -39,14 +39,14 @@ digraph G {
 				label=SizedText,
 				style=filled
 			];
-			u6			 [fillcolor="#ffffbb",
+			u7			 [fillcolor="#ffffbb",
 				label=SizedText,
 				style="filled,bold"];
-			u7			 [fillcolor="#bbffff",
+			u8			 [fillcolor="#bbffff",
 				label=Class,
 				penwidth=0,
 				style=filled];
-			u8			 [fillcolor="#bbffff",
+			u9			 [fillcolor="#bbffff",
 				label=TH,
 				penwidth=0,
 				style=filled];
@@ -55,17 +55,25 @@ digraph G {
 			label=Hex,
 			penwidth=0,
 			style=filled];
+		u6		 [fillcolor="#ffffbb",
+			label=If,
+			penwidth=0,
+			style=filled];
+		u10		 [fillcolor="#ffffbb",
+			label=Smart,
+			penwidth=0,
+			style=filled];
 	}
 	subgraph cluster_4 {
 		graph [color="#0000000F",
 			label=Extras,
 			style=filled
 		];
-		u9		 [fillcolor="#ffbbff",
+		u11		 [fillcolor="#ffbbff",
 			label=Hex,
 			penwidth=0,
 			style=filled];
-		u10		 [fillcolor="#ffbbff",
+		u12		 [fillcolor="#ffbbff",
 			label=Sized,
 			penwidth=0,
 			style=filled];
@@ -80,7 +88,7 @@ digraph G {
 				label=TypeLits,
 				style=filled
 			];
-			u2			 [fillcolor="#ffff77",
+			u1			 [fillcolor="#ffff77",
 				label=Extras,
 				penwidth=0,
 				style=filled];
@@ -96,7 +104,7 @@ digraph G {
 				label=Extras,
 				style=filled
 			];
-			u34			 [fillcolor="#ff7777",
+			u36			 [fillcolor="#ff7777",
 				label=GitVersion,
 				penwidth=0,
 				style=filled];
@@ -107,7 +115,7 @@ digraph G {
 			label=Hsed,
 			style=filled
 		];
-		u11		 [fillcolor="#77ffff",
+		u13		 [fillcolor="#77ffff",
 			label=App,
 			penwidth=0,
 			style=filled];
@@ -137,10 +145,10 @@ digraph G {
 							label=ColumnTypes,
 							style=filled
 						];
-						u19						 [fillcolor="#3333ff",
+						u21						 [fillcolor="#3333ff",
 							label=ColumnTypes,
 							style="filled,bold"];
-						u20						 [fillcolor="#ff3333",
+						u22						 [fillcolor="#ff3333",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -150,71 +158,71 @@ digraph G {
 							label=TableUIDs,
 							style=filled
 						];
-						u28						 [fillcolor="#3333ff",
+						u30						 [fillcolor="#3333ff",
 							label=TableUIDs,
 							style="filled,bold"];
-						u29						 [fillcolor="#77bbff",
+						u31						 [fillcolor="#77bbff",
 							label=TH,
 							penwidth=0,
 							style=filled];
 					}
-					u12					 [fillcolor="#3333ff",
+					u14					 [fillcolor="#3333ff",
 						label=Base_Type,
 						penwidth=0,
 						style=filled];
-					u13					 [fillcolor="#3333ff",
+					u15					 [fillcolor="#3333ff",
 						label=Call,
 						penwidth=0,
 						style=filled];
-					u14					 [fillcolor="#3333ff",
+					u16					 [fillcolor="#3333ff",
 						label=StreamItem,
 						penwidth=0,
 						style=filled];
-					u15					 [fillcolor="#3333ff",
+					u17					 [fillcolor="#3333ff",
 						label=Token,
 						penwidth=0,
 						style=filled];
-					u16					 [fillcolor="#3333ff",
+					u18					 [fillcolor="#3333ff",
 						label=Value,
 						penwidth=0,
 						style=filled];
-					u17					 [fillcolor="#3333ff",
+					u19					 [fillcolor="#3333ff",
 						label=UID,
 						penwidth=0,
 						style=filled];
-					u18					 [fillcolor="#3333ff",
+					u20					 [fillcolor="#3333ff",
 						label=Instances,
 						penwidth=0,
 						style=filled];
-					u21					 [fillcolor="#3333ff",
+					u23					 [fillcolor="#3333ff",
 						label=THUtil,
 						penwidth=0,
 						style=filled];
-					u22					 [fillcolor="#3333ff",
+					u24					 [fillcolor="#3333ff",
 						label=Util,
 						penwidth=0,
 						style=filled];
-					u23					 [fillcolor="#3333ff",
+					u25					 [fillcolor="#3333ff",
 						label=Format,
 						penwidth=0,
 						style=filled];
-					u24					 [fillcolor="#3333ff",
+					u26					 [fillcolor="#3333ff",
 						label=Import,
 						penwidth=0,
 						style=filled];
-					u25					 [fillcolor="#3333ff",
+					u27					 [fillcolor="#3333ff",
 						label=Types,
 						penwidth=0,
 						style=filled];
-					u26					 [fillcolor="#3333ff",
+					u28					 [fillcolor="#3333ff",
 						label=SpecialPurposeUIDs,
 						penwidth=0,
 						style=filled];
-					u27					 [fillcolor="#3333ff",
+					u29					 [fillcolor="#3333ff",
 						label=Table,
 						penwidth=0,
 						style=filled];
-					u30					 [fillcolor="#3333ff",
+					u32					 [fillcolor="#3333ff",
 						label=Simple_Type,
 						penwidth=0,
 						style=filled];
@@ -224,7 +232,7 @@ digraph G {
 						label=Host,
 						style=filled
 					];
-					u31					 [fillcolor="#ff77bb",
+					u33					 [fillcolor="#ff77bb",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -234,7 +242,7 @@ digraph G {
 						label=TPer,
 						style=filled
 					];
-					u32					 [fillcolor="#33bb77",
+					u34					 [fillcolor="#33bb77",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -242,51 +250,52 @@ digraph G {
 			}
 		}
 	}
-	u33	 [fillcolor="#bbffbb",
+	u35	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u33 -> u34;
-	u33 -> u31;
-	u33 -> u32;
+	u35 -> u36;
+	u35 -> u33;
+	u35 -> u34;
+	u10 -> u1;
 	u0 -> u1;
-	u1 -> u2;
-	u3 -> u1;
-	u6 -> u8;
-	u6 -> u2;
-	u8 -> u7;
-	u9 -> u4;
-	u9 -> u6;
-	u10 -> u9;
-	u12 -> u0;
-	u13 -> u16;
-	u13 -> u17;
-	u15 -> u4;
-	u15 -> u14;
-	u16 -> u15;
-	u17 -> u18;
-	u18 -> u10;
-	u18 -> u15;
-	u21 -> u17;
-	u22 -> u17;
-	u23 -> u17;
-	u24 -> u25;
-	u25 -> u13;
-	u25 -> u26;
-	u25 -> u19;
-	u25 -> u28;
-	u26 -> u17;
-	u27 -> u17;
-	u30 -> u12;
+	u2 -> u1;
+	u3 -> u2;
+	u7 -> u9;
+	u7 -> u1;
+	u9 -> u8;
+	u11 -> u4;
+	u11 -> u7;
+	u12 -> u11;
+	u14 -> u0;
+	u15 -> u18;
+	u15 -> u19;
+	u17 -> u4;
+	u17 -> u16;
+	u18 -> u17;
 	u19 -> u20;
-	u20 -> u21;
-	u20 -> u22;
-	u28 -> u29;
-	u29 -> u21;
-	u29 -> u22;
-	u29 -> u27;
-	u31 -> u11;
+	u20 -> u12;
+	u20 -> u17;
+	u23 -> u19;
+	u24 -> u19;
+	u25 -> u19;
+	u26 -> u27;
+	u27 -> u15;
+	u27 -> u28;
+	u27 -> u21;
+	u27 -> u30;
+	u28 -> u19;
+	u29 -> u19;
+	u32 -> u14;
+	u21 -> u22;
+	u22 -> u23;
+	u22 -> u24;
+	u30 -> u31;
+	u31 -> u23;
 	u31 -> u24;
-	u32 -> u11;
-	u32 -> u24;
+	u31 -> u29;
+	u33 -> u13;
+	u33 -> u26;
+	u34 -> u13;
+	u34 -> u26;
 }

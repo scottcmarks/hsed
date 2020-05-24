@@ -27,7 +27,6 @@ where
 
 import           Data.BoundedSize (BoundedSize)
 import           Data.ByteString  (ByteString)
-import           GHC.Base         (Int)
 import           GHC.Num          (Integer)
 import           Numeric.Natural  (Natural)
 

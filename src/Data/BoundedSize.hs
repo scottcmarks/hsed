@@ -50,20 +50,6 @@ module Data.BoundedSize
 )
 where
 
--- import           GHTypeLits.Extras  (fromNat)
--- import           Prelude              hiding (drop, length, map, replicate,
---                                        take)
-
--- import           Data.Proxy
--- import           Data.BoundedSize.Class (Sized, create, createLeft, createRight)
--- import           Data.BoundedSize.TH
-{-|
-
-Use this module when you need to add an 'IsBoundedSize' instance to a
-type.
-
--}
-
 import           Data.ByteString     ()
 import qualified Data.ByteString     as B
 import           Data.Either         (Either (..), either)
@@ -78,7 +64,6 @@ import           GHC.TypeLits        (KnownNat, Nat)
 import           GHC.TypeLits.Extras (fromNat)
 import           GHC.Types           (Int)
 import           GHC.Word            (Word8)
--- import           Prelude             hiding (drop, length, replicate, take)
 
 
 -- -- $setup

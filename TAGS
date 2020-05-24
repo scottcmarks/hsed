@@ -824,36 +824,36 @@ class IsBoundedSize IsBoundedSize89,90
 class (IsBoundedSize l l a) => IsFixedSize IsFixedSize97,98
 type FixedSize FixedSize99,100
 class (IsBoundedSize l u a) => IsBoundedSizeText IsBoundedSizeText104,105
-  type Elem Elem110,111
-  length length112,113
-  append append114,115
-  replicate replicate115,116
-  map map116,117
-  take take117,118
-  drop drop118,119
-class (IsBoundedSizeText l l a) => IsFixedSizeText IsFixedSizeText120,121
-type FixedSizeText FixedSizeText122,123
-instance forall forall l u- IsBoundedSize l u B-ByteString124,125
-    data BoundedSize BoundedSize125,126
-    data BoundedSize l u B.ByteString = ByteString ByteString125,126
-    size size127,128
-instance forall forall l u- (KnownNat l, KnownNat u) => Smart (BoundedSize l u) B-ByteString129,130
-    type ErrorMessage ErrorMessage130,131
-    unsafeCreate unsafeCreate131,132
-    unwrap unwrap132,133
-    predicate predicate133,134
-instance forall forall l u a- (KnownNat l, KnownNat u, Show a, Smart (BoundedSize l u) a) => Show (BoundedSize l u a)144,145
-    show show145,146
-instance forall forall l u-Smart (BoundedSize l u) B-ByteString => IsString (BoundedSize l u B-ByteString)147,148
-    fromString fromString148,149
-instance forall forall l u- IsBoundedSizeText l u B-ByteString150,151
-  type Elem Elem151,152
-  length length152,153
-  append append153,154
-  replicate replicate154,155
-  map map155,156
-  take take156,157
-  drop drop157,158
+  type Elem Elem106,107
+  length length108,109
+  append append110,111
+  replicate replicate111,112
+  map map112,113
+  take take113,114
+  drop drop114,115
+class (IsBoundedSizeText l l a) => IsFixedSizeText IsFixedSizeText116,117
+type FixedSizeText FixedSizeText118,119
+instance forall forall l u- IsBoundedSize l u B-ByteString120,121
+    data BoundedSize BoundedSize121,122
+    data BoundedSize l u B.ByteString = ByteString ByteString121,122
+    size size123,124
+instance forall forall l u- (KnownNat l, KnownNat u) => Smart (BoundedSize l u) B-ByteString125,126
+    type ErrorMessage ErrorMessage126,127
+    unsafeCreate unsafeCreate127,128
+    unwrap unwrap128,129
+    predicate predicate129,130
+instance forall forall l u a- (KnownNat l, KnownNat u, Show a, Smart (BoundedSize l u) a) => Show (BoundedSize l u a)140,141
+    show show141,142
+instance forall forall l u-Smart (BoundedSize l u) B-ByteString => IsString (BoundedSize l u B-ByteString)143,144
+    fromString fromString144,145
+instance forall forall l u- IsBoundedSizeText l u B-ByteString146,147
+  type Elem Elem147,148
+  length length148,149
+  append append149,150
+  replicate replicate150,151
+  map map151,152
+  take take152,153
+  drop drop153,154
 
 ./src/Extras/Sized.lhs,1561
 module Extras.SizedExtras.Sized39,40

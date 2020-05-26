@@ -43,26 +43,26 @@ newtype LitS =
 
 -- | Type-safe constructor for bounded-length string literals: BoundedSize a l u
 -- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize a_0
---                                                                                                    3
---                                                                                                    6) =>
---                                                 Data.BoundedSize.Class.BoundedSize a_0 3 6
+--                                                               Data.BoundedSize.Class.IsBoundedSize 3
+--                                                                                                    6
+--                                                                                                    a_0) =>
+--                                                 Data.BoundedSize.Class.BoundedSize 3 6 a_0
 --
 -- >>> runQ $ ppr <$> sb 3 6 "Foobar"
 -- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize a_0
---                                                                                                    3
---                                                                                                    6) =>
---                                                 Data.BoundedSize.Class.BoundedSize a_0 3 6
+--                                                               Data.BoundedSize.Class.IsBoundedSize 3
+--                                                                                                    6
+--                                                                                                    a_0) =>
+--                                                 Data.BoundedSize.Class.BoundedSize 3 6 a_0
 --
 -- >>> :t sb 3 6 "Foobar"
 -- sb 3 6 "Foobar" :: Q Exp
 sb :: Int -> Int -> String -> Q Exp
 sb l u s = do
-  ta <- newName "a"
   let tl = typeFromInt l
       tu = typeFromInt u
-  return $ unsafeCreateExp universallyQuantifiedBoundedSizeType ta tl tu s
+  ta <- newName "a"
+  return $ unsafeCreateExp universallyQuantifiedBoundedSizeType tl tu ta s
 
 
 
@@ -74,15 +74,15 @@ sb l u s = do
 -- LitS "Foobar" :: LitS
 -- >>> :t st "Foobar"
 -- st "Foobar" :: Q Exp
--- >>> $(st "Foobar") :: BoundedSize ByteString 6 6
+-- >>> $(st "Foobar") :: BoundedSize 6 6 ByteString
 -- "Foobar"
 --
 -- >>> runQ $ ppr <$> st "Foobar"
 -- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize a_0
+--                                                               Data.BoundedSize.Class.IsBoundedSize 6
 --                                                                                                    6
---                                                                                                    6) =>
---                                                 Data.BoundedSize.Class.BoundedSize a_0 6 6
+--                                                                                                    a_0) =>
+--                                                 Data.BoundedSize.Class.BoundedSize 6 6 a_0
 --
 -- >>> :t runQ $ ppr <$> st "Foobar"
 -- runQ $ ppr <$> st "Foobar" :: Quasi m => m Doc
@@ -101,15 +101,15 @@ st (LitS s) = sb l l s  where l = P.length s
 -- LitS "Foobar" :: LitS
 -- >>> :t sz "Foobar"
 -- sz "Foobar" :: Q Exp
--- >>> $(sz "Foobar") :: BoundedSize ByteString 0 6
+-- >>> $(sz "Foobar") :: BoundedSize 0 6 ByteString
 -- "Foobar"
 --
 -- >>> runQ $ ppr <$> sz "Foobar"
 -- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize a_0
---                                                                                                    0
---                                                                                                    6) =>
---                                                 Data.BoundedSize.Class.BoundedSize a_0 0 6
+--                                                               Data.BoundedSize.Class.IsBoundedSize 0
+--                                                                                                    6
+--                                                                                                    a_0) =>
+--                                                 Data.BoundedSize.Class.BoundedSize 0 6 a_0
 --
 -- >>> :t runQ $ ppr <$> sz "Foobar"
 -- runQ $ ppr <$> sz "Foobar" :: Quasi m => m Doc
@@ -134,41 +134,41 @@ typeFromInt = LitT . NumTyLit . fromIntegral
 --   where l and u are the type-level KnownNat versions of the bounds of s
 --
 -- >>> at <- runQ $ newName "a"
--- >>> ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType at (typeFromInt 0) (typeFromInt 4) "Boo!"
+-- >>> ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
 -- Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.String.IsString a_0,
---                                                             Data.BoundedSize.Class.IsBoundedSize a_0
---                                                                                                  0
---                                                                                                  4) =>
---                                               Data.BoundedSize.Class.BoundedSize a_0 0 4
+--                                                             Data.BoundedSize.Class.IsBoundedSize 0
+--                                                                                                  4
+--                                                                                                  a_0) =>
+--                                               Data.BoundedSize.Class.BoundedSize 0 4 a_0
 unsafeCreateExp ::
-    (Name -> Type -> Type -> Type) -- type expression constructor
- -> Name   -- name of the wrapped type, e.g. ByteString
+    (Type -> Type -> Name -> Type) -- type expression constructor
  -> Type   -- type-level value for the min length
  -> Type   -- type-level value for the max lengthName
+ -> Name   -- name of the wrapped type, e.g. ByteString
  -> String -- literal IsString value to be wrapped
  -> Exp    -- type express  unsafeCreate <s> :: forall a ...
-unsafeCreateExp typef at l u s =
+unsafeCreateExp typef l u a s =
     SigE
       (AppE (VarE 'unsafeCreate) (LitE $ StringL s))
       (ForallT
-         [PlainTV at]
+         [PlainTV a]
 #if MIN_VERSION_template_haskell(2,10,0)
-         [AppT (ConT ''IsString) (VarT at), AppT (AppT (AppT (ConT ''IsBoundedSize) (VarT at)) l) u] $
+         [AppT (ConT ''IsString) (VarT a), AppT (AppT (AppT (ConT ''IsBoundedSize) l) u) (VarT a)] $
 #else
-         [ClassP ''IsString [VarT at], ClassP ''IsBoundedSize [VarT at] l u] $
+         [ClassP ''IsString [VarT a], ClassP ''IsBoundedSize l u [VarT a]] $
 #endif
-       typef at l u) -- create the final type expression, e.g. BoundedSize a l u
+       typef l u a) -- create the final type expression, e.g. BoundedSize l u a
 
 
--- | Create the final expression for BoundedSize a l u
+-- | Create the final expression for BoundedSize l u a
 --
--- >>> universallyQuantifiedBoundedSizeType (mkName "a") (typeFromInt 3) (typeFromInt 6)
--- AppT (AppT (AppT (ConT Data.BoundedSize.Class.BoundedSize) (VarT a)) (LitT (NumTyLit 3))) (LitT (NumTyLit 6))
--- >>> ppr $ universallyQuantifiedBoundedSizeType (mkName "a") (typeFromInt 3) (typeFromInt 6)
--- Data.BoundedSize.Class.BoundedSize a 3 6
+-- >>> universallyQuantifiedBoundedSizeType (typeFromInt 3) (typeFromInt 6) (mkName "a")
+-- AppT (AppT (AppT (ConT Data.BoundedSize.Class.BoundedSize) (LitT (NumTyLit 3))) (LitT (NumTyLit 6))) (VarT a)
+-- >>> ppr $ universallyQuantifiedBoundedSizeType (typeFromInt 3) (typeFromInt 6) (mkName "a")
+-- Data.BoundedSize.Class.BoundedSize 3 6 a
 universallyQuantifiedBoundedSizeType ::
-    Name -- name of the wrapped type, e.g. ByteString
- -> Type  -- type-level value for the min length
+    Type  -- type-level value for the min length
  -> Type  -- type-level value for the max length
+ -> Name  -- name of the wrapped type, e.g. ByteString
  -> Type  -- type expression, e.g. BoundedSize ByteString l u
-universallyQuantifiedBoundedSizeType a l u = AppT (AppT (AppT (ConT ''BoundedSize) (VarT a)) l) u
+universallyQuantifiedBoundedSizeType l u a = AppT (AppT (AppT (ConT ''BoundedSize) l) u) (VarT a)

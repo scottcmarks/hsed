@@ -577,7 +577,7 @@ class IsBoundedSize IsBoundedSize55,56
   safeCreate safeCreate85,86
   create create88,89
 type FixedSize FixedSize94,95
-class (IsBoundedSize a l u) => IsBoundedSizeText IsBoundedSizeText99,100
+class (IsBoundedSize l u a) => IsBoundedSizeText IsBoundedSizeText99,100
   type Elem Elem105,106
   length length107,108
   append append109,110
@@ -585,17 +585,17 @@ class (IsBoundedSize a l u) => IsBoundedSizeText IsBoundedSizeText99,100
   map map111,112
   take take112,113
   drop drop113,114
-instance forall forall a l u- (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText a l u) => IsString (BoundedSize a l u)117,118
+instance forall forall l u a- (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText l u a) => IsString (BoundedSize l u a)117,118
   where fromString fromString118,119
 type FixedSizeText FixedSizeText123,124
-instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSize B-ByteString l u125,126
+instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSize l u B-ByteString125,126
   data BoundedSize BoundedSize126,127
-  data BoundedSize B.ByteString l u = ByteString ByteString126,127
+  data BoundedSize l u B.ByteString = ByteString ByteString126,127
   unsafeCreate unsafeCreate128,129
   unwrap unwrap129,130
   size size130,131
   predicate predicate131,132
-instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSizeText B-ByteString l u142,143
+instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSizeText l u B-ByteString142,143
   type Elem Elem143,144
   length length144,145
   append append145,146
@@ -603,7 +603,7 @@ instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSizeText B-Byt
   map map147,148
   take take148,149
   drop drop149,150
-instance forall forall a l u- (Show a, KnownNat l, KnownNat u, IsBoundedSize a l u) => Show (BoundedSize a l u)151,152
+instance forall forall l u a- (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a)151,152
     show show152,153
 
 ./src/Data/BoundedSize/TH.hs,275

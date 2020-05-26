@@ -123,11 +123,7 @@ type FixedSize l a = (IsBoundedSize l l a) => BoundedSize l l a
 --   length.
 class (IsBoundedSize l u a) => IsBoundedSizeText l u a where {
     
-    -- | Data family which wraps values of the underlying Text-like type giving
-    --   them a type-level length. <tt>BoundedSizeText t 6 10</tt> means a
-    --   value of type <tt>t</tt> of length between 6 and 10.
-    --   
-    --   Basic element type. For <tt>IsBoundedSizeTextText [a]</tt>, this is
+    -- | Basic element type. For <tt>IsBoundedSizeTextText [a]</tt>, this is
     --   <tt>a</tt>.
     type family Elem a;
 }
@@ -610,12 +606,12 @@ module Data.BoundedSize.Class
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   length.
-class IsBoundedSize a (l :: Nat) (u :: Nat) where {
+class IsBoundedSize (l :: Nat) (u :: Nat) a where {
     
     -- | Data family which wraps values of the underlying type giving them a
     --   type-level size. <tt>BoundedSize t 6 10</tt> means a value of type
     --   <tt>t</tt> of size between 6 and 10.
-    data family BoundedSize a l u;
+    data family BoundedSize l u a;
 }
 
 -- | Simply wrap a value in a BoundedSize as is, assuming any length.
@@ -634,22 +630,22 @@ class IsBoundedSize a (l :: Nat) (u :: Nat) where {
 --   
 --   When writing new <a>IsBoundedSize</a> instances, make this simply
 --   apply the constructor of <a>BoundedSize</a>.
-unsafeCreate :: IsBoundedSize a l u => a -> BoundedSize a l u
+unsafeCreate :: IsBoundedSize l u a => a -> BoundedSize l u a
 
 -- | Forget type-level minimum and maximum size, obtaining the underlying
 --   value.
-unwrap :: IsBoundedSize a l u => BoundedSize a l u -> a
-size :: IsBoundedSize a l u => a -> Int
-predicate :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => BoundedSize a l u -> Either String (BoundedSize a l u)
-safeCreate :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => a -> Either String (BoundedSize a l u)
-create :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => a -> Maybe (BoundedSize a l u)
+unwrap :: IsBoundedSize l u a => BoundedSize l u a -> a
+size :: IsBoundedSize l u a => a -> Int
+predicate :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => BoundedSize l u a -> Either String (BoundedSize l u a)
+safeCreate :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => a -> Either String (BoundedSize l u a)
+create :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => a -> Maybe (BoundedSize l u a)
 
 -- | Class of types which can be assigned a fixed type-level size.
-type FixedSize a (l :: Nat) = BoundedSize a l l
+type FixedSize (l :: Nat) a = BoundedSize l l a
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   length.
-class (IsBoundedSize a l u) => IsBoundedSizeText a l u where {
+class (IsBoundedSize l u a) => IsBoundedSizeText l u a where {
     
     -- | Data family which wraps values of the underlying Text-like type giving
     --   them a type-level length. <tt>BoundedSizeText t 6 10</tt> means a
@@ -659,19 +655,19 @@ class (IsBoundedSize a l u) => IsBoundedSizeText a l u where {
     --   <tt>a</tt>.
     type family Elem a;
 }
-length :: IsBoundedSizeText a l u => a -> Int
-append :: IsBoundedSizeText a l u => a -> a -> a
-replicate :: IsBoundedSizeText a l u => Int -> Elem a -> a
-map :: IsBoundedSizeText a l u => (Elem a -> Elem a) -> a -> a
-take :: IsBoundedSizeText a l u => Int -> a -> a
-drop :: IsBoundedSizeText a l u => Int -> a -> a
-type FixedSizeText a (l :: Nat) = (IsBoundedSizeText a l l) => FixedSize a l
-instance GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize Data.ByteString.Internal.ByteString l u)
-instance GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize Data.ByteString.Internal.ByteString l u)
-instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSizeText a l u) => Data.String.IsString (Data.BoundedSize.Class.BoundedSize a l u)
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.Class.IsBoundedSizeText Data.ByteString.Internal.ByteString l u
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.Class.IsBoundedSize Data.ByteString.Internal.ByteString l u
-instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSize a l u) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize a l u)
+length :: IsBoundedSizeText l u a => a -> Int
+append :: IsBoundedSizeText l u a => a -> a -> a
+replicate :: IsBoundedSizeText l u a => Int -> Elem a -> a
+map :: IsBoundedSizeText l u a => (Elem a -> Elem a) -> a -> a
+take :: IsBoundedSizeText l u a => Int -> a -> a
+drop :: IsBoundedSizeText l u a => Int -> a -> a
+type FixedSizeText (l :: Nat) a = (IsBoundedSizeText l l a) => FixedSize l a
+instance GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u Data.ByteString.Internal.ByteString)
+instance GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u Data.ByteString.Internal.ByteString)
+instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSizeText l u a) => Data.String.IsString (Data.BoundedSize.Class.BoundedSize l u a)
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.Class.IsBoundedSizeText l u Data.ByteString.Internal.ByteString
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.Class.IsBoundedSize l u Data.ByteString.Internal.ByteString
+instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSize l u a) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 
 
 -- | Template Haskell helpers for BoundedSize.
@@ -690,17 +686,17 @@ module Data.BoundedSize.TH
 --   &gt;&gt;&gt; :t st "Foobar"
 --   st "Foobar" :: Q Exp
 --   
---   &gt;&gt;&gt; $(st "Foobar") :: BoundedSize ByteString 6 6
+--   &gt;&gt;&gt; $(st "Foobar") :: BoundedSize 6 6 ByteString
 --   "Foobar"
 --   </pre>
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; st "Foobar"
 --   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                                 Data.BoundedSize.Class.IsBoundedSize a_0
+--                                                                 Data.BoundedSize.Class.IsBoundedSize 6
 --                                                                                                      6
---                                                                                                      6) =&gt;
---                                                   Data.BoundedSize.Class.BoundedSize a_0 6 6
+--                                                                                                      a_0) =&gt;
+--                                                   Data.BoundedSize.Class.BoundedSize 6 6 a_0
 --   </pre>
 --   
 --   <pre>
@@ -724,17 +720,17 @@ st :: LitS -> Q Exp
 --   &gt;&gt;&gt; :t sz "Foobar"
 --   sz "Foobar" :: Q Exp
 --   
---   &gt;&gt;&gt; $(sz "Foobar") :: BoundedSize ByteString 0 6
+--   &gt;&gt;&gt; $(sz "Foobar") :: BoundedSize 0 6 ByteString
 --   "Foobar"
 --   </pre>
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; sz "Foobar"
 --   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                                 Data.BoundedSize.Class.IsBoundedSize a_0
---                                                                                                      0
---                                                                                                      6) =&gt;
---                                                   Data.BoundedSize.Class.BoundedSize a_0 0 6
+--                                                                 Data.BoundedSize.Class.IsBoundedSize 0
+--                                                                                                      6
+--                                                                                                      a_0) =&gt;
+--                                                   Data.BoundedSize.Class.BoundedSize 0 6 a_0
 --   </pre>
 --   
 --   <pre>
@@ -752,14 +748,14 @@ sz :: LitS -> Q Exp
 --   <pre>
 --   &gt;&gt;&gt; at &lt;- runQ $ newName "a"
 --   
---   &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType at (typeFromInt 0) (typeFromInt 4) "Boo!"
+--   &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
 --   Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize a_0
---                                                                                                    0
---                                                                                                    4) =&gt;
---                                                 Data.BoundedSize.Class.BoundedSize a_0 0 4
+--                                                               Data.BoundedSize.Class.IsBoundedSize 0
+--                                                                                                    4
+--                                                                                                    a_0) =&gt;
+--                                                 Data.BoundedSize.Class.BoundedSize 0 4 a_0
 --   </pre>
-unsafeCreateExp :: (Name -> Type -> Type -> Type) -> Name -> Type -> Type -> String -> Exp
+unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> String -> Exp
 
 -- | Transform a data-level Int to a Type value LitT (NumTyLit 3)
 --   

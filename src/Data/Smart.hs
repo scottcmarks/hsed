@@ -30,9 +30,9 @@ module Data.Smart
   , IsBoundedSize(..)
   , IsFixedSize
   , FixedSize
-  , IsBoundedSizeText(..)
-  , IsFixedSizeText
-  , FixedSizeText
+  , IsBoundedSizeBytes(..)
+  , IsFixedSizeBytes
+  , FixedSizeBytes
   )
 where
 
@@ -102,8 +102,8 @@ type FixedSize l a = (IsBoundedSize l l a) => BoundedSize l l a
 
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class (IsBoundedSize l u a) => IsBoundedSizeText l u a where
-  -- | Basic element type. For @IsBoundedSizeTextText [a]@, this is @a@.
+class (IsBoundedSize l u a) => IsBoundedSizeBytes l u a where
+  -- | Basic element type. For @IsBoundedSizeBytesText [a]@, this is @a@.
   type Elem a
 
   length :: a -> Int
@@ -114,9 +114,9 @@ class (IsBoundedSize l u a) => IsBoundedSizeText l u a where
   take :: Int -> a -> a
   drop :: Int -> a -> a
 
-class (IsBoundedSizeText l l a) => IsFixedSizeText l a where
+class (IsBoundedSizeBytes l l a) => IsFixedSizeBytes l a where
 
-type FixedSizeText l a =(IsFixedSizeText l a) => FixedSize l a
+type FixedSizeBytes l a =(IsFixedSizeBytes l a) => FixedSize l a
 
 instance forall l u. IsBoundedSize l u B.ByteString where
     data BoundedSize l u B.ByteString = ByteString B.ByteString
@@ -144,7 +144,7 @@ instance forall l u a. (KnownNat l, KnownNat u, Show a, Smart (BoundedSize l u) 
 instance forall l u.Smart (BoundedSize l u) B.ByteString => IsString (BoundedSize l u B.ByteString) where
     fromString = either error id . safeCreate . fromString
 
-instance forall l u. IsBoundedSizeText l u B.ByteString where
+instance forall l u. IsBoundedSizeBytes l u B.ByteString where
   type Elem B.ByteString = Word8
   length = B.length
   append = B.append

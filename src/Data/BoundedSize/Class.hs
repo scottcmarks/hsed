@@ -22,8 +22,8 @@ type.
 module Data.BoundedSize.Class
        ( IsBoundedSize(..)
        , FixedSize
-       , IsBoundedSizeText(..)
-       , FixedSizeText
+       , IsBoundedSizeBytes(..)
+       , FixedSizeBytes
        )
 
 where
@@ -97,12 +97,12 @@ type FixedSize (l :: Nat) a = BoundedSize l l a
 
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class (IsBoundedSize l u a) => IsBoundedSizeText l u a where
+class (IsBoundedSize l u a) => IsBoundedSizeBytes l u a where
   -- | Data family which wraps values of the underlying Text-like type giving
-  -- them a type-level length. @BoundedSizeText t 6 10@ means a value of type @t@ of
+  -- them a type-level length. @BoundedSizeBytes t 6 10@ means a value of type @t@ of
   -- length between 6 and 10.
 
-  -- | Basic element type. For @IsBoundedSizeTextText [a]@, this is @a@.
+  -- | Basic element type. For @IsBoundedSizeBytesText [a]@, this is @a@.
   type Elem a
 
   length :: a -> Int
@@ -115,13 +115,13 @@ class (IsBoundedSize l u a) => IsBoundedSizeText l u a where
 
 
 
-instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText l u a) => IsString(BoundedSize l u a)
+instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString(BoundedSize l u a)
   where fromString s =
-            maybe (error "prohibits coercion to BoundedSizeText") id
+            maybe (error "prohibits coercion to BoundedSizeBytes") id
                   (create (fromString s))
 
 
-type FixedSizeText (l :: Nat) a = (IsBoundedSizeText l l a) => FixedSize l a
+type FixedSizeBytes (l :: Nat) a = (IsBoundedSizeBytes l l a) => FixedSize l a
 
 instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize l u B.ByteString where
   data BoundedSize l u B.ByteString = ByteString B.ByteString
@@ -140,7 +140,7 @@ instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize l u B.ByteString 
                 then show vl
                 else "between " ++ show vl ++ " and " ++ show vu
 
-instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSizeText l u B.ByteString where
+instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSizeBytes l u B.ByteString where
   type Elem B.ByteString = Word8
   length = B.length
   append = B.append

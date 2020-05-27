@@ -20,9 +20,10 @@ type.
 -}
 
 module Data.BoundedSize.Class
-       ( IsBoundedSize(..)
+       ( IsBytes(..)
+       , IsBoundedSize(..)
        , FixedSize
-       , IsBoundedSizeBytes(..)
+       , IsBoundedSizeBytes
        , FixedSizeBytes
        )
 
@@ -91,37 +92,35 @@ class IsBoundedSize (l::Nat) (u::Nat) a where
 
 
 
--- | Class of types which can be assigned a fixed type-level size.
-type FixedSize (l :: Nat) a = BoundedSize l l a
 
-
-
--- | Class of types which can be assigned a type-level minimum and maximum length.
-class (IsBoundedSize l u a) => IsBoundedSizeBytes l u a where
-  -- | Data family which wraps values of the underlying Text-like type giving
-  -- them a type-level length. @BoundedSizeBytes t 6 10@ means a value of type @t@ of
-  -- length between 6 and 10.
-
-  -- | Basic element type. For @IsBoundedSizeBytesText [a]@, this is @a@.
+-- | Class of types with ByteString-like operations
+class IsBytes a where
   type Elem a
-
   length :: a -> Int
-
   append :: a -> a -> a
   replicate :: Int -> Elem a -> a
   map :: (Elem a -> Elem a) -> a -> a
   take :: Int -> a -> a
   drop :: Int -> a -> a
 
+instance IsBytes B.ByteString where
+  type Elem B.ByteString = Word8
+  length = B.length
+  append = B.append
+  replicate = B.replicate
+  map = B.map
+  take = B.take
+  drop = B.drop
+
+
+-- | Class of ByteString-like types which can be assigned a type-level minimum and maximum length.
+class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a where { }
 
 
 instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString(BoundedSize l u a)
   where fromString s =
             maybe (error "prohibits coercion to BoundedSizeBytes") id
                   (create (fromString s))
-
-
-type FixedSizeBytes (l :: Nat) a = (IsBoundedSizeBytes l l a) => FixedSize l a
 
 instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize l u B.ByteString where
   data BoundedSize l u B.ByteString = ByteString B.ByteString
@@ -140,14 +139,17 @@ instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize l u B.ByteString 
                 then show vl
                 else "between " ++ show vl ++ " and " ++ show vu
 
-instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSizeBytes l u B.ByteString where
-  type Elem B.ByteString = Word8
-  length = B.length
-  append = B.append
-  replicate = B.replicate
-  map = B.map
-  take = B.take
-  drop = B.drop
 
 instance forall l u a. (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a) where
     show = show . unwrap
+
+
+
+
+
+
+-- | Class of types which can be assigned a fixed type-level size.
+type FixedSize n a = BoundedSize n n a
+
+
+type FixedSizeBytes n a = IsBoundedSizeBytes n n a => FixedSize n a

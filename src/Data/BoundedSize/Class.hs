@@ -1,5 +1,6 @@
 {-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
@@ -22,8 +23,14 @@ module Data.BoundedSize.Class
        ( IsBytes(..)
        , IsBoundedSize(..)
        , FixedSize
+       , MaxSize
        , IsBoundedSizeBytes
+       , BoundedSizeBytes
        , FixedSizeBytes
+       , MaxSizeBytes
+       , BoundedSizeByteString
+       , FixedSizeByteString
+       , MaxSizeByteString
        )
 
 where
@@ -96,6 +103,9 @@ instance forall l u a. (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => 
 -- | Class of types which can be assigned a fixed type-level size.
 type FixedSize n a = BoundedSize n n a
 
+-- | Class of types which can be assigned a maximum type-level size.
+type MaxSize n a = BoundedSize 0 n a
+
 
 
 
@@ -113,16 +123,6 @@ class IsBytes a where
   map :: (Elem a -> Elem a) -> a -> a
   take :: Int -> a -> a
   drop :: Int -> a -> a
-
-instance IsBytes B.ByteString where
-  type Elem B.ByteString = Word8
-  length = B.length
-  append = B.append
-  replicate = B.replicate
-  map = B.map
-  take = B.take
-  drop = B.drop
-
 
 -- | Class of ByteString-like types which can be assigned a type-level minimum and maximum length.
 class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a where { }
@@ -147,7 +147,29 @@ instance forall l u a. (KnownNat l, KnownNat u, IsBytes a) => IsBoundedSize l u 
 instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString(BoundedSize l u a)
   where fromString = either error id . safeCreate . fromString
 
-
-
+type BoundedSizeBytes l u a = IsBoundedSizeBytes l u a => BoundedSize l u a
 
 type FixedSizeBytes n a = IsBoundedSizeBytes n n a => FixedSize n a
+
+type MaxSizeBytes n a = IsBoundedSizeBytes n n a => MaxSize n a
+
+
+
+
+
+
+instance IsBytes B.ByteString where
+  type Elem B.ByteString = Word8
+  length = B.length
+  append = B.append
+  replicate = B.replicate
+  map = B.map
+  take = B.take
+  drop = B.drop
+
+
+type BoundedSizeByteString l u = BoundedSizeBytes l u B.ByteString
+
+type FixedSizeByteString n = FixedSizeBytes n B.ByteString
+
+type MaxSizeByteString n = MaxSizeBytes n B.ByteString

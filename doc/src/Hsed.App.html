@@ -32,7 +32,7 @@ Constructors and lenses.
 </span><span id="line-32"></span><span class="hs-keyword">newtype</span><span> </span><span id="Options"><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Options"><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span>
 </span><span id="line-33"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_verbose"><span class="annot"><span class="annottext">Options -&gt; Bool
 </span><a href="Hsed.App.html#_verbose"><span class="hs-identifier hs-var hs-var">_verbose</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679514273"><span id="local-6989586621679514275"><span id="local-6989586621679514277"><span class="annot"><span class="annottext">Int -&gt; Options -&gt; ShowS
+</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679514352"><span id="local-6989586621679514354"><span id="local-6989586621679514356"><span class="annot"><span class="annottext">Int -&gt; Options -&gt; ShowS
 [Options] -&gt; ShowS
 Options -&gt; String
 (Int -&gt; Options -&gt; ShowS)
@@ -63,7 +63,7 @@ $cshowsPrec :: Int -&gt; Options -&gt; ShowS
 </span><a href="Hsed.App.html#makeApp"><span class="hs-identifier hs-var hs-var">makeApp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogFunc -&gt; ProcessContext -&gt; Options -&gt; App
 </span><a href="Hsed.App.html#App"><span class="hs-identifier hs-var">App</span></a></span><span>
 </span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasLogFunc</span></span><span> </span><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679514260"><span class="annot"><span class="annottext">logFuncL :: (LogFunc -&gt; f LogFunc) -&gt; App -&gt; f App
+</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasLogFunc</span></span><span> </span><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679514339"><span class="annot"><span class="annottext">logFuncL :: (LogFunc -&gt; f LogFunc) -&gt; App -&gt; f App
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">logFuncL</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(LogFunc -&gt; f LogFunc) -&gt; App -&gt; f App
 Lens' App LogFunc
 </span><a href="Hsed.App.html#logFunc"><span class="hs-identifier hs-var">logFunc</span></a></span><span>

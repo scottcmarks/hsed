@@ -654,15 +654,23 @@ create :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => a -> Maybe (BoundedSi
 -- | Class of types which can be assigned a fixed type-level size.
 type FixedSize n a = BoundedSize n n a
 
+-- | Class of types which can be assigned a maximum type-level size.
+type MaxSize n a = BoundedSize 0 n a
+
 -- | Class of ByteString-like types which can be assigned a type-level
 --   minimum and maximum length.
 class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a
+type BoundedSizeBytes l u a = IsBoundedSizeBytes l u a => BoundedSize l u a
 type FixedSizeBytes n a = IsBoundedSizeBytes n n a => FixedSize n a
+type MaxSizeBytes n a = IsBoundedSizeBytes n n a => MaxSize n a
+type BoundedSizeByteString l u = BoundedSizeBytes l u ByteString
+type FixedSizeByteString n = FixedSizeBytes n ByteString
+type MaxSizeByteString n = MaxSizeBytes n ByteString
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u a)
 instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSizeBytes l u a) => Data.String.IsString (Data.BoundedSize.Class.BoundedSize l u a)
-instance Data.BoundedSize.Class.IsBytes Data.ByteString.Internal.ByteString
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBytes a) => Data.BoundedSize.Class.IsBoundedSize l u a
+instance Data.BoundedSize.Class.IsBytes Data.ByteString.Internal.ByteString
 instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSize l u a) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 
 

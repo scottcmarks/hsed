@@ -566,56 +566,56 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1508
-module Data.BoundedSize.ClassData.BoundedSize.Class21,22
-class IsBoundedSize IsBoundedSize56,57
-  data BoundedSize BoundedSize60,61
-  unsafeCreate unsafeCreate76,77
-  unwrap unwrap79,80
-  size size82,83
-  predicate predicate84,85
-  safeCreate safeCreate86,87
-  create create89,90
-class IsBytes IsBytes96,97
-  type Elem Elem97,98
-  length length98,99
-  append append99,100
-  replicate replicate100,101
-  map map101,102
-  take take102,103
-  drop drop103,104
-instance IsBytes IsBytes B-ByteString105,106
-  type Elem Elem106,107
-  length length107,108
-  append append108,109
-  replicate replicate109,110
-  map map110,111
-  take take111,112
-  drop drop112,113
-class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes116,117
-instance forall forall l u a- (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString (BoundedSize l u a)119,120
-  where fromString fromString120,121
-instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSize l u B-ByteString124,125
-  data BoundedSize BoundedSize125,126
-  data BoundedSize l u B.ByteString = ByteString ByteString125,126
-  unsafeCreate unsafeCreate127,128
-  unwrap unwrap128,129
-  size size129,130
-  predicate predicate130,131
-instance forall forall l u a- (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a)142,143
-    show show143,144
-type FixedSize FixedSize151,152
-type FixedSizeBytes FixedSizeBytes154,155
+./src/Data/BoundedSize/Class.hs,1500
+module Data.BoundedSize.ClassData.BoundedSize.Class20,21
+class IsBoundedSize IsBoundedSize55,56
+  data BoundedSize BoundedSize59,60
+  unsafeCreate unsafeCreate75,76
+  unwrap unwrap78,79
+  size size80,81
+  predicate predicate82,83
+  safeCreate safeCreate84,85
+  create create87,88
+instance forall forall l u a- (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a)91,92
+    show show92,93
+type FixedSize FixedSize96,97
+class IsBytes IsBytes107,108
+  type Elem Elem108,109
+  length length109,110
+  append append110,111
+  replicate replicate111,112
+  map map112,113
+  take take113,114
+  drop drop114,115
+instance IsBytes IsBytes B-ByteString116,117
+  type Elem Elem117,118
+  length length118,119
+  append append119,120
+  replicate replicate120,121
+  map map121,122
+  take take122,123
+  drop drop123,124
+class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes127,128
+instance forall forall l u a- (KnownNat l, KnownNat u, IsBytes a) => IsBoundedSize l u a129,130
+  data BoundedSize BoundedSize130,131
+  data BoundedSize l u a = ByteString ByteString130,131
+  unsafeCreate unsafeCreate132,133
+  unwrap unwrap133,134
+  size size134,135
+  predicate predicate135,136
+instance forall forall l u a- (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString (BoundedSize l u a)146,147
+  where fromString fromString147,148
+type FixedSizeBytes FixedSizeBytes152,153
 
 ./src/Data/BoundedSize/TH.hs,275
 module Data.BoundedSize.THData.BoundedSize.TH9,10
-newtype LitS LitS39,40
-sb sb59,60
-st st91,92
-sz sz118,119
-typeFromInt typeFromInt128,129
-unsafeCreateExp unsafeCreateExp142,143
-universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType168,169
+newtype LitS LitS40,41
+sb sb60,61
+st st92,93
+sz sz119,120
+typeFromInt typeFromInt129,130
+unsafeCreateExp unsafeCreateExp143,144
+universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType169,170
 
 ./src/Data/ByteString/Integral.hs,793
 module Data.ByteString.IntegralData.ByteString.Integral21,22

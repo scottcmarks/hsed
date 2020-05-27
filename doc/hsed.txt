@@ -658,11 +658,11 @@ type FixedSize n a = BoundedSize n n a
 --   minimum and maximum length.
 class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a
 type FixedSizeBytes n a = IsBoundedSizeBytes n n a => FixedSize n a
-instance GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u Data.ByteString.Internal.ByteString)
-instance GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u Data.ByteString.Internal.ByteString)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u a)
 instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSizeBytes l u a) => Data.String.IsString (Data.BoundedSize.Class.BoundedSize l u a)
 instance Data.BoundedSize.Class.IsBytes Data.ByteString.Internal.ByteString
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.Class.IsBoundedSize l u Data.ByteString.Internal.ByteString
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBytes a) => Data.BoundedSize.Class.IsBoundedSize l u a
 instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSize l u a) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 
 

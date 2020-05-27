@@ -28,6 +28,7 @@ import           Language.Haskell.TH
 -- >>> :set -XFlexibleContexts
 -- >>> :set -XTemplateHaskell
 -- >>> :set -XOverloadedStrings
+-- >>> :set -XMonoLocalBinds
 -- >>> :set -Wno-type-defaults
 -- >>> import Data.ByteString(ByteString)
 -- >>> import Data.ByteString.Internal()

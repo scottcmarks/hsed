@@ -1,8 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE DataKinds             #-}
-{-# LANGUAGE DerivingStrategies    #-}
-{-# LANGUAGE DerivingVia           #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE RankNTypes            #-}
@@ -32,7 +31,7 @@ where
 import           Data.ByteString     ()
 import qualified Data.ByteString     as B
 import           Data.Either         (Either (..), either)
-import           Data.Maybe          (Maybe (..), maybe)
+import           Data.Maybe          (Maybe (..))
 import           Data.Proxy          (Proxy (..))
 import           Data.String         (IsString (..), String)
 import           GHC.Base            (const, id, ($), (++), (.))
@@ -79,7 +78,6 @@ class IsBoundedSize (l::Nat) (u::Nat) a where
   -- | Forget type-level minimum and maximum size, obtaining the underlying value.
   unwrap :: BoundedSize l u a -> a
 
-
   size :: a -> Int
 
   predicate :: (KnownNat l, KnownNat u) => BoundedSize l u a -> Either String (BoundedSize l u a)
@@ -89,6 +87,19 @@ class IsBoundedSize (l::Nat) (u::Nat) a where
 
   create :: (KnownNat l, KnownNat u) => a -> Maybe (BoundedSize l u a)
   create = either (const Nothing) Just . safeCreate
+
+
+instance forall l u a. (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a) where
+    show = show . unwrap
+
+
+-- | Class of types which can be assigned a fixed type-level size.
+type FixedSize n a = BoundedSize n n a
+
+
+
+
+
 
 
 
@@ -116,20 +127,14 @@ instance IsBytes B.ByteString where
 -- | Class of ByteString-like types which can be assigned a type-level minimum and maximum length.
 class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a where { }
 
-
-instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString(BoundedSize l u a)
-  where fromString s =
-            maybe (error "prohibits coercion to BoundedSizeBytes") id
-                  (create (fromString s))
-
-instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize l u B.ByteString where
-  data BoundedSize l u B.ByteString = ByteString B.ByteString
+instance forall l u a. (KnownNat l, KnownNat u, IsBytes a) => IsBoundedSize l u a where
+  data BoundedSize l u a = ByteString a
     deriving (Eq, Ord)
   unsafeCreate = ByteString
   unwrap (ByteString t) = t
-  size = B.length
+  size = length
   predicate b@(ByteString t) =
-      let lt = B.length t
+      let lt = length t
           vl = fromNat (Proxy @l)
           vu = fromNat (Proxy @u)
       in if vl <= lt && lt <= vu
@@ -139,17 +144,10 @@ instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize l u B.ByteString 
                 then show vl
                 else "between " ++ show vl ++ " and " ++ show vu
 
-
-instance forall l u a. (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a) where
-    show = show . unwrap
-
+instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString(BoundedSize l u a)
+  where fromString = either error id . safeCreate . fromString
 
 
-
-
-
--- | Class of types which can be assigned a fixed type-level size.
-type FixedSize n a = BoundedSize n n a
 
 
 type FixedSizeBytes n a = IsBoundedSizeBytes n n a => FixedSize n a

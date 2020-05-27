@@ -764,7 +764,7 @@ class IsBoundedSize IsBoundedSize89,90
   safeCreate safeCreate119,120
   create create122,123
 type FixedSize FixedSize128,129
-class (IsBoundedSize a l u) => IsBoundedSizeText IsBoundedSizeText133,134
+class (IsBoundedSize l u a) => IsBoundedSizeText IsBoundedSizeText133,134
   type Elem Elem139,140
   length length141,142
   append append143,144
@@ -772,17 +772,17 @@ class (IsBoundedSize a l u) => IsBoundedSizeText IsBoundedSizeText133,134
   map map145,146
   take take146,147
   drop drop147,148
-instance forall forall a l u- (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText a l u) => IsString (BoundedSize a l u)151,152
+instance forall forall l u a- (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText l u a) => IsString (BoundedSize l u a)151,152
   where fromString fromString152,153
 type FixedSizeText FixedSizeText157,158
-instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSize B-ByteString l u159,160
+instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSize l u B-ByteString159,160
   data BoundedSize BoundedSize160,161
-  data BoundedSize B.ByteString l u = ByteString ByteString160,161
+  data BoundedSize l u B.ByteString = ByteString ByteString160,161
   unsafeCreate unsafeCreate162,163
   unwrap unwrap163,164
   size size164,165
   predicate predicate165,166
-instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSizeText B-ByteString l u176,177
+instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSizeText l u B-ByteString176,177
   type Elem Elem177,178
   length length178,179
   append append179,180
@@ -790,7 +790,7 @@ instance forall forall l u- (KnownNat l, KnownNat u) => IsBoundedSizeText B-Byt
   map map181,182
   take take182,183
   drop drop183,184
-instance forall forall a l u- (Show a, KnownNat l, KnownNat u, IsBoundedSize a l u) => Show (BoundedSize a l u)185,186
+instance forall forall l u a- (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a)185,186
     show show186,187
 
 ./src/Data/SizedText.hs,336

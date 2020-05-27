@@ -36,7 +36,7 @@ newtype Core_some_uinteger = Core_some_uinteger Natural
 newtype Core_some_bytes    = Core_some_bytes    ByteString
 newtype Core_some_maxbytes = Core_some_maxbytes ByteString
 
-newtype Core_integer   n = Core_integer   (BoundedSize Core_some_integer  n n)
-newtype Core_uinteger  n = Core_uinteger  (BoundedSize Core_some_uinteger n n)
-newtype Core_bytes     n = Core_bytes     (BoundedSize Core_some_bytes    n n)
-newtype Core_max_bytes n = Core_max_bytes (BoundedSize Core_some_maxbytes 0 n)
+newtype Core_integer   n = Core_integer   (BoundedSize n n Core_some_integer )
+newtype Core_uinteger  n = Core_uinteger  (BoundedSize n n Core_some_uinteger)
+newtype Core_bytes     n = Core_bytes     (BoundedSize n n Core_some_bytes   )
+newtype Core_max_bytes n = Core_max_bytes (BoundedSize 0 n Core_some_maxbytes)

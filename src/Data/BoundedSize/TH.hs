@@ -170,5 +170,5 @@ universallyQuantifiedBoundedSizeType ::
     Type  -- type-level value for the min length
  -> Type  -- type-level value for the max length
  -> Name  -- name of the wrapped type, e.g. ByteString
- -> Type  -- type expression, e.g. BoundedSize ByteString l u
+ -> Type  -- type expression, e.g. BoundedSize l u ByteString
 universallyQuantifiedBoundedSizeType l u a = AppT (AppT (AppT (ConT ''BoundedSize) l) u) (VarT a)

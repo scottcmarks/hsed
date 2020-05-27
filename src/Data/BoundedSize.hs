@@ -43,7 +43,7 @@ module Data.BoundedSize
   , BoundedSize
   , IsBoundedSize(unwrap)
 
-    -- * FixedSize class @FixedSize a l == BoundedSize a l l
+    -- * FixedSize class @FixedSize l a == BoundedSize l l a
   , FixedSize
        , IsBoundedSizeText(..)
    , FixedSizeText
@@ -87,11 +87,11 @@ import           GHC.Word            (Word8)
 
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class IsBoundedSize a (l::Nat) (u::Nat) where
+class IsBoundedSize (l::Nat) (u::Nat) a where
   -- | Data family which wraps values of the underlying type giving
-  -- them a type-level size. @BoundedSize t 6 10@ means a value of type @t@ of
+  -- them a type-level size. @BoundedSize 6 10 t@ means a value of type @t@ of
   -- size between 6 and 10.
-  data BoundedSize a l u
+  data BoundedSize l u a
 
   -- | Simply wrap a value in a BoundedSize as is, assuming any length.
   --
@@ -107,33 +107,33 @@ class IsBoundedSize a (l::Nat) (u::Nat) where
   --
   -- When writing new "IsBoundedSize" instances, make this simply apply
   -- the constructor of "BoundedSize".
-  unsafeCreate :: a -> BoundedSize a l u
+  unsafeCreate :: a -> BoundedSize l u a
 
   -- | Forget type-level minimum and maximum size, obtaining the underlying value.
-  unwrap :: BoundedSize a l u -> a
+  unwrap :: BoundedSize l u a -> a
 
 
   size :: a -> Int
 
-  predicate :: (KnownNat l, KnownNat u) => BoundedSize a l u -> Either String (BoundedSize a l u)
+  predicate :: (KnownNat l, KnownNat u) => BoundedSize l u a -> Either String (BoundedSize l u a)
 
-  safeCreate :: (KnownNat l, KnownNat u) => a -> Either String (BoundedSize a l u)
+  safeCreate :: (KnownNat l, KnownNat u) => a -> Either String (BoundedSize l u a)
   safeCreate = predicate . unsafeCreate
 
-  create :: (KnownNat l, KnownNat u) => a -> Maybe (BoundedSize a l u)
+  create :: (KnownNat l, KnownNat u) => a -> Maybe (BoundedSize l u a)
   create = either (const Nothing) Just . safeCreate
 
 
 
 -- | Class of types which can be assigned a fixed type-level size.
-type FixedSize a (l :: Nat) = BoundedSize a l l
+type FixedSize (l :: Nat) a = BoundedSize l l a
 
 
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class (IsBoundedSize a l u) => IsBoundedSizeText a l u where
+class (IsBoundedSize l u a) => IsBoundedSizeText l u a where
   -- | Data family which wraps values of the underlying Text-like type giving
-  -- them a type-level length. @BoundedSizeText t 6 10@ means a value of type @t@ of
+  -- them a type-level length. @BoundedSizeText 6 10 t@ means a value of type @t@ of
   -- length between 6 and 10.
 
   -- | Basic element type. For @IsBoundedSizeTextText [a]@, this is @a@.
@@ -149,16 +149,16 @@ class (IsBoundedSize a l u) => IsBoundedSizeText a l u where
 
 
 
-instance forall a l u. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText a l u) => IsString(BoundedSize a l u)
+instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeText l u a) => IsString(BoundedSize l u a)
   where fromString s =
             maybe (error "prohibits coercion to BoundedSizeText") id
                   (create (fromString s))
 
 
-type FixedSizeText a (l :: Nat) = (IsBoundedSizeText a l l) => FixedSize a l
+type FixedSizeText (l :: Nat) a = (IsBoundedSizeText l l a) => FixedSize l a
 
-instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize B.ByteString l u where
-  data BoundedSize B.ByteString l u = ByteString B.ByteString
+instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize l u B.ByteString where
+  data BoundedSize l u B.ByteString = ByteString B.ByteString
     deriving (Eq, Ord)
   unsafeCreate = ByteString
   unwrap (ByteString t) = t
@@ -174,7 +174,7 @@ instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSize B.ByteString l u 
                 then show vl
                 else "between " ++ show vl ++ " and " ++ show vu
 
-instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSizeText B.ByteString l u where
+instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSizeText l u B.ByteString where
   type Elem B.ByteString = Word8
   length = B.length
   append = B.append
@@ -183,5 +183,5 @@ instance forall l u. (KnownNat l, KnownNat u) => IsBoundedSizeText B.ByteString 
   take = B.take
   drop = B.drop
 
-instance forall a l u. (Show a, KnownNat l, KnownNat u, IsBoundedSize a l u) => Show (BoundedSize a l u) where
+instance forall l u a. (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a) where
     show = show . unwrap

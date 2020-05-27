@@ -780,50 +780,50 @@ instance Data.String.IsString Data.BoundedSize.TH.LitS
 --   import qualified Data.BoundedSize as S
 --   </pre>
 module Data.BoundedSize
-create :: (IsBoundedSize a l u, KnownNat l, KnownNat u) => a -> Maybe (BoundedSize a l u)
-size :: IsBoundedSize a l u => a -> Int
+create :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => a -> Maybe (BoundedSize l u a)
+size :: IsBoundedSize l u a => a -> Int
 
 -- | Data family which wraps values of the underlying type giving them a
---   type-level size. <tt>BoundedSize t 6 10</tt> means a value of type
+--   type-level size. <tt>BoundedSize 6 10 t</tt> means a value of type
 --   <tt>t</tt> of size between 6 and 10.
-data family BoundedSize a l u
+data family BoundedSize l u a
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   length.
-class IsBoundedSize a (l :: Nat) (u :: Nat)
+class IsBoundedSize (l :: Nat) (u :: Nat) a
 
 -- | Forget type-level minimum and maximum size, obtaining the underlying
 --   value.
-unwrap :: IsBoundedSize a l u => BoundedSize a l u -> a
+unwrap :: IsBoundedSize l u a => BoundedSize l u a -> a
 
 -- | Class of types which can be assigned a fixed type-level size.
-type FixedSize a (l :: Nat) = BoundedSize a l l
+type FixedSize (l :: Nat) a = BoundedSize l l a
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   length.
-class (IsBoundedSize a l u) => IsBoundedSizeText a l u where {
+class (IsBoundedSize l u a) => IsBoundedSizeText l u a where {
     
     -- | Data family which wraps values of the underlying Text-like type giving
-    --   them a type-level length. <tt>BoundedSizeText t 6 10</tt> means a
+    --   them a type-level length. <tt>BoundedSizeText 6 10 t</tt> means a
     --   value of type <tt>t</tt> of length between 6 and 10.
     --   
     --   Basic element type. For <tt>IsBoundedSizeTextText [a]</tt>, this is
     --   <tt>a</tt>.
     type family Elem a;
 }
-length :: IsBoundedSizeText a l u => a -> Int
-append :: IsBoundedSizeText a l u => a -> a -> a
-replicate :: IsBoundedSizeText a l u => Int -> Elem a -> a
-map :: IsBoundedSizeText a l u => (Elem a -> Elem a) -> a -> a
-take :: IsBoundedSizeText a l u => Int -> a -> a
-drop :: IsBoundedSizeText a l u => Int -> a -> a
-type FixedSizeText a (l :: Nat) = (IsBoundedSizeText a l l) => FixedSize a l
-instance GHC.Classes.Ord (Data.BoundedSize.BoundedSize Data.ByteString.Internal.ByteString l u)
-instance GHC.Classes.Eq (Data.BoundedSize.BoundedSize Data.ByteString.Internal.ByteString l u)
-instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.IsBoundedSizeText a l u) => Data.String.IsString (Data.BoundedSize.BoundedSize a l u)
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.IsBoundedSizeText Data.ByteString.Internal.ByteString l u
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.IsBoundedSize Data.ByteString.Internal.ByteString l u
-instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.IsBoundedSize a l u) => GHC.Show.Show (Data.BoundedSize.BoundedSize a l u)
+length :: IsBoundedSizeText l u a => a -> Int
+append :: IsBoundedSizeText l u a => a -> a -> a
+replicate :: IsBoundedSizeText l u a => Int -> Elem a -> a
+map :: IsBoundedSizeText l u a => (Elem a -> Elem a) -> a -> a
+take :: IsBoundedSizeText l u a => Int -> a -> a
+drop :: IsBoundedSizeText l u a => Int -> a -> a
+type FixedSizeText (l :: Nat) a = (IsBoundedSizeText l l a) => FixedSize l a
+instance GHC.Classes.Ord (Data.BoundedSize.BoundedSize l u Data.ByteString.Internal.ByteString)
+instance GHC.Classes.Eq (Data.BoundedSize.BoundedSize l u Data.ByteString.Internal.ByteString)
+instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.IsBoundedSizeText l u a) => Data.String.IsString (Data.BoundedSize.BoundedSize l u a)
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.IsBoundedSizeText l u Data.ByteString.Internal.ByteString
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.IsBoundedSize l u Data.ByteString.Internal.ByteString
+instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.IsBoundedSize l u a) => GHC.Show.Show (Data.BoundedSize.BoundedSize l u a)
 
 
 -- | Datatypes for <tt>hsed</tt> main. Constructors and lenses.
@@ -860,13 +860,13 @@ Core_some_bytes :: ByteString -> Core_some_bytes
 newtype Core_some_maxbytes
 Core_some_maxbytes :: ByteString -> Core_some_maxbytes
 newtype Core_integer n
-Core_integer :: BoundedSize Core_some_integer n n -> Core_integer n
+Core_integer :: BoundedSize n n Core_some_integer -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: BoundedSize Core_some_uinteger n n -> Core_uinteger n
+Core_uinteger :: BoundedSize n n Core_some_uinteger -> Core_uinteger n
 newtype Core_bytes n
-Core_bytes :: BoundedSize Core_some_bytes n n -> Core_bytes n
+Core_bytes :: BoundedSize n n Core_some_bytes -> Core_bytes n
 newtype Core_max_bytes n
-Core_max_bytes :: BoundedSize Core_some_maxbytes 0 n -> Core_max_bytes n
+Core_max_bytes :: BoundedSize 0 n Core_some_maxbytes -> Core_max_bytes n
 
 
 -- | Formats.

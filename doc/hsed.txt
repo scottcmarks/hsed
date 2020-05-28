@@ -672,6 +672,7 @@ instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize 
 instance Data.BoundedSize.Class.IsBytes Data.ByteString.Internal.ByteString
 instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSize l u a) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.IsBoundedSize l u a) => Data.String.IsString (Data.BoundedSize.Class.BoundedSize l u a)
+instance (Data.BoundedSize.Class.HasSize a, Data.BoundedSize.Class.IsBoundedSize l u a) => Data.BoundedSize.Class.HasSize (Data.BoundedSize.Class.BoundedSize l u a)
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.Class.HasSize a) => Data.BoundedSize.Class.IsBoundedSize l u a
 instance Data.BoundedSize.Class.HasSize Data.ByteString.Internal.ByteString
 
@@ -988,6 +989,12 @@ newtype Core_bytes n
 Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
 newtype Core_max_bytes n
 Core_max_bytes :: MaxSize n Core_some_maxbytes -> Core_max_bytes n
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.BoundedSize.Class.HasSize (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.BoundedSize.Class.HasSize (System.SED.MCTP.Common.Base_Type.Core_bytes n)
 instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
 instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
 instance Data.BoundedSize.Class.IsBytes System.SED.MCTP.Common.Base_Type.Core_some_maxbytes

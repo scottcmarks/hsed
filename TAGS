@@ -566,7 +566,7 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1831
+./src/Data/BoundedSize/Class.hs,1938
 module Data.BoundedSize.ClassData.BoundedSize.Class21,22
 class HasSize HasSize61,62
     size size62,63
@@ -581,38 +581,40 @@ instance (S(Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (Bound
     show show104,105
 instance (I(IsString a, KnownNat l, KnownNat u, IsBoundedSize l u a) => IsString (BoundedSize l u a)106,107
     fromString fromString109,110
-type FixedSize FixedSize113,114
-type MaxSize MaxSize116,117
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a119,120
-  data BoundedSize BoundedSize120,121
-  data BoundedSize l u a = BdSz BdSz120,121
-  unsafeCreate unsafeCreate122,123
-  unwrap unwrap123,124
-  predicate predicate124,125
-class (HasSize a) => IsBytes IsBytes143,144
-  type Elem Elem144,145
-  length length145,146
-  append append147,148
-  replicate replicate148,149
-  map map149,150
-  take take150,151
-  drop drop151,152
-class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes155,156
-type BoundedSizeBytes BoundedSizeBytes160,161
-type FixedSizeBytes FixedSizeBytes162,163
-type MaxSizeBytes MaxSizeBytes164,165
-instance HasSize HasSize B-ByteString170,171
-      size size172,173
-instance IsBytes IsBytes B-ByteString173,174
-    type Elem Elem175,176
-    append append176,177
-    replicate replicate177,178
-    map map178,179
-    take take179,180
-    drop drop180,181
-type BoundedSizeByteString BoundedSizeByteString183,184
-type FixedSizeByteString FixedSizeByteString185,186
-type MaxSizeByteString MaxSizeByteString187,188
+instance (H(HasSize a, IsBoundedSize l u a) => HasSize (BoundedSize l u a)111,112
+    size size114,115
+type FixedSize FixedSize117,118
+type MaxSize MaxSize120,121
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a123,124
+  data BoundedSize BoundedSize124,125
+  data BoundedSize l u a = BdSz BdSz124,125
+  unsafeCreate unsafeCreate126,127
+  unwrap unwrap127,128
+  predicate predicate128,129
+class (HasSize a) => IsBytes IsBytes147,148
+  type Elem Elem148,149
+  length length149,150
+  append append151,152
+  replicate replicate152,153
+  map map153,154
+  take take154,155
+  drop drop155,156
+class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes159,160
+type BoundedSizeBytes BoundedSizeBytes164,165
+type FixedSizeBytes FixedSizeBytes166,167
+type MaxSizeBytes MaxSizeBytes168,169
+instance HasSize HasSize B-ByteString174,175
+      size size176,177
+instance IsBytes IsBytes B-ByteString177,178
+    type Elem Elem179,180
+    append append180,181
+    replicate replicate181,182
+    map map182,183
+    take take183,184
+    drop drop184,185
+type BoundedSizeByteString BoundedSizeByteString187,188
+type FixedSizeByteString FixedSizeByteString189,190
+type MaxSizeByteString MaxSizeByteString191,192
 
 ./src/Data/BoundedSize/TH.hs,275
 module Data.BoundedSize.THData.BoundedSize.TH9,10

@@ -45,7 +45,7 @@ import           GHC.Base            (const, id, ($), (++), (.))
 import           GHC.Classes         (Eq (..), Ord (..), (&&))
 import           GHC.Err             (error)
 import           GHC.Show            (Show (..))
-import           GHC.TypeLits        (KnownNat, Nat)
+import           GHC.TypeLits        (KnownNat)
 import           GHC.TypeLits.Extras (fromNat)
 import           GHC.Types           (Int)
 import           GHC.Word            (Word8)
@@ -109,6 +109,10 @@ instance (IsString a, KnownNat l, KnownNat u, IsBoundedSize l u a) =>
   where
     fromString = either error id . safeCreate . fromString
 
+instance (HasSize a, IsBoundedSize l u a) =>
+         HasSize(BoundedSize l u a)
+  where
+    size = size . unwrap
 
 -- | Class of types which can be assigned a fixed type-level size.
 type FixedSize n a = BoundedSize n n a

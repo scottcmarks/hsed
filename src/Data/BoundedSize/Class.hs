@@ -35,7 +35,6 @@ module Data.BoundedSize.Class
 
 where
 
-import           Data.ByteString     ()
 import qualified Data.ByteString     as B
 import           Data.Either         (Either (..), either)
 import           Data.Maybe          (Maybe (..))

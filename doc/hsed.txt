@@ -784,50 +784,69 @@ instance Data.String.IsString Data.BoundedSize.TH.LitS
 --   import qualified Data.BoundedSize as S
 --   </pre>
 module Data.BoundedSize
-create :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => a -> Maybe (BoundedSize l u a)
-size :: IsBoundedSize l u a => a -> Int
 
--- | Data family which wraps values of the underlying type giving them a
---   type-level size. <tt>BoundedSize 6 10 t</tt> means a value of type
---   <tt>t</tt> of size between 6 and 10.
-data family BoundedSize l u a
+-- | Class of types with ByteString-like operations
+class IsBytes a where {
+    type family Elem a;
+}
+length :: IsBytes a => a -> Int
+append :: IsBytes a => a -> a -> a
+replicate :: IsBytes a => Int -> Elem a -> a
+map :: IsBytes a => (Elem a -> Elem a) -> a -> a
+take :: IsBytes a => Int -> a -> a
+drop :: IsBytes a => Int -> a -> a
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   length.
-class IsBoundedSize (l :: Nat) (u :: Nat) a
+class IsBoundedSize (l :: Nat) (u :: Nat) a where {
+    
+    -- | Data family which wraps values of the underlying type giving them a
+    --   type-level size. <tt>BoundedSize t 6 10</tt> means a value of type
+    --   <tt>t</tt> of size between 6 and 10.
+    data family BoundedSize l u a;
+}
+
+-- | Simply wrap a value in a BoundedSize as is, assuming any length.
+--   
+--   <b>WARNING</b> Use it only when you know what you're doing.
+--   
+--   For example, an expression like
+--   
+--   <pre>
+--   unsafeCreate "somestring" :: BoundedSize String 50 100
+--   </pre>
+--   
+--   will typecheck, although the stored size information will not match
+--   actual value size. This may result in wrong behaviour of all functions
+--   defined for <a>IsBoundedSize</a>.
+--   
+--   When writing new <a>IsBoundedSize</a> instances, make this simply
+--   apply the constructor of <a>BoundedSize</a>.
+unsafeCreate :: IsBoundedSize l u a => a -> BoundedSize l u a
 
 -- | Forget type-level minimum and maximum size, obtaining the underlying
 --   value.
 unwrap :: IsBoundedSize l u a => BoundedSize l u a -> a
+size :: IsBoundedSize l u a => a -> Int
+predicate :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => BoundedSize l u a -> Either String (BoundedSize l u a)
+safeCreate :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => a -> Either String (BoundedSize l u a)
+create :: (IsBoundedSize l u a, KnownNat l, KnownNat u) => a -> Maybe (BoundedSize l u a)
 
 -- | Class of types which can be assigned a fixed type-level size.
-type FixedSize (l :: Nat) a = BoundedSize l l a
+type FixedSize n a = BoundedSize n n a
 
--- | Class of types which can be assigned a type-level minimum and maximum
---   length.
-class (IsBoundedSize l u a) => IsBoundedSizeBytes l u a where {
-    
-    -- | Data family which wraps values of the underlying Text-like type giving
-    --   them a type-level length. <tt>BoundedSizeBytes 6 10 t</tt> means a
-    --   value of type <tt>t</tt> of length between 6 and 10.
-    --   
-    --   Basic element type. For <tt>IsBoundedSizeBytes [a]</tt>, this is
-    --   <tt>a</tt>.
-    type family Elem a;
-}
-length :: IsBoundedSizeBytes l u a => a -> Int
-append :: IsBoundedSizeBytes l u a => a -> a -> a
-replicate :: IsBoundedSizeBytes l u a => Int -> Elem a -> a
-map :: IsBoundedSizeBytes l u a => (Elem a -> Elem a) -> a -> a
-take :: IsBoundedSizeBytes l u a => Int -> a -> a
-drop :: IsBoundedSizeBytes l u a => Int -> a -> a
-type FixedSizeBytes (l :: Nat) a = (IsBoundedSizeBytes l l a) => FixedSize l a
-instance GHC.Classes.Ord (Data.BoundedSize.BoundedSize l u Data.ByteString.Internal.ByteString)
-instance GHC.Classes.Eq (Data.BoundedSize.BoundedSize l u Data.ByteString.Internal.ByteString)
-instance (Data.String.IsString a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.IsBoundedSizeBytes l u a) => Data.String.IsString (Data.BoundedSize.BoundedSize l u a)
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.IsBoundedSizeBytes l u Data.ByteString.Internal.ByteString
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.BoundedSize.IsBoundedSize l u Data.ByteString.Internal.ByteString
-instance (GHC.Show.Show a, GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.BoundedSize.IsBoundedSize l u a) => GHC.Show.Show (Data.BoundedSize.BoundedSize l u a)
+-- | Class of types which can be assigned a maximum type-level size.
+type MaxSize n a = BoundedSize 0 n a
+
+-- | Class of ByteString-like types which can be assigned a type-level
+--   minimum and maximum length.
+class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a
+type BoundedSizeBytes l u a = IsBoundedSizeBytes l u a => BoundedSize l u a
+type FixedSizeBytes n a = IsBoundedSizeBytes n n a => FixedSize n a
+type MaxSizeBytes n a = IsBoundedSizeBytes n n a => MaxSize n a
+type BoundedSizeByteString l u = BoundedSizeBytes l u ByteString
+type FixedSizeByteString n = FixedSizeBytes n ByteString
+type MaxSizeByteString n = MaxSizeBytes n ByteString
 
 
 -- | Datatypes for <tt>hsed</tt> main. Constructors and lenses.
@@ -864,13 +883,19 @@ Core_some_bytes :: ByteString -> Core_some_bytes
 newtype Core_some_maxbytes
 Core_some_maxbytes :: ByteString -> Core_some_maxbytes
 newtype Core_integer n
-Core_integer :: BoundedSize n n Core_some_integer -> Core_integer n
+Core_integer :: FixedSize n Core_some_integer -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: BoundedSize n n Core_some_uinteger -> Core_uinteger n
+Core_uinteger :: FixedSize n Core_some_uinteger -> Core_uinteger n
 newtype Core_bytes n
-Core_bytes :: BoundedSize n n Core_some_bytes -> Core_bytes n
+Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
 newtype Core_max_bytes n
-Core_max_bytes :: BoundedSize 0 n Core_some_maxbytes -> Core_max_bytes n
+Core_max_bytes :: MaxSize n Core_some_maxbytes -> Core_max_bytes n
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
+instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
+instance Data.BoundedSize.Class.IsBytes System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_bytes
+instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Core_some_bytes
+instance Data.BoundedSize.Class.IsBytes System.SED.MCTP.Common.Base_Type.Core_some_bytes
 
 
 -- | Formats.

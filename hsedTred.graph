@@ -15,7 +15,7 @@ digraph G {
 			u0			 [fillcolor="#ffffbb",
 				label=BoundedSize,
 				style="filled,bold"];
-			u2			 [fillcolor="#bbbbff",
+			u1			 [fillcolor="#bbbbff",
 				label=Class,
 				penwidth=0,
 				style=filled];
@@ -88,7 +88,7 @@ digraph G {
 				label=TypeLits,
 				style=filled
 			];
-			u1			 [fillcolor="#ffff77",
+			u2			 [fillcolor="#ffff77",
 				label=Extras,
 				penwidth=0,
 				style=filled];
@@ -257,12 +257,12 @@ digraph G {
 	u35 -> u36;
 	u35 -> u33;
 	u35 -> u34;
-	u10 -> u1;
+	u10 -> u2;
 	u0 -> u1;
-	u2 -> u1;
-	u3 -> u2;
+	u1 -> u2;
+	u3 -> u1;
 	u7 -> u9;
-	u7 -> u1;
+	u7 -> u2;
 	u9 -> u8;
 	u11 -> u4;
 	u11 -> u7;

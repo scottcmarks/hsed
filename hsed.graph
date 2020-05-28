@@ -14,7 +14,7 @@ label="BoundedSize";
 color="#0000000F";
 style="filled";
 u0[label="BoundedSize",style="filled,bold",fillcolor="#ffffbb"];
-u2[label="Class",style="filled",fillcolor="#bbbbff",penwidth="0"];
+u1[label="Class",style="filled",fillcolor="#bbbbff",penwidth="0"];
 u3[label="TH",style="filled",fillcolor="#bbbbff",penwidth="0"];
 
 }
@@ -52,7 +52,7 @@ subgraph cluster_6 {
 label="TypeLits";
 color="#0000000F";
 style="filled";
-u1[label="Extras",style="filled",fillcolor="#ffff77",penwidth="0"];
+u2[label="Extras",style="filled",fillcolor="#ffff77",penwidth="0"];
 
 }
 
@@ -147,13 +147,13 @@ u34[label="Run",style="filled",fillcolor="#33bb77",penwidth="0"];
 
 }
 u0 -> u1;
-u2 -> u1;
-u3 -> u2;
-u7 -> u1;
+u1 -> u2;
+u3 -> u1;
+u7 -> u2;
 u7 -> u8;
 u7 -> u9;
 u9 -> u8;
-u10 -> u1;
+u10 -> u2;
 u11 -> u4;
 u11 -> u7;
 u12 -> u4;
@@ -173,7 +173,7 @@ u19 -> u12;
 u19 -> u16;
 u19 -> u17;
 u19 -> u20;
-u20 -> u1;
+u20 -> u2;
 u20 -> u12;
 u20 -> u16;
 u20 -> u17;
@@ -189,7 +189,7 @@ u24 -> u19;
 u25 -> u16;
 u25 -> u19;
 u26 -> u27;
-u27 -> u1;
+u27 -> u2;
 u27 -> u4;
 u27 -> u12;
 u27 -> u15;

@@ -37,129 +37,56 @@ import GHC.Base(const, (++))
 
 
 import Data.Char (toUpper)
-
-:load src/Data/SizedText/TH.hs
-:load src/Data/SizedText.hs
 import Data.ByteString (ByteString)
-
-:i take
-:t take $(st "Hello")
-:t take $(st "Hello") :: C.Sized ByteString 4 32
-take $(st "Hello") :: C.Sized ByteString 4 32
-length (take $(st "Hello") :: C.Sized ByteString 4 32)
-take $(st "Hello") :: C.Sized ByteString 4 32
-take $(st "Hello") :: C.Sized ByteString 4 4
-take $(st "HelloHelloHelloHelloHelloHelloHello") :: C.Sized ByteString 4 32
-:i create
-:i ByteString
-"Hello" :: ByteString
-create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 32)
-create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 32)
-create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 4 4)
-create ("Hello" :: ByteString) :: Maybe (C.Sized ByteString 8 32)
-$(st "Hello")
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-$(st "foo")
-:t it
-
-
 import Data.String(IsString(..))
 import Data.SizedText.Class(IsSizedText(Sized))
-
-type TCG_some_bytes    = ByteString
-type TCG_some_maxbytes = ByteString
-type TCG_bytes    n = Sized TCG_some_bytes    n n
-type TCG_maxbytes n = Sized TCG_some_maxbytes 0 n
-type TCG_bytes_8    = TCG_bytes    8
-type TCG_maxbytes_8 = TCG_maxbytes 8
-
 import GHC.Word(Word8)
 import Data.ByteString.Internal(c2w)
-fill = c2w '_'
-b = createLeft fill "bolo" :: TCG_bytes_8
-b
-:i b
-length b
-
-sb = "lobo" :: TCG_some_bytes
-sb
-:t sb
-
-"lobolobo" :: TCG_some_bytes
-:t it
-it :: TCG_some_bytes
-
-$(st "bolo____") :: TCG_bytes_8
-:t it
-length it
-
-take b :: TCG_bytes 4
-:t it
-bounds it
-
-take b :: TCG_maxbytes 5
-:t it
-bounds it
-
-
 import Language.Haskell.TH
 import Language.Haskell.TH.Ppr
 import Language.Haskell.TH.PprLib
-:load src/Data/SizedText.hs
-:show modules
-:t sz
-:t (sz "goo")
-:t ppr
-:t ppr <$> sz "goo"
-:t runQ
-:t runQ $ ppr <$> sz "goo"
-runQ $ ppr <$> sz "goo"
+import Data.Either(Either(..))
+import Data.String(String)
+import Data.BoundedSize(BoundedSize(..))
+import Data.BoundedSize(IsBytes(..))
 
-:t st
-:t (st "goo")
-:t ppr
-:t ppr <$> st "goo"
-:t runQ
-:t runQ $ ppr <$> st "goo"
-runQ $ ppr <$> st "goo"
-
-:set -package hsed
-:set -XOverloadedStrings
-:set -XDataKinds
-
-:load src/System/SED/MCTP/Common/UID.hs
-
-import Data.SizedText.Class
-import Data.ByteString.Short
-import Extras.Sized
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 
-:i UID
-:i Fixed_bytes
+:i Core_integer
+:i Core_bytes
+:k Core_bytes
+:k Core_bytes 5
+safeCreate "Scott" :: Either String (BoundedSize 5 5 ByteString)
+safeCreate "Scott" :: Either String (FixedSize 5 ByteString)
+
+:set -XDerivingVia
+:t safeCreate
+:i IsBytes
+:set -XUndecidableInstances
+newtype Core_some_bytes = Core_some_bytes ByteString deriving (IsBytes,IsString,Show) via ByteString
+:i Core_some_bytes
+import Data.String(IsString(..))
+safeCreate "Scott" :: Either String (BoundedSize 5 5 Core_some_bytes)
+:t it
+safeCreate "Scott" :: Either String (FixedSize 5 Core_some_bytes)
+:t it
 :i IsString
-:t hNull
-let (HalfUID fb) = hNull in fb
-Data.ByteString.Short.pack [0,0,0,0]
-"\NUL\NUL\NUL\NUL" :: ShortByteString
-"\NUL\NUL\NUL\NUL" :: Fixed_bytes 4
-import Data.Maybe
-:t Just "\NUL\NUL\NUL\NUL"
--- "\NUL\NUL\NUL\NUL" :: Fixed_bytes 3
-"\NUL\NUL\NUL\NUL" :: Fixed_bytes 4
--- "\NUL\NUL\NUL\NUL" :: Fixed_bytes 5
-HalfUID "\NUL\NUL\NUL\NUL"
--- HalfUID "\NUL\NUL\NUL\NUL\NUL"
-HalfUID "BobT" == halfUID 0x42 0x6F 0x62 0x54
+:i Core_bytes
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 putStrLn "Buh-bye now."
 
 
 --------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 putStrLn ".. script loaded."
+--------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

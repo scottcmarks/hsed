@@ -619,7 +619,7 @@ drop :: IsBytes a => Int -> a -> a
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   length.
-class (HasSize a) => IsBoundedSize (l :: Nat) (u :: Nat) a where {
+class (HasSize a, KnownNat l, KnownNat u) => IsBoundedSize l u a where {
     
     -- | Data family which wraps values of the underlying type giving them a
     --   type-level size. <tt>BoundedSize t 6 10</tt> means a value of type
@@ -802,7 +802,7 @@ drop :: IsBytes a => Int -> a -> a
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   length.
-class (HasSize a) => IsBoundedSize (l :: Nat) (u :: Nat) a where {
+class (HasSize a, KnownNat l, KnownNat u) => IsBoundedSize l u a where {
     
     -- | Data family which wraps values of the underlying type giving them a
     --   type-level size. <tt>BoundedSize t 6 10</tt> means a value of type

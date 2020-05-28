@@ -63,7 +63,7 @@ class HasSize a where
     size :: a -> Int
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class (HasSize a) => IsBoundedSize (l::Nat) (u::Nat) a where
+class (HasSize a, KnownNat l, KnownNat u) => IsBoundedSize l u a where
   -- | Data family which wraps values of the underlying type giving
   -- them a type-level size. @BoundedSize t 6 10@ means a value of type @t@ of
   -- size between 6 and 10.
@@ -88,7 +88,9 @@ class (HasSize a) => IsBoundedSize (l::Nat) (u::Nat) a where
   -- | Forget type-level minimum and maximum size, obtaining the underlying value.
   unwrap :: BoundedSize l u a -> a
 
-  predicate :: (KnownNat l, KnownNat u) => BoundedSize l u a -> Either String (BoundedSize l u a)
+  predicate :: (KnownNat l, KnownNat u) =>
+      BoundedSize l u a
+   -> Either String (BoundedSize l u a)
 
   safeCreate :: (KnownNat l, KnownNat u) => a -> Either String (BoundedSize l u a)
   safeCreate = predicate . unsafeCreate
@@ -126,7 +128,7 @@ instance (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
           vu = fromNat (Proxy @u)
       in if vl <= lt && lt <= vu
            then Right b
-           else Left $ "length " ++ show lt ++ " should be " ++
+           else Left $ "size " ++ show lt ++ " should be " ++
                        if vl == vu
                        then show vl
                        else "between " ++ show vl ++ " and " ++ show vu

@@ -45,6 +45,7 @@ newtype Core_some_maxbytes = Core_some_maxbytes ByteString
 
 newtype Core_integer   n = Core_integer   (FixedSize n Core_some_integer )
 newtype Core_uinteger  n = Core_uinteger  (FixedSize n Core_some_uinteger)
+
 newtype Core_bytes     n = Core_bytes     (FixedSize n Core_some_bytes   )
 --         deriving (IsBytes,IsString,Show) via (FixedSize n Core_some_bytes   )
 newtype Core_max_bytes n = Core_max_bytes (MaxSize   n Core_some_maxbytes)

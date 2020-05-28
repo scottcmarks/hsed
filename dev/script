@@ -39,7 +39,6 @@ import GHC.Base(const, (++))
 import Data.Char (toUpper)
 import Data.ByteString (ByteString)
 import Data.String(IsString(..))
-import Data.SizedText.Class(IsSizedText(Sized))
 import GHC.Word(Word8)
 import Data.ByteString.Internal(c2w)
 import Language.Haskell.TH

@@ -22,6 +22,10 @@ module Data.BoundedSize
   , BoundedSizeByteString
   , FixedSizeByteString
   , MaxSizeByteString
+  , st
+  , sz
+  , unsafeCreateExp
+  , typeFromInt
   )
 where
 
@@ -31,3 +35,4 @@ import           Data.BoundedSize.Class (BoundedSizeByteString,
                                          IsBoundedSize (..), IsBoundedSizeBytes,
                                          IsBytes (..), MaxSize,
                                          MaxSizeByteString, MaxSizeBytes)
+import           Data.BoundedSize.TH    (st, sz, typeFromInt, unsafeCreateExp)

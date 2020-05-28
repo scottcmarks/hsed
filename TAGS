@@ -377,8 +377,8 @@ newtype Core_some_bytes Core_some_bytes40,41
 newtype Core_some_maxbytes Core_some_maxbytes42,43
 newtype Core_integer Core_integer45,46
 newtype Core_uinteger Core_uinteger46,47
-newtype Core_bytes Core_bytes47,48
-newtype Core_max_bytes Core_max_bytes49,50
+newtype Core_bytes Core_bytes48,49
+newtype Core_max_bytes Core_max_bytes50,51
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26

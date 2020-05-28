@@ -1,3 +1,4 @@
+:set -package hsed
 :set -Wno-type-defaults
 :set prompt-cont ""
 
@@ -10,6 +11,9 @@
 :set -XGADTs
 :set -XStandaloneDeriving
 :set -XKindSignatures
+:set -XMultiParamTypeClasses
+:set -XFlexibleContexts
+:set -XDerivingVia
 
 import System.IO
 putStrLn "loading script ..."
@@ -46,33 +50,13 @@ import Language.Haskell.TH.Ppr
 import Language.Haskell.TH.PprLib
 import Data.Either(Either(..))
 import Data.String(String)
-import Data.BoundedSize(BoundedSize(..))
-import Data.BoundedSize(IsBytes(..))
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+:load /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type.hs
 
-:i Core_integer
-:i Core_bytes
-:k Core_bytes
-:k Core_bytes 5
-safeCreate "Scott" :: Either String (BoundedSize 5 5 ByteString)
-safeCreate "Scott" :: Either String (FixedSize 5 ByteString)
-
-:set -XDerivingVia
-:t safeCreate
-:i IsBytes
-:set -XUndecidableInstances
-newtype Core_some_bytes = Core_some_bytes ByteString deriving (IsBytes,IsString,Show) via ByteString
-:i Core_some_bytes
-import Data.String(IsString(..))
-safeCreate "Scott" :: Either String (BoundedSize 5 5 Core_some_bytes)
-:t it
-safeCreate "Scott" :: Either String (FixedSize 5 Core_some_bytes)
-:t it
-:i IsString
-:i Core_bytes
+import Data.BoundedSize
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

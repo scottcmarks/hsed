@@ -81,8 +81,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-47"></span><span class="hs-comment">-- | Trim trailing whitespace from e.g. a field in a quasiquoted table</span><span>
 </span><span id="line-48"></span><span class="annot"><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-type">trimTrailingWhitespace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-49"></span><span id="trimTrailingWhitespace"><span class="annot"><span class="annottext">trimTrailingWhitespace :: ByteString -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-var hs-var">trimTrailingWhitespace</span></a></span></span><span> </span><span id="local-6989586621679515505"><span class="annot"><span class="annottext">s :: ByteString
-</span><a href="#local-6989586621679515505"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString, ByteString) -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-var hs-var">trimTrailingWhitespace</span></a></span></span><span> </span><span id="local-6989586621679515723"><span class="annot"><span class="annottext">s :: ByteString
+</span><a href="#local-6989586621679515723"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString, ByteString) -&gt; ByteString
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">((ByteString, ByteString) -&gt; ByteString)
 -&gt; (ByteString, ByteString) -&gt; ByteString
@@ -90,7 +90,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; ByteString -&gt; (ByteString, ByteString)
 </span><span class="hs-identifier hs-var">spanEnd</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Bool
 </span><span class="hs-identifier hs-var">isSpace_w8</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679515505"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621679515723"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-50"></span><span>
 </span><span id="line-51"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
 </span><span id="line-52"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>

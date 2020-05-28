@@ -28,20 +28,23 @@ module System.SED.MCTP.Common.Base_Type
   )
 where
 
-import           Data.BoundedSize (FixedSize, IsBytes (..), MaxSize)
 import           Data.ByteString  (ByteString)
 import           Data.String      (IsString (..))
 import           GHC.Num          (Integer)
 import           GHC.Show         (Show (..))
 import           Numeric.Natural  (Natural)
 
+import           Data.BoundedSize (FixedSize, HasSize (..), IsBytes (..),
+                                   MaxSize)
+
 
 newtype Core_some_integer  = Core_some_integer  Integer
 newtype Core_some_uinteger = Core_some_uinteger Natural
 newtype Core_some_bytes    = Core_some_bytes    ByteString
-        deriving (IsBytes,IsString,Show) via ByteString
+        deriving (HasSize, IsBytes, IsString, Show) via ByteString
 newtype Core_some_maxbytes = Core_some_maxbytes ByteString
-        deriving (IsBytes,IsString,Show) via ByteString
+        deriving (HasSize, IsBytes, IsString, Show) via ByteString
+
 
 newtype Core_integer   n = Core_integer   (FixedSize n Core_some_integer )
 newtype Core_uinteger  n = Core_uinteger  (FixedSize n Core_some_uinteger)

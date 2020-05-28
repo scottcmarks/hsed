@@ -11,7 +11,8 @@ This module is meant to be imported qualifed, e.g.
 
 -}
 module Data.BoundedSize
-  ( IsBytes(..)
+  ( HasSize(..)
+  , IsBytes(..)
   , IsBoundedSize(..)
   , FixedSize
   , MaxSize
@@ -32,7 +33,8 @@ where
 import           Data.BoundedSize.Class (BoundedSizeByteString,
                                          BoundedSizeBytes, FixedSize,
                                          FixedSizeByteString, FixedSizeBytes,
-                                         IsBoundedSize (..), IsBoundedSizeBytes,
-                                         IsBytes (..), MaxSize,
-                                         MaxSizeByteString, MaxSizeBytes)
+                                         HasSize (..), IsBoundedSize (..),
+                                         IsBoundedSizeBytes, IsBytes (..),
+                                         MaxSize, MaxSizeByteString,
+                                         MaxSizeBytes)
 import           Data.BoundedSize.TH    (st, sz, typeFromInt, unsafeCreateExp)

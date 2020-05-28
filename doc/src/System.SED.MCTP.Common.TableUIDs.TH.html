@@ -96,76 +96,76 @@ forall a. HasCallStack =&gt; a
 </span><span id="line-75"></span><span>
 </span><span id="line-76"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#t240Decs"><span class="hs-identifier hs-type">t240Decs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span class="hs-special">]</span><span>
 </span><span id="line-77"></span><span id="t240Decs"><span class="annot"><span class="annottext">t240Decs :: String -&gt; [Dec]
-</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#t240Decs"><span class="hs-identifier hs-var hs-var">t240Decs</span></a></span></span><span> </span><span id="local-6989586621679515653"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679515653"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[Dec]] -&gt; [Dec]
+</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#t240Decs"><span class="hs-identifier hs-var hs-var">t240Decs</span></a></span></span><span> </span><span id="local-6989586621679515871"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679515871"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[[Dec]] -&gt; [Dec]
 forall (t :: * -&gt; *) a. Foldable t =&gt; t [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">concat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">[Dec]
-</span><a href="#local-6989586621679515652"><span class="hs-identifier hs-var">us</span></a></span><span>
+</span><a href="#local-6989586621679515870"><span class="hs-identifier hs-var">us</span></a></span><span>
 </span><span id="line-78"></span><span>                    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; [Exp] -&gt; [Dec]
-</span><a href="#local-6989586621679515651"><span class="hs-identifier hs-var">mapd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Name
+</span><a href="#local-6989586621679515869"><span class="hs-identifier hs-var">mapd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;nameHalfUID&quot;</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">HalfUID</span><span> </span><span class="annot"><span class="annottext">[Exp]
-</span><a href="#local-6989586621679515650"><span class="hs-identifier hs-var">ehs</span></a></span><span>
+</span><a href="#local-6989586621679515868"><span class="hs-identifier hs-var">ehs</span></a></span><span>
 </span><span id="line-79"></span><span>                    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; [Exp] -&gt; [Dec]
-</span><a href="#local-6989586621679515651"><span class="hs-identifier hs-var">mapd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Name
+</span><a href="#local-6989586621679515869"><span class="hs-identifier hs-var">mapd</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;nameUID&quot;</span></span><span class="hs-special">)</span><span>     </span><span class="hs-special">''</span><span class="hs-identifier">UID</span><span>     </span><span class="annot"><span class="annottext">[Exp]
-</span><a href="#local-6989586621679515649"><span class="hs-identifier hs-var">eus</span></a></span><span>
+</span><a href="#local-6989586621679515867"><span class="hs-identifier hs-var">eus</span></a></span><span>
 </span><span id="line-80"></span><span>                    </span><span class="hs-special">]</span><span>
 </span><span id="line-81"></span><span>  </span><span class="hs-keyword">where</span><span>
 </span><span id="line-82"></span><span>    </span><span class="hs-comment">-- | approx. [d| $n :: Map $t String; $n = fromList $v |]</span><span>
-</span><span id="line-83"></span><span>    </span><span id="local-6989586621679515651"><span class="annot"><span class="annottext">mapd :: Name -&gt; Name -&gt; [Exp] -&gt; [Dec]
-</span><a href="#local-6989586621679515651"><span class="hs-identifier hs-var hs-var">mapd</span></a></span></span><span> </span><span id="local-6989586621679515648"><span class="annot"><span class="annottext">n :: Name
-</span><a href="#local-6989586621679515648"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679515647"><span class="annot"><span class="annottext">t :: Name
-</span><a href="#local-6989586621679515647"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679515646"><span class="annot"><span class="annottext">v :: [Exp]
-</span><a href="#local-6989586621679515646"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-83"></span><span>    </span><span id="local-6989586621679515869"><span class="annot"><span class="annottext">mapd :: Name -&gt; Name -&gt; [Exp] -&gt; [Dec]
+</span><a href="#local-6989586621679515869"><span class="hs-identifier hs-var hs-var">mapd</span></a></span></span><span> </span><span id="local-6989586621679515866"><span class="annot"><span class="annottext">n :: Name
+</span><a href="#local-6989586621679515866"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679515865"><span class="annot"><span class="annottext">t :: Name
+</span><a href="#local-6989586621679515865"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679515864"><span class="annot"><span class="annottext">v :: [Exp]
+</span><a href="#local-6989586621679515864"><span class="hs-identifier hs-var">v</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>        </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Type -&gt; Dec
 </span><span class="hs-identifier hs-var">SigD</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515648"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679515866"><span class="hs-identifier hs-var">n</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Map</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515647"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><a href="#local-6989586621679515865"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">String</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-85"></span><span>        </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Pat -&gt; Body -&gt; [Dec] -&gt; Dec
 </span><span class="hs-identifier hs-var">ValD</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Pat
 </span><span class="hs-identifier hs-var">VarP</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515648"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Body
+</span><a href="#local-6989586621679515866"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Body
 </span><span class="hs-identifier hs-var">NormalB</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">fromList</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Exp] -&gt; Exp
 </span><span class="hs-identifier hs-var">ListE</span></span><span> </span><span class="annot"><span class="annottext">[Exp]
-</span><a href="#local-6989586621679515646"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621679515864"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-86"></span><span>        </span><span class="hs-special">]</span><span>
-</span><span id="line-87"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span><span> </span><span id="local-6989586621679515652"><span class="annot"><span class="annottext">us :: [Dec]
-</span><a href="#local-6989586621679515652"><span class="hs-identifier hs-var">us</span></a></span></span><span> </span><span id="local-6989586621679515650"><span class="annot"><span class="annottext">ehs :: [Exp]
-</span><a href="#local-6989586621679515650"><span class="hs-identifier hs-var">ehs</span></a></span></span><span> </span><span id="local-6989586621679515649"><span class="annot"><span class="annottext">eus :: [Exp]
-</span><a href="#local-6989586621679515649"><span class="hs-identifier hs-var">eus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-87"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span><span> </span><span id="local-6989586621679515870"><span class="annot"><span class="annottext">us :: [Dec]
+</span><a href="#local-6989586621679515870"><span class="hs-identifier hs-var">us</span></a></span></span><span> </span><span id="local-6989586621679515868"><span class="annot"><span class="annottext">ehs :: [Exp]
+</span><a href="#local-6989586621679515868"><span class="hs-identifier hs-var">ehs</span></a></span></span><span> </span><span id="local-6989586621679515867"><span class="annot"><span class="annottext">eus :: [Exp]
+</span><a href="#local-6989586621679515867"><span class="hs-identifier hs-var">eus</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-88"></span><span>        </span><span class="annot"><span class="annottext">(UIDRow -&gt; UIDRowDecs -&gt; UIDRowDecs)
 -&gt; UIDRowDecs -&gt; [UIDRow] -&gt; UIDRowDecs
 forall (t :: * -&gt; *) a b.
 Foldable t =&gt;
 (a -&gt; b -&gt; b) -&gt; b -&gt; t a -&gt; b
 </span><span class="hs-identifier hs-var">foldr</span></span><span> </span><span class="annot"><span class="annottext">UIDRow -&gt; UIDRowDecs -&gt; UIDRowDecs
-</span><a href="#local-6989586621679515635"><span class="hs-identifier hs-var">gather</span></a></span><span> </span><span class="annot"><span class="annottext">UIDRowDecs
+</span><a href="#local-6989586621679515853"><span class="hs-identifier hs-var">gather</span></a></span><span> </span><span class="annot"><span class="annottext">UIDRowDecs
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span> </span><span class="annot"><span class="annottext">([UIDRow] -&gt; UIDRowDecs) -&gt; [UIDRow] -&gt; UIDRowDecs
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parser [UIDRow] -&gt; String -&gt; [UIDRow]
 forall c. Parser c -&gt; String -&gt; c
 </span><a href="System.SED.MCTP.Common.THUtil.html#parseTable"><span class="hs-identifier hs-var">parseTable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser [UIDRow]
-</span><a href="#local-6989586621679515633"><span class="hs-identifier hs-var">table240Parser</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679515653"><span class="hs-identifier hs-var">s</span></a></span><span>
-</span><span id="line-89"></span><span>      </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679515632"><span class="annot"><span class="annottext">row :: UIDRow
-</span><a href="#local-6989586621679515632"><span class="hs-identifier hs-var">row</span></a></span></span><span> </span><span id="local-6989586621679515635"><span class="annot"><span class="annottext">gather :: UIDRow -&gt; UIDRowDecs -&gt; UIDRowDecs
-</span><a href="#local-6989586621679515635"><span class="hs-operator hs-var hs-var">`gather`</span></a></span></span><span> </span><span id="local-6989586621679515631"><span class="annot"><span class="annottext">decs :: UIDRowDecs
-</span><a href="#local-6989586621679515631"><span class="hs-identifier hs-var">decs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UIDRowDecs
-</span><a href="#local-6989586621679515631"><span class="hs-identifier hs-var">decs</span></a></span><span> </span><span class="annot"><span class="annottext">UIDRowDecs -&gt; UIDRowDecs -&gt; UIDRowDecs
+</span><a href="#local-6989586621679515851"><span class="hs-identifier hs-var">table240Parser</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679515871"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><span id="line-89"></span><span>      </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679515850"><span class="annot"><span class="annottext">row :: UIDRow
+</span><a href="#local-6989586621679515850"><span class="hs-identifier hs-var">row</span></a></span></span><span> </span><span id="local-6989586621679515853"><span class="annot"><span class="annottext">gather :: UIDRow -&gt; UIDRowDecs -&gt; UIDRowDecs
+</span><a href="#local-6989586621679515853"><span class="hs-operator hs-var hs-var">`gather`</span></a></span></span><span> </span><span id="local-6989586621679515849"><span class="annot"><span class="annottext">decs :: UIDRowDecs
+</span><a href="#local-6989586621679515849"><span class="hs-identifier hs-var">decs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UIDRowDecs
+</span><a href="#local-6989586621679515849"><span class="hs-identifier hs-var">decs</span></a></span><span> </span><span class="annot"><span class="annottext">UIDRowDecs -&gt; UIDRowDecs -&gt; UIDRowDecs
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">UIDRow -&gt; UIDRowDecs
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#dUIDRow"><span class="hs-identifier hs-var">dUIDRow</span></a></span><span> </span><span class="annot"><span class="annottext">UIDRow
-</span><a href="#local-6989586621679515632"><span class="hs-identifier hs-var">row</span></a></span><span>
-</span><span id="line-90"></span><span>            </span><span id="local-6989586621679515633"><span class="annot"><span class="annottext">table240Parser :: Parser [UIDRow]
-</span><a href="#local-6989586621679515633"><span class="hs-identifier hs-var hs-var">table240Parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ()
+</span><a href="#local-6989586621679515850"><span class="hs-identifier hs-var">row</span></a></span><span>
+</span><span id="line-90"></span><span>            </span><span id="local-6989586621679515851"><span class="annot"><span class="annottext">table240Parser :: Parser [UIDRow]
+</span><a href="#local-6989586621679515851"><span class="hs-identifier hs-var hs-var">table240Parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ()
 </span><span class="hs-identifier hs-var">skipSpace</span></span><span>
 </span><span id="line-91"></span><span>                          </span><span class="annot"><span class="annottext">Parser () -&gt; Parser () -&gt; Parser ()
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
@@ -213,7 +213,7 @@ forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span id="line-102"></span><span>
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="hs-keyword">data</span><span> </span><span id="UIDRow"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRow"><span class="hs-identifier hs-var">UIDRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UIDRow"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRow"><span class="hs-identifier hs-var">UIDRow</span></a></span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span><span>
-</span><span id="line-105"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679515621"><span id="local-6989586621679515623"><span class="annot"><span class="annottext">UIDRow -&gt; UIDRow -&gt; Bool
+</span><span id="line-105"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679515839"><span id="local-6989586621679515841"><span class="annot"><span class="annottext">UIDRow -&gt; UIDRow -&gt; Bool
 (UIDRow -&gt; UIDRow -&gt; Bool)
 -&gt; (UIDRow -&gt; UIDRow -&gt; Bool) -&gt; Eq UIDRow
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -284,22 +284,22 @@ forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#mkUIDRow"><span class="hs-identifier hs-type">mkUIDRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRow"><span class="hs-identifier hs-type">UIDRow</span></a></span><span>
 </span><span id="line-119"></span><span id="mkUIDRow"><span class="annot"><span class="annottext">mkUIDRow :: UID -&gt; UID -&gt; TableName -&gt; TemplateName -&gt; UIDRow
-</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#mkUIDRow"><span class="hs-identifier hs-var hs-var">mkUIDRow</span></a></span></span><span> </span><span id="local-6989586621679515614"><span class="annot"><span class="annottext">u1 :: UID
-</span><a href="#local-6989586621679515614"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679515613"><span class="annot"><span class="annottext">u2 :: UID
-</span><a href="#local-6989586621679515613"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679515612"><span class="annot"><span class="annottext">ta :: TableName
-</span><a href="#local-6989586621679515612"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span id="local-6989586621679515611"><span class="annot"><span class="annottext">te :: TemplateName
-</span><a href="#local-6989586621679515611"><span class="hs-identifier hs-var">te</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515614"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">UID -&gt; UID -&gt; Maybe HalfUID
-</span><a href="#local-6989586621679515610"><span class="hs-operator hs-var">`matches`</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515613"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="hs-keyword">of</span><span>
-</span><span id="line-120"></span><span>                         </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679515609"><span class="annot"><span class="annottext">h :: HalfUID
-</span><a href="#local-6989586621679515609"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UID -&gt; UID -&gt; HalfUID -&gt; TableName -&gt; TemplateName -&gt; UIDRow
+</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#mkUIDRow"><span class="hs-identifier hs-var hs-var">mkUIDRow</span></a></span></span><span> </span><span id="local-6989586621679515832"><span class="annot"><span class="annottext">u1 :: UID
+</span><a href="#local-6989586621679515832"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679515831"><span class="annot"><span class="annottext">u2 :: UID
+</span><a href="#local-6989586621679515831"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679515830"><span class="annot"><span class="annottext">ta :: TableName
+</span><a href="#local-6989586621679515830"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span id="local-6989586621679515829"><span class="annot"><span class="annottext">te :: TemplateName
+</span><a href="#local-6989586621679515829"><span class="hs-identifier hs-var">te</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">UID
+</span><a href="#local-6989586621679515832"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">UID -&gt; UID -&gt; Maybe HalfUID
+</span><a href="#local-6989586621679515828"><span class="hs-operator hs-var">`matches`</span></a></span><span> </span><span class="annot"><span class="annottext">UID
+</span><a href="#local-6989586621679515831"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-120"></span><span>                         </span><span class="annot"><span class="hs-identifier hs-type">Just</span></span><span> </span><span id="local-6989586621679515827"><span class="annot"><span class="annottext">h :: HalfUID
+</span><a href="#local-6989586621679515827"><span class="hs-identifier hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">UID -&gt; UID -&gt; HalfUID -&gt; TableName -&gt; TemplateName -&gt; UIDRow
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRow"><span class="hs-identifier hs-var">UIDRow</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515614"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515613"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">HalfUID
-</span><a href="#local-6989586621679515609"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
-</span><a href="#local-6989586621679515612"><span class="hs-identifier hs-var">ta</span></a></span><span> </span><span class="annot"><span class="annottext">TemplateName
-</span><a href="#local-6989586621679515611"><span class="hs-identifier hs-var">te</span></a></span><span>
+</span><a href="#local-6989586621679515832"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">UID
+</span><a href="#local-6989586621679515831"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">HalfUID
+</span><a href="#local-6989586621679515827"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">TableName
+</span><a href="#local-6989586621679515830"><span class="hs-identifier hs-var">ta</span></a></span><span> </span><span class="annot"><span class="annottext">TemplateName
+</span><a href="#local-6989586621679515829"><span class="hs-identifier hs-var">te</span></a></span><span>
 </span><span id="line-121"></span><span>                         </span><span class="annot"><span class="hs-identifier hs-type">Nothing</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; UIDRow
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; UIDRow) -&gt; String -&gt; UIDRow
@@ -307,7 +307,7 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515614"><span class="hs-identifier hs-var">u1</span></a></span><span>
+</span><a href="#local-6989586621679515832"><span class="hs-identifier hs-var">u1</span></a></span><span>
 </span><span id="line-122"></span><span>                                         </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot; does not match &quot;</span></span><span>
@@ -316,25 +316,25 @@ forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515613"><span class="hs-identifier hs-var">u2</span></a></span><span>
-</span><span id="line-124"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span class="annot"><a href="#local-6989586621679515610"><span class="hs-identifier hs-type">matches</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
-</span><span id="line-125"></span><span>          </span><span id="local-6989586621679515610"><span class="annot"><span class="annottext">matches :: UID -&gt; UID -&gt; Maybe HalfUID
-</span><a href="#local-6989586621679515610"><span class="hs-identifier hs-var hs-var">matches</span></a></span></span><span> </span><span id="local-6989586621679515607"><span class="annot"><span class="annottext">u1' :: UID
-</span><a href="#local-6989586621679515607"><span class="hs-identifier hs-var">u1'</span></a></span></span><span> </span><span id="local-6989586621679515606"><span class="annot"><span class="annottext">u2' :: UID
-</span><a href="#local-6989586621679515606"><span class="hs-identifier hs-var">u2'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-126"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679515605"><span class="annot"><span class="annottext">h :: HalfUID
-</span><a href="#local-6989586621679515605"><span class="hs-identifier hs-var hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; HalfUID
+</span><a href="#local-6989586621679515831"><span class="hs-identifier hs-var">u2</span></a></span><span>
+</span><span id="line-124"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span class="annot"><a href="#local-6989586621679515828"><span class="hs-identifier hs-type">matches</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
+</span><span id="line-125"></span><span>          </span><span id="local-6989586621679515828"><span class="annot"><span class="annottext">matches :: UID -&gt; UID -&gt; Maybe HalfUID
+</span><a href="#local-6989586621679515828"><span class="hs-identifier hs-var hs-var">matches</span></a></span></span><span> </span><span id="local-6989586621679515825"><span class="annot"><span class="annottext">u1' :: UID
+</span><a href="#local-6989586621679515825"><span class="hs-identifier hs-var">u1'</span></a></span></span><span> </span><span id="local-6989586621679515824"><span class="annot"><span class="annottext">u2' :: UID
+</span><a href="#local-6989586621679515824"><span class="hs-identifier hs-var">u2'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-126"></span><span>              </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679515823"><span class="annot"><span class="annottext">h :: HalfUID
+</span><a href="#local-6989586621679515823"><span class="hs-identifier hs-var hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#uidLower"><span class="hs-identifier hs-var">uidLower</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515607"><span class="hs-identifier hs-var">u1'</span></a></span><span>
+</span><a href="#local-6989586621679515825"><span class="hs-identifier hs-var">u1'</span></a></span><span>
 </span><span id="line-127"></span><span>              </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">HalfUID
-</span><a href="#local-6989586621679515605"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; HalfUID -&gt; Bool
+</span><a href="#local-6989586621679515823"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; HalfUID -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#uidUpper"><span class="hs-identifier hs-var">uidUpper</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515606"><span class="hs-identifier hs-var">u2'</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Maybe HalfUID
+</span><a href="#local-6989586621679515824"><span class="hs-identifier hs-var">u2'</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Maybe HalfUID
 forall a. a -&gt; Maybe a
 </span><span class="hs-identifier hs-var">Just</span></span><span> </span><span class="annot"><span class="annottext">HalfUID
-</span><a href="#local-6989586621679515605"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Maybe HalfUID
+</span><a href="#local-6989586621679515823"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">Maybe HalfUID
 forall a. Maybe a
 </span><span class="hs-identifier hs-var">Nothing</span></span><span>
 </span><span id="line-128"></span><span>
@@ -368,34 +368,34 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pUIDField"><span class="hs-identifier hs-type">pUIDField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span>
 </span><span id="line-142"></span><span id="pUIDField"><span class="annot"><span class="annottext">pUIDField :: Int -&gt; Parser ByteString UID
-</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pUIDField"><span class="hs-identifier hs-var hs-var">pUIDField</span></a></span></span><span> </span><span id="local-6989586621679515600"><span class="annot"><span class="annottext">i :: Int
-</span><a href="#local-6989586621679515600"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; UID
+</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pUIDField"><span class="hs-identifier hs-var hs-var">pUIDField</span></a></span></span><span> </span><span id="local-6989586621679515818"><span class="annot"><span class="annottext">i :: Int
+</span><a href="#local-6989586621679515818"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; UID
 </span><a href="System.SED.MCTP.Common.Util.html#hexUID"><span class="hs-identifier hs-var">hexUID</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; UID) -&gt; Parser ByteString -&gt; Parser ByteString UID
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pTrimmedField"><span class="hs-identifier hs-var">pTrimmedField</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679515600"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621679515818"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pTrimmedField"><span class="hs-identifier hs-type">pTrimmedField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-145"></span><span id="pTrimmedField"><span class="annot"><span class="annottext">pTrimmedField :: Int -&gt; Parser ByteString
-</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pTrimmedField"><span class="hs-identifier hs-var hs-var">pTrimmedField</span></a></span></span><span> </span><span id="local-6989586621679515599"><span class="annot"><span class="annottext">i :: Int
-</span><a href="#local-6989586621679515599"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pTrimmedField"><span class="hs-identifier hs-var hs-var">pTrimmedField</span></a></span></span><span> </span><span id="local-6989586621679515817"><span class="annot"><span class="annottext">i :: Int
+</span><a href="#local-6989586621679515817"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-var">trimTrailingWhitespace</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString)
 -&gt; Parser ByteString -&gt; Parser ByteString
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pField"><span class="hs-identifier hs-var">pField</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679515599"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><a href="#local-6989586621679515817"><span class="hs-identifier hs-var">i</span></a></span><span>
 </span><span id="line-146"></span><span>
 </span><span id="line-147"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pField"><span class="hs-identifier hs-type">pField</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-148"></span><span id="pField"><span class="annot"><span class="annottext">pField :: Int -&gt; Parser ByteString
-</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pField"><span class="hs-identifier hs-var hs-var">pField</span></a></span></span><span> </span><span id="local-6989586621679515597"><span class="annot"><span class="annottext">i :: Int
-</span><a href="#local-6989586621679515597"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
+</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pField"><span class="hs-identifier hs-var hs-var">pField</span></a></span></span><span> </span><span id="local-6989586621679515815"><span class="annot"><span class="annottext">i :: Int
+</span><a href="#local-6989586621679515815"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
 </span><span class="hs-identifier hs-var">take</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Int]
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#pieceLengths"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Int -&gt; Int
 forall a. [a] -&gt; Int -&gt; a
 </span><span class="hs-operator hs-var">!!</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679515597"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679515815"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-149"></span><span>
 </span><span id="line-150"></span><span>
 </span><span id="line-151"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#title"><span class="hs-identifier hs-type">title</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
@@ -412,10 +412,10 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 forall (t :: * -&gt; *) (m :: * -&gt; *) a b.
 (Foldable t, Monad m) =&gt;
 (a -&gt; m b) -&gt; t a -&gt; m ()
-</span><span class="hs-identifier hs-var">mapM_</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679515595"><span class="annot"><span class="annottext">len :: Int
-</span><a href="#local-6989586621679515595"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
+</span><span class="hs-identifier hs-var">mapM_</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679515813"><span class="annot"><span class="annottext">len :: Int
+</span><a href="#local-6989586621679515813"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString
 </span><span class="hs-identifier hs-var">take</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679515595"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString -&gt; Parser ByteString -&gt; Parser ByteString
+</span><a href="#local-6989586621679515813"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString -&gt; Parser ByteString -&gt; Parser ByteString
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Parser ByteString
 </span><span class="hs-identifier hs-var">string</span></span><span> </span><span class="annot"><span class="hs-string">&quot;|&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int]
@@ -458,92 +458,92 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-166"></span><span>
 </span><span id="line-167"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#dUIDRow"><span class="hs-identifier hs-type">dUIDRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRow"><span class="hs-identifier hs-type">UIDRow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span><span>
 </span><span id="line-168"></span><span id="dUIDRow"><span class="annot"><span class="annottext">dUIDRow :: UIDRow -&gt; UIDRowDecs
-</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#dUIDRow"><span class="hs-identifier hs-var hs-var">dUIDRow</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRow"><span class="hs-identifier hs-type">UIDRow</span></a></span><span> </span><span id="local-6989586621679515593"><span class="annot"><span class="annottext">objectUID :: UID
-</span><a href="#local-6989586621679515593"><span class="hs-identifier hs-var">objectUID</span></a></span></span><span> </span><span id="local-6989586621679515592"><span class="annot"><span class="annottext">tableUID :: UID
-</span><a href="#local-6989586621679515592"><span class="hs-identifier hs-var">tableUID</span></a></span></span><span> </span><span id="local-6989586621679515591"><span class="annot"><span class="annottext">tableHalfUID :: HalfUID
-</span><a href="#local-6989586621679515591"><span class="hs-identifier hs-var">tableHalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span id="local-6989586621679515590"><span class="annot"><span class="annottext">tableName :: ByteString
-</span><a href="#local-6989586621679515590"><span class="hs-identifier hs-var">tableName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span><span> </span><span id="local-6989586621679515589"><span class="annot"><span class="annottext">_templateName :: ByteString
-</span><a href="#local-6989586621679515589"><span class="hs-identifier hs-var">_templateName</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#dUIDRow"><span class="hs-identifier hs-var hs-var">dUIDRow</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRow"><span class="hs-identifier hs-type">UIDRow</span></a></span><span> </span><span id="local-6989586621679515811"><span class="annot"><span class="annottext">objectUID :: UID
+</span><a href="#local-6989586621679515811"><span class="hs-identifier hs-var">objectUID</span></a></span></span><span> </span><span id="local-6989586621679515810"><span class="annot"><span class="annottext">tableUID :: UID
+</span><a href="#local-6989586621679515810"><span class="hs-identifier hs-var">tableUID</span></a></span></span><span> </span><span id="local-6989586621679515809"><span class="annot"><span class="annottext">tableHalfUID :: HalfUID
+</span><a href="#local-6989586621679515809"><span class="hs-identifier hs-var">tableHalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span id="local-6989586621679515808"><span class="annot"><span class="annottext">tableName :: ByteString
+</span><a href="#local-6989586621679515808"><span class="hs-identifier hs-var">tableName</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span><span> </span><span id="local-6989586621679515807"><span class="annot"><span class="annottext">_templateName :: ByteString
+</span><a href="#local-6989586621679515807"><span class="hs-identifier hs-var">_templateName</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-169"></span><span>    </span><span class="annot"><span class="annottext">[Dec] -&gt; [Exp] -&gt; [Exp] -&gt; UIDRowDecs
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-var">UIDRowDecs</span></a></span><span>
 </span><span id="line-170"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dSig"><span class="hs-identifier hs-var">dSig</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515587"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UID</span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679515805"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UID</span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dVal"><span class="hs-identifier hs-var">dVal</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515587"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679515805"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; Exp
 </span><a href="System.SED.MCTP.Common.THUtil.html#eUID"><span class="hs-identifier hs-var">eUID</span></a></span><span>     </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515593"><span class="hs-identifier hs-var">objectUID</span></a></span><span>
+</span><a href="#local-6989586621679515811"><span class="hs-identifier hs-var">objectUID</span></a></span><span>
 </span><span id="line-171"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dSig"><span class="hs-identifier hs-var">dSig</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515584"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UID</span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679515802"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UID</span><span>     </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dVal"><span class="hs-identifier hs-var">dVal</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515584"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679515802"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; Exp
 </span><a href="System.SED.MCTP.Common.THUtil.html#eUID"><span class="hs-identifier hs-var">eUID</span></a></span><span>     </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679515592"><span class="hs-identifier hs-var">tableUID</span></a></span><span>
+</span><a href="#local-6989586621679515810"><span class="hs-identifier hs-var">tableUID</span></a></span><span>
 </span><span id="line-172"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dSig"><span class="hs-identifier hs-var">dSig</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515583"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">HalfUID</span><span> </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679515801"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">HalfUID</span><span> </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dVal"><span class="hs-identifier hs-var">dVal</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515583"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679515801"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Exp
 </span><a href="System.SED.MCTP.Common.THUtil.html#eHalfUID"><span class="hs-identifier hs-var">eHalfUID</span></a></span><span> </span><span class="annot"><span class="annottext">HalfUID
-</span><a href="#local-6989586621679515591"><span class="hs-identifier hs-var">tableHalfUID</span></a></span><span>
+</span><a href="#local-6989586621679515809"><span class="hs-identifier hs-var">tableHalfUID</span></a></span><span>
 </span><span id="line-173"></span><span>    </span><span class="hs-special">]</span><span>
 </span><span id="line-174"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Name -&gt; String -&gt; Exp
 </span><a href="System.SED.MCTP.Common.THUtil.html#eValP"><span class="hs-identifier hs-var">eValP</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515583"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679515580"><span class="hs-identifier hs-var">table</span></a></span><span>
+</span><a href="#local-6989586621679515801"><span class="hs-identifier hs-var">h</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679515798"><span class="hs-identifier hs-var">table</span></a></span><span>
 </span><span id="line-175"></span><span>    </span><span class="hs-special">]</span><span>
 </span><span id="line-176"></span><span>    </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">Name -&gt; String -&gt; Exp
 </span><a href="System.SED.MCTP.Common.THUtil.html#eValP"><span class="hs-identifier hs-var">eValP</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515584"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Exp) -&gt; String -&gt; Exp
+</span><a href="#local-6989586621679515802"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Exp) -&gt; String -&gt; Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679515580"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><a href="#local-6989586621679515798"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot; Table&quot;</span></span><span>
 </span><span id="line-177"></span><span>    </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; String -&gt; Exp
 </span><a href="System.SED.MCTP.Common.THUtil.html#eValP"><span class="hs-identifier hs-var">eValP</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679515587"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Exp) -&gt; String -&gt; Exp
+</span><a href="#local-6989586621679515805"><span class="hs-identifier hs-var">o</span></a></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Exp) -&gt; String -&gt; Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679515580"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><a href="#local-6989586621679515798"><span class="hs-identifier hs-var">table</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot; Table Object&quot;</span></span><span>
 </span><span id="line-178"></span><span>    </span><span class="hs-special">]</span><span>
-</span><span id="line-179"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679515580"><span class="annot"><span class="annottext">table :: String
-</span><a href="#local-6989586621679515580"><span class="hs-identifier hs-var hs-var">table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><span id="line-179"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679515798"><span class="annot"><span class="annottext">table :: String
+</span><a href="#local-6989586621679515798"><span class="hs-identifier hs-var hs-var">table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">C.unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679515590"><span class="hs-identifier hs-var">tableName</span></a></span><span>
-</span><span id="line-180"></span><span>        </span><span id="local-6989586621679515579"><span class="annot"><span class="annottext">p :: String
-</span><a href="#local-6989586621679515579"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679515578"><span class="annot"><span class="annottext">tn :: String -&gt; String -&gt; Name
-</span><a href="#local-6989586621679515578"><span class="hs-operator hs-var hs-var">`tn`</span></a></span></span><span> </span><span id="local-6989586621679515577"><span class="annot"><span class="annottext">t :: String
-</span><a href="#local-6989586621679515577"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
+</span><a href="#local-6989586621679515808"><span class="hs-identifier hs-var">tableName</span></a></span><span>
+</span><span id="line-180"></span><span>        </span><span id="local-6989586621679515797"><span class="annot"><span class="annottext">p :: String
+</span><a href="#local-6989586621679515797"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679515796"><span class="annot"><span class="annottext">tn :: String -&gt; String -&gt; Name
+</span><a href="#local-6989586621679515796"><span class="hs-operator hs-var hs-var">`tn`</span></a></span></span><span> </span><span id="local-6989586621679515795"><span class="annot"><span class="annottext">t :: String
+</span><a href="#local-6989586621679515795"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Name) -&gt; String -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679515579"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679515580"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679515577"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-181"></span><span>        </span><span id="local-6989586621679515583"><span class="annot"><span class="annottext">h :: Name
-</span><a href="#local-6989586621679515583"><span class="hs-identifier hs-var hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;h&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Name
-</span><a href="#local-6989586621679515578"><span class="hs-operator hs-var">`tn`</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;&quot;</span></span><span>
-</span><span id="line-182"></span><span>        </span><span id="local-6989586621679515584"><span class="annot"><span class="annottext">u :: Name
-</span><a href="#local-6989586621679515584"><span class="hs-identifier hs-var hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;u&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Name
-</span><a href="#local-6989586621679515578"><span class="hs-operator hs-var">`tn`</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;Table&quot;</span></span><span>
-</span><span id="line-183"></span><span>        </span><span id="local-6989586621679515587"><span class="annot"><span class="annottext">o :: Name
-</span><a href="#local-6989586621679515587"><span class="hs-identifier hs-var hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;u&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Name
-</span><a href="#local-6989586621679515578"><span class="hs-operator hs-var">`tn`</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;TableObject&quot;</span></span><span>
+</span><a href="#local-6989586621679515797"><span class="hs-identifier hs-var">p</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679515798"><span class="hs-identifier hs-var">table</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679515795"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-181"></span><span>        </span><span id="local-6989586621679515801"><span class="annot"><span class="annottext">h :: Name
+</span><a href="#local-6989586621679515801"><span class="hs-identifier hs-var hs-var">h</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;h&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Name
+</span><a href="#local-6989586621679515796"><span class="hs-operator hs-var">`tn`</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;&quot;</span></span><span>
+</span><span id="line-182"></span><span>        </span><span id="local-6989586621679515802"><span class="annot"><span class="annottext">u :: Name
+</span><a href="#local-6989586621679515802"><span class="hs-identifier hs-var hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;u&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Name
+</span><a href="#local-6989586621679515796"><span class="hs-operator hs-var">`tn`</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;Table&quot;</span></span><span>
+</span><span id="line-183"></span><span>        </span><span id="local-6989586621679515805"><span class="annot"><span class="annottext">o :: Name
+</span><a href="#local-6989586621679515805"><span class="hs-identifier hs-var hs-var">o</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;u&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; Name
+</span><a href="#local-6989586621679515796"><span class="hs-operator hs-var">`tn`</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;TableObject&quot;</span></span><span>
 </span><span id="line-184"></span><span>
 </span><span id="line-185"></span><span class="hs-keyword">data</span><span> </span><span id="UIDRowDecs"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-var">UIDRowDecs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UIDRowDecs"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-var">UIDRowDecs</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span class="hs-special">]</span><span>
-</span><span id="line-186"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679515573"><span id="local-6989586621679515575"><span class="annot"><span class="annottext">UIDRowDecs -&gt; UIDRowDecs -&gt; Bool
+</span><span id="line-186"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679515791"><span id="local-6989586621679515793"><span class="annot"><span class="annottext">UIDRowDecs -&gt; UIDRowDecs -&gt; Bool
 (UIDRowDecs -&gt; UIDRowDecs -&gt; Bool)
 -&gt; (UIDRowDecs -&gt; UIDRowDecs -&gt; Bool) -&gt; Eq UIDRowDecs
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -551,7 +551,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: UIDRowDecs -&gt; UIDRowDecs -&gt; Bool
 == :: UIDRowDecs -&gt; UIDRowDecs -&gt; Bool
 $c== :: UIDRowDecs -&gt; UIDRowDecs -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679515567"><span id="local-6989586621679515569"><span id="local-6989586621679515571"><span class="annot"><span class="annottext">Int -&gt; UIDRowDecs -&gt; String -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679515785"><span id="local-6989586621679515787"><span id="local-6989586621679515789"><span class="annot"><span class="annottext">Int -&gt; UIDRowDecs -&gt; String -&gt; String
 [UIDRowDecs] -&gt; String -&gt; String
 UIDRowDecs -&gt; String
 (Int -&gt; UIDRowDecs -&gt; String -&gt; String)
@@ -569,32 +569,32 @@ showsPrec :: Int -&gt; UIDRowDecs -&gt; String -&gt; String
 $cshowsPrec :: Int -&gt; UIDRowDecs -&gt; String -&gt; String
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-187"></span><span>
-</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679515561"><span id="local-6989586621679515563"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span></span></span><span>
-</span><span id="line-189"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span><span> </span><span id="local-6989586621679515559"><span class="annot"><span class="annottext">u1 :: [Dec]
-</span><a href="#local-6989586621679515559"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679515558"><span class="annot"><span class="annottext">eh1 :: [Exp]
-</span><a href="#local-6989586621679515558"><span class="hs-identifier hs-var">eh1</span></a></span></span><span> </span><span id="local-6989586621679515557"><span class="annot"><span class="annottext">eu1 :: [Exp]
-</span><a href="#local-6989586621679515557"><span class="hs-identifier hs-var">eu1</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679515556"><span class="annot"><span class="annottext">&lt;&gt; :: UIDRowDecs -&gt; UIDRowDecs -&gt; UIDRowDecs
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span><span> </span><span id="local-6989586621679515555"><span class="annot"><span class="annottext">u2 :: [Dec]
-</span><a href="#local-6989586621679515555"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679515554"><span class="annot"><span class="annottext">eh2 :: [Exp]
-</span><a href="#local-6989586621679515554"><span class="hs-identifier hs-var">eh2</span></a></span></span><span> </span><span id="local-6989586621679515553"><span class="annot"><span class="annottext">eu2 :: [Exp]
-</span><a href="#local-6989586621679515553"><span class="hs-identifier hs-var">eu2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-188"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679515779"><span id="local-6989586621679515781"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span></span></span><span>
+</span><span id="line-189"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span><span> </span><span id="local-6989586621679515777"><span class="annot"><span class="annottext">u1 :: [Dec]
+</span><a href="#local-6989586621679515777"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679515776"><span class="annot"><span class="annottext">eh1 :: [Exp]
+</span><a href="#local-6989586621679515776"><span class="hs-identifier hs-var">eh1</span></a></span></span><span> </span><span id="local-6989586621679515775"><span class="annot"><span class="annottext">eu1 :: [Exp]
+</span><a href="#local-6989586621679515775"><span class="hs-identifier hs-var">eu1</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679515774"><span class="annot"><span class="annottext">&lt;&gt; :: UIDRowDecs -&gt; UIDRowDecs -&gt; UIDRowDecs
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span><span> </span><span id="local-6989586621679515773"><span class="annot"><span class="annottext">u2 :: [Dec]
+</span><a href="#local-6989586621679515773"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679515772"><span class="annot"><span class="annottext">eh2 :: [Exp]
+</span><a href="#local-6989586621679515772"><span class="hs-identifier hs-var">eh2</span></a></span></span><span> </span><span id="local-6989586621679515771"><span class="annot"><span class="annottext">eu2 :: [Exp]
+</span><a href="#local-6989586621679515771"><span class="hs-identifier hs-var">eu2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-190"></span><span>            </span><span class="annot"><span class="annottext">[Dec] -&gt; [Exp] -&gt; [Exp] -&gt; UIDRowDecs
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-var">UIDRowDecs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Dec]
-</span><a href="#local-6989586621679515559"><span class="hs-identifier hs-var">u1</span></a></span><span class="annot"><span class="annottext">[Dec] -&gt; [Dec] -&gt; [Dec]
+</span><a href="#local-6989586621679515777"><span class="hs-identifier hs-var">u1</span></a></span><span class="annot"><span class="annottext">[Dec] -&gt; [Dec] -&gt; [Dec]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="annot"><span class="annottext">[Dec]
-</span><a href="#local-6989586621679515555"><span class="hs-identifier hs-var">u2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Exp]
-</span><a href="#local-6989586621679515558"><span class="hs-identifier hs-var">eh1</span></a></span><span class="annot"><span class="annottext">[Exp] -&gt; [Exp] -&gt; [Exp]
+</span><a href="#local-6989586621679515773"><span class="hs-identifier hs-var">u2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Exp]
+</span><a href="#local-6989586621679515776"><span class="hs-identifier hs-var">eh1</span></a></span><span class="annot"><span class="annottext">[Exp] -&gt; [Exp] -&gt; [Exp]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="annot"><span class="annottext">[Exp]
-</span><a href="#local-6989586621679515554"><span class="hs-identifier hs-var">eh2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Exp]
-</span><a href="#local-6989586621679515557"><span class="hs-identifier hs-var">eu1</span></a></span><span class="annot"><span class="annottext">[Exp] -&gt; [Exp] -&gt; [Exp]
+</span><a href="#local-6989586621679515772"><span class="hs-identifier hs-var">eh2</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Exp]
+</span><a href="#local-6989586621679515775"><span class="hs-identifier hs-var">eu1</span></a></span><span class="annot"><span class="annottext">[Exp] -&gt; [Exp] -&gt; [Exp]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="annot"><span class="annottext">[Exp]
-</span><a href="#local-6989586621679515553"><span class="hs-identifier hs-var">eu2</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679515771"><span class="hs-identifier hs-var">eu2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-191"></span><span>
-</span><span id="line-192"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679515547"><span id="local-6989586621679515549"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span></span></span><span>
-</span><span id="line-193"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679515545"><span class="annot"><span class="annottext">mempty :: UIDRowDecs
+</span><span id="line-192"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679515765"><span id="local-6989586621679515767"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-type">UIDRowDecs</span></a></span></span></span><span>
+</span><span id="line-193"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679515763"><span class="annot"><span class="annottext">mempty :: UIDRowDecs
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Dec] -&gt; [Exp] -&gt; [Exp] -&gt; UIDRowDecs
 </span><a href="System.SED.MCTP.Common.TableUIDs.TH.html#UIDRowDecs"><span class="hs-identifier hs-var">UIDRowDecs</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-194"></span><span>

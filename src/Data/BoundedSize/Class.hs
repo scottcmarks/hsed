@@ -20,7 +20,8 @@ type.
 -}
 
 module Data.BoundedSize.Class
-       ( IsBytes(..)
+       ( HasSize(..)
+       , IsBytes(..)
        , IsBoundedSize(..)
        , FixedSize
        , MaxSize
@@ -58,8 +59,11 @@ import           GHC.Word            (Word8)
 -- -- >>> import           Data.Proxy
 
 
+class HasSize a where
+    size :: a -> Int
+
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class IsBoundedSize (l::Nat) (u::Nat) a where
+class (HasSize a) => IsBoundedSize (l::Nat) (u::Nat) a where
   -- | Data family which wraps values of the underlying type giving
   -- them a type-level size. @BoundedSize t 6 10@ means a value of type @t@ of
   -- size between 6 and 10.
@@ -84,8 +88,6 @@ class IsBoundedSize (l::Nat) (u::Nat) a where
   -- | Forget type-level minimum and maximum size, obtaining the underlying value.
   unwrap :: BoundedSize l u a -> a
 
-  size :: a -> Int
-
   predicate :: (KnownNat l, KnownNat u) => BoundedSize l u a -> Either String (BoundedSize l u a)
 
   safeCreate :: (KnownNat l, KnownNat u) => a -> Either String (BoundedSize l u a)
@@ -95,8 +97,15 @@ class IsBoundedSize (l::Nat) (u::Nat) a where
   create = either (const Nothing) Just . safeCreate
 
 
-instance forall l u a. (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) => Show (BoundedSize l u a) where
+instance (Show a, KnownNat l, KnownNat u, IsBoundedSize l u a) =>
+         Show (BoundedSize l u a)
+  where
     show = show . unwrap
+
+instance (IsString a, KnownNat l, KnownNat u, IsBoundedSize l u a) =>
+         IsString(BoundedSize l u a)
+  where
+    fromString = either error id . safeCreate . fromString
 
 
 -- | Class of types which can be assigned a fixed type-level size.
@@ -106,6 +115,22 @@ type FixedSize n a = BoundedSize n n a
 type MaxSize n a = BoundedSize 0 n a
 
 
+instance (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
+  data BoundedSize l u a = BdSz a
+    deriving (Eq, Ord)
+  unsafeCreate = BdSz
+  unwrap (BdSz t) = t
+  predicate b@(BdSz t) =
+      let lt = size t
+          vl = fromNat (Proxy @l)
+          vu = fromNat (Proxy @u)
+      in if vl <= lt && lt <= vu
+           then Right b
+           else Left $ "length " ++ show lt ++ " should be " ++
+                       if vl == vu
+                       then show vl
+                       else "between " ++ show vl ++ " and " ++ show vu
+
 
 
 
@@ -114,37 +139,22 @@ type MaxSize n a = BoundedSize 0 n a
 
 
 -- | Class of types with ByteString-like operations
-class IsBytes a where
+class (HasSize a) => IsBytes a where
   type Elem a
   length :: a -> Int
+  length = size
   append :: a -> a -> a
   replicate :: Int -> Elem a -> a
   map :: (Elem a -> Elem a) -> a -> a
   take :: Int -> a -> a
   drop :: Int -> a -> a
 
--- | Class of ByteString-like types which can be assigned a type-level minimum and maximum length.
+-- | Class of ByteString-like types which can be assigned
+--   a type-level minimum and maximum length.
 class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a where { }
 
-instance forall l u a. (KnownNat l, KnownNat u, IsBytes a) => IsBoundedSize l u a where
-  data BoundedSize l u a = ByteString a
-    deriving (Eq, Ord)
-  unsafeCreate = ByteString
-  unwrap (ByteString t) = t
-  size = length
-  predicate b@(ByteString t) =
-      let lt = length t
-          vl = fromNat (Proxy @l)
-          vu = fromNat (Proxy @u)
-      in if vl <= lt && lt <= vu
-           then Right b
-           else Left $ "length " ++ show lt ++ " should be " ++
-                if vl == vu
-                then show vl
-                else "between " ++ show vl ++ " and " ++ show vu
 
-instance forall l u a. (IsString a, KnownNat l, KnownNat u, IsBoundedSizeBytes l u a) => IsString(BoundedSize l u a)
-  where fromString = either error id . safeCreate . fromString
+
 
 type BoundedSizeBytes l u a = IsBoundedSizeBytes l u a => BoundedSize l u a
 
@@ -156,15 +166,17 @@ type MaxSizeBytes n a = IsBoundedSizeBytes n n a => MaxSize n a
 
 
 
-
-instance IsBytes B.ByteString where
-  type Elem B.ByteString = Word8
-  length = B.length
-  append = B.append
-  replicate = B.replicate
-  map = B.map
-  take = B.take
-  drop = B.drop
+instance HasSize B.ByteString
+  where
+      size = B.length
+instance IsBytes B.ByteString
+  where
+    type Elem B.ByteString = Word8
+    append = B.append
+    replicate = B.replicate
+    map = B.map
+    take = B.take
+    drop = B.drop
 
 
 type BoundedSizeByteString l u = BoundedSizeBytes l u B.ByteString

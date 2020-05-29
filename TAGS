@@ -619,12 +619,12 @@ type MaxSizeByteString MaxSizeByteString191,192
 ./src/Data/BoundedSize/TH.hs,275
 module Data.BoundedSize.THData.BoundedSize.TH9,10
 newtype LitS LitS40,41
-sb sb60,61
-st st92,93
-sz sz119,120
-typeFromInt typeFromInt129,130
-unsafeCreateExp unsafeCreateExp143,144
-universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType169,170
+sb sb56,57
+st st86,87
+sz sz111,112
+typeFromInt typeFromInt121,122
+unsafeCreateExp unsafeCreateExp133,134
+universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType159,160
 
 ./src/Data/ByteString/Integral.hs,793
 module Data.ByteString.IntegralData.ByteString.Integral21,22
@@ -666,8 +666,8 @@ instance Hex Hex L-ByteString69,70
     hex hex70,71
     unhex unhex71,72
 
-./src/Data/If.hs,43
-module Data.If Data.If14,15
+./src/Data/If.hs,49
+module Control.If Control.If14,15
 (?(?)22,23
 
 ./src/Data/SizedText/Class.hs,2559

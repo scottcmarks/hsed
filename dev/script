@@ -58,6 +58,8 @@ import Data.String(String)
 :load /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type.hs
 
 import Data.BoundedSize
+import Data.BoundedSize.TH
+
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

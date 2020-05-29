@@ -43,17 +43,13 @@ newtype LitS =
   deriving (IsString)
 
 -- | Type-safe constructor for bounded-length string literals: BoundedSize a l u
--- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize 3
---                                                                                                    6
---                                                                                                    a_0) =>
+-- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                               Data.String.IsString a_0) =>
 --                                                 Data.BoundedSize.Class.BoundedSize 3 6 a_0
 --
 -- >>> runQ $ ppr <$> sb 3 6 "Foobar"
--- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize 3
---                                                                                                    6
---                                                                                                    a_0) =>
+-- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                               Data.String.IsString a_0) =>
 --                                                 Data.BoundedSize.Class.BoundedSize 3 6 a_0
 --
 -- >>> :t sb 3 6 "Foobar"
@@ -79,10 +75,8 @@ sb l u s = do
 -- "Foobar"
 --
 -- >>> runQ $ ppr <$> st "Foobar"
--- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize 6
---                                                                                                    6
---                                                                                                    a_0) =>
+-- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                               Data.String.IsString a_0) =>
 --                                                 Data.BoundedSize.Class.BoundedSize 6 6 a_0
 --
 -- >>> :t runQ $ ppr <$> st "Foobar"
@@ -106,10 +100,8 @@ st (LitS s) = sb l l s  where l = P.length s
 -- "Foobar"
 --
 -- >>> runQ $ ppr <$> sz "Foobar"
--- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize 0
---                                                                                                    6
---                                                                                                    a_0) =>
+-- Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                               Data.String.IsString a_0) =>
 --                                                 Data.BoundedSize.Class.BoundedSize 0 6 a_0
 --
 -- >>> :t runQ $ ppr <$> sz "Foobar"
@@ -131,15 +123,13 @@ typeFromInt :: Int -> Type
 typeFromInt = LitT . NumTyLit . fromIntegral
 
 -- | Construct
--- > unsafeCreate "Foobar" :: forall a. (IsString a, IsBoundedSize a) => typef a l u
+-- > unsafeCreate "Foobar" :: forall a. (IsString a, HasSize a) => typef a l u
 --   where l and u are the type-level KnownNat versions of the bounds of s
 --
 -- >>> at <- runQ $ newName "a"
 -- >>> ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
--- Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.String.IsString a_0,
---                                                             Data.BoundedSize.Class.IsBoundedSize 0
---                                                                                                  4
---                                                                                                  a_0) =>
+-- Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                             Data.String.IsString a_0) =>
 --                                               Data.BoundedSize.Class.BoundedSize 0 4 a_0
 unsafeCreateExp ::
     (Type -> Type -> Name -> Type) -- type expression constructor
@@ -154,9 +144,9 @@ unsafeCreateExp typef l u a s =
       (ForallT
          [PlainTV a]
 #if MIN_VERSION_template_haskell(2,10,0)
-         [AppT (ConT ''IsString) (VarT a), AppT (AppT (AppT (ConT ''IsBoundedSize) l) u) (VarT a)] $
+         [AppT (ConT ''HasSize) (VarT a), AppT (ConT ''IsString) (VarT a)] $
 #else
-         [ClassP ''IsString [VarT a], ClassP ''IsBoundedSize l u [VarT a]] $
+         [ClassP ''HasSize [VarT a], ClassP ''IsString [VarT a]] $
 #endif
        typef l u a) -- create the final type expression, e.g. BoundedSize l u a
 

@@ -8,6 +8,17 @@
 @version 0.1.0.1
 
 
+-- | if' in the form of the (?) operator
+module Control.If
+
+-- | <tt>if'</tt> function as operator <tt>(?)</tt>
+--   
+--   Since <tt>infixr 0 $</tt>, we can use <tt>?</tt>..<tt>$</tt> like
+--   <tt>?</tt>..<tt>:</tt> in C-family languages.
+(?) :: Bool -> p -> p -> p
+infixr 1 ?
+
+
 -- | Conversions between numbers and bytestrings used to represent them.
 module Data.ByteString.Integral
 rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
@@ -43,17 +54,6 @@ unhex :: (Hex t, MonadFail m) => t -> m t
 instance Data.Hex.Hex GHC.Base.String
 instance Data.Hex.Hex Data.ByteString.Internal.ByteString
 instance Data.Hex.Hex Data.ByteString.Lazy.Internal.ByteString
-
-
--- | if' in the form of the (?) operator
-module Data.If
-
--- | <tt>if'</tt> function as operator <tt>(?)</tt>
---   
---   Since <tt>infixr 0 $</tt>, we can use <tt>?</tt>..<tt>$</tt> like
---   <tt>?</tt>..<tt>:</tt> in C-family languages.
-(?) :: Bool -> p -> p -> p
-infixr 1 ?
 
 
 -- | Conversions from type-level Nat to value-level Num
@@ -699,10 +699,8 @@ module Data.BoundedSize.TH
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; st "Foobar"
---   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                                 Data.BoundedSize.Class.IsBoundedSize 6
---                                                                                                      6
---                                                                                                      a_0) =&gt;
+--   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                                 Data.String.IsString a_0) =&gt;
 --                                                   Data.BoundedSize.Class.BoundedSize 6 6 a_0
 --   </pre>
 --   
@@ -733,10 +731,8 @@ st :: LitS -> Q Exp
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; sz "Foobar"
---   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                                 Data.BoundedSize.Class.IsBoundedSize 0
---                                                                                                      6
---                                                                                                      a_0) =&gt;
+--   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                                 Data.String.IsString a_0) =&gt;
 --                                                   Data.BoundedSize.Class.BoundedSize 0 6 a_0
 --   </pre>
 --   
@@ -749,17 +745,15 @@ st :: LitS -> Q Exp
 sz :: LitS -> Q Exp
 
 -- | Construct &gt; unsafeCreate <a>Foobar</a> :: forall a. (IsString a,
---   IsBoundedSize a) =&gt; typef a l u where l and u are the type-level
---   KnownNat versions of the bounds of s
+--   HasSize a) =&gt; typef a l u where l and u are the type-level KnownNat
+--   versions of the bounds of s
 --   
 --   <pre>
 --   &gt;&gt;&gt; at &lt;- runQ $ newName "a"
 --   
 --   &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
---   Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize 0
---                                                                                                    4
---                                                                                                    a_0) =&gt;
+--   Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                               Data.String.IsString a_0) =&gt;
 --                                                 Data.BoundedSize.Class.BoundedSize 0 4 a_0
 --   </pre>
 unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> String -> Exp
@@ -871,10 +865,8 @@ type MaxSizeByteString n = MaxSizeBytes n ByteString
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; st "Foobar"
---   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                                 Data.BoundedSize.Class.IsBoundedSize 6
---                                                                                                      6
---                                                                                                      a_0) =&gt;
+--   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                                 Data.String.IsString a_0) =&gt;
 --                                                   Data.BoundedSize.Class.BoundedSize 6 6 a_0
 --   </pre>
 --   
@@ -905,10 +897,8 @@ st :: LitS -> Q Exp
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; sz "Foobar"
---   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.String.IsString a_0,
---                                                                 Data.BoundedSize.Class.IsBoundedSize 0
---                                                                                                      6
---                                                                                                      a_0) =&gt;
+--   Data.BoundedSize.Class.unsafeCreate "Foobar" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                                 Data.String.IsString a_0) =&gt;
 --                                                   Data.BoundedSize.Class.BoundedSize 0 6 a_0
 --   </pre>
 --   
@@ -921,17 +911,15 @@ st :: LitS -> Q Exp
 sz :: LitS -> Q Exp
 
 -- | Construct &gt; unsafeCreate <a>Foobar</a> :: forall a. (IsString a,
---   IsBoundedSize a) =&gt; typef a l u where l and u are the type-level
---   KnownNat versions of the bounds of s
+--   HasSize a) =&gt; typef a l u where l and u are the type-level KnownNat
+--   versions of the bounds of s
 --   
 --   <pre>
 --   &gt;&gt;&gt; at &lt;- runQ $ newName "a"
 --   
 --   &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
---   Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.String.IsString a_0,
---                                                               Data.BoundedSize.Class.IsBoundedSize 0
---                                                                                                    4
---                                                                                                    a_0) =&gt;
+--   Data.BoundedSize.Class.unsafeCreate "Boo!" :: forall a_0 . (Data.BoundedSize.Class.HasSize a_0,
+--                                                               Data.String.IsString a_0) =&gt;
 --                                                 Data.BoundedSize.Class.BoundedSize 0 4 a_0
 --   </pre>
 unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> String -> Exp

@@ -1,7 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 {-|
-Module      : Data.If
+Module      : Control.If
 Description : ? operator
 Copyright   : (c) Magnolia Heights R&D, 2020
 License     : All rights reserved
@@ -12,7 +12,7 @@ if' in the form of the (?) operator
 
 -}
 
-module Data.If ((?)) where
+module Control.If ((?)) where
 
 import           GHC.Types (Bool)
 

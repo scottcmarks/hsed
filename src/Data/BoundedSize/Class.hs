@@ -104,7 +104,7 @@ instance (KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a where
 
 
 instance (IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a) where
-S    fromString = either error id . safeCreate . fromString
+    fromString = either error id . safeCreate . fromString
 
 instance IsBoundedSizeBytes l u B.ByteString where {}
 

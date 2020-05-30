@@ -29,7 +29,7 @@ digraph G {
 				label=Class,
 				penwidth=0,
 				style=filled];
-			u4			 [fillcolor="#ffbbbb",
+			u7			 [fillcolor="#ffbbbb",
 				label=TH,
 				penwidth=0,
 				style=filled];
@@ -39,7 +39,7 @@ digraph G {
 				label=ByteString,
 				style=filled
 			];
-			u5			 [fillcolor="#bbffff",
+			u8			 [fillcolor="#bbffff",
 				label=Integral,
 				penwidth=0,
 				style=filled];
@@ -49,24 +49,32 @@ digraph G {
 				label=SizedText,
 				style=filled
 			];
-			u7			 [fillcolor="#bbbbff",
+			u10			 [fillcolor="#bbbbff",
 				label=SizedText,
 				style="filled,bold"];
-			u8			 [fillcolor="#ffbbff",
+			u11			 [fillcolor="#ffbbff",
 				label=Class,
 				penwidth=0,
 				style=filled];
-			u9			 [fillcolor="#ffbbff",
+			u12			 [fillcolor="#ffbbff",
 				label=TH,
 				penwidth=0,
 				style=filled];
 		}
-		u6		 [fillcolor="#bbbbff",
-			label=Hex,
+		u3		 [fillcolor="#bbbbff",
+			label=HasSize,
 			penwidth=0,
 			style=filled];
-		u10		 [fillcolor="#bbbbff",
+		u4		 [fillcolor="#bbbbff",
+			label=IsBytes,
+			penwidth=0,
+			style=filled];
+		u5		 [fillcolor="#bbbbff",
 			label=Smart,
+			penwidth=0,
+			style=filled];
+		u9		 [fillcolor="#bbbbff",
+			label=Hex,
 			penwidth=0,
 			style=filled];
 	}
@@ -75,11 +83,11 @@ digraph G {
 			label=Extras,
 			style=filled
 		];
-		u11		 [fillcolor="#77ff77",
+		u13		 [fillcolor="#77ff77",
 			label=Hex,
 			penwidth=0,
 			style=filled];
-		u12		 [fillcolor="#77ff77",
+		u14		 [fillcolor="#77ff77",
 			label=Sized,
 			penwidth=0,
 			style=filled];
@@ -94,7 +102,7 @@ digraph G {
 				label=TypeLits,
 				style=filled
 			];
-			u3			 [fillcolor="#7777ff",
+			u6			 [fillcolor="#7777ff",
 				label=Extras,
 				penwidth=0,
 				style=filled];
@@ -110,7 +118,7 @@ digraph G {
 				label=Extras,
 				style=filled
 			];
-			u36			 [fillcolor="#77ffff",
+			u38			 [fillcolor="#77ffff",
 				label=GitVersion,
 				penwidth=0,
 				style=filled];
@@ -121,7 +129,7 @@ digraph G {
 			label=Hsed,
 			style=filled
 		];
-		u13		 [fillcolor="#ff77ff",
+		u15		 [fillcolor="#ff77ff",
 			label=App,
 			penwidth=0,
 			style=filled];
@@ -141,26 +149,6 @@ digraph G {
 					label=MCTP,
 					style=filled
 				];
-				subgraph cluster_17 {
-					graph [color="#0000000F",
-						label=Host,
-						style=filled
-					];
-					u33					 [fillcolor="#33bb77",
-						label=Run,
-						penwidth=0,
-						style=filled];
-				}
-				subgraph cluster_18 {
-					graph [color="#0000000F",
-						label=TPer,
-						style=filled
-					];
-					u34					 [fillcolor="#ffff33",
-						label=Run,
-						penwidth=0,
-						style=filled];
-				}
 				subgraph cluster_14 {
 					graph [color="#0000000F",
 						label=Common,
@@ -171,10 +159,10 @@ digraph G {
 							label=ColumnTypes,
 							style=filled
 						];
-						u21						 [fillcolor="#ff3333",
+						u23						 [fillcolor="#ff3333",
 							label=ColumnTypes,
 							style="filled,bold"];
-						u22						 [fillcolor="#77bbff",
+						u24						 [fillcolor="#77bbff",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -184,124 +172,146 @@ digraph G {
 							label=TableUIDs,
 							style=filled
 						];
-						u30						 [fillcolor="#ff3333",
+						u32						 [fillcolor="#ff3333",
 							label=TableUIDs,
 							style="filled,bold"];
-						u31						 [fillcolor="#ff77bb",
+						u33						 [fillcolor="#ff77bb",
 							label=TH,
 							penwidth=0,
 							style=filled];
 					}
-					u14					 [fillcolor="#ff3333",
+					u16					 [fillcolor="#ff3333",
 						label=Base_Type,
 						penwidth=0,
 						style=filled];
-					u15					 [fillcolor="#ff3333",
+					u17					 [fillcolor="#ff3333",
 						label=Call,
 						penwidth=0,
 						style=filled];
-					u16					 [fillcolor="#ff3333",
+					u18					 [fillcolor="#ff3333",
 						label=StreamItem,
 						penwidth=0,
 						style=filled];
-					u17					 [fillcolor="#ff3333",
+					u19					 [fillcolor="#ff3333",
 						label=Token,
 						penwidth=0,
 						style=filled];
-					u18					 [fillcolor="#ff3333",
+					u20					 [fillcolor="#ff3333",
 						label=Value,
 						penwidth=0,
 						style=filled];
-					u19					 [fillcolor="#ff3333",
+					u21					 [fillcolor="#ff3333",
 						label=UID,
 						penwidth=0,
 						style=filled];
-					u20					 [fillcolor="#ff3333",
+					u22					 [fillcolor="#ff3333",
 						label=Instances,
 						penwidth=0,
 						style=filled];
-					u23					 [fillcolor="#ff3333",
+					u25					 [fillcolor="#ff3333",
 						label=THUtil,
 						penwidth=0,
 						style=filled];
-					u24					 [fillcolor="#ff3333",
+					u26					 [fillcolor="#ff3333",
 						label=Util,
 						penwidth=0,
 						style=filled];
-					u25					 [fillcolor="#ff3333",
+					u27					 [fillcolor="#ff3333",
 						label=Format,
 						penwidth=0,
 						style=filled];
-					u26					 [fillcolor="#ff3333",
+					u28					 [fillcolor="#ff3333",
 						label=Import,
 						penwidth=0,
 						style=filled];
-					u27					 [fillcolor="#ff3333",
+					u29					 [fillcolor="#ff3333",
 						label=Types,
 						penwidth=0,
 						style=filled];
-					u28					 [fillcolor="#ff3333",
+					u30					 [fillcolor="#ff3333",
 						label=SpecialPurposeUIDs,
 						penwidth=0,
 						style=filled];
-					u29					 [fillcolor="#ff3333",
+					u31					 [fillcolor="#ff3333",
 						label=Table,
 						penwidth=0,
 						style=filled];
-					u32					 [fillcolor="#ff3333",
+					u34					 [fillcolor="#ff3333",
 						label=Simple_Type,
+						penwidth=0,
+						style=filled];
+				}
+				subgraph cluster_17 {
+					graph [color="#0000000F",
+						label=Host,
+						style=filled
+					];
+					u35					 [fillcolor="#33bb77",
+						label=Run,
+						penwidth=0,
+						style=filled];
+				}
+				subgraph cluster_18 {
+					graph [color="#0000000F",
+						label=TPer,
+						style=filled
+					];
+					u36					 [fillcolor="#ffff33",
+						label=Run,
 						penwidth=0,
 						style=filled];
 				}
 			}
 		}
 	}
-	u35	 [fillcolor="#bbffbb",
+	u37	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u35 -> u36;
-	u35 -> u33;
-	u35 -> u34;
-	u10 -> u3;
-	u1 -> u4;
-	u2 -> u3;
-	u4 -> u2;
-	u7 -> u9;
-	u7 -> u3;
-	u9 -> u8;
-	u11 -> u5;
-	u11 -> u7;
+	u37 -> u38;
+	u37 -> u35;
+	u37 -> u36;
+	u4 -> u3;
+	u1 -> u7;
+	u2 -> u4;
+	u2 -> u5;
+	u2 -> u6;
+	u7 -> u2;
+	u10 -> u12;
+	u10 -> u6;
 	u12 -> u11;
-	u14 -> u1;
-	u15 -> u18;
-	u15 -> u19;
-	u17 -> u5;
-	u17 -> u16;
-	u18 -> u17;
-	u19 -> u20;
-	u20 -> u12;
-	u20 -> u17;
-	u23 -> u19;
-	u24 -> u19;
-	u25 -> u19;
-	u26 -> u27;
-	u27 -> u15;
-	u27 -> u28;
-	u27 -> u21;
-	u27 -> u30;
-	u28 -> u19;
-	u29 -> u19;
-	u32 -> u14;
+	u13 -> u8;
+	u13 -> u10;
+	u14 -> u13;
+	u16 -> u1;
+	u17 -> u20;
+	u17 -> u21;
+	u19 -> u8;
+	u19 -> u18;
+	u20 -> u19;
 	u21 -> u22;
-	u22 -> u23;
-	u22 -> u24;
-	u30 -> u31;
-	u31 -> u23;
-	u31 -> u24;
-	u31 -> u29;
-	u33 -> u13;
+	u22 -> u14;
+	u22 -> u19;
+	u25 -> u21;
+	u26 -> u21;
+	u27 -> u21;
+	u28 -> u29;
+	u29 -> u17;
+	u29 -> u30;
+	u29 -> u23;
+	u29 -> u32;
+	u30 -> u21;
+	u31 -> u21;
+	u34 -> u16;
+	u23 -> u24;
+	u24 -> u25;
+	u24 -> u26;
+	u32 -> u33;
+	u33 -> u25;
 	u33 -> u26;
-	u34 -> u13;
-	u34 -> u26;
+	u33 -> u31;
+	u35 -> u15;
+	u35 -> u28;
+	u36 -> u15;
+	u36 -> u28;
 }

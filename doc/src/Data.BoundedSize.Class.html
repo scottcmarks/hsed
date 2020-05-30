@@ -60,67 +60,60 @@ type.
 </span><span id="line-60"></span><span>
 </span><span id="line-61"></span><span>
 </span><span id="line-62"></span><span class="hs-comment">-- | Class of types which can be assigned a type-level minimum and maximum length.</span><span>
-</span><span id="line-63"></span><span class="hs-keyword">class</span><span> </span><span class="annot"><a href="Data.HasSize.html#HasSize"><span class="hs-identifier hs-type">HasSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514300"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsBoundedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-var">IsBoundedSize</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679514299"><span class="annot"><a href="#local-6989586621679514299"><span class="hs-identifier hs-type">l</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679514298"><span class="annot"><a href="#local-6989586621679514298"><span class="hs-identifier hs-type">u</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679514300"><span class="annot"><a href="#local-6989586621679514300"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>    </span><span class="hs-keyword">data</span><span> </span><span id="BoundedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-var">BoundedSize</span></a></span></span><span> </span><span id="local-6989586621679514299"><span class="annot"><a href="#local-6989586621679514299"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514298"><span class="annot"><a href="#local-6989586621679514298"><span class="hs-identifier hs-type">u</span></a></span></span><span> </span><span id="local-6989586621679514300"><span class="annot"><a href="#local-6989586621679514300"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">class</span><span> </span><span class="annot"><a href="Data.HasSize.html#HasSize"><span class="hs-identifier hs-type">HasSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679515027"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsBoundedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-var">IsBoundedSize</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679515026"><span class="annot"><a href="#local-6989586621679515026"><span class="hs-identifier hs-type">l</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679515025"><span class="annot"><a href="#local-6989586621679515025"><span class="hs-identifier hs-type">u</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679515027"><span class="annot"><a href="#local-6989586621679515027"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-keyword">data</span><span> </span><span id="BoundedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-var">BoundedSize</span></a></span></span><span> </span><span id="local-6989586621679515026"><span class="annot"><a href="#local-6989586621679515026"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679515025"><span class="annot"><a href="#local-6989586621679515025"><span class="hs-identifier hs-type">u</span></a></span></span><span> </span><span id="local-6989586621679515027"><span class="annot"><a href="#local-6989586621679515027"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="hs-comment">-- | Class of types which can be assigned a fixed type-level size.</span><span>
-</span><span id="line-67"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514232"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514232"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514231"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsFixedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#IsFixedSize"><span class="hs-identifier hs-var">IsFixedSize</span></a></span></span><span> </span><span id="local-6989586621679514232"><span class="annot"><a href="#local-6989586621679514232"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514231"><span class="annot"><a href="#local-6989586621679514231"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span>
-</span><span id="line-68"></span><span class="hs-keyword">type</span><span> </span><span id="FixedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier hs-var">FixedSize</span></a></span></span><span> </span><span id="local-6989586621679514230"><span class="annot"><a href="#local-6989586621679514230"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621679514229"><span class="annot"><a href="#local-6989586621679514229"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514230"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514230"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514229"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-67"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514953"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514953"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514952"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsFixedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#IsFixedSize"><span class="hs-identifier hs-var">IsFixedSize</span></a></span></span><span> </span><span id="local-6989586621679514953"><span class="annot"><a href="#local-6989586621679514953"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514952"><span class="annot"><a href="#local-6989586621679514952"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span>
+</span><span id="line-68"></span><span class="hs-keyword">type</span><span> </span><span id="FixedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier hs-var">FixedSize</span></a></span></span><span> </span><span id="local-6989586621679514951"><span class="annot"><a href="#local-6989586621679514951"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621679514950"><span class="annot"><a href="#local-6989586621679514950"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514951"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514951"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514950"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span class="hs-comment">-- | Class of types which can be assigned a maximum type-level size.</span><span>
-</span><span id="line-72"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><a href="#local-6989586621679514228"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514227"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsMaxSize"><span class="annot"><a href="Data.BoundedSize.Class.html#IsMaxSize"><span class="hs-identifier hs-var">IsMaxSize</span></a></span></span><span> </span><span id="local-6989586621679514228"><span class="annot"><a href="#local-6989586621679514228"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514227"><span class="annot"><a href="#local-6989586621679514227"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span>
-</span><span id="line-73"></span><span class="hs-keyword">type</span><span> </span><span id="MaxSize"><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-var">MaxSize</span></a></span></span><span> </span><span id="local-6989586621679514226"><span class="annot"><a href="#local-6989586621679514226"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621679514225"><span class="annot"><a href="#local-6989586621679514225"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><a href="#local-6989586621679514226"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514225"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-72"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><a href="#local-6989586621679514949"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514948"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsMaxSize"><span class="annot"><a href="Data.BoundedSize.Class.html#IsMaxSize"><span class="hs-identifier hs-var">IsMaxSize</span></a></span></span><span> </span><span id="local-6989586621679514949"><span class="annot"><a href="#local-6989586621679514949"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514948"><span class="annot"><a href="#local-6989586621679514948"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span><span>
+</span><span id="line-73"></span><span class="hs-keyword">type</span><span> </span><span id="MaxSize"><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-var">MaxSize</span></a></span></span><span> </span><span id="local-6989586621679514947"><span class="annot"><a href="#local-6989586621679514947"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span id="local-6989586621679514946"><span class="annot"><a href="#local-6989586621679514946"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><a href="#local-6989586621679514947"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514946"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span>
 </span><span id="line-76"></span><span>
 </span><span id="line-77"></span><span class="hs-comment">-- | Class of types which can be assigned a type-level minimum and maximum length.</span><span>
-</span><span id="line-78"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.IsBytes.html#IsBytes"><span class="hs-identifier hs-type">IsBytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514250"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514249"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514248"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514250"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsBoundedSizeBytes"><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-var">IsBoundedSizeBytes</span></a></span></span><span> </span><span id="local-6989586621679514249"><span class="annot"><a href="#local-6989586621679514249"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514248"><span class="annot"><a href="#local-6989586621679514248"><span class="hs-identifier hs-type">u</span></a></span></span><span> </span><span id="local-6989586621679514250"><span class="annot"><a href="#local-6989586621679514250"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-78"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.IsBytes.html#IsBytes"><span class="hs-identifier hs-type">IsBytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514971"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514970"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514969"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514971"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsBoundedSizeBytes"><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-var">IsBoundedSizeBytes</span></a></span></span><span> </span><span id="local-6989586621679514970"><span class="annot"><a href="#local-6989586621679514970"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514969"><span class="annot"><a href="#local-6989586621679514969"><span class="hs-identifier hs-type">u</span></a></span></span><span> </span><span id="local-6989586621679514971"><span class="annot"><a href="#local-6989586621679514971"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span> </span><span class="hs-special">}</span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-type">IsBoundedSizeBytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514224"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514224"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514223"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsFixedSizeBytes"><span class="annot"><a href="Data.BoundedSize.Class.html#IsFixedSizeBytes"><span class="hs-identifier hs-var">IsFixedSizeBytes</span></a></span></span><span> </span><span id="local-6989586621679514224"><span class="annot"><a href="#local-6989586621679514224"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514223"><span class="annot"><a href="#local-6989586621679514223"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-80"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-type">IsBoundedSizeBytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514945"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514945"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514944"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsFixedSizeBytes"><span class="annot"><a href="Data.BoundedSize.Class.html#IsFixedSizeBytes"><span class="hs-identifier hs-var">IsFixedSizeBytes</span></a></span></span><span> </span><span id="local-6989586621679514945"><span class="annot"><a href="#local-6989586621679514945"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514944"><span class="annot"><a href="#local-6989586621679514944"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span> </span><span class="hs-special">}</span><span>
 </span><span id="line-81"></span><span>
-</span><span id="line-82"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-type">IsBoundedSizeBytes</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><a href="#local-6989586621679514222"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514221"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsMaxSizeBytes"><span class="annot"><a href="Data.BoundedSize.Class.html#IsMaxSizeBytes"><span class="hs-identifier hs-var">IsMaxSizeBytes</span></a></span></span><span> </span><span id="local-6989586621679514222"><span class="annot"><a href="#local-6989586621679514222"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514221"><span class="annot"><a href="#local-6989586621679514221"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span> </span><span class="hs-special">}</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-type">IsBoundedSizeBytes</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><a href="#local-6989586621679514943"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514942"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsMaxSizeBytes"><span class="annot"><a href="Data.BoundedSize.Class.html#IsMaxSizeBytes"><span class="hs-identifier hs-var">IsMaxSizeBytes</span></a></span></span><span> </span><span id="local-6989586621679514943"><span class="annot"><a href="#local-6989586621679514943"><span class="hs-identifier hs-type">l</span></a></span></span><span> </span><span id="local-6989586621679514942"><span class="annot"><a href="#local-6989586621679514942"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span> </span><span class="hs-special">}</span><span>
 </span><span id="line-83"></span><span>
 </span><span id="line-84"></span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span id="local-6989586621679514219"><span id="local-6989586621679514220"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514220"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514219"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-87"></span><span>    </span><span class="hs-keyword">data</span><span> </span><span id="BoundedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-var">BoundedSize</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679514220"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514219"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ByteString"><span class="annot"><a href="Data.BoundedSize.Class.html#ByteString"><span class="hs-identifier hs-var">ByteString</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span>
-</span><span id="line-88"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679514212"><span id="local-6989586621679514214"><span class="annot"><span class="annottext">BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-(BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool)
--&gt; (BoundedSize l u ByteString
-    -&gt; BoundedSize l u ByteString -&gt; Bool)
--&gt; Eq (BoundedSize l u ByteString)
+</span><span id="line-86"></span><span id="local-6989586621679514939"><span id="local-6989586621679514940"><span id="local-6989586621679514941"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.HasSize.html#HasSize"><span class="hs-identifier hs-type">HasSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514941"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSize"><span class="hs-identifier hs-type">IsBoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514940"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514939"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514941"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-87"></span><span>    </span><span class="hs-keyword">data</span><span> </span><span id="BoundedSize"><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-var">BoundedSize</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679514940"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514939"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514941"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="BdSzWrapper"><span class="annot"><a href="Data.BoundedSize.Class.html#BdSzWrapper"><span class="hs-identifier hs-var">BdSzWrapper</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679514941"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-88"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679514932"><span id="local-6989586621679514934"><span class="annot"><span class="annottext">BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+(BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool)
+-&gt; Eq (BoundedSize l u a)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-/= :: BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-$c/= :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-== :: BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-$c== :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679514196"><span id="local-6989586621679514198"><span id="local-6989586621679514200"><span id="local-6989586621679514202"><span id="local-6989586621679514204"><span id="local-6989586621679514206"><span id="local-6989586621679514208"><span class="annot"><span class="annottext">Eq (BoundedSize l u ByteString)
-Eq (BoundedSize l u ByteString) =&gt;
-(BoundedSize l u ByteString
- -&gt; BoundedSize l u ByteString -&gt; Ordering)
--&gt; (BoundedSize l u ByteString
-    -&gt; BoundedSize l u ByteString -&gt; Bool)
--&gt; (BoundedSize l u ByteString
-    -&gt; BoundedSize l u ByteString -&gt; Bool)
--&gt; (BoundedSize l u ByteString
-    -&gt; BoundedSize l u ByteString -&gt; Bool)
--&gt; (BoundedSize l u ByteString
-    -&gt; BoundedSize l u ByteString -&gt; Bool)
--&gt; (BoundedSize l u ByteString
-    -&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString)
--&gt; (BoundedSize l u ByteString
-    -&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString)
--&gt; Ord (BoundedSize l u ByteString)
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; Ordering
-BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString
+forall (l :: Nat) (u :: Nat) a.
+Eq a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+/= :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+$c/= :: forall (l :: Nat) (u :: Nat) a.
+Eq a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+== :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+$c== :: forall (l :: Nat) (u :: Nat) a.
+Eq a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679514916"><span id="local-6989586621679514918"><span id="local-6989586621679514920"><span id="local-6989586621679514922"><span id="local-6989586621679514924"><span id="local-6989586621679514926"><span id="local-6989586621679514928"><span class="annot"><span class="annottext">Eq (BoundedSize l u a)
+Eq (BoundedSize l u a) =&gt;
+(BoundedSize l u a -&gt; BoundedSize l u a -&gt; Ordering)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a)
+-&gt; Ord (BoundedSize l u a)
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Ordering
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a
 forall a.
 Eq a =&gt;
 (a -&gt; a -&gt; Ordering)
@@ -131,184 +124,174 @@ Eq a =&gt;
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-forall (l :: Nat) (u :: Nat). Eq (BoundedSize l u ByteString)
-forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; Ordering
-forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString
-min :: BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString
-$cmin :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString
-max :: BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString
-$cmax :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; BoundedSize l u ByteString
-&gt;= :: BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-$c&gt;= :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-&gt; :: BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-$c&gt; :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-&lt;= :: BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-$c&lt;= :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-&lt; :: BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-$c&lt; :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString -&gt; BoundedSize l u ByteString -&gt; Bool
-compare :: BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; Ordering
-$ccompare :: forall (l :: Nat) (u :: Nat).
-BoundedSize l u ByteString
--&gt; BoundedSize l u ByteString -&gt; Ordering
-$cp1Ord :: forall (l :: Nat) (u :: Nat). Eq (BoundedSize l u ByteString)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span></span></span><span>
+forall (l :: Nat) (u :: Nat) a. Ord a =&gt; Eq (BoundedSize l u a)
+forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Ordering
+forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a
+min :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a
+$cmin :: forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a
+max :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a
+$cmax :: forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; BoundedSize l u a
+&gt;= :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+$c&gt;= :: forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+&gt; :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+$c&gt; :: forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+&lt;= :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+$c&lt;= :: forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+&lt; :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+$c&lt; :: forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Bool
+compare :: BoundedSize l u a -&gt; BoundedSize l u a -&gt; Ordering
+$ccompare :: forall (l :: Nat) (u :: Nat) a.
+Ord a =&gt;
+BoundedSize l u a -&gt; BoundedSize l u a -&gt; Ordering
+$cp1Ord :: forall (l :: Nat) (u :: Nat) a. Ord a =&gt; Eq (BoundedSize l u a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span id="local-6989586621679514193"><span id="local-6989586621679514194"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679514186"><span id="local-6989586621679514188"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679514194"><span class="hs-identifier hs-type">l</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679514193"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Smart.html#Smart"><span class="hs-identifier hs-type">Smart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514194"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514193"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-91"></span><span>    </span><span class="hs-keyword">type</span><span> </span><span id="ErrorMessage"><span class="annot"><a href="Data.Smart.html#ErrorMessage"><span class="hs-identifier hs-var">ErrorMessage</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514194"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514193"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-92"></span><span>    </span><span id="local-6989586621679514184"><span class="annot"><span class="annottext">unsafeCreate :: ByteString -&gt; BoundedSize l u ByteString
-</span><a href="Data.Smart.html#unsafeCreate"><span class="hs-identifier hs-var hs-var hs-var hs-var">unsafeCreate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; BoundedSize l u ByteString
-forall (l :: Nat) (u :: Nat).
-ByteString -&gt; BoundedSize l u ByteString
-</span><a href="Data.BoundedSize.Class.html#ByteString"><span class="hs-identifier hs-var">ByteString</span></a></span><span>
-</span><span id="line-93"></span><span>    </span><span id="local-6989586621679514182"><span class="annot"><span class="annottext">unwrap :: BoundedSize l u ByteString -&gt; ByteString
-</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var hs-var hs-var hs-var">unwrap</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#ByteString"><span class="hs-identifier hs-type">ByteString</span></a></span><span> </span><span id="local-6989586621679514180"><span class="annot"><a href="#local-6989586621679514180"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679514180"><span class="hs-identifier hs-var">t</span></a></span><span>
-</span><span id="line-94"></span><span>    </span><span id="local-6989586621679514179"><span class="annot"><span class="annottext">predicate :: BoundedSize l u ByteString
--&gt; Either
-     (ErrorMessage (BoundedSize l u) ByteString)
-     (BoundedSize l u ByteString)
-</span><a href="Data.Smart.html#predicate"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicate</span></a></span></span><span> </span><span id="local-6989586621679514177"><span class="annot"><span class="annottext">b :: BoundedSize l u ByteString
-</span><a href="#local-6989586621679514177"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-95"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679514176"><span class="annot"><span class="annottext">lt :: Int
-</span><a href="#local-6989586621679514176"><span class="hs-identifier hs-var hs-var">lt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Int
+</span><span id="line-90"></span><span id="local-6989586621679514912"><span id="local-6989586621679514913"><span id="local-6989586621679514914"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679514905"><span id="local-6989586621679514907"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679514914"><span class="hs-identifier hs-type">l</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679514913"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.HasSize.html#HasSize"><span class="hs-identifier hs-type">HasSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514912"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Smart.html#Smart"><span class="hs-identifier hs-type">Smart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514914"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514913"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514912"><span class="hs-identifier hs-type">a</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-91"></span><span>    </span><span class="hs-keyword">type</span><span> </span><span id="ErrorMessage"><span class="annot"><a href="Data.Smart.html#ErrorMessage"><span class="hs-identifier hs-var">ErrorMessage</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514914"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514913"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514912"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-92"></span><span>    </span><span id="local-6989586621679514903"><span class="annot"><span class="annottext">unsafeCreate :: a -&gt; BoundedSize l u a
+</span><a href="Data.Smart.html#unsafeCreate"><span class="hs-identifier hs-var hs-var hs-var hs-var">unsafeCreate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; BoundedSize l u a
+forall (l :: Nat) (u :: Nat) a. a -&gt; BoundedSize l u a
+</span><a href="Data.BoundedSize.Class.html#BdSzWrapper"><span class="hs-identifier hs-var">BdSzWrapper</span></a></span><span>
+</span><span id="line-93"></span><span>    </span><span id="local-6989586621679514901"><span class="annot"><span class="annottext">unwrap :: BoundedSize l u a -&gt; a
+</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var hs-var hs-var hs-var">unwrap</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BdSzWrapper"><span class="hs-identifier hs-type">BdSzWrapper</span></a></span><span> </span><span id="local-6989586621679514899"><span class="annot"><a href="#local-6989586621679514899"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679514899"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><span id="line-94"></span><span>    </span><span id="local-6989586621679514898"><span class="annot"><span class="annottext">predicate :: BoundedSize l u a
+-&gt; Either (ErrorMessage (BoundedSize l u) a) (BoundedSize l u a)
+</span><a href="Data.Smart.html#predicate"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicate</span></a></span></span><span> </span><span id="local-6989586621679514896"><span class="annot"><span class="annottext">b :: BoundedSize l u a
+</span><a href="#local-6989586621679514896"><span class="hs-identifier hs-var">b</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-95"></span><span>      </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679514895"><span class="annot"><span class="annottext">lt :: Int
+</span><a href="#local-6989586621679514895"><span class="hs-identifier hs-var hs-var">lt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; Int
 forall a. HasSize a =&gt; a -&gt; Int
-</span><a href="Data.HasSize.html#size"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BoundedSize l u ByteString -&gt; ByteString
+</span><a href="Data.HasSize.html#size"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">BoundedSize l u a -&gt; a
 forall (c :: * -&gt; *) a. Smart c a =&gt; c a -&gt; a
-</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var">unwrap</span></a></span><span> </span><span class="annot"><span class="annottext">BoundedSize l u ByteString
-</span><a href="#local-6989586621679514177"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-96"></span><span>          </span><span id="local-6989586621679514174"><span class="annot"><span class="annottext">vl :: Int
-</span><a href="#local-6989586621679514174"><span class="hs-identifier hs-var hs-var">vl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy l -&gt; Int
+</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var">unwrap</span></a></span><span> </span><span class="annot"><span class="annottext">BoundedSize l u a
+</span><a href="#local-6989586621679514896"><span class="hs-identifier hs-var">b</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span>          </span><span id="local-6989586621679514893"><span class="annot"><span class="annottext">vl :: Int
+</span><a href="#local-6989586621679514893"><span class="hs-identifier hs-var hs-var">vl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy l -&gt; Int
 forall b (n :: Nat) (proxy :: Nat -&gt; *).
 (Num b, KnownNat n) =&gt;
 proxy n -&gt; b
 </span><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-var">fromNat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy l
 forall k (t :: k). Proxy t
-</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679514194"><span class="hs-identifier hs-type">l</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-97"></span><span>          </span><span id="local-6989586621679514172"><span class="annot"><span class="annottext">vu :: Int
-</span><a href="#local-6989586621679514172"><span class="hs-identifier hs-var hs-var">vu</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy u -&gt; Int
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679514914"><span class="hs-identifier hs-type">l</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-97"></span><span>          </span><span id="local-6989586621679514891"><span class="annot"><span class="annottext">vu :: Int
+</span><a href="#local-6989586621679514891"><span class="hs-identifier hs-var hs-var">vu</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Proxy u -&gt; Int
 forall b (n :: Nat) (proxy :: Nat -&gt; *).
 (Num b, KnownNat n) =&gt;
 proxy n -&gt; b
 </span><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-var">fromNat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy u
 forall k (t :: k). Proxy t
-</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679514193"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span>
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679514913"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-98"></span><span>      </span><span class="hs-keyword">in</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514174"><span class="hs-identifier hs-var">vl</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621679514893"><span class="hs-identifier hs-var">vl</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514176"><span class="hs-identifier hs-var">lt</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
+</span><a href="#local-6989586621679514895"><span class="hs-identifier hs-var">lt</span></a></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">&amp;&amp;</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514176"><span class="hs-identifier hs-var">lt</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621679514895"><span class="hs-identifier hs-var">lt</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514172"><span class="hs-identifier hs-var">vu</span></a></span><span>
-</span><span id="line-99"></span><span>           </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">BoundedSize l u ByteString
--&gt; Either String (BoundedSize l u ByteString)
+</span><a href="#local-6989586621679514891"><span class="hs-identifier hs-var">vu</span></a></span><span>
+</span><span id="line-99"></span><span>           </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">BoundedSize l u a -&gt; Either String (BoundedSize l u a)
 forall a b. b -&gt; Either a b
-</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize l u ByteString
-</span><a href="#local-6989586621679514177"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize l u a
+</span><a href="#local-6989586621679514896"><span class="hs-identifier hs-var">b</span></a></span><span>
 </span><span id="line-100"></span><span>           </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">String
--&gt; Either
-     (ErrorMessage (BoundedSize l u) ByteString)
-     (BoundedSize l u ByteString)
+-&gt; Either (ErrorMessage (BoundedSize l u) a) (BoundedSize l u a)
 forall a b. a -&gt; Either a b
 </span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String
- -&gt; Either
-      (ErrorMessage (BoundedSize l u) ByteString)
-      (BoundedSize l u ByteString))
+ -&gt; Either (ErrorMessage (BoundedSize l u) a) (BoundedSize l u a))
 -&gt; String
--&gt; Either
-     (ErrorMessage (BoundedSize l u) ByteString)
-     (BoundedSize l u ByteString)
+-&gt; Either (ErrorMessage (BoundedSize l u) a) (BoundedSize l u a)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="hs-string">&quot;length is &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514176"><span class="hs-identifier hs-var">lt</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><a href="#local-6989586621679514895"><span class="hs-identifier hs-var">lt</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot; but should be &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span>
 </span><span id="line-101"></span><span>                       </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514174"><span class="hs-identifier hs-var">vl</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
+</span><a href="#local-6989586621679514893"><span class="hs-identifier hs-var">vl</span></a></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514172"><span class="hs-identifier hs-var">vu</span></a></span><span>
+</span><a href="#local-6989586621679514891"><span class="hs-identifier hs-var">vu</span></a></span><span>
 </span><span id="line-102"></span><span>                       </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514174"><span class="hs-identifier hs-var">vl</span></a></span><span>
+</span><a href="#local-6989586621679514893"><span class="hs-identifier hs-var">vl</span></a></span><span>
 </span><span id="line-103"></span><span>                       </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="hs-string">&quot;between &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514174"><span class="hs-identifier hs-var">vl</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><a href="#local-6989586621679514893"><span class="hs-identifier hs-var">vl</span></a></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="hs-string">&quot; and &quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679514172"><span class="hs-identifier hs-var">vu</span></a></span></span></span><span>
+</span><a href="#local-6989586621679514891"><span class="hs-identifier hs-var">vu</span></a></span></span></span></span><span>
 </span><span id="line-104"></span><span>
-</span><span id="line-105"></span><span id="local-6989586621679514168"><span id="local-6989586621679514169"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.Smart.html#Smart"><span class="hs-identifier hs-type">Smart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514169"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514168"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514169"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514168"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-106"></span><span>    </span><span id="local-6989586621679514165"><span class="annot"><span class="annottext">fromString :: String -&gt; BoundedSize l u ByteString
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; BoundedSize l u ByteString)
--&gt; (BoundedSize l u ByteString -&gt; BoundedSize l u ByteString)
--&gt; Either String (BoundedSize l u ByteString)
--&gt; BoundedSize l u ByteString
+</span><span id="line-105"></span><span>
+</span><span id="line-106"></span><span id="local-6989586621679514886"><span id="local-6989586621679514887"><span id="local-6989586621679514888"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="annot"><a href="#local-6989586621679514888"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Smart.html#Smart"><span class="hs-identifier hs-type">Smart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514887"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514886"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514888"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">IsString</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514887"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514886"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514888"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-107"></span><span>    </span><span id="local-6989586621679514883"><span class="annot"><span class="annottext">fromString :: String -&gt; BoundedSize l u a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromString</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; BoundedSize l u a)
+-&gt; (BoundedSize l u a -&gt; BoundedSize l u a)
+-&gt; Either String (BoundedSize l u a)
+-&gt; BoundedSize l u a
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
-</span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; BoundedSize l u ByteString
+</span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; BoundedSize l u a
 forall a. HasCallStack =&gt; String -&gt; a
-</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize l u ByteString -&gt; BoundedSize l u ByteString
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize l u a -&gt; BoundedSize l u a
 forall a. a -&gt; a
-</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">(Either String (BoundedSize l u ByteString)
- -&gt; BoundedSize l u ByteString)
--&gt; (String -&gt; Either String (BoundedSize l u ByteString))
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">(Either String (BoundedSize l u a) -&gt; BoundedSize l u a)
+-&gt; (String -&gt; Either String (BoundedSize l u a))
 -&gt; String
--&gt; BoundedSize l u ByteString
+-&gt; BoundedSize l u a
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Either String (BoundedSize l u ByteString)
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Either String (BoundedSize l u a)
 forall (c :: * -&gt; *) a.
 Smart c a =&gt;
 a -&gt; Either (ErrorMessage c a) (c a)
-</span><a href="Data.Smart.html#safeCreate"><span class="hs-identifier hs-var">safeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Either String (BoundedSize l u ByteString))
--&gt; (String -&gt; ByteString)
--&gt; String
--&gt; Either String (BoundedSize l u ByteString)
+</span><a href="Data.Smart.html#safeCreate"><span class="hs-identifier hs-var">safeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; Either String (BoundedSize l u a))
+-&gt; (String -&gt; a) -&gt; String -&gt; Either String (BoundedSize l u a)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; a
 forall a. IsString a =&gt; String -&gt; a
-</span><span class="hs-identifier hs-var">fromString</span></span></span></span><span>
-</span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span id="local-6989586621679514162"><span id="local-6989586621679514163"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-type">IsBoundedSizeBytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514163"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514162"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span></span></span><span>
-</span><span id="line-109"></span><span>
+</span><span class="hs-identifier hs-var">fromString</span></span></span></span></span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span id="local-6989586621679514880"><span id="local-6989586621679514881"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#IsBoundedSizeBytes"><span class="hs-identifier hs-type">IsBoundedSizeBytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514881"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514880"><span class="hs-identifier hs-type">u</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span> </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">{</span><span class="hs-special">}</span></span></span><span>
 </span><span id="line-110"></span><span>
 </span><span id="line-111"></span><span>
 </span><span id="line-112"></span><span>
-</span><span id="line-113"></span><span id="local-6989586621679514156"><span id="local-6989586621679514157"><span id="local-6989586621679514158"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679514151"><span id="local-6989586621679514154"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679514158"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Smart.html#Smart"><span class="hs-identifier hs-type">Smart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514157"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514156"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514158"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514157"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514156"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514158"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-114"></span><span>    </span><span id="local-6989586621679514149"><span class="annot"><span class="annottext">show :: BoundedSize l u a -&gt; String
-</span><a href="#local-6989586621679514149"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; String
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span id="local-6989586621679514874"><span id="local-6989586621679514875"><span id="local-6989586621679514876"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679514869"><span id="local-6989586621679514872"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679514876"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Smart.html#Smart"><span class="hs-identifier hs-type">Smart</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514875"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514874"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514876"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#BoundedSize"><span class="hs-identifier hs-type">BoundedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514875"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679514874"><span class="hs-identifier hs-type">u</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679514876"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-115"></span><span>    </span><span id="local-6989586621679514867"><span class="annot"><span class="annottext">show :: BoundedSize l u a -&gt; String
+</span><a href="#local-6989586621679514867"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; String)
 -&gt; (BoundedSize l u a -&gt; a) -&gt; BoundedSize l u a -&gt; String
@@ -316,4 +299,4 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize l u a -&gt; a
 forall (c :: * -&gt; *) a. Smart c a =&gt; c a -&gt; a
 </span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var">unwrap</span></a></span></span></span></span><span>
-</span><span id="line-115"></span></pre></body></html>
+</span><span id="line-116"></span></pre></body></html>

@@ -566,7 +566,7 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1230
+./src/Data/BoundedSize/Class.hs,1252
 module Data.BoundedSize.ClassData.BoundedSize.Class22,23
 class HasSize a => IsBoundedSize IsBoundedSize62,63
     data BoundedSize BoundedSize63,64
@@ -586,7 +586,7 @@ instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a89,
     unwrap unwrap92,93
     predicate predicate93,94
 instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)105,106
-S S106,107
+    fromString fromString106,107
 instance IsBoundedSizeBytes IsBoundedSizeBytes l u B-ByteString108,109
 instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)113,114
     show show114,115

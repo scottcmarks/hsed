@@ -1,11 +1,3 @@
-\documentstyle{article}
-\begin{document}
-\chapter{Stream Items}
-
-Parse and generate stream items.
-
-
-\begin{code}
 {-|
 Module      : System.SED.MCTP.Common.StreamItem
 Description : SED tokens
@@ -18,21 +10,20 @@ Parse and generate stream items.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 
 module System.SED.MCTP.Common.StreamItem (StreamItem(..), Parser, require)
 
 where
 
-import            Data.Attoparsec.ByteString (Parser, parseOnly)
-import            Data.ByteString
-import            Data.Either.Combinators
-import            RIO
+import           Data.Attoparsec.ByteString (Parser, parseOnly)
+import           Data.ByteString
+import           Data.Either.Combinators
+import           RIO
 
 
-\end{code}
-
+{-
 Due to the nature of method parameters and results, there are two additional constructs defined for
 messaging that serve as grouping mechanisms for the basic types: Named values and List values.
 
@@ -40,7 +31,7 @@ messaging that serve as grouping mechanisms for the basic types: Named values an
 messaging type, i.e. byte-string values, N length signed or unsigned integer values, list values,
 or Named values).
 
-\begin{code}
+-}
 
 
 class StreamItem a where
@@ -78,6 +69,3 @@ instance (StreamItem a) => StreamItem [a] where  -- TODO: Token should use these
 instance (StreamItem a) => StreamItem(a,a) where
     parser = undefined
     generate (f, s) = generate f <> generate s
-
-\end{code}
-\end{document}

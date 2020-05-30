@@ -1,11 +1,17 @@
-\documentstyle{article}
-\begin{document}
-\chapter{Formats}
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FlexibleInstances         #-}
+{-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE StandaloneDeriving        #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
-Define the descriptions of types by the Format values in the Types table.
 
-
-\begin{code}
 {-|
 Module      : System.SED.MCTP.Common.Format
 Description : Core data type formats
@@ -18,38 +24,28 @@ Formats.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude
-           , DataKinds
-           , ScopedTypeVariables
-           , GADTs
-           , PolyKinds
-           , FlexibleInstances
-           , StandaloneDeriving
-           , OverloadedStrings
-#-}
-
-{-# LANGUAGE FlexibleContexts
-#-}
-
-{-# LANGUAGE LambdaCase        #-}
 
 module System.SED.MCTP.Common.Format
     where
 
-import            Data.Attoparsec.ByteString (many1, anyWord8)
-import Data.ByteString(ByteString, singleton)
-import Data.Functor((<$>))
-import Data.Kind(Type)
-import GHC.Enum(Enum(..))
-import GHC.Base((>>=), (<*>), pure, error, (<>), (.), mempty, undefined, Eq(..))
-import GHC.Real(fromIntegral)
-import GHC.Show(Show)
-import GHC.TypeLits(natVal, KnownNat)
-import GHC.Types(Nat)
+import           Data.Attoparsec.ByteString         (anyWord8, many1)
+import           Data.ByteString                    (ByteString, singleton)
+import           Data.Functor                       ((<$>))
+import           Data.Kind                          (Type)
+import           GHC.Base                           (Eq (..), error, mempty,
+                                                     pure, undefined, (.),
+                                                     (<*>), (<>), (>>=))
+import           GHC.Enum                           (Enum (..))
+import           GHC.Real                           (fromIntegral)
+import           GHC.Show                           (Show)
+import           GHC.TypeLits                       (KnownNat, natVal)
+import           GHC.Types                          (Nat)
 
-import System.SED.MCTP.Common.Simple_Type(Core_uinteger_2, Core_integer_2, Core_max_bytes_32)
-import System.SED.MCTP.Common.UID(UID(..))
-import System.SED.MCTP.Common.StreamItem
+import           System.SED.MCTP.Common.Simple_Type (Core_integer_2,
+                                                     Core_max_bytes_32,
+                                                     Core_uinteger_2)
+import           System.SED.MCTP.Common.StreamItem
+import           System.SED.MCTP.Common.UID         (UID (..))
 
 data Max_bytes :: Nat -> Type
 deriving instance Show(Max_bytes n)
@@ -57,7 +53,7 @@ deriving instance Eq(Max_bytes n)
 
 instance StreamItem Core_table_kind
     where generate = singleton . fromIntegral . succ . fromEnum
-          parser = (toEnum . pred <$> fromIntegral) <$> anyWord8
+          parser = toEnum . pred . fromIntegral <$> anyWord8
 
 
 data Core_table_kind = Object_Table | Byte_Table
@@ -167,6 +163,3 @@ instance StreamItem Core_uidref_Byte_Table where
 instance StreamItem Core_uidref_Object_Table where
     parser = undefined
     generate (Core_uidref_Object_Table _base_uidref) = "<uidref_Object_Table>"
-
-\end{code}
-\end{document}

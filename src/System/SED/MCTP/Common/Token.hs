@@ -1,11 +1,3 @@
-\documentstyle{article}
-\begin{document}
-\chapter{Types}
-
-Define the types used in SEDs, and in the hsed program in particular.
-
-
-\begin{code}
 {-|
 Module      : System.SED.MCTP.Common.Token
 Description : SED tokens
@@ -15,7 +7,7 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 Datatypes for Tokens.
-
+Define the types used in SEDs, and in the hsed program in particular.
 -}
 
 {-# LANGUAGE NoImplicitPrelude #-}
@@ -34,27 +26,28 @@ module System.SED.MCTP.Common.Token
 where
 
 import           Data.Array
-import           Data.Attoparsec.ByteString hiding (takeWhile)
+import           Data.Attoparsec.ByteString           hiding (takeWhile)
 import           Data.Bits
-import           Data.ByteString            hiding (ByteString, take, takeWhile,
-                                                    map, unsnoc)
+import           Data.ByteString                      hiding (ByteString, map,
+                                                       take, takeWhile, unsnoc)
 import           Data.Conduit
 import           Data.Conduit.Attoparsec
-import           Data.Conduit.Combinators   (takeWhile)
+import           Data.Conduit.Combinators             (takeWhile)
 import           GHC.Natural
-import           RIO                        hiding (foldr, map, length, mask,
-                                                    null, reverse, take, takeWhile)
-import qualified RIO as R                   (map)
-import           Test.QuickCheck hiding(generate,(.&.))
-import           Test.QuickCheck.Instances.Natural ()
+import           RIO                                  hiding (foldr, length,
+                                                       map, mask, null, reverse,
+                                                       take, takeWhile)
+import qualified RIO                                  as R (map)
+import           Test.QuickCheck                      hiding (generate, (.&.))
 import           Test.QuickCheck.Instances.ByteString ()
+import           Test.QuickCheck.Instances.Natural    ()
 import           Text.Printf
 
 import           Data.ByteString.Integral
 import           System.SED.MCTP.Common.StreamItem
 
 
-\end{code}
+{-
 
 Due to the nature of method parameters and results, there are two additional constructs defined for
 messaging that serve as grouping mechanisms for the basic types: Named values and List values.
@@ -71,7 +64,7 @@ method parameters in stream encoding. List tokens are used to encapsulate method
 separate the InvokingID/MethodID from the method parameters in the stream encoding. For more
 information on stream encoding, see 3.2.2.
 
-{-*
+
 3.2.2.3 Tokens
 
 Values of the four basic types are packaged into tokens, each of which is a TLV (tag, length, value)
@@ -134,7 +127,7 @@ Tokens 0xE4-0xEF, 0xF4-0xF7 and 0xFD-0xFE are reserved for use by TCG.
 An SSC MAY define support for only a subset of the available tokens, as well as
 the behavior of the TPer when unsupported tokens are transmitted by the host.
 -}
-\begin{code}
+
 
 data Token =
     Unsigned Natural
@@ -367,7 +360,6 @@ tokenSource = rawTokenSource .| removeEmpty .| combineContinued
 
 
 
-\end{code}
 
 {-*
 3.2.2.3.1 Simple Tokens -- Atoms Overview
@@ -813,5 +805,3 @@ If empty atoms are supported, then they SHALL NOT be unexpected tokens.
 
 
 -}
-
-\end{document}

@@ -42,6 +42,9 @@ instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
 
 -- | Things that have a "size"
 module Data.HasSize
+
+-- | Size is an abstract Int-valued property of a Type that can be used to
+--   refine values of that type.
 class HasSize a
 size :: HasSize a => a -> Int
 instance Data.HasSize.HasSize Data.ByteString.Internal.ByteString
@@ -605,6 +608,9 @@ instance GHC.TypeNats.KnownNat n => Extras.Hex.HasHex (Extras.Sized.Fixed_bytes 
 -- | Use this module when you need to add an <a>IsBoundedSize</a> instance
 --   to a type.
 module Data.BoundedSize.Class
+
+-- | Size is an abstract Int-valued property of a Type that can be used to
+--   refine values of that type.
 class HasSize a
 size :: HasSize a => a -> Int
 class HasSize a => IsBytes a where {
@@ -726,6 +732,9 @@ instance Data.String.IsString Data.BoundedSize.TH.LitS
 --   import qualified Data.BoundedSize as S
 --   </pre>
 module Data.BoundedSize
+
+-- | Size is an abstract Int-valued property of a Type that can be used to
+--   refine values of that type.
 class HasSize a
 size :: HasSize a => a -> Int
 class HasSize a => IsBytes a where {
@@ -967,7 +976,8 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Commo
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a, a)
 
 
--- | Datatypes for Tokens.
+-- | Datatypes for Tokens. Define the types used in SEDs, and in the hsed
+--   program in particular.
 module System.SED.MCTP.Common.Token
 data Token
 Unsigned :: Natural -> Token

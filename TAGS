@@ -146,24 +146,6 @@ module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs47,48
 lookupTableHalfUID lookupTableHalfUID177,178
 lookupTableUID lookupTableUID182,183
 
-./src/System/SED/MCTP/Common/StreamItem.lhs,562
-module System.SED.MCTP.Common.StreamItem System.SED.MCTP.Common.StreamItem23,24
-class StreamItem StreamItem45,46
-    parser parser46,47
-    generate generate48,49
-    parseByteString parseByteString50,51
-    parseString parseString53,54
-    maybeParse maybeParse56,57
-    pg pg60,61
-    typeIsa typeIsa63,64
-require require67,68
-instance (S(StreamItem a) => StreamItem [a]74,75
-    parser parser75,76
-    generate generate76,77
-instance (S(StreamItem a) => StreamItem (a, a)77,78
-    parser parser78,79
-    generate generate79,80
-
 ./src/System/SED/MCTP/Common/THUtil.lhs,231
 module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil24,25
 parseTable parseTable50,51
@@ -174,69 +156,6 @@ eHalfUID eHalfUID67,68
 eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
-
-./src/System/SED/MCTP/Common/Format.lhs,2867
-module System.SED.MCTP.Common.FormatSystem.SED.MCTP.Common.Format35,36
-import import43,44
-data Max_bytes Max_bytes53,54
-instance StreamItem StreamItem Core_table_kind57,58
-    where generate generate58,59
-data Core_table_kind Core_table_kind62,63
-data Core_table_kind = Object_Table Object_Table62,63
-data Core_table_kind = Object_Table | Byte_TableByte_Table62,63
-newtype Core_uidref Core_uidref66,67
-newtype Core_uidref               = Core_uidref {fromCore_uidref:fromCore_uidref66,67
-newtype Core_uidref_Base_Type Core_uidref_Base_Type68,69
-newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type70,71
-newtype Core_uidref_Byte_Table Core_uidref_Byte_Table72,73
-newtype Core_uidref_Object_Table Core_uidref_Object_Table74,75
-data Known_Core_Type Known_Core_Type77,78
-        Base_Type Base_Type79,80
-        Simple_Type Simple_Type80,81
-        Enumeration_Type Enumeration_Type81,82
-        Alternative_Type Alternative_Type82,83
-        List_Type List_Type83,84
-        Restricted_Reference_Type'5 Restricted_Reference_Type'584,85
-        Restricted_Reference_Type'6 Restricted_Reference_Type'685,86
-        General_Reference_Type'7 General_Reference_Type'786,87
-        General_Reference_Type'8 General_Reference_Type'887,88
-        General_Reference_Type'9 General_Reference_Type'988,89
-        General_Reference_Table_Type General_Reference_Table_Type89,90
-        Named_Value_Name_Type Named_Value_Name_Type90,91
-        Named_Value_Integer_Type Named_Value_Integer_Type91,92
-        Named_Value_Uinteger_Type Named_Value_Uinteger_Type92,93
-        Struct_Type Struct_Type93,94
-        Set_Type Set_Type94,95
-data Some_Core_Type Some_Core_Type99,100
-data Some_Core_Type = forall forall99,100
-data Some_Core_Type = forall (n n99,100
-instance StreamItem StreamItem Some_Core_Type104,105
-    generate generate105,106
-    parser parser123,124
-instance StreamItem StreamItem Core_uinteger_2145,146
-    parser parser146,147
-    generate generate147,148
-instance StreamItem StreamItem Core_integer_2148,149
-    parser parser149,150
-    generate generate150,151
-instance StreamItem StreamItem Core_uidref151,152
-    parser parser152,153
-    generate generate153,154
-instance StreamItem StreamItem Core_max_bytes_32154,155
-    parser parser155,156
-    generate generate156,157
-instance StreamItem StreamItem Core_uidref_Base_Type157,158
-    parser parser158,159
-    generate generate159,160
-instance StreamItem StreamItem Core_uidref_non_Base_Type160,161
-    parser parser161,162
-    generate generate162,163
-instance StreamItem StreamItem Core_uidref_Byte_Table163,164
-    parser parser164,165
-    generate generate165,166
-instance StreamItem StreamItem Core_uidref_Object_Table166,167
-    parser parser167,168
-    generate generate168,169
 
 ./src/System/SED/MCTP/Common/Table.lhs,1052
 module System.SED.MCTP.Common.Table System.SED.MCTP.Common.Table23,24
@@ -321,41 +240,59 @@ instance Semigroup Semigroup UIDRowDecs187,188
 instance Monoid Monoid UIDRowDecs191,192
   where mempty mempty192,193
 
-./src/System/SED/MCTP/Common/Token.lhs,1172
-module System.SED.MCTP.Common.TokenSystem.SED.MCTP.Common.Token22,23
-data Token Token138,139
-    Unsigned Unsigned139,140
-  | Signed Signed140,141
-  | Bytes Bytes141,142
-  | ContinuedBytes ContinuedBytes142,143
-  | StartNameStartName143,144
-  | EndNameEndName144,145
-  | StartListStartList145,146
-  | EndListEndList146,147
-  | CallCall147,148
-  | EndOfDataEndOfData148,149
-  | EndOfSessionEndOfSession149,150
-  | StartTransactionStartTransaction150,151
-  | EndTransactionEndTransaction151,152
-  | EmptyEmpty152,153
-class (Show a) => IsToken IsToken155,156
-    fromToken fromToken156,157
-    token token158,159
-    mtoken mtoken161,162
-instance IsToken IsToken Token165,166
-    token token166,167
-    fromToken fromToken167,168
-instance StreamItem StreamItem Token172,173
-    parser parser173,174
-    generate generate174,175
-tokenParser tokenParser181,182
-generateToken generateToken283,284
-instance Arbitrary Arbitrary Token329,330
-    arbitrary arbitrary330,331
-rawTokenSource rawTokenSource345,346
-removeEmpty removeEmpty348,349
-combineContinued combineContinued351,352
-tokenSource tokenSource364,365
+./src/System/SED/MCTP/Common/Token.hs,1172
+module System.SED.MCTP.Common.TokenSystem.SED.MCTP.Common.Token14,15
+data Token Token131,132
+    Unsigned Unsigned132,133
+  | Signed Signed133,134
+  | Bytes Bytes134,135
+  | ContinuedBytes ContinuedBytes135,136
+  | StartNameStartName136,137
+  | EndNameEndName137,138
+  | StartListStartList138,139
+  | EndListEndList139,140
+  | CallCall140,141
+  | EndOfDataEndOfData141,142
+  | EndOfSessionEndOfSession142,143
+  | StartTransactionStartTransaction143,144
+  | EndTransactionEndTransaction144,145
+  | EmptyEmpty145,146
+class (Show a) => IsToken IsToken148,149
+    fromToken fromToken149,150
+    token token151,152
+    mtoken mtoken154,155
+instance IsToken IsToken Token158,159
+    token token159,160
+    fromToken fromToken160,161
+instance StreamItem StreamItem Token165,166
+    parser parser166,167
+    generate generate167,168
+tokenParser tokenParser174,175
+generateToken generateToken276,277
+instance Arbitrary Arbitrary Token322,323
+    arbitrary arbitrary323,324
+rawTokenSource rawTokenSource338,339
+removeEmpty removeEmpty341,342
+combineContinued combineContinued344,345
+tokenSource tokenSource357,358
+
+./src/System/SED/MCTP/Common/StreamItem.hs,562
+module System.SED.MCTP.Common.StreamItem System.SED.MCTP.Common.StreamItem15,16
+class StreamItem StreamItem36,37
+    parser parser37,38
+    generate generate39,40
+    parseByteString parseByteString41,42
+    parseString parseString44,45
+    maybeParse maybeParse47,48
+    pg pg51,52
+    typeIsa typeIsa54,55
+require require58,59
+instance (S(StreamItem a) => StreamItem [a]65,66
+    parser parser66,67
+    generate generate67,68
+instance (S(StreamItem a) => StreamItem (a, a)68,69
+    parser parser69,70
+    generate generate70,71
 
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
@@ -519,6 +456,69 @@ instance Arbitrary Arbitrary List242,243
     arbitrary arbitrary243,244
 instance Arbitrary Arbitrary Value245,246
     arbitrary arbitrary246,247
+
+./src/System/SED/MCTP/Common/Format.hs,2864
+module System.SED.MCTP.Common.FormatSystem.SED.MCTP.Common.Format27,28
+import import34,35
+data Max_bytes Max_bytes49,50
+instance StreamItem StreamItem Core_table_kind53,54
+    where generate generate54,55
+data Core_table_kind Core_table_kind58,59
+data Core_table_kind = Object_Table Object_Table58,59
+data Core_table_kind = Object_Table | Byte_TableByte_Table58,59
+newtype Core_uidref Core_uidref62,63
+newtype Core_uidref               = Core_uidref {fromCore_uidref:fromCore_uidref62,63
+newtype Core_uidref_Base_Type Core_uidref_Base_Type64,65
+newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type66,67
+newtype Core_uidref_Byte_Table Core_uidref_Byte_Table68,69
+newtype Core_uidref_Object_Table Core_uidref_Object_Table70,71
+data Known_Core_Type Known_Core_Type73,74
+        Base_Type Base_Type75,76
+        Simple_Type Simple_Type76,77
+        Enumeration_Type Enumeration_Type77,78
+        Alternative_Type Alternative_Type78,79
+        List_Type List_Type79,80
+        Restricted_Reference_Type'5 Restricted_Reference_Type'580,81
+        Restricted_Reference_Type'6 Restricted_Reference_Type'681,82
+        General_Reference_Type'7 General_Reference_Type'782,83
+        General_Reference_Type'8 General_Reference_Type'883,84
+        General_Reference_Type'9 General_Reference_Type'984,85
+        General_Reference_Table_Type General_Reference_Table_Type85,86
+        Named_Value_Name_Type Named_Value_Name_Type86,87
+        Named_Value_Integer_Type Named_Value_Integer_Type87,88
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type88,89
+        Struct_Type Struct_Type89,90
+        Set_Type Set_Type90,91
+data Some_Core_Type Some_Core_Type95,96
+data Some_Core_Type = forall forall95,96
+data Some_Core_Type = forall (n n95,96
+instance StreamItem StreamItem Some_Core_Type100,101
+    generate generate101,102
+    parser parser119,120
+instance StreamItem StreamItem Core_uinteger_2141,142
+    parser parser142,143
+    generate generate143,144
+instance StreamItem StreamItem Core_integer_2144,145
+    parser parser145,146
+    generate generate146,147
+instance StreamItem StreamItem Core_uidref147,148
+    parser parser148,149
+    generate generate149,150
+instance StreamItem StreamItem Core_max_bytes_32150,151
+    parser parser151,152
+    generate generate152,153
+instance StreamItem StreamItem Core_uidref_Base_Type153,154
+    parser parser154,155
+    generate generate155,156
+instance StreamItem StreamItem Core_uidref_non_Base_Type156,157
+    parser parser157,158
+    generate generate158,159
+instance StreamItem StreamItem Core_uidref_Byte_Table159,160
+    parser parser160,161
+    generate generate161,162
+instance StreamItem StreamItem Core_uidref_Object_Table162,163
+    parser parser163,164
+    generate generate164,165
 
 ./src/System/SED/MCTP/Common/SpecialPurposeUIDs.lhs,495
 module System.SED.MCTP.Common.SpecialPurposeUIDs System.SED.MCTP.Common.SpecialPurposeUIDs22,23

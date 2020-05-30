@@ -35,20 +35,22 @@ module Data.BoundedSize.Class
 
 where
 
-import qualified Data.ByteString     as B
 import           Data.Either         (Either (..), either)
+import           Data.Functor        ((<$>))
 import           Data.HasSize        (HasSize (..))
 import           Data.IsBytes        (IsBytes (..))
 import           Data.Proxy          (Proxy (..))
-import           Data.Smart          (Smart (..))
+import           Data.Smart          (ErrorMessage (..), Smart (..))
 import           Data.String         (IsString (..), String)
 import           GHC.Base            (id, ($), (++), (.))
 import           GHC.Classes         (Eq (..), Ord (..), (&&))
 import           GHC.Err             (error)
+import           GHC.Num             (Num (..))
+import           GHC.Read            (Read (..))
 import           GHC.Show            (Show (..))
 import           GHC.TypeLits        (KnownNat, Nat)
 import           GHC.TypeLits.Extras (fromNat)
--- import           Prelude             hiding (drop, length, replicate, take)
+
 
 -- -- $setup
 -- -- >>> :set -XDataKinds
@@ -102,14 +104,30 @@ instance (KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a where
                        then show vl
                        else "between " ++ show vl ++ " and " ++ show vu
 
+trans :: (Smart c a, ErrorMessage c a ~ String) => (a -> a) -> c a -> c a
+trans f = either error id . safeCreate . f . unwrap
+
+bitrans
+  :: (Smart c a, ErrorMessage c a ~ String) =>
+     (a -> a -> a) -> c a -> c a -> c a
+bitrans op x y = either error id $ safeCreate $ (unwrap x) `op` (unwrap y)
 
 instance (IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a) where
     fromString = either error id . safeCreate . fromString
 
-instance IsBoundedSizeBytes l u B.ByteString where {}
+instance (HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)  where
+    size = size . unwrap
 
+instance (Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a) where
+    (+) = bitrans (+)
+    (-) = bitrans (-)
+    (*) = bitrans (-)
+    abs = trans abs
+    signum = trans signum
+    fromInteger = either error id . safeCreate . fromInteger
 
-
+instance (Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a) where
+    readPrec = either error id . safeCreate <$> readPrec
 
 instance (Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a) where
     show = show . unwrap

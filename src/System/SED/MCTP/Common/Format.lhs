@@ -41,13 +41,13 @@ import Data.ByteString(ByteString, singleton)
 import Data.Functor((<$>))
 import Data.Kind(Type)
 import GHC.Enum(Enum(..))
-import GHC.Base((>>=), (<*>), pure, error, (<>), (.), mempty, undefined, Eq(..), Int)
--- import GHC.Natural
+import GHC.Base((>>=), (<*>), pure, error, (<>), (.), mempty, undefined, Eq(..))
 import GHC.Real(fromIntegral)
 import GHC.Show(Show)
 import GHC.TypeLits(natVal, KnownNat)
 import GHC.Types(Nat)
 
+import System.SED.MCTP.Common.Simple_Type(Core_uinteger_2, Core_integer_2, Core_max_bytes_32)
 import System.SED.MCTP.Common.UID(UID(..))
 import System.SED.MCTP.Common.StreamItem
 
@@ -63,15 +63,9 @@ instance StreamItem Core_table_kind
 data Core_table_kind = Object_Table | Byte_Table
     deriving (Enum, Eq, Show)
 
-newtype Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2::Int}
-    deriving (Eq,Show) -- , StreamItem) -- FIXME
-newtype Core_integer_2    = Core_integer_2 {fromCore_integer_2::Int}
-    deriving (Eq,Show)
-newtype Core_uidref       = Core_uidref {fromCore_uidref::UID}
-    deriving (Eq,Show)
-newtype Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32::Max_bytes 32} -- FIXME:  Need non-bogus max_bytes
-    deriving (Eq,Show)
 
+newtype Core_uidref               = Core_uidref {fromCore_uidref::UID}
+    deriving (Eq,Show)
 newtype Core_uidref_Base_Type     = Core_uidref_Base_Type     Core_uidref
     deriving (Eq,Show)
 newtype Core_uidref_non_Base_Type = Core_uidref_non_Base_Type Core_uidref

@@ -641,10 +641,12 @@ class (IsBoundedSizeBytes l l a) => IsFixedSizeBytes l a
 class (IsBoundedSizeBytes 0 l a) => IsMaxSizeBytes l a
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u a)
-instance Data.BoundedSize.Class.IsBoundedSizeBytes l u Data.ByteString.Internal.ByteString
 instance Data.HasSize.HasSize a => Data.BoundedSize.Class.IsBoundedSize l u a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a
 instance (Data.String.IsString a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => Data.String.IsString (Data.BoundedSize.Class.BoundedSize l u a)
+instance (Data.HasSize.HasSize a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => Data.HasSize.HasSize (Data.BoundedSize.Class.BoundedSize l u a)
+instance (GHC.Num.Num a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Num.Num (Data.BoundedSize.Class.BoundedSize l u a)
+instance (GHC.Read.Read a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Read.Read (Data.BoundedSize.Class.BoundedSize l u a)
 instance (GHC.Show.Show a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 
 
@@ -852,8 +854,8 @@ newtype Core_some_uinteger
 Core_some_uinteger :: Natural -> Core_some_uinteger
 newtype Core_some_bytes
 Core_some_bytes :: ByteString -> Core_some_bytes
-newtype Core_some_maxbytes
-Core_some_maxbytes :: ByteString -> Core_some_maxbytes
+newtype Core_some_max_bytes
+Core_some_max_bytes :: ByteString -> Core_some_max_bytes
 newtype Core_integer n
 Core_integer :: FixedSize n Core_some_integer -> Core_integer n
 newtype Core_uinteger n
@@ -861,15 +863,55 @@ Core_uinteger :: FixedSize n Core_some_uinteger -> Core_uinteger n
 newtype Core_bytes n
 Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
 newtype Core_max_bytes n
-Core_max_bytes :: MaxSize n Core_some_maxbytes -> Core_max_bytes n
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
-instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
-instance Data.IsBytes.IsBytes System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Core_some_maxbytes
+Core_max_bytes :: MaxSize n Core_some_max_bytes -> Core_max_bytes n
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Core_bytes n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Core_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Core_uinteger n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Core_uinteger n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Core_integer n)
+instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Core_integer n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Core_integer n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Core_integer n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Core_integer n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Core_integer n)
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_max_bytes
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Core_some_max_bytes
+instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Core_some_max_bytes
+instance Data.IsBytes.IsBytes System.SED.MCTP.Common.Base_Type.Core_some_max_bytes
+instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Core_some_max_bytes
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Core_some_max_bytes
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Core_some_max_bytes
 instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_bytes
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Core_some_bytes
 instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Core_some_bytes
 instance Data.IsBytes.IsBytes System.SED.MCTP.Common.Base_Type.Core_some_bytes
 instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Core_some_bytes
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Core_some_bytes
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Core_some_bytes
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_uinteger
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Core_some_uinteger
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Core_some_uinteger
+instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Core_some_uinteger
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Core_some_uinteger
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Core_some_uinteger
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Core_some_integer
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Core_some_integer
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Core_some_integer
+instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Core_some_integer
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Core_some_integer
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Core_some_integer
 
 
 -- | Formats.
@@ -1093,18 +1135,9 @@ data Max_bytes :: Nat -> Type
 data Core_table_kind
 Object_Table :: Core_table_kind
 Byte_Table :: Core_table_kind
-newtype Core_uinteger_2
-Core_uinteger_2 :: Int -> Core_uinteger_2
-[fromCore_uinteger_2] :: Core_uinteger_2 -> Int
-newtype Core_integer_2
-Core_integer_2 :: Int -> Core_integer_2
-[fromCore_integer_2] :: Core_integer_2 -> Int
 newtype Core_uidref
 Core_uidref :: UID -> Core_uidref
 [fromCore_uidref] :: Core_uidref -> UID
-newtype Core_max_bytes_32
-Core_max_bytes_32 :: Max_bytes 32 -> Core_max_bytes_32
-[fromCore_max_bytes_32] :: Core_max_bytes_32 -> Max_bytes 32
 newtype Core_uidref_Base_Type
 Core_uidref_Base_Type :: Core_uidref -> Core_uidref_Base_Type
 newtype Core_uidref_non_Base_Type
@@ -1140,14 +1173,8 @@ instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
 instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
 instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Base_Type
 instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Base_Type
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_max_bytes_32
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_max_bytes_32
 instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref
 instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_integer_2
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_integer_2
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uinteger_2
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uinteger_2
 instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_table_kind
 instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_table_kind
 instance GHC.Enum.Enum System.SED.MCTP.Common.Format.Core_table_kind
@@ -1161,11 +1188,11 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.For
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_Base_Type
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_max_bytes_32
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_integer_2
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uinteger_2
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_table_kind
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Simple_Type.Core_uinteger_2
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Simple_Type.Core_integer_2
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Simple_Type.Core_max_bytes_32
 
 
 -- | Utilities

@@ -172,10 +172,10 @@ digraph G {
 							label=TableUIDs,
 							style=filled
 						];
-						u32						 [fillcolor="#ff3333",
+						u33						 [fillcolor="#ff3333",
 							label=TableUIDs,
 							style="filled,bold"];
-						u33						 [fillcolor="#ff77bb",
+						u34						 [fillcolor="#ff77bb",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -221,23 +221,23 @@ digraph G {
 						penwidth=0,
 						style=filled];
 					u28					 [fillcolor="#ff3333",
-						label=Import,
+						label=Simple_Type,
 						penwidth=0,
 						style=filled];
 					u29					 [fillcolor="#ff3333",
-						label=Types,
+						label=Import,
 						penwidth=0,
 						style=filled];
 					u30					 [fillcolor="#ff3333",
-						label=SpecialPurposeUIDs,
+						label=Types,
 						penwidth=0,
 						style=filled];
 					u31					 [fillcolor="#ff3333",
-						label=Table,
+						label=SpecialPurposeUIDs,
 						penwidth=0,
 						style=filled];
-					u34					 [fillcolor="#ff3333",
-						label=Simple_Type,
+					u32					 [fillcolor="#ff3333",
+						label=Table,
 						penwidth=0,
 						style=filled];
 				}
@@ -295,23 +295,24 @@ digraph G {
 	u25 -> u21;
 	u26 -> u21;
 	u27 -> u21;
-	u28 -> u29;
-	u29 -> u17;
+	u27 -> u28;
+	u28 -> u16;
 	u29 -> u30;
-	u29 -> u23;
-	u29 -> u32;
-	u30 -> u21;
+	u30 -> u17;
+	u30 -> u31;
+	u30 -> u23;
+	u30 -> u33;
 	u31 -> u21;
-	u34 -> u16;
+	u32 -> u21;
 	u23 -> u24;
 	u24 -> u25;
 	u24 -> u26;
-	u32 -> u33;
-	u33 -> u25;
-	u33 -> u26;
-	u33 -> u31;
+	u33 -> u34;
+	u34 -> u25;
+	u34 -> u26;
+	u34 -> u32;
 	u35 -> u15;
-	u35 -> u28;
+	u35 -> u29;
 	u36 -> u15;
-	u36 -> u28;
+	u36 -> u29;
 }

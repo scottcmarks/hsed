@@ -27,15 +27,15 @@ import           GHC.Base                     (Ord (..), quotInt)
 import           GHC.Int                      (Int (..), Int16, Int32, Int64,
                                                Int8)
 import           GHC.Integer                  (Integer, complementInteger)
-import           GHC.Natural                  (Natural, naturalToInteger)
-import           Math.NumberTheory.Logarithms (integerLog2)
--- import           GHC.Integer.Logarithms (integerLog2#)
 import qualified GHC.List                     as L
+import           GHC.Natural                  (Natural, naturalToInteger)
 import           GHC.Num                      ((+))
 import           GHC.Word                     (Word (..), Word16, Word32,
                                                Word64, Word8)
+import           Math.NumberTheory.Logarithms (integerLog2)
 
-
+-- | Size is an abstract Int-valued property of a Type that
+--   can be used to refine values of that type.
 
 class HasSize a where size :: a -> Int
 
@@ -44,6 +44,8 @@ instance HasSize S.ShortByteString where size   = S.length
 instance HasSize [a]               where size   = L.length
 instance HasSize (V.Vector a)      where size   = V.length
 
+-- | The size of an Integer is roughly the number of bytes required to
+--   represent
 instance HasSize Integer
   where
       size 0 = 1

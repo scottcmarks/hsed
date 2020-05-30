@@ -175,7 +175,7 @@ eUID eUID71,72
 eID eID75,76
 eValP eValP80,81
 
-./src/System/SED/MCTP/Common/Format.lhs,3287
+./src/System/SED/MCTP/Common/Format.lhs,2867
 module System.SED.MCTP.Common.FormatSystem.SED.MCTP.Common.Format35,36
 import import43,44
 data Max_bytes Max_bytes53,54
@@ -184,65 +184,59 @@ instance StreamItem StreamItem Core_table_kind57,58
 data Core_table_kind Core_table_kind62,63
 data Core_table_kind = Object_Table Object_Table62,63
 data Core_table_kind = Object_Table | Byte_TableByte_Table62,63
-newtype Core_uinteger_2 Core_uinteger_265,66
-newtype Core_uinteger_2   = Core_uinteger_2 {fromCore_uinteger_2:fromCore_uinteger_265,66
-newtype Core_integer_2 Core_integer_267,68
-newtype Core_integer_2    = Core_integer_2 {fromCore_integer_2:fromCore_integer_267,68
-newtype Core_uidref Core_uidref69,70
-newtype Core_uidref       = Core_uidref {fromCore_uidref:fromCore_uidref69,70
-newtype Core_max_bytes_32 Core_max_bytes_3271,72
-newtype Core_max_bytes_32 = Core_max_bytes_32 {fromCore_max_bytes_32:fromCore_max_bytes_3271,72
-newtype Core_uidref_Base_Type Core_uidref_Base_Type74,75
-newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type76,77
-newtype Core_uidref_Byte_Table Core_uidref_Byte_Table78,79
-newtype Core_uidref_Object_Table Core_uidref_Object_Table80,81
-data Known_Core_Type Known_Core_Type83,84
-        Base_Type Base_Type85,86
-        Simple_Type Simple_Type86,87
-        Enumeration_Type Enumeration_Type87,88
-        Alternative_Type Alternative_Type88,89
-        List_Type List_Type89,90
-        Restricted_Reference_Type'5 Restricted_Reference_Type'590,91
-        Restricted_Reference_Type'6 Restricted_Reference_Type'691,92
-        General_Reference_Type'7 General_Reference_Type'792,93
-        General_Reference_Type'8 General_Reference_Type'893,94
-        General_Reference_Type'9 General_Reference_Type'994,95
-        General_Reference_Table_Type General_Reference_Table_Type95,96
-        Named_Value_Name_Type Named_Value_Name_Type96,97
-        Named_Value_Integer_Type Named_Value_Integer_Type97,98
-        Named_Value_Uinteger_Type Named_Value_Uinteger_Type98,99
-        Struct_Type Struct_Type99,100
-        Set_Type Set_Type100,101
-data Some_Core_Type Some_Core_Type105,106
-data Some_Core_Type = forall forall105,106
-data Some_Core_Type = forall (n n105,106
-instance StreamItem StreamItem Some_Core_Type110,111
-    generate generate111,112
-    parser parser129,130
-instance StreamItem StreamItem Core_uinteger_2151,152
+newtype Core_uidref Core_uidref66,67
+newtype Core_uidref               = Core_uidref {fromCore_uidref:fromCore_uidref66,67
+newtype Core_uidref_Base_Type Core_uidref_Base_Type68,69
+newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type70,71
+newtype Core_uidref_Byte_Table Core_uidref_Byte_Table72,73
+newtype Core_uidref_Object_Table Core_uidref_Object_Table74,75
+data Known_Core_Type Known_Core_Type77,78
+        Base_Type Base_Type79,80
+        Simple_Type Simple_Type80,81
+        Enumeration_Type Enumeration_Type81,82
+        Alternative_Type Alternative_Type82,83
+        List_Type List_Type83,84
+        Restricted_Reference_Type'5 Restricted_Reference_Type'584,85
+        Restricted_Reference_Type'6 Restricted_Reference_Type'685,86
+        General_Reference_Type'7 General_Reference_Type'786,87
+        General_Reference_Type'8 General_Reference_Type'887,88
+        General_Reference_Type'9 General_Reference_Type'988,89
+        General_Reference_Table_Type General_Reference_Table_Type89,90
+        Named_Value_Name_Type Named_Value_Name_Type90,91
+        Named_Value_Integer_Type Named_Value_Integer_Type91,92
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type92,93
+        Struct_Type Struct_Type93,94
+        Set_Type Set_Type94,95
+data Some_Core_Type Some_Core_Type99,100
+data Some_Core_Type = forall forall99,100
+data Some_Core_Type = forall (n n99,100
+instance StreamItem StreamItem Some_Core_Type104,105
+    generate generate105,106
+    parser parser123,124
+instance StreamItem StreamItem Core_uinteger_2145,146
+    parser parser146,147
+    generate generate147,148
+instance StreamItem StreamItem Core_integer_2148,149
+    parser parser149,150
+    generate generate150,151
+instance StreamItem StreamItem Core_uidref151,152
     parser parser152,153
     generate generate153,154
-instance StreamItem StreamItem Core_integer_2154,155
+instance StreamItem StreamItem Core_max_bytes_32154,155
     parser parser155,156
     generate generate156,157
-instance StreamItem StreamItem Core_uidref157,158
+instance StreamItem StreamItem Core_uidref_Base_Type157,158
     parser parser158,159
     generate generate159,160
-instance StreamItem StreamItem Core_max_bytes_32160,161
+instance StreamItem StreamItem Core_uidref_non_Base_Type160,161
     parser parser161,162
     generate generate162,163
-instance StreamItem StreamItem Core_uidref_Base_Type163,164
+instance StreamItem StreamItem Core_uidref_Byte_Table163,164
     parser parser164,165
     generate generate165,166
-instance StreamItem StreamItem Core_uidref_non_Base_Type166,167
+instance StreamItem StreamItem Core_uidref_Object_Table166,167
     parser parser167,168
     generate generate168,169
-instance StreamItem StreamItem Core_uidref_Byte_Table169,170
-    parser parser170,171
-    generate generate171,172
-instance StreamItem StreamItem Core_uidref_Object_Table172,173
-    parser parser173,174
-    generate generate174,175
 
 ./src/System/SED/MCTP/Common/Table.lhs,1052
 module System.SED.MCTP.Common.Table System.SED.MCTP.Common.Table23,24
@@ -369,16 +363,16 @@ module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
 
-./src/System/SED/MCTP/Common/Base_Type.hs,449
+./src/System/SED/MCTP/Common/Base_Type.hs,451
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type18,19
-newtype Core_some_integer Core_some_integer40,41
-newtype Core_some_uinteger Core_some_uinteger41,42
-newtype Core_some_bytes Core_some_bytes42,43
-newtype Core_some_maxbytes Core_some_maxbytes44,45
-newtype Core_integer Core_integer48,49
-newtype Core_uinteger Core_uinteger49,50
-newtype Core_bytes Core_bytes51,52
-newtype Core_max_bytes Core_max_bytes53,54
+newtype Core_some_integer Core_some_integer42,43
+newtype Core_some_uinteger Core_some_uinteger44,45
+newtype Core_some_bytes Core_some_bytes46,47
+newtype Core_some_max_bytes Core_some_max_bytes48,49
+newtype Core_integer Core_integer52,53
+newtype Core_uinteger Core_uinteger54,55
+newtype Core_bytes Core_bytes57,58
+newtype Core_max_bytes Core_max_bytes59,60
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26
@@ -566,30 +560,42 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1252
+./src/Data/BoundedSize/Class.hs,1681
 module Data.BoundedSize.ClassData.BoundedSize.Class22,23
-class HasSize a => IsBoundedSize IsBoundedSize62,63
-    data BoundedSize BoundedSize63,64
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize66,67
-type FixedSize FixedSize67,68
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize71,72
-type MaxSize MaxSize72,73
-class (IsBytes a, IsBoundedSize l u a) => IsBoundedSizeBytes IsBoundedSizeBytes77,78
-class (IsBoundedSizeBytes l l a) => IsFixedSizeBytes IsFixedSizeBytes79,80
-class (IsBoundedSizeBytes 0 l a) => IsMaxSizeBytes IsMaxSizeBytes81,82
-instance (H(HasSize a) => IsBoundedSize l u a85,86
-    data BoundedSize BoundedSize86,87
-    data BoundedSize l u a = BdSzWrapper BdSzWrapper86,87
-instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a89,90
-    type ErrorMessage ErrorMessage90,91
-    unsafeCreate unsafeCreate91,92
-    unwrap unwrap92,93
-    predicate predicate93,94
-instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)105,106
-    fromString fromString106,107
-instance IsBoundedSizeBytes IsBoundedSizeBytes l u B-ByteString108,109
-instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)113,114
-    show show114,115
+class HasSize a => IsBoundedSize IsBoundedSize64,65
+    data BoundedSize BoundedSize65,66
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize68,69
+type FixedSize FixedSize69,70
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize73,74
+type MaxSize MaxSize74,75
+class (IsBytes a, IsBoundedSize l u a) => IsBoundedSizeBytes IsBoundedSizeBytes79,80
+class (IsBoundedSizeBytes l l a) => IsFixedSizeBytes IsFixedSizeBytes81,82
+class (IsBoundedSizeBytes 0 l a) => IsMaxSizeBytes IsMaxSizeBytes83,84
+instance (H(HasSize a) => IsBoundedSize l u a87,88
+    data BoundedSize BoundedSize88,89
+    data BoundedSize l u a = BdSzWrapper BdSzWrapper88,89
+instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a91,92
+    type ErrorMessage ErrorMessage92,93
+    unsafeCreate unsafeCreate93,94
+    unwrap unwrap94,95
+    predicate predicate95,96
+trans trans106,107
+bitrans bitrans112,113
+instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)114,115
+    fromString fromString115,116
+instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)117,118
+    size size118,119
+instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)120,121
+    (+(+)121,122
+    (-(-)122,123
+    (*(*)123,124
+    abs abs124,125
+    signum signum125,126
+    fromInteger fromInteger126,127
+instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)128,129
+    readPrec readPrec129,130
+instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)131,132
+    show show132,133
 
 ./src/Data/BoundedSize/TH.hs,275
 module Data.BoundedSize.THData.BoundedSize.TH9,10
@@ -778,40 +784,40 @@ module Data.BoundedSizeData.BoundedSize12,13
 
 ./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18
-class HasSize HasSize39,40
-class HasSize a where size size39,40
-instance HasSize HasSize B-ByteString41,42
-instance HasSize B.ByteString      where size size41,42
-instance HasSize HasSize S-ShortByteString42,43
-instance HasSize S.ShortByteString where size size42,43
-instance HasSize HasSize [a]43,44
-instance HasSize [a]               where size size43,44
-instance HasSize HasSize (V-Vector a)44,45
-instance HasSize (V.Vector a)      where size size44,45
-instance HasSize HasSize Integer46,47
-      size size48,49
-instance HasSize HasSize Int852,53
-instance HasSize Int8              where size size52,53
-instance HasSize HasSize Int1653,54
-instance HasSize Int16             where size size53,54
-instance HasSize HasSize Int3254,55
-instance HasSize Int32             where size size54,55
-instance HasSize HasSize Int6455,56
-instance HasSize Int64             where size size55,56
-instance HasSize HasSize Int56,57
-instance HasSize Int               where size size56,57
-instance HasSize HasSize Natural58,59
-      size size60,61
-instance HasSize HasSize Word863,64
-instance HasSize Word8             where size size63,64
-instance HasSize HasSize Word1664,65
-instance HasSize Word16            where size size64,65
-instance HasSize HasSize Word3265,66
-instance HasSize Word32            where size size65,66
-instance HasSize HasSize Word6466,67
-instance HasSize Word64            where size size66,67
-instance HasSize HasSize Word67,68
-instance HasSize Word              where size size67,68
+class HasSize HasSize38,39
+class HasSize a where size size38,39
+instance HasSize HasSize B-ByteString40,41
+instance HasSize B.ByteString      where size size40,41
+instance HasSize HasSize S-ShortByteString41,42
+instance HasSize S.ShortByteString where size size41,42
+instance HasSize HasSize [a]42,43
+instance HasSize [a]               where size size42,43
+instance HasSize HasSize (V-Vector a)43,44
+instance HasSize (V.Vector a)      where size size43,44
+instance HasSize HasSize Integer45,46
+      size size47,48
+instance HasSize HasSize Int851,52
+instance HasSize Int8              where size size51,52
+instance HasSize HasSize Int1652,53
+instance HasSize Int16             where size size52,53
+instance HasSize HasSize Int3253,54
+instance HasSize Int32             where size size53,54
+instance HasSize HasSize Int6454,55
+instance HasSize Int64             where size size54,55
+instance HasSize HasSize Int55,56
+instance HasSize Int               where size size55,56
+instance HasSize HasSize Natural57,58
+      size size59,60
+instance HasSize HasSize Word862,63
+instance HasSize Word8             where size size62,63
+instance HasSize HasSize Word1663,64
+instance HasSize Word16            where size size63,64
+instance HasSize HasSize Word3264,65
+instance HasSize Word32            where size size64,65
+instance HasSize HasSize Word6465,66
+instance HasSize Word64            where size size65,66
+instance HasSize HasSize Word66,67
+instance HasSize Word              where size size66,67
 
 ./src/Data/SizedText.hs,336
 module Data.SizedTextData.SizedText27,28

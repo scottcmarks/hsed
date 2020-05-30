@@ -185,11 +185,11 @@ digraph G {
 						penwidth=0,
 						style=filled];
 					u17					 [fillcolor="#ff3333",
-						label=Call,
+						label=StreamItem,
 						penwidth=0,
 						style=filled];
 					u18					 [fillcolor="#ff3333",
-						label=StreamItem,
+						label=Call,
 						penwidth=0,
 						style=filled];
 					u19					 [fillcolor="#ff3333",
@@ -284,10 +284,11 @@ digraph G {
 	u13 -> u10;
 	u14 -> u13;
 	u16 -> u1;
-	u17 -> u20;
-	u17 -> u21;
+	u16 -> u17;
+	u18 -> u20;
+	u18 -> u21;
 	u19 -> u8;
-	u19 -> u18;
+	u19 -> u17;
 	u20 -> u19;
 	u21 -> u22;
 	u22 -> u14;
@@ -298,7 +299,7 @@ digraph G {
 	u27 -> u28;
 	u28 -> u16;
 	u29 -> u30;
-	u30 -> u17;
+	u30 -> u18;
 	u30 -> u31;
 	u30 -> u23;
 	u30 -> u33;

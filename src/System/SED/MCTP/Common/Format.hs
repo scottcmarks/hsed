@@ -139,18 +139,9 @@ instance StreamItem Some_Core_Type where
 
 
 
-instance StreamItem Core_uinteger_2   where
-    parser = undefined
-    generate _ = "<uinteger_2>"
-instance StreamItem Core_integer_2    where
-    parser = undefined
-    generate _ = "<integer_2>"
 instance StreamItem Core_uidref       where
     parser = undefined
     generate _ = "<uidref>"
-instance StreamItem Core_max_bytes_32 where
-    parser = undefined
-    generate _ = "<max_bytes_32>"
 instance StreamItem Core_uidref_Base_Type where
     parser = undefined
     generate (Core_uidref_Base_Type _base_uidref) = "<uidref_Base_Type>"

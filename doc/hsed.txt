@@ -855,6 +855,24 @@ instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
 
 
+-- | Parse and generate stream items.
+module System.SED.MCTP.Common.StreamItem
+class StreamItem a
+parser :: StreamItem a => Parser a
+generate :: StreamItem a => a -> ByteString
+parseByteString :: StreamItem a => ByteString -> Either String a
+parseString :: StreamItem a => String -> Either String a
+maybeParse :: StreamItem a => ByteString -> Maybe a
+
+-- | reduction to canonical form; should never fail by returning Nothing
+pg :: StreamItem a => a -> Maybe a
+typeIsa :: StreamItem a => a -> a
+type Parser = Parser ByteString
+require :: (StreamItem a, Show a, Eq a) => a -> Parser a
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem [a]
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a, a)
+
+
 -- | Formats.
 module System.SED.MCTP.Common.Base_Type
 newtype Core_some_integer
@@ -921,6 +939,9 @@ instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Core_some_integer
 instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Core_some_integer
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Core_some_integer
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Core_some_integer
+instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Core_max_bytes n)
+instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Core_uinteger n)
+instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Core_integer n)
 
 
 -- | Formats.
@@ -940,7 +961,7 @@ type Core_name = Core_max_bytes 32
 type Core_password = Core_max_bytes 32
 type Core_type_def_max_size = 128
 type Core_type_def = Core_max_bytes Core_type_def_max_size
-type Core_uid = Core_bytes 32
+type Core_uid = Core_bytes 8
 type Core_uinteger_1 = Core_uinteger 1
 type Core_uinteger_128 = Core_uinteger 128
 type Core_uinteger_2 = Core_uinteger 2
@@ -956,24 +977,6 @@ type Core_uinteger_48 = Core_uinteger 48
 type Core_uinteger_64 = Core_uinteger 64
 type Core_uinteger_66 = Core_uinteger 66
 type Core_uinteger_8 = Core_uinteger 8
-
-
--- | Parse and generate stream items.
-module System.SED.MCTP.Common.StreamItem
-class StreamItem a
-parser :: StreamItem a => Parser a
-generate :: StreamItem a => a -> ByteString
-parseByteString :: StreamItem a => ByteString -> Either String a
-parseString :: StreamItem a => String -> Either String a
-maybeParse :: StreamItem a => ByteString -> Maybe a
-
--- | reduction to canonical form; should never fail by returning Nothing
-pg :: StreamItem a => a -> Maybe a
-typeIsa :: StreamItem a => a -> a
-type Parser = Parser ByteString
-require :: (StreamItem a, Show a, Eq a) => a -> Parser a
-instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem [a]
-instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a, a)
 
 
 -- | Datatypes for Tokens. Define the types used in SEDs, and in the hsed
@@ -1200,9 +1203,6 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.For
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref_Base_Type
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_uidref
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Format.Core_table_kind
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Simple_Type.Core_uinteger_2
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Simple_Type.Core_integer_2
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Simple_Type.Core_max_bytes_32
 
 
 -- | Utilities

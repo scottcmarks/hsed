@@ -1,5 +1,7 @@
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE NoImplicitPrelude    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 {-|
 Module      : System.SED.MCTP.Common.Simple_Type
@@ -39,7 +41,7 @@ type Core_password      = Core_max_bytes 32
 type Core_type_def_max_size = 128
 type Core_type_def      = Core_max_bytes Core_type_def_max_size
 
-type Core_uid           = Core_bytes 32
+type Core_uid           = Core_bytes 8
 
 type Core_uinteger_1    = Core_uinteger 1
 type Core_uinteger_128  = Core_uinteger 128

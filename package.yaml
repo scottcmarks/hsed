@@ -35,6 +35,7 @@ dependencies:
 - githash
 - heredoc
 - hspec
+- integer-gmp
 - lens
 - megaparsec
 - monad-loops

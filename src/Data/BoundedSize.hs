@@ -11,30 +11,26 @@ This module is meant to be imported qualifed, e.g.
 
 -}
 module Data.BoundedSize
-  ( HasSize(..)
-  , IsBytes(..)
-  , IsBoundedSize(..)
-  , FixedSize
-  , MaxSize
-  , IsBoundedSizeBytes
-  , BoundedSizeBytes
-  , FixedSizeBytes
-  , MaxSizeBytes
-  , BoundedSizeByteString
-  , FixedSizeByteString
-  , MaxSizeByteString
-  , st
-  , sz
-  , unsafeCreateExp
-  , typeFromInt
-  )
+       ( HasSize(..)
+       , IsBytes(..)
+       , IsBoundedSize(..)
+       , IsFixedSize
+       , FixedSize
+       , IsMaxSize
+       , MaxSize
+       , IsBoundedSizeBytes
+       , IsFixedSizeBytes
+       , IsMaxSizeBytes
+       , st
+       , sz
+       , unsafeCreateExp
+       , typeFromInt
+       )
 where
 
-import           Data.BoundedSize.Class (BoundedSizeByteString,
-                                         BoundedSizeBytes, FixedSize,
-                                         FixedSizeByteString, FixedSizeBytes,
-                                         HasSize (..), IsBoundedSize (..),
-                                         IsBoundedSizeBytes, IsBytes (..),
-                                         MaxSize, MaxSizeByteString,
-                                         MaxSizeBytes)
+import           Data.BoundedSize.Class (FixedSize, HasSize (..),
+                                         IsBoundedSize (..), IsBoundedSizeBytes,
+                                         IsBytes (..), IsFixedSize,
+                                         IsFixedSizeBytes, IsMaxSize,
+                                         IsMaxSizeBytes, MaxSize)
 import           Data.BoundedSize.TH    (st, sz, typeFromInt, unsafeCreateExp)

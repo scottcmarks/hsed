@@ -776,21 +776,20 @@ universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 ./src/Data/BoundedSize.hs,47
 module Data.BoundedSizeData.BoundedSize12,13
 
-./src/Data/HasSize.hs,1078
+./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18
-import import25,26
-class HasSize HasSize37,38
-class HasSize a where size size37,38
-instance HasSize HasSize B-ByteString39,40
-instance HasSize B.ByteString      where size size39,40
-instance HasSize HasSize S-ShortByteString40,41
-instance HasSize S.ShortByteString where size size40,41
-instance HasSize HasSize [a]41,42
-instance HasSize [a]               where size size41,42
-instance HasSize HasSize (V-Vector a)42,43
-instance HasSize (V.Vector a)      where size size42,43
-instance HasSize HasSize Integer43,44
-  where size size44,45
+class HasSize HasSize39,40
+class HasSize a where size size39,40
+instance HasSize HasSize B-ByteString41,42
+instance HasSize B.ByteString      where size size41,42
+instance HasSize HasSize S-ShortByteString42,43
+instance HasSize S.ShortByteString where size size42,43
+instance HasSize HasSize [a]43,44
+instance HasSize [a]               where size size43,44
+instance HasSize HasSize (V-Vector a)44,45
+instance HasSize (V.Vector a)      where size size44,45
+instance HasSize HasSize Integer46,47
+      size size48,49
 instance HasSize HasSize Int852,53
 instance HasSize Int8              where size size52,53
 instance HasSize HasSize Int1653,54
@@ -801,6 +800,18 @@ instance HasSize HasSize Int6455,56
 instance HasSize Int64             where size size55,56
 instance HasSize HasSize Int56,57
 instance HasSize Int               where size size56,57
+instance HasSize HasSize Natural58,59
+      size size60,61
+instance HasSize HasSize Word863,64
+instance HasSize Word8             where size size63,64
+instance HasSize HasSize Word1664,65
+instance HasSize Word16            where size size64,65
+instance HasSize HasSize Word3265,66
+instance HasSize Word32            where size size65,66
+instance HasSize HasSize Word6466,67
+instance HasSize Word64            where size size66,67
+instance HasSize HasSize Word67,68
+instance HasSize Word              where size size67,68
 
 ./src/Data/SizedText.hs,336
 module Data.SizedTextData.SizedText27,28

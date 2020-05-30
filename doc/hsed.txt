@@ -54,6 +54,12 @@ instance Data.HasSize.HasSize GHC.Int.Int16
 instance Data.HasSize.HasSize GHC.Int.Int32
 instance Data.HasSize.HasSize GHC.Int.Int64
 instance Data.HasSize.HasSize GHC.Types.Int
+instance Data.HasSize.HasSize GHC.Natural.Natural
+instance Data.HasSize.HasSize GHC.Word.Word8
+instance Data.HasSize.HasSize GHC.Word.Word16
+instance Data.HasSize.HasSize GHC.Word.Word32
+instance Data.HasSize.HasSize GHC.Word.Word64
+instance Data.HasSize.HasSize GHC.Types.Word
 
 
 -- | Convert strings into hexadecimal and back.

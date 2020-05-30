@@ -36,6 +36,7 @@ dependencies:
 - heredoc
 - hspec
 - integer-gmp
+- integer-logarithms
 - lens
 - megaparsec
 - monad-loops

@@ -20,18 +20,20 @@ module Data.HasSize
   )
 where
 
-import           Data.ByteString       as B
-import           Data.ByteString.Short as S
-import           Data.Vector           as V
-import           GHC.Base              (Ord (..), (.), (/=))
--- import           GHC.Exts               (quotRemInt#, (+#), (/=#))
-import           GHC.Float             (Double, logBase)
-import           GHC.Int               (Int (..), Int16, Int32, Int64, Int8)
-import           GHC.Integer           (Integer)
+import           Data.ByteString              as B
+import           Data.ByteString.Short        as S
+import           Data.Vector                  as V
+import           GHC.Base                     (Ord (..), quotInt)
+import           GHC.Int                      (Int (..), Int16, Int32, Int64,
+                                               Int8)
+import           GHC.Integer                  (Integer, complementInteger)
+import           GHC.Natural                  (Natural, naturalToInteger)
+import           Math.NumberTheory.Logarithms (integerLog2)
 -- import           GHC.Integer.Logarithms (integerLog2#)
-import qualified GHC.List              as L
-import           GHC.Num               ((+))
-import           GHC.Real              (floor, fromIntegral, quotRem)
+import qualified GHC.List                     as L
+import           GHC.Num                      ((+))
+import           GHC.Word                     (Word (..), Word16, Word32,
+                                               Word64, Word8)
 
 
 
@@ -41,17 +43,26 @@ instance HasSize B.ByteString      where size   = B.length
 instance HasSize S.ShortByteString where size   = S.length
 instance HasSize [a]               where size   = L.length
 instance HasSize (V.Vector a)      where size   = V.length
+
 instance HasSize Integer
-  where size 0 = 1
-        size n | n < 0 = size (- n)
-        -- size n = case quotRemInt# (integerLog2# n) 8# of
-        --     (# q#, r# #) -> I# (q# +# (r# /=# 0#))
-        size n = case quotRem (integerLog2 n) 8 of
-          (q, r) -> q + if r /= 0 then 1 else 0
-          where integerLog2 = (floor::Double->Int) . logBase 2.0 . fromIntegral
+  where
+      size 0 = 1
+      size n | n < 0 = size (complementInteger n)
+      size n = 1 + (1 + integerLog2 n) `quotInt` 8   -- internal (1 +) for the sign bit
 
 instance HasSize Int8              where size _ =  1
 instance HasSize Int16             where size _ =  2
 instance HasSize Int32             where size _ =  4
 instance HasSize Int64             where size _ =  8
 instance HasSize Int               where size _ =  8   -- TODO: CPP?  obv mostly true lately
+
+instance HasSize Natural
+  where
+      size 0 = 1
+      size n = 1 + integerLog2 (naturalToInteger n) `quotInt` 8
+
+instance HasSize Word8             where size _ =  1
+instance HasSize Word16            where size _ =  2
+instance HasSize Word32            where size _ =  4
+instance HasSize Word64            where size _ =  8
+instance HasSize Word              where size _ =  8   -- TODO: CPP?  obv mostly true lately

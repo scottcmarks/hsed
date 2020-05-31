@@ -72,6 +72,9 @@ instance StreamItem (Core_uinteger n ) where
 instance StreamItem (Core_integer n  ) where
     parser = undefined
     generate _ = "<integer_n>"
+instance StreamItem (Core_bytes n) where
+    parser = undefined
+    generate _ = "<bytes_n>"
 instance StreamItem (Core_max_bytes n) where
     parser = undefined
     generate _ = "<max_bytes_n>"

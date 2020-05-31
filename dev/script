@@ -56,7 +56,16 @@ import Data.String(String)
 --------------------------------------------------------------------------------
 
 :load /Users/scott/hsed/src/System/SED/MCTP/Common/Simple_Type.hs
+import Data.Smart(safeCreate)
 
+:t "Scot"
+:t "Scot" :: Core_bytes_4
+import Data.BoundedSize(FixedSize)
+import System.SED.MCTP.Common.Base_Type
+safeCreate "Scot" :: Either String (FixedSize 4 Core_some_bytes)
+
+safeCreate "Scot" :: Either String Core_bytes_4 -- doesn't yet work
+safeCreate "Scot" :: Either String Core_bytes_5 -- obv shouldn't work
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

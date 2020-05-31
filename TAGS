@@ -300,7 +300,7 @@ module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
 
-./src/System/SED/MCTP/Common/Base_Type.hs,781
+./src/System/SED/MCTP/Common/Base_Type.hs,888
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
 newtype Core_some_integer Core_some_integer45,46
 newtype Core_some_uinteger Core_some_uinteger47,48
@@ -316,9 +316,12 @@ instance StreamItem StreamItem (Core_uinteger n)68,69
 instance StreamItem StreamItem (Core_integer n)71,72
     parser parser72,73
     generate generate73,74
-instance StreamItem StreamItem (Core_max_bytes n)74,75
+instance StreamItem StreamItem (Core_bytes n)74,75
     parser parser75,76
     generate generate76,77
+instance StreamItem StreamItem (Core_max_bytes n)77,78
+    parser parser78,79
+    generate generate79,80
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26
@@ -560,18 +563,18 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1681
+./src/Data/BoundedSize/Class.hs,1733
 module Data.BoundedSize.ClassData.BoundedSize.Class22,23
-class HasSize a => IsBoundedSize IsBoundedSize64,65
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize64,65
     data BoundedSize BoundedSize65,66
 class (IsBoundedSize l l a) => IsFixedSize IsFixedSize68,69
 type FixedSize FixedSize69,70
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize73,74
-type MaxSize MaxSize74,75
-class (IsBytes a, IsBoundedSize l u a) => IsBoundedSizeBytes IsBoundedSizeBytes79,80
-class (IsBoundedSizeBytes l l a) => IsFixedSizeBytes IsFixedSizeBytes81,82
-class (IsBoundedSizeBytes 0 l a) => IsMaxSizeBytes IsMaxSizeBytes83,84
-instance (H(HasSize a) => IsBoundedSize l u a87,88
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize72,73
+type MaxSize MaxSize73,74
+class (IsBytes a, IsBoundedSize l u a) => IsBoundedSizeBytes IsBoundedSizeBytes78,79
+class (IsBytes a, IsFixedSize n a) => IsFixedSizeBytes IsFixedSizeBytes80,81
+class (IsBytes a, IsMaxSize n a) => IsMaxSizeBytes IsMaxSizeBytes82,83
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a87,88
     data BoundedSize BoundedSize88,89
     data BoundedSize l u a = BdSzWrapper BdSzWrapper88,89
 instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a91,92

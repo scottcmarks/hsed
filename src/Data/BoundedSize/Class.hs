@@ -48,7 +48,7 @@ import           GHC.Err             (error)
 import           GHC.Num             (Num (..))
 import           GHC.Read            (Read (..))
 import           GHC.Show            (Show (..))
-import           GHC.TypeLits        (KnownNat, Nat)
+import           GHC.TypeLits        (KnownNat)
 import           GHC.TypeLits.Extras (fromNat)
 
 
@@ -62,13 +62,12 @@ import           GHC.TypeLits.Extras (fromNat)
 
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class HasSize a => IsBoundedSize (l::Nat) (u::Nat) a where
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
     data BoundedSize l u a
 
 -- | Class of types which can be assigned a fixed type-level size.
 class (IsBoundedSize l l a) => IsFixedSize l a where {}
 type FixedSize n a = BoundedSize n n a
-
 
 -- | Class of types which can be assigned a maximum type-level size.
 class (IsBoundedSize 0 l a) => IsMaxSize l a where {}
@@ -79,13 +78,14 @@ type MaxSize n a = BoundedSize 0 n a
 -- | Class of types which can be assigned a type-level minimum and maximum length.
 class (IsBytes a, IsBoundedSize l u a) => IsBoundedSizeBytes l u a where { }
 
-class (IsBoundedSizeBytes l l a) => IsFixedSizeBytes l a where { }
+class (IsBytes a, IsFixedSize n a) => IsFixedSizeBytes n a where { }
 
-class (IsBoundedSizeBytes 0 l a) => IsMaxSizeBytes l a where { }
+class (IsBytes a, IsMaxSize n a) => IsMaxSizeBytes n a where { }
 
 
 
-instance (HasSize a) => IsBoundedSize l u a where
+
+instance (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
     data BoundedSize l u a = BdSzWrapper a
         deriving (Eq, Ord)
 

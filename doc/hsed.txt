@@ -627,6 +627,12 @@ type FixedSize n a = BoundedSize n n a
 -- | Class of types which can be assigned a maximum type-level size.
 class (IsBoundedSize 0 l a) => IsMaxSize l a
 type MaxSize n a = BoundedSize 0 n a
+
+-- | Sometimes a MaxSize value is given, but the only thing known about the
+--   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
+--   String, or a MaxSize 4 String, so it is AtLeast MaxSize 3 Then it can
+--   be later cast to a specific MaxSize (of at least 3).
+type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u a)
 instance Data.BoundedSize.Class.IsBoundedSize 0 l a => Data.BoundedSize.Class.IsMaxSize l a
@@ -751,6 +757,12 @@ class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a
 class (IsFixedSize n a, IsBytes a) => IsFixedSizeBytes n a
 class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes n a
 
+-- | Sometimes a MaxSize value is given, but the only thing known about the
+--   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
+--   String, or a MaxSize 4 String, so it is AtLeast MaxSize 3 Then it can
+--   be later cast to a specific MaxSize (of at least 3).
+type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
+
 -- | Type-safe constructor for fixed-length string literals: BoundedSize a
 --   l l
 fx :: LitS -> Q Exp
@@ -808,12 +820,6 @@ unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> Str
 --   3
 --   </pre>
 typeFromInt :: Int -> Type
-
--- | Sometimes a MaxSize value is given, but the only thing known about the
---   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
---   String, or a MaxSize 4 String, so it is AtLeast MaxSize 3 Then it can
---   be later cast to a specific MaxSize (of at least 3).
-type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsMaxSizeBytes n a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsFixedSizeBytes n a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsBoundedSizeBytes l u a

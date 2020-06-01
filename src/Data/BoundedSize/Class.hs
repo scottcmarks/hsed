@@ -1,14 +1,14 @@
-{-# LANGUAGE AllowAmbiguousTypes   #-}
+
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 
@@ -27,6 +27,7 @@ module Data.BoundedSize.Class
        , FixedSize
        , IsMaxSize
        , MaxSize
+       , AtLeast
        )
 
 where
@@ -43,7 +44,7 @@ import           GHC.Err             (error)
 import           GHC.Num             (Num (..))
 import           GHC.Read            (Read (..))
 import           GHC.Show            (Show (..))
-import           GHC.TypeLits        (KnownNat)
+import           GHC.TypeLits        (type (<=), KnownNat)
 import           GHC.TypeLits.Extras (fromNat)
 
 
@@ -121,3 +122,9 @@ instance (Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a) where
 
 instance (Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a) where
     show = show . unwrap
+
+-- | Sometimes a MaxSize value is given, but the only thing known about
+--   the "max" is that the value is legal, e.g. "foo" could be a MaxSize 3 String,
+--   or a MaxSize 4 String, so it is AtLeast MaxSize 3
+--   Then it can be later cast to a specific MaxSize (of at least 3).
+type AtLeast c m =  forall l. (KnownNat l, m <= l) => c l

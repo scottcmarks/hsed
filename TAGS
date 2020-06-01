@@ -574,41 +574,43 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1608
+./src/Data/BoundedSize/Class.hs,1659
 module Data.BoundedSize.ClassData.BoundedSize.Class22,23
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize60,61
-    data BoundedSize BoundedSize61,62
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a62,63
-    data BoundedSize BoundedSize63,64
-    data BoundedSize l u a = BdSzWrapper BdSzWrapper63,64
-instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a68,69
-    type ErrorMessage ErrorMessage69,70
-    unsafeCreate unsafeCreate70,71
-    unwrap unwrap71,72
-    predicate predicate72,73
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize84,85
-instance (I(IsBoundedSize l l a) => IsFixedSize l a85,86
-type FixedSize FixedSize86,87
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize89,90
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a90,91
-type MaxSize MaxSize91,92
-trans trans96,97
-bitrans bitrans102,103
-instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)104,105
-    fromString fromString105,106
-instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)107,108
-    size size108,109
-instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)110,111
-    (+(+)111,112
-    (-(-)112,113
-    (*(*)113,114
-    abs abs114,115
-    signum signum115,116
-    fromInteger fromInteger116,117
-instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)118,119
-    readPrec readPrec119,120
-instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)121,122
-    show show122,123
+import import46,47
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize61,62
+    data BoundedSize BoundedSize62,63
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a63,64
+    data BoundedSize BoundedSize64,65
+    data BoundedSize l u a = BdSzWrapper BdSzWrapper64,65
+instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a69,70
+    type ErrorMessage ErrorMessage70,71
+    unsafeCreate unsafeCreate71,72
+    unwrap unwrap72,73
+    predicate predicate73,74
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize85,86
+instance (I(IsBoundedSize l l a) => IsFixedSize l a86,87
+type FixedSize FixedSize87,88
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize90,91
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a91,92
+type MaxSize MaxSize92,93
+trans trans97,98
+bitrans bitrans103,104
+instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)105,106
+    fromString fromString106,107
+instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)108,109
+    size size109,110
+instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)111,112
+    (+(+)112,113
+    (-(-)113,114
+    (*(*)114,115
+    abs abs115,116
+    signum signum116,117
+    fromInteger fromInteger117,118
+instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)119,120
+    readPrec readPrec120,121
+instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)122,123
+    show show123,124
+type AtLeast AtLeast129,130
 
 ./src/Data/BoundedSize/TH.hs,275
 module Data.BoundedSize.THData.BoundedSize.TH9,10
@@ -792,16 +794,14 @@ typeFromInt typeFromInt108,109
 unsafeCreateExp unsafeCreateExp120,121
 universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
-./src/Data/BoundedSize.hs,547
-module Data.BoundedSizeData.BoundedSize20,21
-import import44,45
-class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes47,48
-instance (K(KnownNat l, KnownNat u, IsBytes a) => IsBoundedSizeBytes l u a48,49
-class (IsFixedSize n a, IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes50,51
-instance (K(KnownNat n, IsBytes a) => IsFixedSizeBytes n a51,52
-class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes53,54
-instance (K(KnownNat n, IsBytes a) => IsMaxSizeBytes n a54,55
-type AtLeast AtLeast60,61
+./src/Data/BoundedSize.hs,498
+module Data.BoundedSizeData.BoundedSize16,17
+class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes43,44
+instance (K(KnownNat l, KnownNat u, IsBytes a) => IsBoundedSizeBytes l u a44,45
+class (IsFixedSize n a, IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes46,47
+instance (K(KnownNat n, IsBytes a) => IsFixedSizeBytes n a47,48
+class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes49,50
+instance (K(KnownNat n, IsBytes a) => IsMaxSizeBytes n a50,51
 
 ./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18

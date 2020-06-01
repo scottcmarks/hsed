@@ -22,15 +22,11 @@ type.
 
 module Data.BoundedSize.Class
        ( HasSize(..)
-       , IsBytes(..)
        , IsBoundedSize(..)
        , IsFixedSize
        , FixedSize
        , IsMaxSize
        , MaxSize
-       , IsBoundedSizeBytes
-       , IsFixedSizeBytes
-       , IsMaxSizeBytes
        )
 
 where
@@ -38,7 +34,6 @@ where
 import           Data.Either         (Either (..), either)
 import           Data.Functor        ((<$>))
 import           Data.HasSize        (HasSize (..))
-import           Data.IsBytes        (IsBytes (..))
 import           Data.Proxy          (Proxy (..))
 import           Data.Smart          (ErrorMessage (..), Smart (..))
 import           Data.String         (IsString (..), String)
@@ -61,34 +56,16 @@ import           GHC.TypeLits.Extras (fromNat)
 
 
 
--- | Class of types which can be assigned a type-level minimum and maximum length.
+-- | Class of types which can be assigned a type-level minimum and maximum size.
+--
 class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
     data BoundedSize l u a
-
--- | Class of types which can be assigned a fixed type-level size.
-class (IsBoundedSize l l a) => IsFixedSize l a where {}
-type FixedSize n a = BoundedSize n n a
-
--- | Class of types which can be assigned a maximum type-level size.
-class (IsBoundedSize 0 l a) => IsMaxSize l a where {}
-type MaxSize n a = BoundedSize 0 n a
-
-
-
--- | Class of types which can be assigned a type-level minimum and maximum length.
-class (IsBytes a, IsBoundedSize l u a) => IsBoundedSizeBytes l u a where { }
-
-class (IsBytes a, IsFixedSize n a) => IsFixedSizeBytes n a where { }
-
-class (IsBytes a, IsMaxSize n a) => IsMaxSizeBytes n a where { }
-
-
-
-
 instance (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
     data BoundedSize l u a = BdSzWrapper a
         deriving (Eq, Ord)
 
+-- | Instance of Smart constructor for values with type-level minimum and maximum
+--   size.
 instance (KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a where
     type ErrorMessage (BoundedSize l u) a = String
     unsafeCreate = BdSzWrapper
@@ -103,6 +80,19 @@ instance (KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a where
                        if vl == vu
                        then show vl
                        else "between " ++ show vl ++ " and " ++ show vu
+
+-- | Class of types which can be assigned a fixed type-level size.
+class (IsBoundedSize l l a) => IsFixedSize l a
+instance (IsBoundedSize l l a) => IsFixedSize l a
+type FixedSize n a = BoundedSize n n a
+
+-- | Class of types which can be assigned a maximum type-level size.
+class (IsBoundedSize 0 l a) => IsMaxSize l a
+instance (IsBoundedSize 0 l a) => IsMaxSize l a
+type MaxSize n a = BoundedSize 0 n a
+
+
+
 
 trans :: (Smart c a, ErrorMessage c a ~ String) => (a -> a) -> c a -> c a
 trans f = either error id . safeCreate . f . unwrap
@@ -121,7 +111,7 @@ instance (HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)  
 instance (Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a) where
     (+) = bitrans (+)
     (-) = bitrans (-)
-    (*) = bitrans (-)
+    (*) = bitrans (*)
     abs = trans abs
     signum = trans signum
     fromInteger = either error id . safeCreate . fromInteger

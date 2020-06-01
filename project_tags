@@ -297,11 +297,8 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
-module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
-
-./src/System/SED/MCTP/Common/Base_Type.hs,781
-module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,900
+module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class20,21
 newtype Core_some_integer Core_some_integer45,46
 newtype Core_some_uinteger Core_some_uinteger47,48
 newtype Core_some_bytes Core_some_bytes49,50
@@ -316,9 +313,26 @@ instance StreamItem StreamItem (Core_uinteger n)68,69
 instance StreamItem StreamItem (Core_integer n)71,72
     parser parser72,73
     generate generate73,74
-instance StreamItem StreamItem (Core_max_bytes n)74,75
+instance StreamItem StreamItem (Core_bytes n)74,75
     parser parser75,76
     generate generate76,77
+instance StreamItem StreamItem (Core_max_bytes n)77,78
+    parser parser78,79
+    generate generate79,80
+
+./src/System/SED/MCTP/Common/Base_Type/TH.hs,161
+module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH9,10
+newtype LitS LitS41,42
+cb cb64,65
+cu cu67,68
+ci ci70,71
+cm cm73,74
+
+./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
+module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
+
+./src/System/SED/MCTP/Common/Base_Type.hs,79
+module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26
@@ -560,52 +574,51 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1681
+./src/Data/BoundedSize/Class.hs,1608
 module Data.BoundedSize.ClassData.BoundedSize.Class22,23
-class HasSize a => IsBoundedSize IsBoundedSize64,65
-    data BoundedSize BoundedSize65,66
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize68,69
-type FixedSize FixedSize69,70
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize73,74
-type MaxSize MaxSize74,75
-class (IsBytes a, IsBoundedSize l u a) => IsBoundedSizeBytes IsBoundedSizeBytes79,80
-class (IsBoundedSizeBytes l l a) => IsFixedSizeBytes IsFixedSizeBytes81,82
-class (IsBoundedSizeBytes 0 l a) => IsMaxSizeBytes IsMaxSizeBytes83,84
-instance (H(HasSize a) => IsBoundedSize l u a87,88
-    data BoundedSize BoundedSize88,89
-    data BoundedSize l u a = BdSzWrapper BdSzWrapper88,89
-instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a91,92
-    type ErrorMessage ErrorMessage92,93
-    unsafeCreate unsafeCreate93,94
-    unwrap unwrap94,95
-    predicate predicate95,96
-trans trans106,107
-bitrans bitrans112,113
-instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)114,115
-    fromString fromString115,116
-instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)117,118
-    size size118,119
-instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)120,121
-    (+(+)121,122
-    (-(-)122,123
-    (*(*)123,124
-    abs abs124,125
-    signum signum125,126
-    fromInteger fromInteger126,127
-instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)128,129
-    readPrec readPrec129,130
-instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)131,132
-    show show132,133
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize60,61
+    data BoundedSize BoundedSize61,62
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a62,63
+    data BoundedSize BoundedSize63,64
+    data BoundedSize l u a = BdSzWrapper BdSzWrapper63,64
+instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a68,69
+    type ErrorMessage ErrorMessage69,70
+    unsafeCreate unsafeCreate70,71
+    unwrap unwrap71,72
+    predicate predicate72,73
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize84,85
+instance (I(IsBoundedSize l l a) => IsFixedSize l a85,86
+type FixedSize FixedSize86,87
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize89,90
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a90,91
+type MaxSize MaxSize91,92
+trans trans96,97
+bitrans bitrans102,103
+instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)104,105
+    fromString fromString105,106
+instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)107,108
+    size size108,109
+instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)110,111
+    (+(+)111,112
+    (-(-)112,113
+    (*(*)113,114
+    abs abs114,115
+    signum signum115,116
+    fromInteger fromInteger116,117
+instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)118,119
+    readPrec readPrec119,120
+instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)121,122
+    show show122,123
 
 ./src/Data/BoundedSize/TH.hs,275
 module Data.BoundedSize.THData.BoundedSize.TH9,10
 newtype LitS LitS41,42
 sb sb55,56
-st st86,87
-sz sz111,112
-typeFromInt typeFromInt121,122
-unsafeCreateExp unsafeCreateExp133,134
-universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType159,160
+fx fx86,87
+mx mx111,112
+typeFromInt typeFromInt120,121
+unsafeCreateExp unsafeCreateExp132,133
+universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType158,159
 
 ./src/Data/ByteString/Integral.hs,793
 module Data.ByteString.IntegralData.ByteString.Integral21,22
@@ -779,8 +792,16 @@ typeFromInt typeFromInt108,109
 unsafeCreateExp unsafeCreateExp120,121
 universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
-./src/Data/BoundedSize.hs,47
-module Data.BoundedSizeData.BoundedSize12,13
+./src/Data/BoundedSize.hs,547
+module Data.BoundedSizeData.BoundedSize20,21
+import import44,45
+class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes47,48
+instance (K(KnownNat l, KnownNat u, IsBytes a) => IsBoundedSizeBytes l u a48,49
+class (IsFixedSize n a, IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes50,51
+instance (K(KnownNat n, IsBytes a) => IsFixedSizeBytes n a51,52
+class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes53,54
+instance (K(KnownNat n, IsBytes a) => IsMaxSizeBytes n a54,55
+type AtLeast AtLeast60,61
 
 ./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18

@@ -58,3 +58,12 @@ data List = [Value] -- StartList *> many Value <* EndList
 data Value = Final | NamedValue | List
 
 --- parse(Value) ---
+
+
+
+The type of $(mx "foo") should be (HasSize a, IsString a, KnownNat l, 3 <= l) => MaxSize l a
+
+coercion should work from BoundedSize l1 u1 a to BoundedSize l2 u2 a so long as
+easy case) l2 <= l1 and u1 <= u2, so that nothing needs to be done; or
+easy case) (l1..u1) and (l2..u2) don't intersect, so there are no values; or
+hard case) runtime check required to make sure size is between l2 and u2.

@@ -8,8 +8,8 @@ Template Haskell helpers for BoundedSize.
 
 -}
 module Data.BoundedSize.TH
-  ( st
-  , sz
+  ( fx
+  , mx
   , unsafeCreateExp
   , typeFromInt
   ) where
@@ -37,7 +37,7 @@ import           Language.Haskell.TH
 -- >>> import Language.Haskell.TH.PprLib(Doc)
 
 
--- | A type with IsString instance to allow string literals in 'sz'
+-- | A type with IsString instance to allow string literals in 'mx'
 -- argument without quoting.
 newtype LitS =
   LitS String
@@ -69,23 +69,23 @@ sb l u s = do
 -- "Foobar" :: IsString p => p
 -- >>> :t LitS "Foobar"
 -- LitS "Foobar" :: LitS
--- >>> :t st "Foobar"
--- st "Foobar" :: Q Exp
--- >>> $(st "Foobar") :: BoundedSize 6 6 ByteString
+-- >>> :t fx "Foobar"
+-- fx "Foobar" :: Q Exp
+-- >>> $(fx "Foobar") :: BoundedSize 6 6 ByteString
 -- "Foobar"
 --
--- >>> runQ $ ppr <$> st "Foobar"
+-- >>> runQ $ ppr <$> fx "Foobar"
 -- Data.Smart.unsafeCreate "Foobar" :: forall a_0 . (Data.HasSize.HasSize a_0,
 --                                                   Data.String.IsString a_0) =>
 --                                     Data.BoundedSize.Class.BoundedSize 6 6 a_0
 --
--- >>> :t runQ $ ppr <$> st "Foobar"
--- runQ $ ppr <$> st "Foobar" :: Quasi m => m Doc
+-- >>> :t runQ $ ppr <$> fx "Foobar"
+-- runQ $ ppr <$> fx "Foobar" :: Quasi m => m Doc
 --
 -- where 6 is the string length obtained at compile time.
 --
-st :: LitS -> Q Exp
-st (LitS s) = sb l l s  where l = P.length s
+fx :: LitS -> Q Exp
+fx (LitS s) = sb l l s  where l = P.length s
 
 
 -- | Type-safe constructor for bounded-length string literals: BoundedSize a 0 l
@@ -94,26 +94,25 @@ st (LitS s) = sb l l s  where l = P.length s
 -- "Foobar" :: IsString p => p
 -- >>> :t LitS "Foobar"
 -- LitS "Foobar" :: LitS
--- >>> :t sz "Foobar"
--- sz "Foobar" :: Q Exp
--- >>> $(sz "Foobar") :: BoundedSize 0 6 ByteString
+-- >>> :t mx "Foobar"
+-- mx "Foobar" :: Q Exp
+-- >>> $(mx "Foobar") :: BoundedSize 0 6 ByteString
 -- "Foobar"
 --
--- >>> runQ $ ppr <$> sz "Foobar"
+-- >>> runQ $ ppr <$> mx "Foobar"
 -- Data.Smart.unsafeCreate "Foobar" :: forall a_0 . (Data.HasSize.HasSize a_0,
 --                                                   Data.String.IsString a_0) =>
 --                                     Data.BoundedSize.Class.BoundedSize 0 6 a_0
 --
--- >>> :t runQ $ ppr <$> sz "Foobar"
--- runQ $ ppr <$> sz "Foobar" :: Quasi m => m Doc
+-- >>> :t runQ $ ppr <$> mx "Foobar"
+-- runQ $ ppr <$> mx "Foobar" :: Quasi m => m Doc
 --
 -- where 6 is the string length obtained at compile time.
 --
-sz :: LitS -> Q Exp
-sz (LitS s) = sb 0 l s  where l = P.length s
+mx :: LitS -> Q Exp
+mx (LitS s) = sb 0 l s  where l = P.length s
 
 -- | Transform a data-level Int to a Type value
--- LitT (NumTyLit 3)
 --
 -- >>> typeFromInt 3
 -- LitT (NumTyLit 3)
@@ -123,9 +122,9 @@ typeFromInt :: Int -> Type
 typeFromInt = LitT . NumTyLit . fromIntegral
 
 -- | Construct
--- > unsafeCreate "Foobar" :: forall a. (IsString a, HasSize a) => typef a l u
+-- > @unsafeCreate "Foobar" :: forall a. (IsString a, HasSize a) => typef a l u@
 --   where l and u are the type-level KnownNat versions of the bounds of s
---
+-- >>> :set -Wno-name-shadowing
 -- >>> at <- runQ $ newName "a"
 -- >>> ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
 -- Data.Smart.unsafeCreate "Boo!" :: forall a_0 . (Data.HasSize.HasSize a_0,

@@ -297,36 +297,42 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,900
-module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class20,21
-newtype Core_some_integer Core_some_integer45,46
-newtype Core_some_uinteger Core_some_uinteger47,48
-newtype Core_some_bytes Core_some_bytes49,50
-newtype Core_some_max_bytes Core_some_max_bytes51,52
-newtype Core_integer Core_integer55,56
-newtype Core_uinteger Core_uinteger57,58
-newtype Core_bytes Core_bytes60,61
-newtype Core_max_bytes Core_max_bytes62,63
-instance StreamItem StreamItem (Core_uinteger n)68,69
-    parser parser69,70
-    generate generate70,71
-instance StreamItem StreamItem (Core_integer n)71,72
-    parser parser72,73
-    generate generate73,74
-instance StreamItem StreamItem (Core_bytes n)74,75
-    parser parser75,76
-    generate generate76,77
-instance StreamItem StreamItem (Core_max_bytes n)77,78
-    parser parser78,79
-    generate generate79,80
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,1074
+module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class22,23
+newtype Core_some_integer Core_some_integer51,52
+newtype Core_some_uinteger Core_some_uinteger53,54
+newtype Core_some_bytes Core_some_bytes55,56
+newtype Core_some_max_bytes Core_some_max_bytes57,58
+newtype Core_integer Core_integer61,62
+type Core_integer_at_least Core_integer_at_least63,64
+newtype Core_uinteger Core_uinteger65,66
+type Core_uinteger_at_least Core_uinteger_at_least67,68
+newtype Core_max_bytes Core_max_bytes69,70
+type Core_max_bytes_at_least Core_max_bytes_at_least71,72
+newtype Core_bytes Core_bytes73,74
+instance StreamItem StreamItem (Core_uinteger n)79,80
+    parser parser80,81
+    generate generate81,82
+instance StreamItem StreamItem (Core_integer n)82,83
+    parser parser83,84
+    generate generate84,85
+instance StreamItem StreamItem (Core_bytes n)85,86
+    parser parser86,87
+    generate generate87,88
+instance StreamItem StreamItem (Core_max_bytes n)88,89
+    parser parser89,90
+    generate generate90,91
 
-./src/System/SED/MCTP/Common/Base_Type/TH.hs,161
-module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH9,10
+./src/System/SED/MCTP/Common/Base_Type/TH.hs,213
+module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH11,12
 newtype LitS LitS41,42
-cb cb64,65
-cu cu67,68
-ci ci70,71
-cm cm73,74
+newtype LitI LitI48,49
+ci ci72,73
+cu cu75,76
+cx cx80,81
+cb cb86,87
+cm cm89,90
+ct ct94,95
 
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24

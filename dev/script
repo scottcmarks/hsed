@@ -1,37 +1,34 @@
 :set -package hsed
-:set -Wno-type-defaults
 :set prompt-cont ""
 
-:load dev/DevMain.hs
-:set -XQuasiQuotes
 :set -XOverloadedStrings
-:set -XDataKinds
-:set -XTemplateHaskell
-:set -XRankNTypes
-:set -XGADTs
-:set -XStandaloneDeriving
-:set -XKindSignatures
-:set -XMultiParamTypeClasses
-:set -XFlexibleContexts
-:set -XDerivingVia
-:set -XUndecidableInstances
+
+-- :set -XQuasiQuotes
+-- :set -XRankNTypes
+-- :set -XGADTs
+-- :set -XStandaloneDeriving
+-- :set -XKindSignatures
+-- :set -XMultiParamTypeClasses
+-- :set -XFlexibleContexts
+-- :set -XDerivingVia
+-- :set -XUndecidableInstances
 
 import System.IO
 putStrLn "loading script ..."
 --------------------------------------------------------------------------------
 
-import Data.ByteString(head,tail)
-import Data.Either(Either(..))
-import Data.Foldable(mapM_)
-import Data.Functor((<$>))
-import Data.Maybe(Maybe(..))
-import Data.Text(cons, snoc, pack, unpack)
-import GHC.Arr(range)
-import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
-import GHC.Classes((<))
-import GHC.Err(undefined)
-import GHC.Show(show)
-import GHC.Base(const, (++))
+-- import Data.ByteString(head,tail)
+-- import Data.Either(Either(..))
+-- import Data.Foldable(mapM_)
+-- import Data.Functor((<$>))
+-- import Data.Maybe(Maybe(..))
+-- import Data.Text(cons, snoc, pack, unpack)
+-- import GHC.Arr(range)
+-- import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
+-- import GHC.Classes((<))
+-- import GHC.Err(undefined)
+-- import GHC.Show(show)
+-- import GHC.Base(const, (++))
 :def! $ (pure . (":! bash -l -c " ++) . show)
 :def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
 :def! D (pure . const (":set -ddump-splices") )
@@ -41,29 +38,24 @@ import GHC.Base(const, (++))
 --------------------------------------------------------------------------------
 
 
-import Data.Char (toUpper)
-import Data.ByteString (ByteString)
-import Data.String(IsString(..))
-import GHC.Word(Word8)
-import Data.ByteString.Internal(c2w)
-import Language.Haskell.TH
-import Language.Haskell.TH.Ppr
-import Language.Haskell.TH.PprLib
-import Data.Either(Either(..))
-import Data.String(String)
+-- import Data.Char (toUpper)
+-- import Data.ByteString (ByteString)
+-- import Data.String(IsString(..))
+-- import GHC.Word(Word8)
+-- import Data.ByteString.Internal(c2w)
+-- import Language.Haskell.TH
+-- import Language.Haskell.TH.Ppr
+-- import Language.Haskell.TH.PprLib
+-- import Data.Either(Either(..))
+-- import Data.String(String)
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-import Data.Smart(unsafeCreate,safeCreate)
-:load /Users/scott/hsed/src/System/SED/MCTP/Common/Simple_Type.hs
-
-:t "Scot"
-"Scot"
-:t "Scot" :: Core_bytes_4
-"Scot" :: Core_bytes_4
-
-:t unsafeCreate "Scot"::AtLeast Core_bytes 4
-
+:load src/System/SED/MCTP/Common/Simple_Type.hs
+import Data.BoundedSize
+import System.SED.MCTP.Common.Base_Type.TH
+:set -XTemplateHaskell
+:set -XDataKinds
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
@@ -75,6 +67,9 @@ putStrLn "Buh-bye now."
 --------------------------------------------------------------------------------
 
 putStrLn ".. script loaded."
+:show
+:show modules
+:show packages
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

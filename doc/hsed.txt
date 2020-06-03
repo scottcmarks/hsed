@@ -872,28 +872,31 @@ newtype Core_some_integer
 Core_some_integer :: Integer -> Core_some_integer
 newtype Core_some_uinteger
 Core_some_uinteger :: Natural -> Core_some_uinteger
-newtype Core_some_bytes
-Core_some_bytes :: ByteString -> Core_some_bytes
 newtype Core_some_max_bytes
 Core_some_max_bytes :: ByteString -> Core_some_max_bytes
+newtype Core_some_bytes
+Core_some_bytes :: ByteString -> Core_some_bytes
 newtype Core_integer n
-Core_integer :: FixedSize n Core_some_integer -> Core_integer n
+Core_integer :: MaxSize n Core_some_integer -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: FixedSize n Core_some_uinteger -> Core_uinteger n
-newtype Core_bytes n
-Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
+Core_uinteger :: MaxSize n Core_some_uinteger -> Core_uinteger n
 newtype Core_max_bytes n
 Core_max_bytes :: MaxSize n Core_some_max_bytes -> Core_max_bytes n
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+newtype Core_bytes n
+Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
+type Core_uinteger_at_least n = AtLeast Core_uinteger n
+type Core_integer_at_least n = AtLeast Core_integer n
+type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
@@ -932,20 +935,21 @@ instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 
 
 -- | Template Haskell helpers for BoundedSize.
 module System.SED.MCTP.Common.Base_Type.TH
-ci :: LitS -> Q Exp
-cu :: LitS -> Q Exp
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
+ci :: LitI -> Q Exp
+cu :: LitI -> Q Exp
 cb :: LitS -> Q Exp
 cm :: LitS -> Q Exp
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.TH.LitI
 instance Data.String.IsString System.SED.MCTP.Common.Base_Type.TH.LitS
 
 
@@ -960,17 +964,17 @@ Core_some_bytes :: ByteString -> Core_some_bytes
 newtype Core_some_max_bytes
 Core_some_max_bytes :: ByteString -> Core_some_max_bytes
 newtype Core_integer n
-Core_integer :: FixedSize n Core_some_integer -> Core_integer n
+Core_integer :: MaxSize n Core_some_integer -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: FixedSize n Core_some_uinteger -> Core_uinteger n
+Core_uinteger :: MaxSize n Core_some_uinteger -> Core_uinteger n
 newtype Core_bytes n
 Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
 newtype Core_max_bytes n
 Core_max_bytes :: MaxSize n Core_some_max_bytes -> Core_max_bytes n
-ci :: LitS -> Q Exp
-cu :: LitS -> Q Exp
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
+ci :: LitI -> Q Exp
+cu :: LitI -> Q Exp
 cb :: LitS -> Q Exp
 cm :: LitS -> Q Exp
 

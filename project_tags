@@ -323,16 +323,23 @@ instance StreamItem StreamItem (Core_max_bytes n)88,89
     parser parser89,90
     generate generate90,91
 
-./src/System/SED/MCTP/Common/Base_Type/TH.hs,213
-module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH11,12
-newtype LitS LitS41,42
-newtype LitI LitI48,49
-ci ci72,73
-cu cu75,76
-cx cx80,81
-cb cb86,87
-cm cm89,90
-ct ct94,95
+./src/System/SED/MCTP/Common/Base_Type/TH.hs,338
+module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
+import import28,29
+newtype LitS LitS47,48
+newtype LitI LitI54,55
+ci ci81,82
+ci' ci'84,85
+cu cu87,88
+cu' cu'92,93
+cx cx97,98
+cx' cx'107,108
+cb cb130,131
+cb' cb'147,148
+cm cm167,168
+cm' cm'184,185
+ct ct188,189
+ct' ct'197,198
 
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24

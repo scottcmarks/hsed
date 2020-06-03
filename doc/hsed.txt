@@ -946,9 +946,13 @@ module System.SED.MCTP.Common.Base_Type.TH
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
 ci :: LitI -> Q Exp
+ci' :: LitI -> Q Exp
 cu :: LitI -> Q Exp
+cu' :: LitI -> Q Exp
 cb :: LitS -> Q Exp
+cb' :: LitS -> Q Exp
 cm :: LitS -> Q Exp
+cm' :: LitS -> Q Exp
 instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.TH.LitI
 instance Data.String.IsString System.SED.MCTP.Common.Base_Type.TH.LitS
 

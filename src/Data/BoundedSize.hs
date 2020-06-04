@@ -72,21 +72,30 @@ instance (KnownNat n, B.IsBytes a) => IsFixedSizeBytes n a
 class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes n a
 instance (KnownNat n, B.IsBytes a) => IsMaxSizeBytes n a
 
+-- $setup
+-- >>> :set -Wno-type-defaults
+-- >>> :set -XDataKinds
+-- >>> :set -XOverloadedStrings
+-- >>> :set -XTemplateHaskell
+-- >>> import Data.BoundedSize.TH (fx,mx)
+-- >>> import Data.ByteString(ByteString)
+-- >>> import Data.Char (toUpper)
+-- >>> import Data.String (String)
 
 
--- | Append two Sizeds together.
--- append $(sz "foo") $(st "bear")
---   :: (C.IsSizedText a, IsString a) => Sized a 4 7
---
--- >>> :type append $(sz "foo") $(st "bear")
--- append $(sz "foo") $(st "bear")
---   :: (C.IsSizedText a, IsString a) => Sized a 4 7
--- >>> append $(sz "foo") $(st "bear")
+
+
+-- | Append two BoundedSizes together.
 -- "foobear"
--- >>> :type append $(st "Hello, ") $(sz "world!")
--- append $(st "Hello, ") $(sz "world!")
---   :: (C.IsSizedText a, IsString a) => Sized a 7 13
--- >>> append $(st "Hello, ") $(sz "world!")
+--
+-- >>> append $(mx "foo") $(fx "bear")
+-- "foobear"
+--
+-- >>> :type append $(mx "foo") $(fx "bear")
+-- append $(mx "foo") $(fx "bear")
+--   :: (B.IsBytes a, Data.String.IsString a) => C.BoundedSize 4 7 a
+--
+-- >>> append $(fx "Hello, ") $(mx "world!")
 -- "Hello, world!"
 append ::
      forall l1 u1 l2 u2 a. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (l1 + l2), KnownNat (u1 + u2), B.IsBytes a)
@@ -95,7 +104,7 @@ append ::
   -> C.BoundedSize (l1 + l2) (u1 + u2) a
 append a b = unsafeCreate $ B.append (unwrap a) (unwrap b)
 
--- | Construct a new Sized of maximum length from a basic element.
+-- | Construct a new BoundedSize of maximum length from a basic element.
 --
 -- >>> replicate '=' :: C.BoundedSize 5 10 String
 -- "=========="
@@ -107,35 +116,36 @@ replicate e = unsafeCreate $ B.replicate t e
   where
     t = fromNat (Proxy @u)
 
--- | Map a Sized to a Sized of the same length.
+-- | Map a BoundedSize to a BoundedSize of the same length.
 --
--- >>> map toUpper $(st "Hello") :: Sized String 5 5
+-- >>> map toUpper $(fx "Hello") :: C.BoundedSize 5 5 String
 -- "HELLO"
 map ::
      IsBoundedSizeBytes l u a => (B.Elem a -> B.Elem a) -> C.BoundedSize l u a -> C.BoundedSize l u a
 map f s = unsafeCreate $ B.map f $ unwrap s
 
--- | Reduce Sized length, preferring elements on the left.
+-- | Reduce BoundedSize length, preferring elements on the left.
 --
--- >>> take $(sz "Foobar") :: Sized String 0 3
+-- >>> take $(mx "Foobar") :: C.BoundedSize 0 3 String
 -- "Foo"
--- >>> :t take $(st "Hello")
--- take $(st "Hello")
---   :: (C.IsSizedText a, KnownNat l2, KnownNat u2, IsString a,
---       (l2 <=? 5) ~ 'True) =>
---      Sized a l2 u2
--- >>> :t take $(st "Hello") :: Sized ByteString 4 32
--- take $(st "Hello") :: Sized ByteString 4 32
---   :: Sized ByteString 4 32
--- >>> take $(st "Hello") :: Sized ByteString 4 32
+-- >>> :t take $(fx "Hello")
+-- take $(fx "Hello")
+--   :: (KnownNat l2, KnownNat u2, B.IsBytes a,
+--       Data.String.IsString a) =>
+--      C.BoundedSize l2 u2 a
+--
+-- >>> :t take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+-- take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+--   :: C.BoundedSize 4 32 ByteString
+-- >>> take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
 -- "Hello"
--- >>> length (take $(st "Hello") :: Sized ByteString 4 32)
+-- >>> length (take $(fx "Hello") :: C.BoundedSize 4 32 ByteString)
 -- 5
--- >>> take $(st "Hello") :: Sized ByteString 4 32
+-- >>> take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
 -- "Hello"
--- >>> take $(st "Hello") :: Sized ByteString 4 4
+-- >>> take $(fx "Hello") :: C.BoundedSize 4 4 ByteString
 -- "Hell"
--- >>> take $(st "HelloHelloHelloHelloHelloHelloHello") :: Sized ByteString 4 32
+-- >>> take $(fx "HelloHelloHelloHelloHelloHelloHello") :: C.BoundedSize 4 32 ByteString
 -- "HelloHelloHelloHelloHelloHelloHe"
 take ::
      forall l1 u1 l2 u2 a.
@@ -151,11 +161,11 @@ take s = unsafeCreate $ B.take t $ unwrap s
   where
     t = fromNat (Proxy @u2)
 
--- | Reduce Sized length, preferring elements on the right.
+-- | Reduce BoundedSize length, preferring elements on the right.
 --
--- >>> drop $(st "Foobar") :: Sized String 2 2
+-- >>> drop $(fx "Foobar") :: C.BoundedSize 2 2 String
 -- "ar"
--- >>> drop $(sz "Foobar") :: Sized String 0 2
+-- >>> drop $(mx "Foobar") :: C.BoundedSize 0 2 String
 -- "ar"
 drop ::
      forall a l1 u1 l2 u2.
@@ -189,7 +199,7 @@ length ::
   -> Int
 length = B.length . unwrap
 
--- | Fill a Sized with extra elements up to target length, padding
+-- | Fill a BoundedSize with extra elements up to target length, padding
 -- original elements to the left.
 padLeft ::
      forall a l1 u1 l2 u2.

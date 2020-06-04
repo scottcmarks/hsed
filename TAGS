@@ -810,7 +810,7 @@ typeFromInt typeFromInt108,109
 unsafeCreateExp unsafeCreateExp120,121
 universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
-./src/Data/BoundedSize.hs,809
+./src/Data/BoundedSize.hs,810
 module Data.BoundedSizeData.BoundedSize23,24
 class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes65,66
 instance (K(KnownNat l, KnownNat u, B-IsBytes a) => IsBoundedSizeBytes l u a66,67
@@ -818,19 +818,19 @@ class (C.IsFixedSize n a, B.IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes68,
 instance (K(KnownNat n, B-IsBytes a) => IsFixedSizeBytes n a69,70
 class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes71,72
 instance (K(KnownNat n, B-IsBytes a) => IsMaxSizeBytes n a72,73
-append append90,91
-replicate replicate101,102
-map map113,114
-take take139,140
+append append99,100
+replicate replicate110,111
+map map122,123
 take take149,150
-drop drop159,160
+take take159,160
 drop drop169,170
-bounds bounds175,176
-length length185,186
-padLeft padLeft193,194
+drop drop179,180
+bounds bounds185,186
+length length195,196
 padLeft padLeft203,204
-padRight padRight206,207
+padLeft padLeft213,214
 padRight padRight216,217
+padRight padRight226,227
 
 ./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18

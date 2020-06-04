@@ -17,6 +17,7 @@ module Data.Hex(Hex(..)) where
 import           Control.Monad
 import qualified Data.ByteString.Char8      as B
 import qualified Data.ByteString.Lazy.Char8 as L
+import qualified Data.ByteString.Short      as S
 
 -- | Convert strings into hexadecimal and back.
 class Hex t where
@@ -29,8 +30,8 @@ class Hex t where
 instance Hex String where
     hex = Prelude.concatMap w
         where w ch = let s = "0123456789ABCDEF"
-                         (h,l) = fromEnum ch `divMod` 16
-                     in [s !! h,s !! l]
+                         (h, l) = fromEnum ch `divMod` 16
+                     in [s !! h, s !! l]
     unhex []      = return []
     unhex (a:b:r) = do x <- c a
                        y <- c b
@@ -70,3 +71,7 @@ instance Hex B.ByteString where
 instance Hex L.ByteString where
     hex = L.pack . hex . L.unpack
     unhex x = liftM L.pack $ unhex $ L.unpack x
+
+instance Hex S.ShortByteString where  -- scm
+    hex = S.toShort . hex . S.fromShort
+    unhex x = liftM S.toShort $ unhex $ S.fromShort x

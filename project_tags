@@ -659,21 +659,24 @@ instance IsByteString IsByteString Natural107,108
     fromByteString fromByteString108,109
     toByteString toByteString109,110
 
-./src/Data/Hex.hs,337
+./src/Data/Hex.hs,421
 module Data.Hex(Data.Hex14,15
-class Hex Hex21,22
-    hex hex23,24
-    unhex unhex25,26
-instance Hex Hex String28,29
-    hex hex29,30
-    unhex unhex33,34
-c c40,41
-instance Hex Hex B-ByteString65,66
-    hex hex66,67
-    unhex unhex67,68
-instance Hex Hex L-ByteString69,70
-    hex hex70,71
-    unhex unhex71,72
+class Hex Hex22,23
+    hex hex24,25
+    unhex unhex26,27
+instance Hex Hex String29,30
+    hex hex30,31
+    unhex unhex34,35
+c c41,42
+instance Hex Hex B-ByteString66,67
+    hex hex67,68
+    unhex unhex68,69
+instance Hex Hex L-ByteString70,71
+    hex hex71,72
+    unhex unhex72,73
+instance Hex Hex S-ShortByteString74,75
+    hex hex75,76
+    unhex unhex76,77
 
 ./src/Data/IsBytes.hs,983
 module Data.IsBytesData.IsBytes26,27

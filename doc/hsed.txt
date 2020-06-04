@@ -79,6 +79,7 @@ unhex :: (Hex t, MonadFail m) => t -> m t
 instance Data.Hex.Hex GHC.Base.String
 instance Data.Hex.Hex Data.ByteString.Internal.ByteString
 instance Data.Hex.Hex Data.ByteString.Lazy.Internal.ByteString
+instance Data.Hex.Hex Data.ByteString.Short.Internal.ShortByteString
 
 
 -- | Class of things with ByteString-like operations

@@ -36,9 +36,9 @@ module System.SED.MCTP.Common.Base_Type.Class
 where
 
 import           Data.BoundedSize                  (AtLeast, FixedSize,
-                                                    HasSize (..), IsBytes (..),
-                                                    MaxSize)
+                                                    HasSize (..), MaxSize)
 import           Data.ByteString                   (ByteString)
+import           Data.IsBytes                      (IsBytes (..))
 import           Data.String                       (IsString (..))
 import           GHC.Base                          (undefined)
 import           GHC.Classes                       (Eq (..), Ord (..))

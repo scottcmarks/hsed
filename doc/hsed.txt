@@ -710,9 +710,9 @@ typeFromInt :: Int -> Type
 instance Data.String.IsString Data.BoundedSize.TH.LitS
 
 
--- | sized-text combinators are defined for members of <a>IsBoundedSize</a>
---   class. The package includes <a>IsBoundedSize</a> instances for several
---   common types.
+-- | sized-text combinators are defined for members of
+--   <tt>IsBoundedSize</tt> class. The package includes
+--   <tt>IsBoundedSize</tt> instances for several common types.
 --   
 --   This module is meant to be imported qualifed, e.g.
 --   
@@ -725,18 +725,6 @@ module Data.BoundedSize
 --   refine values of that type.
 class HasSize a
 size :: HasSize a => a -> Int
-class HasSize a => IsBytes a where {
-    
-    -- | Basic element type. For <tt>IsBoundedSizeBytesText [a]</tt>, this is
-    --   <tt>a</tt>.
-    type family Elem a;
-}
-length :: IsBytes a => a -> Int
-append :: IsBytes a => a -> a -> a
-replicate :: IsBytes a => Int -> Elem a -> a
-map :: IsBytes a => (Elem a -> Elem a) -> a -> a
-take :: IsBytes a => Int -> a -> a
-drop :: IsBytes a => Int -> a -> a
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   size.
@@ -751,12 +739,6 @@ type FixedSize n a = BoundedSize n n a
 -- | Class of types which can be assigned a maximum type-level size.
 class (IsBoundedSize 0 l a) => IsMaxSize l a
 type MaxSize n a = BoundedSize 0 n a
-
--- | Class of types which can be assigned a type-level minimum and maximum
---   length.
-class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a
-class (IsFixedSize n a, IsBytes a) => IsFixedSizeBytes n a
-class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes n a
 
 -- | Sometimes a MaxSize value is given, but the only thing known about the
 --   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
@@ -821,6 +803,105 @@ unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> Str
 --   3
 --   </pre>
 typeFromInt :: Int -> Type
+
+-- | Class of types which can be assigned a type-level minimum and maximum
+--   length.
+class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a
+class (IsFixedSize n a, IsBytes a) => IsFixedSizeBytes n a
+class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes n a
+
+-- | Append two Sizeds together. append $(sz "foo") $(st "bear") ::
+--   (C.IsSizedText a, IsString a) =&gt; Sized a 4 7
+--   
+--   <pre>
+--   &gt;&gt;&gt; :type append $(sz "foo") $(st "bear")
+--   append $(sz "foo") $(st "bear")
+--     :: (C.IsSizedText a, IsString a) =&gt; Sized a 4 7
+--   
+--   &gt;&gt;&gt; append $(sz "foo") $(st "bear")
+--   "foobear"
+--   
+--   &gt;&gt;&gt; :type append $(st "Hello, ") $(sz "world!")
+--   append $(st "Hello, ") $(sz "world!")
+--     :: (C.IsSizedText a, IsString a) =&gt; Sized a 7 13
+--   
+--   &gt;&gt;&gt; append $(st "Hello, ") $(sz "world!")
+--   "Hello, world!"
+--   </pre>
+append :: forall l1 u1 l2 u2 a. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (l1 + l2), KnownNat (u1 + u2), IsBytes a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a -> BoundedSize (l1 + l2) (u1 + u2) a
+
+-- | Construct a new Sized of maximum length from a basic element.
+--   
+--   <pre>
+--   &gt;&gt;&gt; replicate '=' :: C.BoundedSize 5 10 String
+--   "=========="
+--   </pre>
+replicate :: forall l u a. IsBoundedSizeBytes l u a => Elem a -> BoundedSize l u a
+
+-- | Map a Sized to a Sized of the same length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; map toUpper $(st "Hello") :: Sized String 5 5
+--   "HELLO"
+--   </pre>
+map :: IsBoundedSizeBytes l u a => (Elem a -> Elem a) -> BoundedSize l u a -> BoundedSize l u a
+
+-- | Reduce Sized length, preferring elements on the left.
+--   
+--   <pre>
+--   &gt;&gt;&gt; take $(sz "Foobar") :: Sized String 0 3
+--   "Foo"
+--   
+--   &gt;&gt;&gt; :t take $(st "Hello")
+--   take $(st "Hello")
+--     :: (C.IsSizedText a, KnownNat l2, KnownNat u2, IsString a,
+--         (l2 &lt;=? 5) ~ 'True) =&gt;
+--        Sized a l2 u2
+--   
+--   &gt;&gt;&gt; :t take $(st "Hello") :: Sized ByteString 4 32
+--   take $(st "Hello") :: Sized ByteString 4 32
+--     :: Sized ByteString 4 32
+--   
+--   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; length (take $(st "Hello") :: Sized ByteString 4 32)
+--   5
+--   
+--   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 4
+--   "Hell"
+--   
+--   &gt;&gt;&gt; take $(st "HelloHelloHelloHelloHelloHelloHello") :: Sized ByteString 4 32
+--   "HelloHelloHelloHelloHelloHelloHe"
+--   </pre>
+take :: forall l1 u1 l2 u2 a. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, IsBytes a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+
+-- | Reduce Sized length, preferring elements on the right.
+--   
+--   <pre>
+--   &gt;&gt;&gt; drop $(st "Foobar") :: Sized String 2 2
+--   "ar"
+--   
+--   &gt;&gt;&gt; drop $(sz "Foobar") :: Sized String 0 2
+--   "ar"
+--   </pre>
+drop :: forall a l1 u1 l2 u2. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, IsBytes a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+
+-- | Obtain length bounds from the type.
+bounds :: forall l u a. IsBoundedSize l u a => BoundedSize l u a -> (Int, Int)
+
+-- | Obtain value-level length. Consult the actual data value.
+length :: forall l u a. IsBoundedSizeBytes l u a => BoundedSize l u a -> Int
+
+-- | Fill a Sized with extra elements up to target length, padding original
+--   elements to the left.
+padLeft :: forall a l1 u1 l2 u2. (IsBoundedSizeBytes l1 u1 a, KnownNat l2, KnownNat u2, KnownNat (u2 + u1)) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+
+-- | Like <a>padLeft</a>, but original elements are padded to the right.
+padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, KnownNat l2, KnownNat u2, KnownNat (u1 + u2)) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsMaxSizeBytes n a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsFixedSizeBytes n a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsBoundedSizeBytes l u a

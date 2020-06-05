@@ -39,8 +39,7 @@ import           GHC.TypeLits(KnownNat)
 
 
 import           GHC.TypeLits.Extras (fromNat)
-import           Extras.Sized ()
-import           Extras.Sized (Fixed_bytes(..), fpack, funpack)
+import           System.SED.MCTP.Common.Base_Type (Core_bytes(..))
 import           System.SED.MCTP.Common.StreamItem (StreamItem(..))
 -- import           System.SED.MCTP.Common.Integral
 import           System.SED.MCTP.Common.Token (Token(..),IsToken(..))
@@ -52,17 +51,17 @@ Orphan instances, usually of otherwise unrelated classes and types.
 
 \begin{code}
 
-instance (KnownNat n) => IsToken (Fixed_bytes n) where
+instance (KnownNat n) => IsToken (Core_bytes n) where
     token fb  = Bytes $ funpack fb
     fromToken (Bytes bs) = Just $ fpack bs
     fromToken _ = Nothing
 
-instance (KnownNat n) => StreamItem (Fixed_bytes n) where
+instance (KnownNat n) => StreamItem (Core_bytes n) where
     parser = do
         tok <- parser
         case tok of
             Bytes bs -> pure $ fpack bs
-            _        -> fail $ mconcat [ "Wrong token type for Fixed_bytes "
+            _        -> fail $ mconcat [ "Wrong token type for Core_bytes "
                                        , show (fromNat (Proxy @n) ::Int)
                                        , ": "
                                        , show tok

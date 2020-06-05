@@ -107,55 +107,55 @@ instance Arbitrary Arbitrary Parameters257,258
 instance Arbitrary Arbitrary MethodCall260,261
     arbitrary arbitrary261,262
 
-./src/System/SED/MCTP/Common/Simple_Type.hs,1429
+./src/System/SED/MCTP/Common/Simple_Type.hs,1436
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type17,18
-type Core_bytes_4 Core_bytes_424,25
-type Core_bytes_12 Core_bytes_1225,26
-type Core_bytes_16 Core_bytes_1626,27
-type Core_bytes_20 Core_bytes_2027,28
-type Core_bytes_32 Core_bytes_3228,29
-type Core_bytes_48 Core_bytes_4829,30
-type Core_bytes_64 Core_bytes_6430,31
-type Core_feedback_size Core_feedback_size32,33
-type Core_integer_1 Core_integer_134,35
-type Core_integer_2 Core_integer_235,36
-type Core_max_bytes_32 Core_max_bytes_3237,38
-type Core_name Core_name38,39
-type Core_password Core_password39,40
-type Core_type_def_max_size Core_type_def_max_size40,41
-type Core_type_def Core_type_def41,42
-type Core_uid Core_uid43,44
-type Core_uinteger_1 Core_uinteger_145,46
-type Core_uinteger_128 Core_uinteger_12846,47
-type Core_uinteger_2 Core_uinteger_247,48
-type Core_uinteger_20 Core_uinteger_2048,49
-type Core_uinteger_21 Core_uinteger_2149,50
-type Core_uinteger_24 Core_uinteger_2450,51
-type Core_uinteger_256 Core_uinteger_25651,52
-type Core_uinteger_28 Core_uinteger_2852,53
-type Core_uinteger_30 Core_uinteger_3053,54
-type Core_uinteger_36 Core_uinteger_3654,55
-type Core_uinteger_4 Core_uinteger_455,56
-type Core_uinteger_48 Core_uinteger_4856,57
-type Core_uinteger_64 Core_uinteger_6457,58
-type Core_uinteger_66 Core_uinteger_6658,59
-type Core_uinteger_8 Core_uinteger_859,60
+type Core_bytes_4 Core_bytes_467,68
+type Core_bytes_12 Core_bytes_1268,69
+type Core_bytes_16 Core_bytes_1669,70
+type Core_bytes_20 Core_bytes_2070,71
+type Core_bytes_32 Core_bytes_3271,72
+type Core_bytes_48 Core_bytes_4872,73
+type Core_bytes_64 Core_bytes_6473,74
+type Core_feedback_size Core_feedback_size75,76
+type Core_integer_1 Core_integer_177,78
+type Core_integer_2 Core_integer_278,79
+type Core_max_bytes_32 Core_max_bytes_3280,81
+type Core_name Core_name81,82
+type Core_password Core_password82,83
+type Core_type_def_max_size Core_type_def_max_size83,84
+type Core_type_def Core_type_def84,85
+type Core_uid Core_uid86,87
+type Core_uinteger_1 Core_uinteger_188,89
+type Core_uinteger_128 Core_uinteger_12889,90
+type Core_uinteger_2 Core_uinteger_290,91
+type Core_uinteger_20 Core_uinteger_2091,92
+type Core_uinteger_21 Core_uinteger_2192,93
+type Core_uinteger_24 Core_uinteger_2493,94
+type Core_uinteger_256 Core_uinteger_25694,95
+type Core_uinteger_28 Core_uinteger_2895,96
+type Core_uinteger_30 Core_uinteger_3096,97
+type Core_uinteger_36 Core_uinteger_3697,98
+type Core_uinteger_4 Core_uinteger_498,99
+type Core_uinteger_48 Core_uinteger_4899,100
+type Core_uinteger_64 Core_uinteger_64100,101
+type Core_uinteger_66 Core_uinteger_66101,102
+type Core_uinteger_8 Core_uinteger_8102,103
 
 ./src/System/SED/MCTP/Common/TableUIDs.lhs,165
 module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs47,48
 lookupTableHalfUID lookupTableHalfUID177,178
 lookupTableUID lookupTableUID182,183
 
-./src/System/SED/MCTP/Common/THUtil.lhs,231
-module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil24,25
-parseTable parseTable50,51
-dData dData54,55
-dSig dSig59,60
-dVal dVal63,64
-eHalfUID eHalfUID67,68
-eUID eUID71,72
-eID eID75,76
-eValP eValP80,81
+./src/System/SED/MCTP/Common/THUtil.hs,231
+module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil15,16
+parseTable parseTable43,44
+dData dData47,48
+dSig dSig52,53
+dVal dVal56,57
+eHalfUID eHalfUID60,61
+eUID eUID64,65
+eID eID68,69
+eValP eValP73,74
 
 ./src/System/SED/MCTP/Common/Table.lhs,1052
 module System.SED.MCTP.Common.Table System.SED.MCTP.Common.Table23,24
@@ -180,28 +180,28 @@ data TableColumn = TableColumn { _columnNumber _columnNumber347,348
                                , _columnType _columnType350,351
 newtype ColumnType ColumnType354,355
 
-./src/System/SED/MCTP/Common/UID.hs,634
+./src/System/SED/MCTP/Common/UID.hs,630
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID19,20
-showFixed_bytesHex showFixed_bytesHex68,69
-showFixed_bytes showFixed_bytes73,74
-newtype HalfUID HalfUID77,78
-instance Show Show HalfUID80,81
-    show show81,82
-instance Arbitrary Arbitrary HalfUID82,83
-    arbitrary arbitrary83,84
-halfUID halfUID85,86
-newtype UID UID89,90
-instance Show Show UID92,93
-    show show93,94
-instance Arbitrary Arbitrary UID94,95
-    arbitrary arbitrary95,96
-uid uid97,98
-uidUpper uidUpper104,105
-uidLower uidLower107,108
-uidPlus uidPlus110,111
-(+(+:+)113,114
-hNull hNull117,118
-uNull uNull120,121
+showCore_bytesHex showCore_bytesHex66,67
+showCore_bytes showCore_bytes71,72
+newtype HalfUID HalfUID75,76
+instance Show Show HalfUID78,79
+    show show79,80
+instance Arbitrary Arbitrary HalfUID80,81
+    arbitrary arbitrary81,82
+halfUID halfUID83,84
+newtype UID UID87,88
+instance Show Show UID90,91
+    show show91,92
+instance Arbitrary Arbitrary UID92,93
+    arbitrary arbitrary93,94
+uid uid95,96
+uidUpper uidUpper102,103
+uidLower uidLower105,106
+uidPlus uidPlus108,109
+(+(+:+)111,112
+hNull hNull115,116
+uNull uNull118,119
 
 ./src/System/SED/MCTP/Common/Types.lhs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types21,22
@@ -297,31 +297,34 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,1074
-module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class22,23
-newtype Core_some_integer Core_some_integer51,52
-newtype Core_some_uinteger Core_some_uinteger53,54
-newtype Core_some_bytes Core_some_bytes55,56
-newtype Core_some_max_bytes Core_some_max_bytes57,58
-newtype Core_integer Core_integer61,62
-type Core_integer_at_least Core_integer_at_least63,64
-newtype Core_uinteger Core_uinteger65,66
-type Core_uinteger_at_least Core_uinteger_at_least67,68
-newtype Core_max_bytes Core_max_bytes69,70
-type Core_max_bytes_at_least Core_max_bytes_at_least71,72
-newtype Core_bytes Core_bytes73,74
-instance StreamItem StreamItem (Core_uinteger n)79,80
-    parser parser80,81
-    generate generate81,82
-instance StreamItem StreamItem (Core_integer n)82,83
-    parser parser83,84
-    generate generate84,85
-instance StreamItem StreamItem (Core_bytes n)85,86
-    parser parser86,87
-    generate generate87,88
-instance StreamItem StreamItem (Core_max_bytes n)88,89
-    parser parser89,90
-    generate generate90,91
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,1207
+module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class24,25
+newtype Core_some_integer Core_some_integer64,65
+newtype Core_some_uinteger Core_some_uinteger66,67
+newtype Core_some_bytes Core_some_bytes68,69
+newtype Core_some_max_bytes Core_some_max_bytes70,71
+newtype Core_integer Core_integer74,75
+type Core_integer_at_least Core_integer_at_least76,77
+newtype Core_uinteger Core_uinteger78,79
+type Core_uinteger_at_least Core_uinteger_at_least80,81
+newtype Core_max_bytes Core_max_bytes82,83
+type Core_max_bytes_at_least Core_max_bytes_at_least84,85
+newtype Core_bytes Core_bytes86,87
+instance StreamItem StreamItem (Core_uinteger n)92,93
+    parser parser93,94
+    generate generate94,95
+instance StreamItem StreamItem (Core_integer n)95,96
+    parser parser96,97
+    generate generate97,98
+instance (K(KnownNat n) => StreamItem (Core_bytes n)98,99
+    parser parser99,100
+    generate generate110,111
+instance StreamItem StreamItem (Core_max_bytes n)111,112
+    parser parser112,113
+    generate generate113,114
+instance (K(KnownNat n) => IsToken (Core_bytes n)116,117
+    token token117,118
+    fromToken fromToken118,119
 
 ./src/System/SED/MCTP/Common/Base_Type/TH.hs,338
 module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
@@ -561,14 +564,14 @@ uStartTrustedSession uStartTrustedSession101,102
 uSyncTrustedSession uSyncTrustedSession104,105
 uCloseSession uCloseSession107,108
 
-./src/System/SED/MCTP/Common/Instances.lhs,307
+./src/System/SED/MCTP/Common/Instances.lhs,305
 module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances28,29
-instance (K(KnownNat n) => IsToken (Fixed_bytes n)54,55
-    token token55,56
-    fromToken fromToken56,57
-instance (K(KnownNat n) => StreamItem (Fixed_bytes n)59,60
-    parser parser60,61
-    generate generate69,70
+instance (K(KnownNat n) => IsToken (Core_bytes n)53,54
+    token token54,55
+    fromToken fromToken55,56
+instance (K(KnownNat n) => StreamItem (Core_bytes n)58,59
+    parser parser59,60
+    generate generate68,69
 
 ./src/GHC/TypeLits/Extras.hs,76
 module GHC.TypeLits.ExtrasGHC.TypeLits.Extras20,21

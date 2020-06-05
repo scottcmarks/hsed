@@ -3,7 +3,9 @@
 {-# LANGUAGE NoImplicitPrelude    #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 {-# LANGUAGE StandaloneDeriving   #-}
+{-# LANGUAGE TypeApplications     #-}
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -35,19 +37,30 @@ module System.SED.MCTP.Common.Base_Type.Class
   )
 where
 
+import           Control.Monad                     (fail)
+import           Data.Attoparsec.ByteString        (Parser, parseOnly)
+
 import           Data.BoundedSize                  (AtLeast, FixedSize,
                                                     HasSize (..), MaxSize)
 import           Data.ByteString                   (ByteString)
+import           Data.Either                       (Either (..))
 import           Data.IsBytes                      (IsBytes (..))
+import           Data.Maybe                        (Maybe (..))
+import           Data.Proxy                        (Proxy (..))
+import           Data.Smart                        (Smart (..))
 import           Data.String                       (IsString (..))
-import           GHC.Base                          (undefined)
+import           GHC.Base                          (Int, mconcat, pure,
+                                                    undefined, ($), (.))
 import           GHC.Classes                       (Eq (..), Ord (..))
 import           GHC.Num                           (Integer, Num)
 import           GHC.Read                          (Read (..))
 import           GHC.Show                          (Show (..))
+import           GHC.TypeLits                      (KnownNat)
+import           GHC.TypeLits.Extras               (fromNat)
 import           Numeric.Natural                   (Natural)
 
 import           System.SED.MCTP.Common.StreamItem
+import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
 
 newtype Core_some_integer  = Core_some_integer  Integer
         deriving (Eq, Ord, HasSize, Num, Read, Show) via (Integer)
@@ -83,9 +96,25 @@ instance StreamItem (Core_uinteger n ) where
 instance StreamItem (Core_integer n  ) where
     parser = undefined
     generate _ = "<integer_n>"
-instance StreamItem (Core_bytes n) where
-    parser = undefined
-    generate _ = "<bytes_n>"
+instance (KnownNat n) => StreamItem (Core_bytes n) where
+    parser = do
+        tok <- parser
+        case tok of
+            Bytes bs -> case safeCreate bs of
+                          Right cb    -> pure cb
+                          Left errMsg -> fail errMsg
+            _        -> fail $ mconcat [ "Wrong token type for Core_bytes "
+                                       , show (fromNat (Proxy @n) ::Int)
+                                       , ": "
+                                       , show tok
+                                       ]
+    generate = generate . token
 instance StreamItem (Core_max_bytes n) where
     parser = undefined
     generate _ = "<max_bytes_n>"
+
+
+instance (KnownNat n) => IsToken (Core_bytes n) where
+    token cb  = Bytes $ _ cb
+    fromToken (Bytes bs) = Just $ _ bs
+    fromToken _          = Nothing

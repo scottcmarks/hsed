@@ -1,7 +1,7 @@
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE NoImplicitPrelude    #-}
-{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+
 
 {-|
 Module      : System.SED.MCTP.Common.Simple_Type
@@ -16,6 +16,49 @@ Formats.
 -}
 
 module System.SED.MCTP.Common.Simple_Type
+  (
+      Core_bytes
+  ,   Core_integer
+  ,   Core_max_bytes
+  ,   Core_uinteger
+  ,
+      Core_bytes_4
+  ,   Core_bytes_12
+  ,   Core_bytes_16
+  ,   Core_bytes_20
+  ,   Core_bytes_32
+  ,   Core_bytes_48
+  ,   Core_bytes_64
+
+  ,   Core_feedback_size
+
+  ,   Core_integer_1
+  ,   Core_integer_2
+
+  ,   Core_max_bytes_32
+  ,   Core_name
+  ,   Core_password
+  ,   Core_type_def_max_size
+  ,   Core_type_def
+
+  ,   Core_uid
+
+  ,   Core_uinteger_1
+  ,   Core_uinteger_128
+  ,   Core_uinteger_2
+  ,   Core_uinteger_20
+  ,   Core_uinteger_21
+  ,   Core_uinteger_24
+  ,   Core_uinteger_256
+  ,   Core_uinteger_28
+  ,   Core_uinteger_30
+  ,   Core_uinteger_36
+  ,   Core_uinteger_4
+  ,   Core_uinteger_48
+  ,   Core_uinteger_64
+  ,   Core_uinteger_66
+  ,   Core_uinteger_8
+  )
 where
 
 import           System.SED.MCTP.Common.Base_Type (Core_bytes, Core_integer,

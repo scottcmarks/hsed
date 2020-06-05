@@ -22,7 +22,6 @@ Datatypes for @hsed@.
 module System.SED.MCTP.Common.Types
   ( module Data.ByteString.Integral
   , module Numeric
-  , module Extras.Sized
   , module GHC.TypeLits.Extras
   , module System.SED.MCTP.Common.Call
   , module System.SED.MCTP.Common.ColumnTypes
@@ -38,7 +37,6 @@ where
 
 import           Data.ByteString.Integral
 import           Numeric
-import           Extras.Sized
 import           GHC.TypeLits.Extras
 import           System.SED.MCTP.Common.Call
 import           System.SED.MCTP.Common.ColumnTypes

@@ -32,9 +32,7 @@ import           GHC.Word                          (Word8 (..))
 
 import           Test.QuickCheck                   (Arbitrary (..))
 
-import           Extras.Hex                        (hex)
-import           Extras.Sized                      (Fixed_bytes (..), append,
-                                                    drop, fpack, funpack, take)
+import           System.SED.MCTP.Common.Base_Type  (Core_bytes (..))
 import           System.SED.MCTP.Common.Instances  ()
 import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
 import           System.SED.MCTP.Common.Token      (IsToken (..))
@@ -66,20 +64,20 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 
 -}
 
-showFixed_bytesHex :: (KnownNat n) => Fixed_bytes n -> [String]
-showFixed_bytesHex fb =  concatMap h $ unpack $ funpack fb
+showCore_bytesHex :: (KnownNat n) => Core_bytes n -> [String]
+showCore_bytesHex fb =  concatMap h $ unpack $ funpack fb
        where h :: Word8 -> [String]
              h w = [" 0x", hex w]
 
-showFixed_bytes :: (KnownNat n) => String -> Fixed_bytes n -> String
-showFixed_bytes c fb = mconcat $ c : showFixed_bytesHex fb
+showCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
+showCore_bytes c fb = mconcat $ c : showCore_bytesHex fb
 
 
-newtype HalfUID = HalfUID (Fixed_bytes 4)
+newtype HalfUID = HalfUID (Core_bytes 4)
     deriving(Eq,Ord)
-    deriving(IsToken,StreamItem) via (Fixed_bytes 4)
+    deriving(IsToken,StreamItem) via (Core_bytes 4)
 instance Show HalfUID where
-    show (HalfUID fb) = showFixed_bytes "halfUID" fb
+    show (HalfUID fb) = showCore_bytes "halfUID" fb
 instance Arbitrary HalfUID where
     arbitrary = HalfUID <$> arbitrary
 
@@ -87,11 +85,11 @@ halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
 halfUID b3 b2 b1 b0 = HalfUID $ fpack $ pack [b3, b2, b1, b0]
 
 
-newtype UID = UID (Fixed_bytes 8)
+newtype UID = UID (Core_bytes 8)
     deriving(Eq,Ord)
-    deriving(IsToken, StreamItem) via (Fixed_bytes 8)
+    deriving(IsToken, StreamItem) via (Core_bytes 8)
 instance Show UID where
-    show (UID fb) = showFixed_bytes "uid" fb
+    show (UID fb) = showCore_bytes "uid" fb
 instance Arbitrary UID where
     arbitrary = UID <$> arbitrary
 

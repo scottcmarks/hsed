@@ -30,6 +30,7 @@ import           GHC.Real     (fromIntegral)
 import           GHC.TypeLits (KnownNat, natVal)
 
 -- | Type-level Nat to value-level Num
+--
 -- >>> :set -XDataKinds
 -- >>> :set -XTypeApplications
 -- >>> import           Data.Proxy(Proxy(..))

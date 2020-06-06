@@ -582,7 +582,7 @@ trimTrailingWhitespace trimTrailingWhitespace41,42
 
 ./src/GHC/TypeLits/Extras.hs,76
 module GHC.TypeLits.ExtrasGHC.TypeLits.Extras20,21
-fromNat fromNat38,39
+fromNat fromNat39,40
 
 ./src/Hsed/App.lhs,357
 module Hsed.AppHsed.App23,24
@@ -735,99 +735,6 @@ instance IsBytes IsBytes (V-Vector a)88,89
     drop drop95,96
     toList toList96,97
 
-./src/Data/SizedText/Class.hs,2559
-module Data.SizedText.ClassData.SizedText.Class15,16
-class IsSizedText IsSizedText64,65
-  data Sized Sized68,69
-  type Elem Elem71,72
-  unsafeCreate unsafeCreate87,88
-  unwrap unwrap90,91
-  length length92,93
-  append append93,94
-  replicate replicate94,95
-  map map95,96
-  take take96,97
-  drop drop97,98
-instance (S(Show a, IsSizedText a) => Show (Sized a l u)100,101
-  show show101,102
-  showsPrec showsPrec102,103
-instance IsSizedText IsSizedText [a]104,105
-  type Elem Elem105,106
-  data Sized Sized107,108
-  data Sized [a] l u = List List107,108
-  unsafeCreate unsafeCreate110,111
-  unwrap unwrap111,112
-  length length113,114
-  append append114,115
-  replicate replicate115,116
-  map map116,117
-  take take117,118
-  drop drop118,119
-instance IsSizedText IsSizedText T-Text122,123
-  type Elem Elem123,124
-  data Sized Sized125,126
-  data Sized T.Text l u = Text Text125,126
-  unsafeCreate unsafeCreate128,129
-  unwrap unwrap129,130
-  length length131,132
-  append append132,133
-  replicate replicate133,134
-  map map134,135
-  take take135,136
-  drop drop136,137
-instance IsSizedText IsSizedText B-ByteString141,142
-  type Elem Elem142,143
-  data Sized Sized144,145
-  data Sized B.ByteString l u = ByteString ByteString144,145
-  unsafeCreate unsafeCreate147,148
-  unwrap unwrap148,149
-  length length150,151
-  append append151,152
-  replicate replicate152,153
-  map map153,154
-  take take154,155
-  drop drop155,156
-instance IsSizedText IsSizedText BS-ShortByteString159,160
-  type Elem Elem160,161
-  data Sized Sized162,163
-  data Sized BS.ShortByteString l u = ShortByteString ShortByteString162,163
-  unsafeCreate unsafeCreate165,166
-  unwrap unwrap166,167
-  length length168,169
-  append append169,170
-  replicate replicate170,171
-  map map171,172
-  take take172,173
-  drop drop173,174
-instance IsSizedText IsSizedText (V-Vector a)178,179
-  type Elem Elem179,180
-  data Sized Sized181,182
-  data Sized (V.Vector a) l u = Vector Vector181,182
-  unsafeCreate unsafeCreate184,185
-  unwrap unwrap185,186
-  length length187,188
-  append append188,189
-  replicate replicate189,190
-  map map190,191
-  take take191,192
-  drop drop192,193
-createLeft createLeft203,204
-createRight createRight219,220
-create create241,242
-instance forall forall a l u- (IsString a, IsSizedText a, KnownNat l, KnownNat u) => IsString (Sized a l u)264,265
-  where fromString fromString265,266
-type Static Static272,273
-
-./src/Data/SizedText/TH.hs,258
-module Data.SizedText.THData.SizedText.TH9,10
-newtype LitS LitS34,35
-sb sb50,51
-sz sz76,77
-st st99,100
-typeFromInt typeFromInt108,109
-unsafeCreateExp unsafeCreateExp120,121
-universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
-
 ./src/Data/BoundedSize.hs,795
 module Data.BoundedSizeData.BoundedSize23,24
 class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes65,66
@@ -886,22 +793,6 @@ instance HasSize Word64            where size size68,69
 instance HasSize HasSize Word69,70
 instance HasSize Word              where size size69,70
 
-./src/Data/SizedText.hs,336
-module Data.SizedTextData.SizedText27,28
-append append94,95
-replicate replicate105,106
-map map117,118
-take take143,144
-take take154,155
-drop drop164,165
-drop drop175,176
-bounds bounds181,182
-length length191,192
-padLeft padLeft199,200
-padLeft padLeft213,214
-padRight padRight216,217
-padRight padRight230,231
-
 ./src/Data/Smart.hs,253
 module Data.SmartData.Smart26,27
 class Smart Smart41,42
@@ -912,75 +803,7 @@ class Smart Smart41,42
     safeCreate safeCreate68,69
     create create73,74
 
-./src/Control/If.hs,49
-module Control.If Control.If14,15
-(?(?)22,23
-
-./src/Extras/Sized.lhs,1561
-module Extras.SizedExtras.Sized39,40
-import import65,66
-data Fixed_bytes Fixed_bytes79,80
-data Fixed_bytes (n :: Nat) = Fixed_bytes Fixed_bytes79,80
-take take83,84
-drop drop86,87
-append append89,90
-instance (K(KnownNat n) => Arbitrary (Fixed_bytes n)93,94
-    arbitrary arbitrary94,95
-instance (K(KnownNat n) => Show (Fixed_bytes n)98,99
-    showsPrec showsPrec99,100
-instance (K(KnownNat n) => IsString (Fixed_bytes n)106,107
-    fromString fromString107,108
-class (KnownNat n) => HasFixed_bytes HasFixed_bytes122,123
-    toFixed_bytes toFixed_bytes123,124
-    fromFixed_bytes fromFixed_bytes124,125
-instance (K(KnownNat n) => HasFixed_bytes n Natural126,127
-    toFixed_bytes toFixed_bytes127,128
-    fromFixed_bytes fromFixed_bytes137,138
-instance (K(KnownNat n) => HasFixed_bytes n (T-Static S-ShortByteString n)139,140
-    toFixed_bytes toFixed_bytes140,141
-    fromFixed_bytes fromFixed_bytes141,142
-instance (K(KnownNat n) => HasFixed_bytes n S-ShortByteString143,144
-    toFixed_bytes toFixed_bytes144,145
-    fromFixed_bytes fromFixed_bytes154,155
-instance (K(KnownNat n) => HasFixed_bytes n B-ByteString157,158
-    toFixed_bytes toFixed_bytes158,159
-    fromFixed_bytes fromFixed_bytes159,160
-instance (K(KnownNat n) => HasFixed_bytes n [Word8]161,162
-    toFixed_bytes toFixed_bytes162,163
-    fromFixed_bytes fromFixed_bytes163,164
-instance (K(KnownNat n) => HasHex (Fixed_bytes n)169,170
-    hex hex170,171
-    fromHex fromHex171,172
-fpack fpack175,176
-funpack funpack178,179
-
-./src/Extras/Hex.lhs,829
-module Extras.HexExtras.Hex24,25
-import import37,38
-hexDigit hexDigit50,51
-hexDigits hexDigits53,54
-hexValue hexValue56,57
-class HasHex HasHex60,61
-    hex hex61,62
-    fromHex fromHex62,63
-instance HasHex HasHex Word864,65
-    hex hex65,66
-    fromHex fromHex67,68
-instance HasHex HasHex Char72,73
-    hex hex73,74
-    fromHex fromHex74,75
-instance HasHex HasHex [Word8]76,77
-    hex hex77,78
-    fromHex fromHex78,79
-instance HasHex HasHex ByteString82,83
-    hex hex83,84
-    fromHex fromHex84,85
-instance HasHex HasHex String86,87
-    hex hex87,88
-    fromHex fromHex88,89
-instance HasHex HasHex ShortByteString90,91
-    hex hex91,92
-    fromHex fromHex92,93
-instance (K(KnownNat n) => HasHex (Static ShortByteString n)94,95
-    hex hex95,96
-    fromHex fromHex96,97
+./src/Control/If.hs,63
+module Control.IfControl.If13,14
+(?(?)33,34
+if' if'39,40

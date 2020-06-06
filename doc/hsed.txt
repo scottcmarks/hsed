@@ -8,15 +8,26 @@
 @version 0.1.0.1
 
 
--- | if' in the form of the (?) operator
+-- | if' function, and in the form of the (?) operator
 module Control.If
 
 -- | <tt>if'</tt> function as operator <tt>(?)</tt>
 --   
---   Since <tt>infixr 0 $</tt>, we can use <tt>?</tt>..<tt>$</tt> like
---   <tt>?</tt>..<tt>:</tt> in C-family languages.
+--   Since <tt>infixr 0 $</tt>, we can use <tt> ... ? ... $ ... </tt> like
+--   <tt> ... ?... : ... </tt> in C-family languages.
+--   
+--   <pre>
+--   &gt;&gt;&gt; 1 == 2 ? 3 $ 4
+--   4
+--   
+--   &gt;&gt;&gt; 'a' == 'a' ? "Yes!" $ "no?"
+--   "Yes!"
+--   </pre>
 (?) :: Bool -> p -> p -> p
 infixr 1 ?
+
+-- | Lazy <tt>if'</tt> function
+if' :: Bool -> p -> p -> p
 
 
 -- | Conversions between numbers and bytestrings used to represent them.
@@ -144,10 +155,20 @@ create :: Smart c a => a -> Maybe (c a)
 -- | Conversions from type-level Nat to value-level Num
 module GHC.TypeLits.Extras
 
--- | Type-level Nat to value-level Num &gt;&gt;&gt; :set -XDataKinds
---   &gt;&gt;&gt; :set -XTypeApplications &gt;&gt;&gt; import
---   Data.Proxy(Proxy(..)) &gt;&gt;&gt; import GHC.Types (Int) &gt;&gt;&gt;
---   fromNat (Proxy @5) :: Int 5
+-- | Type-level Nat to value-level Num
+--   
+--   <pre>
+--   &gt;&gt;&gt; :set -XDataKinds
+--   
+--   &gt;&gt;&gt; :set -XTypeApplications
+--   
+--   &gt;&gt;&gt; import           Data.Proxy(Proxy(..))
+--   
+--   &gt;&gt;&gt; import           GHC.Types    (Int)
+--   
+--   &gt;&gt;&gt; fromNat (Proxy @5) :: Int
+--   5
+--   </pre>
 fromNat :: (Num b, KnownNat n) => proxy n -> b
 
 

@@ -2,32 +2,51 @@
 </span><span id="line-2"></span><span>
 </span><span id="line-3"></span><span class="hs-comment">{-|
 Module      : Control.If
-Description : ? operator
 Copyright   : (c) Magnolia Heights R&amp;D, 2020
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-if' in the form of the (?) operator
+if' function, and in the form of the (?) operator
 
 -}</span><span>
-</span><span id="line-14"></span><span>
-</span><span id="line-15"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Control.If</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Control.If.html#%3F"><span class="hs-operator">(?)</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-16"></span><span>
-</span><span id="line-17"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bool</span></span><span class="hs-special">)</span><span>
-</span><span id="line-18"></span><span>
-</span><span id="line-19"></span><span class="hs-comment">-- | @if'@ function as operator @(?)@</span><span>
-</span><span id="line-20"></span><span class="hs-comment">--</span><span>
-</span><span id="line-21"></span><span class="hs-comment">-- Since @infixr 0 $@, we can use @?@..@$@ like @?@..@:@ in C-family languages.</span><span>
-</span><span id="line-22"></span><span class="hs-comment">--</span><span>
-</span><span id="line-23"></span><span id="local-6989586621679528275"><span class="annot"><a href="Control.If.html#%3F"><span class="hs-operator hs-type">(?)</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528275"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528275"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528275"><span class="hs-identifier hs-type">p</span></a></span></span><span>
-</span><span id="line-24"></span><span id="%3F"><span class="annot"><span class="annottext">? :: Bool -&gt; p -&gt; p -&gt; p
-</span><a href="Control.If.html#%3F"><span class="hs-operator hs-var hs-var">(?)</span></a></span></span><span> </span><span id="local-6989586621679528274"><span class="annot"><span class="annottext">p :: Bool
-</span><a href="#local-6989586621679528274"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679528273"><span class="annot"><span class="annottext">t :: p
-</span><a href="#local-6989586621679528273"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679528272"><span class="annot"><span class="annottext">f :: p
-</span><a href="#local-6989586621679528272"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
-</span><a href="#local-6989586621679528274"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">p
-</span><a href="#local-6989586621679528273"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">p
-</span><a href="#local-6989586621679528272"><span class="hs-identifier hs-var">f</span></a></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">infixr</span><span> </span><span class="hs-number">1</span><span> </span><span class="annot"><a href="Control.If.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span>
-</span><span id="line-26"></span></pre></body></html>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Control.If</span><span>
+</span><span id="line-15"></span><span>  </span><span class="hs-special">(</span><span>
+</span><span id="line-16"></span><span>    </span><span class="annot"><a href="Control.If.html#%3F"><span class="hs-operator">(?)</span></a></span><span>
+</span><span id="line-17"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Control.If.html#if%27"><span class="hs-identifier">if'</span></a></span><span>
+</span><span id="line-18"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Types</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bool</span></span><span class="hs-special">)</span><span>
+</span><span id="line-21"></span><span>
+</span><span id="line-22"></span><span class="hs-comment">-- $setup</span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- &gt;&gt;&gt; import GHC.Base</span><span>
+</span><span id="line-24"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -Wno-type-defaults</span><span>
+</span><span id="line-25"></span><span>
+</span><span id="line-26"></span><span class="hs-comment">-- | @if'@ function as operator @(?)@</span><span>
+</span><span id="line-27"></span><span class="hs-comment">--</span><span>
+</span><span id="line-28"></span><span class="hs-comment">-- Since @infixr 0 $@, we can use @ ... ? ... $ ... @ like @ ... ?... : ... @ in C-family languages.</span><span>
+</span><span id="line-29"></span><span class="hs-comment">--</span><span>
+</span><span id="line-30"></span><span class="hs-comment">-- &gt;&gt;&gt; 1 == 2 ? 3 $ 4</span><span>
+</span><span id="line-31"></span><span class="hs-comment">-- 4</span><span>
+</span><span id="line-32"></span><span class="hs-comment">-- &gt;&gt;&gt; 'a' == 'a' ? &quot;Yes!&quot; $ &quot;no?&quot;</span><span>
+</span><span id="line-33"></span><span class="hs-comment">-- &quot;Yes!&quot;</span><span>
+</span><span id="line-34"></span><span id="local-6989586621679528294"><span class="annot"><a href="Control.If.html#%3F"><span class="hs-operator hs-type">(?)</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528294"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528294"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528294"><span class="hs-identifier hs-type">p</span></a></span></span><span>
+</span><span id="line-35"></span><span id="%3F"><span class="annot"><span class="annottext">? :: Bool -&gt; p -&gt; p -&gt; p
+</span><a href="Control.If.html#%3F"><span class="hs-operator hs-var hs-var">(?)</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bool -&gt; p -&gt; p -&gt; p
+forall p. Bool -&gt; p -&gt; p -&gt; p
+</span><a href="Control.If.html#if%27"><span class="hs-identifier hs-var">if'</span></a></span><span>
+</span><span id="line-36"></span><span class="hs-keyword">infixr</span><span> </span><span class="hs-number">1</span><span> </span><span class="annot"><a href="Control.If.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span>
+</span><span id="line-37"></span><span>
+</span><span id="line-38"></span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- | Lazy @if'@ function</span><span>
+</span><span id="line-40"></span><span id="local-6989586621679528298"><span class="annot"><a href="Control.If.html#if%27"><span class="hs-identifier hs-type">if'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528298"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528298"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679528298"><span class="hs-identifier hs-type">p</span></a></span></span><span>
+</span><span id="line-41"></span><span id="if%27"><span class="annot"><span class="annottext">if' :: Bool -&gt; p -&gt; p -&gt; p
+</span><a href="Control.If.html#if%27"><span class="hs-identifier hs-var hs-var">if'</span></a></span></span><span> </span><span id="local-6989586621679528293"><span class="annot"><span class="annottext">p :: Bool
+</span><a href="#local-6989586621679528293"><span class="hs-identifier hs-var">p</span></a></span></span><span> </span><span id="local-6989586621679528292"><span class="annot"><span class="annottext">t :: p
+</span><a href="#local-6989586621679528292"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span id="local-6989586621679528291"><span class="annot"><span class="annottext">f :: p
+</span><a href="#local-6989586621679528291"><span class="hs-identifier hs-var">f</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679528293"><span class="hs-identifier hs-var">p</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621679528292"><span class="hs-identifier hs-var">t</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">p
+</span><a href="#local-6989586621679528291"><span class="hs-identifier hs-var">f</span></a></span><span>
+</span><span id="line-42"></span></pre></body></html>

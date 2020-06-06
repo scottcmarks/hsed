@@ -20,9 +20,13 @@ Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID where
 
 import           Data.Attoparsec.ByteString        ()
-import           Data.ByteString                   (pack, unpack)
+import           Data.BoundedSize                  (append, drop, take)
+import qualified Data.ByteString                   as B (pack, unpack)
+import qualified Data.ByteString.Char8             as C (unpack)
 import           Data.Foldable                     (concatMap)
 import           Data.Functor                      ((<$>))
+import           Data.Hex                          (hex)
+import           Data.Smart                        (unsafeCreate, unwrap)
 import           Data.String                       (String)
 import           GHC.Base                          (mconcat, ($))
 import           GHC.Classes                       (Eq (..), Ord (..))
@@ -65,9 +69,9 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 -}
 
 showCore_bytesHex :: (KnownNat n) => Core_bytes n -> [String]
-showCore_bytesHex fb =  concatMap h $ unpack $ funpack fb
+showCore_bytesHex (Core_bytes b) =  concatMap h $ B.unpack $ unwrap b
        where h :: Word8 -> [String]
-             h w = [" 0x", hex w]
+             h w = [" 0x", C.unpack $ hex $ B.pack [w] ]
 
 showCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
 showCore_bytes c fb = mconcat $ c : showCore_bytesHex fb
@@ -79,10 +83,10 @@ newtype HalfUID = HalfUID (Core_bytes 4)
 instance Show HalfUID where
     show (HalfUID fb) = showCore_bytes "halfUID" fb
 instance Arbitrary HalfUID where
-    arbitrary = HalfUID <$> arbitrary
+    arbitrary = HalfUID <$> Core_bytes <$> arbitrary
 
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
-halfUID b3 b2 b1 b0 = HalfUID $ fpack $ pack [b3, b2, b1, b0]
+halfUID b3 b2 b1 b0 = HalfUID (Core_bytes (unsafeCreate $ B.pack [b3, b2, b1, b0]))
 
 
 newtype UID = UID (Core_bytes 8)
@@ -91,23 +95,25 @@ newtype UID = UID (Core_bytes 8)
 instance Show UID where
     show (UID fb) = showCore_bytes "uid" fb
 instance Arbitrary UID where
-    arbitrary = UID <$> arbitrary
+    arbitrary = UID <$> Core_bytes <$> arbitrary
 
 uid ::
     Word8 -> Word8 -> Word8 -> Word8
  -> Word8 -> Word8 -> Word8 -> Word8
  -> UID
-uid u3 u2 u1 u0 l3 l2 l1 l0 = UID $ fpack $ pack [u3, u2, u1, u0, l3, l2, l1, l0]
+uid u3 u2 u1 u0 l3 l2 l1 l0 =
+    UID (Core_bytes (unsafeCreate $ B.pack [u3, u2, u1, u0, l3, l2, l1, l0]))
 
 
 uidUpper :: UID -> HalfUID
-uidUpper (UID fb) = HalfUID (take fb)
+uidUpper (UID (Core_bytes fb)) = HalfUID (Core_bytes (take fb))
 
 uidLower :: UID -> HalfUID
-uidLower (UID fb) = HalfUID (drop fb)
+uidLower (UID (Core_bytes fb)) = HalfUID (Core_bytes (drop fb))
 
 uidPlus :: HalfUID -> HalfUID -> UID
-uidPlus (HalfUID fbl) (HalfUID fbr) = UID (append fbl fbr)
+uidPlus (HalfUID (Core_bytes fbl)) (HalfUID (Core_bytes fbr)) =
+    UID (Core_bytes (append fbl fbr))
 
 (+:+) :: HalfUID -> HalfUID -> UID
 (+:+) = uidPlus

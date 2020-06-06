@@ -34,7 +34,7 @@ import           Data.ByteString       as B
 import           Data.ByteString.Short as S
 import           Data.HasSize          (HasSize (..))
 import           Data.Vector           as V
-import           GHC.Base              (Int, ($), (.))
+import           GHC.Base              (Int, id, ($), (.))
 import qualified GHC.List              as L
 import           GHC.Word              (Word8 (..))
 
@@ -54,7 +54,7 @@ class HasSize a => IsBytes a where
   map :: (Elem a -> Elem a) -> a -> a
   take :: Int -> a -> a
   drop :: Int -> a -> a
-
+  toList :: a -> [Elem a]
 
 instance IsBytes B.ByteString
   where
@@ -64,7 +64,7 @@ instance IsBytes B.ByteString
     map = B.map
     take = B.take
     drop = B.drop
-
+    toList = B.unpack
 
 instance IsBytes S.ShortByteString
   where
@@ -74,7 +74,7 @@ instance IsBytes S.ShortByteString
     map f = S.toShort . B.map f . S.fromShort
     take n = S.toShort . B.take n . S.fromShort
     drop n = S.toShort . B.drop n . S.fromShort
-
+    toList = B.unpack . S.fromShort
 
 instance IsBytes [a]
   where
@@ -84,7 +84,7 @@ instance IsBytes [a]
     map = L.map
     take = L.take
     drop = L.drop
-
+    toList = id
 
 instance IsBytes (V.Vector a)
   where
@@ -94,3 +94,4 @@ instance IsBytes (V.Vector a)
     map = V.map
     take = V.take
     drop = V.drop
+    toList = V.toList

@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds            #-}
 {-# LANGUAGE DerivingVia          #-}
+{-# LANGUAGE FlexibleInstances    #-}
 {-# LANGUAGE NoImplicitPrelude    #-}
 {-# LANGUAGE OverloadedStrings    #-}
 {-# LANGUAGE RankNTypes           #-}
@@ -7,6 +8,7 @@
 {-# LANGUAGE StandaloneDeriving   #-}
 {-# LANGUAGE TypeApplications     #-}
 {-# LANGUAGE TypeFamilies         #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 
@@ -23,11 +25,7 @@ Formats.
 -}
 
 module System.SED.MCTP.Common.Base_Type.Class
-  ( Core_some_integer  (..)
-  , Core_some_uinteger (..)
-  , Core_some_max_bytes (..)
-  , Core_some_bytes    (..)
-  , Core_integer       (..)
+  ( Core_integer       (..)
   , Core_uinteger      (..)
   , Core_max_bytes     (..)
   , Core_bytes         (..)
@@ -38,70 +36,86 @@ module System.SED.MCTP.Common.Base_Type.Class
 where
 
 import           Control.Monad                     (fail)
-import           Data.Attoparsec.ByteString        (Parser, parseOnly)
 
-import           Data.BoundedSize                  (AtLeast, FixedSize,
-                                                    HasSize (..), MaxSize)
-import           Data.ByteString                   (ByteString)
+import qualified Data.ByteString                   as B (ByteString)
 import           Data.Either                       (Either (..))
+import           Data.Functor                      ((<$>))
 import           Data.IsBytes                      (IsBytes (..))
 import           Data.Maybe                        (Maybe (..))
 import           Data.Proxy                        (Proxy (..))
-import           Data.Smart                        (Smart (..))
-import           Data.String                       (IsString (..))
-import           GHC.Base                          (Int, mconcat, pure,
-                                                    undefined, ($), (.))
+import           Data.String                       (IsString (..), String)
+import           GHC.Base                          (Int, mconcat, pure, ($),
+                                                    (.))
 import           GHC.Classes                       (Eq (..), Ord (..))
 import           GHC.Num                           (Integer, Num)
 import           GHC.Read                          (Read (..))
 import           GHC.Show                          (Show (..))
 import           GHC.TypeLits                      (KnownNat)
-import           GHC.TypeLits.Extras               (fromNat)
 import           Numeric.Natural                   (Natural)
 
+import           Data.BoundedSize                  (AtLeast, FixedSize,
+                                                    HasSize (..), MaxSize)
+import qualified Data.Smart                        as S (Smart (..))
+import           GHC.TypeLits.Extras               (fromNat)
+
+import           System.SED.MCTP.Common.Instances  ()
 import           System.SED.MCTP.Common.StreamItem
 import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
 
-newtype Core_some_integer  = Core_some_integer  Integer
-        deriving (Eq, Ord, HasSize, Num, Read, Show) via (Integer)
-newtype Core_some_uinteger = Core_some_uinteger Natural
-        deriving (Eq, Ord, HasSize, Num, Read, Show) via (Natural)
-newtype Core_some_bytes    = Core_some_bytes    ByteString
-        deriving (Eq, Ord, HasSize, IsBytes, IsString, Read, Show) via ByteString
-newtype Core_some_max_bytes = Core_some_max_bytes ByteString
-        deriving (Eq, Ord, HasSize, IsBytes, IsString, Read, Show) via ByteString
-
-
-newtype Core_integer   n = Core_integer   (MaxSize   n Core_some_integer )
-        deriving (Eq, Ord, HasSize, Num, Read, Show) via (MaxSize n Core_some_integer )
+newtype Core_integer   n = Core_integer   (MaxSize   n Integer )
+        deriving (Eq, Ord, HasSize, Num, Read, Show) via (MaxSize n Integer )
 type Core_integer_at_least n = AtLeast Core_integer n
 
-newtype Core_uinteger  n = Core_uinteger  (MaxSize   n Core_some_uinteger)
-        deriving (Eq, Ord, HasSize, Num, Read, Show) via (MaxSize n Core_some_uinteger)
+newtype Core_uinteger  n = Core_uinteger  (MaxSize   n Natural)
+        deriving (Eq, Ord, HasSize, Num, Read, Show) via (MaxSize n Natural)
 type Core_uinteger_at_least n = AtLeast Core_uinteger n
 
-newtype Core_max_bytes n = Core_max_bytes (MaxSize   n Core_some_max_bytes)
-        deriving (Eq, Ord, HasSize, IsString, Show) via (MaxSize   n Core_some_max_bytes)
+newtype Core_max_bytes n = Core_max_bytes (MaxSize   n B.ByteString)
+        deriving (Eq, Ord, HasSize, IsString, Show) via (MaxSize   n B.ByteString)
+
+
+
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 
-newtype Core_bytes     n = Core_bytes     (FixedSize n Core_some_bytes   )
-        deriving (Eq, Ord, HasSize, IsString, Show) via (FixedSize n Core_some_bytes)
+newtype Core_bytes     n = Core_bytes     (FixedSize n B.ByteString)
+        deriving (Eq, Ord, HasSize, IsBytes, IsString, Show) via (FixedSize n B.ByteString)
 
 
 
+instance (KnownNat n) => StreamItem (Core_uinteger n ) where
+    parser = do
+        tok <- parser
+        case tok of
+            Unsigned u -> case (S.safeCreate u :: Either String (MaxSize n Natural)) of
+                          Right cn    -> pure $ Core_uinteger cn
+                          Left errMsg -> fail errMsg
+            _        -> fail $ mconcat [ "Wrong token type for Core_uinteger "
+                                       , show (fromNat (Proxy @n) ::Int)
+                                       , ": "
+                                       , show tok
+                                       ]
+    generate = generate . token
 
-instance StreamItem (Core_uinteger n ) where
-    parser = undefined
-    generate _ = "<uinteger_n>"
-instance StreamItem (Core_integer n  ) where
-    parser = undefined
-    generate _ = "<integer_n>"
+instance (KnownNat n) => StreamItem (Core_integer n  ) where
+    parser = do
+        tok <- parser
+        case tok of
+            Signed i -> case (S.safeCreate i :: Either String (MaxSize n Integer)) of
+                          Right ci    -> pure $ Core_integer ci
+                          Left errMsg -> fail errMsg
+            _        -> fail $ mconcat [ "Wrong token type for Core_integer "
+                                       , show (fromNat (Proxy @n) ::Int)
+                                       , ": "
+                                       , show tok
+                                       ]
+    generate = generate . token
+
 instance (KnownNat n) => StreamItem (Core_bytes n) where
     parser = do
         tok <- parser
         case tok of
-            Bytes bs -> case safeCreate bs of
-                          Right cb    -> pure cb
+            Bytes bs -> case (S.safeCreate bs :: Either String (FixedSize n B.ByteString)) of
+                          Right cb    -> pure $ Core_bytes cb
                           Left errMsg -> fail errMsg
             _        -> fail $ mconcat [ "Wrong token type for Core_bytes "
                                        , show (fromNat (Proxy @n) ::Int)
@@ -109,12 +123,43 @@ instance (KnownNat n) => StreamItem (Core_bytes n) where
                                        , show tok
                                        ]
     generate = generate . token
-instance StreamItem (Core_max_bytes n) where
-    parser = undefined
-    generate _ = "<max_bytes_n>"
+
+
+instance (KnownNat n) => StreamItem (Core_max_bytes n) where
+    parser = do
+        tok <- parser
+        case tok of
+            Bytes bs -> case (S.safeCreate bs :: Either String (MaxSize n B.ByteString)) of
+                          Right cb    -> pure $ Core_max_bytes cb
+                          Left errMsg -> fail errMsg
+            _        -> fail $ mconcat [ "Wrong token type for Core_max_bytes "
+                                       , show (fromNat (Proxy @n) ::Int)
+                                       , ": "
+                                       , show tok
+                                       ]
+    generate = generate . token
+
+
+
+instance (KnownNat n) => IsToken (Core_integer n) where
+    token (Core_integer i)  = Signed $ S.unwrap i
+    fromToken (Signed i) = Core_integer <$> S.create i
+    fromToken _          = Nothing
+
+
+instance (KnownNat n) => IsToken (Core_uinteger n) where
+    token (Core_uinteger u)  = Unsigned $ S.unwrap u
+    fromToken (Unsigned u) = Core_uinteger <$> S.create u
+    fromToken _            = Nothing
 
 
 instance (KnownNat n) => IsToken (Core_bytes n) where
-    token cb  = Bytes $ _ cb
-    fromToken (Bytes bs) = Just $ _ bs
-    fromToken _          = Nothing
+    token (Core_bytes b)  = Bytes $ S.unwrap b
+    fromToken (Bytes b) = Core_bytes <$> S.create b
+    fromToken _         = Nothing
+
+
+instance (KnownNat n) => IsToken (Core_max_bytes n) where
+    token (Core_max_bytes b)  = Bytes $ S.unwrap b
+    fromToken (Bytes b) = Core_max_bytes <$> S.create b
+    fromToken _         = Nothing

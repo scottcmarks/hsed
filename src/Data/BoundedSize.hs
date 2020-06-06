@@ -98,7 +98,11 @@ instance (KnownNat n, B.IsBytes a) => IsMaxSizeBytes n a
 -- >>> append $(fx "Hello, ") $(mx "world!")
 -- "Hello, world!"
 append ::
-     forall l1 u1 l2 u2 a. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (l1 + l2), KnownNat (u1 + u2), B.IsBytes a)
+     forall l1 u1 l2 u2 a.
+     ( IsBoundedSizeBytes l1 u1 a
+     , IsBoundedSizeBytes l2 u2 a
+     , IsBoundedSizeBytes (l1 + l2) (u1 + u2) a
+     )
   => C.BoundedSize l1 u1 a
   -> C.BoundedSize l2 u2 a
   -> C.BoundedSize (l1 + l2) (u1 + u2) a
@@ -109,7 +113,8 @@ append a b = unsafeCreate $ B.append (unwrap a) (unwrap b)
 -- >>> replicate '=' :: C.BoundedSize 5 10 String
 -- "=========="
 replicate ::
-     forall l u a. (IsBoundedSizeBytes l u a)
+     forall l u a.
+     (IsBoundedSizeBytes l u a)
   => B.Elem a
   -> C.BoundedSize l u a
 replicate e = unsafeCreate $ B.replicate t e
@@ -121,7 +126,11 @@ replicate e = unsafeCreate $ B.replicate t e
 -- >>> map toUpper $(fx "Hello") :: C.BoundedSize 5 5 String
 -- "HELLO"
 map ::
-     IsBoundedSizeBytes l u a => (B.Elem a -> B.Elem a) -> C.BoundedSize l u a -> C.BoundedSize l u a
+     forall l u a.
+     (IsBoundedSizeBytes l u a)
+  => (B.Elem a -> B.Elem a)
+  -> C.BoundedSize l u a
+  -> C.BoundedSize l u a
 map f s = unsafeCreate $ B.map f $ unwrap s
 
 -- | Reduce BoundedSize length, preferring elements on the left.
@@ -130,7 +139,7 @@ map f s = unsafeCreate $ B.map f $ unwrap s
 -- "Foo"
 -- >>> :t take $(fx "Hello")
 -- take $(fx "Hello")
---   :: (KnownNat l2, KnownNat u2, B.IsBytes a,
+--   :: (B.IsBytes a, KnownNat l2, KnownNat u2,
 --       Data.String.IsString a) =>
 --      C.BoundedSize l2 u2 a
 --
@@ -149,11 +158,8 @@ map f s = unsafeCreate $ B.map f $ unwrap s
 -- "HelloHelloHelloHelloHelloHelloHe"
 take ::
      forall l1 u1 l2 u2 a.
-     ( KnownNat l1
-     , KnownNat u1
-     , KnownNat l2
-     , KnownNat u2
-     , B.IsBytes a
+     ( IsBoundedSizeBytes l1 u1 a
+     , IsBoundedSizeBytes l2 u2 a
      )
   => C.BoundedSize l1 u1 a
   -> C.BoundedSize l2 u2 a
@@ -168,12 +174,9 @@ take s = unsafeCreate $ B.take t $ unwrap s
 -- >>> drop $(mx "Foobar") :: C.BoundedSize 0 2 String
 -- "ar"
 drop ::
-     forall a l1 u1 l2 u2.
-     ( KnownNat l1
-     , KnownNat u1
-     , KnownNat l2
-     , KnownNat u2
-     , B.IsBytes a
+     forall l1 u1 l2 u2 a.
+     ( IsBoundedSizeBytes l1 u1 a
+     , IsBoundedSizeBytes l2 u2 a
      )
   => C.BoundedSize l1 u1 a
   -> C.BoundedSize l2 u2 a
@@ -202,11 +205,10 @@ length = B.length . unwrap
 -- | Fill a BoundedSize with extra elements up to target length, padding
 -- original elements to the left.
 padLeft ::
-     forall a l1 u1 l2 u2.
+     forall l1 u1 l2 u2 a.
      ( IsBoundedSizeBytes l1 u1 a
-     , KnownNat l2
-     , KnownNat u2
-     , KnownNat (u2 + u1)
+     , IsBoundedSizeBytes l2 u2 a
+     , IsBoundedSizeBytes 0 (u2 + u1) a
      )
   => B.Elem a
   -> C.BoundedSize l1 u1 a
@@ -217,9 +219,8 @@ padLeft pad = drop . ((replicate pad :: C.BoundedSize 0 u2 a) `append`)
 padRight ::
      forall l1 u1 l2 u2 a.
      ( IsBoundedSizeBytes l1 u1 a
-     , KnownNat l2
-     , KnownNat u2
-     , KnownNat (u1 + u2)
+     , IsBoundedSizeBytes l2 u2 a
+     , IsBoundedSizeBytes 0 (u1 + u2) a
      )
   => B.Elem a
   -> C.BoundedSize l1 u1 a

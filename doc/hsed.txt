@@ -96,6 +96,7 @@ replicate :: IsBytes a => Int -> Elem a -> a
 map :: IsBytes a => (Elem a -> Elem a) -> a -> a
 take :: IsBytes a => Int -> a -> a
 drop :: IsBytes a => Int -> a -> a
+toList :: IsBytes a => a -> [Elem a]
 instance Data.IsBytes.IsBytes Data.ByteString.Internal.ByteString
 instance Data.IsBytes.IsBytes Data.ByteString.Short.Internal.ShortByteString
 instance Data.IsBytes.IsBytes [a]
@@ -645,6 +646,7 @@ instance (Data.HasSize.HasSize a, Data.Smart.Smart (Data.BoundedSize.Class.Bound
 instance (GHC.Num.Num a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Num.Num (Data.BoundedSize.Class.BoundedSize l u a)
 instance (GHC.Read.Read a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Read.Read (Data.BoundedSize.Class.BoundedSize l u a)
 instance (GHC.Show.Show a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
+instance (GHC.TypeNats.KnownNat l, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.BoundedSize.Class.BoundedSize l u a)
 
 
 -- | Template Haskell helpers for BoundedSize.
@@ -810,27 +812,26 @@ class (IsBoundedSize l u a, IsBytes a) => IsBoundedSizeBytes l u a
 class (IsFixedSize n a, IsBytes a) => IsFixedSizeBytes n a
 class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes n a
 
--- | Append two Sizeds together. append $(sz "foo") $(st "bear") ::
---   (C.IsSizedText a, IsString a) =&gt; Sized a 4 7
+-- | Append two BoundedSizes together. "foobear"
 --   
 --   <pre>
---   &gt;&gt;&gt; :type append $(sz "foo") $(st "bear")
---   append $(sz "foo") $(st "bear")
---     :: (C.IsSizedText a, IsString a) =&gt; Sized a 4 7
---   
---   &gt;&gt;&gt; append $(sz "foo") $(st "bear")
+--   &gt;&gt;&gt; append $(mx "foo") $(fx "bear")
 --   "foobear"
+--   </pre>
 --   
---   &gt;&gt;&gt; :type append $(st "Hello, ") $(sz "world!")
---   append $(st "Hello, ") $(sz "world!")
---     :: (C.IsSizedText a, IsString a) =&gt; Sized a 7 13
+--   <pre>
+--   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
+--   append $(mx "foo") $(fx "bear")
+--     :: (B.IsBytes a, Data.String.IsString a) =&gt; C.BoundedSize 4 7 a
+--   </pre>
 --   
---   &gt;&gt;&gt; append $(st "Hello, ") $(sz "world!")
+--   <pre>
+--   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, KnownNat (l1 + l2), KnownNat (u1 + u2), IsBytes a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a -> BoundedSize (l1 + l2) (u1 + u2) a
+append :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes (l1 + l2) (u1 + u2) a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a -> BoundedSize (l1 + l2) (u1 + u2) a
 
--- | Construct a new Sized of maximum length from a basic element.
+-- | Construct a new BoundedSize of maximum length from a basic element.
 --   
 --   <pre>
 --   &gt;&gt;&gt; replicate '=' :: C.BoundedSize 5 10 String
@@ -838,57 +839,59 @@ append :: forall l1 u1 l2 u2 a. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat
 --   </pre>
 replicate :: forall l u a. IsBoundedSizeBytes l u a => Elem a -> BoundedSize l u a
 
--- | Map a Sized to a Sized of the same length.
+-- | Map a BoundedSize to a BoundedSize of the same length.
 --   
 --   <pre>
---   &gt;&gt;&gt; map toUpper $(st "Hello") :: Sized String 5 5
+--   &gt;&gt;&gt; map toUpper $(fx "Hello") :: C.BoundedSize 5 5 String
 --   "HELLO"
 --   </pre>
-map :: IsBoundedSizeBytes l u a => (Elem a -> Elem a) -> BoundedSize l u a -> BoundedSize l u a
+map :: forall l u a. IsBoundedSizeBytes l u a => (Elem a -> Elem a) -> BoundedSize l u a -> BoundedSize l u a
 
--- | Reduce Sized length, preferring elements on the left.
+-- | Reduce BoundedSize length, preferring elements on the left.
 --   
 --   <pre>
---   &gt;&gt;&gt; take $(sz "Foobar") :: Sized String 0 3
+--   &gt;&gt;&gt; take $(mx "Foobar") :: C.BoundedSize 0 3 String
 --   "Foo"
 --   
---   &gt;&gt;&gt; :t take $(st "Hello")
---   take $(st "Hello")
---     :: (C.IsSizedText a, KnownNat l2, KnownNat u2, IsString a,
---         (l2 &lt;=? 5) ~ 'True) =&gt;
---        Sized a l2 u2
---   
---   &gt;&gt;&gt; :t take $(st "Hello") :: Sized ByteString 4 32
---   take $(st "Hello") :: Sized ByteString 4 32
---     :: Sized ByteString 4 32
---   
---   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 32
---   "Hello"
---   
---   &gt;&gt;&gt; length (take $(st "Hello") :: Sized ByteString 4 32)
---   5
---   
---   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 32
---   "Hello"
---   
---   &gt;&gt;&gt; take $(st "Hello") :: Sized ByteString 4 4
---   "Hell"
---   
---   &gt;&gt;&gt; take $(st "HelloHelloHelloHelloHelloHelloHello") :: Sized ByteString 4 32
---   "HelloHelloHelloHelloHelloHelloHe"
+--   &gt;&gt;&gt; :t take $(fx "Hello")
+--   take $(fx "Hello")
+--     :: (B.IsBytes a, KnownNat l2, KnownNat u2,
+--         Data.String.IsString a) =&gt;
+--        C.BoundedSize l2 u2 a
 --   </pre>
-take :: forall l1 u1 l2 u2 a. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, IsBytes a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
-
--- | Reduce Sized length, preferring elements on the right.
 --   
 --   <pre>
---   &gt;&gt;&gt; drop $(st "Foobar") :: Sized String 2 2
+--   &gt;&gt;&gt; :t take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+--   take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+--     :: C.BoundedSize 4 32 ByteString
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+--   "Hello"
+--   
+--   &gt;&gt;&gt; length (take $(fx "Hello") :: C.BoundedSize 4 32 ByteString)
+--   5
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+--   "Hello"
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: C.BoundedSize 4 4 ByteString
+--   "Hell"
+--   
+--   &gt;&gt;&gt; take $(fx "HelloHelloHelloHelloHelloHelloHello") :: C.BoundedSize 4 32 ByteString
+--   "HelloHelloHelloHelloHelloHelloHe"
+--   </pre>
+take :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+
+-- | Reduce BoundedSize length, preferring elements on the right.
+--   
+--   <pre>
+--   &gt;&gt;&gt; drop $(fx "Foobar") :: C.BoundedSize 2 2 String
 --   "ar"
 --   
---   &gt;&gt;&gt; drop $(sz "Foobar") :: Sized String 0 2
+--   &gt;&gt;&gt; drop $(mx "Foobar") :: C.BoundedSize 0 2 String
 --   "ar"
 --   </pre>
-drop :: forall a l1 u1 l2 u2. (KnownNat l1, KnownNat u1, KnownNat l2, KnownNat u2, IsBytes a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
 
 -- | Obtain length bounds from the type.
 bounds :: forall l u a. IsBoundedSize l u a => BoundedSize l u a -> (Int, Int)
@@ -896,12 +899,12 @@ bounds :: forall l u a. IsBoundedSize l u a => BoundedSize l u a -> (Int, Int)
 -- | Obtain value-level length. Consult the actual data value.
 length :: forall l u a. IsBoundedSizeBytes l u a => BoundedSize l u a -> Int
 
--- | Fill a Sized with extra elements up to target length, padding original
---   elements to the left.
-padLeft :: forall a l1 u1 l2 u2. (IsBoundedSizeBytes l1 u1 a, KnownNat l2, KnownNat u2, KnownNat (u2 + u1)) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+-- | Fill a BoundedSize with extra elements up to target length, padding
+--   original elements to the left.
+padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes 0 (u2 + u1) a) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
-padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, KnownNat l2, KnownNat u2, KnownNat (u1 + u2)) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes 0 (u1 + u2) a) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsMaxSizeBytes n a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsFixedSizeBytes n a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsBoundedSizeBytes l u a
@@ -930,6 +933,11 @@ instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
 
 
+-- | Orphan instances.
+module System.SED.MCTP.Common.Instances
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.IsBytes.IsBytes (Data.BoundedSize.Class.BoundedSize l u Data.ByteString.Internal.ByteString)
+
+
 -- | Parse and generate stream items.
 module System.SED.MCTP.Common.StreamItem
 class StreamItem a
@@ -946,158 +954,6 @@ type Parser = Parser ByteString
 require :: (StreamItem a, Show a, Eq a) => a -> Parser a
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem [a]
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a, a)
-
-
--- | Formats.
-module System.SED.MCTP.Common.Base_Type.Class
-newtype Core_some_integer
-Core_some_integer :: Integer -> Core_some_integer
-newtype Core_some_uinteger
-Core_some_uinteger :: Natural -> Core_some_uinteger
-newtype Core_some_max_bytes
-Core_some_max_bytes :: ByteString -> Core_some_max_bytes
-newtype Core_some_bytes
-Core_some_bytes :: ByteString -> Core_some_bytes
-newtype Core_integer n
-Core_integer :: MaxSize n Core_some_integer -> Core_integer n
-newtype Core_uinteger n
-Core_uinteger :: MaxSize n Core_some_uinteger -> Core_uinteger n
-newtype Core_max_bytes n
-Core_max_bytes :: MaxSize n Core_some_max_bytes -> Core_max_bytes n
-newtype Core_bytes n
-Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
-type Core_uinteger_at_least n = AtLeast Core_uinteger n
-type Core_integer_at_least n = AtLeast Core_integer n
-type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_max_bytes
-instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Class.Core_some_max_bytes
-instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Class.Core_some_max_bytes
-instance Data.IsBytes.IsBytes System.SED.MCTP.Common.Base_Type.Class.Core_some_max_bytes
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_max_bytes
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_max_bytes
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_max_bytes
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance Data.IsBytes.IsBytes System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-
-
--- | Template Haskell helpers for BoundedSize.
-module System.SED.MCTP.Common.Base_Type.TH
-
--- | Type-safe constructor for fixed-length byte literals: Core_bytes n
-ci :: LitI -> Q Exp
-ci' :: LitI -> Q Exp
-cu :: LitI -> Q Exp
-cu' :: LitI -> Q Exp
-cb :: LitS -> Q Exp
-cb' :: LitS -> Q Exp
-cm :: LitS -> Q Exp
-cm' :: LitS -> Q Exp
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.TH.LitI
-instance Data.String.IsString System.SED.MCTP.Common.Base_Type.TH.LitS
-
-
--- | Formats.
-module System.SED.MCTP.Common.Base_Type
-newtype Core_some_integer
-Core_some_integer :: Integer -> Core_some_integer
-newtype Core_some_uinteger
-Core_some_uinteger :: Natural -> Core_some_uinteger
-newtype Core_some_bytes
-Core_some_bytes :: ByteString -> Core_some_bytes
-newtype Core_some_max_bytes
-Core_some_max_bytes :: ByteString -> Core_some_max_bytes
-newtype Core_integer n
-Core_integer :: MaxSize n Core_some_integer -> Core_integer n
-newtype Core_uinteger n
-Core_uinteger :: MaxSize n Core_some_uinteger -> Core_uinteger n
-newtype Core_bytes n
-Core_bytes :: FixedSize n Core_some_bytes -> Core_bytes n
-newtype Core_max_bytes n
-Core_max_bytes :: MaxSize n Core_some_max_bytes -> Core_max_bytes n
-
--- | Type-safe constructor for fixed-length byte literals: Core_bytes n
-ci :: LitI -> Q Exp
-cu :: LitI -> Q Exp
-cb :: LitS -> Q Exp
-cm :: LitS -> Q Exp
-
-
--- | Formats.
-module System.SED.MCTP.Common.Simple_Type
-type Core_bytes_4 = Core_bytes 4
-type Core_bytes_12 = Core_bytes 12
-type Core_bytes_16 = Core_bytes 16
-type Core_bytes_20 = Core_bytes 20
-type Core_bytes_32 = Core_bytes 32
-type Core_bytes_48 = Core_bytes 48
-type Core_bytes_64 = Core_bytes 64
-type Core_feedback_size = Core_uinteger 2
-type Core_integer_1 = Core_integer 1
-type Core_integer_2 = Core_integer 2
-type Core_max_bytes_32 = Core_max_bytes 32
-type Core_name = Core_max_bytes 32
-type Core_password = Core_max_bytes 32
-type Core_type_def_max_size = 128
-type Core_type_def = Core_max_bytes Core_type_def_max_size
-type Core_uid = Core_bytes 8
-type Core_uinteger_1 = Core_uinteger 1
-type Core_uinteger_128 = Core_uinteger 128
-type Core_uinteger_2 = Core_uinteger 2
-type Core_uinteger_20 = Core_uinteger 20
-type Core_uinteger_21 = Core_uinteger 21
-type Core_uinteger_24 = Core_uinteger 24
-type Core_uinteger_256 = Core_uinteger 256
-type Core_uinteger_28 = Core_uinteger 28
-type Core_uinteger_30 = Core_uinteger 30
-type Core_uinteger_36 = Core_uinteger 36
-type Core_uinteger_4 = Core_uinteger 4
-type Core_uinteger_48 = Core_uinteger 48
-type Core_uinteger_64 = Core_uinteger 64
-type Core_uinteger_66 = Core_uinteger 66
-type Core_uinteger_8 = Core_uinteger 8
 
 
 -- | Datatypes for Tokens. Define the types used in SEDs, and in the hsed
@@ -1133,21 +989,134 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Tok
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Token.Token
 
 
--- | Orphan instances.
-module System.SED.MCTP.Common.Instances
-instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (Extras.Sized.Fixed_bytes n)
-instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (Extras.Sized.Fixed_bytes n)
+-- | Formats.
+module System.SED.MCTP.Common.Base_Type.Class
+newtype Core_integer n
+Core_integer :: MaxSize n Integer -> Core_integer n
+newtype Core_uinteger n
+Core_uinteger :: MaxSize n Natural -> Core_uinteger n
+newtype Core_max_bytes n
+Core_max_bytes :: MaxSize n ByteString -> Core_max_bytes n
+newtype Core_bytes n
+Core_bytes :: FixedSize n ByteString -> Core_bytes n
+type Core_uinteger_at_least n = AtLeast Core_uinteger n
+type Core_integer_at_least n = AtLeast Core_integer n
+type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.IsBytes.IsBytes (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+
+
+-- | Template Haskell helpers for BoundedSize.
+module System.SED.MCTP.Common.Base_Type.TH
+
+-- | Type-safe constructor for fixed-length byte literals: Core_bytes n
+ci :: LitI -> Q Exp
+ci' :: LitI -> Q Exp
+cu :: LitI -> Q Exp
+cu' :: LitI -> Q Exp
+cb :: LitS -> Q Exp
+cb' :: LitS -> Q Exp
+cm :: LitS -> Q Exp
+cm' :: LitS -> Q Exp
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.TH.LitI
+instance Data.String.IsString System.SED.MCTP.Common.Base_Type.TH.LitS
+
+
+-- | Formats.
+module System.SED.MCTP.Common.Base_Type
+newtype Core_integer n
+Core_integer :: MaxSize n Integer -> Core_integer n
+newtype Core_uinteger n
+Core_uinteger :: MaxSize n Natural -> Core_uinteger n
+newtype Core_bytes n
+Core_bytes :: FixedSize n ByteString -> Core_bytes n
+newtype Core_max_bytes n
+Core_max_bytes :: MaxSize n ByteString -> Core_max_bytes n
+
+-- | Type-safe constructor for fixed-length byte literals: Core_bytes n
+ci :: LitI -> Q Exp
+cu :: LitI -> Q Exp
+cb :: LitS -> Q Exp
+cm :: LitS -> Q Exp
+
+
+-- | Formats.
+module System.SED.MCTP.Common.Simple_Type
+data Core_bytes n
+data Core_integer n
+data Core_max_bytes n
+data Core_uinteger n
+type Core_bytes_4 = Core_bytes 4
+type Core_bytes_12 = Core_bytes 12
+type Core_bytes_16 = Core_bytes 16
+type Core_bytes_20 = Core_bytes 20
+type Core_bytes_32 = Core_bytes 32
+type Core_bytes_48 = Core_bytes 48
+type Core_bytes_64 = Core_bytes 64
+type Core_feedback_size = Core_uinteger 2
+type Core_integer_1 = Core_integer 1
+type Core_integer_2 = Core_integer 2
+type Core_max_bytes_32 = Core_max_bytes 32
+type Core_name = Core_max_bytes 32
+type Core_password = Core_max_bytes 32
+type Core_type_def_max_size = 128
+type Core_type_def = Core_max_bytes Core_type_def_max_size
+type Core_uid = Core_bytes 8
+type Core_uinteger_1 = Core_uinteger 1
+type Core_uinteger_128 = Core_uinteger 128
+type Core_uinteger_2 = Core_uinteger 2
+type Core_uinteger_20 = Core_uinteger 20
+type Core_uinteger_21 = Core_uinteger 21
+type Core_uinteger_24 = Core_uinteger 24
+type Core_uinteger_256 = Core_uinteger 256
+type Core_uinteger_28 = Core_uinteger 28
+type Core_uinteger_30 = Core_uinteger 30
+type Core_uinteger_36 = Core_uinteger 36
+type Core_uinteger_4 = Core_uinteger 4
+type Core_uinteger_48 = Core_uinteger 48
+type Core_uinteger_64 = Core_uinteger 64
+type Core_uinteger_66 = Core_uinteger 66
+type Core_uinteger_8 = Core_uinteger 8
 
 
 -- | Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID
-showFixed_bytesHex :: KnownNat n => Fixed_bytes n -> [String]
-showFixed_bytes :: KnownNat n => String -> Fixed_bytes n -> String
+showCore_bytesHex :: KnownNat n => Core_bytes n -> [String]
+showCore_bytes :: KnownNat n => String -> Core_bytes n -> String
 newtype HalfUID
-HalfUID :: Fixed_bytes 4 -> HalfUID
+HalfUID :: Core_bytes 4 -> HalfUID
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
 newtype UID
-UID :: Fixed_bytes 8 -> UID
+UID :: Core_bytes 8 -> UID
 uid :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> UID
 uidUpper :: UID -> HalfUID
 uidLower :: UID -> HalfUID
@@ -1208,7 +1177,7 @@ instance GHC.Show.Show System.SED.MCTP.Common.Table.TemplateName
 instance GHC.Show.Show System.SED.MCTP.Common.Table.TableName
 
 
--- | Template Haskell utilities.
+-- | TableUIDs Template Haskell
 module System.SED.MCTP.Common.THUtil
 
 -- | Run a table parser (any parser, really) producing a result or throwing
@@ -1232,8 +1201,8 @@ eHalfUID :: HalfUID -> Exp
 -- | UID as Exp
 eUID :: UID -> Exp
 
--- | Wrap a Fixed_bytes n
-eID :: KnownNat n => Name -> Fixed_bytes n -> Exp
+-- | Wrap a Core_bytes n
+eID :: KnownNat n => Name -> Core_bytes n -> Exp
 
 -- | (Name, String) pair as Exp
 eValP :: Name -> String -> Exp

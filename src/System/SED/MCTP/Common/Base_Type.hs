@@ -19,11 +19,7 @@ Formats.
 -}
 
 module System.SED.MCTP.Common.Base_Type
-  ( Core_some_integer  (..)
-  , Core_some_uinteger (..)
-  , Core_some_bytes    (..)
-  , Core_some_max_bytes (..)
-  , Core_integer       (..)
+  ( Core_integer       (..)
   , Core_uinteger      (..)
   , Core_bytes         (..)
   , Core_max_bytes     (..)
@@ -37,9 +33,5 @@ where
 import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
-                                                         Core_some_bytes (..),
-                                                         Core_some_integer (..),
-                                                         Core_some_max_bytes (..),
-                                                         Core_some_uinteger (..),
                                                          Core_uinteger (..))
 import           System.SED.MCTP.Common.Base_Type.TH    (cb, ci, cm, cu)

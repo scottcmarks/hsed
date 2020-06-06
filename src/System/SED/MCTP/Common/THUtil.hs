@@ -16,27 +16,28 @@ TableUIDs Template Haskell
 module System.SED.MCTP.Common.THUtil
 where
 
-import           Data.Attoparsec.ByteString         (Parser, parseOnly)
-import           Data.ByteString                    (unpack)
-import           Data.Either                        (either)
-import           Data.List                          (foldl)
-import           Data.String                        (IsString (..))
+import           Data.Attoparsec.ByteString       (Parser, parseOnly)
+import           Data.Either                      (either)
+import           Data.List                        (foldl)
+import           Data.String                      (IsString (..))
 
-import           GHC.Base                           (Maybe (..), String, id,
-                                                     map, (.))
-import           GHC.Err                            (error)
-import           GHC.Real                           (toInteger)
-import           GHC.TypeLits                       (KnownNat)
+import           GHC.Base                         (Maybe (..), String, id, map,
+                                                   (.))
+import           GHC.Err                          (error)
+import           GHC.Real                         (Integral (..), toInteger)
+import           GHC.TypeLits                     (KnownNat)
+import           GHC.Word                         (Word8 (..))
 
-import           Language.Haskell.TH                (Body (..), Con (..),
-                                                     Dec (..), DerivClause (..),
-                                                     Exp (..), Lit (..), Name,
-                                                     Pat (..), Type (..))
+import           Language.Haskell.TH              (Body (..), Con (..),
+                                                   Dec (..), DerivClause (..),
+                                                   Exp (..), Lit (..), Name,
+                                                   Pat (..), Type (..))
 
+import           Data.IsBytes                     (toList)
 
-import           System.SED.MCTP.Common.Simple_Type (Core_bytes (..))
-import           System.SED.MCTP.Common.UID         (HalfUID (..), UID (..),
-                                                     halfUID, uid)
+import           System.SED.MCTP.Common.Base_Type (Core_bytes (..))
+import           System.SED.MCTP.Common.UID       (HalfUID (..), UID (..),
+                                                   halfUID, uid)
 
 
 -- | Run a table parser (any parser, really) producing a result or throwing an error.
@@ -67,8 +68,10 @@ eUID (UID fb) = eID 'uid fb
 
 -- | Wrap a Core_bytes n
 eID :: (KnownNat n) => Name -> Core_bytes n -> Exp
-eID wrapperName = foldl arg (VarE wrapperName) . unpack . _
-  where arg e b = AppE e (LitE (IntegerL (toInteger b)))
+eID wrapperName = foldl arg (VarE wrapperName) . toList
+  where
+    arg  :: Exp -> Word8 -> Exp
+    arg e b = AppE e (LitE (IntegerL (toInteger b)))
 
 -- | (Name, String) pair as Exp
 eValP :: Name -> String -> Exp

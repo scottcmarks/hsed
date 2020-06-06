@@ -1,14 +1,18 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DataKinds            #-}</span><span>
 </span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia          #-}</span><span>
-</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude    #-}</span><span>
-</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings    #-}</span><span>
-</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes           #-}</span><span>
-</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving   #-}</span><span>
-</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies         #-}</span><span>
-</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
-</span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span>
-</span><span id="line-11"></span><span class="hs-comment">{-|
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances    #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude    #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE OverloadedStrings    #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes           #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables  #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving   #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications     #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies         #-}</span><span>
+</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE TypeSynonymInstances #-}</span><span>
+</span><span id="line-12"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances #-}</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span class="hs-comment">{-|
 Module      : System.SED.MCTP.Common.Base_Type.Class
 Description : Core data type formats
 Copyright   : (c) Magnolia Heights R&amp;D, 2019
@@ -19,13 +23,9 @@ Stability   : experimental
 Formats.
 
 -}</span><span>
-</span><span id="line-22"></span><span>
-</span><span id="line-23"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.Class</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_integer"><span class="hs-identifier">Core_some_integer</span></a></span><span>  </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
-</span><span id="line-25"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_uinteger"><span class="hs-identifier">Core_some_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_max_bytes"><span class="hs-identifier">Core_some_max_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier">Core_some_bytes</span></a></span><span>    </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span>       </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.Class</span><span>
+</span><span id="line-28"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span>       </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
 </span><span id="line-29"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier">Core_max_bytes</span></a></span><span>     </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
 </span><span id="line-31"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span>         </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
@@ -35,541 +35,35 @@ Formats.
 </span><span id="line-35"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-36"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-37"></span><span>
-</span><span id="line-38"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.BoundedSize.html"><span class="hs-identifier">Data.BoundedSize</span></a></span><span>                  </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier">AtLeast</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier">FixedSize</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-39"></span><span>                                                    </span><span class="annot"><a href="Data.HasSize.html#HasSize"><span class="hs-identifier">HasSize</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier">MaxSize</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-40"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
-</span><span id="line-41"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.IsBytes.html"><span class="hs-identifier">Data.IsBytes</span></a></span><span>                      </span><span class="hs-special">(</span><span class="annot"><a href="Data.IsBytes.html#IsBytes"><span class="hs-identifier">IsBytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-42"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-43"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">undefined</span></span><span class="hs-special">)</span><span>
-</span><span id="line-44"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Classes</span></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Eq</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-45"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Num</span></span><span>                           </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Integer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Num</span></span><span class="hs-special">)</span><span>
-</span><span id="line-46"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Read</span></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Read</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-47"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Show</span></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-48"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Numeric.Natural</span></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Natural</span></span><span class="hs-special">)</span><span>
-</span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html"><span class="hs-identifier">System.SED.MCTP.Common.StreamItem</span></a></span><span>
-</span><span id="line-51"></span><span>
-</span><span id="line-52"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_some_integer"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_integer"><span class="hs-identifier hs-var">Core_some_integer</span></a></span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Core_some_integer"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_integer"><span class="hs-identifier hs-var">Core_some_integer</span></a></span></span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
-</span><span id="line-53"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549267"><span id="local-6989586621679549269"><span class="annot"><span class="annottext">Core_some_integer -&gt; Core_some_integer -&gt; Bool
-(Core_some_integer -&gt; Core_some_integer -&gt; Bool)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Bool)
--&gt; Eq Core_some_integer
-forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-$c/= :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-== :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-$c== :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549251"><span id="local-6989586621679549253"><span id="local-6989586621679549255"><span id="local-6989586621679549257"><span id="local-6989586621679549259"><span id="local-6989586621679549261"><span id="local-6989586621679549263"><span class="annot"><span class="annottext">Eq Core_some_integer
-Eq Core_some_integer =&gt;
-(Core_some_integer -&gt; Core_some_integer -&gt; Ordering)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Bool)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Bool)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Bool)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Bool)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer)
--&gt; Ord Core_some_integer
-Core_some_integer -&gt; Core_some_integer -&gt; Bool
-Core_some_integer -&gt; Core_some_integer -&gt; Ordering
-Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-forall a.
-Eq a =&gt;
-(a -&gt; a -&gt; Ordering)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; Ord a
-min :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-$cmin :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-max :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-$cmax :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-&gt;= :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-$c&gt;= :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-&gt; :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-$c&gt; :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-&lt;= :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-$c&lt;= :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-&lt; :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-$c&lt; :: Core_some_integer -&gt; Core_some_integer -&gt; Bool
-compare :: Core_some_integer -&gt; Core_some_integer -&gt; Ordering
-$ccompare :: Core_some_integer -&gt; Core_some_integer -&gt; Ordering
-$cp1Ord :: Eq Core_some_integer
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549248"><span class="annot"><span class="annottext">Core_some_integer -&gt; Int
-(Core_some_integer -&gt; Int) -&gt; HasSize Core_some_integer
-forall a. (a -&gt; Int) -&gt; HasSize a
-size :: Core_some_integer -&gt; Int
-$csize :: Core_some_integer -&gt; Int
-</span><a href="Data.HasSize.html#C%3AHasSize"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549233"><span id="local-6989586621679549235"><span id="local-6989586621679549237"><span id="local-6989586621679549239"><span id="local-6989586621679549241"><span id="local-6989586621679549243"><span id="local-6989586621679549245"><span class="annot"><span class="annottext">Integer -&gt; Core_some_integer
-Core_some_integer -&gt; Core_some_integer
-Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-(Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer)
--&gt; (Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer)
--&gt; (Core_some_integer -&gt; Core_some_integer)
--&gt; (Core_some_integer -&gt; Core_some_integer)
--&gt; (Core_some_integer -&gt; Core_some_integer)
--&gt; (Integer -&gt; Core_some_integer)
--&gt; Num Core_some_integer
-forall a.
-(a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (Integer -&gt; a)
--&gt; Num a
-fromInteger :: Integer -&gt; Core_some_integer
-$cfromInteger :: Integer -&gt; Core_some_integer
-signum :: Core_some_integer -&gt; Core_some_integer
-$csignum :: Core_some_integer -&gt; Core_some_integer
-abs :: Core_some_integer -&gt; Core_some_integer
-$cabs :: Core_some_integer -&gt; Core_some_integer
-negate :: Core_some_integer -&gt; Core_some_integer
-$cnegate :: Core_some_integer -&gt; Core_some_integer
-* :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-$c* :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-- :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-$c- :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-+ :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-$c+ :: Core_some_integer -&gt; Core_some_integer -&gt; Core_some_integer
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549224"><span id="local-6989586621679549226"><span id="local-6989586621679549228"><span id="local-6989586621679549230"><span class="annot"><span class="annottext">ReadPrec [Core_some_integer]
-ReadPrec Core_some_integer
-Int -&gt; ReadS Core_some_integer
-ReadS [Core_some_integer]
-(Int -&gt; ReadS Core_some_integer)
--&gt; ReadS [Core_some_integer]
--&gt; ReadPrec Core_some_integer
--&gt; ReadPrec [Core_some_integer]
--&gt; Read Core_some_integer
-forall a.
-(Int -&gt; ReadS a)
--&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
-readListPrec :: ReadPrec [Core_some_integer]
-$creadListPrec :: ReadPrec [Core_some_integer]
-readPrec :: ReadPrec Core_some_integer
-$creadPrec :: ReadPrec Core_some_integer
-readList :: ReadS [Core_some_integer]
-$creadList :: ReadS [Core_some_integer]
-readsPrec :: Int -&gt; ReadS Core_some_integer
-$creadsPrec :: Int -&gt; ReadS Core_some_integer
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549217"><span id="local-6989586621679549219"><span id="local-6989586621679549221"><span class="annot"><span class="annottext">Int -&gt; Core_some_integer -&gt; ShowS
-[Core_some_integer] -&gt; ShowS
-Core_some_integer -&gt; String
-(Int -&gt; Core_some_integer -&gt; ShowS)
--&gt; (Core_some_integer -&gt; String)
--&gt; ([Core_some_integer] -&gt; ShowS)
--&gt; Show Core_some_integer
-forall a.
-(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [Core_some_integer] -&gt; ShowS
-$cshowList :: [Core_some_integer] -&gt; ShowS
-show :: Core_some_integer -&gt; String
-$cshow :: Core_some_integer -&gt; String
-showsPrec :: Int -&gt; Core_some_integer -&gt; ShowS
-$cshowsPrec :: Int -&gt; Core_some_integer -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span class="hs-special">)</span><span>
-</span><span id="line-54"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_some_uinteger"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_uinteger"><span class="hs-identifier hs-var">Core_some_uinteger</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_some_uinteger"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_uinteger"><span class="hs-identifier hs-var">Core_some_uinteger</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span>
-</span><span id="line-55"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549211"><span id="local-6989586621679549213"><span class="annot"><span class="annottext">Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-(Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool)
--&gt; Eq Core_some_uinteger
-forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-$c/= :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-== :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-$c== :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549196"><span id="local-6989586621679549198"><span id="local-6989586621679549200"><span id="local-6989586621679549202"><span id="local-6989586621679549204"><span id="local-6989586621679549206"><span id="local-6989586621679549208"><span class="annot"><span class="annottext">Eq Core_some_uinteger
-Eq Core_some_uinteger =&gt;
-(Core_some_uinteger -&gt; Core_some_uinteger -&gt; Ordering)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; Ord Core_some_uinteger
-Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-Core_some_uinteger -&gt; Core_some_uinteger -&gt; Ordering
-Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-forall a.
-Eq a =&gt;
-(a -&gt; a -&gt; Ordering)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; Ord a
-min :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-$cmin :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-max :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-$cmax :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-&gt;= :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-$c&gt;= :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-&gt; :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-$c&gt; :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-&lt;= :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-$c&lt;= :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-&lt; :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-$c&lt; :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Bool
-compare :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Ordering
-$ccompare :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Ordering
-$cp1Ord :: Eq Core_some_uinteger
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549194"><span class="annot"><span class="annottext">Core_some_uinteger -&gt; Int
-(Core_some_uinteger -&gt; Int) -&gt; HasSize Core_some_uinteger
-forall a. (a -&gt; Int) -&gt; HasSize a
-size :: Core_some_uinteger -&gt; Int
-$csize :: Core_some_uinteger -&gt; Int
-</span><a href="#local-6989586621679549194"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549180"><span id="local-6989586621679549182"><span id="local-6989586621679549184"><span id="local-6989586621679549186"><span id="local-6989586621679549188"><span id="local-6989586621679549190"><span id="local-6989586621679549192"><span class="annot"><span class="annottext">Integer -&gt; Core_some_uinteger
-Core_some_uinteger -&gt; Core_some_uinteger
-Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-(Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; (Core_some_uinteger -&gt; Core_some_uinteger)
--&gt; (Integer -&gt; Core_some_uinteger)
--&gt; Num Core_some_uinteger
-forall a.
-(a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (Integer -&gt; a)
--&gt; Num a
-fromInteger :: Integer -&gt; Core_some_uinteger
-$cfromInteger :: Integer -&gt; Core_some_uinteger
-signum :: Core_some_uinteger -&gt; Core_some_uinteger
-$csignum :: Core_some_uinteger -&gt; Core_some_uinteger
-abs :: Core_some_uinteger -&gt; Core_some_uinteger
-$cabs :: Core_some_uinteger -&gt; Core_some_uinteger
-negate :: Core_some_uinteger -&gt; Core_some_uinteger
-$cnegate :: Core_some_uinteger -&gt; Core_some_uinteger
-* :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-$c* :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-- :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-$c- :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-+ :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-$c+ :: Core_some_uinteger -&gt; Core_some_uinteger -&gt; Core_some_uinteger
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549172"><span id="local-6989586621679549174"><span id="local-6989586621679549176"><span id="local-6989586621679549178"><span class="annot"><span class="annottext">ReadPrec [Core_some_uinteger]
-ReadPrec Core_some_uinteger
-Int -&gt; ReadS Core_some_uinteger
-ReadS [Core_some_uinteger]
-(Int -&gt; ReadS Core_some_uinteger)
--&gt; ReadS [Core_some_uinteger]
--&gt; ReadPrec Core_some_uinteger
--&gt; ReadPrec [Core_some_uinteger]
--&gt; Read Core_some_uinteger
-forall a.
-(Int -&gt; ReadS a)
--&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
-readListPrec :: ReadPrec [Core_some_uinteger]
-$creadListPrec :: ReadPrec [Core_some_uinteger]
-readPrec :: ReadPrec Core_some_uinteger
-$creadPrec :: ReadPrec Core_some_uinteger
-readList :: ReadS [Core_some_uinteger]
-$creadList :: ReadS [Core_some_uinteger]
-readsPrec :: Int -&gt; ReadS Core_some_uinteger
-$creadsPrec :: Int -&gt; ReadS Core_some_uinteger
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549166"><span id="local-6989586621679549168"><span id="local-6989586621679549170"><span class="annot"><span class="annottext">Int -&gt; Core_some_uinteger -&gt; ShowS
-[Core_some_uinteger] -&gt; ShowS
-Core_some_uinteger -&gt; String
-(Int -&gt; Core_some_uinteger -&gt; ShowS)
--&gt; (Core_some_uinteger -&gt; String)
--&gt; ([Core_some_uinteger] -&gt; ShowS)
--&gt; Show Core_some_uinteger
-forall a.
-(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [Core_some_uinteger] -&gt; ShowS
-$cshowList :: [Core_some_uinteger] -&gt; ShowS
-show :: Core_some_uinteger -&gt; String
-$cshow :: Core_some_uinteger -&gt; String
-showsPrec :: Int -&gt; Core_some_uinteger -&gt; ShowS
-$cshowsPrec :: Int -&gt; Core_some_uinteger -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
-</span><span id="line-56"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_some_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier hs-var">Core_some_bytes</span></a></span></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="Core_some_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier hs-var">Core_some_bytes</span></a></span></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
-</span><span id="line-57"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549161"><span id="local-6989586621679549163"><span class="annot"><span class="annottext">Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-(Core_some_bytes -&gt; Core_some_bytes -&gt; Bool)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Bool)
--&gt; Eq Core_some_bytes
-forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-$c/= :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-== :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-$c== :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549146"><span id="local-6989586621679549148"><span id="local-6989586621679549150"><span id="local-6989586621679549152"><span id="local-6989586621679549154"><span id="local-6989586621679549156"><span id="local-6989586621679549158"><span class="annot"><span class="annottext">Eq Core_some_bytes
-Eq Core_some_bytes =&gt;
-(Core_some_bytes -&gt; Core_some_bytes -&gt; Ordering)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Bool)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Bool)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Bool)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Bool)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes)
--&gt; Ord Core_some_bytes
-Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-Core_some_bytes -&gt; Core_some_bytes -&gt; Ordering
-Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-forall a.
-Eq a =&gt;
-(a -&gt; a -&gt; Ordering)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; Ord a
-min :: Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-$cmin :: Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-max :: Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-$cmax :: Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-&gt;= :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-$c&gt;= :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-&gt; :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-$c&gt; :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-&lt;= :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-$c&lt;= :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-&lt; :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-$c&lt; :: Core_some_bytes -&gt; Core_some_bytes -&gt; Bool
-compare :: Core_some_bytes -&gt; Core_some_bytes -&gt; Ordering
-$ccompare :: Core_some_bytes -&gt; Core_some_bytes -&gt; Ordering
-$cp1Ord :: Eq Core_some_bytes
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549144"><span class="annot"><span class="annottext">Core_some_bytes -&gt; Int
-(Core_some_bytes -&gt; Int) -&gt; HasSize Core_some_bytes
-forall a. (a -&gt; Int) -&gt; HasSize a
-size :: Core_some_bytes -&gt; Int
-$csize :: Core_some_bytes -&gt; Int
-</span><a href="#local-6989586621679549144"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549131"><span id="local-6989586621679549133"><span id="local-6989586621679549135"><span id="local-6989586621679549137"><span id="local-6989586621679549139"><span id="local-6989586621679549141"><span class="annot"><span class="annottext">HasSize Core_some_bytes
-Int -&gt; Elem Core_some_bytes -&gt; Core_some_bytes
-Int -&gt; Core_some_bytes -&gt; Core_some_bytes
-HasSize Core_some_bytes =&gt;
-(Core_some_bytes -&gt; Int)
--&gt; (Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes)
--&gt; (Int -&gt; Elem Core_some_bytes -&gt; Core_some_bytes)
--&gt; ((Elem Core_some_bytes -&gt; Elem Core_some_bytes)
-    -&gt; Core_some_bytes -&gt; Core_some_bytes)
--&gt; (Int -&gt; Core_some_bytes -&gt; Core_some_bytes)
--&gt; (Int -&gt; Core_some_bytes -&gt; Core_some_bytes)
--&gt; IsBytes Core_some_bytes
-Core_some_bytes -&gt; Int
-Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-(Elem Core_some_bytes -&gt; Elem Core_some_bytes)
--&gt; Core_some_bytes -&gt; Core_some_bytes
-forall a.
-HasSize a =&gt;
-(a -&gt; Int)
--&gt; (a -&gt; a -&gt; a)
--&gt; (Int -&gt; Elem a -&gt; a)
--&gt; ((Elem a -&gt; Elem a) -&gt; a -&gt; a)
--&gt; (Int -&gt; a -&gt; a)
--&gt; (Int -&gt; a -&gt; a)
--&gt; IsBytes a
-drop :: Int -&gt; Core_some_bytes -&gt; Core_some_bytes
-$cdrop :: Int -&gt; Core_some_bytes -&gt; Core_some_bytes
-take :: Int -&gt; Core_some_bytes -&gt; Core_some_bytes
-$ctake :: Int -&gt; Core_some_bytes -&gt; Core_some_bytes
-map :: (Elem Core_some_bytes -&gt; Elem Core_some_bytes)
--&gt; Core_some_bytes -&gt; Core_some_bytes
-$cmap :: (Elem Core_some_bytes -&gt; Elem Core_some_bytes)
--&gt; Core_some_bytes -&gt; Core_some_bytes
-replicate :: Int -&gt; Elem Core_some_bytes -&gt; Core_some_bytes
-$creplicate :: Int -&gt; Elem Core_some_bytes -&gt; Core_some_bytes
-append :: Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-$cappend :: Core_some_bytes -&gt; Core_some_bytes -&gt; Core_some_bytes
-length :: Core_some_bytes -&gt; Int
-$clength :: Core_some_bytes -&gt; Int
-$cp1IsBytes :: HasSize Core_some_bytes
-</span><a href="Data.IsBytes.html#C%3AIsBytes"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsBytes</span></a></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549128"><span class="annot"><span class="annottext">String -&gt; Core_some_bytes
-(String -&gt; Core_some_bytes) -&gt; IsString Core_some_bytes
-forall a. (String -&gt; a) -&gt; IsString a
-fromString :: String -&gt; Core_some_bytes
-$cfromString :: String -&gt; Core_some_bytes
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549119"><span id="local-6989586621679549121"><span id="local-6989586621679549123"><span id="local-6989586621679549125"><span class="annot"><span class="annottext">ReadPrec [Core_some_bytes]
-ReadPrec Core_some_bytes
-Int -&gt; ReadS Core_some_bytes
-ReadS [Core_some_bytes]
-(Int -&gt; ReadS Core_some_bytes)
--&gt; ReadS [Core_some_bytes]
--&gt; ReadPrec Core_some_bytes
--&gt; ReadPrec [Core_some_bytes]
--&gt; Read Core_some_bytes
-forall a.
-(Int -&gt; ReadS a)
--&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
-readListPrec :: ReadPrec [Core_some_bytes]
-$creadListPrec :: ReadPrec [Core_some_bytes]
-readPrec :: ReadPrec Core_some_bytes
-$creadPrec :: ReadPrec Core_some_bytes
-readList :: ReadS [Core_some_bytes]
-$creadList :: ReadS [Core_some_bytes]
-readsPrec :: Int -&gt; ReadS Core_some_bytes
-$creadsPrec :: Int -&gt; ReadS Core_some_bytes
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549113"><span id="local-6989586621679549115"><span id="local-6989586621679549117"><span class="annot"><span class="annottext">Int -&gt; Core_some_bytes -&gt; ShowS
-[Core_some_bytes] -&gt; ShowS
-Core_some_bytes -&gt; String
-(Int -&gt; Core_some_bytes -&gt; ShowS)
--&gt; (Core_some_bytes -&gt; String)
--&gt; ([Core_some_bytes] -&gt; ShowS)
--&gt; Show Core_some_bytes
-forall a.
-(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [Core_some_bytes] -&gt; ShowS
-$cshowList :: [Core_some_bytes] -&gt; ShowS
-show :: Core_some_bytes -&gt; String
-$cshow :: Core_some_bytes -&gt; String
-showsPrec :: Int -&gt; Core_some_bytes -&gt; ShowS
-$cshowsPrec :: Int -&gt; Core_some_bytes -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
-</span><span id="line-58"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_some_max_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_max_bytes"><span class="hs-identifier hs-var">Core_some_max_bytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_some_max_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_max_bytes"><span class="hs-identifier hs-var">Core_some_max_bytes</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
-</span><span id="line-59"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549108"><span id="local-6989586621679549110"><span class="annot"><span class="annottext">Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-(Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool)
--&gt; (Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool)
--&gt; Eq Core_some_max_bytes
-forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-$c/= :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-== :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-$c== :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549093"><span id="local-6989586621679549095"><span id="local-6989586621679549097"><span id="local-6989586621679549099"><span id="local-6989586621679549101"><span id="local-6989586621679549103"><span id="local-6989586621679549105"><span class="annot"><span class="annottext">Eq Core_some_max_bytes
-Eq Core_some_max_bytes =&gt;
-(Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Ordering)
--&gt; (Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool)
--&gt; (Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool)
--&gt; (Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool)
--&gt; (Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool)
--&gt; (Core_some_max_bytes
-    -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes)
--&gt; (Core_some_max_bytes
-    -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes)
--&gt; Ord Core_some_max_bytes
-Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Ordering
-Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-forall a.
-Eq a =&gt;
-(a -&gt; a -&gt; Ordering)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; Ord a
-min :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-$cmin :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-max :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-$cmax :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-&gt;= :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-$c&gt;= :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-&gt; :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-$c&gt; :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-&lt;= :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-$c&lt;= :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-&lt; :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-$c&lt; :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Bool
-compare :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Ordering
-$ccompare :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Ordering
-$cp1Ord :: Eq Core_some_max_bytes
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549091"><span class="annot"><span class="annottext">Core_some_max_bytes -&gt; Int
-(Core_some_max_bytes -&gt; Int) -&gt; HasSize Core_some_max_bytes
-forall a. (a -&gt; Int) -&gt; HasSize a
-size :: Core_some_max_bytes -&gt; Int
-$csize :: Core_some_max_bytes -&gt; Int
-</span><a href="#local-6989586621679549091"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549078"><span id="local-6989586621679549080"><span id="local-6989586621679549082"><span id="local-6989586621679549084"><span id="local-6989586621679549086"><span id="local-6989586621679549088"><span class="annot"><span class="annottext">HasSize Core_some_max_bytes
-Int -&gt; Elem Core_some_max_bytes -&gt; Core_some_max_bytes
-Int -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-HasSize Core_some_max_bytes =&gt;
-(Core_some_max_bytes -&gt; Int)
--&gt; (Core_some_max_bytes
-    -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes)
--&gt; (Int -&gt; Elem Core_some_max_bytes -&gt; Core_some_max_bytes)
--&gt; ((Elem Core_some_max_bytes -&gt; Elem Core_some_max_bytes)
-    -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes)
--&gt; (Int -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes)
--&gt; (Int -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes)
--&gt; IsBytes Core_some_max_bytes
-Core_some_max_bytes -&gt; Int
-Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-(Elem Core_some_max_bytes -&gt; Elem Core_some_max_bytes)
--&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-forall a.
-HasSize a =&gt;
-(a -&gt; Int)
--&gt; (a -&gt; a -&gt; a)
--&gt; (Int -&gt; Elem a -&gt; a)
--&gt; ((Elem a -&gt; Elem a) -&gt; a -&gt; a)
--&gt; (Int -&gt; a -&gt; a)
--&gt; (Int -&gt; a -&gt; a)
--&gt; IsBytes a
-drop :: Int -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-$cdrop :: Int -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-take :: Int -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-$ctake :: Int -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-map :: (Elem Core_some_max_bytes -&gt; Elem Core_some_max_bytes)
--&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-$cmap :: (Elem Core_some_max_bytes -&gt; Elem Core_some_max_bytes)
--&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-replicate :: Int -&gt; Elem Core_some_max_bytes -&gt; Core_some_max_bytes
-$creplicate :: Int -&gt; Elem Core_some_max_bytes -&gt; Core_some_max_bytes
-append :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-$cappend :: Core_some_max_bytes -&gt; Core_some_max_bytes -&gt; Core_some_max_bytes
-length :: Core_some_max_bytes -&gt; Int
-$clength :: Core_some_max_bytes -&gt; Int
-$cp1IsBytes :: HasSize Core_some_max_bytes
-</span><a href="#local-6989586621679549078"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsBytes</span></a></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549076"><span class="annot"><span class="annottext">String -&gt; Core_some_max_bytes
-(String -&gt; Core_some_max_bytes) -&gt; IsString Core_some_max_bytes
-forall a. (String -&gt; a) -&gt; IsString a
-fromString :: String -&gt; Core_some_max_bytes
-$cfromString :: String -&gt; Core_some_max_bytes
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549068"><span id="local-6989586621679549070"><span id="local-6989586621679549072"><span id="local-6989586621679549074"><span class="annot"><span class="annottext">ReadPrec [Core_some_max_bytes]
-ReadPrec Core_some_max_bytes
-Int -&gt; ReadS Core_some_max_bytes
-ReadS [Core_some_max_bytes]
-(Int -&gt; ReadS Core_some_max_bytes)
--&gt; ReadS [Core_some_max_bytes]
--&gt; ReadPrec Core_some_max_bytes
--&gt; ReadPrec [Core_some_max_bytes]
--&gt; Read Core_some_max_bytes
-forall a.
-(Int -&gt; ReadS a)
--&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
-readListPrec :: ReadPrec [Core_some_max_bytes]
-$creadListPrec :: ReadPrec [Core_some_max_bytes]
-readPrec :: ReadPrec Core_some_max_bytes
-$creadPrec :: ReadPrec Core_some_max_bytes
-readList :: ReadS [Core_some_max_bytes]
-$creadList :: ReadS [Core_some_max_bytes]
-readsPrec :: Int -&gt; ReadS Core_some_max_bytes
-$creadsPrec :: Int -&gt; ReadS Core_some_max_bytes
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549062"><span id="local-6989586621679549064"><span id="local-6989586621679549066"><span class="annot"><span class="annottext">Int -&gt; Core_some_max_bytes -&gt; ShowS
-[Core_some_max_bytes] -&gt; ShowS
-Core_some_max_bytes -&gt; String
-(Int -&gt; Core_some_max_bytes -&gt; ShowS)
--&gt; (Core_some_max_bytes -&gt; String)
--&gt; ([Core_some_max_bytes] -&gt; ShowS)
--&gt; Show Core_some_max_bytes
-forall a.
-(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [Core_some_max_bytes] -&gt; ShowS
-$cshowList :: [Core_some_max_bytes] -&gt; ShowS
-show :: Core_some_max_bytes -&gt; String
-$cshow :: Core_some_max_bytes -&gt; String
-showsPrec :: Int -&gt; Core_some_max_bytes -&gt; ShowS
-$cshowsPrec :: Int -&gt; Core_some_max_bytes -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Monad</span></span><span>                     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">fail</span></span><span class="hs-special">)</span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>                   </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">B</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-41"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Either</span></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Either</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-42"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Functor</span></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(&lt;$&gt;)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.IsBytes.html"><span class="hs-identifier">Data.IsBytes</span></a></span><span>                      </span><span class="hs-special">(</span><span class="annot"><a href="Data.IsBytes.html#IsBytes"><span class="hs-identifier">IsBytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-44"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-45"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Proxy</span></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Proxy</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">)</span><span>
+</span><span id="line-47"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">mconcat</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">pure</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">,</span><span>
+</span><span id="line-48"></span><span>                                                    </span><span class="annot"><span class="hs-operator">(.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-49"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Classes</span></span><span>                       </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Eq</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Num</span></span><span>                           </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Integer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Num</span></span><span class="hs-special">)</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Read</span></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Read</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-52"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Show</span></span><span>                          </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.TypeLits</span></span><span>                      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">KnownNat</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Numeric.Natural</span></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-55"></span><span>
+</span><span id="line-56"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.BoundedSize.html"><span class="hs-identifier">Data.BoundedSize</span></a></span><span>                  </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier">AtLeast</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier">FixedSize</span></a></span><span class="hs-special">,</span><span>
+</span><span id="line-57"></span><span>                                                    </span><span class="annot"><a href="Data.HasSize.html#HasSize"><span class="hs-identifier">HasSize</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier">MaxSize</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-58"></span><span class="hs-keyword">import</span><span> </span><span class="hs-keyword">qualified</span><span> </span><span class="annot"><a href="Data.Smart.html"><span class="hs-identifier">Data.Smart</span></a></span><span>                        </span><span class="hs-keyword">as</span><span> </span><span class="annot"><span class="hs-identifier">S</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Smart.html#Smart"><span class="hs-identifier">Smart</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-59"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="GHC.TypeLits.Extras.html"><span class="hs-identifier">GHC.TypeLits.Extras</span></a></span><span>               </span><span class="hs-special">(</span><span class="annot"><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier">fromNat</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_integer"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-var">Core_integer</span></a></span></span><span>   </span><span id="local-6989586621679549061"><span class="annot"><a href="#local-6989586621679549061"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_integer"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-var">Core_integer</span></a></span></span><span>   </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679549061"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_integer"><span class="hs-identifier hs-type">Core_some_integer</span></a></span><span> </span><span class="hs-special">)</span><span>
-</span><span id="line-63"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549056"><span id="local-6989586621679549058"><span class="annot"><span class="annottext">Core_integer n -&gt; Core_integer n -&gt; Bool
+</span><span id="line-61"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Instances.html"><span class="hs-identifier">System.SED.MCTP.Common.Instances</span></a></span><span>  </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-62"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html"><span class="hs-identifier">System.SED.MCTP.Common.StreamItem</span></a></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html"><span class="hs-identifier">System.SED.MCTP.Common.Token</span></a></span><span>      </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#IsToken"><span class="hs-identifier">IsToken</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Token"><span class="hs-identifier">Token</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-64"></span><span>
+</span><span id="line-65"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_integer"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-var">Core_integer</span></a></span></span><span>   </span><span id="local-6989586621679544004"><span class="annot"><a href="#local-6989586621679544004"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_integer"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-var">Core_integer</span></a></span></span><span>   </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679544004"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-66"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679543979"><span id="local-6989586621679543981"><span class="annot"><span class="annottext">Core_integer n -&gt; Core_integer n -&gt; Bool
 (Core_integer n -&gt; Core_integer n -&gt; Bool)
 -&gt; (Core_integer n -&gt; Core_integer n -&gt; Bool)
 -&gt; Eq (Core_integer n)
@@ -579,7 +73,7 @@ forall (n :: Nat). Core_integer n -&gt; Core_integer n -&gt; Bool
 $c/= :: forall (n :: Nat). Core_integer n -&gt; Core_integer n -&gt; Bool
 == :: Core_integer n -&gt; Core_integer n -&gt; Bool
 $c== :: forall (n :: Nat). Core_integer n -&gt; Core_integer n -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549041"><span id="local-6989586621679549043"><span id="local-6989586621679549045"><span id="local-6989586621679549047"><span id="local-6989586621679549049"><span id="local-6989586621679549051"><span id="local-6989586621679549053"><span class="annot"><span class="annottext">Eq (Core_integer n)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543963"><span id="local-6989586621679543965"><span id="local-6989586621679543967"><span id="local-6989586621679543969"><span id="local-6989586621679543971"><span id="local-6989586621679543973"><span id="local-6989586621679543975"><span class="annot"><span class="annottext">Eq (Core_integer n)
 Eq (Core_integer n) =&gt;
 (Core_integer n -&gt; Core_integer n -&gt; Ordering)
 -&gt; (Core_integer n -&gt; Core_integer n -&gt; Bool)
@@ -624,13 +118,13 @@ $c&lt; :: forall (n :: Nat). Core_integer n -&gt; Core_integer n -&gt; Bool
 compare :: Core_integer n -&gt; Core_integer n -&gt; Ordering
 $ccompare :: forall (n :: Nat). Core_integer n -&gt; Core_integer n -&gt; Ordering
 $cp1Ord :: forall (n :: Nat). Eq (Core_integer n)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549039"><span class="annot"><span class="annottext">Core_integer n -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543960"><span class="annot"><span class="annottext">Core_integer n -&gt; Int
 (Core_integer n -&gt; Int) -&gt; HasSize (Core_integer n)
 forall a. (a -&gt; Int) -&gt; HasSize a
 forall (n :: Nat). KnownNat n =&gt; Core_integer n -&gt; Int
 size :: Core_integer n -&gt; Int
 $csize :: forall (n :: Nat). KnownNat n =&gt; Core_integer n -&gt; Int
-</span><a href="#local-6989586621679549039"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549025"><span id="local-6989586621679549027"><span id="local-6989586621679549029"><span id="local-6989586621679549031"><span id="local-6989586621679549033"><span id="local-6989586621679549035"><span id="local-6989586621679549037"><span class="annot"><span class="annottext">Integer -&gt; Core_integer n
+</span><a href="Data.HasSize.html#C%3AHasSize"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543945"><span id="local-6989586621679543947"><span id="local-6989586621679543949"><span id="local-6989586621679543951"><span id="local-6989586621679543953"><span id="local-6989586621679543955"><span id="local-6989586621679543957"><span class="annot"><span class="annottext">Integer -&gt; Core_integer n
 Core_integer n -&gt; Core_integer n
 Core_integer n -&gt; Core_integer n -&gt; Core_integer n
 (Core_integer n -&gt; Core_integer n -&gt; Core_integer n)
@@ -675,7 +169,7 @@ Core_integer n -&gt; Core_integer n -&gt; Core_integer n
 $c+ :: forall (n :: Nat).
 KnownNat n =&gt;
 Core_integer n -&gt; Core_integer n -&gt; Core_integer n
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549017"><span id="local-6989586621679549019"><span id="local-6989586621679549021"><span id="local-6989586621679549023"><span class="annot"><span class="annottext">ReadPrec [Core_integer n]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543936"><span id="local-6989586621679543938"><span id="local-6989586621679543940"><span id="local-6989586621679543942"><span class="annot"><span class="annottext">ReadPrec [Core_integer n]
 ReadPrec (Core_integer n)
 Int -&gt; ReadS (Core_integer n)
 ReadS [Core_integer n]
@@ -699,7 +193,7 @@ readList :: ReadS [Core_integer n]
 $creadList :: forall (n :: Nat). KnownNat n =&gt; ReadS [Core_integer n]
 readsPrec :: Int -&gt; ReadS (Core_integer n)
 $creadsPrec :: forall (n :: Nat). KnownNat n =&gt; Int -&gt; ReadS (Core_integer n)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679549011"><span id="local-6989586621679549013"><span id="local-6989586621679549015"><span class="annot"><span class="annottext">Int -&gt; Core_integer n -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543929"><span id="local-6989586621679543931"><span id="local-6989586621679543933"><span class="annot"><span class="annottext">Int -&gt; Core_integer n -&gt; ShowS
 [Core_integer n] -&gt; ShowS
 Core_integer n -&gt; String
 (Int -&gt; Core_integer n -&gt; ShowS)
@@ -717,11 +211,11 @@ show :: Core_integer n -&gt; String
 $cshow :: forall (n :: Nat). KnownNat n =&gt; Core_integer n -&gt; String
 showsPrec :: Int -&gt; Core_integer n -&gt; ShowS
 $cshowsPrec :: forall (n :: Nat). KnownNat n =&gt; Int -&gt; Core_integer n -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679549061"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_integer"><span class="hs-identifier hs-type">Core_some_integer</span></a></span><span> </span><span class="hs-special">)</span><span>
-</span><span id="line-64"></span><span class="hs-keyword">type</span><span> </span><span id="Core_integer_at_least"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer_at_least"><span class="hs-identifier hs-var">Core_integer_at_least</span></a></span></span><span> </span><span id="local-6989586621679549010"><span class="annot"><a href="#local-6989586621679549010"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier hs-type">AtLeast</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-type">Core_integer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679549010"><span class="hs-identifier hs-type">n</span></a></span><span>
-</span><span id="line-65"></span><span>
-</span><span id="line-66"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_uinteger"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-var">Core_uinteger</span></a></span></span><span>  </span><span id="local-6989586621679549009"><span class="annot"><a href="#local-6989586621679549009"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_uinteger"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-var">Core_uinteger</span></a></span></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679549009"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_uinteger"><span class="hs-identifier hs-type">Core_some_uinteger</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-67"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679549004"><span id="local-6989586621679549006"><span class="annot"><span class="annottext">Core_uinteger n -&gt; Core_uinteger n -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679544004"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span class="hs-keyword">type</span><span> </span><span id="Core_integer_at_least"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer_at_least"><span class="hs-identifier hs-var">Core_integer_at_least</span></a></span></span><span> </span><span id="local-6989586621679543927"><span class="annot"><a href="#local-6989586621679543927"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier hs-type">AtLeast</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-type">Core_integer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543927"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_uinteger"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-var">Core_uinteger</span></a></span></span><span>  </span><span id="local-6989586621679544021"><span class="annot"><a href="#local-6989586621679544021"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_uinteger"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-var">Core_uinteger</span></a></span></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679544021"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679543922"><span id="local-6989586621679543924"><span class="annot"><span class="annottext">Core_uinteger n -&gt; Core_uinteger n -&gt; Bool
 (Core_uinteger n -&gt; Core_uinteger n -&gt; Bool)
 -&gt; (Core_uinteger n -&gt; Core_uinteger n -&gt; Bool)
 -&gt; Eq (Core_uinteger n)
@@ -731,7 +225,7 @@ forall (n :: Nat). Core_uinteger n -&gt; Core_uinteger n -&gt; Bool
 $c/= :: forall (n :: Nat). Core_uinteger n -&gt; Core_uinteger n -&gt; Bool
 == :: Core_uinteger n -&gt; Core_uinteger n -&gt; Bool
 $c== :: forall (n :: Nat). Core_uinteger n -&gt; Core_uinteger n -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548989"><span id="local-6989586621679548991"><span id="local-6989586621679548993"><span id="local-6989586621679548995"><span id="local-6989586621679548997"><span id="local-6989586621679548999"><span id="local-6989586621679549001"><span class="annot"><span class="annottext">Eq (Core_uinteger n)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543907"><span id="local-6989586621679543909"><span id="local-6989586621679543911"><span id="local-6989586621679543913"><span id="local-6989586621679543915"><span id="local-6989586621679543917"><span id="local-6989586621679543919"><span class="annot"><span class="annottext">Eq (Core_uinteger n)
 Eq (Core_uinteger n) =&gt;
 (Core_uinteger n -&gt; Core_uinteger n -&gt; Ordering)
 -&gt; (Core_uinteger n -&gt; Core_uinteger n -&gt; Bool)
@@ -776,13 +270,13 @@ $c&lt; :: forall (n :: Nat). Core_uinteger n -&gt; Core_uinteger n -&gt; Bool
 compare :: Core_uinteger n -&gt; Core_uinteger n -&gt; Ordering
 $ccompare :: forall (n :: Nat). Core_uinteger n -&gt; Core_uinteger n -&gt; Ordering
 $cp1Ord :: forall (n :: Nat). Eq (Core_uinteger n)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548987"><span class="annot"><span class="annottext">Core_uinteger n -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543905"><span class="annot"><span class="annottext">Core_uinteger n -&gt; Int
 (Core_uinteger n -&gt; Int) -&gt; HasSize (Core_uinteger n)
 forall a. (a -&gt; Int) -&gt; HasSize a
 forall (n :: Nat). KnownNat n =&gt; Core_uinteger n -&gt; Int
 size :: Core_uinteger n -&gt; Int
 $csize :: forall (n :: Nat). KnownNat n =&gt; Core_uinteger n -&gt; Int
-</span><a href="#local-6989586621679548987"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548973"><span id="local-6989586621679548975"><span id="local-6989586621679548977"><span id="local-6989586621679548979"><span id="local-6989586621679548981"><span id="local-6989586621679548983"><span id="local-6989586621679548985"><span class="annot"><span class="annottext">Integer -&gt; Core_uinteger n
+</span><a href="#local-6989586621679543905"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543891"><span id="local-6989586621679543893"><span id="local-6989586621679543895"><span id="local-6989586621679543897"><span id="local-6989586621679543899"><span id="local-6989586621679543901"><span id="local-6989586621679543903"><span class="annot"><span class="annottext">Integer -&gt; Core_uinteger n
 Core_uinteger n -&gt; Core_uinteger n
 Core_uinteger n -&gt; Core_uinteger n -&gt; Core_uinteger n
 (Core_uinteger n -&gt; Core_uinteger n -&gt; Core_uinteger n)
@@ -827,7 +321,7 @@ Core_uinteger n -&gt; Core_uinteger n -&gt; Core_uinteger n
 $c+ :: forall (n :: Nat).
 KnownNat n =&gt;
 Core_uinteger n -&gt; Core_uinteger n -&gt; Core_uinteger n
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548965"><span id="local-6989586621679548967"><span id="local-6989586621679548969"><span id="local-6989586621679548971"><span class="annot"><span class="annottext">ReadPrec [Core_uinteger n]
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543883"><span id="local-6989586621679543885"><span id="local-6989586621679543887"><span id="local-6989586621679543889"><span class="annot"><span class="annottext">ReadPrec [Core_uinteger n]
 ReadPrec (Core_uinteger n)
 Int -&gt; ReadS (Core_uinteger n)
 ReadS [Core_uinteger n]
@@ -851,7 +345,7 @@ readList :: ReadS [Core_uinteger n]
 $creadList :: forall (n :: Nat). KnownNat n =&gt; ReadS [Core_uinteger n]
 readsPrec :: Int -&gt; ReadS (Core_uinteger n)
 $creadsPrec :: forall (n :: Nat). KnownNat n =&gt; Int -&gt; ReadS (Core_uinteger n)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548959"><span id="local-6989586621679548961"><span id="local-6989586621679548963"><span class="annot"><span class="annottext">Int -&gt; Core_uinteger n -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543877"><span id="local-6989586621679543879"><span id="local-6989586621679543881"><span class="annot"><span class="annottext">Int -&gt; Core_uinteger n -&gt; ShowS
 [Core_uinteger n] -&gt; ShowS
 Core_uinteger n -&gt; String
 (Int -&gt; Core_uinteger n -&gt; ShowS)
@@ -869,11 +363,11 @@ show :: Core_uinteger n -&gt; String
 $cshow :: forall (n :: Nat). KnownNat n =&gt; Core_uinteger n -&gt; String
 showsPrec :: Int -&gt; Core_uinteger n -&gt; ShowS
 $cshowsPrec :: forall (n :: Nat). KnownNat n =&gt; Int -&gt; Core_uinteger n -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679549009"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_uinteger"><span class="hs-identifier hs-type">Core_some_uinteger</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-68"></span><span class="hs-keyword">type</span><span> </span><span id="Core_uinteger_at_least"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger_at_least"><span class="hs-identifier hs-var">Core_uinteger_at_least</span></a></span></span><span> </span><span id="local-6989586621679548958"><span class="annot"><a href="#local-6989586621679548958"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier hs-type">AtLeast</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-type">Core_uinteger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548958"><span class="hs-identifier hs-type">n</span></a></span><span>
-</span><span id="line-69"></span><span>
-</span><span id="line-70"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_max_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-var">Core_max_bytes</span></a></span></span><span> </span><span id="local-6989586621679548957"><span class="annot"><a href="#local-6989586621679548957"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_max_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-var">Core_max_bytes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679548957"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_max_bytes"><span class="hs-identifier hs-type">Core_some_max_bytes</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-71"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679548952"><span id="local-6989586621679548954"><span class="annot"><span class="annottext">Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679544021"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">type</span><span> </span><span id="Core_uinteger_at_least"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger_at_least"><span class="hs-identifier hs-var">Core_uinteger_at_least</span></a></span></span><span> </span><span id="local-6989586621679543876"><span class="annot"><a href="#local-6989586621679543876"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier hs-type">AtLeast</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-type">Core_uinteger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543876"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-72"></span><span>
+</span><span id="line-73"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_max_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-var">Core_max_bytes</span></a></span></span><span> </span><span id="local-6989586621679543999"><span class="annot"><a href="#local-6989586621679543999"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_max_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-var">Core_max_bytes</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679543999"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-74"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679543871"><span id="local-6989586621679543873"><span class="annot"><span class="annottext">Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool
 (Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool)
 -&gt; (Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool)
 -&gt; Eq (Core_max_bytes n)
@@ -883,7 +377,7 @@ forall (n :: Nat). Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool
 $c/= :: forall (n :: Nat). Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool
 == :: Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool
 $c== :: forall (n :: Nat). Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548937"><span id="local-6989586621679548939"><span id="local-6989586621679548941"><span id="local-6989586621679548943"><span id="local-6989586621679548945"><span id="local-6989586621679548947"><span id="local-6989586621679548949"><span class="annot"><span class="annottext">Eq (Core_max_bytes n)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543856"><span id="local-6989586621679543858"><span id="local-6989586621679543860"><span id="local-6989586621679543862"><span id="local-6989586621679543864"><span id="local-6989586621679543866"><span id="local-6989586621679543868"><span class="annot"><span class="annottext">Eq (Core_max_bytes n)
 Eq (Core_max_bytes n) =&gt;
 (Core_max_bytes n -&gt; Core_max_bytes n -&gt; Ordering)
 -&gt; (Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool)
@@ -928,19 +422,19 @@ $c&lt; :: forall (n :: Nat). Core_max_bytes n -&gt; Core_max_bytes n -&gt; Bool
 compare :: Core_max_bytes n -&gt; Core_max_bytes n -&gt; Ordering
 $ccompare :: forall (n :: Nat). Core_max_bytes n -&gt; Core_max_bytes n -&gt; Ordering
 $cp1Ord :: forall (n :: Nat). Eq (Core_max_bytes n)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548935"><span class="annot"><span class="annottext">Core_max_bytes n -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543854"><span class="annot"><span class="annottext">Core_max_bytes n -&gt; Int
 (Core_max_bytes n -&gt; Int) -&gt; HasSize (Core_max_bytes n)
 forall a. (a -&gt; Int) -&gt; HasSize a
 forall (n :: Nat). KnownNat n =&gt; Core_max_bytes n -&gt; Int
 size :: Core_max_bytes n -&gt; Int
 $csize :: forall (n :: Nat). KnownNat n =&gt; Core_max_bytes n -&gt; Int
-</span><a href="#local-6989586621679548935"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548933"><span class="annot"><span class="annottext">String -&gt; Core_max_bytes n
+</span><a href="#local-6989586621679543854"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543852"><span class="annot"><span class="annottext">String -&gt; Core_max_bytes n
 (String -&gt; Core_max_bytes n) -&gt; IsString (Core_max_bytes n)
 forall a. (String -&gt; a) -&gt; IsString a
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_max_bytes n
 fromString :: String -&gt; Core_max_bytes n
 $cfromString :: forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_max_bytes n
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548927"><span id="local-6989586621679548929"><span id="local-6989586621679548931"><span class="annot"><span class="annottext">Int -&gt; Core_max_bytes n -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543845"><span id="local-6989586621679543847"><span id="local-6989586621679543849"><span class="annot"><span class="annottext">Int -&gt; Core_max_bytes n -&gt; ShowS
 [Core_max_bytes n] -&gt; ShowS
 Core_max_bytes n -&gt; String
 (Int -&gt; Core_max_bytes n -&gt; ShowS)
@@ -958,11 +452,14 @@ show :: Core_max_bytes n -&gt; String
 $cshow :: forall (n :: Nat). KnownNat n =&gt; Core_max_bytes n -&gt; String
 showsPrec :: Int -&gt; Core_max_bytes n -&gt; ShowS
 $cshowsPrec :: forall (n :: Nat). KnownNat n =&gt; Int -&gt; Core_max_bytes n -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679548957"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_max_bytes"><span class="hs-identifier hs-type">Core_some_max_bytes</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-72"></span><span class="hs-keyword">type</span><span> </span><span id="Core_max_bytes_at_least"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes_at_least"><span class="hs-identifier hs-var">Core_max_bytes_at_least</span></a></span></span><span> </span><span id="local-6989586621679548926"><span class="annot"><a href="#local-6989586621679548926"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier hs-type">AtLeast</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-type">Core_max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548926"><span class="hs-identifier hs-type">n</span></a></span><span>
-</span><span id="line-73"></span><span>
-</span><span id="line-74"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span></span><span>     </span><span id="local-6989586621679548925"><span class="annot"><a href="#local-6989586621679548925"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span></span><span>     </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier hs-type">FixedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548925"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier hs-type">Core_some_bytes</span></a></span><span>   </span><span class="hs-special">)</span><span>
-</span><span id="line-75"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679548920"><span id="local-6989586621679548922"><span class="annot"><span class="annottext">Core_bytes n -&gt; Core_bytes n -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span>   </span><span class="annot"><a href="#local-6989586621679543999"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">type</span><span> </span><span id="Core_max_bytes_at_least"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes_at_least"><span class="hs-identifier hs-var">Core_max_bytes_at_least</span></a></span></span><span> </span><span id="local-6989586621679543844"><span class="annot"><a href="#local-6989586621679543844"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.BoundedSize.Class.html#AtLeast"><span class="hs-identifier hs-type">AtLeast</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-type">Core_max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543844"><span class="hs-identifier hs-type">n</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span></span><span>     </span><span id="local-6989586621679544002"><span class="annot"><a href="#local-6989586621679544002"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span></span><span>     </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier hs-type">FixedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679544002"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-81"></span><span>        </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679543839"><span id="local-6989586621679543841"><span class="annot"><span class="annottext">Core_bytes n -&gt; Core_bytes n -&gt; Bool
 (Core_bytes n -&gt; Core_bytes n -&gt; Bool)
 -&gt; (Core_bytes n -&gt; Core_bytes n -&gt; Bool) -&gt; Eq (Core_bytes n)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -971,7 +468,7 @@ forall (n :: Nat). Core_bytes n -&gt; Core_bytes n -&gt; Bool
 $c/= :: forall (n :: Nat). Core_bytes n -&gt; Core_bytes n -&gt; Bool
 == :: Core_bytes n -&gt; Core_bytes n -&gt; Bool
 $c== :: forall (n :: Nat). Core_bytes n -&gt; Core_bytes n -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548905"><span id="local-6989586621679548907"><span id="local-6989586621679548909"><span id="local-6989586621679548911"><span id="local-6989586621679548913"><span id="local-6989586621679548915"><span id="local-6989586621679548917"><span class="annot"><span class="annottext">Eq (Core_bytes n)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543824"><span id="local-6989586621679543826"><span id="local-6989586621679543828"><span id="local-6989586621679543830"><span id="local-6989586621679543832"><span id="local-6989586621679543834"><span id="local-6989586621679543836"><span class="annot"><span class="annottext">Eq (Core_bytes n)
 Eq (Core_bytes n) =&gt;
 (Core_bytes n -&gt; Core_bytes n -&gt; Ordering)
 -&gt; (Core_bytes n -&gt; Core_bytes n -&gt; Bool)
@@ -1013,19 +510,94 @@ $c&lt; :: forall (n :: Nat). Core_bytes n -&gt; Core_bytes n -&gt; Bool
 compare :: Core_bytes n -&gt; Core_bytes n -&gt; Ordering
 $ccompare :: forall (n :: Nat). Core_bytes n -&gt; Core_bytes n -&gt; Ordering
 $cp1Ord :: forall (n :: Nat). Eq (Core_bytes n)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548903"><span class="annot"><span class="annottext">Core_bytes n -&gt; Int
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543822"><span class="annot"><span class="annottext">Core_bytes n -&gt; Int
 (Core_bytes n -&gt; Int) -&gt; HasSize (Core_bytes n)
 forall a. (a -&gt; Int) -&gt; HasSize a
 forall (n :: Nat). KnownNat n =&gt; Core_bytes n -&gt; Int
 size :: Core_bytes n -&gt; Int
 $csize :: forall (n :: Nat). KnownNat n =&gt; Core_bytes n -&gt; Int
-</span><a href="#local-6989586621679548903"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548901"><span class="annot"><span class="annottext">String -&gt; Core_bytes n
+</span><a href="#local-6989586621679543822"><span class="hs-identifier hs-var hs-var hs-var hs-var">HasSize</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543807"><span id="local-6989586621679543809"><span id="local-6989586621679543811"><span id="local-6989586621679543813"><span id="local-6989586621679543815"><span id="local-6989586621679543817"><span id="local-6989586621679543819"><span class="annot"><span class="annottext">HasSize (Core_bytes n)
+Int -&gt; Elem (Core_bytes n) -&gt; Core_bytes n
+Int -&gt; Core_bytes n -&gt; Core_bytes n
+HasSize (Core_bytes n) =&gt;
+(Core_bytes n -&gt; Int)
+-&gt; (Core_bytes n -&gt; Core_bytes n -&gt; Core_bytes n)
+-&gt; (Int -&gt; Elem (Core_bytes n) -&gt; Core_bytes n)
+-&gt; ((Elem (Core_bytes n) -&gt; Elem (Core_bytes n))
+    -&gt; Core_bytes n -&gt; Core_bytes n)
+-&gt; (Int -&gt; Core_bytes n -&gt; Core_bytes n)
+-&gt; (Int -&gt; Core_bytes n -&gt; Core_bytes n)
+-&gt; (Core_bytes n -&gt; [Elem (Core_bytes n)])
+-&gt; IsBytes (Core_bytes n)
+Core_bytes n -&gt; Int
+Core_bytes n -&gt; [Elem (Core_bytes n)]
+Core_bytes n -&gt; Core_bytes n -&gt; Core_bytes n
+(Elem (Core_bytes n) -&gt; Elem (Core_bytes n))
+-&gt; Core_bytes n -&gt; Core_bytes n
+forall a.
+HasSize a =&gt;
+(a -&gt; Int)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (Int -&gt; Elem a -&gt; a)
+-&gt; ((Elem a -&gt; Elem a) -&gt; a -&gt; a)
+-&gt; (Int -&gt; a -&gt; a)
+-&gt; (Int -&gt; a -&gt; a)
+-&gt; (a -&gt; [Elem a])
+-&gt; IsBytes a
+forall (n :: Nat). KnownNat n =&gt; HasSize (Core_bytes n)
+forall (n :: Nat).
+KnownNat n =&gt;
+Int -&gt; Elem (Core_bytes n) -&gt; Core_bytes n
+forall (n :: Nat).
+KnownNat n =&gt;
+Int -&gt; Core_bytes n -&gt; Core_bytes n
+forall (n :: Nat). KnownNat n =&gt; Core_bytes n -&gt; Int
+forall (n :: Nat).
+KnownNat n =&gt;
+Core_bytes n -&gt; [Elem (Core_bytes n)]
+forall (n :: Nat).
+KnownNat n =&gt;
+Core_bytes n -&gt; Core_bytes n -&gt; Core_bytes n
+forall (n :: Nat).
+KnownNat n =&gt;
+(Elem (Core_bytes n) -&gt; Elem (Core_bytes n))
+-&gt; Core_bytes n -&gt; Core_bytes n
+toList :: Core_bytes n -&gt; [Elem (Core_bytes n)]
+$ctoList :: forall (n :: Nat).
+KnownNat n =&gt;
+Core_bytes n -&gt; [Elem (Core_bytes n)]
+drop :: Int -&gt; Core_bytes n -&gt; Core_bytes n
+$cdrop :: forall (n :: Nat).
+KnownNat n =&gt;
+Int -&gt; Core_bytes n -&gt; Core_bytes n
+take :: Int -&gt; Core_bytes n -&gt; Core_bytes n
+$ctake :: forall (n :: Nat).
+KnownNat n =&gt;
+Int -&gt; Core_bytes n -&gt; Core_bytes n
+map :: (Elem (Core_bytes n) -&gt; Elem (Core_bytes n))
+-&gt; Core_bytes n -&gt; Core_bytes n
+$cmap :: forall (n :: Nat).
+KnownNat n =&gt;
+(Elem (Core_bytes n) -&gt; Elem (Core_bytes n))
+-&gt; Core_bytes n -&gt; Core_bytes n
+replicate :: Int -&gt; Elem (Core_bytes n) -&gt; Core_bytes n
+$creplicate :: forall (n :: Nat).
+KnownNat n =&gt;
+Int -&gt; Elem (Core_bytes n) -&gt; Core_bytes n
+append :: Core_bytes n -&gt; Core_bytes n -&gt; Core_bytes n
+$cappend :: forall (n :: Nat).
+KnownNat n =&gt;
+Core_bytes n -&gt; Core_bytes n -&gt; Core_bytes n
+length :: Core_bytes n -&gt; Int
+$clength :: forall (n :: Nat). KnownNat n =&gt; Core_bytes n -&gt; Int
+$cp1IsBytes :: forall (n :: Nat). KnownNat n =&gt; HasSize (Core_bytes n)
+</span><a href="Data.IsBytes.html#C%3AIsBytes"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsBytes</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543804"><span class="annot"><span class="annottext">String -&gt; Core_bytes n
 (String -&gt; Core_bytes n) -&gt; IsString (Core_bytes n)
 forall a. (String -&gt; a) -&gt; IsString a
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n
 fromString :: String -&gt; Core_bytes n
 $cfromString :: forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679548895"><span id="local-6989586621679548897"><span id="local-6989586621679548899"><span class="annot"><span class="annottext">Int -&gt; Core_bytes n -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679543798"><span id="local-6989586621679543800"><span id="local-6989586621679543802"><span class="annot"><span class="annottext">Int -&gt; Core_bytes n -&gt; ShowS
 [Core_bytes n] -&gt; ShowS
 Core_bytes n -&gt; String
 (Int -&gt; Core_bytes n -&gt; ShowS)
@@ -1043,37 +615,379 @@ show :: Core_bytes n -&gt; String
 $cshow :: forall (n :: Nat). KnownNat n =&gt; Core_bytes n -&gt; String
 showsPrec :: Int -&gt; Core_bytes n -&gt; ShowS
 $cshowsPrec :: forall (n :: Nat). KnownNat n =&gt; Int -&gt; Core_bytes n -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier hs-type">FixedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548925"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier hs-type">Core_some_bytes</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-76"></span><span>
-</span><span id="line-77"></span><span>
-</span><span id="line-78"></span><span>
-</span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span id="local-6989586621679548894"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679548882"><span id="local-6989586621679548884"><span id="local-6989586621679548886"><span id="local-6989586621679548888"><span id="local-6989586621679548890"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-type">Core_uinteger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548894"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>    </span><span id="local-6989586621679548880"><span class="annot"><span class="annottext">parser :: Parser (Core_uinteger n)
-</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (Core_uinteger n)
-forall a. HasCallStack =&gt; a
-</span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-82"></span><span>    </span><span id="local-6989586621679548878"><span class="annot"><span class="annottext">generate :: Core_uinteger n -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uinteger_n&gt;&quot;</span></span></span><span>
-</span><span id="line-83"></span><span id="local-6989586621679548876"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679548864"><span id="local-6989586621679548866"><span id="local-6989586621679548868"><span id="local-6989586621679548870"><span id="local-6989586621679548872"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-type">Core_integer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548876"><span class="hs-identifier hs-type">n</span></a></span><span>  </span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-84"></span><span>    </span><span id="local-6989586621679548863"><span class="annot"><span class="annottext">parser :: Parser (Core_integer n)
-</span><a href="#local-6989586621679548863"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (Core_integer n)
-forall a. HasCallStack =&gt; a
-</span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-85"></span><span>    </span><span id="local-6989586621679548862"><span class="annot"><span class="annottext">generate :: Core_integer n -&gt; ByteString
-</span><a href="#local-6989586621679548862"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;integer_n&gt;&quot;</span></span></span><span>
-</span><span id="line-86"></span><span id="local-6989586621679548861"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679548849"><span id="local-6989586621679548851"><span id="local-6989586621679548853"><span id="local-6989586621679548855"><span id="local-6989586621679548857"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548861"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-87"></span><span>    </span><span id="local-6989586621679548848"><span class="annot"><span class="annottext">parser :: Parser (Core_bytes n)
-</span><a href="#local-6989586621679548848"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (Core_bytes n)
-forall a. HasCallStack =&gt; a
-</span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-88"></span><span>    </span><span id="local-6989586621679548847"><span class="annot"><span class="annottext">generate :: Core_bytes n -&gt; ByteString
-</span><a href="#local-6989586621679548847"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;bytes_n&gt;&quot;</span></span></span><span>
-</span><span id="line-89"></span><span id="local-6989586621679548846"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679548834"><span id="local-6989586621679548836"><span id="local-6989586621679548838"><span id="local-6989586621679548840"><span id="local-6989586621679548842"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-type">Core_max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679548846"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-90"></span><span>    </span><span id="local-6989586621679548833"><span class="annot"><span class="annottext">parser :: Parser (Core_max_bytes n)
-</span><a href="#local-6989586621679548833"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (Core_max_bytes n)
-forall a. HasCallStack =&gt; a
-</span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-91"></span><span>    </span><span id="local-6989586621679548832"><span class="annot"><span class="annottext">generate :: Core_max_bytes n -&gt; ByteString
-</span><a href="#local-6989586621679548832"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;max_bytes_n&gt;&quot;</span></span></span><span>
-</span><span id="line-92"></span></pre></body></html>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier hs-type">FixedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679544002"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-82"></span><span>
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span id="local-6989586621679543797"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543785"><span id="local-6989586621679543787"><span id="local-6989586621679543789"><span id="local-6989586621679543791"><span id="local-6989586621679543793"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543797"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-type">Core_uinteger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543797"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621679543783"><span class="annot"><span class="annottext">parser :: Parser (Core_uinteger n)
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-87"></span><span>        </span><span id="local-6989586621679543781"><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543781"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Token
+forall a. StreamItem a =&gt; Parser a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-88"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543781"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-89"></span><span>            </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Unsigned"><span class="hs-identifier hs-type">Unsigned</span></a></span><span> </span><span id="local-6989586621679543779"><span class="annot"><span class="annottext">u :: Natural
+</span><a href="#local-6989586621679543779"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Natural
+-&gt; Either
+     (ErrorMessage (BoundedSize 0 n) Natural) (BoundedSize 0 n Natural)
+forall (c :: * -&gt; *) a.
+Smart c a =&gt;
+a -&gt; Either (ErrorMessage c a) (c a)
+</span><a href="Data.Smart.html#safeCreate"><span class="hs-identifier hs-var">S.safeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679543779"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543797"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Natural</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-90"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679543777"><span class="annot"><span class="annottext">cn :: BoundedSize 0 n Natural
+</span><a href="#local-6989586621679543777"><span class="hs-identifier hs-var">cn</span></a></span></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Core_uinteger n -&gt; Parser (Core_uinteger n)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Core_uinteger n -&gt; Parser (Core_uinteger n))
+-&gt; Core_uinteger n -&gt; Parser (Core_uinteger n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize 0 n Natural -&gt; Core_uinteger n
+forall (n :: Nat). MaxSize n Natural -&gt; Core_uinteger n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-var">Core_uinteger</span></a></span><span> </span><span class="annot"><span class="annottext">BoundedSize 0 n Natural
+</span><a href="#local-6989586621679543777"><span class="hs-identifier hs-var">cn</span></a></span><span>
+</span><span id="line-91"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679543776"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621679543776"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_uinteger n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543776"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-92"></span><span>            </span><span class="hs-identifier">_</span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_uinteger n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser (Core_uinteger n))
+-&gt; String -&gt; Parser (Core_uinteger n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;Wrong token type for Core_uinteger &quot;</span></span><span>
+</span><span id="line-93"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n -&gt; Int
+forall b (n :: Nat) (proxy :: Nat -&gt; *).
+(Num b, KnownNat n) =&gt;
+proxy n -&gt; b
+</span><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-var">fromNat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679543797"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;: &quot;</span></span><span>
+</span><span id="line-95"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Token -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543781"><span class="hs-identifier hs-var">tok</span></a></span><span>
+</span><span id="line-96"></span><span>                                       </span><span class="hs-special">]</span><span>
+</span><span id="line-97"></span><span>    </span><span id="local-6989586621679543773"><span class="annot"><span class="annottext">generate :: Core_uinteger n -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Token -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">(Token -&gt; ByteString)
+-&gt; (Core_uinteger n -&gt; Token) -&gt; Core_uinteger n -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Core_uinteger n -&gt; Token
+forall a. IsToken a =&gt; a -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#token"><span class="hs-identifier hs-var">token</span></a></span></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span id="local-6989586621679543770"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543758"><span id="local-6989586621679543760"><span id="local-6989586621679543762"><span id="local-6989586621679543764"><span id="local-6989586621679543766"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543770"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-type">Core_integer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543770"><span class="hs-identifier hs-type">n</span></a></span><span>  </span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-100"></span><span>    </span><span id="local-6989586621679543757"><span class="annot"><span class="annottext">parser :: Parser (Core_integer n)
+</span><a href="#local-6989586621679543757"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-101"></span><span>        </span><span id="local-6989586621679543756"><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543756"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Token
+forall a. StreamItem a =&gt; Parser a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-102"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543756"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-103"></span><span>            </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Signed"><span class="hs-identifier hs-type">Signed</span></a></span><span> </span><span id="local-6989586621679543754"><span class="annot"><span class="annottext">i :: Integer
+</span><a href="#local-6989586621679543754"><span class="hs-identifier hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer
+-&gt; Either
+     (ErrorMessage (BoundedSize 0 n) Integer) (BoundedSize 0 n Integer)
+forall (c :: * -&gt; *) a.
+Smart c a =&gt;
+a -&gt; Either (ErrorMessage c a) (c a)
+</span><a href="Data.Smart.html#safeCreate"><span class="hs-identifier hs-var">S.safeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679543754"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543770"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-104"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679543753"><span class="annot"><span class="annottext">ci :: BoundedSize 0 n Integer
+</span><a href="#local-6989586621679543753"><span class="hs-identifier hs-var">ci</span></a></span></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Core_integer n -&gt; Parser (Core_integer n)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Core_integer n -&gt; Parser (Core_integer n))
+-&gt; Core_integer n -&gt; Parser (Core_integer n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize 0 n Integer -&gt; Core_integer n
+forall (n :: Nat). MaxSize n Integer -&gt; Core_integer n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-var">Core_integer</span></a></span><span> </span><span class="annot"><span class="annottext">BoundedSize 0 n Integer
+</span><a href="#local-6989586621679543753"><span class="hs-identifier hs-var">ci</span></a></span><span>
+</span><span id="line-105"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679543752"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621679543752"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_integer n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543752"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-106"></span><span>            </span><span class="hs-identifier">_</span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_integer n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser (Core_integer n))
+-&gt; String -&gt; Parser (Core_integer n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;Wrong token type for Core_integer &quot;</span></span><span>
+</span><span id="line-107"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n -&gt; Int
+forall b (n :: Nat) (proxy :: Nat -&gt; *).
+(Num b, KnownNat n) =&gt;
+proxy n -&gt; b
+</span><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-var">fromNat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679543770"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;: &quot;</span></span><span>
+</span><span id="line-109"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Token -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543756"><span class="hs-identifier hs-var">tok</span></a></span><span>
+</span><span id="line-110"></span><span>                                       </span><span class="hs-special">]</span><span>
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621679543751"><span class="annot"><span class="annottext">generate :: Core_integer n -&gt; ByteString
+</span><a href="#local-6989586621679543751"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Token -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">(Token -&gt; ByteString)
+-&gt; (Core_integer n -&gt; Token) -&gt; Core_integer n -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Core_integer n -&gt; Token
+forall a. IsToken a =&gt; a -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#token"><span class="hs-identifier hs-var">token</span></a></span></span><span>
+</span><span id="line-112"></span><span>
+</span><span id="line-113"></span><span id="local-6989586621679543750"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543738"><span id="local-6989586621679543740"><span id="local-6989586621679543742"><span id="local-6989586621679543744"><span id="local-6989586621679543746"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543750"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543750"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-114"></span><span>    </span><span id="local-6989586621679543737"><span class="annot"><span class="annottext">parser :: Parser (Core_bytes n)
+</span><a href="#local-6989586621679543737"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-115"></span><span>        </span><span id="local-6989586621679543736"><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543736"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Token
+forall a. StreamItem a =&gt; Parser a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-116"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543736"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-117"></span><span>            </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Bytes"><span class="hs-identifier hs-type">Bytes</span></a></span><span> </span><span id="local-6989586621679543734"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679543734"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
+-&gt; Either
+     (ErrorMessage (BoundedSize n n) ByteString)
+     (BoundedSize n n ByteString)
+forall (c :: * -&gt; *) a.
+Smart c a =&gt;
+a -&gt; Either (ErrorMessage c a) (c a)
+</span><a href="Data.Smart.html#safeCreate"><span class="hs-identifier hs-var">S.safeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679543734"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#FixedSize"><span class="hs-identifier hs-type">FixedSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543750"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-118"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679543733"><span class="annot"><span class="annottext">cb :: BoundedSize n n ByteString
+</span><a href="#local-6989586621679543733"><span class="hs-identifier hs-var">cb</span></a></span></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Core_bytes n -&gt; Parser (Core_bytes n)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Core_bytes n -&gt; Parser (Core_bytes n))
+-&gt; Core_bytes n -&gt; Parser (Core_bytes n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize n n ByteString -&gt; Core_bytes n
+forall (n :: Nat). FixedSize n ByteString -&gt; Core_bytes n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">BoundedSize n n ByteString
+</span><a href="#local-6989586621679543733"><span class="hs-identifier hs-var">cb</span></a></span><span>
+</span><span id="line-119"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679543732"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621679543732"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_bytes n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543732"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-120"></span><span>            </span><span class="hs-identifier">_</span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_bytes n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser (Core_bytes n))
+-&gt; String -&gt; Parser (Core_bytes n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;Wrong token type for Core_bytes &quot;</span></span><span>
+</span><span id="line-121"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n -&gt; Int
+forall b (n :: Nat) (proxy :: Nat -&gt; *).
+(Num b, KnownNat n) =&gt;
+proxy n -&gt; b
+</span><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-var">fromNat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679543750"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-122"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;: &quot;</span></span><span>
+</span><span id="line-123"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Token -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543736"><span class="hs-identifier hs-var">tok</span></a></span><span>
+</span><span id="line-124"></span><span>                                       </span><span class="hs-special">]</span><span>
+</span><span id="line-125"></span><span>    </span><span id="local-6989586621679543731"><span class="annot"><span class="annottext">generate :: Core_bytes n -&gt; ByteString
+</span><a href="#local-6989586621679543731"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Token -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">(Token -&gt; ByteString)
+-&gt; (Core_bytes n -&gt; Token) -&gt; Core_bytes n -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes n -&gt; Token
+forall a. IsToken a =&gt; a -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#token"><span class="hs-identifier hs-var">token</span></a></span></span><span>
+</span><span id="line-126"></span><span>
+</span><span id="line-127"></span><span>
+</span><span id="line-128"></span><span id="local-6989586621679543730"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543718"><span id="local-6989586621679543720"><span id="local-6989586621679543722"><span id="local-6989586621679543724"><span id="local-6989586621679543726"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543730"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-type">Core_max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543730"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>    </span><span id="local-6989586621679543717"><span class="annot"><span class="annottext">parser :: Parser (Core_max_bytes n)
+</span><a href="#local-6989586621679543717"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-130"></span><span>        </span><span id="local-6989586621679543716"><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543716"><span class="hs-identifier hs-var">tok</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser Token
+forall a. StreamItem a =&gt; Parser a
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span>
+</span><span id="line-131"></span><span>        </span><span class="hs-keyword">case</span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543716"><span class="hs-identifier hs-var">tok</span></a></span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-132"></span><span>            </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Bytes"><span class="hs-identifier hs-type">Bytes</span></a></span><span> </span><span id="local-6989586621679543715"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679543715"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-keyword">case</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString
+-&gt; Either
+     (ErrorMessage (BoundedSize 0 n) ByteString)
+     (BoundedSize 0 n ByteString)
+forall (c :: * -&gt; *) a.
+Smart c a =&gt;
+a -&gt; Either (ErrorMessage c a) (c a)
+</span><a href="Data.Smart.html#safeCreate"><span class="hs-identifier hs-var">S.safeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679543715"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.Class.html#MaxSize"><span class="hs-identifier hs-type">MaxSize</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543730"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">B.ByteString</span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-keyword">of</span><span>
+</span><span id="line-133"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Right</span></span><span> </span><span id="local-6989586621679543714"><span class="annot"><span class="annottext">cb :: BoundedSize 0 n ByteString
+</span><a href="#local-6989586621679543714"><span class="hs-identifier hs-var">cb</span></a></span></span><span>    </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Core_max_bytes n -&gt; Parser (Core_max_bytes n)
+forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
+</span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Core_max_bytes n -&gt; Parser (Core_max_bytes n))
+-&gt; Core_max_bytes n -&gt; Parser (Core_max_bytes n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">BoundedSize 0 n ByteString -&gt; Core_max_bytes n
+forall (n :: Nat). MaxSize n ByteString -&gt; Core_max_bytes n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-var">Core_max_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">BoundedSize 0 n ByteString
+</span><a href="#local-6989586621679543714"><span class="hs-identifier hs-var">cb</span></a></span><span>
+</span><span id="line-134"></span><span>                          </span><span class="annot"><span class="hs-identifier hs-type">Left</span></span><span> </span><span id="local-6989586621679543713"><span class="annot"><span class="annottext">errMsg :: String
+</span><a href="#local-6989586621679543713"><span class="hs-identifier hs-var">errMsg</span></a></span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_max_bytes n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679543713"><span class="hs-identifier hs-var">errMsg</span></a></span><span>
+</span><span id="line-135"></span><span>            </span><span class="hs-identifier">_</span><span>        </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser (Core_max_bytes n)
+forall (m :: * -&gt; *) a. MonadFail m =&gt; String -&gt; m a
+</span><span class="hs-identifier hs-var">fail</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Parser (Core_max_bytes n))
+-&gt; String -&gt; Parser (Core_max_bytes n)
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
+forall a. Monoid a =&gt; [a] -&gt; a
+</span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;Wrong token type for Core_max_bytes &quot;</span></span><span>
+</span><span id="line-136"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n -&gt; Int
+forall b (n :: Nat) (proxy :: Nat -&gt; *).
+(Num b, KnownNat n) =&gt;
+proxy n -&gt; b
+</span><a href="GHC.TypeLits.Extras.html#fromNat"><span class="hs-identifier hs-var">fromNat</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Proxy n
+forall k (t :: k). Proxy t
+</span><span class="hs-identifier hs-var">Proxy</span></span><span> </span><span class="hs-glyph">@</span><span class="annot"><a href="#local-6989586621679543730"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span>
+</span><span id="line-137"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;: &quot;</span></span><span>
+</span><span id="line-138"></span><span>                                       </span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Token -&gt; String
+forall a. Show a =&gt; a -&gt; String
+</span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Token
+</span><a href="#local-6989586621679543716"><span class="hs-identifier hs-var">tok</span></a></span><span>
+</span><span id="line-139"></span><span>                                       </span><span class="hs-special">]</span><span>
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621679543712"><span class="annot"><span class="annottext">generate :: Core_max_bytes n -&gt; ByteString
+</span><a href="#local-6989586621679543712"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Token -&gt; ByteString
+forall a. StreamItem a =&gt; a -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">(Token -&gt; ByteString)
+-&gt; (Core_max_bytes n -&gt; Token) -&gt; Core_max_bytes n -&gt; ByteString
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Core_max_bytes n -&gt; Token
+forall a. IsToken a =&gt; a -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#token"><span class="hs-identifier hs-var">token</span></a></span></span><span>
+</span><span id="line-141"></span><span>
+</span><span id="line-142"></span><span>
+</span><span id="line-143"></span><span>
+</span><span id="line-144"></span><span id="local-6989586621679543711"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543706"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543711"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#IsToken"><span class="hs-identifier hs-type">IsToken</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-type">Core_integer</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543711"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-145"></span><span>    </span><span id="local-6989586621679543704"><span class="annot"><span class="annottext">token :: Core_integer n -&gt; Token
+</span><a href="#local-6989586621679543704"><span class="hs-identifier hs-var hs-var hs-var hs-var">token</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-type">Core_integer</span></a></span><span> </span><span id="local-6989586621679543703"><span class="annot"><span class="annottext">i :: MaxSize n Integer
+</span><a href="#local-6989586621679543703"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#Signed"><span class="hs-identifier hs-var">Signed</span></a></span><span> </span><span class="annot"><span class="annottext">(Integer -&gt; Token) -&gt; Integer -&gt; Token
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MaxSize n Integer -&gt; Integer
+forall (c :: * -&gt; *) a. Smart c a =&gt; c a -&gt; a
+</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var">S.unwrap</span></a></span><span> </span><span class="annot"><span class="annottext">MaxSize n Integer
+</span><a href="#local-6989586621679543703"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621679543701"><span class="annot"><span class="annottext">fromToken :: Token -&gt; Maybe (Core_integer n)
+</span><a href="System.SED.MCTP.Common.Token.html#fromToken"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromToken</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Signed"><span class="hs-identifier hs-type">Signed</span></a></span><span> </span><span id="local-6989586621679543699"><span class="annot"><span class="annottext">i :: Integer
+</span><a href="#local-6989586621679543699"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaxSize n Integer -&gt; Core_integer n
+forall (n :: Nat). MaxSize n Integer -&gt; Core_integer n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier hs-var">Core_integer</span></a></span><span> </span><span class="annot"><span class="annottext">(MaxSize n Integer -&gt; Core_integer n)
+-&gt; Maybe (MaxSize n Integer) -&gt; Maybe (Core_integer n)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Maybe (MaxSize n Integer)
+forall (c :: * -&gt; *) a. Smart c a =&gt; a -&gt; Maybe (c a)
+</span><a href="Data.Smart.html#create"><span class="hs-identifier hs-var">S.create</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679543699"><span class="hs-identifier hs-var">i</span></a></span><span>
+</span><span id="line-147"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#fromToken"><span class="hs-identifier hs-var">fromToken</span></a></span><span> </span><span class="hs-identifier">_</span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Core_integer n)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span></span><span>
+</span><span id="line-148"></span><span>
+</span><span id="line-149"></span><span>
+</span><span id="line-150"></span><span id="local-6989586621679543697"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543692"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543697"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#IsToken"><span class="hs-identifier hs-type">IsToken</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-type">Core_uinteger</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543697"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-151"></span><span>    </span><span id="local-6989586621679543691"><span class="annot"><span class="annottext">token :: Core_uinteger n -&gt; Token
+</span><a href="#local-6989586621679543691"><span class="hs-identifier hs-var hs-var hs-var hs-var">token</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-type">Core_uinteger</span></a></span><span> </span><span id="local-6989586621679543690"><span class="annot"><span class="annottext">u :: MaxSize n Natural
+</span><a href="#local-6989586621679543690"><span class="hs-identifier hs-var">u</span></a></span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#Unsigned"><span class="hs-identifier hs-var">Unsigned</span></a></span><span> </span><span class="annot"><span class="annottext">(Natural -&gt; Token) -&gt; Natural -&gt; Token
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MaxSize n Natural -&gt; Natural
+forall (c :: * -&gt; *) a. Smart c a =&gt; c a -&gt; a
+</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var">S.unwrap</span></a></span><span> </span><span class="annot"><span class="annottext">MaxSize n Natural
+</span><a href="#local-6989586621679543690"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621679543689"><span class="annot"><span class="annottext">fromToken :: Token -&gt; Maybe (Core_uinteger n)
+</span><a href="#local-6989586621679543689"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromToken</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Unsigned"><span class="hs-identifier hs-type">Unsigned</span></a></span><span> </span><span id="local-6989586621679543688"><span class="annot"><span class="annottext">u :: Natural
+</span><a href="#local-6989586621679543688"><span class="hs-identifier hs-var">u</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaxSize n Natural -&gt; Core_uinteger n
+forall (n :: Nat). MaxSize n Natural -&gt; Core_uinteger n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier hs-var">Core_uinteger</span></a></span><span> </span><span class="annot"><span class="annottext">(MaxSize n Natural -&gt; Core_uinteger n)
+-&gt; Maybe (MaxSize n Natural) -&gt; Maybe (Core_uinteger n)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Natural -&gt; Maybe (MaxSize n Natural)
+forall (c :: * -&gt; *) a. Smart c a =&gt; a -&gt; Maybe (c a)
+</span><a href="Data.Smart.html#create"><span class="hs-identifier hs-var">S.create</span></a></span><span> </span><span class="annot"><span class="annottext">Natural
+</span><a href="#local-6989586621679543688"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-153"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#fromToken"><span class="hs-identifier hs-var">fromToken</span></a></span><span> </span><span class="hs-identifier">_</span><span>            </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Core_uinteger n)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span></span><span>
+</span><span id="line-154"></span><span>
+</span><span id="line-155"></span><span>
+</span><span id="line-156"></span><span id="local-6989586621679543687"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543682"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543687"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#IsToken"><span class="hs-identifier hs-type">IsToken</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543687"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-157"></span><span>    </span><span id="local-6989586621679543681"><span class="annot"><span class="annottext">token :: Core_bytes n -&gt; Token
+</span><a href="#local-6989586621679543681"><span class="hs-identifier hs-var hs-var hs-var hs-var">token</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679543680"><span class="annot"><span class="annottext">b :: FixedSize n ByteString
+</span><a href="#local-6989586621679543680"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#Bytes"><span class="hs-identifier hs-var">Bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Token) -&gt; ByteString -&gt; Token
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">FixedSize n ByteString -&gt; ByteString
+forall (c :: * -&gt; *) a. Smart c a =&gt; c a -&gt; a
+</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var">S.unwrap</span></a></span><span> </span><span class="annot"><span class="annottext">FixedSize n ByteString
+</span><a href="#local-6989586621679543680"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-158"></span><span>    </span><span id="local-6989586621679543679"><span class="annot"><span class="annottext">fromToken :: Token -&gt; Maybe (Core_bytes n)
+</span><a href="#local-6989586621679543679"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromToken</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Bytes"><span class="hs-identifier hs-type">Bytes</span></a></span><span> </span><span id="local-6989586621679543678"><span class="annot"><span class="annottext">b :: ByteString
+</span><a href="#local-6989586621679543678"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">FixedSize n ByteString -&gt; Core_bytes n
+forall (n :: Nat). FixedSize n ByteString -&gt; Core_bytes n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(FixedSize n ByteString -&gt; Core_bytes n)
+-&gt; Maybe (FixedSize n ByteString) -&gt; Maybe (Core_bytes n)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe (FixedSize n ByteString)
+forall (c :: * -&gt; *) a. Smart c a =&gt; a -&gt; Maybe (c a)
+</span><a href="Data.Smart.html#create"><span class="hs-identifier hs-var">S.create</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679543678"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-159"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#fromToken"><span class="hs-identifier hs-var">fromToken</span></a></span><span> </span><span class="hs-identifier">_</span><span>         </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Core_bytes n)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span></span><span>
+</span><span id="line-160"></span><span>
+</span><span id="line-161"></span><span>
+</span><span id="line-162"></span><span id="local-6989586621679543677"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679543672"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679543677"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#IsToken"><span class="hs-identifier hs-type">IsToken</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-type">Core_max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679543677"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-163"></span><span>    </span><span id="local-6989586621679543671"><span class="annot"><span class="annottext">token :: Core_max_bytes n -&gt; Token
+</span><a href="#local-6989586621679543671"><span class="hs-identifier hs-var hs-var hs-var hs-var">token</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-type">Core_max_bytes</span></a></span><span> </span><span id="local-6989586621679543670"><span class="annot"><span class="annottext">b :: MaxSize n ByteString
+</span><a href="#local-6989586621679543670"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Token
+</span><a href="System.SED.MCTP.Common.Token.html#Bytes"><span class="hs-identifier hs-var">Bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Token) -&gt; ByteString -&gt; Token
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">MaxSize n ByteString -&gt; ByteString
+forall (c :: * -&gt; *) a. Smart c a =&gt; c a -&gt; a
+</span><a href="Data.Smart.html#unwrap"><span class="hs-identifier hs-var">S.unwrap</span></a></span><span> </span><span class="annot"><span class="annottext">MaxSize n ByteString
+</span><a href="#local-6989586621679543670"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-164"></span><span>    </span><span id="local-6989586621679543669"><span class="annot"><span class="annottext">fromToken :: Token -&gt; Maybe (Core_max_bytes n)
+</span><a href="#local-6989586621679543669"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromToken</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#Bytes"><span class="hs-identifier hs-type">Bytes</span></a></span><span> </span><span id="local-6989586621679543668"><span class="annot"><span class="annottext">b :: ByteString
+</span><a href="#local-6989586621679543668"><span class="hs-identifier hs-var">b</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">MaxSize n ByteString -&gt; Core_max_bytes n
+forall (n :: Nat). MaxSize n ByteString -&gt; Core_max_bytes n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier hs-var">Core_max_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(MaxSize n ByteString -&gt; Core_max_bytes n)
+-&gt; Maybe (MaxSize n ByteString) -&gt; Maybe (Core_max_bytes n)
+forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Maybe (MaxSize n ByteString)
+forall (c :: * -&gt; *) a. Smart c a =&gt; a -&gt; Maybe (c a)
+</span><a href="Data.Smart.html#create"><span class="hs-identifier hs-var">S.create</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679543668"><span class="hs-identifier hs-var">b</span></a></span><span>
+</span><span id="line-165"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.Token.html#fromToken"><span class="hs-identifier hs-var">fromToken</span></a></span><span> </span><span class="hs-identifier">_</span><span>         </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Maybe (Core_max_bytes n)
+forall a. Maybe a
+</span><span class="hs-identifier hs-var">Nothing</span></span></span><span>
+</span><span id="line-166"></span></pre></body></html>

@@ -32,7 +32,7 @@ module Data.BoundedSize.Class
 
 where
 
-import           Data.Either         (Either (..), either)
+import           Data.Either         (Either (..), either, isRight)
 import           Data.Functor        ((<$>))
 import           Data.HasSize        (HasSize (..))
 import           Data.Proxy          (Proxy (..))
@@ -46,6 +46,9 @@ import           GHC.Read            (Read (..))
 import           GHC.Show            (Show (..))
 import           GHC.TypeLits        (type (<=), KnownNat)
 import           GHC.TypeLits.Extras (fromNat)
+
+
+import           Test.QuickCheck     (Arbitrary (..), shrink, suchThat)
 
 
 -- -- $setup
@@ -128,3 +131,8 @@ instance (Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a) where
 --   or a MaxSize 4 String, so it is AtLeast MaxSize 3
 --   Then it can be later cast to a specific MaxSize (of at least 3).
 type AtLeast c m =  forall l. (KnownNat l, m <= l) => c l
+
+instance (KnownNat l, HasSize a, Arbitrary a, Smart (BoundedSize l u) a) => Arbitrary (BoundedSize l u a) where
+    arbitrary = (unsafeCreate <$> arbitrary) `suchThat` (isRight . predicate)
+    shrink t = [ unsafeCreate s | s <- shrink $ unwrap t, vl <= size s]
+       where vl = fromNat (Proxy @l)

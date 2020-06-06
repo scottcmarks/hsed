@@ -148,14 +148,14 @@ lookupTableUID lookupTableUID182,183
 
 ./src/System/SED/MCTP/Common/THUtil.hs,231
 module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil15,16
-parseTable parseTable43,44
-dData dData47,48
-dSig dSig52,53
-dVal dVal56,57
-eHalfUID eHalfUID60,61
-eUID eUID64,65
-eID eID68,69
-eValP eValP73,74
+parseTable parseTable44,45
+dData dData48,49
+dSig dSig53,54
+dVal dVal57,58
+eHalfUID eHalfUID61,62
+eUID eUID65,66
+eID eID69,70
+eValP eValP76,77
 
 ./src/System/SED/MCTP/Common/Table.lhs,1052
 module System.SED.MCTP.Common.Table System.SED.MCTP.Common.Table23,24
@@ -180,36 +180,31 @@ data TableColumn = TableColumn { _columnNumber _columnNumber347,348
                                , _columnType _columnType350,351
 newtype ColumnType ColumnType354,355
 
-./src/System/SED/MCTP/Common/UID.hs,630
+./src/System/SED/MCTP/Common/UID.hs,631
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID19,20
-showCore_bytesHex showCore_bytesHex66,67
-showCore_bytes showCore_bytes71,72
-newtype HalfUID HalfUID75,76
-instance Show Show HalfUID78,79
-    show show79,80
-instance Arbitrary Arbitrary HalfUID80,81
-    arbitrary arbitrary81,82
-halfUID halfUID83,84
-newtype UID UID87,88
-instance Show Show UID90,91
-    show show91,92
-instance Arbitrary Arbitrary UID92,93
-    arbitrary arbitrary93,94
-uid uid95,96
-uidUpper uidUpper102,103
-uidLower uidLower105,106
-uidPlus uidPlus108,109
-(+(+:+)111,112
-hNull hNull115,116
-uNull uNull118,119
+showCore_bytesHex showCore_bytesHex70,71
+showCore_bytes showCore_bytes75,76
+newtype HalfUID HalfUID79,80
+instance Show Show HalfUID82,83
+    show show83,84
+instance Arbitrary Arbitrary HalfUID84,85
+    arbitrary arbitrary85,86
+halfUID halfUID87,88
+newtype UID UID91,92
+instance Show Show UID94,95
+    show show95,96
+instance Arbitrary Arbitrary UID96,97
+    arbitrary arbitrary97,98
+uid uid99,100
+uidUpper uidUpper107,108
+uidLower uidLower110,111
+uidPlus uidPlus113,114
+(+(+:+)117,118
+hNull hNull121,122
+uNull uNull124,125
 
 ./src/System/SED/MCTP/Common/Types.lhs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types21,22
-
-./src/System/SED/MCTP/Common/Util.lhs,144
-module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util23,24
-hexUID hexUID43,44
-trimTrailingWhitespace trimTrailingWhitespace47,48
 
 ./src/System/SED/MCTP/Common/TableUIDs/TH.lhs,901
 module System.SED.MCTP.Common.TableUIDs.TH System.SED.MCTP.Common.TableUIDs.TH24,25
@@ -297,34 +292,39 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,1207
-module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class24,25
-newtype Core_some_integer Core_some_integer64,65
-newtype Core_some_uinteger Core_some_uinteger66,67
-newtype Core_some_bytes Core_some_bytes68,69
-newtype Core_some_max_bytes Core_some_max_bytes70,71
-newtype Core_integer Core_integer74,75
-type Core_integer_at_least Core_integer_at_least76,77
-newtype Core_uinteger Core_uinteger78,79
-type Core_uinteger_at_least Core_uinteger_at_least80,81
-newtype Core_max_bytes Core_max_bytes82,83
-type Core_max_bytes_at_least Core_max_bytes_at_least84,85
-newtype Core_bytes Core_bytes86,87
-instance StreamItem StreamItem (Core_uinteger n)92,93
-    parser parser93,94
-    generate generate94,95
-instance StreamItem StreamItem (Core_integer n)95,96
-    parser parser96,97
-    generate generate97,98
-instance (K(KnownNat n) => StreamItem (Core_bytes n)98,99
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,1388
+module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class26,27
+newtype Core_integer Core_integer64,65
+type Core_integer_at_least Core_integer_at_least66,67
+newtype Core_uinteger Core_uinteger68,69
+type Core_uinteger_at_least Core_uinteger_at_least70,71
+newtype Core_max_bytes Core_max_bytes72,73
+type Core_max_bytes_at_least Core_max_bytes_at_least77,78
+newtype Core_bytes Core_bytes79,80
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)84,85
+    parser parser85,86
+    generate generate96,97
+instance (K(KnownNat n) => StreamItem (Core_integer n)98,99
     parser parser99,100
     generate generate110,111
-instance StreamItem StreamItem (Core_max_bytes n)111,112
-    parser parser112,113
-    generate generate113,114
-instance (K(KnownNat n) => IsToken (Core_bytes n)116,117
-    token token117,118
-    fromToken fromToken118,119
+instance (K(KnownNat n) => StreamItem (Core_bytes n)112,113
+    parser parser113,114
+    generate generate124,125
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)127,128
+    parser parser128,129
+    generate generate139,140
+instance (K(KnownNat n) => IsToken (Core_integer n)143,144
+    token token144,145
+    fromToken fromToken145,146
+instance (K(KnownNat n) => IsToken (Core_uinteger n)149,150
+    token token150,151
+    fromToken fromToken151,152
+instance (K(KnownNat n) => IsToken (Core_bytes n)155,156
+    token token156,157
+    fromToken fromToken157,158
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)161,162
+    token token162,163
+    fromToken fromToken163,164
 
 ./src/System/SED/MCTP/Common/Base_Type/TH.hs,338
 module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
@@ -550,6 +550,17 @@ instance StreamItem StreamItem Core_uidref_Object_Table153,154
     parser parser154,155
     generate generate155,156
 
+./src/System/SED/MCTP/Common/Instances.hs,347
+module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances20,21
+instance (K(KnownNat l, KnownNat u) => IsBytes (BoundedSize l u B-ByteString)29,30
+      type Elem Elem31,32
+      append append32,33
+      replicate replicate33,34
+      map map34,35
+      take take35,36
+      drop drop36,37
+      toList toList37,38
+
 ./src/System/SED/MCTP/Common/SpecialPurposeUIDs.lhs,495
 module System.SED.MCTP.Common.SpecialPurposeUIDs System.SED.MCTP.Common.SpecialPurposeUIDs22,23
 uNULL uNULL54,55
@@ -564,14 +575,10 @@ uStartTrustedSession uStartTrustedSession101,102
 uSyncTrustedSession uSyncTrustedSession104,105
 uCloseSession uCloseSession107,108
 
-./src/System/SED/MCTP/Common/Instances.lhs,305
-module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances28,29
-instance (K(KnownNat n) => IsToken (Core_bytes n)53,54
-    token token54,55
-    fromToken fromToken55,56
-instance (K(KnownNat n) => StreamItem (Core_bytes n)58,59
-    parser parser59,60
-    generate generate68,69
+./src/System/SED/MCTP/Common/Util.hs,144
+module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util15,16
+hexUID hexUID37,38
+trimTrailingWhitespace trimTrailingWhitespace41,42
 
 ./src/GHC/TypeLits/Extras.hs,76
 module GHC.TypeLits.ExtrasGHC.TypeLits.Extras20,21
@@ -590,43 +597,46 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1659
+./src/Data/BoundedSize/Class.hs,1838
 module Data.BoundedSize.ClassData.BoundedSize.Class22,23
 import import46,47
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize61,62
-    data BoundedSize BoundedSize62,63
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a63,64
-    data BoundedSize BoundedSize64,65
-    data BoundedSize l u a = BdSzWrapper BdSzWrapper64,65
-instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a69,70
-    type ErrorMessage ErrorMessage70,71
-    unsafeCreate unsafeCreate71,72
-    unwrap unwrap72,73
-    predicate predicate73,74
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize85,86
-instance (I(IsBoundedSize l l a) => IsFixedSize l a86,87
-type FixedSize FixedSize87,88
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize90,91
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a91,92
-type MaxSize MaxSize92,93
-trans trans97,98
-bitrans bitrans103,104
-instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)105,106
-    fromString fromString106,107
-instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)108,109
-    size size109,110
-instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)111,112
-    (+(+)112,113
-    (-(-)113,114
-    (*(*)114,115
-    abs abs115,116
-    signum signum116,117
-    fromInteger fromInteger117,118
-instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)119,120
-    readPrec readPrec120,121
-instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)122,123
-    show show123,124
-type AtLeast AtLeast129,130
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize64,65
+    data BoundedSize BoundedSize65,66
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a66,67
+    data BoundedSize BoundedSize67,68
+    data BoundedSize l u a = BdSzWrapper BdSzWrapper67,68
+instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a72,73
+    type ErrorMessage ErrorMessage73,74
+    unsafeCreate unsafeCreate74,75
+    unwrap unwrap75,76
+    predicate predicate76,77
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize88,89
+instance (I(IsBoundedSize l l a) => IsFixedSize l a89,90
+type FixedSize FixedSize90,91
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize93,94
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a94,95
+type MaxSize MaxSize95,96
+trans trans100,101
+bitrans bitrans106,107
+instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)108,109
+    fromString fromString109,110
+instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)111,112
+    size size112,113
+instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)114,115
+    (+(+)115,116
+    (-(-)116,117
+    (*(*)117,118
+    abs abs118,119
+    signum signum119,120
+    fromInteger fromInteger120,121
+instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)122,123
+    readPrec readPrec123,124
+instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)125,126
+    show show126,127
+type AtLeast AtLeast132,133
+instance (K(KnownNat l, HasSize a, Arbitrary a, Smart (BoundedSize l u) a) => Arbitrary (BoundedSize l u a)134,135
+    arbitrary arbitrary135,136
+    shrink shrink136,137
 
 ./src/Data/BoundedSize/TH.hs,275
 module Data.BoundedSize.THData.BoundedSize.TH9,10
@@ -669,19 +679,19 @@ class Hex Hex22,23
     unhex unhex26,27
 instance Hex Hex String29,30
     hex hex30,31
-    unhex unhex34,35
-c c41,42
-instance Hex Hex B-ByteString66,67
-    hex hex67,68
-    unhex unhex68,69
-instance Hex Hex L-ByteString70,71
-    hex hex71,72
-    unhex unhex72,73
-instance Hex Hex S-ShortByteString74,75
-    hex hex75,76
-    unhex unhex76,77
+    unhex unhex35,36
+c c42,43
+instance Hex Hex B-ByteString67,68
+    hex hex68,69
+    unhex unhex69,70
+instance Hex Hex L-ByteString71,72
+    hex hex72,73
+    unhex unhex73,74
+instance Hex Hex S-ShortByteString75,76
+    hex hex76,77
+    unhex unhex77,78
 
-./src/Data/IsBytes.hs,983
+./src/Data/IsBytes.hs,1106
 module Data.IsBytesData.IsBytes26,27
 class HasSize a => IsBytes IsBytes44,45
   type Elem Elem46,47
@@ -691,6 +701,7 @@ class HasSize a => IsBytes IsBytes44,45
   map map53,54
   take take54,55
   drop drop55,56
+  toList toList56,57
 instance IsBytes IsBytes B-ByteString58,59
     type Elem Elem60,61
     append append61,62
@@ -698,6 +709,7 @@ instance IsBytes IsBytes B-ByteString58,59
     map map63,64
     take take64,65
     drop drop65,66
+    toList toList66,67
 instance IsBytes IsBytes S-ShortByteString68,69
     type Elem Elem70,71
     append append71,72
@@ -705,6 +717,7 @@ instance IsBytes IsBytes S-ShortByteString68,69
     map map73,74
     take take74,75
     drop drop75,76
+    toList toList76,77
 instance IsBytes IsBytes [a]78,79
     type Elem Elem80,81
     append append81,82
@@ -712,6 +725,7 @@ instance IsBytes IsBytes [a]78,79
     map map83,84
     take take84,85
     drop drop85,86
+    toList toList86,87
 instance IsBytes IsBytes (V-Vector a)88,89
     type Elem Elem90,91
     append append91,92
@@ -719,6 +733,7 @@ instance IsBytes IsBytes (V-Vector a)88,89
     map map93,94
     take take94,95
     drop drop95,96
+    toList toList96,97
 
 ./src/Data/SizedText/Class.hs,2559
 module Data.SizedText.ClassData.SizedText.Class15,16
@@ -813,7 +828,7 @@ typeFromInt typeFromInt108,109
 unsafeCreateExp unsafeCreateExp120,121
 universallyQuantifiedSizedType universallyQuantifiedSizedType146,147
 
-./src/Data/BoundedSize.hs,810
+./src/Data/BoundedSize.hs,795
 module Data.BoundedSizeData.BoundedSize23,24
 class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes65,66
 instance (K(KnownNat l, KnownNat u, B-IsBytes a) => IsBoundedSizeBytes l u a66,67
@@ -822,18 +837,17 @@ instance (K(KnownNat n, B-IsBytes a) => IsFixedSizeBytes n a69,70
 class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes71,72
 instance (K(KnownNat n, B-IsBytes a) => IsMaxSizeBytes n a72,73
 append append99,100
-replicate replicate110,111
-map map122,123
-take take149,150
-take take159,160
-drop drop169,170
-drop drop179,180
-bounds bounds185,186
-length length195,196
-padLeft padLeft203,204
-padLeft padLeft213,214
-padRight padRight216,217
-padRight padRight226,227
+append append108,109
+replicate replicate114,115
+map map127,128
+take take158,159
+drop drop175,176
+bounds bounds188,189
+length length198,199
+padLeft padLeft206,207
+padLeft padLeft215,216
+padRight padRight218,219
+padRight padRight227,228
 
 ./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18

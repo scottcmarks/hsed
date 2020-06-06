@@ -32,11 +32,12 @@ instance Hex String where
         where w ch = let s = "0123456789ABCDEF"
                          (h, l) = fromEnum ch `divMod` 16
                      in [s !! h, s !! l]
+
     unhex []      = return []
     unhex (a:b:r) = do x <- c a
                        y <- c b
                        liftM (toEnum ((x * 16) + y) :) $ unhex r
-    unhex [_]      = fail "Non-even length"
+    unhex [_]     = fail "Non-even length"
 
 
 c :: MonadFail m => Char -> m Int  -- scm -- was Monad

@@ -582,7 +582,7 @@ trimTrailingWhitespace trimTrailingWhitespace41,42
 
 ./src/GHC/TypeLits/Extras.hs,76
 module GHC.TypeLits.ExtrasGHC.TypeLits.Extras20,21
-fromNat fromNat38,39
+fromNat fromNat39,40
 
 ./src/Hsed/App.lhs,357
 module Hsed.AppHsed.App23,24
@@ -803,6 +803,7 @@ class Smart Smart41,42
     safeCreate safeCreate68,69
     create create73,74
 
-./src/Control/If.hs,49
-module Control.If Control.If14,15
-(?(?)22,23
+./src/Control/If.hs,63
+module Control.IfControl.If13,14
+(?(?)33,34
+if' if'39,40

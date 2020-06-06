@@ -2,6 +2,65 @@ digraph G {
 	graph [ratio=fill,
 		size="6,4"
 	];
+	subgraph cluster_0 {
+		graph [color="#0000000F",
+			label=Control,
+			style=filled
+		];
+		u0		 [fillcolor="#ffffbb",
+			label=If,
+			penwidth=0,
+			style=filled];
+	}
+	subgraph cluster_1 {
+		graph [color="#0000000F",
+			label=Data,
+			style=filled
+		];
+		subgraph cluster_2 {
+			graph [color="#0000000F",
+				label=BoundedSize,
+				style=filled
+			];
+			u1			 [fillcolor="#bbbbff",
+				label=BoundedSize,
+				style="filled,bold"];
+			u2			 [fillcolor="#ffbbbb",
+				label=Class,
+				penwidth=0,
+				style=filled];
+			u6			 [fillcolor="#ffbbbb",
+				label=TH,
+				penwidth=0,
+				style=filled];
+		}
+		subgraph cluster_3 {
+			graph [color="#0000000F",
+				label=ByteString,
+				style=filled
+			];
+			u8			 [fillcolor="#bbffff",
+				label=Integral,
+				penwidth=0,
+				style=filled];
+		}
+		u3		 [fillcolor="#bbbbff",
+			label=HasSize,
+			penwidth=0,
+			style=filled];
+		u4		 [fillcolor="#bbbbff",
+			label=Smart,
+			penwidth=0,
+			style=filled];
+		u7		 [fillcolor="#bbbbff",
+			label=IsBytes,
+			penwidth=0,
+			style=filled];
+		u9		 [fillcolor="#bbbbff",
+			label=Hex,
+			penwidth=0,
+			style=filled];
+	}
 	subgraph cluster_4 {
 		graph [color="#0000000F",
 			label=GHC,
@@ -186,65 +245,6 @@ digraph G {
 				}
 			}
 		}
-	}
-	subgraph cluster_0 {
-		graph [color="#0000000F",
-			label=Control,
-			style=filled
-		];
-		u0		 [fillcolor="#ffffbb",
-			label=If,
-			penwidth=0,
-			style=filled];
-	}
-	subgraph cluster_1 {
-		graph [color="#0000000F",
-			label=Data,
-			style=filled
-		];
-		subgraph cluster_3 {
-			graph [color="#0000000F",
-				label=ByteString,
-				style=filled
-			];
-			u8			 [fillcolor="#bbffff",
-				label=Integral,
-				penwidth=0,
-				style=filled];
-		}
-		subgraph cluster_2 {
-			graph [color="#0000000F",
-				label=BoundedSize,
-				style=filled
-			];
-			u1			 [fillcolor="#bbbbff",
-				label=BoundedSize,
-				style="filled,bold"];
-			u2			 [fillcolor="#ffbbbb",
-				label=Class,
-				penwidth=0,
-				style=filled];
-			u6			 [fillcolor="#ffbbbb",
-				label=TH,
-				penwidth=0,
-				style=filled];
-		}
-		u3		 [fillcolor="#bbbbff",
-			label=HasSize,
-			penwidth=0,
-			style=filled];
-		u4		 [fillcolor="#bbbbff",
-			label=Smart,
-			penwidth=0,
-			style=filled];
-		u7		 [fillcolor="#bbbbff",
-			label=IsBytes,
-			penwidth=0,
-			style=filled];
-		u9		 [fillcolor="#bbbbff",
-			label=Hex,
-			penwidth=0,
-			style=filled];
 	}
 	u34	 [fillcolor="#bbffbb",
 		label=Main,

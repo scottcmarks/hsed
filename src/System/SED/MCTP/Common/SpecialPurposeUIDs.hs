@@ -1,14 +1,6 @@
-\documentstyle{article}
-\begin{document}
-\chapter{SpecialPurposeUIDs}
-
-Special Purpose UIDs.
-
-
-\begin{code}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-|
 Module      : System.SED.MCTP.Common.SpecialPurposeUIDs
-Description : SED tokens
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -18,7 +10,6 @@ Special Purpose UIDs.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude #-}
 
 module System.SED.MCTP.Common.SpecialPurposeUIDs where
 
@@ -27,7 +18,7 @@ import           Data.Word
 import           System.SED.MCTP.Common.UID
 
 
-\end{code}
+{-
 
                                    Table 239 Special Purpose UIDs
     +-----------------------+--------------------------------------------------------------------+
@@ -49,7 +40,8 @@ import           System.SED.MCTP.Common.UID
     +-----------------------+--------------------------------------------------------------------+
 
 
-\begin{code}
+
+-}
 
 -- | Indicate that no object is being referenced.
 uNULL   :: UID
@@ -70,7 +62,7 @@ uSMMethodUID                 = uid  0x00 0x00 0x00 0x00  0x00 0x00 0xFF
 -- | For SP methods invoked within a session
 uC_PINCharSetUnrestrictedUID :: UID
 uC_PINCharSetUnrestrictedUID = uid  0x00 0x00 0x00 0x00B  0x00 0x00 0x00 0x01
-\end{code}
+{-
 
         Table 241 Session Manager Method UIDs
     +-----------------------+-------------------+
@@ -89,7 +81,7 @@ uC_PINCharSetUnrestrictedUID = uid  0x00 0x00 0x00 0x00B  0x00 0x00 0x00 0x01
     |00 00 00 00 00 00 FF 06|CloseSession       |
     +-----------------------+-------------------+
 
-\begin{code}
+-}
 uProperties          :: UID
 uProperties                  = uSMMethodUID 0x01
 
@@ -107,5 +99,3 @@ uSyncTrustedSession          = uSMMethodUID 0x05
 
 uCloseSession        :: UID
 uCloseSession                = uSMMethodUID 0x06
-\end{code}
-\end{document}

@@ -1597,7 +1597,7 @@ instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
 instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
 
 
--- | Datatypes for Tokens.
+-- | Parse and generate values used in method invocations and responses.
 module System.SED.MCTP.Common.Value
 newtype Datum
 Datum :: Token -> Datum
@@ -1804,19 +1804,6 @@ otherwise :: Bool
 --   assertions are turned off, the first argument to <a>assert</a> is
 --   ignored, and the second argument is returned as the result.
 assert :: Bool -> a -> a
-
--- | <i>O(n)</i>. <a>map</a> <tt>f xs</tt> is the list obtained by applying
---   <tt>f</tt> to each element of <tt>xs</tt>, i.e.,
---   
---   <pre>
---   map f [x1, x2, ..., xn] == [f x1, f x2, ..., f xn]
---   map f [x1, x2, ...] == [f x1, f x2, ...]
---   </pre>
---   
---   <pre>
---   &gt;&gt;&gt; map (+1) [1, 2, 3]
---   </pre>
-map :: (a -> b) -> [a] -> [b]
 
 -- | Application operator. This operator is redundant, since ordinary
 --   application <tt>(f x)</tt> means the same as <tt>(f <a>$</a> x)</tt>.
@@ -3006,11 +2993,6 @@ toList :: Foldable t => t a -> [a]
 --   optimized for structures that are similar to cons-lists, because there
 --   is no general way to do better.
 null :: Foldable t => t a -> Bool
-
--- | Returns the size/length of a finite structure as an <a>Int</a>. The
---   default implementation is optimized for structures that are similar to
---   cons-lists, because there is no general way to do better.
-length :: Foldable t => t a -> Int
 
 -- | Does the element occur in the structure?
 elem :: (Foldable t, Eq a) => a -> t a -> Bool
@@ -4688,12 +4670,6 @@ dropWhile :: (a -> Bool) -> [a] -> [a]
 --   takeWhile (&lt; 0) [1,2,3] == []
 --   </pre>
 takeWhile :: (a -> Bool) -> [a] -> [a]
-
--- | <a>replicate</a> <tt>n x</tt> is a list of length <tt>n</tt> with
---   <tt>x</tt> the value of every element. It is an instance of the more
---   general <a>genericReplicate</a>, in which <tt>n</tt> may be of any
---   integral type.
-replicate :: Int -> a -> [a]
 
 -- | The <a>mapMaybe</a> function is a version of <a>map</a> which can
 --   throw out elements. In particular, the functional argument returns

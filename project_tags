@@ -203,8 +203,129 @@ uidPlus uidPlus113,114
 hNull hNull121,122
 uNull uNull124,125
 
-./src/System/SED/MCTP/Common/Types.lhs,71
-module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types21,22
+./src/System/SED/MCTP/Common/SpecialPurposeUIDs.hs,490
+module System.SED.MCTP.Common.SpecialPurposeUIDs System.SED.MCTP.Common.SpecialPurposeUIDs13,14
+uNULL uNULL46,47
+uThisSP uThisSP50,51
+uSMUID uSMUID54,55
+uSMMethodUID uSMMethodUID58,59
+uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID62,63
+uProperties uProperties84,85
+uStartSession uStartSession87,88
+uSyncSession uSyncSession90,91
+uStartTrustedSession uStartTrustedSession93,94
+uSyncTrustedSession uSyncTrustedSession96,97
+uCloseSession uCloseSession99,100
+
+./src/System/SED/MCTP/Common/Value.hs,3497
+module System.SED.MCTP.Common.Value System.SED.MCTP.Common.Value15,16
+newtype Datum Datum34,35
+class (Show v) => IsDatum IsDatum37,38
+    datum datum38,39
+    mdatum mdatum41,42
+instance IsDatum IsDatum Datum44,45
+    datum datum45,46
+instance IsDatum IsDatum Token47,48
+    mdatum mdatum48,49
+maybeDatumToken maybeDatumToken50,51
+isDatumToken isDatumToken57,58
+instance IsToken IsToken Datum61,62
+    token token62,63
+    fromToken fromToken63,64
+instance IsDatum IsDatum Natural65,66
+    datum datum66,67
+udatum udatum68,69
+instance IsDatum IsDatum Integer71,72
+    datum datum72,73
+sdatum sdatum74,75
+instance IsDatum IsDatum ByteString77,78
+    datum datum78,79
+bdatum bdatum80,81
+instance IsDatum IsDatum String83,84
+    datum datum84,85
+newtype Name Name86,87
+class (Show d) => IsName IsName89,90
+    name name90,91
+    mname mname93,94
+instance IsName IsName Name96,97
+    name name97,98
+instance IsName IsName Datum99,100
+    name name100,101
+instance IsName IsName Token102,103
+    name name103,104
+instance IsName IsName Natural105,106
+    name name106,107
+instance IsName IsName Integer108,109
+    name name109,110
+instance IsName IsName ByteString111,112
+    name name112,113
+instance IsName IsName String114,115
+    name name115,116
+instance IsDatum IsDatum Name117,118
+    datum datum118,119
+instance IsToken IsToken Name120,121
+    token token121,122
+    fromToken fromToken122,123
+data NamedValue NamedValue125,126
+data NamedValue = NamedValue NamedValue125,126
+(.(.:)128,129
+n n129,130
+instance IsName IsName NamedValue132,133
+    name name133,134
+newtype List List135,136
+data Value Value138,139
+data Value = D D138,139
+           | N N139,140
+           | L L140,141
+class IsValue IsValue143,144
+    value value144,145
+    mvalue mvalue145,146
+instance IsValue IsValue Value148,149
+    value value149,150
+instance IsValue IsValue Datum151,152
+    value value152,153
+instance IsValue IsValue NamedValue154,155
+    value value155,156
+instance IsValue IsValue List157,158
+    value value158,159
+instance IsValue IsValue Token160,161
+    value value161,162
+instance IsValue IsValue Natural163,164
+    value value164,165
+instance IsValue IsValue Integer166,167
+    value value167,168
+instance IsValue IsValue ByteString169,170
+    value value170,171
+instance IsValue IsValue String172,173
+    value value173,174
+instance IsToken IsToken Value175,176
+    mtoken mtoken176,177
+    fromToken fromToken178,179
+instance StreamItem StreamItem Datum181,182
+    parser parser182,183
+    generate generate183,184
+instance StreamItem StreamItem Name185,186
+    parser parser186,187
+    generate generate187,188
+instance StreamItem StreamItem NamedValue190,191
+    parser parser191,192
+    generate generate194,195
+instance StreamItem StreamItem List200,201
+    parser parser201,202
+    generate generate204,205
+instance StreamItem StreamItem Value209,210
+    parser parser210,211
+    generate generate213,214
+instance Arbitrary Arbitrary Datum218,219
+    arbitrary arbitrary219,220
+instance Arbitrary Arbitrary Name227,228
+    arbitrary arbitrary228,229
+instance Arbitrary Arbitrary NamedValue230,231
+    arbitrary arbitrary231,232
+instance Arbitrary Arbitrary List233,234
+    arbitrary arbitrary234,235
+instance Arbitrary Arbitrary Value236,237
+    arbitrary arbitrary237,238
 
 ./src/System/SED/MCTP/Common/TableUIDs/TH.lhs,901
 module System.SED.MCTP.Common.TableUIDs.TH System.SED.MCTP.Common.TableUIDs.TH24,25
@@ -386,115 +507,8 @@ data EnumRow = EnumRow EnumRow262,263
 enumTableTitle enumTableTitle265,266
 enumTableRow enumTableRow273,274
 
-./src/System/SED/MCTP/Common/Value.lhs,3505
-module System.SED.MCTP.Common.Value System.SED.MCTP.Common.Value24,25
-newtype Datum Datum43,44
-class (Show v) => IsDatum IsDatum46,47
-    datum datum47,48
-    mdatum mdatum50,51
-instance IsDatum IsDatum Datum53,54
-    datum datum54,55
-instance IsDatum IsDatum Token56,57
-    mdatum mdatum57,58
-maybeDatumToken maybeDatumToken59,60
-isDatumToken isDatumToken66,67
-instance IsToken IsToken Datum70,71
-    token token71,72
-    fromToken fromToken72,73
-instance IsDatum IsDatum Natural74,75
-    datum datum75,76
-udatum udatum77,78
-instance IsDatum IsDatum Integer80,81
-    datum datum81,82
-sdatum sdatum83,84
-instance IsDatum IsDatum ByteString86,87
-    datum datum87,88
-bdatum bdatum89,90
-instance IsDatum IsDatum String92,93
-    datum datum93,94
-newtype Name Name95,96
-class (Show d) => IsName IsName98,99
-    name name99,100
-    mname mname102,103
-instance IsName IsName Name105,106
-    name name106,107
-instance IsName IsName Datum108,109
-    name name109,110
-instance IsName IsName Token111,112
-    name name112,113
-instance IsName IsName Natural114,115
-    name name115,116
-instance IsName IsName Integer117,118
-    name name118,119
-instance IsName IsName ByteString120,121
-    name name121,122
-instance IsName IsName String123,124
-    name name124,125
-instance IsDatum IsDatum Name126,127
-    datum datum127,128
-instance IsToken IsToken Name129,130
-    token token130,131
-    fromToken fromToken131,132
-data NamedValue NamedValue134,135
-data NamedValue = NamedValue NamedValue134,135
-(.(.:)137,138
-n n138,139
-instance IsName IsName NamedValue141,142
-    name name142,143
-newtype List List144,145
-data Value Value147,148
-data Value = D D147,148
-           | N N148,149
-           | L L149,150
-class IsValue IsValue152,153
-    value value153,154
-    mvalue mvalue154,155
-instance IsValue IsValue Value157,158
-    value value158,159
-instance IsValue IsValue Datum160,161
-    value value161,162
-instance IsValue IsValue NamedValue163,164
-    value value164,165
-instance IsValue IsValue List166,167
-    value value167,168
-instance IsValue IsValue Token169,170
-    value value170,171
-instance IsValue IsValue Natural172,173
-    value value173,174
-instance IsValue IsValue Integer175,176
-    value value176,177
-instance IsValue IsValue ByteString178,179
-    value value179,180
-instance IsValue IsValue String181,182
-    value value182,183
-instance IsToken IsToken Value184,185
-    mtoken mtoken185,186
-    fromToken fromToken187,188
-instance StreamItem StreamItem Datum190,191
-    parser parser191,192
-    generate generate192,193
-instance StreamItem StreamItem Name194,195
-    parser parser195,196
-    generate generate196,197
-instance StreamItem StreamItem NamedValue199,200
-    parser parser200,201
-    generate generate203,204
-instance StreamItem StreamItem List209,210
-    parser parser210,211
-    generate generate213,214
-instance StreamItem StreamItem Value218,219
-    parser parser219,220
-    generate generate222,223
-instance Arbitrary Arbitrary Datum227,228
-    arbitrary arbitrary228,229
-instance Arbitrary Arbitrary Name236,237
-    arbitrary arbitrary237,238
-instance Arbitrary Arbitrary NamedValue239,240
-    arbitrary arbitrary240,241
-instance Arbitrary Arbitrary List242,243
-    arbitrary arbitrary243,244
-instance Arbitrary Arbitrary Value245,246
-    arbitrary arbitrary246,247
+./src/System/SED/MCTP/Common/Types.hs,71
+module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types14,15
 
 ./src/System/SED/MCTP/Common/Format.hs,2521
 module System.SED.MCTP.Common.FormatSystem.SED.MCTP.Common.Format27,28
@@ -560,20 +574,6 @@ instance (K(KnownNat l, KnownNat u) => IsBytes (BoundedSize l u B-ByteString)2
       take take35,36
       drop drop36,37
       toList toList37,38
-
-./src/System/SED/MCTP/Common/SpecialPurposeUIDs.lhs,495
-module System.SED.MCTP.Common.SpecialPurposeUIDs System.SED.MCTP.Common.SpecialPurposeUIDs22,23
-uNULL uNULL54,55
-uThisSP uThisSP58,59
-uSMUID uSMUID62,63
-uSMMethodUID uSMMethodUID66,67
-uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID70,71
-uProperties uProperties92,93
-uStartSession uStartSession95,96
-uSyncSession uSyncSession98,99
-uStartTrustedSession uStartTrustedSession101,102
-uSyncTrustedSession uSyncTrustedSession104,105
-uCloseSession uCloseSession107,108
 
 ./src/System/SED/MCTP/Common/Util.hs,144
 module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util15,16

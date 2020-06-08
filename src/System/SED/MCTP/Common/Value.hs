@@ -1,37 +1,28 @@
-\documentstyle{article}
-\begin{document}
-\chapter{Value}
-
-Parse and generate method invocations and responses.
-
-
-\begin{code}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE PolyKinds         #-}
 {-|
 Module      : System.SED.MCTP.Common.Value
-Description : SED tokens
-Copyright   : (c) Magnolia Heights R&D, 2019
+Copyright   : (c) Magnolia Heights R&D, 2020
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Datatypes for Tokens.
+Parse and generate values used in method invocations and responses.
 
 -}
 
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE PolyKinds         #-}
 
 module System.SED.MCTP.Common.Value where
 
-import           RIO                          hiding (foldr, map, length, mask,
-                                                      reverse, take)
-import           Test.QuickCheck              hiding (generate)
+import           RIO                               hiding (foldr, length, map,
+                                                    mask, reverse, take)
+import           Test.QuickCheck                   hiding (generate)
 
 import           System.SED.MCTP.Common.StreamItem
 import           System.SED.MCTP.Common.Token
 
-\end{code}
+{-
 
 Due to the nature of method parameters and results, there are two additional constructs defined for
 messaging that serve as grouping mechanisms for the basic types: Named values and List values.
@@ -39,7 +30,7 @@ messaging that serve as grouping mechanisms for the basic types: Named values an
   a. Named values. The name (a byte-string/integer/uinteger value) followed by its value (any
 messaging type, i.e. byte-string values, N length signed or unsigned integer values, list values,
 or Named values).
-\begin{code}
+-}
 
 newtype Datum = Datum Token
     deriving (Show,Eq)
@@ -184,7 +175,7 @@ instance IsValue String where
 
 instance IsToken Value where
     mtoken (D (Datum d)) = mtoken d
-    mtoken _ = Nothing
+    mtoken _             = Nothing
     fromToken = mvalue
 
 
@@ -249,7 +240,3 @@ instance Arbitrary Value where
         , (10, N <$> arbitrary)
         , (15, L <$> arbitrary)
         ]
-
-
-\end{code}
-\end{document}

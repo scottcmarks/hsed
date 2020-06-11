@@ -114,6 +114,46 @@ instance Data.IsBytes.IsBytes [a]
 instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
 
 
+-- | Datatype refined by predicate
+module Data.Refined
+
+-- | Refined constructor.
+--   
+--   Wrap a <tt>a</tt> in a <tt>c</tt> under the control of a refinement
+--   predicate.
+class Refined p a where {
+    
+    -- | Refinement predicate error message type. Commonly would be
+    --   <tt>String</tt>.
+    type family ErrorMessage p a;
+}
+
+-- | Forget type-level minimum and maximum size, obtaining the underlying
+--   value.
+unwrap :: Refined p a => p a -> a
+
+-- | Simply wrap a value in a <tt>c</tt> as is, assuming
+--   <tt>predicate</tt>.
+--   
+--   <b>WARNING</b> Use it only when you know what you're doing.
+unsafeCreate :: Refined p a => a -> p a
+
+-- | Refinement predicate. Either pass a wrapped value as Right or give an
+--   error message as Left.
+--   
+--   Note that this is passed the value after being wrapped, and therefore
+--   assumes that the wrapping operation is mostly harmless.
+predicate :: Refined p a => p a -> Either (ErrorMessage p a) (p a)
+
+-- | Primary smart constructor into Either.
+safeCreate :: Refined p a => a -> Either (ErrorMessage p a) (p a)
+
+-- | Simplified smart constructor into Maybe.
+create :: Refined p a => a -> Maybe (p a)
+validate :: IsPredicate a => a -> Either (ErrMessage a) a
+instance (GHC.Real.Integral a, GHC.Show.Show a) => Data.Refined.IsPredicate a
+
+
 -- | Smart constructors refined with predicates.
 module Data.Smart
 

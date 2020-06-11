@@ -803,23 +803,23 @@ class Smart Smart41,42
     safeCreate safeCreate68,69
     create create73,74
 
-./src/Data/Refined.hs,591
+./src/Data/Refined.hs,603
 module Data.RefinedData.Refined25,26
-class Refined Refined42,43
-  unwrap unwrap45,46
-  unsafeCreate unsafeCreate50,51
-  type ErrorMessage ErrorMessage53,54
-  predicate predicate60,61
-  safeCreate safeCreate63,64
-  create create67,68
-class IsPredicate IsPredicate80,81
-  type ErrMessage ErrMessage81,82
-  validate validate84,85
-  predicate' predicate'89,90
-  predicateFailureMessage predicateFailureMessage90,91
-instance (I(Integral a, Show a) => IsPredicate a110,111
-    predicate' predicate'111,112
-    predicateFailureMessage predicateFailureMessage112,113
+class Refined Refined47,48
+    unwrap unwrap50,51
+    unsafeCreate unsafeCreate56,57
+    type ErrorMessage ErrorMessage61,62
+    predicate predicate68,69
+    safeCreate safeCreate71,72
+    create create75,76
+class IsPredicate IsPredicate81,82
+  type ErrMessage ErrMessage82,83
+  validate validate85,86
+  predicate' predicate'90,91
+  predicateFailureMessage predicateFailureMessage91,92
+instance (I(Integral a, Show a) => IsPredicate a113,114
+    predicate' predicate'114,115
+    predicateFailureMessage predicateFailureMessage115,116
 
 ./src/Control/If.hs,63
 module Control.IfControl.If13,14

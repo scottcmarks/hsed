@@ -1,19 +1,16 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE AllowAmbiguousTypes   #-}</span><span>
-</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DataKinds             #-}</span><span>
-</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DefaultSignatures     #-}</span><span>
-</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE DerivingStrategies    #-}</span><span>
-</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia           #-}</span><span>
-</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE FlexibleContexts      #-}</span><span>
-</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
-</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
-</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude     #-}</span><span>
-</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes            #-}</span><span>
-</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables   #-}</span><span>
-</span><span id="line-12"></span><span class="hs-pragma">{-# LANGUAGE TypeApplications      #-}</span><span>
-</span><span id="line-13"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies          #-}</span><span>
-</span><span id="line-14"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances  #-}</span><span>
-</span><span id="line-15"></span><span>
-</span><span id="line-16"></span><span class="hs-comment">{-|
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DefaultSignatures     #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DerivingStrategies    #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia           #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE GADTs                 #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude     #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE TypeFamilies          #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE UndecidableInstances  #-}</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">{-|
 Module      : Data.Refined
 Copyright   : (c) Magnolia Heights R&amp;D, 2020
 License     : All rights reserved
@@ -23,17 +20,20 @@ Stability   : experimental
 Datatype refined by predicate
 
 -}</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.Refined</span><span>
-</span><span id="line-27"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Data.Refined.html#Refined"><span class="hs-identifier">Refined</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
-</span><span id="line-28"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Refined.html#validate"><span class="hs-identifier">validate</span></a></span><span>
-</span><span id="line-29"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Either</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">either</span></span><span class="hs-special">)</span><span>
-</span><span id="line-32"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span>   </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-34"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bool</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">const</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.)</span></span><span class="hs-special">)</span><span>
-</span><span id="line-36"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Real</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Integral</span></span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.Refined</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="Data.Refined.html#Refined"><span class="hs-identifier">Refined</span></a></span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Refined.html#validate"><span class="hs-identifier">validate</span></a></span><span>
+</span><span id="line-26"></span><span>  </span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-27"></span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Either</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">either</span></span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span>   </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Maybe</span></span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bool</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Eq</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">const</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">id</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Enum</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bounded</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-34"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Err</span></span><span>     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">error</span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Num</span></span><span>     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Num</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-36"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Read</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Read</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-37"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Show</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">shows</span></span><span class="hs-special">)</span><span>
 </span><span id="line-38"></span><span>
 </span><span id="line-39"></span><span class="hs-comment">-- $setup</span><span>
@@ -45,32 +45,32 @@ Datatype refined by predicate
 </span><span id="line-45"></span><span class="hs-comment">-- | Refined constructor.</span><span>
 </span><span id="line-46"></span><span class="hs-comment">--</span><span>
 </span><span id="line-47"></span><span class="hs-comment">--   Wrap a @a@ in a @c@ under the control of a refinement predicate.</span><span>
-</span><span id="line-48"></span><span class="hs-keyword">class</span><span> </span><span id="Refined"><span class="annot"><a href="Data.Refined.html#Refined"><span class="hs-identifier hs-var">Refined</span></a></span></span><span> </span><span id="local-6989586621679529056"><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621679529057"><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-48"></span><span class="hs-keyword">class</span><span> </span><span id="Refined"><span class="annot"><a href="Data.Refined.html#Refined"><span class="hs-identifier hs-var">Refined</span></a></span></span><span> </span><span id="local-6989586621679530177"><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621679530178"><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span>    </span><span class="hs-comment">-- | Forget type-level minimum and maximum size, obtaining the underlying value.</span><span>
-</span><span id="line-51"></span><span>    </span><span id="unwrap"><span class="annot"><a href="Data.Refined.html#unwrap"><span class="hs-identifier hs-type">unwrap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-51"></span><span>    </span><span id="unwrap"><span class="annot"><a href="Data.Refined.html#unwrap"><span class="hs-identifier hs-type">unwrap</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-52"></span><span>
 </span><span id="line-53"></span><span>    </span><span class="hs-comment">-- | Simply wrap a value in a @c@ as is, assuming @predicate@.</span><span>
 </span><span id="line-54"></span><span>    </span><span class="hs-comment">--</span><span>
 </span><span id="line-55"></span><span>    </span><span class="hs-comment">-- __WARNING__ Use it only when you know what you're doing.</span><span>
 </span><span id="line-56"></span><span>    </span><span class="hs-comment">--</span><span>
-</span><span id="line-57"></span><span>    </span><span id="unsafeCreate"><span class="annot"><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-type">unsafeCreate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-57"></span><span>    </span><span id="unsafeCreate"><span class="annot"><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-type">unsafeCreate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span>    </span><span class="hs-comment">-- | Refinement predicate error message type. Commonly would be @String@.</span><span>
 </span><span id="line-60"></span><span>    </span><span class="hs-comment">--</span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span>    </span><span class="hs-keyword">type</span><span> </span><span id="ErrorMessage"><span class="annot"><a href="Data.Refined.html#ErrorMessage"><span class="hs-identifier hs-var">ErrorMessage</span></a></span></span><span> </span><span id="local-6989586621679529056"><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621679529057"><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-62"></span><span>    </span><span class="hs-keyword">type</span><span> </span><span id="ErrorMessage"><span class="annot"><a href="Data.Refined.html#ErrorMessage"><span class="hs-identifier hs-var">ErrorMessage</span></a></span></span><span> </span><span id="local-6989586621679530177"><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621679530178"><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span></span><span>
 </span><span id="line-63"></span><span>    </span><span class="hs-comment">-- | Refinement predicate.  Either pass a wrapped value as Right or</span><span>
 </span><span id="line-64"></span><span>    </span><span class="hs-comment">--   give an error message as Left.</span><span>
 </span><span id="line-65"></span><span>    </span><span class="hs-comment">--</span><span>
 </span><span id="line-66"></span><span>    </span><span class="hs-comment">--   Note that this is passed the value after being wrapped, and therefore</span><span>
 </span><span id="line-67"></span><span>    </span><span class="hs-comment">--   assumes that the wrapping operation is mostly harmless.</span><span>
 </span><span id="line-68"></span><span>    </span><span class="hs-comment">--</span><span>
-</span><span id="line-69"></span><span>    </span><span id="predicate"><span class="annot"><a href="Data.Refined.html#predicate"><span class="hs-identifier hs-type">predicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-69"></span><span>    </span><span id="predicate"><span class="annot"><a href="Data.Refined.html#predicate"><span class="hs-identifier hs-type">predicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>    </span><span class="hs-comment">-- | Primary smart constructor into Either.</span><span>
 </span><span id="line-71"></span><span>    </span><span class="hs-comment">--</span><span>
-</span><span id="line-72"></span><span>    </span><span id="safeCreate"><span class="annot"><a href="Data.Refined.html#safeCreate"><span class="hs-identifier hs-type">safeCreate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-73"></span><span>    </span><span id="local-6989586621679529022"><span class="annot"><a href="Data.Refined.html#safeCreate"><span class="hs-identifier hs-var hs-var">safeCreate</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Either (ErrorMessage p a) (p a)
+</span><span id="line-72"></span><span>    </span><span id="safeCreate"><span class="annot"><a href="Data.Refined.html#safeCreate"><span class="hs-identifier hs-type">safeCreate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#ErrorMessage"><span class="hs-identifier hs-type">ErrorMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span>    </span><span id="local-6989586621679530121"><span class="annot"><a href="Data.Refined.html#safeCreate"><span class="hs-identifier hs-var hs-var">safeCreate</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Either (ErrorMessage p a) (p a)
 forall (p :: * -&gt; *) a.
 Refined p a =&gt;
 p a -&gt; Either (ErrorMessage p a) (p a)
@@ -82,8 +82,8 @@ forall (p :: * -&gt; *) a. Refined p a =&gt; a -&gt; p a
 </span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span></span><span>
 </span><span id="line-74"></span><span>    </span><span class="hs-comment">-- | Simplified smart constructor into Maybe.</span><span>
 </span><span id="line-75"></span><span>    </span><span class="hs-comment">--</span><span>
-</span><span id="line-76"></span><span>    </span><span id="create"><span class="annot"><a href="Data.Refined.html#create"><span class="hs-identifier hs-type">create</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679529056"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529057"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-77"></span><span>    </span><span id="local-6989586621679529020"><span class="annot"><a href="Data.Refined.html#create"><span class="hs-identifier hs-var hs-var">create</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ErrorMessage p a -&gt; Maybe (p a))
+</span><span id="line-76"></span><span>    </span><span id="create"><span class="annot"><a href="Data.Refined.html#create"><span class="hs-identifier hs-type">create</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679530177"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530178"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679530119"><span class="annot"><a href="Data.Refined.html#create"><span class="hs-identifier hs-var hs-var">create</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ErrorMessage p a -&gt; Maybe (p a))
 -&gt; (p a -&gt; Maybe (p a))
 -&gt; Either (ErrorMessage p a) (p a)
 -&gt; Maybe (p a)
@@ -106,60 +106,291 @@ a -&gt; Either (ErrorMessage p a) (p a)
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="hs-comment">-- | Restarting from very grounded ground zero, and abstracting</span><span>
 </span><span id="line-81"></span><span class="hs-comment">--   back up to a minimally complex notion of 'Refined'</span><span>
-</span><span id="line-82"></span><span class="hs-keyword">class</span><span> </span><span id="IsPredicate"><span class="annot"><a href="Data.Refined.html#IsPredicate"><span class="hs-identifier hs-var">IsPredicate</span></a></span></span><span> </span><span id="local-6989586621679529044"><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-83"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ErrMessage"><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-var">ErrMessage</span></a></span></span><span> </span><span id="local-6989586621679529044"><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
-</span><span id="line-84"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ErrMessage"><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-var">ErrMessage</span></a></span></span><span> </span><span id="local-6989586621679529019"><span class="annot"><a href="#local-6989586621679529019"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-comment">-- default</span><span>
+</span><span id="line-82"></span><span class="hs-keyword">class</span><span> </span><span id="IsPredicate"><span class="annot"><a href="Data.Refined.html#IsPredicate"><span class="hs-identifier hs-var">IsPredicate</span></a></span></span><span> </span><span id="local-6989586621679530165"><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-83"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ErrMessage"><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-var">ErrMessage</span></a></span></span><span> </span><span id="local-6989586621679530165"><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
+</span><span id="line-84"></span><span>  </span><span class="hs-keyword">type</span><span> </span><span id="ErrMessage"><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-var">ErrMessage</span></a></span></span><span> </span><span id="local-6989586621679530118"><span class="annot"><a href="#local-6989586621679530118"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-comment">-- default</span><span>
 </span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span>  </span><span id="validate"><span class="annot"><a href="Data.Refined.html#validate"><span class="hs-identifier hs-type">validate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-type">ErrMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-87"></span><span>  </span><span id="local-6989586621679529018"><span class="annot"><a href="Data.Refined.html#validate"><span class="hs-identifier hs-var hs-var">validate</span></a></span><span> </span><span id="local-6989586621679529017"><span class="annot"><span class="annottext">x :: a
-</span><a href="#local-6989586621679529017"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- default validation uses predicate and pred msg</span><span>
+</span><span id="line-86"></span><span>  </span><span id="validate"><span class="annot"><a href="Data.Refined.html#validate"><span class="hs-identifier hs-type">validate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Either</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-type">ErrMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-87"></span><span>  </span><span id="local-6989586621679530117"><span class="annot"><a href="Data.Refined.html#validate"><span class="hs-identifier hs-var hs-var">validate</span></a></span><span> </span><span id="local-6989586621679530116"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679530116"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-comment">-- default validation uses predicate and pred msg</span><span>
 </span><span id="line-88"></span><span>    </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">a -&gt; Bool
 forall a. IsPredicate a =&gt; a -&gt; Bool
 </span><a href="Data.Refined.html#predicate%27"><span class="hs-identifier hs-var">predicate'</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679529017"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-89"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">a -&gt; Either String a
+</span><a href="#local-6989586621679530116"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-89"></span><span>      </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">a -&gt; Either (ErrMessage a) a
 forall a b. b -&gt; Either a b
 </span><span class="hs-identifier hs-var">Right</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679529017"><span class="hs-identifier hs-var">x</span></a></span><span>
-</span><span id="line-90"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">String -&gt; Either (ErrMessage a) a
+</span><a href="#local-6989586621679530116"><span class="hs-identifier hs-var">x</span></a></span><span>
+</span><span id="line-90"></span><span>      </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ErrMessage a -&gt; Either (ErrMessage a) a
 forall a b. a -&gt; Either a b
-</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Either (ErrMessage a) a)
--&gt; String -&gt; Either (ErrMessage a) a
+</span><span class="hs-identifier hs-var">Left</span></span><span> </span><span class="annot"><span class="annottext">(ErrMessage a -&gt; Either (ErrMessage a) a)
+-&gt; ErrMessage a -&gt; Either (ErrMessage a) a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ErrMessage a
 forall a. IsPredicate a =&gt; a -&gt; ErrMessage a
 </span><a href="Data.Refined.html#predicateFailureMessage"><span class="hs-identifier hs-var">predicateFailureMessage</span></a></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679529017"><span class="hs-identifier hs-var">x</span></a></span></span><span>
-</span><span id="line-91"></span><span>  </span><span id="predicate%27"><span class="annot"><a href="Data.Refined.html#predicate%27"><span class="hs-identifier hs-type">predicate'</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
-</span><span id="line-92"></span><span>  </span><span id="predicateFailureMessage"><span class="annot"><a href="Data.Refined.html#predicateFailureMessage"><span class="hs-identifier hs-type">predicateFailureMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-type">ErrMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529044"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><a href="#local-6989586621679530116"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-91"></span><span>  </span><span id="predicate%27"><span class="annot"><a href="Data.Refined.html#predicate%27"><span class="hs-identifier hs-type">predicate'</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-92"></span><span>  </span><span id="predicateFailureMessage"><span class="annot"><a href="Data.Refined.html#predicateFailureMessage"><span class="hs-identifier hs-type">predicateFailureMessage</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-type">ErrMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-93"></span><span>
-</span><span id="line-94"></span><span>
-</span><span id="line-95"></span><span class="hs-comment">-- | Test with IsPredicate Integer</span><span>
-</span><span id="line-96"></span><span class="hs-comment">--</span><span>
-</span><span id="line-97"></span><span class="hs-comment">-- Note that doctest is perfectly OK with these being comments</span><span>
-</span><span id="line-98"></span><span class="hs-comment">-- inside the instance code, where they are correctly indented,</span><span>
-</span><span id="line-99"></span><span class="hs-comment">-- but dante-eval-block puts the results on the left margin, and</span><span>
-</span><span id="line-100"></span><span class="hs-comment">-- while doctest is again fine with that, I'm not.</span><span>
+</span><span id="line-94"></span><span>  </span><span id="err"><span class="annot"><a href="Data.Refined.html#err"><span class="hs-identifier hs-type">err</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-type">ErrMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-95"></span><span>  </span><span class="hs-keyword">default</span><span> </span><span id="err"><span class="annot"><a href="Data.Refined.html#err"><span class="hs-identifier hs-type">err</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-type">ErrMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><span class="hs-glyph hs-type">~</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Refined.html#ErrMessage"><span class="hs-identifier hs-type">ErrMessage</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-96"></span><span>  </span><span id="local-6989586621679530112"><span class="annot"><a href="Data.Refined.html#err"><span class="hs-identifier hs-var hs-var">err</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ErrMessage a -&gt; a
+forall a. HasCallStack =&gt; [Char] -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span>  </span><span id="enforce"><span class="annot"><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-type">enforce</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679530165"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-99"></span><span>  </span><span id="local-6989586621679530110"><span class="annot"><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var hs-var">enforce</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ErrMessage a -&gt; a) -&gt; (a -&gt; a) -&gt; Either (ErrMessage a) a -&gt; a
+forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
+</span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">ErrMessage a -&gt; a
+forall a. IsPredicate a =&gt; ErrMessage a -&gt; a
+</span><a href="Data.Refined.html#err"><span class="hs-identifier hs-var">err</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a
+forall a. a -&gt; a
+</span><span class="hs-identifier hs-var">id</span></span><span> </span><span class="annot"><span class="annottext">(Either (ErrMessage a) a -&gt; a)
+-&gt; (a -&gt; Either (ErrMessage a) a) -&gt; a -&gt; a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Either (ErrMessage a) a
+forall a. IsPredicate a =&gt; a -&gt; Either (ErrMessage a) a
+</span><a href="Data.Refined.html#validate"><span class="hs-identifier hs-var">validate</span></a></span></span><span>
+</span><span id="line-100"></span><span>
 </span><span id="line-101"></span><span>
-</span><span id="line-102"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (1 :: Int)</span><span>
-</span><span id="line-103"></span><span class="hs-comment">-- Right 1</span><span>
-</span><span id="line-104"></span><span class="hs-comment">--</span><span>
-</span><span id="line-105"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (-1 ::Int)</span><span>
-</span><span id="line-106"></span><span class="hs-comment">-- Left &quot;-1 is negative&quot;</span><span>
-</span><span id="line-107"></span><span class="hs-comment">--</span><span>
-</span><span id="line-108"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (1 :: Integer)</span><span>
-</span><span id="line-109"></span><span class="hs-comment">-- Right 1</span><span>
-</span><span id="line-110"></span><span class="hs-comment">--</span><span>
-</span><span id="line-111"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (-1 ::Integer)</span><span>
-</span><span id="line-112"></span><span class="hs-comment">-- Left &quot;-1 is negative&quot;</span><span>
-</span><span id="line-113"></span><span>
-</span><span id="line-114"></span><span id="local-6989586621679529014"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679529012"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Integral</span></span><span> </span><span class="annot"><a href="#local-6989586621679529014"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679529014"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Refined.html#IsPredicate"><span class="hs-identifier hs-type">IsPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679529014"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-115"></span><span>    </span><span id="local-6989586621679529008"><span class="annot"><span class="annottext">predicate' :: a -&gt; Bool
-</span><a href="#local-6989586621679529008"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicate'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><span id="line-102"></span><span class="hs-comment">-- | Test with IsPredicate Integer</span><span>
+</span><span id="line-103"></span><span class="hs-comment">--</span><span>
+</span><span id="line-104"></span><span class="hs-comment">-- Note that doctest is perfectly OK with these being comments</span><span>
+</span><span id="line-105"></span><span class="hs-comment">-- inside the instance code, where they are correctly indented,</span><span>
+</span><span id="line-106"></span><span class="hs-comment">-- but dante-eval-block puts the results on the left margin, and</span><span>
+</span><span id="line-107"></span><span class="hs-comment">-- while doctest is again fine with that, I'm not.</span><span>
+</span><span id="line-108"></span><span>
+</span><span id="line-109"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (1 ::NonNegative Int)</span><span>
+</span><span id="line-110"></span><span class="hs-comment">-- Right 1</span><span>
+</span><span id="line-111"></span><span class="hs-comment">--</span><span>
+</span><span id="line-112"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (-2 ::NonNegative Int)</span><span>
+</span><span id="line-113"></span><span class="hs-comment">-- *** Exception: -2 is negative</span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- CallStack (from HasCallStack):</span><span>
+</span><span id="line-115"></span><span class="hs-comment">--   error, called at /var/folders/6n/6q645lsj4nj29h559pmrwm1r0000gp/T/dantegO6kcO.hs:96:9 in main:Data.Refined</span><span>
+</span><span id="line-116"></span><span class="hs-comment">--</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (3 :: NonNegative Integer)</span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- Right 3</span><span>
+</span><span id="line-119"></span><span class="hs-comment">--</span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- &gt;&gt;&gt; validate (-4 ::NonNegative Integer)</span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- *** Exception: -4 is negative</span><span>
+</span><span id="line-122"></span><span class="hs-comment">-- CallStack (from HasCallStack):</span><span>
+</span><span id="line-123"></span><span class="hs-comment">--   error, called at /var/folders/6n/6q645lsj4nj29h559pmrwm1r0000gp/T/dantegO6kcO.hs:96:9 in main:Data.Refined</span><span>
+</span><span id="line-124"></span><span>
+</span><span id="line-125"></span><span class="hs-keyword">newtype</span><span>  </span><span id="NonNegative"><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span></span><span> </span><span id="local-6989586621679530136"><span class="annot"><a href="#local-6989586621679530136"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="NonNegative"><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span></span><span> </span><span class="hs-special">{</span><span id="n"><span class="annot"><span class="annottext">NonNegative a -&gt; a
+</span><a href="Data.Refined.html#n"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679530136"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">}</span><span>
+</span><span id="line-126"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679530104"><span id="local-6989586621679530106"><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a -&gt; Bool
+(NonNegative a -&gt; NonNegative a -&gt; Bool)
+-&gt; (NonNegative a -&gt; NonNegative a -&gt; Bool) -&gt; Eq (NonNegative a)
+forall a. Eq a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: NonNegative a -&gt; NonNegative a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+== :: NonNegative a -&gt; NonNegative a -&gt; Bool
+$c== :: forall a. Eq a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679530088"><span id="local-6989586621679530090"><span id="local-6989586621679530092"><span id="local-6989586621679530094"><span id="local-6989586621679530096"><span id="local-6989586621679530098"><span id="local-6989586621679530100"><span class="annot"><span class="annottext">Eq (NonNegative a)
+Eq (NonNegative a) =&gt;
+(NonNegative a -&gt; NonNegative a -&gt; Ordering)
+-&gt; (NonNegative a -&gt; NonNegative a -&gt; Bool)
+-&gt; (NonNegative a -&gt; NonNegative a -&gt; Bool)
+-&gt; (NonNegative a -&gt; NonNegative a -&gt; Bool)
+-&gt; (NonNegative a -&gt; NonNegative a -&gt; Bool)
+-&gt; (NonNegative a -&gt; NonNegative a -&gt; NonNegative a)
+-&gt; (NonNegative a -&gt; NonNegative a -&gt; NonNegative a)
+-&gt; Ord (NonNegative a)
+NonNegative a -&gt; NonNegative a -&gt; Bool
+NonNegative a -&gt; NonNegative a -&gt; Ordering
+NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a. Ord a =&gt; Eq (NonNegative a)
+forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Ordering
+forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+min :: NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+$cmin :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+max :: NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+$cmax :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+&gt;= :: NonNegative a -&gt; NonNegative a -&gt; Bool
+$c&gt;= :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+&gt; :: NonNegative a -&gt; NonNegative a -&gt; Bool
+$c&gt; :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+&lt;= :: NonNegative a -&gt; NonNegative a -&gt; Bool
+$c&lt;= :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+&lt; :: NonNegative a -&gt; NonNegative a -&gt; Bool
+$c&lt; :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Bool
+compare :: NonNegative a -&gt; NonNegative a -&gt; Ordering
+$ccompare :: forall a. Ord a =&gt; NonNegative a -&gt; NonNegative a -&gt; Ordering
+$cp1Ord :: forall a. Ord a =&gt; Eq (NonNegative a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679530083"><span id="local-6989586621679530085"><span class="annot"><span class="annottext">NonNegative a
+NonNegative a -&gt; NonNegative a -&gt; Bounded (NonNegative a)
+forall a. a -&gt; a -&gt; Bounded a
+forall a. Bounded a =&gt; NonNegative a
+maxBound :: NonNegative a
+$cmaxBound :: forall a. Bounded a =&gt; NonNegative a
+minBound :: NonNegative a
+$cminBound :: forall a. Bounded a =&gt; NonNegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Bounded</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679530074"><span id="local-6989586621679530076"><span id="local-6989586621679530078"><span id="local-6989586621679530080"><span class="annot"><span class="annottext">ReadPrec [NonNegative a]
+ReadPrec (NonNegative a)
+Int -&gt; ReadS (NonNegative a)
+ReadS [NonNegative a]
+(Int -&gt; ReadS (NonNegative a))
+-&gt; ReadS [NonNegative a]
+-&gt; ReadPrec (NonNegative a)
+-&gt; ReadPrec [NonNegative a]
+-&gt; Read (NonNegative a)
+forall a. Read a =&gt; ReadPrec [NonNegative a]
+forall a. Read a =&gt; ReadPrec (NonNegative a)
+forall a. Read a =&gt; Int -&gt; ReadS (NonNegative a)
+forall a. Read a =&gt; ReadS [NonNegative a]
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [NonNegative a]
+$creadListPrec :: forall a. Read a =&gt; ReadPrec [NonNegative a]
+readPrec :: ReadPrec (NonNegative a)
+$creadPrec :: forall a. Read a =&gt; ReadPrec (NonNegative a)
+readList :: ReadS [NonNegative a]
+$creadList :: forall a. Read a =&gt; ReadS [NonNegative a]
+readsPrec :: Int -&gt; ReadS (NonNegative a)
+$creadsPrec :: forall a. Read a =&gt; Int -&gt; ReadS (NonNegative a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-127"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span id="local-6989586621679530067"><span id="local-6989586621679530069"><span id="local-6989586621679530071"><span class="annot"><span class="annottext">Int -&gt; NonNegative a -&gt; ShowS
+[NonNegative a] -&gt; ShowS
+NonNegative a -&gt; [Char]
+(Int -&gt; NonNegative a -&gt; ShowS)
+-&gt; (NonNegative a -&gt; [Char])
+-&gt; ([NonNegative a] -&gt; ShowS)
+-&gt; Show (NonNegative a)
+forall a. Show a =&gt; Int -&gt; NonNegative a -&gt; ShowS
+forall a. Show a =&gt; [NonNegative a] -&gt; ShowS
+forall a. Show a =&gt; NonNegative a -&gt; [Char]
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; [Char]) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [NonNegative a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [NonNegative a] -&gt; ShowS
+show :: NonNegative a -&gt; [Char]
+$cshow :: forall a. Show a =&gt; NonNegative a -&gt; [Char]
+showsPrec :: Int -&gt; NonNegative a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; NonNegative a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679530136"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-128"></span><span id="local-6989586621679530065"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679530065"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679530065"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679530065"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>  </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530065"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-129"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530056"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679530056"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679530055"><span class="annot"><span class="annottext">+ :: NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">+</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530053"><span class="annot"><span class="annottext">y :: a
+</span><a href="#local-6989586621679530053"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a
+forall a. IsPredicate a =&gt; a -&gt; a
+</span><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var">enforce</span></a></span><span> </span><span class="annot"><span class="annottext">(NonNegative a -&gt; NonNegative a) -&gt; NonNegative a -&gt; NonNegative a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
+forall a. a -&gt; NonNegative a
+</span><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530056"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530053"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-130"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530052"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679530052"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679530051"><span class="annot"><span class="annottext">- :: NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+</span><span class="hs-glyph hs-var hs-var hs-var hs-var">-</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530050"><span class="annot"><span class="annottext">y :: a
+</span><a href="#local-6989586621679530050"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a
+forall a. IsPredicate a =&gt; a -&gt; a
+</span><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var">enforce</span></a></span><span> </span><span class="annot"><span class="annottext">(NonNegative a -&gt; NonNegative a) -&gt; NonNegative a -&gt; NonNegative a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
+forall a. a -&gt; NonNegative a
+</span><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530052"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530050"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-131"></span><span>  </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530049"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679530049"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679530048"><span class="annot"><span class="annottext">* :: NonNegative a -&gt; NonNegative a -&gt; NonNegative a
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">*</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530046"><span class="annot"><span class="annottext">y :: a
+</span><a href="#local-6989586621679530046"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a
+forall a. IsPredicate a =&gt; a -&gt; a
+</span><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var">enforce</span></a></span><span> </span><span class="annot"><span class="annottext">(NonNegative a -&gt; NonNegative a) -&gt; NonNegative a -&gt; NonNegative a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
+forall a. a -&gt; NonNegative a
+</span><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530049"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530046"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-132"></span><span>  </span><span id="local-6989586621679530045"><span class="annot"><span class="annottext">negate :: NonNegative a -&gt; NonNegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">negate</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530044"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679530044"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a
+forall a. IsPredicate a =&gt; a -&gt; a
+</span><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var">enforce</span></a></span><span> </span><span class="annot"><span class="annottext">(NonNegative a -&gt; NonNegative a) -&gt; NonNegative a -&gt; NonNegative a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
+forall a. a -&gt; NonNegative a
+</span><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530044"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-133"></span><span>  </span><span id="local-6989586621679530043"><span class="annot"><span class="annottext">abs :: NonNegative a -&gt; NonNegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">abs</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530041"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679530041"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a
+forall a. IsPredicate a =&gt; a -&gt; a
+</span><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var">enforce</span></a></span><span> </span><span class="annot"><span class="annottext">(NonNegative a -&gt; NonNegative a) -&gt; NonNegative a -&gt; NonNegative a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
+forall a. a -&gt; NonNegative a
+</span><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">abs</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530041"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-134"></span><span>  </span><span id="local-6989586621679530040"><span class="annot"><span class="annottext">signum :: NonNegative a -&gt; NonNegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">signum</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span id="local-6989586621679530038"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679530038"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a
+forall a. IsPredicate a =&gt; a -&gt; a
+</span><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var">enforce</span></a></span><span> </span><span class="annot"><span class="annottext">(NonNegative a -&gt; NonNegative a) -&gt; NonNegative a -&gt; NonNegative a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
+forall a. a -&gt; NonNegative a
+</span><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">signum</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679530038"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-135"></span><span>  </span><span id="local-6989586621679530037"><span class="annot"><span class="annottext">fromInteger :: Integer -&gt; NonNegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromInteger</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; NonNegative a
+forall a. IsPredicate a =&gt; a -&gt; a
+</span><a href="Data.Refined.html#enforce"><span class="hs-identifier hs-var">enforce</span></a></span><span> </span><span class="annot"><span class="annottext">(NonNegative a -&gt; NonNegative a)
+-&gt; (Integer -&gt; NonNegative a) -&gt; Integer -&gt; NonNegative a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; NonNegative a
+forall a. a -&gt; NonNegative a
+</span><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-var">NonNegative</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; NonNegative a) -&gt; (Integer -&gt; a) -&gt; Integer -&gt; NonNegative a
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; a
+forall a. Num a =&gt; Integer -&gt; a
+</span><span class="hs-identifier hs-var">fromInteger</span></span></span><span>
+</span><span id="line-136"></span><span>
+</span><span id="line-137"></span><span>
+</span><span id="line-138"></span><span id="local-6989586621679530036"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679530028"><span id="local-6989586621679530030"><span id="local-6989586621679530034"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="annot"><a href="#local-6989586621679530036"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679530036"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679530036"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679530036"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Refined.html#IsPredicate"><span class="hs-identifier hs-type">IsPredicate</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Refined.html#NonNegative"><span class="hs-identifier hs-type">NonNegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679530036"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-139"></span><span>    </span><span id="local-6989586621679530026"><span class="annot"><span class="annottext">predicate' :: NonNegative a -&gt; Bool
+</span><a href="#local-6989586621679530026"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicate'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
-</span><span class="hs-operator hs-var">&lt;=</span></span><span class="hs-special">)</span><span>
-</span><span id="line-116"></span><span>    </span><span id="local-6989586621679529006"><span class="annot"><span class="annottext">predicateFailureMessage :: a -&gt; ErrMessage a
-</span><a href="#local-6989586621679529006"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicateFailureMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; ShowS
+</span><span class="hs-operator hs-var">&lt;=</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a -&gt; Bool) -&gt; (NonNegative a -&gt; a) -&gt; NonNegative a -&gt; Bool
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; a
+forall a. NonNegative a -&gt; a
+</span><a href="Data.Refined.html#n"><span class="hs-identifier hs-var hs-var">n</span></a></span><span>
+</span><span id="line-140"></span><span>    </span><span id="local-6989586621679530024"><span class="annot"><span class="annottext">predicateFailureMessage :: NonNegative a -&gt; ErrMessage (NonNegative a)
+</span><a href="#local-6989586621679530024"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicateFailureMessage</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; ShowS
 forall a. Show a =&gt; a -&gt; ShowS
-</span><span class="hs-operator hs-var">`shows`</span></span><span> </span><span class="annot"><span class="hs-string">&quot; is negative&quot;</span></span><span class="hs-special">)</span></span><span>
-</span><span id="line-117"></span></pre></body></html>
+</span><span class="hs-operator hs-var">`shows`</span></span><span> </span><span class="annot"><span class="hs-string">&quot; is negative&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(a -&gt; [Char]) -&gt; (NonNegative a -&gt; a) -&gt; NonNegative a -&gt; [Char]
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">NonNegative a -&gt; a
+forall a. NonNegative a -&gt; a
+</span><a href="Data.Refined.html#n"><span class="hs-identifier hs-var hs-var">n</span></a></span></span><span>
+</span><span id="line-141"></span></pre></body></html>

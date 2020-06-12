@@ -803,8 +803,8 @@ class Smart Smart41,42
     safeCreate safeCreate68,69
     create create73,74
 
-./src/Data/Refined.hs,603
-module Data.RefinedData.Refined25,26
+./src/Data/Refined.hs,958
+module Data.RefinedData.Refined22,23
 class Refined Refined47,48
     unwrap unwrap50,51
     unsafeCreate unsafeCreate56,57
@@ -817,9 +817,19 @@ class IsPredicate IsPredicate81,82
   validate validate85,86
   predicate' predicate'90,91
   predicateFailureMessage predicateFailureMessage91,92
-instance (I(Integral a, Show a) => IsPredicate a113,114
-    predicate' predicate'114,115
-    predicateFailureMessage predicateFailureMessage115,116
+  err err93,94
+  enforce enforce97,98
+newtype  NonNegative NonNegative124,125
+newtype  NonNegative a = NonNegative {n n124,125
+instance (N(Num a, Ord a, Show a) => Num (NonNegative a)127,128
+  (N(NonNegativex)128,129
+  negate negate131,132
+  abs abs132,133
+  signum signum133,134
+  fromInteger fromInteger134,135
+instance (E(Eq a, Num a, Ord a, Show a) => IsPredicate (NonNegative a)137,138
+    predicate' predicate'138,139
+    predicateFailureMessage predicateFailureMessage139,140
 
 ./src/Control/If.hs,63
 module Control.IfControl.If13,14

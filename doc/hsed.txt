@@ -151,7 +151,13 @@ safeCreate :: Refined p a => a -> Either (ErrorMessage p a) (p a)
 -- | Simplified smart constructor into Maybe.
 create :: Refined p a => a -> Maybe (p a)
 validate :: IsPredicate a => a -> Either (ErrMessage a) a
-instance (GHC.Real.Integral a, GHC.Show.Show a) => Data.Refined.IsPredicate a
+instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.NonNegative a)
+instance GHC.Read.Read a => GHC.Read.Read (Data.Refined.NonNegative a)
+instance GHC.Enum.Bounded a => GHC.Enum.Bounded (Data.Refined.NonNegative a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.NonNegative a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.NonNegative a)
+instance (GHC.Num.Num a, GHC.Classes.Ord a, GHC.Show.Show a) => GHC.Num.Num (Data.Refined.NonNegative a)
+instance (GHC.Classes.Eq a, GHC.Num.Num a, GHC.Classes.Ord a, GHC.Show.Show a) => Data.Refined.IsPredicate (Data.Refined.NonNegative a)
 
 
 -- | Smart constructors refined with predicates.

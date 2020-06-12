@@ -1,17 +1,14 @@
-{-# LANGUAGE AllowAmbiguousTypes   #-}
-{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DefaultSignatures     #-}
 {-# LANGUAGE DerivingStrategies    #-}
 {-# LANGUAGE DerivingVia           #-}
-{-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
-{-# LANGUAGE RankNTypes            #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-{-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
+
+
 
 {-|
 Module      : Data.Refined
@@ -32,8 +29,11 @@ import           Data.Either (Either (..), either)
 import           Data.Kind   (Type)
 import           Data.Maybe  (Maybe (..))
 import           Data.String (String)
-import           GHC.Base    (Bool (..), Ord (..), const, ($), (.))
-import           GHC.Real    (Integral)
+import           GHC.Base    (Bool (..), Eq (..), Ord (..), const, id, ($), (.))
+import           GHC.Enum    (Bounded (..))
+import           GHC.Err     (error)
+import           GHC.Num     (Num (..))
+import           GHC.Read    (Read (..))
 import           GHC.Show    (Show (..), shows)
 
 -- $setup
@@ -91,6 +91,13 @@ class IsPredicate a where
   predicate' :: a -> Bool
   predicateFailureMessage :: a -> ErrMessage a
 
+  err :: ErrMessage a -> a
+  default err :: (ErrMessage a ~ String) => ErrMessage a -> a
+  err = error
+
+  enforce :: a -> a
+  enforce = either err id . validate
+
 
 -- | Test with IsPredicate Integer
 --
@@ -99,18 +106,35 @@ class IsPredicate a where
 -- but dante-eval-block puts the results on the left margin, and
 -- while doctest is again fine with that, I'm not.
 
--- >>> validate (1 :: Int)
+-- >>> validate (1 ::NonNegative Int)
 -- Right 1
 --
--- >>> validate (-1 ::Int)
--- Left "-1 is negative"
+-- >>> validate (-2 ::NonNegative Int)
+-- *** Exception: -2 is negative
+-- CallStack (from HasCallStack):
+--   error, called at /var/folders/6n/6q645lsj4nj29h559pmrwm1r0000gp/T/dantegO6kcO.hs:96:9 in main:Data.Refined
 --
--- >>> validate (1 :: Integer)
--- Right 1
+-- >>> validate (3 :: NonNegative Integer)
+-- Right 3
 --
--- >>> validate (-1 ::Integer)
--- Left "-1 is negative"
+-- >>> validate (-4 ::NonNegative Integer)
+-- *** Exception: -4 is negative
+-- CallStack (from HasCallStack):
+--   error, called at /var/folders/6n/6q645lsj4nj29h559pmrwm1r0000gp/T/dantegO6kcO.hs:96:9 in main:Data.Refined
 
-instance (Integral a, Show a) => IsPredicate a where
-    predicate' = (0 <=)
-    predicateFailureMessage = (`shows` " is negative")
+newtype  NonNegative a = NonNegative {n :: a}
+  deriving (Eq, Ord, Bounded, Read)
+  deriving Show via a
+instance (Num a, Ord a, Show a)  => Num (NonNegative a) where
+  (NonNegative x) + (NonNegative y) = enforce $ NonNegative (x + y)
+  (NonNegative x) - (NonNegative y) = enforce $ NonNegative (x - y)
+  (NonNegative x) * (NonNegative y) = enforce $ NonNegative (x * y)
+  negate (NonNegative x) = enforce $ NonNegative (negate x)
+  abs (NonNegative x) = enforce $ NonNegative (abs x)
+  signum (NonNegative x) = enforce $ NonNegative (signum x)
+  fromInteger = enforce . NonNegative . fromInteger
+
+
+instance (Eq a, Num a, Ord a, Show a) => IsPredicate (NonNegative a) where
+    predicate' = (0 <=) . n
+    predicateFailureMessage = (`shows` " is negative") . n

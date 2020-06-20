@@ -51,11 +51,8 @@ putStrLn "loading script ..."
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-:load src/System/SED/MCTP/Common/Simple_Type.hs
-import Data.BoundedSize
-import System.SED.MCTP.Common.Base_Type.TH
 :set -XTemplateHaskell
-:set -XDataKinds
+:load src/Data/Refined.hs
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 

@@ -50,6 +50,30 @@ toByteString :: IsByteString a => a -> ByteString
 instance Data.ByteString.Integral.IsByteString GHC.Integer.Type.Integer
 instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
 
+module Data.Fooned
+class IsPredicate (p :: Type -> Type) a
+predicate :: IsPredicate p a => Proxy p -> a -> Bool
+failMsg :: IsPredicate p a => Proxy p -> a -> String
+newtype Nonnegative a
+N :: a -> Nonnegative a
+newtype Satisfies (p :: Type -> Type) a
+Satisfies :: a -> Satisfies (p :: Type -> Type) a
+
+-- | An infix alias for <a>Satisfies</a>.
+type a ? p = Satisfies p a
+infixr 1 ?
+i :: Integer ? Nonnegative
+j :: Integer ? Nonnegative
+instance GHC.Show.Show a => GHC.Show.Show (Data.Fooned.Satisfies p a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Fooned.Satisfies p a)
+instance GHC.Num.Num a => GHC.Num.Num (Data.Fooned.Satisfies p a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Fooned.Satisfies p a)
+instance GHC.Show.Show a => GHC.Show.Show (Data.Fooned.Nonnegative a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Fooned.Nonnegative a)
+instance GHC.Num.Num a => GHC.Num.Num (Data.Fooned.Nonnegative a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Fooned.Nonnegative a)
+instance (GHC.Num.Num a, GHC.Show.Show a, GHC.Classes.Ord a) => Data.Fooned.IsPredicate Data.Fooned.Nonnegative a
+
 
 -- | Things that have a "size"
 module Data.HasSize
@@ -116,48 +140,27 @@ instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
 
 -- | Datatype refined by predicate
 module Data.Refined
-
--- | Refined constructor.
---   
---   Wrap a <tt>a</tt> in a <tt>c</tt> under the control of a refinement
---   predicate.
-class Refined p a where {
-    
-    -- | Refinement predicate error message type. Commonly would be
-    --   <tt>String</tt>.
-    type family ErrorMessage p a;
-}
-
--- | Forget type-level minimum and maximum size, obtaining the underlying
---   value.
-unwrap :: Refined p a => p a -> a
-
--- | Simply wrap a value in a <tt>c</tt> as is, assuming
---   <tt>predicate</tt>.
---   
---   <b>WARNING</b> Use it only when you know what you're doing.
-unsafeCreate :: Refined p a => a -> p a
-
--- | Refinement predicate. Either pass a wrapped value as Right or give an
---   error message as Left.
---   
---   Note that this is passed the value after being wrapped, and therefore
---   assumes that the wrapping operation is mostly harmless.
-predicate :: Refined p a => p a -> Either (ErrorMessage p a) (p a)
-
--- | Primary smart constructor into Either.
-safeCreate :: Refined p a => a -> Either (ErrorMessage p a) (p a)
-
--- | Simplified smart constructor into Maybe.
-create :: Refined p a => a -> Maybe (p a)
-validate :: IsPredicate a => a -> Either (ErrMessage a) a
-instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.NonNegative a)
-instance GHC.Read.Read a => GHC.Read.Read (Data.Refined.NonNegative a)
-instance GHC.Enum.Bounded a => GHC.Enum.Bounded (Data.Refined.NonNegative a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.NonNegative a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.NonNegative a)
-instance (GHC.Num.Num a, GHC.Classes.Ord a, GHC.Show.Show a) => GHC.Num.Num (Data.Refined.NonNegative a)
-instance (GHC.Classes.Eq a, GHC.Num.Num a, GHC.Classes.Ord a, GHC.Show.Show a) => Data.Refined.IsPredicate (Data.Refined.NonNegative a)
+data Predicate p a
+class IsPredicate p a | p -> a
+predicate :: IsPredicate p a => Predicate p a -> a -> Bool
+failMsg :: IsPredicate p a => Predicate p a -> a -> String
+data Refined p a
+class IsPredicate p a => IsRefined p a | p -> a
+unsafeCreate :: IsRefined p a => Predicate p a -> a -> Refined p a
+unwrap :: IsRefined p a => Refined p a -> a
+extractPredicate :: IsRefined p a => Refined p a -> Predicate p a
+safeCreate :: IsRefined p a => Predicate p a -> a -> Either String (Refined p a)
+create :: IsRefined p a => Predicate p a -> a -> Maybe (Refined p a)
+require :: IsRefined p a => Predicate p a -> a -> Refined p a
+require' :: IsRefined p a => a -> Refined p a
+instance GHC.Enum.Bounded a => GHC.Enum.Bounded (Data.Refined.Refined p a)
+instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
+instance GHC.Read.Read a => GHC.Read.Read (Data.Refined.Refined p a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
+instance Data.HasSize.HasSize a => Data.Refined.FixedSize n a
+instance Data.Refined.IsPredicate p a => Data.Refined.IsRefined p a
+instance (GHC.Num.Num a, Data.Refined.IsRefined p a) => GHC.Num.Num (Data.Refined.Refined p a)
 
 
 -- | Smart constructors refined with predicates.
@@ -196,6 +199,8 @@ safeCreate :: Smart c a => a -> Either (ErrorMessage c a) (c a)
 
 -- | Simplified smart constructor into Maybe.
 create :: Smart c a => a -> Maybe (c a)
+
+module Data.UserOfRefined
 
 
 -- | Conversions from type-level Nat to value-level Num

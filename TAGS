@@ -735,6 +735,10 @@ instance IsBytes IsBytes (V-Vector a)88,89
     drop drop95,96
     toList toList96,97
 
+./src/Data/UserOfRefined.hs,73
+module Data.UserOfRefined Data.UserOfRefined25,26
+import import28,29
+
 ./src/Data/BoundedSize.hs,795
 module Data.BoundedSizeData.BoundedSize23,24
 class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes65,66
@@ -793,6 +797,25 @@ instance HasSize Word64            where size size68,69
 instance HasSize HasSize Word69,70
 instance HasSize Word              where size size69,70
 
+./src/Data/Fooned.hs,540
+module Data.Fooned Data.Fooned28,29
+instance Num Num Integer59,60
+3:361,62
+instance Num Num a => Num (NonNegative a)71,72
+class IsPredicate IsPredicate92,93
+    predicate predicate93,94
+    failMsg failMsg94,95
+newtype Nonnegative Nonnegative99,100
+newtype Nonnegative a = N N99,100
+instance (N(Num a, Show a, Ord a) => IsPredicate Nonnegative a102,103
+    predicate predicate103,104
+    failMsg failMsg104,105
+newtype Satisfies Satisfies110,111
+type role role114,115
+type a a118,119
+i i124,125
+j j127,128
+
 ./src/Data/Smart.hs,253
 module Data.SmartData.Smart26,27
 class Smart Smart41,42
@@ -803,33 +826,34 @@ class Smart Smart41,42
     safeCreate safeCreate68,69
     create create73,74
 
-./src/Data/Refined.hs,958
-module Data.RefinedData.Refined22,23
-class Refined Refined47,48
-    unwrap unwrap50,51
-    unsafeCreate unsafeCreate56,57
-    type ErrorMessage ErrorMessage61,62
-    predicate predicate68,69
-    safeCreate safeCreate71,72
-    create create75,76
-class IsPredicate IsPredicate81,82
-  type ErrMessage ErrMessage82,83
-  validate validate85,86
-  predicate' predicate'90,91
-  predicateFailureMessage predicateFailureMessage91,92
-  err err93,94
-  enforce enforce97,98
-newtype  NonNegative NonNegative124,125
-newtype  NonNegative a = NonNegative {n n124,125
-instance (N(Num a, Ord a, Show a) => Num (NonNegative a)127,128
-  (N(NonNegativex)128,129
-  negate negate131,132
-  abs abs132,133
-  signum signum133,134
-  fromInteger fromInteger134,135
-instance (E(Eq a, Num a, Ord a, Show a) => IsPredicate (NonNegative a)137,138
-    predicate' predicate'138,139
-    predicateFailureMessage predicateFailureMessage139,140
+./src/Data/Refined.hs,994
+module Data.RefinedData.Refined32,33
+data Predicate Predicate280,281
+data Predicate p a = PredicatePredicate280,281
+type role role281,282
+class IsPredicate IsPredicate282,283
+    predicate predicate283,284
+    failMsg failMsg284,285
+type role role287,288
+data Refined Refined288,289
+data Refined p a = Refined Refined288,289
+class IsPredicate p a => IsRefined IsRefined292,293
+    unsafeCreate unsafeCreate293,294
+    unwrap unwrap296,297
+    extractPredicate extractPredicate299,300
+    safeCreate safeCreate302,303
+    create create308,309
+    require require314,315
+    require' require'320,321
+instance (I(IsPredicate p a) => (IsRefined p a)323,324
+instance (N(Num a, IsRefined p a) => Num (Refined p a)326,327
+    (R(Refinedx)327,328
+    negate negate330,331
+    abs abs331,332
+    signum signum332,333
+    fromInteger fromInteger333,334
+class HasSize a => FixedSize FixedSize335,336
+instance HasSize HasSize a => FixedSize n a336,337
 
 ./src/Control/If.hs,63
 module Control.IfControl.If13,14

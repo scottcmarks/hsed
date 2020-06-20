@@ -797,7 +797,7 @@ instance HasSize Word64            where size size68,69
 instance HasSize HasSize Word69,70
 instance HasSize Word              where size size69,70
 
-./src/Data/Fooned.hs,540
+./src/Data/Fooned.hs,721
 module Data.Fooned Data.Fooned28,29
 instance Num Num Integer59,60
 3:361,62
@@ -811,10 +811,16 @@ instance (N(Num a, Show a, Ord a) => IsPredicate Nonnegative a102,103
     predicate predicate103,104
     failMsg failMsg104,105
 newtype Satisfies Satisfies110,111
-type role role114,115
-type a a118,119
-i i124,125
-j j127,128
+instance Num Num a => Num (Satisfies p a)114,115
+  (S(Satisfiesx)115,116
+  negate negate121,122
+  abs abs123,124
+  signum signum125,126
+  fromInteger fromInteger127,128
+type role role132,133
+type a a136,137
+i i142,143
+j j145,146
 
 ./src/Data/Smart.hs,253
 module Data.SmartData.Smart26,27

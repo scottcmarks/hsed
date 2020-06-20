@@ -1,31 +1,151 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
-</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE MonoLocalBinds        #-}</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DerivingVia           #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
 </span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
 </span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude     #-}</span><span>
-</span><span id="line-5"></span><span>
-</span><span id="line-6"></span><span class="hs-comment">{-
-
-{-# LANGUAGE AllowAmbiguousTypes   #-}
-{-# LANGUAGE DefaultSignatures     #-}
-{-# LANGUAGE DeriveAnyClass        #-}
-
-{-# LANGUAGE DerivingStrategies    #-}
-{-# LANGUAGE DerivingVia           #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE GADTs                 #-}
-{-# LANGUAGE IncoherentInstances   #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-
-{-# LANGUAGE RoleAnnotations       #-}
-{-# LANGUAGE StandaloneDeriving    #-}
-{-# LANGUAGE TypeFamilies          #-}
-{-# LANGUAGE UndecidableInstances  #-}
-
--}</span><span>
-</span><span id="line-25"></span><span>
-</span><span id="line-26"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.UserOfRefined</span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.Refined.html"><span class="hs-identifier">Data.Refined</span></a></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Integer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Num</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>                               </span><span class="annot"><span class="hs-identifier">shows</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&lt;=)</span></span><span class="hs-special">)</span><span>
-</span><span id="line-31"></span></pre></body></html>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators         #-}</span><span>
+</span><span id="line-6"></span><span>
+</span><span id="line-7"></span><span>
+</span><span id="line-8"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Data.UserOfRefined</span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-9"></span><span>
+</span><span id="line-10"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.Refined.html"><span class="hs-identifier">Data.Refined</span></a></span><span>
+</span><span id="line-11"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Eq</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Int</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Integer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Num</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-12"></span><span>                               </span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">shows</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">(&lt;=)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-13"></span><span>
+</span><span id="line-14"></span><span>
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span>
+</span><span id="line-17"></span><span class="hs-keyword">newtype</span><span> </span><span id="Nonnegative"><span class="annot"><a href="Data.UserOfRefined.html#Nonnegative"><span class="hs-identifier hs-var">Nonnegative</span></a></span></span><span> </span><span id="local-6989586621679531250"><span class="annot"><a href="#local-6989586621679531250"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="N"><span class="annot"><a href="Data.UserOfRefined.html#N"><span class="hs-identifier hs-var">N</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679531250"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-18"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531245"><span id="local-6989586621679531247"><span class="annot"><span class="annottext">Nonnegative a -&gt; Nonnegative a -&gt; Bool
+(Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool) -&gt; Eq (Nonnegative a)
+forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+== :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c== :: forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531230"><span id="local-6989586621679531232"><span id="local-6989586621679531234"><span id="local-6989586621679531236"><span id="local-6989586621679531238"><span id="local-6989586621679531240"><span id="local-6989586621679531242"><span class="annot"><span class="annottext">Integer -&gt; Nonnegative a
+Nonnegative a -&gt; Nonnegative a
+Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+(Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a)
+-&gt; (Integer -&gt; Nonnegative a)
+-&gt; Num (Nonnegative a)
+forall a. Num a =&gt; Integer -&gt; Nonnegative a
+forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Nonnegative a
+$cfromInteger :: forall a. Num a =&gt; Integer -&gt; Nonnegative a
+signum :: Nonnegative a -&gt; Nonnegative a
+$csignum :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+abs :: Nonnegative a -&gt; Nonnegative a
+$cabs :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+negate :: Nonnegative a -&gt; Nonnegative a
+$cnegate :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+* :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$c* :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+- :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$c- :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
++ :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$c+ :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531214"><span id="local-6989586621679531216"><span id="local-6989586621679531218"><span id="local-6989586621679531220"><span id="local-6989586621679531222"><span id="local-6989586621679531224"><span id="local-6989586621679531226"><span class="annot"><span class="annottext">Eq (Nonnegative a)
+Eq (Nonnegative a) =&gt;
+(Nonnegative a -&gt; Nonnegative a -&gt; Ordering)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; Ord (Nonnegative a)
+Nonnegative a -&gt; Nonnegative a -&gt; Bool
+Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a. Ord a =&gt; Eq (Nonnegative a)
+forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+min :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$cmin :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+max :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$cmax :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+&gt;= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&gt;= :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+&gt; :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&gt; :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+&lt;= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&lt;= :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+&lt; :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&lt; :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+compare :: Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+$ccompare :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+$cp1Ord :: forall a. Ord a =&gt; Eq (Nonnegative a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531207"><span id="local-6989586621679531209"><span id="local-6989586621679531211"><span class="annot"><span class="annottext">Int -&gt; Nonnegative a -&gt; ShowS
+[Nonnegative a] -&gt; ShowS
+Nonnegative a -&gt; String
+(Int -&gt; Nonnegative a -&gt; ShowS)
+-&gt; (Nonnegative a -&gt; String)
+-&gt; ([Nonnegative a] -&gt; ShowS)
+-&gt; Show (Nonnegative a)
+forall a. Show a =&gt; Int -&gt; Nonnegative a -&gt; ShowS
+forall a. Show a =&gt; [Nonnegative a] -&gt; ShowS
+forall a. Show a =&gt; Nonnegative a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Nonnegative a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [Nonnegative a] -&gt; ShowS
+show :: Nonnegative a -&gt; String
+$cshow :: forall a. Show a =&gt; Nonnegative a -&gt; String
+showsPrec :: Int -&gt; Nonnegative a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; Nonnegative a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679531250"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-19"></span><span>
+</span><span id="line-20"></span><span id="local-6989586621679531205"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679531194"><span id="local-6989586621679531196"><span id="local-6989586621679531198"><span id="local-6989586621679531200"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679531205"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679531205"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679531205"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Refined.html#IsPredicate"><span class="hs-identifier hs-type">IsPredicate</span></a></span><span> </span><span class="annot"><a href="Data.UserOfRefined.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531205"><span class="hs-identifier hs-type">a</span></a></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-21"></span><span>    </span><span id="local-6989586621679531192"><span class="annot"><span class="annottext">predicate :: Nonnegative a -&gt; Bool
+</span><a href="Data.Refined.html#predicate"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Nonnegative a -&gt; Nonnegative a -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>    </span><span id="local-6989586621679531190"><span class="annot"><span class="annottext">failMsg :: Nonnegative a -&gt; String
+</span><a href="Data.Refined.html#failMsg"><span class="hs-identifier hs-var hs-var hs-var hs-var">failMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Nonnegative a -&gt; ShowS
+forall a. Show a =&gt; a -&gt; ShowS
+</span><span class="hs-operator hs-var">`shows`</span></span><span> </span><span class="annot"><span class="hs-string">&quot; is negative!&quot;</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-23"></span><span>
+</span><span id="line-24"></span><span class="annot"><a href="Data.UserOfRefined.html#i"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Refined.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="Data.UserOfRefined.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-25"></span><span id="i"><span class="annot"><span class="annottext">i :: Refined Nonnegative Integer
+</span><a href="Data.UserOfRefined.html#i"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">1</span></span><span>
+</span><span id="line-26"></span><span>
+</span><span id="line-27"></span><span class="annot"><a href="Data.UserOfRefined.html#j"><span class="hs-identifier hs-type">j</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Refined.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span class="annot"><a href="Data.UserOfRefined.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-28"></span><span id="j"><span class="annot"><span class="annottext">j :: Refined Nonnegative Integer
+</span><a href="Data.UserOfRefined.html#j"><span class="hs-identifier hs-var hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">)</span><span>  </span><span class="hs-comment">-- lazy evaluation sets a bit of a land mine</span><span>
+</span><span id="line-29"></span><span>
+</span><span id="line-30"></span><span class="annot"><a href="Data.UserOfRefined.html#k"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="Data.UserOfRefined.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span>
+</span><span id="line-31"></span><span id="k"><span class="annot"><span class="annottext">k :: Int ? Nonnegative
+</span><a href="Data.UserOfRefined.html#k"><span class="hs-identifier hs-var hs-var">k</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">3</span></span><span>
+</span><span id="line-32"></span><span>
+</span><span id="line-33"></span><span class="annot"><a href="Data.UserOfRefined.html#l"><span class="hs-identifier hs-type">l</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="Data.UserOfRefined.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span>
+</span><span id="line-34"></span><span id="l"><span class="annot"><span class="annottext">l :: Int ? Nonnegative
+</span><a href="Data.UserOfRefined.html#l"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="hs-number">4</span></span><span class="hs-special">)</span><span>
+</span><span id="line-35"></span></pre></body></html>

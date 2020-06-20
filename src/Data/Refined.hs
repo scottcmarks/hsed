@@ -1,6 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes    #-}
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE DeriveAnyClass         #-}
+{-# LANGUAGE DerivingVia            #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
@@ -8,17 +9,8 @@
 {-# LANGUAGE RoleAnnotations        #-}
 {-# LANGUAGE StandaloneDeriving     #-}
 {-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE TypeOperators          #-}
 {-# LANGUAGE UndecidableInstances   #-}
-{-
-
-{-# LANGUAGE DerivingStrategies    #-}
-{-# LANGUAGE DerivingVia           #-}
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE GADTs                 #-}
-{-# LANGUAGE IncoherentInstances   #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
-
--}
 
 {-|
 Module      : Data.Refined
@@ -31,36 +23,17 @@ Datatype refined by predicate
 
 -}
 module Data.Refined
-  ( Predicate
-  , IsPredicate(..)
-  , Refined
-  , IsRefined(..)
+  ( IsPredicate(..), Refined
+  , type (?)
   ) where
 
-{-
-import           Data.Either  (Either (..), either)
-import           Data.Functor ((<$>))
-import           Data.Kind    (Type)
-import           Data.Maybe   (Maybe (..))
-import           Data.String  (String)
-import           GHC.Base     (Bool (..), Eq (..), Int (..), Ord (..), const,
-                               id, ($), (.))
-import           GHC.Enum     (Bounded (..))
-import           GHC.Err      (error)
-import           GHC.Num      (Num (..))
-import           GHC.Read     (Read (..))
-import           GHC.Show     (Show (..), shows)
-
-
--}
-import           Data.Coerce  (coerce)
+import           Data.Coerce  (Coercible, coerce)
 import           Data.HasSize (HasSize (..))
 import           Data.Kind    (Type)
-import           Data.Proxy   (Proxy (..))
-import           Prelude      (Bool (..), Bounded (..), Either (..), Eq (..),
-                               Maybe (..), Num (..), Ord (..), Read (..),
-                               Show (..), String, const, either, error, id,
-                               shows, undefined, ($), (.))
+
+import           Prelude      (Bool (..), Either (..), Eq (..), Maybe (..),
+                               Num (..), Ord (..), Show (..), String, error,
+                               ($), (.))
 -- $setup
 --
 -- >>> import GHC.Base(Int)
@@ -209,129 +182,65 @@ import           Prelude      (Bool (..), Bounded (..), Either (..), Eq (..),
 
 -- instance Num(NonNegative a)
 
-
-{-
-
-What I want is for something of type
-
-
-a
-
-
-to have a runtime representation identical to that, i.e. with a wrapper type like
-
-
-
-Refined a
-
-
-
-which has a type which is like
-
-
-
-Refined PhantomPredicateTypeDeterminingTheRefinement a
-
-
-
-which one can only hope I will mostly write
-
-
-
-Refined p a
-
-
-
-IsNonNegative a => computation that depends on 0 <= a
-
-(Refined NonNegative a) ... in expr is like (IsNonNegative a) => (a ...
-
-
-outside this module, I define a predicate like this
-
-newtype NonNegative a = NonNegative a
-  deriving (Eq, Ord, Read, Show, Bounded)
-
-instance (IsNum a, Show a) => IsPredicate NonNegative a where
-    predicate = ( 0 <= )
-    failMsg = (`shows` " is negative")
-
-instance IsRefined NonNegative a?
-
-or just
-
-instance IsRefined NonNegative Integer
-
-instance IsRefined NonNegative Int
-
------------ really?  ----- why not ... ------------
-
-
-instance (Num a, Show a) IsRefined NonNegative a where
-    predicate = ( 0 <= )
-    failMsg = (`shows` " is negative")
-
-and then just
-
-let i = NonNegative 2
--}
-
-
-
-data Predicate p a = Predicate
-type role Predicate phantom phantom
-class IsPredicate p a | p -> a where
-    predicate :: (Predicate p a) -> a -> Bool
-    failMsg ::  (Predicate p a) -> a -> String
-
-
 type role Refined phantom nominal
-data Refined p a = Refined a
-    deriving (Eq, Ord, Read, Show, Bounded)
+newtype Refined (p :: Type -> Type) a = Refined a
+    deriving (Eq,Ord,Show) via a
+-- instance The (Refined p a) a
+
+-- | An infix alias for 'Refined'.
+type a ?p = Refined p a
+infixr 1 ?
 
 
-class IsPredicate p a => IsRefined p a | p -> a where
-    unsafeCreate :: (Predicate p a) -> a -> (Refined p a)
-    unsafeCreate _ x = Refined x
-
-    unwrap :: (Refined p a) -> a
-    unwrap (Refined x) = x
-
-    extractPredicate :: (Refined p a) -> (Predicate p a)
-    extractPredicate _ = Predicate
-
-    safeCreate :: (Predicate p a) -> a -> Either String (Refined p a)
-    safeCreate p x =
-      if predicate p x
-        then Right $ unsafeCreate p x
-        else Left $ failMsg p x
-
-    create :: (Predicate p a) -> a -> Maybe (Refined p a)
-    create p x =
-      if predicate p x
-        then Just $ unsafeCreate p x
-        else const Nothing $ failMsg p x
-
-    require :: (Predicate p a) -> a -> (Refined p a)
-    require p x =
-        if predicate p x
-        then id $ unsafeCreate p x
-        else error $ failMsg p x
-
-    require' :: a -> (Refined p a)
-    require' = undefined
-
-instance (IsPredicate p a) => (IsRefined p a) where {}
+class (Coercible (p a) a) => IsPredicate p a where
+    predicate :: p a -> Bool
+    failMsg :: p a -> String
+    examine :: Refined p a -> a
+    examine = coerce
+    require :: a -> Refined p a
+    require = require' . consider
+      where
+        require' :: IsPredicate p a => p a -> Refined p a
+        require' x  = if predicate x then accept x else error $ failMsg x
+    safeCreate :: a -> Either String (Refined p a)
+    safeCreate = safeCreate' . consider
+      where
+        safeCreate' :: IsPredicate p a => p a -> Either String (Refined p a)
+        safeCreate' x  = if predicate x then Right $ accept x else Left $ failMsg x
+    create :: a ->  Maybe (Refined p a)
+    create = create' . consider
+      where
+        create' :: IsPredicate p a => p a -> Maybe (Refined p a)
+        create' x  = if predicate x then Just $ accept x else Nothing
 
 
-instance (Num a, IsRefined p a)  => Num(Refined p a) where
-    (Refined x) + (Refined y) = require Predicate (x + y)
-    (Refined x) - (Refined y) = require Predicate (x - y)
-    (Refined x) * (Refined y) = require Predicate (x * y)
-    negate (Refined x) = require Predicate (negate x)
-    abs (Refined x) = require Predicate (abs x)
-    signum (Refined x) = require Predicate (signum x)
-    fromInteger i = require Predicate (fromInteger i)
+
+
+
+class IsPredicate p a => IsPredicate_Internal p a where
+    consider :: a -> p a
+    consider = coerce
+    accept :: p a -> Refined p a
+    accept = coerce
+instance IsPredicate p a => IsPredicate_Internal p a where
+
+
+
+
+
+
+
+instance (IsPredicate p a, Num a) => Num (Refined p a)
+  where
+    (Refined x) + (Refined y) = require (x + y)
+    (Refined x) - (Refined y) = require (x - y)
+    (Refined x) * (Refined y) = require (x * y)
+    negate (Refined x)        = require (negate x)
+    abs (Refined x)           = require (abs x)
+    signum (Refined x)        = require (signum x)
+    fromInteger x             = require (fromInteger x :: Num a => a)
+
+
 
 class HasSize a => FixedSize n a
 instance HasSize a => FixedSize n a

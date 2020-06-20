@@ -50,31 +50,6 @@ toByteString :: IsByteString a => a -> ByteString
 instance Data.ByteString.Integral.IsByteString GHC.Integer.Type.Integer
 instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
 
-module Data.Fooned
-newtype Satisfies (p :: Type -> Type) a
-Satisfies :: a -> Satisfies (p :: Type -> Type) a
-
--- | An infix alias for <a>Satisfies</a>.
-type a ? p = Satisfies p a
-infixr 1 ?
-class (Coercible (p a) a) => IsPredicate p a
-predicate :: IsPredicate p a => p a -> Bool
-failMsg :: IsPredicate p a => p a -> String
-require :: IsPredicate p a => p a -> Satisfies p a
-newtype Nonnegative a
-N :: a -> Nonnegative a
-i :: Satisfies Nonnegative Integer
-j :: Satisfies Nonnegative Integer
-instance GHC.Show.Show a => GHC.Show.Show (Data.Fooned.Nonnegative a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Fooned.Nonnegative a)
-instance GHC.Num.Num a => GHC.Num.Num (Data.Fooned.Nonnegative a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Fooned.Nonnegative a)
-instance GHC.Show.Show a => GHC.Show.Show (Data.Fooned.Satisfies p a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Fooned.Satisfies p a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Fooned.Satisfies p a)
-instance (GHC.Num.Num a, GHC.Show.Show a, GHC.Classes.Ord a) => Data.Fooned.IsPredicate Data.Fooned.Nonnegative a
-instance (Data.Fooned.IsPredicate p a, GHC.Num.Num a, GHC.Types.Coercible a (p a)) => GHC.Num.Num (Data.Fooned.Satisfies p a)
-
 
 -- | Things that have a "size"
 module Data.HasSize
@@ -141,27 +116,24 @@ instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
 
 -- | Datatype refined by predicate
 module Data.Refined
-data Predicate p a
-class IsPredicate p a | p -> a
-predicate :: IsPredicate p a => Predicate p a -> a -> Bool
-failMsg :: IsPredicate p a => Predicate p a -> a -> String
-data Refined p a
-class IsPredicate p a => IsRefined p a | p -> a
-unsafeCreate :: IsRefined p a => Predicate p a -> a -> Refined p a
-unwrap :: IsRefined p a => Refined p a -> a
-extractPredicate :: IsRefined p a => Refined p a -> Predicate p a
-safeCreate :: IsRefined p a => Predicate p a -> a -> Either String (Refined p a)
-create :: IsRefined p a => Predicate p a -> a -> Maybe (Refined p a)
-require :: IsRefined p a => Predicate p a -> a -> Refined p a
-require' :: IsRefined p a => a -> Refined p a
-instance GHC.Enum.Bounded a => GHC.Enum.Bounded (Data.Refined.Refined p a)
+class (Coercible (p a) a) => IsPredicate p a
+predicate :: IsPredicate p a => p a -> Bool
+failMsg :: IsPredicate p a => p a -> String
+examine :: IsPredicate p a => Refined p a -> a
+require :: IsPredicate p a => a -> Refined p a
+safeCreate :: IsPredicate p a => a -> Either String (Refined p a)
+create :: IsPredicate p a => a -> Maybe (Refined p a)
+data Refined (p :: Type -> Type) a
+
+-- | An infix alias for <a>Refined</a>.
+type a ? p = Refined p a
+infixr 1 ?
 instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
-instance GHC.Read.Read a => GHC.Read.Read (Data.Refined.Refined p a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
 instance Data.HasSize.HasSize a => Data.Refined.FixedSize n a
-instance Data.Refined.IsPredicate p a => Data.Refined.IsRefined p a
-instance (GHC.Num.Num a, Data.Refined.IsRefined p a) => GHC.Num.Num (Data.Refined.Refined p a)
+instance Data.Refined.IsPredicate p a => Data.Refined.IsPredicate_Internal p a
+instance (Data.Refined.IsPredicate p a, GHC.Num.Num a) => GHC.Num.Num (Data.Refined.Refined p a)
 
 
 -- | Smart constructors refined with predicates.
@@ -202,6 +174,17 @@ safeCreate :: Smart c a => a -> Either (ErrorMessage c a) (c a)
 create :: Smart c a => a -> Maybe (c a)
 
 module Data.UserOfRefined
+newtype Nonnegative a
+N :: a -> Nonnegative a
+i :: Refined Nonnegative Integer
+j :: Refined Nonnegative Integer
+k :: Int ? Nonnegative
+l :: Int ? Nonnegative
+instance GHC.Show.Show a => GHC.Show.Show (Data.UserOfRefined.Nonnegative a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.UserOfRefined.Nonnegative a)
+instance GHC.Num.Num a => GHC.Num.Num (Data.UserOfRefined.Nonnegative a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.UserOfRefined.Nonnegative a)
+instance (GHC.Num.Num a, GHC.Show.Show a, GHC.Classes.Ord a) => Data.Refined.IsPredicate Data.UserOfRefined.Nonnegative a
 
 
 -- | Conversions from type-level Nat to value-level Num

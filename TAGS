@@ -735,9 +735,18 @@ instance IsBytes IsBytes (V-Vector a)88,89
     drop drop95,96
     toList toList96,97
 
-./src/Data/UserOfRefined.hs,73
-module Data.UserOfRefined Data.UserOfRefined25,26
-import import28,29
+./src/Data/UserOfRefined.hs,317
+module Data.UserOfRefined Data.UserOfRefined7,8
+import import10,11
+newtype Nonnegative Nonnegative16,17
+newtype Nonnegative a = N N16,17
+instance (N(Num a, Show a, Ord a) => IsPredicate Nonnegative a19,20
+    predicate predicate20,21
+    failMsg failMsg21,22
+i i23,24
+j j26,27
+k k29,30
+l l32,33
 
 ./src/Data/BoundedSize.hs,795
 module Data.BoundedSizeData.BoundedSize23,24
@@ -797,32 +806,6 @@ instance HasSize Word64            where size size68,69
 instance HasSize HasSize Word69,70
 instance HasSize Word              where size size69,70
 
-./src/Data/Fooned.hs,818
-module Data.Fooned Data.Fooned28,29
-instance Num Num Integer59,60
-3:361,62
-instance Num Num a => Num (NonNegative a)71,72
-type role role88,89
-newtype Satisfies Satisfies89,90
-type a a94,95
-class (Coercible (p a) a) => IsPredicate IsPredicate98,99
-    predicate predicate99,100
-    failMsg failMsg100,101
-    require require101,102
-instance (I(IsPredicate p a, Num a, Coercible a (p a)) => Num (Satisfies p a)104,105
-    (S(Satisfiesx)106,107
-    negate negate109,110
-    abs abs110,111
-    signum signum111,112
-    fromInteger fromInteger112,113
-newtype Nonnegative Nonnegative118,119
-newtype Nonnegative a = N N118,119
-instance (N(Num a, Show a, Ord a) => IsPredicate Nonnegative a121,122
-    predicate predicate122,123
-    failMsg failMsg123,124
-i i125,126
-j j128,129
-
 ./src/Data/Smart.hs,253
 module Data.SmartData.Smart26,27
 class Smart Smart41,42
@@ -833,34 +816,30 @@ class Smart Smart41,42
     safeCreate safeCreate68,69
     create create73,74
 
-./src/Data/Refined.hs,994
-module Data.RefinedData.Refined32,33
-data Predicate Predicate280,281
-data Predicate p a = PredicatePredicate280,281
-type role role281,282
-class IsPredicate IsPredicate282,283
-    predicate predicate283,284
-    failMsg failMsg284,285
-type role role287,288
-data Refined Refined288,289
-data Refined p a = Refined Refined288,289
-class IsPredicate p a => IsRefined IsRefined292,293
-    unsafeCreate unsafeCreate293,294
-    unwrap unwrap296,297
-    extractPredicate extractPredicate299,300
-    safeCreate safeCreate302,303
-    create create308,309
-    require require314,315
-    require' require'320,321
-instance (I(IsPredicate p a) => (IsRefined p a)323,324
-instance (N(Num a, IsRefined p a) => Num (Refined p a)326,327
-    (R(Refinedx)327,328
-    negate negate330,331
-    abs abs331,332
-    signum signum332,333
-    fromInteger fromInteger333,334
-class HasSize a => FixedSize FixedSize335,336
-instance HasSize HasSize a => FixedSize n a336,337
+./src/Data/Refined.hs,871
+module Data.RefinedData.Refined24,25
+type role role184,185
+newtype Refined Refined185,186
+type a a190,191
+class (Coercible (p a) a) => IsPredicate IsPredicate194,195
+    predicate predicate195,196
+    failMsg failMsg196,197
+    examine examine197,198
+    require require199,200
+    safeCreate safeCreate204,205
+    create create209,210
+class IsPredicate p a => IsPredicate_Internal IsPredicate_Internal219,220
+    consider consider220,221
+    accept accept222,223
+instance IsPredicate IsPredicate p a => IsPredicate_Internal p a224,225
+instance (I(IsPredicate p a, Num a) => Num (Refined p a)232,233
+    (R(Refinedx)234,235
+    negate negate237,238
+    abs abs238,239
+    signum signum239,240
+    fromInteger fromInteger240,241
+class HasSize a => FixedSize FixedSize244,245
+instance HasSize HasSize a => FixedSize n a245,246
 
 ./src/Control/If.hs,63
 module Control.IfControl.If13,14

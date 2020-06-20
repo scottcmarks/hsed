@@ -5,20 +5,20 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE RoleAnnotations       #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeOperators         #-}
 
 
 {-
+{-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE MonoLocalBinds        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE DefaultSignatures     #-}
 {-# LANGUAGE DeriveAnyClass        #-}
 
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE IncoherentInstances   #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
 
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -78,21 +78,40 @@ instance
 -}
 
 
-
+import           Data.Coerce
 import           Data.Kind
 
-import           Data.Proxy
-import           Prelude    (Bool (..), Eq (..), Integer, Num (..), Ord (..),
-                             Show (..), String, shows, (.))
+import           Prelude     (Bool (..), Eq (..), Integer, Num (..), Ord (..),
+                              Show (..), String, error, shows, ($))
 
 
 
+type role Satisfies nominal nominal
+newtype Satisfies (p :: Type -> Type) a = Satisfies a
+    deriving (Eq,Ord,Show) via a
+-- instance The (Satisfies p a) a
+
+-- | An infix alias for 'Satisfies'.
+type a ?p = Satisfies p a
+infixr 1 ?
 
 
+class (Coercible (p a) a) => IsPredicate p a where
+    predicate :: p a -> Bool
+    failMsg :: p a -> String
+    require :: p a -> Satisfies p a
+    require x  = if predicate x then coerce x else error $ failMsg x
 
-class IsPredicate (p :: Type -> Type) a where
-    predicate :: Proxy p -> a -> Bool
-    failMsg :: Proxy p -> a -> String
+instance (IsPredicate p a, Num a, Coercible a (p a)) => Num (Satisfies p a)
+  where
+    (Satisfies x) + (Satisfies y) = require $ coerce (x + y)
+    (Satisfies x) - (Satisfies y) = require $ coerce (x - y)
+    (Satisfies x) * (Satisfies y) = require $ coerce (x * y)
+    negate (Satisfies x) = require $ coerce (negate x)
+    abs (Satisfies x) = require $ coerce (abs x)
+    signum (Satisfies x) = require $ coerce (signum x)
+    fromInteger x = require $ coerce $ (fromInteger x :: a)
+
 
 
 
@@ -101,47 +120,11 @@ newtype Nonnegative a = N a
     deriving (Eq,Num,Ord,Show) via a
 
 instance (Num a, Show a, Ord a) => IsPredicate Nonnegative a where
-    predicate _  = (0 <=)
-    failMsg _  = (`shows` " is negative!")
+    predicate = (0 <=)
+    failMsg = (`shows` " is negative!")
 
-
-
-
-
-newtype Satisfies (p :: Type -> Type) a = Satisfies a
-    deriving (Eq,Ord,Show) via a
-
-
-instance Num a => Num (Satisfies p a) where
-  (Satisfies x) + (Satisfies y) = Satisfies (x + y)
-
-  (Satisfies x) - (Satisfies y) = Satisfies (x - y)
-
-  (Satisfies x) * (Satisfies y) = Satisfies (x * y)
-
-  negate (Satisfies x) = Satisfies (negate x)
-
-  abs (Satisfies x) = Satisfies (abs x)
-
-  signum (Satisfies x) = Satisfies (signum x)
-
-  fromInteger = Satisfies . fromInteger
-
-
-
-
-type role Satisfies nominal nominal
--- instance The (Satisfies p a) a
-
--- | An infix alias for 'Satisfies'.
-type a ?p = Satisfies p a
-infixr 1 ?
-
-
-
-
-i :: Integer ? Nonnegative
+i :: Satisfies Nonnegative Integer
 i = 1
 
-j :: Integer ? Nonnegative
+j :: Satisfies Nonnegative Integer
 j = (-2)

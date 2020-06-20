@@ -51,28 +51,29 @@ instance Data.ByteString.Integral.IsByteString GHC.Integer.Type.Integer
 instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
 
 module Data.Fooned
-class IsPredicate (p :: Type -> Type) a
-predicate :: IsPredicate p a => Proxy p -> a -> Bool
-failMsg :: IsPredicate p a => Proxy p -> a -> String
-newtype Nonnegative a
-N :: a -> Nonnegative a
 newtype Satisfies (p :: Type -> Type) a
 Satisfies :: a -> Satisfies (p :: Type -> Type) a
 
 -- | An infix alias for <a>Satisfies</a>.
 type a ? p = Satisfies p a
 infixr 1 ?
-i :: Integer ? Nonnegative
-j :: Integer ? Nonnegative
-instance GHC.Show.Show a => GHC.Show.Show (Data.Fooned.Satisfies p a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Fooned.Satisfies p a)
-instance GHC.Num.Num a => GHC.Num.Num (Data.Fooned.Satisfies p a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Fooned.Satisfies p a)
+class (Coercible (p a) a) => IsPredicate p a
+predicate :: IsPredicate p a => p a -> Bool
+failMsg :: IsPredicate p a => p a -> String
+require :: IsPredicate p a => p a -> Satisfies p a
+newtype Nonnegative a
+N :: a -> Nonnegative a
+i :: Satisfies Nonnegative Integer
+j :: Satisfies Nonnegative Integer
 instance GHC.Show.Show a => GHC.Show.Show (Data.Fooned.Nonnegative a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Fooned.Nonnegative a)
 instance GHC.Num.Num a => GHC.Num.Num (Data.Fooned.Nonnegative a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Fooned.Nonnegative a)
+instance GHC.Show.Show a => GHC.Show.Show (Data.Fooned.Satisfies p a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Fooned.Satisfies p a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Fooned.Satisfies p a)
 instance (GHC.Num.Num a, GHC.Show.Show a, GHC.Classes.Ord a) => Data.Fooned.IsPredicate Data.Fooned.Nonnegative a
+instance (Data.Fooned.IsPredicate p a, GHC.Num.Num a, GHC.Types.Coercible a (p a)) => GHC.Num.Num (Data.Fooned.Satisfies p a)
 
 
 -- | Things that have a "size"

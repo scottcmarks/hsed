@@ -1,24 +1,24 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DerivingVia           #-}</span><span>
-</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
-</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE KindSignatures        #-}</span><span>
-</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
-</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude     #-}</span><span>
-</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE RoleAnnotations       #-}</span><span>
-</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators         #-}</span><span>
-</span><span id="line-8"></span><span>
-</span><span id="line-9"></span><span>
-</span><span id="line-10"></span><span class="hs-comment">{-
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-pragma">{-# LANGUAGE DerivingStrategies    #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia           #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE KindSignatures        #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude     #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE RoleAnnotations       #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE ScopedTypeVariables   #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators         #-}</span><span>
+</span><span id="line-10"></span><span>
+</span><span id="line-11"></span><span>
+</span><span id="line-12"></span><span class="hs-comment">{-
+{-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE MonoLocalBinds        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE AllowAmbiguousTypes   #-}
 {-# LANGUAGE DefaultSignatures     #-}
 {-# LANGUAGE DeriveAnyClass        #-}
 
-{-# LANGUAGE DerivingStrategies    #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE GADTs                 #-}
 {-# LANGUAGE IncoherentInstances   #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
 
 {-# LANGUAGE StandaloneDeriving    #-}
 {-# LANGUAGE TypeFamilies          #-}
@@ -78,150 +78,17 @@ instance
 -}</span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span>
-</span><span id="line-81"></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Coerce</span></span><span>
 </span><span id="line-82"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Kind</span></span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Proxy</span></span><span>
-</span><span id="line-85"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bool</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Eq</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Integer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Num</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-86"></span><span>                             </span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">shows</span></span><span class="hs-special">)</span><span>
+</span><span id="line-84"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Prelude</span></span><span>     </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Bool</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Eq</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Integer</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Num</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-85"></span><span>                              </span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">error</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">shows</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-86"></span><span>
 </span><span id="line-87"></span><span>
 </span><span id="line-88"></span><span>
-</span><span id="line-89"></span><span>
-</span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span>
-</span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span class="hs-keyword">class</span><span> </span><span id="IsPredicate"><span class="annot"><a href="Data.Fooned.html#IsPredicate"><span class="hs-identifier hs-var">IsPredicate</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531495"><span class="annot"><a href="#local-6989586621679531495"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679531494"><span class="annot"><a href="#local-6989586621679531494"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>    </span><span id="predicate"><span class="annot"><a href="Data.Fooned.html#predicate"><span class="hs-identifier hs-type">predicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621679531495"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679531494"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
-</span><span id="line-95"></span><span>    </span><span id="failMsg"><span class="annot"><a href="Data.Fooned.html#failMsg"><span class="hs-identifier hs-type">failMsg</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Proxy</span></span><span> </span><span class="annot"><a href="#local-6989586621679531495"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679531494"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-96"></span><span>
-</span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span>
-</span><span id="line-99"></span><span>
-</span><span id="line-100"></span><span class="hs-keyword">newtype</span><span> </span><span id="Nonnegative"><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-var">Nonnegative</span></a></span></span><span> </span><span id="local-6989586621679531479"><span class="annot"><a href="#local-6989586621679531479"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="N"><span class="annot"><a href="Data.Fooned.html#N"><span class="hs-identifier hs-var">N</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679531479"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-101"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531474"><span id="local-6989586621679531476"><span class="annot"><span class="annottext">Nonnegative a -&gt; Nonnegative a -&gt; Bool
-(Nonnegative a -&gt; Nonnegative a -&gt; Bool)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool) -&gt; Eq (Nonnegative a)
-forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
-$c/= :: forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-== :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
-$c== :: forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531459"><span id="local-6989586621679531461"><span id="local-6989586621679531463"><span id="local-6989586621679531465"><span id="local-6989586621679531467"><span id="local-6989586621679531469"><span id="local-6989586621679531471"><span class="annot"><span class="annottext">Integer -&gt; Nonnegative a
-Nonnegative a -&gt; Nonnegative a
-Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-(Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
--&gt; (Nonnegative a -&gt; Nonnegative a)
--&gt; (Nonnegative a -&gt; Nonnegative a)
--&gt; (Nonnegative a -&gt; Nonnegative a)
--&gt; (Integer -&gt; Nonnegative a)
--&gt; Num (Nonnegative a)
-forall a. Num a =&gt; Integer -&gt; Nonnegative a
-forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
-forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-forall a.
-(a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (Integer -&gt; a)
--&gt; Num a
-fromInteger :: Integer -&gt; Nonnegative a
-$cfromInteger :: forall a. Num a =&gt; Integer -&gt; Nonnegative a
-signum :: Nonnegative a -&gt; Nonnegative a
-$csignum :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
-abs :: Nonnegative a -&gt; Nonnegative a
-$cabs :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
-negate :: Nonnegative a -&gt; Nonnegative a
-$cnegate :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
-* :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-$c* :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-- :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-$c- :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-+ :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-$c+ :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531443"><span id="local-6989586621679531445"><span id="local-6989586621679531447"><span id="local-6989586621679531449"><span id="local-6989586621679531451"><span id="local-6989586621679531453"><span id="local-6989586621679531455"><span class="annot"><span class="annottext">Eq (Nonnegative a)
-Eq (Nonnegative a) =&gt;
-(Nonnegative a -&gt; Nonnegative a -&gt; Ordering)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
--&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
--&gt; Ord (Nonnegative a)
-Nonnegative a -&gt; Nonnegative a -&gt; Bool
-Nonnegative a -&gt; Nonnegative a -&gt; Ordering
-Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-forall a.
-Eq a =&gt;
-(a -&gt; a -&gt; Ordering)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; Bool)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; Ord a
-forall a. Ord a =&gt; Eq (Nonnegative a)
-forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Ordering
-forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-min :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-$cmin :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-max :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-$cmax :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
-&gt;= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
-$c&gt;= :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-&gt; :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
-$c&gt; :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-&lt;= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
-$c&lt;= :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-&lt; :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
-$c&lt; :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
-compare :: Nonnegative a -&gt; Nonnegative a -&gt; Ordering
-$ccompare :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Ordering
-$cp1Ord :: forall a. Ord a =&gt; Eq (Nonnegative a)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531436"><span id="local-6989586621679531438"><span id="local-6989586621679531440"><span class="annot"><span class="annottext">Int -&gt; Nonnegative a -&gt; ShowS
-[Nonnegative a] -&gt; ShowS
-Nonnegative a -&gt; String
-(Int -&gt; Nonnegative a -&gt; ShowS)
--&gt; (Nonnegative a -&gt; String)
--&gt; ([Nonnegative a] -&gt; ShowS)
--&gt; Show (Nonnegative a)
-forall a. Show a =&gt; Int -&gt; Nonnegative a -&gt; ShowS
-forall a. Show a =&gt; [Nonnegative a] -&gt; ShowS
-forall a. Show a =&gt; Nonnegative a -&gt; String
-forall a.
-(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [Nonnegative a] -&gt; ShowS
-$cshowList :: forall a. Show a =&gt; [Nonnegative a] -&gt; ShowS
-show :: Nonnegative a -&gt; String
-$cshow :: forall a. Show a =&gt; Nonnegative a -&gt; String
-showsPrec :: Int -&gt; Nonnegative a -&gt; ShowS
-$cshowsPrec :: forall a. Show a =&gt; Int -&gt; Nonnegative a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679531479"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span id="local-6989586621679531434"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679531434"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679531434"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679531434"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Fooned.html#IsPredicate"><span class="hs-identifier hs-type">IsPredicate</span></a></span><span> </span><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531434"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-104"></span><span>    </span><span id="local-6989586621679531430"><span class="annot"><span class="annottext">predicate :: Proxy Nonnegative -&gt; a -&gt; Bool
-</span><a href="#local-6989586621679531430"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicate</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
-forall a. Ord a =&gt; a -&gt; a -&gt; Bool
-</span><span class="hs-operator hs-var">&lt;=</span></span><span class="hs-special">)</span><span>
-</span><span id="line-105"></span><span>    </span><span id="local-6989586621679531428"><span class="annot"><span class="annottext">failMsg :: Proxy Nonnegative -&gt; a -&gt; String
-</span><a href="#local-6989586621679531428"><span class="hs-identifier hs-var hs-var hs-var hs-var">failMsg</span></a></span></span><span> </span><span class="hs-identifier">_</span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; ShowS
-forall a. Show a =&gt; a -&gt; ShowS
-</span><span class="hs-operator hs-var">`shows`</span></span><span> </span><span class="annot"><span class="hs-string">&quot; is negative!&quot;</span></span><span class="hs-special">)</span></span><span>
-</span><span id="line-106"></span><span>
-</span><span id="line-107"></span><span>
-</span><span id="line-108"></span><span>
-</span><span id="line-109"></span><span>
-</span><span id="line-110"></span><span>
-</span><span id="line-111"></span><span class="hs-keyword">newtype</span><span> </span><span id="Satisfies"><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-var">Satisfies</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531427"><span class="annot"><a href="#local-6989586621679531427"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679531426"><span class="annot"><a href="#local-6989586621679531426"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Satisfies"><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-var">Satisfies</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679531426"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-112"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531421"><span id="local-6989586621679531423"><span class="annot"><span class="annottext">Satisfies p a -&gt; Satisfies p a -&gt; Bool
+</span><span id="line-89"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">role</span><span> </span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><span class="hs-identifier">nominal</span></span><span> </span><span class="annot"><span class="hs-identifier">nominal</span></span><span>
+</span><span id="line-90"></span><span class="hs-keyword">newtype</span><span> </span><span id="Satisfies"><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-var">Satisfies</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531415"><span class="annot"><a href="#local-6989586621679531415"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679531414"><span class="annot"><a href="#local-6989586621679531414"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Satisfies"><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-var">Satisfies</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679531414"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-91"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531409"><span id="local-6989586621679531411"><span class="annot"><span class="annottext">Satisfies p a -&gt; Satisfies p a -&gt; Bool
 (Satisfies p a -&gt; Satisfies p a -&gt; Bool)
 -&gt; (Satisfies p a -&gt; Satisfies p a -&gt; Bool) -&gt; Eq (Satisfies p a)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -236,52 +103,7 @@ Satisfies p a -&gt; Satisfies p a -&gt; Bool
 $c== :: forall (p :: * -&gt; *) a.
 Eq a =&gt;
 Satisfies p a -&gt; Satisfies p a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531407"><span id="local-6989586621679531409"><span id="local-6989586621679531411"><span id="local-6989586621679531413"><span id="local-6989586621679531415"><span id="local-6989586621679531417"><span id="local-6989586621679531419"><span class="annot"><span class="annottext">Integer -&gt; Satisfies p a
-Satisfies p a -&gt; Satisfies p a
-Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-(Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a)
--&gt; (Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a)
--&gt; (Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a)
--&gt; (Satisfies p a -&gt; Satisfies p a)
--&gt; (Satisfies p a -&gt; Satisfies p a)
--&gt; (Satisfies p a -&gt; Satisfies p a)
--&gt; (Integer -&gt; Satisfies p a)
--&gt; Num (Satisfies p a)
-forall a.
-(a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (a -&gt; a)
--&gt; (Integer -&gt; a)
--&gt; Num a
-forall (p :: * -&gt; *) a. Num a =&gt; Integer -&gt; Satisfies p a
-forall (p :: * -&gt; *) a. Num a =&gt; Satisfies p a -&gt; Satisfies p a
-forall (p :: * -&gt; *) a.
-Num a =&gt;
-Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-fromInteger :: Integer -&gt; Satisfies p a
-$cfromInteger :: forall (p :: * -&gt; *) a. Num a =&gt; Integer -&gt; Satisfies p a
-signum :: Satisfies p a -&gt; Satisfies p a
-$csignum :: forall (p :: * -&gt; *) a. Num a =&gt; Satisfies p a -&gt; Satisfies p a
-abs :: Satisfies p a -&gt; Satisfies p a
-$cabs :: forall (p :: * -&gt; *) a. Num a =&gt; Satisfies p a -&gt; Satisfies p a
-negate :: Satisfies p a -&gt; Satisfies p a
-$cnegate :: forall (p :: * -&gt; *) a. Num a =&gt; Satisfies p a -&gt; Satisfies p a
-* :: Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-$c* :: forall (p :: * -&gt; *) a.
-Num a =&gt;
-Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-- :: Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-$c- :: forall (p :: * -&gt; *) a.
-Num a =&gt;
-Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-+ :: Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-$c+ :: forall (p :: * -&gt; *) a.
-Num a =&gt;
-Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531392"><span id="local-6989586621679531394"><span id="local-6989586621679531396"><span id="local-6989586621679531398"><span id="local-6989586621679531400"><span id="local-6989586621679531402"><span id="local-6989586621679531404"><span class="annot"><span class="annottext">Eq (Satisfies p a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531393"><span id="local-6989586621679531395"><span id="local-6989586621679531397"><span id="local-6989586621679531399"><span id="local-6989586621679531401"><span id="local-6989586621679531403"><span id="local-6989586621679531405"><span class="annot"><span class="annottext">Eq (Satisfies p a)
 Eq (Satisfies p a) =&gt;
 (Satisfies p a -&gt; Satisfies p a -&gt; Ordering)
 -&gt; (Satisfies p a -&gt; Satisfies p a -&gt; Bool)
@@ -361,24 +183,257 @@ show :: Satisfies p a -&gt; String
 $cshow :: forall (p :: * -&gt; *) a. Show a =&gt; Satisfies p a -&gt; String
 showsPrec :: Int -&gt; Satisfies p a -&gt; ShowS
 $cshowsPrec :: forall (p :: * -&gt; *) a. Show a =&gt; Int -&gt; Satisfies p a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679531426"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-113"></span><span>
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679531414"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-92"></span><span class="hs-comment">-- instance The (Satisfies p a) a</span><span>
+</span><span id="line-93"></span><span>
+</span><span id="line-94"></span><span class="hs-comment">-- | An infix alias for 'Satisfies'.</span><span>
+</span><span id="line-95"></span><span class="hs-keyword">type</span><span> </span><span id="local-6989586621679531384"><span class="annot"><a href="#local-6989586621679531384"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="%3F"><span class="annot"><a href="Data.Fooned.html#%3F"><span class="hs-operator hs-var">?</span></a></span></span><span id="local-6989586621679531382"><span class="annot"><a href="#local-6989586621679531382"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531382"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531384"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-96"></span><span class="hs-keyword">infixr</span><span> </span><span class="hs-number">1</span><span> </span><span class="annot"><a href="Data.Fooned.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span>
+</span><span id="line-97"></span><span>
+</span><span id="line-98"></span><span>
+</span><span id="line-99"></span><span class="hs-keyword">class</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Coercible</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679531438"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531437"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><a href="#local-6989586621679531437"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="IsPredicate"><span class="annot"><a href="Data.Fooned.html#IsPredicate"><span class="hs-identifier hs-var">IsPredicate</span></a></span></span><span> </span><span id="local-6989586621679531438"><span class="annot"><a href="#local-6989586621679531438"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span id="local-6989586621679531437"><span class="annot"><a href="#local-6989586621679531437"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-100"></span><span>    </span><span id="predicate"><span class="annot"><a href="Data.Fooned.html#predicate"><span class="hs-identifier hs-type">predicate</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679531438"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531437"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
+</span><span id="line-101"></span><span>    </span><span id="failMsg"><span class="annot"><a href="Data.Fooned.html#failMsg"><span class="hs-identifier hs-type">failMsg</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679531438"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531437"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-102"></span><span>    </span><span id="require"><span class="annot"><a href="Data.Fooned.html#require"><span class="hs-identifier hs-type">require</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679531438"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531437"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531438"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531437"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-103"></span><span>    </span><span id="local-6989586621679531378"><span class="annot"><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var hs-var">require</span></a></span><span> </span><span id="local-6989586621679531377"><span class="annot"><span class="annottext">x :: p a
+</span><a href="#local-6989586621679531377"><span class="hs-identifier hs-var">x</span></a></span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Bool
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Bool
+</span><a href="Data.Fooned.html#predicate"><span class="hs-identifier hs-var">predicate</span></a></span><span> </span><span class="annot"><span class="annottext">p a
+</span><a href="#local-6989586621679531377"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">p a
+</span><a href="#local-6989586621679531377"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">String -&gt; Satisfies p a
+forall a. HasCallStack =&gt; String -&gt; a
+</span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Satisfies p a) -&gt; String -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">p a -&gt; String
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; String
+</span><a href="Data.Fooned.html#failMsg"><span class="hs-identifier hs-var">failMsg</span></a></span><span> </span><span class="annot"><span class="annottext">p a
+</span><a href="#local-6989586621679531377"><span class="hs-identifier hs-var">x</span></a></span></span><span>
+</span><span id="line-104"></span><span>
+</span><span id="line-105"></span><span id="local-6989586621679531375"><span id="local-6989586621679531376"><span class="hs-keyword">instance</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#IsPredicate"><span class="hs-identifier hs-type">IsPredicate</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531376"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531375"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679531375"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Coercible</span></span><span> </span><span class="annot"><a href="#local-6989586621679531375"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679531376"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531375"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531376"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531375"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-107"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531366"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679531366"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679531365"><span class="annot"><span class="annottext">+ :: Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">+</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531363"><span class="annot"><span class="annottext">y :: a
+</span><a href="#local-6989586621679531363"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Satisfies p a
+</span><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var">require</span></a></span><span> </span><span class="annot"><span class="annottext">(p a -&gt; Satisfies p a) -&gt; p a -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531366"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">+</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531363"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-108"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531362"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679531362"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679531361"><span class="annot"><span class="annottext">- :: Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
+</span><span class="hs-glyph hs-var hs-var hs-var hs-var">-</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531360"><span class="annot"><span class="annottext">y :: a
+</span><a href="#local-6989586621679531360"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Satisfies p a
+</span><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var">require</span></a></span><span> </span><span class="annot"><span class="annottext">(p a -&gt; Satisfies p a) -&gt; p a -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531362"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-glyph hs-var">-</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531360"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-109"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531359"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679531359"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679531358"><span class="annot"><span class="annottext">* :: Satisfies p a -&gt; Satisfies p a -&gt; Satisfies p a
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">*</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531356"><span class="annot"><span class="annottext">y :: a
+</span><a href="#local-6989586621679531356"><span class="hs-identifier hs-var">y</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Satisfies p a
+</span><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var">require</span></a></span><span> </span><span class="annot"><span class="annottext">(p a -&gt; Satisfies p a) -&gt; p a -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531359"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; a
+forall a. Num a =&gt; a -&gt; a -&gt; a
+</span><span class="hs-operator hs-var">*</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531356"><span class="hs-identifier hs-var">y</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>    </span><span id="local-6989586621679531355"><span class="annot"><span class="annottext">negate :: Satisfies p a -&gt; Satisfies p a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">negate</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531354"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679531354"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Satisfies p a
+</span><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var">require</span></a></span><span> </span><span class="annot"><span class="annottext">(p a -&gt; Satisfies p a) -&gt; p a -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">negate</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531354"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>    </span><span id="local-6989586621679531353"><span class="annot"><span class="annottext">abs :: Satisfies p a -&gt; Satisfies p a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">abs</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531351"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679531351"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Satisfies p a
+</span><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var">require</span></a></span><span> </span><span class="annot"><span class="annottext">(p a -&gt; Satisfies p a) -&gt; p a -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">abs</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531351"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-112"></span><span>    </span><span id="local-6989586621679531350"><span class="annot"><span class="annottext">signum :: Satisfies p a -&gt; Satisfies p a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">signum</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span id="local-6989586621679531348"><span class="annot"><span class="annottext">x :: a
+</span><a href="#local-6989586621679531348"><span class="hs-identifier hs-var">x</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Satisfies p a
+</span><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var">require</span></a></span><span> </span><span class="annot"><span class="annottext">(p a -&gt; Satisfies p a) -&gt; p a -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">a -&gt; a
+forall a. Num a =&gt; a -&gt; a
+</span><span class="hs-identifier hs-var">signum</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679531348"><span class="hs-identifier hs-var">x</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-113"></span><span>    </span><span id="local-6989586621679531347"><span class="annot"><span class="annottext">fromInteger :: Integer -&gt; Satisfies p a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">fromInteger</span></span></span><span> </span><span id="local-6989586621679531346"><span class="annot"><span class="annottext">x :: Integer
+</span><a href="#local-6989586621679531346"><span class="hs-identifier hs-var">x</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">p a -&gt; Satisfies p a
+forall (p :: * -&gt; *) a. IsPredicate p a =&gt; p a -&gt; Satisfies p a
+</span><a href="Data.Fooned.html#require"><span class="hs-identifier hs-var">require</span></a></span><span> </span><span class="annot"><span class="annottext">(p a -&gt; Satisfies p a) -&gt; p a -&gt; Satisfies p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; p a
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">(a -&gt; p a) -&gt; a -&gt; p a
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; a
+forall a. Num a =&gt; Integer -&gt; a
+</span><span class="hs-identifier hs-var">fromInteger</span></span><span> </span><span class="annot"><span class="annottext">Integer
+</span><a href="#local-6989586621679531346"><span class="hs-identifier hs-var">x</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679531375"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span>
 </span><span id="line-114"></span><span>
-</span><span id="line-115"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">role</span><span> </span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><span class="hs-identifier">nominal</span></span><span> </span><span class="annot"><span class="hs-identifier">nominal</span></span><span>
-</span><span id="line-116"></span><span class="hs-comment">-- instance The (Satisfies p a) a</span><span>
+</span><span id="line-115"></span><span>
+</span><span id="line-116"></span><span>
 </span><span id="line-117"></span><span>
-</span><span id="line-118"></span><span class="hs-comment">-- | An infix alias for 'Satisfies'.</span><span>
-</span><span id="line-119"></span><span class="hs-keyword">type</span><span> </span><span id="local-6989586621679531385"><span class="annot"><a href="#local-6989586621679531385"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span id="%3F"><span class="annot"><a href="Data.Fooned.html#%3F"><span class="hs-operator hs-var">?</span></a></span></span><span id="local-6989586621679531384"><span class="annot"><a href="#local-6989586621679531384"><span class="hs-identifier hs-type">p</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531384"><span class="hs-identifier hs-type">p</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531385"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-120"></span><span class="hs-keyword">infixr</span><span> </span><span class="hs-number">1</span><span> </span><span class="annot"><a href="Data.Fooned.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span>
+</span><span id="line-118"></span><span>
+</span><span id="line-119"></span><span class="hs-keyword">newtype</span><span> </span><span id="Nonnegative"><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-var">Nonnegative</span></a></span></span><span> </span><span id="local-6989586621679531345"><span class="annot"><a href="#local-6989586621679531345"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="N"><span class="annot"><a href="Data.Fooned.html#N"><span class="hs-identifier hs-var">N</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679531345"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-120"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679531340"><span id="local-6989586621679531342"><span class="annot"><span class="annottext">Nonnegative a -&gt; Nonnegative a -&gt; Bool
+(Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool) -&gt; Eq (Nonnegative a)
+forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c/= :: forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+== :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c== :: forall a. Eq a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531326"><span id="local-6989586621679531328"><span id="local-6989586621679531330"><span id="local-6989586621679531332"><span id="local-6989586621679531334"><span id="local-6989586621679531336"><span id="local-6989586621679531338"><span class="annot"><span class="annottext">Integer -&gt; Nonnegative a
+Nonnegative a -&gt; Nonnegative a
+Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+(Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a)
+-&gt; (Integer -&gt; Nonnegative a)
+-&gt; Num (Nonnegative a)
+forall a. Num a =&gt; Integer -&gt; Nonnegative a
+forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+forall a.
+(a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Integer -&gt; a)
+-&gt; Num a
+fromInteger :: Integer -&gt; Nonnegative a
+$cfromInteger :: forall a. Num a =&gt; Integer -&gt; Nonnegative a
+signum :: Nonnegative a -&gt; Nonnegative a
+$csignum :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+abs :: Nonnegative a -&gt; Nonnegative a
+$cabs :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+negate :: Nonnegative a -&gt; Nonnegative a
+$cnegate :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a
+* :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$c* :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+- :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$c- :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
++ :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$c+ :: forall a. Num a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531311"><span id="local-6989586621679531313"><span id="local-6989586621679531315"><span id="local-6989586621679531317"><span id="local-6989586621679531319"><span id="local-6989586621679531321"><span id="local-6989586621679531323"><span class="annot"><span class="annottext">Eq (Nonnegative a)
+Eq (Nonnegative a) =&gt;
+(Nonnegative a -&gt; Nonnegative a -&gt; Ordering)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Bool)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; (Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a)
+-&gt; Ord (Nonnegative a)
+Nonnegative a -&gt; Nonnegative a -&gt; Bool
+Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a. Ord a =&gt; Eq (Nonnegative a)
+forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+min :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$cmin :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+max :: Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+$cmax :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Nonnegative a
+&gt;= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&gt;= :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+&gt; :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&gt; :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+&lt;= :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&lt;= :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+&lt; :: Nonnegative a -&gt; Nonnegative a -&gt; Bool
+$c&lt; :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Bool
+compare :: Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+$ccompare :: forall a. Ord a =&gt; Nonnegative a -&gt; Nonnegative a -&gt; Ordering
+$cp1Ord :: forall a. Ord a =&gt; Eq (Nonnegative a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679531305"><span id="local-6989586621679531307"><span id="local-6989586621679531309"><span class="annot"><span class="annottext">Int -&gt; Nonnegative a -&gt; ShowS
+[Nonnegative a] -&gt; ShowS
+Nonnegative a -&gt; String
+(Int -&gt; Nonnegative a -&gt; ShowS)
+-&gt; (Nonnegative a -&gt; String)
+-&gt; ([Nonnegative a] -&gt; ShowS)
+-&gt; Show (Nonnegative a)
+forall a. Show a =&gt; Int -&gt; Nonnegative a -&gt; ShowS
+forall a. Show a =&gt; [Nonnegative a] -&gt; ShowS
+forall a. Show a =&gt; Nonnegative a -&gt; String
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Nonnegative a] -&gt; ShowS
+$cshowList :: forall a. Show a =&gt; [Nonnegative a] -&gt; ShowS
+show :: Nonnegative a -&gt; String
+$cshow :: forall a. Show a =&gt; Nonnegative a -&gt; String
+showsPrec :: Int -&gt; Nonnegative a -&gt; ShowS
+$cshowsPrec :: forall a. Show a =&gt; Int -&gt; Nonnegative a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679531345"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-121"></span><span>
-</span><span id="line-122"></span><span>
-</span><span id="line-123"></span><span>
-</span><span id="line-124"></span><span>
-</span><span id="line-125"></span><span class="annot"><a href="Data.Fooned.html#i"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="annot"><a href="Data.Fooned.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span>
-</span><span id="line-126"></span><span id="i"><span class="annot"><span class="annottext">i :: Integer ? Nonnegative
+</span><span id="line-122"></span><span id="local-6989586621679531304"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679531299"><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Num</span></span><span> </span><span class="annot"><a href="#local-6989586621679531304"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679531304"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Ord</span></span><span> </span><span class="annot"><a href="#local-6989586621679531304"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="Data.Fooned.html#IsPredicate"><span class="hs-identifier hs-type">IsPredicate</span></a></span><span> </span><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679531304"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-123"></span><span>    </span><span id="local-6989586621679531297"><span class="annot"><span class="annottext">predicate :: Nonnegative a -&gt; Bool
+</span><a href="#local-6989586621679531297"><span class="hs-identifier hs-var hs-var hs-var hs-var">predicate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Nonnegative a -&gt; Nonnegative a -&gt; Bool
+forall a. Ord a =&gt; a -&gt; a -&gt; Bool
+</span><span class="hs-operator hs-var">&lt;=</span></span><span class="hs-special">)</span><span>
+</span><span id="line-124"></span><span>    </span><span id="local-6989586621679531295"><span class="annot"><span class="annottext">failMsg :: Nonnegative a -&gt; String
+</span><a href="#local-6989586621679531295"><span class="hs-identifier hs-var hs-var hs-var hs-var">failMsg</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Nonnegative a -&gt; ShowS
+forall a. Show a =&gt; a -&gt; ShowS
+</span><span class="hs-operator hs-var">`shows`</span></span><span> </span><span class="annot"><span class="hs-string">&quot; is negative!&quot;</span></span><span class="hs-special">)</span></span><span>
+</span><span id="line-125"></span><span>
+</span><span id="line-126"></span><span class="annot"><a href="Data.Fooned.html#i"><span class="hs-identifier hs-type">i</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-127"></span><span id="i"><span class="annot"><span class="annottext">i :: Satisfies Nonnegative Integer
 </span><a href="Data.Fooned.html#i"><span class="hs-identifier hs-var hs-var">i</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-number">1</span></span><span>
-</span><span id="line-127"></span><span>
-</span><span id="line-128"></span><span class="annot"><a href="Data.Fooned.html#j"><span class="hs-identifier hs-type">j</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span> </span><span class="annot"><a href="Data.Fooned.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span>
-</span><span id="line-129"></span><span id="j"><span class="annot"><span class="annottext">j :: Integer ? Nonnegative
+</span><span id="line-128"></span><span>
+</span><span id="line-129"></span><span class="annot"><a href="Data.Fooned.html#j"><span class="hs-identifier hs-type">j</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.Fooned.html#Satisfies"><span class="hs-identifier hs-type">Satisfies</span></a></span><span> </span><span class="annot"><a href="Data.Fooned.html#Nonnegative"><span class="hs-identifier hs-type">Nonnegative</span></a></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-130"></span><span id="j"><span class="annot"><span class="annottext">j :: Satisfies Nonnegative Integer
 </span><a href="Data.Fooned.html#j"><span class="hs-identifier hs-var hs-var">j</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-glyph">-</span><span class="annot"><span class="hs-number">2</span></span><span class="hs-special">)</span><span>
-</span><span id="line-130"></span></pre></body></html>
+</span><span id="line-131"></span></pre></body></html>

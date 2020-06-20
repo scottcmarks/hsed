@@ -797,24 +797,31 @@ instance HasSize Word64            where size size68,69
 instance HasSize HasSize Word69,70
 instance HasSize Word              where size size69,70
 
-./src/Data/Fooned.hs,540
+./src/Data/Fooned.hs,818
 module Data.Fooned Data.Fooned28,29
 instance Num Num Integer59,60
 3:361,62
 instance Num Num a => Num (NonNegative a)71,72
-class IsPredicate IsPredicate92,93
-    predicate predicate93,94
-    failMsg failMsg94,95
-newtype Nonnegative Nonnegative99,100
-newtype Nonnegative a = N N99,100
-instance (N(Num a, Show a, Ord a) => IsPredicate Nonnegative a102,103
-    predicate predicate103,104
-    failMsg failMsg104,105
-newtype Satisfies Satisfies110,111
-type role role114,115
-type a a118,119
-i i124,125
-j j127,128
+type role role88,89
+newtype Satisfies Satisfies89,90
+type a a94,95
+class (Coercible (p a) a) => IsPredicate IsPredicate98,99
+    predicate predicate99,100
+    failMsg failMsg100,101
+    require require101,102
+instance (I(IsPredicate p a, Num a, Coercible a (p a)) => Num (Satisfies p a)104,105
+    (S(Satisfiesx)106,107
+    negate negate109,110
+    abs abs110,111
+    signum signum111,112
+    fromInteger fromInteger112,113
+newtype Nonnegative Nonnegative118,119
+newtype Nonnegative a = N N118,119
+instance (N(Num a, Show a, Ord a) => IsPredicate Nonnegative a121,122
+    predicate predicate122,123
+    failMsg failMsg123,124
+i i125,126
+j j128,129
 
 ./src/Data/Smart.hs,253
 module Data.SmartData.Smart26,27

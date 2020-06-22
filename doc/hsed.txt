@@ -116,75 +116,27 @@ instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
 
 -- | Datatype refined by predicate
 module Data.Refined
-class (Coercible (p a) a) => IsPredicate p a
+class (Coercible (p a) a) => IsPredicate (p :: Type -> Type) a
 predicate :: IsPredicate p a => p a -> Bool
 failMsg :: IsPredicate p a => p a -> String
 examine :: IsPredicate p a => Refined p a -> a
-require :: IsPredicate p a => a -> Refined p a
+refine :: IsPredicate p a => a -> Refined p a
 safeCreate :: IsPredicate p a => a -> Either String (Refined p a)
 create :: IsPredicate p a => a -> Maybe (Refined p a)
+unsafeCreate :: IsPredicate p a => a -> Refined p a
 data Refined (p :: Type -> Type) a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
+instance Data.HasSize.HasSize a => Data.HasSize.HasSize (Data.Refined.Refined p a)
 instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
-instance Data.HasSize.HasSize a => Data.Refined.FixedSize n a
 instance Data.Refined.IsPredicate p a => Data.Refined.IsPredicate_Internal p a
 instance (Data.Refined.IsPredicate p a, GHC.Num.Num a) => GHC.Num.Num (Data.Refined.Refined p a)
-
-
--- | Smart constructors refined with predicates.
-module Data.Smart
-
--- | Smart constructor.
---   
---   Wrap a <tt>a</tt> in a <tt>c</tt> under the control of a refinement
---   predicate.
-class Smart c a where {
-    
-    -- | Refinement predicate error message type. Commonly would be
-    --   <tt>String</tt>.
-    type family ErrorMessage c a;
-}
-
--- | Forget type-level minimum and maximum size, obtaining the underlying
---   value.
-unwrap :: Smart c a => c a -> a
-
--- | Simply wrap a value in a <tt>c</tt> as is, assuming
---   <tt>predicate</tt>.
---   
---   <b>WARNING</b> Use it only when you know what you're doing.
-unsafeCreate :: Smart c a => a -> c a
-
--- | Refinement predicate. Either pass a wrapped value as Right or give an
---   error message as Left.
---   
---   Note that this is passed the value after being wrapped, and therefore
---   assumes that the wrapping operation is mostly harmless.
-predicate :: Smart c a => c a -> Either (ErrorMessage c a) (c a)
-
--- | Primary smart constructor into Either.
-safeCreate :: Smart c a => a -> Either (ErrorMessage c a) (c a)
-
--- | Simplified smart constructor into Maybe.
-create :: Smart c a => a -> Maybe (c a)
-
-module Data.UserOfRefined
-newtype Nonnegative a
-N :: a -> Nonnegative a
-i :: Refined Nonnegative Integer
-j :: Refined Nonnegative Integer
-k :: Int ? Nonnegative
-l :: Int ? Nonnegative
-instance GHC.Show.Show a => GHC.Show.Show (Data.UserOfRefined.Nonnegative a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.UserOfRefined.Nonnegative a)
-instance GHC.Num.Num a => GHC.Num.Num (Data.UserOfRefined.Nonnegative a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.UserOfRefined.Nonnegative a)
-instance (GHC.Num.Num a, GHC.Show.Show a, GHC.Classes.Ord a) => Data.Refined.IsPredicate Data.UserOfRefined.Nonnegative a
+instance (GHC.Read.Read a, Data.Refined.IsPredicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
+instance (Data.Refined.IsPredicate p a, Data.String.IsString a) => Data.String.IsString (Data.Refined.Refined p a)
 
 
 -- | Conversions from type-level Nat to value-level Num
@@ -218,46 +170,43 @@ size :: HasSize a => a -> Int
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   size.
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where {
-    data family BoundedSize l u a;
-}
+newtype BoundedSize (l :: Nat) (u :: Nat) a
+BoundedSize :: a -> BoundedSize (l :: Nat) (u :: Nat) a
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a
 
 -- | Class of types which can be assigned a fixed type-level size.
 class (IsBoundedSize l l a) => IsFixedSize l a
-type FixedSize n a = BoundedSize n n a
+type FixedSize n = BoundedSize n n
 
 -- | Class of types which can be assigned a maximum type-level size.
 class (IsBoundedSize 0 l a) => IsMaxSize l a
-type MaxSize n a = BoundedSize 0 n a
+type MaxSize n = BoundedSize 0 n
 
 -- | Sometimes a MaxSize value is given, but the only thing known about the
 --   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
 --   String, or a MaxSize 4 String, so it is AtLeast MaxSize 3 Then it can
 --   be later cast to a specific MaxSize (of at least 3).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
+instance Data.HasSize.HasSize a => Data.HasSize.HasSize (Data.BoundedSize.Class.BoundedSize l u a)
+instance GHC.Show.Show a => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u a)
 instance Data.BoundedSize.Class.IsBoundedSize 0 l a => Data.BoundedSize.Class.IsMaxSize l a
 instance Data.BoundedSize.Class.IsBoundedSize l l a => Data.BoundedSize.Class.IsFixedSize l a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.BoundedSize.Class.IsBoundedSize l u a
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a
-instance (Data.String.IsString a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => Data.String.IsString (Data.BoundedSize.Class.BoundedSize l u a)
-instance (Data.HasSize.HasSize a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => Data.HasSize.HasSize (Data.BoundedSize.Class.BoundedSize l u a)
-instance (GHC.Num.Num a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Num.Num (Data.BoundedSize.Class.BoundedSize l u a)
-instance (GHC.Read.Read a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Read.Read (Data.BoundedSize.Class.BoundedSize l u a)
-instance (GHC.Show.Show a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
-instance (GHC.TypeNats.KnownNat l, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Smart.Smart (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.BoundedSize.Class.BoundedSize l u a)
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.Refined.IsPredicate (Data.BoundedSize.Class.BoundedSize l u) a
+instance (GHC.TypeNats.KnownNat l, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.IsPredicate (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Refined.Refined (Data.BoundedSize.Class.BoundedSize l u) a)
 
 
 -- | Template Haskell helpers for BoundedSize.
 module Data.BoundedSize.TH
 
--- | Type-safe constructor for fixed-length string literals: BoundedSize a
---   l l
+-- | Type-safe constructor for fixed-length string literals: a ?
+--   BoundedSize l l
 fx :: LitS -> Q Exp
 
--- | Type-safe constructor for bounded-length string literals: BoundedSize
---   a 0 l
+-- | Type-safe constructor for bounded-length string literals: a ?
+--   BoundedSize 0 l
 --   
 --   <pre>
 --   &gt;&gt;&gt; :t "Foobar"
@@ -269,15 +218,15 @@ fx :: LitS -> Q Exp
 --   &gt;&gt;&gt; :t mx "Foobar"
 --   mx "Foobar" :: Q Exp
 --   
---   &gt;&gt;&gt; $(mx "Foobar") :: BoundedSize 0 6 ByteString
+--   &gt;&gt;&gt; $(mx "Foobar") :: ByteString ? BoundedSize 0 6
 --   "Foobar"
 --   </pre>
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; mx "Foobar"
---   Data.Smart.unsafeCreate "Foobar" :: forall a_0 . (Data.HasSize.HasSize a_0,
---                                                     Data.String.IsString a_0) =&gt;
---                                       Data.BoundedSize.Class.BoundedSize 0 6 a_0
+--   Data.Refined.unsafeCreate "Foobar" :: forall a_0 . (Data.HasSize.HasSize a_0,
+--                                                       Data.String.IsString a_0) =&gt;
+--                                         (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 6)
 --   </pre>
 --   
 --   <pre>
@@ -289,14 +238,14 @@ fx :: LitS -> Q Exp
 mx :: LitS -> Q Exp
 
 -- | Construct &gt; <tt>unsafeCreate <a>Foobar</a> :: forall a. (IsString
---   a, HasSize a) =&gt; typef a l u</tt> where l and u are the type-level
+--   a, HasSize a) =&gt; typef l u a</tt> where l and u are the type-level
 --   KnownNat versions of the bounds of s &gt;&gt;&gt; :set
 --   -Wno-name-shadowing &gt;&gt;&gt; at &lt;- runQ $ newName "a"
 --   &gt;&gt;&gt; ppr $ unsafeCreateExp
 --   universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4)
---   at "Boo!" Data.Smart.unsafeCreate "Boo!" :: forall a_0 .
+--   at "Boo!" Data.Refined.unsafeCreate "Boo!" :: forall a_0 .
 --   (Data.HasSize.HasSize a_0, Data.String.IsString a_0) =&gt;
---   Data.BoundedSize.Class.BoundedSize 0 4 a_0
+--   (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 4)
 unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> String -> Exp
 
 -- | Transform a data-level Int to a Type value
@@ -330,17 +279,17 @@ size :: HasSize a => a -> Int
 
 -- | Class of types which can be assigned a type-level minimum and maximum
 --   size.
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where {
-    data family BoundedSize l u a;
-}
+newtype BoundedSize (l :: Nat) (u :: Nat) a
+BoundedSize :: a -> BoundedSize (l :: Nat) (u :: Nat) a
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a
 
 -- | Class of types which can be assigned a fixed type-level size.
 class (IsBoundedSize l l a) => IsFixedSize l a
-type FixedSize n a = BoundedSize n n a
+type FixedSize n = BoundedSize n n
 
 -- | Class of types which can be assigned a maximum type-level size.
 class (IsBoundedSize 0 l a) => IsMaxSize l a
-type MaxSize n a = BoundedSize 0 n a
+type MaxSize n = BoundedSize 0 n
 
 -- | Sometimes a MaxSize value is given, but the only thing known about the
 --   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
@@ -348,12 +297,12 @@ type MaxSize n a = BoundedSize 0 n a
 --   be later cast to a specific MaxSize (of at least 3).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 
--- | Type-safe constructor for fixed-length string literals: BoundedSize a
---   l l
+-- | Type-safe constructor for fixed-length string literals: a ?
+--   BoundedSize l l
 fx :: LitS -> Q Exp
 
--- | Type-safe constructor for bounded-length string literals: BoundedSize
---   a 0 l
+-- | Type-safe constructor for bounded-length string literals: a ?
+--   BoundedSize 0 l
 --   
 --   <pre>
 --   &gt;&gt;&gt; :t "Foobar"
@@ -365,15 +314,15 @@ fx :: LitS -> Q Exp
 --   &gt;&gt;&gt; :t mx "Foobar"
 --   mx "Foobar" :: Q Exp
 --   
---   &gt;&gt;&gt; $(mx "Foobar") :: BoundedSize 0 6 ByteString
+--   &gt;&gt;&gt; $(mx "Foobar") :: ByteString ? BoundedSize 0 6
 --   "Foobar"
 --   </pre>
 --   
 --   <pre>
 --   &gt;&gt;&gt; runQ $ ppr &lt;$&gt; mx "Foobar"
---   Data.Smart.unsafeCreate "Foobar" :: forall a_0 . (Data.HasSize.HasSize a_0,
---                                                     Data.String.IsString a_0) =&gt;
---                                       Data.BoundedSize.Class.BoundedSize 0 6 a_0
+--   Data.Refined.unsafeCreate "Foobar" :: forall a_0 . (Data.HasSize.HasSize a_0,
+--                                                       Data.String.IsString a_0) =&gt;
+--                                         (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 6)
 --   </pre>
 --   
 --   <pre>
@@ -385,14 +334,14 @@ fx :: LitS -> Q Exp
 mx :: LitS -> Q Exp
 
 -- | Construct &gt; <tt>unsafeCreate <a>Foobar</a> :: forall a. (IsString
---   a, HasSize a) =&gt; typef a l u</tt> where l and u are the type-level
+--   a, HasSize a) =&gt; typef l u a</tt> where l and u are the type-level
 --   KnownNat versions of the bounds of s &gt;&gt;&gt; :set
 --   -Wno-name-shadowing &gt;&gt;&gt; at &lt;- runQ $ newName "a"
 --   &gt;&gt;&gt; ppr $ unsafeCreateExp
 --   universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4)
---   at "Boo!" Data.Smart.unsafeCreate "Boo!" :: forall a_0 .
+--   at "Boo!" Data.Refined.unsafeCreate "Boo!" :: forall a_0 .
 --   (Data.HasSize.HasSize a_0, Data.String.IsString a_0) =&gt;
---   Data.BoundedSize.Class.BoundedSize 0 4 a_0
+--   (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 4)
 unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> String -> Exp
 
 -- | Transform a data-level Int to a Type value
@@ -422,89 +371,89 @@ class (IsMaxSize n a, IsBytes a) => IsMaxSizeBytes n a
 --   <pre>
 --   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
 --   append $(mx "foo") $(fx "bear")
---     :: (B.IsBytes a, Data.String.IsString a) =&gt; C.BoundedSize 4 7 a
+--     :: (B.IsBytes a, Data.String.IsString a) =&gt; a ? C.BoundedSize 4 7
 --   </pre>
 --   
 --   <pre>
 --   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes (l1 + l2) (u1 + u2) a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a -> BoundedSize (l1 + l2) (u1 + u2) a
+append :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new BoundedSize of maximum length from a basic element.
 --   
 --   <pre>
---   &gt;&gt;&gt; replicate '=' :: C.BoundedSize 5 10 String
+--   &gt;&gt;&gt; replicate '=' :: String ? C.BoundedSize 5 10
 --   "=========="
 --   </pre>
-replicate :: forall l u a. IsBoundedSizeBytes l u a => Elem a -> BoundedSize l u a
+replicate :: forall l u a. IsBoundedSizeBytes l u a => Elem a -> a ? BoundedSize l u
 
 -- | Map a BoundedSize to a BoundedSize of the same length.
 --   
 --   <pre>
---   &gt;&gt;&gt; map toUpper $(fx "Hello") :: C.BoundedSize 5 5 String
+--   &gt;&gt;&gt; map toUpper $(fx "Hello") :: String ? C.BoundedSize 5 5
 --   "HELLO"
 --   </pre>
-map :: forall l u a. IsBoundedSizeBytes l u a => (Elem a -> Elem a) -> BoundedSize l u a -> BoundedSize l u a
+map :: forall l u a. IsBoundedSizeBytes l u a => (Elem a -> Elem a) -> (a ? BoundedSize l u) -> a ? BoundedSize l u
 
 -- | Reduce BoundedSize length, preferring elements on the left.
 --   
 --   <pre>
---   &gt;&gt;&gt; take $(mx "Foobar") :: C.BoundedSize 0 3 String
+--   &gt;&gt;&gt; take $(mx "Foobar") :: String ? C.BoundedSize 0 3
 --   "Foo"
 --   
 --   &gt;&gt;&gt; :t take $(fx "Hello")
 --   take $(fx "Hello")
 --     :: (B.IsBytes a, KnownNat l2, KnownNat u2,
 --         Data.String.IsString a) =&gt;
---        C.BoundedSize l2 u2 a
+--        a ? C.BoundedSize l2 u2
 --   </pre>
 --   
 --   <pre>
---   &gt;&gt;&gt; :t take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
---   take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
---     :: C.BoundedSize 4 32 ByteString
+--   &gt;&gt;&gt; :t take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
+--   take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
+--     :: ByteString ? C.BoundedSize 4 32
 --   
---   &gt;&gt;&gt; take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
 --   "Hello"
 --   
---   &gt;&gt;&gt; length (take $(fx "Hello") :: C.BoundedSize 4 32 ByteString)
+--   &gt;&gt;&gt; length (take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32)
 --   5
 --   
---   &gt;&gt;&gt; take $(fx "Hello") :: C.BoundedSize 4 32 ByteString
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
 --   "Hello"
 --   
---   &gt;&gt;&gt; take $(fx "Hello") :: C.BoundedSize 4 4 ByteString
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? C.BoundedSize 4 4
 --   "Hell"
 --   
---   &gt;&gt;&gt; take $(fx "HelloHelloHelloHelloHelloHelloHello") :: C.BoundedSize 4 32 ByteString
+--   &gt;&gt;&gt; take $(fx "HelloHelloHelloHelloHelloHelloHello") :: ByteString ? C.BoundedSize 4 32
 --   "HelloHelloHelloHelloHelloHelloHe"
 --   </pre>
-take :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+take :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Reduce BoundedSize length, preferring elements on the right.
 --   
 --   <pre>
---   &gt;&gt;&gt; drop $(fx "Foobar") :: C.BoundedSize 2 2 String
+--   &gt;&gt;&gt; drop $(fx "Foobar") :: String ? C.BoundedSize 2 2
 --   "ar"
 --   
---   &gt;&gt;&gt; drop $(mx "Foobar") :: C.BoundedSize 0 2 String
+--   &gt;&gt;&gt; drop $(mx "Foobar") :: String ? C.BoundedSize 0 2
 --   "ar"
 --   </pre>
-drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a) => BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Obtain length bounds from the type.
-bounds :: forall l u a. IsBoundedSize l u a => BoundedSize l u a -> (Int, Int)
+bounds :: forall l u a. IsBoundedSize l u a => (a ? BoundedSize l u) -> (Int, Int)
 
 -- | Obtain value-level length. Consult the actual data value.
-length :: forall l u a. IsBoundedSizeBytes l u a => BoundedSize l u a -> Int
+length :: forall l u a. IsBoundedSizeBytes l u a => (a ? BoundedSize l u) -> Int
 
 -- | Fill a BoundedSize with extra elements up to target length, padding
 --   original elements to the left.
-padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes 0 (u2 + u1) a) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes 0 (u2 + u1) a) => Elem a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
-padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes 0 (u1 + u2) a) => Elem a -> BoundedSize l1 u1 a -> BoundedSize l2 u2 a
+padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes 0 (u1 + u2) a) => Elem a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsMaxSizeBytes n a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsFixedSizeBytes n a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsBoundedSizeBytes l u a
@@ -535,7 +484,7 @@ instance GHC.Show.Show Hsed.App.Options
 
 -- | Orphan instances.
 module System.SED.MCTP.Common.Instances
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.IsBytes.IsBytes (Data.BoundedSize.Class.BoundedSize l u Data.ByteString.Internal.ByteString)
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.IsBytes.IsBytes (Data.Refined.Refined (Data.BoundedSize.Class.BoundedSize l u) Data.ByteString.Internal.ByteString)
 
 
 -- | Parse and generate stream items.
@@ -592,37 +541,37 @@ instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Token.Token
 -- | Formats.
 module System.SED.MCTP.Common.Base_Type.Class
 newtype Core_integer n
-Core_integer :: MaxSize n Integer -> Core_integer n
+Core_integer :: (Integer ? MaxSize n) -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: MaxSize n Natural -> Core_uinteger n
+Core_uinteger :: (Natural ? MaxSize n) -> Core_uinteger n
 newtype Core_max_bytes n
-Core_max_bytes :: MaxSize n ByteString -> Core_max_bytes n
+Core_max_bytes :: (ByteString ? MaxSize n) -> Core_max_bytes n
 newtype Core_bytes n
-Core_bytes :: FixedSize n ByteString -> Core_bytes n
+Core_bytes :: (ByteString ? FixedSize n) -> Core_bytes n
 type Core_uinteger_at_least n = AtLeast Core_uinteger n
 type Core_integer_at_least n = AtLeast Core_integer n
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.IsBytes.IsBytes (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
+instance Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -654,13 +603,13 @@ instance Data.String.IsString System.SED.MCTP.Common.Base_Type.TH.LitS
 -- | Formats.
 module System.SED.MCTP.Common.Base_Type
 newtype Core_integer n
-Core_integer :: MaxSize n Integer -> Core_integer n
+Core_integer :: (Integer ? MaxSize n) -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: MaxSize n Natural -> Core_uinteger n
+Core_uinteger :: (Natural ? MaxSize n) -> Core_uinteger n
 newtype Core_bytes n
-Core_bytes :: FixedSize n ByteString -> Core_bytes n
+Core_bytes :: (ByteString ? FixedSize n) -> Core_bytes n
 newtype Core_max_bytes n
-Core_max_bytes :: MaxSize n ByteString -> Core_max_bytes n
+Core_max_bytes :: (ByteString ? MaxSize n) -> Core_max_bytes n
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
 ci :: LitI -> Q Exp

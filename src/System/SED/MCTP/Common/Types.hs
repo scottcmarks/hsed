@@ -15,7 +15,7 @@ Datatypes for @hsed@.
 module System.SED.MCTP.Common.Types
   ( module Data.BoundedSize
   , module Data.ByteString.Integral
-  , module Data.Smart
+  , module Data.Refined
   , module Numeric
   , module GHC.TypeLits.Extras
   , module System.SED.MCTP.Common.Base_Type
@@ -34,7 +34,7 @@ where
 
 import           Data.BoundedSize
 import           Data.ByteString.Integral
-import           Data.Smart
+import           Data.Refined
 import           GHC.TypeLits.Extras
 import           Numeric
 import           System.SED.MCTP.Common.Base_Type

@@ -23,16 +23,16 @@ module System.SED.MCTP.Common.Instances where
 import           Data.BoundedSize (BoundedSize (..))
 import qualified Data.ByteString  as B (ByteString, unpack)
 import           Data.IsBytes     (IsBytes (..))
-import           Data.Smart       (Smart (..))
+import           Data.Refined     (IsPredicate (..), Refined)
 import           GHC.Base         (undefined, (.))
 import           GHC.TypeLits     (KnownNat)
 
-instance (KnownNat l, KnownNat u) => IsBytes (BoundedSize l u B.ByteString)
+instance (KnownNat l, KnownNat u) => IsBytes (Refined (BoundedSize l u) B.ByteString)
   where
-      type Elem (BoundedSize l u B.ByteString) = Elem B.ByteString
+      type Elem (Refined (BoundedSize l u) B.ByteString) = Elem B.ByteString
       append = undefined -- B.append
       replicate = undefined -- B.replicate
       map = undefined -- B.map
       take = undefined -- B.take
       drop = undefined -- B.drop
-      toList = B.unpack . unwrap -- undefined -- toList -- TODO
+      toList = B.unpack . examine -- undefined -- toList -- TODO

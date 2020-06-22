@@ -24,7 +24,7 @@ import           Data.Tuple                       (fst)
 import           GHC.Base                         (id, map, ($), (.))
 import           GHC.Err                          (error)
 
-import           Data.Smart                       (unsafeCreate)
+import           Data.Refined                     (unsafeCreate)
 import           System.SED.MCTP.Common.Base_Type (Core_bytes (..))
 import           System.SED.MCTP.Common.UID
 

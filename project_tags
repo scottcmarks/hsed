@@ -180,28 +180,28 @@ data TableColumn = TableColumn { _columnNumber _columnNumber347,348
                                , _columnType _columnType350,351
 newtype ColumnType ColumnType354,355
 
-./src/System/SED/MCTP/Common/UID.hs,631
+./src/System/SED/MCTP/Common/UID.hs,632
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID19,20
-showCore_bytesHex showCore_bytesHex70,71
-showCore_bytes showCore_bytes75,76
-newtype HalfUID HalfUID79,80
-instance Show Show HalfUID82,83
-    show show83,84
-instance Arbitrary Arbitrary HalfUID84,85
-    arbitrary arbitrary85,86
-halfUID halfUID87,88
-newtype UID UID91,92
-instance Show Show UID94,95
-    show show95,96
-instance Arbitrary Arbitrary UID96,97
-    arbitrary arbitrary97,98
-uid uid99,100
-uidUpper uidUpper107,108
-uidLower uidLower110,111
-uidPlus uidPlus113,114
-(+(+:+)117,118
-hNull hNull121,122
-uNull uNull124,125
+showCore_bytesHex showCore_bytesHex71,72
+showCore_bytes showCore_bytes76,77
+newtype HalfUID HalfUID80,81
+instance Show Show HalfUID83,84
+    show show84,85
+instance Arbitrary Arbitrary HalfUID85,86
+    arbitrary arbitrary86,87
+halfUID halfUID88,89
+newtype UID UID92,93
+instance Show Show UID95,96
+    show show96,97
+instance Arbitrary Arbitrary UID97,98
+    arbitrary arbitrary98,99
+uid uid100,101
+uidUpper uidUpper108,109
+uidLower uidLower111,112
+uidPlus uidPlus114,115
+(+(+:+)118,119
+hNull hNull122,123
+uNull uNull125,126
 
 ./src/System/SED/MCTP/Common/SpecialPurposeUIDs.hs,490
 module System.SED.MCTP.Common.SpecialPurposeUIDs System.SED.MCTP.Common.SpecialPurposeUIDs13,14
@@ -414,14 +414,14 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
 ./src/System/SED/MCTP/Common/Base_Type/Class.hs,1388
-module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class26,27
-newtype Core_integer Core_integer64,65
-type Core_integer_at_least Core_integer_at_least66,67
-newtype Core_uinteger Core_uinteger68,69
-type Core_uinteger_at_least Core_uinteger_at_least70,71
-newtype Core_max_bytes Core_max_bytes72,73
-type Core_max_bytes_at_least Core_max_bytes_at_least77,78
-newtype Core_bytes Core_bytes79,80
+module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class27,28
+newtype Core_integer Core_integer66,67
+type Core_integer_at_least Core_integer_at_least68,69
+newtype Core_uinteger Core_uinteger70,71
+type Core_uinteger_at_least Core_uinteger_at_least72,73
+newtype Core_max_bytes Core_max_bytes74,75
+type Core_max_bytes_at_least Core_max_bytes_at_least76,77
+newtype Core_bytes Core_bytes78,79
 instance (K(KnownNat n) => StreamItem (Core_uinteger n)84,85
     parser parser85,86
     generate generate96,97
@@ -564,9 +564,9 @@ instance StreamItem StreamItem Core_uidref_Object_Table153,154
     parser parser154,155
     generate generate155,156
 
-./src/System/SED/MCTP/Common/Instances.hs,347
+./src/System/SED/MCTP/Common/Instances.hs,357
 module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances20,21
-instance (K(KnownNat l, KnownNat u) => IsBytes (BoundedSize l u B-ByteString)29,30
+instance (K(KnownNat l, KnownNat u) => IsBytes (Refined (BoundedSize l u) B-ByteString)29,30
       type Elem Elem31,32
       append append32,33
       replicate replicate33,34
@@ -597,56 +597,36 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,1838
-module Data.BoundedSize.ClassData.BoundedSize.Class22,23
-import import46,47
+./src/Data/BoundedSize/Class.hs,964
+module Data.BoundedSize.ClassData.BoundedSize.Class24,25
+import import43,44
+type role role61,62
+newtype BoundedSize BoundedSize62,63
 class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize64,65
-    data BoundedSize BoundedSize65,66
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a66,67
-    data BoundedSize BoundedSize67,68
-    data BoundedSize l u a = BdSzWrapper BdSzWrapper67,68
-instance (K(KnownNat l, KnownNat u, HasSize a) => Smart (BoundedSize l u) a72,73
-    type ErrorMessage ErrorMessage73,74
-    unsafeCreate unsafeCreate74,75
-    unwrap unwrap75,76
-    predicate predicate76,77
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize88,89
-instance (I(IsBoundedSize l l a) => IsFixedSize l a89,90
-type FixedSize FixedSize90,91
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize93,94
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a94,95
-type MaxSize MaxSize95,96
-trans trans100,101
-bitrans bitrans106,107
-instance (I(IsString a, Smart (BoundedSize l u) a) => IsString ((BoundedSize l u) a)108,109
-    fromString fromString109,110
-instance (H(HasSize a, Smart (BoundedSize l u) a) => HasSize (BoundedSize l u a)111,112
-    size size112,113
-instance (N(Num a, Smart (BoundedSize l u) a) => Num ((BoundedSize l u) a)114,115
-    (+(+)115,116
-    (-(-)116,117
-    (*(*)117,118
-    abs abs118,119
-    signum signum119,120
-    fromInteger fromInteger120,121
-instance (R(Read a, Smart (BoundedSize l u) a) => Read ((BoundedSize l u) a)122,123
-    readPrec readPrec123,124
-instance (S(Show a, Smart (BoundedSize l u) a) => Show ((BoundedSize l u) a)125,126
-    show show126,127
-type AtLeast AtLeast132,133
-instance (K(KnownNat l, HasSize a, Arbitrary a, Smart (BoundedSize l u) a) => Arbitrary (BoundedSize l u a)134,135
-    arbitrary arbitrary135,136
-    shrink shrink136,137
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a65,66
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsPredicate (BoundedSize l u) a68,69
+    predicate predicate69,70
+    failMsg failMsg74,75
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize89,90
+instance (I(IsBoundedSize l l a) => IsFixedSize l a90,91
+type FixedSize FixedSize91,92
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize94,95
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a95,96
+type MaxSize MaxSize96,97
+type AtLeast AtLeast103,104
+instance (K(KnownNat l, HasSize a, Arbitrary a, IsPredicate (BoundedSize l u) a) => Arbitrary (Refined (BoundedSize l u) a)108,109
+    arbitrary arbitrary109,110
+    shrink shrink110,111
 
-./src/Data/BoundedSize/TH.hs,275
-module Data.BoundedSize.THData.BoundedSize.TH9,10
-newtype LitS LitS41,42
-sb sb55,56
-fx fx86,87
-mx mx111,112
-typeFromInt typeFromInt120,121
-unsafeCreateExp unsafeCreateExp132,133
-universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType158,159
+./src/Data/BoundedSize/TH.hs,278
+module Data.BoundedSize.THData.BoundedSize.TH10,11
+newtype LitS LitS43,44
+sb sb57,58
+fx fx106,107
+mx mx131,132
+typeFromInt typeFromInt140,141
+unsafeCreateExp unsafeCreateExp152,153
+universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType179,180
 
 ./src/Data/ByteString/Integral.hs,793
 module Data.ByteString.IntegralData.ByteString.Integral21,22
@@ -735,39 +715,26 @@ instance IsBytes IsBytes (V-Vector a)88,89
     drop drop95,96
     toList toList96,97
 
-./src/Data/UserOfRefined.hs,317
-module Data.UserOfRefined Data.UserOfRefined7,8
-import import10,11
-newtype Nonnegative Nonnegative16,17
-newtype Nonnegative a = N N16,17
-instance (N(Num a, Show a, Ord a) => IsPredicate Nonnegative a19,20
-    predicate predicate20,21
-    failMsg failMsg21,22
-i i23,24
-j j26,27
-k k29,30
-l l32,33
-
-./src/Data/BoundedSize.hs,795
+./src/Data/BoundedSize.hs,796
 module Data.BoundedSizeData.BoundedSize23,24
-class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes65,66
-instance (K(KnownNat l, KnownNat u, B-IsBytes a) => IsBoundedSizeBytes l u a66,67
-class (C.IsFixedSize n a, B.IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes68,69
-instance (K(KnownNat n, B-IsBytes a) => IsFixedSizeBytes n a69,70
-class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes71,72
-instance (K(KnownNat n, B-IsBytes a) => IsMaxSizeBytes n a72,73
-append append99,100
-append append108,109
-replicate replicate114,115
-map map127,128
-take take158,159
-drop drop175,176
-bounds bounds188,189
-length length198,199
-padLeft padLeft206,207
-padLeft padLeft215,216
-padRight padRight218,219
-padRight padRight227,228
+class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes67,68
+instance (K(KnownNat l, KnownNat u, B-IsBytes a) => IsBoundedSizeBytes l u a68,69
+class (C.IsFixedSize n a, B.IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes70,71
+instance (K(KnownNat n, B-IsBytes a) => IsFixedSizeBytes n a71,72
+class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes73,74
+instance (K(KnownNat n, B-IsBytes a) => IsMaxSizeBytes n a74,75
+append append102,103
+append append111,112
+replicate replicate117,118
+map map130,131
+take take161,162
+drop drop178,179
+bounds bounds191,192
+length length201,202
+padLeft padLeft209,210
+padLeft padLeft218,219
+padRight padRight221,222
+padRight padRight230,231
 
 ./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18
@@ -806,40 +773,33 @@ instance HasSize Word64            where size size68,69
 instance HasSize HasSize Word69,70
 instance HasSize Word              where size size69,70
 
-./src/Data/Smart.hs,253
-module Data.SmartData.Smart26,27
-class Smart Smart41,42
-    unwrap unwrap44,45
-    unsafeCreate unsafeCreate51,52
-    type ErrorMessage ErrorMessage56,57
-    predicate predicate64,65
-    safeCreate safeCreate68,69
-    create create73,74
-
-./src/Data/Refined.hs,871
-module Data.RefinedData.Refined24,25
-type role role184,185
-newtype Refined Refined185,186
-type a a190,191
-class (Coercible (p a) a) => IsPredicate IsPredicate194,195
-    predicate predicate195,196
-    failMsg failMsg196,197
-    examine examine197,198
-    require require199,200
-    safeCreate safeCreate204,205
-    create create209,210
-class IsPredicate p a => IsPredicate_Internal IsPredicate_Internal219,220
-    consider consider220,221
-    accept accept222,223
-instance IsPredicate IsPredicate p a => IsPredicate_Internal p a224,225
-instance (I(IsPredicate p a, Num a) => Num (Refined p a)232,233
-    (R(Refinedx)234,235
-    negate negate237,238
-    abs abs238,239
-    signum signum239,240
-    fromInteger fromInteger240,241
-class HasSize a => FixedSize FixedSize244,245
-instance HasSize HasSize a => FixedSize n a245,246
+./src/Data/Refined.hs,986
+module Data.RefinedData.Refined25,26
+type role role46,47
+newtype Refined Refined47,48
+type a a52,53
+class (Coercible (p a) a) => IsPredicate IsPredicate56,57
+    predicate predicate57,58
+    failMsg failMsg59,60
+    examine examine61,62
+    refine refine64,65
+    safeCreate safeCreate69,70
+    create create74,75
+    unsafeCreate unsafeCreate79,80
+class IsPredicate p a => IsPredicate_Internal IsPredicate_Internal86,87
+    consider consider87,88
+    accept accept89,90
+instance IsPredicate IsPredicate p a => IsPredicate_Internal p a91,92
+instance (I(IsPredicate p a, Num a) => Num (Refined p a)99,100
+    (R(Refinedx)101,102
+    negate negate104,105
+    abs abs105,106
+    signum signum106,107
+    fromInteger fromInteger107,108
+instance (R(Read a, IsPredicate p a) => Read (Refined p a)110,111
+    readPrec readPrec111,112
+instance (I(IsPredicate p a, IsString a) => IsString (Refined p a)114,115
+    fromString fromString115,116
 
 ./src/Control/If.hs,63
 module Control.IfControl.If13,14

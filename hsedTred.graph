@@ -2,73 +2,6 @@ digraph G {
 	graph [ratio=fill,
 		size="6,4"
 	];
-	subgraph cluster_0 {
-		graph [color="#0000000F",
-			label=Control,
-			style=filled
-		];
-		u0		 [fillcolor="#ffffbb",
-			label=If,
-			penwidth=0,
-			style=filled];
-	}
-	subgraph cluster_1 {
-		graph [color="#0000000F",
-			label=Data,
-			style=filled
-		];
-		subgraph cluster_2 {
-			graph [color="#0000000F",
-				label=BoundedSize,
-				style=filled
-			];
-			u1			 [fillcolor="#bbbbff",
-				label=BoundedSize,
-				style="filled,bold"];
-			u2			 [fillcolor="#ffbbbb",
-				label=Class,
-				penwidth=0,
-				style=filled];
-			u6			 [fillcolor="#ffbbbb",
-				label=TH,
-				penwidth=0,
-				style=filled];
-		}
-		subgraph cluster_3 {
-			graph [color="#0000000F",
-				label=ByteString,
-				style=filled
-			];
-			u8			 [fillcolor="#bbffff",
-				label=Integral,
-				penwidth=0,
-				style=filled];
-		}
-		u3		 [fillcolor="#bbbbff",
-			label=HasSize,
-			penwidth=0,
-			style=filled];
-		u4		 [fillcolor="#bbbbff",
-			label=Smart,
-			penwidth=0,
-			style=filled];
-		u7		 [fillcolor="#bbbbff",
-			label=IsBytes,
-			penwidth=0,
-			style=filled];
-		u9		 [fillcolor="#bbbbff",
-			label=Hex,
-			penwidth=0,
-			style=filled];
-		u10		 [fillcolor="#bbbbff",
-			label=Refined,
-			penwidth=0,
-			style=filled];
-		u11		 [fillcolor="#bbbbff",
-			label=UserOfRefined,
-			penwidth=0,
-			style=filled];
-	}
 	subgraph cluster_4 {
 		graph [color="#0000000F",
 			label=GHC,
@@ -95,7 +28,7 @@ digraph G {
 				label=Extras,
 				style=filled
 			];
-			u37			 [fillcolor="#7777ff",
+			u35			 [fillcolor="#7777ff",
 				label=GitVersion,
 				penwidth=0,
 				style=filled];
@@ -106,7 +39,7 @@ digraph G {
 			label=Hsed,
 			style=filled
 		];
-		u12		 [fillcolor="#ff7777",
+		u10		 [fillcolor="#ff7777",
 			label=App,
 			penwidth=0,
 			style=filled];
@@ -136,14 +69,14 @@ digraph G {
 							label=Base_Type,
 							style=filled
 						];
-						u13						 [fillcolor="#bbff77",
+						u11						 [fillcolor="#bbff77",
 							label=Base_Type,
 							style="filled,bold"];
-						u14						 [fillcolor="#3333ff",
+						u12						 [fillcolor="#3333ff",
 							label=Class,
 							penwidth=0,
 							style=filled];
-						u18						 [fillcolor="#3333ff",
+						u16						 [fillcolor="#3333ff",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -153,10 +86,10 @@ digraph G {
 							label=ColumnTypes,
 							style=filled
 						];
-						u22						 [fillcolor="#bbff77",
+						u20						 [fillcolor="#bbff77",
 							label=ColumnTypes,
 							style="filled,bold"];
-						u23						 [fillcolor="#ff3333",
+						u21						 [fillcolor="#ff3333",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -166,67 +99,67 @@ digraph G {
 							label=TableUIDs,
 							style=filled
 						];
-						u32						 [fillcolor="#bbff77",
+						u30						 [fillcolor="#bbff77",
 							label=TableUIDs,
 							style="filled,bold"];
-						u33						 [fillcolor="#77bbff",
+						u31						 [fillcolor="#77bbff",
 							label=TH,
 							penwidth=0,
 							style=filled];
 					}
-					u15					 [fillcolor="#bbff77",
+					u13					 [fillcolor="#bbff77",
 						label=Instances,
 						penwidth=0,
 						style=filled];
-					u16					 [fillcolor="#bbff77",
+					u14					 [fillcolor="#bbff77",
 						label=StreamItem,
 						penwidth=0,
 						style=filled];
-					u17					 [fillcolor="#bbff77",
+					u15					 [fillcolor="#bbff77",
 						label=Token,
 						penwidth=0,
 						style=filled];
-					u19					 [fillcolor="#bbff77",
+					u17					 [fillcolor="#bbff77",
 						label=Call,
 						penwidth=0,
 						style=filled];
-					u20					 [fillcolor="#bbff77",
+					u18					 [fillcolor="#bbff77",
 						label=Value,
 						penwidth=0,
 						style=filled];
-					u21					 [fillcolor="#bbff77",
+					u19					 [fillcolor="#bbff77",
 						label=UID,
 						penwidth=0,
 						style=filled];
-					u24					 [fillcolor="#bbff77",
+					u22					 [fillcolor="#bbff77",
 						label=THUtil,
 						penwidth=0,
 						style=filled];
-					u25					 [fillcolor="#bbff77",
+					u23					 [fillcolor="#bbff77",
 						label=Util,
 						penwidth=0,
 						style=filled];
-					u26					 [fillcolor="#bbff77",
+					u24					 [fillcolor="#bbff77",
 						label=Format,
 						penwidth=0,
 						style=filled];
-					u27					 [fillcolor="#bbff77",
+					u25					 [fillcolor="#bbff77",
 						label=Simple_Type,
 						penwidth=0,
 						style=filled];
-					u28					 [fillcolor="#bbff77",
+					u26					 [fillcolor="#bbff77",
 						label=Import,
 						penwidth=0,
 						style=filled];
-					u29					 [fillcolor="#bbff77",
+					u27					 [fillcolor="#bbff77",
 						label=Types,
 						penwidth=0,
 						style=filled];
-					u30					 [fillcolor="#bbff77",
+					u28					 [fillcolor="#bbff77",
 						label=SpecialPurposeUIDs,
 						penwidth=0,
 						style=filled];
-					u31					 [fillcolor="#bbff77",
+					u29					 [fillcolor="#bbff77",
 						label=Table,
 						penwidth=0,
 						style=filled];
@@ -236,7 +169,7 @@ digraph G {
 						label=Host,
 						style=filled
 					];
-					u34					 [fillcolor="#ff77bb",
+					u32					 [fillcolor="#ff77bb",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -246,7 +179,7 @@ digraph G {
 						label=TPer,
 						style=filled
 					];
-					u35					 [fillcolor="#33bb77",
+					u33					 [fillcolor="#33bb77",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -254,56 +187,113 @@ digraph G {
 			}
 		}
 	}
-	u36	 [fillcolor="#bbffbb",
+	subgraph cluster_0 {
+		graph [color="#0000000F",
+			label=Control,
+			style=filled
+		];
+		u0		 [fillcolor="#ffffbb",
+			label=If,
+			penwidth=0,
+			style=filled];
+	}
+	subgraph cluster_1 {
+		graph [color="#0000000F",
+			label=Data,
+			style=filled
+		];
+		subgraph cluster_3 {
+			graph [color="#0000000F",
+				label=ByteString,
+				style=filled
+			];
+			u8			 [fillcolor="#bbffff",
+				label=Integral,
+				penwidth=0,
+				style=filled];
+		}
+		subgraph cluster_2 {
+			graph [color="#0000000F",
+				label=BoundedSize,
+				style=filled
+			];
+			u1			 [fillcolor="#bbbbff",
+				label=BoundedSize,
+				style="filled,bold"];
+			u2			 [fillcolor="#ffbbbb",
+				label=Class,
+				penwidth=0,
+				style=filled];
+			u6			 [fillcolor="#ffbbbb",
+				label=TH,
+				penwidth=0,
+				style=filled];
+		}
+		u3		 [fillcolor="#bbbbff",
+			label=HasSize,
+			penwidth=0,
+			style=filled];
+		u4		 [fillcolor="#bbbbff",
+			label=Refined,
+			penwidth=0,
+			style=filled];
+		u7		 [fillcolor="#bbbbff",
+			label=IsBytes,
+			penwidth=0,
+			style=filled];
+		u9		 [fillcolor="#bbbbff",
+			label=Hex,
+			penwidth=0,
+			style=filled];
+	}
+	u34	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u36 -> u37;
-	u36 -> u34;
-	u36 -> u35;
+	u34 -> u35;
+	u34 -> u32;
+	u34 -> u33;
+	u4 -> u3;
 	u7 -> u3;
-	u10 -> u3;
-	u11 -> u10;
 	u1 -> u7;
 	u1 -> u6;
-	u2 -> u3;
 	u2 -> u4;
 	u2 -> u5;
 	u6 -> u2;
-	u15 -> u1;
-	u17 -> u8;
-	u17 -> u16;
-	u19 -> u20;
-	u19 -> u21;
-	u20 -> u17;
-	u21 -> u9;
-	u21 -> u13;
-	u24 -> u21;
-	u25 -> u21;
-	u26 -> u21;
+	u13 -> u1;
+	u15 -> u8;
+	u15 -> u14;
+	u17 -> u18;
+	u17 -> u19;
+	u18 -> u15;
+	u19 -> u9;
+	u19 -> u11;
+	u22 -> u19;
+	u23 -> u19;
+	u24 -> u19;
+	u24 -> u25;
+	u25 -> u11;
 	u26 -> u27;
-	u27 -> u13;
-	u28 -> u29;
+	u27 -> u17;
+	u27 -> u25;
+	u27 -> u28;
+	u27 -> u20;
+	u27 -> u30;
+	u28 -> u19;
 	u29 -> u19;
-	u29 -> u27;
-	u29 -> u30;
-	u29 -> u22;
-	u29 -> u32;
-	u30 -> u21;
-	u31 -> u21;
-	u13 -> u18;
-	u14 -> u15;
-	u14 -> u17;
-	u18 -> u14;
-	u22 -> u23;
-	u23 -> u24;
-	u23 -> u25;
-	u32 -> u33;
-	u33 -> u24;
-	u33 -> u25;
-	u33 -> u31;
-	u34 -> u12;
-	u34 -> u28;
-	u35 -> u12;
-	u35 -> u28;
+	u11 -> u16;
+	u12 -> u13;
+	u12 -> u15;
+	u16 -> u12;
+	u20 -> u21;
+	u21 -> u22;
+	u21 -> u23;
+	u30 -> u31;
+	u31 -> u22;
+	u31 -> u23;
+	u31 -> u29;
+	u32 -> u10;
+	u32 -> u26;
+	u33 -> u10;
+	u33 -> u26;
 }

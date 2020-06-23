@@ -36,6 +36,7 @@ module System.SED.MCTP.Common.Base_Type.Class
   , size
   , unsafeCreate
   , safeCreate
+  , toList
   )
 where
 
@@ -47,14 +48,11 @@ import           Data.Functor                      ((<$>))
 import           Data.IsBytes                      (IsBytes (..))
 import           Data.Maybe                        (Maybe (..))
 import           Data.Proxy                        (Proxy (..))
--- import           Data.String                       (IsString (..))
 import           Data.String                       (String)
 import           GHC.Base                          (Int, mconcat, pure, ($),
                                                     (.))
 import           GHC.Classes                       (Eq (..), Ord (..))
 import           GHC.Num                           (Integer)
--- import           GHC.Num                           (Num)
--- import           GHC.Read                          (Read (..))
 import           GHC.Show                          (Show (..))
 import           GHC.TypeLits                      (KnownNat)
 import           Numeric.Natural                   (Natural)

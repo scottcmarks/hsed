@@ -33,9 +33,7 @@ import           Language.Haskell.TH              (Body (..), Con (..),
                                                    Exp (..), Lit (..), Name,
                                                    Pat (..), Type (..))
 
-import           Data.IsBytes                     (toList)
-
-import           System.SED.MCTP.Common.Base_Type (Core_bytes (..))
+import           System.SED.MCTP.Common.Base_Type (Core_bytes (..), toList)
 import           System.SED.MCTP.Common.UID       (HalfUID (..), UID (..),
                                                    halfUID, uid)
 

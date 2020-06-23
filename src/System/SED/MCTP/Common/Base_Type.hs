@@ -24,6 +24,7 @@ module System.SED.MCTP.Common.Base_Type
   , Core_bytes         (..)
   , Core_max_bytes     (..)
   , safeCreate
+  , toList
   , ci
   , cu
   , cb
@@ -35,5 +36,5 @@ import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
                                                          Core_uinteger (..),
-                                                         safeCreate)
+                                                         safeCreate, toList)
 import           System.SED.MCTP.Common.Base_Type.TH    (cb, ci, cm, cu)

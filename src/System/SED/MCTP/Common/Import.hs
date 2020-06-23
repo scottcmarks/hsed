@@ -5,5 +5,5 @@ module System.SED.MCTP.Common.Import
   ) where
 
 import           RIO                          hiding (drop, length, map,
-                                               replicate, take)
+                                               replicate, take, toList)
 import           System.SED.MCTP.Common.Types

@@ -14,13 +14,6 @@ gitVersion gitVersion52,53
 module Main Main2,3
 main main14,15
 
-./spec-tests/System/SED/MCTP/Common/IntegralSpec.hs,204
-module System.SED.MCTP.Common.IntegralSpec System.SED.MCTP.Common.IntegralSpec13,14
-validFirstTwo validFirstTwo30,31
-validNatural validNatural38,39
-validInteger validInteger44,45
-spec spec52,53
-
 ./spec-tests/System/SED/MCTP/Common/ValueSpec.hs,97
 module System.SED.MCTP.Common.ValueSpec System.SED.MCTP.Common.ValueSpec13,14
 spec spec24,25
@@ -43,6 +36,13 @@ module System.SED.MCTP.Common.ColumnTypes.THSpec System.SED.MCTP.Common.ColumnT
 spec spec21,22
 
 ./spec-tests/Spec.hs,0
+
+./spec-tests/Data/ByteString/IntegralSpec.hs,190
+module Data.ByteString.IntegralSpec Data.ByteString.IntegralSpec13,14
+validFirstTwo validFirstTwo29,30
+validNatural validNatural37,38
+validInteger validInteger43,44
+spec spec51,52
 
 ./dev/DevMain.hs,834
 module DevMain DevMain10,11

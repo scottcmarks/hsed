@@ -2,37 +2,11 @@ digraph G {
 	graph [ratio=fill,
 		size="6,4"
 	];
-	subgraph cluster_3 {
-		graph [color="#0000000F",
-			label=GHC,
-			style=filled
-		];
-		subgraph cluster_4 {
-			graph [color="#0000000F",
-				label=TypeLits,
-				style=filled
-			];
-			u4			 [fillcolor="#ffbbff",
-				label=Extras,
-				penwidth=0,
-				style=filled];
-		}
-	}
 	subgraph cluster_0 {
 		graph [color="#0000000F",
 			label=Data,
 			style=filled
 		];
-		subgraph cluster_2 {
-			graph [color="#0000000F",
-				label=ByteString,
-				style=filled
-			];
-			u7			 [fillcolor="#ffbbbb",
-				label=Integral,
-				penwidth=0,
-				style=filled];
-		}
 		subgraph cluster_1 {
 			graph [color="#0000000F",
 				label=BoundedSize,
@@ -50,6 +24,16 @@ digraph G {
 				penwidth=0,
 				style=filled];
 		}
+		subgraph cluster_2 {
+			graph [color="#0000000F",
+				label=ByteString,
+				style=filled
+			];
+			u7			 [fillcolor="#ffbbbb",
+				label=Integral,
+				penwidth=0,
+				style=filled];
+		}
 		u2		 [fillcolor="#ffffbb",
 			label=HasSize,
 			penwidth=0,
@@ -62,6 +46,22 @@ digraph G {
 			label=IsBytes,
 			penwidth=0,
 			style=filled];
+	}
+	subgraph cluster_3 {
+		graph [color="#0000000F",
+			label=GHC,
+			style=filled
+		];
+		subgraph cluster_4 {
+			graph [color="#0000000F",
+				label=TypeLits,
+				style=filled
+			];
+			u4			 [fillcolor="#ffbbff",
+				label=Extras,
+				penwidth=0,
+				style=filled];
+		}
 	}
 	subgraph cluster_5 {
 		graph [color="#0000000F",

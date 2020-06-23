@@ -47,12 +47,14 @@ import           Data.Functor                      ((<$>))
 import           Data.IsBytes                      (IsBytes (..))
 import           Data.Maybe                        (Maybe (..))
 import           Data.Proxy                        (Proxy (..))
-import           Data.String                       (IsString (..), String)
+-- import           Data.String                       (IsString (..))
+import           Data.String                       (String)
 import           GHC.Base                          (Int, mconcat, pure, ($),
                                                     (.))
 import           GHC.Classes                       (Eq (..), Ord (..))
-import           GHC.Num                           (Integer, Num)
-import           GHC.Read                          (Read (..))
+import           GHC.Num                           (Integer)
+-- import           GHC.Num                           (Num)
+-- import           GHC.Read                          (Read (..))
 import           GHC.Show                          (Show (..))
 import           GHC.TypeLits                      (KnownNat)
 import           Numeric.Natural                   (Natural)
@@ -66,20 +68,21 @@ import           System.SED.MCTP.Common.Instances  ()
 import           System.SED.MCTP.Common.StreamItem
 import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
 
+
 newtype Core_integer   n = Core_integer   (Integer ? MaxSize n)
-        deriving (Eq, Ord, HasSize, Num, Read, Show) via (Integer ? MaxSize n)
+        deriving (Eq, Ord, HasSize, Show) via (Integer ? MaxSize n)  -- Num, Read,
 type Core_integer_at_least n = AtLeast Core_integer n
 
 newtype Core_uinteger  n = Core_uinteger  (Natural ? MaxSize n)
-        deriving (Eq, Ord, HasSize, Num, Read, Show) via (Natural ? MaxSize n)
+        deriving (Eq, Ord, HasSize, Show) via (Natural ? MaxSize n) -- Num, Read,
 type Core_uinteger_at_least n = AtLeast Core_uinteger n
 
 newtype Core_max_bytes n = Core_max_bytes (B.ByteString ? MaxSize n)
-        deriving (Eq, Ord, HasSize, IsString, Show)  via (B.ByteString ? MaxSize n)
+        deriving (Eq, Ord, HasSize, Show)  via (B.ByteString ? MaxSize n) -- , IsString
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 
 newtype Core_bytes     n = Core_bytes     (B.ByteString ? FixedSize n)
-        deriving (Eq, Ord, HasSize, IsBytes, IsString, Show) via (B.ByteString ? FixedSize n)
+        deriving (Eq, Ord, HasSize, Show, IsBytes) via (B.ByteString ? FixedSize n) --, IsBytes, IsString
 
 
 

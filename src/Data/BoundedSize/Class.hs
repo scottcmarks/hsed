@@ -33,21 +33,24 @@ module Data.BoundedSize.Class
        , AtLeast
        , Predicate (..)
        , type (?)
+       , fromNat
        )
 
 where
 
-import           Data.HasSize        (HasSize (..))
-import           Data.Proxy          (Proxy (..))
-import           Data.Refined        (type (?), Predicate (..))
-import           GHC.Base            (Int, ($), (.))
-import           GHC.Classes         (Eq (..), Ord (..), (&&))
-import           GHC.Show            (Show (..), showString, shows)
-import           GHC.TypeLits        (type (<=), KnownNat, Nat)
-import           GHC.TypeLits.Extras (fromNat)
+import           Data.HasSize    (HasSize (..))
+import           Data.Proxy      (Proxy (..))
+import           Data.Refined    (type (?), Predicate (..))
+import           GHC.Base        (Int, ($), (.))
+import           GHC.Classes     (Eq (..), Ord (..), (&&))
+import           GHC.Num         (Num)
+import           GHC.Real        (fromIntegral)
+import           GHC.Show        (Show (..), showString, shows)
+import           GHC.TypeLits    (type (<=), KnownNat, Nat, natVal)
 
 
-import           Test.QuickCheck     (Arbitrary (..), shrink, suchThatMap)
+
+import           Test.QuickCheck (Arbitrary (..), shrink, suchThatMap)
 
 
 -- -- $setup
@@ -112,3 +115,15 @@ instance (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => 
     arbitrary = arbitrary `suchThatMap` create -- noice
     shrink t = [ unsafeCreate s | s <- shrink $ plain t, l <= size s]
        where l = fromNat (Proxy @l)
+
+
+-- | Type-level Nat to value-level Num
+--
+-- >>> :set -XDataKinds
+-- >>> :set -XTypeApplications
+-- >>> import           Data.Proxy(Proxy(..))
+-- >>> import           GHC.Types    (Int)
+-- >>> fromNat (Proxy @5) :: Int
+-- 5
+fromNat :: (Num b, KnownNat n) => proxy n -> b
+fromNat = fromIntegral . natVal

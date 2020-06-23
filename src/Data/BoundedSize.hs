@@ -50,10 +50,11 @@ module Data.BoundedSize
 
        , type (?)
        , Predicate(..)
+       , fromNat
        )
 where
 
-import           Data.BoundedSize.Class (type (?), Predicate (..))
+import           Data.BoundedSize.Class (type (?), Predicate (..), fromNat)
 import qualified Data.BoundedSize.Class as C (AtLeast, BoundedSize (..),
                                               FixedSize, HasSize (..),
                                               IsBoundedSize, IsFixedSize,
@@ -63,9 +64,8 @@ import qualified Data.BoundedSize.TH    as C (fx, mx, typeFromInt,
 import qualified Data.IsBytes           as B (IsBytes (..))
 import           Data.Proxy             (Proxy (..))
 import           GHC.Base               (Int, ($), (.))
-import           GHC.Num                (fromInteger, (-))
+import           GHC.Num                ((-))
 import           GHC.TypeLits           (type (+), KnownNat)
-import           GHC.TypeLits.Extras
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
 class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes l u a
@@ -189,7 +189,7 @@ drop ::
 drop s = unsafeCreate $ B.drop (B.length s' - t) s'
   where
     s' = plain s
-    t = fromInteger $ fromNat (Proxy @u2)
+    t = fromNat (Proxy @u2)
 
 -- | Obtain length bounds from the type.
 bounds ::

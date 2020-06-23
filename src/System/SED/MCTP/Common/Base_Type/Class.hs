@@ -59,8 +59,8 @@ import           Numeric.Natural                   (Natural)
 
 import           Data.BoundedSize                  (type (?), AtLeast,
                                                     FixedSize, HasSize (..),
-                                                    MaxSize, Predicate (..))
-import           GHC.TypeLits.Extras               (fromNat)
+                                                    MaxSize, Predicate (..),
+                                                    fromNat)
 
 import           System.SED.MCTP.Common.Instances  ()
 import           System.SED.MCTP.Common.StreamItem

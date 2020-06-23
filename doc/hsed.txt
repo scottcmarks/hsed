@@ -54,27 +54,6 @@ instance Data.HasSize.HasSize GHC.Word.Word64
 instance Data.HasSize.HasSize GHC.Types.Word
 
 
--- | Class of things with ByteString-like operations
-module Data.IsBytes
-class HasSize a => IsBytes a where {
-    
-    -- | Basic element type. For <tt>IsBoundedSizeBytesText [a]</tt>, this is
-    --   <tt>a</tt>.
-    type family Elem a;
-}
-length :: IsBytes a => a -> Int
-append :: IsBytes a => a -> a -> a
-replicate :: IsBytes a => Int -> Elem a -> a
-map :: IsBytes a => (Elem a -> Elem a) -> a -> a
-take :: IsBytes a => Int -> a -> a
-drop :: IsBytes a => Int -> a -> a
-toList :: IsBytes a => a -> [Elem a]
-instance Data.IsBytes.IsBytes Data.ByteString.Internal.ByteString
-instance Data.IsBytes.IsBytes Data.ByteString.Short.Internal.ShortByteString
-instance Data.IsBytes.IsBytes [a]
-instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
-
-
 -- | Datatype refined by predicate
 module Data.Refined
 class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
@@ -98,6 +77,28 @@ instance Data.Refined.Predicate p a => Data.Refined.Predicate_Internal p a
 instance (GHC.Num.Num a, Data.Refined.Predicate p a) => GHC.Num.Num (Data.Refined.Refined p a)
 instance (GHC.Read.Read a, Data.Refined.Predicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
 instance (Data.String.IsString a, Data.Refined.Predicate p a) => Data.String.IsString (Data.Refined.Refined p a)
+
+
+-- | Class of things with ByteString-like operations
+module Data.IsBytes
+class HasSize a => IsBytes a where {
+    
+    -- | Basic element type. For <tt>IsBoundedSizeBytesText [a]</tt>, this is
+    --   <tt>a</tt>.
+    type family Elem a;
+}
+length :: IsBytes a => a -> Int
+append :: IsBytes a => a -> a -> a
+replicate :: IsBytes a => Int -> Elem a -> a
+map :: IsBytes a => (Elem a -> Elem a) -> a -> a
+take :: IsBytes a => Int -> a -> a
+drop :: IsBytes a => Int -> a -> a
+toList :: IsBytes a => a -> [Elem a]
+instance Data.IsBytes.IsBytes Data.ByteString.Internal.ByteString
+instance Data.IsBytes.IsBytes Data.ByteString.Short.Internal.ShortByteString
+instance Data.IsBytes.IsBytes [a]
+instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
+instance (Data.IsBytes.IsBytes a, Data.Refined.Predicate p a) => Data.IsBytes.IsBytes (a Data.Refined.? p)
 
 
 -- | Conversions from type-level Nat to value-level Num
@@ -469,7 +470,6 @@ instance GHC.Show.Show Hsed.App.Options
 
 -- | Orphan instances.
 module System.SED.MCTP.Common.Instances
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.IsBytes.IsBytes (Data.ByteString.Internal.ByteString Data.Refined.? Data.BoundedSize.Class.BoundedSize l u)
 
 
 -- | Parse and generate stream items.

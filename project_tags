@@ -572,10 +572,6 @@ module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util17,18
 hexUID hexUID40,41
 trimTrailingWhitespace trimTrailingWhitespace56,57
 
-./src/GHC/TypeLits/Extras.hs,76
-module GHC.TypeLits.ExtrasGHC.TypeLits.Extras20,21
-fromNat fromNat39,40
-
 ./src/Hsed/App.lhs,357
 module Hsed.AppHsed.App23,24
 newtype Options Options31,32
@@ -589,26 +585,27 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,954
+./src/Data/BoundedSize/Class.hs,984
 module Data.BoundedSize.ClassData.BoundedSize.Class24,25
-import import45,46
-type role role63,64
-newtype BoundedSize BoundedSize64,65
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize66,67
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a67,68
-instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a70,71
-    predicate predicate71,72
-    failMsg failMsg76,77
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize91,92
-instance (I(IsBoundedSize l l a) => IsFixedSize l a92,93
-type FixedSize FixedSize93,94
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize96,97
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a97,98
-type MaxSize MaxSize98,99
-type AtLeast AtLeast105,106
-instance (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))110,111
-    arbitrary arbitrary111,112
-    shrink shrink112,113
+import import48,49
+type role role66,67
+newtype BoundedSize BoundedSize67,68
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize69,70
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a70,71
+instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a73,74
+    predicate predicate74,75
+    failMsg failMsg79,80
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize94,95
+instance (I(IsBoundedSize l l a) => IsFixedSize l a95,96
+type FixedSize FixedSize96,97
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize99,100
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a100,101
+type MaxSize MaxSize101,102
+type AtLeast AtLeast108,109
+instance (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))113,114
+    arbitrary arbitrary114,115
+    shrink shrink115,116
+fromNat fromNat127,128
 
 ./src/Data/BoundedSize/TH.hs,278
 module Data.BoundedSize.THData.BoundedSize.TH10,11

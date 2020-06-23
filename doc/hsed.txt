@@ -101,26 +101,6 @@ instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
 instance (Data.IsBytes.IsBytes a, Data.Refined.Predicate p a) => Data.IsBytes.IsBytes (a Data.Refined.? p)
 
 
--- | Conversions from type-level Nat to value-level Num
-module GHC.TypeLits.Extras
-
--- | Type-level Nat to value-level Num
---   
---   <pre>
---   &gt;&gt;&gt; :set -XDataKinds
---   
---   &gt;&gt;&gt; :set -XTypeApplications
---   
---   &gt;&gt;&gt; import           Data.Proxy(Proxy(..))
---   
---   &gt;&gt;&gt; import           GHC.Types    (Int)
---   
---   &gt;&gt;&gt; fromNat (Proxy @5) :: Int
---   5
---   </pre>
-fromNat :: (Num b, KnownNat n) => proxy n -> b
-
-
 -- | Use this module when you need to add an <a>IsBoundedSize</a> instance
 --   to a type.
 module Data.BoundedSize.Class
@@ -161,6 +141,22 @@ unsafeCreate :: Predicate p a => a -> Refined p a
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
+
+-- | Type-level Nat to value-level Num
+--   
+--   <pre>
+--   &gt;&gt;&gt; :set -XDataKinds
+--   
+--   &gt;&gt;&gt; :set -XTypeApplications
+--   
+--   &gt;&gt;&gt; import           Data.Proxy(Proxy(..))
+--   
+--   &gt;&gt;&gt; import           GHC.Types    (Int)
+--   
+--   &gt;&gt;&gt; fromNat (Proxy @5) :: Int
+--   5
+--   </pre>
+fromNat :: (Num b, KnownNat n) => proxy n -> b
 instance Data.HasSize.HasSize a => Data.HasSize.HasSize (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Show.Show a => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
@@ -440,6 +436,22 @@ refine :: Predicate p a => a -> Refined p a
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 unsafeCreate :: Predicate p a => a -> Refined p a
+
+-- | Type-level Nat to value-level Num
+--   
+--   <pre>
+--   &gt;&gt;&gt; :set -XDataKinds
+--   
+--   &gt;&gt;&gt; :set -XTypeApplications
+--   
+--   &gt;&gt;&gt; import           Data.Proxy(Proxy(..))
+--   
+--   &gt;&gt;&gt; import           GHC.Types    (Int)
+--   
+--   &gt;&gt;&gt; fromNat (Proxy @5) :: Int
+--   5
+--   </pre>
+fromNat :: (Num b, KnownNat n) => proxy n -> b
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsMaxSizeBytes n a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsFixedSizeBytes n a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsBoundedSizeBytes l u a

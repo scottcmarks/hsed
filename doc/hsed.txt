@@ -539,6 +539,7 @@ type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 size :: HasSize a => a -> Int
 unsafeCreate :: Predicate p a => a -> Refined p a
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
+toList :: IsBytes a => a -> [Elem a]
 instance GHC.TypeNats.KnownNat n => Data.IsBytes.IsBytes (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -593,6 +594,7 @@ Core_bytes :: (ByteString ? FixedSize n) -> Core_bytes n
 newtype Core_max_bytes n
 Core_max_bytes :: (ByteString ? MaxSize n) -> Core_max_bytes n
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
+toList :: IsBytes a => a -> [Elem a]
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
 ci :: LitI -> Q Exp
@@ -2952,9 +2954,6 @@ foldr :: Foldable t => (a -> b -> b) -> b -> t a -> b
 --   foldl' f z = <a>foldl'</a> f z . <a>toList</a>
 --   </pre>
 foldl' :: Foldable t => (b -> a -> b) -> b -> t a -> b
-
--- | List of elements of a structure, from left to right.
-toList :: Foldable t => t a -> [a]
 
 -- | Test whether the structure is empty. The default implementation is
 --   optimized for structures that are similar to cons-lists, because there

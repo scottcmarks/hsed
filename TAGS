@@ -564,16 +564,8 @@ instance StreamItem StreamItem Core_uidref_Object_Table153,154
     parser parser154,155
     generate generate155,156
 
-./src/System/SED/MCTP/Common/Instances.hs,351
-module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances21,22
-instance (K(KnownNat l, KnownNat u) => IsBytes (B-ByteString ? (BoundedSize l u))29,30
-      type Elem Elem31,32
-      append append32,33
-      replicate replicate33,34
-      map map34,35
-      take take35,36
-      drop drop36,37
-      toList toList37,38
+./src/System/SED/MCTP/Common/Instances.hs,80
+module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances17,18
 
 ./src/System/SED/MCTP/Common/Util.hs,144
 module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util17,18
@@ -652,49 +644,57 @@ instance IsByteString IsByteString Natural107,108
     fromByteString fromByteString108,109
     toByteString toByteString109,110
 
-./src/Data/IsBytes.hs,1106
+./src/Data/IsBytes.hs,1370
 module Data.IsBytesData.IsBytes26,27
-class HasSize a => IsBytes IsBytes44,45
-  type Elem Elem46,47
-  length length48,49
-  append append51,52
-  replicate replicate52,53
-  map map53,54
-  take take54,55
-  drop drop55,56
-  toList toList56,57
-instance IsBytes IsBytes B-ByteString58,59
-    type Elem Elem60,61
-    append append61,62
-    replicate replicate62,63
-    map map63,64
-    take take64,65
-    drop drop65,66
-    toList toList66,67
-instance IsBytes IsBytes S-ShortByteString68,69
-    type Elem Elem70,71
-    append append71,72
-    replicate replicate72,73
-    map map73,74
-    take take74,75
-    drop drop75,76
-    toList toList76,77
-instance IsBytes IsBytes [a]78,79
-    type Elem Elem80,81
-    append append81,82
-    replicate replicate82,83
-    map map83,84
-    take take84,85
-    drop drop85,86
-    toList toList86,87
-instance IsBytes IsBytes (V-Vector a)88,89
-    type Elem Elem90,91
-    append append91,92
-    replicate replicate92,93
-    map map93,94
-    take take94,95
-    drop drop95,96
-    toList toList96,97
+class HasSize a => IsBytes IsBytes46,47
+  type Elem Elem48,49
+  length length50,51
+  append append53,54
+  replicate replicate54,55
+  map map55,56
+  take take56,57
+  drop drop57,58
+  toList toList58,59
+instance IsBytes IsBytes B-ByteString60,61
+    type Elem Elem62,63
+    append append63,64
+    replicate replicate64,65
+    map map65,66
+    take take66,67
+    drop drop67,68
+    toList toList68,69
+instance IsBytes IsBytes S-ShortByteString70,71
+    type Elem Elem72,73
+    append append73,74
+    replicate replicate74,75
+    map map75,76
+    take take76,77
+    drop drop77,78
+    toList toList78,79
+instance IsBytes IsBytes [a]80,81
+    type Elem Elem82,83
+    append append83,84
+    replicate replicate84,85
+    map map85,86
+    take take86,87
+    drop drop87,88
+    toList toList88,89
+instance IsBytes IsBytes (V-Vector a)90,91
+    type Elem Elem92,93
+    append append93,94
+    replicate replicate94,95
+    map map95,96
+    take take96,97
+    drop drop97,98
+    toList toList98,99
+instance (I(IsBytes (a), Predicate p a) => IsBytes (a ? p)101,102
+      type Elem Elem103,104
+      append append104,105
+      replicate replicate105,106
+      map map106,107
+      take take107,108
+      drop drop108,109
+      toList toList109,110
 
 ./src/Data/BoundedSize.hs,796
 module Data.BoundedSizeData.BoundedSize23,24

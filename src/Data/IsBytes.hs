@@ -10,11 +10,11 @@
 {-# LANGUAGE ScopedTypeVariables   #-}
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
 {-|
 Module      : Data.IsBytes
-Description : ByteString-like class
 Copyright   : (c) Magnolia Heights R&D, 2020
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -33,10 +33,12 @@ where
 import           Data.ByteString       as B
 import           Data.ByteString.Short as S
 import           Data.HasSize          (HasSize (..))
+import           Data.Refined          (type (?), Predicate (..))
 import           Data.Vector           as V
 import           GHC.Base              (Int, id, ($), (.))
 import qualified GHC.List              as L
 import           GHC.Word              (Word8 (..))
+
 
 
 
@@ -95,3 +97,14 @@ instance IsBytes (V.Vector a)
     take = V.take
     drop = V.drop
     toList = V.toList
+
+
+instance (IsBytes(a), Predicate p a) => IsBytes(a ? p)
+  where
+      type Elem (a ? p) = Elem a
+      append a b = refine $ Data.IsBytes.append (plain a) (plain b)
+      replicate n = refine . Data.IsBytes.replicate n
+      map f = refine . Data.IsBytes.map f . plain
+      take n = refine . Data.IsBytes.take n . plain
+      drop n = refine . Data.IsBytes.drop n . plain
+      toList = Data.IsBytes.toList . plain

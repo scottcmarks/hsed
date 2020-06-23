@@ -77,14 +77,14 @@ instance Data.IsBytes.IsBytes (Data.Vector.Vector a)
 
 -- | Datatype refined by predicate
 module Data.Refined
-class (Coercible (p a) a) => IsPredicate (p :: Type -> Type) a
-predicate :: IsPredicate p a => p a -> Bool
-failMsg :: IsPredicate p a => p a -> String
-examine :: IsPredicate p a => Refined p a -> a
-refine :: IsPredicate p a => a -> Refined p a
-safeCreate :: IsPredicate p a => a -> Either String (Refined p a)
-create :: IsPredicate p a => a -> Maybe (Refined p a)
-unsafeCreate :: IsPredicate p a => a -> Refined p a
+class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
+predicate :: Predicate p a => p a -> Bool
+failMsg :: Predicate p a => p a -> String
+plain :: Predicate p a => Refined p a -> a
+refine :: Predicate p a => a -> Refined p a
+safeCreate :: Predicate p a => a -> Either String (Refined p a)
+create :: Predicate p a => a -> Maybe (Refined p a)
+unsafeCreate :: Predicate p a => a -> Refined p a
 data Refined (p :: Type -> Type) a
 
 -- | An infix alias for <a>Refined</a>.
@@ -94,10 +94,10 @@ instance Data.HasSize.HasSize a => Data.HasSize.HasSize (Data.Refined.Refined p 
 instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
-instance Data.Refined.IsPredicate p a => Data.Refined.IsPredicate_Internal p a
-instance (Data.Refined.IsPredicate p a, GHC.Num.Num a) => GHC.Num.Num (Data.Refined.Refined p a)
-instance (GHC.Read.Read a, Data.Refined.IsPredicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
-instance (Data.Refined.IsPredicate p a, Data.String.IsString a) => Data.String.IsString (Data.Refined.Refined p a)
+instance Data.Refined.Predicate p a => Data.Refined.Predicate_Internal p a
+instance (GHC.Num.Num a, Data.Refined.Predicate p a) => GHC.Num.Num (Data.Refined.Refined p a)
+instance (GHC.Read.Read a, Data.Refined.Predicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
+instance (Data.String.IsString a, Data.Refined.Predicate p a) => Data.String.IsString (Data.Refined.Refined p a)
 
 
 -- | Conversions from type-level Nat to value-level Num
@@ -148,6 +148,18 @@ type MaxSize n = BoundedSize 0 n
 --   String, or a MaxSize 4 String, so it is AtLeast MaxSize 3 Then it can
 --   be later cast to a specific MaxSize (of at least 3).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
+class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
+predicate :: Predicate p a => p a -> Bool
+failMsg :: Predicate p a => p a -> String
+plain :: Predicate p a => Refined p a -> a
+refine :: Predicate p a => a -> Refined p a
+safeCreate :: Predicate p a => a -> Either String (Refined p a)
+create :: Predicate p a => a -> Maybe (Refined p a)
+unsafeCreate :: Predicate p a => a -> Refined p a
+
+-- | An infix alias for <a>Refined</a>.
+type a ? p = Refined p a
+infixr 1 ?
 instance Data.HasSize.HasSize a => Data.HasSize.HasSize (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Show.Show a => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
@@ -155,8 +167,8 @@ instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize 
 instance Data.BoundedSize.Class.IsBoundedSize 0 l a => Data.BoundedSize.Class.IsMaxSize l a
 instance Data.BoundedSize.Class.IsBoundedSize l l a => Data.BoundedSize.Class.IsFixedSize l a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.BoundedSize.Class.IsBoundedSize l u a
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.Refined.IsPredicate (Data.BoundedSize.Class.BoundedSize l u) a
-instance (GHC.TypeNats.KnownNat l, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.IsPredicate (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Refined.Refined (Data.BoundedSize.Class.BoundedSize l u) a)
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.Refined.Predicate (Data.BoundedSize.Class.BoundedSize l u) a
+instance (GHC.TypeNats.KnownNat l, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.Predicate (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (a Data.Refined.? Data.BoundedSize.Class.BoundedSize l u)
 
 
 -- | Template Haskell helpers for BoundedSize.
@@ -415,6 +427,18 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeBytes l1 u1 a, IsBoundedSizeBytes l2 u2 a, IsBoundedSizeBytes 0 (u1 + u2) a) => Elem a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+
+-- | An infix alias for <a>Refined</a>.
+type a ? p = Refined p a
+infixr 1 ?
+class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
+predicate :: Predicate p a => p a -> Bool
+failMsg :: Predicate p a => p a -> String
+plain :: Predicate p a => Refined p a -> a
+refine :: Predicate p a => a -> Refined p a
+safeCreate :: Predicate p a => a -> Either String (Refined p a)
+create :: Predicate p a => a -> Maybe (Refined p a)
+unsafeCreate :: Predicate p a => a -> Refined p a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsMaxSizeBytes n a
 instance (GHC.TypeNats.KnownNat n, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsFixedSizeBytes n a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.IsBytes.IsBytes a) => Data.BoundedSize.IsBoundedSizeBytes l u a
@@ -445,7 +469,7 @@ instance GHC.Show.Show Hsed.App.Options
 
 -- | Orphan instances.
 module System.SED.MCTP.Common.Instances
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.IsBytes.IsBytes (Data.Refined.Refined (Data.BoundedSize.Class.BoundedSize l u) Data.ByteString.Internal.ByteString)
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u) => Data.IsBytes.IsBytes (Data.ByteString.Internal.ByteString Data.Refined.? Data.BoundedSize.Class.BoundedSize l u)
 
 
 -- | Parse and generate stream items.
@@ -513,8 +537,8 @@ type Core_uinteger_at_least n = AtLeast Core_uinteger n
 type Core_integer_at_least n = AtLeast Core_integer n
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 size :: HasSize a => a -> Int
-unsafeCreate :: IsPredicate p a => a -> Refined p a
-safeCreate :: IsPredicate p a => a -> Either String (Refined p a)
+unsafeCreate :: Predicate p a => a -> Refined p a
+safeCreate :: Predicate p a => a -> Either String (Refined p a)
 instance GHC.TypeNats.KnownNat n => Data.IsBytes.IsBytes (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -568,7 +592,7 @@ newtype Core_bytes n
 Core_bytes :: (ByteString ? FixedSize n) -> Core_bytes n
 newtype Core_max_bytes n
 Core_max_bytes :: (ByteString ? MaxSize n) -> Core_max_bytes n
-safeCreate :: IsPredicate p a => a -> Either String (Refined p a)
+safeCreate :: Predicate p a => a -> Either String (Refined p a)
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
 ci :: LitI -> Q Exp

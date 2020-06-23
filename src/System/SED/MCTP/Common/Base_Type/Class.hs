@@ -59,9 +59,9 @@ import           GHC.Show                          (Show (..))
 import           GHC.TypeLits                      (KnownNat)
 import           Numeric.Natural                   (Natural)
 
-import           Data.BoundedSize                  (AtLeast, FixedSize,
-                                                    HasSize (..), MaxSize)
-import           Data.Refined                      (type (?), IsPredicate (..))
+import           Data.BoundedSize                  (type (?), AtLeast,
+                                                    FixedSize, HasSize (..),
+                                                    MaxSize, Predicate (..))
 import           GHC.TypeLits.Extras               (fromNat)
 
 import           System.SED.MCTP.Common.Instances  ()
@@ -147,24 +147,24 @@ instance (KnownNat n) => StreamItem (Core_max_bytes n) where
 
 
 instance (KnownNat n) => IsToken (Core_integer n) where
-    token (Core_integer i)  = Signed $ examine i
+    token (Core_integer i)  = Signed $ plain i
     fromToken (Signed i) = Core_integer <$> create i
     fromToken _          = Nothing
 
 
 instance (KnownNat n) => IsToken (Core_uinteger n) where
-    token (Core_uinteger u)  = Unsigned $ examine u
+    token (Core_uinteger u)  = Unsigned $ plain u
     fromToken (Unsigned u) = Core_uinteger <$> create u
     fromToken _            = Nothing
 
 
 instance (KnownNat n) => IsToken (Core_bytes n) where
-    token (Core_bytes b)  = Bytes $ examine b
+    token (Core_bytes b)  = Bytes $ plain b
     fromToken (Bytes b) = Core_bytes <$> create b
     fromToken _         = Nothing
 
 
 instance (KnownNat n) => IsToken (Core_max_bytes n) where
-    token (Core_max_bytes b)  = Bytes $ examine b
+    token (Core_max_bytes b)  = Bytes $ plain b
     fromToken (Bytes b) = Core_max_bytes <$> create b
     fromToken _         = Nothing

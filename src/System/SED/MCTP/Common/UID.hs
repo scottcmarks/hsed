@@ -20,14 +20,14 @@ Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID where
 
 import           Data.Attoparsec.ByteString        ()
-import           Data.BoundedSize                  (append, drop, take)
+import           Data.BoundedSize                  (append, drop, plain, take,
+                                                    unsafeCreate)
 import qualified Data.ByteString                   as B (pack, unpack)
 import           Data.ByteString.Base16            (encode)
 import qualified Data.ByteString.Char8             as C (unpack)
 import           Data.Foldable                     (concatMap)
 import           Data.Functor                      ((<$>))
 
-import           Data.Refined                      (examine, unsafeCreate)
 import           Data.String                       (String)
 import           GHC.Base                          (mconcat, ($))
 import           GHC.Classes                       (Eq (..), Ord (..))
@@ -70,7 +70,7 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 -}
 
 showCore_bytesHex :: (KnownNat n) => Core_bytes n -> [String]
-showCore_bytesHex (Core_bytes b) =  concatMap h $ B.unpack $ examine b
+showCore_bytesHex (Core_bytes b) =  concatMap h $ B.unpack $ plain b
        where h :: Word8 -> [String]
              h w = [" 0x", C.unpack $ encode $ B.pack [w] ]
 

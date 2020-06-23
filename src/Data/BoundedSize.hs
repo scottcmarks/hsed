@@ -47,9 +47,13 @@ module Data.BoundedSize
        , length
        , padLeft
        , padRight
+
+       , type (?)
+       , Predicate(..)
        )
 where
 
+import           Data.BoundedSize.Class (type (?), Predicate (..))
 import qualified Data.BoundedSize.Class as C (AtLeast, BoundedSize (..),
                                               FixedSize, HasSize (..),
                                               IsBoundedSize, IsFixedSize,
@@ -58,7 +62,6 @@ import qualified Data.BoundedSize.TH    as C (fx, mx, typeFromInt,
                                               unsafeCreateExp)
 import qualified Data.IsBytes           as B (IsBytes (..))
 import           Data.Proxy             (Proxy (..))
-import           Data.Refined           (type (?), IsPredicate (..))
 import           GHC.Base               (Int, ($), (.))
 import           GHC.Num                (fromInteger, (-))
 import           GHC.TypeLits           (type (+), KnownNat)
@@ -109,7 +112,7 @@ append ::
   =>  a ? C.BoundedSize l1 u1
   ->  a ? C.BoundedSize l2 u2
   ->  a ? C.BoundedSize (l1 + l2) (u1 + u2)
-append a b = unsafeCreate $ B.append (examine a) (examine b)
+append a b = unsafeCreate $ B.append (plain a) (plain b)
 
 -- | Construct a new BoundedSize of maximum length from a basic element.
 --
@@ -134,7 +137,7 @@ map ::
   => (B.Elem a -> B.Elem a)
   -> a ? C.BoundedSize l u
   -> a ? C.BoundedSize l u
-map f s = unsafeCreate $ B.map f $ examine s
+map f s = unsafeCreate $ B.map f $ plain s
 
 -- | Reduce BoundedSize length, preferring elements on the left.
 --
@@ -166,7 +169,7 @@ take ::
      )
   => a ? C.BoundedSize l1 u1
   -> a ? C.BoundedSize l2 u2
-take s = unsafeCreate $ B.take t $ examine s
+take s = unsafeCreate $ B.take t $ plain s
   where
     t = fromNat (Proxy @u2)
 
@@ -185,7 +188,7 @@ drop ::
   -> a ? C.BoundedSize l2 u2
 drop s = unsafeCreate $ B.drop (B.length s' - t) s'
   where
-    s' = examine s
+    s' = plain s
     t = fromInteger $ fromNat (Proxy @u2)
 
 -- | Obtain length bounds from the type.
@@ -203,7 +206,7 @@ length ::
      forall l u a. (IsBoundedSizeBytes l u a)
   => a ? C.BoundedSize l u
   -> Int
-length = B.length . examine
+length = B.length . plain
 
 -- | Fill a BoundedSize with extra elements up to target length, padding
 -- original elements to the left.

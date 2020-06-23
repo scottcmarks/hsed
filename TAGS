@@ -564,9 +564,9 @@ instance StreamItem StreamItem Core_uidref_Object_Table153,154
     parser parser154,155
     generate generate155,156
 
-./src/System/SED/MCTP/Common/Instances.hs,357
-module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances20,21
-instance (K(KnownNat l, KnownNat u) => IsBytes (Refined (BoundedSize l u) B-ByteString)29,30
+./src/System/SED/MCTP/Common/Instances.hs,351
+module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances21,22
+instance (K(KnownNat l, KnownNat u) => IsBytes (B-ByteString ? (BoundedSize l u))29,30
       type Elem Elem31,32
       append append32,33
       replicate replicate33,34
@@ -597,26 +597,26 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,964
+./src/Data/BoundedSize/Class.hs,954
 module Data.BoundedSize.ClassData.BoundedSize.Class24,25
-import import43,44
-type role role61,62
-newtype BoundedSize BoundedSize62,63
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize64,65
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a65,66
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsPredicate (BoundedSize l u) a68,69
-    predicate predicate69,70
-    failMsg failMsg74,75
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize89,90
-instance (I(IsBoundedSize l l a) => IsFixedSize l a90,91
-type FixedSize FixedSize91,92
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize94,95
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a95,96
-type MaxSize MaxSize96,97
-type AtLeast AtLeast103,104
-instance (K(KnownNat l, HasSize a, Arbitrary a, IsPredicate (BoundedSize l u) a) => Arbitrary (Refined (BoundedSize l u) a)108,109
-    arbitrary arbitrary109,110
-    shrink shrink110,111
+import import45,46
+type role role63,64
+newtype BoundedSize BoundedSize64,65
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize66,67
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a67,68
+instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a70,71
+    predicate predicate71,72
+    failMsg failMsg76,77
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize91,92
+instance (I(IsBoundedSize l l a) => IsFixedSize l a92,93
+type FixedSize FixedSize93,94
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize96,97
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a97,98
+type MaxSize MaxSize98,99
+type AtLeast AtLeast105,106
+instance (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))110,111
+    arbitrary arbitrary111,112
+    shrink shrink112,113
 
 ./src/Data/BoundedSize/TH.hs,278
 module Data.BoundedSize.THData.BoundedSize.TH10,11
@@ -698,24 +698,24 @@ instance IsBytes IsBytes (V-Vector a)88,89
 
 ./src/Data/BoundedSize.hs,796
 module Data.BoundedSizeData.BoundedSize23,24
-class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes67,68
-instance (K(KnownNat l, KnownNat u, B-IsBytes a) => IsBoundedSizeBytes l u a68,69
-class (C.IsFixedSize n a, B.IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes70,71
-instance (K(KnownNat n, B-IsBytes a) => IsFixedSizeBytes n a71,72
-class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes73,74
-instance (K(KnownNat n, B-IsBytes a) => IsMaxSizeBytes n a74,75
-append append102,103
-append append111,112
-replicate replicate117,118
-map map130,131
-take take161,162
-drop drop178,179
-bounds bounds191,192
-length length201,202
-padLeft padLeft209,210
-padLeft padLeft218,219
-padRight padRight221,222
-padRight padRight230,231
+class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes70,71
+instance (K(KnownNat l, KnownNat u, B-IsBytes a) => IsBoundedSizeBytes l u a71,72
+class (C.IsFixedSize n a, B.IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes73,74
+instance (K(KnownNat n, B-IsBytes a) => IsFixedSizeBytes n a74,75
+class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes76,77
+instance (K(KnownNat n, B-IsBytes a) => IsMaxSizeBytes n a77,78
+append append105,106
+append append114,115
+replicate replicate120,121
+map map133,134
+take take164,165
+drop drop181,182
+bounds bounds194,195
+length length204,205
+padLeft padLeft212,213
+padLeft padLeft221,222
+padRight padRight224,225
+padRight padRight233,234
 
 ./src/Data/HasSize.hs,1600
 module Data.HasSizeData.HasSize17,18
@@ -754,30 +754,30 @@ instance HasSize Word64            where size size68,69
 instance HasSize HasSize Word69,70
 instance HasSize Word              where size size69,70
 
-./src/Data/Refined.hs,986
+./src/Data/Refined.hs,957
 module Data.RefinedData.Refined25,26
 type role role46,47
 newtype Refined Refined47,48
 type a a52,53
-class (Coercible (p a) a) => IsPredicate IsPredicate56,57
-    predicate predicate57,58
-    failMsg failMsg59,60
-    examine examine61,62
-    refine refine64,65
-    safeCreate safeCreate69,70
-    create create74,75
-    unsafeCreate unsafeCreate79,80
-class IsPredicate p a => IsPredicate_Internal IsPredicate_Internal86,87
-    consider consider87,88
-    accept accept89,90
-instance IsPredicate IsPredicate p a => IsPredicate_Internal p a91,92
-instance (I(IsPredicate p a, Num a) => Num (Refined p a)99,100
-    (R(Refinedx)101,102
-    negate negate104,105
-    abs abs105,106
-    signum signum106,107
-    fromInteger fromInteger107,108
-instance (R(Read a, IsPredicate p a) => Read (Refined p a)110,111
-    readPrec readPrec111,112
-instance (I(IsPredicate p a, IsString a) => IsString (Refined p a)114,115
-    fromString fromString115,116
+class (Coercible (p a) a) => Predicate Predicate57,58
+    predicate predicate58,59
+    failMsg failMsg60,61
+    plain plain62,63
+    refine refine65,66
+    safeCreate safeCreate70,71
+    create create75,76
+    unsafeCreate unsafeCreate80,81
+class Predicate p a => Predicate_Internal Predicate_Internal87,88
+    consider consider88,89
+    accept accept90,91
+instance Predicate Predicate p a => Predicate_Internal p a92,93
+instance (N(Num a, Predicate p a) => Num (Refined p a)95,96
+    (R(Refinedx)97,98
+    negate negate100,101
+    abs abs101,102
+    signum signum102,103
+    fromInteger fromInteger103,104
+instance (R(Read a, Predicate p a) => Read (Refined p a)106,107
+    readPrec readPrec107,108
+instance (I(IsString a, Predicate p a) => IsString (Refined p a)110,111
+    fromString fromString111,112

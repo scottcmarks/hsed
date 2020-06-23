@@ -18,8 +18,8 @@ module Data.BoundedSize.TH
 import           Prelude
 import qualified Prelude                as P (length)
 
-import           Data.BoundedSize.Class
-import           Data.Refined           (type (?), unsafeCreate)
+import           Data.BoundedSize.Class (type (?), BoundedSize, HasSize,
+                                         unsafeCreate)
 import           Data.String
 
 import           Language.Haskell.TH

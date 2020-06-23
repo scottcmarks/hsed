@@ -294,10 +294,10 @@ generateToken = go
 
     unsigned n
         | inRange(0,63) n   = singleton (0x00 .|. 0x3F .&. byte n)
-        | otherwise         = tlv 0 0 $ naturalToByteString n
+        | otherwise         = tlv 0 0 $ toByteString n
     signed   i
         | inRange(-32,31) i = singleton (0x40 .|. 0x3F .&. byte i)
-        | otherwise         = tlv 0 1 $ integerToByteString i
+        | otherwise         = tlv 0 1 $ toByteString i
     bytes                   = tlv 1 0
     cbytes                  = tlv 1 1
 

@@ -24,7 +24,7 @@ Datatype refined by predicate
 
 -}
 module Data.Refined
-  ( IsPredicate(..)
+  ( Predicate(..)
   , Refined
   , type (?)
   ) where
@@ -54,13 +54,14 @@ type a ?p = Refined p a
 infixr 1 ?
 
 
-class (Coercible (p a) a) => IsPredicate (p :: Type -> Type) a where
+
+class (Coercible (p a) a) => Predicate (p :: Type -> Type) a where
     predicate :: p a -> Bool
 
     failMsg :: p a -> String
 
-    examine :: Refined p a -> a
-    examine = coerce
+    plain :: Refined p a -> a
+    plain = coerce
 
     refine :: a -> Refined p a
     refine = refine' . consider
@@ -84,20 +85,15 @@ class (Coercible (p a) a) => IsPredicate (p :: Type -> Type) a where
 
 
 
-class IsPredicate p a => IsPredicate_Internal p a where
+class Predicate p a => Predicate_Internal p a where
     consider :: a -> p a
     consider = coerce
     accept :: p a -> Refined p a
     accept = coerce
-instance IsPredicate p a => IsPredicate_Internal p a where
+instance Predicate p a => Predicate_Internal p a where
 
 
-
-
-
-
-
-instance (IsPredicate p a, Num a) => Num (Refined p a)
+instance (Num a, Predicate p a) => Num (Refined p a)
   where
     (Refined x) + (Refined y) = refine (x + y)
     (Refined x) - (Refined y) = refine (x - y)
@@ -108,9 +104,9 @@ instance (IsPredicate p a, Num a) => Num (Refined p a)
     fromInteger               = refine . (fromInteger :: Integer -> a)
 
 
-instance (Read a, IsPredicate p a) => Read (Refined p a) where
+instance (Read a, Predicate p a) => Read (Refined p a) where
     readPrec = either error id . safeCreate <$> readPrec
 
 
-instance (IsPredicate p a, IsString a) => IsString (Refined p a) where
+instance (IsString a, Predicate p a) => IsString (Refined p a) where
     fromString = refine . (fromString :: String -> a)

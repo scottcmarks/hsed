@@ -31,13 +31,15 @@ module Data.BoundedSize.Class
        , IsMaxSize
        , MaxSize
        , AtLeast
+       , Predicate (..)
+       , type (?)
        )
 
 where
 
 import           Data.HasSize        (HasSize (..))
 import           Data.Proxy          (Proxy (..))
-import           Data.Refined        (IsPredicate (..), Refined)
+import           Data.Refined        (type (?), Predicate (..))
 import           GHC.Base            (Int, ($), (.))
 import           GHC.Classes         (Eq (..), Ord (..), (&&))
 import           GHC.Show            (Show (..), showString, shows)
@@ -66,7 +68,7 @@ class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
 instance (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
 
 -- | Instance of predicate for values with type-level minimum and maximum size.
-instance (KnownNat l, KnownNat u, HasSize a) => IsPredicate (BoundedSize l u) a where
+instance (KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a where
     predicate x = lower <= n && n <= upper
        where
          lower = fromNat (Proxy @l)
@@ -106,7 +108,7 @@ type AtLeast c m =  forall l. (KnownNat l, m <= l) => c l
 
 -- | Arbitrary values for testing
 --
-instance (KnownNat l, HasSize a, Arbitrary a, IsPredicate (BoundedSize l u) a) => Arbitrary (Refined (BoundedSize l u) a) where
+instance (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u)) where
     arbitrary = arbitrary `suchThatMap` create -- noice
-    shrink t = [ unsafeCreate s | s <- shrink $ examine t, l <= size s]
+    shrink t = [ unsafeCreate s | s <- shrink $ plain t, l <= size s]
        where l = fromNat (Proxy @l)

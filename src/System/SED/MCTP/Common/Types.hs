@@ -13,12 +13,7 @@ Datatypes for @hsed@.
 
 
 module System.SED.MCTP.Common.Types
-  ( module Data.BoundedSize
-  , module Data.ByteString.Integral
-  , module Data.Refined
-  , module Numeric
-  , module GHC.TypeLits.Extras
-  , module System.SED.MCTP.Common.Base_Type
+  ( module System.SED.MCTP.Common.Base_Type
   , module System.SED.MCTP.Common.Call
   , module System.SED.MCTP.Common.ColumnTypes
   , module System.SED.MCTP.Common.Simple_Type
@@ -32,11 +27,6 @@ module System.SED.MCTP.Common.Types
   )
 where
 
-import           Data.BoundedSize
-import           Data.ByteString.Integral
-import           Data.Refined
-import           GHC.TypeLits.Extras
-import           Numeric
 import           System.SED.MCTP.Common.Base_Type
 import           System.SED.MCTP.Common.Call
 import           System.SED.MCTP.Common.ColumnTypes

@@ -25,6 +25,7 @@ dependencies:
 - abnf
 - array
 - attoparsec
+- base16-bytestring
 - bytestring
 - conduit
 - conduit-extra
@@ -51,6 +52,7 @@ dependencies:
 - word8
 - QuickCheck
 - quickcheck-instances
+
 
 ghc-options:
 - -Wall

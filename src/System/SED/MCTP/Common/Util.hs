@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE TypeOperators     #-}
 {-|
 Module      : System.SED.MCTP.Common.Util
 Description : Utilities
@@ -15,17 +17,18 @@ Utilities
 
 module System.SED.MCTP.Common.Util where
 
-import           Data.Attoparsec.ByteString.Char8 (hexadecimal, isSpace_w8,
-                                                   parseOnly)
-import           Data.ByteString                  (ByteString, pack, spanEnd)
-import           Data.ByteString.Char8            (split)
+import           Data.Attoparsec.ByteString.Char8 (isSpace_w8)
+import           Data.ByteString                  (ByteString, filter, null,
+                                                   spanEnd)
 import           Data.Either                      (either)
 import           Data.Tuple                       (fst)
-import           GHC.Base                         (id, map, ($), (.))
+import           GHC.Base                         (id, not, ($), (.))
 import           GHC.Err                          (error)
+import           GHC.Show                         (showString, shows)
 
-import           Data.Refined                     (unsafeCreate)
-import           System.SED.MCTP.Common.Base_Type (Core_bytes (..))
+import           Data.ByteString.Base16           (decode)
+
+import           System.SED.MCTP.Common.Base_Type (Core_bytes (..), safeCreate)
 import           System.SED.MCTP.Common.UID
 
 -- | Convert to a UID from a string of eight hex digit pairs divided by a single space
@@ -36,7 +39,19 @@ import           System.SED.MCTP.Common.UID
 --   This means that if used in a quasiquoter, the malformed string will not compile.
 --
 hexUID :: ByteString -> UID
-hexUID = UID . Core_bytes . unsafeCreate . pack . map (either error id . parseOnly hexadecimal) . split ' '
+hexUID = UID . cf
+    where
+      cf :: ByteString -> Core_bytes 8
+      cf = Core_bytes . either error id . safeCreate . bytesfn
+      bytesfn :: ByteString -> ByteString
+      bytesfn hexBytes =
+          if null remainder
+            then bytes
+            else error $ showString "Invalid UID bytes: " . shows hexBytes $ ""
+          where
+            (bytes,remainder) = decode $ filter (not . isSpace_w8) hexBytes
+
+
 
 -- | Trim trailing whitespace from e.g. a field in a quasiquoted table
 trimTrailingWhitespace :: ByteString -> ByteString

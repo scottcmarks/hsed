@@ -23,6 +23,7 @@ module System.SED.MCTP.Common.Base_Type
   , Core_uinteger      (..)
   , Core_bytes         (..)
   , Core_max_bytes     (..)
+  , safeCreate
   , ci
   , cu
   , cb
@@ -33,5 +34,6 @@ where
 import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
-                                                         Core_uinteger (..))
+                                                         Core_uinteger (..),
+                                                         safeCreate)
 import           System.SED.MCTP.Common.Base_Type.TH    (cb, ci, cm, cu)

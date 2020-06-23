@@ -23,12 +23,14 @@ module System.SED.MCTP.Common.Base_Type.TH
 
 import           Language.Haskell.TH
 
-import           Data.HasSize                           (size)
-import           Data.Refined                           (unsafeCreate)
 import           Data.String                            (IsString (..))
 import           GHC.TypeLits                           (type (<=), KnownNat)
 
-import           System.SED.MCTP.Common.Base_Type.Class
+import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
+                                                         Core_integer (..),
+                                                         Core_max_bytes (..),
+                                                         Core_uinteger (..),
+                                                         size, unsafeCreate)
 
 
 

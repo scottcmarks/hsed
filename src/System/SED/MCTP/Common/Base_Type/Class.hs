@@ -33,6 +33,9 @@ module System.SED.MCTP.Common.Base_Type.Class
   , Core_uinteger_at_least
   , Core_integer_at_least
   , Core_max_bytes_at_least
+  , size
+  , unsafeCreate
+  , safeCreate
   )
 where
 
@@ -56,8 +59,7 @@ import           Numeric.Natural                   (Natural)
 
 import           Data.BoundedSize                  (AtLeast, FixedSize,
                                                     HasSize (..), MaxSize)
-import           Data.Refined                      (type (?), create, examine,
-                                                    safeCreate)
+import           Data.Refined                      (type (?), IsPredicate (..))
 import           GHC.TypeLits.Extras               (fromNat)
 
 import           System.SED.MCTP.Common.Instances  ()

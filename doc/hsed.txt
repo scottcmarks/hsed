@@ -8,28 +8,6 @@
 @version 0.1.0.1
 
 
--- | if' function, and in the form of the (?) operator
-module Control.If
-
--- | <tt>if'</tt> function as operator <tt>(?)</tt>
---   
---   Since <tt>infixr 0 $</tt>, we can use <tt> ... ? ... $ ... </tt> like
---   <tt> ... ?... : ... </tt> in C-family languages.
---   
---   <pre>
---   &gt;&gt;&gt; 1 == 2 ? 3 $ 4
---   4
---   
---   &gt;&gt;&gt; 'a' == 'a' ? "Yes!" $ "no?"
---   "Yes!"
---   </pre>
-(?) :: Bool -> p -> p -> p
-infixr 1 ?
-
--- | Lazy <tt>if'</tt> function
-if' :: Bool -> p -> p -> p
-
-
 -- | Conversions between numbers and bytestrings used to represent them.
 module Data.ByteString.Integral
 rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
@@ -74,23 +52,6 @@ instance Data.HasSize.HasSize GHC.Word.Word16
 instance Data.HasSize.HasSize GHC.Word.Word32
 instance Data.HasSize.HasSize GHC.Word.Word64
 instance Data.HasSize.HasSize GHC.Types.Word
-
-
--- | Convert strings into hexadecimal and back.
-module Data.Hex
-
--- | Convert strings into hexadecimal and back.
-class Hex t
-
--- | Convert string into hexadecimal.
-hex :: Hex t => t -> t
-
--- | Convert from hexadecimal and fail on invalid input.
-unhex :: (Hex t, MonadFail m) => t -> m t
-instance Data.Hex.Hex GHC.Base.String
-instance Data.Hex.Hex Data.ByteString.Internal.ByteString
-instance Data.Hex.Hex Data.ByteString.Lazy.Internal.ByteString
-instance Data.Hex.Hex Data.ByteString.Short.Internal.ShortByteString
 
 
 -- | Class of things with ByteString-like operations
@@ -551,6 +512,9 @@ Core_bytes :: (ByteString ? FixedSize n) -> Core_bytes n
 type Core_uinteger_at_least n = AtLeast Core_uinteger n
 type Core_integer_at_least n = AtLeast Core_integer n
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
+size :: HasSize a => a -> Int
+unsafeCreate :: IsPredicate p a => a -> Refined p a
+safeCreate :: IsPredicate p a => a -> Either String (Refined p a)
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.IsBytes.IsBytes (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -610,6 +574,7 @@ newtype Core_bytes n
 Core_bytes :: (ByteString ? FixedSize n) -> Core_bytes n
 newtype Core_max_bytes n
 Core_max_bytes :: (ByteString ? MaxSize n) -> Core_max_bytes n
+safeCreate :: IsPredicate p a => a -> Either String (Refined p a)
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
 ci :: LitI -> Q Exp

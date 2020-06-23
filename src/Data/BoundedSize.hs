@@ -58,7 +58,7 @@ import qualified Data.BoundedSize.TH    as C (fx, mx, typeFromInt,
                                               unsafeCreateExp)
 import qualified Data.IsBytes           as B (IsBytes (..))
 import           Data.Proxy             (Proxy (..))
-import           Data.Refined
+import           Data.Refined           (type (?), IsPredicate (..))
 import           GHC.Base               (Int, ($), (.))
 import           GHC.Num                (fromInteger, (-))
 import           GHC.TypeLits           (type (+), KnownNat)

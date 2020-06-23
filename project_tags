@@ -413,57 +413,57 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,1388
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,1391
 module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class27,28
-newtype Core_integer Core_integer66,67
-type Core_integer_at_least Core_integer_at_least68,69
-newtype Core_uinteger Core_uinteger70,71
-type Core_uinteger_at_least Core_uinteger_at_least72,73
-newtype Core_max_bytes Core_max_bytes74,75
-type Core_max_bytes_at_least Core_max_bytes_at_least76,77
-newtype Core_bytes Core_bytes78,79
-instance (K(KnownNat n) => StreamItem (Core_uinteger n)84,85
-    parser parser85,86
-    generate generate96,97
-instance (K(KnownNat n) => StreamItem (Core_integer n)98,99
-    parser parser99,100
-    generate generate110,111
-instance (K(KnownNat n) => StreamItem (Core_bytes n)112,113
-    parser parser113,114
-    generate generate124,125
-instance (K(KnownNat n) => StreamItem (Core_max_bytes n)127,128
-    parser parser128,129
-    generate generate139,140
-instance (K(KnownNat n) => IsToken (Core_integer n)143,144
-    token token144,145
-    fromToken fromToken145,146
-instance (K(KnownNat n) => IsToken (Core_uinteger n)149,150
-    token token150,151
-    fromToken fromToken151,152
-instance (K(KnownNat n) => IsToken (Core_bytes n)155,156
-    token token156,157
-    fromToken fromToken157,158
-instance (K(KnownNat n) => IsToken (Core_max_bytes n)161,162
-    token token162,163
-    fromToken fromToken163,164
+newtype Core_integer Core_integer68,69
+type Core_integer_at_least Core_integer_at_least70,71
+newtype Core_uinteger Core_uinteger72,73
+type Core_uinteger_at_least Core_uinteger_at_least74,75
+newtype Core_max_bytes Core_max_bytes76,77
+type Core_max_bytes_at_least Core_max_bytes_at_least78,79
+newtype Core_bytes Core_bytes80,81
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)86,87
+    parser parser87,88
+    generate generate98,99
+instance (K(KnownNat n) => StreamItem (Core_integer n)100,101
+    parser parser101,102
+    generate generate112,113
+instance (K(KnownNat n) => StreamItem (Core_bytes n)114,115
+    parser parser115,116
+    generate generate126,127
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)129,130
+    parser parser130,131
+    generate generate141,142
+instance (K(KnownNat n) => IsToken (Core_integer n)145,146
+    token token146,147
+    fromToken fromToken147,148
+instance (K(KnownNat n) => IsToken (Core_uinteger n)151,152
+    token token152,153
+    fromToken fromToken153,154
+instance (K(KnownNat n) => IsToken (Core_bytes n)157,158
+    token token158,159
+    fromToken fromToken159,160
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)163,164
+    token token164,165
+    fromToken fromToken165,166
 
-./src/System/SED/MCTP/Common/Base_Type/TH.hs,338
+./src/System/SED/MCTP/Common/Base_Type/TH.hs,339
 module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
-import import28,29
-newtype LitS LitS47,48
-newtype LitI LitI54,55
-ci ci81,82
-ci' ci'84,85
-cu cu87,88
-cu' cu'92,93
-cx cx97,98
-cx' cx'107,108
-cb cb130,131
-cb' cb'147,148
-cm cm167,168
-cm' cm'184,185
-ct ct188,189
-ct' ct'197,198
+import import26,27
+newtype LitS LitS49,50
+newtype LitI LitI56,57
+ci ci83,84
+ci' ci'86,87
+cu cu89,90
+cu' cu'94,95
+cx cx99,100
+cx' cx'109,110
+cb cb132,133
+cb' cb'149,150
+cm cm169,170
+cm' cm'186,187
+ct ct190,191
+ct' ct'199,200
 
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
@@ -576,9 +576,9 @@ instance (K(KnownNat l, KnownNat u) => IsBytes (Refined (BoundedSize l u) B-Byt
       toList toList37,38
 
 ./src/System/SED/MCTP/Common/Util.hs,144
-module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util15,16
-hexUID hexUID37,38
-trimTrailingWhitespace trimTrailingWhitespace41,42
+module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util17,18
+hexUID hexUID40,41
+trimTrailingWhitespace trimTrailingWhitespace56,57
 
 ./src/GHC/TypeLits/Extras.hs,76
 module GHC.TypeLits.ExtrasGHC.TypeLits.Extras20,21
@@ -651,25 +651,6 @@ instance IsByteString IsByteString Integer103,104
 instance IsByteString IsByteString Natural107,108
     fromByteString fromByteString108,109
     toByteString toByteString109,110
-
-./src/Data/Hex.hs,421
-module Data.Hex(Data.Hex14,15
-class Hex Hex22,23
-    hex hex24,25
-    unhex unhex26,27
-instance Hex Hex String29,30
-    hex hex30,31
-    unhex unhex35,36
-c c42,43
-instance Hex Hex B-ByteString67,68
-    hex hex68,69
-    unhex unhex69,70
-instance Hex Hex L-ByteString71,72
-    hex hex72,73
-    unhex unhex73,74
-instance Hex Hex S-ShortByteString75,76
-    hex hex76,77
-    unhex unhex77,78
 
 ./src/Data/IsBytes.hs,1106
 module Data.IsBytesData.IsBytes26,27
@@ -800,8 +781,3 @@ instance (R(Read a, IsPredicate p a) => Read (Refined p a)110,111
     readPrec readPrec111,112
 instance (I(IsPredicate p a, IsString a) => IsString (Refined p a)114,115
     fromString fromString115,116
-
-./src/Control/If.hs,63
-module Control.IfControl.If13,14
-(?(?)33,34
-if' if'39,40

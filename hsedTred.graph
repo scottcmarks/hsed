@@ -88,26 +88,6 @@ digraph G {
 					label=MCTP,
 					style=filled
 				];
-				subgraph cluster_13 {
-					graph [color="#0000000F",
-						label=Host,
-						style=filled
-					];
-					u29					 [fillcolor="#3333ff",
-						label=Run,
-						penwidth=0,
-						style=filled];
-				}
-				subgraph cluster_14 {
-					graph [color="#0000000F",
-						label=TPer,
-						style=filled
-					];
-					u30					 [fillcolor="#ff3333",
-						label=Run,
-						penwidth=0,
-						style=filled];
-				}
 				subgraph cluster_9 {
 					graph [color="#0000000F",
 						label=Common,
@@ -210,6 +190,26 @@ digraph G {
 						style=filled];
 					u26					 [fillcolor="#77ffff",
 						label=Table,
+						penwidth=0,
+						style=filled];
+				}
+				subgraph cluster_13 {
+					graph [color="#0000000F",
+						label=Host,
+						style=filled
+					];
+					u29					 [fillcolor="#3333ff",
+						label=Run,
+						penwidth=0,
+						style=filled];
+				}
+				subgraph cluster_14 {
+					graph [color="#0000000F",
+						label=TPer,
+						style=filled
+					];
+					u30					 [fillcolor="#ff3333",
+						label=Run,
 						penwidth=0,
 						style=filled];
 				}

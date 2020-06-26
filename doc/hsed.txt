@@ -306,6 +306,19 @@ class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
 --   &gt;&gt;&gt; append $(mx "foo") $(fx "bear")
 --   "foobear"
 --   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
+--   append $(mx "foo") $(fx "bear")
+--     :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
+--         Data.String.IsString a) =&gt;
+--        a ? BoundedSize 4 7
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
+--   "Hello, world!"
+--   </pre>
 append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new BoundedSize of maximum length from a basic element.
@@ -332,8 +345,8 @@ map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? Bo
 --   
 --   &gt;&gt;&gt; :t take $(fx "Hello")
 --   take $(fx "Hello")
---     :: (B.ListOps a, KnownNat l2, KnownNat u2,
---         Data.String.IsString a) =&gt;
+--     :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
+--         KnownNat u2, HasSize a, Data.String.IsString a) =&gt;
 --        a ? BoundedSize l2 u2
 --   </pre>
 --   

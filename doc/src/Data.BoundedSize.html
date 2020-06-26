@@ -99,11 +99,11 @@ This module is meant to be imported qualifed, e.g.
 </span><span id="line-99"></span><span class="hs-comment">-- &gt;&gt;&gt; append $(mx &quot;foo&quot;) $(fx &quot;bear&quot;)</span><span>
 </span><span id="line-100"></span><span class="hs-comment">-- &quot;foobear&quot;</span><span>
 </span><span id="line-101"></span><span class="hs-comment">--</span><span>
-</span><span id="line-102"></span><span>
-</span><span id="line-103"></span><span>
-</span><span id="line-104"></span><span class="hs-comment">-- &gt;&gt;&gt; :type append $(mx &quot;foo&quot;) $(fx &quot;bear&quot;)</span><span>
-</span><span id="line-105"></span><span class="hs-comment">-- append $(mx &quot;foo&quot;) $(fx &quot;bear&quot;)</span><span>
-</span><span id="line-106"></span><span class="hs-comment">--   :: (B.ListOps a, Data.String.IsString a) =&gt; a ? BoundedSize 4 7</span><span>
+</span><span id="line-102"></span><span class="hs-comment">-- &gt;&gt;&gt; :type append $(mx &quot;foo&quot;) $(fx &quot;bear&quot;)</span><span>
+</span><span id="line-103"></span><span class="hs-comment">-- append $(mx &quot;foo&quot;) $(fx &quot;bear&quot;)</span><span>
+</span><span id="line-104"></span><span class="hs-comment">--   :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,</span><span>
+</span><span id="line-105"></span><span class="hs-comment">--       Data.String.IsString a) =&gt;</span><span>
+</span><span id="line-106"></span><span class="hs-comment">--      a ? BoundedSize 4 7</span><span>
 </span><span id="line-107"></span><span class="hs-comment">--</span><span>
 </span><span id="line-108"></span><span class="hs-comment">-- &gt;&gt;&gt; append $(fx &quot;Hello, &quot;) $(mx &quot;world!&quot;)</span><span>
 </span><span id="line-109"></span><span class="hs-comment">-- &quot;Hello, world!&quot;</span><span>
@@ -200,8 +200,8 @@ forall (p :: * -&gt; *) a. Predicate p a =&gt; Refined p a -&gt; a
 </span><span id="line-149"></span><span class="hs-comment">-- &quot;Foo&quot;</span><span>
 </span><span id="line-150"></span><span class="hs-comment">-- &gt;&gt;&gt; :t take $(fx &quot;Hello&quot;)</span><span>
 </span><span id="line-151"></span><span class="hs-comment">-- take $(fx &quot;Hello&quot;)</span><span>
-</span><span id="line-152"></span><span class="hs-comment">--   :: (B.ListOps a, KnownNat l2, KnownNat u2,</span><span>
-</span><span id="line-153"></span><span class="hs-comment">--       Data.String.IsString a) =&gt;</span><span>
+</span><span id="line-152"></span><span class="hs-comment">--   :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,</span><span>
+</span><span id="line-153"></span><span class="hs-comment">--       KnownNat u2, HasSize a, Data.String.IsString a) =&gt;</span><span>
 </span><span id="line-154"></span><span class="hs-comment">--      a ? BoundedSize l2 u2</span><span>
 </span><span id="line-155"></span><span class="hs-comment">--</span><span>
 </span><span id="line-156"></span><span class="hs-comment">-- &gt;&gt;&gt; :t take $(fx &quot;Hello&quot;) :: ByteString ? BoundedSize 4 32</span><span>

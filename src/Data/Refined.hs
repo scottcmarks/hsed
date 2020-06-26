@@ -33,10 +33,11 @@ import           Data.Coerce  (Coercible, coerce)
 import           Data.HasSize (HasSize (..))
 import           Data.Kind    (Type)
 import           Data.String  (IsString (..), String)
+import           GHC.Exts     (IsList (..))
 import           GHC.Read     (Read (..))
 import           Prelude      (Bool (..), Either (..), Eq (..), Integer,
-                               Maybe (..), Num (..), Ord (..), Show (..),
-                               either, error, id, ($), (.), (<$>))
+                               Maybe (..), Num (..), Ord (..), Show (..), error,
+                               ($), (.), (<$>))
 -- import           Data.Functor        ((<$>))
 -- $setup
 --
@@ -105,8 +106,14 @@ instance (Num a, Predicate p a) => Num (Refined p a)
 
 
 instance (Read a, Predicate p a) => Read (Refined p a) where
-    readPrec = either error id . safeCreate <$> readPrec
+    readPrec = refine <$> readPrec
 
 
 instance (IsString a, Predicate p a) => IsString (Refined p a) where
     fromString = refine . (fromString :: String -> a)
+
+
+instance (IsList a, Predicate p a) => IsList (Refined p a) where
+    type Item (Refined p a) = Item a
+    fromList = refine . fromList
+    toList = toList . plain

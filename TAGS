@@ -585,27 +585,27 @@ makeApp makeApp43,44
 instance HasLogFunc HasLogFunc App46,47
 instance HasLogFunc App where logFuncL logFuncL46,47
 
-./src/Data/BoundedSize/Class.hs,984
-module Data.BoundedSize.ClassData.BoundedSize.Class24,25
-import import48,49
+./src/Data/BoundedSize/Class.hs,982
+module Data.BoundedSize.ClassData.BoundedSize.Class25,26
+import import49,50
 type role role66,67
 newtype BoundedSize BoundedSize67,68
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize69,70
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a70,71
-instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a73,74
-    predicate predicate74,75
-    failMsg failMsg79,80
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize94,95
-instance (I(IsBoundedSize l l a) => IsFixedSize l a95,96
-type FixedSize FixedSize96,97
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize99,100
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a100,101
-type MaxSize MaxSize101,102
-type AtLeast AtLeast108,109
-instance (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))113,114
-    arbitrary arbitrary114,115
-    shrink shrink115,116
-fromNat fromNat127,128
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize70,71
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a71,72
+instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a74,75
+    predicate predicate75,76
+    failMsg failMsg80,81
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize93,94
+instance (I(IsBoundedSize l l a) => IsFixedSize l a94,95
+type FixedSize FixedSize95,96
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize98,99
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a99,100
+type MaxSize MaxSize100,101
+type AtLeast AtLeast107,108
+instance (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))112,113
+    arbitrary arbitrary113,114
+    shrink shrink114,115
+fromNat fromNat123,124
 
 ./src/Data/BoundedSize/TH.hs,278
 module Data.BoundedSize.THData.BoundedSize.TH10,11
@@ -641,140 +641,86 @@ instance IsByteString IsByteString Natural107,108
     fromByteString fromByteString108,109
     toByteString toByteString109,110
 
-./src/Data/IsBytes.hs,1370
-module Data.IsBytesData.IsBytes26,27
-class HasSize a => IsBytes IsBytes46,47
-  type Elem Elem48,49
-  length length50,51
-  append append53,54
-  replicate replicate54,55
-  map map55,56
-  take take56,57
-  drop drop57,58
-  toList toList58,59
-instance IsBytes IsBytes B-ByteString60,61
-    type Elem Elem62,63
-    append append63,64
-    replicate replicate64,65
-    map map65,66
-    take take66,67
-    drop drop67,68
-    toList toList68,69
-instance IsBytes IsBytes S-ShortByteString70,71
-    type Elem Elem72,73
-    append append73,74
-    replicate replicate74,75
-    map map75,76
-    take take76,77
-    drop drop77,78
-    toList toList78,79
-instance IsBytes IsBytes [a]80,81
-    type Elem Elem82,83
-    append append83,84
-    replicate replicate84,85
-    map map85,86
-    take take86,87
-    drop drop87,88
-    toList toList88,89
-instance IsBytes IsBytes (V-Vector a)90,91
-    type Elem Elem92,93
-    append append93,94
-    replicate replicate94,95
-    map map95,96
-    take take96,97
-    drop drop97,98
-    toList toList98,99
-instance (I(IsBytes (a), Predicate p a) => IsBytes (a ? p)101,102
-      type Elem Elem103,104
-      append append104,105
-      replicate replicate105,106
-      map map106,107
-      take take107,108
-      drop drop108,109
-      toList toList109,110
-
 ./src/Data/BoundedSize.hs,796
-module Data.BoundedSizeData.BoundedSize23,24
-class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes IsBoundedSizeBytes70,71
-instance (K(KnownNat l, KnownNat u, B-IsBytes a) => IsBoundedSizeBytes l u a71,72
-class (C.IsFixedSize n a, B.IsBytes a) => IsFixedSizeBytes IsFixedSizeBytes73,74
-instance (K(KnownNat n, B-IsBytes a) => IsFixedSizeBytes n a74,75
-class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes IsMaxSizeBytes76,77
-instance (K(KnownNat n, B-IsBytes a) => IsMaxSizeBytes n a77,78
-append append105,106
-append append114,115
-replicate replicate120,121
-map map133,134
-take take164,165
-drop drop181,182
-bounds bounds194,195
-length length204,205
-padLeft padLeft212,213
-padLeft padLeft221,222
-padRight padRight224,225
-padRight padRight233,234
+module Data.BoundedSizeData.BoundedSize24,25
+class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps IsBoundedSizeListOps73,74
+instance (K(KnownNat l, KnownNat u, ListOps a) => IsBoundedSizeListOps l u a74,75
+class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps IsFixedSizeListOps76,77
+instance (K(KnownNat n, ListOps a) => IsFixedSizeListOps n a77,78
+class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps IsMaxSizeListOps79,80
+instance (K(KnownNat n, ListOps a) => IsMaxSizeListOps n a80,81
+append append109,110
+append append118,119
+replicate replicate124,125
+map map137,138
+take take168,169
+drop drop185,186
+bounds bounds198,199
+length length208,209
+padLeft padLeft216,217
+padLeft padLeft225,226
+padRight padRight228,229
+padRight padRight237,238
 
-./src/Data/HasSize.hs,1600
+./src/Data/HasSize.hs,1399
 module Data.HasSizeData.HasSize17,18
-class HasSize HasSize39,40
-class HasSize a where size size39,40
-instance HasSize HasSize B-ByteString41,42
-instance HasSize B.ByteString      where size size41,42
-instance HasSize HasSize S-ShortByteString42,43
-instance HasSize S.ShortByteString where size size42,43
-instance HasSize HasSize [a]43,44
-instance HasSize [a]               where size size43,44
-instance HasSize HasSize (V-Vector a)44,45
-instance HasSize (V.Vector a)      where size size44,45
-instance HasSize HasSize Integer48,49
-      size size50,51
-instance HasSize HasSize Int854,55
-instance HasSize Int8              where size size54,55
-instance HasSize HasSize Int1655,56
-instance HasSize Int16             where size size55,56
-instance HasSize HasSize Int3256,57
-instance HasSize Int32             where size size56,57
-instance HasSize HasSize Int6457,58
-instance HasSize Int64             where size size57,58
-instance HasSize HasSize Int58,59
-instance HasSize Int               where size size58,59
-instance HasSize HasSize Natural60,61
-      size size62,63
-instance HasSize HasSize Word865,66
-instance HasSize Word8             where size size65,66
-instance HasSize HasSize Word1666,67
-instance HasSize Word16            where size size66,67
-instance HasSize HasSize Word3267,68
-instance HasSize Word32            where size size67,68
-instance HasSize HasSize Word6468,69
-instance HasSize Word64            where size size68,69
-instance HasSize HasSize Word69,70
-instance HasSize Word              where size size69,70
+class HasSize HasSize35,36
+class HasSize a where size size35,36
+instance HasSize HasSize Int841,42
+instance HasSize Int8              where size size41,42
+instance HasSize HasSize Int1642,43
+instance HasSize Int16             where size size42,43
+instance HasSize HasSize Int3243,44
+instance HasSize Int32             where size size43,44
+instance HasSize HasSize Int6444,45
+instance HasSize Int64             where size size44,45
+instance HasSize HasSize Int45,46
+instance HasSize Int               where size size45,46
+instance {-# OVERLAPPING #-} HasSize HasSize Integer46,47
+  where size size47,48
+instance HasSize HasSize Word851,52
+instance HasSize Word8             where size size51,52
+instance HasSize HasSize Word1652,53
+instance HasSize Word16            where size size52,53
+instance HasSize HasSize Word3253,54
+instance HasSize Word32            where size size53,54
+instance HasSize HasSize Word6454,55
+instance HasSize Word64            where size size54,55
+instance HasSize HasSize Word55,56
+instance HasSize Word              where size size55,56
+instance {-# OVERLAPPING #-} HasSize HasSize Natural56,57
+  where size size57,58
+instance {-# OVERLAPPABLE #-} ListLike ListLike full e => HasSize full61,62
+instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size61,62
 
-./src/Data/Refined.hs,957
+./src/Data/Refined.hs,1113
 module Data.RefinedData.Refined25,26
-type role role46,47
-newtype Refined Refined47,48
-type a a52,53
-class (Coercible (p a) a) => Predicate Predicate57,58
-    predicate predicate58,59
-    failMsg failMsg60,61
-    plain plain62,63
-    refine refine65,66
-    safeCreate safeCreate70,71
-    create create75,76
-    unsafeCreate unsafeCreate80,81
-class Predicate p a => Predicate_Internal Predicate_Internal87,88
-    consider consider88,89
-    accept accept90,91
-instance Predicate Predicate p a => Predicate_Internal p a92,93
-instance (N(Num a, Predicate p a) => Num (Refined p a)95,96
-    (R(Refinedx)97,98
-    negate negate100,101
-    abs abs101,102
-    signum signum102,103
-    fromInteger fromInteger103,104
-instance (R(Read a, Predicate p a) => Read (Refined p a)106,107
-    readPrec readPrec107,108
-instance (I(IsString a, Predicate p a) => IsString (Refined p a)110,111
-    fromString fromString111,112
+type role role47,48
+newtype Refined Refined48,49
+type a a53,54
+class (Coercible (p a) a) => Predicate Predicate58,59
+    predicate predicate59,60
+    failMsg failMsg61,62
+    plain plain63,64
+    refine refine66,67
+    safeCreate safeCreate71,72
+    create create76,77
+    unsafeCreate unsafeCreate81,82
+class Predicate p a => Predicate_Internal Predicate_Internal88,89
+    consider consider89,90
+    accept accept91,92
+instance Predicate Predicate p a => Predicate_Internal p a93,94
+instance (N(Num a, Predicate p a) => Num (Refined p a)96,97
+    (R(Refinedx)98,99
+    negate negate101,102
+    abs abs102,103
+    signum signum103,104
+    fromInteger fromInteger104,105
+instance (R(Read a, Predicate p a) => Read (Refined p a)107,108
+    readPrec readPrec108,109
+instance (I(IsString a, Predicate p a) => IsString (Refined p a)111,112
+    fromString fromString112,113
+instance (I(IsList a, Predicate p a) => IsList (Refined p a)115,116
+    type Item Item116,117
+    fromList fromList117,118
+    toList toList118,119

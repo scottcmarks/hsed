@@ -50,6 +50,7 @@ dependencies:
 - transformers
 - vector
 - word8
+- ListLike
 - QuickCheck
 - quickcheck-instances
 

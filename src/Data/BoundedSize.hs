@@ -9,6 +9,7 @@
 {-# LANGUAGE TypeApplications      #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 {-|
 
@@ -22,22 +23,22 @@ This module is meant to be imported qualifed, e.g.
 
 -}
 module Data.BoundedSize
-       ( C.HasSize(..)
-       , C.BoundedSize(..)
-       , C.IsBoundedSize
-       , C.IsFixedSize
-       , C.FixedSize
-       , C.IsMaxSize
-       , C.MaxSize
-       , C.AtLeast
-       , C.fx
-       , C.mx
-       , C.unsafeCreateExp
-       , C.typeFromInt
+       ( HasSize(..)
+       , BoundedSize(..)
+       , IsBoundedSize
+       , IsFixedSize
+       , FixedSize
+       , IsMaxSize
+       , MaxSize
+       , AtLeast
+       , fx
+       , mx
+       , unsafeCreateExp
+       , typeFromInt
 
-       , IsBoundedSizeBytes
-       , IsFixedSizeBytes
-       , IsMaxSizeBytes
+       , IsBoundedSizeListOps
+       , IsFixedSizeListOps
+       , IsMaxSizeListOps
        , append
        , replicate
        , map
@@ -55,27 +56,29 @@ module Data.BoundedSize
 where
 
 import           Data.BoundedSize.Class (type (?), Predicate (..), fromNat)
-import qualified Data.BoundedSize.Class as C (AtLeast, BoundedSize (..),
-                                              FixedSize, HasSize (..),
-                                              IsBoundedSize, IsFixedSize,
-                                              IsMaxSize, MaxSize)
-import qualified Data.BoundedSize.TH    as C (fx, mx, typeFromInt,
-                                              unsafeCreateExp)
-import qualified Data.IsBytes           as B (IsBytes (..))
+import           Data.BoundedSize.Class (AtLeast, BoundedSize (..), FixedSize,
+                                         HasSize (..), IsBoundedSize,
+                                         IsFixedSize, IsMaxSize, MaxSize)
+import           Data.BoundedSize.TH    (fx, mx, typeFromInt, unsafeCreateExp)
+import           Data.ListLike          (ListOps)
+import qualified Data.ListLike          as B (append, drop, length, map,
+                                              replicate, take)
 import           Data.Proxy             (Proxy (..))
 import           GHC.Base               (Int, ($), (.))
+import           GHC.Exts               (IsList (..))
 import           GHC.Num                ((-))
 import           GHC.TypeLits           (type (+), KnownNat)
 
+
 -- | Class of types which can be assigned a type-level minimum and maximum length.
-class (C.IsBoundedSize l u a, B.IsBytes a) => IsBoundedSizeBytes l u a
-instance (KnownNat l, KnownNat u, B.IsBytes a) => IsBoundedSizeBytes l u a
+class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps l u a
+instance (KnownNat l, KnownNat u, ListOps a) => IsBoundedSizeListOps l u a
 
-class (C.IsFixedSize n a, B.IsBytes a) => IsFixedSizeBytes n a
-instance (KnownNat n, B.IsBytes a) => IsFixedSizeBytes n a
+class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps n a
+instance (KnownNat n, ListOps a) => IsFixedSizeListOps n a
 
-class (C.IsMaxSize n a, B.IsBytes a) => IsMaxSizeBytes n a
-instance (KnownNat n, B.IsBytes a) => IsMaxSizeBytes n a
+class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
+instance (KnownNat n, ListOps a) => IsMaxSizeListOps n a
 
 -- $setup
 -- >>> :set -Wno-type-defaults
@@ -83,6 +86,7 @@ instance (KnownNat n, B.IsBytes a) => IsMaxSizeBytes n a
 -- >>> :set -XTypeOperators
 -- >>> :set -XOverloadedStrings
 -- >>> :set -XTemplateHaskell
+-- >>> :set -XFlexibleContexts
 -- >>> import Data.BoundedSize.TH (fx,mx)
 -- >>> import Data.ByteString(ByteString)
 -- >>> import Data.Char (toUpper)
@@ -90,102 +94,102 @@ instance (KnownNat n, B.IsBytes a) => IsMaxSizeBytes n a
 
 
 
-
 -- | Append two BoundedSizes together.
--- "foobear"
 --
 -- >>> append $(mx "foo") $(fx "bear")
 -- "foobear"
 --
+
+
 -- >>> :type append $(mx "foo") $(fx "bear")
 -- append $(mx "foo") $(fx "bear")
---   :: (B.IsBytes a, Data.String.IsString a) => a ? C.BoundedSize 4 7
+--   :: (B.ListOps a, Data.String.IsString a) => a ? BoundedSize 4 7
 --
 -- >>> append $(fx "Hello, ") $(mx "world!")
 -- "Hello, world!"
 append ::
      forall l1 u1 l2 u2 a.
-     ( IsBoundedSizeBytes l1 u1 a
-     , IsBoundedSizeBytes l2 u2 a
-     , IsBoundedSizeBytes (l1 + l2) (u1 + u2) a
+     ( IsBoundedSizeListOps l1 u1 a
+     , IsBoundedSizeListOps l2 u2 a
+     , IsBoundedSizeListOps (l1 + l2) (u1 + u2) a
      )
-  =>  a ? C.BoundedSize l1 u1
-  ->  a ? C.BoundedSize l2 u2
-  ->  a ? C.BoundedSize (l1 + l2) (u1 + u2)
+  =>  a ? BoundedSize l1 u1
+  ->  a ? BoundedSize l2 u2
+  ->  a ? BoundedSize (l1 + l2) (u1 + u2)
 append a b = unsafeCreate $ B.append (plain a) (plain b)
 
 -- | Construct a new BoundedSize of maximum length from a basic element.
 --
--- >>> replicate '=' :: String ? C.BoundedSize 5 10
+-- >>> replicate '=' :: String ? BoundedSize 5 10
 -- "=========="
 replicate ::
      forall l u a.
-     (IsBoundedSizeBytes l u a)
-  => B.Elem a
-  -> a ? C.BoundedSize l u
+     (IsBoundedSizeListOps l u a)
+  => Item a
+  -> a ? BoundedSize l u
 replicate e = unsafeCreate $ B.replicate t e
   where
     t = fromNat (Proxy @u)
 
 -- | Map a BoundedSize to a BoundedSize of the same length.
 --
--- >>> map toUpper $(fx "Hello") :: String ? C.BoundedSize 5 5
+-- >>> map toUpper $(fx "Hello") :: String ? BoundedSize 5 5
 -- "HELLO"
 map ::
      forall l u a.
-     (IsBoundedSizeBytes l u a)
-  => (B.Elem a -> B.Elem a)
-  -> a ? C.BoundedSize l u
-  -> a ? C.BoundedSize l u
+     (IsBoundedSizeListOps l u a)
+  => (Item a -> Item a)
+  -> a ? BoundedSize l u
+  -> a ? BoundedSize l u
 map f s = unsafeCreate $ B.map f $ plain s
 
 -- | Reduce BoundedSize length, preferring elements on the left.
 --
--- >>> take $(mx "Foobar") :: String ? C.BoundedSize 0 3
+-- >>> take $(mx "Foobar") :: String ? BoundedSize 0 3
 -- "Foo"
 -- >>> :t take $(fx "Hello")
 -- take $(fx "Hello")
---   :: (B.IsBytes a, KnownNat l2, KnownNat u2,
+--   :: (B.ListOps a, KnownNat l2, KnownNat u2,
 --       Data.String.IsString a) =>
---      a ? C.BoundedSize l2 u2
+--      a ? BoundedSize l2 u2
 --
--- >>> :t take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
--- take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
---   :: ByteString ? C.BoundedSize 4 32
--- >>> take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
+-- >>> :t take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+-- take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--   :: ByteString ? BoundedSize 4 32
+-- >>> take $(fx "Hello") :: ByteString ? BoundedSize 4 32
 -- "Hello"
--- >>> length (take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32)
+-- >>> length (take $(fx "Hello") :: ByteString ? BoundedSize 4 32)
 -- 5
--- >>> take $(fx "Hello") :: ByteString ? C.BoundedSize 4 32
+-- >>> take $(fx "Hello") :: ByteString ? BoundedSize 4 32
 -- "Hello"
--- >>> take $(fx "Hello") :: ByteString ? C.BoundedSize 4 4
+-- >>> take $(fx "Hello") :: ByteString ? BoundedSize 4 4
 -- "Hell"
--- >>> take $(fx "HelloHelloHelloHelloHelloHelloHello") :: ByteString ? C.BoundedSize 4 32
+-- >>> take $(fx "HelloHelloHelloHelloHelloHelloHello") :: ByteString ? BoundedSize 4 32
 -- "HelloHelloHelloHelloHelloHelloHe"
 take ::
      forall l1 u1 l2 u2 a.
-     ( IsBoundedSizeBytes l1 u1 a
-     , IsBoundedSizeBytes l2 u2 a
+     ( IsBoundedSizeListOps l1 u1 a
+     , IsBoundedSizeListOps l2 u2 a
      )
-  => a ? C.BoundedSize l1 u1
-  -> a ? C.BoundedSize l2 u2
+  => a ? BoundedSize l1 u1
+  -> a ? BoundedSize l2 u2
 take s = unsafeCreate $ B.take t $ plain s
   where
     t = fromNat (Proxy @u2)
 
 -- | Reduce BoundedSize length, preferring elements on the right.
 --
--- >>> drop $(fx "Foobar") :: String ? C.BoundedSize 2 2
+-- >>> drop $(fx "Foobar") :: String ? BoundedSize 2 2
 -- "ar"
--- >>> drop $(mx "Foobar") :: String ? C.BoundedSize 0 2
+-- >>> drop $(mx "Foobar") :: String ? BoundedSize 0 2
 -- "ar"
 drop ::
      forall l1 u1 l2 u2 a.
-     ( IsBoundedSizeBytes l1 u1 a
-     , IsBoundedSizeBytes l2 u2 a
+     ( IsBoundedSizeListOps l1 u1 a
+     , IsBoundedSizeListOps l2 u2 a
      )
-  => a ? C.BoundedSize l1 u1
-  -> a ? C.BoundedSize l2 u2
+  => a ? BoundedSize l1 u1
+  -> a ? BoundedSize l2 u2
 drop s = unsafeCreate $ B.drop (B.length s' - t) s'
   where
     s' = plain s
@@ -193,8 +197,8 @@ drop s = unsafeCreate $ B.drop (B.length s' - t) s'
 
 -- | Obtain length bounds from the type.
 bounds ::
-     forall l u a. (C.IsBoundedSize l u a)
-  => a ? C.BoundedSize l u
+     forall l u a. (IsBoundedSize l u a)
+  => a ? BoundedSize l u
   -> (Int, Int)
 bounds _ = (lower, upper)
   where
@@ -203,8 +207,8 @@ bounds _ = (lower, upper)
 
 -- | Obtain value-level length.  Consult the actual data value.
 length ::
-     forall l u a. (IsBoundedSizeBytes l u a)
-  => a ? C.BoundedSize l u
+     forall l u a. (IsBoundedSizeListOps l u a)
+  => a ? BoundedSize l u
   -> Int
 length = B.length . plain
 
@@ -212,23 +216,23 @@ length = B.length . plain
 -- original elements to the left.
 padLeft ::
      forall l1 u1 l2 u2 a.
-     ( IsBoundedSizeBytes l1 u1 a
-     , IsBoundedSizeBytes l2 u2 a
-     , IsBoundedSizeBytes 0 (u2 + u1) a
+     ( IsBoundedSizeListOps l1 u1 a
+     , IsBoundedSizeListOps l2 u2 a
+     , IsBoundedSizeListOps 0 (u2 + u1) a
      )
-  => B.Elem a
-  -> a ? C.BoundedSize l1 u1
-  -> a ? C.BoundedSize l2 u2
-padLeft pad = drop . ((replicate pad :: a ? C.BoundedSize 0 u2) `append`)
+  => Item a
+  -> a ? BoundedSize l1 u1
+  -> a ? BoundedSize l2 u2
+padLeft pad = drop . ((replicate pad :: a ? BoundedSize 0 u2) `append`)
 
 -- | Like 'padLeft', but original elements are padded to the right.
 padRight ::
      forall l1 u1 l2 u2 a.
-     ( IsBoundedSizeBytes l1 u1 a
-     , IsBoundedSizeBytes l2 u2 a
-     , IsBoundedSizeBytes 0 (u1 + u2) a
+     ( IsBoundedSizeListOps l1 u1 a
+     , IsBoundedSizeListOps l2 u2 a
+     , IsBoundedSizeListOps 0 (u1 + u2) a
      )
-  => B.Elem a
-  -> a ? C.BoundedSize l1 u1
-  -> a ? C.BoundedSize l2 u2
-padRight pad = take . (`append` (replicate pad :: a ? C.BoundedSize 0 u2))
+  => Item a
+  -> a ? BoundedSize l1 u1
+  -> a ? BoundedSize l2 u2
+padRight pad = take . (`append` (replicate pad :: a ? BoundedSize 0 u2))

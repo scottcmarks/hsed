@@ -42,25 +42,25 @@ where
 
 import           Control.Monad                     (fail)
 
-import qualified Data.ByteString                   as B (ByteString)
+import           Data.ByteString                   (ByteString)
 import           Data.Either                       (Either (..))
 import           Data.Functor                      ((<$>))
-import           Data.IsBytes                      (IsBytes (..))
 import           Data.Maybe                        (Maybe (..))
 import           Data.Proxy                        (Proxy (..))
-import           Data.String                       (String)
+import           Data.String                       (IsString (..), String)
 import           GHC.Base                          (Int, mconcat, pure, ($),
                                                     (.))
 import           GHC.Classes                       (Eq (..), Ord (..))
+import           GHC.Exts                          (IsList (..))
 import           GHC.Num                           (Integer)
 import           GHC.Show                          (Show (..))
 import           GHC.TypeLits                      (KnownNat)
 import           Numeric.Natural                   (Natural)
 
 import           Data.BoundedSize                  (type (?), AtLeast,
-                                                    FixedSize, HasSize (..),
-                                                    MaxSize, Predicate (..),
-                                                    fromNat)
+                                                    FixedSize, MaxSize,
+                                                    Predicate (..), fromNat,
+                                                    size)
 
 import           System.SED.MCTP.Common.Instances  ()
 import           System.SED.MCTP.Common.StreamItem
@@ -68,19 +68,19 @@ import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
 
 
 newtype Core_integer   n = Core_integer   (Integer ? MaxSize n)
-        deriving (Eq, Ord, HasSize, Show) via (Integer ? MaxSize n)  -- Num, Read,
+        deriving (Eq, Ord, Show) via (Integer ? MaxSize n)  -- Num, Read,
 type Core_integer_at_least n = AtLeast Core_integer n
 
 newtype Core_uinteger  n = Core_uinteger  (Natural ? MaxSize n)
-        deriving (Eq, Ord, HasSize, Show) via (Natural ? MaxSize n) -- Num, Read,
+        deriving (Eq, Ord, Show) via (Natural ? MaxSize n) -- Num, Read,
 type Core_uinteger_at_least n = AtLeast Core_uinteger n
 
-newtype Core_max_bytes n = Core_max_bytes (B.ByteString ? MaxSize n)
-        deriving (Eq, Ord, HasSize, Show)  via (B.ByteString ? MaxSize n) -- , IsString
+newtype Core_max_bytes n = Core_max_bytes (ByteString ? MaxSize n)
+        deriving (Eq, Ord, Show, IsList, IsString)  via (ByteString ? MaxSize n)
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 
-newtype Core_bytes     n = Core_bytes     (B.ByteString ? FixedSize n)
-        deriving (Eq, Ord, HasSize, Show, IsBytes) via (B.ByteString ? FixedSize n) --, IsBytes, IsString
+newtype Core_bytes     n = Core_bytes     (ByteString ? FixedSize n)
+        deriving (Eq, Ord, Show, IsList, IsString) via (ByteString ? FixedSize n)
 
 
 
@@ -90,13 +90,13 @@ instance (KnownNat n) => StreamItem (Core_uinteger n ) where
         tok <- parser
         case tok of
             Unsigned u -> case (safeCreate u :: Either String (Natural ? MaxSize n)) of
-                          Right cn    -> pure $ Core_uinteger cn
-                          Left errMsg -> fail errMsg
-            _        -> fail $ mconcat [ "Wrong token type for Core_uinteger "
-                                       , show (fromNat (Proxy @n) ::Int)
-                                       , ": "
-                                       , show tok
-                                       ]
+                            Right cn    -> pure $ Core_uinteger cn
+                            Left errMsg -> fail errMsg
+            _          -> fail $ mconcat [ "Wrong token type for Core_uinteger "
+                                         , show (fromNat (Proxy @n) ::Int)
+                                         , ": "
+                                         , show tok
+                                         ]
     generate = generate . token
 
 instance (KnownNat n) => StreamItem (Core_integer n  ) where
@@ -117,7 +117,7 @@ instance (KnownNat n) => StreamItem (Core_bytes n) where
     parser = do
         tok <- parser
         case tok of
-            Bytes bs -> case (safeCreate bs :: Either String (B.ByteString ? FixedSize n)) of
+            Bytes bs -> case (safeCreate bs :: Either String (ByteString ? FixedSize n)) of
                           Right cb    -> pure $ Core_bytes cb
                           Left errMsg -> fail errMsg
             _        -> fail $ mconcat [ "Wrong token type for Core_bytes "
@@ -132,7 +132,7 @@ instance (KnownNat n) => StreamItem (Core_max_bytes n) where
     parser = do
         tok <- parser
         case tok of
-            Bytes bs -> case (safeCreate bs :: Either String (B.ByteString ? MaxSize n)) of
+            Bytes bs -> case (safeCreate bs :: Either String (ByteString ? MaxSize n)) of
                           Right cb    -> pure $ Core_max_bytes cb
                           Left errMsg -> fail errMsg
             _        -> fail $ mconcat [ "Wrong token type for Core_max_bytes "

@@ -1,5 +1,6 @@
 {-# LANGUAGE DerivingVia           #-}
 {-# LANGUAGE RoleAnnotations       #-}
+{-# LANGUAGE StandaloneDeriving    #-}
 
 {-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE FlexibleContexts      #-}
@@ -41,7 +42,7 @@ where
 import           Data.HasSize    (HasSize (..))
 import           Data.Proxy      (Proxy (..))
 import           Data.Refined    (type (?), Predicate (..))
-import           GHC.Base        (Int, ($), (.))
+import           GHC.Base        (Int, Monoid (..), Semigroup (..), ($), (.))
 import           GHC.Classes     (Eq (..), Ord (..), (&&))
 import           GHC.Num         (Num)
 import           GHC.Real        (fromIntegral)
@@ -53,12 +54,11 @@ import           GHC.TypeLits    (type (<=), KnownNat, Nat, natVal)
 import           Test.QuickCheck (Arbitrary (..), shrink, suchThatMap)
 
 
--- -- $setup
--- -- >>> :set -XDataKinds
--- -- >>> :set -XTemplateHaskell
--- -- >>> :set -XOverloadedStrings
--- -- >>> :set -XTypeApplications
--- -- >>> import           Data.Proxy
+-- $setup
+-- >>> :set -XDataKinds
+-- >>> :set -XTypeApplications
+-- >>> import           Data.Proxy(Proxy(..))
+-- >>> import           GHC.Types    (Int)
 
 
 
@@ -66,18 +66,19 @@ import           Test.QuickCheck (Arbitrary (..), shrink, suchThatMap)
 --
 type role BoundedSize phantom phantom nominal
 newtype BoundedSize (l::Nat) (u::Nat) a = BoundedSize a
-    deriving (Eq, Ord, Show, HasSize) via a
+    deriving (Eq, Ord, Show, Semigroup, Monoid) via a
+
 class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
 instance (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
 
 -- | Instance of predicate for values with type-level minimum and maximum size.
 instance (KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a where
-    predicate x = lower <= n && n <= upper
+    predicate (BoundedSize x) = lower <= n && n <= upper
        where
          lower = fromNat (Proxy @l)
          upper = fromNat (Proxy @u)
          n = size x
-    failMsg x = showString "size is " . shows n . showString " but should be " $
+    failMsg (BoundedSize x) = showString "size is " . shows n . showString " but should be " $
                   if lower == upper
                     then show lower
                     else showString "between " . shows lower .
@@ -89,12 +90,10 @@ instance (KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a wh
 
 
 
-
-
 -- | Class of types which can be assigned a fixed type-level size.
 class (IsBoundedSize l l a) => IsFixedSize l a
 instance (IsBoundedSize l l a) => IsFixedSize l a
-type FixedSize n= BoundedSize n n
+type FixedSize n = BoundedSize n n
 
 -- | Class of types which can be assigned a maximum type-level size.
 class (IsBoundedSize 0 l a) => IsMaxSize l a
@@ -106,7 +105,7 @@ type MaxSize n = BoundedSize 0 n
 --   the "max" is that the value is legal, e.g. "foo" could be a MaxSize 3 String,
 --   or a MaxSize 4 String, so it is AtLeast MaxSize 3
 --   Then it can be later cast to a specific MaxSize (of at least 3).
-type AtLeast c m =  forall l. (KnownNat l, m <= l) => c l
+type AtLeast c m =  forall l . (KnownNat l, m <= l) => c l
 
 
 -- | Arbitrary values for testing
@@ -117,12 +116,9 @@ instance (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => 
        where l = fromNat (Proxy @l)
 
 
--- | Type-level Nat to value-level Num
+
+-- | Type-level KnownNat to value-level Integral
 --
--- >>> :set -XDataKinds
--- >>> :set -XTypeApplications
--- >>> import           Data.Proxy(Proxy(..))
--- >>> import           GHC.Types    (Int)
 -- >>> fromNat (Proxy @5) :: Int
 -- 5
 fromNat :: (Num b, KnownNat n) => proxy n -> b

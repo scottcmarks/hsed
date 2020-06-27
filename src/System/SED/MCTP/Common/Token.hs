@@ -21,32 +21,49 @@ module System.SED.MCTP.Common.Token
   , removeEmpty
   , combineContinued
   , tokenSource
+
+  , byteStringToNatural
+  , naturalToByteString
+  , byteStringToInteger
+  , integerToByteString
+  , ordw
   )
 
 where
 
 import           Data.Array
 import           Data.Attoparsec.ByteString           hiding (takeWhile)
-import           Data.Bits
-import           Data.ByteString                      hiding (ByteString, map,
-                                                       take, takeWhile, unsnoc)
 import           Data.Conduit
 import           Data.Conduit.Attoparsec
 import           Data.Conduit.Combinators             (takeWhile)
 import           GHC.Natural
-import           RIO                                  hiding (foldr, length,
-                                                       map, mask, null, reverse,
-                                                       take, takeWhile)
 import qualified RIO                                  as R (map)
 import           Test.QuickCheck                      hiding (generate, (.&.))
 import           Test.QuickCheck.Instances.ByteString ()
 import           Test.QuickCheck.Instances.Natural    ()
 import           Text.Printf
 
-import           Data.ByteString.Integral
+import           Control.Monad.Catch                  (MonadThrow (..))
+import           Data.Bits                            (Bits, complement, shiftL,
+                                                       shiftR, (.&.), (.|.))
+import           Data.ByteString                      hiding (map, take, unsnoc)
+import qualified Data.ByteString                      as B (map)
+import           Data.Char                            (ord)
+import           Data.Functor                         ((<&>))
+import           Data.Maybe                           (Maybe (..), fromMaybe,
+                                                       maybe)
+import           GHC.Word                             (Word8)
+import           Prelude                              (Bounded (..), Char,
+                                                       Eq (..), Int, Integer,
+                                                       Integral (..),
+                                                       Monad (..), Show (..),
+                                                       String, error, fail,
+                                                       fromIntegral, id,
+                                                       mconcat, mempty,
+                                                       otherwise, pure, snd,
+                                                       ($), (-), (.), (<),
+                                                       (<$>), (<*>), (<=), (<>))
 import           System.SED.MCTP.Common.StreamItem
-
-
 {-
 
 Due to the nature of method parameters and results, there are two additional constructs defined for
@@ -340,7 +357,7 @@ rawTokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m (
 rawTokenSource = conduitParser parser
 
 removeEmpty :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
-removeEmpty = takeWhile ((/= Empty) . snd)
+removeEmpty = Data.Conduit.Combinators.takeWhile ((/= Empty) . snd)
 
 combineContinued :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
 combineContinued = loop Nothing
@@ -805,3 +822,63 @@ If empty atoms are supported, then they SHALL NOT be unexpected tokens.
 
 
 -}
+
+
+rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
+rollUp f (d, ds) = foldl roll (f d) ds
+  where
+    x `roll` d' = shiftL x 8 .|. f d'
+
+byteStringToNatural :: ByteString -> Natural
+byteStringToNatural = maybe 0 (rollUp fromIntegral) . uncons
+
+byteStringToInteger :: ByteString -> Integer
+byteStringToInteger = maybe 0 rollUp' . uncons
+  where rollUp' dds@(d,_) =
+            if 0x00 == (0x80 .&. d)
+            then rollUp fromIntegral dds
+            else complement $ rollUp (fromIntegral.complement) dds
+
+naturalToByteString :: Natural -> ByteString
+naturalToByteString n = if n == 0 then singleton 0x00 else reverse $ unfoldr unroll n
+  where unroll n' = if n' == 0 then Nothing else Just (fromIntegral n', shiftR n' 8)
+
+integerToByteString :: Integer -> ByteString
+integerToByteString i =
+    if 0 <= i
+    then                    nonnegativeToByteString              i
+    else B.map complement $ nonnegativeToByteString $ complement i
+  where
+    nonnegativeToByteString nn =
+        let bs = toByteString $ natural nn
+          in if 0x00 == 0x80 .&. head bs
+                then bs
+                else cons 0x00 bs
+
+
+ordw :: Char -> Word8
+ordw = fromIntegral . ord
+
+byte :: Integral a => a -> Word8
+byte = fromIntegral
+
+int :: Integral a => a -> Int
+int = fromIntegral
+
+integer :: Integral a => a -> Integer
+integer = fromIntegral
+
+natural :: Integral a => a -> Natural
+natural = fromIntegral
+
+class IsByteString a where
+    fromByteString :: ByteString -> a
+    toByteString   :: a -> ByteString
+
+instance IsByteString Integer where
+    fromByteString = byteStringToInteger
+    toByteString   = integerToByteString
+
+instance IsByteString Natural where
+    fromByteString = byteStringToNatural
+    toByteString   = naturalToByteString

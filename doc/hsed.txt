@@ -8,27 +8,6 @@
 @version 0.1.0.1
 
 
--- | Conversions between numbers and bytestrings used to represent them.
-module Data.ByteString.Integral
-rollUp :: Bits a => (Word8 -> a) -> (Word8, ByteString) -> a
-byteStringToNatural :: ByteString -> Natural
-byteStringToInteger :: ByteString -> Integer
-naturalToByteString :: Natural -> ByteString
-integerToByteString :: Integer -> ByteString
-word8 :: Integral a => a -> Word8
-char :: Word8 -> Char
-ordw :: Char -> Word8
-byte :: Integral a => a -> Word8
-int :: Integral a => a -> Int
-integer :: Integral a => a -> Integer
-natural :: Integral a => a -> Natural
-class IsByteString a
-fromByteString :: IsByteString a => ByteString -> a
-toByteString :: IsByteString a => a -> ByteString
-instance Data.ByteString.Integral.IsByteString GHC.Integer.Type.Integer
-instance Data.ByteString.Integral.IsByteString GHC.Natural.Natural
-
-
 -- | Things that have a "size"
 module Data.HasSize
 
@@ -491,8 +470,15 @@ rawTokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m (
 removeEmpty :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
 combineContinued :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
 tokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m ()
+byteStringToNatural :: ByteString -> Natural
+naturalToByteString :: Natural -> ByteString
+byteStringToInteger :: ByteString -> Integer
+integerToByteString :: Integer -> ByteString
+ordw :: Char -> Word8
 instance GHC.Show.Show System.SED.MCTP.Common.Token.Token
 instance GHC.Classes.Eq System.SED.MCTP.Common.Token.Token
+instance System.SED.MCTP.Common.Token.IsByteString GHC.Integer.Type.Integer
+instance System.SED.MCTP.Common.Token.IsByteString GHC.Natural.Natural
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.Token.Token
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Token.Token
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Token.Token

@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 {-|
 Module      : System.SED.MCTP.Common.TokenSpec
 Description : Test specifications for System.SED.MCTP.Common.Types
@@ -8,20 +10,22 @@ Stability   : experimental
 
 Test specifications for System.SED.MCTP.Common.Token
 -}
-{-# LANGUAGE NoImplicitPrelude #-}
 
 module System.SED.MCTP.Common.TokenSpec (spec) where
 
 
+import           Data.Bits                            ((.&.))
 import           Data.ByteString
 import           Data.Either
 import           Data.Ix
 import           Data.Word
 import           RIO                                  hiding (null)
 
-import           System.SED.MCTP.Common.Import             hiding (null)
-import           System.SED.MCTP.Common.Token              ()
+import           System.SED.MCTP.Common.Import        hiding (null)
+import           System.SED.MCTP.Common.Token
 
+import           Data.Word
+import           Numeric.Natural
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck                      hiding (generate, (.&.))
@@ -233,6 +237,37 @@ spec = do
       withMaxSuccess 1000 $  -- some low-frequency strings found bugs
         (\bs -> gp bs `shouldSatisfy` (maybeIsPrefixOf bs <||> maybeParsesEq bs))
 
+  describe "byteStringToNatural" $ do
+    prop "is the inverse of naturalToBytestring" $
+      (\n -> (byteStringToNatural . naturalToByteString) n `shouldBe` (n :: Natural))
+    prop "is inverted by naturalToBytestring when the input is valid" $
+      (\bs -> validNatural bs ==>
+                (naturalToByteString . byteStringToNatural) bs `shouldBe` (bs :: ByteString))
+
+    -- FIXME: gives up after ~50 tests; 1000 discarded
+    -- prop "is not inverted by naturalToBytestring when the input is not valid" $
+    --   (\bs -> (not . validNatural) bs ==>
+    --             (naturalToByteString . byteStringToNatural) bs `shouldNotBe` (bs :: ByteString))
+
+    it "is not inverted by naturalToBytestring when the input is \"\\x00\\x80\" (not valid)" $
+          ( (naturalToByteString . byteStringToNatural) (fromString "\x00\x80")
+          `shouldNotBe`
+            (fromString "\x00\x80") )
+    it "is trimmed by naturalToBytestring when the input is \"\\x00\\x80\" (not valid)" $
+          ( (naturalToByteString . byteStringToNatural) (fromString "\x00\x80")
+          `shouldBe`
+            (fromString "\x80"))
+
+  describe "byteStringToInteger" $ do
+    prop "is the inverse of integerToByteString" $
+      (\i -> (byteStringToInteger . integerToByteString) i `shouldBe` (i :: Integer))
+    prop "is inverted by integerToByteString" $
+      (\bs -> validInteger bs ==>
+                (integerToByteString . byteStringToInteger) bs `shouldBe` (bs :: ByteString))
+
+
+
+
 maybeIsPrefixOf :: ByteString -> Maybe ByteString -> Bool
 maybeIsPrefixOf bs = maybe True (`isPrefixOf` bs)
 
@@ -262,3 +297,25 @@ gp = (generate <$>) . p
 -- | Cute, but ultimately unneeded
 _pgp :: ByteString -> Maybe Token
 _pgp = p >=> pg
+
+
+-- | fail on 'mempty', succeed on 'singleton' @b0@, test longer with @pred@
+validFirstTwo :: ByteString -> ((Word8, Word8) -> Bool) -> Bool
+validFirstTwo bs pred = case uncons bs of
+  Nothing -> False
+  Just(b0,bs') -> case uncons bs' of
+    Nothing    -> True
+    Just(b1,_) -> pred (b0, (b1 .&. 0x80))
+
+-- | if two or more bytes, the first one should not be a redundant 0x00
+validNatural :: ByteString -> Bool
+validNatural bs = validFirstTwo bs $ \case
+      (0x00,    _) -> False
+      (   _,    _) -> True
+
+-- | if two or more bytes, the first one should not be a redundant sign propagation
+validInteger :: ByteString -> Bool
+validInteger bs = validFirstTwo bs $ \case
+      (0x00, 0x00) -> False
+      (0xFF, 0x80) -> False
+      (   _,    _) -> True

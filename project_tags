@@ -18,31 +18,27 @@ main main14,15
 module System.SED.MCTP.Common.ValueSpec System.SED.MCTP.Common.ValueSpec13,14
 spec spec24,25
 
-./spec-tests/System/SED/MCTP/Common/TokenSpec.hs,385
-module System.SED.MCTP.Common.TokenSpec System.SED.MCTP.Common.TokenSpec12,13
-spec spec32,33
-maybeIsPrefixOf maybeIsPrefixOf235,236
-maybeParsesEq maybeParsesEq238,239
-(<(<||>)241,242
-tagsReservedForTCG tagsReservedForTCG245,246
-tokenParserByteString tokenParserByteString249,250
-tokenParserString tokenParserString252,253
-p p255,256
-gp gp258,259
-_pgp _pgp262,263
+./spec-tests/System/SED/MCTP/Common/TokenSpec.hs,492
+module System.SED.MCTP.Common.TokenSpec System.SED.MCTP.Common.TokenSpec13,14
+spec spec36,37
+maybeIsPrefixOf maybeIsPrefixOf270,271
+maybeParsesEq maybeParsesEq273,274
+(<(<||>)276,277
+tagsReservedForTCG tagsReservedForTCG280,281
+tokenParserByteString tokenParserByteString284,285
+tokenParserString tokenParserString287,288
+p p290,291
+gp gp293,294
+_pgp _pgp297,298
+validFirstTwo validFirstTwo302,303
+validNatural validNatural310,311
+validInteger validInteger316,317
 
 ./spec-tests/System/SED/MCTP/Common/ColumnTypes/THSpec.hs,115
 module System.SED.MCTP.Common.ColumnTypes.THSpec System.SED.MCTP.Common.ColumnTypes.THSpec12,13
 spec spec21,22
 
 ./spec-tests/Spec.hs,0
-
-./spec-tests/Data/ByteString/IntegralSpec.hs,190
-module Data.ByteString.IntegralSpec Data.ByteString.IntegralSpec13,14
-validFirstTwo validFirstTwo29,30
-validNatural validNatural37,38
-validInteger validInteger43,44
-spec spec51,52
 
 ./dev/DevMain.hs,834
 module DevMain DevMain10,11
@@ -356,41 +352,61 @@ instance Semigroup Semigroup UIDRowDecs187,188
 instance Monoid Monoid UIDRowDecs191,192
   where mempty mempty192,193
 
-./src/System/SED/MCTP/Common/Token.hs,1172
+./src/System/SED/MCTP/Common/Token.hs,1908
 module System.SED.MCTP.Common.TokenSystem.SED.MCTP.Common.Token14,15
-data Token Token131,132
-    Unsigned Unsigned132,133
-  | Signed Signed133,134
-  | Bytes Bytes134,135
-  | ContinuedBytes ContinuedBytes135,136
-  | StartNameStartName136,137
-  | EndNameEndName137,138
-  | StartListStartList138,139
-  | EndListEndList139,140
-  | CallCall140,141
-  | EndOfDataEndOfData141,142
-  | EndOfSessionEndOfSession142,143
-  | StartTransactionStartTransaction143,144
-  | EndTransactionEndTransaction144,145
-  | EmptyEmpty145,146
-class (Show a) => IsToken IsToken148,149
-    fromToken fromToken149,150
-    token token151,152
-    mtoken mtoken154,155
-instance IsToken IsToken Token158,159
-    token token159,160
-    fromToken fromToken160,161
-instance StreamItem StreamItem Token165,166
-    parser parser166,167
-    generate generate167,168
-tokenParser tokenParser174,175
-generateToken generateToken276,277
-instance Arbitrary Arbitrary Token322,323
-    arbitrary arbitrary323,324
-rawTokenSource rawTokenSource338,339
-removeEmpty removeEmpty341,342
-combineContinued combineContinued344,345
-tokenSource tokenSource357,358
+import import55,56
+data Token Token148,149
+    Unsigned Unsigned149,150
+  | Signed Signed150,151
+  | Bytes Bytes151,152
+  | ContinuedBytes ContinuedBytes152,153
+  | StartNameStartName153,154
+  | EndNameEndName154,155
+  | StartListStartList155,156
+  | EndListEndList156,157
+  | CallCall157,158
+  | EndOfDataEndOfData158,159
+  | EndOfSessionEndOfSession159,160
+  | StartTransactionStartTransaction160,161
+  | EndTransactionEndTransaction161,162
+  | EmptyEmpty162,163
+class (Show a) => IsToken IsToken165,166
+    fromToken fromToken166,167
+    token token168,169
+    mtoken mtoken171,172
+instance IsToken IsToken Token175,176
+    token token176,177
+    fromToken fromToken177,178
+instance StreamItem StreamItem Token182,183
+    parser parser183,184
+    generate generate184,185
+tokenParser tokenParser191,192
+generateToken generateToken293,294
+instance Arbitrary Arbitrary Token339,340
+    arbitrary arbitrary340,341
+rawTokenSource rawTokenSource355,356
+removeEmpty removeEmpty358,359
+combineContinued combineContinued361,362
+tokenSource tokenSource374,375
+rollUp rollUp826,827
+byteStringToNatural byteStringToNatural831,832
+byteStringToInteger byteStringToInteger834,835
+naturalToByteString naturalToByteString841,842
+integerToByteString integerToByteString845,846
+ordw ordw858,859
+byte byte861,862
+int int864,865
+integer integer867,868
+natural natural870,871
+class IsByteString IsByteString873,874
+    fromByteString fromByteString874,875
+    toByteString toByteString875,876
+instance IsByteString IsByteString Integer877,878
+    fromByteString fromByteString878,879
+    toByteString toByteString879,880
+instance IsByteString IsByteString Natural881,882
+    fromByteString fromByteString882,883
+    toByteString toByteString883,884
 
 ./src/System/SED/MCTP/Common/StreamItem.hs,562
 module System.SED.MCTP.Common.StreamItem System.SED.MCTP.Common.StreamItem15,16
@@ -473,39 +489,39 @@ module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26
-ttype ttype102,103
-ttypeDecs ttypeDecs110,111
-typeTableParser typeTableParser117,118
-typeTableRow typeTableRow124,125
-dTypeTableRow dTypeTableRow131,132
-typeTableTitle typeTableTitle138,139
-spaces spaces142,143
-rowSepFieldLengths rowSepFieldLengths145,146
-rowSep rowSep152,153
-blankLines blankLines156,157
-tableRowFields tableRowFields160,161
-data TypeTableRow TypeTableRow168,169
-data TypeTableRow = TypeTableRow TypeTableRow168,169
-instance Semigroup Semigroup TypeTableRow171,172
-    (T(TypeTableRowu1n1f1)172,173
-type TypeUIDField TypeUIDField175,176
-type TypeName TypeName177,178
-type FormatString FormatString179,180
-header header182,183
-formatString formatString192,193
-newtype TypeTableRowDecs TypeTableRowDecs199,200
-instance Semigroup Semigroup TypeTableRowDecs202,203
-  where (T(TypeTableRowDecsd1)203,204
-instance Monoid Monoid TypeTableRowDecs206,207
-  where mempty mempty207,208
-tenum tenum217,218
-tenumDecs tenumDecs226,227
-dEnum dEnum229,230
-enumTableParser enumTableParser253,254
-data EnumRow EnumRow262,263
-data EnumRow = EnumRow EnumRow262,263
-enumTableTitle enumTableTitle265,266
-enumTableRow enumTableRow273,274
+ttype ttype101,102
+ttypeDecs ttypeDecs109,110
+typeTableParser typeTableParser116,117
+typeTableRow typeTableRow123,124
+dTypeTableRow dTypeTableRow130,131
+typeTableTitle typeTableTitle137,138
+spaces spaces141,142
+rowSepFieldLengths rowSepFieldLengths144,145
+rowSep rowSep151,152
+blankLines blankLines155,156
+tableRowFields tableRowFields159,160
+data TypeTableRow TypeTableRow167,168
+data TypeTableRow = TypeTableRow TypeTableRow167,168
+instance Semigroup Semigroup TypeTableRow170,171
+    (T(TypeTableRowu1n1f1)171,172
+type TypeUIDField TypeUIDField174,175
+type TypeName TypeName176,177
+type FormatString FormatString178,179
+header header181,182
+formatString formatString191,192
+newtype TypeTableRowDecs TypeTableRowDecs198,199
+instance Semigroup Semigroup TypeTableRowDecs201,202
+  where (T(TypeTableRowDecsd1)202,203
+instance Monoid Monoid TypeTableRowDecs205,206
+  where mempty mempty206,207
+tenum tenum216,217
+tenumDecs tenumDecs225,226
+dEnum dEnum228,229
+enumTableParser enumTableParser252,253
+data EnumRow EnumRow261,262
+data EnumRow = EnumRow EnumRow261,262
+enumTableTitle enumTableTitle264,265
+enumTableRow enumTableRow272,273
 
 ./src/System/SED/MCTP/Common/Types.hs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types14,15
@@ -616,30 +632,6 @@ mx mx131,132
 typeFromInt typeFromInt140,141
 unsafeCreateExp unsafeCreateExp152,153
 universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType179,180
-
-./src/Data/ByteString/Integral.hs,793
-module Data.ByteString.IntegralData.ByteString.Integral21,22
-rollUp rollUp46,47
-byteStringToNatural byteStringToNatural51,52
-byteStringToInteger byteStringToInteger54,55
-naturalToByteString naturalToByteString61,62
-integerToByteString integerToByteString65,66
-word8 word878,79
-char char81,82
-ordw ordw84,85
-byte byte87,88
-int int90,91
-integer integer93,94
-natural natural96,97
-class IsByteString IsByteString99,100
-    fromByteString fromByteString100,101
-    toByteString toByteString101,102
-instance IsByteString IsByteString Integer103,104
-    fromByteString fromByteString104,105
-    toByteString toByteString105,106
-instance IsByteString IsByteString Natural107,108
-    fromByteString fromByteString108,109
-    toByteString toByteString109,110
 
 ./src/Data/BoundedSize.hs,796
 module Data.BoundedSizeData.BoundedSize24,25

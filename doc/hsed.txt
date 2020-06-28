@@ -45,7 +45,6 @@ data Refined (p :: Type -> Type) a
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
-instance Data.HasSize.HasSize a => Data.HasSize.HasSize (Data.Refined.Refined p a)
 instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
@@ -498,12 +497,109 @@ type Core_uinteger_at_least n = AtLeast Core_uinteger n
 type Core_integer_at_least n = AtLeast Core_integer n
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 size :: HasSize a => a -> Int
-unsafeCreate :: Predicate p a => a -> Refined p a
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 
 -- | The <a>toList</a> function extracts a list of <tt>Item l</tt> from the
 --   structure <tt>l</tt>. It should satisfy fromList . toList = id.
 toList :: IsList l => l -> [Item l]
+
+-- | Append two BoundedSizes together.
+--   
+--   <pre>
+--   &gt;&gt;&gt; append $(mx "foo") $(fx "bear")
+--   "foobear"
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
+--   append $(mx "foo") $(fx "bear")
+--     :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
+--         Data.String.IsString a) =&gt;
+--        a ? BoundedSize 4 7
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
+--   "Hello, world!"
+--   </pre>
+append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+
+-- | Construct a new BoundedSize of maximum length from a basic element.
+--   
+--   <pre>
+--   &gt;&gt;&gt; replicate '=' :: String ? BoundedSize 5 10
+--   "=========="
+--   </pre>
+replicate :: forall l u a. IsBoundedSizeListOps l u a => Item a -> a ? BoundedSize l u
+
+-- | Map a BoundedSize to a BoundedSize of the same length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; map toUpper $(fx "Hello") :: String ? BoundedSize 5 5
+--   "HELLO"
+--   </pre>
+map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? BoundedSize l u) -> a ? BoundedSize l u
+
+-- | Reduce BoundedSize length, preferring elements on the left.
+--   
+--   <pre>
+--   &gt;&gt;&gt; take $(mx "Foobar") :: String ? BoundedSize 0 3
+--   "Foo"
+--   
+--   &gt;&gt;&gt; :t take $(fx "Hello")
+--   take $(fx "Hello")
+--     :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
+--         KnownNat u2, HasSize a, Data.String.IsString a) =&gt;
+--        a ? BoundedSize l2 u2
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :t take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--   take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--     :: ByteString ? BoundedSize 4 32
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; length (take $(fx "Hello") :: ByteString ? BoundedSize 4 32)
+--   5
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? BoundedSize 4 4
+--   "Hell"
+--   
+--   &gt;&gt;&gt; take $(fx "HelloHelloHelloHelloHelloHelloHello") :: ByteString ? BoundedSize 4 32
+--   "HelloHelloHelloHelloHelloHelloHe"
+--   </pre>
+take :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+
+-- | Reduce BoundedSize length, preferring elements on the right.
+--   
+--   <pre>
+--   &gt;&gt;&gt; drop $(fx "Foobar") :: String ? BoundedSize 2 2
+--   "ar"
+--   
+--   &gt;&gt;&gt; drop $(mx "Foobar") :: String ? BoundedSize 0 2
+--   "ar"
+--   </pre>
+drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+
+-- | Obtain length bounds from the type.
+bounds :: forall l u a. IsBoundedSize l u a => (a ? BoundedSize l u) -> (Int, Int)
+
+-- | Obtain value-level length. Consult the actual data value.
+length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> Int
+
+-- | Fill a BoundedSize with extra elements up to target length, padding
+--   original elements to the left.
+padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+
+-- | Like <a>padLeft</a>, but original elements are padded to the right.
+padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+plain :: Predicate p a => Refined p a -> a
+unsafeCreate :: Predicate p a => a -> Refined p a
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -562,6 +658,104 @@ safeCreate :: Predicate p a => a -> Either String (Refined p a)
 --   structure <tt>l</tt>. It should satisfy fromList . toList = id.
 toList :: IsList l => l -> [Item l]
 
+-- | Append two BoundedSizes together.
+--   
+--   <pre>
+--   &gt;&gt;&gt; append $(mx "foo") $(fx "bear")
+--   "foobear"
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
+--   append $(mx "foo") $(fx "bear")
+--     :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
+--         Data.String.IsString a) =&gt;
+--        a ? BoundedSize 4 7
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
+--   "Hello, world!"
+--   </pre>
+append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+
+-- | Construct a new BoundedSize of maximum length from a basic element.
+--   
+--   <pre>
+--   &gt;&gt;&gt; replicate '=' :: String ? BoundedSize 5 10
+--   "=========="
+--   </pre>
+replicate :: forall l u a. IsBoundedSizeListOps l u a => Item a -> a ? BoundedSize l u
+
+-- | Map a BoundedSize to a BoundedSize of the same length.
+--   
+--   <pre>
+--   &gt;&gt;&gt; map toUpper $(fx "Hello") :: String ? BoundedSize 5 5
+--   "HELLO"
+--   </pre>
+map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? BoundedSize l u) -> a ? BoundedSize l u
+
+-- | Reduce BoundedSize length, preferring elements on the left.
+--   
+--   <pre>
+--   &gt;&gt;&gt; take $(mx "Foobar") :: String ? BoundedSize 0 3
+--   "Foo"
+--   
+--   &gt;&gt;&gt; :t take $(fx "Hello")
+--   take $(fx "Hello")
+--     :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
+--         KnownNat u2, HasSize a, Data.String.IsString a) =&gt;
+--        a ? BoundedSize l2 u2
+--   </pre>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :t take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--   take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--     :: ByteString ? BoundedSize 4 32
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; length (take $(fx "Hello") :: ByteString ? BoundedSize 4 32)
+--   5
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? BoundedSize 4 32
+--   "Hello"
+--   
+--   &gt;&gt;&gt; take $(fx "Hello") :: ByteString ? BoundedSize 4 4
+--   "Hell"
+--   
+--   &gt;&gt;&gt; take $(fx "HelloHelloHelloHelloHelloHelloHello") :: ByteString ? BoundedSize 4 32
+--   "HelloHelloHelloHelloHelloHelloHe"
+--   </pre>
+take :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+
+-- | Reduce BoundedSize length, preferring elements on the right.
+--   
+--   <pre>
+--   &gt;&gt;&gt; drop $(fx "Foobar") :: String ? BoundedSize 2 2
+--   "ar"
+--   
+--   &gt;&gt;&gt; drop $(mx "Foobar") :: String ? BoundedSize 0 2
+--   "ar"
+--   </pre>
+drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+
+-- | Obtain length bounds from the type.
+bounds :: forall l u a. IsBoundedSize l u a => (a ? BoundedSize l u) -> (Int, Int)
+
+-- | Obtain value-level length. Consult the actual data value.
+length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> Int
+
+-- | Fill a BoundedSize with extra elements up to target length, padding
+--   original elements to the left.
+padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+
+-- | Like <a>padLeft</a>, but original elements are padded to the right.
+padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+plain :: Predicate p a => Refined p a -> a
+unsafeCreate :: Predicate p a => a -> Refined p a
+
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
 ci :: LitI -> Q Exp
 cu :: LitI -> Q Exp
@@ -610,7 +804,6 @@ type Core_uinteger_8 = Core_uinteger 8
 
 -- | Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID
-showCore_bytesHex :: KnownNat n => Core_bytes n -> [String]
 showCore_bytes :: KnownNat n => String -> Core_bytes n -> String
 newtype HalfUID
 HalfUID :: Core_bytes 4 -> HalfUID
@@ -625,10 +818,12 @@ uidPlus :: HalfUID -> HalfUID -> UID
 infix 9 +:+
 hNull :: HalfUID
 uNull :: UID
+instance GHC.Exts.IsList System.SED.MCTP.Common.UID.UID
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.UID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.UID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.UID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.UID
+instance GHC.Exts.IsList System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.HalfUID

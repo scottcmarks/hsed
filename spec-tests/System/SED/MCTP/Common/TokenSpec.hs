@@ -22,10 +22,6 @@ import           Data.Word
 import           RIO                                  hiding (null)
 
 import           System.SED.MCTP.Common.Import        hiding (null)
-import           System.SED.MCTP.Common.Token
-
-import           Data.Word
-import           Numeric.Natural
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck                      hiding (generate, (.&.))

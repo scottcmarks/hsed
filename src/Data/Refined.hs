@@ -29,26 +29,18 @@ module Data.Refined
   , type (?)
   ) where
 
-import           Data.Coerce  (Coercible, coerce)
-import           Data.HasSize (HasSize (..))
-import           Data.Kind    (Type)
-import           Data.String  (IsString (..), String)
-import           GHC.Exts     (IsList (..))
-import           GHC.Read     (Read (..))
-import           Prelude      (Bool (..), Either (..), Eq (..), Integer,
-                               Maybe (..), Num (..), Ord (..), Show (..), error,
-                               ($), (.), (<$>))
--- import           Data.Functor        ((<$>))
--- $setup
---
--- >>> import GHC.Base(Int)
--- >>> import GHC.Integer(Integer)
-
+import           Data.Coerce (Coercible, coerce)
+import           Data.Kind   (Type)
+import           Data.String (IsString (..), String)
+import           GHC.Exts    (IsList (..))
+import           GHC.Read    (Read (..))
+import           Prelude     (Bool (..), Either (..), Eq (..), Integer,
+                              Maybe (..), Num (..), Ord (..), Show (..), error,
+                              ($), (.), (<$>))
 
 type role Refined phantom nominal
 newtype Refined (p :: Type -> Type) a = Refined a
-    deriving (Eq,Ord,Show,HasSize) via a
--- instance The (Refined p a) a
+    deriving (Eq, Ord, Show) via a
 
 -- | An infix alias for 'Refined'.
 type a ?p = Refined p a

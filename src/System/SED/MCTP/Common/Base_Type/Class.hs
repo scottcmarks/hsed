@@ -34,9 +34,20 @@ module System.SED.MCTP.Common.Base_Type.Class
   , Core_integer_at_least
   , Core_max_bytes_at_least
   , size
-  , unsafeCreate
   , safeCreate
   , toList
+  , append
+  , replicate
+  , map
+  , take
+  , drop
+  , bounds
+  , length
+  , padLeft
+  , padRight
+-- TODO: Work around needing these, please
+  , plain
+  , unsafeCreate
   )
 where
 
@@ -59,10 +70,12 @@ import           Numeric.Natural                   (Natural)
 
 import           Data.BoundedSize                  (type (?), AtLeast,
                                                     FixedSize, MaxSize,
-                                                    Predicate (..), fromNat,
-                                                    size)
+                                                    Predicate (..), append,
+                                                    bounds, drop, fromNat,
+                                                    length, map, padLeft,
+                                                    padRight, replicate, size,
+                                                    take)
 
-import           System.SED.MCTP.Common.Instances  ()
 import           System.SED.MCTP.Common.StreamItem
 import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
 

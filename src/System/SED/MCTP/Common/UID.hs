@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-|
 Module      : System.SED.MCTP.Common.UID
 Description : SED tokens
@@ -10,35 +11,36 @@ Datatypes for UIDs and HalfUIDs.
 
 -}
 
-{-# LANGUAGE DataKinds           #-}
-{-# LANGUAGE DerivingVia         #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE DerivingVia          #-}
+{-# LANGUAGE NoImplicitPrelude    #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
 
 
 
 module System.SED.MCTP.Common.UID where
 
-import           Data.Attoparsec.ByteString        ()
-import           Data.BoundedSize                  (append, drop, plain, take,
-                                                    unsafeCreate)
-import qualified Data.ByteString                   as B (pack, unpack)
+import qualified Data.ByteString                   as B (pack, singleton)
 import           Data.ByteString.Base16            (encode)
 import qualified Data.ByteString.Char8             as C (unpack)
-import           Data.Foldable                     (concatMap)
+import           Data.Foldable                     (foldl)
 import           Data.Functor                      ((<$>))
 
 import           Data.String                       (String)
-import           GHC.Base                          (mconcat, ($))
+import           GHC.Base                          (($), (.))
 import           GHC.Classes                       (Eq (..), Ord (..))
-import           GHC.Show                          (Show (..))
+import           GHC.Exts                          (IsList (..))
+import           GHC.Show                          (Show (..), showString)
 import           GHC.TypeLits                      (KnownNat)
 import           GHC.Word                          (Word8 (..))
 
 import           Test.QuickCheck                   (Arbitrary (..))
 
-import           System.SED.MCTP.Common.Base_Type  (Core_bytes (..))
-import           System.SED.MCTP.Common.Instances  ()
+import           System.SED.MCTP.Common.Base_Type  (Core_bytes (..), append,
+                                                    drop, take)
+-- TODO: Work around needing this, please
+import           System.SED.MCTP.Common.Base_Type  (unsafeCreate)
+
 import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
 import           System.SED.MCTP.Common.Token      (IsToken (..))
 
@@ -69,18 +71,13 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 
 -}
 
-showCore_bytesHex :: (KnownNat n) => Core_bytes n -> [String]
-showCore_bytesHex (Core_bytes b) =  concatMap h $ B.unpack $ plain b
-       where h :: Word8 -> [String]
-             h w = [" 0x", C.unpack $ encode $ B.pack [w] ]
-
 showCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
-showCore_bytes c fb = mconcat $ c : showCore_bytesHex fb
+showCore_bytes c fb = foldl ((\s w -> showString s . showString " 0x" $ C.unpack $ encode $ B.singleton w) :: String -> Word8 ->String) c (toList fb)
 
 
 newtype HalfUID = HalfUID (Core_bytes 4)
     deriving(Eq,Ord)
-    deriving(IsToken,StreamItem) via (Core_bytes 4)
+    deriving(IsToken,StreamItem,IsList) via (Core_bytes 4)
 instance Show HalfUID where
     show (HalfUID fb) = showCore_bytes "halfUID" fb
 instance Arbitrary HalfUID where
@@ -92,7 +89,7 @@ halfUID b3 b2 b1 b0 = HalfUID (Core_bytes (unsafeCreate $ B.pack [b3, b2, b1, b0
 
 newtype UID = UID (Core_bytes 8)
     deriving(Eq,Ord)
-    deriving(IsToken, StreamItem) via (Core_bytes 8)
+    deriving(IsToken, StreamItem,IsList) via (Core_bytes 8)
 instance Show UID where
     show (UID fb) = showCore_bytes "uid" fb
 instance Arbitrary UID where

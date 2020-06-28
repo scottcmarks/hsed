@@ -25,6 +25,20 @@ module System.SED.MCTP.Common.Base_Type
   , Core_max_bytes     (..)
   , safeCreate
   , toList
+  , append
+  , replicate
+  , map
+  , take
+  , drop
+  , bounds
+  , length
+  , padLeft
+  , padRight
+
+-- TODO: Work around needing these, please
+  , plain
+  , unsafeCreate
+
   , ci
   , cu
   , cb
@@ -36,5 +50,12 @@ import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
                                                          Core_uinteger (..),
-                                                         safeCreate, toList)
+                                                         append, bounds, drop,
+                                                         length, map, padLeft,
+                                                         padRight, replicate,
+                                                         safeCreate, take,
+                                                         toList)
+-- TODO: Work around needing these, please
+import           System.SED.MCTP.Common.Base_Type.Class (plain, unsafeCreate)
+
 import           System.SED.MCTP.Common.Base_Type.TH    (cb, ci, cm, cu)

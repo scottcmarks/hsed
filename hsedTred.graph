@@ -91,7 +91,7 @@ digraph G {
 							label=Class,
 							penwidth=0,
 							style=filled];
-						u11						 [fillcolor="#77ffff",
+						u10						 [fillcolor="#77ffff",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -101,10 +101,10 @@ digraph G {
 							label=ColumnTypes,
 							style=filled
 						];
-						u15						 [fillcolor="#ff7777",
+						u14						 [fillcolor="#ff7777",
 							label=ColumnTypes,
 							style="filled,bold"];
-						u16						 [fillcolor="#ff77ff",
+						u15						 [fillcolor="#ff77ff",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -114,68 +114,68 @@ digraph G {
 							label=TableUIDs,
 							style=filled
 						];
-						u25						 [fillcolor="#ff7777",
+						u24						 [fillcolor="#ff7777",
 							label=TableUIDs,
 							style="filled,bold"];
-						u26						 [fillcolor="#33ff33",
+						u25						 [fillcolor="#33ff33",
 							label=TH,
 							penwidth=0,
 							style=filled];
 					}
 					u8					 [fillcolor="#ff7777",
-						label=Instances,
-						penwidth=0,
-						style=filled];
-					u9					 [fillcolor="#ff7777",
 						label=StreamItem,
 						penwidth=0,
 						style=filled];
-					u10					 [fillcolor="#ff7777",
+					u9					 [fillcolor="#ff7777",
 						label=Token,
 						penwidth=0,
 						style=filled];
-					u12					 [fillcolor="#ff7777",
+					u11					 [fillcolor="#ff7777",
 						label=Call,
 						penwidth=0,
 						style=filled];
-					u13					 [fillcolor="#ff7777",
+					u12					 [fillcolor="#ff7777",
 						label=Value,
 						penwidth=0,
 						style=filled];
-					u14					 [fillcolor="#ff7777",
+					u13					 [fillcolor="#ff7777",
 						label=UID,
 						penwidth=0,
 						style=filled];
-					u17					 [fillcolor="#ff7777",
+					u16					 [fillcolor="#ff7777",
 						label=THUtil,
 						penwidth=0,
 						style=filled];
-					u18					 [fillcolor="#ff7777",
+					u17					 [fillcolor="#ff7777",
 						label=Util,
 						penwidth=0,
 						style=filled];
-					u19					 [fillcolor="#ff7777",
+					u18					 [fillcolor="#ff7777",
 						label=Format,
 						penwidth=0,
 						style=filled];
-					u20					 [fillcolor="#ff7777",
+					u19					 [fillcolor="#ff7777",
 						label=Simple_Type,
 						penwidth=0,
 						style=filled];
-					u21					 [fillcolor="#ff7777",
+					u20					 [fillcolor="#ff7777",
 						label=Import,
 						penwidth=0,
 						style=filled];
-					u22					 [fillcolor="#ff7777",
+					u21					 [fillcolor="#ff7777",
 						label=Types,
 						penwidth=0,
 						style=filled];
-					u23					 [fillcolor="#ff7777",
+					u22					 [fillcolor="#ff7777",
 						label=SpecialPurposeUIDs,
 						penwidth=0,
 						style=filled];
-					u24					 [fillcolor="#ff7777",
+					u23					 [fillcolor="#ff7777",
 						label=Table,
+						penwidth=0,
+						style=filled];
+					u26					 [fillcolor="#ff7777",
+						label=Instances,
 						penwidth=0,
 						style=filled];
 				}
@@ -209,42 +209,41 @@ digraph G {
 	u29 -> u30;
 	u29 -> u27;
 	u29 -> u28;
-	u3 -> u2;
 	u0 -> u4;
+	u1 -> u2;
 	u1 -> u3;
 	u4 -> u1;
-	u10 -> u9;
-	u12 -> u13;
-	u12 -> u14;
-	u13 -> u10;
-	u14 -> u6;
-	u17 -> u14;
-	u18 -> u14;
-	u19 -> u14;
-	u19 -> u20;
-	u20 -> u6;
+	u9 -> u8;
+	u11 -> u12;
+	u11 -> u13;
+	u12 -> u9;
+	u13 -> u6;
+	u16 -> u13;
+	u17 -> u13;
+	u18 -> u13;
+	u18 -> u19;
+	u19 -> u6;
+	u20 -> u21;
+	u21 -> u11;
+	u21 -> u19;
 	u21 -> u22;
-	u22 -> u12;
-	u22 -> u20;
-	u22 -> u23;
-	u22 -> u15;
-	u22 -> u25;
-	u23 -> u14;
-	u24 -> u14;
-	u6 -> u11;
+	u21 -> u14;
+	u21 -> u24;
+	u22 -> u13;
+	u23 -> u13;
+	u6 -> u10;
 	u7 -> u0;
-	u7 -> u8;
-	u7 -> u10;
-	u11 -> u7;
+	u7 -> u9;
+	u10 -> u7;
+	u14 -> u15;
 	u15 -> u16;
-	u16 -> u17;
-	u16 -> u18;
-	u25 -> u26;
-	u26 -> u17;
-	u26 -> u18;
-	u26 -> u24;
+	u15 -> u17;
+	u24 -> u25;
+	u25 -> u16;
+	u25 -> u17;
+	u25 -> u23;
 	u27 -> u5;
-	u27 -> u21;
+	u27 -> u20;
 	u28 -> u5;
-	u28 -> u21;
+	u28 -> u20;
 }

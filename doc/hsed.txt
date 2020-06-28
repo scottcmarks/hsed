@@ -598,7 +598,6 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
-plain :: Predicate p a => Refined p a -> a
 unsafeCreate :: Predicate p a => a -> Refined p a
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -753,7 +752,6 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
-plain :: Predicate p a => Refined p a -> a
 unsafeCreate :: Predicate p a => a -> Refined p a
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n

@@ -428,39 +428,39 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,1397
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,1396
 module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class27,28
-newtype Core_integer Core_integer82,83
-type Core_integer_at_least Core_integer_at_least84,85
-newtype Core_uinteger Core_uinteger86,87
-type Core_uinteger_at_least Core_uinteger_at_least88,89
-newtype Core_max_bytes Core_max_bytes90,91
-type Core_max_bytes_at_least Core_max_bytes_at_least92,93
-newtype Core_bytes Core_bytes94,95
-instance (K(KnownNat n) => StreamItem (Core_uinteger n)100,101
-    parser parser101,102
-    generate generate112,113
-instance (K(KnownNat n) => StreamItem (Core_integer n)114,115
-    parser parser115,116
-    generate generate126,127
-instance (K(KnownNat n) => StreamItem (Core_bytes n)128,129
-    parser parser129,130
-    generate generate140,141
-instance (K(KnownNat n) => StreamItem (Core_max_bytes n)143,144
-    parser parser144,145
-    generate generate155,156
-instance (K(KnownNat n) => IsToken (Core_integer n)159,160
-    token token160,161
-    fromToken fromToken161,162
-instance (K(KnownNat n) => IsToken (Core_uinteger n)165,166
-    token token166,167
-    fromToken fromToken167,168
-instance (K(KnownNat n) => IsToken (Core_bytes n)171,172
-    token token172,173
-    fromToken fromToken173,174
-instance (K(KnownNat n) => IsToken (Core_max_bytes n)177,178
-    token token178,179
-    fromToken fromToken179,180
+newtype Core_integer Core_integer81,82
+type Core_integer_at_least Core_integer_at_least83,84
+newtype Core_uinteger Core_uinteger85,86
+type Core_uinteger_at_least Core_uinteger_at_least87,88
+newtype Core_max_bytes Core_max_bytes89,90
+type Core_max_bytes_at_least Core_max_bytes_at_least91,92
+newtype Core_bytes Core_bytes93,94
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)99,100
+    parser parser100,101
+    generate generate111,112
+instance (K(KnownNat n) => StreamItem (Core_integer n)113,114
+    parser parser114,115
+    generate generate125,126
+instance (K(KnownNat n) => StreamItem (Core_bytes n)127,128
+    parser parser128,129
+    generate generate139,140
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)142,143
+    parser parser143,144
+    generate generate154,155
+instance (K(KnownNat n) => IsToken (Core_integer n)158,159
+    token token159,160
+    fromToken fromToken160,161
+instance (K(KnownNat n) => IsToken (Core_uinteger n)164,165
+    token token165,166
+    fromToken fromToken166,167
+instance (K(KnownNat n) => IsToken (Core_bytes n)170,171
+    token token171,172
+    fromToken fromToken172,173
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)176,177
+    token token177,178
+    fromToken fromToken178,179
 
 ./src/System/SED/MCTP/Common/Base_Type/TH.hs,339
 module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13

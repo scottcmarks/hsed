@@ -35,8 +35,7 @@ module System.SED.MCTP.Common.Base_Type
   , padLeft
   , padRight
 
--- TODO: Work around needing these, please
-  , plain
+-- TODO: Work around needing this, please
   , unsafeCreate
 
   , ci
@@ -55,7 +54,7 @@ import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          padRight, replicate,
                                                          safeCreate, take,
                                                          toList)
--- TODO: Work around needing these, please
-import           System.SED.MCTP.Common.Base_Type.Class (plain, unsafeCreate)
+-- TODO: Work around needing this, please
+import           System.SED.MCTP.Common.Base_Type.Class (unsafeCreate)
 
 import           System.SED.MCTP.Common.Base_Type.TH    (cb, ci, cm, cu)

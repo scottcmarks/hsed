@@ -13,6 +13,7 @@
 
 {-|
 
+The 'BoundedSize' @l@ @u@ instance of 'Predicate' and various specializations;
 sized-text combinators are defined for members of 'IsBoundedSize'
 class. The package includes 'IsBoundedSize' instances for several
 common types.
@@ -94,7 +95,7 @@ instance (KnownNat n, ListOps a) => IsMaxSizeListOps n a
 
 
 
--- | Append two BoundedSizes together.
+-- | Append two 'BoundedSize' values together.
 --
 -- >>> append $(mx "foo") $(fx "bear")
 -- "foobear"
@@ -118,7 +119,7 @@ append ::
   ->  a ? BoundedSize (l1 + l2) (u1 + u2)
 append a b = unsafeCreate $ B.append (plain a) (plain b)
 
--- | Construct a new BoundedSize of maximum length from a basic element.
+-- | Construct a new 'BoundedSize' of maximum length from a basic element.
 --
 -- >>> replicate '=' :: String ? BoundedSize 5 10
 -- "=========="
@@ -143,7 +144,7 @@ map ::
   -> a ? BoundedSize l u
 map f s = unsafeCreate $ B.map f $ plain s
 
--- | Reduce BoundedSize length, preferring elements on the left.
+-- | Reduce 'BoundedSize' length, preferring elements on the left.
 --
 -- >>> take $(mx "Foobar") :: String ? BoundedSize 0 3
 -- "Foo"
@@ -177,7 +178,7 @@ take s = unsafeCreate $ B.take t $ plain s
   where
     t = fromNat (Proxy @u2)
 
--- | Reduce BoundedSize length, preferring elements on the right.
+-- | Reduce 'BoundedSize' length, preferring elements on the right.
 --
 -- >>> drop $(fx "Foobar") :: String ? BoundedSize 2 2
 -- "ar"
@@ -205,14 +206,14 @@ bounds _ = (lower, upper)
     lower = fromNat (Proxy @l)
     upper = fromNat (Proxy @u)
 
--- | Obtain value-level length.  Consult the actual data value.
+-- | Obtain value-level length.  Consult the @plain@ data value.
 length ::
      forall l u a. (IsBoundedSizeListOps l u a)
   => a ? BoundedSize l u
   -> Int
 length = B.length . plain
 
--- | Fill a BoundedSize with extra elements up to target length, padding
+-- | Fill a 'BoundedSize' with extra elements up to target length, padding
 -- original elements to the left.
 padLeft ::
      forall l1 u1 l2 u2 a.

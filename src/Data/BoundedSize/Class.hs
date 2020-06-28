@@ -101,14 +101,14 @@ instance (IsBoundedSize 0 l a) => IsMaxSize l a
 type MaxSize n = BoundedSize 0 n
 
 
--- | Sometimes a MaxSize value is given, but the only thing known about
---   the "max" is that the value is legal, e.g. "foo" could be a MaxSize 3 String,
---   or a MaxSize 4 String, so it is AtLeast MaxSize 3
---   Then it can be later cast to a specific MaxSize (of at least 3).
+-- | Sometimes a 'MaxSize' value is given, but the only thing known about
+--   the "max" is that the value is legal, e.g. "foo" could be a 'MaxSize' @3@ 'String',
+--   or a 'MaxSize' @4@ 'String', so it is 'AtLeast' 'MaxSize' @3@
+--   Then it can be later cast to a specific 'MaxSize' (of at least @3@).
 type AtLeast c m =  forall l . (KnownNat l, m <= l) => c l
 
 
--- | Arbitrary values for testing
+-- | 'Arbitrary' values for testing
 --
 instance (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u)) where
     arbitrary = arbitrary `suchThatMap` create -- noice
@@ -117,7 +117,7 @@ instance (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => 
 
 
 
--- | Type-level KnownNat to value-level Integral
+-- | Type-level 'KnownNat' to value-level 'Num'
 --
 -- >>> fromNat (Proxy @5) :: Int
 -- 5

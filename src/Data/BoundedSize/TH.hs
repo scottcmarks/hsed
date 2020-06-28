@@ -5,7 +5,7 @@
 
 {-|
 
-Template Haskell helpers for BoundedSize.
+Template Haskell helpers for 'BoundedSize'.
 
 -}
 module Data.BoundedSize.TH
@@ -39,13 +39,13 @@ import           Language.Haskell.TH
 -- >>> import Language.Haskell.TH.PprLib(Doc)
 
 
--- | A type with IsString instance to allow string literals in 'mx'
+-- | A type with 'IsString' instance to allow string literals in 'mx'
 -- argument without quoting.
 newtype LitS =
   LitS String
   deriving (IsString)
 
--- | Type-safe constructor for bounded-length string literals: a ? BoundedSize l u
+-- | Type-safe constructor for bounded-length string literals: @a ? BoundedSize l u@
 --
 
 -- >>> runQ $ ppr <$> sb 3 6 "Foobar"
@@ -64,7 +64,7 @@ sb l u s = do
 
 
 
--- | Type-safe constructor for fixed-length string literals: a ? BoundedSize l l
+-- | Type-safe constructor for fixed-length string literals: @a ? BoundedSize l l@
 --
 
 -- >>> :t "Foobar"
@@ -73,26 +73,8 @@ sb l u s = do
 -- LitS "Foobar" :: LitS
 -- >>> :t fx "Foobar"
 -- fx "Foobar" :: Q Exp
--- >>> $(fx "Foobar") :: BoundedSize 6 6 ByteString
--- <interactive>:129:4-14: error:
---     • Couldn't match type ‘Data.Refined.Refined
---                              (BoundedSize 6 6) [Char]’
---                      with ‘BoundedSize 6 6 ByteString’
---       Expected type: BoundedSize 6 6 ByteString
---         Actual type: [Char] ? BoundedSize 6 6
---     • In the expression:
---           (unsafeCreate "Foobar" ::
---              forall a_aTU7.
---              (HasSize a_aTU7, IsString a_aTU7) =>
---              (?) a_aTU7 (BoundedSize 6 6)) ::
---             BoundedSize 6 6 ByteString
---       In an equation for ‘it’:
---           it
---             = (unsafeCreate "Foobar" ::
---                  forall a_aTU7.
---                  (HasSize a_aTU7, IsString a_aTU7) =>
---                  (?) a_aTU7 (BoundedSize 6 6)) ::
---                 BoundedSize 6 6 ByteString
+-- >>> $(fx "Foobar") ::  ByteString ? BoundedSize 6 6
+-- "Foobar"
 --
 -- >>> runQ $ ppr <$> fx "Foobar"
 -- Data.Refined.unsafeCreate "Foobar" :: forall a_0 . (Data.HasSize.HasSize a_0,
@@ -102,13 +84,13 @@ sb l u s = do
 -- >>> :t runQ $ ppr <$> fx "Foobar"
 -- runQ $ ppr <$> fx "Foobar" :: Quasi m => m Doc
 --
--- where 6 is the string length obtained at compile time.
+-- where @6@ is the string length obtained at compile time.
 --
 fx :: LitS -> Q Exp
 fx (LitS s) = sb l l s  where l = P.length s
 
 
--- | Type-safe constructor for bounded-length string literals: a ? BoundedSize 0 l
+-- | Type-safe constructor for bounded-length string literals: @a ? BoundedSize 0 l@
 --
 -- >>> :t "Foobar"
 -- "Foobar" :: IsString p => p
@@ -127,7 +109,7 @@ fx (LitS s) = sb l l s  where l = P.length s
 -- >>> :t runQ $ ppr <$> mx "Foobar"
 -- runQ $ ppr <$> mx "Foobar" :: Quasi m => m Doc
 --
--- where 6 is the string length obtained at compile time.
+-- where @6@ is the string length obtained at compile time.
 --
 mx :: LitS -> Q Exp
 mx (LitS s) = sb 0 l s  where l = P.length s
@@ -142,8 +124,9 @@ typeFromInt :: Int -> Type
 typeFromInt = LitT . NumTyLit . fromIntegral
 
 -- | Construct
--- > @unsafeCreate "Foobar" :: forall a. (IsString a, HasSize a) => typef l u a@
---   where l and u are the type-level KnownNat versions of the bounds of s
+--   @unsafeCreate "Foobar" :: forall a. (IsString a, HasSize a) => typef l u a@
+--   where @l@ and @u@ are the type-level KnownNat versions of the bounds of @s@
+--
 -- >>> :set -Wno-name-shadowing
 -- >>> at <- runQ $ newName "a"
 -- >>> ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
@@ -154,8 +137,8 @@ unsafeCreateExp ::
     (Type -> Type -> Name -> Type) -- type expression constructor
  -> Type   -- type-level value for the min length
  -> Type   -- type-level value for the max lengthName
- -> Name   -- name of the wrapped type, e.g. ByteString
- -> String -- literal IsString value to be wrapped
+ -> Name   -- name of the wrapped type, e.g. 'ByteString'
+ -> String -- literal 'IsString' value to be wrapped
  -> Exp    -- explicitly typed expression  unsafeCreate <s> :: forall a ...
 unsafeCreateExp typef l u a s =
     SigE
@@ -170,8 +153,7 @@ unsafeCreateExp typef l u a s =
        typef l u a) -- create the final type expression, e.g. a ? BoundedSize l u
 
 
--- | Create the final expression for a ? BoundedSize l u
--- AppT (AppT (ConT Data.Refined.?) (VarT a)) (AppT (AppT (ConT Data.BoundedSize.Class.BoundedSize) (LitT (NumTyLit 3))) (LitT (NumTyLit 6)))
+-- | Create the final expression for @a ? BoundedSize l u@
 --
 -- >>> universallyQuantifiedBoundedSizeType (typeFromInt 3) (typeFromInt 6) (mkName "a")
 -- AppT (AppT (ConT Data.Refined.?) (VarT a)) (AppT (AppT (ConT Data.BoundedSize.Class.BoundedSize) (LitT (NumTyLit 3))) (LitT (NumTyLit 6)))
@@ -180,6 +162,6 @@ unsafeCreateExp typef l u a s =
 universallyQuantifiedBoundedSizeType ::
     Type  -- type-level value for the min length
  -> Type  -- type-level value for the max length
- -> Name  -- name of the wrapped type, e.g. ByteString
- -> Type  -- type expression, e.g.  ByteString ? BoundedSize l u
+ -> Name  -- name of the wrapped type, e.g. 'ByteString'
+ -> Type  -- type expression, e.g.  @ByteString ? BoundedSize l u@
 universallyQuantifiedBoundedSizeType l u a = AppT (AppT (ConT ''(?)) (VarT a)) (AppT (AppT (ConT ''BoundedSize) l) u)

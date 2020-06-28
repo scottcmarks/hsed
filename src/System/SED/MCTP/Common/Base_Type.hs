@@ -24,6 +24,8 @@ module System.SED.MCTP.Common.Base_Type
   , Core_bytes         (..)
   , Core_max_bytes     (..)
   , safeCreate
+  , core_bytes_4
+  , core_bytes_8
   , toList
   , append
   , replicate
@@ -35,9 +37,6 @@ module System.SED.MCTP.Common.Base_Type
   , padLeft
   , padRight
 
--- TODO: Work around needing this, please
-  , unsafeCreate
-
   , ci
   , cu
   , cb
@@ -45,6 +44,9 @@ module System.SED.MCTP.Common.Base_Type
   )
 where
 
+import           Data.ByteString                        (pack)
+import           GHC.Base                               (($))
+import           GHC.Word                               (Word8 (..))
 import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
@@ -53,8 +55,21 @@ import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          length, map, padLeft,
                                                          padRight, replicate,
                                                          safeCreate, take,
-                                                         toList)
--- TODO: Work around needing this, please
-import           System.SED.MCTP.Common.Base_Type.Class (unsafeCreate)
-
+                                                         toList, unsafeCreate)
 import           System.SED.MCTP.Common.Base_Type.TH    (cb, ci, cm, cu)
+
+
+
+core_bytes_4 ::
+    Word8 -> Word8 -> Word8 -> Word8
+ -> Core_bytes 4
+core_bytes_4 b3 b2 b1 b0 =
+    Core_bytes $ unsafeCreate $ pack [b3, b2, b1, b0]
+
+
+core_bytes_8 ::
+    Word8 -> Word8 -> Word8 -> Word8
+ -> Word8 -> Word8 -> Word8 -> Word8
+ -> Core_bytes 8
+core_bytes_8 b7 b6 b5 b4 b3 b2 b1 b0 =
+    Core_bytes $ unsafeCreate $ pack [b7, b6, b5, b4, b3, b2, b1, b0]

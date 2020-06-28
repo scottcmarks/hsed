@@ -8,11 +8,16 @@
 @version 0.1.0.1
 
 
--- | Things that have a "size"
+-- | Things that have a <tt>size</tt>
 module Data.HasSize
 
--- | Size is an abstract Int-valued property of a Type that can be used to
---   refine values of that type.
+-- | <tt>size</tt> is an abstract <a>Int</a>-valued property of a type that
+--   can be used to refine values of that type.
+--   
+--   The size of an <a>Integer</a> is roughly the number of bytes required
+--   to represent
+--   
+--   The size of a <a>ListLike</a> is just the number of <tt>Item</tt>s
 class HasSize a
 size :: HasSize a => a -> Int
 instance Data.HasSize.HasSize GHC.Int.Int8
@@ -59,8 +64,13 @@ instance (GHC.Exts.IsList a, Data.Refined.Predicate p a) => GHC.Exts.IsList (Dat
 --   to a type.
 module Data.BoundedSize.Class
 
--- | Size is an abstract Int-valued property of a Type that can be used to
---   refine values of that type.
+-- | <tt>size</tt> is an abstract <a>Int</a>-valued property of a type that
+--   can be used to refine values of that type.
+--   
+--   The size of an <a>Integer</a> is roughly the number of bytes required
+--   to represent
+--   
+--   The size of a <a>ListLike</a> is just the number of <tt>Item</tt>s
 class HasSize a
 size :: HasSize a => a -> Int
 
@@ -78,10 +88,12 @@ type FixedSize n = BoundedSize n n
 class (IsBoundedSize 0 l a) => IsMaxSize l a
 type MaxSize n = BoundedSize 0 n
 
--- | Sometimes a MaxSize value is given, but the only thing known about the
---   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
---   String, or a MaxSize 4 String, so it is AtLeast MaxSize 3 Then it can
---   be later cast to a specific MaxSize (of at least 3).
+-- | Sometimes a <a>MaxSize</a> value is given, but the only thing known
+--   about the "max" is that the value is legal, e.g. "foo" could be a
+--   <a>MaxSize</a> <tt>3</tt> <tt>String</tt>, or a <a>MaxSize</a>
+--   <tt>4</tt> <tt>String</tt>, so it is <a>AtLeast</a> <a>MaxSize</a>
+--   <tt>3</tt> Then it can be later cast to a specific <a>MaxSize</a> (of
+--   at least <tt>3</tt>).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
@@ -96,7 +108,7 @@ unsafeCreate :: Predicate p a => a -> Refined p a
 type a ? p = Refined p a
 infixr 1 ?
 
--- | Type-level KnownNat to value-level Integral
+-- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
 --   <pre>
 --   &gt;&gt;&gt; fromNat (Proxy @5) :: Int
@@ -115,15 +127,15 @@ instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize
 instance (GHC.TypeNats.KnownNat l, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.Predicate (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (a Data.Refined.? Data.BoundedSize.Class.BoundedSize l u)
 
 
--- | Template Haskell helpers for BoundedSize.
+-- | Template Haskell helpers for <a>BoundedSize</a>.
 module Data.BoundedSize.TH
 
--- | Type-safe constructor for fixed-length string literals: a ?
---   BoundedSize l l
+-- | Type-safe constructor for fixed-length string literals: <tt>a ?
+--   BoundedSize l l</tt>
 fx :: LitS -> Q Exp
 
--- | Type-safe constructor for bounded-length string literals: a ?
---   BoundedSize 0 l
+-- | Type-safe constructor for bounded-length string literals: <tt>a ?
+--   BoundedSize 0 l</tt>
 --   
 --   <pre>
 --   &gt;&gt;&gt; :t "Foobar"
@@ -151,18 +163,23 @@ fx :: LitS -> Q Exp
 --   runQ $ ppr &lt;$&gt; mx "Foobar" :: Quasi m =&gt; m Doc
 --   </pre>
 --   
---   where 6 is the string length obtained at compile time.
+--   where <tt>6</tt> is the string length obtained at compile time.
 mx :: LitS -> Q Exp
 
--- | Construct &gt; <tt>unsafeCreate <a>Foobar</a> :: forall a. (IsString
---   a, HasSize a) =&gt; typef l u a</tt> where l and u are the type-level
---   KnownNat versions of the bounds of s &gt;&gt;&gt; :set
---   -Wno-name-shadowing &gt;&gt;&gt; at &lt;- runQ $ newName "a"
---   &gt;&gt;&gt; ppr $ unsafeCreateExp
---   universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4)
---   at "Boo!" Data.Refined.unsafeCreate "Boo!" :: forall a_0 .
---   (Data.HasSize.HasSize a_0, Data.String.IsString a_0) =&gt;
---   (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 4)
+-- | Construct <tt>unsafeCreate <a>Foobar</a> :: forall a. (IsString a,
+--   HasSize a) =&gt; typef l u a</tt> where <tt>l</tt> and <tt>u</tt> are
+--   the type-level KnownNat versions of the bounds of <tt>s</tt>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :set -Wno-name-shadowing
+--   
+--   &gt;&gt;&gt; at &lt;- runQ $ newName "a"
+--   
+--   &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
+--   Data.Refined.unsafeCreate "Boo!" :: forall a_0 . (Data.HasSize.HasSize a_0,
+--                                                     Data.String.IsString a_0) =&gt;
+--                                       (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 4)
+--   </pre>
 unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> String -> Exp
 
 -- | Transform a data-level Int to a Type value
@@ -178,9 +195,10 @@ typeFromInt :: Int -> Type
 instance Data.String.IsString Data.BoundedSize.TH.LitS
 
 
--- | sized-text combinators are defined for members of <a>IsBoundedSize</a>
---   class. The package includes <a>IsBoundedSize</a> instances for several
---   common types.
+-- | The <a>BoundedSize</a> <tt>l</tt> <tt>u</tt> instance of
+--   <a>Predicate</a> and various specializations; sized-text combinators
+--   are defined for members of <a>IsBoundedSize</a> class. The package
+--   includes <a>IsBoundedSize</a> instances for several common types.
 --   
 --   This module is meant to be imported qualifed, e.g.
 --   
@@ -189,8 +207,13 @@ instance Data.String.IsString Data.BoundedSize.TH.LitS
 --   </pre>
 module Data.BoundedSize
 
--- | Size is an abstract Int-valued property of a Type that can be used to
---   refine values of that type.
+-- | <tt>size</tt> is an abstract <a>Int</a>-valued property of a type that
+--   can be used to refine values of that type.
+--   
+--   The size of an <a>Integer</a> is roughly the number of bytes required
+--   to represent
+--   
+--   The size of a <a>ListLike</a> is just the number of <tt>Item</tt>s
 class HasSize a
 size :: HasSize a => a -> Int
 
@@ -208,18 +231,20 @@ type FixedSize n = BoundedSize n n
 class (IsBoundedSize 0 l a) => IsMaxSize l a
 type MaxSize n = BoundedSize 0 n
 
--- | Sometimes a MaxSize value is given, but the only thing known about the
---   "max" is that the value is legal, e.g. "foo" could be a MaxSize 3
---   String, or a MaxSize 4 String, so it is AtLeast MaxSize 3 Then it can
---   be later cast to a specific MaxSize (of at least 3).
+-- | Sometimes a <a>MaxSize</a> value is given, but the only thing known
+--   about the "max" is that the value is legal, e.g. "foo" could be a
+--   <a>MaxSize</a> <tt>3</tt> <tt>String</tt>, or a <a>MaxSize</a>
+--   <tt>4</tt> <tt>String</tt>, so it is <a>AtLeast</a> <a>MaxSize</a>
+--   <tt>3</tt> Then it can be later cast to a specific <a>MaxSize</a> (of
+--   at least <tt>3</tt>).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 
--- | Type-safe constructor for fixed-length string literals: a ?
---   BoundedSize l l
+-- | Type-safe constructor for fixed-length string literals: <tt>a ?
+--   BoundedSize l l</tt>
 fx :: LitS -> Q Exp
 
--- | Type-safe constructor for bounded-length string literals: a ?
---   BoundedSize 0 l
+-- | Type-safe constructor for bounded-length string literals: <tt>a ?
+--   BoundedSize 0 l</tt>
 --   
 --   <pre>
 --   &gt;&gt;&gt; :t "Foobar"
@@ -247,18 +272,23 @@ fx :: LitS -> Q Exp
 --   runQ $ ppr &lt;$&gt; mx "Foobar" :: Quasi m =&gt; m Doc
 --   </pre>
 --   
---   where 6 is the string length obtained at compile time.
+--   where <tt>6</tt> is the string length obtained at compile time.
 mx :: LitS -> Q Exp
 
--- | Construct &gt; <tt>unsafeCreate <a>Foobar</a> :: forall a. (IsString
---   a, HasSize a) =&gt; typef l u a</tt> where l and u are the type-level
---   KnownNat versions of the bounds of s &gt;&gt;&gt; :set
---   -Wno-name-shadowing &gt;&gt;&gt; at &lt;- runQ $ newName "a"
---   &gt;&gt;&gt; ppr $ unsafeCreateExp
---   universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4)
---   at "Boo!" Data.Refined.unsafeCreate "Boo!" :: forall a_0 .
---   (Data.HasSize.HasSize a_0, Data.String.IsString a_0) =&gt;
---   (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 4)
+-- | Construct <tt>unsafeCreate <a>Foobar</a> :: forall a. (IsString a,
+--   HasSize a) =&gt; typef l u a</tt> where <tt>l</tt> and <tt>u</tt> are
+--   the type-level KnownNat versions of the bounds of <tt>s</tt>
+--   
+--   <pre>
+--   &gt;&gt;&gt; :set -Wno-name-shadowing
+--   
+--   &gt;&gt;&gt; at &lt;- runQ $ newName "a"
+--   
+--   &gt;&gt;&gt; ppr $ unsafeCreateExp universallyQuantifiedBoundedSizeType (typeFromInt 0) (typeFromInt 4) at "Boo!"
+--   Data.Refined.unsafeCreate "Boo!" :: forall a_0 . (Data.HasSize.HasSize a_0,
+--                                                     Data.String.IsString a_0) =&gt;
+--                                       (Data.Refined.?) a_0 (Data.BoundedSize.Class.BoundedSize 0 4)
+--   </pre>
 unsafeCreateExp :: (Type -> Type -> Name -> Type) -> Type -> Type -> Name -> String -> Exp
 
 -- | Transform a data-level Int to a Type value
@@ -278,7 +308,7 @@ class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps l u a
 class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps n a
 class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
 
--- | Append two BoundedSizes together.
+-- | Append two <a>BoundedSize</a> values together.
 --   
 --   <pre>
 --   &gt;&gt;&gt; append $(mx "foo") $(fx "bear")
@@ -299,7 +329,8 @@ class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
 --   </pre>
 append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
--- | Construct a new BoundedSize of maximum length from a basic element.
+-- | Construct a new <a>BoundedSize</a> of maximum length from a basic
+--   element.
 --   
 --   <pre>
 --   &gt;&gt;&gt; replicate '=' :: String ? BoundedSize 5 10
@@ -315,7 +346,7 @@ replicate :: forall l u a. IsBoundedSizeListOps l u a => Item a -> a ? BoundedSi
 --   </pre>
 map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? BoundedSize l u) -> a ? BoundedSize l u
 
--- | Reduce BoundedSize length, preferring elements on the left.
+-- | Reduce <a>BoundedSize</a> length, preferring elements on the left.
 --   
 --   <pre>
 --   &gt;&gt;&gt; take $(mx "Foobar") :: String ? BoundedSize 0 3
@@ -350,7 +381,7 @@ map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? Bo
 --   </pre>
 take :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
--- | Reduce BoundedSize length, preferring elements on the right.
+-- | Reduce <a>BoundedSize</a> length, preferring elements on the right.
 --   
 --   <pre>
 --   &gt;&gt;&gt; drop $(fx "Foobar") :: String ? BoundedSize 2 2
@@ -364,11 +395,11 @@ drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOp
 -- | Obtain length bounds from the type.
 bounds :: forall l u a. IsBoundedSize l u a => (a ? BoundedSize l u) -> (Int, Int)
 
--- | Obtain value-level length. Consult the actual data value.
+-- | Obtain value-level length. Consult the <tt>plain</tt> data value.
 length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> Int
 
--- | Fill a BoundedSize with extra elements up to target length, padding
---   original elements to the left.
+-- | Fill a <a>BoundedSize</a> with extra elements up to target length,
+--   padding original elements to the left.
 padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
@@ -386,7 +417,7 @@ safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 unsafeCreate :: Predicate p a => a -> Refined p a
 
--- | Type-level KnownNat to value-level Integral
+-- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
 --   <pre>
 --   &gt;&gt;&gt; fromNat (Proxy @5) :: Int
@@ -419,10 +450,6 @@ logFunc :: Lens' App LogFunc
 makeApp :: LogFunc -> ProcessContext -> Options -> App
 instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
-
-
--- | Orphan instances.
-module System.SED.MCTP.Common.Instances
 
 
 -- | Parse and generate stream items.
@@ -503,7 +530,7 @@ safeCreate :: Predicate p a => a -> Either String (Refined p a)
 --   structure <tt>l</tt>. It should satisfy fromList . toList = id.
 toList :: IsList l => l -> [Item l]
 
--- | Append two BoundedSizes together.
+-- | Append two <a>BoundedSize</a> values together.
 --   
 --   <pre>
 --   &gt;&gt;&gt; append $(mx "foo") $(fx "bear")
@@ -524,7 +551,8 @@ toList :: IsList l => l -> [Item l]
 --   </pre>
 append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
--- | Construct a new BoundedSize of maximum length from a basic element.
+-- | Construct a new <a>BoundedSize</a> of maximum length from a basic
+--   element.
 --   
 --   <pre>
 --   &gt;&gt;&gt; replicate '=' :: String ? BoundedSize 5 10
@@ -540,7 +568,7 @@ replicate :: forall l u a. IsBoundedSizeListOps l u a => Item a -> a ? BoundedSi
 --   </pre>
 map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? BoundedSize l u) -> a ? BoundedSize l u
 
--- | Reduce BoundedSize length, preferring elements on the left.
+-- | Reduce <a>BoundedSize</a> length, preferring elements on the left.
 --   
 --   <pre>
 --   &gt;&gt;&gt; take $(mx "Foobar") :: String ? BoundedSize 0 3
@@ -575,7 +603,7 @@ map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? Bo
 --   </pre>
 take :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
--- | Reduce BoundedSize length, preferring elements on the right.
+-- | Reduce <a>BoundedSize</a> length, preferring elements on the right.
 --   
 --   <pre>
 --   &gt;&gt;&gt; drop $(fx "Foobar") :: String ? BoundedSize 2 2
@@ -589,11 +617,11 @@ drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOp
 -- | Obtain length bounds from the type.
 bounds :: forall l u a. IsBoundedSize l u a => (a ? BoundedSize l u) -> (Int, Int)
 
--- | Obtain value-level length. Consult the actual data value.
+-- | Obtain value-level length. Consult the <tt>plain</tt> data value.
 length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> Int
 
--- | Fill a BoundedSize with extra elements up to target length, padding
---   original elements to the left.
+-- | Fill a <a>BoundedSize</a> with extra elements up to target length,
+--   padding original elements to the left.
 padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
@@ -652,12 +680,14 @@ Core_bytes :: (ByteString ? FixedSize n) -> Core_bytes n
 newtype Core_max_bytes n
 Core_max_bytes :: (ByteString ? MaxSize n) -> Core_max_bytes n
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
+core_bytes_4 :: Word8 -> Word8 -> Word8 -> Word8 -> Core_bytes 4
+core_bytes_8 :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Core_bytes 8
 
 -- | The <a>toList</a> function extracts a list of <tt>Item l</tt> from the
 --   structure <tt>l</tt>. It should satisfy fromList . toList = id.
 toList :: IsList l => l -> [Item l]
 
--- | Append two BoundedSizes together.
+-- | Append two <a>BoundedSize</a> values together.
 --   
 --   <pre>
 --   &gt;&gt;&gt; append $(mx "foo") $(fx "bear")
@@ -678,7 +708,8 @@ toList :: IsList l => l -> [Item l]
 --   </pre>
 append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
--- | Construct a new BoundedSize of maximum length from a basic element.
+-- | Construct a new <a>BoundedSize</a> of maximum length from a basic
+--   element.
 --   
 --   <pre>
 --   &gt;&gt;&gt; replicate '=' :: String ? BoundedSize 5 10
@@ -694,7 +725,7 @@ replicate :: forall l u a. IsBoundedSizeListOps l u a => Item a -> a ? BoundedSi
 --   </pre>
 map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? BoundedSize l u) -> a ? BoundedSize l u
 
--- | Reduce BoundedSize length, preferring elements on the left.
+-- | Reduce <a>BoundedSize</a> length, preferring elements on the left.
 --   
 --   <pre>
 --   &gt;&gt;&gt; take $(mx "Foobar") :: String ? BoundedSize 0 3
@@ -729,7 +760,7 @@ map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? Bo
 --   </pre>
 take :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) => (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
--- | Reduce BoundedSize length, preferring elements on the right.
+-- | Reduce <a>BoundedSize</a> length, preferring elements on the right.
 --   
 --   <pre>
 --   &gt;&gt;&gt; drop $(fx "Foobar") :: String ? BoundedSize 2 2
@@ -743,16 +774,15 @@ drop :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOp
 -- | Obtain length bounds from the type.
 bounds :: forall l u a. IsBoundedSize l u a => (a ? BoundedSize l u) -> (Int, Int)
 
--- | Obtain value-level length. Consult the actual data value.
+-- | Obtain value-level length. Consult the <tt>plain</tt> data value.
 length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> Int
 
--- | Fill a BoundedSize with extra elements up to target length, padding
---   original elements to the left.
+-- | Fill a <a>BoundedSize</a> with extra elements up to target length,
+--   padding original elements to the left.
 padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
-unsafeCreate :: Predicate p a => a -> Refined p a
 
 -- | Type-safe constructor for fixed-length byte literals: Core_bytes n
 ci :: LitI -> Q Exp

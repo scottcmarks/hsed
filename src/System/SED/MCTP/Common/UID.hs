@@ -20,9 +20,9 @@ Datatypes for UIDs and HalfUIDs.
 
 module System.SED.MCTP.Common.UID where
 
-import qualified Data.ByteString                   as B (pack, singleton)
+import           Data.ByteString                   (singleton)
 import           Data.ByteString.Base16            (encode)
-import qualified Data.ByteString.Char8             as C (unpack)
+import           Data.ByteString.Char8             (unpack)
 import           Data.Foldable                     (foldl)
 import           Data.Functor                      ((<$>))
 
@@ -32,14 +32,13 @@ import           GHC.Classes                       (Eq (..), Ord (..))
 import           GHC.Exts                          (IsList (..))
 import           GHC.Show                          (Show (..), showString)
 import           GHC.TypeLits                      (KnownNat)
-import           GHC.Word                          (Word8 (..))
+import           GHC.Word                          (Word8)
 
 import           Test.QuickCheck                   (Arbitrary (..))
 
 import           System.SED.MCTP.Common.Base_Type  (Core_bytes (..), append,
+                                                    core_bytes_4, core_bytes_8,
                                                     drop, take)
--- TODO: Work around needing this, please
-import           System.SED.MCTP.Common.Base_Type  (unsafeCreate)
 
 import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
 import           System.SED.MCTP.Common.Token      (IsToken (..))
@@ -72,24 +71,25 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 -}
 
 showCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
-showCore_bytes c fb = foldl ((\s w -> showString s . showString " 0x" $ C.unpack $ encode $ B.singleton w) :: String -> Word8 ->String) c (toList fb)
+showCore_bytes tag = foldl rollUp tag . toList
+  where rollUp s = showString s . showString " 0x" . unpack . encode . singleton
 
 
 newtype HalfUID = HalfUID (Core_bytes 4)
-    deriving(Eq,Ord)
-    deriving(IsToken,StreamItem,IsList) via (Core_bytes 4)
+    deriving(Eq, Ord)
+    deriving(IsToken, StreamItem, IsList) via (Core_bytes 4)
 instance Show HalfUID where
     show (HalfUID fb) = showCore_bytes "halfUID" fb
 instance Arbitrary HalfUID where
     arbitrary = HalfUID <$> Core_bytes <$> arbitrary
 
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
-halfUID b3 b2 b1 b0 = HalfUID (Core_bytes (unsafeCreate $ B.pack [b3, b2, b1, b0]))
+halfUID b3 b2 b1 b0 = HalfUID $ core_bytes_4 b3 b2 b1 b0
 
 
 newtype UID = UID (Core_bytes 8)
-    deriving(Eq,Ord)
-    deriving(IsToken, StreamItem,IsList) via (Core_bytes 8)
+    deriving(Eq, Ord)
+    deriving(IsToken, StreamItem, IsList) via (Core_bytes 8)
 instance Show UID where
     show (UID fb) = showCore_bytes "uid" fb
 instance Arbitrary UID where
@@ -100,7 +100,7 @@ uid ::
  -> Word8 -> Word8 -> Word8 -> Word8
  -> UID
 uid u3 u2 u1 u0 l3 l2 l1 l0 =
-    UID (Core_bytes (unsafeCreate $ B.pack [u3, u2, u1, u0, l3, l2, l1, l0]))
+    UID $ core_bytes_8 u3 u2 u1 u0 l3 l2 l1 l0
 
 
 uidUpper :: UID -> HalfUID

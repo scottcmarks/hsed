@@ -178,7 +178,7 @@ newtype ColumnType ColumnType354,355
 
 ./src/System/SED/MCTP/Common/UID.hs,587
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID20,21
-showCore_bytes showCore_bytes73,74
+showCore_bytes showCore_bytes72,73
 newtype HalfUID HalfUID77,78
 instance Show Show HalfUID80,81
     show show81,82
@@ -483,8 +483,10 @@ ct' ct'199,200
 ./src/System/SED/MCTP/Common/ColumnTypes.lhs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes23,24
 
-./src/System/SED/MCTP/Common/Base_Type.hs,79
+./src/System/SED/MCTP/Common/Base_Type.hs,145
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
+core_bytes_4 core_bytes_462,63
+core_bytes_8 core_bytes_869,70
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.lhs,1289
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH25,26
@@ -579,9 +581,6 @@ instance StreamItem StreamItem Core_uidref_Object_Table153,154
     parser parser154,155
     generate generate155,156
 
-./src/System/SED/MCTP/Common/Instances.hs,80
-module System.SED.MCTP.Common.Instances System.SED.MCTP.Common.Instances17,18
-
 ./src/System/SED/MCTP/Common/Util.hs,144
 module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util17,18
 hexUID hexUID40,41
@@ -622,67 +621,67 @@ instance (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) 
     shrink shrink114,115
 fromNat fromNat123,124
 
-./src/Data/BoundedSize/TH.hs,278
+./src/Data/BoundedSize/TH.hs,276
 module Data.BoundedSize.THData.BoundedSize.TH10,11
 newtype LitS LitS43,44
 sb sb57,58
-fx fx106,107
-mx mx131,132
-typeFromInt typeFromInt140,141
-unsafeCreateExp unsafeCreateExp152,153
-universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType179,180
+fx fx88,89
+mx mx113,114
+typeFromInt typeFromInt122,123
+unsafeCreateExp unsafeCreateExp135,136
+universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType161,162
 
 ./src/Data/BoundedSize.hs,796
-module Data.BoundedSizeData.BoundedSize24,25
-class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps IsBoundedSizeListOps73,74
-instance (K(KnownNat l, KnownNat u, ListOps a) => IsBoundedSizeListOps l u a74,75
-class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps IsFixedSizeListOps76,77
-instance (K(KnownNat n, ListOps a) => IsFixedSizeListOps n a77,78
-class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps IsMaxSizeListOps79,80
-instance (K(KnownNat n, ListOps a) => IsMaxSizeListOps n a80,81
-append append109,110
-append append118,119
-replicate replicate124,125
-map map137,138
-take take168,169
-drop drop185,186
-bounds bounds198,199
-length length208,209
-padLeft padLeft216,217
-padLeft padLeft225,226
-padRight padRight228,229
-padRight padRight237,238
+module Data.BoundedSizeData.BoundedSize25,26
+class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps IsBoundedSizeListOps74,75
+instance (K(KnownNat l, KnownNat u, ListOps a) => IsBoundedSizeListOps l u a75,76
+class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps IsFixedSizeListOps77,78
+instance (K(KnownNat n, ListOps a) => IsFixedSizeListOps n a78,79
+class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps IsMaxSizeListOps80,81
+instance (K(KnownNat n, ListOps a) => IsMaxSizeListOps n a81,82
+append append110,111
+append append119,120
+replicate replicate125,126
+map map138,139
+take take169,170
+drop drop186,187
+bounds bounds199,200
+length length209,210
+padLeft padLeft217,218
+padLeft padLeft226,227
+padRight padRight229,230
+padRight padRight238,239
 
 ./src/Data/HasSize.hs,1399
-module Data.HasSizeData.HasSize17,18
-class HasSize HasSize35,36
-class HasSize a where size size35,36
-instance HasSize HasSize Int841,42
-instance HasSize Int8              where size size41,42
-instance HasSize HasSize Int1642,43
-instance HasSize Int16             where size size42,43
-instance HasSize HasSize Int3243,44
-instance HasSize Int32             where size size43,44
-instance HasSize HasSize Int6444,45
-instance HasSize Int64             where size size44,45
-instance HasSize HasSize Int45,46
-instance HasSize Int               where size size45,46
-instance {-# OVERLAPPING #-} HasSize HasSize Integer46,47
-  where size size47,48
-instance HasSize HasSize Word851,52
-instance HasSize Word8             where size size51,52
-instance HasSize HasSize Word1652,53
-instance HasSize Word16            where size size52,53
-instance HasSize HasSize Word3253,54
-instance HasSize Word32            where size size53,54
-instance HasSize HasSize Word6454,55
-instance HasSize Word64            where size size54,55
-instance HasSize HasSize Word55,56
-instance HasSize Word              where size size55,56
-instance {-# OVERLAPPING #-} HasSize HasSize Natural56,57
-  where size size57,58
-instance {-# OVERLAPPABLE #-} ListLike ListLike full e => HasSize full61,62
-instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size61,62
+module Data.HasSizeData.HasSize18,19
+class HasSize HasSize45,46
+class HasSize a where size size45,46
+instance HasSize HasSize Int850,51
+instance HasSize Int8              where size size50,51
+instance HasSize HasSize Int1651,52
+instance HasSize Int16             where size size51,52
+instance HasSize HasSize Int3252,53
+instance HasSize Int32             where size size52,53
+instance HasSize HasSize Int6453,54
+instance HasSize Int64             where size size53,54
+instance HasSize HasSize Int55,56
+instance HasSize Int               where size size55,56
+instance {-# OVERLAPPING #-} HasSize HasSize Integer59,60
+  where size size60,61
+instance HasSize HasSize Word864,65
+instance HasSize Word8             where size size64,65
+instance HasSize HasSize Word1665,66
+instance HasSize Word16            where size size65,66
+instance HasSize HasSize Word3266,67
+instance HasSize Word32            where size size66,67
+instance HasSize HasSize Word6467,68
+instance HasSize Word64            where size size67,68
+instance HasSize HasSize Word69,70
+instance HasSize Word              where size size69,70
+instance {-# OVERLAPPING #-} HasSize HasSize Natural73,74
+  where size size74,75
+instance {-# OVERLAPPABLE #-} ListLike ListLike full e => HasSize full77,78
+instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size77,78
 
 ./src/Data/Refined.hs,1104
 module Data.RefinedData.Refined25,26

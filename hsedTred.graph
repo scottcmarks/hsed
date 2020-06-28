@@ -43,7 +43,7 @@ digraph G {
 				label=Extras,
 				style=filled
 			];
-			u30			 [fillcolor="#bbffff",
+			u29			 [fillcolor="#bbffff",
 				label=GitVersion,
 				penwidth=0,
 				style=filled];
@@ -174,17 +174,13 @@ digraph G {
 						label=Table,
 						penwidth=0,
 						style=filled];
-					u26					 [fillcolor="#ff7777",
-						label=Instances,
-						penwidth=0,
-						style=filled];
 				}
 				subgraph cluster_12 {
 					graph [color="#0000000F",
 						label=Host,
 						style=filled
 					];
-					u27					 [fillcolor="#bbff77",
+					u26					 [fillcolor="#bbff77",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -194,7 +190,7 @@ digraph G {
 						label=TPer,
 						style=filled
 					];
-					u28					 [fillcolor="#3333ff",
+					u27					 [fillcolor="#3333ff",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -202,13 +198,13 @@ digraph G {
 			}
 		}
 	}
-	u29	 [fillcolor="#bbffbb",
+	u28	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u29 -> u30;
-	u29 -> u27;
-	u29 -> u28;
+	u28 -> u29;
+	u28 -> u26;
+	u28 -> u27;
 	u0 -> u4;
 	u1 -> u2;
 	u1 -> u3;
@@ -242,8 +238,8 @@ digraph G {
 	u25 -> u16;
 	u25 -> u17;
 	u25 -> u23;
+	u26 -> u5;
+	u26 -> u20;
 	u27 -> u5;
 	u27 -> u20;
-	u28 -> u5;
-	u28 -> u20;
 }

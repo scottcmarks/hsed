@@ -862,7 +862,7 @@ instance GHC.Show.Show System.SED.MCTP.Common.UID.HalfUID
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.HalfUID
 
 
--- | Table
+-- | Table datatype
 module System.SED.MCTP.Common.Table
 newtype TableName
 TableName :: ByteString -> TableName
@@ -1834,7 +1834,7 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Val
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Value.Datum
 
 
--- | Datatypes for Tokens.
+-- | Parse and generate method invocations and responses.
 module System.SED.MCTP.Common.Call
 data MethodHeader
 MethodHeader :: UID -> UID -> MethodHeader

@@ -32,6 +32,7 @@ module Data.BoundedSize.Class
        , IsMaxSize
        , MaxSize
        , AtLeast
+       , Refined
        , Predicate (..)
        , type (?)
        , fromNat
@@ -41,7 +42,7 @@ where
 
 import           Data.HasSize    (HasSize (..))
 import           Data.Proxy      (Proxy (..))
-import           Data.Refined    (type (?), Predicate (..))
+import           Data.Refined    (type (?), Predicate (..), Refined)
 import           GHC.Base        (Int, Monoid (..), Semigroup (..), ($), (.))
 import           GHC.Classes     (Eq (..), Ord (..), (&&))
 import           GHC.Num         (Num)
@@ -110,8 +111,8 @@ type AtLeast c m =  forall l . (KnownNat l, m <= l) => c l
 
 -- | 'Arbitrary' values for testing
 --
-instance (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u)) where
-    arbitrary = arbitrary `suchThatMap` create -- noice
+instance {-# OVERLAPPING #-} (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u)) where
+    arbitrary = arbitrary `suchThatMap` create
     shrink t = [ unsafeCreate s | s <- shrink $ plain t, l <= size s]
        where l = fromNat (Proxy @l)
 

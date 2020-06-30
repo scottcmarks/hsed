@@ -50,13 +50,15 @@ module Data.BoundedSize
        , padLeft
        , padRight
 
+       , Refined
        , type (?)
        , Predicate(..)
        , fromNat
        )
 where
 
-import           Data.BoundedSize.Class (type (?), Predicate (..), fromNat)
+import           Data.BoundedSize.Class (type (?), Predicate (..), Refined,
+                                         fromNat)
 import           Data.BoundedSize.Class (AtLeast, BoundedSize (..), FixedSize,
                                          HasSize (..), IsBoundedSize,
                                          IsFixedSize, IsMaxSize, MaxSize)

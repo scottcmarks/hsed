@@ -135,11 +135,11 @@ digraph G {
 						penwidth=0,
 						style=filled];
 					u12					 [fillcolor="#ff7777",
-						label=Value,
+						label=UID,
 						penwidth=0,
 						style=filled];
 					u13					 [fillcolor="#ff7777",
-						label=UID,
+						label=Value,
 						penwidth=0,
 						style=filled];
 					u16					 [fillcolor="#ff7777",
@@ -212,11 +212,11 @@ digraph G {
 	u9 -> u8;
 	u11 -> u12;
 	u11 -> u13;
-	u12 -> u9;
-	u13 -> u6;
-	u16 -> u13;
-	u17 -> u13;
-	u18 -> u13;
+	u12 -> u6;
+	u13 -> u9;
+	u16 -> u12;
+	u17 -> u12;
+	u18 -> u12;
 	u18 -> u19;
 	u19 -> u6;
 	u20 -> u21;
@@ -225,8 +225,8 @@ digraph G {
 	u21 -> u22;
 	u21 -> u14;
 	u21 -> u24;
-	u22 -> u13;
-	u23 -> u13;
+	u22 -> u12;
+	u23 -> u12;
 	u6 -> u10;
 	u7 -> u0;
 	u7 -> u9;

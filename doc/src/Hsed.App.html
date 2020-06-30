@@ -1,15 +1,10 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span class="hs-glyph">\</span><span class="hs-identifier">documentstyle</span><span class="hs-special">{</span><span class="hs-identifier">article</span><span class="hs-special">}</span><span>
-</span><span id="line-2"></span><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">document</span><span class="hs-special">}</span><span>
-</span><span id="line-3"></span><span class="hs-glyph">\</span><span class="hs-identifier">chapter</span><span class="hs-special">{</span><span class="hs-identifier">App</span><span class="hs-special">}</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell   #-}</span><span>
 </span><span id="line-4"></span><span>
-</span><span id="line-5"></span><span class="hs-identifier">Define</span><span> </span><span class="hs-identifier">the</span><span> </span><span class="hs-identifier">types</span><span> </span><span class="hs-identifier">used</span><span> </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">SEDs</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">and</span><span> </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">the</span><span> </span><span class="hs-identifier">hsed</span><span> </span><span class="hs-identifier">program</span><span> </span><span class="hs-keyword">in</span><span> </span><span class="hs-identifier">particular</span><span class="hs-operator">.</span><span>
-</span><span id="line-6"></span><span>
-</span><span id="line-7"></span><span>
-</span><span id="line-8"></span><span class="hs-glyph">\</span><span class="hs-identifier">begin</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
-</span><span id="line-9"></span><span class="hs-comment">{-|
+</span><span id="line-5"></span><span class="hs-comment">{-|
 Module      : Hsed.App
-Description : hsed types, field lenses, field types
-Copyright   : (c) Magnolia Heights R&amp;D, 2019
+Copyright   : (c) Magnolia Heights R&amp;D, 2020
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
@@ -17,22 +12,19 @@ Stability   : experimental
 Datatypes for @hsed@ main.
 Constructors and lenses.
 -}</span><span>
-</span><span id="line-20"></span><span>
-</span><span id="line-21"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude #-}</span><span>
-</span><span id="line-22"></span><span class="hs-pragma">{-# LANGUAGE TemplateHaskell   #-}</span><span>
-</span><span id="line-23"></span><span>
-</span><span id="line-24"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hsed.App</span><span>
-</span><span id="line-25"></span><span class="hs-keyword">where</span><span>
-</span><span id="line-26"></span><span>
-</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">RIO</span></span><span>
-</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">RIO.Process</span></span><span>
-</span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-comment">-- | Command line arguments</span><span>
-</span><span id="line-32"></span><span class="hs-keyword">newtype</span><span> </span><span id="Options"><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Options"><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span>
-</span><span id="line-33"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_verbose"><span class="annot"><span class="annottext">Options -&gt; Bool
+</span><span id="line-15"></span><span>
+</span><span id="line-16"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">Hsed.App</span><span>
+</span><span id="line-17"></span><span class="hs-keyword">where</span><span>
+</span><span id="line-18"></span><span>
+</span><span id="line-19"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Control.Lens</span></span><span>
+</span><span id="line-20"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">RIO</span></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">RIO.Process</span></span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-comment">-- | Command line arguments</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">newtype</span><span> </span><span id="Options"><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Options"><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-var">Options</span></a></span></span><span>
+</span><span id="line-25"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_verbose"><span class="annot"><span class="annottext">Options -&gt; Bool
 </span><a href="Hsed.App.html#_verbose"><span class="hs-identifier hs-var hs-var">_verbose</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Bool</span></span><span>
-</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679530572"><span id="local-6989586621679530574"><span id="local-6989586621679530576"><span class="annot"><span class="annottext">Int -&gt; Options -&gt; ShowS
+</span><span id="line-26"></span><span>  </span><span class="hs-special">}</span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679530572"><span id="local-6989586621679530574"><span id="local-6989586621679530576"><span class="annot"><span class="annottext">Int -&gt; Options -&gt; ShowS
 [Options] -&gt; ShowS
 Options -&gt; String
 (Int -&gt; Options -&gt; ShowS)
@@ -46,28 +38,26 @@ $cshow :: Options -&gt; String
 showsPrec :: Int -&gt; Options -&gt; ShowS
 $cshowsPrec :: Int -&gt; Options -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-35"></span><span id="verbose"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Options</span></span><span>
-</span><span id="line-36"></span><span>
-</span><span id="line-37"></span><span class="hs-comment">-- | Global command environment</span><span>
-</span><span id="line-38"></span><span class="hs-keyword">data</span><span> </span><span id="App"><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-var">App</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="App"><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-var">App</span></a></span></span><span>
-</span><span id="line-39"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_logFunc"><span class="annot"><span class="annottext">App -&gt; LogFunc
+</span><span id="line-27"></span><span id="verbose"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Options</span></span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-comment">-- | Global command environment</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">data</span><span> </span><span id="App"><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-var">App</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="App"><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-var">App</span></a></span></span><span>
+</span><span id="line-31"></span><span>  </span><span class="hs-special">{</span><span> </span><span id="_logFunc"><span class="annot"><span class="annottext">App -&gt; LogFunc
 </span><a href="Hsed.App.html#_logFunc"><span class="hs-identifier hs-var hs-var">_logFunc</span></a></span></span><span>        </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">LogFunc</span></span><span>
-</span><span id="line-40"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_processContext"><span class="annot"><span class="annottext">App -&gt; ProcessContext
+</span><span id="line-32"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_processContext"><span class="annot"><span class="annottext">App -&gt; ProcessContext
 </span><a href="Hsed.App.html#_processContext"><span class="hs-identifier hs-var hs-var">_processContext</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><span class="hs-identifier hs-type">ProcessContext</span></span><span>
-</span><span id="line-41"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_options"><span class="annot"><span class="annottext">App -&gt; Options
+</span><span id="line-33"></span><span>  </span><span class="hs-special">,</span><span> </span><span id="_options"><span class="annot"><span class="annottext">App -&gt; Options
 </span><a href="Hsed.App.html#_options"><span class="hs-identifier hs-var hs-var">_options</span></a></span></span><span>        </span><span class="hs-glyph">::</span><span> </span><span class="hs-glyph">!</span><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span>
-</span><span id="line-42"></span><span>  </span><span class="hs-special">}</span><span>
-</span><span id="line-43"></span><span id="processContext"><span id="options"><span id="logFunc"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">App</span></span></span></span><span>
-</span><span id="line-44"></span><span class="annot"><a href="Hsed.App.html#makeApp"><span class="hs-identifier hs-type">makeApp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">LogFunc</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ProcessContext</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a></span><span>
-</span><span id="line-45"></span><span id="makeApp"><span class="annot"><span class="annottext">makeApp :: LogFunc -&gt; ProcessContext -&gt; Options -&gt; App
+</span><span id="line-34"></span><span>  </span><span class="hs-special">}</span><span>
+</span><span id="line-35"></span><span>
+</span><span id="line-36"></span><span id="processContext"><span id="options"><span id="logFunc"><span class="hs-identifier">makeLenses</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">App</span></span></span></span><span>
+</span><span id="line-37"></span><span class="annot"><a href="Hsed.App.html#makeApp"><span class="hs-identifier hs-type">makeApp</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">LogFunc</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ProcessContext</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hsed.App.html#Options"><span class="hs-identifier hs-type">Options</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a></span><span>
+</span><span id="line-38"></span><span id="makeApp"><span class="annot"><span class="annottext">makeApp :: LogFunc -&gt; ProcessContext -&gt; Options -&gt; App
 </span><a href="Hsed.App.html#makeApp"><span class="hs-identifier hs-var hs-var">makeApp</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">LogFunc -&gt; ProcessContext -&gt; Options -&gt; App
 </span><a href="Hsed.App.html#App"><span class="hs-identifier hs-var">App</span></a></span><span>
-</span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasLogFunc</span></span><span> </span><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679530559"><span class="annot"><span class="annottext">logFuncL :: (LogFunc -&gt; f LogFunc) -&gt; App -&gt; f App
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">HasLogFunc</span></span><span> </span><span class="annot"><a href="Hsed.App.html#App"><span class="hs-identifier hs-type">App</span></a></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679530559"><span class="annot"><span class="annottext">logFuncL :: (LogFunc -&gt; f LogFunc) -&gt; App -&gt; f App
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">logFuncL</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(LogFunc -&gt; f LogFunc) -&gt; App -&gt; f App
 Lens' App LogFunc
 </span><a href="Hsed.App.html#logFunc"><span class="hs-identifier hs-var">logFunc</span></a></span><span>
-</span><span id="line-48"></span><span>
-</span><span id="line-49"></span><span>
-</span><span id="line-50"></span><span class="hs-glyph">\</span><span class="hs-identifier">end</span><span class="hs-special">{</span><span class="hs-identifier">code</span><span class="hs-special">}</span><span>
-</span><span id="line-51"></span></pre></body></html>
+</span><span id="line-41"></span></pre></body></html>

@@ -49,7 +49,6 @@ module System.SED.MCTP.Common.Base_Type.Class
   , length
   , padLeft
   , padRight
--- TODO: Work around needing this, please
   , unsafeCreate
   )
 where

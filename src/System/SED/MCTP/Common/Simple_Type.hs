@@ -23,6 +23,7 @@ module System.SED.MCTP.Common.Simple_Type
   ,   Core_uinteger
   ,
       Core_bytes_4
+  ,   Core_bytes_8
   ,   Core_bytes_12
   ,   Core_bytes_16
   ,   Core_bytes_20
@@ -41,6 +42,7 @@ module System.SED.MCTP.Common.Simple_Type
   ,   Core_type_def_max_size
   ,   Core_type_def
 
+  ,   Core_halfuid
   ,   Core_uid
 
   ,   Core_uinteger_1
@@ -66,6 +68,7 @@ import           System.SED.MCTP.Common.Base_Type (Core_bytes, Core_integer,
                                                    Core_uinteger)
 
 type Core_bytes_4       = Core_bytes  4
+type Core_bytes_8       = Core_bytes  8
 type Core_bytes_12      = Core_bytes 12
 type Core_bytes_16      = Core_bytes 16
 type Core_bytes_20      = Core_bytes 20
@@ -84,7 +87,8 @@ type Core_password      = Core_max_bytes 32
 type Core_type_def_max_size = 128
 type Core_type_def      = Core_max_bytes Core_type_def_max_size
 
-type Core_uid           = Core_bytes 8
+type Core_halfuid       = Core_bytes_4
+type Core_uid           = Core_bytes_8
 
 type Core_uinteger_1    = Core_uinteger 1
 type Core_uinteger_128  = Core_uinteger 128

@@ -20,28 +20,29 @@ Datatypes for UIDs and HalfUIDs.
 
 module System.SED.MCTP.Common.UID where
 
-import           Data.ByteString                   (singleton)
-import           Data.ByteString.Base16            (encode)
-import           Data.ByteString.Char8             (unpack)
-import           Data.Foldable                     (foldl)
-import           Data.Functor                      ((<$>))
+import           Data.ByteString                    (singleton)
+import           Data.ByteString.Base16             (encode)
+import           Data.ByteString.Char8              (unpack)
+import           Data.Foldable                      (foldl)
+import           Data.Functor                       ((<$>))
 
-import           Data.String                       (String)
-import           GHC.Base                          (($), (.))
-import           GHC.Classes                       (Eq (..), Ord (..))
-import           GHC.Exts                          (IsList (..))
-import           GHC.Show                          (Show (..), showString)
-import           GHC.TypeLits                      (KnownNat)
-import           GHC.Word                          (Word8)
+import           Data.String                        (String)
+import           GHC.Base                           (($), (.))
+import           GHC.Classes                        (Eq (..), Ord (..))
+import           GHC.Exts                           (IsList (..))
+import           GHC.Show                           (Show (..), showString)
+import           GHC.TypeLits                       (KnownNat)
+import           GHC.Word                           (Word8)
 
-import           Test.QuickCheck                   (Arbitrary (..))
+import           Test.QuickCheck                    (Arbitrary (..))
 
-import           System.SED.MCTP.Common.Base_Type  (Core_bytes (..), append,
-                                                    core_bytes_4, core_bytes_8,
-                                                    drop, take)
+import           System.SED.MCTP.Common.Base_Type   (Core_bytes (..), append,
+                                                     core_bytes_4, core_bytes_8,
+                                                     drop, take)
+import           System.SED.MCTP.Common.Simple_Type (Core_halfuid, Core_uid)
 
-import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
-import           System.SED.MCTP.Common.Token      (IsToken (..))
+import           System.SED.MCTP.Common.StreamItem  (StreamItem (..))
+import           System.SED.MCTP.Common.Token       (IsToken (..))
 
 
 {-
@@ -75,9 +76,9 @@ showCore_bytes tag = foldl rollUp tag . toList
   where rollUp s = showString s . showString " 0x" . unpack . encode . singleton
 
 
-newtype HalfUID = HalfUID (Core_bytes 4)
+newtype HalfUID = HalfUID (Core_halfuid)
     deriving(Eq, Ord)
-    deriving(IsToken, StreamItem, IsList) via (Core_bytes 4)
+    deriving(IsToken, StreamItem, IsList) via (Core_halfuid)
 instance Show HalfUID where
     show (HalfUID fb) = showCore_bytes "halfUID" fb
 instance Arbitrary HalfUID where
@@ -87,9 +88,9 @@ halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
 halfUID b3 b2 b1 b0 = HalfUID $ core_bytes_4 b3 b2 b1 b0
 
 
-newtype UID = UID (Core_bytes 8)
+newtype UID = UID (Core_uid)
     deriving(Eq, Ord)
-    deriving(IsToken, StreamItem, IsList) via (Core_bytes 8)
+    deriving(IsToken, StreamItem, IsList) via (Core_uid)
 instance Show UID where
     show (UID fb) = showCore_bytes "uid" fb
 instance Arbitrary UID where

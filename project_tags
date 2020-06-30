@@ -500,8 +500,8 @@ ct' ct'176,177
 
 ./src/System/SED/MCTP/Common/Base_Type.hs,145
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
-core_bytes_4 core_bytes_468,69
-core_bytes_8 core_bytes_875,76
+core_bytes_4 core_bytes_472,73
+core_bytes_8 core_bytes_879,80
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.hs,1287
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH16,17

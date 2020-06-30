@@ -124,12 +124,12 @@ forall a. HasCallStack =&gt; a
 </span><span id="line-103"></span><span>
 </span><span id="line-104"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#ttypeDecs"><span class="hs-identifier hs-type">ttypeDecs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span class="hs-special">]</span><span>
 </span><span id="line-105"></span><span id="ttypeDecs"><span class="annot"><span class="annottext">ttypeDecs :: String -&gt; [Dec]
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#ttypeDecs"><span class="hs-identifier hs-var hs-var">ttypeDecs</span></a></span></span><span> </span><span id="local-6989586621679532931"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679532931"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Dec]
-</span><a href="#local-6989586621679532930"><span class="hs-identifier hs-var">ds</span></a></span><span>
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#ttypeDecs"><span class="hs-identifier hs-var hs-var">ttypeDecs</span></a></span></span><span> </span><span id="local-6989586621679555644"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679555644"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Dec]
+</span><a href="#local-6989586621679555643"><span class="hs-identifier hs-var">ds</span></a></span><span>
 </span><span id="line-106"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-107"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span><span> </span><span id="local-6989586621679532930"><span class="annot"><span class="annottext">ds :: [Dec]
-</span><a href="#local-6989586621679532930"><span class="hs-identifier hs-var">ds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-107"></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span><span> </span><span id="local-6989586621679555643"><span class="annot"><span class="annottext">ds :: [Dec]
+</span><a href="#local-6989586621679555643"><span class="hs-identifier hs-var">ds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-108"></span><span>        </span><span class="annot"><span class="annottext">TypeTableRow -&gt; TypeTableRowDecs
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#dTypeTableRow"><span class="hs-identifier hs-var">dTypeTableRow</span></a></span><span> </span><span class="annot"><span class="annottext">(TypeTableRow -&gt; TypeTableRowDecs)
 -&gt; TypeTableRow -&gt; TypeTableRowDecs
@@ -138,14 +138,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall c. Parser c -&gt; String -&gt; c
 </span><a href="System.SED.MCTP.Common.THUtil.html#parseTable"><span class="hs-identifier hs-var">parseTable</span></a></span><span> </span><span class="annot"><span class="annottext">Parser TypeTableRow
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableParser"><span class="hs-identifier hs-var">typeTableParser</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532931"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621679555644"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-109"></span><span>
 </span><span id="line-110"></span><span>
 </span><span id="line-111"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableParser"><span class="hs-identifier hs-type">typeTableParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span>
 </span><span id="line-112"></span><span id="typeTableParser"><span class="annot"><span class="annottext">typeTableParser :: Parser TypeTableRow
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableParser"><span class="hs-identifier hs-var hs-var">typeTableParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-113"></span><span>    </span><span id="local-6989586621679532926"><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532926"><span class="hs-identifier hs-var">pieceLengths</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ()
+</span><span id="line-113"></span><span>    </span><span id="local-6989586621679555639"><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555639"><span class="hs-identifier hs-var">pieceLengths</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ()
 </span><span class="hs-identifier hs-var">skipSpace</span></span><span> </span><span class="annot"><span class="annottext">Parser ()
 -&gt; Parser ByteString ByteString -&gt; Parser ByteString ByteString
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
@@ -155,10 +155,10 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#rowSep"><span class="hs-identifier hs-var">rowSep</span></a></span><span>
-</span><span id="line-114"></span><span>    </span><span id="local-6989586621679532923"><span class="annot"><span class="annottext">[TypeTableRow]
-</span><a href="#local-6989586621679532923"><span class="hs-identifier hs-var">rows</span></a></span></span><span>         </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Parser ()
+</span><span id="line-114"></span><span>    </span><span id="local-6989586621679555636"><span class="annot"><span class="annottext">[TypeTableRow]
+</span><a href="#local-6989586621679555636"><span class="hs-identifier hs-var">rows</span></a></span></span><span>         </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Parser ()
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#header"><span class="hs-identifier hs-var">header</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532926"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser () -&gt; Parser ByteString [Int] -&gt; Parser ByteString [Int]
+</span><a href="#local-6989586621679555639"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser () -&gt; Parser ByteString [Int] -&gt; Parser ByteString [Int]
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#rowSep"><span class="hs-identifier hs-var">rowSep</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
@@ -169,7 +169,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><span class="hs-identifier hs-var">many1</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Int] -&gt; Parser TypeTableRow
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableRow"><span class="hs-identifier hs-var">typeTableRow</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532926"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- &lt;-- the data</span><span>
+</span><a href="#local-6989586621679555639"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- &lt;-- the data</span><span>
 </span><span id="line-115"></span><span>    </span><span class="hs-special">(</span><span class="hs-special">)</span><span>           </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#rowSep"><span class="hs-identifier hs-var">rowSep</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int] -&gt; Parser () -&gt; Parser ()
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
@@ -195,19 +195,19 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-var">TypeTableRow</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier hs-var">empty</span></span><span> </span><span class="annot"><span class="annottext">ByteString
 </span><span class="hs-identifier hs-var">empty</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[TypeTableRow]
-</span><a href="#local-6989586621679532923"><span class="hs-identifier hs-var">rows</span></a></span><span>
+</span><a href="#local-6989586621679555636"><span class="hs-identifier hs-var">rows</span></a></span><span>
 </span><span id="line-117"></span><span>
 </span><span id="line-118"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableRow"><span class="hs-identifier hs-type">typeTableRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span>
 </span><span id="line-119"></span><span id="typeTableRow"><span class="annot"><span class="annottext">typeTableRow :: [Int] -&gt; Parser TypeTableRow
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableRow"><span class="hs-identifier hs-var hs-var">typeTableRow</span></a></span></span><span> </span><span id="local-6989586621679532918"><span class="annot"><span class="annottext">lengths :: [Int]
-</span><a href="#local-6989586621679532918"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableRow"><span class="hs-identifier hs-var hs-var">typeTableRow</span></a></span></span><span> </span><span id="local-6989586621679555631"><span class="annot"><span class="annottext">lengths :: [Int]
+</span><a href="#local-6989586621679555631"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-120"></span><span>    </span><span class="hs-keyword">do</span><span>
-</span><span id="line-121"></span><span>        </span><span class="hs-special">[</span><span id="local-6989586621679532917"><span class="annot"><span class="annottext">uidField :: ByteString
-</span><a href="#local-6989586621679532917"><span class="hs-identifier hs-var">uidField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679532916"><span class="annot"><span class="annottext">typeName :: ByteString
-</span><a href="#local-6989586621679532916"><span class="hs-identifier hs-var">typeName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679532915"><span class="annot"><span class="annottext">format :: ByteString
-</span><a href="#local-6989586621679532915"><span class="hs-identifier hs-var">format</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Parser [ByteString]
+</span><span id="line-121"></span><span>        </span><span class="hs-special">[</span><span id="local-6989586621679555630"><span class="annot"><span class="annottext">uidField :: ByteString
+</span><a href="#local-6989586621679555630"><span class="hs-identifier hs-var">uidField</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679555629"><span class="annot"><span class="annottext">typeName :: ByteString
+</span><a href="#local-6989586621679555629"><span class="hs-identifier hs-var">typeName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679555628"><span class="annot"><span class="annottext">format :: ByteString
+</span><a href="#local-6989586621679555628"><span class="hs-identifier hs-var">format</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Parser [ByteString]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#tableRowFields"><span class="hs-identifier hs-var">tableRowFields</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532918"><span class="hs-identifier hs-var">lengths</span></a></span><span>
+</span><a href="#local-6989586621679555631"><span class="hs-identifier hs-var">lengths</span></a></span><span>
 </span><span id="line-122"></span><span>        </span><span class="annot"><span class="annottext">TypeTableRow -&gt; Parser TypeTableRow
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(TypeTableRow -&gt; Parser TypeTableRow)
@@ -215,51 +215,51 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; [ByteString] -&gt; TypeTableRow
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-var">TypeTableRow</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532917"><span class="hs-identifier hs-var">uidField</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532916"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
-</span><a href="#local-6989586621679532913"><span class="hs-identifier hs-var">trimComma</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532915"><span class="hs-identifier hs-var">format</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-123"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679532913"><span class="annot"><span class="annottext">trimComma :: ByteString -&gt; ByteString
-</span><a href="#local-6989586621679532913"><span class="hs-identifier hs-var hs-var">trimComma</span></a></span></span><span> </span><span id="local-6989586621679532912"><span class="annot"><span class="annottext">bs :: ByteString
-</span><a href="#local-6989586621679532912"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word8
+</span><a href="#local-6989586621679555630"><span class="hs-identifier hs-var">uidField</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679555629"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><a href="#local-6989586621679555626"><span class="hs-identifier hs-var">trimComma</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679555628"><span class="hs-identifier hs-var">format</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-123"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679555626"><span class="annot"><span class="annottext">trimComma :: ByteString -&gt; ByteString
+</span><a href="#local-6989586621679555626"><span class="hs-identifier hs-var hs-var">trimComma</span></a></span></span><span> </span><span id="local-6989586621679555625"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679555625"><span class="hs-identifier hs-var">bs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Word8
 </span><span class="hs-identifier hs-var">last</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532912"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
+</span><a href="#local-6989586621679555625"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Word8
 </span><a href="System.SED.MCTP.Common.Token.html#ordw"><span class="hs-identifier hs-var">ordw</span></a></span><span> </span><span class="annot"><span class="hs-char">','</span></span><span> </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">init</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532912"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532912"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621679555625"><span class="hs-identifier hs-var">bs</span></a></span><span> </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679555625"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-124"></span><span>
 </span><span id="line-125"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#dTypeTableRow"><span class="hs-identifier hs-type">dTypeTableRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span><span>
 </span><span id="line-126"></span><span id="dTypeTableRow"><span class="annot"><span class="annottext">dTypeTableRow :: TypeTableRow -&gt; TypeTableRowDecs
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#dTypeTableRow"><span class="hs-identifier hs-var hs-var">dTypeTableRow</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span id="local-6989586621679532911"><span class="annot"><span class="annottext">u :: ByteString
-</span><a href="#local-6989586621679532911"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679532910"><span class="annot"><span class="annottext">n :: ByteString
-</span><a href="#local-6989586621679532910"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679532909"><span class="annot"><span class="annottext">_fs :: [ByteString]
-</span><a href="#local-6989586621679532909"><span class="hs-identifier hs-var">_fs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#dTypeTableRow"><span class="hs-identifier hs-var hs-var">dTypeTableRow</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span id="local-6989586621679555624"><span class="annot"><span class="annottext">u :: ByteString
+</span><a href="#local-6989586621679555624"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679555623"><span class="annot"><span class="annottext">n :: ByteString
+</span><a href="#local-6989586621679555623"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679555622"><span class="annot"><span class="annottext">_fs :: [ByteString]
+</span><a href="#local-6989586621679555622"><span class="hs-identifier hs-var">_fs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-127"></span><span>    </span><span class="annot"><span class="annottext">[Dec] -&gt; TypeTableRowDecs
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-var">TypeTableRowDecs</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dSig"><span class="hs-identifier hs-var">dSig</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679532908"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UID</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679555621"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">UID</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Exp -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dVal"><span class="hs-identifier hs-var">dVal</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679532908"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
+</span><a href="#local-6989586621679555621"><span class="hs-identifier hs-var">typeName</span></a></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Dec) -&gt; Exp -&gt; Dec
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; Exp
 </span><a href="System.SED.MCTP.Common.THUtil.html#eUID"><span class="hs-identifier hs-var">eUID</span></a></span><span> </span><span class="annot"><span class="annottext">UID
-</span><a href="#local-6989586621679532907"><span class="hs-identifier hs-var">typeUID</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-128"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679532908"><span class="annot"><span class="annottext">typeName :: Name
-</span><a href="#local-6989586621679532908"><span class="hs-identifier hs-var hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
+</span><a href="#local-6989586621679555620"><span class="hs-identifier hs-var">typeUID</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-128"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679555621"><span class="annot"><span class="annottext">typeName :: Name
+</span><a href="#local-6989586621679555621"><span class="hs-identifier hs-var hs-var">typeName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Name) -&gt; String -&gt; Name
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[String] -&gt; String
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-string">&quot;u&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">unpack</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532910"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;Type&quot;</span></span><span class="hs-special">]</span><span>
-</span><span id="line-129"></span><span>        </span><span id="local-6989586621679532907"><span class="annot"><span class="annottext">typeUID :: UID
-</span><a href="#local-6989586621679532907"><span class="hs-identifier hs-var hs-var">typeUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; UID
+</span><a href="#local-6989586621679555623"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;Type&quot;</span></span><span class="hs-special">]</span><span>
+</span><span id="line-129"></span><span>        </span><span id="local-6989586621679555620"><span class="annot"><span class="annottext">typeUID :: UID
+</span><a href="#local-6989586621679555620"><span class="hs-identifier hs-var hs-var">typeUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; UID
 </span><a href="System.SED.MCTP.Common.Util.html#hexUID"><span class="hs-identifier hs-var">hexUID</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532911"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><a href="#local-6989586621679555624"><span class="hs-identifier hs-var">u</span></a></span><span>
 </span><span id="line-130"></span><span>
 </span><span id="line-131"></span><span>
 </span><span id="line-132"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#typeTableTitle"><span class="hs-identifier hs-type">typeTableTitle</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
@@ -362,17 +362,17 @@ forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span id="line-153"></span><span>
 </span><span id="line-154"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#tableRowFields"><span class="hs-identifier hs-type">tableRowFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span class="hs-special">]</span><span>
 </span><span id="line-155"></span><span id="tableRowFields"><span class="annot"><span class="annottext">tableRowFields :: [Int] -&gt; Parser [ByteString]
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#tableRowFields"><span class="hs-identifier hs-var hs-var">tableRowFields</span></a></span></span><span> </span><span id="local-6989586621679532904"><span class="annot"><span class="annottext">lengths :: [Int]
-</span><a href="#local-6989586621679532904"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; [ByteString]
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#tableRowFields"><span class="hs-identifier hs-var hs-var">tableRowFields</span></a></span></span><span> </span><span id="local-6989586621679555617"><span class="annot"><span class="annottext">lengths :: [Int]
+</span><a href="#local-6989586621679555617"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; [ByteString]
 forall a. [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">tail</span></span><span> </span><span class="annot"><span class="annottext">([ByteString] -&gt; [ByteString])
 -&gt; Parser [ByteString] -&gt; Parser [ByteString]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser [ByteString]
-</span><a href="#local-6989586621679532903"><span class="hs-identifier hs-var">parseLine</span></a></span><span>
+</span><a href="#local-6989586621679555616"><span class="hs-identifier hs-var">parseLine</span></a></span><span>
 </span><span id="line-156"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-157"></span><span>      </span><span id="local-6989586621679532903"><span class="annot"><span class="annottext">parseLine :: Parser [ByteString]
-</span><a href="#local-6989586621679532903"><span class="hs-identifier hs-var hs-var">parseLine</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([ByteString] -&gt; ByteString) -&gt; [[ByteString]] -&gt; [ByteString]
+</span><span id="line-157"></span><span>      </span><span id="local-6989586621679555616"><span class="annot"><span class="annottext">parseLine :: Parser [ByteString]
+</span><a href="#local-6989586621679555616"><span class="hs-identifier hs-var hs-var">parseLine</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">([ByteString] -&gt; ByteString) -&gt; [[ByteString]] -&gt; [ByteString]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
 forall a. Monoid a =&gt; [a] -&gt; a
@@ -393,30 +393,30 @@ forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 -&gt; [Int] -&gt; Parser [ByteString]
 forall (m :: * -&gt; *) a b. Monad m =&gt; (a -&gt; m b) -&gt; [a] -&gt; m [b]
 </span><span class="hs-identifier hs-var">mapM</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString ByteString
-</span><a href="#local-6989586621679532902"><span class="hs-identifier hs-var">takeField</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532904"><span class="hs-identifier hs-var">lengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser [ByteString] -&gt; Parser () -&gt; Parser [ByteString]
+</span><a href="#local-6989586621679555615"><span class="hs-identifier hs-var">takeField</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555617"><span class="hs-identifier hs-var">lengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser [ByteString] -&gt; Parser () -&gt; Parser [ByteString]
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Parser ()
 </span><span class="hs-identifier hs-var">endOfLine</span></span><span class="hs-special">)</span><span>
 </span><span id="line-159"></span><span>                          </span><span class="annot"><span class="annottext">Parser [ByteString] -&gt; String -&gt; Parser [ByteString]
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Table row fields&quot;</span></span><span>
-</span><span id="line-160"></span><span>      </span><span id="local-6989586621679532902"><span class="annot"><span class="annottext">takeField :: Int -&gt; Parser ByteString ByteString
-</span><a href="#local-6989586621679532902"><span class="hs-identifier hs-var hs-var">takeField</span></a></span></span><span> </span><span id="local-6989586621679532901"><span class="annot"><span class="annottext">len :: Int
-</span><a href="#local-6989586621679532901"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
+</span><span id="line-160"></span><span>      </span><span id="local-6989586621679555615"><span class="annot"><span class="annottext">takeField :: Int -&gt; Parser ByteString ByteString
+</span><a href="#local-6989586621679555615"><span class="hs-identifier hs-var hs-var">takeField</span></a></span></span><span> </span><span id="local-6989586621679555614"><span class="annot"><span class="annottext">len :: Int
+</span><a href="#local-6989586621679555614"><span class="hs-identifier hs-var">len</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-var">trimTrailingWhitespace</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; ByteString)
 -&gt; Parser ByteString ByteString -&gt; Parser ByteString ByteString
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Parser ByteString ByteString
 </span><span class="hs-identifier hs-var">take</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532901"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString ByteString
+</span><a href="#local-6989586621679555614"><span class="hs-identifier hs-var">len</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString ByteString
 -&gt; Parser Word8 -&gt; Parser ByteString ByteString
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Char -&gt; Parser Word8
 </span><span class="hs-identifier hs-var">char8</span></span><span> </span><span class="annot"><span class="hs-char">'|'</span></span><span>
 </span><span id="line-161"></span><span>
 </span><span id="line-162"></span><span class="hs-keyword">data</span><span> </span><span id="TypeTableRow"><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-var">TypeTableRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TypeTableRow"><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-var">TypeTableRow</span></a></span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeUIDField"><span class="hs-identifier hs-type">TypeUIDField</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeName"><span class="hs-identifier hs-type">TypeName</span></a></span><span> </span><span class="hs-special">[</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#FormatString"><span class="hs-identifier hs-type">FormatString</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-163"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679532892"><span id="local-6989586621679532894"><span id="local-6989586621679532896"><span class="annot"><span class="annottext">Int -&gt; TypeTableRow -&gt; ShowS
+</span><span id="line-163"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679555605"><span id="local-6989586621679555607"><span id="local-6989586621679555609"><span class="annot"><span class="annottext">Int -&gt; TypeTableRow -&gt; ShowS
 [TypeTableRow] -&gt; ShowS
 TypeTableRow -&gt; String
 (Int -&gt; TypeTableRow -&gt; ShowS)
@@ -433,23 +433,23 @@ showsPrec :: Int -&gt; TypeTableRow -&gt; ShowS
 $cshowsPrec :: Int -&gt; TypeTableRow -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-164"></span><span>
-</span><span id="line-165"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679532886"><span id="local-6989586621679532888"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-166"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span id="local-6989586621679532884"><span class="annot"><span class="annottext">u1 :: ByteString
-</span><a href="#local-6989586621679532884"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679532883"><span class="annot"><span class="annottext">n1 :: ByteString
-</span><a href="#local-6989586621679532883"><span class="hs-identifier hs-var">n1</span></a></span></span><span> </span><span id="local-6989586621679532882"><span class="annot"><span class="annottext">f1 :: [ByteString]
-</span><a href="#local-6989586621679532882"><span class="hs-identifier hs-var">f1</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679532881"><span class="annot"><span class="annottext">&lt;&gt; :: TypeTableRow -&gt; TypeTableRow -&gt; TypeTableRow
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span id="local-6989586621679532880"><span class="annot"><span class="annottext">_u2 :: ByteString
-</span><a href="#local-6989586621679532880"><span class="hs-identifier hs-var">_u2</span></a></span></span><span> </span><span id="local-6989586621679532879"><span class="annot"><span class="annottext">_n2 :: ByteString
-</span><a href="#local-6989586621679532879"><span class="hs-identifier hs-var">_n2</span></a></span></span><span> </span><span id="local-6989586621679532878"><span class="annot"><span class="annottext">f2 :: [ByteString]
-</span><a href="#local-6989586621679532878"><span class="hs-identifier hs-var">f2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-165"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679555599"><span id="local-6989586621679555601"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-166"></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span id="local-6989586621679555597"><span class="annot"><span class="annottext">u1 :: ByteString
+</span><a href="#local-6989586621679555597"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679555596"><span class="annot"><span class="annottext">n1 :: ByteString
+</span><a href="#local-6989586621679555596"><span class="hs-identifier hs-var">n1</span></a></span></span><span> </span><span id="local-6989586621679555595"><span class="annot"><span class="annottext">f1 :: [ByteString]
+</span><a href="#local-6989586621679555595"><span class="hs-identifier hs-var">f1</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679555594"><span class="annot"><span class="annottext">&lt;&gt; :: TypeTableRow -&gt; TypeTableRow -&gt; TypeTableRow
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span id="local-6989586621679555593"><span class="annot"><span class="annottext">_u2 :: ByteString
+</span><a href="#local-6989586621679555593"><span class="hs-identifier hs-var">_u2</span></a></span></span><span> </span><span id="local-6989586621679555592"><span class="annot"><span class="annottext">_n2 :: ByteString
+</span><a href="#local-6989586621679555592"><span class="hs-identifier hs-var">_n2</span></a></span></span><span> </span><span id="local-6989586621679555591"><span class="annot"><span class="annottext">f2 :: [ByteString]
+</span><a href="#local-6989586621679555591"><span class="hs-identifier hs-var">f2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-167"></span><span>        </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; [ByteString] -&gt; TypeTableRow
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-var">TypeTableRow</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532884"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532883"><span class="hs-identifier hs-var">n1</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ByteString]
-</span><a href="#local-6989586621679532882"><span class="hs-identifier hs-var">f1</span></a></span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; [ByteString] -&gt; [ByteString]
+</span><a href="#local-6989586621679555597"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679555596"><span class="hs-identifier hs-var">n1</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[ByteString]
+</span><a href="#local-6989586621679555595"><span class="hs-identifier hs-var">f1</span></a></span><span> </span><span class="annot"><span class="annottext">[ByteString] -&gt; [ByteString] -&gt; [ByteString]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">[ByteString]
-</span><a href="#local-6989586621679532878"><span class="hs-identifier hs-var">f2</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679555591"><span class="hs-identifier hs-var">f2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span><span>
 </span><span id="line-169"></span><span class="hs-keyword">type</span><span> </span><span id="TypeUIDField"><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeUIDField"><span class="hs-identifier hs-var">TypeUIDField</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-170"></span><span>
@@ -460,12 +460,12 @@ forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span id="line-175"></span><span>
 </span><span id="line-176"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#header"><span class="hs-identifier hs-type">header</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
 </span><span id="line-177"></span><span id="header"><span class="annot"><span class="annottext">header :: [Int] -&gt; Parser ()
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#header"><span class="hs-identifier hs-var hs-var">header</span></a></span></span><span> </span><span id="local-6989586621679532877"><span class="annot"><span class="annottext">lengths :: [Int]
-</span><a href="#local-6989586621679532877"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser [ByteString] -&gt; Parser ByteString [[ByteString]]
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#header"><span class="hs-identifier hs-var hs-var">header</span></a></span></span><span> </span><span id="local-6989586621679555590"><span class="annot"><span class="annottext">lengths :: [Int]
+</span><a href="#local-6989586621679555590"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser [ByteString] -&gt; Parser ByteString [[ByteString]]
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><span class="hs-identifier hs-var">many1</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Int] -&gt; Parser [ByteString]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#tableRowFields"><span class="hs-identifier hs-var">tableRowFields</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532877"><span class="hs-identifier hs-var">lengths</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser ByteString [[ByteString]] -&gt; Parser () -&gt; Parser ()
+</span><a href="#local-6989586621679555590"><span class="hs-identifier hs-var">lengths</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Parser ByteString [[ByteString]] -&gt; Parser () -&gt; Parser ()
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">() -&gt; Parser ()
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
@@ -477,7 +477,7 @@ forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">++</span></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532877"><span class="hs-identifier hs-var">lengths</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679555590"><span class="hs-identifier hs-var">lengths</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-179"></span><span>
 </span><span id="line-180"></span><span>
 </span><span id="line-181"></span><span>
@@ -487,15 +487,15 @@ forall a. Show a =&gt; a -&gt; String
 </span><span id="line-185"></span><span>
 </span><span id="line-186"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#formatString"><span class="hs-identifier hs-type">formatString</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-187"></span><span id="formatString"><span class="annot"><span class="annottext">formatString :: TypeTableRow -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#formatString"><span class="hs-identifier hs-var hs-var">formatString</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span class="hs-string">&quot;List_Type&quot;</span><span> </span><span id="local-6989586621679532875"><span class="annot"><span class="annottext">_maxLength :: ByteString
-</span><a href="#local-6989586621679532875"><span class="hs-identifier hs-var">_maxLength</span></a></span></span><span> </span><span id="local-6989586621679532874"><span class="annot"><span class="annottext">_elementTYpe :: [ByteString]
-</span><a href="#local-6989586621679532874"><span class="hs-identifier hs-var">_elementTYpe</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#formatString"><span class="hs-identifier hs-var hs-var">formatString</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRow"><span class="hs-identifier hs-type">TypeTableRow</span></a></span><span> </span><span class="hs-string">&quot;List_Type&quot;</span><span> </span><span id="local-6989586621679555588"><span class="annot"><span class="annottext">_maxLength :: ByteString
+</span><a href="#local-6989586621679555588"><span class="hs-identifier hs-var">_maxLength</span></a></span></span><span> </span><span id="local-6989586621679555587"><span class="annot"><span class="annottext">_elementTYpe :: [ByteString]
+</span><a href="#local-6989586621679555587"><span class="hs-identifier hs-var">_elementTYpe</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-188"></span><span>    </span><span class="annot"><span class="annottext">[ByteString] -&gt; ByteString
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;L&quot;</span></span><span> </span><span class="hs-comment">-- FIXME</span><span>
 </span><span id="line-189"></span><span>            </span><span class="hs-special">]</span><span>
-</span><span id="line-190"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#formatString"><span class="hs-identifier hs-var">formatString</span></a></span><span> </span><span id="local-6989586621679532873"><span class="annot"><span class="annottext">t :: TypeTableRow
-</span><a href="#local-6989586621679532873"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
+</span><span id="line-190"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#formatString"><span class="hs-identifier hs-var">formatString</span></a></span><span> </span><span id="local-6989586621679555586"><span class="annot"><span class="annottext">t :: TypeTableRow
+</span><a href="#local-6989586621679555586"><span class="hs-identifier hs-var">t</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ByteString
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; ByteString) -&gt; String -&gt; ByteString
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -504,11 +504,11 @@ forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span> </span><span class="hs-special">[</span><span> </span><span class="annot"><span class="hs-string">&quot;No case for &quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">TypeTableRow -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">TypeTableRow
-</span><a href="#local-6989586621679532873"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;?&quot;</span></span><span> </span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621679555586"><span class="hs-identifier hs-var">t</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;?&quot;</span></span><span> </span><span class="hs-special">]</span><span>
 </span><span id="line-191"></span><span>
 </span><span id="line-192"></span><span>
 </span><span id="line-193"></span><span class="hs-keyword">newtype</span><span> </span><span id="TypeTableRowDecs"><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-var">TypeTableRowDecs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>  </span><span id="TypeTableRowDecs"><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-var">TypeTableRowDecs</span></a></span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span class="hs-special">]</span><span>
-</span><span id="line-194"></span><span>  </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679532869"><span id="local-6989586621679532871"><span class="annot"><span class="annottext">TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; Bool
+</span><span id="line-194"></span><span>  </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679555582"><span id="local-6989586621679555584"><span class="annot"><span class="annottext">TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; Bool
 (TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; Bool)
 -&gt; (TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; Bool)
 -&gt; Eq TypeTableRowDecs
@@ -517,7 +517,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; Bool
 == :: TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; Bool
 $c== :: TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679532862"><span id="local-6989586621679532864"><span id="local-6989586621679532866"><span class="annot"><span class="annottext">Int -&gt; TypeTableRowDecs -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679555575"><span id="local-6989586621679555577"><span id="local-6989586621679555579"><span class="annot"><span class="annottext">Int -&gt; TypeTableRowDecs -&gt; ShowS
 [TypeTableRowDecs] -&gt; ShowS
 TypeTableRowDecs -&gt; String
 (Int -&gt; TypeTableRowDecs -&gt; ShowS)
@@ -534,20 +534,20 @@ showsPrec :: Int -&gt; TypeTableRowDecs -&gt; ShowS
 $cshowsPrec :: Int -&gt; TypeTableRowDecs -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-195"></span><span>
-</span><span id="line-196"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679532857"><span id="local-6989586621679532859"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span></span></span><span>
-</span><span id="line-197"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span><span> </span><span id="local-6989586621679532856"><span class="annot"><span class="annottext">d1 :: [Dec]
-</span><a href="#local-6989586621679532856"><span class="hs-identifier hs-var">d1</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679532855"><span class="annot"><span class="annottext">&lt;&gt; :: TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; TypeTableRowDecs
-</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span><span> </span><span id="local-6989586621679532854"><span class="annot"><span class="annottext">d2 :: [Dec]
-</span><a href="#local-6989586621679532854"><span class="hs-identifier hs-var">d2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-196"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679555570"><span id="local-6989586621679555572"><span class="annot"><span class="hs-identifier hs-type">Semigroup</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span></span></span><span>
+</span><span id="line-197"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span><span> </span><span id="local-6989586621679555569"><span class="annot"><span class="annottext">d1 :: [Dec]
+</span><a href="#local-6989586621679555569"><span class="hs-identifier hs-var">d1</span></a></span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679555568"><span class="annot"><span class="annottext">&lt;&gt; :: TypeTableRowDecs -&gt; TypeTableRowDecs -&gt; TypeTableRowDecs
+</span><span class="hs-operator hs-var hs-var hs-var hs-var">&lt;&gt;</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span><span> </span><span id="local-6989586621679555567"><span class="annot"><span class="annottext">d2 :: [Dec]
+</span><a href="#local-6989586621679555567"><span class="hs-identifier hs-var">d2</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-198"></span><span>            </span><span class="annot"><span class="annottext">[Dec] -&gt; TypeTableRowDecs
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-var">TypeTableRowDecs</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Dec]
-</span><a href="#local-6989586621679532856"><span class="hs-identifier hs-var">d1</span></a></span><span class="annot"><span class="annottext">[Dec] -&gt; [Dec] -&gt; [Dec]
+</span><a href="#local-6989586621679555569"><span class="hs-identifier hs-var">d1</span></a></span><span class="annot"><span class="annottext">[Dec] -&gt; [Dec] -&gt; [Dec]
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span class="annot"><span class="annottext">[Dec]
-</span><a href="#local-6989586621679532854"><span class="hs-identifier hs-var">d2</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679555567"><span class="hs-identifier hs-var">d2</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-199"></span><span>
-</span><span id="line-200"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679532848"><span id="local-6989586621679532850"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span></span></span><span>
-</span><span id="line-201"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679532846"><span class="annot"><span class="annottext">mempty :: TypeTableRowDecs
+</span><span id="line-200"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679555561"><span id="local-6989586621679555563"><span class="annot"><span class="hs-identifier hs-type">Monoid</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-type">TypeTableRowDecs</span></a></span></span></span><span>
+</span><span id="line-201"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679555559"><span class="annot"><span class="annottext">mempty :: TypeTableRowDecs
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">mempty</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Dec] -&gt; TypeTableRowDecs
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#TypeTableRowDecs"><span class="hs-identifier hs-var">TypeTableRowDecs</span></a></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-202"></span><span>
@@ -602,19 +602,19 @@ forall c. Parser c -&gt; String -&gt; c
 </span><span id="line-222"></span><span>
 </span><span id="line-223"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#dEnum"><span class="hs-identifier hs-type">dEnum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Dec</span></span><span class="hs-special">]</span><span>
 </span><span id="line-224"></span><span id="dEnum"><span class="annot"><span class="annottext">dEnum :: (String, [EnumRow]) -&gt; [Dec]
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#dEnum"><span class="hs-identifier hs-var hs-var">dEnum</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679532841"><span class="annot"><span class="annottext">enumName :: String
-</span><a href="#local-6989586621679532841"><span class="hs-identifier hs-var">enumName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679532840"><span class="annot"><span class="annottext">enumRows :: [EnumRow]
-</span><a href="#local-6989586621679532840"><span class="hs-identifier hs-var">enumRows</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; [Name] -&gt; Dec
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#dEnum"><span class="hs-identifier hs-var hs-var">dEnum</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679555554"><span class="annot"><span class="annottext">enumName :: String
+</span><a href="#local-6989586621679555554"><span class="hs-identifier hs-var">enumName</span></a></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679555553"><span class="annot"><span class="annottext">enumRows :: [EnumRow]
+</span><a href="#local-6989586621679555553"><span class="hs-identifier hs-var">enumRows</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; [Name] -&gt; [Name] -&gt; Dec
 </span><a href="System.SED.MCTP.Common.THUtil.html#dData"><span class="hs-identifier hs-var">dData</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679532839"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621679532838"><span class="hs-identifier hs-var">constructors</span></a></span><span> </span><span class="annot"><span class="annottext">[Name]
-</span><a href="#local-6989586621679532837"><span class="hs-identifier hs-var">derivations</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-225"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679532839"><span class="annot"><span class="annottext">name :: Name
-</span><a href="#local-6989586621679532839"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
+</span><a href="#local-6989586621679555552"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621679555551"><span class="hs-identifier hs-var">constructors</span></a></span><span> </span><span class="annot"><span class="annottext">[Name]
+</span><a href="#local-6989586621679555550"><span class="hs-identifier hs-var">derivations</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-225"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679555552"><span class="annot"><span class="annottext">name :: Name
+</span><a href="#local-6989586621679555552"><span class="hs-identifier hs-var hs-var">name</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532836"><span class="hs-identifier hs-var">coreName</span></a></span><span>
-</span><span id="line-226"></span><span>        </span><span id="local-6989586621679532838"><span class="annot"><span class="annottext">constructors :: [Name]
-</span><a href="#local-6989586621679532838"><span class="hs-identifier hs-var hs-var">constructors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((String, Int) -&gt; Name) -&gt; [(String, Int)] -&gt; [Name]
+</span><a href="#local-6989586621679555549"><span class="hs-identifier hs-var">coreName</span></a></span><span>
+</span><span id="line-226"></span><span>        </span><span id="local-6989586621679555551"><span class="annot"><span class="annottext">constructors :: [Name]
+</span><a href="#local-6989586621679555551"><span class="hs-identifier hs-var hs-var">constructors</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((String, Int) -&gt; Name) -&gt; [(String, Int)] -&gt; [Name]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Name
 </span><span class="hs-identifier hs-var">mkName</span></span><span> </span><span class="annot"><span class="annottext">(String -&gt; Name)
@@ -623,47 +623,47 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(String, Int) -&gt; String
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, Int)]
-</span><a href="#local-6989586621679532835"><span class="hs-identifier hs-var">enumRowsValueLabelPairs</span></a></span><span>
-</span><span id="line-227"></span><span>        </span><span id="local-6989586621679532837"><span class="annot"><span class="annottext">derivations :: [Name]
-</span><a href="#local-6989586621679532837"><span class="hs-identifier hs-var hs-var">derivations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Bounded</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Enum</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Eq</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Ord</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Show</span><span> </span><span class="hs-special">]</span><span>
-</span><span id="line-228"></span><span>        </span><span id="local-6989586621679532836"><span class="annot"><span class="annottext">coreName :: String
-</span><a href="#local-6989586621679532836"><span class="hs-identifier hs-var hs-var">coreName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;Core_&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><a href="#local-6989586621679555548"><span class="hs-identifier hs-var">enumRowsValueLabelPairs</span></a></span><span>
+</span><span id="line-227"></span><span>        </span><span id="local-6989586621679555550"><span class="annot"><span class="annottext">derivations :: [Name]
+</span><a href="#local-6989586621679555550"><span class="hs-identifier hs-var hs-var">derivations</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">[</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Bounded</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Enum</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Eq</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Ord</span><span class="hs-special">,</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Show</span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-228"></span><span>        </span><span id="local-6989586621679555549"><span class="annot"><span class="annottext">coreName :: String
+</span><a href="#local-6989586621679555549"><span class="hs-identifier hs-var hs-var">coreName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;Core_&quot;</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532841"><span class="hs-identifier hs-var">enumName</span></a></span><span>
-</span><span id="line-229"></span><span>        </span><span id="local-6989586621679532835"><span class="annot"><span class="annottext">enumRowsValueLabelPairs :: [(String, Int)]
-</span><a href="#local-6989586621679532835"><span class="hs-identifier hs-var hs-var">enumRowsValueLabelPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((String, [Int]) -&gt; [(String, Int)])
+</span><a href="#local-6989586621679555554"><span class="hs-identifier hs-var">enumName</span></a></span><span>
+</span><span id="line-229"></span><span>        </span><span id="local-6989586621679555548"><span class="annot"><span class="annottext">enumRowsValueLabelPairs :: [(String, Int)]
+</span><a href="#local-6989586621679555548"><span class="hs-identifier hs-var hs-var">enumRowsValueLabelPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((String, [Int]) -&gt; [(String, Int)])
 -&gt; [(String, [Int])] -&gt; [(String, Int)]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
 </span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="annot"><span class="annottext">(String, [Int]) -&gt; [(String, Int)]
-</span><a href="#local-6989586621679532834"><span class="hs-identifier hs-var">genEnum</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, [Int])]
-</span><a href="#local-6989586621679532833"><span class="hs-identifier hs-var">consolidatedPairs</span></a></span><span>
-</span><span id="line-230"></span><span>        </span><span class="annot"><a href="#local-6989586621679532834"><span class="hs-identifier hs-type">genEnum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-231"></span><span>        </span><span id="local-6989586621679532834"><span class="annot"><span class="annottext">genEnum :: (String, [Int]) -&gt; [(String, Int)]
-</span><a href="#local-6989586621679532834"><span class="hs-identifier hs-var hs-var">genEnum</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679532832"><span class="annot"><span class="annottext">n :: String
-</span><a href="#local-6989586621679532832"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679532831"><span class="annot"><span class="annottext">v :: Int
-</span><a href="#local-6989586621679532831"><span class="hs-identifier hs-var">v</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679532830"><span class="annot"><span class="annottext">vs :: [Int]
-</span><a href="#local-6989586621679532830"><span class="hs-identifier hs-var">vs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532832"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532831"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String, Int) -&gt; [(String, Int)] -&gt; [(String, Int)]
+</span><a href="#local-6989586621679555547"><span class="hs-identifier hs-var">genEnum</span></a></span><span> </span><span class="annot"><span class="annottext">[(String, [Int])]
+</span><a href="#local-6989586621679555546"><span class="hs-identifier hs-var">consolidatedPairs</span></a></span><span>
+</span><span id="line-230"></span><span>        </span><span class="annot"><a href="#local-6989586621679555547"><span class="hs-identifier hs-type">genEnum</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-231"></span><span>        </span><span id="local-6989586621679555547"><span class="annot"><span class="annottext">genEnum :: (String, [Int]) -&gt; [(String, Int)]
+</span><a href="#local-6989586621679555547"><span class="hs-identifier hs-var hs-var">genEnum</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679555545"><span class="annot"><span class="annottext">n :: String
+</span><a href="#local-6989586621679555545"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">,</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679555544"><span class="annot"><span class="annottext">v :: Int
+</span><a href="#local-6989586621679555544"><span class="hs-identifier hs-var">v</span></a></span></span><span class="annot"><span class="hs-glyph hs-type">:</span></span><span id="local-6989586621679555543"><span class="annot"><span class="annottext">vs :: [Int]
+</span><a href="#local-6989586621679555543"><span class="hs-identifier hs-var">vs</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679555545"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679555544"><span class="hs-identifier hs-var">v</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String, Int) -&gt; [(String, Int)] -&gt; [(String, Int)]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; (String, Int)) -&gt; [Int] -&gt; [(String, Int)]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
-</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679532829"><span class="annot"><span class="annottext">v' :: Int
-</span><a href="#local-6989586621679532829"><span class="hs-identifier hs-var">v'</span></a></span></span><span class="hs-glyph">-&gt;</span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+</span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span id="local-6989586621679555542"><span class="annot"><span class="annottext">v' :: Int
+</span><a href="#local-6989586621679555542"><span class="hs-identifier hs-var">v'</span></a></span></span><span class="hs-glyph">-&gt;</span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span class="hs-special">[</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532832"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;_&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
+</span><a href="#local-6989586621679555545"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;_&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Int -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532829"><span class="hs-identifier hs-var">v'</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532829"><span class="hs-identifier hs-var">v'</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532830"><span class="hs-identifier hs-var">vs</span></a></span><span>
-</span><span id="line-232"></span><span>        </span><span class="annot"><a href="#local-6989586621679532834"><span class="hs-identifier hs-var">genEnum</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-identifier">_</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; [(String, Int)]
+</span><a href="#local-6989586621679555542"><span class="hs-identifier hs-var">v'</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679555542"><span class="hs-identifier hs-var">v'</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555543"><span class="hs-identifier hs-var">vs</span></a></span><span>
+</span><span id="line-232"></span><span>        </span><span class="annot"><a href="#local-6989586621679555547"><span class="hs-identifier hs-var">genEnum</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-identifier">_</span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; [(String, Int)]
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="hs-string">&quot;No values&quot;</span></span><span>
-</span><span id="line-233"></span><span>        </span><span id="local-6989586621679532833"><span class="annot"><span class="annottext">consolidatedPairs :: [(String, [Int])]
-</span><a href="#local-6989586621679532833"><span class="hs-identifier hs-var hs-var">consolidatedPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((String, [Int]) -&gt; [Int])
+</span><span id="line-233"></span><span>        </span><span id="local-6989586621679555546"><span class="annot"><span class="annottext">consolidatedPairs :: [(String, [Int])]
+</span><a href="#local-6989586621679555546"><span class="hs-identifier hs-var hs-var">consolidatedPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">((String, [Int]) -&gt; [Int])
 -&gt; [(String, [Int])] -&gt; [(String, [Int])]
 forall b a. Ord b =&gt; (a -&gt; b) -&gt; [a] -&gt; [a]
 </span><span class="hs-identifier hs-var">sortOn</span></span><span> </span><span class="annot"><span class="annottext">(String, [Int]) -&gt; [Int]
@@ -683,89 +683,89 @@ forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
 </span><span class="hs-identifier hs-var">flip</span></span><span class="annot"><span class="annottext">[Int] -&gt; [Int] -&gt; [Int]
 forall a. [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">(++)</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[(String, [Int])]
-</span><a href="#local-6989586621679532828"><span class="hs-identifier hs-var">fullPairs</span></a></span><span>
-</span><span id="line-234"></span><span>        </span><span id="local-6989586621679532828"><span class="annot"><span class="annottext">fullPairs :: [(String, [Int])]
-</span><a href="#local-6989586621679532828"><span class="hs-identifier hs-var hs-var">fullPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621679555541"><span class="hs-identifier hs-var">fullPairs</span></a></span><span>
+</span><span id="line-234"></span><span>        </span><span id="local-6989586621679555541"><span class="annot"><span class="annottext">fullPairs :: [(String, [Int])]
+</span><a href="#local-6989586621679555541"><span class="hs-identifier hs-var hs-var">fullPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-235"></span><span>            </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532827"><span class="hs-identifier hs-var">missingValues</span></a></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; [Int] -&gt; Bool
+</span><a href="#local-6989586621679555540"><span class="hs-identifier hs-var">missingValues</span></a></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; [Int] -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="hs-special">[</span><span class="hs-special">]</span><span>
 </span><span id="line-236"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span class="hs-special">[</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532836"><span class="hs-identifier hs-var">coreName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;_NA&quot;</span></span><span class="hs-special">]</span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532827"><span class="hs-identifier hs-var">missingValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String, [Int]) -&gt; [(String, [Int])] -&gt; [(String, [Int])]
+</span><a href="#local-6989586621679555549"><span class="hs-identifier hs-var">coreName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;_NA&quot;</span></span><span class="hs-special">]</span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555540"><span class="hs-identifier hs-var">missingValues</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String, [Int]) -&gt; [(String, [Int])] -&gt; [(String, [Int])]
 forall a. a -&gt; [a] -&gt; [a]
 </span><span class="hs-glyph hs-var">:</span></span><span> </span><span class="annot"><span class="annottext">[(String, [Int])]
-</span><a href="#local-6989586621679532825"><span class="hs-identifier hs-var">givenPairs</span></a></span><span>
+</span><a href="#local-6989586621679555538"><span class="hs-identifier hs-var">givenPairs</span></a></span><span>
 </span><span id="line-237"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[(String, [Int])]
-</span><a href="#local-6989586621679532825"><span class="hs-identifier hs-var">givenPairs</span></a></span><span>
-</span><span id="line-238"></span><span>        </span><span id="local-6989586621679532827"><span class="annot"><span class="annottext">missingValues :: [Int]
-</span><a href="#local-6989586621679532827"><span class="hs-identifier hs-var hs-var">missingValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532824"><span class="hs-identifier hs-var">fullRange</span></a></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; [Int] -&gt; [Int]
+</span><a href="#local-6989586621679555538"><span class="hs-identifier hs-var">givenPairs</span></a></span><span>
+</span><span id="line-238"></span><span>        </span><span id="local-6989586621679555540"><span class="annot"><span class="annottext">missingValues :: [Int]
+</span><a href="#local-6989586621679555540"><span class="hs-identifier hs-var hs-var">missingValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555537"><span class="hs-identifier hs-var">fullRange</span></a></span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; [Int] -&gt; [Int]
 forall a. Eq a =&gt; [a] -&gt; [a] -&gt; [a]
 </span><span class="hs-operator hs-var">\\</span></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532823"><span class="hs-identifier hs-var">givenValues</span></a></span><span>
-</span><span id="line-239"></span><span>        </span><span id="local-6989586621679532825"><span class="annot"><span class="annottext">givenPairs :: [(String, [Int])]
-</span><a href="#local-6989586621679532825"><span class="hs-identifier hs-var hs-var">givenPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EnumRow -&gt; (String, [Int])) -&gt; [EnumRow] -&gt; [(String, [Int])]
+</span><a href="#local-6989586621679555536"><span class="hs-identifier hs-var">givenValues</span></a></span><span>
+</span><span id="line-239"></span><span>        </span><span id="local-6989586621679555538"><span class="annot"><span class="annottext">givenPairs :: [(String, [Int])]
+</span><a href="#local-6989586621679555538"><span class="hs-identifier hs-var hs-var">givenPairs</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EnumRow -&gt; (String, [Int])) -&gt; [EnumRow] -&gt; [(String, [Int])]
 forall a b. (a -&gt; b) -&gt; [a] -&gt; [b]
 </span><span class="hs-identifier hs-var">map</span></span><span> </span><span class="annot"><span class="annottext">EnumRow -&gt; (String, [Int])
-</span><a href="#local-6989586621679532822"><span class="hs-identifier hs-var">enumRowValueLabelPairs</span></a></span><span> </span><span class="annot"><span class="annottext">[EnumRow]
-</span><a href="#local-6989586621679532840"><span class="hs-identifier hs-var">enumRows</span></a></span><span>
-</span><span id="line-240"></span><span>        </span><span class="annot"><a href="#local-6989586621679532822"><span class="hs-identifier hs-type">enumRowValueLabelPairs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
-</span><span id="line-241"></span><span>        </span><span id="local-6989586621679532822"><span class="annot"><span class="annottext">enumRowValueLabelPairs :: EnumRow -&gt; (String, [Int])
-</span><a href="#local-6989586621679532822"><span class="hs-identifier hs-var hs-var">enumRowValueLabelPairs</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span> </span><span id="local-6989586621679532820"><span class="annot"><span class="annottext">n :: String
-</span><a href="#local-6989586621679532820"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679532819"><span class="annot"><span class="annottext">vs :: [Int]
-</span><a href="#local-6989586621679532819"><span class="hs-identifier hs-var">vs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
+</span><a href="#local-6989586621679555535"><span class="hs-identifier hs-var">enumRowValueLabelPairs</span></a></span><span> </span><span class="annot"><span class="annottext">[EnumRow]
+</span><a href="#local-6989586621679555553"><span class="hs-identifier hs-var">enumRows</span></a></span><span>
+</span><span id="line-240"></span><span>        </span><span class="annot"><a href="#local-6989586621679555535"><span class="hs-identifier hs-type">enumRowValueLabelPairs</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
+</span><span id="line-241"></span><span>        </span><span id="local-6989586621679555535"><span class="annot"><span class="annottext">enumRowValueLabelPairs :: EnumRow -&gt; (String, [Int])
+</span><a href="#local-6989586621679555535"><span class="hs-identifier hs-var hs-var">enumRowValueLabelPairs</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span> </span><span id="local-6989586621679555533"><span class="annot"><span class="annottext">n :: String
+</span><a href="#local-6989586621679555533"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span id="local-6989586621679555532"><span class="annot"><span class="annottext">vs :: [Int]
+</span><a href="#local-6989586621679555532"><span class="hs-identifier hs-var">vs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[String] -&gt; String
 forall a. Monoid a =&gt; [a] -&gt; a
 </span><span class="hs-identifier hs-var">mconcat</span></span><span class="hs-special">[</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532836"><span class="hs-identifier hs-var">coreName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;_&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532820"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532819"><span class="hs-identifier hs-var">vs</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-242"></span><span>        </span><span id="local-6989586621679532823"><span class="annot"><span class="annottext">givenValues :: [Int]
-</span><a href="#local-6989586621679532823"><span class="hs-identifier hs-var hs-var">givenValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EnumRow -&gt; [Int]) -&gt; [EnumRow] -&gt; [Int]
+</span><a href="#local-6989586621679555549"><span class="hs-identifier hs-var">coreName</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-string">&quot;_&quot;</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679555533"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555532"><span class="hs-identifier hs-var">vs</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-242"></span><span>        </span><span id="local-6989586621679555536"><span class="annot"><span class="annottext">givenValues :: [Int]
+</span><a href="#local-6989586621679555536"><span class="hs-identifier hs-var hs-var">givenValues</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(EnumRow -&gt; [Int]) -&gt; [EnumRow] -&gt; [Int]
 forall (t :: * -&gt; *) a b. Foldable t =&gt; (a -&gt; [b]) -&gt; t a -&gt; [b]
-</span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679532818"><span class="annot"><span class="annottext">vs :: [Int]
-</span><a href="#local-6989586621679532818"><span class="hs-identifier hs-var">vs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532818"><span class="hs-identifier hs-var">vs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[EnumRow]
-</span><a href="#local-6989586621679532840"><span class="hs-identifier hs-var">enumRows</span></a></span><span>
-</span><span id="line-243"></span><span>        </span><span id="local-6989586621679532817"><span class="annot"><span class="annottext">maxv :: Int
-</span><a href="#local-6989586621679532817"><span class="hs-identifier hs-var hs-var">maxv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Int
+</span><span class="hs-identifier hs-var">concatMap</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">\</span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span> </span><span class="hs-identifier">_</span><span> </span><span id="local-6989586621679555531"><span class="annot"><span class="annottext">vs :: [Int]
+</span><a href="#local-6989586621679555531"><span class="hs-identifier hs-var">vs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555531"><span class="hs-identifier hs-var">vs</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[EnumRow]
+</span><a href="#local-6989586621679555553"><span class="hs-identifier hs-var">enumRows</span></a></span><span>
+</span><span id="line-243"></span><span>        </span><span id="local-6989586621679555530"><span class="annot"><span class="annottext">maxv :: Int
+</span><a href="#local-6989586621679555530"><span class="hs-identifier hs-var hs-var">maxv</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Int
 forall (t :: * -&gt; *) a. (Foldable t, Ord a) =&gt; t a -&gt; a
 </span><span class="hs-identifier hs-var">maximum</span></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532823"><span class="hs-identifier hs-var">givenValues</span></a></span><span>
-</span><span id="line-244"></span><span>        </span><span id="local-6989586621679532824"><span class="annot"><span class="annottext">fullRange :: [Int]
-</span><a href="#local-6989586621679532824"><span class="hs-identifier hs-var hs-var">fullRange</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Int, Int) -&gt; [Int]
+</span><a href="#local-6989586621679555536"><span class="hs-identifier hs-var">givenValues</span></a></span><span>
+</span><span id="line-244"></span><span>        </span><span id="local-6989586621679555537"><span class="annot"><span class="annottext">fullRange :: [Int]
+</span><a href="#local-6989586621679555537"><span class="hs-identifier hs-var hs-var">fullRange</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Int, Int) -&gt; [Int]
 forall a. Ix a =&gt; (a, a) -&gt; [a]
 </span><span class="hs-identifier hs-var">range</span></span><span class="hs-special">(</span><span class="annot"><span class="hs-number">0</span></span><span class="hs-special">,</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532817"><span class="hs-identifier hs-var">maxv</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679555530"><span class="hs-identifier hs-var">maxv</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-245"></span><span>
 </span><span id="line-246"></span><span>
 </span><span id="line-247"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#enumTableParser"><span class="hs-identifier hs-type">enumTableParser</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span class="hs-special">,</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span class="hs-special">]</span><span class="hs-special">)</span><span>
 </span><span id="line-248"></span><span id="enumTableParser"><span class="annot"><span class="annottext">enumTableParser :: Parser (String, [EnumRow])
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#enumTableParser"><span class="hs-identifier hs-var hs-var">enumTableParser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-249"></span><span>    </span><span id="local-6989586621679532816"><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532816"><span class="hs-identifier hs-var">enumType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ()
+</span><span id="line-249"></span><span>    </span><span id="local-6989586621679555529"><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679555529"><span class="hs-identifier hs-var">enumType</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ()
 </span><span class="hs-identifier hs-var">skipSpace</span></span><span> </span><span class="annot"><span class="annottext">Parser () -&gt; Parser ByteString String -&gt; Parser ByteString String
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString String
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#enumTableTitle"><span class="hs-identifier hs-var">enumTableTitle</span></a></span><span>
-</span><span id="line-250"></span><span>    </span><span id="local-6989586621679532814"><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532814"><span class="hs-identifier hs-var">pieceLengths</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
+</span><span id="line-250"></span><span>    </span><span id="local-6989586621679555527"><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555527"><span class="hs-identifier hs-var">pieceLengths</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#rowSep"><span class="hs-identifier hs-var">rowSep</span></a></span><span>
 </span><span id="line-251"></span><span>    </span><span class="annot"><span class="annottext">[Int]
 </span><span class="hs-identifier">_</span></span><span>            </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Parser ()
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#header"><span class="hs-identifier hs-var">header</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532814"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser () -&gt; Parser ByteString [Int] -&gt; Parser ByteString [Int]
+</span><a href="#local-6989586621679555527"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser () -&gt; Parser ByteString [Int] -&gt; Parser ByteString [Int]
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#rowSep"><span class="hs-identifier hs-var">rowSep</span></a></span><span>
-</span><span id="line-252"></span><span>    </span><span id="local-6989586621679532813"><span class="annot"><span class="annottext">[EnumRow]
-</span><a href="#local-6989586621679532813"><span class="hs-identifier hs-var">enumRows</span></a></span></span><span>     </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString EnumRow -&gt; Parser ByteString [EnumRow]
+</span><span id="line-252"></span><span>    </span><span id="local-6989586621679555526"><span class="annot"><span class="annottext">[EnumRow]
+</span><a href="#local-6989586621679555526"><span class="hs-identifier hs-var">enumRows</span></a></span></span><span>     </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString EnumRow -&gt; Parser ByteString [EnumRow]
 forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
 </span><span class="hs-identifier hs-var">many1</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[Int] -&gt; Parser ByteString EnumRow
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#enumTableRow"><span class="hs-identifier hs-var">enumTableRow</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532814"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString EnumRow
+</span><a href="#local-6989586621679555527"><span class="hs-identifier hs-var">pieceLengths</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString EnumRow
 -&gt; Parser ByteString [Int] -&gt; Parser ByteString EnumRow
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
@@ -779,11 +779,11 @@ forall t. Chunk t =&gt; Parser t ()
 </span><span id="line-254"></span><span>    </span><span class="annot"><span class="annottext">(String, [EnumRow]) -&gt; Parser (String, [EnumRow])
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679532816"><span class="hs-identifier hs-var">enumType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[EnumRow]
-</span><a href="#local-6989586621679532813"><span class="hs-identifier hs-var">enumRows</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679555529"><span class="hs-identifier hs-var">enumType</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">[EnumRow]
+</span><a href="#local-6989586621679555526"><span class="hs-identifier hs-var">enumRows</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-255"></span><span>
 </span><span id="line-256"></span><span class="hs-keyword">data</span><span> </span><span id="EnumRow"><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-var">EnumRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="EnumRow"><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-var">EnumRow</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span>
-</span><span id="line-257"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679532806"><span id="local-6989586621679532808"><span id="local-6989586621679532810"><span class="annot"><span class="annottext">Int -&gt; EnumRow -&gt; ShowS
+</span><span id="line-257"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679555519"><span id="local-6989586621679555521"><span id="local-6989586621679555523"><span class="annot"><span class="annottext">Int -&gt; EnumRow -&gt; ShowS
 [EnumRow] -&gt; ShowS
 EnumRow -&gt; String
 (Int -&gt; EnumRow -&gt; ShowS)
@@ -817,7 +817,7 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; Parser ByteString ByteString
 </span><span class="hs-identifier hs-var">takeWhile</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Bool
-</span><a href="#local-6989586621679532805"><span class="hs-identifier hs-var">idChar</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString ByteString
+</span><a href="#local-6989586621679555518"><span class="hs-identifier hs-var">idChar</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString ByteString
 -&gt; Parser ByteString ByteString -&gt; Parser ByteString ByteString
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span class="hs-operator hs-var">&lt;*</span></span><span>
@@ -831,22 +831,22 @@ forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f a
 </span><span id="line-263"></span><span>             </span><span class="annot"><span class="annottext">Parser ByteString String -&gt; String -&gt; Parser ByteString String
 forall i a. Parser i a -&gt; String -&gt; Parser i a
 </span><span class="hs-operator hs-var">&lt;?&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot;Enum Table Title&quot;</span></span><span>
-</span><span id="line-264"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679532805"><span class="annot"><span class="annottext">idChar :: Word8 -&gt; Bool
-</span><a href="#local-6989586621679532805"><span class="hs-identifier hs-var hs-var">idChar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Word8 -&gt; Bool
+</span><span id="line-264"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679555518"><span class="annot"><span class="annottext">idChar :: Word8 -&gt; Bool
+</span><a href="#local-6989586621679555518"><span class="hs-identifier hs-var hs-var">idChar</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Word8 -&gt; Bool
 </span><span class="hs-identifier hs-var">inClass</span></span><span> </span><span class="annot"><span class="hs-string">&quot;a-zA-Z0-9_&quot;</span></span><span>
 </span><span id="line-265"></span><span>
 </span><span id="line-266"></span><span>
 </span><span id="line-267"></span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#enumTableRow"><span class="hs-identifier hs-type">enumTableRow</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-type">EnumRow</span></a></span><span>
 </span><span id="line-268"></span><span id="enumTableRow"><span class="annot"><span class="annottext">enumTableRow :: [Int] -&gt; Parser ByteString EnumRow
-</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#enumTableRow"><span class="hs-identifier hs-var hs-var">enumTableRow</span></a></span></span><span> </span><span id="local-6989586621679532804"><span class="annot"><span class="annottext">lengths :: [Int]
-</span><a href="#local-6989586621679532804"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-269"></span><span>    </span><span class="hs-special">[</span><span id="local-6989586621679532803"><span class="annot"><span class="annottext">sv :: ByteString
-</span><a href="#local-6989586621679532803"><span class="hs-identifier hs-var">sv</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679532802"><span class="annot"><span class="annottext">n :: ByteString
-</span><a href="#local-6989586621679532802"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Parser [ByteString]
+</span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#enumTableRow"><span class="hs-identifier hs-var hs-var">enumTableRow</span></a></span></span><span> </span><span id="local-6989586621679555517"><span class="annot"><span class="annottext">lengths :: [Int]
+</span><a href="#local-6989586621679555517"><span class="hs-identifier hs-var">lengths</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-269"></span><span>    </span><span class="hs-special">[</span><span id="local-6989586621679555516"><span class="annot"><span class="annottext">sv :: ByteString
+</span><a href="#local-6989586621679555516"><span class="hs-identifier hs-var">sv</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679555515"><span class="annot"><span class="annottext">n :: ByteString
+</span><a href="#local-6989586621679555515"><span class="hs-identifier hs-var">n</span></a></span></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">[Int] -&gt; Parser [ByteString]
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#tableRowFields"><span class="hs-identifier hs-var">tableRowFields</span></a></span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532804"><span class="hs-identifier hs-var">lengths</span></a></span><span>
-</span><span id="line-270"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679532801"><span class="annot"><span class="annottext">ev :: [Int]
-</span><a href="#local-6989586621679532801"><span class="hs-identifier hs-var hs-var">ev</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; [Int])
+</span><a href="#local-6989586621679555517"><span class="hs-identifier hs-var">lengths</span></a></span><span>
+</span><span id="line-270"></span><span>    </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679555514"><span class="annot"><span class="annottext">ev :: [Int]
+</span><a href="#local-6989586621679555514"><span class="hs-identifier hs-var hs-var">ev</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; [Int])
 -&gt; ([Int] -&gt; [Int]) -&gt; Either String [Int] -&gt; [Int]
 forall a c b. (a -&gt; c) -&gt; (b -&gt; c) -&gt; Either a b -&gt; c
 </span><span class="hs-identifier hs-var">either</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; [Int]
@@ -858,8 +858,8 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int] -&gt; ByteString -&gt; Either String [Int]
 forall a. Parser a -&gt; ByteString -&gt; Either String a
 </span><span class="hs-identifier hs-var">parseOnly</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString [Int]
-</span><a href="#local-6989586621679532800"><span class="hs-identifier hs-var">pRange</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532803"><span class="hs-identifier hs-var">sv</span></a></span><span>
+</span><a href="#local-6989586621679555513"><span class="hs-identifier hs-var">pRange</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679555516"><span class="hs-identifier hs-var">sv</span></a></span><span>
 </span><span id="line-271"></span><span>    </span><span class="annot"><span class="annottext">EnumRow -&gt; Parser ByteString EnumRow
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(EnumRow -&gt; Parser ByteString EnumRow)
@@ -867,35 +867,35 @@ forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; [Int] -&gt; EnumRow
 </span><a href="System.SED.MCTP.Common.ColumnTypes.TH.html#EnumRow"><span class="hs-identifier hs-var">EnumRow</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">ByteString -&gt; String
-</span><a href="#local-6989586621679532799"><span class="hs-identifier hs-var">scrub</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532802"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int]
-</span><a href="#local-6989586621679532801"><span class="hs-identifier hs-var">ev</span></a></span><span>
+</span><a href="#local-6989586621679555512"><span class="hs-identifier hs-var">scrub</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679555515"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">[Int]
+</span><a href="#local-6989586621679555514"><span class="hs-identifier hs-var">ev</span></a></span><span>
 </span><span id="line-272"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-273"></span><span>      </span><span id="local-6989586621679532800"><span class="annot"><span class="annottext">pRange :: Parser ByteString [Int]
-</span><a href="#local-6989586621679532800"><span class="hs-identifier hs-var hs-var">pRange</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-274"></span><span>          </span><span id="local-6989586621679532798"><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532798"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Int
-</span><a href="#local-6989586621679532797"><span class="hs-identifier hs-var">dInt</span></a></span><span>
+</span><span id="line-273"></span><span>      </span><span id="local-6989586621679555513"><span class="annot"><span class="annottext">pRange :: Parser ByteString [Int]
+</span><a href="#local-6989586621679555513"><span class="hs-identifier hs-var hs-var">pRange</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-274"></span><span>          </span><span id="local-6989586621679555511"><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679555511"><span class="hs-identifier hs-var">v1</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Int
+</span><a href="#local-6989586621679555510"><span class="hs-identifier hs-var">dInt</span></a></span><span>
 </span><span id="line-275"></span><span>          </span><span class="annot"><span class="annottext">[Int] -&gt; Parser ByteString [Int] -&gt; Parser ByteString [Int]
 forall (f :: * -&gt; *) a. Alternative f =&gt; a -&gt; f a -&gt; f a
 </span><span class="hs-identifier hs-var">option</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532798"><span class="hs-identifier hs-var">v1</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; [Int]
+</span><a href="#local-6989586621679555511"><span class="hs-identifier hs-var">v1</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; [Int]
 forall a. Enum a =&gt; a -&gt; a -&gt; [a]
 </span><span class="hs-identifier hs-var">enumFromTo</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679532798"><span class="hs-identifier hs-var">v1</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; [Int]) -&gt; Parser ByteString Int -&gt; Parser ByteString [Int]
+</span><a href="#local-6989586621679555511"><span class="hs-identifier hs-var">v1</span></a></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; [Int]) -&gt; Parser ByteString Int -&gt; Parser ByteString [Int]
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-string">&quot;-&quot;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString ByteString
 -&gt; Parser ByteString Int -&gt; Parser ByteString Int
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f a -&gt; f b -&gt; f b
 </span><span class="hs-operator hs-var">*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Int
-</span><a href="#local-6989586621679532797"><span class="hs-identifier hs-var">dInt</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-276"></span><span>      </span><span id="local-6989586621679532797"><span class="annot"><span class="annottext">dInt :: Parser ByteString Int
-</span><a href="#local-6989586621679532797"><span class="hs-identifier hs-var hs-var">dInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Int
+</span><a href="#local-6989586621679555510"><span class="hs-identifier hs-var">dInt</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-276"></span><span>      </span><span id="local-6989586621679555510"><span class="annot"><span class="annottext">dInt :: Parser ByteString Int
+</span><a href="#local-6989586621679555510"><span class="hs-identifier hs-var hs-var">dInt</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Int
 forall a. Integral a =&gt; Parser a
 </span><span class="hs-identifier hs-var">decimal</span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Parser</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span>
-</span><span id="line-277"></span><span>      </span><span id="local-6989586621679532799"><span class="annot"><span class="annottext">scrub :: ByteString -&gt; String
-</span><a href="#local-6989586621679532799"><span class="hs-identifier hs-var hs-var">scrub</span></a></span></span><span> </span><span id="local-6989586621679532796"><span class="annot"><span class="annottext">n :: ByteString
-</span><a href="#local-6989586621679532796"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><span id="line-277"></span><span>      </span><span id="local-6989586621679555512"><span class="annot"><span class="annottext">scrub :: ByteString -&gt; String
+</span><a href="#local-6989586621679555512"><span class="hs-identifier hs-var hs-var">scrub</span></a></span></span><span> </span><span id="local-6989586621679555509"><span class="annot"><span class="annottext">n :: ByteString
+</span><a href="#local-6989586621679555509"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 </span><span class="hs-identifier hs-var">unpack</span></span><span>
 </span><span id="line-278"></span><span>          </span><span class="annot"><span class="annottext">(ByteString -&gt; String) -&gt; ByteString -&gt; String
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -906,29 +906,29 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; ByteString -&gt; [ByteString]
 </span><span class="hs-identifier hs-var">splitWith</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Bool
 forall a. (Eq a, Num a) =&gt; a -&gt; Bool
-</span><a href="#local-6989586621679532795"><span class="hs-identifier hs-var">scrubbed</span></a></span><span>
+</span><a href="#local-6989586621679555508"><span class="hs-identifier hs-var">scrubbed</span></a></span><span>
 </span><span id="line-280"></span><span>          </span><span class="annot"><span class="annottext">(ByteString -&gt; [ByteString]) -&gt; ByteString -&gt; [ByteString]
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; ByteString -&gt; ByteString
 </span><span class="hs-identifier hs-var">filter</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Bool
 forall a. (Eq a, Num a) =&gt; a -&gt; Bool
-</span><a href="#local-6989586621679532794"><span class="hs-identifier hs-var">notComma</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679532796"><span class="hs-identifier hs-var">n</span></a></span><span>
-</span><span id="line-281"></span><span>      </span><span id="local-6989586621679532795"><span class="annot"><span class="annottext">scrubbed :: a -&gt; Bool
-</span><a href="#local-6989586621679532795"><span class="hs-identifier hs-var hs-var">scrubbed</span></a></span></span><span> </span><span id="local-6989586621679532793"><span class="annot"><span class="annottext">c :: a
-</span><a href="#local-6989586621679532793"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679532793"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621679555507"><span class="hs-identifier hs-var">notComma</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679555509"><span class="hs-identifier hs-var">n</span></a></span><span>
+</span><span id="line-281"></span><span>      </span><span id="local-6989586621679555508"><span class="annot"><span class="annottext">scrubbed :: a -&gt; Bool
+</span><a href="#local-6989586621679555508"><span class="hs-identifier hs-var hs-var">scrubbed</span></a></span></span><span> </span><span id="local-6989586621679555506"><span class="annot"><span class="annottext">c :: a
+</span><a href="#local-6989586621679555506"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679555506"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="hs-number">32</span></span><span> </span><span class="annot"><span class="annottext">Bool -&gt; Bool -&gt; Bool
 </span><span class="hs-operator hs-var">||</span></span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679532793"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><a href="#local-6989586621679555506"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">==</span></span><span> </span><span class="annot"><span class="hs-number">45</span></span><span>
 </span><span id="line-282"></span><span>      </span><span class="hs-comment">-- ^ space or dash</span><span>
-</span><span id="line-283"></span><span>      </span><span id="local-6989586621679532794"><span class="annot"><span class="annottext">notComma :: a -&gt; Bool
-</span><a href="#local-6989586621679532794"><span class="hs-identifier hs-var hs-var">notComma</span></a></span></span><span> </span><span id="local-6989586621679532792"><span class="annot"><span class="annottext">c :: a
-</span><a href="#local-6989586621679532792"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
-</span><a href="#local-6989586621679532792"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
+</span><span id="line-283"></span><span>      </span><span id="local-6989586621679555507"><span class="annot"><span class="annottext">notComma :: a -&gt; Bool
+</span><a href="#local-6989586621679555507"><span class="hs-identifier hs-var hs-var">notComma</span></a></span></span><span> </span><span id="local-6989586621679555505"><span class="annot"><span class="annottext">c :: a
+</span><a href="#local-6989586621679555505"><span class="hs-identifier hs-var">c</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679555505"><span class="hs-identifier hs-var">c</span></a></span><span> </span><span class="annot"><span class="annottext">a -&gt; a -&gt; Bool
 forall a. Eq a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">/=</span></span><span> </span><span class="annot"><span class="hs-number">44</span></span><span>
 </span><span id="line-284"></span><span>      </span><span class="hs-comment">-- ^ comma</span><span>

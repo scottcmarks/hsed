@@ -431,53 +431,53 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,2138
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,2142
 module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class28,29
-newtype Core_some_integer Core_some_integer85,86
-newtype Core_some_integer = Core_some_integer {unCore_some_integer unCore_some_integer85,86
-newtype Core_integer Core_integer88,89
-type Core_integer_at_least Core_integer_at_least90,91
-newtype Core_some_uinteger Core_some_uinteger93,94
-newtype Core_some_uinteger = Core_some_uinteger {unCore_some_uinteger unCore_some_uinteger93,94
-newtype Core_uinteger Core_uinteger96,97
-type Core_uinteger_at_least Core_uinteger_at_least98,99
-newtype Core_some_bytes Core_some_bytes101,102
-newtype Core_some_bytes = Core_some_bytes {unCore_some_bytes unCore_some_bytes101,102
-instance LL.FoldableLL LL-FoldableLL Core_some_bytes Word8104,105
-    foldl foldl105,106
-    foldr foldr106,107
-instance LL.ListLike LL-ListLike Core_some_bytes Word8107,108
-    singleton singleton108,109
-    head head109,110
-    tail tail110,111
-    genericLength genericLength111,112
-newtype Core_max_bytes Core_max_bytes114,115
-type Core_max_bytes_at_least Core_max_bytes_at_least116,117
-newtype Core_bytes Core_bytes119,120
-instance (K(KnownNat n) => StreamItem (Core_uinteger n)125,126
-    parser parser126,127
-    generate generate136,137
-instance (K(KnownNat n) => StreamItem (Core_integer n)138,139
-    parser parser139,140
-    generate generate149,150
-instance (K(KnownNat n) => StreamItem (Core_bytes n)151,152
-    parser parser152,153
-    generate generate162,163
-instance (K(KnownNat n) => StreamItem (Core_max_bytes n)165,166
-    parser parser166,167
-    generate generate176,177
-instance (K(KnownNat n) => IsToken (Core_integer n)180,181
-    token token181,182
-    fromToken fromToken182,183
-instance (K(KnownNat n) => IsToken (Core_uinteger n)186,187
-    token token187,188
-    fromToken fromToken188,189
-instance (K(KnownNat n) => IsToken (Core_bytes n)192,193
-    token token193,194
-    fromToken fromToken194,195
-instance (K(KnownNat n) => IsToken (Core_max_bytes n)198,199
-    token token199,200
-    fromToken fromToken200,201
+newtype Core_some_integer Core_some_integer90,91
+newtype Core_some_integer = Core_some_integer {unCore_some_integer unCore_some_integer90,91
+newtype Core_integer Core_integer93,94
+type Core_integer_at_least Core_integer_at_least95,96
+newtype Core_some_uinteger Core_some_uinteger98,99
+newtype Core_some_uinteger = Core_some_uinteger {unCore_some_uinteger unCore_some_uinteger98,99
+newtype Core_uinteger Core_uinteger101,102
+type Core_uinteger_at_least Core_uinteger_at_least103,104
+newtype Core_some_bytes Core_some_bytes106,107
+newtype Core_some_bytes = Core_some_bytes {unCore_some_bytes unCore_some_bytes106,107
+instance LL.FoldableLL LL-FoldableLL Core_some_bytes Word8109,110
+    foldl foldl110,111
+    foldr foldr111,112
+instance LL.ListLike LL-ListLike Core_some_bytes Word8112,113
+    singleton singleton113,114
+    head head114,115
+    tail tail115,116
+    genericLength genericLength116,117
+newtype Core_max_bytes Core_max_bytes119,120
+type Core_max_bytes_at_least Core_max_bytes_at_least121,122
+newtype Core_bytes Core_bytes124,125
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)130,131
+    parser parser131,132
+    generate generate141,142
+instance (K(KnownNat n) => StreamItem (Core_integer n)143,144
+    parser parser144,145
+    generate generate154,155
+instance (K(KnownNat n) => StreamItem (Core_bytes n)156,157
+    parser parser157,158
+    generate generate167,168
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)170,171
+    parser parser171,172
+    generate generate181,182
+instance (K(KnownNat n) => IsToken (Core_integer n)185,186
+    token token186,187
+    fromToken fromToken187,188
+instance (K(KnownNat n) => IsToken (Core_uinteger n)191,192
+    token token192,193
+    fromToken fromToken193,194
+instance (K(KnownNat n) => IsToken (Core_bytes n)197,198
+    token token198,199
+    fromToken fromToken199,200
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)203,204
+    token token204,205
+    fromToken fromToken205,206
 
 ./src/System/SED/MCTP/Common/Base_Type/TH.hs,339
 module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
@@ -499,8 +499,8 @@ ct' ct'199,200
 
 ./src/System/SED/MCTP/Common/Base_Type.hs,145
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
-core_bytes_4 core_bytes_462,63
-core_bytes_8 core_bytes_869,70
+core_bytes_4 core_bytes_468,69
+core_bytes_8 core_bytes_875,76
 
 ./src/System/SED/MCTP/Common/ColumnTypes/TH.hs,1287
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH16,17
@@ -597,8 +597,8 @@ instance StreamItem StreamItem Core_uidref_Object_Table153,154
 
 ./src/System/SED/MCTP/Common/Util.hs,144
 module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util17,18
-hexUID hexUID40,41
-trimTrailingWhitespace trimTrailingWhitespace56,57
+hexUID hexUID42,43
+trimTrailingWhitespace trimTrailingWhitespace58,59
 
 ./src/Hsed/App.hs,357
 module Hsed.AppHsed.App15,16
@@ -613,7 +613,7 @@ makeApp makeApp36,37
 instance HasLogFunc HasLogFunc App39,40
 instance HasLogFunc App where logFuncL logFuncL39,40
 
-./src/Data/BoundedSize/Class.hs,984
+./src/Data/BoundedSize/Class.hs,1004
 module Data.BoundedSize.ClassData.BoundedSize.Class25,26
 import import50,51
 type role role67,68
@@ -630,7 +630,7 @@ class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize99,100
 instance (I(IsBoundedSize 0 l a) => IsMaxSize l a100,101
 type MaxSize MaxSize101,102
 type AtLeast AtLeast108,109
-instance (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))113,114
+instance {-# OVERLAPPING #-} (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))113,114
     arbitrary arbitrary114,115
     shrink shrink115,116
 fromNat fromNat124,125

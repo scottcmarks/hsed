@@ -89,23 +89,23 @@ import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
 import           Test.QuickCheck                   (Arbitrary (..))
 
 newtype Core_some_integer = Core_some_integer {unCore_some_integer :: Integer}
-    deriving (Eq, Ord, Show, Num, HasSize, Arbitrary) via Integer
+    deriving (Eq, Ord, Num, Show, HasSize, Arbitrary) via Integer
 
 newtype Core_integer   n = Core_integer   (Core_some_integer ? MaxSize n)
-    deriving (Eq, Ord, Show) via (Core_some_integer ? MaxSize n)  -- Num, Read,
+    deriving (Eq, Ord, Num, Show) via (Core_some_integer ? MaxSize n)  -- Read,
 type Core_integer_at_least n = AtLeast Core_integer n
 
 
 newtype Core_some_uinteger = Core_some_uinteger {unCore_some_uinteger :: Natural}
-    deriving (Eq, Ord, Show, Num, HasSize, Arbitrary) via Natural
+    deriving (Eq, Ord, Num, Show, HasSize, Arbitrary) via Natural
 
 newtype Core_uinteger  n = Core_uinteger  (Core_some_uinteger ? MaxSize n)
-    deriving (Eq, Ord, Show) via (Core_some_uinteger ? MaxSize n) -- Num, Read,
+    deriving (Eq, Ord, Num, Show) via (Core_some_uinteger ? MaxSize n) -- Read,
 type Core_uinteger_at_least n = AtLeast Core_uinteger n
 
 
 newtype Core_some_bytes = Core_some_bytes {unCore_some_bytes :: ByteString}
-    deriving (Eq, Ord, Show, IsList, IsString, Semigroup, Monoid, Arbitrary)  via ByteString
+    deriving (Eq, Ord, Show, IsList, IsString, Semigroup, Monoid, Arbitrary) via ByteString
 
 instance LL.FoldableLL Core_some_bytes Word8 where
     foldl f acc   =                   LL.foldl f acc   . unCore_some_bytes

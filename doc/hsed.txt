@@ -662,21 +662,23 @@ instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
 instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
 instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)

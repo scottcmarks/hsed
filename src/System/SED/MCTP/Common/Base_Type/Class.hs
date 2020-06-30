@@ -56,8 +56,9 @@ where
 
 import           Control.Monad                     (fail)
 
-import           Data.BoundedSize                  (AtLeast, FixedSize,
-                                                    HasSize (..), MaxSize,
+import           Data.BoundedSize                  (type (?), AtLeast,
+                                                    FixedSize, HasSize (..),
+                                                    MaxSize, Predicate (..),
                                                     append, bounds, drop,
                                                     fromNat, length, map,
                                                     padLeft, padRight,
@@ -69,7 +70,6 @@ import qualified Data.ListLike                     as LL (FoldableLL (..),
                                                           ListLike (..))
 import           Data.Maybe                        (Maybe (..))
 import           Data.Proxy                        (Proxy (..))
-import           Data.Refined
 import           Data.String                       (IsString (..), String)
 import           GHC.Base                          (Int, Monoid (..),
                                                     Semigroup (..), pure, ($),

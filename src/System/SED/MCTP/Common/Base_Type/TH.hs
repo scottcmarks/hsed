@@ -15,8 +15,7 @@ module System.SED.MCTP.Common.Base_Type.TH
   , ci' -- $(ci 42) ==> (unsafeCreate 42) :: Core_integer 1 == ($ci 42)::Core_integer 1
   , cu  -- like ci, but Core_uinteger
   , cu' -- like ci'
-  , cb  -- like ci, but Core_bytes
-  , cb' -- like cb
+  , cb' -- there is no cb, since Core_bytes are FixedSize
   , cm  -- like ci, but Core_max_bytes
   , cm' -- like cm
   ) where
@@ -60,9 +59,6 @@ newtype LitI =
 
 
 
--- | Type-safe constructor for fixed-length byte literals: Core_bytes n
---
-
 -- >>> :t "Foobar"
 -- "Foobar" :: IsString p => p
 -- >>> :t LitI 142857
@@ -71,9 +67,9 @@ newtype LitI =
 -- ci 142857 :: Q Exp
 -- >>> runQ $ ppr <$> ci 142857
 -- System.SED.MCTP.Common.Base_Type.Class.Core_integer (Data.Refined.unsafeCreate 142857) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,
---                                                                                                       (GHC.TypeNats.<=) 3
---                                                                                                                         n_0) =>
---                                                                                         System.SED.MCTP.Common.Base_Type.Class.Core_integer n_0
+--                                                                                                         (GHC.TypeNats.<=) 3
+--                                                                                                                           n_0) =>
+--                                                                                           System.SED.MCTP.Common.Base_Type.Class.Core_integer n_0
 --
 -- >>> :t runQ $ ppr <$> ci 142857
 -- runQ $ ppr <$> ci 142857 :: Quasi m => m Doc
@@ -113,25 +109,6 @@ cx' cn tn (LitI i) =
                 (AppT (ConT tn) (LitT (NumTyLit l)))
   where l = toInteger (size i)
 
--- >>> :t "Foobar"
--- "Foobar" :: IsString p => p
--- >>> :t LitS "Foobar"
--- LitS "Foobar" :: LitS
--- >>> :t cb "Foobar"
--- cb "Foobar" :: Q Exp
--- >>> runQ $ ppr <$> cb "Foobar"
--- System.SED.MCTP.Common.Base_Type.Class.Core_bytes (Data.Refined.unsafeCreate "Foobar") :: forall n_0 . (GHC.TypeNats.KnownNat n_0,
---                                                                                                       (GHC.TypeNats.<=) 6
---                                                                                                                         n_0) =>
---                                                                                         System.SED.MCTP.Common.Base_Type.Class.Core_bytes n_0
---
--- >>> :t runQ $ ppr <$> cb "Foobar"
--- runQ $ ppr <$> cb "Foobar" :: Quasi m => m Doc
---
--- where 6 is the string length obtained at compile time.
---
-cb :: LitS -> Q Exp
-cb = ct 'Core_bytes ''Core_bytes
 
 -- >>> :t "Foobar"
 -- "Foobar" :: IsString p => p
@@ -158,9 +135,9 @@ cb' = ct' 'Core_bytes ''Core_bytes
 -- cm "Foobar" :: Q Exp
 -- >>> runQ $ ppr <$> cm "Foobar"
 -- System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes (Data.Refined.unsafeCreate "Foobar") :: forall n_0 . (GHC.TypeNats.KnownNat n_0,
---                                                                                                           (GHC.TypeNats.<=) 6
---                                                                                                                             n_0) =>
---                                                                                             System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n_0
+--                                                                                                             (GHC.TypeNats.<=) 6
+--                                                                                                                               n_0) =>
+--                                                                                               System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n_0
 --
 -- >>> :t runQ $ ppr <$> cm "Foobar"
 -- runQ $ ppr <$> cm "Foobar" :: Quasi m => m Doc
@@ -199,6 +176,9 @@ ct cn tn (LitS s) = do
 
 ct' ::  Name -> Name -> LitS -> Q Exp
 ct' cn tn (LitS s) =
-    pure $ SigE (AppE (ConE cn) (AppE (VarE 'unsafeCreate) (LitE (StringL s))))
-                (AppT (ConT tn) (LitT (NumTyLit l)))
-  where l = toInteger (size s)
+  pure $
+  SigE
+    (AppE (ConE cn) (AppE (VarE 'unsafeCreate) (LitE (StringL s))))
+    (AppT (ConT tn) (LitT (NumTyLit l)))
+  where
+    l = toInteger (size s)

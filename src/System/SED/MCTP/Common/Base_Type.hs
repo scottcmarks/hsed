@@ -41,9 +41,12 @@ module System.SED.MCTP.Common.Base_Type
   , padRight
 
   , ci
+  , ci'
   , cu
-  , cb
+  , cu'
+  , cb'
   , cm
+  , cm'
   )
 where
 
@@ -62,7 +65,8 @@ import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          padRight, replicate,
                                                          safeCreate, take,
                                                          toList, unsafeCreate)
-import           System.SED.MCTP.Common.Base_Type.TH    (cb, ci, cm, cu)
+import           System.SED.MCTP.Common.Base_Type.TH    (cb', ci, ci', cm, cm',
+                                                         cu, cu')
 
 
 

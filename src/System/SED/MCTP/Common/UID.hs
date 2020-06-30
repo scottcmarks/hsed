@@ -1,7 +1,10 @@
+{-# LANGUAGE DataKinds            #-}
+{-# LANGUAGE DerivingVia          #-}
+{-# LANGUAGE NoImplicitPrelude    #-}
 {-# LANGUAGE UndecidableInstances #-}
+
 {-|
 Module      : System.SED.MCTP.Common.UID
-Description : SED tokens
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -11,10 +14,6 @@ Datatypes for UIDs and HalfUIDs.
 
 -}
 
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE DerivingVia          #-}
-{-# LANGUAGE NoImplicitPrelude    #-}
-{-# LANGUAGE ScopedTypeVariables  #-}
 
 
 

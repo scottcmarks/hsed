@@ -1,28 +1,26 @@
 {-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 
 {-|
 Module      : System.SED.MCTP.Common.Simple_Type
-Description : Core data type formats
-Copyright   : (c) Magnolia Heights R&D, 2019
+Copyright   : (c) Magnolia Heights R&D, 2020
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Formats.
+Core data "simple" type formats
 
 -}
 
 module System.SED.MCTP.Common.Simple_Type
   (
-      Core_bytes
-  ,   Core_integer
-  ,   Core_max_bytes
-  ,   Core_uinteger
-  ,
-      Core_bytes_4
+      Core_bytes(..)
+  ,   Core_integer(..)
+  ,   Core_max_bytes(..)
+  ,   Core_uinteger(..)
+
+  ,   Core_bytes_4
   ,   Core_bytes_8
   ,   Core_bytes_12
   ,   Core_bytes_16
@@ -63,9 +61,10 @@ module System.SED.MCTP.Common.Simple_Type
   )
 where
 
-import           System.SED.MCTP.Common.Base_Type (Core_bytes, Core_integer,
-                                                   Core_max_bytes,
-                                                   Core_uinteger)
+import           System.SED.MCTP.Common.Base_Type (Core_bytes (..),
+                                                   Core_integer (..),
+                                                   Core_max_bytes (..),
+                                                   Core_uinteger (..))
 
 type Core_bytes_4       = Core_bytes  4
 type Core_bytes_8       = Core_bytes  8

@@ -184,7 +184,7 @@ header lengths = many1 (tableRowFields lengths) *> pure ()
 
 
 formatString :: TypeTableRow -> ByteString
-formatString (TypeTableRow "List_Type" _maxLength _elementTYpe) =
+formatString (TypeTableRow "List_Type" _maxLength _elementType) =
     mconcat [ "L" -- FIXME
             ]
 formatString t = error $ mconcat [ "No case for ", show t, "?" ]
@@ -226,11 +226,11 @@ dEnum (enumName, enumRows) = [dData name constructors derivations]
         constructors = map (mkName . fst) enumRowsValueLabelPairs
         derivations = [ ''Bounded, ''Enum, ''Eq, ''Ord, ''Show ]
         coreName = "Core_" <> enumName
-        enumRowsValueLabelPairs = concatMap genEnum consolidatedPairs
+        enumRowsValueLabelPairs = sortOn snd $ concatMap genEnum consolidatedPairs
         genEnum :: (String, [Int]) -> [(String, Int)]
         genEnum (n, (v:vs)) = (n,v) : map (\v'->(mconcat[n, "_", show v'],v')) vs
         genEnum (_, []) = error "No values"
-        consolidatedPairs = sortOn snd $ toList $ fromListWith (flip(++)) fullPairs
+        consolidatedPairs = toList $ fromListWith (flip(++)) fullPairs -- TODO -- complain on duplication instead of just papering over
         fullPairs =
             if missingValues /= []
             then (mconcat[coreName, "_NA"]::String, missingValues) : givenPairs

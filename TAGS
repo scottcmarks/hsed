@@ -108,7 +108,7 @@ type Core_uinteger_66 Core_uinteger_66104,105
 type Core_uinteger_8 Core_uinteger_8105,106
 
 ./src/System/SED/MCTP/Common/ColumnTypes.hs,83
-module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes15,16
+module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes16,17
 
 ./src/System/SED/MCTP/Common/THUtil.hs,231
 module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil15,16

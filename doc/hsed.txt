@@ -1507,14 +1507,14 @@ Core_life_cycle_state_Issued_Failed :: Core_life_cycle_state
 Core_life_cycle_state_Unassigned :: Core_life_cycle_state
 Core_life_cycle_state_Unassigned_6 :: Core_life_cycle_state
 Core_life_cycle_state_Unassigned_7 :: Core_life_cycle_state
-Core_life_cycle_state_Unassigned_14 :: Core_life_cycle_state
-Core_life_cycle_state_Unassigned_15 :: Core_life_cycle_state
 Core_life_cycle_state_Reserved_for_SSC_Usage :: Core_life_cycle_state
 Core_life_cycle_state_Reserved_for_SSC_Usage_9 :: Core_life_cycle_state
 Core_life_cycle_state_Reserved_for_SSC_Usage_10 :: Core_life_cycle_state
 Core_life_cycle_state_Reserved_for_SSC_Usage_11 :: Core_life_cycle_state
 Core_life_cycle_state_Reserved_for_SSC_Usage_12 :: Core_life_cycle_state
 Core_life_cycle_state_Reserved_for_SSC_Usage_13 :: Core_life_cycle_state
+Core_life_cycle_state_Unassigned_14 :: Core_life_cycle_state
+Core_life_cycle_state_Unassigned_15 :: Core_life_cycle_state
 uLogList_object_refType :: UID
 ulog_row_refType :: UID
 ulog_selectType :: UID

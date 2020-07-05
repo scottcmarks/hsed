@@ -1,0 +1,2727 @@
+Restarting process ...
+Hours of hacking await!
+If I break, you can:
+  1. Restart:           M-x haskell-process-restart
+  2. Configure logging: C-h v haskell-process-log (useful for debugging)
+  3. General config:    M-x customize-mode
+  4. Hide these tips:   C-h v haskell-process-show-debug-tips
+λ> :script dev/script
+package flags have changed, resetting and loading new packages...
+loading script ...
+[ 1 of 16] Compiling Data.HasSize     ( /Users/scott/hsed/src/Data/HasSize.hs, interpreted )
+[ 2 of 16] Compiling Data.Refined     ( /Users/scott/hsed/src/Data/Refined.hs, interpreted )
+[ 3 of 16] Compiling Data.BoundedSize.Class ( /Users/scott/hsed/src/Data/BoundedSize/Class.hs, interpreted )
+[ 4 of 16] Compiling Data.BoundedSize.TH ( /Users/scott/hsed/src/Data/BoundedSize/TH.hs, interpreted )
+[ 5 of 16] Compiling Data.BoundedSize ( /Users/scott/hsed/src/Data/BoundedSize.hs, interpreted )
+[ 6 of 16] Compiling System.SED.MCTP.Common.StreamItem ( /Users/scott/hsed/src/System/SED/MCTP/Common/StreamItem.hs, interpreted )
+[ 7 of 16] Compiling System.SED.MCTP.Common.Token ( /Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs, interpreted )
+[ 8 of 16] Compiling System.SED.MCTP.Common.Base_Type.Class ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/Class.hs, interpreted )
+[ 9 of 16] Compiling System.SED.MCTP.Common.Base_Type.TH ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/TH.hs, interpreted )
+[10 of 16] Compiling System.SED.MCTP.Common.Base_Type ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type.hs, interpreted )
+[11 of 16] Compiling System.SED.MCTP.Common.Simple_Type ( /Users/scott/hsed/src/System/SED/MCTP/Common/Simple_Type.hs, interpreted )
+[12 of 16] Compiling System.SED.MCTP.Common.UID ( /Users/scott/hsed/src/System/SED/MCTP/Common/UID.hs, interpreted )
+[13 of 16] Compiling System.SED.MCTP.Common.THUtil ( /Users/scott/hsed/src/System/SED/MCTP/Common/THUtil.hs, interpreted )
+[14 of 16] Compiling System.SED.MCTP.Common.Util ( /Users/scott/hsed/src/System/SED/MCTP/Common/Util.hs, interpreted )
+[15 of 16] Compiling System.SED.MCTP.Common.ColumnTypes.TH ( /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes/TH.hs, interpreted )
+[16 of 16] Compiling System.SED.MCTP.Common.ColumnTypes ( src/System/SED/MCTP/Common/ColumnTypes.hs, interpreted )
+Ok, 16 modules loaded.
+Collecting type info for 16 module(s) ...
+Running ...
+
+
+
+                  Table 65 bytes_4
+    +-----------------------+-------+---------------------+
+    |UID                    |Name   |Format               |
+    +-----------------------+-------+---------------------+
+    |00 00 00 05 00 00 02 38|bytes_4|Simple_Type,         |
+    |                       |       |bytes,               |
+    |                       |       |4                    |
+    +-----------------------+-------+---------------------+
+
+
+TypeTableRow "00 00 00 05 00 00 02 38" "bytes_4" "Simple_Type,bytes,4"
+
+
+ubytes_4Type :: System.SED.MCTP.Common.UID.UID
+ubytes_4Type = System.SED.MCTP.Common.UID.uid 0 0 0 5 0 0 2 56
+fbytes_4Type :: GHC.Base.String
+fbytes_4Type = "Simple_Type,bytes,4"
+
+
+Buh-bye now.
+.. script loaded.
+λ> :D
+λ> :load System.SED.MCTP.Common.ColumnTypes
+[ 1 of 16] Compiling Data.HasSize     ( /Users/scott/hsed/src/Data/HasSize.hs, interpreted )
+[ 2 of 16] Compiling Data.Refined     ( /Users/scott/hsed/src/Data/Refined.hs, interpreted )
+[ 3 of 16] Compiling Data.BoundedSize.Class ( /Users/scott/hsed/src/Data/BoundedSize/Class.hs, interpreted )
+[ 4 of 16] Compiling Data.BoundedSize.TH ( /Users/scott/hsed/src/Data/BoundedSize/TH.hs, interpreted )
+[ 5 of 16] Compiling Data.BoundedSize ( /Users/scott/hsed/src/Data/BoundedSize.hs, interpreted )
+[ 6 of 16] Compiling System.SED.MCTP.Common.StreamItem ( /Users/scott/hsed/src/System/SED/MCTP/Common/StreamItem.hs, interpreted )
+[ 7 of 16] Compiling System.SED.MCTP.Common.Token ( /Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs, interpreted )
+[ 8 of 16] Compiling System.SED.MCTP.Common.Base_Type.Class ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/Class.hs, interpreted )
+[ 9 of 16] Compiling System.SED.MCTP.Common.Base_Type.TH ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/TH.hs, interpreted )
+[10 of 16] Compiling System.SED.MCTP.Common.Base_Type ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type.hs, interpreted )
+[11 of 16] Compiling System.SED.MCTP.Common.Simple_Type ( /Users/scott/hsed/src/System/SED/MCTP/Common/Simple_Type.hs, interpreted )
+[12 of 16] Compiling System.SED.MCTP.Common.UID ( /Users/scott/hsed/src/System/SED/MCTP/Common/UID.hs, interpreted )
+[13 of 16] Compiling System.SED.MCTP.Common.THUtil ( /Users/scott/hsed/src/System/SED/MCTP/Common/THUtil.hs, interpreted )
+[14 of 16] Compiling System.SED.MCTP.Common.Util ( /Users/scott/hsed/src/System/SED/MCTP/Common/Util.hs, interpreted )
+[15 of 16] Compiling System.SED.MCTP.Common.ColumnTypes.TH ( /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes/TH.hs, interpreted )
+[16 of 16] Compiling System.SED.MCTP.Common.ColumnTypes ( /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs, interpreted )
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(534,8)-(546,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                          Table 46 AC_element\n\
+      \    +------------------------+----------+---------------------------+\n\
+      \    |UID                     |Name      |Format                     |\n\
+      \    +------------------------+----------+---------------------------+\n\
+      \    |00 00 00 05 00 00 08 01 |AC_element|List_Type,                 |\n\
+      \    |                        |          |*,                         |\n\
+      \    |                        |          |ACE_expression             |\n\
+      \    +------------------------+----------+---------------------------+\n\
+      \\n"
+  ======>
+    uAC_elementType :: System.SED.MCTP.Common.UID.UID
+    uAC_elementType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 8) 1
+    fAC_elementType :: GHC.Base.String
+    fAC_elementType = "List_Type,*,ACE_expression"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(565,8)-(576,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                   Table 47 ACE_columns\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 1A 03|ACE_columns|Set_Type,   |\n\
+      \    |                       |           |0,          |\n\
+      \    |                       |           |*           |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uACE_columnsType :: System.SED.MCTP.Common.UID.UID
+    uACE_columnsType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 3
+    fACE_columnsType :: GHC.Base.String
+    fACE_columnsType = "Set_Type,0,*"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(589,8)-(600,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                       Table 48 ACE_expression\n\
+      \    +-----------------------+--------------+---------------------+\n\
+      \    |UID                    |Name          |Format               |\n\
+      \    +-----------------------+--------------+---------------------+\n\
+      \    |00 00 00 05 00 00 06 01|ACE_expression|Alternative_Type,    |\n\
+      \    |                       |              |Authority_object_ref,|\n\
+      \    |                       |              |boolean_ACE          |\n\
+      \    +-----------------------+--------------+---------------------+\n\
+      \\n"
+  ======>
+    uACE_expressionType :: System.SED.MCTP.Common.UID.UID
+    uACE_expressionType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 6) 1
+    fACE_expressionType :: GHC.Base.String
+    fACE_expressionType
+      = "Alternative_Type,Authority_object_ref,boolean_ACE"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(611,8)-(620,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \                           Table 49 ACE_object_ref\n\
+      \    +-----------------------+--------------+-----------------------------+\n\
+      \    |UID                    |Name          |Format                       |\n\
+      \    +-----------------------+--------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 04|ACE_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |              |uidref{ACETableUID}          |\n\
+      \    +-----------------------+--------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uACE_object_refType :: System.SED.MCTP.Common.UID.UID
+    uACE_object_refType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 4
+    fACE_object_refType :: GHC.Base.String
+    fACE_object_refType
+      = "Restricted_Reference_Type{6},uidref{ACETableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(632,8)-(643,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 50 ACL\n\
+      \    +-----------------------+-----+--------------+\n\
+      \    |UID                    |Name |Format        |\n\
+      \    +-----------------------+-----+--------------+\n\
+      \    |00 00 00 05 00 00 08 02|ACL  |List_Type,    |\n\
+      \    |                       |     |*,            |\n\
+      \    |                       |     |ACE_object_ref|\n\
+      \    +-----------------------+-----+--------------+\n\
+      \\n"
+  ======>
+    uACLType :: System.SED.MCTP.Common.UID.UID
+    uACLType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 8) 2
+    fACLType :: GHC.Base.String
+    fACLType = "List_Type,*,ACE_object_ref"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(653,8)-(663,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \                     Table 51 adv_key_mode\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |UID                    |Name        |Format           |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 0F|adv_key_mode|Enumeration_Type,|\n\
+      \    |                       |            |0,               |\n\
+      \    |                       |            |7                |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \\n"
+  ======>
+    uadv_key_modeType :: System.SED.MCTP.Common.UID.UID
+    uadv_key_modeType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 15
+    fadv_key_modeType :: GHC.Base.String
+    fadv_key_modeType = "Enumeration_Type,0,7"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(670,8)-(681,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \     Table 52 adv_key_mode Enumeration Values\n\
+      \    +------------------+---------------------+\n\
+      \    |Enumeration Value |Behavior             |\n\
+      \    +------------------+---------------------+\n\
+      \    |0                 |Wait for AdvKey_Req  |\n\
+      \    +------------------+---------------------+\n\
+      \    |1                 |Auto-advance keys    |\n\
+      \    +------------------+---------------------+\n\
+      \    |2-7               |Reserved             |\n\
+      \    +------------------+---------------------+\n"
+  ======>
+    data Core_adv_key_mode
+      = Core_adv_key_mode_Wait_for_AdvKey_Req |
+        Core_adv_key_mode_Auto_advance_keys |
+        Core_adv_key_mode_Reserved |
+        Core_adv_key_mode_Reserved_3 |
+        Core_adv_key_mode_Reserved_4 |
+        Core_adv_key_mode_Reserved_5 |
+        Core_adv_key_mode_Reserved_6 |
+        Core_adv_key_mode_Reserved_7
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(691,8)-(701,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \                 Table 53 attr_flags\n\
+      \    +-----------------------+----------+---------+\n\
+      \    |UID                    |Name      |Format   |\n\
+      \    +-----------------------+----------+---------+\n\
+      \    |00 00 00 05 00 00 1A 04|attr_flags|Set_Type,|\n\
+      \    |                       |          |0,       |\n\
+      \    |                       |          |31       |\n\
+      \    +-----------------------+----------+---------+\n\
+      \\n"
+  ======>
+    uattr_flagsType :: System.SED.MCTP.Common.UID.UID
+    uattr_flagsType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 4
+    fattr_flagsType :: GHC.Base.String
+    fattr_flagsType = "Set_Type,0,31"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(708,8)-(719,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \          Table 54 attr_flags Set Values\n\
+      \    +------------------+---------------------+\n\
+      \    |Set Value         |Behavior             |\n\
+      \    +------------------+---------------------+\n\
+      \    |0                 |Get Not Permitted    |\n\
+      \    +------------------+---------------------+\n\
+      \    |1                 |Set Not Permitted    |\n\
+      \    +------------------+---------------------+\n\
+      \    |2-31              |Reserved             |\n\
+      \    +------------------+---------------------+\n"
+  ======>
+    data Core_attr_flags
+      = Core_attr_flags_Get_Not_Permitted |
+        Core_attr_flags_Set_Not_Permitted |
+        Core_attr_flags_Reserved |
+        Core_attr_flags_Reserved_3 |
+        Core_attr_flags_Reserved_4 |
+        Core_attr_flags_Reserved_5 |
+        Core_attr_flags_Reserved_6 |
+        Core_attr_flags_Reserved_7 |
+        Core_attr_flags_Reserved_8 |
+        Core_attr_flags_Reserved_9 |
+        Core_attr_flags_Reserved_10 |
+        Core_attr_flags_Reserved_11 |
+        Core_attr_flags_Reserved_12 |
+        Core_attr_flags_Reserved_13 |
+        Core_attr_flags_Reserved_14 |
+        Core_attr_flags_Reserved_15 |
+        Core_attr_flags_Reserved_16 |
+        Core_attr_flags_Reserved_17 |
+        Core_attr_flags_Reserved_18 |
+        Core_attr_flags_Reserved_19 |
+        Core_attr_flags_Reserved_20 |
+        Core_attr_flags_Reserved_21 |
+        Core_attr_flags_Reserved_22 |
+        Core_attr_flags_Reserved_23 |
+        Core_attr_flags_Reserved_24 |
+        Core_attr_flags_Reserved_25 |
+        Core_attr_flags_Reserved_26 |
+        Core_attr_flags_Reserved_27 |
+        Core_attr_flags_Reserved_28 |
+        Core_attr_flags_Reserved_29 |
+        Core_attr_flags_Reserved_30 |
+        Core_attr_flags_Reserved_31
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(730,8)-(740,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                      Table 55 auth_method\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |UID                    |Name        |Format           |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 08|auth_method |Enumeration_Type,|\n\
+      \    |                       |            |0,               |\n\
+      \    |                       |            |23               |\n\
+      \    +-----------------------+------------+-----------------+\n"
+  ======>
+    uauth_methodType :: System.SED.MCTP.Common.UID.UID
+    uauth_methodType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 8
+    fauth_methodType :: GHC.Base.String
+    fauth_methodType = "Enumeration_Type,0,23"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(750,8)-(773,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \     Table 56 auth_method Enumeration Values\n\
+      \    +------------------+---------------------+\n\
+      \    |Enumeration Value |Authentication Method|\n\
+      \    +------------------+---------------------+\n\
+      \    |0                 |None                 |\n\
+      \    +------------------+---------------------+\n\
+      \    |1                 |Password             |\n\
+      \    +------------------+---------------------+\n\
+      \    |2                 |Exchange             |\n\
+      \    +------------------+---------------------+\n\
+      \    |3                 |Sign                 |\n\
+      \    +------------------+---------------------+\n\
+      \    |4                 |SymK                 |\n\
+      \    +------------------+---------------------+\n\
+      \    |5                 |HMAC                 |\n\
+      \    +------------------+---------------------+\n\
+      \    |6                 |TPerSign             |\n\
+      \    +------------------+---------------------+\n\
+      \    |7                 |TPerExchange         |\n\
+      \    +------------------+---------------------+\n\
+      \    |8-23              |Reserved             |\n\
+      \    +------------------+---------------------+\n"
+  ======>
+    data Core_auth_method
+      = Core_auth_method_None |
+        Core_auth_method_Password |
+        Core_auth_method_Exchange |
+        Core_auth_method_Sign |
+        Core_auth_method_SymK |
+        Core_auth_method_HMAC |
+        Core_auth_method_TPerSign |
+        Core_auth_method_TPerExchange |
+        Core_auth_method_Reserved |
+        Core_auth_method_Reserved_9 |
+        Core_auth_method_Reserved_10 |
+        Core_auth_method_Reserved_11 |
+        Core_auth_method_Reserved_12 |
+        Core_auth_method_Reserved_13 |
+        Core_auth_method_Reserved_14 |
+        Core_auth_method_Reserved_15 |
+        Core_auth_method_Reserved_16 |
+        Core_auth_method_Reserved_17 |
+        Core_auth_method_Reserved_18 |
+        Core_auth_method_Reserved_19 |
+        Core_auth_method_Reserved_20 |
+        Core_auth_method_Reserved_21 |
+        Core_auth_method_Reserved_22 |
+        Core_auth_method_Reserved_23
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(782,8)-(792,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                        Table 57 Authority_object_ref\n\
+      \    +-----------------------+--------------------+-----------------------------+\n\
+      \    |UID                    |Name                |Format                       |\n\
+      \    +-----------------------+--------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 05|Authority_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                    |uidref{AuthorityTableUID}    |\n\
+      \    +-----------------------+--------------------+-----------------------------+\n"
+  ======>
+    uAuthority_object_refType :: System.SED.MCTP.Common.UID.UID
+    uAuthority_object_refType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 5
+    fAuthority_object_refType :: GHC.Base.String
+    fAuthority_object_refType
+      = "Restricted_Reference_Type{6},uidref{AuthorityTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(803,8)-(815,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                        Table 58 boolean\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |UID                    |Name        |Format           |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 01|boolean     |Enumeration_Type,|\n\
+      \    |                       |            |0,               |\n\
+      \    |                       |            |1                |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \\n"
+  ======>
+    ubooleanType :: System.SED.MCTP.Common.UID.UID
+    ubooleanType
+      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 1
+    fbooleanType :: GHC.Base.String
+    fbooleanType = "Enumeration_Type,0,1"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(822,8)-(831,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \     Table 59 boolean Enumeration Values\n\
+      \    +------------------+-----------------+\n\
+      \    |Enumeration Value |Associated Value |\n\
+      \    +------------------+-----------------+\n\
+      \    |0                 |False            |\n\
+      \    +------------------+-----------------+\n\
+      \    |1                 |True             |\n\
+      \    +------------------+-----------------+\n"
+  ======>
+    data Core_boolean = Core_boolean_False | Core_boolean_True
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(841,8)-(853,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                      Table 60 boolean_ACE\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |UID                    |Name        |Format           |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 0E|boolean_ACE |Enumeration_Type,|\n\
+      \    |                       |            |0,               |\n\
+      \    |                       |            |2                |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \\n"
+  ======>
+    uboolean_ACEType :: System.SED.MCTP.Common.UID.UID
+    uboolean_ACEType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 14
+    fboolean_ACEType :: GHC.Base.String
+    fboolean_ACEType = "Enumeration_Type,0,2"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(860,8)-(872,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \\n\
+      \    Table 61 boolean_ACE Enumeration Values\n\
+      \    +------------------+---------------------+\n\
+      \    |Enumeration Value |Associated Value     |\n\
+      \    +------------------+---------------------+\n\
+      \    |0                 |And                  |\n\
+      \    +------------------+---------------------+\n\
+      \    |1                 |Or                   |\n\
+      \    +------------------+---------------------+\n\
+      \    |2                 |Not                  |\n\
+      \    +------------------+---------------------+\n"
+  ======>
+    data Core_boolean_ACE = Core_boolean_ACE_And | Core_boolean_ACE_Or | Core_boolean_ACE_Not
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(881,8)-(890,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                           Table 62 byte_row_ref\n\
+      \    +-----------------------+-------------+--------------------------+\n\
+      \    |UID                    |Name         |Format                    |\n\
+      \    +-----------------------+-------------+--------------------------+\n\
+      \    |00 00 00 05 00 00 0F 01|byte_row_ref |General_Reference_Type{7} |\n\
+      \    +-----------------------+-------------+--------------------------+\n"
+  ======>
+    ubyte_row_refType :: System.SED.MCTP.Common.UID.UID
+    ubyte_row_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 15) 1
+    fbyte_row_refType :: GHC.Base.String
+    fbyte_row_refType = "General_Reference_Type{7}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(901,8)-(912,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                          Table 63 byte_table_ref\n\
+      \    +-----------------------+--------------+-----------------------------+\n\
+      \    |UID                    |Name          |Format                       |\n\
+      \    +-----------------------+--------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 10 01|byte_table_ref|General_Reference_Table_Type,|\n\
+      \    |                       |              |2                            |\n\
+      \    +-----------------------+--------------+-----------------------------+\n\
+      \\n"
+  ======>
+    ubyte_table_refType :: System.SED.MCTP.Common.UID.UID
+    ubyte_table_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 16) 1
+    fbyte_table_refType :: GHC.Base.String
+    fbyte_table_refType = "General_Reference_Table_Type,2"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(922,8)-(931,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                  Table 64 bytes\n\
+      \    +-----------------------+------+----------+\n\
+      \    |UID                    |Name  |Format    |\n\
+      \    +-----------------------+------+----------+\n\
+      \    |00 00 00 05 00 00 00 02|bytes |Base_Type |\n\
+      \    +-----------------------+------+----------+\n"
+  ======>
+    ubytesType :: System.SED.MCTP.Common.UID.UID
+    ubytesType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 0) 2
+    fbytesType :: GHC.Base.String
+    fbytesType = "Base_Type"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(940,8)-(952,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                  Table 65 bytes_4\n\
+      \    +-----------------------+-------+---------------------+\n\
+      \    |UID                    |Name   |Format               |\n\
+      \    +-----------------------+-------+---------------------+\n\
+      \    |00 00 00 05 00 00 02 38|bytes_4|Simple_Type,         |\n\
+      \    |                       |       |bytes,               |\n\
+      \    |                       |       |4                    |\n\
+      \    +-----------------------+-------+---------------------+\n\
+      \\n"
+  ======>
+    ubytes_4Type :: System.SED.MCTP.Common.UID.UID
+    ubytes_4Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 56
+    fbytes_4Type :: GHC.Base.String
+    fbytes_4Type = "Simple_Type,bytes,4"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(961,8)-(972,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                       Table 66 bytes_12\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |UID                    |Name    |Format               |\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |00 00 00 05 00 00 02 01|bytes_12|Simple_Type,         |\n\
+      \    |                       |        |bytes,               |\n\
+      \    |                       |        |12                   |\n\
+      \    +-----------------------+--------+---------------------+\n"
+  ======>
+    ubytes_12Type :: System.SED.MCTP.Common.UID.UID
+    ubytes_12Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 1
+    fbytes_12Type :: GHC.Base.String
+    fbytes_12Type = "Simple_Type,bytes,12"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(982,8)-(993,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                       Table 67 bytes_16\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |UID                    |Name    |Format               |\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |00 00 00 05 00 00 02 02|bytes_16|Simple_Type,         |\n\
+      \    |                       |        |bytes,               |\n\
+      \    |                       |        |16                   |\n\
+      \    +-----------------------+--------+---------------------+\n"
+  ======>
+    ubytes_16Type :: System.SED.MCTP.Common.UID.UID
+    ubytes_16Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 2
+    fbytes_16Type :: GHC.Base.String
+    fbytes_16Type = "Simple_Type,bytes,16"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1002,8)-(1013,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                       Table 68 bytes_20\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |UID                    |Name    |Format               |\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |00 00 00 05 00 00 02 36|bytes_20|Simple_Type,         |\n\
+      \    |                       |        |bytes,               |\n\
+      \    |                       |        |20                   |\n\
+      \    +-----------------------+--------+---------------------+\n"
+  ======>
+    ubytes_20Type :: System.SED.MCTP.Common.UID.UID
+    ubytes_20Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 54
+    fbytes_20Type :: GHC.Base.String
+    fbytes_20Type = "Simple_Type,bytes,20"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1022,8)-(1033,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                       Table 69 bytes_32\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |UID                    |Name    |Format               |\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |00 00 00 05 00 00 02 05|bytes_32|Simple_Type,         |\n\
+      \    |                       |        |bytes,               |\n\
+      \    |                       |        |32                   |\n\
+      \    +-----------------------+--------+---------------------+\n"
+  ======>
+    ubytes_32Type :: System.SED.MCTP.Common.UID.UID
+    ubytes_32Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 5
+    fbytes_32Type :: GHC.Base.String
+    fbytes_32Type = "Simple_Type,bytes,32"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1042,8)-(1053,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                       Table 70 bytes_48\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |UID                    |Name    |Format               |\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |00 00 00 05 00 00 02 37|bytes_48|Simple_Type,         |\n\
+      \    |                       |        |bytes,               |\n\
+      \    |                       |        |48                   |\n\
+      \    +-----------------------+--------+---------------------+\n"
+  ======>
+    ubytes_48Type :: System.SED.MCTP.Common.UID.UID
+    ubytes_48Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 55
+    fbytes_48Type :: GHC.Base.String
+    fbytes_48Type = "Simple_Type,bytes,48"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1065,8)-(1076,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \\n\
+      \                       Table 71 bytes_64\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |UID                    |Name    |Format               |\n\
+      \    +-----------------------+--------+---------------------+\n\
+      \    |00 00 00 05 00 00 02 06|bytes_64|Simple_Type,         |\n\
+      \    |                       |        |bytes,               |\n\
+      \    |                       |        |64                   |\n\
+      \    +-----------------------+--------+---------------------+\n"
+  ======>
+    ubytes_64Type :: System.SED.MCTP.Common.UID.UID
+    ubytes_64Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 6
+    fbytes_64Type :: GHC.Base.String
+    fbytes_64Type = "Simple_Type,bytes,64"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1085,8)-(1094,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                           Table 72 Certificates_object_ref\n\
+      \    +-----------------------+-----------------------+-----------------------------+\n\
+      \    |UID                    |Name                   |Format                       |\n\
+      \    +-----------------------+-----------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 06|Certificates_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                       |uidref{CertificatesTableUID} |\n\
+      \    +-----------------------+-----------------------+-----------------------------+\n"
+  ======>
+    uCertificates_object_refType :: System.SED.MCTP.Common.UID.UID
+    uCertificates_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 6
+    fCertificates_object_refType :: GHC.Base.String
+    fCertificates_object_refType = "Restricted_Reference_Type{6},uidref{CertificatesTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1103,8)-(1113,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 73 clock_kind\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |UID                    |Name       |Format           |\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 0B|clock_kind |Enumeration_Type,|\n\
+      \    |                       |           |0,               |\n\
+      \    |                       |           |3                |\n\
+      \    +-----------------------+-----------+-----------------+\n"
+  ======>
+    uclock_kindType :: System.SED.MCTP.Common.UID.UID
+    uclock_kindType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 11
+    fclock_kindType :: GHC.Base.String
+    fclock_kindType = "Enumeration_Type,0,3"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1121,8)-(1135,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \\n\
+      \      Table 74 clock_kind Enumeration Values\n\
+      \    +------------------+--------------------+\n\
+      \    |Enumeration Value |Associated Value    |\n\
+      \    +------------------+--------------------+\n\
+      \    |0                 |Timer               |\n\
+      \    +------------------+--------------------+\n\
+      \    |1                 |Low                 |\n\
+      \    +------------------+--------------------+\n\
+      \    |2                 |High                |\n\
+      \    +------------------+--------------------+\n\
+      \    |3                 |LowAndHigh          |\n\
+      \    +------------------+--------------------+\n"
+  ======>
+    data Core_clock_kind = Core_clock_kind_Timer |
+        Core_clock_kind_Low |
+        Core_clock_kind_High |
+        Core_clock_kind_LowAndHigh
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1161,8)-(1177,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 75 clock_time\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |UID                    |Name       |Format           |\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |00 00 00 05 00 00 18 05|clock_time |Struct_Type,     |\n\
+      \    |                       |           |Year,            |\n\
+      \    |                       |           |Month,           |\n\
+      \    |                       |           |Day,             |\n\
+      \    |                       |           |Hour,            |\n\
+      \    |                       |           |Minute,          |\n\
+      \    |                       |           |Seconds,         |\n\
+      \    |                       |           |Fraction         |\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \\n"
+  ======>
+    uclock_timeType :: System.SED.MCTP.Common.UID.UID
+    uclock_timeType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 24) 5
+    fclock_timeType :: GHC.Base.String
+    fclock_timeType = "Struct_Type,Year,Month,Day,Hour,Minute,Seconds,Fraction"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1188,8)-(1198,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                         Table 76 Column_object_ref\n\
+      \    +-----------------------+-----------------+-----------------------------+\n\
+      \    |UID                    |Name             |Format                       |\n\
+      \    +-----------------------+-----------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 07|Column_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                 |uidref {ColumnTable_UID}     |\n\
+      \    +-----------------------+-----------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uColumn_object_refType :: System.SED.MCTP.Common.UID.UID
+    uColumn_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 7
+    fColumn_object_refType :: GHC.Base.String
+    fColumn_object_refType = "Restricted_Reference_Type{6},uidref {ColumnTable_UID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1216,8)-(1230,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                          Table 77 cred_object_uidref\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \    |UID                    |Name               |Format                       |\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 0B|cred_object_uidref |Restricted_Reference_Type{6},|\n\
+      \    |                       |                   |uidref {C_PINTableUID},      |\n\
+      \    |                       |                   |uidref {C_AES_*TableUID},    |\n\
+      \    |                       |                   |uidref {C_RSA_*TableUID},    |\n\
+      \    |                       |                   |uidref {C_EC_*TableUID},     |\n\
+      \    |                       |                   |uidref {C_HMAC_*TableUID}    |\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \\n"
+  ======>
+    ucred_object_uidrefType :: System.SED.MCTP.Common.UID.UID
+    ucred_object_uidrefType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 11
+    fcred_object_uidrefType :: GHC.Base.String
+    fcred_object_uidrefType = "Restricted_Reference_Type{6},uidref {C_PINTableUID},uidref {C_AES_*TableUID},uidref {C_RSA_*TableUID},uidref {C_EC_*TableUID},uidref {C_HMAC_*TableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1241,8)-(1253,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 78 date\n\
+      \    +-----------------------+----+-----------------+\n\
+      \    |UID                    |Name|Format           |\n\
+      \    +-----------------------+----+-----------------+\n\
+      \    |00 00 00 05 00 00 18 04|date|Struct_Type,     |\n\
+      \    |                       |    |Year,            |\n\
+      \    |                       |    |Month,           |\n\
+      \    |                       |    |Day              |\n\
+      \    +-----------------------+----+-----------------+\n\
+      \\n"
+  ======>
+    udateType :: System.SED.MCTP.Common.UID.UID
+    udateType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 24) 4
+    fdateType :: GHC.Base.String
+    fdateType = "Struct_Type,Year,Month,Day"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1264,8)-(1275,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                         Table 79 Day\n\
+      \    +-----------------------+----+-------------------------+\n\
+      \    |UID                    |Name|Format                   |\n\
+      \    +-----------------------+----+-------------------------+\n\
+      \    |00 00 00 05 00 00 14 03|Day |Name_Value_Uinteger_Type,|\n\
+      \    |                       |    |2,                       |\n\
+      \    |                       |    |day_enum                 |\n\
+      \    +-----------------------+----+-------------------------+\n\
+      \\n"
+  ======>
+    uDayType :: System.SED.MCTP.Common.UID.UID
+    uDayType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 20) 3
+    fDayType :: GHC.Base.String
+    fDayType = "Name_Value_Uinteger_Type,2,day_enum"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1285,8)-(1296,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                         Table 80 day_enum\n\
+      \    +-----------------------+--------+-----------------+\n\
+      \    |UID                    |Name    |Format           |\n\
+      \    +-----------------------+--------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 18|day_enum|Enumeration_Type,|\n\
+      \    |                       |        |1,               |\n\
+      \    |                       |        |31               |\n\
+      \    +-----------------------+--------+-----------------+\n\
+      \\n"
+  ======>
+    uday_enumType :: System.SED.MCTP.Common.UID.UID
+    uday_enumType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 24
+    fday_enumType :: GHC.Base.String
+    fday_enumType = "Enumeration_Type,1,31"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1308,8)-(1319,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                         Table 81 enc_supported\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |UID                    |Name         |Format           |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 1D|enc_supported|Enumeration_Type,|\n\
+      \    |                       |             |0,               |\n\
+      \    |                       |             |15               |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \\n"
+  ======>
+    uenc_supportedType :: System.SED.MCTP.Common.UID.UID
+    uenc_supportedType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 29
+    fenc_supportedType :: GHC.Base.String
+    fenc_supportedType = "Enumeration_Type,0,15"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1327,8)-(1338,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \        Table 82 enc_supported Enumes\n\
+      \    +-----------------+----------------+\n\
+      \    |Enumeration Value|Associated Value|\n\
+      \    +-----------------+----------------+\n\
+      \    |0                |None            |\n\
+      \    +-----------------+----------------+\n\
+      \    |1                |Media Encryption|\n\
+      \    +-----------------+----------------+\n\
+      \    |2-15             |Reserved        |\n\
+      \    +-----------------+----------------+\n"
+  ======>
+    data Core_enc_supported = Core_enc_supported_None |
+        Core_enc_supported_Media_Encryption |
+        Core_enc_supported_Reserved |
+        Core_enc_supported_Reserved_3 |
+        Core_enc_supported_Reserved_4 |
+        Core_enc_supported_Reserved_5 |
+        Core_enc_supported_Reserved_6 |
+        Core_enc_supported_Reserved_7 |
+        Core_enc_supported_Reserved_8 |
+        Core_enc_supported_Reserved_9 |
+        Core_enc_supported_Reserved_10 |
+        Core_enc_supported_Reserved_11 |
+        Core_enc_supported_Reserved_12 |
+        Core_enc_supported_Reserved_13 |
+        Core_enc_supported_Reserved_14 |
+        Core_enc_supported_Reserved_15
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1351,8)-(1362,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 83 feedback_size\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |UID                    |Name         |Format           |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |00 00 00 05 00 00 18 04|feedback_size|Simple_Type,     |\n\
+      \    |                       |             |uinteger,        |\n\
+      \    |                       |             |2                |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \\n"
+  ======>
+    ufeedback_sizeType :: System.SED.MCTP.Common.UID.UID
+    ufeedback_sizeType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 24) 4
+    ffeedback_sizeType :: GHC.Base.String
+    ffeedback_sizeType = "Simple_Type,uinteger,2"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1372,8)-(1383,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                         Table 84 Fraction\n\
+      \    +-----------------------+---------+-------------------------+\n\
+      \    |UID                    |Name     |Format                   |\n\
+      \    +-----------------------+---------+-------------------------+\n\
+      \    |00 00 00 05 00 00 14 07|Fraction |Name_Value_Uinteger_Type,|\n\
+      \    |                       |         |6,                       |\n\
+      \    |                       |         |fraction_enum            |\n\
+      \    +-----------------------+---------+-------------------------+\n\
+      \\n"
+  ======>
+    uFractionType :: System.SED.MCTP.Common.UID.UID
+    uFractionType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 20) 7
+    fFractionType :: GHC.Base.String
+    fFractionType = "Name_Value_Uinteger_Type,6,fraction_enum"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1393,8)-(1404,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                       Table 85 fraction_enum\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |UID                    |Name         |Format           |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |00 00 00 05 00 00 18 04|fraction_enum|Enumeration_Type,|\n\
+      \    |                       |             |0,               |\n\
+      \    |                       |             |999              |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \\n"
+  ======>
+    ufraction_enumType :: System.SED.MCTP.Common.UID.UID
+    ufraction_enumType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 24) 4
+    ffraction_enumType :: GHC.Base.String
+    ffraction_enumType = "Enumeration_Type,0,999"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1414,8)-(1425,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                    Table 86 gen_status\n\
+      \    +-----------------------+----------+---------+\n\
+      \    |UID                    |Name      |Format   |\n\
+      \    +-----------------------+----------+---------+\n\
+      \    |00 00 00 05 00 00 18 04|gen_status|Set_Type,|\n\
+      \    |                       |          |0,       |\n\
+      \    |                       |          |63       |\n\
+      \    +-----------------------+----------+---------+\n\
+      \\n"
+  ======>
+    ugen_statusType :: System.SED.MCTP.Common.UID.UID
+    ugen_statusType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 24) 4
+    fgen_statusType :: GHC.Base.String
+    fgen_statusType = "Set_Type,0,63"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1482,8)-(1494,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 88 hash_protocol\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |UID                    |Name         |Format           |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 0D|hash_protocol|Enumeration_Type,|\n\
+      \    |                       |             |0,               |\n\
+      \    |                       |             |15               |\n\
+      \    |                       |             |                 |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \\n"
+  ======>
+    uhash_protocolType :: System.SED.MCTP.Common.UID.UID
+    uhash_protocolType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 13
+    fhash_protocolType :: GHC.Base.String
+    fhash_protocolType = "Enumeration_Type,0,15"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1504,8)-(1521,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \     Table 89 hash_protocol Enumeration Values\n\
+      \    +------------------+----------------------+\n\
+      \    |Enumeration Value |Associated Value      |\n\
+      \    +------------------+----------------------+\n\
+      \    |0                 |None                  |\n\
+      \    +------------------+----------------------+\n\
+      \    |1                 |SHA 1                 |\n\
+      \    +------------------+----------------------+\n\
+      \    |2                 |SHA 256               |\n\
+      \    +------------------+----------------------+\n\
+      \    |3                 |SHA 384               |\n\
+      \    +------------------+----------------------+\n\
+      \    |4                 |SHA 512               |\n\
+      \    +------------------+----------------------+\n\
+      \    |5-15              |Reserved              |\n\
+      \    +------------------+----------------------+\n"
+  ======>
+    data Core_hash_protocol = Core_hash_protocol_None |
+        Core_hash_protocol_SHA_1 |
+        Core_hash_protocol_SHA_256 |
+        Core_hash_protocol_SHA_384 |
+        Core_hash_protocol_SHA_512 |
+        Core_hash_protocol_Reserved |
+        Core_hash_protocol_Reserved_6 |
+        Core_hash_protocol_Reserved_7 |
+        Core_hash_protocol_Reserved_8 |
+        Core_hash_protocol_Reserved_9 |
+        Core_hash_protocol_Reserved_10 |
+        Core_hash_protocol_Reserved_11 |
+        Core_hash_protocol_Reserved_12 |
+        Core_hash_protocol_Reserved_13 |
+        Core_hash_protocol_Reserved_14 |
+        Core_hash_protocol_Reserved_15
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1531,8)-(1542,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                         Table 90 Hour\n\
+      \    +-----------------------+----+-------------------------+\n\
+      \    |UID                    |Name|Format                   |\n\
+      \    +-----------------------+----+-------------------------+\n\
+      \    |00 00 00 05 00 00 14 04|Hour|Name_Value_Uinteger_Type,|\n\
+      \    |                       |    |3,                       |\n\
+      \    |                       |    |hour_enum                |\n\
+      \    +-----------------------+----+-------------------------+\n\
+      \\n"
+  ======>
+    uHourType :: System.SED.MCTP.Common.UID.UID
+    uHourType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 20) 4
+    fHourType :: GHC.Base.String
+    fHourType = "Name_Value_Uinteger_Type,3,hour_enum"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1553,8)-(1564,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 91 hour_enum\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |UID                    |Name         |Format           |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 19|hour_enum    |Enumeration_Type,|\n\
+      \    |                       |             |0,               |\n\
+      \    |                       |             |23               |\n\
+      \    +-----------------------+-------------+-----------------+\n\
+      \\n"
+  ======>
+    uhour_enumType :: System.SED.MCTP.Common.UID.UID
+    uhour_enumType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 25
+    fhour_enumType :: GHC.Base.String
+    fhour_enumType = "Enumeration_Type,0,23"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1575,8)-(1584,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                  Table 92 integer\n\
+      \    +-----------------------+-------+----------+\n\
+      \    |UID                    |Name   |Format    |\n\
+      \    +-----------------------+-------+----------+\n\
+      \    |00 00 00 05 00 00 00 04|integer|Base_Type |\n\
+      \    +-----------------------+-------+----------+\n\
+      \\n"
+  ======>
+    uintegerType :: System.SED.MCTP.Common.UID.UID
+    uintegerType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 0) 4
+    fintegerType :: GHC.Base.String
+    fintegerType = "Base_Type"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1595,8)-(1606,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                   Table 93 integer_1\n\
+      \    +-----------------------+---------+------------+\n\
+      \    |UID                    |Name     |Format      |\n\
+      \    +-----------------------+---------+------------+\n\
+      \    |00 00 00 05 00 00 02 10|integer_1|Simple_Type,|\n\
+      \    |                       |         |integer,    |\n\
+      \    |                       |         |1           |\n\
+      \    +-----------------------+---------+------------+\n\
+      \\n"
+  ======>
+    uinteger_1Type :: System.SED.MCTP.Common.UID.UID
+    uinteger_1Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 16
+    finteger_1Type :: GHC.Base.String
+    finteger_1Type = "Simple_Type,integer,1"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1617,8)-(1628,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                   Table 94 integer_2\n\
+      \    +-----------------------+---------+------------+\n\
+      \    |UID                    |Name     |Format      |\n\
+      \    +-----------------------+---------+------------+\n\
+      \    |00 00 00 05 00 00 02 15|integer_2|Simple_Type,|\n\
+      \    |                       |         |integer,    |\n\
+      \    |                       |         |2           |\n\
+      \    +-----------------------+---------+------------+\n\
+      \\n"
+  ======>
+    uinteger_2Type :: System.SED.MCTP.Common.UID.UID
+    uinteger_2Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 21
+    finteger_2Type :: GHC.Base.String
+    finteger_2Type = "Simple_Type,integer,2"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1641,8)-(1652,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 95 key_128\n\
+      \    +-----------------------+-------+-----------------+\n\
+      \    |UID                    |Name   |Format           |\n\
+      \    +-----------------------+-------+-----------------+\n\
+      \    |00 00 00 05 00 00 06 02|key_128|Alternative_Type,|\n\
+      \    |                       |       |bytes_16,        |\n\
+      \    |                       |       |bytes_32         |\n\
+      \    +-----------------------+-------+-----------------+\n\
+      \\n"
+  ======>
+    ukey_128Type :: System.SED.MCTP.Common.UID.UID
+    ukey_128Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 6) 2
+    fkey_128Type :: GHC.Base.String
+    fkey_128Type = "Alternative_Type,bytes_16,bytes_32"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1664,8)-(1675,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 96 key_256\n\
+      \    +-----------------------+-------+-----------------+\n\
+      \    |UID                    |Name   |Format           |\n\
+      \    +-----------------------+-------+-----------------+\n\
+      \    |00 00 00 05 00 00 06 03|key_256|Alternative_Type,|\n\
+      \    |                       |       |bytes_32,        |\n\
+      \    |                       |       |bytes_64         |\n\
+      \    +-----------------------+-------+-----------------+\n\
+      \\n"
+  ======>
+    ukey_256Type :: System.SED.MCTP.Common.UID.UID
+    ukey_256Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 6) 3
+    fkey_256Type :: GHC.Base.String
+    fkey_256Type = "Alternative_Type,bytes_32,bytes_64"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1688,8)-(1699,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                      Table 97 keys_avail_conds\n\
+      \    +-----------------------+----------------+-----------------+\n\
+      \    |UID                    |Name            |Format           |\n\
+      \    +-----------------------+----------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 10|keys_avail_conds|Enumeration_Type,|\n\
+      \    |                       |                |0,               |\n\
+      \    |                       |                |7                |\n\
+      \    +-----------------------+----------------+-----------------+\n\
+      \\n"
+  ======>
+    ukeys_avail_condsType :: System.SED.MCTP.Common.UID.UID
+    ukeys_avail_condsType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 16
+    fkeys_avail_condsType :: GHC.Base.String
+    fkeys_avail_condsType = "Enumeration_Type,0,7"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1709,8)-(1722,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \                          Table 98 keys_avail_conds Enumeration Values\n\
+      \    +-----------+---------------------------------------------------------------------------+\n\
+      \    |Enumeration|Associated Value                                                           |\n\
+      \    |Value      |                                                                           |\n\
+      \    +-----------+---------------------------------------------------------------------------+\n\
+      \    |0          |None                                                                       |\n\
+      \    +-----------+---------------------------------------------------------------------------+\n\
+      \    |1          |Authentication of an authority with Set access to any of the ReadLocked,   |\n\
+      \    |           |WriteLocked, ReadLockEnabled or WriteLockEnabled columns for that LBA range|\n\
+      \    +-----------+---------------------------------------------------------------------------+\n\
+      \    |2-7        |Reserved                                                                   |\n\
+      \    +-----------+---------------------------------------------------------------------------+\n"
+  ======>
+    data Core_keys_avail_conds = Core_keys_avail_conds_None |
+        Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLockedWriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range |
+        Core_keys_avail_conds_Reserved |
+        Core_keys_avail_conds_Reserved_3 |
+        Core_keys_avail_conds_Reserved_4 |
+        Core_keys_avail_conds_Reserved_5 |
+        Core_keys_avail_conds_Reserved_6 |
+        Core_keys_avail_conds_Reserved_7
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1736,8)-(1747,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                   Table 99 lag\n\
+      \    +-----------------------+----+------------+\n\
+      \    |UID                    |Name|Format      |\n\
+      \    +-----------------------+----+------------+\n\
+      \    |00 00 00 05 00 00 18 02|lag |Struct_Type,|\n\
+      \    |                       |    |Seconds,    |\n\
+      \    |                       |    |Fraction    |\n\
+      \    +-----------------------+----+------------+\n\
+      \\n"
+  ======>
+    ulagType :: System.SED.MCTP.Common.UID.UID
+    ulagType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 24) 2
+    flagType :: GHC.Base.String
+    flagType = "Struct_Type,Seconds,Fraction"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1757,8)-(1768,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 100 last_reenc_stat\n\
+      \    +-----------------------+---------------+-----------------+\n\
+      \    |UID                    |Name           |Format           |\n\
+      \    +-----------------------+---------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 11|last_reenc_stat|Enumeration_Type,|\n\
+      \    |                       |               |0,               |\n\
+      \    |                       |               |7                |\n\
+      \    +-----------------------+---------------+-----------------+\n\
+      \\n"
+  ======>
+    ulast_reenc_statType :: System.SED.MCTP.Common.UID.UID
+    ulast_reenc_statType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 17
+    flast_reenc_statType :: GHC.Base.String
+    flast_reenc_statType = "Enumeration_Type,0,7"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1775,8)-(1791,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \\n\
+      \     Table 101 last_reenc_stat Enumeration Values\n\
+      \    +-----------------+--------------------------+\n\
+      \    |Enumeration Value|Associated Value          |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |0                |Success                   |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |1                |Read Error                |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |2                |Write Error               |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |3                |Verify Error              |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |4-7              |Reserved                  |\n\
+      \    +-----------------+--------------------------+\n"
+  ======>
+    data Core_last_reenc_stat = Core_last_reenc_stat_Success |
+        Core_last_reenc_stat_Read_Error |
+        Core_last_reenc_stat_Write_Error |
+        Core_last_reenc_stat_Verify_Error |
+        Core_last_reenc_stat_Reserved |
+        Core_last_reenc_stat_Reserved_5 |
+        Core_last_reenc_stat_Reserved_6 |
+        Core_last_reenc_stat_Reserved_7
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1801,8)-(1812,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 102 life_cycle_state\n\
+      \    +-----------------------+----------------+-----------------+\n\
+      \    |UID                    |Name            |Format           |\n\
+      \    +-----------------------+----------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 05|life_cycle_state|Enumeration_Type,|\n\
+      \    |                       |                |0,               |\n\
+      \    |                       |                |15               |\n\
+      \    +-----------------------+----------------+-----------------+\n\
+      \\n"
+  ======>
+    ulife_cycle_stateType :: System.SED.MCTP.Common.UID.UID
+    ulife_cycle_stateType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 5
+    flife_cycle_stateType :: GHC.Base.String
+    flife_cycle_stateType = "Enumeration_Type,0,15"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1820,8)-(1842,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \\n\
+      \    Table 103 life_cycle_state Enumeration Values\n\
+      \    +-----------------+--------------------------+\n\
+      \    |Enumeration Value|Associated Value          |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |0                |Issued                    |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |1                |Issued-Disabled           |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |2                |Issued-Frozen             |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |3                |Issued-Disabled-Frozen    |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |4                |Issued-Failed             |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |5-7              |Unassigned                |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |8-13             |Reserved for SSC Usage    |\n\
+      \    +-----------------+--------------------------+\n\
+      \    |14-15            |Unassigned                |\n\
+      \    +-----------------+--------------------------+\n"
+  ======>
+    data Core_life_cycle_state = Core_life_cycle_state_Issued |
+        Core_life_cycle_state_Issued_Disabled |
+        Core_life_cycle_state_Issued_Frozen |
+        Core_life_cycle_state_Issued_Disabled_Frozen |
+        Core_life_cycle_state_Issued_Failed |
+        Core_life_cycle_state_Unassigned |
+        Core_life_cycle_state_Unassigned_6 |
+        Core_life_cycle_state_Unassigned_7 |
+        Core_life_cycle_state_Reserved_for_SSC_Usage |
+        Core_life_cycle_state_Reserved_for_SSC_Usage_9 |
+        Core_life_cycle_state_Reserved_for_SSC_Usage_10 |
+        Core_life_cycle_state_Reserved_for_SSC_Usage_11 |
+        Core_life_cycle_state_Reserved_for_SSC_Usage_12 |
+        Core_life_cycle_state_Reserved_for_SSC_Usage_13 |
+        Core_life_cycle_state_Unassigned_14 |
+        Core_life_cycle_state_Unassigned_15
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1851,8)-(1861,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                              Table 104 LogList_object_ref\n\
+      \    +-----------------------+-------------------------+-----------------------------+\n\
+      \    |UID                    |Name                     |Format                       |\n\
+      \    +-----------------------+-------------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 0D|LogList_object_ref       |Restricted_Reference_Type{6},|\n\
+      \    |                       |                         |uidref {LogListTableUID}     |\n\
+      \    +-----------------------+-------------------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uLogList_object_refType :: System.SED.MCTP.Common.UID.UID
+    uLogList_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 13
+    fLogList_object_refType :: GHC.Base.String
+    fLogList_object_refType = "Restricted_Reference_Type{6},uidref {LogListTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1875,8)-(1887,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                        Table 105 log_row_ref\n\
+      \    +-----------------------+-----------+-------------------------+\n\
+      \    |UID                    |Name       |Format                   |\n\
+      \    +-----------------------+-----------+-------------------------+\n\
+      \    |00 00 00 05 00 00 0C 0A|log_row_ref|Restricted_Reference_Type|\n\
+      \    |                       |           |{6},                     |\n\
+      \    |                       |           |uidref{LogTableUID},     |\n\
+      \    |                       |           |*                        |\n\
+      \    +-----------------------+-----------+-------------------------+\n\
+      \\n"
+  ======>
+    ulog_row_refType :: System.SED.MCTP.Common.UID.UID
+    ulog_row_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 10
+    flog_row_refType :: GHC.Base.String
+    flog_row_refType = "Restricted_Reference_Type{6},uidref{LogTableUID},*"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1899,8)-(1910,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 106 log_select\n\
+      \    +-----------------------+----------+-----------------+\n\
+      \    |UID                    |Name      |Format           |\n\
+      \    +-----------------------+----------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 0C|log_select|Enumeration_Type,|\n\
+      \    |                       |          |0,               |\n\
+      \    |                       |          |3                |\n\
+      \    +-----------------------+----------+-----------------+\n\
+      \\n"
+  ======>
+    ulog_selectType :: System.SED.MCTP.Common.UID.UID
+    ulog_selectType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 12
+    flog_selectType :: GHC.Base.String
+    flog_selectType = "Enumeration_Type,0,3"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1919,8)-(1932,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \    Table 107 log_select Enumeration Values\n\
+      \    +-----------------+-------------------+\n\
+      \    |Enumeration Value|Associated Value   |\n\
+      \    +-----------------+-------------------+\n\
+      \    |0                |None               |\n\
+      \    +-----------------+-------------------+\n\
+      \    |1                |LogSuccess         |\n\
+      \    +-----------------+-------------------+\n\
+      \    |2                |LogFail            |\n\
+      \    +-----------------+-------------------+\n\
+      \    |3                |LogAlways          |\n\
+      \    +-----------------+-------------------+\n"
+  ======>
+    data Core_log_select = Core_log_select_None |
+        Core_log_select_LogSuccess |
+        Core_log_select_LogFail |
+        Core_log_select_LogAlways
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1943,8)-(1952,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                 Table 108 max_bytes\n\
+      \    +-----------------------+---------+---------+\n\
+      \    |UID                    |Name     |Format   |\n\
+      \    +-----------------------+---------+---------+\n\
+      \    |00 00 00 05 00 00 00 03|max_bytes|Base_Type|\n\
+      \    +-----------------------+---------+---------+\n\
+      \\n"
+  ======>
+    umax_bytesType :: System.SED.MCTP.Common.UID.UID
+    umax_bytesType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 0) 3
+    fmax_bytesType :: GHC.Base.String
+    fmax_bytesType = "Base_Type"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1962,8)-(1973,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                  Table 109 max_bytes_32\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |UID                    |Name        |Format      |\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |00 00 00 05 00 00 02 0D|max_bytes_32|Simple_Type,|\n\
+      \    |                       |            |max_bytes,  |\n\
+      \    |                       |            |32          |\n\
+      \    +-----------------------+------------+------------+\n\
+      \\n"
+  ======>
+    umax_bytes_32Type :: System.SED.MCTP.Common.UID.UID
+    umax_bytes_32Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 13
+    fmax_bytes_32Type :: GHC.Base.String
+    fmax_bytes_32Type = "Simple_Type,max_bytes,32"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(1983,8)-(1994,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                  Table 110 max_bytes_64\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |UID                    |Name        |Format      |\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |00 00 00 05 00 00 02 0E|max_bytes_64|Simple_Type,|\n\
+      \    |                       |            |max_bytes,  |\n\
+      \    |                       |            |64          |\n\
+      \    +-----------------------+------------+------------+\n\
+      \\n"
+  ======>
+    umax_bytes_64Type :: System.SED.MCTP.Common.UID.UID
+    umax_bytes_64Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 14
+    fmax_bytes_64Type :: GHC.Base.String
+    fmax_bytes_64Type = "Simple_Type,max_bytes,64"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2006,8)-(2017,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                            Table 111 mediakey_obj_uidref\n\
+      \    +-----------------------+----------------------+-----------------------------+\n\
+      \    |UID                    |Name                  |Format                       |\n\
+      \    +-----------------------+----------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 0C|mediakey_object_uidref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                      |uidref {K_AES_128TableUID},  |\n\
+      \    |                       |                      |uidref {K_AES_256TableUID}   |\n\
+      \    +-----------------------+----------------------+-----------------------------+\n\
+      \\n"
+  ======>
+    umediakey_object_uidrefType :: System.SED.MCTP.Common.UID.UID
+    umediakey_object_uidrefType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 12
+    fmediakey_object_uidrefType :: GHC.Base.String
+    fmediakey_object_uidrefType = "Restricted_Reference_Type{6},uidref {K_AES_128TableUID},uidref {K_AES_256TableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2027,8)-(2037,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \    Table 112 MethodID_object _ref\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \    |UID                    |Name               |Format                       |\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 03|MethodID_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                   |uidref {MethodIDTableUID}    |\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uMethodID_object_refType :: System.SED.MCTP.Common.UID.UID
+    uMethodID_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 3
+    fMethodID_object_refType :: GHC.Base.String
+    fMethodID_object_refType = "Restricted_Reference_Type{6},uidref {MethodIDTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2047,8)-(2058,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \    Table 113 messaging_type\n\
+      \    +-----------------------+--------------+-----------------+\n\
+      \    |UID                    |Name          |Format           |\n\
+      \    +-----------------------+--------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 04|messaging_type|Enumeration_Type,|\n\
+      \    |                       |              |0,               |\n\
+      \    |                       |              |255              |\n\
+      \    +-----------------------+--------------+-----------------+\n\
+      \\n"
+  ======>
+    umessaging_typeType :: System.SED.MCTP.Common.UID.UID
+    umessaging_typeType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 4
+    fmessaging_typeType :: GHC.Base.String
+    fmessaging_typeType = "Enumeration_Type,0,255"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2070,8)-(2081,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                         Table 114 Minute\n\
+      \    +-----------------------+------+-------------------------+\n\
+      \    |UID                    |Name  |Format                   |\n\
+      \    +-----------------------+------+-------------------------+\n\
+      \    |00 00 00 05 00 00 14 05|Minute|Name_Value_Uinteger_Type,|\n\
+      \    |                       |      |4,                       |\n\
+      \    |                       |      |minute_enum              |\n\
+      \    +-----------------------+------+-------------------------+\n\
+      \\n"
+  ======>
+    uMinuteType :: System.SED.MCTP.Common.UID.UID
+    uMinuteType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 20) 5
+    fMinuteType :: GHC.Base.String
+    fMinuteType = "Name_Value_Uinteger_Type,4,minute_enum"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2092,8)-(2103,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 115 minute_enum\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |UID                    |Name       |Format           |\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 1A|minute_enum|Enumeration_Type,|\n\
+      \    |                       |           |0,               |\n\
+      \    |                       |           |59               |\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \\n"
+  ======>
+    uminute_enumType :: System.SED.MCTP.Common.UID.UID
+    uminute_enumType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 26
+    fminute_enumType :: GHC.Base.String
+    fminute_enumType = "Enumeration_Type,0,59"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2113,8)-(2124,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 116 Month\n\
+      \    +-----------------------+-----+-------------------------+\n\
+      \    |UID                    |Name |Format                   |\n\
+      \    +-----------------------+-----+-------------------------+\n\
+      \    |00 00 00 05 00 00 14 02|Month|Name_Value_Uinteger_Type,|\n\
+      \    |                       |     |1,                       |\n\
+      \    |                       |     |month_enum               |\n\
+      \    +-----------------------+-----+-------------------------+\n\
+      \\n"
+  ======>
+    uMonthType :: System.SED.MCTP.Common.UID.UID
+    uMonthType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 20) 2
+    fMonthType :: GHC.Base.String
+    fMonthType = "Name_Value_Uinteger_Type,1,month_enum"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2134,8)-(2145,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 117 month_enum\n\
+      \    +-----------------------+------------------+-----------------+\n\
+      \    |UID                    |Name              |Format           |\n\
+      \    +-----------------------+------------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 17|month_enum        |Enumeration_Type,|\n\
+      \    |                       |                  |1,               |\n\
+      \    |                       |                  |12               |\n\
+      \    +-----------------------+------------------+-----------------+\n\
+      \\n"
+  ======>
+    umonth_enumType :: System.SED.MCTP.Common.UID.UID
+    umonth_enumType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 23
+    fmonth_enumType :: GHC.Base.String
+    fmonth_enumType = "Enumeration_Type,1,12"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2157,8)-(2168,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                  Table 118 name\n\
+      \    +-----------------------+----+------------+\n\
+      \    |UID                    |Name|Format      |\n\
+      \    +-----------------------+----+------------+\n\
+      \    |00 00 00 05 00 00 02 0B|name|Simple_Type,|\n\
+      \    |                       |    |max_bytes,  |\n\
+      \    |                       |    |32          |\n\
+      \    +-----------------------+----+------------+\n\
+      \\n"
+  ======>
+    unameType :: System.SED.MCTP.Common.UID.UID
+    unameType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 11
+    fnameType :: GHC.Base.String
+    fnameType = "Simple_Type,max_bytes,32"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2178,8)-(2188,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                            Table 119 object_ref\n\
+      \    +-----------------------+------------------+--------------------------+\n\
+      \    |UID                    |Name              |Format                    |\n\
+      \    +-----------------------+------------------+--------------------------+\n\
+      \    |00 00 00 05 00 00 0F 02|object_ref        |General_Reference_Type{8} |\n\
+      \    |                       |                  |                          |\n\
+      \    +-----------------------+------------------+--------------------------+\n\
+      \\n"
+  ======>
+    uobject_refType :: System.SED.MCTP.Common.UID.UID
+    uobject_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 15) 2
+    fobject_refType :: GHC.Base.String
+    fobject_refType = "General_Reference_Type{8}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2200,8)-(2211,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 120 padding_type\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |UID                    |Name        |Format           |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 06|padding_type|Enumeration_Type,|\n\
+      \    |                       |            |0,               |\n\
+      \    |                       |            |15               |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \\n"
+  ======>
+    upadding_typeType :: System.SED.MCTP.Common.UID.UID
+    upadding_typeType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 6
+    fpadding_typeType :: GHC.Base.String
+    fpadding_typeType = "Enumeration_Type,0,15"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2219,8)-(2236,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \    Table 121 padding_type Enumeration Values\n\
+      \    +-----------------+-------------------+\n\
+      \    |Enumeration Value|Associated Value   |\n\
+      \    +-----------------+-------------------+\n\
+      \    |0                |None               |\n\
+      \    +-----------------+-------------------+\n\
+      \    |1                |None               |\n\
+      \    +-----------------+-------------------+\n\
+      \    |2                |RSAES-PKCS1-v1_5   |\n\
+      \    +-----------------+-------------------+\n\
+      \    |3                |RSAES-OAEP         |\n\
+      \    +-----------------+-------------------+\n\
+      \    |4                |RSASSA-PKCS1-v1_5  |\n\
+      \    +-----------------+-------------------+\n\
+      \    |5-15             |Reserved           |\n\
+      \    +-----------------+-------------------+\n"
+  ======>
+    data Core_padding_type = Core_padding_type_None |
+        Core_padding_type_None_1 |
+        Core_padding_type_RSAES_PKCS1_v1_5 |
+        Core_padding_type_RSAES_OAEP |
+        Core_padding_type_RSASSA_PKCS1_v1_5 |
+        Core_padding_type_Reserved |
+        Core_padding_type_Reserved_6 |
+        Core_padding_type_Reserved_7 |
+        Core_padding_type_Reserved_8 |
+        Core_padding_type_Reserved_9 |
+        Core_padding_type_Reserved_10 |
+        Core_padding_type_Reserved_11 |
+        Core_padding_type_Reserved_12 |
+        Core_padding_type_Reserved_13 |
+        Core_padding_type_Reserved_14 |
+        Core_padding_type_Reserved_15
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2245,8)-(2256,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                   Table 122 password\n\
+      \    +-----------------------+--------+------------+\n\
+      \    |UID                    |Name    |Format      |\n\
+      \    +-----------------------+--------+------------+\n\
+      \    |00 00 00 05 00 00 02 0C|password|Simple_Type,|\n\
+      \    |                       |        |max_bytes,  |\n\
+      \    |                       |        |32          |\n\
+      \    +-----------------------+--------+------------+\n\
+      \\n"
+  ======>
+    upasswordType :: System.SED.MCTP.Common.UID.UID
+    upasswordType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 12
+    fpasswordType :: GHC.Base.String
+    fpasswordType = "Simple_Type,max_bytes,32"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2267,8)-(2278,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                   Table 123 protect_types\n\
+      \    +-----------------------+-------------+--------------+\n\
+      \    |UID                    |Name         |Format        |\n\
+      \    +-----------------------+-------------+--------------+\n\
+      \    |00 00 00 05 00 00 1A 05|protect_types|Set_Type,     |\n\
+      \    |                       |             |0,            |\n\
+      \    |                       |             |255           |\n\
+      \    +-----------------------+-------------+--------------+\n\
+      \\n"
+  ======>
+    uprotect_typesType :: System.SED.MCTP.Common.UID.UID
+    uprotect_typesType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 5
+    fprotect_typesType :: GHC.Base.String
+    fprotect_typesType = "Set_Type,0,255"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2295,8)-(2306,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 124 reencrypt_request\n\
+      \    +-----------------------+-----------------+-----------------+\n\
+      \    |UID                    |Name             |Format           |\n\
+      \    +-----------------------+-----------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 13|reencrypt_request|Enumeration_Type,|\n\
+      \    |                       |                 |1,               |\n\
+      \    |                       |                 |16               |\n\
+      \    +-----------------------+-----------------+-----------------+\n\
+      \\n"
+  ======>
+    ureencrypt_requestType :: System.SED.MCTP.Common.UID.UID
+    ureencrypt_requestType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 19
+    freencrypt_requestType :: GHC.Base.String
+    freencrypt_requestType = "Enumeration_Type,1,16"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2318,8)-(2329,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 125 reencrypt_state\n\
+      \    +-----------------------+---------------+-----------------+\n\
+      \    |UID                    |Name           |Format           |\n\
+      \    +-----------------------+---------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 14|reencrypt_state|Enumeration_Type,|\n\
+      \    |                       |               |1,               |\n\
+      \    |                       |               |16               |\n\
+      \    +-----------------------+---------------+-----------------+\n\
+      \\n"
+  ======>
+    ureencrypt_stateType :: System.SED.MCTP.Common.UID.UID
+    ureencrypt_stateType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 20
+    freencrypt_stateType :: GHC.Base.String
+    freencrypt_stateType = "Enumeration_Type,1,16"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2337,8)-(2354,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \   Table 126 reencrypt_state Enumeration Values\n\
+      \    +-----------------+-------------------+\n\
+      \    |Enumeration Value|Associated Value   |\n\
+      \    +-----------------+-------------------+\n\
+      \    |1                |Idle               |\n\
+      \    +-----------------+-------------------+\n\
+      \    |2                |Pending            |\n\
+      \    +-----------------+-------------------+\n\
+      \    |3                |Active             |\n\
+      \    +-----------------+-------------------+\n\
+      \    |4                |Completed          |\n\
+      \    +-----------------+-------------------+\n\
+      \    |5                |Paused             |\n\
+      \    +-----------------+-------------------+\n\
+      \    |6-16             |Reserved           |\n\
+      \    +-----------------+-------------------+\n"
+  ======>
+    data Core_reencrypt_state = Core_reencrypt_state_NA |
+        Core_reencrypt_state_Idle |
+        Core_reencrypt_state_Pending |
+        Core_reencrypt_state_Active |
+        Core_reencrypt_state_Completed |
+        Core_reencrypt_state_Paused |
+        Core_reencrypt_state_Reserved |
+        Core_reencrypt_state_Reserved_7 |
+        Core_reencrypt_state_Reserved_8 |
+        Core_reencrypt_state_Reserved_9 |
+        Core_reencrypt_state_Reserved_10 |
+        Core_reencrypt_state_Reserved_11 |
+        Core_reencrypt_state_Reserved_12 |
+        Core_reencrypt_state_Reserved_13 |
+        Core_reencrypt_state_Reserved_14 |
+        Core_reencrypt_state_Reserved_15 |
+        Core_reencrypt_state_Reserved_16
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2363,8)-(2374,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 127 reset_types\n\
+      \    +-----------------------+-----------+--------------+\n\
+      \    |UID                    |Name       |Format        |\n\
+      \    +-----------------------+-----------+--------------+\n\
+      \    |00 00 00 05 00 00 1A 01|reset_types|Set_Type,     |\n\
+      \    |                       |           |0,            |\n\
+      \    |                       |           |31            |\n\
+      \    +-----------------------+-----------+--------------+\n\
+      \\n"
+  ======>
+    ureset_typesType :: System.SED.MCTP.Common.UID.UID
+    ureset_typesType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 1
+    freset_typesType :: GHC.Base.String
+    freset_typesType = "Set_Type,0,31"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2383,8)-(2398,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \    Table 128 reset_types Set Values\n\
+      \    +-----------------+----------------+\n\
+      \    |Enumeration Value|Associated Value|\n\
+      \    +-----------------+----------------+\n\
+      \    |0                |Power Cycle     |\n\
+      \    +-----------------+----------------+\n\
+      \    |1                |Hardware        |\n\
+      \    +-----------------+----------------+\n\
+      \    |2                |HotPlug         |\n\
+      \    +-----------------+----------------+\n\
+      \    |3-15             |Reserved        |\n\
+      \    +-----------------+----------------+\n\
+      \    |16-31            |Vendor Unique   |\n\
+      \    +-----------------+----------------+\n"
+  ======>
+    data Core_reset_types = Core_reset_types_Power_Cycle |
+        Core_reset_types_Hardware |
+        Core_reset_types_HotPlug |
+        Core_reset_types_Reserved |
+        Core_reset_types_Reserved_4 |
+        Core_reset_types_Reserved_5 |
+        Core_reset_types_Reserved_6 |
+        Core_reset_types_Reserved_7 |
+        Core_reset_types_Reserved_8 |
+        Core_reset_types_Reserved_9 |
+        Core_reset_types_Reserved_10 |
+        Core_reset_types_Reserved_11 |
+        Core_reset_types_Reserved_12 |
+        Core_reset_types_Reserved_13 |
+        Core_reset_types_Reserved_14 |
+        Core_reset_types_Reserved_15 |
+        Core_reset_types_Vendor_Unique |
+        Core_reset_types_Vendor_Unique_17 |
+        Core_reset_types_Vendor_Unique_18 |
+        Core_reset_types_Vendor_Unique_19 |
+        Core_reset_types_Vendor_Unique_20 |
+        Core_reset_types_Vendor_Unique_21 |
+        Core_reset_types_Vendor_Unique_22 |
+        Core_reset_types_Vendor_Unique_23 |
+        Core_reset_types_Vendor_Unique_24 |
+        Core_reset_types_Vendor_Unique_25 |
+        Core_reset_types_Vendor_Unique_26 |
+        Core_reset_types_Vendor_Unique_27 |
+        Core_reset_types_Vendor_Unique_28 |
+        Core_reset_types_Vendor_Unique_29 |
+        Core_reset_types_Vendor_Unique_30 |
+        Core_reset_types_Vendor_Unique_31
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2408,8)-(2419,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                       Table 129 Seconds\n\
+      \    +-----------------------+-------+-------------------------+\n\
+      \    |UID                    |Name   |Format                   |\n\
+      \    +-----------------------+-------+-------------------------+\n\
+      \    |00 00 00 00 00 00 00 00|Seconds|Name_Value_Uinteger_Type,|\n\
+      \    |                       |       |5,                       |\n\
+      \    |                       |       |seconds_enum             |\n\
+      \    +-----------------------+-------+-------------------------+\n\
+      \\n"
+  ======>
+    uSecondsType :: System.SED.MCTP.Common.UID.UID
+    uSecondsType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 0) 0) 0) 0) 0
+    fSecondsType :: GHC.Base.String
+    fSecondsType = "Name_Value_Uinteger_Type,5,seconds_enum"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2429,8)-(2440,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 130 seconds_enum\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |UID                    |Name        |Format           |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 1B|seconds_enum|Enumeration_Type,|\n\
+      \    |                       |            |0,               |\n\
+      \    |                       |            |59               |\n\
+      \    +-----------------------+------------+-----------------+\n\
+      \\n"
+  ======>
+    useconds_enumType :: System.SED.MCTP.Common.UID.UID
+    useconds_enumType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 27
+    fseconds_enumType :: GHC.Base.String
+    fseconds_enumType = "Enumeration_Type,0,59"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2450,8)-(2460,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 131 SPTemplates_object_ref\n\
+      \    +-----------------------+----------------------+-----------------------------+\n\
+      \    |UID                    |Name                  |Format                       |\n\
+      \    +-----------------------+----------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 01|SPTemplates_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                      |uidref{SPTemplatesTableUID}  |\n\
+      \    +-----------------------+----------------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uSPTemplates_object_refType :: System.SED.MCTP.Common.UID.UID
+    uSPTemplates_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 1
+    fSPTemplates_object_refType :: GHC.Base.String
+    fSPTemplates_object_refType = "Restricted_Reference_Type{6},uidref{SPTemplatesTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2470,8)-(2481,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 132 SSC\n\
+      \    +-----------------------+----+--------------+\n\
+      \    |UID                    |Name|Format        |\n\
+      \    +-----------------------+----+--------------+\n\
+      \    |00 00 00 05 00 00 08 03|SSC |List_Type,    |\n\
+      \    |                       |    |*,            |\n\
+      \    |                       |    |name          |\n\
+      \    +-----------------------+----+--------------+\n\
+      \\n"
+  ======>
+    uSSCType :: System.SED.MCTP.Common.UID.UID
+    uSSCType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 8) 3
+    fSSCType :: GHC.Base.String
+    fSSCType = "List_Type,*,name"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2491,8)-(2502,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 133 symmetric_mode\n\
+      \    +-----------------------+--------------+-----------------+\n\
+      \    |UID                    |Name          |Format           |\n\
+      \    +-----------------------+--------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 0A|symmetric_mode|Enumeration_Type,|\n\
+      \    |                       |              |0,               |\n\
+      \    |                       |              |23               |\n\
+      \    +-----------------------+--------------+-----------------+\n\
+      \\n"
+  ======>
+    usymmetric_modeType :: System.SED.MCTP.Common.UID.UID
+    usymmetric_modeType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 10
+    fsymmetric_modeType :: GHC.Base.String
+    fsymmetric_modeType = "Enumeration_Type,0,23"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2510,8)-(2542,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \\n\
+      \ Table 134 symmetric_mode Enumeration Values\n\
+      \    +-----------------+----------------+\n\
+      \    |Enumeration Value|Associated Value|\n\
+      \    +-----------------+----------------+\n\
+      \    |0                |ECB             |\n\
+      \    +-----------------+----------------+\n\
+      \    |1                |CBC             |\n\
+      \    +-----------------+----------------+\n\
+      \    |2                |CFB             |\n\
+      \    +-----------------+----------------+\n\
+      \    |3                |OFB             |\n\
+      \    +-----------------+----------------+\n\
+      \    |4                |GCM             |\n\
+      \    +-----------------+----------------+\n\
+      \    |5                |CTR             |\n\
+      \    +-----------------+----------------+\n\
+      \    |6                |CCM             |\n\
+      \    +-----------------+----------------+\n\
+      \    |7                |XTS             |\n\
+      \    +-----------------+----------------+\n\
+      \    |8                |LRW             |\n\
+      \    +-----------------+----------------+\n\
+      \    |9                |EME             |\n\
+      \    +-----------------+----------------+\n\
+      \    |10               |CMC             |\n\
+      \    +-----------------+----------------+\n\
+      \    |11               |XEX             |\n\
+      \    +-----------------+----------------+\n\
+      \    |12-23            |Reserved        |\n\
+      \    +-----------------+----------------+\n"
+  ======>
+    data Core_symmetric_mode = Core_symmetric_mode_ECB |
+        Core_symmetric_mode_CBC |
+        Core_symmetric_mode_CFB |
+        Core_symmetric_mode_OFB |
+        Core_symmetric_mode_GCM |
+        Core_symmetric_mode_CTR |
+        Core_symmetric_mode_CCM |
+        Core_symmetric_mode_XTS |
+        Core_symmetric_mode_LRW |
+        Core_symmetric_mode_EME |
+        Core_symmetric_mode_CMC |
+        Core_symmetric_mode_XEX |
+        Core_symmetric_mode_Reserved |
+        Core_symmetric_mode_Reserved_13 |
+        Core_symmetric_mode_Reserved_14 |
+        Core_symmetric_mode_Reserved_15 |
+        Core_symmetric_mode_Reserved_16 |
+        Core_symmetric_mode_Reserved_17 |
+        Core_symmetric_mode_Reserved_18 |
+        Core_symmetric_mode_Reserved_19 |
+        Core_symmetric_mode_Reserved_20 |
+        Core_symmetric_mode_Reserved_21 |
+        Core_symmetric_mode_Reserved_22 |
+        Core_symmetric_mode_Reserved_23
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2551,8)-(2562,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 135 symmetric_mode_media\n\
+      \    +-----------------------+--------------------+-----------------+\n\
+      \    |UID                    |Name                |Format           |\n\
+      \    +-----------------------+--------------------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 03|symmetric_mode_media|Enumeration_Type,|\n\
+      \    |                       |                    |0,               |\n\
+      \    |                       |                    |23               |\n\
+      \    +-----------------------+--------------------+-----------------+\n\
+      \\n"
+  ======>
+    usymmetric_mode_mediaType :: System.SED.MCTP.Common.UID.UID
+    usymmetric_mode_mediaType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 3
+    fsymmetric_mode_mediaType :: GHC.Base.String
+    fsymmetric_mode_mediaType = "Enumeration_Type,0,23"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2571,8)-(2605,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \\n\
+      \Table 136 symmetric_mode_media Enumeration Values\n\
+      \    +-----------------+-----------------+\n\
+      \    |Enumeration Value|Associated Value |\n\
+      \    +-----------------+-----------------+\n\
+      \    |0                |ECB              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |1                |CBC              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |2                |CFB              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |3                |OFB              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |4                |GCM              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |5                |CTR              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |6                |CCM              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |7                |XTS              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |8                |LRW              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |9                |EME              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |10               |CMC              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |11               |XEX              |\n\
+      \    +-----------------+-----------------+\n\
+      \    |12-22            |Reserved         |\n\
+      \    +-----------------+-----------------+\n\
+      \    |23               |Media Encryption |\n\
+      \    +-----------------+-----------------+\n"
+  ======>
+    data Core_symmetric_mode_media = Core_symmetric_mode_media_ECB |
+        Core_symmetric_mode_media_CBC |
+        Core_symmetric_mode_media_CFB |
+        Core_symmetric_mode_media_OFB |
+        Core_symmetric_mode_media_GCM |
+        Core_symmetric_mode_media_CTR |
+        Core_symmetric_mode_media_CCM |
+        Core_symmetric_mode_media_XTS |
+        Core_symmetric_mode_media_LRW |
+        Core_symmetric_mode_media_EME |
+        Core_symmetric_mode_media_CMC |
+        Core_symmetric_mode_media_XEX |
+        Core_symmetric_mode_media_Reserved |
+        Core_symmetric_mode_media_Reserved_13 |
+        Core_symmetric_mode_media_Reserved_14 |
+        Core_symmetric_mode_media_Reserved_15 |
+        Core_symmetric_mode_media_Reserved_16 |
+        Core_symmetric_mode_media_Reserved_17 |
+        Core_symmetric_mode_media_Reserved_18 |
+        Core_symmetric_mode_media_Reserved_19 |
+        Core_symmetric_mode_media_Reserved_20 |
+        Core_symmetric_mode_media_Reserved_21 |
+        Core_symmetric_mode_media_Reserved_22 |
+        Core_symmetric_mode_media_Media_Encryption
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2614,8)-(2625,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 137 table_kind\n\
+      \    +-----------------------+----------+-----------------+\n\
+      \    |UID                    |Name      |Format           |\n\
+      \    +-----------------------+----------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 15|table_kind|Enumeration_Type,|\n\
+      \    |                       |          |1,               |\n\
+      \    |                       |          |8                |\n\
+      \    +-----------------------+----------+-----------------+\n\
+      \\n"
+  ======>
+    utable_kindType :: System.SED.MCTP.Common.UID.UID
+    utable_kindType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 21
+    ftable_kindType :: GHC.Base.String
+    ftable_kindType = "Enumeration_Type,1,8"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2633,8)-(2644,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \    Table 138 table_kind Enumeration Values\n\
+      \    +-----------------+-------------------+\n\
+      \    |Enumeration Value|Table Type         |\n\
+      \    +-----------------+-------------------+\n\
+      \    |1                |Object             |\n\
+      \    +-----------------+-------------------+\n\
+      \    |2                |Byte               |\n\
+      \    +-----------------+-------------------+\n\
+      \    |3-8              |Reserved           |\n\
+      \    +-----------------+-------------------+\n"
+  ======>
+    data Core_table_kind = Core_table_kind_NA |
+        Core_table_kind_Object |
+        Core_table_kind_Byte |
+        Core_table_kind_Reserved |
+        Core_table_kind_Reserved_4 |
+        Core_table_kind_Reserved_5 |
+        Core_table_kind_Reserved_6 |
+        Core_table_kind_Reserved_7 |
+        Core_table_kind_Reserved_8
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2654,8)-(2665,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 139 table_or_object_ref\n\
+      \    +-----------------------+-------------------+-----------------+\n\
+      \    |UID                    |Name               |Format           |\n\
+      \    +-----------------------+-------------------+-----------------+\n\
+      \    |00 00 00 05 00 00 06 06|table_or_object_ref|Alternative_Type,|\n\
+      \    |                       |                   |object_ref,      |\n\
+      \    |                       |                   |table_ref        |\n\
+      \    +-----------------------+-------------------+-----------------+\n\
+      \\n"
+  ======>
+    utable_or_object_refType :: System.SED.MCTP.Common.UID.UID
+    utable_or_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 6) 6
+    ftable_or_object_refType :: GHC.Base.String
+    ftable_or_object_refType = "Alternative_Type,object_ref,table_ref"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2677,8)-(2687,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                        Table 140 Table_object_ref\n\
+      \    +-----------------------+----------------+-----------------------------+\n\
+      \    |UID                    |Name            |Format                       |\n\
+      \    +-----------------------+----------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 09|Table_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                |uidref {TableTableUID}       |\n\
+      \    +-----------------------+----------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uTable_object_refType :: System.SED.MCTP.Common.UID.UID
+    uTable_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 9
+    fTable_object_refType :: GHC.Base.String
+    fTable_object_refType = "Restricted_Reference_Type{6},uidref {TableTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2697,8)-(2705,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \                        Table 141 table_ref\n\
+      \    +-----------------------+---------+-------------------------+\n\
+      \    |UID                    |Name     |Format                   |\n\
+      \    +-----------------------+---------+-------------------------+\n\
+      \    |00 00 00 05 00 00 0F 03|table_ref|General_Reference_Type{9}|\n\
+      \    +-----------------------+---------+-------------------------+\n\
+      \\n"
+  ======>
+    utable_refType :: System.SED.MCTP.Common.UID.UID
+    utable_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 15) 3
+    ftable_refType :: GHC.Base.String
+    ftable_refType = "General_Reference_Type{9}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2715,8)-(2726,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                 Table 142 Template_object_ref\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \    |UID                    |Name               |Format                       |\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 08|Template_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                   |uidref{TemplateTableUID}     |\n\
+      \    |                       |                   |                             |\n\
+      \    +-----------------------+-------------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uTemplate_object_refType :: System.SED.MCTP.Common.UID.UID
+    uTemplate_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 8
+    fTemplate_object_refType :: GHC.Base.String
+    fTemplate_object_refType = "Restricted_Reference_Type{6},uidref{TemplateTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2738,8)-(2749,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                   Table 143 type_def\n\
+      \    +-----------------------+--------+------------+\n\
+      \    |UID                    |Name    |Format      |\n\
+      \    +-----------------------+--------+------------+\n\
+      \    |00 00 00 05 00 00 02 03|type_def|Simple_Type,|\n\
+      \    |                       |        |max_bytes,  |\n\
+      \    |                       |        |*           |\n\
+      \    +-----------------------+--------+------------+\n\
+      \\n"
+  ======>
+    utype_defType :: System.SED.MCTP.Common.UID.UID
+    utype_defType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 3
+    ftype_defType :: GHC.Base.String
+    ftype_defType = "Simple_Type,max_bytes,*"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2759,8)-(2770,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 144 Type_object_ref\n\
+      \    +-----------------------+---------------+-----------------------------+\n\
+      \    |UID                    |Name           |Format                       |\n\
+      \    +-----------------------+---------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 02|Type_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |               |uidref {TypeTableUID}        |\n\
+      \    |                       |               |                             |\n\
+      \    +-----------------------+---------------+-----------------------------+\n\
+      \\n"
+  ======>
+    uType_object_refType :: System.SED.MCTP.Common.UID.UID
+    uType_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 2
+    fType_object_refType :: GHC.Base.String
+    fType_object_refType = "Restricted_Reference_Type{6},uidref {TypeTableUID}"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2780,8)-(2791,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 145 uid\n\
+      \    +-----------------------+----------+--------------+\n\
+      \    |UID                    |Name      |Format        |\n\
+      \    +-----------------------+----------+--------------+\n\
+      \    |00 00 00 05 00 00 02 09|uid       |Simple_Type,  |\n\
+      \    |                       |          |bytes,        |\n\
+      \    |                       |          |8             |\n\
+      \    +-----------------------+----------+--------------+\n\
+      \\n"
+  ======>
+    uuidType :: System.SED.MCTP.Common.UID.UID
+    uuidType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 9
+    fuidType :: GHC.Base.String
+    fuidType = "Simple_Type,bytes,8"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2801,8)-(2812,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                  Table 146 uinteger\n\
+      \    +-----------------------+--------+---------+\n\
+      \    |UID                    |Name    |Format   |\n\
+      \    +-----------------------+--------+---------+\n\
+      \    |00 00 00 05 00 00 00 05|uinteger|Base_Type|\n\
+      \    |                       |        |         |\n\
+      \    |                       |        |         |\n\
+      \    +-----------------------+--------+---------+\n\
+      \\n"
+  ======>
+    uuintegerType :: System.SED.MCTP.Common.UID.UID
+    uuintegerType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 0) 5
+    fuintegerType :: GHC.Base.String
+    fuintegerType = "Base_Type"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2822,8)-(2833,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 147 uinteger_1\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |UID                    |Name      |Format      |\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |00 00 00 05 00 00 02 11|uinteger_1|Simple_Type,|\n\
+      \    |                       |          |uinteger,   |\n\
+      \    |                       |          |1           |\n\
+      \    +-----------------------+----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_1Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_1Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 17
+    fuinteger_1Type :: GHC.Base.String
+    fuinteger_1Type = "Simple_Type,uinteger,1"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2843,8)-(2854,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 148 uinteger_128\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |UID                    |Name        |Format      |\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |00 00 00 05 00 00 02 12|uinteger_128|Simple_Type,|\n\
+      \    |                       |            |uinteger,   |\n\
+      \    |                       |            |128         |\n\
+      \    +-----------------------+------------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_128Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_128Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 18
+    fuinteger_128Type :: GHC.Base.String
+    fuinteger_128Type = "Simple_Type,uinteger,128"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2864,8)-(2875,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 149 uinteger_2\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |UID                    |Name      |Format      |\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |00 00 00 05 00 00 02 15|uinteger_2|Simple_Type,|\n\
+      \    |                       |          |uinteger, 2 |\n\
+      \    |                       |          |            |\n\
+      \    +-----------------------+----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_2Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_2Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 21
+    fuinteger_2Type :: GHC.Base.String
+    fuinteger_2Type = "Simple_Type,uinteger, 2"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2885,8)-(2896,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 150 uinteger_20\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 16|uinteger_20|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |20          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_20Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_20Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 22
+    fuinteger_20Type :: GHC.Base.String
+    fuinteger_20Type = "Simple_Type,uinteger,20"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2906,8)-(2917,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 151 uinteger_21\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 17|uinteger_21|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |21          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_21Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_21Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 23
+    fuinteger_21Type :: GHC.Base.String
+    fuinteger_21Type = "Simple_Type,uinteger,21"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2927,8)-(2938,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 152 uinteger_24\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 18|uinteger_24|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |24          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_24Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_24Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 24
+    fuinteger_24Type :: GHC.Base.String
+    fuinteger_24Type = "Simple_Type,uinteger,24"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2948,8)-(2959,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 153 uinteger_256\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |UID                    |Name        |Format      |\n\
+      \    +-----------------------+------------+------------+\n\
+      \    |00 00 00 05 00 00 02 19|uinteger_256|Simple_Type,|\n\
+      \    |                       |            |uinteger,   |\n\
+      \    |                       |            |256         |\n\
+      \    +-----------------------+------------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_256Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_256Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 25
+    fuinteger_256Type :: GHC.Base.String
+    fuinteger_256Type = "Simple_Type,uinteger,256"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2969,8)-(2980,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 154 uinteger_28\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 1A|uinteger_28|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |28          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_28Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_28Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 26
+    fuinteger_28Type :: GHC.Base.String
+    fuinteger_28Type = "Simple_Type,uinteger,28"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(2990,8)-(3001,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 155 uinteger_30\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 1B|uinteger_30|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |30          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_30Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_30Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 27
+    fuinteger_30Type :: GHC.Base.String
+    fuinteger_30Type = "Simple_Type,uinteger,30"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3011,8)-(3022,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 156 uinteger_36\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 1F|uinteger_36|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |36          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_36Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_36Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 31
+    fuinteger_36Type :: GHC.Base.String
+    fuinteger_36Type = "Simple_Type,uinteger,36"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3032,8)-(3043,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 147 uinteger_1\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |UID                    |Name      |Format      |\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |00 00 00 05 00 00 02 20|uinteger_4|Simple_Type,|\n\
+      \    |                       |          |uinteger,   |\n\
+      \    |                       |          |4           |\n\
+      \    +-----------------------+----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_4Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_4Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 32
+    fuinteger_4Type :: GHC.Base.String
+    fuinteger_4Type = "Simple_Type,uinteger,4"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3053,8)-(3064,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 158 uinteger_48\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 23|uinteger_48|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |48          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_48Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_48Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 35
+    fuinteger_48Type :: GHC.Base.String
+    fuinteger_48Type = "Simple_Type,uinteger,48"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3074,8)-(3085,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 159 uinteger_64\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 24|uinteger_64|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |64          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_64Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_64Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 36
+    fuinteger_64Type :: GHC.Base.String
+    fuinteger_64Type = "Simple_Type,uinteger,64"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3095,8)-(3106,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 160 uinteger_66\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |UID                    |Name       |Format      |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \    |00 00 00 05 00 00 02 27|uinteger_66|Simple_Type,|\n\
+      \    |                       |           |uinteger,   |\n\
+      \    |                       |           |66          |\n\
+      \    +-----------------------+-----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_66Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_66Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 39
+    fuinteger_66Type :: GHC.Base.String
+    fuinteger_66Type = "Simple_Type,uinteger,66"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3116,8)-(3127,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 160 uinteger_8\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |UID                    |Name      |Format      |\n\
+      \    +-----------------------+----------+------------+\n\
+      \    |00 00 00 05 00 00 02 25|uinteger_8|Simple_Type,|\n\
+      \    |                       |          |uinteger,   |\n\
+      \    |                       |          |8           |\n\
+      \    +-----------------------+----------+------------+\n\
+      \\n"
+  ======>
+    uuinteger_8Type :: System.SED.MCTP.Common.UID.UID
+    uuinteger_8Type = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 2) 37
+    fuinteger_8Type :: GHC.Base.String
+    fuinteger_8Type = "Simple_Type,uinteger,8"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3139,8)-(3150,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 162 verify_mode\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |UID                    |Name       |Format           |\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 12|verify_mode|Enumeration_Type,|\n\
+      \    |                       |           |0,               |\n\
+      \    |                       |           |7                |\n\
+      \    +-----------------------+-----------+-----------------+\n\
+      \\n"
+  ======>
+    uverify_modeType :: System.SED.MCTP.Common.UID.UID
+    uverify_modeType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 18
+    fverify_modeType :: GHC.Base.String
+    fverify_modeType = "Enumeration_Type,0,7"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3158,8)-(3170,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      tenum
+      "\n\
+      \\n\
+      \   Table 163 verify_mode Enumeration Values\n\
+      \    +-----------------+-------------------+\n\
+      \    |Enumeration Value|Associated Value   |\n\
+      \    +-----------------+-------------------+\n\
+      \    |0                |No verify          |\n\
+      \    +-----------------+-------------------+\n\
+      \    |1                |Verify enabled     |\n\
+      \    +-----------------+-------------------+\n\
+      \    |2-7              |Reserved           |\n\
+      \    +-----------------+-------------------+\n"
+  ======>
+    data Core_verify_mode = Core_verify_mode_No_verify |
+        Core_verify_mode_Verify_enabled |
+        Core_verify_mode_Reserved |
+        Core_verify_mode_Reserved_3 |
+        Core_verify_mode_Reserved_4 |
+        Core_verify_mode_Reserved_5 |
+        Core_verify_mode_Reserved_6 |
+        Core_verify_mode_Reserved_7
+      deriving (GHC.Enum.Bounded,
+                GHC.Enum.Enum,
+                GHC.Classes.Eq,
+                GHC.Classes.Ord,
+                GHC.Show.Show)
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3180,8)-(3191,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 164 Year\n\
+      \    +-----------------------+----------+-------------------------+\n\
+      \    |UID                    |Name      |Format                   |\n\
+      \    +-----------------------+----------+-------------------------+\n\
+      \    |00 00 00 05 00 00 14 01|Year      |Name_Value_Uinteger_Type,|\n\
+      \    |                       |          |0,                       |\n\
+      \    |                       |          |year_enum                |\n\
+      \    +-----------------------+----------+-------------------------+\n\
+      \\n"
+  ======>
+    uYearType :: System.SED.MCTP.Common.UID.UID
+    uYearType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 20) 1
+    fYearType :: GHC.Base.String
+    fYearType = "Name_Value_Uinteger_Type,0,year_enum"
+/Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(3200,8)-(3211,2): Splicing declarations
+    Language.Haskell.TH.Quote.quoteDec
+      ttype
+      "\n\
+      \\n\
+      \                     Table 165 year_enum\n\
+      \    +-----------------------+---------+-----------------+\n\
+      \    |UID                    |Name     |Format           |\n\
+      \    +-----------------------+---------+-----------------+\n\
+      \    |00 00 00 05 00 00 04 16|year_enum|Enumeration_Type,|\n\
+      \    |                       |         |1970,            |\n\
+      \    |                       |         |9999             |\n\
+      \    +-----------------------+---------+-----------------+\n\
+      \\n"
+  ======>
+    uyear_enumType :: System.SED.MCTP.Common.UID.UID
+    uyear_enumType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 22
+    fyear_enumType :: GHC.Base.String
+    fyear_enumType = "Enumeration_Type,1970,9999"
+Ok, 16 modules loaded.
+λ>

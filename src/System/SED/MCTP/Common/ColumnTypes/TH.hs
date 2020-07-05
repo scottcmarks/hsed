@@ -55,8 +55,8 @@ import           Language.Haskell.TH.Quote        (QuasiQuoter (..), quoteDec,
 import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
 
 
-import           System.SED.MCTP.Common.THUtil    (dData, dSig, dVal, eUID,
-                                                   parseTable)
+import           System.SED.MCTP.Common.THUtil    (dData, dSig, dVal, eLitS,
+                                                   eUID, parseTable)
 import           System.SED.MCTP.Common.Token     (ordw)
 import           System.SED.MCTP.Common.UID       (UID)
 import           System.SED.MCTP.Common.Util      (hexUID,
@@ -113,20 +113,26 @@ typeTableParser = do
     pieceLengths <- skipSpace *> typeTableTitle *> rowSep
     rows         <- header pieceLengths *> rowSep *> many1 (typeTableRow pieceLengths) -- <-- the data
     ()           <- rowSep *> blankLines *> endOfInput
-    pure $ foldr (<>) (TypeTableRow empty empty []) rows
+    pure $ foldr (<>) (TypeTableRow empty empty "") rows
 
 typeTableRow :: [Int] -> Parser TypeTableRow
 typeTableRow lengths =
     do
         [uidField, typeName, format] <- tableRowFields lengths
-        pure $ TypeTableRow uidField typeName [trimComma format]
+        pure $ TypeTableRow uidField typeName (trimComma format)
   where trimComma bs = if last bs == ordw ',' then init bs else bs
 
 dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
-dTypeTableRow (TypeTableRow u n _fs) =
-    TypeTableRowDecs [dSig typeName ''UID, dVal typeName $ eUID typeUID]
-  where typeName = mkName $ mconcat ["u", unpack n, "Type"]
+dTypeTableRow (TypeTableRow u n fs) =
+    TypeTableRowDecs [ dSig uidName ''UID
+                     , dVal uidName $ eUID typeUID
+                     , dSig formatName ''String
+                     , dVal formatName $ eLitS (unpack fs)
+                     ]
+  where typeTag = unpack n <> "Type"
+        uidName = mkName $ "u" <> typeTag
         typeUID = hexUID u
+        formatName = mkName $ "f" <> typeTag
 
 
 typeTableTitle :: Parser ByteString
@@ -159,7 +165,7 @@ tableRowFields lengths = tail <$> parseLine
                           <?> "Table row fields"
       takeField len = trimTrailingWhitespace <$> take len <* char8 '|'
 
-data TypeTableRow = TypeTableRow TypeUIDField TypeName [FormatString]
+data TypeTableRow = TypeTableRow TypeUIDField TypeName FormatString
     deriving (Show)
 
 instance Semigroup TypeTableRow where

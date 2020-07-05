@@ -161,3 +161,5 @@ In the messaging stream, these values SHALL be represented as follows:
    c. 0x02 represents Key Wrapping
    d. 0x03 represents Backup
    e. 0x04 – 0x20 are reserved
+
+Table 76 spells its restricting uidref as "ColumnTable_UID".  Nowhere else is there an underscore between Table and UID.  Both redundant by the way, but perhaps "Table" is nice since it will allow "TableTable".

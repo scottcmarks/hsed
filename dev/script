@@ -53,8 +53,12 @@ import Data.String(String)
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 :set -XTemplateHaskell
+:set -XDataKinds
 -- :set -ddump-splices
 :load src/System/SED/MCTP/Common/ColumnTypes.hs
+import System.SED.MCTP.Common.ColumnTypes.TH
+import System.SED.MCTP.Common.THUtil
+
 putStrLn "Running ..."
 :{
 table65 =
@@ -72,7 +76,27 @@ table65 =
       \\n" :: String
 :}
 putStrLn table65
+parseTable typeTableParser table65
+putStrLn "\n"
 runQ $ ppr <$> quoteDec ttype table65
+
+:{
+table76 =
+      "\n\
+      \\n\
+      \                         Table 76 Column_object_ref\n\
+      \    +-----------------------+-----------------+-----------------------------+\n\
+      \    |UID                    |Name             |Format                       |\n\
+      \    +-----------------------+-----------------+-----------------------------+\n\
+      \    |00 00 00 05 00 00 0C 07|Column_object_ref|Restricted_Reference_Type{6},|\n\
+      \    |                       |                 |uidref {ColumnTable_UID}     |\n\
+      \    +-----------------------+-----------------+-----------------------------+\n\
+      \\n" :: String
+:}
+putStrLn table76
+parseTable typeTableParser table76
+putStrLn "\n"
+runQ $ ppr <$> quoteDec ttype table76
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

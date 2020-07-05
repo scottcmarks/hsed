@@ -24,6 +24,7 @@ import           Data.String                      (IsString (..))
 import           GHC.Base                         (Maybe (..), String, id, map,
                                                    (.))
 import           GHC.Err                          (error)
+import           GHC.Integer                      (Integer)
 import           GHC.Real                         (Integral (..), toInteger)
 import           GHC.TypeLits                     (KnownNat)
 import           GHC.Word                         (Word8 (..))
@@ -31,7 +32,8 @@ import           GHC.Word                         (Word8 (..))
 import           Language.Haskell.TH              (Body (..), Con (..),
                                                    Dec (..), DerivClause (..),
                                                    Exp (..), Lit (..), Name,
-                                                   Pat (..), Type (..))
+                                                   Pat (..), TyLit (..),
+                                                   Type (..))
 
 import           System.SED.MCTP.Common.Base_Type (Core_bytes (..), toList)
 import           System.SED.MCTP.Common.UID       (HalfUID (..), UID (..),
@@ -56,6 +58,10 @@ dSig n t = SigD n (ConT t)
 dVal :: Name -> Exp -> Dec
 dVal n e = ValD (VarP n) (NormalB e) []
 
+-- | Type synonym declaration, essentially [d| type $n = $t $v |]
+dTyp :: Name -> Name -> Integer -> Dec
+dTyp n t v = TySynD n [] (AppT (ConT t) (LitT (NumTyLit v)))
+
 -- | HalfUID as Exp
 eHalfUID :: HalfUID -> Exp
 eHalfUID (HalfUID fb) = eID 'halfUID fb
@@ -71,6 +77,11 @@ eID wrapperName = foldl arg (VarE wrapperName) . toList
     arg  :: Exp -> Word8 -> Exp
     arg e b = AppE e (LitE (IntegerL (toInteger b)))
 
+-- | String literal as Exp
+eLitS :: String -> Exp
+eLitS ts = LitE (StringL ts)
+
+
 -- | (Name, String) pair as Exp
 eValP :: Name -> String -> Exp
-eValP hn ts = TupE [VarE hn, LitE (StringL ts)]
+eValP hn ts = TupE [VarE hn, eLitS ts]

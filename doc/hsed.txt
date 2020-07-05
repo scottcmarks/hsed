@@ -971,6 +971,9 @@ dSig :: Name -> Name -> Dec
 -- | Value declaration, essentially [d| $n = $e |]
 dVal :: Name -> Exp -> Dec
 
+-- | Type synonym declaration, essentially [d| type $n = $t $v |]
+dTyp :: Name -> Name -> Integer -> Dec
+
 -- | HalfUID as Exp
 eHalfUID :: HalfUID -> Exp
 
@@ -979,6 +982,9 @@ eUID :: UID -> Exp
 
 -- | Wrap a Core_bytes n
 eID :: KnownNat n => Name -> Core_bytes n -> Exp
+
+-- | String literal as Exp
+eLitS :: String -> Exp
 
 -- | (Name, String) pair as Exp
 eValP :: Name -> String -> Exp
@@ -1289,7 +1295,7 @@ rowSep :: Parser [Int]
 blankLines :: Parser ()
 tableRowFields :: [Int] -> Parser [ByteString]
 data TypeTableRow
-TypeTableRow :: TypeUIDField -> TypeName -> [FormatString] -> TypeTableRow
+TypeTableRow :: TypeUIDField -> TypeName -> FormatString -> TypeTableRow
 type TypeUIDField = ByteString
 type TypeName = ByteString
 type FormatString = ByteString
@@ -1321,11 +1327,17 @@ instance GHC.Base.Semigroup System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRow
 
 -- | Table column types.
 module System.SED.MCTP.Common.ColumnTypes
+fAC_elementType :: String
 uAC_elementType :: UID
+fACE_columnsType :: String
 uACE_columnsType :: UID
+fACE_expressionType :: String
 uACE_expressionType :: UID
+fACE_object_refType :: String
 uACE_object_refType :: UID
+fACLType :: String
 uACLType :: UID
+fadv_key_modeType :: String
 uadv_key_modeType :: UID
 data Core_adv_key_mode
 Core_adv_key_mode_Wait_for_AdvKey_Req :: Core_adv_key_mode
@@ -1336,6 +1348,7 @@ Core_adv_key_mode_Reserved_4 :: Core_adv_key_mode
 Core_adv_key_mode_Reserved_5 :: Core_adv_key_mode
 Core_adv_key_mode_Reserved_6 :: Core_adv_key_mode
 Core_adv_key_mode_Reserved_7 :: Core_adv_key_mode
+fattr_flagsType :: String
 uattr_flagsType :: UID
 data Core_attr_flags
 Core_attr_flags_Get_Not_Permitted :: Core_attr_flags
@@ -1370,6 +1383,7 @@ Core_attr_flags_Reserved_28 :: Core_attr_flags
 Core_attr_flags_Reserved_29 :: Core_attr_flags
 Core_attr_flags_Reserved_30 :: Core_attr_flags
 Core_attr_flags_Reserved_31 :: Core_attr_flags
+fauth_methodType :: String
 uauth_methodType :: UID
 data Core_auth_method
 Core_auth_method_None :: Core_auth_method
@@ -1396,39 +1410,61 @@ Core_auth_method_Reserved_20 :: Core_auth_method
 Core_auth_method_Reserved_21 :: Core_auth_method
 Core_auth_method_Reserved_22 :: Core_auth_method
 Core_auth_method_Reserved_23 :: Core_auth_method
+fAuthority_object_refType :: String
 uAuthority_object_refType :: UID
+fbooleanType :: String
 ubooleanType :: UID
 data Core_boolean
 Core_boolean_False :: Core_boolean
 Core_boolean_True :: Core_boolean
+fboolean_ACEType :: String
 uboolean_ACEType :: UID
 data Core_boolean_ACE
 Core_boolean_ACE_And :: Core_boolean_ACE
 Core_boolean_ACE_Or :: Core_boolean_ACE
 Core_boolean_ACE_Not :: Core_boolean_ACE
+fbyte_row_refType :: String
 ubyte_row_refType :: UID
+fbyte_table_refType :: String
 ubyte_table_refType :: UID
+fbytesType :: String
 ubytesType :: UID
+fbytes_4Type :: String
 ubytes_4Type :: UID
+fbytes_12Type :: String
 ubytes_12Type :: UID
+fbytes_16Type :: String
 ubytes_16Type :: UID
+fbytes_20Type :: String
 ubytes_20Type :: UID
+fbytes_32Type :: String
 ubytes_32Type :: UID
+fbytes_48Type :: String
 ubytes_48Type :: UID
+fbytes_64Type :: String
 ubytes_64Type :: UID
+fCertificates_object_refType :: String
 uCertificates_object_refType :: UID
+fclock_kindType :: String
 uclock_kindType :: UID
 data Core_clock_kind
 Core_clock_kind_Timer :: Core_clock_kind
 Core_clock_kind_Low :: Core_clock_kind
 Core_clock_kind_High :: Core_clock_kind
 Core_clock_kind_LowAndHigh :: Core_clock_kind
+fclock_timeType :: String
 uclock_timeType :: UID
+fColumn_object_refType :: String
 uColumn_object_refType :: UID
+fcred_object_uidrefType :: String
 ucred_object_uidrefType :: UID
+fdateType :: String
 udateType :: UID
+fDayType :: String
 uDayType :: UID
+fday_enumType :: String
 uday_enumType :: UID
+fenc_supportedType :: String
 uenc_supportedType :: UID
 data Core_enc_supported
 Core_enc_supported_None :: Core_enc_supported
@@ -1447,10 +1483,15 @@ Core_enc_supported_Reserved_12 :: Core_enc_supported
 Core_enc_supported_Reserved_13 :: Core_enc_supported
 Core_enc_supported_Reserved_14 :: Core_enc_supported
 Core_enc_supported_Reserved_15 :: Core_enc_supported
+ffeedback_sizeType :: String
 ufeedback_sizeType :: UID
+fFractionType :: String
 uFractionType :: UID
+ffraction_enumType :: String
 ufraction_enumType :: UID
+fgen_statusType :: String
 ugen_statusType :: UID
+fhash_protocolType :: String
 uhash_protocolType :: UID
 data Core_hash_protocol
 Core_hash_protocol_None :: Core_hash_protocol
@@ -1469,13 +1510,21 @@ Core_hash_protocol_Reserved_12 :: Core_hash_protocol
 Core_hash_protocol_Reserved_13 :: Core_hash_protocol
 Core_hash_protocol_Reserved_14 :: Core_hash_protocol
 Core_hash_protocol_Reserved_15 :: Core_hash_protocol
+fHourType :: String
 uHourType :: UID
+fhour_enumType :: String
 uhour_enumType :: UID
+fintegerType :: String
 uintegerType :: UID
+finteger_1Type :: String
 uinteger_1Type :: UID
+finteger_2Type :: String
 uinteger_2Type :: UID
+fkey_128Type :: String
 ukey_128Type :: UID
+fkey_256Type :: String
 ukey_256Type :: UID
+fkeys_avail_condsType :: String
 ukeys_avail_condsType :: UID
 data Core_keys_avail_conds
 Core_keys_avail_conds_None :: Core_keys_avail_conds
@@ -1486,7 +1535,9 @@ Core_keys_avail_conds_Reserved_4 :: Core_keys_avail_conds
 Core_keys_avail_conds_Reserved_5 :: Core_keys_avail_conds
 Core_keys_avail_conds_Reserved_6 :: Core_keys_avail_conds
 Core_keys_avail_conds_Reserved_7 :: Core_keys_avail_conds
+flagType :: String
 ulagType :: UID
+flast_reenc_statType :: String
 ulast_reenc_statType :: UID
 data Core_last_reenc_stat
 Core_last_reenc_stat_Success :: Core_last_reenc_stat
@@ -1497,6 +1548,7 @@ Core_last_reenc_stat_Reserved :: Core_last_reenc_stat
 Core_last_reenc_stat_Reserved_5 :: Core_last_reenc_stat
 Core_last_reenc_stat_Reserved_6 :: Core_last_reenc_stat
 Core_last_reenc_stat_Reserved_7 :: Core_last_reenc_stat
+flife_cycle_stateType :: String
 ulife_cycle_stateType :: UID
 data Core_life_cycle_state
 Core_life_cycle_state_Issued :: Core_life_cycle_state
@@ -1515,26 +1567,42 @@ Core_life_cycle_state_Reserved_for_SSC_Usage_12 :: Core_life_cycle_state
 Core_life_cycle_state_Reserved_for_SSC_Usage_13 :: Core_life_cycle_state
 Core_life_cycle_state_Unassigned_14 :: Core_life_cycle_state
 Core_life_cycle_state_Unassigned_15 :: Core_life_cycle_state
+fLogList_object_refType :: String
 uLogList_object_refType :: UID
+flog_row_refType :: String
 ulog_row_refType :: UID
+flog_selectType :: String
 ulog_selectType :: UID
 data Core_log_select
 Core_log_select_None :: Core_log_select
 Core_log_select_LogSuccess :: Core_log_select
 Core_log_select_LogFail :: Core_log_select
 Core_log_select_LogAlways :: Core_log_select
+fmax_bytesType :: String
 umax_bytesType :: UID
+fmax_bytes_32Type :: String
 umax_bytes_32Type :: UID
+fmax_bytes_64Type :: String
 umax_bytes_64Type :: UID
+fmediakey_object_uidrefType :: String
 umediakey_object_uidrefType :: UID
+fMethodID_object_refType :: String
 uMethodID_object_refType :: UID
+fmessaging_typeType :: String
 umessaging_typeType :: UID
+fMinuteType :: String
 uMinuteType :: UID
+fminute_enumType :: String
 uminute_enumType :: UID
+fMonthType :: String
 uMonthType :: UID
+fmonth_enumType :: String
 umonth_enumType :: UID
+fnameType :: String
 unameType :: UID
+fobject_refType :: String
 uobject_refType :: UID
+fpadding_typeType :: String
 upadding_typeType :: UID
 data Core_padding_type
 Core_padding_type_None :: Core_padding_type
@@ -1553,9 +1621,13 @@ Core_padding_type_Reserved_12 :: Core_padding_type
 Core_padding_type_Reserved_13 :: Core_padding_type
 Core_padding_type_Reserved_14 :: Core_padding_type
 Core_padding_type_Reserved_15 :: Core_padding_type
+fpasswordType :: String
 upasswordType :: UID
+fprotect_typesType :: String
 uprotect_typesType :: UID
+freencrypt_requestType :: String
 ureencrypt_requestType :: UID
+freencrypt_stateType :: String
 ureencrypt_stateType :: UID
 data Core_reencrypt_state
 Core_reencrypt_state_NA :: Core_reencrypt_state
@@ -1575,6 +1647,7 @@ Core_reencrypt_state_Reserved_13 :: Core_reencrypt_state
 Core_reencrypt_state_Reserved_14 :: Core_reencrypt_state
 Core_reencrypt_state_Reserved_15 :: Core_reencrypt_state
 Core_reencrypt_state_Reserved_16 :: Core_reencrypt_state
+freset_typesType :: String
 ureset_typesType :: UID
 data Core_reset_types
 Core_reset_types_Power_Cycle :: Core_reset_types
@@ -1609,10 +1682,15 @@ Core_reset_types_Vendor_Unique_28 :: Core_reset_types
 Core_reset_types_Vendor_Unique_29 :: Core_reset_types
 Core_reset_types_Vendor_Unique_30 :: Core_reset_types
 Core_reset_types_Vendor_Unique_31 :: Core_reset_types
+fSecondsType :: String
 uSecondsType :: UID
+fseconds_enumType :: String
 useconds_enumType :: UID
+fSPTemplates_object_refType :: String
 uSPTemplates_object_refType :: UID
+fSSCType :: String
 uSSCType :: UID
+fsymmetric_modeType :: String
 usymmetric_modeType :: UID
 data Core_symmetric_mode
 Core_symmetric_mode_ECB :: Core_symmetric_mode
@@ -1639,6 +1717,7 @@ Core_symmetric_mode_Reserved_20 :: Core_symmetric_mode
 Core_symmetric_mode_Reserved_21 :: Core_symmetric_mode
 Core_symmetric_mode_Reserved_22 :: Core_symmetric_mode
 Core_symmetric_mode_Reserved_23 :: Core_symmetric_mode
+fsymmetric_mode_mediaType :: String
 usymmetric_mode_mediaType :: UID
 data Core_symmetric_mode_media
 Core_symmetric_mode_media_ECB :: Core_symmetric_mode_media
@@ -1665,6 +1744,7 @@ Core_symmetric_mode_media_Reserved_20 :: Core_symmetric_mode_media
 Core_symmetric_mode_media_Reserved_21 :: Core_symmetric_mode_media
 Core_symmetric_mode_media_Reserved_22 :: Core_symmetric_mode_media
 Core_symmetric_mode_media_Media_Encryption :: Core_symmetric_mode_media
+ftable_kindType :: String
 utable_kindType :: UID
 data Core_table_kind
 Core_table_kind_NA :: Core_table_kind
@@ -1676,29 +1756,53 @@ Core_table_kind_Reserved_5 :: Core_table_kind
 Core_table_kind_Reserved_6 :: Core_table_kind
 Core_table_kind_Reserved_7 :: Core_table_kind
 Core_table_kind_Reserved_8 :: Core_table_kind
+ftable_or_object_refType :: String
 utable_or_object_refType :: UID
+fTable_object_refType :: String
 uTable_object_refType :: UID
+ftable_refType :: String
 utable_refType :: UID
+fTemplate_object_refType :: String
 uTemplate_object_refType :: UID
+ftype_defType :: String
 utype_defType :: UID
+fType_object_refType :: String
 uType_object_refType :: UID
+fuidType :: String
 uuidType :: UID
+fuintegerType :: String
 uuintegerType :: UID
+fuinteger_1Type :: String
 uuinteger_1Type :: UID
+fuinteger_128Type :: String
 uuinteger_128Type :: UID
+fuinteger_2Type :: String
 uuinteger_2Type :: UID
+fuinteger_20Type :: String
 uuinteger_20Type :: UID
+fuinteger_21Type :: String
 uuinteger_21Type :: UID
+fuinteger_24Type :: String
 uuinteger_24Type :: UID
+fuinteger_256Type :: String
 uuinteger_256Type :: UID
+fuinteger_28Type :: String
 uuinteger_28Type :: UID
+fuinteger_30Type :: String
 uuinteger_30Type :: UID
+fuinteger_36Type :: String
 uuinteger_36Type :: UID
+fuinteger_4Type :: String
 uuinteger_4Type :: UID
+fuinteger_48Type :: String
 uuinteger_48Type :: UID
+fuinteger_64Type :: String
 uuinteger_64Type :: UID
+fuinteger_66Type :: String
 uuinteger_66Type :: UID
+fuinteger_8Type :: String
 uuinteger_8Type :: UID
+fverify_modeType :: String
 uverify_modeType :: UID
 data Core_verify_mode
 Core_verify_mode_No_verify :: Core_verify_mode
@@ -1709,7 +1813,9 @@ Core_verify_mode_Reserved_4 :: Core_verify_mode
 Core_verify_mode_Reserved_5 :: Core_verify_mode
 Core_verify_mode_Reserved_6 :: Core_verify_mode
 Core_verify_mode_Reserved_7 :: Core_verify_mode
+fYearType :: String
 uYearType :: UID
+fyear_enumType :: String
 uyear_enumType :: UID
 instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
 instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_verify_mode

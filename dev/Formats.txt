@@ -1,0 +1,82 @@
+Alternative_Type,Authority_object_ref,boolean_ACE
+Alternative_Type,bytes_16,bytes_32
+Alternative_Type,bytes_32,bytes_64
+Alternative_Type,object_ref,table_ref
+Base_Type
+Enumeration_Type,0,1
+Enumeration_Type,0,15
+Enumeration_Type,0,2
+Enumeration_Type,0,23
+Enumeration_Type,0,255
+Enumeration_Type,0,3
+Enumeration_Type,0,59
+Enumeration_Type,0,7
+Enumeration_Type,0,999
+Enumeration_Type,1,12
+Enumeration_Type,1,16
+Enumeration_Type,1,31
+Enumeration_Type,1,8
+Enumeration_Type,1970,9999
+General_Reference_Table_Type,2
+General_Reference_Type{7}
+General_Reference_Type{8}
+General_Reference_Type{9}
+List_Type,*,ACE_expression
+List_Type,*,ACE_object_ref
+List_Type,*,name
+Name_Value_Uinteger_Type,0,year_enum
+Name_Value_Uinteger_Type,1,month_enum
+Name_Value_Uinteger_Type,2,day_enum
+Name_Value_Uinteger_Type,3,hour_enum
+Name_Value_Uinteger_Type,4,minute_enum
+Name_Value_Uinteger_Type,5,seconds_enum
+Name_Value_Uinteger_Type,6,fraction_enum
+Restricted_Reference_Type{6},uidref {C_PINTableUID},uidref {C_AES_*TableUID},uidref {C_RSA_*TableUID},uidref {C_EC_*TableUID},uidref {C_HMAC_*TableUID}
+Restricted_Reference_Type{6},uidref {ColumnTable_UID}
+Restricted_Reference_Type{6},uidref {K_AES_128TableUID},uidref {K_AES_256TableUID}
+Restricted_Reference_Type{6},uidref {LogListTableUID}
+Restricted_Reference_Type{6},uidref {MethodIDTableUID}
+Restricted_Reference_Type{6},uidref {TableTableUID}
+Restricted_Reference_Type{6},uidref {TypeTableUID}
+Restricted_Reference_Type{6},uidref{ACETableUID}
+Restricted_Reference_Type{6},uidref{AuthorityTableUID}
+Restricted_Reference_Type{6},uidref{CertificatesTableUID}
+Restricted_Reference_Type{6},uidref{LogTableUID},*
+Restricted_Reference_Type{6},uidref{SPTemplatesTableUID}
+Restricted_Reference_Type{6},uidref{TemplateTableUID}
+Set_Type,0,*
+Set_Type,0,255
+Set_Type,0,31
+Set_Type,0,63
+Simple_Type,bytes,12
+Simple_Type,bytes,16
+Simple_Type,bytes,20
+Simple_Type,bytes,32
+Simple_Type,bytes,4
+Simple_Type,bytes,48
+Simple_Type,bytes,64
+Simple_Type,bytes,8
+Simple_Type,integer,1
+Simple_Type,integer,2
+Simple_Type,max_bytes,*
+Simple_Type,max_bytes,32
+Simple_Type,max_bytes,64
+Simple_Type,uinteger, 2
+Simple_Type,uinteger,1
+Simple_Type,uinteger,128
+Simple_Type,uinteger,2
+Simple_Type,uinteger,20
+Simple_Type,uinteger,21
+Simple_Type,uinteger,24
+Simple_Type,uinteger,256
+Simple_Type,uinteger,28
+Simple_Type,uinteger,30
+Simple_Type,uinteger,36
+Simple_Type,uinteger,4
+Simple_Type,uinteger,48
+Simple_Type,uinteger,64
+Simple_Type,uinteger,66
+Simple_Type,uinteger,8
+Struct_Type,Seconds,Fraction
+Struct_Type,Year,Month,Day
+Struct_Type,Year,Month,Day,Hour,Minute,Seconds,Fraction

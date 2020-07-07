@@ -54,7 +54,6 @@ import Data.String(String)
 --------------------------------------------------------------------------------
 :set -XTemplateHaskell
 :set -XDataKinds
--- :set -ddump-splices
 :load src/System/SED/MCTP/Common/ColumnTypes.hs
 import System.SED.MCTP.Common.ColumnTypes.TH
 import System.SED.MCTP.Common.THUtil
@@ -97,6 +96,25 @@ putStrLn table76
 parseTable typeTableParser table76
 putStrLn "\n"
 runQ $ ppr <$> quoteDec ttype table76
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+putStrLn "\n\n\n"
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+putStrLn "Before ':load src/System/SED/MCTP/Common/TableUIDs.hs'\n"
+:load src/System/SED/MCTP/Common/TableUIDs.hs
+putStrLn "Before ':set -ddump-splices'\n"
+:set -ddump-splices
+putStrLn "Before ':load src/System/SED/MCTP/Common/TableUIDs.hs'\n"
+:load src/System/SED/MCTP/Common/TableUIDs.hs
+import System.SED.MCTP.Common.TableUIDs.TH
+putStrLn "\n"
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------

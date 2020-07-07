@@ -122,376 +122,283 @@
       \\n"
   ======>
     uK_AES_256TableObject :: UID
-    uK_AES_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 6
+    uK_AES_256TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 6
     uK_AES_256Table :: UID
-    uK_AES_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 6) 0) 0) 0) 0
+    uK_AES_256Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 6) 0) 0) 0) 0
     hK_AES_256 :: HalfUID
     hK_AES_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 6
     uK_AES_128TableObject :: UID
-    uK_AES_128TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 5
+    uK_AES_128TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 5
     uK_AES_128Table :: UID
-    uK_AES_128Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 5) 0) 0) 0) 0
+    uK_AES_128Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 5) 0) 0) 0) 0
     hK_AES_128 :: HalfUID
     hK_AES_128 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 5
     uMBRTableObject :: UID
-    uMBRTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 4
+    uMBRTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 4
     uMBRTable :: UID
-    uMBRTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 4) 0) 0) 0) 0
+    uMBRTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 4) 0) 0) 0) 0
     hMBR :: HalfUID
     hMBR = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 4
     uMBRControlTableObject :: UID
-    uMBRControlTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 3
+    uMBRControlTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 3
     uMBRControlTable :: UID
-    uMBRControlTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 3) 0) 0) 0) 0
+    uMBRControlTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 3) 0) 0) 0) 0
     hMBRControl :: HalfUID
     hMBRControl = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 3
     uLockingTableObject :: UID
-    uLockingTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 2
+    uLockingTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 2
     uLockingTable :: UID
-    uLockingTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 2) 0) 0) 0) 0
+    uLockingTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 2) 0) 0) 0) 0
     hLocking :: HalfUID
     hLocking = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 2
     uLockingInfoTableObject :: UID
-    uLockingInfoTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 1
+    uLockingInfoTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 1
     uLockingInfoTable :: UID
-    uLockingInfoTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 1) 0) 0) 0) 0
+    uLockingInfoTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 1) 0) 0) 0) 0
     hLockingInfo :: HalfUID
     hLockingInfo = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 1
     uLogListTableObject :: UID
-    uLogListTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 10) 2
+    uLogListTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 10) 2
     uLogListTable :: UID
-    uLogListTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 10) 2) 0) 0) 0) 0
+    uLogListTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 10) 2) 0) 0) 0) 0
     hLogList :: HalfUID
     hLogList = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 10) 2
     uLogTableObject :: UID
-    uLogTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 10) 1
+    uLogTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 10) 1
     uLogTable :: UID
-    uLogTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 10) 1) 0) 0) 0) 0
+    uLogTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 10) 1) 0) 0) 0) 0
     hLog :: HalfUID
     hLog = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 10) 1
     uH_SHA_512TableObject :: UID
-    uH_SHA_512TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 4
+    uH_SHA_512TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 4
     uH_SHA_512Table :: UID
-    uH_SHA_512Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 4) 0) 0) 0) 0
+    uH_SHA_512Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 4) 0) 0) 0) 0
     hH_SHA_512 :: HalfUID
     hH_SHA_512 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 4
     uH_SHA_384TableObject :: UID
-    uH_SHA_384TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 3
+    uH_SHA_384TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 3
     uH_SHA_384Table :: UID
-    uH_SHA_384Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 3) 0) 0) 0) 0
+    uH_SHA_384Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 3) 0) 0) 0) 0
     hH_SHA_384 :: HalfUID
     hH_SHA_384 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 3
     uH_SHA_256TableObject :: UID
-    uH_SHA_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 2
+    uH_SHA_256TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 2
     uH_SHA_256Table :: UID
-    uH_SHA_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 2) 0) 0) 0) 0
+    uH_SHA_256Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 2) 0) 0) 0) 0
     hH_SHA_256 :: HalfUID
     hH_SHA_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 2
     uH_SHA_1TableObject :: UID
-    uH_SHA_1TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 1
+    uH_SHA_1TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 1
     uH_SHA_1Table :: UID
-    uH_SHA_1Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 1) 0) 0) 0) 0
+    uH_SHA_1Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 1) 0) 0) 0) 0
     hH_SHA_1 :: HalfUID
     hH_SHA_1 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 1
     uClockTimeTableObject :: UID
-    uClockTimeTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 4) 1
+    uClockTimeTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 4) 1
     uClockTimeTable :: UID
-    uClockTimeTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 4) 1) 0) 0) 0) 0
+    uClockTimeTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 4) 1) 0) 0) 0) 0
     hClockTime :: HalfUID
     hClockTime = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 4) 1
     uSPTableObject :: UID
-    uSPTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 5
+    uSPTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 5
     uSPTable :: UID
-    uSPTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 5) 0) 0) 0) 0
+    uSPTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 5) 0) 0) 0) 0
     hSP :: HalfUID
     hSP = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 5
     uTemplateTableObject :: UID
-    uTemplateTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 4
+    uTemplateTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 4
     uTemplateTable :: UID
-    uTemplateTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 4) 0) 0) 0) 0
+    uTemplateTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 4) 0) 0) 0) 0
     hTemplate :: HalfUID
     hTemplate = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 4
     uCryptoSuiteTableObject :: UID
-    uCryptoSuiteTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 3
+    uCryptoSuiteTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 3
     uCryptoSuiteTable :: UID
-    uCryptoSuiteTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 3) 0) 0) 0) 0
+    uCryptoSuiteTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 3) 0) 0) 0) 0
     hCryptoSuite :: HalfUID
     hCryptoSuite = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 3
     uTPerInfoTableObject :: UID
-    uTPerInfoTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 1
+    uTPerInfoTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 1
     uTPerInfoTable :: UID
-    uTPerInfoTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 1) 0) 0) 0) 0
+    uTPerInfoTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 1) 0) 0) 0) 0
     hTPerInfo :: HalfUID
     hTPerInfo = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 1
     uSecretProtectTableObject :: UID
-    uSecretProtectTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 29
+    uSecretProtectTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 29
     uSecretProtectTable :: UID
-    uSecretProtectTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 29) 0) 0) 0) 0
+    uSecretProtectTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 29) 0) 0) 0) 0
     hSecretProtect :: HalfUID
     hSecretProtect = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 29
     uC_HMAC_512TableObject :: UID
-    uC_HMAC_512TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 28
+    uC_HMAC_512TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 28
     uC_HMAC_512Table :: UID
-    uC_HMAC_512Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 28) 0) 0) 0) 0
+    uC_HMAC_512Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 28) 0) 0) 0) 0
     hC_HMAC_512 :: HalfUID
     hC_HMAC_512 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 28
     uC_HMAC_384TableObject :: UID
-    uC_HMAC_384TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 27
+    uC_HMAC_384TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 27
     uC_HMAC_384Table :: UID
-    uC_HMAC_384Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 27) 0) 0) 0) 0
+    uC_HMAC_384Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 27) 0) 0) 0) 0
     hC_HMAC_384 :: HalfUID
     hC_HMAC_384 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 27
     uC_HMAC_256TableObject :: UID
-    uC_HMAC_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 26
+    uC_HMAC_256TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 26
     uC_HMAC_256Table :: UID
-    uC_HMAC_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 26) 0) 0) 0) 0
+    uC_HMAC_256Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 26) 0) 0) 0) 0
     hC_HMAC_256 :: HalfUID
     hC_HMAC_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 26
     uC_HMAC_160TableObject :: UID
-    uC_HMAC_160TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 25
+    uC_HMAC_160TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 25
     uC_HMAC_160Table :: UID
-    uC_HMAC_160Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 25) 0) 0) 0) 0
+    uC_HMAC_160Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 25) 0) 0) 0) 0
     hC_HMAC_160 :: HalfUID
     hC_HMAC_160 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 25
     uC_EC_283TableObject :: UID
-    uC_EC_283TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 24
+    uC_EC_283TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 24
     uC_EC_283Table :: UID
-    uC_EC_283Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 24) 0) 0) 0) 0
+    uC_EC_283Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 24) 0) 0) 0) 0
     hC_EC_283 :: HalfUID
     hC_EC_283 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 24
     uC_EC_233TableObject :: UID
-    uC_EC_233TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 23
+    uC_EC_233TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 23
     uC_EC_233Table :: UID
-    uC_EC_233Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 23) 0) 0) 0) 0
+    uC_EC_233Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 23) 0) 0) 0) 0
     hC_EC_233 :: HalfUID
     hC_EC_233 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 23
     uC_EC_163TableObject :: UID
-    uC_EC_163TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 22
+    uC_EC_163TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 22
     uC_EC_163Table :: UID
-    uC_EC_163Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 22) 0) 0) 0) 0
+    uC_EC_163Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 22) 0) 0) 0) 0
     hC_EC_163 :: HalfUID
     hC_EC_163 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 22
     uC_EC_521TableObject :: UID
-    uC_EC_521TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 21
+    uC_EC_521TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 21
     uC_EC_521Table :: UID
-    uC_EC_521Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 21) 0) 0) 0) 0
+    uC_EC_521Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 21) 0) 0) 0) 0
     hC_EC_521 :: HalfUID
     hC_EC_521 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 21
     uC_EC_384TableObject :: UID
-    uC_EC_384TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 20
+    uC_EC_384TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 20
     uC_EC_384Table :: UID
-    uC_EC_384Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 20) 0) 0) 0) 0
+    uC_EC_384Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 20) 0) 0) 0) 0
     hC_EC_384 :: HalfUID
     hC_EC_384 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 20
     uC_EC_256TableObject :: UID
-    uC_EC_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 19
+    uC_EC_256TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 19
     uC_EC_256Table :: UID
-    uC_EC_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 19) 0) 0) 0) 0
+    uC_EC_256Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 19) 0) 0) 0) 0
     hC_EC_256 :: HalfUID
     hC_EC_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 19
     uC_EC_224TableObject :: UID
-    uC_EC_224TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 18
+    uC_EC_224TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 18
     uC_EC_224Table :: UID
-    uC_EC_224Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 18) 0) 0) 0) 0
+    uC_EC_224Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 18) 0) 0) 0) 0
     hC_EC_224 :: HalfUID
     hC_EC_224 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 18
     uC_EC_192TableObject :: UID
-    uC_EC_192TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 17
+    uC_EC_192TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 17
     uC_EC_192Table :: UID
-    uC_EC_192Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 17) 0) 0) 0) 0
+    uC_EC_192Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 17) 0) 0) 0) 0
     hC_EC_192 :: HalfUID
     hC_EC_192 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 17
     uC_EC_160TableObject :: UID
-    uC_EC_160TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 16
+    uC_EC_160TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 16
     uC_EC_160Table :: UID
-    uC_EC_160Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 16) 0) 0) 0) 0
+    uC_EC_160Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 16) 0) 0) 0) 0
     hC_EC_160 :: HalfUID
     hC_EC_160 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 16
     uC_AES_256TableObject :: UID
-    uC_AES_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 15
+    uC_AES_256TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 15
     uC_AES_256Table :: UID
-    uC_AES_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 15) 0) 0) 0) 0
+    uC_AES_256Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 15) 0) 0) 0) 0
     hC_AES_256 :: HalfUID
     hC_AES_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 15
     uC_AES_128TableObject :: UID
-    uC_AES_128TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 14
+    uC_AES_128TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 14
     uC_AES_128Table :: UID
-    uC_AES_128Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 14) 0) 0) 0) 0
+    uC_AES_128Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 14) 0) 0) 0) 0
     hC_AES_128 :: HalfUID
     hC_AES_128 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 14
     uC_RSA_2048TableObject :: UID
-    uC_RSA_2048TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 13
+    uC_RSA_2048TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 13
     uC_RSA_2048Table :: UID
-    uC_RSA_2048Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 13) 0) 0) 0) 0
+    uC_RSA_2048Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 13) 0) 0) 0) 0
     hC_RSA_2048 :: HalfUID
     hC_RSA_2048 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 13
     uC_RSA_1024TableObject :: UID
-    uC_RSA_1024TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 12
+    uC_RSA_1024TableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 12
     uC_RSA_1024Table :: UID
-    uC_RSA_1024Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 12) 0) 0) 0) 0
+    uC_RSA_1024Table = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 12) 0) 0) 0) 0
     hC_RSA_1024 :: HalfUID
     hC_RSA_1024 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 12
     uC_PINTableObject :: UID
-    uC_PINTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 11
+    uC_PINTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 11
     uC_PINTable :: UID
-    uC_PINTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 11) 0) 0) 0) 0
+    uC_PINTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 11) 0) 0) 0) 0
     hC_PIN :: HalfUID
     hC_PIN = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 11
     uCertificatesTableObject :: UID
-    uCertificatesTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 10
+    uCertificatesTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 10
     uCertificatesTable :: UID
-    uCertificatesTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 10) 0) 0) 0) 0
+    uCertificatesTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 10) 0) 0) 0) 0
     hCertificates :: HalfUID
     hCertificates = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 10
     uAuthorityTableObject :: UID
-    uAuthorityTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 9
+    uAuthorityTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 9
     uAuthorityTable :: UID
-    uAuthorityTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 9) 0) 0) 0) 0
+    uAuthorityTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 9) 0) 0) 0) 0
     hAuthority :: HalfUID
     hAuthority = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 9
     uACETableObject :: UID
-    uACETableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 8
+    uACETableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 8
     uACETable :: UID
-    uACETable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 8) 0) 0) 0) 0
+    uACETable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 8) 0) 0) 0) 0
     hACE :: HalfUID
     hACE = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 8
     uAccessControlTableObject :: UID
-    uAccessControlTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 7
+    uAccessControlTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 7
     uAccessControlTable :: UID
-    uAccessControlTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 7) 0) 0) 0) 0
+    uAccessControlTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 7) 0) 0) 0) 0
     hAccessControl :: HalfUID
     hAccessControl = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 7
     uMethodIDTableObject :: UID
-    uMethodIDTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 6
+    uMethodIDTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 6
     uMethodIDTable :: UID
-    uMethodIDTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 6) 0) 0) 0) 0
+    uMethodIDTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 6) 0) 0) 0) 0
     hMethodID :: HalfUID
     hMethodID = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 6
     uTypeTableObject :: UID
-    uTypeTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 5
+    uTypeTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 5
     uTypeTable :: UID
-    uTypeTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 0) 0
+    uTypeTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 0) 0
     hType :: HalfUID
     hType = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 5
     uColumnTableObject :: UID
-    uColumnTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 4
+    uColumnTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 4
     uColumnTable :: UID
-    uColumnTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 4) 0) 0) 0) 0
+    uColumnTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 4) 0) 0) 0) 0
     hColumn :: HalfUID
     hColumn = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 4
     uSPTemplatesTableObject :: UID
-    uSPTemplatesTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 3
+    uSPTemplatesTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 3
     uSPTemplatesTable :: UID
-    uSPTemplatesTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 3) 0) 0) 0) 0
+    uSPTemplatesTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 3) 0) 0) 0) 0
     hSPTemplates :: HalfUID
     hSPTemplates = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 3
     uSPInfoTableObject :: UID
-    uSPInfoTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 2
+    uSPInfoTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 2
     uSPInfoTable :: UID
-    uSPInfoTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 2) 0) 0) 0) 0
+    uSPInfoTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 2) 0) 0) 0) 0
     hSPInfo :: HalfUID
     hSPInfo = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 2
     uTableTableObject :: UID
-    uTableTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 1
+    uTableTableObject = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 1
     uTableTable :: UID
-    uTableTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 0
+    uTableTable = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 0
     hTable :: HalfUID
     hTable = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 1
     nameHalfUID :: Data.Map.Internal.Map HalfUID String
-    nameHalfUID
-      = Data.Map.Internal.fromList
+    nameHalfUID = Data.Map.Internal.fromList
           [(hK_AES_256, "K_AES_256"), (hK_AES_128, "K_AES_128"),
            (hMBR, "MBR"), (hMBRControl, "MBRControl"), (hLocking, "Locking"),
            (hLockingInfo, "LockingInfo"), (hLogList, "LogList"),
@@ -515,8 +422,7 @@
            (hSPTemplates, "SPTemplates"), (hSPInfo, "SPInfo"),
            (hTable, "Table")]
     nameUID :: Data.Map.Internal.Map UID String
-    nameUID
-      = Data.Map.Internal.fromList
+    nameUID = Data.Map.Internal.fromList
           [(uK_AES_256Table, "K_AES_256 Table"),
            (uK_AES_256TableObject, "K_AES_256 Table Object"),
            (uK_AES_128Table, "K_AES_128 Table"),
@@ -606,594 +512,4 @@
            (uTableTable, "Table Table"),
            (uTableTableObject, "Table Table Object")]
 Ok, 17 modules loaded.
-Collecting type info for 3 module(s) ...
-/Users/scott/hsed/src/System/SED/MCTP/Common/TableUIDs.hs:(62,7)-(163,2): Splicing declarations
-    Language.Haskell.TH.Quote.quoteDec
-      t240
-      "\n\
-      \\n\
-      \\n\
-      \                              Table 240   Table UIDs\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |UID of Table Descriptor |UID of Table            |Table Name    |Template|\n\
-      \    |Object                  |                        |              |        |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 01 |00 00 00 01 00 00 00 00 |Table         |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 02 |00 00 00 02 00 00 00 00 |SPInfo        |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 03 |00 00 00 03 00 00 00 00 |SPTemplates   |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 04 |00 00 00 04 00 00 00 00 |Column        |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 05 |00 00 00 05 00 00 00 00 |Type          |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 06 |00 00 00 06 00 00 00 00 |MethodID      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 07 |00 00 00 07 00 00 00 00 |AccessControl |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 08 |00 00 00 08 00 00 00 00 |ACE           |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 09 |00 00 00 09 00 00 00 00 |Authority     |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 0A |00 00 00 0A 00 00 00 00 |Certificates  |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 0B |00 00 00 0B 00 00 00 00 |C_PIN         |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 0C |00 00 00 0C 00 00 00 00 |C_RSA_1024    |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 0D |00 00 00 0D 00 00 00 00 |C_RSA_2048    |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 0E |00 00 00 0E 00 00 00 00 |C_AES_128     |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 0F |00 00 00 0F 00 00 00 00 |C_AES_256     |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 10 |00 00 00 10 00 00 00 00 |C_EC_160      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 11 |00 00 00 11 00 00 00 00 |C_EC_192      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 12 |00 00 00 12 00 00 00 00 |C_EC_224      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 13 |00 00 00 13 00 00 00 00 |C_EC_256      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 14 |00 00 00 14 00 00 00 00 |C_EC_384      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 15 |00 00 00 15 00 00 00 00 |C_EC_521      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 16 |00 00 00 16 00 00 00 00 |C_EC_163      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 17 |00 00 00 17 00 00 00 00 |C_EC_233      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 18 |00 00 00 18 00 00 00 00 |C_EC_283      |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 19 |00 00 00 19 00 00 00 00 |C_HMAC_160    |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 1A |00 00 00 1A 00 00 00 00 |C_HMAC_256    |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 1B |00 00 00 1B 00 00 00 00 |C_HMAC_384    |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 1C |00 00 00 1C 00 00 00 00 |C_HMAC_512    |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 00 1D |00 00 00 1D 00 00 00 00 |SecretProtect |Base    |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 02 01 |00 00 02 01 00 00 00 00 |TPerInfo      |Admin   |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 02 03 |00 00 02 03 00 00 00 00 |CryptoSuite   |Admin   |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 02 04 |00 00 02 04 00 00 00 00 |Template      |Admin   |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 02 05 |00 00 02 05 00 00 00 00 |SP            |Admin   |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 04 01 |00 00 04 01 00 00 00 00 |ClockTime     |Clock   |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 06 01 |00 00 06 01 00 00 00 00 |H_SHA_1       |Crypto  |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 06 02 |00 00 06 02 00 00 00 00 |H_SHA_256     |Crypto  |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 06 03 |00 00 06 03 00 00 00 00 |H_SHA_384     |Crypto  |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 06 04 |00 00 06 04 00 00 00 00 |H_SHA_512     |Crypto  |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 0A 01 |00 00 0A 01 00 00 00 00 |Log           |Log     |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 0A 02 |00 00 0A 02 00 00 00 00 |LogList       |Log     |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 08 01 |00 00 08 01 00 00 00 00 |LockingInfo   |Locking |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 08 02 |00 00 08 02 00 00 00 00 |Locking       |Locking |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 08 03 |00 00 08 03 00 00 00 00 |MBRControl    |Locking |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 08 04 |00 00 08 04 00 00 00 00 |MBR           |Locking |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 08 05 |00 00 08 05 00 00 00 00 |K_AES_128     |Locking |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \    |00 00 00 01 00 00 08 06 |00 00 08 06 00 00 00 00 |K_AES_256     |Locking |\n\
-      \    +------------------------+------------------------+--------------+--------+\n\
-      \\n"
-  ======>
-    uK_AES_256TableObject :: UID
-    uK_AES_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 6
-    uK_AES_256Table :: UID
-    uK_AES_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 6) 0) 0) 0) 0
-    hK_AES_256 :: HalfUID
-    hK_AES_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 6
-    uK_AES_128TableObject :: UID
-    uK_AES_128TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 5
-    uK_AES_128Table :: UID
-    uK_AES_128Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 5) 0) 0) 0) 0
-    hK_AES_128 :: HalfUID
-    hK_AES_128 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 5
-    uMBRTableObject :: UID
-    uMBRTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 4
-    uMBRTable :: UID
-    uMBRTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 4) 0) 0) 0) 0
-    hMBR :: HalfUID
-    hMBR = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 4
-    uMBRControlTableObject :: UID
-    uMBRControlTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 3
-    uMBRControlTable :: UID
-    uMBRControlTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 3) 0) 0) 0) 0
-    hMBRControl :: HalfUID
-    hMBRControl = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 3
-    uLockingTableObject :: UID
-    uLockingTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 2
-    uLockingTable :: UID
-    uLockingTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 2) 0) 0) 0) 0
-    hLocking :: HalfUID
-    hLocking = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 2
-    uLockingInfoTableObject :: UID
-    uLockingInfoTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 8) 1
-    uLockingInfoTable :: UID
-    uLockingInfoTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 8) 1) 0) 0) 0) 0
-    hLockingInfo :: HalfUID
-    hLockingInfo = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 8) 1
-    uLogListTableObject :: UID
-    uLogListTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 10) 2
-    uLogListTable :: UID
-    uLogListTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 10) 2) 0) 0) 0) 0
-    hLogList :: HalfUID
-    hLogList = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 10) 2
-    uLogTableObject :: UID
-    uLogTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 10) 1
-    uLogTable :: UID
-    uLogTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 10) 1) 0) 0) 0) 0
-    hLog :: HalfUID
-    hLog = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 10) 1
-    uH_SHA_512TableObject :: UID
-    uH_SHA_512TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 4
-    uH_SHA_512Table :: UID
-    uH_SHA_512Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 4) 0) 0) 0) 0
-    hH_SHA_512 :: HalfUID
-    hH_SHA_512 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 4
-    uH_SHA_384TableObject :: UID
-    uH_SHA_384TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 3
-    uH_SHA_384Table :: UID
-    uH_SHA_384Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 3) 0) 0) 0) 0
-    hH_SHA_384 :: HalfUID
-    hH_SHA_384 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 3
-    uH_SHA_256TableObject :: UID
-    uH_SHA_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 2
-    uH_SHA_256Table :: UID
-    uH_SHA_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 2) 0) 0) 0) 0
-    hH_SHA_256 :: HalfUID
-    hH_SHA_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 2
-    uH_SHA_1TableObject :: UID
-    uH_SHA_1TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 6) 1
-    uH_SHA_1Table :: UID
-    uH_SHA_1Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 6) 1) 0) 0) 0) 0
-    hH_SHA_1 :: HalfUID
-    hH_SHA_1 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 6) 1
-    uClockTimeTableObject :: UID
-    uClockTimeTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 4) 1
-    uClockTimeTable :: UID
-    uClockTimeTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 4) 1) 0) 0) 0) 0
-    hClockTime :: HalfUID
-    hClockTime = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 4) 1
-    uSPTableObject :: UID
-    uSPTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 5
-    uSPTable :: UID
-    uSPTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 5) 0) 0) 0) 0
-    hSP :: HalfUID
-    hSP = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 5
-    uTemplateTableObject :: UID
-    uTemplateTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 4
-    uTemplateTable :: UID
-    uTemplateTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 4) 0) 0) 0) 0
-    hTemplate :: HalfUID
-    hTemplate = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 4
-    uCryptoSuiteTableObject :: UID
-    uCryptoSuiteTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 3
-    uCryptoSuiteTable :: UID
-    uCryptoSuiteTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 3) 0) 0) 0) 0
-    hCryptoSuite :: HalfUID
-    hCryptoSuite = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 3
-    uTPerInfoTableObject :: UID
-    uTPerInfoTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 2) 1
-    uTPerInfoTable :: UID
-    uTPerInfoTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 2) 1) 0) 0) 0) 0
-    hTPerInfo :: HalfUID
-    hTPerInfo = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 2) 1
-    uSecretProtectTableObject :: UID
-    uSecretProtectTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 29
-    uSecretProtectTable :: UID
-    uSecretProtectTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 29) 0) 0) 0) 0
-    hSecretProtect :: HalfUID
-    hSecretProtect = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 29
-    uC_HMAC_512TableObject :: UID
-    uC_HMAC_512TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 28
-    uC_HMAC_512Table :: UID
-    uC_HMAC_512Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 28) 0) 0) 0) 0
-    hC_HMAC_512 :: HalfUID
-    hC_HMAC_512 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 28
-    uC_HMAC_384TableObject :: UID
-    uC_HMAC_384TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 27
-    uC_HMAC_384Table :: UID
-    uC_HMAC_384Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 27) 0) 0) 0) 0
-    hC_HMAC_384 :: HalfUID
-    hC_HMAC_384 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 27
-    uC_HMAC_256TableObject :: UID
-    uC_HMAC_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 26
-    uC_HMAC_256Table :: UID
-    uC_HMAC_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 26) 0) 0) 0) 0
-    hC_HMAC_256 :: HalfUID
-    hC_HMAC_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 26
-    uC_HMAC_160TableObject :: UID
-    uC_HMAC_160TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 25
-    uC_HMAC_160Table :: UID
-    uC_HMAC_160Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 25) 0) 0) 0) 0
-    hC_HMAC_160 :: HalfUID
-    hC_HMAC_160 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 25
-    uC_EC_283TableObject :: UID
-    uC_EC_283TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 24
-    uC_EC_283Table :: UID
-    uC_EC_283Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 24) 0) 0) 0) 0
-    hC_EC_283 :: HalfUID
-    hC_EC_283 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 24
-    uC_EC_233TableObject :: UID
-    uC_EC_233TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 23
-    uC_EC_233Table :: UID
-    uC_EC_233Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 23) 0) 0) 0) 0
-    hC_EC_233 :: HalfUID
-    hC_EC_233 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 23
-    uC_EC_163TableObject :: UID
-    uC_EC_163TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 22
-    uC_EC_163Table :: UID
-    uC_EC_163Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 22) 0) 0) 0) 0
-    hC_EC_163 :: HalfUID
-    hC_EC_163 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 22
-    uC_EC_521TableObject :: UID
-    uC_EC_521TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 21
-    uC_EC_521Table :: UID
-    uC_EC_521Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 21) 0) 0) 0) 0
-    hC_EC_521 :: HalfUID
-    hC_EC_521 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 21
-    uC_EC_384TableObject :: UID
-    uC_EC_384TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 20
-    uC_EC_384Table :: UID
-    uC_EC_384Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 20) 0) 0) 0) 0
-    hC_EC_384 :: HalfUID
-    hC_EC_384 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 20
-    uC_EC_256TableObject :: UID
-    uC_EC_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 19
-    uC_EC_256Table :: UID
-    uC_EC_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 19) 0) 0) 0) 0
-    hC_EC_256 :: HalfUID
-    hC_EC_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 19
-    uC_EC_224TableObject :: UID
-    uC_EC_224TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 18
-    uC_EC_224Table :: UID
-    uC_EC_224Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 18) 0) 0) 0) 0
-    hC_EC_224 :: HalfUID
-    hC_EC_224 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 18
-    uC_EC_192TableObject :: UID
-    uC_EC_192TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 17
-    uC_EC_192Table :: UID
-    uC_EC_192Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 17) 0) 0) 0) 0
-    hC_EC_192 :: HalfUID
-    hC_EC_192 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 17
-    uC_EC_160TableObject :: UID
-    uC_EC_160TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 16
-    uC_EC_160Table :: UID
-    uC_EC_160Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 16) 0) 0) 0) 0
-    hC_EC_160 :: HalfUID
-    hC_EC_160 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 16
-    uC_AES_256TableObject :: UID
-    uC_AES_256TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 15
-    uC_AES_256Table :: UID
-    uC_AES_256Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 15) 0) 0) 0) 0
-    hC_AES_256 :: HalfUID
-    hC_AES_256 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 15
-    uC_AES_128TableObject :: UID
-    uC_AES_128TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 14
-    uC_AES_128Table :: UID
-    uC_AES_128Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 14) 0) 0) 0) 0
-    hC_AES_128 :: HalfUID
-    hC_AES_128 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 14
-    uC_RSA_2048TableObject :: UID
-    uC_RSA_2048TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 13
-    uC_RSA_2048Table :: UID
-    uC_RSA_2048Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 13) 0) 0) 0) 0
-    hC_RSA_2048 :: HalfUID
-    hC_RSA_2048 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 13
-    uC_RSA_1024TableObject :: UID
-    uC_RSA_1024TableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 12
-    uC_RSA_1024Table :: UID
-    uC_RSA_1024Table
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 12) 0) 0) 0) 0
-    hC_RSA_1024 :: HalfUID
-    hC_RSA_1024 = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 12
-    uC_PINTableObject :: UID
-    uC_PINTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 11
-    uC_PINTable :: UID
-    uC_PINTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 11) 0) 0) 0) 0
-    hC_PIN :: HalfUID
-    hC_PIN = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 11
-    uCertificatesTableObject :: UID
-    uCertificatesTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 10
-    uCertificatesTable :: UID
-    uCertificatesTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 10) 0) 0) 0) 0
-    hCertificates :: HalfUID
-    hCertificates = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 10
-    uAuthorityTableObject :: UID
-    uAuthorityTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 9
-    uAuthorityTable :: UID
-    uAuthorityTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 9) 0) 0) 0) 0
-    hAuthority :: HalfUID
-    hAuthority = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 9
-    uACETableObject :: UID
-    uACETableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 8
-    uACETable :: UID
-    uACETable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 8) 0) 0) 0) 0
-    hACE :: HalfUID
-    hACE = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 8
-    uAccessControlTableObject :: UID
-    uAccessControlTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 7
-    uAccessControlTable :: UID
-    uAccessControlTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 7) 0) 0) 0) 0
-    hAccessControl :: HalfUID
-    hAccessControl = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 7
-    uMethodIDTableObject :: UID
-    uMethodIDTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 6
-    uMethodIDTable :: UID
-    uMethodIDTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 6) 0) 0) 0) 0
-    hMethodID :: HalfUID
-    hMethodID = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 6
-    uTypeTableObject :: UID
-    uTypeTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 5
-    uTypeTable :: UID
-    uTypeTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 0) 0
-    hType :: HalfUID
-    hType = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 5
-    uColumnTableObject :: UID
-    uColumnTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 4
-    uColumnTable :: UID
-    uColumnTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 4) 0) 0) 0) 0
-    hColumn :: HalfUID
-    hColumn = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 4
-    uSPTemplatesTableObject :: UID
-    uSPTemplatesTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 3
-    uSPTemplatesTable :: UID
-    uSPTemplatesTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 3) 0) 0) 0) 0
-    hSPTemplates :: HalfUID
-    hSPTemplates = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 3
-    uSPInfoTableObject :: UID
-    uSPInfoTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 2
-    uSPInfoTable :: UID
-    uSPInfoTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 2) 0) 0) 0) 0
-    hSPInfo :: HalfUID
-    hSPInfo = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 2
-    uTableTableObject :: UID
-    uTableTableObject
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 1
-    uTableTable :: UID
-    uTableTable
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 1) 0) 0) 0) 0
-    hTable :: HalfUID
-    hTable = (((System.SED.MCTP.Common.UID.halfUID 0) 0) 0) 1
-    nameHalfUID :: Data.Map.Internal.Map HalfUID String
-    nameHalfUID
-      = Data.Map.Internal.fromList
-          [(hK_AES_256, "K_AES_256"), (hK_AES_128, "K_AES_128"),
-           (hMBR, "MBR"), (hMBRControl, "MBRControl"), (hLocking, "Locking"),
-           (hLockingInfo, "LockingInfo"), (hLogList, "LogList"),
-           (hLog, "Log"), (hH_SHA_512, "H_SHA_512"),
-           (hH_SHA_384, "H_SHA_384"), (hH_SHA_256, "H_SHA_256"),
-           (hH_SHA_1, "H_SHA_1"), (hClockTime, "ClockTime"), (hSP, "SP"),
-           (hTemplate, "Template"), (hCryptoSuite, "CryptoSuite"),
-           (hTPerInfo, "TPerInfo"), (hSecretProtect, "SecretProtect"),
-           (hC_HMAC_512, "C_HMAC_512"), (hC_HMAC_384, "C_HMAC_384"),
-           (hC_HMAC_256, "C_HMAC_256"), (hC_HMAC_160, "C_HMAC_160"),
-           (hC_EC_283, "C_EC_283"), (hC_EC_233, "C_EC_233"),
-           (hC_EC_163, "C_EC_163"), (hC_EC_521, "C_EC_521"),
-           (hC_EC_384, "C_EC_384"), (hC_EC_256, "C_EC_256"),
-           (hC_EC_224, "C_EC_224"), (hC_EC_192, "C_EC_192"),
-           (hC_EC_160, "C_EC_160"), (hC_AES_256, "C_AES_256"),
-           (hC_AES_128, "C_AES_128"), (hC_RSA_2048, "C_RSA_2048"),
-           (hC_RSA_1024, "C_RSA_1024"), (hC_PIN, "C_PIN"),
-           (hCertificates, "Certificates"), (hAuthority, "Authority"),
-           (hACE, "ACE"), (hAccessControl, "AccessControl"),
-           (hMethodID, "MethodID"), (hType, "Type"), (hColumn, "Column"),
-           (hSPTemplates, "SPTemplates"), (hSPInfo, "SPInfo"),
-           (hTable, "Table")]
-    nameUID :: Data.Map.Internal.Map UID String
-    nameUID
-      = Data.Map.Internal.fromList
-          [(uK_AES_256Table, "K_AES_256 Table"),
-           (uK_AES_256TableObject, "K_AES_256 Table Object"),
-           (uK_AES_128Table, "K_AES_128 Table"),
-           (uK_AES_128TableObject, "K_AES_128 Table Object"),
-           (uMBRTable, "MBR Table"), (uMBRTableObject, "MBR Table Object"),
-           (uMBRControlTable, "MBRControl Table"),
-           (uMBRControlTableObject, "MBRControl Table Object"),
-           (uLockingTable, "Locking Table"),
-           (uLockingTableObject, "Locking Table Object"),
-           (uLockingInfoTable, "LockingInfo Table"),
-           (uLockingInfoTableObject, "LockingInfo Table Object"),
-           (uLogListTable, "LogList Table"),
-           (uLogListTableObject, "LogList Table Object"),
-           (uLogTable, "Log Table"), (uLogTableObject, "Log Table Object"),
-           (uH_SHA_512Table, "H_SHA_512 Table"),
-           (uH_SHA_512TableObject, "H_SHA_512 Table Object"),
-           (uH_SHA_384Table, "H_SHA_384 Table"),
-           (uH_SHA_384TableObject, "H_SHA_384 Table Object"),
-           (uH_SHA_256Table, "H_SHA_256 Table"),
-           (uH_SHA_256TableObject, "H_SHA_256 Table Object"),
-           (uH_SHA_1Table, "H_SHA_1 Table"),
-           (uH_SHA_1TableObject, "H_SHA_1 Table Object"),
-           (uClockTimeTable, "ClockTime Table"),
-           (uClockTimeTableObject, "ClockTime Table Object"),
-           (uSPTable, "SP Table"), (uSPTableObject, "SP Table Object"),
-           (uTemplateTable, "Template Table"),
-           (uTemplateTableObject, "Template Table Object"),
-           (uCryptoSuiteTable, "CryptoSuite Table"),
-           (uCryptoSuiteTableObject, "CryptoSuite Table Object"),
-           (uTPerInfoTable, "TPerInfo Table"),
-           (uTPerInfoTableObject, "TPerInfo Table Object"),
-           (uSecretProtectTable, "SecretProtect Table"),
-           (uSecretProtectTableObject, "SecretProtect Table Object"),
-           (uC_HMAC_512Table, "C_HMAC_512 Table"),
-           (uC_HMAC_512TableObject, "C_HMAC_512 Table Object"),
-           (uC_HMAC_384Table, "C_HMAC_384 Table"),
-           (uC_HMAC_384TableObject, "C_HMAC_384 Table Object"),
-           (uC_HMAC_256Table, "C_HMAC_256 Table"),
-           (uC_HMAC_256TableObject, "C_HMAC_256 Table Object"),
-           (uC_HMAC_160Table, "C_HMAC_160 Table"),
-           (uC_HMAC_160TableObject, "C_HMAC_160 Table Object"),
-           (uC_EC_283Table, "C_EC_283 Table"),
-           (uC_EC_283TableObject, "C_EC_283 Table Object"),
-           (uC_EC_233Table, "C_EC_233 Table"),
-           (uC_EC_233TableObject, "C_EC_233 Table Object"),
-           (uC_EC_163Table, "C_EC_163 Table"),
-           (uC_EC_163TableObject, "C_EC_163 Table Object"),
-           (uC_EC_521Table, "C_EC_521 Table"),
-           (uC_EC_521TableObject, "C_EC_521 Table Object"),
-           (uC_EC_384Table, "C_EC_384 Table"),
-           (uC_EC_384TableObject, "C_EC_384 Table Object"),
-           (uC_EC_256Table, "C_EC_256 Table"),
-           (uC_EC_256TableObject, "C_EC_256 Table Object"),
-           (uC_EC_224Table, "C_EC_224 Table"),
-           (uC_EC_224TableObject, "C_EC_224 Table Object"),
-           (uC_EC_192Table, "C_EC_192 Table"),
-           (uC_EC_192TableObject, "C_EC_192 Table Object"),
-           (uC_EC_160Table, "C_EC_160 Table"),
-           (uC_EC_160TableObject, "C_EC_160 Table Object"),
-           (uC_AES_256Table, "C_AES_256 Table"),
-           (uC_AES_256TableObject, "C_AES_256 Table Object"),
-           (uC_AES_128Table, "C_AES_128 Table"),
-           (uC_AES_128TableObject, "C_AES_128 Table Object"),
-           (uC_RSA_2048Table, "C_RSA_2048 Table"),
-           (uC_RSA_2048TableObject, "C_RSA_2048 Table Object"),
-           (uC_RSA_1024Table, "C_RSA_1024 Table"),
-           (uC_RSA_1024TableObject, "C_RSA_1024 Table Object"),
-           (uC_PINTable, "C_PIN Table"),
-           (uC_PINTableObject, "C_PIN Table Object"),
-           (uCertificatesTable, "Certificates Table"),
-           (uCertificatesTableObject, "Certificates Table Object"),
-           (uAuthorityTable, "Authority Table"),
-           (uAuthorityTableObject, "Authority Table Object"),
-           (uACETable, "ACE Table"), (uACETableObject, "ACE Table Object"),
-           (uAccessControlTable, "AccessControl Table"),
-           (uAccessControlTableObject, "AccessControl Table Object"),
-           (uMethodIDTable, "MethodID Table"),
-           (uMethodIDTableObject, "MethodID Table Object"),
-           (uTypeTable, "Type Table"),
-           (uTypeTableObject, "Type Table Object"),
-           (uColumnTable, "Column Table"),
-           (uColumnTableObject, "Column Table Object"),
-           (uSPTemplatesTable, "SPTemplates Table"),
-           (uSPTemplatesTableObject, "SPTemplates Table Object"),
-           (uSPInfoTable, "SPInfo Table"),
-           (uSPInfoTableObject, "SPInfo Table Object"),
-           (uTableTable, "Table Table"),
-           (uTableTableObject, "Table Table Object")]
 λ>

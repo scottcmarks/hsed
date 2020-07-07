@@ -169,8 +169,10 @@ data TypeTableRow = TypeTableRow TypeUIDField TypeName FormatString
     deriving (Show)
 
 instance Semigroup TypeTableRow where
-    (TypeTableRow u1 n1 f1) <> (TypeTableRow _u2 _n2 f2) =
+    (TypeTableRow u1 n1 f1) <> (TypeTableRow "" "" f2) =
         TypeTableRow u1 n1 (f1 <> f2)
+    _ <> _ =
+        undefined
 
 type TypeUIDField = ByteString
 

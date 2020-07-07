@@ -1,57 +1,3 @@
-Restarting process ...
-Hours of hacking await!
-If I break, you can:
-  1. Restart:           M-x haskell-process-restart
-  2. Configure logging: C-h v haskell-process-log (useful for debugging)
-  3. General config:    M-x customize-mode
-  4. Hide these tips:   C-h v haskell-process-show-debug-tips
-λ> :script dev/script
-package flags have changed, resetting and loading new packages...
-loading script ...
-[ 1 of 16] Compiling Data.HasSize     ( /Users/scott/hsed/src/Data/HasSize.hs, interpreted )
-[ 2 of 16] Compiling Data.Refined     ( /Users/scott/hsed/src/Data/Refined.hs, interpreted )
-[ 3 of 16] Compiling Data.BoundedSize.Class ( /Users/scott/hsed/src/Data/BoundedSize/Class.hs, interpreted )
-[ 4 of 16] Compiling Data.BoundedSize.TH ( /Users/scott/hsed/src/Data/BoundedSize/TH.hs, interpreted )
-[ 5 of 16] Compiling Data.BoundedSize ( /Users/scott/hsed/src/Data/BoundedSize.hs, interpreted )
-[ 6 of 16] Compiling System.SED.MCTP.Common.StreamItem ( /Users/scott/hsed/src/System/SED/MCTP/Common/StreamItem.hs, interpreted )
-[ 7 of 16] Compiling System.SED.MCTP.Common.Token ( /Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs, interpreted )
-[ 8 of 16] Compiling System.SED.MCTP.Common.Base_Type.Class ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/Class.hs, interpreted )
-[ 9 of 16] Compiling System.SED.MCTP.Common.Base_Type.TH ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/TH.hs, interpreted )
-[10 of 16] Compiling System.SED.MCTP.Common.Base_Type ( /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type.hs, interpreted )
-[11 of 16] Compiling System.SED.MCTP.Common.Simple_Type ( /Users/scott/hsed/src/System/SED/MCTP/Common/Simple_Type.hs, interpreted )
-[12 of 16] Compiling System.SED.MCTP.Common.UID ( /Users/scott/hsed/src/System/SED/MCTP/Common/UID.hs, interpreted )
-[13 of 16] Compiling System.SED.MCTP.Common.THUtil ( /Users/scott/hsed/src/System/SED/MCTP/Common/THUtil.hs, interpreted )
-[14 of 16] Compiling System.SED.MCTP.Common.Util ( /Users/scott/hsed/src/System/SED/MCTP/Common/Util.hs, interpreted )
-[15 of 16] Compiling System.SED.MCTP.Common.ColumnTypes.TH ( /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes/TH.hs, interpreted )
-[16 of 16] Compiling System.SED.MCTP.Common.ColumnTypes ( src/System/SED/MCTP/Common/ColumnTypes.hs, interpreted )
-Ok, 16 modules loaded.
-Collecting type info for 16 module(s) ...
-Running ...
-
-
-
-                  Table 65 bytes_4
-    +-----------------------+-------+---------------------+
-    |UID                    |Name   |Format               |
-    +-----------------------+-------+---------------------+
-    |00 00 00 05 00 00 02 38|bytes_4|Simple_Type,         |
-    |                       |       |bytes,               |
-    |                       |       |4                    |
-    +-----------------------+-------+---------------------+
-
-
-TypeTableRow "00 00 00 05 00 00 02 38" "bytes_4" "Simple_Type,bytes,4"
-
-
-ubytes_4Type :: System.SED.MCTP.Common.UID.UID
-ubytes_4Type = System.SED.MCTP.Common.UID.uid 0 0 0 5 0 0 2 56
-fbytes_4Type :: GHC.Base.String
-fbytes_4Type = "Simple_Type,bytes,4"
-
-
-Buh-bye now.
-.. script loaded.
-λ> :D
 λ> :load System.SED.MCTP.Common.ColumnTypes
 [ 1 of 16] Compiling Data.HasSize     ( /Users/scott/hsed/src/Data/HasSize.hs, interpreted )
 [ 2 of 16] Compiling Data.Refined     ( /Users/scott/hsed/src/Data/Refined.hs, interpreted )
@@ -86,8 +32,7 @@ Buh-bye now.
       \\n"
   ======>
     uAC_elementType :: System.SED.MCTP.Common.UID.UID
-    uAC_elementType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 8) 1
+    uAC_elementType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 8) 1
     fAC_elementType :: GHC.Base.String
     fAC_elementType = "List_Type,*,ACE_expression"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(565,8)-(576,2): Splicing declarations
@@ -106,8 +51,7 @@ Buh-bye now.
       \\n"
   ======>
     uACE_columnsType :: System.SED.MCTP.Common.UID.UID
-    uACE_columnsType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 3
+    uACE_columnsType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 3
     fACE_columnsType :: GHC.Base.String
     fACE_columnsType = "Set_Type,0,*"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(589,8)-(600,2): Splicing declarations
@@ -126,11 +70,9 @@ Buh-bye now.
       \\n"
   ======>
     uACE_expressionType :: System.SED.MCTP.Common.UID.UID
-    uACE_expressionType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 6) 1
+    uACE_expressionType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 6) 1
     fACE_expressionType :: GHC.Base.String
-    fACE_expressionType
-      = "Alternative_Type,Authority_object_ref,boolean_ACE"
+    fACE_expressionType = "Alternative_Type,Authority_object_ref,boolean_ACE"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(611,8)-(620,2): Splicing declarations
     Language.Haskell.TH.Quote.quoteDec
       ttype
@@ -145,11 +87,9 @@ Buh-bye now.
       \\n"
   ======>
     uACE_object_refType :: System.SED.MCTP.Common.UID.UID
-    uACE_object_refType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 4
+    uACE_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 4
     fACE_object_refType :: GHC.Base.String
-    fACE_object_refType
-      = "Restricted_Reference_Type{6},uidref{ACETableUID}"
+    fACE_object_refType = "Restricted_Reference_Type{6},uidref{ACETableUID}"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(632,8)-(643,2): Splicing declarations
     Language.Haskell.TH.Quote.quoteDec
       ttype
@@ -166,8 +106,7 @@ Buh-bye now.
       \\n"
   ======>
     uACLType :: System.SED.MCTP.Common.UID.UID
-    uACLType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 8) 2
+    uACLType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 8) 2
     fACLType :: GHC.Base.String
     fACLType = "List_Type,*,ACE_object_ref"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(653,8)-(663,2): Splicing declarations
@@ -185,8 +124,7 @@ Buh-bye now.
       \\n"
   ======>
     uadv_key_modeType :: System.SED.MCTP.Common.UID.UID
-    uadv_key_modeType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 15
+    uadv_key_modeType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 15
     fadv_key_modeType :: GHC.Base.String
     fadv_key_modeType = "Enumeration_Type,0,7"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(670,8)-(681,2): Splicing declarations
@@ -204,8 +142,7 @@ Buh-bye now.
       \    |2-7               |Reserved             |\n\
       \    +------------------+---------------------+\n"
   ======>
-    data Core_adv_key_mode
-      = Core_adv_key_mode_Wait_for_AdvKey_Req |
+    data Core_adv_key_mode = Core_adv_key_mode_Wait_for_AdvKey_Req |
         Core_adv_key_mode_Auto_advance_keys |
         Core_adv_key_mode_Reserved |
         Core_adv_key_mode_Reserved_3 |
@@ -233,8 +170,7 @@ Buh-bye now.
       \\n"
   ======>
     uattr_flagsType :: System.SED.MCTP.Common.UID.UID
-    uattr_flagsType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 4
+    uattr_flagsType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 26) 4
     fattr_flagsType :: GHC.Base.String
     fattr_flagsType = "Set_Type,0,31"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(708,8)-(719,2): Splicing declarations
@@ -252,8 +188,7 @@ Buh-bye now.
       \    |2-31              |Reserved             |\n\
       \    +------------------+---------------------+\n"
   ======>
-    data Core_attr_flags
-      = Core_attr_flags_Get_Not_Permitted |
+    data Core_attr_flags = Core_attr_flags_Get_Not_Permitted |
         Core_attr_flags_Set_Not_Permitted |
         Core_attr_flags_Reserved |
         Core_attr_flags_Reserved_3 |
@@ -305,8 +240,7 @@ Buh-bye now.
       \    +-----------------------+------------+-----------------+\n"
   ======>
     uauth_methodType :: System.SED.MCTP.Common.UID.UID
-    uauth_methodType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 8
+    uauth_methodType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 8
     fauth_methodType :: GHC.Base.String
     fauth_methodType = "Enumeration_Type,0,23"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(750,8)-(773,2): Splicing declarations
@@ -336,8 +270,7 @@ Buh-bye now.
       \    |8-23              |Reserved             |\n\
       \    +------------------+---------------------+\n"
   ======>
-    data Core_auth_method
-      = Core_auth_method_None |
+    data Core_auth_method = Core_auth_method_None |
         Core_auth_method_Password |
         Core_auth_method_Exchange |
         Core_auth_method_Sign |
@@ -381,11 +314,9 @@ Buh-bye now.
       \    +-----------------------+--------------------+-----------------------------+\n"
   ======>
     uAuthority_object_refType :: System.SED.MCTP.Common.UID.UID
-    uAuthority_object_refType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 5
+    uAuthority_object_refType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 12) 5
     fAuthority_object_refType :: GHC.Base.String
-    fAuthority_object_refType
-      = "Restricted_Reference_Type{6},uidref{AuthorityTableUID}"
+    fAuthority_object_refType = "Restricted_Reference_Type{6},uidref{AuthorityTableUID}"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(803,8)-(815,2): Splicing declarations
     Language.Haskell.TH.Quote.quoteDec
       ttype
@@ -403,8 +334,7 @@ Buh-bye now.
       \\n"
   ======>
     ubooleanType :: System.SED.MCTP.Common.UID.UID
-    ubooleanType
-      = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 1
+    ubooleanType = (((((((System.SED.MCTP.Common.UID.uid 0) 0) 0) 5) 0) 0) 4) 1
     fbooleanType :: GHC.Base.String
     fbooleanType = "Enumeration_Type,0,1"
 /Users/scott/hsed/src/System/SED/MCTP/Common/ColumnTypes.hs:(822,8)-(831,2): Splicing declarations

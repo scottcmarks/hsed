@@ -27,13 +27,14 @@ module Data.Refined
   ( Predicate(..)
   , Refined
   , type (?)
-  ) where
+  )
+where
 
 import           Data.Coerce     (Coercible, coerce)
 import           Data.Kind       (Type)
 import           Data.ListLike   (FoldableLL (..), ListLike (..))
 import           Data.String     (IsString (..), String)
-import           GHC.Base        (Monoid (..), Semigroup (..))
+import           GHC.Base        (Monoid (..), Semigroup (..), const)
 import           GHC.Exts        (IsList (..))
 import           GHC.Read        (Read (..))
 import           Prelude         (Bool (..), Either (..), Eq (..), Integer,
@@ -52,6 +53,8 @@ type a ?p = Refined p a
 infixr 1 ?
 
 
+test :: forall p a t. (Predicate p a) => (p a -> t) -> (p a -> t) -> a -> t
+test f g x = if predicate x' then f x' else g x' where x' = coerce x
 
 class (Coercible (p a) a) => Predicate (p :: Type -> Type) a where
     predicate :: p a -> Bool
@@ -61,35 +64,17 @@ class (Coercible (p a) a) => Predicate (p :: Type -> Type) a where
     plain :: Refined p a -> a
     plain = coerce
 
-    refine :: a -> Refined p a
-    refine = refine' . consider
-      where
-        refine' x  = if predicate x then accept x else error $ failMsg x
+    refine ::     a -> Refined p a
+    refine     = test (coerce :: p a -> Refined p a)           (error . failMsg)
 
     safeCreate :: a -> Either String (Refined p a)
-    safeCreate = safeCreate' . consider
-      where
-        safeCreate' x  = if predicate x then Right $ accept x else Left $ failMsg x
+    safeCreate = test (Right . (coerce :: p a -> Refined p a)) (Left . failMsg)
 
-    create :: a ->  Maybe (Refined p a)
-    create = create' . consider
-      where
-        create' x  = if predicate x then Just $ accept x else Nothing
+    create ::     a -> Maybe (Refined p a)
+    create     = test (Just . (coerce :: p a -> Refined p a))  (const Nothing)
 
     unsafeCreate :: a -> Refined p a
-    unsafeCreate = accept . consider
-
-
-
-
-
-class Predicate p a => Predicate_Internal p a where
-    consider :: a -> p a
-    consider = coerce
-    accept :: p a -> Refined p a
-    accept = coerce
-instance Predicate p a => Predicate_Internal p a where
-
+    unsafeCreate = coerce
 
 
 

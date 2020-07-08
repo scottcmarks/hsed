@@ -2,6 +2,7 @@
 {-# LANGUAGE DefaultSignatures      #-}
 {-# LANGUAGE DeriveAnyClass         #-}
 {-# LANGUAGE DerivingVia            #-}
+{-# LANGUAGE FlexibleContexts       #-}
 {-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
@@ -37,9 +38,9 @@ import           Data.String     (IsString (..), String)
 import           GHC.Base        (Monoid (..), Semigroup (..), const)
 import           GHC.Exts        (IsList (..))
 import           GHC.Read        (Read (..))
-import           Prelude         (Bool (..), Either (..), Eq (..), Integer,
-                                  Maybe (..), Num (..), Ord (..), Show (..),
-                                  error, ($), (.), (<$>))
+import           Prelude         (Bool (..), Either (..), Eq (..), Maybe (..),
+                                  Num (..), Ord (..), Show (..), error, (.),
+                                  (<$>))
 
 import           Test.QuickCheck (Arbitrary (..), suchThatMap)
 
@@ -53,10 +54,14 @@ type a ?p = Refined p a
 infixr 1 ?
 
 
-test :: forall p a t. (Predicate p a) => (p a -> t) -> (p a -> t) -> a -> t
+test :: forall p a t. (Coercible a (p a), Predicate p a)
+ => (p a -> t) -> (p a -> t) -> a -> t
 test f g x = if predicate x' then f x' else g x' where x' = coerce x
 
-class (Coercible (p a) a) => Predicate (p :: Type -> Type) a where
+accept :: Coercible (p a) a => p a -> Refined p a
+accept = coerce
+
+class Coercible (p a) a => Predicate (p :: Type -> Type) a where
     predicate :: p a -> Bool
 
     failMsg :: p a -> String
@@ -64,18 +69,17 @@ class (Coercible (p a) a) => Predicate (p :: Type -> Type) a where
     plain :: Refined p a -> a
     plain = coerce
 
-    refine ::     a -> Refined p a
-    refine     = test (coerce :: p a -> Refined p a)           (error . failMsg)
-
-    safeCreate :: a -> Either String (Refined p a)
-    safeCreate = test (Right . (coerce :: p a -> Refined p a)) (Left . failMsg)
-
-    create ::     a -> Maybe (Refined p a)
-    create     = test (Just . (coerce :: p a -> Refined p a))  (const Nothing)
-
     unsafeCreate :: a -> Refined p a
     unsafeCreate = coerce
 
+    safeCreate :: a -> Either String (Refined p a)
+    safeCreate = test  (Right . accept)  (Left . failMsg)
+
+    create :: a -> Maybe (Refined p a)
+    create = test  (Just . accept)  (const Nothing)
+
+    refine :: a -> Refined p a
+    refine = test  accept  (error . failMsg)
 
 
 instance (Num a, Predicate p a) => Num (Refined p a)
@@ -86,27 +90,22 @@ instance (Num a, Predicate p a) => Num (Refined p a)
     negate (Refined x)        = refine (negate x)
     abs    (Refined x)        = refine (abs    x)
     signum (Refined x)        = refine (signum x)
-    fromInteger               = refine . (fromInteger :: Integer -> a)
-
-
+    fromInteger               = refine . fromInteger
 
 
 instance (Read a, Predicate p a) => Read (Refined p a) where
     readPrec = refine <$> readPrec
 
 
-
-
 instance (IsString a, Predicate p a) => IsString (Refined p a) where
-    fromString = refine . (fromString :: String -> a)
-
-
+    fromString = refine . fromString
 
 
 instance (IsList a, Predicate p a) => IsList (Refined p a) where
     type Item (Refined p a) = Item a
     fromList = refine . fromList
     toList = toList . plain
+
 
 instance (ListLike full item, Predicate p full) => FoldableLL (Refined p full) item where
     foldl f acc = foldl f acc . plain
@@ -116,7 +115,7 @@ instance (ListLike full item, Predicate p full) => Semigroup (Refined p full)  w
     (Refined x) <> (Refined y) = refine (x <> y)
 
 instance (ListLike full item, Predicate p full) => Monoid (Refined p full)  where
-    mempty = refine $ mempty
+    mempty = refine mempty
 
 instance (ListLike full item, Predicate p full) => ListLike (Refined p full) item where
     singleton = refine . singleton
@@ -124,7 +123,6 @@ instance (ListLike full item, Predicate p full) => ListLike (Refined p full) ite
     tail = refine . tail . plain
     null = null . plain
     genericLength = genericLength . plain
-
 
 
 instance (Arbitrary a, Predicate p a) => Arbitrary (Refined p a) where

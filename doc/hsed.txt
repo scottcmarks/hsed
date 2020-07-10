@@ -37,14 +37,14 @@ instance Data.ListLike.Base.ListLike full e => Data.HasSize.HasSize full
 
 -- | Datatype refined by predicate
 module Data.Refined
-class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
+class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
 plain :: Predicate p a => Refined p a -> a
-refine :: Predicate p a => a -> Refined p a
+unsafeCreate :: Predicate p a => a -> Refined p a
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
-unsafeCreate :: Predicate p a => a -> Refined p a
+refine :: Predicate p a => a -> Refined p a
 data Refined (p :: Type -> Type) a
 
 -- | An infix alias for <a>Refined</a>.
@@ -53,7 +53,6 @@ infixr 1 ?
 instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
-instance Data.Refined.Predicate p a => Data.Refined.Predicate_Internal p a
 instance (GHC.Num.Num a, Data.Refined.Predicate p a) => GHC.Num.Num (Data.Refined.Refined p a)
 instance (GHC.Read.Read a, Data.Refined.Predicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
 instance (Data.String.IsString a, Data.Refined.Predicate p a) => Data.String.IsString (Data.Refined.Refined p a)
@@ -101,14 +100,14 @@ type MaxSize n = BoundedSize 0 n
 --   at least <tt>3</tt>).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 data Refined (p :: Type -> Type) a
-class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
+class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
 plain :: Predicate p a => Refined p a -> a
-refine :: Predicate p a => a -> Refined p a
+unsafeCreate :: Predicate p a => a -> Refined p a
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
-unsafeCreate :: Predicate p a => a -> Refined p a
+refine :: Predicate p a => a -> Refined p a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
@@ -415,14 +414,14 @@ data Refined (p :: Type -> Type) a
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
-class (Coercible (p a) a) => Predicate (p :: Type -> Type) a
+class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
 plain :: Predicate p a => Refined p a -> a
-refine :: Predicate p a => a -> Refined p a
+unsafeCreate :: Predicate p a => a -> Refined p a
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
-unsafeCreate :: Predicate p a => a -> Refined p a
+refine :: Predicate p a => a -> Refined p a
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
@@ -864,6 +863,7 @@ type Core_name = Core_max_bytes 32
 type Core_password = Core_max_bytes 32
 type Core_type_def_max_size = 128
 type Core_type_def = Core_max_bytes Core_type_def_max_size
+type Core_max_bytes_64 = Core_max_bytes 64
 type Core_halfuid = Core_bytes_4
 type Core_uid = Core_bytes_8
 type Core_uinteger_1 = Core_uinteger 1
@@ -1325,7 +1325,7 @@ instance GHC.Base.Monoid System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
 instance GHC.Base.Semigroup System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRow
 
 
--- | Table column types.
+-- | Table column types defined by text tables in the Core Spec.
 module System.SED.MCTP.Common.ColumnTypes
 fAC_elementType :: String
 uAC_elementType :: UID

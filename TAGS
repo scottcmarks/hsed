@@ -71,7 +71,7 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Simple_Type.hs,1518
+./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16
 type Core_bytes_4 Core_bytes_468,69
 type Core_bytes_8 Core_bytes_869,70
@@ -89,23 +89,24 @@ type Core_name Core_name83,84
 type Core_password Core_password84,85
 type Core_type_def_max_size Core_type_def_max_size85,86
 type Core_type_def Core_type_def86,87
-type Core_halfuid Core_halfuid88,89
-type Core_uid Core_uid89,90
-type Core_uinteger_1 Core_uinteger_191,92
-type Core_uinteger_128 Core_uinteger_12892,93
-type Core_uinteger_2 Core_uinteger_293,94
-type Core_uinteger_20 Core_uinteger_2094,95
-type Core_uinteger_21 Core_uinteger_2195,96
-type Core_uinteger_24 Core_uinteger_2496,97
-type Core_uinteger_256 Core_uinteger_25697,98
-type Core_uinteger_28 Core_uinteger_2898,99
-type Core_uinteger_30 Core_uinteger_3099,100
-type Core_uinteger_36 Core_uinteger_36100,101
-type Core_uinteger_4 Core_uinteger_4101,102
-type Core_uinteger_48 Core_uinteger_48102,103
-type Core_uinteger_64 Core_uinteger_64103,104
-type Core_uinteger_66 Core_uinteger_66104,105
-type Core_uinteger_8 Core_uinteger_8105,106
+type Core_max_bytes_64 Core_max_bytes_6487,88
+type Core_halfuid Core_halfuid89,90
+type Core_uid Core_uid90,91
+type Core_uinteger_1 Core_uinteger_192,93
+type Core_uinteger_128 Core_uinteger_12893,94
+type Core_uinteger_2 Core_uinteger_294,95
+type Core_uinteger_20 Core_uinteger_2095,96
+type Core_uinteger_21 Core_uinteger_2196,97
+type Core_uinteger_24 Core_uinteger_2497,98
+type Core_uinteger_256 Core_uinteger_25698,99
+type Core_uinteger_28 Core_uinteger_2899,100
+type Core_uinteger_30 Core_uinteger_30100,101
+type Core_uinteger_36 Core_uinteger_36101,102
+type Core_uinteger_4 Core_uinteger_4102,103
+type Core_uinteger_48 Core_uinteger_48103,104
+type Core_uinteger_64 Core_uinteger_64104,105
+type Core_uinteger_66 Core_uinteger_66105,106
+type Core_uinteger_8 Core_uinteger_8106,107
 
 ./src/System/SED/MCTP/Common/ColumnTypes.hs,83
 module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes15,16

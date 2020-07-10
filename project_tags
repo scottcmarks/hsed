@@ -71,7 +71,7 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Simple_Type.hs,1518
+./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16
 type Core_bytes_4 Core_bytes_468,69
 type Core_bytes_8 Core_bytes_869,70
@@ -89,26 +89,27 @@ type Core_name Core_name83,84
 type Core_password Core_password84,85
 type Core_type_def_max_size Core_type_def_max_size85,86
 type Core_type_def Core_type_def86,87
-type Core_halfuid Core_halfuid88,89
-type Core_uid Core_uid89,90
-type Core_uinteger_1 Core_uinteger_191,92
-type Core_uinteger_128 Core_uinteger_12892,93
-type Core_uinteger_2 Core_uinteger_293,94
-type Core_uinteger_20 Core_uinteger_2094,95
-type Core_uinteger_21 Core_uinteger_2195,96
-type Core_uinteger_24 Core_uinteger_2496,97
-type Core_uinteger_256 Core_uinteger_25697,98
-type Core_uinteger_28 Core_uinteger_2898,99
-type Core_uinteger_30 Core_uinteger_3099,100
-type Core_uinteger_36 Core_uinteger_36100,101
-type Core_uinteger_4 Core_uinteger_4101,102
-type Core_uinteger_48 Core_uinteger_48102,103
-type Core_uinteger_64 Core_uinteger_64103,104
-type Core_uinteger_66 Core_uinteger_66104,105
-type Core_uinteger_8 Core_uinteger_8105,106
+type Core_max_bytes_64 Core_max_bytes_6487,88
+type Core_halfuid Core_halfuid89,90
+type Core_uid Core_uid90,91
+type Core_uinteger_1 Core_uinteger_192,93
+type Core_uinteger_128 Core_uinteger_12893,94
+type Core_uinteger_2 Core_uinteger_294,95
+type Core_uinteger_20 Core_uinteger_2095,96
+type Core_uinteger_21 Core_uinteger_2196,97
+type Core_uinteger_24 Core_uinteger_2497,98
+type Core_uinteger_256 Core_uinteger_25698,99
+type Core_uinteger_28 Core_uinteger_2899,100
+type Core_uinteger_30 Core_uinteger_30100,101
+type Core_uinteger_36 Core_uinteger_36101,102
+type Core_uinteger_4 Core_uinteger_4102,103
+type Core_uinteger_48 Core_uinteger_48103,104
+type Core_uinteger_64 Core_uinteger_64104,105
+type Core_uinteger_66 Core_uinteger_66105,106
+type Core_uinteger_8 Core_uinteger_8106,107
 
 ./src/System/SED/MCTP/Common/ColumnTypes.hs,83
-module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes16,17
+module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes15,16
 
 ./src/System/SED/MCTP/Common/THUtil.hs,267
 module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil15,16
@@ -505,7 +506,7 @@ module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
 core_bytes_4 core_bytes_472,73
 core_bytes_8 core_bytes_879,80
 
-./src/System/SED/MCTP/Common/ColumnTypes/TH.hs,1287
+./src/System/SED/MCTP/Common/ColumnTypes/TH.hs,1304
 module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH16,17
 ttype ttype95,96
 ttypeDecs ttypeDecs103,104
@@ -522,24 +523,25 @@ data TypeTableRow TypeTableRow167,168
 data TypeTableRow = TypeTableRow TypeTableRow167,168
 instance Semigroup Semigroup TypeTableRow170,171
     (T(TypeTableRowu1n1f1)171,172
-type TypeUIDField TypeUIDField174,175
-type TypeName TypeName176,177
-type FormatString FormatString178,179
-header header181,182
-formatString formatString191,192
-newtype TypeTableRowDecs TypeTableRowDecs198,199
-instance Semigroup Semigroup TypeTableRowDecs201,202
-  where (T(TypeTableRowDecsd1)202,203
-instance Monoid Monoid TypeTableRowDecs205,206
-  where mempty mempty206,207
-tenum tenum216,217
-tenumDecs tenumDecs225,226
-dEnum dEnum228,229
-enumTableParser enumTableParser252,253
-data EnumRow EnumRow261,262
-data EnumRow = EnumRow EnumRow261,262
-enumTableTitle enumTableTitle264,265
-enumTableRow enumTableRow272,273
+    _ _173,174
+type TypeUIDField TypeUIDField176,177
+type TypeName TypeName178,179
+type FormatString FormatString180,181
+header header183,184
+formatString formatString193,194
+newtype TypeTableRowDecs TypeTableRowDecs200,201
+instance Semigroup Semigroup TypeTableRowDecs203,204
+  where (T(TypeTableRowDecsd1)204,205
+instance Monoid Monoid TypeTableRowDecs207,208
+  where mempty mempty208,209
+tenum tenum218,219
+tenumDecs tenumDecs227,228
+dEnum dEnum230,231
+enumTableParser enumTableParser254,255
+data EnumRow EnumRow263,264
+data EnumRow = EnumRow EnumRow263,264
+enumTableTitle enumTableTitle266,267
+enumTableRow enumTableRow274,275
 
 ./src/System/SED/MCTP/Common/Types.hs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types14,15
@@ -700,49 +702,47 @@ instance {-# OVERLAPPING #-} HasSize HasSize Natural73,74
 instance {-# OVERLAPPABLE #-} ListLike ListLike full e => HasSize full77,78
 instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size77,78
 
-./src/Data/Refined.hs,1831
-module Data.RefinedData.Refined25,26
-type role role45,46
-newtype Refined Refined46,47
-type a a50,51
-class (Coercible (p a) a) => Predicate Predicate55,56
-    predicate predicate56,57
-    failMsg failMsg58,59
-    plain plain60,61
-    refine refine63,64
-    safeCreate safeCreate68,69
-    create create73,74
-    unsafeCreate unsafeCreate78,79
-class Predicate p a => Predicate_Internal Predicate_Internal85,86
-    consider consider86,87
-    accept accept88,89
-instance Predicate Predicate p a => Predicate_Internal p a90,91
-instance (N(Num a, Predicate p a) => Num (Refined p a)95,96
-    (R(Refinedx)97,98
-    negate negate100,101
-    abs abs101,102
-    signum signum102,103
-    fromInteger fromInteger103,104
-instance (R(Read a, Predicate p a) => Read (Refined p a)108,109
-    readPrec readPrec109,110
-instance (I(IsString a, Predicate p a) => IsString (Refined p a)114,115
-    fromString fromString115,116
-instance (I(IsList a, Predicate p a) => IsList (Refined p a)120,121
-    type Item Item121,122
-    fromList fromList122,123
-    toList toList123,124
-instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item125,126
-    foldl foldl126,127
-    foldr foldr127,128
-instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)129,130
-    (R(Refinedx)130,131
-instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)132,133
-    mempty mempty133,134
-instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item135,136
-    singleton singleton136,137
-    head head137,138
-    tail tail138,139
-    null null139,140
-    genericLength genericLength140,141
-instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)144,145
-    arbitrary arbitrary145,146
+./src/Data/Refined.hs,1666
+module Data.RefinedData.Refined26,27
+type role role47,48
+newtype Refined Refined48,49
+type a a52,53
+test test56,57
+accept accept60,61
+class Coercible (p a) a => Predicate Predicate63,64
+    predicate predicate64,65
+    failMsg failMsg66,67
+    plain plain68,69
+    unsafeCreate unsafeCreate71,72
+    safeCreate safeCreate74,75
+    create create77,78
+    refine refine80,81
+instance (N(Num a, Predicate p a) => Num (Refined p a)84,85
+    (R(Refinedx)86,87
+    negate negate89,90
+    abs abs90,91
+    signum signum91,92
+    fromInteger fromInteger92,93
+instance (R(Read a, Predicate p a) => Read (Refined p a)95,96
+    readPrec readPrec96,97
+instance (I(IsString a, Predicate p a) => IsString (Refined p a)99,100
+    fromString fromString100,101
+instance (I(IsList a, Predicate p a) => IsList (Refined p a)103,104
+    type Item Item104,105
+    fromList fromList105,106
+    toList toList106,107
+instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item109,110
+    foldl foldl110,111
+    foldr foldr111,112
+instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)113,114
+    (R(Refinedx)114,115
+instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)116,117
+    mempty mempty117,118
+instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item119,120
+    singleton singleton120,121
+    head head121,122
+    tail tail122,123
+    null null123,124
+    genericLength genericLength124,125
+instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)127,128
+    arbitrary arbitrary128,129

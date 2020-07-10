@@ -61,10 +61,10 @@ Simple_Type,integer,2
 Simple_Type,max_bytes,*
 Simple_Type,max_bytes,32
 Simple_Type,max_bytes,64
-Simple_Type,uinteger, 2
 Simple_Type,uinteger,1
 Simple_Type,uinteger,128
 Simple_Type,uinteger,2
+Simple_Type,uinteger, 2
 Simple_Type,uinteger,20
 Simple_Type,uinteger,21
 Simple_Type,uinteger,24

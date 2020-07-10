@@ -1,0 +1,16 @@
+00 Base_Type
+01 Simple_Type
+02 Enumeration_Type
+03 Alternative_Type
+04 List_Type
+05 Restricted_Reference_Type{5}
+06 Restricted_Reference_Type{6}
+07 General_Reference_Type{7}
+08 General_Reference_Type{8}
+09 General_Reference_Type{9}
+10 General_Reference_Table_Type
+11 Named_Value_Name_Type
+12 Named_Value_Integer_Type
+13 Named_Value_Uinteger_Type
+14 Set_Type
+15 Struct_Type

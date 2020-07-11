@@ -27,7 +27,7 @@ import GHC.Arr(range)
 import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
 import GHC.Classes((<))
 import GHC.Err(undefined)
-import GHC.Show(show)
+import GHC.Show(Show(..),showString,shows)
 import GHC.Base(const, (++))
 :def! $ (pure . (":! bash -l -c " ++) . show)
 :def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
@@ -107,19 +107,20 @@ putStrLn "\n\n\n"
 
 
 
-putStrLn "Before ':load src/System/SED/MCTP/Common/TableUIDs.hs'\n"
-:load src/System/SED/MCTP/Common/TableUIDs.hs
-putStrLn "Before ':set -ddump-splices'\n"
-:set -ddump-splices
-putStrLn "Before ':load src/System/SED/MCTP/Common/TableUIDs.hs'\n"
-:load src/System/SED/MCTP/Common/TableUIDs.hs
-import System.SED.MCTP.Common.TableUIDs.TH
-putStrLn "\n"
+putStrLn "Before ':load System.SED.MCTP.Common.TableUIDs'\n"
+:load System.SED.MCTP.Common.TableUIDs
+putStrLn "\n\n\n"
+putStrLn $ showString "hColumn = " . shows hColumn $ ""
+putStrLn "\n\n\n"
+
+
+
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-putStrLn "\n\nBuh-bye now."
+
+putStrLn "\n\n\nBuh-bye now.\n\n"
 
 
 --------------------------------------------------------------------------------

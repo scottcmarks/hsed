@@ -3,7 +3,7 @@
 -- {-# OPTIONS_GHC -ddump-splices #-}
 
 {-|
-Module      : System.SED.MCTP.Common.ColumnTypes
+Module      : System.SED.MCTP.Common.TypeUIDs
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -13,10 +13,10 @@ Table column types defined by text tables in the Core Spec.
 
 -}
 
-module System.SED.MCTP.Common.ColumnTypes
+module System.SED.MCTP.Common.TypeUIDs
 where
 
-import           System.SED.MCTP.Common.ColumnTypes.TH (tenum, ttype)
+import           System.SED.MCTP.Common.TypeUIDs.TH (tenum, ttype)
 
 
 {-

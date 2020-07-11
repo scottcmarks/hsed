@@ -15,7 +15,7 @@ Datatypes for @hsed@.
 module System.SED.MCTP.Common.Types
   ( module System.SED.MCTP.Common.Base_Type
   , module System.SED.MCTP.Common.Call
-  , module System.SED.MCTP.Common.ColumnTypes
+  , module System.SED.MCTP.Common.TypeUIDs
   , module System.SED.MCTP.Common.Simple_Type
   , module System.SED.MCTP.Common.SpecialPurposeUIDs
   , module System.SED.MCTP.Common.StreamItem
@@ -29,7 +29,7 @@ where
 
 import           System.SED.MCTP.Common.Base_Type
 import           System.SED.MCTP.Common.Call
-import           System.SED.MCTP.Common.ColumnTypes
+import           System.SED.MCTP.Common.TypeUIDs
 import           System.SED.MCTP.Common.Simple_Type
 import           System.SED.MCTP.Common.SpecialPurposeUIDs
 import           System.SED.MCTP.Common.StreamItem

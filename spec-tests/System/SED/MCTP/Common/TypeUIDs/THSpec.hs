@@ -1,22 +1,22 @@
 {-|
-Module      : System.SED.MCTP.Common.ColumnTypes.TH
-Description : Test specifications for System.SED.MCTP.Common.ColumnTypes.THSpec
+Module      : System.SED.MCTP.Common.TypeUIDs.TH
+Description : Test specifications for System.SED.MCTP.Common.TypeUIDs.THSpec
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Test specifications for System.SED.MCTP.Common.ColumnTypes.TH
+Test specifications for System.SED.MCTP.Common.TypeUIDs.TH
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module System.SED.MCTP.Common.ColumnTypes.THSpec (spec) where
+module System.SED.MCTP.Common.TypeUIDs.THSpec (spec) where
 
 import           RIO
 import           Test.Hspec
 import           Test.Hspec.QuickCheck            ()
 
-import           System.SED.MCTP.Common.ColumnTypes.TH ()
+import           System.SED.MCTP.Common.TypeUIDs.TH ()
 
 -- | test suite
 spec :: Spec

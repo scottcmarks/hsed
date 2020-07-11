@@ -3,7 +3,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-|
-Module      : System.SED.MCTP.Common.ColumnTypes.TH
+Module      : System.SED.MCTP.Common.TypeUIDs.TH
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -14,7 +14,7 @@ Template Haskell for parsing Table column types in Section 5.1.3.
 -}
 
 
-module System.SED.MCTP.Common.ColumnTypes.TH where
+module System.SED.MCTP.Common.TypeUIDs.TH where
 
 
 import           Data.Attoparsec.ByteString       (Parser, endOfInput, inClass,
@@ -207,6 +207,19 @@ instance Semigroup TypeTableRowDecs
 
 instance Monoid TypeTableRowDecs
   where mempty = TypeTableRowDecs []
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

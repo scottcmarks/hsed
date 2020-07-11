@@ -534,14 +534,14 @@ instance Semigroup Semigroup TypeTableRowDecs203,204
   where (T(TypeTableRowDecsd1)204,205
 instance Monoid Monoid TypeTableRowDecs207,208
   where mempty mempty208,209
-tenum tenum218,219
-tenumDecs tenumDecs227,228
-dEnum dEnum230,231
-enumTableParser enumTableParser254,255
-data EnumRow EnumRow263,264
-data EnumRow = EnumRow EnumRow263,264
-enumTableTitle enumTableTitle266,267
-enumTableRow enumTableRow274,275
+tenum tenum231,232
+tenumDecs tenumDecs240,241
+dEnum dEnum243,244
+enumTableParser enumTableParser267,268
+data EnumRow EnumRow276,277
+data EnumRow = EnumRow EnumRow276,277
+enumTableTitle enumTableTitle279,280
+enumTableRow enumTableRow287,288
 
 ./src/System/SED/MCTP/Common/Types.hs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types14,15

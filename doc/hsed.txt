@@ -1093,192 +1093,8 @@ hexUID :: ByteString -> UID
 trimTrailingWhitespace :: ByteString -> ByteString
 
 
--- | TableUIDs Template Haskell.
-module System.SED.MCTP.Common.TableUIDs.TH
-
--- | Bespoke QuasiQuoter for Table 240
-t240 :: QuasiQuoter
-instance GHC.Show.Show System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRow
-instance GHC.Base.Semigroup System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Base.Monoid System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-
-
--- | Table UIDs as specified in Table 240.
---   
---   The specification for each table is translated to three constant
---   declarations. For instance, the information on the
---   <tt>AccessControl</tt> table becomes
---   
---   <pre>
---   --| The HalfUID that identifies the AccessControl table
---   hAccessControl :: HalfUID
---   hAccessControl = halfUID 0x00 0x00 0x00 0x07
---   
---   --| The UID that identifies the AccessControl table itself
---   uAccessControlTable :: UID
---   uAccessControlTable = uid 0x00 0x00 0x00 0x07 0x00 0x00 0x00 0x00
---   
---   --| The UID that identifies the AccessControl table entry in the Table Table
---   uAccessControlTableObject :: UID
---   uAccessControlTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x07
---   </pre>
---   
---   Unfortunately, Template Haskell can neither see manual comments nor
---   create comments for Haddock to see; hence the names themselves must
---   suffice as documentation.
-module System.SED.MCTP.Common.TableUIDs
-nameUID :: Map UID String
-nameHalfUID :: Map HalfUID String
-hTable :: HalfUID
-uTableTable :: UID
-uTableTableObject :: UID
-hSPInfo :: HalfUID
-uSPInfoTable :: UID
-uSPInfoTableObject :: UID
-hSPTemplates :: HalfUID
-uSPTemplatesTable :: UID
-uSPTemplatesTableObject :: UID
-hColumn :: HalfUID
-uColumnTable :: UID
-uColumnTableObject :: UID
-hType :: HalfUID
-uTypeTable :: UID
-uTypeTableObject :: UID
-hMethodID :: HalfUID
-uMethodIDTable :: UID
-uMethodIDTableObject :: UID
-hAccessControl :: HalfUID
-uAccessControlTable :: UID
-uAccessControlTableObject :: UID
-hACE :: HalfUID
-uACETable :: UID
-uACETableObject :: UID
-hAuthority :: HalfUID
-uAuthorityTable :: UID
-uAuthorityTableObject :: UID
-hCertificates :: HalfUID
-uCertificatesTable :: UID
-uCertificatesTableObject :: UID
-hC_PIN :: HalfUID
-uC_PINTable :: UID
-uC_PINTableObject :: UID
-hC_RSA_1024 :: HalfUID
-uC_RSA_1024Table :: UID
-uC_RSA_1024TableObject :: UID
-hC_RSA_2048 :: HalfUID
-uC_RSA_2048Table :: UID
-uC_RSA_2048TableObject :: UID
-hC_AES_128 :: HalfUID
-uC_AES_128Table :: UID
-uC_AES_128TableObject :: UID
-hC_AES_256 :: HalfUID
-uC_AES_256Table :: UID
-uC_AES_256TableObject :: UID
-hC_EC_160 :: HalfUID
-uC_EC_160Table :: UID
-uC_EC_160TableObject :: UID
-hC_EC_192 :: HalfUID
-uC_EC_192Table :: UID
-uC_EC_192TableObject :: UID
-hC_EC_224 :: HalfUID
-uC_EC_224Table :: UID
-uC_EC_224TableObject :: UID
-hC_EC_256 :: HalfUID
-uC_EC_256Table :: UID
-uC_EC_256TableObject :: UID
-hC_EC_384 :: HalfUID
-uC_EC_384Table :: UID
-uC_EC_384TableObject :: UID
-hC_EC_521 :: HalfUID
-uC_EC_521Table :: UID
-uC_EC_521TableObject :: UID
-hC_EC_163 :: HalfUID
-uC_EC_163Table :: UID
-uC_EC_163TableObject :: UID
-hC_EC_233 :: HalfUID
-uC_EC_233Table :: UID
-uC_EC_233TableObject :: UID
-hC_EC_283 :: HalfUID
-uC_EC_283Table :: UID
-uC_EC_283TableObject :: UID
-hC_HMAC_160 :: HalfUID
-uC_HMAC_160Table :: UID
-uC_HMAC_160TableObject :: UID
-hC_HMAC_256 :: HalfUID
-uC_HMAC_256Table :: UID
-uC_HMAC_256TableObject :: UID
-hC_HMAC_384 :: HalfUID
-uC_HMAC_384Table :: UID
-uC_HMAC_384TableObject :: UID
-hC_HMAC_512 :: HalfUID
-uC_HMAC_512Table :: UID
-uC_HMAC_512TableObject :: UID
-hSecretProtect :: HalfUID
-uSecretProtectTable :: UID
-uSecretProtectTableObject :: UID
-hTPerInfo :: HalfUID
-uTPerInfoTable :: UID
-uTPerInfoTableObject :: UID
-hCryptoSuite :: HalfUID
-uCryptoSuiteTable :: UID
-uCryptoSuiteTableObject :: UID
-hTemplate :: HalfUID
-uTemplateTable :: UID
-uTemplateTableObject :: UID
-hSP :: HalfUID
-uSPTable :: UID
-uSPTableObject :: UID
-hClockTime :: HalfUID
-uClockTimeTable :: UID
-uClockTimeTableObject :: UID
-hH_SHA_1 :: HalfUID
-uH_SHA_1Table :: UID
-uH_SHA_1TableObject :: UID
-hH_SHA_256 :: HalfUID
-uH_SHA_256Table :: UID
-uH_SHA_256TableObject :: UID
-hH_SHA_384 :: HalfUID
-uH_SHA_384Table :: UID
-uH_SHA_384TableObject :: UID
-hH_SHA_512 :: HalfUID
-uH_SHA_512Table :: UID
-uH_SHA_512TableObject :: UID
-hLog :: HalfUID
-uLogTable :: UID
-uLogTableObject :: UID
-hLogList :: HalfUID
-uLogListTable :: UID
-uLogListTableObject :: UID
-hLockingInfo :: HalfUID
-uLockingInfoTable :: UID
-uLockingInfoTableObject :: UID
-hLocking :: HalfUID
-uLockingTable :: UID
-uLockingTableObject :: UID
-hMBRControl :: HalfUID
-uMBRControlTable :: UID
-uMBRControlTableObject :: UID
-hMBR :: HalfUID
-uMBRTable :: UID
-uMBRTableObject :: UID
-hK_AES_128 :: HalfUID
-uK_AES_128Table :: UID
-uK_AES_128TableObject :: UID
-hK_AES_256 :: HalfUID
-uK_AES_256Table :: UID
-uK_AES_256TableObject :: UID
-
--- | Look up the name of a Table <a>HalfUID</a>
-lookupTableHalfUID :: HalfUID -> Maybe String
-
--- | Look up the name of a Table <a>UID</a> or a Table object <a>UID</a>
-lookupTableUID :: UID -> Maybe String
-
-
 -- | Template Haskell for parsing Table column types in Section 5.1.3.
-module System.SED.MCTP.Common.ColumnTypes.TH
+module System.SED.MCTP.Common.TypeUIDs.TH
 
 -- | QuasiQuoter for Type Table row tables.
 --   
@@ -1316,17 +1132,17 @@ data EnumRow
 EnumRow :: String -> [Int] -> EnumRow
 enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.TH.EnumRow
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRow
-instance GHC.Base.Semigroup System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Base.Monoid System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRowDecs
-instance GHC.Base.Semigroup System.SED.MCTP.Common.ColumnTypes.TH.TypeTableRow
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
+instance GHC.Base.Semigroup System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
+instance GHC.Base.Monoid System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
+instance GHC.Base.Semigroup System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
 
 
 -- | Table column types defined by text tables in the Core Spec.
-module System.SED.MCTP.Common.ColumnTypes
+module System.SED.MCTP.Common.TypeUIDs
 fAC_elementType :: String
 uAC_elementType :: UID
 fACE_columnsType :: String
@@ -1817,101 +1633,285 @@ fYearType :: String
 uYearType :: UID
 fyear_enumType :: String
 uyear_enumType :: UID
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_verify_mode
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_table_kind
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_table_kind
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_table_kind
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_table_kind
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_table_kind
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode_media
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_symmetric_mode
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_reset_types
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_reset_types
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_reset_types
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_reset_types
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_reset_types
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_reencrypt_state
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_padding_type
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_padding_type
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_padding_type
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_padding_type
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_padding_type
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_log_select
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_log_select
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_log_select
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_log_select
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_log_select
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_life_cycle_state
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_last_reenc_stat
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_keys_avail_conds
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_hash_protocol
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_enc_supported
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_clock_kind
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_boolean_ACE
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_boolean
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_boolean
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_boolean
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_boolean
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_boolean
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_auth_method
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_auth_method
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_auth_method
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_auth_method
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_auth_method
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_attr_flags
-instance GHC.Show.Show System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Classes.Ord System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Classes.Eq System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Enum.Enum System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
-instance GHC.Enum.Bounded System.SED.MCTP.Common.ColumnTypes.Core_adv_key_mode
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
+
+
+-- | TableUIDs Template Haskell.
+module System.SED.MCTP.Common.TableUIDs.TH
+
+-- | Bespoke QuasiQuoter for Table 240
+t240 :: QuasiQuoter
+instance GHC.Show.Show System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRow
+instance GHC.Base.Semigroup System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Base.Monoid System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+
+
+-- | Table UIDs as specified in Table 240.
+--   
+--   The specification for each table is translated to three constant
+--   declarations. For instance, the information on the
+--   <tt>AccessControl</tt> table becomes
+--   
+--   <pre>
+--   --| The HalfUID that identifies the AccessControl table
+--   hAccessControl :: HalfUID
+--   hAccessControl = halfUID 0x00 0x00 0x00 0x07
+--   
+--   --| The UID that identifies the AccessControl table itself
+--   uAccessControlTable :: UID
+--   uAccessControlTable = uid 0x00 0x00 0x00 0x07 0x00 0x00 0x00 0x00
+--   
+--   --| The UID that identifies the AccessControl table entry in the Table Table
+--   uAccessControlTableObject :: UID
+--   uAccessControlTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x07
+--   </pre>
+--   
+--   Unfortunately, Template Haskell can neither see manual comments nor
+--   create comments for Haddock to see; hence the names themselves must
+--   suffice as documentation.
+module System.SED.MCTP.Common.TableUIDs
+nameUID :: Map UID String
+nameHalfUID :: Map HalfUID String
+hTable :: HalfUID
+uTableTable :: UID
+uTableTableObject :: UID
+hSPInfo :: HalfUID
+uSPInfoTable :: UID
+uSPInfoTableObject :: UID
+hSPTemplates :: HalfUID
+uSPTemplatesTable :: UID
+uSPTemplatesTableObject :: UID
+hColumn :: HalfUID
+uColumnTable :: UID
+uColumnTableObject :: UID
+hType :: HalfUID
+uTypeTable :: UID
+uTypeTableObject :: UID
+hMethodID :: HalfUID
+uMethodIDTable :: UID
+uMethodIDTableObject :: UID
+hAccessControl :: HalfUID
+uAccessControlTable :: UID
+uAccessControlTableObject :: UID
+hACE :: HalfUID
+uACETable :: UID
+uACETableObject :: UID
+hAuthority :: HalfUID
+uAuthorityTable :: UID
+uAuthorityTableObject :: UID
+hCertificates :: HalfUID
+uCertificatesTable :: UID
+uCertificatesTableObject :: UID
+hC_PIN :: HalfUID
+uC_PINTable :: UID
+uC_PINTableObject :: UID
+hC_RSA_1024 :: HalfUID
+uC_RSA_1024Table :: UID
+uC_RSA_1024TableObject :: UID
+hC_RSA_2048 :: HalfUID
+uC_RSA_2048Table :: UID
+uC_RSA_2048TableObject :: UID
+hC_AES_128 :: HalfUID
+uC_AES_128Table :: UID
+uC_AES_128TableObject :: UID
+hC_AES_256 :: HalfUID
+uC_AES_256Table :: UID
+uC_AES_256TableObject :: UID
+hC_EC_160 :: HalfUID
+uC_EC_160Table :: UID
+uC_EC_160TableObject :: UID
+hC_EC_192 :: HalfUID
+uC_EC_192Table :: UID
+uC_EC_192TableObject :: UID
+hC_EC_224 :: HalfUID
+uC_EC_224Table :: UID
+uC_EC_224TableObject :: UID
+hC_EC_256 :: HalfUID
+uC_EC_256Table :: UID
+uC_EC_256TableObject :: UID
+hC_EC_384 :: HalfUID
+uC_EC_384Table :: UID
+uC_EC_384TableObject :: UID
+hC_EC_521 :: HalfUID
+uC_EC_521Table :: UID
+uC_EC_521TableObject :: UID
+hC_EC_163 :: HalfUID
+uC_EC_163Table :: UID
+uC_EC_163TableObject :: UID
+hC_EC_233 :: HalfUID
+uC_EC_233Table :: UID
+uC_EC_233TableObject :: UID
+hC_EC_283 :: HalfUID
+uC_EC_283Table :: UID
+uC_EC_283TableObject :: UID
+hC_HMAC_160 :: HalfUID
+uC_HMAC_160Table :: UID
+uC_HMAC_160TableObject :: UID
+hC_HMAC_256 :: HalfUID
+uC_HMAC_256Table :: UID
+uC_HMAC_256TableObject :: UID
+hC_HMAC_384 :: HalfUID
+uC_HMAC_384Table :: UID
+uC_HMAC_384TableObject :: UID
+hC_HMAC_512 :: HalfUID
+uC_HMAC_512Table :: UID
+uC_HMAC_512TableObject :: UID
+hSecretProtect :: HalfUID
+uSecretProtectTable :: UID
+uSecretProtectTableObject :: UID
+hTPerInfo :: HalfUID
+uTPerInfoTable :: UID
+uTPerInfoTableObject :: UID
+hCryptoSuite :: HalfUID
+uCryptoSuiteTable :: UID
+uCryptoSuiteTableObject :: UID
+hTemplate :: HalfUID
+uTemplateTable :: UID
+uTemplateTableObject :: UID
+hSP :: HalfUID
+uSPTable :: UID
+uSPTableObject :: UID
+hClockTime :: HalfUID
+uClockTimeTable :: UID
+uClockTimeTableObject :: UID
+hH_SHA_1 :: HalfUID
+uH_SHA_1Table :: UID
+uH_SHA_1TableObject :: UID
+hH_SHA_256 :: HalfUID
+uH_SHA_256Table :: UID
+uH_SHA_256TableObject :: UID
+hH_SHA_384 :: HalfUID
+uH_SHA_384Table :: UID
+uH_SHA_384TableObject :: UID
+hH_SHA_512 :: HalfUID
+uH_SHA_512Table :: UID
+uH_SHA_512TableObject :: UID
+hLog :: HalfUID
+uLogTable :: UID
+uLogTableObject :: UID
+hLogList :: HalfUID
+uLogListTable :: UID
+uLogListTableObject :: UID
+hLockingInfo :: HalfUID
+uLockingInfoTable :: UID
+uLockingInfoTableObject :: UID
+hLocking :: HalfUID
+uLockingTable :: UID
+uLockingTableObject :: UID
+hMBRControl :: HalfUID
+uMBRControlTable :: UID
+uMBRControlTableObject :: UID
+hMBR :: HalfUID
+uMBRTable :: UID
+uMBRTableObject :: UID
+hK_AES_128 :: HalfUID
+uK_AES_128Table :: UID
+uK_AES_128TableObject :: UID
+hK_AES_256 :: HalfUID
+uK_AES_256Table :: UID
+uK_AES_256TableObject :: UID
+
+-- | Look up the name of a Table <a>HalfUID</a>
+lookupTableHalfUID :: HalfUID -> Maybe String
+
+-- | Look up the name of a Table <a>UID</a> or a Table object <a>UID</a>
+lookupTableUID :: UID -> Maybe String
 
 
 -- | Parse and generate values used in method invocations and responses.

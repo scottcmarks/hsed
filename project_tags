@@ -18,6 +18,10 @@ main main14,15
 module System.SED.MCTP.Common.ValueSpec System.SED.MCTP.Common.ValueSpec13,14
 spec spec24,25
 
+./spec-tests/System/SED/MCTP/Common/TypeUIDs/THSpec.hs,109
+module System.SED.MCTP.Common.TypeUIDs.THSpec System.SED.MCTP.Common.TypeUIDs.THSpec12,13
+spec spec21,22
+
 ./spec-tests/System/SED/MCTP/Common/TokenSpec.hs,492
 module System.SED.MCTP.Common.TokenSpec System.SED.MCTP.Common.TokenSpec13,14
 spec spec32,33
@@ -33,10 +37,6 @@ _pgp _pgp293,294
 validFirstTwo validFirstTwo298,299
 validNatural validNatural306,307
 validInteger validInteger312,313
-
-./spec-tests/System/SED/MCTP/Common/ColumnTypes/THSpec.hs,115
-module System.SED.MCTP.Common.ColumnTypes.THSpec System.SED.MCTP.Common.ColumnTypes.THSpec12,13
-spec spec21,22
 
 ./spec-tests/Spec.hs,0
 
@@ -108,9 +108,6 @@ type Core_uinteger_64 Core_uinteger_64104,105
 type Core_uinteger_66 Core_uinteger_66105,106
 type Core_uinteger_8 Core_uinteger_8106,107
 
-./src/System/SED/MCTP/Common/ColumnTypes.hs,83
-module System.SED.MCTP.Common.ColumnTypesSystem.SED.MCTP.Common.ColumnTypes15,16
-
 ./src/System/SED/MCTP/Common/THUtil.hs,267
 module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil15,16
 parseTable parseTable44,45
@@ -123,6 +120,43 @@ eUID eUID69,70
 eID eID73,74
 eLitS eLitS80,81
 eValP eValP85,86
+
+./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,1298
+module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH16,17
+ttype ttype95,96
+ttypeDecs ttypeDecs103,104
+typeTableParser typeTableParser110,111
+typeTableRow typeTableRow117,118
+dTypeTableRow dTypeTableRow124,125
+typeTableTitle typeTableTitle137,138
+spaces spaces141,142
+rowSepFieldLengths rowSepFieldLengths144,145
+rowSep rowSep151,152
+blankLines blankLines155,156
+tableRowFields tableRowFields159,160
+data TypeTableRow TypeTableRow167,168
+data TypeTableRow = TypeTableRow TypeTableRow167,168
+instance Semigroup Semigroup TypeTableRow170,171
+    (T(TypeTableRowu1n1f1)171,172
+    _ _173,174
+type TypeUIDField TypeUIDField176,177
+type TypeName TypeName178,179
+type FormatString FormatString180,181
+header header183,184
+formatString formatString193,194
+newtype TypeTableRowDecs TypeTableRowDecs200,201
+instance Semigroup Semigroup TypeTableRowDecs203,204
+  where (T(TypeTableRowDecsd1)204,205
+instance Monoid Monoid TypeTableRowDecs207,208
+  where mempty mempty208,209
+tenum tenum231,232
+tenumDecs tenumDecs240,241
+dEnum dEnum243,244
+enumTableParser enumTableParser267,268
+data EnumRow EnumRow276,277
+data EnumRow = EnumRow EnumRow276,277
+enumTableTitle enumTableTitle279,280
+enumTableRow enumTableRow287,288
 
 ./src/System/SED/MCTP/Common/UID.hs,587
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID19,20
@@ -506,45 +540,11 @@ module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
 core_bytes_4 core_bytes_472,73
 core_bytes_8 core_bytes_879,80
 
-./src/System/SED/MCTP/Common/ColumnTypes/TH.hs,1304
-module System.SED.MCTP.Common.ColumnTypes.TH System.SED.MCTP.Common.ColumnTypes.TH16,17
-ttype ttype95,96
-ttypeDecs ttypeDecs103,104
-typeTableParser typeTableParser110,111
-typeTableRow typeTableRow117,118
-dTypeTableRow dTypeTableRow124,125
-typeTableTitle typeTableTitle137,138
-spaces spaces141,142
-rowSepFieldLengths rowSepFieldLengths144,145
-rowSep rowSep151,152
-blankLines blankLines155,156
-tableRowFields tableRowFields159,160
-data TypeTableRow TypeTableRow167,168
-data TypeTableRow = TypeTableRow TypeTableRow167,168
-instance Semigroup Semigroup TypeTableRow170,171
-    (T(TypeTableRowu1n1f1)171,172
-    _ _173,174
-type TypeUIDField TypeUIDField176,177
-type TypeName TypeName178,179
-type FormatString FormatString180,181
-header header183,184
-formatString formatString193,194
-newtype TypeTableRowDecs TypeTableRowDecs200,201
-instance Semigroup Semigroup TypeTableRowDecs203,204
-  where (T(TypeTableRowDecsd1)204,205
-instance Monoid Monoid TypeTableRowDecs207,208
-  where mempty mempty208,209
-tenum tenum218,219
-tenumDecs tenumDecs227,228
-dEnum dEnum230,231
-enumTableParser enumTableParser254,255
-data EnumRow EnumRow263,264
-data EnumRow = EnumRow EnumRow263,264
-enumTableTitle enumTableTitle266,267
-enumTableRow enumTableRow274,275
-
 ./src/System/SED/MCTP/Common/Types.hs,71
 module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types14,15
+
+./src/System/SED/MCTP/Common/TypeUIDs.hs,77
+module System.SED.MCTP.Common.TypeUIDsSystem.SED.MCTP.Common.TypeUIDs15,16
 
 ./src/System/SED/MCTP/Common/Format.hs,2521
 module System.SED.MCTP.Common.FormatSystem.SED.MCTP.Common.Format27,28

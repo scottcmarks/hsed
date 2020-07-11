@@ -98,26 +98,26 @@ digraph G {
 					}
 					subgraph cluster_10 {
 						graph [color="#0000000F",
-							label=ColumnTypes,
-							style=filled
-						];
-						u15						 [fillcolor="#ff7777",
-							label=ColumnTypes,
-							style="filled,bold"];
-						u16						 [fillcolor="#ff77ff",
-							label=TH,
-							penwidth=0,
-							style=filled];
-					}
-					subgraph cluster_11 {
-						graph [color="#0000000F",
 							label=TableUIDs,
 							style=filled
 						];
 						u24						 [fillcolor="#ff7777",
 							label=TableUIDs,
 							style="filled,bold"];
-						u25						 [fillcolor="#33ff33",
+						u25						 [fillcolor="#ff77ff",
+							label=TH,
+							penwidth=0,
+							style=filled];
+					}
+					subgraph cluster_11 {
+						graph [color="#0000000F",
+							label=TypeUIDs,
+							style=filled
+						];
+						u18						 [fillcolor="#ff7777",
+							label=TypeUIDs,
+							style="filled,bold"];
+						u19						 [fillcolor="#33ff33",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -146,24 +146,24 @@ digraph G {
 						label=Value,
 						penwidth=0,
 						style=filled];
-					u17					 [fillcolor="#ff7777",
-						label=THUtil,
-						penwidth=0,
-						style=filled];
-					u18					 [fillcolor="#ff7777",
-						label=Util,
-						penwidth=0,
-						style=filled];
-					u19					 [fillcolor="#ff7777",
+					u15					 [fillcolor="#ff7777",
 						label=Format,
 						penwidth=0,
 						style=filled];
-					u20					 [fillcolor="#ff7777",
+					u16					 [fillcolor="#ff7777",
 						label=Import,
 						penwidth=0,
 						style=filled];
-					u21					 [fillcolor="#ff7777",
+					u17					 [fillcolor="#ff7777",
 						label=Types,
+						penwidth=0,
+						style=filled];
+					u20					 [fillcolor="#ff7777",
+						label=THUtil,
+						penwidth=0,
+						style=filled];
+					u21					 [fillcolor="#ff7777",
+						label=Util,
 						penwidth=0,
 						style=filled];
 					u22					 [fillcolor="#ff7777",
@@ -215,29 +215,29 @@ digraph G {
 	u12 -> u13;
 	u13 -> u6;
 	u14 -> u9;
-	u17 -> u12;
-	u18 -> u12;
-	u19 -> u12;
-	u20 -> u21;
-	u21 -> u11;
-	u21 -> u22;
-	u21 -> u15;
-	u21 -> u24;
+	u15 -> u12;
+	u16 -> u17;
+	u17 -> u11;
+	u17 -> u22;
+	u17 -> u24;
+	u17 -> u18;
+	u20 -> u12;
+	u21 -> u12;
 	u22 -> u12;
 	u23 -> u12;
 	u6 -> u10;
 	u7 -> u0;
 	u7 -> u9;
 	u10 -> u7;
-	u15 -> u16;
-	u16 -> u17;
-	u16 -> u18;
 	u24 -> u25;
-	u25 -> u17;
-	u25 -> u18;
+	u25 -> u20;
+	u25 -> u21;
 	u25 -> u23;
+	u18 -> u19;
+	u19 -> u20;
+	u19 -> u21;
 	u26 -> u5;
-	u26 -> u20;
+	u26 -> u16;
 	u27 -> u5;
-	u27 -> u20;
+	u27 -> u16;
 }

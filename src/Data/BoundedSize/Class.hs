@@ -33,8 +33,10 @@ module Data.BoundedSize.Class
        , MaxSize
        , AtLeast
        , Refined
-       , Predicate (..)
+       , unsafeCreate
+       , plain
        , type (?)
+       , Predicate(..)
        , fromNat
        )
 
@@ -42,7 +44,8 @@ where
 
 import           Data.HasSize    (HasSize (..))
 import           Data.Proxy      (Proxy (..))
-import           Data.Refined    (type (?), Predicate (..), Refined)
+import           Data.Refined    (type (?), Predicate (..), Refined, plain,
+                                  unsafeCreate)
 import           GHC.Base        (Int, Monoid (..), Semigroup (..), ($), (.))
 import           GHC.Classes     (Eq (..), Ord (..), (&&))
 import           GHC.Num         (Num)

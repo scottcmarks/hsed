@@ -121,64 +121,80 @@ eID eID73,74
 eLitS eLitS80,81
 eValP eValP85,86
 
-./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,1298
-module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH16,17
-ttype ttype95,96
-ttypeDecs ttypeDecs103,104
-typeTableParser typeTableParser110,111
-typeTableRow typeTableRow117,118
-dTypeTableRow dTypeTableRow124,125
-typeTableTitle typeTableTitle137,138
-spaces spaces141,142
-rowSepFieldLengths rowSepFieldLengths144,145
-rowSep rowSep151,152
-blankLines blankLines155,156
-tableRowFields tableRowFields159,160
-data TypeTableRow TypeTableRow167,168
-data TypeTableRow = TypeTableRow TypeTableRow167,168
-instance Semigroup Semigroup TypeTableRow170,171
-    (T(TypeTableRowu1n1f1)171,172
-    _ _173,174
-type TypeUIDField TypeUIDField176,177
-type TypeName TypeName178,179
-type FormatString FormatString180,181
-header header183,184
-formatString formatString193,194
-newtype TypeTableRowDecs TypeTableRowDecs200,201
-instance Semigroup Semigroup TypeTableRowDecs203,204
-  where (T(TypeTableRowDecsd1)204,205
-instance Monoid Monoid TypeTableRowDecs207,208
-  where mempty mempty208,209
-tenum tenum231,232
-tenumDecs tenumDecs240,241
-dEnum dEnum243,244
-enumTableParser enumTableParser267,268
-data EnumRow EnumRow276,277
-data EnumRow = EnumRow EnumRow276,277
-enumTableTitle enumTableTitle279,280
-enumTableRow enumTableRow287,288
+./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,1598
+module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH20,21
+ttype ttype102,103
+ttypeDecs ttypeDecs110,111
+typeTableParser typeTableParser117,118
+typeTableRow typeTableRow124,125
+dTypeTableRow dTypeTableRow131,132
+typeTableTitle typeTableTitle144,145
+spaces spaces148,149
+rowSepFieldLengths rowSepFieldLengths151,152
+rowSep rowSep158,159
+blankLines blankLines162,163
+tableRowFields tableRowFields166,167
+data TypeTableRow TypeTableRow174,175
+data TypeTableRow = TypeTableRow TypeTableRow174,175
+instance Semigroup Semigroup TypeTableRow177,178
+    (T(TypeTableRowu1n1f1)178,179
+    _ _180,181
+type TypeUIDField TypeUIDField183,184
+type TypeName TypeName185,186
+type FormatString FormatString187,188
+header header190,191
+formatString formatString200,201
+newtype TypeTableRowDecs TypeTableRowDecs207,208
+instance Semigroup Semigroup TypeTableRowDecs210,211
+  where (T(TypeTableRowDecsd1)211,212
+instance Monoid Monoid TypeTableRowDecs214,215
+  where mempty mempty215,216
+type Core_type_def_max_uidrefs Core_type_def_max_uidrefs218,219
+type Core_Object_Table_UID Core_Object_Table_UID219,220
+data Core_Format Core_Format220,221
+    Base_TypeBase_Type221,222
+  | Restricted_Reference_Type'6 Restricted_Reference_Type'6222,223
+formatParser formatParser223,224
+tenum tenum232,233
+tenumDecs tenumDecs241,242
+dEnum dEnum244,245
+enumTableParser enumTableParser268,269
+data EnumRow EnumRow277,278
+data EnumRow = EnumRow EnumRow277,278
+enumTableTitle enumTableTitle280,281
+enumTableRow enumTableRow288,289
 
-./src/System/SED/MCTP/Common/UID.hs,587
-module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID19,20
-showCore_bytes showCore_bytes72,73
-newtype HalfUID HalfUID77,78
-instance Show Show HalfUID80,81
-    show show81,82
-instance Arbitrary Arbitrary HalfUID82,83
-    arbitrary arbitrary83,84
-halfUID halfUID85,86
-newtype UID UID89,90
-instance Show Show UID92,93
-    show show93,94
-instance Arbitrary Arbitrary UID94,95
-    arbitrary arbitrary95,96
-uid uid97,98
-uidUpper uidUpper105,106
-uidLower uidLower108,109
-uidPlus uidPlus111,112
-(+(+:+)115,116
-hNull hNull119,120
-uNull uNull122,123
+./src/System/SED/MCTP/Common/UID.hs,1007
+module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID24,25
+data TableKindEnum TableKindEnum82,83
+    Null_TableNull_Table83,84
+  | Object_TableObject_Table84,85
+  | Byte_TableByte_Table85,86
+type role role89,90
+newtype TableKind TableKind90,91
+showCore_bytes showCore_bytes94,95
+newtype HalfUID HalfUID99,100
+instance Show Show HalfUID102,103
+    show show103,104
+instance Arbitrary Arbitrary HalfUID104,105
+    arbitrary arbitrary105,106
+halfUID halfUID107,108
+type Object_Table_HalfUID Object_Table_HalfUID110,111
+type Byte_Table_HalfUID Byte_Table_HalfUID112,113
+newtype UID UID117,118
+instance Show Show UID120,121
+    show show121,122
+instance Arbitrary Arbitrary UID122,123
+    arbitrary arbitrary123,124
+uid uid125,126
+type Object_Table_UID Object_Table_UID133,134
+type Byte_Table_UID Byte_Table_UID134,135
+uidUpper uidUpper138,139
+uidLower uidLower141,142
+uidPlus uidPlus144,145
+(+(+:+)148,149
+hNull hNull152,153
+uNull uNull155,156
 
 ./src/System/SED/MCTP/Common/Call.hs,1361
 module System.SED.MCTP.Common.Call System.SED.MCTP.Common.Call14,15
@@ -361,8 +377,8 @@ instance Arbitrary Arbitrary Value236,237
 
 ./src/System/SED/MCTP/Common/TableUIDs.hs,165
 module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs38,39
-lookupTableHalfUID lookupTableHalfUID168,169
-lookupTableUID lookupTableUID173,174
+lookupTableHalfUID lookupTableHalfUID173,174
+lookupTableUID lookupTableUID178,179
 
 ./src/System/SED/MCTP/Common/TableUIDs/TH.hs,899
 module System.SED.MCTP.Common.TableUIDs.TH System.SED.MCTP.Common.TableUIDs.TH15,16
@@ -472,51 +488,51 @@ module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
 ./src/System/SED/MCTP/Common/Base_Type/Class.hs,2142
 module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class28,29
-newtype Core_some_integer Core_some_integer89,90
-newtype Core_some_integer = Core_some_integer {unCore_some_integer unCore_some_integer89,90
-newtype Core_integer Core_integer92,93
-type Core_integer_at_least Core_integer_at_least94,95
-newtype Core_some_uinteger Core_some_uinteger97,98
-newtype Core_some_uinteger = Core_some_uinteger {unCore_some_uinteger unCore_some_uinteger97,98
-newtype Core_uinteger Core_uinteger100,101
-type Core_uinteger_at_least Core_uinteger_at_least102,103
-newtype Core_some_bytes Core_some_bytes105,106
-newtype Core_some_bytes = Core_some_bytes {unCore_some_bytes unCore_some_bytes105,106
-instance LL.FoldableLL LL-FoldableLL Core_some_bytes Word8108,109
-    foldl foldl109,110
-    foldr foldr110,111
-instance LL.ListLike LL-ListLike Core_some_bytes Word8111,112
-    singleton singleton112,113
-    head head113,114
-    tail tail114,115
-    genericLength genericLength115,116
-newtype Core_max_bytes Core_max_bytes118,119
-type Core_max_bytes_at_least Core_max_bytes_at_least120,121
-newtype Core_bytes Core_bytes123,124
-instance (K(KnownNat n) => StreamItem (Core_uinteger n)129,130
-    parser parser130,131
-    generate generate140,141
-instance (K(KnownNat n) => StreamItem (Core_integer n)142,143
-    parser parser143,144
-    generate generate153,154
-instance (K(KnownNat n) => StreamItem (Core_bytes n)155,156
-    parser parser156,157
-    generate generate166,167
-instance (K(KnownNat n) => StreamItem (Core_max_bytes n)169,170
-    parser parser170,171
-    generate generate180,181
-instance (K(KnownNat n) => IsToken (Core_integer n)184,185
-    token token185,186
-    fromToken fromToken186,187
-instance (K(KnownNat n) => IsToken (Core_uinteger n)190,191
-    token token191,192
-    fromToken fromToken192,193
-instance (K(KnownNat n) => IsToken (Core_bytes n)196,197
-    token token197,198
-    fromToken fromToken198,199
-instance (K(KnownNat n) => IsToken (Core_max_bytes n)202,203
-    token token203,204
-    fromToken fromToken204,205
+newtype Core_some_integer Core_some_integer90,91
+newtype Core_some_integer = Core_some_integer {unCore_some_integer unCore_some_integer90,91
+newtype Core_integer Core_integer93,94
+type Core_integer_at_least Core_integer_at_least95,96
+newtype Core_some_uinteger Core_some_uinteger98,99
+newtype Core_some_uinteger = Core_some_uinteger {unCore_some_uinteger unCore_some_uinteger98,99
+newtype Core_uinteger Core_uinteger101,102
+type Core_uinteger_at_least Core_uinteger_at_least103,104
+newtype Core_some_bytes Core_some_bytes106,107
+newtype Core_some_bytes = Core_some_bytes {unCore_some_bytes unCore_some_bytes106,107
+instance LL.FoldableLL LL-FoldableLL Core_some_bytes Word8109,110
+    foldl foldl110,111
+    foldr foldr111,112
+instance LL.ListLike LL-ListLike Core_some_bytes Word8112,113
+    singleton singleton113,114
+    head head114,115
+    tail tail115,116
+    genericLength genericLength116,117
+newtype Core_max_bytes Core_max_bytes119,120
+type Core_max_bytes_at_least Core_max_bytes_at_least121,122
+newtype Core_bytes Core_bytes124,125
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)130,131
+    parser parser131,132
+    generate generate141,142
+instance (K(KnownNat n) => StreamItem (Core_integer n)143,144
+    parser parser144,145
+    generate generate154,155
+instance (K(KnownNat n) => StreamItem (Core_bytes n)156,157
+    parser parser157,158
+    generate generate167,168
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)170,171
+    parser parser171,172
+    generate generate181,182
+instance (K(KnownNat n) => IsToken (Core_integer n)185,186
+    token token186,187
+    fromToken fromToken187,188
+instance (K(KnownNat n) => IsToken (Core_uinteger n)191,192
+    token token192,193
+    fromToken fromToken193,194
+instance (K(KnownNat n) => IsToken (Core_bytes n)197,198
+    token token198,199
+    fromToken fromToken199,200
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)203,204
+    token token204,205
+    fromToken fromToken205,206
 
 ./src/System/SED/MCTP/Common/Base_Type/TH.hs,323
 module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
@@ -618,27 +634,27 @@ makeApp makeApp36,37
 instance HasLogFunc HasLogFunc App39,40
 instance HasLogFunc App where logFuncL logFuncL39,40
 
-./src/Data/BoundedSize/Class.hs,1004
+./src/Data/BoundedSize/Class.hs,1006
 module Data.BoundedSize.ClassData.BoundedSize.Class25,26
-import import50,51
-type role role67,68
-newtype BoundedSize BoundedSize68,69
-class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize71,72
-instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a72,73
-instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a75,76
-    predicate predicate76,77
-    failMsg failMsg81,82
-class (IsBoundedSize l l a) => IsFixedSize IsFixedSize94,95
-instance (I(IsBoundedSize l l a) => IsFixedSize l a95,96
-type FixedSize FixedSize96,97
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize99,100
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a100,101
-type MaxSize MaxSize101,102
-type AtLeast AtLeast108,109
-instance {-# OVERLAPPING #-} (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))113,114
-    arbitrary arbitrary114,115
-    shrink shrink115,116
-fromNat fromNat124,125
+import import53,54
+type role role70,71
+newtype BoundedSize BoundedSize71,72
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize74,75
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a75,76
+instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a78,79
+    predicate predicate79,80
+    failMsg failMsg84,85
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize97,98
+instance (I(IsBoundedSize l l a) => IsFixedSize l a98,99
+type FixedSize FixedSize99,100
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize102,103
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a103,104
+type MaxSize MaxSize104,105
+type AtLeast AtLeast111,112
+instance {-# OVERLAPPING #-} (K(KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))116,117
+    arbitrary arbitrary117,118
+    shrink shrink118,119
+fromNat fromNat127,128
 
 ./src/Data/BoundedSize/TH.hs,276
 module Data.BoundedSize.THData.BoundedSize.TH10,11
@@ -650,16 +666,15 @@ typeFromInt typeFromInt122,123
 unsafeCreateExp unsafeCreateExp135,136
 universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType161,162
 
-./src/Data/BoundedSize.hs,796
+./src/Data/BoundedSize.hs,773
 module Data.BoundedSizeData.BoundedSize25,26
-class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps IsBoundedSizeListOps76,77
-instance (K(KnownNat l, KnownNat u, ListOps a) => IsBoundedSizeListOps l u a77,78
-class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps IsFixedSizeListOps79,80
-instance (K(KnownNat n, ListOps a) => IsFixedSizeListOps n a80,81
-class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps IsMaxSizeListOps82,83
-instance (K(KnownNat n, ListOps a) => IsMaxSizeListOps n a83,84
-append append112,113
-append append121,122
+class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps IsBoundedSizeListOps78,79
+instance (K(KnownNat l, KnownNat u, ListOps a) => IsBoundedSizeListOps l u a79,80
+class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps IsFixedSizeListOps81,82
+instance (K(KnownNat n, ListOps a) => IsFixedSizeListOps n a82,83
+class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps IsMaxSizeListOps84,85
+instance (K(KnownNat n, ListOps a) => IsMaxSizeListOps n a85,86
+append append114,115
 replicate replicate127,128
 map map140,141
 take take171,172
@@ -671,78 +686,80 @@ padLeft padLeft228,229
 padRight padRight231,232
 padRight padRight240,241
 
-./src/Data/HasSize.hs,1399
+./src/Data/HasSize.hs,1497
 module Data.HasSizeData.HasSize18,19
-class HasSize HasSize45,46
-class HasSize a where size size45,46
-instance HasSize HasSize Int850,51
-instance HasSize Int8              where size size50,51
-instance HasSize HasSize Int1651,52
-instance HasSize Int16             where size size51,52
-instance HasSize HasSize Int3252,53
-instance HasSize Int32             where size size52,53
-instance HasSize HasSize Int6453,54
-instance HasSize Int64             where size size53,54
-instance HasSize HasSize Int55,56
-instance HasSize Int               where size size55,56
-instance {-# OVERLAPPING #-} HasSize HasSize Integer59,60
-  where size size60,61
-instance HasSize HasSize Word864,65
-instance HasSize Word8             where size size64,65
-instance HasSize HasSize Word1665,66
-instance HasSize Word16            where size size65,66
-instance HasSize HasSize Word3266,67
-instance HasSize Word32            where size size66,67
-instance HasSize HasSize Word6467,68
-instance HasSize Word64            where size size67,68
-instance HasSize HasSize Word69,70
-instance HasSize Word              where size size69,70
-instance {-# OVERLAPPING #-} HasSize HasSize Natural73,74
-  where size size74,75
-instance {-# OVERLAPPABLE #-} ListLike ListLike full e => HasSize full77,78
-instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size77,78
+class HasSize HasSize47,48
+class HasSize a where size size47,48
+instance HasSize HasSize Int852,53
+instance HasSize Int8              where size size52,53
+instance HasSize HasSize Int1653,54
+instance HasSize Int16             where size size53,54
+instance HasSize HasSize Int3254,55
+instance HasSize Int32             where size size54,55
+instance HasSize HasSize Int6455,56
+instance HasSize Int64             where size size55,56
+instance HasSize HasSize Int57,58
+instance HasSize Int               where size size57,58
+instance {-# OVERLAPPING #-} HasSize HasSize Integer61,62
+  where size size62,63
+instance HasSize HasSize Word866,67
+instance HasSize Word8             where size size66,67
+instance HasSize HasSize Word1667,68
+instance HasSize Word16            where size size67,68
+instance HasSize HasSize Word3268,69
+instance HasSize Word32            where size size68,69
+instance HasSize HasSize Word6469,70
+instance HasSize Word64            where size size69,70
+instance HasSize HasSize Word71,72
+instance HasSize Word              where size size71,72
+instance {-# OVERLAPPING #-} HasSize HasSize Natural75,76
+  where size size76,77
+instance {-# OVERLAPPABLE #-} ListLike ListLike full e => HasSize full79,80
+instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size79,80
+instance HasSize HasSize (Set a)81,82
+instance HasSize (Set a)           where size size81,82
 
-./src/Data/Refined.hs,1666
+./src/Data/Refined.hs,1660
 module Data.RefinedData.Refined26,27
-type role role47,48
-newtype Refined Refined48,49
-type a a52,53
-test test56,57
-accept accept60,61
-class Coercible (p a) a => Predicate Predicate63,64
-    predicate predicate64,65
-    failMsg failMsg66,67
-    plain plain68,69
-    unsafeCreate unsafeCreate71,72
-    safeCreate safeCreate74,75
-    create create77,78
-    refine refine80,81
-instance (N(Num a, Predicate p a) => Num (Refined p a)84,85
-    (R(Refinedx)86,87
-    negate negate89,90
-    abs abs90,91
-    signum signum91,92
-    fromInteger fromInteger92,93
-instance (R(Read a, Predicate p a) => Read (Refined p a)95,96
-    readPrec readPrec96,97
-instance (I(IsString a, Predicate p a) => IsString (Refined p a)99,100
-    fromString fromString100,101
-instance (I(IsList a, Predicate p a) => IsList (Refined p a)103,104
-    type Item Item104,105
-    fromList fromList105,106
-    toList toList106,107
-instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item109,110
-    foldl foldl110,111
-    foldr foldr111,112
-instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)113,114
-    (R(Refinedx)114,115
-instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)116,117
-    mempty mempty117,118
-instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item119,120
-    singleton singleton120,121
-    head head121,122
-    tail tail122,123
-    null null123,124
-    genericLength genericLength124,125
-instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)127,128
-    arbitrary arbitrary128,129
+type role role49,50
+newtype Refined Refined50,51
+plain plain53,54
+unsafeCreate unsafeCreate56,57
+type a a61,62
+test test65,66
+accept accept69,70
+class Coercible (p a) a => Predicate Predicate72,73
+    predicate predicate73,74
+    failMsg failMsg75,76
+    safeCreate safeCreate77,78
+    create create80,81
+    refine refine83,84
+instance (N(Num a, Predicate p a) => Num (Refined p a)87,88
+    (R(Refinedx)89,90
+    negate negate92,93
+    abs abs93,94
+    signum signum94,95
+    fromInteger fromInteger95,96
+instance (R(Read a, Predicate p a) => Read (Refined p a)98,99
+    readPrec readPrec99,100
+instance (I(IsString a, Predicate p a) => IsString (Refined p a)102,103
+    fromString fromString103,104
+instance (I(IsList a, Predicate p a) => IsList (Refined p a)106,107
+    type Item Item107,108
+    fromList fromList108,109
+    toList toList109,110
+instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item112,113
+    foldl foldl113,114
+    foldr foldr114,115
+instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)116,117
+    (R(Refinedx)117,118
+instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)119,120
+    mempty mempty120,121
+instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item122,123
+    singleton singleton123,124
+    head head124,125
+    tail tail125,126
+    null null126,127
+    genericLength genericLength127,128
+instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)130,131
+    arbitrary arbitrary131,132

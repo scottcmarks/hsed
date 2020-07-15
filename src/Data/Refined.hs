@@ -25,9 +25,11 @@ Datatype refined by predicate
 
 -}
 module Data.Refined
-  ( Predicate(..)
-  , Refined
+  ( Refined
+  , plain
+  , unsafeCreate
   , type (?)
+  , Predicate(..)
   )
 where
 
@@ -49,8 +51,15 @@ type role Refined phantom _
 newtype Refined (p :: Type -> Type) a = Refined a
     deriving (Eq, Ord, Show) via a
 
+plain :: Refined p a -> a
+plain = coerce
+
+unsafeCreate :: a -> Refined p a
+unsafeCreate = coerce
+
+
 -- | An infix alias for 'Refined'.
-type a ?p = Refined p a
+type a ? p = Refined p a
 infixr 1 ?
 
 
@@ -65,12 +74,6 @@ class Coercible (p a) a => Predicate (p :: Type -> Type) a where
     predicate :: p a -> Bool
 
     failMsg :: p a -> String
-
-    plain :: Refined p a -> a
-    plain = coerce
-
-    unsafeCreate :: a -> Refined p a
-    unsafeCreate = coerce
 
     safeCreate :: a -> Either String (Refined p a)
     safeCreate = test  (Right . accept)  (Left . failMsg)

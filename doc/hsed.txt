@@ -33,23 +33,24 @@ instance Data.HasSize.HasSize GHC.Word.Word64
 instance Data.HasSize.HasSize GHC.Types.Word
 instance Data.HasSize.HasSize GHC.Natural.Natural
 instance Data.ListLike.Base.ListLike full e => Data.HasSize.HasSize full
+instance Data.HasSize.HasSize (Data.Set.Internal.Set a)
 
 
 -- | Datatype refined by predicate
 module Data.Refined
-class Coercible (p a) a => Predicate (p :: Type -> Type) a
-predicate :: Predicate p a => p a -> Bool
-failMsg :: Predicate p a => p a -> String
-plain :: Predicate p a => Refined p a -> a
-unsafeCreate :: Predicate p a => a -> Refined p a
-safeCreate :: Predicate p a => a -> Either String (Refined p a)
-create :: Predicate p a => a -> Maybe (Refined p a)
-refine :: Predicate p a => a -> Refined p a
 data Refined (p :: Type -> Type) a
+plain :: Refined p a -> a
+unsafeCreate :: a -> Refined p a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
+class Coercible (p a) a => Predicate (p :: Type -> Type) a
+predicate :: Predicate p a => p a -> Bool
+failMsg :: Predicate p a => p a -> String
+safeCreate :: Predicate p a => a -> Either String (Refined p a)
+create :: Predicate p a => a -> Maybe (Refined p a)
+refine :: Predicate p a => a -> Refined p a
 instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
@@ -100,18 +101,18 @@ type MaxSize n = BoundedSize 0 n
 --   at least <tt>3</tt>).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 data Refined (p :: Type -> Type) a
-class Coercible (p a) a => Predicate (p :: Type -> Type) a
-predicate :: Predicate p a => p a -> Bool
-failMsg :: Predicate p a => p a -> String
-plain :: Predicate p a => Refined p a -> a
-unsafeCreate :: Predicate p a => a -> Refined p a
-safeCreate :: Predicate p a => a -> Either String (Refined p a)
-create :: Predicate p a => a -> Maybe (Refined p a)
-refine :: Predicate p a => a -> Refined p a
+unsafeCreate :: a -> Refined p a
+plain :: Refined p a -> a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
+class Coercible (p a) a => Predicate (p :: Type -> Type) a
+predicate :: Predicate p a => p a -> Bool
+failMsg :: Predicate p a => p a -> String
+safeCreate :: Predicate p a => a -> Either String (Refined p a)
+create :: Predicate p a => a -> Maybe (Refined p a)
+refine :: Predicate p a => a -> Refined p a
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
@@ -332,7 +333,7 @@ class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
 --   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+append :: forall l1 u1 l2 u2 a. IsBoundedSizeListOps l1 u1 a => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new <a>BoundedSize</a> of maximum length from a basic
 --   element.
@@ -410,6 +411,8 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 data Refined (p :: Type -> Type) a
+plain :: Refined p a -> a
+unsafeCreate :: a -> Refined p a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
@@ -417,8 +420,6 @@ infixr 1 ?
 class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
-plain :: Predicate p a => Refined p a -> a
-unsafeCreate :: Predicate p a => a -> Refined p a
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 refine :: Predicate p a => a -> Refined p a
@@ -564,7 +565,7 @@ toList :: IsList l => l -> [Item l]
 --   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+append :: forall l1 u1 l2 u2 a. IsBoundedSizeListOps l1 u1 a => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new <a>BoundedSize</a> of maximum length from a basic
 --   element.
@@ -641,7 +642,7 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
-unsafeCreate :: Predicate p a => a -> Refined p a
+unsafeCreate :: a -> Refined p a
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -751,7 +752,7 @@ toList :: IsList l => l -> [Item l]
 --   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+append :: forall l1 u1 l2 u2 a. IsBoundedSizeListOps l1 u1 a => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new <a>BoundedSize</a> of maximum length from a basic
 --   element.
@@ -885,13 +886,23 @@ type Core_uinteger_8 = Core_uinteger 8
 
 -- | Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID
+data TableKindEnum
+Null_Table :: TableKindEnum
+Object_Table :: TableKindEnum
+Byte_Table :: TableKindEnum
+newtype TableKind (k :: TableKindEnum) a
+TableKind :: a -> TableKind (k :: TableKindEnum) a
 showCore_bytes :: KnownNat n => String -> Core_bytes n -> String
 newtype HalfUID
 HalfUID :: Core_halfuid -> HalfUID
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
+type Object_Table_HalfUID = HalfUID ? TableKind 'Object_Table
+type Byte_Table_HalfUID = HalfUID ? TableKind 'Byte_Table
 newtype UID
 UID :: Core_uid -> UID
 uid :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> UID
+type Object_Table_UID = UID ? TableKind 'Object_Table
+type Byte_Table_UID = UID ? TableKind 'Byte_Table
 uidUpper :: UID -> HalfUID
 uidLower :: UID -> HalfUID
 uidPlus :: HalfUID -> HalfUID -> UID
@@ -909,6 +920,12 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.HalfUID
+instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.UID.TableKind k a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (System.SED.MCTP.Common.UID.TableKind k a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (System.SED.MCTP.Common.UID.TableKind k a)
+instance GHC.Show.Show System.SED.MCTP.Common.UID.TableKindEnum
+instance GHC.Classes.Eq System.SED.MCTP.Common.UID.TableKindEnum
+instance GHC.Enum.Enum System.SED.MCTP.Common.UID.TableKindEnum
 instance GHC.Show.Show System.SED.MCTP.Common.UID.UID
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.HalfUID
@@ -1119,6 +1136,12 @@ header :: [Int] -> Parser ()
 formatString :: TypeTableRow -> ByteString
 newtype TypeTableRowDecs
 TypeTableRowDecs :: [Dec] -> TypeTableRowDecs
+type Core_type_def_max_uidrefs = 16
+type Core_Object_Table_UID = UID
+data Core_Format
+Base_Type :: Core_Format
+Restricted_Reference_Type'6 :: (Set Core_Object_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format
+formatParser :: Parser (Proxy Core_Format)
 
 -- | QuasiQuoter for Type Table enum tables.
 --   

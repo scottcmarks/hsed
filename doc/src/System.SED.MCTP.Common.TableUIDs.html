@@ -40,7 +40,7 @@ comments for Haddock to see; hence the names themselves must suffice as document
 </span><span id="line-40"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-41"></span><span>
 </span><span id="line-42"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Map</span></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">lookup</span></span><span class="hs-special">)</span><span>
-</span><span id="line-43"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">flip</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">String</span></span><span class="hs-special">)</span><span>
 </span><span id="line-44"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Maybe</span></span><span>                           </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Maybe</span></span><span class="hs-special">)</span><span>
 </span><span id="line-45"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html"><span class="hs-identifier">System.SED.MCTP.Common.TableUIDs.TH</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.TH.html#t240"><span class="hs-identifier">t240</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-46"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html"><span class="hs-identifier">System.SED.MCTP.Common.UID</span></a></span><span>          </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier">HalfUID</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier">UID</span></a></span><span class="hs-special">)</span><span>
@@ -163,34 +163,27 @@ comments for Haddock to see; hence the names themselves must suffice as document
 |]</span><span>
 </span><span id="line-164"></span><span>
 </span><span id="line-165"></span><span class="hs-comment">-- * Safe accessor functions for the generated `Map's</span><span>
-</span><span id="line-166"></span><span>
-</span><span id="line-167"></span><span class="hs-comment">-- | Look up the name of a Table `HalfUID'</span><span>
-</span><span id="line-168"></span><span class="hs-comment">--</span><span>
-</span><span id="line-169"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableHalfUID"><span class="hs-identifier hs-type">lookupTableHalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-170"></span><span id="lookupTableHalfUID"><span class="annot"><span class="annottext">lookupTableHalfUID :: HalfUID -&gt; Maybe String
-</span><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableHalfUID"><span class="hs-identifier hs-var hs-var">lookupTableHalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(HalfUID -&gt; Map HalfUID String -&gt; Maybe String)
--&gt; Map HalfUID String -&gt; HalfUID -&gt; Maybe String
-forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Map HalfUID String -&gt; Maybe String
-forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">(Map HalfUID String -&gt; HalfUID -&gt; Maybe String)
--&gt; Map HalfUID String -&gt; HalfUID -&gt; Maybe String
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Map HalfUID String
-</span><a href="System.SED.MCTP.Common.TableUIDs.html#nameHalfUID"><span class="hs-identifier hs-var">nameHalfUID</span></a></span><span>  </span><span class="hs-comment">-- &lt;-- defined in t240 TH</span><span>
+</span><span id="line-166"></span><span class="hs-comment">--</span><span>
+</span><span id="line-167"></span><span class="hs-comment">-- The definitions of @nameHalfUID@ and @nameUID@ are generated</span><span>
+</span><span id="line-168"></span><span class="hs-comment">-- by the splice of @t240@ above.</span><span>
+</span><span id="line-169"></span><span>
+</span><span id="line-170"></span><span>
 </span><span id="line-171"></span><span>
-</span><span id="line-172"></span><span class="hs-comment">-- | Look up the name of a Table `UID' or a Table object `UID'</span><span>
+</span><span id="line-172"></span><span class="hs-comment">-- | Look up the name of a Table `HalfUID'</span><span>
 </span><span id="line-173"></span><span class="hs-comment">--</span><span>
-</span><span id="line-174"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableUID"><span class="hs-identifier hs-type">lookupTableUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-175"></span><span id="lookupTableUID"><span class="annot"><span class="annottext">lookupTableUID :: UID -&gt; Maybe String
-</span><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableUID"><span class="hs-identifier hs-var hs-var">lookupTableUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(UID -&gt; Map UID String -&gt; Maybe String)
--&gt; Map UID String -&gt; UID -&gt; Maybe String
-forall a b c. (a -&gt; b -&gt; c) -&gt; b -&gt; a -&gt; c
-</span><span class="hs-identifier hs-var">flip</span></span><span> </span><span class="annot"><span class="annottext">UID -&gt; Map UID String -&gt; Maybe String
+</span><span id="line-174"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableHalfUID"><span class="hs-identifier hs-type">lookupTableHalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-175"></span><span id="lookupTableHalfUID"><span class="annot"><span class="annottext">lookupTableHalfUID :: HalfUID -&gt; Maybe String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableHalfUID"><span class="hs-identifier hs-var hs-var">lookupTableHalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HalfUID -&gt; Map HalfUID String -&gt; Maybe String
 forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
-</span><span class="hs-identifier hs-var">lookup</span></span><span> </span><span class="annot"><span class="annottext">(Map UID String -&gt; UID -&gt; Maybe String)
--&gt; Map UID String -&gt; UID -&gt; Maybe String
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Map UID String
-</span><a href="System.SED.MCTP.Common.TableUIDs.html#nameUID"><span class="hs-identifier hs-var">nameUID</span></a></span><span>          </span><span class="hs-comment">-- &lt;-- defined in t240 TH</span><span>
-</span><span id="line-176"></span></pre></body></html>
+</span><span class="hs-operator hs-var">`lookup`</span></span><span> </span><span class="annot"><span class="annottext">Map HalfUID String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#nameHalfUID"><span class="hs-identifier hs-var">nameHalfUID</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span><span>
+</span><span id="line-177"></span><span class="hs-comment">-- | Look up the name of a Table `UID' or a Table object `UID'</span><span>
+</span><span id="line-178"></span><span class="hs-comment">--</span><span>
+</span><span id="line-179"></span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableUID"><span class="hs-identifier hs-type">lookupTableUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-180"></span><span id="lookupTableUID"><span class="annot"><span class="annottext">lookupTableUID :: UID -&gt; Maybe String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#lookupTableUID"><span class="hs-identifier hs-var hs-var">lookupTableUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UID -&gt; Map UID String -&gt; Maybe String
+forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
+</span><span class="hs-operator hs-var">`lookup`</span></span><span> </span><span class="annot"><span class="annottext">Map UID String
+</span><a href="System.SED.MCTP.Common.TableUIDs.html#nameUID"><span class="hs-identifier hs-var">nameUID</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-181"></span></pre></body></html>

@@ -22,6 +22,8 @@ module Data.HasSize
 where
 
 import           Data.ListLike                (ListLike (..))
+import           Data.Set                     (Set)
+import qualified Data.Set                     as Set (size)
 import           GHC.Base                     (Ord (..), quotInt)
 import           GHC.Int                      (Int, Int16, Int32, Int64, Int8)
 import           GHC.Integer                  (Integer, complementInteger)
@@ -76,3 +78,5 @@ instance {-# OVERLAPPING #-} HasSize Natural
         size n = 1 + integerLog2 (naturalToInteger n) `quotInt` 8
 
 instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size = length
+
+instance HasSize (Set a)           where size = Set.size

@@ -51,17 +51,19 @@ module Data.BoundedSize
        , padRight
 
        , Refined
+       , plain
+       , unsafeCreate
        , type (?)
        , Predicate(..)
        , fromNat
        )
 where
 
-import           Data.BoundedSize.Class (type (?), Predicate (..), Refined,
-                                         fromNat)
-import           Data.BoundedSize.Class (AtLeast, BoundedSize (..), FixedSize,
-                                         HasSize (..), IsBoundedSize,
-                                         IsFixedSize, IsMaxSize, MaxSize)
+import           Data.BoundedSize.Class (type (?), AtLeast, BoundedSize (..),
+                                         FixedSize, HasSize (..), IsBoundedSize,
+                                         IsFixedSize, IsMaxSize, MaxSize,
+                                         Predicate (..), Refined, fromNat,
+                                         plain, unsafeCreate)
 import           Data.BoundedSize.TH    (fx, mx, typeFromInt, unsafeCreateExp)
 import           Data.ListLike          (ListOps)
 import qualified Data.ListLike          as B (append, drop, length, map,
@@ -113,8 +115,6 @@ instance (KnownNat n, ListOps a) => IsMaxSizeListOps n a
 append ::
      forall l1 u1 l2 u2 a.
      ( IsBoundedSizeListOps l1 u1 a
-     , IsBoundedSizeListOps l2 u2 a
-     , IsBoundedSizeListOps (l1 + l2) (u1 + u2) a
      )
   =>  a ? BoundedSize l1 u1
   ->  a ? BoundedSize l2 u2

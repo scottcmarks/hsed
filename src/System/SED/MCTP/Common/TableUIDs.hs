@@ -40,7 +40,7 @@ module System.SED.MCTP.Common.TableUIDs
 where
 
 import           Data.Map                            (lookup)
-import           GHC.Base                            (String, flip, ($))
+import           GHC.Base                            (String)
 import           GHC.Maybe                           (Maybe)
 import           System.SED.MCTP.Common.TableUIDs.TH (t240)
 import           System.SED.MCTP.Common.UID          (HalfUID, UID)
@@ -163,13 +163,18 @@ import           System.SED.MCTP.Common.UID          (HalfUID, UID)
 |]
 
 -- * Safe accessor functions for the generated `Map's
+--
+-- The definitions of @nameHalfUID@ and @nameUID@ are generated
+-- by the splice of @t240@ above.
+
+
 
 -- | Look up the name of a Table `HalfUID'
 --
 lookupTableHalfUID :: HalfUID -> Maybe String
-lookupTableHalfUID = flip lookup $ nameHalfUID  -- <-- defined in t240 TH
+lookupTableHalfUID = (`lookup` nameHalfUID)
 
 -- | Look up the name of a Table `UID' or a Table object `UID'
 --
 lookupTableUID :: UID -> Maybe String
-lookupTableUID = flip lookup $ nameUID          -- <-- defined in t240 TH
+lookupTableUID = (`lookup` nameUID)

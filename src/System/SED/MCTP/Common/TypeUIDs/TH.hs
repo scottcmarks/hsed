@@ -1,7 +1,11 @@
-{-# LANGUAGE DerivingVia       #-}
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE DerivingVia        #-}
+{-# LANGUAGE ExplicitNamespaces #-}
+{-# LANGUAGE NoImplicitPrelude  #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE TemplateHaskell    #-}
+{-# LANGUAGE TypeOperators      #-}
+
 {-|
 Module      : System.SED.MCTP.Common.TypeUIDs.TH
 Copyright   : (c) Magnolia Heights R&D, 2019
@@ -34,6 +38,8 @@ import           Data.Foldable                    (concatMap, foldr, maximum)
 import           Data.Functor                     ((<$>))
 import           Data.List                        (sortOn, transpose, (\\))
 import           Data.Map                         (fromListWith, toList)
+import           Data.Proxy                       (Proxy (..))
+import           Data.Set                         (Set)
 import           Data.String                      (String)
 import           Data.Tuple                       (fst, snd)
 
@@ -55,6 +61,7 @@ import           Language.Haskell.TH.Quote        (QuasiQuoter (..), quoteDec,
 import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
 
 
+import           Data.BoundedSize                 (type (?), BoundedSize (..))
 import           System.SED.MCTP.Common.THUtil    (dData, dSig, dVal, eLitS,
                                                    eUID, parseTable)
 import           System.SED.MCTP.Common.Token     (ordw)
@@ -209,19 +216,13 @@ instance Monoid TypeTableRowDecs
   where mempty = TypeTableRowDecs []
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+type Core_type_def_max_uidrefs = 16
+type Core_Object_Table_UID = UID -- FIXME
+data Core_Format =
+    Base_Type
+  | Restricted_Reference_Type'6 ((Set Core_Object_Table_UID) ? (BoundedSize 1 Core_type_def_max_uidrefs))
+formatParser :: Parser (Proxy Core_Format)
+formatParser = undefined
 
 
 

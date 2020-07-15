@@ -60,8 +60,9 @@ import           Data.BoundedSize                  (type (?), AtLeast,
                                                     MaxSize, Predicate (..),
                                                     append, bounds, drop,
                                                     fromNat, length, map,
-                                                    padLeft, padRight,
-                                                    replicate, size, take)
+                                                    padLeft, padRight, plain,
+                                                    replicate, size, take,
+                                                    unsafeCreate)
 import           Data.ByteString                   (ByteString)
 import           Data.Either                       (Either (..))
 import           Data.Functor                      ((<$>))

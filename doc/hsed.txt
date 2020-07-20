@@ -886,23 +886,13 @@ type Core_uinteger_8 = Core_uinteger 8
 
 -- | Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID
-data TableKindEnum
-Null_Table :: TableKindEnum
-Object_Table :: TableKindEnum
-Byte_Table :: TableKindEnum
-newtype TableKind (k :: TableKindEnum) a
-TableKind :: a -> TableKind (k :: TableKindEnum) a
 showCore_bytes :: KnownNat n => String -> Core_bytes n -> String
 newtype HalfUID
 HalfUID :: Core_halfuid -> HalfUID
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
-type Object_Table_HalfUID = HalfUID ? TableKind 'Object_Table
-type Byte_Table_HalfUID = HalfUID ? TableKind 'Byte_Table
 newtype UID
 UID :: Core_uid -> UID
 uid :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> UID
-type Object_Table_UID = UID ? TableKind 'Object_Table
-type Byte_Table_UID = UID ? TableKind 'Byte_Table
 uidUpper :: UID -> HalfUID
 uidLower :: UID -> HalfUID
 uidPlus :: HalfUID -> HalfUID -> UID
@@ -920,12 +910,6 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.HalfUID
-instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.UID.TableKind k a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (System.SED.MCTP.Common.UID.TableKind k a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (System.SED.MCTP.Common.UID.TableKind k a)
-instance GHC.Show.Show System.SED.MCTP.Common.UID.TableKindEnum
-instance GHC.Classes.Eq System.SED.MCTP.Common.UID.TableKindEnum
-instance GHC.Enum.Enum System.SED.MCTP.Common.UID.TableKindEnum
 instance GHC.Show.Show System.SED.MCTP.Common.UID.UID
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.HalfUID
@@ -1935,6 +1919,38 @@ lookupTableHalfUID :: HalfUID -> Maybe String
 
 -- | Look up the name of a Table <a>UID</a> or a Table object <a>UID</a>
 lookupTableUID :: UID -> Maybe String
+
+
+-- | Reference_Types per Core Spec
+module System.SED.MCTP.Common.Reference_Types
+data TableKinds
+Null_Table :: TableKinds
+Object_Table :: TableKinds
+Byte_Table :: TableKinds
+newtype TableKind (k :: TableKinds) a
+TableKind :: a -> TableKind (k :: TableKinds) a
+type Table_HalfUID k = HalfUID ? (TableKind k)
+type Table_UID k = UID ? (TableKind k)
+class IsTable_HalfUID a
+fromTable_HalfUID :: IsTable_HalfUID a => Table_HalfUID k -> a
+type Null_Table_HalfUID = Table_HalfUID 'Null_Table
+type Object_Table_HalfUID = Table_HalfUID 'Object_Table
+type Byte_Table_HalfUID = Table_HalfUID 'Byte_Table
+type Null_Table_UID = Table_UID 'Null_Table
+type Object_Table_UID = Table_UID 'Object_Table
+type Byte_Table_UID = Table_UID 'Byte_Table
+nthNull :: Null_Table_HalfUID
+ntuNull :: Null_Table_UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Reference_Types.TableKind k a)
+instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.Reference_Types.TableKind k a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (System.SED.MCTP.Common.Reference_Types.TableKind k a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (System.SED.MCTP.Common.Reference_Types.TableKind k a)
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.TableKinds
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.TableKinds
+instance GHC.Enum.Enum System.SED.MCTP.Common.Reference_Types.TableKinds
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a Data.Refined.? System.SED.MCTP.Common.Reference_Types.TableKind k)
 
 
 -- | Parse and generate values used in method invocations and responses.

@@ -50,13 +50,13 @@ import           Language.Haskell.TH.Syntax       (returnQ)
 
 
 
+-- import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
+--                                                          Object_Table_HalfUID)
 import           System.SED.MCTP.Common.Table     (TableName (..),
                                                    TemplateName (..))
 import           System.SED.MCTP.Common.THUtil
 import           System.SED.MCTP.Common.UID       (HalfUID (..), UID (..),
                                                    uidLower, uidUpper)
-
-
 import           System.SED.MCTP.Common.Util      (hexUID,
                                                    trimTrailingWhitespace)
 
@@ -163,12 +163,19 @@ rowSepString = "    +------------------------+------------------------+---------
 dUIDRow :: UIDRow -> UIDRowDecs
 dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateName _templateName)) =
     UIDRowDecs
-    [ dSig o ''UID     , dVal o $ eUID     objectUID
-    , dSig u ''UID     , dVal u $ eUID     tableUID
-    , dSig h ''HalfUID , dVal h $ eHalfUID tableHalfUID
+    [ dSig o ''UID
+    , dVal o $ eUID     objectUID
+
+    , dSig u ''UID
+    , dVal u $ eUID     tableUID
+
+    , dSig h ''HalfUID
+    , dVal h $ eHalfUID tableHalfUID
     ]
+
     [ eValP h table
     ]
+
     [ eValP u $ table ++ " Table"
     , eValP o $ table ++ " Table Object"
     ]

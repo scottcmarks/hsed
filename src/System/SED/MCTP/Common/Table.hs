@@ -336,3 +336,10 @@ newtype ColumnType = ColumnType ()
 -- | This is the object descriptor for the Table Table in the Columns Table,
 --   which is to say it is that row of the Columns Table that describes
 --   the columns of the Table Table.
+{-
+
+FIXME
+
+Really.  Just ... fix me.  More likely, get rid of this.
+
+-}

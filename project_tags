@@ -71,6 +71,33 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
+./src/System/SED/MCTP/Common/Reference_Types.hs,1103
+module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types24,25
+data TableKinds TableKinds40,41
+    Null_TableNull_Table41,42
+  | Object_TableObject_Table42,43
+  | Byte_TableByte_Table43,44
+type role role47,48
+newtype TableKind TableKind48,49
+instance StreamItem StreamItem a => StreamItem (a ? TableKind k)51,52
+  where generate generate52,53
+type Table_HalfUID Table_HalfUID55,56
+type Table_UID Table_UID57,58
+class IsTable_HalfUID IsTable_HalfUID60,61
+    fromTable_HalfUID fromTable_HalfUID61,62
+instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)63,64
+    fromTable_HalfUID fromTable_HalfUID64,65
+instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)66,67
+    fromTable_HalfUID fromTable_HalfUID67,68
+type Null_Table_HalfUID Null_Table_HalfUID70,71
+type Object_Table_HalfUID Object_Table_HalfUID71,72
+type Byte_Table_HalfUID Byte_Table_HalfUID72,73
+type Null_Table_UID Null_Table_UID74,75
+type Object_Table_UID Object_Table_UID75,76
+type Byte_Table_UID Byte_Table_UID76,77
+nthNull nthNull79,80
+ntuNull ntuNull82,83
+
 ./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16
 type Core_bytes_4 Core_bytes_468,69
@@ -164,37 +191,27 @@ data EnumRow = EnumRow EnumRow277,278
 enumTableTitle enumTableTitle280,281
 enumTableRow enumTableRow288,289
 
-./src/System/SED/MCTP/Common/UID.hs,1007
-module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID24,25
-data TableKindEnum TableKindEnum82,83
-    Null_TableNull_Table83,84
-  | Object_TableObject_Table84,85
-  | Byte_TableByte_Table85,86
-type role role89,90
-newtype TableKind TableKind90,91
-showCore_bytes showCore_bytes94,95
-newtype HalfUID HalfUID99,100
-instance Show Show HalfUID102,103
-    show show103,104
-instance Arbitrary Arbitrary HalfUID104,105
-    arbitrary arbitrary105,106
-halfUID halfUID107,108
-type Object_Table_HalfUID Object_Table_HalfUID110,111
-type Byte_Table_HalfUID Byte_Table_HalfUID112,113
-newtype UID UID117,118
-instance Show Show UID120,121
-    show show121,122
-instance Arbitrary Arbitrary UID122,123
-    arbitrary arbitrary123,124
-uid uid125,126
-type Object_Table_UID Object_Table_UID133,134
-type Byte_Table_UID Byte_Table_UID134,135
-uidUpper uidUpper138,139
-uidLower uidLower141,142
-uidPlus uidPlus144,145
-(+(+:+)148,149
-hNull hNull152,153
-uNull uNull155,156
+./src/System/SED/MCTP/Common/UID.hs,599
+module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID25,26
+showCore_bytes showCore_bytes82,83
+newtype HalfUID HalfUID87,88
+instance Show Show HalfUID90,91
+    show show91,92
+instance Arbitrary Arbitrary HalfUID92,93
+    arbitrary arbitrary93,94
+halfUID halfUID95,96
+newtype UID UID101,102
+instance Show Show UID104,105
+    show show105,106
+instance Arbitrary Arbitrary UID106,107
+    arbitrary arbitrary107,108
+uid uid109,110
+uidUpper uidUpper118,119
+uidLower uidLower121,122
+uidPlus uidPlus124,125
+(+(+:+)128,129
+hNull hNull132,133
+uNull uNull135,136
 
 ./src/System/SED/MCTP/Common/Call.hs,1361
 module System.SED.MCTP.Common.Call System.SED.MCTP.Common.Call14,15
@@ -402,12 +419,12 @@ rowSep rowSep152,153
 pieceLengths pieceLengths155,156
 rowSepString rowSepString158,159
 dUIDRow dUIDRow162,163
-data UIDRowDecs UIDRowDecs180,181
-data UIDRowDecs = UIDRowDecs UIDRowDecs180,181
-instance Semigroup Semigroup UIDRowDecs183,184
-  where (U(UIDRowDecsu1eh1eu1)184,185
-instance Monoid Monoid UIDRowDecs187,188
-  where mempty mempty188,189
+data UIDRowDecs UIDRowDecs187,188
+data UIDRowDecs = UIDRowDecs UIDRowDecs187,188
+instance Semigroup Semigroup UIDRowDecs190,191
+  where (U(UIDRowDecsu1eh1eu1)191,192
+instance Monoid Monoid UIDRowDecs194,195
+  where mempty mempty195,196
 
 ./src/System/SED/MCTP/Common/Token.hs,1908
 module System.SED.MCTP.Common.TokenSystem.SED.MCTP.Common.Token14,15

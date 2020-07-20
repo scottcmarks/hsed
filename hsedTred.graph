@@ -43,7 +43,7 @@ digraph G {
 				label=Extras,
 				style=filled
 			];
-			u29			 [fillcolor="#bbffff",
+			u30			 [fillcolor="#bbffff",
 				label=GitVersion,
 				penwidth=0,
 				style=filled];
@@ -101,10 +101,10 @@ digraph G {
 							label=TableUIDs,
 							style=filled
 						];
-						u24						 [fillcolor="#ff7777",
+						u19						 [fillcolor="#ff7777",
 							label=TableUIDs,
 							style="filled,bold"];
-						u25						 [fillcolor="#ff77ff",
+						u20						 [fillcolor="#ff77ff",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -114,10 +114,10 @@ digraph G {
 							label=TypeUIDs,
 							style=filled
 						];
-						u18						 [fillcolor="#ff7777",
+						u25						 [fillcolor="#ff7777",
 							label=TypeUIDs,
 							style="filled,bold"];
-						u19						 [fillcolor="#33ff33",
+						u26						 [fillcolor="#33ff33",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -158,20 +158,24 @@ digraph G {
 						label=Types,
 						penwidth=0,
 						style=filled];
-					u20					 [fillcolor="#ff7777",
-						label=THUtil,
+					u18					 [fillcolor="#ff7777",
+						label=Reference_Types,
 						penwidth=0,
 						style=filled];
 					u21					 [fillcolor="#ff7777",
-						label=Util,
+						label=Table,
 						penwidth=0,
 						style=filled];
 					u22					 [fillcolor="#ff7777",
-						label=SpecialPurposeUIDs,
+						label=THUtil,
 						penwidth=0,
 						style=filled];
 					u23					 [fillcolor="#ff7777",
-						label=Table,
+						label=Util,
+						penwidth=0,
+						style=filled];
+					u24					 [fillcolor="#ff7777",
+						label=SpecialPurposeUIDs,
 						penwidth=0,
 						style=filled];
 				}
@@ -180,7 +184,7 @@ digraph G {
 						label=Host,
 						style=filled
 					];
-					u26					 [fillcolor="#bbff77",
+					u27					 [fillcolor="#bbff77",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -190,7 +194,7 @@ digraph G {
 						label=TPer,
 						style=filled
 					];
-					u27					 [fillcolor="#3333ff",
+					u28					 [fillcolor="#3333ff",
 						label=Run,
 						penwidth=0,
 						style=filled];
@@ -198,13 +202,13 @@ digraph G {
 			}
 		}
 	}
-	u28	 [fillcolor="#bbffbb",
+	u29	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u28 -> u29;
-	u28 -> u26;
-	u28 -> u27;
+	u29 -> u30;
+	u29 -> u27;
+	u29 -> u28;
 	u0 -> u4;
 	u1 -> u2;
 	u1 -> u3;
@@ -218,26 +222,27 @@ digraph G {
 	u15 -> u12;
 	u16 -> u17;
 	u17 -> u11;
-	u17 -> u22;
-	u17 -> u24;
 	u17 -> u18;
-	u20 -> u12;
+	u17 -> u24;
+	u17 -> u25;
+	u18 -> u19;
 	u21 -> u12;
 	u22 -> u12;
 	u23 -> u12;
+	u24 -> u12;
 	u6 -> u10;
 	u7 -> u0;
 	u7 -> u9;
 	u10 -> u7;
-	u24 -> u25;
-	u25 -> u20;
-	u25 -> u21;
-	u25 -> u23;
-	u18 -> u19;
 	u19 -> u20;
-	u19 -> u21;
-	u26 -> u5;
-	u26 -> u16;
+	u20 -> u21;
+	u20 -> u22;
+	u20 -> u23;
+	u25 -> u26;
+	u26 -> u22;
+	u26 -> u23;
 	u27 -> u5;
 	u27 -> u16;
+	u28 -> u5;
+	u28 -> u16;
 }

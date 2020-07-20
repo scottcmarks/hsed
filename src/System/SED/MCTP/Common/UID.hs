@@ -4,6 +4,7 @@
 {-# LANGUAGE KindSignatures        #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE RoleAnnotations       #-}
 {-# LANGUAGE TypeOperators         #-}
 {-# LANGUAGE UndecidableInstances  #-}
@@ -33,7 +34,6 @@ import           Data.Functor                       ((<$>))
 import           Data.String                        (String)
 import           GHC.Base                           (($), (.))
 import           GHC.Classes                        (Eq (..), Ord (..))
-import           GHC.Enum                           (Enum (..))
 import           GHC.Exts                           (IsList (..))
 import           GHC.Show                           (Show (..), showString)
 import           GHC.TypeLits                       (KnownNat)
@@ -49,7 +49,6 @@ import           System.SED.MCTP.Common.Simple_Type (Core_halfuid, Core_uid)
 import           System.SED.MCTP.Common.StreamItem  (StreamItem (..))
 import           System.SED.MCTP.Common.Token       (IsToken (..))
 
-import           Data.Refined                       (type (?))
 
 {-
 3.2.4.1 Method Syntax
@@ -80,17 +79,6 @@ b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
 
 
 
-data TableKindEnum =
-    Null_Table
-  | Object_Table
-  | Byte_Table
-    deriving (Enum, Eq, Show)
-
-
-type role TableKind phantom _
-newtype TableKind (k::TableKindEnum) a = TableKind a
-   deriving (Eq,Ord,Show) via a
-
 
 showCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
 showCore_bytes tag = foldl rollUp tag . toList
@@ -107,10 +95,6 @@ instance Arbitrary HalfUID where
 
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
 halfUID b3 b2 b1 b0 = HalfUID $ core_bytes_4 b3 b2 b1 b0
-
-type Object_Table_HalfUID = HalfUID ? TableKind 'Object_Table
-
-type Byte_Table_HalfUID = HalfUID ? TableKind 'Byte_Table
 
 
 
@@ -129,10 +113,6 @@ uid ::
  -> UID
 uid u3 u2 u1 u0 l3 l2 l1 l0 =
     UID $ core_bytes_8 u3 u2 u1 u0 l3 l2 l1 l0
-
-
-type Object_Table_UID = UID ? TableKind 'Object_Table
-type Byte_Table_UID = UID ? TableKind 'Byte_Table
 
 
 
@@ -155,3 +135,31 @@ hNull = halfUID 0x00 0x00 0x00 0x00
 
 uNull :: UID
 uNull = hNull +:+ hNull
+
+
+{-
+In general, a UID contains two pieces of information, essentially a table index,
+selecting a Table, and a row index, selecting a row within that Table.
+In the particular cases of a "Table UID" or a "Table Object UID",
+there is only the information from the HalfUID that specifies the Table.
+
+
+class IsTable_HalfUID a where
+    fromTable_HalfUID :: forall (k::TableKinds). HalfUID ? TableKind k -> a
+
+
+instance forall (k::TableKinds). IsTable_HalfUID (HalfUID ? TableKind k) where
+    fromTable_HalfUID = coerce
+
+instance forall (k::TableKinds). IsTable_HalfUID (UID ? TableKind k) where
+    fromTable_HalfUID oth = unsafeCreate $ plain oth +:+ hNull
+
+
+fromByte_Table_HalfUID :: HalfUID ? TableKind 'Byte_Table -> UID ? TableKind 'Byte_Table
+fromByte_Table_HalfUID oth = unsafeCreate $ plain oth +:+ hNull
+
+
+This whole thing probably has to move to TableUIDs.hs so that it can reference defined Table UIDs.  Which, of course, should be Table_Object_HalfUIDs.  Gordian knots indeed.  TODO FIXME
+
+
+-}

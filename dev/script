@@ -140,8 +140,12 @@ putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
+:{
+othTable :: Object_Table_HalfUID
+othTable = unsafeCreate hTable
+:}
 
-unsafeCreate hTable :: HalfUID ? (TableKind 'Object_Table)
+putStrLn $ showString "othTable = " . shows othTable $ ""
 
 
 putStrLn "\n\n\nBuh-bye now.\n\n"

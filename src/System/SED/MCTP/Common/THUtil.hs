@@ -16,29 +16,31 @@ TableUIDs Template Haskell
 module System.SED.MCTP.Common.THUtil
 where
 
-import           Data.Attoparsec.ByteString       (Parser, parseOnly)
-import           Data.Either                      (either)
-import           Data.List                        (foldl)
-import           Data.String                      (IsString (..))
+import           Data.Attoparsec.ByteString             (Parser, parseOnly)
+import           Data.Either                            (either)
+import           Data.List                              (foldl)
+import           Data.String                            (IsString (..))
 
-import           GHC.Base                         (Maybe (..), String, id, map,
-                                                   (.))
-import           GHC.Err                          (error)
-import           GHC.Integer                      (Integer)
-import           GHC.Real                         (Integral (..), toInteger)
-import           GHC.TypeLits                     (KnownNat)
-import           GHC.Word                         (Word8 (..))
+import           GHC.Base                               (Maybe (..), String, id,
+                                                         map, (.))
+import           GHC.Err                                (error)
+import           GHC.Integer                            (Integer)
+import           GHC.Real                               (Integral (..),
+                                                         toInteger)
+import           GHC.TypeLits                           (KnownNat)
+import           GHC.Word                               (Word8 (..))
 
-import           Language.Haskell.TH              (Body (..), Con (..),
-                                                   Dec (..), DerivClause (..),
-                                                   Exp (..), Lit (..), Name,
-                                                   Pat (..), TyLit (..),
-                                                   Type (..))
-
-import           System.SED.MCTP.Common.Base_Type (Core_bytes (..), toList)
-import           System.SED.MCTP.Common.UID       (HalfUID (..), UID (..),
-                                                   halfUID, uid)
-
+import           Language.Haskell.TH                    (Body (..), Con (..),
+                                                         Dec (..),
+                                                         DerivClause (..),
+                                                         Exp (..), Lit (..),
+                                                         Name, Pat (..),
+                                                         TyLit (..), Type (..))
+import           System.SED.MCTP.Common.Base_Type       (Core_bytes (..),
+                                                         toList)
+import           System.SED.MCTP.Common.Reference_Types (otHalfUID)
+import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..),
+                                                         halfUID, uid)
 
 -- | Run a table parser (any parser, really) producing a result or throwing an error.
 --   This is safe only in TH code, where an error is a compilation error.
@@ -65,6 +67,10 @@ dTyp n t v = TySynD n [] (AppT (ConT t) (LitT (NumTyLit v)))
 -- | HalfUID as Exp
 eHalfUID :: HalfUID -> Exp
 eHalfUID (HalfUID fb) = eID 'halfUID fb
+
+-- | Object_Table_HalfUID as Exp
+eObject_Table_HalfUID :: HalfUID -> Exp
+eObject_Table_HalfUID (HalfUID fb) = eID 'otHalfUID fb
 
 -- | UID as Exp
 eUID :: UID -> Exp

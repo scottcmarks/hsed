@@ -29,14 +29,15 @@ where
 -- import           Data.Functor                      ((<$>))
 import           Data.Refined                      (type (?), plain,
                                                     unsafeCreate)
+import           Data.Word8                        (Word8)
 import           GHC.Base                          (Eq (..), Ord (..),
                                                     undefined, ($), (.))
 import           GHC.Enum                          (Enum (..))
 import           GHC.Show                          (Show (..))
 import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
-import           System.SED.MCTP.Common.TableUIDs  ()
 import           System.SED.MCTP.Common.UID        (HalfUID (..), UID (..),
-                                                    hNull, (+:+))
+                                                    hNull, halfUID, uidUpper,
+                                                    (+:+))
 
 data TableKinds =
     Null_Table
@@ -60,12 +61,15 @@ type Table_UID k          = UID ? (TableKind k)
 
 class IsTable_HalfUID a where
     fromTable_HalfUID :: Table_HalfUID k -> a
+    toTable_HalfUID :: a -> Table_HalfUID k -- TODO ?? Safe ??
 
 instance IsTable_HalfUID (Table_HalfUID k) where
-    fromTable_HalfUID th = unsafeCreate $ plain th
+    fromTable_HalfUID = unsafeCreate . plain
+    toTable_HalfUID = unsafeCreate . plain
 
 instance IsTable_HalfUID (Table_UID k) where
-    fromTable_HalfUID th = unsafeCreate $ plain th +:+ hNull
+    fromTable_HalfUID = unsafeCreate . (+:+ hNull) . plain
+    toTable_HalfUID = unsafeCreate . uidUpper . plain
 
 
 type Null_Table_HalfUID   = Table_HalfUID 'Null_Table
@@ -82,3 +86,6 @@ nthNull = unsafeCreate $ hNull
 
 ntuNull :: Null_Table_UID
 ntuNull = fromTable_HalfUID nthNull
+
+otHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_HalfUID
+otHalfUID b3 b2 b1 b0 = unsafeCreate $ halfUID b3 b2 b1 b0

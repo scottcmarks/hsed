@@ -50,35 +50,6 @@ import           System.SED.MCTP.Common.StreamItem  (StreamItem (..))
 import           System.SED.MCTP.Common.Token       (IsToken (..))
 
 
-{-
-3.2.4.1 Method Syntax
-
-A method invocation is made up of the following parts:
-
-1. Method Header Ð The method header is made up of the InvokingID and the MethodID, and
-identifies what method is being called and on what the method is operating.
-1. InvokingID Ð This is the 8-byte UID of the table, object, or SP upon which the method is
-being invoked.
-a. For SP methods invoked within a session, the InvokingID SHALL be 0x00 0x00 0x00
-0x00 0x00 0x00 0x00 0x01, which is used to signify "this SP".
-b. For methods invoked at the Session Manager Layer, the InvokingID SHALL be 0x00
-0x00 0x00 0x00 0x00 0x00 0x00 0xFF, known as the "SMUID".
-c. For other methods, this is the 8-byte UID of the table or object upon which the method
-is being invoked.
-
-
-
-2. MethodID Ð This is the 8-byte UID of the method being invoked.
-a. For methods invoked within a session, this SHALL be the UID column value of the
-object that represents the methed as assigned in the MethodID table.
-b. For Session Manager Layer methods, this SHALL be the UID as assigned in Table
-241. There SHALL NOT be rows in the MethodID table that represent these methods.
-
--}
-
-
-
-
 
 showCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
 showCore_bytes tag = foldl rollUp tag . toList
@@ -86,8 +57,7 @@ showCore_bytes tag = foldl rollUp tag . toList
 
 
 newtype HalfUID = HalfUID (Core_halfuid)
-    deriving(Eq, Ord)
-    deriving(IsToken, StreamItem, IsList) via (Core_halfuid)
+    deriving(Eq, Ord, IsToken, StreamItem, IsList) via (Core_halfuid)
 instance Show HalfUID where
     show (HalfUID fb) = showCore_bytes "halfUID" fb
 instance Arbitrary HalfUID where
@@ -100,8 +70,7 @@ halfUID b3 b2 b1 b0 = HalfUID $ core_bytes_4 b3 b2 b1 b0
 
 
 newtype UID = UID (Core_uid)
-    deriving(Eq, Ord)
-    deriving(IsToken, StreamItem, IsList) via (Core_uid)
+    deriving(Eq, Ord, IsToken, StreamItem, IsList) via (Core_uid)
 instance Show UID where
     show (UID fb) = showCore_bytes "uid" fb
 instance Arbitrary UID where
@@ -135,31 +104,3 @@ hNull = halfUID 0x00 0x00 0x00 0x00
 
 uNull :: UID
 uNull = hNull +:+ hNull
-
-
-{-
-In general, a UID contains two pieces of information, essentially a table index,
-selecting a Table, and a row index, selecting a row within that Table.
-In the particular cases of a "Table UID" or a "Table Object UID",
-there is only the information from the HalfUID that specifies the Table.
-
-
-class IsTable_HalfUID a where
-    fromTable_HalfUID :: forall (k::TableKinds). HalfUID ? TableKind k -> a
-
-
-instance forall (k::TableKinds). IsTable_HalfUID (HalfUID ? TableKind k) where
-    fromTable_HalfUID = coerce
-
-instance forall (k::TableKinds). IsTable_HalfUID (UID ? TableKind k) where
-    fromTable_HalfUID oth = unsafeCreate $ plain oth +:+ hNull
-
-
-fromByte_Table_HalfUID :: HalfUID ? TableKind 'Byte_Table -> UID ? TableKind 'Byte_Table
-fromByte_Table_HalfUID oth = unsafeCreate $ plain oth +:+ hNull
-
-
-This whole thing probably has to move to TableUIDs.hs so that it can reference defined Table UIDs.  Which, of course, should be Table_Object_HalfUIDs.  Gordian knots indeed.  TODO FIXME
-
-
--}

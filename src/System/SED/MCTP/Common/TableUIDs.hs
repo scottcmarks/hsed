@@ -39,12 +39,12 @@ comments for Haddock to see; hence the names themselves must suffice as document
 module System.SED.MCTP.Common.TableUIDs
 where
 
-import           Data.Map                            (lookup)
-import           GHC.Base                            (String)
-import           GHC.Maybe                           (Maybe)
-import           System.SED.MCTP.Common.TableUIDs.TH (t240)
-import           System.SED.MCTP.Common.UID          (HalfUID, UID)
-
+import           Data.Map                               (lookup)
+import           GHC.Base                               (String)
+import           GHC.Maybe                              (Maybe)
+import           System.SED.MCTP.Common.Reference_Types (Object_Table_HalfUID)
+import           System.SED.MCTP.Common.TableUIDs.TH    (t240)
+import           System.SED.MCTP.Common.UID             (UID)
 
 
 -- * Table HalfUID, UIDs, and Object UIDs
@@ -169,9 +169,9 @@ import           System.SED.MCTP.Common.UID          (HalfUID, UID)
 
 
 
--- | Look up the name of a Table `HalfUID'
+-- | Look up the name of a `Table_Object_HalfUID'
 --
-lookupTableHalfUID :: HalfUID -> Maybe String
+lookupTableHalfUID ::Object_Table_HalfUID -> Maybe String
 lookupTableHalfUID = (`lookup` nameHalfUID)
 
 -- | Look up the name of a Table `UID' or a Table object `UID'

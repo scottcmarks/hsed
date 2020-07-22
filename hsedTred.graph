@@ -101,10 +101,10 @@ digraph G {
 							label=TableUIDs,
 							style=filled
 						];
-						u19						 [fillcolor="#ff7777",
+						u21						 [fillcolor="#ff7777",
 							label=TableUIDs,
 							style="filled,bold"];
-						u20						 [fillcolor="#ff77ff",
+						u22						 [fillcolor="#ff77ff",
 							label=TH,
 							penwidth=0,
 							style=filled];
@@ -162,20 +162,20 @@ digraph G {
 						label=Reference_Types,
 						penwidth=0,
 						style=filled];
-					u21					 [fillcolor="#ff7777",
+					u19					 [fillcolor="#ff7777",
+						label=SpecialPurposeUIDs,
+						penwidth=0,
+						style=filled];
+					u20					 [fillcolor="#ff7777",
 						label=Table,
 						penwidth=0,
 						style=filled];
-					u22					 [fillcolor="#ff7777",
+					u23					 [fillcolor="#ff7777",
 						label=THUtil,
 						penwidth=0,
 						style=filled];
-					u23					 [fillcolor="#ff7777",
-						label=Util,
-						penwidth=0,
-						style=filled];
 					u24					 [fillcolor="#ff7777",
-						label=SpecialPurposeUIDs,
+						label=Util,
 						penwidth=0,
 						style=filled];
 				}
@@ -222,25 +222,25 @@ digraph G {
 	u15 -> u12;
 	u16 -> u17;
 	u17 -> u11;
-	u17 -> u18;
-	u17 -> u24;
+	u17 -> u19;
+	u17 -> u21;
 	u17 -> u25;
-	u18 -> u19;
-	u21 -> u12;
-	u22 -> u12;
-	u23 -> u12;
+	u18 -> u12;
+	u19 -> u12;
+	u20 -> u12;
+	u23 -> u18;
 	u24 -> u12;
 	u6 -> u10;
 	u7 -> u0;
 	u7 -> u9;
 	u10 -> u7;
-	u19 -> u20;
-	u20 -> u21;
-	u20 -> u22;
-	u20 -> u23;
+	u21 -> u22;
+	u22 -> u20;
+	u22 -> u23;
+	u22 -> u24;
 	u25 -> u26;
-	u26 -> u22;
 	u26 -> u23;
+	u26 -> u24;
 	u27 -> u5;
 	u27 -> u16;
 	u28 -> u5;

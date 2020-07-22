@@ -16,49 +16,50 @@ TableUIDs Template Haskell.
 module System.SED.MCTP.Common.TableUIDs.TH (t240)
 where
 
-import           Control.Applicative              (many, (*>), (<$>), (<*),
-                                                   (<*>))
+import           Control.Applicative                    (many, (*>), (<$>),
+                                                         (<*), (<*>))
 
-import           Data.Attoparsec.ByteString       (Parser, take, (<?>))
-
-
-import           Data.Attoparsec.ByteString.Char8 (endOfInput, endOfLine,
-                                                   skipSpace, string)
-import           Data.ByteString                  (ByteString, length)
-import           Data.ByteString.Char8            (split)
-import qualified Data.ByteString.Char8            as C (unpack)
-import           Data.Foldable                    (foldr, mapM_)
-import           Data.List                        (concat, init, map, (!!))
-import           Data.Map                         (Map, fromList)
-
-import           GHC.Base                         (Eq (..), Int, Maybe (..),
-                                                   Monoid, Semigroup, String,
-                                                   mconcat, mempty, ($), (++),
-                                                   (.), (<>), (==))
+import           Data.Attoparsec.ByteString             (Parser, take, (<?>))
 
 
+import           Data.Attoparsec.ByteString.Char8       (endOfInput, endOfLine,
+                                                         skipSpace, string)
+import           Data.ByteString                        (ByteString, length)
+import           Data.ByteString.Char8                  (split)
+import qualified Data.ByteString.Char8                  as C (unpack)
+import           Data.Foldable                          (foldr, mapM_)
+import           Data.List                              (concat, init, map,
+                                                         (!!))
+import           Data.Map                               (Map, fromList)
 
-
-import           GHC.Err                          (error, undefined)
-import           GHC.Show                         (Show (..))
-
-import           Language.Haskell.TH              (Body (..), Dec (..),
-                                                   Exp (..), Pat (..),
-                                                   Type (..), mkName)
-import           Language.Haskell.TH.Quote        (QuasiQuoter (..))
-import           Language.Haskell.TH.Syntax       (returnQ)
+import           GHC.Base                               (Eq (..), Int,
+                                                         Maybe (..), Monoid,
+                                                         Semigroup, String,
+                                                         mconcat, mempty, ($),
+                                                         (++), (.), (<>), (==))
 
 
 
--- import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
---                                                          Object_Table_HalfUID)
-import           System.SED.MCTP.Common.Table     (TableName (..),
-                                                   TemplateName (..))
+
+import           GHC.Err                                (error, undefined)
+import           GHC.Show                               (Show (..))
+
+import           Language.Haskell.TH                    (Body (..), Dec (..),
+                                                         Exp (..), Pat (..),
+                                                         Type (..), mkName)
+import           Language.Haskell.TH.Quote              (QuasiQuoter (..))
+import           Language.Haskell.TH.Syntax             (returnQ)
+
+
+
+import           System.SED.MCTP.Common.Reference_Types (Object_Table_HalfUID)
+import           System.SED.MCTP.Common.Table           (TableName (..),
+                                                         TemplateName (..))
 import           System.SED.MCTP.Common.THUtil
-import           System.SED.MCTP.Common.UID       (HalfUID (..), UID (..),
-                                                   uidLower, uidUpper)
-import           System.SED.MCTP.Common.Util      (hexUID,
-                                                   trimTrailingWhitespace)
+import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..),
+                                                         uidLower, uidUpper)
+import           System.SED.MCTP.Common.Util            (hexUID,
+                                                         trimTrailingWhitespace)
 
 -- | Bespoke QuasiQuoter for Table 240
 t240 :: QuasiQuoter
@@ -71,8 +72,8 @@ t240 = QuasiQuoter
 
 t240Decs :: String -> [Dec]
 t240Decs s = concat [ us
-                    , mapd (mkName "nameHalfUID") ''HalfUID ehs
-                    , mapd (mkName "nameUID")     ''UID     eus
+                    , mapd (mkName "nameHalfUID") ''Object_Table_HalfUID ehs
+                    , mapd (mkName "nameUID")     ''UID                  eus
                     ]
   where
     -- | approx. [d| $n :: Map $t String; $n = fromList $v |]
@@ -169,8 +170,8 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     , dSig u ''UID
     , dVal u $ eUID     tableUID
 
-    , dSig h ''HalfUID
-    , dVal h $ eHalfUID tableHalfUID
+    , dSig h ''Object_Table_HalfUID
+    , dVal h $ eObject_Table_HalfUID tableHalfUID
     ]
 
     [ eValP h table
@@ -181,9 +182,9 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     ]
   where table = C.unpack tableName
         p `tn` t = mkName $ mconcat [ p, table, t]
-        h = "h" `tn` ""
-        u = "u" `tn` "Table"
-        o = "u" `tn` "TableObject"
+        h = "oth" `tn` ""
+        u = "u"   `tn` "Table"
+        o = "u"   `tn` "TableObject"
 
 data UIDRowDecs = UIDRowDecs [Dec] [Exp] [Exp]
     deriving(Eq,Show)

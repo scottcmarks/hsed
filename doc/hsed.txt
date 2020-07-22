@@ -999,6 +999,8 @@ type Object_Table_UID = Table_UID 'Object_Table
 type Byte_Table_UID = Table_UID 'Byte_Table
 nthNull :: Null_Table_HalfUID
 ntuNull :: Null_Table_UID
+tHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Table_HalfUID k
+btHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_HalfUID
 otHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_HalfUID
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Reference_Types.TableKind k a)
 instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.Reference_Types.TableKind k a)
@@ -1035,6 +1037,9 @@ dTyp :: Name -> Name -> Integer -> Dec
 
 -- | HalfUID as Exp
 eHalfUID :: HalfUID -> Exp
+
+-- | Byte_Table_HalfUID as Exp
+eByte_Table_HalfUID :: HalfUID -> Exp
 
 -- | Object_Table_HalfUID as Exp
 eObject_Table_HalfUID :: HalfUID -> Exp
@@ -1811,151 +1816,203 @@ instance GHC.Base.Monoid System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
 --   suffice as documentation.
 module System.SED.MCTP.Common.TableUIDs
 nameUID :: Map UID String
-nameHalfUID :: Map Object_Table_HalfUID String
+nameHalfUID :: Map HalfUID String
 othTable :: Object_Table_HalfUID
+hTable :: HalfUID
 uTableTable :: UID
 uTableTableObject :: UID
 othSPInfo :: Object_Table_HalfUID
+hSPInfo :: HalfUID
 uSPInfoTable :: UID
 uSPInfoTableObject :: UID
 othSPTemplates :: Object_Table_HalfUID
+hSPTemplates :: HalfUID
 uSPTemplatesTable :: UID
 uSPTemplatesTableObject :: UID
 othColumn :: Object_Table_HalfUID
+hColumn :: HalfUID
 uColumnTable :: UID
 uColumnTableObject :: UID
 othType :: Object_Table_HalfUID
+hType :: HalfUID
 uTypeTable :: UID
 uTypeTableObject :: UID
 othMethodID :: Object_Table_HalfUID
+hMethodID :: HalfUID
 uMethodIDTable :: UID
 uMethodIDTableObject :: UID
 othAccessControl :: Object_Table_HalfUID
+hAccessControl :: HalfUID
 uAccessControlTable :: UID
 uAccessControlTableObject :: UID
 othACE :: Object_Table_HalfUID
+hACE :: HalfUID
 uACETable :: UID
 uACETableObject :: UID
 othAuthority :: Object_Table_HalfUID
+hAuthority :: HalfUID
 uAuthorityTable :: UID
 uAuthorityTableObject :: UID
 othCertificates :: Object_Table_HalfUID
+hCertificates :: HalfUID
 uCertificatesTable :: UID
 uCertificatesTableObject :: UID
 othC_PIN :: Object_Table_HalfUID
+hC_PIN :: HalfUID
 uC_PINTable :: UID
 uC_PINTableObject :: UID
 othC_RSA_1024 :: Object_Table_HalfUID
+hC_RSA_1024 :: HalfUID
 uC_RSA_1024Table :: UID
 uC_RSA_1024TableObject :: UID
 othC_RSA_2048 :: Object_Table_HalfUID
+hC_RSA_2048 :: HalfUID
 uC_RSA_2048Table :: UID
 uC_RSA_2048TableObject :: UID
 othC_AES_128 :: Object_Table_HalfUID
+hC_AES_128 :: HalfUID
 uC_AES_128Table :: UID
 uC_AES_128TableObject :: UID
 othC_AES_256 :: Object_Table_HalfUID
+hC_AES_256 :: HalfUID
 uC_AES_256Table :: UID
 uC_AES_256TableObject :: UID
 othC_EC_160 :: Object_Table_HalfUID
+hC_EC_160 :: HalfUID
 uC_EC_160Table :: UID
 uC_EC_160TableObject :: UID
 othC_EC_192 :: Object_Table_HalfUID
+hC_EC_192 :: HalfUID
 uC_EC_192Table :: UID
 uC_EC_192TableObject :: UID
 othC_EC_224 :: Object_Table_HalfUID
+hC_EC_224 :: HalfUID
 uC_EC_224Table :: UID
 uC_EC_224TableObject :: UID
 othC_EC_256 :: Object_Table_HalfUID
+hC_EC_256 :: HalfUID
 uC_EC_256Table :: UID
 uC_EC_256TableObject :: UID
 othC_EC_384 :: Object_Table_HalfUID
+hC_EC_384 :: HalfUID
 uC_EC_384Table :: UID
 uC_EC_384TableObject :: UID
 othC_EC_521 :: Object_Table_HalfUID
+hC_EC_521 :: HalfUID
 uC_EC_521Table :: UID
 uC_EC_521TableObject :: UID
 othC_EC_163 :: Object_Table_HalfUID
+hC_EC_163 :: HalfUID
 uC_EC_163Table :: UID
 uC_EC_163TableObject :: UID
 othC_EC_233 :: Object_Table_HalfUID
+hC_EC_233 :: HalfUID
 uC_EC_233Table :: UID
 uC_EC_233TableObject :: UID
 othC_EC_283 :: Object_Table_HalfUID
+hC_EC_283 :: HalfUID
 uC_EC_283Table :: UID
 uC_EC_283TableObject :: UID
 othC_HMAC_160 :: Object_Table_HalfUID
+hC_HMAC_160 :: HalfUID
 uC_HMAC_160Table :: UID
 uC_HMAC_160TableObject :: UID
 othC_HMAC_256 :: Object_Table_HalfUID
+hC_HMAC_256 :: HalfUID
 uC_HMAC_256Table :: UID
 uC_HMAC_256TableObject :: UID
 othC_HMAC_384 :: Object_Table_HalfUID
+hC_HMAC_384 :: HalfUID
 uC_HMAC_384Table :: UID
 uC_HMAC_384TableObject :: UID
 othC_HMAC_512 :: Object_Table_HalfUID
+hC_HMAC_512 :: HalfUID
 uC_HMAC_512Table :: UID
 uC_HMAC_512TableObject :: UID
 othSecretProtect :: Object_Table_HalfUID
+hSecretProtect :: HalfUID
 uSecretProtectTable :: UID
 uSecretProtectTableObject :: UID
 othTPerInfo :: Object_Table_HalfUID
+hTPerInfo :: HalfUID
 uTPerInfoTable :: UID
 uTPerInfoTableObject :: UID
 othCryptoSuite :: Object_Table_HalfUID
+hCryptoSuite :: HalfUID
 uCryptoSuiteTable :: UID
 uCryptoSuiteTableObject :: UID
 othTemplate :: Object_Table_HalfUID
+hTemplate :: HalfUID
 uTemplateTable :: UID
 uTemplateTableObject :: UID
 othSP :: Object_Table_HalfUID
+hSP :: HalfUID
 uSPTable :: UID
 uSPTableObject :: UID
 othClockTime :: Object_Table_HalfUID
+hClockTime :: HalfUID
 uClockTimeTable :: UID
 uClockTimeTableObject :: UID
 othH_SHA_1 :: Object_Table_HalfUID
+hH_SHA_1 :: HalfUID
 uH_SHA_1Table :: UID
 uH_SHA_1TableObject :: UID
 othH_SHA_256 :: Object_Table_HalfUID
+hH_SHA_256 :: HalfUID
 uH_SHA_256Table :: UID
 uH_SHA_256TableObject :: UID
 othH_SHA_384 :: Object_Table_HalfUID
+hH_SHA_384 :: HalfUID
 uH_SHA_384Table :: UID
 uH_SHA_384TableObject :: UID
 othH_SHA_512 :: Object_Table_HalfUID
+hH_SHA_512 :: HalfUID
 uH_SHA_512Table :: UID
 uH_SHA_512TableObject :: UID
 othLog :: Object_Table_HalfUID
+hLog :: HalfUID
 uLogTable :: UID
 uLogTableObject :: UID
 othLogList :: Object_Table_HalfUID
+hLogList :: HalfUID
 uLogListTable :: UID
 uLogListTableObject :: UID
 othLockingInfo :: Object_Table_HalfUID
+hLockingInfo :: HalfUID
 uLockingInfoTable :: UID
 uLockingInfoTableObject :: UID
 othLocking :: Object_Table_HalfUID
+hLocking :: HalfUID
 uLockingTable :: UID
 uLockingTableObject :: UID
 othMBRControl :: Object_Table_HalfUID
+hMBRControl :: HalfUID
 uMBRControlTable :: UID
 uMBRControlTableObject :: UID
-othMBR :: Object_Table_HalfUID
+bthMBR :: Byte_Table_HalfUID
+hMBR :: HalfUID
 uMBRTable :: UID
 uMBRTableObject :: UID
 othK_AES_128 :: Object_Table_HalfUID
+hK_AES_128 :: HalfUID
 uK_AES_128Table :: UID
 uK_AES_128TableObject :: UID
 othK_AES_256 :: Object_Table_HalfUID
+hK_AES_256 :: HalfUID
 uK_AES_256Table :: UID
 uK_AES_256TableObject :: UID
 
--- | Look up the name of a <tt>Table_Object_HalfUID</tt>
-lookupTableHalfUID :: Object_Table_HalfUID -> Maybe String
+-- | Look up the name of a <a>HalfUID</a>
+lookupTableHalfUID :: HalfUID -> Maybe String
 
 -- | Look up the name of a Table <a>UID</a> or a Table object <a>UID</a>
 lookupTableUID :: UID -> Maybe String
+class TableID a
+lookup :: TableID a => a -> Maybe String
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.HalfUID
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.UID
+instance System.SED.MCTP.Common.TableUIDs.TableID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
+instance System.SED.MCTP.Common.TableUIDs.TableID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
 
 
 -- | Parse and generate values used in method invocations and responses.
@@ -5362,15 +5419,6 @@ runST :: (forall s. () => ST s a) -> a
 --   <a>zipWith</a> is capable of list fusion, but it is restricted to its
 --   first list argument and its resulting list.
 zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
-
--- | <i>O(n)</i>. <a>lookup</a> <tt>key assocs</tt> looks up a key in an
---   association list.
---   
---   <pre>
---   &gt;&gt;&gt; lookup 2 [(1, "first"), (2, "second"), (3, "third")]
---   Just "second"
---   </pre>
-lookup :: Eq a => a -> [(a, b)] -> Maybe b
 
 -- | <a>reverse</a> <tt>xs</tt> returns the elements of <tt>xs</tt> in
 --   reverse order. <tt>xs</tt> must be finite.

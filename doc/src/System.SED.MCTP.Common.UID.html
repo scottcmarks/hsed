@@ -51,26 +51,26 @@ Datatypes for UIDs and HalfUIDs.
 </span><span id="line-51"></span><span>
 </span><span id="line-52"></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span id="local-6989586621679566009"><span class="annot"><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-type">showCore_bytes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679566009"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679566009"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span></span><span>
+</span><span id="line-54"></span><span id="local-6989586621679578912"><span class="annot"><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-type">showCore_bytes</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679578912"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679578912"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span></span><span>
 </span><span id="line-55"></span><span id="showCore_bytes"><span class="annot"><span class="annottext">showCore_bytes :: String -&gt; Core_bytes n -&gt; String
-</span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var hs-var">showCore_bytes</span></a></span></span><span> </span><span id="local-6989586621679565968"><span class="annot"><span class="annottext">tag :: String
-</span><a href="#local-6989586621679565968"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Word8 -&gt; String) -&gt; String -&gt; [Word8] -&gt; String
+</span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var hs-var">showCore_bytes</span></a></span></span><span> </span><span id="local-6989586621679578871"><span class="annot"><span class="annottext">tag :: String
+</span><a href="#local-6989586621679578871"><span class="hs-identifier hs-var">tag</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(String -&gt; Word8 -&gt; String) -&gt; String -&gt; [Word8] -&gt; String
 forall (t :: * -&gt; *) b a.
 Foldable t =&gt;
 (b -&gt; a -&gt; b) -&gt; b -&gt; t a -&gt; b
 </span><span class="hs-identifier hs-var">foldl</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Word8 -&gt; String
-</span><a href="#local-6989586621679565967"><span class="hs-identifier hs-var">rollUp</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679565968"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; String)
+</span><a href="#local-6989586621679578870"><span class="hs-identifier hs-var">rollUp</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679578871"><span class="hs-identifier hs-var">tag</span></a></span><span> </span><span class="annot"><span class="annottext">([Word8] -&gt; String)
 -&gt; (Core_bytes n -&gt; [Word8]) -&gt; Core_bytes n -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes n -&gt; [Word8]
 forall l. IsList l =&gt; l -&gt; [Item l]
 </span><span class="hs-identifier hs-var">toList</span></span><span>
-</span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679565967"><span class="annot"><span class="annottext">rollUp :: String -&gt; Word8 -&gt; String
-</span><a href="#local-6989586621679565967"><span class="hs-identifier hs-var hs-var">rollUp</span></a></span></span><span> </span><span id="local-6989586621679565966"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679565966"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span id="line-56"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679578870"><span class="annot"><span class="annottext">rollUp :: String -&gt; Word8 -&gt; String
+</span><a href="#local-6989586621679578870"><span class="hs-identifier hs-var hs-var">rollUp</span></a></span></span><span> </span><span id="local-6989586621679578869"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679578869"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 </span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679565966"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; (Word8 -&gt; String) -&gt; Word8 -&gt; String
+</span><a href="#local-6989586621679578869"><span class="hs-identifier hs-var">s</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; (Word8 -&gt; String) -&gt; Word8 -&gt; String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
 </span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="hs-string">&quot; 0x&quot;</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; (Word8 -&gt; String) -&gt; Word8 -&gt; String
@@ -87,7 +87,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">newtype</span><span> </span><span id="HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Simple_Type.html#Core_halfuid"><span class="hs-identifier hs-type">Core_halfuid</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-60"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679565961"><span id="local-6989586621679565963"><span class="annot"><span class="annottext">HalfUID -&gt; HalfUID -&gt; Bool
+</span><span id="line-60"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679578864"><span id="local-6989586621679578866"><span class="annot"><span class="annottext">HalfUID -&gt; HalfUID -&gt; Bool
 (HalfUID -&gt; HalfUID -&gt; Bool)
 -&gt; (HalfUID -&gt; HalfUID -&gt; Bool) -&gt; Eq HalfUID
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -95,7 +95,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: HalfUID -&gt; HalfUID -&gt; Bool
 == :: HalfUID -&gt; HalfUID -&gt; Bool
 $c== :: HalfUID -&gt; HalfUID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565945"><span id="local-6989586621679565947"><span id="local-6989586621679565949"><span id="local-6989586621679565951"><span id="local-6989586621679565953"><span id="local-6989586621679565955"><span id="local-6989586621679565957"><span class="annot"><span class="annottext">Eq HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578848"><span id="local-6989586621679578850"><span id="local-6989586621679578852"><span id="local-6989586621679578854"><span id="local-6989586621679578856"><span id="local-6989586621679578858"><span id="local-6989586621679578860"><span class="annot"><span class="annottext">Eq HalfUID
 Eq HalfUID =&gt;
 (HalfUID -&gt; HalfUID -&gt; Ordering)
 -&gt; (HalfUID -&gt; HalfUID -&gt; Bool)
@@ -133,7 +133,7 @@ $c&lt; :: HalfUID -&gt; HalfUID -&gt; Bool
 compare :: HalfUID -&gt; HalfUID -&gt; Ordering
 $ccompare :: HalfUID -&gt; HalfUID -&gt; Ordering
 $cp1Ord :: Eq HalfUID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565937"><span id="local-6989586621679565939"><span id="local-6989586621679565941"><span class="annot"><span class="annottext">Show HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578840"><span id="local-6989586621679578842"><span id="local-6989586621679578844"><span class="annot"><span class="annottext">Show HalfUID
 Show HalfUID =&gt;
 (Token -&gt; Maybe HalfUID)
 -&gt; (HalfUID -&gt; Token)
@@ -153,7 +153,7 @@ $ctoken :: HalfUID -&gt; Token
 fromToken :: Token -&gt; Maybe HalfUID
 $cfromToken :: Token -&gt; Maybe HalfUID
 $cp1IsToken :: Show HalfUID
-</span><a href="System.SED.MCTP.Common.Token.html#C%3AIsToken"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsToken</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565922"><span id="local-6989586621679565924"><span id="local-6989586621679565926"><span id="local-6989586621679565928"><span id="local-6989586621679565930"><span id="local-6989586621679565932"><span id="local-6989586621679565934"><span class="annot"><span class="annottext">Parser HalfUID
+</span><a href="System.SED.MCTP.Common.Token.html#C%3AIsToken"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsToken</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578825"><span id="local-6989586621679578827"><span id="local-6989586621679578829"><span id="local-6989586621679578831"><span id="local-6989586621679578833"><span id="local-6989586621679578835"><span id="local-6989586621679578837"><span class="annot"><span class="annottext">Parser HalfUID
 String -&gt; Either String HalfUID
 ByteString -&gt; Maybe HalfUID
 ByteString -&gt; Either String HalfUID
@@ -191,7 +191,7 @@ generate :: HalfUID -&gt; ByteString
 $cgenerate :: HalfUID -&gt; ByteString
 parser :: Parser HalfUID
 $cparser :: Parser HalfUID
-</span><a href="System.SED.MCTP.Common.StreamItem.html#C%3AStreamItem"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565915"><span id="local-6989586621679565917"><span id="local-6989586621679565919"><span class="annot"><span class="annottext">Int -&gt; [Item HalfUID] -&gt; HalfUID
+</span><a href="System.SED.MCTP.Common.StreamItem.html#C%3AStreamItem"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578818"><span id="local-6989586621679578820"><span id="local-6989586621679578822"><span class="annot"><span class="annottext">Int -&gt; [Item HalfUID] -&gt; HalfUID
 [Item HalfUID] -&gt; HalfUID
 HalfUID -&gt; [Item HalfUID]
 ([Item HalfUID] -&gt; HalfUID)
@@ -208,15 +208,15 @@ $cfromListN :: Int -&gt; [Item HalfUID] -&gt; HalfUID
 fromList :: [Item HalfUID] -&gt; HalfUID
 $cfromList :: [Item HalfUID] -&gt; HalfUID
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsList</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Simple_Type.html#Core_halfuid"><span class="hs-identifier hs-type">Core_halfuid</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679565909"><span id="local-6989586621679565912"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-62"></span><span>    </span><span id="local-6989586621679565907"><span class="annot"><span class="annottext">show :: HalfUID -&gt; String
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679565905"><span class="annot"><span class="annottext">fb :: Core_halfuid
-</span><a href="#local-6989586621679565905"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_halfuid -&gt; String
+</span><span id="line-61"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679578812"><span id="local-6989586621679578815"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-62"></span><span>    </span><span id="local-6989586621679578810"><span class="annot"><span class="annottext">show :: HalfUID -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679578808"><span class="annot"><span class="annottext">fb :: Core_halfuid
+</span><a href="#local-6989586621679578808"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_halfuid -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;halfUID&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_halfuid
-</span><a href="#local-6989586621679565905"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679565902"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-64"></span><span>    </span><span id="local-6989586621679565900"><span class="annot"><span class="annottext">arbitrary :: Gen HalfUID
+</span><a href="#local-6989586621679578808"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679578805"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-64"></span><span>    </span><span id="local-6989586621679578803"><span class="annot"><span class="annottext">arbitrary :: Gen HalfUID
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_halfuid -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_halfuid -&gt; HalfUID)
 -&gt; ((Core_some_bytes ? FixedSize 4) -&gt; Core_halfuid)
@@ -234,32 +234,32 @@ forall a. Arbitrary a =&gt; Gen a
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#halfUID"><span class="hs-identifier hs-type">halfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
 </span><span id="line-67"></span><span id="halfUID"><span class="annot"><span class="annottext">halfUID :: Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; HalfUID
-</span><a href="System.SED.MCTP.Common.UID.html#halfUID"><span class="hs-identifier hs-var hs-var">halfUID</span></a></span></span><span> </span><span id="local-6989586621679565896"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679565896"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679565895"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679565895"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679565894"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679565894"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679565893"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679565893"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_halfuid -&gt; HalfUID
+</span><a href="System.SED.MCTP.Common.UID.html#halfUID"><span class="hs-identifier hs-var hs-var">halfUID</span></a></span></span><span> </span><span id="local-6989586621679578799"><span class="annot"><span class="annottext">b3 :: Word8
+</span><a href="#local-6989586621679578799"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679578798"><span class="annot"><span class="annottext">b2 :: Word8
+</span><a href="#local-6989586621679578798"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679578797"><span class="annot"><span class="annottext">b1 :: Word8
+</span><a href="#local-6989586621679578797"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679578796"><span class="annot"><span class="annottext">b0 :: Word8
+</span><a href="#local-6989586621679578796"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_halfuid -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_halfuid -&gt; HalfUID) -&gt; Core_halfuid -&gt; HalfUID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Core_halfuid
 </span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_4"><span class="hs-identifier hs-var">core_bytes_4</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565896"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565895"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565894"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565893"><span class="hs-identifier hs-var">b0</span></a></span><span>
+</span><a href="#local-6989586621679578799"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578798"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578797"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578796"><span class="hs-identifier hs-var">b0</span></a></span><span>
 </span><span id="line-68"></span><span>
 </span><span id="line-69"></span><span>
 </span><span id="line-70"></span><span>
 </span><span id="line-71"></span><span>
 </span><span id="line-72"></span><span class="hs-keyword">newtype</span><span> </span><span id="UID"><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-var">UID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UID"><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-var">UID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Simple_Type.html#Core_uid"><span class="hs-identifier hs-type">Core_uid</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-73"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679565888"><span id="local-6989586621679565890"><span class="annot"><span class="annottext">UID -&gt; UID -&gt; Bool
+</span><span id="line-73"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679578791"><span id="local-6989586621679578793"><span class="annot"><span class="annottext">UID -&gt; UID -&gt; Bool
 (UID -&gt; UID -&gt; Bool) -&gt; (UID -&gt; UID -&gt; Bool) -&gt; Eq UID
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: UID -&gt; UID -&gt; Bool
 $c/= :: UID -&gt; UID -&gt; Bool
 == :: UID -&gt; UID -&gt; Bool
 $c== :: UID -&gt; UID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565873"><span id="local-6989586621679565875"><span id="local-6989586621679565877"><span id="local-6989586621679565879"><span id="local-6989586621679565881"><span id="local-6989586621679565883"><span id="local-6989586621679565885"><span class="annot"><span class="annottext">Eq UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578776"><span id="local-6989586621679578778"><span id="local-6989586621679578780"><span id="local-6989586621679578782"><span id="local-6989586621679578784"><span id="local-6989586621679578786"><span id="local-6989586621679578788"><span class="annot"><span class="annottext">Eq UID
 Eq UID =&gt;
 (UID -&gt; UID -&gt; Ordering)
 -&gt; (UID -&gt; UID -&gt; Bool)
@@ -297,7 +297,7 @@ $c&lt; :: UID -&gt; UID -&gt; Bool
 compare :: UID -&gt; UID -&gt; Ordering
 $ccompare :: UID -&gt; UID -&gt; Ordering
 $cp1Ord :: Eq UID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565866"><span id="local-6989586621679565868"><span id="local-6989586621679565870"><span class="annot"><span class="annottext">Show UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578769"><span id="local-6989586621679578771"><span id="local-6989586621679578773"><span class="annot"><span class="annottext">Show UID
 Show UID =&gt;
 (Token -&gt; Maybe UID)
 -&gt; (UID -&gt; Token) -&gt; (UID -&gt; Maybe Token) -&gt; IsToken UID
@@ -315,7 +315,7 @@ $ctoken :: UID -&gt; Token
 fromToken :: Token -&gt; Maybe UID
 $cfromToken :: Token -&gt; Maybe UID
 $cp1IsToken :: Show UID
-</span><a href="#local-6989586621679565866"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsToken</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565852"><span id="local-6989586621679565854"><span id="local-6989586621679565856"><span id="local-6989586621679565858"><span id="local-6989586621679565860"><span id="local-6989586621679565862"><span id="local-6989586621679565864"><span class="annot"><span class="annottext">Parser UID
+</span><a href="#local-6989586621679578769"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsToken</span></a></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578755"><span id="local-6989586621679578757"><span id="local-6989586621679578759"><span id="local-6989586621679578761"><span id="local-6989586621679578763"><span id="local-6989586621679578765"><span id="local-6989586621679578767"><span class="annot"><span class="annottext">Parser UID
 String -&gt; Either String UID
 ByteString -&gt; Maybe UID
 ByteString -&gt; Either String UID
@@ -353,7 +353,7 @@ generate :: UID -&gt; ByteString
 $cgenerate :: UID -&gt; ByteString
 parser :: Parser UID
 $cparser :: Parser UID
-</span><a href="#local-6989586621679565852"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679565846"><span id="local-6989586621679565848"><span id="local-6989586621679565850"><span class="annot"><span class="annottext">Int -&gt; [Item UID] -&gt; UID
+</span><a href="#local-6989586621679578755"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679578749"><span id="local-6989586621679578751"><span id="local-6989586621679578753"><span class="annot"><span class="annottext">Int -&gt; [Item UID] -&gt; UID
 [Item UID] -&gt; UID
 UID -&gt; [Item UID]
 ([Item UID] -&gt; UID)
@@ -368,16 +368,16 @@ $cfromListN :: Int -&gt; [Item UID] -&gt; UID
 fromList :: [Item UID] -&gt; UID
 $cfromList :: [Item UID] -&gt; UID
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsList</span></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Simple_Type.html#Core_uid"><span class="hs-identifier hs-type">Core_uid</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679565841"><span id="local-6989586621679565844"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-75"></span><span>    </span><span id="local-6989586621679565840"><span class="annot"><span class="annottext">show :: UID -&gt; String
-</span><a href="#local-6989586621679565840"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679565839"><span class="annot"><span class="annottext">fb :: Core_uid
-</span><a href="#local-6989586621679565839"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_uid -&gt; String
+</span><span id="line-74"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679578744"><span id="local-6989586621679578747"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-75"></span><span>    </span><span id="local-6989586621679578743"><span class="annot"><span class="annottext">show :: UID -&gt; String
+</span><a href="#local-6989586621679578743"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679578742"><span class="annot"><span class="annottext">fb :: Core_uid
+</span><a href="#local-6989586621679578742"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_uid -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;uid&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_uid
-</span><a href="#local-6989586621679565839"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-76"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679565836"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-77"></span><span>    </span><span id="local-6989586621679565835"><span class="annot"><span class="annottext">arbitrary :: Gen UID
-</span><a href="#local-6989586621679565835"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_uid -&gt; UID
+</span><a href="#local-6989586621679578742"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679578739"><span class="annot"><span class="hs-identifier hs-type">Arbitrary</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679578738"><span class="annot"><span class="annottext">arbitrary :: Gen UID
+</span><a href="#local-6989586621679578738"><span class="hs-identifier hs-var hs-var hs-var hs-var">arbitrary</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_uid -&gt; UID
 </span><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-var">UID</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_uid -&gt; UID)
 -&gt; ((Core_some_bytes ? FixedSize 8) -&gt; Core_uid)
 -&gt; (Core_some_bytes ? FixedSize 8)
@@ -405,15 +405,15 @@ forall a. Arbitrary a =&gt; Gen a
 -&gt; Word8
 -&gt; Word8
 -&gt; UID
-</span><a href="System.SED.MCTP.Common.UID.html#uid"><span class="hs-identifier hs-var hs-var">uid</span></a></span></span><span> </span><span id="local-6989586621679565833"><span class="annot"><span class="annottext">u3 :: Word8
-</span><a href="#local-6989586621679565833"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679565832"><span class="annot"><span class="annottext">u2 :: Word8
-</span><a href="#local-6989586621679565832"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679565831"><span class="annot"><span class="annottext">u1 :: Word8
-</span><a href="#local-6989586621679565831"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679565830"><span class="annot"><span class="annottext">u0 :: Word8
-</span><a href="#local-6989586621679565830"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679565829"><span class="annot"><span class="annottext">l3 :: Word8
-</span><a href="#local-6989586621679565829"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679565828"><span class="annot"><span class="annottext">l2 :: Word8
-</span><a href="#local-6989586621679565828"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679565827"><span class="annot"><span class="annottext">l1 :: Word8
-</span><a href="#local-6989586621679565827"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679565826"><span class="annot"><span class="annottext">l0 :: Word8
-</span><a href="#local-6989586621679565826"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.UID.html#uid"><span class="hs-identifier hs-var hs-var">uid</span></a></span></span><span> </span><span id="local-6989586621679578736"><span class="annot"><span class="annottext">u3 :: Word8
+</span><a href="#local-6989586621679578736"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679578735"><span class="annot"><span class="annottext">u2 :: Word8
+</span><a href="#local-6989586621679578735"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679578734"><span class="annot"><span class="annottext">u1 :: Word8
+</span><a href="#local-6989586621679578734"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679578733"><span class="annot"><span class="annottext">u0 :: Word8
+</span><a href="#local-6989586621679578733"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679578732"><span class="annot"><span class="annottext">l3 :: Word8
+</span><a href="#local-6989586621679578732"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679578731"><span class="annot"><span class="annottext">l2 :: Word8
+</span><a href="#local-6989586621679578731"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679578730"><span class="annot"><span class="annottext">l1 :: Word8
+</span><a href="#local-6989586621679578730"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679578729"><span class="annot"><span class="annottext">l0 :: Word8
+</span><a href="#local-6989586621679578729"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-84"></span><span>    </span><span class="annot"><span class="annottext">Core_uid -&gt; UID
 </span><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-var">UID</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_uid -&gt; UID) -&gt; Core_uid -&gt; UID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -427,21 +427,21 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; Core_uid
 </span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_8"><span class="hs-identifier hs-var">core_bytes_8</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565833"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565832"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565831"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565830"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565829"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565828"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565827"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679565826"><span class="hs-identifier hs-var">l0</span></a></span><span>
+</span><a href="#local-6989586621679578736"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578735"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578734"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578733"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578732"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578731"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578730"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679578729"><span class="hs-identifier hs-var">l0</span></a></span><span>
 </span><span id="line-85"></span><span>
 </span><span id="line-86"></span><span>
 </span><span id="line-87"></span><span>
 </span><span id="line-88"></span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#uidUpper"><span class="hs-identifier hs-type">uidUpper</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
 </span><span id="line-89"></span><span id="uidUpper"><span class="annot"><span class="annottext">uidUpper :: UID -&gt; HalfUID
-</span><a href="System.SED.MCTP.Common.UID.html#uidUpper"><span class="hs-identifier hs-var hs-var">uidUpper</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679565824"><span class="annot"><span class="annottext">fb :: Core_some_bytes ? FixedSize 8
-</span><a href="#local-6989586621679565824"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_halfuid -&gt; HalfUID
+</span><a href="System.SED.MCTP.Common.UID.html#uidUpper"><span class="hs-identifier hs-var hs-var">uidUpper</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679578727"><span class="annot"><span class="annottext">fb :: Core_some_bytes ? FixedSize 8
+</span><a href="#local-6989586621679578727"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_halfuid -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 4) -&gt; Core_halfuid
 forall (n :: Nat). (Core_some_bytes ? FixedSize n) -&gt; Core_bytes n
 </span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 8) -&gt; Core_some_bytes ? FixedSize 4
@@ -449,12 +449,12 @@ forall (l1 :: Nat) (u1 :: Nat) (l2 :: Nat) (u2 :: Nat) a.
 (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) =&gt;
 (a ? BoundedSize l1 u1) -&gt; a ? BoundedSize l2 u2
 </span><a href="Data.BoundedSize.html#take"><span class="hs-identifier hs-var">take</span></a></span><span> </span><span class="annot"><span class="annottext">Core_some_bytes ? FixedSize 8
-</span><a href="#local-6989586621679565824"><span class="hs-identifier hs-var">fb</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679578727"><span class="hs-identifier hs-var">fb</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-90"></span><span>
 </span><span id="line-91"></span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#uidLower"><span class="hs-identifier hs-type">uidLower</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
 </span><span id="line-92"></span><span id="uidLower"><span class="annot"><span class="annottext">uidLower :: UID -&gt; HalfUID
-</span><a href="System.SED.MCTP.Common.UID.html#uidLower"><span class="hs-identifier hs-var hs-var">uidLower</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679565822"><span class="annot"><span class="annottext">fb :: Core_some_bytes ? FixedSize 8
-</span><a href="#local-6989586621679565822"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_halfuid -&gt; HalfUID
+</span><a href="System.SED.MCTP.Common.UID.html#uidLower"><span class="hs-identifier hs-var hs-var">uidLower</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679578725"><span class="annot"><span class="annottext">fb :: Core_some_bytes ? FixedSize 8
+</span><a href="#local-6989586621679578725"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_halfuid -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 4) -&gt; Core_halfuid
 forall (n :: Nat). (Core_some_bytes ? FixedSize n) -&gt; Core_bytes n
 </span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 8) -&gt; Core_some_bytes ? FixedSize 4
@@ -462,13 +462,13 @@ forall (l1 :: Nat) (u1 :: Nat) (l2 :: Nat) (u2 :: Nat) a.
 (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a) =&gt;
 (a ? BoundedSize l1 u1) -&gt; a ? BoundedSize l2 u2
 </span><a href="Data.BoundedSize.html#drop"><span class="hs-identifier hs-var">drop</span></a></span><span> </span><span class="annot"><span class="annottext">Core_some_bytes ? FixedSize 8
-</span><a href="#local-6989586621679565822"><span class="hs-identifier hs-var">fb</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679578725"><span class="hs-identifier hs-var">fb</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-93"></span><span>
 </span><span id="line-94"></span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#uidPlus"><span class="hs-identifier hs-type">uidPlus</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span>
 </span><span id="line-95"></span><span id="uidPlus"><span class="annot"><span class="annottext">uidPlus :: HalfUID -&gt; HalfUID -&gt; UID
-</span><a href="System.SED.MCTP.Common.UID.html#uidPlus"><span class="hs-identifier hs-var hs-var">uidPlus</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679565820"><span class="annot"><span class="annottext">fbl :: Core_some_bytes ? FixedSize 4
-</span><a href="#local-6989586621679565820"><span class="hs-identifier hs-var">fbl</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679565819"><span class="annot"><span class="annottext">fbr :: Core_some_bytes ? FixedSize 4
-</span><a href="#local-6989586621679565819"><span class="hs-identifier hs-var">fbr</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.UID.html#uidPlus"><span class="hs-identifier hs-var hs-var">uidPlus</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679578723"><span class="annot"><span class="annottext">fbl :: Core_some_bytes ? FixedSize 4
+</span><a href="#local-6989586621679578723"><span class="hs-identifier hs-var">fbl</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span id="local-6989586621679578722"><span class="annot"><span class="annottext">fbr :: Core_some_bytes ? FixedSize 4
+</span><a href="#local-6989586621679578722"><span class="hs-identifier hs-var">fbr</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-96"></span><span>    </span><span class="annot"><span class="annottext">Core_uid -&gt; UID
 </span><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-var">UID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 8) -&gt; Core_uid
 forall (n :: Nat). (Core_some_bytes ? FixedSize n) -&gt; Core_bytes n
@@ -480,8 +480,8 @@ IsBoundedSizeListOps l1 u1 a =&gt;
 (a ? BoundedSize l1 u1)
 -&gt; (a ? BoundedSize l2 u2) -&gt; a ? BoundedSize (l1 + l2) (u1 + u2)
 </span><a href="Data.BoundedSize.html#append"><span class="hs-identifier hs-var">append</span></a></span><span> </span><span class="annot"><span class="annottext">Core_some_bytes ? FixedSize 4
-</span><a href="#local-6989586621679565820"><span class="hs-identifier hs-var">fbl</span></a></span><span> </span><span class="annot"><span class="annottext">Core_some_bytes ? FixedSize 4
-</span><a href="#local-6989586621679565819"><span class="hs-identifier hs-var">fbr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679578723"><span class="hs-identifier hs-var">fbl</span></a></span><span> </span><span class="annot"><span class="annottext">Core_some_bytes ? FixedSize 4
+</span><a href="#local-6989586621679578722"><span class="hs-identifier hs-var">fbr</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>
 </span><span id="line-98"></span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#%2B%3A%2B"><span class="hs-operator hs-type">(+:+)</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span>
 </span><span id="line-99"></span><span id="%2B%3A%2B"><span class="annot"><span class="annottext">+:+ :: HalfUID -&gt; HalfUID -&gt; UID

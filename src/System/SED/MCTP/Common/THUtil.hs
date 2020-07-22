@@ -38,7 +38,7 @@ import           Language.Haskell.TH                    (Body (..), Con (..),
                                                          TyLit (..), Type (..))
 import           System.SED.MCTP.Common.Base_Type       (Core_bytes (..),
                                                          toList)
-import           System.SED.MCTP.Common.Reference_Types (otHalfUID)
+import           System.SED.MCTP.Common.Reference_Types (btHalfUID, otHalfUID)
 import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..),
                                                          halfUID, uid)
 
@@ -67,6 +67,10 @@ dTyp n t v = TySynD n [] (AppT (ConT t) (LitT (NumTyLit v)))
 -- | HalfUID as Exp
 eHalfUID :: HalfUID -> Exp
 eHalfUID (HalfUID fb) = eID 'halfUID fb
+
+-- | Byte_Table_HalfUID as Exp
+eByte_Table_HalfUID :: HalfUID -> Exp
+eByte_Table_HalfUID (HalfUID fb) = eID 'btHalfUID fb
 
 -- | Object_Table_HalfUID as Exp
 eObject_Table_HalfUID :: HalfUID -> Exp

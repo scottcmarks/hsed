@@ -87,5 +87,13 @@ nthNull = unsafeCreate $ hNull
 ntuNull :: Null_Table_UID
 ntuNull = fromTable_HalfUID nthNull
 
+
+tHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Table_HalfUID k
+tHalfUID b3 b2 b1 b0 = unsafeCreate $ halfUID b3 b2 b1 b0
+
+
+btHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_HalfUID
+btHalfUID = tHalfUID
+
 otHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_HalfUID
-otHalfUID b3 b2 b1 b0 = unsafeCreate $ halfUID b3 b2 b1 b0
+otHalfUID = tHalfUID

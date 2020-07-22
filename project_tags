@@ -71,7 +71,7 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Reference_Types.hs,1259
+./src/System/SED/MCTP/Common/Reference_Types.hs,1311
 module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types24,25
 data TableKinds TableKinds41,42
     Null_TableNull_Table42,43
@@ -100,7 +100,9 @@ type Object_Table_UID Object_Table_UID79,80
 type Byte_Table_UID Byte_Table_UID80,81
 nthNull nthNull83,84
 ntuNull ntuNull86,87
-otHalfUID otHalfUID89,90
+tHalfUID tHalfUID90,91
+btHalfUID btHalfUID94,95
+otHalfUID otHalfUID97,98
 
 ./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16
@@ -139,7 +141,7 @@ type Core_uinteger_64 Core_uinteger_64104,105
 type Core_uinteger_66 Core_uinteger_66105,106
 type Core_uinteger_8 Core_uinteger_8106,107
 
-./src/System/SED/MCTP/Common/THUtil.hs,318
+./src/System/SED/MCTP/Common/THUtil.hs,365
 module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil15,16
 parseTable parseTable46,47
 dData dData50,51
@@ -147,11 +149,12 @@ dSig dSig55,56
 dVal dVal59,60
 dTyp dTyp63,64
 eHalfUID eHalfUID67,68
-eObject_Table_HalfUID eObject_Table_HalfUID71,72
-eUID eUID75,76
-eID eID79,80
-eLitS eLitS86,87
-eValP eValP91,92
+eByte_Table_HalfUID eByte_Table_HalfUID71,72
+eObject_Table_HalfUID eObject_Table_HalfUID75,76
+eUID eUID79,80
+eID eID83,84
+eLitS eLitS90,91
+eValP eValP95,96
 
 ./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,1598
 module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH20,21
@@ -397,39 +400,49 @@ instance Arbitrary Arbitrary List233,234
 instance Arbitrary Arbitrary Value236,237
     arbitrary arbitrary237,238
 
-./src/System/SED/MCTP/Common/TableUIDs.hs,165
-module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs38,39
-lookupTableHalfUID lookupTableHalfUID173,174
-lookupTableUID lookupTableUID178,179
+./src/System/SED/MCTP/Common/TableUIDs.hs,515
+module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs40,41
+lookupTableHalfUID lookupTableHalfUID178,179
+lookupTableUID lookupTableUID183,184
+class TableID TableID186,187
+    lookup lookup187,188
+instance TableID(TableID (HalfUID)188,189
+    lookup lookup189,190
+instance TableID(TableID (UID)190,191
+    lookup lookup191,192
+instance TableID(TableID (Table_HalfUID k)192,193
+    lookup lookup193,194
+instance TableID(TableID (Table_UID k)194,195
+    lookup lookup195,196
 
 ./src/System/SED/MCTP/Common/TableUIDs/TH.hs,901
 module System.SED.MCTP.Common.TableUIDs.TH System.SED.MCTP.Common.TableUIDs.TH15,16
 import import34,35
-t240 t24064,65
-t240Decs t240Decs72,73
-data UIDRow UIDRow100,101
-data UIDRow = UIDRow UIDRow100,101
-uidRow uidRow103,104
-mkUIDRow mkUIDRow114,115
-pTableObjectUID pTableObjectUID125,126
-pTableUID pTableUID128,129
-pTableName pTableName131,132
-pTemplateName pTemplateName134,135
-pUIDField pUIDField137,138
-pTrimmedField pTrimmedField140,141
-pField pField143,144
-title title147,148
-header header150,151
-rowSep rowSep153,154
-pieceLengths pieceLengths156,157
-rowSepString rowSepString159,160
-dUIDRow dUIDRow163,164
-data UIDRowDecs UIDRowDecs188,189
-data UIDRowDecs = UIDRowDecs UIDRowDecs188,189
-instance Semigroup Semigroup UIDRowDecs191,192
-  where (U(UIDRowDecsu1eh1eu1)192,193
-instance Monoid Monoid UIDRowDecs195,196
-  where mempty mempty196,197
+t240 t24065,66
+t240Decs t240Decs73,74
+data UIDRow UIDRow101,102
+data UIDRow = UIDRow UIDRow101,102
+uidRow uidRow104,105
+mkUIDRow mkUIDRow115,116
+pTableObjectUID pTableObjectUID126,127
+pTableUID pTableUID129,130
+pTableName pTableName132,133
+pTemplateName pTemplateName135,136
+pUIDField pUIDField138,139
+pTrimmedField pTrimmedField141,142
+pField pField144,145
+title title148,149
+header header151,152
+rowSep rowSep154,155
+pieceLengths pieceLengths157,158
+rowSepString rowSepString160,161
+dUIDRow dUIDRow164,165
+data UIDRowDecs UIDRowDecs208,209
+data UIDRowDecs = UIDRowDecs UIDRowDecs208,209
+instance Semigroup Semigroup UIDRowDecs211,212
+  where (U(UIDRowDecsu1eh1eu1)212,213
+instance Monoid Monoid UIDRowDecs215,216
+  where mempty mempty216,217
 
 ./src/System/SED/MCTP/Common/Token.hs,1908
 module System.SED.MCTP.Common.TokenSystem.SED.MCTP.Common.Token14,15

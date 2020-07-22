@@ -28,8 +28,8 @@ import           Data.ByteString                        (ByteString, length)
 import           Data.ByteString.Char8                  (split)
 import qualified Data.ByteString.Char8                  as C (unpack)
 import           Data.Foldable                          (foldr, mapM_)
-import           Data.List                              (concat, init, map,
-                                                         (!!))
+import           Data.List                              (concat, elem, init,
+                                                         map, (!!))
 import           Data.Map                               (Map, fromList)
 
 import           GHC.Base                               (Eq (..), Int,
@@ -52,7 +52,8 @@ import           Language.Haskell.TH.Syntax             (returnQ)
 
 
 
-import           System.SED.MCTP.Common.Reference_Types (Object_Table_HalfUID)
+import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
+                                                         Object_Table_HalfUID)
 import           System.SED.MCTP.Common.Table           (TableName (..),
                                                          TemplateName (..))
 import           System.SED.MCTP.Common.THUtil
@@ -72,8 +73,8 @@ t240 = QuasiQuoter
 
 t240Decs :: String -> [Dec]
 t240Decs s = concat [ us
-                    , mapd (mkName "nameHalfUID") ''Object_Table_HalfUID ehs
-                    , mapd (mkName "nameUID")     ''UID                  eus
+                    , mapd (mkName "nameHalfUID") ''HalfUID ehs
+                    , mapd (mkName "nameUID")     ''UID     eus
                     ]
   where
     -- | approx. [d| $n :: Map $t String; $n = fromList $v |]
@@ -164,15 +165,30 @@ rowSepString = "    +------------------------+------------------------+---------
 dUIDRow :: UIDRow -> UIDRowDecs
 dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateName _templateName)) =
     UIDRowDecs
-    [ dSig o ''UID
-    , dVal o $ eUID     objectUID
 
-    , dSig u ''UID
-    , dVal u $ eUID     tableUID
+    (
+     mconcat
+     [[ dSig o ''UID
+      , dVal o $ eUID     objectUID
 
-    , dSig h ''Object_Table_HalfUID
-    , dVal h $ eObject_Table_HalfUID tableHalfUID
-    ]
+      , dSig u ''UID
+      , dVal u $ eUID     tableUID
+
+      , dSig h ''HalfUID
+      , dVal h $ eHalfUID tableHalfUID
+      ]
+     ,
+      if isByteTable
+      then
+        [ dSig bth ''Byte_Table_HalfUID
+        , dVal bth $ eByte_Table_HalfUID tableHalfUID
+        ]
+      else
+        [ dSig oth ''Object_Table_HalfUID
+        , dVal oth $ eObject_Table_HalfUID tableHalfUID
+        ]
+     ]
+    )
 
     [ eValP h table
     ]
@@ -182,9 +198,13 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     ]
   where table = C.unpack tableName
         p `tn` t = mkName $ mconcat [ p, table, t]
-        h = "oth" `tn` ""
+        h = "h" `tn` ""
+        oth = "oth" `tn` ""
+        bth = "bth" `tn` ""
         u = "u"   `tn` "Table"
         o = "u"   `tn` "TableObject"
+        isByteTable = table `elem` byteTables
+        byteTables = ["MBR"]
 
 data UIDRowDecs = UIDRowDecs [Dec] [Exp] [Exp]
     deriving(Eq,Show)

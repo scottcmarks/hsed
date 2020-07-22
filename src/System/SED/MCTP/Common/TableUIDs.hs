@@ -1,7 +1,9 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE QuasiQuotes       #-}
-{-# LANGUAGE Trustworthy       #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE NoImplicitPrelude    #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE QuasiQuotes          #-}
+{-# LANGUAGE Trustworthy          #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 {-|
 Module      : System.SED.MCTP.Common.TablesUIDs
@@ -39,18 +41,21 @@ comments for Haddock to see; hence the names themselves must suffice as document
 module System.SED.MCTP.Common.TableUIDs
 where
 
-import           Data.Map                               (lookup)
-import           GHC.Base                               (String)
+import qualified Data.Map                               as Map (lookup)
+import           Data.Refined                           (plain)
+import           GHC.Base                               (String, (.))
 import           GHC.Maybe                              (Maybe)
-import           System.SED.MCTP.Common.Reference_Types (Object_Table_HalfUID)
+import           System.SED.MCTP.Common.Reference_Types (Table_HalfUID,
+                                                         Table_UID)
 import           System.SED.MCTP.Common.TableUIDs.TH    (t240)
-import           System.SED.MCTP.Common.UID             (UID)
+import           System.SED.MCTP.Common.UID             (HalfUID, UID)
 
 
 -- * Table HalfUID, UIDs, and Object UIDs
 -- **** For each row of the table (after the header row), define the indicated constants.
 -- For example, from the second row, we define
 --   hSPInfo :: HalfUID
+--   othSPInfo :: Table_Object_HalfUID
 --   uSPInfoTable :: UID
 --   uSPInfoTableObject :: UID
 -- together with informtion to map between the above and name strings
@@ -169,12 +174,23 @@ import           System.SED.MCTP.Common.UID             (UID)
 
 
 
--- | Look up the name of a `Table_Object_HalfUID'
+-- | Look up the name of a `HalfUID'
 --
-lookupTableHalfUID ::Object_Table_HalfUID -> Maybe String
-lookupTableHalfUID = (`lookup` nameHalfUID)
+lookupTableHalfUID :: HalfUID -> Maybe String
+lookupTableHalfUID = (`Map.lookup` nameHalfUID)
 
 -- | Look up the name of a Table `UID' or a Table object `UID'
 --
 lookupTableUID :: UID -> Maybe String
-lookupTableUID = (`lookup` nameUID)
+lookupTableUID = (`Map.lookup` nameUID)
+
+class TableID a where
+    lookup :: a -> Maybe String
+instance TableID(HalfUID) where
+    lookup = lookupTableHalfUID
+instance TableID(UID) where
+    lookup = lookupTableUID
+instance TableID(Table_HalfUID k) where
+    lookup = lookupTableHalfUID . plain
+instance TableID(Table_UID k) where
+    lookup = lookupTableUID . plain

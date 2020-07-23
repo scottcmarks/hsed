@@ -643,11 +643,13 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 unsafeCreate :: a -> Refined p a
+instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
@@ -900,20 +902,20 @@ uidPlus :: HalfUID -> HalfUID -> UID
 infix 9 +:+
 hNull :: HalfUID
 uNull :: UID
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
 instance GHC.Exts.IsList System.SED.MCTP.Common.UID.UID
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.UID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.UID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.UID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.UID
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Exts.IsList System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.UID
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.HalfUID
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.HalfUID
 
 
 -- | Table datatype

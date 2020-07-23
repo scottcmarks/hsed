@@ -26,7 +26,7 @@ module System.SED.MCTP.Common.Reference_Types
 
 where
 
--- import           Data.Functor                      ((<$>))
+
 import           Data.Refined                      (type (?), plain,
                                                     unsafeCreate)
 import           Data.Word8                        (Word8)
@@ -61,15 +61,15 @@ type Table_UID k          = UID ? (TableKind k)
 
 class IsTable_HalfUID a where
     fromTable_HalfUID :: Table_HalfUID k -> a
-    toTable_HalfUID :: a -> Table_HalfUID k -- TODO ?? Safe ??
+    toTable_HalfUID   :: a -> Table_HalfUID k
 
 instance IsTable_HalfUID (Table_HalfUID k) where
     fromTable_HalfUID = unsafeCreate . plain
-    toTable_HalfUID = unsafeCreate . plain
+    toTable_HalfUID   = unsafeCreate . plain
 
 instance IsTable_HalfUID (Table_UID k) where
     fromTable_HalfUID = unsafeCreate . (+:+ hNull) . plain
-    toTable_HalfUID = unsafeCreate . uidUpper . plain
+    toTable_HalfUID   = unsafeCreate . uidUpper    . plain
 
 
 type Null_Table_HalfUID   = Table_HalfUID 'Null_Table

@@ -118,12 +118,12 @@ instance LL.ListLike Core_some_bytes Word8 where
 
 
 newtype Core_max_bytes n = Core_max_bytes (Core_some_bytes ? MaxSize n)
-    deriving (Eq, Ord, Show, IsList, IsString)  via (Core_some_bytes ? MaxSize n)
+    deriving (Eq, Ord, Show, IsList, IsString, Arbitrary)  via (Core_some_bytes ? MaxSize n)
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 
 
 newtype Core_bytes     n = Core_bytes     (Core_some_bytes ? FixedSize n)
-    deriving (Eq, Ord, Show, IsList, IsString) via (Core_some_bytes ? FixedSize n)
+    deriving (Eq, Ord, Show, IsList, IsString, Arbitrary) via (Core_some_bytes ? FixedSize n)
 
 
 

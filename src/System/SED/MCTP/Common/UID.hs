@@ -29,8 +29,6 @@ import           Data.ByteString                    (singleton)
 import           Data.ByteString.Base16             (encode)
 import           Data.ByteString.Char8              (unpack)
 import           Data.Foldable                      (foldl)
-import           Data.Functor                       ((<$>))
-
 import           Data.String                        (String)
 import           GHC.Base                           (($), (.))
 import           GHC.Classes                        (Eq (..), Ord (..))
@@ -57,24 +55,23 @@ showCore_bytes tag = foldl rollUp tag . toList
 
 
 newtype HalfUID = HalfUID (Core_halfuid)
-    deriving(Eq, Ord, IsToken, StreamItem, IsList) via (Core_halfuid)
+    deriving(Eq, Ord, IsToken, StreamItem, IsList, Arbitrary) via (Core_halfuid)
 instance Show HalfUID where
     show (HalfUID fb) = showCore_bytes "halfUID" fb
-instance Arbitrary HalfUID where
-    arbitrary = HalfUID <$> Core_bytes <$> arbitrary
 
-halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
-halfUID b3 b2 b1 b0 = HalfUID $ core_bytes_4 b3 b2 b1 b0
+halfUID ::
+    Word8 -> Word8 -> Word8 -> Word8
+ -> HalfUID
+halfUID b3 b2 b1 b0 =
+    HalfUID $ core_bytes_4 b3 b2 b1 b0
 
 
 
 
 newtype UID = UID (Core_uid)
-    deriving(Eq, Ord, IsToken, StreamItem, IsList) via (Core_uid)
+    deriving(Eq, Ord, IsToken, StreamItem, IsList, Arbitrary) via (Core_uid)
 instance Show UID where
     show (UID fb) = showCore_bytes "uid" fb
-instance Arbitrary UID where
-    arbitrary = UID <$> Core_bytes <$> arbitrary
 
 uid ::
     Word8 -> Word8 -> Word8 -> Word8

@@ -199,27 +199,23 @@ data EnumRow = EnumRow EnumRow277,278
 enumTableTitle enumTableTitle280,281
 enumTableRow enumTableRow288,289
 
-./src/System/SED/MCTP/Common/UID.hs,579
+./src/System/SED/MCTP/Common/UID.hs,431
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID25,26
-showCore_bytes showCore_bytes53,54
-newtype HalfUID HalfUID58,59
-instance Show Show HalfUID60,61
-    show show61,62
-instance Arbitrary Arbitrary HalfUID62,63
-    arbitrary arbitrary63,64
-halfUID halfUID65,66
-newtype UID UID71,72
-instance Show Show UID73,74
-    show show74,75
-instance Arbitrary Arbitrary UID75,76
-    arbitrary arbitrary76,77
-uid uid78,79
-uidUpper uidUpper87,88
-uidLower uidLower90,91
-uidPlus uidPlus93,94
-(+(+:+)97,98
-hNull hNull101,102
-uNull uNull104,105
+showCore_bytes showCore_bytes51,52
+newtype HalfUID HalfUID56,57
+instance Show Show HalfUID58,59
+    show show59,60
+halfUID halfUID61,62
+newtype UID UID70,71
+instance Show Show UID72,73
+    show show73,74
+uid uid75,76
+uidUpper uidUpper84,85
+uidLower uidLower87,88
+uidPlus uidPlus90,91
+(+(+:+)94,95
+hNull hNull98,99
+uNull uNull101,102
 
 ./src/System/SED/MCTP/Common/Call.hs,1361
 module System.SED.MCTP.Common.Call System.SED.MCTP.Common.Call14,15

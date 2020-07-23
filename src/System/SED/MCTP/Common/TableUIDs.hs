@@ -55,7 +55,7 @@ import           System.SED.MCTP.Common.UID             (HalfUID, UID)
 -- **** For each row of the table (after the header row), define the indicated constants.
 -- For example, from the second row, we define
 --   hSPInfo :: HalfUID
---   othSPInfo :: Table_Object_HalfUID
+--   othSPInfo :: Object_Table_HalfUID
 --   uSPInfoTable :: UID
 --   uSPInfoTableObject :: UID
 -- together with informtion to map between the above and name strings

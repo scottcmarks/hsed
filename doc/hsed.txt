@@ -1010,6 +1010,9 @@ ntuNull :: Null_Table_UID
 ntHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Null_Table_HalfUID
 btHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_HalfUID
 otHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_HalfUID
+ntUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Null_Table_UID
+btUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_UID
+otUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_UID
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
 instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Byte_Table_UID

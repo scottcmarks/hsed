@@ -71,7 +71,7 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Reference_Types.hs,1906
+./src/System/SED/MCTP/Common/Reference_Types.hs,1969
 module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types25,26
 data TableKinds TableKinds47,48
     Null_TableNull_Table48,49
@@ -118,6 +118,9 @@ ntuNull ntuNull127,128
 ntHalfUID ntHalfUID131,132
 btHalfUID btHalfUID134,135
 otHalfUID otHalfUID137,138
+ntUID ntUID141,142
+btUID btUID144,145
+otUID otUID147,148
 
 ./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16

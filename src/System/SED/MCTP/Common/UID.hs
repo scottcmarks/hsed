@@ -90,7 +90,7 @@ uidLower (UID (Core_bytes fb)) = HalfUID (Core_bytes (drop fb))
 
 uidPlus :: HalfUID -> HalfUID -> UID
 uidPlus (HalfUID (Core_bytes fbl)) (HalfUID (Core_bytes fbr)) =
-    UID (Core_bytes (append fbl fbr))
+    UID (Core_bytes (fbl `append` fbr))
 
 (+:+) :: HalfUID -> HalfUID -> UID
 (+:+) = uidPlus

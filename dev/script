@@ -140,10 +140,6 @@ putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-:{
-othTable :: Object_Table_HalfUID
-othTable = unsafeCreate hTable
-:}
 
 putStrLn $ showString "othTable = " . shows othTable $ ""
 

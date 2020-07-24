@@ -7,6 +7,7 @@
 {-# LANGUAGE RoleAnnotations      #-}
 {-# LANGUAGE TypeOperators        #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 {-|
 Module      : System.SED.MCTP.Common.Reference_Types
@@ -33,11 +34,16 @@ import           Data.Word8                        (Word8)
 import           GHC.Base                          (Eq (..), Ord (..),
                                                     undefined, ($), (.))
 import           GHC.Enum                          (Enum (..))
+import           GHC.Exts                          (IsList (..))
 import           GHC.Show                          (Show (..))
+import           Test.QuickCheck                   (Arbitrary (..))
+
 import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
+import           System.SED.MCTP.Common.Token      (IsToken (..))
 import           System.SED.MCTP.Common.UID        (HalfUID (..), UID (..),
-                                                    hNull, halfUID, uidUpper,
-                                                    (+:+))
+                                                    hNull, halfUID,
+                                                    showCore_bytes, uid,
+                                                    uidUpper, (+:+))
 
 data TableKinds =
     Null_Table
@@ -48,7 +54,9 @@ data TableKinds =
 
 type role TableKind phantom _
 newtype TableKind (k::TableKinds) a = TableKind a
-   deriving (Eq,Ord,Show,StreamItem) via a
+   deriving (Eq,Ord,Show,StreamItem,IsList,Arbitrary,IsToken) via a
+
+
 
 instance StreamItem a => StreamItem (a ? TableKind k)
   where generate = generate . plain
@@ -71,29 +79,71 @@ instance IsTable_HalfUID (Table_UID k) where
     fromTable_HalfUID = unsafeCreate . (+:+ hNull) . plain
     toTable_HalfUID   = unsafeCreate . uidUpper    . plain
 
-
-type Null_Table_HalfUID   = Table_HalfUID 'Null_Table
-type Object_Table_HalfUID = Table_HalfUID 'Object_Table
-type Byte_Table_HalfUID   = Table_HalfUID 'Byte_Table
-
-type Null_Table_UID       = Table_UID 'Null_Table
-type Object_Table_UID     = Table_UID 'Object_Table
-type Byte_Table_UID       = Table_UID 'Byte_Table
+instance IsTable_HalfUID (HalfUID) where
+    fromTable_HalfUID = plain
+    toTable_HalfUID = unsafeCreate
 
 
-nthNull :: Null_Table_HalfUID
-nthNull = unsafeCreate $ hNull
+
+newtype Null_Table_HalfUID   = Null_Table_HalfUID (Table_HalfUID 'Null_Table)
+    deriving(Eq, Ord, StreamItem,IsTable_HalfUID) via (Table_HalfUID 'Null_Table)
+instance Show Null_Table_HalfUID where
+     show (Null_Table_HalfUID t) = showCore_bytes "ntHalfUID" fb
+         where (HalfUID fb) = plain t
+
+newtype Object_Table_HalfUID   = Object_Table_HalfUID (Table_HalfUID 'Object_Table)
+    deriving(Eq, Ord, StreamItem,IsTable_HalfUID) via (Table_HalfUID 'Object_Table)
+instance Show Object_Table_HalfUID where
+     show (Object_Table_HalfUID t) = showCore_bytes "otHalfUID" fb
+         where (HalfUID fb) = plain t
+
+newtype Byte_Table_HalfUID   = Byte_Table_HalfUID (Table_HalfUID 'Byte_Table)
+    deriving(Eq, Ord, StreamItem,IsTable_HalfUID) via (Table_HalfUID 'Byte_Table)
+instance Show Byte_Table_HalfUID where
+     show (Byte_Table_HalfUID t) = showCore_bytes "btHalfUID" fb
+         where (HalfUID fb) = plain t
+
+newtype Null_Table_UID   = Null_Table_UID (Table_UID 'Null_Table)
+    deriving(Eq, Ord, StreamItem,IsTable_HalfUID) via (Table_UID 'Null_Table)
+instance Show Null_Table_UID where
+     show (Null_Table_UID t) = showCore_bytes "ntUID" fb
+         where (UID fb) = plain t
+
+newtype Object_Table_UID   = Object_Table_UID (Table_UID 'Object_Table)
+    deriving(Eq, Ord, StreamItem,IsTable_HalfUID) via (Table_UID 'Object_Table)
+instance Show Object_Table_UID where
+     show (Object_Table_UID t) = showCore_bytes "otUID" fb
+         where (UID fb) = plain t
+
+newtype Byte_Table_UID   = Byte_Table_UID (Table_UID 'Byte_Table)
+    deriving(Eq, Ord, StreamItem,IsTable_HalfUID) via (Table_UID 'Byte_Table)
+instance Show Byte_Table_UID where
+     show (Byte_Table_UID t) = showCore_bytes "btUID" fb
+         where (UID fb) = plain t
+
+
+nthNull ::  Null_Table_HalfUID
+nthNull = fromTable_HalfUID $ toTable_HalfUID $ hNull
 
 ntuNull :: Null_Table_UID
-ntuNull = fromTable_HalfUID nthNull
+ntuNull = fromTable_HalfUID $ toTable_HalfUID $ hNull
 
 
-tHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Table_HalfUID k
-tHalfUID b3 b2 b1 b0 = unsafeCreate $ halfUID b3 b2 b1 b0
-
+ntHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Null_Table_HalfUID
+ntHalfUID b3 b2 b1 b0 = Null_Table_HalfUID   $ unsafeCreate $ halfUID b3 b2 b1 b0
 
 btHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_HalfUID
-btHalfUID = tHalfUID
+btHalfUID b3 b2 b1 b0 = Byte_Table_HalfUID   $ unsafeCreate $ halfUID b3 b2 b1 b0
 
 otHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_HalfUID
-otHalfUID = tHalfUID
+otHalfUID b3 b2 b1 b0 = Object_Table_HalfUID $ unsafeCreate $ halfUID b3 b2 b1 b0
+
+
+ntUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Null_Table_UID
+ntUID u3 u2 u1 u0 l3 l2 l1 l0 = Null_Table_UID   $ unsafeCreate $ uid u3 u2 u1 u0 l3 l2 l1 l0
+
+btUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_UID
+btUID u3 u2 u1 u0 l3 l2 l1 l0 = Byte_Table_UID   $ unsafeCreate $ uid u3 u2 u1 u0 l3 l2 l1 l0
+
+otUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_UID
+otUID u3 u2 u1 u0 l3 l2 l1 l0 = Object_Table_UID $ unsafeCreate $ uid u3 u2 u1 u0 l3 l2 l1 l0

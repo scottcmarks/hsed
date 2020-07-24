@@ -993,17 +993,50 @@ type Table_UID k = UID ? (TableKind k)
 class IsTable_HalfUID a
 fromTable_HalfUID :: IsTable_HalfUID a => Table_HalfUID k -> a
 toTable_HalfUID :: IsTable_HalfUID a => a -> Table_HalfUID k
-type Null_Table_HalfUID = Table_HalfUID 'Null_Table
-type Object_Table_HalfUID = Table_HalfUID 'Object_Table
-type Byte_Table_HalfUID = Table_HalfUID 'Byte_Table
-type Null_Table_UID = Table_UID 'Null_Table
-type Object_Table_UID = Table_UID 'Object_Table
-type Byte_Table_UID = Table_UID 'Byte_Table
+newtype Null_Table_HalfUID
+Null_Table_HalfUID :: Table_HalfUID 'Null_Table -> Null_Table_HalfUID
+newtype Object_Table_HalfUID
+Object_Table_HalfUID :: Table_HalfUID 'Object_Table -> Object_Table_HalfUID
+newtype Byte_Table_HalfUID
+Byte_Table_HalfUID :: Table_HalfUID 'Byte_Table -> Byte_Table_HalfUID
+newtype Null_Table_UID
+Null_Table_UID :: Table_UID 'Null_Table -> Null_Table_UID
+newtype Object_Table_UID
+Object_Table_UID :: Table_UID 'Object_Table -> Object_Table_UID
+newtype Byte_Table_UID
+Byte_Table_UID :: Table_UID 'Byte_Table -> Byte_Table_UID
 nthNull :: Null_Table_HalfUID
 ntuNull :: Null_Table_UID
-tHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Table_HalfUID k
+ntHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Null_Table_HalfUID
 btHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_HalfUID
 otHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_HalfUID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance System.SED.MCTP.Common.Token.IsToken a => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Reference_Types.TableKind k a)
+instance Test.QuickCheck.Arbitrary.Arbitrary a => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Reference_Types.TableKind k a)
+instance GHC.Exts.IsList a => GHC.Exts.IsList (System.SED.MCTP.Common.Reference_Types.TableKind k a)
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Reference_Types.TableKind k a)
 instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.Reference_Types.TableKind k a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (System.SED.MCTP.Common.Reference_Types.TableKind k a)
@@ -1011,8 +1044,15 @@ instance GHC.Classes.Eq a => GHC.Classes.Eq (System.SED.MCTP.Common.Reference_Ty
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.TableKinds
 instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.TableKinds
 instance GHC.Enum.Enum System.SED.MCTP.Common.Reference_Types.TableKinds
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a Data.Refined.? System.SED.MCTP.Common.Reference_Types.TableKind k)
 
 

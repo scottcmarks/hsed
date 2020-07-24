@@ -71,38 +71,56 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Reference_Types.hs,1311
-module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types24,25
-data TableKinds TableKinds41,42
-    Null_TableNull_Table42,43
-  | Object_TableObject_Table43,44
-  | Byte_TableByte_Table44,45
-type role role48,49
-newtype TableKind TableKind49,50
-instance StreamItem StreamItem a => StreamItem (a ? TableKind k)52,53
-  where generate generate53,54
-type Table_HalfUID Table_HalfUID56,57
-type Table_UID Table_UID58,59
-class IsTable_HalfUID IsTable_HalfUID61,62
-    fromTable_HalfUID fromTable_HalfUID62,63
-    toTable_HalfUID toTable_HalfUID63,64
-instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)65,66
-    fromTable_HalfUID fromTable_HalfUID66,67
-    toTable_HalfUID toTable_HalfUID67,68
-instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)69,70
+./src/System/SED/MCTP/Common/Reference_Types.hs,1969
+module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types25,26
+data TableKinds TableKinds47,48
+    Null_TableNull_Table48,49
+  | Object_TableObject_Table49,50
+  | Byte_TableByte_Table50,51
+type role role54,55
+newtype TableKind TableKind55,56
+instance StreamItem StreamItem a => StreamItem (a ? TableKind k)60,61
+  where generate generate61,62
+type Table_HalfUID Table_HalfUID64,65
+type Table_UID Table_UID66,67
+class IsTable_HalfUID IsTable_HalfUID69,70
     fromTable_HalfUID fromTable_HalfUID70,71
     toTable_HalfUID toTable_HalfUID71,72
-type Null_Table_HalfUID Null_Table_HalfUID74,75
-type Object_Table_HalfUID Object_Table_HalfUID75,76
-type Byte_Table_HalfUID Byte_Table_HalfUID76,77
-type Null_Table_UID Null_Table_UID78,79
-type Object_Table_UID Object_Table_UID79,80
-type Byte_Table_UID Byte_Table_UID80,81
-nthNull nthNull83,84
-ntuNull ntuNull86,87
-tHalfUID tHalfUID90,91
-btHalfUID btHalfUID94,95
-otHalfUID otHalfUID97,98
+instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)73,74
+    fromTable_HalfUID fromTable_HalfUID74,75
+    toTable_HalfUID toTable_HalfUID75,76
+instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)77,78
+    fromTable_HalfUID fromTable_HalfUID78,79
+    toTable_HalfUID toTable_HalfUID79,80
+instance IsTable_HalfUID IsTable_HalfUID (HalfUID)81,82
+    fromTable_HalfUID fromTable_HalfUID82,83
+    toTable_HalfUID toTable_HalfUID83,84
+newtype Null_Table_HalfUID Null_Table_HalfUID87,88
+instance Show Show Null_Table_HalfUID89,90
+     show show90,91
+newtype Object_Table_HalfUID Object_Table_HalfUID93,94
+instance Show Show Object_Table_HalfUID95,96
+     show show96,97
+newtype Byte_Table_HalfUID Byte_Table_HalfUID99,100
+instance Show Show Byte_Table_HalfUID101,102
+     show show102,103
+newtype Null_Table_UID Null_Table_UID105,106
+instance Show Show Null_Table_UID107,108
+     show show108,109
+newtype Object_Table_UID Object_Table_UID111,112
+instance Show Show Object_Table_UID113,114
+     show show114,115
+newtype Byte_Table_UID Byte_Table_UID117,118
+instance Show Show Byte_Table_UID119,120
+     show show120,121
+nthNull nthNull124,125
+ntuNull ntuNull127,128
+ntHalfUID ntHalfUID131,132
+btHalfUID btHalfUID134,135
+otHalfUID otHalfUID137,138
+ntUID ntUID141,142
+btUID btUID144,145
+otUID otUID147,148
 
 ./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16

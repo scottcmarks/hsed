@@ -993,6 +993,7 @@ type Table_UID k = UID ? (TableKind k)
 class IsTable_HalfUID a
 fromTable_HalfUID :: IsTable_HalfUID a => Table_HalfUID k -> a
 toTable_HalfUID :: IsTable_HalfUID a => a -> Table_HalfUID k
+viaTable_HalfUID :: (IsTable_HalfUID a, IsTable_HalfUID b) => a -> b
 newtype Null_Table_HalfUID
 Null_Table_HalfUID :: Table_HalfUID 'Null_Table -> Null_Table_HalfUID
 newtype Object_Table_HalfUID
@@ -1055,7 +1056,6 @@ instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Object_Table_HalfU
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a Data.Refined.? System.SED.MCTP.Common.Reference_Types.TableKind k)
 
 
@@ -2046,18 +2046,13 @@ othK_AES_256 :: Object_Table_HalfUID
 hK_AES_256 :: HalfUID
 uK_AES_256Table :: UID
 uK_AES_256TableObject :: UID
-
--- | Look up the name of a <a>HalfUID</a>
-lookupTableHalfUID :: HalfUID -> Maybe String
-
--- | Look up the name of a Table <a>UID</a> or a Table object <a>UID</a>
-lookupTableUID :: UID -> Maybe String
 class TableID a
 lookup :: TableID a => a -> Maybe String
 instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.UID
-instance System.SED.MCTP.Common.TableUIDs.TableID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
-instance System.SED.MCTP.Common.TableUIDs.TableID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
 
 
 -- | Parse and generate values used in method invocations and responses.

@@ -71,7 +71,7 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Reference_Types.hs,1969
+./src/System/SED/MCTP/Common/Reference_Types.hs,1858
 module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types25,26
 data TableKinds TableKinds47,48
     Null_TableNull_Table48,49
@@ -92,35 +92,33 @@ instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)73,74
 instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)77,78
     fromTable_HalfUID fromTable_HalfUID78,79
     toTable_HalfUID toTable_HalfUID79,80
-instance IsTable_HalfUID IsTable_HalfUID (HalfUID)81,82
-    fromTable_HalfUID fromTable_HalfUID82,83
-    toTable_HalfUID toTable_HalfUID83,84
-newtype Null_Table_HalfUID Null_Table_HalfUID87,88
-instance Show Show Null_Table_HalfUID89,90
-     show show90,91
-newtype Object_Table_HalfUID Object_Table_HalfUID93,94
-instance Show Show Object_Table_HalfUID95,96
-     show show96,97
-newtype Byte_Table_HalfUID Byte_Table_HalfUID99,100
-instance Show Show Byte_Table_HalfUID101,102
-     show show102,103
-newtype Null_Table_UID Null_Table_UID105,106
-instance Show Show Null_Table_UID107,108
-     show show108,109
-newtype Object_Table_UID Object_Table_UID111,112
-instance Show Show Object_Table_UID113,114
-     show show114,115
-newtype Byte_Table_UID Byte_Table_UID117,118
-instance Show Show Byte_Table_UID119,120
-     show show120,121
-nthNull nthNull124,125
-ntuNull ntuNull127,128
-ntHalfUID ntHalfUID131,132
-btHalfUID btHalfUID134,135
-otHalfUID otHalfUID137,138
-ntUID ntUID141,142
-btUID btUID144,145
-otUID otUID147,148
+viaTable_HalfUID viaTable_HalfUID81,82
+newtype Null_Table_HalfUID Null_Table_HalfUID84,85
+instance Show Show Null_Table_HalfUID86,87
+     show show87,88
+newtype Object_Table_HalfUID Object_Table_HalfUID90,91
+instance Show Show Object_Table_HalfUID92,93
+     show show93,94
+newtype Byte_Table_HalfUID Byte_Table_HalfUID96,97
+instance Show Show Byte_Table_HalfUID98,99
+     show show99,100
+newtype Null_Table_UID Null_Table_UID102,103
+instance Show Show Null_Table_UID104,105
+     show show105,106
+newtype Object_Table_UID Object_Table_UID108,109
+instance Show Show Object_Table_UID110,111
+     show show111,112
+newtype Byte_Table_UID Byte_Table_UID114,115
+instance Show Show Byte_Table_UID116,117
+     show show117,118
+nthNull nthNull121,122
+ntuNull ntuNull124,125
+ntHalfUID ntHalfUID128,129
+btHalfUID btHalfUID131,132
+otHalfUID otHalfUID134,135
+ntUID ntUID138,139
+btUID btUID141,142
+otUID otUID144,145
 
 ./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16
@@ -414,20 +412,20 @@ instance Arbitrary Arbitrary List233,234
 instance Arbitrary Arbitrary Value236,237
     arbitrary arbitrary237,238
 
-./src/System/SED/MCTP/Common/TableUIDs.hs,515
-module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs40,41
-lookupTableHalfUID lookupTableHalfUID178,179
-lookupTableUID lookupTableUID183,184
-class TableID TableID186,187
-    lookup lookup187,188
-instance TableID(TableID (HalfUID)188,189
-    lookup lookup189,190
-instance TableID(TableID (UID)190,191
-    lookup lookup191,192
-instance TableID(TableID (Table_HalfUID k)192,193
-    lookup lookup193,194
-instance TableID(TableID (Table_UID k)194,195
-    lookup lookup195,196
+./src/System/SED/MCTP/Common/TableUIDs.hs,523
+module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs43,44
+class TableID TableID181,182
+    lookup lookup182,183
+instance TableID(TableID (HalfUID)183,184
+    lookup lookup184,185
+instance TableID(TableID (UID)185,186
+    lookup lookup186,187
+instance TableID(TableID (Null_Table_HalfUID)187,188
+    lookup lookup188,189
+instance TableID(TableID (Byte_Table_HalfUID)189,190
+    lookup lookup190,191
+instance TableID(TableID (Object_Table_HalfUID)191,192
+    lookup lookup192,193
 
 ./src/System/SED/MCTP/Common/TableUIDs/TH.hs,901
 module System.SED.MCTP.Common.TableUIDs.TH System.SED.MCTP.Common.TableUIDs.TH15,16

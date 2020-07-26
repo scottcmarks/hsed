@@ -79,11 +79,8 @@ instance IsTable_HalfUID (Table_UID k) where
     fromTable_HalfUID = unsafeCreate . (+:+ hNull) . plain
     toTable_HalfUID   = unsafeCreate . uidUpper    . plain
 
-instance IsTable_HalfUID (HalfUID) where
-    fromTable_HalfUID = plain
-    toTable_HalfUID = unsafeCreate
-
-
+viaTable_HalfUID :: (IsTable_HalfUID a, IsTable_HalfUID b) => a -> b
+viaTable_HalfUID = fromTable_HalfUID . toTable_HalfUID
 
 newtype Null_Table_HalfUID   = Null_Table_HalfUID (Table_HalfUID 'Null_Table)
     deriving(Eq, Ord, StreamItem,IsTable_HalfUID) via (Table_HalfUID 'Null_Table)
@@ -122,11 +119,11 @@ instance Show Byte_Table_UID where
          where (UID fb) = plain t
 
 
-nthNull ::  Null_Table_HalfUID
-nthNull = fromTable_HalfUID $ toTable_HalfUID $ hNull
+nthNull :: Null_Table_HalfUID
+nthNull = viaTable_HalfUID $ (unsafeCreate $ hNull :: Table_HalfUID 'Null_Table)
 
 ntuNull :: Null_Table_UID
-ntuNull = fromTable_HalfUID $ toTable_HalfUID $ hNull
+ntuNull = viaTable_HalfUID $ (unsafeCreate $ hNull :: Table_HalfUID 'Null_Table)
 
 
 ntHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Null_Table_HalfUID

@@ -185,9 +185,12 @@ instance TableID(HalfUID) where
     lookup = (`Map.lookup` nameHalfUID)
 instance TableID(UID) where
     lookup = (`Map.lookup` nameUID)
-instance TableID(Null_Table_HalfUID) where
+instance {-# OVERLAPPABLE #-} IsTable_HalfUID a => TableID(a) where
+    lookup = lookup . plain . toTable_HalfUID
+instance {-# OVERLAPPING #-} TableID(Null_Table_HalfUID) where
     lookup = ((<> " Null Table HalfUID") <$>) . lookup . plain . toTable_HalfUID
-instance TableID(Byte_Table_HalfUID) where
+instance {-# OVERLAPPING #-} TableID(Byte_Table_HalfUID) where
     lookup = ((<> " Byte Table HalfUID") <$>) . lookup . plain . toTable_HalfUID
-instance TableID(Object_Table_HalfUID) where
+instance {-# OVERLAPPING #-} TableID(Object_Table_HalfUID) where
     lookup = ((<> " Object Table HalfUID") <$>) . lookup . plain . toTable_HalfUID
+ -- TODO -- finish these off for O_T_UID etc?, elim OVERLAP

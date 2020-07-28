@@ -63,7 +63,7 @@ type a ? p = Refined p a
 infixr 1 ?
 
 
-test :: forall p a t. (Coercible a (p a), Predicate p a)
+test :: forall p a t. (Predicate p a)
  => (p a -> t) -> (p a -> t) -> a -> t
 test f g x = if predicate x' then f x' else g x' where x' = coerce x
 

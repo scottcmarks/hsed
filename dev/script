@@ -141,15 +141,10 @@ putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 
 
--- :{
--- putStrLn $ showString "othTable = " . shows othTable
---          . showString "lookup othTable = " . shows (lookup othTable)
---          $ ""
--- :}
-:{
-putStrLn $ showString "othTable = " . shows othTable
-         $ ""
-:}
+putStrLn $ showString "othTable = " . shows othTable $ ""
+putStrLn $ showString "lookup othTable = " . shows (lookup othTable) $ ""
+
+
 
 putStrLn "\n\n\nBuh-bye now.\n\n"
 

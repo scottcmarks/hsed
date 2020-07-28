@@ -2050,6 +2050,7 @@ class TableID a
 lookup :: TableID a => a -> Maybe String
 instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.UID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID a => System.SED.MCTP.Common.TableUIDs.TableID a
 instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
 instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID

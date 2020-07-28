@@ -412,7 +412,7 @@ instance Arbitrary Arbitrary List233,234
 instance Arbitrary Arbitrary Value236,237
     arbitrary arbitrary237,238
 
-./src/System/SED/MCTP/Common/TableUIDs.hs,523
+./src/System/SED/MCTP/Common/TableUIDs.hs,698
 module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs43,44
 class TableID TableID181,182
     lookup lookup182,183
@@ -420,12 +420,14 @@ instance TableID(TableID (HalfUID)183,184
     lookup lookup184,185
 instance TableID(TableID (UID)185,186
     lookup lookup186,187
-instance TableID(TableID (Null_Table_HalfUID)187,188
+instance {-# OVERLAPPABLE #-} IsTable_HalfUID IsTable_HalfUID a => TableID (a)187,188
     lookup lookup188,189
-instance TableID(TableID (Byte_Table_HalfUID)189,190
+instance {-# OVERLAPPING #-} TableID(TableID (Null_Table_HalfUID)189,190
     lookup lookup190,191
-instance TableID(TableID (Object_Table_HalfUID)191,192
+instance {-# OVERLAPPING #-} TableID(TableID (Byte_Table_HalfUID)191,192
     lookup lookup192,193
+instance {-# OVERLAPPING #-} TableID(TableID (Object_Table_HalfUID)193,194
+    lookup lookup194,195
 
 ./src/System/SED/MCTP/Common/TableUIDs/TH.hs,901
 module System.SED.MCTP.Common.TableUIDs.TH System.SED.MCTP.Common.TableUIDs.TH15,16

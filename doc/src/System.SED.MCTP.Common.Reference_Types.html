@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24maxtag_AgVt275H3KYIgOveBYfYLg"><span id="%24tag2con_AgVt275H3KYIgOveBYfYLg"><span id="%24con2tag_AgVt275H3KYIgOveBYfYLg"></span></span></span><span class="hs-pragma">{-# LANGUAGE DataKinds            #-}</span><span>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24maxtag_1o8YdxiPNCwCBTq9GHfi6B"><span id="%24tag2con_1o8YdxiPNCwCBTq9GHfi6B"><span id="%24con2tag_1o8YdxiPNCwCBTq9GHfi6B"></span></span></span><span class="hs-pragma">{-# LANGUAGE DataKinds            #-}</span><span>
 </span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia          #-}</span><span>
 </span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances    #-}</span><span>
 </span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE KindSignatures       #-}</span><span>
@@ -48,25 +48,25 @@ Reference_Types per Core Spec
 </span><span id="line-48"></span><span>                                                    </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier">showCore_bytes</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#uid"><span class="hs-identifier">uid</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-49"></span><span>                                                    </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#uidUpper"><span class="hs-identifier">uidUpper</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#%2B%3A%2B"><span class="hs-operator">(+:+)</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-50"></span><span>
-</span><span id="line-51"></span><span class="hs-keyword">data</span><span> </span><span id="TableKinds"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKinds"><span class="hs-identifier hs-var">TableKinds</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-51"></span><span class="hs-keyword">data</span><span> </span><span id="Table_Kind"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_Kind"><span class="hs-identifier hs-var">Table_Kind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-52"></span><span>    </span><span id="Null_Table"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table"><span class="hs-identifier hs-var">Null_Table</span></a></span></span><span>
 </span><span id="line-53"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Object_Table"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table"><span class="hs-identifier hs-var">Object_Table</span></a></span></span><span>
 </span><span id="line-54"></span><span>  </span><span class="hs-glyph">|</span><span> </span><span id="Byte_Table"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table"><span class="hs-identifier hs-var">Byte_Table</span></a></span></span><span>
-</span><span id="line-55"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679594039"><span id="local-6989586621679594041"><span id="local-6989586621679594043"><span id="local-6989586621679594045"><span id="local-6989586621679594047"><span id="local-6989586621679594049"><span id="local-6989586621679594051"><span id="local-6989586621679594053"><span class="annot"><span class="annottext">Int -&gt; TableKinds
-TableKinds -&gt; Int
-TableKinds -&gt; [TableKinds]
-TableKinds -&gt; TableKinds
-TableKinds -&gt; TableKinds -&gt; [TableKinds]
-TableKinds -&gt; TableKinds -&gt; TableKinds -&gt; [TableKinds]
-(TableKinds -&gt; TableKinds)
--&gt; (TableKinds -&gt; TableKinds)
--&gt; (Int -&gt; TableKinds)
--&gt; (TableKinds -&gt; Int)
--&gt; (TableKinds -&gt; [TableKinds])
--&gt; (TableKinds -&gt; TableKinds -&gt; [TableKinds])
--&gt; (TableKinds -&gt; TableKinds -&gt; [TableKinds])
--&gt; (TableKinds -&gt; TableKinds -&gt; TableKinds -&gt; [TableKinds])
--&gt; Enum TableKinds
+</span><span id="line-55"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679595056"><span id="local-6989586621679595058"><span id="local-6989586621679595060"><span id="local-6989586621679595062"><span id="local-6989586621679595064"><span id="local-6989586621679595066"><span id="local-6989586621679595068"><span id="local-6989586621679595070"><span class="annot"><span class="annottext">Int -&gt; Table_Kind
+Table_Kind -&gt; Int
+Table_Kind -&gt; [Table_Kind]
+Table_Kind -&gt; Table_Kind
+Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+(Table_Kind -&gt; Table_Kind)
+-&gt; (Table_Kind -&gt; Table_Kind)
+-&gt; (Int -&gt; Table_Kind)
+-&gt; (Table_Kind -&gt; Int)
+-&gt; (Table_Kind -&gt; [Table_Kind])
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; [Table_Kind])
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; [Table_Kind])
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind])
+-&gt; Enum Table_Kind
 forall a.
 (a -&gt; a)
 -&gt; (a -&gt; a)
@@ -77,103 +77,104 @@ forall a.
 -&gt; (a -&gt; a -&gt; [a])
 -&gt; (a -&gt; a -&gt; a -&gt; [a])
 -&gt; Enum a
-enumFromThenTo :: TableKinds -&gt; TableKinds -&gt; TableKinds -&gt; [TableKinds]
-$cenumFromThenTo :: TableKinds -&gt; TableKinds -&gt; TableKinds -&gt; [TableKinds]
-enumFromTo :: TableKinds -&gt; TableKinds -&gt; [TableKinds]
-$cenumFromTo :: TableKinds -&gt; TableKinds -&gt; [TableKinds]
-enumFromThen :: TableKinds -&gt; TableKinds -&gt; [TableKinds]
-$cenumFromThen :: TableKinds -&gt; TableKinds -&gt; [TableKinds]
-enumFrom :: TableKinds -&gt; [TableKinds]
-$cenumFrom :: TableKinds -&gt; [TableKinds]
-fromEnum :: TableKinds -&gt; Int
-$cfromEnum :: TableKinds -&gt; Int
-toEnum :: Int -&gt; TableKinds
-$ctoEnum :: Int -&gt; TableKinds
-pred :: TableKinds -&gt; TableKinds
-$cpred :: TableKinds -&gt; TableKinds
-succ :: TableKinds -&gt; TableKinds
-$csucc :: TableKinds -&gt; TableKinds
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594034"><span id="local-6989586621679594036"><span class="annot"><span class="annottext">TableKinds -&gt; TableKinds -&gt; Bool
-(TableKinds -&gt; TableKinds -&gt; Bool)
--&gt; (TableKinds -&gt; TableKinds -&gt; Bool) -&gt; Eq TableKinds
+enumFromThenTo :: Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+$cenumFromThenTo :: Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+enumFromTo :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+$cenumFromTo :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+enumFromThen :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+$cenumFromThen :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+enumFrom :: Table_Kind -&gt; [Table_Kind]
+$cenumFrom :: Table_Kind -&gt; [Table_Kind]
+fromEnum :: Table_Kind -&gt; Int
+$cfromEnum :: Table_Kind -&gt; Int
+toEnum :: Int -&gt; Table_Kind
+$ctoEnum :: Int -&gt; Table_Kind
+pred :: Table_Kind -&gt; Table_Kind
+$cpred :: Table_Kind -&gt; Table_Kind
+succ :: Table_Kind -&gt; Table_Kind
+$csucc :: Table_Kind -&gt; Table_Kind
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679595051"><span id="local-6989586621679595053"><span class="annot"><span class="annottext">Table_Kind -&gt; Table_Kind -&gt; Bool
+(Table_Kind -&gt; Table_Kind -&gt; Bool)
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; Bool) -&gt; Eq Table_Kind
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-/= :: TableKinds -&gt; TableKinds -&gt; Bool
-$c/= :: TableKinds -&gt; TableKinds -&gt; Bool
-== :: TableKinds -&gt; TableKinds -&gt; Bool
-$c== :: TableKinds -&gt; TableKinds -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594027"><span id="local-6989586621679594029"><span id="local-6989586621679594031"><span class="annot"><span class="annottext">Int -&gt; TableKinds -&gt; ShowS
-[TableKinds] -&gt; ShowS
-TableKinds -&gt; String
-(Int -&gt; TableKinds -&gt; ShowS)
--&gt; (TableKinds -&gt; String)
--&gt; ([TableKinds] -&gt; ShowS)
--&gt; Show TableKinds
+/= :: Table_Kind -&gt; Table_Kind -&gt; Bool
+$c/= :: Table_Kind -&gt; Table_Kind -&gt; Bool
+== :: Table_Kind -&gt; Table_Kind -&gt; Bool
+$c== :: Table_Kind -&gt; Table_Kind -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679595044"><span id="local-6989586621679595046"><span id="local-6989586621679595048"><span class="annot"><span class="annottext">Int -&gt; Table_Kind -&gt; ShowS
+[Table_Kind] -&gt; ShowS
+Table_Kind -&gt; String
+(Int -&gt; Table_Kind -&gt; ShowS)
+-&gt; (Table_Kind -&gt; String)
+-&gt; ([Table_Kind] -&gt; ShowS)
+-&gt; Show Table_Kind
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-showList :: [TableKinds] -&gt; ShowS
-$cshowList :: [TableKinds] -&gt; ShowS
-show :: TableKinds -&gt; String
-$cshow :: TableKinds -&gt; String
-showsPrec :: Int -&gt; TableKinds -&gt; ShowS
-$cshowsPrec :: Int -&gt; TableKinds -&gt; ShowS
+showList :: [Table_Kind] -&gt; ShowS
+$cshowList :: [Table_Kind] -&gt; ShowS
+show :: Table_Kind -&gt; String
+$cshow :: Table_Kind -&gt; String
+showsPrec :: Int -&gt; Table_Kind -&gt; ShowS
+$cshowsPrec :: Int -&gt; Table_Kind -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594014"><span id="local-6989586621679594016"><span id="local-6989586621679594018"><span id="local-6989586621679594020"><span id="local-6989586621679594022"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKinds"><span class="hs-identifier hs-type">TableKinds</span></a></span></span></span></span></span></span><span>
-</span><span id="line-57"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679594012"><span class="annot"><span class="annottext">generate :: TableKinds -&gt; ByteString
+</span><span id="line-56"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679595031"><span id="local-6989586621679595033"><span id="local-6989586621679595035"><span id="local-6989586621679595037"><span id="local-6989586621679595039"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_Kind"><span class="hs-identifier hs-type">Table_Kind</span></a></span></span></span></span></span></span><span>
+</span><span id="line-57"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679595029"><span class="annot"><span class="annottext">generate :: Table_Kind -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; ByteString
 </span><span class="hs-identifier hs-var">singleton</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; ByteString)
--&gt; (TableKinds -&gt; Word8) -&gt; TableKinds -&gt; ByteString
+-&gt; (Table_Kind -&gt; Word8) -&gt; Table_Kind -&gt; ByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Int -&gt; Word8
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
-</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Word8) -&gt; (TableKinds -&gt; Int) -&gt; TableKinds -&gt; Word8
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Word8) -&gt; (Table_Kind -&gt; Int) -&gt; Table_Kind -&gt; Word8
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">TableKinds -&gt; Int
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Table_Kind -&gt; Int
 forall a. Enum a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">fromEnum</span></span><span>
-</span><span id="line-58"></span><span>          </span><span id="local-6989586621679594009"><span class="annot"><span class="annottext">parser :: Parser TableKinds
-</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; TableKinds
+</span><span id="line-58"></span><span>          </span><span id="local-6989586621679595026"><span class="annot"><span class="annottext">parser :: Parser Table_Kind
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Table_Kind
 forall a. Enum a =&gt; Int -&gt; a
-</span><span class="hs-identifier hs-var">toEnum</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; TableKinds) -&gt; (Word8 -&gt; Int) -&gt; Word8 -&gt; TableKinds
+</span><span class="hs-identifier hs-var">toEnum</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Table_Kind) -&gt; (Word8 -&gt; Int) -&gt; Word8 -&gt; Table_Kind
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Int
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
-</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; TableKinds)
--&gt; Parser ByteString Word8 -&gt; Parser TableKinds
+</span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Table_Kind)
+-&gt; Parser ByteString Word8 -&gt; Parser Table_Kind
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Word8
 </span><span class="hs-identifier hs-var">anyWord8</span></span><span>
 </span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span>
-</span><span id="line-61"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">role</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKind"><span class="hs-identifier hs-type">TableKind</span></a></span><span> </span><span class="annot"><span class="hs-identifier">phantom</span></span><span> </span><span class="annot"><span class="hs-identifier">_</span></span><span>
-</span><span id="line-62"></span><span class="hs-keyword">newtype</span><span> </span><span id="TableKind"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKind"><span class="hs-identifier hs-var">TableKind</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679594006"><span class="annot"><a href="#local-6989586621679594006"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKinds"><span class="hs-identifier hs-type">TableKinds</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679594005"><span class="annot"><a href="#local-6989586621679594005"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableKind"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKind"><span class="hs-identifier hs-var">TableKind</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679594005"><span class="hs-identifier hs-type">a</span></a></span><span>
-</span><span id="line-63"></span><span>   </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679594000"><span id="local-6989586621679594002"><span class="annot"><span class="annottext">TableKind k a -&gt; TableKind k a -&gt; Bool
-(TableKind k a -&gt; TableKind k a -&gt; Bool)
--&gt; (TableKind k a -&gt; TableKind k a -&gt; Bool) -&gt; Eq (TableKind k a)
+</span><span id="line-61"></span><span class="hs-keyword">type</span><span> </span><span class="hs-keyword">role</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ForTable_Kind"><span class="hs-identifier hs-type">ForTable_Kind</span></a></span><span> </span><span class="annot"><span class="hs-identifier">phantom</span></span><span> </span><span class="annot"><span class="hs-identifier">_</span></span><span>
+</span><span id="line-62"></span><span class="hs-keyword">newtype</span><span> </span><span id="ForTable_Kind"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ForTable_Kind"><span class="hs-identifier hs-var">ForTable_Kind</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679595023"><span class="annot"><a href="#local-6989586621679595023"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_Kind"><span class="hs-identifier hs-type">Table_Kind</span></a></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679595022"><span class="annot"><a href="#local-6989586621679595022"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ForTable_Kind"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ForTable_Kind"><span class="hs-identifier hs-var">ForTable_Kind</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679595022"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-63"></span><span>   </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679595017"><span id="local-6989586621679595019"><span class="annot"><span class="annottext">ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+(ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool)
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool)
+-&gt; Eq (ForTable_Kind k a)
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
-forall (k :: TableKinds) a.
+forall (k :: Table_Kind) a.
 Eq a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-/= :: TableKind k a -&gt; TableKind k a -&gt; Bool
-$c/= :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+/= :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+$c/= :: forall (k :: Table_Kind) a.
 Eq a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-== :: TableKind k a -&gt; TableKind k a -&gt; Bool
-$c== :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+== :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+$c== :: forall (k :: Table_Kind) a.
 Eq a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593985"><span id="local-6989586621679593987"><span id="local-6989586621679593989"><span id="local-6989586621679593991"><span id="local-6989586621679593993"><span id="local-6989586621679593995"><span id="local-6989586621679593997"><span class="annot"><span class="annottext">Eq (TableKind k a)
-Eq (TableKind k a) =&gt;
-(TableKind k a -&gt; TableKind k a -&gt; Ordering)
--&gt; (TableKind k a -&gt; TableKind k a -&gt; Bool)
--&gt; (TableKind k a -&gt; TableKind k a -&gt; Bool)
--&gt; (TableKind k a -&gt; TableKind k a -&gt; Bool)
--&gt; (TableKind k a -&gt; TableKind k a -&gt; Bool)
--&gt; (TableKind k a -&gt; TableKind k a -&gt; TableKind k a)
--&gt; (TableKind k a -&gt; TableKind k a -&gt; TableKind k a)
--&gt; Ord (TableKind k a)
-TableKind k a -&gt; TableKind k a -&gt; Bool
-TableKind k a -&gt; TableKind k a -&gt; Ordering
-TableKind k a -&gt; TableKind k a -&gt; TableKind k a
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679595002"><span id="local-6989586621679595004"><span id="local-6989586621679595006"><span id="local-6989586621679595008"><span id="local-6989586621679595010"><span id="local-6989586621679595012"><span id="local-6989586621679595014"><span class="annot"><span class="annottext">Eq (ForTable_Kind k a)
+Eq (ForTable_Kind k a) =&gt;
+(ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Ordering)
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool)
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool)
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool)
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool)
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a)
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a)
+-&gt; Ord (ForTable_Kind k a)
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Ordering
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a
 forall a.
 Eq a =&gt;
 (a -&gt; a -&gt; Ordering)
@@ -184,78 +185,82 @@ Eq a =&gt;
 -&gt; (a -&gt; a -&gt; a)
 -&gt; (a -&gt; a -&gt; a)
 -&gt; Ord a
-forall (k :: TableKinds) a. Ord a =&gt; Eq (TableKind k a)
-forall (k :: TableKinds) a.
+forall (k :: Table_Kind) a. Ord a =&gt; Eq (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Ordering
-forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Ordering
+forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; TableKind k a
-min :: TableKind k a -&gt; TableKind k a -&gt; TableKind k a
-$cmin :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a
+min :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a
+$cmin :: forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; TableKind k a
-max :: TableKind k a -&gt; TableKind k a -&gt; TableKind k a
-$cmax :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a
+max :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a
+$cmax :: forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; TableKind k a
-&gt;= :: TableKind k a -&gt; TableKind k a -&gt; Bool
-$c&gt;= :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; ForTable_Kind k a
+&gt;= :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+$c&gt;= :: forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-&gt; :: TableKind k a -&gt; TableKind k a -&gt; Bool
-$c&gt; :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+&gt; :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+$c&gt; :: forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-&lt;= :: TableKind k a -&gt; TableKind k a -&gt; Bool
-$c&lt;= :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+&lt;= :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+$c&lt;= :: forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-&lt; :: TableKind k a -&gt; TableKind k a -&gt; Bool
-$c&lt; :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+&lt; :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+$c&lt; :: forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Bool
-compare :: TableKind k a -&gt; TableKind k a -&gt; Ordering
-$ccompare :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Bool
+compare :: ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Ordering
+$ccompare :: forall (k :: Table_Kind) a.
 Ord a =&gt;
-TableKind k a -&gt; TableKind k a -&gt; Ordering
-$cp1Ord :: forall (k :: TableKinds) a. Ord a =&gt; Eq (TableKind k a)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593978"><span id="local-6989586621679593980"><span id="local-6989586621679593982"><span class="annot"><span class="annottext">Int -&gt; TableKind k a -&gt; ShowS
-[TableKind k a] -&gt; ShowS
-TableKind k a -&gt; String
-(Int -&gt; TableKind k a -&gt; ShowS)
--&gt; (TableKind k a -&gt; String)
--&gt; ([TableKind k a] -&gt; ShowS)
--&gt; Show (TableKind k a)
+ForTable_Kind k a -&gt; ForTable_Kind k a -&gt; Ordering
+$cp1Ord :: forall (k :: Table_Kind) a. Ord a =&gt; Eq (ForTable_Kind k a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594995"><span id="local-6989586621679594997"><span id="local-6989586621679594999"><span class="annot"><span class="annottext">Int -&gt; ForTable_Kind k a -&gt; ShowS
+[ForTable_Kind k a] -&gt; ShowS
+ForTable_Kind k a -&gt; String
+(Int -&gt; ForTable_Kind k a -&gt; ShowS)
+-&gt; (ForTable_Kind k a -&gt; String)
+-&gt; ([ForTable_Kind k a] -&gt; ShowS)
+-&gt; Show (ForTable_Kind k a)
 forall a.
 (Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
-forall (k :: TableKinds) a. Show a =&gt; Int -&gt; TableKind k a -&gt; ShowS
-forall (k :: TableKinds) a. Show a =&gt; [TableKind k a] -&gt; ShowS
-forall (k :: TableKinds) a. Show a =&gt; TableKind k a -&gt; String
-showList :: [TableKind k a] -&gt; ShowS
-$cshowList :: forall (k :: TableKinds) a. Show a =&gt; [TableKind k a] -&gt; ShowS
-show :: TableKind k a -&gt; String
-$cshow :: forall (k :: TableKinds) a. Show a =&gt; TableKind k a -&gt; String
-showsPrec :: Int -&gt; TableKind k a -&gt; ShowS
-$cshowsPrec :: forall (k :: TableKinds) a. Show a =&gt; Int -&gt; TableKind k a -&gt; ShowS
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593964"><span id="local-6989586621679593966"><span id="local-6989586621679593968"><span id="local-6989586621679593970"><span id="local-6989586621679593972"><span id="local-6989586621679593974"><span id="local-6989586621679593976"><span class="annot"><span class="annottext">Parser (TableKind k a)
-String -&gt; Either String (TableKind k a)
-ByteString -&gt; Maybe (TableKind k a)
-ByteString -&gt; Either String (TableKind k a)
-Parser (TableKind k a)
--&gt; (TableKind k a -&gt; ByteString)
--&gt; (ByteString -&gt; Either String (TableKind k a))
--&gt; (String -&gt; Either String (TableKind k a))
--&gt; (ByteString -&gt; Maybe (TableKind k a))
--&gt; (TableKind k a -&gt; Maybe (TableKind k a))
--&gt; (TableKind k a -&gt; TableKind k a)
--&gt; StreamItem (TableKind k a)
-TableKind k a -&gt; Maybe (TableKind k a)
-TableKind k a -&gt; ByteString
-TableKind k a -&gt; TableKind k a
+forall (k :: Table_Kind) a.
+Show a =&gt;
+Int -&gt; ForTable_Kind k a -&gt; ShowS
+forall (k :: Table_Kind) a. Show a =&gt; [ForTable_Kind k a] -&gt; ShowS
+forall (k :: Table_Kind) a. Show a =&gt; ForTable_Kind k a -&gt; String
+showList :: [ForTable_Kind k a] -&gt; ShowS
+$cshowList :: forall (k :: Table_Kind) a. Show a =&gt; [ForTable_Kind k a] -&gt; ShowS
+show :: ForTable_Kind k a -&gt; String
+$cshow :: forall (k :: Table_Kind) a. Show a =&gt; ForTable_Kind k a -&gt; String
+showsPrec :: Int -&gt; ForTable_Kind k a -&gt; ShowS
+$cshowsPrec :: forall (k :: Table_Kind) a.
+Show a =&gt;
+Int -&gt; ForTable_Kind k a -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594981"><span id="local-6989586621679594983"><span id="local-6989586621679594985"><span id="local-6989586621679594987"><span id="local-6989586621679594989"><span id="local-6989586621679594991"><span id="local-6989586621679594993"><span class="annot"><span class="annottext">Parser (ForTable_Kind k a)
+String -&gt; Either String (ForTable_Kind k a)
+ByteString -&gt; Maybe (ForTable_Kind k a)
+ByteString -&gt; Either String (ForTable_Kind k a)
+Parser (ForTable_Kind k a)
+-&gt; (ForTable_Kind k a -&gt; ByteString)
+-&gt; (ByteString -&gt; Either String (ForTable_Kind k a))
+-&gt; (String -&gt; Either String (ForTable_Kind k a))
+-&gt; (ByteString -&gt; Maybe (ForTable_Kind k a))
+-&gt; (ForTable_Kind k a -&gt; Maybe (ForTable_Kind k a))
+-&gt; (ForTable_Kind k a -&gt; ForTable_Kind k a)
+-&gt; StreamItem (ForTable_Kind k a)
+ForTable_Kind k a -&gt; Maybe (ForTable_Kind k a)
+ForTable_Kind k a -&gt; ByteString
+ForTable_Kind k a -&gt; ForTable_Kind k a
 forall a.
 Parser a
 -&gt; (a -&gt; ByteString)
@@ -265,160 +270,167 @@ Parser a
 -&gt; (a -&gt; Maybe a)
 -&gt; (a -&gt; a)
 -&gt; StreamItem a
-forall (k :: TableKinds) a. StreamItem a =&gt; Parser (TableKind k a)
-forall (k :: TableKinds) a.
+forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-String -&gt; Either String (TableKind k a)
-forall (k :: TableKinds) a.
+Parser (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-ByteString -&gt; Maybe (TableKind k a)
-forall (k :: TableKinds) a.
+String -&gt; Either String (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-ByteString -&gt; Either String (TableKind k a)
-forall (k :: TableKinds) a.
+ByteString -&gt; Maybe (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-TableKind k a -&gt; Maybe (TableKind k a)
-forall (k :: TableKinds) a.
+ByteString -&gt; Either String (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-TableKind k a -&gt; ByteString
-forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; Maybe (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-TableKind k a -&gt; TableKind k a
-typeIsa :: TableKind k a -&gt; TableKind k a
-$ctypeIsa :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ByteString
+forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-TableKind k a -&gt; TableKind k a
-pg :: TableKind k a -&gt; Maybe (TableKind k a)
-$cpg :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a
+typeIsa :: ForTable_Kind k a -&gt; ForTable_Kind k a
+$ctypeIsa :: forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-TableKind k a -&gt; Maybe (TableKind k a)
-maybeParse :: ByteString -&gt; Maybe (TableKind k a)
-$cmaybeParse :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; ForTable_Kind k a
+pg :: ForTable_Kind k a -&gt; Maybe (ForTable_Kind k a)
+$cpg :: forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-ByteString -&gt; Maybe (TableKind k a)
-parseString :: String -&gt; Either String (TableKind k a)
-$cparseString :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; Maybe (ForTable_Kind k a)
+maybeParse :: ByteString -&gt; Maybe (ForTable_Kind k a)
+$cmaybeParse :: forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-String -&gt; Either String (TableKind k a)
-parseByteString :: ByteString -&gt; Either String (TableKind k a)
-$cparseByteString :: forall (k :: TableKinds) a.
+ByteString -&gt; Maybe (ForTable_Kind k a)
+parseString :: String -&gt; Either String (ForTable_Kind k a)
+$cparseString :: forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-ByteString -&gt; Either String (TableKind k a)
-generate :: TableKind k a -&gt; ByteString
-$cgenerate :: forall (k :: TableKinds) a.
+String -&gt; Either String (ForTable_Kind k a)
+parseByteString :: ByteString -&gt; Either String (ForTable_Kind k a)
+$cparseByteString :: forall (k :: Table_Kind) a.
 StreamItem a =&gt;
-TableKind k a -&gt; ByteString
-parser :: Parser (TableKind k a)
-$cparser :: forall (k :: TableKinds) a. StreamItem a =&gt; Parser (TableKind k a)
-</span><a href="#local-6989586621679593964"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593958"><span id="local-6989586621679593960"><span id="local-6989586621679593962"><span class="annot"><span class="annottext">Int -&gt; [Item (TableKind k a)] -&gt; TableKind k a
-[Item (TableKind k a)] -&gt; TableKind k a
-TableKind k a -&gt; [Item (TableKind k a)]
-([Item (TableKind k a)] -&gt; TableKind k a)
--&gt; (Int -&gt; [Item (TableKind k a)] -&gt; TableKind k a)
--&gt; (TableKind k a -&gt; [Item (TableKind k a)])
--&gt; IsList (TableKind k a)
+ByteString -&gt; Either String (ForTable_Kind k a)
+generate :: ForTable_Kind k a -&gt; ByteString
+$cgenerate :: forall (k :: Table_Kind) a.
+StreamItem a =&gt;
+ForTable_Kind k a -&gt; ByteString
+parser :: Parser (ForTable_Kind k a)
+$cparser :: forall (k :: Table_Kind) a.
+StreamItem a =&gt;
+Parser (ForTable_Kind k a)
+</span><a href="#local-6989586621679594981"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594975"><span id="local-6989586621679594977"><span id="local-6989586621679594979"><span class="annot"><span class="annottext">Int -&gt; [Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+[Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+ForTable_Kind k a -&gt; [Item (ForTable_Kind k a)]
+([Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a)
+-&gt; (Int -&gt; [Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a)
+-&gt; (ForTable_Kind k a -&gt; [Item (ForTable_Kind k a)])
+-&gt; IsList (ForTable_Kind k a)
 forall l.
 ([Item l] -&gt; l)
 -&gt; (Int -&gt; [Item l] -&gt; l) -&gt; (l -&gt; [Item l]) -&gt; IsList l
-forall (k :: TableKinds) a.
+forall (k :: Table_Kind) a.
 IsList a =&gt;
-Int -&gt; [Item (TableKind k a)] -&gt; TableKind k a
-forall (k :: TableKinds) a.
+Int -&gt; [Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+forall (k :: Table_Kind) a.
 IsList a =&gt;
-[Item (TableKind k a)] -&gt; TableKind k a
-forall (k :: TableKinds) a.
+[Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+forall (k :: Table_Kind) a.
 IsList a =&gt;
-TableKind k a -&gt; [Item (TableKind k a)]
-toList :: TableKind k a -&gt; [Item (TableKind k a)]
-$ctoList :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; [Item (ForTable_Kind k a)]
+toList :: ForTable_Kind k a -&gt; [Item (ForTable_Kind k a)]
+$ctoList :: forall (k :: Table_Kind) a.
 IsList a =&gt;
-TableKind k a -&gt; [Item (TableKind k a)]
-fromListN :: Int -&gt; [Item (TableKind k a)] -&gt; TableKind k a
-$cfromListN :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; [Item (ForTable_Kind k a)]
+fromListN :: Int -&gt; [Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+$cfromListN :: forall (k :: Table_Kind) a.
 IsList a =&gt;
-Int -&gt; [Item (TableKind k a)] -&gt; TableKind k a
-fromList :: [Item (TableKind k a)] -&gt; TableKind k a
-$cfromList :: forall (k :: TableKinds) a.
+Int -&gt; [Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+fromList :: [Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+$cfromList :: forall (k :: Table_Kind) a.
 IsList a =&gt;
-[Item (TableKind k a)] -&gt; TableKind k a
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsList</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593953"><span id="local-6989586621679593955"><span class="annot"><span class="annottext">Gen (TableKind k a)
-Gen (TableKind k a)
--&gt; (TableKind k a -&gt; [TableKind k a]) -&gt; Arbitrary (TableKind k a)
-TableKind k a -&gt; [TableKind k a]
+[Item (ForTable_Kind k a)] -&gt; ForTable_Kind k a
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsList</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594970"><span id="local-6989586621679594972"><span class="annot"><span class="annottext">Gen (ForTable_Kind k a)
+Gen (ForTable_Kind k a)
+-&gt; (ForTable_Kind k a -&gt; [ForTable_Kind k a])
+-&gt; Arbitrary (ForTable_Kind k a)
+ForTable_Kind k a -&gt; [ForTable_Kind k a]
 forall a. Gen a -&gt; (a -&gt; [a]) -&gt; Arbitrary a
-forall (k :: TableKinds) a. Arbitrary a =&gt; Gen (TableKind k a)
-forall (k :: TableKinds) a.
+forall (k :: Table_Kind) a. Arbitrary a =&gt; Gen (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 Arbitrary a =&gt;
-TableKind k a -&gt; [TableKind k a]
-shrink :: TableKind k a -&gt; [TableKind k a]
-$cshrink :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; [ForTable_Kind k a]
+shrink :: ForTable_Kind k a -&gt; [ForTable_Kind k a]
+$cshrink :: forall (k :: Table_Kind) a.
 Arbitrary a =&gt;
-TableKind k a -&gt; [TableKind k a]
-arbitrary :: Gen (TableKind k a)
-$carbitrary :: forall (k :: TableKinds) a. Arbitrary a =&gt; Gen (TableKind k a)
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Arbitrary</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593945"><span id="local-6989586621679593947"><span id="local-6989586621679593949"><span class="annot"><span class="annottext">Show (TableKind k a)
-Show (TableKind k a) =&gt;
-(Token -&gt; Maybe (TableKind k a))
--&gt; (TableKind k a -&gt; Token)
--&gt; (TableKind k a -&gt; Maybe Token)
--&gt; IsToken (TableKind k a)
-Token -&gt; Maybe (TableKind k a)
-TableKind k a -&gt; Maybe Token
-TableKind k a -&gt; Token
+ForTable_Kind k a -&gt; [ForTable_Kind k a]
+arbitrary :: Gen (ForTable_Kind k a)
+$carbitrary :: forall (k :: Table_Kind) a. Arbitrary a =&gt; Gen (ForTable_Kind k a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Arbitrary</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594962"><span id="local-6989586621679594964"><span id="local-6989586621679594966"><span class="annot"><span class="annottext">Show (ForTable_Kind k a)
+Show (ForTable_Kind k a) =&gt;
+(Token -&gt; Maybe (ForTable_Kind k a))
+-&gt; (ForTable_Kind k a -&gt; Token)
+-&gt; (ForTable_Kind k a -&gt; Maybe Token)
+-&gt; IsToken (ForTable_Kind k a)
+Token -&gt; Maybe (ForTable_Kind k a)
+ForTable_Kind k a -&gt; Maybe Token
+ForTable_Kind k a -&gt; Token
 forall a.
 Show a =&gt;
 (Token -&gt; Maybe a)
 -&gt; (a -&gt; Token) -&gt; (a -&gt; Maybe Token) -&gt; IsToken a
-forall (k :: TableKinds) a. IsToken a =&gt; Show (TableKind k a)
-forall (k :: TableKinds) a.
+forall (k :: Table_Kind) a. IsToken a =&gt; Show (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 IsToken a =&gt;
-Token -&gt; Maybe (TableKind k a)
-forall (k :: TableKinds) a.
+Token -&gt; Maybe (ForTable_Kind k a)
+forall (k :: Table_Kind) a.
 IsToken a =&gt;
-TableKind k a -&gt; Maybe Token
-forall (k :: TableKinds) a. IsToken a =&gt; TableKind k a -&gt; Token
-mtoken :: TableKind k a -&gt; Maybe Token
-$cmtoken :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; Maybe Token
+forall (k :: Table_Kind) a. IsToken a =&gt; ForTable_Kind k a -&gt; Token
+mtoken :: ForTable_Kind k a -&gt; Maybe Token
+$cmtoken :: forall (k :: Table_Kind) a.
 IsToken a =&gt;
-TableKind k a -&gt; Maybe Token
-token :: TableKind k a -&gt; Token
-$ctoken :: forall (k :: TableKinds) a. IsToken a =&gt; TableKind k a -&gt; Token
-fromToken :: Token -&gt; Maybe (TableKind k a)
-$cfromToken :: forall (k :: TableKinds) a.
+ForTable_Kind k a -&gt; Maybe Token
+token :: ForTable_Kind k a -&gt; Token
+$ctoken :: forall (k :: Table_Kind) a. IsToken a =&gt; ForTable_Kind k a -&gt; Token
+fromToken :: Token -&gt; Maybe (ForTable_Kind k a)
+$cfromToken :: forall (k :: Table_Kind) a.
 IsToken a =&gt;
-Token -&gt; Maybe (TableKind k a)
-$cp1IsToken :: forall (k :: TableKinds) a. IsToken a =&gt; Show (TableKind k a)
-</span><a href="System.SED.MCTP.Common.Token.html#C%3AIsToken"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsToken</span></a></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679594005"><span class="hs-identifier hs-type">a</span></a></span><span>
+Token -&gt; Maybe (ForTable_Kind k a)
+$cp1IsToken :: forall (k :: Table_Kind) a. IsToken a =&gt; Show (ForTable_Kind k a)
+</span><a href="System.SED.MCTP.Common.Token.html#C%3AIsToken"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">IsToken</span></a></span></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="annot"><a href="#local-6989586621679595022"><span class="hs-identifier hs-type">a</span></a></span><span>
 </span><span id="line-64"></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span>
-</span><span id="line-67"></span><span id="local-6989586621679593942"><span id="local-6989586621679593943"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679593930"><span id="local-6989586621679593932"><span id="local-6989586621679593934"><span id="local-6989586621679593936"><span id="local-6989586621679593938"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679593943"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679593943"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKind"><span class="hs-identifier hs-type">TableKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679593942"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
-</span><span id="line-68"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679593929"><span class="annot"><span class="annottext">generate :: (a ? TableKind k) -&gt; ByteString
-</span><a href="#local-6989586621679593929"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; ByteString
+</span><span id="line-67"></span><span id="local-6989586621679594959"><span id="local-6989586621679594960"><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594947"><span id="local-6989586621679594949"><span id="local-6989586621679594951"><span id="local-6989586621679594953"><span id="local-6989586621679594955"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594960"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679594960"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ForTable_Kind"><span class="hs-identifier hs-type">ForTable_Kind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594959"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span></span></span></span></span></span><span>
+</span><span id="line-68"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679594946"><span class="annot"><span class="annottext">generate :: (a ? ForTable_Kind k) -&gt; ByteString
+</span><a href="#local-6989586621679594946"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">a -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">(a -&gt; ByteString)
--&gt; ((a ? TableKind k) -&gt; a) -&gt; (a ? TableKind k) -&gt; ByteString
+-&gt; ((a ? ForTable_Kind k) -&gt; a)
+-&gt; (a ? ForTable_Kind k)
+-&gt; ByteString
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a ? TableKind k) -&gt; a
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">(a ? ForTable_Kind k) -&gt; a
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span>
-</span><span id="line-69"></span><span>        </span><span id="local-6989586621679593928"><span class="annot"><span class="annottext">parser :: Parser (a ? TableKind k)
-</span><a href="#local-6989586621679593928"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (a ? TableKind k)
+</span><span id="line-69"></span><span>        </span><span id="local-6989586621679594945"><span class="annot"><span class="annottext">parser :: Parser (a ? ForTable_Kind k)
+</span><a href="#local-6989586621679594945"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser (a ? ForTable_Kind k)
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span></span></span><span> </span><span class="hs-comment">-- this works --&gt; unsafeCreate &lt;$&gt; parser  -- TODO Hmm.  I suppose the parser is a de facto predicate</span><span>
 </span><span id="line-70"></span><span>
-</span><span id="line-71"></span><span class="hs-keyword">type</span><span> </span><span id="Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-var">Table_HalfUID</span></a></span></span><span> </span><span id="local-6989586621679593927"><span class="annot"><a href="#local-6989586621679593927"><span class="hs-identifier hs-type">k</span></a></span></span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKind"><span class="hs-identifier hs-type">TableKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679593927"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">type</span><span> </span><span id="Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-var">Table_HalfUID</span></a></span></span><span> </span><span id="local-6989586621679594944"><span class="annot"><a href="#local-6989586621679594944"><span class="hs-identifier hs-type">k</span></a></span></span><span>      </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ForTable_Kind"><span class="hs-identifier hs-type">ForTable_Kind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594944"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-72"></span><span>
-</span><span id="line-73"></span><span class="hs-keyword">type</span><span> </span><span id="Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-var">Table_UID</span></a></span></span><span> </span><span id="local-6989586621679593926"><span class="annot"><a href="#local-6989586621679593926"><span class="hs-identifier hs-type">k</span></a></span></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#TableKind"><span class="hs-identifier hs-type">TableKind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679593926"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-73"></span><span class="hs-keyword">type</span><span> </span><span id="Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-var">Table_UID</span></a></span></span><span> </span><span id="local-6989586621679594943"><span class="annot"><a href="#local-6989586621679594943"><span class="hs-identifier hs-type">k</span></a></span></span><span>          </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span class="annot"><a href="Data.Refined.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ForTable_Kind"><span class="hs-identifier hs-type">ForTable_Kind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594943"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-74"></span><span>
 </span><span id="line-75"></span><span>
-</span><span id="line-76"></span><span class="hs-keyword">class</span><span> </span><span id="IsTable_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-var">IsTable_HalfUID</span></a></span></span><span> </span><span id="local-6989586621679594111"><span class="annot"><a href="#local-6989586621679594111"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-77"></span><span>    </span><span id="local-6989586621679594116"><span id="fromTable_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#fromTable_HalfUID"><span class="hs-identifier hs-type">fromTable_HalfUID</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594116"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679594111"><span class="hs-identifier hs-type">a</span></a></span></span><span>
-</span><span id="line-78"></span><span>    </span><span id="local-6989586621679594113"><span id="toTable_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#toTable_HalfUID"><span class="hs-identifier hs-type">toTable_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679594111"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594113"><span class="hs-identifier hs-type">k</span></a></span></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">class</span><span> </span><span id="IsTable_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-var">IsTable_HalfUID</span></a></span></span><span> </span><span id="local-6989586621679595128"><span class="annot"><a href="#local-6989586621679595128"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-77"></span><span>    </span><span id="local-6989586621679595133"><span id="fromTable_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#fromTable_HalfUID"><span class="hs-identifier hs-type">fromTable_HalfUID</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679595133"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679595128"><span class="hs-identifier hs-type">a</span></a></span></span><span>
+</span><span id="line-78"></span><span>    </span><span id="local-6989586621679595130"><span id="toTable_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#toTable_HalfUID"><span class="hs-identifier hs-type">toTable_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679595128"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679595130"><span class="hs-identifier hs-type">k</span></a></span></span><span>
 </span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span id="local-6989586621679593923"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679593923"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-81"></span><span>    </span><span id="local-6989586621679593919"><span class="annot"><span class="annottext">fromTable_HalfUID :: Table_HalfUID k -&gt; Table_HalfUID k
-</span><a href="#local-6989586621679593919"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromTable_HalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Table_HalfUID k
+</span><span id="line-80"></span><span id="local-6989586621679594940"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594940"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-81"></span><span>    </span><span id="local-6989586621679594936"><span class="annot"><span class="annottext">fromTable_HalfUID :: Table_HalfUID k -&gt; Table_HalfUID k
+</span><a href="#local-6989586621679594936"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromTable_HalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Table_HalfUID k
 forall a (p :: * -&gt; *). a -&gt; Refined p a
 </span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(HalfUID -&gt; Table_HalfUID k)
 -&gt; (Table_HalfUID k -&gt; HalfUID)
@@ -428,8 +440,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Table_HalfUID k -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span>
-</span><span id="line-82"></span><span>    </span><span id="local-6989586621679593918"><span class="annot"><span class="annottext">toTable_HalfUID :: Table_HalfUID k -&gt; Table_HalfUID k
-</span><a href="#local-6989586621679593918"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTable_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Table_HalfUID k
+</span><span id="line-82"></span><span>    </span><span id="local-6989586621679594935"><span class="annot"><span class="annottext">toTable_HalfUID :: Table_HalfUID k -&gt; Table_HalfUID k
+</span><a href="#local-6989586621679594935"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTable_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Table_HalfUID k
 forall a (p :: * -&gt; *). a -&gt; Refined p a
 </span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(HalfUID -&gt; Table_HalfUID k)
 -&gt; (Table_HalfUID k -&gt; HalfUID)
@@ -440,9 +452,9 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span></span><span>
 </span><span id="line-83"></span><span>
-</span><span id="line-84"></span><span id="local-6989586621679593917"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679593917"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-85"></span><span>    </span><span id="local-6989586621679593914"><span class="annot"><span class="annottext">fromTable_HalfUID :: Table_HalfUID k -&gt; Table_UID k
-</span><a href="#local-6989586621679593914"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromTable_HalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; Table_UID k
+</span><span id="line-84"></span><span id="local-6989586621679594934"><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594934"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-85"></span><span>    </span><span id="local-6989586621679594931"><span class="annot"><span class="annottext">fromTable_HalfUID :: Table_HalfUID k -&gt; Table_UID k
+</span><a href="#local-6989586621679594931"><span class="hs-identifier hs-var hs-var hs-var hs-var">fromTable_HalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">UID -&gt; Table_UID k
 forall a (p :: * -&gt; *). a -&gt; Refined p a
 </span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(UID -&gt; Table_UID k)
 -&gt; (Table_HalfUID k -&gt; UID) -&gt; Table_HalfUID k -&gt; Table_UID k
@@ -455,8 +467,8 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Table_HalfUID k -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span>
-</span><span id="line-86"></span><span>    </span><span id="local-6989586621679593913"><span class="annot"><span class="annottext">toTable_HalfUID :: Table_UID k -&gt; Table_HalfUID k
-</span><a href="#local-6989586621679593913"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTable_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Table_HalfUID k
+</span><span id="line-86"></span><span>    </span><span id="local-6989586621679594930"><span class="annot"><span class="annottext">toTable_HalfUID :: Table_UID k -&gt; Table_HalfUID k
+</span><a href="#local-6989586621679594930"><span class="hs-identifier hs-var hs-var hs-var hs-var">toTable_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Table_HalfUID k
 forall a (p :: * -&gt; *). a -&gt; Refined p a
 </span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(HalfUID -&gt; Table_HalfUID k)
 -&gt; (Table_UID k -&gt; HalfUID) -&gt; Table_UID k -&gt; Table_HalfUID k
@@ -468,22 +480,22 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span></span><span>
 </span><span id="line-87"></span><span>
-</span><span id="line-88"></span><span id="local-6989586621679594074"><span id="local-6989586621679594075"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#viaTable_HalfUID"><span class="hs-identifier hs-type">viaTable_HalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594075"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679594074"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679594075"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679594074"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
+</span><span id="line-88"></span><span id="local-6989586621679595091"><span id="local-6989586621679595092"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#viaTable_HalfUID"><span class="hs-identifier hs-type">viaTable_HalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679595092"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679595091"><span class="hs-identifier hs-type">b</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679595092"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="#local-6989586621679595091"><span class="hs-identifier hs-type">b</span></a></span></span></span><span>
 </span><span id="line-89"></span><span id="viaTable_HalfUID"><span class="annot"><span class="annottext">viaTable_HalfUID :: a -&gt; b
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#viaTable_HalfUID"><span class="hs-identifier hs-var hs-var">viaTable_HalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID Any -&gt; b
-forall a (k :: TableKinds).
+forall a (k :: Table_Kind).
 IsTable_HalfUID a =&gt;
 Table_HalfUID k -&gt; a
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#fromTable_HalfUID"><span class="hs-identifier hs-var">fromTable_HalfUID</span></a></span><span> </span><span class="annot"><span class="annottext">(Table_HalfUID Any -&gt; b) -&gt; (a -&gt; Table_HalfUID Any) -&gt; a -&gt; b
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Table_HalfUID Any
-forall a (k :: TableKinds).
+forall a (k :: Table_Kind).
 IsTable_HalfUID a =&gt;
 a -&gt; Table_HalfUID k
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#toTable_HalfUID"><span class="hs-identifier hs-var">toTable_HalfUID</span></a></span><span>
 </span><span id="line-90"></span><span>
 </span><span id="line-91"></span><span class="hs-keyword">newtype</span><span> </span><span id="Null_Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-var">Null_Table_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span id="Null_Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-var">Null_Table_HalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table"><span class="hs-identifier hs-type">Null_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-92"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679593907"><span id="local-6989586621679593909"><span class="annot"><span class="annottext">Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool
+</span><span id="line-92"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679594924"><span id="local-6989586621679594926"><span class="annot"><span class="annottext">Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool
 (Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool)
 -&gt; (Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool)
 -&gt; Eq Null_Table_HalfUID
@@ -492,7 +504,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool
 == :: Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool
 $c== :: Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593892"><span id="local-6989586621679593894"><span id="local-6989586621679593896"><span id="local-6989586621679593898"><span id="local-6989586621679593900"><span id="local-6989586621679593902"><span id="local-6989586621679593904"><span class="annot"><span class="annottext">Eq Null_Table_HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594909"><span id="local-6989586621679594911"><span id="local-6989586621679594913"><span id="local-6989586621679594915"><span id="local-6989586621679594917"><span id="local-6989586621679594919"><span id="local-6989586621679594921"><span class="annot"><span class="annottext">Eq Null_Table_HalfUID
 Eq Null_Table_HalfUID =&gt;
 (Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Ordering)
 -&gt; (Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool)
@@ -530,7 +542,7 @@ $c&lt; :: Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Bool
 compare :: Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Ordering
 $ccompare :: Null_Table_HalfUID -&gt; Null_Table_HalfUID -&gt; Ordering
 $cp1Ord :: Eq Null_Table_HalfUID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593878"><span id="local-6989586621679593880"><span id="local-6989586621679593882"><span id="local-6989586621679593884"><span id="local-6989586621679593886"><span id="local-6989586621679593888"><span id="local-6989586621679593890"><span class="annot"><span class="annottext">Parser Null_Table_HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594895"><span id="local-6989586621679594897"><span id="local-6989586621679594899"><span id="local-6989586621679594901"><span id="local-6989586621679594903"><span id="local-6989586621679594905"><span id="local-6989586621679594907"><span class="annot"><span class="annottext">Parser Null_Table_HalfUID
 String -&gt; Either String Null_Table_HalfUID
 ByteString -&gt; Maybe Null_Table_HalfUID
 ByteString -&gt; Either String Null_Table_HalfUID
@@ -568,38 +580,38 @@ generate :: Null_Table_HalfUID -&gt; ByteString
 $cgenerate :: Null_Table_HalfUID -&gt; ByteString
 parser :: Parser Null_Table_HalfUID
 $cparser :: Parser Null_Table_HalfUID
-</span><a href="#local-6989586621679593878"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593874"><span id="local-6989586621679593876"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Null_Table_HalfUID
+</span><a href="#local-6989586621679594895"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594891"><span id="local-6989586621679594893"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Null_Table_HalfUID
 Null_Table_HalfUID -&gt; Table_HalfUID k
-(forall (k :: TableKinds). Table_HalfUID k -&gt; Null_Table_HalfUID)
--&gt; (forall (k :: TableKinds).
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; Null_Table_HalfUID)
+-&gt; (forall (k :: Table_Kind).
     Null_Table_HalfUID -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID Null_Table_HalfUID
 forall a.
-(forall (k :: TableKinds). Table_HalfUID k -&gt; a)
--&gt; (forall (k :: TableKinds). a -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; a)
+-&gt; (forall (k :: Table_Kind). a -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID a
-forall (k :: TableKinds). Table_HalfUID k -&gt; Null_Table_HalfUID
-forall (k :: TableKinds). Null_Table_HalfUID -&gt; Table_HalfUID k
+forall (k :: Table_Kind). Table_HalfUID k -&gt; Null_Table_HalfUID
+forall (k :: Table_Kind). Null_Table_HalfUID -&gt; Table_HalfUID k
 toTable_HalfUID :: Null_Table_HalfUID -&gt; Table_HalfUID k
-$ctoTable_HalfUID :: forall (k :: TableKinds). Null_Table_HalfUID -&gt; Table_HalfUID k
+$ctoTable_HalfUID :: forall (k :: Table_Kind). Null_Table_HalfUID -&gt; Table_HalfUID k
 fromTable_HalfUID :: Table_HalfUID k -&gt; Null_Table_HalfUID
-$cfromTable_HalfUID :: forall (k :: TableKinds). Table_HalfUID k -&gt; Null_Table_HalfUID
-</span><a href="#local-6989586621679593874"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table"><span class="hs-identifier hs-type">Null_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679593869"><span id="local-6989586621679593872"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-type">Null_Table_HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-94"></span><span>     </span><span id="local-6989586621679593868"><span class="annot"><span class="annottext">show :: Null_Table_HalfUID -&gt; String
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-type">Null_Table_HalfUID</span></a></span><span> </span><span id="local-6989586621679593866"><span class="annot"><span class="annottext">t :: Table_HalfUID 'Null_Table
-</span><a href="#local-6989586621679593866"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 4 -&gt; String
+$cfromTable_HalfUID :: forall (k :: Table_Kind). Table_HalfUID k -&gt; Null_Table_HalfUID
+</span><a href="#local-6989586621679594891"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table"><span class="hs-identifier hs-type">Null_Table</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594886"><span id="local-6989586621679594889"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-type">Null_Table_HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-94"></span><span>     </span><span id="local-6989586621679594885"><span class="annot"><span class="annottext">show :: Null_Table_HalfUID -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-type">Null_Table_HalfUID</span></a></span><span> </span><span id="local-6989586621679594883"><span class="annot"><span class="annottext">t :: Table_HalfUID 'Null_Table
+</span><a href="#local-6989586621679594883"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 4 -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;ntHalfUID&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes 4
-</span><a href="#local-6989586621679593865"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-95"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679593865"><span class="annot"><span class="annottext">fb :: Core_bytes 4
-</span><a href="#local-6989586621679593865"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Null_Table -&gt; HalfUID
+</span><a href="#local-6989586621679594882"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-95"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679594882"><span class="annot"><span class="annottext">fb :: Core_bytes 4
+</span><a href="#local-6989586621679594882"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Null_Table -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Null_Table
-</span><a href="#local-6989586621679593866"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621679594883"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-96"></span><span>
 </span><span id="line-97"></span><span class="hs-keyword">newtype</span><span> </span><span id="Object_Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-var">Object_Table_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span id="Object_Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-var">Object_Table_HalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-98"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679593859"><span id="local-6989586621679593861"><span class="annot"><span class="annottext">Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool
+</span><span id="line-98"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679594876"><span id="local-6989586621679594878"><span class="annot"><span class="annottext">Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool
 (Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool)
 -&gt; (Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool)
 -&gt; Eq Object_Table_HalfUID
@@ -608,7 +620,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool
 == :: Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool
 $c== :: Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593844"><span id="local-6989586621679593846"><span id="local-6989586621679593848"><span id="local-6989586621679593850"><span id="local-6989586621679593852"><span id="local-6989586621679593854"><span id="local-6989586621679593856"><span class="annot"><span class="annottext">Eq Object_Table_HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594861"><span id="local-6989586621679594863"><span id="local-6989586621679594865"><span id="local-6989586621679594867"><span id="local-6989586621679594869"><span id="local-6989586621679594871"><span id="local-6989586621679594873"><span class="annot"><span class="annottext">Eq Object_Table_HalfUID
 Eq Object_Table_HalfUID =&gt;
 (Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Ordering)
 -&gt; (Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool)
@@ -653,7 +665,7 @@ $c&lt; :: Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Bool
 compare :: Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Ordering
 $ccompare :: Object_Table_HalfUID -&gt; Object_Table_HalfUID -&gt; Ordering
 $cp1Ord :: Eq Object_Table_HalfUID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593830"><span id="local-6989586621679593832"><span id="local-6989586621679593834"><span id="local-6989586621679593836"><span id="local-6989586621679593838"><span id="local-6989586621679593840"><span id="local-6989586621679593842"><span class="annot"><span class="annottext">Parser Object_Table_HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594847"><span id="local-6989586621679594849"><span id="local-6989586621679594851"><span id="local-6989586621679594853"><span id="local-6989586621679594855"><span id="local-6989586621679594857"><span id="local-6989586621679594859"><span class="annot"><span class="annottext">Parser Object_Table_HalfUID
 String -&gt; Either String Object_Table_HalfUID
 ByteString -&gt; Maybe Object_Table_HalfUID
 ByteString -&gt; Either String Object_Table_HalfUID
@@ -691,38 +703,38 @@ generate :: Object_Table_HalfUID -&gt; ByteString
 $cgenerate :: Object_Table_HalfUID -&gt; ByteString
 parser :: Parser Object_Table_HalfUID
 $cparser :: Parser Object_Table_HalfUID
-</span><a href="#local-6989586621679593830"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593826"><span id="local-6989586621679593828"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Object_Table_HalfUID
+</span><a href="#local-6989586621679594847"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594843"><span id="local-6989586621679594845"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Object_Table_HalfUID
 Object_Table_HalfUID -&gt; Table_HalfUID k
-(forall (k :: TableKinds). Table_HalfUID k -&gt; Object_Table_HalfUID)
--&gt; (forall (k :: TableKinds).
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; Object_Table_HalfUID)
+-&gt; (forall (k :: Table_Kind).
     Object_Table_HalfUID -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID Object_Table_HalfUID
 forall a.
-(forall (k :: TableKinds). Table_HalfUID k -&gt; a)
--&gt; (forall (k :: TableKinds). a -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; a)
+-&gt; (forall (k :: Table_Kind). a -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID a
-forall (k :: TableKinds). Table_HalfUID k -&gt; Object_Table_HalfUID
-forall (k :: TableKinds). Object_Table_HalfUID -&gt; Table_HalfUID k
+forall (k :: Table_Kind). Table_HalfUID k -&gt; Object_Table_HalfUID
+forall (k :: Table_Kind). Object_Table_HalfUID -&gt; Table_HalfUID k
 toTable_HalfUID :: Object_Table_HalfUID -&gt; Table_HalfUID k
-$ctoTable_HalfUID :: forall (k :: TableKinds). Object_Table_HalfUID -&gt; Table_HalfUID k
+$ctoTable_HalfUID :: forall (k :: Table_Kind). Object_Table_HalfUID -&gt; Table_HalfUID k
 fromTable_HalfUID :: Table_HalfUID k -&gt; Object_Table_HalfUID
-$cfromTable_HalfUID :: forall (k :: TableKinds). Table_HalfUID k -&gt; Object_Table_HalfUID
-</span><a href="#local-6989586621679593826"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679593821"><span id="local-6989586621679593824"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-type">Object_Table_HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-100"></span><span>     </span><span id="local-6989586621679593820"><span class="annot"><span class="annottext">show :: Object_Table_HalfUID -&gt; String
-</span><a href="#local-6989586621679593820"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-type">Object_Table_HalfUID</span></a></span><span> </span><span id="local-6989586621679593819"><span class="annot"><span class="annottext">t :: Table_HalfUID 'Object_Table
-</span><a href="#local-6989586621679593819"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 4 -&gt; String
+$cfromTable_HalfUID :: forall (k :: Table_Kind). Table_HalfUID k -&gt; Object_Table_HalfUID
+</span><a href="#local-6989586621679594843"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-99"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594838"><span id="local-6989586621679594841"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-type">Object_Table_HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-100"></span><span>     </span><span id="local-6989586621679594837"><span class="annot"><span class="annottext">show :: Object_Table_HalfUID -&gt; String
+</span><a href="#local-6989586621679594837"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-type">Object_Table_HalfUID</span></a></span><span> </span><span id="local-6989586621679594836"><span class="annot"><span class="annottext">t :: Table_HalfUID 'Object_Table
+</span><a href="#local-6989586621679594836"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 4 -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;otHalfUID&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes 4
-</span><a href="#local-6989586621679593818"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-101"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679593818"><span class="annot"><span class="annottext">fb :: Core_bytes 4
-</span><a href="#local-6989586621679593818"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Object_Table -&gt; HalfUID
+</span><a href="#local-6989586621679594835"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-101"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679594835"><span class="annot"><span class="annottext">fb :: Core_bytes 4
+</span><a href="#local-6989586621679594835"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Object_Table -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Object_Table
-</span><a href="#local-6989586621679593819"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621679594836"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-102"></span><span>
 </span><span id="line-103"></span><span class="hs-keyword">newtype</span><span> </span><span id="Byte_Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-var">Byte_Table_HalfUID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span id="Byte_Table_HalfUID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-var">Byte_Table_HalfUID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table"><span class="hs-identifier hs-type">Byte_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-104"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679593813"><span id="local-6989586621679593815"><span class="annot"><span class="annottext">Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool
+</span><span id="line-104"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679594830"><span id="local-6989586621679594832"><span class="annot"><span class="annottext">Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool
 (Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool)
 -&gt; (Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool)
 -&gt; Eq Byte_Table_HalfUID
@@ -731,7 +743,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool
 == :: Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool
 $c== :: Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593798"><span id="local-6989586621679593800"><span id="local-6989586621679593802"><span id="local-6989586621679593804"><span id="local-6989586621679593806"><span id="local-6989586621679593808"><span id="local-6989586621679593810"><span class="annot"><span class="annottext">Eq Byte_Table_HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594815"><span id="local-6989586621679594817"><span id="local-6989586621679594819"><span id="local-6989586621679594821"><span id="local-6989586621679594823"><span id="local-6989586621679594825"><span id="local-6989586621679594827"><span class="annot"><span class="annottext">Eq Byte_Table_HalfUID
 Eq Byte_Table_HalfUID =&gt;
 (Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Ordering)
 -&gt; (Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool)
@@ -769,7 +781,7 @@ $c&lt; :: Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Bool
 compare :: Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Ordering
 $ccompare :: Byte_Table_HalfUID -&gt; Byte_Table_HalfUID -&gt; Ordering
 $cp1Ord :: Eq Byte_Table_HalfUID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593784"><span id="local-6989586621679593786"><span id="local-6989586621679593788"><span id="local-6989586621679593790"><span id="local-6989586621679593792"><span id="local-6989586621679593794"><span id="local-6989586621679593796"><span class="annot"><span class="annottext">Parser Byte_Table_HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594801"><span id="local-6989586621679594803"><span id="local-6989586621679594805"><span id="local-6989586621679594807"><span id="local-6989586621679594809"><span id="local-6989586621679594811"><span id="local-6989586621679594813"><span class="annot"><span class="annottext">Parser Byte_Table_HalfUID
 String -&gt; Either String Byte_Table_HalfUID
 ByteString -&gt; Maybe Byte_Table_HalfUID
 ByteString -&gt; Either String Byte_Table_HalfUID
@@ -807,38 +819,38 @@ generate :: Byte_Table_HalfUID -&gt; ByteString
 $cgenerate :: Byte_Table_HalfUID -&gt; ByteString
 parser :: Parser Byte_Table_HalfUID
 $cparser :: Parser Byte_Table_HalfUID
-</span><a href="#local-6989586621679593784"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593780"><span id="local-6989586621679593782"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Byte_Table_HalfUID
+</span><a href="#local-6989586621679594801"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594797"><span id="local-6989586621679594799"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Byte_Table_HalfUID
 Byte_Table_HalfUID -&gt; Table_HalfUID k
-(forall (k :: TableKinds). Table_HalfUID k -&gt; Byte_Table_HalfUID)
--&gt; (forall (k :: TableKinds).
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; Byte_Table_HalfUID)
+-&gt; (forall (k :: Table_Kind).
     Byte_Table_HalfUID -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID Byte_Table_HalfUID
 forall a.
-(forall (k :: TableKinds). Table_HalfUID k -&gt; a)
--&gt; (forall (k :: TableKinds). a -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; a)
+-&gt; (forall (k :: Table_Kind). a -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID a
-forall (k :: TableKinds). Table_HalfUID k -&gt; Byte_Table_HalfUID
-forall (k :: TableKinds). Byte_Table_HalfUID -&gt; Table_HalfUID k
+forall (k :: Table_Kind). Table_HalfUID k -&gt; Byte_Table_HalfUID
+forall (k :: Table_Kind). Byte_Table_HalfUID -&gt; Table_HalfUID k
 toTable_HalfUID :: Byte_Table_HalfUID -&gt; Table_HalfUID k
-$ctoTable_HalfUID :: forall (k :: TableKinds). Byte_Table_HalfUID -&gt; Table_HalfUID k
+$ctoTable_HalfUID :: forall (k :: Table_Kind). Byte_Table_HalfUID -&gt; Table_HalfUID k
 fromTable_HalfUID :: Table_HalfUID k -&gt; Byte_Table_HalfUID
-$cfromTable_HalfUID :: forall (k :: TableKinds). Table_HalfUID k -&gt; Byte_Table_HalfUID
-</span><a href="#local-6989586621679593780"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table"><span class="hs-identifier hs-type">Byte_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679593775"><span id="local-6989586621679593778"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-type">Byte_Table_HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-106"></span><span>     </span><span id="local-6989586621679593774"><span class="annot"><span class="annottext">show :: Byte_Table_HalfUID -&gt; String
-</span><a href="#local-6989586621679593774"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-type">Byte_Table_HalfUID</span></a></span><span> </span><span id="local-6989586621679593773"><span class="annot"><span class="annottext">t :: Table_HalfUID 'Byte_Table
-</span><a href="#local-6989586621679593773"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 4 -&gt; String
+$cfromTable_HalfUID :: forall (k :: Table_Kind). Table_HalfUID k -&gt; Byte_Table_HalfUID
+</span><a href="#local-6989586621679594797"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_HalfUID"><span class="hs-identifier hs-type">Table_HalfUID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table"><span class="hs-identifier hs-type">Byte_Table</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594792"><span id="local-6989586621679594795"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-type">Byte_Table_HalfUID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-106"></span><span>     </span><span id="local-6989586621679594791"><span class="annot"><span class="annottext">show :: Byte_Table_HalfUID -&gt; String
+</span><a href="#local-6989586621679594791"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-type">Byte_Table_HalfUID</span></a></span><span> </span><span id="local-6989586621679594790"><span class="annot"><span class="annottext">t :: Table_HalfUID 'Byte_Table
+</span><a href="#local-6989586621679594790"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 4 -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;btHalfUID&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes 4
-</span><a href="#local-6989586621679593772"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-107"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679593772"><span class="annot"><span class="annottext">fb :: Core_bytes 4
-</span><a href="#local-6989586621679593772"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Byte_Table -&gt; HalfUID
+</span><a href="#local-6989586621679594789"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-107"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span id="local-6989586621679594789"><span class="annot"><span class="annottext">fb :: Core_bytes 4
+</span><a href="#local-6989586621679594789"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Byte_Table -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Byte_Table
-</span><a href="#local-6989586621679593773"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621679594790"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-108"></span><span>
 </span><span id="line-109"></span><span class="hs-keyword">newtype</span><span> </span><span id="Null_Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-var">Null_Table_UID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span id="Null_Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-var">Null_Table_UID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table"><span class="hs-identifier hs-type">Null_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-110"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679593767"><span id="local-6989586621679593769"><span class="annot"><span class="annottext">Null_Table_UID -&gt; Null_Table_UID -&gt; Bool
+</span><span id="line-110"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679594784"><span id="local-6989586621679594786"><span class="annot"><span class="annottext">Null_Table_UID -&gt; Null_Table_UID -&gt; Bool
 (Null_Table_UID -&gt; Null_Table_UID -&gt; Bool)
 -&gt; (Null_Table_UID -&gt; Null_Table_UID -&gt; Bool) -&gt; Eq Null_Table_UID
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -846,7 +858,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Null_Table_UID -&gt; Null_Table_UID -&gt; Bool
 == :: Null_Table_UID -&gt; Null_Table_UID -&gt; Bool
 $c== :: Null_Table_UID -&gt; Null_Table_UID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593752"><span id="local-6989586621679593754"><span id="local-6989586621679593756"><span id="local-6989586621679593758"><span id="local-6989586621679593760"><span id="local-6989586621679593762"><span id="local-6989586621679593764"><span class="annot"><span class="annottext">Eq Null_Table_UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594769"><span id="local-6989586621679594771"><span id="local-6989586621679594773"><span id="local-6989586621679594775"><span id="local-6989586621679594777"><span id="local-6989586621679594779"><span id="local-6989586621679594781"><span class="annot"><span class="annottext">Eq Null_Table_UID
 Eq Null_Table_UID =&gt;
 (Null_Table_UID -&gt; Null_Table_UID -&gt; Ordering)
 -&gt; (Null_Table_UID -&gt; Null_Table_UID -&gt; Bool)
@@ -884,7 +896,7 @@ $c&lt; :: Null_Table_UID -&gt; Null_Table_UID -&gt; Bool
 compare :: Null_Table_UID -&gt; Null_Table_UID -&gt; Ordering
 $ccompare :: Null_Table_UID -&gt; Null_Table_UID -&gt; Ordering
 $cp1Ord :: Eq Null_Table_UID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593738"><span id="local-6989586621679593740"><span id="local-6989586621679593742"><span id="local-6989586621679593744"><span id="local-6989586621679593746"><span id="local-6989586621679593748"><span id="local-6989586621679593750"><span class="annot"><span class="annottext">Parser Null_Table_UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594755"><span id="local-6989586621679594757"><span id="local-6989586621679594759"><span id="local-6989586621679594761"><span id="local-6989586621679594763"><span id="local-6989586621679594765"><span id="local-6989586621679594767"><span class="annot"><span class="annottext">Parser Null_Table_UID
 String -&gt; Either String Null_Table_UID
 ByteString -&gt; Maybe Null_Table_UID
 ByteString -&gt; Either String Null_Table_UID
@@ -922,37 +934,37 @@ generate :: Null_Table_UID -&gt; ByteString
 $cgenerate :: Null_Table_UID -&gt; ByteString
 parser :: Parser Null_Table_UID
 $cparser :: Parser Null_Table_UID
-</span><a href="#local-6989586621679593738"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593734"><span id="local-6989586621679593736"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Null_Table_UID
+</span><a href="#local-6989586621679594755"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594751"><span id="local-6989586621679594753"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Null_Table_UID
 Null_Table_UID -&gt; Table_HalfUID k
-(forall (k :: TableKinds). Table_HalfUID k -&gt; Null_Table_UID)
--&gt; (forall (k :: TableKinds). Null_Table_UID -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; Null_Table_UID)
+-&gt; (forall (k :: Table_Kind). Null_Table_UID -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID Null_Table_UID
 forall a.
-(forall (k :: TableKinds). Table_HalfUID k -&gt; a)
--&gt; (forall (k :: TableKinds). a -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; a)
+-&gt; (forall (k :: Table_Kind). a -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID a
-forall (k :: TableKinds). Table_HalfUID k -&gt; Null_Table_UID
-forall (k :: TableKinds). Null_Table_UID -&gt; Table_HalfUID k
+forall (k :: Table_Kind). Table_HalfUID k -&gt; Null_Table_UID
+forall (k :: Table_Kind). Null_Table_UID -&gt; Table_HalfUID k
 toTable_HalfUID :: Null_Table_UID -&gt; Table_HalfUID k
-$ctoTable_HalfUID :: forall (k :: TableKinds). Null_Table_UID -&gt; Table_HalfUID k
+$ctoTable_HalfUID :: forall (k :: Table_Kind). Null_Table_UID -&gt; Table_HalfUID k
 fromTable_HalfUID :: Table_HalfUID k -&gt; Null_Table_UID
-$cfromTable_HalfUID :: forall (k :: TableKinds). Table_HalfUID k -&gt; Null_Table_UID
-</span><a href="#local-6989586621679593734"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table"><span class="hs-identifier hs-type">Null_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679593729"><span id="local-6989586621679593732"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-type">Null_Table_UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-112"></span><span>     </span><span id="local-6989586621679593728"><span class="annot"><span class="annottext">show :: Null_Table_UID -&gt; String
-</span><a href="#local-6989586621679593728"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-type">Null_Table_UID</span></a></span><span> </span><span id="local-6989586621679593727"><span class="annot"><span class="annottext">t :: Table_UID 'Null_Table
-</span><a href="#local-6989586621679593727"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 8 -&gt; String
+$cfromTable_HalfUID :: forall (k :: Table_Kind). Table_HalfUID k -&gt; Null_Table_UID
+</span><a href="#local-6989586621679594751"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table"><span class="hs-identifier hs-type">Null_Table</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594746"><span id="local-6989586621679594749"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-type">Null_Table_UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-112"></span><span>     </span><span id="local-6989586621679594745"><span class="annot"><span class="annottext">show :: Null_Table_UID -&gt; String
+</span><a href="#local-6989586621679594745"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-type">Null_Table_UID</span></a></span><span> </span><span id="local-6989586621679594744"><span class="annot"><span class="annottext">t :: Table_UID 'Null_Table
+</span><a href="#local-6989586621679594744"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 8 -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;ntUID&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes 8
-</span><a href="#local-6989586621679593726"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-113"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679593726"><span class="annot"><span class="annottext">fb :: Core_bytes 8
-</span><a href="#local-6989586621679593726"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Null_Table -&gt; UID
+</span><a href="#local-6989586621679594743"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-113"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679594743"><span class="annot"><span class="annottext">fb :: Core_bytes 8
+</span><a href="#local-6989586621679594743"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Null_Table -&gt; UID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">Table_UID 'Null_Table
-</span><a href="#local-6989586621679593727"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621679594744"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-114"></span><span>
 </span><span id="line-115"></span><span class="hs-keyword">newtype</span><span> </span><span id="Object_Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-var">Object_Table_UID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span id="Object_Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-var">Object_Table_UID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-116"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679593720"><span id="local-6989586621679593722"><span class="annot"><span class="annottext">Object_Table_UID -&gt; Object_Table_UID -&gt; Bool
+</span><span id="line-116"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679594737"><span id="local-6989586621679594739"><span class="annot"><span class="annottext">Object_Table_UID -&gt; Object_Table_UID -&gt; Bool
 (Object_Table_UID -&gt; Object_Table_UID -&gt; Bool)
 -&gt; (Object_Table_UID -&gt; Object_Table_UID -&gt; Bool)
 -&gt; Eq Object_Table_UID
@@ -961,7 +973,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Object_Table_UID -&gt; Object_Table_UID -&gt; Bool
 == :: Object_Table_UID -&gt; Object_Table_UID -&gt; Bool
 $c== :: Object_Table_UID -&gt; Object_Table_UID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593705"><span id="local-6989586621679593707"><span id="local-6989586621679593709"><span id="local-6989586621679593711"><span id="local-6989586621679593713"><span id="local-6989586621679593715"><span id="local-6989586621679593717"><span class="annot"><span class="annottext">Eq Object_Table_UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594722"><span id="local-6989586621679594724"><span id="local-6989586621679594726"><span id="local-6989586621679594728"><span id="local-6989586621679594730"><span id="local-6989586621679594732"><span id="local-6989586621679594734"><span class="annot"><span class="annottext">Eq Object_Table_UID
 Eq Object_Table_UID =&gt;
 (Object_Table_UID -&gt; Object_Table_UID -&gt; Ordering)
 -&gt; (Object_Table_UID -&gt; Object_Table_UID -&gt; Bool)
@@ -999,7 +1011,7 @@ $c&lt; :: Object_Table_UID -&gt; Object_Table_UID -&gt; Bool
 compare :: Object_Table_UID -&gt; Object_Table_UID -&gt; Ordering
 $ccompare :: Object_Table_UID -&gt; Object_Table_UID -&gt; Ordering
 $cp1Ord :: Eq Object_Table_UID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593691"><span id="local-6989586621679593693"><span id="local-6989586621679593695"><span id="local-6989586621679593697"><span id="local-6989586621679593699"><span id="local-6989586621679593701"><span id="local-6989586621679593703"><span class="annot"><span class="annottext">Parser Object_Table_UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594708"><span id="local-6989586621679594710"><span id="local-6989586621679594712"><span id="local-6989586621679594714"><span id="local-6989586621679594716"><span id="local-6989586621679594718"><span id="local-6989586621679594720"><span class="annot"><span class="annottext">Parser Object_Table_UID
 String -&gt; Either String Object_Table_UID
 ByteString -&gt; Maybe Object_Table_UID
 ByteString -&gt; Either String Object_Table_UID
@@ -1037,37 +1049,37 @@ generate :: Object_Table_UID -&gt; ByteString
 $cgenerate :: Object_Table_UID -&gt; ByteString
 parser :: Parser Object_Table_UID
 $cparser :: Parser Object_Table_UID
-</span><a href="#local-6989586621679593691"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593687"><span id="local-6989586621679593689"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Object_Table_UID
+</span><a href="#local-6989586621679594708"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594704"><span id="local-6989586621679594706"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Object_Table_UID
 Object_Table_UID -&gt; Table_HalfUID k
-(forall (k :: TableKinds). Table_HalfUID k -&gt; Object_Table_UID)
--&gt; (forall (k :: TableKinds). Object_Table_UID -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; Object_Table_UID)
+-&gt; (forall (k :: Table_Kind). Object_Table_UID -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID Object_Table_UID
 forall a.
-(forall (k :: TableKinds). Table_HalfUID k -&gt; a)
--&gt; (forall (k :: TableKinds). a -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; a)
+-&gt; (forall (k :: Table_Kind). a -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID a
-forall (k :: TableKinds). Table_HalfUID k -&gt; Object_Table_UID
-forall (k :: TableKinds). Object_Table_UID -&gt; Table_HalfUID k
+forall (k :: Table_Kind). Table_HalfUID k -&gt; Object_Table_UID
+forall (k :: Table_Kind). Object_Table_UID -&gt; Table_HalfUID k
 toTable_HalfUID :: Object_Table_UID -&gt; Table_HalfUID k
-$ctoTable_HalfUID :: forall (k :: TableKinds). Object_Table_UID -&gt; Table_HalfUID k
+$ctoTable_HalfUID :: forall (k :: Table_Kind). Object_Table_UID -&gt; Table_HalfUID k
 fromTable_HalfUID :: Table_HalfUID k -&gt; Object_Table_UID
-$cfromTable_HalfUID :: forall (k :: TableKinds). Table_HalfUID k -&gt; Object_Table_UID
-</span><a href="#local-6989586621679593687"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679593682"><span id="local-6989586621679593685"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-type">Object_Table_UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-118"></span><span>     </span><span id="local-6989586621679593681"><span class="annot"><span class="annottext">show :: Object_Table_UID -&gt; String
-</span><a href="#local-6989586621679593681"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-type">Object_Table_UID</span></a></span><span> </span><span id="local-6989586621679593680"><span class="annot"><span class="annottext">t :: Table_UID 'Object_Table
-</span><a href="#local-6989586621679593680"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 8 -&gt; String
+$cfromTable_HalfUID :: forall (k :: Table_Kind). Table_HalfUID k -&gt; Object_Table_UID
+</span><a href="#local-6989586621679594704"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-117"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594699"><span id="local-6989586621679594702"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-type">Object_Table_UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-118"></span><span>     </span><span id="local-6989586621679594698"><span class="annot"><span class="annottext">show :: Object_Table_UID -&gt; String
+</span><a href="#local-6989586621679594698"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-type">Object_Table_UID</span></a></span><span> </span><span id="local-6989586621679594697"><span class="annot"><span class="annottext">t :: Table_UID 'Object_Table
+</span><a href="#local-6989586621679594697"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 8 -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;otUID&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes 8
-</span><a href="#local-6989586621679593679"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-119"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679593679"><span class="annot"><span class="annottext">fb :: Core_bytes 8
-</span><a href="#local-6989586621679593679"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Object_Table -&gt; UID
+</span><a href="#local-6989586621679594696"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-119"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679594696"><span class="annot"><span class="annottext">fb :: Core_bytes 8
+</span><a href="#local-6989586621679594696"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Object_Table -&gt; UID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">Table_UID 'Object_Table
-</span><a href="#local-6989586621679593680"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621679594697"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-120"></span><span>
 </span><span id="line-121"></span><span class="hs-keyword">newtype</span><span> </span><span id="Byte_Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-var">Byte_Table_UID</span></a></span></span><span>   </span><span class="hs-glyph">=</span><span> </span><span id="Byte_Table_UID"><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-var">Byte_Table_UID</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table"><span class="hs-identifier hs-type">Byte_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-122"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679593674"><span id="local-6989586621679593676"><span class="annot"><span class="annottext">Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool
+</span><span id="line-122"></span><span>    </span><span class="hs-keyword">deriving</span><span class="hs-special">(</span><span id="local-6989586621679594691"><span id="local-6989586621679594693"><span class="annot"><span class="annottext">Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool
 (Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool)
 -&gt; (Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool) -&gt; Eq Byte_Table_UID
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -1075,7 +1087,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool
 == :: Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool
 $c== :: Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593659"><span id="local-6989586621679593661"><span id="local-6989586621679593663"><span id="local-6989586621679593665"><span id="local-6989586621679593667"><span id="local-6989586621679593669"><span id="local-6989586621679593671"><span class="annot"><span class="annottext">Eq Byte_Table_UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594676"><span id="local-6989586621679594678"><span id="local-6989586621679594680"><span id="local-6989586621679594682"><span id="local-6989586621679594684"><span id="local-6989586621679594686"><span id="local-6989586621679594688"><span class="annot"><span class="annottext">Eq Byte_Table_UID
 Eq Byte_Table_UID =&gt;
 (Byte_Table_UID -&gt; Byte_Table_UID -&gt; Ordering)
 -&gt; (Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool)
@@ -1113,7 +1125,7 @@ $c&lt; :: Byte_Table_UID -&gt; Byte_Table_UID -&gt; Bool
 compare :: Byte_Table_UID -&gt; Byte_Table_UID -&gt; Ordering
 $ccompare :: Byte_Table_UID -&gt; Byte_Table_UID -&gt; Ordering
 $cp1Ord :: Eq Byte_Table_UID
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679593645"><span id="local-6989586621679593647"><span id="local-6989586621679593649"><span id="local-6989586621679593651"><span id="local-6989586621679593653"><span id="local-6989586621679593655"><span id="local-6989586621679593657"><span class="annot"><span class="annottext">Parser Byte_Table_UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679594662"><span id="local-6989586621679594664"><span id="local-6989586621679594666"><span id="local-6989586621679594668"><span id="local-6989586621679594670"><span id="local-6989586621679594672"><span id="local-6989586621679594674"><span class="annot"><span class="annottext">Parser Byte_Table_UID
 String -&gt; Either String Byte_Table_UID
 ByteString -&gt; Maybe Byte_Table_UID
 ByteString -&gt; Either String Byte_Table_UID
@@ -1151,34 +1163,34 @@ generate :: Byte_Table_UID -&gt; ByteString
 $cgenerate :: Byte_Table_UID -&gt; ByteString
 parser :: Parser Byte_Table_UID
 $cparser :: Parser Byte_Table_UID
-</span><a href="#local-6989586621679593645"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679593641"><span id="local-6989586621679593643"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Byte_Table_UID
+</span><a href="#local-6989586621679594662"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">StreamItem</span></a></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679594658"><span id="local-6989586621679594660"><span class="annot"><span class="annottext">Table_HalfUID k -&gt; Byte_Table_UID
 Byte_Table_UID -&gt; Table_HalfUID k
-(forall (k :: TableKinds). Table_HalfUID k -&gt; Byte_Table_UID)
--&gt; (forall (k :: TableKinds). Byte_Table_UID -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; Byte_Table_UID)
+-&gt; (forall (k :: Table_Kind). Byte_Table_UID -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID Byte_Table_UID
 forall a.
-(forall (k :: TableKinds). Table_HalfUID k -&gt; a)
--&gt; (forall (k :: TableKinds). a -&gt; Table_HalfUID k)
+(forall (k :: Table_Kind). Table_HalfUID k -&gt; a)
+-&gt; (forall (k :: Table_Kind). a -&gt; Table_HalfUID k)
 -&gt; IsTable_HalfUID a
-forall (k :: TableKinds). Table_HalfUID k -&gt; Byte_Table_UID
-forall (k :: TableKinds). Byte_Table_UID -&gt; Table_HalfUID k
+forall (k :: Table_Kind). Table_HalfUID k -&gt; Byte_Table_UID
+forall (k :: Table_Kind). Byte_Table_UID -&gt; Table_HalfUID k
 toTable_HalfUID :: Byte_Table_UID -&gt; Table_HalfUID k
-$ctoTable_HalfUID :: forall (k :: TableKinds). Byte_Table_UID -&gt; Table_HalfUID k
+$ctoTable_HalfUID :: forall (k :: Table_Kind). Byte_Table_UID -&gt; Table_HalfUID k
 fromTable_HalfUID :: Table_HalfUID k -&gt; Byte_Table_UID
-$cfromTable_HalfUID :: forall (k :: TableKinds). Table_HalfUID k -&gt; Byte_Table_UID
-</span><a href="#local-6989586621679593641"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table"><span class="hs-identifier hs-type">Byte_Table</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-123"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679593636"><span id="local-6989586621679593639"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-type">Byte_Table_UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-124"></span><span>     </span><span id="local-6989586621679593635"><span class="annot"><span class="annottext">show :: Byte_Table_UID -&gt; String
-</span><a href="#local-6989586621679593635"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-type">Byte_Table_UID</span></a></span><span> </span><span id="local-6989586621679593634"><span class="annot"><span class="annottext">t :: Table_UID 'Byte_Table
-</span><a href="#local-6989586621679593634"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 8 -&gt; String
+$cfromTable_HalfUID :: forall (k :: Table_Kind). Table_HalfUID k -&gt; Byte_Table_UID
+</span><a href="#local-6989586621679594658"><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">IsTable_HalfUID</span></a></span></span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">via</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Table_UID"><span class="hs-identifier hs-type">Table_UID</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table"><span class="hs-identifier hs-type">Byte_Table</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-123"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679594653"><span id="local-6989586621679594656"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-type">Byte_Table_UID</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-124"></span><span>     </span><span id="local-6989586621679594652"><span class="annot"><span class="annottext">show :: Byte_Table_UID -&gt; String
+</span><a href="#local-6989586621679594652"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-type">Byte_Table_UID</span></a></span><span> </span><span id="local-6989586621679594651"><span class="annot"><span class="annottext">t :: Table_UID 'Byte_Table
+</span><a href="#local-6989586621679594651"><span class="hs-identifier hs-var">t</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Core_bytes 8 -&gt; String
 forall (n :: Nat). KnownNat n =&gt; String -&gt; Core_bytes n -&gt; String
 </span><a href="System.SED.MCTP.Common.UID.html#showCore_bytes"><span class="hs-identifier hs-var">showCore_bytes</span></a></span><span> </span><span class="annot"><span class="hs-string">&quot;btUID&quot;</span></span><span> </span><span class="annot"><span class="annottext">Core_bytes 8
-</span><a href="#local-6989586621679593633"><span class="hs-identifier hs-var">fb</span></a></span><span>
-</span><span id="line-125"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679593633"><span class="annot"><span class="annottext">fb :: Core_bytes 8
-</span><a href="#local-6989586621679593633"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Byte_Table -&gt; UID
+</span><a href="#local-6989586621679594650"><span class="hs-identifier hs-var">fb</span></a></span><span>
+</span><span id="line-125"></span><span>         </span><span class="hs-keyword">where</span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span> </span><span id="local-6989586621679594650"><span class="annot"><span class="annottext">fb :: Core_bytes 8
+</span><a href="#local-6989586621679594650"><span class="hs-identifier hs-var">fb</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Byte_Table -&gt; UID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
 </span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">Table_UID 'Byte_Table
-</span><a href="#local-6989586621679593634"><span class="hs-identifier hs-var">t</span></a></span><span>
+</span><a href="#local-6989586621679594651"><span class="hs-identifier hs-var">t</span></a></span><span>
 </span><span id="line-126"></span><span>
 </span><span id="line-127"></span><span>
 </span><span id="line-128"></span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#nthNull"><span class="hs-identifier hs-type">nthNull</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-type">Null_Table_HalfUID</span></a></span><span>
@@ -1214,11 +1226,11 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-134"></span><span>
 </span><span id="line-135"></span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ntHalfUID"><span class="hs-identifier hs-type">ntHalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-type">Null_Table_HalfUID</span></a></span><span>
 </span><span id="line-136"></span><span id="ntHalfUID"><span class="annot"><span class="annottext">ntHalfUID :: Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Null_Table_HalfUID
-</span><a href="System.SED.MCTP.Common.Reference_Types.html#ntHalfUID"><span class="hs-identifier hs-var hs-var">ntHalfUID</span></a></span></span><span> </span><span id="local-6989586621679593629"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679593629"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679593628"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679593628"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679593627"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679593627"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679593626"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679593626"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Null_Table -&gt; Null_Table_HalfUID
+</span><a href="System.SED.MCTP.Common.Reference_Types.html#ntHalfUID"><span class="hs-identifier hs-var hs-var">ntHalfUID</span></a></span></span><span> </span><span id="local-6989586621679594646"><span class="annot"><span class="annottext">b3 :: Word8
+</span><a href="#local-6989586621679594646"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679594645"><span class="annot"><span class="annottext">b2 :: Word8
+</span><a href="#local-6989586621679594645"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679594644"><span class="annot"><span class="annottext">b1 :: Word8
+</span><a href="#local-6989586621679594644"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679594643"><span class="annot"><span class="annottext">b0 :: Word8
+</span><a href="#local-6989586621679594643"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Null_Table -&gt; Null_Table_HalfUID
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-var">Null_Table_HalfUID</span></a></span><span>   </span><span class="annot"><span class="annottext">(Table_HalfUID 'Null_Table -&gt; Null_Table_HalfUID)
 -&gt; Table_HalfUID 'Null_Table -&gt; Null_Table_HalfUID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1229,18 +1241,18 @@ forall a (p :: * -&gt; *). a -&gt; Refined p a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#halfUID"><span class="hs-identifier hs-var">halfUID</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593629"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593628"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593627"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593626"><span class="hs-identifier hs-var">b0</span></a></span><span>
+</span><a href="#local-6989586621679594646"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594645"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594644"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594643"><span class="hs-identifier hs-var">b0</span></a></span><span>
 </span><span id="line-137"></span><span>
 </span><span id="line-138"></span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#btHalfUID"><span class="hs-identifier hs-type">btHalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-type">Byte_Table_HalfUID</span></a></span><span>
 </span><span id="line-139"></span><span id="btHalfUID"><span class="annot"><span class="annottext">btHalfUID :: Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Byte_Table_HalfUID
-</span><a href="System.SED.MCTP.Common.Reference_Types.html#btHalfUID"><span class="hs-identifier hs-var hs-var">btHalfUID</span></a></span></span><span> </span><span id="local-6989586621679593624"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679593624"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679593623"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679593623"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679593622"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679593622"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679593621"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679593621"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Byte_Table -&gt; Byte_Table_HalfUID
+</span><a href="System.SED.MCTP.Common.Reference_Types.html#btHalfUID"><span class="hs-identifier hs-var hs-var">btHalfUID</span></a></span></span><span> </span><span id="local-6989586621679594641"><span class="annot"><span class="annottext">b3 :: Word8
+</span><a href="#local-6989586621679594641"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679594640"><span class="annot"><span class="annottext">b2 :: Word8
+</span><a href="#local-6989586621679594640"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679594639"><span class="annot"><span class="annottext">b1 :: Word8
+</span><a href="#local-6989586621679594639"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679594638"><span class="annot"><span class="annottext">b0 :: Word8
+</span><a href="#local-6989586621679594638"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Byte_Table -&gt; Byte_Table_HalfUID
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-var">Byte_Table_HalfUID</span></a></span><span>   </span><span class="annot"><span class="annottext">(Table_HalfUID 'Byte_Table -&gt; Byte_Table_HalfUID)
 -&gt; Table_HalfUID 'Byte_Table -&gt; Byte_Table_HalfUID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1251,18 +1263,18 @@ forall a (p :: * -&gt; *). a -&gt; Refined p a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#halfUID"><span class="hs-identifier hs-var">halfUID</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593624"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593623"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593622"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593621"><span class="hs-identifier hs-var">b0</span></a></span><span>
+</span><a href="#local-6989586621679594641"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594640"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594639"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594638"><span class="hs-identifier hs-var">b0</span></a></span><span>
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#otHalfUID"><span class="hs-identifier hs-type">otHalfUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-type">Object_Table_HalfUID</span></a></span><span>
 </span><span id="line-142"></span><span id="otHalfUID"><span class="annot"><span class="annottext">otHalfUID :: Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Object_Table_HalfUID
-</span><a href="System.SED.MCTP.Common.Reference_Types.html#otHalfUID"><span class="hs-identifier hs-var hs-var">otHalfUID</span></a></span></span><span> </span><span id="local-6989586621679593619"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679593619"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679593618"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679593618"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679593617"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679593617"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679593616"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679593616"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Object_Table -&gt; Object_Table_HalfUID
+</span><a href="System.SED.MCTP.Common.Reference_Types.html#otHalfUID"><span class="hs-identifier hs-var hs-var">otHalfUID</span></a></span></span><span> </span><span id="local-6989586621679594636"><span class="annot"><span class="annottext">b3 :: Word8
+</span><a href="#local-6989586621679594636"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679594635"><span class="annot"><span class="annottext">b2 :: Word8
+</span><a href="#local-6989586621679594635"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679594634"><span class="annot"><span class="annottext">b1 :: Word8
+</span><a href="#local-6989586621679594634"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679594633"><span class="annot"><span class="annottext">b0 :: Word8
+</span><a href="#local-6989586621679594633"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_HalfUID 'Object_Table -&gt; Object_Table_HalfUID
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-var">Object_Table_HalfUID</span></a></span><span> </span><span class="annot"><span class="annottext">(Table_HalfUID 'Object_Table -&gt; Object_Table_HalfUID)
 -&gt; Table_HalfUID 'Object_Table -&gt; Object_Table_HalfUID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1273,10 +1285,10 @@ forall a (p :: * -&gt; *). a -&gt; Refined p a
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; HalfUID
 </span><a href="System.SED.MCTP.Common.UID.html#halfUID"><span class="hs-identifier hs-var">halfUID</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593619"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593618"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593617"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593616"><span class="hs-identifier hs-var">b0</span></a></span><span>
+</span><a href="#local-6989586621679594636"><span class="hs-identifier hs-var">b3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594635"><span class="hs-identifier hs-var">b2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594634"><span class="hs-identifier hs-var">b1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594633"><span class="hs-identifier hs-var">b0</span></a></span><span>
 </span><span id="line-143"></span><span>
 </span><span id="line-144"></span><span>
 </span><span id="line-145"></span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#ntUID"><span class="hs-identifier hs-type">ntUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-type">Null_Table_UID</span></a></span><span>
@@ -1289,15 +1301,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; Word8
 -&gt; Null_Table_UID
-</span><a href="System.SED.MCTP.Common.Reference_Types.html#ntUID"><span class="hs-identifier hs-var hs-var">ntUID</span></a></span></span><span> </span><span id="local-6989586621679593614"><span class="annot"><span class="annottext">u3 :: Word8
-</span><a href="#local-6989586621679593614"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679593613"><span class="annot"><span class="annottext">u2 :: Word8
-</span><a href="#local-6989586621679593613"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679593612"><span class="annot"><span class="annottext">u1 :: Word8
-</span><a href="#local-6989586621679593612"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679593611"><span class="annot"><span class="annottext">u0 :: Word8
-</span><a href="#local-6989586621679593611"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679593610"><span class="annot"><span class="annottext">l3 :: Word8
-</span><a href="#local-6989586621679593610"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679593609"><span class="annot"><span class="annottext">l2 :: Word8
-</span><a href="#local-6989586621679593609"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679593608"><span class="annot"><span class="annottext">l1 :: Word8
-</span><a href="#local-6989586621679593608"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679593607"><span class="annot"><span class="annottext">l0 :: Word8
-</span><a href="#local-6989586621679593607"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Null_Table -&gt; Null_Table_UID
+</span><a href="System.SED.MCTP.Common.Reference_Types.html#ntUID"><span class="hs-identifier hs-var hs-var">ntUID</span></a></span></span><span> </span><span id="local-6989586621679594631"><span class="annot"><span class="annottext">u3 :: Word8
+</span><a href="#local-6989586621679594631"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679594630"><span class="annot"><span class="annottext">u2 :: Word8
+</span><a href="#local-6989586621679594630"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679594629"><span class="annot"><span class="annottext">u1 :: Word8
+</span><a href="#local-6989586621679594629"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679594628"><span class="annot"><span class="annottext">u0 :: Word8
+</span><a href="#local-6989586621679594628"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679594627"><span class="annot"><span class="annottext">l3 :: Word8
+</span><a href="#local-6989586621679594627"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679594626"><span class="annot"><span class="annottext">l2 :: Word8
+</span><a href="#local-6989586621679594626"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679594625"><span class="annot"><span class="annottext">l1 :: Word8
+</span><a href="#local-6989586621679594625"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679594624"><span class="annot"><span class="annottext">l0 :: Word8
+</span><a href="#local-6989586621679594624"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Null_Table -&gt; Null_Table_UID
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_UID"><span class="hs-identifier hs-var">Null_Table_UID</span></a></span><span>   </span><span class="annot"><span class="annottext">(Table_UID 'Null_Table -&gt; Null_Table_UID)
 -&gt; Table_UID 'Null_Table -&gt; Null_Table_UID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1315,14 +1327,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; UID
 </span><a href="System.SED.MCTP.Common.UID.html#uid"><span class="hs-identifier hs-var">uid</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593614"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593613"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593612"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593611"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593610"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593609"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593608"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593607"><span class="hs-identifier hs-var">l0</span></a></span><span>
+</span><a href="#local-6989586621679594631"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594630"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594629"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594628"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594627"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594626"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594625"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594624"><span class="hs-identifier hs-var">l0</span></a></span><span>
 </span><span id="line-147"></span><span>
 </span><span id="line-148"></span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#btUID"><span class="hs-identifier hs-type">btUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-type">Byte_Table_UID</span></a></span><span>
 </span><span id="line-149"></span><span id="btUID"><span class="annot"><span class="annottext">btUID :: Word8
@@ -1334,15 +1346,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; Word8
 -&gt; Byte_Table_UID
-</span><a href="System.SED.MCTP.Common.Reference_Types.html#btUID"><span class="hs-identifier hs-var hs-var">btUID</span></a></span></span><span> </span><span id="local-6989586621679593605"><span class="annot"><span class="annottext">u3 :: Word8
-</span><a href="#local-6989586621679593605"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679593604"><span class="annot"><span class="annottext">u2 :: Word8
-</span><a href="#local-6989586621679593604"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679593603"><span class="annot"><span class="annottext">u1 :: Word8
-</span><a href="#local-6989586621679593603"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679593602"><span class="annot"><span class="annottext">u0 :: Word8
-</span><a href="#local-6989586621679593602"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679593601"><span class="annot"><span class="annottext">l3 :: Word8
-</span><a href="#local-6989586621679593601"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679593600"><span class="annot"><span class="annottext">l2 :: Word8
-</span><a href="#local-6989586621679593600"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679593599"><span class="annot"><span class="annottext">l1 :: Word8
-</span><a href="#local-6989586621679593599"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679593598"><span class="annot"><span class="annottext">l0 :: Word8
-</span><a href="#local-6989586621679593598"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Byte_Table -&gt; Byte_Table_UID
+</span><a href="System.SED.MCTP.Common.Reference_Types.html#btUID"><span class="hs-identifier hs-var hs-var">btUID</span></a></span></span><span> </span><span id="local-6989586621679594622"><span class="annot"><span class="annottext">u3 :: Word8
+</span><a href="#local-6989586621679594622"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679594621"><span class="annot"><span class="annottext">u2 :: Word8
+</span><a href="#local-6989586621679594621"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679594620"><span class="annot"><span class="annottext">u1 :: Word8
+</span><a href="#local-6989586621679594620"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679594619"><span class="annot"><span class="annottext">u0 :: Word8
+</span><a href="#local-6989586621679594619"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679594618"><span class="annot"><span class="annottext">l3 :: Word8
+</span><a href="#local-6989586621679594618"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679594617"><span class="annot"><span class="annottext">l2 :: Word8
+</span><a href="#local-6989586621679594617"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679594616"><span class="annot"><span class="annottext">l1 :: Word8
+</span><a href="#local-6989586621679594616"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679594615"><span class="annot"><span class="annottext">l0 :: Word8
+</span><a href="#local-6989586621679594615"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Byte_Table -&gt; Byte_Table_UID
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_UID"><span class="hs-identifier hs-var">Byte_Table_UID</span></a></span><span>   </span><span class="annot"><span class="annottext">(Table_UID 'Byte_Table -&gt; Byte_Table_UID)
 -&gt; Table_UID 'Byte_Table -&gt; Byte_Table_UID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1360,14 +1372,14 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; UID
 </span><a href="System.SED.MCTP.Common.UID.html#uid"><span class="hs-identifier hs-var">uid</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593605"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593604"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593603"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593602"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593601"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593600"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593599"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593598"><span class="hs-identifier hs-var">l0</span></a></span><span>
+</span><a href="#local-6989586621679594622"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594621"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594620"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594619"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594618"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594617"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594616"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594615"><span class="hs-identifier hs-var">l0</span></a></span><span>
 </span><span id="line-150"></span><span>
 </span><span id="line-151"></span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#otUID"><span class="hs-identifier hs-type">otUID</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-type">Object_Table_UID</span></a></span><span>
 </span><span id="line-152"></span><span id="otUID"><span class="annot"><span class="annottext">otUID :: Word8
@@ -1379,15 +1391,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; Word8
 -&gt; Object_Table_UID
-</span><a href="System.SED.MCTP.Common.Reference_Types.html#otUID"><span class="hs-identifier hs-var hs-var">otUID</span></a></span></span><span> </span><span id="local-6989586621679593596"><span class="annot"><span class="annottext">u3 :: Word8
-</span><a href="#local-6989586621679593596"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679593595"><span class="annot"><span class="annottext">u2 :: Word8
-</span><a href="#local-6989586621679593595"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679593594"><span class="annot"><span class="annottext">u1 :: Word8
-</span><a href="#local-6989586621679593594"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679593593"><span class="annot"><span class="annottext">u0 :: Word8
-</span><a href="#local-6989586621679593593"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679593592"><span class="annot"><span class="annottext">l3 :: Word8
-</span><a href="#local-6989586621679593592"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679593591"><span class="annot"><span class="annottext">l2 :: Word8
-</span><a href="#local-6989586621679593591"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679593590"><span class="annot"><span class="annottext">l1 :: Word8
-</span><a href="#local-6989586621679593590"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679593589"><span class="annot"><span class="annottext">l0 :: Word8
-</span><a href="#local-6989586621679593589"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Object_Table -&gt; Object_Table_UID
+</span><a href="System.SED.MCTP.Common.Reference_Types.html#otUID"><span class="hs-identifier hs-var hs-var">otUID</span></a></span></span><span> </span><span id="local-6989586621679594613"><span class="annot"><span class="annottext">u3 :: Word8
+</span><a href="#local-6989586621679594613"><span class="hs-identifier hs-var">u3</span></a></span></span><span> </span><span id="local-6989586621679594612"><span class="annot"><span class="annottext">u2 :: Word8
+</span><a href="#local-6989586621679594612"><span class="hs-identifier hs-var">u2</span></a></span></span><span> </span><span id="local-6989586621679594611"><span class="annot"><span class="annottext">u1 :: Word8
+</span><a href="#local-6989586621679594611"><span class="hs-identifier hs-var">u1</span></a></span></span><span> </span><span id="local-6989586621679594610"><span class="annot"><span class="annottext">u0 :: Word8
+</span><a href="#local-6989586621679594610"><span class="hs-identifier hs-var">u0</span></a></span></span><span> </span><span id="local-6989586621679594609"><span class="annot"><span class="annottext">l3 :: Word8
+</span><a href="#local-6989586621679594609"><span class="hs-identifier hs-var">l3</span></a></span></span><span> </span><span id="local-6989586621679594608"><span class="annot"><span class="annottext">l2 :: Word8
+</span><a href="#local-6989586621679594608"><span class="hs-identifier hs-var">l2</span></a></span></span><span> </span><span id="local-6989586621679594607"><span class="annot"><span class="annottext">l1 :: Word8
+</span><a href="#local-6989586621679594607"><span class="hs-identifier hs-var">l1</span></a></span></span><span> </span><span id="local-6989586621679594606"><span class="annot"><span class="annottext">l0 :: Word8
+</span><a href="#local-6989586621679594606"><span class="hs-identifier hs-var">l0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Table_UID 'Object_Table -&gt; Object_Table_UID
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_UID"><span class="hs-identifier hs-var">Object_Table_UID</span></a></span><span> </span><span class="annot"><span class="annottext">(Table_UID 'Object_Table -&gt; Object_Table_UID)
 -&gt; Table_UID 'Object_Table -&gt; Object_Table_UID
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -1405,12 +1417,12 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; UID
 </span><a href="System.SED.MCTP.Common.UID.html#uid"><span class="hs-identifier hs-var">uid</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593596"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593595"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593594"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593593"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593592"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593591"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593590"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679593589"><span class="hs-identifier hs-var">l0</span></a></span><span>
+</span><a href="#local-6989586621679594613"><span class="hs-identifier hs-var">u3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594612"><span class="hs-identifier hs-var">u2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594611"><span class="hs-identifier hs-var">u1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594610"><span class="hs-identifier hs-var">u0</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594609"><span class="hs-identifier hs-var">l3</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594608"><span class="hs-identifier hs-var">l2</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594607"><span class="hs-identifier hs-var">l1</span></a></span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679594606"><span class="hs-identifier hs-var">l0</span></a></span><span>
 </span><span id="line-153"></span></pre></body></html>

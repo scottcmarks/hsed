@@ -982,14 +982,14 @@ uCloseSession :: UID
 
 -- | Reference_Types per Core Spec
 module System.SED.MCTP.Common.Reference_Types
-data TableKinds
-Null_Table :: TableKinds
-Object_Table :: TableKinds
-Byte_Table :: TableKinds
-newtype TableKind (k :: TableKinds) a
-TableKind :: a -> TableKind (k :: TableKinds) a
-type Table_HalfUID k = HalfUID ? (TableKind k)
-type Table_UID k = UID ? (TableKind k)
+data Table_Kind
+Null_Table :: Table_Kind
+Object_Table :: Table_Kind
+Byte_Table :: Table_Kind
+newtype ForTable_Kind (k :: Table_Kind) a
+ForTable_Kind :: a -> ForTable_Kind (k :: Table_Kind) a
+type Table_HalfUID k = HalfUID ? (ForTable_Kind k)
+type Table_UID k = UID ? (ForTable_Kind k)
 class IsTable_HalfUID a
 fromTable_HalfUID :: IsTable_HalfUID a => Table_HalfUID k -> a
 toTable_HalfUID :: IsTable_HalfUID a => a -> Table_HalfUID k
@@ -1038,16 +1038,16 @@ instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
-instance System.SED.MCTP.Common.Token.IsToken a => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Reference_Types.TableKind k a)
-instance Test.QuickCheck.Arbitrary.Arbitrary a => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Reference_Types.TableKind k a)
-instance GHC.Exts.IsList a => GHC.Exts.IsList (System.SED.MCTP.Common.Reference_Types.TableKind k a)
-instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Reference_Types.TableKind k a)
-instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.Reference_Types.TableKind k a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (System.SED.MCTP.Common.Reference_Types.TableKind k a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (System.SED.MCTP.Common.Reference_Types.TableKind k a)
-instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.TableKinds
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.TableKinds
-instance GHC.Enum.Enum System.SED.MCTP.Common.Reference_Types.TableKinds
+instance System.SED.MCTP.Common.Token.IsToken a => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
+instance Test.QuickCheck.Arbitrary.Arbitrary a => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
+instance GHC.Exts.IsList a => GHC.Exts.IsList (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
+instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Table_Kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Table_Kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.Reference_Types.Table_Kind
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Object_Table_UID
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_UID
@@ -1056,8 +1056,8 @@ instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Object_Table_HalfU
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
-instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a Data.Refined.? System.SED.MCTP.Common.Reference_Types.TableKind k)
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.TableKinds
+instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a Data.Refined.? System.SED.MCTP.Common.Reference_Types.ForTable_Kind k)
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Table_Kind
 
 
 -- | TableUIDs Template Haskell
@@ -1182,6 +1182,238 @@ hexUID :: ByteString -> UID
 trimTrailingWhitespace :: ByteString -> ByteString
 
 
+-- | TableUIDs Template Haskell.
+module System.SED.MCTP.Common.TableUIDs.TH
+
+-- | Bespoke QuasiQuoter for Table 240
+t240 :: QuasiQuoter
+instance GHC.Show.Show System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRow
+instance GHC.Base.Semigroup System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+instance GHC.Base.Monoid System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
+
+
+-- | Table UIDs as specified in Table 240.
+--   
+--   The specification for each table is translated to three constant
+--   declarations. For instance, the information on the
+--   <tt>AccessControl</tt> table becomes
+--   
+--   <pre>
+--   --| The HalfUID that identifies the AccessControl table
+--   hAccessControl :: HalfUID
+--   hAccessControl = halfUID 0x00 0x00 0x00 0x07
+--   
+--   --| The UID that identifies the AccessControl table itself
+--   uAccessControlTable :: UID
+--   uAccessControlTable = uid 0x00 0x00 0x00 0x07 0x00 0x00 0x00 0x00
+--   
+--   --| The UID that identifies the AccessControl table entry in the Table Table
+--   uAccessControlTableObject :: UID
+--   uAccessControlTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x07
+--   </pre>
+--   
+--   Unfortunately, Template Haskell can neither see manual comments nor
+--   create comments for Haddock to see; hence the names themselves must
+--   suffice as documentation.
+module System.SED.MCTP.Common.TableUIDs
+nameUID :: Map UID String
+nameHalfUID :: Map HalfUID String
+othTable :: Object_Table_HalfUID
+hTable :: HalfUID
+uTableTable :: UID
+uTableTableObject :: UID
+othSPInfo :: Object_Table_HalfUID
+hSPInfo :: HalfUID
+uSPInfoTable :: UID
+uSPInfoTableObject :: UID
+othSPTemplates :: Object_Table_HalfUID
+hSPTemplates :: HalfUID
+uSPTemplatesTable :: UID
+uSPTemplatesTableObject :: UID
+othColumn :: Object_Table_HalfUID
+hColumn :: HalfUID
+uColumnTable :: UID
+uColumnTableObject :: UID
+othType :: Object_Table_HalfUID
+hType :: HalfUID
+uTypeTable :: UID
+uTypeTableObject :: UID
+othMethodID :: Object_Table_HalfUID
+hMethodID :: HalfUID
+uMethodIDTable :: UID
+uMethodIDTableObject :: UID
+othAccessControl :: Object_Table_HalfUID
+hAccessControl :: HalfUID
+uAccessControlTable :: UID
+uAccessControlTableObject :: UID
+othACE :: Object_Table_HalfUID
+hACE :: HalfUID
+uACETable :: UID
+uACETableObject :: UID
+othAuthority :: Object_Table_HalfUID
+hAuthority :: HalfUID
+uAuthorityTable :: UID
+uAuthorityTableObject :: UID
+othCertificates :: Object_Table_HalfUID
+hCertificates :: HalfUID
+uCertificatesTable :: UID
+uCertificatesTableObject :: UID
+othC_PIN :: Object_Table_HalfUID
+hC_PIN :: HalfUID
+uC_PINTable :: UID
+uC_PINTableObject :: UID
+othC_RSA_1024 :: Object_Table_HalfUID
+hC_RSA_1024 :: HalfUID
+uC_RSA_1024Table :: UID
+uC_RSA_1024TableObject :: UID
+othC_RSA_2048 :: Object_Table_HalfUID
+hC_RSA_2048 :: HalfUID
+uC_RSA_2048Table :: UID
+uC_RSA_2048TableObject :: UID
+othC_AES_128 :: Object_Table_HalfUID
+hC_AES_128 :: HalfUID
+uC_AES_128Table :: UID
+uC_AES_128TableObject :: UID
+othC_AES_256 :: Object_Table_HalfUID
+hC_AES_256 :: HalfUID
+uC_AES_256Table :: UID
+uC_AES_256TableObject :: UID
+othC_EC_160 :: Object_Table_HalfUID
+hC_EC_160 :: HalfUID
+uC_EC_160Table :: UID
+uC_EC_160TableObject :: UID
+othC_EC_192 :: Object_Table_HalfUID
+hC_EC_192 :: HalfUID
+uC_EC_192Table :: UID
+uC_EC_192TableObject :: UID
+othC_EC_224 :: Object_Table_HalfUID
+hC_EC_224 :: HalfUID
+uC_EC_224Table :: UID
+uC_EC_224TableObject :: UID
+othC_EC_256 :: Object_Table_HalfUID
+hC_EC_256 :: HalfUID
+uC_EC_256Table :: UID
+uC_EC_256TableObject :: UID
+othC_EC_384 :: Object_Table_HalfUID
+hC_EC_384 :: HalfUID
+uC_EC_384Table :: UID
+uC_EC_384TableObject :: UID
+othC_EC_521 :: Object_Table_HalfUID
+hC_EC_521 :: HalfUID
+uC_EC_521Table :: UID
+uC_EC_521TableObject :: UID
+othC_EC_163 :: Object_Table_HalfUID
+hC_EC_163 :: HalfUID
+uC_EC_163Table :: UID
+uC_EC_163TableObject :: UID
+othC_EC_233 :: Object_Table_HalfUID
+hC_EC_233 :: HalfUID
+uC_EC_233Table :: UID
+uC_EC_233TableObject :: UID
+othC_EC_283 :: Object_Table_HalfUID
+hC_EC_283 :: HalfUID
+uC_EC_283Table :: UID
+uC_EC_283TableObject :: UID
+othC_HMAC_160 :: Object_Table_HalfUID
+hC_HMAC_160 :: HalfUID
+uC_HMAC_160Table :: UID
+uC_HMAC_160TableObject :: UID
+othC_HMAC_256 :: Object_Table_HalfUID
+hC_HMAC_256 :: HalfUID
+uC_HMAC_256Table :: UID
+uC_HMAC_256TableObject :: UID
+othC_HMAC_384 :: Object_Table_HalfUID
+hC_HMAC_384 :: HalfUID
+uC_HMAC_384Table :: UID
+uC_HMAC_384TableObject :: UID
+othC_HMAC_512 :: Object_Table_HalfUID
+hC_HMAC_512 :: HalfUID
+uC_HMAC_512Table :: UID
+uC_HMAC_512TableObject :: UID
+othSecretProtect :: Object_Table_HalfUID
+hSecretProtect :: HalfUID
+uSecretProtectTable :: UID
+uSecretProtectTableObject :: UID
+othTPerInfo :: Object_Table_HalfUID
+hTPerInfo :: HalfUID
+uTPerInfoTable :: UID
+uTPerInfoTableObject :: UID
+othCryptoSuite :: Object_Table_HalfUID
+hCryptoSuite :: HalfUID
+uCryptoSuiteTable :: UID
+uCryptoSuiteTableObject :: UID
+othTemplate :: Object_Table_HalfUID
+hTemplate :: HalfUID
+uTemplateTable :: UID
+uTemplateTableObject :: UID
+othSP :: Object_Table_HalfUID
+hSP :: HalfUID
+uSPTable :: UID
+uSPTableObject :: UID
+othClockTime :: Object_Table_HalfUID
+hClockTime :: HalfUID
+uClockTimeTable :: UID
+uClockTimeTableObject :: UID
+othH_SHA_1 :: Object_Table_HalfUID
+hH_SHA_1 :: HalfUID
+uH_SHA_1Table :: UID
+uH_SHA_1TableObject :: UID
+othH_SHA_256 :: Object_Table_HalfUID
+hH_SHA_256 :: HalfUID
+uH_SHA_256Table :: UID
+uH_SHA_256TableObject :: UID
+othH_SHA_384 :: Object_Table_HalfUID
+hH_SHA_384 :: HalfUID
+uH_SHA_384Table :: UID
+uH_SHA_384TableObject :: UID
+othH_SHA_512 :: Object_Table_HalfUID
+hH_SHA_512 :: HalfUID
+uH_SHA_512Table :: UID
+uH_SHA_512TableObject :: UID
+othLog :: Object_Table_HalfUID
+hLog :: HalfUID
+uLogTable :: UID
+uLogTableObject :: UID
+othLogList :: Object_Table_HalfUID
+hLogList :: HalfUID
+uLogListTable :: UID
+uLogListTableObject :: UID
+othLockingInfo :: Object_Table_HalfUID
+hLockingInfo :: HalfUID
+uLockingInfoTable :: UID
+uLockingInfoTableObject :: UID
+othLocking :: Object_Table_HalfUID
+hLocking :: HalfUID
+uLockingTable :: UID
+uLockingTableObject :: UID
+othMBRControl :: Object_Table_HalfUID
+hMBRControl :: HalfUID
+uMBRControlTable :: UID
+uMBRControlTableObject :: UID
+bthMBR :: Byte_Table_HalfUID
+hMBR :: HalfUID
+uMBRTable :: UID
+uMBRTableObject :: UID
+othK_AES_128 :: Object_Table_HalfUID
+hK_AES_128 :: HalfUID
+uK_AES_128Table :: UID
+uK_AES_128TableObject :: UID
+othK_AES_256 :: Object_Table_HalfUID
+hK_AES_256 :: HalfUID
+uK_AES_256Table :: UID
+uK_AES_256TableObject :: UID
+class TableID a
+lookup :: TableID a => a -> Maybe String
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.HalfUID
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.UID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID a => System.SED.MCTP.Common.TableUIDs.TableID a
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+
+
 -- | Template Haskell for parsing Table column types in Section 5.1.3.
 module System.SED.MCTP.Common.TypeUIDs.TH
 
@@ -1205,11 +1437,27 @@ type TypeUIDField = ByteString
 type TypeName = ByteString
 type FormatString = ByteString
 header :: [Int] -> Parser ()
-formatString :: TypeTableRow -> ByteString
+type Type_UID = UID
+type Base_Type_UID = Type_UID
+type Non_Base_Type_UID = Type_UID
 type Core_type_def_max_uidrefs = 16
-data Core_Format
-Base_Type :: Core_Format
-Restricted_Reference_Type'6 :: (Set Object_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format
+data Core_Format :: Nat -> Type
+[Base_Type] :: Core_Format 0
+[Simple_Type] :: Base_Type_UID -> Core_uinteger_2 -> Core_Format 1
+[Enumeration_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Core_Format 2
+[Alternative_Type] :: (Set Non_Base_Type_UID ? BoundedSize 2 Core_type_def_max_uidrefs) -> Core_Format 3
+[List_Type] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 4
+[Restricted_Reference_Type'5] :: (Set Byte_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 5
+[Restricted_Reference_Type'6] :: (Set Object_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 6
+[General_Reference_Type'7] :: Core_Format 7
+[General_Reference_Type'8] :: Core_Format 8
+[General_Reference_Type'9] :: Core_Format 9
+[General_Reference_Table_Type] :: Table_Kind -> Core_Format 10
+[Named_Value_Name_Type] :: Core_max_bytes_32 -> Non_Base_Type_UID -> Core_Format 11
+[Named_Value_Integer_Type] :: Core_integer_2 -> Non_Base_Type_UID -> Core_Format 12
+[Named_Value_Uinteger_Type] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 13
+[Struct_Type] :: ([Non_Base_Type_UID] ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 14
+[Set_Type] :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 15
 formatParser :: Parser (Proxy Core_Format)
 
 -- | QuasiQuoter for Type Table enum tables.
@@ -1816,238 +2064,6 @@ instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
 instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
 instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
 instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
-
-
--- | TableUIDs Template Haskell.
-module System.SED.MCTP.Common.TableUIDs.TH
-
--- | Bespoke QuasiQuoter for Table 240
-t240 :: QuasiQuoter
-instance GHC.Show.Show System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRow
-instance GHC.Base.Semigroup System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Base.Monoid System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-
-
--- | Table UIDs as specified in Table 240.
---   
---   The specification for each table is translated to three constant
---   declarations. For instance, the information on the
---   <tt>AccessControl</tt> table becomes
---   
---   <pre>
---   --| The HalfUID that identifies the AccessControl table
---   hAccessControl :: HalfUID
---   hAccessControl = halfUID 0x00 0x00 0x00 0x07
---   
---   --| The UID that identifies the AccessControl table itself
---   uAccessControlTable :: UID
---   uAccessControlTable = uid 0x00 0x00 0x00 0x07 0x00 0x00 0x00 0x00
---   
---   --| The UID that identifies the AccessControl table entry in the Table Table
---   uAccessControlTableObject :: UID
---   uAccessControlTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x07
---   </pre>
---   
---   Unfortunately, Template Haskell can neither see manual comments nor
---   create comments for Haddock to see; hence the names themselves must
---   suffice as documentation.
-module System.SED.MCTP.Common.TableUIDs
-nameUID :: Map UID String
-nameHalfUID :: Map HalfUID String
-othTable :: Object_Table_HalfUID
-hTable :: HalfUID
-uTableTable :: UID
-uTableTableObject :: UID
-othSPInfo :: Object_Table_HalfUID
-hSPInfo :: HalfUID
-uSPInfoTable :: UID
-uSPInfoTableObject :: UID
-othSPTemplates :: Object_Table_HalfUID
-hSPTemplates :: HalfUID
-uSPTemplatesTable :: UID
-uSPTemplatesTableObject :: UID
-othColumn :: Object_Table_HalfUID
-hColumn :: HalfUID
-uColumnTable :: UID
-uColumnTableObject :: UID
-othType :: Object_Table_HalfUID
-hType :: HalfUID
-uTypeTable :: UID
-uTypeTableObject :: UID
-othMethodID :: Object_Table_HalfUID
-hMethodID :: HalfUID
-uMethodIDTable :: UID
-uMethodIDTableObject :: UID
-othAccessControl :: Object_Table_HalfUID
-hAccessControl :: HalfUID
-uAccessControlTable :: UID
-uAccessControlTableObject :: UID
-othACE :: Object_Table_HalfUID
-hACE :: HalfUID
-uACETable :: UID
-uACETableObject :: UID
-othAuthority :: Object_Table_HalfUID
-hAuthority :: HalfUID
-uAuthorityTable :: UID
-uAuthorityTableObject :: UID
-othCertificates :: Object_Table_HalfUID
-hCertificates :: HalfUID
-uCertificatesTable :: UID
-uCertificatesTableObject :: UID
-othC_PIN :: Object_Table_HalfUID
-hC_PIN :: HalfUID
-uC_PINTable :: UID
-uC_PINTableObject :: UID
-othC_RSA_1024 :: Object_Table_HalfUID
-hC_RSA_1024 :: HalfUID
-uC_RSA_1024Table :: UID
-uC_RSA_1024TableObject :: UID
-othC_RSA_2048 :: Object_Table_HalfUID
-hC_RSA_2048 :: HalfUID
-uC_RSA_2048Table :: UID
-uC_RSA_2048TableObject :: UID
-othC_AES_128 :: Object_Table_HalfUID
-hC_AES_128 :: HalfUID
-uC_AES_128Table :: UID
-uC_AES_128TableObject :: UID
-othC_AES_256 :: Object_Table_HalfUID
-hC_AES_256 :: HalfUID
-uC_AES_256Table :: UID
-uC_AES_256TableObject :: UID
-othC_EC_160 :: Object_Table_HalfUID
-hC_EC_160 :: HalfUID
-uC_EC_160Table :: UID
-uC_EC_160TableObject :: UID
-othC_EC_192 :: Object_Table_HalfUID
-hC_EC_192 :: HalfUID
-uC_EC_192Table :: UID
-uC_EC_192TableObject :: UID
-othC_EC_224 :: Object_Table_HalfUID
-hC_EC_224 :: HalfUID
-uC_EC_224Table :: UID
-uC_EC_224TableObject :: UID
-othC_EC_256 :: Object_Table_HalfUID
-hC_EC_256 :: HalfUID
-uC_EC_256Table :: UID
-uC_EC_256TableObject :: UID
-othC_EC_384 :: Object_Table_HalfUID
-hC_EC_384 :: HalfUID
-uC_EC_384Table :: UID
-uC_EC_384TableObject :: UID
-othC_EC_521 :: Object_Table_HalfUID
-hC_EC_521 :: HalfUID
-uC_EC_521Table :: UID
-uC_EC_521TableObject :: UID
-othC_EC_163 :: Object_Table_HalfUID
-hC_EC_163 :: HalfUID
-uC_EC_163Table :: UID
-uC_EC_163TableObject :: UID
-othC_EC_233 :: Object_Table_HalfUID
-hC_EC_233 :: HalfUID
-uC_EC_233Table :: UID
-uC_EC_233TableObject :: UID
-othC_EC_283 :: Object_Table_HalfUID
-hC_EC_283 :: HalfUID
-uC_EC_283Table :: UID
-uC_EC_283TableObject :: UID
-othC_HMAC_160 :: Object_Table_HalfUID
-hC_HMAC_160 :: HalfUID
-uC_HMAC_160Table :: UID
-uC_HMAC_160TableObject :: UID
-othC_HMAC_256 :: Object_Table_HalfUID
-hC_HMAC_256 :: HalfUID
-uC_HMAC_256Table :: UID
-uC_HMAC_256TableObject :: UID
-othC_HMAC_384 :: Object_Table_HalfUID
-hC_HMAC_384 :: HalfUID
-uC_HMAC_384Table :: UID
-uC_HMAC_384TableObject :: UID
-othC_HMAC_512 :: Object_Table_HalfUID
-hC_HMAC_512 :: HalfUID
-uC_HMAC_512Table :: UID
-uC_HMAC_512TableObject :: UID
-othSecretProtect :: Object_Table_HalfUID
-hSecretProtect :: HalfUID
-uSecretProtectTable :: UID
-uSecretProtectTableObject :: UID
-othTPerInfo :: Object_Table_HalfUID
-hTPerInfo :: HalfUID
-uTPerInfoTable :: UID
-uTPerInfoTableObject :: UID
-othCryptoSuite :: Object_Table_HalfUID
-hCryptoSuite :: HalfUID
-uCryptoSuiteTable :: UID
-uCryptoSuiteTableObject :: UID
-othTemplate :: Object_Table_HalfUID
-hTemplate :: HalfUID
-uTemplateTable :: UID
-uTemplateTableObject :: UID
-othSP :: Object_Table_HalfUID
-hSP :: HalfUID
-uSPTable :: UID
-uSPTableObject :: UID
-othClockTime :: Object_Table_HalfUID
-hClockTime :: HalfUID
-uClockTimeTable :: UID
-uClockTimeTableObject :: UID
-othH_SHA_1 :: Object_Table_HalfUID
-hH_SHA_1 :: HalfUID
-uH_SHA_1Table :: UID
-uH_SHA_1TableObject :: UID
-othH_SHA_256 :: Object_Table_HalfUID
-hH_SHA_256 :: HalfUID
-uH_SHA_256Table :: UID
-uH_SHA_256TableObject :: UID
-othH_SHA_384 :: Object_Table_HalfUID
-hH_SHA_384 :: HalfUID
-uH_SHA_384Table :: UID
-uH_SHA_384TableObject :: UID
-othH_SHA_512 :: Object_Table_HalfUID
-hH_SHA_512 :: HalfUID
-uH_SHA_512Table :: UID
-uH_SHA_512TableObject :: UID
-othLog :: Object_Table_HalfUID
-hLog :: HalfUID
-uLogTable :: UID
-uLogTableObject :: UID
-othLogList :: Object_Table_HalfUID
-hLogList :: HalfUID
-uLogListTable :: UID
-uLogListTableObject :: UID
-othLockingInfo :: Object_Table_HalfUID
-hLockingInfo :: HalfUID
-uLockingInfoTable :: UID
-uLockingInfoTableObject :: UID
-othLocking :: Object_Table_HalfUID
-hLocking :: HalfUID
-uLockingTable :: UID
-uLockingTableObject :: UID
-othMBRControl :: Object_Table_HalfUID
-hMBRControl :: HalfUID
-uMBRControlTable :: UID
-uMBRControlTableObject :: UID
-bthMBR :: Byte_Table_HalfUID
-hMBR :: HalfUID
-uMBRTable :: UID
-uMBRTableObject :: UID
-othK_AES_128 :: Object_Table_HalfUID
-hK_AES_128 :: HalfUID
-uK_AES_128Table :: UID
-uK_AES_128TableObject :: UID
-othK_AES_256 :: Object_Table_HalfUID
-hK_AES_256 :: HalfUID
-uK_AES_256Table :: UID
-uK_AES_256TableObject :: UID
-class TableID a
-lookup :: TableID a => a -> Maybe String
-instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.HalfUID
-instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.UID.UID
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID a => System.SED.MCTP.Common.TableUIDs.TableID a
-instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
-instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
-instance System.SED.MCTP.Common.TableUIDs.TableID System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
 
 
 -- | Parse and generate values used in method invocations and responses.

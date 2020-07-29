@@ -71,17 +71,17 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Reference_Types.hs,1948
+./src/System/SED/MCTP/Common/Reference_Types.hs,1960
 module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types25,26
-data TableKinds TableKinds50,51
+data Table_Kind Table_Kind50,51
     Null_TableNull_Table51,52
   | Object_TableObject_Table52,53
   | Byte_TableByte_Table53,54
-instance StreamItem StreamItem TableKinds55,56
+instance StreamItem StreamItem Table_Kind55,56
     where generate generate56,57
 type role role60,61
-newtype TableKind TableKind61,62
-instance StreamItem StreamItem a => StreamItem (a ? TableKind k)66,67
+newtype ForTable_Kind ForTable_Kind61,62
+instance StreamItem StreamItem a => StreamItem (a ? ForTable_Kind k)66,67
   where generate generate67,68
 type Table_HalfUID Table_HalfUID70,71
 type Table_UID Table_UID72,73
@@ -174,42 +174,58 @@ eID eID83,84
 eLitS eLitS90,91
 eValP eValP95,96
 
-./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,1314
-module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH20,21
-ttype ttype112,113
-ttypeDecs ttypeDecs120,121
-typeTableParser typeTableParser124,125
-typeTableRow typeTableRow131,132
-dTypeTableRow dTypeTableRow138,139
-typeTableTitle typeTableTitle150,151
-spaces spaces154,155
-rowSepFieldLengths rowSepFieldLengths157,158
-rowSep rowSep164,165
-blankLines blankLines168,169
-tableRowFields tableRowFields172,173
-data TypeTableRow TypeTableRow180,181
-data TypeTableRow = TypeTableRow TypeTableRow180,181
-instance Semigroup Semigroup TypeTableRow183,184
-    (T(TypeTableRowu1n1f1)184,185
-    _ _186,187
-type TypeUIDField TypeUIDField189,190
-type TypeName TypeName191,192
-type FormatString FormatString193,194
-header header196,197
-formatString formatString203,204
-type Core_type_def_max_uidrefs Core_type_def_max_uidrefs211,212
-data Core_Format Core_Format212,213
-    Base_TypeBase_Type213,214
-  | Restricted_Reference_Type'6 Restricted_Reference_Type'6214,215
-formatParser formatParser215,216
-tenum tenum224,225
-tenumDecs tenumDecs233,234
-dEnum dEnum236,237
-enumTableParser enumTableParser260,261
-data EnumRow EnumRow269,270
-data EnumRow = EnumRow EnumRow269,270
-enumTableTitle enumTableTitle272,273
-enumTableRow enumTableRow280,281
+./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,2214
+module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH22,23
+ttype ttype124,125
+ttypeDecs ttypeDecs132,133
+typeTableParser typeTableParser136,137
+typeTableRow typeTableRow143,144
+dTypeTableRow dTypeTableRow150,151
+typeTableTitle typeTableTitle162,163
+spaces spaces166,167
+rowSepFieldLengths rowSepFieldLengths169,170
+rowSep rowSep176,177
+blankLines blankLines180,181
+tableRowFields tableRowFields184,185
+data TypeTableRow TypeTableRow192,193
+data TypeTableRow = TypeTableRow TypeTableRow192,193
+instance Semigroup Semigroup TypeTableRow195,196
+    (T(TypeTableRowu1n1f1)196,197
+    _ _198,199
+type TypeUIDField TypeUIDField201,202
+type TypeName TypeName203,204
+type FormatString FormatString205,206
+header header208,209
+type Type_UID Type_UID213,214
+type Base_Type_UID Base_Type_UID214,215
+type Non_Base_Type_UID Non_Base_Type_UID215,216
+type Core_type_def_max_uidrefs Core_type_def_max_uidrefs219,220
+data Core_Format Core_Format220,221
+        Base_Type Base_Type222,223
+        Simple_Type Simple_Type223,224
+        Enumeration_Type Enumeration_Type224,225
+        Alternative_Type Alternative_Type225,226
+        List_Type List_Type226,227
+        Restricted_Reference_Type'5 Restricted_Reference_Type'5227,228
+        Restricted_Reference_Type'6 Restricted_Reference_Type'6228,229
+        General_Reference_Type'7 General_Reference_Type'7229,230
+        General_Reference_Type'8 General_Reference_Type'8230,231
+        General_Reference_Type'9 General_Reference_Type'9231,232
+        General_Reference_Table_Type General_Reference_Table_Type232,233
+        Named_Value_Name_Type Named_Value_Name_Type233,234
+        Named_Value_Integer_Type Named_Value_Integer_Type234,235
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type235,236
+        Struct_Type Struct_Type236,237
+        Set_Type Set_Type237,238
+formatParser formatParser240,241
+tenum tenum251,252
+tenumDecs tenumDecs260,261
+dEnum dEnum263,264
+enumTableParser enumTableParser287,288
+data EnumRow EnumRow296,297
+data EnumRow = EnumRow EnumRow296,297
+enumTableTitle enumTableTitle299,300
+enumTableRow enumTableRow307,308
 
 ./src/System/SED/MCTP/Common/UID.hs,431
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID25,26

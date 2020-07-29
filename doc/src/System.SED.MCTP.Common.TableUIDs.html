@@ -179,39 +179,39 @@ comments for Haddock to see; hence the names themselves must suffice as document
 </span><span id="line-179"></span><span class="hs-comment">-- by the splice of @t240@ above.</span><span>
 </span><span id="line-180"></span><span>
 </span><span id="line-181"></span><span>
-</span><span id="line-182"></span><span class="hs-keyword">class</span><span> </span><span id="TableID"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-var">TableID</span></a></span></span><span> </span><span id="local-6989586621679596793"><span class="annot"><a href="#local-6989586621679596793"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-183"></span><span>    </span><span id="lookup"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookup"><span class="hs-identifier hs-type">lookup</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679596793"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-182"></span><span class="hs-keyword">class</span><span> </span><span id="TableID"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-var">TableID</span></a></span></span><span> </span><span id="local-6989586621679596119"><span class="annot"><a href="#local-6989586621679596119"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-183"></span><span>    </span><span id="lookup"><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#lookup"><span class="hs-identifier hs-type">lookup</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="#local-6989586621679596119"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Maybe</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
 </span><span id="line-184"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-type">TableID</span></a></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-185"></span><span>    </span><span id="local-6989586621679596578"><span class="annot"><span class="annottext">lookup :: HalfUID -&gt; Maybe String
-</span><a href="#local-6989586621679596578"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HalfUID -&gt; Map HalfUID String -&gt; Maybe String
+</span><span id="line-185"></span><span>    </span><span id="local-6989586621679595904"><span class="annot"><span class="annottext">lookup :: HalfUID -&gt; Maybe String
+</span><a href="#local-6989586621679595904"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">HalfUID -&gt; Map HalfUID String -&gt; Maybe String
 forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
 </span><span class="hs-operator hs-var">`Map.lookup`</span></span><span> </span><span class="annot"><span class="annottext">Map HalfUID String
 </span><a href="System.SED.MCTP.Common.TableUIDs.html#nameHalfUID"><span class="hs-identifier hs-var">nameHalfUID</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-186"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-type">TableID</span></a></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-187"></span><span>    </span><span id="local-6989586621679596576"><span class="annot"><span class="annottext">lookup :: UID -&gt; Maybe String
-</span><a href="#local-6989586621679596576"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UID -&gt; Map UID String -&gt; Maybe String
+</span><span id="line-187"></span><span>    </span><span id="local-6989586621679595902"><span class="annot"><span class="annottext">lookup :: UID -&gt; Maybe String
+</span><a href="#local-6989586621679595902"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">UID -&gt; Map UID String -&gt; Maybe String
 forall k a. Ord k =&gt; k -&gt; Map k a -&gt; Maybe a
 </span><span class="hs-operator hs-var">`Map.lookup`</span></span><span> </span><span class="annot"><span class="annottext">Map UID String
 </span><a href="System.SED.MCTP.Common.TableUIDs.html#nameUID"><span class="hs-identifier hs-var">nameUID</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-188"></span><span id="local-6989586621679596575"><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# OVERLAPPABLE</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679596575"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-type">TableID</span></a></span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679596575"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-189"></span><span>    </span><span id="local-6989586621679596573"><span class="annot"><span class="annottext">lookup :: a -&gt; Maybe String
-</span><a href="#local-6989586621679596573"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Maybe String
+</span><span id="line-188"></span><span id="local-6989586621679595901"><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# OVERLAPPABLE</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#IsTable_HalfUID"><span class="hs-identifier hs-type">IsTable_HalfUID</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679595901"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-type">TableID</span></a></span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679595901"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-189"></span><span>    </span><span id="local-6989586621679595899"><span class="annot"><span class="annottext">lookup :: a -&gt; Maybe String
+</span><a href="#local-6989586621679595899"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">HalfUID -&gt; Maybe String
 forall a. TableID a =&gt; a -&gt; Maybe String
 </span><a href="System.SED.MCTP.Common.TableUIDs.html#lookup"><span class="hs-identifier hs-var">lookup</span></a></span><span> </span><span class="annot"><span class="annottext">(HalfUID -&gt; Maybe String) -&gt; (a -&gt; HalfUID) -&gt; a -&gt; Maybe String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (TableKind Any) HalfUID -&gt; HalfUID
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
-</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (TableKind Any) HalfUID -&gt; HalfUID)
--&gt; (a -&gt; Refined (TableKind Any) HalfUID) -&gt; a -&gt; HalfUID
+</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID)
+-&gt; (a -&gt; Refined (ForTable_Kind Any) HalfUID) -&gt; a -&gt; HalfUID
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Refined (TableKind Any) HalfUID
-forall a (k :: TableKinds).
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; Refined (ForTable_Kind Any) HalfUID
+forall a (k :: Table_Kind).
 IsTable_HalfUID a =&gt;
 a -&gt; Table_HalfUID k
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#toTable_HalfUID"><span class="hs-identifier hs-var">toTable_HalfUID</span></a></span></span><span>
 </span><span id="line-190"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# OVERLAPPING</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-type">TableID</span></a></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Null_Table_HalfUID"><span class="hs-identifier hs-type">Null_Table_HalfUID</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-191"></span><span>    </span><span id="local-6989586621679596570"><span class="annot"><span class="annottext">lookup :: Null_Table_HalfUID -&gt; Maybe String
-</span><a href="#local-6989586621679596570"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><span id="line-191"></span><span>    </span><span id="local-6989586621679595896"><span class="annot"><span class="annottext">lookup :: Null_Table_HalfUID -&gt; Maybe String
+</span><a href="#local-6989586621679595896"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot; Null Table HalfUID&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String -&gt; String) -&gt; Maybe String -&gt; Maybe String
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -227,21 +227,21 @@ forall a. TableID a =&gt; a -&gt; Maybe String
 -&gt; Null_Table_HalfUID
 -&gt; Maybe String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (TableKind Any) HalfUID -&gt; HalfUID
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
-</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (TableKind Any) HalfUID -&gt; HalfUID)
--&gt; (Null_Table_HalfUID -&gt; Refined (TableKind Any) HalfUID)
+</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID)
+-&gt; (Null_Table_HalfUID -&gt; Refined (ForTable_Kind Any) HalfUID)
 -&gt; Null_Table_HalfUID
 -&gt; HalfUID
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Null_Table_HalfUID -&gt; Refined (TableKind Any) HalfUID
-forall a (k :: TableKinds).
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Null_Table_HalfUID -&gt; Refined (ForTable_Kind Any) HalfUID
+forall a (k :: Table_Kind).
 IsTable_HalfUID a =&gt;
 a -&gt; Table_HalfUID k
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#toTable_HalfUID"><span class="hs-identifier hs-var">toTable_HalfUID</span></a></span><span>
 </span><span id="line-192"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# OVERLAPPING</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-type">TableID</span></a></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Byte_Table_HalfUID"><span class="hs-identifier hs-type">Byte_Table_HalfUID</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-193"></span><span>    </span><span id="local-6989586621679596568"><span class="annot"><span class="annottext">lookup :: Byte_Table_HalfUID -&gt; Maybe String
-</span><a href="#local-6989586621679596568"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><span id="line-193"></span><span>    </span><span id="local-6989586621679595894"><span class="annot"><span class="annottext">lookup :: Byte_Table_HalfUID -&gt; Maybe String
+</span><a href="#local-6989586621679595894"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot; Byte Table HalfUID&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String -&gt; String) -&gt; Maybe String -&gt; Maybe String
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -257,21 +257,21 @@ forall a. TableID a =&gt; a -&gt; Maybe String
 -&gt; Byte_Table_HalfUID
 -&gt; Maybe String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (TableKind Any) HalfUID -&gt; HalfUID
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
-</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (TableKind Any) HalfUID -&gt; HalfUID)
--&gt; (Byte_Table_HalfUID -&gt; Refined (TableKind Any) HalfUID)
+</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID)
+-&gt; (Byte_Table_HalfUID -&gt; Refined (ForTable_Kind Any) HalfUID)
 -&gt; Byte_Table_HalfUID
 -&gt; HalfUID
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Byte_Table_HalfUID -&gt; Refined (TableKind Any) HalfUID
-forall a (k :: TableKinds).
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Byte_Table_HalfUID -&gt; Refined (ForTable_Kind Any) HalfUID
+forall a (k :: Table_Kind).
 IsTable_HalfUID a =&gt;
 a -&gt; Table_HalfUID k
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#toTable_HalfUID"><span class="hs-identifier hs-var">toTable_HalfUID</span></a></span><span>
 </span><span id="line-194"></span><span class="hs-keyword">instance</span><span> </span><span class="hs-pragma">{-# OVERLAPPING</span><span> </span><span class="hs-pragma">#-}</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.TableUIDs.html#TableID"><span class="hs-identifier hs-type">TableID</span></a></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Reference_Types.html#Object_Table_HalfUID"><span class="hs-identifier hs-type">Object_Table_HalfUID</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-195"></span><span>    </span><span id="local-6989586621679596566"><span class="annot"><span class="annottext">lookup :: Object_Table_HalfUID -&gt; Maybe String
-</span><a href="#local-6989586621679596566"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
+</span><span id="line-195"></span><span>    </span><span id="local-6989586621679595892"><span class="annot"><span class="annottext">lookup :: Object_Table_HalfUID -&gt; Maybe String
+</span><a href="#local-6989586621679595892"><span class="hs-identifier hs-var hs-var hs-var hs-var">lookup</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-special">(</span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; String -&gt; String
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="hs-string">&quot; Object Table HalfUID&quot;</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(String -&gt; String) -&gt; Maybe String -&gt; Maybe String
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
@@ -287,15 +287,15 @@ forall a. TableID a =&gt; a -&gt; Maybe String
 -&gt; Object_Table_HalfUID
 -&gt; Maybe String
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (TableKind Any) HalfUID -&gt; HalfUID
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID
 forall (p :: * -&gt; *) a. Refined p a -&gt; a
-</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (TableKind Any) HalfUID -&gt; HalfUID)
--&gt; (Object_Table_HalfUID -&gt; Refined (TableKind Any) HalfUID)
+</span><a href="Data.Refined.html#plain"><span class="hs-identifier hs-var">plain</span></a></span><span> </span><span class="annot"><span class="annottext">(Refined (ForTable_Kind Any) HalfUID -&gt; HalfUID)
+-&gt; (Object_Table_HalfUID -&gt; Refined (ForTable_Kind Any) HalfUID)
 -&gt; Object_Table_HalfUID
 -&gt; HalfUID
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
-</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Object_Table_HalfUID -&gt; Refined (TableKind Any) HalfUID
-forall a (k :: TableKinds).
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Object_Table_HalfUID -&gt; Refined (ForTable_Kind Any) HalfUID
+forall a (k :: Table_Kind).
 IsTable_HalfUID a =&gt;
 a -&gt; Table_HalfUID k
 </span><a href="System.SED.MCTP.Common.Reference_Types.html#toTable_HalfUID"><span class="hs-identifier hs-var">toTable_HalfUID</span></a></span><span>

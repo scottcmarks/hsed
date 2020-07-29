@@ -71,54 +71,56 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Reference_Types.hs,1858
+./src/System/SED/MCTP/Common/Reference_Types.hs,1948
 module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types25,26
-data TableKinds TableKinds47,48
-    Null_TableNull_Table48,49
-  | Object_TableObject_Table49,50
-  | Byte_TableByte_Table50,51
-type role role54,55
-newtype TableKind TableKind55,56
-instance StreamItem StreamItem a => StreamItem (a ? TableKind k)60,61
-  where generate generate61,62
-type Table_HalfUID Table_HalfUID64,65
-type Table_UID Table_UID66,67
-class IsTable_HalfUID IsTable_HalfUID69,70
-    fromTable_HalfUID fromTable_HalfUID70,71
-    toTable_HalfUID toTable_HalfUID71,72
-instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)73,74
-    fromTable_HalfUID fromTable_HalfUID74,75
-    toTable_HalfUID toTable_HalfUID75,76
-instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)77,78
-    fromTable_HalfUID fromTable_HalfUID78,79
-    toTable_HalfUID toTable_HalfUID79,80
-viaTable_HalfUID viaTable_HalfUID81,82
-newtype Null_Table_HalfUID Null_Table_HalfUID84,85
-instance Show Show Null_Table_HalfUID86,87
-     show show87,88
-newtype Object_Table_HalfUID Object_Table_HalfUID90,91
-instance Show Show Object_Table_HalfUID92,93
+data TableKinds TableKinds50,51
+    Null_TableNull_Table51,52
+  | Object_TableObject_Table52,53
+  | Byte_TableByte_Table53,54
+instance StreamItem StreamItem TableKinds55,56
+    where generate generate56,57
+type role role60,61
+newtype TableKind TableKind61,62
+instance StreamItem StreamItem a => StreamItem (a ? TableKind k)66,67
+  where generate generate67,68
+type Table_HalfUID Table_HalfUID70,71
+type Table_UID Table_UID72,73
+class IsTable_HalfUID IsTable_HalfUID75,76
+    fromTable_HalfUID fromTable_HalfUID76,77
+    toTable_HalfUID toTable_HalfUID77,78
+instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)79,80
+    fromTable_HalfUID fromTable_HalfUID80,81
+    toTable_HalfUID toTable_HalfUID81,82
+instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)83,84
+    fromTable_HalfUID fromTable_HalfUID84,85
+    toTable_HalfUID toTable_HalfUID85,86
+viaTable_HalfUID viaTable_HalfUID87,88
+newtype Null_Table_HalfUID Null_Table_HalfUID90,91
+instance Show Show Null_Table_HalfUID92,93
      show show93,94
-newtype Byte_Table_HalfUID Byte_Table_HalfUID96,97
-instance Show Show Byte_Table_HalfUID98,99
+newtype Object_Table_HalfUID Object_Table_HalfUID96,97
+instance Show Show Object_Table_HalfUID98,99
      show show99,100
-newtype Null_Table_UID Null_Table_UID102,103
-instance Show Show Null_Table_UID104,105
+newtype Byte_Table_HalfUID Byte_Table_HalfUID102,103
+instance Show Show Byte_Table_HalfUID104,105
      show show105,106
-newtype Object_Table_UID Object_Table_UID108,109
-instance Show Show Object_Table_UID110,111
+newtype Null_Table_UID Null_Table_UID108,109
+instance Show Show Null_Table_UID110,111
      show show111,112
-newtype Byte_Table_UID Byte_Table_UID114,115
-instance Show Show Byte_Table_UID116,117
+newtype Object_Table_UID Object_Table_UID114,115
+instance Show Show Object_Table_UID116,117
      show show117,118
-nthNull nthNull121,122
-ntuNull ntuNull124,125
-ntHalfUID ntHalfUID128,129
-btHalfUID btHalfUID131,132
-otHalfUID otHalfUID134,135
-ntUID ntUID138,139
-btUID btUID141,142
-otUID otUID144,145
+newtype Byte_Table_UID Byte_Table_UID120,121
+instance Show Show Byte_Table_UID122,123
+     show show123,124
+nthNull nthNull127,128
+ntuNull ntuNull130,131
+ntHalfUID ntHalfUID134,135
+btHalfUID btHalfUID137,138
+otHalfUID otHalfUID140,141
+ntUID ntUID144,145
+btUID btUID147,148
+otUID otUID150,151
 
 ./src/System/SED/MCTP/Common/Simple_Type.hs,1568
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type15,16
@@ -172,48 +174,42 @@ eID eID83,84
 eLitS eLitS90,91
 eValP eValP95,96
 
-./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,1598
+./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,1314
 module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH20,21
-ttype ttype102,103
-ttypeDecs ttypeDecs110,111
-typeTableParser typeTableParser117,118
-typeTableRow typeTableRow124,125
-dTypeTableRow dTypeTableRow131,132
-typeTableTitle typeTableTitle144,145
-spaces spaces148,149
-rowSepFieldLengths rowSepFieldLengths151,152
-rowSep rowSep158,159
-blankLines blankLines162,163
-tableRowFields tableRowFields166,167
-data TypeTableRow TypeTableRow174,175
-data TypeTableRow = TypeTableRow TypeTableRow174,175
-instance Semigroup Semigroup TypeTableRow177,178
-    (T(TypeTableRowu1n1f1)178,179
-    _ _180,181
-type TypeUIDField TypeUIDField183,184
-type TypeName TypeName185,186
-type FormatString FormatString187,188
-header header190,191
-formatString formatString200,201
-newtype TypeTableRowDecs TypeTableRowDecs207,208
-instance Semigroup Semigroup TypeTableRowDecs210,211
-  where (T(TypeTableRowDecsd1)211,212
-instance Monoid Monoid TypeTableRowDecs214,215
-  where mempty mempty215,216
-type Core_type_def_max_uidrefs Core_type_def_max_uidrefs218,219
-type Core_Object_Table_UID Core_Object_Table_UID219,220
-data Core_Format Core_Format220,221
-    Base_TypeBase_Type221,222
-  | Restricted_Reference_Type'6 Restricted_Reference_Type'6222,223
-formatParser formatParser223,224
-tenum tenum232,233
-tenumDecs tenumDecs241,242
-dEnum dEnum244,245
-enumTableParser enumTableParser268,269
-data EnumRow EnumRow277,278
-data EnumRow = EnumRow EnumRow277,278
-enumTableTitle enumTableTitle280,281
-enumTableRow enumTableRow288,289
+ttype ttype112,113
+ttypeDecs ttypeDecs120,121
+typeTableParser typeTableParser124,125
+typeTableRow typeTableRow131,132
+dTypeTableRow dTypeTableRow138,139
+typeTableTitle typeTableTitle150,151
+spaces spaces154,155
+rowSepFieldLengths rowSepFieldLengths157,158
+rowSep rowSep164,165
+blankLines blankLines168,169
+tableRowFields tableRowFields172,173
+data TypeTableRow TypeTableRow180,181
+data TypeTableRow = TypeTableRow TypeTableRow180,181
+instance Semigroup Semigroup TypeTableRow183,184
+    (T(TypeTableRowu1n1f1)184,185
+    _ _186,187
+type TypeUIDField TypeUIDField189,190
+type TypeName TypeName191,192
+type FormatString FormatString193,194
+header header196,197
+formatString formatString203,204
+type Core_type_def_max_uidrefs Core_type_def_max_uidrefs211,212
+data Core_Format Core_Format212,213
+    Base_TypeBase_Type213,214
+  | Restricted_Reference_Type'6 Restricted_Reference_Type'6214,215
+formatParser formatParser215,216
+tenum tenum224,225
+tenumDecs tenumDecs233,234
+dEnum dEnum236,237
+enumTableParser enumTableParser260,261
+data EnumRow EnumRow269,270
+data EnumRow = EnumRow EnumRow269,270
+enumTableTitle enumTableTitle272,273
+enumTableRow enumTableRow280,281
 
 ./src/System/SED/MCTP/Common/UID.hs,431
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID25,26

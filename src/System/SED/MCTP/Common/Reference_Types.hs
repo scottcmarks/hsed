@@ -27,7 +27,9 @@ module System.SED.MCTP.Common.Reference_Types
 
 where
 
-
+import           Data.Attoparsec.ByteString        (anyWord8)
+import           Data.ByteString                   (singleton)
+import           Data.Functor                      ((<$>))
 import           Data.Refined                      (type (?), plain,
                                                     unsafeCreate)
 import           Data.Word8                        (Word8)
@@ -35,6 +37,7 @@ import           GHC.Base                          (Eq (..), Ord (..),
                                                     undefined, ($), (.))
 import           GHC.Enum                          (Enum (..))
 import           GHC.Exts                          (IsList (..))
+import           GHC.Real                          (fromIntegral)
 import           GHC.Show                          (Show (..))
 import           Test.QuickCheck                   (Arbitrary (..))
 
@@ -45,26 +48,29 @@ import           System.SED.MCTP.Common.UID        (HalfUID (..), UID (..),
                                                     showCore_bytes, uid,
                                                     uidUpper, (+:+))
 
-data TableKinds =
+data Table_Kind =
     Null_Table
   | Object_Table
   | Byte_Table
     deriving (Enum, Eq, Show)
+instance StreamItem Table_Kind
+    where generate = singleton . fromIntegral . fromEnum
+          parser = toEnum . fromIntegral <$> anyWord8
 
 
-type role TableKind phantom _
-newtype TableKind (k::TableKinds) a = TableKind a
+type role ForTable_Kind phantom _
+newtype ForTable_Kind (k::Table_Kind) a = ForTable_Kind a
    deriving (Eq,Ord,Show,StreamItem,IsList,Arbitrary,IsToken) via a
 
 
 
-instance StreamItem a => StreamItem (a ? TableKind k)
+instance StreamItem a => StreamItem (a ? ForTable_Kind k)
   where generate = generate . plain
         parser = undefined -- this works --> unsafeCreate <$> parser  -- TODO Hmm.  I suppose the parser is a de facto predicate
 
-type Table_HalfUID k      = HalfUID ? (TableKind k)
+type Table_HalfUID k      = HalfUID ? (ForTable_Kind k)
 
-type Table_UID k          = UID ? (TableKind k)
+type Table_UID k          = UID ? (ForTable_Kind k)
 
 
 class IsTable_HalfUID a where

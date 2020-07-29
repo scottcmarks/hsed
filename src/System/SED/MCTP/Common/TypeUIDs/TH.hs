@@ -1,6 +1,8 @@
 {-# LANGUAGE DataKinds          #-}
 {-# LANGUAGE DerivingVia        #-}
 {-# LANGUAGE ExplicitNamespaces #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE KindSignatures     #-}
 {-# LANGUAGE NoImplicitPrelude  #-}
 {-# LANGUAGE OverloadedStrings  #-}
 {-# LANGUAGE TemplateHaskell    #-}
@@ -21,54 +23,74 @@ Template Haskell for parsing Table column types in Section 5.1.3.
 module System.SED.MCTP.Common.TypeUIDs.TH where
 
 
-import           Data.Attoparsec.ByteString       (Parser, endOfInput, inClass,
-                                                   many1, parseOnly, skipWhile,
-                                                   string, take, takeTill,
-                                                   takeWhile, (<?>))
-import           Data.Attoparsec.ByteString.Char8 (char8, decimal, endOfLine,
-                                                   isDigit_w8, isEndOfLine,
-                                                   isHorizontalSpace, skipSpace)
-import           Data.Attoparsec.Combinator       (option)
-import           Data.ByteString                  (ByteString, append, empty,
-                                                   filter, init, intercalate,
-                                                   last, length, splitWith)
-import           Data.ByteString.Char8            (unpack)
-import           Data.Either                      (either)
-import           Data.Foldable                    (concatMap, foldr, maximum)
-import           Data.Functor                     ((<$>))
-import           Data.List                        (sortOn, transpose, (\\))
-import           Data.Map                         (fromListWith, toList)
-import           Data.Proxy                       (Proxy (..))
-import           Data.Set                         (Set)
-import           Data.String                      (String)
-import           Data.Tuple                       (fst, snd)
+import           Data.Attoparsec.ByteString             (Parser, endOfInput,
+                                                         inClass, many1,
+                                                         parseOnly, skipWhile,
+                                                         string, take, takeTill,
+                                                         takeWhile, (<?>))
+import           Data.Attoparsec.ByteString.Char8       (char8, decimal,
+                                                         endOfLine, isDigit_w8,
+                                                         isEndOfLine,
+                                                         isHorizontalSpace,
+                                                         skipSpace)
+import           Data.Attoparsec.Combinator             (option)
+import           Data.ByteString                        (ByteString, append,
+                                                         empty, filter, init,
+                                                         intercalate, last,
+                                                         length, splitWith)
+import           Data.ByteString.Char8                  (unpack)
+import           Data.Either                            (either)
+import           Data.Foldable                          (concatMap, foldr,
+                                                         maximum)
+import           Data.Functor                           ((<$>))
+import           Data.Kind                              (Type)
+import           Data.List                              (sortOn, transpose,
+                                                         (\\))
+import           Data.Map                               (fromListWith, toList)
+import           Data.Proxy                             (Proxy (..))
+import           Data.Set                               (Set)
+import           Data.String                            (String)
+import           Data.Tuple                             (fst, snd)
 
-import           GHC.Arr                          (range)
-import           GHC.Base                         (Monoid (..), Semigroup (..),
-                                                   error, flip, id, many, map,
-                                                   mapM, pure, undefined, ($),
-                                                   (*>), (.), (<*), (<*>), (||))
-import           GHC.Classes                      (Eq (..), Ord (..))
-import           GHC.Enum                         (Bounded (..), Enum (..),
-                                                   enumFromTo)
-import           GHC.List                         (tail, (++))
-import           GHC.Show                         (Show (..), show)
-import           GHC.Types                        (Int)
+import           GHC.Arr                                (range)
+import           GHC.Base                               (Monoid (..),
+                                                         Semigroup (..), error,
+                                                         flip, id, many, map,
+                                                         mapM, pure, undefined,
+                                                         ($), (*>), (.), (<*),
+                                                         (<*>), (||))
+import           GHC.Classes                            (Eq (..), Ord (..))
+import           GHC.Enum                               (Bounded (..),
+                                                         Enum (..), enumFromTo)
+import           GHC.List                               (tail, (++))
+import           GHC.Show                               (Show (..), show)
+import           GHC.TypeLits                           ()
+import           GHC.Types                              (Int, Nat)
 
-import           Language.Haskell.TH.Quote        (QuasiQuoter (..), quoteDec,
-                                                   quoteExp, quotePat,
-                                                   quoteType)
-import           Language.Haskell.TH.Syntax       (Dec, mkName, returnQ)
+import           Language.Haskell.TH.Quote              (QuasiQuoter (..),
+                                                         quoteDec, quoteExp,
+                                                         quotePat, quoteType)
+import           Language.Haskell.TH.Syntax             (Dec, mkName, returnQ)
 
 
-import           Data.BoundedSize                 (type (?), BoundedSize (..))
-import           System.SED.MCTP.Common.THUtil    (dData, dSig, dVal, eLitS,
-                                                   eUID, parseTable)
-import           System.SED.MCTP.Common.Token     (ordw)
-import           System.SED.MCTP.Common.UID       (UID)
-import           System.SED.MCTP.Common.Util      (hexUID,
-                                                   trimTrailingWhitespace)
+import           Data.BoundedSize                       (type (?),
+                                                         BoundedSize (..))
+import           System.SED.MCTP.Common.Reference_Types (Byte_Table_UID,
+                                                         Object_Table_UID,
+                                                         Table_Kind)
 
+import           System.SED.MCTP.Common.Simple_Type     (Core_integer_2,
+                                                         Core_max_bytes_32,
+                                                         Core_uinteger_2)
+import           System.SED.MCTP.Common.TableUIDs       ()
+
+import           System.SED.MCTP.Common.THUtil          (dData, dSig, dVal,
+                                                         eLitS, eUID,
+                                                         parseTable)
+import           System.SED.MCTP.Common.Token           (ordw)
+import           System.SED.MCTP.Common.UID             (UID)
+import           System.SED.MCTP.Common.Util            (hexUID,
+                                                         trimTrailingWhitespace)
 
 {-
 
@@ -109,10 +131,7 @@ ttype = QuasiQuoter
     }
 
 ttypeDecs :: String -> [Dec]
-ttypeDecs s = ds
-  where
-    TypeTableRowDecs ds =
-        dTypeTableRow $ parseTable typeTableParser s
+ttypeDecs s = dTypeTableRow $ parseTable typeTableParser s
 
 
 typeTableParser :: Parser TypeTableRow
@@ -129,13 +148,12 @@ typeTableRow lengths =
         pure $ TypeTableRow uidField typeName (trimComma format)
   where trimComma bs = if last bs == ordw ',' then init bs else bs
 
-dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
-dTypeTableRow (TypeTableRow u n fs) =
-    TypeTableRowDecs [ dSig uidName ''UID
-                     , dVal uidName $ eUID typeUID
-                     , dSig formatName ''String
-                     , dVal formatName $ eLitS (unpack fs)
-                     ]
+dTypeTableRow :: TypeTableRow -> [Dec]
+dTypeTableRow (TypeTableRow u n fs) = [ dSig uidName ''UID
+                                      , dVal uidName $ eUID typeUID
+                                      , dSig formatName ''String
+                                      , dVal formatName $ eLitS (unpack fs)
+                                      ]
   where typeTag = unpack n <> "Type"
         uidName = mkName $ "u" <> typeTag
         typeUID = hexUID u
@@ -193,36 +211,37 @@ header lengths = many1 (tableRowFields lengths) *> pure ()
   <?> ("header " ++ show lengths)
 
 
+type Type_UID = UID
+type Base_Type_UID = Type_UID
+type Non_Base_Type_UID = Type_UID
 
-
-
-
-
-formatString :: TypeTableRow -> ByteString
-formatString (TypeTableRow "List_Type" _maxLength _elementType) =
-    mconcat [ "L" -- FIXME
-            ]
-formatString t = error $ mconcat [ "No case for ", show t, "?" ]
-
-
-newtype TypeTableRowDecs =  TypeTableRowDecs [Dec]
-  deriving(Eq, Show)
-
-instance Semigroup TypeTableRowDecs
-  where (TypeTableRowDecs d1) <> (TypeTableRowDecs d2) =
-            TypeTableRowDecs (d1<>d2)
-
-instance Monoid TypeTableRowDecs
-  where mempty = TypeTableRowDecs []
 
 
 type Core_type_def_max_uidrefs = 16
-type Core_Object_Table_UID = UID -- FIXME
-data Core_Format =
-    Base_Type
-  | Restricted_Reference_Type'6 ((Set Core_Object_Table_UID) ? (BoundedSize 1 Core_type_def_max_uidrefs))
+data Core_Format :: Nat -> Type
+    where
+        Base_Type                    ::                                                                                               Core_Format  0
+        Simple_Type                  ::                       Base_Type_UID -> Core_uinteger_2                                     -> Core_Format  1
+        Enumeration_Type             :: [(Core_uinteger_2, Core_uinteger_2)]                                                       -> Core_Format  2
+        Alternative_Type             ::                      ((Set Non_Base_Type_UID) ? (BoundedSize 2 Core_type_def_max_uidrefs)) -> Core_Format  3
+        List_Type                    :: Core_uinteger_2    -> Non_Base_Type_UID                                                    -> Core_Format  4
+        Restricted_Reference_Type'5  ::                       ((Set Byte_Table_UID) ? (BoundedSize 1 Core_type_def_max_uidrefs))   -> Core_Format  5
+        Restricted_Reference_Type'6  ::                       ((Set Object_Table_UID) ? (BoundedSize 1 Core_type_def_max_uidrefs)) -> Core_Format  6
+        General_Reference_Type'7     ::                                                                                               Core_Format  7
+        General_Reference_Type'8     ::                                                                                               Core_Format  8
+        General_Reference_Type'9     ::                                                                                               Core_Format  9
+        General_Reference_Table_Type :: Table_Kind                                                                                 -> Core_Format 10
+        Named_Value_Name_Type        :: Core_max_bytes_32 ->  Non_Base_Type_UID                                                    -> Core_Format 11
+        Named_Value_Integer_Type     :: Core_integer_2    ->  Non_Base_Type_UID                                                    -> Core_Format 12
+        Named_Value_Uinteger_Type    :: Core_uinteger_2   ->  Non_Base_Type_UID                                                    -> Core_Format 13
+        Struct_Type                  ::                      ([Non_Base_Type_UID] ? (BoundedSize 1 Core_type_def_max_uidrefs))     -> Core_Format 14
+        Set_Type                     :: ([(Core_uinteger_2, Core_uinteger_2)] ? (BoundedSize 1 Core_type_def_max_uidrefs))         -> Core_Format 15 -- 1 <= length  -- TODO length?
+
+
 formatParser :: Parser (Proxy Core_Format)
 formatParser = undefined
+
+
 
 
 

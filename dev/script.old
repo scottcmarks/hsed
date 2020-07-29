@@ -59,7 +59,6 @@ import System.SED.MCTP.Common.TypeUIDs.TH
 import System.SED.MCTP.Common.THUtil
 
 putStrLn "Running ..."
-
 :{
 table65 =
       "\n\
@@ -96,7 +95,6 @@ table76 =
 putStrLn table76
 parseTable typeTableParser table76
 putStrLn "\n"
-
 runQ $ ppr <$> quoteDec ttype table76
 
 
@@ -106,6 +104,46 @@ runQ $ ppr <$> quoteDec ttype table76
 putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
+
+
+putStrLn "Before ':load System.SED.MCTP.Common.TableUIDs'\n"
+:load System.SED.MCTP.Common.TableUIDs
+putStrLn "\n\n\n"
+putStrLn $ showString "hColumn = " . shows hColumn $ ""
+putStrLn "\n\n\n"
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+:load System.SED.MCTP.Common.Types
+:set -XTypeOperators
+:set -XExplicitNamespaces
+import Data.Refined
+import qualified GHC.Base as Base(map)
+import Data.Tuple(snd)
+import GHC.Exts(IsList(..))
+
+Base.map snd $ toList  nameHalfUID
+
+
+
+import Data.Set(Set)
+import GHC.Base(Int)
+import Data.BoundedSize(BoundedSize(..))
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+putStrLn "\n\n\n"
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+putStrLn $ showString "othTable = " . shows othTable $ ""
+putStrLn $ showString "lookup othTable = " . shows (lookup othTable) $ ""
+
 
 
 putStrLn "\n\n\nBuh-bye now.\n\n"

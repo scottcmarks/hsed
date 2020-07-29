@@ -1057,6 +1057,7 @@ instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a Data.Refined.? System.SED.MCTP.Common.Reference_Types.TableKind k)
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.TableKinds
 
 
 -- | TableUIDs Template Haskell
@@ -1191,7 +1192,7 @@ ttype :: QuasiQuoter
 ttypeDecs :: String -> [Dec]
 typeTableParser :: Parser TypeTableRow
 typeTableRow :: [Int] -> Parser TypeTableRow
-dTypeTableRow :: TypeTableRow -> TypeTableRowDecs
+dTypeTableRow :: TypeTableRow -> [Dec]
 typeTableTitle :: Parser ByteString
 spaces :: Parser ByteString
 rowSepFieldLengths :: Parser [Int]
@@ -1205,13 +1206,10 @@ type TypeName = ByteString
 type FormatString = ByteString
 header :: [Int] -> Parser ()
 formatString :: TypeTableRow -> ByteString
-newtype TypeTableRowDecs
-TypeTableRowDecs :: [Dec] -> TypeTableRowDecs
 type Core_type_def_max_uidrefs = 16
-type Core_Object_Table_UID = UID
 data Core_Format
 Base_Type :: Core_Format
-Restricted_Reference_Type'6 :: (Set Core_Object_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format
+Restricted_Reference_Type'6 :: (Set Object_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format
 formatParser :: Parser (Proxy Core_Format)
 
 -- | QuasiQuoter for Type Table enum tables.
@@ -1227,11 +1225,7 @@ EnumRow :: String -> [Int] -> EnumRow
 enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
-instance GHC.Base.Semigroup System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
-instance GHC.Base.Monoid System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRowDecs
 instance GHC.Base.Semigroup System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
 
 

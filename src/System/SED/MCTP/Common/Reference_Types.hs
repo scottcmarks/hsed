@@ -26,7 +26,6 @@ Reference_Types per Core Spec
 module System.SED.MCTP.Common.Reference_Types
 
 where
-
 import           Data.Attoparsec.ByteString        (anyWord8)
 import           Data.ByteString                   (singleton)
 import           Data.Functor                      ((<$>))

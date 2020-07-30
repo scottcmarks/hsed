@@ -24,9 +24,8 @@ import           Data.Attoparsec.ByteString             (Parser, take, (<?>))
 
 import           Data.Attoparsec.ByteString.Char8       (endOfInput, endOfLine,
                                                          skipSpace, string)
-import           Data.ByteString                        (ByteString, length)
-import           Data.ByteString.Char8                  (split)
-import qualified Data.ByteString.Char8                  as C (unpack)
+import           Data.ByteString.Char8                  (ByteString, length,
+                                                         split, unpack)
 import           Data.Foldable                          (foldr, mapM_)
 import           Data.List                              (concat, elem, init,
                                                          map, (!!))
@@ -56,7 +55,12 @@ import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
                                                          Object_Table_HalfUID)
 import           System.SED.MCTP.Common.Table           (TableName (..),
                                                          TemplateName (..))
-import           System.SED.MCTP.Common.THUtil
+import           System.SED.MCTP.Common.THUtil          (dSig, dVal,
+                                                         eByte_Table_HalfUID,
+                                                         eHalfUID,
+                                                         eObject_Table_HalfUID,
+                                                         eUID, eValP,
+                                                         parseTable)
 import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..),
                                                          uidLower, uidUpper)
 import           System.SED.MCTP.Common.Util            (hexUID,
@@ -196,7 +200,7 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
     [ eValP u $ table ++ " Table"
     , eValP o $ table ++ " Table Object"
     ]
-  where table = C.unpack tableName
+  where table = unpack tableName
         p `tn` t = mkName $ mconcat [ p, table, t]
         h = "h" `tn` ""
         oth = "oth" `tn` ""

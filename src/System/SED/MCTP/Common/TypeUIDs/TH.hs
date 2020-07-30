@@ -1,12 +1,16 @@
-{-# LANGUAGE DataKinds          #-}
-{-# LANGUAGE DerivingVia        #-}
-{-# LANGUAGE ExplicitNamespaces #-}
-{-# LANGUAGE GADTs              #-}
-{-# LANGUAGE KindSignatures     #-}
-{-# LANGUAGE NoImplicitPrelude  #-}
-{-# LANGUAGE OverloadedStrings  #-}
-{-# LANGUAGE TemplateHaskell    #-}
-{-# LANGUAGE TypeOperators      #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DerivingVia         #-}
+{-# LANGUAGE ExplicitNamespaces  #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE PolyKinds           #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeOperators       #-}
 
 {-|
 Module      : System.SED.MCTP.Common.TypeUIDs.TH
@@ -43,7 +47,6 @@ import           Data.Either                            (either)
 import           Data.Foldable                          (concatMap, foldr,
                                                          maximum)
 import           Data.Functor                           ((<$>))
-import           Data.Kind                              (Type)
 import           Data.List                              (sortOn, transpose,
                                                          (\\))
 import           Data.Map                               (fromListWith, toList)
@@ -53,7 +56,7 @@ import           Data.String                            (String)
 import           Data.Tuple                             (fst, snd)
 
 import           GHC.Arr                                (range)
-import           GHC.Base                               (Monoid (..),
+import           GHC.Base                               (Monoid (..), Type,
                                                          Semigroup (..), error,
                                                          flip, id, many, map,
                                                          mapM, pure, undefined,
@@ -64,9 +67,9 @@ import           GHC.Enum                               (Bounded (..),
                                                          Enum (..), enumFromTo)
 import           GHC.List                               (tail, (++))
 import           GHC.Show                               (Show (..), show)
-import           GHC.TypeLits                           ()
+import           GHC.TypeLits                           (KnownNat)
 import           GHC.Types                              (Int, Nat)
-
+import           GHC.Word                               (Word8)
 import           Language.Haskell.TH.Quote              (QuasiQuoter (..),
                                                          quoteDec, quoteExp,
                                                          quotePat, quoteType)
@@ -84,6 +87,7 @@ import           System.SED.MCTP.Common.Simple_Type     (Core_integer_2,
                                                          Core_uinteger_2)
 import           System.SED.MCTP.Common.TableUIDs       ()
 
+import           Data.BoundedSize                       (fromNat)
 import           System.SED.MCTP.Common.THUtil          (dData, dSig, dVal,
                                                          eLitS, eUID,
                                                          parseTable)
@@ -211,34 +215,52 @@ header lengths = many1 (tableRowFields lengths) *> pure ()
   <?> ("header " ++ show lengths)
 
 
+-- TODO Properties
 type Type_UID = UID
 type Base_Type_UID = Type_UID
 type Non_Base_Type_UID = Type_UID
+type Named_Value_Type_UID = Type_UID
 
 
+type Core_type_def_max_enum_ranges          = 16
+type Core_type_def_max_alternative_uidrefs  = 16
+type Core_type_def_max_byte_table_uidrefs   = 16
+type Core_type_def_max_object_table_uidrefs = 16
+type Core_type_def_max_struct_uidrefs       = 16
+type Core_type_def_max_set_ranges           = 16
 
-type Core_type_def_max_uidrefs = 16
-data Core_Format :: Nat -> Type
+data Core_Format (n::Nat) :: Type
     where
-        Base_Type                    ::                                                                                               Core_Format  0
-        Simple_Type                  ::                       Base_Type_UID -> Core_uinteger_2                                     -> Core_Format  1
-        Enumeration_Type             :: [(Core_uinteger_2, Core_uinteger_2)]                                                       -> Core_Format  2
-        Alternative_Type             ::                      ((Set Non_Base_Type_UID) ? (BoundedSize 2 Core_type_def_max_uidrefs)) -> Core_Format  3
-        List_Type                    :: Core_uinteger_2    -> Non_Base_Type_UID                                                    -> Core_Format  4
-        Restricted_Reference_Type'5  ::                       ((Set Byte_Table_UID) ? (BoundedSize 1 Core_type_def_max_uidrefs))   -> Core_Format  5
-        Restricted_Reference_Type'6  ::                       ((Set Object_Table_UID) ? (BoundedSize 1 Core_type_def_max_uidrefs)) -> Core_Format  6
-        General_Reference_Type'7     ::                                                                                               Core_Format  7
-        General_Reference_Type'8     ::                                                                                               Core_Format  8
-        General_Reference_Type'9     ::                                                                                               Core_Format  9
-        General_Reference_Table_Type :: Table_Kind                                                                                 -> Core_Format 10
-        Named_Value_Name_Type        :: Core_max_bytes_32 ->  Non_Base_Type_UID                                                    -> Core_Format 11
-        Named_Value_Integer_Type     :: Core_integer_2    ->  Non_Base_Type_UID                                                    -> Core_Format 12
-        Named_Value_Uinteger_Type    :: Core_uinteger_2   ->  Non_Base_Type_UID                                                    -> Core_Format 13
-        Struct_Type                  ::                      ([Non_Base_Type_UID] ? (BoundedSize 1 Core_type_def_max_uidrefs))     -> Core_Format 14
-        Set_Type                     :: ([(Core_uinteger_2, Core_uinteger_2)] ? (BoundedSize 1 Core_type_def_max_uidrefs))         -> Core_Format 15 -- 1 <= length  -- TODO length?
+        Base_Type_Format                    ::                                                                                                                                           Core_Format  0
+        Simple_Type_Format                  ::  Base_Type_UID -> Core_uinteger_2                                                                                                      -> Core_Format  1
+        Enumeration_Type_Format             ::                                        ([(Core_uinteger_2, Core_uinteger_2)] ? (BoundedSize 1 Core_type_def_max_enum_ranges))          -> Core_Format  2
+        Alternative_Type_Format             ::                                        ((Set Non_Base_Type_UID)              ? (BoundedSize 2 Core_type_def_max_alternative_uidrefs))  -> Core_Format  3
+        List_Type_Format                    :: Core_uinteger_2   -> Non_Base_Type_UID                                                                                                 -> Core_Format  4
+        Restricted_Reference_Type_5_Format  ::                                        ((Set Byte_Table_UID)                 ? (BoundedSize 1 Core_type_def_max_byte_table_uidrefs))   -> Core_Format  5
+        Restricted_Reference_Type_6_Format  ::                                        ((Set Object_Table_UID)               ? (BoundedSize 1 Core_type_def_max_object_table_uidrefs)) -> Core_Format  6
+        General_Reference_Type_7_Format     ::                                                                                                                                           Core_Format  7
+        General_Reference_Type_8_Format     ::                                                                                                                                           Core_Format  8
+        General_Reference_Type_9_Format     ::                                                                                                                                           Core_Format  9
+        General_Reference_Table_Type_Format :: Table_Kind                                                                                                                             -> Core_Format 10
+        Named_Value_Name_Type_Format        :: Core_max_bytes_32 -> Non_Base_Type_UID                                                                                                 -> Core_Format 11
+        Named_Value_Integer_Type_Format     :: Core_integer_2    -> Non_Base_Type_UID                                                                                                 -> Core_Format 12
+        Named_Value_Uinteger_Type_Format    :: Core_uinteger_2   -> Non_Base_Type_UID                                                                                                 -> Core_Format 13
+        Struct_Type_Format                  ::                                        ([Named_Value_Type_UID]               ? (BoundedSize 1 Core_type_def_max_struct_uidrefs))       -> Core_Format 14
+        Set_Type_Format                     ::                                        ([(Core_uinteger_2, Core_uinteger_2)] ? (BoundedSize 1 Core_type_def_max_set_ranges))           -> Core_Format 15
 
 
-formatParser :: Parser (Proxy Core_Format)
+data Some_Core_Format =  forall n. KnownNat n => Some_Core_Format(Core_Format n)
+
+class Is_Core_Format (a)
+  where
+    formatCode :: a -> Word8
+instance (KnownNat n) => Is_Core_Format (Core_Format n) where
+    formatCode _ =  fromNat(Proxy @n)
+instance Is_Core_Format (Some_Core_Format) where
+    formatCode (Some_Core_Format x) = formatCode x
+
+-- | Parse the string in the Format colum
+formatParser :: Parser (Proxy Some_Core_Format)
 formatParser = undefined
 
 

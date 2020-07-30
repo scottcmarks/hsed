@@ -1440,25 +1440,37 @@ header :: [Int] -> Parser ()
 type Type_UID = UID
 type Base_Type_UID = Type_UID
 type Non_Base_Type_UID = Type_UID
-type Core_type_def_max_uidrefs = 16
-data Core_Format :: Nat -> Type
-[Base_Type] :: Core_Format 0
-[Simple_Type] :: Base_Type_UID -> Core_uinteger_2 -> Core_Format 1
-[Enumeration_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Core_Format 2
-[Alternative_Type] :: (Set Non_Base_Type_UID ? BoundedSize 2 Core_type_def_max_uidrefs) -> Core_Format 3
-[List_Type] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 4
-[Restricted_Reference_Type'5] :: (Set Byte_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 5
-[Restricted_Reference_Type'6] :: (Set Object_Table_UID ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 6
-[General_Reference_Type'7] :: Core_Format 7
-[General_Reference_Type'8] :: Core_Format 8
-[General_Reference_Type'9] :: Core_Format 9
-[General_Reference_Table_Type] :: Table_Kind -> Core_Format 10
-[Named_Value_Name_Type] :: Core_max_bytes_32 -> Non_Base_Type_UID -> Core_Format 11
-[Named_Value_Integer_Type] :: Core_integer_2 -> Non_Base_Type_UID -> Core_Format 12
-[Named_Value_Uinteger_Type] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 13
-[Struct_Type] :: ([Non_Base_Type_UID] ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 14
-[Set_Type] :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_uidrefs) -> Core_Format 15
-formatParser :: Parser (Proxy Core_Format)
+type Named_Value_Type_UID = Type_UID
+type Core_type_def_max_enum_ranges = 16
+type Core_type_def_max_alternative_uidrefs = 16
+type Core_type_def_max_byte_table_uidrefs = 16
+type Core_type_def_max_object_table_uidrefs = 16
+type Core_type_def_max_struct_uidrefs = 16
+type Core_type_def_max_set_ranges = 16
+data Core_Format (n :: Nat) :: Type
+[Base_Type_Format] :: Core_Format 0
+[Simple_Type_Format] :: Base_Type_UID -> Core_uinteger_2 -> Core_Format 1
+[Enumeration_Type_Format] :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_enum_ranges) -> Core_Format 2
+[Alternative_Type_Format] :: (Set Non_Base_Type_UID ? BoundedSize 2 Core_type_def_max_alternative_uidrefs) -> Core_Format 3
+[List_Type_Format] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 4
+[Restricted_Reference_Type_5_Format] :: (Set Byte_Table_UID ? BoundedSize 1 Core_type_def_max_byte_table_uidrefs) -> Core_Format 5
+[Restricted_Reference_Type_6_Format] :: (Set Object_Table_UID ? BoundedSize 1 Core_type_def_max_object_table_uidrefs) -> Core_Format 6
+[General_Reference_Type_7_Format] :: Core_Format 7
+[General_Reference_Type_8_Format] :: Core_Format 8
+[General_Reference_Type_9_Format] :: Core_Format 9
+[General_Reference_Table_Type_Format] :: Table_Kind -> Core_Format 10
+[Named_Value_Name_Type_Format] :: Core_max_bytes_32 -> Non_Base_Type_UID -> Core_Format 11
+[Named_Value_Integer_Type_Format] :: Core_integer_2 -> Non_Base_Type_UID -> Core_Format 12
+[Named_Value_Uinteger_Type_Format] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 13
+[Struct_Type_Format] :: ([Named_Value_Type_UID] ? BoundedSize 1 Core_type_def_max_struct_uidrefs) -> Core_Format 14
+[Set_Type_Format] :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_set_ranges) -> Core_Format 15
+data Some_Core_Format
+Some_Core_Format :: Core_Format n -> Some_Core_Format
+class Is_Core_Format a
+formatCode :: Is_Core_Format a => a -> Word8
+
+-- | Parse the string in the Format colum
+formatParser :: Parser (Proxy Some_Core_Format)
 
 -- | QuasiQuoter for Type Table enum tables.
 --   
@@ -1474,6 +1486,8 @@ enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
+instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.TypeUIDs.TH.Is_Core_Format (System.SED.MCTP.Common.TypeUIDs.TH.Core_Format n)
+instance System.SED.MCTP.Common.TypeUIDs.TH.Is_Core_Format System.SED.MCTP.Common.TypeUIDs.TH.Some_Core_Format
 instance GHC.Base.Semigroup System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
 
 

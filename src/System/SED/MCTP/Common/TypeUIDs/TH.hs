@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE ExplicitNamespaces  #-}
@@ -30,7 +31,7 @@ module System.SED.MCTP.Common.TypeUIDs.TH where
 import           Data.Attoparsec.ByteString             (Parser, endOfInput,
                                                          inClass, many1,
                                                          parseOnly, skipWhile,
-                                                         string, take, takeTill,
+                                                         take, takeTill,
                                                          takeWhile, (<?>))
 import           Data.Attoparsec.ByteString.Char8       (char8, decimal,
                                                          endOfLine, isDigit_w8,
@@ -61,12 +62,12 @@ import           GHC.Base                               (Monoid (..), Type,
                                                          flip, id, many, map,
                                                          mapM, pure, undefined,
                                                          ($), (*>), (.), (<*),
-                                                         (<*>), (||))
+                                                         (<*>), (||), (<|>))
 import           GHC.Classes                            (Eq (..), Ord (..))
 import           GHC.Enum                               (Bounded (..),
                                                          Enum (..), enumFromTo)
 import           GHC.List                               (tail, (++))
-import           GHC.Show                               (Show (..), show)
+import           GHC.Show                               (Show (..), showString)
 import           GHC.TypeLits                           (KnownNat)
 import           GHC.Types                              (Int, Nat)
 import           GHC.Word                               (Word8)
@@ -165,7 +166,7 @@ dTypeTableRow (TypeTableRow u n fs) = [ dSig uidName ''UID
 
 
 typeTableTitle :: Parser ByteString
-typeTableTitle = (append <$> string "Table " <*> takeTill isEndOfLine) <* endOfLine
+typeTableTitle = (append <$> "Table " <*> takeTill isEndOfLine) <* endOfLine
   <?> "Table typeTableTitle"
 
 spaces :: Parser ByteString
@@ -248,8 +249,7 @@ data Core_Format (n::Nat) :: Type
         Struct_Type_Format                  ::                                        ([Named_Value_Type_UID]               ? (BoundedSize 1 Core_type_def_max_struct_uidrefs))       -> Core_Format 14
         Set_Type_Format                     ::                                        ([(Core_uinteger_2, Core_uinteger_2)] ? (BoundedSize 1 Core_type_def_max_set_ranges))           -> Core_Format 15
 
-
-data Some_Core_Format =  forall n. KnownNat n => Some_Core_Format(Core_Format n)
+data Some_Core_Format =  forall n. (Show (Core_Format n),KnownNat n) => Some_Core_Format(Core_Format n)
 
 class Is_Core_Format (a)
   where
@@ -259,11 +259,46 @@ instance (KnownNat n) => Is_Core_Format (Core_Format n) where
 instance Is_Core_Format (Some_Core_Format) where
     formatCode (Some_Core_Format x) = formatCode x
 
+
+instance (KnownNat n) => Show (Core_Format n) where
+    show = showString "Core_Format " . show . formatCode
+
+instance Show Some_Core_Format where
+    showsPrec p (Some_Core_Format x) =
+          showString "Some_Core_Format ("
+        . showsPrec p x
+        . showString ")"
+
+
+
+
 -- | Parse the string in the Format colum
-formatParser :: Parser (Proxy Some_Core_Format)
-formatParser = undefined
+formatParser :: Parser Some_Core_Format
+formatParser = Some_Core_Format <$> (baseTypeFormatParser <|> baseTypeFormatParser)
 
 
+baseTypeFormatParser :: Parser (Core_Format 0)
+baseTypeFormatParser = "Base_Type" *> pure Base_Type_Format
+
+simpleTypeFormatParser :: Parser (Core_Format 1)
+simpleTypeFormatParser = "Simple_Type" *> "," *> pure ( Simple_Type_Format ("bytes" <|> "max_bytes" <|> "integer" <|> "uinteger" )
+                                                 undefined)
+
+{-
+"Alternative_Type"
+"Base_Type"
+"Enumeration_Type"
+"General_Reference_Table_Type"
+"General_Reference_Type{7}"
+"General_Reference_Type{8}"
+"General_Reference_Type{9}"
+"List_Type"
+"Name_Value_Uinteger_Type"
+"Restricted_Reference_Type{6}"
+"Set_Type"
+"Simple_Type"
+"Struct_Type"
+-}
 
 
 

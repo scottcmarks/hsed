@@ -125,4 +125,15 @@ putStrLn ".. script loaded."
 --------------------------------------------------------------------------------
 
 -- TODOs
--- increase right margin in auto-formatting
+-- Object HalfUIDs are the right half of Object UIDs
+-- Object Table Object HalfUIDs are the same as Object Table HalfUIDs
+-- Type HalfUIDs are e.g. the 00.00.02.38 in the lower half of bytes_4
+-- so tohbytes_4 = typeObject_HalfUID 0x00 0x00 0x02 0x38 :: HalfUID ? Object_HalfUID(othType)
+-- (approximately -- always touchy what the name of the Type table is, given
+-- that "Type" is a big deal in Haskell :)
+--
+-- Then Base_Type_UID and Non_Base_Type_UID can play off those.
+-- Also seem to need String <-> typeHalfUID map
+--
+-- Important: switch to using Data.Binary for StreamItem, etc.
+--

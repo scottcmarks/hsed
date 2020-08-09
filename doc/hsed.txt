@@ -1468,9 +1468,42 @@ data Some_Core_Format
 Some_Core_Format :: Core_Format n -> Some_Core_Format
 class Is_Core_Format a
 formatCode :: Is_Core_Format a => a -> Word8
+type Type_Name = String
+type Base_Type_Name = Type_Name
+type Non_Base_Type_Name = Type_Name
+type Named_Value_Type_Name = Type_Name
+type Table_Name = String
+type Byte_Table_Name = Table_Name
+type Object_Table_Name = Table_Name
+newtype One_Of s a
+One_Of :: a -> One_Of s a
+core_Base_Type_Names :: Set String
+type Core_Base_Type_Names = Type
+core_Table_Kind_Names :: Set String
+type Core_Table_Kind_Names = Type
+data Core_Format_Spec
+Base_Type_Spec :: (String ? One_Of Core_Base_Type_Names) -> Core_Format_Spec
+Simple_Type_Spec :: (Base_Type_Name, Core_uinteger_2) -> Core_Format_Spec
+Enumeration_Type_Spec :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_enum_ranges) -> Core_Format_Spec
+Alternative_Type_Spec :: (Set Non_Base_Type_Name ? BoundedSize 2 Core_type_def_max_alternative_uidrefs) -> Core_Format_Spec
+List_Type_Spec :: (Core_uinteger_2, Non_Base_Type_Name) -> Core_Format_Spec
+Restricted_Reference_Type_5_Spec :: (Set Byte_Table_Name ? BoundedSize 1 Core_type_def_max_byte_table_uidrefs) -> Core_Format_Spec
+Restricted_Reference_Type_6_Spec :: (Set Object_Table_Name ? BoundedSize 1 Core_type_def_max_object_table_uidrefs) -> Core_Format_Spec
+General_Reference_Type_7_Spec :: Core_Format_Spec
+General_Reference_Type_8_Spec :: Core_Format_Spec
+General_Reference_Type_9_Spec :: Core_Format_Spec
+General_Reference_Table_Type_Spec :: (String ? One_Of Core_Table_Kind_Names) -> Core_Format_Spec
+Named_Value_Name_Type_Spec :: (Core_max_bytes_32, Non_Base_Type_Name) -> Core_Format_Spec
+Named_Value_Integer_Type_Spec :: (Core_integer_2, Non_Base_Type_Name) -> Core_Format_Spec
+Named_Value_Uinteger_Type_Spec :: (Core_uinteger_2, Non_Base_Type_Name) -> Core_Format_Spec
+Struct_Type_Spec :: ([Named_Value_Type_Name] ? BoundedSize 1 Core_type_def_max_struct_uidrefs) -> Core_Format_Spec
+Set_Type_Spec :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_set_ranges) -> Core_Format_Spec
+stringSetParser :: (IsList l, Item l ~ String) => l -> Parser ByteString
 
 -- | Parse the string in the Format colum
-formatParser :: Parser (Proxy Some_Core_Format)
+formatSpecParser :: Parser Core_Format_Spec
+baseTypeFormatSpecParser :: Parser Core_Format_Spec
+simpleTypeFormatSpecParser :: Parser Core_Format_Spec
 
 -- | QuasiQuoter for Type Table enum tables.
 --   
@@ -1486,8 +1519,11 @@ enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
+instance Data.Refined.Predicate (System.SED.MCTP.Common.TypeUIDs.TH.One_Of (Data.Set.Internal.Set a)) a
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.TypeUIDs.TH.Is_Core_Format (System.SED.MCTP.Common.TypeUIDs.TH.Core_Format n)
 instance System.SED.MCTP.Common.TypeUIDs.TH.Is_Core_Format System.SED.MCTP.Common.TypeUIDs.TH.Some_Core_Format
+instance GHC.TypeNats.KnownNat n => GHC.Show.Show (System.SED.MCTP.Common.TypeUIDs.TH.Core_Format n)
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.Some_Core_Format
 instance GHC.Base.Semigroup System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
 
 

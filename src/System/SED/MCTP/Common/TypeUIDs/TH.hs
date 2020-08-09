@@ -1,9 +1,12 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RoleAnnotations #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE ExplicitNamespaces  #-}
 {-# LANGUAGE GADTs               #-}
 {-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE MultiParamTypeClasses   #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE PolyKinds           #-}
@@ -28,32 +31,32 @@ Template Haskell for parsing Table column types in Section 5.1.3.
 module System.SED.MCTP.Common.TypeUIDs.TH where
 
 
-import           Data.Attoparsec.ByteString             (Parser, endOfInput,
+import           Data.Attoparsec.ByteString       (takeTill)
+import           Data.Attoparsec.ByteString.Char8       (isEndOfLine,
+                                                         Parser, endOfInput,
                                                          inClass, many1,
                                                          parseOnly, skipWhile,
-                                                         take, takeTill,
-                                                         takeWhile, (<?>))
-import           Data.Attoparsec.ByteString.Char8       (char8, decimal,
-                                                         endOfLine, isDigit_w8,
-                                                         isEndOfLine,
+                                                         takeWhile, string, choice,
+                                                         take, (<?>), char8, decimal,
+                                                         endOfLine, isDigit,
                                                          isHorizontalSpace,
                                                          skipSpace)
 import           Data.Attoparsec.Combinator             (option)
 import           Data.ByteString                        (ByteString, append,
                                                          empty, filter, init,
-                                                         intercalate, last,
+                                                         intercalate,
                                                          length, splitWith)
-import           Data.ByteString.Char8                  (unpack)
+import           Data.ByteString.Char8                  (unpack, last)
 import           Data.Either                            (either)
 import           Data.Foldable                          (concatMap, foldr,
                                                          maximum)
 import           Data.Functor                           ((<$>))
 import           Data.List                              (sortOn, transpose,
                                                          (\\))
-import           Data.Map                               (fromListWith, toList)
+import           Data.Map                               (fromListWith)
 import           Data.Proxy                             (Proxy (..))
 import           Data.Set                               (Set)
-import           Data.String                            (String)
+import           Data.String                            (String, IsString(..))
 import           Data.Tuple                             (fst, snd)
 
 import           GHC.Arr                                (range)
@@ -66,6 +69,7 @@ import           GHC.Base                               (Monoid (..), Type,
 import           GHC.Classes                            (Eq (..), Ord (..))
 import           GHC.Enum                               (Bounded (..),
                                                          Enum (..), enumFromTo)
+import GHC.Exts(IsList(..))
 import           GHC.List                               (tail, (++))
 import           GHC.Show                               (Show (..), showString)
 import           GHC.TypeLits                           (KnownNat)
@@ -88,7 +92,7 @@ import           System.SED.MCTP.Common.Simple_Type     (Core_integer_2,
                                                          Core_uinteger_2)
 import           System.SED.MCTP.Common.TableUIDs       ()
 
-import           Data.BoundedSize                       (fromNat)
+import           Data.BoundedSize                       (Predicate(..), fromNat)
 import           System.SED.MCTP.Common.THUtil          (dData, dSig, dVal,
                                                          eLitS, eUID,
                                                          parseTable)
@@ -151,7 +155,7 @@ typeTableRow lengths =
     do
         [uidField, typeName, format] <- tableRowFields lengths
         pure $ TypeTableRow uidField typeName (trimComma format)
-  where trimComma bs = if last bs == ordw ',' then init bs else bs
+  where trimComma bs = if last bs == ',' then init bs else bs
 
 dTypeTableRow :: TypeTableRow -> [Dec]
 dTypeTableRow (TypeTableRow u n fs) = [ dSig uidName ''UID
@@ -170,12 +174,12 @@ typeTableTitle = (append <$> "Table " <*> takeTill isEndOfLine) <* endOfLine
   <?> "Table typeTableTitle"
 
 spaces :: Parser ByteString
-spaces = takeWhile isHorizontalSpace
+spaces = takeWhile (isHorizontalSpace . ordw)
 
 rowSepFieldLengths :: Parser [Int]
 rowSepFieldLengths =
       (char8 '+' <?> "initial")
-   *> many (length <$> takeWhile (== ordw '-')
+   *> many (length <$> takeWhile (== '-')
                    <* (char8 '+' <?> "trailing"))
   <?> "row separator fields"
 
@@ -272,17 +276,66 @@ instance Show Some_Core_Format where
 
 
 
+type Type_Name = String
+type Base_Type_Name = Type_Name
+type Non_Base_Type_Name = Type_Name
+type Named_Value_Type_Name = Type_Name
+type Table_Name = String
+type Byte_Table_Name = Table_Name
+type Object_Table_Name = Table_Name
+
+type role One_Of phantom _
+newtype One_Of s a = One_Of a
+
+instance Predicate (One_Of (Set a)) a where
+    predicate (One_Of _s) = undefined -- needs singletons and demote, etc.
+    failMsg (One_Of _s) = undefined -- ditto -- TODO!!
+
+core_Base_Type_Names :: Set String
+core_Base_Type_Names = fromList ["bytes","integer","max_bytes","uinteger"]
+type Core_Base_Type_Names = Type
+
+core_Table_Kind_Names :: Set String
+core_Table_Kind_Names = fromList ["Byte", "Object"]
+type Core_Table_Kind_Names = Type
+
+
+data Core_Format_Spec =
+    Base_Type_Spec                      ( String ? One_Of Core_Base_Type_Names)
+  | Simple_Type_Spec                    ( Base_Type_Name, Core_uinteger_2 )
+  | Enumeration_Type_Spec               ( [(Core_uinteger_2, Core_uinteger_2)]  ? (BoundedSize 1 Core_type_def_max_enum_ranges) )
+  | Alternative_Type_Spec               ( (Set Non_Base_Type_Name)              ? (BoundedSize 2 Core_type_def_max_alternative_uidrefs))
+  | List_Type_Spec                      ( Core_uinteger_2, Non_Base_Type_Name)
+  | Restricted_Reference_Type_5_Spec    ( (Set Byte_Table_Name)                 ? (BoundedSize 1 Core_type_def_max_byte_table_uidrefs))
+  | Restricted_Reference_Type_6_Spec    ( (Set Object_Table_Name)               ? (BoundedSize 1 Core_type_def_max_object_table_uidrefs))
+  | General_Reference_Type_7_Spec
+  | General_Reference_Type_8_Spec
+  | General_Reference_Type_9_Spec
+  | General_Reference_Table_Type_Spec   ( String ? One_Of Core_Table_Kind_Names)
+  | Named_Value_Name_Type_Spec          ( Core_max_bytes_32, Non_Base_Type_Name)
+  | Named_Value_Integer_Type_Spec       ( Core_integer_2,  Non_Base_Type_Name)
+  | Named_Value_Uinteger_Type_Spec      ( Core_uinteger_2, Non_Base_Type_Name)
+  | Struct_Type_Spec                    ( [Named_Value_Type_Name]               ? (BoundedSize 1 Core_type_def_max_struct_uidrefs))
+  | Set_Type_Spec                       ( [(Core_uinteger_2, Core_uinteger_2)]  ? (BoundedSize 1 Core_type_def_max_set_ranges))
+
+
+
+
+stringSetParser :: (IsList l, Item l ~ String) => l -> Parser ByteString
+stringSetParser = choice . map (string . fromString) . toList
+
+
 -- | Parse the string in the Format colum
-formatParser :: Parser Some_Core_Format
-formatParser = Some_Core_Format <$> (baseTypeFormatParser <|> baseTypeFormatParser)
+formatSpecParser :: Parser Core_Format_Spec
+formatSpecParser = baseTypeFormatSpecParser
+               <|> simpleTypeFormatSpecParser
+               <?> "invalid Format specification"
 
+baseTypeFormatSpecParser :: Parser Core_Format_Spec
+baseTypeFormatSpecParser =  undefined -- TODO -- "Base_Type" *> stringSetParser core_Base_Type_Names
 
-baseTypeFormatParser :: Parser (Core_Format 0)
-baseTypeFormatParser = "Base_Type" *> pure Base_Type_Format
-
-simpleTypeFormatParser :: Parser (Core_Format 1)
-simpleTypeFormatParser = "Simple_Type" *> "," *> pure ( Simple_Type_Format ("bytes" <|> "max_bytes" <|> "integer" <|> "uinteger" )
-                                                 undefined)
+simpleTypeFormatSpecParser :: Parser Core_Format_Spec
+simpleTypeFormatSpecParser = undefined -- TODO -- string "Simple_Type" *> "," *> pure Simple_Type_Spec <$> undefined
 
 {-
 "Alternative_Type"
@@ -355,7 +408,7 @@ data EnumRow = EnumRow String [Int]
     deriving (Show)
 
 enumTableTitle :: Parser String
-enumTableTitle = unpack <$> ("Table " *> skipWhile isDigit_w8 *> " "
+enumTableTitle = unpack <$> ("Table " *> skipWhile isDigit *> " "
                                       *> takeWhile idChar <*
                                          takeTill isEndOfLine <* endOfLine)
              <?> "Enum Table Title"

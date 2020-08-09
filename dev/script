@@ -80,24 +80,24 @@ parseTable typeTableParser table65
 putStrLn "\n"
 runQ $ ppr <$> quoteDec ttype table65
 
-:{
-table76 =
-      "\n\
-      \\n\
-      \                         Table 76 Column_object_ref\n\
-      \    +-----------------------+-----------------+-----------------------------+\n\
-      \    |UID                    |Name             |Format                       |\n\
-      \    +-----------------------+-----------------+-----------------------------+\n\
-      \    |00 00 00 05 00 00 0C 07|Column_object_ref|Restricted_Reference_Type{6},|\n\
-      \    |                       |                 |uidref {ColumnTable_UID}     |\n\
-      \    +-----------------------+-----------------+-----------------------------+\n\
-      \\n" :: String
-:}
-putStrLn table76
-parseTable typeTableParser table76
-putStrLn "\n"
+-- :{
+-- table76 =
+--       "\n\
+--       \\n\
+--       \                         Table 76 Column_object_ref\n\
+--       \    +-----------------------+-----------------+-----------------------------+\n\
+--       \    |UID                    |Name             |Format                       |\n\
+--       \    +-----------------------+-----------------+-----------------------------+\n\
+--       \    |00 00 00 05 00 00 0C 07|Column_object_ref|Restricted_Reference_Type{6},|\n\
+--       \    |                       |                 |uidref {ColumnTable_UID}     |\n\
+--       \    +-----------------------+-----------------+-----------------------------+\n\
+--       \\n" :: String
+-- :}
+-- putStrLn table76
+-- parseTable typeTableParser table76
+-- putStrLn "\n"
+-- runQ $ ppr <$> quoteDec ttype table76
 
-runQ $ ppr <$> quoteDec ttype table76
 
 
 

@@ -45,6 +45,7 @@ dependencies:
 - mtl
 - pretty
 - regex-pcre-builtin
+- singletons
 - static-text
 - template-haskell
 - text

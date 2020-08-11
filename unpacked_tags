@@ -19141,6 +19141,2752 @@ liftCatch liftCatch211,212
 liftListen liftListen216,217
 liftPass liftPass223,224
 
+/Users/scott/unpackedHackagePackages/singletons-2.7/Setup.hs,250
+module Main Main1,2
+main main21,22
+haddockToBuildFlags haddockToBuildFlags34,35
+generateBuildModule generateBuildModule40,41
+buildSingletonsModule buildSingletonsModule102,103
+testSuiteName testSuiteName105,106
+amendGPD amendGPD108,109
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/ByHand.hs,11692
+module ByHand ByHand20,21
+import import27,28
+type Nat Nat37,38
+  Zero Zero39,40
+  Succ Succ40,41
+  Zero Zero39,40
+  Succ Succ40,41
+type Bool Bool43,44
+  False False45,46
+  True True46,47
+  False False45,46
+  True True46,47
+type Maybe Maybe48,49
+  Nothing Nothing50,51
+  Just Just51,52
+type List List55,56
+  Nil Nil57,58
+  Cons Cons58,59
+type Either Either61,62
+  Left Left63,64
+  Right Right64,65
+type PEq PEq72,73
+  type (=(74,75
+type SEq SEq78,79
+  (%(%==)80,81
+type If If83,84
+type family family84,85
+  If If85,86
+sIf sIf88,89
+type SNat SNat98,99
+  SZero SZero100,101
+  SSucc SSucc101,102
+type instance instance102,103
+type SuccSym0 SuccSym0104,105
+type instance instance106,107
+type EqualsNat EqualsNat108,109
+type family family109,110
+  EqualsNat EqualsNat110,111
+instance PEq PEq Nat113,114
+  type a a114,115
+instance SEq SEq Nat116,117
+  SZero SZero117,118
+  (S(SSucc_)119,120
+  (S(SSuccn)120,121
+instance SDecide SDecide Nat122,123
+  SZero SZero123,124
+  (S(SSuccm)124,125
+  SZero SZero128,129
+  (S(SSucc_)129,130
+instance SingI SingI Zero131,132
+  sing sing132,133
+instance SingI SingI n => SingI (Succ n)133,134
+  sing sing134,135
+instance SingKind SingKind Nat135,136
+  type Demote Demote136,137
+  fromSing fromSing137,138
+  toSing toSing139,140
+type SBool SBool144,145
+  SFalse SFalse146,147
+  STrue STrue147,148
+type instance instance148,149
+(&(&&)150,151
+False False151,152
+True True152,153
+type (&(154,155
+type family family155,156
+  False False156,157
+  True True157,158
+(%(%&&)159,160
+SFalse SFalse160,161
+STrue STrue162,163
+instance SingI SingI False165,166
+  sing sing166,167
+instance SingI SingI True167,168
+  sing sing168,169
+instance SingKind SingKind Bool169,170
+  type Demote Demote170,171
+  fromSing fromSing171,172
+  toSing toSing173,174
+type SMaybe SMaybe178,179
+  SNothing SNothing180,181
+  SJust SJust181,182
+  SJust :: forall k (a a181,182
+type instance instance182,183
+type EqualsMaybe EqualsMaybe184,185
+type family family185,186
+  EqualsMaybe EqualsMaybe186,187
+instance PEq PEq a => PEq (Maybe a)189,190
+  type m1 m1190,191
+instance SDecide SDecide k => SDecide (Maybe k)192,193
+  SNothing SNothing193,194
+  (S(SJustx)194,195
+  SNothing SNothing198,199
+  (S(SJust_)199,200
+instance SEq SEq k => SEq (Maybe k)201,202
+  SNothing SNothing202,203
+  (S(SJust_)204,205
+  (S(SJusta)205,206
+instance SingI SingI (Nothing :: Maybe k)207,208
+  sing sing208,209
+instance SingI SingI a => SingI (Just (a :: k))209,210
+  sing sing210,211
+instance SingKind SingKind k => SingKind (Maybe k)211,212
+  type Demote Demote212,213
+  fromSing fromSing213,214
+  toSing toSing215,216
+type SList SList222,223
+  SNil SNil224,225
+  SCons SCons225,226
+  SCons :: forall k (h h225,226
+  SCons :: forall k (h :: k) (t t225,226
+type instance instance226,227
+type NilSym0 NilSym0228,229
+type ConsSym0 ConsSym0231,232
+type instance instance233,234
+type ConsSym1 ConsSym1235,236
+type instance instance237,238
+type ConsSym2 ConsSym2239,240
+type EqualsList EqualsList242,243
+type family family243,244
+  EqualsList EqualsList244,245
+instance PEq PEq a => PEq (List a)247,248
+  type l1 l1248,249
+instance SEq SEq k => SEq (List k)250,251
+  SNil SNil251,252
+  (S(SCons__)253,254
+  (S(SConsab)254,255
+instance SDecide SDecide k => SDecide (List k)256,257
+  SNil SNil257,258
+  (S(SConsh1t1)258,259
+  SNil SNil263,264
+  (S(SCons__)264,265
+instance SingI SingI Nil266,267
+  sing sing267,268
+instance (S(SingI h, SingI t) => SingI (Cons (h :: k) (t :: List k))268,269
+  sing sing270,271
+instance SingKind SingKind k => SingKind (List k)271,272
+  type Demote Demote272,273
+  fromSing fromSing273,274
+  toSing toSing275,276
+type SEither SEither283,284
+  SLeft SLeft285,286
+  SLeft :: forall k1 (a a285,286
+  SRight SRight286,287
+  SRight :: forall k2 (b b286,287
+type instance instance287,288
+instance (S(SingI a) => SingI (Left (a :: k))289,290
+  sing sing290,291
+instance (S(SingI b) => SingI (Right (b :: k))291,292
+  sing sing292,293
+instance (S(SingKind k1, SingKind k2) => SingKind (Either k1 k2)293,294
+  type Demote Demote294,295
+  fromSing fromSing295,296
+  toSing toSing297,298
+instance (S(SDecide k1, SDecide k2) => SDecide (Either k1 k2)304,305
+  (S(SLeftx)305,306
+  (S(SRightx)309,310
+  (S(SLeft_)313,314
+  (S(SRight_)314,315
+type Composite Composite318,319
+  MkComp MkComp320,321
+type SComposite SComposite322,323
+  SMkComp SMkComp324,325
+  SMkComp :: forall k1 k2 (a a324,325
+type instance instance325,326
+instance SingI SingI a => SingI (MkComp (a :: Either (Maybe k1) k2))327,328
+  sing sing328,329
+instance (S(SingKind k1, SingKind k2) => SingKind (Composite k1 k2)329,330
+  type Demote Demote330,331
+  fromSing fromSing332,333
+  toSing toSing333,334
+instance (S(SDecide k1, SDecide k2) => SDecide (Composite k1 k2)337,338
+  (S(SMkCompx)338,339
+type Empty Empty345,346
+type SEmpty SEmpty347,348
+type instance instance349,350
+instance SingKind SingKind Empty350,351
+  type Demote Demote351,352
+  fromSing fromSing352,353
+  toSing toSing353,354
+type Vec Vec357,358
+  VNil VNil359,360
+  VCons VCons360,361
+type Rep Rep362,363
+data Rep = Nat Nat363,364
+data Rep = Nat | Maybe Maybe363,364
+data Rep = Nat | Maybe Rep | Vec Vec363,364
+type SRep SRep365,366
+  SNat SNat367,368
+  SMaybe SMaybe368,369
+  SVec SVec369,370
+type instance instance370,371
+instance SingI SingI Nat372,373
+  sing sing373,374
+instance SingI SingI a => SingI (Maybe a)374,375
+  sing sing375,376
+instance (S(SingI a, SingI n) => SingI (Vec a n)376,377
+  sing sing377,378
+instance SingKind SingKind Type379,380
+  type Demote Demote380,381
+  fromSing fromSing382,383
+  toSing toSing386,387
+instance SDecide SDecide Type395,396
+  SNat SNat396,397
+  (S(SMaybe{})399,400
+  (S(SMaybea)400,401
+  (S(SMaybe{})404,405
+  (S(SVec{})405,406
+  (S(SVeca1n1)407,408
+type EqualsType EqualsType413,414
+type family family414,415
+  EqualsType EqualsType415,416
+instance PEq PEq Type417,418
+  type a a418,419
+instance SEq SEq Type420,421
+  a a421,422
+isJust isJust430,431
+type IsJust IsJust434,435
+type family family435,436
+    IsJust IsJust436,437
+type IsJustSym0 IsJustSym0440,441
+type instance instance442,443
+sIsJust sIsJust444,445
+pred pred448,449
+type Pred Pred452,453
+type family family453,454
+  Pred Pred454,455
+type PredSym0 PredSym0457,458
+type instance instance459,460
+sPred sPred461,462
+map map465,466
+type Map Map469,470
+type family family470,471
+    Map Map471,472
+type MapSym1 MapSym1475,476
+type MapSym0 MapSym0477,478
+type instance instance479,480
+sMap sMap482,483
+sMap2 sMap2489,490
+foo foo495,496
+bar bar499,500
+baz baz502,503
+zipWith zipWith505,506
+type ZipWith ZipWith511,512
+type family family512,513
+  ZipWith ZipWith513,514
+type ZipWithSym2 ZipWithSym2518,519
+type ZipWithSym1 ZipWithSym1520,521
+type ZipWithSym0 ZipWithSym0522,523
+type instance instance524,525
+sZipWith sZipWith529,530
+either either537,538
+type Either_ Either_541,542
+type family family542,543
+    Either_ Either_543,544
+type Either_Sym2 Either_Sym2547,548
+type Either_Sym1 Either_Sym1549,550
+type Either_Sym0 Either_Sym0551,552
+type instance instance553,554
+sEither sEither557,558
+sEither2 sEither2569,570
+sEither2 sEither2577,578
+eitherFoo eitherFoo580,581
+eitherBar eitherBar584,585
+eitherToNat eitherToNat590,591
+type EitherToNat EitherToNat594,595
+type family family595,596
+    EitherToNat EitherToNat596,597
+sEitherToNat sEitherToNat599,600
+liftMaybe liftMaybe603,604
+type LiftMaybe LiftMaybe607,608
+type family family608,609
+    LiftMaybe LiftMaybe609,610
+type LiftMaybeSym1 LiftMaybeSym1612,613
+type LiftMaybeSym0 LiftMaybeSym0614,615
+type instance instance616,617
+sLiftMaybe sLiftMaybe619,620
+(+(+)625,626
+Zero Zero626,627
+(S(Succx)627,628
+type (+(629,630
+type family family630,631
+  Zero Zero631,632
+  (S(Succx)632,633
+type (+(635,636
+type instance instance639,640
+(%(%+)642,643
+SZero SZero643,644
+(S(SSuccx)644,645
+(-(-)646,647
+Zero Zero647,648
+(S(Succx)648,649
+type (-(651,652
+type family family652,653
+  Zero Zero653,654
+  (S(Succx)654,655
+type (-(657,658
+type instance instance661,662
+(%(%-)664,665
+SZero SZero665,666
+(S(SSuccx)666,667
+isZero isZero669,670
+type IsZero IsZero672,673
+type family family673,674
+  IsZero IsZero674,675
+type IsZeroSym0 IsZeroSym0676,677
+type instance instance678,679
+sIsZero sIsZero680,681
+(|(||)683,684
+False False684,685
+True True685,686
+type (|(687,688
+type family family688,689
+  False False689,690
+  True True690,691
+type (|(692,693
+type instance instance696,697
+(%(%||)699,700
+SFalse SFalse700,701
+STrue STrue701,702
+type Contains Contains709,710
+type family family710,711
+  Contains Contains711,712
+type ContainsSym1 ContainsSym1714,715
+type ContainsSym0 ContainsSym0716,717
+type instance instance718,719
+sContains sContains729,730
+type Cont Cont749,750
+type family family750,751
+  Cont Cont751,752
+data Lambda10Sym0 Lambda10Sym0753,754
+  KindInferenceLambda10Sym0 KindInferenceLambda10Sym0754,755
+type instance instance757,758
+data Lambda10Sym1 Lambda10Sym1759,760
+  KindInferenceLambda10Sym1 KindInferenceLambda10Sym1760,761
+type instance instance763,764
+type Lambda10Sym2 Lambda10Sym2765,766
+type family family767,768
+  Lambda10 Lambda10768,769
+type family family770,771
+  Case10 Case10771,772
+data (=(774,775
+  (:###==$) )775,776
+data (==$=774,775
+type instance instance778,779
+data (=(780,781
+  (:###==$$) )781,782
+data (==$=780,781
+type instance instance784,785
+type (=(786,787
+impNat impNat789,790
+callImpNat callImpNat792,793
+instance Show Show (SNat n)795,796
+  show show796,797
+findIndices' findIndices'808,809
+type FindIndices FindIndices818,819
+type family family819,820
+  FindIndices FindIndices820,821
+type family family822,823
+  Let123Loop Let123Loop823,824
+  Let123Loop p ls n (x `Cons`Cons824,825
+type family family826,827
+  Case123 Case123827,828
+data Let123LoopSym2 Let123LoopSym2830,831
+  Let123LoopSym2KindInfernece Let123LoopSym2KindInfernece831,832
+type instance instance834,835
+data Let123LoopSym3 Let123LoopSym3836,837
+  KindInferenceLet123LoopSym3 KindInferenceLet123LoopSym3837,838
+type instance instance840,841
+type Let123LoopSym4 Let123LoopSym4842,843
+data FindIndicesSym0 FindIndicesSym0844,845
+  KindInferenceFindIndicesSym0 KindInferenceFindIndicesSym0845,846
+type instance instance848,849
+data FindIndicesSym1 FindIndicesSym1850,851
+  KindInferenceFindIndicesSym1 KindInferenceFindIndicesSym1851,852
+type instance instance854,855
+type FindIndicesSym2 FindIndicesSym2856,857
+sFindIndices sFindIndices858,859
+fI fI875,876
+type FI FI885,886
+type FISym0 FISym0887,888
+type family family889,890
+  Lambda22 Lambda22890,891
+data Lambda22Sym0 Lambda22Sym0892,893
+  KindInferenceLambda22Sym0 KindInferenceLambda22Sym0893,894
+type instance instance896,897
+data Lambda22Sym1 Lambda22Sym1898,899
+  KindInferenceLambda22Sym1 KindInferenceLambda22Sym1899,900
+type instance instance902,903
+type Lambda22Sym2 Lambda22Sym2904,905
+    let lambda :: forall {-(t1 :: a ~> Bool)-} t1 t1911,912
+type G G930,931
+  MkG MkG932,933
+type SG SG934,935
+  SMkG SMkG936,937
+type instance instance937,938
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/SingletonsTestSuite.hs,104
+module Main Main0,1
+main main9,10
+tests tests12,13
+afterSingletonsNat afterSingletonsNat152,153
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/SingletonsTestSuiteUtils.hs,390
+module SingletonsTestSuiteUtils SingletonsTestSuiteUtils5,6
+newtype ProcessException ProcessException29,30
+goldenPath goldenPath34,35
+ghcOpts ghcOpts38,39
+compileAndDumpTest compileAndDumpTest81,82
+compileAndDumpStdTest compileAndDumpStdTest110,111
+testCompileAndDumpGroup testCompileAndDumpGroup118,119
+normalizeOutput normalizeOutput156,157
+cleanFiles cleanFiles177,178
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/GradingClient/Main.hs,52
+module Main Main12,13
+$($19,20
+main main39,40
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/GradingClient/Database.hs,2791
+module GradingClient.Database GradingClient.Database22,23
+$($34,35
+fromNat fromNat40,41
+toNat toNat44,45
+instance Show Show Nat50,51
+  show show51,52
+instance Read Read Nat52,53
+  readsPrec readsPrec53,54
+$($55,56
+type family family105,106
+type instance instance106,107
+data Vec Vec112,113
+  VNil VNil113,114
+  VCons VCons114,115
+instance Read Read (Vec a Zero)117,118
+  readsPrec readsPrec118,119
+instance (R(Read a, Read (Vec a n)) => Read (Vec a (Succ n))119,120
+  readsPrec readsPrec120,121
+data VecReadInstance VecReadInstance131,132
+  VecReadInstance VecReadInstance132,133
+vecReadInstance vecReadInstance137,138
+instance Show Show a => Show (Vec a n)143,144
+  show show144,145
+data ElUReadInstance ElUReadInstance153,154
+  ElUReadInstance ElUReadInstance154,155
+elUReadInstance elUReadInstance156,157
+data ElUShowInstance ElUShowInstance164,165
+  ElUShowInstance ElUShowInstance165,166
+elUShowInstance elUShowInstance167,168
+showAttrProof showAttrProof174,175
+data Row Row178,179
+  EmptyRow EmptyRow179,180
+  ConsRow ConsRow180,181
+instance Show Show (Row (Sch '[]))183,184
+  show show184,185
+instance (S(Show (El u), Show (Row (Sch attrs))) => Show (Row (Sch ((Attr name u) ': attrs)))185,186
+  show show187,188
+data Handle Handle195,196
+  Handle Handle196,197
+type ErrorM ErrorM210,211
+readRow readRow215,216
+readRows readRows233,234
+connect connect241,242
+data InProof InProof278,279
+  InElt InElt279,280
+  InTail InTail280,281
+class InC InC282,283
+  inProof inProof283,284
+instance InC InC name u (Sch ((Attr name u) ': schTail))284,285
+  inProof inProof285,286
+instance InC InC name u (Sch attrs) => InC name u (Sch (a ': attrs))286,287
+  inProof inProof287,288
+data SubsetProof SubsetProof289,290
+  SubsetEmpty SubsetEmpty290,291
+  SubsetCons SubsetCons291,292
+class SubsetC SubsetC294,295
+  subset subset295,296
+instance SubsetC SubsetC (Sch '[]) s'297,298
+  subset subset298,299
+instance (I(InC name u s', SubsetC (Sch attrs) s') => SubsetC (Sch ((Attr name u) ': attrs)) s'299,300
+  subset subset301,302
+data RA RA306,307
+  Read Read308,309
+  Union Union313,314
+  Diff Diff317,318
+  Product Product321,322
+  Project Project327,328
+  Select Select335,336
+data Expr Expr344,345
+  Equal Equal346,347
+  LessThan LessThan349,350
+  LiteralNat LiteralNat352,353
+  Element Element356,357
+getId getId363,364
+changeId changeId368,369
+eqRow eqRow373,374
+eqAttr eqAttr377,378
+rowAppend rowAppend410,411
+choose choose424,425
+query query432,433
+data G G536,537
+  GCons GCons537,538
+data H H539,540
+  HCons HCons540,541
+  HNil HNil541,542
+data J J543,544
+  JCons JCons544,545
+  JNil JNil545,546
+eval eval547,548
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/InsertionSort/InsertionSortImp.hs,1908
+module InsertionSort.InsertionSortImp InsertionSort.InsertionSortImp34,35
+data Dict Dict41,42
+  Dict Dict42,43
+$($45,46
+toNat toNat50,51
+fromNat fromNat55,56
+class (a a60,61
+instance Zero Zero :< = : a61,62
+instance (a(a :< = : b) => (Succ a) :< = : (Succ b)62,63
+data AscendingProof AscendingProof65,66
+  AscEmpty AscEmpty66,67
+  AscOne AscOne67,68
+  AscCons AscCons68,69
+data AscendingProof :: [Nat] [Nat]65,66
+class AscendingC AscendingC72,73
+  ascendingProof ascendingProof73,74
+instance AscendingC AscendingC '[]76,77
+  ascendingProof ascendingProof77,78
+instance AscendingC AscendingC '[n]78,79
+  ascendingProof ascendingProof79,80
+instance (a(a :< = : b, AscendingC (b ': rest)) => AscendingC (a ': b ': rest)80,81
+  ascendingProof ascendingProof81,82
+data InsertionProof InsertionProof85,86
+data InsertionProof (x x85,86
+data InsertionProof (x :: k) (l1 l185,86
+data InsertionProof (x :: k) (l1 :: [k]) (l2 l285,86
+  InsHere InsHere86,87
+  InsLater InsLater87,88
+data InsertionProof (x x85,86
+class InsertionC InsertionC90,91
+  insertionProof insertionProof91,92
+instance InsertionC InsertionC x l (x ': l)93,94
+  insertionProof insertionProof94,95
+instance InsertionC InsertionC x l1 l2 => InsertionC x (y ': l1) (y ': l2)95,96
+  insertionProof insertionProof96,97
+data PermutationProof PermutationProof99,100
+data PermutationProof (l1 l199,100
+data PermutationProof (l1 :: [k]) (l2 l299,100
+  PermId PermId100,101
+  PermIns PermIns101,102
+data PermutationProof (l1 l199,100
+$($105,106
+sLeq_true__le sLeq_true__le123,124
+sLeq_false__nle sLeq_false__nle132,133
+insert_ascending insert_ascending142,143
+insert_insertion insert_insertion167,168
+insertionSort_ascending insertionSort_ascending176,177
+insertionSort_permutes insertionSort_permutes188,189
+insertionSort_correct insertionSort_correct201,202
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T378a.hs,604
+module T378a T378a0,1
+$($6,7
+ex1 ex117,18
+type PEx1 PEx120,21
+sEx1 sEx123,24
+ex2 ex226,27
+type PEx2 PEx229,30
+sEx2 sEx232,33
+proxyEx1, proxyEx2, proxyEx3, proxyEx4 proxyEx435,36
+proxyEx1, proxyEx2, proxyEx3,proxyEx335,36
+proxyEx1, proxyEx2,proxyEx235,36
+proxyEx1,proxyEx135,36
+proxyEx2 proxyEx237,38
+proxyEx3 proxyEx338,39
+proxyEx4 proxyEx439,40
+type ProxyEx1 ProxyEx141,42
+type ProxyEx2 ProxyEx244,45
+type ProxyEx3 ProxyEx347,48
+type ProxyEx4 ProxyEx450,51
+sProxyEx1 sProxyEx153,54
+sProxyEx2 sProxyEx256,57
+sProxyEx3 sProxyEx359,60
+sProxyEx4 sProxyEx462,63
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/CaseExpressions.hs,266
+module Singletons.CaseExpressions Singletons.CaseExpressions2,3
+$($9,10
+foo1a foo1a37,38
+foo1b foo1b40,41
+foo2a foo2a43,44
+foo2b foo2b46,47
+foo3a foo3a49,50
+foo3b foo3b52,53
+foo4a foo4a55,56
+foo4b foo4b58,59
+foo5a foo5a61,62
+foo5b foo5b64,65
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T229.hs,31
+module T229 T2290,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T209.hs,31
+module T209 T2092,3
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/FunctorLikeDeriving.hs,61
+module FunctorLikeDeriving FunctorLikeDeriving3,4
+$($8,9
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/BoxUnBox.hs,61
+module Singletons.BoxUnBox Singletons.BoxUnBox0,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Contains.hs,61
+module Singletons.Contains Singletons.Contains0,1
+$($8,9
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/AsPattern.hs,64
+module Singletons.AsPattern Singletons.AsPattern0,1
+$($9,10
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Undef.hs,55
+module Singletons.Undef Singletons.Undef1,2
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T249.hs,31
+module T249 T2490,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T358.hs,31
+module T358 T3580,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/ShowDeriving.hs,243
+module Singletons.ShowDeriving Singletons.ShowDeriving0,1
+$($7,8
+foo1 foo121,22
+foo2a foo2a24,25
+foo2b :: "True `MkFoo2b`MkFoo2b27,28
+foo2b foo2b27,28
+foo2c foo2c30,31
+foo2d' foo2d'33,34
+foo2d'' foo2d''36,37
+foo3 foo339,40
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/BoundedDeriving.hs,303
+module Singletons.BoundedDeriving Singletons.BoundedDeriving0,1
+$($6,7
+foo1a foo1a17,18
+foo1b foo1b20,21
+foo1c foo1c23,24
+foo1d foo1d26,27
+foo2a foo2a29,30
+foo2b foo2b32,33
+foo2c foo2c35,36
+foo2d foo2d38,39
+foo3a foo3a41,42
+foo3b foo3b44,45
+foo3c foo3c47,48
+foo3d foo3d50,51
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/PolyKinds.hs,54
+module Singletons.PolyKinds Singletons.PolyKinds0,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T402.hs,55
+module T402 T4020,1
+type family family5,6
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T401b.hs,24
+module T401b T401b0,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T412.hs,294
+module T412 T4120,1
+  infix 5 `C1`C15,6
+infix 5 `C2`C219,20
+  infix 6 `m2`m221,22
+infixl 5 `T2a`T2a24,25
+type family family26,27
+  T2b T2b27,28
+infixr 5 `D2`D229,30
+data D2 a b = MkD2 MkD230,31
+data D2 a b = MkD2 { d2A d2A30,31
+data D2 a b = MkD2 { d2A :: a, d2B d2B30,31
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/TopLevelPatterns.hs,79
+module Singletons.TopLevelPatterns Singletons.TopLevelPatterns3,4
+$($10,11
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T316.hs,31
+module T316 T3160,1
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T322.hs,44
+module T322 T3220,1
+$($5,6
+f1 f111,12
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Lambdas.hs,327
+module Singletons.Lambdas Singletons.Lambdas4,5
+$($10,11
+foo1a foo1a53,54
+foo1b foo1b56,57
+foo2a foo2a59,60
+foo2b foo2b62,63
+foo3a foo3a65,66
+foo3b foo3b68,69
+foo4a foo4a71,72
+foo4b foo4b74,75
+foo5a foo5a77,78
+foo5b foo5b80,81
+foo6a foo6a83,84
+foo6b foo6b86,87
+foo7a foo7a89,90
+foo7b foo7b92,93
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T332.hs,31
+module T332 T3320,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T124.hs,68
+module Singletons.T124 Singletons.T1240,1
+$($5,6
+bar bar11,12
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T175.hs,35
+module T175 T17510,11
+$($15,16
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T54.hs,51
+module Singletons.T54 Singletons.T542,3
+$($7,8
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T326.hs,128
+module T326 T3260,1
+class C1 C15,6
+  (<(<%>)7,8
+class C2 C29,10
+  (<(<%%>)11,12
+test1 test116,17
+test2 test220,21
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/BadBoundedDeriving.hs,81
+module Singletons.BadBoundedDeriving Singletons.BadBoundedDeriving0,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T312.hs,31
+module T312 T3120,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/PatternMatching.hs,172
+module Singletons.PatternMatching Singletons.PatternMatching3,4
+$($10,11
+test1 test137,38
+test2 test240,41
+test3 test343,44
+test4 test446,47
+test5 test549,50
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/TypeRepTYPE.hs,244
+module TypeRepTYPE TypeRepTYPE1,2
+eqTYPETest1 eqTYPETest110,11
+eqTYPETest2 eqTYPETest213,14
+f f16,17
+data MaybeWordRep MaybeWordRep25,26
+  = NothingWordRepNothingWordRep26,27
+  | JustWordRep JustWordRep27,28
+g g29,30
+h h38,39
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T353.hs,146
+module T353 T3530,1
+$($6,7
+data Prod Prod12,13
+data Prod f g p = MkProd MkProd12,13
+data Foo Foo15,16
+data Foo a b = MkFoo MkFoo15,16
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T145.hs,44
+module Singletons.T145 Singletons.T1450,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T367.hs,48
+module T367 T3670,1
+$($5,6
+test test10,11
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T376.hs,31
+module T376 T3760,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T342.hs,31
+module T342 T3420,1
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T313.hs,31
+module T313 T3130,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T160.hs,42
+module T160 T1600,1
+$($6,7
+f f11,12
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Fixity.hs,57
+module Singletons.Fixity Singletons.Fixity0,1
+$($7,8
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/NatSymbolReflexive.hs,85
+module NatSymbolReflexive NatSymbolReflexive0,1
+test1 test16,7
+test2 test29,10
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Operators.hs,63
+module Singletons.Operators Singletons.Operators0,1
+$($7,8
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T183.hs,31
+module T183 T1830,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T226.hs,22
+module T226 T2260,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T197.hs,31
+module T197 T1970,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T206.hs,31
+module T206 T2060,1
+x x4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Classes.hs,403
+module Singletons.Classes Singletons.Classes0,1
+$($10,11
+      F `mycompare`mycompare54,55
+$($66,67
+foo1a :: Proxy (Zero `Mycompare`Mycompare75,76
+foo1a foo1a75,76
+foo1b foo1b78,79
+foo2a :: Proxy (A `Mycompare`Mycompare81,82
+foo2a foo2a81,82
+foo2b foo2b84,85
+foo3a :: Proxy ('() `Mycompare`Mycompare87,88
+foo3a foo3a87,88
+foo3b foo3b90,91
+foo4a foo4a93,94
+foo4b foo4b96,97
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T323.hs,37
+module T323 T3230,1
+test test5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T150.hs,31
+module T150 T1500,1
+$($8,9
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T216.hs,119
+module T216 T2160,1
+type family family5,6
+  MyProxy MyProxy6,7
+type family family8,9
+  Symmetry Symmetry9,10
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T187.hs,22
+module T187 T1870,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T297.hs,31
+module T297 T2970,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/LetStatements.hs,681
+module Singletons.LetStatements Singletons.LetStatements3,4
+$($11,12
+foo1a foo1a110,111
+foo1b foo1b113,114
+foo2a foo2a116,117
+foo2b foo2b119,120
+foo3a foo3a122,123
+foo3b foo3b125,126
+foo4a foo4a128,129
+foo4b foo4b131,132
+foo5a foo5a134,135
+foo5b foo5b137,138
+foo6a foo6a140,141
+foo6b foo6b143,144
+foo7a foo7a146,147
+foo7b foo7b149,150
+foo8a foo8a152,153
+foo8b foo8b155,156
+foo9a foo9a158,159
+foo9b foo9b161,162
+foo10a foo10a164,165
+foo10b foo10b167,168
+foo11a foo11a170,171
+foo11b foo11b173,174
+foo12a foo12a176,177
+foo12b foo12b179,180
+foo13a foo13a182,183
+foo13b foo13b185,186
+foo14a foo14a188,189
+foo14b foo14b191,192
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T157.hs,35
+module T157 T1570,1
+foo foo4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T163.hs,31
+module T163 T1630,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T190.hs,33
+module T190 T1907,8
+$($11,12
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/EnumDeriving.hs,69
+module Singletons.EnumDeriving Singletons.EnumDeriving0,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T136b.hs,35
+module T136b T136b0,1
+$($10,11
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T287.hs,31
+module T287 T2870,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T136.hs,81
+module Binary Binary7,8
+type Bit Bit14,15
+type BiNat BiNat15,16
+$($17,18
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T167.hs,87
+module Singletons.T167 Singletons.T16710,11
+type DiffList DiffList15,16
+$($17,18
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T153.hs,57
+module Singletons.T153 Singletons.T1533,4
+foo foo8,9
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Sections.hs,175
+module Singletons.Sections Singletons.Sections0,1
+$($8,9
+foo1a foo1a23,24
+foo1b foo1b26,27
+foo2a foo2a29,30
+foo2b foo2b32,33
+foo3a foo3a35,36
+foo3b foo3b38,39
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T371.hs,48
+module T371 T3710,1
+$($5,6
+main main10,11
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Error.hs,55
+module Singletons.Error Singletons.Error0,1
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T33.hs,51
+module Singletons.T33 Singletons.T330,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T184.hs,32
+module T184 T1841,2
+$($9,10
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T166.hs,51
+module SingletonsBug SingletonsBug8,9
+$($13,14
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T204.hs,31
+module T204 T2040,1
+$($7,8
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/ReturnFunc.hs,67
+module Singletons.ReturnFunc Singletons.ReturnFunc0,1
+$($12,13
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T271.hs,31
+module T271 T2710,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/HigherOrder.hs,183
+module Singletons.HigherOrder Singletons.HigherOrder0,1
+$($12,13
+foo1a foo1a40,41
+foo1b foo1b43,44
+foo2a foo2a46,47
+foo2b foo2b49,50
+foo3a foo3a52,53
+foo3b foo3b55,56
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T176.hs,33
+module T176 T1768,9
+$($14,15
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/OverloadedStrings.hs,57
+module OverloadedStrings OverloadedStrings1,2
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T296.hs,31
+module T296 T2960,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T200.hs,31
+module T200 T2000,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/PolyKindsApp.hs,60
+module Singletons.PolyKindsApp Singletons.PolyKindsApp0,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/OrdDeriving.hs,640
+module Singletons.OrdDeriving Singletons.OrdDeriving0,1
+$($5,6
+foo1a foo1a17,18
+foo1b foo1b20,21
+foo2a :: Proxy (Succ (Succ Zero) `Compare`Compare23,24
+foo2a foo2a23,24
+foo2b foo2b26,27
+foo3a :: Proxy (A 1 2 3 4 `Compare`Compare29,30
+foo3a foo3a29,30
+foo3b foo3b32,33
+foo4a :: Proxy (A 1 2 3 4 `Compare`Compare35,36
+foo4a foo4a35,36
+foo4b foo4b38,39
+foo5a :: Proxy (A 1 2 3 4 `Compare`Compare41,42
+foo5a foo5a41,42
+foo5b foo5b44,45
+foo6a :: Proxy (A 1 2 3 4 `Compare`Compare47,48
+foo6a foo6a47,48
+foo6b foo6b50,51
+foo7a :: Proxy (B 1 2 3 4 `Compare`Compare53,54
+foo7a foo7a53,54
+foo7b foo7b56,57
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T172.hs,33
+module T172 T1728,9
+$($14,15
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T197b.hs,33
+module T197b T197b0,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/EqInstances.hs,58
+module Singletons.EqInstances Singletons.EqInstances0,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T401.hs,31
+module T401 T4010,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Maybe.hs,55
+module Singletons.Maybe Singletons.Maybe0,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T78.hs,81
+module Singletons.T78 Singletons.T780,1
+type MaybeBool MaybeBool5,6
+$($7,8
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T29.hs,203
+module Singletons.T29 Singletons.T290,1
+$($5,6
+foo1a foo1a21,22
+foo1b foo1b24,25
+bar1a bar1a27,28
+bar1b bar1b30,31
+baz1a baz1a33,34
+baz1b baz1b36,37
+ban1a ban1a39,40
+ban1b ban1b42,43
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T159.hs,389
+module T159 T1590,1
+data T0 T04,5
+data T0 = A A4,5
+data T0 = A | B B4,5
+data T0 = A | B | C C4,5
+data T0 = A | B | C | D D4,5
+data T0 = A | B | C | D | E E4,5
+data T0 = A | B | C | D | E | FF4,5
+data T1 T17,8
+data T1 = N1 N17,8
+data T1 = N1 | C1 C17,8
+data T1 = N1 | C1 T0 T1 | T0 T07,8
+infixr 5 `C1`C110,11
+singletons singletons15,16
+t1 t122,23
+t2 t225,26
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Star.hs,101
+module Singletons.Star Singletons.Star0,1
+data Vec Vec8,9
+  VNil VNil9,10
+  VCons VCons10,11
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Nat.hs,51
+module Singletons.Nat Singletons.Nat0,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/StandaloneDeriving.hs,119
+module Singletons.StandaloneDeriving Singletons.StandaloneDeriving0,1
+$($6,7
+test1 test125,26
+test2 test228,29
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Empty.hs,46
+module Singletons.Empty Singletons.Empty0,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T378b.hs,143
+module T378b T378b0,1
+$($5,6
+type CExP CExP28,29
+type CExS CExS31,32
+type DExS DExS34,35
+type FEx0 FEx037,38
+type FEx1 FEx140,41
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Classes2.hs,63
+module Singletons.Classes2 Singletons.Classes20,1
+$($11,12
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T410.hs,31
+module T410 T4100,1
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/LambdasComprehensive.hs,194
+module Singletons.LambdasComprehensive Singletons.LambdasComprehensive0,1
+$($9,10
+fooTest1a fooTest1a18,19
+fooTest1b fooTest1b21,22
+barTest1a barTest1a24,25
+barTest1b barTest1b27,28
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/Records.hs,135
+module Singletons.Records Singletons.Records0,1
+$($6,7
+foo1a foo1a18,19
+foo1b foo1b21,22
+foo2a foo2a24,25
+foo2b foo2b27,28
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/LambdaCase.hs,179
+module Singletons.LambdaCase Singletons.LambdaCase0,1
+$($6,7
+foo1a foo1a22,23
+foo1b foo1b25,26
+foo2a foo2a28,29
+foo2b foo2b31,32
+foo3a foo3a34,35
+foo3b foo3b37,38
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/EmptyShowDeriving.hs,70
+module Singletons.EmptyShowDeriving Singletons.EmptyShowDeriving0,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/BadEnumDeriving.hs,75
+module Singletons.BadEnumDeriving Singletons.BadEnumDeriving0,1
+$($4,5
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T178.hs,31
+module T178 T1780,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/FunDeps.hs,59
+module Singletons.FunDeps Singletons.FunDeps2,3
+$($8,9
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/DataValues.hs,65
+module Singletons.DataValues Singletons.DataValues0,1
+$($8,9
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Singletons/T414.hs,22
+module T414 T4140,1
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Promote/Prelude.hs,1449
+module Promote.Prelude Promote.Prelude0,1
+lengthTest1a lengthTest1a7,8
+lengthTest1b lengthTest1b10,11
+lengthTest2a lengthTest2a13,14
+lengthTest2b lengthTest2b16,17
+sumTest1a sumTest1a19,20
+sumTest1b sumTest1b22,23
+sumTest2a sumTest2a25,26
+sumTest2b sumTest2b28,29
+productTest1a productTest1a31,32
+productTest1b productTest1b34,35
+productTest2a productTest2a37,38
+productTest2b productTest2b40,41
+takeTest1a takeTest1a43,44
+takeTest1b takeTest1b46,47
+takeTest2a takeTest2a49,50
+takeTest2b takeTest2b52,53
+dropTest1a dropTest1a55,56
+dropTest1b dropTest1b58,59
+dropTest2a dropTest2a61,62
+dropTest2b dropTest2b64,65
+splitAtTest1a splitAtTest1a67,68
+splitAtTest1b splitAtTest1b70,71
+splitAtTest2a splitAtTest2a73,74
+splitAtTest2b splitAtTest2b76,77
+indexingTest1a indexingTest1a79,80
+indexingTest1b indexingTest1b82,83
+indexingTest2a indexingTest2a85,86
+indexingTest2b indexingTest2b88,89
+replicateTest1a replicateTest1a91,92
+replicateTest1b replicateTest1b94,95
+replicateTest2a replicateTest2a97,98
+replicateTest2b replicateTest2b100,101
+$($103,104
+findIndexTest1a findIndexTest1a109,110
+findIndexTest1b findIndexTest1b112,113
+findIndicesTest1a findIndicesTest1a115,116
+findIndicesTest1b findIndicesTest1b118,119
+transposeTest1a transposeTest1a121,122
+transposeTest1b transposeTest1b124,125
+transposeTest2a transposeTest2a127,128
+transposeTest2b transposeTest2b130,131
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Promote/Newtypes.hs,55
+module Promote.Newtypes Promote.Newtypes0,1
+$($6,7
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Promote/Constructors.hs,64
+module Promote.Constructors Promote.Constructors0,1
+$($9,10
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Promote/T180.hs,43
+module T180 T1800,1
+promote promote5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Promote/T361.hs,31
+module T361 T3610,1
+$($7,8
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Promote/GenDefunSymbols.hs,217
+module Promote.GenDefunSymbols Promote.GenDefunSymbols0,1
+type family family8,9
+    LiftMaybe LiftMaybe9,10
+data NatT NatT12,13
+data NatT = Zero Zero12,13
+data NatT = Zero | Succ Succ12,13
+type a a14,15
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/compile-and-dump/Promote/Pragmas.hs,53
+module Promote.Pragmas Promote.Pragmas0,1
+$($5,6
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/tests/ByHand2.hs,2987
+module ByHand2 ByHand25,6
+type Nat Nat11,12
+data Nat = Zero Zero12,13
+data Nat = Zero | Succ Succ12,13
+type Bool Bool14,15
+data Bool = False False15,16
+data Bool = False | TrueTrue15,16
+type Ordering Ordering17,18
+data Ordering = LT LT18,19
+data Ordering = LT | EQ EQ18,19
+data Ordering = LT | EQ | GTGT18,19
+not not20,21
+type Eq Eq24,25
+  (=(==)26,27
+  (/(/=)27,28
+  infix infix28,29
+  x x30,31
+instance Eq Eq Nat33,34
+  Zero Zero34,35
+  Succ Succ36,37
+type SBool SBool39,40
+  SFalse SFalse41,42
+  STrue STrue42,43
+type instance instance43,44
+type SNat SNat45,46
+  SZero SZero47,48
+  SSucc SSucc48,49
+type instance instance49,50
+type Not Not51,52
+type family family52,53
+  Not Not53,54
+sNot sNot56,57
+type PEq PEq60,61
+  type (=(62,63
+  type x x65,66
+instance PEq PEq Nat68,69
+  type 'Zero 'Zero69,70
+  type 'Succ 'Succ70,71
+  type 'Zero 'Zero71,72
+  type 'Succ 'Succ72,73
+type SEq SEq74,75
+  (%(%==)76,77
+  (%(%/=)77,78
+  default default79,80
+  x x80,81
+  default default82,83
+  x x83,84
+instance SEq SEq Nat85,86
+  (%(%==)86,87
+  SZero SZero87,88
+  SSucc SSucc88,89
+  SZero SZero89,90
+  SSucc SSucc90,91
+instance Eq Eq Ordering92,93
+  LT LT93,94
+  EQ EQ96,97
+  GT GT99,100
+type Ord Ord103,104
+  compare compare105,106
+  (<(<)106,107
+  x x108,109
+type POrd POrd110,111
+  type Compare Compare112,113
+  type (<(113,114
+  type x x115,116
+instance Ord Ord Nat117,118
+  compare compare118,119
+instance POrd POrd Nat123,124
+  type Compare Compare124,125
+type SOrdering SOrdering129,130
+  SLT SLT131,132
+  SEQ SEQ132,133
+  SGT SGT133,134
+type instance instance134,135
+instance PEq PEq Ordering136,137
+  type 'LT 'LT137,138
+  type 'EQ 'EQ140,141
+  type 'GT 'GT143,144
+instance SEq SEq Ordering147,148
+  SLT SLT148,149
+  SEQ SEQ151,152
+  SGT SGT154,155
+type SOrd SOrd158,159
+  sCompare sCompare160,161
+  (%(%<)161,162
+  default default163,164
+  x x164,165
+instance SOrd SOrd Nat166,167
+  sCompare sCompare167,168
+type Pointed Pointed172,173
+  point point174,175
+type PPointed PPointed176,177
+  type Point Point178,179
+type SPointed SPointed180,181
+  sPoint sPoint182,183
+instance Pointed Pointed Nat184,185
+  point point185,186
+instance PPointed PPointed Nat187,188
+  type Point Point188,189
+instance SPointed SPointed Nat190,191
+  sPoint sPoint191,192
+type FD FD195,196
+  meth meth197,198
+  l2r l2r198,199
+instance FD FD Bool Nat200,201
+  meth meth201,202
+  l2r l2r202,203
+t1 t1205,206
+t2 t2206,207
+type PFD PFD208,209
+  type Meth Meth210,211
+  type L2r L2r211,212
+instance PFD PFD Bool Nat213,214
+  type Meth Meth214,215
+  type L2r L2r215,216
+type T1 T1218,219
+type T2 T2221,222
+type SFD SFD224,225
+  sMeth sMeth226,227
+  sL2r sL2r227,228
+instance SFD SFD Bool Nat229,230
+  sMeth sMeth230,231
+  sL2r sL2r231,232
+sT1 sT1234,235
+sT2 sT2235,236
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Syntax.hs,4196
+module Data.Singletons.Syntax Data.Singletons.Syntax12,13
+type VarPromotions VarPromotions22,23
+data PromDPatInfos PromDPatInfos25,26
+data PromDPatInfos = PromDPatInfosPromDPatInfos25,26
+  { prom_dpat_vars prom_dpat_vars26,27
+  , prom_dpat_sig_kvs prom_dpat_sig_kvs28,29
+instance Semigroup Semigroup PromDPatInfos33,34
+  PromDPatInfos PromDPatInfos34,35
+instance Monoid Monoid PromDPatInfos37,38
+  mempty mempty38,39
+type SingDSigPaInfos SingDSigPaInfos44,45
+data DataDecl DataDecl47,48
+data DataDecl = DataDecl DataDecl47,48
+data TySynDecl TySynDecl50,51
+data TySynDecl = TySynDecl TySynDecl50,51
+type OpenTypeFamilyDecl OpenTypeFamilyDecl53,54
+type ClosedTypeFamilyDecl ClosedTypeFamilyDecl56,57
+newtype TypeFamilyDecl TypeFamilyDecl59,60
+  = TypeFamilyDecl { getTypeFamilyDecl getTypeFamilyDecl60,61
+data FamilyInfo FamilyInfo62,63
+data FamilyInfo = Open Open62,63
+data FamilyInfo = Open | ClosedClosed62,63
+data ClassDecl ClassDecl64,65
+  = ClassDecl ClassDecl65,66
+  = ClassDecl { cd_cxt cd_cxt65,66
+              , cd_name cd_name66,67
+              , cd_tvbs cd_tvbs67,68
+              , cd_fds cd_fds68,69
+              , cd_lde cd_lde69,70
+              , cd_atfs cd_atfs70,71
+data InstDecl InstDecl77,78
+data InstDecl  ann = InstDecl InstDecl77,78
+data InstDecl  ann = InstDecl { id_cxt id_cxt77,78
+                              , id_name id_name78,79
+                              , id_arg_tys id_arg_tys79,80
+                              , id_sigs id_sigs80,81
+                              , id_meths id_meths81,82
+type UClassDecl UClassDecl83,84
+type UInstDecl UInstDecl84,85
+type AClassDecl AClassDecl86,87
+type AInstDecl AInstDecl87,88
+data ADExp ADExp99,100
+data ADExp = ADVarE ADVarE99,100
+           | ADConE ADConE100,101
+           | ADLitE ADLitE101,102
+           | ADAppE ADAppE102,103
+           | ADLamE ADLamE103,104
+           | ADCaseE ADCaseE106,107
+           | ADLetE ADLetE108,109
+           | ADSigE ADSigE109,110
+data ADPat ADPat113,114
+data ADPat = ADLitP ADLitP113,114
+           | ADVarP ADVarP114,115
+           | ADConP ADConP115,116
+           | ADTildeP ADTildeP116,117
+           | ADBangP ADBangP117,118
+           | ADSigP ADSigP118,119
+           | ADWildPADWildP121,122
+data ADMatch ADMatch123,124
+data ADMatch = ADMatch ADMatch123,124
+data ADClause ADClause124,125
+data ADClause = ADClause ADClause124,125
+data AnnotationFlag AnnotationFlag127,128
+data AnnotationFlag = Annotated Annotated127,128
+data AnnotationFlag = Annotated | UnannotatedUnannotated127,128
+type Annotated Annotated130,131
+type Unannotated Unannotated131,132
+type family family133,134
+  IfAnn IfAnn134,135
+data family family137,138
+data instance instance138,139
+  = AFunction AFunction139,140
+  | AValue AValue142,143
+data instance instance145,146
+data instance LetDecRHS Unannotated = UFunction UFunction145,146
+                                    | UValue UValue146,147
+type ALetDecRHS ALetDecRHS148,149
+type ULetDecRHS ULetDecRHS149,150
+data LetDecEnv LetDecEnv151,152
+data LetDecEnv ann = LetDecEnvLetDecEnv151,152
+                   { lde_defns lde_defns152,153
+                   , lde_types lde_types153,154
+                   , lde_infix lde_infix154,155
+                   , lde_proms lde_proms155,156
+                   , lde_bound_kvs lde_bound_kvs156,157
+type ALetDecEnv ALetDecEnv161,162
+type ULetDecEnv ULetDecEnv162,163
+instance Semigroup Semigroup ULetDecEnv164,165
+  LetDecEnv LetDecEnv165,166
+instance Monoid Monoid ULetDecEnv168,169
+  mempty mempty169,170
+valueBinding valueBinding171,172
+typeBinding typeBinding174,175
+infixDecl infixDecl177,178
+emptyLetDecEnv emptyLetDecEnv180,181
+buildLetDecEnv buildLetDecEnv183,184
+data DerivedDecl DerivedDecl201,202
+data DerivedDecl (cls :: Type -> Constraint) = DerivedDeclDerivedDecl201,202
+  { ded_mb_cxt ded_mb_cxt202,203
+  , ded_type ded_type203,204
+  , ded_type_tycon ded_type_tycon204,205
+  , ded_decl ded_decl205,206
+type DerivedEqDecl DerivedEqDecl208,209
+type DerivedShowDecl DerivedShowDecl209,210
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude.hs,62
+module Data.Singletons.Prelude Data.Singletons.Prelude20,21
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/ShowSing.hs,608
+module Data.Singletons.ShowSing Data.Singletons.ShowSing28,29
+type ShowSing ShowSing114,115
+instance (f(forall (z :: k) - ShowSing' z) => ShowSing k116,117
+type ShowSing' ShowSing'197,198
+instance Show Show (Sing z) => ShowSing' z199,200
+instance ShowSing ShowSing k => Show (WrappedSing (a :: k))277,278
+  showsPrec showsPrec278,279
+instance ShowSing ShowSing k => Show (SWrappedSing (ws :: WrappedSing (a :: k)))282,283
+  showsPrec showsPrec283,284
+instance Show Show (SNat n)297,298
+  showsPrec showsPrec298,299
+instance Show Show (SSymbol s)304,305
+  showsPrec showsPrec305,306
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Decide.hs,524
+module Data.Singletons.Decide Data.Singletons.Decide18,19
+type Refuted Refuted40,41
+type Decision Decision45,46
+data Decision a = Proved Proved46,47
+                | Disproved Disproved47,48
+type SDecide SDecide52,53
+  (%(%~)55,56
+decideEquality decideEquality60,61
+instance SDecide SDecide k => TestEquality (WrappedSing @k)67,68
+  testEquality testEquality68,69
+decideCoercion decideCoercion72,73
+instance SDecide SDecide k => TestCoercion (WrappedSing @k)79,80
+  testCoercion testCoercion80,81
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Names.hs,3963
+module Data.Singletons.Names Data.Singletons.Names10,11
+boolName boolName53,54
+andName andName54,55
+compareName compareName55,56
+minBoundName minBoundName56,57
+maxBoundName maxBoundName57,58
+tyEqName tyEqName58,59
+repName repName59,60
+nilName nilName60,61
+consName consName61,62
+listName listName62,63
+tyFunArrowName tyFunArrowName63,64
+applyName applyName64,65
+applyTyConName applyTyConName65,66
+applyTyConAux1Name applyTyConAux1Name66,67
+symbolName symbolName67,68
+natName natName68,69
+typeRepName typeRepName69,70
+stringName stringName70,71
+eqName eqName71,72
+ordName ordName72,73
+boundedName boundedName73,74
+orderingName orderingName74,75
+singFamilyName singFamilyName75,76
+singIName singIName76,77
+singMethName singMethName77,78
+toSingName toSingName78,79
+fromSingName fromSingName79,80
+demoteName demoteName80,81
+withSingIName withSingIName81,82
+singKindClassName singKindClassName82,83
+sEqClassName sEqClassName83,84
+sEqMethName sEqMethName84,85
+sIfName sIfName85,86
+sconsName sconsName86,87
+snilName snilName87,88
+strueName strueName88,89
+someSingTypeName someSingTypeName89,90
+someSingDataName someSingDataName90,91
+sListName sListName91,92
+sDecideClassName sDecideClassName92,93
+sDecideMethName sDecideMethName93,94
+testEqualityClassName testEqualityClassName94,95
+testEqualityMethName testEqualityMethName95,96
+decideEqualityName decideEqualityName96,97
+testCoercionClassName testCoercionClassName97,98
+testCoercionMethName testCoercionMethName98,99
+decideCoercionName decideCoercionName99,100
+provedName provedName100,101
+disprovedName disprovedName101,102
+reflName reflName102,103
+equalityName equalityName103,104
+applySingName applySingName104,105
+suppressClassName suppressClassName105,106
+suppressMethodName suppressMethodName106,107
+thenCmpName thenCmpName107,108
+sameKindName sameKindName108,109
+tyFromIntegerName tyFromIntegerName109,110
+tyNegateName tyNegateName110,111
+sFromIntegerName sFromIntegerName111,112
+sNegateName sNegateName112,113
+errorName errorName113,114
+foldlName foldlName114,115
+cmpEQName cmpEQName115,116
+cmpLTName cmpLTName116,117
+cmpGTName cmpGTName117,118
+singletonsToEnumName singletonsToEnumName118,119
+singletonsFromEnumName singletonsFromEnumName119,120
+enumName enumName120,121
+singletonsEnumName singletonsEnumName121,122
+equalsName equalsName122,123
+constraintName constraintName123,124
+showName showName124,125
+showSName showSName125,126
+showCharName showCharName126,127
+showParenName showParenName127,128
+showSpaceName showSpaceName128,129
+showsPrecName showsPrecName129,130
+showStringName showStringName130,131
+showSingName showSingName131,132
+showSing'Name showSing'Name132,133
+composeName composeName133,134
+gtName gtName134,135
+showCommaSpaceName showCommaSpaceName135,136
+tyFromStringName tyFromStringName136,137
+sFromStringName sFromStringName137,138
+foldableName foldableName138,139
+foldMapName foldMapName139,140
+memptyName memptyName140,141
+mappendName mappendName141,142
+foldrName foldrName142,143
+functorName functorName143,144
+fmapName fmapName144,145
+replaceName replaceName145,146
+traversableName traversableName146,147
+traverseName traverseName147,148
+pureName pureName148,149
+apName apName149,150
+liftA2Name liftA2Name150,151
+singPkg singPkg152,153
+mk_name_tc mk_name_tc155,156
+mk_name_d mk_name_d158,159
+mk_name_v mk_name_v161,162
+mkTupleTypeName mkTupleTypeName164,165
+mkTupleDataName mkTupleDataName168,169
+mkTyName mkTyName172,173
+mkTyConName mkTyConName178,179
+boolKi boolKi181,182
+singFamily singFamily184,185
+singKindConstraint singKindConstraint187,188
+demote demote190,191
+apply apply193,194
+mkListE mkListE196,197
+foldApply foldApply202,203
+mkEqPred mkEqPred206,207
+splitUnderscores splitUnderscores213,214
+modifyConNameDType modifyConNameDType219,220
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Promote/Defun.hs,836
+module Data.Singletons.Promote.Defun Data.Singletons.Promote.Defun10,11
+defunInfo defunInfo25,26
+defunTopLevelTypeDecls defunTopLevelTypeDecls39,40
+defunAssociatedTypeFamilies defunAssociatedTypeFamilies54,55
+buildDefunSyms buildDefunSyms93,94
+buildDefunSymsClosedTypeFamilyD buildDefunSymsClosedTypeFamilyD112,113
+buildDefunSymsOpenTypeFamilyD buildDefunSymsOpenTypeFamilyD118,119
+buildDefunSymsTypeFamilyHead buildDefunSymsTypeFamilyHead126,127
+buildDefunSymsTySynD buildDefunSymsTySynD132,133
+buildDefunSymsDataD buildDefunSymsDataD142,143
+defunReify defunReify160,161
+defunctionalize defunctionalize178,179
+data DefunKindInfoDefunKindInfo399,400
+  = DefunSAK DefunSAK400,401
+  | DefunNoSAK DefunNoSAK401,402
+buildTyFunArrow buildTyFunArrow404,405
+buildTyFunArrow_maybe buildTyFunArrow_maybe407,408
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Promote/Type.hs,221
+module Data.Singletons.Promote.TypeData.Singletons.Promote.Type8,9
+promoteType promoteType22,23
+promoteType_NC promoteType_NC30,31
+promoteTypeArg_NC promoteTypeArg_NC78,79
+promoteUnraveled promoteUnraveled84,85
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Promote/Monad.hs,949
+module Data.Singletons.Promote.Monad Data.Singletons.Promote.Monad14,15
+type LetExpansions LetExpansions31,32
+data PrEnv PrEnv34,35
+  PrEnv PrEnv35,36
+  PrEnv { pr_options pr_options35,36
+        , pr_lambda_bound pr_lambda_bound36,37
+        , pr_let_bound pr_let_bound37,38
+        , pr_forall_bound pr_forall_bound38,39
+        , pr_local_decls pr_local_decls39,40
+emptyPrEnv emptyPrEnv42,43
+newtype PrM PrM50,51
+instance DsMonad DsMonad PrM55,56
+  localDeclarations localDeclarations56,57
+instance OptionsMonad OptionsMonad PrM58,59
+  getOptions getOptions59,60
+allLocals allLocals62,63
+emitDecs emitDecs73,74
+emitDecsM emitDecsM76,77
+lambdaBind lambdaBind83,84
+type LetBind LetBind91,92
+letBind letBind92,93
+lookupVarE lookupVarE97,98
+forallBind forallBind107,108
+allBoundKindVars allBoundKindVars114,115
+promoteM promoteM117,118
+promoteM_ promoteM_126,127
+promoteMDecs promoteMDecs132,133
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Promote/Eq.hs,108
+module Data.Singletons.Promote.Eq Data.Singletons.Promote.Eq9,10
+mkEqTypeInstance mkEqTypeInstance20,21
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/TypeRepTYPE.hs,850
+module Data.Singletons.TypeRepTYPE Data.Singletons.TypeRepTYPE22,23
+type instance instance56,57
+type SomeTypeRepTYPE SomeTypeRepTYPE60,61
+  SomeTypeRepTYPE :: forall (rep rep62,63
+  SomeTypeRepTYPE :: forall (rep :: RuntimeRep) (a a62,63
+instance Eq Eq (SomeTypeRepTYPE rep)64,65
+  SomeTypeRepTYPE SomeTypeRepTYPE65,66
+instance Ord Ord (SomeTypeRepTYPE rep)70,71
+  SomeTypeRepTYPE a `compare`compare71,72
+instance Show Show (SomeTypeRepTYPE rep)74,75
+  showsPrec showsPrec75,76
+instance Typeable Typeable a => SingI (a :: TYPE rep)77,78
+  sing sing78,79
+instance SingKind SingKind (TYPE rep)79,80
+  type Demote Demote80,81
+  fromSing fromSing81,82
+  toSing toSing82,83
+instance PEq PEq (TYPE rep)84,85
+instance SEq SEq (TYPE rep)85,86
+  tra tra86,87
+instance SDecide SDecide (TYPE rep)93,94
+  tra tra94,95
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Single/Defun.hs,101
+module Data.Singletons.Single.Defun Data.Singletons.Single.Defun13,14
+singDefuns singDefuns49,50
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Single/Data.hs,124
+module Data.Singletons.Single.Data Data.Singletons.Single.Data10,11
+singDataD singDataD27,28
+singCtor singCtor154,155
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Single/Fixity.hs,158
+module Data.Singletons.Single.Fixity Data.Singletons.Single.Fixity1,2
+singInfixDecl singInfixDecl11,12
+singReifiedInfixDecls singReifiedInfixDecls38,39
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Single/Type.hs,238
+module Data.Singletons.Single.Type Data.Singletons.Single.Type8,9
+singType singType23,24
+singType singType34,35
+singTypeKVBs singTypeKVBs56,57
+singPred singPred81,82
+singPred_NC singPred_NC89,90
+singPredRec singPredRec93,94
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Single/Monad.hs,795
+module Data.Singletons.Single.Monad Data.Singletons.Single.Monad12,13
+data SgEnv SgEnv33,34
+  SgEnv SgEnv34,35
+  SgEnv { sg_options sg_options34,35
+        , sg_let_binds sg_let_binds35,36
+        , sg_context sg_context36,37
+        , sg_local_decls sg_local_decls37,38
+emptySgEnv emptySgEnv40,41
+newtype SgM SgM48,49
+instance DsMonad DsMonad SgM53,54
+  localDeclarations localDeclarations54,55
+instance OptionsMonad OptionsMonad SgM56,57
+  getOptions getOptions57,58
+bindLets bindLets59,60
+bindContext bindContext66,67
+askContext askContext73,74
+lookupVarE lookupVarE76,77
+lookupConE lookupConE82,83
+lookup_var_con lookup_var_con88,89
+wrapSingFun wrapSingFun106,107
+wrapUnSingFun wrapUnSingFun121,122
+singM singM136,137
+singDecsM singDecsM145,146
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Single/Eq.hs,652
+module Data.Singletons.Single.Eq Data.Singletons.Single.Eq8,9
+type EqualityClassDesc EqualityClassDesc20,21
+sEqClassDesc, sDecideClassDesc sDecideClassDesc21,22
+sEqClassDesc,sEqClassDesc21,22
+sDecideClassDesc sDecideClassDesc23,24
+mkEqualityInstance mkEqualityInstance25,26
+data TestInstance TestInstance40,41
+data TestInstance = TestEqualityTestEquality40,41
+                  | TestCoercionTestCoercion41,42
+mkTestInstance mkTestInstance44,45
+mkEqMethClause mkEqMethClause64,65
+mkEmptyEqMethClause mkEmptyEqMethClause94,95
+mkDecideMethClause mkDecideMethClause99,100
+mkEmptyDecideMethClause mkEmptyDecideMethClause144,145
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/TypeError.hs,1951
+module Data.Singletons.TypeError Data.Singletons.TypeError28,29
+type ErrorMessage' ErrorMessage'57,58
+  = Text Text59,60
+  | forall forall61,62
+  | ErrorMessage' ErrorMessage'64,65
+type ErrorMessage ErrorMessage74,75
+type PErrorMessage PErrorMessage78,79
+type SErrorMessage SErrorMessage81,82
+  SText SText83,84
+  SShowType SShowType84,85
+  (:%<>:) )85,86
+type instance instance90,91
+instance SingKind SingKind PErrorMessage92,93
+  type Demote Demote93,94
+  fromSing fromSing94,95
+  toSing toSing98,99
+instance SingI SingI t => SingI ('Text t :: PErrorMessage)107,108
+  sing sing108,109
+instance SingI SingI ty => SingI ('ShowType ty :: PErrorMessage)110,111
+  sing sing111,112
+instance (S(SingI e1, SingI e2) => SingI (e1 ':<>: e2 :: PErrorMessage)113,114
+  sing sing114,115
+instance (S(SingI e1, SingI e2) => SingI (e1 ':$$: e2 :: PErrorMessage)116,117
+  sing sing117,118
+showErrorMessage showErrorMessage120,121
+typeError typeError134,135
+type ConvertPErrorMessage ConvertPErrorMessage138,139
+type family family139,140
+  ConvertPErrorMessage ConvertPErrorMessage140,141
+type TypeError TypeError147,148
+type family family148,149
+  TypeError TypeError150,151
+sTypeError sTypeError156,157
+instance SingI SingI (TextSym0 :: Symbol ~> PErrorMessage)161,162
+  sing sing162,163
+instance SingI SingI (ShowTypeSym0 :: t ~> PErrorMessage)164,165
+  sing sing165,166
+instance SingI SingI ((:<>:@#@$) :: PErrorMessage ~> PErrorMessage ~> PErrorMessage)167,168
+  sing sing168,169
+instance SingI SingI x => SingI ((:<>:@#@$$) x :: PErrorMessage ~> PErrorMessage)169,170
+  sing sing170,171
+instance SingI SingI ((:$$:@#@$) :: PErrorMessage ~> PErrorMessage ~> PErrorMessage)172,173
+  sing sing173,174
+instance SingI SingI x => SingI ((:$$:@#@$$) x :: PErrorMessage ~> PErrorMessage)174,175
+  sing sing175,176
+instance SingI SingI TypeErrorSym0177,178
+  sing sing178,179
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Infer.hs,166
+module Data.Singletons.Deriving.Infer Data.Singletons.Deriving.Infer15,16
+inferConstraints inferConstraints63,64
+inferConstraintsDef inferConstraintsDef159,160
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Traversable.hs,139
+module Data.Singletons.Deriving.Traversable Data.Singletons.Deriving.Traversable15,16
+mkTraversableInstance mkTraversableInstance23,24
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Ord.hs,230
+module Data.Singletons.Deriving.Ord Data.Singletons.Deriving.Ord13,14
+mkOrdInstance mkOrdInstance24,25
+mk_equal_clause mk_equal_clause42,43
+mk_nonequal_clause mk_nonequal_clause57,58
+mk_empty_clause mk_empty_clause69,70
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Enum.hs,111
+module Data.Singletons.Deriving.Enum Data.Singletons.Deriving.Enum13,14
+mkEnumInstance mkEnumInstance26,27
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Bounded.hs,123
+module Data.Singletons.Deriving.Bounded Data.Singletons.Deriving.Bounded13,14
+mkBoundedInstance mkBoundedInstance26,27
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Show.hs,702
+module Data.Singletons.Deriving.Show Data.Singletons.Deriving.Show13,14
+mkShowInstance mkShowInstance31,32
+mk_showsPrec mk_showsPrec44,45
+mk_showsPrec_clause mk_showsPrec_clause52,53
+parenInfixConName parenInfixConName172,173
+showsPrecE showsPrecE177,178
+dCharE dCharE180,181
+dStringE dStringE189,190
+dIntegerE dIntegerE192,193
+isSym isSym195,196
+data ShowMode ShowMode205,206
+data ShowMode = ForPromotion ForPromotion205,206
+              | ForShowSing ForShowSing206,207
+mkShowSingContext mkShowSingContext211,212
+mk_Show_name mk_Show_name221,222
+mk_Show_inst_ty mk_Show_inst_ty228,229
+mk_Show_arg_pat mk_Show_arg_pat237,238
+mk_Show_rhs_sig mk_Show_rhs_sig246,247
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Functor.hs,335
+module Data.Singletons.Deriving.Functor Data.Singletons.Deriving.Functor15,16
+mkFunctorInstance mkFunctorInstance24,25
+data Replacer Replacer93,94
+data Replacer = Immediate Immediate93,94
+data Replacer = Immediate { replace replace93,94
+              | Nested Nested94,95
+              | Nested    { replace replace94,95
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Util.hs,848
+module Data.Singletons.Deriving.Util Data.Singletons.Deriving.Util15,16
+type DerivDesc DerivDesc27,28
+isNonVanillaDataType isNonVanillaDataType73,74
+data FFoldType FFoldType89,90
+   = FT FT90,91
+   = FT { ft_triv ft_triv90,91
+        , ft_var ft_var92,93
+        , ft_ty_app ft_ty_app94,95
+        , ft_bad_app ft_bad_app96,97
+        , ft_forall ft_forall98,99
+functorLikeTraverse functorLikeTraverse108,109
+isInTypeFamilyApp isInTypeFamilyApp180,181
+functorLikeValidityChecks functorLikeValidityChecks208,209
+deepSubtypesContaining deepSubtypesContaining257,258
+foldDataConArgs foldDataConArgs270,271
+getDVarTName_maybe getDVarTName_maybe286,287
+mkSimpleLam mkSimpleLam292,293
+mkSimpleLam2 mkSimpleLam2299,300
+mkSimpleConClause mkSimpleConClause313,314
+isFunctorLikeClassName isFunctorLikeClassName332,333
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Deriving/Foldable.hs,127
+module Data.Singletons.Deriving.Foldable Data.Singletons.Deriving.Foldable15,16
+mkFoldableInstance mkFoldableInstance23,24
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Partition.hs,1004
+module Data.Singletons.Partition Data.Singletons.Partition16,17
+data PartitionedDecs PartitionedDecs43,44
+  PDecs PDecs44,45
+  PDecs { pd_let_decs pd_let_decs44,45
+        , pd_class_decs pd_class_decs45,46
+        , pd_instance_decs pd_instance_decs46,47
+        , pd_data_decs pd_data_decs47,48
+        , pd_ty_syn_decs pd_ty_syn_decs48,49
+        , pd_open_type_family_decs pd_open_type_family_decs49,50
+        , pd_closed_type_family_decs pd_closed_type_family_decs50,51
+        , pd_derived_eq_decs pd_derived_eq_decs51,52
+        , pd_derived_show_decs pd_derived_show_decs52,53
+instance Semigroup Semigroup PartitionedDecs55,56
+  PDecs PDecs56,57
+instance Monoid Monoid PartitionedDecs60,61
+  mempty mempty61,62
+partitionDecs partitionDecs66,67
+partitionDec partitionDec69,70
+partitionClassDec partitionClassDec159,160
+partitionInstanceDec partitionInstanceDec180,181
+partitionDeriving partitionDeriving210,211
+isStockOrDefault isStockOrDefault300,301
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Internal.hs,3535
+module Data.Singletons.Internal Data.Singletons.Internal23,24
+type KindOf KindOf35,36
+type SameKind SameKind42,43
+type Sing Sing50,51
+type family family51,52
+class SingI SingI114,115
+  sing sing117,118
+pattern Sing Sing127,128
+pattern Sing <- <-128,129
+type SingKind SingKind148,149
+  type Demote Demote153,154
+  fromSing fromSing156,157
+  toSing toSing159,160
+type SomeSing SomeSing171,172
+  SomeSing :: Sing (a a173,174
+pattern FromSing FromSing204,205
+pattern FromSing sng sng205,206
+type WrappedSing WrappedSing220,221
+type SWrappedSing SWrappedSing226,227
+type instance instance230,231
+type UnwrapSing UnwrapSing232,233
+type family family233,234
+  UnwrapSing UnwrapSing234,235
+instance SingKind SingKind (WrappedSing a)236,237
+  type Demote Demote237,238
+  fromSing fromSing238,239
+  toSing toSing239,240
+instance forall forall a (s :: Sing a) - SingI a => SingI ('WrapSing s)241,242
+  sing sing242,243
+type SingInstance SingInstance249,250
+type DI DI254,255
+newtype DI a = Don'tInstantiate Don'tInstantiate255,256
+singInstance singInstance258,259
+type TyFun TyFun272,273
+type (~(277,278
+type a a278,279
+type Apply Apply282,283
+type family family283,284
+type (@(286,287
+type a a287,288
+type TyCon TyCon294,295
+data family family295,296
+type ApplyTyCon ApplyTyCon309,310
+type family family310,311
+  ApplyTyCon ApplyTyCon311,312
+type instance instance332,333
+type ApplyTyConAux1 ApplyTyConAux1337,338
+type ApplyTyConAux2 ApplyTyConAux2341,342
+type instance instance343,344
+type TyCon1 TyCon1357,358
+type TyCon2 TyCon2361,362
+type TyCon3 TyCon3364,365
+type TyCon4 TyCon4367,368
+type TyCon5 TyCon5370,371
+type TyCon6 TyCon6374,375
+type TyCon7 TyCon7378,379
+type TyCon8 TyCon8382,383
+type SLambda SLambda390,391
+  SLambda { applySing applySing392,393
+type instance instance393,394
+(@(@@)396,397
+instance (S(SingKind k1, SingKind k2) => SingKind (k1 ~> k2)402,403
+  type Demote Demote403,404
+  fromSing fromSing404,405
+  toSing toSing405,406
+type SingFunction1 SingFunction1422,423
+singFun1 singFun1434,435
+type SingFunction2 SingFunction2437,438
+singFun2 singFun2439,440
+type SingFunction3 SingFunction3442,443
+singFun3 singFun3446,447
+type SingFunction4 SingFunction4449,450
+singFun4 singFun4453,454
+type SingFunction5 SingFunction5456,457
+singFun5 singFun5460,461
+type SingFunction6 SingFunction6463,464
+singFun6 singFun6467,468
+type SingFunction7 SingFunction7470,471
+singFun7 singFun7474,475
+type SingFunction8 SingFunction8477,478
+singFun8 singFun8481,482
+unSingFun1 unSingFun1486,487
+unSingFun2 unSingFun2489,490
+unSingFun3 unSingFun3492,493
+unSingFun4 unSingFun4495,496
+unSingFun5 unSingFun5498,499
+unSingFun6 unSingFun6501,502
+unSingFun7 unSingFun7504,505
+unSingFun8 unSingFun8507,508
+pattern SLambda2 SLambda2511,512
+pattern SLambda2 {a{512,513
+pattern SLambda3 SLambda3516,517
+pattern SLambda3 {a{517,518
+pattern SLambda4 SLambda4521,522
+pattern SLambda4 {a{522,523
+pattern SLambda5 SLambda5526,527
+pattern SLambda5 {a{527,528
+pattern SLambda6 SLambda6531,532
+pattern SLambda6 {a{532,533
+pattern SLambda7 SLambda7536,537
+pattern SLambda7 {a{537,538
+pattern SLambda8 SLambda8541,542
+pattern SLambda8 {a{542,543
+withSingI withSingI551,552
+withSomeSing withSomeSing558,559
+withSing withSing571,572
+singThat singThat578,579
+singByProxy singByProxy583,584
+singByProxy# singByProxy#587,588
+demote demote601,602
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/TypeLits/Internal.hs,2133
+module Data.Singletons.TypeLits.Internal Data.Singletons.TypeLits.Internal21,22
+type SNat SNat61,62
+data SNat n = KnownNat KnownNat62,63
+type instance instance63,64
+instance KnownNat KnownNat n => SingI n65,66
+  sing sing66,67
+instance SingKind SingKind Nat68,69
+  type Demote Demote69,70
+  fromSing fromSing70,71
+  toSing toSing71,72
+type SSymbol SSymbol74,75
+data SSymbol n = KnownSymbol KnownSymbol75,76
+type instance instance76,77
+instance KnownSymbol KnownSymbol n => SingI n78,79
+  sing sing79,80
+instance SingKind SingKind Symbol81,82
+  type Demote Demote82,83
+  fromSing fromSing83,84
+  toSing toSing84,85
+instance SDecide SDecide Nat88,89
+  (S(SNat::Singn)89,90
+instance SDecide SDecide Symbol96,97
+  (S(SSym::Singn)97,98
+instance PEq PEq Nat105,106
+instance PEq PEq Symbol106,107
+instance SEq SEq Nat109,110
+  (S(SNat::Singn)110,111
+instance SEq SEq Symbol115,116
+  (S(SSym::Singn)116,117
+instance POrd POrd Nat122,123
+  type (a(123,124
+instance POrd POrd Symbol125,126
+  type (a(126,127
+instance SOrd SOrd Nat129,130
+  a `sCompare`sCompare130,131
+instance SOrd SOrd Symbol135,136
+  a `sCompare`sCompare136,137
+withKnownNat withKnownNat145,146
+withKnownSymbol withKnownSymbol150,151
+type Error Error155,156
+type family family156,157
+instance SingI SingI (ErrorSym0 :: Symbol ~> a)158,159
+  sing sing159,160
+sError sError162,163
+type ErrorWithoutStackTrace ErrorWithoutStackTrace167,168
+type family family168,169
+instance SingI SingI (ErrorWithoutStackTraceSym0 :: Symbol ~> a)170,171
+  sing sing171,172
+sErrorWithoutStackTrace sErrorWithoutStackTrace174,175
+type Undefined Undefined178,179
+type family family179,180
+sUndefined sUndefined183,184
+(%(%^)187,188
+sa sa188,189
+instance SingI SingI (^@#@$)199,200
+  sing sing200,201
+instance SingI SingI x => SingI ((^@#@$$) x)201,202
+  sing sing202,203
+(%(%<=?)221,222
+sa sa222,223
+infix infix223,224
+$($226,227
+instance SingI SingI (< = ?@#@$)227,228
+  sing sing228,229
+instance SingI SingI x => SingI ((< = ?@#@$$) x)229,230
+  sing sing230,231
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/TH.hs,127
+module Data.Singletons.TH Data.Singletons.TH18,19
+cases cases144,145
+sCases sCases165,166
+buildCases buildCases183,184
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Sigma.hs,1749
+module Data.Singletons.SigmaData.Singletons.Sigma29,30
+type Sigma Sigma51,52
+  (:&:) )53,54
+  (:&:) :: forall s t fst. Sing (fst fst53,54
+instance (S(ShowSing s, ShowApply t) => Show (Sigma s t)55,56
+  showsPrec showsPrec56,57
+type Î£ Î£61,62
+type SSigma SSigma65,66
+  (:%&:) )67,68
+  (:%&:) :: forall s t (fst fst67,68
+  (:%&:) :: forall s t (fst :: s) (sfst sfst67,68
+  (:%&:) :: forall s t (fst :: s) (sfst :: Sing fst) (snd snd67,68
+type instance instance71,72
+instance forall forall s (t :: s ~> Type) (sig :: Sigma s t) - (ShowSing s, ShowSingApply t) => Show (SSigma sig)72,73
+  showsPrec showsPrec75,76
+instance forall forall s t (fst :: s) (a :: Sing fst) (b :: t @@ fst) - (SingI fst, SingI b) => SingI (a ':&: b :: Sigma s t)80,81
+  sing sing83,84
+type SÎ£ SÎ£86,87
+fstSigma fstSigma90,91
+type FstSigma FstSigma94,95
+type family family95,96
+  FstSigma FstSigma96,97
+sndSigma sndSigma99,100
+type SndSigma SndSigma105,106
+type family family106,107
+  SndSigma SndSigma107,108
+projSigma1 projSigma1111,112
+projSigma2 projSigma2116,117
+mapSigma mapSigma120,121
+zipSigma zipSigma125,126
+currySigma currySigma147,148
+uncurrySigma uncurrySigma157,158
+type ShowApply ShowApply174,175
+instance (f(forall (x :: a) - ShowApply' f x) => ShowApply (f :: a ~> Type)176,177
+type ShowApply' ShowApply'178,179
+instance Show Show (Apply f x) => ShowApply' (f :: a ~> Type) (x :: a)180,181
+type ShowSingApply ShowSingApply182,183
+instance (f(forall (x :: a) (z :: Apply f x) - ShowSingApply' f x z) => ShowSingApply (f :: a ~> Type)184,185
+type ShowSingApply' ShowSingApply'186,187
+instance Show Show (Sing z) => ShowSingApply' (f :: a ~> Type) (x :: a) (z :: Apply f x)188,189
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/SuppressUnusedWarnings.hs,205
+module Data.Singletons.SuppressUnusedWarnings Data.Singletons.SuppressUnusedWarnings11,12
+type SuppressUnusedWarnings SuppressUnusedWarnings18,19
+  suppressUnusedWarnings suppressUnusedWarnings20,21
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/CustomStar.hs,103
+module Data.Singletons.CustomStar Data.Singletons.CustomStar18,19
+singletonStar singletonStar73,74
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Promote.hs,1887
+module Data.Singletons.Promote Data.Singletons.Promote12,13
+genPromotions genPromotions69,70
+promote promote84,85
+promoteOnly promoteOnly92,93
+promote' promote'99,100
+genDefunSymbols genDefunSymbols114,115
+promoteEqInstances promoteEqInstances122,123
+promoteOrdInstances promoteOrdInstances126,127
+promoteOrdInstance promoteOrdInstance130,131
+promoteBoundedInstances promoteBoundedInstances134,135
+promoteBoundedInstance promoteBoundedInstance138,139
+promoteEnumInstances promoteEnumInstances142,143
+promoteEnumInstance promoteEnumInstance146,147
+promoteShowInstances promoteShowInstances150,151
+promoteShowInstance promoteShowInstance154,155
+promoteEqInstance promoteEqInstance158,159
+promoteInstance promoteInstance168,169
+promoteInfo promoteInfo181,182
+promoteDecs promoteDecs229,230
+promoteLetDecs promoteLetDecs253,254
+promoteDataDecs promoteDataDecs268,269
+promoteDataDec promoteDataDec288,289
+promoteClassDec promoteClassDec300,301
+promoteInstanceDec promoteInstanceDec411,412
+data MethodSortMethodSort503,504
+  = DefaultMethodsDefaultMethods505,506
+  | InstanceMethods InstanceMethods507,508
+promoteMethod promoteMethod512,513
+promoteLetDecEnv promoteLetDecEnv650,651
+promoteInfixDecl promoteInfixDecl678,679
+promoteReifiedInfixDecls promoteReifiedInfixDecls724,725
+data LetDecRHSSortLetDecRHSSort736,737
+  = LetBindingRHSLetBindingRHS738,739
+  | ClassMethodRHSClassMethodRHS741,742
+promoteLetDecRHS promoteLetDecRHS750,751
+promoteLetDecRHS promoteLetDecRHS760,761
+data LetDecRHSKindInfo LetDecRHSKindInfo930,931
+  LDRKI LDRKI931,932
+promoteClause promoteClause990,991
+promoteMatch promoteMatch1007,1008
+promotePat promotePat1025,1026
+promoteExp promoteExp1057,1058
+promoteLitExp promoteLitExp1118,1119
+promoteLitPat promoteLitPat1132,1133
+promoteDerivedEqDec promoteDerivedEqDec1143,1144
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Traversable.hs,393
+module Data.Singletons.Prelude.Traversable Data.Singletons.Prelude.Traversable27,28
+type StateL StateL67,68
+type SStateL SStateL69,70
+type instance instance72,73
+type StateLSym0 StateLSym073,74
+type instance instance75,76
+type StateR StateR77,78
+type SStateR SStateR79,80
+type instance instance82,83
+type StateRSym0 StateRSym083,84
+type instance instance85,86
+$($87,88
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Ord.hs,81
+module Data.Singletons.Prelude.Ord Data.Singletons.Prelude.Ord21,22
+$($53,54
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Function.hs,104
+module Data.Singletons.Prelude.Function Data.Singletons.Prelude.Function24,25
+  (.*.) `on`on105,106
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Const.hs,405
+module Data.Singletons.Prelude.Const Data.Singletons.Prelude.Const27,28
+type SConst SConst73,74
+type instance instance76,77
+instance SingKind SingKind a => SingKind (Const a b)77,78
+  type Demote Demote78,79
+  fromSing fromSing79,80
+  toSing toSing80,81
+instance SingI SingI a => SingI ('Const a)81,82
+  sing sing82,83
+instance SingI SingI ConstSym085,86
+  sing sing86,87
+$($88,89
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Monoid.hs,87
+module Data.Singletons.Prelude.Monoid Data.Singletons.Prelude.Monoid30,31
+$($72,73
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Base.hs,83
+module Data.Singletons.Prelude.Base Data.Singletons.Prelude.Base24,25
+$($55,56
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Identity.hs,91
+module Data.Singletons.Prelude.Identity Data.Singletons.Prelude.Identity27,28
+$($52,53
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Enum.hs,83
+module Data.Singletons.Prelude.Enum Data.Singletons.Prelude.Enum19,20
+$($52,53
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/List.hs,72
+module Data.Singletons.Prelude.List Data.Singletons.Prelude.List22,23
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Applicative.hs,97
+module Data.Singletons.Prelude.Applicative Data.Singletons.Prelude.Applicative28,29
+$($61,62
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Either.hs,87
+module Data.Singletons.Prelude.Either Data.Singletons.Prelude.Either24,25
+$($51,52
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/List/Internal/Disambiguation.hs,278
+module Data.Singletons.Prelude.List.Internal.Disambiguation Data.Singletons.Prelude.List.Internal.Disambiguation18,19
+$($32,33
+listtake listtake156,157
+listdrop listdrop159,160
+listsplitAt listsplitAt162,163
+listindex listindex165,166
+listlength listlength168,169
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/List/NonEmpty.hs,103
+module Data.Singletons.Prelude.List.NonEmpty Data.Singletons.Prelude.List.NonEmpty26,27
+$($157,158
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/List/Internal.hs,101
+module Data.Singletons.Prelude.List.Internal Data.Singletons.Prelude.List.Internal24,25
+$($41,42
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Semigroup/Internal/Disambiguation.hs,141
+module Data.Singletons.Prelude.Semigroup.Internal.Disambiguation Data.Singletons.Prelude.Semigroup.Internal.Disambiguation25,26
+$($36,37
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Semigroup/Internal.hs,242
+module Data.Singletons.Prelude.Semigroup.Internal Data.Singletons.Prelude.Semigroup.Internal35,36
+$($60,61
+instance PSemigroup PSemigroup Symbol220,221
+  type a a221,222
+instance SSemigroup SSemigroup Symbol223,224
+  sa sa224,225
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Show.hs,293
+module Data.Singletons.Prelude.Show Data.Singletons.Prelude.Show28,29
+type SymbolS SymbolS80,81
+type SChar SChar85,86
+$($88,89
+instance PShow PShow Nat180,181
+  type ShowsPrec ShowsPrec181,182
+instance SShow SShow Nat183,184
+  sShowsPrec sShowsPrec184,185
+show_ show_194,195
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Tuple.hs,85
+module Data.Singletons.Prelude.Tuple Data.Singletons.Prelude.Tuple24,25
+$($52,53
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Semigroup.hs,93
+module Data.Singletons.Prelude.Semigroup Data.Singletons.Prelude.Semigroup30,31
+$($96,97
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/IsString.hs,246
+module Data.Singletons.Prelude.IsString Data.Singletons.Prelude.IsString24,25
+$($39,40
+instance PIsString PIsString Symbol55,56
+  type FromString FromString56,57
+instance SIsString SIsString Symbol59,60
+  sFromString sFromString60,61
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Monad/Zip.hs,93
+module Data.Singletons.Prelude.Monad.Zip Data.Singletons.Prelude.Monad.Zip27,28
+$($50,51
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Monad/Fail.hs,95
+module Data.Singletons.Prelude.Monad.Fail Data.Singletons.Prelude.Monad.Fail23,24
+$($34,35
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Monad/Internal.hs,103
+module Data.Singletons.Prelude.Monad.Internal Data.Singletons.Prelude.Monad.Internal38,39
+$($47,48
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Ord/Disambiguation.hs,111
+module Data.Singletons.Prelude.Ord.Disambiguation Data.Singletons.Prelude.Ord.Disambiguation24,25
+$($33,34
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Monad.hs,87
+module Data.Singletons.Prelude.Monad Data.Singletons.Prelude.Monad28,29
+$($112,113
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Maybe.hs,85
+module Data.Singletons.Prelude.Maybe Data.Singletons.Prelude.Maybe25,26
+$($53,54
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Eq.hs,713
+module Data.Singletons.Prelude.Eq Data.Singletons.Prelude.Eq18,19
+type PEq PEq42,43
+  type (=(44,45
+  infix infix50,51
+type DefaultEq DefaultEq60,61
+type family family61,62
+  DefaultEq DefaultEq62,63
+$($65,66
+type SEq SEq69,70
+  (%(%==)72,73
+  infix infix73,74
+  (%(%/=)76,77
+  default default77,78
+  a a80,81
+  infix infix81,82
+instance SEq SEq a => SingI ((= = @#@$) :: a ~> a ~> Bool)85,86
+  sing sing86,87
+instance (S(SEq a, SingI x) => SingI ((= = @#@$$) x :: a ~> Bool)87,88
+  sing sing88,89
+instance SEq SEq a => SingI ((/ = @#@$) :: a ~> a ~> Bool)90,91
+  sing sing91,92
+instance (S(SEq a, SingI x) => SingI ((/ = @#@$$) x :: a ~> Bool)92,93
+  sing sing93,94
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Functor.hs,89
+module Data.Singletons.Prelude.Functor Data.Singletons.Prelude.Functor29,30
+$($52,53
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Instances.hs,93
+module Data.Singletons.Prelude.Instances Data.Singletons.Prelude.Instances16,17
+$($31,32
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Proxy.hs,660
+module Data.Singletons.Prelude.Proxy Data.Singletons.Prelude.Proxy26,27
+import import56,57
+data SProxy SProxy64,65
+  SProxy SProxy65,66
+type instance instance66,67
+instance SingKind SingKind (Proxy t)67,68
+  type Demote Demote68,69
+  fromSing fromSing69,70
+  toSing toSing70,71
+instance SingI SingI 'Proxy71,72
+  sing sing72,73
+instance SDecide SDecide (Proxy t)76,77
+  SProxy SProxy77,78
+instance TestEquality TestEquality SProxy79,80
+  testEquality testEquality80,81
+instance TestCoercion TestCoercion SProxy82,83
+  testCoercion testCoercion83,84
+instance Show Show (SProxy z)85,86
+  showsPrec showsPrec86,87
+$($88,89
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Num.hs,500
+module Data.Singletons.Prelude.Num Data.Singletons.Prelude.Num23,24
+$($47,48
+type SignumNat SignumNat90,91
+type family family91,92
+  SignumNat SignumNat92,93
+instance PNum PNum Nat95,96
+  type a a96,97
+  type Negate Negate99,100
+  type Abs Abs100,101
+  type Signum Signum101,102
+  type FromInteger FromInteger102,103
+instance SNum SNum Nat105,106
+  sa sa106,107
+  sNegate sNegate130,131
+  sAbs sAbs132,133
+  sSignum sSignum134,135
+  sFromInteger sFromInteger139,140
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Bool.hs,536
+module Data.Singletons.Prelude.Bool Data.Singletons.Prelude.Bool24,25
+$($54,55
+(%(%&&)66,67
+SFalse SFalse67,68
+STrue STrue68,69
+instance SingI SingI (&&@#@$)71,72
+  sing sing72,73
+instance SingI SingI x => SingI ((&&@#@$$) x)73,74
+  sing sing74,75
+(%(%||)77,78
+SFalse SFalse78,79
+STrue STrue79,80
+instance SingI SingI (||@#@$)82,83
+  sing sing83,84
+instance SingI SingI x => SingI ((||@#@$$) x)84,85
+  sing sing85,86
+sNot sNot88,89
+instance SingI SingI NotSym092,93
+  sing sing93,94
+sIf sIf96,97
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Void.hs,83
+module Data.Singletons.Prelude.Void Data.Singletons.Prelude.Void29,30
+$($51,52
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Prelude/Foldable.hs,239
+module Data.Singletons.Prelude.Foldable Data.Singletons.Prelude.Foldable27,28
+type Endo Endo137,138
+type SEndo SEndo139,140
+type instance instance142,143
+type EndoSym0 EndoSym0143,144
+type instance instance145,146
+$($147,148
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/TypeLits.hs,1517
+module Data.Singletons.TypeLits Data.Singletons.TypeLits19,20
+instance Num Num Nat68,69
+  (+(+)69,70
+  (-(-)70,71
+  (*(*)71,72
+  negate negate72,73
+  abs abs73,74
+  signum signum74,75
+  fromInteger fromInteger75,76
+instance Eq Eq Nat77,78
+  (=(==)78,79
+instance Ord Ord Nat80,81
+  compare compare81,82
+instance Enum Enum Nat83,84
+  toEnum toEnum84,85
+  fromEnum fromEnum85,86
+  enumFromTo enumFromTo86,87
+  enumFromThenTo enumFromThenTo87,88
+instance Show Show Nat89,90
+  showsPrec showsPrec90,91
+instance Eq Eq Symbol95,96
+  (=(==)96,97
+instance Ord Ord Symbol98,99
+  compare compare99,100
+instance IsString IsString Symbol101,102
+  fromString fromString102,103
+instance Semigroup Semigroup Symbol104,105
+  (<(<>)105,106
+instance Monoid Monoid Symbol107,108
+  mempty mempty108,109
+instance Show Show Symbol110,111
+  showsPrec showsPrec111,112
+no_term_level_nats no_term_level_nats113,114
+no_term_level_syms no_term_level_syms116,117
+genLog2 genLog2130,131
+sLog2 sLog2148,149
+instance SingI SingI Log2Sym0156,157
+  sing sing157,158
+sDiv sDiv159,160
+instance SingI SingI DivSym0168,169
+  sing sing169,170
+instance SingI SingI x => SingI (DivSym1 x)170,171
+  sing sing171,172
+sMod sMod173,174
+instance SingI SingI ModSym0182,183
+  sing sing183,184
+instance SingI SingI x => SingI (ModSym1 x)184,185
+  sing sing185,186
+$($187,188
+sDivMod sDivMod203,204
+sQuotRem sQuotRem214,215
+sQuot sQuot217,218
+sRem sRem221,222
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Single.hs,1915
+module Data.Singletons.Single Data.Singletons.Single10,11
+genSingletons genSingletons89,90
+singletons singletons103,104
+singletonsOnly singletonsOnly112,113
+singletons' singletons'119,120
+singEqInstances singEqInstances130,131
+singEqInstance singEqInstance134,135
+singEqInstancesOnly singEqInstancesOnly142,143
+singEqInstanceOnly singEqInstanceOnly147,148
+singDecideInstances singDecideInstances152,153
+singDecideInstance singDecideInstance157,158
+singEqualityInstance singEqualityInstance161,162
+singOrdInstances singOrdInstances180,181
+singOrdInstance singOrdInstance184,185
+singBoundedInstances singBoundedInstances188,189
+singBoundedInstance singBoundedInstance192,193
+singEnumInstances singEnumInstances196,197
+singEnumInstance singEnumInstance200,201
+singShowInstance singShowInstance206,207
+singShowInstances singShowInstances212,213
+showSingInstance showSingInstance218,219
+showSingInstances showSingInstances237,238
+singITyConInstances singITyConInstances245,246
+singITyConInstance singITyConInstance253,254
+singInstance singInstance289,290
+singInfo singInfo303,304
+singTopLevelDecs singTopLevelDecs315,316
+buildDataLets buildDataLets358,359
+buildMethLets buildMethLets379,380
+singClassD singClassD389,390
+singInstD singInstD467,468
+singLetDecEnv singLetDecEnv554,555
+singLetDecEnv singLetDecEnv563,564
+singTySig singTySig583,584
+singTySig singTySig594,595
+singLetDecRHS singLetDecRHS748,749
+singClause singClause769,770
+singClause singClause778,779
+singPat singPat796,797
+mkSigPaCaseE mkSigPaCaseE835,836
+singExp singExp949,950
+singExp (ADVarE err `ADAppE`ADAppE952,953
+singExp singExp956,957
+singDerivedEqDecs singDerivedEqDecs997,998
+sEqToSDecide sEqToSDecide1020,1021
+singDerivedShowDecs singDerivedShowDecs1029,1030
+isException isException1059,1060
+singMatch singMatch1072,1073
+singLit singLit1079,1080
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/TH/Options.hs,2022
+module Data.Singletons.TH.OptionsData.Singletons.TH.Options18,19
+data Options Options58,59
+data Options = OptionsOptions58,59
+  { genQuotedDecs genQuotedDecs59,60
+  , genSingKindInsts genSingKindInsts63,64
+  , promotedClassName promotedClassName68,69
+  , promotedValueName promotedValueName71,72
+  , singledDataTypeName singledDataTypeName80,81
+  , singledClassName singledClassName83,84
+  , singledDataConName singledDataConName86,87
+  , singledValueName singledValueName89,90
+  , defunctionalizedName defunctionalizedName92,93
+defaultOptions defaultOptions117,118
+promotedTopLevelValueName promotedTopLevelValueName132,133
+promotedLetBoundValueName promotedLetBoundValueName138,139
+defunctionalizedName0 defunctionalizedName0144,145
+class DsMonad m => OptionsMonad OptionsMonad148,149
+  getOptions getOptions149,150
+instance OptionsMonad OptionsMonad Q151,152
+  getOptions getOptions152,153
+instance OptionsMonad OptionsMonad m => OptionsMonad (DsM m)154,155
+  getOptions getOptions155,156
+instance (O(OptionsMonad q, Monoid m) => OptionsMonad (QWithAux m q)157,158
+  getOptions getOptions158,159
+instance OptionsMonad OptionsMonad m => OptionsMonad (ReaderT r m)160,161
+  getOptions getOptions161,162
+instance OptionsMonad OptionsMonad m => OptionsMonad (StateT s m)163,164
+  getOptions getOptions164,165
+instance (O(OptionsMonad m, Monoid w) => OptionsMonad (WriterT w m)166,167
+  getOptions getOptions167,168
+instance (O(OptionsMonad m, Monoid w) => OptionsMonad (RWST r w s m)169,170
+  getOptions getOptions170,171
+newtype OptionsM OptionsM174,175
+instance DsMonad DsMonad m => OptionsMonad (OptionsM m)179,180
+  getOptions getOptions180,181
+withOptions withOptions183,184
+promoteValNameLhs promoteValNameLhs193,194
+promoteTySym promoteTySym211,212
+promoteClassName promoteClassName239,240
+singDataConName singDataConName244,245
+singTyConName singTyConName252,253
+singClassName singClassName259,260
+singValName singValName262,263
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons/Util.hs,2912
+module Data.Singletons.Util Data.Singletons.Util15,16
+basicTypes basicTypes39,40
+boundedBasicTypes boundedBasicTypes47,48
+enumBasicTypes enumBasicTypes58,59
+semigroupBasicTypes semigroupBasicTypes61,62
+monoidBasicTypes monoidBasicTypes80,81
+qReportWarning qReportWarning87,88
+qReportError qReportError91,92
+qNewUnique qNewUnique95,96
+checkForRep checkForRep102,103
+checkForRepInDecls checkForRepInDecls109,110
+tysOfConFields tysOfConFields113,114
+recSelsOfConFields recSelsOfConFields117,118
+extractNameArgs extractNameArgs122,123
+extractName extractName126,127
+extractRecSelNames extractRecSelNames130,131
+isInfixDataCon isInfixDataCon134,135
+isDataConName isDataConName140,141
+isUpcase isUpcase149,150
+upcase upcase154,155
+toUpcaseStr toUpcaseStr158,159
+noPrefix noPrefix174,175
+prefixConName prefixConName183,184
+prefixName prefixName190,191
+suffixName suffixName200,201
+uniquePrefixes uniquePrefixes209,210
+extractTvbKind extractTvbKind234,235
+extractTvbName extractTvbName239,240
+tvbToType tvbToType243,244
+defaultTvbToTypeKind defaultTvbToTypeKind248,249
+defaultMaybeToTypeKind defaultMaybeToTypeKind253,254
+inferMaybeKindTV inferMaybeKindTV257,258
+resultSigToMaybeKind resultSigToMaybeKind261,262
+maybeKindToResultSig maybeKindToResultSig267,268
+maybeSigT maybeSigT270,271
+ravelVanillaDType ravelVanillaDType278,279
+unravelVanillaDType unravelVanillaDType303,304
+checkVanillaDType checkVanillaDType316,317
+unravelVanillaDType_either unravelVanillaDType_either324,325
+newtype UnravelM UnravelM399,400
+newtype UnravelM a = UnravelM { runUnravelM runUnravelM399,400
+countArgs countArgs403,404
+filterInvisTvbArgs filterInvisTvbArgs408,409
+replaceTvbKind replaceTvbKind419,420
+noExactTyVars noExactTyVars424,425
+noExactName noExactName440,441
+substKind substKind444,445
+substType substType449,450
+subst_tvb subst_tvb470,471
+dropTvbKind dropTvbKind474,475
+foldType foldType479,480
+foldTypeTvbs foldTypeTvbs483,484
+buildDataDTvbs buildDataDTvbs488,489
+foldExp foldExp494,495
+isFunTy isFunTy498,499
+orIfEmpty orIfEmpty504,505
+multiCase multiCase509,510
+newtype QWithAux QWithAux515,516
+newtype QWithAux m q a = QWA QWA515,516
+newtype QWithAux m q a = QWA { runQWA runQWA515,516
+evalWithoutAux evalWithoutAux521,522
+evalForAux evalForAux525,526
+evalForPair evalForPair530,531
+addBinding addBinding534,535
+addElement addElement538,539
+dsReifyTypeNameInfo dsReifyTypeNameInfo546,547
+concatMapM concatMapM555,556
+mapMaybeM mapMaybeM562,563
+listify listify572,573
+fstOf3 fstOf3575,576
+liftFst liftFst578,579
+liftSnd liftSnd581,582
+snocView snocView584,585
+partitionWith partitionWith589,590
+partitionWithM partitionWithM597,598
+partitionLetDecs partitionLetDecs606,607
+zipWith3M zipWith3M611,612
+mapAndUnzip3M mapAndUnzip3M615,616
+isHsLetter isHsLetter623,624
+
+/Users/scott/unpackedHackagePackages/singletons-2.7/src/Data/Singletons.hs,1184
+module Data.Singletons Data.Singletons39,40
+instance SEq SEq k => Eq (SomeSing k)130,131
+  SomeSing SomeSing131,132
+instance SOrd SOrd k => Ord (SomeSing k)134,135
+  SomeSing a `compare`compare135,136
+  SomeSing SomeSing136,137
+instance SBounded SBounded k => Bounded (SomeSing k)141,142
+  minBound minBound142,143
+  maxBound maxBound143,144
+instance SEnum SEnum k => Enum (SomeSing k)145,146
+  succ succ146,147
+  pred pred147,148
+  toEnum toEnum148,149
+  fromEnum fromEnum149,150
+  enumFromTo enumFromTo150,151
+  enumFromThenTo enumFromThenTo152,153
+listFromSingShallow listFromSingShallow157,158
+instance SNum SNum k => Num (SomeSing k)161,162
+  SomeSing SomeSing162,163
+  negate negate165,166
+  abs abs166,167
+  signum signum167,168
+  fromInteger fromInteger168,169
+instance ShowSing ShowSing k => Show (SomeSing k)170,171
+  showsPrec showsPrec171,172
+instance SSemigroup SSemigroup k => Semigroup (SomeSing k)175,176
+  SomeSing SomeSing176,177
+instance SMonoid SMonoid k => Monoid (SomeSing k)178,179
+  mempty mempty179,180
+instance SIsString SIsString k => IsString (SomeSing k)181,182
+  fromString fromString182,183
+
 /Users/scott/unpackedHackagePackages/tagged-0.8.6/Setup.lhs,39
  module Main Main1,2
  main main5,6

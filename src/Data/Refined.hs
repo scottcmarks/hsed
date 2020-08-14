@@ -27,6 +27,7 @@ Datatype refined by predicate
 module Data.Refined
   ( Refined
   , plain
+  , reifyP
   , unsafeCreate
   , type (?)
   , Predicate(..)
@@ -36,6 +37,7 @@ where
 import           Data.Coerce     (Coercible, coerce)
 import           Data.Kind       (Type)
 import           Data.ListLike   (FoldableLL (..), ListLike (..))
+import           Data.Proxy      (Proxy (..))
 import           Data.String     (IsString (..), String)
 import           GHC.Base        (Monoid (..), Semigroup (..), const)
 import           GHC.Exts        (IsList (..))
@@ -57,6 +59,8 @@ plain = coerce
 unsafeCreate :: a -> Refined p a
 unsafeCreate = coerce
 
+reifyP :: Refined p a -> Proxy p
+reifyP _ = Proxy
 
 -- | An infix alias for 'Refined'.
 type a ? p = Refined p a
@@ -83,6 +87,11 @@ class Coercible (p a) a => Predicate (p :: Type -> Type) a where
 
     refine :: a -> Refined p a
     refine = test  accept  (error . failMsg)
+
+    pred :: a -> Bool
+    pred = predicate . (coerce :: a -> p a)
+
+
 
 
 instance (Num a, Predicate p a) => Num (Refined p a)

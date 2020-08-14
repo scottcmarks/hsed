@@ -63,6 +63,28 @@ Struct_Type Struct_Type73,74
 Set_Type Set_Type75,76
 correctABNFToTCGABNF correctABNFToTCGABNF80,81
 
+./Scratch.hs,509
+module Scratch Scratch13,14
+type role role26,27
+newtype Refined Refined27,28
+plain plain30,31
+unsafeCreate unsafeCreate33,34
+reifyPhantom reifyPhantom36,37
+type a a40,41
+test test44,45
+pred pred48,49
+pred' pred'54,55
+accept accept60,61
+class Coercible (p a) a => Predicate Predicate63,64
+    predicate predicate64,65
+    failMsg failMsg66,67
+    safeCreate safeCreate68,69
+    create create71,72
+    refine refine74,75
+type Parity Parity77,78
+even even79,80
+hi hi84,85
+
 ./src/System/SED/MCTP/TPer/Run.hs,76
 module System.SED.MCTP.TPer.Run System.SED.MCTP.TPer.Run2,3
 run run9,10
@@ -837,47 +859,49 @@ instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size7
 instance HasSize HasSize (Set a)81,82
 instance HasSize (Set a)           where size size81,82
 
-./src/Data/Refined.hs,1660
+./src/Data/Refined.hs,1713
 module Data.RefinedData.Refined26,27
-type role role49,50
-newtype Refined Refined50,51
-plain plain53,54
-unsafeCreate unsafeCreate56,57
-type a a61,62
-test test65,66
-accept accept69,70
-class Coercible (p a) a => Predicate Predicate72,73
-    predicate predicate73,74
-    failMsg failMsg75,76
-    safeCreate safeCreate77,78
-    create create80,81
-    refine refine83,84
-instance (N(Num a, Predicate p a) => Num (Refined p a)87,88
-    (R(Refinedx)89,90
-    negate negate92,93
-    abs abs93,94
-    signum signum94,95
-    fromInteger fromInteger95,96
-instance (R(Read a, Predicate p a) => Read (Refined p a)98,99
-    readPrec readPrec99,100
-instance (I(IsString a, Predicate p a) => IsString (Refined p a)102,103
-    fromString fromString103,104
-instance (I(IsList a, Predicate p a) => IsList (Refined p a)106,107
-    type Item Item107,108
-    fromList fromList108,109
-    toList toList109,110
-instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item112,113
-    foldl foldl113,114
-    foldr foldr114,115
-instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)116,117
-    (R(Refinedx)117,118
-instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)119,120
-    mempty mempty120,121
-instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item122,123
-    singleton singleton123,124
-    head head124,125
-    tail tail125,126
-    null null126,127
-    genericLength genericLength127,128
-instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)130,131
-    arbitrary arbitrary131,132
+type role role51,52
+newtype Refined Refined52,53
+plain plain55,56
+unsafeCreate unsafeCreate58,59
+reifyP reifyP61,62
+type a a65,66
+test test69,70
+accept accept73,74
+class Coercible (p a) a => Predicate Predicate76,77
+    predicate predicate77,78
+    failMsg failMsg79,80
+    safeCreate safeCreate81,82
+    create create84,85
+    refine refine87,88
+    pred pred90,91
+instance (N(Num a, Predicate p a) => Num (Refined p a)96,97
+    (R(Refinedx)98,99
+    negate negate101,102
+    abs abs102,103
+    signum signum103,104
+    fromInteger fromInteger104,105
+instance (R(Read a, Predicate p a) => Read (Refined p a)107,108
+    readPrec readPrec108,109
+instance (I(IsString a, Predicate p a) => IsString (Refined p a)111,112
+    fromString fromString112,113
+instance (I(IsList a, Predicate p a) => IsList (Refined p a)115,116
+    type Item Item116,117
+    fromList fromList117,118
+    toList toList118,119
+instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item121,122
+    foldl foldl122,123
+    foldr foldr123,124
+instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)125,126
+    (R(Refinedx)126,127
+instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)128,129
+    mempty mempty129,130
+instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item131,132
+    singleton singleton132,133
+    head head133,134
+    tail tail134,135
+    null null135,136
+    genericLength genericLength136,137
+instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)139,140
+    arbitrary arbitrary140,141

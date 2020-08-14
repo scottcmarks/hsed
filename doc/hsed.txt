@@ -40,6 +40,7 @@ instance Data.HasSize.HasSize (Data.Set.Internal.Set a)
 module Data.Refined
 data Refined (p :: Type -> Type) a
 plain :: Refined p a -> a
+reifyP :: Refined p a -> Proxy p
 unsafeCreate :: a -> Refined p a
 
 -- | An infix alias for <a>Refined</a>.
@@ -51,6 +52,7 @@ failMsg :: Predicate p a => p a -> String
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 refine :: Predicate p a => a -> Refined p a
+pred :: Predicate p a => a -> Bool
 instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
@@ -113,6 +115,7 @@ failMsg :: Predicate p a => p a -> String
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 refine :: Predicate p a => a -> Refined p a
+pred :: Predicate p a => a -> Bool
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
@@ -423,6 +426,7 @@ failMsg :: Predicate p a => p a -> String
 safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 refine :: Predicate p a => a -> Refined p a
+pred :: Predicate p a => a -> Bool
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   

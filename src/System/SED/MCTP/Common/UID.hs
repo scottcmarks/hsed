@@ -29,6 +29,7 @@ import           Data.ByteString                    (singleton)
 import           Data.ByteString.Base16             (encode)
 import           Data.ByteString.Char8              (unpack)
 import           Data.Foldable                      (foldl)
+import           Data.HasSize                       (HasSize (..))
 import           Data.String                        (String)
 import           GHC.Base                           (($), (.))
 import           GHC.Classes                        (Eq (..), Ord (..))
@@ -55,7 +56,7 @@ showCore_bytes tag = foldl rollUp tag . toList
 
 
 newtype HalfUID = HalfUID (Core_halfuid)
-    deriving(Eq, Ord, IsToken, StreamItem, IsList, Arbitrary) via (Core_halfuid)
+    deriving(Eq, Ord, IsToken, StreamItem, IsList, HasSize, Arbitrary) via (Core_halfuid)
 instance Show HalfUID where
     show (HalfUID fb) = showCore_bytes "halfUID" fb
 
@@ -69,7 +70,7 @@ halfUID b3 b2 b1 b0 =
 
 
 newtype UID = UID (Core_uid)
-    deriving(Eq, Ord, IsToken, StreamItem, IsList, Arbitrary) via (Core_uid)
+    deriving(Eq, Ord, IsToken, StreamItem, IsList, HasSize, Arbitrary) via (Core_uid)
 instance Show UID where
     show (UID fb) = showCore_bytes "uid" fb
 

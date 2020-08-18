@@ -35,6 +35,7 @@ module Data.Refined
 where
 
 import           Data.Coerce     (Coercible, coerce)
+import           Data.HasSize    (HasSize (..))
 import           Data.Kind       (Type)
 import           Data.ListLike   (FoldableLL (..), ListLike (..))
 import           Data.Proxy      (Proxy (..))
@@ -66,6 +67,8 @@ reifyP _ = Proxy
 type a ? p = Refined p a
 infixr 1 ?
 
+instance HasSize a => HasSize (a ? p) where
+    size = size . plain
 
 test :: forall p a t. (Predicate p a)
  => (p a -> t) -> (p a -> t) -> a -> t

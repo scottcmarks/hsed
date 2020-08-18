@@ -46,11 +46,11 @@ Utilities
 </span><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-var">UID</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_uid -&gt; UID) -&gt; (ByteString -&gt; Core_uid) -&gt; ByteString -&gt; UID
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Core_uid
-</span><a href="#local-6989586621679609358"><span class="hs-identifier hs-var">cf</span></a></span><span>
+</span><a href="#local-6989586621679609842"><span class="hs-identifier hs-var">cf</span></a></span><span>
 </span><span id="line-45"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>      </span><span class="annot"><a href="#local-6989586621679609358"><span class="hs-identifier hs-type">cf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
-</span><span id="line-47"></span><span>      </span><span id="local-6989586621679609358"><span class="annot"><span class="annottext">cf :: ByteString -&gt; Core_uid
-</span><a href="#local-6989586621679609358"><span class="hs-identifier hs-var hs-var">cf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 8) -&gt; Core_uid
+</span><span id="line-46"></span><span>      </span><span class="annot"><a href="#local-6989586621679609842"><span class="hs-identifier hs-type">cf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
+</span><span id="line-47"></span><span>      </span><span id="local-6989586621679609842"><span class="annot"><span class="annottext">cf :: ByteString -&gt; Core_uid
+</span><a href="#local-6989586621679609842"><span class="hs-identifier hs-var hs-var">cf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 8) -&gt; Core_uid
 forall (n :: Nat). (Core_some_bytes ? FixedSize n) -&gt; Core_bytes n
 </span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">((Core_some_bytes ? FixedSize 8) -&gt; Core_uid)
 -&gt; (ByteString -&gt; Core_some_bytes ? FixedSize 8)
@@ -87,16 +87,16 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 -&gt; (ByteString -&gt; ByteString) -&gt; ByteString -&gt; Core_some_bytes
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString
-</span><a href="#local-6989586621679609355"><span class="hs-identifier hs-var">bytesfn</span></a></span><span>
-</span><span id="line-48"></span><span>      </span><span class="annot"><a href="#local-6989586621679609355"><span class="hs-identifier hs-type">bytesfn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
-</span><span id="line-49"></span><span>      </span><span id="local-6989586621679609355"><span class="annot"><span class="annottext">bytesfn :: ByteString -&gt; ByteString
-</span><a href="#local-6989586621679609355"><span class="hs-identifier hs-var hs-var">bytesfn</span></a></span></span><span> </span><span id="local-6989586621679609354"><span class="annot"><span class="annottext">hexBytes :: ByteString
-</span><a href="#local-6989586621679609354"><span class="hs-identifier hs-var">hexBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="#local-6989586621679609839"><span class="hs-identifier hs-var">bytesfn</span></a></span><span>
+</span><span id="line-48"></span><span>      </span><span class="annot"><a href="#local-6989586621679609839"><span class="hs-identifier hs-type">bytesfn</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
+</span><span id="line-49"></span><span>      </span><span id="local-6989586621679609839"><span class="annot"><span class="annottext">bytesfn :: ByteString -&gt; ByteString
+</span><a href="#local-6989586621679609839"><span class="hs-identifier hs-var hs-var">bytesfn</span></a></span></span><span> </span><span id="local-6989586621679609838"><span class="annot"><span class="annottext">hexBytes :: ByteString
+</span><a href="#local-6989586621679609838"><span class="hs-identifier hs-var">hexBytes</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-50"></span><span>          </span><span class="hs-keyword">if</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Bool
 </span><span class="hs-identifier hs-var">null</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679609353"><span class="hs-identifier hs-var">remainder</span></a></span><span>
+</span><a href="#local-6989586621679609837"><span class="hs-identifier hs-var">remainder</span></a></span><span>
 </span><span id="line-51"></span><span>            </span><span class="hs-keyword">then</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679609352"><span class="hs-identifier hs-var">bytes</span></a></span><span>
+</span><a href="#local-6989586621679609836"><span class="hs-identifier hs-var">bytes</span></a></span><span>
 </span><span id="line-52"></span><span>            </span><span class="hs-keyword">else</span><span> </span><span class="annot"><span class="annottext">[Char] -&gt; ByteString
 forall a. HasCallStack =&gt; [Char] -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="annottext">([Char] -&gt; ByteString) -&gt; [Char] -&gt; ByteString
@@ -107,13 +107,13 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ShowS
 forall a. Show a =&gt; a -&gt; ShowS
 </span><span class="hs-identifier hs-var">shows</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679609354"><span class="hs-identifier hs-var">hexBytes</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS
+</span><a href="#local-6989586621679609838"><span class="hs-identifier hs-var">hexBytes</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="hs-string">&quot;&quot;</span></span><span>
 </span><span id="line-53"></span><span>          </span><span class="hs-keyword">where</span><span>
-</span><span id="line-54"></span><span>            </span><span class="hs-special">(</span><span id="local-6989586621679609352"><span class="annot"><span class="annottext">bytes :: ByteString
-</span><a href="#local-6989586621679609352"><span class="hs-identifier hs-var">bytes</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679609353"><span class="annot"><span class="annottext">remainder :: ByteString
-</span><a href="#local-6989586621679609353"><span class="hs-identifier hs-var">remainder</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; (ByteString, ByteString)
+</span><span id="line-54"></span><span>            </span><span class="hs-special">(</span><span id="local-6989586621679609836"><span class="annot"><span class="annottext">bytes :: ByteString
+</span><a href="#local-6989586621679609836"><span class="hs-identifier hs-var">bytes</span></a></span></span><span class="hs-special">,</span><span id="local-6989586621679609837"><span class="annot"><span class="annottext">remainder :: ByteString
+</span><a href="#local-6989586621679609837"><span class="hs-identifier hs-var">remainder</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; (ByteString, ByteString)
 </span><span class="hs-identifier hs-var">decode</span></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; (ByteString, ByteString))
 -&gt; ByteString -&gt; (ByteString, ByteString)
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -123,15 +123,15 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Bool
 </span><span class="hs-identifier hs-var">isSpace_w8</span></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679609354"><span class="hs-identifier hs-var">hexBytes</span></a></span><span>
+</span><a href="#local-6989586621679609838"><span class="hs-identifier hs-var">hexBytes</span></a></span><span>
 </span><span id="line-55"></span><span>
 </span><span id="line-56"></span><span>
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span class="hs-comment">-- | Trim trailing whitespace from e.g. a field in a quasiquoted table</span><span>
 </span><span id="line-59"></span><span class="annot"><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-type">trimTrailingWhitespace</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span>
 </span><span id="line-60"></span><span id="trimTrailingWhitespace"><span class="annot"><span class="annottext">trimTrailingWhitespace :: ByteString -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-var hs-var">trimTrailingWhitespace</span></a></span></span><span> </span><span id="local-6989586621679609350"><span class="annot"><span class="annottext">s :: ByteString
-</span><a href="#local-6989586621679609350"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString, ByteString) -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.Util.html#trimTrailingWhitespace"><span class="hs-identifier hs-var hs-var">trimTrailingWhitespace</span></a></span></span><span> </span><span id="local-6989586621679609834"><span class="annot"><span class="annottext">s :: ByteString
+</span><a href="#local-6989586621679609834"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(ByteString, ByteString) -&gt; ByteString
 forall a b. (a, b) -&gt; a
 </span><span class="hs-identifier hs-var">fst</span></span><span> </span><span class="annot"><span class="annottext">((ByteString, ByteString) -&gt; ByteString)
 -&gt; (ByteString, ByteString) -&gt; ByteString
@@ -139,5 +139,5 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; Bool) -&gt; ByteString -&gt; (ByteString, ByteString)
 </span><span class="hs-identifier hs-var">spanEnd</span></span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Bool
 </span><span class="hs-identifier hs-var">isSpace_w8</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679609350"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621679609834"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-61"></span></pre></body></html>

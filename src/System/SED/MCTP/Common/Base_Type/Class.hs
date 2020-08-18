@@ -124,6 +124,8 @@ type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 
 newtype Core_bytes     n = Core_bytes     (Core_some_bytes ? FixedSize n)
     deriving (Eq, Ord, Show, IsList, IsString, Arbitrary) via (Core_some_bytes ? FixedSize n)
+instance KnownNat n => HasSize (Core_bytes n) where
+    size = fromNat
 
 
 

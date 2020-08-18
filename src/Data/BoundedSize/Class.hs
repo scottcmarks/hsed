@@ -99,6 +99,9 @@ class (IsBoundedSize l l a) => IsFixedSize l a
 instance (IsBoundedSize l l a) => IsFixedSize l a
 type FixedSize n = BoundedSize n n
 
+instance KnownNat n => HasSize (a ? FixedSize n) where
+    size _ = fromNat (Proxy @n)
+
 -- | Class of types which can be assigned a maximum type-level size.
 class (IsBoundedSize 0 l a) => IsMaxSize l a
 instance (IsBoundedSize 0 l a) => IsMaxSize l a

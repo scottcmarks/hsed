@@ -178,7 +178,7 @@ The TPer is not required to keep rows of the table sorted by these unique values
 
 -}</span><span>
 </span><span id="line-180"></span><span>
-</span><span id="line-181"></span><span class="hs-keyword">newtype</span><span> </span><span id="TableName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="TableName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608299"><span id="local-6989586621679608301"><span class="annot"><span class="annottext">TableName -&gt; TableName -&gt; Bool
+</span><span id="line-181"></span><span class="hs-keyword">newtype</span><span> </span><span id="TableName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="TableName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-var">TableName</span></a></span></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608783"><span id="local-6989586621679608785"><span class="annot"><span class="annottext">TableName -&gt; TableName -&gt; Bool
 (TableName -&gt; TableName -&gt; Bool)
 -&gt; (TableName -&gt; TableName -&gt; Bool) -&gt; Eq TableName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -186,20 +186,20 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TableName -&gt; TableName -&gt; Bool
 == :: TableName -&gt; TableName -&gt; Bool
 $c== :: TableName -&gt; TableName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608296"><span class="annot"><span class="annottext">String -&gt; TableName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608780"><span class="annot"><span class="annottext">String -&gt; TableName
 (String -&gt; TableName) -&gt; IsString TableName
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; TableName
 $cfromString :: String -&gt; TableName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-182"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679608290"><span id="local-6989586621679608293"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679608288"><span class="annot"><span class="annottext">show :: TableName -&gt; String
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span id="local-6989586621679608286"><span class="annot"><span class="annottext">bs :: ByteString
-</span><a href="#local-6989586621679608286"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><span id="line-182"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679608774"><span id="local-6989586621679608777"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679608772"><span class="annot"><span class="annottext">show :: TableName -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span> </span><span id="local-6989586621679608770"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679608770"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679608286"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621679608770"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-183"></span><span>
-</span><span id="line-184"></span><span class="hs-keyword">newtype</span><span> </span><span id="TemplateName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-var">TemplateName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TemplateName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-var">TemplateName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608281"><span id="local-6989586621679608283"><span class="annot"><span class="annottext">TemplateName -&gt; TemplateName -&gt; Bool
+</span><span id="line-184"></span><span class="hs-keyword">newtype</span><span> </span><span id="TemplateName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-var">TemplateName</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TemplateName"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-var">TemplateName</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608765"><span id="local-6989586621679608767"><span class="annot"><span class="annottext">TemplateName -&gt; TemplateName -&gt; Bool
 (TemplateName -&gt; TemplateName -&gt; Bool)
 -&gt; (TemplateName -&gt; TemplateName -&gt; Bool) -&gt; Eq TemplateName
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -207,18 +207,18 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TemplateName -&gt; TemplateName -&gt; Bool
 == :: TemplateName -&gt; TemplateName -&gt; Bool
 $c== :: TemplateName -&gt; TemplateName -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608279"><span class="annot"><span class="annottext">String -&gt; TemplateName
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608763"><span class="annot"><span class="annottext">String -&gt; TemplateName
 (String -&gt; TemplateName) -&gt; IsString TemplateName
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; TemplateName
 $cfromString :: String -&gt; TemplateName
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-185"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679608274"><span id="local-6989586621679608277"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679608273"><span class="annot"><span class="annottext">show :: TemplateName -&gt; String
-</span><a href="#local-6989586621679608273"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span><span> </span><span id="local-6989586621679608272"><span class="annot"><span class="annottext">bs :: ByteString
-</span><a href="#local-6989586621679608272"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
+</span><span id="line-185"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679608758"><span id="local-6989586621679608761"><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span></span></span><span> </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679608757"><span class="annot"><span class="annottext">show :: TemplateName -&gt; String
+</span><a href="#local-6989586621679608757"><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TemplateName"><span class="hs-identifier hs-type">TemplateName</span></a></span><span> </span><span id="local-6989586621679608756"><span class="annot"><span class="annottext">bs :: ByteString
+</span><a href="#local-6989586621679608756"><span class="hs-identifier hs-var">bs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; String
 forall a. Show a =&gt; a -&gt; String
 </span><span class="hs-identifier hs-var">show</span></span><span> </span><span class="annot"><span class="annottext">ByteString
-</span><a href="#local-6989586621679608272"><span class="hs-identifier hs-var">bs</span></a></span><span>
+</span><a href="#local-6989586621679608756"><span class="hs-identifier hs-var">bs</span></a></span><span>
 </span><span id="line-186"></span><span>
 </span><span id="line-187"></span><span class="hs-keyword">data</span><span> </span><span id="Table"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Table"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#Table"><span class="hs-identifier hs-var">Table</span></a></span></span><span> </span><span class="hs-special">{</span><span> </span><span id="_tableName"><span class="annot"><span class="annottext">Table -&gt; TableName
 </span><a href="System.SED.MCTP.Common.Table.html#_tableName"><span class="hs-identifier hs-var hs-var">_tableName</span></a></span></span><span>    </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableName"><span class="hs-identifier hs-type">TableName</span></a></span><span>
@@ -229,14 +229,14 @@ forall a. Show a =&gt; a -&gt; String
 </span><span id="line-190"></span><span>                   </span><span class="hs-special">,</span><span> </span><span id="_tableRows"><span class="annot"><span class="annottext">Table -&gt; [TableRow]
 </span><a href="System.SED.MCTP.Common.Table.html#_tableRows"><span class="hs-identifier hs-var hs-var">_tableRows</span></a></span></span><span>    </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableRow"><span class="hs-identifier hs-type">TableRow</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-191"></span><span>                   </span><span class="hs-special">}</span><span>
-</span><span id="line-192"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608263"><span id="local-6989586621679608265"><span class="annot"><span class="annottext">Table -&gt; Table -&gt; Bool
+</span><span id="line-192"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608747"><span id="local-6989586621679608749"><span class="annot"><span class="annottext">Table -&gt; Table -&gt; Bool
 (Table -&gt; Table -&gt; Bool) -&gt; (Table -&gt; Table -&gt; Bool) -&gt; Eq Table
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 /= :: Table -&gt; Table -&gt; Bool
 $c/= :: Table -&gt; Table -&gt; Bool
 == :: Table -&gt; Table -&gt; Bool
 $c== :: Table -&gt; Table -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608257"><span id="local-6989586621679608259"><span id="local-6989586621679608261"><span class="annot"><span class="annottext">Int -&gt; Table -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608741"><span id="local-6989586621679608743"><span id="local-6989586621679608745"><span class="annot"><span class="annottext">Int -&gt; Table -&gt; ShowS
 [Table] -&gt; ShowS
 Table -&gt; String
 (Int -&gt; Table -&gt; ShowS)
@@ -252,7 +252,7 @@ $cshowsPrec :: Int -&gt; Table -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-193"></span><span>
 </span><span id="line-194"></span><span class="hs-keyword">newtype</span><span> </span><span id="TableRow"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableRow"><span class="hs-identifier hs-var">TableRow</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="TableRow"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#TableRow"><span class="hs-identifier hs-var">TableRow</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-195"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608252"><span id="local-6989586621679608254"><span class="annot"><span class="annottext">TableRow -&gt; TableRow -&gt; Bool
+</span><span id="line-195"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608736"><span id="local-6989586621679608738"><span class="annot"><span class="annottext">TableRow -&gt; TableRow -&gt; Bool
 (TableRow -&gt; TableRow -&gt; Bool)
 -&gt; (TableRow -&gt; TableRow -&gt; Bool) -&gt; Eq TableRow
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -260,7 +260,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TableRow -&gt; TableRow -&gt; Bool
 == :: TableRow -&gt; TableRow -&gt; Bool
 $c== :: TableRow -&gt; TableRow -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608246"><span id="local-6989586621679608248"><span id="local-6989586621679608250"><span class="annot"><span class="annottext">Int -&gt; TableRow -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608730"><span id="local-6989586621679608732"><span id="local-6989586621679608734"><span class="annot"><span class="annottext">Int -&gt; TableRow -&gt; ShowS
 [TableRow] -&gt; ShowS
 TableRow -&gt; String
 (Int -&gt; TableRow -&gt; ShowS)
@@ -413,7 +413,7 @@ in this table.
 </span><span id="line-329"></span><span>                               </span><span class="hs-special">,</span><span> </span><span id="_columnType"><span class="annot"><span class="annottext">TableColumn -&gt; ColumnType
 </span><a href="System.SED.MCTP.Common.Table.html#_columnType"><span class="hs-identifier hs-var hs-var">_columnType</span></a></span></span><span>     </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Table.html#ColumnType"><span class="hs-identifier hs-type">ColumnType</span></a></span><span>
 </span><span id="line-330"></span><span>                               </span><span class="hs-special">}</span><span>
-</span><span id="line-331"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608237"><span id="local-6989586621679608239"><span class="annot"><span class="annottext">TableColumn -&gt; TableColumn -&gt; Bool
+</span><span id="line-331"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608721"><span id="local-6989586621679608723"><span class="annot"><span class="annottext">TableColumn -&gt; TableColumn -&gt; Bool
 (TableColumn -&gt; TableColumn -&gt; Bool)
 -&gt; (TableColumn -&gt; TableColumn -&gt; Bool) -&gt; Eq TableColumn
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -421,7 +421,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: TableColumn -&gt; TableColumn -&gt; Bool
 == :: TableColumn -&gt; TableColumn -&gt; Bool
 $c== :: TableColumn -&gt; TableColumn -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608231"><span id="local-6989586621679608233"><span id="local-6989586621679608235"><span class="annot"><span class="annottext">Int -&gt; TableColumn -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608715"><span id="local-6989586621679608717"><span id="local-6989586621679608719"><span class="annot"><span class="annottext">Int -&gt; TableColumn -&gt; ShowS
 [TableColumn] -&gt; ShowS
 TableColumn -&gt; String
 (Int -&gt; TableColumn -&gt; ShowS)
@@ -439,7 +439,7 @@ $cshowsPrec :: Int -&gt; TableColumn -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-332"></span><span>
 </span><span id="line-333"></span><span class="hs-keyword">newtype</span><span> </span><span id="ColumnType"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#ColumnType"><span class="hs-identifier hs-var">ColumnType</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="ColumnType"><span class="annot"><a href="System.SED.MCTP.Common.Table.html#ColumnType"><span class="hs-identifier hs-var">ColumnType</span></a></span></span><span> </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
-</span><span id="line-334"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608226"><span id="local-6989586621679608228"><span class="annot"><span class="annottext">ColumnType -&gt; ColumnType -&gt; Bool
+</span><span id="line-334"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679608710"><span id="local-6989586621679608712"><span class="annot"><span class="annottext">ColumnType -&gt; ColumnType -&gt; Bool
 (ColumnType -&gt; ColumnType -&gt; Bool)
 -&gt; (ColumnType -&gt; ColumnType -&gt; Bool) -&gt; Eq ColumnType
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -447,7 +447,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: ColumnType -&gt; ColumnType -&gt; Bool
 == :: ColumnType -&gt; ColumnType -&gt; Bool
 $c== :: ColumnType -&gt; ColumnType -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608220"><span id="local-6989586621679608222"><span id="local-6989586621679608224"><span class="annot"><span class="annottext">Int -&gt; ColumnType -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679608704"><span id="local-6989586621679608706"><span id="local-6989586621679608708"><span class="annot"><span class="annottext">Int -&gt; ColumnType -&gt; ShowS
 [ColumnType] -&gt; ShowS
 ColumnType -&gt; String
 (Int -&gt; ColumnType -&gt; ShowS)

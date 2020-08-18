@@ -60,25 +60,25 @@ import System.SED.MCTP.Common.THUtil
 
 putStrLn "Running ..."
 
-:{
-table65 =
-      "\n\
-      \\n\
-      \\n\
-      \                  Table 65 bytes_4\n\
-      \    +-----------------------+-------+---------------------+\n\
-      \    |UID                    |Name   |Format               |\n\
-      \    +-----------------------+-------+---------------------+\n\
-      \    |00 00 00 05 00 00 02 38|bytes_4|Simple_Type,         |\n\
-      \    |                       |       |bytes,               |\n\
-      \    |                       |       |4                    |\n\
-      \    +-----------------------+-------+---------------------+\n\
-      \\n" :: String
-:}
-putStrLn table65
-parseTable typeTableParser table65
-putStrLn "\n"
-runQ $ ppr <$> quoteDec ttype table65
+-- :{
+-- table65 =
+--       "\n\
+--       \\n\
+--       \\n\
+--       \                  Table 65 bytes_4\n\
+--       \    +-----------------------+-------+---------------------+\n\
+--       \    |UID                    |Name   |Format               |\n\
+--       \    +-----------------------+-------+---------------------+\n\
+--       \    |00 00 00 05 00 00 02 38|bytes_4|Simple_Type,         |\n\
+--       \    |                       |       |bytes,               |\n\
+--       \    |                       |       |4                    |\n\
+--       \    +-----------------------+-------+---------------------+\n\
+--       \\n" :: String
+-- :}
+-- putStrLn table65
+-- parseTable typeTableParser table65
+-- putStrLn "\n"
+-- runQ $ ppr <$> quoteDec ttype table65
 
 -- :{
 -- table76 =
@@ -106,6 +106,69 @@ runQ $ ppr <$> quoteDec ttype table65
 putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+:set -XFlexibleInstances
+:set -XTypeOperators
+:set -XTypeApplications
+:set -XScopedTypeVariables
+
+import Data.Refined
+import Data.Proxy
+import Data.BoundedSize.Class
+import GHC.TypeNats
+import System.SED.MCTP.Common.TableUIDs
+import System.SED.MCTP.Common.UID
+import System.SED.MCTP.Common.Simple_Type
+import System.SED.MCTP.Common.Base_Type.Class
+
+
+:set -Wno-orphans
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+import GHC.Base(Monad(..),Monoid(..),Bool(..))
+import GHC.Classes
+import GHC.Exts
+import GHC.Real
+-- hide some to avoid collisions with other modules, mostly Base
+import Data.ListLike.Base hiding (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
+import qualified Data.ListLike.Base as LL (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
+import Data.ListLike.FoldableLL
+
+
+:i IsList
+:i ListLike
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+putStrLn "\n\n\n"
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+putStrLn $ showString "size hSP = " $ show (size hSP)
+putStrLn $ showString "size uSPTable = " $ show (size uSPTable )
+putStrLn $ showString "hSP = " $ show hSP
+putStrLn $ showString "toList hSP = " $ show (toList hSP)
 
 
 putStrLn "\n\n\nBuh-bye now.\n\n"
@@ -137,3 +200,10 @@ putStrLn ".. script loaded."
 --
 -- Important: switch to using Data.Binary for StreamItem, etc.
 --
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

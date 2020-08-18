@@ -65,6 +65,7 @@ instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) 
 instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => GHC.Base.Monoid (Data.Refined.Refined p full)
 instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => Data.ListLike.Base.ListLike (Data.Refined.Refined p full) item
 instance (Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.Predicate p a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Refined.Refined p a)
+instance Data.HasSize.HasSize a => Data.HasSize.HasSize (a Data.Refined.? p)
 
 
 -- | Use this module when you need to add an <a>IsBoundedSize</a> instance
@@ -130,6 +131,7 @@ instance GHC.Show.Show a => GHC.Show.Show (Data.BoundedSize.Class.BoundedSize l 
 instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.BoundedSize.Class.BoundedSize l u a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.BoundedSize.Class.BoundedSize l u a)
 instance Data.BoundedSize.Class.IsBoundedSize 0 l a => Data.BoundedSize.Class.IsMaxSize l a
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (a Data.Refined.? Data.BoundedSize.Class.FixedSize n)
 instance Data.BoundedSize.Class.IsBoundedSize l l a => Data.BoundedSize.Class.IsFixedSize l a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.BoundedSize.Class.IsBoundedSize l u a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.Refined.Predicate (Data.BoundedSize.Class.BoundedSize l u) a
@@ -687,6 +689,7 @@ instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
@@ -907,12 +910,14 @@ infix 9 +:+
 hNull :: HalfUID
 uNull :: UID
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
+instance Data.HasSize.HasSize System.SED.MCTP.Common.UID.UID
 instance GHC.Exts.IsList System.SED.MCTP.Common.UID.UID
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.UID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.UID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.UID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.UID
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.HalfUID
+instance Data.HasSize.HasSize System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Exts.IsList System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.HalfUID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID

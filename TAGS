@@ -863,51 +863,57 @@ instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size7
 instance HasSize HasSize (Set a)81,82
 instance HasSize (Set a)           where size size81,82
 
-./src/Data/Refined.hs,1790
-module Data.RefinedData.Refined26,27
-type role role52,53
-newtype Refined Refined53,54
-plain plain56,57
-unsafeCreate unsafeCreate59,60
-reifyP reifyP62,63
-type a a66,67
-instance HasSize HasSize a => HasSize (a ? p)69,70
-    size size70,71
-test test72,73
-accept accept76,77
-class Coercible (p a) a => Predicate Predicate79,80
-    predicate predicate80,81
-    failMsg failMsg82,83
-    safeCreate safeCreate84,85
-    create create87,88
-    refine refine90,91
-    pred pred93,94
-instance (N(Num a, Predicate p a) => Num (Refined p a)99,100
-    (R(Refinedx)101,102
-    negate negate104,105
-    abs abs105,106
-    signum signum106,107
-    fromInteger fromInteger107,108
-instance (R(Read a, Predicate p a) => Read (Refined p a)110,111
-    readPrec readPrec111,112
-instance (I(IsString a, Predicate p a) => IsString (Refined p a)114,115
-    fromString fromString115,116
-instance (I(IsList a, Predicate p a) => IsList (Refined p a)118,119
-    type Item Item119,120
-    fromList fromList120,121
-    toList toList121,122
-instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item124,125
-    foldl foldl125,126
-    foldr foldr126,127
-instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)128,129
-    (R(Refinedx)129,130
-instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)131,132
-    mempty mempty132,133
-instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item134,135
-    singleton singleton135,136
-    head head136,137
-    tail tail137,138
-    null null138,139
-    genericLength genericLength139,140
-instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)142,143
-    arbitrary arbitrary143,144
+./src/Data/Refined.hs,2179
+module Data.RefinedData.Refined27,28
+type role role57,58
+newtype Refined Refined58,59
+type a a62,63
+plain plain65,66
+unsafeCreate unsafeCreate68,69
+reifyRefinedPhantomAsProxy reifyRefinedPhantomAsProxy71,72
+reifyRefinedContextAsProxy reifyRefinedContextAsProxy74,75
+accept accept77,78
+instance HasSize HasSize a => HasSize (a ? p)80,81
+    size size81,82
+coerceToProxyTypeOf coerceToProxyTypeOf83,84
+class Coercible (p a) a => Predicate Predicate87,88
+    predicate predicate88,89
+    failMsg failMsg90,91
+    safeCreate safeCreate92,93
+    create create95,96
+    refine refine98,99
+    pred pred101,102
+    reifyPredicatePhantomAsProxy reifyPredicatePhantomAsProxy104,105
+    reifyPredicateAsProxy reifyPredicateAsProxy107,108
+test test110,111
+reifyPredicatePred reifyPredicatePred114,115
+reifyRefinedPredicatePred reifyRefinedPredicatePred117,118
+instance (N(Num a, Predicate p a) => Num (Refined p a)121,122
+    (R(Refinedx)123,124
+    negate negate126,127
+    abs abs127,128
+    signum signum128,129
+    fromInteger fromInteger129,130
+instance (R(Read a, Predicate p a) => Read (Refined p a)132,133
+    readPrec readPrec133,134
+instance (I(IsString a, Predicate p a) => IsString (Refined p a)136,137
+    fromString fromString137,138
+instance (I(IsList a, Predicate p a) => IsList (Refined p a)140,141
+    type Item Item141,142
+    fromList fromList142,143
+    toList toList143,144
+instance (L(ListLike full item, Predicate p full) => FoldableLL (Refined p full) item146,147
+    foldl foldl147,148
+    foldr foldr148,149
+instance (L(ListLike full item, Predicate p full) => Semigroup (Refined p full)150,151
+    (R(Refinedx)151,152
+instance (L(ListLike full item, Predicate p full) => Monoid (Refined p full)153,154
+    mempty mempty154,155
+instance (L(ListLike full item, Predicate p full) => ListLike (Refined p full) item156,157
+    singleton singleton157,158
+    head head158,159
+    tail tail159,160
+    null null160,161
+    genericLength genericLength161,162
+instance (A(Arbitrary a, Predicate p a) => Arbitrary (Refined p a)164,165
+    arbitrary arbitrary165,166

@@ -38,14 +38,16 @@ instance Data.HasSize.HasSize (Data.Set.Internal.Set a)
 
 -- | Datatype refined by predicate
 module Data.Refined
-data Refined (p :: Type -> Type) a
-plain :: Refined p a -> a
-reifyP :: Refined p a -> Proxy p
-unsafeCreate :: a -> Refined p a
+data Refined p a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
+plain :: Refined p a -> a
+unsafeCreate :: a -> Refined p a
+reifyRefinedPhantomAsProxy :: Refined p a -> Proxy p
+reifyRefinedContextAsProxy :: Refined p a -> Proxy (p a)
+coerceToProxyTypeOf :: Coercible a b => a -> proxy b -> b
 class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
@@ -53,9 +55,13 @@ safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 refine :: Predicate p a => a -> Refined p a
 pred :: Predicate p a => a -> Bool
-instance GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
+reifyPredicatePhantomAsProxy :: Predicate p a => Proxy p
+reifyPredicateAsProxy :: Predicate p a => Proxy (p a)
+reifyPredicatePred :: forall p a. Predicate p a => a -> Bool
+reifyRefinedPredicatePred :: Predicate p a => Refined p a -> a -> Bool
+instance forall k (p :: k) a. GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
+instance forall k (p :: k) a. GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
+instance forall k (p :: k) a. GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
 instance (GHC.Num.Num a, Data.Refined.Predicate p a) => GHC.Num.Num (Data.Refined.Refined p a)
 instance (GHC.Read.Read a, Data.Refined.Predicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
 instance (Data.String.IsString a, Data.Refined.Predicate p a) => Data.String.IsString (Data.Refined.Refined p a)
@@ -65,7 +71,7 @@ instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) 
 instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => GHC.Base.Monoid (Data.Refined.Refined p full)
 instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => Data.ListLike.Base.ListLike (Data.Refined.Refined p full) item
 instance (Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.Predicate p a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Refined.Refined p a)
-instance Data.HasSize.HasSize a => Data.HasSize.HasSize (a Data.Refined.? p)
+instance forall k a (p :: k). Data.HasSize.HasSize a => Data.HasSize.HasSize (a Data.Refined.? p)
 
 
 -- | Use this module when you need to add an <a>IsBoundedSize</a> instance
@@ -103,7 +109,7 @@ type MaxSize n = BoundedSize 0 n
 --   <tt>3</tt> Then it can be later cast to a specific <a>MaxSize</a> (of
 --   at least <tt>3</tt>).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
-data Refined (p :: Type -> Type) a
+data Refined p a
 unsafeCreate :: a -> Refined p a
 plain :: Refined p a -> a
 
@@ -117,6 +123,8 @@ safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 refine :: Predicate p a => a -> Refined p a
 pred :: Predicate p a => a -> Bool
+reifyPredicatePhantomAsProxy :: Predicate p a => Proxy p
+reifyPredicateAsProxy :: Predicate p a => Proxy (p a)
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
@@ -415,7 +423,7 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
-data Refined (p :: Type -> Type) a
+data Refined p a
 plain :: Refined p a -> a
 unsafeCreate :: a -> Refined p a
 
@@ -429,6 +437,8 @@ safeCreate :: Predicate p a => a -> Either String (Refined p a)
 create :: Predicate p a => a -> Maybe (Refined p a)
 refine :: Predicate p a => a -> Refined p a
 pred :: Predicate p a => a -> Bool
+reifyPredicatePhantomAsProxy :: Predicate p a => Proxy p
+reifyPredicateAsProxy :: Predicate p a => Proxy (p a)
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   

@@ -1,7 +1,9 @@
 :set -package hsed
-:set prompt-cont ""
+-- :set prompt-cont ""
 
-:set -XOverloadedStrings
+-- :set -XOverloadedStrings
+-- :set -XTemplateHaskell
+-- :set -XDataKinds
 
 -- :set -XQuasiQuotes
 -- :set -XRankNTypes
@@ -13,50 +15,50 @@
 -- :set -XDerivingVia
 -- :set -XUndecidableInstances
 
-import System.IO
-putStrLn "loading script ..."
---------------------------------------------------------------------------------
-
-import Data.ByteString(head,tail)
-import Data.Either(Either(..))
-import Data.Foldable(mapM_)
-import Data.Functor((<$>))
-import Data.Maybe(Maybe(..))
-import Data.Text(cons, snoc, pack, unpack)
-import GHC.Arr(range)
-import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
-import GHC.Classes((<))
-import GHC.Err(undefined)
-import GHC.Show(Show(..),showString,shows)
-import GHC.Base(const, (++))
 :def! $ (pure . (":! bash -l -c " ++) . show)
 :def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
 :def! D (pure . const (":set -ddump-splices") )
 :def! H (pure . (":! bash -l -c \"./h\"" ++) . show)
 :def! P (pure . (":! bash -l -c \"./hp\"" ++) . show)
 
---------------------------------------------------------------------------------
 
 
-import Data.Char (toUpper)
-import Data.ByteString (ByteString)
-import Data.String(IsString(..))
-import GHC.Word(Word8)
-import Data.ByteString.Internal(c2w)
-import Language.Haskell.TH
-import Language.Haskell.TH.Quote
-import Language.Haskell.TH.Ppr
-import Language.Haskell.TH.PprLib
-import Data.Either(Either(..))
-import Data.String(String)
+import System.IO
+putStrLn "loading script ..."
+--------------------------------------------------------------------------------
+
+-- import Data.ByteString(head,tail)
+-- import Data.Either(Either(..))
+-- import Data.Foldable(mapM_)
+-- import Data.Functor((<$>))
+-- import Data.Maybe(Maybe(..))
+-- import Data.Text(cons, snoc, pack, unpack)
+-- import GHC.Arr(range)
+-- import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
+-- import GHC.Classes((<))
+-- import GHC.Err(undefined)
+-- import GHC.Show(Show(..),showString,shows)
+-- import GHC.Base(const, (++))
+-- --------------------------------------------------------------------------------
+
+
+-- import Data.Char (toUpper)
+-- import Data.ByteString (ByteString)
+-- import Data.String(IsString(..))
+-- import GHC.Word(Word8)
+-- import Data.ByteString.Internal(c2w)
+-- import Language.Haskell.TH
+-- import Language.Haskell.TH.Quote
+-- import Language.Haskell.TH.Ppr
+-- import Language.Haskell.TH.PprLib
+-- import Data.Either(Either(..))
+-- import Data.String(String)
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-:set -XTemplateHaskell
-:set -XDataKinds
-:load src/System/SED/MCTP/Common/TypeUIDs.hs
-import System.SED.MCTP.Common.TypeUIDs.TH
-import System.SED.MCTP.Common.THUtil
+-- :load src/System/SED/MCTP/Common/TypeUIDs.hs
+-- import System.SED.MCTP.Common.TypeUIDs.TH
+-- import System.SED.MCTP.Common.THUtil
 
 putStrLn "Running ..."
 
@@ -122,39 +124,62 @@ putStrLn "\n\n\n"
 
 
 
-:set -XFlexibleInstances
+-- :set -XFlexibleInstances
+-- :set -XTypeOperators
+-- :set -XTypeApplications
+-- :set -XScopedTypeVariables
+
+-- import Data.Refined
+-- import Data.Proxy
+-- import Data.BoundedSize.Class
+-- import GHC.TypeNats
+-- import System.SED.MCTP.Common.TableUIDs
+-- import System.SED.MCTP.Common.UID
+-- import System.SED.MCTP.Common.Simple_Type
+-- import System.SED.MCTP.Common.Base_Type.Class
+
+
+
+-- --------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+
+
+-- import GHC.Base(Monad(..),Monoid(..),Bool(..))
+-- import GHC.Classes
+-- import GHC.Real
+-- -- hide some to avoid collisions with other modules, mostly Base
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+:set -XKindSignatures
 :set -XTypeOperators
-:set -XTypeApplications
-:set -XScopedTypeVariables
+:set -XRankNTypes
+:load src/System/SED/MCTP/Common/TableUIDs.hs
 
-import Data.Refined
-import Data.Proxy
-import Data.BoundedSize.Class
-import GHC.TypeNats
-import System.SED.MCTP.Common.TableUIDs
-import System.SED.MCTP.Common.UID
-import System.SED.MCTP.Common.Simple_Type
-import System.SED.MCTP.Common.Base_Type.Class
-
-
-:set -Wno-orphans
-
-
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-
-import GHC.Base(Monad(..),Monoid(..),Bool(..))
-import GHC.Classes
-import GHC.Exts
-import GHC.Real
--- hide some to avoid collisions with other modules, mostly Base
+-- system imports
 import Data.ListLike.Base hiding (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
 import qualified Data.ListLike.Base as LL (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
 import Data.ListLike.FoldableLL
+import Data.Proxy(Proxy(..))
 
+import GHC.Base(($),Bool(..),Type)
+import GHC.Exts(IsList(..),Item(..))
+import GHC.Show(Show(..),showString,shows)
+
+-- local extension imports
+import Data.BoundedSize.Class(BoundedSize(..),FixedSize,fromNat)
+import Data.HasSize(HasSize(..))
+import Data.Refined(Refined, type (?), reifyP, reifyPA, Predicate(..))
+import System.SED.MCTP.Common.Simple_Type(Core_bytes(..))
+import System.SED.MCTP.Common.Base_Type.Class(Core_some_bytes(..))
 
 :i IsList
 :i ListLike
@@ -165,10 +190,30 @@ putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 
-putStrLn $ showString "size hSP = " $ show (size hSP)
-putStrLn $ showString "size uSPTable = " $ show (size uSPTable )
+putStrLn $ showString "size hSP = " $ show $ size hSP
+putStrLn $ showString "size uSPTable = " $ show $ size uSPTable
 putStrLn $ showString "hSP = " $ show hSP
-putStrLn $ showString "toList hSP = " $ show (toList hSP)
+putStrLn $ showString "toList hSP = " $ show $ toList hSP
+
+:set -Wno-type-defaults
+chSP = let (HalfUID c)=hSP in c
+putStrLn $ showString "fromNat chSP = " $ show $ fromNat chSP
+
+csb4SP = let (Core_bytes c)=chSP in c
+:type csb4SP
+
+csbSP = plain csb4SP
+:type csb4SP
+
+import Data.ByteString.Internal(ByteString)
+bSP = unCore_some_bytes csbSP
+:type bSP
+
+putStrLn $ showString "reifyP csb4SP = " $ show $ reifyP csb4SP
+:type reifyP csb4SP
+
+putStrLn $ showString "reifyPA csb4SP = " $ show $ reifyPA csb4SP
+:type reifyPA csb4SP
 
 
 putStrLn "\n\n\nBuh-bye now.\n\n"
@@ -188,6 +233,7 @@ putStrLn ".. script loaded."
 --------------------------------------------------------------------------------
 
 -- TODOs
+
 -- Object HalfUIDs are the right half of Object UIDs
 -- Object Table Object HalfUIDs are the same as Object Table HalfUIDs
 -- Type HalfUIDs are e.g. the 00.00.02.38 in the lower half of bytes_4

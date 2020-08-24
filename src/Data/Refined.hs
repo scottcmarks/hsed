@@ -7,6 +7,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses  #-}
 {-# LANGUAGE NoImplicitPrelude      #-}
+{-# LANGUAGE PolyKinds              #-}
 {-# LANGUAGE RoleAnnotations        #-}
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE StandaloneDeriving     #-}
@@ -26,11 +27,15 @@ Datatype refined by predicate
 -}
 module Data.Refined
   ( Refined
-  , plain
-  , reifyP
-  , unsafeCreate
   , type (?)
+  , plain
+  , unsafeCreate
+  , reifyRefinedPhantomAsProxy
+  , reifyRefinedContextAsProxy
+  , coerceToProxyTypeOf
   , Predicate(..)
+  , reifyPredicatePred
+  , reifyRefinedPredicatePred
   )
 where
 
@@ -38,7 +43,7 @@ import           Data.Coerce     (Coercible, coerce)
 import           Data.HasSize    (HasSize (..))
 import           Data.Kind       (Type)
 import           Data.ListLike   (FoldableLL (..), ListLike (..))
-import           Data.Proxy      (Proxy (..))
+import           Data.Proxy      (Proxy (..), asProxyTypeOf)
 import           Data.String     (IsString (..), String)
 import           GHC.Base        (Monoid (..), Semigroup (..), const)
 import           GHC.Exts        (IsList (..))
@@ -51,8 +56,12 @@ import           Test.QuickCheck (Arbitrary (..), suchThatMap)
 
 
 type role Refined phantom _
-newtype Refined (p :: Type -> Type) a = Refined a
+newtype Refined p a = Refined a
     deriving (Eq, Ord, Show) via a
+
+-- | An infix alias for 'Refined'.
+type a ? p = Refined p a
+infixr 1 ?
 
 plain :: Refined p a -> a
 plain = coerce
@@ -60,22 +69,21 @@ plain = coerce
 unsafeCreate :: a -> Refined p a
 unsafeCreate = coerce
 
-reifyP :: Refined p a -> Proxy p
-reifyP _ = Proxy
+reifyRefinedPhantomAsProxy :: Refined p a -> Proxy p
+reifyRefinedPhantomAsProxy _ = Proxy
 
--- | An infix alias for 'Refined'.
-type a ? p = Refined p a
-infixr 1 ?
+reifyRefinedContextAsProxy :: Refined p a -> Proxy (p a)
+reifyRefinedContextAsProxy _ = Proxy
+
+accept :: Coercible (p a) a => p a -> Refined p a
+accept = coerce
 
 instance HasSize a => HasSize (a ? p) where
     size = size . plain
 
-test :: forall p a t. (Predicate p a)
- => (p a -> t) -> (p a -> t) -> a -> t
-test f g x = if predicate x' then f x' else g x' where x' = coerce x
+coerceToProxyTypeOf :: Coercible a b => a -> proxy b -> b
+coerceToProxyTypeOf = asProxyTypeOf . coerce
 
-accept :: Coercible (p a) a => p a -> Refined p a
-accept = coerce
 
 class Coercible (p a) a => Predicate (p :: Type -> Type) a where
     predicate :: p a -> Bool
@@ -94,7 +102,21 @@ class Coercible (p a) a => Predicate (p :: Type -> Type) a where
     pred :: a -> Bool
     pred = predicate . (coerce :: a -> p a)
 
+    reifyPredicatePhantomAsProxy :: Proxy p
+    reifyPredicatePhantomAsProxy = Proxy
 
+    reifyPredicateAsProxy :: Proxy (p a)
+    reifyPredicateAsProxy = Proxy
+
+test :: forall p a t. (Predicate p a)
+ => (p a -> t) -> (p a -> t) -> a -> t
+test f g x = if predicate x' then f x' else g x' where x' = coerce x
+
+reifyPredicatePred :: forall p a. (Predicate p a) => a -> Bool
+reifyPredicatePred = test (const True :: p a -> Bool) (const False)
+
+reifyRefinedPredicatePred :: Predicate p a => Refined p a -> a -> Bool
+reifyRefinedPredicatePred r = predicate . (`coerceToProxyTypeOf` reifyRefinedContextAsProxy r)
 
 
 instance (Num a, Predicate p a) => Num (Refined p a)

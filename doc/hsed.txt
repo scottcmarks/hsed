@@ -8301,6 +8301,25 @@ contramapMaybeGLogFunc :: (a -> Maybe b) -> GLogFunc b -> GLogFunc a
 --   secrets might be logged accidently.
 noLogging :: (HasLogFunc env, MonadReader env m) => m a -> m a
 
+-- | What accent colors, indexed by <a>Int</a>, is the log func configured
+--   to use?
+--   
+--   Intended for use by code which wants to optionally add additional
+--   color to its log messages.
+logFuncAccentColorsL :: HasLogFunc env => SimpleGetter env (Int -> Utf8Builder)
+
+-- | What color is the log func configured to use for secondary content?
+--   
+--   Intended for use by code which wants to optionally add additional
+--   color to its log messages.
+logFuncSecondaryColorL :: HasLogFunc env => SimpleGetter env Utf8Builder
+
+-- | What color is the log func configured to use for each <a>LogLevel</a>?
+--   
+--   Intended for use by code which wants to optionally add additional
+--   color to its log messages.
+logFuncLogLevelColorsL :: HasLogFunc env => SimpleGetter env (LogLevel -> Utf8Builder)
+
 -- | Is the log func configured to use color output?
 --   
 --   Intended for use by code which wants to optionally add additional
@@ -8322,6 +8341,25 @@ setLogFormat :: (Utf8Builder -> Utf8Builder) -> LogOptions -> LogOptions
 --   
 --   Default: <a>True</a> if in verbose mode, <a>False</a> otherwise.
 setLogUseLoc :: Bool -> LogOptions -> LogOptions
+
+-- | ANSI color codes for accents in the log output. Accent colors are
+--   indexed by <a>Int</a>.
+--   
+--   Default: <a>const</a> "\ESC[92m" -- Bright green, for all indicies
+setLogAccentColors :: (Int -> Utf8Builder) -> LogOptions -> LogOptions
+
+-- | ANSI color codes for secondary content in the log output.
+--   
+--   Default: "\ESC[90m" -- Bright black (gray)
+setLogSecondaryColor :: Utf8Builder -> LogOptions -> LogOptions
+
+-- | ANSI color codes for <a>LogLevel</a> in the log output.
+--   
+--   Default: <a>LevelDebug</a> = "\ESC[32m" -- Green <a>LevelInfo</a> =
+--   "\ESC[34m" -- Blue <a>LevelWarn</a> = "\ESC[33m" -- Yellow
+--   <a>LevelError</a> = "\ESC[31m" -- Red <a>LevelOther</a> _ = "\ESC[35m"
+--   -- Magenta
+setLogLevelColors :: (LogLevel -> Utf8Builder) -> LogOptions -> LogOptions
 
 -- | Use ANSI color codes in the log output.
 --   

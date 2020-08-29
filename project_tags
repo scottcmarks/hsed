@@ -63,28 +63,6 @@ Struct_Type Struct_Type73,74
 Set_Type Set_Type75,76
 correctABNFToTCGABNF correctABNFToTCGABNF80,81
 
-./Scratch.hs,509
-module Scratch Scratch13,14
-type role role26,27
-newtype Refined Refined27,28
-plain plain30,31
-unsafeCreate unsafeCreate33,34
-reifyPhantom reifyPhantom36,37
-type a a40,41
-test test44,45
-pred pred48,49
-pred' pred'54,55
-accept accept60,61
-class Coercible (p a) a => Predicate Predicate63,64
-    predicate predicate64,65
-    failMsg failMsg66,67
-    safeCreate safeCreate68,69
-    create create71,72
-    refine refine74,75
-type Parity Parity77,78
-even even79,80
-hi hi84,85
-
 ./src/System/SED/MCTP/TPer/Run.hs,76
 module System.SED.MCTP.TPer.Run System.SED.MCTP.TPer.Run2,3
 run run9,10

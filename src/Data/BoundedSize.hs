@@ -115,6 +115,8 @@ instance (KnownNat n, ListOps a) => IsMaxSizeListOps n a
 append ::
      forall l1 u1 l2 u2 a.
      ( IsBoundedSizeListOps l1 u1 a
+     , IsBoundedSizeListOps l2 u2 a
+     , IsBoundedSizeListOps (l1 + l2) (u1 + u2) a
      )
   =>  a ? BoundedSize l1 u1
   ->  a ? BoundedSize l2 u2

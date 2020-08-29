@@ -177,7 +177,7 @@ import GHC.Show(Show(..),showString,shows)
 -- local extension imports
 import Data.BoundedSize.Class(BoundedSize(..),FixedSize,fromNat)
 import Data.HasSize(HasSize(..))
-import Data.Refined(Refined, type (?), reifyP, reifyPA, Predicate(..))
+import Data.Refined(Refined, type (?), Predicate(..))
 import System.SED.MCTP.Common.Simple_Type(Core_bytes(..))
 import System.SED.MCTP.Common.Base_Type.Class(Core_some_bytes(..))
 
@@ -208,12 +208,6 @@ csbSP = plain csb4SP
 import Data.ByteString.Internal(ByteString)
 bSP = unCore_some_bytes csbSP
 :type bSP
-
-putStrLn $ showString "reifyP csb4SP = " $ show $ reifyP csb4SP
-:type reifyP csb4SP
-
-putStrLn $ showString "reifyPA csb4SP = " $ show $ reifyPA csb4SP
-:type reifyPA csb4SP
 
 
 putStrLn "\n\n\nBuh-bye now.\n\n"

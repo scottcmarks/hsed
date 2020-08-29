@@ -44,8 +44,8 @@ where
 
 import           Data.HasSize    (HasSize (..))
 import           Data.Proxy      (Proxy (..))
-import           Data.Refined    (type (?), Predicate (..), Refined, plain,
-                                  unsafeCreate)
+import           Data.Refined    (type (?), IsRefined (..), Predicate (..),
+                                  Refined, plain, unsafeCreate)
 import           GHC.Base        (Int, Monoid (..), Semigroup (..), ($), (.))
 import           GHC.Classes     (Eq (..), Ord (..), (&&))
 import           GHC.Num         (Num)
@@ -74,6 +74,8 @@ newtype BoundedSize (l::Nat) (u::Nat) a = BoundedSize a
 
 class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
 instance (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a where
+
+instance IsBoundedSize l u a => IsRefined (BoundedSize l u) a
 
 -- | Instance of predicate for values with type-level minimum and maximum size.
 instance (KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a where
@@ -117,7 +119,8 @@ type AtLeast c m =  forall l . (KnownNat l, m <= l) => c l
 
 -- | 'Arbitrary' values for testing
 --
-instance {-# OVERLAPPING #-} (KnownNat l, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u)) where
+instance {-# OVERLAPPING #-} (KnownNat l, KnownNat u, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a)
+ => Arbitrary (a ? (BoundedSize l u)) where
     arbitrary = arbitrary `suchThatMap` create
     shrink t = [ unsafeCreate s | s <- shrink $ plain t, l <= size s]
        where l = fromNat (Proxy @l)

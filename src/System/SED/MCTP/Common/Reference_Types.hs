@@ -1,13 +1,14 @@
-{-# LANGUAGE DataKinds            #-}
-{-# LANGUAGE DerivingVia          #-}
-{-# LANGUAGE FlexibleInstances    #-}
-{-# LANGUAGE KindSignatures       #-}
-{-# LANGUAGE NoImplicitPrelude    #-}
-{-# LANGUAGE RankNTypes           #-}
-{-# LANGUAGE RoleAnnotations      #-}
-{-# LANGUAGE TypeOperators        #-}
-{-# LANGUAGE TypeSynonymInstances #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds             #-}
+{-# LANGUAGE DerivingVia           #-}
+{-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE KindSignatures        #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE RoleAnnotations       #-}
+{-# LANGUAGE TypeOperators         #-}
+{-# LANGUAGE TypeSynonymInstances  #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
 {-|
 Module      : System.SED.MCTP.Common.Reference_Types
@@ -29,8 +30,7 @@ where
 import           Data.Attoparsec.ByteString        (anyWord8)
 import           Data.ByteString                   (singleton)
 import           Data.Functor                      ((<$>))
-import           Data.Refined                      (type (?), plain,
-                                                    unsafeCreate)
+import           Data.Refined                      (type (?), IsRefined (..))
 import           Data.Word8                        (Word8)
 import           GHC.Base                          (Eq (..), Ord (..),
                                                     undefined, ($), (.))
@@ -61,7 +61,7 @@ type role ForTable_Kind phantom _
 newtype ForTable_Kind (k::Table_Kind) a = ForTable_Kind a
    deriving (Eq,Ord,Show,StreamItem,IsList,Arbitrary,IsToken) via a
 
-
+instance IsRefined (ForTable_Kind (k::Table_Kind)) a
 
 instance StreamItem a => StreamItem (a ? ForTable_Kind k)
   where generate = generate . plain

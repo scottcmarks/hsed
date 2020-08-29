@@ -28,14 +28,9 @@ Datatype refined by predicate
 module Data.Refined
   ( Refined
   , type (?)
-  , plain
-  , unsafeCreate
-  , reifyRefinedPhantomAsProxy
-  , reifyRefinedContextAsProxy
+  , IsRefined(..)
   , coerceToProxyTypeOf
   , Predicate(..)
-  , reifyPredicatePred
-  , reifyRefinedPredicatePred
   )
 where
 
@@ -60,26 +55,33 @@ newtype Refined p a = Refined a
     deriving (Eq, Ord, Show) via a
 
 -- | An infix alias for 'Refined'.
-type a ? p = Refined p a
 infixr 1 ?
+type a ? p = Refined p a
 
-plain :: Refined p a -> a
-plain = coerce
 
-unsafeCreate :: a -> Refined p a
-unsafeCreate = coerce
+class IsRefined p a where
+    plain :: Refined p a -> a
+    plain = coerce
 
-reifyRefinedPhantomAsProxy :: Refined p a -> Proxy p
-reifyRefinedPhantomAsProxy _ = Proxy
+    unsafeCreate :: a -> Refined p a
+    unsafeCreate = coerce
 
-reifyRefinedContextAsProxy :: Refined p a -> Proxy (p a)
-reifyRefinedContextAsProxy _ = Proxy
+    reifyRefinedPhantomAsProxy :: Refined p a -> Proxy p
+    reifyRefinedPhantomAsProxy _ = Proxy
 
-accept :: Coercible (p a) a => p a -> Refined p a
-accept = coerce
+    reifyRefinedContextAsProxy :: Refined p a -> Proxy (p a)
+    reifyRefinedContextAsProxy _ = Proxy
 
-instance HasSize a => HasSize (a ? p) where
+    accept :: Coercible (p a) a => p a -> Refined p a
+    accept = coerce
+
+
+instance IsRefined (Refined p) a
+
+
+instance (HasSize a, IsRefined p a) => HasSize (a ? p) where
     size = size . plain
+
 
 coerceToProxyTypeOf :: Coercible a b => a -> proxy b -> b
 coerceToProxyTypeOf = asProxyTypeOf . coerce
@@ -90,36 +92,38 @@ class Coercible (p a) a => Predicate (p :: Type -> Type) a where
 
     failMsg :: p a -> String
 
-    safeCreate :: a -> Either String (Refined p a)
-    safeCreate = test  (Right . accept)  (Left . failMsg)
+    safeCreate :: IsRefined p a => a -> Either String (Refined p a)
+    safeCreate = _test  (Right . accept)  (Left . failMsg)
 
-    create :: a -> Maybe (Refined p a)
-    create = test  (Just . accept)  (const Nothing)
+    create :: IsRefined p a => a -> Maybe (Refined p a)
+    create = _test  (Just . accept)  (const Nothing)
 
-    refine :: a -> Refined p a
-    refine = test  accept  (error . failMsg)
+    refine :: IsRefined p a => a -> Refined p a
+    refine = _test  accept  (error . failMsg)
 
     pred :: a -> Bool
     pred = predicate . (coerce :: a -> p a)
 
-    reifyPredicatePhantomAsProxy :: Proxy p
-    reifyPredicatePhantomAsProxy = Proxy
-
-    reifyPredicateAsProxy :: Proxy (p a)
-    reifyPredicateAsProxy = Proxy
-
-test :: forall p a t. (Predicate p a)
- => (p a -> t) -> (p a -> t) -> a -> t
-test f g x = if predicate x' then f x' else g x' where x' = coerce x
-
-reifyPredicatePred :: forall p a. (Predicate p a) => a -> Bool
-reifyPredicatePred = test (const True :: p a -> Bool) (const False)
-
-reifyRefinedPredicatePred :: Predicate p a => Refined p a -> a -> Bool
-reifyRefinedPredicatePred r = predicate . (`coerceToProxyTypeOf` reifyRefinedContextAsProxy r)
+_test :: forall p a t. (Predicate p a) => (p a -> t) -> (p a -> t) -> a -> t
+_test f g x = if predicate x' then f x' else g x' where x' = coerce x
 
 
-instance (Num a, Predicate p a) => Num (Refined p a)
+class (IsRefined p a, Predicate p a) => IsRefinedByPredicate p a where
+
+
+instance (IsRefined p a, Predicate p a) => IsRefinedByPredicate p a where
+
+
+
+-- instance Predicate (p :: Type -> Type) a => IsRefined p a where
+
+
+-- instance (Coercible a (p a), IsRefined p a) => Predicate p a where
+--     predicate = predicate . (`coerceToProxyTypeOf` (Proxy :: Proxy (p a)))
+--     failMsg = failMsg . (`coerceToProxyTypeOf` (Proxy :: Proxy (p a)))
+
+
+instance (Num a, IsRefinedByPredicate p a) => Num (Refined p a)
   where
     (Refined x) + (Refined y) = refine (x + y)
     (Refined x) - (Refined y) = refine (x - y)
@@ -130,31 +134,31 @@ instance (Num a, Predicate p a) => Num (Refined p a)
     fromInteger               = refine . fromInteger
 
 
-instance (Read a, Predicate p a) => Read (Refined p a) where
+instance (Read a, IsRefinedByPredicate p a) => Read (Refined p a) where
     readPrec = refine <$> readPrec
 
 
-instance (IsString a, Predicate p a) => IsString (Refined p a) where
+instance (IsString a, IsRefinedByPredicate p a) => IsString (Refined p a) where
     fromString = refine . fromString
 
 
-instance (IsList a, Predicate p a) => IsList (Refined p a) where
+instance (IsList a, IsRefinedByPredicate p a) => IsList (Refined p a) where
     type Item (Refined p a) = Item a
     fromList = refine . fromList
     toList = toList . plain
 
 
-instance (ListLike full item, Predicate p full) => FoldableLL (Refined p full) item where
+instance (ListLike full item, IsRefinedByPredicate p full) => FoldableLL (Refined p full) item where
     foldl f acc = foldl f acc . plain
     foldr f acc = foldr f acc . plain
 
-instance (ListLike full item, Predicate p full) => Semigroup (Refined p full)  where
+instance (ListLike full item, IsRefinedByPredicate p full) => Semigroup (Refined p full)  where
     (Refined x) <> (Refined y) = refine (x <> y)
 
-instance (ListLike full item, Predicate p full) => Monoid (Refined p full)  where
+instance (ListLike full item, IsRefinedByPredicate p full) => Monoid (Refined p full)  where
     mempty = refine mempty
 
-instance (ListLike full item, Predicate p full) => ListLike (Refined p full) item where
+instance (ListLike full item, IsRefinedByPredicate p full) => ListLike (Refined p full) item where
     singleton = refine . singleton
     head = head . plain
     tail = refine . tail . plain
@@ -162,5 +166,5 @@ instance (ListLike full item, Predicate p full) => ListLike (Refined p full) ite
     genericLength = genericLength . plain
 
 
-instance (Arbitrary a, Predicate p a) => Arbitrary (Refined p a) where
+instance (Arbitrary a, IsRefinedByPredicate p a) => Arbitrary (Refined p a) where
     arbitrary = arbitrary `suchThatMap` create

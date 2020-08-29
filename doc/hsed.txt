@@ -43,35 +43,35 @@ data Refined p a
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
-plain :: Refined p a -> a
-unsafeCreate :: a -> Refined p a
-reifyRefinedPhantomAsProxy :: Refined p a -> Proxy p
-reifyRefinedContextAsProxy :: Refined p a -> Proxy (p a)
+class IsRefined p a
+plain :: IsRefined p a => Refined p a -> a
+unsafeCreate :: IsRefined p a => a -> Refined p a
+reifyRefinedPhantomAsProxy :: IsRefined p a => Refined p a -> Proxy p
+reifyRefinedContextAsProxy :: IsRefined p a => Refined p a -> Proxy (p a)
+accept :: (IsRefined p a, Coercible (p a) a) => p a -> Refined p a
 coerceToProxyTypeOf :: Coercible a b => a -> proxy b -> b
 class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
-safeCreate :: Predicate p a => a -> Either String (Refined p a)
-create :: Predicate p a => a -> Maybe (Refined p a)
-refine :: Predicate p a => a -> Refined p a
+safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
+create :: (Predicate p a, IsRefined p a) => a -> Maybe (Refined p a)
+refine :: (Predicate p a, IsRefined p a) => a -> Refined p a
 pred :: Predicate p a => a -> Bool
-reifyPredicatePhantomAsProxy :: Predicate p a => Proxy p
-reifyPredicateAsProxy :: Predicate p a => Proxy (p a)
-reifyPredicatePred :: forall p a. Predicate p a => a -> Bool
-reifyRefinedPredicatePred :: Predicate p a => Refined p a -> a -> Bool
 instance forall k (p :: k) a. GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance forall k (p :: k) a. GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance forall k (p :: k) a. GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
-instance (GHC.Num.Num a, Data.Refined.Predicate p a) => GHC.Num.Num (Data.Refined.Refined p a)
-instance (GHC.Read.Read a, Data.Refined.Predicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
-instance (Data.String.IsString a, Data.Refined.Predicate p a) => Data.String.IsString (Data.Refined.Refined p a)
-instance (GHC.Exts.IsList a, Data.Refined.Predicate p a) => GHC.Exts.IsList (Data.Refined.Refined p a)
-instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => Data.ListLike.FoldableLL.FoldableLL (Data.Refined.Refined p full) item
-instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => GHC.Base.Semigroup (Data.Refined.Refined p full)
-instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => GHC.Base.Monoid (Data.Refined.Refined p full)
-instance (Data.ListLike.Base.ListLike full item, Data.Refined.Predicate p full) => Data.ListLike.Base.ListLike (Data.Refined.Refined p full) item
-instance (Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.Predicate p a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Refined.Refined p a)
-instance forall k a (p :: k). Data.HasSize.HasSize a => Data.HasSize.HasSize (a Data.Refined.? p)
+instance (Data.Refined.IsRefined p a, Data.Refined.Predicate p a) => Data.Refined.IsRefinedByPredicate p a
+instance (GHC.Num.Num a, Data.Refined.IsRefinedByPredicate p a) => GHC.Num.Num (Data.Refined.Refined p a)
+instance (GHC.Read.Read a, Data.Refined.IsRefinedByPredicate p a) => GHC.Read.Read (Data.Refined.Refined p a)
+instance (Data.String.IsString a, Data.Refined.IsRefinedByPredicate p a) => Data.String.IsString (Data.Refined.Refined p a)
+instance (GHC.Exts.IsList a, Data.Refined.IsRefinedByPredicate p a) => GHC.Exts.IsList (Data.Refined.Refined p a)
+instance (Data.ListLike.Base.ListLike full item, Data.Refined.IsRefinedByPredicate p full) => Data.ListLike.FoldableLL.FoldableLL (Data.Refined.Refined p full) item
+instance (Data.ListLike.Base.ListLike full item, Data.Refined.IsRefinedByPredicate p full) => GHC.Base.Semigroup (Data.Refined.Refined p full)
+instance (Data.ListLike.Base.ListLike full item, Data.Refined.IsRefinedByPredicate p full) => GHC.Base.Monoid (Data.Refined.Refined p full)
+instance (Data.ListLike.Base.ListLike full item, Data.Refined.IsRefinedByPredicate p full) => Data.ListLike.Base.ListLike (Data.Refined.Refined p full) item
+instance (Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.IsRefinedByPredicate p a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Refined.Refined p a)
+instance forall k (p :: k) a. Data.Refined.IsRefined (Data.Refined.Refined p) a
+instance (Data.HasSize.HasSize a, Data.Refined.IsRefined p a) => Data.HasSize.HasSize (a Data.Refined.? p)
 
 
 -- | Use this module when you need to add an <a>IsBoundedSize</a> instance
@@ -110,8 +110,8 @@ type MaxSize n = BoundedSize 0 n
 --   at least <tt>3</tt>).
 type AtLeast c m = forall l. (KnownNat l, m <= l) => c l
 data Refined p a
-unsafeCreate :: a -> Refined p a
-plain :: Refined p a -> a
+unsafeCreate :: IsRefined p a => a -> Refined p a
+plain :: IsRefined p a => Refined p a -> a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
@@ -119,12 +119,10 @@ infixr 1 ?
 class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
-safeCreate :: Predicate p a => a -> Either String (Refined p a)
-create :: Predicate p a => a -> Maybe (Refined p a)
-refine :: Predicate p a => a -> Refined p a
+safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
+create :: (Predicate p a, IsRefined p a) => a -> Maybe (Refined p a)
+refine :: (Predicate p a, IsRefined p a) => a -> Refined p a
 pred :: Predicate p a => a -> Bool
-reifyPredicatePhantomAsProxy :: Predicate p a => Proxy p
-reifyPredicateAsProxy :: Predicate p a => Proxy (p a)
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
@@ -142,8 +140,9 @@ instance Data.BoundedSize.Class.IsBoundedSize 0 l a => Data.BoundedSize.Class.Is
 instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (a Data.Refined.? Data.BoundedSize.Class.FixedSize n)
 instance Data.BoundedSize.Class.IsBoundedSize l l a => Data.BoundedSize.Class.IsFixedSize l a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.BoundedSize.Class.IsBoundedSize l u a
+instance Data.BoundedSize.Class.IsBoundedSize l u a => Data.Refined.IsRefined (Data.BoundedSize.Class.BoundedSize l u) a
 instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a) => Data.Refined.Predicate (Data.BoundedSize.Class.BoundedSize l u) a
-instance (GHC.TypeNats.KnownNat l, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.Predicate (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (a Data.Refined.? Data.BoundedSize.Class.BoundedSize l u)
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.HasSize.HasSize a, Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.Predicate (Data.BoundedSize.Class.BoundedSize l u) a) => Test.QuickCheck.Arbitrary.Arbitrary (a Data.Refined.? Data.BoundedSize.Class.BoundedSize l u)
 
 
 -- | Template Haskell helpers for <a>BoundedSize</a>.
@@ -346,7 +345,7 @@ class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
 --   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. IsBoundedSizeListOps l1 u1 a => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new <a>BoundedSize</a> of maximum length from a basic
 --   element.
@@ -424,8 +423,8 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 data Refined p a
-plain :: Refined p a -> a
-unsafeCreate :: a -> Refined p a
+plain :: IsRefined p a => Refined p a -> a
+unsafeCreate :: IsRefined p a => a -> Refined p a
 
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
@@ -433,12 +432,10 @@ infixr 1 ?
 class Coercible (p a) a => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
-safeCreate :: Predicate p a => a -> Either String (Refined p a)
-create :: Predicate p a => a -> Maybe (Refined p a)
-refine :: Predicate p a => a -> Refined p a
+safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
+create :: (Predicate p a, IsRefined p a) => a -> Maybe (Refined p a)
+refine :: (Predicate p a, IsRefined p a) => a -> Refined p a
 pred :: Predicate p a => a -> Bool
-reifyPredicatePhantomAsProxy :: Predicate p a => Proxy p
-reifyPredicateAsProxy :: Predicate p a => Proxy (p a)
 
 -- | Type-level <a>KnownNat</a> to value-level <a>Num</a>
 --   
@@ -556,7 +553,7 @@ type Core_uinteger_at_least n = AtLeast Core_uinteger n
 type Core_integer_at_least n = AtLeast Core_integer n
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 size :: HasSize a => a -> Int
-safeCreate :: Predicate p a => a -> Either String (Refined p a)
+safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
 
 -- | The <a>toList</a> function extracts a list of <tt>Item l</tt> from the
 --   structure <tt>l</tt>. It should satisfy fromList . toList = id.
@@ -581,7 +578,7 @@ toList :: IsList l => l -> [Item l]
 --   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. IsBoundedSizeListOps l1 u1 a => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new <a>BoundedSize</a> of maximum length from a basic
 --   element.
@@ -658,7 +655,7 @@ padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeLis
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
-unsafeCreate :: a -> Refined p a
+unsafeCreate :: IsRefined p a => a -> Refined p a
 instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
@@ -744,7 +741,7 @@ newtype Core_bytes n
 Core_bytes :: (Core_some_bytes ? FixedSize n) -> Core_bytes n
 newtype Core_max_bytes n
 Core_max_bytes :: (Core_some_bytes ? MaxSize n) -> Core_max_bytes n
-safeCreate :: Predicate p a => a -> Either String (Refined p a)
+safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
 core_bytes_4 :: Word8 -> Word8 -> Word8 -> Word8 -> Core_bytes 4
 core_bytes_8 :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Core_bytes 8
 
@@ -771,7 +768,7 @@ toList :: IsList l => l -> [Item l]
 --   &gt;&gt;&gt; append $(fx "Hello, ") $(mx "world!")
 --   "Hello, world!"
 --   </pre>
-append :: forall l1 u1 l2 u2 a. IsBoundedSizeListOps l1 u1 a => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
+append :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps (l1 + l2) (u1 + u2) a) => (a ? BoundedSize l1 u1) -> (a ? BoundedSize l2 u2) -> a ? BoundedSize (l1 + l2) (u1 + u2)
 
 -- | Construct a new <a>BoundedSize</a> of maximum length from a basic
 --   element.
@@ -1075,6 +1072,7 @@ instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Object_Table_HalfU
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_HalfUID k)
 instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID (System.SED.MCTP.Common.Reference_Types.Table_UID k)
+instance Data.Refined.IsRefined (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k) a
 instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Common.StreamItem.StreamItem (a Data.Refined.? System.SED.MCTP.Common.Reference_Types.ForTable_Kind k)
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Table_Kind
 

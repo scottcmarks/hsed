@@ -165,21 +165,27 @@ putStrLn "\n\n\n"
 :load src/System/SED/MCTP/Common/TableUIDs.hs
 
 -- system imports
+import Data.ByteString(ByteString)
 import Data.ListLike.Base hiding (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
 import qualified Data.ListLike.Base as LL (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
 import Data.ListLike.FoldableLL
 import Data.Proxy(Proxy(..))
 
-import GHC.Base(($),Bool(..),Type)
+import GHC.Base(($),Bool(..), Nat, Type)
 import GHC.Exts(IsList(..),Item(..))
 import GHC.Show(Show(..),showString,shows)
+import GHC.TypeNats(KnownNat)
 
 -- local extension imports
 import Data.BoundedSize.Class(BoundedSize(..),FixedSize,fromNat)
 import Data.HasSize(HasSize(..))
-import Data.Refined(Refined, type (?), Predicate(..))
-import System.SED.MCTP.Common.Simple_Type(Core_bytes(..))
+:{
+import Data.Refined(Refined, type (?), Predicate(..), IsRefined(..),
+       coerceToProxyTypeOf, IsRefinedByPredicate)
+:}
+import System.SED.MCTP.Common.Simple_Type(Core_bytes(..), Core_halfuid, Core_bytes_4)
 import System.SED.MCTP.Common.Base_Type.Class(Core_some_bytes(..))
+
 
 :i IsList
 :i ListLike
@@ -189,25 +195,49 @@ import System.SED.MCTP.Common.Base_Type.Class(Core_some_bytes(..))
 putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
-
-putStrLn $ showString "size hSP = " $ show $ size hSP
-putStrLn $ showString "size uSPTable = " $ show $ size uSPTable
-putStrLn $ showString "hSP = " $ show hSP
-putStrLn $ showString "toList hSP = " $ show $ toList hSP
-
 :set -Wno-type-defaults
+
+putStrLn $ showString "hSP = " $ show hSP
+:type hSP
+putStrLn $ showString "toList hSP = " $ show $ toList hSP
+putStrLn $ showString "size hSP = " $ show $ size hSP
+putStrLn "\n\n"
+
+putStrLn $ showString "uSPTable = " $ show uSPTable
+:type uSPTable
+putStrLn $ showString "toList uSPTable = " $ show $ toList uSPTable
+putStrLn $ showString "size uSPTable = " $ show $ size uSPTable
+putStrLn "\n\n"
+
+
 chSP = let (HalfUID c)=hSP in c
-putStrLn $ showString "fromNat chSP = " $ show $ fromNat chSP
+putStrLn $ showString "chSP = " $ show chSP
+:type chSP
+putStrLn $ showString "toList chSP = " $ show $ toList chSP
+putStrLn $ showString "size chSP = " $ show $ size chSP
+putStrLn "\n\n"
 
 csb4SP = let (Core_bytes c)=chSP in c
+putStrLn $ showString "csb4SP = " $ show csb4SP
 :type csb4SP
+putStrLn $ showString "toList csb4SP = " $ show $ toList csb4SP
+putStrLn $ showString "size csb4SP = " $ show $ size csb4SP
+putStrLn "\n\n"
 
 csbSP = plain csb4SP
-:type csb4SP
+:type csbSP
+putStrLn $ showString "csbSP = " $ show csbSP
+:type csbSP
+putStrLn $ showString "toList csbSP = " $ show $ toList csbSP
+putStrLn $ showString "size csbSP = " $ show $ size csbSP
+putStrLn "\n\n"
 
-import Data.ByteString.Internal(ByteString)
 bSP = unCore_some_bytes csbSP
+putStrLn $ showString "bSP = " $ show bSP
 :type bSP
+putStrLn $ showString "toList bSP = " $ show $ toList bSP
+putStrLn $ showString "size bSP = " $ show $ size bSP
+putStrLn "\n\n"
 
 
 putStrLn "\n\n\nBuh-bye now.\n\n"

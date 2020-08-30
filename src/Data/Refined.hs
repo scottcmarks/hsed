@@ -31,6 +31,7 @@ module Data.Refined
   , IsRefined(..)
   , coerceToProxyTypeOf
   , Predicate(..)
+  , IsRefinedByPredicate
   )
 where
 
@@ -79,7 +80,7 @@ class IsRefined p a where
 instance IsRefined (Refined p) a
 
 
-instance (HasSize a, IsRefined p a) => HasSize (a ? p) where
+instance {-# OVERLAPPABLE #-} (HasSize a, IsRefined p a) => HasSize (a ? p) where
     size = size . plain
 
 
@@ -87,7 +88,7 @@ coerceToProxyTypeOf :: Coercible a b => a -> proxy b -> b
 coerceToProxyTypeOf = asProxyTypeOf . coerce
 
 
-class Coercible (p a) a => Predicate (p :: Type -> Type) a where
+class Coercible a (p a) => Predicate (p :: Type -> Type) a where
     predicate :: p a -> Bool
 
     failMsg :: p a -> String
@@ -108,19 +109,14 @@ _test :: forall p a t. (Predicate p a) => (p a -> t) -> (p a -> t) -> a -> t
 _test f g x = if predicate x' then f x' else g x' where x' = coerce x
 
 
+instance Predicate p a => Predicate (Refined p) a where
+    predicate = predicate . (`coerceToProxyTypeOf` (Proxy :: Proxy (p a)))
+    failMsg   = failMsg   . (`coerceToProxyTypeOf` (Proxy :: Proxy (p a)))
+
+
 class (IsRefined p a, Predicate p a) => IsRefinedByPredicate p a where
 
-
 instance (IsRefined p a, Predicate p a) => IsRefinedByPredicate p a where
-
-
-
--- instance Predicate (p :: Type -> Type) a => IsRefined p a where
-
-
--- instance (Coercible a (p a), IsRefined p a) => Predicate p a where
---     predicate = predicate . (`coerceToProxyTypeOf` (Proxy :: Proxy (p a)))
---     failMsg = failMsg . (`coerceToProxyTypeOf` (Proxy :: Proxy (p a)))
 
 
 instance (Num a, IsRefinedByPredicate p a) => Num (Refined p a)

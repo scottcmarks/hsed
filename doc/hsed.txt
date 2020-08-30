@@ -50,13 +50,14 @@ reifyRefinedPhantomAsProxy :: IsRefined p a => Refined p a -> Proxy p
 reifyRefinedContextAsProxy :: IsRefined p a => Refined p a -> Proxy (p a)
 accept :: (IsRefined p a, Coercible (p a) a) => p a -> Refined p a
 coerceToProxyTypeOf :: Coercible a b => a -> proxy b -> b
-class Coercible (p a) a => Predicate (p :: Type -> Type) a
+class Coercible a (p a) => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
 safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
 create :: (Predicate p a, IsRefined p a) => a -> Maybe (Refined p a)
 refine :: (Predicate p a, IsRefined p a) => a -> Refined p a
 pred :: Predicate p a => a -> Bool
+class (IsRefined p a, Predicate p a) => IsRefinedByPredicate p a
 instance forall k (p :: k) a. GHC.Show.Show a => GHC.Show.Show (Data.Refined.Refined p a)
 instance forall k (p :: k) a. GHC.Classes.Ord a => GHC.Classes.Ord (Data.Refined.Refined p a)
 instance forall k (p :: k) a. GHC.Classes.Eq a => GHC.Classes.Eq (Data.Refined.Refined p a)
@@ -70,6 +71,7 @@ instance (Data.ListLike.Base.ListLike full item, Data.Refined.IsRefinedByPredica
 instance (Data.ListLike.Base.ListLike full item, Data.Refined.IsRefinedByPredicate p full) => GHC.Base.Monoid (Data.Refined.Refined p full)
 instance (Data.ListLike.Base.ListLike full item, Data.Refined.IsRefinedByPredicate p full) => Data.ListLike.Base.ListLike (Data.Refined.Refined p full) item
 instance (Test.QuickCheck.Arbitrary.Arbitrary a, Data.Refined.IsRefinedByPredicate p a) => Test.QuickCheck.Arbitrary.Arbitrary (Data.Refined.Refined p a)
+instance Data.Refined.Predicate p a => Data.Refined.Predicate (Data.Refined.Refined p) a
 instance forall k (p :: k) a. Data.Refined.IsRefined (Data.Refined.Refined p) a
 instance (Data.HasSize.HasSize a, Data.Refined.IsRefined p a) => Data.HasSize.HasSize (a Data.Refined.? p)
 
@@ -116,7 +118,7 @@ plain :: IsRefined p a => Refined p a -> a
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
-class Coercible (p a) a => Predicate (p :: Type -> Type) a
+class Coercible a (p a) => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
 safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
@@ -429,7 +431,7 @@ unsafeCreate :: IsRefined p a => a -> Refined p a
 -- | An infix alias for <a>Refined</a>.
 type a ? p = Refined p a
 infixr 1 ?
-class Coercible (p a) a => Predicate (p :: Type -> Type) a
+class Coercible a (p a) => Predicate (p :: Type -> Type) a
 predicate :: Predicate p a => p a -> Bool
 failMsg :: Predicate p a => p a -> String
 safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)

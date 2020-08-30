@@ -63,28 +63,6 @@ Struct_Type Struct_Type73,74
 Set_Type Set_Type75,76
 correctABNFToTCGABNF correctABNFToTCGABNF80,81
 
-./Scratch.hs,509
-module Scratch Scratch13,14
-type role role26,27
-newtype Refined Refined27,28
-plain plain30,31
-unsafeCreate unsafeCreate33,34
-reifyPhantom reifyPhantom36,37
-type a a40,41
-test test44,45
-pred pred48,49
-pred' pred'54,55
-accept accept60,61
-class Coercible (p a) a => Predicate Predicate63,64
-    predicate predicate64,65
-    failMsg failMsg66,67
-    safeCreate safeCreate68,69
-    create create71,72
-    refine refine74,75
-type Parity Parity77,78
-even even79,80
-hi hi84,85
-
 ./src/System/SED/MCTP/TPer/Run.hs,76
 module System.SED.MCTP.TPer.Run System.SED.MCTP.TPer.Run2,3
 run run9,10
@@ -777,7 +755,7 @@ makeApp makeApp36,37
 instance HasLogFunc HasLogFunc App39,40
 instance HasLogFunc App where logFuncL logFuncL39,40
 
-./src/Data/BoundedSize/Class.hs,1195
+./src/Data/BoundedSize/Class.hs,1215
 module Data.BoundedSize.ClassData.BoundedSize.Class25,26
 import import53,54
 type role role70,71
@@ -791,16 +769,16 @@ instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a
 class (IsBoundedSize l l a) => IsFixedSize IsFixedSize99,100
 instance (I(IsBoundedSize l l a) => IsFixedSize l a100,101
 type FixedSize FixedSize101,102
-instance KnownNat KnownNat n => HasSize (a ? FixedSize n)103,104
-    size size104,105
-class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize107,108
-instance (I(IsBoundedSize 0 l a) => IsMaxSize l a108,109
-type MaxSize MaxSize109,110
-type AtLeast AtLeast116,117
-instance {-# OVERLAPPING #-} (K(KnownNat l, KnownNat u, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))121,122
-    arbitrary arbitrary123,124
-    shrink shrink124,125
-fromNat fromNat133,134
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (a ? FixedSize n)104,105
+    size size105,106
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize109,110
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a110,111
+type MaxSize MaxSize111,112
+type AtLeast AtLeast118,119
+instance {-# OVERLAPPING #-} (K(KnownNat l, KnownNat u, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))123,124
+    arbitrary arbitrary125,126
+    shrink shrink126,127
+fromNat fromNat135,136
 
 ./src/Data/BoundedSize/TH.hs,276
 module Data.BoundedSize.THData.BoundedSize.TH10,11
@@ -866,57 +844,60 @@ instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size size7
 instance HasSize HasSize (Set a)81,82
 instance HasSize (Set a)           where size size81,82
 
-./src/Data/Refined.hs,2330
+./src/Data/Refined.hs,2482
 module Data.RefinedData.Refined27,28
-type role role52,53
-newtype Refined Refined53,54
-type a a58,59
-class IsRefined IsRefined61,62
-    plain plain62,63
-    unsafeCreate unsafeCreate65,66
-    reifyRefinedPhantomAsProxy reifyRefinedPhantomAsProxy68,69
-    reifyRefinedContextAsProxy reifyRefinedContextAsProxy71,72
-    accept accept74,75
-instance IsRefined IsRefined (Refined p) a78,79
-instance (H(HasSize a, IsRefined p a) => HasSize (a ? p)81,82
-    size size82,83
-coerceToProxyTypeOf coerceToProxyTypeOf85,86
-class Coercible (p a) a => Predicate Predicate89,90
-    predicate predicate90,91
-    failMsg failMsg92,93
-    safeCreate safeCreate94,95
-    create create97,98
-    refine refine100,101
-    pred pred103,104
-_test _test106,107
-class (IsRefined p a, Predicate p a) => IsRefinedByPredicate IsRefinedByPredicate110,111
-instance (I(IsRefined p a, Predicate p a) => IsRefinedByPredicate p a113,114
-instance (N(Num a, IsRefinedByPredicate p a) => Num (Refined p a)125,126
-    (R(Refinedx)127,128
-    negate negate130,131
-    abs abs131,132
-    signum signum132,133
-    fromInteger fromInteger133,134
-instance (R(Read a, IsRefinedByPredicate p a) => Read (Refined p a)136,137
-    readPrec readPrec137,138
-instance (I(IsString a, IsRefinedByPredicate p a) => IsString (Refined p a)140,141
-    fromString fromString141,142
-instance (I(IsList a, IsRefinedByPredicate p a) => IsList (Refined p a)144,145
-    type Item Item145,146
-    fromList fromList146,147
-    toList toList147,148
-instance (L(ListLike full item, IsRefinedByPredicate p full) => FoldableLL (Refined p full) item150,151
-    foldl foldl151,152
-    foldr foldr152,153
-instance (L(ListLike full item, IsRefinedByPredicate p full) => Semigroup (Refined p full)154,155
-    (R(Refinedx)155,156
-instance (L(ListLike full item, IsRefinedByPredicate p full) => Monoid (Refined p full)157,158
-    mempty mempty158,159
-instance (L(ListLike full item, IsRefinedByPredicate p full) => ListLike (Refined p full) item160,161
-    singleton singleton161,162
-    head head162,163
-    tail tail163,164
-    null null164,165
-    genericLength genericLength165,166
-instance (A(Arbitrary a, IsRefinedByPredicate p a) => Arbitrary (Refined p a)168,169
-    arbitrary arbitrary169,170
+type role role53,54
+newtype Refined Refined54,55
+type a a59,60
+class IsRefined IsRefined62,63
+    plain plain63,64
+    unsafeCreate unsafeCreate66,67
+    reifyRefinedPhantomAsProxy reifyRefinedPhantomAsProxy69,70
+    reifyRefinedContextAsProxy reifyRefinedContextAsProxy72,73
+    accept accept75,76
+instance IsRefined IsRefined (Refined p) a79,80
+instance {-# OVERLAPPABLE #-} (H(HasSize a, IsRefined p a) => HasSize (a ? p)82,83
+    size size83,84
+coerceToProxyTypeOf coerceToProxyTypeOf86,87
+class Coercible a (p a) => Predicate Predicate90,91
+    predicate predicate91,92
+    failMsg failMsg93,94
+    safeCreate safeCreate95,96
+    create create98,99
+    refine refine101,102
+    pred pred104,105
+_test _test107,108
+instance Predicate Predicate p a => Predicate (Refined p) a111,112
+    predicate predicate112,113
+    failMsg failMsg113,114
+class (IsRefined p a, Predicate p a) => IsRefinedByPredicate IsRefinedByPredicate116,117
+instance (I(IsRefined p a, Predicate p a) => IsRefinedByPredicate p a118,119
+instance (N(Num a, IsRefinedByPredicate p a) => Num (Refined p a)121,122
+    (R(Refinedx)123,124
+    negate negate126,127
+    abs abs127,128
+    signum signum128,129
+    fromInteger fromInteger129,130
+instance (R(Read a, IsRefinedByPredicate p a) => Read (Refined p a)132,133
+    readPrec readPrec133,134
+instance (I(IsString a, IsRefinedByPredicate p a) => IsString (Refined p a)136,137
+    fromString fromString137,138
+instance (I(IsList a, IsRefinedByPredicate p a) => IsList (Refined p a)140,141
+    type Item Item141,142
+    fromList fromList142,143
+    toList toList143,144
+instance (L(ListLike full item, IsRefinedByPredicate p full) => FoldableLL (Refined p full) item146,147
+    foldl foldl147,148
+    foldr foldr148,149
+instance (L(ListLike full item, IsRefinedByPredicate p full) => Semigroup (Refined p full)150,151
+    (R(Refinedx)151,152
+instance (L(ListLike full item, IsRefinedByPredicate p full) => Monoid (Refined p full)153,154
+    mempty mempty154,155
+instance (L(ListLike full item, IsRefinedByPredicate p full) => ListLike (Refined p full) item156,157
+    singleton singleton157,158
+    head head158,159
+    tail tail159,160
+    null null160,161
+    genericLength genericLength161,162
+instance (A(Arbitrary a, IsRefinedByPredicate p a) => Arbitrary (Refined p a)164,165
+    arbitrary arbitrary165,166

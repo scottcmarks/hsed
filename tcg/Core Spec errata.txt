@@ -163,3 +163,13 @@ In the messaging stream, these values SHALL be represented as follows:
    e. 0x04 – 0x20 are reserved
 
 Table 76 spells its restricting uidref as "ColumnTable_UID".  Nowhere else is there an underscore between Table and UID.  Both redundant by the way, but perhaps "Table" is nice since it will allow "TableTable".
+
+
+
+Also not an error, exactly, and definitely immutable at this point, but ..
+including the base_types in the Column_Types tables is a bad idea.  Instead they should
+just be an enum selector used by Simple_Type.  It's cute to give them UIDs and give them
+a uniform treatment, but the result is that all kinds of referenes have to say "non-base-type"
+and the column types table is almost-but-not-quite full of types of actual data (Types, in
+Haskell parlance), except for the Base types, which are Core_uinteger2->Type value to be used
+specially by the Simple Type constructors.

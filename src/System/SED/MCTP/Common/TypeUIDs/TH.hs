@@ -4,8 +4,8 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE DerivingVia         #-}
 {-# LANGUAGE ExplicitNamespaces  #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE GADTs               #-}
-{-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE MultiParamTypeClasses   #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
@@ -14,6 +14,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies       #-}
 {-# LANGUAGE TypeOperators       #-}
 
 {-|
@@ -55,7 +56,9 @@ import           Data.List                              (sortOn, transpose,
                                                          (\\))
 import           Data.Map                               (fromListWith)
 import           Data.Proxy                             (Proxy (..))
-import           Data.Set                               (Set)
+import           Data.Set                               (Set
+--                                                        , member
+                                                        )
 import           Data.String                            (String, IsString(..))
 import           Data.Tuple                             (fst, snd)
 
@@ -72,7 +75,7 @@ import           GHC.Enum                               (Bounded (..),
 import GHC.Exts(IsList(..))
 import           GHC.List                               (tail, (++))
 import           GHC.Show                               (Show (..), showString)
-import           GHC.TypeLits                           (KnownNat)
+import           GHC.TypeLits                           (KnownNat, Symbol)
 import           GHC.Types                              (Int, Nat)
 import           GHC.Word                               (Word8)
 import           Language.Haskell.TH.Quote              (QuasiQuoter (..),
@@ -100,6 +103,7 @@ import           System.SED.MCTP.Common.Token           (ordw)
 import           System.SED.MCTP.Common.UID             (UID)
 import           System.SED.MCTP.Common.Util            (hexUID,
                                                          trimTrailingWhitespace)
+import           System.SED.MCTP.Common.Base_Type       (Core_some_uinteger)
 
 {-
 
@@ -287,9 +291,15 @@ type Object_Table_Name = Table_Name
 type role One_Of phantom _
 newtype One_Of s a = One_Of a
 
+class IsOne_Of s a where
+    refiningSet :: s a -> Set a
+    refiningSet = undefined
+
+instance IsOne_Of (One_Of s) a
+
 instance Predicate (One_Of (Set a)) a where
-    predicate (One_Of _s) = undefined -- needs singletons and demote, etc.
-    failMsg (One_Of _s) = undefined -- ditto -- TODO!!
+    predicate (One_Of _x) = undefined -- (x `member` s)
+    failMsg (One_Of _x) = undefined
 
 core_Base_Type_Names :: Set String
 core_Base_Type_Names = fromList ["bytes","integer","max_bytes","uinteger"]
@@ -433,3 +443,17 @@ enumTableRow lengths = do
       -- ^ space or dash
       notComma c = c /= 44
       -- ^ comma
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+type U1 = "abc"
+type U2 = "u2"
+
+data Core_type (uid::Symbol) a where
+    Core_type_uinteger :: Core_type "00000005" (Core_uinteger_2 -> Core_some_uinteger)

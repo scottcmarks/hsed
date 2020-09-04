@@ -1496,6 +1496,8 @@ type Byte_Table_Name = Table_Name
 type Object_Table_Name = Table_Name
 newtype One_Of s a
 One_Of :: a -> One_Of s a
+class IsOne_Of s a
+refiningSet :: IsOne_Of s a => s a -> Set a
 core_Base_Type_Names :: Set String
 type Core_Base_Type_Names = Type
 core_Table_Kind_Names :: Set String
@@ -1536,8 +1538,13 @@ data EnumRow
 EnumRow :: String -> [Int] -> EnumRow
 enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
+type U1 = "abc"
+type U2 = "u2"
+data Core_type (uid :: Symbol) a
+[Core_type_uinteger] :: Core_type "00000005" (Core_uinteger_2 -> Core_some_uinteger)
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
+instance forall k (s :: k) a. System.SED.MCTP.Common.TypeUIDs.TH.IsOne_Of (System.SED.MCTP.Common.TypeUIDs.TH.One_Of s) a
 instance Data.Refined.Predicate (System.SED.MCTP.Common.TypeUIDs.TH.One_Of (Data.Set.Internal.Set a)) a
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.TypeUIDs.TH.Is_Core_Format (System.SED.MCTP.Common.TypeUIDs.TH.Core_Format n)
 instance System.SED.MCTP.Common.TypeUIDs.TH.Is_Core_Format System.SED.MCTP.Common.TypeUIDs.TH.Some_Core_Format
@@ -6295,8 +6302,8 @@ fromShort :: ShortByteString -> ByteString
 
 -- | A compact representation of a <a>Word8</a> vector.
 --   
---   It has a lower memory overhead than a <a>ByteString</a> and and does
---   not contribute to heap fragmentation. It can be converted to or from a
+--   It has a lower memory overhead than a <a>ByteString</a> and does not
+--   contribute to heap fragmentation. It can be converted to or from a
 --   <a>ByteString</a> (at the cost of copying the string data). It
 --   supports very few other operations.
 --   

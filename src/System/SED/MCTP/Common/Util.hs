@@ -29,7 +29,7 @@ import           GHC.Show                         (showString, shows)
 import           Data.ByteString.Base16           (decode)
 
 import           System.SED.MCTP.Common.Base_Type (Core_bytes (..),
-                                                   Core_some_bytes (..),
+                                                   Implementation_bytes (..),
                                                    safeCreate)
 import           System.SED.MCTP.Common.UID
 
@@ -44,7 +44,7 @@ hexUID :: ByteString -> UID
 hexUID = UID . cf
     where
       cf :: ByteString -> Core_bytes 8
-      cf = Core_bytes . either error id . safeCreate . Core_some_bytes . bytesfn
+      cf = Core_bytes . either error id . safeCreate . Implementation_bytes . bytesfn
       bytesfn :: ByteString -> ByteString
       bytesfn hexBytes =
           if null remainder

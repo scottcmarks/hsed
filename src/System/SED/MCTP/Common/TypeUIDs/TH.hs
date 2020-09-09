@@ -103,7 +103,7 @@ import           System.SED.MCTP.Common.Token           (ordw)
 import           System.SED.MCTP.Common.UID             (UID)
 import           System.SED.MCTP.Common.Util            (hexUID,
                                                          trimTrailingWhitespace)
-import           System.SED.MCTP.Common.Base_Type       (Core_some_uinteger)
+import           System.SED.MCTP.Common.Base_Type       (Implementation_uinteger)
 
 {-
 
@@ -456,4 +456,4 @@ type U1 = "abc"
 type U2 = "u2"
 
 data Core_type (uid::Symbol) a where
-    Core_type_uinteger :: Core_type "00000005" (Core_uinteger_2 -> Core_some_uinteger)
+    Core_type_uinteger :: Core_type "00000005" (Core_uinteger_2 -> Implementation_uinteger)

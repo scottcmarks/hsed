@@ -534,23 +534,23 @@ instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Token.Token
 
 -- | Formats.
 module System.SED.MCTP.Common.Base_Type.Class
-newtype Core_some_integer
-Core_some_integer :: Integer -> Core_some_integer
-[unCore_some_integer] :: Core_some_integer -> Integer
-newtype Core_some_uinteger
-Core_some_uinteger :: Natural -> Core_some_uinteger
-[unCore_some_uinteger] :: Core_some_uinteger -> Natural
-newtype Core_some_bytes
-Core_some_bytes :: ByteString -> Core_some_bytes
-[unCore_some_bytes] :: Core_some_bytes -> ByteString
+newtype Implementation_integer
+Implementation_integer :: Integer -> Implementation_integer
+[unImplementation_integer] :: Implementation_integer -> Integer
+newtype Implementation_uinteger
+Implementation_uinteger :: Natural -> Implementation_uinteger
+[unImplementation_uinteger] :: Implementation_uinteger -> Natural
+newtype Implementation_bytes
+Implementation_bytes :: ByteString -> Implementation_bytes
+[unImplementation_bytes] :: Implementation_bytes -> ByteString
 newtype Core_integer n
-Core_integer :: (Core_some_integer ? MaxSize n) -> Core_integer n
+Core_integer :: (Implementation_integer ? MaxSize n) -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: (Core_some_uinteger ? MaxSize n) -> Core_uinteger n
+Core_uinteger :: (Implementation_uinteger ? MaxSize n) -> Core_uinteger n
 newtype Core_max_bytes n
-Core_max_bytes :: (Core_some_bytes ? MaxSize n) -> Core_max_bytes n
+Core_max_bytes :: (Implementation_bytes ? MaxSize n) -> Core_max_bytes n
 newtype Core_bytes n
-Core_bytes :: (Core_some_bytes ? FixedSize n) -> Core_bytes n
+Core_bytes :: (Implementation_bytes ? FixedSize n) -> Core_bytes n
 type Core_uinteger_at_least n = AtLeast Core_uinteger n
 type Core_integer_at_least n = AtLeast Core_integer n
 type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
@@ -670,41 +670,41 @@ instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Base.Monoid System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Base.Semigroup System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Exts.IsList System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
+instance GHC.Base.Monoid System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
+instance GHC.Base.Semigroup System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
+instance Data.String.IsString System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
+instance GHC.Exts.IsList System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_uinteger
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Implementation_uinteger
+instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Implementation_uinteger
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Implementation_uinteger
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Implementation_uinteger
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Implementation_uinteger
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Implementation_uinteger
 instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Core_some_integer
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Class.Implementation_integer
+instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Class.Implementation_integer
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Class.Implementation_integer
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Class.Implementation_integer
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Class.Implementation_integer
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Class.Implementation_integer
 instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n)
-instance Data.ListLike.FoldableLL.FoldableLL System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes GHC.Word.Word8
-instance Data.ListLike.Base.ListLike System.SED.MCTP.Common.Base_Type.Class.Core_some_bytes GHC.Word.Word8
+instance Data.ListLike.FoldableLL.FoldableLL System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes GHC.Word.Word8
+instance Data.ListLike.Base.ListLike System.SED.MCTP.Common.Base_Type.Class.Implementation_bytes GHC.Word.Word8
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Class.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Class.Core_integer n)
@@ -726,23 +726,23 @@ instance Data.String.IsString System.SED.MCTP.Common.Base_Type.TH.LitS
 
 -- | Formats.
 module System.SED.MCTP.Common.Base_Type
-newtype Core_some_integer
-Core_some_integer :: Integer -> Core_some_integer
-[unCore_some_integer] :: Core_some_integer -> Integer
-newtype Core_some_uinteger
-Core_some_uinteger :: Natural -> Core_some_uinteger
-[unCore_some_uinteger] :: Core_some_uinteger -> Natural
-newtype Core_some_bytes
-Core_some_bytes :: ByteString -> Core_some_bytes
-[unCore_some_bytes] :: Core_some_bytes -> ByteString
+newtype Implementation_integer
+Implementation_integer :: Integer -> Implementation_integer
+[unImplementation_integer] :: Implementation_integer -> Integer
+newtype Implementation_uinteger
+Implementation_uinteger :: Natural -> Implementation_uinteger
+[unImplementation_uinteger] :: Implementation_uinteger -> Natural
+newtype Implementation_bytes
+Implementation_bytes :: ByteString -> Implementation_bytes
+[unImplementation_bytes] :: Implementation_bytes -> ByteString
 newtype Core_integer n
-Core_integer :: (Core_some_integer ? MaxSize n) -> Core_integer n
+Core_integer :: (Implementation_integer ? MaxSize n) -> Core_integer n
 newtype Core_uinteger n
-Core_uinteger :: (Core_some_uinteger ? MaxSize n) -> Core_uinteger n
+Core_uinteger :: (Implementation_uinteger ? MaxSize n) -> Core_uinteger n
 newtype Core_bytes n
-Core_bytes :: (Core_some_bytes ? FixedSize n) -> Core_bytes n
+Core_bytes :: (Implementation_bytes ? FixedSize n) -> Core_bytes n
 newtype Core_max_bytes n
-Core_max_bytes :: (Core_some_bytes ? MaxSize n) -> Core_max_bytes n
+Core_max_bytes :: (Implementation_bytes ? MaxSize n) -> Core_max_bytes n
 safeCreate :: (Predicate p a, IsRefined p a) => a -> Either String (Refined p a)
 core_bytes_4 :: Word8 -> Word8 -> Word8 -> Word8 -> Core_bytes 4
 core_bytes_8 :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Core_bytes 8
@@ -859,13 +859,13 @@ cm' :: LitS -> Q Exp
 -- | Core data "simple" type formats
 module System.SED.MCTP.Common.Simple_Type
 newtype Core_bytes n
-Core_bytes :: (Core_some_bytes ? FixedSize n) -> Core_bytes n
+Core_bytes :: (Implementation_bytes ? FixedSize n) -> Core_bytes n
 newtype Core_integer n
-Core_integer :: (Core_some_integer ? MaxSize n) -> Core_integer n
+Core_integer :: (Implementation_integer ? MaxSize n) -> Core_integer n
 newtype Core_max_bytes n
-Core_max_bytes :: (Core_some_bytes ? MaxSize n) -> Core_max_bytes n
+Core_max_bytes :: (Implementation_bytes ? MaxSize n) -> Core_max_bytes n
 newtype Core_uinteger n
-Core_uinteger :: (Core_some_uinteger ? MaxSize n) -> Core_uinteger n
+Core_uinteger :: (Implementation_uinteger ? MaxSize n) -> Core_uinteger n
 type Core_bytes_4 = Core_bytes 4
 type Core_bytes_8 = Core_bytes 8
 type Core_bytes_12 = Core_bytes 12
@@ -1541,7 +1541,7 @@ enumTableRow :: [Int] -> Parser EnumRow
 type U1 = "abc"
 type U2 = "u2"
 data Core_type (uid :: Symbol) a
-[Core_type_uinteger] :: Core_type "00000005" (Core_uinteger_2 -> Core_some_uinteger)
+[Core_type_uinteger] :: Core_type "00000005" (Core_uinteger_2 -> Implementation_uinteger)
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
 instance forall k (s :: k) a. System.SED.MCTP.Common.TypeUIDs.TH.IsOne_Of (System.SED.MCTP.Common.TypeUIDs.TH.One_Of s) a

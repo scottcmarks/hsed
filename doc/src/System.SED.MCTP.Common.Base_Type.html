@@ -19,9 +19,9 @@ Formats.
 -}</span><span>
 </span><span id="line-20"></span><span>
 </span><span id="line-21"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">System.SED.MCTP.Common.Base_Type</span><span>
-</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_integer"><span class="hs-identifier">Core_some_integer</span></a></span><span>       </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
-</span><span id="line-23"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_uinteger"><span class="hs-identifier">Core_some_uinteger</span></a></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
-</span><span id="line-24"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier">Core_some_bytes</span></a></span><span>         </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-22"></span><span>  </span><span class="hs-special">(</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_integer"><span class="hs-identifier">Implementation_integer</span></a></span><span>       </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-23"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_uinteger"><span class="hs-identifier">Implementation_uinteger</span></a></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_bytes"><span class="hs-identifier">Implementation_bytes</span></a></span><span>         </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
 </span><span id="line-25"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span>       </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span>      </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span>  </span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span>         </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span>
@@ -50,21 +50,21 @@ Formats.
 </span><span id="line-50"></span><span>  </span><span class="hs-special">)</span><span>
 </span><span id="line-51"></span><span class="hs-keyword">where</span><span>
 </span><span id="line-52"></span><span>
-</span><span id="line-53"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.ByteString</span></span><span>                        </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">pack</span></span><span class="hs-special">)</span><span>
-</span><span id="line-54"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-53"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Exts</span></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsList</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-55"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Word</span></span><span>                               </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word8</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-56"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.Class</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-57"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-58"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier">Core_max_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-59"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier">Core_some_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-60"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_integer"><span class="hs-identifier">Core_some_integer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-61"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_uinteger"><span class="hs-identifier">Core_some_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-62"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-59"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-60"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_bytes"><span class="hs-identifier">Implementation_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-61"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_integer"><span class="hs-identifier">Implementation_integer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-62"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_uinteger"><span class="hs-identifier">Implementation_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-63"></span><span>                                                         </span><span class="annot"><a href="Data.BoundedSize.html#append"><span class="hs-identifier">append</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.html#bounds"><span class="hs-identifier">bounds</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.html#drop"><span class="hs-identifier">drop</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-64"></span><span>                                                         </span><span class="annot"><a href="Data.BoundedSize.html#length"><span class="hs-identifier">length</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.html#map"><span class="hs-identifier">map</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.html#padLeft"><span class="hs-identifier">padLeft</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-65"></span><span>                                                         </span><span class="annot"><a href="Data.BoundedSize.html#padRight"><span class="hs-identifier">padRight</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.html#replicate"><span class="hs-identifier">replicate</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-66"></span><span>                                                         </span><span class="annot"><a href="Data.Refined.html#safeCreate"><span class="hs-identifier">safeCreate</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.BoundedSize.html#take"><span class="hs-identifier">take</span></a></span><span class="hs-special">,</span><span>
-</span><span id="line-67"></span><span>                                                         </span><span class="annot"><span class="hs-identifier">toList</span></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier">unsafeCreate</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-67"></span><span>                                                         </span><span class="annot"><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier">unsafeCreate</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-68"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.TH</span></a></span><span>    </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cb%27"><span class="hs-identifier">cb'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci"><span class="hs-identifier">ci</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci%27"><span class="hs-identifier">ci'</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm"><span class="hs-identifier">cm</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm%27"><span class="hs-identifier">cm'</span></a></span><span class="hs-special">,</span><span>
 </span><span id="line-69"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu"><span class="hs-identifier">cu</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu%27"><span class="hs-identifier">cu'</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-70"></span><span>
@@ -74,30 +74,33 @@ Formats.
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
 </span><span id="line-75"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><span class="hs-number">4</span></span><span>
 </span><span id="line-76"></span><span id="core_bytes_4"><span class="annot"><span class="annottext">core_bytes_4 :: Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Core_bytes 4
-</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_4"><span class="hs-identifier hs-var hs-var">core_bytes_4</span></a></span></span><span> </span><span id="local-6989586621679619553"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679619553"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679619552"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679619552"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679619551"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679619551"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679619550"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679619550"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 4) -&gt; Core_bytes 4
-forall (n :: Nat). (Core_some_bytes ? FixedSize n) -&gt; Core_bytes n
-</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">((Core_some_bytes ? FixedSize 4) -&gt; Core_bytes 4)
--&gt; (Core_some_bytes ? FixedSize 4) -&gt; Core_bytes 4
+</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_4"><span class="hs-identifier hs-var hs-var">core_bytes_4</span></a></span></span><span> </span><span id="local-6989586621679619457"><span class="annot"><span class="annottext">b3 :: Word8
+</span><a href="#local-6989586621679619457"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679619456"><span class="annot"><span class="annottext">b2 :: Word8
+</span><a href="#local-6989586621679619456"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679619455"><span class="annot"><span class="annottext">b1 :: Word8
+</span><a href="#local-6989586621679619455"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679619454"><span class="annot"><span class="annottext">b0 :: Word8
+</span><a href="#local-6989586621679619454"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">(Implementation_bytes ? FixedSize 4) -&gt; Core_bytes 4
+forall (n :: Nat).
+(Implementation_bytes ? FixedSize n) -&gt; Core_bytes n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">((Implementation_bytes ? FixedSize 4) -&gt; Core_bytes 4)
+-&gt; (Implementation_bytes ? FixedSize 4) -&gt; Core_bytes 4
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Core_some_bytes -&gt; Core_some_bytes ? FixedSize 4
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Implementation_bytes -&gt; Implementation_bytes ? FixedSize 4
 forall (p :: * -&gt; *) a. IsRefined p a =&gt; a -&gt; Refined p a
-</span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_some_bytes -&gt; Core_some_bytes ? FixedSize 4)
--&gt; Core_some_bytes -&gt; Core_some_bytes ? FixedSize 4
+</span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(Implementation_bytes -&gt; Implementation_bytes ? FixedSize 4)
+-&gt; Implementation_bytes -&gt; Implementation_bytes ? FixedSize 4
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Core_some_bytes
-</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier hs-var">Core_some_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Core_some_bytes) -&gt; ByteString -&gt; Core_some_bytes
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Word8] -&gt; ByteString
-</span><span class="hs-identifier hs-var">pack</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619553"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619552"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619551"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619550"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Item Implementation_bytes] -&gt; Implementation_bytes
+forall l. IsList l =&gt; [Item l] -&gt; l
+</span><span class="hs-identifier hs-var">fromList</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619457"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619456"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619455"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619454"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_8"><span class="hs-identifier hs-type">core_bytes_8</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -113,36 +116,43 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Word8
 -&gt; Word8
 -&gt; Core_bytes 8
-</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_8"><span class="hs-identifier hs-var hs-var">core_bytes_8</span></a></span></span><span> </span><span id="local-6989586621679619547"><span class="annot"><span class="annottext">b7 :: Word8
-</span><a href="#local-6989586621679619547"><span class="hs-identifier hs-var">b7</span></a></span></span><span> </span><span id="local-6989586621679619546"><span class="annot"><span class="annottext">b6 :: Word8
-</span><a href="#local-6989586621679619546"><span class="hs-identifier hs-var">b6</span></a></span></span><span> </span><span id="local-6989586621679619545"><span class="annot"><span class="annottext">b5 :: Word8
-</span><a href="#local-6989586621679619545"><span class="hs-identifier hs-var">b5</span></a></span></span><span> </span><span id="local-6989586621679619544"><span class="annot"><span class="annottext">b4 :: Word8
-</span><a href="#local-6989586621679619544"><span class="hs-identifier hs-var">b4</span></a></span></span><span> </span><span id="local-6989586621679619543"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679619543"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679619542"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679619542"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679619541"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679619541"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679619540"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679619540"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">(Core_some_bytes ? FixedSize 8) -&gt; Core_bytes 8
-forall (n :: Nat). (Core_some_bytes ? FixedSize n) -&gt; Core_bytes n
-</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">((Core_some_bytes ? FixedSize 8) -&gt; Core_bytes 8)
--&gt; (Core_some_bytes ? FixedSize 8) -&gt; Core_bytes 8
+</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_8"><span class="hs-identifier hs-var hs-var">core_bytes_8</span></a></span></span><span> </span><span id="local-6989586621679619452"><span class="annot"><span class="annottext">b7 :: Word8
+</span><a href="#local-6989586621679619452"><span class="hs-identifier hs-var">b7</span></a></span></span><span> </span><span id="local-6989586621679619451"><span class="annot"><span class="annottext">b6 :: Word8
+</span><a href="#local-6989586621679619451"><span class="hs-identifier hs-var">b6</span></a></span></span><span> </span><span id="local-6989586621679619450"><span class="annot"><span class="annottext">b5 :: Word8
+</span><a href="#local-6989586621679619450"><span class="hs-identifier hs-var">b5</span></a></span></span><span> </span><span id="local-6989586621679619449"><span class="annot"><span class="annottext">b4 :: Word8
+</span><a href="#local-6989586621679619449"><span class="hs-identifier hs-var">b4</span></a></span></span><span> </span><span id="local-6989586621679619448"><span class="annot"><span class="annottext">b3 :: Word8
+</span><a href="#local-6989586621679619448"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679619447"><span class="annot"><span class="annottext">b2 :: Word8
+</span><a href="#local-6989586621679619447"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679619446"><span class="annot"><span class="annottext">b1 :: Word8
+</span><a href="#local-6989586621679619446"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679619445"><span class="annot"><span class="annottext">b0 :: Word8
+</span><a href="#local-6989586621679619445"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">(Implementation_bytes ? FixedSize 8) -&gt; Core_bytes 8
+forall (n :: Nat).
+(Implementation_bytes ? FixedSize n) -&gt; Core_bytes n
+</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">((Implementation_bytes ? FixedSize 8) -&gt; Core_bytes 8)
+-&gt; (Implementation_bytes ? FixedSize 8) -&gt; Core_bytes 8
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Core_some_bytes -&gt; Core_some_bytes ? FixedSize 8
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">Implementation_bytes -&gt; Implementation_bytes ? FixedSize 8
 forall (p :: * -&gt; *) a. IsRefined p a =&gt; a -&gt; Refined p a
-</span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_some_bytes -&gt; Core_some_bytes ? FixedSize 8)
--&gt; Core_some_bytes -&gt; Core_some_bytes ? FixedSize 8
+</span><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier hs-var">unsafeCreate</span></a></span><span> </span><span class="annot"><span class="annottext">(Implementation_bytes -&gt; Implementation_bytes ? FixedSize 8)
+-&gt; Implementation_bytes -&gt; Implementation_bytes ? FixedSize 8
 forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Core_some_bytes
-</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_some_bytes"><span class="hs-identifier hs-var">Core_some_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Core_some_bytes) -&gt; ByteString -&gt; Core_some_bytes
-forall a b. (a -&gt; b) -&gt; a -&gt; b
-</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Word8] -&gt; ByteString
-</span><span class="hs-identifier hs-var">pack</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619547"><span class="hs-identifier hs-var">b7</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619546"><span class="hs-identifier hs-var">b6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619545"><span class="hs-identifier hs-var">b5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619544"><span class="hs-identifier hs-var">b4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619543"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619542"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619541"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
-</span><a href="#local-6989586621679619540"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">[Item Implementation_bytes] -&gt; Implementation_bytes
+forall l. IsList l =&gt; [Item l] -&gt; l
+</span><span class="hs-identifier hs-var">fromList</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619452"><span class="hs-identifier hs-var">b7</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619451"><span class="hs-identifier hs-var">b6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619450"><span class="hs-identifier hs-var">b5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619449"><span class="hs-identifier hs-var">b4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619448"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619447"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619446"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+Item Implementation_bytes
+</span><a href="#local-6989586621679619445"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-86"></span></pre></body></html>

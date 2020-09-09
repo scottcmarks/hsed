@@ -184,7 +184,7 @@ import Data.Refined(Refined, type (?), Predicate(..), IsRefined(..),
        coerceToProxyTypeOf, IsRefinedByPredicate)
 :}
 import System.SED.MCTP.Common.Simple_Type(Core_bytes(..), Core_halfuid, Core_bytes_4)
-import System.SED.MCTP.Common.Base_Type.Class(Core_some_bytes(..))
+import System.SED.MCTP.Common.Base_Type.Class(Implementation_bytes(..))
 
 
 :i IsList
@@ -217,26 +217,26 @@ putStrLn $ showString "toList chSP = " $ show $ toList chSP
 putStrLn $ showString "size chSP = " $ show $ size chSP
 putStrLn "\n\n"
 
-csb4SP = let (Core_bytes c)=chSP in c
-putStrLn $ showString "csb4SP = " $ show csb4SP
-:type csb4SP
-putStrLn $ showString "toList csb4SP = " $ show $ toList csb4SP
-putStrLn $ showString "size csb4SP = " $ show $ size csb4SP
+ib4SP = let (Core_bytes c)=chSP in c
+putStrLn $ showString "ib4SP = " $ show ib4SP
+:type ib4SP
+putStrLn $ showString "toList ib4SP = " $ show $ toList ib4SP
+putStrLn $ showString "size ib4SP = " $ show $ size ib4SP
 putStrLn "\n\n"
 
-csbSP = plain csb4SP
-:type csbSP
-putStrLn $ showString "csbSP = " $ show csbSP
-:type csbSP
-putStrLn $ showString "toList csbSP = " $ show $ toList csbSP
-putStrLn $ showString "size csbSP = " $ show $ size csbSP
+ibSP = plain ib4SP
+:type ibSP
+putStrLn $ showString "ibSP = " $ show ibSP
+:type ibSP
+putStrLn $ showString "toList ibSP = " $ show $ toList ibSP
+putStrLn $ showString "size ibSP = " $ show $ size ibSP
 putStrLn "\n\n"
 
-bSP = unCore_some_bytes csbSP
-putStrLn $ showString "bSP = " $ show bSP
-:type bSP
-putStrLn $ showString "toList bSP = " $ show $ toList bSP
-putStrLn $ showString "size bSP = " $ show $ size bSP
+bsSP = unImplementation_bytes ibSP
+putStrLn $ showString "bsSP = " $ show bsSP
+:type bsSP
+putStrLn $ showString "toList bsSP = " $ show $ toList bsSP
+putStrLn $ showString "size bsSP = " $ show $ size bsSP
 putStrLn "\n\n"
 
 

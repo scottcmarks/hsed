@@ -614,22 +614,22 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,2229
+./src/System/SED/MCTP/Common/Base_Type/Class.hs,2329
 module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class28,29
-newtype Core_some_integer Core_some_integer90,91
-newtype Core_some_integer = Core_some_integer {unCore_some_integer unCore_some_integer90,91
+newtype Implementation_integer Implementation_integer90,91
+newtype Implementation_integer = Implementation_integer {unImplementation_integer unImplementation_integer90,91
 newtype Core_integer Core_integer93,94
 type Core_integer_at_least Core_integer_at_least95,96
-newtype Core_some_uinteger Core_some_uinteger98,99
-newtype Core_some_uinteger = Core_some_uinteger {unCore_some_uinteger unCore_some_uinteger98,99
+newtype Implementation_uinteger Implementation_uinteger98,99
+newtype Implementation_uinteger = Implementation_uinteger {unImplementation_uinteger unImplementation_uinteger98,99
 newtype Core_uinteger Core_uinteger101,102
 type Core_uinteger_at_least Core_uinteger_at_least103,104
-newtype Core_some_bytes Core_some_bytes106,107
-newtype Core_some_bytes = Core_some_bytes {unCore_some_bytes unCore_some_bytes106,107
-instance LL.FoldableLL LL-FoldableLL Core_some_bytes Word8109,110
+newtype Implementation_bytes Implementation_bytes106,107
+newtype Implementation_bytes = Implementation_bytes {unImplementation_bytes unImplementation_bytes106,107
+instance LL.FoldableLL LL-FoldableLL Implementation_bytes Word8109,110
     foldl foldl110,111
     foldr foldr111,112
-instance LL.ListLike LL-ListLike Core_some_bytes Word8112,113
+instance LL.ListLike LL-ListLike Implementation_bytes Word8112,113
     singleton singleton113,114
     head head114,115
     tail tail115,116

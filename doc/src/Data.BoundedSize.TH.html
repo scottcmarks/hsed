@@ -43,7 +43,7 @@ Template Haskell helpers for 'BoundedSize'.
 </span><span id="line-43"></span><span class="hs-comment">-- argument without quoting.</span><span>
 </span><span id="line-44"></span><span class="hs-keyword">newtype</span><span> </span><span id="LitS"><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-45"></span><span>  </span><span id="LitS"><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679617777"><span class="annot"><span class="annottext">String -&gt; LitS
+</span><span id="line-46"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679617779"><span class="annot"><span class="annottext">String -&gt; LitS
 (String -&gt; LitS) -&gt; IsString LitS
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; LitS
@@ -62,20 +62,20 @@ $cfromString :: String -&gt; LitS
 </span><span id="line-57"></span><span class="hs-comment">-- sb 3 6 &quot;Foobar&quot; :: Q Exp</span><span>
 </span><span id="line-58"></span><span class="annot"><a href="Data.BoundedSize.TH.html#sb"><span class="hs-identifier hs-type">sb</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Int</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-59"></span><span id="sb"><span class="annot"><span class="annottext">sb :: Int -&gt; Int -&gt; String -&gt; Q Exp
-</span><a href="Data.BoundedSize.TH.html#sb"><span class="hs-identifier hs-var hs-var">sb</span></a></span></span><span> </span><span id="local-6989586621679617774"><span class="annot"><span class="annottext">l :: Int
-</span><a href="#local-6989586621679617774"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679617773"><span class="annot"><span class="annottext">u :: Int
-</span><a href="#local-6989586621679617773"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679617772"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679617772"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-60"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679617771"><span class="annot"><span class="annottext">tl :: Type
-</span><a href="#local-6989586621679617771"><span class="hs-identifier hs-var hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Type
+</span><a href="Data.BoundedSize.TH.html#sb"><span class="hs-identifier hs-var hs-var">sb</span></a></span></span><span> </span><span id="local-6989586621679617776"><span class="annot"><span class="annottext">l :: Int
+</span><a href="#local-6989586621679617776"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679617775"><span class="annot"><span class="annottext">u :: Int
+</span><a href="#local-6989586621679617775"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679617774"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679617774"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-60"></span><span>  </span><span class="hs-keyword">let</span><span> </span><span id="local-6989586621679617773"><span class="annot"><span class="annottext">tl :: Type
+</span><a href="#local-6989586621679617773"><span class="hs-identifier hs-var hs-var">tl</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Type
 </span><a href="Data.BoundedSize.TH.html#typeFromInt"><span class="hs-identifier hs-var">typeFromInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679617774"><span class="hs-identifier hs-var">l</span></a></span><span>
-</span><span id="line-61"></span><span>      </span><span id="local-6989586621679617770"><span class="annot"><span class="annottext">tu :: Type
-</span><a href="#local-6989586621679617770"><span class="hs-identifier hs-var hs-var">tu</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Type
+</span><a href="#local-6989586621679617776"><span class="hs-identifier hs-var">l</span></a></span><span>
+</span><span id="line-61"></span><span>      </span><span id="local-6989586621679617772"><span class="annot"><span class="annottext">tu :: Type
+</span><a href="#local-6989586621679617772"><span class="hs-identifier hs-var hs-var">tu</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Type
 </span><a href="Data.BoundedSize.TH.html#typeFromInt"><span class="hs-identifier hs-var">typeFromInt</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679617773"><span class="hs-identifier hs-var">u</span></a></span><span>
-</span><span id="line-62"></span><span>  </span><span id="local-6989586621679617769"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679617769"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
+</span><a href="#local-6989586621679617775"><span class="hs-identifier hs-var">u</span></a></span><span>
+</span><span id="line-62"></span><span>  </span><span id="local-6989586621679617771"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679617771"><span class="hs-identifier hs-var">ta</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
 </span><span class="hs-identifier hs-var">newName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;a&quot;</span></span><span>
 </span><span id="line-63"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
@@ -85,10 +85,10 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 -&gt; Type -&gt; Type -&gt; Name -&gt; String -&gt; Exp
 </span><a href="Data.BoundedSize.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var">unsafeCreateExp</span></a></span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Name -&gt; Type
 </span><a href="Data.BoundedSize.TH.html#universallyQuantifiedBoundedSizeType"><span class="hs-identifier hs-var">universallyQuantifiedBoundedSizeType</span></a></span><span> </span><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621679617771"><span class="hs-identifier hs-var">tl</span></a></span><span> </span><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621679617770"><span class="hs-identifier hs-var">tu</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679617769"><span class="hs-identifier hs-var">ta</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679617772"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621679617773"><span class="hs-identifier hs-var">tl</span></a></span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679617772"><span class="hs-identifier hs-var">tu</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679617771"><span class="hs-identifier hs-var">ta</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679617774"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-64"></span><span>
 </span><span id="line-65"></span><span>
 </span><span id="line-66"></span><span>
@@ -116,16 +116,16 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-88"></span><span class="hs-comment">--</span><span>
 </span><span id="line-89"></span><span class="annot"><a href="Data.BoundedSize.TH.html#fx"><span class="hs-identifier hs-type">fx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-90"></span><span id="fx"><span class="annot"><span class="annottext">fx :: LitS -&gt; Q Exp
-</span><a href="Data.BoundedSize.TH.html#fx"><span class="hs-identifier hs-var hs-var">fx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679617767"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679617767"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; String -&gt; Q Exp
+</span><a href="Data.BoundedSize.TH.html#fx"><span class="hs-identifier hs-var hs-var">fx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679617769"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679617769"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; String -&gt; Q Exp
 </span><a href="Data.BoundedSize.TH.html#sb"><span class="hs-identifier hs-var">sb</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679617766"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679617766"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679617767"><span class="hs-identifier hs-var">s</span></a></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679617766"><span class="annot"><span class="annottext">l :: Int
-</span><a href="#local-6989586621679617766"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
+</span><a href="#local-6989586621679617768"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Int
+</span><a href="#local-6989586621679617768"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679617769"><span class="hs-identifier hs-var">s</span></a></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679617768"><span class="annot"><span class="annottext">l :: Int
+</span><a href="#local-6989586621679617768"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">P.length</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679617767"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621679617769"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-91"></span><span>
 </span><span id="line-92"></span><span>
 </span><span id="line-93"></span><span class="hs-comment">-- | Type-safe constructor for bounded-length string literals: @a ? BoundedSize 0 l@</span><span>
@@ -151,15 +151,15 @@ forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span id="line-113"></span><span class="hs-comment">--</span><span>
 </span><span id="line-114"></span><span class="annot"><a href="Data.BoundedSize.TH.html#mx"><span class="hs-identifier hs-type">mx</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
 </span><span id="line-115"></span><span id="mx"><span class="annot"><span class="annottext">mx :: LitS -&gt; Q Exp
-</span><a href="Data.BoundedSize.TH.html#mx"><span class="hs-identifier hs-var hs-var">mx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679617765"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679617765"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; String -&gt; Q Exp
+</span><a href="Data.BoundedSize.TH.html#mx"><span class="hs-identifier hs-var hs-var">mx</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="Data.BoundedSize.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679617767"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679617767"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Int -&gt; String -&gt; Q Exp
 </span><a href="Data.BoundedSize.TH.html#sb"><span class="hs-identifier hs-var">sb</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Int
-</span><a href="#local-6989586621679617764"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679617765"><span class="hs-identifier hs-var">s</span></a></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679617764"><span class="annot"><span class="annottext">l :: Int
-</span><a href="#local-6989586621679617764"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
+</span><a href="#local-6989586621679617766"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">String
+</span><a href="#local-6989586621679617767"><span class="hs-identifier hs-var">s</span></a></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679617766"><span class="annot"><span class="annottext">l :: Int
+</span><a href="#local-6989586621679617766"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Int
 forall (t :: * -&gt; *) a. Foldable t =&gt; t a -&gt; Int
 </span><span class="hs-identifier hs-var">P.length</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679617765"><span class="hs-identifier hs-var">s</span></a></span><span>
+</span><a href="#local-6989586621679617767"><span class="hs-identifier hs-var">s</span></a></span><span>
 </span><span id="line-116"></span><span>
 </span><span id="line-117"></span><span class="hs-comment">-- | Transform a data-level Int to a Type value</span><span>
 </span><span id="line-118"></span><span class="hs-comment">--</span><span>
@@ -198,12 +198,12 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span id="line-142"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>    </span><span class="hs-comment">-- explicitly typed expression  unsafeCreate &lt;s&gt; :: forall a ...</span><span>
 </span><span id="line-143"></span><span id="unsafeCreateExp"><span class="annot"><span class="annottext">unsafeCreateExp :: (Type -&gt; Type -&gt; Name -&gt; Type)
 -&gt; Type -&gt; Type -&gt; Name -&gt; String -&gt; Exp
-</span><a href="Data.BoundedSize.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var hs-var">unsafeCreateExp</span></a></span></span><span> </span><span id="local-6989586621679617760"><span class="annot"><span class="annottext">typef :: Type -&gt; Type -&gt; Name -&gt; Type
-</span><a href="#local-6989586621679617760"><span class="hs-identifier hs-var">typef</span></a></span></span><span> </span><span id="local-6989586621679617759"><span class="annot"><span class="annottext">l :: Type
-</span><a href="#local-6989586621679617759"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679617758"><span class="annot"><span class="annottext">u :: Type
-</span><a href="#local-6989586621679617758"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679617757"><span class="annot"><span class="annottext">a :: Name
-</span><a href="#local-6989586621679617757"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679617756"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679617756"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="Data.BoundedSize.TH.html#unsafeCreateExp"><span class="hs-identifier hs-var hs-var">unsafeCreateExp</span></a></span></span><span> </span><span id="local-6989586621679617762"><span class="annot"><span class="annottext">typef :: Type -&gt; Type -&gt; Name -&gt; Type
+</span><a href="#local-6989586621679617762"><span class="hs-identifier hs-var">typef</span></a></span></span><span> </span><span id="local-6989586621679617761"><span class="annot"><span class="annottext">l :: Type
+</span><a href="#local-6989586621679617761"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679617760"><span class="annot"><span class="annottext">u :: Type
+</span><a href="#local-6989586621679617760"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679617759"><span class="annot"><span class="annottext">a :: Name
+</span><a href="#local-6989586621679617759"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span id="local-6989586621679617758"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679617758"><span class="hs-identifier hs-var">s</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-144"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Type -&gt; Exp
 </span><span class="hs-identifier hs-var">SigE</span></span><span>
 </span><span id="line-145"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
@@ -213,32 +213,32 @@ forall a b. (Integral a, Num b) =&gt; a -&gt; b
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="annottext">String -&gt; Lit
 </span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679617756"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679617758"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-146"></span><span>      </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TyVarBndr] -&gt; Cxt -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">ForallT</span></span><span>
 </span><span id="line-147"></span><span>         </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; TyVarBndr
 </span><span class="hs-identifier hs-var">PlainTV</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679617757"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">]</span><span class="hs-cpp">
+</span><a href="#local-6989586621679617759"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">]</span><span class="hs-cpp">
 #if MIN_VERSION_template_haskell(2,10,0)
 </span><span>         </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">HasSize</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679617757"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679617759"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsString</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679617757"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(Type -&gt; Type) -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679617759"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span> </span><span class="annot"><span class="annottext">(Type -&gt; Type) -&gt; Type -&gt; Type
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span class="hs-cpp">
 #else
 </span><span>         </span><span class="hs-special">[</span><span class="hs-identifier">ClassP</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">HasSize</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">VarT</span><span> </span><span class="hs-identifier">a</span><span class="hs-special">]</span><span class="hs-special">,</span><span> </span><span class="hs-identifier">ClassP</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">IsString</span><span> </span><span class="hs-special">[</span><span class="hs-identifier">VarT</span><span> </span><span class="hs-identifier">a</span><span class="hs-special">]</span><span class="hs-special">]</span><span> </span><span class="hs-operator">$</span><span class="hs-cpp">
 #endif
 </span><span>       </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Name -&gt; Type
-</span><a href="#local-6989586621679617760"><span class="hs-identifier hs-var">typef</span></a></span><span> </span><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621679617759"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621679617758"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679617757"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- create the final type expression, e.g. a ? BoundedSize l u</span><span>
+</span><a href="#local-6989586621679617762"><span class="hs-identifier hs-var">typef</span></a></span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679617761"><span class="hs-identifier hs-var">l</span></a></span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679617760"><span class="hs-identifier hs-var">u</span></a></span><span> </span><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679617759"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-comment">-- create the final type expression, e.g. a ? BoundedSize l u</span><span>
 </span><span id="line-154"></span><span>
 </span><span id="line-155"></span><span>
 </span><span id="line-156"></span><span class="hs-comment">-- | Create the final expression for @a ? BoundedSize l u@</span><span>
@@ -253,18 +253,18 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span id="line-165"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span>  </span><span class="hs-comment">-- name of the wrapped type, e.g. 'ByteString'</span><span>
 </span><span id="line-166"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>  </span><span class="hs-comment">-- type expression, e.g.  @ByteString ? BoundedSize l u@</span><span>
 </span><span id="line-167"></span><span id="universallyQuantifiedBoundedSizeType"><span class="annot"><span class="annottext">universallyQuantifiedBoundedSizeType :: Type -&gt; Type -&gt; Name -&gt; Type
-</span><a href="Data.BoundedSize.TH.html#universallyQuantifiedBoundedSizeType"><span class="hs-identifier hs-var hs-var">universallyQuantifiedBoundedSizeType</span></a></span></span><span> </span><span id="local-6989586621679617745"><span class="annot"><span class="annottext">l :: Type
-</span><a href="#local-6989586621679617745"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679617744"><span class="annot"><span class="annottext">u :: Type
-</span><a href="#local-6989586621679617744"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679617743"><span class="annot"><span class="annottext">a :: Name
-</span><a href="#local-6989586621679617743"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="Data.BoundedSize.TH.html#universallyQuantifiedBoundedSizeType"><span class="hs-identifier hs-var hs-var">universallyQuantifiedBoundedSizeType</span></a></span></span><span> </span><span id="local-6989586621679617747"><span class="annot"><span class="annottext">l :: Type
+</span><a href="#local-6989586621679617747"><span class="hs-identifier hs-var">l</span></a></span></span><span> </span><span id="local-6989586621679617746"><span class="annot"><span class="annottext">u :: Type
+</span><a href="#local-6989586621679617746"><span class="hs-identifier hs-var">u</span></a></span></span><span> </span><span id="local-6989586621679617745"><span class="annot"><span class="annottext">a :: Name
+</span><a href="#local-6989586621679617745"><span class="hs-identifier hs-var">a</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-special">(</span><span class="hs-operator">?</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679617743"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679617745"><span class="hs-identifier hs-var">a</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">BoundedSize</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621679617745"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Type
-</span><a href="#local-6989586621679617744"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span>
+</span><a href="#local-6989586621679617747"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">Type
+</span><a href="#local-6989586621679617746"><span class="hs-identifier hs-var">u</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-168"></span></pre></body></html>

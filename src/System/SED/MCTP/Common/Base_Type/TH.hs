@@ -25,7 +25,7 @@ import           Language.Haskell.TH
 import           Data.String                            (IsString (..))
 import           GHC.TypeLits                           (type (<=), KnownNat)
 
-import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
+import           System.SED.MCTP.Common.Base_Type.Types (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
                                                          Core_uinteger (..),
@@ -66,10 +66,10 @@ newtype LitI =
 -- >>> :t ci 142857
 -- ci 142857 :: Q Exp
 -- >>> runQ $ ppr <$> ci 142857
--- System.SED.MCTP.Common.Base_Type.Class.Core_integer (Data.Refined.unsafeCreate 142857) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,
+-- System.SED.MCTP.Common.Base_Type.Types.Core_integer (Data.Refined.unsafeCreate 142857) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,
 --                                                                                                         (GHC.TypeNats.<=) 3
 --                                                                                                                           n_0) =>
---                                                                                           System.SED.MCTP.Common.Base_Type.Class.Core_integer n_0
+--                                                                                           System.SED.MCTP.Common.Base_Type.Types.Core_integer n_0
 --
 -- >>> :t runQ $ ppr <$> ci 142857
 -- runQ $ ppr <$> ci 142857 :: Quasi m => m Doc
@@ -117,7 +117,7 @@ cx' cn tn (LitI i) =
 -- >>> :t cb' "Foobar"
 -- cb' "Foobar" :: Q Exp
 -- >>> runQ $ ppr <$> cb' "Foobar"
--- System.SED.MCTP.Common.Base_Type.Class.Core_bytes (Data.Refined.unsafeCreate "Foobar") :: System.SED.MCTP.Common.Base_Type.Class.Core_bytes 6
+-- System.SED.MCTP.Common.Base_Type.Types.Core_bytes (Data.Refined.unsafeCreate "Foobar") :: System.SED.MCTP.Common.Base_Type.Types.Core_bytes 6
 --
 -- >>> :t runQ $ ppr <$> cb' "Foobar"
 -- runQ $ ppr <$> cb' "Foobar" :: Quasi m => m Doc
@@ -134,10 +134,10 @@ cb' = ct' 'Core_bytes ''Core_bytes
 -- >>> :t cm "Foobar"
 -- cm "Foobar" :: Q Exp
 -- >>> runQ $ ppr <$> cm "Foobar"
--- System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes (Data.Refined.unsafeCreate "Foobar") :: forall n_0 . (GHC.TypeNats.KnownNat n_0,
+-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate "Foobar") :: forall n_0 . (GHC.TypeNats.KnownNat n_0,
 --                                                                                                             (GHC.TypeNats.<=) 6
 --                                                                                                                               n_0) =>
---                                                                                               System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n_0
+--                                                                                               System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n_0
 --
 -- >>> :t runQ $ ppr <$> cm "Foobar"
 -- runQ $ ppr <$> cm "Foobar" :: Quasi m => m Doc
@@ -154,7 +154,7 @@ cm = ct 'Core_max_bytes ''Core_max_bytes
 -- >>> :t cm' "Foobar"
 -- cm' "Foobar" :: Q Exp
 -- >>> runQ $ ppr <$> cm' "Foobar"
--- System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes (Data.Refined.unsafeCreate "Foobar") :: System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes 6
+-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate "Foobar") :: System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes 6
 --
 -- >>> :t runQ $ ppr <$> cm' "Foobar"
 -- runQ $ ppr <$> cm' "Foobar" :: Quasi m => m Doc

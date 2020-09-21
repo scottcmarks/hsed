@@ -184,7 +184,7 @@ import Data.Refined(Refined, type (?), Predicate(..), IsRefined(..),
        coerceToProxyTypeOf, IsRefinedByPredicate)
 :}
 import System.SED.MCTP.Common.Simple_Type(Core_bytes(..), Core_halfuid, Core_bytes_4)
-import System.SED.MCTP.Common.Base_Type.Class(Implementation_bytes(..))
+import System.SED.MCTP.Common.Base_Type.Types(Implementation_bytes(..))
 
 
 :i IsList

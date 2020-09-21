@@ -88,11 +88,11 @@ digraph G {
 							label=Base_Type,
 							style="filled,bold"];
 						u7						 [fillcolor="#77ffff",
-							label=Class,
+							label=TH,
 							penwidth=0,
 							style=filled];
-						u10						 [fillcolor="#77ffff",
-							label=TH,
+						u8						 [fillcolor="#77ffff",
+							label=Types,
 							penwidth=0,
 							style=filled];
 					}
@@ -122,11 +122,11 @@ digraph G {
 							penwidth=0,
 							style=filled];
 					}
-					u8					 [fillcolor="#ff7777",
+					u9					 [fillcolor="#ff7777",
 						label=StreamItem,
 						penwidth=0,
 						style=filled];
-					u9					 [fillcolor="#ff7777",
+					u10					 [fillcolor="#ff7777",
 						label=Token,
 						penwidth=0,
 						style=filled];
@@ -213,12 +213,12 @@ digraph G {
 	u0 -> u4;
 	u1 -> u3;
 	u4 -> u1;
-	u9 -> u8;
+	u10 -> u9;
 	u11 -> u12;
 	u11 -> u14;
 	u12 -> u13;
 	u13 -> u6;
-	u14 -> u9;
+	u14 -> u10;
 	u15 -> u12;
 	u16 -> u17;
 	u17 -> u11;
@@ -229,10 +229,10 @@ digraph G {
 	u20 -> u12;
 	u23 -> u18;
 	u24 -> u12;
-	u6 -> u10;
-	u7 -> u0;
-	u7 -> u9;
-	u10 -> u7;
+	u6 -> u7;
+	u7 -> u8;
+	u8 -> u0;
+	u8 -> u10;
 	u21 -> u22;
 	u22 -> u20;
 	u22 -> u23;

@@ -175,124 +175,252 @@ eID eID83,84
 eLitS eLitS90,91
 eValP eValP95,96
 
-./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,5807
-module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH31,32
-ttype ttype137,138
-ttypeDecs ttypeDecs145,146
-typeTableParser typeTableParser149,150
-typeTableRow typeTableRow156,157
-dTypeTableRow dTypeTableRow163,164
-typeTableTitle typeTableTitle175,176
-spaces spaces179,180
-rowSepFieldLengths rowSepFieldLengths182,183
-rowSep rowSep189,190
-blankLines blankLines193,194
-tableRowFields tableRowFields197,198
-data TypeTableRow TypeTableRow205,206
-data TypeTableRow = TypeTableRow TypeTableRow205,206
-instance Semigroup Semigroup TypeTableRow208,209
-    (T(TypeTableRowu1n1f1)209,210
-    _ _211,212
-type TypeUIDField TypeUIDField214,215
-type TypeName TypeName216,217
-type FormatString FormatString218,219
-header header221,222
-type Type_UID Type_UID227,228
-type Base_Type_UID Base_Type_UID228,229
-type Non_Base_Type_UID Non_Base_Type_UID229,230
-type Named_Value_Type_UID Named_Value_Type_UID230,231
-type Core_type_def_max_enum_ranges Core_type_def_max_enum_ranges233,234
-type Core_type_def_max_alternative_uidrefs Core_type_def_max_alternative_uidrefs234,235
-type Core_type_def_max_byte_table_uidrefs Core_type_def_max_byte_table_uidrefs235,236
-type Core_type_def_max_object_table_uidrefs Core_type_def_max_object_table_uidrefs236,237
-type Core_type_def_max_struct_uidrefs Core_type_def_max_struct_uidrefs237,238
-type Core_type_def_max_set_ranges Core_type_def_max_set_ranges238,239
-data Core_Format Core_Format240,241
-data Core_Format (n:n240,241
-data Core_Format (n::Nat) )240,241
-        Base_Type_Format Base_Type_Format242,243
-        Simple_Type_Format Simple_Type_Format243,244
-        Enumeration_Type_Format Enumeration_Type_Format244,245
-        Alternative_Type_Format Alternative_Type_Format245,246
-        List_Type_Format List_Type_Format246,247
-        Restricted_Reference_Type_5_Format Restricted_Reference_Type_5_Format247,248
-        Restricted_Reference_Type_6_Format Restricted_Reference_Type_6_Format248,249
-        General_Reference_Type_7_Format General_Reference_Type_7_Format249,250
-        General_Reference_Type_8_Format General_Reference_Type_8_Format250,251
-        General_Reference_Type_9_Format General_Reference_Type_9_Format251,252
-        General_Reference_Table_Type_Format General_Reference_Table_Type_Format252,253
-        Named_Value_Name_Type_Format Named_Value_Name_Type_Format253,254
-        Named_Value_Integer_Type_Format Named_Value_Integer_Type_Format254,255
-        Named_Value_Uinteger_Type_Format Named_Value_Uinteger_Type_Format255,256
-        Struct_Type_Format Struct_Type_Format256,257
-        Set_Type_Format Set_Type_Format257,258
-data Core_Format (n:n240,241
-data Some_Core_Format Some_Core_Format259,260
-data Some_Core_Format =  forall forall259,260
-class Is_Core_Format Is_Core_Format261,262
-    formatCode formatCode263,264
-instance (K(KnownNat n) => Is_Core_Format (Core_Format n)264,265
-    formatCode formatCode265,266
-instance Is_Core_Format Is_Core_Format (Some_Core_Format)266,267
+./src/System/SED/MCTP/Common/TypeUIDs/TH (original).hs,5924
+module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH35,36
+ttype ttype141,142
+ttypeDecs ttypeDecs149,150
+typeTableParser typeTableParser153,154
+typeTableRow typeTableRow160,161
+dTypeTableRow dTypeTableRow167,168
+typeTableTitle typeTableTitle179,180
+spaces spaces183,184
+rowSepFieldLengths rowSepFieldLengths186,187
+rowSep rowSep193,194
+blankLines blankLines197,198
+tableRowFields tableRowFields201,202
+data TypeTableRow TypeTableRow209,210
+data TypeTableRow = TypeTableRow TypeTableRow209,210
+instance Semigroup Semigroup TypeTableRow212,213
+    (T(TypeTableRowu1n1f1)213,214
+    _ _215,216
+type TypeUIDField TypeUIDField218,219
+type TypeName TypeName220,221
+type FormatString FormatString222,223
+header header225,226
+type Type_UID Type_UID231,232
+type Base_Type_UID Base_Type_UID232,233
+type Non_Base_Type_UID Non_Base_Type_UID233,234
+type Named_Value_Type_UID Named_Value_Type_UID234,235
+type Core_type_def_max_enum_ranges Core_type_def_max_enum_ranges237,238
+type Core_type_def_max_alternative_uidrefs Core_type_def_max_alternative_uidrefs238,239
+type Core_type_def_max_byte_table_uidrefs Core_type_def_max_byte_table_uidrefs239,240
+type Core_type_def_max_object_table_uidrefs Core_type_def_max_object_table_uidrefs240,241
+type Core_type_def_max_struct_uidrefs Core_type_def_max_struct_uidrefs241,242
+type Core_type_def_max_set_ranges Core_type_def_max_set_ranges242,243
+data Core_Format Core_Format244,245
+data Core_Format (n:n244,245
+data Core_Format (n::Nat) )244,245
+        Base_Type_Format Base_Type_Format246,247
+        Simple_Type_Format Simple_Type_Format247,248
+        Enumeration_Type_Format Enumeration_Type_Format248,249
+        Alternative_Type_Format Alternative_Type_Format249,250
+        List_Type_Format List_Type_Format250,251
+        Restricted_Reference_Type_5_Format Restricted_Reference_Type_5_Format251,252
+        Restricted_Reference_Type_6_Format Restricted_Reference_Type_6_Format252,253
+        General_Reference_Type_7_Format General_Reference_Type_7_Format253,254
+        General_Reference_Type_8_Format General_Reference_Type_8_Format254,255
+        General_Reference_Type_9_Format General_Reference_Type_9_Format255,256
+        General_Reference_Table_Type_Format General_Reference_Table_Type_Format256,257
+        Named_Value_Name_Type_Format Named_Value_Name_Type_Format257,258
+        Named_Value_Integer_Type_Format Named_Value_Integer_Type_Format258,259
+        Named_Value_Uinteger_Type_Format Named_Value_Uinteger_Type_Format259,260
+        Struct_Type_Format Struct_Type_Format260,261
+        Set_Type_Format Set_Type_Format261,262
+data Core_Format (n:n244,245
+data Some_Core_Format Some_Core_Format263,264
+data Some_Core_Format =  forall forall263,264
+class Is_Core_Format Is_Core_Format265,266
     formatCode formatCode267,268
-instance (K(KnownNat n) => Show (Core_Format n)270,271
-    show show271,272
-instance Show Show Some_Core_Format273,274
-    showsPrec showsPrec274,275
-type Type_Name Type_Name282,283
-type Base_Type_Name Base_Type_Name283,284
-type Non_Base_Type_Name Non_Base_Type_Name284,285
-type Named_Value_Type_Name Named_Value_Type_Name285,286
-type Table_Name Table_Name286,287
-type Byte_Table_Name Byte_Table_Name287,288
-type Object_Table_Name Object_Table_Name288,289
-type role role290,291
-newtype One_Of One_Of291,292
-class IsOne_Of IsOne_Of293,294
-    refiningSet refiningSet294,295
-instance IsOne_Of IsOne_Of (One_Of s) a297,298
-instance Predicate Predicate (One_Of (Set a)) a299,300
-    predicate predicate300,301
-    failMsg failMsg301,302
-core_Base_Type_Names core_Base_Type_Names303,304
-type Core_Base_Type_Names Core_Base_Type_Names305,306
-core_Table_Kind_Names core_Table_Kind_Names307,308
-type Core_Table_Kind_Names Core_Table_Kind_Names309,310
-data Core_Format_Spec Core_Format_Spec312,313
-    Base_Type_Spec Base_Type_Spec313,314
-  | Simple_Type_Spec Simple_Type_Spec314,315
-  | Enumeration_Type_Spec Enumeration_Type_Spec315,316
-  | Alternative_Type_Spec Alternative_Type_Spec316,317
-  | List_Type_Spec List_Type_Spec317,318
-  | Restricted_Reference_Type_5_Spec Restricted_Reference_Type_5_Spec318,319
-  | Restricted_Reference_Type_6_Spec Restricted_Reference_Type_6_Spec319,320
-  | General_Reference_Type_7_SpecGeneral_Reference_Type_7_Spec320,321
-  | General_Reference_Type_8_SpecGeneral_Reference_Type_8_Spec321,322
-  | General_Reference_Type_9_SpecGeneral_Reference_Type_9_Spec322,323
-  | General_Reference_Table_Type_Spec General_Reference_Table_Type_Spec323,324
-  | Named_Value_Name_Type_Spec Named_Value_Name_Type_Spec324,325
-  | Named_Value_Integer_Type_Spec Named_Value_Integer_Type_Spec325,326
-  | Named_Value_Uinteger_Type_Spec Named_Value_Uinteger_Type_Spec326,327
-  | Struct_Type_Spec Struct_Type_Spec327,328
-  | Set_Type_Spec Set_Type_Spec328,329
-stringSetParser stringSetParser333,334
-formatSpecParser formatSpecParser338,339
-baseTypeFormatSpecParser baseTypeFormatSpecParser343,344
-simpleTypeFormatSpecParser simpleTypeFormatSpecParser346,347
-tenum tenum371,372
-tenumDecs tenumDecs380,381
-dEnum dEnum383,384
-enumTableParser enumTableParser407,408
-data EnumRow EnumRow416,417
-data EnumRow = EnumRow EnumRow416,417
-enumTableTitle enumTableTitle419,420
-enumTableRow enumTableRow427,428
-type U1 U1454,455
-type U2 U2455,456
-data Core_type Core_type457,458
-data Core_type (uid:uid457,458
-    Core_type_uinteger Core_type_uinteger458,459
-data Core_type (uid:uid457,458
+instance (K(KnownNat n) => Is_Core_Format (Core_Format n)268,269
+    formatCode formatCode269,270
+instance Is_Core_Format Is_Core_Format (Some_Core_Format)270,271
+    formatCode formatCode271,272
+instance (K(KnownNat n) => Show (Core_Format n)274,275
+    show show275,276
+instance Show Show Some_Core_Format277,278
+    showsPrec showsPrec278,279
+type Type_Name Type_Name286,287
+type Base_Type_Name Base_Type_Name287,288
+type Non_Base_Type_Name Non_Base_Type_Name288,289
+type Named_Value_Type_Name Named_Value_Type_Name289,290
+type Table_Name Table_Name290,291
+type Byte_Table_Name Byte_Table_Name291,292
+type Object_Table_Name Object_Table_Name292,293
+type role role294,295
+newtype One_Of One_Of295,296
+class IsOne_Of IsOne_Of297,298
+    refiningSet refiningSet298,299
+instance IsOne_Of IsOne_Of (One_Of s) a301,302
+instance Predicate Predicate (One_Of (Set a)) a303,304
+    predicate predicate304,305
+    failMsg failMsg305,306
+core_Base_Type_Names core_Base_Type_Names307,308
+type Core_Base_Type_Names Core_Base_Type_Names309,310
+core_Table_Kind_Names core_Table_Kind_Names311,312
+type Core_Table_Kind_Names Core_Table_Kind_Names313,314
+data Core_Format_Spec Core_Format_Spec316,317
+    Base_Type_Spec Base_Type_Spec317,318
+  | Simple_Type_Spec Simple_Type_Spec318,319
+  | Enumeration_Type_Spec Enumeration_Type_Spec319,320
+  | Alternative_Type_Spec Alternative_Type_Spec320,321
+  | List_Type_Spec List_Type_Spec321,322
+  | Restricted_Reference_Type_5_Spec Restricted_Reference_Type_5_Spec322,323
+  | Restricted_Reference_Type_6_Spec Restricted_Reference_Type_6_Spec323,324
+  | General_Reference_Type_7_SpecGeneral_Reference_Type_7_Spec324,325
+  | General_Reference_Type_8_SpecGeneral_Reference_Type_8_Spec325,326
+  | General_Reference_Type_9_SpecGeneral_Reference_Type_9_Spec326,327
+  | General_Reference_Table_Type_Spec General_Reference_Table_Type_Spec327,328
+  | Named_Value_Name_Type_Spec Named_Value_Name_Type_Spec328,329
+  | Named_Value_Integer_Type_Spec Named_Value_Integer_Type_Spec329,330
+  | Named_Value_Uinteger_Type_Spec Named_Value_Uinteger_Type_Spec330,331
+  | Struct_Type_Spec Struct_Type_Spec331,332
+  | Set_Type_Spec Set_Type_Spec332,333
+stringSetParser stringSetParser337,338
+formatSpecParser formatSpecParser342,343
+baseTypeFormatSpecParser baseTypeFormatSpecParser347,348
+simpleTypeFormatSpecParser simpleTypeFormatSpecParser350,351
+tenum tenum375,376
+tenumDecs tenumDecs384,385
+dEnum dEnum387,388
+enumTableParser enumTableParser411,412
+data EnumRow EnumRow420,421
+data EnumRow = EnumRow EnumRow420,421
+enumTableTitle enumTableTitle423,424
+enumTableRow enumTableRow431,432
+type U1 U1458,459
+type U2 U2459,460
+type family family461,462
+type Core_Base_Type(Core_Base_Type463,464
+type Core_Data_Type(Core_Data_Type464,465
+type instance instance466,467
+type Core_Simple_Type Core_Simple_Type475,476
+type instance instance476,477
+type Core_bytes_4 Core_bytes_4478,479
+
+./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,6015
+module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH32,33
+ttype ttype140,141
+ttypeDecs ttypeDecs148,149
+typeTableParser typeTableParser152,153
+typeTableRow typeTableRow159,160
+dTypeTableRow dTypeTableRow166,167
+typeTableTitle typeTableTitle178,179
+spaces spaces182,183
+rowSepFieldLengths rowSepFieldLengths185,186
+rowSep rowSep192,193
+blankLines blankLines196,197
+tableRowFields tableRowFields200,201
+data TypeTableRow TypeTableRow208,209
+data TypeTableRow = TypeTableRow TypeTableRow208,209
+instance Semigroup Semigroup TypeTableRow211,212
+    (T(TypeTableRowu1n1f1)212,213
+    _ _214,215
+type TypeUIDField TypeUIDField217,218
+type TypeName TypeName219,220
+type FormatString FormatString221,222
+header header224,225
+type Type_UID Type_UID230,231
+type Base_Type_UID Base_Type_UID231,232
+type Non_Base_Type_UID Non_Base_Type_UID232,233
+type Named_Value_Type_UID Named_Value_Type_UID233,234
+type Core_type_def_max_enum_ranges Core_type_def_max_enum_ranges236,237
+type Core_type_def_max_alternative_uidrefs Core_type_def_max_alternative_uidrefs237,238
+type Core_type_def_max_byte_table_uidrefs Core_type_def_max_byte_table_uidrefs238,239
+type Core_type_def_max_object_table_uidrefs Core_type_def_max_object_table_uidrefs239,240
+type Core_type_def_max_struct_uidrefs Core_type_def_max_struct_uidrefs240,241
+type Core_type_def_max_set_ranges Core_type_def_max_set_ranges241,242
+data Core_Format Core_Format243,244
+data Core_Format (n:n243,244
+data Core_Format (n::Nat) )243,244
+        Base_Type_Format Base_Type_Format245,246
+        Simple_Type_Format Simple_Type_Format246,247
+        Enumeration_Type_Format Enumeration_Type_Format247,248
+        Alternative_Type_Format Alternative_Type_Format248,249
+        List_Type_Format List_Type_Format249,250
+        Restricted_Reference_Type_5_Format Restricted_Reference_Type_5_Format250,251
+        Restricted_Reference_Type_6_Format Restricted_Reference_Type_6_Format251,252
+        General_Reference_Type_7_Format General_Reference_Type_7_Format252,253
+        General_Reference_Type_8_Format General_Reference_Type_8_Format253,254
+        General_Reference_Type_9_Format General_Reference_Type_9_Format254,255
+        General_Reference_Table_Type_Format General_Reference_Table_Type_Format255,256
+        Named_Value_Name_Type_Format Named_Value_Name_Type_Format256,257
+        Named_Value_Integer_Type_Format Named_Value_Integer_Type_Format257,258
+        Named_Value_Uinteger_Type_Format Named_Value_Uinteger_Type_Format258,259
+        Struct_Type_Format Struct_Type_Format259,260
+        Set_Type_Format Set_Type_Format260,261
+data Core_Format (n:n243,244
+data Some_Core_Format Some_Core_Format262,263
+data Some_Core_Format =  forall forall262,263
+class Is_Core_Format Is_Core_Format264,265
+    formatCode formatCode266,267
+instance (K(KnownNat n) => Is_Core_Format (Core_Format n)267,268
+    formatCode formatCode268,269
+instance Is_Core_Format Is_Core_Format (Some_Core_Format)269,270
+    formatCode formatCode270,271
+instance (K(KnownNat n) => Show (Core_Format n)273,274
+    show show274,275
+instance Show Show Some_Core_Format276,277
+    showsPrec showsPrec277,278
+type Type_Name Type_Name285,286
+type Base_Type_Name Base_Type_Name286,287
+type Non_Base_Type_Name Non_Base_Type_Name287,288
+type Named_Value_Type_Name Named_Value_Type_Name288,289
+type Table_Name Table_Name289,290
+type Byte_Table_Name Byte_Table_Name290,291
+type Object_Table_Name Object_Table_Name291,292
+type role role293,294
+newtype One_Of One_Of294,295
+class IsOne_Of IsOne_Of296,297
+    refiningSet refiningSet297,298
+instance IsOne_Of IsOne_Of (One_Of s) a300,301
+instance Predicate Predicate (One_Of (Set a)) a302,303
+    predicate predicate303,304
+    failMsg failMsg304,305
+core_Base_Type_Names core_Base_Type_Names306,307
+type Core_Base_Type_Names Core_Base_Type_Names308,309
+core_Table_Kind_Names core_Table_Kind_Names310,311
+type Core_Table_Kind_Names Core_Table_Kind_Names312,313
+data Core_Format_Spec Core_Format_Spec315,316
+    Base_Type_Spec Base_Type_Spec316,317
+  | Simple_Type_Spec Simple_Type_Spec317,318
+  | Enumeration_Type_Spec Enumeration_Type_Spec318,319
+  | Alternative_Type_Spec Alternative_Type_Spec319,320
+  | List_Type_Spec List_Type_Spec320,321
+  | Restricted_Reference_Type_5_Spec Restricted_Reference_Type_5_Spec321,322
+  | Restricted_Reference_Type_6_Spec Restricted_Reference_Type_6_Spec322,323
+  | General_Reference_Type_7_SpecGeneral_Reference_Type_7_Spec323,324
+  | General_Reference_Type_8_SpecGeneral_Reference_Type_8_Spec324,325
+  | General_Reference_Type_9_SpecGeneral_Reference_Type_9_Spec325,326
+  | General_Reference_Table_Type_Spec General_Reference_Table_Type_Spec326,327
+  | Named_Value_Name_Type_Spec Named_Value_Name_Type_Spec327,328
+  | Named_Value_Integer_Type_Spec Named_Value_Integer_Type_Spec328,329
+  | Named_Value_Uinteger_Type_Spec Named_Value_Uinteger_Type_Spec329,330
+  | Struct_Type_Spec Struct_Type_Spec330,331
+  | Set_Type_Spec Set_Type_Spec331,332
+stringSetParser stringSetParser336,337
+formatSpecParser formatSpecParser341,342
+baseTypeFormatSpecParser baseTypeFormatSpecParser346,347
+simpleTypeFormatSpecParser simpleTypeFormatSpecParser349,350
+tenum tenum374,375
+tenumDecs tenumDecs383,384
+dEnum dEnum386,387
+enumTableParser enumTableParser410,411
+data EnumRow EnumRow419,420
+data EnumRow = EnumRow EnumRow419,420
+enumTableTitle enumTableTitle422,423
+enumTableRow enumTableRow430,431
+type U1 U1457,458
+type U2 U2458,459
+data Core_type Core_type460,461
+data Core_type (uid:uid460,461
+    Core_type_uinteger Core_type_uinteger461,462
+data Core_type (uid:uid460,461
+type family family463,464
+type instance instance464,465
+type Core_Simple_Type Core_Simple_Type473,474
+type family family475,476
+type instance instance476,477
+type Core_bytes_4 Core_bytes_4478,479
 
 ./src/System/SED/MCTP/Common/UID.hs,432
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID25,26
@@ -614,8 +742,25 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,2329
-module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class28,29
+./src/System/SED/MCTP/Common/Base_Type/TH.hs,323
+module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
+import import25,26
+newtype LitS LitS48,49
+newtype LitI LitI55,56
+ci ci79,80
+ci' ci'82,83
+cu cu85,86
+cu' cu'90,91
+cx cx95,96
+cx' cx'105,106
+cb' cb'126,127
+cm cm146,147
+cm' cm'163,164
+ct ct167,168
+ct' ct'176,177
+
+./src/System/SED/MCTP/Common/Base_Type/Types.hs,2329
+module System.SED.MCTP.Common.Base_Type.TypesSystem.SED.MCTP.Common.Base_Type.Types28,29
 newtype Implementation_integer Implementation_integer90,91
 newtype Implementation_integer = Implementation_integer {unImplementation_integer unImplementation_integer90,91
 newtype Core_integer Core_integer93,94
@@ -663,23 +808,6 @@ instance (K(KnownNat n) => IsToken (Core_bytes n)199,200
 instance (K(KnownNat n) => IsToken (Core_max_bytes n)205,206
     token token206,207
     fromToken fromToken207,208
-
-./src/System/SED/MCTP/Common/Base_Type/TH.hs,323
-module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
-import import25,26
-newtype LitS LitS48,49
-newtype LitI LitI55,56
-ci ci79,80
-ci' ci'82,83
-cu cu85,86
-cu' cu'90,91
-cx cx95,96
-cx' cx'105,106
-cb' cb'126,127
-cm cm146,147
-cm' cm'163,164
-ct ct167,168
-ct' ct'176,177
 
 ./src/System/SED/MCTP/Common/Base_Type.hs,145
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21

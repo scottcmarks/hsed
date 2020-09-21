@@ -28,8 +28,8 @@ Utilities
 </span><span id="line-28"></span><span>
 </span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.ByteString.Base16</span></span><span>           </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">decode</span></span><span class="hs-special">)</span><span>
 </span><span id="line-30"></span><span>
-</span><span id="line-31"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>                                                   </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_bytes"><span class="hs-identifier">Implementation_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>                                                   </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Implementation_bytes"><span class="hs-identifier">Implementation_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-33"></span><span>                                                   </span><span class="annot"><a href="Data.Refined.html#safeCreate"><span class="hs-identifier">safeCreate</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html"><span class="hs-identifier">System.SED.MCTP.Common.UID</span></a></span><span>
 </span><span id="line-35"></span><span>
@@ -48,12 +48,12 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Core_uid
 </span><a href="#local-6989586621679620914"><span class="hs-identifier hs-var">cf</span></a></span><span>
 </span><span id="line-45"></span><span>    </span><span class="hs-keyword">where</span><span>
-</span><span id="line-46"></span><span>      </span><span class="annot"><a href="#local-6989586621679620914"><span class="hs-identifier hs-type">cf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
+</span><span id="line-46"></span><span>      </span><span class="annot"><a href="#local-6989586621679620914"><span class="hs-identifier hs-type">cf</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><span class="hs-number">8</span></span><span>
 </span><span id="line-47"></span><span>      </span><span id="local-6989586621679620914"><span class="annot"><span class="annottext">cf :: ByteString -&gt; Core_uid
 </span><a href="#local-6989586621679620914"><span class="hs-identifier hs-var hs-var">cf</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">(Implementation_bytes ? FixedSize 8) -&gt; Core_uid
 forall (n :: Nat).
 (Implementation_bytes ? FixedSize n) -&gt; Core_bytes n
-</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">((Implementation_bytes ? FixedSize 8) -&gt; Core_uid)
+</span><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_bytes"><span class="hs-identifier hs-var">Core_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">((Implementation_bytes ? FixedSize 8) -&gt; Core_uid)
 -&gt; (ByteString -&gt; Implementation_bytes ? FixedSize 8)
 -&gt; ByteString
 -&gt; Core_uid
@@ -88,7 +88,7 @@ a -&gt; Either [Char] (Refined p a)
 -&gt; Either [Char] (Implementation_bytes ? FixedSize 8)
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; Implementation_bytes
-</span><a href="System.SED.MCTP.Common.Base_Type.Class.html#Implementation_bytes"><span class="hs-identifier hs-var">Implementation_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Implementation_bytes)
+</span><a href="System.SED.MCTP.Common.Base_Type.Types.html#Implementation_bytes"><span class="hs-identifier hs-var">Implementation_bytes</span></a></span><span> </span><span class="annot"><span class="annottext">(ByteString -&gt; Implementation_bytes)
 -&gt; (ByteString -&gt; ByteString) -&gt; ByteString -&gt; Implementation_bytes
 forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString

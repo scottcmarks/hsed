@@ -614,8 +614,25 @@ instance (S(StreamItem a) => StreamItem (a, a)68,69
 ./src/System/SED/MCTP/Common/Import.hs,71
 module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
 
-./src/System/SED/MCTP/Common/Base_Type/Class.hs,2329
-module System.SED.MCTP.Common.Base_Type.ClassSystem.SED.MCTP.Common.Base_Type.Class28,29
+./src/System/SED/MCTP/Common/Base_Type/TH.hs,323
+module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
+import import25,26
+newtype LitS LitS48,49
+newtype LitI LitI55,56
+ci ci79,80
+ci' ci'82,83
+cu cu85,86
+cu' cu'90,91
+cx cx95,96
+cx' cx'105,106
+cb' cb'126,127
+cm cm146,147
+cm' cm'163,164
+ct ct167,168
+ct' ct'176,177
+
+./src/System/SED/MCTP/Common/Base_Type/Types.hs,2329
+module System.SED.MCTP.Common.Base_Type.TypesSystem.SED.MCTP.Common.Base_Type.Types28,29
 newtype Implementation_integer Implementation_integer90,91
 newtype Implementation_integer = Implementation_integer {unImplementation_integer unImplementation_integer90,91
 newtype Core_integer Core_integer93,94
@@ -663,23 +680,6 @@ instance (K(KnownNat n) => IsToken (Core_bytes n)199,200
 instance (K(KnownNat n) => IsToken (Core_max_bytes n)205,206
     token token206,207
     fromToken fromToken207,208
-
-./src/System/SED/MCTP/Common/Base_Type/TH.hs,323
-module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
-import import25,26
-newtype LitS LitS48,49
-newtype LitI LitI55,56
-ci ci79,80
-ci' ci'82,83
-cu cu85,86
-cu' cu'90,91
-cx cx95,96
-cx' cx'105,106
-cb' cb'126,127
-cm cm146,147
-cm' cm'163,164
-ct ct167,168
-ct' ct'176,177
 
 ./src/System/SED/MCTP/Common/Base_Type.hs,145
 module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21

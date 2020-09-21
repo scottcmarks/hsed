@@ -53,7 +53,9 @@ where
 import           GHC.Base                               (($))
 import           GHC.Exts                               (IsList (..))
 import           GHC.Word                               (Word8 (..))
-import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
+import           System.SED.MCTP.Common.Base_Type.TH    (cb', ci, ci', cm, cm',
+                                                         cu, cu')
+import           System.SED.MCTP.Common.Base_Type.Types (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
                                                          Core_uinteger (..),
@@ -65,8 +67,6 @@ import           System.SED.MCTP.Common.Base_Type.Class (Core_bytes (..),
                                                          padRight, replicate,
                                                          safeCreate, take,
                                                          unsafeCreate)
-import           System.SED.MCTP.Common.Base_Type.TH    (cb', ci, ci', cm, cm',
-                                                         cu, cu')
 
 
 

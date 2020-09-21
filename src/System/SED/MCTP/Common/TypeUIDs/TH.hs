@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE RoleAnnotations #-}
 {-# LANGUAGE FlexibleContexts #-}
@@ -103,7 +104,9 @@ import           System.SED.MCTP.Common.Token           (ordw)
 import           System.SED.MCTP.Common.UID             (UID)
 import           System.SED.MCTP.Common.Util            (hexUID,
                                                          trimTrailingWhitespace)
-import           System.SED.MCTP.Common.Base_Type       (Implementation_uinteger)
+import           System.SED.MCTP.Common.Base_Type       (Core_bytes(..), Core_max_bytes(..),
+                                                         Core_integer(..), Core_uinteger(..),
+                                                         Implementation_uinteger)
 
 {-
 
@@ -457,3 +460,20 @@ type U2 = "u2"
 
 data Core_type (uid::Symbol) a where
     Core_type_uinteger :: Core_type "00000005" (Core_uinteger_2 -> Implementation_uinteger)
+
+type family Core_Base_type (tag::Symbol) :: Nat->Type
+type instance Core_Base_type "00000002"  = Core_Base_type "bytes"
+type instance Core_Base_type "bytes"     = Core_bytes
+type instance Core_Base_type "00000003"  = Core_Base_type "max_bytes"
+type instance Core_Base_type "max_bytes" = Core_max_bytes
+type instance Core_Base_type "00000004"  = Core_Base_type "integer"
+type instance Core_Base_type "integer"   = Core_integer
+type instance Core_Base_type "00000005"  = Core_Base_type "uinteger"
+type instance Core_Base_type "uinteger"  = Core_uinteger
+
+type Core_Simple_Type (t::Nat->Type) (n::Nat) = t n
+
+type family Core_Data_type (tag::Symbol) :: Type
+type instance Core_Data_type "00000238"  = Core_Data_type "bytes_4"
+type instance Core_Data_type "bytes_4"   = Core_Simple_Type Core_bytes 4
+type Core_bytes_4 = Core_bytes 4

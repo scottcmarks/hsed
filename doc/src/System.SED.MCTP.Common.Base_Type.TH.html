@@ -25,10 +25,10 @@ Template Haskell helpers for BoundedSize.
 </span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.TypeLits</span></span><span>                           </span><span class="hs-special">(</span><span class="hs-keyword">type</span><span> </span><span class="annot"><span class="hs-operator">(&lt;=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">KnownNat</span></span><span class="hs-special">)</span><span>
 </span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.Class</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-29"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_max_bytes"><span class="hs-identifier">Core_max_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Class.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-29"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_max_bytes"><span class="hs-identifier">Core_max_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
 </span><span id="line-32"></span><span>                                                         </span><span class="annot"><a href="Data.HasSize.html#size"><span class="hs-identifier">size</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier">unsafeCreate</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-33"></span><span>
 </span><span id="line-34"></span><span>
@@ -105,10 +105,10 @@ $c+ :: LitI -&gt; LitI -&gt; LitI
 </span><span id="line-66"></span><span class="hs-comment">-- &gt;&gt;&gt; :t ci 142857</span><span>
 </span><span id="line-67"></span><span class="hs-comment">-- ci 142857 :: Q Exp</span><span>
 </span><span id="line-68"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; ci 142857</span><span>
-</span><span id="line-69"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Class.Core_integer (Data.Refined.unsafeCreate 142857) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_integer (Data.Refined.unsafeCreate 142857) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
 </span><span id="line-70"></span><span class="hs-comment">--                                                                                                         (GHC.TypeNats.&lt;=) 3</span><span>
 </span><span id="line-71"></span><span class="hs-comment">--                                                                                                                           n_0) =&gt;</span><span>
-</span><span id="line-72"></span><span class="hs-comment">--                                                                                           System.SED.MCTP.Common.Base_Type.Class.Core_integer n_0</span><span>
+</span><span id="line-72"></span><span class="hs-comment">--                                                                                           System.SED.MCTP.Common.Base_Type.Types.Core_integer n_0</span><span>
 </span><span id="line-73"></span><span class="hs-comment">--</span><span>
 </span><span id="line-74"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; ci 142857</span><span>
 </span><span id="line-75"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; ci 142857 :: Quasi m =&gt; m Doc</span><span>
@@ -256,7 +256,7 @@ forall a. HasSize a =&gt; a -&gt; Int
 </span><span id="line-117"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cb' &quot;Foobar&quot;</span><span>
 </span><span id="line-118"></span><span class="hs-comment">-- cb' &quot;Foobar&quot; :: Q Exp</span><span>
 </span><span id="line-119"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot;</span><span>
-</span><span id="line-120"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Class.Core_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Class.Core_bytes 6</span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Types.Core_bytes 6</span><span>
 </span><span id="line-121"></span><span class="hs-comment">--</span><span>
 </span><span id="line-122"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot;</span><span>
 </span><span id="line-123"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
@@ -275,10 +275,10 @@ forall a. HasSize a =&gt; a -&gt; Int
 </span><span id="line-134"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cm &quot;Foobar&quot;</span><span>
 </span><span id="line-135"></span><span class="hs-comment">-- cm &quot;Foobar&quot; :: Q Exp</span><span>
 </span><span id="line-136"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot;</span><span>
-</span><span id="line-137"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
 </span><span id="line-138"></span><span class="hs-comment">--                                                                                                             (GHC.TypeNats.&lt;=) 6</span><span>
 </span><span id="line-139"></span><span class="hs-comment">--                                                                                                                               n_0) =&gt;</span><span>
-</span><span id="line-140"></span><span class="hs-comment">--                                                                                               System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes n_0</span><span>
+</span><span id="line-140"></span><span class="hs-comment">--                                                                                               System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n_0</span><span>
 </span><span id="line-141"></span><span class="hs-comment">--</span><span>
 </span><span id="line-142"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot;</span><span>
 </span><span id="line-143"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
@@ -297,7 +297,7 @@ forall a. HasSize a =&gt; a -&gt; Int
 </span><span id="line-154"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cm' &quot;Foobar&quot;</span><span>
 </span><span id="line-155"></span><span class="hs-comment">-- cm' &quot;Foobar&quot; :: Q Exp</span><span>
 </span><span id="line-156"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot;</span><span>
-</span><span id="line-157"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Class.Core_max_bytes 6</span><span>
+</span><span id="line-157"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes 6</span><span>
 </span><span id="line-158"></span><span class="hs-comment">--</span><span>
 </span><span id="line-159"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot;</span><span>
 </span><span id="line-160"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>

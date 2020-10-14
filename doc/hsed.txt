@@ -473,6 +473,8 @@ makeApp :: LogFunc -> ProcessContext -> Options -> App
 instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
 
+module System.SED.MCTP.Common.SingTest
+
 
 -- | Parse and generate stream items.
 module System.SED.MCTP.Common.StreamItem
@@ -685,6 +687,7 @@ instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
 instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
 instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
 instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
@@ -695,6 +698,7 @@ instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
 instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
 instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
 instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
@@ -866,7 +870,7 @@ newtype Core_max_bytes n
 Core_max_bytes :: (Implementation_bytes ? MaxSize n) -> Core_max_bytes n
 newtype Core_uinteger n
 Core_uinteger :: (Implementation_uinteger ? MaxSize n) -> Core_uinteger n
-type Core_bytes_4 = Core_bytes 4
+type Core_bytes_4 = Data_type "bytes_4"
 type Core_bytes_8 = Core_bytes 8
 type Core_bytes_12 = Core_bytes 12
 type Core_bytes_16 = Core_bytes 16
@@ -887,7 +891,7 @@ type Core_halfuid = Core_bytes_4
 type Core_uid = Core_bytes_8
 type Core_uinteger_1 = Core_uinteger 1
 type Core_uinteger_128 = Core_uinteger 128
-type Core_uinteger_2 = Core_uinteger 2
+type Core_uinteger_2 = Data_type "uinteger_2"
 type Core_uinteger_20 = Core_uinteger 20
 type Core_uinteger_21 = Core_uinteger 21
 type Core_uinteger_24 = Core_uinteger 24
@@ -900,6 +904,8 @@ type Core_uinteger_48 = Core_uinteger 48
 type Core_uinteger_64 = Core_uinteger 64
 type Core_uinteger_66 = Core_uinteger 66
 type Core_uinteger_8 = Core_uinteger 8
+type family Enumeration_Type :: Type
+type Core_AC_element = Data_type "AC_element"
 
 
 -- | Datatypes for UIDs and HalfUIDs.
@@ -1468,21 +1474,21 @@ type Core_type_def_max_struct_uidrefs = 16
 type Core_type_def_max_set_ranges = 16
 data Core_Format (n :: Nat) :: Type
 [Base_Type_Format] :: Core_Format 0
-[Simple_Type_Format] :: Base_Type_UID -> Core_uinteger_2 -> Core_Format 1
-[Enumeration_Type_Format] :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_enum_ranges) -> Core_Format 2
+[Simple_Type_Format] :: Base_Type_UID -> Core_uinteger 2 -> Core_Format 1
+[Enumeration_Type_Format] :: ([(Core_uinteger 2, Core_uinteger 2)] ? BoundedSize 1 Core_type_def_max_enum_ranges) -> Core_Format 2
 [Alternative_Type_Format] :: (Set Non_Base_Type_UID ? BoundedSize 2 Core_type_def_max_alternative_uidrefs) -> Core_Format 3
-[List_Type_Format] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 4
+[List_Type_Format] :: Core_uinteger 2 -> Non_Base_Type_UID -> Core_Format 4
 [Restricted_Reference_Type_5_Format] :: (Set Byte_Table_UID ? BoundedSize 1 Core_type_def_max_byte_table_uidrefs) -> Core_Format 5
 [Restricted_Reference_Type_6_Format] :: (Set Object_Table_UID ? BoundedSize 1 Core_type_def_max_object_table_uidrefs) -> Core_Format 6
 [General_Reference_Type_7_Format] :: Core_Format 7
 [General_Reference_Type_8_Format] :: Core_Format 8
 [General_Reference_Type_9_Format] :: Core_Format 9
 [General_Reference_Table_Type_Format] :: Table_Kind -> Core_Format 10
-[Named_Value_Name_Type_Format] :: Core_max_bytes_32 -> Non_Base_Type_UID -> Core_Format 11
-[Named_Value_Integer_Type_Format] :: Core_integer_2 -> Non_Base_Type_UID -> Core_Format 12
-[Named_Value_Uinteger_Type_Format] :: Core_uinteger_2 -> Non_Base_Type_UID -> Core_Format 13
+[Named_Value_Name_Type_Format] :: Core_max_bytes 32 -> Non_Base_Type_UID -> Core_Format 11
+[Named_Value_Integer_Type_Format] :: Core_integer 2 -> Non_Base_Type_UID -> Core_Format 12
+[Named_Value_Uinteger_Type_Format] :: Core_uinteger 2 -> Non_Base_Type_UID -> Core_Format 13
 [Struct_Type_Format] :: ([Named_Value_Type_UID] ? BoundedSize 1 Core_type_def_max_struct_uidrefs) -> Core_Format 14
-[Set_Type_Format] :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_set_ranges) -> Core_Format 15
+[Set_Type_Format] :: ([(Core_uinteger 2, Core_uinteger 2)] ? BoundedSize 1 Core_type_def_max_set_ranges) -> Core_Format 15
 data Some_Core_Format
 Some_Core_Format :: Core_Format n -> Some_Core_Format
 class Is_Core_Format a
@@ -1504,21 +1510,21 @@ core_Table_Kind_Names :: Set String
 type Core_Table_Kind_Names = Type
 data Core_Format_Spec
 Base_Type_Spec :: (String ? One_Of Core_Base_Type_Names) -> Core_Format_Spec
-Simple_Type_Spec :: (Base_Type_Name, Core_uinteger_2) -> Core_Format_Spec
-Enumeration_Type_Spec :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_enum_ranges) -> Core_Format_Spec
+Simple_Type_Spec :: (Base_Type_Name, Core_uinteger 2) -> Core_Format_Spec
+Enumeration_Type_Spec :: ([(Core_uinteger 2, Core_uinteger 2)] ? BoundedSize 1 Core_type_def_max_enum_ranges) -> Core_Format_Spec
 Alternative_Type_Spec :: (Set Non_Base_Type_Name ? BoundedSize 2 Core_type_def_max_alternative_uidrefs) -> Core_Format_Spec
-List_Type_Spec :: (Core_uinteger_2, Non_Base_Type_Name) -> Core_Format_Spec
+List_Type_Spec :: (Core_uinteger 2, Non_Base_Type_Name) -> Core_Format_Spec
 Restricted_Reference_Type_5_Spec :: (Set Byte_Table_Name ? BoundedSize 1 Core_type_def_max_byte_table_uidrefs) -> Core_Format_Spec
 Restricted_Reference_Type_6_Spec :: (Set Object_Table_Name ? BoundedSize 1 Core_type_def_max_object_table_uidrefs) -> Core_Format_Spec
 General_Reference_Type_7_Spec :: Core_Format_Spec
 General_Reference_Type_8_Spec :: Core_Format_Spec
 General_Reference_Type_9_Spec :: Core_Format_Spec
 General_Reference_Table_Type_Spec :: (String ? One_Of Core_Table_Kind_Names) -> Core_Format_Spec
-Named_Value_Name_Type_Spec :: (Core_max_bytes_32, Non_Base_Type_Name) -> Core_Format_Spec
-Named_Value_Integer_Type_Spec :: (Core_integer_2, Non_Base_Type_Name) -> Core_Format_Spec
-Named_Value_Uinteger_Type_Spec :: (Core_uinteger_2, Non_Base_Type_Name) -> Core_Format_Spec
+Named_Value_Name_Type_Spec :: (Core_max_bytes 32, Non_Base_Type_Name) -> Core_Format_Spec
+Named_Value_Integer_Type_Spec :: (Core_integer 2, Non_Base_Type_Name) -> Core_Format_Spec
+Named_Value_Uinteger_Type_Spec :: (Core_uinteger 2, Non_Base_Type_Name) -> Core_Format_Spec
 Struct_Type_Spec :: ([Named_Value_Type_Name] ? BoundedSize 1 Core_type_def_max_struct_uidrefs) -> Core_Format_Spec
-Set_Type_Spec :: ([(Core_uinteger_2, Core_uinteger_2)] ? BoundedSize 1 Core_type_def_max_set_ranges) -> Core_Format_Spec
+Set_Type_Spec :: ([(Core_uinteger 2, Core_uinteger 2)] ? BoundedSize 1 Core_type_def_max_set_ranges) -> Core_Format_Spec
 stringSetParser :: (IsList l, Item l ~ String) => l -> Parser ByteString
 
 -- | Parse the string in the Format colum
@@ -1538,10 +1544,6 @@ data EnumRow
 EnumRow :: String -> [Int] -> EnumRow
 enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
-type U1 = "abc"
-type U2 = "u2"
-data Core_type (uid :: Symbol) a
-[Core_type_uinteger] :: Core_type "00000005" (Core_uinteger_2 -> Implementation_uinteger)
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
 instance forall k (s :: k) a. System.SED.MCTP.Common.TypeUIDs.TH.IsOne_Of (System.SED.MCTP.Common.TypeUIDs.TH.One_Of s) a

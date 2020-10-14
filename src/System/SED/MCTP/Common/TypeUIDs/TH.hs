@@ -15,7 +15,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 {-# LANGUAGE TypeApplications    #-}
-{-# LANGUAGE TypeFamilies       #-}
 {-# LANGUAGE TypeOperators       #-}
 
 {-|
@@ -76,7 +75,7 @@ import           GHC.Enum                               (Bounded (..),
 import GHC.Exts(IsList(..))
 import           GHC.List                               (tail, (++))
 import           GHC.Show                               (Show (..), showString)
-import           GHC.TypeLits                           (KnownNat, Symbol)
+import           GHC.TypeLits                           (KnownNat)
 import           GHC.Types                              (Int, Nat)
 import           GHC.Word                               (Word8)
 import           Language.Haskell.TH.Quote              (QuasiQuoter (..),
@@ -91,9 +90,7 @@ import           System.SED.MCTP.Common.Reference_Types (Byte_Table_UID,
                                                          Object_Table_UID,
                                                          Table_Kind)
 
-import           System.SED.MCTP.Common.Simple_Type     (Core_integer_2,
-                                                         Core_max_bytes_32,
-                                                         Core_uinteger_2)
+import           System.SED.MCTP.Common.Base_Type       (Core_integer, Core_uinteger, Core_max_bytes)
 import           System.SED.MCTP.Common.TableUIDs       ()
 
 import           Data.BoundedSize                       (Predicate(..), fromNat)
@@ -104,9 +101,6 @@ import           System.SED.MCTP.Common.Token           (ordw)
 import           System.SED.MCTP.Common.UID             (UID)
 import           System.SED.MCTP.Common.Util            (hexUID,
                                                          trimTrailingWhitespace)
-import           System.SED.MCTP.Common.Base_Type       (Core_bytes(..), Core_max_bytes(..),
-                                                         Core_integer(..), Core_uinteger(..),
-                                                         Implementation_uinteger)
 
 {-
 
@@ -244,21 +238,21 @@ type Core_type_def_max_set_ranges           = 16
 data Core_Format (n::Nat) :: Type
     where
         Base_Type_Format                    ::                                                                                                                                           Core_Format  0
-        Simple_Type_Format                  ::  Base_Type_UID -> Core_uinteger_2                                                                                                      -> Core_Format  1
-        Enumeration_Type_Format             ::                                        ([(Core_uinteger_2, Core_uinteger_2)] ? (BoundedSize 1 Core_type_def_max_enum_ranges))          -> Core_Format  2
+        Simple_Type_Format                  ::  Base_Type_UID -> Core_uinteger 2                                                                                                      -> Core_Format  1
+        Enumeration_Type_Format             ::                                        ([(Core_uinteger 2, Core_uinteger 2)] ? (BoundedSize 1 Core_type_def_max_enum_ranges))          -> Core_Format  2
         Alternative_Type_Format             ::                                        ((Set Non_Base_Type_UID)              ? (BoundedSize 2 Core_type_def_max_alternative_uidrefs))  -> Core_Format  3
-        List_Type_Format                    :: Core_uinteger_2   -> Non_Base_Type_UID                                                                                                 -> Core_Format  4
+        List_Type_Format                    :: Core_uinteger 2   -> Non_Base_Type_UID                                                                                                 -> Core_Format  4
         Restricted_Reference_Type_5_Format  ::                                        ((Set Byte_Table_UID)                 ? (BoundedSize 1 Core_type_def_max_byte_table_uidrefs))   -> Core_Format  5
         Restricted_Reference_Type_6_Format  ::                                        ((Set Object_Table_UID)               ? (BoundedSize 1 Core_type_def_max_object_table_uidrefs)) -> Core_Format  6
         General_Reference_Type_7_Format     ::                                                                                                                                           Core_Format  7
         General_Reference_Type_8_Format     ::                                                                                                                                           Core_Format  8
         General_Reference_Type_9_Format     ::                                                                                                                                           Core_Format  9
         General_Reference_Table_Type_Format :: Table_Kind                                                                                                                             -> Core_Format 10
-        Named_Value_Name_Type_Format        :: Core_max_bytes_32 -> Non_Base_Type_UID                                                                                                 -> Core_Format 11
-        Named_Value_Integer_Type_Format     :: Core_integer_2    -> Non_Base_Type_UID                                                                                                 -> Core_Format 12
-        Named_Value_Uinteger_Type_Format    :: Core_uinteger_2   -> Non_Base_Type_UID                                                                                                 -> Core_Format 13
+        Named_Value_Name_Type_Format        :: Core_max_bytes 32 -> Non_Base_Type_UID                                                                                                 -> Core_Format 11
+        Named_Value_Integer_Type_Format     :: Core_integer 2    -> Non_Base_Type_UID                                                                                                 -> Core_Format 12
+        Named_Value_Uinteger_Type_Format    :: Core_uinteger 2   -> Non_Base_Type_UID                                                                                                 -> Core_Format 13
         Struct_Type_Format                  ::                                        ([Named_Value_Type_UID]               ? (BoundedSize 1 Core_type_def_max_struct_uidrefs))       -> Core_Format 14
-        Set_Type_Format                     ::                                        ([(Core_uinteger_2, Core_uinteger_2)] ? (BoundedSize 1 Core_type_def_max_set_ranges))           -> Core_Format 15
+        Set_Type_Format                     ::                                        ([(Core_uinteger 2, Core_uinteger 2)] ? (BoundedSize 1 Core_type_def_max_set_ranges))           -> Core_Format 15
 
 data Some_Core_Format =  forall n. (Show (Core_Format n),KnownNat n) => Some_Core_Format(Core_Format n)
 
@@ -315,21 +309,21 @@ type Core_Table_Kind_Names = Type
 
 data Core_Format_Spec =
     Base_Type_Spec                      ( String ? One_Of Core_Base_Type_Names)
-  | Simple_Type_Spec                    ( Base_Type_Name, Core_uinteger_2 )
-  | Enumeration_Type_Spec               ( [(Core_uinteger_2, Core_uinteger_2)]  ? (BoundedSize 1 Core_type_def_max_enum_ranges) )
+  | Simple_Type_Spec                    ( Base_Type_Name, Core_uinteger 2 )
+  | Enumeration_Type_Spec               ( [(Core_uinteger 2, Core_uinteger 2)]  ? (BoundedSize 1 Core_type_def_max_enum_ranges) )
   | Alternative_Type_Spec               ( (Set Non_Base_Type_Name)              ? (BoundedSize 2 Core_type_def_max_alternative_uidrefs))
-  | List_Type_Spec                      ( Core_uinteger_2, Non_Base_Type_Name)
+  | List_Type_Spec                      ( Core_uinteger 2, Non_Base_Type_Name)
   | Restricted_Reference_Type_5_Spec    ( (Set Byte_Table_Name)                 ? (BoundedSize 1 Core_type_def_max_byte_table_uidrefs))
   | Restricted_Reference_Type_6_Spec    ( (Set Object_Table_Name)               ? (BoundedSize 1 Core_type_def_max_object_table_uidrefs))
   | General_Reference_Type_7_Spec
   | General_Reference_Type_8_Spec
   | General_Reference_Type_9_Spec
   | General_Reference_Table_Type_Spec   ( String ? One_Of Core_Table_Kind_Names)
-  | Named_Value_Name_Type_Spec          ( Core_max_bytes_32, Non_Base_Type_Name)
-  | Named_Value_Integer_Type_Spec       ( Core_integer_2,  Non_Base_Type_Name)
-  | Named_Value_Uinteger_Type_Spec      ( Core_uinteger_2, Non_Base_Type_Name)
+  | Named_Value_Name_Type_Spec          ( Core_max_bytes 32, Non_Base_Type_Name)
+  | Named_Value_Integer_Type_Spec       ( Core_integer 2,  Non_Base_Type_Name)
+  | Named_Value_Uinteger_Type_Spec      ( Core_uinteger 2, Non_Base_Type_Name)
   | Struct_Type_Spec                    ( [Named_Value_Type_Name]               ? (BoundedSize 1 Core_type_def_max_struct_uidrefs))
-  | Set_Type_Spec                       ( [(Core_uinteger_2, Core_uinteger_2)]  ? (BoundedSize 1 Core_type_def_max_set_ranges))
+  | Set_Type_Spec                       ( [(Core_uinteger 2, Core_uinteger 2)]  ? (BoundedSize 1 Core_type_def_max_set_ranges))
 
 
 
@@ -446,34 +440,3 @@ enumTableRow lengths = do
       -- ^ space or dash
       notComma c = c /= 44
       -- ^ comma
-
-
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
---------------------------------------------------------------------------------
-
-type U1 = "abc"
-type U2 = "u2"
-
-data Core_type (uid::Symbol) a where
-    Core_type_uinteger :: Core_type "00000005" (Core_uinteger_2 -> Implementation_uinteger)
-
-type family Core_Base_type (tag::Symbol) :: Nat->Type
-type instance Core_Base_type "00000002"  = Core_Base_type "bytes"
-type instance Core_Base_type "bytes"     = Core_bytes
-type instance Core_Base_type "00000003"  = Core_Base_type "max_bytes"
-type instance Core_Base_type "max_bytes" = Core_max_bytes
-type instance Core_Base_type "00000004"  = Core_Base_type "integer"
-type instance Core_Base_type "integer"   = Core_integer
-type instance Core_Base_type "00000005"  = Core_Base_type "uinteger"
-type instance Core_Base_type "uinteger"  = Core_uinteger
-
-type Core_Simple_Type (t::Nat->Type) (n::Nat) = t n
-
-type family Core_Data_type (tag::Symbol) :: Type
-type instance Core_Data_type "00000238"  = Core_Data_type "bytes_4"
-type instance Core_Data_type "bytes_4"   = Core_Simple_Type Core_bytes 4
-type Core_bytes_4 = Core_bytes 4

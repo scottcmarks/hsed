@@ -1,7 +1,7 @@
 digraph G {
 size="6,4";
 ratio="fill";
-u29[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
+u30[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
 subgraph cluster_0 {
 label="Data";
 color="#0000000F";
@@ -27,7 +27,7 @@ subgraph cluster_3 {
 label="Extras";
 color="#0000000F";
 style="filled";
-u30[label="GitVersion",style="filled",fillcolor="#bbffff",penwidth="0"];
+u31[label="GitVersion",style="filled",fillcolor="#bbffff",penwidth="0"];
 
 }
 
@@ -69,6 +69,7 @@ u19[label="SpecialPurposeUIDs",style="filled",fillcolor="#ff7777",penwidth="0"];
 u20[label="Table",style="filled",fillcolor="#ff7777",penwidth="0"];
 u23[label="THUtil",style="filled",fillcolor="#ff7777",penwidth="0"];
 u24[label="Util",style="filled",fillcolor="#ff7777",penwidth="0"];
+u27[label="SingTest",style="filled",fillcolor="#ff7777",penwidth="0"];
 subgraph cluster_9 {
 label="Base_Type";
 color="#0000000F";
@@ -100,14 +101,14 @@ subgraph cluster_12 {
 label="Host";
 color="#0000000F";
 style="filled";
-u27[label="Run",style="filled",fillcolor="#bbff77",penwidth="0"];
+u28[label="Run",style="filled",fillcolor="#bbff77",penwidth="0"];
 
 }
 subgraph cluster_13 {
 label="TPer";
 color="#0000000F";
 style="filled";
-u28[label="Run",style="filled",fillcolor="#3333ff",penwidth="0"];
+u29[label="Run",style="filled",fillcolor="#3333ff",penwidth="0"];
 
 }
 
@@ -182,18 +183,17 @@ u26 -> u0;
 u26 -> u6;
 u26 -> u10;
 u26 -> u12;
-u26 -> u13;
 u26 -> u18;
 u26 -> u21;
 u26 -> u23;
 u26 -> u24;
-u27 -> u5;
-u27 -> u16;
 u28 -> u5;
 u28 -> u16;
 u29 -> u5;
-u29 -> u27;
-u29 -> u28;
-u29 -> u30;
+u29 -> u16;
+u30 -> u5;
+u30 -> u28;
+u30 -> u29;
+u30 -> u31;
 
 }

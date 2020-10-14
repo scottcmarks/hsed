@@ -77,6 +77,7 @@ import           GHC.Base                          (Int, Monoid (..),
 import           GHC.Classes                       (Eq (..), Ord (..))
 import           GHC.Exts                          (IsList (..))
 import           GHC.Num                           (Integer, Num (..))
+import           GHC.Read                          (Read (..))
 import           GHC.Show                          (Show (..), showString,
                                                     shows)
 import           GHC.TypeLits                      (KnownNat)
@@ -89,15 +90,15 @@ import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
 import           Test.QuickCheck                   (Arbitrary (..))
 
 newtype Implementation_integer = Implementation_integer {unImplementation_integer :: Integer}
-    deriving (Eq, Ord, Num, Show, HasSize, Arbitrary) via Integer
+    deriving (Eq, Ord, Num, Read, Show, HasSize, Arbitrary) via Integer
 
 newtype Core_integer   n = Core_integer   (Implementation_integer ? MaxSize n)
-    deriving (Eq, Ord, Num, Show) via (Implementation_integer ? MaxSize n)  -- Read,
+    deriving (Eq, Ord, Num, Show) via (Implementation_integer ? MaxSize n)
 type Core_integer_at_least n = AtLeast Core_integer n
 
 
 newtype Implementation_uinteger = Implementation_uinteger {unImplementation_uinteger :: Natural}
-    deriving (Eq, Ord, Num, Show, HasSize, Arbitrary) via Natural
+    deriving (Eq, Ord, Num, Read, Show, HasSize, Arbitrary) via Natural
 
 newtype Core_uinteger  n = Core_uinteger  (Implementation_uinteger ? MaxSize n)
     deriving (Eq, Ord, Num, Show) via (Implementation_uinteger ? MaxSize n) -- Read,

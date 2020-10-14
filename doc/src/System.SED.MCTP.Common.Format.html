@@ -48,11 +48,11 @@ Formats.
 </span><span id="line-48"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.UID.html"><span class="hs-identifier">System.SED.MCTP.Common.UID</span></a></span><span>         </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier">UID</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-49"></span><span>
 </span><span id="line-50"></span><span class="hs-keyword">data</span><span> </span><span id="Max_bytes"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Max_bytes"><span class="hs-identifier hs-var">Max_bytes</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span>
-</span><span id="line-51"></span><span id="local-6989586621679620828"><span id="local-6989586621679620830"><span id="local-6989586621679620832"><span id="local-6989586621679620834"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Max_bytes"><span class="hs-identifier hs-type">Max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679620834"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
-</span><span id="line-52"></span><span id="local-6989586621679620822"><span id="local-6989586621679620824"><span id="local-6989586621679620826"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Max_bytes"><span class="hs-identifier hs-type">Max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679620826"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-51"></span><span id="local-6989586621679706992"><span id="local-6989586621679706994"><span id="local-6989586621679706996"><span id="local-6989586621679706998"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Max_bytes"><span class="hs-identifier hs-type">Max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679706998"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-52"></span><span id="local-6989586621679706986"><span id="local-6989586621679706988"><span id="local-6989586621679706990"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Max_bytes"><span class="hs-identifier hs-type">Max_bytes</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679706990"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679620809"><span id="local-6989586621679620811"><span id="local-6989586621679620813"><span id="local-6989586621679620815"><span id="local-6989586621679620817"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_table_kind"><span class="hs-identifier hs-type">Core_table_kind</span></a></span></span></span></span></span></span><span>
-</span><span id="line-55"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679620807"><span class="annot"><span class="annottext">generate :: Core_table_kind -&gt; ByteString
+</span><span id="line-54"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679706973"><span id="local-6989586621679706975"><span id="local-6989586621679706977"><span id="local-6989586621679706979"><span id="local-6989586621679706981"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_table_kind"><span class="hs-identifier hs-type">Core_table_kind</span></a></span></span></span></span></span></span><span>
+</span><span id="line-55"></span><span>    </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679706971"><span class="annot"><span class="annottext">generate :: Core_table_kind -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; ByteString
 </span><span class="hs-identifier hs-var">singleton</span></span><span> </span><span class="annot"><span class="annottext">(Word8 -&gt; ByteString)
 -&gt; (Core_table_kind -&gt; Word8) -&gt; Core_table_kind -&gt; ByteString
@@ -69,7 +69,7 @@ forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
 </span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">Core_table_kind -&gt; Int
 forall a. Enum a =&gt; a -&gt; Int
 </span><span class="hs-identifier hs-var">fromEnum</span></span><span>
-</span><span id="line-56"></span><span>          </span><span id="local-6989586621679620803"><span class="annot"><span class="annottext">parser :: Parser Core_table_kind
+</span><span id="line-56"></span><span>          </span><span id="local-6989586621679706967"><span class="annot"><span class="annottext">parser :: Parser Core_table_kind
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Core_table_kind
 forall a. Enum a =&gt; Int -&gt; a
 </span><span class="hs-identifier hs-var">toEnum</span></span><span> </span><span class="annot"><span class="annottext">(Int -&gt; Core_table_kind)
@@ -89,7 +89,7 @@ forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span id="line-57"></span><span>
 </span><span id="line-58"></span><span>
 </span><span id="line-59"></span><span class="hs-keyword">data</span><span> </span><span id="Core_table_kind"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_table_kind"><span class="hs-identifier hs-var">Core_table_kind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Object_Table"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Object_Table"><span class="hs-identifier hs-var">Object_Table</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Byte_Table"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Byte_Table"><span class="hs-identifier hs-var">Byte_Table</span></a></span></span><span>
-</span><span id="line-60"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679620782"><span id="local-6989586621679620784"><span id="local-6989586621679620786"><span id="local-6989586621679620788"><span id="local-6989586621679620790"><span id="local-6989586621679620792"><span id="local-6989586621679620794"><span id="local-6989586621679620796"><span class="annot"><span class="annottext">Int -&gt; Core_table_kind
+</span><span id="line-60"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706946"><span id="local-6989586621679706948"><span id="local-6989586621679706950"><span id="local-6989586621679706952"><span id="local-6989586621679706954"><span id="local-6989586621679706956"><span id="local-6989586621679706958"><span id="local-6989586621679706960"><span class="annot"><span class="annottext">Int -&gt; Core_table_kind
 Core_table_kind -&gt; Int
 Core_table_kind -&gt; [Core_table_kind]
 Core_table_kind -&gt; Core_table_kind
@@ -134,7 +134,7 @@ pred :: Core_table_kind -&gt; Core_table_kind
 $cpred :: Core_table_kind -&gt; Core_table_kind
 succ :: Core_table_kind -&gt; Core_table_kind
 $csucc :: Core_table_kind -&gt; Core_table_kind
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679620777"><span id="local-6989586621679620779"><span class="annot"><span class="annottext">Core_table_kind -&gt; Core_table_kind -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679706941"><span id="local-6989586621679706943"><span class="annot"><span class="annottext">Core_table_kind -&gt; Core_table_kind -&gt; Bool
 (Core_table_kind -&gt; Core_table_kind -&gt; Bool)
 -&gt; (Core_table_kind -&gt; Core_table_kind -&gt; Bool)
 -&gt; Eq Core_table_kind
@@ -143,7 +143,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Core_table_kind -&gt; Core_table_kind -&gt; Bool
 == :: Core_table_kind -&gt; Core_table_kind -&gt; Bool
 $c== :: Core_table_kind -&gt; Core_table_kind -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679620771"><span id="local-6989586621679620773"><span id="local-6989586621679620775"><span class="annot"><span class="annottext">Int -&gt; Core_table_kind -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span> </span><span id="local-6989586621679706935"><span id="local-6989586621679706937"><span id="local-6989586621679706939"><span class="annot"><span class="annottext">Int -&gt; Core_table_kind -&gt; ShowS
 [Core_table_kind] -&gt; ShowS
 Core_table_kind -&gt; String
 (Int -&gt; Core_table_kind -&gt; ShowS)
@@ -163,7 +163,7 @@ $cshowsPrec :: Int -&gt; Core_table_kind -&gt; ShowS
 </span><span id="line-62"></span><span>
 </span><span id="line-63"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_uidref"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-var">Core_uidref</span></a></span></span><span>               </span><span class="hs-glyph">=</span><span> </span><span id="Core_uidref"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-var">Core_uidref</span></a></span></span><span> </span><span class="hs-special">{</span><span id="fromCore_uidref"><span class="annot"><span class="annottext">Core_uidref -&gt; UID
 </span><a href="System.SED.MCTP.Common.Format.html#fromCore_uidref"><span class="hs-identifier hs-var hs-var">fromCore_uidref</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><a href="System.SED.MCTP.Common.UID.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span class="hs-special">}</span><span>
-</span><span id="line-64"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679620765"><span id="local-6989586621679620767"><span class="annot"><span class="annottext">Core_uidref -&gt; Core_uidref -&gt; Bool
+</span><span id="line-64"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706929"><span id="local-6989586621679706931"><span class="annot"><span class="annottext">Core_uidref -&gt; Core_uidref -&gt; Bool
 (Core_uidref -&gt; Core_uidref -&gt; Bool)
 -&gt; (Core_uidref -&gt; Core_uidref -&gt; Bool) -&gt; Eq Core_uidref
 forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
@@ -171,7 +171,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Core_uidref -&gt; Core_uidref -&gt; Bool
 == :: Core_uidref -&gt; Core_uidref -&gt; Bool
 $c== :: Core_uidref -&gt; Core_uidref -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679620759"><span id="local-6989586621679620761"><span id="local-6989586621679620763"><span class="annot"><span class="annottext">Int -&gt; Core_uidref -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679706923"><span id="local-6989586621679706925"><span id="local-6989586621679706927"><span class="annot"><span class="annottext">Int -&gt; Core_uidref -&gt; ShowS
 [Core_uidref] -&gt; ShowS
 Core_uidref -&gt; String
 (Int -&gt; Core_uidref -&gt; ShowS)
@@ -188,7 +188,7 @@ showsPrec :: Int -&gt; Core_uidref -&gt; ShowS
 $cshowsPrec :: Int -&gt; Core_uidref -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-65"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_uidref_Base_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Base_Type"><span class="hs-identifier hs-var">Core_uidref_Base_Type</span></a></span></span><span>     </span><span class="hs-glyph">=</span><span> </span><span id="Core_uidref_Base_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Base_Type"><span class="hs-identifier hs-var">Core_uidref_Base_Type</span></a></span></span><span>     </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-type">Core_uidref</span></a></span><span>
-</span><span id="line-66"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679620754"><span id="local-6989586621679620756"><span class="annot"><span class="annottext">Core_uidref_Base_Type -&gt; Core_uidref_Base_Type -&gt; Bool
+</span><span id="line-66"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706918"><span id="local-6989586621679706920"><span class="annot"><span class="annottext">Core_uidref_Base_Type -&gt; Core_uidref_Base_Type -&gt; Bool
 (Core_uidref_Base_Type -&gt; Core_uidref_Base_Type -&gt; Bool)
 -&gt; (Core_uidref_Base_Type -&gt; Core_uidref_Base_Type -&gt; Bool)
 -&gt; Eq Core_uidref_Base_Type
@@ -197,7 +197,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Core_uidref_Base_Type -&gt; Core_uidref_Base_Type -&gt; Bool
 == :: Core_uidref_Base_Type -&gt; Core_uidref_Base_Type -&gt; Bool
 $c== :: Core_uidref_Base_Type -&gt; Core_uidref_Base_Type -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679620748"><span id="local-6989586621679620750"><span id="local-6989586621679620752"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_Base_Type -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679706912"><span id="local-6989586621679706914"><span id="local-6989586621679706916"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_Base_Type -&gt; ShowS
 [Core_uidref_Base_Type] -&gt; ShowS
 Core_uidref_Base_Type -&gt; String
 (Int -&gt; Core_uidref_Base_Type -&gt; ShowS)
@@ -214,7 +214,7 @@ showsPrec :: Int -&gt; Core_uidref_Base_Type -&gt; ShowS
 $cshowsPrec :: Int -&gt; Core_uidref_Base_Type -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-67"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_uidref_non_Base_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_non_Base_Type"><span class="hs-identifier hs-var">Core_uidref_non_Base_Type</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Core_uidref_non_Base_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_non_Base_Type"><span class="hs-identifier hs-var">Core_uidref_non_Base_Type</span></a></span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-type">Core_uidref</span></a></span><span>
-</span><span id="line-68"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679620743"><span id="local-6989586621679620745"><span class="annot"><span class="annottext">Core_uidref_non_Base_Type -&gt; Core_uidref_non_Base_Type -&gt; Bool
+</span><span id="line-68"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706907"><span id="local-6989586621679706909"><span class="annot"><span class="annottext">Core_uidref_non_Base_Type -&gt; Core_uidref_non_Base_Type -&gt; Bool
 (Core_uidref_non_Base_Type -&gt; Core_uidref_non_Base_Type -&gt; Bool)
 -&gt; (Core_uidref_non_Base_Type -&gt; Core_uidref_non_Base_Type -&gt; Bool)
 -&gt; Eq Core_uidref_non_Base_Type
@@ -223,7 +223,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Core_uidref_non_Base_Type -&gt; Core_uidref_non_Base_Type -&gt; Bool
 == :: Core_uidref_non_Base_Type -&gt; Core_uidref_non_Base_Type -&gt; Bool
 $c== :: Core_uidref_non_Base_Type -&gt; Core_uidref_non_Base_Type -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679620737"><span id="local-6989586621679620739"><span id="local-6989586621679620741"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_non_Base_Type -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679706901"><span id="local-6989586621679706903"><span id="local-6989586621679706905"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_non_Base_Type -&gt; ShowS
 [Core_uidref_non_Base_Type] -&gt; ShowS
 Core_uidref_non_Base_Type -&gt; String
 (Int -&gt; Core_uidref_non_Base_Type -&gt; ShowS)
@@ -240,7 +240,7 @@ showsPrec :: Int -&gt; Core_uidref_non_Base_Type -&gt; ShowS
 $cshowsPrec :: Int -&gt; Core_uidref_non_Base_Type -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-69"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_uidref_Byte_Table"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Byte_Table"><span class="hs-identifier hs-var">Core_uidref_Byte_Table</span></a></span></span><span>    </span><span class="hs-glyph">=</span><span> </span><span id="Core_uidref_Byte_Table"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Byte_Table"><span class="hs-identifier hs-var">Core_uidref_Byte_Table</span></a></span></span><span>    </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-type">Core_uidref</span></a></span><span>
-</span><span id="line-70"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679620732"><span id="local-6989586621679620734"><span class="annot"><span class="annottext">Core_uidref_Byte_Table -&gt; Core_uidref_Byte_Table -&gt; Bool
+</span><span id="line-70"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706896"><span id="local-6989586621679706898"><span class="annot"><span class="annottext">Core_uidref_Byte_Table -&gt; Core_uidref_Byte_Table -&gt; Bool
 (Core_uidref_Byte_Table -&gt; Core_uidref_Byte_Table -&gt; Bool)
 -&gt; (Core_uidref_Byte_Table -&gt; Core_uidref_Byte_Table -&gt; Bool)
 -&gt; Eq Core_uidref_Byte_Table
@@ -249,7 +249,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Core_uidref_Byte_Table -&gt; Core_uidref_Byte_Table -&gt; Bool
 == :: Core_uidref_Byte_Table -&gt; Core_uidref_Byte_Table -&gt; Bool
 $c== :: Core_uidref_Byte_Table -&gt; Core_uidref_Byte_Table -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679620726"><span id="local-6989586621679620728"><span id="local-6989586621679620730"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_Byte_Table -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679706890"><span id="local-6989586621679706892"><span id="local-6989586621679706894"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_Byte_Table -&gt; ShowS
 [Core_uidref_Byte_Table] -&gt; ShowS
 Core_uidref_Byte_Table -&gt; String
 (Int -&gt; Core_uidref_Byte_Table -&gt; ShowS)
@@ -266,7 +266,7 @@ showsPrec :: Int -&gt; Core_uidref_Byte_Table -&gt; ShowS
 $cshowsPrec :: Int -&gt; Core_uidref_Byte_Table -&gt; ShowS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">)</span><span>
 </span><span id="line-71"></span><span class="hs-keyword">newtype</span><span> </span><span id="Core_uidref_Object_Table"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Object_Table"><span class="hs-identifier hs-var">Core_uidref_Object_Table</span></a></span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span id="Core_uidref_Object_Table"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Object_Table"><span class="hs-identifier hs-var">Core_uidref_Object_Table</span></a></span></span><span>  </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-type">Core_uidref</span></a></span><span>
-</span><span id="line-72"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679620721"><span id="local-6989586621679620723"><span class="annot"><span class="annottext">Core_uidref_Object_Table -&gt; Core_uidref_Object_Table -&gt; Bool
+</span><span id="line-72"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706885"><span id="local-6989586621679706887"><span class="annot"><span class="annottext">Core_uidref_Object_Table -&gt; Core_uidref_Object_Table -&gt; Bool
 (Core_uidref_Object_Table -&gt; Core_uidref_Object_Table -&gt; Bool)
 -&gt; (Core_uidref_Object_Table -&gt; Core_uidref_Object_Table -&gt; Bool)
 -&gt; Eq Core_uidref_Object_Table
@@ -275,7 +275,7 @@ forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
 $c/= :: Core_uidref_Object_Table -&gt; Core_uidref_Object_Table -&gt; Bool
 == :: Core_uidref_Object_Table -&gt; Core_uidref_Object_Table -&gt; Bool
 $c== :: Core_uidref_Object_Table -&gt; Core_uidref_Object_Table -&gt; Bool
-</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679620715"><span id="local-6989586621679620717"><span id="local-6989586621679620719"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_Object_Table -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679706879"><span id="local-6989586621679706881"><span id="local-6989586621679706883"><span class="annot"><span class="annottext">Int -&gt; Core_uidref_Object_Table -&gt; ShowS
 [Core_uidref_Object_Table] -&gt; ShowS
 Core_uidref_Object_Table -&gt; String
 (Int -&gt; Core_uidref_Object_Table -&gt; ShowS)
@@ -311,18 +311,18 @@ $cshowsPrec :: Int -&gt; Core_uidref_Object_Table -&gt; ShowS
 </span><span id="line-90"></span><span>        </span><span id="Struct_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Struct_Type"><span class="hs-identifier hs-var">Struct_Type</span></a></span></span><span>                  </span><span class="hs-glyph">::</span><span>                      </span><span class="hs-special">[</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_non_Base_Type"><span class="hs-identifier hs-type">Core_uidref_non_Base_Type</span></a></span><span class="hs-special">]</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><span class="hs-number">14</span></span><span> </span><span class="hs-comment">-- 1 &lt;= length</span><span>
 </span><span id="line-91"></span><span>        </span><span id="Set_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Set_Type"><span class="hs-identifier hs-var">Set_Type</span></a></span></span><span>                     </span><span class="hs-glyph">::</span><span> </span><span class="hs-special">[</span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Simple_Type.html#Core_uinteger_2"><span class="hs-identifier hs-type">Core_uinteger_2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Simple_Type.html#Core_uinteger_2"><span class="hs-identifier hs-type">Core_uinteger_2</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>             </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><span class="hs-number">15</span></span><span> </span><span class="hs-comment">-- 1 &lt;= length</span><span>
 </span><span id="line-92"></span><span>
-</span><span id="line-93"></span><span id="local-6989586621679620692"><span id="local-6989586621679620694"><span id="local-6989586621679620696"><span id="local-6989586621679620698"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679620698"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
-</span><span id="line-94"></span><span id="local-6989586621679620687"><span id="local-6989586621679620689"><span id="local-6989586621679620691"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679620691"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-93"></span><span id="local-6989586621679706856"><span id="local-6989586621679706858"><span id="local-6989586621679706860"><span id="local-6989586621679706862"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679706862"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span></span><span>
+</span><span id="line-94"></span><span id="local-6989586621679706851"><span id="local-6989586621679706853"><span id="local-6989586621679706855"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Eq</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679706855"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span></span></span></span><span>
 </span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span class="hs-keyword">data</span><span> </span><span id="Some_Core_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679620860"><span class="annot"><a href="#local-6989586621679620860"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679620860"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="Some_Core_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679620860"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-96"></span><span class="hs-keyword">data</span><span> </span><span id="Some_Core_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679707024"><span class="annot"><a href="#local-6989586621679707024"><span class="hs-identifier hs-type">n</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Nat</span></span><span class="hs-special">)</span><span class="hs-operator">.</span><span> </span><span class="annot"><span class="hs-identifier hs-type">KnownNat</span></span><span> </span><span class="annot"><a href="#local-6989586621679707024"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span id="Some_Core_Type"><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679707024"><span class="hs-identifier hs-type">n</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-97"></span><span>
-</span><span id="line-98"></span><span id="local-6989586621679620680"><span id="local-6989586621679620682"><span id="local-6989586621679620684"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-type">Some_Core_Type</span></a></span></span></span></span><span>
+</span><span id="line-98"></span><span id="local-6989586621679706844"><span id="local-6989586621679706846"><span id="local-6989586621679706848"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-type">Some_Core_Type</span></a></span></span></span></span><span>
 </span><span id="line-99"></span><span>
 </span><span id="line-100"></span><span>
-</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679620668"><span id="local-6989586621679620670"><span id="local-6989586621679620672"><span id="local-6989586621679620674"><span id="local-6989586621679620676"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-type">Some_Core_Type</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-102"></span><span>    </span><span id="local-6989586621679620667"><span class="annot"><span class="annottext">generate :: Some_Core_Type -&gt; ByteString
-</span><a href="#local-6989586621679620667"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-type">Some_Core_Type</span></a></span><span> </span><span id="local-6989586621679620666"><span class="annot"><span class="annottext">ct :: Known_Core_Type n
-</span><a href="#local-6989586621679620666"><span class="hs-identifier hs-var">ct</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; ByteString
+</span><span id="line-101"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679706832"><span id="local-6989586621679706834"><span id="local-6989586621679706836"><span id="local-6989586621679706838"><span id="local-6989586621679706840"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-type">Some_Core_Type</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-102"></span><span>    </span><span id="local-6989586621679706831"><span class="annot"><span class="annottext">generate :: Some_Core_Type -&gt; ByteString
+</span><a href="#local-6989586621679706831"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-type">Some_Core_Type</span></a></span><span> </span><span id="local-6989586621679706830"><span class="annot"><span class="annottext">ct :: Known_Core_Type n
+</span><a href="#local-6989586621679706830"><span class="hs-identifier hs-var">ct</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; ByteString
 </span><span class="hs-identifier hs-var">singleton</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Word8
 forall a b. (Integral a, Num b) =&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">fromIntegral</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Known_Core_Type n -&gt; Integer
@@ -330,118 +330,125 @@ forall (n :: Nat) (proxy :: Nat -&gt; *).
 KnownNat n =&gt;
 proxy n -&gt; Integer
 </span><span class="hs-identifier hs-var">natVal</span></span><span> </span><span class="annot"><span class="annottext">Known_Core_Type n
-</span><a href="#local-6989586621679620666"><span class="hs-identifier hs-var">ct</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="#local-6989586621679706830"><span class="hs-identifier hs-var">ct</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Known_Core_Type n -&gt; ByteString
 forall (n :: Nat). Known_Core_Type n -&gt; ByteString
-</span><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><span class="annottext">Known_Core_Type n
-</span><a href="#local-6989586621679620666"><span class="hs-identifier hs-var">ct</span></a></span><span>
-</span><span id="line-103"></span><span>      </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679620869"><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-type">genFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679620869"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span></span><span>
-</span><span id="line-104"></span><span>            </span><span id="local-6989586621679620665"><span class="annot"><span class="annottext">genFields :: Known_Core_Type n -&gt; ByteString
-</span><a href="#local-6989586621679620665"><span class="hs-identifier hs-var hs-var">genFields</span></a></span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Base_Type"><span class="hs-identifier hs-type">Base_Type</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><span class="annottext">Known_Core_Type n
+</span><a href="#local-6989586621679706830"><span class="hs-identifier hs-var">ct</span></a></span><span>
+</span><span id="line-103"></span><span>      </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679707035"><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-type">genFields</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Known_Core_Type"><span class="hs-identifier hs-type">Known_Core_Type</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679707035"><span class="hs-identifier hs-type">n</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">ByteString</span></span></span><span>
+</span><span id="line-104"></span><span>            </span><span id="local-6989586621679706829"><span class="annot"><span class="annottext">genFields :: Known_Core_Type n -&gt; ByteString
+</span><a href="#local-6989586621679706829"><span class="hs-identifier hs-var hs-var">genFields</span></a></span></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Base_Type"><span class="hs-identifier hs-type">Base_Type</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-105"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Simple_Type"><span class="hs-identifier hs-type">Simple_Type</span></a></span><span> </span><span id="local-6989586621679620664"><span class="annot"><span class="annottext">base_uidref :: Core_uidref_Base_Type
-</span><a href="#local-6989586621679620664"><span class="hs-identifier hs-var">base_uidref</span></a></span></span><span> </span><span id="local-6989586621679620663"><span class="annot"><span class="annottext">size :: Core_uinteger_2
-</span><a href="#local-6989586621679620663"><span class="hs-identifier hs-var">size</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_uidref_Base_Type -&gt; ByteString
+</span><span id="line-105"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Simple_Type"><span class="hs-identifier hs-type">Simple_Type</span></a></span><span> </span><span id="local-6989586621679706828"><span class="annot"><span class="annottext">base_uidref :: Core_uidref_Base_Type
+</span><a href="#local-6989586621679706828"><span class="hs-identifier hs-var">base_uidref</span></a></span></span><span> </span><span id="local-6989586621679706827"><span class="annot"><span class="annottext">size :: Core_uinteger_2
+</span><a href="#local-6989586621679706827"><span class="hs-identifier hs-var">size</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_uidref_Base_Type -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uidref_Base_Type
-</span><a href="#local-6989586621679620664"><span class="hs-identifier hs-var">base_uidref</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="#local-6989586621679706828"><span class="hs-identifier hs-var">base_uidref</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
-</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Core_uinteger_2 -&gt; ByteString
+</span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2 -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uinteger_2
-</span><a href="#local-6989586621679620663"><span class="hs-identifier hs-var">size</span></a></span><span>
-</span><span id="line-106"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Enumeration_Type"><span class="hs-identifier hs-type">Enumeration_Type</span></a></span><span> </span><span id="local-6989586621679620662"><span class="annot"><span class="annottext">ranges :: [(Core_uinteger_2, Core_uinteger_2)]
-</span><a href="#local-6989586621679620662"><span class="hs-identifier hs-var">ranges</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Core_uinteger_2, Core_uinteger_2)] -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2
+Core_uinteger_2
+</span><a href="#local-6989586621679706827"><span class="hs-identifier hs-var">size</span></a></span><span>
+</span><span id="line-106"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Enumeration_Type"><span class="hs-identifier hs-type">Enumeration_Type</span></a></span><span> </span><span id="local-6989586621679706826"><span class="annot"><span class="annottext">ranges :: [(Core_uinteger_2, Core_uinteger_2)]
+</span><a href="#local-6989586621679706826"><span class="hs-identifier hs-var">ranges</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+-&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[(Core_uinteger_2, Core_uinteger_2)]
-</span><a href="#local-6989586621679620662"><span class="hs-identifier hs-var">ranges</span></a></span><span>
-</span><span id="line-107"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Alternative_Type"><span class="hs-identifier hs-type">Alternative_Type</span></a></span><span> </span><span id="local-6989586621679620661"><span class="annot"><span class="annottext">alternatives :: [Core_uidref_non_Base_Type]
-</span><a href="#local-6989586621679620661"><span class="hs-identifier hs-var">alternatives</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_non_Base_Type] -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+[(Core_uinteger_2, Core_uinteger_2)]
+</span><a href="#local-6989586621679706826"><span class="hs-identifier hs-var">ranges</span></a></span><span>
+</span><span id="line-107"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Alternative_Type"><span class="hs-identifier hs-type">Alternative_Type</span></a></span><span> </span><span id="local-6989586621679706825"><span class="annot"><span class="annottext">alternatives :: [Core_uidref_non_Base_Type]
+</span><a href="#local-6989586621679706825"><span class="hs-identifier hs-var">alternatives</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_non_Base_Type] -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[Core_uidref_non_Base_Type]
-</span><a href="#local-6989586621679620661"><span class="hs-identifier hs-var">alternatives</span></a></span><span>
-</span><span id="line-108"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#List_Type"><span class="hs-identifier hs-type">List_Type</span></a></span><span> </span><span id="local-6989586621679620660"><span class="annot"><span class="annottext">maxSize :: Core_uinteger_2
-</span><a href="#local-6989586621679620660"><span class="hs-identifier hs-var">maxSize</span></a></span></span><span> </span><span id="local-6989586621679620659"><span class="annot"><span class="annottext">elementType :: Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620659"><span class="hs-identifier hs-var">elementType</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_uinteger_2 -&gt; ByteString
+</span><a href="#local-6989586621679706825"><span class="hs-identifier hs-var">alternatives</span></a></span><span>
+</span><span id="line-108"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#List_Type"><span class="hs-identifier hs-type">List_Type</span></a></span><span> </span><span id="local-6989586621679706824"><span class="annot"><span class="annottext">maxSize :: Core_uinteger_2
+</span><a href="#local-6989586621679706824"><span class="hs-identifier hs-var">maxSize</span></a></span></span><span> </span><span id="local-6989586621679706823"><span class="annot"><span class="annottext">elementType :: Core_uidref_non_Base_Type
+</span><a href="#local-6989586621679706823"><span class="hs-identifier hs-var">elementType</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2 -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uinteger_2
-</span><a href="#local-6989586621679620660"><span class="hs-identifier hs-var">maxSize</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2
+Core_uinteger_2
+</span><a href="#local-6989586621679706824"><span class="hs-identifier hs-var">maxSize</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620659"><span class="hs-identifier hs-var">elementType</span></a></span><span>
-</span><span id="line-109"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Restricted_Reference_Type%275"><span class="hs-identifier hs-type">Restricted_Reference_Type'5</span></a></span><span> </span><span id="local-6989586621679620658"><span class="annot"><span class="annottext">uidrefs :: [Core_uidref_Byte_Table]
-</span><a href="#local-6989586621679620658"><span class="hs-identifier hs-var">uidrefs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_Byte_Table] -&gt; ByteString
+</span><a href="#local-6989586621679706823"><span class="hs-identifier hs-var">elementType</span></a></span><span>
+</span><span id="line-109"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Restricted_Reference_Type%275"><span class="hs-identifier hs-type">Restricted_Reference_Type'5</span></a></span><span> </span><span id="local-6989586621679706822"><span class="annot"><span class="annottext">uidrefs :: [Core_uidref_Byte_Table]
+</span><a href="#local-6989586621679706822"><span class="hs-identifier hs-var">uidrefs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_Byte_Table] -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[Core_uidref_Byte_Table]
-</span><a href="#local-6989586621679620658"><span class="hs-identifier hs-var">uidrefs</span></a></span><span>
-</span><span id="line-110"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Restricted_Reference_Type%276"><span class="hs-identifier hs-type">Restricted_Reference_Type'6</span></a></span><span> </span><span id="local-6989586621679620657"><span class="annot"><span class="annottext">uidrefs :: [Core_uidref_Object_Table]
-</span><a href="#local-6989586621679620657"><span class="hs-identifier hs-var">uidrefs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_Object_Table] -&gt; ByteString
+</span><a href="#local-6989586621679706822"><span class="hs-identifier hs-var">uidrefs</span></a></span><span>
+</span><span id="line-110"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Restricted_Reference_Type%276"><span class="hs-identifier hs-type">Restricted_Reference_Type'6</span></a></span><span> </span><span id="local-6989586621679706821"><span class="annot"><span class="annottext">uidrefs :: [Core_uidref_Object_Table]
+</span><a href="#local-6989586621679706821"><span class="hs-identifier hs-var">uidrefs</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_Object_Table] -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[Core_uidref_Object_Table]
-</span><a href="#local-6989586621679620657"><span class="hs-identifier hs-var">uidrefs</span></a></span><span>
-</span><span id="line-111"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Type%277"><span class="hs-identifier hs-type">General_Reference_Type'7</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><a href="#local-6989586621679706821"><span class="hs-identifier hs-var">uidrefs</span></a></span><span>
+</span><span id="line-111"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Type%277"><span class="hs-identifier hs-type">General_Reference_Type'7</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-112"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Type%278"><span class="hs-identifier hs-type">General_Reference_Type'8</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-112"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Type%278"><span class="hs-identifier hs-type">General_Reference_Type'8</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-113"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Type%279"><span class="hs-identifier hs-type">General_Reference_Type'9</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
+</span><span id="line-113"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Type%279"><span class="hs-identifier hs-type">General_Reference_Type'9</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">ByteString
 forall a. Monoid a =&gt; a
 </span><span class="hs-identifier hs-var">mempty</span></span><span>
-</span><span id="line-114"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Table_Type"><span class="hs-identifier hs-type">General_Reference_Table_Type</span></a></span><span> </span><span id="local-6989586621679620656"><span class="annot"><span class="annottext">k :: Core_table_kind
-</span><a href="#local-6989586621679620656"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_table_kind -&gt; ByteString
+</span><span id="line-114"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#General_Reference_Table_Type"><span class="hs-identifier hs-type">General_Reference_Table_Type</span></a></span><span> </span><span id="local-6989586621679706820"><span class="annot"><span class="annottext">k :: Core_table_kind
+</span><a href="#local-6989586621679706820"><span class="hs-identifier hs-var">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_table_kind -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_table_kind
-</span><a href="#local-6989586621679620656"><span class="hs-identifier hs-var">k</span></a></span><span>
-</span><span id="line-115"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Named_Value_Name_Type"><span class="hs-identifier hs-type">Named_Value_Name_Type</span></a></span><span>     </span><span id="local-6989586621679620655"><span class="annot"><span class="annottext">name :: Core_max_bytes_32
-</span><a href="#local-6989586621679620655"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621679620654"><span class="annot"><span class="annottext">uidref :: Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620654"><span class="hs-identifier hs-var">uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_max_bytes_32 -&gt; ByteString
+</span><a href="#local-6989586621679706820"><span class="hs-identifier hs-var">k</span></a></span><span>
+</span><span id="line-115"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Named_Value_Name_Type"><span class="hs-identifier hs-type">Named_Value_Name_Type</span></a></span><span>     </span><span id="local-6989586621679706819"><span class="annot"><span class="annottext">name :: Core_max_bytes_32
+</span><a href="#local-6989586621679706819"><span class="hs-identifier hs-var">name</span></a></span></span><span> </span><span id="local-6989586621679706818"><span class="annot"><span class="annottext">uidref :: Core_uidref_non_Base_Type
+</span><a href="#local-6989586621679706818"><span class="hs-identifier hs-var">uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_max_bytes_32 -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_max_bytes_32
-</span><a href="#local-6989586621679620655"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="#local-6989586621679706819"><span class="hs-identifier hs-var">name</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620654"><span class="hs-identifier hs-var">uidref</span></a></span><span>
-</span><span id="line-116"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Named_Value_Integer_Type"><span class="hs-identifier hs-type">Named_Value_Integer_Type</span></a></span><span>  </span><span id="local-6989586621679620653"><span class="annot"><span class="annottext">int :: Core_integer_2
-</span><a href="#local-6989586621679620653"><span class="hs-identifier hs-var">int</span></a></span></span><span>  </span><span id="local-6989586621679620652"><span class="annot"><span class="annottext">uidref :: Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620652"><span class="hs-identifier hs-var">uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_integer_2 -&gt; ByteString
+</span><a href="#local-6989586621679706818"><span class="hs-identifier hs-var">uidref</span></a></span><span>
+</span><span id="line-116"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Named_Value_Integer_Type"><span class="hs-identifier hs-type">Named_Value_Integer_Type</span></a></span><span>  </span><span id="local-6989586621679706817"><span class="annot"><span class="annottext">int :: Core_integer_2
+</span><a href="#local-6989586621679706817"><span class="hs-identifier hs-var">int</span></a></span></span><span>  </span><span id="local-6989586621679706816"><span class="annot"><span class="annottext">uidref :: Core_uidref_non_Base_Type
+</span><a href="#local-6989586621679706816"><span class="hs-identifier hs-var">uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_integer_2 -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_integer_2
-</span><a href="#local-6989586621679620653"><span class="hs-identifier hs-var">int</span></a></span><span>  </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="#local-6989586621679706817"><span class="hs-identifier hs-var">int</span></a></span><span>  </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620652"><span class="hs-identifier hs-var">uidref</span></a></span><span>
-</span><span id="line-117"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Named_Value_Uinteger_Type"><span class="hs-identifier hs-type">Named_Value_Uinteger_Type</span></a></span><span> </span><span id="local-6989586621679620651"><span class="annot"><span class="annottext">uint :: Core_uinteger_2
-</span><a href="#local-6989586621679620651"><span class="hs-identifier hs-var">uint</span></a></span></span><span> </span><span id="local-6989586621679620650"><span class="annot"><span class="annottext">uidref :: Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620650"><span class="hs-identifier hs-var">uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Core_uinteger_2 -&gt; ByteString
+</span><a href="#local-6989586621679706816"><span class="hs-identifier hs-var">uidref</span></a></span><span>
+</span><span id="line-117"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Named_Value_Uinteger_Type"><span class="hs-identifier hs-type">Named_Value_Uinteger_Type</span></a></span><span> </span><span id="local-6989586621679706815"><span class="annot"><span class="annottext">uint :: Core_uinteger_2
+</span><a href="#local-6989586621679706815"><span class="hs-identifier hs-var">uint</span></a></span></span><span> </span><span id="local-6989586621679706814"><span class="annot"><span class="annottext">uidref :: Core_uidref_non_Base_Type
+</span><a href="#local-6989586621679706814"><span class="hs-identifier hs-var">uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2 -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uinteger_2
-</span><a href="#local-6989586621679620651"><span class="hs-identifier hs-var">uint</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2
+Core_uinteger_2
+</span><a href="#local-6989586621679706815"><span class="hs-identifier hs-var">uint</span></a></span><span> </span><span class="annot"><span class="annottext">ByteString -&gt; ByteString -&gt; ByteString
 forall a. Semigroup a =&gt; a -&gt; a -&gt; a
 </span><span class="hs-operator hs-var">&lt;&gt;</span></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620650"><span class="hs-identifier hs-var">uidref</span></a></span><span>
-</span><span id="line-118"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Struct_Type"><span class="hs-identifier hs-type">Struct_Type</span></a></span><span> </span><span id="local-6989586621679620649"><span class="annot"><span class="annottext">flds :: [Core_uidref_non_Base_Type]
-</span><a href="#local-6989586621679620649"><span class="hs-identifier hs-var">flds</span></a></span></span><span> </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_non_Base_Type] -&gt; ByteString
+</span><a href="#local-6989586621679706814"><span class="hs-identifier hs-var">uidref</span></a></span><span>
+</span><span id="line-118"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Struct_Type"><span class="hs-identifier hs-type">Struct_Type</span></a></span><span> </span><span id="local-6989586621679706813"><span class="annot"><span class="annottext">flds :: [Core_uidref_non_Base_Type]
+</span><a href="#local-6989586621679706813"><span class="hs-identifier hs-var">flds</span></a></span></span><span> </span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[Core_uidref_non_Base_Type] -&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
 </span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[Core_uidref_non_Base_Type]
-</span><a href="#local-6989586621679620649"><span class="hs-identifier hs-var">flds</span></a></span><span>
-</span><span id="line-119"></span><span>            </span><span class="annot"><a href="#local-6989586621679620665"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Set_Type"><span class="hs-identifier hs-type">Set_Type</span></a></span><span> </span><span id="local-6989586621679620648"><span class="annot"><span class="annottext">ranges :: [(Core_uinteger_2, Core_uinteger_2)]
-</span><a href="#local-6989586621679620648"><span class="hs-identifier hs-var">ranges</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Core_uinteger_2, Core_uinteger_2)] -&gt; ByteString
+</span><a href="#local-6989586621679706813"><span class="hs-identifier hs-var">flds</span></a></span><span>
+</span><span id="line-119"></span><span>            </span><span class="annot"><a href="#local-6989586621679706829"><span class="hs-identifier hs-var">genFields</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Set_Type"><span class="hs-identifier hs-type">Set_Type</span></a></span><span> </span><span id="local-6989586621679706812"><span class="annot"><span class="annottext">ranges :: [(Core_uinteger_2, Core_uinteger_2)]
+</span><a href="#local-6989586621679706812"><span class="hs-identifier hs-var">ranges</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">[(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+-&gt; ByteString
 forall a. StreamItem a =&gt; a -&gt; ByteString
-</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[(Core_uinteger_2, Core_uinteger_2)]
-</span><a href="#local-6989586621679620648"><span class="hs-identifier hs-var">ranges</span></a></span><span>
-</span><span id="line-120"></span><span>    </span><span id="local-6989586621679620647"><span class="annot"><span class="annottext">parser :: Parser Some_Core_Type
-</span><a href="#local-6989586621679620647"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Word8
+</span><a href="System.SED.MCTP.Common.StreamItem.html#generate"><span class="hs-identifier hs-var">generate</span></a></span><span> </span><span class="annot"><span class="annottext">[(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+[(Core_uinteger_2, Core_uinteger_2)]
+</span><a href="#local-6989586621679706812"><span class="hs-identifier hs-var">ranges</span></a></span><span>
+</span><span id="line-120"></span><span>    </span><span id="local-6989586621679706811"><span class="annot"><span class="annottext">parser :: Parser Some_Core_Type
+</span><a href="#local-6989586621679706811"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Word8
 </span><span class="hs-identifier hs-var">anyWord8</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Word8
 -&gt; (Word8 -&gt; Parser Some_Core_Type) -&gt; Parser Some_Core_Type
 forall (m :: * -&gt; *) a b. Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
@@ -464,18 +471,23 @@ Known_Core_Type n -&gt; Some_Core_Type
 </span><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Known_Core_Type 1 -&gt; Some_Core_Type)
 -&gt; Parser ByteString (Known_Core_Type 1) -&gt; Parser Some_Core_Type
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Core_uidref_Base_Type -&gt; Core_uinteger_2 -&gt; Known_Core_Type 1
-</span><a href="System.SED.MCTP.Common.Format.html#Simple_Type"><span class="hs-identifier hs-var">Simple_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_uidref_Base_Type -&gt; Core_uinteger_2 -&gt; Known_Core_Type 1)
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Core_uidref_Base_Type
+-&gt; Simple_Type Core_uinteger 2 -&gt; Known_Core_Type 1
+Core_uidref_Base_Type -&gt; Core_uinteger_2 -&gt; Known_Core_Type 1
+</span><a href="System.SED.MCTP.Common.Format.html#Simple_Type"><span class="hs-identifier hs-var">Simple_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_uidref_Base_Type
+ -&gt; Simple_Type Core_uinteger 2 -&gt; Known_Core_Type 1)
 -&gt; Parser ByteString Core_uidref_Base_Type
--&gt; Parser ByteString (Core_uinteger_2 -&gt; Known_Core_Type 1)
+-&gt; Parser
+     ByteString (Simple_Type Core_uinteger 2 -&gt; Known_Core_Type 1)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
 </span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_Base_Type
 forall a. StreamItem a =&gt; Parser a
-</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Core_uinteger_2 -&gt; Known_Core_Type 1)
--&gt; Parser ByteString Core_uinteger_2
+</span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
+  ByteString (Simple_Type Core_uinteger 2 -&gt; Known_Core_Type 1)
+-&gt; Parser ByteString (Simple_Type Core_uinteger 2)
 -&gt; Parser ByteString (Known_Core_Type 1)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Simple_Type Core_uinteger 2)
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-123"></span><span>        </span><span class="hs-number">02</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Known_Core_Type 2 -&gt; Some_Core_Type
@@ -485,28 +497,44 @@ Known_Core_Type n -&gt; Some_Core_Type
 </span><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Known_Core_Type 2 -&gt; Some_Core_Type)
 -&gt; Parser ByteString (Known_Core_Type 2) -&gt; Parser Some_Core_Type
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Core_uinteger_2, Core_uinteger_2)] -&gt; Known_Core_Type 2
-</span><a href="System.SED.MCTP.Common.Format.html#Enumeration_Type"><span class="hs-identifier hs-var">Enumeration_Type</span></a></span><span> </span><span class="annot"><span class="annottext">([(Core_uinteger_2, Core_uinteger_2)] -&gt; Known_Core_Type 2)
--&gt; Parser ByteString [(Core_uinteger_2, Core_uinteger_2)]
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+-&gt; Known_Core_Type 2
+[(Core_uinteger_2, Core_uinteger_2)] -&gt; Known_Core_Type 2
+</span><a href="System.SED.MCTP.Common.Format.html#Enumeration_Type"><span class="hs-identifier hs-var">Enumeration_Type</span></a></span><span> </span><span class="annot"><span class="annottext">([(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+ -&gt; Known_Core_Type 2)
+-&gt; Parser
+     ByteString
+     [(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
 -&gt; Parser ByteString (Known_Core_Type 2)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Core_uinteger_2, Core_uinteger_2)
--&gt; Parser ByteString [(Core_uinteger_2, Core_uinteger_2)]
-forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
-</span><span class="hs-identifier hs-var">many1</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Core_uinteger_2
- -&gt; Core_uinteger_2 -&gt; (Core_uinteger_2, Core_uinteger_2))
--&gt; Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser
+  ByteString
+  (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)
 -&gt; Parser
-     ByteString (Core_uinteger_2 -&gt; (Core_uinteger_2, Core_uinteger_2))
+     ByteString
+     [(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
+</span><span class="hs-identifier hs-var">many1</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Simple_Type Core_uinteger 2
+ -&gt; Simple_Type Core_uinteger 2
+ -&gt; (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2))
+-&gt; Parser ByteString (Simple_Type Core_uinteger 2)
+-&gt; Parser
+     ByteString
+     (Simple_Type Core_uinteger 2
+      -&gt; (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Simple_Type Core_uinteger 2)
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
-  ByteString (Core_uinteger_2 -&gt; (Core_uinteger_2, Core_uinteger_2))
--&gt; Parser ByteString Core_uinteger_2
--&gt; Parser ByteString (Core_uinteger_2, Core_uinteger_2)
+  ByteString
+  (Simple_Type Core_uinteger 2
+   -&gt; (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2))
+-&gt; Parser ByteString (Simple_Type Core_uinteger 2)
+-&gt; Parser
+     ByteString
+     (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Simple_Type Core_uinteger 2)
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-124"></span><span>        </span><span class="hs-number">03</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">Known_Core_Type 3 -&gt; Some_Core_Type
@@ -549,13 +577,16 @@ Known_Core_Type n -&gt; Some_Core_Type
 </span><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Known_Core_Type 4 -&gt; Some_Core_Type)
 -&gt; Parser ByteString (Known_Core_Type 4) -&gt; Parser Some_Core_Type
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Core_uinteger_2 -&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 4
-</span><a href="System.SED.MCTP.Common.Format.html#List_Type"><span class="hs-identifier hs-var">List_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_uinteger_2 -&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 4)
--&gt; Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2
+-&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 4
+Core_uinteger_2 -&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 4
+</span><a href="System.SED.MCTP.Common.Format.html#List_Type"><span class="hs-identifier hs-var">List_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Simple_Type Core_uinteger 2
+ -&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 4)
+-&gt; Parser ByteString (Simple_Type Core_uinteger 2)
 -&gt; Parser
      ByteString (Core_uidref_non_Base_Type -&gt; Known_Core_Type 4)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Simple_Type Core_uinteger 2)
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Core_uidref_non_Base_Type -&gt; Known_Core_Type 4)
 -&gt; Parser ByteString Core_uidref_non_Base_Type
@@ -700,14 +731,16 @@ Known_Core_Type n -&gt; Some_Core_Type
 </span><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Known_Core_Type 13 -&gt; Some_Core_Type)
 -&gt; Parser ByteString (Known_Core_Type 13) -&gt; Parser Some_Core_Type
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Core_uinteger_2 -&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 13
-</span><a href="System.SED.MCTP.Common.Format.html#Named_Value_Uinteger_Type"><span class="hs-identifier hs-var">Named_Value_Uinteger_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Simple_Type Core_uinteger 2
+-&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 13
+Core_uinteger_2 -&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 13
+</span><a href="System.SED.MCTP.Common.Format.html#Named_Value_Uinteger_Type"><span class="hs-identifier hs-var">Named_Value_Uinteger_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Simple_Type Core_uinteger 2
  -&gt; Core_uidref_non_Base_Type -&gt; Known_Core_Type 13)
--&gt; Parser ByteString Core_uinteger_2
+-&gt; Parser ByteString (Simple_Type Core_uinteger 2)
 -&gt; Parser
      ByteString (Core_uidref_non_Base_Type -&gt; Known_Core_Type 13)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Simple_Type Core_uinteger 2)
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Core_uidref_non_Base_Type -&gt; Known_Core_Type 13)
 -&gt; Parser ByteString Core_uidref_non_Base_Type
@@ -741,28 +774,44 @@ Known_Core_Type n -&gt; Some_Core_Type
 </span><a href="System.SED.MCTP.Common.Format.html#Some_Core_Type"><span class="hs-identifier hs-var">Some_Core_Type</span></a></span><span> </span><span class="annot"><span class="annottext">(Known_Core_Type 15 -&gt; Some_Core_Type)
 -&gt; Parser ByteString (Known_Core_Type 15) -&gt; Parser Some_Core_Type
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Core_uinteger_2, Core_uinteger_2)] -&gt; Known_Core_Type 15
-</span><a href="System.SED.MCTP.Common.Format.html#Set_Type"><span class="hs-identifier hs-var">Set_Type</span></a></span><span> </span><span class="annot"><span class="annottext">([(Core_uinteger_2, Core_uinteger_2)] -&gt; Known_Core_Type 15)
--&gt; Parser ByteString [(Core_uinteger_2, Core_uinteger_2)]
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+-&gt; Known_Core_Type 15
+[(Core_uinteger_2, Core_uinteger_2)] -&gt; Known_Core_Type 15
+</span><a href="System.SED.MCTP.Common.Format.html#Set_Type"><span class="hs-identifier hs-var">Set_Type</span></a></span><span> </span><span class="annot"><span class="annottext">([(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+ -&gt; Known_Core_Type 15)
+-&gt; Parser
+     ByteString
+     [(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
 -&gt; Parser ByteString (Known_Core_Type 15)
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Core_uinteger_2, Core_uinteger_2)
--&gt; Parser ByteString [(Core_uinteger_2, Core_uinteger_2)]
-forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
-</span><span class="hs-identifier hs-var">many1</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Core_uinteger_2
- -&gt; Core_uinteger_2 -&gt; (Core_uinteger_2, Core_uinteger_2))
--&gt; Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser
+  ByteString
+  (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)
 -&gt; Parser
-     ByteString (Core_uinteger_2 -&gt; (Core_uinteger_2, Core_uinteger_2))
+     ByteString
+     [(Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)]
+forall (f :: * -&gt; *) a. Alternative f =&gt; f a -&gt; f [a]
+</span><span class="hs-identifier hs-var">many1</span></span><span> </span><span class="hs-special">(</span><span> </span><span class="hs-special">(</span><span class="hs-special">,</span><span class="hs-special">)</span><span> </span><span class="annot"><span class="annottext">(Simple_Type Core_uinteger 2
+ -&gt; Simple_Type Core_uinteger 2
+ -&gt; (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2))
+-&gt; Parser ByteString (Simple_Type Core_uinteger 2)
+-&gt; Parser
+     ByteString
+     (Simple_Type Core_uinteger 2
+      -&gt; (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2))
 forall (f :: * -&gt; *) a b. Functor f =&gt; (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;$&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Simple_Type Core_uinteger 2)
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span> </span><span class="annot"><span class="annottext">Parser
-  ByteString (Core_uinteger_2 -&gt; (Core_uinteger_2, Core_uinteger_2))
--&gt; Parser ByteString Core_uinteger_2
--&gt; Parser ByteString (Core_uinteger_2, Core_uinteger_2)
+  ByteString
+  (Simple_Type Core_uinteger 2
+   -&gt; (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2))
+-&gt; Parser ByteString (Simple_Type Core_uinteger 2)
+-&gt; Parser
+     ByteString
+     (Simple_Type Core_uinteger 2, Simple_Type Core_uinteger 2)
 forall (f :: * -&gt; *) a b. Applicative f =&gt; f (a -&gt; b) -&gt; f a -&gt; f b
-</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uinteger_2
+</span><span class="hs-operator hs-var">&lt;*&gt;</span></span><span> </span><span class="annot"><span class="annottext">Parser ByteString (Simple_Type Core_uinteger 2)
 forall a. StreamItem a =&gt; Parser a
 </span><a href="System.SED.MCTP.Common.StreamItem.html#parser"><span class="hs-identifier hs-var">parser</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span>
 </span><span id="line-137"></span><span>        </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="annottext">String -&gt; Parser Some_Core_Type
@@ -772,43 +821,43 @@ forall a. HasCallStack =&gt; String -&gt; a
 </span><span id="line-139"></span><span>
 </span><span id="line-140"></span><span>
 </span><span id="line-141"></span><span>
-</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679620635"><span id="local-6989586621679620637"><span id="local-6989586621679620639"><span id="local-6989586621679620641"><span id="local-6989586621679620643"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-type">Core_uidref</span></a></span></span></span></span></span></span><span>       </span><span class="hs-keyword">where</span><span>
-</span><span id="line-143"></span><span>    </span><span id="local-6989586621679620634"><span class="annot"><span class="annottext">parser :: Parser Core_uidref
-</span><a href="#local-6989586621679620634"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Core_uidref
+</span><span id="line-142"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679706799"><span id="local-6989586621679706801"><span id="local-6989586621679706803"><span id="local-6989586621679706805"><span id="local-6989586621679706807"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref"><span class="hs-identifier hs-type">Core_uidref</span></a></span></span></span></span></span></span><span>       </span><span class="hs-keyword">where</span><span>
+</span><span id="line-143"></span><span>    </span><span id="local-6989586621679706798"><span class="annot"><span class="annottext">parser :: Parser Core_uidref
+</span><a href="#local-6989586621679706798"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser Core_uidref
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-144"></span><span>    </span><span id="local-6989586621679620633"><span class="annot"><span class="annottext">generate :: Core_uidref -&gt; ByteString
-</span><a href="#local-6989586621679620633"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref&gt;&quot;</span></span><span>
-</span><span id="line-145"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679620621"><span id="local-6989586621679620623"><span id="local-6989586621679620625"><span id="local-6989586621679620627"><span id="local-6989586621679620629"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Base_Type"><span class="hs-identifier hs-type">Core_uidref_Base_Type</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-146"></span><span>    </span><span id="local-6989586621679620620"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_Base_Type
-</span><a href="#local-6989586621679620620"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_Base_Type
+</span><span id="line-144"></span><span>    </span><span id="local-6989586621679706797"><span class="annot"><span class="annottext">generate :: Core_uidref -&gt; ByteString
+</span><a href="#local-6989586621679706797"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-identifier">_</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref&gt;&quot;</span></span><span>
+</span><span id="line-145"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679706785"><span id="local-6989586621679706787"><span id="local-6989586621679706789"><span id="local-6989586621679706791"><span id="local-6989586621679706793"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Base_Type"><span class="hs-identifier hs-type">Core_uidref_Base_Type</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-146"></span><span>    </span><span id="local-6989586621679706784"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_Base_Type
+</span><a href="#local-6989586621679706784"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_Base_Type
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-147"></span><span>    </span><span id="local-6989586621679620619"><span class="annot"><span class="annottext">generate :: Core_uidref_Base_Type -&gt; ByteString
-</span><a href="#local-6989586621679620619"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Base_Type"><span class="hs-identifier hs-type">Core_uidref_Base_Type</span></a></span><span> </span><span id="local-6989586621679620618"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
-</span><a href="#local-6989586621679620618"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_Base_Type&gt;&quot;</span></span><span>
-</span><span id="line-148"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679620606"><span id="local-6989586621679620608"><span id="local-6989586621679620610"><span id="local-6989586621679620612"><span id="local-6989586621679620614"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_non_Base_Type"><span class="hs-identifier hs-type">Core_uidref_non_Base_Type</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-149"></span><span>    </span><span id="local-6989586621679620605"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_non_Base_Type
-</span><a href="#local-6989586621679620605"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_non_Base_Type
+</span><span id="line-147"></span><span>    </span><span id="local-6989586621679706783"><span class="annot"><span class="annottext">generate :: Core_uidref_Base_Type -&gt; ByteString
+</span><a href="#local-6989586621679706783"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Base_Type"><span class="hs-identifier hs-type">Core_uidref_Base_Type</span></a></span><span> </span><span id="local-6989586621679706782"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
+</span><a href="#local-6989586621679706782"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_Base_Type&gt;&quot;</span></span><span>
+</span><span id="line-148"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679706770"><span id="local-6989586621679706772"><span id="local-6989586621679706774"><span id="local-6989586621679706776"><span id="local-6989586621679706778"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_non_Base_Type"><span class="hs-identifier hs-type">Core_uidref_non_Base_Type</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-149"></span><span>    </span><span id="local-6989586621679706769"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_non_Base_Type
+</span><a href="#local-6989586621679706769"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_non_Base_Type
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-150"></span><span>    </span><span id="local-6989586621679620604"><span class="annot"><span class="annottext">generate :: Core_uidref_non_Base_Type -&gt; ByteString
-</span><a href="#local-6989586621679620604"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_non_Base_Type"><span class="hs-identifier hs-type">Core_uidref_non_Base_Type</span></a></span><span> </span><span id="local-6989586621679620603"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
-</span><a href="#local-6989586621679620603"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_non_Base_Type&gt;&quot;</span></span><span>
-</span><span id="line-151"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679620591"><span id="local-6989586621679620593"><span id="local-6989586621679620595"><span id="local-6989586621679620597"><span id="local-6989586621679620599"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Byte_Table"><span class="hs-identifier hs-type">Core_uidref_Byte_Table</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-152"></span><span>    </span><span id="local-6989586621679620590"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_Byte_Table
-</span><a href="#local-6989586621679620590"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_Byte_Table
+</span><span id="line-150"></span><span>    </span><span id="local-6989586621679706768"><span class="annot"><span class="annottext">generate :: Core_uidref_non_Base_Type -&gt; ByteString
+</span><a href="#local-6989586621679706768"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_non_Base_Type"><span class="hs-identifier hs-type">Core_uidref_non_Base_Type</span></a></span><span> </span><span id="local-6989586621679706767"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
+</span><a href="#local-6989586621679706767"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_non_Base_Type&gt;&quot;</span></span><span>
+</span><span id="line-151"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679706755"><span id="local-6989586621679706757"><span id="local-6989586621679706759"><span id="local-6989586621679706761"><span id="local-6989586621679706763"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Byte_Table"><span class="hs-identifier hs-type">Core_uidref_Byte_Table</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-152"></span><span>    </span><span id="local-6989586621679706754"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_Byte_Table
+</span><a href="#local-6989586621679706754"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_Byte_Table
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-153"></span><span>    </span><span id="local-6989586621679620589"><span class="annot"><span class="annottext">generate :: Core_uidref_Byte_Table -&gt; ByteString
-</span><a href="#local-6989586621679620589"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Byte_Table"><span class="hs-identifier hs-type">Core_uidref_Byte_Table</span></a></span><span> </span><span id="local-6989586621679620588"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
-</span><a href="#local-6989586621679620588"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_Byte_Table&gt;&quot;</span></span><span>
-</span><span id="line-154"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679620576"><span id="local-6989586621679620578"><span id="local-6989586621679620580"><span id="local-6989586621679620582"><span id="local-6989586621679620584"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Object_Table"><span class="hs-identifier hs-type">Core_uidref_Object_Table</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
-</span><span id="line-155"></span><span>    </span><span id="local-6989586621679620575"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_Object_Table
-</span><a href="#local-6989586621679620575"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_Object_Table
+</span><span id="line-153"></span><span>    </span><span id="local-6989586621679706753"><span class="annot"><span class="annottext">generate :: Core_uidref_Byte_Table -&gt; ByteString
+</span><a href="#local-6989586621679706753"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Byte_Table"><span class="hs-identifier hs-type">Core_uidref_Byte_Table</span></a></span><span> </span><span id="local-6989586621679706752"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
+</span><a href="#local-6989586621679706752"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_Byte_Table&gt;&quot;</span></span><span>
+</span><span id="line-154"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679706740"><span id="local-6989586621679706742"><span id="local-6989586621679706744"><span id="local-6989586621679706746"><span id="local-6989586621679706748"><span class="annot"><a href="System.SED.MCTP.Common.StreamItem.html#StreamItem"><span class="hs-identifier hs-type">StreamItem</span></a></span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Object_Table"><span class="hs-identifier hs-type">Core_uidref_Object_Table</span></a></span></span></span></span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-155"></span><span>    </span><span id="local-6989586621679706739"><span class="annot"><span class="annottext">parser :: Parser ByteString Core_uidref_Object_Table
+</span><a href="#local-6989586621679706739"><span class="hs-identifier hs-var hs-var hs-var hs-var">parser</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Parser ByteString Core_uidref_Object_Table
 forall a. HasCallStack =&gt; a
 </span><span class="hs-identifier hs-var">undefined</span></span><span>
-</span><span id="line-156"></span><span>    </span><span id="local-6989586621679620574"><span class="annot"><span class="annottext">generate :: Core_uidref_Object_Table -&gt; ByteString
-</span><a href="#local-6989586621679620574"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Object_Table"><span class="hs-identifier hs-type">Core_uidref_Object_Table</span></a></span><span> </span><span id="local-6989586621679620573"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
-</span><a href="#local-6989586621679620573"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_Object_Table&gt;&quot;</span></span><span>
+</span><span id="line-156"></span><span>    </span><span id="local-6989586621679706738"><span class="annot"><span class="annottext">generate :: Core_uidref_Object_Table -&gt; ByteString
+</span><a href="#local-6989586621679706738"><span class="hs-identifier hs-var hs-var hs-var hs-var">generate</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Format.html#Core_uidref_Object_Table"><span class="hs-identifier hs-type">Core_uidref_Object_Table</span></a></span><span> </span><span id="local-6989586621679706737"><span class="annot"><span class="annottext">_base_uidref :: Core_uidref
+</span><a href="#local-6989586621679706737"><span class="hs-identifier hs-var">_base_uidref</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="hs-string">&quot;&lt;uidref_Object_Table&gt;&quot;</span></span><span>
 </span><span id="line-157"></span></pre></body></html>

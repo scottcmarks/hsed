@@ -636,7 +636,7 @@ cm' cm'163,164
 ct ct167,168
 ct' ct'176,177
 
-./src/System/SED/MCTP/Common/Base_Type/Types.hs,2331
+./src/System/SED/MCTP/Common/Base_Type/Types.hs,2601
 module System.SED.MCTP.Common.Base_Type.TypesSystem.SED.MCTP.Common.Base_Type.Types28,29
 newtype Implementation_integer Implementation_integer91,92
 newtype Implementation_integer = Implementation_integer {unImplementation_integer unImplementation_integer91,92
@@ -659,32 +659,38 @@ instance LL.ListLike LL-ListLike Implementation_bytes Word8113,114
 newtype Core_max_bytes Core_max_bytes120,121
 type Core_max_bytes_at_least Core_max_bytes_at_least122,123
 newtype Core_bytes Core_bytes125,126
-instance KnownNat KnownNat n => HasSize (Core_bytes n)127,128
-    size size128,129
-instance (K(KnownNat n) => StreamItem (Core_uinteger n)133,134
-    parser parser134,135
-    generate generate144,145
-instance (K(KnownNat n) => StreamItem (Core_integer n)146,147
-    parser parser147,148
-    generate generate157,158
-instance (K(KnownNat n) => StreamItem (Core_bytes n)159,160
-    parser parser160,161
-    generate generate170,171
-instance (K(KnownNat n) => StreamItem (Core_max_bytes n)173,174
-    parser parser174,175
-    generate generate184,185
-instance (K(KnownNat n) => IsToken (Core_integer n)188,189
-    token token189,190
-    fromToken fromToken190,191
-instance (K(KnownNat n) => IsToken (Core_uinteger n)194,195
-    token token195,196
-    fromToken fromToken196,197
-instance (K(KnownNat n) => IsToken (Core_bytes n)200,201
-    token token201,202
-    fromToken fromToken202,203
-instance (K(KnownNat n) => IsToken (Core_max_bytes n)206,207
-    token token207,208
-    fromToken fromToken208,209
+instance KnownNat KnownNat n => HasSize (Core_bytes n)129,130
+    size size130,131
+instance KnownNat KnownNat n => HasSize (Core_max_bytes n)131,132
+    size size132,133
+instance KnownNat KnownNat n => HasSize (Core_uinteger n)133,134
+    size size134,135
+instance KnownNat KnownNat n => HasSize (Core_integer n)135,136
+    size size136,137
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)140,141
+    parser parser141,142
+    generate generate151,152
+instance (K(KnownNat n) => StreamItem (Core_integer n)153,154
+    parser parser154,155
+    generate generate164,165
+instance (K(KnownNat n) => StreamItem (Core_bytes n)166,167
+    parser parser167,168
+    generate generate177,178
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)180,181
+    parser parser181,182
+    generate generate191,192
+instance (K(KnownNat n) => IsToken (Core_integer n)195,196
+    token token196,197
+    fromToken fromToken197,198
+instance (K(KnownNat n) => IsToken (Core_uinteger n)201,202
+    token token202,203
+    fromToken fromToken203,204
+instance (K(KnownNat n) => IsToken (Core_bytes n)207,208
+    token token208,209
+    fromToken fromToken209,210
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)213,214
+    token token214,215
+    fromToken fromToken215,216
 
 ./src/System/SED/MCTP/Common/SingTest.hs,75
 module System.SED.MCTP.Common.SingTestSystem.SED.MCTP.Common.SingTest4,5

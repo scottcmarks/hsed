@@ -705,12 +705,15 @@ instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_in
 instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
 instance Data.ListLike.FoldableLL.FoldableLL System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes GHC.Word.Word8
 instance Data.ListLike.Base.ListLike System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes GHC.Word.Word8
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
 
@@ -5257,6 +5260,38 @@ lines :: String -> [String]
 --   Nothing
 --   </pre>
 readMaybe :: Read a => String -> Maybe a
+
+-- | Return the contents of a <a>Right</a>-value or a default value
+--   otherwise.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   Basic usage:
+--   
+--   <pre>
+--   &gt;&gt;&gt; fromRight 1 (Right 3)
+--   3
+--   
+--   &gt;&gt;&gt; fromRight 1 (Left "foo")
+--   1
+--   </pre>
+fromRight :: b -> Either a b -> b
+
+-- | Return the contents of a <a>Left</a>-value or a default value
+--   otherwise.
+--   
+--   <h4><b>Examples</b></h4>
+--   
+--   Basic usage:
+--   
+--   <pre>
+--   &gt;&gt;&gt; fromLeft 1 (Left 3)
+--   3
+--   
+--   &gt;&gt;&gt; fromLeft 1 (Right "foo")
+--   1
+--   </pre>
+fromLeft :: a -> Either a b -> a
 
 -- | Return <a>True</a> if the given value is a <a>Right</a>-value,
 --   <a>False</a> otherwise.

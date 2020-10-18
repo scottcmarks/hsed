@@ -248,8 +248,8 @@ putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 
 :load System.SED.MCTP.Common.Simple_Type
-:info Core_Base_type
-:info Core_Data_type
+
+:info Data_type
 
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -257,10 +257,16 @@ putStrLn "\n\n\n"
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 :set -XDataKinds
+import Data.Refined(plain)
+import GHC.Natural(Natural(..))
+import System.SED.MCTP.Common.Base_Type (Implementation_uinteger (..))
+
 :t 4 :: Core_uinteger 2
 4 :: Core_uinteger 2
-:t 4 :: Core_Data_type "00000212"
-4 :: Core_Data_type "00000212"
+:t 4 :: Data_type "00000215"
+4 :: Data_type "00000215"
+let (Core_uinteger n) = 4 :: Data_type "00000215" in unImplementation_uinteger $ plain n
+:t let (Core_uinteger n) = 4 :: Data_type "00000215" in unImplementation_uinteger $ plain n
 
 
 putStrLn "\n\n\nBuh-bye now.\n\n"

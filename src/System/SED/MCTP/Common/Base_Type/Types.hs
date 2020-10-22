@@ -127,13 +127,13 @@ newtype Core_bytes     n = Core_bytes     (Implementation_bytes ? FixedSize n)
     deriving (Eq, Ord, Show, IsList, IsString, Arbitrary) via (Implementation_bytes ? FixedSize n)
 
 
-instance KnownNat n => HasSize (Core_bytes n) where
+instance {-# OVERLAPPING #-} KnownNat n => HasSize (Core_bytes n) where
     size = fromNat
-instance KnownNat n => HasSize (Core_max_bytes n) where
+instance {-# OVERLAPPING #-} KnownNat n => HasSize (Core_max_bytes n) where
     size (Core_max_bytes b) = size (plain b)
-instance KnownNat n => HasSize (Core_uinteger n) where
+instance {-# OVERLAPPING #-} KnownNat n => HasSize (Core_uinteger n) where
     size (Core_uinteger n) = size (plain n)
-instance KnownNat n => HasSize (Core_integer n) where
+instance {-# OVERLAPPING #-} KnownNat n => HasSize (Core_integer n) where
     size (Core_integer i) = size (plain i)
 
 

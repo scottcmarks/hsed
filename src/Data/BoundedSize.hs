@@ -77,13 +77,13 @@ import           GHC.TypeLits           (type (+), KnownNat)
 
 -- | Class of types which can be assigned a type-level minimum and maximum length.
 class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps l u a
-instance (KnownNat l, KnownNat u, ListOps a) => IsBoundedSizeListOps l u a
+instance (KnownNat l, KnownNat u, ListOps a, HasSize(Item a)) => IsBoundedSizeListOps l u a
 
 class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps n a
-instance (KnownNat n, ListOps a) => IsFixedSizeListOps n a
+instance (KnownNat n, ListOps a, HasSize(Item a)) => IsFixedSizeListOps n a
 
 class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
-instance (KnownNat n, ListOps a) => IsMaxSizeListOps n a
+instance (KnownNat n, ListOps a, HasSize(Item a)) => IsMaxSizeListOps n a
 
 -- $setup
 -- >>> :set -Wno-type-defaults
@@ -92,6 +92,7 @@ instance (KnownNat n, ListOps a) => IsMaxSizeListOps n a
 -- >>> :set -XOverloadedStrings
 -- >>> :set -XTemplateHaskell
 -- >>> :set -XFlexibleContexts
+-- >>> :set -XMonoLocalBinds
 -- >>> import Data.BoundedSize.TH (fx,mx)
 -- >>> import Data.ByteString(ByteString)
 -- >>> import Data.Char (toUpper)
@@ -106,8 +107,8 @@ instance (KnownNat n, ListOps a) => IsMaxSizeListOps n a
 --
 -- >>> :type append $(mx "foo") $(fx "bear")
 -- append $(mx "foo") $(fx "bear")
---   :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
---       Data.String.IsString a) =>
+--   :: (Data.ListLike.Base.ListLike a (Item a), HasSize (Item a),
+--       HasSize a, Data.String.IsString a) =>
 --      a ? BoundedSize 4 7
 --
 -- >>> append $(fx "Hello, ") $(mx "world!")
@@ -155,7 +156,8 @@ map f s = unsafeCreate $ B.map f $ plain s
 -- >>> :t take $(fx "Hello")
 -- take $(fx "Hello")
 --   :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
---       KnownNat u2, HasSize a, Data.String.IsString a) =>
+--       KnownNat u2, HasSize (Item a), HasSize a,
+--       Data.String.IsString a) =>
 --      a ? BoundedSize l2 u2
 --
 -- >>> :t take $(fx "Hello") :: ByteString ? BoundedSize 4 32
@@ -221,7 +223,8 @@ length = B.length . plain
 -- original elements to the left.
 padLeft ::
      forall l1 u1 l2 u2 a.
-     ( IsBoundedSizeListOps l1 u1 a
+     ( HasSize(Item a)
+     , IsBoundedSizeListOps l1 u1 a
      , IsBoundedSizeListOps l2 u2 a
      , IsBoundedSizeListOps 0 (u2 + u1) a
      )
@@ -233,7 +236,8 @@ padLeft pad = drop . ((replicate pad :: a ? BoundedSize 0 u2) `append`)
 -- | Like 'padLeft', but original elements are padded to the right.
 padRight ::
      forall l1 u1 l2 u2 a.
-     ( IsBoundedSizeListOps l1 u1 a
+     ( HasSize(Item a)
+     , IsBoundedSizeListOps l1 u1 a
      , IsBoundedSizeListOps l2 u2 a
      , IsBoundedSizeListOps 0 (u1 + u2) a
      )

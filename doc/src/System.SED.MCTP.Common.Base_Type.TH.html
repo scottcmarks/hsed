@@ -22,45 +22,46 @@ Template Haskell helpers for BoundedSize.
 </span><span id="line-22"></span><span>
 </span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Language.Haskell.TH</span></span><span>
 </span><span id="line-24"></span><span>
-</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.TypeLits</span></span><span>                           </span><span class="hs-special">(</span><span class="hs-keyword">type</span><span> </span><span class="annot"><span class="hs-operator">(&lt;=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">KnownNat</span></span><span class="hs-special">)</span><span>
-</span><span id="line-27"></span><span>
-</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-29"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-30"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_max_bytes"><span class="hs-identifier">Core_max_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-31"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-32"></span><span>                                                         </span><span class="annot"><a href="Data.HasSize.html#size"><span class="hs-identifier">size</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier">unsafeCreate</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-33"></span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="Data.HasSize.html"><span class="hs-identifier">Data.HasSize</span></a></span><span>                           </span><span class="hs-special">(</span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.String</span></span><span>                            </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">IsString</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.TypeLits</span></span><span>                           </span><span class="hs-special">(</span><span class="hs-keyword">type</span><span> </span><span class="annot"><span class="hs-operator">(&lt;=)</span></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">KnownNat</span></span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html"><span class="hs-identifier">System.SED.MCTP.Common.Base_Type.Types</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_bytes"><span class="hs-identifier">Core_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-30"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_integer"><span class="hs-identifier">Core_integer</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-31"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_max_bytes"><span class="hs-identifier">Core_max_bytes</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-32"></span><span>                                                         </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_uinteger"><span class="hs-identifier">Core_uinteger</span></a></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-33"></span><span>                                                         </span><span class="annot"><a href="Data.HasSize.html#size"><span class="hs-identifier">size</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><a href="Data.Refined.html#unsafeCreate"><span class="hs-identifier">unsafeCreate</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-34"></span><span>
 </span><span id="line-35"></span><span>
-</span><span id="line-36"></span><span class="hs-comment">-- $setup</span><span>
-</span><span id="line-37"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XDataKinds</span><span>
-</span><span id="line-38"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XTemplateHaskell</span><span>
-</span><span id="line-39"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XOverloadedStrings</span><span>
-</span><span id="line-40"></span><span class="hs-comment">-- &gt;&gt;&gt; import Data.ByteString(ByteString)</span><span>
-</span><span id="line-41"></span><span class="hs-comment">-- &gt;&gt;&gt; import Data.ByteString.Internal()</span><span>
-</span><span id="line-42"></span><span class="hs-comment">-- &gt;&gt;&gt; import Data.Functor                           ((&lt;$&gt;))</span><span>
-</span><span id="line-43"></span><span class="hs-comment">-- &gt;&gt;&gt; import Language.Haskell.TH.Syntax(Quasi(..))</span><span>
-</span><span id="line-44"></span><span class="hs-comment">-- &gt;&gt;&gt; import Language.Haskell.TH.PprLib(Doc)</span><span>
-</span><span id="line-45"></span><span>
+</span><span id="line-36"></span><span>
+</span><span id="line-37"></span><span class="hs-comment">-- $setup</span><span>
+</span><span id="line-38"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XDataKinds</span><span>
+</span><span id="line-39"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XTemplateHaskell</span><span>
+</span><span id="line-40"></span><span class="hs-comment">-- &gt;&gt;&gt; :set -XOverloadedStrings</span><span>
+</span><span id="line-41"></span><span class="hs-comment">-- &gt;&gt;&gt; import Data.ByteString(ByteString)</span><span>
+</span><span id="line-42"></span><span class="hs-comment">-- &gt;&gt;&gt; import Data.ByteString.Internal()</span><span>
+</span><span id="line-43"></span><span class="hs-comment">-- &gt;&gt;&gt; import Data.Functor                           ((&lt;$&gt;))</span><span>
+</span><span id="line-44"></span><span class="hs-comment">-- &gt;&gt;&gt; import Language.Haskell.TH.Syntax(Quasi(..))</span><span>
+</span><span id="line-45"></span><span class="hs-comment">-- &gt;&gt;&gt; import Language.Haskell.TH.PprLib(Doc)</span><span>
 </span><span id="line-46"></span><span>
-</span><span id="line-47"></span><span class="hs-comment">-- | A type with IsString instance to allow string literals in</span><span>
-</span><span id="line-48"></span><span class="hs-comment">-- argument without quoting.</span><span>
-</span><span id="line-49"></span><span class="hs-keyword">newtype</span><span> </span><span id="LitS"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-50"></span><span>  </span><span id="LitS"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
-</span><span id="line-51"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706411"><span class="annot"><span class="annottext">String -&gt; LitS
+</span><span id="line-47"></span><span>
+</span><span id="line-48"></span><span class="hs-comment">-- | A type with IsString instance to allow string literals in</span><span>
+</span><span id="line-49"></span><span class="hs-comment">-- argument without quoting.</span><span>
+</span><span id="line-50"></span><span class="hs-keyword">newtype</span><span> </span><span id="LitS"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-51"></span><span>  </span><span id="LitS"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-var">LitS</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">String</span></span><span>
+</span><span id="line-52"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706699"><span class="annot"><span class="annottext">String -&gt; LitS
 (String -&gt; LitS) -&gt; IsString LitS
 forall a. (String -&gt; a) -&gt; IsString a
 fromString :: String -&gt; LitS
 $cfromString :: String -&gt; LitS
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var">IsString</span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-52"></span><span>
 </span><span id="line-53"></span><span>
-</span><span id="line-54"></span><span class="hs-comment">-- | A type with Num instance to allow integer literals in</span><span>
-</span><span id="line-55"></span><span class="hs-comment">-- argument without quoting.</span><span>
-</span><span id="line-56"></span><span class="hs-keyword">newtype</span><span> </span><span id="LitI"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-var">LitI</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-57"></span><span>     </span><span id="LitI"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-var">LitI</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
-</span><span id="line-58"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706395"><span id="local-6989586621679706397"><span id="local-6989586621679706399"><span id="local-6989586621679706401"><span id="local-6989586621679706403"><span id="local-6989586621679706405"><span id="local-6989586621679706407"><span class="annot"><span class="annottext">Integer -&gt; LitI
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="hs-comment">-- | A type with Num instance to allow integer literals in</span><span>
+</span><span id="line-56"></span><span class="hs-comment">-- argument without quoting.</span><span>
+</span><span id="line-57"></span><span class="hs-keyword">newtype</span><span> </span><span id="LitI"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-var">LitI</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-58"></span><span>     </span><span id="LitI"><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-var">LitI</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Integer</span></span><span>
+</span><span id="line-59"></span><span>  </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679706683"><span id="local-6989586621679706685"><span id="local-6989586621679706687"><span id="local-6989586621679706689"><span id="local-6989586621679706691"><span id="local-6989586621679706693"><span id="local-6989586621679706695"><span class="annot"><span class="annottext">Integer -&gt; LitI
 LitI -&gt; LitI
 LitI -&gt; LitI -&gt; LitI
 (LitI -&gt; LitI -&gt; LitI)
@@ -95,79 +96,79 @@ $c- :: LitI -&gt; LitI -&gt; LitI
 + :: LitI -&gt; LitI -&gt; LitI
 $c+ :: LitI -&gt; LitI -&gt; LitI
 </span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Num</span></span></span></span></span></span></span></span></span><span class="hs-special">)</span><span>
-</span><span id="line-59"></span><span>
 </span><span id="line-60"></span><span>
 </span><span id="line-61"></span><span>
-</span><span id="line-62"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
-</span><span id="line-63"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
-</span><span id="line-64"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitI 142857</span><span>
-</span><span id="line-65"></span><span class="hs-comment">-- LitI 142857 :: LitI</span><span>
-</span><span id="line-66"></span><span class="hs-comment">-- &gt;&gt;&gt; :t ci 142857</span><span>
-</span><span id="line-67"></span><span class="hs-comment">-- ci 142857 :: Q Exp</span><span>
-</span><span id="line-68"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; ci 142857</span><span>
-</span><span id="line-69"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_integer (Data.Refined.unsafeCreate 142857) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
-</span><span id="line-70"></span><span class="hs-comment">--                                                                                                         (GHC.TypeNats.&lt;=) 3</span><span>
-</span><span id="line-71"></span><span class="hs-comment">--                                                                                                                           n_0) =&gt;</span><span>
-</span><span id="line-72"></span><span class="hs-comment">--                                                                                           System.SED.MCTP.Common.Base_Type.Types.Core_integer n_0</span><span>
-</span><span id="line-73"></span><span class="hs-comment">--</span><span>
-</span><span id="line-74"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; ci 142857</span><span>
-</span><span id="line-75"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; ci 142857 :: Quasi m =&gt; m Doc</span><span>
-</span><span id="line-76"></span><span class="hs-comment">--</span><span>
-</span><span id="line-77"></span><span class="hs-comment">-- where 3 is the &quot;byte size&quot; of the integer 142857 obtained at compile time.</span><span>
-</span><span id="line-78"></span><span class="hs-comment">--</span><span>
-</span><span id="line-79"></span><span>
-</span><span id="line-80"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci"><span class="hs-identifier hs-type">ci</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-81"></span><span id="ci"><span class="annot"><span class="annottext">ci :: LitI -&gt; Q Exp
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
+</span><span id="line-64"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
+</span><span id="line-65"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitI 142857</span><span>
+</span><span id="line-66"></span><span class="hs-comment">-- LitI 142857 :: LitI</span><span>
+</span><span id="line-67"></span><span class="hs-comment">-- &gt;&gt;&gt; :t ci 142857</span><span>
+</span><span id="line-68"></span><span class="hs-comment">-- ci 142857 :: Q Exp</span><span>
+</span><span id="line-69"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; ci 142857</span><span>
+</span><span id="line-70"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_integer (Data.Refined.unsafeCreate 142857) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
+</span><span id="line-71"></span><span class="hs-comment">--                                                                                                         (GHC.TypeNats.&lt;=) 3</span><span>
+</span><span id="line-72"></span><span class="hs-comment">--                                                                                                                           n_0) =&gt;</span><span>
+</span><span id="line-73"></span><span class="hs-comment">--                                                                                           System.SED.MCTP.Common.Base_Type.Types.Core_integer n_0</span><span>
+</span><span id="line-74"></span><span class="hs-comment">--</span><span>
+</span><span id="line-75"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; ci 142857</span><span>
+</span><span id="line-76"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; ci 142857 :: Quasi m =&gt; m Doc</span><span>
+</span><span id="line-77"></span><span class="hs-comment">--</span><span>
+</span><span id="line-78"></span><span class="hs-comment">-- where 3 is the &quot;byte size&quot; of the integer 142857 obtained at compile time.</span><span>
+</span><span id="line-79"></span><span class="hs-comment">--</span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci"><span class="hs-identifier hs-type">ci</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-82"></span><span id="ci"><span class="annot"><span class="annottext">ci :: LitI -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci"><span class="hs-identifier hs-var hs-var">ci</span></a></span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitI -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx"><span class="hs-identifier hs-var">cx</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">Core_integer</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Core_integer</span><span>
-</span><span id="line-82"></span><span>
-</span><span id="line-83"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci%27"><span class="hs-identifier hs-type">ci'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-84"></span><span id="ci%27"><span class="annot"><span class="annottext">ci' :: LitI -&gt; Q Exp
+</span><span id="line-83"></span><span>
+</span><span id="line-84"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci%27"><span class="hs-identifier hs-type">ci'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-85"></span><span id="ci%27"><span class="annot"><span class="annottext">ci' :: LitI -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ci%27"><span class="hs-identifier hs-var hs-var">ci'</span></a></span></span><span>  </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitI -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx%27"><span class="hs-identifier hs-var">cx'</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">Core_integer</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Core_integer</span><span>
-</span><span id="line-85"></span><span>
-</span><span id="line-86"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu"><span class="hs-identifier hs-type">cu</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-87"></span><span id="cu"><span class="annot"><span class="annottext">cu :: LitI -&gt; Q Exp
-</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu"><span class="hs-identifier hs-var hs-var">cu</span></a></span></span><span> </span><span id="local-6989586621679706391"><span class="annot"><span class="annottext">li :: LitI
-</span><a href="#local-6989586621679706391"><span class="hs-identifier hs-var">li</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706390"><span class="annot"><span class="annottext">i :: Integer
-</span><a href="#local-6989586621679706390"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-88"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
+</span><span id="line-86"></span><span>
+</span><span id="line-87"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu"><span class="hs-identifier hs-type">cu</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-88"></span><span id="cu"><span class="annot"><span class="annottext">cu :: LitI -&gt; Q Exp
+</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu"><span class="hs-identifier hs-var hs-var">cu</span></a></span></span><span> </span><span id="local-6989586621679706679"><span class="annot"><span class="annottext">li :: LitI
+</span><a href="#local-6989586621679706679"><span class="hs-identifier hs-var">li</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706678"><span class="annot"><span class="annottext">i :: Integer
+</span><a href="#local-6989586621679706678"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-89"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706390"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitI -&gt; Q Exp
+</span><a href="#local-6989586621679706678"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitI -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx"><span class="hs-identifier hs-var">cx</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">Core_uinteger</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Core_uinteger</span><span> </span><span class="annot"><span class="annottext">LitI
-</span><a href="#local-6989586621679706391"><span class="hs-identifier hs-var">li</span></a></span><span>
-</span><span id="line-89"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679706679"><span class="hs-identifier hs-var">li</span></a></span><span>
+</span><span id="line-90"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Exp
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="hs-string">&quot;negative unsigned integer&quot;</span></span><span>
-</span><span id="line-90"></span><span>
-</span><span id="line-91"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu%27"><span class="hs-identifier hs-type">cu'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-92"></span><span id="cu%27"><span class="annot"><span class="annottext">cu' :: LitI -&gt; Q Exp
-</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu%27"><span class="hs-identifier hs-var hs-var">cu'</span></a></span></span><span> </span><span id="local-6989586621679706387"><span class="annot"><span class="annottext">li :: LitI
-</span><a href="#local-6989586621679706387"><span class="hs-identifier hs-var">li</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706386"><span class="annot"><span class="annottext">i :: Integer
-</span><a href="#local-6989586621679706386"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span>
-</span><span id="line-93"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
+</span><span id="line-91"></span><span>
+</span><span id="line-92"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu%27"><span class="hs-identifier hs-type">cu'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-93"></span><span id="cu%27"><span class="annot"><span class="annottext">cu' :: LitI -&gt; Q Exp
+</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cu%27"><span class="hs-identifier hs-var hs-var">cu'</span></a></span></span><span> </span><span id="local-6989586621679706675"><span class="annot"><span class="annottext">li :: LitI
+</span><a href="#local-6989586621679706675"><span class="hs-identifier hs-var">li</span></a></span></span><span class="hs-glyph">@</span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706674"><span class="annot"><span class="annottext">i :: Integer
+</span><a href="#local-6989586621679706674"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span>
+</span><span id="line-94"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="annottext">Integer -&gt; Integer -&gt; Bool
 forall a. Ord a =&gt; a -&gt; a -&gt; Bool
 </span><span class="hs-operator hs-var">&lt;=</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706386"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitI -&gt; Q Exp
+</span><a href="#local-6989586621679706674"><span class="hs-identifier hs-var">i</span></a></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitI -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx%27"><span class="hs-identifier hs-var">cx'</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">Core_uinteger</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Core_uinteger</span><span> </span><span class="annot"><span class="annottext">LitI
-</span><a href="#local-6989586621679706387"><span class="hs-identifier hs-var">li</span></a></span><span>
-</span><span id="line-94"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
+</span><a href="#local-6989586621679706675"><span class="hs-identifier hs-var">li</span></a></span><span>
+</span><span id="line-95"></span><span>    </span><span class="hs-glyph">|</span><span> </span><span class="annot"><span class="annottext">Bool
 </span><span class="hs-identifier hs-var">otherwise</span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Exp
 forall a. HasCallStack =&gt; String -&gt; a
 </span><span class="hs-identifier hs-var">error</span></span><span> </span><span class="annot"><span class="hs-string">&quot;negative unsigned integer&quot;</span></span><span>
-</span><span id="line-95"></span><span>
-</span><span id="line-96"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx"><span class="hs-identifier hs-type">cx</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-97"></span><span id="cx"><span class="annot"><span class="annottext">cx :: Name -&gt; Name -&gt; LitI -&gt; Q Exp
-</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx"><span class="hs-identifier hs-var hs-var">cx</span></a></span></span><span> </span><span id="local-6989586621679706385"><span class="annot"><span class="annottext">cn :: Name
-</span><a href="#local-6989586621679706385"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706384"><span class="annot"><span class="annottext">tn :: Name
-</span><a href="#local-6989586621679706384"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706383"><span class="annot"><span class="annottext">i :: Integer
-</span><a href="#local-6989586621679706383"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-98"></span><span>    </span><span id="local-6989586621679706382"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706382"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
+</span><span id="line-96"></span><span>
+</span><span id="line-97"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx"><span class="hs-identifier hs-type">cx</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-98"></span><span id="cx"><span class="annot"><span class="annottext">cx :: Name -&gt; Name -&gt; LitI -&gt; Q Exp
+</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx"><span class="hs-identifier hs-var hs-var">cx</span></a></span></span><span> </span><span id="local-6989586621679706673"><span class="annot"><span class="annottext">cn :: Name
+</span><a href="#local-6989586621679706673"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706672"><span class="annot"><span class="annottext">tn :: Name
+</span><a href="#local-6989586621679706672"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706671"><span class="annot"><span class="annottext">i :: Integer
+</span><a href="#local-6989586621679706671"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-99"></span><span>    </span><span id="local-6989586621679706670"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679706670"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
 </span><span class="hs-identifier hs-var">newName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;n&quot;</span></span><span>
-</span><span id="line-99"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
+</span><span id="line-100"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -175,51 +176,51 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">SigE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">ConE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706385"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><a href="#local-6989586621679706673"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">unsafeCreate</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
 </span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Lit
 </span><span class="hs-identifier hs-var">IntegerL</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706383"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-100"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TyVarBndr] -&gt; Cxt -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706671"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-101"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TyVarBndr] -&gt; Cxt -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">ForallT</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; TyVarBndr
 </span><span class="hs-identifier hs-var">PlainTV</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706382"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-101"></span><span>                   </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706670"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-102"></span><span>                   </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">KnownNat</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706382"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
-</span><span id="line-102"></span><span>                    </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706670"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span>
+</span><span id="line-103"></span><span>                    </span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-special">(</span><span class="hs-operator">&lt;=</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TyLit -&gt; Type
 </span><span class="hs-identifier hs-var">LitT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; TyLit
 </span><span class="hs-identifier hs-var">NumTyLit</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706368"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><a href="#local-6989586621679706656"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706382"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">]</span><span>
-</span><span id="line-103"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706670"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">]</span><span>
+</span><span id="line-104"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706384"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><a href="#local-6989586621679706672"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706382"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-104"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679706368"><span class="annot"><span class="annottext">l :: Integer
-</span><a href="#local-6989586621679706368"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
+</span><a href="#local-6989586621679706670"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-105"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679706656"><span class="annot"><span class="annottext">l :: Integer
+</span><a href="#local-6989586621679706656"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
 forall a. Integral a =&gt; a -&gt; Integer
 </span><span class="hs-identifier hs-var">toInteger</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Int
 forall a. HasSize a =&gt; a -&gt; Int
 </span><a href="Data.HasSize.html#size"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706383"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-105"></span><span>
-</span><span id="line-106"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx%27"><span class="hs-identifier hs-type">cx'</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-107"></span><span id="cx%27"><span class="annot"><span class="annottext">cx' :: Name -&gt; Name -&gt; LitI -&gt; Q Exp
-</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx%27"><span class="hs-identifier hs-var hs-var">cx'</span></a></span></span><span> </span><span id="local-6989586621679706367"><span class="annot"><span class="annottext">cn :: Name
-</span><a href="#local-6989586621679706367"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706366"><span class="annot"><span class="annottext">tn :: Name
-</span><a href="#local-6989586621679706366"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706365"><span class="annot"><span class="annottext">i :: Integer
-</span><a href="#local-6989586621679706365"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-108"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
+</span><a href="#local-6989586621679706671"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-106"></span><span>
+</span><span id="line-107"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx%27"><span class="hs-identifier hs-type">cx'</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-108"></span><span id="cx%27"><span class="annot"><span class="annottext">cx' :: Name -&gt; Name -&gt; LitI -&gt; Q Exp
+</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cx%27"><span class="hs-identifier hs-var hs-var">cx'</span></a></span></span><span> </span><span id="local-6989586621679706655"><span class="annot"><span class="annottext">cn :: Name
+</span><a href="#local-6989586621679706655"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706654"><span class="annot"><span class="annottext">tn :: Name
+</span><a href="#local-6989586621679706654"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitI"><span class="hs-identifier hs-type">LitI</span></a></span><span> </span><span id="local-6989586621679706653"><span class="annot"><span class="annottext">i :: Integer
+</span><a href="#local-6989586621679706653"><span class="hs-identifier hs-var">i</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-109"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -227,99 +228,99 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">SigE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">ConE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706367"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><a href="#local-6989586621679706655"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">unsafeCreate</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
 </span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Lit
 </span><span class="hs-identifier hs-var">IntegerL</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706365"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-109"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706653"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-110"></span><span>                </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706366"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TyLit -&gt; Type
+</span><a href="#local-6989586621679706654"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TyLit -&gt; Type
 </span><span class="hs-identifier hs-var">LitT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; TyLit
 </span><span class="hs-identifier hs-var">NumTyLit</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706364"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-110"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679706364"><span class="annot"><span class="annottext">l :: Integer
-</span><a href="#local-6989586621679706364"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
+</span><a href="#local-6989586621679706652"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-111"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679706652"><span class="annot"><span class="annottext">l :: Integer
+</span><a href="#local-6989586621679706652"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
 forall a. Integral a =&gt; a -&gt; Integer
 </span><span class="hs-identifier hs-var">toInteger</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; Int
 forall a. HasSize a =&gt; a -&gt; Int
 </span><a href="Data.HasSize.html#size"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706365"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-111"></span><span>
+</span><a href="#local-6989586621679706653"><span class="hs-identifier hs-var">i</span></a></span><span class="hs-special">)</span><span>
 </span><span id="line-112"></span><span>
-</span><span id="line-113"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
-</span><span id="line-114"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
-</span><span id="line-115"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitS &quot;Foobar&quot;</span><span>
-</span><span id="line-116"></span><span class="hs-comment">-- LitS &quot;Foobar&quot; :: LitS</span><span>
-</span><span id="line-117"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cb' &quot;Foobar&quot;</span><span>
-</span><span id="line-118"></span><span class="hs-comment">-- cb' &quot;Foobar&quot; :: Q Exp</span><span>
-</span><span id="line-119"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot;</span><span>
-</span><span id="line-120"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Types.Core_bytes 6</span><span>
-</span><span id="line-121"></span><span class="hs-comment">--</span><span>
-</span><span id="line-122"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot;</span><span>
-</span><span id="line-123"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
-</span><span id="line-124"></span><span class="hs-comment">--</span><span>
-</span><span id="line-125"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
-</span><span id="line-126"></span><span class="hs-comment">--</span><span>
-</span><span id="line-127"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cb%27"><span class="hs-identifier hs-type">cb'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-128"></span><span id="cb%27"><span class="annot"><span class="annottext">cb' :: LitS -&gt; Q Exp
+</span><span id="line-113"></span><span>
+</span><span id="line-114"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
+</span><span id="line-115"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
+</span><span id="line-116"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitS &quot;Foobar&quot;</span><span>
+</span><span id="line-117"></span><span class="hs-comment">-- LitS &quot;Foobar&quot; :: LitS</span><span>
+</span><span id="line-118"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cb' &quot;Foobar&quot;</span><span>
+</span><span id="line-119"></span><span class="hs-comment">-- cb' &quot;Foobar&quot; :: Q Exp</span><span>
+</span><span id="line-120"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot;</span><span>
+</span><span id="line-121"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Types.Core_bytes 6</span><span>
+</span><span id="line-122"></span><span class="hs-comment">--</span><span>
+</span><span id="line-123"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot;</span><span>
+</span><span id="line-124"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cb' &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
+</span><span id="line-125"></span><span class="hs-comment">--</span><span>
+</span><span id="line-126"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
+</span><span id="line-127"></span><span class="hs-comment">--</span><span>
+</span><span id="line-128"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cb%27"><span class="hs-identifier hs-type">cb'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-129"></span><span id="cb%27"><span class="annot"><span class="annottext">cb' :: LitS -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cb%27"><span class="hs-identifier hs-var hs-var">cb'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitS -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct%27"><span class="hs-identifier hs-var">ct'</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">Core_bytes</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Core_bytes</span><span>
-</span><span id="line-129"></span><span>
-</span><span id="line-130"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
-</span><span id="line-131"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
-</span><span id="line-132"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitS &quot;Foobar&quot;</span><span>
-</span><span id="line-133"></span><span class="hs-comment">-- LitS &quot;Foobar&quot; :: LitS</span><span>
-</span><span id="line-134"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cm &quot;Foobar&quot;</span><span>
-</span><span id="line-135"></span><span class="hs-comment">-- cm &quot;Foobar&quot; :: Q Exp</span><span>
-</span><span id="line-136"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot;</span><span>
-</span><span id="line-137"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
-</span><span id="line-138"></span><span class="hs-comment">--                                                                                                             (GHC.TypeNats.&lt;=) 6</span><span>
-</span><span id="line-139"></span><span class="hs-comment">--                                                                                                                               n_0) =&gt;</span><span>
-</span><span id="line-140"></span><span class="hs-comment">--                                                                                               System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n_0</span><span>
-</span><span id="line-141"></span><span class="hs-comment">--</span><span>
-</span><span id="line-142"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot;</span><span>
-</span><span id="line-143"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
-</span><span id="line-144"></span><span class="hs-comment">--</span><span>
-</span><span id="line-145"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
-</span><span id="line-146"></span><span class="hs-comment">--</span><span>
-</span><span id="line-147"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm"><span class="hs-identifier hs-type">cm</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-148"></span><span id="cm"><span class="annot"><span class="annottext">cm :: LitS -&gt; Q Exp
+</span><span id="line-130"></span><span>
+</span><span id="line-131"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
+</span><span id="line-132"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
+</span><span id="line-133"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitS &quot;Foobar&quot;</span><span>
+</span><span id="line-134"></span><span class="hs-comment">-- LitS &quot;Foobar&quot; :: LitS</span><span>
+</span><span id="line-135"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cm &quot;Foobar&quot;</span><span>
+</span><span id="line-136"></span><span class="hs-comment">-- cm &quot;Foobar&quot; :: Q Exp</span><span>
+</span><span id="line-137"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot;</span><span>
+</span><span id="line-138"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: forall n_0 . (GHC.TypeNats.KnownNat n_0,</span><span>
+</span><span id="line-139"></span><span class="hs-comment">--                                                                                                             (GHC.TypeNats.&lt;=) 6</span><span>
+</span><span id="line-140"></span><span class="hs-comment">--                                                                                                                               n_0) =&gt;</span><span>
+</span><span id="line-141"></span><span class="hs-comment">--                                                                                               System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n_0</span><span>
+</span><span id="line-142"></span><span class="hs-comment">--</span><span>
+</span><span id="line-143"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot;</span><span>
+</span><span id="line-144"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cm &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
+</span><span id="line-145"></span><span class="hs-comment">--</span><span>
+</span><span id="line-146"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
+</span><span id="line-147"></span><span class="hs-comment">--</span><span>
+</span><span id="line-148"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm"><span class="hs-identifier hs-type">cm</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-149"></span><span id="cm"><span class="annot"><span class="annottext">cm :: LitS -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm"><span class="hs-identifier hs-var hs-var">cm</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitS -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct"><span class="hs-identifier hs-var">ct</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">Core_max_bytes</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Core_max_bytes</span><span>
-</span><span id="line-149"></span><span>
-</span><span id="line-150"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
-</span><span id="line-151"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
-</span><span id="line-152"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitS &quot;Foobar&quot;</span><span>
-</span><span id="line-153"></span><span class="hs-comment">-- LitS &quot;Foobar&quot; :: LitS</span><span>
-</span><span id="line-154"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cm' &quot;Foobar&quot;</span><span>
-</span><span id="line-155"></span><span class="hs-comment">-- cm' &quot;Foobar&quot; :: Q Exp</span><span>
-</span><span id="line-156"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot;</span><span>
-</span><span id="line-157"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes 6</span><span>
-</span><span id="line-158"></span><span class="hs-comment">--</span><span>
-</span><span id="line-159"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot;</span><span>
-</span><span id="line-160"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
-</span><span id="line-161"></span><span class="hs-comment">--</span><span>
-</span><span id="line-162"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
-</span><span id="line-163"></span><span class="hs-comment">--</span><span>
-</span><span id="line-164"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm%27"><span class="hs-identifier hs-type">cm'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-165"></span><span id="cm%27"><span class="annot"><span class="annottext">cm' :: LitS -&gt; Q Exp
+</span><span id="line-150"></span><span>
+</span><span id="line-151"></span><span class="hs-comment">-- &gt;&gt;&gt; :t &quot;Foobar&quot;</span><span>
+</span><span id="line-152"></span><span class="hs-comment">-- &quot;Foobar&quot; :: IsString p =&gt; p</span><span>
+</span><span id="line-153"></span><span class="hs-comment">-- &gt;&gt;&gt; :t LitS &quot;Foobar&quot;</span><span>
+</span><span id="line-154"></span><span class="hs-comment">-- LitS &quot;Foobar&quot; :: LitS</span><span>
+</span><span id="line-155"></span><span class="hs-comment">-- &gt;&gt;&gt; :t cm' &quot;Foobar&quot;</span><span>
+</span><span id="line-156"></span><span class="hs-comment">-- cm' &quot;Foobar&quot; :: Q Exp</span><span>
+</span><span id="line-157"></span><span class="hs-comment">-- &gt;&gt;&gt; runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot;</span><span>
+</span><span id="line-158"></span><span class="hs-comment">-- System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes (Data.Refined.unsafeCreate &quot;Foobar&quot;) :: System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes 6</span><span>
+</span><span id="line-159"></span><span class="hs-comment">--</span><span>
+</span><span id="line-160"></span><span class="hs-comment">-- &gt;&gt;&gt; :t runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot;</span><span>
+</span><span id="line-161"></span><span class="hs-comment">-- runQ $ ppr &lt;$&gt; cm' &quot;Foobar&quot; :: Quasi m =&gt; m Doc</span><span>
+</span><span id="line-162"></span><span class="hs-comment">--</span><span>
+</span><span id="line-163"></span><span class="hs-comment">-- where 6 is the string length obtained at compile time.</span><span>
+</span><span id="line-164"></span><span class="hs-comment">--</span><span>
+</span><span id="line-165"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm%27"><span class="hs-identifier hs-type">cm'</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-166"></span><span id="cm%27"><span class="annot"><span class="annottext">cm' :: LitS -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#cm%27"><span class="hs-identifier hs-var hs-var">cm'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Name -&gt; Name -&gt; LitS -&gt; Q Exp
 </span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct%27"><span class="hs-identifier hs-var">ct'</span></a></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">Core_max_bytes</span><span> </span><span class="hs-special">''</span><span class="hs-identifier">Core_max_bytes</span><span>
-</span><span id="line-166"></span><span>
 </span><span id="line-167"></span><span>
-</span><span id="line-168"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct"><span class="hs-identifier hs-type">ct</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-169"></span><span id="ct"><span class="annot"><span class="annottext">ct :: Name -&gt; Name -&gt; LitS -&gt; Q Exp
-</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct"><span class="hs-identifier hs-var hs-var">ct</span></a></span></span><span> </span><span id="local-6989586621679706361"><span class="annot"><span class="annottext">cn :: Name
-</span><a href="#local-6989586621679706361"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706360"><span class="annot"><span class="annottext">tn :: Name
-</span><a href="#local-6989586621679706360"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679706359"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679706359"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
-</span><span id="line-170"></span><span>    </span><span id="local-6989586621679706358"><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706358"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
+</span><span id="line-168"></span><span>
+</span><span id="line-169"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct"><span class="hs-identifier hs-type">ct</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-170"></span><span id="ct"><span class="annot"><span class="annottext">ct :: Name -&gt; Name -&gt; LitS -&gt; Q Exp
+</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct"><span class="hs-identifier hs-var hs-var">ct</span></a></span></span><span> </span><span id="local-6989586621679706649"><span class="annot"><span class="annottext">cn :: Name
+</span><a href="#local-6989586621679706649"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706648"><span class="annot"><span class="annottext">tn :: Name
+</span><a href="#local-6989586621679706648"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679706647"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679706647"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="hs-keyword">do</span><span>
+</span><span id="line-171"></span><span>    </span><span id="local-6989586621679706646"><span class="annot"><span class="annottext">Name
+</span><a href="#local-6989586621679706646"><span class="hs-identifier hs-var">n</span></a></span></span><span> </span><span class="hs-glyph">&lt;-</span><span> </span><span class="annot"><span class="annottext">String -&gt; Q Name
 </span><span class="hs-identifier hs-var">newName</span></span><span> </span><span class="annot"><span class="hs-string">&quot;n&quot;</span></span><span>
-</span><span id="line-171"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
+</span><span id="line-172"></span><span>    </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (m :: * -&gt; *) a. Monad m =&gt; a -&gt; m a
 </span><span class="hs-identifier hs-var">return</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
@@ -327,78 +328,78 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-identifier hs-var">SigE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">ConE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706361"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><a href="#local-6989586621679706649"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">unsafeCreate</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
 </span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Lit
 </span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679706359"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-172"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TyVarBndr] -&gt; Cxt -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706647"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-173"></span><span>                  </span><span class="hs-special">(</span><span class="annot"><span class="annottext">[TyVarBndr] -&gt; Cxt -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">ForallT</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Name -&gt; TyVarBndr
 </span><span class="hs-identifier hs-var">PlainTV</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706358"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span>
-</span><span id="line-173"></span><span>                   </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706646"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">]</span><span>
+</span><span id="line-174"></span><span>                   </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-identifier">KnownNat</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706358"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706646"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">,</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="hs-special">''</span><span class="hs-special">(</span><span class="hs-operator">&lt;=</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TyLit -&gt; Type
 </span><span class="hs-identifier hs-var">LitT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; TyLit
 </span><span class="hs-identifier hs-var">NumTyLit</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706356"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><a href="#local-6989586621679706644"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706358"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
-</span><span id="line-174"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706646"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">]</span><span>
+</span><span id="line-175"></span><span>                   </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706360"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
+</span><a href="#local-6989586621679706648"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">VarT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706358"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-175"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679706356"><span class="annot"><span class="annottext">l :: Integer
-</span><a href="#local-6989586621679706356"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
+</span><a href="#local-6989586621679706646"><span class="hs-identifier hs-var">n</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-176"></span><span>  </span><span class="hs-keyword">where</span><span> </span><span id="local-6989586621679706644"><span class="annot"><span class="annottext">l :: Integer
+</span><a href="#local-6989586621679706644"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
 forall a. Integral a =&gt; a -&gt; Integer
 </span><span class="hs-identifier hs-var">toInteger</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Int
 forall a. HasSize a =&gt; a -&gt; Int
 </span><a href="Data.HasSize.html#size"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679706359"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-176"></span><span>
-</span><span id="line-177"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct%27"><span class="hs-identifier hs-type">ct'</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
-</span><span id="line-178"></span><span id="ct%27"><span class="annot"><span class="annottext">ct' :: Name -&gt; Name -&gt; LitS -&gt; Q Exp
-</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct%27"><span class="hs-identifier hs-var hs-var">ct'</span></a></span></span><span> </span><span id="local-6989586621679706355"><span class="annot"><span class="annottext">cn :: Name
-</span><a href="#local-6989586621679706355"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706354"><span class="annot"><span class="annottext">tn :: Name
-</span><a href="#local-6989586621679706354"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679706353"><span class="annot"><span class="annottext">s :: String
-</span><a href="#local-6989586621679706353"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
-</span><span id="line-179"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
+</span><a href="#local-6989586621679706647"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-177"></span><span>
+</span><span id="line-178"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct%27"><span class="hs-identifier hs-type">ct'</span></a></span><span> </span><span class="hs-glyph">::</span><span>  </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Name</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Q</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Exp</span></span><span>
+</span><span id="line-179"></span><span id="ct%27"><span class="annot"><span class="annottext">ct' :: Name -&gt; Name -&gt; LitS -&gt; Q Exp
+</span><a href="System.SED.MCTP.Common.Base_Type.TH.html#ct%27"><span class="hs-identifier hs-var hs-var">ct'</span></a></span></span><span> </span><span id="local-6989586621679706643"><span class="annot"><span class="annottext">cn :: Name
+</span><a href="#local-6989586621679706643"><span class="hs-identifier hs-var">cn</span></a></span></span><span> </span><span id="local-6989586621679706642"><span class="annot"><span class="annottext">tn :: Name
+</span><a href="#local-6989586621679706642"><span class="hs-identifier hs-var">tn</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.TH.html#LitS"><span class="hs-identifier hs-type">LitS</span></a></span><span> </span><span id="local-6989586621679706641"><span class="annot"><span class="annottext">s :: String
+</span><a href="#local-6989586621679706641"><span class="hs-identifier hs-var">s</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span>
+</span><span id="line-180"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Q Exp
 forall (f :: * -&gt; *) a. Applicative f =&gt; a -&gt; f a
 </span><span class="hs-identifier hs-var">pure</span></span><span> </span><span class="annot"><span class="annottext">(Exp -&gt; Q Exp) -&gt; Exp -&gt; Q Exp
 forall a b. (a -&gt; b) -&gt; a -&gt; b
 </span><span class="hs-operator hs-var">$</span></span><span>
-</span><span id="line-180"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Type -&gt; Exp
+</span><span id="line-181"></span><span>  </span><span class="annot"><span class="annottext">Exp -&gt; Type -&gt; Exp
 </span><span class="hs-identifier hs-var">SigE</span></span><span>
-</span><span id="line-181"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><span id="line-182"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">ConE</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706355"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
+</span><a href="#local-6989586621679706643"><span class="hs-identifier hs-var">cn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Exp -&gt; Exp -&gt; Exp
 </span><span class="hs-identifier hs-var">AppE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Exp
 </span><span class="hs-identifier hs-var">VarE</span></span><span> </span><span class="hs-special">'</span><span class="hs-identifier">unsafeCreate</span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Lit -&gt; Exp
 </span><span class="hs-identifier hs-var">LitE</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Lit
 </span><span class="hs-identifier hs-var">StringL</span></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679706353"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-182"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
+</span><a href="#local-6989586621679706641"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-183"></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Type -&gt; Type -&gt; Type
 </span><span class="hs-identifier hs-var">AppT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Name -&gt; Type
 </span><span class="hs-identifier hs-var">ConT</span></span><span> </span><span class="annot"><span class="annottext">Name
-</span><a href="#local-6989586621679706354"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TyLit -&gt; Type
+</span><a href="#local-6989586621679706642"><span class="hs-identifier hs-var">tn</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">TyLit -&gt; Type
 </span><span class="hs-identifier hs-var">LitT</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">Integer -&gt; TyLit
 </span><span class="hs-identifier hs-var">NumTyLit</span></span><span> </span><span class="annot"><span class="annottext">Integer
-</span><a href="#local-6989586621679706352"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
-</span><span id="line-183"></span><span>  </span><span class="hs-keyword">where</span><span>
-</span><span id="line-184"></span><span>    </span><span id="local-6989586621679706352"><span class="annot"><span class="annottext">l :: Integer
-</span><a href="#local-6989586621679706352"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
+</span><a href="#local-6989586621679706640"><span class="hs-identifier hs-var">l</span></a></span><span class="hs-special">)</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-184"></span><span>  </span><span class="hs-keyword">where</span><span>
+</span><span id="line-185"></span><span>    </span><span id="local-6989586621679706640"><span class="annot"><span class="annottext">l :: Integer
+</span><a href="#local-6989586621679706640"><span class="hs-identifier hs-var hs-var">l</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Int -&gt; Integer
 forall a. Integral a =&gt; a -&gt; Integer
 </span><span class="hs-identifier hs-var">toInteger</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="annottext">String -&gt; Int
 forall a. HasSize a =&gt; a -&gt; Int
 </span><a href="Data.HasSize.html#size"><span class="hs-identifier hs-var">size</span></a></span><span> </span><span class="annot"><span class="annottext">String
-</span><a href="#local-6989586621679706353"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
-</span><span id="line-185"></span></pre></body></html>
+</span><a href="#local-6989586621679706641"><span class="hs-identifier hs-var">s</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-186"></span></pre></body></html>

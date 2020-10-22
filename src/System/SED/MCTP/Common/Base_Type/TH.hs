@@ -22,6 +22,7 @@ module System.SED.MCTP.Common.Base_Type.TH
 
 import           Language.Haskell.TH
 
+import           Data.HasSize                           ()
 import           Data.String                            (IsString (..))
 import           GHC.TypeLits                           (type (<=), KnownNat)
 

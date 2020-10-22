@@ -1,5 +1,6 @@
 {-# LANGUAGE CPP                  #-}
 {-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE MonoLocalBinds       #-}
 {-# LANGUAGE NoImplicitPrelude    #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -21,10 +22,10 @@ module Data.HasSize
   )
 where
 
-import           Data.ListLike                (ListLike (..))
+import           Data.ListLike                (FoldableLL (..), ListLike (..))
 import           Data.Set                     (Set)
 import qualified Data.Set                     as Set (size)
-import           GHC.Base                     (Ord (..), quotInt)
+import           GHC.Base                     (Char, Ord (..), quotInt)
 import           GHC.Int                      (Int, Int16, Int32, Int64, Int8)
 import           GHC.Integer                  (Integer, complementInteger)
 import           GHC.Natural                  (Natural, naturalToInteger)
@@ -77,6 +78,10 @@ instance {-# OVERLAPPING #-} HasSize Natural
   where size 0 = 1
         size n = 1 + integerLog2 (naturalToInteger n) `quotInt` 8
 
-instance {-# OVERLAPPABLE #-} ListLike full e => HasSize full where size = length
+instance {-# OVERLAPPABLE #-} (HasSize e, ListLike full e) => HasSize full
+    where size = foldl' acc 0
+              where acc b a = b + size a
 
 instance HasSize (Set a)           where size = Set.size
+
+instance HasSize Char              where size _ =  1 -- could argue for 4 in the UTF setting

@@ -32,8 +32,9 @@ instance Data.HasSize.HasSize GHC.Word.Word32
 instance Data.HasSize.HasSize GHC.Word.Word64
 instance Data.HasSize.HasSize GHC.Types.Word
 instance Data.HasSize.HasSize GHC.Natural.Natural
-instance Data.ListLike.Base.ListLike full e => Data.HasSize.HasSize full
+instance (Data.HasSize.HasSize e, Data.ListLike.Base.ListLike full e) => Data.HasSize.HasSize full
 instance Data.HasSize.HasSize (Data.Set.Internal.Set a)
+instance Data.HasSize.HasSize GHC.Types.Char
 
 
 -- | Datatype refined by predicate
@@ -338,8 +339,8 @@ class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps n a
 --   <pre>
 --   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
 --   append $(mx "foo") $(fx "bear")
---     :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
---         Data.String.IsString a) =&gt;
+--     :: (Data.ListLike.Base.ListLike a (Item a), HasSize (Item a),
+--         HasSize a, Data.String.IsString a) =&gt;
 --        a ? BoundedSize 4 7
 --   </pre>
 --   
@@ -375,7 +376,8 @@ map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? Bo
 --   &gt;&gt;&gt; :t take $(fx "Hello")
 --   take $(fx "Hello")
 --     :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
---         KnownNat u2, HasSize a, Data.String.IsString a) =&gt;
+--         KnownNat u2, HasSize (Item a), HasSize a,
+--         Data.String.IsString a) =&gt;
 --        a ? BoundedSize l2 u2
 --   </pre>
 --   
@@ -420,10 +422,10 @@ length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> I
 
 -- | Fill a <a>BoundedSize</a> with extra elements up to target length,
 --   padding original elements to the left.
-padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+padLeft :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
-padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+padRight :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 data Refined p a
 plain :: IsRefined p a => Refined p a -> a
 unsafeCreate :: IsRefined p a => a -> Refined p a
@@ -446,9 +448,9 @@ pred :: Predicate p a => a -> Bool
 --   5
 --   </pre>
 fromNat :: (Num b, KnownNat n) => proxy n -> b
-instance (GHC.TypeNats.KnownNat n, Data.ListLike.Base.ListOps a) => Data.BoundedSize.IsMaxSizeListOps n a
-instance (GHC.TypeNats.KnownNat n, Data.ListLike.Base.ListOps a) => Data.BoundedSize.IsFixedSizeListOps n a
-instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.ListLike.Base.ListOps a) => Data.BoundedSize.IsBoundedSizeListOps l u a
+instance (GHC.TypeNats.KnownNat n, Data.ListLike.Base.ListOps a, Data.HasSize.HasSize (GHC.Exts.Item a)) => Data.BoundedSize.IsMaxSizeListOps n a
+instance (GHC.TypeNats.KnownNat n, Data.ListLike.Base.ListOps a, Data.HasSize.HasSize (GHC.Exts.Item a)) => Data.BoundedSize.IsFixedSizeListOps n a
+instance (GHC.TypeNats.KnownNat l, GHC.TypeNats.KnownNat u, Data.ListLike.Base.ListOps a, Data.HasSize.HasSize (GHC.Exts.Item a)) => Data.BoundedSize.IsBoundedSizeListOps l u a
 
 
 -- | Datatypes for <tt>hsed</tt> main. Constructors and lenses.
@@ -573,8 +575,8 @@ toList :: IsList l => l -> [Item l]
 --   <pre>
 --   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
 --   append $(mx "foo") $(fx "bear")
---     :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
---         Data.String.IsString a) =&gt;
+--     :: (Data.ListLike.Base.ListLike a (Item a), HasSize (Item a),
+--         HasSize a, Data.String.IsString a) =&gt;
 --        a ? BoundedSize 4 7
 --   </pre>
 --   
@@ -610,7 +612,8 @@ map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? Bo
 --   &gt;&gt;&gt; :t take $(fx "Hello")
 --   take $(fx "Hello")
 --     :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
---         KnownNat u2, HasSize a, Data.String.IsString a) =&gt;
+--         KnownNat u2, HasSize (Item a), HasSize a,
+--         Data.String.IsString a) =&gt;
 --        a ? BoundedSize l2 u2
 --   </pre>
 --   
@@ -655,10 +658,10 @@ length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> I
 
 -- | Fill a <a>BoundedSize</a> with extra elements up to target length,
 --   padding original elements to the left.
-padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+padLeft :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
-padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+padRight :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 unsafeCreate :: IsRefined p a => a -> Refined p a
 instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
@@ -768,8 +771,8 @@ toList :: IsList l => l -> [Item l]
 --   <pre>
 --   &gt;&gt;&gt; :type append $(mx "foo") $(fx "bear")
 --   append $(mx "foo") $(fx "bear")
---     :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
---         Data.String.IsString a) =&gt;
+--     :: (Data.ListLike.Base.ListLike a (Item a), HasSize (Item a),
+--         HasSize a, Data.String.IsString a) =&gt;
 --        a ? BoundedSize 4 7
 --   </pre>
 --   
@@ -805,7 +808,8 @@ map :: forall l u a. IsBoundedSizeListOps l u a => (Item a -> Item a) -> (a ? Bo
 --   &gt;&gt;&gt; :t take $(fx "Hello")
 --   take $(fx "Hello")
 --     :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
---         KnownNat u2, HasSize a, Data.String.IsString a) =&gt;
+--         KnownNat u2, HasSize (Item a), HasSize a,
+--         Data.String.IsString a) =&gt;
 --        a ? BoundedSize l2 u2
 --   </pre>
 --   
@@ -850,10 +854,10 @@ length :: forall l u a. IsBoundedSizeListOps l u a => (a ? BoundedSize l u) -> I
 
 -- | Fill a <a>BoundedSize</a> with extra elements up to target length,
 --   padding original elements to the left.
-padLeft :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+padLeft :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u2 + u1) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
-padRight :: forall l1 u1 l2 u2 a. (IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
+padRight :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 ci :: LitI -> Q Exp
 ci' :: LitI -> Q Exp
 cu :: LitI -> Q Exp

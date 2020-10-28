@@ -6,3 +6,4 @@ module System.SED.MCTP.Common.SingTest
 where
 
 import           Data.Singletons ()
+import           Prelude         ()

@@ -7096,17 +7096,22 @@ AsyncExceptionWrapper :: e -> AsyncExceptionWrapper
 data SyncExceptionWrapper
 SyncExceptionWrapper :: e -> SyncExceptionWrapper
 
--- | Generalized version of <a>Handler</a>.
+-- | A helper data type for usage with <a>catches</a> and similar
+--   functions.
 data Handler (m :: Type -> Type) a
 Handler :: (e -> m a) -> Handler (m :: Type -> Type) a
 
--- | Unlifted <a>catch</a>, but will not catch asynchronous exceptions.
+-- | Catch a synchronous (but not asynchronous) exception and recover from
+--   it.
+--   
+--   This is parameterized on the exception type. To catch all synchronous
+--   exceptions, use <a>catchAny</a>.
 catch :: (MonadUnliftIO m, Exception e) => m a -> (e -> m a) -> m a
 
 -- | <a>catch</a> specialized to only catching <a>IOException</a>s.
 catchIO :: MonadUnliftIO m => m a -> (IOException -> m a) -> m a
 
--- | <a>catch</a> specialized to catch all synchronous exception.
+-- | <a>catch</a> specialized to catch all synchronous exceptions.
 catchAny :: MonadUnliftIO m => m a -> (SomeException -> m a) -> m a
 
 -- | Same as <a>catch</a>, but fully force evaluation of the result value
@@ -7139,7 +7144,11 @@ handleAnyDeep :: (MonadUnliftIO m, NFData a) => (SomeException -> m a) -> m a ->
 -- | Flipped <a>catchJust</a>.
 handleJust :: (MonadUnliftIO m, Exception e) => (e -> Maybe b) -> (b -> m a) -> m a -> m a
 
--- | Unlifted <a>try</a>, but will not catch asynchronous exceptions.
+-- | Run the given action and catch any synchronous exceptions as a
+--   <a>Left</a> value.
+--   
+--   This is parameterized on the exception type. To catch all synchronous
+--   exceptions, use <a>tryAny</a>.
 try :: (MonadUnliftIO m, Exception e) => m a -> m (Either e a)
 
 -- | <a>try</a> specialized to only catching <a>IOException</a>s.
@@ -7168,8 +7177,12 @@ pureTry :: a -> Either SomeException a
 -- | Evaluate the value to NF and catch any synchronous exceptions.
 pureTryDeep :: NFData a => a -> Either SomeException a
 
--- | Same as upstream <a>catches</a>, but will not catch asynchronous
---   exceptions.
+-- | Similar to <a>catch</a>, but provides multiple different handler
+--   functions.
+--   
+--   For more information on motivation, see <tt>base</tt>'s
+--   <a>catches</a>. Note that, unlike that function, this function will
+--   not catch asynchronous exceptions.
 catches :: MonadUnliftIO m => m a -> [Handler m a] -> m a
 
 -- | Same as <a>catches</a>, but fully force evaluation of the result value
@@ -7182,30 +7195,58 @@ evaluate :: MonadIO m => a -> m a
 -- | Deeply evaluate a value using <a>evaluate</a> and <a>NFData</a>.
 evaluateDeep :: (MonadIO m, NFData a) => a -> m a
 
--- | Async safe version of <a>bracket</a>.
+-- | Allocate and clean up a resource safely.
+--   
+--   For more information on motivation and usage of this function, see
+--   <tt>base</tt>'s <a>bracket</a>. This function has two differences from
+--   the one in <tt>base</tt>. The first, and more obvious, is that it
+--   works on any <tt>MonadUnliftIO</tt> instance, not just <tt>IO</tt>.
+--   
+--   The more subtle difference is that this function will use
+--   uninterruptible masking for its cleanup handler. This is a subtle
+--   distinction, but at a high level, means that resource cleanup has more
+--   guarantees to complete. This comes at the cost that an incorrectly
+--   written cleanup function cannot be interrupted.
+--   
+--   For more information, please see
+--   <a>https://github.com/fpco/safe-exceptions/issues/3</a>.
 bracket :: MonadUnliftIO m => m a -> (a -> m b) -> (a -> m c) -> m c
 
--- | Async safe version of <a>bracket_</a>.
+-- | Same as <a>bracket</a>, but does not pass the acquired resource to
+--   cleanup and use functions.
+--   
+--   For more information, see <tt>base</tt>'s <a>bracket_</a>.
 bracket_ :: MonadUnliftIO m => m a -> m b -> m c -> m c
 
--- | Async safe version of <a>bracketOnError</a>.
+-- | Same as <a>bracket</a>, but only perform the cleanup if an exception
+--   is thrown.
 bracketOnError :: MonadUnliftIO m => m a -> (a -> m b) -> (a -> m c) -> m c
 
 -- | A variant of <a>bracketOnError</a> where the return value from the
 --   first computation is not required.
 bracketOnError_ :: MonadUnliftIO m => m a -> m b -> m c -> m c
 
--- | Async safe version of <a>finally</a>.
+-- | Perform <tt>thing</tt>, guaranteeing that <tt>after</tt> will run
+--   after, even if an exception occurs.
+--   
+--   Same interruptible vs uninterrupible points apply as with
+--   <a>bracket</a>. See <tt>base</tt>'s <a>finally</a> for more
+--   information.
 finally :: MonadUnliftIO m => m a -> m b -> m a
 
 -- | Like <a>onException</a>, but provides the handler the thrown
 --   exception.
 withException :: (MonadUnliftIO m, Exception e) => m a -> (e -> m b) -> m a
 
--- | Async safe version of <a>onException</a>.
+-- | Like <a>finally</a>, but only call <tt>after</tt> if an exception
+--   occurs.
 onException :: MonadUnliftIO m => m a -> m b -> m a
 
 -- | Synchronously throw the given exception.
+--   
+--   Note that, if you provide an exception value which is of an
+--   asynchronous type, it will be wrapped up in
+--   <a>SyncExceptionWrapper</a>. See <a>toSyncException</a>.
 throwIO :: (MonadIO m, Exception e) => e -> m a
 
 -- | Convert an exception into a synchronous exception.
@@ -7381,8 +7422,8 @@ EmptyWithNoAlternative :: ConcException
 
 -- | A more efficient alternative to <a>Concurrently</a>, which reduces the
 --   number of threads that need to be forked. For more information, see
---   <tt>FIXME link to blog post</tt>. This is provided as a separate type
---   to <tt>Concurrently</tt> as it has a slightly different API.
+--   <a>this blog post</a>. This is provided as a separate type to
+--   <tt>Concurrently</tt> as it has a slightly different API.
 --   
 --   Use the <a>conc</a> function to construct values of type <a>Conc</a>,
 --   and <a>runConc</a> to execute the composed actions. You can use the

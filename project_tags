@@ -123,6 +123,15 @@ ntUID ntUID143,144
 btUID btUID146,147
 otUID otUID149,150
 
+./src/System/SED/MCTP/Common/GDPTest.hs,225
+module System.SED.MCTP.Common.GDPTestSystem.SED.MCTP.Common.GDPTest6,7
+newtype SortedBy SortedBy18,19
+type role role19,20
+sortBy sortBy23,24
+newtype MemberOf MemberOf30,31
+type role role31,32
+isMemb isMemb35,36
+
 ./src/System/SED/MCTP/Common/Simple_Type.hs,2013
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type17,18
 type family family88,89

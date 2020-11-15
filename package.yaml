@@ -55,7 +55,7 @@ dependencies:
 - ListLike
 - QuickCheck
 - quickcheck-instances
-
+- gdp
 
 ghc-options:
 - -Wall

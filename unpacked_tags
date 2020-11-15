@@ -45180,6 +45180,280 @@ mkNoRepType mkNoRepType547,548
 /Users/scott/unpackedHackagePackages/uuid-types-1.0.3/Data/UUID/Types.hs,46
 module Data.UUID.Types(Data.UUID.Types17,18
 
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/Setup.hs,15
+main main1,2
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/app/Main.hs,356
+module Main Main4,5
+unsafeMergeBy unsafeMergeBy15,16
+newtype SortedBy SortedBy27,28
+type role role28,29
+sortBy sortBy32,33
+mergeBy mergeBy41,42
+newtype Opposite Opposite47,48
+type role role48,49
+opposite opposite51,52
+newtype Reverse Reverse58,59
+type role role59,60
+rev rev62,63
+rev_ord_lemma rev_ord_lemma66,67
+main main70,71
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/GDP.hs,19
+module GDPGDP8,9
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Theory/Equality.hs,762
+module Theory.EqualityTheory.Equality18,19
+newtype Equals Equals52,53
+type role role53,54
+type x x56,57
+infix infix57,58
+instance Argument Argument (Equals x y) 059,60
+  type GetArg GetArg60,61
+  type SetArg SetArg61,62
+instance Argument Argument (Equals x y) 163,64
+  type GetArg GetArg64,65
+  type SetArg SetArg65,66
+instance Argument Argument (Equals x y) LHS67,68
+  type GetArg GetArg68,69
+  type SetArg SetArg69,70
+instance Argument Argument (Equals x y) RHS71,72
+  type GetArg GetArg72,73
+  type SetArg SetArg73,74
+(=(==.)76,77
+_ _77,78
+apply apply80,81
+substitute substitute86,87
+substituteL substituteL92,93
+substituteR substituteR98,99
+same same108,109
+reflectEq reflectEq132,133
+propEq propEq137,138
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Theory/Named.hs,297
+module Theory.NamedTheory.Named17,18
+newtype Named Named39,40
+type role role40,41
+type a a43,44
+instance The The (Named name a) a45,46
+name name49,50
+name2 name253,54
+name3 name357,58
+data Defn Defn87,88
+data Defn = DefnDefn87,88
+type Defining Defining93,94
+defn defn97,98
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Theory/Lists.hs,952
+module Theory.ListsTheory.Lists9,10
+data IsList IsList46,47
+data IsCons IsCons47,48
+data IsNil IsNil48,49
+newtype Head Head51,52
+type role role52,53
+newtype Tail Tail53,54
+type role role54,55
+data ListCase ListCase58,59
+  = IsCons_ IsCons_59,60
+  | IsNil_ IsNil_60,61
+classify classify64,65
+pattern IsCons IsCons69,70
+pattern IsNil IsNil72,73
+data ListCase' ListCase'77,78
+    Cons_ Cons_78,79
+    Nil_ Nil_79,80
+classify' classify'83,84
+pattern Cons Cons88,89
+pattern Nil Nil91,92
+head head95,96
+tail tail99,100
+cons cons103,104
+nil nil107,108
+newtype Cons' Cons'111,112
+type role role112,113
+newtype Nil' Nil'115,116
+headOfCons headOfCons118,119
+tailOfCons tailOfCons122,123
+consIsCons consIsCons126,127
+nilIsNil nilIsNil130,131
+listShapes listShapes134,135
+listInduction listInduction140,141
+consIsList consIsList143,144
+nilIsList nilIsList146,147
+listIsList listIsList149,150
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Logic/Proof.hs,136
+module Logic.ProofLogic.Proof11,12
+data Proof Proof58,59
+data Proof (pf :: k) = QEDQED58,59
+sorry sorry67,68
+axiom axiom85,86
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Logic/NegClasses.hs,185
+module Logic.NegClassesLogic.NegClasses11,12
+class Irreflexive Irreflexive39,40
+  irrefl irrefl40,41
+class Antisymmetric Antisymmetric60,61
+  antisymmetric antisymmetric61,62
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Logic/Propositional.hs,2128
+module Logic.PropositionalLogic.Propositional14,15
+data TRUETRUE106,107
+data FALSEFALSE109,110
+data And And112,113
+data Or Or115,116
+data Not Not118,119
+data Implies Implies121,122
+data Exists Exists124,125
+data ForAll ForAll127,128
+type p p130,131
+type p p139,140
+type p p148,149
+infixl 2 `Or`Or150,151
+infixl 3 `And`And155,156
+infixr 1 `Implies`Implies160,161
+firstAnd firstAnd168,169
+secondAnd secondAnd172,173
+bimapAnd bimapAnd176,177
+firstOr firstOr184,185
+secondOr secondOr188,189
+bimapOr bimapOr192,193
+lmapImpl lmapImpl196,197
+rmapImpl rmapImpl200,201
+dimapImpl dimapImpl204,205
+mapNot mapNot208,209
+true true216,217
+noncontra noncontra220,221
+introAnd introAnd228,229
+introAnd' introAnd'232,233
+introOrL introOrL236,237
+introOrR introOrR240,241
+introImpl introImpl245,246
+introNot introNot250,251
+contrapositive contrapositive256,257
+contradicts contradicts260,261
+contradicts' contradicts'266,267
+introUniv introUniv271,272
+introEx introEx276,277
+elimAndL elimAndL284,285
+elimAndR elimAndR288,289
+elimAnd elimAnd293,294
+elimOr elimOr298,299
+elimOrL elimOrL302,303
+elimOrR elimOrR306,307
+elimImpl elimImpl311,312
+modusPonens modusPonens317,318
+modusTollens modusTollens346,347
+absurd absurd350,351
+elimUniv elimUniv355,356
+elimEx elimEx361,362
+class ClassicalClassical373,374
+classically classically382,383
+lem lem387,388
+contradiction contradiction416,417
+elimNot elimNot420,421
+elimNotNot elimNotNot433,434
+instance Symmetric Symmetric And440,441
+instance Symmetric Symmetric Or441,442
+instance Associative Associative And443,444
+instance Associative Associative Or444,445
+instance DistributiveR DistributiveR And And446,447
+instance DistributiveR DistributiveR And Or447,448
+instance DistributiveR DistributiveR Or And448,449
+instance DistributiveR DistributiveR Or Or449,450
+instance DistributiveL DistributiveL And And451,452
+instance DistributiveL DistributiveL And Or452,453
+instance DistributiveL DistributiveL Or And453,454
+instance DistributiveL DistributiveL Or Or454,455
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Logic/Classes.hs,920
+module Logic.ClassesLogic.Classes12,13
+class Reflexive Reflexive50,51
+  refl refl51,52
+class Symmetric Symmetric69,70
+  symmetric symmetric70,71
+class Transitive Transitive88,89
+  transitive transitive89,90
+transitive' transitive'93,94
+class Idempotent Idempotent109,110
+  idempotent idempotent110,111
+class Commutative Commutative126,127
+  commutative commutative127,128
+class Associative Associative144,145
+  associative associative145,146
+class DistributiveL DistributiveL164,165
+  distributiveL distributiveL165,166
+class DistributiveR DistributiveR184,185
+  distributiveR distributiveR185,186
+class Injective Injective201,202
+  elim_inj elim_inj202,203
+instance Reflexive Reflexive Equals210,211
+  refl refl211,212
+instance Symmetric Symmetric Equals213,214
+  symmetric symmetric214,215
+instance Transitive Transitive Equals216,217
+  transitive transitive217,218
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Logic/Implicit.hs,168
+module Logic.ImplicitLogic.Implicit5,6
+class Fact Fact22,23
+known known25,26
+newtype WithFact WithFact28,29
+type role role29,30
+note note32,33
+on on52,53
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Data/The.hs,92
+module Data.TheData.The14,15
+class The The34,35
+  the the35,36
+pattern The The52,53
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Data/Refined.hs,626
+module Data.RefinedData.Refined17,18
+newtype a a62,63
+newtype a ::: p = SuchThat SuchThat62,63
+type role role64,65
+instance The The a' a => The (a' :: : p) a66,67
+  the the67,68
+(.(...)71,72
+x x72,73
+($($:)76,77
+f f77,78
+(.(...>)81,82
+x x82,83
+exorcise exorcise85,86
+conjure conjure89,90
+newtype Satisfies Satisfies105,106
+type role role106,107
+instance The The (Satisfies p a) a107,108
+type a a110,111
+assert assert114,115
+unname unname120,121
+rename rename126,127
+(.(...?)150,151
+traverseP traverseP157,158
+traverseP_ traverseP_164,165
+forP forP171,172
+forP_ forP_178,179
+
+/Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/Data/Arguments.hs,444
+module Data.ArgumentsData.Arguments14,15
+class Argument Argument24,25
+  type GetArg GetArg25,26
+  type SetArg SetArg26,27
+data LHSLHS29,30
+data RHSRHS32,33
+instance Argument Argument (Either a b) LHS34,35
+  type GetArg GetArg35,36
+  type SetArg SetArg36,37
+instance Argument Argument (Either a b) RHS38,39
+  type GetArg GetArg39,40
+  type SetArg SetArg40,41
+data Arg Arg43,44
+data Arg n = ArgArg43,44
+arg arg46,47
+
 /Users/scott/unpackedHackagePackages/old-locale-1.0.0.7/Setup.hs,37
 module Main Main0,1
 main main4,5

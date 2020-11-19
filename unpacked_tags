@@ -45184,10 +45184,10 @@ module Data.UUID.Types(Data.UUID.Types17,18
 main main1,2
 
 /Users/scott/unpackedHackagePackages/gdp-0.0.3.0/app/Main.hs,356
-module Main Main4,5
-unsafeMergeBy unsafeMergeBy15,16
-newtype SortedBy SortedBy27,28
-type role role28,29
+module Main Main3,4
+unsafeMergeBy unsafeMergeBy14,15
+newtype SortedBy SortedBy26,27
+type role role27,28
 sortBy sortBy32,33
 mergeBy mergeBy41,42
 newtype Opposite Opposite47,48

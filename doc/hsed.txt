@@ -475,10 +475,18 @@ makeApp :: LogFunc -> ProcessContext -> Options -> App
 instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
 
+module PatternTest
+newtype New a
+New :: a -> New a
+class View d a | d -> a
+view :: View d a => d -> a
+view :: (View d a, Coercible d a) => d -> a
+f :: New x -> x
+pattern Pat :: View d a => a -> d
+g :: New x -> x
+instance PatternTest.View (PatternTest.New a) a
+
 module System.SED.MCTP.Common.GDPTest
-newtype SortedBy comp name
-SortedBy :: Defn -> SortedBy comp name
-sortBy :: ((a -> a -> Ordering) ~~ comp) -> [a] -> [a] ? SortedBy comp
 newtype MemberOf set name
 MemberOf :: Defn -> MemberOf set name
 isMemb :: Ord a => (Set a ~~ set) -> a -> a ? MemberOf set

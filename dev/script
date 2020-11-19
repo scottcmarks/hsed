@@ -32,7 +32,7 @@ putStrLn "loading script ..."
 
 
 :load System.SED.MCTP.Common.GDPTest
-import GDP
+import GDP hiding (The(..))
 --------------------------------------------------------------------------------
 --------------------------------------------------------------------------------
 putStrLn "\n\n\n"

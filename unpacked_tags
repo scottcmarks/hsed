@@ -45190,14 +45190,14 @@ newtype SortedBy SortedBy26,27
 type role role27,28
 sortBy sortBy32,33
 mergeBy mergeBy41,42
-newtype Opposite Opposite47,48
-type role role48,49
-opposite opposite51,52
-newtype Reverse Reverse58,59
-type role role59,60
-rev rev62,63
-rev_ord_lemma rev_ord_lemma66,67
-main main70,71
+newtype Opposite Opposite48,49
+type role role49,50
+opposite opposite52,53
+newtype Reverse Reverse60,61
+type role role61,62
+rev rev64,65
+rev_ord_lemma rev_ord_lemma69,70
+main main73,74
 
 /Users/scott/unpackedHackagePackages/gdp-0.0.3.0/src/GDP.hs,19
 module GDPGDP8,9

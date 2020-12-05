@@ -475,21 +475,10 @@ makeApp :: LogFunc -> ProcessContext -> Options -> App
 instance RIO.Prelude.Logger.HasLogFunc Hsed.App.App
 instance GHC.Show.Show Hsed.App.Options
 
-module PatternTest
-newtype New a
-New :: a -> New a
-class View d a | d -> a
-view :: View d a => d -> a
-view :: (View d a, Coercible d a) => d -> a
-f :: New x -> x
-pattern Pat :: View d a => a -> d
-g :: New x -> x
-instance PatternTest.View (PatternTest.New a) a
-
 module System.SED.MCTP.Common.GDPTest
 newtype MemberOf set name
 MemberOf :: Defn -> MemberOf set name
-isMemb :: Ord a => (Set a ~~ set) -> a -> a ? MemberOf set
+(⋺) :: (Ord a, Show a) => (Set a ~~ set) -> a -> a ? MemberOf set
 
 module System.SED.MCTP.Common.SingTest
 
@@ -934,6 +923,9 @@ type Core_AC_element = Data_type "AC_element"
 -- | Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID
 showCore_bytes :: KnownNat n => String -> Core_bytes n -> String
+readPCore_bytes :: forall n. KnownNat n => String -> ReadP (Core_bytes n)
+word8P :: ReadP Word8
+core_bytesP :: forall n. KnownNat n => ReadP (Core_bytes n)
 newtype HalfUID
 HalfUID :: Core_halfuid -> HalfUID
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
@@ -962,7 +954,9 @@ instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.UID
+instance GHC.Read.Read System.SED.MCTP.Common.UID.UID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.HalfUID
+instance GHC.Read.Read System.SED.MCTP.Common.UID.HalfUID
 
 
 -- | Table datatype

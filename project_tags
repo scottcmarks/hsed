@@ -123,11 +123,13 @@ ntUID ntUID143,144
 btUID btUID146,147
 otUID otUID149,150
 
-./src/System/SED/MCTP/Common/GDPTest.hs,149
+./src/System/SED/MCTP/Common/GDPTest.hs,169
 module System.SED.MCTP.Common.GDPTestSystem.SED.MCTP.Common.GDPTest6,7
 newtype MemberOf MemberOf18,19
 type role role19,20
-isMemb isMemb23,24
+(â(âº)31,32
+The The32,33
+_ _37,38
 
 ./src/System/SED/MCTP/Common/Simple_Type.hs,2013
 module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type17,18
@@ -305,23 +307,30 @@ data EnumRow = EnumRow EnumRow413,414
 enumTableTitle enumTableTitle416,417
 enumTableRow enumTableRow424,425
 
-./src/System/SED/MCTP/Common/UID.hs,432
-module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID25,26
-showCore_bytes showCore_bytes52,53
-newtype HalfUID HalfUID57,58
-instance Show Show HalfUID59,60
-    show show60,61
-halfUID halfUID62,63
-newtype UID UID71,72
-instance Show Show UID73,74
-    show show74,75
-uid uid76,77
-uidUpper uidUpper85,86
-uidLower uidLower88,89
-uidPlus uidPlus91,92
-(+(+:+)95,96
-hNull hNull99,100
-uNull uNull102,103
+./src/System/SED/MCTP/Common/UID.hs,678
+module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID34,35
+showCore_bytes showCore_bytes74,75
+readPCore_bytes readPCore_bytes78,79
+word8P word8P82,83
+core_bytesP core_bytesP94,95
+newtype HalfUID HalfUID100,101
+instance Show Show HalfUID102,103
+    show show103,104
+instance Read Read HalfUID104,105
+    readPrec readPrec105,106
+halfUID halfUID107,108
+newtype UID UID116,117
+instance Show Show UID118,119
+    show show119,120
+instance Read Read UID120,121
+    readPrec readPrec121,122
+uid uid123,124
+uidUpper uidUpper132,133
+uidLower uidLower135,136
+uidPlus uidPlus138,139
+(+(+:+)142,143
+hNull hNull146,147
+uNull uNull149,150
 
 ./src/System/SED/MCTP/Common/Call.hs,1361
 module System.SED.MCTP.Common.Call System.SED.MCTP.Common.Call14,15
@@ -932,13 +941,3 @@ instance (L(ListLike full item, IsRefinedByPredicate p full) => ListLike (Refin
     genericLength genericLength161,162
 instance (A(Arbitrary a, IsRefinedByPredicate p a) => Arbitrary (Refined p a)164,165
     arbitrary arbitrary165,166
-
-./src/PatternTest.hs,182
-module PatternTestPatternTest9,10
-newtype New New15,16
-class View View17,18
-  view view18,19
-instance View View (New a) a22,23
-f f24,25
-pattern Pat Pat28,29
-g g31,32

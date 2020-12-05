@@ -1,18 +1,18 @@
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE PatternSynonyms   #-}
 {-# LANGUAGE RoleAnnotations   #-}
 {-# LANGUAGE TypeOperators     #-}
--- {-# OPTIONS_GHC -ddump-splices #-}
 
 
 module System.SED.MCTP.Common.GDPTest
 where
 
-import           GDP
+import           GDP      (type (?), Defn, pattern The, type (~~), assert)
 
-import           Data.Ord
-import qualified Data.Set as S
-import           GHC.Base (error)
-
+import           Data.Ord (Ord (..))
+import           Data.Set (Set, member)
+import           GHC.Base (error, undefined, ($), (.))
+import           GHC.Show (Show (..), showString, shows)
 
 -- Introduce a predicate `MemberOf set`, indicating that the value
 -- has been validated by membership in the collection named `set`.
@@ -21,19 +21,19 @@ type role MemberOf nominal nominal
 
 -- Validate a value using the collection named `set`. The
 -- resulting value will satisfy `MemberOf set`.
-isMemb :: Ord a =>
-          (S.Set a ~~ set)
-       -> a
-       -> (a ?MemberOf set)
-isMemb (The set) x = assert (if S.member x set then x else error "x is not a member of set") -- TODO shows
-
+--
+-- Unicode info for the set-with-name-contains operator:
 -- @
--- src/System/SED/MCTP/Common/GDPTest.hs:28:1-92: warning: [-Wincomplete-patterns] …
---     Pattern match(es) are non-exhaustive
---     In an equation for ‘isMemb’: Patterns not matched: _ _
+--   ⋺
+--   CONTAINS WITH LONG HORIZONTAL STROKE
+--   Unicode: U+22FA, UTF-8: E2 8B BA
 -- @
 --
--- This warning does not appear if the view pattern @the -> set@ is used instead.
--- Odd, since that is what @The set@ expands to.
-
-isMemb _ _ = assert (error "Shouldn't happen -- x is x")  -- TODO shows
+(⋺) :: (Ord a, Show a) => (Set a ~~ set) -> a -> (a ?MemberOf set)
+The set ⋺ x = if member x set
+              then assert x
+              else error ( shows x .
+                           showString " is not a member of " $
+                           show set )
+_       ⋺ _ = undefined -- error ( showString "Shouldn't happen -- x is " $
+                        --         show x )  -- silence -Wincomplete-patterns …

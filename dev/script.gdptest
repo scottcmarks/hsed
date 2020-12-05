@@ -1,0 +1,100 @@
+:set -package hsed
+-- :set prompt-cont ""
+
+:def! $ (pure . (":! bash -l -c " ++) . show)
+:def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
+:def! D (pure . const (":set -ddump-splices") )
+:def! H (pure . (":! bash -l -c \"./h\"" ++) . show)
+:def! P (pure . (":! bash -l -c \"./hp\"" ++) . show)
+
+
+-- :set -XOverloadedStrings
+-- :set -XTemplateHaskell
+-- :set -XDataKinds
+-- :set -XQuasiQuotes
+-- :set -XRankNTypes
+-- :set -XGADTs
+-- :set -XStandaloneDeriving
+-- :set -XKindSignatures
+-- :set -XMultiParamTypeClasses
+-- :set -XFlexibleContexts
+-- :set -XDerivingVia
+-- :set -XUndecidableInstances
+-- :set -XFlexibleInstances
+-- :set -XTypeOperators
+-- :set -XTypeApplications
+-- :set -XScopedTypeVariables
+:set -XRoleAnnotations
+
+import System.IO
+putStrLn "loading script ..."
+--------------------------------------------------------------------------------
+
+
+:load System.SED.MCTP.Common.GDPTest
+import           GDP
+
+import           Data.Ord
+import qualified Data.Set as S
+import           GHC.Base (error, ($), (.), undefined)
+import           GHC.Num  (Num (..))
+import           GHC.Show (Show (..), showString, shows)
+
+import           GHC.Base (Int)
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+putStrLn "\n\n\n"
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+:set -Wno-type-defaults
+s = S.fromList[1,2,3] :: S.Set Int
+:type s
+putStrLn $ showString "s = " $ show s
+putStrLn $ showString "S.member 2 s = " $ show (S.member 2 s)
+putStrLn $ showString "S.member 4 s = " $ show (S.member 4 s)
+putStrLn $ showString "name s (\\set -> the (set ⋺ 2)) = " $ show (name s (\set -> the (set ⋺ 2)))
+putStrLn $ showString "name s (\\set -> the (set ⋺ 4)) = " $ show (name s (\set -> the (set ⋺ 4)))
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+putStrLn ".. script loaded."
+-- :show
+-- :show modules
+-- :show packages
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- TODOs
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

@@ -1,0 +1,709 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"><html xmlns="http://www.w3.org/1999/xhtml"><head><link rel="stylesheet" type="text/css" href="style.css" /><script type="text/javascript" src="highlight.js"></script></head><body><pre><span id="%24maxtag_FZ8AGQZbXXc54wQkXRfxQO"><span id="%24tag2con_FZ8AGQZbXXc54wQkXRfxQO"><span id="%24con2tag_FZ8AGQZbXXc54wQkXRfxQO"></span></span></span><span class="hs-pragma">{-# LANGUAGE DataKinds             #-}</span><span>
+</span><span id="line-2"></span><span class="hs-pragma">{-# LANGUAGE DerivingVia           #-}</span><span>
+</span><span id="line-3"></span><span class="hs-pragma">{-# LANGUAGE FlexibleInstances     #-}</span><span>
+</span><span id="line-4"></span><span class="hs-pragma">{-# LANGUAGE KindSignatures        #-}</span><span>
+</span><span id="line-5"></span><span class="hs-pragma">{-# LANGUAGE MultiParamTypeClasses #-}</span><span>
+</span><span id="line-6"></span><span class="hs-pragma">{-# LANGUAGE NoImplicitPrelude     #-}</span><span>
+</span><span id="line-7"></span><span class="hs-pragma">{-# LANGUAGE PolyKinds             #-}</span><span>
+</span><span id="line-8"></span><span class="hs-pragma">{-# LANGUAGE RankNTypes            #-}</span><span>
+</span><span id="line-9"></span><span class="hs-pragma">{-# LANGUAGE StandaloneDeriving    #-}</span><span>
+</span><span id="line-10"></span><span class="hs-pragma">{-# LANGUAGE TypeOperators         #-}</span><span>
+</span><span id="line-11"></span><span class="hs-pragma">{-# LANGUAGE TypeSynonymInstances  #-}</span><span>
+</span><span id="line-12"></span><span>
+</span><span id="line-13"></span><span class="hs-comment">{-|
+Module      : TypeTests
+Copyright   : (c) Magnolia Heights R&amp;D, 2020
+License     : All rights reserved
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+-}</span><span>
+</span><span id="line-20"></span><span>
+</span><span id="line-21"></span><span class="hs-keyword">module</span><span> </span><span class="hs-identifier">TypeTests</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-22"></span><span>
+</span><span id="line-23"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">Data.Coerce</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">coerce</span></span><span class="hs-special">)</span><span>
+</span><span id="line-24"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">($)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-25"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Base</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-operator">(.)</span></span><span class="hs-special">)</span><span>
+</span><span id="line-26"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Classes</span></span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Eq</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">Ord</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-27"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Enum</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Enum</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-28"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Read</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Read</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">)</span><span>
+</span><span id="line-29"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Show</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Show</span></span><span> </span><span class="hs-special">(</span><span class="hs-glyph">..</span><span class="hs-special">)</span><span class="hs-special">,</span><span> </span><span class="annot"><span class="hs-identifier">showString</span></span><span class="hs-special">)</span><span>
+</span><span id="line-30"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Show</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">shows</span></span><span class="hs-special">)</span><span>
+</span><span id="line-31"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Types</span></span><span>   </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Type</span></span><span class="hs-special">)</span><span>
+</span><span id="line-32"></span><span class="hs-keyword">import</span><span>           </span><span class="annot"><span class="hs-identifier">GHC.Word</span></span><span>    </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier">Word8</span></span><span class="hs-special">)</span><span>
+</span><span id="line-33"></span><span>
+</span><span id="line-34"></span><span>
+</span><span id="line-35"></span><span class="hs-keyword">newtype</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720931"><span class="annot"><a href="#local-6989586621679720931"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="%3F"><span class="annot"><a href="TypeTests.html#%3F"><span class="hs-operator hs-var">?</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720930"><span class="annot"><a href="#local-6989586621679720930"><span class="hs-identifier hs-type">p</span></a></span></span><span class="hs-glyph">::</span><span id="local-6989586621679720929"><span class="annot"><a href="#local-6989586621679720929"><span class="hs-identifier hs-type hs-type">k</span></a></span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Refined"><span class="annot"><a href="TypeTests.html#Refined"><span class="hs-identifier hs-var">Refined</span></a></span></span><span> </span><span class="annot"><a href="#local-6989586621679720931"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-36"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720924"><span id="local-6989586621679720926"><span class="annot"><span class="annottext">(a ? p) -&gt; (a ? p) -&gt; Bool
+((a ? p) -&gt; (a ? p) -&gt; Bool)
+-&gt; ((a ? p) -&gt; (a ? p) -&gt; Bool) -&gt; Eq (a ? p)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall a k (p :: k). Eq a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+/= :: (a ? p) -&gt; (a ? p) -&gt; Bool
+$c/= :: forall a k (p :: k). Eq a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+== :: (a ? p) -&gt; (a ? p) -&gt; Bool
+$c== :: forall a k (p :: k). Eq a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720908"><span id="local-6989586621679720910"><span id="local-6989586621679720912"><span id="local-6989586621679720914"><span id="local-6989586621679720916"><span id="local-6989586621679720918"><span id="local-6989586621679720920"><span class="annot"><span class="annottext">Eq (a ? p)
+Eq (a ? p) =&gt;
+((a ? p) -&gt; (a ? p) -&gt; Ordering)
+-&gt; ((a ? p) -&gt; (a ? p) -&gt; Bool)
+-&gt; ((a ? p) -&gt; (a ? p) -&gt; Bool)
+-&gt; ((a ? p) -&gt; (a ? p) -&gt; Bool)
+-&gt; ((a ? p) -&gt; (a ? p) -&gt; Bool)
+-&gt; ((a ? p) -&gt; (a ? p) -&gt; a ? p)
+-&gt; ((a ? p) -&gt; (a ? p) -&gt; a ? p)
+-&gt; Ord (a ? p)
+(a ? p) -&gt; (a ? p) -&gt; Bool
+(a ? p) -&gt; (a ? p) -&gt; Ordering
+(a ? p) -&gt; (a ? p) -&gt; a ? p
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall a k (p :: k). Ord a =&gt; Eq (a ? p)
+forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; Ordering
+forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; a ? p
+min :: (a ? p) -&gt; (a ? p) -&gt; a ? p
+$cmin :: forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; a ? p
+max :: (a ? p) -&gt; (a ? p) -&gt; a ? p
+$cmax :: forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; a ? p
+&gt;= :: (a ? p) -&gt; (a ? p) -&gt; Bool
+$c&gt;= :: forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+&gt; :: (a ? p) -&gt; (a ? p) -&gt; Bool
+$c&gt; :: forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+&lt;= :: (a ? p) -&gt; (a ? p) -&gt; Bool
+$c&lt;= :: forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+&lt; :: (a ? p) -&gt; (a ? p) -&gt; Bool
+$c&lt; :: forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; Bool
+compare :: (a ? p) -&gt; (a ? p) -&gt; Ordering
+$ccompare :: forall a k (p :: k). Ord a =&gt; (a ? p) -&gt; (a ? p) -&gt; Ordering
+$cp1Ord :: forall a k (p :: k). Ord a =&gt; Eq (a ? p)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720899"><span id="local-6989586621679720901"><span id="local-6989586621679720903"><span id="local-6989586621679720905"><span class="annot"><span class="annottext">ReadPrec [a ? p]
+ReadPrec (a ? p)
+Int -&gt; ReadS (a ? p)
+ReadS [a ? p]
+(Int -&gt; ReadS (a ? p))
+-&gt; ReadS [a ? p]
+-&gt; ReadPrec (a ? p)
+-&gt; ReadPrec [a ? p]
+-&gt; Read (a ? p)
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+forall a k (p :: k). Read a =&gt; ReadPrec [a ? p]
+forall a k (p :: k). Read a =&gt; ReadPrec (a ? p)
+forall a k (p :: k). Read a =&gt; Int -&gt; ReadS (a ? p)
+forall a k (p :: k). Read a =&gt; ReadS [a ? p]
+readListPrec :: ReadPrec [a ? p]
+$creadListPrec :: forall a k (p :: k). Read a =&gt; ReadPrec [a ? p]
+readPrec :: ReadPrec (a ? p)
+$creadPrec :: forall a k (p :: k). Read a =&gt; ReadPrec (a ? p)
+readList :: ReadS [a ? p]
+$creadList :: forall a k (p :: k). Read a =&gt; ReadS [a ? p]
+readsPrec :: Int -&gt; ReadS (a ? p)
+$creadsPrec :: forall a k (p :: k). Read a =&gt; Int -&gt; ReadS (a ? p)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-37"></span><span id="local-6989586621679720892"><span id="local-6989586621679720894"><span id="local-6989586621679720896"><span class="hs-keyword">deriving</span><span> </span><span class="hs-keyword">instance</span><span> </span><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720890"><span class="annot"><a href="#local-6989586621679720890"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span id="local-6989586621679720889"><span class="annot"><a href="#local-6989586621679720889"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720888"><span class="annot"><a href="#local-6989586621679720888"><span class="hs-identifier hs-type">p</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><a href="#local-6989586621679720889"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-operator">.</span><span> </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679720890"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679720890"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679720888"><span class="hs-identifier hs-type">p</span></a></span><span class="hs-special">)</span></span></span></span><span>
+</span><span id="line-38"></span><span class="hs-keyword">infix</span><span> </span><span class="hs-number">1</span><span> </span><span class="annot"><a href="TypeTests.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span>
+</span><span id="line-39"></span><span>
+</span><span id="line-40"></span><span>
+</span><span id="line-41"></span><span class="hs-keyword">data</span><span> </span><span id="Table_Kind"><span class="annot"><a href="TypeTests.html#Table_Kind"><span class="hs-identifier hs-var">Table_Kind</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Null"><span class="annot"><a href="TypeTests.html#Null"><span class="hs-identifier hs-var">Null</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Object_Table"><span class="annot"><a href="TypeTests.html#Object_Table"><span class="hs-identifier hs-var">Object_Table</span></a></span></span><span> </span><span class="hs-glyph">|</span><span> </span><span id="Byte_Table"><span class="annot"><a href="TypeTests.html#Byte_Table"><span class="hs-identifier hs-var">Byte_Table</span></a></span></span><span>
+</span><span id="line-42"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720883"><span id="local-6989586621679720885"><span class="annot"><span class="annottext">Table_Kind -&gt; Table_Kind -&gt; Bool
+(Table_Kind -&gt; Table_Kind -&gt; Bool)
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; Bool) -&gt; Eq Table_Kind
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Table_Kind -&gt; Table_Kind -&gt; Bool
+$c/= :: Table_Kind -&gt; Table_Kind -&gt; Bool
+== :: Table_Kind -&gt; Table_Kind -&gt; Bool
+$c== :: Table_Kind -&gt; Table_Kind -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720867"><span id="local-6989586621679720869"><span id="local-6989586621679720871"><span id="local-6989586621679720873"><span id="local-6989586621679720875"><span id="local-6989586621679720877"><span id="local-6989586621679720879"><span id="local-6989586621679720881"><span class="annot"><span class="annottext">Int -&gt; Table_Kind
+Table_Kind -&gt; Int
+Table_Kind -&gt; [Table_Kind]
+Table_Kind -&gt; Table_Kind
+Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+(Table_Kind -&gt; Table_Kind)
+-&gt; (Table_Kind -&gt; Table_Kind)
+-&gt; (Int -&gt; Table_Kind)
+-&gt; (Table_Kind -&gt; Int)
+-&gt; (Table_Kind -&gt; [Table_Kind])
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; [Table_Kind])
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; [Table_Kind])
+-&gt; (Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind])
+-&gt; Enum Table_Kind
+forall a.
+(a -&gt; a)
+-&gt; (a -&gt; a)
+-&gt; (Int -&gt; a)
+-&gt; (a -&gt; Int)
+-&gt; (a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; [a])
+-&gt; (a -&gt; a -&gt; a -&gt; [a])
+-&gt; Enum a
+enumFromThenTo :: Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+$cenumFromThenTo :: Table_Kind -&gt; Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+enumFromTo :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+$cenumFromTo :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+enumFromThen :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+$cenumFromThen :: Table_Kind -&gt; Table_Kind -&gt; [Table_Kind]
+enumFrom :: Table_Kind -&gt; [Table_Kind]
+$cenumFrom :: Table_Kind -&gt; [Table_Kind]
+fromEnum :: Table_Kind -&gt; Int
+$cfromEnum :: Table_Kind -&gt; Int
+toEnum :: Int -&gt; Table_Kind
+$ctoEnum :: Int -&gt; Table_Kind
+pred :: Table_Kind -&gt; Table_Kind
+$cpred :: Table_Kind -&gt; Table_Kind
+succ :: Table_Kind -&gt; Table_Kind
+$csucc :: Table_Kind -&gt; Table_Kind
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Enum</span></span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720860"><span id="local-6989586621679720862"><span id="local-6989586621679720864"><span class="annot"><span class="annottext">Int -&gt; Table_Kind -&gt; ShowS
+[Table_Kind] -&gt; ShowS
+Table_Kind -&gt; String
+(Int -&gt; Table_Kind -&gt; ShowS)
+-&gt; (Table_Kind -&gt; String)
+-&gt; ([Table_Kind] -&gt; ShowS)
+-&gt; Show Table_Kind
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Table_Kind] -&gt; ShowS
+$cshowList :: [Table_Kind] -&gt; ShowS
+show :: Table_Kind -&gt; String
+$cshow :: Table_Kind -&gt; String
+showsPrec :: Int -&gt; Table_Kind -&gt; ShowS
+$cshowsPrec :: Int -&gt; Table_Kind -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720852"><span id="local-6989586621679720854"><span id="local-6989586621679720856"><span id="local-6989586621679720858"><span class="annot"><span class="annottext">ReadPrec [Table_Kind]
+ReadPrec Table_Kind
+Int -&gt; ReadS Table_Kind
+ReadS [Table_Kind]
+(Int -&gt; ReadS Table_Kind)
+-&gt; ReadS [Table_Kind]
+-&gt; ReadPrec Table_Kind
+-&gt; ReadPrec [Table_Kind]
+-&gt; Read Table_Kind
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Table_Kind]
+$creadListPrec :: ReadPrec [Table_Kind]
+readPrec :: ReadPrec Table_Kind
+$creadPrec :: ReadPrec Table_Kind
+readList :: ReadS [Table_Kind]
+$creadList :: ReadS [Table_Kind]
+readsPrec :: Int -&gt; ReadS Table_Kind
+$creadsPrec :: Int -&gt; ReadS Table_Kind
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-43"></span><span>
+</span><span id="line-44"></span><span class="hs-keyword">data</span><span> </span><span id="Bytes4"><span class="annot"><a href="TypeTests.html#Bytes4"><span class="hs-identifier hs-var">Bytes4</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Bytes4"><span class="annot"><a href="TypeTests.html#Bytes4"><span class="hs-identifier hs-var">Bytes4</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
+</span><span id="line-45"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720847"><span id="local-6989586621679720849"><span class="annot"><span class="annottext">Bytes4 -&gt; Bytes4 -&gt; Bool
+(Bytes4 -&gt; Bytes4 -&gt; Bool)
+-&gt; (Bytes4 -&gt; Bytes4 -&gt; Bool) -&gt; Eq Bytes4
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Bytes4 -&gt; Bytes4 -&gt; Bool
+$c/= :: Bytes4 -&gt; Bytes4 -&gt; Bool
+== :: Bytes4 -&gt; Bytes4 -&gt; Bool
+$c== :: Bytes4 -&gt; Bytes4 -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720832"><span id="local-6989586621679720834"><span id="local-6989586621679720836"><span id="local-6989586621679720838"><span id="local-6989586621679720840"><span id="local-6989586621679720842"><span id="local-6989586621679720844"><span class="annot"><span class="annottext">Eq Bytes4
+Eq Bytes4 =&gt;
+(Bytes4 -&gt; Bytes4 -&gt; Ordering)
+-&gt; (Bytes4 -&gt; Bytes4 -&gt; Bool)
+-&gt; (Bytes4 -&gt; Bytes4 -&gt; Bool)
+-&gt; (Bytes4 -&gt; Bytes4 -&gt; Bool)
+-&gt; (Bytes4 -&gt; Bytes4 -&gt; Bool)
+-&gt; (Bytes4 -&gt; Bytes4 -&gt; Bytes4)
+-&gt; (Bytes4 -&gt; Bytes4 -&gt; Bytes4)
+-&gt; Ord Bytes4
+Bytes4 -&gt; Bytes4 -&gt; Bool
+Bytes4 -&gt; Bytes4 -&gt; Ordering
+Bytes4 -&gt; Bytes4 -&gt; Bytes4
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Bytes4 -&gt; Bytes4 -&gt; Bytes4
+$cmin :: Bytes4 -&gt; Bytes4 -&gt; Bytes4
+max :: Bytes4 -&gt; Bytes4 -&gt; Bytes4
+$cmax :: Bytes4 -&gt; Bytes4 -&gt; Bytes4
+&gt;= :: Bytes4 -&gt; Bytes4 -&gt; Bool
+$c&gt;= :: Bytes4 -&gt; Bytes4 -&gt; Bool
+&gt; :: Bytes4 -&gt; Bytes4 -&gt; Bool
+$c&gt; :: Bytes4 -&gt; Bytes4 -&gt; Bool
+&lt;= :: Bytes4 -&gt; Bytes4 -&gt; Bool
+$c&lt;= :: Bytes4 -&gt; Bytes4 -&gt; Bool
+&lt; :: Bytes4 -&gt; Bytes4 -&gt; Bool
+$c&lt; :: Bytes4 -&gt; Bytes4 -&gt; Bool
+compare :: Bytes4 -&gt; Bytes4 -&gt; Ordering
+$ccompare :: Bytes4 -&gt; Bytes4 -&gt; Ordering
+$cp1Ord :: Eq Bytes4
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720826"><span id="local-6989586621679720828"><span id="local-6989586621679720830"><span class="annot"><span class="annottext">Int -&gt; Bytes4 -&gt; ShowS
+[Bytes4] -&gt; ShowS
+Bytes4 -&gt; String
+(Int -&gt; Bytes4 -&gt; ShowS)
+-&gt; (Bytes4 -&gt; String) -&gt; ([Bytes4] -&gt; ShowS) -&gt; Show Bytes4
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Bytes4] -&gt; ShowS
+$cshowList :: [Bytes4] -&gt; ShowS
+show :: Bytes4 -&gt; String
+$cshow :: Bytes4 -&gt; String
+showsPrec :: Int -&gt; Bytes4 -&gt; ShowS
+$cshowsPrec :: Int -&gt; Bytes4 -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720818"><span id="local-6989586621679720820"><span id="local-6989586621679720822"><span id="local-6989586621679720824"><span class="annot"><span class="annottext">ReadPrec [Bytes4]
+ReadPrec Bytes4
+Int -&gt; ReadS Bytes4
+ReadS [Bytes4]
+(Int -&gt; ReadS Bytes4)
+-&gt; ReadS [Bytes4]
+-&gt; ReadPrec Bytes4
+-&gt; ReadPrec [Bytes4]
+-&gt; Read Bytes4
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Bytes4]
+$creadListPrec :: ReadPrec [Bytes4]
+readPrec :: ReadPrec Bytes4
+$creadPrec :: ReadPrec Bytes4
+readList :: ReadS [Bytes4]
+$creadList :: ReadS [Bytes4]
+readsPrec :: Int -&gt; ReadS Bytes4
+$creadsPrec :: Int -&gt; ReadS Bytes4
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-46"></span><span class="annot"><a href="TypeTests.html#b4Null"><span class="hs-identifier hs-type">b4Null</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#Bytes4"><span class="hs-identifier hs-type">Bytes4</span></a></span><span>
+</span><span id="line-47"></span><span id="b4Null"><span class="annot"><span class="annottext">b4Null :: Bytes4
+</span><a href="TypeTests.html#b4Null"><span class="hs-identifier hs-var hs-var">b4Null</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Bytes4
+</span><a href="TypeTests.html#Bytes4"><span class="hs-identifier hs-var">Bytes4</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-48"></span><span>
+</span><span id="line-49"></span><span class="annot"><a href="TypeTests.html#b4SP"><span class="hs-identifier hs-type">b4SP</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#Bytes4"><span class="hs-identifier hs-type">Bytes4</span></a></span><span>
+</span><span id="line-50"></span><span id="b4SP"><span class="annot"><span class="annottext">b4SP :: Bytes4
+</span><a href="TypeTests.html#b4SP"><span class="hs-identifier hs-var hs-var">b4SP</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Bytes4
+</span><a href="TypeTests.html#Bytes4"><span class="hs-identifier hs-var">Bytes4</span></a></span><span> </span><span class="annot"><span class="hs-number">0x00</span></span><span> </span><span class="annot"><span class="hs-number">0x02</span></span><span> </span><span class="annot"><span class="hs-number">0x00</span></span><span> </span><span class="annot"><span class="hs-number">0x05</span></span><span>
+</span><span id="line-51"></span><span>
+</span><span id="line-52"></span><span class="hs-keyword">newtype</span><span> </span><span id="HalfUID"><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="HalfUID"><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span></span><span> </span><span class="annot"><a href="TypeTests.html#Bytes4"><span class="hs-identifier hs-type">Bytes4</span></a></span><span>
+</span><span id="line-53"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720811"><span id="local-6989586621679720813"><span class="annot"><span class="annottext">HalfUID -&gt; HalfUID -&gt; Bool
+(HalfUID -&gt; HalfUID -&gt; Bool)
+-&gt; (HalfUID -&gt; HalfUID -&gt; Bool) -&gt; Eq HalfUID
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: HalfUID -&gt; HalfUID -&gt; Bool
+$c/= :: HalfUID -&gt; HalfUID -&gt; Bool
+== :: HalfUID -&gt; HalfUID -&gt; Bool
+$c== :: HalfUID -&gt; HalfUID -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720796"><span id="local-6989586621679720798"><span id="local-6989586621679720800"><span id="local-6989586621679720802"><span id="local-6989586621679720804"><span id="local-6989586621679720806"><span id="local-6989586621679720808"><span class="annot"><span class="annottext">Eq HalfUID
+Eq HalfUID =&gt;
+(HalfUID -&gt; HalfUID -&gt; Ordering)
+-&gt; (HalfUID -&gt; HalfUID -&gt; Bool)
+-&gt; (HalfUID -&gt; HalfUID -&gt; Bool)
+-&gt; (HalfUID -&gt; HalfUID -&gt; Bool)
+-&gt; (HalfUID -&gt; HalfUID -&gt; Bool)
+-&gt; (HalfUID -&gt; HalfUID -&gt; HalfUID)
+-&gt; (HalfUID -&gt; HalfUID -&gt; HalfUID)
+-&gt; Ord HalfUID
+HalfUID -&gt; HalfUID -&gt; Bool
+HalfUID -&gt; HalfUID -&gt; Ordering
+HalfUID -&gt; HalfUID -&gt; HalfUID
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: HalfUID -&gt; HalfUID -&gt; HalfUID
+$cmin :: HalfUID -&gt; HalfUID -&gt; HalfUID
+max :: HalfUID -&gt; HalfUID -&gt; HalfUID
+$cmax :: HalfUID -&gt; HalfUID -&gt; HalfUID
+&gt;= :: HalfUID -&gt; HalfUID -&gt; Bool
+$c&gt;= :: HalfUID -&gt; HalfUID -&gt; Bool
+&gt; :: HalfUID -&gt; HalfUID -&gt; Bool
+$c&gt; :: HalfUID -&gt; HalfUID -&gt; Bool
+&lt;= :: HalfUID -&gt; HalfUID -&gt; Bool
+$c&lt;= :: HalfUID -&gt; HalfUID -&gt; Bool
+&lt; :: HalfUID -&gt; HalfUID -&gt; Bool
+$c&lt; :: HalfUID -&gt; HalfUID -&gt; Bool
+compare :: HalfUID -&gt; HalfUID -&gt; Ordering
+$ccompare :: HalfUID -&gt; HalfUID -&gt; Ordering
+$cp1Ord :: Eq HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720790"><span id="local-6989586621679720792"><span id="local-6989586621679720794"><span class="annot"><span class="annottext">Int -&gt; HalfUID -&gt; ShowS
+[HalfUID] -&gt; ShowS
+HalfUID -&gt; String
+(Int -&gt; HalfUID -&gt; ShowS)
+-&gt; (HalfUID -&gt; String) -&gt; ([HalfUID] -&gt; ShowS) -&gt; Show HalfUID
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [HalfUID] -&gt; ShowS
+$cshowList :: [HalfUID] -&gt; ShowS
+show :: HalfUID -&gt; String
+$cshow :: HalfUID -&gt; String
+showsPrec :: Int -&gt; HalfUID -&gt; ShowS
+$cshowsPrec :: Int -&gt; HalfUID -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720782"><span id="local-6989586621679720784"><span id="local-6989586621679720786"><span id="local-6989586621679720788"><span class="annot"><span class="annottext">ReadPrec [HalfUID]
+ReadPrec HalfUID
+Int -&gt; ReadS HalfUID
+ReadS [HalfUID]
+(Int -&gt; ReadS HalfUID)
+-&gt; ReadS [HalfUID]
+-&gt; ReadPrec HalfUID
+-&gt; ReadPrec [HalfUID]
+-&gt; Read HalfUID
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [HalfUID]
+$creadListPrec :: ReadPrec [HalfUID]
+readPrec :: ReadPrec HalfUID
+$creadPrec :: ReadPrec HalfUID
+readList :: ReadS [HalfUID]
+$creadList :: ReadS [HalfUID]
+readsPrec :: Int -&gt; ReadS HalfUID
+$creadsPrec :: Int -&gt; ReadS HalfUID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-54"></span><span>
+</span><span id="line-55"></span><span class="annot"><a href="TypeTests.html#hNull"><span class="hs-identifier hs-type">hNull</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
+</span><span id="line-56"></span><span id="hNull"><span class="annot"><span class="annottext">hNull :: HalfUID
+</span><a href="TypeTests.html#hNull"><span class="hs-identifier hs-var hs-var">hNull</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bytes4 -&gt; HalfUID
+</span><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-var">HalfUID</span></a></span><span> </span><span class="annot"><span class="annottext">Bytes4
+</span><a href="TypeTests.html#b4Null"><span class="hs-identifier hs-var">b4Null</span></a></span><span>
+</span><span id="line-57"></span><span>
+</span><span id="line-58"></span><span class="hs-keyword">data</span><span> </span><span id="Bytes8"><span class="annot"><a href="TypeTests.html#Bytes8"><span class="hs-identifier hs-var">Bytes8</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="Bytes8"><span class="annot"><a href="TypeTests.html#Bytes8"><span class="hs-identifier hs-var">Bytes8</span></a></span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
+</span><span id="line-59"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720776"><span id="local-6989586621679720778"><span class="annot"><span class="annottext">Bytes8 -&gt; Bytes8 -&gt; Bool
+(Bytes8 -&gt; Bytes8 -&gt; Bool)
+-&gt; (Bytes8 -&gt; Bytes8 -&gt; Bool) -&gt; Eq Bytes8
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: Bytes8 -&gt; Bytes8 -&gt; Bool
+$c/= :: Bytes8 -&gt; Bytes8 -&gt; Bool
+== :: Bytes8 -&gt; Bytes8 -&gt; Bool
+$c== :: Bytes8 -&gt; Bytes8 -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720761"><span id="local-6989586621679720763"><span id="local-6989586621679720765"><span id="local-6989586621679720767"><span id="local-6989586621679720769"><span id="local-6989586621679720771"><span id="local-6989586621679720773"><span class="annot"><span class="annottext">Eq Bytes8
+Eq Bytes8 =&gt;
+(Bytes8 -&gt; Bytes8 -&gt; Ordering)
+-&gt; (Bytes8 -&gt; Bytes8 -&gt; Bool)
+-&gt; (Bytes8 -&gt; Bytes8 -&gt; Bool)
+-&gt; (Bytes8 -&gt; Bytes8 -&gt; Bool)
+-&gt; (Bytes8 -&gt; Bytes8 -&gt; Bool)
+-&gt; (Bytes8 -&gt; Bytes8 -&gt; Bytes8)
+-&gt; (Bytes8 -&gt; Bytes8 -&gt; Bytes8)
+-&gt; Ord Bytes8
+Bytes8 -&gt; Bytes8 -&gt; Bool
+Bytes8 -&gt; Bytes8 -&gt; Ordering
+Bytes8 -&gt; Bytes8 -&gt; Bytes8
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: Bytes8 -&gt; Bytes8 -&gt; Bytes8
+$cmin :: Bytes8 -&gt; Bytes8 -&gt; Bytes8
+max :: Bytes8 -&gt; Bytes8 -&gt; Bytes8
+$cmax :: Bytes8 -&gt; Bytes8 -&gt; Bytes8
+&gt;= :: Bytes8 -&gt; Bytes8 -&gt; Bool
+$c&gt;= :: Bytes8 -&gt; Bytes8 -&gt; Bool
+&gt; :: Bytes8 -&gt; Bytes8 -&gt; Bool
+$c&gt; :: Bytes8 -&gt; Bytes8 -&gt; Bool
+&lt;= :: Bytes8 -&gt; Bytes8 -&gt; Bool
+$c&lt;= :: Bytes8 -&gt; Bytes8 -&gt; Bool
+&lt; :: Bytes8 -&gt; Bytes8 -&gt; Bool
+$c&lt; :: Bytes8 -&gt; Bytes8 -&gt; Bool
+compare :: Bytes8 -&gt; Bytes8 -&gt; Ordering
+$ccompare :: Bytes8 -&gt; Bytes8 -&gt; Ordering
+$cp1Ord :: Eq Bytes8
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720755"><span id="local-6989586621679720757"><span id="local-6989586621679720759"><span class="annot"><span class="annottext">Int -&gt; Bytes8 -&gt; ShowS
+[Bytes8] -&gt; ShowS
+Bytes8 -&gt; String
+(Int -&gt; Bytes8 -&gt; ShowS)
+-&gt; (Bytes8 -&gt; String) -&gt; ([Bytes8] -&gt; ShowS) -&gt; Show Bytes8
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [Bytes8] -&gt; ShowS
+$cshowList :: [Bytes8] -&gt; ShowS
+show :: Bytes8 -&gt; String
+$cshow :: Bytes8 -&gt; String
+showsPrec :: Int -&gt; Bytes8 -&gt; ShowS
+$cshowsPrec :: Int -&gt; Bytes8 -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720747"><span id="local-6989586621679720749"><span id="local-6989586621679720751"><span id="local-6989586621679720753"><span class="annot"><span class="annottext">ReadPrec [Bytes8]
+ReadPrec Bytes8
+Int -&gt; ReadS Bytes8
+ReadS [Bytes8]
+(Int -&gt; ReadS Bytes8)
+-&gt; ReadS [Bytes8]
+-&gt; ReadPrec Bytes8
+-&gt; ReadPrec [Bytes8]
+-&gt; Read Bytes8
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [Bytes8]
+$creadListPrec :: ReadPrec [Bytes8]
+readPrec :: ReadPrec Bytes8
+$creadPrec :: ReadPrec Bytes8
+readList :: ReadS [Bytes8]
+$creadList :: ReadS [Bytes8]
+readsPrec :: Int -&gt; ReadS Bytes8
+$creadsPrec :: Int -&gt; ReadS Bytes8
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-60"></span><span class="annot"><a href="TypeTests.html#b8Null"><span class="hs-identifier hs-type">b8Null</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#Bytes8"><span class="hs-identifier hs-type">Bytes8</span></a></span><span>
+</span><span id="line-61"></span><span id="b8Null"><span class="annot"><span class="annottext">b8Null :: Bytes8
+</span><a href="TypeTests.html#b8Null"><span class="hs-identifier hs-var hs-var">b8Null</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Word8
+-&gt; Word8
+-&gt; Word8
+-&gt; Word8
+-&gt; Word8
+-&gt; Word8
+-&gt; Word8
+-&gt; Word8
+-&gt; Bytes8
+</span><a href="TypeTests.html#Bytes8"><span class="hs-identifier hs-var">Bytes8</span></a></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span> </span><span class="annot"><span class="hs-number">0</span></span><span>
+</span><span id="line-62"></span><span>
+</span><span id="line-63"></span><span class="hs-keyword">newtype</span><span> </span><span id="UID"><span class="annot"><a href="TypeTests.html#UID"><span class="hs-identifier hs-var">UID</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span id="UID"><span class="annot"><a href="TypeTests.html#UID"><span class="hs-identifier hs-var">UID</span></a></span></span><span> </span><span class="annot"><a href="TypeTests.html#Bytes8"><span class="hs-identifier hs-type">Bytes8</span></a></span><span>
+</span><span id="line-64"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720741"><span id="local-6989586621679720743"><span class="annot"><span class="annottext">UID -&gt; UID -&gt; Bool
+(UID -&gt; UID -&gt; Bool) -&gt; (UID -&gt; UID -&gt; Bool) -&gt; Eq UID
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+/= :: UID -&gt; UID -&gt; Bool
+$c/= :: UID -&gt; UID -&gt; Bool
+== :: UID -&gt; UID -&gt; Bool
+$c== :: UID -&gt; UID -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720726"><span id="local-6989586621679720728"><span id="local-6989586621679720730"><span id="local-6989586621679720732"><span id="local-6989586621679720734"><span id="local-6989586621679720736"><span id="local-6989586621679720738"><span class="annot"><span class="annottext">Eq UID
+Eq UID =&gt;
+(UID -&gt; UID -&gt; Ordering)
+-&gt; (UID -&gt; UID -&gt; Bool)
+-&gt; (UID -&gt; UID -&gt; Bool)
+-&gt; (UID -&gt; UID -&gt; Bool)
+-&gt; (UID -&gt; UID -&gt; Bool)
+-&gt; (UID -&gt; UID -&gt; UID)
+-&gt; (UID -&gt; UID -&gt; UID)
+-&gt; Ord UID
+UID -&gt; UID -&gt; Bool
+UID -&gt; UID -&gt; Ordering
+UID -&gt; UID -&gt; UID
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+min :: UID -&gt; UID -&gt; UID
+$cmin :: UID -&gt; UID -&gt; UID
+max :: UID -&gt; UID -&gt; UID
+$cmax :: UID -&gt; UID -&gt; UID
+&gt;= :: UID -&gt; UID -&gt; Bool
+$c&gt;= :: UID -&gt; UID -&gt; Bool
+&gt; :: UID -&gt; UID -&gt; Bool
+$c&gt; :: UID -&gt; UID -&gt; Bool
+&lt;= :: UID -&gt; UID -&gt; Bool
+$c&lt;= :: UID -&gt; UID -&gt; Bool
+&lt; :: UID -&gt; UID -&gt; Bool
+$c&lt; :: UID -&gt; UID -&gt; Bool
+compare :: UID -&gt; UID -&gt; Ordering
+$ccompare :: UID -&gt; UID -&gt; Ordering
+$cp1Ord :: Eq UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720720"><span id="local-6989586621679720722"><span id="local-6989586621679720724"><span class="annot"><span class="annottext">Int -&gt; UID -&gt; ShowS
+[UID] -&gt; ShowS
+UID -&gt; String
+(Int -&gt; UID -&gt; ShowS)
+-&gt; (UID -&gt; String) -&gt; ([UID] -&gt; ShowS) -&gt; Show UID
+forall a.
+(Int -&gt; a -&gt; ShowS) -&gt; (a -&gt; String) -&gt; ([a] -&gt; ShowS) -&gt; Show a
+showList :: [UID] -&gt; ShowS
+$cshowList :: [UID] -&gt; ShowS
+show :: UID -&gt; String
+$cshow :: UID -&gt; String
+showsPrec :: Int -&gt; UID -&gt; ShowS
+$cshowsPrec :: Int -&gt; UID -&gt; ShowS
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Show</span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720712"><span id="local-6989586621679720714"><span id="local-6989586621679720716"><span id="local-6989586621679720718"><span class="annot"><span class="annottext">ReadPrec [UID]
+ReadPrec UID
+Int -&gt; ReadS UID
+ReadS [UID]
+(Int -&gt; ReadS UID)
+-&gt; ReadS [UID] -&gt; ReadPrec UID -&gt; ReadPrec [UID] -&gt; Read UID
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+readListPrec :: ReadPrec [UID]
+$creadListPrec :: ReadPrec [UID]
+readPrec :: ReadPrec UID
+$creadPrec :: ReadPrec UID
+readList :: ReadS [UID]
+$creadList :: ReadS [UID]
+readsPrec :: Int -&gt; ReadS UID
+$creadsPrec :: Int -&gt; ReadS UID
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-65"></span><span>
+</span><span id="line-66"></span><span class="annot"><a href="TypeTests.html#uNull"><span class="hs-identifier hs-type">uNull</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#UID"><span class="hs-identifier hs-type">UID</span></a></span><span>
+</span><span id="line-67"></span><span id="uNull"><span class="annot"><span class="annottext">uNull :: UID
+</span><a href="TypeTests.html#uNull"><span class="hs-identifier hs-var hs-var">uNull</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bytes8 -&gt; UID
+</span><a href="TypeTests.html#UID"><span class="hs-identifier hs-var">UID</span></a></span><span> </span><span class="annot"><span class="annottext">Bytes8
+</span><a href="TypeTests.html#b8Null"><span class="hs-identifier hs-var">b8Null</span></a></span><span>
+</span><span id="line-68"></span><span>
+</span><span id="line-69"></span><span class="hs-keyword">newtype</span><span> </span><span id="For_Table_Kind"><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-var">For_Table_Kind</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720710"><span class="annot"><a href="#local-6989586621679720710"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><a href="TypeTests.html#Table_Kind"><span class="hs-identifier hs-type">Table_Kind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720709"><span class="annot"><a href="#local-6989586621679720709"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span id="For_Table_Kind"><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-var">For_Table_Kind</span></a></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="#local-6989586621679720709"><span class="hs-identifier hs-type">a</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679720710"><span class="hs-identifier hs-type">k</span></a></span><span class="hs-special">)</span><span>
+</span><span id="line-70"></span><span>    </span><span class="hs-keyword">deriving</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720704"><span id="local-6989586621679720706"><span class="annot"><span class="annottext">For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+(For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool)
+-&gt; (For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool)
+-&gt; Eq (For_Table_Kind k a)
+forall a. (a -&gt; a -&gt; Bool) -&gt; (a -&gt; a -&gt; Bool) -&gt; Eq a
+forall (k :: Table_Kind) a.
+Eq a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+/= :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+$c/= :: forall (k :: Table_Kind) a.
+Eq a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+== :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+$c== :: forall (k :: Table_Kind) a.
+Eq a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var">Eq</span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720689"><span id="local-6989586621679720691"><span id="local-6989586621679720693"><span id="local-6989586621679720695"><span id="local-6989586621679720697"><span id="local-6989586621679720699"><span id="local-6989586621679720701"><span class="annot"><span class="annottext">Eq (For_Table_Kind k a)
+Eq (For_Table_Kind k a) =&gt;
+(For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Ordering)
+-&gt; (For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool)
+-&gt; (For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool)
+-&gt; (For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool)
+-&gt; (For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool)
+-&gt; (For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a)
+-&gt; (For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a)
+-&gt; Ord (For_Table_Kind k a)
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Ordering
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a
+forall a.
+Eq a =&gt;
+(a -&gt; a -&gt; Ordering)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; Bool)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; (a -&gt; a -&gt; a)
+-&gt; Ord a
+forall (k :: Table_Kind) a. Ord a =&gt; Eq (For_Table_Kind k a)
+forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Ordering
+forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a
+min :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a
+$cmin :: forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a
+max :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a
+$cmax :: forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; For_Table_Kind k a
+&gt;= :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+$c&gt;= :: forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+&gt; :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+$c&gt; :: forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+&lt;= :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+$c&lt;= :: forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+&lt; :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+$c&lt; :: forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Bool
+compare :: For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Ordering
+$ccompare :: forall (k :: Table_Kind) a.
+Ord a =&gt;
+For_Table_Kind k a -&gt; For_Table_Kind k a -&gt; Ordering
+$cp1Ord :: forall (k :: Table_Kind) a. Ord a =&gt; Eq (For_Table_Kind k a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Ord</span></span></span></span></span></span></span></span></span><span class="hs-special">,</span><span id="local-6989586621679720681"><span id="local-6989586621679720683"><span id="local-6989586621679720685"><span id="local-6989586621679720687"><span class="annot"><span class="annottext">ReadPrec [For_Table_Kind k a]
+ReadPrec (For_Table_Kind k a)
+Int -&gt; ReadS (For_Table_Kind k a)
+ReadS [For_Table_Kind k a]
+(Int -&gt; ReadS (For_Table_Kind k a))
+-&gt; ReadS [For_Table_Kind k a]
+-&gt; ReadPrec (For_Table_Kind k a)
+-&gt; ReadPrec [For_Table_Kind k a]
+-&gt; Read (For_Table_Kind k a)
+forall a.
+(Int -&gt; ReadS a)
+-&gt; ReadS [a] -&gt; ReadPrec a -&gt; ReadPrec [a] -&gt; Read a
+forall (k :: Table_Kind) a. Read a =&gt; ReadPrec [For_Table_Kind k a]
+forall (k :: Table_Kind) a. Read a =&gt; ReadPrec (For_Table_Kind k a)
+forall (k :: Table_Kind) a.
+Read a =&gt;
+Int -&gt; ReadS (For_Table_Kind k a)
+forall (k :: Table_Kind) a. Read a =&gt; ReadS [For_Table_Kind k a]
+readListPrec :: ReadPrec [For_Table_Kind k a]
+$creadListPrec :: forall (k :: Table_Kind) a. Read a =&gt; ReadPrec [For_Table_Kind k a]
+readPrec :: ReadPrec (For_Table_Kind k a)
+$creadPrec :: forall (k :: Table_Kind) a. Read a =&gt; ReadPrec (For_Table_Kind k a)
+readList :: ReadS [For_Table_Kind k a]
+$creadList :: forall (k :: Table_Kind) a. Read a =&gt; ReadS [For_Table_Kind k a]
+readsPrec :: Int -&gt; ReadS (For_Table_Kind k a)
+$creadsPrec :: forall (k :: Table_Kind) a.
+Read a =&gt;
+Int -&gt; ReadS (For_Table_Kind k a)
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var hs-var">Read</span></span></span></span></span></span><span class="hs-special">)</span><span>
+</span><span id="line-71"></span><span class="hs-keyword">instance</span><span> </span><span id="local-6989586621679720676"><span id="local-6989586621679720679"><span class="hs-keyword">forall</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720675"><span class="annot"><a href="#local-6989586621679720675"><span class="hs-identifier hs-type">a</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720674"><span class="annot"><a href="#local-6989586621679720674"><span class="hs-identifier hs-type">k</span></a></span></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#Table_Kind"><span class="hs-identifier hs-type">Table_Kind</span></a></span><span class="hs-special">)</span><span>  </span><span class="hs-operator">.</span><span>  </span><span class="hs-special">(</span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span> </span><span class="annot"><a href="#local-6989586621679720675"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Show</span></span><span class="hs-special">(</span><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-type">For_Table_Kind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679720674"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679720675"><span class="hs-identifier hs-type">a</span></a></span><span class="hs-special">)</span></span></span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-72"></span><span>    </span><span id="local-6989586621679720673"><span class="annot"><span class="annottext">show :: For_Table_Kind k a -&gt; String
+</span><span class="hs-identifier hs-var hs-var hs-var hs-var">show</span></span></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-type">For_Table_Kind</span></a></span><span> </span><span class="hs-special">(</span><span class="annot"><a href="TypeTests.html#Refined"><span class="hs-identifier hs-type">Refined</span></a></span><span> </span><span id="local-6989586621679720671"><span class="annot"><span class="annottext">a :: a
+</span><a href="#local-6989586621679720671"><span class="hs-identifier hs-var">a</span></a></span></span><span class="hs-special">)</span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">String -&gt; ShowS
+</span><span class="hs-identifier hs-var">showString</span></span><span> </span><span class="annot"><span class="hs-string">&quot;For_Table_Kind (&quot;</span></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS -&gt; ShowS
+forall b c a. (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+</span><span class="hs-operator hs-var">.</span></span><span> </span><span class="annot"><span class="annottext">a -&gt; ShowS
+forall a. Show a =&gt; a -&gt; ShowS
+</span><span class="hs-identifier hs-var">shows</span></span><span> </span><span class="annot"><span class="annottext">a
+</span><a href="#local-6989586621679720671"><span class="hs-identifier hs-var">a</span></a></span><span> </span><span class="annot"><span class="annottext">ShowS -&gt; ShowS
+forall a b. (a -&gt; b) -&gt; a -&gt; b
+</span><span class="hs-operator hs-var">$</span></span><span> </span><span class="annot"><span class="hs-string">&quot;)&quot;</span></span><span>
+</span><span id="line-73"></span><span>
+</span><span id="line-74"></span><span>
+</span><span id="line-75"></span><span>
+</span><span id="line-76"></span><span class="hs-keyword">type</span><span> </span><span id="HalfUID_For_Table_Kind"><span class="annot"><a href="TypeTests.html#HalfUID_For_Table_Kind"><span class="hs-identifier hs-var">HalfUID_For_Table_Kind</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720669"><span class="annot"><a href="#local-6989586621679720669"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><a href="TypeTests.html#Table_Kind"><span class="hs-identifier hs-type">Table_Kind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-type">For_Table_Kind</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679720669"><span class="hs-identifier hs-type">k</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
+</span><span id="line-77"></span><span>
+</span><span id="line-78"></span><span class="hs-keyword">type</span><span> </span><span id="For_Object_Table"><span class="annot"><a href="TypeTests.html#For_Object_Table"><span class="hs-identifier hs-var">For_Object_Table</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720667"><span class="annot"><a href="#local-6989586621679720667"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-type">For_Table_Kind</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="TypeTests.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span> </span><span class="annot"><a href="#local-6989586621679720667"><span class="hs-identifier hs-type">a</span></a></span><span>
+</span><span id="line-79"></span><span>
+</span><span id="line-80"></span><span>
+</span><span id="line-81"></span><span class="hs-keyword">type</span><span> </span><span id="HalfUID_For_Object_Table"><span class="annot"><a href="TypeTests.html#HalfUID_For_Object_Table"><span class="hs-identifier hs-var">HalfUID_For_Object_Table</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-type">For_Table_Kind</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="TypeTests.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
+</span><span id="line-82"></span><span class="hs-keyword">type</span><span> </span><span id="HalfUID_For_Object_Table%27"><span class="annot"><a href="TypeTests.html#HalfUID_For_Object_Table%27"><span class="hs-identifier hs-var">HalfUID_For_Object_Table'</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID_For_Table_Kind"><span class="hs-identifier hs-type">HalfUID_For_Table_Kind</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="TypeTests.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span>
+</span><span id="line-83"></span><span class="hs-keyword">type</span><span> </span><span id="HalfUID_For_Object_Table%27%27"><span class="annot"><a href="TypeTests.html#HalfUID_For_Object_Table%27%27"><span class="hs-identifier hs-var">HalfUID_For_Object_Table''</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><a href="TypeTests.html#For_Object_Table"><span class="hs-identifier hs-type">For_Object_Table</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span>
+</span><span id="line-84"></span><span>
+</span><span id="line-85"></span><span class="annot"><a href="TypeTests.html#nthNull"><span class="hs-identifier hs-type">nthNull</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-type">For_Table_Kind</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="TypeTests.html#Null"><span class="hs-identifier hs-type">Null</span></a></span><span>
+</span><span id="line-86"></span><span id="nthNull"><span class="annot"><span class="annottext">nthNull :: HalfUID ? For_Table_Kind 'Null
+</span><a href="TypeTests.html#nthNull"><span class="hs-identifier hs-var hs-var">nthNull</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bytes4 -&gt; HalfUID ? For_Table_Kind 'Null
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">Bytes4
+</span><a href="TypeTests.html#b4Null"><span class="hs-identifier hs-var">b4Null</span></a></span><span>
+</span><span id="line-87"></span><span>
+</span><span id="line-88"></span><span class="annot"><a href="TypeTests.html#othSP"><span class="hs-identifier hs-type">othSP</span></a></span><span> </span><span class="hs-glyph">::</span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID"><span class="hs-identifier hs-type">HalfUID</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#%3F"><span class="hs-operator hs-type">?</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#For_Table_Kind"><span class="hs-identifier hs-type">For_Table_Kind</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="TypeTests.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span>
+</span><span id="line-89"></span><span id="othSP"><span class="annot"><span class="annottext">othSP :: HalfUID ? For_Table_Kind 'Object_Table
+</span><a href="TypeTests.html#othSP"><span class="hs-identifier hs-var hs-var">othSP</span></a></span></span><span> </span><span class="hs-glyph">=</span><span> </span><span class="annot"><span class="annottext">Bytes4 -&gt; HalfUID ? For_Table_Kind 'Object_Table
+forall a b. Coercible a b =&gt; a -&gt; b
+</span><span class="hs-identifier hs-var">coerce</span></span><span> </span><span class="annot"><span class="annottext">Bytes4
+</span><a href="TypeTests.html#b4SP"><span class="hs-identifier hs-var">b4SP</span></a></span><span>
+</span><span id="line-90"></span><span>
+</span><span id="line-91"></span><span class="hs-keyword">class</span><span> </span><span id="Is_HalfUID_For_Table_Kind"><span class="annot"><a href="TypeTests.html#Is_HalfUID_For_Table_Kind"><span class="hs-identifier hs-var">Is_HalfUID_For_Table_Kind</span></a></span></span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720939"><span class="annot"><a href="#local-6989586621679720939"><span class="hs-identifier hs-type">k</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><a href="TypeTests.html#Table_Kind"><span class="hs-identifier hs-type">Table_Kind</span></a></span><span class="hs-special">)</span><span> </span><span class="hs-special">(</span><span id="local-6989586621679720938"><span class="annot"><a href="#local-6989586621679720938"><span class="hs-identifier hs-type">a</span></a></span></span><span class="hs-glyph">::</span><span class="annot"><span class="hs-identifier hs-type">Type</span></span><span class="hs-special">)</span><span> </span><span class="hs-keyword">where</span><span>
+</span><span id="line-92"></span><span>
+</span><span id="line-93"></span><span class="hs-keyword">instance</span><span> </span><span class="annot"><a href="TypeTests.html#Is_HalfUID_For_Table_Kind"><span class="hs-identifier hs-type">Is_HalfUID_For_Table_Kind</span></a></span><span> </span><span class="hs-special">'</span><span class="annot"><a href="TypeTests.html#Object_Table"><span class="hs-identifier hs-type">Object_Table</span></a></span><span> </span><span class="annot"><a href="TypeTests.html#HalfUID_For_Object_Table"><span class="hs-identifier hs-type">HalfUID_For_Object_Table</span></a></span><span>
+</span><span id="line-94"></span></pre></body></html>

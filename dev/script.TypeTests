@@ -1,0 +1,247 @@
+:set -package hsed
+-- :set prompt-cont ""
+
+-- :set -XOverloadedStrings
+-- :set -XTemplateHaskell
+-- :set -XDataKinds
+
+-- :set -XQuasiQuotes
+-- :set -XRankNTypes
+-- :set -XGADTs
+-- :set -XStandaloneDeriving
+-- :set -XKindSignatures
+-- :set -XMultiParamTypeClasses
+-- :set -XFlexibleContexts
+-- :set -XDerivingVia
+-- :set -XUndecidableInstances
+
+:def! $ (pure . (":! bash -l -c " ++) . show)
+:def! B (pure . (":! bash -l -c \"stack build\"" ++) . show)
+:def! D (pure . const (":set -ddump-splices") )
+:def! H (pure . (":! bash -l -c \"./h\"" ++) . show)
+:def! P (pure . (":! bash -l -c \"./hp\"" ++) . show)
+
+
+
+import System.IO
+putStrLn "loading script ..."
+--------------------------------------------------------------------------------
+
+-- import Data.ByteString(head,tail)
+-- import Data.Either(Either(..))
+-- import Data.Foldable(mapM_)
+-- import Data.Functor((<$>))
+-- import Data.Maybe(Maybe(..))
+-- import Data.Text(cons, snoc, pack, unpack)
+-- import GHC.Arr(range)
+-- import GHC.Base(flip,map,pure,(.),($),(*>),(<*>),(<*),(<>))
+-- import GHC.Classes((<))
+-- import GHC.Err(undefined)
+-- import GHC.Show(Show(..),showString,shows)
+-- import GHC.Base(const, (++))
+-- --------------------------------------------------------------------------------
+
+
+-- import Data.Char (toUpper)
+-- import Data.ByteString (ByteString)
+-- import Data.String(IsString(..))
+-- import GHC.Word(Word8)
+-- import Data.ByteString.Internal(c2w)
+-- import Language.Haskell.TH
+-- import Language.Haskell.TH.Quote
+-- import Language.Haskell.TH.Ppr
+-- import Language.Haskell.TH.PprLib
+-- import Data.Either(Either(..))
+-- import Data.String(String)
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+-- :load src/System/SED/MCTP/Common/TypeUIDs.hs
+-- import System.SED.MCTP.Common.TypeUIDs.TH
+-- import System.SED.MCTP.Common.THUtil
+
+putStrLn "Running ..."
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+putStrLn "\n\n\n"
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+-- :set -XFlexibleInstances
+-- :set -XTypeOperators
+-- :set -XTypeApplications
+-- :set -XScopedTypeVariables
+
+-- import Data.Refined
+-- import Data.Proxy
+-- import Data.BoundedSize.Class
+-- import GHC.TypeNats
+-- import System.SED.MCTP.Common.TableUIDs
+-- import System.SED.MCTP.Common.UID
+-- import System.SED.MCTP.Common.Simple_Type
+-- import System.SED.MCTP.Common.Base_Type.Class
+
+
+
+-- --------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+
+
+-- import GHC.Base(Monad(..),Monoid(..),Bool(..))
+-- import GHC.Classes
+-- import GHC.Real
+-- -- hide some to avoid collisions with other modules, mostly Base
+
+
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- :set -XKindSignatures
+-- :set -XTypeOperators
+-- :set -XRankNTypes
+
+-- system imports
+-- import Data.ByteString(ByteString)
+-- import Data.ListLike.Base hiding (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
+-- import qualified Data.ListLike.Base as LL (cons, snoc, append, head, tail, replicate, take, drop, length, map, empty)
+-- import Data.ListLike.FoldableLL
+-- import Data.Proxy(Proxy(..))
+
+-- import GHC.Base(($),Bool(..), Nat, Type)
+-- import GHC.Exts(IsList(..),Item(..))
+-- import GHC.Show(Show(..),showString,shows)
+-- import GHC.TypeNats(KnownNat)
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+putStrLn "\n"
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+:set -Wno-type-defaults
+
+
+:load src/TypeTests.hs
+:set -XDataKinds
+:set -XKindSignatures
+
+import           GHC.Base    ((.), ($))
+import           GHC.Show    (Show (..), shows, showString)
+
+
+putStrLn "\n"
+
+
+:info Table_Kind
+:kind Table_Kind
+putStrLn ""
+
+:info HalfUID
+putStrLn ""
+
+:info hNull
+putStrLn ""
+
+:info UID
+putStrLn ""
+
+:info For_Table_Kind
+:kind For_Table_Kind
+putStrLn ""
+
+:info HalfUID_For_Table_Kind
+:kind HalfUID_For_Table_Kind
+putStrLn ""
+
+:info For_Object_Table
+:kind For_Object_Table
+putStrLn ""
+
+:info HalfUID_For_Object_Table
+:kind HalfUID_For_Object_Table
+putStrLn ""
+
+:info HalfUID_For_Object_Table'
+:kind HalfUID_For_Object_Table'
+putStrLn ""
+
+:info HalfUID_For_Object_Table''
+:kind HalfUID_For_Object_Table''
+putStrLn ""
+
+:info nthNull
+:type nthNull
+putStrLn $ showString "nthNull = " . shows nthNull $ "\n"
+
+:info othSP
+:type othSP
+putStrLn $ showString "othSP = " . shows othSP $ "\n"
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+
+putStrLn "\n\n\nBuh-bye now.\n\n"
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+putStrLn ".. script loaded."
+-- :show
+-- :show modules
+-- :show packages
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+-- TODOs
+
+-- Object HalfUIDs are the right half of Object UIDs
+-- Object Table Object HalfUIDs are the same as Object Table HalfUIDs
+-- Type HalfUIDs are e.g. the 00.00.02.38 in the lower half of bytes_4
+-- so tohbytes_4 = typeObject_HalfUID 0x00 0x00 0x02 0x38 :: HalfUID ? Object_HalfUID(othType)
+-- (approximately -- always touchy what the name of the Type table is, given
+-- that "Type" is a big deal in Haskell :)
+--
+-- Then Base_Type_UID and Non_Base_Type_UID can play off those.
+-- Also seem to need String <-> typeHalfUID map
+--
+-- Important: switch to using Data.Binary for StreamItem, etc.
+--
+
+
+
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------

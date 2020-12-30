@@ -1,7 +1,8 @@
 digraph G {
 size="6,4";
 ratio="fill";
-u31[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
+u31[label="TypeTests",style="filled",fillcolor="#bbffbb",penwidth="0"];
+u32[label="Main",style="filled",fillcolor="#bbffbb",penwidth="0"];
 subgraph cluster_0 {
 label="Data";
 color="#0000000F";
@@ -27,7 +28,7 @@ subgraph cluster_3 {
 label="Extras";
 color="#0000000F";
 style="filled";
-u32[label="GitVersion",style="filled",fillcolor="#bbffff",penwidth="0"];
+u33[label="GitVersion",style="filled",fillcolor="#bbffff",penwidth="0"];
 
 }
 
@@ -136,7 +137,6 @@ u11 -> u9;
 u11 -> u10;
 u11 -> u12;
 u11 -> u14;
-u12 -> u0;
 u12 -> u2;
 u12 -> u6;
 u12 -> u9;
@@ -194,9 +194,9 @@ u29 -> u5;
 u29 -> u17;
 u30 -> u5;
 u30 -> u17;
-u31 -> u5;
-u31 -> u29;
-u31 -> u30;
-u31 -> u32;
+u32 -> u5;
+u32 -> u29;
+u32 -> u30;
+u32 -> u33;
 
 }

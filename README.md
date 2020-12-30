@@ -1,4 +1,18 @@
 # hsed
+Goals drift.
+
+In the commercial, common, nearly-"static" case, almost nothing is writable.
+One cannot create new tables or types; probably not even add or delete rows.
+Mostly just set passwords and fill out ranges in the Locking table.
+In that configuration, all the types are known, and hence can be erased,
+and the purpose of the types is to prove the internal consistency of the
+configuration.
+In the general case, almost everything is writable.
+Tables and types and rows can come and go, subject to consistency,
+so the refinement of values to dependent types must be done by runtime validation.
+The proof of the general case should lift to the static case.
+
+
 Short-term TODO list
 
 Finish ColumnTypes

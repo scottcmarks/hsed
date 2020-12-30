@@ -710,6 +710,7 @@ instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Types.Implementation_int
 instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
@@ -922,10 +923,8 @@ type Core_AC_element = Data_type "AC_element"
 
 -- | Datatypes for UIDs and HalfUIDs.
 module System.SED.MCTP.Common.UID
-showCore_bytes :: KnownNat n => String -> Core_bytes n -> String
-readPCore_bytes :: forall n. KnownNat n => String -> ReadP (Core_bytes n)
-word8P :: ReadP Word8
-core_bytesP :: forall n. KnownNat n => ReadP (Core_bytes n)
+showtaggedCore_bytes :: KnownNat n => String -> Core_bytes n -> String
+readPrectaggedCore_bytes :: forall n. KnownNat n => String -> ReadPrec (Core_bytes n)
 newtype HalfUID
 HalfUID :: Core_halfuid -> HalfUID
 halfUID :: Word8 -> Word8 -> Word8 -> Word8 -> HalfUID
@@ -1031,7 +1030,7 @@ newtype ForTable_Kind (k :: Table_Kind) a
 ForTable_Kind :: a -> ForTable_Kind (k :: Table_Kind) a
 type Table_HalfUID k = HalfUID ? (ForTable_Kind k)
 type Table_UID k = UID ? (ForTable_Kind k)
-class IsTable_HalfUID a
+class IsTable_HalfUID (a :: Type)
 fromTable_HalfUID :: IsTable_HalfUID a => Table_HalfUID k -> a
 toTable_HalfUID :: IsTable_HalfUID a => a -> Table_HalfUID k
 viaTable_HalfUID :: (IsTable_HalfUID a, IsTable_HalfUID b) => a -> b
@@ -8832,3 +8831,65 @@ run :: RIO App ()
 
 module System.SED.MCTP.TPer.Run
 run :: RIO App ()
+
+
+module TypeTests
+newtype (a :: Type) ? (p :: k)
+Refined :: a -> (?) (a :: Type) (p :: k)
+infix 1 ?
+data Table_Kind
+Null :: Table_Kind
+Object_Table :: Table_Kind
+Byte_Table :: Table_Kind
+data Bytes4
+Bytes4 :: Word8 -> Word8 -> Word8 -> Word8 -> Bytes4
+b4Null :: Bytes4
+b4SP :: Bytes4
+newtype HalfUID
+HalfUID :: Bytes4 -> HalfUID
+hNull :: HalfUID
+data Bytes8
+Bytes8 :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Bytes8
+b8Null :: Bytes8
+newtype UID
+UID :: Bytes8 -> UID
+uNull :: UID
+newtype For_Table_Kind (k :: Table_Kind) (a :: Type)
+For_Table_Kind :: (a ? k) -> For_Table_Kind (k :: Table_Kind) (a :: Type)
+type HalfUID_For_Table_Kind (k :: Table_Kind) = For_Table_Kind k HalfUID
+type For_Object_Table (a :: Type) = For_Table_Kind 'Object_Table a
+type HalfUID_For_Object_Table = For_Table_Kind 'Object_Table HalfUID
+type HalfUID_For_Object_Table' = HalfUID_For_Table_Kind 'Object_Table
+type HalfUID_For_Object_Table'' = For_Object_Table HalfUID
+nthNull :: HalfUID ? For_Table_Kind 'Null
+othSP :: HalfUID ? For_Table_Kind 'Object_Table
+class Is_HalfUID_For_Table_Kind (k :: Table_Kind) (a :: Type)
+instance GHC.Read.Read a => GHC.Read.Read (TypeTests.For_Table_Kind k a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (TypeTests.For_Table_Kind k a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (TypeTests.For_Table_Kind k a)
+instance GHC.Read.Read TypeTests.UID
+instance GHC.Show.Show TypeTests.UID
+instance GHC.Classes.Ord TypeTests.UID
+instance GHC.Classes.Eq TypeTests.UID
+instance GHC.Read.Read TypeTests.Bytes8
+instance GHC.Show.Show TypeTests.Bytes8
+instance GHC.Classes.Ord TypeTests.Bytes8
+instance GHC.Classes.Eq TypeTests.Bytes8
+instance GHC.Read.Read TypeTests.HalfUID
+instance GHC.Show.Show TypeTests.HalfUID
+instance GHC.Classes.Ord TypeTests.HalfUID
+instance GHC.Classes.Eq TypeTests.HalfUID
+instance GHC.Read.Read TypeTests.Bytes4
+instance GHC.Show.Show TypeTests.Bytes4
+instance GHC.Classes.Ord TypeTests.Bytes4
+instance GHC.Classes.Eq TypeTests.Bytes4
+instance GHC.Read.Read TypeTests.Table_Kind
+instance GHC.Show.Show TypeTests.Table_Kind
+instance GHC.Enum.Enum TypeTests.Table_Kind
+instance GHC.Classes.Eq TypeTests.Table_Kind
+instance forall a k (p :: k). GHC.Read.Read a => GHC.Read.Read (a TypeTests.? p)
+instance forall a k (p :: k). GHC.Classes.Ord a => GHC.Classes.Ord (a TypeTests.? p)
+instance forall a k (p :: k). GHC.Classes.Eq a => GHC.Classes.Eq (a TypeTests.? p)
+instance forall a k (p :: k). GHC.Show.Show a => GHC.Show.Show (a TypeTests.? p)
+instance TypeTests.Is_HalfUID_For_Table_Kind 'TypeTests.Object_Table TypeTests.HalfUID_For_Object_Table
+instance GHC.Show.Show a => GHC.Show.Show (TypeTests.For_Table_Kind k a)

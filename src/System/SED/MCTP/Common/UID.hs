@@ -34,31 +34,23 @@ Datatypes for UIDs and HalfUIDs.
 
 module System.SED.MCTP.Common.UID where
 
-import           Data.BoundedSize                   (fromNat)
 import           Data.ByteString                    (singleton)
 import           Data.ByteString.Base16             (encode)
 import           Data.ByteString.Char8              (unpack)
 import           Data.Foldable                      (foldl)
 import           Data.Functor                       ((<$>))
 import           Data.HasSize                       (HasSize (..))
-import           Data.Proxy                         (Proxy (..))
 import           Data.String                        (String)
-import           GHC.Base                           (Maybe (..), pure, ($),
-                                                     (&&), (.), (>>))
+import           GHC.Base                           (($), (.), (>>))
 import           GHC.Classes                        (Eq (..), Ord (..))
-import           GHC.Enum                           (Bounded (..))
 import           GHC.Exts                           (IsList (..))
-import           GHC.Num                            (Num (..))
 import           GHC.Read                           (Read (..))
-import           GHC.Real                           (fromIntegral)
 import           GHC.Show                           (Show (..), showString)
 import           GHC.TypeLits                       (KnownNat)
 import           GHC.Word                           (Word8)
 
-import           Text.ParserCombinators.ReadP       (ReadP, count, pfail,
-                                                     string)
-import           Text.ParserCombinators.ReadPrec    (lift)
-import           Text.Read.Lex
+import           Text.ParserCombinators.ReadP       (string)
+import           Text.ParserCombinators.ReadPrec    (ReadPrec, lift)
 
 import           Test.QuickCheck                    (Arbitrary (..))
 
@@ -72,38 +64,20 @@ import           System.SED.MCTP.Common.Token       (IsToken (..))
 
 
 
-showCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
-showCore_bytes tag = foldl rollUp tag . toList
+showtaggedCore_bytes :: (KnownNat n) => String -> Core_bytes n -> String
+showtaggedCore_bytes tag = foldl rollUp tag . toList
   where rollUp s = showString s . showString " 0x" . unpack . encode . singleton
 
-readPCore_bytes :: forall n. (KnownNat n) => String -> ReadP (Core_bytes n)
-readPCore_bytes tag = string tag >> core_bytesP
-
-
-word8P :: ReadP Word8
-word8P = do
-    Number n <- lex
-    case numberToInteger n of
-      Just i -> if isWord8 i
-                   then pure (fromInteger i)
-                   else pfail
-      _      -> pfail
-  where
-      isWord8 i = (fromIntegral (minBound::Word8)) <= i && i <= (fromIntegral (maxBound::Word8))
-
-
-core_bytesP :: forall n. (KnownNat n) => ReadP (Core_bytes n)
-core_bytesP = do
-    bytes <- count (fromNat (Proxy @n)) word8P
-    pure (fromList bytes)
+readPrectaggedCore_bytes :: forall n. (KnownNat n) => String -> ReadPrec (Core_bytes n)
+readPrectaggedCore_bytes tag = lift (string tag) >> readPrec
 
 
 newtype HalfUID = HalfUID (Core_halfuid)
     deriving(Eq, Ord, IsToken, StreamItem, IsList, HasSize, Arbitrary) via (Core_halfuid)
 instance Show HalfUID where
-    show (HalfUID fb) = showCore_bytes "halfUID" fb
+    show (HalfUID fb) = showtaggedCore_bytes "halfUID" fb
 instance Read HalfUID where
-    readPrec  = lift (HalfUID <$> (readPCore_bytes "halfUID"))
+    readPrec  = HalfUID <$> readPrectaggedCore_bytes "halfUID"
 
 halfUID ::
     Word8 -> Word8 -> Word8 -> Word8
@@ -117,9 +91,9 @@ halfUID b3 b2 b1 b0 =
 newtype UID = UID (Core_uid)
     deriving(Eq, Ord, IsToken, StreamItem, IsList, HasSize, Arbitrary) via (Core_uid)
 instance Show UID where
-    show (UID fb) = showCore_bytes "uid" fb
+    show (UID fb) = showtaggedCore_bytes "uid" fb
 instance Read UID where
-    readPrec  = lift (UID <$> (readPCore_bytes "uid"))
+    readPrec  = UID <$> readPrectaggedCore_bytes "uid"
 
 uid ::
     Word8 -> Word8 -> Word8 -> Word8

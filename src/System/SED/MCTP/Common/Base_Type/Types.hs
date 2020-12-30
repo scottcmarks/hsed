@@ -68,16 +68,18 @@ import           Data.Either                       (Either (..))
 import           Data.Functor                      ((<$>))
 import qualified Data.ListLike                     as LL (FoldableLL (..),
                                                           ListLike (..))
-import           Data.Maybe                        (Maybe (..))
+import           Data.Maybe                        (Maybe (..), maybe)
 import           Data.Proxy                        (Proxy (..))
 import           Data.String                       (IsString (..), String)
 import           GHC.Base                          (Int, Monoid (..),
-                                                    Semigroup (..), pure, ($),
-                                                    (.))
+                                                    Semigroup (..), otherwise,
+                                                    pure, ($), (&&), (.))
 import           GHC.Classes                       (Eq (..), Ord (..))
+import           GHC.Enum                          (Bounded (..))
 import           GHC.Exts                          (IsList (..))
 import           GHC.Num                           (Integer, Num (..))
 import           GHC.Read                          (Read (..))
+import           GHC.Real                          (fromIntegral)
 import           GHC.Show                          (Show (..), showString,
                                                     shows)
 import           GHC.TypeLits                      (KnownNat)
@@ -86,6 +88,10 @@ import           Numeric.Natural                   (Natural)
 
 import           System.SED.MCTP.Common.StreamItem
 import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
+import           Text.ParserCombinators.ReadP      (ReadP, count, pfail)
+import           Text.ParserCombinators.ReadPrec   (lift)
+import           Text.Read.Lex                     (Lexeme (..), lex,
+                                                    numberToInteger)
 
 import           Test.QuickCheck                   (Arbitrary (..))
 
@@ -125,6 +131,26 @@ type Core_max_bytes_at_least n = AtLeast Core_max_bytes n
 
 newtype Core_bytes     n = Core_bytes     (Implementation_bytes ? FixedSize n)
     deriving (Eq, Ord, Show, IsList, IsString, Arbitrary) via (Implementation_bytes ? FixedSize n)
+instance (KnownNat n) => Read (Core_bytes n) where
+    readPrec = lift (fromList <$> count (fromNat (Proxy @n)) word8P)
+        where
+          word8P :: ReadP Word8
+          word8P = do
+              Number n <- lex
+              maybe pfail acceptWord8 (numberToInteger n)
+                where
+                  acceptWord8 i | isWord8 i = pure (fromInteger i)
+                                | otherwise = failWord8 i
+                  isWord8 i = minWord8 <= i && i <= maxWord8
+                  failWord8 i = fail $ showString "Literal "
+                                . shows i
+                                . showString " is out of the Word8 range "
+                                . shows minWord8
+                                . showString ".."
+                                $ show maxWord8
+                  minWord8 = fromIntegral (minBound::Word8)
+                  maxWord8 = fromIntegral (maxBound::Word8)
+
 
 
 instance {-# OVERLAPPING #-} KnownNat n => HasSize (Core_bytes n) where

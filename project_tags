@@ -63,6 +63,38 @@ Struct_Type Struct_Type73,74
 Set_Type Set_Type75,76
 correctABNFToTCGABNF correctABNFToTCGABNF80,81
 
+./src/TypeTests.hs,1249
+module TypeTests TypeTests20,21
+newtype (a(34,35
+newtype (a::Type) ? (p::k) = Refined Refined34,35
+data Table_Kind Table_Kind40,41
+data Table_Kind = Null Null40,41
+data Table_Kind = Null | Object_Table Object_Table40,41
+data Table_Kind = Null | Object_Table | Byte_TableByte_Table40,41
+data Bytes4 Bytes443,44
+data Bytes4 = Bytes4 Bytes443,44
+b4Null b4Null45,46
+b4SP b4SP48,49
+newtype HalfUID HalfUID51,52
+hNull hNull54,55
+data Bytes8 Bytes857,58
+data Bytes8 = Bytes8 Bytes857,58
+b8Null b8Null59,60
+newtype UID UID62,63
+uNull uNull65,66
+newtype For_Table_Kind For_Table_Kind68,69
+instance forall forall (a :: Type) (k :: Table_Kind) - (Show a) => Show (For_Table_Kind k a)70,71
+    show show71,72
+type HalfUID_For_Table_Kind HalfUID_For_Table_Kind75,76
+type For_Object_Table For_Object_Table77,78
+type HalfUID_For_Object_Table HalfUID_For_Object_Table80,81
+type HalfUID_For_Object_Table' HalfUID_For_Object_Table'81,82
+type HalfUID_For_Object_Table'' HalfUID_For_Object_Table''82,83
+nthNull nthNull84,85
+othSP othSP87,88
+class Is_HalfUID_For_Table_Kind Is_HalfUID_For_Table_Kind90,91
+instance Is_HalfUID_For_Table_Kind Is_HalfUID_For_Table_Kind 'Object_Table HalfUID_For_Object_Table92,93
+
 ./src/System/SED/MCTP/TPer/Run.hs,76
 module System.SED.MCTP.TPer.Run System.SED.MCTP.TPer.Run2,3
 run run9,10
@@ -71,57 +103,57 @@ run run9,10
 module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
 run run9,10
 
-./src/System/SED/MCTP/Common/Reference_Types.hs,2031
-module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types26,27
-data Table_Kind Table_Kind49,50
-    Null_TableNull_Table50,51
-  | Object_TableObject_Table51,52
-  | Byte_TableByte_Table52,53
-instance StreamItem StreamItem Table_Kind54,55
-    where generate generate55,56
-type role role59,60
-newtype ForTable_Kind ForTable_Kind60,61
-instance IsRefined IsRefined (ForTable_Kind (k :: Table_Kind)) a63,64
-instance StreamItem StreamItem a => StreamItem (a ? ForTable_Kind k)65,66
-  where generate generate66,67
-type Table_HalfUID Table_HalfUID69,70
-type Table_UID Table_UID71,72
-class IsTable_HalfUID IsTable_HalfUID74,75
-    fromTable_HalfUID fromTable_HalfUID75,76
-    toTable_HalfUID toTable_HalfUID76,77
-instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)78,79
-    fromTable_HalfUID fromTable_HalfUID79,80
-    toTable_HalfUID toTable_HalfUID80,81
-instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)82,83
-    fromTable_HalfUID fromTable_HalfUID83,84
-    toTable_HalfUID toTable_HalfUID84,85
-viaTable_HalfUID viaTable_HalfUID86,87
-newtype Null_Table_HalfUID Null_Table_HalfUID89,90
-instance Show Show Null_Table_HalfUID91,92
-     show show92,93
-newtype Object_Table_HalfUID Object_Table_HalfUID95,96
-instance Show Show Object_Table_HalfUID97,98
-     show show98,99
-newtype Byte_Table_HalfUID Byte_Table_HalfUID101,102
-instance Show Show Byte_Table_HalfUID103,104
-     show show104,105
-newtype Null_Table_UID Null_Table_UID107,108
-instance Show Show Null_Table_UID109,110
-     show show110,111
-newtype Object_Table_UID Object_Table_UID113,114
-instance Show Show Object_Table_UID115,116
-     show show116,117
-newtype Byte_Table_UID Byte_Table_UID119,120
-instance Show Show Byte_Table_UID121,122
-     show show122,123
-nthNull nthNull126,127
-ntuNull ntuNull129,130
-ntHalfUID ntHalfUID133,134
-btHalfUID btHalfUID136,137
-otHalfUID otHalfUID139,140
-ntUID ntUID143,144
-btUID btUID146,147
-otUID otUID149,150
+./src/System/SED/MCTP/Common/Reference_Types.hs,2045
+module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types38,39
+data Table_Kind Table_Kind61,62
+    Null_TableNull_Table62,63
+  | Object_TableObject_Table63,64
+  | Byte_TableByte_Table64,65
+instance StreamItem StreamItem Table_Kind66,67
+    where generate generate67,68
+type role role71,72
+newtype ForTable_Kind ForTable_Kind72,73
+instance IsRefined IsRefined (ForTable_Kind (k :: Table_Kind)) a75,76
+instance StreamItem StreamItem a => StreamItem (a ? ForTable_Kind k)77,78
+  where generate generate78,79
+type Table_HalfUID Table_HalfUID81,82
+type Table_UID Table_UID85,86
+class IsTable_HalfUID IsTable_HalfUID88,89
+    fromTable_HalfUID fromTable_HalfUID89,90
+    toTable_HalfUID toTable_HalfUID90,91
+instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)92,93
+    fromTable_HalfUID fromTable_HalfUID93,94
+    toTable_HalfUID toTable_HalfUID94,95
+instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)96,97
+    fromTable_HalfUID fromTable_HalfUID97,98
+    toTable_HalfUID toTable_HalfUID98,99
+viaTable_HalfUID viaTable_HalfUID100,101
+newtype Null_Table_HalfUID Null_Table_HalfUID103,104
+instance Show Show Null_Table_HalfUID105,106
+     show show106,107
+newtype Object_Table_HalfUID Object_Table_HalfUID109,110
+instance Show Show Object_Table_HalfUID111,112
+     show show112,113
+newtype Byte_Table_HalfUID Byte_Table_HalfUID115,116
+instance Show Show Byte_Table_HalfUID117,118
+     show show118,119
+newtype Null_Table_UID Null_Table_UID121,122
+instance Show Show Null_Table_UID123,124
+     show show124,125
+newtype Object_Table_UID Object_Table_UID127,128
+instance Show Show Object_Table_UID129,130
+     show show130,131
+newtype Byte_Table_UID Byte_Table_UID133,134
+instance Show Show Byte_Table_UID135,136
+     show show136,137
+nthNull nthNull140,141
+ntuNull ntuNull143,144
+ntHalfUID ntHalfUID147,148
+btHalfUID btHalfUID150,151
+otHalfUID otHalfUID153,154
+ntUID ntUID157,158
+btUID btUID160,161
+otUID otUID163,164
 
 ./src/System/SED/MCTP/Common/GDPTest.hs,169
 module System.SED.MCTP.Common.GDPTestSystem.SED.MCTP.Common.GDPTest6,7
@@ -307,30 +339,28 @@ data EnumRow = EnumRow EnumRow413,414
 enumTableTitle enumTableTitle416,417
 enumTableRow enumTableRow424,425
 
-./src/System/SED/MCTP/Common/UID.hs,678
+./src/System/SED/MCTP/Common/UID.hs,632
 module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID34,35
-showCore_bytes showCore_bytes74,75
-readPCore_bytes readPCore_bytes78,79
-word8P word8P82,83
-core_bytesP core_bytesP94,95
-newtype HalfUID HalfUID100,101
-instance Show Show HalfUID102,103
-    show show103,104
-instance Read Read HalfUID104,105
-    readPrec readPrec105,106
-halfUID halfUID107,108
-newtype UID UID116,117
-instance Show Show UID118,119
-    show show119,120
-instance Read Read UID120,121
-    readPrec readPrec121,122
-uid uid123,124
-uidUpper uidUpper132,133
-uidLower uidLower135,136
-uidPlus uidPlus138,139
-(+(+:+)142,143
-hNull hNull146,147
-uNull uNull149,150
+showtaggedCore_bytes showtaggedCore_bytes66,67
+readPrectaggedCore_bytes readPrectaggedCore_bytes70,71
+newtype HalfUID HalfUID74,75
+instance Show Show HalfUID76,77
+    show show77,78
+instance Read Read HalfUID78,79
+    readPrec readPrec79,80
+halfUID halfUID81,82
+newtype UID UID90,91
+instance Show Show UID92,93
+    show show93,94
+instance Read Read UID94,95
+    readPrec readPrec95,96
+uid uid97,98
+uidUpper uidUpper106,107
+uidLower uidLower109,110
+uidPlus uidPlus112,113
+(+(+:+)116,117
+hNull hNull120,121
+uNull uNull123,124
 
 ./src/System/SED/MCTP/Common/Call.hs,1361
 module System.SED.MCTP.Common.Call System.SED.MCTP.Common.Call14,15
@@ -651,61 +681,63 @@ cm' cm'164,165
 ct ct168,169
 ct' ct'177,178
 
-./src/System/SED/MCTP/Common/Base_Type/Types.hs,2681
+./src/System/SED/MCTP/Common/Base_Type/Types.hs,2774
 module System.SED.MCTP.Common.Base_Type.TypesSystem.SED.MCTP.Common.Base_Type.Types28,29
-newtype Implementation_integer Implementation_integer91,92
-newtype Implementation_integer = Implementation_integer {unImplementation_integer unImplementation_integer91,92
-newtype Core_integer Core_integer94,95
-type Core_integer_at_least Core_integer_at_least96,97
-newtype Implementation_uinteger Implementation_uinteger99,100
-newtype Implementation_uinteger = Implementation_uinteger {unImplementation_uinteger unImplementation_uinteger99,100
-newtype Core_uinteger Core_uinteger102,103
-type Core_uinteger_at_least Core_uinteger_at_least104,105
-newtype Implementation_bytes Implementation_bytes107,108
-newtype Implementation_bytes = Implementation_bytes {unImplementation_bytes unImplementation_bytes107,108
-instance LL.FoldableLL LL-FoldableLL Implementation_bytes Word8110,111
-    foldl foldl111,112
-    foldr foldr112,113
-instance LL.ListLike LL-ListLike Implementation_bytes Word8113,114
-    singleton singleton114,115
-    head head115,116
-    tail tail116,117
-    genericLength genericLength117,118
-newtype Core_max_bytes Core_max_bytes120,121
-type Core_max_bytes_at_least Core_max_bytes_at_least122,123
-newtype Core_bytes Core_bytes125,126
-instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_bytes n)129,130
-    size size130,131
-instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_max_bytes n)131,132
-    size size132,133
-instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_uinteger n)133,134
-    size size134,135
-instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_integer n)135,136
-    size size136,137
-instance (K(KnownNat n) => StreamItem (Core_uinteger n)140,141
-    parser parser141,142
-    generate generate151,152
-instance (K(KnownNat n) => StreamItem (Core_integer n)153,154
-    parser parser154,155
-    generate generate164,165
-instance (K(KnownNat n) => StreamItem (Core_bytes n)166,167
+newtype Implementation_integer Implementation_integer97,98
+newtype Implementation_integer = Implementation_integer {unImplementation_integer unImplementation_integer97,98
+newtype Core_integer Core_integer100,101
+type Core_integer_at_least Core_integer_at_least102,103
+newtype Implementation_uinteger Implementation_uinteger105,106
+newtype Implementation_uinteger = Implementation_uinteger {unImplementation_uinteger unImplementation_uinteger105,106
+newtype Core_uinteger Core_uinteger108,109
+type Core_uinteger_at_least Core_uinteger_at_least110,111
+newtype Implementation_bytes Implementation_bytes113,114
+newtype Implementation_bytes = Implementation_bytes {unImplementation_bytes unImplementation_bytes113,114
+instance LL.FoldableLL LL-FoldableLL Implementation_bytes Word8116,117
+    foldl foldl117,118
+    foldr foldr118,119
+instance LL.ListLike LL-ListLike Implementation_bytes Word8119,120
+    singleton singleton120,121
+    head head121,122
+    tail tail122,123
+    genericLength genericLength123,124
+newtype Core_max_bytes Core_max_bytes126,127
+type Core_max_bytes_at_least Core_max_bytes_at_least128,129
+newtype Core_bytes Core_bytes131,132
+instance (K(KnownNat n) => Read (Core_bytes n)133,134
+    readPrec readPrec134,135
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_bytes n)155,156
+    size size156,157
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_max_bytes n)157,158
+    size size158,159
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_uinteger n)159,160
+    size size160,161
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_integer n)161,162
+    size size162,163
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)166,167
     parser parser167,168
     generate generate177,178
-instance (K(KnownNat n) => StreamItem (Core_max_bytes n)180,181
-    parser parser181,182
-    generate generate191,192
-instance (K(KnownNat n) => IsToken (Core_integer n)195,196
-    token token196,197
-    fromToken fromToken197,198
-instance (K(KnownNat n) => IsToken (Core_uinteger n)201,202
-    token token202,203
-    fromToken fromToken203,204
-instance (K(KnownNat n) => IsToken (Core_bytes n)207,208
-    token token208,209
-    fromToken fromToken209,210
-instance (K(KnownNat n) => IsToken (Core_max_bytes n)213,214
-    token token214,215
-    fromToken fromToken215,216
+instance (K(KnownNat n) => StreamItem (Core_integer n)179,180
+    parser parser180,181
+    generate generate190,191
+instance (K(KnownNat n) => StreamItem (Core_bytes n)192,193
+    parser parser193,194
+    generate generate203,204
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)206,207
+    parser parser207,208
+    generate generate217,218
+instance (K(KnownNat n) => IsToken (Core_integer n)221,222
+    token token222,223
+    fromToken fromToken223,224
+instance (K(KnownNat n) => IsToken (Core_uinteger n)227,228
+    token token228,229
+    fromToken fromToken229,230
+instance (K(KnownNat n) => IsToken (Core_bytes n)233,234
+    token token234,235
+    fromToken fromToken235,236
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)239,240
+    token token240,241
+    fromToken fromToken241,242
 
 ./src/System/SED/MCTP/Common/SingTest.hs,75
 module System.SED.MCTP.Common.SingTestSystem.SED.MCTP.Common.SingTest4,5

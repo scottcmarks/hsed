@@ -43,7 +43,7 @@ digraph G {
 				label=Extras,
 				style=filled
 			];
-			u32			 [fillcolor="#bbffff",
+			u33			 [fillcolor="#bbffff",
 				label=GitVersion,
 				penwidth=0,
 				style=filled];
@@ -211,12 +211,16 @@ digraph G {
 		}
 	}
 	u31	 [fillcolor="#bbffbb",
+		label=TypeTests,
+		penwidth=0,
+		style=filled];
+	u32	 [fillcolor="#bbffbb",
 		label=Main,
 		penwidth=0,
 		style=filled];
-	u31 -> u32;
-	u31 -> u29;
-	u31 -> u30;
+	u32 -> u33;
+	u32 -> u29;
+	u32 -> u30;
 	u3 -> u2;
 	u0 -> u4;
 	u1 -> u3;

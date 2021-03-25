@@ -668,18 +668,28 @@ padLeft :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a
 -- | Like <a>padLeft</a>, but original elements are padded to the right.
 padRight :: forall l1 u1 l2 u2 a. (HasSize (Item a), IsBoundedSizeListOps l1 u1 a, IsBoundedSizeListOps l2 u2 a, IsBoundedSizeListOps 0 (u1 + u2) a) => Item a -> (a ? BoundedSize l1 u1) -> a ? BoundedSize l2 u2
 unsafeCreate :: IsRefined p a => a -> Refined p a
-instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
-instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
-instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
-instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
-instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
+instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes
 instance GHC.Base.Monoid System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes
 instance GHC.Base.Semigroup System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes
@@ -688,28 +698,18 @@ instance GHC.Exts.IsList System.SED.MCTP.Common.Base_Type.Types.Implementation_b
 instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes
 instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes
 instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_bytes
-instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
-instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_uinteger n)
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
-instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_uinteger
-instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
-instance GHC.TypeNats.KnownNat n => GHC.Num.Num (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
-instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
-instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_integer n)
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
-instance Data.HasSize.HasSize System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
-instance GHC.Show.Show System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
-instance GHC.Read.Read System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
-instance GHC.Classes.Ord System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
-instance GHC.Classes.Eq System.SED.MCTP.Common.Base_Type.Types.Implementation_integer
+instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_max_bytes n)
+instance GHC.TypeNats.KnownNat n => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => Data.String.IsString (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
+instance GHC.TypeNats.KnownNat n => GHC.Exts.IsList (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
+instance GHC.Show.Show (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
+instance GHC.Classes.Ord (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
+instance GHC.Classes.Eq (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => GHC.Read.Read (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => Data.HasSize.HasSize (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.StreamItem.StreamItem (System.SED.MCTP.Common.Base_Type.Types.Core_bytes n)
@@ -736,8 +736,8 @@ cu' :: LitI -> Q Exp
 cb' :: LitS -> Q Exp
 cm :: LitS -> Q Exp
 cm' :: LitS -> Q Exp
-instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.TH.LitI
 instance Data.String.IsString System.SED.MCTP.Common.Base_Type.TH.LitS
+instance GHC.Num.Num System.SED.MCTP.Common.Base_Type.TH.LitI
 
 
 -- | Formats.
@@ -938,13 +938,6 @@ uidPlus :: HalfUID -> HalfUID -> UID
 infix 9 +:+
 hNull :: HalfUID
 uNull :: UID
-instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
-instance Data.HasSize.HasSize System.SED.MCTP.Common.UID.UID
-instance GHC.Exts.IsList System.SED.MCTP.Common.UID.UID
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.UID
-instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.UID
-instance GHC.Classes.Ord System.SED.MCTP.Common.UID.UID
-instance GHC.Classes.Eq System.SED.MCTP.Common.UID.UID
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.HalfUID
 instance Data.HasSize.HasSize System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Exts.IsList System.SED.MCTP.Common.UID.HalfUID
@@ -952,6 +945,13 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID
 instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Ord System.SED.MCTP.Common.UID.HalfUID
 instance GHC.Classes.Eq System.SED.MCTP.Common.UID.HalfUID
+instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.UID.UID
+instance Data.HasSize.HasSize System.SED.MCTP.Common.UID.UID
+instance GHC.Exts.IsList System.SED.MCTP.Common.UID.UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.UID.UID
+instance System.SED.MCTP.Common.Token.IsToken System.SED.MCTP.Common.UID.UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.UID.UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.UID.UID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.UID
 instance GHC.Read.Read System.SED.MCTP.Common.UID.UID
 instance GHC.Show.Show System.SED.MCTP.Common.UID.HalfUID
@@ -980,18 +980,18 @@ TableColumn :: Int -> ByteString -> Bool -> ColumnType -> TableColumn
 [_columnType] :: TableColumn -> ColumnType
 newtype ColumnType
 ColumnType :: () -> ColumnType
-instance GHC.Show.Show System.SED.MCTP.Common.Table.Table
-instance GHC.Classes.Eq System.SED.MCTP.Common.Table.Table
-instance GHC.Show.Show System.SED.MCTP.Common.Table.TableColumn
-instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableColumn
-instance GHC.Show.Show System.SED.MCTP.Common.Table.ColumnType
-instance GHC.Classes.Eq System.SED.MCTP.Common.Table.ColumnType
-instance GHC.Show.Show System.SED.MCTP.Common.Table.TableRow
-instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableRow
-instance Data.String.IsString System.SED.MCTP.Common.Table.TemplateName
-instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TemplateName
 instance Data.String.IsString System.SED.MCTP.Common.Table.TableName
 instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableName
+instance Data.String.IsString System.SED.MCTP.Common.Table.TemplateName
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TemplateName
+instance GHC.Show.Show System.SED.MCTP.Common.Table.TableRow
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableRow
+instance GHC.Show.Show System.SED.MCTP.Common.Table.ColumnType
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.ColumnType
+instance GHC.Show.Show System.SED.MCTP.Common.Table.TableColumn
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.TableColumn
+instance GHC.Show.Show System.SED.MCTP.Common.Table.Table
+instance GHC.Classes.Eq System.SED.MCTP.Common.Table.Table
 instance GHC.Show.Show System.SED.MCTP.Common.Table.TemplateName
 instance GHC.Show.Show System.SED.MCTP.Common.Table.TableName
 
@@ -1054,30 +1054,9 @@ otHalfUID :: Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_HalfUID
 ntUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Null_Table_UID
 btUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Byte_Table_UID
 otUID :: Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Word8 -> Object_Table_UID
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
-instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Object_Table_UID
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Object_Table_UID
-instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Object_Table_UID
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Object_Table_UID
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Null_Table_UID
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Null_Table_UID
-instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Null_Table_UID
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Null_Table_UID
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
-instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
-instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
-instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
-instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
-instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Table_Kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Table_Kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.Reference_Types.Table_Kind
 instance System.SED.MCTP.Common.Token.IsToken a => System.SED.MCTP.Common.Token.IsToken (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
 instance Test.QuickCheck.Arbitrary.Arbitrary a => Test.QuickCheck.Arbitrary.Arbitrary (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
 instance GHC.Exts.IsList a => GHC.Exts.IsList (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
@@ -1085,9 +1064,30 @@ instance System.SED.MCTP.Common.StreamItem.StreamItem a => System.SED.MCTP.Commo
 instance GHC.Show.Show a => GHC.Show.Show (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
 instance GHC.Classes.Ord a => GHC.Classes.Ord (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
 instance GHC.Classes.Eq a => GHC.Classes.Eq (System.SED.MCTP.Common.Reference_Types.ForTable_Kind k a)
-instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Table_Kind
-instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Table_Kind
-instance GHC.Enum.Enum System.SED.MCTP.Common.Reference_Types.Table_Kind
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Null_Table_HalfUID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Object_Table_HalfUID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Byte_Table_HalfUID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Null_Table_UID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Object_Table_UID
+instance System.SED.MCTP.Common.Reference_Types.IsTable_HalfUID System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance GHC.Classes.Ord System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
+instance GHC.Classes.Eq System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Byte_Table_UID
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Object_Table_UID
 instance GHC.Show.Show System.SED.MCTP.Common.Reference_Types.Null_Table_UID
@@ -1180,19 +1180,19 @@ data Known_Core_Type :: Nat -> Type
 [Set_Type] :: [(Core_uinteger_2, Core_uinteger_2)] -> Known_Core_Type 15
 data Some_Core_Type
 Some_Core_Type :: Known_Core_Type n -> Some_Core_Type
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Object_Table
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Object_Table
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Base_Type
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Base_Type
-instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref
-instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref
 instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_table_kind
 instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_table_kind
 instance GHC.Enum.Enum System.SED.MCTP.Common.Format.Core_table_kind
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Base_Type
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Base_Type
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_non_Base_Type
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Byte_Table
+instance GHC.Show.Show System.SED.MCTP.Common.Format.Core_uidref_Object_Table
+instance GHC.Classes.Eq System.SED.MCTP.Common.Format.Core_uidref_Object_Table
 instance GHC.Show.Show (System.SED.MCTP.Common.Format.Max_bytes n)
 instance GHC.Classes.Eq (System.SED.MCTP.Common.Format.Max_bytes n)
 instance GHC.Show.Show (System.SED.MCTP.Common.Format.Known_Core_Type n)
@@ -1228,9 +1228,9 @@ module System.SED.MCTP.Common.TableUIDs.TH
 
 -- | Bespoke QuasiQuoter for Table 240
 t240 :: QuasiQuoter
+instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRow
 instance GHC.Show.Show System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
 instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
-instance GHC.Classes.Eq System.SED.MCTP.Common.TableUIDs.TH.UIDRow
 instance GHC.Base.Semigroup System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
 instance GHC.Base.Monoid System.SED.MCTP.Common.TableUIDs.TH.UIDRowDecs
 
@@ -1560,8 +1560,8 @@ data EnumRow
 EnumRow :: String -> [Int] -> EnumRow
 enumTableTitle :: Parser String
 enumTableRow :: [Int] -> Parser EnumRow
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.TypeTableRow
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.TH.EnumRow
 instance forall k (s :: k) a. System.SED.MCTP.Common.TypeUIDs.TH.IsOne_Of (System.SED.MCTP.Common.TypeUIDs.TH.One_Of s) a
 instance Data.Refined.Predicate (System.SED.MCTP.Common.TypeUIDs.TH.One_Of (Data.Set.Internal.Set a)) a
 instance GHC.TypeNats.KnownNat n => System.SED.MCTP.Common.TypeUIDs.TH.Is_Core_Format (System.SED.MCTP.Common.TypeUIDs.TH.Core_Format n)
@@ -2063,101 +2063,101 @@ fYearType :: String
 uYearType :: UID
 fyear_enumType :: String
 uyear_enumType :: UID
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_table_kind
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_table_kind
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_table_kind
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_table_kind
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_table_kind
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_reset_types
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_reset_types
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_reset_types
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_reset_types
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_reset_types
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_padding_type
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_padding_type
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_padding_type
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_padding_type
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_padding_type
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_log_select
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_log_select
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_log_select
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_log_select
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_log_select
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_boolean
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_boolean
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_boolean
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_boolean
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_boolean
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_auth_method
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_auth_method
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_auth_method
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_auth_method
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_auth_method
-instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
-instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
-instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
-instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
-instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
 instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
 instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
 instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
 instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
 instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_adv_key_mode
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_attr_flags
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_auth_method
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_boolean
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_boolean_ACE
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_clock_kind
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_enc_supported
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_hash_protocol
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_keys_avail_conds
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_last_reenc_stat
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_life_cycle_state
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_log_select
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_padding_type
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_reencrypt_state
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_reset_types
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_symmetric_mode_media
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_table_kind
+instance GHC.Show.Show System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Classes.Ord System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Classes.Eq System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Enum.Enum System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
+instance GHC.Enum.Bounded System.SED.MCTP.Common.TypeUIDs.Core_verify_mode
 
 
 -- | Parse and generate values used in method invocations and responses.
@@ -2190,16 +2190,16 @@ L :: List -> Value
 class IsValue a
 value :: IsValue a => a -> Value
 mvalue :: IsValue a => a -> Maybe Value
+instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Datum
+instance GHC.Show.Show System.SED.MCTP.Common.Value.Datum
+instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Name
+instance GHC.Show.Show System.SED.MCTP.Common.Value.Name
 instance GHC.Classes.Eq System.SED.MCTP.Common.Value.NamedValue
 instance GHC.Show.Show System.SED.MCTP.Common.Value.NamedValue
 instance GHC.Classes.Eq System.SED.MCTP.Common.Value.List
 instance GHC.Show.Show System.SED.MCTP.Common.Value.List
 instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Value
 instance GHC.Show.Show System.SED.MCTP.Common.Value.Value
-instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Name
-instance GHC.Show.Show System.SED.MCTP.Common.Value.Name
-instance GHC.Classes.Eq System.SED.MCTP.Common.Value.Datum
-instance GHC.Show.Show System.SED.MCTP.Common.Value.Datum
 instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Value.Value
 instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Value.Datum
 instance System.SED.MCTP.Common.Value.IsValue System.SED.MCTP.Common.Value.NamedValue
@@ -2255,12 +2255,12 @@ MethodCall :: MethodHeader -> Parameters -> Natural -> MethodCall
 [_parameters] :: MethodCall -> Parameters
 [_statusCode] :: MethodCall -> Natural
 d :: Natural -> Value
-instance GHC.Classes.Eq System.SED.MCTP.Common.Call.MethodCall
-instance GHC.Show.Show System.SED.MCTP.Common.Call.MethodCall
-instance GHC.Classes.Eq System.SED.MCTP.Common.Call.Parameters
-instance GHC.Show.Show System.SED.MCTP.Common.Call.Parameters
 instance GHC.Classes.Eq System.SED.MCTP.Common.Call.MethodHeader
 instance GHC.Show.Show System.SED.MCTP.Common.Call.MethodHeader
+instance GHC.Classes.Eq System.SED.MCTP.Common.Call.Parameters
+instance GHC.Show.Show System.SED.MCTP.Common.Call.Parameters
+instance GHC.Classes.Eq System.SED.MCTP.Common.Call.MethodCall
+instance GHC.Show.Show System.SED.MCTP.Common.Call.MethodCall
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Call.MethodCall
 instance Test.QuickCheck.Arbitrary.Arbitrary System.SED.MCTP.Common.Call.MethodCall
 instance System.SED.MCTP.Common.StreamItem.StreamItem System.SED.MCTP.Common.Call.Parameters
@@ -2299,11 +2299,11 @@ infixr 5 ++
 --   evaluated before <tt>a</tt>. If you need to guarantee a specific order
 --   of evaluation, you must use the function <tt>pseq</tt> from the
 --   "parallel" package.
-seq :: a -> b -> b
+seq :: forall (r :: RuntimeRep) a (b :: TYPE r). a -> b -> b
 infixr 0 `seq`
 
--- | <i>O(n)</i>. <a>filter</a>, applied to a predicate and a list, returns
---   the list of those elements that satisfy the predicate; i.e.,
+-- | &lt;math&gt;. <a>filter</a>, applied to a predicate and a list,
+--   returns the list of those elements that satisfy the predicate; i.e.,
 --   
 --   <pre>
 --   filter p xs = [ x | x &lt;- xs, p x]
@@ -2315,7 +2315,7 @@ infixr 0 `seq`
 --   </pre>
 filter :: (a -> Bool) -> [a] -> [a]
 
--- | <i>O(min(m,n))</i>. <a>zip</a> takes two lists and returns a list of
+-- | &lt;math&gt;. <a>zip</a> takes two lists and returns a list of
 --   corresponding pairs.
 --   
 --   <pre>
@@ -2439,6 +2439,14 @@ guard :: Alternative f => Bool -> f ()
 -- | The <a>join</a> function is the conventional monad join operator. It
 --   is used to remove one level of monadic structure, projecting its bound
 --   argument into the outer level.
+--   
+--   '<tt><a>join</a> bss</tt>' can be understood as the <tt>do</tt>
+--   expression
+--   
+--   <pre>
+--   do bs &lt;- bss
+--      bs
+--   </pre>
 --   
 --   <h4><b>Examples</b></h4>
 --   
@@ -2661,10 +2669,10 @@ divMod :: Integral a => a -> a -> (a, a)
 
 -- | conversion to <a>Integer</a>
 toInteger :: Integral a => a -> Integer
-infixl 7 `quot`
-infixl 7 `rem`
-infixl 7 `div`
 infixl 7 `mod`
+infixl 7 `div`
+infixl 7 `rem`
+infixl 7 `quot`
 
 -- | The <a>Monad</a> class defines the basic operations over a
 --   <i>monad</i>, a concept from a branch of mathematics known as
@@ -2690,7 +2698,8 @@ infixl 7 `mod`
 --   
 --   <ul>
 --   <li><pre><a>pure</a> = <a>return</a></pre></li>
---   <li><pre>(<a>&lt;*&gt;</a>) = <a>ap</a></pre></li>
+--   <li><pre>m1 <a>&lt;*&gt;</a> m2 = m1 <a>&gt;&gt;=</a> (x1 -&gt; m2
+--   <a>&gt;&gt;=</a> (x2 -&gt; <a>return</a> (x1 x2)))</pre></li>
 --   </ul>
 --   
 --   The above laws imply:
@@ -2710,11 +2719,27 @@ class Applicative m => Monad (m :: Type -> Type)
 
 -- | Sequentially compose two actions, passing any value produced by the
 --   first as an argument to the second.
+--   
+--   '<tt>as <a>&gt;&gt;=</a> bs</tt>' can be understood as the <tt>do</tt>
+--   expression
+--   
+--   <pre>
+--   do a &lt;- as
+--      bs a
+--   </pre>
 (>>=) :: Monad m => m a -> (a -> m b) -> m b
 
 -- | Sequentially compose two actions, discarding any value produced by the
 --   first, like sequencing operators (such as the semicolon) in imperative
 --   languages.
+--   
+--   '<tt>as <a>&gt;&gt;</a> bs</tt>' can be understood as the <tt>do</tt>
+--   expression
+--   
+--   <pre>
+--   do as
+--      bs
+--   </pre>
 (>>) :: Monad m => m a -> m b -> m b
 
 -- | Inject a value into the monadic type.
@@ -2897,11 +2922,31 @@ gmapMo :: (Data a, MonadPlus m) => (forall d. Data d => d -> m d) -> a -> m a
 --   <a>fmap</a> and the first law, so you need only check that the former
 --   condition holds.
 class Functor (f :: Type -> Type)
+
+-- | Using <tt>ApplicativeDo</tt>: '<tt><a>fmap</a> f as</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do a &lt;- as
+--      pure (f a)
+--   </pre>
+--   
+--   with an inferred <tt>Functor</tt> constraint.
 fmap :: Functor f => (a -> b) -> f a -> f b
 
 -- | Replace all locations in the input with the same value. The default
 --   definition is <tt><a>fmap</a> . <a>const</a></tt>, but this may be
 --   overridden with a more efficient version.
+--   
+--   Using <tt>ApplicativeDo</tt>: '<tt>a <a>&lt;$</a> bs</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do bs
+--      pure a
+--   </pre>
+--   
+--   with an inferred <tt>Functor</tt> constraint.
 (<$) :: Functor f => a -> f b -> f a
 infixl 4 <$
 
@@ -2960,9 +3005,9 @@ signum :: Num a => a -> a
 --   value of type <a>Integer</a>, so such literals have type
 --   <tt>(<a>Num</a> a) =&gt; a</tt>.
 fromInteger :: Num a => Integer -> a
+infixl 6 -
 infixl 6 +
 infixl 7 *
-infixl 6 -
 
 -- | The <a>Ord</a> class is used for totally ordered datatypes.
 --   
@@ -2997,6 +3042,10 @@ infixl 6 -
 --   <li><tt>max x y == if x &gt;= y then x else y</tt> = <a>True</a></li>
 --   </ol>
 --   
+--   Note that (7.) and (8.) do <i>not</i> require <a>min</a> and
+--   <a>max</a> to return either of their arguments. The result is merely
+--   required to <i>equal</i> one of the arguments in terms of <a>(==)</a>.
+--   
 --   Minimal complete definition: either <a>compare</a> or <a>&lt;=</a>.
 --   Using <a>compare</a> can be more efficient for complex types.
 class Eq a => Ord a
@@ -3007,10 +3056,10 @@ compare :: Ord a => a -> a -> Ordering
 (>=) :: Ord a => a -> a -> Bool
 max :: Ord a => a -> a -> a
 min :: Ord a => a -> a -> a
-infix 4 >=
-infix 4 >
-infix 4 <=
 infix 4 <
+infix 4 <=
+infix 4 >
+infix 4 >=
 
 -- | Parsing of <a>String</a>s, producing values.
 --   
@@ -3399,7 +3448,8 @@ fromString :: IsString a => String -> a
 --   
 --   <ul>
 --   <li><pre><a>pure</a> = <a>return</a></pre></li>
---   <li><pre>(<a>&lt;*&gt;</a>) = <a>ap</a></pre></li>
+--   <li><pre>m1 <a>&lt;*&gt;</a> m2 = m1 <a>&gt;&gt;=</a> (x1 -&gt; m2
+--   <a>&gt;&gt;=</a> (x2 -&gt; <a>return</a> (x1 x2)))</pre></li>
 --   <li><pre>(<a>*&gt;</a>) = (<a>&gt;&gt;</a>)</pre></li>
 --   </ul>
 --   
@@ -3414,6 +3464,15 @@ pure :: Applicative f => a -> f a
 --   
 --   A few functors support an implementation of <a>&lt;*&gt;</a> that is
 --   more efficient than the default one.
+--   
+--   Using <tt>ApplicativeDo</tt>: '<tt>fs <a>&lt;*&gt;</a> as</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do f &lt;- fs
+--      a &lt;- as
+--      pure (f a)
+--   </pre>
 (<*>) :: Applicative f => f (a -> b) -> f a -> f b
 
 -- | Lift a binary function to actions.
@@ -3422,16 +3481,55 @@ pure :: Applicative f => a -> f a
 --   efficient than the default one. In particular, if <a>fmap</a> is an
 --   expensive operation, it is likely better to use <a>liftA2</a> than to
 --   <a>fmap</a> over the structure and then use <a>&lt;*&gt;</a>.
+--   
+--   This became a typeclass method in 4.10.0.0. Prior to that, it was a
+--   function defined in terms of <a>&lt;*&gt;</a> and <a>fmap</a>.
+--   
+--   Using <tt>ApplicativeDo</tt>: '<tt><a>liftA2</a> f as bs</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do a &lt;- as
+--      b &lt;- bs
+--      pure (f a b)
+--   </pre>
 liftA2 :: Applicative f => (a -> b -> c) -> f a -> f b -> f c
 
 -- | Sequence actions, discarding the value of the first argument.
+--   
+--   '<tt>as <a>*&gt;</a> bs</tt>' can be understood as the <tt>do</tt>
+--   expression
+--   
+--   <pre>
+--   do as
+--      bs
+--   </pre>
+--   
+--   This is a tad complicated for our <tt>ApplicativeDo</tt> extension
+--   which will give it a <tt>Monad</tt> constraint. For an
+--   <tt>Applicative</tt> constraint we write it of the form
+--   
+--   <pre>
+--   do _ &lt;- as
+--      b &lt;- bs
+--      pure b
+--   </pre>
 (*>) :: Applicative f => f a -> f b -> f b
 
 -- | Sequence actions, discarding the value of the second argument.
+--   
+--   Using <tt>ApplicativeDo</tt>: '<tt>as <a>&lt;*</a> bs</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do a &lt;- as
+--      bs
+--      pure a
+--   </pre>
 (<*) :: Applicative f => f a -> f b -> f a
-infixl 4 <*>
-infixl 4 *>
 infixl 4 <*
+infixl 4 *>
+infixl 4 <*>
 
 -- | Data structures that can be folded.
 --   
@@ -3611,7 +3709,14 @@ infix 4 `elem`
 --   <a>Compose</a> are from <a>Data.Functor.Identity</a> and
 --   <a>Data.Functor.Compose</a>.
 --   
---   (The naturality law is implied by parametricity.)
+--   A result of the naturality law is a purity law for <a>traverse</a>
+--   
+--   <pre>
+--   <a>traverse</a> <a>pure</a> = <a>pure</a>
+--   </pre>
+--   
+--   (The naturality law is implied by parametricity and thus so is the
+--   purity law [1, p15].)
 --   
 --   Instances are similar to <a>Functor</a>, e.g. given a data type
 --   
@@ -3641,6 +3746,9 @@ infix 4 `elem`
 --   equivalent to traversal with a constant applicative functor
 --   (<a>foldMapDefault</a>).</li>
 --   </ul>
+--   
+--   References: [1] The Essence of the Iterator Pattern, Jeremy Gibbons
+--   and Bruno C. d. S. Oliveira
 class (Functor t, Foldable t) => Traversable (t :: Type -> Type)
 
 -- | Map each element of a structure to an action, evaluate these actions
@@ -3685,6 +3793,11 @@ class Generic a
 class Semigroup a
 
 -- | An associative operation.
+--   
+--   <pre>
+--   &gt;&gt;&gt; [1,2,3] &lt;&gt; [4,5,6]
+--   [1,2,3,4,5,6]
+--   </pre>
 (<>) :: Semigroup a => a -> a -> a
 infixr 6 <>
 
@@ -3716,13 +3829,21 @@ infixr 6 <>
 class Semigroup a => Monoid a
 
 -- | Identity of <a>mappend</a>
+--   
+--   <pre>
+--   &gt;&gt;&gt; "Hello world" &lt;&gt; mempty
+--   "Hello world"
+--   </pre>
 mempty :: Monoid a => a
 
 -- | An associative operation
 --   
 --   <b>NOTE</b>: This method is redundant and has the default
 --   implementation <tt><a>mappend</a> = (<a>&lt;&gt;</a>)</tt> since
---   <i>base-4.11.0.0</i>.
+--   <i>base-4.11.0.0</i>. Should it be implemented manually, since
+--   <a>mappend</a> is a synonym for (<a>&lt;&gt;</a>), it is expected that
+--   the two functions are defined the same way. In a future GHC release
+--   <a>mappend</a> will be removed from <a>Monoid</a>.
 mappend :: Monoid a => a -> a -> a
 
 -- | Fold a list using the monoid.
@@ -3730,6 +3851,11 @@ mappend :: Monoid a => a -> a -> a
 --   For most types, the default definition for <a>mconcat</a> will be
 --   used, but the function is included in the class definition so that an
 --   optimized version can be provided for specific types.
+--   
+--   <pre>
+--   &gt;&gt;&gt; mconcat ["Hello", " ", "Haskell", "!"]
+--   "Hello Haskell!"
+--   </pre>
 mconcat :: Monoid a => [a] -> a
 data Bool
 False :: Bool
@@ -3777,15 +3903,12 @@ data Int32
 -- | 64-bit signed integer type
 data Int64
 
--- | Invariant: <a>Jn#</a> and <a>Jp#</a> are used iff value doesn't fit in
---   <a>S#</a>
+-- | Arbitrary precision integers. In contrast with fixed-size integral
+--   types such as <a>Int</a>, the <a>Integer</a> type represents the
+--   entire infinite range of integers.
 --   
---   Useful properties resulting from the invariants:
---   
---   <ul>
---   <li><pre>abs (<a>S#</a> _) &lt;= abs (<a>Jp#</a> _)</pre></li>
---   <li><pre>abs (<a>S#</a> _) &lt; abs (<a>Jn#</a> _)</pre></li>
---   </ul>
+--   For more information about this type's representation, see the
+--   comments in its implementation.
 data Integer
 
 -- | Type representing arbitrary-precision non-negative integers.
@@ -4034,6 +4157,8 @@ data CallStack
 
 -- | A <a>String</a> is a list of characters. String constants in Haskell
 --   are values of type <a>String</a>.
+--   
+--   See <a>Data.List</a> for operations on lists.
 type String = [Char]
 
 -- | Boolean "not"
@@ -4248,6 +4373,21 @@ first :: Bifunctor p => (a -> b) -> p a c -> p b c
 --   </pre>
 second :: Bifunctor p => (b -> c) -> p a b -> p a c
 
+-- | <a>forM_</a> is <a>mapM_</a> with its arguments flipped. For a version
+--   that doesn't ignore the results see <a>forM</a>.
+--   
+--   As of base 4.8.0.0, <a>forM_</a> is just <a>for_</a>, specialized to
+--   <a>Monad</a>.
+forM_ :: (Foldable t, Monad m) => t a -> (a -> m b) -> m ()
+
+-- | Map each element of a structure to a monadic action, evaluate these
+--   actions from left to right, and ignore the results. For a version that
+--   doesn't ignore the results see <a>mapM</a>.
+--   
+--   As of base 4.8.0.0, <a>mapM_</a> is just <a>traverse_</a>, specialized
+--   to <a>Monad</a>.
+mapM_ :: (Foldable t, Monad m) => (a -> m b) -> t a -> m ()
+
 -- | A <a>ThreadId</a> is an abstract type representing a handle to a
 --   thread. <a>ThreadId</a> is an instance of <a>Eq</a>, <a>Ord</a> and
 --   <a>Show</a>, where the <a>Ord</a> instance implements an arbitrary
@@ -4381,6 +4521,32 @@ data Void
 -- | <a>Chan</a> is an abstract type representing an unbounded FIFO
 --   channel.
 data Chan a
+
+-- | <a>QSem</a> is a quantity semaphore in which the resource is acquired
+--   and released in units of one. It provides guaranteed FIFO ordering for
+--   satisfying blocked <a>waitQSem</a> calls.
+--   
+--   The pattern
+--   
+--   <pre>
+--   bracket_ waitQSem signalQSem (...)
+--   </pre>
+--   
+--   is safe; it never loses a unit of the resource.
+data QSem
+
+-- | <a>QSemN</a> is a quantity semaphore in which the resource is acquired
+--   and released in units of one. It provides guaranteed FIFO ordering for
+--   satisfying blocked <a>waitQSemN</a> calls.
+--   
+--   The pattern
+--   
+--   <pre>
+--   bracket_ (waitQSemN n) (signalQSemN n) (...)
+--   </pre>
+--   
+--   is safe; it never loses any of the resource.
+data QSemN
 
 -- | The <a>bimapAccumR</a> function behaves like a combination of
 --   <a>bimap</a> and <a>bifoldl</a>; it traverses a structure from right
@@ -4766,6 +4932,17 @@ zipWithM :: Applicative m => (a -> b -> m c) -> [a] -> [b] -> m [c]
 
 -- | Repeat an action indefinitely.
 --   
+--   Using <tt>ApplicativeDo</tt>: '<tt><a>forever</a> as</tt>' can be
+--   understood as the pseudo-<tt>do</tt> expression
+--   
+--   <pre>
+--   do as
+--      as
+--      ..
+--   </pre>
+--   
+--   with <tt>as</tt> repeating.
+--   
 --   <h4><b>Examples</b></h4>
 --   
 --   A common use of <a>forever</a> is to process input from network
@@ -4802,6 +4979,14 @@ forever :: Applicative f => f a -> f b
 infixr 1 <=<
 
 -- | Left-to-right composition of Kleisli arrows.
+--   
+--   '<tt>(bs <a>&gt;=&gt;</a> cs) a</tt>' can be understood as the
+--   <tt>do</tt> expression
+--   
+--   <pre>
+--   do b &lt;- bs a
+--      cs b
+--   </pre>
 (>=>) :: Monad m => (a -> m b) -> (b -> m c) -> a -> m c
 infixr 1 >=>
 
@@ -5155,21 +5340,6 @@ sequence_ :: (Foldable t, Monad m) => t (m a) -> m ()
 --   <a>sequenceA</a>.
 sequenceA_ :: (Foldable t, Applicative f) => t (f a) -> f ()
 
--- | <a>forM_</a> is <a>mapM_</a> with its arguments flipped. For a version
---   that doesn't ignore the results see <a>forM</a>.
---   
---   As of base 4.8.0.0, <a>forM_</a> is just <a>for_</a>, specialized to
---   <a>Monad</a>.
-forM_ :: (Foldable t, Monad m) => t a -> (a -> m b) -> m ()
-
--- | Map each element of a structure to a monadic action, evaluate these
---   actions from left to right, and ignore the results. For a version that
---   doesn't ignore the results see <a>mapM</a>.
---   
---   As of base 4.8.0.0, <a>mapM_</a> is just <a>traverse_</a>, specialized
---   to <a>Monad</a>.
-mapM_ :: (Foldable t, Monad m) => (a -> m b) -> t a -> m ()
-
 -- | <a>for_</a> is <a>traverse_</a> with its arguments flipped. For a
 --   version that doesn't ignore the results see <a>for</a>.
 --   
@@ -5456,6 +5626,8 @@ comparing :: Ord a => (b -> a) -> b -> b -> Ordering
 newtype Down a
 Down :: a -> Down a
 
+[getDown] :: Down a -> a
+
 -- | <a>Proxy</a> is a type that holds no data, but has a phantom parameter
 --   of arbitrary type (or even kind). Its use is to provide type
 --   information, even though there is no value available of that type (or
@@ -5542,7 +5714,7 @@ byteSwap64 :: Word64 -> Word64
 -- | Reverse order of bytes in <a>Word32</a>.
 byteSwap32 :: Word32 -> Word32
 
--- | Swap bytes in <a>Word16</a>.
+-- | Reverse order of bytes in <a>Word16</a>.
 byteSwap16 :: Word16 -> Word16
 
 -- | <tt><a>lcm</a> x y</tt> is the smallest positive integer that both
@@ -5577,8 +5749,8 @@ even :: Integral a => a -> Bool
 --   inaccessible to the rest of the program.
 runST :: (forall s. () => ST s a) -> a
 
--- | <i>O(min(m,n))</i>. <a>zipWith</a> generalises <a>zip</a> by zipping
---   with the function given as the first argument, instead of a tupling
+-- | &lt;math&gt;. <a>zipWith</a> generalises <a>zip</a> by zipping with
+--   the function given as the first argument, instead of a tupling
 --   function. For example, <tt><a>zipWith</a> (+)</tt> is applied to two
 --   lists to produce the list of corresponding sums:
 --   
@@ -6018,11 +6190,21 @@ infixl 0 `on`
 --   
 --   Instead of making a recursive call, we introduce a dummy parameter
 --   <tt>rec</tt>; when used within <a>fix</a>, this parameter then refers
---   to <a>fix</a> argument, hence the recursion is reintroduced.
+--   to <a>fix</a>’s argument, hence the recursion is reintroduced.
 fix :: (a -> a) -> a
 
 -- | <tt><a>void</a> value</tt> discards or ignores the result of
 --   evaluation, such as the return value of an <a>IO</a> action.
+--   
+--   Using <tt>ApplicativeDo</tt>: '<tt><a>void</a> as</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do as
+--      pure ()
+--   </pre>
+--   
+--   with an inferred <tt>Functor</tt> constraint.
 --   
 --   <h4><b>Examples</b></h4>
 --   
@@ -6077,6 +6259,16 @@ fix :: (a -> a) -> a
 void :: Functor f => f a -> f ()
 
 -- | Flipped version of <a>&lt;$</a>.
+--   
+--   Using <tt>ApplicativeDo</tt>: '<tt>as <a>$&gt;</a> b</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do as
+--      pure b
+--   </pre>
+--   
+--   with an inferred <tt>Functor</tt> constraint.
 --   
 --   <h4><b>Examples</b></h4>
 --   
@@ -6305,10 +6497,31 @@ when :: Applicative f => Bool -> f () -> f ()
 infixr 1 =<<
 
 -- | Lift a ternary function to actions.
+--   
+--   Using <tt>ApplicativeDo</tt>: '<tt><a>liftA3</a> f as bs cs</tt>' can
+--   be understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do a &lt;- as
+--      b &lt;- bs
+--      c &lt;- cs
+--      pure (f a b c)
+--   </pre>
 liftA3 :: Applicative f => (a -> b -> c -> d) -> f a -> f b -> f c -> f d
 
 -- | Lift a function to actions. This function may be used as a value for
 --   <a>fmap</a> in a <a>Functor</a> instance.
+--   
+--   | Using <tt>ApplicativeDo</tt>: '<tt><a>liftA</a> f as</tt>' can be
+--   understood as the <tt>do</tt> expression
+--   
+--   <pre>
+--   do a &lt;- as
+--      pure (f a)
+--   </pre>
+--   
+--   with an inferred <tt>Functor</tt> constraint, weaker than
+--   <tt>Applicative</tt>.
 liftA :: Applicative f => (a -> b) -> f a -> f b
 
 -- | Non-empty (and non-strict) list type.
@@ -6338,11 +6551,11 @@ type HasCallStack = ?callStack :: CallStack
 data SomeException
 SomeException :: e -> SomeException
 
--- | Boolean "and"
+-- | Boolean "and", lazy in the second argument
 (&&) :: Bool -> Bool -> Bool
 infixr 3 &&
 
--- | Boolean "or"
+-- | Boolean "or", lazy in the second argument
 (||) :: Bool -> Bool -> Bool
 infixr 2 ||
 
@@ -6406,24 +6619,19 @@ ReaderT :: (r -> m a) -> ReaderT r (m :: Type -> Type) a
 --   u . f</pre></li>
 --   </ul>
 --   
---   The third is a currently nameless law which ensures that the current
---   context is preserved.
+--   Instances of <tt>MonadUnliftIO</tt> must also satisfy the idempotency
+--   law:
 --   
 --   <ul>
---   <li><pre>askUnliftIO &gt;&gt;= (u -&gt; liftIO (unliftIO u m)) =
+--   <li><pre>askUnliftIO &gt;&gt;= \u -&gt; (liftIO . unliftIO u) m =
 --   m</pre></li>
 --   </ul>
 --   
---   If you have a name for this, please submit it in a pull request for
---   great glory.
+--   This law showcases two properties. First, <a>askUnliftIO</a> doesn't
+--   change the monadic context, and second, <tt>liftIO . unliftIO u</tt>
+--   is equivalent to <tt>id</tt> IF called in the same monadic context as
+--   <a>askUnliftIO</a>.
 class MonadIO m => MonadUnliftIO (m :: Type -> Type)
-
--- | Capture the current monadic context, providing the ability to run
---   monadic actions in <a>IO</a>.
---   
---   See <a>UnliftIO</a> for an explanation of why we need a helper
---   datatype here.
-askUnliftIO :: MonadUnliftIO m => m (UnliftIO m)
 
 -- | Convenience function for capturing the monadic context and running an
 --   <a>IO</a> action with a runner function. The runner function is used
@@ -7773,6 +7981,34 @@ memoizeRef :: MonadUnliftIO m => m a -> m (Memoized a)
 --   action is only run once, even in a multithreaded application.
 memoizeMVar :: MonadUnliftIO m => m a -> m (Memoized a)
 
+-- | Lifted <a>newQSem</a>.
+newQSem :: MonadIO m => Int -> m QSem
+
+-- | Lifted <a>waitQSem</a>.
+waitQSem :: MonadIO m => QSem -> m ()
+
+-- | Lifted <a>signalQSem</a>.
+signalQSem :: MonadIO m => QSem -> m ()
+
+-- | <a>withQSem</a> is an exception-safe wrapper for performing the
+--   provided operation while holding a unit of value from the semaphore.
+--   It ensures the semaphore cannot be leaked if there are exceptions.
+withQSem :: MonadUnliftIO m => QSem -> m a -> m a
+
+-- | Lifted <a>newQSemN</a>.
+newQSemN :: MonadIO m => Int -> m QSemN
+
+-- | Lifted <a>waitQSemN</a>.
+waitQSemN :: MonadIO m => QSemN -> Int -> m ()
+
+-- | Lifted <a>signalQSemN</a>.
+signalQSemN :: MonadIO m => QSemN -> Int -> m ()
+
+-- | <a>withQSemN</a> is an exception-safe wrapper for performing the
+--   provided operation while holding N unit of value from the semaphore.
+--   It ensures the semaphore cannot be leaked if there are exceptions.
+withQSemN :: MonadUnliftIO m => QSemN -> Int -> m a -> m a
+
 -- | Lifted version of <a>atomically</a>
 atomically :: MonadIO m => STM a -> m a
 
@@ -7890,6 +8126,17 @@ withUnliftIO :: MonadUnliftIO m => (UnliftIO m -> IO a) -> m a
 --   transformation on one concrete type, this function can be more
 --   convenient.
 askRunInIO :: MonadUnliftIO m => m (m a -> IO a)
+
+-- | Capture the current monadic context, providing the ability to run
+--   monadic actions in <a>IO</a>.
+--   
+--   See <a>UnliftIO</a> for an explanation of why we need a helper
+--   datatype here.
+--   
+--   Prior to version 0.2.0.0 of this library, this was a method in the
+--   <a>MonadUnliftIO</a> type class. It was moved out due to
+--   <a>https://github.com/fpco/unliftio/issues/55</a>.
+askUnliftIO :: MonadUnliftIO m => m (UnliftIO m)
 
 -- | The ability to run any monadic action <tt>m a</tt> as <tt>IO a</tt>.
 --   
@@ -8864,32 +9111,32 @@ type HalfUID_For_Object_Table'' = For_Object_Table HalfUID
 nthNull :: HalfUID ? For_Table_Kind 'Null
 othSP :: HalfUID ? For_Table_Kind 'Object_Table
 class Is_HalfUID_For_Table_Kind (k :: Table_Kind) (a :: Type)
-instance GHC.Read.Read a => GHC.Read.Read (TypeTests.For_Table_Kind k a)
-instance GHC.Classes.Ord a => GHC.Classes.Ord (TypeTests.For_Table_Kind k a)
-instance GHC.Classes.Eq a => GHC.Classes.Eq (TypeTests.For_Table_Kind k a)
-instance GHC.Read.Read TypeTests.UID
-instance GHC.Show.Show TypeTests.UID
-instance GHC.Classes.Ord TypeTests.UID
-instance GHC.Classes.Eq TypeTests.UID
-instance GHC.Read.Read TypeTests.Bytes8
-instance GHC.Show.Show TypeTests.Bytes8
-instance GHC.Classes.Ord TypeTests.Bytes8
-instance GHC.Classes.Eq TypeTests.Bytes8
-instance GHC.Read.Read TypeTests.HalfUID
-instance GHC.Show.Show TypeTests.HalfUID
-instance GHC.Classes.Ord TypeTests.HalfUID
-instance GHC.Classes.Eq TypeTests.HalfUID
-instance GHC.Read.Read TypeTests.Bytes4
-instance GHC.Show.Show TypeTests.Bytes4
-instance GHC.Classes.Ord TypeTests.Bytes4
-instance GHC.Classes.Eq TypeTests.Bytes4
+instance forall a k (p :: k). GHC.Read.Read a => GHC.Read.Read (a TypeTests.? p)
+instance forall a k (p :: k). GHC.Classes.Ord a => GHC.Classes.Ord (a TypeTests.? p)
+instance forall a k (p :: k). GHC.Classes.Eq a => GHC.Classes.Eq (a TypeTests.? p)
 instance GHC.Read.Read TypeTests.Table_Kind
 instance GHC.Show.Show TypeTests.Table_Kind
 instance GHC.Enum.Enum TypeTests.Table_Kind
 instance GHC.Classes.Eq TypeTests.Table_Kind
-instance forall a k (p :: k). GHC.Read.Read a => GHC.Read.Read (a TypeTests.? p)
-instance forall a k (p :: k). GHC.Classes.Ord a => GHC.Classes.Ord (a TypeTests.? p)
-instance forall a k (p :: k). GHC.Classes.Eq a => GHC.Classes.Eq (a TypeTests.? p)
+instance GHC.Read.Read TypeTests.Bytes4
+instance GHC.Show.Show TypeTests.Bytes4
+instance GHC.Classes.Ord TypeTests.Bytes4
+instance GHC.Classes.Eq TypeTests.Bytes4
+instance GHC.Read.Read TypeTests.HalfUID
+instance GHC.Show.Show TypeTests.HalfUID
+instance GHC.Classes.Ord TypeTests.HalfUID
+instance GHC.Classes.Eq TypeTests.HalfUID
+instance GHC.Read.Read TypeTests.Bytes8
+instance GHC.Show.Show TypeTests.Bytes8
+instance GHC.Classes.Ord TypeTests.Bytes8
+instance GHC.Classes.Eq TypeTests.Bytes8
+instance GHC.Read.Read TypeTests.UID
+instance GHC.Show.Show TypeTests.UID
+instance GHC.Classes.Ord TypeTests.UID
+instance GHC.Classes.Eq TypeTests.UID
+instance GHC.Read.Read a => GHC.Read.Read (TypeTests.For_Table_Kind k a)
+instance GHC.Classes.Ord a => GHC.Classes.Ord (TypeTests.For_Table_Kind k a)
+instance GHC.Classes.Eq a => GHC.Classes.Eq (TypeTests.For_Table_Kind k a)
 instance forall a k (p :: k). GHC.Show.Show a => GHC.Show.Show (a TypeTests.? p)
 instance TypeTests.Is_HalfUID_For_Table_Kind 'TypeTests.Object_Table TypeTests.HalfUID_For_Object_Table
 instance GHC.Show.Show a => GHC.Show.Show (TypeTests.For_Table_Kind k a)

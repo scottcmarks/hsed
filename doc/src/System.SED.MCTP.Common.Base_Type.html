@@ -74,11 +74,11 @@ Formats.
 </span><span id="line-74"></span><span>    </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><span class="hs-identifier hs-type">Word8</span></span><span>
 </span><span id="line-75"></span><span> </span><span class="hs-glyph">-&gt;</span><span> </span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.Types.html#Core_bytes"><span class="hs-identifier hs-type">Core_bytes</span></a></span><span> </span><span class="annot"><span class="hs-number">4</span></span><span>
 </span><span id="line-76"></span><span id="core_bytes_4"><span class="annot"><span class="annottext">core_bytes_4 :: Word8 -&gt; Word8 -&gt; Word8 -&gt; Word8 -&gt; Core_bytes 4
-</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_4"><span class="hs-identifier hs-var hs-var">core_bytes_4</span></a></span></span><span> </span><span id="local-6989586621679714513"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679714513"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679714512"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679714512"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679714511"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679714511"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679714510"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679714510"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_4"><span class="hs-identifier hs-var hs-var">core_bytes_4</span></a></span></span><span> </span><span id="local-6989586621679582614"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582614"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679582613"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582613"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679582612"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582612"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679582611"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582611"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-77"></span><span>    </span><span class="annot"><span class="annottext">(Implementation_bytes ? FixedSize 4) -&gt; Core_bytes 4
 forall (n :: Nat).
 (Implementation_bytes ? FixedSize n) -&gt; Core_bytes n
@@ -94,13 +94,13 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall l. IsList l =&gt; [Item l] -&gt; l
 </span><span class="hs-identifier hs-var">fromList</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714513"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582614"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714512"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582613"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714511"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582612"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714510"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621679582611"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-78"></span><span>
 </span><span id="line-79"></span><span>
 </span><span id="line-80"></span><span class="annot"><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_8"><span class="hs-identifier hs-type">core_bytes_8</span></a></span><span> </span><span class="hs-glyph">::</span><span>
@@ -116,15 +116,15 @@ Item Implementation_bytes
 -&gt; Word8
 -&gt; Word8
 -&gt; Core_bytes 8
-</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_8"><span class="hs-identifier hs-var hs-var">core_bytes_8</span></a></span></span><span> </span><span id="local-6989586621679714508"><span class="annot"><span class="annottext">b7 :: Word8
-</span><a href="#local-6989586621679714508"><span class="hs-identifier hs-var">b7</span></a></span></span><span> </span><span id="local-6989586621679714507"><span class="annot"><span class="annottext">b6 :: Word8
-</span><a href="#local-6989586621679714507"><span class="hs-identifier hs-var">b6</span></a></span></span><span> </span><span id="local-6989586621679714506"><span class="annot"><span class="annottext">b5 :: Word8
-</span><a href="#local-6989586621679714506"><span class="hs-identifier hs-var">b5</span></a></span></span><span> </span><span id="local-6989586621679714505"><span class="annot"><span class="annottext">b4 :: Word8
-</span><a href="#local-6989586621679714505"><span class="hs-identifier hs-var">b4</span></a></span></span><span> </span><span id="local-6989586621679714504"><span class="annot"><span class="annottext">b3 :: Word8
-</span><a href="#local-6989586621679714504"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679714503"><span class="annot"><span class="annottext">b2 :: Word8
-</span><a href="#local-6989586621679714503"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679714502"><span class="annot"><span class="annottext">b1 :: Word8
-</span><a href="#local-6989586621679714502"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679714501"><span class="annot"><span class="annottext">b0 :: Word8
-</span><a href="#local-6989586621679714501"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
+</span><a href="System.SED.MCTP.Common.Base_Type.html#core_bytes_8"><span class="hs-identifier hs-var hs-var">core_bytes_8</span></a></span></span><span> </span><span id="local-6989586621679582609"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582609"><span class="hs-identifier hs-var">b7</span></a></span></span><span> </span><span id="local-6989586621679582608"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582608"><span class="hs-identifier hs-var">b6</span></a></span></span><span> </span><span id="local-6989586621679582607"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582607"><span class="hs-identifier hs-var">b5</span></a></span></span><span> </span><span id="local-6989586621679582606"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582606"><span class="hs-identifier hs-var">b4</span></a></span></span><span> </span><span id="local-6989586621679582605"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582605"><span class="hs-identifier hs-var">b3</span></a></span></span><span> </span><span id="local-6989586621679582604"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582604"><span class="hs-identifier hs-var">b2</span></a></span></span><span> </span><span id="local-6989586621679582603"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582603"><span class="hs-identifier hs-var">b1</span></a></span></span><span> </span><span id="local-6989586621679582602"><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582602"><span class="hs-identifier hs-var">b0</span></a></span></span><span> </span><span class="hs-glyph">=</span><span>
 </span><span id="line-85"></span><span>    </span><span class="annot"><span class="annottext">(Implementation_bytes ? FixedSize 8) -&gt; Core_bytes 8
 forall (n :: Nat).
 (Implementation_bytes ? FixedSize n) -&gt; Core_bytes n
@@ -140,19 +140,19 @@ forall a b. (a -&gt; b) -&gt; a -&gt; b
 forall l. IsList l =&gt; [Item l] -&gt; l
 </span><span class="hs-identifier hs-var">fromList</span></span><span> </span><span class="hs-special">[</span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714508"><span class="hs-identifier hs-var">b7</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582609"><span class="hs-identifier hs-var">b7</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714507"><span class="hs-identifier hs-var">b6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582608"><span class="hs-identifier hs-var">b6</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714506"><span class="hs-identifier hs-var">b5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582607"><span class="hs-identifier hs-var">b5</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714505"><span class="hs-identifier hs-var">b4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582606"><span class="hs-identifier hs-var">b4</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714504"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582605"><span class="hs-identifier hs-var">b3</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714503"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582604"><span class="hs-identifier hs-var">b2</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714502"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
+</span><a href="#local-6989586621679582603"><span class="hs-identifier hs-var">b1</span></a></span><span class="hs-special">,</span><span> </span><span class="annot"><span class="annottext">Word8
 Item Implementation_bytes
-</span><a href="#local-6989586621679714501"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
+</span><a href="#local-6989586621679582602"><span class="hs-identifier hs-var">b0</span></a></span><span class="hs-special">]</span><span>
 </span><span id="line-86"></span></pre></body></html>

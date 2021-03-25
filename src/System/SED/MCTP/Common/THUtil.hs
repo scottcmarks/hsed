@@ -94,4 +94,4 @@ eLitS ts = LitE (StringL ts)
 
 -- | (Name, String) pair as Exp
 eValP :: Name -> String -> Exp
-eValP hn ts = TupE [VarE hn, eLitS ts]
+eValP hn ts = TupE [Just (VarE hn), Just (eLitS ts)]

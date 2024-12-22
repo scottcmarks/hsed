@@ -1,0 +1,15 @@
+:load dev/DevMain.hs
+:set -fno-warn-type-defaults
+:set -fno-warn-unused-imports
+:set -XDataKinds
+:set -XOverloadedStrings
+:set -XTemplateHaskell
+
+import System.IO
+--------------------------------------------------------------------------------
+
+
+
+
+--------------------------------------------------------------------------------
+putStrLn "script loaded."

@@ -1,0 +1,175 @@
+5.1.1 b. uinteger. Unsigned integer. To differentiate among the type sizes, a size identifier is specified with the type, i.e. a one-byte integer is denoted as uinteger_1, etc.
+"one-byte integer" should be "one-byte unsigned integer" to make a clear distinction from the otherwise identical languague in "a. integer. Signed integer."
+
+5.1.1 The following "ABNF" is illegal according to the cited reference (RFC 5234).
+      - Underscores are not allowed in "rulename" tokens; the allowable values
+        are 'ALPHA *(ALPHA / DIGIT / "-")', i.e. words starting with a letter
+        and containing subsequent letters, digit, or dashes (not underscores).
+      - Elements that are "num-val"s should begin with a '%' followed by a
+        'b', 'd', or 'h'; unadorned DIGITs only may occur as the options
+        "repeat" preceding an "element" in a "repetition"
+
+"Type = Base_Type / Simple_Type / Enumeration_Type / Alternative_Type / List_Type /
+ Restricted_Reference_Type / General_Reference_Type / Named_Value_Type /
+ Struct_Type / Set_Type" does not match the subsequent list, including no
+mention of General_Reference_Table_Type
+
+Named_Value_Name_Type = 11 1*32bytes bytes_8
+Name_Value_Integer_Type = 12 integer_2 bytes_8
+Name_Value_Uinteger_Type = 13 uinteger_2 bytes_8
+
+
+Why is the first one "Named_Value_..." and the next two "Name_Value_..."
+The latter two are later refered to as Named_Value_...
+
+Not an error, exactly, and probably immutable at this point, but ..
+Simple_Type has the pattern <uid,size>, whereas all the other two-parameter
+types are <size,(uid|[uid])>.  Messes with the rhythm.
+
+Thus this:
+
+    Type = Base_Type / Simple_Type / Enumeration_Type / Alternative_Type / List_Type / Restricted_Reference_Type / General_Reference_Type / Named_Value_Type / Struct_Type / Set_Type
+    table_kind = 1/2
+    Base_Type = 0
+    Simple_Type = 1 bytes_8 uinteger_2
+    Enumeration_Type = 2 1*(uinteger_2 uinteger_2)
+    Alternative_Type = 3 2*bytes_8
+    List_Type = 4 uinteger_2 bytes_8
+    Restricted_Reference_Type = 5/6 1*bytes_8
+    General_Reference_Type = 7/8/9
+    General_Reference_Table_Type = 10 table_kind
+    Named_Value_Name_Type = 11 1*32bytes bytes_8
+    Name_Value_Integer_Type = 12 integer_2 bytes_8
+    Name_Value_Uinteger_Type = 13 uinteger_2 bytes_8
+    Struct_Type = 14 1*bytes_8
+    Set_Type = 15 1*(uinteger_2 uinteger_2)
+
+should probably at least be this:
+
+    Type = Base-Type / Simple-Type / Enumeration-Type / Alternative-Type / List-Type / Restricted-Reference-Type / General-Reference-Type / General-Reference-Table-Type / Named-Value-Type / Struct-Type / Set-Type
+    table-kind = %d1/%d2
+    Base-Type = %d0
+    Simple-Type = %d1 bytes-8 uinteger-2
+    Enumeration-Type = %d2 1*(uinteger-2 uinteger-2)
+    Alternative-Type = %d3 2*bytes-8
+    List-Type = %d4 uinteger-2 bytes-8
+    Restricted-Reference-Type = %d5/%d6 1*bytes-8
+    General-Reference-Type = %d7/%d8/%d9
+    General-Reference-Table-Type = %d10 table-kind
+    Named-Value-Name-Type = %d11 1*32bytes bytes-8
+    Name-Value-Integer-Type = %d12 integer-2 bytes-8
+    Name-Value-Uinteger-Type = %d13 uinteger-2 bytes-8
+    Struct-Type = %d14 1*bytes-8
+    Set-Type = %d15 1*(uinteger-2 uinteger-2)
+
+Furthermore, the use of implementation details in this list requires an "out-of-band" semantic description in following text.
+It would probably be much more useful to use something like this:
+
+    Type = Base-Type / Simple-Type / Enumeration-Type / Alternative-Type / List-Type / Restricted-Reference-Type / General-Reference-Type / General-Reference-Table-Type / Named-Value-Type / Struct-Type / Set-Type
+
+    Base-Type = %d0
+    Simple-Type = %d1 Base-Type-uidref uinteger-2
+    Enumeration-Type = %d2 1*(uinteger-2 uinteger-2)
+    Alternative-Type = %d3 2*Non-Base-Type-uidref
+    List-Type = %d4 uinteger-2 Non-Base-Type-uidref
+    Byte-Table-Restricted-Reference-Type = %d5 1*Byte-Table-uidref
+    Object-Table-Restricted-Reference-Type = d6 1*Object-Table-uidref
+    Byte-Table-Row-Number-Type = %d7
+    Object-UID-Type = %d8
+    Table-UID-Type = %d9
+    Table-Reference-Type = %d10 table-kind
+    Name-Value-Name-Type = %d11 1*32bytes Non-Base-Type-uidref
+    Name-Value-Integer-Type = %d12 integer-2 Non-Base-Type-uidref
+    Name-Value-Uinteger-Type = %d13 uinteger-2 Non-Base-Type-uidref
+    Struct-Type = %d14 1*Non-Base-Type-uidref
+    Set-Type = %d15 1*(uinteger-2 uinteger-2)
+
+    Base-Type-uidref = uidref
+    Non-Base-Type-uidref = uidref
+    Byte-Table-uidref = uidref
+    Object-Table-uidref = uidref
+
+    uidref = bytes-8
+    table-kind = %d1/%d2
+
+However, changing to the names above would require changing the
+corresponding entries in the subsequent tables describing Type table
+entries.
+
+(In the Haskell implementation, "Template Haskell" translation is
+applied to the suggested replacement ABNF, and the corresponding
+translation of the Type table entry tables maps from the published Core
+Spec usage to the suggested names, further modified to be Haskell
+identifiers legal for their context (initial lowercase for Haskell value
+identifiers, initial uppercase for Haskell type, class,
+etc. identifiers.)
+
+"c. Enumeration_Type. This is a n unsigned integer in a specific range." should be
+"c. Enumeration_Type. This is an unsigned integer in a specific range."
+
+5.1.3.13ff Table 63 ff
+dashes in names should be underscores, e.g. byte-table-ref s/b byte_table_ref
+Seems to be more a problem in pdftxt than in the original.
+
+
+no "Table 71-3/4 bytes_8" or bytes_8 in the Types table.
+This is presumably because UID is also bytes_8, and because there happen to be
+no types using "raw" bytes_8 instead of uid variants.  Since this is the case,
+we should eliminate the term "bytes_8" in favor of "uid" or "uidref" as
+appropriate.
+
+Table 72 "Certificates_object _ref" should be "Certificates_object_ref"
+
+Table 75 "Fractoin" should be "Fraction"
+
+Table 101 "Eror" should be "Error"
+
+5.1.3.56 "" should be "4"
+
+Table 131 "SPTemplates_object _ref" should be "SPTemplates_object_ref" (no space)
+
+5.1.3.73 "Table 134" should be "Table 136"
+
+5.1.3.74 "Table 137" -- table_kind is defined to be 1/2.
+This enumeration adds values 3-8 as "Reserved" -- why?
+All other references to table_kind are explicitly 1 (Object table) or 2 (Byte table).
+
+5.1.3.76 "Table_object _ref" should be "Table_object_ref"
+
+5.1.3.78 "Template_object _ref" should be "Template_object_ref"
+
+5.1.3.80 "Type_object _ref" should be "Type_object_ref"
+
+5.1.3.81 Not really an erratum, but ... uid is the only use in the Core Spec
+for bytes_8, but collapsing the two concepts is notationally awkward.
+
+
+5.1.4.2.13 package_purpose is a type that has valid values in the range of
+integers from 1-32. The messaging stream description includes 0x00 as reserved,
+rather than illegal:
+
+These integers have the following values:
+   a. 1 = Issuance
+   b. 2 = Key Wrapping
+   c. 3 = Backup
+   d. 4-32 = reserved
+Format:
+   uinteger
+In the messaging stream, these values SHALL be represented as follows:
+   a. 0x00 is reserved
+   b. 0x01 represents Issuance
+   c. 0x02 represents Key Wrapping
+   d. 0x03 represents Backup
+   e. 0x04 – 0x20 are reserved
+
+Table 76 spells its restricting uidref as "ColumnTable_UID".  Nowhere else is there an underscore between Table and UID.  Both redundant by the way, but perhaps "Table" is nice since it will allow "TableTable".
+
+
+
+Also not an error, exactly, and definitely immutable at this point, but ..
+including the base_types in the Column_Types tables is a bad idea.  Instead they should
+just be an enum selector used by Simple_Type.  It's cute to give them UIDs and give them
+a uniform treatment, but the result is that all kinds of referenes have to say "non-base-type"
+and the column types table is almost-but-not-quite full of types of actual data (Types, in
+Haskell parlance), except for the Base types, which are Core_uinteger2->Type value to be used
+specially by the Simple Type constructors.

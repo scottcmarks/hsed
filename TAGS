@@ -1,0 +1,975 @@
+
+./doc-tests/DocTest.hs,0
+
+./Setup.hs,15
+main main1,2
+
+./app/GitHash/Extras/GitVersion.hs,155
+module GitHash.Extras.GitVersion GitHash.Extras.GitVersion15,16
+plainVersion plainVersion32,33
+gitBranch gitBranch39,40
+gitVersion gitVersion52,53
+
+./app/Main.hs,39
+module Main Main2,3
+main main14,15
+
+./spec-tests/System/SED/MCTP/Common/ValueSpec.hs,97
+module System.SED.MCTP.Common.ValueSpec System.SED.MCTP.Common.ValueSpec13,14
+spec spec24,25
+
+./spec-tests/System/SED/MCTP/Common/TypeUIDs/THSpec.hs,109
+module System.SED.MCTP.Common.TypeUIDs.THSpec System.SED.MCTP.Common.TypeUIDs.THSpec12,13
+spec spec21,22
+
+./spec-tests/System/SED/MCTP/Common/TokenSpec.hs,492
+module System.SED.MCTP.Common.TokenSpec System.SED.MCTP.Common.TokenSpec13,14
+spec spec32,33
+maybeIsPrefixOf maybeIsPrefixOf266,267
+maybeParsesEq maybeParsesEq269,270
+(<(<||>)272,273
+tagsReservedForTCG tagsReservedForTCG276,277
+tokenParserByteString tokenParserByteString280,281
+tokenParserString tokenParserString283,284
+p p286,287
+gp gp289,290
+_pgp _pgp293,294
+validFirstTwo validFirstTwo298,299
+validNatural validNatural306,307
+validInteger validInteger312,313
+
+./spec-tests/Spec.hs,0
+
+./dev/DevMain.hs,834
+module DevMain DevMain10,11
+dev dev23,24
+preprocessABNF preprocessABNF36,37
+correctABNFFromTCGABNF correctABNFFromTCGABNF39,40
+coreTypesTCGABNF coreTypesTCGABNF43,44
+Type Type45,46
+table_kind table_kind48,49
+Base_Type Base_Type51,52
+Simple_Type Simple_Type53,54
+Enumeration_Type Enumeration_Type55,56
+Alternative_Type Alternative_Type57,58
+List_Type List_Type59,60
+Restricted_Reference_Type Restricted_Reference_Type61,62
+General_Reference_Type General_Reference_Type63,64
+General_Reference_Table_Type General_Reference_Table_Type65,66
+Named_Value_Name_Type Named_Value_Name_Type67,68
+Name_Value_Integer_Type Name_Value_Integer_Type69,70
+Name_Value_Uinteger_Type Name_Value_Uinteger_Type71,72
+Struct_Type Struct_Type73,74
+Set_Type Set_Type75,76
+correctABNFToTCGABNF correctABNFToTCGABNF80,81
+
+./src/TypeTests.hs,1249
+module TypeTests TypeTests20,21
+newtype (a(34,35
+newtype (a::Type) ? (p::k) = Refined Refined34,35
+data Table_Kind Table_Kind40,41
+data Table_Kind = Null Null40,41
+data Table_Kind = Null | Object_Table Object_Table40,41
+data Table_Kind = Null | Object_Table | Byte_TableByte_Table40,41
+data Bytes4 Bytes443,44
+data Bytes4 = Bytes4 Bytes443,44
+b4Null b4Null45,46
+b4SP b4SP48,49
+newtype HalfUID HalfUID51,52
+hNull hNull54,55
+data Bytes8 Bytes857,58
+data Bytes8 = Bytes8 Bytes857,58
+b8Null b8Null59,60
+newtype UID UID62,63
+uNull uNull65,66
+newtype For_Table_Kind For_Table_Kind68,69
+instance forall forall (a :: Type) (k :: Table_Kind) - (Show a) => Show (For_Table_Kind k a)70,71
+    show show71,72
+type HalfUID_For_Table_Kind HalfUID_For_Table_Kind75,76
+type For_Object_Table For_Object_Table77,78
+type HalfUID_For_Object_Table HalfUID_For_Object_Table80,81
+type HalfUID_For_Object_Table' HalfUID_For_Object_Table'81,82
+type HalfUID_For_Object_Table'' HalfUID_For_Object_Table''82,83
+nthNull nthNull84,85
+othSP othSP87,88
+class Is_HalfUID_For_Table_Kind Is_HalfUID_For_Table_Kind90,91
+instance Is_HalfUID_For_Table_Kind Is_HalfUID_For_Table_Kind 'Object_Table HalfUID_For_Object_Table92,93
+
+./src/System/SED/MCTP/TPer/Run.hs,76
+module System.SED.MCTP.TPer.Run System.SED.MCTP.TPer.Run2,3
+run run9,10
+
+./src/System/SED/MCTP/Host/Run.hs,76
+module System.SED.MCTP.Host.Run System.SED.MCTP.Host.Run2,3
+run run9,10
+
+./src/System/SED/MCTP/Common/Reference_Types.hs,2045
+module System.SED.MCTP.Common.Reference_TypesSystem.SED.MCTP.Common.Reference_Types38,39
+data Table_Kind Table_Kind61,62
+    Null_TableNull_Table62,63
+  | Object_TableObject_Table63,64
+  | Byte_TableByte_Table64,65
+instance StreamItem StreamItem Table_Kind66,67
+    where generate generate67,68
+type role role71,72
+newtype ForTable_Kind ForTable_Kind72,73
+instance IsRefined IsRefined (ForTable_Kind (k :: Table_Kind)) a75,76
+instance StreamItem StreamItem a => StreamItem (a ? ForTable_Kind k)77,78
+  where generate generate78,79
+type Table_HalfUID Table_HalfUID81,82
+type Table_UID Table_UID85,86
+class IsTable_HalfUID IsTable_HalfUID88,89
+    fromTable_HalfUID fromTable_HalfUID89,90
+    toTable_HalfUID toTable_HalfUID90,91
+instance IsTable_HalfUID IsTable_HalfUID (Table_HalfUID k)92,93
+    fromTable_HalfUID fromTable_HalfUID93,94
+    toTable_HalfUID toTable_HalfUID94,95
+instance IsTable_HalfUID IsTable_HalfUID (Table_UID k)96,97
+    fromTable_HalfUID fromTable_HalfUID97,98
+    toTable_HalfUID toTable_HalfUID98,99
+viaTable_HalfUID viaTable_HalfUID100,101
+newtype Null_Table_HalfUID Null_Table_HalfUID103,104
+instance Show Show Null_Table_HalfUID105,106
+     show show106,107
+newtype Object_Table_HalfUID Object_Table_HalfUID109,110
+instance Show Show Object_Table_HalfUID111,112
+     show show112,113
+newtype Byte_Table_HalfUID Byte_Table_HalfUID115,116
+instance Show Show Byte_Table_HalfUID117,118
+     show show118,119
+newtype Null_Table_UID Null_Table_UID121,122
+instance Show Show Null_Table_UID123,124
+     show show124,125
+newtype Object_Table_UID Object_Table_UID127,128
+instance Show Show Object_Table_UID129,130
+     show show130,131
+newtype Byte_Table_UID Byte_Table_UID133,134
+instance Show Show Byte_Table_UID135,136
+     show show136,137
+nthNull nthNull140,141
+ntuNull ntuNull143,144
+ntHalfUID ntHalfUID147,148
+btHalfUID btHalfUID150,151
+otHalfUID otHalfUID153,154
+ntUID ntUID157,158
+btUID btUID160,161
+otUID otUID163,164
+
+./src/System/SED/MCTP/Common/GDPTest.hs,169
+module System.SED.MCTP.Common.GDPTestSystem.SED.MCTP.Common.GDPTest6,7
+newtype MemberOf MemberOf18,19
+type role role19,20
+(â(âº)31,32
+The The32,33
+_ _37,38
+
+./src/System/SED/MCTP/Common/Simple_Type.hs,2013
+module System.SED.MCTP.Common.Simple_TypeSystem.SED.MCTP.Common.Simple_Type17,18
+type family family88,89
+type Base_Type Base_Type93,94
+type instance instance95,96
+type instance instance104,105
+type Simple_Type Simple_Type109,110
+type instance instance111,112
+type Core_bytes_4 Core_bytes_4113,114
+type instance instance115,116
+type Core_uinteger_2 Core_uinteger_2117,118
+type family family121,122
+type instance instance126,127
+type Core_AC_element_max_Size Core_AC_element_max_Size128,129
+type Core_AC_element Core_AC_element129,130
+type Core_bytes_8 Core_bytes_8138,139
+type Core_bytes_12 Core_bytes_12139,140
+type Core_bytes_16 Core_bytes_16140,141
+type Core_bytes_20 Core_bytes_20141,142
+type Core_bytes_32 Core_bytes_32142,143
+type Core_bytes_48 Core_bytes_48143,144
+type Core_bytes_64 Core_bytes_64144,145
+type Core_feedback_size Core_feedback_size146,147
+type Core_integer_1 Core_integer_1148,149
+type Core_integer_2 Core_integer_2149,150
+type Core_max_bytes_32 Core_max_bytes_32151,152
+type Core_name Core_name152,153
+type Core_password Core_password153,154
+type Core_type_def_max_size Core_type_def_max_size154,155
+type Core_type_def Core_type_def155,156
+type Core_max_bytes_64 Core_max_bytes_64156,157
+type Core_halfuid Core_halfuid158,159
+type Core_uid Core_uid159,160
+type Core_uinteger_1 Core_uinteger_1161,162
+type Core_uinteger_128 Core_uinteger_128162,163
+type Core_uinteger_20 Core_uinteger_20164,165
+type Core_uinteger_21 Core_uinteger_21165,166
+type Core_uinteger_24 Core_uinteger_24166,167
+type Core_uinteger_256 Core_uinteger_256167,168
+type Core_uinteger_28 Core_uinteger_28168,169
+type Core_uinteger_30 Core_uinteger_30169,170
+type Core_uinteger_36 Core_uinteger_36170,171
+type Core_uinteger_4 Core_uinteger_4171,172
+type Core_uinteger_48 Core_uinteger_48172,173
+type Core_uinteger_64 Core_uinteger_64173,174
+type Core_uinteger_66 Core_uinteger_66174,175
+type Core_uinteger_8 Core_uinteger_8175,176
+
+./src/System/SED/MCTP/Common/THUtil.hs,365
+module System.SED.MCTP.Common.THUtilSystem.SED.MCTP.Common.THUtil15,16
+parseTable parseTable46,47
+dData dData50,51
+dSig dSig55,56
+dVal dVal59,60
+dTyp dTyp63,64
+eHalfUID eHalfUID67,68
+eByte_Table_HalfUID eByte_Table_HalfUID71,72
+eObject_Table_HalfUID eObject_Table_HalfUID75,76
+eUID eUID79,80
+eID eID83,84
+eLitS eLitS90,91
+eValP eValP95,96
+
+./src/System/SED/MCTP/Common/TypeUIDs/TH.hs,5616
+module System.SED.MCTP.Common.TypeUIDs.TH System.SED.MCTP.Common.TypeUIDs.TH31,32
+ttype ttype134,135
+ttypeDecs ttypeDecs142,143
+typeTableParser typeTableParser146,147
+typeTableRow typeTableRow153,154
+dTypeTableRow dTypeTableRow160,161
+typeTableTitle typeTableTitle172,173
+spaces spaces176,177
+rowSepFieldLengths rowSepFieldLengths179,180
+rowSep rowSep186,187
+blankLines blankLines190,191
+tableRowFields tableRowFields194,195
+data TypeTableRow TypeTableRow202,203
+data TypeTableRow = TypeTableRow TypeTableRow202,203
+instance Semigroup Semigroup TypeTableRow205,206
+    (T(TypeTableRowu1n1f1)206,207
+    _ _208,209
+type TypeUIDField TypeUIDField211,212
+type TypeName TypeName213,214
+type FormatString FormatString215,216
+header header218,219
+type Type_UID Type_UID224,225
+type Base_Type_UID Base_Type_UID225,226
+type Non_Base_Type_UID Non_Base_Type_UID226,227
+type Named_Value_Type_UID Named_Value_Type_UID227,228
+type Core_type_def_max_enum_ranges Core_type_def_max_enum_ranges230,231
+type Core_type_def_max_alternative_uidrefs Core_type_def_max_alternative_uidrefs231,232
+type Core_type_def_max_byte_table_uidrefs Core_type_def_max_byte_table_uidrefs232,233
+type Core_type_def_max_object_table_uidrefs Core_type_def_max_object_table_uidrefs233,234
+type Core_type_def_max_struct_uidrefs Core_type_def_max_struct_uidrefs234,235
+type Core_type_def_max_set_ranges Core_type_def_max_set_ranges235,236
+data Core_Format Core_Format237,238
+data Core_Format (n:n237,238
+data Core_Format (n::Nat) )237,238
+        Base_Type_Format Base_Type_Format239,240
+        Simple_Type_Format Simple_Type_Format240,241
+        Enumeration_Type_Format Enumeration_Type_Format241,242
+        Alternative_Type_Format Alternative_Type_Format242,243
+        List_Type_Format List_Type_Format243,244
+        Restricted_Reference_Type_5_Format Restricted_Reference_Type_5_Format244,245
+        Restricted_Reference_Type_6_Format Restricted_Reference_Type_6_Format245,246
+        General_Reference_Type_7_Format General_Reference_Type_7_Format246,247
+        General_Reference_Type_8_Format General_Reference_Type_8_Format247,248
+        General_Reference_Type_9_Format General_Reference_Type_9_Format248,249
+        General_Reference_Table_Type_Format General_Reference_Table_Type_Format249,250
+        Named_Value_Name_Type_Format Named_Value_Name_Type_Format250,251
+        Named_Value_Integer_Type_Format Named_Value_Integer_Type_Format251,252
+        Named_Value_Uinteger_Type_Format Named_Value_Uinteger_Type_Format252,253
+        Struct_Type_Format Struct_Type_Format253,254
+        Set_Type_Format Set_Type_Format254,255
+data Core_Format (n:n237,238
+data Some_Core_Format Some_Core_Format256,257
+data Some_Core_Format =  forall forall256,257
+class Is_Core_Format Is_Core_Format258,259
+    formatCode formatCode260,261
+instance (K(KnownNat n) => Is_Core_Format (Core_Format n)261,262
+    formatCode formatCode262,263
+instance Is_Core_Format Is_Core_Format (Some_Core_Format)263,264
+    formatCode formatCode264,265
+instance (K(KnownNat n) => Show (Core_Format n)267,268
+    show show268,269
+instance Show Show Some_Core_Format270,271
+    showsPrec showsPrec271,272
+type Type_Name Type_Name279,280
+type Base_Type_Name Base_Type_Name280,281
+type Non_Base_Type_Name Non_Base_Type_Name281,282
+type Named_Value_Type_Name Named_Value_Type_Name282,283
+type Table_Name Table_Name283,284
+type Byte_Table_Name Byte_Table_Name284,285
+type Object_Table_Name Object_Table_Name285,286
+type role role287,288
+newtype One_Of One_Of288,289
+class IsOne_Of IsOne_Of290,291
+    refiningSet refiningSet291,292
+instance IsOne_Of IsOne_Of (One_Of s) a294,295
+instance Predicate Predicate (One_Of (Set a)) a296,297
+    predicate predicate297,298
+    failMsg failMsg298,299
+core_Base_Type_Names core_Base_Type_Names300,301
+type Core_Base_Type_Names Core_Base_Type_Names302,303
+core_Table_Kind_Names core_Table_Kind_Names304,305
+type Core_Table_Kind_Names Core_Table_Kind_Names306,307
+data Core_Format_Spec Core_Format_Spec309,310
+    Base_Type_Spec Base_Type_Spec310,311
+  | Simple_Type_Spec Simple_Type_Spec311,312
+  | Enumeration_Type_Spec Enumeration_Type_Spec312,313
+  | Alternative_Type_Spec Alternative_Type_Spec313,314
+  | List_Type_Spec List_Type_Spec314,315
+  | Restricted_Reference_Type_5_Spec Restricted_Reference_Type_5_Spec315,316
+  | Restricted_Reference_Type_6_Spec Restricted_Reference_Type_6_Spec316,317
+  | General_Reference_Type_7_SpecGeneral_Reference_Type_7_Spec317,318
+  | General_Reference_Type_8_SpecGeneral_Reference_Type_8_Spec318,319
+  | General_Reference_Type_9_SpecGeneral_Reference_Type_9_Spec319,320
+  | General_Reference_Table_Type_Spec General_Reference_Table_Type_Spec320,321
+  | Named_Value_Name_Type_Spec Named_Value_Name_Type_Spec321,322
+  | Named_Value_Integer_Type_Spec Named_Value_Integer_Type_Spec322,323
+  | Named_Value_Uinteger_Type_Spec Named_Value_Uinteger_Type_Spec323,324
+  | Struct_Type_Spec Struct_Type_Spec324,325
+  | Set_Type_Spec Set_Type_Spec325,326
+stringSetParser stringSetParser330,331
+formatSpecParser formatSpecParser335,336
+baseTypeFormatSpecParser baseTypeFormatSpecParser340,341
+simpleTypeFormatSpecParser simpleTypeFormatSpecParser343,344
+tenum tenum368,369
+tenumDecs tenumDecs377,378
+dEnum dEnum380,381
+enumTableParser enumTableParser404,405
+data EnumRow EnumRow413,414
+data EnumRow = EnumRow EnumRow413,414
+enumTableTitle enumTableTitle416,417
+enumTableRow enumTableRow424,425
+
+./src/System/SED/MCTP/Common/UID.hs,632
+module System.SED.MCTP.Common.UID System.SED.MCTP.Common.UID34,35
+showtaggedCore_bytes showtaggedCore_bytes66,67
+readPrectaggedCore_bytes readPrectaggedCore_bytes70,71
+newtype HalfUID HalfUID74,75
+instance Show Show HalfUID76,77
+    show show77,78
+instance Read Read HalfUID78,79
+    readPrec readPrec79,80
+halfUID halfUID81,82
+newtype UID UID90,91
+instance Show Show UID92,93
+    show show93,94
+instance Read Read UID94,95
+    readPrec readPrec95,96
+uid uid97,98
+uidUpper uidUpper106,107
+uidLower uidLower109,110
+uidPlus uidPlus112,113
+(+(+:+)116,117
+hNull hNull120,121
+uNull uNull123,124
+
+./src/System/SED/MCTP/Common/Call.hs,1361
+module System.SED.MCTP.Common.Call System.SED.MCTP.Common.Call14,15
+data MethodHeader MethodHeader189,190
+data MethodHeader = MethodHeader{ MethodHeader{189,190
+data MethodHeader = MethodHeader{ _invokingID _invokingID189,190
+                                , _methodID _methodID190,191
+data Parameters Parameters194,195
+data Parameters = Parameters Parameters194,195
+data Parameters = Parameters { _required:_required194,195
+                             , _optional:_optional195,196
+data MethodCall MethodCall198,199
+data MethodCall = MethodCall MethodCall198,199
+data MethodCall = MethodCall { _header _header198,199
+                             , _parameters _parameters199,200
+                             , _statusCode _statusCode200,201
+instance StreamItem StreamItem MethodHeader205,206
+    parser parser206,207
+    generate generate207,208
+instance StreamItem StreamItem Parameters209,210
+    parser parser210,211
+    generate generate211,212
+d d213,214
+instance StreamItem StreamItem MethodCall216,217
+    parser parser217,218
+    generate generate232,233
+instance Arbitrary Arbitrary MethodHeader244,245
+    arbitrary arbitrary245,246
+instance Arbitrary Arbitrary Parameters247,248
+    arbitrary arbitrary248,249
+instance Arbitrary Arbitrary MethodCall250,251
+    arbitrary arbitrary251,252
+
+./src/System/SED/MCTP/Common/SpecialPurposeUIDs.hs,490
+module System.SED.MCTP.Common.SpecialPurposeUIDs System.SED.MCTP.Common.SpecialPurposeUIDs13,14
+uNULL uNULL46,47
+uThisSP uThisSP50,51
+uSMUID uSMUID54,55
+uSMMethodUID uSMMethodUID58,59
+uC_PINCharSetUnrestrictedUID uC_PINCharSetUnrestrictedUID62,63
+uProperties uProperties84,85
+uStartSession uStartSession87,88
+uSyncSession uSyncSession90,91
+uStartTrustedSession uStartTrustedSession93,94
+uSyncTrustedSession uSyncTrustedSession96,97
+uCloseSession uCloseSession99,100
+
+./src/System/SED/MCTP/Common/Table.hs,1052
+module System.SED.MCTP.Common.Table System.SED.MCTP.Common.Table14,15
+newtype TableName TableName180,181
+instance Show Show TableName181,182
+instance Show TableName where show show181,182
+newtype TemplateName TemplateName183,184
+instance Show Show TemplateName184,185
+instance Show TemplateName where show show184,185
+data Table Table186,187
+data Table = Table Table186,187
+data Table = Table { _tableName _tableName186,187
+                   , _tableHalfUID _tableHalfUID187,188
+                   , _tableColumns _tableColumns188,189
+                   , _tableRows _tableRows189,190
+newtype TableRow TableRow193,194
+data TableColumn TableColumn325,326
+data TableColumn = TableColumn TableColumn325,326
+data TableColumn = TableColumn { _columnNumber _columnNumber325,326
+                               , _columnName _columnName326,327
+                               , _columnIsUnique _columnIsUnique327,328
+                               , _columnType _columnType328,329
+newtype ColumnType ColumnType332,333
+
+./src/System/SED/MCTP/Common/Value.hs,3497
+module System.SED.MCTP.Common.Value System.SED.MCTP.Common.Value15,16
+newtype Datum Datum34,35
+class (Show v) => IsDatum IsDatum37,38
+    datum datum38,39
+    mdatum mdatum41,42
+instance IsDatum IsDatum Datum44,45
+    datum datum45,46
+instance IsDatum IsDatum Token47,48
+    mdatum mdatum48,49
+maybeDatumToken maybeDatumToken50,51
+isDatumToken isDatumToken57,58
+instance IsToken IsToken Datum61,62
+    token token62,63
+    fromToken fromToken63,64
+instance IsDatum IsDatum Natural65,66
+    datum datum66,67
+udatum udatum68,69
+instance IsDatum IsDatum Integer71,72
+    datum datum72,73
+sdatum sdatum74,75
+instance IsDatum IsDatum ByteString77,78
+    datum datum78,79
+bdatum bdatum80,81
+instance IsDatum IsDatum String83,84
+    datum datum84,85
+newtype Name Name86,87
+class (Show d) => IsName IsName89,90
+    name name90,91
+    mname mname93,94
+instance IsName IsName Name96,97
+    name name97,98
+instance IsName IsName Datum99,100
+    name name100,101
+instance IsName IsName Token102,103
+    name name103,104
+instance IsName IsName Natural105,106
+    name name106,107
+instance IsName IsName Integer108,109
+    name name109,110
+instance IsName IsName ByteString111,112
+    name name112,113
+instance IsName IsName String114,115
+    name name115,116
+instance IsDatum IsDatum Name117,118
+    datum datum118,119
+instance IsToken IsToken Name120,121
+    token token121,122
+    fromToken fromToken122,123
+data NamedValue NamedValue125,126
+data NamedValue = NamedValue NamedValue125,126
+(.(.:)128,129
+n n129,130
+instance IsName IsName NamedValue132,133
+    name name133,134
+newtype List List135,136
+data Value Value138,139
+data Value = D D138,139
+           | N N139,140
+           | L L140,141
+class IsValue IsValue143,144
+    value value144,145
+    mvalue mvalue145,146
+instance IsValue IsValue Value148,149
+    value value149,150
+instance IsValue IsValue Datum151,152
+    value value152,153
+instance IsValue IsValue NamedValue154,155
+    value value155,156
+instance IsValue IsValue List157,158
+    value value158,159
+instance IsValue IsValue Token160,161
+    value value161,162
+instance IsValue IsValue Natural163,164
+    value value164,165
+instance IsValue IsValue Integer166,167
+    value value167,168
+instance IsValue IsValue ByteString169,170
+    value value170,171
+instance IsValue IsValue String172,173
+    value value173,174
+instance IsToken IsToken Value175,176
+    mtoken mtoken176,177
+    fromToken fromToken178,179
+instance StreamItem StreamItem Datum181,182
+    parser parser182,183
+    generate generate183,184
+instance StreamItem StreamItem Name185,186
+    parser parser186,187
+    generate generate187,188
+instance StreamItem StreamItem NamedValue190,191
+    parser parser191,192
+    generate generate194,195
+instance StreamItem StreamItem List200,201
+    parser parser201,202
+    generate generate204,205
+instance StreamItem StreamItem Value209,210
+    parser parser210,211
+    generate generate213,214
+instance Arbitrary Arbitrary Datum218,219
+    arbitrary arbitrary219,220
+instance Arbitrary Arbitrary Name227,228
+    arbitrary arbitrary228,229
+instance Arbitrary Arbitrary NamedValue230,231
+    arbitrary arbitrary231,232
+instance Arbitrary Arbitrary List233,234
+    arbitrary arbitrary234,235
+instance Arbitrary Arbitrary Value236,237
+    arbitrary arbitrary237,238
+
+./src/System/SED/MCTP/Common/TableUIDs.hs,698
+module System.SED.MCTP.Common.TableUIDsSystem.SED.MCTP.Common.TableUIDs43,44
+class TableID TableID181,182
+    lookup lookup182,183
+instance TableID(TableID (HalfUID)183,184
+    lookup lookup184,185
+instance TableID(TableID (UID)185,186
+    lookup lookup186,187
+instance {-# OVERLAPPABLE #-} IsTable_HalfUID IsTable_HalfUID a => TableID (a)187,188
+    lookup lookup188,189
+instance {-# OVERLAPPING #-} TableID(TableID (Null_Table_HalfUID)189,190
+    lookup lookup190,191
+instance {-# OVERLAPPING #-} TableID(TableID (Byte_Table_HalfUID)191,192
+    lookup lookup192,193
+instance {-# OVERLAPPING #-} TableID(TableID (Object_Table_HalfUID)193,194
+    lookup lookup194,195
+
+./src/System/SED/MCTP/Common/TableUIDs/TH.hs,901
+module System.SED.MCTP.Common.TableUIDs.TH System.SED.MCTP.Common.TableUIDs.TH15,16
+import import33,34
+t240 t24069,70
+t240Decs t240Decs77,78
+data UIDRow UIDRow105,106
+data UIDRow = UIDRow UIDRow105,106
+uidRow uidRow108,109
+mkUIDRow mkUIDRow119,120
+pTableObjectUID pTableObjectUID130,131
+pTableUID pTableUID133,134
+pTableName pTableName136,137
+pTemplateName pTemplateName139,140
+pUIDField pUIDField142,143
+pTrimmedField pTrimmedField145,146
+pField pField148,149
+title title152,153
+header header155,156
+rowSep rowSep158,159
+pieceLengths pieceLengths161,162
+rowSepString rowSepString164,165
+dUIDRow dUIDRow168,169
+data UIDRowDecs UIDRowDecs212,213
+data UIDRowDecs = UIDRowDecs UIDRowDecs212,213
+instance Semigroup Semigroup UIDRowDecs215,216
+  where (U(UIDRowDecsu1eh1eu1)216,217
+instance Monoid Monoid UIDRowDecs219,220
+  where mempty mempty220,221
+
+./src/System/SED/MCTP/Common/Token.hs,1908
+module System.SED.MCTP.Common.TokenSystem.SED.MCTP.Common.Token14,15
+import import55,56
+data Token Token148,149
+    Unsigned Unsigned149,150
+  | Signed Signed150,151
+  | Bytes Bytes151,152
+  | ContinuedBytes ContinuedBytes152,153
+  | StartNameStartName153,154
+  | EndNameEndName154,155
+  | StartListStartList155,156
+  | EndListEndList156,157
+  | CallCall157,158
+  | EndOfDataEndOfData158,159
+  | EndOfSessionEndOfSession159,160
+  | StartTransactionStartTransaction160,161
+  | EndTransactionEndTransaction161,162
+  | EmptyEmpty162,163
+class (Show a) => IsToken IsToken165,166
+    fromToken fromToken166,167
+    token token168,169
+    mtoken mtoken171,172
+instance IsToken IsToken Token175,176
+    token token176,177
+    fromToken fromToken177,178
+instance StreamItem StreamItem Token182,183
+    parser parser183,184
+    generate generate184,185
+tokenParser tokenParser191,192
+generateToken generateToken293,294
+instance Arbitrary Arbitrary Token339,340
+    arbitrary arbitrary340,341
+rawTokenSource rawTokenSource355,356
+removeEmpty removeEmpty358,359
+combineContinued combineContinued361,362
+tokenSource tokenSource374,375
+rollUp rollUp826,827
+byteStringToNatural byteStringToNatural831,832
+byteStringToInteger byteStringToInteger834,835
+naturalToByteString naturalToByteString841,842
+integerToByteString integerToByteString845,846
+ordw ordw858,859
+byte byte861,862
+int int864,865
+integer integer867,868
+natural natural870,871
+class IsByteString IsByteString873,874
+    fromByteString fromByteString874,875
+    toByteString toByteString875,876
+instance IsByteString IsByteString Integer877,878
+    fromByteString fromByteString878,879
+    toByteString toByteString879,880
+instance IsByteString IsByteString Natural881,882
+    fromByteString fromByteString882,883
+    toByteString toByteString883,884
+
+./src/System/SED/MCTP/Common/StreamItem.hs,562
+module System.SED.MCTP.Common.StreamItem System.SED.MCTP.Common.StreamItem15,16
+class StreamItem StreamItem36,37
+    parser parser37,38
+    generate generate39,40
+    parseByteString parseByteString41,42
+    parseString parseString44,45
+    maybeParse maybeParse47,48
+    pg pg51,52
+    typeIsa typeIsa54,55
+require require58,59
+instance (S(StreamItem a) => StreamItem [a]65,66
+    parser parser66,67
+    generate generate67,68
+instance (S(StreamItem a) => StreamItem (a, a)68,69
+    parser parser69,70
+    generate generate70,71
+
+./src/System/SED/MCTP/Common/Import.hs,71
+module System.SED.MCTP.Common.ImportSystem.SED.MCTP.Common.Import1,2
+
+./src/System/SED/MCTP/Common/Base_Type/TH.hs,323
+module System.SED.MCTP.Common.Base_Type.THSystem.SED.MCTP.Common.Base_Type.TH12,13
+import import26,27
+newtype LitS LitS49,50
+newtype LitI LitI56,57
+ci ci80,81
+ci' ci'83,84
+cu cu86,87
+cu' cu'91,92
+cx cx96,97
+cx' cx'106,107
+cb' cb'127,128
+cm cm147,148
+cm' cm'164,165
+ct ct168,169
+ct' ct'177,178
+
+./src/System/SED/MCTP/Common/Base_Type/Types.hs,2774
+module System.SED.MCTP.Common.Base_Type.TypesSystem.SED.MCTP.Common.Base_Type.Types28,29
+newtype Implementation_integer Implementation_integer97,98
+newtype Implementation_integer = Implementation_integer {unImplementation_integer unImplementation_integer97,98
+newtype Core_integer Core_integer100,101
+type Core_integer_at_least Core_integer_at_least102,103
+newtype Implementation_uinteger Implementation_uinteger105,106
+newtype Implementation_uinteger = Implementation_uinteger {unImplementation_uinteger unImplementation_uinteger105,106
+newtype Core_uinteger Core_uinteger108,109
+type Core_uinteger_at_least Core_uinteger_at_least110,111
+newtype Implementation_bytes Implementation_bytes113,114
+newtype Implementation_bytes = Implementation_bytes {unImplementation_bytes unImplementation_bytes113,114
+instance LL.FoldableLL LL-FoldableLL Implementation_bytes Word8116,117
+    foldl foldl117,118
+    foldr foldr118,119
+instance LL.ListLike LL-ListLike Implementation_bytes Word8119,120
+    singleton singleton120,121
+    head head121,122
+    tail tail122,123
+    genericLength genericLength123,124
+newtype Core_max_bytes Core_max_bytes126,127
+type Core_max_bytes_at_least Core_max_bytes_at_least128,129
+newtype Core_bytes Core_bytes131,132
+instance (K(KnownNat n) => Read (Core_bytes n)133,134
+    readPrec readPrec134,135
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_bytes n)155,156
+    size size156,157
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_max_bytes n)157,158
+    size size158,159
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_uinteger n)159,160
+    size size160,161
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (Core_integer n)161,162
+    size size162,163
+instance (K(KnownNat n) => StreamItem (Core_uinteger n)166,167
+    parser parser167,168
+    generate generate177,178
+instance (K(KnownNat n) => StreamItem (Core_integer n)179,180
+    parser parser180,181
+    generate generate190,191
+instance (K(KnownNat n) => StreamItem (Core_bytes n)192,193
+    parser parser193,194
+    generate generate203,204
+instance (K(KnownNat n) => StreamItem (Core_max_bytes n)206,207
+    parser parser207,208
+    generate generate217,218
+instance (K(KnownNat n) => IsToken (Core_integer n)221,222
+    token token222,223
+    fromToken fromToken223,224
+instance (K(KnownNat n) => IsToken (Core_uinteger n)227,228
+    token token228,229
+    fromToken fromToken229,230
+instance (K(KnownNat n) => IsToken (Core_bytes n)233,234
+    token token234,235
+    fromToken fromToken235,236
+instance (K(KnownNat n) => IsToken (Core_max_bytes n)239,240
+    token token240,241
+    fromToken fromToken241,242
+
+./src/System/SED/MCTP/Common/SingTest.hs,75
+module System.SED.MCTP.Common.SingTestSystem.SED.MCTP.Common.SingTest4,5
+
+./src/System/SED/MCTP/Common/Base_Type.hs,145
+module System.SED.MCTP.Common.Base_TypeSystem.SED.MCTP.Common.Base_Type20,21
+core_bytes_4 core_bytes_472,73
+core_bytes_8 core_bytes_879,80
+
+./src/System/SED/MCTP/Common/Types.hs,71
+module System.SED.MCTP.Common.TypesSystem.SED.MCTP.Common.Types14,15
+
+./src/System/SED/MCTP/Common/TypeUIDs.hs,77
+module System.SED.MCTP.Common.TypeUIDsSystem.SED.MCTP.Common.TypeUIDs15,16
+
+./src/System/SED/MCTP/Common/Format.hs,2521
+module System.SED.MCTP.Common.FormatSystem.SED.MCTP.Common.Format27,28
+import import34,35
+data Max_bytes Max_bytes49,50
+instance StreamItem StreamItem Core_table_kind53,54
+    where generate generate54,55
+data Core_table_kind Core_table_kind58,59
+data Core_table_kind = Object_Table Object_Table58,59
+data Core_table_kind = Object_Table | Byte_TableByte_Table58,59
+newtype Core_uidref Core_uidref62,63
+newtype Core_uidref               = Core_uidref {fromCore_uidref:fromCore_uidref62,63
+newtype Core_uidref_Base_Type Core_uidref_Base_Type64,65
+newtype Core_uidref_non_Base_Type Core_uidref_non_Base_Type66,67
+newtype Core_uidref_Byte_Table Core_uidref_Byte_Table68,69
+newtype Core_uidref_Object_Table Core_uidref_Object_Table70,71
+data Known_Core_Type Known_Core_Type73,74
+        Base_Type Base_Type75,76
+        Simple_Type Simple_Type76,77
+        Enumeration_Type Enumeration_Type77,78
+        Alternative_Type Alternative_Type78,79
+        List_Type List_Type79,80
+        Restricted_Reference_Type'5 Restricted_Reference_Type'580,81
+        Restricted_Reference_Type'6 Restricted_Reference_Type'681,82
+        General_Reference_Type'7 General_Reference_Type'782,83
+        General_Reference_Type'8 General_Reference_Type'883,84
+        General_Reference_Type'9 General_Reference_Type'984,85
+        General_Reference_Table_Type General_Reference_Table_Type85,86
+        Named_Value_Name_Type Named_Value_Name_Type86,87
+        Named_Value_Integer_Type Named_Value_Integer_Type87,88
+        Named_Value_Uinteger_Type Named_Value_Uinteger_Type88,89
+        Struct_Type Struct_Type89,90
+        Set_Type Set_Type90,91
+data Some_Core_Type Some_Core_Type95,96
+data Some_Core_Type = forall forall95,96
+data Some_Core_Type = forall (n n95,96
+instance StreamItem StreamItem Some_Core_Type100,101
+    generate generate101,102
+    parser parser119,120
+instance StreamItem StreamItem Core_uidref141,142
+    parser parser142,143
+    generate generate143,144
+instance StreamItem StreamItem Core_uidref_Base_Type144,145
+    parser parser145,146
+    generate generate146,147
+instance StreamItem StreamItem Core_uidref_non_Base_Type147,148
+    parser parser148,149
+    generate generate149,150
+instance StreamItem StreamItem Core_uidref_Byte_Table150,151
+    parser parser151,152
+    generate generate152,153
+instance StreamItem StreamItem Core_uidref_Object_Table153,154
+    parser parser154,155
+    generate generate155,156
+
+./src/System/SED/MCTP/Common/Util.hs,144
+module System.SED.MCTP.Common.Util System.SED.MCTP.Common.Util17,18
+hexUID hexUID42,43
+trimTrailingWhitespace trimTrailingWhitespace58,59
+
+./src/Hsed/App.hs,357
+module Hsed.AppHsed.App15,16
+newtype Options Options23,24
+  { _verbose _verbose24,25
+data App App29,30
+data App = AppApp29,30
+  { _logFunc _logFunc30,31
+  , _processContext _processContext31,32
+  , _options _options32,33
+makeApp makeApp36,37
+instance HasLogFunc HasLogFunc App39,40
+instance HasLogFunc App where logFuncL logFuncL39,40
+
+./src/Data/BoundedSize/Class.hs,1215
+module Data.BoundedSize.ClassData.BoundedSize.Class25,26
+import import53,54
+type role role70,71
+newtype BoundedSize BoundedSize71,72
+class (KnownNat l, KnownNat u, HasSize a) => IsBoundedSize IsBoundedSize74,75
+instance (K(KnownNat l, KnownNat u, HasSize a) => IsBoundedSize l u a75,76
+instance IsBoundedSize IsBoundedSize l u a => IsRefined (BoundedSize l u) a77,78
+instance (K(KnownNat l, KnownNat u, HasSize a) => Predicate (BoundedSize l u) a80,81
+    predicate predicate81,82
+    failMsg failMsg86,87
+class (IsBoundedSize l l a) => IsFixedSize IsFixedSize99,100
+instance (I(IsBoundedSize l l a) => IsFixedSize l a100,101
+type FixedSize FixedSize101,102
+instance {-# OVERLAPPING #-} KnownNat KnownNat n => HasSize (a ? FixedSize n)104,105
+    size size105,106
+class (IsBoundedSize 0 l a) => IsMaxSize IsMaxSize109,110
+instance (I(IsBoundedSize 0 l a) => IsMaxSize l a110,111
+type MaxSize MaxSize111,112
+type AtLeast AtLeast118,119
+instance {-# OVERLAPPING #-} (K(KnownNat l, KnownNat u, HasSize a, Arbitrary a, Predicate (BoundedSize l u) a) => Arbitrary (a ? (BoundedSize l u))123,124
+    arbitrary arbitrary125,126
+    shrink shrink126,127
+fromNat fromNat135,136
+
+./src/Data/BoundedSize/TH.hs,276
+module Data.BoundedSize.THData.BoundedSize.TH10,11
+newtype LitS LitS43,44
+sb sb57,58
+fx fx88,89
+mx mx113,114
+typeFromInt typeFromInt122,123
+unsafeCreateExp unsafeCreateExp135,136
+universallyQuantifiedBoundedSizeType universallyQuantifiedBoundedSizeType161,162
+
+./src/Data/BoundedSize.hs,850
+module Data.BoundedSizeData.BoundedSize25,26
+class (IsBoundedSize l u a, ListOps a) => IsBoundedSizeListOps IsBoundedSizeListOps78,79
+instance (K(KnownNat l, KnownNat u, ListOps a, HasSize (Item a)) => IsBoundedSizeListOps l u a79,80
+class (IsFixedSize n a, ListOps a) => IsFixedSizeListOps IsFixedSizeListOps81,82
+instance (K(KnownNat n, ListOps a, HasSize (Item a)) => IsFixedSizeListOps n a82,83
+class (IsMaxSize n a, ListOps a) => IsMaxSizeListOps IsMaxSizeListOps84,85
+instance (K(KnownNat n, ListOps a, HasSize (Item a)) => IsMaxSizeListOps n a85,86
+append append115,116
+append append124,125
+replicate replicate130,131
+map map143,144
+take take175,176
+drop drop192,193
+bounds bounds205,206
+length length215,216
+padLeft padLeft223,224
+padLeft padLeft233,234
+padRight padRight236,237
+padRight padRight246,247
+
+./src/Data/HasSize.hs,1540
+module Data.HasSizeData.HasSize19,20
+class HasSize HasSize48,49
+class HasSize a where size size48,49
+instance HasSize HasSize Int853,54
+instance HasSize Int8              where size size53,54
+instance HasSize HasSize Int1654,55
+instance HasSize Int16             where size size54,55
+instance HasSize HasSize Int3255,56
+instance HasSize Int32             where size size55,56
+instance HasSize HasSize Int6456,57
+instance HasSize Int64             where size size56,57
+instance HasSize HasSize Int58,59
+instance HasSize Int               where size size58,59
+instance {-# OVERLAPPING #-} HasSize HasSize Integer62,63
+  where size size63,64
+instance HasSize HasSize Word867,68
+instance HasSize Word8             where size size67,68
+instance HasSize HasSize Word1668,69
+instance HasSize Word16            where size size68,69
+instance HasSize HasSize Word3269,70
+instance HasSize Word32            where size size69,70
+instance HasSize HasSize Word6470,71
+instance HasSize Word64            where size size70,71
+instance HasSize HasSize Word72,73
+instance HasSize Word              where size size72,73
+instance {-# OVERLAPPING #-} HasSize HasSize Natural76,77
+  where size size77,78
+instance {-# OVERLAPPABLE #-} (H(HasSize e, ListLike full e) => HasSize full80,81
+    where size size81,82
+instance HasSize HasSize (Set a)84,85
+instance HasSize (Set a)           where size size84,85
+instance HasSize HasSize Char86,87
+instance HasSize Char              where size size86,87
+
+./src/Data/Refined.hs,2482
+module Data.RefinedData.Refined27,28
+type role role53,54
+newtype Refined Refined54,55
+type a a59,60
+class IsRefined IsRefined62,63
+    plain plain63,64
+    unsafeCreate unsafeCreate66,67
+    reifyRefinedPhantomAsProxy reifyRefinedPhantomAsProxy69,70
+    reifyRefinedContextAsProxy reifyRefinedContextAsProxy72,73
+    accept accept75,76
+instance IsRefined IsRefined (Refined p) a79,80
+instance {-# OVERLAPPABLE #-} (H(HasSize a, IsRefined p a) => HasSize (a ? p)82,83
+    size size83,84
+coerceToProxyTypeOf coerceToProxyTypeOf86,87
+class Coercible a (p a) => Predicate Predicate90,91
+    predicate predicate91,92
+    failMsg failMsg93,94
+    safeCreate safeCreate95,96
+    create create98,99
+    refine refine101,102
+    pred pred104,105
+_test _test107,108
+instance Predicate Predicate p a => Predicate (Refined p) a111,112
+    predicate predicate112,113
+    failMsg failMsg113,114
+class (IsRefined p a, Predicate p a) => IsRefinedByPredicate IsRefinedByPredicate116,117
+instance (I(IsRefined p a, Predicate p a) => IsRefinedByPredicate p a118,119
+instance (N(Num a, IsRefinedByPredicate p a) => Num (Refined p a)121,122
+    (R(Refinedx)123,124
+    negate negate126,127
+    abs abs127,128
+    signum signum128,129
+    fromInteger fromInteger129,130
+instance (R(Read a, IsRefinedByPredicate p a) => Read (Refined p a)132,133
+    readPrec readPrec133,134
+instance (I(IsString a, IsRefinedByPredicate p a) => IsString (Refined p a)136,137
+    fromString fromString137,138
+instance (I(IsList a, IsRefinedByPredicate p a) => IsList (Refined p a)140,141
+    type Item Item141,142
+    fromList fromList142,143
+    toList toList143,144
+instance (L(ListLike full item, IsRefinedByPredicate p full) => FoldableLL (Refined p full) item146,147
+    foldl foldl147,148
+    foldr foldr148,149
+instance (L(ListLike full item, IsRefinedByPredicate p full) => Semigroup (Refined p full)150,151
+    (R(Refinedx)151,152
+instance (L(ListLike full item, IsRefinedByPredicate p full) => Monoid (Refined p full)153,154
+    mempty mempty154,155
+instance (L(ListLike full item, IsRefinedByPredicate p full) => ListLike (Refined p full) item156,157
+    singleton singleton157,158
+    head head158,159
+    tail tail159,160
+    null null160,161
+    genericLength genericLength161,162
+instance (A(Arbitrary a, IsRefinedByPredicate p a) => Arbitrary (Refined p a)164,165
+    arbitrary arbitrary165,166

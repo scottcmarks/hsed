@@ -488,7 +488,7 @@ AC_element
 with the notes -- "The size of the AC_element list is implementation-dependant."  -- explains the "*"
                -- "A minimum size restriction MAY be defined by an SSC." -- indicates the need for a predicate hook.
 
-The issues of implementation-dependant information and SSC-defined information would seem to call out for a Reader
+The issues of implementation-dependent information and SSC-defined information would seem to call out for a Reader
 monad with getters.  Even so, each such "*" needs to be translated as e.g. "AC_elementSize" to name the getter.
 
 Noted later: 2019 July 18

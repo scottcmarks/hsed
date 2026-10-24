@@ -126,7 +126,7 @@ type family List_Type (n :: Nat) (element :: Type) :: Type
 
 type instance Data_type "00000801"   = Data_type "AC_element"
 type instance Data_type "AC_element" = List_Type Core_AC_element_max_Size (Data_type "ACE_expression")
-type Core_AC_element_max_Size = 32 -- implementation dependant
+type Core_AC_element_max_Size = 32 -- implementation dependent
 type Core_AC_element = Data_type "AC_element"
 
 

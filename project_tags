@@ -296,7 +296,7 @@ data Core_ACE_expression = Core_ACE_expressionCore_ACE_expression3951,3952
 newtype Core_AC_element Core_AC_element3953,3954
 _AC_elementSize _AC_elementSize3956,3957
 _AC_elementMinSize _AC_elementMinSize3959,3960
-implementationDependant_AC_elementSize implementationDependant_AC_elementSize3966,3967
+implementationDependent_AC_elementSize implementationDependent_AC_elementSize3966,3967
 i i3969,3970
 ssc_AC_elementMinSize ssc_AC_elementMinSize3972,3973
 s s3975,3976

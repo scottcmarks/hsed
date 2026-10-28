@@ -1,0 +1,739 @@
+All test running disabled by --no-run-tests flag. To mute this message in future, set
+notify-if-no-run-tests: false in Stack's configuration.
+OneTuple                     > using precompiled package
+StateVar                     > using precompiled package
+base-compat                  > using precompiled package
+base-orphans                 > using precompiled package
+base16-bytestring            > using precompiled package
+call-stack                   > using precompiled package
+code-page                    > using precompiled package
+colour                       > using precompiled package
+dlist                        > using precompiled package
+contravariant                > using precompiled package
+base-compat-batteries        > using precompiled package
+fmlist                       > using precompiled package
+generically                  > using precompiled package
+HUnit                        > using precompiled package
+ghc-paths                    > using precompiled package
+ansi-terminal-types          > using precompiled package
+hashable                     > using precompiled package
+haskell-lexer                > using precompiled package
+heredoc                      > using precompiled package
+hspec-discover               > using precompiled package
+integer-logarithms           > using precompiled package
+hspec-expectations           > using precompiled package
+lawful                       > using precompiled package
+ansi-terminal                > using precompiled package
+case-insensitive             > using precompiled package
+data-fix                     > using precompiled package
+microlens                    > using precompiled package
+async                        > configure
+network                      > using precompiled package
+old-locale                   > using precompiled package
+gdp                          > using precompiled package
+ansi-wl-pprint               > using precompiled package
+parallel                     > using precompiled package
+async                        > Configuring async-2.2.4...
+primitive                    > using precompiled package
+reflection                   > using precompiled package
+safe-exceptions              > using precompiled package
+async                        > build with ghc-9.4.7
+async                        > Preprocessing library for async-2.2.4..
+async                        > Building library for async-2.2.4..
+semigroups                   > using precompiled package
+async                        > [1 of 1] Compiling Control.Concurrent.Async
+setenv                       > using precompiled package
+old-time                     > configure
+async                        > 
+async                        > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/async-2.2.4/Control/Concurrent/Async.hs:215:1: warning: [-Wunused-imports]
+async                        >     The import of ‘Data.Semigroup’ is redundant
+async                        >       except perhaps to import instances from ‘Data.Semigroup’
+async                        >     To import instances alone, use: import Data.Semigroup()
+async                        >     |
+async                        > 215 | import Data.Semigroup (Semigroup((<>)))
+async                        >     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+old-time                     > [1 of 3] Compiling Main             ( /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/old-time-1.1.0.3/Setup.hs, /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/old-time-1.1.0.3/.stack-work/dist/aarch64-osx/ghc-9.4.7/setup/Main.o )
+singletons                   > using precompiled package
+old-time                     > [2 of 3] Compiling StackSetupShim   ( /Users/scott/.stack/setup-exe-src/setup-shim-w2MFVN35.hs, /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/old-time-1.1.0.3/.stack-work/dist/aarch64-osx/ghc-9.4.7/setup/StackSetupShim.o )
+old-time                     > [3 of 3] Linking /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/old-time-1.1.0.3/.stack-work/dist/aarch64-osx/ghc-9.4.7/setup/setup
+scientific                   > using precompiled package
+old-time                     > ld: warning: ignoring duplicate libraries: '-lm'
+split                        > using precompiled package
+splitmix                     > using precompiled package
+syb                          > using precompiled package
+tagged                       > using precompiled package
+text-short                   > using precompiled package
+async                        > ld: warning: -single_module is obsolete
+attoparsec                   > using precompiled package
+old-time                     > Configuring old-time-1.1.0.3...
+th-abstraction               > using precompiled package
+random                       > using precompiled package
+old-time                     > configure: WARNING: unrecognized options: --with-compiler
+old-time                     > checking for gcc... /usr/bin/gcc
+doctest                      > using precompiled package
+old-time                     > checking whether the C compiler works... yes
+old-time                     > checking for C compiler default output file name... a.out
+old-time                     > checking for suffix of executables... 
+old-time                     > checking whether we are cross compiling... no
+assoc                        > using precompiled package
+old-time                     > checking for suffix of object files... o
+old-time                     > checking whether we are using the GNU C compiler... yes
+old-time                     > checking whether /usr/bin/gcc accepts -g... yes
+async                        > copy/register
+async                        > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/async-2.2.4-9AvInezNcKbBf0QQfwLW1a
+old-time                     > checking for /usr/bin/gcc option to accept ISO C89... none needed
+distributive                 > using precompiled package
+old-time                     > checking how to run the C preprocessor... /usr/bin/gcc -E
+old-time                     > checking for grep that handles long lines and -e... /opt/local/bin/ggrep
+old-time                     > checking for egrep... /opt/local/bin/ggrep -E
+async                        > Registering library for async-2.2.4..
+foldable1-classes-compat     > using precompiled package
+old-time                     > checking for ANSI C header files... yes
+old-time                     > checking for sys/types.h... yes
+old-time                     > checking for sys/stat.h... yes
+th-compat                    > using precompiled package
+old-time                     > checking for stdlib.h... yes
+old-time                     > checking for string.h... yes
+old-time                     > checking for memory.h... yes
+old-time                     > checking for strings.h... yes
+time-compat                  > using precompiled package
+old-time                     > checking for inttypes.h... yes
+old-time                     > checking for stdint.h... yes
+old-time                     > checking for unistd.h... yes
+QuickCheck                   > using precompiled package
+old-time                     > checking sys/time.h usability... yes
+old-time                     > checking sys/time.h presence... yes
+old-time                     > checking for sys/time.h... yes
+old-time                     > checking sys/timeb.h usability... yes
+old-time                     > checking sys/timeb.h presence... yes
+old-time                     > checking for sys/timeb.h... yes
+tf-random                    > using precompiled package
+old-time                     > checking time.h usability... yes
+old-time                     > checking time.h presence... yes
+old-time                     > checking for time.h... yes
+old-time                     > checking for ftime... yes
+old-time                     > checking for gmtime_r... yes
+transformers-compat          > using precompiled package
+old-time                     > checking for localtime_r... yes
+old-time                     > checking for gettimeofday... yes
+unliftio-core                > using precompiled package
+old-time                     > checking whether struct tm is in sys/time.h or time.h... time.h
+old-time                     > checking for struct tm.tm_zone... yes
+old-time                     > checking whether time.h and sys/time.h may both be included... yes
+old-time                     > checking for sys/time.h... (cached) yes
+old-time                     > checking whether altzone is declared... no
+old-time                     > configure: creating ./config.status
+indexed-traversable          > using precompiled package
+old-time                     > config.status: creating include/HsTimeConfig.h
+old-time                     > configure: WARNING: unrecognized options: --with-compiler
+old-time                     > build with ghc-9.4.7
+githash                      > using precompiled package
+old-time                     > Preprocessing library for old-time-1.1.0.3..
+these                        > using precompiled package
+old-time                     > Building library for old-time-1.1.0.3..
+old-time                     > [1 of 1] Compiling System.Time
+quickcheck-io                > using precompiled package
+unordered-containers         > using precompiled package
+microlens-mtl                > using precompiled package
+optparse-applicative         > using precompiled package
+comonad                      > using precompiled package
+resourcet                    > using precompiled package
+strict                       > using precompiled package
+hspec-core                   > using precompiled package
+transformers-base            > using precompiled package
+typed-process                > configure
+optparse-simple              > using precompiled package
+bifunctors                   > using precompiled package
+unliftio                     > configure
+old-time                     > ld: warning: -single_module is obsolete
+typed-process                > Configuring typed-process-0.2.11.1...
+utf8-string                  > using precompiled package
+hspec                        > using precompiled package
+typed-process                > build with ghc-9.4.7
+typed-process                > Preprocessing library for typed-process-0.2.11.1..
+typed-process                > Building library for typed-process-0.2.11.1..
+uuid-types                   > using precompiled package
+typed-process                > [1 of 3] Compiling Paths_typed_process
+unliftio                     > Configuring unliftio-0.2.25.0...
+vector-stream                > using precompiled package
+typed-process                > [2 of 3] Compiling System.Process.Typed.Internal
+unliftio                     > build with ghc-9.4.7
+profunctors                  > using precompiled package
+unliftio                     > Preprocessing library for unliftio-0.2.25.0..
+unliftio                     > Building library for unliftio-0.2.25.0..
+old-time                     > copy/register
+old-time                     > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/old-time-1.1.0.3-EO4BkAubfN4CLCS9qF8OKw
+semigroupoids                > using precompiled package
+old-time                     > Registering library for old-time-1.1.0.3..
+typed-process                > [3 of 3] Compiling System.Process.Typed
+void                         > using precompiled package
+unliftio                     > [ 1 of 23] Compiling Paths_unliftio
+word8                        > using precompiled package
+unliftio                     > [ 2 of 23] Compiling UnliftIO.Chan
+unliftio                     > [ 3 of 23] Compiling UnliftIO.Directory
+zlib                         > using precompiled package
+unliftio                     > [ 4 of 23] Compiling UnliftIO.Environment
+unliftio                     > [ 5 of 23] Compiling UnliftIO.Exception
+vector                       > using precompiled package
+typed-process                > ld: warning: -single_module is obsolete
+invariant                    > using precompiled package
+either                       > using precompiled package
+unliftio                     > [ 6 of 23] Compiling UnliftIO.Exception.Lens
+unliftio                     > [ 7 of 23] Compiling UnliftIO.Foreign
+free                         > using precompiled package
+streaming-commons            > configure
+ListLike                     > using precompiled package
+bitvec                       > using precompiled package
+unliftio                     > [ 8 of 23] Compiling UnliftIO.IO
+typed-process                > copy/register
+typed-process                > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/typed-process-0.2.11.1-8oarnJZD3DI4JM0YiPLzCi
+indexed-traversable-instances> using precompiled package
+unliftio                     > [ 9 of 23] Compiling UnliftIO.IORef
+unliftio                     > [10 of 23] Compiling UnliftIO.Internals.Async
+typed-process                > Registering library for typed-process-0.2.11.1..
+quickcheck-instances         > configure
+unliftio                     > 
+unliftio                     > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/unliftio-0.2.25.0/src/UnliftIO/Internals/Async.hs:513:3: warning: [-Wnoncanonical-monoid-instances]
+unliftio                     >     Noncanonical ‘mappend’ definition detected
+unliftio                     >     in the instance declaration for ‘Monoid (Conc m a)’.
+unliftio                     >     ‘mappend’ will eventually be removed in favour of ‘(<>)’
+unliftio                     >     Either remove definition for ‘mappend’ (recommended) or define as ‘mappend = (<>)’
+unliftio                     >     See also: https://gitlab.haskell.org/ghc/ghc/-/wikis/proposal/semigroup-monoid
+unliftio                     >     |
+unliftio                     > 513 |   mappend = liftA2 mappend
+unliftio                     >     |   ^^^^^^^^^^^^^^^^^^^^^^^^
+streaming-commons            > Configuring streaming-commons-0.2.2.6...
+streaming-commons            > build with ghc-9.4.7
+adjunctions                  > using precompiled package
+streaming-commons            > Preprocessing library for streaming-commons-0.2.2.6..
+streaming-commons            > Building library for streaming-commons-0.2.2.6..
+quickcheck-instances         > Configuring quickcheck-instances-0.3.30...
+streaming-commons            > [ 1 of 11] Compiling Data.Streaming.ByteString.Builder.Buffer
+vector-algorithms            > using precompiled package
+streaming-commons            > [ 2 of 11] Compiling Data.Streaming.ByteString.Builder
+quickcheck-instances         > build with ghc-9.4.7
+quickcheck-instances         > Preprocessing library for quickcheck-instances-0.3.30..
+quickcheck-instances         > Building library for quickcheck-instances-0.3.30..
+semialign                    > using precompiled package
+witherable                   > using precompiled package
+streaming-commons            > [ 3 of 11] Compiling Data.Streaming.FileRead
+streaming-commons            > [ 4 of 11] Compiling Data.Streaming.Filesystem
+unliftio                     > [11 of 23] Compiling UnliftIO.Async
+unliftio                     > [12 of 23] Compiling UnliftIO.MVar
+kan-extensions               > using precompiled package
+streaming-commons            > [ 5 of 11] Compiling Data.Streaming.Network.Internal
+unliftio                     > [13 of 23] Compiling UnliftIO.IO.File.Posix
+mono-traversable             > using precompiled package
+streaming-commons            > [ 6 of 11] Compiling Data.Streaming.Network
+quickcheck-instances         > [ 1 of 26] Compiling Test.QuickCheck.Instances.Array.Byte
+quickcheck-instances         > [ 2 of 26] Compiling Test.QuickCheck.Instances.Containers
+quickcheck-instances         > [ 3 of 26] Compiling Test.QuickCheck.Instances.CustomPrelude
+quickcheck-instances         > [ 4 of 26] Compiling Test.QuickCheck.Instances.CaseInsensitive
+aeson                        > configure
+quickcheck-instances         > [ 5 of 26] Compiling Test.QuickCheck.Instances.ByteString
+unliftio                     > [14 of 23] Compiling UnliftIO.IO.File
+lens                         > using precompiled package
+unliftio                     > [15 of 23] Compiling UnliftIO.Concurrent
+quickcheck-instances         > [ 6 of 26] Compiling Test.QuickCheck.Instances.Array
+unliftio                     > [16 of 23] Compiling UnliftIO.Memoize
+conduit                      > using precompiled package
+unliftio                     > [17 of 23] Compiling UnliftIO.Process
+quickcheck-instances         > [ 7 of 26] Compiling Test.QuickCheck.Instances.DataFix
+unliftio                     > [18 of 23] Compiling UnliftIO.QSem
+quickcheck-instances         > [ 8 of 26] Compiling Test.QuickCheck.Instances.Hashable
+unliftio                     > [19 of 23] Compiling UnliftIO.QSemN
+quickcheck-instances         > [ 9 of 26] Compiling Test.QuickCheck.Instances.Natural
+unliftio                     > [20 of 23] Compiling UnliftIO.STM
+quickcheck-instances         > [10 of 26] Compiling Test.QuickCheck.Instances.OldTime
+unliftio                     > [21 of 23] Compiling UnliftIO.Temporary
+aeson                        > Configuring aeson-2.1.2.1...
+unliftio                     > [22 of 23] Compiling UnliftIO.Timeout
+streaming-commons            > [ 7 of 11] Compiling Data.Streaming.Process.Internal
+unliftio                     > [23 of 23] Compiling UnliftIO
+streaming-commons            > [ 8 of 11] Compiling Data.Streaming.Process
+quickcheck-instances         > [11 of 26] Compiling Test.QuickCheck.Instances.Primitive
+aeson                        > build with ghc-9.4.7
+quickcheck-instances         > [12 of 26] Compiling Test.QuickCheck.Instances.Scientific
+aeson                        > Preprocessing library for aeson-2.1.2.1..
+aeson                        > Building library for aeson-2.1.2.1..
+streaming-commons            > [ 9 of 11] Compiling Data.Streaming.Text
+quickcheck-instances         > [13 of 26] Compiling Test.QuickCheck.Instances.Semigroup
+quickcheck-instances         > [14 of 26] Compiling Test.QuickCheck.Instances.Solo
+quickcheck-instances         > [15 of 26] Compiling Test.QuickCheck.Instances.Strict
+aeson                        > [ 1 of 35] Compiling Data.Aeson.Internal.ByteString
+quickcheck-instances         > [16 of 26] Compiling Test.QuickCheck.Instances.Tagged
+unliftio                     > ld: warning: -single_module is obsolete
+quickcheck-instances         > [17 of 26] Compiling Test.QuickCheck.Instances.Text
+aeson                        > [ 2 of 35] Compiling Data.Aeson.Internal.Functions
+unliftio                     > copy/register
+unliftio                     > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/unliftio-0.2.25.0-KEyhVsAVAajHbeh6uqXGJS
+aeson                        > [ 3 of 35] Compiling Data.Aeson.Internal.TH
+unliftio                     > Registering library for unliftio-0.2.25.0..
+aeson                        > [ 4 of 35] Compiling Data.Aeson.Internal.Text
+quickcheck-instances         > [18 of 26] Compiling Test.QuickCheck.Instances.Text.Short
+aeson                        > [ 5 of 35] Compiling Data.Aeson.Internal.Word8
+rio                          > configure
+quickcheck-instances         > [19 of 26] Compiling Test.QuickCheck.Instances.These
+aeson                        > [ 6 of 35] Compiling Data.Aeson.Internal.Integer
+aeson                        > [ 7 of 35] Compiling Data.Aeson.Key
+streaming-commons            > [10 of 11] Compiling Data.Streaming.Zlib.Lowlevel
+quickcheck-instances         > [20 of 26] Compiling Test.QuickCheck.Instances.Time
+streaming-commons            > [11 of 11] Compiling Data.Streaming.Zlib
+aeson                        > [ 8 of 35] Compiling Data.Aeson.Decoding.Tokens
+rio                          > Configuring rio-0.1.22.0...
+rio                          > build with ghc-9.4.7
+quickcheck-instances         > [21 of 26] Compiling Test.QuickCheck.Instances.Transformer
+rio                          > Preprocessing library for rio-0.1.22.0..
+rio                          > Building library for rio-0.1.22.0..
+quickcheck-instances         > [22 of 26] Compiling Test.QuickCheck.Instances.UUID
+quickcheck-instances         > [23 of 26] Compiling Test.QuickCheck.Instances.UnorderedContainers
+quickcheck-instances         > [24 of 26] Compiling Test.QuickCheck.Instances.Vector
+rio                          > [ 1 of 62] Compiling RIO.ByteString.Lazy.Partial
+rio                          > [ 2 of 62] Compiling RIO.ByteString.Partial
+aeson                        > [ 9 of 35] Compiling Data.Aeson.Decoding.Internal
+rio                          > [ 3 of 62] Compiling RIO.Char
+streaming-commons            > ld: warning: -single_module is obsolete
+aeson                        > [10 of 35] Compiling Data.Aeson.KeyMap
+rio                          > [ 4 of 62] Compiling RIO.Char.Partial
+rio                          > [ 5 of 62] Compiling RIO.Directory
+streaming-commons            > copy/register
+quickcheck-instances         > [25 of 26] Compiling Test.QuickCheck.Instances.Void
+rio                          > [ 6 of 62] Compiling RIO.File
+streaming-commons            > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/streaming-commons-0.2.2.6-59nse1hLS4g474Uldj1IZ4
+rio                          > [ 7 of 62] Compiling RIO.FilePath
+quickcheck-instances         > [26 of 26] Compiling Test.QuickCheck.Instances
+rio                          > [ 8 of 62] Compiling RIO.HashMap
+rio                          > [ 9 of 62] Compiling RIO.HashMap.Partial
+streaming-commons            > Registering library for streaming-commons-0.2.2.6..
+rio                          > [10 of 62] Compiling RIO.HashSet
+rio                          > [11 of 62] Compiling RIO.Lens
+quickcheck-instances         > ld: warning: -single_module is obsolete
+conduit-extra                > configure
+rio                          > [12 of 62] Compiling RIO.List
+quickcheck-instances         > copy/register
+rio                          > [13 of 62] Compiling RIO.List.Partial
+quickcheck-instances         > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/quickcheck-instances-0.3.30-C2LDPa77dfdBZ0jAGNEqpC
+rio                          > [14 of 62] Compiling RIO.Map
+rio                          > [15 of 62] Compiling RIO.Map.Partial
+rio                          > [16 of 62] Compiling RIO.Map.Unchecked
+quickcheck-instances         > Registering library for quickcheck-instances-0.3.30..
+rio                          > [17 of 62] Compiling RIO.NonEmpty
+rio                          > [18 of 62] Compiling RIO.NonEmpty.Partial
+rio                          > [19 of 62] Compiling RIO.Partial
+rio                          > [20 of 62] Compiling RIO.Prelude.Display
+conduit-extra                > Configuring conduit-extra-1.3.6...
+conduit-extra                > build with ghc-9.4.7
+conduit-extra                > Preprocessing library for conduit-extra-1.3.6..
+conduit-extra                > Building library for conduit-extra-1.3.6..
+rio                          > [21 of 62] Compiling RIO.Prelude.Exit
+rio                          > [22 of 62] Compiling RIO.Prelude.Extra
+conduit-extra                > [ 1 of 13] Compiling Data.Conduit.Attoparsec
+aeson                        > [11 of 35] Compiling Data.Aeson.Parser.UnescapePure
+rio                          > [23 of 62] Compiling RIO.Prelude.Lens
+rio                          > [24 of 62] Compiling RIO.Prelude.Renames
+aeson                        > [12 of 35] Compiling Data.Aeson.Parser.Unescape
+rio                          > [25 of 62] Compiling RIO.Prelude.Text
+aeson                        > [13 of 35] Compiling Data.Aeson.Decoding.ByteString.Lazy
+rio                          > [26 of 62] Compiling RIO.Prelude.Types
+rio                          > [27 of 62] Compiling RIO.Prelude
+rio                          > [28 of 62] Compiling RIO.Prelude.Reexports
+rio                          > [29 of 62] Compiling RIO.Prelude.Logger
+conduit-extra                > [ 2 of 13] Compiling Data.Conduit.Binary
+conduit-extra                > [ 3 of 13] Compiling Data.Conduit.ByteString.Builder
+rio                          > [30 of 62] Compiling RIO.Prelude.IO
+conduit-extra                > [ 4 of 13] Compiling Data.Conduit.Filesystem
+aeson                        > [14 of 35] Compiling Data.Aeson.Decoding.ByteString
+conduit-extra                > [ 5 of 13] Compiling Data.Conduit.Foldl
+rio                          > [31 of 62] Compiling RIO.Deque
+conduit-extra                > [ 6 of 13] Compiling Data.Conduit.Lazy
+conduit-extra                > [ 7 of 13] Compiling Data.Conduit.Network
+rio                          > [32 of 62] Compiling RIO.Prelude.URef
+aeson                        > [15 of 35] Compiling Data.Aeson.Types.Generic
+conduit-extra                > [ 8 of 13] Compiling Data.Conduit.Network.UDP
+rio                          > [33 of 62] Compiling RIO.Prelude.RIO
+aeson                        > [16 of 35] Compiling Data.Aeson.Types.Internal
+rio                          > 
+rio                          > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/rio-0.1.22.0/src/RIO/Prelude/RIO.hs:46:3: warning: [-Wnoncanonical-monoid-instances]
+rio                          >     Noncanonical ‘mappend’ definition detected
+rio                          >     in the instance declaration for ‘Monoid (RIO env a)’.
+rio                          >     ‘mappend’ will eventually be removed in favour of ‘(<>)’
+rio                          >     Either remove definition for ‘mappend’ (recommended) or define as ‘mappend = (<>)’
+rio                          >     See also: https://gitlab.haskell.org/ghc/ghc/-/wikis/proposal/semigroup-monoid
+rio                          >    |
+rio                          > 46 |   mappend = liftA2 mappend
+rio                          >    |   ^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > [ 9 of 13] Compiling Data.Conduit.Network.Unix
+conduit-extra                > [10 of 13] Compiling Data.Conduit.Process
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:47:13: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 47 | instance (r ~ (), MonadIO m, i ~ ByteString) => InputSource (ConduitM i o m r) where
+conduit-extra                >    |             ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:47:32: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 47 | instance (r ~ (), MonadIO m, i ~ ByteString) => InputSource (ConduitM i o m r) where
+conduit-extra                >    |                                ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:48:20: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 48 |     isStdStream = (\(Just h) -> hSetBuffering h NoBuffering $> sinkHandle h, Just CreatePipe)
+conduit-extra                >    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:49:13: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 49 | instance (r ~ (), r' ~ (), MonadIO m, MonadIO n, i ~ ByteString) => InputSource (ConduitM i o m r, n r') where
+conduit-extra                >    |             ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:49:22: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 49 | instance (r ~ (), r' ~ (), MonadIO m, MonadIO n, i ~ ByteString) => InputSource (ConduitM i o m r, n r') where
+conduit-extra                >    |                      ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:49:52: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 49 | instance (r ~ (), r' ~ (), MonadIO m, MonadIO n, i ~ ByteString) => InputSource (ConduitM i o m r, n r') where
+conduit-extra                >    |                                                    ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:50:20: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 50 |     isStdStream = (\(Just h) -> hSetBuffering h NoBuffering $> (sinkHandle h, liftIO $ hClose h), Just CreatePipe)
+conduit-extra                >    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:65:24: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 65 | instance (MonadIO m, r ~ ()) => InputSource (BuilderInput o m r) where
+conduit-extra                >    |                        ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:66:18: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 66 |   isStdStream = (\(Just h) -> return $ BuilderInput $ sinkHandleBuilder h, Just CreatePipe)
+conduit-extra                >    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:67:35: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 67 | instance (MonadIO m, MonadIO n, r ~ (), r' ~ ()) => InputSource (BuilderInput o m r, n r') where
+conduit-extra                >    |                                   ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:67:44: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 67 | instance (MonadIO m, MonadIO n, r ~ (), r' ~ ()) => InputSource (BuilderInput o m r, n r') where
+conduit-extra                >    |                                            ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:68:18: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 68 |   isStdStream = (\(Just h) -> return (BuilderInput $ sinkHandleBuilder h, liftIO $ hClose h), Just CreatePipe)
+conduit-extra                >    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:69:24: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 69 | instance (MonadIO m, r ~ ()) => InputSource (FlushInput o m r) where
+conduit-extra                >    |                        ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:70:18: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 70 |   isStdStream = (\(Just h) -> return $ FlushInput $ sinkHandleFlush h, Just CreatePipe)
+conduit-extra                >    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:71:35: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 71 | instance (MonadIO m, MonadIO n, r ~ (), r' ~ ()) => InputSource (FlushInput o m r, n r') where
+conduit-extra                >    |                                   ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:71:44: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 71 | instance (MonadIO m, MonadIO n, r ~ (), r' ~ ()) => InputSource (FlushInput o m r, n r') where
+conduit-extra                >    |                                            ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:72:18: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 72 |   isStdStream = (\(Just h) -> return (FlushInput $ sinkHandleFlush h, liftIO $ hClose h), Just CreatePipe)
+conduit-extra                >    |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:74:13: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 74 | instance (r ~ (), MonadIO m, o ~ ByteString) => OutputSink (ConduitM i o m r) where
+conduit-extra                >    |             ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:74:32: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 74 | instance (r ~ (), MonadIO m, o ~ ByteString) => OutputSink (ConduitM i o m r) where
+conduit-extra                >    |                                ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:75:20: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 75 |     osStdStream = (\(Just h) -> hSetBuffering h NoBuffering $> sourceHandle h, Just CreatePipe)
+conduit-extra                >    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:76:13: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 76 | instance (r ~ (), r' ~ (), MonadIO m, MonadIO n, o ~ ByteString) => OutputSink (ConduitM i o m r, n r') where
+conduit-extra                >    |             ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:76:22: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 76 | instance (r ~ (), r' ~ (), MonadIO m, MonadIO n, o ~ ByteString) => OutputSink (ConduitM i o m r, n r') where
+conduit-extra                >    |                      ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:76:52: warning: [-Wtype-equality-requires-operators]
+conduit-extra                >     The use of ‘~’ without TypeOperators
+conduit-extra                >     will become an error in a future GHC release.
+conduit-extra                >     Suggested fix: Perhaps you intended to use TypeOperators
+conduit-extra                >    |
+conduit-extra                > 76 | instance (r ~ (), r' ~ (), MonadIO m, MonadIO n, o ~ ByteString) => OutputSink (ConduitM i o m r, n r') where
+conduit-extra                >    |                                                    ^
+conduit-extra                > 
+conduit-extra                > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/conduit-extra-1.3.6/Data/Conduit/Process.hs:77:20: warning: [-Wincomplete-uni-patterns]
+conduit-extra                >     Pattern match(es) are non-exhaustive
+conduit-extra                >     In a lambda abstraction:
+conduit-extra                >         Patterns of type ‘Maybe GHC.IO.Handle.Types.Handle’ not matched:
+conduit-extra                >             Nothing
+conduit-extra                >    |
+conduit-extra                > 77 |     osStdStream = (\(Just h) -> hSetBuffering h NoBuffering $> (sourceHandle h, liftIO $ hClose h), Just CreatePipe)
+conduit-extra                >    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+rio                          > [34 of 62] Compiling RIO.Process
+conduit-extra                > [11 of 13] Compiling Data.Conduit.Process.Typed
+conduit-extra                > [12 of 13] Compiling Data.Conduit.Text
+rio                          > [35 of 62] Compiling RIO.Prelude.Simple
+rio                          > [36 of 62] Compiling RIO.Seq
+rio                          > [37 of 62] Compiling RIO.Set
+rio                          > [38 of 62] Compiling RIO.Set.Partial
+rio                          > [39 of 62] Compiling RIO.Set.Unchecked
+rio                          > [40 of 62] Compiling RIO.State
+rio                          > [41 of 62] Compiling RIO.Text
+rio                          > [42 of 62] Compiling RIO.Prelude.Trace
+conduit-extra                > [13 of 13] Compiling Data.Conduit.Zlib
+rio                          > [43 of 62] Compiling RIO
+rio                          > [44 of 62] Compiling RIO.ByteString.Lazy
+aeson                        > [17 of 35] Compiling Data.Aeson.Parser.Internal
+rio                          > [45 of 62] Compiling RIO.ByteString
+rio                          > [46 of 62] Compiling RIO.Text.Lazy
+rio                          > [47 of 62] Compiling RIO.Text.Lazy.Partial
+rio                          > [48 of 62] Compiling RIO.Text.Partial
+conduit-extra                > ld: warning: -single_module is obsolete
+rio                          > [49 of 62] Compiling RIO.Time
+rio                          > [50 of 62] Compiling RIO.Vector
+rio                          > [51 of 62] Compiling RIO.Vector.Boxed
+conduit-extra                > copy/register
+rio                          > [52 of 62] Compiling RIO.Vector.Boxed.Partial
+rio                          > [53 of 62] Compiling RIO.Vector.Boxed.Unsafe
+conduit-extra                > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/conduit-extra-1.3.6-BbP8yNDShuo83xQIQumZt
+rio                          > [54 of 62] Compiling RIO.Vector.Partial
+rio                          > [55 of 62] Compiling RIO.Vector.Storable
+rio                          > [56 of 62] Compiling RIO.Vector.Storable.Partial
+conduit-extra                > Registering library for conduit-extra-1.3.6..
+rio                          > [57 of 62] Compiling RIO.Vector.Storable.Unsafe
+rio                          > [58 of 62] Compiling RIO.Vector.Unboxed
+rio                          > [59 of 62] Compiling RIO.Vector.Unboxed.Partial
+rio                          > [60 of 62] Compiling RIO.Vector.Unboxed.Unsafe
+rio                          > [61 of 62] Compiling RIO.Vector.Unsafe
+rio                          > [62 of 62] Compiling RIO.Writer
+rio                          > ld: warning: -single_module is obsolete
+rio                          > copy/register
+rio                          > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/rio-0.1.22.0-75Hu1fW2hRQ1JoVRR23hFo
+rio                          > Registering library for rio-0.1.22.0..
+aeson                        > [18 of 35] Compiling Data.Aeson.Parser
+aeson                        > [19 of 35] Compiling Data.Attoparsec.Time.Internal
+aeson                        > [20 of 35] Compiling Data.Attoparsec.Time
+aeson                        > 
+aeson                        > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/aeson-2.1.2.1/attoparsec-iso8601/src/Data/Attoparsec/Time.hs:132:21: warning: [-Wdeprecations]
+aeson                        >     In the use of ‘toPico’
+aeson                        >     (imported from Data.Attoparsec.Time.Internal):
+aeson                        >     Deprecated: "Use MkFixed"
+aeson                        >     |
+aeson                        > 132 |   parsePicos a0 t = toPico (fromIntegral (t' * 10^n))
+aeson                        >     |                     ^^^^^^
+aeson                        > [21 of 35] Compiling Data.Aeson.Parser.Time
+aeson                        > [22 of 35] Compiling Data.Aeson.Types.FromJSON
+aeson                        > [23 of 35] Compiling Data.Aeson.Internal
+aeson                        > [24 of 35] Compiling Data.Aeson.Internal.Time
+aeson                        > [25 of 35] Compiling Data.Aeson.Encoding.Builder
+aeson                        > [26 of 35] Compiling Data.Aeson.Encoding.Internal
+aeson                        > [27 of 35] Compiling Data.Aeson.Encoding
+aeson                        > [28 of 35] Compiling Data.Aeson.Types.ToJSON
+aeson                        > [29 of 35] Compiling Data.Aeson.Types.Class
+aeson                        > [30 of 35] Compiling Data.Aeson.Types
+aeson                        > [31 of 35] Compiling Data.Aeson.Text
+aeson                        > [32 of 35] Compiling Data.Aeson
+aeson                        > 
+aeson                        > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/aeson-2.1.2.1/src/Data/Aeson.hs:166:35: warning: [-Wunused-imports]
+aeson                        >     The import of ‘ifromJSON’
+aeson                        >     from module ‘Data.Aeson.Types.FromJSON’ is redundant
+aeson                        >     |
+aeson                        > 166 | import Data.Aeson.Types.FromJSON (ifromJSON, parseIndexedJSON)
+aeson                        >     |                                   ^^^^^^^^^
+aeson                        > 
+aeson                        > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/aeson-2.1.2.1/src/Data/Aeson.hs:170:1: warning: [-Wunused-imports]
+aeson                        >     The import of ‘Data.Aeson.Types.Internal’ is redundant
+aeson                        >       except perhaps to import instances from ‘Data.Aeson.Types.Internal’
+aeson                        >     To import instances alone, use: import Data.Aeson.Types.Internal()
+aeson                        >     |
+aeson                        > 170 | import Data.Aeson.Types.Internal (formatError)
+aeson                        >     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+aeson                        > [33 of 35] Compiling Data.Aeson.TH
+aeson                        > 
+aeson                        > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/aeson-2.1.2.1/src/Data/Aeson/TH.hs:984:7: warning: [-Wincomplete-uni-patterns]
+aeson                        >     Pattern match(es) are non-exhaustive
+aeson                        >     In a pattern binding: Patterns of type ‘[Q Exp]’ not matched: []
+aeson                        >     |
+aeson                        > 984 |       x:xs = [ [|lookupField|]
+aeson                        >     |       ^^^^^^^^^^^^^^^^^^^^^^^^...
+aeson                        > 
+aeson                        > /private/var/folders/yt/nrfvglc15611k9npbk3mntvh0000gn/T/stack-f0f0209e26b2fb0f/aeson-2.1.2.1/src/Data/Aeson/TH.hs:1100:14: warning: [-Wincomplete-uni-patterns]
+aeson                        >     Pattern match(es) are non-exhaustive
+aeson                        >     In a pattern binding: Patterns of type ‘[Q Exp]’ not matched: []
+aeson                        >      |
+aeson                        > 1100 |          let x:xs = [ dispatchParseJSON jc conName tvMap argTy
+aeson                        >      |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^...
+aeson                        > [34 of 35] Compiling Data.Aeson.QQ.Simple
+aeson                        > [35 of 35] Compiling Data.Aeson.Decoding
+aeson                        > ld: warning: -single_module is obsolete
+aeson                        > copy/register
+aeson                        > Installing library in /Users/scott/.stack/snapshots/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/aeson-2.1.2.1-HhFysmwCIEh1zDIBJNuaKW
+aeson                        > Registering library for aeson-2.1.2.1..
+doctest-discover             > using precompiled package
+hsed                         > configure (lib + test)
+Configuring hsed-0.1.0.1...
+hsed                         > build (lib + test) with ghc-9.4.7
+Preprocessing library for hsed-0.1.0.1..
+Building library for hsed-0.1.0.1..
+[ 1 of 33] Compiling Data.HasSize
+[ 2 of 33] Compiling Data.Refined
+[ 3 of 33] Compiling Data.BoundedSize.Class
+[ 4 of 33] Compiling Data.BoundedSize.TH
+[ 5 of 33] Compiling Data.BoundedSize
+[ 6 of 33] Compiling Hsed.App
+[ 7 of 33] Compiling Paths_hsed
+[ 8 of 33] Compiling System.SED.MCTP.Common.GDPTest
+[ 9 of 33] Compiling System.SED.MCTP.Common.SingTest
+[10 of 33] Compiling System.SED.MCTP.Common.StreamItem
+[11 of 33] Compiling System.SED.MCTP.Common.Token
+[12 of 33] Compiling System.SED.MCTP.Common.Base_Type.Types
+[13 of 33] Compiling System.SED.MCTP.Common.Base_Type.TH
+[14 of 33] Compiling System.SED.MCTP.Common.Base_Type
+[15 of 33] Compiling System.SED.MCTP.Common.Simple_Type
+[16 of 33] Compiling System.SED.MCTP.Common.UID
+[17 of 33] Compiling System.SED.MCTP.Common.Table
+[18 of 33] Compiling System.SED.MCTP.Common.SpecialPurposeUIDs
+[19 of 33] Compiling System.SED.MCTP.Common.Reference_Types
+[20 of 33] Compiling System.SED.MCTP.Common.THUtil
+[21 of 33] Compiling System.SED.MCTP.Common.Format
+[22 of 33] Compiling System.SED.MCTP.Common.Util
+[23 of 33] Compiling System.SED.MCTP.Common.TableUIDs.TH
+[24 of 33] Compiling System.SED.MCTP.Common.TableUIDs
+ld: warning: -single_module is obsolete
+[25 of 33] Compiling System.SED.MCTP.Common.TypeUIDs.TH
+
+/private/tmp/claude-501/-Users-scott-hsed/f05c341b-63d7-4ac7-8e79-f36321a58c77/scratchpad/hsed-lts2121/src/System/SED/MCTP/Common/TypeUIDs/TH.hs:331:38: warning: [-Wtype-equality-out-of-scope]
+    • The ‘~’ operator is out of scope.
+      Assuming it to stand for an equality constraint.
+    • NB: ‘~’ used to be built-in syntax but now is a regular type operator
+          exported from Data.Type.Equality and Prelude.
+      If you are using a custom Prelude, consider re-exporting it.
+    • This will become an error in a future GHC release.
+    |
+331 | stringSetParser :: (IsList l, Item l ~ String) => l -> Parser ByteString
+    |                                      ^
+[26 of 33] Compiling System.SED.MCTP.Common.TypeUIDs
+ld: warning: -single_module is obsolete
+[27 of 33] Compiling System.SED.MCTP.Common.Value
+[28 of 33] Compiling System.SED.MCTP.Common.Call
+[29 of 33] Compiling System.SED.MCTP.Common.Types
+[30 of 33] Compiling System.SED.MCTP.Common.Import
+[31 of 33] Compiling System.SED.MCTP.Host.Run
+[32 of 33] Compiling System.SED.MCTP.TPer.Run
+[33 of 33] Compiling TypeTests
+ld: warning: -single_module is obsolete
+Preprocessing test suite 'hsed-spec-test' for hsed-0.1.0.1..
+Building test suite 'hsed-spec-test' for hsed-0.1.0.1..
+[1 of 5] Compiling Paths_hsed
+[2 of 5] Compiling System.SED.MCTP.Common.TokenSpec
+[3 of 5] Compiling System.SED.MCTP.Common.TypeUIDs.THSpec
+[4 of 5] Compiling System.SED.MCTP.Common.ValueSpec
+[5 of 5] Compiling Main
+[6 of 6] Linking /private/tmp/claude-501/-Users-scott-hsed/f05c341b-63d7-4ac7-8e79-f36321a58c77/scratchpad/hsed-lts2121/.stack-work/dist/aarch64-osx/ghc-9.4.7/build/hsed-spec-test/hsed-spec-test
+ld: warning: ignoring duplicate libraries: '-lm'
+Preprocessing test suite 'hsed-doc-test' for hsed-0.1.0.1..
+Building test suite 'hsed-doc-test' for hsed-0.1.0.1..
+[1 of 2] Compiling Main
+[2 of 2] Compiling Paths_hsed
+[3 of 3] Linking /private/tmp/claude-501/-Users-scott-hsed/f05c341b-63d7-4ac7-8e79-f36321a58c77/scratchpad/hsed-lts2121/.stack-work/dist/aarch64-osx/ghc-9.4.7/build/hsed-doc-test/hsed-doc-test
+ld: warning: ignoring duplicate libraries: '-lm'
+hsed                         > copy/register
+Installing library in /private/tmp/claude-501/-Users-scott-hsed/f05c341b-63d7-4ac7-8e79-f36321a58c77/scratchpad/hsed-lts2121/.stack-work/install/aarch64-osx/733e96d9a3d9f3e8defb85a5461e05cb70ce77b83c7e2143527743de4ac862c0/9.4.7/lib/aarch64-osx-ghc-9.4.7/hsed-0.1.0.1-H3e4iqf2k4N1x02XdO8I1u
+Registering library for hsed-0.1.0.1..
+Completed 106 action(s).
+EXIT=0

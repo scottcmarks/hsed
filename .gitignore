@@ -5,3 +5,5 @@ tarballs/
 *.lock
 dist-newstyle
 *.cabal
+build/
+__pycache__/

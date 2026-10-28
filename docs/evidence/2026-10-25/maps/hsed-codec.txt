@@ -1,0 +1,122 @@
+##### hsed-codec
+
+SUMMARY:
+hsed (/Users/scott/hsed, branch feature/types, Haskell/stack) contains a working, property-tested TCG token-stream codec and little else that executes. The codec is layered on one typeclass, StreamItem (attoparsec `parser` + `generate :: a -> ByteString`, with `pg = maybeParse . generate` as the canonical round-trip). Token.hs implements the full Table 04 token set (tiny/short/medium/long atoms as Unsigned Natural / Signed Integer / Bytes / ContinuedBytes, the four sequence tokens, five control tokens, Empty), rejects zero-length and TCG-reserved encodings with exact error strings, emits shortest encodings, and provides a conduit pipeline (tokenSource) that strips Empty atoms and joins continued byte sequences. Value.hs builds Datum/Name/NamedValue/List/Value on top; Call.hs builds MethodHeader/Parameters/MethodCall; UID.hs gives UID/HalfUID as refined fixed-size bytes (Core_bytes 8/4) whose StreamItem instances come via DerivingVia from a type-level BoundedSize/Refined library (src/Data/*) plus a large TH/quasiquote layer (TypeUIDs.hs is 3210 generated lines). Nothing above the method-call token level exists: no SubPacket/Packet/ComPacket headers, no session-manager methods, no IF-SEND/IF-RECV, no transport, no device model. TPer/Run.hs and Host/Run.hs are 12-line stubs that log one string; app/Main.hs parses only --verbose and runs the TPer stub. Table.hs is a placeholder with `TableRow ()` and `ColumnType ()`.
+
+Testing: hspec-discover suite with TokenSpec (QuickCheck round-trips for every Token constructor, truncated/zero-length/reserved-tag error messages, Natural/Integer byte conversions), ValueSpec (only Datum round-trip; NamedValue/List/Value properties are commented out), and THSpec (pending). A doctest-discover target exists with ~91 `>>>` examples in the BoundedSize/Base_Type TH modules. Two codec defects are visible by reading against the spec text embedded in the same files: Call.hs omits the StartList/EndList that §3.2.4.2 requires around the parameter list, and Token.removeEmpty uses takeWhile, so an Empty atom terminates the stream instead of being ignored. Neither is caught because MethodCall has no round-trip test.
+
+Build state is blocked twice before GHC version even matters. stack 2.11.1 (ghcup, aarch64) cannot download the Hackage index: `stack --no-install-ghc build --dry-run` fails with "root.json does not have enough signatures signed with the appropriate keys" (Hackage root keys rotated 2025-07-24; stack's changelog says 3.9.1 carries the new keyids). Separately, the resolver lts-17.7 pins GHC 8.10.4, for which ghcup reports no-bindist on aarch64-darwin; 8.10.5-8.10.7 do have bindists, 9.4.7 is installed at ~/.ghcup (HLS-powered), and /opt/homebrew/bin/ghc is 9.14.1. ~/.stack had never been used on this Mac (only a ghcup-delegating ghc-install hook); there is no .stack-work.
+
+Porting to GHC 9.4 is moderate: the only singletons use is an empty `import Data.Singletons ()`, gdp/static-text/heredoc/regex-pcre-builtin/singletons 3.x are all in current Stackage, and roughly a third of package.yaml's dependencies (ghc, megaparsec, monad-loops, mtl, pretty, regex-pcre-builtin, static-text, transformers, vector, cborg, abnf) are never imported and can be dropped. Concrete source edits: three `PlainTV n` sites need the TH 2.17 flag argument, three modules import `Nat` from GHC.Base/GHC.Types (moved to GHC.TypeNats in 9.2), and the type-level `(<=)` constraints (now Assert-based) plus simplified subsumption with RankNTypes are the typecheck risk, concentrated in src/Data and the TH modules rather than in the codec. The cheapest route to a green build is lts-18.x (GHC 8.10.7, native aarch64) after upgrading stack; the 9.4 port is a second step.
+
+FACTS:
+  1. Token ADT covers the whole Table 04 token set: Unsigned Natural, Signed Integer, Bytes, ContinuedBytes, StartName, EndName, StartList, EndList, Call, EndOfData, EndOfSession, StartTransaction, EndTransaction, Empty.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs:149-163]
+  2. tokenParser is an attoparsec parser dispatching on the tag byte through a 256-entry array; it rejects zero-length short/medium/long atoms (except 0xA0 empty bytes) and fails on TCG-reserved tags with 'TCG Reserved Token Type 0x%02X'.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs:192-227, 275-277]
+  3. generateToken emits shortest encodings: tiny for 0..63 / -32..31, short <=15 bytes, medium <=2047, long otherwise; but the long-atom guard is `l <= 0xFFFFFFFFFFFF` while only 3 length bytes are emitted (spec max 16,777,215), so lengths >0xFFFFFF would be silently truncated.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs:312-336]
+  4. A conduit pipeline exists: tokenSource = rawTokenSource .| removeEmpty .| combineContinued; removeEmpty is `takeWhile ((/= Empty) . snd)`, which ends the stream at the first Empty atom rather than ignoring it, contradicting the spec text quoted in the same file ('SHALL be ignored').
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs:356-376 vs 600-602]
+  5. combineContinued uses partial `error` calls for a ContinuedBytes run that is unterminated or followed by a non-Bytes token.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs:372-373]
+  6. Byte-level integer codecs byteStringToNatural/naturalToByteString/byteStringToInteger/integerToByteString (big-endian two's-complement) are defined and exported.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs:832-856]
+  7. StreamItem is the universal codec interface: parser :: Parser a, generate :: a -> ByteString, parseByteString, parseString, maybeParse, pg; `require` matches a specific item. The [a] and (a,a) instances have `parser = undefined`.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/StreamItem.hs:37-71]
+  8. Value layer: Datum (Token restricted to Unsigned/Signed/Bytes), Name, NamedValue (SN name value EN), List (SL many EL), Value = D | N | L, each with StreamItem and Arbitrary instances.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Value.hs:35-55, 126-142, 182-242]
+  9. Call layer: MethodHeader{invokingID,methodID::UID}, Parameters{required::[Value],optional::[NamedValue]}, MethodCall{header,parameters,statusCode::Natural}; MethodCall encodes as Call, header, parameters, EndOfData, List[sc,0,0].
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Call.hs:190-241]
+  10. Parameters' StreamItem instance emits/parses the values bare, omitting the StartList/EndList that the spec's §3.2.4.2 (quoted in the same file) requires around the parameter list; and `many parser <*> many parser` means optional NamedValues are absorbed by the required [Value] (FIXME noted).
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Call.hs:196, 210-212 vs 85-104]
+  11. No method-response type, no SubPacket/Packet/ComPacket headers, no session-manager methods, no IF-SEND/IF-RECV, and no transport exist; those words occur only inside spec-text comments.
+     [grep -rniE 'compacket|subpacket|if-send' src → only Call.hs:175-176,185; Table.hs:24; Token.hs:606,769,774,783,789,798]
+  12. UID = Core_uid = Core_bytes 8 and HalfUID = Core_bytes 4, deriving IsToken/StreamItem/IsList/HasSize/Arbitrary via DerivingVia; uidUpper/uidLower/(+:+)/uNull helpers; hexUID parses '01 02 03 04 05 06 07 08'.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/UID.hs:75-125; /Users/scott/hsed/src/System/SED/MCTP/Common/Util.hs:43-54]
+  13. Core_bytes n / Core_max_bytes n / Core_uinteger n / Core_integer n StreamItem instances parse one Bytes/Unsigned/Signed token and refine it with FixedSize n / MaxSize n via safeCreate (KnownNat n).
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/Types.hs:167-215]
+  14. Table.hs is a placeholder: TableRow = TableRow (), ColumnType = ColumnType (), with a FIXME 'More likely, get rid of this'.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Table.hs:187-195, 326-345]
+  15. TPer/Run.hs and Host/Run.hs are 12-line stubs: run = logInfo "We're inside the SED.MCTP.TPer/Host application!".
+     [/Users/scott/hsed/src/System/SED/MCTP/TPer/Run.hs:10-12; /Users/scott/hsed/src/System/SED/MCTP/Host/Run.hs:10-12]
+  16. app/Main.hs parses only --verbose via optparse-simple, builds App{LogFunc,ProcessContext,Options} and runs TPer.run; Host.Run is imported with an empty import list and never run.
+     [/Users/scott/hsed/app/Main.hs:12-13, 21-32; /Users/scott/hsed/src/Hsed/App.hs:24-34]
+  17. dev/DevMain.hs: dev = putStrLn "dev" plus a heredoc of the Core spec's type ABNF and a preprocessor converting TCG ABNF to RFC 5234 ABNF (underscores->hyphens, %d prefixes).
+     [/Users/scott/hsed/dev/DevMain.hs:24-25, 37-82]
+  18. spec-tests use hspec-discover; TokenSpec has QuickCheck round-trip props for every Token constructor, exact error strings for truncated/zero-length tokens and reserved tags, and Natural/Integer byte-conversion inverses.
+     [/Users/scott/hsed/spec-tests/Spec.hs:1; /Users/scott/hsed/spec-tests/System/SED/MCTP/Common/TokenSpec.hs:35-262]
+  19. ValueSpec tests only Datum round-trip; NamedValue/List/Value properties are commented out ('which is WRONG'); THSpec is pendingWith "Code something!". No test covers Call.hs/MethodCall.
+     [/Users/scott/hsed/spec-tests/System/SED/MCTP/Common/ValueSpec.hs:27-39; /Users/scott/hsed/spec-tests/System/SED/MCTP/Common/TypeUIDs/THSpec.hs:24-26]
+  20. A doctest-discover target hsed-doc-test exists; '>>>' examples: Base_Type/TH.hs 28, Data/BoundedSize.hs 26, Data/BoundedSize/TH.hs 32, Data/BoundedSize/Class.hs 5. doctest-discover/hspec-discover are not declared as build-tools (travis installs doctest-discover by hand).
+     [/Users/scott/hsed/doc-tests/DocTest.hs:1; grep -rc '>>>' src; /Users/scott/hsed/.travis.yml:36]
+  21. The library itself depends on QuickCheck/hspec: Arbitrary instances live in src (Token, Value, Call, UID).
+     [/Users/scott/hsed/package.yaml:23-62 (single global dependencies list); Token.hs:340, Value.hs:219, Call.hs:245, UID.hs:76]
+  22. stack.yaml: resolver lts-17.7 (GHC 8.10.4); extra-deps: git xldenis/abnf@e50d8589 and static-text-0.2.0.4; allow-newer: true.
+     [/Users/scott/hsed/stack.yaml:22, 41-45, 49]
+  23. Dependencies never imported anywhere in src/app/spec-tests/doc-tests/dev/DevMain.hs: abnf (Text.ABNF only in the ghci script dev/script.ABNF), ghc (GHC API), megaparsec, monad-loops, mtl, pretty, regex-pcre-builtin, static-text, transformers, vector, cborg.
+     [import-prefix grep over the tree: files=0 for each of those; dev/script.ABNF:28-29]
+  24. singletons is used only as `import Data.Singletons ()` in SingTest.hs; gdp only in GDPTest.hs (a 39-line experiment defining a MemberOf predicate); heredoc only in dev/DevMain.hs.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/SingTest.hs:8; /Users/scott/hsed/src/System/SED/MCTP/Common/GDPTest.hs:10; /Users/scott/hsed/dev/DevMain.hs:21]
+  25. Toolchain on this Mac (arm64): stack 2.11.1 aarch64 (ghcup), cabal 3.6.2.0, ghc 9.4.7 at ~/.ghcup/bin (hls-powered, HLS 2.4.0.0), /opt/homebrew/bin/ghc -> Cellar/ghc/9.14.1 reporting version 9.14.1; Rosetta x86_64 available.
+     [command output: `~/.ghcup/bin/ghc --version` → 9.4.7; `/opt/homebrew/bin/ghc --version` → 9.14.1; `stack --version` → 2.11.1 aarch64; `arch -x86_64 true` succeeded]
+  26. ghcup reports GHC 8.10.1-8.10.4 as 'no-bindist' for this platform, 8.10.5-8.10.7 and 9.4.1-9.4.8 as available, 9.4.7 installed; stack 3.11.1 latest / 3.3.1 recommended available.
+     [`ghcup list -t ghc` and `ghcup list -t stack` output]
+  27. `stack --no-install-ghc build --dry-run` cloned the abnf git dep and then failed: 'Downloading root / <repo>/root.json does not have enough signatures signed with the appropriate keys' (exit 1), before any snapshot or GHC resolution.
+     [command output of stack build --dry-run in /Users/scott/hsed]
+  28. Stack's changelog for v3.9.1 (2026-01-04) says the keyids key lists 'the keys of the Hackage root key holders applicable from 2025-07-24', i.e. stack 2.11.1 (2023) predates the Hackage root-key rotation.
+     [WebFetch of https://raw.githubusercontent.com/commercialhaskell/stack/master/ChangeLog.md]
+  29. ~/.stack had never been used here (only hooks/ghc-install.sh from 2023-11-12 delegating to ghcup); no .stack-work exists in the repo; the probe created ~/.stack/{config.yaml,pantry,stack.sqlite3} (804K), which the home repo's .gitignore:85 ignores. Working tree remains clean.
+     [ls ~/.stack before/after; `git -C /Users/scott check-ignore -v .stack` → .gitignore:85; `git status --short` empty]
+  30. The ghc-install hook would run `ghcup install ghc 8.10.4` if stack were allowed to install GHC, which cannot succeed natively on aarch64-darwin.
+     [/Users/scott/.stack/hooks/ghc-install.sh lines 10-13; ghcup list shows 8.10.4 no-bindist]
+  31. TH 2.17+ breakage sites: `ForallT [PlainTV n]` needs a Specificity flag at Base_Type/TH.hs:101 and :173 and Data/BoundedSize/TH.hs:147; TupE already uses the 2.16 `[Maybe Exp]` form (THUtil.hs:97); no ConP constructions exist.
+     [grep output for PlainTV/ConP/TupE across src]
+  32. GHC 9.2+ `Nat` relocation breakage: `import GHC.Base (Nat, Symbol, Type)` Simple_Type.hs:71, `GHC.Types (Int, Nat)` TypeUIDs/TH.hs:79, `GHC.Types (Nat)` Format.hs:42.
+     [grep output 'GHC.Base/GHC.Types imports of Nat']
+  33. Type-level `(<=)` (Assert-based since base 4.16) is used in `type AtLeast c m = forall l . (KnownNat l, m <= l) => c l` and in TH-generated constraints `ConT ''(<=)`; UndecidableInstances in 12 files, RankNTypes in 7, DerivingVia in 10, TemplateHaskell in 11.
+     [/Users/scott/hsed/src/Data/BoundedSize/Class.hs:54,119; /Users/scott/hsed/src/System/SED/MCTP/Common/Base_Type/TH.hs:27,103; LANGUAGE tally]
+  34. CPP is used for MachDeps word size (HasSize.hs, #error unless 64-bit) and an existing MIN_VERSION_template_haskell(2,10,0) compat branch, so TH-version CPP is an established pattern in this code.
+     [/Users/scott/hsed/src/Data/HasSize.hs:7,58-62; /Users/scott/hsed/src/Data/BoundedSize/TH.hs:148-152]
+  35. Stackage availability: gdp 0.0.3.0 (Hackage upload 2019-11-13, base <5) is in lts-17.7 and current LTS 24.65; static-text 0.2.0.7, heredoc 0.2.0.0, regex-pcre-builtin, singletons 3.0.x (with singletons-th/base 3.0 in lts-21.25) are in current Stackage; only abnf is a non-Stackage git dep.
+     [WebFetch of stackage.org package pages for gdp, static-text, heredoc, regex-pcre-builtin, singletons and hackage.haskell.org/package/gdp]
+  36. Last substantive commits: 2021-03-25 'lts-17.7' and 'Paper calling for reference implementation'; 2024-09-24 LICENSE; 2026-10-24 comment spelling; 2026-10-25 tcg/ specs added. Code is otherwise ~5 years idle.
+     [`git log --date=short` output]
+  37. Module dependency graph: Types re-exports Base_Type, Call, TypeUIDs, Simple_Type, SpecialPurposeUIDs, Reference_Types, StreamItem, Table, TableUIDs, Token, UID, Value; Import = RIO + Types; TPer/Host Run depend only on App and Import.
+     [/Users/scott/hsed/src/System/SED/MCTP/Common/Types.hs:15-28; /Users/scott/hsed/src/System/SED/MCTP/Common/Import.hs:1-9; /Users/scott/hsed/hsed.graph]
+ENTRY POINTS:
+  - main @ /Users/scott/hsed/app/Main.hs:15-32: hsed executable: parses --verbose, builds App, runs TPer.run (Host.run never invoked)
+  - System.SED.MCTP.TPer.Run.run / System.SED.MCTP.Host.Run.run @ /Users/scott/hsed/src/System/SED/MCTP/TPer/Run.hs:10-12; /Users/scott/hsed/src/System/SED/MCTP/Host/Run.hs:10-12: placeholder RIO App actions for the simulated drive and host sides; log one line each
+  - class StreamItem (parser/generate/pg) @ /Users/scott/hsed/src/System/SED/MCTP/Common/StreamItem.hs:37-56: the codec interface every wire type implements; pg is the round-trip used by all tests
+  - tokenParser / generateToken / tokenSource @ /Users/scott/hsed/src/System/SED/MCTP/Common/Token.hs:192, 294, 375: byte <-> Token codec and conduit stream (strip Empty, join continued bytes)
+  - MethodCall (StreamItem instance) @ /Users/scott/hsed/src/System/SED/MCTP/Common/Call.hs:199-241: highest-level wire structure that exists: Call header params EOD status-list
+  - Hsed.App (App, Options, makeApp) @ /Users/scott/hsed/src/Hsed/App.hs:24-40: RIO environment (LogFunc, ProcessContext, Options) shared by host and TPer runners
+  - spec-tests/Spec.hs (hspec-discover) and doc-tests/DocTest.hs (doctest-discover) @ /Users/scott/hsed/spec-tests/Spec.hs:1; /Users/scott/hsed/doc-tests/DocTest.hs:1: test entry points: hsed-spec-test and hsed-doc-test targets
+  - dev/DevMain.hs dev + dev/script @ /Users/scott/hsed/dev/DevMain.hs:24; /Users/scott/hsed/dev/script:1-25: ghci exploration harness; holds the Core-spec type ABNF and its TCG->RFC5234 preprocessor
+  - bh / h / hp @ /Users/scott/hsed/bh, /Users/scott/hsed/h, /Users/scott/hsed/hp: build scripts: stack purge, build --haddock, test, install, then commit/push
+  - package.yaml / stack.yaml @ /Users/scott/hsed/package.yaml; /Users/scott/hsed/stack.yaml: hpack package definition (library + hsed exe + two test suites) and lts-17.7 resolver with abnf/static-text extra-deps
+RISKS:
+  - Build is blocked before GHC matters: stack 2.11.1 cannot fetch the Hackage index (root.json signature failure from the 2025-07-24 Hackage root-key rotation); cabal 3.6.2.0 is from the same era and likely shares the problem.
+  - lts-17.7 pins GHC 8.10.4, which has no aarch64-darwin bindist (ghcup: no-bindist); the ~/.stack ghc-install hook would hand that request to ghcup and fail, or Rosetta x86_64 would be needed.
+  - Codec deviates from the spec in two places that a host/TPer pair would hit immediately: MethodCall omits the parameter-list StartList/EndList (Call.hs:210-212) and removeEmpty truncates the token stream at the first Empty atom (Token.hs:359-360); neither is under test.
+  - Latent partiality: StreamItem [a]/(a,a) parser = undefined, `error` in combineContinued, long-atom bound allows lengths the 3-byte header cannot carry.
+  - Everything the new program needs above tokens is greenfield: no ComPacket/Packet/SubPacket, no session manager, no method-response type, no transport abstraction, no device state; Table.hs is a stub.
+  - The heaviest GHC 9.x porting surface (type-level BoundedSize/Refined, TH quasiquoters generating 3210-line TypeUIDs.hs, UndecidableInstances/RankNTypes, Assert-based (<=)) is also the least tested part (THSpec pending), so port regressions there would be silent.
+  - package.yaml's single global dependency list makes the library depend on hspec/QuickCheck and on the unused `ghc` API package, which bloats and destabilises any new build plan (allow-newer: true is already papering over bounds).
+  - abnf is an unmaintained git dependency (xldenis/abnf @ 2019 commit) that nothing in src imports; it still has to compile for every build.
+  - Code has been idle since 2021-03; dev/script.save.* and script.gdptest show exploratory churn whose conclusions are not recorded anywhere but README.md 'Goals drift'.
+  - Probe side effect: ~/.stack now holds config.yaml, pantry (with the abnf clone) and stack.sqlite3 (~804K); gitignored, no tracked file changed.
+OPEN QUESTIONS:
+  - Which compiler target does Scott want: lts-18.x/GHC 8.10.7 (native aarch64, near-zero code change), GHC 9.4.7 (already installed, HLS-powered, needs the edits listed), or Homebrew GHC 9.14.1 (would also require singletons/TH/rio versions well beyond anything verified here)?
+  - Stay on stack (needs upgrade to >=3.9.1 for the new Hackage keys) or move to cabal (3.6.2.0 also needs upgrading)?
+  - Is the dependent-type layer (Data.Refined/BoundedSize, gdp experiments, TH-generated TypeUIDs) meant to be the type system of the spec-annotation compiler, or does only the Token/Value/Call codec carry forward into the PDF-driven design?
+  - Should the Core spec's type ABNF (already transcribed in dev/DevMain.hs coreTypesTCGABNF) be the grammar the PDF annotations are extracted into, which would justify keeping an ABNF dependency?
+  - Should the stray `error` paths and `parser = undefined` instances become typed failures before the codec is reused as the reference implementation's contract?
+  - Does the module namespace System.SED.MCTP (vs TCG's 'SWG') stay, given the planned host/TPer split and transports?
+RECOMMENDATIONS:
+  - First unblock tooling, not code: `ghcup install stack 3.11.1` (or 3.3.1 recommended) and rerun `stack build --dry-run`; until the Hackage index loads, no resolver/GHC experiment is meaningful.
+  - Get a green build cheaply before porting: bump resolver to the last lts-18 (GHC 8.10.7, aarch64 bindist exists per ghcup) and keep lts-17.7 semantics; expect zero or trivial source changes.
+  - Then port to GHC 9.4.7 (already installed): lts-21.25 or `compiler: ghc-9.4.7` with system-ghc; edit the three `PlainTV n` sites to add SpecifiedSpec (guard with MIN_VERSION_template_haskell as BoundedSize/TH.hs already does), move `Nat` imports to GHC.TypeNats/GHC.TypeLits (Simple_Type.hs:71, Format.hs:42, TypeUIDs/TH.hs:79), and be ready to rewrite `m <= l` constraints as `(m <=? l) ~ 'True` or via Assert where inference fails; verify TH output with -ddump-splices on TypeUIDs.hs.
+  - Prune package.yaml before porting: drop ghc, megaparsec, monad-loops, mtl, pretty, regex-pcre-builtin, static-text (+extra-dep), transformers, vector, cborg, the abnf git dep (move ABNF experiments under dev/ with their own stanza), and singletons unless the SingTest spike is revived; split test-only deps (hspec/QuickCheck) from the library or keep them deliberately; declare hspec-discover and doctest-discover as build-tools.
+  - Fix the codec against the embedded spec text before building the host/TPer on it: wrap Parameters in StartList/EndList, make removeEmpty a filter rather than takeWhile, tighten the long-atom bound to 0xFFFFFF, model optional parameters as uinteger-named values, add a MethodResponse type, and re-enable the commented-out Value/NamedValue/List round-trip props plus a new MethodCall round-trip.
+  - Add the missing layers as new modules alongside the existing ones rather than inside them: SubPacket/Packet/ComPacket headers (Core spec §3.2.3), session-manager methods (Properties/StartSession/SyncSession), and a Transport record (send :: ByteString -> IO (), recv :: IO ByteString) with in-process, IF-SEND/IF-RECV-over-USB (sedutil path) and mh_transport backends; keep the StreamItem class as the single codec contract so the PDF-annotation compiler targets one interface.

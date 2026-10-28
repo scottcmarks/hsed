@@ -1,0 +1,291 @@
+REGEN REPORT: Core Spec 2.01 Tables 46-165 (section 5.1.3) extracted from the PDF vs hsed TypeUIDs.hs
+====================================================================================================
+PDF Type tables (UID/Name/Format): 100   hsed [ttype| blocks: 100
+PDF enum/set tables:               20   hsed [tenum| blocks: 19   (PDF enum tables not embedded in hsed: [87])
+Other tables in 46-165:            []
+Table numbers paired in order:     types True, enums [52, 54, 56, 59, 61, 74, 82, 89, 98, 101, 103, 107, 121, 126, 128, 134, 136, 138, 163]
+
+Differences by class:
+  deliberate typo fix in hsed      10
+  hsed transcription error         7
+  whitespace-only                  10
+  TOTAL                            27
+  UNEXPLAINED differences: 0   extraction problems: 0
+
+Regenerated data: Type triples = 100 (all UIDs 8 bytes: True), enum tables = 20 with 115 rows
+
+DETAILS BY CLASS
+----------------------------------------------------------------------------------------------------
+[deliberate typo fix in hsed] (10)
+  Table  72 caption          pdf='Table 72 Certificates_object _ref'  hsed='Table 72 Certificates_object_ref'   ['_object _ref' -> '_object_ref']
+  Table  75 Format           pdf='Struct_Type, Year, Month, Day, Hour, Minute, Seconds, Fractoin'  hsed='Struct_Type, Year, Month, Day, Hour, Minute, Seconds, Fraction'   ['Fractoin' -> 'Fraction']
+  Table  76 caption          pdf='Table 76 Column_object _ref'  hsed='Table 76 Column_object_ref'   ['_object _ref' -> '_object_ref']
+  Table 131 caption          pdf='Table 131 SPTemplates_object _ref'  hsed='Table 131 SPTemplates_object_ref'   ['_object _ref' -> '_object_ref']
+  Table 140 caption          pdf='Table 140 Table_object _ref'  hsed='Table 140 Table_object_ref'   ['_object _ref' -> '_object_ref']
+  Table 142 caption          pdf='Table 142 Template_object _ref'  hsed='Table 142 Template_object_ref'   ['_object _ref' -> '_object_ref']
+  Table 144 caption          pdf='Table 144 Type_object _ref'  hsed='Table 144 Type_object_ref'   ['_object _ref' -> '_object_ref']
+  Table  61 header           pdf='Enumeration Value | Operator'  hsed='Enumeration Value | Associated Value'   ['Operator' -> 'Associated Value']
+  Table 101 row 3 label      pdf='Verify Eror'  hsed='Verify Error'   ['Eror' -> 'Error']
+  Table 128 header           pdf='Set Value | Associated Value'  hsed='Enumeration Value | Associated Value'   ['Set Value' -> 'Enumeration Value']
+
+[hsed transcription error] (7)
+  Table  83 UID              pdf='00 00 00 05 00 00 02 14'  hsed='00 00 00 05 00 00 18 04'   [feedback_size carries date's UID 00 00 00 05 00 00 18 04]
+  Table  85 UID              pdf='00 00 00 05 00 00 04 1C'  hsed='00 00 00 05 00 00 18 04'   [fraction_enum carries date's UID]
+  Table  86 UID              pdf='00 00 00 05 00 00 1A 02'  hsed='00 00 00 05 00 00 18 04'   [gen_status carries date's UID]
+  Table 129 UID              pdf='00 00 00 05 00 00 14 06'  hsed='00 00 00 00 00 00 00 00'   [UID of Seconds transcribed as all zeros]
+  Table 157 caption number   pdf=157  hsed=147   [caption numbered 147 (and named uinteger_1) instead of 157 uinteger_4]
+  Table 161 caption number   pdf=161  hsed=160   [caption numbered 160 instead of 161]
+  Table  82 caption          pdf='Table 82 enc_supported Enumeration Values'  hsed='Table 82 enc_supported Enumes'   [caption 'enc_supported Enumes' is a garbled/truncated copy of 'enc_supported Enumeration Values' (harmless: tenum reads only the number and identifier)]
+
+[whitespace-only] (10)
+  Table  57 Format           pdf='Restricted_Reference_Type{6}, uidref {AuthorityTableUID}'  hsed='Restricted_Reference_Type{6}, uidref{AuthorityTableUID}'
+  Table  62 Format           pdf='General_Reference_Type {7}'  hsed='General_Reference_Type{7}'
+  Table  72 Format           pdf='Restricted_Reference_Type{6}, uidref {CertificatesTableUID}'  hsed='Restricted_Reference_Type{6}, uidref{CertificatesTableUID}'
+  Table  77 Format           pdf='Restricted_Reference_Type{6}, uidref {C_PINTableUID}, uidref {C_AES_*TableUID}, uidref {C_RSA_*TableUID}, uidref{C_EC_*TableUID}, uidref{C_HMAC_*TableUID}'  hsed='Restricted_Reference_Type{6}, uidref {C_PINTableUID}, uidref {C_AES_*TableUID}, uidref {C_RSA_*TableUID}, uidref {C_EC_*TableUID}, uidref {C_HMAC_*TableUID}'
+  Table 105 Format           pdf='Restricted_Reference_Type {6}, uidref{LogTableUID}, *'  hsed='Restricted_Reference_Type{6}, uidref{LogTableUID}, *'
+  Table 119 Format           pdf='General_Reference_Type {8}'  hsed='General_Reference_Type{8}'
+  Table 141 Format           pdf='General_Reference_Type {9}'  hsed='General_Reference_Type{9}'
+  Table 142 Format           pdf='Restricted_Reference_Type{6}, uidref {TemplateTableUID}'  hsed='Restricted_Reference_Type{6}, uidref{TemplateTableUID}'
+  Table  98 header           pdf='Enumeration Value | Associated Value'  hsed='EnumerationValue | Associated Value'
+  Table  98 row 1 label      pdf='Authentication of an authority with Set access to any of the ReadLocked, WriteLocked, ReadLockEnabled or WriteLockEnabled columns for that LBA range'  hsed='Authentication of an authority with Set access to any of the ReadLocked,WriteLocked, ReadLockEnabled or WriteLockEnabled columns for that LBA range'
+
+REGENERATED TYPE TRIPLES (table, UID, Name, Format tokens)
+----------------------------------------------------------------------------------------------------
+  T 46 00 00 00 05 00 00 08 01  AC_element                   ['List_Type', '*', 'ACE_expression']
+  T 47 00 00 00 05 00 00 1A 03  ACE_columns                  ['Set_Type', '0', '*']
+  T 48 00 00 00 05 00 00 06 01  ACE_expression               ['Alternative_Type', 'Authority_object_ref', 'boolean_ACE']
+  T 49 00 00 00 05 00 00 0C 04  ACE_object_ref               ['Restricted_Reference_Type{6}', 'uidref{ACETableUID}']
+  T 50 00 00 00 05 00 00 08 02  ACL                          ['List_Type', '*', 'ACE_object_ref']
+  T 51 00 00 00 05 00 00 04 0F  adv_key_mode                 ['Enumeration_Type', '0', '7']
+  T 53 00 00 00 05 00 00 1A 04  attr_flags                   ['Set_Type', '0', '31']
+  T 55 00 00 00 05 00 00 04 08  auth_method                  ['Enumeration_Type', '0', '23']
+  T 57 00 00 00 05 00 00 0C 05  Authority_object_ref         ['Restricted_Reference_Type{6}', 'uidref {AuthorityTableUID}']
+  T 58 00 00 00 05 00 00 04 01  boolean                      ['Enumeration_Type', '0', '1']
+  T 60 00 00 00 05 00 00 04 0E  boolean_ACE                  ['Enumeration_Type', '0', '2']
+  T 62 00 00 00 05 00 00 0F 01  byte_row_ref                 ['General_Reference_Type {7}']
+  T 63 00 00 00 05 00 00 10 01  byte_table_ref               ['General_Reference_Table_Type', '2']
+  T 64 00 00 00 05 00 00 00 02  bytes                        ['Base_Type']
+  T 65 00 00 00 05 00 00 02 38  bytes_4                      ['Simple_Type', 'bytes', '4']
+  T 66 00 00 00 05 00 00 02 01  bytes_12                     ['Simple_Type', 'bytes', '12']
+  T 67 00 00 00 05 00 00 02 02  bytes_16                     ['Simple_Type', 'bytes', '16']
+  T 68 00 00 00 05 00 00 02 36  bytes_20                     ['Simple_Type', 'bytes', '20']
+  T 69 00 00 00 05 00 00 02 05  bytes_32                     ['Simple_Type', 'bytes', '32']
+  T 70 00 00 00 05 00 00 02 37  bytes_48                     ['Simple_Type', 'bytes', '48']
+  T 71 00 00 00 05 00 00 02 06  bytes_64                     ['Simple_Type', 'bytes', '64']
+  T 72 00 00 00 05 00 00 0C 06  Certificates_object_ref      ['Restricted_Reference_Type{6}', 'uidref {CertificatesTableUID}']
+  T 73 00 00 00 05 00 00 04 0B  clock_kind                   ['Enumeration_Type', '0', '3']
+  T 75 00 00 00 05 00 00 18 05  clock_time                   ['Struct_Type', 'Year', 'Month', 'Day', 'Hour', 'Minute', 'Seconds', 'Fractoin']
+  T 76 00 00 00 05 00 00 0C 07  Column_object_ref            ['Restricted_Reference_Type{6}', 'uidref {ColumnTable_UID}']
+  T 77 00 00 00 05 00 00 0C 0B  cred_object_uidref           ['Restricted_Reference_Type{6}', 'uidref {C_PINTableUID}', 'uidref {C_AES_*TableUID}', 'uidref {C_RSA_*TableUID}', 'uidref{C_EC_*TableUID}', 'uidref{C_HMAC_*TableUID}']
+  T 78 00 00 00 05 00 00 18 04  date                         ['Struct_Type', 'Year', 'Month', 'Day']
+  T 79 00 00 00 05 00 00 14 03  Day                          ['Name_Value_Uinteger_Type', '2', 'day_enum']
+  T 80 00 00 00 05 00 00 04 18  day_enum                     ['Enumeration_Type', '1', '31']
+  T 81 00 00 00 05 00 00 04 1D  enc_supported                ['Enumeration_Type', '0', '15']
+  T 83 00 00 00 05 00 00 02 14  feedback_size                ['Simple_Type', 'uinteger', '2']
+  T 84 00 00 00 05 00 00 14 07  Fraction                     ['Name_Value_Uinteger_Type', '6', 'fraction_enum']
+  T 85 00 00 00 05 00 00 04 1C  fraction_enum                ['Enumeration_Type', '0', '999']
+  T 86 00 00 00 05 00 00 1A 02  gen_status                   ['Set_Type', '0', '63']
+  T 88 00 00 00 05 00 00 04 0D  hash_protocol                ['Enumeration_Type', '0', '15']
+  T 90 00 00 00 05 00 00 14 04  Hour                         ['Name_Value_Uinteger_Type', '3', 'hour_enum']
+  T 91 00 00 00 05 00 00 04 19  hour_enum                    ['Enumeration_Type', '0', '23']
+  T 92 00 00 00 05 00 00 00 04  integer                      ['Base_Type']
+  T 93 00 00 00 05 00 00 02 10  integer_1                    ['Simple_Type', 'integer', '1']
+  T 94 00 00 00 05 00 00 02 15  integer_2                    ['Simple_Type', 'integer', '2']
+  T 95 00 00 00 05 00 00 06 02  key_128                      ['Alternative_Type', 'bytes_16', 'bytes_32']
+  T 96 00 00 00 05 00 00 06 03  key_256                      ['Alternative_Type', 'bytes_32', 'bytes_64']
+  T 97 00 00 00 05 00 00 04 10  keys_avail_conds             ['Enumeration_Type', '0', '7']
+  T 99 00 00 00 05 00 00 18 02  lag                          ['Struct_Type', 'Seconds', 'Fraction']
+  T100 00 00 00 05 00 00 04 11  last_reenc_stat              ['Enumeration_Type', '0', '7']
+  T102 00 00 00 05 00 00 04 05  life_cycle_state             ['Enumeration_Type', '0', '15']
+  T104 00 00 00 05 00 00 0C 0D  LogList_object_ref           ['Restricted_Reference_Type{6}', 'uidref {LogListTableUID}']
+  T105 00 00 00 05 00 00 0C 0A  log_row_ref                  ['Restricted_Reference_Type {6}', 'uidref{LogTableUID}', '*']
+  T106 00 00 00 05 00 00 04 0C  log_select                   ['Enumeration_Type', '0', '3']
+  T108 00 00 00 05 00 00 00 03  max_bytes                    ['Base_Type']
+  T109 00 00 00 05 00 00 02 0D  max_bytes_32                 ['Simple_Type', 'max_bytes', '32']
+  T110 00 00 00 05 00 00 02 0E  max_bytes_64                 ['Simple_Type', 'max_bytes', '64']
+  T111 00 00 00 05 00 00 0C 0C  mediakey_object_uidref       ['Restricted_Reference_Type{6}', 'uidref {K_AES_128TableUID}', 'uidref {K_AES_256TableUID}']
+  T112 00 00 00 05 00 00 0C 03  MethodID_object_ref          ['Restricted_Reference_Type{6}', 'uidref {MethodIDTableUID}']
+  T113 00 00 00 05 00 00 04 04  messaging_type               ['Enumeration_Type', '0', '255']
+  T114 00 00 00 05 00 00 14 05  Minute                       ['Name_Value_Uinteger_Type', '4', 'minute_enum']
+  T115 00 00 00 05 00 00 04 1A  minute_enum                  ['Enumeration_Type', '0', '59']
+  T116 00 00 00 05 00 00 14 02  Month                        ['Name_Value_Uinteger_Type', '1', 'month_enum']
+  T117 00 00 00 05 00 00 04 17  month_enum                   ['Enumeration_Type', '1', '12']
+  T118 00 00 00 05 00 00 02 0B  name                         ['Simple_Type', 'max_bytes', '32']
+  T119 00 00 00 05 00 00 0F 02  object_ref                   ['General_Reference_Type {8}']
+  T120 00 00 00 05 00 00 04 06  padding_type                 ['Enumeration_Type', '0', '15']
+  T122 00 00 00 05 00 00 02 0C  password                     ['Simple_Type', 'max_bytes', '32']
+  T123 00 00 00 05 00 00 1A 05  protect_types                ['Set_Type', '0', '255']
+  T124 00 00 00 05 00 00 04 13  reencrypt_request            ['Enumeration_Type', '1', '16']
+  T125 00 00 00 05 00 00 04 14  reencrypt_state              ['Enumeration_Type', '1', '16']
+  T127 00 00 00 05 00 00 1A 01  reset_types                  ['Set_Type', '0', '31']
+  T129 00 00 00 05 00 00 14 06  Seconds                      ['Name_Value_Uinteger_Type', '5', 'seconds_enum']
+  T130 00 00 00 05 00 00 04 1B  seconds_enum                 ['Enumeration_Type', '0', '59']
+  T131 00 00 00 05 00 00 0C 01  SPTemplates_object_ref       ['Restricted_Reference_Type{6}', 'uidref{SPTemplatesTableUID}']
+  T132 00 00 00 05 00 00 08 03  SSC                          ['List_Type', '*', 'name']
+  T133 00 00 00 05 00 00 04 0A  symmetric_mode               ['Enumeration_Type', '0', '23']
+  T135 00 00 00 05 00 00 04 03  symmetric_mode_media         ['Enumeration_Type', '0', '23']
+  T137 00 00 00 05 00 00 04 15  table_kind                   ['Enumeration_Type', '1', '8']
+  T139 00 00 00 05 00 00 06 06  table_or_object_ref          ['Alternative_Type', 'object_ref', 'table_ref']
+  T140 00 00 00 05 00 00 0C 09  Table_object_ref             ['Restricted_Reference_Type{6}', 'uidref {TableTableUID}']
+  T141 00 00 00 05 00 00 0F 03  table_ref                    ['General_Reference_Type {9}']
+  T142 00 00 00 05 00 00 0C 08  Template_object_ref          ['Restricted_Reference_Type{6}', 'uidref {TemplateTableUID}']
+  T143 00 00 00 05 00 00 02 03  type_def                     ['Simple_Type', 'max_bytes', '*']
+  T144 00 00 00 05 00 00 0C 02  Type_object_ref              ['Restricted_Reference_Type{6}', 'uidref {TypeTableUID}']
+  T145 00 00 00 05 00 00 02 09  uid                          ['Simple_Type', 'bytes', '8']
+  T146 00 00 00 05 00 00 00 05  uinteger                     ['Base_Type']
+  T147 00 00 00 05 00 00 02 11  uinteger_1                   ['Simple_Type', 'uinteger', '1']
+  T148 00 00 00 05 00 00 02 12  uinteger_128                 ['Simple_Type', 'uinteger', '128']
+  T149 00 00 00 05 00 00 02 15  uinteger_2                   ['Simple_Type', 'uinteger', '2']
+  T150 00 00 00 05 00 00 02 16  uinteger_20                  ['Simple_Type', 'uinteger', '20']
+  T151 00 00 00 05 00 00 02 17  uinteger_21                  ['Simple_Type', 'uinteger', '21']
+  T152 00 00 00 05 00 00 02 18  uinteger_24                  ['Simple_Type', 'uinteger', '24']
+  T153 00 00 00 05 00 00 02 19  uinteger_256                 ['Simple_Type', 'uinteger', '256']
+  T154 00 00 00 05 00 00 02 1A  uinteger_28                  ['Simple_Type', 'uinteger', '28']
+  T155 00 00 00 05 00 00 02 1B  uinteger_30                  ['Simple_Type', 'uinteger', '30']
+  T156 00 00 00 05 00 00 02 1F  uinteger_36                  ['Simple_Type', 'uinteger', '36']
+  T157 00 00 00 05 00 00 02 20  uinteger_4                   ['Simple_Type', 'uinteger', '4']
+  T158 00 00 00 05 00 00 02 23  uinteger_48                  ['Simple_Type', 'uinteger', '48']
+  T159 00 00 00 05 00 00 02 24  uinteger_64                  ['Simple_Type', 'uinteger', '64']
+  T160 00 00 00 05 00 00 02 27  uinteger_66                  ['Simple_Type', 'uinteger', '66']
+  T161 00 00 00 05 00 00 02 25  uinteger_8                   ['Simple_Type', 'uinteger', '8']
+  T162 00 00 00 05 00 00 04 12  verify_mode                  ['Enumeration_Type', '0', '7']
+  T164 00 00 00 05 00 00 14 01  Year                         ['Name_Value_Uinteger_Type', '0', 'year_enum']
+  T165 00 00 00 05 00 00 04 16  year_enum                    ['Enumeration_Type', '1970', '9999']
+
+REGENERATED ENUM/SET TABLES
+----------------------------------------------------------------------------------------------------
+  T 52 Table 52 adv_key_mode Enumeration Values   header=['Enumeration Value', 'Behavior']
+           0-0    Wait for AdvKey_Req
+           1-1    Auto-advance keys
+           2-7    Reserved
+  T 54 Table 54 attr_flags Set Values   header=['Set Value', 'Behavior']
+           0-0    Get Not Permitted
+           1-1    Set Not Permitted
+           2-31   Reserved
+  T 56 Table 56 auth_method Enumeration Values   header=['Enumeration Value', 'Authentication Method']
+           0-0    None
+           1-1    Password
+           2-2    Exchange
+           3-3    Sign
+           4-4    SymK
+           5-5    HMAC
+           6-6    TPerSign
+           7-7    TPerExchange
+           8-23   Reserved
+  T 59 Table 59 boolean Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    False
+           1-1    True
+  T 61 Table 61 boolean_ACE Enumeration Values   header=['Enumeration Value', 'Operator']
+           0-0    And
+           1-1    Or
+           2-2    Not
+  T 74 Table 74 clock_kind Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    Timer
+           1-1    Low
+           2-2    High
+           3-3    LowAndHigh
+  T 82 Table 82 enc_supported Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    None
+           1-1    Media Encryption
+           2-15   Reserved
+  T 87 Table 87 gen_status Enumeration Values   header=['Column Value', 'Associated Value', 'Meaning']
+           0-0    None   ['']
+           1-1    pending_tper_error   ['Last ReEncryptState value was PENDING AND a TPer_Error_Detect condition was detected']
+           2-2    active_tper_error   ['Last ReEncryptState value was ACTIVE AND a TPer_Error_Detect condition was detected']
+           3-3    active_pause_requested   ['Last ReEncryptState value was ACTIVE AND PAUSE_req was detected']
+           4-4    pend_pause_requested   ['Last ReEncryptState value was PENDING AND a PAUSE_req value was detected']
+           5-5    pend_reset_stop_detect   ['A reset condition AND its associated ContOnReset configuration does not allow re-encryption to continue AND last state was PENDING']
+           6-6    key_error   ['ReEncryptState value was PENDING AND valid keys were not found in any C_* table OR insufficient access control granted for reading C_* table.']
+           7-31   reserved   ['']
+          32-32   wait_AvailableKeys   ['keys are not available']
+          33-33   wait_for_TPer_resources   ['TPer_Ready condition is not True']
+          34-34   active_reset_stop_detect   ['A reset condition AND its associated ContOnReset configuration does not allow re-encryption to continue AND last ReEncryptState value was ACTIVE']
+          34-63   reserved   ['']
+  T 89 Table 89 hash_protocol Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    None
+           1-1    SHA 1
+           2-2    SHA 256
+           3-3    SHA 384
+           4-4    SHA 512
+           5-15   Reserved
+  T 98 Table 98 keys_avail_conds Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    None
+           1-1    Authentication of an authority with Set access to any of the ReadLocked, WriteLocked, ReadLockEnabled or WriteLockEnabled columns for that LBA range
+           2-7    Reserved
+  T101 Table 101 last_reenc_stat Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    Success
+           1-1    Read Error
+           2-2    Write Error
+           3-3    Verify Eror
+           4-7    Reserved
+  T103 Table 103 life_cycle_state Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    Issued
+           1-1    Issued-Disabled
+           2-2    Issued-Frozen
+           3-3    Issued-Disabled-Frozen
+           4-4    Issued-Failed
+           5-7    Unassigned
+           8-13   Reserved for SSC Usage
+          14-15   Unassigned
+  T107 Table 107 log_select Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    None
+           1-1    LogSuccess
+           2-2    LogFail
+           3-3    LogAlways
+  T121 Table 121 padding_type Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    None
+           1-1    None
+           2-2    RSAES-PKCS1-v1_5
+           3-3    RSAES-OAEP
+           4-4    RSASSA-PKCS1-v1_5
+           5-15   Reserved
+  T126 Table 126 reencrypt_state Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           1-1    Idle
+           2-2    Pending
+           3-3    Active
+           4-4    Completed
+           5-5    Paused
+           6-16   Reserved
+  T128 Table 128 reset_types Set Values   header=['Set Value', 'Associated Value']
+           0-0    Power Cycle
+           1-1    Hardware
+           2-2    HotPlug
+           3-15   Reserved
+          16-31   Vendor Unique
+  T134 Table 134 symmetric_mode Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    ECB
+           1-1    CBC
+           2-2    CFB
+           3-3    OFB
+           4-4    GCM
+           5-5    CTR
+           6-6    CCM
+           7-7    XTS
+           8-8    LRW
+           9-9    EME
+          10-10   CMC
+          11-11   XEX
+          12-23   Reserved
+  T136 Table 136 symmetric_mode_media Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    ECB
+           1-1    CBC
+           2-2    CFB
+           3-3    OFB
+           4-4    GCM
+           5-5    CTR
+           6-6    CCM
+           7-7    XTS
+           8-8    LRW
+           9-9    EME
+          10-10   CMC
+          11-11   XEX
+          12-22   Reserved
+          23-23   Media Encryption
+  T138 Table 138 table_kind Enumeration Values   header=['Enumeration Value', 'Table Type']
+           1-1    Object
+           2-2    Byte
+           3-8    Reserved
+  T163 Table 163 verify_mode Enumeration Values   header=['Enumeration Value', 'Associated Value']
+           0-0    No verify
+           1-1    Verify enabled
+           2-7    Reserved

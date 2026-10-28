@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP               #-}
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE TypeOperators     #-}
 {-|
@@ -27,6 +28,10 @@ import           GHC.Err                          (error)
 import           GHC.Show                         (showString, shows)
 
 import           Data.ByteString.Base16           (decode)
+#if MIN_VERSION_base16_bytestring(1,0,0)
+import           Data.ByteString                  (empty)
+import           GHC.Base                         (const)
+#endif
 
 import           System.SED.MCTP.Common.Base_Type (Core_bytes (..),
                                                    Implementation_bytes (..),
@@ -51,8 +56,16 @@ hexUID = UID . cf
             then bytes
             else error $ showString "Invalid UID bytes: " . shows hexBytes $ ""
           where
-            (bytes,remainder) = decode $ filter (not . isSpace_w8) hexBytes
+            (bytes,remainder) = decode16 $ filter (not . isSpace_w8) hexBytes
 
+-- | 'Data.ByteString.Base16.decode' with its pre-1.0 @(decoded, remainder)@ interface:
+--   base16-bytestring >= 1.0 returns @Either String ByteString@ instead.
+decode16 :: ByteString -> (ByteString, ByteString)
+#if MIN_VERSION_base16_bytestring(1,0,0)
+decode16 s = either (const (empty, s)) (\b -> (b, empty)) (decode s)
+#else
+decode16 = decode
+#endif
 
 
 -- | Trim trailing whitespace from e.g. a field in a quasiquoted table

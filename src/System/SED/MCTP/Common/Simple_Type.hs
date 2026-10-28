@@ -68,7 +68,8 @@ module System.SED.MCTP.Common.Simple_Type
   )
 where
 
-import           GHC.Base                         (Nat, Symbol, Type)
+import           GHC.Base                         (Symbol, Type)
+import           GHC.TypeLits                     (Nat)
 import           System.SED.MCTP.Common.Base_Type (Core_bytes (..),
                                                    Core_integer (..),
                                                    Core_max_bytes (..),

@@ -98,7 +98,12 @@ cx ::  Name -> Name -> LitI -> Q Exp
 cx cn tn (LitI i) = do
     n <- newName "n"
     return $ SigE (AppE (ConE cn) (AppE (VarE 'unsafeCreate) (LitE (IntegerL i))))
-                  (ForallT [PlainTV n]
+                  (ForallT
+#if MIN_VERSION_template_haskell(2,17,0)
+                   [PlainTV n SpecifiedSpec]
+#else
+                   [PlainTV n]
+#endif
                    [AppT (ConT ''KnownNat) (VarT n),
                     AppT (AppT (ConT ''(<=)) (LitT (NumTyLit l))) (VarT n) ]
                    (AppT (ConT tn) (VarT n)))
@@ -170,7 +175,12 @@ ct ::  Name -> Name -> LitS -> Q Exp
 ct cn tn (LitS s) = do
     n <- newName "n"
     return $ SigE (AppE (ConE cn) (AppE (VarE 'unsafeCreate) (LitE (StringL s))))
-                  (ForallT [PlainTV n]
+                  (ForallT
+#if MIN_VERSION_template_haskell(2,17,0)
+                   [PlainTV n SpecifiedSpec]
+#else
+                   [PlainTV n]
+#endif
                    [AppT (ConT ''KnownNat) (VarT n),AppT (AppT (ConT ''(<=)) (LitT (NumTyLit l))) (VarT n)]
                    (AppT (ConT tn) (VarT n)))
   where l = toInteger (size s)

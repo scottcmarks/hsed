@@ -68,7 +68,7 @@ sb l u s = do
 --
 
 -- >>> :t "Foobar"
--- "Foobar" :: IsString p => p
+-- "Foobar" :: IsString a => a
 -- >>> :t LitS "Foobar"
 -- LitS "Foobar" :: LitS
 -- >>> :t fx "Foobar"
@@ -93,7 +93,7 @@ fx (LitS s) = sb l l s  where l = P.length s
 -- | Type-safe constructor for bounded-length string literals: @a ? BoundedSize 0 l@
 --
 -- >>> :t "Foobar"
--- "Foobar" :: IsString p => p
+-- "Foobar" :: IsString a => a
 -- >>> :t LitS "Foobar"
 -- LitS "Foobar" :: LitS
 -- >>> :t mx "Foobar"
@@ -144,7 +144,11 @@ unsafeCreateExp typef l u a s =
     SigE
       (AppE (VarE 'unsafeCreate) (LitE $ StringL s))
       (ForallT
+#if MIN_VERSION_template_haskell(2,17,0)
+         [PlainTV a SpecifiedSpec]
+#else
          [PlainTV a]
+#endif
 #if MIN_VERSION_template_haskell(2,10,0)
          [AppT (ConT ''HasSize) (VarT a), AppT (ConT ''IsString) (VarT a)] $
 #else

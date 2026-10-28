@@ -22,7 +22,6 @@ description:         Please see the README on Github at <https://github.com/scot
 dependencies:
 - base >= 4.10 && < 10
 - rio >= 0.1.1.0
-- abnf
 - array
 - attoparsec
 - base16-bytestring
@@ -32,7 +31,6 @@ dependencies:
 - containers
 - either
 - exceptions
-- ghc
 - ghc-prim
 - githash
 - heredoc
@@ -40,17 +38,9 @@ dependencies:
 - integer-gmp
 - integer-logarithms
 - lens
-- megaparsec
-- monad-loops
-- mtl
-- pretty
-- regex-pcre-builtin
 - singletons
-- static-text
 - template-haskell
 - text
-- transformers
-- vector
 - word8
 - ListLike
 - QuickCheck
@@ -75,7 +65,6 @@ executables:
     dependencies:
     - hsed
     - optparse-simple
-    - cborg
 
     ghc-options:
     - -threaded
@@ -88,6 +77,8 @@ tests:
     source-dirs:         spec-tests
     dependencies:
     - hsed
+    build-tools:
+    - hspec-discover
 
     ghc-options:
     - -threaded
@@ -100,6 +91,8 @@ tests:
     dependencies:
     - hsed
     - doctest
+    build-tools:
+    - doctest-discover
 
     ghc-options:
     - -threaded

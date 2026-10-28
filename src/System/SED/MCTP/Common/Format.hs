@@ -38,8 +38,7 @@ import           GHC.Base                           (Eq (..), error, mempty,
 import           GHC.Enum                           (Enum (..))
 import           GHC.Real                           (fromIntegral)
 import           GHC.Show                           (Show)
-import           GHC.TypeLits                       (KnownNat, natVal)
-import           GHC.Types                          (Nat)
+import           GHC.TypeLits                       (KnownNat, Nat, natVal)
 
 import           System.SED.MCTP.Common.Simple_Type (Core_integer_2,
                                                      Core_max_bytes_32,

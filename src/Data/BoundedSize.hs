@@ -107,8 +107,8 @@ instance (KnownNat n, ListOps a, HasSize(Item a)) => IsMaxSizeListOps n a
 --
 -- >>> :type append $(mx "foo") $(fx "bear")
 -- append $(mx "foo") $(fx "bear")
---   :: (Data.ListLike.Base.ListLike a (Item a), HasSize (Item a),
---       HasSize a, Data.String.IsString a) =>
+--   :: (Data.ListLike.Base.ListLike a (Item a), HasSize a,
+--       HasSize (Item a), Data.String.IsString a) =>
 --      a ? BoundedSize 4 7
 --
 -- >>> append $(fx "Hello, ") $(mx "world!")
@@ -156,7 +156,7 @@ map f s = unsafeCreate $ B.map f $ plain s
 -- >>> :t take $(fx "Hello")
 -- take $(fx "Hello")
 --   :: (Data.ListLike.Base.ListLike a (Item a), KnownNat l2,
---       KnownNat u2, HasSize (Item a), HasSize a,
+--       KnownNat u2, HasSize a, HasSize (Item a),
 --       Data.String.IsString a) =>
 --      a ? BoundedSize l2 u2
 --

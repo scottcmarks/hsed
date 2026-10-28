@@ -47,7 +47,7 @@ import           Language.Haskell.TH                    (Body (..), Dec (..),
                                                          Exp (..), Pat (..),
                                                          Type (..), mkName)
 import           Language.Haskell.TH.Quote              (QuasiQuoter (..))
-import           Language.Haskell.TH.Syntax             (returnQ)
+import           GHC.Base                               (pure)
 
 
 
@@ -71,7 +71,7 @@ t240 :: QuasiQuoter
 t240 = QuasiQuoter
     { quoteExp = undefined
     , quotePat = undefined
-    , quoteDec = returnQ <$> t240Decs
+    , quoteDec = pure <$> t240Decs
     , quoteType = undefined
     }
 

@@ -75,13 +75,13 @@ import           GHC.Enum                               (Bounded (..),
 import GHC.Exts(IsList(..))
 import           GHC.List                               (tail, (++))
 import           GHC.Show                               (Show (..), showString)
-import           GHC.TypeLits                           (KnownNat)
-import           GHC.Types                              (Int, Nat)
+import           GHC.TypeLits                           (KnownNat, Nat)
+import           GHC.Types                              (Int)
 import           GHC.Word                               (Word8)
 import           Language.Haskell.TH.Quote              (QuasiQuoter (..),
                                                          quoteDec, quoteExp,
                                                          quotePat, quoteType)
-import           Language.Haskell.TH.Syntax             (Dec, mkName, returnQ)
+import           Language.Haskell.TH.Syntax             (Dec, mkName)
 
 
 import           Data.BoundedSize                       (type (?),
@@ -136,7 +136,7 @@ ttype :: QuasiQuoter
 ttype = QuasiQuoter
     { quoteExp = undefined
     , quotePat = undefined
-    , quoteDec = returnQ <$> ttypeDecs
+    , quoteDec = pure <$> ttypeDecs
     , quoteType = undefined
     }
 
@@ -370,7 +370,7 @@ tenum :: QuasiQuoter
 tenum = QuasiQuoter
     { quoteExp = undefined
     , quotePat = undefined
-    , quoteDec = returnQ <$> tenumDecs
+    , quoteDec = pure <$> tenumDecs
     , quoteType = undefined
     }
 

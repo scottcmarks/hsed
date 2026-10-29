@@ -12,8 +12,8 @@ Stability   : experimental
 
 Design section 4.2. 'mkContext' builds the shared, read-only
 'Hsed.Spec.RuleDef.Context' every rule reads: one IR under one errata set,
-its numbered tables, their classification ("Hsed.Spec.Rules") and the bound
-tables read under the errata set. 'checks' runs the generic checks, then the
+its numbered tables, their classification ("Hsed.Spec.Rules"), every table's
+section ("Hsed.Spec.Scope") and the bound tables read under the errata set. 'checks' runs the generic checks, then the
 checks of every rule of "Hsed.Spec.Registry" on the tables bound to its shape
 (each rule's own module documents its checks and their codes). The generic
 checks, each emitting findings with the code in brackets:
@@ -60,6 +60,7 @@ import           Hsed.Spec.IR      (SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules   (checkExemplars, classifyWith)
+import           Hsed.Spec.Scope   (tableSections)
 import           Hsed.Spec.Shape   (headerNormalisations, measure, normaliseCaption, rawCaptionTitle)
 
 
@@ -74,6 +75,7 @@ mkContext es ir = Context
   , cxTables         = tables
   , cxClasses        = classes
   , cxClassFindings  = classFindings
+  , cxSections       = tableSections ir
   , cxCorrected      = fmap fst corrected
   , cxErrataFindings = concatMap snd (Map.elems corrected)
   }

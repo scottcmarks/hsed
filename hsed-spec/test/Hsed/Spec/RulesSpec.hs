@@ -12,11 +12,14 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The rules of design section 3.4 on the committed Core extraction: scope only from
-the anchors, the M1 pair binding Tables 46-165 (T87 by its comment), precedence by
-@refines@, the bare modifier chain of Table 75, bindings shaped by their
-target, the exemplars, and the validation of every annotation: an anchor of
-the payload's kind, naming something in the IR, alone on its anchor; @hsedc
-check@ and @hsedc bind@ refusing exactly the same annotations.
+the anchors, every numbered table classified once, precedence by @refines@, the
+bare modifier chain of Table 75, bindings shaped by their target, the
+exemplars, and the validation of every annotation: an anchor of the payload's
+kind, naming something in the IR, alone on its anchor; @hsedc check@ and
+@hsedc bind@ refusing exactly the same annotations. The tests hold invariants
+of the classification, not its totals (those are in @docs/LEDGER.md@, and each
+rule's own count is in @Rules/\<Rule\>Spec.hs@), so that a new rule edits
+nothing here.
 -}
 module Hsed.Spec.RulesSpec (spec) where
 
@@ -26,7 +29,7 @@ import qualified RIO.Text          as T
 import           RIO               hiding ((&))
 import           Test.Hspec
 
-import           Hsed.Spec.Anchor  (AnchorId (..))
+import           Hsed.Spec.Anchor  (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Bind    (bindEntries)
 import           Hsed.Spec.Common  (Finding, Severity (..), isError, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
@@ -37,7 +40,6 @@ import           Hsed.Spec.IR      (AnnotIR (..), Rect (..), SpecIR (..), Struct
 import qualified Hsed.Spec.IR      as IR
 import           Hsed.Spec.Rules
 import           Hsed.Spec.Rules.TypeRow (typeRowRule)
-import           Hsed.Spec.Shape   (measure)
 
 
 codesOf :: [Finding] -> [Text]
@@ -46,11 +48,15 @@ codesOf = map Cm.code
 count :: (Classification -> Bool) -> Map AnchorId Classification -> Int
 count p = length . filter p . Map.elems
 
-isRuleBound, isUnbound :: Classification -> Bool
+isRuleBound, isUnbound, isAmbiguousOrInvalid :: Classification -> Bool
 isRuleBound c = case c of
   RuleBound {} -> True
   _            -> False
 isUnbound c = c == Unbound
+isAmbiguousOrInvalid c = case c of
+  Ambiguous _ -> True
+  Invalid _   -> True
+  _           -> False
 
 -- | A rule that fires wherever typeRow does: the second of an ambiguous pair.
 shadow :: Maybe RuleName -> RuleDef
@@ -77,17 +83,15 @@ spec = do
         Map.lookup (StructPath "0/1288") secs `shouldBe` Just (Just "5.1.3.1")   -- T46
         Map.lookup (StructPath "0/1318") secs `shouldBe` Just (Just "5.1.3.6")   -- T52
 
-    describe "tableIdent" $
-      it "names the type of a type row and of an enumeration" $ do
-        let ident n = tableIdent . measure core201 =<< Map.lookup (TableId n) (numberedTables ir)
-        map ident [46, 52, 54, 72, 171] `shouldBe` [Just "AC_element", Just "adv_key_mode", Just "attr_flags", Just "Certificates_object_ref", Nothing]
-
     describe "scopeOf" $ do
       it "finds typeRow and enumValues at section 5.1.3 and nowhere else, tableUIDs on the doc anchor" $ do
         scopeOf ir (RuleName "typeRow") `shouldBe` [Subtree "5.1.3"]
         scopeOf ir (RuleName "enumValues") `shouldBe` [Subtree "5.1.3"]
         scopeOf ir (RuleName "tableUIDs") `shouldBe` [WholeDocument]
-        scopeOf ir (RuleName "codes") `shouldBe` []
+      it "gives a rule no anchor names no scope" $ do
+        ir' <- annotated pristine "core-2.01 | doc | doc core201\ncore-2.01 | 5.1.3 | rule typeRow\n"
+        scopeOf ir' (RuleName "typeRow") `shouldBe` [Subtree "5.1.3"]
+        scopeOf ir' (RuleName "enumValues") `shouldBe` []
       it "comes only from the anchors: the pristine IR has none" $ do
         scopeOf pristine (RuleName "typeRow") `shouldBe` []
         count isUnbound (classify pristine) `shouldBe` 248
@@ -97,31 +101,34 @@ spec = do
         count isRuleBound (classify ir') `shouldBe` 119
 
     describe "classify" $ do
-      it "binds the 100 type rows and 19 enumerations of section 5.1.3 and Table 240, and nothing else" $ do
-        count isRuleBound classes `shouldBe` 120
-        count isUnbound classes `shouldBe` 127
+      it "classifies every numbered table once, binding none ambiguously or invalidly" $ do
+        Map.keys classes `shouldBe` Map.keys (numberedTables ir)
         Map.size classes `shouldBe` 248
+        [ aid | (aid, c) <- Map.toList classes, isAmbiguousOrInvalid c ] `shouldBe` []
+      it "reports one W-UNBOUND per unbound table, at the table" $ do
+        let (_, fs) = classifyWith ir
+        L.sort [ a | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning, Just a <- [Cm.anchor f] ]
+          `shouldBe` L.sort [ renderAnchorId aid | (aid, Unbound) <- Map.toList classes ]
       it "binds T46 by typeRow and T52 by enumValues, with no comment" $ do
         at' 46 `shouldBe` Just (RuleBound (RuleName "typeRow") [] (SomeBinding typeRow))
         at' 52 `shouldBe` Just (RuleBound (RuleName "enumValues") [] (SomeBinding enumValues))
       it "applies Table 75's bare erratum to the typeRow default" $
         at' 75 `shouldBe` Just (RuleBound (RuleName "typeRow") [Erratum Scott [("Fractoin", "Fraction")]]
                                           (SomeBinding (erratum scott ["Fractoin" ~> "Fraction"] typeRow)))
-      it "leaves the tables outside 5.1.3 but T240 unbound, each a W-UNBOUND" $ do
-        at' 239 `shouldBe` Just Unbound
-        at' 240 `shouldBe` Just (RuleBound (RuleName "tableUIDs") [] (SomeBinding tableUIDs))
-        let (_, fs) = classifyWith ir
-        length [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning ] `shouldBe` 127
+      it "leaves every table of the pristine IR unbound, each a W-UNBOUND naming its caption" $ do
+        let (pristineClasses, fs) = classifyWith pristine
+        L.nub (Map.elems pristineClasses) `shouldBe` [Unbound]
+        length [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning ] `shouldBe` Map.size pristineClasses
         filter ("T239" `T.isInfixOf`) (map renderFinding fs)
           `shouldBe` ["W-UNBOUND core-2.01.pdf#page=302&T239: no annotation binds it and no rule in scope fires on it (Table 239 Special Purpose UIDs)"]
       it "binds a wider enumeration through a full binding with cols: T87's comment (design E4)" $ do
         at' 87 `shouldBe` Just (CommentBound (SomeBinding (rangeWords ["to"] (cols 0 1 enumValues))))
         ir' <- annotated pristine (withoutLine "T87" hsa)
         Map.lookup (TableId 87) (classify ir') `shouldBe` Just Unbound
-      it "refuses a bare modifier chain where no rule fires" $ do
-        ir' <- annotated pristine (hsa <> "core-2.01 | T239 | erratum scott [\"a\" ~> \"b\"]\n")
-        fmap describeClassification (Map.lookup (TableId 239) (classify ir'))
-          `shouldSatisfy` maybe False ("invalid: E-MODIFIER core-2.01.pdf#page=302&T239" `T.isPrefixOf`)
+      it "refuses a bare modifier chain where no rule fires (no rule anchor at all)" $ do
+        ir' <- annotated pristine "core-2.01 | T46 | erratum scott [\"a\" ~> \"b\"]\n"
+        fmap describeClassification (Map.lookup (TableId 46) (classify ir'))
+          `shouldSatisfy` maybe False ("invalid: E-MODIFIER core-2.01.pdf#page=100&T46" `T.isPrefixOf`)
       it "keeps a parse failure as Invalid, located at the anchor" $ do
         ir' <- annotated pristine "core-2.01 | T46 | frobnicate\n"
         fmap describeClassification (Map.lookup (TableId 46) (classify ir'))
@@ -134,9 +141,12 @@ spec = do
         ir' <- annotated pristine "core-2.01 | T47 | refines (opal 3)\n"
         fmap describeClassification (Map.lookup (TableId 47) (classify ir'))
           `shouldSatisfy` maybe False ("invalid: E-SHAPE core-2.01.pdf#page=100&T47" `T.isPrefixOf`)
-      it "reports a rule named but not implemented" $ do
-        ir' <- annotated pristine "core-2.01 | doc | doc core201 & rule codes\n"
-        codesOf (snd (classifyWith ir')) `shouldContain` ["W-RULE-UNIMPLEMENTED"]
+      it "reports a rule named but not implemented, whichever that is" $
+        case [ r | r <- knownRules, r `notElem` map ruleName rules ] of
+          [] -> pendingWith "every rule of the vocabulary is implemented"
+          r : _ -> do
+            ir' <- annotated pristine ("core-2.01 | doc | doc core201 & rule " <> ruleNameText r <> "\n")
+            codesOf (snd (classifyWith ir')) `shouldContain` ["W-RULE-UNIMPLEMENTED"]
 
     describe "precedence" $ do
       ir' <- runIO (annotated pristine "core-2.01 | 5.1.3 | rule typeRow & rule tableDesc\n")

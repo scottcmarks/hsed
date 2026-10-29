@@ -36,6 +36,7 @@ module Hsed.Spec.Shape
     Shape (..)
   , shapeName
   , readShape
+  , shapeGenerates
   , SShape (..)
   , KnownShape (..)
   , sShape
@@ -89,6 +90,12 @@ shapeName = tshow
 
 readShape :: Text -> Maybe Shape
 readShape t = lookup t [ (shapeName s, s) | s <- [minBound .. maxBound] ]
+
+-- | Whether a table bound with a shape has code to generate: every table shape
+--   but @Prose@, whose tables are text and nothing else. @hsedc compile@
+--   reports a table of a generating shape that no rule reads (@W-GEN-EXCLUDED@).
+shapeGenerates :: Shape -> Bool
+shapeGenerates = (/= Prose)
 
 -- | The singleton of 'Shape'.
 data SShape (s :: Shape) where

@@ -214,6 +214,14 @@ spec = do
       moduleName core typesModule `shouldBe` "Hsed.Gen.Core.Types"
       moduleName (SpecId "opal-2.30") typesModule `shouldBe` "Hsed.Gen.Opal.Types"
       modulePath "hsed/gen" "Hsed.Gen.Core.Types" `shouldBe` "hsed/gen/Hsed/Gen/Core/Types.hs"
+      map specLabel [core, SpecId "opal-2.30"] `shouldBe` ["Core", "Opal"]
+    it "unites the language extensions the declarations need with the two every module has, sorted" $ do
+      let d exts = (decl (prov "T1" "Table 1 x" 1 1 1 "0/1" "") "x" ["x = ()"]) { declExtensions = exts }
+          pragmas ds = filter ("{-# LANGUAGE" `T.isPrefixOf`) (T.lines (renderModule "M" typesModule ds))
+      pragmas [] `shouldBe` ["{-# LANGUAGE NoImplicitPrelude #-}", "{-# LANGUAGE OverloadedStrings #-}"]
+      pragmas [d ["TypeOperators", "DataKinds"], d ["DataKinds"]]
+        `shouldBe` [ "{-# LANGUAGE DataKinds #-}", "{-# LANGUAGE NoImplicitPrelude #-}", "{-# LANGUAGE OverloadedStrings #-}"
+                   , "{-# LANGUAGE TypeOperators #-}" ]
 
   describe "provenanceComment" $
     it "names the spec, table, caption title, pages, ordinal and hash prefix" $

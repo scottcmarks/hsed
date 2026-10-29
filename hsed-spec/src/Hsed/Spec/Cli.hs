@@ -24,6 +24,11 @@ Findings print in 'renderFinding' form on stdout, errors first; a one-line
 summary goes to stderr. Every command exits non-zero when any Error was found,
 the sidecar's included. @bind@ and @compile@ write nothing then: an Error
 leaves the committed bindings and generated module as they were.
+
+@compile@ owns the directory of its spec's generated modules
+(@DIR/Hsed/Gen/Core@ for Core): after writing the modules it removes every
+other @.hs@ file under it, so that a module no rule emits any more, or one
+renamed, disappears from the tree and @make gen-diff@ reports it.
 -}
 module Hsed.Spec.Cli
   ( Input (..)
@@ -35,8 +40,9 @@ module Hsed.Spec.Cli
   ) where
 
 import           RIO
-import           RIO.Directory            (createDirectoryIfMissing)
-import           RIO.FilePath             (takeDirectory, (</>))
+import           RIO.Directory            (createDirectoryIfMissing, doesDirectoryExist, listDirectory, removeFile)
+import           RIO.FilePath             (normalise, takeDirectory, takeExtension, (</>))
+import qualified RIO.List                 as L
 import qualified RIO.Map                  as Map
 import qualified RIO.Text                 as T
 
@@ -46,7 +52,7 @@ import           Hsed.Spec.Check          (checkIR, sortFindings)
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, RuleName (..), SpecId (..), errataSetName,
                                            isError, matchesSpec, renderFinding)
 import           Hsed.Spec.Compile
-import           Hsed.Spec.Gen            (modulePath)
+import           Hsed.Spec.Gen            (modulePath, specModuleDir)
 import           Hsed.Spec.IR
 import           Hsed.Spec.Report
 import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifyWith, explain,
@@ -112,13 +118,18 @@ runWith out err = \case
         forM_ paths $ \(path, text) -> do
           createDirectoryIfMissing True (takeDirectory path)
           writeFileUtf8 path text
+        existing <- haskellFiles (specModuleDir dir sid)
+        let stale = L.sort (filter (`notElem` map (normalise . fst) paths) (map normalise existing))
+        mapM_ removeFile stale
         createDirectoryIfMissing True reportTo
         writeFileUtf8 (reportTo </> "findings.md") (findingsMarkdown sid es fs)
         writeFileUtf8 (reportTo </> "coverage.md") (coverageMarkdown ir)
-        writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown [ledger ir])
+        writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown es [(ledger ir, fs)])
         say err ("hsedc compile: wrote " <> display (T.intercalate ", " (map (T.pack . fst) paths)) <> " ("
                     <> display (length (crDecls cr)) <> " declarations, "
-                    <> display (length (crExcluded cr)) <> " tables left out) and " <> fromString reportTo
+                    <> display (length (crExcluded cr)) <> " tables left out)"
+                    <> (if null stale then "" else ", removed " <> display (T.intercalate ", " (map T.pack stale)))
+                    <> " and " <> fromString reportTo
                     <> "/{findings,coverage,ledger}.md; " <> display (findingCounts fs) <> "\n")
   CmdExplain specName n inp -> do
     (ir, sideFs) <- load err inp
@@ -181,6 +192,16 @@ load err (Input path hsa) = do
       text <- readFileUtf8 f
       let (fs, ir') = withSidecar ir text
       pure (ir', fs)
+
+-- | Every @.hs@ file under a directory, at any depth; none when it does not exist.
+haskellFiles :: FilePath -> IO [FilePath]
+haskellFiles d = do
+  exists <- doesDirectoryExist d
+  if not exists then pure [] else do
+    entries <- map (d </>) <$> listDirectory d
+    concat <$> forM entries (\e -> do
+      isDir <- doesDirectoryExist e
+      if isDir then haskellFiles e else pure [ e | takeExtension e == ".hs" ])
 
 readOrFail :: Handle -> FilePath -> IO SpecIR
 readOrFail err path = readIR path >>= either (failWith err . fromString) pure

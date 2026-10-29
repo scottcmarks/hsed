@@ -12,8 +12,12 @@ Stability   : experimental
 docs/adding-a-rule.md: every rule is one module under @src/Hsed/Spec/Rules/@,
 named after the rule (@typeRow@ in @TypeRow.hs@), and one line of
 "Hsed.Spec.Registry"; no two rules share a name or a shape; and the generic
-modules name no rule, no rule's shape and no rule's module, so that rules
-added in parallel touch only their own files and the registry.
+modules name no rule, no rule's shape and no rule's module, those of the
+registry and those still to come (every rule token of "Hsed.Spec.DSL", every
+shape a table can be bound with), so that a rule added later edits no generic
+module. Adding a rule touches its own files, the registry's two lines, and
+files @make gen@ rewrites (the sidecar's renderings, the bindings, the
+generated modules, @docs/LEDGER.md@).
 -}
 module Hsed.Spec.RegistrySpec (spec) where
 
@@ -26,16 +30,17 @@ import           RIO
 import           Test.Hspec
 
 import           Hsed.Spec.Common  (RuleName (..))
+import           Hsed.Spec.DSL     (knownRules)
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef (RuleDef (..), ruleShape)
-import           Hsed.Spec.Shape   (shapeName)
+import           Hsed.Spec.Shape   (Shape (..), shapeName)
 
 
 -- | The modules that must know no rule: they iterate the registry.
 genericModules :: [FilePath]
 genericModules =
   map ("src/Hsed/Spec" </>)
-    ["Rules.hs", "Check.hs", "Compile.hs", "Gen.hs", "Cli.hs", "RuleDef.hs", "Report.hs", "Bind.hs"]
+    ["Rules.hs", "Scope.hs", "Check.hs", "Compile.hs", "Gen.hs", "Cli.hs", "RuleDef.hs", "Report.hs", "Bind.hs"]
   <> ["app/Main.hs"]
 
 -- | Haskell source without its comments: @{- ... -}@ blocks and @--@ to the end of a line.
@@ -73,3 +78,10 @@ spec = describe "the registry" $ do
     -- and the search finds them where they belong
     registryCode <- withoutComments <$> readFileUtf8 "src/Hsed/Spec/Registry.hs"
     length (filter (`elem` banned) (identifiers registryCode)) `shouldSatisfy` (>= 2 * length registry)
+  it "is known to no generic module before it is written: no rule token of the vocabulary, no table shape" $ do
+    let tokens = map ruleNameText knownRules
+        shapes = [ shapeName s | s <- [minBound .. maxBound], s `notElem` [Doc, Heading] ]
+        banned = tokens <> map capitalise tokens <> map (<> "Rule") tokens <> shapes
+    forM_ genericModules $ \path -> do
+      code <- withoutComments <$> readFileUtf8 path
+      (path, L.nub [ w | w <- identifiers code, w `elem` banned ]) `shouldBe` (path, [])

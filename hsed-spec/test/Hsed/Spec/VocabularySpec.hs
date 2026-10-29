@@ -12,7 +12,7 @@ Stability   : experimental
 @tools/extract/hsed_annot.py@ keeps, in its @VOCABULARY@ table, the anchors a
 payload may sit on by its first word, so that @annotate.py@ refuses a mismatch
 before the PDF is written. hsedc's grammar and its anchor-kind check
-("Hsed.Spec.Rules".'anchorKindMismatch') are the authority; this keeps the two
+("Hsed.Spec.Scope".'anchorKindMismatch') are the authority; this keeps the two
 equal: the same words, and for each word (through a payload that starts with
 it) the same anchors.
 -}

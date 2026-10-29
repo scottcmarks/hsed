@@ -25,15 +25,24 @@ knows lives in its 'RuleDef':
 * its checks: a function of the shared, read-only 'Context' and the tables
   bound to its shape ('BoundTable', rule-bound or comment-bound alike);
 * its compilation of the same tables to declarations ('Hsed.Spec.Gen.Decl')
-  for its generated module ('Hsed.Spec.Gen.GenModule'), or the tables it
-  leaves out and why.
+  for its generated module ('Hsed.Spec.Gen.GenModule'), or for another module
+  it names ('EmitIn'), or the tables it leaves out and why.
+
+The interface covers the numbered tables: the classification binds tables,
+and 'ruleChecks' and 'ruleCompile' read 'BoundTable's. A unit that is not a
+table (the method signatures of design rule @sig@, M2b) needs its own bound
+unit here first, a serial change before such a rule can be written.
 
 A rule that needs what another rule reads (an enumeration takes its range from
 its type row) imports that rule's module and calls its readers on the same
 'Context'. The 'Context' itself holds only what is generic: one IR under one
-errata set, its numbered tables, their classification and the bound tables
-read under the errata set ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext'
-builds it).
+errata set, its numbered tables, their classification, the section of every
+table ("Hsed.Spec.Scope") and the bound tables read under the errata set
+("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext' builds it).
+
+Several bindings may share a shape (@propsNames@ and @propsInitial@ are both
+@Props@): the shape has one 'RuleDef', which reads every table bound with it
+and tells them apart by 'btBinding'.
 -}
 module Hsed.Spec.RuleDef
   ( -- * Rules
@@ -47,6 +56,7 @@ module Hsed.Spec.RuleDef
   , Context (..)
   , BoundTable (..)
   , boundTables
+  , sectionOf
   , Mods (..)
   , modsOf
     -- * Locating findings
@@ -58,6 +68,7 @@ module Hsed.Spec.RuleDef
   , parseUIDCell
   , hexUID
   , provenanceOf
+  , atRow
   , cellsHash
   ) where
 
@@ -74,7 +85,7 @@ import           Hsed.Spec.Common (ErrataSet (..), Finding, RuleName, SpecId (..
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), someBindingShape)
 import qualified Hsed.Spec.Gen    as Gen
-import           Hsed.Spec.IR     (SpecIR (..), StructPath (..), TableIR (..), CellIR (..))
+import           Hsed.Spec.IR     (CellIR (..), SpecIR (..), StructPath (..), TableIR (..))
 import           Hsed.Spec.Shape  (Form, Shape (..))
 
 
@@ -112,8 +123,9 @@ ruleShape = someBindingShape . bindsTo
 
 -- | What a rule's compilation gives.
 data Emitted
-  = Emit !Gen.Decl              -- ^ a declaration for the rule's module
-  | Excluded !AnchorId !Text    -- ^ a bound table left out, and why (its Error is among the rule's findings)
+  = Emit !Gen.Decl                   -- ^ a declaration for the rule's module
+  | EmitIn !Gen.GenModule !Gen.Decl  -- ^ a declaration for another module (one rule writing several)
+  | Excluded !AnchorId !Text         -- ^ a bound table left out, and why (its Error is among the rule's findings)
   deriving (Eq, Show)
 
 
@@ -146,6 +158,7 @@ data Context = Context
   , cxTables         :: !(Map AnchorId TableIR)          -- ^ the numbered tables, as printed
   , cxClasses        :: !(Map AnchorId Classification)
   , cxClassFindings  :: ![Finding]                        -- ^ what the classification found
+  , cxSections       :: !(Map StructPath (Maybe Text))    -- ^ every table's section ("Hsed.Spec.Scope".'Hsed.Spec.Scope.tableSections')
   , cxCorrected      :: !(Map AnchorId TableIR)           -- ^ the bound tables, read under the errata set
   , cxErrataFindings :: ![Finding]                        -- ^ what reading them under the set found
   }
@@ -167,13 +180,23 @@ boundTables shape ctx =
   , (aid, t) <- Map.toList (cxTables ctx), Just sb <- [Map.lookup aid (cxClasses ctx) >>= boundBinding]
   , someBindingShape sb == shape ]
 
--- | The modifiers of a binding a rule reads: Scott's corrections (the grammar
---   admits no other set), the bound columns, the range words and the waivers.
+-- | The section of a bound table: that of the nearest numbered heading before it.
+sectionOf :: Context -> BoundTable -> Maybe Text
+sectionOf ctx bt = join (Map.lookup (btTable bt).structPath (cxSections ctx))
+
+-- | The modifiers of a binding a rule reads, one field for each modifier of
+--   "Hsed.Spec.DSL": Scott's corrections (the grammar admits no other set), the
+--   bound columns, the range words, the waivers, and whether the binding is
+--   under @enumInDescription@, @expand@ or @as@. A new modifier adds its field
+--   here, in the serial commit that adds it to the vocabulary.
 data Mods = Mods
-  { mErrata     :: [(Text, Text)]
-  , mCols       :: Maybe (Int, Int)
-  , mRangeWords :: [Text]
-  , mWaivers    :: [(Text, Text, Text)]
+  { mErrata            :: [(Text, Text)]
+  , mCols              :: Maybe (Int, Int)
+  , mRangeWords        :: [Text]
+  , mWaivers           :: [(Text, Text, Text)]
+  , mEnumInDescription :: Bool
+  , mExpand            :: Bool
+  , mAs                :: Bool
   }
 
 modsOf :: SomeBinding -> Mods
@@ -188,10 +211,10 @@ modsOf = \case
       WithWaiver c sj r b       -> let m = go b in m { mWaivers = (c, sj, r) : mWaivers m }
       WithCols a c b            -> (go b) { mCols = Just (a, c) }
       WithRangeWords ws b       -> let m = go b in m { mRangeWords = ws <> mRangeWords m }
-      WithEnumInDescription b   -> go b
-      WithExpand b              -> go b
-      WithAs b                  -> go b
-      _                         -> Mods [] Nothing [] []
+      WithEnumInDescription b   -> (go b) { mEnumInDescription = True }
+      WithExpand b              -> (go b) { mExpand = True }
+      WithAs b                  -> (go b) { mAs = True }
+      _                         -> Mods [] Nothing [] [] False False False
 
 
 -- * Locating findings
@@ -250,6 +273,14 @@ provenanceOf ctx aid t caption = Gen.Provenance
   , Gen.structPath  = let StructPath sp = t.structPath in sp
   , Gen.cellsHash   = cellsHash t }
   where page = fromMaybe 1 (tablePage t)
+
+-- | A provenance moved to the page of one row: the PDF and printed page of the
+--   row's first cell that has one (a table spanning pages prints a row on the
+--   page it lies on); the table's ordinal and hash are kept.
+atRow :: Context -> [CellIR] -> Gen.Provenance -> Gen.Provenance
+atRow ctx cells p = case listToMaybe (mapMaybe (\c -> c.page) cells) of
+  Nothing -> p
+  Just page0 -> p { Gen.pdfPage1 = page0 + 1, Gen.printedPage = page0 + 1 - (cxIR ctx).labelOffset }
 
 -- | sha256 over a table's cell texts, header rows first, a tab between cells and
 --   a newline between rows: the manifest's @hash@ (@tools/extract/annotate.py@).

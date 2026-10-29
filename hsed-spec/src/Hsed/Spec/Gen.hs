@@ -15,13 +15,15 @@ Stability   : experimental
 Assembles one generated module from the declarations the rules emit for it
 (docs/spec-as-source.md section 4.2; docs/adding-a-rule.md). A rule prints its
 own declarations ('Decl': its lines, the imports they need, where it comes
-from) and names the module they go to ('GenModule'); this module knows nothing
-of what any rule generates. It writes the header (pragmas, the module's
-Haddock with the rule's description and notes), merges the imports of every
-declaration (a whole-module import wins over an import list; lists are united
-and sorted), and prints the declarations sorted by table number, then rank
-within the table, then name. The same declarations print the same text in
-any order.
+from, the language extensions they need) and names the module they go to
+('GenModule'); this module knows nothing of what any rule generates. It writes
+the header (the pragmas, every declaration's extensions united with the two
+every module has; the module's Haddock with the description and notes),
+merges the imports of every declaration (a whole-module import wins over an
+import list; lists are united and sorted), and prints the declarations sorted
+by table number, then rank within the table, then name. The same declarations
+print the same text in any order. The runtime modules the declarations import
+are named once here ('uidModule', 'coreTypesModule').
 
 Every definition carries a Haddock line naming its table, PDF and printed
 page, structure ordinal and the hash of its cells ('provenanceComment',
@@ -37,8 +39,13 @@ module Hsed.Spec.Gen
   , Import (..)
   , Decl (..)
   , decl
+  , specLabel
   , moduleName
+  , specModuleDir
   , modulePath
+    -- * The runtime modules generated code imports
+  , uidModule
+  , coreTypesModule
     -- * Printing
   , renderModule
     -- * Pieces for the rules' printers
@@ -94,21 +101,42 @@ data Decl = Decl
   , declName       :: !Text        -- ^ the name it defines first, the third
   , declBody       :: ![Text]      -- ^ its lines, Haddock included
   , declImports    :: ![Import]
+  , declExtensions :: ![Text]      -- ^ the LANGUAGE extensions its lines need (@DataKinds@)
   }
   deriving (Eq, Show)
 
--- | A declaration of rank 0 with no imports; set the rest by record update.
+-- | A declaration of rank 0 with no imports and no extensions; set the rest by record update.
 decl :: Provenance -> Text -> [Text] -> Decl
-decl p n body = Decl { declProvenance = p, declRank = 0, declName = n, declBody = body, declImports = [] }
+decl p n body = Decl { declProvenance = p, declRank = 0, declName = n, declBody = body, declImports = [], declExtensions = [] }
+
+-- | The spec's name in generated identifiers: @Core@ for @core-2.01@.
+specLabel :: SpecId -> Text
+specLabel sid = capitalise (T.takeWhile C.isAlpha (specIdText sid))
+  where capitalise t = maybe t (\(c, cs) -> T.cons (C.toUpper c) (T.toLower cs)) (T.uncons t)
 
 -- | @Hsed.Gen.Core.Types@ for @core-2.01@ and a module whose leaf is @Types@.
 moduleName :: SpecId -> GenModule -> Text
-moduleName sid gm = "Hsed.Gen." <> capitalise (T.takeWhile C.isAlpha (specIdText sid)) <> "." <> gm.leaf
-  where capitalise t = maybe t (\(c, cs) -> T.cons (C.toUpper c) (T.toLower cs)) (T.uncons t)
+moduleName sid gm = "Hsed.Gen." <> specLabel sid <> "." <> gm.leaf
+
+-- | The directory of a spec's generated modules under an output directory:
+--   @DIR/Hsed/Gen/Core@; @hsedc compile@ owns it.
+specModuleDir :: FilePath -> SpecId -> FilePath
+specModuleDir dir sid = dir </> "Hsed" </> "Gen" </> T.unpack (specLabel sid)
 
 -- | Where a module goes under an output directory: @DIR/Hsed/Gen/Core/Types.hs@.
 modulePath :: FilePath -> Text -> FilePath
 modulePath dir name = dir </> T.unpack (T.replace "." "/" name) <> ".hs"
+
+
+-- * The runtime modules generated code imports
+
+-- | @UID@, @uid@, @HalfUID@, @halfUID@.
+uidModule :: Text
+uidModule = "System.SED.MCTP.Common.UID"
+
+-- | @TypeDef@ and its constructors, the @Enumerated@ class.
+coreTypesModule :: Text
+coreTypesModule = "Hsed.Core.Types"
 
 
 -- * Printing
@@ -119,10 +147,11 @@ renderModule modName gm decls = T.unlines (header <> importLines (concatMap (.de
   where
     sorted = sortOn (\d -> (tableNumber d.declProvenance, d.declRank, d.declName)) decls
     specs  = Set.toList (Set.fromList (map (\d -> specIdText d.declProvenance.spec) sorted))
+    extensions = Set.toList (Set.fromList (["NoImplicitPrelude", "OverloadedStrings"] <> concatMap (.declExtensions) decls))
     header =
-      [ "{-# LANGUAGE NoImplicitPrelude #-}"
-      , "{-# LANGUAGE OverloadedStrings #-}"
-      , ""
+      [ "{-# LANGUAGE " <> x <> " #-}" | x <- extensions ]
+      <>
+      [ ""
       , "{-|"
       , "Module      : " <> modName
       , "Description : " <> gm.description <> ", generated from " <> T.intercalate ", " specs

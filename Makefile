@@ -15,13 +15,15 @@ CORE_ANNOT_ARGS := --spec core-2.01 --pristine $(CORE) --ir spec/ir/core-2.01.js
                    --out build/core-2.01.hsed.pdf --upd $(ANNOT)/core-2.01.upd --manifest $(ANNOT)/core-2.01.manifest.json
 
 # the hsedc side of the pipeline (docs/spec-as-source.md section 5.2): the annotated PDF extracted,
-# then bind, check and compile; what it writes under hsed-spec/bindings and hsed/gen is committed
+# then bind, check and compile; what it writes under hsed-spec/bindings and hsed/gen is committed, and
+# so is its ledger (docs/LEDGER.md: the binding and finding totals the tests do not pin)
 HSEDC       := stack exec -- hsedc
 CORE_IR     := build/core-2.01.hsed.json
 BINDINGS    := hsed-spec/bindings/Hsed/Bindings/Core.hs
 BIND_CMD    := $(HSEDC) bind $(CORE_IR) -o $(BINDINGS)
 CHECK_CMD   := $(HSEDC) check $(CORE_IR) --errata scott
-COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/gen --report build/report
+COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/gen --report build/report \
+               && cp build/report/ledger.md docs/LEDGER.md
 
 .PHONY: check test extract extract-test regen-diff annotate pdf-checks venv \
         hsedc ir-annotated bind hsedc-check compile gen gen-diff splices
@@ -97,7 +99,8 @@ bind: ir-annotated hsedc
 hsedc-check: ir-annotated hsedc
 	$(CHECK_CMD)
 
-## hsed/gen/Hsed/Gen/Core/{Types,Enums,TableUIDs}.hs and build/report/{findings,coverage,ledger}.md (nothing written on an Error)
+## hsed/gen/Hsed/Gen/Core/*.hs (any other module there removed), build/report/{findings,coverage,ledger}.md
+## and docs/LEDGER.md, the committed copy of the ledger (nothing written on an Error)
 compile: ir-annotated hsedc
 	$(COMPILE_CMD)
 
@@ -107,10 +110,11 @@ gen: ir-annotated hsedc
 	$(CHECK_CMD)
 	$(COMPILE_CMD)
 
-## the committed bindings and generated code must be what gen produces today (changed or new files)
+## the committed bindings, generated code and ledger must be what gen produces today (changed, removed
+## or new files)
 gen-diff: gen
-	git diff --exit-code --stat hsed-spec/bindings hsed/gen
-	@new=$$(git status --porcelain --untracked-files=all -- hsed-spec/bindings hsed/gen); \
+	git diff --exit-code --stat hsed-spec/bindings hsed/gen docs/LEDGER.md
+	@new=$$(git status --porcelain --untracked-files=all -- hsed-spec/bindings hsed/gen docs/LEDGER.md); \
 	  if [ -n "$$new" ]; then echo "$$new"; echo "gen-diff: generated files are not committed"; exit 1; fi
 
 ## dev/TableUIDs.txt: GHCi's -ddump-splices transcript of hsed's hand-written TableUIDs, the

@@ -13,7 +13,8 @@ Stability   : experimental
 The commands as @hsedc@ runs them, on the committed Core extraction with a
 sidecar (@--hsa@): @bind@ and @compile@ write nothing when they report an
 Error, so a bad comment cannot overwrite the committed bindings or generated
-module; @orphans@, @ledger@ and @explain@ report the sidecar's and the
+module; @compile@ removes the modules of its spec's directory it did not
+write, and nothing else; @orphans@, @ledger@ and @explain@ report the sidecar's and the
 annotations' Errors and exit non-zero on them; @orphans@ lists the invalid
 and ambiguous tables beside the unbound ones; @ledger@ with several IRs and one
 sidecar applies it to the IR whose spec it names; @--target@ and @explain@ name
@@ -22,8 +23,9 @@ a spec only in full (@core@, @core-2.01@, @core201@).
 module Hsed.Spec.CliSpec (spec) where
 
 import           RIO
-import           RIO.Directory    (doesDirectoryExist, doesFileExist)
-import           RIO.FilePath     ((</>))
+import qualified RIO.List         as L
+import           RIO.Directory    (createDirectoryIfMissing, doesDirectoryExist, doesFileExist)
+import           RIO.FilePath     (takeDirectory, (</>))
 import           Test.Hspec
 
 import           Hsed.Spec.Cli
@@ -95,6 +97,20 @@ spec = do
           quietly (CmdCompile (Input coreIR (Just file)) Published "core" (dir </> "gen") (dir </> "report")) `shouldReturn` True
           doesDirectoryExist (dir </> "gen") `shouldReturn` False
           doesDirectoryExist (dir </> "report") `shouldReturn` False
+      it "removes the modules of its spec's directory it did not write, and nothing else" $
+        withSidecarFile hsa $ \dir file -> do
+          let gen = dir </> "gen"
+              stale = gen </> "Hsed/Gen/Core/Old.hs"
+              nested = gen </> "Hsed/Gen/Core/Old/Deeper.hs"
+              kept = [gen </> "Hsed/Gen/Core/notes.txt", gen </> "Hsed/Gen/Opal/Types.hs", gen </> "Hsed/Gen/Other.hs"]
+          forM_ (stale : nested : kept) $ \f -> do
+            createDirectoryIfMissing True (takeDirectory f)
+            writeFileUtf8 f "stale"
+          quietly (CmdCompile (Input coreIR (Just file)) Scott "core" gen (dir </> "report")) `shouldReturn` False
+          mapM doesFileExist [stale, nested] `shouldReturn` [False, False]
+          mapM doesFileExist kept `shouldReturn` [True, True, True]
+          mapM (doesFileExist . (gen </>)) ["Hsed/Gen/Core/Types.hs", "Hsed/Gen/Core/Enums.hs", "Hsed/Gen/Core/TableUIDs.hs"]
+            `shouldReturn` [True, True, True]
       it "refuses a --target that names the spec only in part" $
         withSidecarFile hsa $ \dir file ->
           forM_ ["", "c"] $ \target ->
@@ -127,7 +143,7 @@ spec = do
         let (_, ir) = withSidecar pristine (hsa <> "core-2.01 | T46 | frobnicate\n")
             os = orphans ir
         fmap Cm.code (lookup (TableId 46) os) `shouldBe` Just "E-GRAMMAR"
-        length os `shouldBe` 128
+        map fst os `shouldBe` L.sort (TableId 46 : map fst (orphans (snd (withSidecar pristine hsa))))
 
     describe "ledger" $ do
       it "applies one sidecar to the IR whose spec its lines name, and reads the others as they are" $

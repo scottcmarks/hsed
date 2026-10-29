@@ -20,7 +20,7 @@ applied to the default of the rule that binds the table, so that Table 75's
 (@refines (core 42)@) takes the target's shape ("Hsed.Spec.Rules"). A
 rule-bound table without an annotation prints nothing: that is the point of
 the rules. An annotation that cannot be resolved is a finding instead of an
-entry: one that "Hsed.Spec.Rules".'parseAnnots' refuses (an id naming nothing,
+entry: one that "Hsed.Spec.Scope".'parseAnnots' refuses (an id naming nothing,
 two annotations on one anchor, a payload that does not parse, a binding of the
 wrong kind for its anchor), so that @hsedc bind@ refuses exactly what @hsedc
 check@ does.

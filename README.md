@@ -2,6 +2,7 @@
 The TCG Storage specifications under `tcg/`, and everything here derived from them, are
 redistributed under TCG's own terms: see `tcg/TCG-NOTICE.txt`. The design of record is
 `docs/spec-as-source.md`.
+Adding a rule to the spec compiler `hsedc`: `docs/adding-a-rule.md`.
 
 Goals drift.
 

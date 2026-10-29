@@ -28,6 +28,7 @@ import           Test.Hspec
 
 import           Hsed.Core.Types                 (Enumerated (..), enumValue)
 import           Hsed.Gen.Core.EquivTH
+import qualified Hsed.Gen.Core.Enums             as G
 import qualified Hsed.Gen.Core.Types             as G
 import qualified System.SED.MCTP.Common.TypeUIDs as H
 import           System.SED.MCTP.Common.UID      (uid)
@@ -35,7 +36,7 @@ import           System.SED.MCTP.Common.UID      (uid)
 
 -- | Every generated definition compared, and the generated names the hand-written module lacks.
 equiv :: ([Comparison], [String])
-equiv = $(comparisons "gen/Hsed/Gen/Core/Types.hs" "G" "H")
+equiv = $(comparisons ["gen/Hsed/Gen/Core/Types.hs", "gen/Hsed/Gen/Core/Enums.hs"] "G" "H")
 
 -- | What a listed difference is.
 data Expected

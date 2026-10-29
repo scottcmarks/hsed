@@ -88,9 +88,14 @@ enumValuesRule = RuleDef
   , ruleCompile = compile
   }
 
--- | The module the enumerations go to: the type rows' module.
+-- | @Hsed.Gen.\<Spec\>.Enums@; it imports the type rows' module for each type's UID.
 enumsModule :: Gen.GenModule
-enumsModule = typesModule
+enumsModule = Gen.GenModule
+  { Gen.leaf        = "Enums"
+  , Gen.description = "Enumerations of the Type objects: each value's constructor, the type's UID and range"
+  , Gen.notes       = [ "The constructors are named as hsed's hand-written dEnum names them (the label"
+                      , "scrubbed, a label's later values suffixed, _NA for the gaps of the range), for"
+                      , "the M2a runtime comparison." ] }
 
 -- | The type an enumeration's caption names: @\<ident\> Enumeration Values@ or @\<ident\> Set Values@.
 enumIdent :: Form -> Maybe Text

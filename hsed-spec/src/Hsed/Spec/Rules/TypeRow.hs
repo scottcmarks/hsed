@@ -92,7 +92,7 @@ typeRowRule = RuleDef
 typesModule :: Gen.GenModule
 typesModule = Gen.GenModule
   { Gen.leaf        = "Types"
-  , Gen.description = "Type objects and their enumerations"
+  , Gen.description = "Type objects: each Type table row's UID, Format and TypeDef"
   , Gen.notes       = [ "The @f\\<Name\\>Type@ strings are the Format cells joined as hsed's hand"
                       , "transcription joins them, for the M2a runtime comparison." ] }
 

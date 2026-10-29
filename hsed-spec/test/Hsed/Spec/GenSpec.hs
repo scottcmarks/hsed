@@ -101,6 +101,14 @@ goldenFile es = "test/golden/Core-Types-" <> T.unpack (errataSetName es) <> ".hs
 coreTypes :: Text
 coreTypes = "Hsed.Gen.Core.Types"
 
+-- | The module the golden files print: type rows and an enumeration together,
+--   as M1 generated them, so that the printer's output is pinned on its own.
+goldenModule :: GenModule
+goldenModule = GenModule
+  { leaf = "Types", description = "Type objects and their enumerations"
+  , notes = [ "The @f\\<Name\\>Type@ strings are the Format cells joined as hsed's hand"
+            , "transcription joins them, for the M2a runtime comparison." ] }
+
 
 -- * Type-checking a printed module
 
@@ -112,7 +120,7 @@ compiles decls = withSystemTempDirectory "hsed-gen" $ \dir -> do
   let file = dir </> "Hsed" </> "Gen" </> "Core" </> "Types.hs"
       ghcArgs = ["-fno-code", "-Wall", "-Werror", "-package", "hsed-core", "-i" <> dir, file]
   createDirectoryIfMissing True (takeDirectory file)
-  writeFileUtf8 file (renderModule coreTypes typesModule decls)
+  writeFileUtf8 file (renderModule coreTypes goldenModule decls)
   underStack <- isJust <$> lookupEnv "GHC_PACKAGE_PATH"
   let (prog, args) = if underStack then ("ghc", ghcArgs) else ("stack", ["exec", "--", "ghc"] <> ghcArgs)
   result <- try (readProcessWithExitCode prog args "")
@@ -129,7 +137,7 @@ spec = do
   describe "renderModule" $ do
     forM_ [Scott, Published] $ \es ->
       it ("prints T46, T52 and T75 under " <> T.unpack (errataSetName es) <> " as the golden file has them") $ do
-        let actual = renderModule coreTypes typesModule (golden env es)
+        let actual = renderModule coreTypes goldenModule (golden env es)
             path   = goldenFile es
         exists <- doesFileExist path
         if exists
@@ -140,44 +148,44 @@ spec = do
             writeFileUtf8 path actual
             pendingWith ("wrote " <> path <> "; review it and run again")
     it "prints the same text for the same input in any order" $
-      renderModule coreTypes typesModule (reverse (golden env Scott)) `shouldBe` renderModule coreTypes typesModule (golden env Scott)
+      renderModule coreTypes goldenModule (reverse (golden env Scott)) `shouldBe` renderModule coreTypes goldenModule (golden env Scott)
     it "orders the definitions by table number" $ do
-      let text = renderModule coreTypes typesModule (reverse (golden env Scott))
+      let text = renderModule coreTypes goldenModule (reverse (golden env Scott))
           position needle = T.length (fst (T.breakOn needle text))
           positions = map position ["uAC_elementType ::", "data Core_adv_key_mode", "uclock_timeType ::"]
       positions `shouldBe` sort positions
       positions `shouldSatisfy` all (< T.length text)
     it "gives every definition its provenance line" $ do
-      let text = renderModule coreTypes typesModule (golden env Scott)
+      let text = renderModule coreTypes goldenModule (golden env Scott)
           count needle = length (T.breakOnAll needle text)
       count "-- | core-2.01 T46 AC_element (PDF 100 / p.83, ord 48, sha256:5b2d8106fd18)" `shouldBe` 3
       count "-- | core-2.01 T52 adv_key_mode Enumeration Values (PDF 102 / p.85, ord 54, sha256:3aa5da037978)" `shouldBe` 2
       count "-- | core-2.01 T75 clock_time (PDF 107 / p.90, ord 77, sha256:c349b5b0b0ba)" `shouldBe` 3
     it "prints the three shapes of a Type row as hsed's TypeUIDs.hs has them" $ do
-      let text = renderModule coreTypes typesModule [t46 env]
+      let text = renderModule coreTypes goldenModule [t46 env]
       text `shouldSatisfy` T.isInfixOf "uAC_elementType :: UID\nuAC_elementType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01\n"
       text `shouldSatisfy` T.isInfixOf "fAC_elementType :: String\nfAC_elementType = \"List_Type,*,ACE_expression\"\n"
       text `shouldSatisfy` T.isInfixOf "tAC_element :: TypeDef\ntAC_element = ListType Star (Ref \"ACE_expression\")\n"
     it "omits the TypeDef of a Format that did not parse" $ do
-      let text = renderModule coreTypes typesModule (golden env Published)
+      let text = renderModule coreTypes goldenModule (golden env Published)
       text `shouldSatisfy` T.isInfixOf "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
       text `shouldSatisfy` (not . T.isInfixOf "tclock_time ::")
       text `shouldSatisfy` T.isInfixOf "fclock_timeType = \"Struct_Type,Year,Month,Day,Hour,Minute,Seconds,Fractoin\""
-      renderModule coreTypes typesModule (golden env Scott)
+      renderModule coreTypes goldenModule (golden env Scott)
         `shouldSatisfy` T.isInfixOf "tclock_time = StructType [Ref \"Year\",Ref \"Month\",Ref \"Day\",Ref \"Hour\",Ref \"Minute\",Ref \"Seconds\",Ref \"Fraction\"]"
     it "refers to the row's UID name in its module or another, or spells the UID out" $ do
       t52Beside51.declBody `shouldSatisfy` elem "  typeUID = uadv_key_modeType"
       t52.declBody `shouldSatisfy` elem "  typeUID = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x0f"
-      renderModule coreTypes typesModule [t51 env, t52Beside51] `shouldSatisfy` T.isInfixOf "  typeUID = uadv_key_modeType\n  range   = (0, 7)\n"
+      renderModule coreTypes goldenModule [t51 env, t52Beside51] `shouldSatisfy` T.isInfixOf "  typeUID = uadv_key_modeType\n  range   = (0, 7)\n"
       let elsewhere = renderEnum (InModule "Hsed.Gen.Core.Types") t52Decl
       elsewhere.declBody `shouldSatisfy` elem "  typeUID = uadv_key_modeType"
       elsewhere.declImports `shouldSatisfy` elem (ImportAll "Hsed.Gen.Core.Types")
     it "imports only what its definitions use" $ do
-      renderModule coreTypes typesModule [t52] `shouldSatisfy` T.isInfixOf "import           Prelude                    (Bounded, Enum, Eq, Ord, Show)\n"
-      renderModule coreTypes typesModule [t52] `shouldSatisfy` T.isInfixOf "import           System.SED.MCTP.Common.UID (uid)\n"
-      renderModule coreTypes typesModule [t46 env] `shouldSatisfy` T.isInfixOf "import           Prelude                    (String)\n"
-      renderModule coreTypes typesModule [t75 env Published] `shouldSatisfy` (not . T.isInfixOf "import           Hsed.Core.Types")
-      renderModule coreTypes typesModule [] `shouldSatisfy` (not . T.isInfixOf "import")
+      renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           Prelude                    (Bounded, Enum, Eq, Ord, Show)\n"
+      renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           System.SED.MCTP.Common.UID (uid)\n"
+      renderModule coreTypes goldenModule [t46 env] `shouldSatisfy` T.isInfixOf "import           Prelude                    (String)\n"
+      renderModule coreTypes goldenModule [t75 env Published] `shouldSatisfy` (not . T.isInfixOf "import           Hsed.Core.Types")
+      renderModule coreTypes goldenModule [] `shouldSatisfy` (not . T.isInfixOf "import")
 
   describe "the printed module" $
     forM_ [ ("scott", golden env Scott), ("published", golden env Published)

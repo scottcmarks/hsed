@@ -45,11 +45,11 @@ differs c = cGenerated c /= cHandWritten c
 --   module imported qualified as @G@ and the hand-written one as @H@: an
 --   expression of type @([Comparison], [String])@, the comparisons and the
 --   generated names without a counterpart.
-comparisons :: FilePath -> String -> String -> Q Exp
-comparisons path g h = do
-  addDependentFile path
-  src <- runIO (readFile path)
-  let ls     = lines src
+comparisons :: [FilePath] -> String -> String -> Q Exp
+comparisons paths g h = do
+  mapM_ addDependentFile paths
+  srcs <- runIO (mapM readFile paths)
+  let ls     = concatMap lines srcs
       values = mapMaybe valueName ls
       types  = mapMaybe (stripPrefix "data ") ls
   vs <- forM values $ \n -> pair n <$> lookupValueName (g ++ "." ++ n) <*> lookupValueName (h ++ "." ++ n)

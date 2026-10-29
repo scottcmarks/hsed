@@ -97,7 +97,7 @@ bind: ir-annotated hsedc
 hsedc-check: ir-annotated hsedc
 	$(CHECK_CMD)
 
-## hsed/gen/Hsed/Gen/Core/Types.hs and build/report/{findings,coverage,ledger}.md (nothing written on an Error)
+## hsed/gen/Hsed/Gen/Core/{Types,Enums,TableUIDs}.hs and build/report/{findings,coverage,ledger}.md (nothing written on an Error)
 compile: ir-annotated hsedc
 	$(COMPILE_CMD)
 

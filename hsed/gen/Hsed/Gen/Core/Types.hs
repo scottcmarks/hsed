@@ -3,7 +3,7 @@
 
 {-|
 Module      : Hsed.Gen.Core.Types
-Description : Type objects and their enumerations, generated from core-2.01
+Description : Type objects: each Type table row's UID, Format and TypeDef, generated from core-2.01
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -17,7 +17,7 @@ hsed's hand transcription joins them, for the M2a runtime comparison.
 module Hsed.Gen.Core.Types where
 
 import           Hsed.Core.Types
-import           Prelude                    (Bounded, Enum, Eq, Ord, Show, String)
+import           Prelude                    (String)
 import           System.SED.MCTP.Common.UID (UID, uid)
 
 -- | core-2.01 T46 AC_element (PDF 100 / p.83, ord 48, sha256:caa39084636e)
@@ -92,23 +92,6 @@ fadv_key_modeType = "Enumeration_Type,0,7"
 tadv_key_mode :: TypeDef
 tadv_key_mode = EnumType [(Lit 0,Lit 7)]
 
--- | core-2.01 T52 adv_key_mode Enumeration Values (PDF 102 / p.85, ord 54, sha256:1537687dfe92)
-data Core_adv_key_mode
-  = Core_adv_key_mode_Wait_for_AdvKey_Req
-  | Core_adv_key_mode_Auto_advance_keys
-  | Core_adv_key_mode_Reserved
-  | Core_adv_key_mode_Reserved_3
-  | Core_adv_key_mode_Reserved_4
-  | Core_adv_key_mode_Reserved_5
-  | Core_adv_key_mode_Reserved_6
-  | Core_adv_key_mode_Reserved_7
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T52 adv_key_mode Enumeration Values (PDF 102 / p.85, ord 54, sha256:1537687dfe92)
-instance Enumerated Core_adv_key_mode where
-  typeUID = uadv_key_modeType
-  range   = (0, 7)
-
 -- | core-2.01 T53 attr_flags (PDF 102 / p.85, ord 55, sha256:a8f2336ef7b0)
 uattr_flagsType :: UID
 uattr_flagsType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x1a 0x04
@@ -121,47 +104,6 @@ fattr_flagsType = "Set_Type,0,31"
 tattr_flags :: TypeDef
 tattr_flags = SetType [(Lit 0,Lit 31)]
 
--- | core-2.01 T54 attr_flags Set Values (PDF 102 / p.85, ord 56, sha256:85d542657277)
-data Core_attr_flags
-  = Core_attr_flags_Get_Not_Permitted
-  | Core_attr_flags_Set_Not_Permitted
-  | Core_attr_flags_Reserved
-  | Core_attr_flags_Reserved_3
-  | Core_attr_flags_Reserved_4
-  | Core_attr_flags_Reserved_5
-  | Core_attr_flags_Reserved_6
-  | Core_attr_flags_Reserved_7
-  | Core_attr_flags_Reserved_8
-  | Core_attr_flags_Reserved_9
-  | Core_attr_flags_Reserved_10
-  | Core_attr_flags_Reserved_11
-  | Core_attr_flags_Reserved_12
-  | Core_attr_flags_Reserved_13
-  | Core_attr_flags_Reserved_14
-  | Core_attr_flags_Reserved_15
-  | Core_attr_flags_Reserved_16
-  | Core_attr_flags_Reserved_17
-  | Core_attr_flags_Reserved_18
-  | Core_attr_flags_Reserved_19
-  | Core_attr_flags_Reserved_20
-  | Core_attr_flags_Reserved_21
-  | Core_attr_flags_Reserved_22
-  | Core_attr_flags_Reserved_23
-  | Core_attr_flags_Reserved_24
-  | Core_attr_flags_Reserved_25
-  | Core_attr_flags_Reserved_26
-  | Core_attr_flags_Reserved_27
-  | Core_attr_flags_Reserved_28
-  | Core_attr_flags_Reserved_29
-  | Core_attr_flags_Reserved_30
-  | Core_attr_flags_Reserved_31
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T54 attr_flags Set Values (PDF 102 / p.85, ord 56, sha256:85d542657277)
-instance Enumerated Core_attr_flags where
-  typeUID = uattr_flagsType
-  range   = (0, 31)
-
 -- | core-2.01 T55 auth_method (PDF 102 / p.85, ord 57, sha256:601006fdee42)
 uauth_methodType :: UID
 uauth_methodType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x08
@@ -173,39 +115,6 @@ fauth_methodType = "Enumeration_Type,0,23"
 -- | core-2.01 T55 auth_method (PDF 102 / p.85, ord 57, sha256:601006fdee42)
 tauth_method :: TypeDef
 tauth_method = EnumType [(Lit 0,Lit 23)]
-
--- | core-2.01 T56 auth_method Enumeration Values (PDF 102 / p.85, ord 58, sha256:e4c4fcbd603b)
-data Core_auth_method
-  = Core_auth_method_None
-  | Core_auth_method_Password
-  | Core_auth_method_Exchange
-  | Core_auth_method_Sign
-  | Core_auth_method_SymK
-  | Core_auth_method_HMAC
-  | Core_auth_method_TPerSign
-  | Core_auth_method_TPerExchange
-  | Core_auth_method_Reserved
-  | Core_auth_method_Reserved_9
-  | Core_auth_method_Reserved_10
-  | Core_auth_method_Reserved_11
-  | Core_auth_method_Reserved_12
-  | Core_auth_method_Reserved_13
-  | Core_auth_method_Reserved_14
-  | Core_auth_method_Reserved_15
-  | Core_auth_method_Reserved_16
-  | Core_auth_method_Reserved_17
-  | Core_auth_method_Reserved_18
-  | Core_auth_method_Reserved_19
-  | Core_auth_method_Reserved_20
-  | Core_auth_method_Reserved_21
-  | Core_auth_method_Reserved_22
-  | Core_auth_method_Reserved_23
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T56 auth_method Enumeration Values (PDF 102 / p.85, ord 58, sha256:e4c4fcbd603b)
-instance Enumerated Core_auth_method where
-  typeUID = uauth_methodType
-  range   = (0, 23)
 
 -- | core-2.01 T57 Authority_object_ref (PDF 103 / p.86, ord 59, sha256:1cde70faa891)
 uAuthority_object_refType :: UID
@@ -231,17 +140,6 @@ fbooleanType = "Enumeration_Type,0,1"
 tboolean :: TypeDef
 tboolean = EnumType [(Lit 0,Lit 1)]
 
--- | core-2.01 T59 boolean Enumeration Values (PDF 103 / p.86, ord 61, sha256:a6fb2b3e4174)
-data Core_boolean
-  = Core_boolean_False
-  | Core_boolean_True
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T59 boolean Enumeration Values (PDF 103 / p.86, ord 61, sha256:a6fb2b3e4174)
-instance Enumerated Core_boolean where
-  typeUID = ubooleanType
-  range   = (0, 1)
-
 -- | core-2.01 T60 boolean_ACE (PDF 103 / p.86, ord 62, sha256:4fa710082678)
 uboolean_ACEType :: UID
 uboolean_ACEType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x0e
@@ -253,18 +151,6 @@ fboolean_ACEType = "Enumeration_Type,0,2"
 -- | core-2.01 T60 boolean_ACE (PDF 103 / p.86, ord 62, sha256:4fa710082678)
 tboolean_ACE :: TypeDef
 tboolean_ACE = EnumType [(Lit 0,Lit 2)]
-
--- | core-2.01 T61 boolean_ACE Enumeration Values (PDF 104 / p.87, ord 63, sha256:52d7fa0b5077)
-data Core_boolean_ACE
-  = Core_boolean_ACE_And
-  | Core_boolean_ACE_Or
-  | Core_boolean_ACE_Not
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T61 boolean_ACE Enumeration Values (PDF 104 / p.87, ord 63, sha256:52d7fa0b5077)
-instance Enumerated Core_boolean_ACE where
-  typeUID = uboolean_ACEType
-  range   = (0, 2)
 
 -- | core-2.01 T62 byte_row_ref (PDF 104 / p.87, ord 64, sha256:ec8618a4a08e)
 ubyte_row_refType :: UID
@@ -410,19 +296,6 @@ fclock_kindType = "Enumeration_Type,0,3"
 tclock_kind :: TypeDef
 tclock_kind = EnumType [(Lit 0,Lit 3)]
 
--- | core-2.01 T74 clock_kind Enumeration Values (PDF 106 / p.89, ord 76, sha256:f2ffc6a7e46a)
-data Core_clock_kind
-  = Core_clock_kind_Timer
-  | Core_clock_kind_Low
-  | Core_clock_kind_High
-  | Core_clock_kind_LowAndHigh
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T74 clock_kind Enumeration Values (PDF 106 / p.89, ord 76, sha256:f2ffc6a7e46a)
-instance Enumerated Core_clock_kind where
-  typeUID = uclock_kindType
-  range   = (0, 3)
-
 -- | core-2.01 T75 clock_time (PDF 107 / p.90, ord 77, sha256:5a5e8787c29a)
 uclock_timeType :: UID
 uclock_timeType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x18 0x05
@@ -507,31 +380,6 @@ fenc_supportedType = "Enumeration_Type,0,15"
 tenc_supported :: TypeDef
 tenc_supported = EnumType [(Lit 0,Lit 15)]
 
--- | core-2.01 T82 enc_supported Enumeration Values (PDF 108 / p.91, ord 84, sha256:8dfbfb101d40)
-data Core_enc_supported
-  = Core_enc_supported_None
-  | Core_enc_supported_Media_Encryption
-  | Core_enc_supported_Reserved
-  | Core_enc_supported_Reserved_3
-  | Core_enc_supported_Reserved_4
-  | Core_enc_supported_Reserved_5
-  | Core_enc_supported_Reserved_6
-  | Core_enc_supported_Reserved_7
-  | Core_enc_supported_Reserved_8
-  | Core_enc_supported_Reserved_9
-  | Core_enc_supported_Reserved_10
-  | Core_enc_supported_Reserved_11
-  | Core_enc_supported_Reserved_12
-  | Core_enc_supported_Reserved_13
-  | Core_enc_supported_Reserved_14
-  | Core_enc_supported_Reserved_15
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T82 enc_supported Enumeration Values (PDF 108 / p.91, ord 84, sha256:8dfbfb101d40)
-instance Enumerated Core_enc_supported where
-  typeUID = uenc_supportedType
-  range   = (0, 15)
-
 -- | core-2.01 T83 feedback_size (PDF 108 / p.91, ord 85, sha256:1a73ddaec49c)
 ufeedback_sizeType :: UID
 ufeedback_sizeType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x02 0x14
@@ -580,79 +428,6 @@ fgen_statusType = "Set_Type,0,63"
 tgen_status :: TypeDef
 tgen_status = SetType [(Lit 0,Lit 63)]
 
--- | core-2.01 T87 gen_status Enumeration Values (PDF 109 / p.92, ord 89, sha256:b3ec98a47f86)
-data Core_gen_status
-  = Core_gen_status_None
-  | Core_gen_status_pending_tper_error
-  | Core_gen_status_active_tper_error
-  | Core_gen_status_active_pause_requested
-  | Core_gen_status_pend_pause_requested
-  | Core_gen_status_pend_reset_stop_detect
-  | Core_gen_status_key_error
-  | Core_gen_status_reserved
-  | Core_gen_status_reserved_8
-  | Core_gen_status_reserved_9
-  | Core_gen_status_reserved_10
-  | Core_gen_status_reserved_11
-  | Core_gen_status_reserved_12
-  | Core_gen_status_reserved_13
-  | Core_gen_status_reserved_14
-  | Core_gen_status_reserved_15
-  | Core_gen_status_reserved_16
-  | Core_gen_status_reserved_17
-  | Core_gen_status_reserved_18
-  | Core_gen_status_reserved_19
-  | Core_gen_status_reserved_20
-  | Core_gen_status_reserved_21
-  | Core_gen_status_reserved_22
-  | Core_gen_status_reserved_23
-  | Core_gen_status_reserved_24
-  | Core_gen_status_reserved_25
-  | Core_gen_status_reserved_26
-  | Core_gen_status_reserved_27
-  | Core_gen_status_reserved_28
-  | Core_gen_status_reserved_29
-  | Core_gen_status_reserved_30
-  | Core_gen_status_reserved_31
-  | Core_gen_status_wait_AvailableKeys
-  | Core_gen_status_wait_for_TPer_resources
-  | Core_gen_status_active_reset_stop_detect
-  | Core_gen_status_reserved_35
-  | Core_gen_status_reserved_36
-  | Core_gen_status_reserved_37
-  | Core_gen_status_reserved_38
-  | Core_gen_status_reserved_39
-  | Core_gen_status_reserved_40
-  | Core_gen_status_reserved_41
-  | Core_gen_status_reserved_42
-  | Core_gen_status_reserved_43
-  | Core_gen_status_reserved_44
-  | Core_gen_status_reserved_45
-  | Core_gen_status_reserved_46
-  | Core_gen_status_reserved_47
-  | Core_gen_status_reserved_48
-  | Core_gen_status_reserved_49
-  | Core_gen_status_reserved_50
-  | Core_gen_status_reserved_51
-  | Core_gen_status_reserved_52
-  | Core_gen_status_reserved_53
-  | Core_gen_status_reserved_54
-  | Core_gen_status_reserved_55
-  | Core_gen_status_reserved_56
-  | Core_gen_status_reserved_57
-  | Core_gen_status_reserved_58
-  | Core_gen_status_reserved_59
-  | Core_gen_status_reserved_60
-  | Core_gen_status_reserved_61
-  | Core_gen_status_reserved_62
-  | Core_gen_status_reserved_63
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T87 gen_status Enumeration Values (PDF 109 / p.92, ord 89, sha256:b3ec98a47f86)
-instance Enumerated Core_gen_status where
-  typeUID = ugen_statusType
-  range   = (0, 63)
-
 -- | core-2.01 T88 hash_protocol (PDF 110 / p.93, ord 90, sha256:c953a53cdb6a)
 uhash_protocolType :: UID
 uhash_protocolType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x0d
@@ -664,31 +439,6 @@ fhash_protocolType = "Enumeration_Type,0,15"
 -- | core-2.01 T88 hash_protocol (PDF 110 / p.93, ord 90, sha256:c953a53cdb6a)
 thash_protocol :: TypeDef
 thash_protocol = EnumType [(Lit 0,Lit 15)]
-
--- | core-2.01 T89 hash_protocol Enumeration Values (PDF 110 / p.93, ord 91, sha256:8b8a9dbce730)
-data Core_hash_protocol
-  = Core_hash_protocol_None
-  | Core_hash_protocol_SHA_1
-  | Core_hash_protocol_SHA_256
-  | Core_hash_protocol_SHA_384
-  | Core_hash_protocol_SHA_512
-  | Core_hash_protocol_Reserved
-  | Core_hash_protocol_Reserved_6
-  | Core_hash_protocol_Reserved_7
-  | Core_hash_protocol_Reserved_8
-  | Core_hash_protocol_Reserved_9
-  | Core_hash_protocol_Reserved_10
-  | Core_hash_protocol_Reserved_11
-  | Core_hash_protocol_Reserved_12
-  | Core_hash_protocol_Reserved_13
-  | Core_hash_protocol_Reserved_14
-  | Core_hash_protocol_Reserved_15
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T89 hash_protocol Enumeration Values (PDF 110 / p.93, ord 91, sha256:8b8a9dbce730)
-instance Enumerated Core_hash_protocol where
-  typeUID = uhash_protocolType
-  range   = (0, 15)
 
 -- | core-2.01 T90 Hour (PDF 111 / p.94, ord 92, sha256:65fd3cbda1bf)
 uHourType :: UID
@@ -786,23 +536,6 @@ fkeys_avail_condsType = "Enumeration_Type,0,7"
 tkeys_avail_conds :: TypeDef
 tkeys_avail_conds = EnumType [(Lit 0,Lit 7)]
 
--- | core-2.01 T98 keys_avail_conds Enumeration Values (PDF 112 / p.95, ord 100, sha256:35d94dfe1526)
-data Core_keys_avail_conds
-  = Core_keys_avail_conds_None
-  | Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLocked_WriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range
-  | Core_keys_avail_conds_Reserved
-  | Core_keys_avail_conds_Reserved_3
-  | Core_keys_avail_conds_Reserved_4
-  | Core_keys_avail_conds_Reserved_5
-  | Core_keys_avail_conds_Reserved_6
-  | Core_keys_avail_conds_Reserved_7
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T98 keys_avail_conds Enumeration Values (PDF 112 / p.95, ord 100, sha256:35d94dfe1526)
-instance Enumerated Core_keys_avail_conds where
-  typeUID = ukeys_avail_condsType
-  range   = (0, 7)
-
 -- | core-2.01 T99 lag (PDF 112 / p.95, ord 101, sha256:6c9ea99481a4)
 ulagType :: UID
 ulagType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x18 0x02
@@ -827,23 +560,6 @@ flast_reenc_statType = "Enumeration_Type,0,7"
 tlast_reenc_stat :: TypeDef
 tlast_reenc_stat = EnumType [(Lit 0,Lit 7)]
 
--- | core-2.01 T101 last_reenc_stat Enumeration Values (PDF 113 / p.96, ord 103, sha256:0456fc9013de)
-data Core_last_reenc_stat
-  = Core_last_reenc_stat_Success
-  | Core_last_reenc_stat_Read_Error
-  | Core_last_reenc_stat_Write_Error
-  | Core_last_reenc_stat_Verify_Error
-  | Core_last_reenc_stat_Reserved
-  | Core_last_reenc_stat_Reserved_5
-  | Core_last_reenc_stat_Reserved_6
-  | Core_last_reenc_stat_Reserved_7
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T101 last_reenc_stat Enumeration Values (PDF 113 / p.96, ord 103, sha256:0456fc9013de)
-instance Enumerated Core_last_reenc_stat where
-  typeUID = ulast_reenc_statType
-  range   = (0, 7)
-
 -- | core-2.01 T102 life_cycle_state (PDF 113 / p.96, ord 104, sha256:039fa2caf9ec)
 ulife_cycle_stateType :: UID
 ulife_cycle_stateType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x05
@@ -855,31 +571,6 @@ flife_cycle_stateType = "Enumeration_Type,0,15"
 -- | core-2.01 T102 life_cycle_state (PDF 113 / p.96, ord 104, sha256:039fa2caf9ec)
 tlife_cycle_state :: TypeDef
 tlife_cycle_state = EnumType [(Lit 0,Lit 15)]
-
--- | core-2.01 T103 life_cycle_state Enumeration Values (PDF 113 / p.96, ord 105, sha256:99457e7fd5b6)
-data Core_life_cycle_state
-  = Core_life_cycle_state_Issued
-  | Core_life_cycle_state_Issued_Disabled
-  | Core_life_cycle_state_Issued_Frozen
-  | Core_life_cycle_state_Issued_Disabled_Frozen
-  | Core_life_cycle_state_Issued_Failed
-  | Core_life_cycle_state_Unassigned
-  | Core_life_cycle_state_Unassigned_6
-  | Core_life_cycle_state_Unassigned_7
-  | Core_life_cycle_state_Reserved_for_SSC_Usage
-  | Core_life_cycle_state_Reserved_for_SSC_Usage_9
-  | Core_life_cycle_state_Reserved_for_SSC_Usage_10
-  | Core_life_cycle_state_Reserved_for_SSC_Usage_11
-  | Core_life_cycle_state_Reserved_for_SSC_Usage_12
-  | Core_life_cycle_state_Reserved_for_SSC_Usage_13
-  | Core_life_cycle_state_Unassigned_14
-  | Core_life_cycle_state_Unassigned_15
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T103 life_cycle_state Enumeration Values (PDF 113 / p.96, ord 105, sha256:99457e7fd5b6)
-instance Enumerated Core_life_cycle_state where
-  typeUID = ulife_cycle_stateType
-  range   = (0, 15)
 
 -- | core-2.01 T104 LogList_object_ref (PDF 114 / p.97, ord 106, sha256:77757fe5cd4c)
 uLogList_object_refType :: UID
@@ -916,19 +607,6 @@ flog_selectType = "Enumeration_Type,0,3"
 -- | core-2.01 T106 log_select (PDF 114 / p.97, ord 108, sha256:9f7014eae265)
 tlog_select :: TypeDef
 tlog_select = EnumType [(Lit 0,Lit 3)]
-
--- | core-2.01 T107 log_select Enumeration Values (PDF 114 / p.97, ord 109, sha256:f3a8eca0f568)
-data Core_log_select
-  = Core_log_select_None
-  | Core_log_select_LogSuccess
-  | Core_log_select_LogFail
-  | Core_log_select_LogAlways
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T107 log_select Enumeration Values (PDF 114 / p.97, ord 109, sha256:f3a8eca0f568)
-instance Enumerated Core_log_select where
-  typeUID = ulog_selectType
-  range   = (0, 3)
 
 -- | core-2.01 T108 max_bytes (PDF 115 / p.98, ord 110, sha256:c7453ae3cf01)
 umax_bytesType :: UID
@@ -1086,31 +764,6 @@ fpadding_typeType = "Enumeration_Type,0,15"
 tpadding_type :: TypeDef
 tpadding_type = EnumType [(Lit 0,Lit 15)]
 
--- | core-2.01 T121 padding_type Enumeration Values (PDF 117 / p.100, ord 123, sha256:36f822e82374)
-data Core_padding_type
-  = Core_padding_type_None
-  | Core_padding_type_None_1
-  | Core_padding_type_RSAES_PKCS1_v1_5
-  | Core_padding_type_RSAES_OAEP
-  | Core_padding_type_RSASSA_PKCS1_v1_5
-  | Core_padding_type_Reserved
-  | Core_padding_type_Reserved_6
-  | Core_padding_type_Reserved_7
-  | Core_padding_type_Reserved_8
-  | Core_padding_type_Reserved_9
-  | Core_padding_type_Reserved_10
-  | Core_padding_type_Reserved_11
-  | Core_padding_type_Reserved_12
-  | Core_padding_type_Reserved_13
-  | Core_padding_type_Reserved_14
-  | Core_padding_type_Reserved_15
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T121 padding_type Enumeration Values (PDF 117 / p.100, ord 123, sha256:36f822e82374)
-instance Enumerated Core_padding_type where
-  typeUID = upadding_typeType
-  range   = (0, 15)
-
 -- | core-2.01 T122 password (PDF 118 / p.101, ord 124, sha256:89dd50dc326f)
 upasswordType :: UID
 upasswordType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x02 0x0c
@@ -1159,31 +812,6 @@ freencrypt_stateType = "Enumeration_Type,1,16"
 treencrypt_state :: TypeDef
 treencrypt_state = EnumType [(Lit 1,Lit 16)]
 
--- | core-2.01 T126 reencrypt_state Enumeration Values (PDF 119 / p.102, ord 128, sha256:05d133405d51)
-data Core_reencrypt_state
-  = Core_reencrypt_state_Idle
-  | Core_reencrypt_state_Pending
-  | Core_reencrypt_state_Active
-  | Core_reencrypt_state_Completed
-  | Core_reencrypt_state_Paused
-  | Core_reencrypt_state_Reserved
-  | Core_reencrypt_state_Reserved_7
-  | Core_reencrypt_state_Reserved_8
-  | Core_reencrypt_state_Reserved_9
-  | Core_reencrypt_state_Reserved_10
-  | Core_reencrypt_state_Reserved_11
-  | Core_reencrypt_state_Reserved_12
-  | Core_reencrypt_state_Reserved_13
-  | Core_reencrypt_state_Reserved_14
-  | Core_reencrypt_state_Reserved_15
-  | Core_reencrypt_state_Reserved_16
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T126 reencrypt_state Enumeration Values (PDF 119 / p.102, ord 128, sha256:05d133405d51)
-instance Enumerated Core_reencrypt_state where
-  typeUID = ureencrypt_stateType
-  range   = (1, 16)
-
 -- | core-2.01 T127 reset_types (PDF 119 / p.102, ord 129, sha256:390f5e87c60f)
 ureset_typesType :: UID
 ureset_typesType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x1a 0x01
@@ -1195,47 +823,6 @@ freset_typesType = "Set_Type,0,31"
 -- | core-2.01 T127 reset_types (PDF 119 / p.102, ord 129, sha256:390f5e87c60f)
 treset_types :: TypeDef
 treset_types = SetType [(Lit 0,Lit 31)]
-
--- | core-2.01 T128 reset_types Set Values (PDF 119 / p.102, ord 130, sha256:1064b36970c7)
-data Core_reset_types
-  = Core_reset_types_Power_Cycle
-  | Core_reset_types_Hardware
-  | Core_reset_types_HotPlug
-  | Core_reset_types_Reserved
-  | Core_reset_types_Reserved_4
-  | Core_reset_types_Reserved_5
-  | Core_reset_types_Reserved_6
-  | Core_reset_types_Reserved_7
-  | Core_reset_types_Reserved_8
-  | Core_reset_types_Reserved_9
-  | Core_reset_types_Reserved_10
-  | Core_reset_types_Reserved_11
-  | Core_reset_types_Reserved_12
-  | Core_reset_types_Reserved_13
-  | Core_reset_types_Reserved_14
-  | Core_reset_types_Reserved_15
-  | Core_reset_types_Vendor_Unique
-  | Core_reset_types_Vendor_Unique_17
-  | Core_reset_types_Vendor_Unique_18
-  | Core_reset_types_Vendor_Unique_19
-  | Core_reset_types_Vendor_Unique_20
-  | Core_reset_types_Vendor_Unique_21
-  | Core_reset_types_Vendor_Unique_22
-  | Core_reset_types_Vendor_Unique_23
-  | Core_reset_types_Vendor_Unique_24
-  | Core_reset_types_Vendor_Unique_25
-  | Core_reset_types_Vendor_Unique_26
-  | Core_reset_types_Vendor_Unique_27
-  | Core_reset_types_Vendor_Unique_28
-  | Core_reset_types_Vendor_Unique_29
-  | Core_reset_types_Vendor_Unique_30
-  | Core_reset_types_Vendor_Unique_31
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T128 reset_types Set Values (PDF 119 / p.102, ord 130, sha256:1064b36970c7)
-instance Enumerated Core_reset_types where
-  typeUID = ureset_typesType
-  range   = (0, 31)
 
 -- | core-2.01 T129 Seconds (PDF 119 / p.102, ord 131, sha256:f4dd878ae93c)
 uSecondsType :: UID
@@ -1297,39 +884,6 @@ fsymmetric_modeType = "Enumeration_Type,0,23"
 tsymmetric_mode :: TypeDef
 tsymmetric_mode = EnumType [(Lit 0,Lit 23)]
 
--- | core-2.01 T134 symmetric_mode Enumeration Values (PDF 120 / p.103, ord 136, sha256:c01034344293)
-data Core_symmetric_mode
-  = Core_symmetric_mode_ECB
-  | Core_symmetric_mode_CBC
-  | Core_symmetric_mode_CFB
-  | Core_symmetric_mode_OFB
-  | Core_symmetric_mode_GCM
-  | Core_symmetric_mode_CTR
-  | Core_symmetric_mode_CCM
-  | Core_symmetric_mode_XTS
-  | Core_symmetric_mode_LRW
-  | Core_symmetric_mode_EME
-  | Core_symmetric_mode_CMC
-  | Core_symmetric_mode_XEX
-  | Core_symmetric_mode_Reserved
-  | Core_symmetric_mode_Reserved_13
-  | Core_symmetric_mode_Reserved_14
-  | Core_symmetric_mode_Reserved_15
-  | Core_symmetric_mode_Reserved_16
-  | Core_symmetric_mode_Reserved_17
-  | Core_symmetric_mode_Reserved_18
-  | Core_symmetric_mode_Reserved_19
-  | Core_symmetric_mode_Reserved_20
-  | Core_symmetric_mode_Reserved_21
-  | Core_symmetric_mode_Reserved_22
-  | Core_symmetric_mode_Reserved_23
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T134 symmetric_mode Enumeration Values (PDF 120 / p.103, ord 136, sha256:c01034344293)
-instance Enumerated Core_symmetric_mode where
-  typeUID = usymmetric_modeType
-  range   = (0, 23)
-
 -- | core-2.01 T135 symmetric_mode_media (PDF 121 / p.104, ord 137, sha256:f58a256b7a25)
 usymmetric_mode_mediaType :: UID
 usymmetric_mode_mediaType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x03
@@ -1342,39 +896,6 @@ fsymmetric_mode_mediaType = "Enumeration_Type,0,23"
 tsymmetric_mode_media :: TypeDef
 tsymmetric_mode_media = EnumType [(Lit 0,Lit 23)]
 
--- | core-2.01 T136 symmetric_mode_media Enumeration Values (PDF 121 / p.104, ord 138, sha256:82b5e09bf495)
-data Core_symmetric_mode_media
-  = Core_symmetric_mode_media_ECB
-  | Core_symmetric_mode_media_CBC
-  | Core_symmetric_mode_media_CFB
-  | Core_symmetric_mode_media_OFB
-  | Core_symmetric_mode_media_GCM
-  | Core_symmetric_mode_media_CTR
-  | Core_symmetric_mode_media_CCM
-  | Core_symmetric_mode_media_XTS
-  | Core_symmetric_mode_media_LRW
-  | Core_symmetric_mode_media_EME
-  | Core_symmetric_mode_media_CMC
-  | Core_symmetric_mode_media_XEX
-  | Core_symmetric_mode_media_Reserved
-  | Core_symmetric_mode_media_Reserved_13
-  | Core_symmetric_mode_media_Reserved_14
-  | Core_symmetric_mode_media_Reserved_15
-  | Core_symmetric_mode_media_Reserved_16
-  | Core_symmetric_mode_media_Reserved_17
-  | Core_symmetric_mode_media_Reserved_18
-  | Core_symmetric_mode_media_Reserved_19
-  | Core_symmetric_mode_media_Reserved_20
-  | Core_symmetric_mode_media_Reserved_21
-  | Core_symmetric_mode_media_Reserved_22
-  | Core_symmetric_mode_media_Media_Encryption
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T136 symmetric_mode_media Enumeration Values (PDF 121 / p.104, ord 138, sha256:82b5e09bf495)
-instance Enumerated Core_symmetric_mode_media where
-  typeUID = usymmetric_mode_mediaType
-  range   = (0, 23)
-
 -- | core-2.01 T137 table_kind (PDF 122 / p.105, ord 139, sha256:1de75009fb01)
 utable_kindType :: UID
 utable_kindType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x15
@@ -1386,23 +907,6 @@ ftable_kindType = "Enumeration_Type,1,8"
 -- | core-2.01 T137 table_kind (PDF 122 / p.105, ord 139, sha256:1de75009fb01)
 ttable_kind :: TypeDef
 ttable_kind = EnumType [(Lit 1,Lit 8)]
-
--- | core-2.01 T138 table_kind Enumeration Values (PDF 122 / p.105, ord 140, sha256:5b81908c5690)
-data Core_table_kind
-  = Core_table_kind_Object
-  | Core_table_kind_Byte
-  | Core_table_kind_Reserved
-  | Core_table_kind_Reserved_4
-  | Core_table_kind_Reserved_5
-  | Core_table_kind_Reserved_6
-  | Core_table_kind_Reserved_7
-  | Core_table_kind_Reserved_8
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T138 table_kind Enumeration Values (PDF 122 / p.105, ord 140, sha256:5b81908c5690)
-instance Enumerated Core_table_kind where
-  typeUID = utable_kindType
-  range   = (1, 8)
 
 -- | core-2.01 T139 table_or_object_ref (PDF 122 / p.105, ord 141, sha256:b405fe507430)
 utable_or_object_refType :: UID
@@ -1691,23 +1195,6 @@ fverify_modeType = "Enumeration_Type,0,7"
 -- | core-2.01 T162 verify_mode (PDF 127 / p.110, ord 164, sha256:e56010c34fef)
 tverify_mode :: TypeDef
 tverify_mode = EnumType [(Lit 0,Lit 7)]
-
--- | core-2.01 T163 verify_mode Enumeration Values (PDF 127 / p.110, ord 165, sha256:bddde5f3a6b8)
-data Core_verify_mode
-  = Core_verify_mode_No_verify
-  | Core_verify_mode_Verify_enabled
-  | Core_verify_mode_Reserved
-  | Core_verify_mode_Reserved_3
-  | Core_verify_mode_Reserved_4
-  | Core_verify_mode_Reserved_5
-  | Core_verify_mode_Reserved_6
-  | Core_verify_mode_Reserved_7
-  deriving (Bounded, Enum, Eq, Ord, Show)
-
--- | core-2.01 T163 verify_mode Enumeration Values (PDF 127 / p.110, ord 165, sha256:bddde5f3a6b8)
-instance Enumerated Core_verify_mode where
-  typeUID = uverify_modeType
-  range   = (0, 7)
 
 -- | core-2.01 T164 Year (PDF 127 / p.110, ord 166, sha256:8df28bbfed77)
 uYearType :: UID

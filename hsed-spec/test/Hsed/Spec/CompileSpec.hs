@@ -52,8 +52,9 @@ enumsOf ctx = rights [ enumDecl ctx er (checkEnum ctx rows er) | er <- rights (e
 moduleText :: Text -> CompileResult -> Text
 moduleText modName cr = fromMaybe "" (lookup modName (crModules cr))
 
-typesText :: CompileResult -> Text
+typesText, enumsText :: CompileResult -> Text
 typesText = moduleText "Hsed.Gen.Core.Types"
+enumsText = moduleText "Hsed.Gen.Core.Enums"
 
 spec :: Spec
 spec = do
@@ -100,7 +101,8 @@ spec = do
         [ e.ctors | e <- enumsOf (mkContext Published ir), e.name == "gen_status" ] `shouldBe` map (.ctors) gen
       it "takes the range of reencrypt_state from its Format, starting at 1" $
         [ e.range | e <- enumsOf ctx, e.name == "reencrypt_state" ] `shouldBe` [(1, 16)]
-      it "writes the committed hsed/gen modules" $
+      it "writes the committed hsed/gen modules: Types, Enums and TableUIDs" $ do
+        map fst (crModules cr) `shouldBe` ["Hsed.Gen.Core.Enums", "Hsed.Gen.Core.TableUIDs", "Hsed.Gen.Core.Types"]
         forM_ (crModules cr) $ \(modName, text) -> do
           committed <- readFileUtf8 (Gen.modulePath "../hsed/gen" modName)
           text `shouldBe` committed
@@ -133,7 +135,7 @@ spec = do
           `shouldBe` ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
       it "T101: without it, the module names Verify Eror as printed" $ do
         cr' <- without "T101"
-        let changed = [ (a, b) | (a, b) <- zip (T.lines (typesText cr)) (T.lines (typesText cr')), a /= b ]
+        let changed = [ (a, b) | (a, b) <- zip (T.lines (enumsText cr)) (T.lines (enumsText cr')), a /= b ]
         changed `shouldBe` [("  | Core_last_reenc_stat_Verify_Error", "  | Core_last_reenc_stat_Verify_Eror")]
       it "T149: without it, compile finds the Error C-UID-UNIQUE" $ do
         cr' <- without "T149"

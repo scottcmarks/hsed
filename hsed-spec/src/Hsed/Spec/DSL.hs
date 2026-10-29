@@ -170,7 +170,7 @@ data Binding (s :: Shape) where
   Also                  :: RuleBearing s => Binding s -> Binding s -> Binding s
   -- modifiers
   WithErratum           :: ErrataSet -> [(Text, Text)] -> Binding s -> Binding s
-  WithWaiver            :: Text -> Text -> Text -> Binding s -> Binding s   -- ^ check code, subject, reason
+  WithWaiver            :: Text -> Text -> Text -> Binding 'TypeRow -> Binding 'TypeRow   -- ^ check code, subject, reason
   WithCols              :: Int -> Int -> Binding 'EnumValues -> Binding 'EnumValues
   WithRangeWords        :: [Text] -> Binding 'EnumValues -> Binding 'EnumValues
   WithEnumInDescription :: Binding 'EnumValues -> Binding 'EnumValues
@@ -220,7 +220,7 @@ shapeOfBinding = \case
   Extends _               -> SColumnsAddition
   Also a _                -> shapeOfBinding a
   WithErratum _ _ b       -> shapeOfBinding b
-  WithWaiver _ _ _ b      -> shapeOfBinding b
+  WithWaiver _ _ _ _      -> STypeRow
   WithCols _ _ _          -> SEnumValues
   WithRangeWords _ _      -> SEnumValues
   WithEnumInDescription _ -> SEnumValues
@@ -320,7 +320,7 @@ data Modifier
   | EnumInDescription                  -- ^ the enumeration is read from the Description column
   | Expand                             -- ^ expand the @(+XX)@ template rows of a preconfiguration
   | As Shape                           -- ^ @as \@'Codes@: the form is odd; E-SHAPE is a Warning
-  | Waive Text Text Text               -- ^ @waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "reason"@
+  | Waive Text Text Text               -- ^ @waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "reason"@
   deriving stock (Eq, Show)
 
 -- | Apply a modifier to a binding, checking at run time what the smart
@@ -328,7 +328,7 @@ data Modifier
 applyModifier :: forall s. Modifier -> Binding s -> Either Finding (Binding s)
 applyModifier m b = case m of
   Erratum e ps      -> Right (WithErratum e ps b)
-  Waive c s r       -> Right (WithWaiver c s r b)
+  Waive c s r       -> onShape STypeRow (WithWaiver c s r)
   Cols a c          -> onShape SEnumValues (WithCols a c)
   RangeWords ws     -> onShape SEnumValues (WithRangeWords ws)
   EnumInDescription -> onShape SEnumValues WithEnumInDescription
@@ -392,7 +392,7 @@ applyModifierSome :: Modifier -> SomeBinding -> Either Finding SomeBinding
 applyModifierSome m (SomeBinding b) = SomeBinding <$> applyModifier m b
 applyModifierSome m (PolyBinding b) = case m of
   Erratum e ps      -> Right (PolyBinding (WithErratum e ps b))
-  Waive c s r       -> Right (PolyBinding (WithWaiver c s r b))
+  Waive c s r       -> Right (SomeBinding (WithWaiver c s r b))
   Cols a c          -> Right (SomeBinding (WithCols a c b))
   RangeWords ws     -> Right (SomeBinding (WithRangeWords ws b))
   EnumInDescription -> Right (SomeBinding (WithEnumInDescription b))
@@ -620,11 +620,15 @@ infixl 1 &
 erratum :: ErrataSet -> [(Text, Text)] -> Binding s -> Binding s
 erratum = WithErratum
 
--- | @waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "reason" typeRow@: the
---   named check's Error on this table about exactly this subject (for
---   C-UID-UNIQUE the UID, as the table prints it) is a Warning carrying the
---   reason. A waiver that waives nothing is @W-WAIVER-UNUSED@.
-waive :: Text -> Text -> Text -> Binding s -> Binding s
+-- | @waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "reason" typeRow@: the
+--   named check's Error on this table about exactly this subject is a Warning
+--   carrying the reason. For C-UID-UNIQUE the subject is the other table of
+--   the clash and the UID both print: the Error is waived only when exactly
+--   those two type rows share exactly that UID. A waiver that waives nothing is
+--   @W-WAIVER-UNUSED@, and the Error stands. C-UID-UNIQUE is about type rows,
+--   so a waiver sits on a type row alone: on any other binding it is a type
+--   error here and @E-MODIFIER@ in 'applyModifier'.
+waive :: Text -> Text -> Text -> Binding 'TypeRow -> Binding 'TypeRow
 waive = WithWaiver
 
 -- | The checks a @waive@ may name.

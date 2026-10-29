@@ -28,10 +28,10 @@ in brackets:
 * @C-EXEMPLAR@: each rule still fires on its exemplar;
 * @E-SHAPE@: every bound table's form is accepted by its binding ('bindingAccepts');
 * @C-UID-TABLE@: a type row's UID is eight bytes with upper half @00 00 00 05@;
-* @C-UID-UNIQUE@: no two type rows share a UID; an annotation's @waive
-  "C-UID-UNIQUE" "\<uid\>" "\<reason\>"@ makes the Error a Warning for that
-  table and that UID alone, and a waiver that waives nothing is
-  @W-WAIVER-UNUSED@;
+* @C-UID-UNIQUE@: no two type rows share a UID; a type row's @waive
+  "C-UID-UNIQUE" "T\<n\> \<uid\>" "\<reason\>"@ makes the Error a Warning for
+  that table when it and table @n@, and no other, print that UID, and a waiver
+  that waives nothing is @W-WAIVER-UNUSED@;
 * @C-FMT-RESOLVE@: every Format cell parses ('parseFormat'), its findings
   carrying "Hsed.Spec.Format"'s codes (@E-FMT-RESOLVE@ and friends);
 * @C-ENUM-RANGE@: an enumeration's values lie within its type row's range, each
@@ -87,12 +87,11 @@ import qualified Data.Text                as DT
 import qualified RIO.Char                 as C
 import qualified RIO.List                 as L
 import qualified RIO.Map                  as Map
-import qualified RIO.Set                  as Set
 import qualified RIO.Text                 as T
 import           RIO
 
 import           Hsed.Core.Types          (Operand (..), TypeDef (..))
-import           Hsed.Spec.Anchor         (AnchorId (..), locationText, naturalKey, renderAnchorId)
+import           Hsed.Spec.Anchor         (AnchorId (..), locationText, naturalKey, parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.DSL            (Binding (..), SomeBinding (..), bindingAccepts,
@@ -439,18 +438,29 @@ uidTable sid tr = map (locatedAt sid (renderAnchorId (trAnchor tr)) (fromMaybe 1
     | otherwise -> [finding Error "C-UID-TABLE" ("the UID " <> hexUID bs <> " of " <> trName tr <> " is not a Type object's (upper half 00 00 00 05)")]
 
 -- | @C-UID-UNIQUE@, reported at every type row after the first with a UID. A
---   waiver on that row for that very UID makes it a Warning carrying the
---   waiver's reason; a waiver that waives nothing (the row's UID is another, or
---   no row before it has it) is @W-WAIVER-UNUSED@, and the Error stands.
+--   waiver on that row naming the other table and the UID
+--   (@waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "reason"@) makes it a
+--   Warning carrying the waiver's reason when exactly those two type rows print
+--   exactly that UID. A waiver that waives nothing (its subject is not a table
+--   and a UID, the row's UID is another, no row before it has it, or the rows
+--   that have it are not the two it names) is @W-WAIVER-UNUSED@, and the Error
+--   stands.
 uidUnique :: SpecId -> [TypeRowRead] -> [Finding]
 uidUnique sid rows = concatMap clash (Map.elems groups) <> unusedWaivers
   where
+    -- the rows of each UID, in anchor order (rows comes in anchor order)
     groups = Map.fromListWith (flip (<>)) [ (bs, [tr]) | tr <- rows, Just bs <- [trUID tr] ]
     here tr = locatedAt sid (renderAnchorId (trAnchor tr)) (fromMaybe 1 (tablePage (trTable tr)))
-    -- the reason of a waiver on the row naming this check and the row's own UID
-    ownUID tr subject = isJust (trUID tr) && parseUIDCell subject == trUID tr
-    waiverOf tr = listToMaybe [ reason | ("C-UID-UNIQUE", subject, reason) <- trWaivers tr, ownUID tr subject ]
-    clashing = Set.fromList [ trAnchor tr | _ : rest@(_ : _) <- Map.elems groups, tr <- rest ]
+    -- why a waiver with this subject on this row waives nothing; Nothing when it waives its clash
+    whyUnused tr subject = case waiverSubject subject of
+      Nothing -> Just "that is not a table and a UID (\"T<n> 00 00 00 05 ...\")"
+      Just (partner, uid)
+        | Just uid /= trUID tr -> Just ("the table's UID cell is " <> tshow (trUIDText tr))
+        | otherwise -> case map trAnchor (Map.findWithDefault [] uid groups) of
+            first' : _ | first' == trAnchor tr -> Just "no type row before it has that UID"
+            [first', self] | first' == partner && self == trAnchor tr -> Nothing
+            held -> Just ("the type rows with that UID are " <> T.intercalate ", " (map renderAnchorId held))
+    waiverOf tr = listToMaybe [ reason | ("C-UID-UNIQUE", subject, reason) <- trWaivers tr, isNothing (whyUnused tr subject) ]
     clash (first' : rest@(_ : _)) =
       [ here tr (finding (if isJust waived then Warning else Error) "C-UID-UNIQUE"
           ("the UID " <> maybe "" hexUID (trUID tr) <> " of " <> trName tr <> " is also that of "
@@ -461,11 +471,15 @@ uidUnique sid rows = concatMap clash (Map.elems groups) <> unusedWaivers
     clash _ = []
     unusedWaivers =
       [ here tr (finding Warning "W-WAIVER-UNUSED"
-          ("the annotation waives C-UID-UNIQUE for the UID " <> tshow subject <> ", and "
-            <> if ownUID tr subject then "no type row before it has that UID"
-               else "the table's UID cell is " <> tshow (trUIDText tr)))
-      | tr <- rows, ("C-UID-UNIQUE", subject, _) <- trWaivers tr
-      , not (Set.member (trAnchor tr) clashing && ownUID tr subject) ]
+          ("the annotation waives C-UID-UNIQUE for " <> tshow subject <> ", and " <> why))
+      | tr <- rows, ("C-UID-UNIQUE", subject, _) <- trWaivers tr, Just why <- [whyUnused tr subject] ]
+
+-- | The subject of a C-UID-UNIQUE waiver: the other table of the clash and
+--   the UID, @T94 00 00 00 05 00 00 02 15@.
+waiverSubject :: Text -> Maybe (AnchorId, [Word8])
+waiverSubject subject = case T.words subject of
+  table : uid | Just aid@(TableId _) <- parseAnchorId table, Just bs <- parseUIDCell (T.unwords uid) -> Just (aid, bs)
+  _ -> Nothing
 
 -- | Every check of one IR under one errata set, errors first.
 checkIR :: ErrataSet -> SpecIR -> [Finding]

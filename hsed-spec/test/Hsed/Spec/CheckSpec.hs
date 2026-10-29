@@ -44,9 +44,9 @@ about anchor = rendered . filter ((== Just anchor) . Cm.anchor)
 errorsOf :: ErrataSet -> SpecIR -> [Text]
 errorsOf es = rendered . filter isError . checkIR es
 
--- | The committed sidecar's T149 line with another UID in its waiver.
+-- | The committed sidecar's T149 line with another subject in its waiver.
 waiverFor :: Text -> Text
-waiverFor uid = "core-2.01 | T149 | waive \"C-UID-UNIQUE\" \"" <> uid <> "\" \"no erratum says which is wrong\"\n"
+waiverFor subject = "core-2.01 | T149 | waive \"C-UID-UNIQUE\" \"" <> subject <> "\" \"no erratum says which is wrong\"\n"
 
 spec :: Spec
 spec = do
@@ -146,25 +146,48 @@ spec = do
 
     describe "the waiver" $ do
       it "waives only the UID it records: on another UID it is unused and the Error stands" $ do
-        ir' <- annotated pristine (withoutLine "T149" hsa <> waiverFor "00 00 00 05 00 00 09 99")
+        ir' <- annotated pristine (withoutLine "T149" hsa <> waiverFor "T94 00 00 00 05 00 00 09 99")
         let fs = checkIR Scott ir'
         about "T149" fs `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
-          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 09 99\", and the table's UID cell is \"00 00 00 05 00 00 02 15\"" ]
-      it "becomes W-WAIVER-UNUSED when the PDF no longer prints the UID twice, and the Error moves with a new clash" $ do
+          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 09 99\", and the table's UID cell is \"00 00 00 05 00 00 02 15\"" ]
+      it "becomes W-WAIVER-UNUSED when the PDF no longer prints the UID twice, and the Error moves with a new clash (ir-uid999)" $ do
         let moved = setCell "T94" 0 0 "00 00 00 05 00 00 09 99" (setCell "T149" 0 0 "00 00 00 05 00 00 09 99" ir)
         about "T149" (checkIR Scott moved) `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 09 99 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
-          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 09 99\"" ]
+          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 09 99\"" ]
         let fixed = setCell "T149" 0 0 "00 00 00 05 00 00 02 16" ir
         about "T149" (checkIR Scott fixed) `shouldBe`
-          [ "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 02 16\"" ]
+          [ "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 02 16\"" ]
+      it "waives only the clash with the table it names: T149 against T51 stays an Error (ir-partner)" $ do
+        let partner = setCell "T94" 0 0 "00 00 00 05 00 00 09 99" (setCell "T51" 0 0 "00 00 00 05 00 00 02 15" ir)
+            fs = checkIR Scott partner
+        about "T149" fs `shouldBe`
+          [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T51 adv_key_mode (PDF 101)"
+          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the type rows with that UID are T51, T149" ]
+        map Cm.code (filter isError fs) `shouldBe` ["C-UID-UNIQUE"]
+      it "waives nothing when a third table prints the UID too" $ do
+        let three = setCell "T51" 0 0 "00 00 00 05 00 00 02 15" ir
+        errorsOf Scott three `shouldBe`
+          [ "C-UID-UNIQUE core-2.01.pdf#page=111&T94: the UID 00 00 00 05 00 00 02 15 of integer_2 is also that of T51 adv_key_mode (PDF 101)"
+          , "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T51 adv_key_mode (PDF 101)" ]
+        about "T149" (checkIR Scott three) `shouldContain`
+          [ "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the type rows with that UID are T51, T94, T149" ]
+      it "waives nothing when its subject does not name the other table" $ do
+        ir' <- annotated pristine (withoutLine "T149" hsa <> waiverFor "00 00 00 05 00 00 02 15")
+        about "T149" (checkIR Scott ir') `shouldBe`
+          [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
+          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"00 00 00 05 00 00 02 15\", and that is not a table and a UID (\"T<n> 00 00 00 05 ...\")" ]
       it "waives nothing on the first of the two tables, where no finding is reported" $ do
-        ir' <- annotated pristine (withoutLine "T149" hsa <> "core-2.01 | T94 | waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"x\"\n")
+        ir' <- annotated pristine (withoutLine "T149" hsa <> "core-2.01 | T94 | waive \"C-UID-UNIQUE\" \"T149 00 00 00 05 00 00 02 15\" \"x\"\n")
         let fs = checkIR Scott ir'
         about "T94" fs `shouldBe`
-          ["W-WAIVER-UNUSED core-2.01.pdf#page=111&T94: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 02 15\", and no type row before it has that UID"]
+          ["W-WAIVER-UNUSED core-2.01.pdf#page=111&T94: the annotation waives C-UID-UNIQUE for \"T149 00 00 00 05 00 00 02 15\", and no type row before it has that UID"]
         filter isError fs `shouldSatisfy` any ((== "C-UID-UNIQUE") . Cm.code)
+      it "is refused on a table that is not a type row (onEnum.hsa)" $ do
+        ir' <- annotated pristine (hsa <> "core-2.01 | T52 | waive \"C-UID-UNIQUE\" \"T51 00 00 00 05 00 00 08 01\" \"y\"\n")
+        errorsOf Scott ir' `shouldBe`
+          ["E-MODIFIER core-2.01.pdf#page=102&T52: waive applies to a TypeRow binding, not to a EnumValues one"]
 
     describe "the errata" $ do
       it "refuse an erratum of the published set: published is the text as printed" $ do

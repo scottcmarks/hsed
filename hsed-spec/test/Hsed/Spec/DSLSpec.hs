@@ -85,18 +85,22 @@ spec = do
       applyModifier (As Codes) codes `shouldBe` Right (as @'Codes codes)
       applyModifier Expand preconfig `shouldBe` Right (expand preconfig)
       applyModifier EnumInDescription enumValues `shouldBe` Right (enumInDescription enumValues)
+      applyModifier (Waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "r") typeRow
+        `shouldBe` Right (waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "r" typeRow)
 
     it "rejects what they reject, naming both shapes" $ do
       let wrong = [ fmap bindingShape (applyModifier (Cols 0 1) typeRow)
                   , fmap bindingShape (applyModifier (As Codes) typeRow)
                   , fmap bindingShape (applyModifier Expand enumValues)
-                  , fmap bindingShape (applyModifier (RangeWords ["to"]) codes) ]
-      map (either C.code (const "accepted")) wrong `shouldBe` replicate 4 "E-MODIFIER"
+                  , fmap bindingShape (applyModifier (RangeWords ["to"]) codes)
+                  , fmap bindingShape (applyModifier (Waive "C-UID-UNIQUE" "T51 00 00 00 05 00 00 08 01" "r") enumValues) ]
+      map (either C.code (const "accepted")) wrong `shouldBe` replicate 5 "E-MODIFIER"
       map (either C.message (const "")) wrong `shouldBe`
         [ "cols 0 1 applies to a EnumValues binding, not to a TypeRow one"
         , "as @'Codes applies to a Codes binding, not to a TypeRow one"
         , "expand applies to a Preconfig binding, not to a EnumValues one"
-        , "rangeWords applies to a EnumValues binding, not to a Codes one" ]
+        , "rangeWords applies to a EnumValues binding, not to a Codes one"
+        , "waive applies to a TypeRow binding, not to a EnumValues one" ]
 
   describe "SomeBinding" $ do
     it "compares across shapes" $ do
@@ -111,6 +115,7 @@ spec = do
       applyModifierSome (Erratum Scott []) (PolyBinding (refines (core 42))) `shouldBe` Right (PolyBinding (erratum scott [] (refines (core 42))))
       applyModifierSome (As Feature) (PolyBinding (refines (core 42))) `shouldBe` Right (SomeBinding (as @'Feature (refines (core 42))))
       fmap someBindingShape (applyModifierSome Expand (PolyBinding (replaces [core 1]))) `shouldBe` Right (Just Preconfig)
+      fmap someBindingShape (applyModifierSome (Waive "C-UID-UNIQUE" "x" "y") (PolyBinding (refines (core 46)))) `shouldBe` Right (Just TypeRow)
 
     it "instantiates at a shape" $ do
       atShape @'Feature (PolyBinding (refines (core 42))) `shouldBe` Just (refines (core 42))

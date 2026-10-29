@@ -49,7 +49,7 @@ spec = do
             , AnnotIR Bind "core-2.01" "T75" (StructPath "0/1429") 1 106 (Rect 170.88 559.18 468.12 671.1) 6 "erratum scott [\"Fractoin\" ~> \"Fraction\"]"
             , AnnotIR Bind "core-2.01" "T101" (StructPath "0/1555") 1 112 (Rect 227.4 373.92 411.49 477.42) 6 "erratum scott [\"Verify Eror\" ~> \"Verify Error\"]"
             , AnnotIR Bind "core-2.01" "T149" (StructPath "0/1792") 1 123 (Rect 169.44 356.64 469.56 411.18) 6
-                "waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" ] )
+                "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" ] )
       it "refuses an anchor the IR does not have, and another spec's line" $ do
         let (fs, as) = resolveSidecar ir "core-2.01 | T999 | typeRow\nopal-2.30 | T46 | typeRow\ncore-2.01 | 9.9.9 | rule typeRow\n"
         as `shouldBe` []

@@ -25,7 +25,7 @@ b_core_T101 = at (anchor @'EnumValues "core-2.01" "T101" "0/1555" 113) (erratum 
 
 {-# LINE 1 "core-2.01.pdf#page=124&T149" #-}
 b_core_T149 :: Bound
-b_core_T149 = at (anchor @'TypeRow "core-2.01" "T149" "0/1792" 124) (waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "no erratum says which is wrong" typeRow)
+b_core_T149 = at (anchor @'TypeRow "core-2.01" "T149" "0/1792" 124) (waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "no erratum says which is wrong" typeRow)
 
 {-# LINE 31 "Hsed/Bindings/Core.hs" #-}
 bindings :: [Bound]

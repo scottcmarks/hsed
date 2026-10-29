@@ -38,7 +38,7 @@ class Vocabulary(unittest.TestCase):
     def test_the_committed_kind_of_payload_passes(self):
         for anchor_id, payload in (("doc", "doc core201"), ("5.1.3", "rule typeRow & rule enumValues"),
                                    ("T75", 'erratum scott ["Fractoin" ~> "Fraction"]'),
-                                   ("T149", 'waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "no erratum says which is wrong"'),
+                                   ("T149", 'waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "no erratum says which is wrong"'),
                                    ("3.3.10.2.1#3a", 'law "Sync.ifSendWhileBusy"'), ("5.3.3.6", 'behaviour "Base.get"')):
             self.assertIsNone(H.payload_problem(anchor_id, payload), (anchor_id, payload))
 

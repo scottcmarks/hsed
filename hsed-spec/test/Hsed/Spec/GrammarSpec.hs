@@ -76,9 +76,9 @@ examples =
   , ( "erratum scott [fractoin ~> fraction] cols 0 1 enumValues"
     , Full (SomeBinding (erratum scott ["fractoin" ~> "fraction"] (cols 0 1 enumValues)))
     , "erratum scott [\"fractoin\" ~> \"fraction\"] (cols 0 1 enumValues)" )
-  , ( "waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\""
-    , Modifiers [Waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "no erratum says which is wrong"]
-    , "waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" )
+  , ( "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\""
+    , Modifiers [Waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "no erratum says which is wrong"]
+    , "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" )
   , ( "waive \"C-UID-UNIQUE\" \"x\" \"y\" typeRow"
     , Full (SomeBinding (waive "C-UID-UNIQUE" "x" "y" typeRow))
     , "waive \"C-UID-UNIQUE\" \"x\" \"y\" typeRow" )

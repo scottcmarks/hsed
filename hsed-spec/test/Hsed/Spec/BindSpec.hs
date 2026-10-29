@@ -43,7 +43,7 @@ spec = withCore $ \pristine -> do
         , (SectionId "5.1.3", 100, StructPath "0/1278", "rule typeRow & rule enumValues")
         , (TableId 75, 107, StructPath "0/1429", "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow")
         , (TableId 101, 113, StructPath "0/1555", "erratum scott [\"Verify Eror\" ~> \"Verify Error\"] enumValues")
-        , (TableId 149, 124, StructPath "0/1792", "waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\" typeRow") ]
+        , (TableId 149, 124, StructPath "0/1792", "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\" typeRow") ]
     it "prints nothing for a rule-bound table without a comment" $
       length (snd (bindEntries ir)) `shouldBe` 5
     it "prints a binding shaped by its target at the target's shape" $ do

@@ -1,0 +1,76 @@
+name:                hsed-core
+version:             0.1.0.1
+github:              scottcmarks/hsed
+license:             BSD3
+author:              Scott Marks
+maintainer:          scott@magnolia-heights.com
+copyright:           Magnolia Heights R&D
+synopsis:            TCG SWG storage codec and table machinery, no generated spec data
+description:         The hsed codec (stream items, tokens, values, method calls and
+                     responses, UIDs, base and reference types), the table machinery
+                     and the generic compile-time table parsers. No generated spec
+                     data lives here; see the hsed package for that and
+                     <https://github.com/scottcmarks/hsed#readme> for the project.
+
+# The doctest suite interprets the library sources, so it needs every library
+# dependency; declaring them package-wide keeps that one list.
+dependencies:
+- base >= 4.10 && < 10
+- rio >= 0.1.1.0
+- ListLike
+- QuickCheck
+- array
+- attoparsec
+- base16-bytestring
+- bytestring
+- conduit
+- conduit-extra
+- containers
+- either
+- exceptions
+- ghc-prim
+- integer-gmp
+- integer-logarithms
+- quickcheck-instances
+- template-haskell
+- word8
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wredundant-constraints
+- -optP-Wno-nonportable-include-path # workaround [Filename case on macOS · Issue #4739 · haskell/cabal](https://github.com/haskell/cabal/issues/4739)
+
+library:
+  source-dirs: src
+
+tests:
+  hsed-core-spec-test:
+    main:                Spec.hs
+    source-dirs:         spec-tests
+    dependencies:
+    - hsed-core
+    - hspec
+    build-tools:
+    - hspec-discover
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+  hsed-core-doc-test:
+    main:                DocTest.hs
+    source-dirs:         doc-tests
+    dependencies:
+    - hsed-core
+    - doctest
+    build-tools:
+    - doctest-discover
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

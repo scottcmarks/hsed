@@ -34,7 +34,9 @@ resolver: lts-21.21
 #  - auto-update
 #  - wai
 packages:
-- .
+- hsed-core
+- hsed-spec
+- hsed
 #
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.

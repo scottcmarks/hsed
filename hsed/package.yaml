@@ -1,0 +1,70 @@
+name:                hsed
+version:             0.1.0.1
+github:              scottcmarks/hsed
+license:             BSD3
+author:              Scott Marks
+maintainer:          scott@magnolia-heights.com
+copyright:           Magnolia Heights R&D
+
+# Metadata used when publishing your package
+# synopsis:            TCG SWG Self-Encrypting Drive library
+# category:            System
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on Github at <https://github.com/scottcmarks/hsed#readme>
+
+dependencies:
+- base >= 4.10 && < 10
+- rio >= 0.1.1.0
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wredundant-constraints
+- -optP-Wno-nonportable-include-path # workaround [Filename case on macOS · Issue #4739 · haskell/cabal](https://github.com/haskell/cabal/issues/4739)
+
+library:
+  source-dirs: src
+  dependencies:
+  - hsed-core
+  - containers    # TableUIDs, GDPTest
+  - name: gdp     # GDPTest; its Data.Refined would shadow hsed-core's
+    mixin:
+    - hiding (Data.Refined)
+  - ghc-prim      # TypeTests
+  - lens          # Hsed.App
+  - singletons    # SingTest
+
+executables:
+  hsed:
+    main:                Main.hs
+    source-dirs:         app
+    dependencies:
+    - hsed
+    - githash
+    - optparse-simple
+    - template-haskell
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+tests:
+  hsed-spec-test:
+    main:                Spec.hs
+    source-dirs:         spec-tests
+    dependencies:
+    - hsed-core
+    - hspec
+    build-tools:
+    - hspec-discover
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

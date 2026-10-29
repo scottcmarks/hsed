@@ -1,0 +1,97 @@
+{
+  "irVersion": 1,
+  "spec": "core-2.01",
+  "source": "TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf",
+  "pdfMd5": "5ceb93ab118a578125e3755eb885b668",
+  "pages": 306,
+  "labelOffset": 17,
+  "notice": "tcg/TCG-NOTICE.txt",
+  "extractor": { "script": "extract_tables.py", "version": 1, "pymupdf": "PyMuPDF 1.28.2", "pikepdf": "10.17.0" },
+  "wordComplete": ["5.1.3"],
+  "tables": [
+    {
+      "id": "T75",
+      "table_number": 75,
+      "caption": "Table 75 Fraction",
+      "caption_path": "0/1339",
+      "struct_path": "0/1340",
+      "nested_in": null,
+      "pages": [106],
+      "printed_pages": [89],
+      "n_rows": 1,
+      "n_cols": 3,
+      "ordinal": 77,
+      "rects": [[106, [90.0, 400.0, 522.0, 460.0]]],
+      "header_source": "leading-th",
+      "header_rows": [
+        [
+          { "kind": "TH", "text": "UID", "lines": ["UID"], "page": 106, "bbox": [90.0, 440.0, 200.0, 460.0],
+            "bold": true, "underline": false, "fonts": ["Arial-BoldMT"], "fill_rgb": [225, 225, 225], "fill_bbox": [90.0, 440.0, 200.0, 460.0] },
+          { "kind": "TH", "text": "Name", "lines": ["Name"], "page": 106, "bbox": [200.0, 440.0, 350.0, 460.0],
+            "bold": true, "underline": false, "fonts": ["Arial-BoldMT"], "fill_rgb": [225, 225, 225], "fill_bbox": [200.0, 440.0, 350.0, 460.0] },
+          { "kind": "TH", "text": "Format", "lines": ["Format"], "page": 106, "bbox": [350.0, 440.0, 522.0, 460.0],
+            "bold": true, "underline": false, "fonts": ["Arial-BoldMT"], "fill_rgb": [225, 225, 225], "fill_bbox": [350.0, 440.0, 522.0, 460.0] }
+        ]
+      ],
+      "repeated_header_rows": [],
+      "rows": [
+        [
+          { "kind": "TD", "text": "00 00 00 05 00 00 04 10", "lines": ["00 00 00 05 00 00 04 10"], "page": 106, "bbox": [90.0, 400.0, 200.0, 440.0],
+            "bold": false, "underline": false, "fonts": ["ArialMT"], "fill_rgb": null, "fill_bbox": null },
+          { "kind": "TD", "text": "Fraction", "lines": ["Fractoin"], "page": 106, "bbox": [200.0, 400.0, 350.0, 440.0],
+            "bold": false, "underline": true, "fonts": ["ArialMT"], "fill_rgb": null, "fill_bbox": null,
+            "est_bbox": [200.0, 400.0, 350.0, 440.0], "split_from_merged": true, "recovered_by_geometry": true },
+          { "kind": "TD", "text": "Struct_Type, uinteger_2, uinteger_2", "lines": ["Struct_Type,", "uinteger_2, uinteger_2"], "page": 106, "bbox": [350.0, 400.0, 522.0, 440.0],
+            "bold": false, "underline": false, "fonts": ["ArialMT", "ArialMT"], "fill_rgb": null, "fill_bbox": null,
+            "adopted_from": { "struct_path": "0/1403", "text": "uinteger_2" }, "ragged_join": true }
+        ]
+      ],
+      "warnings": ["ragged rows: widths [(3, 1)]"]
+    },
+    {
+      "id": null,
+      "table_number": null,
+      "caption": null,
+      "caption_path": null,
+      "struct_path": "0/1340/1/1/0",
+      "nested_in": "0/1340",
+      "part": 1,
+      "parts": 2,
+      "pages": [106, 107],
+      "printed_pages": [89, 90],
+      "n_rows": 1,
+      "n_cols": 1,
+      "ordinal": 78,
+      "rects": [[106, [360.0, 410.0, 500.0, 430.0]], [107, [360.0, 700.0, 500.0, 720.0]]],
+      "header_source": "none",
+      "header_rows": [],
+      "repeated_header_rows": [
+        [ { "kind": "TH", "text": "Field", "lines": ["Field"], "page": 107, "bbox": [360.0, 700.0, 500.0, 720.0],
+            "bold": true, "underline": false, "fill_rgb": null, "fill_bbox": null } ]
+      ],
+      "rows": [
+        [ { "kind": "TD", "text": "numerator", "lines": ["numerator"], "page": 106, "bbox": [360.0, 410.0, 500.0, 430.0],
+            "bold": false, "underline": false, "fonts": ["ArialMT"], "fill_rgb": null, "fill_bbox": null,
+            "moved_out": { "to_struct_path": "0/1407", "text": "denominator" }, "adopted_orphan": true, "extra_field_tolerated": 42 } ]
+      ],
+      "warnings": []
+    }
+  ],
+  "headings": [
+    { "section": "5.1.3", "title": "Column Types", "level": 3, "page": 99, "struct_path": "0/1286", "rect": [90.0, 700.0, 300.0, 716.0] },
+    { "section": null, "title": "Revision History", "level": 1, "page": 3, "struct_path": "0/12", "rect": [90.0, 700.0, 300.0, 716.0] }
+  ],
+  "paras": [
+    { "section": "3.3.10.2.1", "item": "3a", "kind": "LI", "page": 81, "struct_path": "0/1012", "rect": [108.0, 500.0, 522.0, 540.0],
+      "hash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "words": null },
+    { "section": "5.1.3", "item": null, "kind": "P", "page": 99, "struct_path": "0/1287", "rect": [90.0, 600.0, 522.0, 680.0],
+      "hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae", "words": ["this", "section", "describes", "each", "column", "type"] }
+  ],
+  "sigs": [],
+  "annots": [
+    { "kind": "Doc", "spec": "core-2.01", "id": "doc", "struct": "", "v": 1, "page": 0, "rect": [0.0, 720.0, 72.0, 792.0], "flags": 6,
+      "contents": "doc core201" },
+    { "kind": "Bind", "spec": "core-2.01", "id": "T75", "struct": "0/1340", "v": 1, "page": 106, "rect": [90.0, 400.0, 522.0, 460.0], "flags": 6,
+      "contents": "erratum scott [\"Fractoin\" ~> \"Fraction\"]" }
+  ]
+}

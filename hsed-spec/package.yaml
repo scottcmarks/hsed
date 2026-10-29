@@ -1,0 +1,79 @@
+name:                hsed-spec
+version:             0.1.0.0
+github:              scottcmarks/hsed
+license:             BSD3
+author:              Scott Marks
+maintainer:          scott@magnolia-heights.com
+copyright:           Magnolia Heights R&D
+synopsis:            "The hsed spec compiler: TCG spec IR in, checked bindings and generated code out"
+description:         The compiler library behind the hsedc executable (docs/spec-as-source.md
+                     section 4.2). It reads the IR v1 JSON that the PDF extractor writes
+                     (docs/ir-v1.md) and never compiles generated code itself; the committed
+                     bindings are compiled only by the bindings test component.
+
+dependencies:
+- base >= 4.10 && < 10
+- rio >= 0.1.1.0
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wredundant-constraints
+- -optP-Wno-nonportable-include-path # workaround [Filename case on macOS · Issue #4739 · haskell/cabal](https://github.com/haskell/cabal/issues/4739)
+
+library:
+  source-dirs: src
+  dependencies:
+  - hsed-core
+  - aeson
+  - attoparsec
+  - bytestring
+  - containers
+  - cryptonite
+  - directory
+  - filepath
+  - megaparsec
+  - prettyprinter
+  - text
+  - unordered-containers
+  - vector
+
+executables:
+  hsedc:
+    main:                Main.hs
+    source-dirs:         app
+    dependencies:
+    - hsed-spec
+    - optparse-applicative
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+tests:
+  hsed-spec-test:
+    main:                Spec.hs
+    source-dirs:         test
+    dependencies:
+    - hsed-spec
+    - aeson
+    - hspec
+    - QuickCheck
+    build-tools:
+    - hspec-discover
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
+  # The only component that compiles the committed, generated bindings
+  # (design section 4.2): a wrong comment in the spec breaks this and nothing else.
+  bindings:
+    main:                Main.hs
+    source-dirs:         bindings
+    dependencies:
+    - hsed-spec

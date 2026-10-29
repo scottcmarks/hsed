@@ -5,7 +5,8 @@ on:
   pull_request:
 
 jobs:
-  # Both Haskell test suites on the resolver's exact GHC; stack never downloads a compiler.
+  # Every Haskell test suite of the three packages on the resolver's exact GHC; stack never
+  # downloads a compiler.
   stack:
     strategy:
       fail-fast: false
@@ -24,7 +25,7 @@ jobs:
           path: |
             ~/.stack
             .stack-work
-          key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', 'package.yaml') }}
+          key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', '**/package.yaml') }}
           restore-keys: stack-${{ runner.os }}-
       - run: stack --system-ghc --no-install-ghc test
 

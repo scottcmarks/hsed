@@ -16,3 +16,5 @@ unpacked_tags
 *.graph
 hsed.pdf
 hsedTred.pdf
+# agent worktrees the desktop app creates inside the checkout
+/.claude/

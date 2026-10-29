@@ -21,7 +21,9 @@ import io
 import json
 import os
 import re
+import struct
 import sys
+import zlib
 from contextlib import contextmanager
 from functools import reduce
 
@@ -170,15 +172,48 @@ def compact_syntax():
         DictionaryObject.write_to_stream, ArrayObject.write_to_stream = saved
 
 
+XREF_OBJ_RE = re.compile(rb"(\d+) 0 obj<</Type/XRef")
+INDEX_RE = re.compile(rb"/Index\[([0-9 ]*)\]")
+LENGTH_RE = re.compile(rb"/Length (\d+)>>\nstream\n")
+
+
+def self_indexed_xref(data: bytes, increment_start: int) -> bytes:
+    """The file with its last xref stream listing itself.  pypdf's incremental writer gives the xref
+    stream an /Index and entries for every object of the increment but the stream's own object (qpdf:
+    "xref entry for the xref stream itself is missing"; PDF 32000-1 7.5.8 lets a cross-reference
+    stream cover itself, and Acrobat's always do).  Rewritten here: the stream's object number joins
+    /Index (extending the last subsection when it follows on), a type-1 entry for its own offset
+    joins the data, and /Length follows; everything before the stream, and its offset, is unchanged."""
+    found = list(XREF_OBJ_RE.finditer(data, increment_start))
+    if not found:
+        raise ValueError("no xref stream in the increment")
+    at, number = found[-1].start(), int(found[-1].group(1))
+    index_m, length_m = INDEX_RE.search(data, at), LENGTH_RE.search(data, at)
+    begin = length_m.end()
+    entries = zlib.decompress(data[begin:begin + int(length_m.group(1))])
+    index = [int(x) for x in index_m.group(1).split()]
+    if any(first <= number < first + count for first, count in zip(index[::2], index[1::2])):
+        return data                                        # already lists itself
+    index = index[:-1] + [index[-1] + 1] if index and index[-2] + index[-1] == number else index + [number, 1]
+    stream = zlib.compress(entries + struct.pack(">BIB", 1, at, 0))
+    head = data[at:length_m.start()].replace(index_m.group(0), b"/Index[" + b" ".join(b"%d" % i for i in index) + b"]")
+    return (data[:at] + head + b"/Length %d>>\nstream\n" % len(stream) + stream
+            + b"\nendstream\nendobj\nstartxref\n%d\n%%%%EOF\n" % at)
+
+
 def write_annotated(pristine: str, out: str, annots: list[H.HsedAnnot]) -> None:
     """pristine + ONE incremental section holding the annotations, in the order given (pypdf numbers
-    the new objects in that order, so the file order is the canonical order)."""
+    the new objects in that order, so the file order is the canonical order), its xref stream
+    listing itself ('self_indexed_xref')."""
     w = pypdf.PdfWriter(pristine, incremental=True)
     for a in annots:
         w.add_annotation(page_number=a.page, annotation=H.to_pypdf(a))
     os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    buf = io.BytesIO()
     with compact_syntax():
-        w.write(out)
+        w.write(buf)
+    with open(out, "wb") as f:
+        f.write(self_indexed_xref(buf.getvalue(), os.path.getsize(pristine)))
 
 
 def manifest_of(ir: dict, pristine_md5: str, records: list[dict]) -> dict:

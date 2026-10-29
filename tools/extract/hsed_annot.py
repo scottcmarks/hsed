@@ -20,7 +20,11 @@ ignored:
     core-2.01 | T75 | erratum scott ["Fractoin" ~> "Fraction"]
 
 Kind follows from the id: `doc` -> Doc, a section number -> Rule, `T<n>` -> Bind,
-`<section>#<item>` -> Law, or Behaviour when the payload starts with `behaviour` or `fails`.
+`<section>#<item>` -> Law; a section or an item whose payload starts with `behaviour` or `fails` is
+Behaviour (design section 3.1: a method heading or a Fails list), as hsedc's annotKind has it.
+What a payload may say on each kind of anchor is VOCABULARY below, by its first word; a sidecar line
+whose first word does not belong on its anchor is refused here, before hsedc (whose grammar and
+anchor-kind check, Hsed.Spec.Rules.anchorKindMismatch, are the authority) would refuse it.
 The canonical order of anchors (in the PDF's incremental section, in the dump, in the manifest) is
 kind order Doc, Rule, Bind, Law, Behaviour, then the natural order of the id (T9 before T10).
 
@@ -49,21 +53,99 @@ SECTION_RE = re.compile(r"^\d+(?:\.\d+)*$")                       # 5.1.3
 TABLE_RE = re.compile(r"^T\d+$")                                  # T75
 ITEM_RE = re.compile(r"^\d+(?:\.\d+)*#[A-Za-z0-9]+$")             # 3.3.10.2.1#3a, 5.2.2#p1
 NATURAL_RE = re.compile(r"(\d+)")
+FIRST_WORD_RE = re.compile(r"[\s(]*([A-Za-z_][A-Za-z0-9_']*)")
+
+# The first word of a payload and the classes of anchor it may sit on: "doc" (the doc anchor),
+# "section" (a heading), "table" (T<n>), "item" (<section>#<item>).  The words are hsedc's
+# Hsed.Spec.Grammar.vocabulary; hsed-spec's VocabularySpec reads this table (one entry per line,
+# between the braces) and keeps it equal to what hsedc accepts.  A table binding or a modifier
+# belongs on a table (a modifier chain binds only a table); `sig` belongs nowhere, signature blocks
+# being rule-bound.
+VOCABULARY = {
+    "doc": ("doc",),
+    "rule": ("section",),
+    "behaviour": ("section", "item"),
+    "law": ("item",),
+    "fails": ("item",),
+    "sig": (),
+    "typeRow": ("table",),
+    "enumValues": ("table",),
+    "tableDesc": ("table",),
+    "columnsAddition": ("table",),
+    "tableUIDs": ("table",),
+    "uidTable": ("table",),
+    "statusCodes": ("table",),
+    "codes": ("table",),
+    "fieldValue": ("table",),
+    "fieldType": ("table",),
+    "byteFieldValue": ("table",),
+    "byteGrid": ("table",),
+    "layout": ("table",),
+    "feature": ("table",),
+    "featureNamed": ("table",),
+    "bits": ("table",),
+    "constValues": ("table",),
+    "ranges": ("table",),
+    "preconfig": ("table",),
+    "tokens": ("table",),
+    "stateTable": ("table",),
+    "propsNames": ("table",),
+    "propsInitial": ("table",),
+    "propsReq": ("table",),
+    "legend": ("table",),
+    "decision": ("table",),
+    "prose": ("table",),
+    "refines": ("table",),
+    "narrows": ("table",),
+    "replaces": ("table",),
+    "extends": ("table",),
+    "erratum": ("table",),
+    "cols": ("table",),
+    "rangeWords": ("table",),
+    "enumInDescription": ("table",),
+    "expand": ("table",),
+    "as": ("table",),
+    "waive": ("table",),
+}
 
 
 # ----------------------------------------------------------------------------- kinds and order
-def kind_of(anchor_id: str, payload: str) -> str:
-    """The /Kind an anchor id (and, for items, its payload) implies; ValueError for a malformed id."""
-    if anchor_id == DOC_ID:
-        return "Doc"
-    if SECTION_RE.match(anchor_id):
-        return "Rule"
-    if TABLE_RE.match(anchor_id):
-        return "Bind"
-    if ITEM_RE.match(anchor_id):
-        head = payload.split(maxsplit=1)[0] if payload.split() else ""
-        return "Behaviour" if head in BEHAVIOUR_WORDS else "Law"
+def anchor_class(anchor_id: str) -> str:
+    """"doc", "section", "table" or "item"; ValueError for a malformed id."""
+    for name, matches in (("doc", lambda i: i == DOC_ID), ("section", SECTION_RE.match), ("table", TABLE_RE.match),
+                          ("item", ITEM_RE.match)):
+        if matches(anchor_id):
+            return name
     raise ValueError(f"malformed anchor id {anchor_id!r} (expected doc, <section>, T<n> or <section>#<item>)")
+
+
+def first_word(payload: str) -> str | None:
+    """The name a payload starts with (past any opening parentheses), None when it starts with none."""
+    m = FIRST_WORD_RE.match(payload)
+    return m.group(1) if m else None
+
+
+def kind_of(anchor_id: str, payload: str) -> str:
+    """The /Kind an anchor id (and, for a section or an item, its payload) implies; ValueError for a
+    malformed id."""
+    cls = anchor_class(anchor_id)
+    if cls in ("section", "item") and first_word(payload) in BEHAVIOUR_WORDS:
+        return "Behaviour"
+    return {"doc": "Doc", "section": "Rule", "table": "Bind", "item": "Law"}[cls]
+
+
+def payload_problem(anchor_id: str, payload: str) -> str | None:
+    """Why a payload cannot sit on an anchor, judged by its first word (VOCABULARY); None when it may."""
+    cls, word = anchor_class(anchor_id), first_word(payload)
+    if word is None:
+        return "the payload does not start with a name"
+    if word not in VOCABULARY:
+        return f"unknown name {word!r}: not in the annotation vocabulary (hsedc's Hsed.Spec.Grammar)"
+    if cls not in VOCABULARY[word]:
+        where = " or ".join("the doc anchor" if c == "doc" else f"a {c} anchor" for c in VOCABULARY[word]) or "no anchor"
+        here = "the doc anchor" if cls == "doc" else f"a {cls} anchor"
+        return f"{word!r} belongs on {where}, not on {here}"
+    return None
 
 
 def natural_key(s: str) -> tuple:
@@ -108,9 +190,11 @@ def parse_hsa_line(line: str, where: str = "") -> Anchor | None:
         raise ValueError(f"{where}: expected 'spec | id | payload', got {line.rstrip()!r}")
     spec, anchor_id, payload = parts
     try:
-        kind_of(anchor_id, payload)                  # a malformed id is an error here, not later
+        problem = payload_problem(anchor_id, payload)   # a malformed id is an error here, not later
     except ValueError as e:
         raise ValueError(f"{where}: {line.rstrip()!r}: {e}") from None
+    if problem:
+        raise ValueError(f"{where}: {line.rstrip()!r}: {problem}")
     return Anchor(spec, anchor_id, payload)
 
 

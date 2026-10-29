@@ -19,9 +19,10 @@ time:
   compilation): every signature
   @name :: T@ whose type the hand-written modules also have (@UID@, @String@,
   @HalfUID@ and the two name maps; a @TypeDef@ has no hand-written
-  counterpart) and every @data Core_\<enum\>@, each with the caption of the
-  table its provenance line names (a definition under the provenance of a
-  signature block, @5.3.3.6/sig@, names no table and is not read);
+  counterpart) and every @data Core_\<enum\>@ (another data type, a record,
+  is no enumeration), each with the caption of the table its provenance line
+  names (a definition under the provenance of a signature block,
+  @5.3.3.6/sig@, names no table and is not read);
 * 'generatedUIDLists' reads the same modules' lists of a table's UIDs
   (@name :: [(UID, String)]@), each with its table: what a hand-written UID of
   a table whose rows the PDF names nowhere is found in;
@@ -135,7 +136,7 @@ generatedNames = go Nothing
       | Just rest <- stripPrefix "-- | " l, " (PDF " `isInfixOf` rest = go (provenance rest) ls
       | Just (table, caption) <- prov, Just n <- signature l = (n, table, caption, Scalar') : go prov ls
       | Just (table, caption) <- prov, Just n <- uidList l = (n, table, caption, UIDList) : go prov ls
-      | Just (table, caption) <- prov, Just n <- stripPrefix "data " l = (n, table, caption, Enumeration) : go prov ls
+      | Just (table, caption) <- prov, Just n <- stripPrefix "data " l, "Core_" `isPrefixOf` n = (n, table, caption, Enumeration) : go prov ls
       | otherwise = go prov ls
     uidList l = case words l of
       [n, "::", "[(UID,", "String)]"] -> Just n

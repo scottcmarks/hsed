@@ -4,9 +4,10 @@
                 --hsa spec/annot/core-2.01.hsa --out build/core-2.01.hsed.pdf
                 --upd spec/annot/core-2.01.upd --manifest spec/annot/core-2.01.manifest.json
 
-Each sidecar line is resolved to its anchor through the IR (docs/ir-v1.md): a table by id to its
-struct path and first-page rect, a section to its heading, `doc` to the top-left inch of page 1,
-`<section>#<item>` to the paragraph; an anchor the IR does not know is refused with its line.  The
+Each sidecar line is resolved to its anchor through the IR (docs/ir-v1.md), by the class of its id
+whatever its kind: a table by id to its struct path and first-page rect, a section (Rule or
+Behaviour) to its heading, `doc` to the top-left inch of page 1, `<section>#<item>` (Law or
+Behaviour) to the paragraph; an anchor the IR does not know is refused with its line.  The
 annotations (hsed_annot.py is the format) are written in canonical order as ONE pypdf incremental
 section, so the pristine file is an exact byte prefix of the output and two runs are byte-identical.
 The tail is exported as the `.upd` file and the manifest records what the pristine PDF implies
@@ -26,6 +27,7 @@ import sys
 import zlib
 from contextlib import contextmanager
 from functools import reduce
+from pathlib import Path
 
 import pypdf
 
@@ -108,13 +110,16 @@ def resolve_doc(ir: dict, anchor: H.Anchor) -> tuple[H.HsedAnnot, dict]:
         "rects": [[H.DOC_PAGE, list(H.DOC_RECT)]]}
 
 
-RESOLVERS = {"Doc": resolve_doc, "Rule": resolve_heading, "Bind": resolve_table, "Law": resolve_para,
-             "Behaviour": resolve_para}
+# The resolver follows from the class of the anchor's id (hsed_annot.anchor_class), not from its
+# /Kind: a Behaviour sits on a heading (a method's section) or on an item (a Fails list), and is
+# found where any other heading or item is.
+RESOLVERS = {"doc": resolve_doc, "section": resolve_heading, "table": resolve_table, "item": resolve_para}
 
 
 def resolve(ir: dict, anchor: H.Anchor) -> tuple[H.HsedAnnot, dict]:
-    """(annotation, manifest record) for one sidecar line; KeyError when the IR has no such anchor."""
-    annot, facts = RESOLVERS[anchor.kind](ir, anchor)
+    """(annotation, manifest record) for one sidecar line; KeyError when the IR has no such anchor,
+    ValueError when the id is not one of the anchor classes."""
+    annot, facts = RESOLVERS[H.anchor_class(anchor.id)](ir, anchor)
     return annot, {"id": anchor.id, "kind": anchor.kind, **facts, "label": label_of(facts["page"], ir["labelOffset"])}
 
 
@@ -123,11 +128,11 @@ def resolve_all(ir: dict, anchors: list[H.Anchor], spec: str, hsa_name: str) -> 
     def attempt(a):
         try:
             return resolve(ir, a) if a.spec == spec else KeyError(f"spec is not {spec}")
-        except KeyError as e:
+        except (KeyError, ValueError) as e:
             return e
 
     outcomes = [(a, attempt(a)) for a in anchors]
-    failures = [f"{hsa_name}: {a.line!r}: {e.args[0]}" for a, e in outcomes if isinstance(e, KeyError)]
+    failures = [f"{hsa_name}: {a.line!r}: {e.args[0]}" for a, e in outcomes if isinstance(e, (KeyError, ValueError))]
     if failures:
         sys.exit("refused:\n  " + "\n  ".join(failures))
     return sorted((r for _, r in outcomes), key=lambda r: r[0].sort_key)
@@ -229,25 +234,25 @@ def dump_json(obj, path: str) -> None:
 
 def annotate(spec: str, pristine: str, ir_path: str, hsa: str, out: str, upd: str, manifest: str) -> dict:
     """The whole job; returns a summary (also what main prints)."""
-    ir = json.load(open(ir_path))
-    head = open(pristine, "rb").read()
+    ir = json.loads(Path(ir_path).read_text())
+    head = Path(pristine).read_bytes()
     if ir["spec"] != spec:
         sys.exit(f"{ir_path} is the IR of {ir['spec']}, not {spec}")
     if ir["pdfMd5"] != md5_bytes(head):
         sys.exit(f"{pristine} has md5 {md5_bytes(head)} but {ir_path} was extracted from {ir['pdfMd5']}")
     try:
-        anchors = H.parse_hsa(open(hsa).read(), hsa)
+        anchors = H.parse_hsa(Path(hsa).read_text(), hsa)
     except ValueError as e:
         sys.exit(f"refused: {e}")
     resolved = resolve_all(ir, anchors, spec, hsa)
     annots = [a for a, _ in resolved]
     write_annotated(pristine, out, annots)
-    data = open(out, "rb").read()
+    data = Path(out).read_bytes()
     assert data[:len(head)] == head, "pypdf did not keep the pristine bytes as a prefix"
     tail = data[len(head):]
     for p in (upd, manifest):
         os.makedirs(os.path.dirname(os.path.abspath(p)), exist_ok=True)
-    open(upd, "wb").write(tail)
+    Path(upd).write_bytes(tail)
     dump_json(manifest_of(ir, ir["pdfMd5"], [r for _, r in resolved]), manifest)
     return {"spec": spec, "anchors": len(annots), "pristine_bytes": len(head), "tail_bytes": len(tail),
             "annotated_md5": md5_bytes(data), "out": out, "upd": upd, "manifest": manifest,

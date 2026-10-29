@@ -1,11 +1,14 @@
 """Unit tests for the annotation side (hsed_annot.py, annotate.py) and the extractor's md5 pins and
 invariants (no TCG PDF needed):  the sidecar refusing a payload of the wrong kind for its anchor by
 its first word, the kinds and the canonical order, the incremental tail's xref stream listing
-itself, the pins of design section 5.1 step 1, and Core Table 7's two parts.
+itself, annotate.py placing a heading `behaviour` anchor on its heading end to end, the pins of
+design section 5.1 step 1, and Core Table 7's two parts.
 
 Run:  .venv/bin/python -I -m unittest discover -s tools/extract -p 'test_*.py'   (make extract-test)
 """
+import hashlib
 import io
+import json
 import os
 import tempfile
 import unittest
@@ -102,6 +105,62 @@ class XrefStream(unittest.TestCase):
             Path(raw).write_bytes(buf.getvalue())
             with pikepdf.open(raw) as pdf:
                 self.assertTrue(any("xref stream itself" in m for m in pdf.check_pdf_syntax()))
+
+
+# A sidecar whose last line is a Behaviour on a heading (design E9: a method's section), beside a
+# Rule on another heading; the resolver follows the id's class (section -> heading), not the kind.
+BEH_HSA = ('core-2.01 | doc | doc core201\n'
+           'core-2.01 | 5.1.3 | rule typeRow & rule enumValues\n'
+           'core-2.01 | 5.3.3.6 | behaviour "Base.get"\n')
+
+
+def tiny_ir(pdf: bytes) -> dict:
+    """The IR fields annotate.py reads, for tiny_pdf(): two headings and no tables or paragraphs."""
+    def heading(section, k, title):
+        return {"section": section, "struct_path": f"0/{k}", "page": 0, "level": 3,
+                "rect": [20.0, 150.0 - 20 * k, 180.0, 160.0 - 20 * k], "title": title}
+
+    return {"irVersion": 1, "spec": "core-2.01", "source": "p.pdf", "pdfMd5": hashlib.md5(pdf).hexdigest(),
+            "pages": 1, "labelOffset": 0, "tables": [], "paras": [],
+            "headings": [heading("5.1.3", 1, "Type Table"), heading("5.3.3.6", 2, "Get")]}
+
+
+class HeadingBehaviour(unittest.TestCase):
+    def annotate(self, d: str, hsa_text: str) -> dict:
+        pdf = tiny_pdf()
+        paths = {n: os.path.join(d, n) for n in ("p.pdf", "ir.json", "x.hsa", "a.pdf", "x.upd", "m.json")}
+        Path(paths["p.pdf"]).write_bytes(pdf)
+        Path(paths["ir.json"]).write_text(json.dumps(tiny_ir(pdf)))
+        Path(paths["x.hsa"]).write_text(hsa_text)
+        return A.annotate("core-2.01", paths["p.pdf"], paths["ir.json"], paths["x.hsa"], paths["a.pdf"],
+                          paths["x.upd"], paths["m.json"])
+
+    def test_a_heading_behaviour_is_annotated_on_its_heading(self):
+        with tempfile.TemporaryDirectory() as d:
+            summary = self.annotate(d, BEH_HSA)
+            self.assertEqual(summary["anchors"], 3)
+            read = [(a.id, a.kind, a.struct, a.page, a.payload) for a in H.read_pikepdf(summary["out"])]
+            self.assertEqual(read, [("doc", "Doc", "", 0, "doc core201"),
+                                    ("5.1.3", "Rule", "0/1", 0, "rule typeRow & rule enumValues"),
+                                    ("5.3.3.6", "Behaviour", "0/2", 0, 'behaviour "Base.get"')])
+            self.assertEqual([H.problems(a) for a in H.read_pikepdf(summary["out"])], [[], [], []])
+            manifest = json.loads(Path(summary["manifest"]).read_text())
+            self.assertEqual([(r["id"], r["kind"], r["struct"], r["title"]) for r in manifest["anchors"]],
+                             [("doc", "Doc", "", None), ("5.1.3", "Rule", "0/1", "Type Table"),
+                              ("5.3.3.6", "Behaviour", "0/2", "Get")])
+            self.assertEqual(H.format_hsa(a.anchor for a in H.read_pikepdf(summary["out"])), BEH_HSA)
+
+    def test_an_unknown_heading_is_refused_naming_its_line(self):
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(SystemExit) as e:
+                self.annotate(d, BEH_HSA.replace("5.3.3.6", "5.3.3.7"))
+            self.assertIn("""'core-2.01 | 5.3.3.7 | behaviour "Base.get"': no heading numbered 5.3.3.7""", str(e.exception))
+
+    def test_a_malformed_id_is_refused_naming_its_line_not_a_traceback(self):
+        """parse_hsa refuses a malformed id first; resolve_all still reports one by its line."""
+        with self.assertRaises(SystemExit) as e:
+            A.resolve_all(tiny_ir(b""), [H.Anchor("core-2.01", "5.x", "rule typeRow")], "core-2.01", "x.hsa")
+        self.assertIn("x.hsa: 'core-2.01 | 5.x | rule typeRow': malformed anchor id '5.x'", str(e.exception))
 
 
 class Pins(unittest.TestCase):

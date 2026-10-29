@@ -29,8 +29,8 @@ mechanics (pypdf incremental update, render identity, three-reader read-back):
   (invariants skipped).
 - `test_extract.py` — unit tests of the pure rules (ragged-row join, section-number parsing,
   item-label concatenation, word normalisation and hashing); `test_annot.py` — the sidecar's
-  vocabulary check, kinds and order, the tail's self-listing xref stream, the md5 pins and the
-  Table 7 invariant: `make extract-test`.
+  vocabulary check, kinds and order, the tail's self-listing xref stream, a heading `behaviour`
+  annotated end to end, the md5 pins and the Table 7 invariant: `make extract-test`.
 - `regen_typeuids.py` — regenerates Core Tables 46-165 from the JSON and diffs them against the
   hand transcription in `src/System/SED/MCTP/Common/TypeUIDs.hs` (27 differences, all explained).
 
@@ -52,8 +52,9 @@ mechanics (pypdf incremental update, render identity, three-reader read-back):
   which qpdf otherwise warns of), the tail exported as `spec/annot/<spec>.upd` and
   the manifest `spec/annot/<spec>.manifest.json` (md5, pages, labelOffset, irVersion and per anchor
   id, kind, ordinal, struct path, 0-based page, printed label, title, normalised header, content
-  hash, fragment rects). Every sidecar line is resolved through the IR (table id, section number,
-  `<section>#<item>`, `doc`); an unknown anchor is refused with its line.
+  hash, fragment rects). Every sidecar line is resolved through the IR by the class of its id,
+  whatever its kind (table id, section number, `<section>#<item>`, `doc`: a `behaviour` on a
+  heading resolves as a heading); an unknown anchor is refused with its line.
   `.venv/bin/python -I tools/extract/annotate.py --spec core-2.01 --pristine tcg/TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf --ir spec/ir/core-2.01.json --hsa spec/annot/core-2.01.hsa --out build/core-2.01.hsed.pdf --upd spec/annot/core-2.01.upd --manifest spec/annot/core-2.01.manifest.json`
   (`make annotate`).
 - `apply.py` — pristine + `.upd` -> the annotated PDF, after checking the pristine's md5 against the

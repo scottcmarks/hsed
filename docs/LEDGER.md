@@ -37,7 +37,7 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | Warning | W-ENUM-LABEL-REPEATED | 3 |
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
-| Warning | W-GEN-EXCLUDED | 2 |
+| Warning | W-PROP-NAME-CASE | 1 |
 | Warning | W-RULE-UNIMPLEMENTED | 10 |
 | Warning | W-UNBOUND | 154 |
 | Note | N-CAPTION-NORMALISED | 7 |

@@ -73,7 +73,9 @@ t75 :: Env -> ErrataSet -> Decl
 t75 env es = typeRow env "clock_time" [0, 0, 0, 5, 0, 0, 0x18, 5] corrected
   (prov "T75" "Table 75 clock_time" 107 90 77 "0/1429" "c349b5b0b0bae90ca8cb7ad917b3d90f4c443c408da83d20ed8b16ba9e42e127")
   where
-    corrected = fst (applyErrata es (Site core "T75" FormatCell (Just 107))
+    -- under scott, the correction Table 75's annotation carries
+    corrections = [ Erratum core "T75" "Fractoin" "Fraction" "annotation at core-2.01.pdf#page=107&T75" | es == Scott ]
+    corrected = fst (applyErrata corrections (Site core "T75" (DataCell 0 2 "Format") (Just 107))
                                  "Struct_Type, Year, Month, Day, Hour, Minute, Seconds, Fractoin")
 
 golden :: Env -> ErrataSet -> [Decl]

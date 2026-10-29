@@ -70,10 +70,18 @@ form87 = measure core t87
 
 spec :: Spec
 spec = do
-  describe "normHeader" $
+  describe "normHeader" $ do
     it "applies the typo table, strips whitespace and lower-cases" $
       map normHeader ["Enumeration Value", "Colum Type", "M axSize", "MandatoryWrite  Granularity", " UID ", "Byte\\Bit"]
         `shouldBe` ["enumerationvalue", "columntype", "maxsize", "mandatorywritegranularity", "uid", "byte\\bit"]
+    it "needs the typo table only for Colum Type: the design's other two typos are whitespace" $
+      headerTypos `shouldBe` [("Colum Type", "Column Type")]
+
+  describe "headerNormalisations" $
+    it "lists each typo a table's header cells contain, as printed and as read" $ do
+      headerNormalisations (mkTable "T26" "Table 26 X Columns" ["Column Number", "Column Name", "IsUnique", "Colum Type"] [])
+        `shouldBe` [("Colum Type", "Column Type")]
+      headerNormalisations (mkTable "T46" "Table 46 AC_element" ["UID", "Name", "Format"] []) `shouldBe` []
 
   describe "captionTitle and classifyCaption" $ do
     it "strip the table number in both spellings" $ do
@@ -82,6 +90,10 @@ spec = do
       captionTitle "Table 01 Global Terminology" `shouldBe` Just "Global Terminology"
       captionTitle "Figure 3 Something" `shouldBe` Nothing
       captionTitle "Table 71 ACE_object _ref" `shouldBe` Just "ACE_object_ref"
+    it "normalise the _object _ref captions, which rawCaptionTitle leaves as printed" $ do
+      rawCaptionTitle "Table 72 Certificates_object _ref" `shouldBe` Just "Certificates_object _ref"
+      normaliseCaption "Table 72 Certificates_object _ref" `shouldBe` "Table 72 Certificates_object_ref"
+      normaliseCaption "Table 46 AC_element" `shouldBe` "Table 46 AC_element"
 
     it "classify the design's caption kinds" $
       map classifyCaption

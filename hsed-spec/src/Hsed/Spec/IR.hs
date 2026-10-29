@@ -34,6 +34,7 @@ module Hsed.Spec.IR
   , TableIR (..)
   , RepeatedHeaderIR (..)
   , CellIR (..)
+  , cellWithText
   , FragmentIR (..)
   , AdoptedFromIR (..)
   , MovedOutIR (..)
@@ -147,6 +148,12 @@ data CellIR = CellIR
   , adoptedFrom         :: !(Maybe AdoptedFromIR)
   , movedOut            :: !(Maybe MovedOutIR)
   } deriving (Eq, Show, Generic)
+
+-- | A cell with its text replaced (an erratum's correction): @text@ is a field of
+--   several records here, so a record update would be ambiguous.
+cellWithText :: Text -> CellIR -> CellIR
+cellWithText t (CellIR k _ ls p bb eb b u fs fr fb nt fg sm rg rj ao af mo) =
+  CellIR k t ls p bb eb b u fs fr fb nt fg sm rg rj ao af mo
 
 -- | One piece of a cell that continues on another page.
 data FragmentIR = FragmentIR

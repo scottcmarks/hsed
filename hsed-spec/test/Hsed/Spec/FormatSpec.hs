@@ -1,4 +1,5 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 {-|
@@ -25,13 +26,19 @@ import           Test.Hspec
 import           Hsed.Core.Types
 import           Hsed.Spec.Common hiding (spec)
 import           Hsed.Spec.Errata
+import           Hsed.Spec.CoreIR   (withCore)
 import           Hsed.Spec.Fixtures
 import           Hsed.Spec.Format
+import           Hsed.Spec.IR       (CellIR (..), TableIR (..))
+import qualified Hsed.Spec.IR       as IR
+import           Hsed.Spec.Shape    (normHeader)
 
 
--- | A row's Format cell under an errata set.
+-- | A row's Format cell under an errata set: under scott, corrected as Table 75's
+--   annotation corrects it (spec/annot/core-2.01.hsa), the one Format cell with an erratum.
 cell :: ErrataSet -> Row -> Text
-cell es r = fst (applyErrata es (Site core ("T" <> tshow (rowTable r)) FormatCell Nothing) (rowFormat r))
+cell es r = fst (applyErrata corrections (Site core ("T" <> tshow (rowTable r)) (DataCell 0 2 "Format") Nothing) (rowFormat r))
+  where corrections = [ Erratum core "T75" "Fractoin" "Fraction" "annotation" | es == Scott ]
 
 -- | The sixteen codes, one example each, over a small environment.
 smallEnv :: Env
@@ -162,9 +169,34 @@ spec = do
       globMatch "*" "" `shouldBe` True
       globMatch "Log" "LogList" `shouldBe` False
 
+  describe "formatNormalisations" $ do
+    it "lists a name spaced from its braces and T76's Table_UID, each as printed and as read" $ do
+      formatNormalisations "Restricted_Reference_Type{6}, uidref {ColumnTable_UID}"
+        `shouldBe` [("uidref {ColumnTable_UID}", "uidref{ColumnTable_UID}"), ("ColumnTable_UID", "ColumnTableUID")]
+      formatNormalisations "General_Reference_Type {7}" `shouldBe` [("General_Reference_Type {7}", "General_Reference_Type{7}")]
+      formatNormalisations "Restricted_Reference_Type{6}, uidref{LogTableUID}, *" `shouldBe` []
+      formatNormalisations "Simple_Type, uinteger, 2" `shouldBe` []
+    it "finds them in the fourteen printed cells that have them" $
+      [ rowTable r | r <- rows, not (null (formatNormalisations (rowFormat r))) ]
+        `shouldBe` [57, 62, 72, 76, 77, 104, 105, 111, 112, 119, 140, 141, 142, 144]
+
+  -- the fixtures are copies of spec/ir/core-2.01.json: a regenerated IR that changed them fails here
+  withCore $ \ir -> describe "the fixtures against spec/ir/core-2.01.json" $ do
+    let typeTables = [ t | t <- ir.tables, Just n <- [t.tableNumber], t.part `elem` [Nothing, Just 1]
+                         , map (normHeader . (.text)) (concat (take 1 t.headerRows)) == ["uid", "name", "format"]
+                         , [_, _, _] : _ <- [t.rows], n >= 46, n <= 165 ]
+    it "hold every Type table row as the IR prints it" $
+      [ Row n (cellText 1 r) (cellText 0 r) (cellText 2 r) | t <- typeTables, Just n <- [t.tableNumber], r : _ <- [t.rows] ]
+        `shouldBe` rows
+    it "hold the Table Name column of the IR's T240" $
+      [ T.strip c.text | t <- ir.tables, t.id == Just "T240", r <- t.rows, c <- take 1 (drop 2 r), not (T.null (T.strip c.text)) ]
+        `shouldBe` tables
+
   describe "tableName" $
     it "strips the TableUID suffix in each of its spellings" $
       map tableName ["C_PINTableUID", "ColumnTable_UID", "LogTableUID", "C_AES_*TableUID", "Foo"]
         `shouldBe` ["C_PIN", "Column", "Log", "C_AES_*", "Foo"]
   where
     spelledCode r = T.filter (not . isSpace) (T.takeWhile (/= ',') (rowFormat r))
+    cellText :: Int -> [IR.CellIR] -> Text
+    cellText i r = maybe "" (.text) (listToMaybe (drop i r))

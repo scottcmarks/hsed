@@ -8,6 +8,8 @@
 Checks, each printed PASS / FAIL / SKIP with its numbers; any FAIL makes the exit status 1:
   * the manifest and the IR were made for this pristine file (md5);
   * the pristine bytes are an exact prefix of the annotated file, and pristine + .upd == annotated;
+  * qpdf (through pikepdf) finds no syntax warning in the annotated file that it does not find in
+    the pristine one (the tail's xref stream lists itself);
   * the tail is at most --budget bytes per anchor plus one xref stream (the numbers are reported);
   * the annotation objects sit in the tail in canonical order;
   * renders of the listed 1-based pages (plus every page an anchor sits on) are identical to the
@@ -114,6 +116,12 @@ def render_page(pristine: str, out: str, page1: int, rdir: str) -> dict:
 
 
 # ----------------------------------------------------------------------------- the checks
+def syntax_warnings(pdf: str) -> list[str]:
+    """qpdf's syntax warnings for a file, the file name taken out so two files compare."""
+    with pikepdf.open(pdf) as p:
+        return [w.replace(pdf, "<file>") for w in p.check_pdf_syntax()]
+
+
 def tail_budget(tail: bytes, n_anchors: int, budget: int) -> dict:
     """Split the tail into the objects (page dictionaries, /Annots arrays, annotations) and the one
     xref stream with its startxref trailer; the budget is on the former, per anchor."""
@@ -157,12 +165,16 @@ def run_checks(args) -> tuple[list[tuple[str, bool | None, str]], dict]:
     ids_in_tail = [i.decode("latin1") for i in ID_RE.findall(tail)]
     canonical = [r["id"] for r in manifest["anchors"]]
 
+    pristine_warnings, annotated_warnings = syntax_warnings(args.pristine), syntax_warnings(args.out)
+    new_warnings = [w for w in annotated_warnings if w not in pristine_warnings]
     checks = [
         ("manifest md5 is the pristine file's", manifest["md5"] == pmd5, f"{pmd5}"),
         ("IR pdfMd5 is the pristine file's", ir_meta["pdfMd5"] == pmd5, f"{ir_meta['pdfMd5']}"),
         ("pristine bytes are an exact prefix of the annotated file", annotated.startswith(pristine),
          f"{len(pristine)} + {len(tail)} = {len(annotated)} bytes"),
         ("pristine + upd == annotated byte for byte", pristine + upd == annotated, f"upd {len(upd)} bytes, md5 {md5_bytes(annotated)}"),
+        ("no qpdf syntax warning the pristine file does not have", not new_warnings,
+         "; ".join(new_warnings) or f"{len(annotated_warnings)} warnings, as the pristine file"),
         ("one xref stream in the tail", budget["one_xref_stream"], f"{budget['xref_stream_bytes']} bytes including startxref/%%EOF"),
         (f"tail at most {args.budget} bytes per anchor plus the xref stream", budget["within_budget"],
          f"{budget['object_bytes']} object bytes / {n} anchors = {budget['bytes_per_anchor']} per anchor"),

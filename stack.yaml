@@ -70,3 +70,5 @@ install-ghc: false
 #
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+# ... or, as here, nothing but the snapshot's own GHC (9.4.7; design section 10.1)
+compiler-check: match-exact

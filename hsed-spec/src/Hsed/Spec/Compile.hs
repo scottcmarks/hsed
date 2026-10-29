@@ -25,8 +25,11 @@ declaration per bound table of the two M1 shapes (the design's per-shape
   it joins.
 
 A bound table that cannot be generated cleanly is left out with the Warning
-@W-GEN-EXCLUDED@ saying why (its Error is already among the findings). The
-module text is 'Gen.renderModule''s: deterministic, sorted by table number.
+@W-GEN-EXCLUDED@ saying why (its Error is already among the findings), and so
+is a table bound (by a comment) to a shape M1 has no generator for, such as
+@statusCodes@ or @as \@'Codes codes@; both count among the tables left out. A
+@prose@ table has nothing to generate and is not counted. The module text is
+'Gen.renderModule''s: deterministic, sorted by table number.
 -}
 module Hsed.Spec.Compile
   ( CompileResult (..)
@@ -44,6 +47,7 @@ import           Control.Monad.RWS.Strict (modify', tell)
 import           Crypto.Hash              (SHA256 (..), hashWith)
 import qualified Data.Text                as DT
 import qualified RIO.Char                 as C
+import qualified RIO.Map                  as Map
 import           RIO.FilePath             ((</>))
 import qualified RIO.Text                 as T
 import           RIO
@@ -51,9 +55,11 @@ import           RIO
 import           Hsed.Spec.Anchor         (AnchorId, renderAnchorId)
 import           Hsed.Spec.Check
 import           Hsed.Spec.Common         (ErrataSet, Finding, Severity (..), SpecId (..), finding)
+import           Hsed.Spec.DSL            (someBindingShape)
 import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR (..), SpecIR (..), StructPath (..), TableIR (..))
 import           Hsed.Spec.Rules          (locatedAt, tablePage)
+import           Hsed.Spec.Shape          (Shape (..), shapeName)
 
 
 -- | What @hsedc compile@ writes, with everything it found.
@@ -83,7 +89,12 @@ compileSpec = do
   forM_ rows $ \tr -> either (exclude (trAnchor tr) (trTable tr)) (emit . Gen.TypeRow) (typeRowDecl env tr)
   forM_ (rights (enumReads env)) $ \er ->
     either (exclude (erAnchor er) (erTable er)) (emit . Gen.Enum) (enumDecl env er (checkEnum env rows er))
+  forM_ (Map.toList (ceTables env)) $ \(aid, t) -> case bindingOf env aid >>= someBindingShape of
+    Just shape | shape `notElem` handled ->
+      exclude aid t ("hsedc generates nothing for a " <> shapeName shape <> " table yet (M1: TypeRow and EnumValues)")
+    _ -> pure ()
   where
+    handled = [TypeRow, EnumValues, Prose]   -- generated above, or nothing to generate
     emit :: Gen.Decl -> Compile ()
     emit d = modify' (<> Artefacts [d] [])
     exclude :: AnchorId -> TableIR -> Text -> Compile ()

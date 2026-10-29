@@ -58,7 +58,7 @@ executables:
     - -with-rtsopts=-N
 
 tests:
-  hsed-spec-test:
+  hsed-test:
     main:                Spec.hs
     source-dirs:         spec-tests
     dependencies:

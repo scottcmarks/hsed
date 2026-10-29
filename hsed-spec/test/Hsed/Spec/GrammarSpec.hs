@@ -73,9 +73,15 @@ examples =
   , ( "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow"
     , Full (SomeBinding (erratum scott ["Fractoin" ~> "Fraction"] typeRow))
     , "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow" )
-  , ( "erratum published [fractoin ~> fraction] cols 0 1 enumValues"
-    , Full (SomeBinding (erratum published ["fractoin" ~> "fraction"] (cols 0 1 enumValues)))
-    , "erratum published [\"fractoin\" ~> \"fraction\"] (cols 0 1 enumValues)" )
+  , ( "erratum scott [fractoin ~> fraction] cols 0 1 enumValues"
+    , Full (SomeBinding (erratum scott ["fractoin" ~> "fraction"] (cols 0 1 enumValues)))
+    , "erratum scott [\"fractoin\" ~> \"fraction\"] (cols 0 1 enumValues)" )
+  , ( "waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\""
+    , Modifiers [Waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "no erratum says which is wrong"]
+    , "waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" )
+  , ( "waive \"C-UID-UNIQUE\" \"x\" \"y\" typeRow"
+    , Full (SomeBinding (waive "C-UID-UNIQUE" "x" "y" typeRow))
+    , "waive \"C-UID-UNIQUE\" \"x\" \"y\" typeRow" )
   , ( "bits 5 [(0, \"KeyChangeZone\"), (1, \"IdScope\")]"
     , Full (SomeBinding (bits 5 [(0, "KeyChangeZone"), (1, "IdScope")]))
     , "bits 5 [(0, \"KeyChangeZone\"), (1, \"IdScope\")]" )
@@ -98,6 +104,11 @@ failures =
   , ("doc core199", "E-GRAMMAR", "1:1: unknown specification core199")
   , ("erratum scott", "E-GRAMMAR", "1:1: erratum: expected erratum scott [\"old\" ~> \"new\", ...]")
   , ("erratum bob [\"a\" ~> \"b\"]", "E-GRAMMAR", "1:9: unknown errata set bob")
+  , ("erratum published [\"Fractoin\" ~> \"Fraction\"]", "E-ERRATUM-PUBLISHED",
+     "1:9: erratum published: the published set is the text as printed and takes no corrections; write erratum scott")
+  , ("erratum scott [\"a\" ~> \"b\"] (erratum published [\"a\" ~> \"b\"] typeRow)", "E-ERRATUM-PUBLISHED", "1:37: erratum published")
+  , ("waive \"C-ENUM-RANGE\" \"x\" \"y\"", "E-GRAMMAR", "1:7: waive: hsedc waives only C-UID-UNIQUE, not C-ENUM-RANGE")
+  , ("waive \"C-UID-UNIQUE\" \"x\"", "E-GRAMMAR", "1:1: waive: expected waive \"C-UID-UNIQUE\" \"subject\" \"reason\"")
   , ("as @'Codex", "E-GRAMMAR", "1:4: unknown shape Codex")
   , ("typeRow & rule codes", "E-GRAMMAR", "1:1: only doc and rule tokens join with &")
   , ("rule codes & doc core201 & typeRow", "E-GRAMMAR", "1:28: only doc and rule tokens join with &")
@@ -127,6 +138,9 @@ spec = do
 
     it "is inverted by parsePayload on arbitrary payloads" $
       property $ \(ArbPayload p) -> parsePayload (printPayload p) === Right p
+
+    it "names every word a payload may start with in its vocabulary" $
+      vocabulary `shouldSatisfy` \v -> all (`elem` v) ["doc", "rule", "typeRow", "law", "behaviour", "erratum", "waive", "as", "refines"]
 
     it "prints Haskell string literals the grammar reads back" $
       property $ \(ArbText t) -> parsePayload ("law " <> haskellString t) === Right (Full (SomeBinding (law t)))
@@ -159,8 +173,9 @@ genRef :: Gen Ref
 genRef = oneof [core <$> small, opal <$> small, section <$> dotted]
   where dotted = T.intercalate "." <$> listOf1 (tshow <$> chooseInt (1, 20))
 
+-- | Scott's: the grammar refuses an erratum of the published set.
 genErrataSet :: Gen ErrataSet
-genErrataSet = elements [Scott, Published]
+genErrataSet = pure Scott
 
 genModifier :: Gen Modifier
 genModifier = oneof
@@ -169,7 +184,8 @@ genModifier = oneof
   , RangeWords <$> listOf text
   , pure EnumInDescription
   , pure Expand
-  , As <$> elements [minBound .. maxBound] ]
+  , As <$> elements [minBound .. maxBound]
+  , Waive <$> elements waivableChecks <*> text <*> text ]
 
 -- | A fixed-shape table or prose binding without modifiers.
 genCore :: Gen SomeBinding

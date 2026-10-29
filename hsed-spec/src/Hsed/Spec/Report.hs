@@ -128,10 +128,21 @@ findingCounts :: [Finding] -> Text
 findingCounts fs = T.intercalate ", " [ tshow (n sev) <> " " <> w | (sev, w) <- [(Error, "errors"), (Warning, "warnings"), (Note, "notes")] ]
   where n sev = length (filter ((== sev) . Cm.severity) fs)
 
--- | The unbound tables, as @W-UNBOUND@ findings say them.
+-- | The tables nothing binds: unbound (@W-UNBOUND@), ambiguous (@E-AMBIGUOUS@)
+--   or with an annotation that does not bind (its Error), each as its finding says it.
 orphans :: SpecIR -> [(AnchorId, Finding)]
 orphans ir =
-  [ (aid, f) | (aid, Unbound) <- Map.toList classes, f <- located aid ]
+  [ (aid, f) | (aid, c) <- Map.toList classes, orphan c, f <- located aid c ]
   where
     (classes, fs) = classifyWith ir
-    located aid = take 1 [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.anchor f == Just (renderAnchorId aid) ]
+    orphan = \case
+      Unbound     -> True
+      Ambiguous _ -> True
+      Invalid _   -> True
+      _           -> False
+    located aid = \case
+      Invalid f -> [f]
+      c         -> take 1 [ f | f <- fs, Cm.code f == codeOf c, Cm.anchor f == Just (renderAnchorId aid) ]
+    codeOf = \case
+      Ambiguous _ -> "E-AMBIGUOUS"
+      _           -> "W-UNBOUND"

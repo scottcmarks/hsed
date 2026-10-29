@@ -19,6 +19,10 @@ Output: one sorted-key JSON document (irVersion 1; see `main` for the top level,
 with the sanity invariants of design section 5.1 step 9, printed PASS/FAIL to stderr; any FAIL makes
 the exit status 1.  The output is deterministic (no timestamps, no absolute paths).
 
+A spec with a pinned md5 (PINNED_MD5: design section 5.1 step 1, example E0) is refused unless the
+PDF read (the pristine one, with --pristine) has exactly that md5, so that no run, by make or by
+hand, writes an IR of another printing under that spec's name.
+
 Usage:
   python -I extract_tables.py <pdf> <out.json> <index.txt> --spec core-2.01 --page-offset 17
                               [--pristine <original.pdf>] [--check-against <core.json>] [--pages a-b]
@@ -956,6 +960,7 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
         theirs = [norm(r[col]["text"]) for r in o["rows"] if len(r) > col]
         return (f"{tid} header equals {other_id} column {col}", mine == theirs, f"mine {mine} theirs {theirs}")
 
+    t7_parts = [(t.get("part"), t.get("parts"), t["n_rows"]) for t in tables if t["id"] == "T7"]
     core = [
         ("heading 5.1.3 on page index 99, printed label 83",
          any(h["section"] == "5.1.3" and h["page"] == 99 and h["page"] + 1 - ir["labelOffset"] == 83 for h in headings),
@@ -963,6 +968,9 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
         ("248 distinct numbered captions", len(numbered) == 248, f"got {len(numbered)}"),
         ("Table 185 present", 185 in numbered, f"{'present' if 185 in numbered else 'absent'}"),
         ("T46 ordinal 48", (table_by_id(ir, "T46") or {}).get("ordinal") == 48, f"got {(table_by_id(ir, 'T46') or {}).get('ordinal')}"),
+        # Word split Table 7 at the page 33/34 break into two struct tables (docs/ir-v1.md): its one
+        # data row is in the second part, the first holds only the header
+        ("T7 two parts, one data row between them", t7_parts == [(1, 2, 0), (2, 2, 1)], f"got (part, parts, rows) {t7_parts}"),
         cells_check("T71", 3), cells_check("T81", 3),
         rows_check("T189", 14), rows_check("T233", 14), rows_check("T243", 17), rows_check("T244", 4), rows_check("T245", 5),
     ]
@@ -984,6 +992,20 @@ def index_line(r: dict) -> str:
     nest = " NESTED" if r["nested_in"] else ""
     cap = r["caption"] or ("(unnumbered: " + " | ".join(c["text"] for c in (r["header_rows"] or r["rows"] or [[]])[0])[:70] + ")")
     return f"{num}{part:<5} {pg:<12} {pp:<10} {shape:<9}{nest} {cap}"
+
+
+# The md5 of the PDF each spec id names (design section 5.1 step 1); a spec not listed is not pinned.
+PINNED_MD5 = {
+    "core-2.01": "5ceb93ab118a578125e3755eb885b668",
+    "opal-2.30": "054e505db3895b25c38dd9dfbcc36259",
+}
+
+
+def pin_problem(spec: str, md5: str) -> str | None:
+    """Why a PDF with this md5 cannot be extracted as `spec`; None when it is the pinned one or the
+    spec has no pin."""
+    want = PINNED_MD5.get(spec)
+    return None if want in (None, md5) else f"{spec} is pinned to the PDF with md5 {want}; this one has {md5}"
 
 
 def source_md5(pdf_path: str, pristine: str | None) -> tuple[str, str]:
@@ -1012,6 +1034,8 @@ def main(argv=None) -> int:
 
     t0 = time.time()
     source, md5 = source_md5(args.pdf, args.pristine)
+    if pin_problem(args.spec, md5):
+        sys.exit(f"refused: {pin_problem(args.spec, md5)}")
     pdf = pikepdf.open(args.pdf)
     doc = pymupdf.open(args.pdf)
     page_of = {pg.obj.objgen: i for i, pg in enumerate(pdf.pages)}

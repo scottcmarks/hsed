@@ -14,10 +14,12 @@ resolved into the committed Core extraction (the anchor's structure path and
 page come from the IR's tables) and must make the check logic, and the binding
 step, fail with an Error whose text cites @core-2.01.pdf#page=@; the expected
 text of each fixture is in 'expected', and a fixture without an entry there
-fails the suite. Nothing here compiles generated code, so @stack build
-hsed-spec@ stays green while the fixtures fail; GHC's own rejection of an
-unknown name in a generated bindings module is tested in
-"Hsed.Spec.Bindings.PrintSpec".
+fails the suite. hsedc refuses all three itself, so none reaches a generated
+module: @unknown-name.hsa@ fails with hsedc's @E-GRAMMAR@ at the page, not
+with a GHC error (GHC's own rejection of an unknown name, should one ever
+reach a generated bindings module, is tested in
+"Hsed.Spec.Bindings.PrintSpec"). Nothing here compiles generated code, so
+@stack build hsed-spec@ stays green while the fixtures fail.
 -}
 module Hsed.Spec.NegativeSpec (spec) where
 
@@ -42,6 +44,8 @@ expected =
                          , Nothing ))
   , ("unknown-name.hsa", ( "E-GRAMMAR core-2.01.pdf#page=100&T46: 1:1: unknown name frobnicate"
                          , Just "E-GRAMMAR core-2.01.pdf#page=100&T46: 1:1: unknown name frobnicate" ))
+  , ("wrong-kind.hsa",   ( "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not rule typeRow"
+                         , Just "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not rule typeRow" ))
   ]
 
 dir :: FilePath

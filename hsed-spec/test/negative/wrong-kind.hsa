@@ -1,0 +1,4 @@
+# Must fail `hsedc check` and `hsedc bind` with E-ANCHOR-KIND citing core-2.01.pdf#page=100&T46:
+# a rule token belongs on a heading or the doc anchor, not on a table, where it would silently drop
+# Table 46 from the generated module (design 3.1; annotate.py refuses it too).
+core-2.01 | T46 | rule typeRow

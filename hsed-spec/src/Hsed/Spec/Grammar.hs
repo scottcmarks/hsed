@@ -34,6 +34,11 @@ The printed form is canonical: a modifier is written before what it modifies
 (@rangeWords ["to"] (cols 0 1 enumValues)@; the design's @enumValues (cols 0 1)@
 also parses), @§ "5.1.3"@ prints as @section "5.1.3"@ because @§@ is no Haskell
 name, and the same text is what the generated bindings module contains.
+
+Two modifiers are checked beyond their arity: @erratum@ takes only Scott's set
+(@erratum published [...]@ is @E-ERRATUM-PUBLISHED@: the published set is the
+text as printed and takes no corrections), and @waive@ names one of the checks
+"Hsed.Spec.DSL".'waivableChecks' lists.
 -}
 module Hsed.Spec.Grammar
   ( -- * Payloads
@@ -47,6 +52,8 @@ module Hsed.Spec.Grammar
   , printModifiers
   , printRef
   , haskellString
+    -- * The vocabulary
+  , vocabulary
     -- * The surface syntax
   , Expr (..)
   , SrcPos
@@ -284,13 +291,30 @@ ruleTerm rs e = case e of
   _               -> Left (grammarError (posOf e) "only doc and rule tokens join with &")
 
 modifierArity :: Text -> Maybe Int
-modifierArity n = lookup n
-  [ ("erratum", 2), ("cols", 2), ("rangeWords", 1), ("enumInDescription", 0), ("expand", 0), ("as", 1) ]
+modifierArity n = lookup n modifierArities
+
+modifierArities :: [(Text, Int)]
+modifierArities =
+  [ ("erratum", 2), ("cols", 2), ("rangeWords", 1), ("enumInDescription", 0), ("expand", 0), ("as", 1)
+  , ("waive", 3) ]
+
+-- | Every name a payload may start with: @doc@, @rule@, the bindings and the
+--   modifiers. @tools/extract/hsed_annot.py@ keeps the anchors each may sit on,
+--   for annotate.py to refuse a mismatch before hsedc sees it; a test keeps the
+--   two lists equal.
+vocabulary :: [Text]
+vocabulary = ["doc", "rule"] <> map fst bindingArities <> map fst modifierArities
 
 modifierOf :: SrcPos -> Text -> [Expr] -> Either Finding Modifier
 modifierOf p n own = case (n, own) of
-  ("erratum", [EApp sp setName [], EList _ ps]) -> Erratum <$> maybe (Left (grammarError (Just sp) ("unknown errata set " <> setName))) Right (parseErrataSet setName)
-                                                   <*> traverse arrow ps
+  ("erratum", [EApp sp setName [], EList _ ps]) -> case parseErrataSet setName of
+    Just Scott     -> Erratum Scott <$> traverse arrow ps
+    Just Published -> Left (finding Error "E-ERRATUM-PUBLISHED" (tshow (fst sp) <> ":" <> tshow (snd sp)
+                        <> ": erratum published: the published set is the text as printed and takes no corrections; write erratum scott"))
+    Nothing        -> Left (grammarError (Just sp) ("unknown errata set " <> setName))
+  ("waive", [EStr sp c, EStr _ subject, EStr _ reason])
+    | c `elem` waivableChecks             -> Right (Waive c subject reason)
+    | otherwise                           -> Left (grammarError (Just sp) ("waive: hsedc waives only " <> T.intercalate ", " waivableChecks <> ", not " <> c))
   ("cols", [EInt _ a, EInt _ b])          -> Right (Cols (fromInteger a) (fromInteger b))
   ("rangeWords", [EList _ ws])            -> RangeWords <$> traverse str ws
   ("enumInDescription", [])               -> Right EnumInDescription
@@ -301,11 +325,15 @@ modifierOf p n own = case (n, own) of
     usage = fromMaybe "" (lookup n
       [ ("erratum", "erratum scott [\"old\" ~> \"new\", ...]"), ("cols", "cols A B")
       , ("rangeWords", "rangeWords [\"to\", ...]"), ("enumInDescription", "no arguments")
-      , ("expand", "no arguments"), ("as", "as @'Shape") ])
+      , ("expand", "no arguments"), ("as", "as @'Shape")
+      , ("waive", "waive \"C-UID-UNIQUE\" \"subject\" \"reason\"") ])
 
 -- | The binding names and how many arguments each takes.
 bindingArity :: Text -> Maybe Int
-bindingArity n = lookup n
+bindingArity n = lookup n bindingArities
+
+bindingArities :: [(Text, Int)]
+bindingArities =
   [ ("typeRow", 0), ("enumValues", 0), ("tableDesc", 0), ("columnsAddition", 0), ("tableUIDs", 0)
   , ("uidTable", 0), ("statusCodes", 0), ("codes", 0), ("fieldValue", 0), ("fieldType", 0)
   , ("byteFieldValue", 0), ("byteGrid", 0), ("layout", 1), ("feature", 0), ("featureNamed", 1)
@@ -410,6 +438,7 @@ printModifier = \case
   EnumInDescription -> "enumInDescription"
   Expand            -> "expand"
   As sh             -> "as @'" <> shapeName sh
+  Waive c sj r      -> "waive " <> T.unwords (map haskellString [c, sj, r])
 
 -- | A bare modifier chain, innermost first: @[Cols 0 1, RangeWords ["to"]]@ is @rangeWords ["to"] (cols 0 1)@.
 printModifiers :: [Modifier] -> Text
@@ -464,6 +493,7 @@ printBinding = \case
   Extends r               -> "extends (" <> printRef r <> ")"
   Also a b                -> printBinding a <> " & " <> rightOperand b
   WithErratum e ps b      -> printModifier (Erratum e ps) <> " " <> operand b
+  WithWaiver c sj r b     -> printModifier (Waive c sj r) <> " " <> operand b
   WithCols a c b          -> printModifier (Cols a c) <> " " <> operand b
   WithRangeWords ws b     -> printModifier (RangeWords ws) <> " " <> operand b
   WithEnumInDescription b -> "enumInDescription " <> operand b

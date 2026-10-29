@@ -28,11 +28,15 @@ import           Hsed.Spec.Sidecar
 
 spec :: Spec
 spec = do
-  describe "parseSidecar" $
+  describe "parseSidecar" $ do
     it "skips comments and blank lines and names a malformed line" $ do
       let (fs, ls) = parseSidecar "# a comment\n\ncore-2.01 | T75 | erratum scott [\"a\" ~> \"b\"]\nno bars here\n"
       ls `shouldBe` [SidecarLine 3 "core-2.01" "T75" "erratum scott [\"a\" ~> \"b\"]"]
       map renderFinding fs `shouldBe` ["E-SIDECAR -: line 4: expected spec | id | payload, got \"no bars here\""]
+    it "refuses an anchor listed twice, keeping its first line (as hsed_annot.py's parse_hsa refuses it)" $ do
+      let (fs, ls) = parseSidecar "core-2.01 | 5.1.3 | rule typeRow\ncore-2.01 | doc | doc core201\ncore-2.01 | 5.1.3 | rule enumValues\n"
+      map slLine ls `shouldBe` [1, 2]
+      map renderFinding fs `shouldBe` ["E-SIDECAR -: line 3: anchor core-2.01 | 5.1.3 is listed more than once (first at line 1)"]
 
   withCore $ \ir -> do
     describe "resolveSidecar" $ do
@@ -42,7 +46,10 @@ spec = do
           ( []
           , [ AnnotIR Doc "core-2.01" "doc" (StructPath "") 1 0 (Rect 36 720 108 756) 6 "doc core201"
             , AnnotIR Rule "core-2.01" "5.1.3" (StructPath "0/1278") 1 99 (Rect 90.0 595.61 215.4 613.67) 6 "rule typeRow & rule enumValues"
-            , AnnotIR Bind "core-2.01" "T75" (StructPath "0/1429") 1 106 (Rect 170.88 559.18 468.12 671.1) 6 "erratum scott [\"Fractoin\" ~> \"Fraction\"]" ] )
+            , AnnotIR Bind "core-2.01" "T75" (StructPath "0/1429") 1 106 (Rect 170.88 559.18 468.12 671.1) 6 "erratum scott [\"Fractoin\" ~> \"Fraction\"]"
+            , AnnotIR Bind "core-2.01" "T101" (StructPath "0/1555") 1 112 (Rect 227.4 373.92 411.49 477.42) 6 "erratum scott [\"Verify Eror\" ~> \"Verify Error\"]"
+            , AnnotIR Bind "core-2.01" "T149" (StructPath "0/1792") 1 123 (Rect 169.44 356.64 469.56 411.18) 6
+                "waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" ] )
       it "refuses an anchor the IR does not have, and another spec's line" $ do
         let (fs, as) = resolveSidecar ir "core-2.01 | T999 | typeRow\nopal-2.30 | T46 | typeRow\ncore-2.01 | 9.9.9 | rule typeRow\n"
         as `shouldBe` []
@@ -50,7 +57,12 @@ spec = do
           [ "E-SIDECAR core-2.01: line 1: no table T999 in the IR"
           , "E-SIDECAR core-2.01: line 2: spec is opal-2.30, the IR is core-2.01"
           , "E-SIDECAR core-2.01: line 3: no heading numbered 9.9.9 in the IR" ]
+      it "refuses a paragraph the IR does not have and a signature block" $ do
+        let (fs, _) = resolveSidecar ir "core-2.01 | 5.1.3#p99 | law \"A.b\"\ncore-2.01 | 5.3.3.6/sig | sig\n"
+        map renderFinding fs `shouldBe`
+          [ "E-SIDECAR core-2.01: line 1: no paragraph 5.1.3#p99 in the IR"
+          , "E-SIDECAR core-2.01: line 2: signature blocks are rule-bound and carry no annotation: 5.3.3.6/sig" ]
     describe "withSidecar" $
-      it "orders the annotations canonically" $ do
-        let (_, ir') = withSidecar ir "core-2.01 | T75 | erratum scott [\"a\" ~> \"b\"]\ncore-2.01 | T46 | typeRow\ncore-2.01 | doc | doc core201\n"
-        map (.id) ir'.annots `shouldBe` ["doc", "T46", "T75"]
+      it "orders the annotations canonically: kind, then the id's natural order" $ do
+        let (_, ir') = withSidecar ir "core-2.01 | T75 | erratum scott [\"a\" ~> \"b\"]\ncore-2.01 | T101 | enumValues\ncore-2.01 | T46 | typeRow\ncore-2.01 | doc | doc core201\n"
+        map (.id) ir'.annots `shouldBe` ["doc", "T46", "T75", "T101"]

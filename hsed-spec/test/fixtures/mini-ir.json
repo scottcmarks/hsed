@@ -6,22 +6,23 @@
   "pages": 306,
   "labelOffset": 17,
   "notice": "tcg/TCG-NOTICE.txt",
-  "extractor": { "script": "extract_tables.py", "version": 1, "pymupdf": "PyMuPDF 1.28.2", "pikepdf": "10.17.0" },
+  "extractor": { "script": "extract_tables.py", "version": 1, "pymupdf": "1.28.2", "pikepdf": "10.17.0",
+                 "n_tables": 2, "n_numbered": 1, "n_nested": 1, "n_headings": 2, "n_paras": 2, "empty_paras_skipped": 0, "toc_lines_skipped": 0 },
   "wordComplete": ["5.1.3"],
   "tables": [
     {
       "id": "T75",
       "table_number": 75,
       "caption": "Table 75 Fraction",
-      "caption_path": "0/1339",
-      "struct_path": "0/1340",
+      "caption_path": [0, 1339],
+      "struct_path": [0, 1340],
       "nested_in": null,
-      "pages": [106],
-      "printed_pages": [89],
+      "pages": [106, 107],
+      "printed_pages": [89, 90],
       "n_rows": 1,
       "n_cols": 3,
       "ordinal": 77,
-      "rects": [[106, [90.0, 400.0, 522.0, 460.0]]],
+      "rects": [[106, [90.0, 400.0, 522.0, 460.0]], [107, [90.0, 700.0, 522.0, 720.0]]],
       "header_source": "leading-th",
       "header_rows": [
         [
@@ -33,7 +34,13 @@
             "bold": true, "underline": false, "fonts": ["Arial-BoldMT"], "fill_rgb": [225, 225, 225], "fill_bbox": [350.0, 440.0, 522.0, 460.0] }
         ]
       ],
-      "repeated_header_rows": [],
+      "repeated_header_rows": [
+        { "cells": [
+            { "kind": "TH", "text": "UID", "lines": ["UID"], "page": 107, "bbox": [90.0, 700.0, 200.0, 720.0],
+              "bold": true, "underline": false, "fonts": ["Arial-BoldMT"], "fill_rgb": [225, 225, 225], "fill_bbox": [90.0, 700.0, 200.0, 720.0] } ],
+          "page": 107,
+          "row_index": 1 }
+      ],
       "rows": [
         [
           { "kind": "TD", "text": "00 00 00 05 00 00 04 10", "lines": ["00 00 00 05 00 00 04 10"], "page": 106, "bbox": [90.0, 400.0, 200.0, 440.0],
@@ -43,7 +50,10 @@
             "est_bbox": [200.0, 400.0, 350.0, 440.0], "split_from_merged": true, "recovered_by_geometry": true },
           { "kind": "TD", "text": "Struct_Type, uinteger_2, uinteger_2", "lines": ["Struct_Type,", "uinteger_2, uinteger_2"], "page": 106, "bbox": [350.0, 400.0, 522.0, 440.0],
             "bold": false, "underline": false, "fonts": ["ArialMT", "ArialMT"], "fill_rgb": null, "fill_bbox": null,
-            "adopted_from": { "struct_path": "0/1403", "text": "uinteger_2" }, "ragged_join": true }
+            "fragments": [ { "bbox": [350.0, 400.0, 522.0, 440.0], "page": 106 }, { "bbox": [350.0, 700.0, 522.0, 720.0], "page": 107 } ],
+            "ragged_join": true,
+            "adopted_from": { "struct_path": [0, 1403], "text": "uinteger_2" },
+            "color": ["#000000"] }
         ]
       ],
       "warnings": ["ragged rows: widths [(3, 1)]"]
@@ -53,26 +63,27 @@
       "table_number": null,
       "caption": null,
       "caption_path": null,
-      "struct_path": "0/1340/1/1/0",
-      "nested_in": "0/1340",
+      "struct_path": [0, 1340, 1, 1, 0],
+      "nested_in": [0, 1340],
       "part": 1,
       "parts": 2,
-      "pages": [106, 107],
-      "printed_pages": [89, 90],
+      "pages": [106],
+      "printed_pages": [89],
       "n_rows": 1,
-      "n_cols": 1,
-      "ordinal": 78,
-      "rects": [[106, [360.0, 410.0, 500.0, 430.0]], [107, [360.0, 700.0, 500.0, 720.0]]],
+      "n_cols": 2,
+      "ordinal": null,
+      "rects": [[106, [360.0, 410.0, 500.0, 430.0]]],
       "header_source": "none",
       "header_rows": [],
-      "repeated_header_rows": [
-        [ { "kind": "TH", "text": "Field", "lines": ["Field"], "page": 107, "bbox": [360.0, 700.0, 500.0, 720.0],
-            "bold": true, "underline": false, "fill_rgb": null, "fill_bbox": null } ]
-      ],
+      "repeated_header_rows": [],
       "rows": [
-        [ { "kind": "TD", "text": "numerator", "lines": ["numerator"], "page": 106, "bbox": [360.0, 410.0, 500.0, 430.0],
+        [
+          { "kind": "TD", "text": "", "lines": [], "page": null, "bbox": null, "bold": null, "underline": null, "fill_rgb": null,
+            "est_bbox": [360.0, 410.0, 430.0, 430.0], "nested_tables": [[0, 1340, 1, 1, 0]] },
+          { "kind": "TD", "text": "(MSB) numerator", "lines": ["(MSB)", "numerator"], "page": 106, "bbox": [430.0, 410.0, 500.0, 430.0],
             "bold": false, "underline": false, "fonts": ["ArialMT"], "fill_rgb": null, "fill_bbox": null,
-            "moved_out": { "to_struct_path": "0/1407", "text": "denominator" }, "adopted_orphan": true, "extra_field_tolerated": 42 } ]
+            "moved_out": { "text": "denominator", "to_struct_path": [0, 1407] }, "adopted_orphan": "(MSB)", "extra_field_tolerated": 42 }
+        ]
       ],
       "warnings": []
     }

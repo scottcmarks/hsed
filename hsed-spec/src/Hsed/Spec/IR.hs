@@ -18,8 +18,12 @@ Haskell types for the IR v1 JSON that @tools/extract/extract_tables.py@ writes
 and @hsedc@ reads: @docs/ir-v1.md@, design @docs/spec-as-source.md@ sections
 4.2 and 5.1. Field names follow the JSON: camelCase here, snake_case in the file
 where the schema says so ('snakeOptions'). Extra JSON fields are ignored, optional
-fields are 'Maybe', and the repair flags of a cell default to 'False' when absent.
-Fields are accessed with @OverloadedRecordDot@ (@ir.tables@, @cell.text@).
+fields are 'Maybe', and a cell's repair flags default to 'False' when absent;
+@null@ for @bold@ and @underline@ (an empty cell) reads as 'False' too. The shapes
+follow the committed @spec/ir/*.json@: a repeated header row is an object with its
+page and row index, a nested table has no ordinal, an empty cell has no page or
+bbox, and structure paths may be written as int arrays. Fields are accessed with
+@OverloadedRecordDot@ (@ir.tables@, @cell.text@).
 -}
 module Hsed.Spec.IR
   ( -- * Document
@@ -28,7 +32,11 @@ module Hsed.Spec.IR
   , irVersion1
     -- * Tables
   , TableIR (..)
+  , RepeatedHeaderIR (..)
   , CellIR (..)
+  , FragmentIR (..)
+  , AdoptedFromIR (..)
+  , MovedOutIR (..)
   , HeaderSource (..)
   , CellKind (..)
     -- * Headings and paragraphs
@@ -97,11 +105,11 @@ data TableIR = TableIR
   , printedPages       :: ![Int]
   , nRows              :: !Int
   , nCols              :: !Int
-  , ordinal            :: !Int                 -- ^ 1-based among top-level tables
+  , ordinal            :: !(Maybe Int)         -- ^ 1-based among top-level tables; a nested table has none
   , rects              :: ![PageRect]          -- ^ one per page the table touches
   , headerSource       :: !HeaderSource
   , headerRows         :: ![[CellIR]]
-  , repeatedHeaderRows :: ![[CellIR]]
+  , repeatedHeaderRows :: ![RepeatedHeaderIR]
   , rows               :: ![[CellIR]]
   , warnings           :: ![Text]
   } deriving (Eq, Show, Generic)
@@ -110,25 +118,52 @@ data TableIR = TableIR
 data HeaderSource = LeadingTH | FirstOfAllTH | Repeat | BoldFirstRow | NoHeader
   deriving (Eq, Show, Bounded, Enum, Generic)
 
+-- | A header row repeated where a table continues on a later page.
+data RepeatedHeaderIR = RepeatedHeaderIR
+  { cells    :: ![CellIR]
+  , page     :: !Int
+  , rowIndex :: !Int        -- ^ the row's index among the table's rows
+  } deriving (Eq, Show, Generic)
+
 -- | One table cell with its text, geometry, styling and repair flags.
 data CellIR = CellIR
   { kind                :: !CellKind
   , text                :: !Text
   , lines               :: ![Text]
-  , page                :: !Int
-  , bbox                :: !Rect
+  , page                :: !(Maybe Int)        -- ^ absent for an empty cell
+  , bbox                :: !(Maybe Rect)       -- ^ absent for an empty cell, which carries 'estBbox'
   , estBbox             :: !(Maybe Rect)
   , bold                :: !Bool
   , underline           :: !Bool
   , fonts               :: ![Text]
   , fillRgb             :: !(Maybe RGB)
   , fillBbox            :: !(Maybe Rect)
+  , nestedTables        :: ![StructPath]       -- ^ the tables nested in this cell
+  , fragments           :: ![FragmentIR]       -- ^ the pieces of a cell that spans pages
   , splitFromMerged     :: !Bool
   , recoveredByGeometry :: !Bool
-  , adoptedOrphan       :: !Bool
   , raggedJoin          :: !Bool
-  , adoptedFrom         :: !(Maybe Value)      -- ^ where an adopted cell came from
-  , movedOut            :: !(Maybe Value)      -- ^ where a moved cell went
+  , adoptedOrphan       :: !(Maybe Text)       -- ^ the orphan text adopted into this cell
+  , adoptedFrom         :: !(Maybe AdoptedFromIR)
+  , movedOut            :: !(Maybe MovedOutIR)
+  } deriving (Eq, Show, Generic)
+
+-- | One piece of a cell that continues on another page.
+data FragmentIR = FragmentIR
+  { bbox :: !Rect
+  , page :: !Int
+  } deriving (Eq, Show, Generic)
+
+-- | Where an adopted cell's text came from.
+data AdoptedFromIR = AdoptedFromIR
+  { structPath :: !StructPath
+  , text       :: !Text
+  } deriving (Eq, Show, Generic)
+
+-- | Where a cell's text was moved to.
+data MovedOutIR = MovedOutIR
+  { toStructPath :: !StructPath
+  , text         :: !Text
   } deriving (Eq, Show, Generic)
 
 -- | Header or data cell.
@@ -190,8 +225,9 @@ data PageRect = PageRect { page :: !Int, rect :: !Rect }
 data RGB = RGB { r :: !Double, g :: !Double, b :: !Double }
   deriving (Eq, Show, Generic)
 
--- | A @/K@ index path from @/StructTreeRoot@, written @"0/1288"@.
--- Reading also accepts the pre-v1 array form @[0, 1288]@.
+-- | A @/K@ index path from @/StructTreeRoot@, written @"0/1288"@ (headings,
+-- paras, annots) or as the int array @[0, 1288]@ (tables and cells); both read,
+-- the string form is written.
 newtype StructPath = StructPath Text
   deriving (Eq, Ord, Show, Generic)
 
@@ -240,25 +276,27 @@ instance FromJSON HeaderSource where
 instance ToJSON HeaderSource where
   toJSON = String . headerSourceName
 
--- | Hand-written so that absent repair flags read as 'False' and absent
--- @fonts@ as @[]@; the field order is the record's.
+-- | Hand-written so that absent or @null@ flags read as 'False' and absent
+-- lists as @[]@; the field order is the record's.
 instance FromJSON CellIR where
   parseJSON = withObject "CellIR" $ \o ->
     CellIR <$> o .:  "kind"
            <*> o .:  "text"
            <*> o .:  "lines"
-           <*> o .:  "page"
-           <*> o .:  "bbox"
+           <*> o .:? "page"
+           <*> o .:? "bbox"
            <*> o .:? "est_bbox"
-           <*> o .:  "bold"
-           <*> o .:  "underline"
+           <*> flag o "bold"
+           <*> flag o "underline"
            <*> o .:? "fonts" .!= []
            <*> o .:? "fill_rgb"
            <*> o .:? "fill_bbox"
+           <*> o .:? "nested_tables" .!= []
+           <*> o .:? "fragments" .!= []
            <*> flag o "split_from_merged"
            <*> flag o "recovered_by_geometry"
-           <*> flag o "adopted_orphan"
            <*> flag o "ragged_join"
+           <*> o .:? "adopted_orphan"
            <*> o .:? "adopted_from"
            <*> o .:? "moved_out"
     where flag o k = o .:? k .!= False
@@ -270,6 +308,30 @@ instance FromJSON CellKind where
   parseJSON = enumParser "CellKind" tshow
 instance ToJSON CellKind where
   toJSON = String . tshow
+
+instance FromJSON RepeatedHeaderIR where
+  parseJSON = genericParseJSON snakeOptions
+instance ToJSON RepeatedHeaderIR where
+  toJSON     = genericToJSON snakeOptions
+  toEncoding = genericToEncoding snakeOptions
+
+instance FromJSON FragmentIR where
+  parseJSON = genericParseJSON snakeOptions
+instance ToJSON FragmentIR where
+  toJSON     = genericToJSON snakeOptions
+  toEncoding = genericToEncoding snakeOptions
+
+instance FromJSON AdoptedFromIR where
+  parseJSON = genericParseJSON snakeOptions
+instance ToJSON AdoptedFromIR where
+  toJSON     = genericToJSON snakeOptions
+  toEncoding = genericToEncoding snakeOptions
+
+instance FromJSON MovedOutIR where
+  parseJSON = genericParseJSON snakeOptions
+instance ToJSON MovedOutIR where
+  toJSON     = genericToJSON snakeOptions
+  toEncoding = genericToEncoding snakeOptions
 
 instance FromJSON HeadingIR where
   parseJSON = genericParseJSON snakeOptions

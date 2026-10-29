@@ -19,11 +19,17 @@ and of the table itself.
 
 Checks:
 
-* @C-T240-HALVES@: both UID cells are eight bytes, and the low half of the
-  descriptor object's UID is the high half of the table's UID (the table's
-  half-UID), on every row;
+* @C-T240-HALVES@: both UID cells are eight bytes, and on every row the low
+  half of the descriptor object's UID is the high half of the table's UID (the
+  table's half-UID), the low half of the table's UID is zero, and the high half
+  of the descriptor object's UID is the half-UID of the table of tables: the
+  one row whose descriptor object lies in its own table (row 1, @Table@, in
+  Core; Core section 3.2.5.3 b.i and b.ii, printed pages 34-35);
 * @C-T240-NAME@: every table name is an identifier, and no two rows name one
   table (each names generated definitions).
+
+Each row's definitions cite the page the row is printed on (Table 240 spans
+two), with the table's ordinal and cell hash.
 
 Compiled into 'tableUIDsModule' in the shapes hsed's hand-written
 @System.SED.MCTP.Common.TableUIDs@ has: @u\<T\>TableObject :: UID@, @u\<T\>Table ::
@@ -43,6 +49,7 @@ module Hsed.Spec.Rules.TableUIDs
   ) where
 
 import qualified RIO.Char         as C
+import qualified RIO.List         as L
 import qualified RIO.Map          as Map
 import qualified RIO.Text         as T
 import           RIO
@@ -67,7 +74,8 @@ tableUIDsRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch TableUIDs form)
   , ruleIdent   = const Nothing
   , ruleModule  = tableUIDsModule
-  , ruleChecks  = \ctx bts -> concatMap (either (\(bt, f) -> [atTable ctx bt f]) (rowChecks ctx)) (readRows bts) <> nameChecks ctx bts
+  , ruleChecks  = \ctx bts -> concatMap (either (\(bt, f) -> [atTable ctx bt f]) (rowChecks ctx (tablesTable bts))) (readRows bts)
+                               <> tablesTableChecks ctx bts <> nameChecks ctx bts
   , ruleCompile = compile
   }
 
@@ -91,6 +99,7 @@ data TableUIDRow = TableUIDRow
   , tuTableText  :: !Text              -- ^ the table's UID cell
   , tuObject     :: !(Maybe [Word8])
   , tuTable      :: !(Maybe [Word8])
+  , tuCells      :: ![CellIR]          -- ^ the row's cells, for the page it is printed on
   }
 
 -- | Every row of every table bound to the rule's shape; a row that is not four cells is a finding.
@@ -105,7 +114,7 @@ readRows bts = [ row bt i cells | bt <- bts, (i, cells) <- zip [0 ..] (btRead bt
     row bt i = \case
       [object, table, name, _template] -> Right TableUIDRow
         { tuBound = bt, tuRow = i, tuName = T.strip name.text, tuObjectText = object.text, tuTableText = table.text
-        , tuObject = parseUIDCell object.text, tuTable = parseUIDCell table.text }
+        , tuObject = parseUIDCell object.text, tuTable = parseUIDCell table.text, tuCells = [object, table, name, _template] }
       cells -> Left (bt, finding Error "C-T240-HALVES" ("row " <> tshow (i + 1) <> " has " <> tshow (length cells) <> " cells, not four"))
 
 -- | The table names a @uidref{...}@ may name: the Table Name column of every
@@ -116,18 +125,48 @@ tableNames ctx = [ tuName r | Right r <- tableUIDRows ctx, not (T.null (tuName r
 
 -- * Checks
 
-rowChecks :: Context -> TableUIDRow -> [Finding]
-rowChecks ctx r = map (atTable ctx (tuBound r) . finding Error "C-T240-HALVES" . (label r <>)) (halvesProblems r)
+rowChecks :: Context -> Either Text (TableUIDRow, [Word8]) -> TableUIDRow -> [Finding]
+rowChecks ctx tables r = map (atTable ctx (tuBound r) . finding Error "C-T240-HALVES" . (label r <>)) (halvesProblems tables r)
 
--- | What C-T240-HALVES finds wrong with a row.
-halvesProblems :: TableUIDRow -> [Text]
-halvesProblems r = case (tuObject r, tuTable r) of
+-- | The table of tables: the one row whose descriptor object lies in its own
+--   table (its descriptor's high half is its table's half-UID), with that
+--   half-UID; Left saying why there is none.
+tablesTable :: [BoundTable] -> Either Text (TableUIDRow, [Word8])
+tablesTable bts = case L.nubBy (\a b -> snd a == snd b) selfDescribing of
+  [one]   -> Right one
+  []      -> Left "no row's descriptor object lies in its own table, so no row is the table of tables"
+  several -> Left ("rows " <> T.intercalate " and " [ tshow (tuRow r + 1) <> " " <> tuName r | (r, _) <- several ]
+                 <> " each have their descriptor object in their own table")
+  where
+    selfDescribing = [ (r, take 4 t) | Right r <- readRows bts, Just o <- [tuObject r], Just t <- [tuTable r], take 4 o == take 4 t ]
+
+-- | C-T240-HALVES, once for the table: no table of tables, reported only when
+--   every UID cell reads (an unreadable cell is its own finding).
+tablesTableChecks :: Context -> [BoundTable] -> [Finding]
+tablesTableChecks ctx bts = case (tablesTable bts, bts) of
+  (Left why, bt : _) | all readable rows -> [atTable ctx bt (finding Error "C-T240-HALVES" why)]
+  _                                      -> []
+  where
+    rows = [ r | Right r <- readRows bts ]
+    readable r = isJust (tuObject r) && isJust (tuTable r)
+
+-- | What C-T240-HALVES finds wrong with a row, given the table of tables.
+halvesProblems :: Either Text (TableUIDRow, [Word8]) -> TableUIDRow -> [Text]
+halvesProblems tables r = case (tuObject r, tuTable r) of
   (Nothing, _) -> ["the descriptor object's UID cell " <> tshow (tuObjectText r) <> " is not eight bytes"]
   (_, Nothing) -> ["the table's UID cell " <> tshow (tuTableText r) <> " is not eight bytes"]
-  (Just o, Just t)
-    | drop 4 o == take 4 t -> []
-    | otherwise -> ["the low half " <> hexUID (drop 4 o) <> " of the descriptor object's UID is not the high half "
-                    <> hexUID (take 4 t) <> " of the table's UID"]
+  (Just o, Just t) -> catMaybes
+    [ unless' (drop 4 o == take 4 t)
+        ("the low half " <> hexUID (drop 4 o) <> " of the descriptor object's UID is not the high half "
+          <> hexUID (take 4 t) <> " of the table's UID")
+    , unless' (all (== 0) (drop 4 t))
+        ("the low half " <> hexUID (drop 4 t) <> " of the table's UID is not zero")
+    , case tables of
+        Right (tr, h) | take 4 o /= h ->
+          Just ("the high half " <> hexUID (take 4 o) <> " of the descriptor object's UID is not " <> hexUID h
+                <> ", the half-UID of the table of tables (row " <> tshow (tuRow tr + 1) <> " " <> tuName tr <> ")")
+        _ -> Nothing ]
+  where unless' ok msg = if ok then Nothing else Just msg
 
 nameChecks :: Context -> [BoundTable] -> [Finding]
 nameChecks ctx bts = [ atTable ctx (tuBound r) (finding Error "C-T240-NAME" (label r <> why)) | (r, why) <- nameProblems [ r | Right r <- readRows bts ] ]
@@ -156,7 +195,7 @@ compile ctx bts = map one rows <> maps
   where
     rows   = [ r | Right r <- readRows bts ]
     named  = [ (btAnchor (tuBound r), tuRow r) | (r, _) <- nameProblems rows ]
-    good r = null (halvesProblems r) && (btAnchor (tuBound r), tuRow r) `notElem` named
+    good r = null (halvesProblems (tablesTable bts) r) && (btAnchor (tuBound r), tuRow r) `notElem` named
     one r
       | good r, Just o <- tuObject r, Just t <- tuTable r = Emit (rowDecl ctx r o t)
       | otherwise = Excluded (btAnchor (tuBound r)) (label r <> "C-T240-HALVES or C-T240-NAME failed")
@@ -168,13 +207,13 @@ compile ctx bts = map one rows <> maps
 provenance :: Context -> TableUIDRow -> Gen.Provenance
 provenance ctx r = let bt = tuBound r in provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
 
--- | @u\<T\>TableObject@, @u\<T\>Table@ and @h\<T\>@ for one row.
+-- | @u\<T\>TableObject@, @u\<T\>Table@ and @h\<T\>@ for one row, citing the page it is printed on.
 rowDecl :: Context -> TableUIDRow -> [Word8] -> [Word8] -> Gen.Decl
 rowDecl ctx r object table = (Gen.decl p n body)
   { Gen.declRank    = tuRow r
-  , Gen.declImports = [Gen.ImportSome "System.SED.MCTP.Common.UID" ["HalfUID", "UID", "halfUID", "uid"]] }
+  , Gen.declImports = [Gen.ImportSome Gen.uidModule ["HalfUID", "UID", "halfUID", "uid"]] }
   where
-    p    = provenance ctx r
+    p    = atRow ctx (tuCells r) (provenance ctx r)
     n    = tuName r
     doc  = Gen.provenanceComment p <> ", row " <> tshow (tuRow r + 1) <> ": " <> n
     body =
@@ -187,7 +226,7 @@ mapsDecl :: Gen.Provenance -> Int -> [TableUIDRow] -> Gen.Decl
 mapsDecl p rank rows = (Gen.decl p "nameHalfUID" body)
   { Gen.declRank    = rank
   , Gen.declImports = [ Gen.ImportSome "Data.Map" ["Map", "fromList"], Gen.ImportSome "Prelude" ["String"]
-                      , Gen.ImportSome "System.SED.MCTP.Common.UID" ["HalfUID", "UID"] ] }
+                      , Gen.ImportSome Gen.uidModule ["HalfUID", "UID"] ] }
   where
     doc what = Gen.provenanceComment p <> ": " <> what
     names = map tuName rows

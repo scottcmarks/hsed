@@ -22,12 +22,15 @@ enumValues)@), which also names the words that spell a range besides @-@.
 
 Check @C-ENUM-RANGE@: the values lie within the type row's range (the
 Format's lower bound, so @reencrypt_state@'s 1..16 gets no @_NA@ at 0), each
-value is assigned once (@W-ENUM-OVERLAP@ otherwise, the first row kept), the
-constructors are distinct, and two labels that scrub to one constructor are
-an Error; a label used for more than one row is @W-ENUM-LABEL-REPEATED@ (its
-later values get suffixed constructors).
+value is assigned once (@W-ENUM-OVERLAP@ otherwise, the first row kept), every
+label has a letter or a digit to name a constructor (an empty cell, or a
+@cols@ binding pointing at a sparse column, is an Error), the constructors are
+distinct, and two labels that scrub to one constructor are an Error; a label
+used for more than one row is @W-ENUM-LABEL-REPEATED@ (its later values get
+suffixed constructors).
 
-Compiled into 'enumsModule': @data Core_\<type\>@ with the constructor names
+Compiled into 'enumsModule': @data Core_\<type\>@ (the spec's label,
+"Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with the constructor names
 today's @dEnum@ produces (the label scrubbed, the first value of a label bare
 and the later ones suffixed @_\<v\>@, @_NA@ fillers for the gaps of the range),
 plus an 'Hsed.Core.Types.Enumerated' instance naming the type row's
@@ -49,6 +52,7 @@ module Hsed.Spec.Rules.EnumValues
   , enumDecl
   , UIDRef (..)
   , renderEnum
+  , enumTypeName
   , constructorNames
   ) where
 
@@ -69,7 +73,8 @@ import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typesModule)
-import           Hsed.Spec.Shape         (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption)
+import           Hsed.Spec.Shape         (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption,
+                                          shapeMismatch)
 
 
 -- | The rule.
@@ -80,7 +85,8 @@ enumValuesRule = RuleDef
   , exemplar    = (SpecId "core-2.01", TableId 52)
   , refinesRule = Nothing
   , joinsTo     = Just (RuleName "typeRow")
-  , fires       = \_ _ form -> fCols form == 2 && take 1 (fHeaderNorm form) `elem` [["enumerationvalue"], ["setvalue"]]
+  , fires       = \_ _ form -> isNothing (shapeMismatch EnumValues form)
+                              && take 1 (fHeaderNorm form) `elem` [["enumerationvalue"], ["setvalue"]]
                               && isJust (enumIdent form)
   , ruleIdent   = enumIdent
   , ruleModule  = enumsModule
@@ -180,11 +186,13 @@ checkEnum ctx rows e = case companion of
             overlaps  = [ (v, ls) | (v, ls) <- Map.toList (Map.fromListWith (flip (<>)) [ (v, [l]) | (v, l) <- assigned ]), length ls > 1 ]
             repeated  = [ (l, n) | (l, n) <- Map.toList (Map.fromListWith (+) [ (label, 1 :: Int) | (label, _) <- given ]), n > 1 ]
             labelled  = [ (label, v) | (v, label) <- kept ]
-            names     = map fst (constructorNames (trName tr) (lo, hi) labelled)
+            nameless  = [ (cell, label) | (cell, label) <- erRows e, not (T.any C.isAlphaNum label) ]
+            names     = map fst (constructorNames (enumTypeName sid (trName tr)) (lo, hi) labelled)
             clashes   = [ n | (n, k) <- Map.toList (Map.fromListWith (+) [ (n, 1 :: Int) | n <- names ]), k > 1 ]
             merged    = [ ls | ls <- map L.nub (Map.elems (Map.fromListWith (flip (<>)) [ (scrubbed l, [l]) | (l, _) <- given ])), length ls > 1 ]
             findings  = map (\(v, l) -> bad ("value " <> tshow v <> " (" <> tshow l <> ") lies outside " <> tshow lo <> ".." <> tshow hi
                                               <> " of " <> renderAnchorId (trAnchor tr) <> " " <> trName tr)) outside
+                     <> map (\(c, l) -> bad ("the value " <> tshow c <> " has the label " <> tshow l <> ", which has no letter or digit to name a constructor")) nameless
                      <> map (\(v, ls) -> warn "W-ENUM-OVERLAP" ("value " <> tshow v <> " is assigned by " <> T.intercalate " and " (map tshow ls) <> "; the first is kept")) overlaps
                      <> map (\(l, n) -> warn "W-ENUM-LABEL-REPEATED" ("the label " <> tshow l <> " is used by " <> tshow n <> " rows; its later values get suffixed constructors")) repeated
                      <> map (\n -> bad ("the constructor " <> n <> " would be defined twice")) clashes
@@ -255,17 +263,17 @@ enumDecl ctx er ec = case ecDecl ec of
 -- | @data Core_\<type\>@ and its 'Hsed.Core.Types.Enumerated' instance.
 renderEnum :: UIDRef -> EnumDecl -> Gen.Decl
 renderEnum ref e = (Gen.decl e.provenance e.name body)
-  { Gen.declImports = [ Gen.ImportAll "Hsed.Core.Types", Gen.ImportSome "Prelude" ["Bounded", "Enum", "Eq", "Ord", "Show"] ]
+  { Gen.declImports = [ Gen.ImportAll Gen.coreTypesModule, Gen.ImportSome "Prelude" ["Bounded", "Enum", "Eq", "Ord", "Show"] ]
                       <> case ref of
                            SameModule -> []
                            InModule m -> [Gen.ImportAll m]
-                           Literal    -> [Gen.ImportSome "System.SED.MCTP.Common.UID" ["uid"]] }
+                           Literal    -> [Gen.ImportSome Gen.uidModule ["uid"]] }
   where
-    coreName = "Core_" <> e.name
+    coreName = enumTypeName e.provenance.spec e.name
     doc = Gen.provenanceComment e.provenance
     body =
       [ doc, "data " <> coreName ]
-      <> zipWith (\i (ctor, _) -> (if i == (0 :: Int) then "  = " else "  | ") <> ctor) [0 ..] (constructorNames e.name e.range e.ctors)
+      <> zipWith (\i (ctor, _) -> (if i == (0 :: Int) then "  = " else "  | ") <> ctor) [0 ..] (constructorNames coreName e.range e.ctors)
       <> [ "  deriving (Bounded, Enum, Eq, Ord, Show)"
          , ""
          , doc
@@ -274,14 +282,19 @@ renderEnum ref e = (Gen.decl e.provenance e.name body)
          , "  range   = (" <> tshow (fst e.range) <> ", " <> tshow (snd e.range) <> ")"
          ]
 
--- | The constructors of @Core_\<enum\>@ in value order, as today's @dEnum@ names
---   them: the label with commas dropped and spaces and dashes turned to
---   underscores, the first value of a label bare and the later ones suffixed
---   @_\<v\>@, and @_NA@ for every value of the range no label covers.
+-- | The data type of an enumeration: the spec's label and the type's name,
+--   @Core_adv_key_mode@.
+enumTypeName :: SpecId -> Text -> Text
+enumTypeName sid typeName = Gen.specLabel sid <> "_" <> typeName
+
+-- | The constructors of an enumeration's data type ('enumTypeName') in value
+--   order, as today's @dEnum@ names them: the type, then the label with commas
+--   dropped and spaces and dashes turned to underscores, the first value of a
+--   label bare and the later ones suffixed @_\<v\>@, and @_NA@ for every value
+--   of the range no label covers.
 constructorNames :: Text -> (Int, Int) -> [(Text, Int)] -> [(Text, Int)]
-constructorNames enumName (lo, hi) given = sortOn snd (concatMap suffixed (Map.toList groups))
+constructorNames coreName (lo, hi) given = sortOn snd (concatMap suffixed (Map.toList groups))
   where
-    coreName = "Core_" <> enumName
     groups   = Map.fromListWith (flip (<>)) ([ (coreName <> "_" <> scrub label, [v]) | (label, v) <- given ] <> filler)
     missing  = [lo .. hi] \\ map snd given
     filler   = [ (coreName <> "_NA", missing) | not (null missing) ]

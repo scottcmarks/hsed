@@ -393,183 +393,183 @@ uCryptoSuiteTable = uid 0x00 0x00 0x02 0x03 0x00 0x00 0x00 0x00
 hCryptoSuite :: HalfUID
 hCryptoSuite = halfUID 0x00 0x00 0x02 0x03
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 32: Template
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 32: Template
 uTemplateTableObject :: UID
 uTemplateTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x02 0x04
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 32: Template
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 32: Template
 uTemplateTable :: UID
 uTemplateTable = uid 0x00 0x00 0x02 0x04 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 32: Template
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 32: Template
 hTemplate :: HalfUID
 hTemplate = halfUID 0x00 0x00 0x02 0x04
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 33: SP
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 33: SP
 uSPTableObject :: UID
 uSPTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x02 0x05
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 33: SP
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 33: SP
 uSPTable :: UID
 uSPTable = uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 33: SP
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 33: SP
 hSP :: HalfUID
 hSP = halfUID 0x00 0x00 0x02 0x05
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 34: ClockTime
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 34: ClockTime
 uClockTimeTableObject :: UID
 uClockTimeTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x04 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 34: ClockTime
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 34: ClockTime
 uClockTimeTable :: UID
 uClockTimeTable = uid 0x00 0x00 0x04 0x01 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 34: ClockTime
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 34: ClockTime
 hClockTime :: HalfUID
 hClockTime = halfUID 0x00 0x00 0x04 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 35: H_SHA_1
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 35: H_SHA_1
 uH_SHA_1TableObject :: UID
 uH_SHA_1TableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x06 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 35: H_SHA_1
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 35: H_SHA_1
 uH_SHA_1Table :: UID
 uH_SHA_1Table = uid 0x00 0x00 0x06 0x01 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 35: H_SHA_1
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 35: H_SHA_1
 hH_SHA_1 :: HalfUID
 hH_SHA_1 = halfUID 0x00 0x00 0x06 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 36: H_SHA_256
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 36: H_SHA_256
 uH_SHA_256TableObject :: UID
 uH_SHA_256TableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x06 0x02
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 36: H_SHA_256
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 36: H_SHA_256
 uH_SHA_256Table :: UID
 uH_SHA_256Table = uid 0x00 0x00 0x06 0x02 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 36: H_SHA_256
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 36: H_SHA_256
 hH_SHA_256 :: HalfUID
 hH_SHA_256 = halfUID 0x00 0x00 0x06 0x02
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 37: H_SHA_384
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 37: H_SHA_384
 uH_SHA_384TableObject :: UID
 uH_SHA_384TableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x06 0x03
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 37: H_SHA_384
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 37: H_SHA_384
 uH_SHA_384Table :: UID
 uH_SHA_384Table = uid 0x00 0x00 0x06 0x03 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 37: H_SHA_384
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 37: H_SHA_384
 hH_SHA_384 :: HalfUID
 hH_SHA_384 = halfUID 0x00 0x00 0x06 0x03
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 38: H_SHA_512
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 38: H_SHA_512
 uH_SHA_512TableObject :: UID
 uH_SHA_512TableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x06 0x04
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 38: H_SHA_512
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 38: H_SHA_512
 uH_SHA_512Table :: UID
 uH_SHA_512Table = uid 0x00 0x00 0x06 0x04 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 38: H_SHA_512
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 38: H_SHA_512
 hH_SHA_512 :: HalfUID
 hH_SHA_512 = halfUID 0x00 0x00 0x06 0x04
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 39: Log
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 39: Log
 uLogTableObject :: UID
 uLogTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x0a 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 39: Log
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 39: Log
 uLogTable :: UID
 uLogTable = uid 0x00 0x00 0x0a 0x01 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 39: Log
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 39: Log
 hLog :: HalfUID
 hLog = halfUID 0x00 0x00 0x0a 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 40: LogList
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 40: LogList
 uLogListTableObject :: UID
 uLogListTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x0a 0x02
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 40: LogList
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 40: LogList
 uLogListTable :: UID
 uLogListTable = uid 0x00 0x00 0x0a 0x02 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 40: LogList
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 40: LogList
 hLogList :: HalfUID
 hLogList = halfUID 0x00 0x00 0x0a 0x02
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 41: LockingInfo
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 41: LockingInfo
 uLockingInfoTableObject :: UID
 uLockingInfoTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 41: LockingInfo
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 41: LockingInfo
 uLockingInfoTable :: UID
 uLockingInfoTable = uid 0x00 0x00 0x08 0x01 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 41: LockingInfo
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 41: LockingInfo
 hLockingInfo :: HalfUID
 hLockingInfo = halfUID 0x00 0x00 0x08 0x01
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 42: Locking
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 42: Locking
 uLockingTableObject :: UID
 uLockingTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x02
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 42: Locking
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 42: Locking
 uLockingTable :: UID
 uLockingTable = uid 0x00 0x00 0x08 0x02 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 42: Locking
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 42: Locking
 hLocking :: HalfUID
 hLocking = halfUID 0x00 0x00 0x08 0x02
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 43: MBRControl
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 43: MBRControl
 uMBRControlTableObject :: UID
 uMBRControlTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x03
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 43: MBRControl
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 43: MBRControl
 uMBRControlTable :: UID
 uMBRControlTable = uid 0x00 0x00 0x08 0x03 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 43: MBRControl
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 43: MBRControl
 hMBRControl :: HalfUID
 hMBRControl = halfUID 0x00 0x00 0x08 0x03
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 44: MBR
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 44: MBR
 uMBRTableObject :: UID
 uMBRTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x04
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 44: MBR
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 44: MBR
 uMBRTable :: UID
 uMBRTable = uid 0x00 0x00 0x08 0x04 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 44: MBR
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 44: MBR
 hMBR :: HalfUID
 hMBR = halfUID 0x00 0x00 0x08 0x04
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 45: K_AES_128
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 45: K_AES_128
 uK_AES_128TableObject :: UID
 uK_AES_128TableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x05
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 45: K_AES_128
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 45: K_AES_128
 uK_AES_128Table :: UID
 uK_AES_128Table = uid 0x00 0x00 0x08 0x05 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 45: K_AES_128
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 45: K_AES_128
 hK_AES_128 :: HalfUID
 hK_AES_128 = halfUID 0x00 0x00 0x08 0x05
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 46: K_AES_256
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 46: K_AES_256
 uK_AES_256TableObject :: UID
 uK_AES_256TableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x06
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 46: K_AES_256
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 46: K_AES_256
 uK_AES_256Table :: UID
 uK_AES_256Table = uid 0x00 0x00 0x08 0x06 0x00 0x00 0x00 0x00
 
--- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 46: K_AES_256
+-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 46: K_AES_256
 hK_AES_256 :: HalfUID
 hK_AES_256 = halfUID 0x00 0x00 0x08 0x06
 

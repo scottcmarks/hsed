@@ -12,9 +12,13 @@ Stability   : experimental
 
 The tableUIDs rule on the committed Core extraction with the committed
 annotations (design example E6, M2a): it fires on Table 240 alone, from the
-doc anchor's @rule tableUIDs@; C-T240-HALVES passes on all 46 rows and fails on
-one edited cell; C-T240-NAME refuses a name that is no identifier or that two
-rows give; the generated module has the hand-written module's shapes.
+doc anchor's @rule tableUIDs@; its 46 table names are the names a
+@uidref{...}@ may name; C-T240-HALVES passes on all 46 rows and fails on one
+edited cell, each of its relations in turn (the descriptor's low half and the
+table's high half, the table's zero low half, the descriptor in the table of
+tables); C-T240-NAME refuses a name that is no identifier or that two rows
+give; the generated module has the hand-written module's shapes, each row
+citing the page it is printed on.
 -}
 module Hsed.Spec.Rules.TableUIDsSpec (spec) where
 
@@ -49,6 +53,8 @@ spec = withCore $ \pristine -> do
       length rows `shouldBe` 46
       lefts (tableUIDRows ctx) `shouldBe` []
       take 3 (map tuName rows) `shouldBe` ["Table", "SPInfo", "SPTemplates"]
+    it "gives the 46 table names a uidref{...} may name" $
+      length (tableNames ctx) `shouldBe` 46
 
   describe "C-T240-HALVES" $ do
     it "passes on all 46 rows: the descriptor object's low half is the table's high half" $ do
@@ -63,6 +69,17 @@ spec = withCore $ \pristine -> do
     it "fails on a UID cell that is not eight bytes" $
       errorsOf (setCell "T240" 0 0 "00 00 00 01 00 00 01" ir) `shouldBe`
         [ "C-T240-HALVES core-2.01.pdf#page=302&T240: row 1 Table: the descriptor object's UID cell \"00 00 00 01 00 00 01\" is not eight bytes" ]
+    it "fails on a descriptor object outside the table of tables and a table UID whose low half is not zero (the middle halves agreeing)" $ do
+      let moved = setCell "T240" 1 1 "00 00 00 02 00 00 00 07" (setCell "T240" 1 0 "00 00 00 09 00 00 00 02" ir)
+      errorsOf moved `shouldBe`
+        [ "C-T240-HALVES core-2.01.pdf#page=302&T240: row 2 SPInfo: the high half 00 00 00 09 of the descriptor object's UID is not 00 00 00 01, the half-UID of the table of tables (row 1 Table)"
+        , "C-T240-HALVES core-2.01.pdf#page=302&T240: row 2 SPInfo: the low half 00 00 00 07 of the table's UID is not zero" ]
+      fmap crExcluded (compileIR Scott moved) `shouldBe` Right [(TableId 240, "row 2 SPInfo: C-T240-HALVES or C-T240-NAME failed")]
+    it "fails when no row, or more than one, is the table of tables" $ do
+      errorsOf (setCell "T240" 0 1 "00 00 00 3F 00 00 00 00" (setCell "T240" 0 0 "00 00 00 01 00 00 00 3F" ir))
+        `shouldSatisfy` elem "C-T240-HALVES core-2.01.pdf#page=302&T240: no row's descriptor object lies in its own table, so no row is the table of tables"
+      errorsOf (setCell "T240" 1 0 "00 00 00 02 00 00 00 02" ir)
+        `shouldSatisfy` elem "C-T240-HALVES core-2.01.pdf#page=302&T240: rows 1 Table and 2 SPInfo each have their descriptor object in their own table"
 
   describe "C-T240-NAME" $
     it "refuses a name that is no identifier, and one an earlier row gives" $
@@ -84,3 +101,6 @@ spec = withCore $ \pristine -> do
       lns `shouldContain` ["nameUID :: Map UID String", "nameUID = fromList", "  [ (uTableTable, \"Table Table\")", "  , (uTableTableObject, \"Table Table Object\")"]
     it "declares no typed half-UID: Core does not say which tables are byte tables" $
       filter (\l -> any (`T.isPrefixOf` l) ["oth", "bth"]) lns `shouldBe` []
+    it "cites the page each row is printed on: rows 1-31 on PDF 302, rows 32-46 on PDF 303" $ do
+      lns `shouldContain` ["-- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 31: CryptoSuite"]
+      lns `shouldContain` ["-- | core-2.01 T240 Table UIDs (PDF 303 / p.286, ord 242, sha256:2cd1f420bb70), row 32: Template"]

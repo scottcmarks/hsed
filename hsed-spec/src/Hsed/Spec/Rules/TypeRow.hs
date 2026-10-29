@@ -23,7 +23,11 @@ type row and the table names a @uidref{...}@ may name, those of the table the
 Checks, each with the code its findings carry:
 
 * @E-SHAPE@: the table is one row of three cells;
-* @C-UID-TABLE@: the UID is eight bytes with upper half @00 00 00 05@;
+* @C-UID-TABLE@: the UID is eight bytes, and every type row's UID lies in one
+  table, a table of Table 240: the type rows' table is the one whose half-UID
+  (@00 00 00 05@ in Core) most of their upper halves carry, and a row whose
+  upper half is another is an Error, as is a half that names no table of
+  Table 240;
 * @C-UID-UNIQUE@: no two type rows share a UID; a type row's @waive
   "C-UID-UNIQUE" "T\<n\> \<uid\>" "\<reason\>"@ makes the Error a Warning for
   that table when it and table @n@, and no other, print that UID, and a waiver
@@ -55,6 +59,7 @@ module Hsed.Spec.Rules.TypeRow
   ) where
 
 import qualified Data.Text        as DT
+import qualified RIO.List         as L
 import qualified RIO.Map          as Map
 import qualified RIO.Text         as T
 import           RIO
@@ -68,8 +73,8 @@ import           Hsed.Spec.Format (Env, formatNormalisations, mkEnv, parseFormat
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TableUIDs (tableNames)
-import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableNames, tableUIDRows)
+import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption, shapeMismatch)
 
 
 -- | The rule.
@@ -80,8 +85,7 @@ typeRowRule = RuleDef
   , exemplar    = (SpecId "core-2.01", TableId 46)
   , refinesRule = Nothing
   , joinsTo     = Nothing
-  , fires       = \_ _ form -> fCols form == 3 && fHeaderNorm form == ["uid", "name", "format"]
-                              && isJust (typeIdent form)
+  , fires       = \_ _ form -> isNothing (shapeMismatch TypeRow form) && fCols form == 3 && isJust (typeIdent form)
   , ruleIdent   = typeIdent
   , ruleModule  = typesModule
   , ruleChecks  = checks
@@ -163,7 +167,7 @@ typeEnvFrom ctx =
 -- * Checks
 
 checks :: Context -> [BoundTable] -> [Finding]
-checks ctx bts = snd (formatEnv ctx) <> lefts reads <> concatMap formatNote rows <> concatMap uidTable rows
+checks ctx bts = snd (formatEnv ctx) <> lefts reads <> concatMap formatNote rows <> concatMap uidTable rows <> typesTable
                  <> uidUnique rows <> lefts (map trTypeDef rows)
   where
     reads = readRows ctx bts
@@ -176,11 +180,19 @@ checks ctx bts = snd (formatEnv ctx) <> lefts reads <> concatMap formatNote rows
       pairs -> [ here tr (finding Note "N-FORMAT-NORMALISED"
                    ("Format read with " <> T.intercalate ", " [ tshow a <> " as " <> tshow b | (a, b) <- pairs ])) ]
 
+    typesHalf = typeTableHalf rows
     uidTable tr = map (here tr) $ case trUID tr of
       Nothing -> [finding Error "C-UID-TABLE" ("the UID cell " <> tshow (trUIDText tr) <> " is not eight bytes")]
       Just bs
-        | take 4 bs == [0, 0, 0, 5] -> []
-        | otherwise -> [finding Error "C-UID-TABLE" ("the UID " <> hexUID bs <> " of " <> trName tr <> " is not a Type object's (upper half 00 00 00 05)")]
+        | Just (take 4 bs) == typesHalf -> []
+        | otherwise -> [finding Error "C-UID-TABLE" ("the UID " <> hexUID bs <> " of " <> trName tr <> " is not a Type object's (upper half "
+                                                       <> maybe "unknown" hexUID typesHalf <> ")")]
+    -- the type rows' table must be a table of Table 240, when tableUIDs binds one
+    halves = [ take 4 t | Right r <- tableUIDRows ctx, Just t <- [tuTable r] ]
+    typesTable = case (typesHalf, filter ((== typesHalf) . fmap (take 4) . trUID) rows) of
+      (Just h, tr : _) | not (null halves), h `notElem` halves ->
+        [ here tr (finding Error "C-UID-TABLE" ("the type rows' upper half " <> hexUID h <> " is the half-UID of no table of those tableUIDs binds")) ]
+      _ -> []
 
     -- C-UID-UNIQUE, reported at every type row after the first with a UID. A
     -- waiver on that row naming the other table and the UID makes it a Warning
@@ -212,6 +224,14 @@ checks ctx bts = snd (formatEnv ctx) <> lefts reads <> concatMap formatNote rows
           [ here tr (finding Warning "W-WAIVER-UNUSED"
               ("the annotation waives C-UID-UNIQUE for " <> tshow subject <> ", and " <> why))
           | tr <- trs, ("C-UID-UNIQUE", subject, _) <- trWaivers tr, Just why <- [whyUnused tr subject] ]
+
+-- | The half-UID of the table the type rows lie in: the upper half most of their
+--   UIDs carry, the first in anchor order on a tie; Nothing without a UID.
+typeTableHalf :: [TypeRowRead] -> Maybe [Word8]
+typeTableHalf rows = listToMaybe (L.sortOn (Down . count) (L.nub halves))
+  where
+    halves  = [ take 4 bs | tr <- rows, Just bs <- [trUID tr] ]
+    count h = length (filter (== h) halves)
 
 -- | The subject of a C-UID-UNIQUE waiver: the other table of the clash and
 --   the UID, @T94 00 00 00 05 00 00 02 15@.
@@ -250,8 +270,8 @@ typeRowDecl ctx tr = case trUID tr of
 -- | @u\<Name\>Type@, @f\<Name\>Type@ and, when the Format parsed, @t\<Name\>@.
 renderTypeRow :: TypeRowDecl -> Gen.Decl
 renderTypeRow r = (Gen.decl r.provenance r.name body)
-  { Gen.declImports = [ Gen.ImportAll "Hsed.Core.Types" | isJust r.typeDef ]
-                      <> [ Gen.ImportSome "Prelude" ["String"], Gen.ImportSome "System.SED.MCTP.Common.UID" ["UID", "uid"] ] }
+  { Gen.declImports = [ Gen.ImportAll Gen.coreTypesModule | isJust r.typeDef ]
+                      <> [ Gen.ImportSome "Prelude" ["String"], Gen.ImportSome Gen.uidModule ["UID", "uid"] ] }
   where
     tag = r.name <> "Type"
     doc = Gen.provenanceComment r.provenance

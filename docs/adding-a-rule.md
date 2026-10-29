@@ -51,7 +51,10 @@ Some changes are generic and are made in a small commit of their own, before the
 - **A milestone's anchors.** Every rule token and heading anchor the milestone's rules need goes into
   the `.hsa` in one commit, with the `.upd`, manifest and bindings `make gen` regenerates, so that the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
-  `W-RULE-UNIMPLEMENTED`.
+  `W-RULE-UNIMPLEMENTED`, and a table a comment binds to a shape no registered rule reads (T45's
+  `stateTable`, T167/T168's `propsNames`/`propsInitial` before their reader) is `W-GEN-EXCLUDED`. M2b's
+  are in: an M2b rule or reader edits no `.hsa`. A rule test that edits a table and expects the rule
+  to leave it out compares with the committed run (`CoreIR.newlyExcluded`), not with an empty list.
 - **A runtime module** generated code imports: named once in `Hsed.Spec.Gen` (`uidModule`,
   `coreTypesModule`).
 

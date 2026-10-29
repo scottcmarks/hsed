@@ -28,7 +28,10 @@ ghc-options:
 - -optP-Wno-nonportable-include-path # workaround [Filename case on macOS · Issue #4739 · haskell/cabal](https://github.com/haskell/cabal/issues/4739)
 
 library:
-  source-dirs: src
+  # gen/ holds the modules hsedc compile writes (Hsed.Gen.*; generated, committed)
+  source-dirs:
+  - src
+  - gen
   dependencies:
   - hsed-core
   - containers    # TableUIDs, GDPTest
@@ -59,8 +62,10 @@ tests:
     main:                Spec.hs
     source-dirs:         spec-tests
     dependencies:
+    - hsed
     - hsed-core
     - hspec
+    - template-haskell   # EquivTH: one comparison per generated definition
     build-tools:
     - hspec-discover
 

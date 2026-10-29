@@ -24,7 +24,7 @@ import list; lists are united and sorted), and prints the declarations sorted
 by table number, then rank within the table, then name. The same declarations
 print the same text in any order. The runtime modules the declarations import
 are named once here ('uidModule', 'coreTypesModule', 'coreTableModule',
-'methodModule').
+'methodModule', 'codeModule', 'fieldModule').
 
 Every definition carries a Haddock line naming its table, PDF and printed
 page, structure ordinal and the hash of its cells ('provenanceComment',
@@ -49,6 +49,8 @@ module Hsed.Spec.Gen
   , coreTypesModule
   , coreTableModule
   , methodModule
+  , codeModule
+  , fieldModule
     -- * Printing
   , renderModule
     -- * Pieces for the rules' printers
@@ -148,6 +150,14 @@ coreTableModule = "Hsed.Core.Table"
 -- | The @Method@ and @MethodSignature@ classes a method record instantiates, @Signature@, @Param@, @Response@, @Value@.
 methodModule :: Text
 methodModule = "Hsed.Core.Method"
+
+-- | @Span@ and @CodeRow@: the rows of a code table.
+codeModule :: Text
+codeModule = "Hsed.Core.Code"
+
+-- | @FieldValue@, @FieldConst@ and @FieldDef@: the rows of a record table.
+fieldModule :: Text
+fieldModule = "Hsed.Core.Field"
 
 
 -- * Printing

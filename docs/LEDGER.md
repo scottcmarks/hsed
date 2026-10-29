@@ -7,7 +7,7 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| core-2.01 | 248 | 187 | 3 | 10 | 51 | 0 | 0 |
+| core-2.01 | 248 | 202 | 3 | 10 | 36 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
@@ -23,10 +23,14 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | comment Props | 2 |
 | comment Prose | 6 |
 | comment StateTable | 1 |
+| rule codes | 8 |
 | rule constValues | 9 |
 | rule enumValues | 19 |
+| rule fieldType | 3 |
+| rule fieldValue | 3 |
 | rule preconfig | 2 |
 | rule ranges | 2 |
+| rule statusCodes | 1 |
 | rule tableDesc | 45 |
 | rule tableUIDs | 1 |
 | rule typeRow | 100 |
@@ -44,13 +48,15 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
 | Warning | W-GEN-EXCLUDED | 3 |
-| Warning | W-RULE-UNIMPLEMENTED | 6 |
-| Warning | W-UNBOUND | 51 |
+| Warning | W-RULE-UNIMPLEMENTED | 2 |
+| Warning | W-UNBOUND | 36 |
 | Note | C-SIG-METHOD | 1 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |
 | Note | N-RANGE-NAME-NORMALISED | 2 |
 | Note | N-RANGE-ONE-CELL | 1 |
 | Note | N-SIG-NORMALISED | 1 |
+| Note | N-STATUS-NAME-SUFFIXED | 1 |
+| Note | N-STATUS-UNDESCRIBED | 1 |
 | Note | N-UID-RANGE-NO-TEMPLATE | 1 |
 | Note | N-UID-UNNAMED | 4 |

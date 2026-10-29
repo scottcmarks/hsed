@@ -36,6 +36,13 @@ its value column equal to what this module computes for the difference
 * @caption@: a table whose caption the two sides print differently (spacing
   aside); @generated / hand-written@.
 
+Two rules of M2b have a hand counterpart other than a definition: the
+method status codes (Core Table 166, @statusCodes@) are what hsed-core's codec
+carries as a bare uinteger in a response's status list, so every one of them
+is encoded and decoded by the codec here and the values the table leaves
+unassigned are listed; and each field of a typed record (Tables 22, 23 and 34,
+@fieldType@) names a Type object whose UID the hand transcription has.
+
 The M1 slice is kept by name above it (M1 acceptance (d)). The hand-written
 side is read where it lives, in hsed's library; when M2d makes those modules
 re-exports of the generated ones, the hand transcription is kept as a test
@@ -53,15 +60,24 @@ import           GHC.Exts                                  (toList)
 import           Numeric                                   (showHex)
 import           Test.Hspec
 
+import qualified RIO.ByteString                            as B
+import qualified RIO.Text                                  as T
+
+import           Hsed.Core.Code                            (CodeRow (..), Span (..))
+import           Hsed.Core.Field                           (FieldDef (..))
 import           Hsed.Core.Types                           (Enumerated (..), enumValue)
-import           Hsed.Gen.Core.EquivTH
+import qualified Hsed.Gen.Core.Codes                       as G
 import qualified Hsed.Gen.Core.Enums                       as G
+import           Hsed.Gen.Core.EquivTH
+import qualified Hsed.Gen.Core.Fields                      as G
 import qualified Hsed.Gen.Core.Methods                     as G
 import qualified Hsed.Gen.Core.TableUIDs                   as G
 import qualified Hsed.Gen.Core.Types                       as G
 import qualified Hsed.Gen.Core.UIDRanges                   as G
 import qualified Hsed.Gen.Core.UIDs                        as G
+import           System.SED.MCTP.Common.Call               (MethodResponse (..))
 import qualified System.SED.MCTP.Common.SpecialPurposeUIDs as H
+import           System.SED.MCTP.Common.StreamItem         (StreamItem (..))
 import qualified System.SED.MCTP.Common.TableUIDs          as H
 import qualified System.SED.MCTP.Common.TypeUIDs           as H
 import           System.SED.MCTP.Common.UID                (UID, uidLower)
@@ -265,6 +281,30 @@ spec = do
         `shouldBe` [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_table_kind], x /= H.Core_table_kind_NA ]
     it "finds every typed half-UID's table among the generated half-UIDs" $
       [ dName h | h <- Map.elems (hands Map.\\ gens), any (`isPrefixOf` dName h) ["oth", "bth"], isNothing (lookup' h) ] `shouldBe` []
+
+  describe "the status codes beside the codec's status list (T166, design M2b)" $ do
+    let statuses = [ (v, n) | CodeRow (One v) [n] <- G.cStatusCodes ]
+        wire v = B.unpack (generate (MethodResponse [] (fromInteger v)))
+        readBack v = _resultStatus <$> (parseByteString (generate (MethodResponse [] (fromInteger v))) :: Either String MethodResponse)
+    it "gives 19 values, each a tiny atom the codec puts first in a response's status list" $ do
+      length statuses `shouldBe` 19
+      [ (n, wire v) | (v, n) <- statuses ] `shouldBe` [ (n, [0xF0, 0xF1, 0xF9, 0xF0, fromInteger v, 0x00, 0x00, 0xF1]) | (v, n) <- statuses ]
+    it "reads every one back through the codec" $
+      [ n | (v, n) <- statuses, readBack v /= Right (fromInteger v) ] `shouldBe` []
+    it "names with its patterns the values the codec carries bare" $ do
+      [G.SUCCESS, G.NOT_AUTHORIZED, G.OBSOLETE_13, G.FAIL] `shouldBe` map G.StatusCode [0x00, 0x01, 0x0d, 0x3f]
+      [ n | (v, n) <- statuses, n == T.pack "INVALID_PARAMETER", G.StatusCode (fromInteger v) /= G.INVALID_PARAMETER ] `shouldBe` []
+    it "differs from the codec as listed: the codec names no value, and reads every tiny atom the table leaves unassigned" $
+      [ v | v <- [0 .. 0x3f], v `notElem` map fst statuses, readBack v == Right (fromInteger v) ] `shouldBe` (0x0b : [0x13 .. 0x3e])
+
+  describe "the typed records' fields beside the hand-written Type objects (T22, T23, T34, design M2b)" $
+    it "gives each field the UID the hand transcription gives the Type object it names" $ do
+      let hands  = byName handWritten
+          fields = G.rSecureMessagingPacketPayloadField ++ G.rSecureMessagingPacketPayloadSecureDataField ++ G.rDateValues
+      length fields `shouldBe` 14
+      [ (fdName f, fdTypeName f) | f <- fields
+                                 , fmap dValue (Map.lookup ("u" ++ T.unpack (fdTypeName f) ++ "Type") hands) /= Just (Scalar (show (fdType f))) ]
+        `shouldBe` []
   where
     lookup' h = case mapMaybe (`stripPrefix` dName h) ["oth", "bth"] of
       [t] | isJust (Map.lookup ("h" ++ t) (byName generated)) -> Just t

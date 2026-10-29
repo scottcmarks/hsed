@@ -15,6 +15,14 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 |---|---:|---:|---:|---:|
 | core-2.01 | 53 | 0 | 53 | 0 |
 
+What the document checks read (docs/ir-v1.md): LOT-VS-BODY compares each List of Tables entry with
+the caption it names, XREF-RESOLVES each table reference in the prose with the table it names; what
+they report is among the findings below and in `build/report/ERRATA.md`.
+
+| spec | List of Tables entries | table references |
+|---|---:|---:|
+| core-2.01 | 248 | 108 |
+
 ## core-2.01: what binds the tables
 
 | binding | tables |
@@ -38,5 +46,6 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | Warning | W-GEN-EXCLUDED | 3 |
 | Warning | W-RULE-UNIMPLEMENTED | 12 |
 | Warning | W-UNBOUND | 171 |
+| Warning | XREF-RESOLVES | 2 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |

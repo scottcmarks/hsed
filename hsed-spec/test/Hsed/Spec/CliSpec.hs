@@ -14,16 +14,18 @@ The commands as @hsedc@ runs them, on the committed Core extraction with a
 sidecar (@--hsa@): @bind@ and @compile@ write nothing when they report an
 Error, so a bad comment cannot overwrite the committed bindings or generated
 module; @compile@ removes the modules of its spec's directory it did not
-write, and nothing else; @orphans@, @ledger@ and @explain@ report the sidecar's and the
+write, and nothing else, and writes its four reports (@ERRATA.md@ among them); @orphans@, @ledger@ and @explain@ report the sidecar's and the
 annotations' Errors and exit non-zero on them; @orphans@ lists the invalid
 and ambiguous tables beside the unbound ones; @ledger@ with several IRs and one
 sidecar applies it to the IR whose spec it names; @--target@ and @explain@ name
-a spec only in full (@core@, @core-2.01@, @core201@).
+a spec only in full (@core@, @core-2.01@, @core201@); @explain@ takes a
+signature block as well as a table.
 -}
 module Hsed.Spec.CliSpec (spec) where
 
 import           RIO
 import qualified RIO.List         as L
+import qualified RIO.Text         as T
 import           RIO.Directory    (createDirectoryIfMissing, doesDirectoryExist, doesFileExist)
 import           RIO.FilePath     (takeDirectory, (</>))
 import           Test.Hspec
@@ -111,6 +113,11 @@ spec = do
           mapM doesFileExist kept `shouldReturn` [True, True, True]
           mapM (doesFileExist . (gen </>)) ["Hsed/Gen/Core/Types.hs", "Hsed/Gen/Core/Enums.hs", "Hsed/Gen/Core/TableUIDs.hs"]
             `shouldReturn` [True, True, True]
+      it "writes its four reports beside the modules" $
+        withSidecarFile hsa $ \dir file -> do
+          quietly (CmdCompile (Input coreIR (Just file)) Scott "core" (dir </> "gen") (dir </> "report")) `shouldReturn` False
+          mapM (doesFileExist . ((dir </> "report") </>)) ["findings.md", "coverage.md", "ERRATA.md", "ledger.md"]
+            `shouldReturn` [True, True, True, True]
       it "refuses a --target that names the spec only in part" $
         withSidecarFile hsa $ \dir file ->
           forM_ ["", "c"] $ \target ->
@@ -121,20 +128,26 @@ spec = do
         withSidecarFile hsa $ \_ file -> do
           quietly (CmdOrphans (Input coreIR (Just file))) `shouldReturn` False
           quietly (CmdLedger [coreIR] (Just file)) `shouldReturn` False
-          quietly (CmdExplain "core" 46 (Input coreIR (Just file))) `shouldReturn` False
+          quietly (CmdExplain "core" (TableId 46) (Input coreIR (Just file))) `shouldReturn` False
       it "report a sidecar that does not resolve and exit non-zero" $
         withSidecarFile (withoutLine "5.1.3" hsa <> "core-2.01 | 5.1.30 | rule typeRow & rule enumValues\n") $ \_ file -> do
           quietly (CmdOrphans (Input coreIR (Just file))) `shouldReturn` True
           quietly (CmdLedger [coreIR] (Just file)) `shouldReturn` True
-          quietly (CmdExplain "core" 46 (Input coreIR (Just file))) `shouldReturn` True
+          quietly (CmdExplain "core" (TableId 46) (Input coreIR (Just file))) `shouldReturn` True
       it "report an annotation that binds nothing and exit non-zero" $
         withSidecarFile bad $ \_ file -> do
           quietly (CmdOrphans (Input coreIR (Just file))) `shouldReturn` True
           quietly (CmdLedger [coreIR] (Just file)) `shouldReturn` True
-          quietly (CmdExplain "core" 52 (Input coreIR (Just file))) `shouldReturn` True
+          quietly (CmdExplain "core" (TableId 52) (Input coreIR (Just file))) `shouldReturn` True
+      it "explain a signature block by its id, and refuse one the IR does not have" $
+        withSidecarFile hsa $ \_ file -> do
+          (failed, out) <- captured (CmdExplain "core" (SigId "5.3.3.6") (Input coreIR (Just file)))
+          failed `shouldBe` False
+          T.lines out `shouldSatisfy` any ("  core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get, PDF 201" `T.isPrefixOf`)
+          quietly (CmdExplain "core" (SigId "9.9") (Input coreIR (Just file))) `shouldReturn` True
       it "refuse a spec named only in part" $
         withSidecarFile hsa $ \_ file ->
-          forM_ ["", "c"] $ \name -> quietly (CmdExplain name 46 (Input coreIR (Just file))) `shouldReturn` True
+          forM_ ["", "c"] $ \name -> quietly (CmdExplain name (TableId 46) (Input coreIR (Just file))) `shouldReturn` True
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa

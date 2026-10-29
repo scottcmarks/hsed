@@ -21,7 +21,11 @@ several IRs and one sidecar: the sidecar replaces the annotations of the IRs
 whose spec its lines name, and the others are read as they are.
 
 Findings print in 'renderFinding' form on stdout, errors first; a one-line
-summary goes to stderr. Every command exits non-zero when any Error was found,
+summary goes to stderr. @compile@ writes the reports of "Hsed.Spec.Report" beside
+the modules: @findings.md@, @coverage.md@ (every numbered table, signature
+block and anchor), @ERRATA.md@ (the corrections and the findings that report
+the PDF) and @ledger.md@. @explain@ takes a table (@46@ or @T46@) or a
+signature block (@5.3.3.6/sig@); @orphans@ and @ledger@ count both. Every command exits non-zero when any Error was found,
 the sidecar's included. @bind@ and @compile@ write nothing then: an Error
 leaves the committed bindings and generated module as they were.
 
@@ -48,7 +52,7 @@ import qualified RIO.Text                 as T
 
 import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Bind           (bindModule)
-import           Hsed.Spec.Check          (checkIR, sortFindings)
+import           Hsed.Spec.Check          (checkIR, mkContext, sortFindings)
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, RuleName (..), SpecId (..), errataSetName,
                                            isError, matchesSpec, renderFinding)
 import           Hsed.Spec.Compile
@@ -70,7 +74,7 @@ data Command
   | CmdBind Input FilePath
   | CmdCheck Input ErrataSet
   | CmdCompile Input ErrataSet Text FilePath FilePath
-  | CmdExplain Text Int Input
+  | CmdExplain Text AnchorId Input
   | CmdOrphans Input
   | CmdLedger [FilePath] (Maybe FilePath)
   | CmdNotImplemented Text [Text]   -- ^ the subcommand and whatever followed it
@@ -125,26 +129,33 @@ runWith out err = \case
         createDirectoryIfMissing True reportTo
         writeFileUtf8 (reportTo </> "findings.md") (findingsMarkdown sid es fs)
         writeFileUtf8 (reportTo </> "coverage.md") (coverageMarkdown ir)
+        writeFileUtf8 (reportTo </> "ERRATA.md") (errataMarkdown (mkContext es ir) fs)
         writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown es [(ledger ir, fs)])
         say err ("hsedc compile: wrote " <> display (T.intercalate ", " (map (T.pack . fst) paths)) <> " ("
                     <> display (length (crDecls cr)) <> " declarations, "
                     <> display (length (crExcluded cr)) <> " tables left out)"
                     <> (if null stale then "" else ", removed " <> display (T.intercalate ", " (map T.pack stale)))
                     <> " and " <> fromString reportTo
-                    <> "/{findings,coverage,ledger}.md; " <> display (findingCounts fs) <> "\n")
-  CmdExplain specName n inp -> do
+                    <> "/{findings,coverage,ERRATA,ledger}.md; " <> display (findingCounts fs) <> "\n")
+  CmdExplain specName aid inp -> do
     (ir, sideFs) <- load err inp
     unless (matchesSpec specName (SpecId ir.spec)) $
       failWith err ("hsedc explain: the IR is " <> display ir.spec <> ", not " <> display specName)
-    let aid  = TableId n
-        errs = sortFindings (sideFs <> filter isError (snd (classifyWith ir)))
+    let (sigClasses, sigFs) = classifySignatures ir
+        errs = sortFindings (sideFs <> filter isError (snd (classifyWith ir) <> sigFs))
+        how = \case
+          RuleBound r _ _ -> ": rule " <> display (ruleNameText r) <> ", anchored at "
+                               <> display (T.intercalate ", " (map scope (scopeOf ir r)))
+          _               -> ""
     report out errs
     say out (display (explain ir aid) <> "\n")
-    case (Map.lookup aid (classify ir), Map.lookup aid (numberedTables ir)) of
-      (Just (RuleBound r _ _), Just t) -> say out ("  " <> where' ir aid t <> ": rule " <> display (ruleNameText r)
-                                                      <> ", anchored at " <> display (T.intercalate ", " (map scope (scopeOf ir r))) <> "\n")
-      (Just _, Just t) -> say out ("  " <> where' ir aid t <> "\n")
-      _ -> exitFailure
+    case aid of
+      SigId _ -> case (Map.lookup aid sigClasses, Map.lookup aid (signatureUnits ir)) of
+        (Just c, Just s) -> say out ("  " <> sigWhere ir aid s <> how c <> "\n")
+        _                -> exitFailure
+      _ -> case (Map.lookup aid (classify ir), Map.lookup aid (numberedTables ir)) of
+        (Just c, Just t) -> say out ("  " <> where' ir aid t <> how c <> "\n")
+        _                -> exitFailure
     exitOnErrors errs
   CmdOrphans inp -> do
     (ir, sideFs) <- load err inp
@@ -175,6 +186,9 @@ runWith out err = \case
     where' ir aid t = display ir.spec <> " " <> display (renderAnchorId aid) <> " "
                       <> display (fromMaybe "" (t.caption >>= captionTitle))
                       <> maybe "" (\p -> ", PDF " <> display p) (tablePage t)
+    sigWhere :: SpecIR -> AnchorId -> SigIR -> Utf8Builder
+    sigWhere ir aid s = display ir.spec <> " " <> display (renderAnchorId aid) <> " "
+                        <> display (T.intercalate ", " s.heads) <> ", PDF " <> display (s.page + 1)
     isAmbiguous = \case
       Ambiguous _ -> True
       _           -> False
@@ -225,6 +239,9 @@ summary ir = mconcat
   , "tables:   " <> count ir.tables
   , "headings: " <> count ir.headings
   , "paras:    " <> count ir.paras
+  , "sigs:     " <> count ir.sigs
+  , "lot:      " <> count ir.lot
+  , "xrefs:    " <> count ir.xrefs
   , "annots:   " <> count ir.annots
   ]
   where count xs = display (length xs) <> "\n"

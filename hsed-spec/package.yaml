@@ -65,6 +65,7 @@ tests:
     - process
     - QuickCheck
     - text
+    - typed-process
     build-tools:
     - hspec-discover
 

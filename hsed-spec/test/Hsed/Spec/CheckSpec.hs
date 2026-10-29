@@ -11,8 +11,10 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The M1 checks on the committed Core extraction with the committed annotations,
-under both errata sets (acceptance (e)), and each check made to fail by one
-edited cell.
+under both errata sets (acceptance (e)); each per-table annotation shown to
+matter (without it the check under scott goes red, or what is read changes);
+each check made to fail by one edited cell; the waiver of C-UID-UNIQUE; the
+errata reaching every cell; the normalisations reported as Notes.
 -}
 module Hsed.Spec.CheckSpec (spec) where
 
@@ -22,8 +24,9 @@ import qualified RIO.Text         as T
 import           RIO
 import           Test.Hspec
 
+import           Hsed.Spec.Anchor  (AnchorId (..))
 import           Hsed.Spec.Check
-import           Hsed.Spec.Common (ErrataSet (..), Finding, isError, renderFinding)
+import           Hsed.Spec.Common (ErrataSet (..), Finding, Severity (..), finding, isError, renderFinding)
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.IR     (SpecIR)
@@ -40,6 +43,10 @@ about anchor = rendered . filter ((== Just anchor) . Cm.anchor)
 
 errorsOf :: ErrataSet -> SpecIR -> [Text]
 errorsOf es = rendered . filter isError . checkIR es
+
+-- | The committed sidecar's T149 line with another UID in its waiver.
+waiverFor :: Text -> Text
+waiverFor uid = "core-2.01 | T149 | waive \"C-UID-UNIQUE\" \"" <> uid <> "\" \"no erratum says which is wrong\"\n"
 
 spec :: Spec
 spec = do
@@ -59,11 +66,17 @@ spec = do
       parseEnumValue ["to"] "7 to 31" `shouldBe` Just [7 .. 31]
       parseEnumValue [] "7-2" `shouldBe` Nothing
 
+  describe "sortFindings" $
+    it "orders the anchors of one page naturally: T8, T9, T10" $ do
+      let at' a = (finding Warning "W-UNBOUND" "x") { Cm.spec = Nothing, Cm.anchor = Just a, Cm.page = Just 34 }
+      map Cm.anchor (sortFindings (map at' ["T10", "T8", "T9"])) `shouldBe` map Just ["T8", "T9", "T10"]
+
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
     let scott     = checkIR Scott ir
         published = checkIR Published ir
+        without a = annotated pristine (withoutLine a hsa)
 
     describe "the Format environment" $ do
       it "holds the 100 Type objects of the type-row tables" $ do
@@ -75,15 +88,28 @@ spec = do
     describe "checkIR under --errata scott" $ do
       it "finds no Error" $
         filter isError scott `shouldBe` []
-      it "applies T75's correction from its annotation, and the Errata module's ten others" $ do
+      it "applies the corrections of the T75 and T101 annotations, and no others" $ do
         about "T75" scott `shouldBe`
           ["W-ERRATUM-APPLIED core-2.01.pdf#page=107&T75: Format \"Fractoin\" -> \"Fraction\" (annotation at core-2.01.pdf#page=107&T75)"]
-        Map.lookup "W-ERRATUM-APPLIED" (codesOf scott) `shouldBe` Just 11
-      it "reports the 129 unbound tables, the two repeated labels and the duplicate UID the PDF prints" $ do
+        about "T101" scott `shouldBe`
+          ["W-ERRATUM-APPLIED core-2.01.pdf#page=113&T101: Associated Value \"Verify Eror\" -> \"Verify Error\" (annotation at core-2.01.pdf#page=113&T101)"]
+        Map.lookup "W-ERRATUM-APPLIED" (codesOf scott) `shouldBe` Just 2
+      it "reports the unbound tables, the repeated labels, the waived duplicate UID and the normalisations" $
         codesOf scott `shouldBe` Map.fromList
-          [("W-ERRATUM-APPLIED", 11), ("W-UNBOUND", 129), ("W-ENUM-LABEL-REPEATED", 2), ("W-UID-DUPLICATE", 1)]
+          [ ("W-ERRATUM-APPLIED", 2), ("W-UNBOUND", 129), ("W-ENUM-LABEL-REPEATED", 2), ("C-UID-UNIQUE", 1)
+          , ("N-CAPTION-NORMALISED", 7), ("N-FORMAT-NORMALISED", 14) ]
+      it "demotes the duplicate UID the PDF prints for T94 and T149 to a Warning by T149's waiver" $ do
         about "T149" scott `shouldBe`
-          ["W-UID-DUPLICATE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111); the published text prints it twice and no erratum records which is wrong"]
+          ["C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111); waived by its annotation: no erratum says which is wrong"]
+        [ Cm.severity f | f <- scott, Cm.anchor f == Just "T149" ] `shouldBe` [Warning]
+      it "reports each _object _ref caption read as one identifier, as a Note" $ do
+        about "T72" scott `shouldContain` ["N-CAPTION-NORMALISED core-2.01.pdf#page=106&T72: caption \"Certificates_object _ref\" read as \"Certificates_object_ref\""]
+        L.sort [ a | f <- scott, Cm.code f == "N-CAPTION-NORMALISED", Just a <- [Cm.anchor f] ]
+          `shouldBe` L.sort ["T72", "T76", "T112", "T131", "T140", "T142", "T144"]
+      it "reports a Format cell's spacing and T76's Table_UID, as Notes" $
+        about "T76" scott `shouldBe`
+          [ "N-CAPTION-NORMALISED core-2.01.pdf#page=107&T76: caption \"Column_object _ref\" read as \"Column_object_ref\""
+          , "N-FORMAT-NORMALISED core-2.01.pdf#page=107&T76: Format read with \"uidref {ColumnTable_UID}\" as \"uidref{ColumnTable_UID}\", \"ColumnTable_UID\" as \"ColumnTableUID\"" ]
       it "passes C-ENUM-RANGE for T51/T52 (acceptance (d))" $ do
         about "T51" scott `shouldBe` []
         about "T52" scott `shouldBe` []
@@ -94,14 +120,83 @@ spec = do
       it "leaves Fractoin as printed and fails to resolve it, citing the page" $
         errorsOf Published ir `shouldBe`
           ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
-      it "applies no correction and reports each known defect" $ do
+      it "applies no correction and reports each defect the annotations record" $ do
         Map.lookup "W-ERRATUM-APPLIED" (codesOf published) `shouldBe` Nothing
-        Map.lookup "W-ERRATUM-KNOWN" (codesOf published) `shouldBe` Just 11
-      it "fails the same way without the T75 annotation, which the Errata module also corrects" $ do
-        noT75 <- annotated pristine (T.unlines (filter (not . ("| T75 |" `T.isInfixOf`)) (T.lines hsa)))
-        errorsOf Published noT75 `shouldBe` errorsOf Published ir
-        about "T75" (checkIR Scott noT75) `shouldBe`
-          ["W-ERRATUM-APPLIED core-2.01.pdf#page=107&T75: Format \"Fractoin\" -> \"Fraction\" (tcg/Core Spec errata.txt: Table 75 \"Fractoin\" should be \"Fraction\")"]
+        Map.lookup "W-ERRATUM-KNOWN" (codesOf published) `shouldBe` Just 2
+        about "T101" published `shouldBe`
+          ["W-ERRATUM-KNOWN core-2.01.pdf#page=113&T101: published text left as printed; scott: Associated Value \"Verify Eror\" -> \"Verify Error\" (annotation at core-2.01.pdf#page=113&T101)"]
+      it "reads the normalisations as under scott" $ do
+        Map.lookup "N-CAPTION-NORMALISED" (codesOf published) `shouldBe` Just 7
+        Map.lookup "N-FORMAT-NORMALISED" (codesOf published) `shouldBe` Just 14
+
+    describe "each per-table annotation matters" $ do
+      it "T75: without it, Fractoin fails to resolve under scott too" $ do
+        noT75 <- without "T75"
+        errorsOf Scott noT75 `shouldBe`
+          ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
+        about "T75" (checkIR Published noT75) `shouldBe` ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
+      it "T101: without it, nothing corrects Verify Eror and nothing reports it" $ do
+        noT101 <- without "T101"
+        about "T101" (checkIR Scott noT101) `shouldBe` []
+        about "T101" (checkIR Published noT101) `shouldBe` []
+      it "T149: without it, the duplicate UID is the Error C-UID-UNIQUE" $ do
+        noT149 <- without "T149"
+        errorsOf Scott noT149 `shouldBe`
+          ["C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111)"]
+
+    describe "the waiver" $ do
+      it "waives only the UID it records: on another UID it is unused and the Error stands" $ do
+        ir' <- annotated pristine (withoutLine "T149" hsa <> waiverFor "00 00 00 05 00 00 09 99")
+        let fs = checkIR Scott ir'
+        about "T149" fs `shouldBe`
+          [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
+          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 09 99\", and the table's UID cell is \"00 00 00 05 00 00 02 15\"" ]
+      it "becomes W-WAIVER-UNUSED when the PDF no longer prints the UID twice, and the Error moves with a new clash" $ do
+        let moved = setCell "T94" 0 0 "00 00 00 05 00 00 09 99" (setCell "T149" 0 0 "00 00 00 05 00 00 09 99" ir)
+        about "T149" (checkIR Scott moved) `shouldBe`
+          [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 09 99 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
+          , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 09 99\"" ]
+        let fixed = setCell "T149" 0 0 "00 00 00 05 00 00 02 16" ir
+        about "T149" (checkIR Scott fixed) `shouldBe`
+          [ "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 02 16\"" ]
+      it "waives nothing on the first of the two tables, where no finding is reported" $ do
+        ir' <- annotated pristine (withoutLine "T149" hsa <> "core-2.01 | T94 | waive \"C-UID-UNIQUE\" \"00 00 00 05 00 00 02 15\" \"x\"\n")
+        let fs = checkIR Scott ir'
+        about "T94" fs `shouldBe`
+          ["W-WAIVER-UNUSED core-2.01.pdf#page=111&T94: the annotation waives C-UID-UNIQUE for the UID \"00 00 00 05 00 00 02 15\", and no type row before it has that UID"]
+        filter isError fs `shouldSatisfy` any ((== "C-UID-UNIQUE") . Cm.code)
+
+    describe "the errata" $ do
+      it "refuse an erratum of the published set: published is the text as printed" $ do
+        ir' <- annotated pristine (withoutLine "T75" hsa <> "core-2.01 | T75 | erratum published [\"Fractoin\" ~> \"Fraction\"]\n")
+        forM_ [Scott, Published] $ \es ->
+          about "T75" (filter isError (checkIR es ir')) `shouldBe`
+            ["E-ERRATUM-PUBLISHED core-2.01.pdf#page=107&T75: 1:9: erratum published: the published set is the text as printed and takes no corrections; write erratum scott"]
+      it "apply a chain in order and call none of it unused" $ do
+        ir' <- annotated pristine (withoutLine "T75" hsa <> "core-2.01 | T75 | erratum scott [\"Fractoin\" ~> \"Zq\", \"Zq\" ~> \"Fraction\"]\n")
+        let fs = checkIR Scott ir'
+        filter isError fs `shouldBe` []
+        map Cm.code (filter ((== Just "T75") . Cm.anchor) fs) `shouldBe` ["W-ERRATUM-APPLIED", "W-ERRATUM-APPLIED"]
+      it "reach every cell: a value cell of an enumeration" $ do
+        ir' <- annotated pristine (withoutLine "T101" hsa <> "core-2.01 | T101 | erratum scott [\"4-7\" ~> \"4-6\"]\n")
+        about "T101" (checkIR Scott ir') `shouldBe`
+          ["W-ERRATUM-APPLIED core-2.01.pdf#page=113&T101: Enumeration Value \"4-7\" -> \"4-6\" (annotation at core-2.01.pdf#page=113&T101)"]
+      it "reach the identifier a caption names" $ do
+        ir' <- annotated pristine (hsa <> "core-2.01 | T52 | erratum scott [\"adv_key_mode Enumeration\" ~> \"adv_key_mod Enumeration\"]\n")
+        let env = mkCompileEnv Scott ir'
+        [ erIdent e | Right e <- enumReads env, erAnchor e == TableId 52 ]
+          `shouldBe` [Just "adv_key_mod"]
+        errorsOf Scott ir' `shouldBe` ["C-ENUM-RANGE core-2.01.pdf#page=102&T52: no type row for adv_key_mod to take the range from"]
+      it "report a correction that matches no text of the table" $ do
+        ir' <- annotated pristine (hsa <> "core-2.01 | T46 | erratum scott [\"Nonesuch\" ~> \"X\"]\n")
+        forM_ [Scott, Published] $ \es ->
+          about "T46" (checkIR es ir') `shouldBe`
+            ["W-ERRATUM-UNUSED core-2.01.pdf#page=100&T46: the annotation's correction \"Nonesuch\" -> \"X\" matches no text of the table"]
+
+    describe "the normalisations" $
+      it "report a header read through the typo table" $
+        about "T46" (checkIR Scott (setHeaderCell "T46" 0 0 "Colum Type" ir)) `shouldContain`
+          ["N-HEADER-NORMALISED core-2.01.pdf#page=100&T46: header \"Colum Type\" read as \"Column Type\""]
 
     describe "each check, made to fail" $ do
       it "E-SHAPE: a feature comment on a type table" $ do
@@ -134,10 +229,6 @@ spec = do
       it "W-ENUM-OVERLAP: a value assigned twice, the first kept" $
         about "T52" (checkIR Scott (setCell "T52" 1 0 "0" ir)) `shouldBe`
           ["W-ENUM-OVERLAP core-2.01.pdf#page=102&T52: value 0 is assigned by \"Wait for AdvKey_Req\" and \"Auto-advance keys\"; the first is kept"]
-      it "W-ERRATUM-UNUSED: an annotation's correction that matches nothing" $ do
-        ir' <- annotated pristine (hsa <> "core-2.01 | T46 | erratum scott [\"Nonesuch\" ~> \"X\"]\n")
-        about "T46" (checkIR Scott ir') `shouldBe`
-          ["W-ERRATUM-UNUSED core-2.01.pdf#page=100&T46: the annotation's correction \"Nonesuch\" -> \"X\" matches no text of the table"]
       it "the T87 comment of design E4: rangeWords, cols, an overlap and a repeated label" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T87 | rangeWords [\"to\"] (cols 0 1 enumValues)\n")
         about "T87" (checkIR Scott ir') `shouldBe`

@@ -1,3 +1,4 @@
-# Must fail the `bindings` test component with a GHC error citing core-2.01.pdf#page=100&T46:
-# `frobnicate` is not a smart constructor of Hsed.Spec.DSL (not in scope); design 3.3, M1 acceptance (f).
+# Must fail `hsedc check` and `hsedc bind` with E-GRAMMAR citing core-2.01.pdf#page=100&T46:
+# `frobnicate` is not in the vocabulary of Hsed.Spec.DSL; design 3.3, M1 acceptance (f). hsedc refuses
+# it before any module is written, so GHC never sees it (annotate.py refuses it too).
 core-2.01 | T46 | frobnicate

@@ -34,6 +34,12 @@ enumValues@ at Core section 5.1.3, @doc core201 & rule codes@ on page 1): the
 'Replaces' take their shape from the target they name, so they are
 shape-polymorphic here and 'PolyBinding' carries them until the rules resolve
 the target.
+
+'bindingKind' says which anchors a binding belongs on (design section 3.1):
+@doc@ and its rule tokens on the document, rule tokens or a @behaviour@ on a
+heading, a table binding (with its modifiers) on a table, @law@, @fails@ or
+@behaviour@ on a list item or paragraph. "Hsed.Spec.Rules" refuses a binding
+on an anchor of another kind.
 -}
 module Hsed.Spec.DSL
   ( -- * Bindings
@@ -45,6 +51,9 @@ module Hsed.Spec.DSL
   , shapeOfBinding
   , bindingShape
   , isAtomicBinding
+  , BindingKind (..)
+  , bindingKind
+  , someBindingKind
     -- * Modifiers
   , Modifier (..)
   , applyModifier
@@ -73,8 +82,8 @@ module Hsed.Spec.DSL
     -- ** Joining rule tokens
   , (&)
     -- ** Modifiers
-  , erratum, cols, rangeWords, enumInDescription, expand, as
-  , (~>), scott, published
+  , erratum, cols, rangeWords, enumInDescription, expand, as, waive
+  , (~>), scott, waivableChecks
     -- ** Names
   , core201, opal230, knownSpecs, specName, specByName
   , tokenEncoding, terminology, knownRules
@@ -161,6 +170,7 @@ data Binding (s :: Shape) where
   Also                  :: RuleBearing s => Binding s -> Binding s -> Binding s
   -- modifiers
   WithErratum           :: ErrataSet -> [(Text, Text)] -> Binding s -> Binding s
+  WithWaiver            :: Text -> Text -> Text -> Binding s -> Binding s   -- ^ check code, subject, reason
   WithCols              :: Int -> Int -> Binding 'EnumValues -> Binding 'EnumValues
   WithRangeWords        :: [Text] -> Binding 'EnumValues -> Binding 'EnumValues
   WithEnumInDescription :: Binding 'EnumValues -> Binding 'EnumValues
@@ -210,6 +220,7 @@ shapeOfBinding = \case
   Extends _               -> SColumnsAddition
   Also a _                -> shapeOfBinding a
   WithErratum _ _ b       -> shapeOfBinding b
+  WithWaiver _ _ _ b      -> shapeOfBinding b
   WithCols _ _ _          -> SEnumValues
   WithRangeWords _ _      -> SEnumValues
   WithEnumInDescription _ -> SEnumValues
@@ -248,6 +259,56 @@ isAtomicBinding = \case
   ProseB           -> True
   _                -> False
 
+-- | What a binding is about, which fixes the anchors it may sit on.
+data BindingKind
+  = DocKind [SpecId] Bool  -- ^ @doc@ tokens (with any rule tokens), and whether a @doc@ token comes first
+  | RuleKind               -- ^ rule tokens only
+  | TableKind              -- ^ a table binding, with or without modifiers
+  | BehaviourKind          -- ^ @behaviour "M.f"@
+  | LawKind                -- ^ @law "M.f"@ or @fails "M.f"@
+  | SigKind                -- ^ @sig@: signature blocks are rule-bound and carry no annotation
+  | ModifiedKind BindingKind  -- ^ modifiers on a binding that is not a table's
+  deriving stock (Eq, Show)
+
+-- | The kind of a binding, from its constructors.
+bindingKind :: Binding s -> BindingKind
+bindingKind b = case b of
+  DocB _                  -> rules
+  RuleB _                 -> rules
+  Also _ _                -> rules
+  Behaviour _             -> BehaviourKind
+  Law _                   -> LawKind
+  Fails _                 -> LawKind
+  SigB                    -> SigKind
+  WithErratum _ _ inner   -> modified inner
+  WithWaiver _ _ _ inner  -> modified inner
+  WithAs inner            -> modified inner
+  _                       -> TableKind
+  where
+    rules = case docTokens b of
+      []   -> RuleKind
+      docs -> DocKind docs (leftmostIsDoc b)
+    modified :: Binding t -> BindingKind
+    modified inner = case bindingKind inner of
+      TableKind      -> TableKind
+      ModifiedKind k -> ModifiedKind k
+      k              -> ModifiedKind k
+    docTokens :: Binding t -> [SpecId]
+    docTokens = \case
+      DocB sid -> [sid]
+      Also l r -> docTokens l <> docTokens r
+      _        -> []
+    leftmostIsDoc :: Binding t -> Bool
+    leftmostIsDoc = \case
+      DocB _   -> True
+      Also l _ -> leftmostIsDoc l
+      _        -> False
+
+-- | 'bindingKind' of a packed binding; one shaped by its target is a table binding.
+someBindingKind :: SomeBinding -> BindingKind
+someBindingKind (SomeBinding b) = bindingKind b
+someBindingKind (PolyBinding b) = bindingKind (b :: Binding 'Prose)
+
 
 -- * Modifiers
 
@@ -259,6 +320,7 @@ data Modifier
   | EnumInDescription                  -- ^ the enumeration is read from the Description column
   | Expand                             -- ^ expand the @(+XX)@ template rows of a preconfiguration
   | As Shape                           -- ^ @as \@'Codes@: the form is odd; E-SHAPE is a Warning
+  | Waive Text Text Text               -- ^ @waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "reason"@
   deriving stock (Eq, Show)
 
 -- | Apply a modifier to a binding, checking at run time what the smart
@@ -266,6 +328,7 @@ data Modifier
 applyModifier :: forall s. Modifier -> Binding s -> Either Finding (Binding s)
 applyModifier m b = case m of
   Erratum e ps      -> Right (WithErratum e ps b)
+  Waive c s r       -> Right (WithWaiver c s r b)
   Cols a c          -> onShape SEnumValues (WithCols a c)
   RangeWords ws     -> onShape SEnumValues (WithRangeWords ws)
   EnumInDescription -> onShape SEnumValues WithEnumInDescription
@@ -285,6 +348,7 @@ applyModifier m b = case m of
 modifierWord :: Modifier -> Text
 modifierWord = \case
   Erratum _ _       -> "erratum"
+  Waive _ _ _       -> "waive"
   Cols a c          -> "cols " <> tshow a <> " " <> tshow c
   RangeWords _      -> "rangeWords"
   EnumInDescription -> "enumInDescription"
@@ -328,6 +392,7 @@ applyModifierSome :: Modifier -> SomeBinding -> Either Finding SomeBinding
 applyModifierSome m (SomeBinding b) = SomeBinding <$> applyModifier m b
 applyModifierSome m (PolyBinding b) = case m of
   Erratum e ps      -> Right (PolyBinding (WithErratum e ps b))
+  Waive c s r       -> Right (PolyBinding (WithWaiver c s r b))
   Cols a c          -> Right (SomeBinding (WithCols a c b))
   RangeWords ws     -> Right (SomeBinding (WithRangeWords ws b))
   EnumInDescription -> Right (SomeBinding (WithEnumInDescription b))
@@ -359,6 +424,7 @@ bindingAccepts = go Error
       WithCols a c inner          -> either (Just . atForm sev form) (go sev inner) (projectColumns a c form)
       WithAs inner                -> go Warning inner form
       WithErratum _ _ inner       -> go sev inner form
+      WithWaiver _ _ _ inner      -> go sev inner form
       WithRangeWords _ inner      -> go sev inner form
       WithExpand inner            -> go sev inner form
       WithEnumInDescription inner -> description sev form <|> go sev inner form { fCols = 2, fHeaderNorm = ["enumerationvalue", "description"] }
@@ -548,9 +614,22 @@ infixl 1 &
 (&) :: RuleBearing s => Binding s -> Binding s -> Binding s
 (&) = Also
 
--- | @erratum scott ["Fractoin" ~> "Fraction"] typeRow@
+-- | @erratum scott ["Fractoin" ~> "Fraction"] typeRow@: Scott's correction of
+--   the text as printed (design decision 13.5). There is no published
+--   counterpart: the published set is the text as printed.
 erratum :: ErrataSet -> [(Text, Text)] -> Binding s -> Binding s
 erratum = WithErratum
+
+-- | @waive "C-UID-UNIQUE" "00 00 00 05 00 00 02 15" "reason" typeRow@: the
+--   named check's Error on this table about exactly this subject (for
+--   C-UID-UNIQUE the UID, as the table prints it) is a Warning carrying the
+--   reason. A waiver that waives nothing is @W-WAIVER-UNUSED@.
+waive :: Text -> Text -> Text -> Binding s -> Binding s
+waive = WithWaiver
+
+-- | The checks a @waive@ may name.
+waivableChecks :: [Text]
+waivableChecks = ["C-UID-UNIQUE"]
 
 -- | @cols 0 1 enumValues@: the two columns of a wider enumeration table.
 cols :: Int -> Int -> Binding 'EnumValues -> Binding 'EnumValues
@@ -577,9 +656,8 @@ infix 4 ~>
 (~>) :: Text -> Text -> (Text, Text)
 (~>) = (,)
 
-scott, published :: ErrataSet
-scott     = Scott
-published = Published
+scott :: ErrataSet
+scott = Scott
 
 core201, opal230 :: SpecId
 core201 = SpecId "core-2.01"

@@ -14,22 +14,27 @@ Stability   : experimental
 The rules of design section 3.4 on the committed Core extraction: scope only from
 the anchors, the M1 pair binding Tables 46-165 but T87, precedence by
 @refines@, the bare modifier chain of Table 75, bindings shaped by their
-target, the exemplars and C-RULE-ANCHORED.
+target, the exemplars, and the validation of every annotation: an anchor of
+the payload's kind, naming something in the IR, alone on its anchor; @hsedc
+check@ and @hsedc bind@ refusing exactly the same annotations.
 -}
 module Hsed.Spec.RulesSpec (spec) where
 
+import qualified RIO.List          as L
 import qualified RIO.Map           as Map
 import qualified RIO.Text          as T
 import           RIO               hiding ((&))
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor  (AnchorId (..))
-import           Hsed.Spec.Common  (Finding, Severity (..), renderFinding)
+import           Hsed.Spec.Bind    (bindEntries)
+import           Hsed.Spec.Common  (Finding, Severity (..), isError, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.CoreIR  hiding (core)
 import           Hsed.Spec.DSL
 import           Hsed.Spec.Grammar (printSomeBinding)
-import           Hsed.Spec.IR      (StructPath (..))
+import           Hsed.Spec.IR      (AnnotIR (..), Rect (..), SpecIR (..), StructPath (..))
+import qualified Hsed.Spec.IR      as IR
 import           Hsed.Spec.Rules
 import           Hsed.Spec.Shape   (measure)
 
@@ -157,9 +162,61 @@ spec = do
         map renderFinding (checkExemplars (setCell "T52" 0 0 "zero" ir)) `shouldBe` []   -- the rule reads headers, not values
         codesOf (checkExemplars (dropTable "T51" ir)) `shouldBe` ["C-EXEMPLAR"]          -- T52 has no type row to join
 
-    describe "checkRulesAnchored" $ do
-      it "passes when every binding rule has an anchor" $
-        checkRulesAnchored ir classes `shouldBe` []
-      it "reports a rule that binds without an anchor" $
-        map renderFinding (checkRulesAnchored pristine (Map.fromList [(TableId 46, RuleBound (RuleName "typeRow") [] (SomeBinding typeRow))]))
-          `shouldBe` ["C-RULE-ANCHORED core-2.01: rule typeRow binds 1 tables and has no anchor in core-2.01"]
+    describe "an annotation of the wrong kind for its anchor (E-ANCHOR-KIND)" $ do
+      let errorsWith extra = do
+            ir' <- annotated pristine (hsa <> extra)
+            pure (filter isError (snd (classifyWith ir')), filter isError (fst (bindEntries ir')), ir')
+          refused extra want = do
+            (checkErrs, bindErrs, _) <- errorsWith extra
+            map renderFinding checkErrs `shouldBe` [want]
+            map renderFinding bindErrs `shouldBe` [want]
+      it "refuses a rule token on a table, leaving T46 to the rule" $ do
+        refused "core-2.01 | T46 | rule typeRow\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not rule typeRow"
+        (_, _, ir') <- errorsWith "core-2.01 | T46 | rule typeRow\n"
+        fmap describeClassification (Map.lookup (TableId 46) (classify ir'))
+          `shouldBe` Just "invalid: E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not rule typeRow"
+      it "refuses doc, behaviour and law on a table" $ do
+        refused "core-2.01 | T46 | doc core201\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not doc core201"
+        refused "core-2.01 | T46 | behaviour \"Foo.bar\"\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not behaviour \"Foo.bar\""
+        refused "core-2.01 | T46 | law \"Foo.bar\"\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not law \"Foo.bar\""
+      it "refuses a table binding, a cross-spec binding and a doc token on a heading" $ do
+        refused "core-2.01 | 5.1.4 | typeRow\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=128&5.1.4: a heading anchor takes rule tokens or a behaviour, not typeRow"
+        refused "core-2.01 | 5.1.5 | refines (core 46)\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=137&5.1.5: a heading anchor takes rule tokens or a behaviour, not refines (core 46)"
+        refused "core-2.01 | 5.1.5 | doc opal230\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=137&5.1.5: a heading anchor takes rule tokens or a behaviour, not doc opal230"
+      it "refuses a rule token on a paragraph" $
+        refused "core-2.01 | 5.1.3#p1 | rule typeRow\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&5.1.3#p1: a list item or paragraph anchor takes law, fails or behaviour, not rule typeRow"
+      it "refuses a doc anchor naming another spec, or without its doc token first" $ do
+        let doc' payload = annotated pristine (T.unlines (("core-2.01 | doc | " <> payload) : drop 1 (T.lines hsa)))
+        ir1 <- doc' "doc opal230 & rule typeRow & rule enumValues"
+        map renderFinding (filter isError (snd (classifyWith ir1)))
+          `shouldBe` ["E-ANCHOR-KIND core-2.01.pdf#page=1&doc: the doc anchor of core-2.01 names its own spec, doc core201, not doc opal230 & rule typeRow & rule enumValues"]
+        ir2 <- doc' "rule typeRow"
+        map renderFinding (filter isError (fst (bindEntries ir2)))
+          `shouldBe` ["E-ANCHOR-KIND core-2.01.pdf#page=1&doc: the doc anchor takes doc core201 first, then rule tokens, not rule typeRow"]
+      it "takes what each anchor's kind takes" $ do
+        (checkErrs, bindErrs, _) <- errorsWith (T.unlines
+          [ "core-2.01 | 3.3.3.1 | behaviour \"Sync.x\"", "core-2.01 | 3.3.3#1 | law \"Sync.y\""
+          , "core-2.01 | T87 | rangeWords [\"to\"] (cols 0 1 enumValues)" ])
+        (checkErrs, bindErrs) `shouldBe` ([], [])
+
+    describe "an annotation naming nothing in the IR, or sharing its anchor (E-ANCHOR)" $ do
+      let ruleAnnot sec = AnnotIR IR.Rule "core-2.01" sec (StructPath "0/1278") 1 99 (Rect 90 595.61 215.4 613.67) 6 "rule typeRow & rule enumValues"
+      it "refuses a rule anchor whose section has no heading, so that nothing is silently left unbound" $ do
+        let ir' = ir { annots = [ a | a <- ir.annots, a.id /= "5.1.3" ] <> [ruleAnnot "5.1.30"] }
+            want = "E-ANCHOR core-2.01.pdf#page=100&5.1.30: no heading numbered 5.1.30 in the IR"
+        map renderFinding (filter isError (snd (classifyWith ir'))) `shouldSatisfy` elem want
+        map renderFinding (fst (bindEntries ir')) `shouldSatisfy` elem want
+      it "refuses two annotations on one heading, in check and in bind" $ do
+        let ir' = ir { annots = ir.annots <> [ruleAnnot "5.1.3"] }
+            want = "E-ANCHOR core-2.01.pdf#page=100&5.1.3: 2 annotations on one anchor"
+        L.nub (map renderFinding (filter isError (snd (classifyWith ir')))) `shouldSatisfy` elem want
+        map renderFinding (fst (bindEntries ir')) `shouldSatisfy` elem want
+        scopeOf ir' (RuleName "typeRow") `shouldBe` []

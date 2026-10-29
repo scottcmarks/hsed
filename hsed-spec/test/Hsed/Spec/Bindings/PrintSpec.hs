@@ -15,8 +15,10 @@ Stability   : experimental
 A small generated module is printed and then type-checked with the GHC of the
 build (@ghc -fno-code -package hsed-spec@), the way @stack test
 hsed-spec:bindings@ checks the committed one; a wrong modifier must fail with
-a message naming both shapes and citing the PDF page. The compile is skipped
-with a message when no GHC can be run from inside the suite.
+a message naming both shapes and citing the PDF page, and so must a name the
+vocabulary does not have (hsedc's grammar refuses one before it is ever
+printed; this is GHC's check behind it). The compile is skipped with a message
+when no GHC can be run from inside the suite.
 -}
 module Hsed.Spec.Bindings.PrintSpec (spec) where
 
@@ -54,6 +56,11 @@ wrongText :: Text -> Text
 wrongText = DT.replace "(anchor @'EnumValues \"core-2.01\" \"T52\" \"0/1318\" 102) enumValues"
                       "(anchor @'EnumValues \"core-2.01\" \"T52\" \"0/1318\" 102) (cols 0 1 typeRow)"
 
+-- | The same module with T52 bound by @frobnicate@, a name the vocabulary does not have.
+unknownText :: Text -> Text
+unknownText = DT.replace "(anchor @'EnumValues \"core-2.01\" \"T52\" \"0/1318\" 102) enumValues"
+                        "(anchor @'EnumValues \"core-2.01\" \"T52\" \"0/1318\" 102) frobnicate"
+
 -- | Type-check a module with the GHC of the build: Nothing when none can be run here.
 typeCheck :: FilePath -> IO (Maybe (ExitCode, Text))
 typeCheck dir = do
@@ -82,7 +89,8 @@ spec = do
       moduleNameFor coreSpec `shouldBe` "Hsed.Bindings.Core"
       moduleNameFor (SpecId "opal-2.30") `shouldBe` "Hsed.Bindings.Opal"
       map (bindingIdent coreSpec) [TableId 46, SectionId "5.1.3", DocId, ItemId "3.3.10.2.1" "3a", SigId "5.3.3.6"]
-        `shouldBe` ["b_core_T46", "b_core_5_1_3", "b_core_doc", "b_core_3_3_10_2_1_3a", "b_core_5_3_3_6_sig"]
+        `shouldBe` ["b_core_T46", "b_core_5_1_3", "b_core_doc", "b_core_3_3_10_2_1_i_3a", "b_core_5_3_3_6_sig"]
+      bindingIdent coreSpec (SectionId "3.3.3.1") `shouldNotBe` bindingIdent coreSpec (ItemId "3.3.3" "1")
 
     it "prints one LINE-pragma'd binding per anchor and the bindings list" $ do
       let ls = either (const []) T.lines printed
@@ -118,4 +126,16 @@ spec = do
           code `shouldNotBe` ExitSuccess
           out `shouldSatisfy` T.isInfixOf "'EnumValues"
           out `shouldSatisfy` T.isInfixOf "'TypeRow"
+          out `shouldSatisfy` T.isInfixOf "core-2.01.pdf#page=102&T52"
+
+    it "fails to type-check a name the vocabulary does not have, citing the page" $ do
+      text <- either (throwString . T.unpack . C.renderFinding) pure printed
+      let wrong = unknownText text
+      wrong `shouldNotBe` text
+      withModule wrong $ \dir -> typeCheck dir >>= \case
+        Nothing -> pendingWith "no GHC with the hsed-spec package reachable from the test"
+        Just (code, out) -> do
+          code `shouldNotBe` ExitSuccess
+          out `shouldSatisfy` T.isInfixOf "frobnicate"
+          out `shouldSatisfy` T.isInfixOf "not in scope"
           out `shouldSatisfy` T.isInfixOf "core-2.01.pdf#page=102&T52"

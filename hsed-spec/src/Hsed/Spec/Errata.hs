@@ -1,96 +1,88 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedStrings   #-}
 
 {-|
 Module      : Hsed.Spec.Errata
-Description : The two errata sets as data, and their application to spec text
+Description : Corrections to spec text, as the annotations carry them, and their application
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 Design decision 13.5: the compiler builds from the published text as printed
-('Published') or from Scott's corrections ('Scott'), each correction a plain
-substitution scoped to one part of one table and cited to where it is recorded
-(tcg/Core Spec errata.txt; the regen report of docs/evidence/2026-10-25). Each
-application is reported, so that @--errata scott@ lists what it corrected
-(@W-ERRATUM-APPLIED@) and @--errata published@ lists the defects it left in
-(@W-ERRATUM-KNOWN@) beside whatever else fails on them, such as @E-FMT-RESOLVE@
-on Table 75's @Fractoin@ (design example E3).
+('Published') or from Scott's corrections ('Scott'). The corrections live in the
+annotated PDF and nowhere else. Each is one pair of an @erratum scott [...]@
+modifier on a table's annotation (Table 75's @erratum scott ["Fractoin" ~>
+"Fraction"]@), a plain substitution over that table's caption, header cells
+and data cells, cited to the annotation that carries it. The published set
+takes none: it is the text as printed, so the grammar refuses an @erratum
+published [...]@ annotation outright (@E-ERRATUM-PUBLISHED@).
+@tcg/Core Spec errata.txt@ stays Scott's notes: a test checks every
+annotation's correction against them, and nothing reads corrections from it.
 
-Two of hsed's differences from the PDF are not errata and are not here: the
-captions numbered 147 and 160 in TypeUIDs.hs are hsed's own transcription
-slips (the PDF has 157 and 161).
+Each correction is reported: under 'Scott' each one made (@W-ERRATUM-APPLIED@),
+under 'Published' each defect left as printed (@W-ERRATUM-KNOWN@), and under
+both a correction whose text the table does not contain (@W-ERRATUM-UNUSED@).
+Under 'Published', @E-FMT-RESOLVE@ on Table 75's @Fractoin@ follows (design
+example E3).
+
+Normalisations are not errata and are not here: the @_object _ref@ captions
+("Hsed.Spec.Shape".'Hsed.Spec.Shape.normaliseCaption'), the header typo table
+and the spacing of a Format cell are read the same way under either set and
+reported as Notes. Nor are hsed's own transcription slips: the captions
+numbered 147 and 160 in TypeUIDs.hs (the PDF has 157 and 161).
 -}
 module Hsed.Spec.Errata
   ( -- * Errata
     Erratum (..)
   , Part (..)
-  , corrections
+  , partName
     -- * Application
   , Site (..)
   , applyErrata
   , errata
+  , correctTable
+    -- * Findings
   , appliedFinding
   , knownDefectFinding
+  , unusedFinding
   ) where
 
 import qualified Data.Text        as T
+import qualified RIO.List         as L
 import           RIO
 
 import           Hsed.Spec.Common
+import           Hsed.Spec.IR     (CellIR (..), TableIR (..), cellWithText)
 
 
--- | Which part of a table a correction applies to.
-data Part = FormatCell | Caption | HeaderCell | RowLabel
-  deriving (Eq, Ord, Show, Enum, Bounded)
+-- | Which part of a table a correction was made in.
+data Part
+  = Caption
+  | HeaderCell !Int !Int        -- ^ header row and column, 0-based
+  | DataCell !Int !Int !Text    -- ^ data row and column, 0-based, and the column's header text
+  deriving (Eq, Ord, Show)
+
+-- | How a finding names a part: @caption@, @header@, or a data cell by its
+--   column's header (@Format@, @Associated Value@).
+partName :: Part -> Text
+partName Caption              = "caption"
+partName (HeaderCell _ _)     = "header"
+partName (DataCell r c h)
+  | T.null (T.strip h)        = "row " <> tshow (r + 1) <> " column " <> tshow (c + 1)
+  | otherwise                 = T.unwords (T.words h)
 
 -- | One correction: replace every occurrence of 'errFrom' by 'errTo' in the
---   given part of the given table.
+--   caption and cells of one table.
 data Erratum = Erratum
   { errSpec   :: !SpecId
   , errTable  :: !Text    -- ^ anchor id, @T75@
-  , errPart   :: !Part
   , errFrom   :: !Text
   , errTo     :: !Text
-  , errSource :: !Text    -- ^ where the correction is recorded
+  , errSource :: !Text    -- ^ where the correction is recorded: the annotation's location
   }
   deriving (Eq, Show)
-
--- | The corrections of a set. The published text has none by definition.
-corrections :: ErrataSet -> [Erratum]
-corrections Published = []
-corrections Scott     = scott
-
-core :: SpecId
-core = SpecId "core-2.01"
-
-errataTxt, regenReport :: Text
-errataTxt   = "tcg/Core Spec errata.txt"
-regenReport = "docs/evidence/2026-10-25/extract/regen_report.txt"
-
--- | Scott's corrections to Core 2.01, seeded from tcg/Core Spec errata.txt and the
---   deliberate fixes hsed's hand transcription made (regen report, class
---   "deliberate typo fix in hsed").
-scott :: [Erratum]
-scott =
-  [ Erratum core "T75"  FormatCell "Fractoin"    "Fraction"     (errataTxt <> ": Table 75 \"Fractoin\" should be \"Fraction\"")
-  , Erratum core "T101" RowLabel   "Verify Eror" "Verify Error" (errataTxt <> ": Table 101 \"Eror\" should be \"Error\"")
-  , Erratum core "T61"  HeaderCell "Operator"    "Associated Value"  (regenReport <> ": Table 61 header")
-  , Erratum core "T128" HeaderCell "Set Value"   "Enumeration Value" (regenReport <> ": Table 128 header")
-  ]
-  <> map objectRef
-       [ ("T72",  "Certificates", errataTxt <> ": Table 72")
-       , ("T76",  "Column",       regenReport <> ": Table 76 caption")
-       , ("T112", "MethodID",     regenReport <> ": Table 112 caption")
-       , ("T131", "SPTemplates",  errataTxt <> ": Table 131")
-       , ("T140", "Table",        errataTxt <> ": 5.1.3.76")
-       , ("T142", "Template",     errataTxt <> ": 5.1.3.78")
-       , ("T144", "Type",         errataTxt <> ": 5.1.3.80")
-       ]
-  where
-    objectRef (table, noun, source) =
-      Erratum core table Caption (noun <> "_object _ref") (noun <> "_object_ref") source
 
 
 -- | Where a piece of text came from: enough to select the errata that apply and
@@ -104,38 +96,70 @@ data Site = Site
   deriving (Eq, Show)
 
 appliesAt :: Site -> Erratum -> Bool
-appliesAt site e = errSpec e == siteSpec site && errTable e == siteTable site && errPart e == sitePart site
+appliesAt site e = errSpec e == siteSpec site && errTable e == siteTable site
 
--- | Correct a cell, caption, header or label: the corrected text and the errata
---   that fired, in the order they are listed.
-applyErrata :: ErrataSet -> Site -> Text -> (Text, [Erratum])
-applyErrata errataSet site text = foldl' step (text, []) (filter (appliesAt site) (corrections errataSet))
+-- | Correct one piece of text with the errata of its table, in the order they
+--   are given (each sees the text the ones before it left): the corrected text
+--   and the errata that fired.
+applyErrata :: [Erratum] -> Site -> Text -> (Text, [Erratum])
+applyErrata es site text = foldl' step (text, []) (filter (appliesAt site) es)
   where
     step (t, fired) e
       | errFrom e `T.isInfixOf` t = (T.replace (errFrom e) (errTo e) t, fired <> [e])
       | otherwise                 = (t, fired)
 
--- | 'applyErrata' with its report: under 'Scott' one @W-ERRATUM-APPLIED@ per
---   correction made; under 'Published' the text unchanged and one
---   @W-ERRATUM-KNOWN@ per correction that would have been made.
-errata :: ErrataSet -> Site -> Text -> (Text, [Finding])
-errata Published site text = (text, map (knownDefectFinding site) (snd (applyErrata Scott site text)))
-errata errataSet site text = second (map (appliedFinding site)) (applyErrata errataSet site text)
+-- | 'applyErrata' under an errata set, with its report: under 'Scott' the
+--   corrected text and one @W-ERRATUM-APPLIED@ per correction made; under
+--   'Published' the text as printed and one @W-ERRATUM-KNOWN@ per correction
+--   Scott's set makes there.
+errata :: ErrataSet -> [Erratum] -> Site -> Text -> (Text, [Finding])
+errata es errs site text = let (t, _, fs) = errataFired es errs site text in (t, fs)
+
+errataFired :: ErrataSet -> [Erratum] -> Site -> Text -> (Text, [Erratum], [Finding])
+errataFired es errs site text = case es of
+  Scott     -> (corrected, fired, map (appliedFinding site) fired)
+  Published -> (text, fired, map (knownDefectFinding site) fired)
+  where (corrected, fired) = applyErrata errs site text
+
+-- | A table read under an errata set: its caption, header cells and data cells,
+--   each corrected by the table's errata ('errata'), with the findings, and
+--   @W-ERRATUM-UNUSED@ for a correction that matches no text of the table.
+correctTable :: ErrataSet -> SpecId -> Text -> Maybe Int -> [Erratum] -> TableIR -> (TableIR, [Finding])
+correctTable es sid tid pg errs t = (t', concatMap third results <> unused)
+  where
+    site part = Site sid tid part pg
+    header    = maybe [] (map (.text)) (listToMaybe t.headerRows)
+    column c  = fromMaybe "" (listToMaybe (drop c header))
+    one part  = errataFired es errs (site part)
+    caption   = (\c -> one Caption c) <$> t.caption
+    headers   = [ [ one (HeaderCell r c) cell.text | (c, cell) <- zip [0 ..] row ] | (r, row) <- zip [0 ..] t.headerRows ]
+    cells     = [ [ one (DataCell r c (column c)) cell.text | (c, cell) <- zip [0 ..] row ] | (r, row) <- zip [0 ..] t.rows ]
+    results   = maybeToList caption <> concat headers <> concat cells
+    setText cell (txt, _, _) = cellWithText txt cell
+    t' = t { caption    = (\(txt, _, _) -> txt) <$> caption
+           , headerRows = zipWith (zipWith setText) t.headerRows headers
+           , rows       = zipWith (zipWith setText) t.rows cells }
+    fired     = concatMap (\(_, f, _) -> f) results
+    third (_, _, fs) = fs
+    unused    = [ unusedFinding sid tid pg e | e <- L.nub (filter (appliesAt (site Caption)) errs), e `notElem` fired ]
+
+
+-- * Findings
 
 appliedFinding :: Site -> Erratum -> Finding
-appliedFinding site e = at site (finding Warning "W-ERRATUM-APPLIED" (describe e <> " (" <> errSource e <> ")"))
+appliedFinding site e = at site (finding Warning "W-ERRATUM-APPLIED" (describe site e <> " (" <> errSource e <> ")"))
 
 knownDefectFinding :: Site -> Erratum -> Finding
-knownDefectFinding site e = at site (finding Warning "W-ERRATUM-KNOWN" ("published text left as printed; scott: " <> describe e))
+knownDefectFinding site e = at site (finding Warning "W-ERRATUM-KNOWN"
+  ("published text left as printed; scott: " <> describe site e <> " (" <> errSource e <> ")"))
 
-describe :: Erratum -> Text
-describe e = partName (errPart e) <> " " <> tshow (errFrom e) <> " -> " <> tshow (errTo e)
+-- | A correction that matches no text of its table.
+unusedFinding :: SpecId -> Text -> Maybe Int -> Erratum -> Finding
+unusedFinding sid tid pg e = Finding Warning "W-ERRATUM-UNUSED" (Just sid) (Just tid) pg
+  ("the annotation's correction " <> tshow (errFrom e) <> " -> " <> tshow (errTo e) <> " matches no text of the table")
 
-partName :: Part -> Text
-partName FormatCell = "Format"
-partName Caption    = "caption"
-partName HeaderCell = "header"
-partName RowLabel   = "label"
+describe :: Site -> Erratum -> Text
+describe site e = partName (sitePart site) <> " " <> tshow (errFrom e) <> " -> " <> tshow (errTo e)
 
 at :: Site -> Finding -> Finding
-at site f = f { spec = Just (siteSpec site), anchor = Just (siteTable site), page = sitePage site }
+at site f = Finding (severity f) (code f) (Just (siteSpec site)) (Just (siteTable site)) (sitePage site) (message f)

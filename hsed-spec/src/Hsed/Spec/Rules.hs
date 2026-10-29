@@ -36,6 +36,19 @@ fire; any other double match is @E-AMBIGUOUS@.
 plus 'Invalid' for an annotation that does not parse or whose modifiers do not
 apply. M1 implements the pair @typeRow@ and @enumValues@; the other rule names
 of "Hsed.Spec.DSL" parse but bind nothing yet (@W-RULE-UNIMPLEMENTED@).
+
+Every annotation is validated once, in 'parseAnnots', so that @hsedc check@ and
+@hsedc bind@ refuse the same ones: its id must parse and name something in the
+IR (@E-ANCHOR@, citing the page), no other annotation may sit on the same
+anchor (@E-ANCHOR@), its payload must parse (@E-SYNTAX@, @E-GRAMMAR@,
+@E-ERRATUM-PUBLISHED@), and the binding must be of the anchor's kind
+(@E-ANCHOR-KIND@, 'anchorKindMismatch'): the @doc@ anchor takes @doc \<spec\>@
+naming this spec, first, and rule tokens; a heading takes rule tokens or a
+@behaviour@; a table takes a table binding or a bare modifier chain; a list item
+or paragraph takes @law@, @fails@ or @behaviour@.
+
+A rule binds only where an anchor puts it in scope, so design section 3.4's
+@C-RULE-ANCHORED@ holds by construction and is not checked separately.
 -}
 module Hsed.Spec.Rules
   ( -- * Rules
@@ -66,7 +79,7 @@ module Hsed.Spec.Rules
   , tablePage
   , locatedAt
   , checkExemplars
-  , checkRulesAnchored
+  , anchorKindMismatch
   ) where
 
 import qualified Data.Text         as DT
@@ -77,13 +90,13 @@ import qualified RIO.Set           as Set
 import qualified RIO.Text          as T
 import           RIO
 
-import           Hsed.Spec.Anchor  (AnchorId (..), parseAnchorId, renderAnchorId)
+import           Hsed.Spec.Anchor  (AnchorId (..), anchorTarget, parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Common  (Finding, RuleName (..), Severity (..), SpecId (..), finding,
                                     renderFinding)
 import qualified Hsed.Spec.Common  as Cm
-import           Hsed.Spec.DSL     (Binding (..), Modifier (..), Ref (..), SomeBinding (..),
+import           Hsed.Spec.DSL     (Binding (..), BindingKind (..), Modifier (..), Ref (..), SomeBinding (..),
                                     applyModifierSome, atShape, bindingAccepts, enumValues,
-                                    knownRules, someBindingShape, typeRow)
+                                    knownRules, someBindingKind, someBindingShape, specName, typeRow)
 import           Hsed.Spec.Grammar (Payload (..), parsePayload, printSomeBinding)
 import           Hsed.Spec.IR      (AnnotIR (..), HeadingIR (..), SpecIR (..), StructPath (..),
                                     TableIR (..))
@@ -198,7 +211,7 @@ ruleTokens = \case
 
 -- | Where a rule is anchored, computed only from the annotations of the IR.
 scopeOf :: SpecIR -> RuleName -> [Section]
-scopeOf ir r = scopesFrom (snd (parseAnnots ir)) r
+scopeOf ir r = scopesFrom (parseAnnots ir) r
 
 scopesFrom :: [ParsedAnnot] -> RuleName -> [Section]
 scopesFrom parsed r = Set.toList $ Set.fromList
@@ -220,14 +233,51 @@ data ParsedAnnot = ParsedAnnot
   , paPayload :: !(Either Finding Payload)   -- ^ a failure is located at the annotation
   }
 
--- | Every annotation of the IR parsed; the findings are those of the ids that do not parse.
-parseAnnots :: SpecIR -> ([Finding], [ParsedAnnot])
-parseAnnots ir = (badIds, map parsed ir.annots)
+-- | Every annotation of the IR, validated: an id that does not parse or names
+--   nothing in the IR, a second annotation on one anchor, a payload that does
+--   not parse and a binding of the wrong kind for its anchor each make the
+--   payload a located Error.
+parseAnnots :: SpecIR -> [ParsedAnnot]
+parseAnnots ir = map parsed ir.annots
   where
-    parsed a = ParsedAnnot a (parseAnchorId a.id) (first (located a) (parsePayload a.contents))
-    located a = locatedAt (SpecId ir.spec) a.id (a.page + 1)
-    badIds = [ locatedAt (SpecId ir.spec) a.id (a.page + 1) (finding Error "E-ANCHOR" ("not an anchor id: " <> tshow a.id))
-             | a <- ir.annots, isNothing (parseAnchorId a.id) ]
+    sid = SpecId ir.spec
+    counts = Map.fromListWith (+) [ (aid, 1 :: Int) | a <- ir.annots, Just aid <- [parseAnchorId a.id] ]
+    parsed a = ParsedAnnot a anchorId (first (locatedAt sid a.id (a.page + 1)) (validate a))
+      where anchorId = parseAnchorId a.id
+    validate a = case parseAnchorId a.id of
+      Nothing  -> Left (finding Error "E-ANCHOR" ("not an anchor id: " <> tshow a.id))
+      Just aid -> do
+        let n = Map.findWithDefault 0 aid counts
+        when (n > 1) $ Left (finding Error "E-ANCHOR" (tshow n <> " annotations on one anchor"))
+        void (first (finding Error "E-ANCHOR") (anchorTarget ir aid))
+        payload <- parsePayload a.contents
+        maybe (Right payload) (\(c, msg) -> Left (finding Error c msg)) (anchorKindMismatch sid aid payload)
+
+-- | Why a payload does not belong on an anchor, as a code and a message; Nothing
+--   when it does (design section 3.1's kinds, 'Hsed.Spec.DSL.bindingKind').
+anchorKindMismatch :: SpecId -> AnchorId -> Payload -> Maybe (Text, Text)
+anchorKindMismatch sid aid payload = case (aid, payload) of
+  (TableId _, Modifiers _) -> Nothing
+  (_, Modifiers _)         -> Just ("E-MODIFIER", "a bare modifier chain binds only a table")
+  (_, Full sb)             -> kindError <$> mismatch (someBindingKind sb)
+  where
+    kindError why = ("E-ANCHOR-KIND", why <> ", not " <> printPayloadShort)
+    printPayloadShort = case payload of
+      Full sb      -> printSomeBinding sb
+      Modifiers _  -> "a bare modifier chain"
+    mismatch k = case (aid, k) of
+      (DocId, DocKind [d] True) | d == sid -> Nothing
+                                | otherwise -> Just ("the doc anchor of " <> specIdText sid <> " names its own spec, doc " <> specName sid)
+      (DocId, _)               -> Just ("the doc anchor takes doc " <> specName sid <> " first, then rule tokens")
+      (SectionId _, RuleKind)      -> Nothing
+      (SectionId _, BehaviourKind) -> Nothing
+      (SectionId _, _)         -> Just "a heading anchor takes rule tokens or a behaviour"
+      (TableId _, TableKind)   -> Nothing
+      (TableId _, _)           -> Just "a table anchor takes a table binding or a bare modifier chain"
+      (ItemId _ _, LawKind)       -> Nothing
+      (ItemId _ _, BehaviourKind) -> Nothing
+      (ItemId _ _, _)          -> Just "a list item or paragraph anchor takes law, fails or behaviour"
+      (SigId _, _)             -> Just "a signature block is rule-bound and carries no annotation"
 
 -- | Give a finding a location unless it has one.
 locatedAt :: SpecId -> Text -> Int -> Finding -> Finding
@@ -296,10 +346,10 @@ classifyWith = classifyWithRules rules
 
 -- | 'classifyWith' under another set of rules (the tests' ambiguous pairs).
 classifyWithRules :: [Rule] -> SpecIR -> (Map AnchorId Classification, [Finding])
-classifyWithRules ruleSet ir = (final, badIds <> orphanAnnots <> otherAnnots <> unimplemented <> concatMap located (Map.toList final))
+classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatMap located (Map.toList final))
   where
     sid      = SpecId ir.spec
-    (badIds, parsed) = parseAnnots ir
+    parsed   = parseAnnots ir
     tables   = numberedTables ir
     sections = tableSections ir
     scopes   = Map.fromList [ (ruleName r, scopesFrom parsed (ruleName r)) | r <- ruleSet ]
@@ -322,12 +372,11 @@ classifyWithRules ruleSet ir = (final, badIds <> orphanAnnots <> otherAnnots <> 
     here aid t = locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))
 
     classifyTable aid t = case commentsOn aid of
-      []   -> byRules aid t []
-      [pa] -> case paPayload pa of
+      []     -> byRules aid t []
+      pa : _ -> case paPayload pa of     -- a second annotation on the anchor makes each one Left
         Left f               -> Invalid f
         Right (Full sb)      -> CommentBound sb
         Right (Modifiers ms) -> byRules aid t ms
-      pas  -> Invalid (here aid t (finding Error "E-ANCHOR" (tshow (length pas) <> " annotations on one table")))
 
     byRules aid t ms = case foldM project (measure sid t) ms of
       Left msg   -> Invalid (here aid t (finding Error "E-MODIFIER" msg))
@@ -372,17 +421,8 @@ classifyWithRules ruleSet ir = (final, badIds <> orphanAnnots <> otherAnnots <> 
                                      ("no annotation binds it and no rule in scope fires on it (" <> fromMaybe "no caption" t.caption <> ")"))]
       _                         -> []
 
-    -- annotations that are not about a table of this IR
-    orphanAnnots = [ locatedAt sid a.id (a.page + 1) (finding Error "E-ANCHOR" ("no table " <> a.id <> " in the IR"))
-                   | pa <- parsed, let a = paAnnot pa, Just aid@(TableId _) <- [paAnchor pa], not (Map.member aid tables) ]
-    otherAnnots  = [ f | pa <- parsed, Just aid <- [paAnchor pa], not (isTable aid)
-                       , f <- either pure (nonTablePayload (paAnnot pa)) (paPayload pa) ]
-    nonTablePayload a = \case
-      Modifiers _ -> [locatedAt sid a.id (a.page + 1) (finding Error "E-MODIFIER" "a bare modifier chain binds only a table")]
-      Full _      -> []
-    isTable = \case
-      TableId _ -> True
-      _         -> False
+    -- what is wrong with an annotation that no numbered table's classification reports
+    annotFindings = L.nub [ f | pa <- parsed, Left f <- [paPayload pa], maybe True (`Map.notMember` tables) (paAnchor pa) ]
     unimplemented =
       [ locatedAt sid (paAnnot pa).id ((paAnnot pa).page + 1)
           (finding (if r `elem` knownRules then Warning else Error) (if r `elem` knownRules then "W-RULE-UNIMPLEMENTED" else "E-GRAMMAR")
@@ -425,12 +465,3 @@ checkExemplars ir = concatMap check [ r | r <- rules, fst (exemplar r) == sid ]
              , guarded (not joins) (finding Error "C-EXEMPLAR" ("rule " <> ruleNameText (ruleName r) <> ": the exemplar has no table to join"))
              , shape ])
     guarded c f = if c then Just f else Nothing
-
--- | @C-RULE-ANCHORED@: every rule that binds a table has an anchor in this spec.
-checkRulesAnchored :: SpecIR -> Map AnchorId Classification -> [Finding]
-checkRulesAnchored ir classes =
-  [ (finding Error "C-RULE-ANCHORED" ("rule " <> ruleNameText r <> " binds " <> tshow n <> " tables and has no anchor in " <> ir.spec))
-      { Cm.spec = Just (SpecId ir.spec) }
-  | (r, n) <- Map.toList usage, null (scopeOf ir r) ]
-  where
-    usage = Map.fromListWith (+) [ (r, 1 :: Int) | RuleBound r _ _ <- Map.elems classes ]

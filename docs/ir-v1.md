@@ -119,7 +119,12 @@ core-2.01 | 5.1.3 | rule typeRow & rule enumValues
 core-2.01 | T75 | erratum scott ["Fractoin" ~> "Fraction"]
 ```
 Kind follows from the id: `doc` is Doc, a section number is Rule, `T<n>` is Bind, `<section>#<item>`
-is Law (or Behaviour when the payload starts with `behaviour`/`fails`); `<section>#p<k>` names the
-k-th plain paragraph of a section. The committed file is the canonical form (lines in canonical
+is Law; a section or an item whose payload starts with `behaviour`/`fails` is Behaviour (a method
+heading or a Fails list, design §3.1); `<section>#p<k>` names the k-th plain paragraph of a
+section. What a payload may say depends on its anchor: the doc anchor takes `doc <spec>` (naming
+its own spec) first, then rule tokens; a heading takes rule tokens or a `behaviour`; a table takes
+a table binding or a bare modifier chain; an item takes `law`, `fails` or `behaviour`. hsedc refuses
+anything else (`E-ANCHOR-KIND`), and `annotate.py` refuses what it can tell from the first word
+(`hsed_annot.VOCABULARY`). An anchor may carry one annotation. The committed file is the canonical form (lines in canonical
 order, single spaces around `|`, no comments): `dump` of the annotated PDF reproduces it byte for
 byte, and `annotate` of the file reproduces the `.upd`.

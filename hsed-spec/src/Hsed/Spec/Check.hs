@@ -22,14 +22,16 @@ the IR itself: the Type objects of the type-row tables and the table names of
 the T240-shaped tables. The checks of M1, each emitting findings with the code
 in brackets:
 
-* classification: parse failures (@E-SYNTAX@, @E-GRAMMAR@, @E-MODIFIER@),
-  @E-AMBIGUOUS@, @W-UNBOUND@;
+* classification: annotations refused (@E-ANCHOR@, @E-ANCHOR-KIND@,
+  @E-SYNTAX@, @E-GRAMMAR@, @E-ERRATUM-PUBLISHED@, @E-MODIFIER@), @E-AMBIGUOUS@,
+  @W-UNBOUND@ ("Hsed.Spec.Rules");
 * @C-EXEMPLAR@: each rule still fires on its exemplar;
-* @C-RULE-ANCHORED@: each rule that binds a table has an anchor;
 * @E-SHAPE@: every bound table's form is accepted by its binding ('bindingAccepts');
 * @C-UID-TABLE@: a type row's UID is eight bytes with upper half @00 00 00 05@;
-* @C-UID-UNIQUE@: no two type rows share a UID (a duplicate the published text
-  is known to print is the Warning @W-UID-DUPLICATE@, see 'knownDuplicateUIDs');
+* @C-UID-UNIQUE@: no two type rows share a UID; an annotation's @waive
+  "C-UID-UNIQUE" "\<uid\>" "\<reason\>"@ makes the Error a Warning for that
+  table and that UID alone, and a waiver that waives nothing is
+  @W-WAIVER-UNUSED@;
 * @C-FMT-RESOLVE@: every Format cell parses ('parseFormat'), its findings
   carrying "Hsed.Spec.Format"'s codes (@E-FMT-RESOLVE@ and friends);
 * @C-ENUM-RANGE@: an enumeration's values lie within its type row's range, each
@@ -37,12 +39,19 @@ in brackets:
   constructors are distinct; a label used for more than one row is
   @W-ENUM-LABEL-REPEATED@.
 
-Errata: a table's caption, header, Format cell and labels are read under the
-selected set, first the corrections its own annotation carries (@erratum scott
-[...]@), then those of "Hsed.Spec.Errata"; each correction made is
-@W-ERRATUM-APPLIED@, each known defect left as printed @W-ERRATUM-KNOWN@, and an
-annotation's correction whose text the table does not contain is
-@W-ERRATUM-UNUSED@.
+Errata ("Hsed.Spec.Errata"): every bound table is read under the selected set,
+its caption, header cells and data cells corrected by the @erratum scott [...]@
+pairs its own annotation carries, and by nothing else: under @scott@ each
+correction made is @W-ERRATUM-APPLIED@, under @published@ each defect left as
+printed is @W-ERRATUM-KNOWN@, and under both a correction whose text the table
+does not contain is @W-ERRATUM-UNUSED@. Everything that reads a bound table
+(the Format environment, the type rows, the enumerations, the identifier a
+caption names) reads the corrected one; the rules fire on the text as printed.
+
+Normalisations, the same under both sets, are Notes: a caption printed
+@\<X\>_object _ref@ (@N-CAPTION-NORMALISED@), a header cell in the typo table
+(@N-HEADER-NORMALISED@), and a Format cell's spacing before a brace or its
+@Table_UID@ suffix (@N-FORMAT-NORMALISED@).
 -}
 module Hsed.Spec.Check
   ( -- * The Compile monad
@@ -68,7 +77,8 @@ module Hsed.Spec.Check
   , checks
   , checkIR
   , sortFindings
-  , knownDuplicateUIDs
+  , Mods (..)
+  , modsOf
   ) where
 
 import           Control.Monad.RWS.Strict (RWST, runRWST, tell)
@@ -77,21 +87,23 @@ import qualified Data.Text                as DT
 import qualified RIO.Char                 as C
 import qualified RIO.List                 as L
 import qualified RIO.Map                  as Map
+import qualified RIO.Set                  as Set
 import qualified RIO.Text                 as T
 import           RIO
 
 import           Hsed.Core.Types          (Operand (..), TypeDef (..))
-import           Hsed.Spec.Anchor         (AnchorId (..), locationText, renderAnchorId)
+import           Hsed.Spec.Anchor         (AnchorId (..), locationText, naturalKey, renderAnchorId)
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.DSL            (Binding (..), SomeBinding (..), bindingAccepts,
                                            someBindingShape)
-import           Hsed.Spec.Errata         (Erratum (..), Part (..), Site (..), appliedFinding, errata)
-import           Hsed.Spec.Format         (Env, mkEnv, parseFormat)
+import           Hsed.Spec.Errata         (Erratum (..), correctTable)
+import           Hsed.Spec.Format         (Env, formatNormalisations, mkEnv, parseFormat)
 import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR (..), SpecIR (..), TableIR (..))
 import           Hsed.Spec.Rules
-import           Hsed.Spec.Shape          (Shape (..), measure, normHeader)
+import           Hsed.Spec.Shape          (Shape (..), headerNormalisations, measure, normHeader, normaliseCaption,
+                                           rawCaptionTitle)
 
 
 -- * The Compile monad
@@ -104,25 +116,36 @@ data CompileEnv = CompileEnv
   , ceTables         :: !(Map AnchorId TableIR)          -- ^ the numbered tables
   , ceClasses        :: !(Map AnchorId Classification)
   , ceClassFindings  :: ![Finding]                        -- ^ what the classification found
+  , ceCorrected      :: !(Map AnchorId TableIR)           -- ^ the bound tables, read under the errata set
+  , ceErrataFindings :: ![Finding]                        -- ^ what reading them under the set found
   , ceFormatEnv      :: !Env
   , ceEnvFindings    :: ![Finding]                        -- ^ what building the 'Env' found
   }
 
 mkCompileEnv :: ErrataSet -> SpecIR -> CompileEnv
 mkCompileEnv es ir = CompileEnv
-  { ceIR            = ir
-  , ceSpec          = SpecId ir.spec
-  , ceErrata        = es
-  , ceTables        = tables
-  , ceClasses       = classes
-  , ceClassFindings = classFindings
-  , ceFormatEnv     = mkEnv (typeEnvFrom tables classes) names
-  , ceEnvFindings   = nameFindings
+  { ceIR             = ir
+  , ceSpec           = sid
+  , ceErrata         = es
+  , ceTables         = tables
+  , ceClasses        = classes
+  , ceClassFindings  = classFindings
+  , ceCorrected      = fmap fst corrected
+  , ceErrataFindings = concatMap snd (Map.elems corrected)
+  , ceFormatEnv      = mkEnv (typeEnvFrom (Map.union (fmap fst corrected) tables) classes) names
+  , ceEnvFindings    = nameFindings
   }
   where
+    sid                    = SpecId ir.spec
     tables                 = numberedTables ir
     (classes, classFindings) = classifyWith ir
     (nameFindings, names)  = either (\f -> ([f], [])) ([],) (tableNamesFrom ir)
+    corrected = Map.fromList
+      [ (aid, correctTable es sid tid page (map erratum (mErrata (modsOf sb))) t)
+      | (aid, t) <- Map.toList tables, Just sb <- [Map.lookup aid classes >>= boundBinding]
+      , let tid = renderAnchorId aid
+            page = tablePage t
+            erratum (from, into) = Erratum sid tid from into ("annotation at " <> locationText sid (fromMaybe 1 page) aid) ]
 
 -- | What a compilation produces besides findings.
 data Artefacts = Artefacts
@@ -176,118 +199,93 @@ bindingOf env aid = Map.lookup aid (ceClasses env) >>= boundBinding
 -- | One type-row table read under the errata set.
 data TypeRowRead = TypeRowRead
   { trAnchor  :: !AnchorId
-  , trTable   :: !TableIR
-  , trCaption :: !Text                       -- ^ after errata
-  , trIdent   :: !(Maybe Text)               -- ^ the caption's identifier
-  , trName    :: !Text                       -- ^ the Name cell
-  , trUIDText :: !Text
+  , trTable   :: !TableIR                    -- ^ as printed (its cells are what the manifest hashes)
+  , trCaption :: !Text                       -- ^ after errata, normalised
+  , trIdent   :: !(Maybe Text)               -- ^ the corrected caption's identifier
+  , trName    :: !Text                       -- ^ the Name cell after errata
+  , trUIDText :: !Text                       -- ^ the UID cell after errata
   , trUID     :: !(Maybe [Word8])
   , trFormat  :: !Text                       -- ^ the Format cell after errata
   , trTypeDef :: !(Either Finding TypeDef)   -- ^ located at the table
-  , trErrata  :: ![Finding]
+  , trWaivers :: ![(Text, Text, Text)]       -- ^ the annotation's waivers: check, subject, reason
   }
 
 -- | One enumeration table read under the errata set.
 data EnumRead = EnumRead
   { erAnchor  :: !AnchorId
-  , erTable   :: !TableIR
-  , erCaption :: !Text                 -- ^ after errata
-  , erIdent   :: !(Maybe Text)         -- ^ the type the caption names
+  , erTable   :: !TableIR              -- ^ as printed
+  , erCaption :: !Text                 -- ^ after errata, normalised
+  , erIdent   :: !(Maybe Text)         -- ^ the type the corrected caption names
   , erRows    :: ![(Text, Text)]       -- ^ value cell and label after errata, in the bound columns
   , erRangeWords :: ![Text]
-  , erErrata  :: ![Finding]
   }
 
--- | The tables bound with a shape, in anchor order, with their bindings.
-boundWith :: Shape -> CompileEnv -> [(AnchorId, TableIR, SomeBinding)]
+-- | The tables bound with a shape, in anchor order, with their bindings and
+--   their text read under the errata set.
+boundWith :: Shape -> CompileEnv -> [(AnchorId, TableIR, TableIR, SomeBinding)]
 boundWith shape env =
-  [ (aid, t, sb) | (aid, t) <- Map.toList (ceTables env), Just sb <- [bindingOf env aid], someBindingShape sb == Just shape ]
+  [ (aid, t, Map.findWithDefault t aid (ceCorrected env), sb)
+  | (aid, t) <- Map.toList (ceTables env), Just sb <- [bindingOf env aid], someBindingShape sb == Just shape ]
 
--- | The modifiers of a binding that the readers need.
-data Mods = Mods { mErrata :: [(ErrataSet, [(Text, Text)])], mCols :: Maybe (Int, Int), mRangeWords :: [Text] }
+-- | The modifiers of a binding that the readers need: Scott's corrections (the
+--   grammar admits no other set), the bound columns, the range words and the waivers.
+data Mods = Mods
+  { mErrata     :: [(Text, Text)]
+  , mCols       :: Maybe (Int, Int)
+  , mRangeWords :: [Text]
+  , mWaivers    :: [(Text, Text, Text)]
+  }
 
 modsOf :: SomeBinding -> Mods
 modsOf = \case
   SomeBinding b -> go b
-  PolyBinding _ -> Mods [] Nothing []
+  PolyBinding b -> go (b :: Binding 'Prose)
   where
     go :: Binding s -> Mods
     go = \case
-      WithErratum e ps b      -> let m = go b in m { mErrata = (e, ps) : mErrata m }
-      WithCols a c b          -> (go b) { mCols = Just (a, c) }
-      WithRangeWords ws b     -> let m = go b in m { mRangeWords = ws <> mRangeWords m }
-      WithEnumInDescription b -> go b
-      WithExpand b            -> go b
-      WithAs b                -> go b
-      _                       -> Mods [] Nothing []
+      WithErratum Scott ps b    -> let m = go b in m { mErrata = ps <> mErrata m }
+      WithErratum Published _ b -> go b
+      WithWaiver c sj r b       -> let m = go b in m { mWaivers = (c, sj, r) : mWaivers m }
+      WithCols a c b            -> (go b) { mCols = Just (a, c) }
+      WithRangeWords ws b       -> let m = go b in m { mRangeWords = ws <> mRangeWords m }
+      WithEnumInDescription b   -> go b
+      WithExpand b              -> go b
+      WithAs b                  -> go b
+      _                         -> Mods [] Nothing [] []
 
--- | A table's texts corrected under the errata set: the annotation's own
---   corrections of that set, then the Errata module's; the findings, and
---   @W-ERRATUM-UNUSED@ for an annotation correction no text contained.
-correctAll :: CompileEnv -> AnchorId -> TableIR -> SomeBinding -> [(Part, Text)] -> ([Text], [Finding])
-correctAll env aid t sb parts = (map fst results, concatMap snd results <> unused)
-  where
-    sid    = ceSpec env
-    tid    = renderAnchorId aid
-    page   = tablePage t
-    pairs  = concat [ ps | (e, ps) <- mErrata (modsOf sb), e == ceErrata env ]
-    source = "annotation at " <> locationText sid (fromMaybe 1 page) aid
-    results = map one parts
-    one (part, text) =
-      let site = Site sid tid part page
-          step (txt, fs) (from, into)
-            | from `T.isInfixOf` txt = (DT.replace from into txt, fs <> [appliedFinding site (Erratum sid tid part from into source)])
-            | otherwise              = (txt, fs)
-          (own, ownFs)    = foldl' step (text, []) pairs
-          (final, setFs)  = errata (ceErrata env) site own
-      in (final, ownFs <> setFs)
-    unused = [ locatedAt sid tid (fromMaybe 1 page) (finding Warning "W-ERRATUM-UNUSED"
-                 ("the annotation's correction " <> tshow from <> " -> " <> tshow into <> " matches no text of the table"))
-             | (from, into) <- pairs, not (any ((from `T.isInfixOf`) . snd) parts) ]
-
--- | Every table bound as a type row, read; a table that is not one row of
---   three cells is a finding.
+-- | Every table bound as a type row, read under the errata set; a table that is
+--   not one row of three cells is a finding.
 typeRowReads :: CompileEnv -> [Either Finding TypeRowRead]
-typeRowReads env = [ readRow aid t sb | (aid, t, sb) <- boundWith TypeRow env ]
+typeRowReads env = [ readRow aid t t' sb | (aid, t, t', sb) <- boundWith TypeRow env ]
   where
     sid = ceSpec env
-    readRow aid t sb = case t.rows of
+    readRow aid t t' sb = case t'.rows of
       [[uidCell, nameCell, formatCell]] ->
-        let caption = fromMaybe "" t.caption
-            (texts, fs) = correctAll env aid t sb [(Caption, caption), (FormatCell, formatCell.text)]
-            (caption', format') = case texts of
-              [c, f] -> (c, f)
-              _      -> (caption, formatCell.text)
-            here = locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))
+        let here = locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))
         in Right TypeRowRead
-             { trAnchor = aid, trTable = t, trCaption = caption'
-             , trIdent = tableIdent (measure sid t)
+             { trAnchor = aid, trTable = t, trCaption = normaliseCaption (fromMaybe "" t'.caption)
+             , trIdent = tableIdent (measure sid t')
              , trName = T.strip nameCell.text, trUIDText = uidCell.text, trUID = parseUIDCell uidCell.text
-             , trFormat = format', trTypeDef = first here (parseFormat (ceFormatEnv env) format')
-             , trErrata = fs }
+             , trFormat = formatCell.text, trTypeDef = first here (parseFormat (ceFormatEnv env) formatCell.text)
+             , trWaivers = mWaivers (modsOf sb) }
       rows -> Left (locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t)) (finding Error "E-SHAPE"
                 ("a type row table holds one row of three cells; this one has " <> tshow (map length rows))))
 
--- | Every table bound as an enumeration, read in its bound columns (@cols a b@, else 0 and 1).
+-- | Every table bound as an enumeration, read under the errata set in its bound
+--   columns (@cols a b@, else 0 and 1).
 enumReads :: CompileEnv -> [Either Finding EnumRead]
-enumReads env = [ readEnum aid t sb | (aid, t, sb) <- boundWith EnumValues env ]
+enumReads env = [ readEnum aid t t' sb | (aid, t, t', sb) <- boundWith EnumValues env ]
   where
     sid = ceSpec env
-    readEnum aid t sb =
+    readEnum aid t t' sb =
       let mods      = modsOf sb
           (a, b)    = fromMaybe (0, 1) (mCols mods)
           cell :: Int -> [CellIR] -> Text
           cell i r  = maybe "" (.text) (listToMaybe (drop i r))
-          header    = maybe [] (map (.text)) (listToMaybe t.headerRows)
-          caption   = fromMaybe "" t.caption
-          values    = map (cell a) t.rows
-          parts     = [(Caption, caption)] <> map (HeaderCell,) header <> map ((RowLabel,) . cell b) t.rows
-          (texts, fs) = correctAll env aid t sb parts
-          labels    = drop (1 + length header) texts
       in Right EnumRead
-           { erAnchor = aid, erTable = t, erCaption = fromMaybe caption (listToMaybe texts)
-           , erIdent = tableIdent (measure sid t), erRows = zip values labels
-           , erRangeWords = mRangeWords mods, erErrata = fs }
+           { erAnchor = aid, erTable = t, erCaption = normaliseCaption (fromMaybe "" t'.caption)
+           , erIdent = tableIdent (measure sid t'), erRows = [ (cell a r, cell b r) | r <- t'.rows ]
+           , erRangeWords = mRangeWords mods }
 
 -- | A UID cell: sixteen hex digits once whitespace is removed.
 parseUIDCell :: Text -> Maybe [Word8]
@@ -382,13 +380,6 @@ checkEnum env rows e = case companion of
 
 -- * The checks
 
--- | UIDs the published text prints for two type rows, with no correction recorded:
---   Core 2.01 gives integer_2 (T94, PDF 111) and uinteger_2 (T149, PDF 124) the same
---   UID @00 00 00 05 00 00 02 15@. Reported as @W-UID-DUPLICATE@ rather than
---   @C-UID-UNIQUE@ until an erratum says which one is wrong.
-knownDuplicateUIDs :: [(SpecId, [AnchorId])]
-knownDuplicateUIDs = [(SpecId "core-2.01", [TableId 94, TableId 149])]
-
 -- | Every M1 check, in a fixed order.
 checks :: Compile ()
 checks = do
@@ -400,21 +391,45 @@ checks = do
   tell (ceClassFindings env)
   tell (ceEnvFindings env)
   tell (checkExemplars ir)
-  tell (checkRulesAnchored ir (ceClasses env))
   -- E-SHAPE on every bound table
   tell [ f | (aid, t) <- Map.toList (ceTables env), Just (SomeBinding b) <- [bindingOf env aid]
            , Just f <- [bindingAccepts b (measure sid t)] ]
+  -- errata, then the normalisations every numbered table is read with
+  tell (ceErrataFindings env)
+  tell (concatMap (captionNote sid) (Map.toList (ceTables env)))
+  tell (concatMap (headerNote sid) (Map.toList (ceTables env)))
   -- type rows
   tell (lefts rowReads)
-  tell (concatMap trErrata rowsOk)
+  tell (concatMap (formatNote sid) rowsOk)
   tell (concatMap (uidTable sid) rowsOk)
   tell (uidUnique sid rowsOk)
   tell (lefts (map trTypeDef rowsOk))
   -- enumerations
   let enums = enumReads env
   tell (lefts enums)
-  tell (concatMap erErrata (rights enums))
   tell (concatMap (ecFindings . checkEnum env rowsOk) (rights enums))
+
+-- | @N-CAPTION-NORMALISED@: a caption read other than as printed.
+captionNote :: SpecId -> (AnchorId, TableIR) -> [Finding]
+captionNote sid (aid, t) =
+  [ locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))
+      (finding Note "N-CAPTION-NORMALISED" ("caption " <> tshow raw <> " read as " <> tshow (normaliseCaption raw)))
+  | Just raw <- [t.caption >>= rawCaptionTitle], normaliseCaption raw /= raw ]
+
+-- | @N-HEADER-NORMALISED@: a header cell read through the typo table.
+headerNote :: SpecId -> (AnchorId, TableIR) -> [Finding]
+headerNote sid (aid, t) =
+  [ locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))
+      (finding Note "N-HEADER-NORMALISED" ("header " <> tshow bad <> " read as " <> tshow good))
+  | (bad, good) <- headerNormalisations t ]
+
+-- | @N-FORMAT-NORMALISED@: a Format cell whose spacing or @Table_UID@ suffix the parser reads past.
+formatNote :: SpecId -> TypeRowRead -> [Finding]
+formatNote sid tr = case formatNormalisations (trFormat tr) of
+  []    -> []
+  pairs -> [ locatedAt sid (renderAnchorId (trAnchor tr)) (fromMaybe 1 (tablePage (trTable tr)))
+               (finding Note "N-FORMAT-NORMALISED"
+                 ("Format read with " <> T.intercalate ", " [ tshow a <> " as " <> tshow b | (a, b) <- pairs ])) ]
 
 uidTable :: SpecId -> TypeRowRead -> [Finding]
 uidTable sid tr = map (locatedAt sid (renderAnchorId (trAnchor tr)) (fromMaybe 1 (tablePage (trTable tr)))) $ case trUID tr of
@@ -423,26 +438,40 @@ uidTable sid tr = map (locatedAt sid (renderAnchorId (trAnchor tr)) (fromMaybe 1
     | take 4 bs == [0, 0, 0, 5] -> []
     | otherwise -> [finding Error "C-UID-TABLE" ("the UID " <> hexUID bs <> " of " <> trName tr <> " is not a Type object's (upper half 00 00 00 05)")]
 
+-- | @C-UID-UNIQUE@, reported at every type row after the first with a UID. A
+--   waiver on that row for that very UID makes it a Warning carrying the
+--   waiver's reason; a waiver that waives nothing (the row's UID is another, or
+--   no row before it has it) is @W-WAIVER-UNUSED@, and the Error stands.
 uidUnique :: SpecId -> [TypeRowRead] -> [Finding]
-uidUnique sid rows = concatMap clash (Map.elems groups)
+uidUnique sid rows = concatMap clash (Map.elems groups) <> unusedWaivers
   where
     groups = Map.fromListWith (flip (<>)) [ (bs, [tr]) | tr <- rows, Just bs <- [trUID tr] ]
+    here tr = locatedAt sid (renderAnchorId (trAnchor tr)) (fromMaybe 1 (tablePage (trTable tr)))
+    -- the reason of a waiver on the row naming this check and the row's own UID
+    ownUID tr subject = isJust (trUID tr) && parseUIDCell subject == trUID tr
+    waiverOf tr = listToMaybe [ reason | ("C-UID-UNIQUE", subject, reason) <- trWaivers tr, ownUID tr subject ]
+    clashing = Set.fromList [ trAnchor tr | _ : rest@(_ : _) <- Map.elems groups, tr <- rest ]
     clash (first' : rest@(_ : _)) =
-      let members = map trAnchor (first' : rest)
-          known   = any (\(s, as) -> s == sid && all (`elem` as) members) knownDuplicateUIDs
-      in [ locatedAt sid (renderAnchorId (trAnchor tr)) (fromMaybe 1 (tablePage (trTable tr)))
-             (finding (if known then Warning else Error) (if known then "W-UID-DUPLICATE" else "C-UID-UNIQUE")
-               ("the UID " <> maybe "" hexUID (trUID tr) <> " of " <> trName tr <> " is also that of "
-                 <> renderAnchorId (trAnchor first') <> " " <> trName first'
-                 <> maybe "" (\p -> " (PDF " <> tshow p <> ")") (tablePage (trTable first'))
-                 <> if known then "; the published text prints it twice and no erratum records which is wrong" else ""))
-         | tr <- rest ]
+      [ here tr (finding (if isJust waived then Warning else Error) "C-UID-UNIQUE"
+          ("the UID " <> maybe "" hexUID (trUID tr) <> " of " <> trName tr <> " is also that of "
+            <> renderAnchorId (trAnchor first') <> " " <> trName first'
+            <> maybe "" (\p -> " (PDF " <> tshow p <> ")") (tablePage (trTable first'))
+            <> maybe "" ("; waived by its annotation: " <>) waived))
+      | tr <- rest, let waived = waiverOf tr ]
     clash _ = []
+    unusedWaivers =
+      [ here tr (finding Warning "W-WAIVER-UNUSED"
+          ("the annotation waives C-UID-UNIQUE for the UID " <> tshow subject <> ", and "
+            <> if ownUID tr subject then "no type row before it has that UID"
+               else "the table's UID cell is " <> tshow (trUIDText tr)))
+      | tr <- rows, ("C-UID-UNIQUE", subject, _) <- trWaivers tr
+      , not (Set.member (trAnchor tr) clashing && ownUID tr subject) ]
 
 -- | Every check of one IR under one errata set, errors first.
 checkIR :: ErrataSet -> SpecIR -> [Finding]
 checkIR es ir = either pure (\(_, _, fs) -> sortFindings fs) (runCompile (mkCompileEnv es ir) checks)
 
--- | Errors, then Warnings, then Notes; within each by page, anchor, code and message.
+-- | Errors, then Warnings, then Notes; within each by page, anchor in its
+--   natural order (T8 before T10), code and message.
 sortFindings :: [Finding] -> [Finding]
-sortFindings = L.sortOn (\f -> (Cm.severity f, Cm.page f, Cm.anchor f, Cm.code f, Cm.message f))
+sortFindings = L.sortOn (\f -> (Cm.severity f, Cm.page f, naturalKey <$> Cm.anchor f, Cm.code f, Cm.message f))

@@ -13,6 +13,7 @@ Stability   : experimental
 -}
 module Hsed.Spec.AnchorSpec (spec) where
 
+import qualified RIO.List         as L
 import           RIO
 import           Test.Hspec
 
@@ -47,9 +48,17 @@ spec = do
     it "round-trips through renderAnchorId" $
       map (renderAnchorId . snd) ids `shouldBe` map fst ids
 
-  describe "anchorIdent" $
+  describe "anchorIdent" $ do
     it "makes a Haskell identifier fragment" $
-      map (anchorIdent . snd) ids `shouldBe` ["T46", "5_1_3", "6", "doc", "3_3_10_2_1_3a", "5_1_3_p2", "5_3_3_6_sig"]
+      map (anchorIdent . snd) ids `shouldBe` ["T46", "5_1_3", "6", "doc", "3_3_10_2_1_i_3a", "5_1_3_i_p2", "5_3_3_6_sig"]
+    it "keeps a heading and an item that share their digits apart (3.3.3.1 and 3.3.3#1)" $ do
+      let clashing = [SectionId "3.3.3.1", ItemId "3.3.3" "1", SectionId "5.3.3.6", ItemId "5.3.3.6" "sig", SigId "5.3.3.6", ItemId "5.3" "3_6"]
+      length (L.nub (map anchorIdent clashing)) `shouldBe` length clashing
+
+  describe "naturalKey" $
+    it "orders ids as hsed_annot.py's natural_key does: T9 before T10, 5.9 before 5.10" $
+      L.sortOn naturalKey ["T10", "T9", "T101", "5.10", "5.9", "doc", "T75", "5.1.3", "3.3.3#1", "3.3.3.1"]
+        `shouldBe` ["3.3.3#1", "3.3.3.1", "5.1.3", "5.9", "5.10", "T9", "T10", "T75", "T101", "doc"]
 
   describe "annotKind" $ do
     it "follows the id" $ do
@@ -62,6 +71,7 @@ spec = do
     it "is Behaviour for a behaviour or fails payload on a section or an item" $ do
       annotKind (SectionId "5.3.3.6") "behaviour \"Base.get\"" `shouldBe` IR.Behaviour
       annotKind (ItemId "5.3.3.6" "p4") "  fails \"Base.getFails\"" `shouldBe` IR.Behaviour
+      annotKind (SectionId "5.3.3.6") "(behaviour \"Base.get\")" `shouldBe` IR.Behaviour
       annotKind (TableId 46) "behaviour \"Base.get\"" `shouldBe` IR.Bind
 
   describe "Anchor" $ do

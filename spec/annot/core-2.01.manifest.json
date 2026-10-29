@@ -69,6 +69,57 @@
    ],
    "struct": "0/1429",
    "title": "clock_time"
+  },
+  {
+   "hash": "0456fc9013ded4e3577922bd25b98b11abe62fa14f21f521f61865d6bdb5fb9e",
+   "header": [
+    "enumerationvalue",
+    "associatedvalue"
+   ],
+   "id": "T101",
+   "kind": "Bind",
+   "label": 96,
+   "ordinal": 103,
+   "page": 112,
+   "rects": [
+    [
+     112,
+     [
+      227.4,
+      373.92,
+      411.49,
+      477.42
+     ]
+    ]
+   ],
+   "struct": "0/1555",
+   "title": "last_reenc_stat Enumeration Values"
+  },
+  {
+   "hash": "1ce08bfea6b2cb2d458192e9d3f42c94c92d8e10c57e287ca85f37f5114bbd43",
+   "header": [
+    "uid",
+    "name",
+    "format"
+   ],
+   "id": "T149",
+   "kind": "Bind",
+   "label": 107,
+   "ordinal": 151,
+   "page": 123,
+   "rects": [
+    [
+     123,
+     [
+      169.44,
+      356.64,
+      469.56,
+      411.18
+     ]
+    ]
+   ],
+   "struct": "0/1792",
+   "title": "uinteger_2"
   }
  ],
  "irVersion": 1,

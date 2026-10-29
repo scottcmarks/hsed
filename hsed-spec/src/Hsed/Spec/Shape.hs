@@ -24,7 +24,9 @@ extractor measured (docs/spec-as-source.md section 4.2). 'accepts' is the
 @E-SHAPE@ check of section 3.3: the shape must accept the form, an Error for a
 rule default and a Warning under @as@. Header cells are compared
 whitespace-stripped and lower-cased after the typo table of section 3.4, and the
-corner cell of a byte grid is normalised before the @grid8@ test.
+corner cell of a byte grid is normalised before the @grid8@ test. Neither
+normalisation is an erratum: both apply under either errata set, and hsedc
+reports each one it makes as a Note ('headerNormalisations', 'normaliseCaption').
 
 'SShape' is the singleton of 'Shape', so a shape can be reified from a type
 ('KnownShape') and a type recovered from a value ('toSomeShape').
@@ -45,7 +47,10 @@ module Hsed.Spec.Shape
   , measure
   , normHeader
   , headerTypos
+  , headerNormalisations
   , captionTitle
+  , rawCaptionTitle
+  , normaliseCaption
   , classifyCaption
   , isGrid8
     -- * The E-SHAPE check
@@ -293,11 +298,12 @@ measure sid t = Form
     title    = t.caption >>= captionTitle
 
 -- | The typo table of design section 3.4, applied before whitespace is stripped.
+--   The design's other two entries, @M axSize@ and @MandatoryWrite  Granularity@,
+--   differ from the right spelling only in whitespace, which 'normHeader' strips
+--   anyway; @Colum Type@ (Opal T26, T43) is the one a typo table is needed for.
 headerTypos :: [(Text, Text)]
 headerTypos =
   [ ("Colum Type", "Column Type")
-  , ("M axSize", "MaxSize")
-  , ("MandatoryWrite  Granularity", "MandatoryWriteGranularity")
   ]
 
 -- | Header normalisation: the typo table, then every whitespace character
@@ -306,17 +312,32 @@ normHeader :: Text -> Text
 normHeader = T.toLower . T.filter (not . C.isSpace) . untypo
   where untypo t = foldl' (\acc (bad, good) -> DT.replace bad good acc) t headerTypos
 
+-- | The typos of the table a table's header cells contain, each as printed and
+--   as read: what hsedc reports as @N-HEADER-NORMALISED@.
+headerNormalisations :: TableIR -> [(Text, Text)]
+headerNormalisations t =
+  [ (bad, good) | row <- t.headerRows, cell <- row, (bad, good) <- headerTypos, bad `T.isInfixOf` cell.text ]
+
 -- | The title of a caption: @Table 46 AC_element@ gives @AC_element@, and Opal's
---   @Table 26 - Admin SP – TPerInfo Columns@ gives @Admin SP – TPerInfo Columns@.
---   The seven @X_object _ref@ captions are joined to @X_object_ref@. Nothing for
---   a caption that does not start with @Table N@.
+--   @Table 26 - Admin SP – TPerInfo Columns@ gives @Admin SP – TPerInfo Columns@,
+--   normalised ('normaliseCaption'). Nothing for a caption that does not start
+--   with @Table N@.
 captionTitle :: Text -> Maybe Text
-captionTitle caption = do
+captionTitle = fmap normaliseCaption . rawCaptionTitle
+
+-- | 'captionTitle' before 'normaliseCaption', the title as printed.
+rawCaptionTitle :: Text -> Maybe Text
+rawCaptionTitle caption = do
   rest <- T.stripPrefix "table" (T.toLower (T.take 5 caption)) >> pure (T.drop 5 caption)
   let (number, afterNumber) = T.span C.isDigit (T.stripStart rest)
   guard (not (T.null number))
-  let title = T.strip (T.dropWhile (`elem` ("-–— " :: String)) (T.stripStart afterNumber))
-  pure (DT.replace "_object _ref" "_object_ref" title)
+  pure (T.strip (T.dropWhile (`elem` ("-–— " :: String)) (T.stripStart afterNumber)))
+
+-- | The seven Core captions printed @\<X\>_object _ref@ read as @\<X\>_object_ref@
+--   (design example E3: normalised and reported, not an erratum; hsedc reports
+--   each as @N-CAPTION-NORMALISED@).
+normaliseCaption :: Text -> Text
+normaliseCaption = DT.replace "_object _ref" "_object_ref"
 
 -- | Classify a caption's title (design section 3.4).
 classifyCaption :: Text -> CaptionKind

@@ -23,7 +23,9 @@ module Hsed.Spec.CoreIR
   , annotated
   , annotatedWith
   , setCell
+  , setHeaderCell
   , dropTable
+  , withoutLine
   , core
   ) where
 
@@ -32,6 +34,7 @@ import qualified Data.Aeson        as A
 import qualified Data.Aeson.KeyMap as KM
 import           RIO
 import           RIO.Directory     (doesFileExist)
+import qualified RIO.Text          as T
 import           Test.Hspec
 
 import           Hsed.Spec.Common  (Finding, SpecId (..))
@@ -77,6 +80,18 @@ setCell tid row col txt ir = ir { tables = map table ir.tables }
         A.Success c' -> c'
         A.Error e    -> error ("setCell: " <> e)
       _ -> c
+
+-- | Set the text of one header cell (row and column 0-based) of a numbered table.
+setHeaderCell :: Text -> Int -> Int -> Text -> SpecIR -> SpecIR
+setHeaderCell tid row col txt ir = ir { tables = map table ir.tables }
+  where
+    table t
+      | t.id == Just tid = t { headerRows = zipWith (\i r -> if i == row then zipWith (\j c -> if j == col then cellWithText txt c else c) [0 :: Int ..] r else r) [0 ..] t.headerRows }
+      | otherwise        = t
+
+-- | A sidecar without the line of one anchor (@withoutLine "T75"@).
+withoutLine :: Text -> Text -> Text
+withoutLine anchorId = T.unlines . filter (not . (("| " <> anchorId <> " |") `T.isInfixOf`)) . T.lines
 
 -- | The IR without a numbered table.
 dropTable :: Text -> SpecIR -> SpecIR

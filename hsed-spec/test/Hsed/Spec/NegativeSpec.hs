@@ -11,14 +11,18 @@ Stability   : experimental
 
 Design section 5.4 gate f and M1 acceptance (f). Each @test/negative/*.hsa@ is
 resolved into the committed Core extraction (the anchor's structure path and
-page come from the IR's tables) and must make the check logic, and the binding
-step, fail with an Error whose text cites @core-2.01.pdf#page=@; the expected
-text of each fixture is in 'expected', and a fixture without an entry there
-fails the suite. hsedc refuses all three itself, so none reaches a generated
-module: @unknown-name.hsa@ fails with hsedc's @E-GRAMMAR@ at the page, not
-with a GHC error (GHC's own rejection of an unknown name, should one ever
+page come from the IR's tables) and must make the check logic fail with an
+Error whose text cites @core-2.01.pdf#page=@, and the binding step too where
+it has something to refuse; the expected text of each fixture is in
+'expected', and a fixture without an entry there fails the suite. @hsedc
+check@ refuses all three. @hsedc bind@ refuses @unknown-name.hsa@ (hsedc's
+@E-GRAMMAR@ at the page, not a GHC error) and @wrong-kind.hsa@
+(@E-ANCHOR-KIND@), so neither reaches a generated module. @wrong-shape.hsa@
+does reach the bindings module: @feature@ on a @'Feature@ anchor type-checks,
+and only the table's measured form says Table 46 is no feature, which check's
+@E-SHAPE@ alone sees. (GHC's own rejection of an unknown name, should one ever
 reach a generated bindings module, is tested in
-"Hsed.Spec.Bindings.PrintSpec"). Nothing here compiles generated code, so
+"Hsed.Spec.Bindings.PrintSpec".) Nothing here compiles generated code, so
 @stack build hsed-spec@ stays green while the fixtures fail.
 -}
 module Hsed.Spec.NegativeSpec (spec) where

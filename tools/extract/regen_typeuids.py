@@ -37,8 +37,12 @@ DELIBERATE = [
     ("Fractoin", "Fraction"),            # Table 75 clock_time Format
     ("Eror", "Error"),                   # Table 101 Enumeration label 'Verify Eror'
     ("_object _ref", "_object_ref"),     # captions of Tables 72, 76, 131, 140, 142, 144 (112 kept the typo)
-    ("Set Value", "Enumeration Value"),  # Table 128 header
-    ("Operator", "Associated Value"),    # Table 61 header
+]
+# Known places where the PDF is correct and hsed's hand transcription differs (PDF text -> hsed
+# text): not typos, so the PDF-anchored source keeps the text as printed and carries no erratum.
+HAND_TRANSCRIPTION = [
+    ("Set Value", "Enumeration Value"),  # Table 128 reset_types, a Set Values table: 'Set Value | Associated Value'
+    ("Operator", "Associated Value"),    # Table 61 boolean_ACE: 'Enumeration Value | Operator' (And, Or)
 ]
 # Known accidental corruptions in hsed (by PDF table number), from the hsed-tables map.
 EXPECTED_CAPTION_QUIRKS = {
@@ -145,17 +149,20 @@ def hsed_enum(b: dict) -> dict:
 
 
 # ----------------------------------------------------------------------------- diffing
-def deliberate(pdf_s: str, hs_s: str) -> str | None:
-    hits = [f"{a!r} -> {b!r}" for a, b in DELIBERATE if a in pdf_s and squash(pdf_s.replace(a, b)) == squash(hs_s)]
+def known_edit(edits: list[tuple[str, str]], pdf_s: str, hs_s: str) -> str | None:
+    hits = [f"{a!r} -> {b!r}" for a, b in edits if a in pdf_s and squash(pdf_s.replace(a, b)) == squash(hs_s)]
     return hits[0] if hits else None
 
 
 def compare_text(field: str, pdf_s: str, hs_s: str, table: int) -> list[dict]:
     if pdf_s == hs_s:
         return []
-    d = deliberate(pdf_s, hs_s)
-    if d:
-        return [{"table": table, "field": field, "pdf": pdf_s, "hsed": hs_s, "class": "deliberate typo fix in hsed", "note": d}]
+    known = [(cls, note) for cls, edits in (("deliberate typo fix in hsed", DELIBERATE),
+                                            ("hsed hand-transcription difference (PDF correct)", HAND_TRANSCRIPTION))
+             if (note := known_edit(edits, pdf_s, hs_s))]
+    if known:
+        cls, note = known[0]
+        return [{"table": table, "field": field, "pdf": pdf_s, "hsed": hs_s, "class": cls, "note": note}]
     if squash(pdf_s) == squash(hs_s):
         return [{"table": table, "field": field, "pdf": pdf_s, "hsed": hs_s, "class": "whitespace-only"}]
     if field == "caption" and (squash(pdf_s).startswith(squash(hs_s)) or table in EXPECTED_CAPTION_QUIRKS):
@@ -236,8 +243,8 @@ def main(argv):
         f"enums {[p['table'] for p in pdf_enums_embedded]}",
         "",
         "Differences by class:",
-        *(f"  {c:<32} {n}" for c, n in sorted(classes.items())),
-        f"  {'TOTAL':<32} {len(diffs)}",
+        *(f"  {c:<50} {n}" for c, n in sorted(classes.items())),
+        f"  {'TOTAL':<50} {len(diffs)}",
         f"  UNEXPLAINED differences: {classes.get('UNEXPLAINED', 0)}   extraction problems: {classes.get('extraction problem', 0)}",
         "",
         "Regenerated data: Type triples = {} (all UIDs 8 bytes: {}), enum tables = {} with {} rows".format(

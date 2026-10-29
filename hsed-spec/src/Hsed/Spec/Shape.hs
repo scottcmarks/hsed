@@ -300,7 +300,7 @@ measure sid t = Form
 -- | The typo table of design section 3.4, applied before whitespace is stripped.
 --   The design's other two entries, @M axSize@ and @MandatoryWrite  Granularity@,
 --   differ from the right spelling only in whitespace, which 'normHeader' strips
---   anyway; @Colum Type@ (Opal T26, T43) is the one a typo table is needed for.
+--   anyway; @Colum Type@ (Opal T26) is the one a typo table is needed for.
 headerTypos :: [(Text, Text)]
 headerTypos =
   [ ("Colum Type", "Column Type")

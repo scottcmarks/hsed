@@ -50,7 +50,7 @@ enumsOf ctx = rights [ enumDecl ctx er (checkEnum ctx rows er) | er <- rights (e
 
 -- | The text of one generated module.
 moduleText :: Text -> CompileResult -> Text
-moduleText name cr = fromMaybe "" (lookup name (crModules cr))
+moduleText modName cr = fromMaybe "" (lookup modName (crModules cr))
 
 typesText :: CompileResult -> Text
 typesText = moduleText "Hsed.Gen.Core.Types"
@@ -94,8 +94,8 @@ spec = do
       it "takes the range of reencrypt_state from its Format, starting at 1" $
         [ e.range | e <- enumsOf ctx, e.name == "reencrypt_state" ] `shouldBe` [(1, 16)]
       it "writes the committed hsed/gen modules" $
-        forM_ (crModules cr) $ \(name, text) -> do
-          committed <- readFileUtf8 (Gen.modulePath "../hsed/gen" name)
+        forM_ (crModules cr) $ \(modName, text) -> do
+          committed <- readFileUtf8 (Gen.modulePath "../hsed/gen" modName)
           text `shouldBe` committed
       it "writes the same text whatever the order of the IR's tables" $ do
         cr' <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir { tables = reverse ir.tables })

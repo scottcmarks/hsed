@@ -83,9 +83,10 @@ spec = do
         map ident [46, 52, 54, 72, 171] `shouldBe` [Just "AC_element", Just "adv_key_mode", Just "attr_flags", Just "Certificates_object_ref", Nothing]
 
     describe "scopeOf" $ do
-      it "finds typeRow and enumValues at section 5.1.3 and nowhere else" $ do
+      it "finds typeRow and enumValues at section 5.1.3 and nowhere else, tableUIDs on the doc anchor" $ do
         scopeOf ir (RuleName "typeRow") `shouldBe` [Subtree "5.1.3"]
         scopeOf ir (RuleName "enumValues") `shouldBe` [Subtree "5.1.3"]
+        scopeOf ir (RuleName "tableUIDs") `shouldBe` [WholeDocument]
         scopeOf ir (RuleName "codes") `shouldBe` []
       it "comes only from the anchors: the pristine IR has none" $ do
         scopeOf pristine (RuleName "typeRow") `shouldBe` []
@@ -96,9 +97,9 @@ spec = do
         count isRuleBound (classify ir') `shouldBe` 119
 
     describe "classify" $ do
-      it "binds the 100 type rows and 19 enumerations of section 5.1.3, and nothing else" $ do
-        count isRuleBound classes `shouldBe` 119
-        count isUnbound classes `shouldBe` 129
+      it "binds the 100 type rows and 19 enumerations of section 5.1.3 and Table 240, and nothing else" $ do
+        count isRuleBound classes `shouldBe` 120
+        count isUnbound classes `shouldBe` 128
         Map.size classes `shouldBe` 248
       it "binds T46 by typeRow and T52 by enumValues, with no comment" $ do
         at' 46 `shouldBe` Just (RuleBound (RuleName "typeRow") [] (SomeBinding typeRow))
@@ -106,11 +107,12 @@ spec = do
       it "applies Table 75's bare erratum to the typeRow default" $
         at' 75 `shouldBe` Just (RuleBound (RuleName "typeRow") [Erratum Scott [("Fractoin", "Fraction")]]
                                           (SomeBinding (erratum scott ["Fractoin" ~> "Fraction"] typeRow)))
-      it "leaves T87 (three columns) and the tables outside 5.1.3 unbound, each a W-UNBOUND" $ do
+      it "leaves T87 (three columns) and the tables outside 5.1.3 but T240 unbound, each a W-UNBOUND" $ do
         at' 87 `shouldBe` Just Unbound
-        at' 240 `shouldBe` Just Unbound
+        at' 239 `shouldBe` Just Unbound
+        at' 240 `shouldBe` Just (RuleBound (RuleName "tableUIDs") [] (SomeBinding tableUIDs))
         let (_, fs) = classifyWith ir
-        length [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning ] `shouldBe` 129
+        length [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning ] `shouldBe` 128
         filter ("T87" `T.isInfixOf`) (map renderFinding fs)
           `shouldBe` ["W-UNBOUND core-2.01.pdf#page=109&T87: no annotation binds it and no rule in scope fires on it (Table 87 gen_status Enumeration Values)"]
       it "binds a wider enumeration through a full binding with cols" $ do
@@ -118,9 +120,9 @@ spec = do
         Map.lookup (TableId 87) (classify ir')
           `shouldBe` Just (CommentBound (SomeBinding (rangeWords ["to"] (cols 0 1 enumValues))))
       it "refuses a bare modifier chain where no rule fires" $ do
-        ir' <- annotated pristine (hsa <> "core-2.01 | T240 | erratum scott [\"a\" ~> \"b\"]\n")
-        fmap describeClassification (Map.lookup (TableId 240) (classify ir'))
-          `shouldSatisfy` maybe False ("invalid: E-MODIFIER core-2.01.pdf#page=302&T240" `T.isPrefixOf`)
+        ir' <- annotated pristine (hsa <> "core-2.01 | T239 | erratum scott [\"a\" ~> \"b\"]\n")
+        fmap describeClassification (Map.lookup (TableId 239) (classify ir'))
+          `shouldSatisfy` maybe False ("invalid: E-MODIFIER core-2.01.pdf#page=302&T239" `T.isPrefixOf`)
       it "keeps a parse failure as Invalid, located at the anchor" $ do
         ir' <- annotated pristine "core-2.01 | T46 | frobnicate\n"
         fmap describeClassification (Map.lookup (TableId 46) (classify ir'))

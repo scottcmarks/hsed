@@ -1,4 +1,4 @@
-core-2.01 | doc | doc core201
+core-2.01 | doc | doc core201 & rule tableUIDs
 core-2.01 | 5.1.3 | rule typeRow & rule enumValues
 core-2.01 | T75 | erratum scott ["Fractoin" ~> "Fraction"]
 core-2.01 | T101 | erratum scott ["Verify Eror" ~> "Verify Error"]

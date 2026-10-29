@@ -9,7 +9,7 @@ import Hsed.Spec.DSL
 
 {-# LINE 1 "core-2.01.pdf#page=1&doc" #-}
 b_core_doc :: Bound
-b_core_doc = at (anchor @'Doc "core-2.01" "doc" "" 1) (doc core201)
+b_core_doc = at (anchor @'Doc "core-2.01" "doc" "" 1) (doc core201 & rule tableUIDs)
 
 {-# LINE 1 "core-2.01.pdf#page=100&5.1.3" #-}
 b_core_5_1_3 :: Bound

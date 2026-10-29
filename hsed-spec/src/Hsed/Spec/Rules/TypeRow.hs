@@ -17,7 +17,8 @@ Format]@ whose caption is a single identifier (@Table 46 AC_element@; the seven
 @\<X\>_object _ref@ captions are normalised by "Hsed.Spec.Shape"). Each such
 table holds one row of the Type table: its UID, its name and its Format, which
 "Hsed.Spec.Format" parses into a 'TypeDef' against the Type objects of every
-type row and the table names a @uidref{...}@ may name.
+type row and the table names a @uidref{...}@ may name, those of the table the
+@tableUIDs@ rule binds (Table 240).
 
 Checks, each with the code its findings carry:
 
@@ -45,7 +46,6 @@ module Hsed.Spec.Rules.TypeRow
   , typeRowReads
   , formatEnv
   , typeEnvFrom
-  , tableNamesFrom
   , typeIdent
     -- * Declarations
   , TypeRowDecl (..)
@@ -66,10 +66,10 @@ import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (SomeBinding (..), typeRow)
 import           Hsed.Spec.Format (Env, formatNormalisations, mkEnv, parseFormat)
 import qualified Hsed.Spec.Gen    as Gen
-import           Hsed.Spec.IR     (CellIR (..), SpecIR (..), TableIR (..))
+import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normHeader,
-                                   normaliseCaption)
+import           Hsed.Spec.Rules.TableUIDs (tableNames)
+import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption)
 
 
 -- | The rule.
@@ -139,11 +139,18 @@ readRows ctx = map readRow
                 ("a type row table holds one row of three cells; this one has " <> tshow (map length rows))))
 
 -- | The environment the Format cells resolve against: the Type objects of the
---   type rows and the table names a @uidref{...}@ may name; with what building
---   it found.
+--   type rows and the table names a @uidref{...}@ may name, those of the tables
+--   bound by @tableUIDs@ ("Hsed.Spec.Rules.TableUIDs"); with what building it
+--   found: @C-FMT-RESOLVE@ when there are type rows and no such table.
 formatEnv :: Context -> (Env, [Finding])
-formatEnv ctx = (mkEnv (typeEnvFrom ctx) names, nameFindings)
-  where (nameFindings, names) = either (\f -> ([f], [])) (\ns -> ([], ns)) (tableNamesFrom (cxIR ctx))
+formatEnv ctx = (mkEnv types names, nameFindings)
+  where
+    types = typeEnvFrom ctx
+    names = tableNames ctx
+    nameFindings =
+      [ (finding Error "C-FMT-RESOLVE" "no table bound by tableUIDs (T240's header) to resolve uidref{...} against")
+          { Cm.spec = Just (cxSpec ctx) }
+      | null names, not (null types) ]
 
 -- | The Type objects: the Name cell of every table bound as a type row (read
 --   under the errata set), with its table number.
@@ -151,19 +158,6 @@ typeEnvFrom :: Context -> [(Text, Maybe Int)]
 typeEnvFrom ctx =
   [ (T.strip nameCell.text, t.tableNumber)
   | bt <- boundTables (Just TypeRow) ctx, let t = btRead bt, [_, nameCell, _] : _ <- [t.rows] ]
-
--- | The table names a @uidref{...}@ may name: the @Table Name@ column of every
---   table with T240's header (@UID of Table Descriptor Object, UID of Table,
---   Table Name, Template@).
-tableNamesFrom :: SpecIR -> Either Finding [Text]
-tableNamesFrom ir = case [ t | t <- ir.tables, header t == t240 ] of
-  []     -> Left ((finding Error "C-FMT-RESOLVE" "no table of table UIDs (T240's header) to resolve uidref{...} against")
-                    { Cm.spec = Just (SpecId ir.spec) })
-  ts     -> Right [ T.strip c.text | t <- ts, row <- t.rows, c <- take 1 (drop 2 row), not (T.null (T.strip c.text)) ]
-  where
-    header :: TableIR -> [Text]
-    header t = maybe [] (map (normHeader . (.text))) (listToMaybe t.headerRows)
-    t240 = ["uidoftabledescriptorobject", "uidoftable", "tablename", "template"]
 
 
 -- * Checks

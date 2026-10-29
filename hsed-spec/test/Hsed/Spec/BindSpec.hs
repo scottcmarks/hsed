@@ -39,7 +39,7 @@ spec = withCore $ \pristine -> do
       let (fs, entries) = bindEntries ir
       fs `shouldBe` []
       [ (a, page, sp, printSomeBinding sb) | (_, a, page, sp, sb) <- entries ] `shouldBe`
-        [ (DocId, 1, StructPath "", "doc core201")
+        [ (DocId, 1, StructPath "", "doc core201 & rule tableUIDs")
         , (SectionId "5.1.3", 100, StructPath "0/1278", "rule typeRow & rule enumValues")
         , (TableId 75, 107, StructPath "0/1429", "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow")
         , (TableId 101, 113, StructPath "0/1555", "erratum scott [\"Verify Eror\" ~> \"Verify Error\"] enumValues")

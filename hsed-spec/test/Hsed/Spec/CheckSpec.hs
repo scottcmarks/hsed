@@ -18,6 +18,7 @@ errata reaching every cell; the normalisations reported as Notes.
 -}
 module Hsed.Spec.CheckSpec (spec) where
 
+import qualified Data.Text        as DT
 import qualified RIO.List         as L
 import qualified RIO.Map          as Map
 import qualified RIO.Text         as T
@@ -32,7 +33,8 @@ import           Hsed.Spec.CoreIR
 import           Hsed.Spec.IR     (SpecIR)
 import           Hsed.Spec.RuleDef (parseUIDCell)
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads)
-import           Hsed.Spec.Rules.TypeRow (tableNamesFrom, typeEnvFrom)
+import           Hsed.Spec.Rules.TableUIDs (tableNames)
+import           Hsed.Spec.Rules.TypeRow (typeEnvFrom)
 
 
 codesOf :: [Finding] -> Map Text Int
@@ -75,8 +77,12 @@ spec = do
     describe "the Format environment" $ do
       it "holds the 100 Type objects of the type-row tables" $ do
         length (typeEnvFrom (mkContext Scott ir)) `shouldBe` 100
-      it "holds the 46 table names of T240" $
-        fmap length (tableNamesFrom ir) `shouldBe` Right 46
+      it "holds the 46 table names of T240, the table the tableUIDs rule binds" $
+        length (tableNames (mkContext Scott ir)) `shouldBe` 46
+      it "has no table names to resolve uidref{...} against when tableUIDs binds nothing" $ do
+        noToken <- annotated pristine (DT.replace "doc core201 & rule tableUIDs" "doc core201" hsa)
+        errorsOf Scott noToken `shouldSatisfy`
+          elem "C-FMT-RESOLVE core-2.01: no table bound by tableUIDs (T240's header) to resolve uidref{...} against"
 
     describe "checkIR under --errata scott" $ do
       it "finds no Error" $
@@ -89,7 +95,7 @@ spec = do
         Map.lookup "W-ERRATUM-APPLIED" (codesOf scott) `shouldBe` Just 2
       it "reports the unbound tables, the repeated labels, the waived duplicate UID and the normalisations" $
         codesOf scott `shouldBe` Map.fromList
-          [ ("W-ERRATUM-APPLIED", 2), ("W-UNBOUND", 129), ("W-ENUM-LABEL-REPEATED", 2), ("C-UID-UNIQUE", 1)
+          [ ("W-ERRATUM-APPLIED", 2), ("W-UNBOUND", 128), ("W-ENUM-LABEL-REPEATED", 2), ("C-UID-UNIQUE", 1)
           , ("N-CAPTION-NORMALISED", 7), ("N-FORMAT-NORMALISED", 14) ]
       it "demotes the duplicate UID the PDF prints for T94 and T149 to a Warning by T149's waiver" $ do
         about "T149" scott `shouldBe`

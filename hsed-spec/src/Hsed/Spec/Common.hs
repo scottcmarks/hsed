@@ -14,6 +14,7 @@ one another (docs/spec-as-source.md section 4.2).
 -}
 module Hsed.Spec.Common
   ( SpecId (..)
+  , matchesSpec
   , RuleName (..)
   , ErrataSet (..)
   , errataSetName
@@ -26,11 +27,19 @@ module Hsed.Spec.Common
   ) where
 
 import           RIO
+import           RIO.Char (isAlpha, isAlphaNum)
 import qualified RIO.Text as T
 
 -- | Which specification an anchor or a table belongs to: @core-2.01@, @opal-2.30@, ...
 newtype SpecId = SpecId { specIdText :: Text }
   deriving stock (Eq, Ord, Show)
+
+-- | Does a name given on the command line (@--target core@, @hsedc explain core
+--   46@) name this spec: the spec id itself (@core-2.01@), its letters (@core@) or
+--   its grammar name (@core201@)? An empty or partial name (@c@) names none.
+matchesSpec :: Text -> SpecId -> Bool
+matchesSpec name (SpecId s) =
+  not (T.null name) && name `elem` [s, T.takeWhile isAlpha s, T.filter isAlphaNum s]
 
 -- | The name of a document-level rule (@typeRow@, @enumValues@, ...).
 newtype RuleName = RuleName { ruleNameText :: Text }

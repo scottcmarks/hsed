@@ -1,0 +1,201 @@
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedStrings   #-}
+
+{-|
+Module      : Hsed.Spec.Cli
+Description : What each hsedc command does, apart from reading its command line
+Copyright   : (c) Magnolia Heights R&D, 2026
+License     : BSD3
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+The commands of the spec compiler (docs/spec-as-source.md sections 4.2 and
+5.2), here rather than in @app/Main.hs@ so that the tests can run them. Every
+command reads an IR v1 file, by default the annotated extraction
+@build/core-2.01.hsed.json@ (@make ir-annotated@); @--hsa FILE@ replaces the
+IR's annotations with a sidecar's, resolved against the IR, so that a sidecar
+can be checked without annotating and re-extracting the PDF.
+
+Findings print in 'renderFinding' form on stdout, errors first; a one-line
+summary goes to stderr. Every command exits non-zero when any Error was found,
+the sidecar's included. @bind@ and @compile@ write nothing then: an Error
+leaves the committed bindings and generated module as they were.
+-}
+module Hsed.Spec.Cli
+  ( Input (..)
+  , Command (..)
+  , defaultIR
+  , run
+  , runWith
+  , load
+  ) where
+
+import           RIO
+import           RIO.Directory            (createDirectoryIfMissing)
+import           RIO.FilePath             (takeDirectory, (</>))
+import qualified RIO.Map                  as Map
+import qualified RIO.Text                 as T
+
+import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
+import           Hsed.Spec.Bind           (bindModule)
+import           Hsed.Spec.Check          (checkIR, sortFindings)
+import           Hsed.Spec.Common         (ErrataSet (..), Finding, RuleName (..), SpecId (..), errataSetName,
+                                           isError, matchesSpec, renderFinding)
+import           Hsed.Spec.Compile
+import           Hsed.Spec.IR
+import           Hsed.Spec.Report
+import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifyWith, explain,
+                                           numberedTables, scopeOf, tablePage)
+import           Hsed.Spec.Shape          (captionTitle)
+import           Hsed.Spec.Sidecar        (withSidecar)
+
+
+-- | Where the IR comes from: a file, and optionally a sidecar replacing its annotations.
+data Input = Input FilePath (Maybe FilePath)
+
+data Command
+  = CmdIrSummary FilePath
+  | CmdBind Input FilePath
+  | CmdCheck Input ErrataSet
+  | CmdCompile Input ErrataSet Text FilePath FilePath
+  | CmdExplain Text Int Input
+  | CmdOrphans Input
+  | CmdLedger [FilePath] (Maybe FilePath)
+  | CmdNotImplemented Text [Text]   -- ^ the subcommand and whatever followed it
+
+defaultIR :: FilePath
+defaultIR = "build/core-2.01.hsed.json"
+
+run :: Command -> IO ()
+run = runWith stdout stderr
+
+-- | 'run' with the findings and answers written to the first handle and the
+--   one-line summaries and refusals to the second.
+runWith :: Handle -> Handle -> Command -> IO ()
+runWith out err = \case
+  CmdIrSummary path -> readIR path >>= either (failWith err . fromString) (say out . summary)
+  CmdBind inp file -> do
+    (ir, sideFs) <- load err inp
+    let (fs, result) = bindModule ir
+        found = sortFindings (sideFs <> fs <> either pure (const []) result)
+    report out found
+    case result of
+      Right text | not (any isError found) -> do
+        createDirectoryIfMissing True (takeDirectory file)
+        writeFileUtf8 file text
+        say err ("hsedc bind: wrote " <> fromString file <> "; " <> display (findingCounts found) <> "\n")
+      _ -> failWith err ("hsedc bind: " <> display (findingCounts found) <> "; " <> fromString file <> " not written")
+  CmdCheck inp es -> do
+    (ir, sideFs) <- load err inp
+    let fs = sortFindings (sideFs <> checkIR es ir)
+    report out fs
+    say err ("hsedc check: " <> display ir.spec <> ", errata " <> display (errataSetName es) <> ": " <> display (findingCounts fs) <> "\n")
+    exitOnErrors fs
+  CmdCompile inp es target dir reportTo -> do
+    (ir, sideFs) <- load err inp
+    unless (matchesSpec target (SpecId ir.spec)) $
+      failWith err ("hsedc compile: --target " <> display target <> " does not name the IR's spec " <> display ir.spec)
+    case compileIR es ir of
+      Left f -> report out (sideFs <> [f]) >> failWith err "hsedc compile: nothing written"
+      Right cr -> do
+        let fs   = sortFindings (sideFs <> crFindings cr)
+            sid  = SpecId ir.spec
+            path = generatedModulePath dir sid
+        report out fs
+        when (any isError fs) $
+          failWith err ("hsedc compile: " <> display (findingCounts fs) <> "; nothing written")
+        createDirectoryIfMissing True (takeDirectory path)
+        writeFileUtf8 path (crModuleText cr)
+        createDirectoryIfMissing True reportTo
+        writeFileUtf8 (reportTo </> "findings.md") (findingsMarkdown sid es fs)
+        writeFileUtf8 (reportTo </> "coverage.md") (coverageMarkdown ir)
+        writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown [ledger ir])
+        say err ("hsedc compile: wrote " <> fromString path <> " (" <> display (length (crDecls cr)) <> " declarations, "
+                    <> display (length (crExcluded cr)) <> " tables left out) and " <> fromString reportTo
+                    <> "/{findings,coverage,ledger}.md; " <> display (findingCounts fs) <> "\n")
+  CmdExplain specName n inp -> do
+    (ir, sideFs) <- load err inp
+    unless (matchesSpec specName (SpecId ir.spec)) $
+      failWith err ("hsedc explain: the IR is " <> display ir.spec <> ", not " <> display specName)
+    let aid  = TableId n
+        errs = sortFindings (sideFs <> filter isError (snd (classifyWith ir)))
+    report out errs
+    say out (display (explain ir aid) <> "\n")
+    case (Map.lookup aid (classify ir), Map.lookup aid (numberedTables ir)) of
+      (Just (RuleBound r _ _), Just t) -> say out ("  " <> where' ir aid t <> ": rule " <> display (ruleNameText r)
+                                                      <> ", anchored at " <> display (T.intercalate ", " (map scope (scopeOf ir r))) <> "\n")
+      (Just _, Just t) -> say out ("  " <> where' ir aid t <> "\n")
+      _ -> exitFailure
+    exitOnErrors errs
+  CmdOrphans inp -> do
+    (ir, sideFs) <- load err inp
+    let os  = orphans ir
+        fs  = sortFindings (sideFs <> map snd os <> otherErrors ir (map snd os))
+        n c = length [ () | (aid, _) <- os, Map.lookup aid (classify ir) & maybe False c ]
+    report out fs
+    say err ("hsedc orphans: " <> display (length os) <> " of " <> display (Map.size (numberedTables ir))
+                <> " numbered tables of " <> display ir.spec <> " are bound by nothing ("
+                <> display (n (== Unbound)) <> " unbound, " <> display (n isAmbiguous) <> " ambiguous, "
+                <> display (n isInvalid) <> " invalid)\n")
+    exitOnErrors fs
+  CmdLedger paths hsa -> do
+    loaded <- traverse (\p -> load err (Input p hsa)) (if null paths then [defaultIR] else paths)
+    let errs = sortFindings (concat [ sideFs <> filter isError (snd (classifyWith ir)) | (ir, sideFs) <- loaded ])
+    report out errs
+    say out (display (renderLedger (map (ledger . fst) loaded)))
+    exitOnErrors errs
+  CmdNotImplemented name _ -> failWith err ("hsedc " <> display name <> ": not implemented")
+  where
+    scope WholeDocument = "the whole document"
+    scope (Subtree s)   = "section " <> s
+    where' :: SpecIR -> AnchorId -> TableIR -> Utf8Builder
+    where' ir aid t = display ir.spec <> " " <> display (renderAnchorId aid) <> " "
+                      <> display (fromMaybe "" (t.caption >>= captionTitle))
+                      <> maybe "" (\p -> ", PDF " <> display p) (tablePage t)
+    isAmbiguous = \case
+      Ambiguous _ -> True
+      _           -> False
+    isInvalid = \case
+      Invalid _ -> True
+      _         -> False
+    -- the classification's Errors that are not about a numbered table (an annotation on a heading, say)
+    otherErrors ir shown = [ f | f <- snd (classifyWith ir), isError f, f `notElem` shown ]
+
+-- | The IR, with a sidecar's annotations in place of its own when one is given,
+--   and what resolving the sidecar found.
+load :: Handle -> Input -> IO (SpecIR, [Finding])
+load err (Input path hsa) = do
+  ir <- readIR path >>= either (failWith err . fromString) pure
+  case hsa of
+    Nothing -> pure (ir, [])
+    Just f  -> do
+      text <- readFileUtf8 f
+      let (fs, ir') = withSidecar ir text
+      pure (ir', fs)
+
+report :: Handle -> [Finding] -> IO ()
+report h = say h . foldMap (\f -> display (renderFinding f) <> "\n")
+
+exitOnErrors :: [Finding] -> IO ()
+exitOnErrors fs = when (any isError fs) exitFailure
+
+-- | The counts @ir-summary@ prints.
+summary :: SpecIR -> Utf8Builder
+summary ir = mconcat
+  [ "spec:     " <> display ir.spec <> "\n"
+  , "tables:   " <> count ir.tables
+  , "headings: " <> count ir.headings
+  , "paras:    " <> count ir.paras
+  , "annots:   " <> count ir.annots
+  ]
+  where count xs = display (length xs) <> "\n"
+
+-- | Write to a handle; stdout is flushed first, so that a summary on stderr
+--   follows the findings on stdout when both go to one terminal or file.
+say :: Handle -> Utf8Builder -> IO ()
+say h msg = hFlush stdout >> hPutBuilder h (getUtf8Builder msg) >> hFlush h
+
+failWith :: Handle -> Utf8Builder -> IO b
+failWith h msg = say h (msg <> "\n") >> exitFailure

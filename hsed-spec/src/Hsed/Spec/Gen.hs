@@ -24,7 +24,7 @@ import list; lists are united and sorted), and prints the declarations sorted
 by table number, then rank within the table, then name. The same declarations
 print the same text in any order. The runtime modules the declarations import
 are named once here ('uidModule', 'coreTypesModule', 'coreTableModule',
-'methodModule', 'codeModule', 'fieldModule').
+'methodModule', 'codeModule', 'fieldModule', 'syncModule', 'propertiesModule').
 
 Every definition carries a Haddock line naming its table, PDF and printed
 page, structure ordinal and the hash of its cells ('provenanceComment',
@@ -51,6 +51,8 @@ module Hsed.Spec.Gen
   , methodModule
   , codeModule
   , fieldModule
+  , syncModule
+  , propertiesModule
     -- * Printing
   , renderModule
     -- * Pieces for the rules' printers
@@ -158,6 +160,14 @@ codeModule = "Hsed.Core.Code"
 -- | @FieldValue@, @FieldConst@ and @FieldDef@: the rows of a record table.
 fieldModule :: Text
 fieldModule = "Hsed.Core.Field"
+
+-- | A state table's runtime form: @StateTable@, @StateRow@, @Setting@.
+syncModule :: Text
+syncModule = "Hsed.Core.Sync"
+
+-- | The Properties method's runtime form: @Property@, @Communicator@, @Assumptions@.
+propertiesModule :: Text
+propertiesModule = "Hsed.Core.Properties"
 
 
 -- * Printing

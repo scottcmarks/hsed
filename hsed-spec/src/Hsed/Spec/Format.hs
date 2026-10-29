@@ -19,9 +19,11 @@ values.") parsed against the ABNF of Core 5.1.1 into a 'TypeDef'.
 The tokenizer accepts the spacing the printed tables use (@uidref {X}@ and
 @uidref{X}@, @General_Reference_Type {7}@, @Simple_Type,uinteger, 2@), the suffix
 forms @{5}@..@{9}@ after a Format code's name, decimal literals and the @*@
-placeholder; 'formatNormalisations' lists the spacing and spelling it reads past,
-which hsedc reports (@N-FORMAT-NORMALISED@, design example E3: "normalised and
-reported"). Names are resolved against an 'Env' of the Type objects and the
+placeholder; 'formatNormalisations' lists the spacing and spelling it reads past
+at a brace (spaces before or inside the braces, a table's @Table_UID@ or plain
+@Table@ suffix), which hsedc reports (@N-FORMAT-NORMALISED@, design example E3:
+"normalised and reported"); the spacing between other tokens only separates
+them and is not listed. Names are resolved against an 'Env' of the Type objects and the
 T240 tables; an unknown name is @E-FMT-RESOLVE@ with the nearest known name, so
 that under the published errata set Table 75's @Fractoin@ reads
 @unresolved type name Fractoin (nearest: Fraction, T84)@ (design example E3).
@@ -224,25 +226,35 @@ tableRef env n
   | otherwise = Left (unresolved "table" n (nearest (Set.toList tables) n))
   where tables = envTables env
 
--- | What 'parseFormat' reads differently from the printed text, each as printed
---   and as read: a name spaced from its braces (@uidref {AuthorityTableUID}@,
---   @General_Reference_Type {7}@) and a table named with @Table_UID@ (T76's
---   @ColumnTable_UID@) rather than @TableUID@.
+-- | What 'parseFormat' reads differently from the printed text at a brace, each
+--   as printed and as read: a name spaced from its braces
+--   (@uidref {AuthorityTableUID}@, @General_Reference_Type {7}@), spaces inside
+--   the braces (@uidref{ ColumnTableUID }@), and a table named with @Table_UID@
+--   (T76's @ColumnTable_UID@) or a plain @Table@ (@ColumnTable@) rather than
+--   @TableUID@. Not listed: whitespace between the other tokens
+--   (@Simple_Type,uinteger, 2@), which only separates them and varies freely in
+--   the printed tables, and a bare table name (@uidref{Column}@), which is the
+--   name T240 prints and is read as it stands.
 formatNormalisations :: Text -> [(Text, Text)]
 formatNormalisations cell = spaced <> suffixed
   where
+    braces = T.breakOnAll "{" cell
     spaced =
-      [ (name <> gap <> braced, name <> braced)
-      | (before, after) <- T.breakOnAll "{" cell
-      , let gap = T.takeWhileEnd isSpace before
-            name = T.takeWhileEnd isNameChar (T.dropWhileEnd isSpace before)
-            braced = T.takeWhile (/= '}') after <> "}"
-      , not (T.null gap), not (T.null name) ]
+      [ (printed, name <> "{" <> T.strip inside <> "}")
+      | (before, after) <- braces
+      , let name = T.takeWhileEnd isNameChar (T.dropWhileEnd isSpace before)
+            inside = T.takeWhile (/= '}') (T.drop 1 after)
+            printed = name <> T.takeWhileEnd isSpace before <> "{" <> inside <> "}"
+      , not (T.null name), printed /= name <> "{" <> T.strip inside <> "}" ]
     suffixed =
-      [ (inner, T.dropEnd (T.length "Table_UID") inner <> "TableUID")
-      | (_, after) <- T.breakOnAll "{" cell
+      [ (inner, canonical)
+      | (_, after) <- braces
       , let inner = T.strip (T.takeWhile (/= '}') (T.drop 1 after))
-      , "Table_UID" `T.isSuffixOf` inner ]
+      , Just canonical <- [tableUID inner] ]
+    tableUID t
+      | Just stem <- T.stripSuffix "Table_UID" t = Just (stem <> "TableUID")
+      | "Table" `T.isSuffixOf` t                 = Just (t <> "UID")
+      | otherwise                                = Nothing
     isNameChar c = isAlphaNum c || c == '_'
 
 -- | The T240 table name inside a @uidref{...}@: @C_PINTableUID@ and

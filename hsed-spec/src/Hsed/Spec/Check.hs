@@ -50,8 +50,8 @@ caption names) reads the corrected one; the rules fire on the text as printed.
 
 Normalisations, the same under both sets, are Notes: a caption printed
 @\<X\>_object _ref@ (@N-CAPTION-NORMALISED@), a header cell in the typo table
-(@N-HEADER-NORMALISED@), and a Format cell's spacing before a brace or its
-@Table_UID@ suffix (@N-FORMAT-NORMALISED@).
+(@N-HEADER-NORMALISED@), and a Format cell's spacing at a brace or its table's
+@Table_UID@ or @Table@ suffix (@N-FORMAT-NORMALISED@).
 -}
 module Hsed.Spec.Check
   ( -- * The Compile monad
@@ -422,7 +422,7 @@ headerNote sid (aid, t) =
       (finding Note "N-HEADER-NORMALISED" ("header " <> tshow bad <> " read as " <> tshow good))
   | (bad, good) <- headerNormalisations t ]
 
--- | @N-FORMAT-NORMALISED@: a Format cell whose spacing or @Table_UID@ suffix the parser reads past.
+-- | @N-FORMAT-NORMALISED@: a Format cell whose spacing at a brace or table suffix the parser reads past.
 formatNote :: SpecId -> TypeRowRead -> [Finding]
 formatNote sid tr = case formatNormalisations (trFormat tr) of
   []    -> []

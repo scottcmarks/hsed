@@ -176,6 +176,22 @@ spec = do
       formatNormalisations "General_Reference_Type {7}" `shouldBe` [("General_Reference_Type {7}", "General_Reference_Type{7}")]
       formatNormalisations "Restricted_Reference_Type{6}, uidref{LogTableUID}, *" `shouldBe` []
       formatNormalisations "Simple_Type, uinteger, 2" `shouldBe` []
+    it "lists spaces inside the braces and a plain Table suffix too, and not a bare table name" $ do
+      formatNormalisations "Restricted_Reference_Type{6}, uidref{ ColumnTableUID }"
+        `shouldBe` [("uidref{ ColumnTableUID }", "uidref{ColumnTableUID}")]
+      formatNormalisations "Restricted_Reference_Type{6}, uidref{ColumnTable}" `shouldBe` [("ColumnTable", "ColumnTableUID")]
+      formatNormalisations "Restricted_Reference_Type{6}, uidref{Column}" `shouldBe` []
+    it "lists something for every spelling at a brace that reads as the canonical cell but is printed otherwise" $ do
+      let canonical = "Restricted_Reference_Type{6}, uidref{LogTableUID}"
+          variants  = [ "Restricted_Reference_Type {6}, uidref{LogTableUID}", "Restricted_Reference_Type{ 6 }, uidref{LogTableUID}"
+                      , "Restricted_Reference_Type{6}, uidref {LogTableUID}", "Restricted_Reference_Type{6}, uidref{ LogTableUID}"
+                      , "Restricted_Reference_Type{6}, uidref{LogTable_UID}", "Restricted_Reference_Type{6}, uidref{LogTable}"
+                      , "Restricted_Reference_Type{6}, uidref { LogTable }" ]
+      formatNormalisations canonical `shouldBe` []
+      parseFormat smallEnv canonical `shouldSatisfy` isRight
+      forM_ variants $ \v -> do
+        parseFormat smallEnv v `shouldBe` parseFormat smallEnv canonical
+        (v, formatNormalisations v) `shouldNotSatisfy` (null . snd)
     it "finds them in the fourteen printed cells that have them" $
       [ rowTable r | r <- rows, not (null (formatNormalisations (rowFormat r))) ]
         `shouldBe` [57, 62, 72, 76, 77, 104, 105, 111, 112, 119, 140, 141, 142, 144]

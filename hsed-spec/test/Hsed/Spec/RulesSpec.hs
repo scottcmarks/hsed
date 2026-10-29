@@ -36,6 +36,7 @@ import           Hsed.Spec.Grammar (printSomeBinding)
 import           Hsed.Spec.IR      (AnnotIR (..), Rect (..), SpecIR (..), StructPath (..))
 import qualified Hsed.Spec.IR      as IR
 import           Hsed.Spec.Rules
+import           Hsed.Spec.Rules.TypeRow (typeRowRule)
 import           Hsed.Spec.Shape   (measure)
 
 
@@ -52,7 +53,7 @@ isRuleBound c = case c of
 isUnbound c = c == Unbound
 
 -- | A rule that fires wherever typeRow does: the second of an ambiguous pair.
-shadow :: Maybe RuleName -> Rule
+shadow :: Maybe RuleName -> RuleDef
 shadow refining = typeRowRule
   { ruleName = RuleName "tableDesc", refinesRule = refining, bindsTo = SomeBinding tableDesc }
 

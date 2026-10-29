@@ -25,7 +25,7 @@ import           RIO
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor  (AnchorId (..))
-import           Hsed.Spec.Check   (Mods (..), modsOf)
+import           Hsed.Spec.RuleDef (Mods (..), modsOf)
 import           Hsed.Spec.Common  hiding (spec)
 import           Hsed.Spec.CoreIR  (annotated, committedHsa, withCore)
 import           Hsed.Spec.Errata

@@ -12,12 +12,12 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 @hsedc compile@ on the committed Core extraction with the committed annotations:
-the 100 type rows and 19 enumerations of section 5.1.3, their provenance (the
-cell hash the manifest records), the module under each errata set, the T75 and
-T101 annotations each changing the module when dropped, a table left out with
-W-GEN-EXCLUDED (one that fails, and one comment-bound to a shape with no
-generator), and the committed @hsed/gen@ module exactly what the committed
-annotations give.
+the 100 type rows and 19 enumerations of section 5.1.3 (read through their
+rules' modules), their provenance (the cell hash the manifest records), the
+module under each errata set, the T75 and T101 annotations each changing the
+module when dropped, a table left out with W-GEN-EXCLUDED (one that fails, and
+one comment-bound to a shape no rule reads), and the committed @hsed/gen@
+modules exactly what the committed annotations give.
 -}
 module Hsed.Spec.CompileSpec (spec) where
 
@@ -27,26 +27,40 @@ import           Test.Hspec
 
 import           Hsed.Core.Types   (Operand (..), TypeDef (..), TypeRef (..))
 import           Hsed.Spec.Anchor  (AnchorId (..))
+import           Hsed.Spec.Check   (mkContext)
 import           Hsed.Spec.Common  (ErrataSet (..), isError, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.Compile
 import           Hsed.Spec.CoreIR
 import qualified Hsed.Spec.Gen     as Gen
 import           Hsed.Spec.IR      (SpecIR (..))
+import           Hsed.Spec.RuleDef (Context)
+import           Hsed.Spec.Rules.EnumValues (EnumDecl (..), checkEnum, enumDecl, enumReads)
+import           Hsed.Spec.Rules.TypeRow (TypeRowDecl (..), joinFormat, typeRowDecl, typeRowReads, typesModule)
 
 
-rowsOf :: CompileResult -> [Gen.TypeRowDecl]
-rowsOf cr = [ r | Gen.TypeRow r <- crDecls cr ]
+-- | The type rows a context declares.
+rowsOf :: Context -> [TypeRowDecl]
+rowsOf ctx = rights [ typeRowDecl ctx tr | tr <- rights (typeRowReads ctx) ]
 
-enumsOf :: CompileResult -> [Gen.EnumDecl]
-enumsOf cr = [ e | Gen.Enum e <- crDecls cr ]
+-- | The enumerations a context declares.
+enumsOf :: Context -> [EnumDecl]
+enumsOf ctx = rights [ enumDecl ctx er (checkEnum ctx rows er) | er <- rights (enumReads ctx) ]
+  where rows = rights (typeRowReads ctx)
+
+-- | The text of one generated module.
+moduleText :: Text -> CompileResult -> Text
+moduleText name cr = fromMaybe "" (lookup name (crModules cr))
+
+typesText :: CompileResult -> Text
+typesText = moduleText "Hsed.Gen.Core.Types"
 
 spec :: Spec
 spec = do
-  describe "generatedModuleName" $
-    it "names the module and its file after the spec" $ do
-      generatedModuleName core `shouldBe` "Hsed.Gen.Core.Types"
-      generatedModulePath "hsed/gen" core `shouldBe` "hsed/gen/Hsed/Gen/Core/Types.hs"
+  describe "the generated module of a rule" $
+    it "is named, and filed, after the spec" $ do
+      Gen.moduleName core typesModule `shouldBe` "Hsed.Gen.Core.Types"
+      Gen.modulePath "hsed/gen" "Hsed.Gen.Core.Types" `shouldBe` "hsed/gen/Hsed/Gen/Core/Types.hs"
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
@@ -55,46 +69,49 @@ spec = do
 
     describe "compileIR --errata scott" $ do
       cr <- runIO (compiled Scott)
+      let ctx = mkContext Scott ir
       it "declares the 100 type rows and the 19 enumerations of section 5.1.3, leaving none out" $ do
-        length (rowsOf cr) `shouldBe` 100
-        length (enumsOf cr) `shouldBe` 19
+        length (rowsOf ctx) `shouldBe` 100
+        length (enumsOf ctx) `shouldBe` 19
         crExcluded cr `shouldBe` []
         filter isError (crFindings cr) `shouldBe` []
       it "records the provenance of design example E2, with the manifest's cell hash" $ do
-        let p46 = [ r.provenance | r <- rowsOf cr, r.name == "AC_element" ]
-            p75 = [ r.provenance | r <- rowsOf cr, r.name == "clock_time" ]
+        let p46 = [ r.provenance | r <- rowsOf ctx, r.name == "AC_element" ]
+            p75 = [ r.provenance | r <- rowsOf ctx, r.name == "clock_time" ]
         map (\p -> (p.tableId, p.pdfPage1, p.printedPage, p.ordinal, p.structPath)) p46 `shouldBe` [("T46", 100, 83, 48, "0/1288")]
         map (.cellsHash) p75 `shouldBe` ["5a5e8787c29a7124035961d972b7b81ab1635117d2d207a0942f1a9c43291655"]
       it "reads T46 as design example E2 does" $
-        [ (r.uidBytes, Gen.joinFormat r.formatText, r.typeDef) | r <- rowsOf cr, r.name == "AC_element" ]
+        [ (r.uidBytes, joinFormat r.formatText, r.typeDef) | r <- rowsOf ctx, r.name == "AC_element" ]
           `shouldBe` [([0, 0, 0, 5, 0, 0, 8, 1], "List_Type,*,ACE_expression", Just (ListType Star (Ref "ACE_expression")))]
       it "corrects T75 and types it" $
-        [ r.typeDef | r <- rowsOf cr, r.name == "clock_time" ]
+        [ r.typeDef | r <- rowsOf ctx, r.name == "clock_time" ]
           `shouldBe` [Just (StructType (map Ref ["Year", "Month", "Day", "Hour", "Minute", "Seconds", "Fraction"]))]
       it "reads T52 as design example E4 does, with the range of T51" $
-        [ (e.ctors, e.range, e.typeUID) | e <- enumsOf cr, e.name == "adv_key_mode" ]
+        [ (e.ctors, e.range, e.typeUID) | e <- enumsOf ctx, e.name == "adv_key_mode" ]
           `shouldBe` [([("Wait for AdvKey_Req", 0), ("Auto-advance keys", 1)] <> [ ("Reserved", v) | v <- [2 .. 7] ], (0, 7), [0, 0, 0, 5, 0, 0, 4, 0x0F])]
       it "names T101's value as its annotation corrects it" $
-        [ e.ctors | e <- enumsOf cr, e.name == "last_reenc_stat" ] `shouldSatisfy` all (elem ("Verify Error", 3))
+        [ e.ctors | e <- enumsOf ctx, e.name == "last_reenc_stat" ] `shouldSatisfy` all (elem ("Verify Error", 3))
       it "takes the range of reencrypt_state from its Format, starting at 1" $
-        [ e.range | e <- enumsOf cr, e.name == "reencrypt_state" ] `shouldBe` [(1, 16)]
-      it "writes the committed hsed/gen/Hsed/Gen/Core/Types.hs" $ do
-        committed <- readFileUtf8 "../hsed/gen/Hsed/Gen/Core/Types.hs"
-        crModuleText cr `shouldBe` committed
+        [ e.range | e <- enumsOf ctx, e.name == "reencrypt_state" ] `shouldBe` [(1, 16)]
+      it "writes the committed hsed/gen modules" $
+        forM_ (crModules cr) $ \(name, text) -> do
+          committed <- readFileUtf8 (Gen.modulePath "../hsed/gen" name)
+          text `shouldBe` committed
       it "writes the same text whatever the order of the IR's tables" $ do
         cr' <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir { tables = reverse ir.tables })
-        crModuleText cr' `shouldBe` crModuleText cr
+        crModules cr' `shouldBe` crModules cr
 
     describe "compileIR --errata published" $ do
       cr <- runIO (compiled Published)
+      let ctx = mkContext Published ir
       it "keeps Fractoin, gives T75 no TypeDef and reports E-FMT-RESOLVE" $ do
-        [ (Gen.joinFormat r.formatText, r.typeDef) | r <- rowsOf cr, r.name == "clock_time" ]
+        [ (joinFormat r.formatText, r.typeDef) | r <- rowsOf ctx, r.name == "clock_time" ]
           `shouldBe` [("Struct_Type,Year,Month,Day,Hour,Minute,Seconds,Fractoin", Nothing)]
-        T.lines (crModuleText cr) `shouldSatisfy` elem "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
+        T.lines (typesText cr) `shouldSatisfy` elem "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
         map renderFinding (filter isError (crFindings cr))
           `shouldBe` ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
       it "names T101's value as printed" $
-        [ e.ctors | e <- enumsOf cr, e.name == "last_reenc_stat" ] `shouldSatisfy` all (elem ("Verify Eror", 3))
+        [ e.ctors | e <- enumsOf ctx, e.name == "last_reenc_stat" ] `shouldSatisfy` all (elem ("Verify Eror", 3))
 
     describe "the per-table annotations" $ do
       cr <- runIO (compiled Scott)
@@ -103,31 +120,32 @@ spec = do
             either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir')
       it "T75: without it, clock_time has no TypeDef and the module changes" $ do
         cr' <- without "T75"
-        crModuleText cr' `shouldNotBe` crModuleText cr
-        T.lines (crModuleText cr') `shouldSatisfy` elem "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
+        typesText cr' `shouldNotBe` typesText cr
+        T.lines (typesText cr') `shouldSatisfy` elem "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
         map renderFinding (filter isError (crFindings cr'))
           `shouldBe` ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
       it "T101: without it, the module names Verify Eror as printed" $ do
         cr' <- without "T101"
-        let changed = [ (a, b) | (a, b) <- zip (T.lines (crModuleText cr)) (T.lines (crModuleText cr')), a /= b ]
+        let changed = [ (a, b) | (a, b) <- zip (T.lines (typesText cr)) (T.lines (typesText cr')), a /= b ]
         changed `shouldBe` [("  | Core_last_reenc_stat_Verify_Error", "  | Core_last_reenc_stat_Verify_Eror")]
       it "T149: without it, compile finds the Error C-UID-UNIQUE" $ do
         cr' <- without "T149"
         map Cm.code (filter isError (crFindings cr')) `shouldBe` ["C-UID-UNIQUE"]
 
-    describe "a table bound to a shape M1 does not generate" $
+    describe "a table bound to a shape no rule reads" $
       it "is left out with W-GEN-EXCLUDED and counted, not dropped in silence" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T46 | as @'Codes codes\ncore-2.01 | T166 | statusCodes\n")
         cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir')
         crExcluded cr `shouldBe`
-          [ (TableId 46, "hsedc generates nothing for a Codes table yet (M1: TypeRow and EnumValues)")
-          , (TableId 166, "hsedc generates nothing for a StatusCodes table yet (M1: TypeRow and EnumValues)") ]
+          [ (TableId 46, "hsedc generates nothing for a Codes table yet (no rule of the registry reads one)")
+          , (TableId 166, "hsedc generates nothing for a StatusCodes table yet (no rule of the registry reads one)") ]
         [ Cm.code f | f <- crFindings cr, Cm.anchor f == Just "T166" ] `shouldBe` ["W-GEN-EXCLUDED"]
-        length (rowsOf cr) `shouldBe` 99
+        length (rowsOf (mkContext Scott ir')) `shouldBe` 99
 
     describe "a table that cannot be generated" $
       it "is left out with W-GEN-EXCLUDED, its Error among the findings" $ do
-        cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott (setCell "T52" 2 0 "2-8" ir))
+        let broken = setCell "T52" 2 0 "2-8" ir
+        cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott broken)
         crExcluded cr `shouldBe` [(TableId 52, "C-ENUM-RANGE failed")]
         [ Cm.code f | f <- crFindings cr, Cm.anchor f == Just "T52" ] `shouldBe` ["C-ENUM-RANGE", "W-GEN-EXCLUDED"]
-        length (enumsOf cr) `shouldBe` 18
+        length (enumsOf (mkContext Scott broken)) `shouldBe` 18

@@ -46,7 +46,7 @@ commands = hsubparser $ mconcat
   , command "check" (info (CmdCheck <$> input <*> errataOpt)
       (progDesc "Classify every numbered table and run the checks; non-zero exit on any Error"))
   , command "compile" (info (CmdCompile <$> input <*> errataOpt <*> targetOpt <*> outDir <*> reportDir)
-      (progDesc "Check, then write DIR/Hsed/Gen/<Spec>/Types.hs and the reports findings.md, coverage.md, ledger.md"))
+      (progDesc "Check, then write the generated modules DIR/Hsed/Gen/<Spec>/*.hs and the reports findings.md, coverage.md, ledger.md"))
   , command "explain" (info (CmdExplain <$> strArgument (metavar "SPEC" <> help "core or opal")
                                      <*> argument auto (metavar "N" <> help "the table number")
                                      <*> input)

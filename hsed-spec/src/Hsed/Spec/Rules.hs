@@ -10,32 +10,35 @@
 
 {-|
 Module      : Hsed.Spec.Rules
-Description : The document-level rules, their scope, and the classification of every numbered table
+Description : The document-level rules' scope, and the classification of every numbered table
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Design section 3.4. A 'Rule' fires on a table by its measured 'Form' (and the
-table itself); it binds the table to its default binding wherever the rule is in
+Design section 3.4. The rules are those of "Hsed.Spec.Registry", each the
+'RuleDef' of its own module under @Hsed/Spec/Rules/@; this module knows none of
+them by name. A rule fires on a table by its measured 'Form' (and the table
+itself); it binds the table to its default binding wherever the rule is in
 scope. Scope comes only from the anchors: a @rule X@ token on a heading anchor
 governs that section's subtree, on the @doc@ anchor the whole document
 ('scopeOf'). Precedence: a rule may declare 'refinesRule' and wins where both
-fire; any other double match is @E-AMBIGUOUS@.
+fire; any other double match is @E-AMBIGUOUS@. A rule with 'joinsTo' fires only
+on a table whose identifier ('ruleIdent') a table of the joined rule names too.
 
 'classify' puts every numbered table in one of four places:
 
-* comment-bound: its annotation is a full binding (@feature@, @refines (core 42)@);
+* comment-bound: its annotation is a full binding;
 * rule-bound: no annotation and exactly one rule in scope fires, or an
   annotation that is a bare modifier chain, applied in order to the default of
-  the single rule that fires (Table 75's @erratum scott [...]@);
+  the single rule that fires;
 * ambiguous: two rules fire and neither refines the other (@E-AMBIGUOUS@);
-* unbound: nothing binds it. At M1 only section 5.1.3 is anchored, so this is
-  the Warning @W-UNBOUND@ (design M2b promotes it to @E-UNBOUND@);
+* unbound: nothing binds it, the Warning @W-UNBOUND@ (design M2b promotes it
+  to @E-UNBOUND@);
 
 plus 'Invalid' for an annotation that does not parse or whose modifiers do not
-apply. M1 implements the pair @typeRow@ and @enumValues@; the other rule names
-of "Hsed.Spec.DSL" parse but bind nothing yet (@W-RULE-UNIMPLEMENTED@).
+apply. A rule name of "Hsed.Spec.DSL" that the registry does not implement
+parses but binds nothing (@W-RULE-UNIMPLEMENTED@).
 
 Every annotation is validated once, in 'parseAnnots', so that @hsedc check@ and
 @hsedc bind@ refuse the same ones: its id must parse and name something in the
@@ -52,11 +55,9 @@ A rule binds only where an anchor puts it in scope, so design section 3.4's
 -}
 module Hsed.Spec.Rules
   ( -- * Rules
-    Rule (..)
+    RuleDef (..)
   , rules
   , ruleNamed
-  , typeRowRule
-  , enumValuesRule
   , tableIdent
     -- * Scope
   , Section (..)
@@ -95,79 +96,30 @@ import           Hsed.Spec.Common  (Finding, RuleName (..), Severity (..), SpecI
                                     renderFinding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.DSL     (Binding (..), BindingKind (..), Modifier (..), Ref (..), SomeBinding (..),
-                                    applyModifierSome, atShape, bindingAccepts, enumValues,
-                                    knownRules, someBindingKind, someBindingShape, specName, typeRow)
+                                    applyModifierSome, atShape, bindingAccepts, knownRules, someBindingKind,
+                                    someBindingShape, specName)
 import           Hsed.Spec.Grammar (Payload (..), parsePayload, printSomeBinding)
 import           Hsed.Spec.IR      (AnnotIR (..), HeadingIR (..), SpecIR (..), StructPath (..),
                                     TableIR (..))
-import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), KnownShape, SShape, Shape (Doc), SomeShape (..),
+import           Hsed.Spec.Registry (registry)
+import           Hsed.Spec.RuleDef (Classification (..), RuleDef (..), boundBinding, locatedAt, numberedTables,
+                                    tablePage)
+import           Hsed.Spec.Shape   (Form (..), KnownShape, SShape, Shape (Doc), SomeShape (..),
                                     measure, projectColumns, toSomeShape)
-
 
 -- * Rules
 
--- | A document-level rule (design section 4.2), plus 'joinsTo': the rule whose
---   table of the same identifier must exist somewhere in the document
---   (@enumValues@ joins the @typeRow@ of its type).
-data Rule = Rule
-  { ruleName    :: !RuleName
-  , refinesRule :: !(Maybe RuleName)
-  , exemplar    :: !(SpecId, AnchorId)
-  , fires       :: SpecId -> TableIR -> Form -> Bool
-  , bindsTo     :: !SomeBinding
-  , joinsTo     :: !(Maybe RuleName)
-  }
+-- | The rules hsedc implements: "Hsed.Spec.Registry".
+rules :: [RuleDef]
+rules = registry
 
--- | The rules hsedc implements: the M1 pair.
-rules :: [Rule]
-rules = [typeRowRule, enumValuesRule]
-
-ruleNamed :: RuleName -> Maybe Rule
+ruleNamed :: RuleName -> Maybe RuleDef
 ruleNamed n = L.find ((== n) . ruleName) rules
 
--- | @[UID, Name, Format]@ under a caption @Table N \<ident\>@; the seven
---   @\<X\>_object _ref@ captions are normalised by 'Hsed.Spec.Shape.captionTitle'.
-typeRowRule :: Rule
-typeRowRule = Rule
-  { ruleName    = RuleName "typeRow"
-  , refinesRule = Nothing
-  , exemplar    = (SpecId "core-2.01", TableId 46)
-  , fires       = \_ _ form -> fCols form == 3 && fHeaderNorm form == ["uid", "name", "format"]
-                              && isJust (typeIdent form)
-  , bindsTo     = SomeBinding typeRow
-  , joinsTo     = Nothing
-  }
-
--- | Two columns, the first headed @Enumeration Value@ or @Set Value@, under a
---   caption @\<ident\> Enumeration Values@ or @\<ident\> Set Values@, joined to
---   the @typeRow@ of the same identifier. A wider table reaches it only through
---   @cols a b@, which 'classify' applies to the form before asking.
-enumValuesRule :: Rule
-enumValuesRule = Rule
-  { ruleName    = RuleName "enumValues"
-  , refinesRule = Nothing
-  , exemplar    = (SpecId "core-2.01", TableId 52)
-  , fires       = \_ _ form -> fCols form == 2 && take 1 (fHeaderNorm form) `elem` [["enumerationvalue"], ["setvalue"]]
-                              && isJust (enumIdent form)
-  , bindsTo     = SomeBinding enumValues
-  , joinsTo     = Just (RuleName "typeRow")
-  }
-
-typeIdent :: Form -> Maybe Text
-typeIdent form = case fCaptionKind form of
-  CaptionIdent s -> Just s
-  _              -> Nothing
-
-enumIdent :: Form -> Maybe Text
-enumIdent form = case fCaptionKind form of
-  CaptionEnumValues s -> ident s
-  CaptionOther t      -> T.stripSuffix " Set Values" t >>= ident . T.strip
-  _                   -> Nothing
-  where ident s = if not (T.null s) && T.all (\c -> C.isAlphaNum c || c == '_') s then Just s else Nothing
-
--- | The identifier a table's caption names: the type of a type row or of an enumeration.
+-- | The identifier a table's caption names, as the first rule that reads one
+--   from it reads it (the type of a type row or of an enumeration).
 tableIdent :: Form -> Maybe Text
-tableIdent form = typeIdent form <|> enumIdent form
+tableIdent form = asum [ ruleIdent r form | r <- rules ]
 
 
 -- * Scope
@@ -279,28 +231,8 @@ anchorKindMismatch sid aid payload = case (aid, payload) of
       (ItemId _ _, _)          -> Just "a list item or paragraph anchor takes law, fails or behaviour"
       (SigId _, _)             -> Just "a signature block is rule-bound and carries no annotation"
 
--- | Give a finding a location unless it has one.
-locatedAt :: SpecId -> Text -> Int -> Finding -> Finding
-locatedAt sid aid page f = f { Cm.spec = Cm.spec f <|> Just sid, Cm.anchor = Cm.anchor f <|> Just aid, Cm.page = Cm.page f <|> Just page }
-
 
 -- * Classification
-
--- | Where a numbered table stands.
-data Classification
-  = CommentBound !SomeBinding                  -- ^ its annotation is a full binding
-  | RuleBound !RuleName ![Modifier] !SomeBinding  -- ^ bound by a rule; the modifiers of a bare chain, and the result
-  | Ambiguous ![RuleName]                      -- ^ two or more rules fire, neither refining the other
-  | Unbound                                    -- ^ no annotation, no rule
-  | Invalid !Finding                           -- ^ the annotation does not parse or does not apply
-  deriving (Eq, Show)
-
--- | The binding a table ends up with, if any.
-boundBinding :: Classification -> Maybe SomeBinding
-boundBinding = \case
-  CommentBound sb    -> Just sb
-  RuleBound _ _ sb   -> Just sb
-  _                  -> Nothing
 
 -- | One line for a ledger or an explanation.
 describeClassification :: Classification -> Text
@@ -312,7 +244,7 @@ describeClassification = \case
   Unbound            -> "unbound"
   Invalid f          -> "invalid: " <> renderFinding f
 
--- | @typeRow (exemplar core T46)@ for a rule-bound table (design acceptance M1 (g)).
+-- | The rule and its exemplar for a rule-bound table, @\<binding\> (exemplar core T46)@ (design acceptance M1 (g)).
 explain :: SpecIR -> AnchorId -> Text
 explain ir aid = case Map.lookup aid (classify ir) of
   Nothing -> "no table " <> renderAnchorId aid <> " in " <> ir.spec
@@ -321,20 +253,6 @@ explain ir aid = case Map.lookup aid (classify ir) of
     Nothing -> describeClassification c
   Just c -> describeClassification c
   where prefix = T.toLower . T.takeWhile C.isAlpha . specIdText
-
--- | Every numbered table by its anchor id; a table Word split in two (Core T7)
---   is its first part.
-numberedTables :: SpecIR -> Map AnchorId TableIR
-numberedTables ir = Map.fromListWith earlier
-  [ (aid, t) | t <- ir.tables, Just i <- [t.id], Just aid@(TableId _) <- [parseAnchorId i] ]
-  where
-    earlier a b = if order a <= order b then a else b
-    order :: TableIR -> (Maybe Int, Maybe Int)
-    order t = (t.part, t.ordinal)
-
--- | The 1-based PDF page of a table's first fragment.
-tablePage :: TableIR -> Maybe Int
-tablePage t = (+ 1) <$> listToMaybe t.pages
 
 classify :: SpecIR -> Map AnchorId Classification
 classify = fst . classifyWith
@@ -345,7 +263,7 @@ classifyWith :: SpecIR -> (Map AnchorId Classification, [Finding])
 classifyWith = classifyWithRules rules
 
 -- | 'classifyWith' under another set of rules (the tests' ambiguous pairs).
-classifyWithRules :: [Rule] -> SpecIR -> (Map AnchorId Classification, [Finding])
+classifyWithRules :: [RuleDef] -> SpecIR -> (Map AnchorId Classification, [Finding])
 classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatMap located (Map.toList final))
   where
     sid      = SpecId ir.spec
@@ -356,14 +274,14 @@ classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatM
     -- the identifiers of the tables each rule fires on, anywhere in the document, for the joins
     idents   = Map.fromList
       [ (ruleName r, Set.fromList [ i | t <- Map.elems tables, let form = measure sid t
-                                      , fires r sid t form, Just i <- [tableIdent form] ])
+                                      , fires r sid t form, Just i <- [ruleIdent r form] ])
       | r <- ruleSet ]
     commentsOn aid = [ pa | pa <- parsed, paAnchor pa == Just aid ]
     firing t form = precedence
       [ r | r <- ruleSet
           , any (`covers` Map.findWithDefault Nothing t.structPath sections) (Map.findWithDefault [] (ruleName r) scopes)
           , fires r sid t form
-          , maybe True (\joined -> maybe False (`Set.member` Map.findWithDefault mempty joined idents) (tableIdent form)) (joinsTo r) ]
+          , maybe True (\joined -> maybe False (`Set.member` Map.findWithDefault mempty joined idents) (ruleIdent r form)) (joinsTo r) ]
     precedence rs = [ r | r <- rs, not (any ((== Just (ruleName r)) . refinesRule) rs) ]
 
     first' = Map.mapWithKey classifyTable tables
@@ -439,8 +357,10 @@ polyTargets = \case
   WithAs b          -> polyTargets b
   _                 -> []
 
--- | Each exemplar still fires its rule and is accepted by the rule's default
---   binding (design section 3.4, re-verified on every run): @C-EXEMPLAR@.
+-- | Each exemplar still fires its rule, is accepted by the rule's default
+--   binding and has its table to join (design section 3.4, re-verified on every
+--   run): @C-EXEMPLAR@. A reader reached only by a comment (a name that is no
+--   rule token of "Hsed.Spec.DSL") never fires; its exemplar need only be accepted.
 checkExemplars :: SpecIR -> [Finding]
 checkExemplars ir = concatMap check [ r | r <- rules, fst (exemplar r) == sid ]
   where
@@ -450,18 +370,19 @@ checkExemplars ir = concatMap check [ r | r <- rules, fst (exemplar r) == sid ]
       Nothing -> [finding Error "C-EXEMPLAR" ("the exemplar " <> renderAnchorId (snd (exemplar r)) <> " of rule "
                     <> ruleNameText (ruleName r) <> " is not in the IR") & \f -> f { Cm.spec = Just sid }]
       Just t  ->
-        let form  = measure sid t
-            here  = locatedAt sid (renderAnchorId (snd (exemplar r))) (fromMaybe 1 (tablePage t))
-            joins = case joinsTo r of
+        let form   = measure sid t
+            here   = locatedAt sid (renderAnchorId (snd (exemplar r))) (fromMaybe 1 (tablePage t))
+            isRule = ruleName r `elem` knownRules
+            joins  = case joinsTo r of
               Nothing     -> True
               Just target -> case ruleNamed target of
                 Nothing -> False
-                Just tr -> any (\u -> let f = measure sid u in fires tr sid u f && tableIdent f == tableIdent form) (Map.elems tables)
-            shape = case bindsTo r of
+                Just tr -> any (\u -> let f = measure sid u in fires tr sid u f && ruleIdent tr f == ruleIdent r form) (Map.elems tables)
+            shape  = case bindsTo r of
               SomeBinding b -> bindingAccepts b form
               PolyBinding _ -> Nothing
         in map here (catMaybes
-             [ guarded (not (fires r sid t form)) (finding Error "C-EXEMPLAR" ("rule " <> ruleNameText (ruleName r) <> " no longer fires on its exemplar"))
-             , guarded (not joins) (finding Error "C-EXEMPLAR" ("rule " <> ruleNameText (ruleName r) <> ": the exemplar has no table to join"))
+             [ guarded (isRule && not (fires r sid t form)) (finding Error "C-EXEMPLAR" ("rule " <> ruleNameText (ruleName r) <> " no longer fires on its exemplar"))
+             , guarded (isRule && not joins) (finding Error "C-EXEMPLAR" ("rule " <> ruleNameText (ruleName r) <> ": the exemplar has no table to join"))
              , shape ])
     guarded c f = if c then Just f else Nothing

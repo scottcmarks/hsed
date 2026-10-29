@@ -46,6 +46,7 @@ import           Hsed.Spec.Check          (checkIR, sortFindings)
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, RuleName (..), SpecId (..), errataSetName,
                                            isError, matchesSpec, renderFinding)
 import           Hsed.Spec.Compile
+import           Hsed.Spec.Gen            (modulePath)
 import           Hsed.Spec.IR
 import           Hsed.Spec.Report
 import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifyWith, explain,
@@ -102,19 +103,21 @@ runWith out err = \case
     case compileIR es ir of
       Left f -> report out (sideFs <> [f]) >> failWith err "hsedc compile: nothing written"
       Right cr -> do
-        let fs   = sortFindings (sideFs <> crFindings cr)
-            sid  = SpecId ir.spec
-            path = generatedModulePath dir sid
+        let fs    = sortFindings (sideFs <> crFindings cr)
+            sid   = SpecId ir.spec
+            paths = [ (modulePath dir name, text) | (name, text) <- crModules cr ]
         report out fs
         when (any isError fs) $
           failWith err ("hsedc compile: " <> display (findingCounts fs) <> "; nothing written")
-        createDirectoryIfMissing True (takeDirectory path)
-        writeFileUtf8 path (crModuleText cr)
+        forM_ paths $ \(path, text) -> do
+          createDirectoryIfMissing True (takeDirectory path)
+          writeFileUtf8 path text
         createDirectoryIfMissing True reportTo
         writeFileUtf8 (reportTo </> "findings.md") (findingsMarkdown sid es fs)
         writeFileUtf8 (reportTo </> "coverage.md") (coverageMarkdown ir)
         writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown [ledger ir])
-        say err ("hsedc compile: wrote " <> fromString path <> " (" <> display (length (crDecls cr)) <> " declarations, "
+        say err ("hsedc compile: wrote " <> display (T.intercalate ", " (map (T.pack . fst) paths)) <> " ("
+                    <> display (length (crDecls cr)) <> " declarations, "
                     <> display (length (crExcluded cr)) <> " tables left out) and " <> fromString reportTo
                     <> "/{findings,coverage,ledger}.md; " <> display (findingCounts fs) <> "\n")
   CmdExplain specName n inp -> do

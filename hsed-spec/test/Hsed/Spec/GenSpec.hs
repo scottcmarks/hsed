@@ -1,5 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
+{-# LANGUAGE OverloadedRecordDot   #-}
 {-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
 
@@ -11,13 +12,16 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The golden module is Core Tables 46 (AC_element), 52 (adv_key_mode) and 75
-(clock_time) under each errata set, checked in as
+The printer assembles a module from the declarations the rules print. The
+golden module is Core Tables 46 (AC_element), 52 (adv_key_mode) and 75
+(clock_time) under each errata set, printed by the typeRow and enumValues
+rules and assembled into the types module, checked in as
 @test/golden/Core-Types-\<set\>.hs@; a missing golden file is written and the
 test left pending for review. The printed modules are also type-checked with
 @ghc -fno-code -Wall -Werror@ against hsed-core (via @stack exec@ unless the
 test already runs inside stack's environment); where neither can run the check
-is pending with a message.
+is pending with a message. The generic pieces (imports merged, declarations
+ordered, the Haddock paragraph wrapped) are tested on their own.
 -}
 module Hsed.Spec.GenSpec (spec) where
 
@@ -26,7 +30,6 @@ import           RIO
 import           RIO.Directory      (createDirectoryIfMissing, doesFileExist)
 import           RIO.FilePath       (takeDirectory, (</>))
 import           RIO.List           (sort)
-import qualified RIO.Set            as Set
 import           System.Environment (lookupEnv)
 import           System.Process     (readProcessWithExitCode)
 import           Test.Hspec
@@ -36,6 +39,8 @@ import           Hsed.Spec.Errata
 import           Hsed.Spec.Fixtures
 import           Hsed.Spec.Format
 import           Hsed.Spec.Gen
+import           Hsed.Spec.Rules.EnumValues (EnumDecl (..), UIDRef (..), renderEnum)
+import           Hsed.Spec.Rules.TypeRow (TypeRowDecl (..), renderTypeRow, typesModule)
 
 
 -- * The golden tables, as spec/ir/core-2.01.json records them
@@ -46,7 +51,7 @@ prov tid cap pdf printed ord sp h = Provenance
   , ordinal = ord, structPath = sp, cellsHash = h }
 
 typeRow :: Env -> Text -> [Word8] -> Text -> Provenance -> Decl
-typeRow env n bytes f p = TypeRow TypeRowDecl
+typeRow env n bytes f p = renderTypeRow TypeRowDecl
   { name = n, uidBytes = bytes, formatText = f
   , typeDef = either (const Nothing) Just (parseFormat env f), provenance = p }
 
@@ -60,8 +65,16 @@ t51 :: Env -> Decl
 t51 env = typeRow env "adv_key_mode" [0, 0, 0, 5, 0, 0, 4, 0x0F] "Enumeration_Type, 0, 7"
   (prov "T51" "Table 51 adv_key_mode" 102 85 53 "0/1316" "806db1ea2e8a9f73d3ae112b36a63960f063a3c9820a93fb9039ff90844fea15")
 
+-- | Table 52, its type's UID spelled out (its row is not in the golden module).
 t52 :: Decl
-t52 = Enum EnumDecl
+t52 = renderEnum Literal t52Decl
+
+-- | Table 52 beside its row T51 in one module.
+t52Beside51 :: Decl
+t52Beside51 = renderEnum SameModule t52Decl
+
+t52Decl :: EnumDecl
+t52Decl = EnumDecl
   { name = "adv_key_mode"
   , ctors = [("Wait for AdvKey_Req", 0), ("Auto-advance keys", 1)] <> [ ("Reserved", v) | v <- [2 .. 7] ]
   , typeUID = [0, 0, 0, 5, 0, 0, 4, 0x0F]
@@ -85,6 +98,10 @@ goldenFile :: ErrataSet -> FilePath
 goldenFile es = "test/golden/Core-Types-" <> T.unpack (errataSetName es) <> ".hs"
 
 
+coreTypes :: Text
+coreTypes = "Hsed.Gen.Core.Types"
+
+
 -- * Type-checking a printed module
 
 -- | @ghc -fno-code -Wall -Werror@ on the module, against the hsed-core in stack's
@@ -95,7 +112,7 @@ compiles decls = withSystemTempDirectory "hsed-gen" $ \dir -> do
   let file = dir </> "Hsed" </> "Gen" </> "Core" </> "Types.hs"
       ghcArgs = ["-fno-code", "-Wall", "-Werror", "-package", "hsed-core", "-i" <> dir, file]
   createDirectoryIfMissing True (takeDirectory file)
-  writeFileUtf8 file (renderModule coreTypesModule decls)
+  writeFileUtf8 file (renderModule coreTypes typesModule decls)
   underStack <- isJust <$> lookupEnv "GHC_PACKAGE_PATH"
   let (prog, args) = if underStack then ("ghc", ghcArgs) else ("stack", ["exec", "--", "ghc"] <> ghcArgs)
   result <- try (readProcessWithExitCode prog args "")
@@ -112,7 +129,7 @@ spec = do
   describe "renderModule" $ do
     forM_ [Scott, Published] $ \es ->
       it ("prints T46, T52 and T75 under " <> T.unpack (errataSetName es) <> " as the golden file has them") $ do
-        let actual = renderModule coreTypesModule (golden env es)
+        let actual = renderModule coreTypes typesModule (golden env es)
             path   = goldenFile es
         exists <- doesFileExist path
         if exists
@@ -123,76 +140,72 @@ spec = do
             writeFileUtf8 path actual
             pendingWith ("wrote " <> path <> "; review it and run again")
     it "prints the same text for the same input in any order" $
-      renderModule coreTypesModule (reverse (golden env Scott)) `shouldBe` renderModule coreTypesModule (golden env Scott)
+      renderModule coreTypes typesModule (reverse (golden env Scott)) `shouldBe` renderModule coreTypes typesModule (golden env Scott)
     it "orders the definitions by table number" $ do
-      let text = renderModule coreTypesModule (reverse (golden env Scott))
+      let text = renderModule coreTypes typesModule (reverse (golden env Scott))
           position needle = T.length (fst (T.breakOn needle text))
           positions = map position ["uAC_elementType ::", "data Core_adv_key_mode", "uclock_timeType ::"]
       positions `shouldBe` sort positions
       positions `shouldSatisfy` all (< T.length text)
     it "gives every definition its provenance line" $ do
-      let text = renderModule coreTypesModule (golden env Scott)
+      let text = renderModule coreTypes typesModule (golden env Scott)
           count needle = length (T.breakOnAll needle text)
       count "-- | core-2.01 T46 AC_element (PDF 100 / p.83, ord 48, sha256:5b2d8106fd18)" `shouldBe` 3
       count "-- | core-2.01 T52 adv_key_mode Enumeration Values (PDF 102 / p.85, ord 54, sha256:3aa5da037978)" `shouldBe` 2
       count "-- | core-2.01 T75 clock_time (PDF 107 / p.90, ord 77, sha256:c349b5b0b0ba)" `shouldBe` 3
     it "prints the three shapes of a Type row as hsed's TypeUIDs.hs has them" $ do
-      let text = renderModule coreTypesModule [t46 env]
+      let text = renderModule coreTypes typesModule [t46 env]
       text `shouldSatisfy` T.isInfixOf "uAC_elementType :: UID\nuAC_elementType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01\n"
       text `shouldSatisfy` T.isInfixOf "fAC_elementType :: String\nfAC_elementType = \"List_Type,*,ACE_expression\"\n"
       text `shouldSatisfy` T.isInfixOf "tAC_element :: TypeDef\ntAC_element = ListType Star (Ref \"ACE_expression\")\n"
     it "omits the TypeDef of a Format that did not parse" $ do
-      let text = renderModule coreTypesModule (golden env Published)
+      let text = renderModule coreTypes typesModule (golden env Published)
       text `shouldSatisfy` T.isInfixOf "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
       text `shouldSatisfy` (not . T.isInfixOf "tclock_time ::")
       text `shouldSatisfy` T.isInfixOf "fclock_timeType = \"Struct_Type,Year,Month,Day,Hour,Minute,Seconds,Fractoin\""
-      renderModule coreTypesModule (golden env Scott)
+      renderModule coreTypes typesModule (golden env Scott)
         `shouldSatisfy` T.isInfixOf "tclock_time = StructType [Ref \"Year\",Ref \"Month\",Ref \"Day\",Ref \"Hour\",Ref \"Minute\",Ref \"Seconds\",Ref \"Fraction\"]"
-    it "refers to the row's UID name when the row is in the module, else spells the UID out" $ do
-      renderDecl (Set.fromList ["adv_key_mode"]) t52 `shouldSatisfy` elem "  typeUID = uadv_key_modeType"
-      renderDecl Set.empty t52 `shouldSatisfy` elem "  typeUID = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x0f"
-      renderModule coreTypesModule [t51 env, t52] `shouldSatisfy` T.isInfixOf "  typeUID = uadv_key_modeType\n  range   = (0, 7)\n"
+    it "refers to the row's UID name in its module or another, or spells the UID out" $ do
+      t52Beside51.declBody `shouldSatisfy` elem "  typeUID = uadv_key_modeType"
+      t52.declBody `shouldSatisfy` elem "  typeUID = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x0f"
+      renderModule coreTypes typesModule [t51 env, t52Beside51] `shouldSatisfy` T.isInfixOf "  typeUID = uadv_key_modeType\n  range   = (0, 7)\n"
+      let elsewhere = renderEnum (InModule "Hsed.Gen.Core.Types") t52Decl
+      elsewhere.declBody `shouldSatisfy` elem "  typeUID = uadv_key_modeType"
+      elsewhere.declImports `shouldSatisfy` elem (ImportAll "Hsed.Gen.Core.Types")
     it "imports only what its definitions use" $ do
-      renderModule coreTypesModule [t52] `shouldSatisfy` T.isInfixOf "import           Prelude                    (Bounded, Enum, Eq, Ord, Show)\n"
-      renderModule coreTypesModule [t52] `shouldSatisfy` T.isInfixOf "import           System.SED.MCTP.Common.UID (uid)\n"
-      renderModule coreTypesModule [t46 env] `shouldSatisfy` T.isInfixOf "import           Prelude                    (String)\n"
-      renderModule coreTypesModule [t75 env Published] `shouldSatisfy` (not . T.isInfixOf "import           Hsed.Core.Types")
-      renderModule coreTypesModule [] `shouldSatisfy` (not . T.isInfixOf "import")
+      renderModule coreTypes typesModule [t52] `shouldSatisfy` T.isInfixOf "import           Prelude                    (Bounded, Enum, Eq, Ord, Show)\n"
+      renderModule coreTypes typesModule [t52] `shouldSatisfy` T.isInfixOf "import           System.SED.MCTP.Common.UID (uid)\n"
+      renderModule coreTypes typesModule [t46 env] `shouldSatisfy` T.isInfixOf "import           Prelude                    (String)\n"
+      renderModule coreTypes typesModule [t75 env Published] `shouldSatisfy` (not . T.isInfixOf "import           Hsed.Core.Types")
+      renderModule coreTypes typesModule [] `shouldSatisfy` (not . T.isInfixOf "import")
 
   describe "the printed module" $
     forM_ [ ("scott", golden env Scott), ("published", golden env Published)
           , ("enumerations only", [t52]), ("rows only, one of them unparsed", [t46 env, t75 env Published])
-          , ("an enumeration and its row", [t51 env, t52]), ("empty", []) ] $ \(label, decls) ->
+          , ("an enumeration and its row", [t51 env, t52Beside51]), ("empty", []) ] $ \(label, decls) ->
       it ("type-checks under -Wall -Werror: " <> label) $ compiles decls
 
-  describe "constructorNames" $ do
-    it "names adv_key_mode as today's dEnum does: first value of a label bare, later ones suffixed" $
-      map fst (constructorNames "adv_key_mode" (0, 7) advKeyMode)
-        `shouldBe` [ "Core_adv_key_mode_Wait_for_AdvKey_Req", "Core_adv_key_mode_Auto_advance_keys", "Core_adv_key_mode_Reserved"
-                   , "Core_adv_key_mode_Reserved_3", "Core_adv_key_mode_Reserved_4", "Core_adv_key_mode_Reserved_5"
-                   , "Core_adv_key_mode_Reserved_6", "Core_adv_key_mode_Reserved_7" ]
-    it "treats a repeated label as one label (padding_type's two None rows)" $
-      take 2 (constructorNames "padding_type" (0, 15) paddingType)
-        `shouldBe` [("Core_padding_type_None", 0), ("Core_padding_type_None_1", 1)]
-    it "keeps a label's values in table order across its rows (life_cycle_state's Unassigned)" $
-      filter (T.isInfixOf "Unassigned" . fst) (constructorNames "life_cycle_state" (0, 15) lifeCycleState)
-        `shouldBe` [ ("Core_life_cycle_state_Unassigned", 5), ("Core_life_cycle_state_Unassigned_6", 6), ("Core_life_cycle_state_Unassigned_7", 7)
-                   , ("Core_life_cycle_state_Unassigned_14", 14), ("Core_life_cycle_state_Unassigned_15", 15) ]
-    it "fills the gaps of the range with _NA from the range's lower bound" $ do
-      constructorNames "x" (1, 4) [("Idle", 1), ("Active", 3)]
-        `shouldBe` [("Core_x_Idle", 1), ("Core_x_NA", 2), ("Core_x_Active", 3), ("Core_x_NA_4", 4)]
-      constructorNames "x" (0, 3) [("A", 2)]
-        `shouldBe` [("Core_x_NA", 0), ("Core_x_NA_1", 1), ("Core_x_A", 2), ("Core_x_NA_3", 3)]
-      map fst (constructorNames "reencrypt_state" (1, 16) reencryptState) `shouldSatisfy` notElem "Core_reencrypt_state_NA"
-      map snd (constructorNames "reencrypt_state" (1, 16) reencryptState) `shouldBe` [1 .. 16]
-    it "scrubs a label to an identifier: commas dropped, spaces and dashes to underscores" $
-      map fst (constructorNames "e" (0, 3) [("RSAES-PKCS1-v1_5", 0), ("SHA 1", 1), ("Issued-Disabled-Frozen", 2), ("ReadLocked, WriteLocked or (none)", 3)])
-        `shouldBe` ["Core_e_RSAES_PKCS1_v1_5", "Core_e_SHA_1", "Core_e_Issued_Disabled_Frozen", "Core_e_ReadLocked_WriteLocked_or__none_"]
+  describe "the imports" $ do
+    let d imports = (decl (prov "T1" "Table 1 x" 1 1 1 "0/1" "") "x" ["x = ()"]) { declImports = imports }
+        importsOf ds = filter ("import" `T.isPrefixOf`) (T.lines (renderModule "M" typesModule ds))
+    it "unite the lists of one module, sorted case-insensitively, and align them on the longest module name" $
+      importsOf [d [ImportSome "Prelude" ["String"], ImportSome "System.SED.MCTP.Common.UID" ["uid"]], d [ImportSome "Prelude" ["Eq", "String"], ImportSome "System.SED.MCTP.Common.UID" ["UID"]]]
+        `shouldBe` [ "import           Prelude                    (Eq, String)"
+                   , "import           System.SED.MCTP.Common.UID (UID, uid)" ]
+    it "let a whole-module import win over a list of the same module" $
+      importsOf [d [ImportSome "Data.Map" ["Map"]], d [ImportAll "Data.Map"]] `shouldBe` ["import           Data.Map"]
 
-  describe "joinFormat" $
-    it "joins the pieces with commas and no spaces, as hsed's quasiquoter does" $
-      map joinFormat [ "List_Type, *, ACE_expression", "Simple_Type,uinteger, 2", "Restricted_Reference_Type{6}, uidref {AuthorityTableUID}", "Base_Type" ]
-        `shouldBe` [ "List_Type,*,ACE_expression", "Simple_Type,uinteger,2", "Restricted_Reference_Type{6},uidref {AuthorityTableUID}", "Base_Type" ]
+  describe "the module header" $ do
+    it "wraps the module's notes into the generated-by paragraph" $
+      wrapText 80 "a bb ccc" `shouldBe` ["a bb ccc"]
+    it "keeps every line within the width, words whole" $ do
+      let ls = wrapText 20 "Generated by hsedc: do not edit. Each definition names its table"
+      ls `shouldSatisfy` all ((<= 20) . T.length)
+      T.unwords ls `shouldBe` "Generated by hsedc: do not edit. Each definition names its table"
+    it "names the module and its file" $ do
+      moduleName core typesModule `shouldBe` "Hsed.Gen.Core.Types"
+      moduleName (SpecId "opal-2.30") typesModule `shouldBe` "Hsed.Gen.Opal.Types"
+      modulePath "hsed/gen" "Hsed.Gen.Core.Types" `shouldBe` "hsed/gen/Hsed/Gen/Core/Types.hs"
 
   describe "provenanceComment" $
     it "names the spec, table, caption title, pages, ordinal and hash prefix" $
@@ -202,9 +215,3 @@ spec = do
   describe "tableNumber" $
     it "reads the number of an anchor id, and sorts an id without one last" $
       map (tableNumber . \tid -> prov tid "" 0 0 0 "" "") ["T46", "T240", "doc"] `shouldBe` [46, 240, maxBound]
-  where
-    advKeyMode     = [("Wait for AdvKey_Req", 0), ("Auto-advance keys", 1)] <> [ ("Reserved", v) | v <- [2 .. 7] ]
-    paddingType    = [("None", 0), ("None", 1), ("RSAES-PKCS1-v1_5", 2), ("RSAES-OAEP", 3), ("RSASSA-PKCS1-v1_5", 4)] <> [ ("Reserved", v) | v <- [5 .. 15] ]
-    lifeCycleState = [("Issued", 0), ("Issued-Disabled", 1), ("Issued-Frozen", 2), ("Issued-Disabled-Frozen", 3), ("Issued-Failed", 4)]
-                     <> [ ("Unassigned", v) | v <- [5 .. 7] ] <> [ ("Reserved for SSC Usage", v) | v <- [8 .. 13] ] <> [ ("Unassigned", v) | v <- [14, 15] ]
-    reencryptState = [("Idle", 1), ("Pending", 2), ("Active", 3), ("Completed", 4), ("Paused", 5)] <> [ ("Reserved", v) | v <- [6 .. 16] ]

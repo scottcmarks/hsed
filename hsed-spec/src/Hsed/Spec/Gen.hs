@@ -12,44 +12,51 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Prints @gen/Hsed/Gen/Core/Types.hs@ from plain declaration records, in exactly the
-shapes hsed's hand-written TypeUIDs.hs has today so that the M2a runtime
-comparison (design section 5.5) is clean: @u\<Name\>Type :: UID@, @f\<Name\>Type ::
-String@ with the Format cell joined as hsed's quasiquoter joins it (commas, no
-spaces), @t\<Name\> :: TypeDef@ when the Format parsed, and @data Core_\<enum\>@
-with the constructor names today's @dEnum@ produces (the label scrubbed, the
-first value of a label bare and the later ones suffixed @_\<v\>@, @_NA@ fillers for
-the gaps of the range) plus an 'Enumerated' instance. Every definition carries a
-Haddock line naming its table, PDF and printed page, structure ordinal and the
-hash of its cells (design example E2). The same input prints the same text;
-definitions are sorted by table number.
+Assembles one generated module from the declarations the rules emit for it
+(docs/spec-as-source.md section 4.2; docs/adding-a-rule.md). A rule prints its
+own declarations ('Decl': its lines, the imports they need, where it comes
+from) and names the module they go to ('GenModule'); this module knows nothing
+of what any rule generates. It writes the header (pragmas, the module's
+Haddock with the rule's description and notes), merges the imports of every
+declaration (a whole-module import wins over an import list; lists are united
+and sorted), and prints the declarations sorted by table number, then rank
+within the table, then name. The same declarations print the same text in
+any order.
+
+Every definition carries a Haddock line naming its table, PDF and printed
+page, structure ordinal and the hash of its cells ('provenanceComment',
+design example E2).
 -}
 module Hsed.Spec.Gen
-  ( -- * Input
+  ( -- * Where a definition comes from
     Provenance (..)
-  , TypeRowDecl (..)
-  , EnumDecl (..)
-  , Decl (..)
-    -- * Printing
-  , coreTypesModule
-  , renderModule
-  , renderDecl
-    -- * Pieces, exported for the tests
-  , constructorNames
-  , joinFormat
   , provenanceComment
   , tableNumber
+    -- * Declarations and the modules they go to
+  , GenModule (..)
+  , Import (..)
+  , Decl (..)
+  , decl
+  , moduleName
+  , modulePath
+    -- * Printing
+  , renderModule
+    -- * Pieces for the rules' printers
+  , uidExpr
+  , bytesExpr
+  , hexByte
+  , wrapText
   ) where
 
-import           Data.Char        (isAlphaNum)
 import qualified Data.Text        as T
 import qualified Data.Text.Read   as TR
 import           RIO
-import           RIO.List         (sortOn, (\\))
+import qualified RIO.Char         as C
+import           RIO.FilePath     ((</>))
+import           RIO.List         (sortOn)
 import qualified RIO.Map          as Map
 import qualified RIO.Set          as Set
 
-import           Hsed.Core.Types  (TypeDef)
 import           Hsed.Spec.Common (SpecId (..))
 
 
@@ -66,110 +73,109 @@ data Provenance = Provenance
   }
   deriving (Eq, Show)
 
--- | One Type table row (Core 5.1.3).
-data TypeRowDecl = TypeRowDecl
-  { name       :: !Text
-  , uidBytes   :: ![Word8]
-  , formatText :: !Text            -- ^ the Format cell, after errata
-  , typeDef    :: !(Maybe TypeDef)  -- ^ absent when the Format did not parse
-  , provenance :: !Provenance
+-- | A generated module, named by its last component under @Hsed.Gen.\<Spec\>@.
+data GenModule = GenModule
+  { leaf        :: !Text     -- ^ @Types@: the module is @Hsed.Gen.Core.Types@ for @core-2.01@
+  , description :: !Text     -- ^ the Haddock Description, before @, generated from \<spec\>@
+  , notes       :: ![Text]   -- ^ sentences appended to the module's Haddock paragraph
   }
   deriving (Eq, Show)
 
--- | One enumeration table: every value of the table with its label, a row
---   @2-7 Reserved@ already expanded to six pairs.
-data EnumDecl = EnumDecl
-  { name       :: !Text            -- ^ the Type object's name, @adv_key_mode@
-  , ctors      :: ![(Text, Int)]
-  , typeUID    :: ![Word8]         -- ^ the Type object's UID
-  , range      :: !(Int, Int)      -- ^ from the Type object's Format
-  , provenance :: !Provenance
+-- | What a declaration needs imported.
+data Import
+  = ImportAll !Text           -- ^ @import M@
+  | ImportSome !Text ![Text]  -- ^ @import M (a, b)@
+  deriving (Eq, Show)
+
+-- | One declaration as a rule printed it.
+data Decl = Decl
+  { declProvenance :: !Provenance  -- ^ the table it comes from: the first sort key, its number
+  , declRank       :: !Int         -- ^ its place within the table (a row's index), the second
+  , declName       :: !Text        -- ^ the name it defines first, the third
+  , declBody       :: ![Text]      -- ^ its lines, Haddock included
+  , declImports    :: ![Import]
   }
   deriving (Eq, Show)
 
-data Decl = TypeRow TypeRowDecl | Enum EnumDecl
-  deriving (Eq, Show)
+-- | A declaration of rank 0 with no imports; set the rest by record update.
+decl :: Provenance -> Text -> [Text] -> Decl
+decl p n body = Decl { declProvenance = p, declRank = 0, declName = n, declBody = body, declImports = [] }
 
--- | The module the Core Type tables generate.
-coreTypesModule :: Text
-coreTypesModule = "Hsed.Gen.Core.Types"
+-- | @Hsed.Gen.Core.Types@ for @core-2.01@ and a module whose leaf is @Types@.
+moduleName :: SpecId -> GenModule -> Text
+moduleName sid gm = "Hsed.Gen." <> capitalise (T.takeWhile C.isAlpha (specIdText sid)) <> "." <> gm.leaf
+  where capitalise t = maybe t (\(c, cs) -> T.cons (C.toUpper c) (T.toLower cs)) (T.uncons t)
+
+-- | Where a module goes under an output directory: @DIR/Hsed/Gen/Core/Types.hs@.
+modulePath :: FilePath -> Text -> FilePath
+modulePath dir name = dir </> T.unpack (T.replace "." "/" name) <> ".hs"
 
 
 -- * Printing
 
--- | The whole module, declarations sorted by table number then name.
-renderModule :: Text -> [Decl] -> Text
-renderModule modName decls = T.unlines (header <> imports <> concatMap (("" :) . renderDecl rowNames) sorted)
+-- | The whole module: header, imports, then the declarations in order.
+renderModule :: Text -> GenModule -> [Decl] -> Text
+renderModule modName gm decls = T.unlines (header <> importLines (concatMap (.declImports) decls) <> concatMap (("" :) . (.declBody)) sorted)
   where
-    sorted   = sortOn (\d -> (tableNumber (provenanceOf d), nameOf d)) decls
-    rowNames = Set.fromList [ r.name | TypeRow r <- decls ]
-    rows     = [ r | TypeRow r <- decls ]
-    enums    = [ e | Enum e <- decls ]
-    specs    = Set.toList (Set.fromList (map (specIdText . (.spec) . provenanceOf) sorted))
+    sorted = sortOn (\d -> (tableNumber d.declProvenance, d.declRank, d.declName)) decls
+    specs  = Set.toList (Set.fromList (map (\d -> specIdText d.declProvenance.spec) sorted))
     header =
       [ "{-# LANGUAGE NoImplicitPrelude #-}"
       , "{-# LANGUAGE OverloadedStrings #-}"
       , ""
       , "{-|"
       , "Module      : " <> modName
-      , "Description : Type objects and their enumerations, generated from " <> T.intercalate ", " specs
+      , "Description : " <> gm.description <> ", generated from " <> T.intercalate ", " specs
       , "Copyright   : (c) Magnolia Heights R&D, 2026"
       , "License     : BSD3"
       , "Maintainer  : scott@magnolia-heights.com"
-      , ""
-      , "Generated by hsedc: do not edit. Each definition names its table, its PDF and"
+      , "" ]
+      <> wrapText 80 (T.unwords (generatedNote : gm.notes))
+      <> [ "-}"
+         , "module " <> modName <> " where"
+         , "" ]
+    generatedNote = T.unwords
+      [ "Generated by hsedc: do not edit. Each definition names its table, its PDF and"
       , "printed page, its ordinal in the structure tree and the sha256 of its cells"
       , "(docs/spec-as-source.md section 3.5). The tables are TCG's text: see"
-      , "tcg/TCG-NOTICE.txt. The @f\\<Name\\>Type@ strings are the Format cells joined as"
-      , "hsed's hand transcription joins them, for the M2a runtime comparison."
-      , "-}"
-      , "module " <> modName <> " where"
-      , ""
-      ]
-    imports = catMaybes
-      [ guarded (any (isJust . (.typeDef)) rows || not (null enums)) "import           Hsed.Core.Types"
-      , importList "Prelude                    " (["String" | not (null rows)] <> (if null enums then [] else ["Bounded", "Enum", "Eq", "Ord", "Show"]))
-      , importList "System.SED.MCTP.Common.UID " (["UID" | not (null rows)] <> ["uid" | not (null rows) || any (literalUID rowNames) enums])
-      ]
-    guarded c t = if c then Just t else Nothing
-    importList m items = guarded (not (null items)) ("import           " <> m <> "(" <> T.intercalate ", " (sortOn T.toLower items) <> ")")
+      , "tcg/TCG-NOTICE.txt." ]
 
--- | One declaration's lines, given the names of the Type rows in the same module
---   (an enumeration's instance refers to its row's @u\<Name\>Type@ when the row is
---   there, else spells the UID out).
-renderDecl :: Set Text -> Decl -> [Text]
-renderDecl _ (TypeRow r) =
-  [ doc, "u" <> tag <> " :: UID", "u" <> tag <> " = " <> uidExpr r.uidBytes
-  , "", doc, "f" <> tag <> " :: String", "f" <> tag <> " = " <> tshow (joinFormat r.formatText)
-  , "" ]
-  <> maybe [ "-- t" <> r.name <> ": no TypeDef, the Format did not parse under this errata set" ]
-           (\t -> [ doc, "t" <> r.name <> " :: TypeDef", "t" <> r.name <> " = " <> tshow t ])
-           r.typeDef
+-- | The import lines: one per module, in module order, a whole-module import
+--   winning over a list; the lists united, sorted case-insensitively, and
+--   aligned on the longest module name that has one.
+importLines :: [Import] -> [Text]
+importLines is = map line (Map.toList merged)
   where
-    tag = r.name <> "Type"
-    doc = provenanceComment r.provenance
-renderDecl rowNames (Enum e) =
-  [ doc, "data " <> coreName ]
-  <> zipWith (\i (ctor, _) -> (if i == (0 :: Int) then "  = " else "  | ") <> ctor) [0 ..] (constructorNames e.name e.range e.ctors)
-  <> [ "  deriving (Bounded, Enum, Eq, Ord, Show)"
-     , ""
-     , doc
-     , "instance Enumerated " <> coreName <> " where"
-     , "  typeUID = " <> if literalUID rowNames e then uidExpr e.typeUID else "u" <> e.name <> "Type"
-     , "  range   = (" <> tshow (fst e.range) <> ", " <> tshow (snd e.range) <> ")"
-     ]
-  where
-    coreName = "Core_" <> e.name
-    doc = provenanceComment e.provenance
+    merged = Map.fromListWith combine [ entry i | i <- is ]
+    entry (ImportAll m)       = (m, Nothing)
+    entry (ImportSome m xs)   = (m, Just (Set.fromList xs))
+    combine a b = (<>) <$> a <*> b
+    width = 1 + foldl' max 0 [ T.length m | (m, Just _) <- Map.toList merged ]
+    line (m, Nothing) = "import           " <> m
+    line (m, Just xs) = "import           " <> m <> T.replicate (width - T.length m) " "
+                        <> "(" <> T.intercalate ", " (sortOn (\x -> (T.toLower x, x)) (Set.toList xs)) <> ")"
 
-literalUID :: Set Text -> EnumDecl -> Bool
-literalUID rowNames e = not (e.name `Set.member` rowNames)
-
+-- | @uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01@
 uidExpr :: [Word8] -> Text
-uidExpr bytes = T.unwords ("uid" : map hex2 bytes)
+uidExpr = bytesExpr "uid"
+
+-- | A function applied to bytes: @bytesExpr "halfUID" [0, 0, 0, 7]@ is @halfUID 0x00 0x00 0x00 0x07@.
+bytesExpr :: Text -> [Word8] -> Text
+bytesExpr fn bytes = T.unwords (fn : map hexByte bytes)
+
+-- | @0x0f@
+hexByte :: Word8 -> Text
+hexByte b = "0x" <> T.pack [digit (b `div` 16), digit (b `mod` 16)]
+  where digit d = T.index "0123456789abcdef" (fromIntegral d)
+
+-- | Greedy word wrap: as many words to a line as fit in the width.
+wrapText :: Int -> Text -> [Text]
+wrapText width = reverse . map T.unwords . foldl' place [] . T.words
   where
-    hex2 b = "0x" <> T.pack [digit (b `div` 16), digit (b `mod` 16)]
-    digit d = T.index "0123456789abcdef" (fromIntegral d)
+    place [] w = [[w]]
+    place (current : done) w
+      | T.length (T.unwords (current <> [w])) <= width = (current <> [w]) : done
+      | otherwise = [w] : current : done
 
 -- | @-- | core-2.01 T46 AC_element (PDF 100 \/ p.83, ord 48, sha256:3f1a2b3c4d5e)@
 provenanceComment :: Provenance -> Text
@@ -183,32 +189,3 @@ provenanceComment p = T.concat
 -- | The number in an anchor id (@T46@ -> 46); an id without one sorts last.
 tableNumber :: Provenance -> Int
 tableNumber p = either (const maxBound) fst (TR.decimal (T.drop 1 p.tableId) :: Either String (Int, Text))
-
--- | The Format cell as hsed's quasiquoter joins the table's lines: the pieces
---   between commas trimmed, no space after a comma.
-joinFormat :: Text -> Text
-joinFormat = T.intercalate "," . map T.strip . T.splitOn ","
-
--- | The constructors of @Core_\<enum\>@ in value order, as today's @dEnum@ names
---   them: the label with commas dropped and spaces and dashes turned to
---   underscores, the first value of a label bare and the later ones suffixed
---   @_\<v\>@, and @_NA@ for every value of the range no label covers.
-constructorNames :: Text -> (Int, Int) -> [(Text, Int)] -> [(Text, Int)]
-constructorNames enumName (lo, hi) given = sortOn snd (concatMap suffixed (Map.toList groups))
-  where
-    coreName = "Core_" <> enumName
-    groups   = Map.fromListWith (flip (<>)) ([ (coreName <> "_" <> scrub label, [v]) | (label, v) <- given ] <> filler)
-    missing  = [lo .. hi] \\ map snd given
-    filler   = [ (coreName <> "_NA", missing) | not (null missing) ]
-    suffixed (n, v : vs) = (n, v) : [ (n <> "_" <> tshow v', v') | v' <- vs ]
-    suffixed (_, [])     = []
-    scrub = T.map identifier . T.intercalate "_" . T.split (`elem` [' ', '-']) . T.filter (/= ',')
-    identifier c = if isAlphaNum c || c == '_' || c == '\'' then c else '_'
-
-provenanceOf :: Decl -> Provenance
-provenanceOf (TypeRow r) = r.provenance
-provenanceOf (Enum e)    = e.provenance
-
-nameOf :: Decl -> Text
-nameOf (TypeRow r) = r.name
-nameOf (Enum e)    = e.name

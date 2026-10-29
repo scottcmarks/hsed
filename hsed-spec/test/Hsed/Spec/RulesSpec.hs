@@ -40,6 +40,7 @@ import           Hsed.Spec.IR      (AnnotIR (..), Rect (..), SpecIR (..), Struct
 import qualified Hsed.Spec.IR      as IR
 import           Hsed.Spec.Rules
 import           Hsed.Spec.Rules.TypeRow (typeRowRule)
+import           Hsed.Spec.Shape   (measure, shapeMismatch)
 
 
 codesOf :: [Finding] -> [Text]
@@ -158,6 +159,20 @@ spec = do
         let (classes', fs) = classifyWithRules [typeRowRule, shadow (Just (RuleName "typeRow"))] ir'
         Map.lookup (TableId 46) classes' `shouldBe` Just (RuleBound (RuleName "tableDesc") [] (SomeBinding tableDesc))
         filter ((== "E-AMBIGUOUS") . Cm.code) fs `shouldBe` []
+
+    describe "a comment on a table a rule fires on" $
+      it "wins over the rule: T3, Foo Table Description, stays prose under a tableDesc that fires on it" $ do
+        let tableDescLike = typeRowRule
+              { ruleName = RuleName "tableDesc", bindsTo = SomeBinding tableDesc, joinsTo = Nothing
+              , ruleIdent = const Nothing, fires = \_ _ form -> isNothing (shapeMismatch TableDesc form) }
+            ruleSet = filter ((/= RuleName "tableDesc") . ruleName) rules <> [tableDescLike]
+            (classes', fs) = classifyWithRules ruleSet ir
+        scopeOf ir (RuleName "tableDesc") `shouldBe` [WholeDocument]
+        fires tableDescLike (SpecId "core-2.01") <$> Map.lookup (TableId 3) (numberedTables ir)
+          <*> (measure (SpecId "core-2.01") <$> Map.lookup (TableId 3) (numberedTables ir)) `shouldBe` Just True
+        Map.lookup (TableId 3) classes' `shouldBe` Just (CommentBound (SomeBinding prose))
+        Map.lookup (TableId 171) classes' `shouldBe` Just (RuleBound (RuleName "tableDesc") [] (SomeBinding tableDesc))
+        [ f | f <- fs, Cm.anchor f == Just "T3" ] `shouldBe` []
 
     describe "explain" $
       it "names the rule and its exemplar (acceptance (g))" $ do

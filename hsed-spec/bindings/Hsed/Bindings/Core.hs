@@ -9,11 +9,31 @@ import Hsed.Spec.DSL
 
 {-# LINE 1 "core-2.01.pdf#page=1&doc" #-}
 b_core_doc :: Bound
-b_core_doc = at (anchor @'Doc "core-2.01" "doc" "" 1) (doc core201 & rule tableUIDs)
+b_core_doc = at (anchor @'Doc "core-2.01" "doc" "" 1) (doc core201 & rule tableDesc & rule tableUIDs & rule uidTable & rule statusCodes & rule codes & rule fieldValue & rule fieldType & rule constValues & rule ranges & rule preconfig & rule terminology & rule sig)
+
+{-# LINE 1 "core-2.01.pdf#page=31&3.2.2" #-}
+b_core_3_2_2 :: Bound
+b_core_3_2_2 = at (anchor @'Heading "core-2.01" "3.2.2" "0/241" 31) (rule tokenEncoding)
 
 {-# LINE 1 "core-2.01.pdf#page=100&5.1.3" #-}
 b_core_5_1_3 :: Bound
 b_core_5_1_3 = at (anchor @'Heading "core-2.01" "5.1.3" "0/1278" 100) (rule typeRow & rule enumValues)
+
+{-# LINE 1 "core-2.01.pdf#page=28&T2" #-}
+b_core_T2 :: Bound
+b_core_T2 = at (anchor @'Prose "core-2.01" "T2" "0/199" 28) prose
+
+{-# LINE 1 "core-2.01.pdf#page=29&T3" #-}
+b_core_T3 :: Bound
+b_core_T3 = at (anchor @'Prose "core-2.01" "T3" "0/207" 29) prose
+
+{-# LINE 1 "core-2.01.pdf#page=53&T24" #-}
+b_core_T24 :: Bound
+b_core_T24 = at (anchor @'Prose "core-2.01" "T24" "0/587" 53) prose
+
+{-# LINE 1 "core-2.01.pdf#page=83&T45" #-}
+b_core_T45 :: Bound
+b_core_T45 = at (anchor @'StateTable "core-2.01" "T45" "0/1061" 83) (stateTable "Sync.table45")
 
 {-# LINE 1 "core-2.01.pdf#page=107&T75" #-}
 b_core_T75 :: Bound
@@ -31,13 +51,43 @@ b_core_T101 = at (anchor @'EnumValues "core-2.01" "T101" "0/1555" 113) (erratum 
 b_core_T149 :: Bound
 b_core_T149 = at (anchor @'TypeRow "core-2.01" "T149" "0/1792" 124) (waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "no erratum says which is wrong" typeRow)
 
-{-# LINE 35 "Hsed/Bindings/Core.hs" #-}
+{-# LINE 1 "core-2.01.pdf#page=141&T167" #-}
+b_core_T167 :: Bound
+b_core_T167 = at (anchor @'Props "core-2.01" "T167" "0/2096" 141) propsNames
+
+{-# LINE 1 "core-2.01.pdf#page=144&T168" #-}
+b_core_T168 :: Bound
+b_core_T168 = at (anchor @'Props "core-2.01" "T168" "0/2111" 144) propsInitial
+
+{-# LINE 1 "core-2.01.pdf#page=176&T185" #-}
+b_core_T185 :: Bound
+b_core_T185 = at (anchor @'Prose "core-2.01" "T185" "0/2818" 176) prose
+
+{-# LINE 1 "core-2.01.pdf#page=284&T230" #-}
+b_core_T230 :: Bound
+b_core_T230 = at (anchor @'Prose "core-2.01" "T230" "0/5057" 284) prose
+
+{-# LINE 1 "core-2.01.pdf#page=285&T231" #-}
+b_core_T231 :: Bound
+b_core_T231 = at (anchor @'Prose "core-2.01" "T231" "0/5060" 285) prose
+
+{-# LINE 75 "Hsed/Bindings/Core.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_core_doc
+  , b_core_3_2_2
   , b_core_5_1_3
+  , b_core_T2
+  , b_core_T3
+  , b_core_T24
+  , b_core_T45
   , b_core_T75
   , b_core_T87
   , b_core_T101
   , b_core_T149
+  , b_core_T167
+  , b_core_T168
+  , b_core_T185
+  , b_core_T230
+  , b_core_T231
   ]

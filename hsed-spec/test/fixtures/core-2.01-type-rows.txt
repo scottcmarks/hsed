@@ -1,0 +1,100 @@
+T46|AC_element|00 00 00 05 00 00 08 01|List_Type, *, ACE_expression
+T47|ACE_columns|00 00 00 05 00 00 1A 03|Set_Type, 0, *
+T48|ACE_expression|00 00 00 05 00 00 06 01|Alternative_Type, Authority_object_ref, boolean_ACE
+T49|ACE_object_ref|00 00 00 05 00 00 0C 04|Restricted_Reference_Type{6}, uidref{ACETableUID}
+T50|ACL|00 00 00 05 00 00 08 02|List_Type, *, ACE_object_ref
+T51|adv_key_mode|00 00 00 05 00 00 04 0F|Enumeration_Type, 0, 7
+T53|attr_flags|00 00 00 05 00 00 1A 04|Set_Type, 0, 31
+T55|auth_method|00 00 00 05 00 00 04 08|Enumeration_Type, 0, 23
+T57|Authority_object_ref|00 00 00 05 00 00 0C 05|Restricted_Reference_Type{6}, uidref {AuthorityTableUID}
+T58|boolean|00 00 00 05 00 00 04 01|Enumeration_Type, 0, 1
+T60|boolean_ACE|00 00 00 05 00 00 04 0E|Enumeration_Type, 0, 2
+T62|byte_row_ref|00 00 00 05 00 00 0F 01|General_Reference_Type {7}
+T63|byte_table_ref|00 00 00 05 00 00 10 01|General_Reference_Table_Type, 2
+T64|bytes|00 00 00 05 00 00 00 02|Base_Type
+T65|bytes_4|00 00 00 05 00 00 02 38|Simple_Type, bytes, 4
+T66|bytes_12|00 00 00 05 00 00 02 01|Simple_Type, bytes, 12
+T67|bytes_16|00 00 00 05 00 00 02 02|Simple_Type, bytes, 16
+T68|bytes_20|00 00 00 05 00 00 02 36|Simple_Type, bytes, 20
+T69|bytes_32|00 00 00 05 00 00 02 05|Simple_Type, bytes, 32
+T70|bytes_48|00 00 00 05 00 00 02 37|Simple_Type, bytes, 48
+T71|bytes_64|00 00 00 05 00 00 02 06|Simple_Type, bytes, 64
+T72|Certificates_object_ref|00 00 00 05 00 00 0C 06|Restricted_Reference_Type{6}, uidref {CertificatesTableUID}
+T73|clock_kind|00 00 00 05 00 00 04 0B|Enumeration_Type, 0, 3
+T75|clock_time|00 00 00 05 00 00 18 05|Struct_Type, Year, Month, Day, Hour, Minute, Seconds, Fractoin
+T76|Column_object_ref|00 00 00 05 00 00 0C 07|Restricted_Reference_Type{6}, uidref {ColumnTable_UID}
+T77|cred_object_uidref|00 00 00 05 00 00 0C 0B|Restricted_Reference_Type{6}, uidref {C_PINTableUID}, uidref {C_AES_*TableUID}, uidref {C_RSA_*TableUID}, uidref{C_EC_*TableUID}, uidref{C_HMAC_*TableUID}
+T78|date|00 00 00 05 00 00 18 04|Struct_Type, Year, Month, Day
+T79|Day|00 00 00 05 00 00 14 03|Name_Value_Uinteger_Type, 2, day_enum
+T80|day_enum|00 00 00 05 00 00 04 18|Enumeration_Type, 1, 31
+T81|enc_supported|00 00 00 05 00 00 04 1D|Enumeration_Type, 0, 15
+T83|feedback_size|00 00 00 05 00 00 02 14|Simple_Type, uinteger, 2
+T84|Fraction|00 00 00 05 00 00 14 07|Name_Value_Uinteger_Type, 6, fraction_enum
+T85|fraction_enum|00 00 00 05 00 00 04 1C|Enumeration_Type, 0, 999
+T86|gen_status|00 00 00 05 00 00 1A 02|Set_Type, 0, 63
+T88|hash_protocol|00 00 00 05 00 00 04 0D|Enumeration_Type, 0, 15
+T90|Hour|00 00 00 05 00 00 14 04|Name_Value_Uinteger_Type, 3, hour_enum
+T91|hour_enum|00 00 00 05 00 00 04 19|Enumeration_Type, 0, 23
+T92|integer|00 00 00 05 00 00 00 04|Base_Type
+T93|integer_1|00 00 00 05 00 00 02 10|Simple_Type, integer, 1
+T94|integer_2|00 00 00 05 00 00 02 15|Simple_Type, integer, 2
+T95|key_128|00 00 00 05 00 00 06 02|Alternative_Type, bytes_16, bytes_32
+T96|key_256|00 00 00 05 00 00 06 03|Alternative_Type, bytes_32, bytes_64
+T97|keys_avail_conds|00 00 00 05 00 00 04 10|Enumeration_Type, 0, 7
+T99|lag|00 00 00 05 00 00 18 02|Struct_Type, Seconds, Fraction
+T100|last_reenc_stat|00 00 00 05 00 00 04 11|Enumeration_Type, 0, 7
+T102|life_cycle_state|00 00 00 05 00 00 04 05|Enumeration_Type, 0, 15
+T104|LogList_object_ref|00 00 00 05 00 00 0C 0D|Restricted_Reference_Type{6}, uidref {LogListTableUID}
+T105|log_row_ref|00 00 00 05 00 00 0C 0A|Restricted_Reference_Type {6}, uidref{LogTableUID}, *
+T106|log_select|00 00 00 05 00 00 04 0C|Enumeration_Type, 0, 3
+T108|max_bytes|00 00 00 05 00 00 00 03|Base_Type
+T109|max_bytes_32|00 00 00 05 00 00 02 0D|Simple_Type, max_bytes, 32
+T110|max_bytes_64|00 00 00 05 00 00 02 0E|Simple_Type, max_bytes, 64
+T111|mediakey_object_uidref|00 00 00 05 00 00 0C 0C|Restricted_Reference_Type{6}, uidref {K_AES_128TableUID}, uidref {K_AES_256TableUID}
+T112|MethodID_object_ref|00 00 00 05 00 00 0C 03|Restricted_Reference_Type{6}, uidref {MethodIDTableUID}
+T113|messaging_type|00 00 00 05 00 00 04 04|Enumeration_Type, 0, 255
+T114|Minute|00 00 00 05 00 00 14 05|Name_Value_Uinteger_Type, 4, minute_enum
+T115|minute_enum|00 00 00 05 00 00 04 1A|Enumeration_Type, 0, 59
+T116|Month|00 00 00 05 00 00 14 02|Name_Value_Uinteger_Type, 1, month_enum
+T117|month_enum|00 00 00 05 00 00 04 17|Enumeration_Type, 1, 12
+T118|name|00 00 00 05 00 00 02 0B|Simple_Type, max_bytes, 32
+T119|object_ref|00 00 00 05 00 00 0F 02|General_Reference_Type {8}
+T120|padding_type|00 00 00 05 00 00 04 06|Enumeration_Type, 0, 15
+T122|password|00 00 00 05 00 00 02 0C|Simple_Type, max_bytes, 32
+T123|protect_types|00 00 00 05 00 00 1A 05|Set_Type, 0, 255
+T124|reencrypt_request|00 00 00 05 00 00 04 13|Enumeration_Type, 1, 16
+T125|reencrypt_state|00 00 00 05 00 00 04 14|Enumeration_Type, 1, 16
+T127|reset_types|00 00 00 05 00 00 1A 01|Set_Type, 0, 31
+T129|Seconds|00 00 00 05 00 00 14 06|Name_Value_Uinteger_Type, 5, seconds_enum
+T130|seconds_enum|00 00 00 05 00 00 04 1B|Enumeration_Type, 0, 59
+T131|SPTemplates_object_ref|00 00 00 05 00 00 0C 01|Restricted_Reference_Type{6}, uidref{SPTemplatesTableUID}
+T132|SSC|00 00 00 05 00 00 08 03|List_Type, *, name
+T133|symmetric_mode|00 00 00 05 00 00 04 0A|Enumeration_Type, 0, 23
+T135|symmetric_mode_media|00 00 00 05 00 00 04 03|Enumeration_Type, 0, 23
+T137|table_kind|00 00 00 05 00 00 04 15|Enumeration_Type, 1, 8
+T139|table_or_object_ref|00 00 00 05 00 00 06 06|Alternative_Type, object_ref, table_ref
+T140|Table_object_ref|00 00 00 05 00 00 0C 09|Restricted_Reference_Type{6}, uidref {TableTableUID}
+T141|table_ref|00 00 00 05 00 00 0F 03|General_Reference_Type {9}
+T142|Template_object_ref|00 00 00 05 00 00 0C 08|Restricted_Reference_Type{6}, uidref {TemplateTableUID}
+T143|type_def|00 00 00 05 00 00 02 03|Simple_Type, max_bytes, *
+T144|Type_object_ref|00 00 00 05 00 00 0C 02|Restricted_Reference_Type{6}, uidref {TypeTableUID}
+T145|uid|00 00 00 05 00 00 02 09|Simple_Type, bytes, 8
+T146|uinteger|00 00 00 05 00 00 00 05|Base_Type
+T147|uinteger_1|00 00 00 05 00 00 02 11|Simple_Type, uinteger, 1
+T148|uinteger_128|00 00 00 05 00 00 02 12|Simple_Type, uinteger, 128
+T149|uinteger_2|00 00 00 05 00 00 02 15|Simple_Type, uinteger, 2
+T150|uinteger_20|00 00 00 05 00 00 02 16|Simple_Type, uinteger, 20
+T151|uinteger_21|00 00 00 05 00 00 02 17|Simple_Type, uinteger, 21
+T152|uinteger_24|00 00 00 05 00 00 02 18|Simple_Type, uinteger, 24
+T153|uinteger_256|00 00 00 05 00 00 02 19|Simple_Type, uinteger, 256
+T154|uinteger_28|00 00 00 05 00 00 02 1A|Simple_Type, uinteger, 28
+T155|uinteger_30|00 00 00 05 00 00 02 1B|Simple_Type, uinteger, 30
+T156|uinteger_36|00 00 00 05 00 00 02 1F|Simple_Type, uinteger, 36
+T157|uinteger_4|00 00 00 05 00 00 02 20|Simple_Type, uinteger, 4
+T158|uinteger_48|00 00 00 05 00 00 02 23|Simple_Type, uinteger, 48
+T159|uinteger_64|00 00 00 05 00 00 02 24|Simple_Type, uinteger, 64
+T160|uinteger_66|00 00 00 05 00 00 02 27|Simple_Type, uinteger, 66
+T161|uinteger_8|00 00 00 05 00 00 02 25|Simple_Type, uinteger, 8
+T162|verify_mode|00 00 00 05 00 00 04 12|Enumeration_Type, 0, 7
+T164|Year|00 00 00 05 00 00 14 01|Name_Value_Uinteger_Type, 0, year_enum
+T165|year_enum|00 00 00 05 00 00 04 16|Enumeration_Type, 1970, 9999

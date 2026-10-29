@@ -223,10 +223,15 @@ spec = do
         `shouldBe` [ "{-# LANGUAGE DataKinds #-}", "{-# LANGUAGE NoImplicitPrelude #-}", "{-# LANGUAGE OverloadedStrings #-}"
                    , "{-# LANGUAGE TypeOperators #-}" ]
 
-  describe "provenanceComment" $
+  describe "provenanceComment" $ do
     it "names the spec, table, caption title, pages, ordinal and hash prefix" $
       provenanceComment (prov "T46" "Table 46 AC_element" 100 83 48 "0/1288" "3f1a2b3c4d5e6f708192a3b4c5d6e7f8")
         `shouldBe` "-- | core-2.01 T46 AC_element (PDF 100 / p.83, ord 48, sha256:3f1a2b3c4d5e)"
+    it "takes the caption's number printed with leading zeros, and keeps a caption of another table whole" $ do
+      provenanceComment (prov "T4" "Table 04 Token Types" 32 15 6 "0/1" "00")
+        `shouldBe` "-- | core-2.01 T4 Token Types (PDF 32 / p.15, ord 6, sha256:00)"
+      provenanceComment (prov "T4" "Table 40 Feature Codes" 32 15 6 "0/1" "00")
+        `shouldBe` "-- | core-2.01 T4 Table 40 Feature Codes (PDF 32 / p.15, ord 6, sha256:00)"
 
   describe "tableNumber" $
     it "reads the number of an anchor id, and sorts an id without one last" $

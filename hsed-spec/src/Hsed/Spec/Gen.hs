@@ -244,7 +244,13 @@ provenanceComment p = T.concat
   , " (PDF ", tshow p.pdfPage1, " / p.", tshow p.printedPage, ", ord ", tshow p.ordinal
   , ", sha256:", T.take 12 p.cellsHash, ")" ]
   where
-    title = fromMaybe p.caption (T.stripPrefix ("Table " <> T.drop 1 p.tableId <> " ") p.caption)
+    -- the caption without "Table <n> ", its number printed with or without
+    -- leading zeros (Core prints "Table 04 Token Types")
+    title = fromMaybe p.caption $ do
+      rest <- T.stripPrefix "Table " p.caption
+      let (digits, after) = T.span C.isDigit rest
+      guard (not (T.null digits) && T.dropWhile (== '0') digits == T.dropWhile (== '0') (T.drop 1 p.tableId))
+      T.stripPrefix " " after
 
 -- | The number in an anchor id (@T46@ -> 46); an id without one sorts last.
 tableNumber :: Provenance -> Int

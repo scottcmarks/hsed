@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 PY=./.venv/bin/python
 ORIG=tcg/TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf
-IR=spec/ir/core-2.01.tables.json
+IR=spec/ir/core-2.01.json
 OUT=build/m1
 mkdir -p "$OUT"
 $PY -I tools/extract/annotate.py "$ORIG" "$IR" "$OUT"

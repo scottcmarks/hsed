@@ -1,5 +1,6 @@
 #!/usr/bin/env python -I
-"""Extract every /Table of a tagged PDF (TCG Core 2.01 / Opal SSC 2.30) into JSON.
+"""Extract a tagged TCG PDF (Core 2.01 / Opal SSC 2.30) into IR v1 (docs/ir-v1.md): every /Table,
+every /H1../H6 heading, every /P and /LI outside tables, and every hsed annotation in the input.
 
 Two independent views of the same document are joined by the structure-tree path:
 
@@ -13,19 +14,25 @@ Two independent views of the same document are joined by the structure-tree path
     attributed to a cell without interpreting the content stream ourselves.  Filled
     rectangles from page.get_drawings() supply cell shading and underline strokes.
 
-Output: a JSON list of table objects (see `table_record`) plus a one-line-per-table index.
+Output: one sorted-key JSON document (irVersion 1; see `main` for the top level, `table_record`,
+`prose_records` and `annot_records` for the entries) plus a one-line-per-table index.  The run ends
+with the sanity invariants of design section 5.1 step 9, printed PASS/FAIL to stderr; any FAIL makes
+the exit status 1.  The output is deterministic (no timestamps, no absolute paths).
 
 Usage:
-  python -I extract_tables.py <pdf> <out.json> <index.txt> --page-offset 17 [--pages a-b]
+  python -I extract_tables.py <pdf> <out.json> <index.txt> --spec core-2.01 --page-offset 17
+                              [--pristine <original.pdf>] [--check-against <core.json>] [--pages a-b]
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
 import sys
 import time
+import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
 from itertools import takewhile
@@ -36,8 +43,12 @@ import pymupdf
 from pikepdf import Array, Dictionary
 
 # ----------------------------------------------------------------------------- constants
+IR_VERSION = 1
+NOTICE = "tcg/TCG-NOTICE.txt"          # the TCG licence the extracted data travels under
 CELL_TAGS = {"/TH", "/TD", "/Artifact"}
 ROW_GROUP_TAGS = {"/THead", "/TBody", "/TFoot"}
+HEADING_TAGS = {f"/H{i}" for i in range(1, 7)}
+PARA_TAGS = {"/P", "/LI"}
 THIN = 1.6            # pt: a filled rect thinner than this is a rule / underline, not shading
 UNDER_LO, UNDER_HI = -0.10, 0.22   # underline rect centre must lie this far below the baseline (em); Word draws
                                    # underlines at ~0.15 em, a tight cell's bottom border sits at >= 0.25 em
@@ -266,13 +277,14 @@ class PageCache:
         return ~self.doc[pno].transformation_matrix
 
 
-def chars_under(cache: PageCache, path: tuple, pages: Iterable[int], stop_at_nested_table=True) -> list[tuple[int, dict]]:
-    """All (page, char) records under struct path `path` on the given pages.  By default characters
-    that belong to a /Table nested *below* `path` are excluded (they are that table's own cells)."""
-    n = len(path)
+def chars_under(cache: PageCache, path: tuple, pages: Iterable[int], stop_tags: Iterable[str] = ("Table",)) -> list[tuple[int, dict]]:
+    """All (page, char) records under struct path `path` on the given pages.  Characters that belong
+    to an element tagged in `stop_tags` nested *below* `path` are excluded: by default a nested /Table
+    (its own cells), for a list item also a nested /L (its own items)."""
+    n, stop = len(path), set(stop_tags)
 
     def keep(p, raws):
-        return p[:n] == path and not (stop_at_nested_table and "Table" in raws[n:])
+        return p[:n] == path and not (stop & set(raws[n:]))
 
     return sorted(((pno, ch)
                    for pno in sorted(pages)
@@ -572,9 +584,75 @@ def fill_empty_cells(rows: list[list[dict]], cache: PageCache) -> None:
                       "fill_bbox": to_pdf_space(f["rect"], inv) if f else None})
 
 
+# ----------------------------------------------------------------------------- ragged-row join (design 5.1 step 5)
+# A cell that continues past a page break (or a paragraph break Word turned into a row) comes out
+# as a short extra row holding only the continued columns: Opal T17 row 7 'Initial Assumption: 1
+# Minimum' belongs to MaxSubpackets' third cell, Core T26 'these are "non-reserved" ComIDs.' to the
+# Description above it.  Such a row is appended to its predecessor.  The merged byte-layout rows
+# ('3 | Length' under a nine-column Bit header, Opal T2-T8, Core T38-T44) are short too, but they
+# are full-width rows: they start in the first column, and are never joined.
+
+def cell_box(c: dict) -> list[float] | None:
+    return c.get("bbox") or c.get("est_bbox")
+
+
+def column_bands(header: list[dict]) -> list[tuple[float, float]] | None:
+    """Column x-bands from the header cells' left edges (2 pt tolerance, as split_merged_cells):
+    band j runs from column j's left edge to column j+1's; None when the header has no usable boxes."""
+    lefts = [b[0] for c in header for b in [cell_box(c)] if b]
+    if len(lefts) != len(header) or lefts != sorted(lefts):
+        return None
+    return [(l - 2.0, r - 2.0) for l, r in zip(lefts, lefts[1:] + [float("inf")])]
+
+
+def x_overlap(a: list[float], b: list[float]) -> float:
+    return min(a[2], b[2]) - max(a[0], b[0])
+
+
+def ragged_join_targets(header: list[dict], prev: list[dict] | None, row: list[dict]) -> list[int] | None:
+    """The predecessor cell index each cell of `row` continues, or None when `row` is not a
+    continuation: it is the first data row, has as many cells as the header, has an empty cell, lacks
+    geometry, or is full-width (starts in the first column).  Each cell goes to the predecessor cell
+    whose x-extent it overlaps most."""
+    bands = column_bands(header) if header else None
+    boxes, pboxes = [cell_box(c) for c in row], [cell_box(c) for c in (prev or [])]
+    if (bands is None or prev is None or not row or len(row) >= len(header)
+            or not all(c["text"] for c in row) or not all(boxes) or not any(pboxes)):
+        return None
+    if len(bands) < 2 or min(b[0] for b in boxes) < bands[1][0]:
+        return None                                      # full-width: the row begins in the first column
+    candidates = [j for j, pb in enumerate(pboxes) if pb]
+    targets = [max(candidates, key=lambda j: x_overlap(b, pboxes[j])) for b in boxes]
+    return targets if all(x_overlap(b, pboxes[j]) > 0 for b, j in zip(boxes, targets)) else None
+
+
+def ragged_warning(rows: list[list[dict]]) -> list[str]:
+    return [f"ragged rows: widths {sorted(Counter(len(r) for r in rows).items())}"] if len({len(r) for r in rows}) > 1 else []
+
+
+def join_ragged_rows(records: list[dict], cache: PageCache) -> None:
+    """Fold every continuation row into the row above it (flag `ragged_join` on the cells that grew)."""
+    for r in records:
+        header = r["header_rows"][0] if r["header_rows"] else []
+        kept, joined = [], []
+        for row in r["rows"]:
+            targets = ragged_join_targets(header, kept[-1] if kept else None, row)
+            if targets is None:
+                kept.append(row)
+                continue
+            for j, c in zip(targets, row):
+                tgt = kept[-1][j]
+                rebuild(cache, tgt, tgt["_recs"] + c["_recs"])
+                tgt["ragged_join"] = True
+            joined.append(f"ragged row {[c['text'][:30] for c in row]} joined into the row above (continuation)")
+        if joined:
+            r["rows"], r["n_rows"] = kept, len(kept)
+            r["warnings"] = [w for w in r["warnings"] if not w.startswith("ragged rows:")] + ragged_warning(r["header_rows"] + kept) + joined
+
+
 # ----------------------------------------------------------------------------- captions and headers
 def element_text(cache: PageCache, path: tuple, pages: Iterable[int]) -> str:
-    return norm(" ".join(text_lines(chars_under(cache, path, pages, stop_at_nested_table=False))))
+    return norm(" ".join(text_lines(chars_under(cache, path, pages, stop_tags=()))))
 
 
 def find_caption(cache: PageCache, t: dict, pages: set[int], page_of) -> tuple[int | None, str | None, list | None]:
@@ -604,22 +682,26 @@ def row_texts(row: list[dict]) -> list[str]:
     return [c["text"] for c in row]
 
 
-def split_header(rows: list[list[dict]], row_pages: list[int | None]) -> tuple[list, list, list, str | None]:
-    """Return (header_rows, data_rows, repeated_header_rows, header_source)."""
+def split_header(rows: list[list[dict]], row_pages: list[int | None]) -> tuple[list, list, list, str]:
+    """Return (header_rows, data_rows, repeated_header_rows, header_source); the cascade of design
+    section 5.1 step 3, `header_source` named as in docs/ir-v1.md."""
     all_th = [bool(r) and all(c["kind"] == "TH" for c in r) for r in rows]
     n_th = len(list(takewhile(bool, all_th)))
     texts = [row_texts(r) for r in rows]
-    recurs = any(texts[k] == texts[0] and row_pages[k] is not None and row_pages[k - 1] is not None
-                 and row_pages[k] != row_pages[k - 1] for k in range(1, len(rows)))
+    first_repeats = [k for k in range(1, len(rows)) if texts[k] == texts[0] and row_pages[k] is not None
+                     and row_pages[k - 1] is not None and row_pages[k] != row_pages[k - 1]]
     inked = [c for c in rows[0] if c["text"]] if rows else []
-    if n_th:
-        n_hdr, source = n_th, "TH"
-    elif len(rows) >= 2 and recurs:
+    if n_th == len(rows) and len(rows) - len(first_repeats) >= 3:
+        n_hdr, source = 1, "first-of-all-th"            # Word tagged every row /TH (Core T233, T243, T244, T245);
+        #                                                 a two-row all-/TH table is a two-level header (Core T7 part 1)
+    elif n_th:
+        n_hdr, source = n_th, "leading-th"
+    elif len(rows) >= 2 and first_repeats:
         n_hdr, source = 1, "repeat"                      # Opal: header row re-stated on every page
     elif len(rows) >= 2 and len(inked) >= 2 and sum(bool(c.get("bold")) for c in inked) * 2 >= len(inked):
         n_hdr, source = 1, "bold-first-row"             # Opal: Arial Narrow Bold header cells, no /TH
     else:
-        n_hdr, source = 0, None
+        n_hdr, source = 0, "none"
     first = texts[0] if n_hdr else None
 
     def is_repeat(k):
@@ -657,7 +739,7 @@ def table_record(cache: PageCache, t: dict, page_of: dict, page_offset: int, nes
     number, caption, cpath = (None, None, None) if t["nested_in"] else find_caption(cache, t, pages, page_of)
     header, data, repeated, source = split_header(rows, row_pages)
     ncols = max((len(r) for r in rows), default=0)
-    warnings = ([f"ragged rows: widths {sorted(Counter(len(r) for r in rows).items())}"] if len({len(r) for r in rows}) > 1 else []) \
+    warnings = ragged_warning(rows) \
         + ([f"{dropped_artifacts} /Artifact cells dropped"] if dropped_artifacts else []) \
         + (["no text in any cell"] if not any(c["text"] for r in rows for c in r) else []) \
         + ([f"cells split across pages: {sum(1 for r in rows for c in r if c.get('fragments'))}"] if any(c.get("fragments") for r in rows for c in r) else []) \
@@ -683,6 +765,215 @@ def mark_parts(records: list[dict]) -> list[dict]:
     return records
 
 
+def mark_ids(records: list[dict]) -> list[dict]:
+    """IR v1 `id` (T<n> for a numbered table, both parts of a split one) and `ordinal` (1-based among
+    top-level /Table structs in document order; nested tables have none)."""
+    top = [r for r in records if not r["nested_in"]]
+    for k, r in enumerate(top, 1):
+        r["ordinal"] = k
+    for r in records:
+        r.setdefault("ordinal", None)
+        r["id"] = f"T{r['table_number']}" if r["table_number"] is not None else None
+    return records
+
+
+def table_cells(t: dict) -> list[dict]:
+    return [c for row in t["header_rows"] + t["rows"] + [x["cells"] for x in t["repeated_header_rows"]] for c in row]
+
+
+def table_rects(t: dict) -> list[list]:
+    """[[page, [x0, y0, x1, y1]], ...]: per page, the union of every box attributed to a cell there
+    (glyph bbox, estimated box of an empty cell, drawn cell rect, per-page fragments), PDF user space."""
+    boxes = [(c["page"], b) for c in table_cells(t) if c.get("page") is not None
+             for b in (c.get("bbox"), c.get("est_bbox"), c.get("fill_bbox")) if b] \
+        + [(f["page"], f["bbox"]) for c in table_cells(t) for f in c.get("fragments", []) if f.get("bbox")]
+    return [[p, [round(f(b[i] for q, b in boxes if q == p), 2) for i, f in ((0, min), (1, min), (2, max), (3, max))]]
+            for p in sorted({p for p, _ in boxes})]
+
+
+# ----------------------------------------------------------------------------- prose: headings, paragraphs, list items
+SECTION_RE = re.compile(r"^(\d+(?:\.\d+)*)\s+(.*\S)\s*$")
+TOC_LINE_RE = re.compile(r"\.{3,}\s*\d*\s*$")                 # dot leaders then a page number: a contents line
+LABEL_RE = re.compile(r"^(?:(?P<num>\d{1,3})[.)]?|\[(?P<ref>\d{1,3})\]\.?|\(?(?P<alpha>[a-z]{1,4})[.)])$")
+BULLET = "•"
+BULLETS = {BULLET, "o", "", "", "-", "–", "▪", "◦", "·", "*"}
+
+
+def parse_heading(text: str) -> tuple[str | None, str]:
+    """('5.1.3', 'Column Types') from a heading's text; (None, text) for an unnumbered heading."""
+    m = SECTION_RE.match(text)
+    return (m.group(1), m.group(2)) if m else (None, text)
+
+
+def is_toc_line(text: str) -> bool:
+    """Word styles the top-level contents lines as /H1 ('1 INTRODUCTION ..... 1'); they are not headings."""
+    return TOC_LINE_RE.search(text) is not None
+
+
+def parse_label(text: str) -> tuple[str | None, str]:
+    """(label, body) of a list item.  PDFMaker writes the label as the leading text of the /LBody
+    (no /Lbl element in these PDFs): '3.' / '3)' / '3' -> '3', 'a.' / '(a)' -> 'a', 'iii.' -> 'iii',
+    '[2]' -> '[2]', a bullet glyph -> BULLET; anything else (a caption tagged as a list item, a
+    continuation fragment) has no label and the whole text is the body."""
+    head, _, rest = text.partition(" ")
+    if head in BULLETS:
+        return BULLET, rest
+    m = LABEL_RE.match(head)
+    if not m:
+        return None, text
+    return m.group("num") or m.group("alpha") or f"[{m.group('ref')}]", rest
+
+
+def item_label(labels: Iterable[str | None]) -> str | None:
+    """Labels of the /LI chain outermost first, concatenated: '3' then 'a' is '3a'; None when none is known."""
+    known = [l for l in labels if l is not None]
+    return "".join(known) if known else None
+
+
+def norm_words(text: str) -> list[str]:
+    """Lower-cased words with punctuation and symbols stripped (Unicode categories P*, S*; C* too for
+    soft hyphens and private-use bullets), split on whitespace.  The underscore stays: it is an
+    identifier character in these specs (C_PIN, AC_element, K_AES_128), not punctuation."""
+    return [w for w in ("".join(ch for ch in tok if ch == "_" or unicodedata.category(ch)[0] not in "PSC")
+                        for tok in text.lower().split()) if w]
+
+
+def words_hash(words: Iterable[str]) -> str:
+    return hashlib.sha256(" ".join(words).encode()).hexdigest()
+
+
+def glyph_rect(cache: PageCache, recs: list[tuple[int, dict]]) -> tuple[int | None, list[float] | None]:
+    """(first page, union of the ink glyphs on it in PDF user space) of some (page, char) records."""
+    ink = [(p, ch) for p, ch in recs if ch["c"].strip()]
+    if not ink:
+        return None, None
+    page = min(p for p, _ in ink)
+    return page, to_pdf_space(union_rect(pt for p, ch in ink if p == page for pt in ch["quad"]), cache.inv(page))
+
+
+def path_str(path: Iterable[int]) -> str:
+    return "/".join(str(i) for i in path)
+
+
+def prose_records(cache: PageCache, root, page_of: dict) -> tuple[list[dict], list[dict], dict]:
+    """(headings, paras, counts) in document order: HeadingIR from every /H1../H6 (contents lines
+    skipped), ParaIR from every /P and /LI outside tables that has ink (empty spacer paragraphs
+    skipped).  `section` is the nearest preceding numbered heading; an /LI's `item` concatenates the
+    labels of its /LI ancestors and its own; its words exclude nested lists."""
+    headings, paras, counts = [], [], Counter()
+    state = {"section": None}
+
+    def recs_of(path, elem, stop):
+        pages = leaf_pages(elem, page_of)
+        return chars_under(cache, path, pages, stop_tags=stop) if pages else []
+
+    def walk(node, path, labels, in_table):
+        n_li = 0
+        for i, k in enumerate(kids(node)):
+            if not is_elem(k):
+                continue
+            p, t = path + (i,), tag(k)
+            own = None
+            if t in HEADING_TAGS:
+                recs = recs_of(p, k, ())
+                text = norm(" ".join(text_lines(recs)))
+                page, rect = glyph_rect(cache, recs)
+                if is_toc_line(text):
+                    counts["toc_lines_skipped"] += 1
+                else:
+                    section, title = parse_heading(text)
+                    headings.append({"section": section, "title": title, "level": int(t[2]), "page": page,
+                                     "struct_path": path_str(p), "rect": rect})
+                    state["section"] = section or state["section"]
+            elif t in PARA_TAGS and not in_table:
+                n_li += t == "/LI"
+                recs = recs_of(p, k, ("Table", "L"))
+                text = norm(" ".join(text_lines(recs)))
+                page, rect = glyph_rect(cache, recs)
+                label, body = parse_label(text) if t == "/LI" else (None, text)
+                own = f"{BULLET}{n_li}" if label == BULLET else label
+                if page is None:
+                    counts["empty_paras_skipped"] += 1
+                else:
+                    paras.append({"section": state["section"], "item": item_label(labels + [own]) if t == "/LI" else None,
+                                  "kind": t[1:], "page": page, "struct_path": path_str(p), "rect": rect,
+                                  "hash": words_hash(norm_words(body)), "words": None})
+            walk(k, p, labels + [own] if t == "/LI" else labels, in_table or t == "/Table")
+
+    walk(root, (), [], False)
+    return headings, paras, dict(counts)
+
+
+# ----------------------------------------------------------------------------- hsed annotations in the input
+def pdf_text(v) -> str | None:
+    return None if v is None else str(v)
+
+
+def pdf_name(v) -> str | None:
+    s = pdf_text(v)
+    return s[1:] if s and s.startswith("/") else s
+
+
+def annot_records(pdf) -> list[dict]:
+    """AnnotIR for every /Text annotation whose dictionary carries /HSED (docs/ir-v1.md): the anchor
+    fields from /HSED (/Kind /Spec /Id /Struct /V), the page, /Rect, /F and the /Contents payload."""
+    def rec(page, a):
+        h = a.get("/HSED")
+        return {"kind": pdf_name(h.get("/Kind")), "spec": pdf_text(h.get("/Spec")), "id": pdf_text(h.get("/Id")),
+                "struct": pdf_text(h.get("/Struct")), "v": int(h.get("/V", 0)), "page": page,
+                "rect": [round(float(x), 2) for x in a.get("/Rect", [])], "flags": int(a.get("/F", 0)),
+                "contents": pdf_text(a.get("/Contents"))}
+
+    return [rec(i, a) for i, pg in enumerate(pdf.pages) for a in (pg.obj.get("/Annots") or [])
+            if isinstance(a, Dictionary) and str(a.get("/Subtype", "")) == "/Text" and isinstance(a.get("/HSED"), Dictionary)]
+
+
+# ----------------------------------------------------------------------------- invariants (design 5.1 step 9)
+def table_by_id(ir: dict, tid: str) -> dict | None:
+    return next((t for t in ir["tables"] if t["id"] == tid and not t.get("part")), None)
+
+
+def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, str]]:
+    """[(name, ok, detail)] for the spec in `ir`; ok None means skipped (needs --check-against)."""
+    tables, headings = ir["tables"], ir["headings"]
+    numbered = {t["table_number"] for t in tables if t["table_number"] is not None}
+
+    def rows_check(tid, want):
+        t = table_by_id(ir, tid)
+        got = t["n_rows"] if t else None
+        return (f"{tid} has {want} data rows", got == want, f"got {got}")
+
+    def cells_check(tid, want):
+        t = table_by_id(ir, tid)
+        got = sorted({len(r) for r in t["rows"]}) if t else None
+        return (f"{tid} has {want} cells per data row", got == [want], f"got widths {got}")
+
+    def header_vs_column(tid, other_id, col):
+        t, o = table_by_id(ir, tid), table_by_id(against, other_id) if against else None
+        if o is None:
+            return (f"{tid} header equals {other_id} column {col}", None, "needs --check-against with that table")
+        mine = [norm(c["text"]) for c in t["header_rows"][0]] if t and t["header_rows"] else None
+        theirs = [norm(r[col]["text"]) for r in o["rows"] if len(r) > col]
+        return (f"{tid} header equals {other_id} column {col}", mine == theirs, f"mine {mine} theirs {theirs}")
+
+    core = [
+        ("heading 5.1.3 on page index 99, printed label 83",
+         any(h["section"] == "5.1.3" and h["page"] == 99 and h["page"] + 1 - ir["labelOffset"] == 83 for h in headings),
+         f"got {[(h['page'], h['page'] + 1 - ir['labelOffset']) for h in headings if h['section'] == '5.1.3']}"),
+        ("248 distinct numbered captions", len(numbered) == 248, f"got {len(numbered)}"),
+        ("Table 185 present", 185 in numbered, f"{'present' if 185 in numbered else 'absent'}"),
+        ("T46 ordinal 48", (table_by_id(ir, "T46") or {}).get("ordinal") == 48, f"got {(table_by_id(ir, 'T46') or {}).get('ordinal')}"),
+        cells_check("T71", 3), cells_check("T81", 3),
+        rows_check("T189", 14), rows_check("T233", 14), rows_check("T243", 17), rows_check("T244", 4), rows_check("T245", 5),
+    ]
+    opal = [
+        ("50 distinct numbered captions", len(numbered) == 50, f"got {len(numbered)}"),
+        header_vs_column("T24", "T178", 1),
+        rows_check("T17", 11), rows_check("T38", 96), rows_check("T22", 45),
+    ]
+    return {"core-2.01": core, "opal-2.30": opal}.get(ir["spec"], [])
+
+
 def index_line(r: dict) -> str:
     num = f"T{r['table_number']:03d}" if r["table_number"] is not None else "T---"
     part = f".{r['part']}/{r['parts']}" if r.get("part") else ""
@@ -695,16 +986,32 @@ def index_line(r: dict) -> str:
     return f"{num}{part:<5} {pg:<12} {pp:<10} {shape:<9}{nest} {cap}"
 
 
+def source_md5(pdf_path: str, pristine: str | None) -> tuple[str, str]:
+    """(source basename, md5): of the pristine PDF when given -- the input must then start with its
+    bytes (an annotated file is pristine + incremental tail) -- else of the whole input."""
+    data = open(pdf_path, "rb").read()
+    if pristine is None:
+        return os.path.basename(pdf_path), hashlib.md5(data).hexdigest()
+    head = open(pristine, "rb").read()
+    if not data.startswith(head):
+        sys.exit(f"{pdf_path} does not start with the bytes of {pristine}")
+    return os.path.basename(pristine), hashlib.md5(head).hexdigest()
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("pdf")
     ap.add_argument("out_json")
     ap.add_argument("out_index")
+    ap.add_argument("--spec", required=True, help="SpecId of the document, e.g. core-2.01 or opal-2.30")
     ap.add_argument("--page-offset", type=int, default=0, help="printed page = PDF page index + 1 - offset ... i.e. PDF(1-based) = printed + offset")
-    ap.add_argument("--pages", help="restrict to tables touching these 1-based PDF pages, e.g. 100-101 (debugging)")
+    ap.add_argument("--pristine", help="the original PDF; the input must start with its bytes and pdfMd5 is its md5")
+    ap.add_argument("--check-against", help="another spec's IR JSON for the cross-document invariants (Opal T24 vs Core T178)")
+    ap.add_argument("--pages", help="restrict to tables touching these 1-based PDF pages, e.g. 100-101 (debugging; invariants skipped)")
     args = ap.parse_args(argv)
 
     t0 = time.time()
+    source, md5 = source_md5(args.pdf, args.pristine)
     pdf = pikepdf.open(args.pdf)
     doc = pymupdf.open(args.pdf)
     page_of = {pg.obj.objgen: i for i, pg in enumerate(pdf.pages)}
@@ -722,21 +1029,40 @@ def main(argv=None) -> int:
     records = mark_parts([table_record(cache, t, page_of, args.page_offset - 1, nested_by_parent) for t in tables])
     adopt_stray_fragments(records, cache)
     adopt_orphans(records, cache)
-    strip_private(records)
+    join_ragged_rows(records, cache)
+    strip_private(mark_ids(records))
+    for r in records:
+        r["rects"] = table_rects(r)
+    headings, paras, prose_counts = prose_records(cache, pdf.Root.StructTreeRoot, page_of)
+    annots = annot_records(pdf)
     elapsed = time.time() - t0
-    # meta is deterministic (no wall-clock time, no absolute path) so that regenerating a
-    # committed JSON file diffs clean; "notice" names the TCG licence the data travels under
-    meta = {"source": os.path.basename(args.pdf), "notice": "tcg/TCG-NOTICE.txt",
-            "n_tables": len(records), "n_numbered": sum(r["table_number"] is not None for r in records),
-            "distinct_numbers": len({r["table_number"] for r in records if r["table_number"] is not None}),
-            "n_nested": sum(bool(r["nested_in"]) for r in records),
-            "pymupdf": pymupdf.__doc__.split(":")[0], "pikepdf": pikepdf.__version__}
+
+    # everything below is deterministic (no wall-clock time, no absolute path) so that regenerating a
+    # committed JSON file diffs clean
+    counts = {"n_tables": len(records), "n_numbered": sum(r["table_number"] is not None for r in records),
+              "distinct_numbers": len({r["table_number"] for r in records if r["table_number"] is not None}),
+              "n_nested": sum(bool(r["nested_in"]) for r in records), "n_headings": len(headings),
+              "n_paras": len(paras), **prose_counts}
+    # the counts travel under "extractor"; n_annots stays out so that an annotated input's IR differs
+    # from the pristine one's in "annots" alone
+    ir = {"irVersion": IR_VERSION, "spec": args.spec, "source": source, "pdfMd5": md5, "pages": len(pdf.pages),
+          "labelOffset": args.page_offset, "notice": NOTICE,
+          "extractor": {"script": os.path.basename(__file__), "version": IR_VERSION,
+                        "pymupdf": pymupdf.__version__, "pikepdf": pikepdf.__version__, **counts},
+          "wordComplete": [], "tables": records, "headings": headings, "paras": paras, "sigs": [], "annots": annots}
     with open(args.out_json, "w") as f:
-        json.dump({"meta": meta, "tables": records}, f, indent=1, ensure_ascii=False)
+        json.dump(ir, f, indent=1, ensure_ascii=False, sort_keys=True)
     with open(args.out_index, "w") as f:
         f.write("\n".join(index_line(r) for r in records) + "\n")
-    print(json.dumps({**meta, "seconds": round(elapsed, 1)}), file=sys.stderr)
-    return 0
+
+    against = json.load(open(args.check_against)) if args.check_against else None
+    results = [] if args.pages else invariants(ir, against)
+    for name, ok, detail in results:
+        print(f"{'SKIP' if ok is None else 'PASS' if ok else 'FAIL'} {args.spec}: {name} ({detail})", file=sys.stderr)
+    verdict = Counter("skip" if ok is None else "pass" if ok else "fail" for _, ok, _ in results)
+    print(json.dumps({"spec": args.spec, "source": source, "pdfMd5": md5, **counts, "n_annots": len(annots),
+                      "invariants": dict(verdict), "seconds": round(elapsed, 1)}), file=sys.stderr)
+    return 1 if verdict["fail"] else 0
 
 
 if __name__ == "__main__":

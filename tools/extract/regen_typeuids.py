@@ -1,5 +1,5 @@
 #!/usr/bin/env python -I
-"""Regenerate what hsed's TypeUIDs.hs hand-transcribes from core_tables.json and diff the two.
+"""Regenerate what hsed's TypeUIDs.hs hand-transcribes from spec/ir/core-2.01.json and diff the two.
 
 Core Spec 2.01 section 5.1.3 (Tables 46-165) holds, per column type, one 'Type table' row
 (UID / Name / Format) and, for enumerations and sets, a companion 'Enumeration Values' /
@@ -14,7 +14,7 @@ Core Spec 2.01 section 5.1.3 (Tables 46-165) holds, per column type, one 'Type t
      19 enum/set tables; Table 87 gen_status is a commented-out FIXME in hsed) and reports
      every difference, classified.
 
-Usage:  python -I regen_typeuids.py core_tables.json TypeUIDs.hs regen_report.txt regen_typeuids.json
+Usage:  python -I regen_typeuids.py spec/ir/core-2.01.json TypeUIDs.hs regen_report.txt regen_typeuids.json
 """
 from __future__ import annotations
 

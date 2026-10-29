@@ -3,7 +3,7 @@ table by /HSED /Path in a fresh run of the extractor over the same annotated fil
 table's shape fits the directive, and generate ONE Haskell module in hsed's own shapes.
 
 Usage: python -I compile.py <annotated.pdf> <out_dir> [--extractor <extract_tables.py>]
-                            [--compare-json <core_tables.json>] [--discover-only]
+                            [--compare-json <spec/ir/core-2.01.json>] [--discover-only]
 Writes <out_dir>/Hsed/Generated/CoreM1.hs, <out_dir>/Equiv.hs, <out_dir>/annotated_tables.json,
        <out_dir>/compile_report.json
 """
@@ -26,6 +26,7 @@ import hsed_annot as H  # noqa: E402
 
 PYTHON = sys.executable
 DEFAULT_EXTRACTOR = os.path.join(HERE, "extract_tables.py")
+SPEC = "core-2.01"                     # the extractor's --spec (IR v1 `spec`)
 PAGE_OFFSET = 17                       # Core 2.01: PDF page (1-based) = printed page + 17
 MODULE = "Hsed.Generated.CoreM1"
 HEX_UID_RE = re.compile(r"^([0-9A-Fa-f]{2})( [0-9A-Fa-f]{2}){7}$")
@@ -42,7 +43,7 @@ def discover(pdf_path: str) -> list[dict]:
 # ----------------------------------------------------------------------------- 2. extract + locate
 def run_extractor(extractor: str, pdf_path: str, out_dir: str) -> dict:
     out_json, out_idx = f"{out_dir}/annotated_tables.json", f"{out_dir}/annotated_index.txt"
-    r = subprocess.run([PYTHON, "-I", extractor, pdf_path, out_json, out_idx, "--page-offset", str(PAGE_OFFSET)],
+    r = subprocess.run([PYTHON, "-I", extractor, pdf_path, out_json, out_idx, "--spec", SPEC, "--page-offset", str(PAGE_OFFSET)],
                        capture_output=True, text=True, check=True)
     return {"json": out_json, "index": out_idx, "meta": json.loads(r.stderr.strip().splitlines()[-1])}
 

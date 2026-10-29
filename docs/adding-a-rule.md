@@ -26,7 +26,17 @@ many findings of each code a run gives are in `docs/LEDGER.md`. A new rule edits
 A rule whose definitions have a hand-written counterpart in hsed (the M2a-M2d comparison, design §5.5)
 also extends `hsed/spec-tests/Hsed/Gen/Core/EquivTH.hs` (`handDefs`) and adds its expected differences to
 `spec/expected-diff.txt`; a new generated module needs one import line in `EquivSpec.hs`, which reads
-every module under `gen/Hsed/Gen/Core` and refuses to compile without it.
+every module under `gen/Hsed/Gen/Core` and refuses to compile without it as soon as the module declares a
+definition the oracle compares (`name :: UID`, `String`, `HalfUID`, the two name maps, a `[(UID, String)]`
+list of a table's UIDs, or a `data Core_<enum>`; any other `data`, a record such as a method's, is no
+enumeration to it). Generated modules stay ASCII: EquivTH reads them with the locale's `readFile`, so a
+text literal prints non-ASCII escaped (`tshow`).
+
+A rule's finding codes are named in `Hsed.Spec.Report.catalogue` by what they report (a defect of the PDF,
+text read other than as printed, worth a look, or hsedc's bookkeeping), which sorts `build/report/ERRATA.md`;
+a code it does not name is listed there under "Not yet classified", and `ReportSpec` fails while the
+committed run gives one. That is one line in a generic module: rules written in parallel leave it to the
+integrator, who also adds the codes to design §2 Q2.
 
 ## When two rules are added in parallel
 
@@ -56,12 +66,14 @@ Some changes are generic and are made in a small commit of their own, before the
   are in: an M2b rule or reader edits no `.hsa`. A rule test that edits a table and expects the rule
   to leave it out compares with the committed run (`CoreIR.newlyExcluded`), not with an empty list.
 - **A runtime module** generated code imports: named once in `Hsed.Spec.Gen` (`uidModule`,
-  `coreTypesModule`).
+  `coreTypesModule`; since M2b also `coreTableModule`, `methodModule`, `codeModule`, `fieldModule`,
+  `syncModule`, `propertiesModule`), the module itself in hsed-core.
 
 `RegistrySpec` fails if a module under `Rules/` is not in the registry, if two rules share a name or a
 shape, or if a generic module (`Rules`, `Scope`, `Check`, `Compile`, `Gen`, `Cli`, `RuleDef`, `Report`,
-`Bind`, `app/Main.hs`) names in code any rule token of the vocabulary, its `<rule>Rule` value, or any
-shape a table can be bound with, registered or not.
+`Bind`, `Document`, `app/Main.hs`) names in code any rule token of the vocabulary, its `<rule>Rule` value, or any
+shape a table can be bound with, registered or not; string literals are code to it (a catalogue line or a
+help text says "code table", never the token).
 
 ## The record (`Hsed.Spec.RuleDef`)
 
@@ -92,7 +104,11 @@ generic: the IR, spec, errata set, numbered tables, classification, every table'
 (`cxSections`; `sectionOf ctx bt`) and corrected tables. A rule that needs another rule's reading (an
 enumeration's range from its type row; a table description's UID from Table 240) imports that rule's
 module and calls its reader on the same `Context`; it never adds fields to the `Context`. Locate
-findings with `atTable ctx bt`; give every finding a catalogue code.
+findings with `atTable ctx bt`; give every finding a catalogue code. A check that joins two rules' readings
+belongs to the rule whose table it locates its findings at (`uidTable`'s C-PRECONF-UID holds Table 243
+against the rows `preconfig` reads, `preEntries`). A rule test that compares the exact Errors of an edited
+run keeps to its own codes, since the edit may fail another rule's check as well (`TypeRowSpec` leaves out
+`ranges`' C-UID-RANGE, `PreconfigSpec` `uidTable`'s C-PRECONF-UID).
 
 One shape has one `RuleDef`. Where several bindings share a shape (`propsNames` and `propsInitial` both
 bind `Props`), the shape's rule reads every table bound with it and tells them apart by `btBinding`.
@@ -155,6 +171,7 @@ its xref stream) to 400 bytes per anchor on average; never raise the budget sile
 
 ## Checking it
 
-`make gen` (bind, check, compile, the ledger), `stack exec hsedc -- explain core <n>`, `make gen-diff`
+`make gen` (bind, check, compile, the ledger), `stack exec hsedc -- explain core <n>` (or `<section>/sig` for a
+signature block), `make gen-diff`
 after a second `make gen`, then `make check`. No spec data in code: tables, UIDs, names and typo lists
 come from the PDF or from an annotation.

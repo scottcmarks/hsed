@@ -7,7 +7,7 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| core-2.01 | 248 | 120 | 3 | 10 | 118 | 0 | 0 |
+| core-2.01 | 248 | 126 | 3 | 10 | 112 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
@@ -25,6 +25,7 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | comment StateTable | 1 |
 | rule enumValues | 19 |
 | rule tableUIDs | 1 |
+| rule terminology | 6 |
 | rule typeRow | 100 |
 
 ## core-2.01: findings under --errata scott
@@ -36,7 +37,7 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
 | Warning | W-GEN-EXCLUDED | 3 |
-| Warning | W-RULE-UNIMPLEMENTED | 12 |
-| Warning | W-UNBOUND | 171 |
+| Warning | W-RULE-UNIMPLEMENTED | 11 |
+| Warning | W-UNBOUND | 165 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |

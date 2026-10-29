@@ -1181,7 +1181,8 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
         ("CloseSession (5.2.3.5) is the one block without =>", [s["section"] for s in sigs if ARROW not in s["text"]] == ["5.2.3.5"],
          f"got {[s['section'] for s in sigs if ARROW not in s['text']]}"),
         lot_check(248), xrefs_check(108),
-        ("Table 179 referenced on PDF 116", any(x["number"] == 179 and x["page"] == 115 for x in xrefs), "absent"),
+        ("Table 179 referenced on PDF 116", any(x["number"] == 179 and x["page"] == 115 for x in xrefs),
+         f"referenced on PDF {sorted(x['page'] + 1 for x in xrefs if x['number'] == 179)}"),
     ]
     opal = [
         ("50 distinct numbered captions", len(numbered) == 50, f"got {len(numbered)}"),

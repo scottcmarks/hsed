@@ -99,7 +99,7 @@ bind: ir-annotated hsedc
 hsedc-check: ir-annotated hsedc
 	$(CHECK_CMD)
 
-## hsed/gen/Hsed/Gen/Core/*.hs (any other module there removed), build/report/{findings,coverage,ledger}.md
+## hsed/gen/Hsed/Gen/Core/*.hs (any other module there removed), build/report/{findings,coverage,ERRATA,ledger}.md
 ## and docs/LEDGER.md, the committed copy of the ledger (nothing written on an Error)
 compile: ir-annotated hsedc
 	$(COMPILE_CMD)

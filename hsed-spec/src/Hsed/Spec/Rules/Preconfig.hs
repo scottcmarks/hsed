@@ -49,7 +49,7 @@ Compiled into 'preconfigModule': per table the caption's words in camel case
 row giving its cells by column number; Core gives no access ('access' is
 @[]@). Whether the rows' UIDs and names agree with the table of the target's
 UIDs (Core Table 243 for the authorities) is the @uidTable@ rule's to check
-('preRowsFor' gives them).
+(@C-PRECONF-UID@; 'preEntries' gives them).
 -}
 module Hsed.Spec.Rules.Preconfig
   ( preconfigRule
@@ -61,6 +61,8 @@ module Hsed.Spec.Rules.Preconfig
   , targetNoun
   , captionTemplate
   , preRowsFor
+  , PreEntry (..)
+  , preEntries
   , preDeclName
   ) where
 
@@ -195,6 +197,23 @@ captionTemplate p = do
 --   row order: what the table of that table's UIDs must agree with.
 preRowsFor :: Context -> Text -> [(Text, [Word8])]
 preRowsFor ctx n = [ (name, uid) | (tn, name, uid, _, _) <- index (preReads ctx), tn == n ]
+
+-- | One row preconfigured for a table, as the table of that table's UIDs
+--   must give it.
+data PreEntry = PreEntry
+  { peTarget   :: !Text          -- ^ the target's name, @Authority@
+  , peName     :: !Text          -- ^ its Name column's cell, blank without one
+  , peUID      :: ![Word8]
+  , peTemplate :: !(Maybe Text)  -- ^ the template its table's caption names ('captionTemplate')
+  , peWhere    :: !Text          -- ^ its table and row, @T209 row 1@
+  }
+
+-- | Every row preconfigured for a table, in anchor and row order (the
+--   template rows left out, as 'preRowsFor' leaves them).
+preEntries :: Context -> [PreEntry]
+preEntries ctx =
+  [ PreEntry tn name uid (captionTemplate p) (renderAnchorId (btAnchor (pBound p)) <> " row " <> tshow (prRow r + 1))
+  | (tn, name, uid, p, r) <- index (preReads ctx) ]
 
 -- | Every non-template row of a table with a target, by the target's name: its
 --   Name column's cell (blank without one), its UID, its table and row.

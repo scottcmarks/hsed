@@ -43,8 +43,11 @@ import           Hsed.Spec.Rules.TableDesc (DescRead (..))
 import           Hsed.Spec.Shape           (measure)
 
 
+-- | The Errors of a run, but the uidTable rule's C-PRECONF-UID, which an
+--   edited UID or row also fails where Table 243 lists the authorities (its own
+--   tests are UidTableSpec's).
 errorsOf :: SpecIR -> [Text]
-errorsOf = map renderFinding . filter isError . checkIR Scott
+errorsOf = map renderFinding . filter (\f -> isError f && Cm.code f /= "C-PRECONF-UID") . checkIR Scott
 
 -- | The generated module of an IR.
 generated :: SpecIR -> IO [Text]

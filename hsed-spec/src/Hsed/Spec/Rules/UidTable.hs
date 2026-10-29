@@ -41,6 +41,11 @@ Checks, each with the code its findings carry:
   Table 241@) covers every UID of that table;
 * @C-UID-UNIQUE@: no two rows of one table print one UID;
 * @C-UID-NAME@: no two rows give one generated name;
+* @C-PRECONF-UID@: the table of a table's UIDs (its header or caption claims
+  every row for that table: Table 243 for the Authority table) gives the rows
+  the @preconfig@ rule reads for that table ("Hsed.Spec.Rules.Preconfig":
+  Tables 209 and 216), UID for UID, each with the same name, and in the
+  template the preconfiguration's caption names; one finding per difference;
 * @N-UID-UNNAMED@: the rows of a table that name no definition (a placeholder
   such as @Reserved for SSC Usage@ or @OBSOLETE *@, a pattern, or a table whose
   rows carry a purpose and no name), listed once per table.
@@ -84,6 +89,7 @@ import           Hsed.Spec.DSL    (SomeBinding (..), uidTable)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
+import           Hsed.Spec.Rules.Preconfig (PreEntry (..), preEntries)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows)
 import           Hsed.Spec.Shape  (Shape (..), captionTitle, normHeader, normaliseCaption, shapeMismatch)
 
@@ -256,7 +262,7 @@ rowText r = T.intercalate " | " (filter (not . T.null) [ T.unwords (T.words c.te
 -- * Checks
 
 checks :: Context -> [BoundTable] -> [Finding]
-checks ctx bts = concatMap tableCheck (L.groupBy sameTable rows) <> patternChecks <> nameChecks <> noTables
+checks ctx bts = concatMap tableCheck (L.groupBy sameTable rows) <> patternChecks <> nameChecks <> noTables <> preconfChecks
   where
     rows = concatMap (tableRows ctx) bts
     halves = tablesByHalf ctx
@@ -299,6 +305,29 @@ checks ctx bts = concatMap tableCheck (L.groupBy sameTable rows) <> patternCheck
                                             <> " row " <> tshow (urRow r0 + 1) <> " is"))
       | (i, r0 : rest) <- Map.toList (Map.fromListWith (flip (<>)) [ (i, [r]) | r <- rows, Just i <- [urIdent r] ])
       , r <- rest ]
+
+    -- the table of a table's UIDs against the rows preconfigured for that table
+    preconfChecks =
+      [ atTable ctx bt (finding Error "C-PRECONF-UID" m)
+      | bt <- bts, Just t <- [headerClaim (fst (uidHeaders bt)) <|> captionClaim bt]
+      , let es = [ e | e <- preEntries ctx, peTarget e == t ], not (null es)
+      , m <- preconfDifferences t [ r | r <- rows, btAnchor (urBound r) == btAnchor bt ] es ]
+
+-- | How the rows of the table of a table's UIDs differ from the rows
+--   preconfigured for that table: a UID one side has and the other lacks, or
+--   one UID with another name or in another template.
+preconfDifferences :: Text -> [UidRow] -> [PreEntry] -> [Text]
+preconfDifferences t trs es =
+  [ label r <> "no row preconfigured for the " <> t <> " table (" <> wheres <> ") has this UID"
+  | (r, bs) <- exact, bs `notElem` map peUID es ]
+  <> [ peWhere e <> " preconfigures " <> peName e <> ", " <> hexUID (peUID e) <> ", which is not among the rows"
+     | e <- es, peUID e `notElem` map snd exact ]
+  <> concat [ [ label r <> "it is " <> peName e <> " in " <> peWhere e | Just (peName e) /= urName r ]
+              <> [ label r <> peWhere e <> " preconfigures it for the " <> tpl <> " template" | Just tpl <- [peTemplate e], Just tpl /= urTemplate r ]
+            | (r, bs) <- exact, e <- es, peUID e == bs ]
+  where
+    exact  = [ (r, bs) | r <- trs, Exact bs <- [urValue r] ]
+    wheres = T.intercalate ", " (L.nub (map (T.takeWhile (/= ' ') . peWhere) es))
 
 -- | The tables a row's text cites, @see Table 241@.
 citedTables :: UidRow -> [Int]

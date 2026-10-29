@@ -16,26 +16,28 @@ tables of section 6.3 besides Table 240 by the doc anchor's @rule uidTable@;
 Table 243 yields its 17 authorities; every UID lies in the table its upper
 half names, and in the one a header, caption or cell claims; the Special
 Purpose UIDs' pattern covers Table 241; C-UID-TABLE, C-UID-UNIQUE and
-C-UID-NAME fail on edited cells; the generated module names every named row
-and lists every table.
+C-UID-NAME fail on edited cells; Table 243 gives the 17 authorities Tables 209
+and 216 preconfigure (C-PRECONF-UID); the generated module names every named
+row and lists every table.
 -}
 module Hsed.Spec.Rules.UidTableSpec (spec) where
 
-import qualified RIO.List                 as L
-import qualified RIO.Map                  as Map
-import qualified RIO.Text                 as T
+import qualified RIO.List                  as L
+import qualified RIO.Map                   as Map
+import qualified RIO.Text                  as T
 import           RIO
 import           Test.Hspec
 
-import           Hsed.Spec.Anchor         (AnchorId (..))
-import           Hsed.Spec.Check          (checkIR, mkContext)
-import           Hsed.Spec.Common         (ErrataSet (..), RuleName (..), isError, renderFinding)
-import qualified Hsed.Spec.Common         as Cm
-import           Hsed.Spec.Compile        (CompileResult (..), compileIR)
+import           Hsed.Spec.Anchor          (AnchorId (..))
+import           Hsed.Spec.Check           (checkIR, mkContext)
+import           Hsed.Spec.Common          (ErrataSet (..), RuleName (..), isError, renderFinding)
+import qualified Hsed.Spec.Common          as Cm
+import           Hsed.Spec.Compile         (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
-import           Hsed.Spec.IR             (SpecIR)
-import           Hsed.Spec.RuleDef        (BoundTable (..), Classification (..))
-import           Hsed.Spec.Rules          (classify, explain)
+import           Hsed.Spec.IR              (SpecIR)
+import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..))
+import           Hsed.Spec.Rules           (classify, explain)
+import           Hsed.Spec.Rules.Preconfig (PreEntry (..), preEntries)
 import           Hsed.Spec.Rules.UidTable
 
 
@@ -109,13 +111,34 @@ spec = do
     describe "C-UID-UNIQUE and C-UID-NAME" $ do
       it "fail on two rows of one table with one UID" $
         errorsOf (setCell "T243" 1 0 "00 00 00 09 00 00 00 01" ir) `shouldBe`
-          [ "C-UID-UNIQUE core-2.01.pdf#page=304&T243: row 2 \"Admins | Base\": the UID 00 00 00 09 00 00 00 01 is also that of row 1" ]
+          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: T209 row 2 preconfigures Admins, 00 00 00 09 00 00 00 02, which is not among the rows"
+          , "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 2 \"Admins | Base\": it is Anybody in T209 row 1"
+          , "C-UID-UNIQUE core-2.01.pdf#page=304&T243: row 2 \"Admins | Base\": the UID 00 00 00 09 00 00 00 01 is also that of row 1" ]
       it "fail on two rows that give one name, and leave both out of the module" $ do
         let twice = setCell "T243" 1 1 "Anybody" ir
         errorsOf twice `shouldBe`
-          [ "C-UID-NAME core-2.01.pdf#page=304&T243: row 2 \"Anybody | Base\": it is generated as uAuthority_Anybody, as T243 row 1 is" ]
+          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 2 \"Anybody | Base\": it is Admins in T209 row 2"
+          , "C-UID-NAME core-2.01.pdf#page=304&T243: row 2 \"Anybody | Base\": it is generated as uAuthority_Anybody, as T243 row 1 is" ]
         newlyExcluded ir twice `shouldReturn`
           [ (TableId 243, "row 1 \"Anybody | Base\": C-UID-NAME failed"), (TableId 243, "row 2 \"Anybody | Base\": C-UID-NAME failed") ]
+
+    describe "C-PRECONF-UID, Table 243 against the default authorities of Tables 209 and 216" $ do
+      let preconf ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-PRECONF-UID" ]
+      it "passes: the 17 rows are those the two tables preconfigure, in order, with their names, UIDs and templates" $ do
+        preconf ir `shouldBe` []
+        [ (peName e, peUID e, peTemplate e) | e <- preEntries ctx, peTarget e == "Authority" ]
+          `shouldBe` [ (fromMaybe "" (urName r), bs, urTemplate r) | r <- of' 243, Exact bs <- [urValue r] ]
+        map peWhere (preEntries ctx) `shouldBe` map (\i -> "T209 row " <> tshow i) [1 .. 9 :: Int] <> map (\i -> "T216 row " <> tshow i) [1 .. 8 :: Int]
+      it "fails on a name the preconfiguration gives otherwise" $
+        preconf (setCell "T243" 9 1 "Issuer" ir) `shouldBe`
+          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 10 \"Issuer | Admin\": it is Issuers in T216 row 1" ]
+      it "fails on a UID one side gives and the other lacks" $
+        preconf (setCell "T216" 7 1 "00 00 00 09 00 00 02 09" ir) `shouldBe`
+          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: T216 row 8 preconfigures Reserve3, 00 00 00 09 00 00 02 09, which is not among the rows"
+          , "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 17 \"Reserve3 | Admin\": no row preconfigured for the Authority table (T209, T216) has this UID" ]
+      it "fails on a template other than the one the preconfiguration's caption names" $
+        preconf (setCell "T243" 0 2 "Admin" ir) `shouldBe`
+          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 1 \"Anybody | Admin\": T209 row 1 preconfigures it for the Base template" ]
 
     describe "N-UID-UNNAMED" $
       it "lists the rows that name no definition, once per table" $

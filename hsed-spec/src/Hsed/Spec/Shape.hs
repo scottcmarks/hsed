@@ -417,7 +417,13 @@ describe form = T.concat
   , if fRagged form then ", ragged" else "" ]
 
 -- | Why a shape rejects a form, or Nothing when it accepts it. Structural only:
---   a rule's caption and row conditions belong to the rule's @fires@.
+--   a rule's caption and row conditions belong to the rule's @fires@. Where
+--   two shapes' structures overlap, the looser one leaves the other's tables to
+--   it ('notAlso'): a UID table is not a type table, the table of table UIDs or
+--   a preconfiguration; a code table is not an enumeration or a typed record.
+--   'Tokens' takes the token table of Core Table 4 and the atom diagrams that
+--   follow it (a first header cell naming the atom's header, or two columns
+--   with no header row).
 shapeMismatch :: Shape -> Form -> Maybe Text
 shapeMismatch shape form = case shape of
   TypeRow         -> header ["uid", "name", "format"]
@@ -426,8 +432,10 @@ shapeMismatch shape form = case shape of
   ColumnsAddition -> header tableDescHeader
   TableUIDs       -> header ["uidoftabledescriptorobject", "uidoftable", "tablename", "template"]
   UidTable        -> atLeast 2 <|> firstSuch "a first header cell naming a UID" ("uid" `T.isInfixOf`)
+                       <|> notAlso [TypeRow, TableUIDs, Preconfig]
   StatusCodes     -> header ["name", "value"]
-  Codes           -> (columns 2 >> columns 3) <|> firstSuch "a code-like first header cell" codeLike
+  Codes           -> (columns 2 >> columns 3) <|> firstSuch "a code-like first header cell" (codeLike . untyped)
+                       <|> notAlso [EnumValues, FieldType]
   FieldValue      -> header ["field", "value"]
   FieldType       -> header ["field", "type"] >> header ["value", "type", "range"]
   ByteFieldValue  -> columns 3 <|> cells "[Byte(s), Field, Value(s)]" byteFieldValue
@@ -436,7 +444,7 @@ shapeMismatch shape form = case shape of
   ConstValues     -> header ["column", "value"]
   Ranges          -> columns 3 <|> cells "[<X> Name, … Start, … End]" ranges
   Preconfig       -> atLeast 2 <|> caption
-  Tokens          -> atLeast 4 <|> prefix ["byte", "hex", "acronym", "meaning"]
+  Tokens          -> (atLeast 4 <|> prefix ["byte", "hex", "acronym", "meaning"]) >> atomDiagram
   StateTable      -> atLeast 2
   Props           -> atLeast 3 <|> firstSuch "a first header cell starting with Property" ("property" `T.isPrefixOf`)
   PropsReq        -> columns 3 <|> prefix ["propertyname"]
@@ -486,6 +494,20 @@ shapeMismatch shape form = case shape of
     codeLike h = or
       [ "code" `T.isSuffixOf` h, h == "id", "comid" `T.isInfixOf` h, "type" `T.isSuffixOf` h
       , "value" `T.isSuffixOf` h, h == "bit", "versionnumber" `T.isSuffixOf` h ]
+    -- a header cell with its value's type in parentheses after it: "Start Transaction Status Code (uinteger)"
+    untyped h = case DT.breakOnEnd "(" h of
+      (before, inside) | not (T.null before), ")" `T.isSuffixOf` inside -> T.dropEnd 1 before
+      _                                                                  -> h
+    -- the first header cell names the atom's header ("Header+Data", "Header (1 byte)"), or there is no
+    -- header row and two columns (an atom's encoding)
+    atomDiagram = case hs of
+      h : _ | "header" `T.isPrefixOf` h -> Nothing
+      [] | fCols form == 2              -> Nothing
+      _ -> Just "expects the header [Byte, Hex, Acronym, Meaning], a first header cell naming an atom's Header, or two columns with no header row"
+    -- the tables another shape takes are not this shape's
+    notAlso others = case [ o | o <- others, isNothing (shapeMismatch o form) ] of
+      o : _ -> Just ("the table is a " <> shapeName o <> " table, which that shape takes")
+      []    -> Nothing
 
 -- | The form of a wider table seen through @cols a b@: two columns, their
 --   header cells, the rest unchanged. Left names the column that does not exist.

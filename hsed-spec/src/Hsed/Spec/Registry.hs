@@ -24,6 +24,7 @@ module Hsed.Spec.Registry
 
 import           Hsed.Spec.RuleDef          (RuleDef)
 import           Hsed.Spec.Rules.EnumValues (enumValuesRule)
+import           Hsed.Spec.Rules.StateTable (stateTableRule)
 import           Hsed.Spec.Rules.TableUIDs  (tableUIDsRule)
 import           Hsed.Spec.Rules.Terminology (terminologyRule)
 import           Hsed.Spec.Rules.TokenEncoding (tokenEncodingRule)
@@ -34,6 +35,7 @@ import           Hsed.Spec.Rules.TypeRow    (typeRowRule)
 registry :: [RuleDef]
 registry =
   [ enumValuesRule
+  , stateTableRule
   , tableUIDsRule
   , terminologyRule
   , tokenEncodingRule

@@ -24,7 +24,7 @@ CHECK_CMD   := $(HSEDC) check $(CORE_IR) --errata scott
 COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/gen --report build/report
 
 .PHONY: check test extract extract-test regen-diff annotate pdf-checks venv \
-        hsedc ir-annotated bind hsedc-check compile gen gen-diff
+        hsedc ir-annotated bind hsedc-check compile gen gen-diff splices
 
 # The targets share files (spec/ir is rewritten by extract and read by annotate; build/*.hsed.* by
 # annotate, ir-annotated and the hsedc targets) and stack takes a lock: run them one at a time
@@ -112,3 +112,11 @@ gen-diff: gen
 	git diff --exit-code --stat hsed-spec/bindings hsed/gen
 	@new=$$(git status --porcelain --untracked-files=all -- hsed-spec/bindings hsed/gen); \
 	  if [ -n "$$new" ]; then echo "$$new"; echo "gen-diff: generated files are not committed"; exit 1; fi
+
+## dev/TableUIDs.txt: GHCi's -ddump-splices transcript of hsed's hand-written TableUIDs, the
+## definitions the t240 quasiquoter makes (design 5.5: secondary to the runtime oracle, regenerated
+## at M2a); paths made relative to the checkout. Not part of check.
+splices:
+	printf ':set -ddump-splices\n:load System.SED.MCTP.Common.TableUIDs\n' \
+	  | stack ghci hsed:lib --no-load --ghci-options='-ignore-dot-ghci -hide-package gdp' 2>&1 \
+	  | sed -e 's|$(CURDIR)/||g' > dev/TableUIDs.txt

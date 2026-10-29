@@ -1,0 +1,95 @@
+# The runtime oracle's expected differences (docs/spec-as-source.md section 5.5, M2a):
+# every way the code hsedc generates from the PDF (hsed/gen/Hsed/Gen/Core/{Types,Enums,TableUIDs}.hs)
+# differs from hsed's hand transcription (System.SED.MCTP.Common.{TypeUIDs,TableUIDs}), one per line.
+# hsed's EquivSpec fails on a missing or an extra line, on a line whose kind does not hold of the two
+# sides, and on a line whose value is not the one it computes.
+#
+#   subject | kind | value | reason
+#
+# subject: the definition, or the table whose caption differs. kind and value:
+#   pdf-uid         the generated UID, the one the PDF prints
+#   spacing         the same once spaces and underscores are dropped; the generated value
+#                   (for an enumeration, +[constructors only generated] -[constructors only hand-written])
+#   range-from-1    a range starting at 1, hand-written with _NA fillers from 0; as for spacing
+#   typed-half-uid  a hand-written oth<T>/bth<T> not generated, its bytes those of h<T>; the hand-written value
+#   new             generated, not in the hand transcription; its value (an enumeration's size and range)
+#   caption         generated / hand-written caption, spacing aside
+
+# the four UIDs hsed transcribed wrongly (design section 1)
+uSecondsType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x14 0x06 | T129: hsed has all zeros
+ufeedback_sizeType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x02 0x14 | T83: hsed carries date's 18 04
+ufraction_enumType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x1c | T85: hsed carries date's 18 04
+ugen_statusType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x1a 0x02 | T86: hsed carries date's 18 04
+
+# spacing only: the PDF's kept, hsed's closed up or moved
+fAuthority_object_refType | spacing | "Restricted_Reference_Type{6},uidref {AuthorityTableUID}" | T57: uidref {AuthorityTableUID} in the PDF, uidref{...} in hsed
+fCertificates_object_refType | spacing | "Restricted_Reference_Type{6},uidref {CertificatesTableUID}" | T72: uidref {CertificatesTableUID} in the PDF
+fTemplate_object_refType | spacing | "Restricted_Reference_Type{6},uidref {TemplateTableUID}" | T142: uidref {TemplateTableUID} in the PDF
+fbyte_row_refType | spacing | "General_Reference_Type {7}" | T62: General_Reference_Type {7} in the PDF
+fobject_refType | spacing | "General_Reference_Type {8}" | T119: General_Reference_Type {8} in the PDF
+ftable_refType | spacing | "General_Reference_Type {9}" | T141: General_Reference_Type {9} in the PDF
+flog_row_refType | spacing | "Restricted_Reference_Type {6},uidref{LogTableUID},*" | T105: Restricted_Reference_Type {6} in the PDF; hsed split the cell differently
+fcred_object_uidrefType | spacing | "Restricted_Reference_Type{6},uidref {C_PINTableUID},uidref {C_AES_*TableUID},uidref {C_RSA_*TableUID},uidref{C_EC_*TableUID},uidref{C_HMAC_*TableUID}" | T77: the PDF spaces three uidrefs and closes two; hsed spaces all five
+fuinteger_2Type | spacing | "Simple_Type,uinteger,2" | T149: hsed's line break left Simple_Type,uinteger, 2
+Core_keys_avail_conds | spacing | +[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLocked_WriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] -[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLockedWriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] | T98: the PDF's label reads ReadLocked, WriteLocked (a space after the comma), hsed's ReadLocked,WriteLocked
+
+# enumerations whose range starts at 1
+Core_reencrypt_state | range-from-1 | +[] -[("Core_reencrypt_state_NA",0)] | T126: the range starts at 1 (T125 Enumeration_Type, 1, 16); dEnum starts at 0 and adds _NA
+Core_table_kind | range-from-1 | +[] -[("Core_table_kind_NA",0)] | T138: the range starts at 1 (T137 Enumeration_Type, 1, 8); dEnum starts at 0 and adds _NA
+
+# captions
+T82 | caption | Table 82 enc_supported Enumeration Values / Table 82 enc_supported Enumes | hsed's caption is cut short: Enumes for Enumeration Values
+T112 | caption | Table 112 MethodID_object_ref / Table 112 MethodID_object _ref | the PDF prints MethodID_object _ref, read as one identifier (N-CAPTION-NORMALISED); hsed kept the space
+T157 | caption | Table 157 uinteger_4 / Table 147 uinteger_1 | hsed's caption for Table 157 (uinteger_4) repeats Table 147's, uinteger_1
+T161 | caption | Table 161 uinteger_8 / Table 160 uinteger_8 | hsed numbers Table 161 as 160
+
+# newly generated
+Core_gen_status | new | 64 constructors, values 0..63 | T87: generated through its rangeWords comment; hsed has only a FIXME
+
+# the typed half-UIDs hsed derives from a hard-coded table kind
+bthMBR | typed-half-uid | btHalfUID 0x00 0x00 0x08 0x04 | T240: hsed hard-codes MBR as the one byte table; Core gives no table kind (Opal's Kind column, M5)
+othACE | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x08 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othAccessControl | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x07 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othAuthority | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x09 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_AES_128 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0e | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_AES_256 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0f | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_160 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x10 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_163 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x16 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_192 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x11 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_224 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x12 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_233 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x17 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_256 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x13 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_283 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x18 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_384 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x14 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_EC_521 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x15 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_HMAC_160 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x19 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_HMAC_256 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1a | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_HMAC_384 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1b | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_HMAC_512 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1c | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_PIN | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0b | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_RSA_1024 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0c | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othC_RSA_2048 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0d | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othCertificates | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0a | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othClockTime | typed-half-uid | otHalfUID 0x00 0x00 0x04 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othColumn | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x04 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othCryptoSuite | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x03 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othH_SHA_1 | typed-half-uid | otHalfUID 0x00 0x00 0x06 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othH_SHA_256 | typed-half-uid | otHalfUID 0x00 0x00 0x06 0x02 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othH_SHA_384 | typed-half-uid | otHalfUID 0x00 0x00 0x06 0x03 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othH_SHA_512 | typed-half-uid | otHalfUID 0x00 0x00 0x06 0x04 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othK_AES_128 | typed-half-uid | otHalfUID 0x00 0x00 0x08 0x05 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othK_AES_256 | typed-half-uid | otHalfUID 0x00 0x00 0x08 0x06 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othLocking | typed-half-uid | otHalfUID 0x00 0x00 0x08 0x02 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othLockingInfo | typed-half-uid | otHalfUID 0x00 0x00 0x08 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othLog | typed-half-uid | otHalfUID 0x00 0x00 0x0a 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othLogList | typed-half-uid | otHalfUID 0x00 0x00 0x0a 0x02 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othMBRControl | typed-half-uid | otHalfUID 0x00 0x00 0x08 0x03 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othMethodID | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x06 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othSP | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x05 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othSPInfo | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x02 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othSPTemplates | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x03 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othSecretProtect | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1d | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othTPerInfo | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othTable | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othTemplate | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x04 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
+othType | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x05 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)

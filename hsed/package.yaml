@@ -64,8 +64,9 @@ tests:
     dependencies:
     - hsed
     - hsed-core
+    - containers         # EquivSpec: the two sides by name
     - hspec
-    - template-haskell   # EquivTH: one comparison per generated definition
+    - template-haskell   # EquivTH: every definition of either side, from source
     build-tools:
     - hspec-discover
 

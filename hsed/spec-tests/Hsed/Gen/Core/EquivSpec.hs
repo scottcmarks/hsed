@@ -3,83 +3,154 @@
 
 {-|
 Module      : Hsed.Gen.Core.EquivSpec
-Description : The generated Core types beside hsed's hand-written TypeUIDs, at run time
+Description : The generated Core modules beside hsed's hand-written TypeUIDs and TableUIDs, at run time
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Design docs/spec-as-source.md section 5.5 and M1 acceptance (d): the module
-@hsedc compile@ generated from the PDF (@gen/Hsed/Gen/Core/Types.hs@, imported
-as @G@) against the hand transcription (@System.SED.MCTP.Common.TypeUIDs@, as
-@H@). First the M1 slice by name (Tables 46-56 and 75); then every generated
-definition with a hand-written counterpart ("Hsed.Gen.Core.EquivTH"), where the
-set of definitions that differ must be exactly 'expectedDifferences': a known
-difference that disappears fails the test as surely as a new one. Each listed
-difference is also checked to be the one it is listed as ('Expected'), so a
-listed definition whose difference changes fails too.
+Design docs/spec-as-source.md section 5.5, the regenerate-and-compare oracle
+(M2a): every definition @hsedc compile@ generated from the PDF
+(@gen/Hsed/Gen/Core/{Types,Enums,TableUIDs}.hs@, imported as @G@) beside its
+counterpart in the hand transcription (@System.SED.MCTP.Common.{TypeUIDs,TableUIDs}@,
+as @H@), definition by definition and table caption by table caption
+("Hsed.Gen.Core.EquivTH"). The differences must be exactly the lines of
+@spec/expected-diff.txt@: a missing line fails the test as surely as an extra
+one, and each line is checked by value, its kind holding of the two sides and
+its value column equal to what this module computes for the difference
+('summary'):
+
+* @pdf-uid@: the generated UID, the one the PDF prints (hsed transcribed another);
+* @spacing@: the same once spaces and underscores are dropped; the generated value;
+* @range-from-1@: an enumeration whose range starts at 1, the hand-written one
+  with @_NA@ fillers from 0; the constructors only on either side;
+* @typed-half-uid@: a hand-written @oth\<T\>@ or @bth\<T\>@ with no generated
+  counterpart, its bytes those of the generated @h\<T\>@; the hand-written value;
+* @new@: a generated definition the hand transcription lacks; its value;
+* @caption@: a table whose caption the two sides print differently (spacing
+  aside); @generated / hand-written@.
+
+The M1 slice is kept by name above it (M1 acceptance (d)).
 -}
 module Hsed.Gen.Core.EquivSpec (spec) where
 
-import           Data.Char                       (isSpace)
-import           Data.List                       (isSuffixOf, sort)
-import           Data.Word                       (Word8)
+import           Data.Char                        (isDigit, isSpace)
+import           Data.List                        (intercalate, isPrefixOf, nub, sort, stripPrefix, (\\))
+import qualified Data.Map                         as Map
+import           Data.Maybe                       (isJust, isNothing, mapMaybe)
 import           Test.Hspec
 
-import           Hsed.Core.Types                 (Enumerated (..), enumValue)
+import           Hsed.Core.Types                  (Enumerated (..), enumValue)
 import           Hsed.Gen.Core.EquivTH
-import qualified Hsed.Gen.Core.Enums             as G
-import qualified Hsed.Gen.Core.Types             as G
-import qualified System.SED.MCTP.Common.TypeUIDs as H
-import           System.SED.MCTP.Common.UID      (uid)
+import qualified Hsed.Gen.Core.Enums              as G
+import qualified Hsed.Gen.Core.TableUIDs          as G
+import qualified Hsed.Gen.Core.Types              as G
+import qualified System.SED.MCTP.Common.TableUIDs as H
+import qualified System.SED.MCTP.Common.TypeUIDs  as H
 
 
--- | Every generated definition compared, and the generated names the hand-written module lacks.
-equiv :: ([Comparison], [String])
-equiv = $(comparisons ["gen/Hsed/Gen/Core/Types.hs", "gen/Hsed/Gen/Core/Enums.hs"] "G" "H")
+-- | Every generated definition a hand-written module could have.
+generated :: [Def]
+generated = $(generatedDefs [ "gen/Hsed/Gen/Core/Types.hs", "gen/Hsed/Gen/Core/Enums.hs"
+                            , "gen/Hsed/Gen/Core/TableUIDs.hs" ] "G")
 
--- | What a listed difference is.
-data Expected
-  = PdfUID [Word8]   -- ^ the generated UID is this, the one the PDF prints
-  | Spacing          -- ^ the two agree once spaces (and the underscores a label's spaces become) are dropped
-  | RangeFromOne     -- ^ the same constructors once the hand-written @_NA@ at 0 is dropped
+-- | Every hand-written definition the quasiquoters make.
+handWritten :: [Def]
+handWritten = $(handDefs "src/System/SED/MCTP/Common/TypeUIDs.hs" "src/System/SED/MCTP/Common/TableUIDs.hs" "H")
 
--- | The differences the hand transcription is known to have, each with what it
---   is and its reason (design section 5.5; docs/evidence/2026-10-25/extract/regen_report.txt).
-expectedDifferences :: [(String, Expected, String)]
-expectedDifferences =
-  -- the four UIDs hsed transcribed wrongly (design section 1)
-  [ ("uSecondsType",       PdfUID [0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x14, 0x06], "T129: hsed has all zeros")
-  , ("ufeedback_sizeType", PdfUID [0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x02, 0x14], "T83: hsed carries date's 18 04")
-  , ("ufraction_enumType", PdfUID [0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x04, 0x1C], "T85: hsed carries date's 18 04")
-  , ("ugen_statusType",    PdfUID [0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x1A, 0x02], "T86: hsed carries date's 18 04")
-    -- whitespace inside a Format value: the PDF's spacing kept, hsed's ASCII tables closed it up
-  , ("fAuthority_object_refType",    Spacing, "T57: uidref {AuthorityTableUID} in the PDF, uidref{...} in hsed")
-  , ("fCertificates_object_refType", Spacing, "T72: uidref {CertificatesTableUID} in the PDF")
-  , ("fTemplate_object_refType",     Spacing, "T142: uidref {TemplateTableUID} in the PDF")
-  , ("fbyte_row_refType",            Spacing, "T62: General_Reference_Type {7} in the PDF")
-  , ("fobject_refType",              Spacing, "T119: General_Reference_Type {8} in the PDF")
-  , ("ftable_refType",               Spacing, "T141: General_Reference_Type {9} in the PDF")
-  , ("flog_row_refType",             Spacing, "T105: Restricted_Reference_Type {6} in the PDF; hsed split the cell differently")
-  , ("fcred_object_uidrefType",      Spacing, "T77: the PDF spaces three uidrefs and closes two; hsed spaces all five")
-    -- a hand-formatting artefact of hsed's table
-  , ("fuinteger_2Type",              Spacing, "T149: hsed's line break left Simple_Type,uinteger, 2")
-    -- enumerations
-  , ("Core_keys_avail_conds",        Spacing, "T98: the PDF's label reads ReadLocked, WriteLocked (a space after the comma), hsed's ReadLocked,WriteLocked")
-  , ("Core_reencrypt_state",         RangeFromOne, "T126: the range starts at 1 (T125 Enumeration_Type, 1, 16); dEnum starts at 0 and adds _NA")
-  , ("Core_table_kind",              RangeFromOne, "T138: the range starts at 1 (T137 Enumeration_Type, 1, 8); dEnum starts at 0 and adds _NA")
-  ]
 
--- | Is a comparison the difference it is listed as?
-isAsExpected :: Expected -> Comparison -> Bool
-isAsExpected expected c = case expected of
-  PdfUID [a, b, d, e, f, g, h, i] -> cGenerated c == show (uid a b d e f g h i)
-  PdfUID _                        -> False
-  Spacing                         -> squeeze (cGenerated c) == squeeze (cHandWritten c)
-  RangeFromOne                    -> names (cGenerated c) == filter (not . ("_NA" `isSuffixOf`)) (names (cHandWritten c))
+-- * Differences
+
+-- | A difference between the two sides: of one definition (either side may
+--   lack it), or of the caption of one generated table.
+data Difference = Difference
+  { subject       :: String                  -- ^ the definition's name, or the table's id
+  , generatedSide :: Maybe Def
+  , handSide      :: Maybe Def
+  , captions      :: Maybe (String, String)  -- ^ a caption difference: generated, hand-written
+  }
+
+byName :: [Def] -> Map.Map String Def
+byName ds = Map.fromList [ (dName d, d) | d <- ds ]
+
+differences :: [Difference]
+differences = valueDifferences ++ captionDifferences
   where
-    squeeze = filter (\x -> not (isSpace x) && x /= '_')
-    names s = map fst (read s :: [(String, Int)])
+    gens  = byName generated
+    hands = byName handWritten
+    valueDifferences =
+      [ Difference n g h Nothing
+      | n <- Map.keys (Map.union gens hands), let g = Map.lookup n gens; h = Map.lookup n hands
+      , fmap dValue g /= fmap dValue h ]
+    -- each generated table's caption against those of its definitions' hand-written counterparts
+    tables = Map.fromListWith (\(c, hs) (_, hs') -> (c, hs' ++ hs))
+      [ (dTable g, (dCaption g, [dCaption h])) | (n, g) <- Map.toList gens, Just h <- [Map.lookup n hands] ]
+    captionDifferences =
+      [ Difference t Nothing Nothing (Just (gc, hc))
+      | (t, (gc, hcs)) <- Map.toList tables, hc <- nub (map normal hcs), normal gc /= hc ]
+
+normal :: String -> String
+normal = unwords . words
+
+-- | The value column of a difference's line.
+summary :: Difference -> String
+summary d = case (captions d, generatedSide d, handSide d) of
+  (Just (g, h), _, _)  -> normal g ++ " / " ++ normal h
+  (_, Just g, Just h)  -> case (dValue g, dValue h) of
+    (Entries a, Entries b) -> "+" ++ show (a \\ b) ++ " -" ++ show (b \\ a)
+    (a, _)                 -> value a
+  (_, Just g, Nothing) -> value (dValue g)
+  (_, Nothing, Just h) -> value (dValue h)
+  _                    -> ""
+  where
+    value (Scalar s)   = s
+    value (Entries es) = show (length es) ++ " constructors, values " ++ show (minimum (map snd es)) ++ ".." ++ show (maximum (map snd es))
+
+-- | Does a difference have the kind a line names?
+holds :: String -> Difference -> Bool
+holds kind d = case (kind, captions d, dValue <$> generatedSide d, dValue <$> handSide d) of
+  ("caption", Just _, _, _) -> True
+  ("pdf-uid", Nothing, Just (Scalar a), Just (Scalar b)) -> all ("uid " `isPrefixOf`) [a, b] && a /= b
+  ("spacing", Nothing, Just a, Just b) -> squeeze a == squeeze b
+  ("range-from-1", Nothing, Just (Entries a), Just (Entries b)) -> filter (not . isNA . fst) b == a && minimum (map snd a) >= 1
+  ("typed-half-uid", Nothing, Nothing, Just (Scalar b)) ->
+    case mapMaybe (`stripPrefix` subject d) ["oth", "bth"] of
+      [t] | Just g <- Map.lookup ("h" ++ t) (byName generated), Scalar a <- dValue g -> drop 1 (words a) == drop 1 (words b)
+      _   -> False
+  ("new", Nothing, Just _, Nothing) -> True
+  _ -> False
+  where
+    squeeze (Scalar s)   = Scalar (dropSpacing s)
+    squeeze (Entries es) = Entries [ (dropSpacing c, v) | (c, v) <- es ]
+    dropSpacing = filter (\x -> not (isSpace x) && x /= '_')
+    -- Core_x_NA, Core_x_NA_4: dEnum's fillers
+    isNA c = case reverse (splitOn "_" c) of
+      "NA" : _                       -> True
+      n : "NA" : _ | all isDigit n   -> True
+      _                              -> False
+
+-- | One line of spec/expected-diff.txt: subject | kind | value | reason.
+data Expected = Expected { eSubject :: String, eKind :: String, eValue :: String, eReason :: String }
+  deriving (Show)
+
+parseExpected :: String -> [Expected]
+parseExpected = map line . filter (not . ignorable) . lines
+  where
+    ignorable l = all isSpace l || "#" `isPrefixOf` dropWhile isSpace l
+    line l = case splitOn " | " l of
+      s : k : v : r@(_ : _) -> Expected s k v (intercalate " | " r)
+      _                     -> error ("spec/expected-diff.txt: not subject | kind | value | reason: " ++ l)
+
+splitOn :: String -> String -> [String]
+splitOn sep = go ""
+  where
+    go acc s | Just rest <- stripPrefix sep s = reverse acc : go "" rest
+    go acc (c : cs) = go (c : acc) cs
+    go acc []       = [reverse acc]
+
+kinds :: [String]
+kinds = ["pdf-uid", "spacing", "range-from-1", "typed-half-uid", "new", "caption"]
+
 
 spec :: Spec
 spec = do
@@ -114,18 +185,37 @@ spec = do
       map show [minBound .. maxBound :: G.Core_attr_flags] `shouldBe` map show [minBound .. maxBound :: H.Core_attr_flags]
       map show [minBound .. maxBound :: G.Core_auth_method] `shouldBe` map show [minBound .. maxBound :: H.Core_auth_method]
 
-  describe "every generated definition with a hand-written counterpart" $ do
-    let (compared, unmatched) = equiv
-    it "covers the 100 type rows twice (UID, Format) and the 19 enumerations; T87's is new" $ do
-      length compared `shouldBe` 219
-      unmatched `shouldBe` ["Core_gen_status"]
-    it "differs from the hand transcription exactly where it is known to" $
-      sort (map cName (filter differs compared)) `shouldBe` sort [ n | (n, _, _) <- expectedDifferences ]
-    it "differs there in exactly the way each difference is listed as" $
-      [ cName c | c <- compared, (n, expected, _) <- expectedDifferences, n == cName c, not (isAsExpected expected c) ]
-        `shouldBe` []
+  describe "every generated definition beside its hand-written counterpart (design 5.5)" $ do
+    expected <- runIO (parseExpected <$> readFile "../spec/expected-diff.txt")
+    let gens  = byName generated
+        hands = byName handWritten
+        matching e = [ d | d <- differences, subject d == eSubject e ]
+    it "reads 360 generated definitions and 405 hand-written ones: 359 on both sides, 1 new, 46 the generated lack" $ do
+      (Map.size gens, Map.size hands) `shouldBe` (360, 405)
+      Map.size (Map.intersection gens hands) `shouldBe` 359
+      Map.keys (gens Map.\\ hands) `shouldBe` ["Core_gen_status"]
+      Map.size (hands Map.\\ gens) `shouldBe` 46
+    it "differs from the hand transcription exactly on the lines of spec/expected-diff.txt (extra, missing)" $ do
+      let actual = sort (map subject differences)
+          listed = sort (map eSubject expected)
+      (actual \\ listed, listed \\ actual) `shouldBe` ([], [])
+    it "lists each difference once, with a kind it knows and a reason" $ do
+      let listed = map eSubject expected
+      listed \\ nub listed `shouldBe` []
+      [ eSubject e ++ ": " ++ eKind e | e <- expected, eKind e `notElem` kinds ] `shouldBe` []
+      [ eSubject e | e <- expected, all isSpace (eReason e) ] `shouldBe` []
+    it "differs there in the kind each line names" $
+      [ eSubject e ++ " is not " ++ eKind e | e <- expected, d <- matching e, not (holds (eKind e) d) ] `shouldBe` []
+    it "differs there by the value each line records" $
+      [ (eSubject e, eValue e, summary d) | e <- expected, d <- matching e, summary d /= eValue e ] `shouldBe` []
     it "agrees on the value of every constructor where only the range's start differs (T126, T138)" $ do
       [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_reencrypt_state] ]
         `shouldBe` [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_reencrypt_state], x /= H.Core_reencrypt_state_NA ]
       [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_table_kind] ]
         `shouldBe` [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_table_kind], x /= H.Core_table_kind_NA ]
+    it "finds every typed half-UID's table among the generated half-UIDs" $
+      [ dName h | h <- Map.elems (hands Map.\\ gens), isNothing (lookup' h) ] `shouldBe` []
+  where
+    lookup' h = case mapMaybe (`stripPrefix` dName h) ["oth", "bth"] of
+      [t] | isJust (Map.lookup ("h" ++ t) (byName generated)) -> Just t
+      _   -> Nothing

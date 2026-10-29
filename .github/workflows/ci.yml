@@ -20,24 +20,33 @@ jobs:
           ghc-version: '9.4.7'
           enable-stack: true
           stack-version: 'latest'
-      # The GHC 9.4.7 Linux bindist hard-wires -fuse-ld=gold into its settings, and the gold
-      # linker is gone from ubuntu-26.04's binutils ("collect2: fatal error: cannot find 'ld'");
-      # let gcc pick the system linker instead.
+      # The GHC 9.4.7 Linux bindist hard-wires -fuse-ld=gold (in its settings and in the hsc2hs
+      # wrapper's --lflag), and the gold linker is gone from ubuntu-26.04's binutils
+      # ("collect2: fatal error: cannot find 'ld'"). Strip it everywhere in the install so gcc
+      # picks the system linker.
       - if: runner.os == 'Linux'
         run: |
-          settings="$(ghc --print-libdir)/settings"
-          sudo sed -i 's/-fuse-ld=gold//g' "$settings"
-          grep -c 'fuse-ld' "$settings" || true
-      # On macos-26 the Command Line Tools' ld cannot read its own SDK's arm64e.x1 .tbd stubs
-      # ("tapi error: malformed file ... unknown architecture"); the newest Xcode's ld can.
+          root="$(cd "$(ghc --print-libdir)/../../.." && pwd)"
+          echo "GHC install: $root"
+          files="$(sudo grep -rlI -e '-fuse-ld=gold' "$root" || true)"
+          echo "$files"
+          [ -z "$files" ] || echo "$files" | xargs sudo sed -i 's/--lflag=-fuse-ld=gold//g; s/-fuse-ld=gold//g'
+          ! sudo grep -rlI -e '-fuse-ld=gold' "$root"
+      # The GHC 9.4.7 macOS bindist's rts links libffi from a hard-coded
+      # /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk. On macos-26 that symlink names a
+      # MacOSX27.0 SDK whose arm64e.x1 .tbd stubs no installed Xcode's ld can read ("tapi error:
+      # malformed file ... unknown architecture"). Select the newest Xcode and point that path at
+      # its own SDK, so the linker and the stubs come from the same toolchain.
       - if: runner.os == 'macOS'
         run: |
-          ls -d /Applications/Xcode*.app || true
           xcode="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)"
           if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode"; fi
+          sdk="$(xcrun --show-sdk-path)"
+          ls /Library/Developer/CommandLineTools/SDKs || true
+          sudo ln -sfn "$sdk" /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
           xcode-select -p
           ld -v 2>&1 | head -1
-          xcrun --show-sdk-path
+          ls -l /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
       - uses: actions/cache@v4
         with:
           path: |

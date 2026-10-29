@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -723,15 +724,18 @@ def main(argv=None) -> int:
     adopt_orphans(records, cache)
     strip_private(records)
     elapsed = time.time() - t0
-    meta = {"source": args.pdf, "n_tables": len(records), "n_numbered": sum(r["table_number"] is not None for r in records),
+    # meta is deterministic (no wall-clock time, no absolute path) so that regenerating a
+    # committed JSON file diffs clean; "notice" names the TCG licence the data travels under
+    meta = {"source": os.path.basename(args.pdf), "notice": "tcg/TCG-NOTICE.txt",
+            "n_tables": len(records), "n_numbered": sum(r["table_number"] is not None for r in records),
             "distinct_numbers": len({r["table_number"] for r in records if r["table_number"] is not None}),
-            "n_nested": sum(bool(r["nested_in"]) for r in records), "seconds": round(elapsed, 1),
+            "n_nested": sum(bool(r["nested_in"]) for r in records),
             "pymupdf": pymupdf.__doc__.split(":")[0], "pikepdf": pikepdf.__version__}
     with open(args.out_json, "w") as f:
         json.dump({"meta": meta, "tables": records}, f, indent=1, ensure_ascii=False)
     with open(args.out_index, "w") as f:
         f.write("\n".join(index_line(r) for r in records) + "\n")
-    print(json.dumps(meta), file=sys.stderr)
+    print(json.dumps({**meta, "seconds": round(elapsed, 1)}), file=sys.stderr)
     return 0
 
 

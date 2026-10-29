@@ -1,11 +1,11 @@
 {
  "meta": {
-  "source": "/private/tmp/claude-501/-Users-scott-hsed/f05c341b-63d7-4ac7-8e79-f36321a58c77/scratchpad/pdf-structure/pdfs/opal.pdf",
+  "source": "TCG_Storage-Opal_SSC_v2.30.pdf",
+  "notice": "tcg/TCG-NOTICE.txt",
   "n_tables": 63,
   "n_numbered": 50,
   "distinct_numbers": 50,
   "n_nested": 0,
-  "seconds": 5.5,
   "pymupdf": "PyMuPDF 1.28.2",
   "pikepdf": "10.17.0"
  },

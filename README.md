@@ -1,4 +1,8 @@
 # hsed
+The TCG Storage specifications under `tcg/`, and everything here derived from them, are
+redistributed under TCG's own terms: see `tcg/TCG-NOTICE.txt`. The design of record is
+`docs/spec-as-source.md`.
+
 Goals drift.
 
 In the commercial, common, nearly-"static" case, almost nothing is writable.

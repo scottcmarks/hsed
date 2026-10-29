@@ -7,7 +7,7 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| core-2.01 | 248 | 129 | 3 | 10 | 109 | 0 | 0 |
+| core-2.01 | 248 | 135 | 3 | 10 | 103 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
@@ -25,6 +25,8 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | comment StateTable | 1 |
 | rule codes | 8 |
 | rule enumValues | 19 |
+| rule fieldType | 3 |
+| rule fieldValue | 3 |
 | rule statusCodes | 1 |
 | rule tableUIDs | 1 |
 | rule typeRow | 100 |
@@ -38,8 +40,8 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
 | Warning | W-GEN-EXCLUDED | 3 |
-| Warning | W-RULE-UNIMPLEMENTED | 10 |
-| Warning | W-UNBOUND | 162 |
+| Warning | W-RULE-UNIMPLEMENTED | 8 |
+| Warning | W-UNBOUND | 156 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |
 | Note | N-STATUS-NAME-SUFFIXED | 1 |

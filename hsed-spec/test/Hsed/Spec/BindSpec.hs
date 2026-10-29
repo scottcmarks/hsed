@@ -1,0 +1,64 @@
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedStrings   #-}
+
+{-|
+Module      : Hsed.Spec.BindSpec
+Description : Test specifications for Hsed.Spec.Bind
+Copyright   : (c) Magnolia Heights R&D, 2026
+License     : BSD3
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+@hsedc bind@ on the committed Core extraction: one entry per annotation, a bare
+modifier chain printed on its rule default, a binding shaped by its target
+printed at the target's shape, and the committed bindings module exactly what
+the committed annotations give.
+-}
+module Hsed.Spec.BindSpec (spec) where
+
+import qualified RIO.Text                 as T
+import           RIO
+import           Test.Hspec
+
+import           Hsed.Spec.Anchor         (AnchorId (..))
+import           Hsed.Spec.Bind
+import           Hsed.Spec.Common         (isError, renderFinding)
+import           Hsed.Spec.CoreIR
+import           Hsed.Spec.Grammar        (printSomeBinding)
+import           Hsed.Spec.IR             (StructPath (..))
+
+
+spec :: Spec
+spec = withCore $ \pristine -> do
+  hsa <- runIO committedHsa
+  ir  <- runIO (annotated pristine hsa)
+
+  describe "bindEntries" $ do
+    it "gives the doc anchor, the rule anchor and T75, in canonical order" $ do
+      let (fs, entries) = bindEntries ir
+      fs `shouldBe` []
+      [ (a, page, sp, printSomeBinding sb) | (_, a, page, sp, sb) <- entries ] `shouldBe`
+        [ (DocId, 1, StructPath "", "doc core201")
+        , (SectionId "5.1.3", 100, StructPath "0/1278", "rule typeRow & rule enumValues")
+        , (TableId 75, 107, StructPath "0/1429", "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow") ]
+    it "prints nothing for a rule-bound table without a comment" $
+      length (snd (bindEntries ir)) `shouldBe` 3
+    it "prints a binding shaped by its target at the target's shape" $ do
+      ir' <- annotated pristine (hsa <> "core-2.01 | T47 | refines (core 46)\n")
+      let (fs, result) = bindModule ir'
+      fs `shouldBe` []
+      fmap T.lines result `shouldSatisfy` either (const False)
+        (elem "b_core_T47 = at (anchor @'TypeRow \"core-2.01\" \"T47\" \"0/1294\" 100) (refines (core 46))")
+    it "reports an annotation it cannot resolve, citing the page, and leaves it out" $ do
+      ir' <- annotated pristine (hsa <> "core-2.01 | T47 | refines (opal 3)\n")
+      let (fs, entries) = bindEntries ir'
+      map renderFinding fs `shouldSatisfy` any ("E-SHAPE core-2.01.pdf#page=100&T47: the shape comes from Opal 3" `T.isPrefixOf`)
+      length entries `shouldBe` 3
+
+  describe "bindModule" $
+    it "prints the committed hsed-spec/bindings/Hsed/Bindings/Core.hs" $ do
+      committed <- readFileUtf8 "bindings/Hsed/Bindings/Core.hs"
+      let (fs, result) = bindModule ir
+      filter isError fs `shouldBe` []
+      result `shouldBe` Right committed

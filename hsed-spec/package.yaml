@@ -35,6 +35,7 @@ library:
   - directory
   - filepath
   - megaparsec
+  - mtl
   - prettyprinter
   - text
   - unordered-containers

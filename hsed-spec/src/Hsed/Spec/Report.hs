@@ -296,12 +296,30 @@ catalogue = Map.fromList $
     , ("C-ENUM-RANGE",     "an enumeration's values do not fit its type's range")
     , ("C-T240-HALVES",    "a table's UIDs disagree with its descriptor object's")
     , ("C-T240-NAME",      "a table name is no identifier, or names two tables")
-    , ("C-FMT-RESOLVE",    "a Format names a type no table defines")
+    , ("C-FMT-RESOLVE",    "a Format or a column's type names a type no table defines")
     , ("E-FMT-RESOLVE",    "a Format names a type no table defines")
     , ("C-COL-CONTIG",     "a table description's column numbers leave a gap")
+    , ("C-COL-CELL",       "a table description's row is not four cells, or names a column twice or by no identifier")
+    , ("C-DESC-TABLE",     "a table description names no table of Table 240, or one another description names")
+    , ("C-CONST-DESC",     "a table of column values names no described table enclosing it, or one another names")
+    , ("C-CONST-VALUE",    "a column value names no column, does not read or fit, or disagrees with its remark")
     , ("C-LAYOUT-TILE",    "a byte layout's fields do not tile its bytes")
     , ("C-LAYOUT-ENDIAN",  "a field's (MSB) and (LSB) marks disagree")
     , ("C-PRECONF-HEADER", "a preconfiguration table's columns are not its table's")
+    , ("C-PRECONF-CELL",   "a preconfigured cell does not read as its column's type")
+    , ("C-PRECONF-UID",    "the table of a table's UIDs disagrees with the rows preconfigured for that table")
+    , ("C-UID-NAME",       "two rows of the UID tables give one name")
+    , ("C-SIG-PARSE",      "a method signature does not parse as printed")
+    , ("C-CODE-VALUE",     "a code table has no code column, a row of another width, a downward range or two catch-alls")
+    , ("W-CODE-OVERLAP",   "two rows of a code table assign one value")
+    , ("C-CODE-TYPE",      "a code column's type names no Type object")
+    , ("C-STATUS-CODE",    "a status row is not one name and one value, or gives a value twice")
+    , ("C-FIELD-VALUE",    "a command block's row is not one named field and its value, or names a field twice")
+    , ("C-FIELD-TYPE",     "a record field's type names no Type object, or its range is not one the type holds")
+    , ("C-TOKEN-TABLE",    "the token table covers a byte twice or not at all, or a row's bit pattern and hex range disagree")
+    , ("C-STATE-TABLE",    "a state table's row names no state, or leaves a field without a setting")
+    , ("C-PROP-TYPE",      "a property's type names no Type object, or its applicability no communicator")
+    , ("C-PROP-INITIAL",   "an initial assumption does not read by its property's type, or its arithmetic does not hold")
     , ("C-LEGEND-TOTAL",   "a preconfiguration cell's style maps to no class of the colour key")
     , ("C-PATCH-UID",      "an SSC's change to a Core definition changes its UID")
     , ("C-PATCH-MONOTONE", "an SSC's value lies below the Core minimum")
@@ -313,13 +331,24 @@ catalogue = Map.fromList $
   <> [ (c, AsPrinted d) | (c, d) <-
     [ ("N-CAPTION-NORMALISED", "a caption read as one identifier where the PDF prints a space in it")
     , ("N-HEADER-NORMALISED",  "a header cell read through the typo table")
-    , ("N-FORMAT-NORMALISED",  "a Format cell read with its spacing or spelling normalised") ] ]
-  <> [ ("W-ENUM-LABEL-REPEATED", Suspect "an enumeration gives one label to several rows") ]
+    , ("N-FORMAT-NORMALISED",  "a Format cell read with its spacing or spelling normalised")
+    , ("N-SIG-NORMALISED",     "a method signature read with its punctuation normalised")
+    , ("N-RANGE-NAME-NORMALISED", "a type format's name read as the Format cells spell it")
+    , ("N-RANGE-ONE-CELL",     "a range printed as one cell spanning its start and end")
+    , ("N-STATUS-NAME-SUFFIXED", "a status name given to several values, the later ones suffixed")
+    , ("W-PROP-NAME-CASE",     "a property name printed in two spellings, read as the Properties table spells it") ] ]
+  <> [ (c, Suspect d) | (c, d) <-
+    [ ("W-ENUM-LABEL-REPEATED",   "an enumeration gives one label to several rows")
+    , ("C-TOKEN-CODEC",           "the token table and hsed's hand-written codec disagree")
+    , ("W-STATUS-SECTION",        "a subsection of the status table's section names no status of it")
+    , ("N-STATUS-UNDESCRIBED",    "a status no subsection of its section describes")
+    , ("N-UID-RANGE-NO-TEMPLATE", "UID rows that name no template, with the template range each lies in") ] ]
   <> [ (c, Correction) | c <- ["W-ERRATUM-APPLIED", "W-ERRATUM-KNOWN", "W-ERRATUM-UNUSED"] ]
   <> [ (c, Bookkeeping) | c <-
     [ "W-UNBOUND", "E-UNBOUND", "E-AMBIGUOUS", "W-RULE-UNIMPLEMENTED", "W-GEN-EXCLUDED", "C-EXEMPLAR", "W-WAIVER-UNUSED"
     , "W-PINS-NONE", "E-SHAPE", "E-ANCHOR", "E-ANCHOR-KIND", "E-SYNTAX", "E-GRAMMAR", "E-MODIFIER", "E-SIDECAR"
-    , "E-ERRATUM-PUBLISHED", "E-GEN-MODULE", "E-FMT-SYNTAX", "E-FMT-CODE", "E-FMT-ARITY" ] ]
+    , "E-ERRATUM-PUBLISHED", "E-GEN-MODULE", "E-FMT-SYNTAX", "E-FMT-CODE", "E-FMT-ARITY"
+    , "N-UID-UNNAMED", "N-RANGE-UNCHECKED", "W-PRECONF-TEMPLATE" ] ]
 
 -- | What a code's findings say; Nothing for a code the catalogue does not name.
 reportsOf :: Text -> Maybe Reports

@@ -15,7 +15,8 @@ committed annotations, as invariants: @ERRATA.md@ carries every correction of
 the annotations under both errata sets with its page and annotation, every
 finding whose code reports the PDF (the acceptance's among them: the
 @C-UID-UNIQUE@ waiver, @W-ENUM-OVERLAP@, @XREF-RESOLVES@ at PDF 116) and none
-of hsedc's own, and lists a code the catalogue does not name apart;
+of hsedc's own, names every code the committed run gives in its catalogue,
+and lists a code the catalogue does not name apart;
 @coverage.md@ has a row for every numbered table, every signature block in
 document order and every anchor, each anchor with what it binds;
 @findings.md@ counts the findings by code; the ledger counts the List of
@@ -80,6 +81,9 @@ spec = withCore $ \pristine -> do
         `shouldBe` L.sort [ "### " <> c <> ": " <> d <> " (" <> tshow n <> ")"
                           | c <- ["XREF-RESOLVES", "C-UID-UNIQUE", "W-ENUM-OVERLAP"], Just (Defect d) <- [reportsOf c]
                           , let n = length (filter ((== c) . Cm.code) fs) ]
+    it "names every code the committed run gives in its catalogue, so that nothing is left unclassified" $ do
+      L.nub [ Cm.code f | f <- fs, isNothing (reportsOf (Cm.code f)) ] `shouldBe` []
+      has "## Not yet classified" `shouldBe` False
     it "lists the findings of a code its catalogue does not name apart, so that none is dropped" $ do
       let new = (finding Warning "W-NOVEL" "something new") { Cm.spec = Just core, Cm.page = Just 40, Cm.anchor = Just "T17" }
           text = errataMarkdown ctx [new]

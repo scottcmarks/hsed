@@ -24,6 +24,7 @@ module Hsed.Spec.Registry
 
 import           Hsed.Spec.RuleDef          (RuleDef)
 import           Hsed.Spec.Rules.EnumValues (enumValuesRule)
+import           Hsed.Spec.Rules.TableDesc  (tableDescRule)
 import           Hsed.Spec.Rules.TableUIDs  (tableUIDsRule)
 import           Hsed.Spec.Rules.TypeRow    (typeRowRule)
 
@@ -32,6 +33,7 @@ import           Hsed.Spec.Rules.TypeRow    (typeRowRule)
 registry :: [RuleDef]
 registry =
   [ enumValuesRule
+  , tableDescRule
   , tableUIDsRule
   , typeRowRule
   ]

@@ -9,6 +9,12 @@ tables bound through a bare modifier comment on the rule default.
 |---|---:|---:|---:|---:|---:|---:|---:|
 | core-2.01 | 248 | 120 | 3 | 1 | 127 | 0 | 0 |
 
+The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
+
+| spec | signature blocks | rule-bound | unbound | ambiguous |
+|---|---:|---:|---:|---:|
+| core-2.01 | 53 | 0 | 53 | 0 |
+
 ## core-2.01: what binds the tables
 
 | binding | tables |
@@ -26,6 +32,6 @@ tables bound through a bare modifier comment on the rule default.
 | Warning | W-ENUM-LABEL-REPEATED | 3 |
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
-| Warning | W-UNBOUND | 127 |
+| Warning | W-UNBOUND | 180 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |

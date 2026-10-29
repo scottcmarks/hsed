@@ -44,9 +44,10 @@ Some changes are generic and are made in a small commit of their own, before the
   its `Shape` and binding constructor, the grammar and `tools/extract/hsed_annot.py`'s `VOCABULARY`. A
   new shape, binding or modifier changes DSL, Shape (with its `shapeMismatch` line), Grammar,
   `hsed_annot.py` and `VocabularySpec`; a new modifier also gets its field in `Hsed.Spec.RuleDef.Mods`.
-- **A unit that is not a table.** `RuleDef` covers the numbered tables: the classification binds
-  tables and the rule reads `BoundTable`s. The method signatures of rule `sig` (M2b) need the IR's
-  `sigs` schema, the extractor, their classification and a non-table bound unit in `RuleDef` first.
+- **A unit that is not a table.** `RuleDef` binds two kinds of unit: the numbered tables and, since
+  M2b, the method signature blocks (below). Another kind (a Fails list, a law sentence) needs its IR
+  schema, the extractor, its classification and its bound unit in `RuleDef` first, as the
+  signature blocks had.
 - **A milestone's anchors.** Every rule token and heading anchor the milestone's rules need goes into
   the `.hsa` in one commit, with the `.upd`, manifest and bindings `make gen` regenerates, so that the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
@@ -101,6 +102,32 @@ the validated annotations; it sits below the registry, while `Hsed.Spec.Rules` i
 so every rule, and a rule importing it would be a module cycle), and `Hsed.Spec.Readers(.<X>)`, the home
 of helpers several rules share and no comment names (`pins`, `accessControl`). A helper never goes under
 `Rules/`, where every module must be a registered rule.
+
+## A rule over signature units
+
+The method signature blocks of the IR (`sigs`, `docs/ir-v1.md`: one per section, heads, the lines as
+printed) are the second kind of unit. `Hsed.Spec.Shape.shapeUnit` says which shape takes them (the
+signature shape, `sig`); its rule is an ordinary module under `Rules/` whose `RuleDef` has:
+
+- `bindsTo = SomeBinding sig`, `fires = \_ _ _ -> False` (it never fires on a table), `ruleIdent =
+  const Nothing`, and an exemplar that is a signature block, `(SpecId "core-2.01", SigId "5.3.3.6")`
+  (`C-EXEMPLAR` asks only that the IR has it);
+- `ruleChecks` and `ruleCompile`, which get no tables (`[]`) and read the bound blocks themselves:
+  `boundSigs (ruleShape <rule>) ctx :: [BoundSig]`, each with its anchor id (`bsAnchor`, `SigId
+  "5.3.3.6"`, rendered `5.3.3.6/sig`), its `SigIR` (`bsSig`: `section`, `page` 0-based, `rect`,
+  `structPath`, `heads`, `text`) and its binding. A block carries no annotation, so no modifiers and
+  no errata: it is read as printed. Locate a finding with `atSig ctx bs`
+  (`core-2.01.pdf#page=201&5.3.3.6/sig`) and give a declaration `sigProvenanceOf ctx bs` (the block's
+  heads as its caption, its 1-based place among the blocks as its ordinal, the sha256 of its text).
+
+`Hsed.Spec.Rules.classifySignatures` binds every block whose section a `rule <token>` anchor covers
+to that rule (the doc anchor covers them all); a block no such rule covers is `W-UNBOUND` at the
+block, as an unbound table is (an Error with E-UNBOUND at the end of M2c), and one two such rules
+cover is `E-AMBIGUOUS`. The ledger counts the blocks beside the tables (`docs/LEDGER.md`), `hsedc
+orphans` lists the unbound ones after the tables, and the coverage report lists every block. The
+blocks are in the `Context` (`cxSigs`, `cxSigClasses`); a rule that needs a table's reading too (the
+method UIDs of Table 242) calls that rule's reader on the same `Context`. `SignatureUnitSpec` proves
+the interface with a stub rule.
 
 ## Generated code (`Hsed.Spec.Gen`)
 

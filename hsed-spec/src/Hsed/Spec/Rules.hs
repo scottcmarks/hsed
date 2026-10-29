@@ -40,6 +40,14 @@ plus 'Invalid' for an annotation that does not parse or whose modifiers do not
 apply. A rule name of "Hsed.Spec.DSL" that the registry does not implement
 parses but binds nothing (@W-RULE-UNIMPLEMENTED@).
 
+'classifySignatures' does the same for the signature units (the method
+signature blocks, IR @sigs@), which carry no annotation and which a rule
+binds by its scope alone: each unit whose section a rule anchor covers is
+bound to the rule whose shape takes signature units
+('Hsed.Spec.Shape.shapeUnit'); a unit no such rule covers is unbound
+(@W-UNBOUND@, as an unbound table), one two such rules cover is
+@E-AMBIGUOUS@.
+
 Every annotation is validated once, in "Hsed.Spec.Scope".'parseAnnots', so
 that @hsedc check@ and @hsedc bind@ refuse the same ones; the sections, the
 scope and that validation live in "Hsed.Spec.Scope", below the registry, so
@@ -67,6 +75,8 @@ module Hsed.Spec.Rules
   , classify
   , classifyWith
   , classifyWithRules
+  , classifySignatures
+  , classifySignaturesWith
   , boundBinding
   , describeClassification
   , explain
@@ -74,6 +84,7 @@ module Hsed.Spec.Rules
   , tablePage
   , locatedAt
   , checkExemplars
+  , checkExemplarsWith
   , anchorKindMismatch
   ) where
 
@@ -91,13 +102,13 @@ import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.DSL     (Binding (..), Modifier (..), Ref (..), SomeBinding (..),
                                     applyModifierSome, atShape, bindingAccepts, knownRules, someBindingShape)
 import           Hsed.Spec.Grammar (Payload (..), printSomeBinding)
-import           Hsed.Spec.IR      (AnnotIR (..), SpecIR (..), TableIR (..))
+import           Hsed.Spec.IR      (AnnotIR (..), SigIR (..), SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef (Classification (..), RuleDef (..), boundBinding, locatedAt, numberedTables,
-                                    tablePage)
+                                    ruleShape, signatureUnits, tablePage)
 import           Hsed.Spec.Scope
-import           Hsed.Spec.Shape   (KnownShape, SShape, Shape (Doc), SomeShape (..),
-                                    measure, projectColumns, toSomeShape)
+import           Hsed.Spec.Shape   (KnownShape, SShape, Shape (Doc), SomeShape (..), UnitKind (..),
+                                    measure, projectColumns, shapeUnit, toSomeShape)
 
 -- * Rules
 
@@ -123,13 +134,20 @@ describeClassification = \case
 
 -- | The rule and its exemplar for a rule-bound table, @\<binding\> (exemplar core T46)@ (design acceptance M1 (g)).
 explain :: SpecIR -> AnchorId -> Text
-explain ir aid = case Map.lookup aid (classify ir) of
-  Nothing -> "no table " <> renderAnchorId aid <> " in " <> ir.spec
+explain ir aid = case Map.lookup aid (classes aid) of
+  Nothing -> "no " <> unit aid <> " " <> renderAnchorId aid <> " in " <> ir.spec
   Just c@(RuleBound r _ sb) -> case ruleNamed r of
     Just rl -> printSomeBinding sb <> " (exemplar " <> prefix (fst (exemplar rl)) <> " " <> renderAnchorId (snd (exemplar rl)) <> ")"
     Nothing -> describeClassification c
   Just c -> describeClassification c
-  where prefix = T.toLower . T.takeWhile C.isAlpha . specIdText
+  where
+    prefix = T.toLower . T.takeWhile C.isAlpha . specIdText
+    classes = \case
+      SigId _ -> fst (classifySignatures ir)
+      _       -> classify ir
+    unit = \case
+      SigId _ -> "signature block"
+      _       -> "table"
 
 classify :: SpecIR -> Map AnchorId Classification
 classify = fst . classifyWith
@@ -224,6 +242,34 @@ classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatM
              ("rule " <> ruleNameText r <> " binds nothing yet: hsedc implements " <> T.intercalate ", " (map (ruleNameText . ruleName) ruleSet)))
       | pa <- parsed, Right p <- [paPayload pa], r <- ruleTokens p, isNothing (L.find ((== r) . ruleName) ruleSet) ]
 
+-- | The classification of every signature unit by the rules of "Hsed.Spec.Registry".
+classifySignatures :: SpecIR -> (Map AnchorId Classification, [Finding])
+classifySignatures = classifySignaturesWith rules
+
+-- | The classification of every signature unit, and its findings, under a set of
+--   rules: a unit is bound to the rule whose shape takes signature units and
+--   whose scope covers the unit's section; @W-UNBOUND@ where none does,
+--   @E-AMBIGUOUS@ where several do.
+classifySignaturesWith :: [RuleDef] -> SpecIR -> (Map AnchorId Classification, [Finding])
+classifySignaturesWith ruleSet ir = (classes, concatMap located (Map.toList classes))
+  where
+    sid     = SpecId ir.spec
+    parsed  = parseAnnots ir
+    units   = signatureUnits ir
+    takers  = [ (r, scopesFrom parsed (ruleName r)) | r <- ruleSet, fmap shapeUnit (ruleShape r) == Just SignatureUnit ]
+    classes = Map.map unitClass units
+    unitClass u = case [ r | (r, scope) <- takers, any (`covers` Just u.section) scope ] of
+      [r] -> RuleBound (ruleName r) [] (bindsTo r)
+      []  -> Unbound
+      rs  -> Ambiguous (map ruleName rs)
+    located (aid, c) = case (c, Map.lookup aid units) of
+      (Unbound, Just u)      -> [here aid u (finding Warning "W-UNBOUND"
+                                  ("no rule in scope binds this signature block (" <> T.intercalate ", " u.heads <> ")"))]
+      (Ambiguous rs, Just u) -> [here aid u (finding Error "E-AMBIGUOUS"
+                                  ("rules " <> T.intercalate " and " (map ruleNameText rs) <> " both bind this signature block"))]
+      _                      -> []
+    here aid u = locatedAt sid (renderAnchorId aid) (u.page + 1)
+
 -- | The tables a binding shaped by its target names.
 polyTargets :: Binding s -> [Ref]
 polyTargets = \case
@@ -239,11 +285,23 @@ polyTargets = \case
 --   run): @C-EXEMPLAR@. A reader reached only by a comment (a name that is no
 --   rule token of "Hsed.Spec.DSL") never fires; its exemplar need only be accepted.
 checkExemplars :: SpecIR -> [Finding]
-checkExemplars ir = concatMap check [ r | r <- rules, fst (exemplar r) == sid ]
+checkExemplars = checkExemplarsWith rules
+
+-- | 'checkExemplars' under a set of rules. The exemplar of a rule binding
+--   signature units is a signature unit, which need only be in the IR.
+checkExemplarsWith :: [RuleDef] -> SpecIR -> [Finding]
+checkExemplarsWith ruleSet ir = concatMap check [ r | r <- ruleSet, fst (exemplar r) == sid ]
   where
     sid    = SpecId ir.spec
     tables = numberedTables ir
-    check r = case Map.lookup (snd (exemplar r)) tables of
+    check r = case snd (exemplar r) of
+      SigId _ -> sigExemplar r
+      _       -> tableExemplar r
+    sigExemplar r
+      | Map.member (snd (exemplar r)) (signatureUnits ir) = []
+      | otherwise = [finding Error "C-EXEMPLAR" ("the exemplar " <> renderAnchorId (snd (exemplar r)) <> " of rule "
+                       <> ruleNameText (ruleName r) <> " is not in the IR") & \f -> f { Cm.spec = Just sid }]
+    tableExemplar r = case Map.lookup (snd (exemplar r)) tables of
       Nothing -> [finding Error "C-EXEMPLAR" ("the exemplar " <> renderAnchorId (snd (exemplar r)) <> " of rule "
                     <> ruleNameText (ruleName r) <> " is not in the IR") & \f -> f { Cm.spec = Just sid }]
       Just t  ->
@@ -252,7 +310,7 @@ checkExemplars ir = concatMap check [ r | r <- rules, fst (exemplar r) == sid ]
             isRule = ruleName r `elem` knownRules
             joins  = case joinsTo r of
               Nothing     -> True
-              Just target -> case ruleNamed target of
+              Just target -> case L.find ((== target) . ruleName) ruleSet of
                 Nothing -> False
                 Just tr -> any (\u -> let f = measure sid u in fires tr sid u f && ruleIdent tr f == ruleIdent r form) (Map.elems tables)
             shape  = case bindsTo r of

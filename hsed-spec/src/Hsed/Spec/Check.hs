@@ -20,7 +20,8 @@ checks, each emitting findings with the code in brackets:
 
 * classification: annotations refused (@E-ANCHOR@, @E-ANCHOR-KIND@,
   @E-SYNTAX@, @E-GRAMMAR@, @E-ERRATUM-PUBLISHED@, @E-MODIFIER@), @E-AMBIGUOUS@,
-  @W-UNBOUND@, @W-RULE-UNIMPLEMENTED@ ("Hsed.Spec.Rules");
+  @W-UNBOUND@, @W-RULE-UNIMPLEMENTED@ ("Hsed.Spec.Rules"), for the numbered
+  tables and the signature units alike;
 * @C-EXEMPLAR@: each rule still fires on its exemplar;
 * @E-SHAPE@: every bound table's form is accepted by its binding.
 
@@ -40,6 +41,7 @@ Normalisations, the same under both sets, are Notes: a caption printed
 module Hsed.Spec.Check
   ( -- * The shared context
     mkContext
+  , mkContextWith
   , bindingOf
     -- * Checks
   , checks
@@ -59,7 +61,7 @@ import           Hsed.Spec.Errata  (Erratum (..), correctTable)
 import           Hsed.Spec.IR      (SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules   (checkExemplars, classifyWith)
+import           Hsed.Spec.Rules   (checkExemplars, classifySignaturesWith, classifyWithRules)
 import           Hsed.Spec.Scope   (tableSections)
 import           Hsed.Spec.Shape   (headerNormalisations, measure, normaliseCaption, rawCaptionTitle)
 
@@ -68,21 +70,28 @@ import           Hsed.Spec.Shape   (headerNormalisations, measure, normaliseCapt
 
 -- | The context of one IR under one errata set.
 mkContext :: ErrataSet -> SpecIR -> Context
-mkContext es ir = Context
+mkContext = mkContextWith registry
+
+-- | 'mkContext' with the units classified by a set of rules (a test's stub rule beside the registry's).
+mkContextWith :: [RuleDef] -> ErrataSet -> SpecIR -> Context
+mkContextWith ruleSet es ir = Context
   { cxIR             = ir
   , cxSpec           = sid
   , cxErrata         = es
   , cxTables         = tables
   , cxClasses        = classes
-  , cxClassFindings  = classFindings
+  , cxClassFindings  = classFindings <> sigFindings
   , cxSections       = tableSections ir
   , cxCorrected      = fmap fst corrected
   , cxErrataFindings = concatMap snd (Map.elems corrected)
+  , cxSigs           = signatureUnits ir
+  , cxSigClasses     = sigClasses
   }
   where
     sid                      = SpecId ir.spec
     tables                   = numberedTables ir
-    (classes, classFindings) = classifyWith ir
+    (classes, classFindings) = classifyWithRules ruleSet ir
+    (sigClasses, sigFindings) = classifySignaturesWith ruleSet ir
     corrected = Map.fromList
       [ (aid, correctTable es sid tid page (map erratum (mErrata (modsOf sb))) t)
       | (aid, t) <- Map.toList tables, Just sb <- [Map.lookup aid classes >>= boundBinding]

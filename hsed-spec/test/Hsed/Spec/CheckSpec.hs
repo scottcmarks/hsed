@@ -36,7 +36,7 @@ import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.IR     (SpecIR)
 import           Hsed.Spec.RuleDef (Classification (..), Mods (..), boundBinding, modsOf, parseUIDCell)
-import           Hsed.Spec.Rules  (classify, classifyWith)
+import           Hsed.Spec.Rules  (classify, classifySignatures, classifyWith)
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads)
 
 
@@ -83,11 +83,12 @@ spec = do
     describe "checkIR under --errata scott" $ do
       it "finds no Error" $
         filter isError scott `shouldBe` []
-      it "reports everything the classification found, one W-UNBOUND per unbound table" $ do
+      it "reports everything the classification found, one W-UNBOUND per unbound table or signature block" $ do
         let (classes, classFindings) = classifyWith ir
-        filter (`notElem` scott) classFindings `shouldBe` []
+            (sigClasses, sigFindings) = classifySignatures ir
+        filter (`notElem` scott) (classFindings <> sigFindings) `shouldBe` []
         Map.lookup "W-UNBOUND" (codesOf scott) `shouldBe`
-          (let n = length (filter (== Unbound) (Map.elems classes)) in if n == 0 then Nothing else Just n)
+          (let n = length (filter (== Unbound) (Map.elems classes <> Map.elems sigClasses)) in if n == 0 then Nothing else Just n)
       it "applies the corrections of the T75 and T101 annotations, and of no other table" $ do
         about "T75" scott `shouldBe`
           ["W-ERRATUM-APPLIED core-2.01.pdf#page=107&T75: Format \"Fractoin\" -> \"Fraction\" (annotation at core-2.01.pdf#page=107&T75)"]

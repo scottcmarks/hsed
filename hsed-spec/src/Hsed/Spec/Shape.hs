@@ -37,6 +37,8 @@ module Hsed.Spec.Shape
   , shapeName
   , readShape
   , shapeGenerates
+  , UnitKind (..)
+  , shapeUnit
   , SShape (..)
   , KnownShape (..)
   , sShape
@@ -96,6 +98,19 @@ readShape t = lookup t [ (shapeName s, s) | s <- [minBound .. maxBound] ]
 --   reports a table of a generating shape that no rule reads (@W-GEN-EXCLUDED@).
 shapeGenerates :: Shape -> Bool
 shapeGenerates = (/= Prose)
+
+-- | What a binding of a shape binds: a numbered table, or a method signature
+--   block (design section 5.1 step 7, IR @sigs@), which no annotation carries
+--   and @hsedc@ classifies apart from the tables. The generic modules ask this
+--   rather than name the shape.
+data UnitKind = TableUnit | SignatureUnit
+  deriving stock (Eq, Show)
+
+-- | 'SignatureUnit' for the shape of the signature blocks, 'TableUnit' for every other.
+shapeUnit :: Shape -> UnitKind
+shapeUnit = \case
+  Sig -> SignatureUnit
+  _   -> TableUnit
 
 -- | The singleton of 'Shape'.
 data SShape (s :: Shape) where

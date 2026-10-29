@@ -28,10 +28,16 @@ knows lives in its 'RuleDef':
   for its generated module ('Hsed.Spec.Gen.GenModule'), or for another module
   it names ('EmitIn'), or the tables it leaves out and why.
 
-The interface covers the numbered tables: the classification binds tables,
-and 'ruleChecks' and 'ruleCompile' read 'BoundTable's. A unit that is not a
-table (the method signatures of design rule @sig@, M2b) needs its own bound
-unit here first, a serial change before such a rule can be written.
+Two kinds of unit are bound ('Hsed.Spec.Shape.shapeUnit' of the rule's
+shape): the numbered tables, which a rule fires on by their form and reads
+as 'BoundTable's, and the method signature blocks (IR @sigs@, design section
+5.1 step 7), the signature units, which carry no annotation: every one in a
+rule's scope is bound to the rule whose shape takes signature units
+("Hsed.Spec.Rules".'Hsed.Spec.Rules.classifySignatures'), and that rule
+reads them as 'BoundSig's ('boundSigs'; 'ruleChecks' and 'ruleCompile' get
+it no tables, and its 'fires' is never true of a table). A signature unit's
+anchor id is @\<section\>/sig@; locate its findings with 'atSig' and its
+declarations with 'sigProvenanceOf'.
 
 A rule that needs what another rule reads (an enumeration takes its range from
 its type row) imports that rule's module and calls its readers on the same
@@ -57,6 +63,12 @@ module Hsed.Spec.RuleDef
   , BoundTable (..)
   , boundTables
   , sectionOf
+    -- * Signature units
+  , BoundSig (..)
+  , boundSigs
+  , signatureUnits
+  , atSig
+  , sigProvenanceOf
   , Mods (..)
   , modsOf
     -- * Locating findings
@@ -76,6 +88,7 @@ import           Crypto.Hash      (SHA256 (..), hashWith)
 import qualified Data.Char        as DC
 import qualified Data.Text        as DT
 import qualified RIO.Char         as C
+import qualified RIO.List         as L
 import qualified RIO.Map          as Map
 import qualified RIO.Text         as T
 import           RIO
@@ -85,7 +98,7 @@ import           Hsed.Spec.Common (ErrataSet (..), Finding, RuleName, SpecId (..
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), someBindingShape)
 import qualified Hsed.Spec.Gen    as Gen
-import           Hsed.Spec.IR     (CellIR (..), SpecIR (..), StructPath (..), TableIR (..))
+import           Hsed.Spec.IR     (CellIR (..), SigIR (..), SpecIR (..), StructPath (..), TableIR (..))
 import           Hsed.Spec.Shape  (Form, Shape (..))
 
 
@@ -161,6 +174,8 @@ data Context = Context
   , cxSections       :: !(Map StructPath (Maybe Text))    -- ^ every table's section ("Hsed.Spec.Scope".'Hsed.Spec.Scope.tableSections')
   , cxCorrected      :: !(Map AnchorId TableIR)           -- ^ the bound tables, read under the errata set
   , cxErrataFindings :: ![Finding]                        -- ^ what reading them under the set found
+  , cxSigs           :: !(Map AnchorId SigIR)             -- ^ the signature units, by id ('signatureUnits')
+  , cxSigClasses     :: !(Map AnchorId Classification)    -- ^ their classification
   }
 
 -- | One table bound to a rule's shape.
@@ -183,6 +198,51 @@ boundTables shape ctx =
 -- | The section of a bound table: that of the nearest numbered heading before it.
 sectionOf :: Context -> BoundTable -> Maybe Text
 sectionOf ctx bt = join (Map.lookup (btTable bt).structPath (cxSections ctx))
+
+
+-- * Signature units
+
+-- | One signature unit (a method signature block) bound to a rule's shape. It
+--   carries no annotation, so no modifiers and no errata: it is read as printed.
+data BoundSig = BoundSig
+  { bsAnchor  :: !AnchorId      -- ^ @5.3.3.6/sig@
+  , bsSig     :: !SigIR
+  , bsBinding :: !SomeBinding   -- ^ the binding rule's default
+  }
+
+-- | The signature units bound with a shape, in anchor order.
+boundSigs :: Maybe Shape -> Context -> [BoundSig]
+boundSigs shape ctx =
+  [ BoundSig aid s sb
+  | isJust shape
+  , (aid, s) <- Map.toList (cxSigs ctx), Just sb <- [Map.lookup aid (cxSigClasses ctx) >>= boundBinding]
+  , someBindingShape sb == shape ]
+
+-- | Every signature unit of an IR by its anchor id, @\<section\>/sig@: the IR
+--   has one block per section (docs/ir-v1.md); a second would be the first's.
+signatureUnits :: SpecIR -> Map AnchorId SigIR
+signatureUnits ir = Map.fromListWith (\_ firstOne -> firstOne) [ (SigId s.section, s) | s <- ir.sigs ]
+
+-- | Locate a finding at a signature unit: @core-2.01.pdf#page=201&5.3.3.6/sig@.
+atSig :: Context -> BoundSig -> Finding -> Finding
+atSig ctx bs = locatedAt (cxSpec ctx) (renderAnchorId (bsAnchor bs)) ((bsSig bs).page + 1)
+
+-- | Where a declaration made from a signature unit comes from: its anchor id,
+--   its heads as the caption, its PDF and printed page, its 1-based position
+--   among the IR's signature blocks as the ordinal, its first paragraph's
+--   structure path and the sha256 of its text.
+sigProvenanceOf :: Context -> BoundSig -> Gen.Provenance
+sigProvenanceOf ctx bs = Gen.Provenance
+  { Gen.spec        = cxSpec ctx
+  , Gen.tableId     = renderAnchorId (bsAnchor bs)
+  , Gen.caption     = T.intercalate ", " s.heads
+  , Gen.pdfPage1    = s.page + 1
+  , Gen.printedPage = s.page + 1 - (cxIR ctx).labelOffset
+  , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex s (cxIR ctx).sigs)
+  , Gen.structPath  = let StructPath sp = s.structPath in sp
+  , Gen.cellsHash   = tshow (hashWith SHA256 (encodeUtf8 s.text)) }
+  where s = bsSig bs
+
 
 -- | The modifiers of a binding a rule reads, one field for each modifier of
 --   "Hsed.Spec.DSL": Scott's corrections (the grammar admits no other set), the

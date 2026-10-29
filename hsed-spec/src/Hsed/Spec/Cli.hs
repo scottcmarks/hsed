@@ -55,8 +55,9 @@ import           Hsed.Spec.Compile
 import           Hsed.Spec.Gen            (modulePath, specModuleDir)
 import           Hsed.Spec.IR
 import           Hsed.Spec.Report
-import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifyWith, explain,
-                                           numberedTables, scopeOf, tablePage)
+import           Hsed.Spec.RuleDef        (signatureUnits)
+import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifySignatures, classifyWith,
+                                           explain, numberedTables, scopeOf, tablePage)
 import           Hsed.Spec.Shape          (captionTitle)
 import           Hsed.Spec.Sidecar        (withSidecar, withSidecarOn)
 
@@ -148,19 +149,21 @@ runWith out err = \case
   CmdOrphans inp -> do
     (ir, sideFs) <- load err inp
     let os  = orphans ir
+        (sigOs, tableOs) = L.partition (isSigId . fst) os
         fs  = sortFindings (sideFs <> map snd os <> otherErrors ir (map snd os))
-        n c = length [ () | (aid, _) <- os, Map.lookup aid (classify ir) & maybe False c ]
+        n c = length [ () | (aid, _) <- tableOs, Map.lookup aid (classify ir) & maybe False c ]
     report out fs
-    say err ("hsedc orphans: " <> display (length os) <> " of " <> display (Map.size (numberedTables ir))
+    say err ("hsedc orphans: " <> display (length tableOs) <> " of " <> display (Map.size (numberedTables ir))
                 <> " numbered tables of " <> display ir.spec <> " are bound by nothing ("
                 <> display (n (== Unbound)) <> " unbound, " <> display (n isAmbiguous) <> " ambiguous, "
-                <> display (n isInvalid) <> " invalid)\n")
+                <> display (n isInvalid) <> " invalid), and " <> display (length sigOs) <> " of "
+                <> display (Map.size (signatureUnits ir)) <> " signature blocks\n")
     exitOnErrors fs
   CmdLedger paths hsa -> do
     irs  <- traverse (readOrFail err) (if null paths then [defaultIR] else paths)
     side <- traverse readFileUtf8 hsa
     let (sideFs, irs') = maybe ([], irs) (withSidecarOn irs) side
-        errs = sortFindings (sideFs <> concat [ filter isError (snd (classifyWith ir)) | ir <- irs' ])
+        errs = sortFindings (sideFs <> concat [ filter isError (snd (classifyWith ir) <> snd (classifySignatures ir)) | ir <- irs' ])
     report out errs
     say out (display (renderLedger (map ledger irs')))
     exitOnErrors errs
@@ -178,8 +181,11 @@ runWith out err = \case
     isInvalid = \case
       Invalid _ -> True
       _         -> False
+    isSigId = \case
+      SigId _ -> True
+      _       -> False
     -- the classification's Errors that are not about a numbered table (an annotation on a heading, say)
-    otherErrors ir shown = [ f | f <- snd (classifyWith ir), isError f, f `notElem` shown ]
+    otherErrors ir shown = [ f | f <- snd (classifyWith ir) <> snd (classifySignatures ir), isError f, f `notElem` shown ]
 
 -- | The IR, with a sidecar's annotations in place of its own when one is given,
 --   and what resolving the sidecar found.

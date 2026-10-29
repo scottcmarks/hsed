@@ -12,7 +12,9 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 @hsedc compile@ on the committed Core extraction with the committed
-annotations: no Error and no table left out; the committed @hsed/gen@ modules
+annotations: no Error, and no table left out but those a comment binds to a
+shape no rule of the registry reads yet (a reader still to come, each a
+W-GEN-EXCLUDED Warning); the committed @hsed/gen@ modules
 exactly what the committed annotations give, file for file (a module no rule
 emits any more must not stay committed); the committed ledger
 @docs/LEDGER.md@, which holds the totals the tests do not pin, exactly what
@@ -26,6 +28,7 @@ module Hsed.Spec.CompileSpec (spec) where
 
 import qualified Data.Text         as DT
 import qualified RIO.List          as L
+import qualified RIO.Map           as Map
 import qualified RIO.Text          as T
 import           RIO
 import           RIO.Directory     (doesDirectoryExist, listDirectory)
@@ -42,9 +45,10 @@ import qualified Hsed.Spec.Gen     as Gen
 import           Hsed.Spec.IR      (SpecIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.Report  (ledger, ledgerMarkdown)
-import           Hsed.Spec.RuleDef (ruleShape)
+import           Hsed.Spec.DSL     (someBindingShape)
+import           Hsed.Spec.RuleDef (Context (..), boundBinding, ruleShape)
 import           Hsed.Spec.Rules.TypeRow (typesModule)
-import           Hsed.Spec.Shape   (Shape (..), shapeName)
+import           Hsed.Spec.Shape   (Shape (..), shapeGenerates, shapeName)
 
 
 -- | The text of one generated module.
@@ -88,8 +92,11 @@ spec = do
 
     describe "compileIR --errata scott" $ do
       cr <- runIO (compiled Scott)
-      it "finds no Error and leaves no table out" $ do
-        crExcluded cr `shouldBe` []
+      it "finds no Error, and leaves out only the tables bound to a shape no rule of the registry reads" $ do
+        let ctx = mkContext Scott ir
+            unread = [ aid | (aid, c) <- Map.toList (cxClasses ctx), Just sb <- [boundBinding c], Just shape <- [someBindingShape sb]
+                           , shapeGenerates shape, Just shape `notElem` map ruleShape registry ]
+        map fst (crExcluded cr) `shouldBe` unread
         filter isError (crFindings cr) `shouldBe` []
       it "writes the committed hsed/gen modules, and only those: no other module of the spec is committed" $ do
         committed <- committedModules "../hsed/gen" (Gen.specModuleDir "../hsed/gen" core)
@@ -126,9 +133,10 @@ spec = do
     describe "a table bound to a shape no rule reads" $
       it "is left out with W-GEN-EXCLUDED and counted, not dropped in silence" $
         if null unreadShapes then pendingWith "a rule reads every shape the test can bind" else do
-          ir' <- annotated pristine (hsa <> T.unlines [ "core-2.01 | T" <> tshow n <> " | " <> payload | (n, payload, _) <- unreadShapes ])
+          let others = foldr (\(n, _, _) -> withoutLine ("T" <> tshow n)) hsa unreadShapes
+          ir' <- annotated pristine (others <> T.unlines [ "core-2.01 | T" <> tshow n <> " | " <> payload | (n, payload, _) <- unreadShapes ])
           cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir')
-          crExcluded cr `shouldBe`
+          crExcluded cr `shouldSatisfy` \ex -> all (`elem` ex)
             [ (TableId n, "hsedc generates nothing for a " <> shapeName shape <> " table yet (no rule of the registry reads one)")
             | (n, _, shape) <- unreadShapes ]
           forM_ unreadShapes $ \(n, _, _) ->

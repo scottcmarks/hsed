@@ -7,3 +7,12 @@ dist-newstyle
 *.cabal
 build/
 __pycache__/
+# generated haddock, tags and module graphs (make them locally; never commit them)
+/doc/
+TAGS
+project_tags
+unpacked
+unpacked_tags
+*.graph
+hsed.pdf
+hsedTred.pdf

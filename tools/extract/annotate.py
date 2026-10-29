@@ -25,8 +25,8 @@ from PIL import Image, ImageChops
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hsed_annot as H  # noqa: E402
 
-GS = "/opt/local/bin/gs"
-SIPS = "/usr/bin/sips"
+GS = shutil.which("gs") or "/opt/local/bin/gs"
+SIPS = "/usr/bin/sips" if os.path.exists("/usr/bin/sips") else None   # CoreGraphics: macOS only
 DPI = 100
 TARGETS = ((46, H.TYPE_ROW), (52, H.ENUM_VALUES), (240, H.TABLE_UIDS))   # (table number, directive)
 
@@ -109,6 +109,8 @@ def single_page_pdf(src: str, page0: int, out: str) -> None:
 
 
 def sips_render(pdf: str, png: str) -> dict:
+    if SIPS is None:
+        return {"png": png, "md5": None, "rc": None, "stderr": "", "skipped": True}
     r = subprocess.run([SIPS, "-s", "format", "png", pdf, "--out", png], capture_output=True, text=True)
     return {"png": png, "md5": md5_file(png) if r.returncode == 0 and os.path.exists(png) else None,
             "rc": r.returncode, "stderr": r.stderr[-200:]}
@@ -125,7 +127,8 @@ def render_checks(orig: str, out: str, page0: int, rdir: str) -> dict:
             "gs": {"orig_md5": g0["md5"], "annot_md5": g1["md5"], "identical": g0["md5"] == g1["md5"] and g0["md5"] is not None,
                    "pixdiff": pixdiff(g0["png"], g1["png"]) if g0["md5"] and g1["md5"] else None, "stderr": (g0["stderr"] + g1["stderr"]).strip()},
             "mupdf": {"orig_md5": m0, "annot_md5": m1, "identical": m0 == m1},
-            "sips": {"orig_md5": s0["md5"], "annot_md5": s1["md5"], "identical": s0["md5"] == s1["md5"] and s0["md5"] is not None,
+            "sips": {"orig_md5": s0["md5"], "annot_md5": s1["md5"],
+                     "identical": None if s0.get("skipped") else s0["md5"] == s1["md5"] and s0["md5"] is not None,
                      "single_page_pdfs": [f"{rdir}/p{p1}_orig.pdf", f"{rdir}/p{p1}_annot.pdf"], "stderr": (s0["stderr"] + s1["stderr"]).strip()}}
 
 
@@ -176,7 +179,9 @@ def main(argv) -> int:
         "renders": {str(p + 1): render_checks(orig, out, p, f"{out_dir}/render") for p in listed},
         "pages_touched_1based": [p + 1 for p in touched], "pages_listed_1based": [p + 1 for p in listed],
     }
-    report["all_renders_identical"] = all(r[k]["identical"] for r in report["renders"].values() for k in ("gs", "mupdf", "sips"))
+    # a renderer that is not available on this machine (sips off macOS) is skipped, not failed
+    report["all_renders_identical"] = all(r[k]["identical"] for r in report["renders"].values() for k in ("gs", "mupdf", "sips")
+                                          if r[k]["identical"] is not None)
     report["all_pixdiff_zero"] = all(r["gs"]["pixdiff"]["differing_pixels"] == 0 for r in report["renders"].values())
     json.dump(report, open(f"{out_dir}/annotate_report.json", "w"), indent=1, default=str)
     print(json.dumps({k: report[k] for k in ("original", "annotated", "pages_touched_1based", "pages_listed_1based",

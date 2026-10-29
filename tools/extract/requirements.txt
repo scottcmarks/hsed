@@ -1,0 +1,5 @@
+# the venv tools/extract runs in (make venv); versions are the ones the evidence was gathered with
+pymupdf==1.28.2
+pikepdf==10.17.0
+pypdf==6.21.2
+pillow==13.0.0

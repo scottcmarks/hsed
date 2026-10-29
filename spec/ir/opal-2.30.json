@@ -14024,10 +14024,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    17
-   ],
+   "struct_path": "0/17",
    "table_number": null,
    "warnings": [
     "29 /Artifact cells dropped"
@@ -14862,10 +14859,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    59
-   ],
+   "struct_path": "0/59",
    "table_number": 1,
    "warnings": [
     "6 /Artifact cells dropped"
@@ -15761,10 +15755,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    139
-   ],
+   "struct_path": "0/139",
    "table_number": null,
    "warnings": [
     "18 /Artifact cells dropped"
@@ -16976,10 +16967,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    189
-   ],
+   "struct_path": "0/189",
    "table_number": 2,
    "warnings": [
     "ragged rows: widths [(2, 1), (4, 11), (9, 1)]",
@@ -17809,10 +17797,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    195
-   ],
+   "struct_path": "0/195",
    "table_number": 3,
    "warnings": [
     "ragged rows: widths [(2, 2), (3, 1), (4, 2), (9, 2)]",
@@ -18645,10 +18630,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    203
-   ],
+   "struct_path": "0/203",
    "table_number": 4,
    "warnings": [
     "ragged rows: widths [(2, 2), (3, 1), (4, 2), (9, 2)]",
@@ -20720,10 +20702,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    215
-   ],
+   "struct_path": "0/215",
    "table_number": 5,
    "warnings": [
     "ragged rows: widths [(2, 8), (3, 15), (4, 3), (9, 2)]",
@@ -22147,10 +22126,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    231
-   ],
+   "struct_path": "0/231",
    "table_number": 6,
    "warnings": [
     "ragged rows: widths [(2, 4), (3, 2), (4, 10), (9, 1)]",
@@ -22457,10 +22433,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    237
-   ],
+   "struct_path": "0/237",
    "table_number": 7,
    "warnings": [
     "6 /Artifact cells dropped"
@@ -23652,10 +23625,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    251
-   ],
+   "struct_path": "0/251",
    "table_number": 8,
    "warnings": [
     "ragged rows: widths [(2, 9), (3, 1), (4, 3), (7, 1), (9, 1)]",
@@ -24267,10 +24237,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    255
-   ],
+   "struct_path": "0/255",
    "table_number": 9,
    "warnings": [
     "9 /Artifact cells dropped"
@@ -24814,10 +24781,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    273
-   ],
+   "struct_path": "0/273",
    "table_number": 10,
    "warnings": [
     "ragged rows: widths [(1, 1), (3, 7)]",
@@ -25034,10 +24998,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    281
-   ],
+   "struct_path": "0/281",
    "table_number": 11,
    "warnings": [
     "4 /Artifact cells dropped"
@@ -25253,10 +25214,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    284
-   ],
+   "struct_path": "0/284",
    "table_number": 12,
    "warnings": [
     "4 /Artifact cells dropped"
@@ -25516,10 +25474,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    304
-   ],
+   "struct_path": "0/304",
    "table_number": 13,
    "warnings": [
     "5 /Artifact cells dropped"
@@ -25916,10 +25871,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    322
-   ],
+   "struct_path": "0/322",
    "table_number": 14,
    "warnings": [
     "8 /Artifact cells dropped"
@@ -26648,10 +26600,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    330
-   ],
+   "struct_path": "0/330",
    "table_number": 15,
    "warnings": [
     "15 /Artifact cells dropped"
@@ -26999,10 +26948,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    349
-   ],
+   "struct_path": "0/349",
    "table_number": 16,
    "warnings": [
     "7 /Artifact cells dropped"
@@ -27920,10 +27866,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    360
-   ],
+   "struct_path": "0/360",
    "table_number": 17,
    "warnings": [
     "13 /Artifact cells dropped",
@@ -28351,10 +28294,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    386
-   ],
+   "struct_path": "0/386",
    "table_number": 18,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -28775,10 +28715,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    395
-   ],
+   "struct_path": "0/395",
    "table_number": 19,
    "warnings": [
     "3 /Artifact cells dropped"
@@ -33655,10 +33592,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    407
-   ],
+   "struct_path": "0/407",
    "table_number": 20,
    "warnings": [
     "14 /Artifact cells dropped"
@@ -34598,10 +34532,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    418
-   ],
+   "struct_path": "0/418",
    "table_number": 21,
    "warnings": [
     "9 /Artifact cells dropped"
@@ -55179,10 +55110,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    440
-   ],
+   "struct_path": "0/440",
    "table_number": 22,
    "warnings": [
     "53 /Artifact cells dropped"
@@ -58194,10 +58122,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    448
-   ],
+   "struct_path": "0/448",
    "table_number": 23,
    "warnings": [
     "18 /Artifact cells dropped"
@@ -61704,10 +61629,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    455
-   ],
+   "struct_path": "0/455",
    "table_number": 24,
    "warnings": [
     "7 /Artifact cells dropped"
@@ -63117,10 +63039,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    461
-   ],
+   "struct_path": "0/461",
    "table_number": 25,
    "warnings": [
     "6 /Artifact cells dropped"
@@ -63364,10 +63283,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    476
-   ],
+   "struct_path": "0/476",
    "table_number": 26,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -63904,10 +63820,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    484
-   ],
+   "struct_path": "0/484",
    "table_number": 27,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -64556,10 +64469,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    489
-   ],
+   "struct_path": "0/489",
    "table_number": 28,
    "warnings": [
     "4 /Artifact cells dropped"
@@ -65223,10 +65133,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    495
-   ],
+   "struct_path": "0/495",
    "table_number": 29,
    "warnings": [
     "3 /Artifact cells dropped"
@@ -65425,10 +65332,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    503
-   ],
+   "struct_path": "0/503",
    "table_number": 30,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -65776,10 +65680,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    507
-   ],
+   "struct_path": "0/507",
    "table_number": 31,
    "warnings": [
     "7 /Artifact cells dropped"
@@ -66069,10 +65970,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    513
-   ],
+   "struct_path": "0/513",
    "table_number": 32,
    "warnings": [
     "3 /Artifact cells dropped"
@@ -66201,10 +66099,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    525
-   ],
+   "struct_path": "0/525",
    "table_number": 33,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -66631,10 +66526,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    541
-   ],
+   "struct_path": "0/541",
    "table_number": 34,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -67042,10 +66934,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    547
-   ],
+   "struct_path": "0/547",
    "table_number": 35,
    "warnings": [
     "3 /Artifact cells dropped"
@@ -74625,10 +74514,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    555
-   ],
+   "struct_path": "0/555",
    "table_number": 36,
    "warnings": [
     "18 /Artifact cells dropped"
@@ -75639,10 +75525,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    564
-   ],
+   "struct_path": "0/564",
    "table_number": 37,
    "warnings": [
     "9 /Artifact cells dropped"
@@ -123225,10 +123108,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    581
-   ],
+   "struct_path": "0/581",
    "table_number": 38,
    "warnings": [
     "119 /Artifact cells dropped"
@@ -131621,10 +131501,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    587
-   ],
+   "struct_path": "0/587",
    "table_number": 39,
    "warnings": [
     "51 /Artifact cells dropped"
@@ -137687,10 +137564,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    594
-   ],
+   "struct_path": "0/594",
    "table_number": 40,
    "warnings": [
     "12 /Artifact cells dropped"
@@ -139587,10 +139461,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    601
-   ],
+   "struct_path": "0/601",
    "table_number": 41,
    "warnings": [
     "8 /Artifact cells dropped"
@@ -140002,10 +139873,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    606
-   ],
+   "struct_path": "0/606",
    "table_number": 42,
    "warnings": [
     "3 /Artifact cells dropped"
@@ -140495,10 +140363,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    621
-   ],
+   "struct_path": "0/621",
    "table_number": 43,
    "warnings": [
     "5 /Artifact cells dropped"
@@ -141055,10 +140920,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    626
-   ],
+   "struct_path": "0/626",
    "table_number": 44,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -143790,10 +143652,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    636
-   ],
+   "struct_path": "0/636",
    "table_number": 45,
    "warnings": [
     "5 /Artifact cells dropped"
@@ -143856,10 +143715,7 @@
    ],
    "repeated_header_rows": [],
    "rows": [],
-   "struct_path": [
-    0,
-    646
-   ],
+   "struct_path": "0/646",
    "table_number": null,
    "warnings": [
     "1 /Artifact cells dropped"
@@ -143925,10 +143781,7 @@
    ],
    "repeated_header_rows": [],
    "rows": [],
-   "struct_path": [
-    0,
-    653
-   ],
+   "struct_path": "0/653",
    "table_number": null,
    "warnings": [
     "1 /Artifact cells dropped"
@@ -144214,10 +144067,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    664
-   ],
+   "struct_path": "0/664",
    "table_number": 46,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -144806,10 +144656,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    680
-   ],
+   "struct_path": "0/680",
    "table_number": 47,
    "warnings": [
     "4 /Artifact cells dropped"
@@ -145400,10 +145247,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    683
-   ],
+   "struct_path": "0/683",
    "table_number": 48,
    "warnings": [
     "4 /Artifact cells dropped"
@@ -145717,10 +145561,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    842
-   ],
+   "struct_path": "0/842",
    "table_number": 49,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -146050,10 +145891,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    852
-   ],
+   "struct_path": "0/852",
    "table_number": 50,
    "warnings": [
     "3 /Artifact cells dropped"
@@ -146122,10 +145960,7 @@
    ],
    "repeated_header_rows": [],
    "rows": [],
-   "struct_path": [
-    0,
-    866
-   ],
+   "struct_path": "0/866",
    "table_number": null,
    "warnings": [
     "1 /Artifact cells dropped"
@@ -146194,10 +146029,7 @@
    ],
    "repeated_header_rows": [],
    "rows": [],
-   "struct_path": [
-    0,
-    877
-   ],
+   "struct_path": "0/877",
    "table_number": null,
    "warnings": [
     "1 /Artifact cells dropped"
@@ -146235,10 +146067,7 @@
    "rects": [],
    "repeated_header_rows": [],
    "rows": [],
-   "struct_path": [
-    0,
-    878
-   ],
+   "struct_path": "0/878",
    "table_number": null,
    "warnings": [
     "no text in any cell"
@@ -146308,10 +146137,7 @@
    ],
    "repeated_header_rows": [],
    "rows": [],
-   "struct_path": [
-    0,
-    881
-   ],
+   "struct_path": "0/881",
    "table_number": null,
    "warnings": [
     "1 /Artifact cells dropped"
@@ -146349,10 +146175,7 @@
    "rects": [],
    "repeated_header_rows": [],
    "rows": [],
-   "struct_path": [
-    0,
-    882
-   ],
+   "struct_path": "0/882",
    "table_number": null,
    "warnings": [
     "no text in any cell"
@@ -147158,10 +146981,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    886
-   ],
+   "struct_path": "0/886",
    "table_number": null,
    "warnings": [
     "2 /Artifact cells dropped"
@@ -147685,10 +147505,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    890
-   ],
+   "struct_path": "0/890",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(3, 1), (20, 1)]",
@@ -148092,10 +147909,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    894
-   ],
+   "struct_path": "0/894",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(3, 1), (14, 1)]",
@@ -148468,10 +148282,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    898
-   ],
+   "struct_path": "0/898",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(3, 1), (14, 1)]",

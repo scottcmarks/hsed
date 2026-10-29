@@ -1,157 +1,285 @@
-"""The ONE place that knows the hsed annotation payload format (PROVISIONAL grammar).
+"""The ONE place that knows the hsed annotation format (docs/ir-v1.md; design docs/spec-as-source.md
+sections 3.1-3.3).  annotate.py, apply.py, dump.py and pdf_checks.py import everything from here;
+renaming a key, a kind or the sidecar's column order is a change to this file only.
 
-An hsed annotation is a hidden PDF /Text annotation, one per spec table:
+The PDF side -- one hidden /Text annotation per anchor:
 
-    /Type /Annot  /Subtype /Text
-    /F 6                                  Hidden | Print  (never drawn, never printed)
-    /Rect [x0 y0 x1 y1]                   the table's bbox on its first page (PDF user space, y up)
-    /Contents (hsed: <directive>)         the whole visible payload: a name in the hsed library
-    /HSED << /V 1                         private dictionary, machine anchor
-             /Path (0/1288)               /StructTreeRoot /K index path of the /Table element
-             /Caption (Table 46 AC_element)
-             /Pages [99] >>               0-based page indices the table touches (first = anchor page)
+    << /Type /Annot /Subtype /Text /F 6 /Rect [x0 y0 x1 y1]
+       /Contents (erratum scott ["Fractoin" ~> "Fraction"])        the payload text, verbatim
+       /HSED << /V 1 /Kind /Bind /Spec (core-2.01) /Id (T75) /Struct (0/1429) >>
+       /P <page ref> >>                                              (added by pypdf)
 
-<directive> is one of DIRECTIVES below.  Renaming a directive, the "hsed:" prefix, the private
-key or the dictionary field names is a change to this file only; annotate.py, compile.py and the
-probes import everything from here.
+/F 6 is Hidden | Print: never drawn, never printed.  /HSED is identity only: format version, kind,
+spec, anchor id and the /K index path of the anchored structure element ("" for the `doc` anchor,
+i.e. /StructTreeRoot itself).  Everything else about the anchor (page, label, ordinal, header,
+hashes, fragment rects) is derivable from the pristine PDF and lives in the manifest.
 
-Library-neutral: the format is a plain dataclass; adapters convert to pypdf objects (writer) and
-from pikepdf / pypdf / pymupdf objects (readers).
+The sidecar side -- `spec/annot/<spec>.hsa`, one anchor per line, `#` comments and blank lines
+ignored:
+
+    core-2.01 | T75 | erratum scott ["Fractoin" ~> "Fraction"]
+
+Kind follows from the id: `doc` -> Doc, a section number -> Rule, `T<n>` -> Bind,
+`<section>#<item>` -> Law, or Behaviour when the payload starts with `behaviour` or `fails`.
+The canonical order of anchors (in the PDF's incremental section, in the dump, in the manifest) is
+kind order Doc, Rule, Bind, Law, Behaviour, then the natural order of the id (T9 before T10).
+
+Library-neutral: the records are plain dataclasses; adapters convert to pypdf objects (the writer)
+and from pikepdf / pypdf / pymupdf objects (the readers).
 """
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable, Iterable
 
-# ----------------------------------------------------------------------------- grammar constants
-PREFIX = "hsed:"                     # /Contents marker; the compiler ignores every annotation without it
-PRIVATE_KEY = "/HSED"                # private dictionary key (second-class name, PDF 32000 Annex E)
+# ----------------------------------------------------------------------------- format constants
+PRIVATE_KEY = "/HSED"                # the private dictionary (PDF 32000 Annex E second-class name)
 VERSION = 1                          # /HSED /V
 FLAGS = 6                            # /F: Hidden (bit 2) | Print (bit 3)
+KINDS = ("Doc", "Rule", "Bind", "Law", "Behaviour")      # /HSED /Kind, in canonical order
+DOC_ID = "doc"                       # the one document-level anchor
+DOC_PAGE = 0                         # it sits on the first page ...
+DOC_RECT = (36.0, 720.0, 108.0, 756.0)                   # ... in the top-left inch
+DOC_STRUCT = ""                      # ... anchored at /StructTreeRoot (the empty /K path)
+BEHAVIOUR_WORDS = ("behaviour", "fails")                 # payload heads that make an item anchor a Behaviour
+HSA_SEP = " | "
 
-TYPE_ROW = "typeRow"                 # a UID / Name / Format Type-table row (Core 5.1.3, Tables 46-165)
-ENUM_VALUES = "enumValues"           # an "<name> Enumeration Values" / "<name> Set Values" table
-TABLE_UIDS = "tableUIDs"             # Table 240 Table UIDs
-DIRECTIVES = {
-    TYPE_ROW: "Type table row -> u<Name>Type :: UID, f<Name>Type :: String",
-    ENUM_VALUES: "enumeration table -> data Core_<name> = Core_<name>_<Label> | ...",
-    TABLE_UIDS: "Table 240 -> u<T>Table, u<T>TableObject :: UID, h<T> :: HalfUID",
-}
-
-CONTENTS_RE = re.compile(r"^\s*" + re.escape(PREFIX) + r"\s*(?P<directive>[A-Za-z_][A-Za-z0-9_']*)\s*$")
-PATH_SEP = "/"
+SECTION_RE = re.compile(r"^\d+(?:\.\d+)*$")                       # 5.1.3
+TABLE_RE = re.compile(r"^T\d+$")                                  # T75
+ITEM_RE = re.compile(r"^\d+(?:\.\d+)*#[A-Za-z0-9]+$")             # 3.3.10.2.1#3a, 5.2.2#p1
+NATURAL_RE = re.compile(r"(\d+)")
 
 
-# ----------------------------------------------------------------------------- the payload
+# ----------------------------------------------------------------------------- kinds and order
+def kind_of(anchor_id: str, payload: str) -> str:
+    """The /Kind an anchor id (and, for items, its payload) implies; ValueError for a malformed id."""
+    if anchor_id == DOC_ID:
+        return "Doc"
+    if SECTION_RE.match(anchor_id):
+        return "Rule"
+    if TABLE_RE.match(anchor_id):
+        return "Bind"
+    if ITEM_RE.match(anchor_id):
+        head = payload.split(maxsplit=1)[0] if payload.split() else ""
+        return "Behaviour" if head in BEHAVIOUR_WORDS else "Law"
+    raise ValueError(f"malformed anchor id {anchor_id!r} (expected doc, <section>, T<n> or <section>#<item>)")
+
+
+def natural_key(s: str) -> tuple:
+    """'T10' after 'T9', '5.10' after '5.9': digit runs compare as integers, the rest as text.
+    re.split with a capturing group alternates text and digit runs, so positions always share a type."""
+    return tuple(int(t) if i % 2 else t for i, t in enumerate(NATURAL_RE.split(s)))
+
+
+def sort_key(kind: str, anchor_id: str) -> tuple:
+    return (KINDS.index(kind), natural_key(anchor_id))
+
+
+# ----------------------------------------------------------------------------- the sidecar (.hsa)
 @dataclass(frozen=True)
-class HsedAnnot:
-    directive: str
-    path: tuple[int, ...]            # struct index path (/K indices from /StructTreeRoot)
-    caption: str
-    pages: tuple[int, ...]           # 0-based page indices, first is the anchor page
-    rect: tuple[float, float, float, float]
+class Anchor:
+    """One `.hsa` line: spec, anchor id and the payload text (design section 3.3 grammar, not
+    parsed here -- Haskell is the only parser of payloads)."""
+    spec: str
+    id: str
+    payload: str
 
     @property
-    def page(self) -> int:
-        return self.pages[0]
+    def kind(self) -> str:
+        return kind_of(self.id, self.payload)
+
+    @property
+    def sort_key(self) -> tuple:
+        return sort_key(self.kind, self.id)
+
+    @property
+    def line(self) -> str:
+        return HSA_SEP.join((self.spec, self.id, self.payload))
 
 
-def format_contents(directive: str) -> str:
-    """The /Contents string, byte for byte (ASCII): 'hsed: typeRow'."""
-    if directive not in DIRECTIVES:
-        raise ValueError(f"unknown directive {directive!r}; known: {sorted(DIRECTIVES)}")
-    return f"{PREFIX} {directive}"
+def parse_hsa_line(line: str, where: str = "") -> Anchor | None:
+    """The Anchor on one line, None for a comment or blank line; ValueError names `where`."""
+    body = line.strip()
+    if not body or body.startswith("#"):
+        return None
+    parts = [p.strip() for p in body.split("|", 2)]
+    if len(parts) != 3 or not all(parts):
+        raise ValueError(f"{where}: expected 'spec | id | payload', got {line.rstrip()!r}")
+    spec, anchor_id, payload = parts
+    try:
+        kind_of(anchor_id, payload)                  # a malformed id is an error here, not later
+    except ValueError as e:
+        raise ValueError(f"{where}: {line.rstrip()!r}: {e}") from None
+    return Anchor(spec, anchor_id, payload)
 
 
-def parse_contents(s: str) -> str | None:
-    """Directive named by a /Contents string, or None when this is not an hsed annotation."""
-    m = CONTENTS_RE.match(s or "")
-    return m.group("directive") if m else None
+def parse_hsa(text: str, name: str = "<hsa>") -> list[Anchor]:
+    """Every anchor in a sidecar, in file order (not sorted); duplicates are an error."""
+    anchors = [a for a in (parse_hsa_line(l, f"{name}:{n}") for n, l in enumerate(text.splitlines(), 1)) if a]
+    keys = [(a.spec, a.id) for a in anchors]
+    dups = sorted({k for k in keys if keys.count(k) > 1})
+    if dups:
+        raise ValueError(f"{name}: anchor listed more than once: {', '.join(f'{s} | {i}' for s, i in dups)}")
+    return anchors
 
 
-def format_path(path) -> str:
-    return PATH_SEP.join(str(int(i)) for i in path)
+def format_hsa(anchors: Iterable[Anchor]) -> str:
+    """The canonical sidecar text: one line per anchor in canonical order, newline-terminated."""
+    return "".join(a.line + "\n" for a in sorted(anchors, key=lambda a: a.sort_key))
 
 
-def parse_path(s: str) -> tuple[int, ...]:
-    return tuple(int(t) for t in s.strip().split(PATH_SEP) if t != "")
+# ----------------------------------------------------------------------------- the annotation (PDF side)
+@dataclass(frozen=True)
+class HsedAnnot:
+    """One hsed annotation as stored in a PDF."""
+    spec: str
+    id: str
+    payload: str                     # /Contents
+    kind: str                        # /HSED /Kind as stored
+    struct: str                      # /HSED /Struct ("" = the structure tree root)
+    page: int                        # 0-based index of the page whose /Annots lists it
+    rect: tuple[float, float, float, float]
+    flags: int = FLAGS
+    version: int = VERSION
+
+    @property
+    def anchor(self) -> Anchor:
+        return Anchor(self.spec, self.id, self.payload)
+
+    @property
+    def sort_key(self) -> tuple:
+        return sort_key(self.kind, self.id)
+
+
+def make_annot(anchor: Anchor, struct: str, page: int, rect: Iterable[float]) -> HsedAnnot:
+    return HsedAnnot(spec=anchor.spec, id=anchor.id, payload=anchor.payload, kind=anchor.kind, struct=struct,
+                     page=page, rect=tuple(round(float(v), 2) for v in rect))
+
+
+def problems(a: HsedAnnot) -> list[str]:
+    """What is inconsistent about an annotation as read back (empty when it is exactly what the
+    writer emits)."""
+    return ([] if a.version == VERSION else [f"/V is {a.version}, expected {VERSION}"]) \
+        + ([] if a.flags == FLAGS else [f"/F is {a.flags}, expected {FLAGS}"]) \
+        + ([] if a.kind in KINDS else [f"unknown /Kind {a.kind!r}"]) \
+        + ([] if a.kind == kind_of(a.id, a.payload) else [f"/Kind {a.kind} but the id implies {kind_of(a.id, a.payload)}"]) \
+        + ([] if (a.id == DOC_ID) == (a.struct == DOC_STRUCT) else ["only the doc anchor has the empty struct path"])
 
 
 # ----------------------------------------------------------------------------- writer adapter (pypdf)
+def _literal_bytes(s: str) -> bytes:
+    """A PDF literal string body: printable ASCII as is (backslash and parentheses escaped), anything
+    else in PDFDocEncoding as octal -- so the tail reads `(0/1429)` rather than pypdf's `(0\\0571429)`."""
+    from pypdf.generic import TextStringObject
+    raw = TextStringObject(s).get_encoded_bytes()
+    return b"".join(b"\\" + bytes([c]) if c in b"\\()" else bytes([c]) if 32 <= c < 127 else b"\\%03o" % c
+                    for c in raw)
+
+
 def to_pypdf(a: HsedAnnot):
-    """pypdf DictionaryObject for the annotation (pypdf adds /P itself in add_annotation)."""
-    from pypdf.generic import (ArrayObject, DictionaryObject, FloatObject, NameObject,
-                               NumberObject, TextStringObject)
+    """The annotation as a pypdf DictionaryObject (pypdf adds /P in add_annotation)."""
+    from pypdf.generic import (ArrayObject, DictionaryObject, FloatObject, NameObject, NumberObject,
+                               TextStringObject)
+
+    class Literal(TextStringObject):                 # same value, compact serialisation
+        def write_to_stream(self, stream, encryption_key=None):
+            stream.write(b"(" + _literal_bytes(self) + b")")
+
     private = DictionaryObject({
-        NameObject("/V"): NumberObject(VERSION),
-        NameObject("/Path"): TextStringObject(format_path(a.path)),
-        NameObject("/Caption"): TextStringObject(a.caption),
-        NameObject("/Pages"): ArrayObject([NumberObject(p) for p in a.pages]),
+        NameObject("/V"): NumberObject(a.version),
+        NameObject("/Kind"): NameObject("/" + a.kind),
+        NameObject("/Spec"): Literal(a.spec),
+        NameObject("/Id"): Literal(a.id),
+        NameObject("/Struct"): Literal(a.struct),
     })
     return DictionaryObject({
         NameObject("/Type"): NameObject("/Annot"),
         NameObject("/Subtype"): NameObject("/Text"),
-        NameObject("/Rect"): ArrayObject([FloatObject(round(v, 2)) for v in a.rect]),
-        NameObject("/Contents"): TextStringObject(format_contents(a.directive)),
-        NameObject("/F"): NumberObject(FLAGS),
+        NameObject("/F"): NumberObject(a.flags),
+        NameObject("/Rect"): ArrayObject([FloatObject(v) for v in a.rect]),
+        NameObject("/Contents"): Literal(a.payload),
         NameObject(PRIVATE_KEY): private,
     })
 
 
 # ----------------------------------------------------------------------------- reader adapters
-def _from_fields(contents: str, rect, flags, private: dict | None) -> tuple[HsedAnnot | None, list[str]]:
-    """Common decoding; returns (annot or None, problems). Problems are advisory (the directive
-    alone is enough to compile; /HSED is the robust anchor)."""
-    directive = parse_contents(contents)
-    if directive is None:
-        return None, []
-    problems = ([] if directive in DIRECTIVES else [f"unknown directive {directive!r}"]) \
-        + ([] if int(flags or 0) == FLAGS else [f"/F is {flags}, expected {FLAGS}"]) \
-        + ([] if private else [f"missing {PRIVATE_KEY} dictionary"])
-    p = private or {}
-    return HsedAnnot(directive=directive,
-                     path=parse_path(str(p.get("Path", ""))),
-                     caption=str(p.get("Caption", "")),
-                     pages=tuple(int(x) for x in p.get("Pages", [])),
-                     rect=tuple(float(x) for x in rect)), problems
+def _from_fields(page: int, contents: str, rect, flags, private: dict[str, Any]) -> HsedAnnot:
+    return HsedAnnot(spec=str(private.get("Spec", "")), id=str(private.get("Id", "")), payload=contents,
+                     kind=str(private.get("Kind", "")), struct=str(private.get("Struct", "")), page=page,
+                     rect=tuple(round(float(x), 2) for x in rect), flags=int(flags), version=int(private.get("V", 0)))
 
 
-def from_pikepdf(obj) -> tuple[HsedAnnot | None, list[str]]:
+def _name(v) -> str:
+    s = str(v)
+    return s[1:] if s.startswith("/") else s
+
+
+def from_pikepdf(obj, page: int) -> HsedAnnot | None:
+    """pikepdf annotation dictionary -> HsedAnnot, None when it is not an hsed annotation."""
     import pikepdf
-    if str(obj.get("/Subtype", "")) != "/Text":
-        return None, []
-    priv = obj.get(PRIVATE_KEY)
-    private = None if priv is None else {
-        "Path": str(priv.get("/Path", "")),
-        "Caption": str(priv.get("/Caption", "")),
-        "Pages": [int(x) for x in (priv.get("/Pages") or [])],
-        "V": int(priv.get("/V", 0)),
-    }
-    return _from_fields(str(obj.get("/Contents", "")), obj.get("/Rect", [0, 0, 0, 0]), obj.get("/F", 0), private)
+    if not isinstance(obj, pikepdf.Dictionary) or str(obj.get("/Subtype", "")) != "/Text":
+        return None
+    h = obj.get(PRIVATE_KEY)
+    if not isinstance(h, pikepdf.Dictionary):
+        return None
+    private = {"V": int(h.get("/V", 0)), "Kind": _name(h.get("/Kind", "")), "Spec": str(h.get("/Spec", "")),
+               "Id": str(h.get("/Id", "")), "Struct": str(h.get("/Struct", ""))}
+    return _from_fields(page, str(obj.get("/Contents", "")), obj.get("/Rect", [0, 0, 0, 0]), obj.get("/F", 0), private)
 
 
-def from_pypdf(obj) -> tuple[HsedAnnot | None, list[str]]:
+def from_pypdf(obj, page: int) -> HsedAnnot | None:
     obj = obj.get_object()
     if obj.get("/Subtype") != "/Text":
-        return None, []
-    priv = obj.get(PRIVATE_KEY)
-    private = None if priv is None else {
-        "Path": str(priv.get("/Path", "")), "Caption": str(priv.get("/Caption", "")),
-        "Pages": [int(x) for x in priv.get("/Pages", [])], "V": int(priv.get("/V", 0))}
-    return _from_fields(str(obj.get("/Contents", "")), obj.get("/Rect", [0, 0, 0, 0]), obj.get("/F", 0), private)
+        return None
+    h = obj.get(PRIVATE_KEY)
+    if h is None:
+        return None
+    h = h.get_object()
+    private = {"V": int(h.get("/V", 0)), "Kind": _name(h.get("/Kind", "")), "Spec": str(h.get("/Spec", "")),
+               "Id": str(h.get("/Id", "")), "Struct": str(h.get("/Struct", ""))}
+    return _from_fields(page, str(obj.get("/Contents", "")), obj.get("/Rect", [0, 0, 0, 0]), obj.get("/F", 0), private)
 
 
-def find_pikepdf(pdf) -> list[tuple[int, HsedAnnot, list[str]]]:
-    """[(page_index, annot, problems)] for every hsed annotation in an open pikepdf.Pdf."""
-    found = ((i, *from_pikepdf(a)) for i, pg in enumerate(pdf.pages) for a in (pg.obj.get("/Annots") or []))
-    return [(i, a, probs) for i, a, probs in found if a is not None]
+def from_pymupdf(doc, xref: int, page: int) -> HsedAnnot | None:
+    """pymupdf gives a /Text annotation a fixed icon rect and extra flags through its Annot object, so
+    the raw dictionary values are read through xref_get_key (whose key paths reach into /HSED)."""
+    def key(k):
+        kind, val = doc.xref_get_key(xref, k)
+        return None if kind == "null" else val
+
+    if key("Subtype") != "/Text" or key(PRIVATE_KEY[1:]) is None:
+        return None
+    rect = [float(x) for x in key("Rect").strip("[]").split()]
+    private = {"V": int(key("HSED/V") or 0), "Kind": _name(key("HSED/Kind") or ""), "Spec": key("HSED/Spec") or "",
+               "Id": key("HSED/Id") or "", "Struct": key("HSED/Struct") or ""}
+    return _from_fields(page, key("Contents") or "", rect, key("F") or 0, private)
 
 
-def smallest_payload(a: HsedAnnot) -> dict[str, Any]:
-    """What the payload would shrink to under the alternatives discussed in the report."""
-    contents = format_contents(a.directive)
-    return {"contents_bytes": len(contents.encode()),
-            "directive_only_bytes": len(a.directive.encode()),
-            "private_dict_text": f"<</V {VERSION}/Path({format_path(a.path)})/Caption({a.caption})/Pages[{' '.join(map(str, a.pages))}]>>",
-            }
+def read_pikepdf(path: str) -> list[HsedAnnot]:
+    """Every hsed annotation in document order (page order, then /Annots order)."""
+    import pikepdf
+    with pikepdf.open(path) as pdf:
+        found = [from_pikepdf(a, i) for i, pg in enumerate(pdf.pages) for a in (pg.obj.get("/Annots") or [])]
+    return [a for a in found if a is not None]
+
+
+def read_pypdf(path: str) -> list[HsedAnnot]:
+    import pypdf
+    r = pypdf.PdfReader(path)
+    found = [from_pypdf(a, i) for i, pg in enumerate(r.pages) for a in (pg.get("/Annots") or [])]
+    return [a for a in found if a is not None]
+
+
+def read_pymupdf(path: str) -> list[HsedAnnot]:
+    import pymupdf
+    doc = pymupdf.open(path)
+    try:
+        found = [from_pymupdf(doc, xref, i) for i, pg in enumerate(doc) for xref, _, _ in pg.annot_xrefs()]
+    finally:
+        doc.close()
+    return [a for a in found if a is not None]
+
+
+READERS: dict[str, Callable[[str], list[HsedAnnot]]] = {
+    "pikepdf": read_pikepdf, "pypdf": read_pypdf, "pymupdf": read_pymupdf}

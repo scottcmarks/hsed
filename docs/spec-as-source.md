@@ -2,7 +2,7 @@
 
 Design of record for annotating TCG Core 2.01 and Opal SSC 2.30 and compiling the annotated PDFs into a Haskell host jig and reference TPer. Synthesised 2026-10-25 from four candidate designs (fidelity, minimal, jig, delivery) and three judgements; revised the same day against three skeptic reviews (§14). Base: `minimal`.
 
-Evidence: the survey maps and digest under `docs/evidence/2026-10-25/` (`maps/*.txt`, `digest.md`), the tag-tree extraction (`spec/ir/{core-2.01,opal-2.30}.tables.json` produced by `tools/extract/extract_tables.py`; `docs/evidence/2026-10-25/extract/findings.md` and `regen_report.txt`), the M1 round-trip prototype (`tools/extract/{hsed_annot,annotate,compile}.py`; `docs/evidence/2026-10-25/m1_report.md`), the skeptics' probes (`docs/evidence/2026-10-25/{classify,decode_di}.py`) and the lts-21.21 scratch build log (`docs/evidence/2026-10-25/lts2121-build.log`). Page numbers are PDF page indices unless marked "printed"; Core printed = PDF - 17, Opal printed = PDF - 1, Test Cases printed = PDF - 1.
+Evidence: the survey maps and digest under `docs/evidence/2026-10-25/` (`maps/*.txt`, `digest.md`), the tag-tree extraction (`spec/ir/{core-2.01,opal-2.30}.tables.json` produced by `tools/extract/extract_tables.py`; `docs/evidence/2026-10-25/extract/findings.md` and `regen_report.txt`), the M1 round-trip prototype, promoted to `tools/extract/{hsed_annot,annotate,apply,dump,pdf_checks}.py` (its report: `docs/evidence/2026-10-25/m1_report.md`), the skeptics' probes (`docs/evidence/2026-10-25/{classify,decode_di}.py`) and the lts-21.21 scratch build log (`docs/evidence/2026-10-25/lts2121-build.log`). Page numbers are PDF page indices unless marked "printed"; Core printed = PDF - 17, Opal printed = PDF - 1, Test Cases printed = PDF - 1.
 
 ## 1 Mandate and constraints
 
@@ -48,7 +48,7 @@ Winner per question is the design adopted as base; *corrected* lists what the sk
 ```
 << /Type /Annot /Subtype /Text /F 6 /Rect [176.28 259.38 462.72 318.36]
    /Contents (erratum scott ["Fractoin" ~> "Fraction"])
-   /HSED << /V 1 /Spec (core-2.01) /Id (T75) /Struct (0/1340) >> >>
+   /HSED << /V 1 /Spec (core-2.01) /Id (T75) /Struct (0/1429) >> >>
 ```
 
 - Flags `/F 6`. No `/Popup`, `/NM`, `/AP`, `/C` (pypdf emits a harmless `/Flags 0` beside `/F`).

@@ -1,0 +1,80 @@
+{
+ "anchors": [
+  {
+   "hash": null,
+   "header": null,
+   "id": "doc",
+   "kind": "Doc",
+   "label": null,
+   "ordinal": null,
+   "page": 0,
+   "rects": [
+    [
+     0,
+     [
+      36.0,
+      720.0,
+      108.0,
+      756.0
+     ]
+    ]
+   ],
+   "struct": "",
+   "title": null
+  },
+  {
+   "hash": "dbddb70a974e0b6e1e5461e9385c8a5bcad7a29dc5e36406baed3c9113d98251",
+   "header": null,
+   "id": "5.1.3",
+   "kind": "Rule",
+   "label": 83,
+   "ordinal": null,
+   "page": 99,
+   "rects": [
+    [
+     99,
+     [
+      90.0,
+      595.61,
+      215.4,
+      613.67
+     ]
+    ]
+   ],
+   "struct": "0/1278",
+   "title": "Column Types"
+  },
+  {
+   "hash": "5a5e8787c29a7124035961d972b7b81ab1635117d2d207a0942f1a9c43291655",
+   "header": [
+    "uid",
+    "name",
+    "format"
+   ],
+   "id": "T75",
+   "kind": "Bind",
+   "label": 90,
+   "ordinal": 77,
+   "page": 106,
+   "rects": [
+    [
+     106,
+     [
+      170.88,
+      559.18,
+      468.12,
+      671.1
+     ]
+    ]
+   ],
+   "struct": "0/1429",
+   "title": "clock_time"
+  }
+ ],
+ "irVersion": 1,
+ "labelOffset": 17,
+ "md5": "5ceb93ab118a578125e3755eb885b668",
+ "pages": 306,
+ "source": "TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf",
+ "spec": "core-2.01"
+}

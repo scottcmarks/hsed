@@ -79564,10 +79564,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    51
-   ],
+   "struct_path": "0/51",
    "table_number": null,
    "warnings": []
   },
@@ -81532,10 +81529,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    102
-   ],
+   "struct_path": "0/102",
    "table_number": 1,
    "warnings": []
   },
@@ -81706,10 +81700,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    199
-   ],
+   "struct_path": "0/199",
    "table_number": 2,
    "warnings": []
   },
@@ -82115,10 +82106,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    207
-   ],
+   "struct_path": "0/207",
    "table_number": 3,
    "warnings": []
   },
@@ -85825,10 +85813,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    255
-   ],
+   "struct_path": "0/255",
    "table_number": 4,
    "warnings": [
     "ragged rows: widths [(3, 3), (4, 2), (7, 1), (9, 1), (10, 1), (12, 10), (14, 1)]"
@@ -86127,10 +86112,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    270
-   ],
+   "struct_path": "0/270",
    "table_number": 5,
    "warnings": [
     "ragged rows: widths [(1, 1), (3, 1), (8, 1)]"
@@ -86310,10 +86292,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    274
-   ],
+   "struct_path": "0/274",
    "table_number": 6,
    "warnings": []
   },
@@ -86483,13 +86462,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    274,
-    1,
-    1,
-    0
-   ],
+   "struct_path": "0/274/1/1/0",
    "table_number": null,
    "warnings": []
   },
@@ -86742,10 +86715,7 @@
     }
    ],
    "rows": [],
-   "struct_path": [
-    0,
-    278
-   ],
+   "struct_path": "0/278",
    "table_number": 7,
    "warnings": [
     "ragged rows: widths [(2, 2), (5, 1)]"
@@ -87130,10 +87100,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    279
-   ],
+   "struct_path": "0/279",
    "table_number": 7,
    "warnings": [
     "ragged rows: widths [(5, 1), (11, 1)]"
@@ -87363,10 +87330,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    283
-   ],
+   "struct_path": "0/283",
    "table_number": 8,
    "warnings": []
   },
@@ -87538,13 +87502,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    283,
-    1,
-    1,
-    0
-   ],
+   "struct_path": "0/283/1/1/0",
    "table_number": null,
    "warnings": []
   },
@@ -87730,13 +87688,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    283,
-    2,
-    1,
-    0
-   ],
+   "struct_path": "0/283/2/1/0",
    "table_number": null,
    "warnings": []
   },
@@ -87888,16 +87840,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    283,
-    2,
-    1,
-    0,
-    1,
-    1,
-    0
-   ],
+   "struct_path": "0/283/2/1/0/1/1/0",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(1, 1), (2, 2)]"
@@ -88050,16 +87993,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    283,
-    2,
-    1,
-    0,
-    2,
-    1,
-    0
-   ],
+   "struct_path": "0/283/2/1/0/2/1/0",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(1, 1), (2, 2)]"
@@ -88381,10 +88315,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    287
-   ],
+   "struct_path": "0/287",
    "table_number": 9,
    "warnings": [
     "ragged rows: widths [(1, 1), (4, 1), (8, 1)]"
@@ -89045,10 +88976,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    292
-   ],
+   "struct_path": "0/292",
    "table_number": 10,
    "warnings": [
     "ragged rows: widths [(2, 1), (3, 1), (5, 1), (19, 1)]"
@@ -89278,10 +89206,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    296
-   ],
+   "struct_path": "0/296",
    "table_number": 11,
    "warnings": []
   },
@@ -89453,13 +89378,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    296,
-    1,
-    1,
-    0
-   ],
+   "struct_path": "0/296/1/1/0",
    "table_number": null,
    "warnings": []
   },
@@ -89645,13 +89564,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    296,
-    2,
-    1,
-    0
-   ],
+   "struct_path": "0/296/2/1/0",
    "table_number": null,
    "warnings": []
   },
@@ -89803,16 +89716,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    296,
-    2,
-    1,
-    0,
-    1,
-    1,
-    0
-   ],
+   "struct_path": "0/296/2/1/0/1/1/0",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(1, 1), (2, 2)]"
@@ -89965,16 +89869,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    296,
-    2,
-    1,
-    0,
-    2,
-    1,
-    0
-   ],
+   "struct_path": "0/296/2/1/0/2/1/0",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(1, 1), (2, 2)]"
@@ -91035,10 +90930,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    300
-   ],
+   "struct_path": "0/300",
    "table_number": 12,
    "warnings": [
     "ragged rows: widths [(2, 1), (5, 1), (6, 1), (35, 1)]"
@@ -91323,10 +91215,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    304
-   ],
+   "struct_path": "0/304",
    "table_number": 13,
    "warnings": []
   },
@@ -91498,13 +91387,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    304,
-    2,
-    1,
-    0
-   ],
+   "struct_path": "0/304/2/1/0",
    "table_number": null,
    "warnings": []
   },
@@ -91690,13 +91573,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    304,
-    3,
-    1,
-    0
-   ],
+   "struct_path": "0/304/3/1/0",
    "table_number": null,
    "warnings": []
   },
@@ -91848,16 +91725,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    304,
-    3,
-    1,
-    0,
-    1,
-    1,
-    0
-   ],
+   "struct_path": "0/304/3/1/0/1/1/0",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(1, 1), (2, 2)]"
@@ -92010,16 +91878,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    304,
-    3,
-    1,
-    0,
-    2,
-    1,
-    0
-   ],
+   "struct_path": "0/304/3/1/0/2/1/0",
    "table_number": null,
    "warnings": [
     "ragged rows: widths [(1, 1), (2, 2)]"
@@ -92276,10 +92135,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    308
-   ],
+   "struct_path": "0/308",
    "table_number": 14,
    "warnings": [
     "ragged rows: widths [(1, 2), (8, 1)]"
@@ -92451,10 +92307,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    335
-   ],
+   "struct_path": "0/335",
    "table_number": 15,
    "warnings": []
   },
@@ -92669,10 +92522,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    348
-   ],
+   "struct_path": "0/348",
    "table_number": 16,
    "warnings": []
   },
@@ -94318,10 +94168,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    383
-   ],
+   "struct_path": "0/383",
    "table_number": 17,
    "warnings": [
     "ragged rows: widths [(1, 1), (3, 14), (4, 7), (9, 1)]"
@@ -96469,10 +96316,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    409
-   ],
+   "struct_path": "0/409",
    "table_number": 18,
    "warnings": [
     "ragged rows: widths [(3, 13), (4, 12), (9, 2)]"
@@ -96645,10 +96489,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    436
-   ],
+   "struct_path": "0/436",
    "table_number": 19,
    "warnings": []
   },
@@ -97884,10 +97725,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    441
-   ],
+   "struct_path": "0/441",
    "table_number": 20,
    "warnings": [
     "ragged rows: widths [(4, 13), (9, 1)]"
@@ -99352,10 +99190,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    463
-   ],
+   "struct_path": "0/463",
    "table_number": 21,
    "warnings": [
     "ragged rows: widths [(4, 16), (9, 1)]"
@@ -99572,10 +99407,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    483
-   ],
+   "struct_path": "0/483",
    "table_number": 22,
    "warnings": []
   },
@@ -99790,10 +99622,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    485
-   ],
+   "struct_path": "0/485",
    "table_number": 23,
    "warnings": []
   },
@@ -100015,10 +99844,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    587
-   ],
+   "struct_path": "0/587",
    "table_number": 24,
    "warnings": []
   },
@@ -100464,10 +100290,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    589
-   ],
+   "struct_path": "0/589",
    "table_number": 25,
    "warnings": []
   },
@@ -100851,10 +100674,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    620
-   ],
+   "struct_path": "0/620",
    "table_number": 26,
    "warnings": [
     "ragged row ['these are “non-reserved” ComID'] joined into the row above (continuation)"
@@ -101126,10 +100946,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    684
-   ],
+   "struct_path": "0/684",
    "table_number": 27,
    "warnings": []
   },
@@ -101298,10 +101115,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    687
-   ],
+   "struct_path": "0/687",
    "table_number": 28,
    "warnings": []
   },
@@ -101560,10 +101374,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    717
-   ],
+   "struct_path": "0/717",
    "table_number": 29,
    "warnings": []
   },
@@ -101822,10 +101633,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    722
-   ],
+   "struct_path": "0/722",
    "table_number": 30,
    "warnings": []
   },
@@ -102236,10 +102044,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    729
-   ],
+   "struct_path": "0/729",
    "table_number": 31,
    "warnings": [
     "ragged rows: widths [(2, 1), (3, 5)]"
@@ -102624,10 +102429,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    735
-   ],
+   "struct_path": "0/735",
    "table_number": 32,
    "warnings": [
     "mis-tagged merged cells split by geometry: 2"
@@ -103327,10 +103129,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    739
-   ],
+   "struct_path": "0/739",
    "table_number": 33,
    "warnings": [
     "mis-tagged merged cells split by geometry: 2"
@@ -103956,10 +103755,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    744
-   ],
+   "struct_path": "0/744",
    "table_number": 34,
    "warnings": []
   },
@@ -104261,10 +104057,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    756
-   ],
+   "struct_path": "0/756",
    "table_number": 35,
    "warnings": []
   },
@@ -104762,10 +104555,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    764
-   ],
+   "struct_path": "0/764",
    "table_number": 36,
    "warnings": [
     "mis-tagged merged cells split by geometry: 2"
@@ -105177,10 +104967,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    778
-   ],
+   "struct_path": "0/778",
    "table_number": 37,
    "warnings": [
     "ragged rows: widths [(2, 1), (3, 5)]"
@@ -105500,10 +105287,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    801
-   ],
+   "struct_path": "0/801",
    "table_number": 38,
    "warnings": [
     "ragged rows: widths [(2, 2), (9, 1)]"
@@ -106832,10 +106616,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    806
-   ],
+   "struct_path": "0/806",
    "table_number": 39,
    "warnings": [
     "ragged rows: widths [(4, 14), (9, 1)]"
@@ -107379,10 +107160,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    823
-   ],
+   "struct_path": "0/823",
    "table_number": 40,
    "warnings": []
   },
@@ -107909,10 +107687,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    827
-   ],
+   "struct_path": "0/827",
    "table_number": 41,
    "warnings": [
     "ragged rows: widths [(2, 2), (3, 2), (4, 1), (9, 1)]"
@@ -108847,10 +108622,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    840
-   ],
+   "struct_path": "0/840",
    "table_number": 42,
    "warnings": [
     "ragged rows: widths [(2, 2), (3, 2), (4, 1), (9, 3)]"
@@ -109553,10 +109325,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    861
-   ],
+   "struct_path": "0/861",
    "table_number": 43,
    "warnings": [
     "ragged rows: widths [(2, 2), (3, 2), (4, 1), (8, 1), (9, 1)]"
@@ -110040,10 +109809,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    881
-   ],
+   "struct_path": "0/881",
    "table_number": 44,
    "warnings": [
     "ragged rows: widths [(2, 1), (9, 2)]"
@@ -110713,10 +110479,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1061
-   ],
+   "struct_path": "0/1061",
    "table_number": 45,
    "warnings": []
   },
@@ -110914,10 +110677,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1288
-   ],
+   "struct_path": "0/1288",
    "table_number": 46,
    "warnings": []
   },
@@ -111223,10 +110983,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1294
-   ],
+   "struct_path": "0/1294",
    "table_number": 47,
    "warnings": []
   },
@@ -111424,10 +111181,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1299
-   ],
+   "struct_path": "0/1299",
    "table_number": 48,
    "warnings": []
   },
@@ -111624,10 +111378,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1304
-   ],
+   "struct_path": "0/1304",
    "table_number": 49,
    "warnings": []
   },
@@ -111825,10 +111576,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1309
-   ],
+   "struct_path": "0/1309",
    "table_number": 50,
    "warnings": []
   },
@@ -112026,10 +111774,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1314
-   ],
+   "struct_path": "0/1314",
    "table_number": 51,
    "warnings": []
   },
@@ -112244,10 +111989,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1318
-   ],
+   "struct_path": "0/1318",
    "table_number": 52,
    "warnings": []
   },
@@ -112445,10 +112187,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1323
-   ],
+   "struct_path": "0/1323",
    "table_number": 53,
    "warnings": []
   },
@@ -112663,10 +112402,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1327
-   ],
+   "struct_path": "0/1327",
    "table_number": 54,
    "warnings": []
   },
@@ -112864,10 +112600,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1332
-   ],
+   "struct_path": "0/1332",
    "table_number": 55,
    "warnings": []
   },
@@ -113406,10 +113139,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1336
-   ],
+   "struct_path": "0/1336",
    "table_number": 56,
    "warnings": []
   },
@@ -113606,10 +113336,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1340
-   ],
+   "struct_path": "0/1340",
    "table_number": 57,
    "warnings": []
   },
@@ -113807,10 +113534,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1345
-   ],
+   "struct_path": "0/1345",
    "table_number": 58,
    "warnings": []
   },
@@ -113981,10 +113705,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1349
-   ],
+   "struct_path": "0/1349",
    "table_number": 59,
    "warnings": []
   },
@@ -114182,10 +113903,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1354
-   ],
+   "struct_path": "0/1354",
    "table_number": 60,
    "warnings": []
   },
@@ -114400,10 +114118,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1358
-   ],
+   "struct_path": "0/1358",
    "table_number": 61,
    "warnings": []
   },
@@ -114599,10 +114314,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1363
-   ],
+   "struct_path": "0/1363",
    "table_number": 62,
    "warnings": []
   },
@@ -114799,10 +114511,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1368
-   ],
+   "struct_path": "0/1368",
    "table_number": 63,
    "warnings": []
   },
@@ -114998,10 +114707,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1373
-   ],
+   "struct_path": "0/1373",
    "table_number": 64,
    "warnings": []
   },
@@ -115199,10 +114905,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1378
-   ],
+   "struct_path": "0/1378",
    "table_number": 65,
    "warnings": []
   },
@@ -115400,10 +115103,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1383
-   ],
+   "struct_path": "0/1383",
    "table_number": 66,
    "warnings": []
   },
@@ -115601,10 +115301,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1388
-   ],
+   "struct_path": "0/1388",
    "table_number": 67,
    "warnings": []
   },
@@ -115802,10 +115499,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1393
-   ],
+   "struct_path": "0/1393",
    "table_number": 68,
    "warnings": []
   },
@@ -116003,10 +115697,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1398
-   ],
+   "struct_path": "0/1398",
    "table_number": 69,
    "warnings": []
   },
@@ -116202,10 +115893,7 @@
       ],
       "moved_out": {
        "text": "bytes, 64",
-       "to_struct_path": [
-        0,
-        1407
-       ]
+       "to_struct_path": "0/1407"
       },
       "page": 104,
       "text": "Simple_Type, bytes, 48",
@@ -116213,14 +115901,11 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1403
-   ],
+   "struct_path": "0/1403",
    "table_number": 70,
    "warnings": [
     "cells split across pages: 1",
-    "moved stray fragment 'bytes, 64' (page 106) to table at [0, 1407]"
+    "moved stray fragment 'bytes, 64' (page 106) to table at 0/1407"
    ]
   },
   {
@@ -116395,10 +116080,7 @@
      },
      {
       "adopted_from": {
-       "struct_path": [
-        0,
-        1403
-       ],
+       "struct_path": "0/1403",
        "text": "bytes, 64"
       },
       "bbox": [
@@ -116426,14 +116108,11 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1407
-   ],
+   "struct_path": "0/1407",
    "table_number": 71,
    "warnings": [
     "mis-tagged merged cells split by geometry: 2",
-    "adopted 'bytes, 64' from table at [0, 1403] (tagging defect)"
+    "adopted 'bytes, 64' from table at 0/1403 (tagging defect)"
    ]
   },
   {
@@ -116631,10 +116310,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1412
-   ],
+   "struct_path": "0/1412",
    "table_number": 72,
    "warnings": [
     "mis-tagged merged cells split by geometry: 2"
@@ -116836,10 +116512,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1417
-   ],
+   "struct_path": "0/1417",
    "table_number": 73,
    "warnings": [
     "mis-tagged merged cells split by geometry: 2"
@@ -117100,10 +116773,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1421
-   ],
+   "struct_path": "0/1421",
    "table_number": 74,
    "warnings": []
   },
@@ -117306,10 +116976,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1429
-   ],
+   "struct_path": "0/1429",
    "table_number": 75,
    "warnings": []
   },
@@ -117506,10 +117173,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1434
-   ],
+   "struct_path": "0/1434",
    "table_number": 76,
    "warnings": []
   },
@@ -117710,10 +117374,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1440
-   ],
+   "struct_path": "0/1440",
    "table_number": 77,
    "warnings": []
   },
@@ -117911,10 +117572,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1445
-   ],
+   "struct_path": "0/1445",
    "table_number": 78,
    "warnings": []
   },
@@ -118112,10 +117770,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1450
-   ],
+   "struct_path": "0/1450",
    "table_number": 79,
    "warnings": []
   },
@@ -118313,10 +117968,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1455
-   ],
+   "struct_path": "0/1455",
    "table_number": 80,
    "warnings": []
   },
@@ -118516,10 +118168,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1460
-   ],
+   "struct_path": "0/1460",
    "table_number": 81,
    "warnings": [
     "mis-tagged merged cells split by geometry: 2"
@@ -118736,10 +118385,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1464
-   ],
+   "struct_path": "0/1464",
    "table_number": 82,
    "warnings": []
   },
@@ -119045,10 +118691,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1469
-   ],
+   "struct_path": "0/1469",
    "table_number": 83,
    "warnings": []
   },
@@ -119246,10 +118889,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1474
-   ],
+   "struct_path": "0/1474",
    "table_number": 84,
    "warnings": []
   },
@@ -119447,10 +119087,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1479
-   ],
+   "struct_path": "0/1479",
    "table_number": 85,
    "warnings": []
   },
@@ -119648,10 +119285,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1484
-   ],
+   "struct_path": "0/1484",
    "table_number": 86,
    "warnings": []
   },
@@ -120624,10 +120258,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1488
-   ],
+   "struct_path": "0/1488",
    "table_number": 87,
    "warnings": []
   },
@@ -120825,10 +120456,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1493
-   ],
+   "struct_path": "0/1493",
    "table_number": 88,
    "warnings": []
   },
@@ -121175,10 +120803,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1497
-   ],
+   "struct_path": "0/1497",
    "table_number": 89,
    "warnings": []
   },
@@ -121376,10 +121001,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1502
-   ],
+   "struct_path": "0/1502",
    "table_number": 90,
    "warnings": []
   },
@@ -121577,10 +121199,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1507
-   ],
+   "struct_path": "0/1507",
    "table_number": 91,
    "warnings": []
   },
@@ -121776,10 +121395,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1512
-   ],
+   "struct_path": "0/1512",
    "table_number": 92,
    "warnings": []
   },
@@ -121977,10 +121593,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1517
-   ],
+   "struct_path": "0/1517",
    "table_number": 93,
    "warnings": []
   },
@@ -122178,10 +121791,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1522
-   ],
+   "struct_path": "0/1522",
    "table_number": 94,
    "warnings": []
   },
@@ -122379,10 +121989,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1527
-   ],
+   "struct_path": "0/1527",
    "table_number": 95,
    "warnings": []
   },
@@ -122580,10 +122187,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1532
-   ],
+   "struct_path": "0/1532",
    "table_number": 96,
    "warnings": []
   },
@@ -122781,10 +122385,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1537
-   ],
+   "struct_path": "0/1537",
    "table_number": 97,
    "warnings": []
   },
@@ -123002,10 +122603,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1541
-   ],
+   "struct_path": "0/1541",
    "table_number": 98,
    "warnings": []
   },
@@ -123311,10 +122909,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1546
-   ],
+   "struct_path": "0/1546",
    "table_number": 99,
    "warnings": []
   },
@@ -123512,10 +123107,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1551
-   ],
+   "struct_path": "0/1551",
    "table_number": 100,
    "warnings": []
   },
@@ -123818,10 +123410,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1555
-   ],
+   "struct_path": "0/1555",
    "table_number": 101,
    "warnings": []
   },
@@ -124019,10 +123608,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1560
-   ],
+   "struct_path": "0/1560",
    "table_number": 102,
    "warnings": []
   },
@@ -124517,10 +124103,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1564
-   ],
+   "struct_path": "0/1564",
    "table_number": 103,
    "warnings": []
   },
@@ -124717,10 +124300,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1569
-   ],
+   "struct_path": "0/1569",
    "table_number": 104,
    "warnings": []
   },
@@ -124918,10 +124498,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1575
-   ],
+   "struct_path": "0/1575",
    "table_number": 105,
    "warnings": []
   },
@@ -125119,10 +124696,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1580
-   ],
+   "struct_path": "0/1580",
    "table_number": 106,
    "warnings": []
   },
@@ -125381,10 +124955,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1584
-   ],
+   "struct_path": "0/1584",
    "table_number": 107,
    "warnings": []
   },
@@ -125580,10 +125151,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1589
-   ],
+   "struct_path": "0/1589",
    "table_number": 108,
    "warnings": []
   },
@@ -125781,10 +125349,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1594
-   ],
+   "struct_path": "0/1594",
    "table_number": 109,
    "warnings": []
   },
@@ -125982,10 +125547,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1599
-   ],
+   "struct_path": "0/1599",
    "table_number": 110,
    "warnings": []
   },
@@ -126183,10 +125745,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1604
-   ],
+   "struct_path": "0/1604",
    "table_number": 111,
    "warnings": []
   },
@@ -126383,10 +125942,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1609
-   ],
+   "struct_path": "0/1609",
    "table_number": 112,
    "warnings": []
   },
@@ -126584,10 +126140,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1614
-   ],
+   "struct_path": "0/1614",
    "table_number": 113,
    "warnings": []
   },
@@ -126785,10 +126338,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1620
-   ],
+   "struct_path": "0/1620",
    "table_number": 114,
    "warnings": []
   },
@@ -126986,10 +126536,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1625
-   ],
+   "struct_path": "0/1625",
    "table_number": 115,
    "warnings": []
   },
@@ -127187,10 +126734,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1630
-   ],
+   "struct_path": "0/1630",
    "table_number": 116,
    "warnings": []
   },
@@ -127496,10 +127040,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1636
-   ],
+   "struct_path": "0/1636",
    "table_number": 117,
    "warnings": []
   },
@@ -127697,10 +127238,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1641
-   ],
+   "struct_path": "0/1641",
    "table_number": 118,
    "warnings": []
   },
@@ -127896,10 +127434,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1646
-   ],
+   "struct_path": "0/1646",
    "table_number": 119,
    "warnings": []
   },
@@ -128097,10 +127632,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1651
-   ],
+   "struct_path": "0/1651",
    "table_number": 120,
    "warnings": []
   },
@@ -128447,10 +127979,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1655
-   ],
+   "struct_path": "0/1655",
    "table_number": 121,
    "warnings": []
   },
@@ -128648,10 +128177,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1660
-   ],
+   "struct_path": "0/1660",
    "table_number": 122,
    "warnings": []
   },
@@ -128849,10 +128375,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1665
-   ],
+   "struct_path": "0/1665",
    "table_number": 123,
    "warnings": []
   },
@@ -129050,10 +128573,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1671
-   ],
+   "struct_path": "0/1671",
    "table_number": 124,
    "warnings": []
   },
@@ -129251,10 +128771,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1677
-   ],
+   "struct_path": "0/1677",
    "table_number": 125,
    "warnings": []
   },
@@ -129601,10 +129118,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1681
-   ],
+   "struct_path": "0/1681",
    "table_number": 126,
    "warnings": []
   },
@@ -129802,10 +129316,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1685
-   ],
+   "struct_path": "0/1685",
    "table_number": 127,
    "warnings": []
   },
@@ -130108,10 +129619,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1689
-   ],
+   "struct_path": "0/1689",
    "table_number": 128,
    "warnings": []
   },
@@ -130309,10 +129817,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1694
-   ],
+   "struct_path": "0/1694",
    "table_number": 129,
    "warnings": []
   },
@@ -130510,10 +130015,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1700
-   ],
+   "struct_path": "0/1700",
    "table_number": 130,
    "warnings": []
   },
@@ -130710,10 +130212,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1705
-   ],
+   "struct_path": "0/1705",
    "table_number": 131,
    "warnings": []
   },
@@ -130911,10 +130410,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1710
-   ],
+   "struct_path": "0/1710",
    "table_number": 132,
    "warnings": []
   },
@@ -131112,10 +130608,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1715
-   ],
+   "struct_path": "0/1715",
    "table_number": 133,
    "warnings": []
   },
@@ -131830,10 +131323,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1719
-   ],
+   "struct_path": "0/1719",
    "table_number": 134,
    "warnings": []
   },
@@ -132031,10 +131521,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1724
-   ],
+   "struct_path": "0/1724",
    "table_number": 135,
    "warnings": []
   },
@@ -132733,10 +132220,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1728
-   ],
+   "struct_path": "0/1728",
    "table_number": 136,
    "warnings": []
   },
@@ -132934,10 +132418,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1733
-   ],
+   "struct_path": "0/1733",
    "table_number": 137,
    "warnings": []
   },
@@ -133152,10 +132633,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1737
-   ],
+   "struct_path": "0/1737",
    "table_number": 138,
    "warnings": []
   },
@@ -133353,10 +132831,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1742
-   ],
+   "struct_path": "0/1742",
    "table_number": 139,
    "warnings": []
   },
@@ -133553,10 +133028,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1747
-   ],
+   "struct_path": "0/1747",
    "table_number": 140,
    "warnings": []
   },
@@ -133752,10 +133224,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1752
-   ],
+   "struct_path": "0/1752",
    "table_number": 141,
    "warnings": []
   },
@@ -133952,10 +133421,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1758
-   ],
+   "struct_path": "0/1758",
    "table_number": 142,
    "warnings": []
   },
@@ -134153,10 +133619,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1763
-   ],
+   "struct_path": "0/1763",
    "table_number": 143,
    "warnings": []
   },
@@ -134353,10 +133816,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1768
-   ],
+   "struct_path": "0/1768",
    "table_number": 144,
    "warnings": []
   },
@@ -134554,10 +134014,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1773
-   ],
+   "struct_path": "0/1773",
    "table_number": 145,
    "warnings": []
   },
@@ -134753,10 +134210,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1778
-   ],
+   "struct_path": "0/1778",
    "table_number": 146,
    "warnings": []
   },
@@ -134954,10 +134408,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1782
-   ],
+   "struct_path": "0/1782",
    "table_number": 147,
    "warnings": []
   },
@@ -135155,10 +134606,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1787
-   ],
+   "struct_path": "0/1787",
    "table_number": 148,
    "warnings": []
   },
@@ -135356,10 +134804,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1792
-   ],
+   "struct_path": "0/1792",
    "table_number": 149,
    "warnings": []
   },
@@ -135557,10 +135002,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1797
-   ],
+   "struct_path": "0/1797",
    "table_number": 150,
    "warnings": []
   },
@@ -135758,10 +135200,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1802
-   ],
+   "struct_path": "0/1802",
    "table_number": 151,
    "warnings": []
   },
@@ -135959,10 +135398,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1807
-   ],
+   "struct_path": "0/1807",
    "table_number": 152,
    "warnings": []
   },
@@ -136160,10 +135596,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1812
-   ],
+   "struct_path": "0/1812",
    "table_number": 153,
    "warnings": []
   },
@@ -136361,10 +135794,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1817
-   ],
+   "struct_path": "0/1817",
    "table_number": 154,
    "warnings": []
   },
@@ -136562,10 +135992,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1822
-   ],
+   "struct_path": "0/1822",
    "table_number": 155,
    "warnings": []
   },
@@ -136763,10 +136190,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1827
-   ],
+   "struct_path": "0/1827",
    "table_number": 156,
    "warnings": []
   },
@@ -136964,10 +136388,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1832
-   ],
+   "struct_path": "0/1832",
    "table_number": 157,
    "warnings": []
   },
@@ -137165,10 +136586,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1837
-   ],
+   "struct_path": "0/1837",
    "table_number": 158,
    "warnings": []
   },
@@ -137366,10 +136784,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1842
-   ],
+   "struct_path": "0/1842",
    "table_number": 159,
    "warnings": []
   },
@@ -137567,10 +136982,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1847
-   ],
+   "struct_path": "0/1847",
    "table_number": 160,
    "warnings": []
   },
@@ -137768,10 +137180,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1852
-   ],
+   "struct_path": "0/1852",
    "table_number": 161,
    "warnings": []
   },
@@ -137969,10 +137378,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1857
-   ],
+   "struct_path": "0/1857",
    "table_number": 162,
    "warnings": []
   },
@@ -138187,10 +137593,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1861
-   ],
+   "struct_path": "0/1861",
    "table_number": 163,
    "warnings": []
   },
@@ -138388,10 +137791,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1866
-   ],
+   "struct_path": "0/1866",
    "table_number": 164,
    "warnings": []
   },
@@ -138589,10 +137989,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    1872
-   ],
+   "struct_path": "0/1872",
    "table_number": 165,
    "warnings": []
   },
@@ -139528,10 +138925,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2017
-   ],
+   "struct_path": "0/2017",
    "table_number": 166,
    "warnings": []
   },
@@ -142059,10 +141453,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2096
-   ],
+   "struct_path": "0/2096",
    "table_number": 167,
    "warnings": []
   },
@@ -142922,10 +142313,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2111
-   ],
+   "struct_path": "0/2111",
    "table_number": 168,
    "warnings": []
   },
@@ -143660,10 +143048,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2337
-   ],
+   "struct_path": "0/2337",
    "table_number": 169,
    "warnings": []
   },
@@ -144152,10 +143537,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2366
-   ],
+   "struct_path": "0/2366",
    "table_number": 170,
    "warnings": []
   },
@@ -145532,10 +144914,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2386
-   ],
+   "struct_path": "0/2386",
    "table_number": 171,
    "warnings": []
   },
@@ -146572,10 +145951,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2430
-   ],
+   "struct_path": "0/2430",
    "table_number": 172,
    "warnings": []
   },
@@ -147154,10 +146530,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2470
-   ],
+   "struct_path": "0/2470",
    "table_number": 173,
    "warnings": []
   },
@@ -147658,10 +147031,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2491
-   ],
+   "struct_path": "0/2491",
    "table_number": 174,
    "warnings": []
   },
@@ -149060,10 +148430,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2514
-   ],
+   "struct_path": "0/2514",
    "table_number": 175,
    "warnings": []
   },
@@ -149552,10 +148919,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2554
-   ],
+   "struct_path": "0/2554",
    "table_number": 176,
    "warnings": []
   },
@@ -150272,10 +149636,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2571
-   ],
+   "struct_path": "0/2571",
    "table_number": 177,
    "warnings": []
   },
@@ -152140,10 +151501,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2591
-   ],
+   "struct_path": "0/2591",
    "table_number": 178,
    "warnings": []
   },
@@ -154224,10 +153582,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2615
-   ],
+   "struct_path": "0/2615",
    "table_number": 179,
    "warnings": []
   },
@@ -154944,10 +154299,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2659
-   ],
+   "struct_path": "0/2659",
    "table_number": 180,
    "warnings": []
   },
@@ -155808,10 +155160,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2677
-   ],
+   "struct_path": "0/2677",
    "table_number": 181,
    "warnings": []
   },
@@ -157566,10 +156915,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2705
-   ],
+   "struct_path": "0/2705",
    "table_number": 182,
    "warnings": []
   },
@@ -159185,10 +158531,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2749
-   ],
+   "struct_path": "0/2749",
    "table_number": 183,
    "warnings": []
   },
@@ -160049,10 +159392,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2792
-   ],
+   "struct_path": "0/2792",
    "table_number": 184,
    "warnings": []
   },
@@ -160462,10 +159802,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2818
-   ],
+   "struct_path": "0/2818",
    "table_number": 185,
    "warnings": []
   },
@@ -161326,10 +160663,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2822
-   ],
+   "struct_path": "0/2822",
    "table_number": 186,
    "warnings": []
   },
@@ -162682,10 +162016,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2846
-   ],
+   "struct_path": "0/2846",
    "table_number": 187,
    "warnings": []
   },
@@ -163006,10 +162337,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2882
-   ],
+   "struct_path": "0/2882",
    "table_number": 188,
    "warnings": []
   },
@@ -164414,10 +163742,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2886
-   ],
+   "struct_path": "0/2886",
    "table_number": 189,
    "warnings": [
     "row recovered from the drawn grid on page 179: ['0x01', 'Name', 'Yes', 'name'] (dangling struct element)",
@@ -164763,10 +164088,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2922
-   ],
+   "struct_path": "0/2922",
    "table_number": 190,
    "warnings": [
     "row recovered from the drawn grid on page 180: ['p', 'FFFFFFFF FFFFFFFF FF'] (dangling struct element)",
@@ -166181,10 +165503,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2926
-   ],
+   "struct_path": "0/2926",
    "table_number": 191,
    "warnings": [
     "row recovered from the drawn grid on page 181: ['0x00', 'UID', '', 'uid'] (dangling struct element)",
@@ -166521,10 +165840,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2962
-   ],
+   "struct_path": "0/2962",
    "table_number": 192,
    "warnings": []
   },
@@ -167877,10 +167193,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    2966
-   ],
+   "struct_path": "0/2966",
    "table_number": 193,
    "warnings": []
   },
@@ -168206,10 +167519,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3001
-   ],
+   "struct_path": "0/3001",
    "table_number": 194,
    "warnings": []
   },
@@ -169562,10 +168872,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3005
-   ],
+   "struct_path": "0/3005",
    "table_number": 195,
    "warnings": []
   },
@@ -169892,10 +169199,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3041
-   ],
+   "struct_path": "0/3041",
    "table_number": 196,
    "warnings": []
   },
@@ -171248,10 +170552,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3045
-   ],
+   "struct_path": "0/3045",
    "table_number": 197,
    "warnings": []
   },
@@ -171582,10 +170883,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3081
-   ],
+   "struct_path": "0/3081",
    "table_number": 198,
    "warnings": []
   },
@@ -173184,10 +172482,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3085
-   ],
+   "struct_path": "0/3085",
    "table_number": 199,
    "warnings": []
   },
@@ -173640,10 +172935,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3127
-   ],
+   "struct_path": "0/3127",
    "table_number": 200,
    "warnings": []
   },
@@ -175078,10 +174370,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3131
-   ],
+   "struct_path": "0/3131",
    "table_number": 201,
    "warnings": []
   },
@@ -175446,10 +174735,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3169
-   ],
+   "struct_path": "0/3169",
    "table_number": 202,
    "warnings": []
   },
@@ -177048,10 +176334,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3173
-   ],
+   "struct_path": "0/3173",
    "table_number": 203,
    "warnings": []
   },
@@ -177508,10 +176791,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3215
-   ],
+   "struct_path": "0/3215",
    "table_number": 204,
    "warnings": []
   },
@@ -178126,10 +177406,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3219
-   ],
+   "struct_path": "0/3219",
    "table_number": 205,
    "warnings": []
   },
@@ -178744,10 +178021,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3237
-   ],
+   "struct_path": "0/3237",
    "table_number": 206,
    "warnings": []
   },
@@ -179500,10 +178774,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3256
-   ],
+   "struct_path": "0/3256",
    "table_number": 207,
    "warnings": []
   },
@@ -180118,10 +179389,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3273
-   ],
+   "struct_path": "0/3273",
    "table_number": 208,
    "warnings": []
   },
@@ -181461,10 +180729,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3667
-   ],
+   "struct_path": "0/3667",
    "table_number": 209,
    "warnings": []
   },
@@ -182963,10 +182228,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3844
-   ],
+   "struct_path": "0/3844",
    "table_number": 210,
    "warnings": []
   },
@@ -183783,10 +183045,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3871
-   ],
+   "struct_path": "0/3871",
    "table_number": 211,
    "warnings": []
   },
@@ -184574,10 +183833,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3898
-   ],
+   "struct_path": "0/3898",
    "table_number": 212,
    "warnings": [
     "ragged rows: widths [(2, 10), (3, 2), (9, 1)]"
@@ -185314,10 +184570,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3906
-   ],
+   "struct_path": "0/3906",
    "table_number": 213,
    "warnings": []
   },
@@ -185894,10 +185147,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3931
-   ],
+   "struct_path": "0/3931",
    "table_number": 214,
    "warnings": []
   },
@@ -186856,10 +186106,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    3951
-   ],
+   "struct_path": "0/3951",
    "table_number": 215,
    "warnings": []
   },
@@ -187874,10 +187121,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4029
-   ],
+   "struct_path": "0/4029",
    "table_number": 216,
    "warnings": []
   },
@@ -188513,10 +187757,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4051
-   ],
+   "struct_path": "0/4051",
    "table_number": 217,
    "warnings": []
   },
@@ -189826,10 +189067,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4057
-   ],
+   "struct_path": "0/4057",
    "table_number": 218,
    "warnings": []
   },
@@ -189978,10 +189216,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4284
-   ],
+   "struct_path": "0/4284",
    "table_number": 219,
    "warnings": []
   },
@@ -190642,10 +189877,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4293
-   ],
+   "struct_path": "0/4293",
    "table_number": 220,
    "warnings": []
   },
@@ -191306,10 +190538,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4312
-   ],
+   "struct_path": "0/4312",
    "table_number": 221,
    "warnings": []
   },
@@ -191970,10 +191199,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4331
-   ],
+   "struct_path": "0/4331",
    "table_number": 222,
    "warnings": []
   },
@@ -192634,10 +191860,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4350
-   ],
+   "struct_path": "0/4350",
    "table_number": 223,
    "warnings": []
   },
@@ -193369,10 +192592,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4799
-   ],
+   "struct_path": "0/4799",
    "table_number": 224,
    "warnings": []
   },
@@ -194106,10 +193326,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4808
-   ],
+   "struct_path": "0/4808",
    "table_number": 225,
    "warnings": []
   },
@@ -195909,10 +195126,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4834
-   ],
+   "struct_path": "0/4834",
    "table_number": 226,
    "warnings": []
   },
@@ -196526,10 +195740,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4893
-   ],
+   "struct_path": "0/4893",
    "table_number": 227,
    "warnings": []
   },
@@ -197144,10 +196355,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4911
-   ],
+   "struct_path": "0/4911",
    "table_number": 228,
    "warnings": []
   },
@@ -197635,10 +196843,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    4929
-   ],
+   "struct_path": "0/4929",
    "table_number": 229,
    "warnings": []
   },
@@ -200096,10 +199301,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5057
-   ],
+   "struct_path": "0/5057",
    "table_number": 230,
    "warnings": []
   },
@@ -202417,10 +201619,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5060
-   ],
+   "struct_path": "0/5060",
    "table_number": 231,
    "warnings": []
   },
@@ -202567,10 +201766,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5143
-   ],
+   "struct_path": "0/5143",
    "table_number": 232,
    "warnings": []
   },
@@ -203883,10 +203079,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5151
-   ],
+   "struct_path": "0/5151",
    "table_number": 233,
    "warnings": []
   },
@@ -204547,10 +203740,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5199
-   ],
+   "struct_path": "0/5199",
    "table_number": 234,
    "warnings": []
   },
@@ -205117,10 +204307,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5307
-   ],
+   "struct_path": "0/5307",
    "table_number": 235,
    "warnings": []
   },
@@ -205398,10 +204585,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5311
-   ],
+   "struct_path": "0/5311",
    "table_number": 236,
    "warnings": []
   },
@@ -206154,10 +205338,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5346
-   ],
+   "struct_path": "0/5346",
    "table_number": 237,
    "warnings": []
   },
@@ -207364,10 +206545,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5349
-   ],
+   "struct_path": "0/5349",
    "table_number": 238,
    "warnings": [
     "ragged rows: widths [(2, 1), (3, 17)]"
@@ -207695,10 +206873,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5354
-   ],
+   "struct_path": "0/5354",
    "table_number": 239,
    "warnings": []
   },
@@ -211955,10 +211130,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5357
-   ],
+   "struct_path": "0/5357",
    "table_number": 240,
    "warnings": []
   },
@@ -212323,10 +211495,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5359
-   ],
+   "struct_path": "0/5359",
    "table_number": 241,
    "warnings": []
   },
@@ -216047,10 +215216,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5362
-   ],
+   "struct_path": "0/5362",
    "table_number": 242,
    "warnings": []
   },
@@ -217297,10 +216463,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5365
-   ],
+   "struct_path": "0/5365",
    "table_number": 243,
    "warnings": []
   },
@@ -217577,10 +216740,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5368
-   ],
+   "struct_path": "0/5368",
    "table_number": 244,
    "warnings": []
   },
@@ -218036,10 +217196,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5371
-   ],
+   "struct_path": "0/5371",
    "table_number": 245,
    "warnings": []
   },
@@ -218448,10 +217605,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5374
-   ],
+   "struct_path": "0/5374",
    "table_number": 246,
    "warnings": []
   },
@@ -218938,10 +218092,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5377
-   ],
+   "struct_path": "0/5377",
    "table_number": 247,
    "warnings": []
   },
@@ -221022,10 +220173,7 @@
      }
     ]
    ],
-   "struct_path": [
-    0,
-    5380
-   ],
+   "struct_path": "0/5380",
    "table_number": 248,
    "warnings": []
   }

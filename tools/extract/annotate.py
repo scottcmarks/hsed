@@ -1,196 +1,237 @@
-"""annotate.py: write an annotated COPY of the Core spec with exactly three hidden hsed annotations
-(Table 46 typeRow, Table 52 enumValues, Table 240 tableUIDs) via a pypdf incremental update,
-then verify that the original is an exact byte prefix and that every touched page renders
-identically (Ghostscript png16m 100 dpi md5 + pixel diff, MuPDF md5, CoreGraphics/sips md5 on a
-single-page extraction).
+"""annotate.py: pristine PDF + sidecar (.hsa) + IR -> annotated PDF, incremental tail (.upd) and manifest.
 
-Usage: python -I annotate.py <original.pdf> <core_tables.json> <out_dir>
-Writes <out_dir>/core_annotated.pdf, <out_dir>/annotate_report.json, renders under <out_dir>/render/.
+    annotate.py --spec core-2.01 --pristine tcg/<pdf> --ir spec/ir/core-2.01.json
+                --hsa spec/annot/core-2.01.hsa --out build/core-2.01.hsed.pdf
+                --upd spec/annot/core-2.01.upd --manifest spec/annot/core-2.01.manifest.json
+
+Each sidecar line is resolved to its anchor through the IR (docs/ir-v1.md): a table by id to its
+struct path and first-page rect, a section to its heading, `doc` to the top-left inch of page 1,
+`<section>#<item>` to the paragraph; an anchor the IR does not know is refused with its line.  The
+annotations (hsed_annot.py is the format) are written in canonical order as ONE pypdf incremental
+section, so the pristine file is an exact byte prefix of the output and two runs are byte-identical.
+The tail is exported as the `.upd` file and the manifest records what the pristine PDF implies
+about every anchor (design section 3.2): ordinal, struct path, page, printed label, normalised
+header, content hash and fragment rects.  Exit status 2 on a refused sidecar.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
+import io
 import json
 import os
-import shutil
-import subprocess
+import re
 import sys
+from contextlib import contextmanager
 from functools import reduce
 
-import pikepdf
-import pymupdf
 import pypdf
-from PIL import Image, ImageChops
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import hsed_annot as H  # noqa: E402
+from extract_tables import norm_words, words_hash  # noqa: E402
 
-GS = shutil.which("gs") or "/opt/local/bin/gs"
-SIPS = "/usr/bin/sips" if os.path.exists("/usr/bin/sips") else None   # CoreGraphics: macOS only
-DPI = 100
-TARGETS = ((46, H.TYPE_ROW), (52, H.ENUM_VALUES), (240, H.TABLE_UIDS))   # (table number, directive)
-
-
-def md5_file(p: str) -> str:
-    return hashlib.md5(open(p, "rb").read()).hexdigest()
+WS = re.compile(r"\s+")
+CAPTION_RE = re.compile(r"^\s*Table\s+\d+\s*")
 
 
 def md5_bytes(b: bytes) -> str:
     return hashlib.md5(b).hexdigest()
 
 
-# ----------------------------------------------------------------------------- anchors from the extractor's JSON
-def cells_of(t: dict) -> list[dict]:
-    return [c for row in t["header_rows"] + t["rows"] for c in row] \
-        + [c for r in t["repeated_header_rows"] for c in r["cells"]]
+def norm_header(texts) -> list[str]:
+    """Header cells as the rules compare them (design section 3.4): whitespace stripped, case folded."""
+    return [WS.sub("", t).lower() for t in texts]
 
 
-def boxes_on(t: dict, page: int) -> list[list[float]]:
-    """Every rectangle the extractor attributed to a cell on `page`: glyph bbox, estimated bbox of an
-    empty cell, drawn (shaded) cell rect, and per-page fragments."""
-    return [b for c in cells_of(t) if c.get("page") == page
-            for b in (c.get("bbox"), c.get("est_bbox"), c.get("fill_bbox")) if b] \
-        + [f["bbox"] for c in cells_of(t) for f in c.get("fragments", []) if f.get("page") == page and f.get("bbox")]
+def cells_hash(t: dict) -> str:
+    """sha256 over the table's cell texts, header rows first, tab between cells, newline between rows."""
+    rows = t["header_rows"] + t["rows"]
+    return hashlib.sha256("\n".join("\t".join(c["text"] for c in row) for row in rows).encode()).hexdigest()
 
 
-def union(boxes) -> tuple[float, float, float, float]:
-    return reduce(lambda a, b: (min(a[0], b[0]), min(a[1], b[1]), max(a[2], b[2]), max(a[3], b[3])), boxes)
+def label_of(page: int, label_offset: int) -> int | None:
+    """Printed page label of a 0-based page index, None before the printed numbering starts."""
+    label = page + 1 - label_offset
+    return label if label >= 1 else None
 
 
-def anchor(t: dict, directive: str) -> H.HsedAnnot:
-    pages = tuple(t["pages"])
-    return H.HsedAnnot(directive=directive, path=tuple(t["struct_path"]), caption=t["caption"],
-                       pages=pages, rect=tuple(round(v, 2) for v in union(boxes_on(t, pages[0]))))
+# ----------------------------------------------------------------------------- resolution against the IR
+def resolve_table(ir: dict, anchor: H.Anchor) -> tuple[H.HsedAnnot, dict]:
+    parts = [t for t in ir["tables"] if t["id"] == anchor.id]
+    if not parts:
+        raise KeyError(f"no table {anchor.id} in the IR")
+    t = parts[0]                                               # a split table (Core T7) anchors on its first part
+    page, rect = t["rects"][0]
+    return H.make_annot(anchor, t["struct_path"], page, rect), {
+        "ordinal": t["ordinal"], "struct": t["struct_path"], "page": page,
+        "title": CAPTION_RE.sub("", t["caption"] or "", count=1) or None,
+        "header": norm_header(c["text"] for c in t["header_rows"][0]) if t["header_rows"] else None,
+        "hash": cells_hash(t), "rects": [r for p in parts for r in p["rects"]]}
 
 
-def select(tables: list[dict]) -> list[H.HsedAnnot]:
-    by_num = {t["table_number"]: t for t in tables if t["table_number"] is not None and not t.get("part")}
-    return [anchor(by_num[n], d) for n, d in TARGETS]
+def resolve_heading(ir: dict, anchor: H.Anchor) -> tuple[H.HsedAnnot, dict]:
+    hs = [h for h in ir["headings"] if h["section"] == anchor.id]
+    if not hs:
+        raise KeyError(f"no heading numbered {anchor.id} in the IR")
+    if len(hs) > 1:
+        raise KeyError(f"{len(hs)} headings numbered {anchor.id} in the IR")
+    h = hs[0]
+    return H.make_annot(anchor, h["struct_path"], h["page"], h["rect"]), {
+        "ordinal": None, "struct": h["struct_path"], "page": h["page"], "title": h["title"], "header": None,
+        "hash": words_hash(norm_words(h["title"])), "rects": [[h["page"], h["rect"]]]}
+
+
+def resolve_para(ir: dict, anchor: H.Anchor) -> tuple[H.HsedAnnot, dict]:
+    section, item = anchor.id.split("#", 1)
+    in_section = [p for p in ir["paras"] if p["section"] == section]
+    if item.startswith("p") and item[1:].isdigit():            # <section>#p<k>: the k-th /P of the section
+        plain = [p for p in in_section if p["kind"] == "P"]
+        hits = plain[int(item[1:]) - 1: int(item[1:])] if int(item[1:]) >= 1 else []
+    else:
+        hits = [p for p in in_section if p["item"] == item]
+    if not hits:
+        raise KeyError(f"no paragraph {anchor.id} in the IR ({len(in_section)} paragraphs in section {section})")
+    if len(hits) > 1:
+        raise KeyError(f"{len(hits)} paragraphs labelled {anchor.id} in the IR")
+    p = hits[0]
+    return H.make_annot(anchor, p["struct_path"], p["page"], p["rect"]), {
+        "ordinal": None, "struct": p["struct_path"], "page": p["page"], "title": None, "header": None,
+        "hash": p["hash"], "rects": [[p["page"], p["rect"]]]}
+
+
+def resolve_doc(ir: dict, anchor: H.Anchor) -> tuple[H.HsedAnnot, dict]:
+    return H.make_annot(anchor, H.DOC_STRUCT, H.DOC_PAGE, H.DOC_RECT), {
+        "ordinal": None, "struct": H.DOC_STRUCT, "page": H.DOC_PAGE, "title": None, "header": None, "hash": None,
+        "rects": [[H.DOC_PAGE, list(H.DOC_RECT)]]}
+
+
+RESOLVERS = {"Doc": resolve_doc, "Rule": resolve_heading, "Bind": resolve_table, "Law": resolve_para,
+             "Behaviour": resolve_para}
+
+
+def resolve(ir: dict, anchor: H.Anchor) -> tuple[H.HsedAnnot, dict]:
+    """(annotation, manifest record) for one sidecar line; KeyError when the IR has no such anchor."""
+    annot, facts = RESOLVERS[anchor.kind](ir, anchor)
+    return annot, {"id": anchor.id, "kind": anchor.kind, **facts, "label": label_of(facts["page"], ir["labelOffset"])}
+
+
+def resolve_all(ir: dict, anchors: list[H.Anchor], spec: str, hsa_name: str) -> list[tuple[H.HsedAnnot, dict]]:
+    """Every line resolved, in canonical order; every failure reported, naming the line, before exit."""
+    def attempt(a):
+        try:
+            return resolve(ir, a) if a.spec == spec else KeyError(f"spec is not {spec}")
+        except KeyError as e:
+            return e
+
+    outcomes = [(a, attempt(a)) for a in anchors]
+    failures = [f"{hsa_name}: {a.line!r}: {e.args[0]}" for a, e in outcomes if isinstance(e, KeyError)]
+    if failures:
+        sys.exit("refused:\n  " + "\n  ".join(failures))
+    return sorted((r for _, r in outcomes), key=lambda r: r[0].sort_key)
 
 
 # ----------------------------------------------------------------------------- writer
-def write_annotated(orig: str, out: str, annots: list[H.HsedAnnot]) -> None:
-    w = pypdf.PdfWriter(orig, incremental=True)
+REGULAR = re.compile(rb"[^\x00\t\n\x0c\r ()<>\[\]{}/%]")           # PDF 32000 7.2.2: not white space, not a delimiter
+
+
+def _serialised(obj) -> bytes:
+    b = io.BytesIO()
+    obj.write_to_stream(b)
+    return b.getvalue()
+
+
+def _joined(parts: list[bytes]) -> bytes:
+    """Tokens with a space only where two regular characters would otherwise touch."""
+    return reduce(lambda acc, p: acc + (b" " if acc and REGULAR.match(acc[-1:]) and REGULAR.match(p[:1]) else b"") + p,
+                  parts, b"")
+
+
+@contextmanager
+def compact_syntax():
+    """While active, pypdf writes dictionaries and arrays without the newlines and padding of its
+    default pretty form (`<</Type/Annot/F 6/Rect[36 720 108 756]...>>`): the same objects, fewer
+    bytes in the tail (design section 1: the additions to the PDF are to be minimal).  Whitespace
+    only; every reader parses both forms identically."""
+    from pypdf.generic import ArrayObject, DictionaryObject
+
+    def dict_write(self, stream, encryption_key=None):
+        items = [(k, v) for k, v in self.items() if not (len(k) > 2 and k[1] == "%" and k[-1] == "%")]
+        stream.write(b"<<" + b"".join(_joined([_serialised(k), _serialised(v)]) for k, v in items) + b">>")
+
+    def array_write(self, stream, encryption_key=None):
+        stream.write(b"[" + _joined([_serialised(x) for x in self]) + b"]")
+
+    saved = DictionaryObject.write_to_stream, ArrayObject.write_to_stream
+    DictionaryObject.write_to_stream, ArrayObject.write_to_stream = dict_write, array_write
+    try:
+        yield
+    finally:
+        DictionaryObject.write_to_stream, ArrayObject.write_to_stream = saved
+
+
+def write_annotated(pristine: str, out: str, annots: list[H.HsedAnnot]) -> None:
+    """pristine + ONE incremental section holding the annotations, in the order given (pypdf numbers
+    the new objects in that order, so the file order is the canonical order)."""
+    w = pypdf.PdfWriter(pristine, incremental=True)
     for a in annots:
         w.add_annotation(page_number=a.page, annotation=H.to_pypdf(a))
-    w.write(out)
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
+    with compact_syntax():
+        w.write(out)
 
 
-# ----------------------------------------------------------------------------- renderers
-def gs_render(pdf: str, page1: int, png: str) -> dict:
-    r = subprocess.run([GS, "-q", "-dNOPAUSE", "-dBATCH", "-dSAFER", "-sDEVICE=png16m", f"-r{DPI}",
-                        f"-dFirstPage={page1}", f"-dLastPage={page1}", f"-sOutputFile={png}", pdf],
-                       capture_output=True, text=True)
-    return {"png": png, "md5": md5_file(png) if r.returncode == 0 else None, "rc": r.returncode, "stderr": r.stderr[-300:]}
+def manifest_of(ir: dict, pristine_md5: str, records: list[dict]) -> dict:
+    return {"irVersion": ir["irVersion"], "spec": ir["spec"], "source": ir["source"], "md5": pristine_md5,
+            "pages": ir["pages"], "labelOffset": ir["labelOffset"], "anchors": records}
 
 
-def pixdiff(a: str, b: str) -> dict:
-    ia, ib = Image.open(a).convert("RGB"), Image.open(b).convert("RGB")
-    if ia.size != ib.size:
-        return {"size_mismatch": [ia.size, ib.size]}
-    d = ImageChops.difference(ia, ib)
-    any_channel = reduce(ImageChops.lighter, d.split())          # per-pixel max over R,G,B: 0 only where all three agree
-    return {"differing_pixels": sum(any_channel.histogram()[1:]), "diff_bbox": d.getbbox(), "size": ia.size}
+def dump_json(obj, path: str) -> None:
+    with open(path, "w") as f:
+        json.dump(obj, f, indent=1, sort_keys=True, ensure_ascii=False)
+        f.write("\n")
 
 
-def mupdf_render_md5(pdf: str, page0: int) -> str:
-    doc = pymupdf.open(pdf)
+def annotate(spec: str, pristine: str, ir_path: str, hsa: str, out: str, upd: str, manifest: str) -> dict:
+    """The whole job; returns a summary (also what main prints)."""
+    ir = json.load(open(ir_path))
+    head = open(pristine, "rb").read()
+    if ir["spec"] != spec:
+        sys.exit(f"{ir_path} is the IR of {ir['spec']}, not {spec}")
+    if ir["pdfMd5"] != md5_bytes(head):
+        sys.exit(f"{pristine} has md5 {md5_bytes(head)} but {ir_path} was extracted from {ir['pdfMd5']}")
     try:
-        return md5_bytes(doc[page0].get_pixmap(dpi=DPI, annots=True).tobytes("png"))
-    finally:
-        doc.close()
+        anchors = H.parse_hsa(open(hsa).read(), hsa)
+    except ValueError as e:
+        sys.exit(f"refused: {e}")
+    resolved = resolve_all(ir, anchors, spec, hsa)
+    annots = [a for a, _ in resolved]
+    write_annotated(pristine, out, annots)
+    data = open(out, "rb").read()
+    assert data[:len(head)] == head, "pypdf did not keep the pristine bytes as a prefix"
+    tail = data[len(head):]
+    for p in (upd, manifest):
+        os.makedirs(os.path.dirname(os.path.abspath(p)), exist_ok=True)
+    open(upd, "wb").write(tail)
+    dump_json(manifest_of(ir, ir["pdfMd5"], [r for _, r in resolved]), manifest)
+    return {"spec": spec, "anchors": len(annots), "pristine_bytes": len(head), "tail_bytes": len(tail),
+            "annotated_md5": md5_bytes(data), "out": out, "upd": upd, "manifest": manifest,
+            "pages_1based": sorted({a.page + 1 for a in annots})}
 
 
-def single_page_pdf(src: str, page0: int, out: str) -> None:
-    """Copy one page (with its /Annots) into a fresh PDF so CoreGraphics renders just that page."""
-    with pikepdf.open(src) as s, pikepdf.new() as d:
-        d.pages.append(s.pages[page0])
-        d.save(out)
-
-
-def sips_render(pdf: str, png: str) -> dict:
-    if SIPS is None:
-        return {"png": png, "md5": None, "rc": None, "stderr": "", "skipped": True}
-    r = subprocess.run([SIPS, "-s", "format", "png", pdf, "--out", png], capture_output=True, text=True)
-    return {"png": png, "md5": md5_file(png) if r.returncode == 0 and os.path.exists(png) else None,
-            "rc": r.returncode, "stderr": r.stderr[-200:]}
-
-
-def render_checks(orig: str, out: str, page0: int, rdir: str) -> dict:
-    p1 = page0 + 1
-    g0, g1 = gs_render(orig, p1, f"{rdir}/p{p1}_orig_gs.png"), gs_render(out, p1, f"{rdir}/p{p1}_annot_gs.png")
-    single_page_pdf(orig, page0, f"{rdir}/p{p1}_orig.pdf")
-    single_page_pdf(out, page0, f"{rdir}/p{p1}_annot.pdf")
-    s0, s1 = sips_render(f"{rdir}/p{p1}_orig.pdf", f"{rdir}/p{p1}_orig_sips.png"), sips_render(f"{rdir}/p{p1}_annot.pdf", f"{rdir}/p{p1}_annot_sips.png")
-    m0, m1 = mupdf_render_md5(orig, page0), mupdf_render_md5(out, page0)
-    return {"pdf_page_1based": p1,
-            "gs": {"orig_md5": g0["md5"], "annot_md5": g1["md5"], "identical": g0["md5"] == g1["md5"] and g0["md5"] is not None,
-                   "pixdiff": pixdiff(g0["png"], g1["png"]) if g0["md5"] and g1["md5"] else None, "stderr": (g0["stderr"] + g1["stderr"]).strip()},
-            "mupdf": {"orig_md5": m0, "annot_md5": m1, "identical": m0 == m1},
-            "sips": {"orig_md5": s0["md5"], "annot_md5": s1["md5"],
-                     "identical": None if s0.get("skipped") else s0["md5"] == s1["md5"] and s0["md5"] is not None,
-                     "single_page_pdfs": [f"{rdir}/p{p1}_orig.pdf", f"{rdir}/p{p1}_annot.pdf"], "stderr": (s0["stderr"] + s1["stderr"]).strip()}}
-
-
-# ----------------------------------------------------------------------------- read-back
-def readback(out: str) -> dict:
-    with pikepdf.open(out) as pdf:
-        found = H.find_pikepdf(pdf)
-        annots_per_page = {i: [str(a.get("/Subtype")) for a in (pdf.pages[i].obj.get("/Annots") or [])]
-                           for i in sorted({i for i, _, _ in found})}
-        n_objects = len(pdf.objects)
-        is_lin = pdf.is_linearized
-    with pikepdf.open(out) as pdf:
-        raw = {f"page{i}": {str(k): (str(v) if k != "/HSED" else {str(kk): str(vv) for kk, vv in v.items()})
-                            for k, v in a.items() if k not in ("/P",)}
-               for i, pg in enumerate(pdf.pages) for a in (pg.obj.get("/Annots") or []) if H.from_pikepdf(a)[0] is not None}
-    return {"found": [{"page": i, "directive": a.directive, "path": H.format_path(a.path), "caption": a.caption,
-                       "pages": list(a.pages), "rect": list(a.rect), "problems": probs} for i, a, probs in found],
-            "annots_on_touched_pages": annots_per_page, "n_objects": n_objects, "is_linearized_claimed": is_lin,
-            "raw_annotation_dicts": raw}
-
-
-def tail_text(orig: str, out: str) -> str:
-    ob, nb = open(orig, "rb").read(), open(out, "rb").read()
-    return nb[len(ob):].decode("latin1")
-
-
-def main(argv) -> int:
-    orig, tables_json, out_dir = argv[1], argv[2], argv[3]
-    os.makedirs(f"{out_dir}/render", exist_ok=True)
-    out = f"{out_dir}/core_annotated.pdf"
-    tables = json.load(open(tables_json))["tables"]
-    annots = select(tables)
-    write_annotated(orig, out, annots)
-
-    ob, nb = open(orig, "rb").read(), open(out, "rb").read()
-    touched = sorted({a.page for a in annots})                       # pages whose /Page dict was rewritten
-    listed = sorted({p for a in annots for p in a.pages})           # every page any table touches
-    report = {
-        "original": {"path": orig, "size": len(ob), "md5": md5_bytes(ob)},
-        "annotated": {"path": out, "size": len(nb), "md5": md5_bytes(nb), "delta_bytes": len(nb) - len(ob),
-                      "original_is_exact_prefix": nb[:len(ob)] == ob},
-        "annotations_written": [{"directive": a.directive, "page0": a.page, "pdf_page_1based": a.page + 1,
-                                 "path": H.format_path(a.path), "caption": a.caption, "pages": list(a.pages),
-                                 "rect": list(a.rect), "contents": H.format_contents(a.directive)} for a in annots],
-        "incremental_tail": tail_text(orig, out),
-        "readback": readback(out),
-        "gs_version": subprocess.run([GS, "--version"], capture_output=True, text=True).stdout.strip(),
-        "renders": {str(p + 1): render_checks(orig, out, p, f"{out_dir}/render") for p in listed},
-        "pages_touched_1based": [p + 1 for p in touched], "pages_listed_1based": [p + 1 for p in listed],
-    }
-    # a renderer that is not available on this machine (sips off macOS) is skipped, not failed
-    report["all_renders_identical"] = all(r[k]["identical"] for r in report["renders"].values() for k in ("gs", "mupdf", "sips")
-                                          if r[k]["identical"] is not None)
-    report["all_pixdiff_zero"] = all(r["gs"]["pixdiff"]["differing_pixels"] == 0 for r in report["renders"].values())
-    json.dump(report, open(f"{out_dir}/annotate_report.json", "w"), indent=1, default=str)
-    print(json.dumps({k: report[k] for k in ("original", "annotated", "pages_touched_1based", "pages_listed_1based",
-                                              "all_renders_identical", "all_pixdiff_zero")}, indent=1))
-    print("renders:", json.dumps({p: {k: r[k]["identical"] for k in ("gs", "mupdf", "sips")} | {"pixdiff": r["gs"]["pixdiff"]["differing_pixels"]}
-                                  for p, r in report["renders"].items()}))
-    print("readback:", json.dumps(report["readback"]["found"], indent=1))
-    return 0 if report["annotated"]["original_is_exact_prefix"] and report["all_renders_identical"] and len(report["readback"]["found"]) == 3 else 1
+def main(argv=None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--spec", required=True)
+    ap.add_argument("--pristine", required=True, help="the original PDF under tcg/ (never modified)")
+    ap.add_argument("--ir", required=True, help="the pristine IR, spec/ir/<spec>.json")
+    ap.add_argument("--hsa", required=True, help="the sidecar, spec/annot/<spec>.hsa")
+    ap.add_argument("--out", required=True, help="the annotated PDF to write, build/<spec>.hsed.pdf")
+    ap.add_argument("--upd", required=True, help="where to export the incremental tail")
+    ap.add_argument("--manifest", required=True, help="where to write the manifest JSON")
+    args = ap.parse_args(argv)
+    print(json.dumps(annotate(args.spec, args.pristine, args.ir, args.hsa, args.out, args.upd, args.manifest)))
+    return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main())

@@ -5,11 +5,15 @@ PY      := .venv/bin/python
 EXTRACT := $(PY) -I tools/extract/extract_tables.py
 CORE    := tcg/TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf
 OPAL    := tcg/TCG_Storage-Opal_SSC_v2.30.pdf
+# the annotation round trip of docs/spec-as-source.md section 5.3 (M1: Core only)
+ANNOT   := spec/annot
+CORE_ANNOT_ARGS := --spec core-2.01 --pristine $(CORE) --ir spec/ir/core-2.01.json --hsa $(ANNOT)/core-2.01.hsa \
+                   --out build/core-2.01.hsed.pdf --upd $(ANNOT)/core-2.01.upd --manifest $(ANNOT)/core-2.01.manifest.json
 
-.PHONY: check test extract extract-test regen-diff m1 venv
+.PHONY: check test extract extract-test regen-diff annotate pdf-checks venv
 
 ## everything CI runs
-check: test extract-test regen-diff m1
+check: test extract-test regen-diff annotate pdf-checks
 
 ## both Haskell test suites
 test:
@@ -36,6 +40,15 @@ extract-test: $(PY)
 regen-diff: extract
 	git diff --exit-code --stat spec/ir
 
-## the M1 round trip: annotate, re-extract, generate, check (exit status is the verdict)
-m1: $(PY)
-	tools/extract/run_all.sh
+## build/core-2.01.hsed.pdf from the committed sidecar: pristine + ONE incremental section;
+## rewrites the committed .upd and manifest (which must then diff clean, see pdf-checks)
+annotate: $(PY)
+	mkdir -p build
+	$(PY) -I tools/extract/annotate.py $(CORE_ANNOT_ARGS)
+
+## the PDF gates (design 5.4 c-e): byte prefix, pristine + upd == annotated, tail budget, identical
+## renders (gs, MuPDF, sips where present), three-reader read-back, dump(apply(upd)) == hsa,
+## annotate(hsa) == upd; then the committed .upd and manifest must be what annotate produced
+pdf-checks: annotate
+	$(PY) -I tools/extract/pdf_checks.py $(CORE_ANNOT_ARGS) --work build/pdf-checks
+	git diff --exit-code --stat $(ANNOT)

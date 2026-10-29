@@ -745,7 +745,7 @@ def table_record(cache: PageCache, t: dict, page_of: dict, page_offset: int, nes
         + ([f"cells split across pages: {sum(1 for r in rows for c in r if c.get('fragments'))}"] if any(c.get("fragments") for r in rows for c in r) else []) \
         + ([f"mis-tagged merged cells split by geometry: {sum(1 for r in rows for c in r if c.get('split_from_merged'))}"] if any(c.get("split_from_merged") for r in rows for c in r) else [])
     return {"table_number": number, "caption": caption, "caption_path": cpath,
-            "struct_path": list(path), "nested_in": t["nested_in"],
+            "struct_path": path_str(path), "nested_in": t["nested_in"],
             "pages": sorted(pages), "printed_pages": [p - page_offset for p in sorted(pages)],
             "n_rows": len(data), "n_cols": ncols, "header_source": source,
             "header_rows": header, "repeated_header_rows": repeated, "rows": data, "warnings": warnings}

@@ -1,0 +1,3 @@
+# Must fail `hsedc check` with E-SHAPE at core-2.01.pdf#page=100&T46: `feature` expects a byte-grid
+# Form, and Table 46 is a three-column type table ([UID, Name, Format]); design 3.3, M1 acceptance (f).
+core-2.01 | T46 | feature

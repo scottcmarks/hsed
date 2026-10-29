@@ -29,9 +29,11 @@ jobs:
           restore-keys: stack-${{ runner.os }}-
       - run: stack --system-ghc --no-install-ghc test
 
-  # The committed table extractions regenerate byte-for-byte, and the M1 annotate ->
-  # extract -> generate round trip holds (the Haskell typecheck of the generated module is
-  # part of the stack job's library; here the PDF side and the generator are exercised).
+  # The committed IR extractions regenerate byte-for-byte (gate b), and the PDF side of the
+  # annotation round trip holds (gates c-e, docs/spec-as-source.md section 5.4): the annotated
+  # PDF is pristine + the committed .upd, renders identically under Ghostscript and MuPDF (sips is
+  # macOS-only and skipped here), reads back the same through pikepdf, pypdf and pymupdf, and
+  # dump(apply(upd)) == hsa, annotate(hsa) == upd.
   extract:
     runs-on: ubuntu-latest
     steps:
@@ -41,5 +43,7 @@ jobs:
           python-version: '3.12'
       - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ghostscript
       - run: make venv
+      - run: make extract-test
       - run: make regen-diff
-      - run: make m1
+      - run: make annotate
+      - run: make pdf-checks

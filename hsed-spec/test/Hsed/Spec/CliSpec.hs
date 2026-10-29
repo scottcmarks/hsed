@@ -15,8 +15,9 @@ sidecar (@--hsa@): @bind@ and @compile@ write nothing when they report an
 Error, so a bad comment cannot overwrite the committed bindings or generated
 module; @orphans@, @ledger@ and @explain@ report the sidecar's and the
 annotations' Errors and exit non-zero on them; @orphans@ lists the invalid
-and ambiguous tables beside the unbound ones; @--target@ and @explain@ name a
-spec only in full (@core@, @core-2.01@, @core201@).
+and ambiguous tables beside the unbound ones; @ledger@ with several IRs and one
+sidecar applies it to the IR whose spec it names; @--target@ and @explain@ name
+a spec only in full (@core@, @core-2.01@, @core201@).
 -}
 module Hsed.Spec.CliSpec (spec) where
 
@@ -29,18 +30,29 @@ import           Hsed.Spec.Cli
 import           Hsed.Spec.Common (ErrataSet (..), SpecId (..), matchesSpec)
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.CoreIR (committedHsa, withCore, withoutLine)
-import           Hsed.Spec.Report (orphans)
+import           Hsed.Spec.IR     (readIR)
+import           Hsed.Spec.Report (ledger, orphans, renderLedger)
 import           Hsed.Spec.Sidecar (withSidecar)
 import           Hsed.Spec.Anchor (AnchorId (..))
 
 
-coreIR :: FilePath
+coreIR, opalIR :: FilePath
 coreIR = "../spec/ir/core-2.01.json"
+opalIR = "../spec/ir/opal-2.30.json"
 
 -- | Run a command with its output discarded; whether it exited non-zero.
 quietly :: Command -> IO Bool
 quietly cmd = bracket (openFile "/dev/null" WriteMode) hClose $ \null' ->
   (runWith null' null' cmd >> pure False) `catch` \(e :: ExitCode) -> pure (e /= ExitSuccess)
+
+-- | Run a command; whether it exited non-zero, and what it wrote to its first handle.
+captured :: Command -> IO (Bool, Text)
+captured cmd = withSystemTempDirectory "hsedc-out" $ \dir -> do
+  let path = dir </> "out"
+  failed <- withFile path WriteMode $ \h -> bracket (openFile "/dev/null" WriteMode) hClose $ \null' ->
+    (runWith h null' cmd >> pure False) `catch` \(e :: ExitCode) -> pure (e /= ExitSuccess)
+  text <- readFileUtf8 path
+  pure (failed, text)
 
 -- | A sidecar file in a temporary directory, and what the test does with it there.
 withSidecarFile :: Text -> (FilePath -> FilePath -> IO a) -> IO a
@@ -116,3 +128,16 @@ spec = do
             os = orphans ir
         fmap Cm.code (lookup (TableId 46) os) `shouldBe` Just "E-GRAMMAR"
         length os `shouldBe` 130
+
+    describe "ledger" $ do
+      it "applies one sidecar to the IR whose spec its lines name, and reads the others as they are" $
+        withSidecarFile hsa $ \_ file -> do
+          opal <- readIR opalIR >>= either throwString pure
+          (failed, out) <- captured (CmdLedger [coreIR, opalIR] (Just file))
+          failed `shouldBe` False
+          out `shouldBe` renderLedger [ledger (snd (withSidecar pristine hsa)), ledger opal]
+      it "refuses a sidecar line naming none of the IRs' specs" $ do
+        withSidecarFile (hsa <> "core-2.02 | T46 | typeRow\n") $ \_ file ->
+          quietly (CmdLedger [coreIR, opalIR] (Just file)) `shouldReturn` True
+        withSidecarFile hsa $ \_ file ->
+          quietly (CmdLedger [opalIR] (Just file)) `shouldReturn` True

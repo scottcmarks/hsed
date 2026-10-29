@@ -16,7 +16,9 @@ The commands of the spec compiler (docs/spec-as-source.md sections 4.2 and
 command reads an IR v1 file, by default the annotated extraction
 @build/core-2.01.hsed.json@ (@make ir-annotated@); @--hsa FILE@ replaces the
 IR's annotations with a sidecar's, resolved against the IR, so that a sidecar
-can be checked without annotating and re-extracting the PDF.
+can be checked without annotating and re-extracting the PDF. @ledger@ takes
+several IRs and one sidecar: the sidecar replaces the annotations of the IRs
+whose spec its lines name, and the others are read as they are.
 
 Findings print in 'renderFinding' form on stdout, errors first; a one-line
 summary goes to stderr. Every command exits non-zero when any Error was found,
@@ -49,7 +51,7 @@ import           Hsed.Spec.Report
 import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifyWith, explain,
                                            numberedTables, scopeOf, tablePage)
 import           Hsed.Spec.Shape          (captionTitle)
-import           Hsed.Spec.Sidecar        (withSidecar)
+import           Hsed.Spec.Sidecar        (withSidecar, withSidecarOn)
 
 
 -- | Where the IR comes from: a file, and optionally a sidecar replacing its annotations.
@@ -141,10 +143,12 @@ runWith out err = \case
                 <> display (n isInvalid) <> " invalid)\n")
     exitOnErrors fs
   CmdLedger paths hsa -> do
-    loaded <- traverse (\p -> load err (Input p hsa)) (if null paths then [defaultIR] else paths)
-    let errs = sortFindings (concat [ sideFs <> filter isError (snd (classifyWith ir)) | (ir, sideFs) <- loaded ])
+    irs  <- traverse (readOrFail err) (if null paths then [defaultIR] else paths)
+    side <- traverse readFileUtf8 hsa
+    let (sideFs, irs') = maybe ([], irs) (withSidecarOn irs) side
+        errs = sortFindings (sideFs <> concat [ filter isError (snd (classifyWith ir)) | ir <- irs' ])
     report out errs
-    say out (display (renderLedger (map (ledger . fst) loaded)))
+    say out (display (renderLedger (map ledger irs')))
     exitOnErrors errs
   CmdNotImplemented name _ -> failWith err ("hsedc " <> display name <> ": not implemented")
   where
@@ -167,13 +171,16 @@ runWith out err = \case
 --   and what resolving the sidecar found.
 load :: Handle -> Input -> IO (SpecIR, [Finding])
 load err (Input path hsa) = do
-  ir <- readIR path >>= either (failWith err . fromString) pure
+  ir <- readOrFail err path
   case hsa of
     Nothing -> pure (ir, [])
     Just f  -> do
       text <- readFileUtf8 f
       let (fs, ir') = withSidecar ir text
       pure (ir', fs)
+
+readOrFail :: Handle -> FilePath -> IO SpecIR
+readOrFail err path = readIR path >>= either (failWith err . fromString) pure
 
 report :: Handle -> [Finding] -> IO ()
 report h = say h . foldMap (\f -> display (renderFinding f) <> "\n")

@@ -27,6 +27,7 @@ module Hsed.Spec.Sidecar
   , resolveLine
   , resolveSidecar
   , withSidecar
+  , withSidecarOn
   ) where
 
 import qualified Data.Text        as DT
@@ -85,17 +86,40 @@ resolveLine ir l
 
 -- | Every line resolved; the failures as findings.
 resolveSidecar :: SpecIR -> Text -> ([Finding], [AnnotIR])
-resolveSidecar ir text = (bad <> lefts resolved, rights resolved)
+resolveSidecar ir text = first (bad <>) (resolveLines ir ls)
   where
     (bad, ls) = parseSidecar text
-    resolved  = map (resolveLine ir) ls
+
+resolveLines :: SpecIR -> [SidecarLine] -> ([Finding], [AnnotIR])
+resolveLines ir ls = (lefts resolved, rights resolved)
+  where resolved = map (resolveLine ir) ls
 
 -- | The IR with its annotations replaced by a sidecar's, in canonical order
 --   (kind order, then the anchor id's natural order), the order annotate.py
 --   writes them in and the extractor reads them back.
 withSidecar :: SpecIR -> Text -> ([Finding], SpecIR)
-withSidecar ir text = (fs, ir { annots = L.sortOn order as })
+withSidecar ir text = first (bad <>) (withLines ir ls)
   where
-    (fs, as) = resolveSidecar ir text
+    (bad, ls) = parseSidecar text
+
+-- | Several IRs and one sidecar, as @hsedc ledger@ takes them: each IR whose
+--   spec a line names has its annotations replaced by the lines naming it, the
+--   other IRs keep their own, and a line naming none of the IRs' specs is
+--   @E-SIDECAR@. For one IR it is 'withSidecar'.
+withSidecarOn :: [SpecIR] -> Text -> ([Finding], [SpecIR])
+withSidecarOn [ir] text = second pure (withSidecar ir text)
+withSidecarOn irs text = (bad <> stray <> concat found, irs')
+  where
+    (bad, ls) = parseSidecar text
+    (found, irs') = L.unzip [ if null own then ([], ir) else withLines ir own
+                          | ir <- irs, let own = filter ((== ir.spec) . slSpec) ls ]
+    stray = [ finding Error "E-SIDECAR" ("line " <> tshow (slLine l) <> ": spec is " <> slSpec l
+                <> ", and no IR given is (" <> T.intercalate ", " (map (.spec) irs) <> ")")
+            | l <- ls, slSpec l `notElem` map (.spec) irs ]
+
+withLines :: SpecIR -> [SidecarLine] -> ([Finding], SpecIR)
+withLines ir ls = (fs, ir { annots = L.sortOn order as })
+  where
+    (fs, as) = resolveLines ir ls
     order :: AnnotIR -> (Int, [Either Text Integer])
     order a = (fromEnum a.kind, naturalKey a.id)

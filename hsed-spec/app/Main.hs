@@ -53,7 +53,7 @@ commands = hsubparser $ mconcat
       (progDesc "Say how a table is bound: hsedc explain core 46"))
   , command "orphans" (info (CmdOrphans <$> input) (progDesc "List the numbered tables nothing binds: unbound, ambiguous or with an annotation that does not bind"))
   , command "ledger" (info (CmdLedger <$> many (strArgument (metavar "IR...")) <*> hsaOpt)
-      (progDesc "Count rule-bound, comment-bound and unbound tables per spec"))
+      (progDesc "Count rule-bound, comment-bound and unbound tables per spec; --hsa applies to the IRs whose spec its lines name"))
   , command "dump" (info (CmdNotImplemented "dump" <$> many (strArgument (metavar "ARG")))
       (progDesc "Dump the annotations of a PDF as a sidecar (not implemented: tools/extract/dump.py)"))
   ]

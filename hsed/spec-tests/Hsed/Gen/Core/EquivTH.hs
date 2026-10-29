@@ -13,7 +13,10 @@ section 5.5, the regenerate-and-compare oracle). Both read source at compile
 time and build, for each definition, a 'Def' whose value is computed at run
 time:
 
-* 'generatedDefs' reads the modules @hsedc compile@ wrote: every signature
+* 'generatedDefs' reads every module @hsedc compile@ wrote for the spec (all
+  of @gen/Hsed/Gen/Core@, so that a new generated module cannot escape the
+  comparison: one not imported by "Hsed.Gen.Core.EquivSpec" stops the
+  compilation): every signature
   @name :: T@ whose type the hand-written modules also have (@UID@, @String@,
   @HalfUID@ and the two name maps; a @TypeDef@ has no hand-written
   counterpart) and every @data Core_\<enum\>@, each with the caption of the
@@ -39,10 +42,12 @@ module Hsed.Gen.Core.EquivTH
 
 import           Control.Monad              (forM)
 import           Data.Char                  (isDigit, isSpace)
-import           Data.List                  (isPrefixOf, stripPrefix, transpose)
+import           Data.List                  (isPrefixOf, sort, stripPrefix, transpose)
 import           Data.Maybe                 (catMaybes)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Syntax (addDependentFile)
+import           System.Directory           (doesDirectoryExist, listDirectory)
+import           System.FilePath            (takeExtension, (</>))
 
 import           Hsed.Core.Types            (enumValue)
 
@@ -65,9 +70,11 @@ data Def = Def
 
 -- * The generated modules
 
--- | @$(generatedDefs ["gen/Hsed/Gen/Core/Types.hs", ...] "G")@, the modules imported qualified as @G@.
-generatedDefs :: [FilePath] -> String -> Q Exp
-generatedDefs paths g = do
+-- | @$(generatedDefs "gen/Hsed/Gen/Core" "G")@: every module under the
+--   directory, at any depth, all imported qualified as @G@.
+generatedDefs :: FilePath -> String -> Q Exp
+generatedDefs dir g = do
+  paths <- runIO (haskellFiles dir)
   mapM_ addDependentFile paths
   srcs <- runIO (mapM readFile paths)
   defs <- fmap concat (forM srcs (\src -> forM (generatedNames (lines src)) one))
@@ -80,6 +87,14 @@ generatedDefs paths g = do
         Just nm
           | isEnum    -> [| Def n table caption (Entries [ (show x, enumValue x) | x <- [minBound .. maxBound :: $(conT nm)] ]) |]
           | otherwise -> [| Def n table caption (Scalar (show $(varE nm))) |]
+
+-- | Every @.hs@ file under a directory, sorted.
+haskellFiles :: FilePath -> IO [FilePath]
+haskellFiles d = do
+  entries <- map (d </>) . sort <$> listDirectory d
+  fmap concat $ forM entries $ \e -> do
+    isDir <- doesDirectoryExist e
+    if isDir then haskellFiles e else pure [ e | takeExtension e == ".hs" ]
 
 -- | The definitions of a generated module with the table and caption of the
 --   provenance line above each: @-- | core-2.01 T46 AC_element (PDF 100 / ...@.

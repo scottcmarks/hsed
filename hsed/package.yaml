@@ -65,6 +65,8 @@ tests:
     - hsed
     - hsed-core
     - containers         # EquivSpec: the two sides by name
+    - directory          # EquivTH: every generated module of the spec
+    - filepath
     - hspec
     - template-haskell   # EquivTH: every definition of either side, from source
     build-tools:

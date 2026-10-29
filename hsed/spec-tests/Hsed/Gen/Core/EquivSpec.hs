@@ -10,8 +10,8 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 Design docs/spec-as-source.md section 5.5, the regenerate-and-compare oracle
-(M2a): every definition @hsedc compile@ generated from the PDF
-(@gen/Hsed/Gen/Core/{Types,Enums,TableUIDs}.hs@, imported as @G@) beside its
+(M2a): every definition @hsedc compile@ generated from the PDF (every module
+under @gen/Hsed/Gen/Core@, each imported here as @G@) beside its
 counterpart in the hand transcription (@System.SED.MCTP.Common.{TypeUIDs,TableUIDs}@,
 as @H@), definition by definition and table caption by table caption
 ("Hsed.Gen.Core.EquivTH"). The differences must be exactly the lines of
@@ -26,18 +26,26 @@ its value column equal to what this module computes for the difference
   with @_NA@ fillers from 0; the constructors only on either side;
 * @typed-half-uid@: a hand-written @oth\<T\>@ or @bth\<T\>@ with no generated
   counterpart, its bytes those of the generated @h\<T\>@; the hand-written value;
-* @new@: a generated definition the hand transcription lacks; its value;
+* @new@: a generated definition the hand transcription lacks; its value (an
+  enumeration's size, range and a digest of its constructor names, so that a
+  binding that names other constructors cannot pass);
 * @caption@: a table whose caption the two sides print differently (spacing
   aside); @generated / hand-written@.
 
-The M1 slice is kept by name above it (M1 acceptance (d)).
+The M1 slice is kept by name above it (M1 acceptance (d)). The hand-written
+side is read where it lives, in hsed's library; when M2d makes those modules
+re-exports of the generated ones, the hand transcription is kept as a test
+fixture and 'handDefs' points at it (design section 11, M2d).
 -}
 module Hsed.Gen.Core.EquivSpec (spec) where
 
-import           Data.Char                        (isDigit, isSpace)
-import           Data.List                        (intercalate, isPrefixOf, nub, sort, stripPrefix, (\\))
+import           Data.Bits                        (xor)
+import           Data.Char                        (isDigit, isSpace, ord)
+import           Data.List                        (foldl', intercalate, isPrefixOf, nub, sort, stripPrefix, (\\))
 import qualified Data.Map                         as Map
 import           Data.Maybe                       (isJust, isNothing, mapMaybe)
+import           Data.Word                        (Word64)
+import           Numeric                          (showHex)
 import           Test.Hspec
 
 import           Hsed.Core.Types                  (Enumerated (..), enumValue)
@@ -51,8 +59,7 @@ import qualified System.SED.MCTP.Common.TypeUIDs  as H
 
 -- | Every generated definition a hand-written module could have.
 generated :: [Def]
-generated = $(generatedDefs [ "gen/Hsed/Gen/Core/Types.hs", "gen/Hsed/Gen/Core/Enums.hs"
-                            , "gen/Hsed/Gen/Core/TableUIDs.hs" ] "G")
+generated = $(generatedDefs "gen/Hsed/Gen/Core" "G")
 
 -- | Every hand-written definition the quasiquoters make.
 handWritten :: [Def]
@@ -105,6 +112,14 @@ summary d = case (captions d, generatedSide d, handSide d) of
   where
     value (Scalar s)   = s
     value (Entries es) = show (length es) ++ " constructors, values " ++ show (minimum (map snd es)) ++ ".." ++ show (maximum (map snd es))
+                         ++ ", names fnv1a64:" ++ digest (intercalate "," (map fst es))
+
+-- | FNV-1a over a string's characters, 64 bits, as sixteen hex digits: a short,
+--   stable digest of an enumeration's constructor names for its @new@ line.
+digest :: String -> String
+digest s = let h = foldl' (\acc c -> (acc `xor` fromIntegral (ord c)) * 0x100000001b3) (0xcbf29ce484222325 :: Word64) s
+               hex = showHex h ""
+           in replicate (16 - length hex) '0' ++ hex
 
 -- | Does a difference have the kind a line names?
 holds :: String -> Difference -> Bool

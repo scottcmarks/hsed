@@ -12,7 +12,8 @@
 #                   (for an enumeration, +[constructors only generated] -[constructors only hand-written])
 #   range-from-1    a range starting at 1, hand-written with _NA fillers from 0; as for spacing
 #   typed-half-uid  a hand-written oth<T>/bth<T> not generated, its bytes those of h<T>; the hand-written value
-#   new             generated, not in the hand transcription; its value (an enumeration's size and range)
+#   new             generated, not in the hand transcription; its value (an enumeration's size, range and
+#                   the FNV-1a digest of its constructor names)
 #   caption         generated / hand-written caption, spacing aside
 
 # the four UIDs hsed transcribed wrongly (design section 1)
@@ -21,7 +22,9 @@ ufeedback_sizeType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x02 0x14 | T83
 ufraction_enumType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x1c | T85: hsed carries date's 18 04
 ugen_statusType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x1a 0x02 | T86: hsed carries date's 18 04
 
-# spacing only: the PDF's kept, hsed's closed up or moved
+# spacing only: the two sides differ in spaces alone, either side having the extra one (the generated
+# value keeps the PDF's spaces within a line and joins the PDF's lines, hsed's quasiquoters join the
+# lines of its transcription without a space)
 fAuthority_object_refType | spacing | "Restricted_Reference_Type{6},uidref {AuthorityTableUID}" | T57: uidref {AuthorityTableUID} in the PDF, uidref{...} in hsed
 fCertificates_object_refType | spacing | "Restricted_Reference_Type{6},uidref {CertificatesTableUID}" | T72: uidref {CertificatesTableUID} in the PDF
 fTemplate_object_refType | spacing | "Restricted_Reference_Type{6},uidref {TemplateTableUID}" | T142: uidref {TemplateTableUID} in the PDF
@@ -30,8 +33,8 @@ fobject_refType | spacing | "General_Reference_Type {8}" | T119: General_Referen
 ftable_refType | spacing | "General_Reference_Type {9}" | T141: General_Reference_Type {9} in the PDF
 flog_row_refType | spacing | "Restricted_Reference_Type {6},uidref{LogTableUID},*" | T105: Restricted_Reference_Type {6} in the PDF; hsed split the cell differently
 fcred_object_uidrefType | spacing | "Restricted_Reference_Type{6},uidref {C_PINTableUID},uidref {C_AES_*TableUID},uidref {C_RSA_*TableUID},uidref{C_EC_*TableUID},uidref{C_HMAC_*TableUID}" | T77: the PDF spaces three uidrefs and closes two; hsed spaces all five
-fuinteger_2Type | spacing | "Simple_Type,uinteger,2" | T149: hsed's line break left Simple_Type,uinteger, 2
-Core_keys_avail_conds | spacing | +[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLocked_WriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] -[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLockedWriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] | T98: the PDF's label reads ReadLocked, WriteLocked (a space after the comma), hsed's ReadLocked,WriteLocked
+fuinteger_2Type | spacing | "Simple_Type,uinteger,2" | T149: hsed writes uinteger, 2 on one line and keeps its space; the PDF prints the cell on three lines, which the generated value joins without spaces
+Core_keys_avail_conds | spacing | +[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLocked_WriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] -[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLockedWriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] | T98: both break the label after ReadLocked,; hsedc joins the PDF's lines with a space (ReadLocked, WriteLocked), hsed's tenum joins its lines with none (ReadLocked,WriteLocked), and the comma dropped leaves ReadLockedWriteLocked
 
 # enumerations whose range starts at 1
 Core_reencrypt_state | range-from-1 | +[] -[("Core_reencrypt_state_NA",0)] | T126: the range starts at 1 (T125 Enumeration_Type, 1, 16); dEnum starts at 0 and adds _NA
@@ -44,7 +47,7 @@ T157 | caption | Table 157 uinteger_4 / Table 147 uinteger_1 | hsed's caption fo
 T161 | caption | Table 161 uinteger_8 / Table 160 uinteger_8 | hsed numbers Table 161 as 160
 
 # newly generated
-Core_gen_status | new | 64 constructors, values 0..63 | T87: generated through its rangeWords comment; hsed has only a FIXME
+Core_gen_status | new | 64 constructors, values 0..63, names fnv1a64:12da542bacb6d98d | T87: generated through its rangeWords comment; hsed has only a FIXME
 
 # the typed half-UIDs hsed derives from a hard-coded table kind
 bthMBR | typed-half-uid | btHalfUID 0x00 0x00 0x08 0x04 | T240: hsed hard-codes MBR as the one byte table; Core gives no table kind (Opal's Kind column, M5)

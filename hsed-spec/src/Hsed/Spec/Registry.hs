@@ -26,6 +26,7 @@ import           Hsed.Spec.RuleDef          (RuleDef)
 import           Hsed.Spec.Rules.EnumValues (enumValuesRule)
 import           Hsed.Spec.Rules.TableUIDs  (tableUIDsRule)
 import           Hsed.Spec.Rules.TypeRow    (typeRowRule)
+import           Hsed.Spec.Rules.UidTable   (uidTableRule)
 
 
 -- | The rules, in alphabetical order.
@@ -34,4 +35,5 @@ registry =
   [ enumValuesRule
   , tableUIDsRule
   , typeRowRule
+  , uidTableRule
   ]

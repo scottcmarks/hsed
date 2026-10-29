@@ -208,37 +208,68 @@ instance StreamItem MethodHeader where
     generate (MethodHeader i m) = generate i <> generate m
 
 instance StreamItem Parameters where
-    parser = Parameters <$> many parser <*> many parser
-    generate (Parameters r o) = mconcat $ map generate r <> map generate o
+    -- 3.2.4.2: the parameter list is a List; required parameters come first,
+    -- positionally, and are never Named values, so the first Named value starts
+    -- the optional parameters.
+    parser = require StartList
+          *> (Parameters <$> many requiredParameter <*> many parser) <*
+             require EndList
+      where
+        requiredParameter = D <$> parser <|> L <$> parser
+    generate (Parameters r o) = generate (List (r <> (N <$> o)))
+
+-- | An optional parameter is a Named value whose name is a uinteger: its 0-based
+--   position among the method signature's optional parameters (3.2.4.2).
+optionalParameter :: (IsValue v) => Natural -> v -> NamedValue
+optionalParameter i = (i .:)
 
 d :: Natural -> Value
 d = D . Datum . Unsigned
 
-instance StreamItem MethodCall where
-    parser = do
-        Call      <- parser
-        mh        <- parser
-        p         <- parser
-        EndOfData <- parser
-        status    <- parser
-        case status of
-          (List [ D (Datum (Unsigned sc))
-                , D (Datum (Unsigned  0))
-                , D (Datum (Unsigned  0))]) ->
-              pure $ MethodCall mh p sc
-          (List l) ->
-              fail $ "Status code list should be 3 uintegers, \
-                     \with the second and third being zero, but is " <> show l
+-- | The status list that ends every method invocation and response:
+--   @StartList status 0x00 0x00 EndList@ (3.2.4.2).
+statusList :: Natural -> List
+statusList sc = List [d sc, d 0, d 0]
 
+statusParser :: Parser Natural
+statusParser = parser >>= status
+  where
+    status (List [ D (Datum (Unsigned sc))
+                 , D (Datum (Unsigned  0))
+                 , D (Datum (Unsigned  0))]) = pure sc
+    status (List l) =
+        fail $ "Status code list should be 3 uintegers, \
+               \with the second and third being zero, but is " <> show l
+
+instance StreamItem MethodCall where
+    parser = MethodCall
+          <$> (require Call *> parser)
+          <*> parser
+          <*> (require EndOfData *> statusParser)
     generate (MethodCall mh p sc) =
           generate Call
        <> generate mh
        <> generate p
        <> generate EndOfData
-       <> generate ( List [ D (Datum (Unsigned sc))
-                          , D (Datum (Unsigned  0))
-                          , D (Datum (Unsigned  0))
-                          ] )
+       <> generate (statusList sc)
+
+-- | A method response (3.2.4.2): @StartList results EndList EndOfData@ and the
+--   status list. Session Manager responses are formatted as method invocations
+--   instead and parse as 'MethodCall'.
+data MethodResponse = MethodResponse { _results      :: [Value]
+                                     , _resultStatus :: Natural
+                                     }
+    deriving(Show,Eq)
+
+instance StreamItem MethodResponse where
+    parser = MethodResponse
+          <$> (unList <$> parser)
+          <*> (require EndOfData *> statusParser)
+      where unList (List vs) = vs
+    generate (MethodResponse rs sc) =
+          generate (List rs)
+       <> generate EndOfData
+       <> generate (statusList sc)
 
 
 
@@ -246,7 +277,12 @@ instance Arbitrary MethodHeader where
     arbitrary = MethodHeader <$> arbitrary <*> arbitrary
 
 instance Arbitrary Parameters where
-    arbitrary = Parameters <$> arbitrary <*> arbitrary
+    arbitrary = Parameters <$> listOf requiredValue
+                           <*> (zipWith optionalParameter [0..] <$> listOf (arbitrary :: Gen Value))
+      where requiredValue = frequency [ (10, D <$> arbitrary), (5, L <$> arbitrary) ]
 
 instance Arbitrary MethodCall where
     arbitrary = MethodCall <$> arbitrary <*> arbitrary <*> arbitrary
+
+instance Arbitrary MethodResponse where
+    arbitrary = MethodResponse <$> arbitrary <*> arbitrary

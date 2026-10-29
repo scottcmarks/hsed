@@ -35,7 +35,7 @@ import           Data.Array
 import           Data.Attoparsec.ByteString           hiding (takeWhile)
 import           Data.Conduit
 import           Data.Conduit.Attoparsec
-import           Data.Conduit.Combinators             (takeWhile)
+import qualified Data.Conduit.Combinators             as C (filter)
 import           GHC.Natural
 import qualified RIO                                  as R (map)
 import           Test.QuickCheck                      hiding (generate, (.&.))
@@ -325,7 +325,7 @@ generateToken = go
         | l <= 0x7FF =           -- Medium
               singleton (0xC0 .|. _BS `shiftL` 3 .|. byte (l `shiftR` 8))
            <> byte0 l
-        | l <= 0xFFFFFFFFFFFF =  -- Long
+        | l <= 0xFFFFFF =        -- Long (3 length bytes, Table 13)
               singleton (0xE0 .|. _BS)
            <> byte2 l <> byte1 l <> byte0 l
         | otherwise = error "Generated Atom byte sequence impossibly long!"
@@ -356,8 +356,10 @@ instance Arbitrary Token where
 rawTokenSource :: MonadThrow m => ConduitT ByteString (PositionRange, Token) m ()
 rawTokenSource = conduitParser parser
 
+-- | Drop Empty atoms: they MAY appear anywhere an atom can, including between
+--   the atoms of a continued value, and SHALL be ignored (Table 14).
 removeEmpty :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
-removeEmpty = Data.Conduit.Combinators.takeWhile ((/= Empty) . snd)
+removeEmpty = C.filter ((/= Empty) . snd)
 
 combineContinued :: Monad m => ConduitT (PositionRange, Token) (PositionRange, Token) m ()
 combineContinued = loop Nothing
@@ -366,8 +368,8 @@ combineContinued = loop Nothing
        where
          examine  Nothing            (Just (pos, ContinuedBytes bs))  =  loop  $ Just (pos, bs)
          examine  (Just (pos, acc))  (Just (_  , ContinuedBytes bs))  =  loop  $ Just (pos, append acc bs)
-         examine  Nothing            (Just (pos, t))                  =  yield (pos, t)
-         examine  (Just (pos, acc))  (Just (_  , Bytes bs         ))  =  yield (pos, Bytes (append acc bs))
+         examine  Nothing            (Just (pos, t))                  =  yield (pos, t) >> loop Nothing
+         examine  (Just (pos, acc))  (Just (_  , Bytes bs         ))  =  yield (pos, Bytes (append acc bs)) >> loop Nothing
          examine  Nothing            Nothing                          =  pure  ()
          examine  _                  Nothing                          =  error "ContinuedBytes not finished"
          examine  _                  _                                =  error "ContinuedBytes followed by non-Bytes"

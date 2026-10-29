@@ -15,6 +15,8 @@ module System.SED.MCTP.Common.TokenSpec (spec) where
 
 
 import           Data.Bits                            ((.&.))
+import           Data.Conduit                         (runConduit, yield, (.|))
+import qualified Data.Conduit.Combinators             as C (sinkList)
 import           Data.ByteString
 import           Data.Either
 import           Data.Ix
@@ -32,6 +34,25 @@ import           Text.Printf
 -- | test suite
 spec :: Spec
 spec = do
+  describe "generateToken's long-atom limit (Table 13)" $ do
+    it "refuses an atom longer than the limit" $
+      evaluate (generate (Bytes (Data.ByteString.replicate 0x1000000 0)))
+        `shouldThrow` anyErrorCall
+    it "generates and parses an atom of exactly the limit" $
+      let bs = Data.ByteString.replicate 0xFFFFFF 0
+       in pg (Bytes bs) `shouldBe` Just (Bytes bs)
+
+  describe "tokenSource" $ do
+    it "ignores Empty atoms wherever they appear (Table 14)" $ do
+      ts <- tokens (pack [0xFF, 0x01, 0xFF, 0xFF, 0x02, 0xFF])
+      ts `shouldBe` [Unsigned 1, Unsigned 2]
+    it "ignores Empty atoms between the atoms of a continued value" $ do
+      ts <- tokens (generate (ContinuedBytes (pack [0x61, 0x62])) <> pack [0xFF] <> generate (Bytes (pack [0x63, 0x64])))
+      ts `shouldBe` [Bytes (pack [0x61, 0x62, 0x63, 0x64])]
+    it "keeps going after a plain token and after a joined continued value" $ do
+      ts <- tokens (generate (Unsigned 7) <> generate (ContinuedBytes (pack [0x61])) <> generate (Bytes (pack [0x62])) <> generate (Unsigned 9))
+      ts `shouldBe` [Unsigned 7, Bytes (pack [0x61, 0x62]), Unsigned 9]
+
   describe "tokenParser" $ do
     prop "is the inverse of generateToken for an unsigned byte" $
       (\b -> inRange (0,63) b ==>
@@ -289,6 +310,10 @@ p = maybeParse
 
 gp :: ByteString -> Maybe ByteString
 gp = (generate <$>) . p
+
+-- | The tokens 'tokenSource' yields for a byte string
+tokens :: ByteString -> IO [Token]
+tokens bs = fmap (fmap snd) (runConduit (yield bs .| tokenSource .| C.sinkList))
 
 -- | Cute, but ultimately unneeded
 _pgp :: ByteString -> Maybe Token

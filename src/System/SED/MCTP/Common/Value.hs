@@ -180,7 +180,9 @@ instance IsToken Value where
 
 
 instance StreamItem Datum where
-    parser    = datum <$> (parser::Parser Token)
+    -- fail, rather than return an erroring thunk, on a non-Datum token so that
+    -- the alternatives in the Value parser get their turn
+    parser    = (parser::Parser Token) >>= maybe (fail "Not a Datum") pure . mdatum
     generate (Datum t) = generate t
 
 instance StreamItem Name where
@@ -228,11 +230,12 @@ instance Arbitrary Datum where
 instance Arbitrary Name where
     arbitrary = Name <$> arbitrary
 
+-- Nested values shrink the size parameter so that arbitrary trees stay small.
 instance Arbitrary NamedValue where
-    arbitrary = NamedValue <$> arbitrary <*> arbitrary
+    arbitrary = NamedValue <$> arbitrary <*> scale (`div` 2) arbitrary
 
 instance Arbitrary List where
-    arbitrary = List <$> arbitrary
+    arbitrary = List <$> scale (`div` 4) arbitrary
 
 instance Arbitrary Value where
     arbitrary = frequency

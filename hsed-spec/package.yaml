@@ -59,9 +59,12 @@ tests:
     source-dirs:         test
     dependencies:
     - hsed-spec
+    - hsed-core
     - aeson
     - hspec
+    - process
     - QuickCheck
+    - text
     build-tools:
     - hspec-discover
 

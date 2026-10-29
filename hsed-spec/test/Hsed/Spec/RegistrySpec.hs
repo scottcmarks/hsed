@@ -40,7 +40,7 @@ import           Hsed.Spec.Shape   (Shape (..), shapeName)
 genericModules :: [FilePath]
 genericModules =
   map ("src/Hsed/Spec" </>)
-    ["Rules.hs", "Scope.hs", "Check.hs", "Compile.hs", "Gen.hs", "Cli.hs", "RuleDef.hs", "Report.hs", "Bind.hs"]
+    ["Rules.hs", "Scope.hs", "Check.hs", "Compile.hs", "Gen.hs", "Cli.hs", "RuleDef.hs", "Report.hs", "Bind.hs", "Document.hs"]
   <> ["app/Main.hs"]
 
 -- | Haskell source without its comments: @{- ... -}@ blocks and @--@ to the end of a line.

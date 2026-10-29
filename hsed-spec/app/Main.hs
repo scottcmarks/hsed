@@ -22,8 +22,10 @@ module Main (main) where
 
 import           Options.Applicative
 import           RIO
+import           RIO.Char                 (isDigit)
 import qualified RIO.Text                 as T
 
+import           Hsed.Spec.Anchor         (AnchorId (..), parseAnchorId)
 import           Hsed.Spec.Cli
 import           Hsed.Spec.Common         (ErrataSet (..), errataSetName, parseErrataSet)
 
@@ -46,14 +48,15 @@ commands = hsubparser $ mconcat
   , command "check" (info (CmdCheck <$> input <*> errataOpt)
       (progDesc "Classify every numbered table and run the checks; non-zero exit on any Error"))
   , command "compile" (info (CmdCompile <$> input <*> errataOpt <*> targetOpt <*> outDir <*> reportDir)
-      (progDesc "Check, then write the generated modules DIR/Hsed/Gen/<Spec>/*.hs (removing the other modules there) and the reports findings.md, coverage.md, ledger.md"))
+      (progDesc "Check, then write the generated modules DIR/Hsed/Gen/<Spec>/*.hs (removing the other modules there) and the reports findings.md, coverage.md, ERRATA.md, ledger.md"))
   , command "explain" (info (CmdExplain <$> strArgument (metavar "SPEC" <> help "core or opal")
-                                     <*> argument auto (metavar "N" <> help "the table number")
+                                     <*> argument (maybeReader (explainedId . T.pack))
+                                           (metavar "ID" <> help "a table, 46 or T46, or a method signature block by its anchor id (docs/ir-v1.md)")
                                      <*> input)
-      (progDesc "Say how a table is bound: hsedc explain core 46"))
-  , command "orphans" (info (CmdOrphans <$> input) (progDesc "List the numbered tables nothing binds: unbound, ambiguous or with an annotation that does not bind"))
+      (progDesc "Say how a table or a signature block is bound: hsedc explain core 46"))
+  , command "orphans" (info (CmdOrphans <$> input) (progDesc "List the numbered tables and signature blocks nothing binds: unbound, ambiguous or with an annotation that does not bind"))
   , command "ledger" (info (CmdLedger <$> many (strArgument (metavar "IR...")) <*> hsaOpt)
-      (progDesc "Count rule-bound, comment-bound and unbound tables per spec; --hsa applies to the IRs whose spec its lines name"))
+      (progDesc "Count rule-bound, comment-bound and unbound tables and signature blocks per spec; --hsa applies to the IRs whose spec its lines name"))
   , command "dump" (info (CmdNotImplemented "dump" <$> many (strArgument (metavar "ARG")))
       (progDesc "Dump the annotations of a PDF as a sidecar (not implemented: tools/extract/dump.py)"))
   ]
@@ -66,6 +69,15 @@ commands = hsubparser $ mconcat
     outFile   = strOption (short 'o' <> long "output" <> metavar "FILE" <> help "the module to write")
     outDir    = strOption (short 'o' <> long "output" <> metavar "DIR" <> help "the source directory to generate into")
     reportDir = strOption (long "report" <> metavar "DIR" <> value "build/report" <> showDefault <> help "where the reports go")
+
+-- | What @explain@ is asked about: a bare number is a table.
+explainedId :: Text -> Maybe AnchorId
+explainedId t
+  | not (T.null t), T.all isDigit t = TableId <$> readMaybe (T.unpack t)
+  | otherwise = case parseAnchorId t of
+      Just aid@(TableId _) -> Just aid
+      Just aid@(SigId _)   -> Just aid
+      _                    -> Nothing
 
 hsaOpt :: Parser (Maybe FilePath)
 hsaOpt = optional (strOption (long "hsa" <> metavar "FILE" <> help "a sidecar whose annotations replace the IR's"))

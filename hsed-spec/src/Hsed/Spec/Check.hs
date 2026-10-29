@@ -23,7 +23,10 @@ checks, each emitting findings with the code in brackets:
   @W-UNBOUND@, @W-RULE-UNIMPLEMENTED@ ("Hsed.Spec.Rules"), for the numbered
   tables and the signature units alike;
 * @C-EXEMPLAR@: each rule still fires on its exemplar;
-* @E-SHAPE@: every bound table's form is accepted by its binding.
+* @E-SHAPE@: every bound table's form is accepted by its binding;
+* the checks of the document as a whole ("Hsed.Spec.Document"): its List of
+  Tables against the captions (@LOT-VS-BODY@) and every table reference in its
+  prose against the table it names (@XREF-RESOLVES@), Warnings that report the PDF.
 
 Errata ("Hsed.Spec.Errata"): every bound table is read under the selected set,
 its caption, header cells and data cells corrected by the @erratum scott [...]@
@@ -32,7 +35,8 @@ correction made is @W-ERRATUM-APPLIED@, under @published@ each defect left as
 printed is @W-ERRATUM-KNOWN@, and under both a correction whose text the table
 does not contain is @W-ERRATUM-UNUSED@. Everything a rule reads of a bound
 table it reads corrected ('Hsed.Spec.RuleDef.btRead'); the rules fire on the
-text as printed.
+text as printed. 'errataFindingsUnder' gives what the same corrections report
+under either set, for @build/report/ERRATA.md@ ("Hsed.Spec.Report").
 
 Normalisations, the same under both sets, are Notes: a caption printed
 @\<X\>_object _ref@ (@N-CAPTION-NORMALISED@) and a header cell in the typo table
@@ -43,6 +47,7 @@ module Hsed.Spec.Check
     mkContext
   , mkContextWith
   , bindingOf
+  , errataFindingsUnder
     -- * Checks
   , checks
   , checkIR
@@ -57,6 +62,7 @@ import           Hsed.Spec.Anchor  (AnchorId, locationText, naturalKey, renderAn
 import           Hsed.Spec.Common  (ErrataSet (..), Finding, Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.DSL     (SomeBinding (..), bindingAccepts)
+import           Hsed.Spec.Document (documentChecks)
 import           Hsed.Spec.Errata  (Erratum (..), correctTable)
 import           Hsed.Spec.IR      (SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
@@ -88,16 +94,29 @@ mkContextWith ruleSet es ir = Context
   , cxSigClasses     = sigClasses
   }
   where
-    sid                      = SpecId ir.spec
-    tables                   = numberedTables ir
-    (classes, classFindings) = classifyWithRules ruleSet ir
+    sid                       = SpecId ir.spec
+    tables                    = numberedTables ir
+    (classes, classFindings)  = classifyWithRules ruleSet ir
     (sigClasses, sigFindings) = classifySignaturesWith ruleSet ir
-    corrected = Map.fromList
-      [ (aid, correctTable es sid tid page (map erratum (mErrata (modsOf sb))) t)
-      | (aid, t) <- Map.toList tables, Just sb <- [Map.lookup aid classes >>= boundBinding]
-      , let tid = renderAnchorId aid
-            page = tablePage t
-            erratum (from, into) = Erratum sid tid from into ("annotation at " <> locationText sid (fromMaybe 1 page) aid) ]
+    corrected                 = correctedUnder es sid tables classes
+
+-- | Every bound table read under an errata set, with what reading it found: its
+--   caption and cells corrected by the @erratum scott@ pairs of its own binding.
+correctedUnder :: ErrataSet -> SpecId -> Map AnchorId TableIR -> Map AnchorId Classification -> Map AnchorId (TableIR, [Finding])
+correctedUnder es sid tables classes = Map.fromList
+  [ (aid, correctTable es sid tid page (map erratum (mErrata (modsOf sb))) t)
+  | (aid, t) <- Map.toList tables, Just sb <- [Map.lookup aid classes >>= boundBinding]
+  , let tid = renderAnchorId aid
+        page = tablePage t
+        erratum (from, into) = Erratum sid tid from into ("annotation at " <> locationText sid (fromMaybe 1 page) aid) ]
+
+-- | What the corrections of a context's annotations report under an errata set,
+--   whichever set the context was made for: @W-ERRATUM-APPLIED@ under @scott@,
+--   @W-ERRATUM-KNOWN@ under @published@, @W-ERRATUM-UNUSED@ under both.
+errataFindingsUnder :: ErrataSet -> Context -> [Finding]
+errataFindingsUnder es ctx
+  | es == cxErrata ctx = cxErrataFindings ctx
+  | otherwise          = concatMap snd (Map.elems (correctedUnder es (cxSpec ctx) (cxTables ctx) (cxClasses ctx)))
 
 -- | The binding a table ends up with.
 bindingOf :: Context -> AnchorId -> Maybe SomeBinding
@@ -114,6 +133,8 @@ checks ctx = concat
     -- E-SHAPE on every bound table
   , [ f | (aid, t) <- Map.toList (cxTables ctx), Just (SomeBinding b) <- [bindingOf ctx aid]
         , Just f <- [bindingAccepts b (measure (cxSpec ctx) t)] ]
+    -- the List of Tables and the table references
+  , documentChecks (cxIR ctx)
     -- errata, then the normalisations every numbered table is read with
   , cxErrataFindings ctx
   , concatMap (captionNote (cxSpec ctx)) (Map.toList (cxTables ctx))

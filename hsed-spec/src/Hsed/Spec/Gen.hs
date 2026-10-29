@@ -23,7 +23,8 @@ merges the imports of every declaration (a whole-module import wins over an
 import list; lists are united and sorted), and prints the declarations sorted
 by table number, then rank within the table, then name. The same declarations
 print the same text in any order. The runtime modules the declarations import
-are named once here ('uidModule', 'coreTypesModule').
+are named once here ('uidModule', 'coreTypesModule', 'codeModule',
+'fieldModule').
 
 Every definition carries a Haddock line naming its table, PDF and printed
 page, structure ordinal and the hash of its cells ('provenanceComment',
@@ -46,6 +47,8 @@ module Hsed.Spec.Gen
     -- * The runtime modules generated code imports
   , uidModule
   , coreTypesModule
+  , codeModule
+  , fieldModule
     -- * Printing
   , renderModule
     -- * Pieces for the rules' printers
@@ -137,6 +140,14 @@ uidModule = "System.SED.MCTP.Common.UID"
 -- | @TypeDef@ and its constructors, the @Enumerated@ class.
 coreTypesModule :: Text
 coreTypesModule = "Hsed.Core.Types"
+
+-- | @Span@ and @CodeRow@: the rows of a code table.
+codeModule :: Text
+codeModule = "Hsed.Core.Code"
+
+-- | @FieldValue@, @FieldConst@ and @FieldDef@: the rows of a record table.
+fieldModule :: Text
+fieldModule = "Hsed.Core.Field"
 
 
 -- * Printing

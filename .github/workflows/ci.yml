@@ -28,6 +28,19 @@ jobs:
           key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', '**/package.yaml') }}
           restore-keys: stack-${{ runner.os }}-
       - run: stack --system-ghc --no-install-ghc test
+      # The hsedc side of gate b (docs/spec-as-source.md sections 5.2, 5.4): annotate the pristine
+      # Core PDF from the committed sidecar, extract the annotated PDF, then hsedc bind, check and
+      # compile; the committed bindings module and hsed/gen must be exactly what it writes. Ubuntu
+      # only (one runner is enough for a determinism gate). The chain renders nothing, so it needs
+      # the venv but not Ghostscript (the extract job's pdf-checks do the rendering).
+      - if: runner.os == 'Linux'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - if: runner.os == 'Linux'
+        run: make venv
+      - if: runner.os == 'Linux'
+        run: make gen-diff
 
   # The committed IR extractions regenerate byte-for-byte (gate b), and the PDF side of the
   # annotation round trip holds (gates c-e, docs/spec-as-source.md section 5.4): the annotated

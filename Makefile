@@ -10,10 +10,20 @@ ANNOT   := spec/annot
 CORE_ANNOT_ARGS := --spec core-2.01 --pristine $(CORE) --ir spec/ir/core-2.01.json --hsa $(ANNOT)/core-2.01.hsa \
                    --out build/core-2.01.hsed.pdf --upd $(ANNOT)/core-2.01.upd --manifest $(ANNOT)/core-2.01.manifest.json
 
-.PHONY: check test extract extract-test regen-diff annotate pdf-checks venv
+# the hsedc side of the pipeline (docs/spec-as-source.md section 5.2): the annotated PDF extracted,
+# then bind, check and compile; what it writes under hsed-spec/bindings and hsed/gen is committed
+HSEDC       := stack exec -- hsedc
+CORE_IR     := build/core-2.01.hsed.json
+BINDINGS    := hsed-spec/bindings/Hsed/Bindings/Core.hs
+BIND_CMD    := $(HSEDC) bind $(CORE_IR) -o $(BINDINGS)
+CHECK_CMD   := $(HSEDC) check $(CORE_IR) --errata scott
+COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/gen --report build/report
 
-## everything CI runs
-check: test extract-test regen-diff annotate pdf-checks
+.PHONY: check test extract extract-test regen-diff annotate pdf-checks venv \
+        hsedc ir-annotated bind hsedc-check compile gen gen-diff
+
+## everything CI runs (gen-diff before test, so the suites compile what gen wrote)
+check: extract-test regen-diff annotate pdf-checks gen-diff test
 
 ## both Haskell test suites
 test:
@@ -52,3 +62,37 @@ annotate: $(PY)
 pdf-checks: annotate
 	$(PY) -I tools/extract/pdf_checks.py $(CORE_ANNOT_ARGS) --work build/pdf-checks
 	git diff --exit-code --stat $(ANNOT)
+
+## the spec compiler
+hsedc:
+	stack build hsed-spec:exe:hsedc
+
+## build/core-2.01.hsed.json: the annotated PDF extracted (pristine + the committed annotations); it
+## differs from spec/ir/core-2.01.json in its annots alone, which is what hsedc reads
+ir-annotated: annotate
+	$(EXTRACT) build/core-2.01.hsed.pdf $(CORE_IR) build/core-2.01.hsed-index.txt --spec core-2.01 --page-offset 17 --pristine $(CORE)
+
+## hsed-spec/bindings/Hsed/Bindings/Core.hs from the annotations of build/core-2.01.hsed.json;
+## only the hsed-spec:bindings test component compiles it
+bind: hsedc
+	$(BIND_CMD)
+
+## classify every numbered table and run the checks under Scott's errata (non-zero exit on an Error)
+hsedc-check: hsedc
+	$(CHECK_CMD)
+
+## hsed/gen/Hsed/Gen/Core/Types.hs and build/report/{findings,coverage,ledger}.md
+compile: hsedc
+	$(COMPILE_CMD)
+
+## the whole chain, in order: annotate -> ir-annotated -> bind -> hsedc-check -> compile
+gen: ir-annotated hsedc
+	$(BIND_CMD)
+	$(CHECK_CMD)
+	$(COMPILE_CMD)
+
+## the committed bindings and generated code must be what gen produces today (changed or new files)
+gen-diff: gen
+	git diff --exit-code --stat hsed-spec/bindings hsed/gen
+	@new=$$(git status --porcelain --untracked-files=all -- hsed-spec/bindings hsed/gen); \
+	  if [ -n "$$new" ]; then echo "$$new"; echo "gen-diff: generated files are not committed"; exit 1; fi

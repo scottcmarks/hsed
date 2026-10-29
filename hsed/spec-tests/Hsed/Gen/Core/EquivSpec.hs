@@ -3,7 +3,7 @@
 
 {-|
 Module      : Hsed.Gen.Core.EquivSpec
-Description : The generated Core modules beside hsed's hand-written TypeUIDs and TableUIDs, at run time
+Description : The generated Core modules beside hsed's hand-written TypeUIDs, TableUIDs and SpecialPurposeUIDs, at run time
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -12,7 +12,7 @@ Stability   : experimental
 Design docs/spec-as-source.md section 5.5, the regenerate-and-compare oracle
 (M2a): every definition @hsedc compile@ generated from the PDF (every module
 under @gen/Hsed/Gen/Core@, each imported here as @G@) beside its
-counterpart in the hand transcription (@System.SED.MCTP.Common.{TypeUIDs,TableUIDs}@,
+counterpart in the hand transcription (@System.SED.MCTP.Common.{TypeUIDs,TableUIDs,SpecialPurposeUIDs}@,
 as @H@), definition by definition and table caption by table caption
 ("Hsed.Gen.Core.EquivTH"). The differences must be exactly the lines of
 @spec/expected-diff.txt@: a missing line fails the test as surely as an extra
@@ -29,6 +29,10 @@ its value column equal to what this module computes for the difference
 * @new@: a generated definition the hand transcription lacks; its value (an
   enumeration's size, range and a digest of its constructor names, so that a
   binding that names other constructors cannot pass);
+* @unnamed@: a hand-written UID with no generated counterpart of its name,
+  from a table whose rows the PDF names nowhere (Table 239's Purpose column),
+  its value among the UIDs the generated list of that table holds; the
+  hand-written value;
 * @caption@: a table whose caption the two sides print differently (spacing
   aside); @generated / hand-written@.
 
@@ -39,31 +43,42 @@ fixture and 'handDefs' points at it (design section 11, M2d).
 -}
 module Hsed.Gen.Core.EquivSpec (spec) where
 
-import           Data.Bits                        (xor)
-import           Data.Char                        (isDigit, isSpace, ord)
-import           Data.List                        (foldl', intercalate, isPrefixOf, nub, sort, stripPrefix, (\\))
-import qualified Data.Map                         as Map
-import           Data.Maybe                       (isJust, isNothing, mapMaybe)
-import           Data.Word                        (Word64)
-import           Numeric                          (showHex)
+import           Data.Bits                                 (xor)
+import           Data.Char                                 (isDigit, isSpace, ord)
+import           Data.List                                 (foldl', intercalate, isPrefixOf, nub, sort, stripPrefix, (\\))
+import qualified Data.Map                                  as Map
+import           Data.Maybe                                (isJust, isNothing, mapMaybe)
+import           Data.Word                                 (Word32, Word64)
+import           GHC.Exts                                  (toList)
+import           Numeric                                   (showHex)
 import           Test.Hspec
 
-import           Hsed.Core.Types                  (Enumerated (..), enumValue)
+import           Hsed.Core.Types                           (Enumerated (..), enumValue)
 import           Hsed.Gen.Core.EquivTH
-import qualified Hsed.Gen.Core.Enums              as G
-import qualified Hsed.Gen.Core.TableUIDs          as G
-import qualified Hsed.Gen.Core.Types              as G
-import qualified System.SED.MCTP.Common.TableUIDs as H
-import qualified System.SED.MCTP.Common.TypeUIDs  as H
+import qualified Hsed.Gen.Core.Enums                       as G
+import qualified Hsed.Gen.Core.Methods                     as G
+import qualified Hsed.Gen.Core.TableUIDs                   as G
+import qualified Hsed.Gen.Core.Types                       as G
+import qualified Hsed.Gen.Core.UIDRanges                   as G
+import qualified Hsed.Gen.Core.UIDs                        as G
+import qualified System.SED.MCTP.Common.SpecialPurposeUIDs as H
+import qualified System.SED.MCTP.Common.TableUIDs          as H
+import qualified System.SED.MCTP.Common.TypeUIDs           as H
+import           System.SED.MCTP.Common.UID                (UID, uidLower)
 
 
 -- | Every generated definition a hand-written module could have.
 generated :: [Def]
 generated = $(generatedDefs "gen/Hsed/Gen/Core" "G")
 
--- | Every hand-written definition the quasiquoters make.
+-- | Every generated list of a table's UIDs: the table, and each UID shown.
+generatedLists :: [(String, [String])]
+generatedLists = $(generatedUIDLists "gen/Hsed/Gen/Core" "G")
+
+-- | Every hand-written definition the quasiquoters make, and the special purpose UIDs.
 handWritten :: [Def]
-handWritten = $(handDefs "src/System/SED/MCTP/Common/TypeUIDs.hs" "src/System/SED/MCTP/Common/TableUIDs.hs" "H")
+handWritten = $(handDefs "src/System/SED/MCTP/Common/TypeUIDs.hs" "src/System/SED/MCTP/Common/TableUIDs.hs"
+                         "src/System/SED/MCTP/Common/SpecialPurposeUIDs.hs" "H")
 
 
 -- * Differences
@@ -133,6 +148,8 @@ holds kind d = case (kind, captions d, dValue <$> generatedSide d, dValue <$> ha
       [t] | Just g <- Map.lookup ("h" ++ t) (byName generated), Scalar a <- dValue g -> drop 1 (words a) == drop 1 (words b)
       _   -> False
   ("new", Nothing, Just _, Nothing) -> True
+  ("unnamed", Nothing, Nothing, Just (Scalar b)) ->
+    any (\h -> b `elem` concat [ us | (t, us) <- generatedLists, t == dTable h ]) (handSide d)
   _ -> False
   where
     squeeze (Scalar s)   = Scalar (dropSpacing s)
@@ -143,6 +160,10 @@ holds kind d = case (kind, captions d, dValue <$> generatedSide d, dValue <$> ha
       "NA" : _                       -> True
       n : "NA" : _ | all isDigit n   -> True
       _                              -> False
+
+-- | The lower four bytes of a UID.
+lsb :: UID -> Word32
+lsb = foldl' (\acc b -> acc * 256 + fromIntegral b) 0 . toList . uidLower
 
 -- | One line of spec/expected-diff.txt: subject | kind | value | reason.
 data Expected = Expected { eSubject :: String, eKind :: String, eValue :: String, eReason :: String }
@@ -164,7 +185,7 @@ splitOn sep = go ""
     go acc []       = [reverse acc]
 
 kinds :: [String]
-kinds = ["pdf-uid", "spacing", "range-from-1", "typed-half-uid", "new", "caption"]
+kinds = ["pdf-uid", "spacing", "range-from-1", "typed-half-uid", "new", "unnamed", "caption"]
 
 
 spec :: Spec
@@ -205,11 +226,25 @@ spec = do
     let gens  = byName generated
         hands = byName handWritten
         matching e = [ d | d <- differences, subject d == eSubject e ]
-    it "reads 360 generated definitions and 405 hand-written ones: 359 on both sides, 1 new, 46 the generated lack" $ do
-      (Map.size gens, Map.size hands) `shouldBe` (360, 405)
-      Map.size (Map.intersection gens hands) `shouldBe` 359
-      Map.keys (gens Map.\\ hands) `shouldBe` ["Core_gen_status"]
-      Map.size (hands Map.\\ gens) `shouldBe` 46
+    it "reads 483 generated definitions and 415 hand-written ones: 367 on both sides, 116 new, 48 the generated lack" $ do
+      (Map.size gens, Map.size hands) `shouldBe` (483, 415)
+      Map.size (Map.intersection gens hands) `shouldBe` 367
+      -- new: Core_gen_status, and the UIDs of the tables hsed does not transcribe (Tables 242-248)
+      [ n | (n, g) <- Map.toList (gens Map.\\ hands), dTable g `notElem` map (('T' :) . show) [242 .. 248 :: Int] ]
+        `shouldBe` ["Core_gen_status"]
+      Map.size (gens Map.\\ hands) `shouldBe` 116
+      -- lacked: the 46 typed half-UIDs, and the two special purpose UIDs the PDF names nowhere
+      Map.size (hands Map.\\ gens) `shouldBe` 48
+    it "has the hand-written Session Manager method UIDs and invoking IDs (Tables 241 and 239)" $ do
+      [G.uProperties, G.uStartSession, G.uSyncSession, G.uStartTrustedSession, G.uSyncTrustedSession, G.uCloseSession]
+        `shouldBe` [H.uProperties, H.uStartSession, H.uSyncSession, H.uStartTrustedSession, H.uSyncTrustedSession, H.uCloseSession]
+      (G.uThisSP, G.uSMUID) `shouldBe` (H.uThisSP, H.uSMUID)
+      map (show . fst) G.specialPurposeUIDs `shouldContain` [show H.uNULL]
+    it "finds every generated MethodID UID that names a template in that template's generated range (C-UID-RANGE)" $ do
+      let templated = [ (u, template) | (u, row) <- G.methodIDUIDs, _ : template : _ <- [splitOn " | " row] ]
+          inRange u t = or [ lo <= lsb u && lsb u <= hi | (n, (lo, hi)) <- G.templateRanges, n == t ]
+      length templated `shouldBe` 47
+      [ (show u, t) | (u, t) <- templated, not (inRange u t) ] `shouldBe` []
     it "differs from the hand transcription exactly on the lines of spec/expected-diff.txt (extra, missing)" $ do
       let actual = sort (map subject differences)
           listed = sort (map eSubject expected)
@@ -229,7 +264,7 @@ spec = do
       [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_table_kind] ]
         `shouldBe` [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_table_kind], x /= H.Core_table_kind_NA ]
     it "finds every typed half-UID's table among the generated half-UIDs" $
-      [ dName h | h <- Map.elems (hands Map.\\ gens), isNothing (lookup' h) ] `shouldBe` []
+      [ dName h | h <- Map.elems (hands Map.\\ gens), any (`isPrefixOf` dName h) ["oth", "bth"], isNothing (lookup' h) ] `shouldBe` []
   where
     lookup' h = case mapMaybe (`stripPrefix` dName h) ["oth", "bth"] of
       [t] | isJust (Map.lookup ("h" ++ t) (byName generated)) -> Just t

@@ -7,13 +7,13 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| core-2.01 | 248 | 120 | 3 | 10 | 118 | 0 | 0 |
+| core-2.01 | 248 | 131 | 3 | 10 | 107 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
 | spec | signature blocks | rule-bound | unbound | ambiguous |
 |---|---:|---:|---:|---:|
-| core-2.01 | 53 | 0 | 53 | 0 |
+| core-2.01 | 53 | 53 | 0 | 0 |
 
 ## core-2.01: what binds the tables
 
@@ -24,19 +24,29 @@ The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a
 | comment Prose | 6 |
 | comment StateTable | 1 |
 | rule enumValues | 19 |
+| rule ranges | 2 |
 | rule tableUIDs | 1 |
 | rule typeRow | 100 |
+| rule uidTable | 9 |
 
 ## core-2.01: findings under --errata scott
 
 | severity | code | findings |
 |---|---|---:|
+| Warning | C-SIG-METHOD | 1 |
+| Warning | C-SIG-PARSE | 1 |
 | Warning | C-UID-UNIQUE | 1 |
 | Warning | W-ENUM-LABEL-REPEATED | 3 |
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
 | Warning | W-GEN-EXCLUDED | 3 |
-| Warning | W-RULE-UNIMPLEMENTED | 12 |
-| Warning | W-UNBOUND | 171 |
+| Warning | W-RULE-UNIMPLEMENTED | 9 |
+| Warning | W-UNBOUND | 107 |
+| Note | C-SIG-METHOD | 1 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |
+| Note | N-RANGE-NAME-NORMALISED | 2 |
+| Note | N-RANGE-ONE-CELL | 1 |
+| Note | N-SIG-NORMALISED | 1 |
+| Note | N-UID-RANGE-NO-TEMPLATE | 1 |
+| Note | N-UID-UNNAMED | 4 |

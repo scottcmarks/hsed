@@ -15,7 +15,8 @@ binds the way it binds numbered tables, by its scope alone (they carry no
 annotation): "Hsed.Spec.Rules".'classifySignatures' binds each block a rule
 anchor covers to the rule whose shape takes signature units, and the rule
 reads them from the 'Context' as 'BoundSig's. A stub rule stands in for the
-rule the M2b uid group writes, proving the interface: the scope from a doc
+registered signature rule (taken out of the registry here), proving the
+interface: the scope from a doc
 token or a heading, @W-UNBOUND@ for a block no rule covers (a Warning through
 M2b, like an unbound table), @E-AMBIGUOUS@ for two such rules, a rule that
 never fires on a table, a signature exemplar, findings and declarations
@@ -43,6 +44,7 @@ import           Hsed.Spec.Report  (Ledger (..), ledger, orphans)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules   (checkExemplarsWith, classifySignatures, classifySignaturesWith, classifyWithRules,
                                     explain)
+import           Hsed.Spec.Shape   (UnitKind (..), shapeUnit)
 
 
 -- | What the rule binding signature units looks like: an ordinary 'RuleDef' of
@@ -61,6 +63,10 @@ stub = RuleDef
   , ruleCompile = \ctx _ -> [ Emit (Gen.decl (sigProvenanceOf ctx bs) "m" [Gen.provenanceComment (sigProvenanceOf ctx bs)])
                             | bs <- boundSigs (ruleShape stub) ctx ]
   }
+
+-- | The registry without the rules that take signature units: the stub is the only one.
+tableRules :: [RuleDef]
+tableRules = [ r | r <- registry, fmap shapeUnit (ruleShape r) /= Just SignatureUnit ]
 
 unbound :: [Finding] -> [Text]
 unbound fs = [ a | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning, Just a <- [Cm.anchor f] ]
@@ -81,7 +87,7 @@ spec = withCore $ \pristine -> do
   describe "classifySignaturesWith" $ do
     it "binds every block to the signature rule from a token on the doc anchor" $ do
       ir <- docLine "doc core201 & rule sig"
-      let (classes, fs) = classifySignaturesWith (registry <> [stub]) ir
+      let (classes, fs) = classifySignaturesWith (tableRules <> [stub]) ir
       bound classes `shouldBe` Map.keys (signatureUnits ir)
       fs `shouldBe` []
     it "binds only the blocks under a heading the rule is anchored at, the others W-UNBOUND at the block" $ do
@@ -95,10 +101,10 @@ spec = withCore $ \pristine -> do
         `shouldBe` ["W-UNBOUND core-2.01.pdf#page=140&5.2.2.1/sig: no rule in scope binds this signature block (SMUID.Properties)"]
     it "leaves every block unbound when no rule takes signature units, the rule token being only W-RULE-UNIMPLEMENTED" $ do
       ir <- docLine "doc core201 & rule sig"
-      let (classes, fs) = classifySignaturesWith registry ir
+      let (classes, fs) = classifySignaturesWith tableRules ir
       L.nub (Map.elems classes) `shouldBe` [Unbound]
       length (unbound fs) `shouldBe` Map.size classes
-      [ Cm.code f | f <- snd (classifyWithRules registry ir), "rule sig" `T.isInfixOf` Cm.message f ] `shouldBe` ["W-RULE-UNIMPLEMENTED"]
+      [ Cm.code f | f <- snd (classifyWithRules tableRules ir), "rule sig" `T.isInfixOf` Cm.message f ] `shouldBe` ["W-RULE-UNIMPLEMENTED"]
     it "makes two rules taking signature units E-AMBIGUOUS" $ do
       ir <- docLine "doc core201 & rule sig & rule tableDesc"
       let other = stub { ruleName = RuleName "tableDesc" }
@@ -107,11 +113,11 @@ spec = withCore $ \pristine -> do
       length [ f | f <- fs, Cm.code f == "E-AMBIGUOUS" ] `shouldBe` Map.size classes
     it "never binds a table: the tables classify as they do without the rule" $ do
       ir <- docLine "doc core201 & rule tableUIDs & rule sig"
-      fst (classifyWithRules (registry <> [stub]) ir) `shouldBe` fst (classifyWithRules registry ir)
+      fst (classifyWithRules (tableRules <> [stub]) ir) `shouldBe` fst (classifyWithRules tableRules ir)
 
   describe "a rule reading signature units" $ do
     ir <- runIO (docLine "doc core201 & rule tableUIDs & rule sig")
-    let ctx = mkContextWith (registry <> [stub]) Scott ir
+    let ctx = mkContextWith (tableRules <> [stub]) Scott ir
         sigs' = boundSigs (ruleShape stub) ctx
     it "reads every bound block, and no table" $ do
       map bsAnchor sigs' `shouldBe` Map.keys (signatureUnits ir)

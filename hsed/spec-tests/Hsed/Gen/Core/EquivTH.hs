@@ -19,14 +19,22 @@ time:
   compilation): every signature
   @name :: T@ whose type the hand-written modules also have (@UID@, @String@,
   @HalfUID@ and the two name maps; a @TypeDef@ has no hand-written
-  counterpart) and every @data Core_\<enum\>@, each with the caption of the
-  table its provenance line names;
+  counterpart) and every @data Core_\<enum\>@ (another data type, a record,
+  is no enumeration), each with the caption of the table its provenance line
+  names (a definition under the provenance of a signature block,
+  @5.3.3.6/sig@, names no table and is not read);
+* 'generatedUIDLists' reads the same modules' lists of a table's UIDs
+  (@name :: [(UID, String)]@), each with its table: what a hand-written UID of
+  a table whose rows the PDF names nowhere is found in;
 * 'handDefs' reads hsed's hand-written modules: every @[ttype|@ quasiquote
-  (@u\<Name\>Type@, @f\<Name\>Type@), every @[tenum|@ (@Core_\<enum\>@) and the
+  (@u\<Name\>Type@, @f\<Name\>Type@), every @[tenum|@ (@Core_\<enum\>@), the
   @[t240|@ rows (@h\<T\>@, @u\<T\>Table@, @u\<T\>TableObject@, and whichever of
   the typed @oth\<T\>@ or @bth\<T\>@ the module defines; then @nameHalfUID@ and
-  @nameUID@), each with the caption the quasiquote prints. A name the source
-  promises and the module does not define stops the compilation.
+  @nameUID@), each with the caption the quasiquote prints, and every @name ::
+  UID@ of @SpecialPurposeUIDs@ with the caption of the transcribed table above
+  it (@Table 239 Special Purpose UIDs@, @Table 241 Session Manager Method
+  UIDs@). A name the source promises and the module does not define stops the
+  compilation.
 
 A value is 'Scalar' ('show' of it) or, for an enumeration, 'Entries': each
 constructor with the value the spec assigns it (the generated module's
@@ -37,12 +45,13 @@ module Hsed.Gen.Core.EquivTH
   ( Def (..)
   , Value (..)
   , generatedDefs
+  , generatedUIDLists
   , handDefs
   ) where
 
 import           Control.Monad              (forM)
 import           Data.Char                  (isDigit, isSpace)
-import           Data.List                  (isPrefixOf, sort, stripPrefix, transpose)
+import           Data.List                  (isInfixOf, isPrefixOf, sort, stripPrefix, transpose)
 import           Data.Maybe                 (catMaybes)
 import           Language.Haskell.TH
 import           Language.Haskell.TH.Syntax (addDependentFile)
@@ -77,16 +86,35 @@ generatedDefs dir g = do
   paths <- runIO (haskellFiles dir)
   mapM_ addDependentFile paths
   srcs <- runIO (mapM readFile paths)
-  defs <- fmap concat (forM srcs (\src -> forM (generatedNames (lines src)) one))
+  defs <- fmap concat (forM srcs (\src -> forM [ d | d@(_, _, _, kind) <- generatedNames (lines src), kind /= UIDList ] one))
   listE (map pure defs)
   where
-    one (n, table, caption, isEnum) = do
+    one (n, table, caption, kind) = do
+      let isEnum = kind == Enumeration
       found <- (if isEnum then lookupTypeName else lookupValueName) (g ++ "." ++ n)
       case found of
         Nothing -> fail ("the generated module declares " ++ n ++ " but " ++ g ++ " does not export it")
         Just nm
           | isEnum    -> [| Def n table caption (Entries [ (show x, enumValue x) | x <- [minBound .. maxBound :: $(conT nm)] ]) |]
           | otherwise -> [| Def n table caption (Scalar (show $(varE nm))) |]
+
+-- | @$(generatedUIDLists "gen/Hsed/Gen/Core" "G")@: each list of a table's
+--   UIDs, @[(UID, String)]@, as its table and the 'show' of every UID in it.
+generatedUIDLists :: FilePath -> String -> Q Exp
+generatedUIDLists dir g = do
+  paths <- runIO (haskellFiles dir)
+  mapM_ addDependentFile paths
+  srcs <- runIO (mapM readFile paths)
+  lists <- fmap concat $ forM srcs $ \src -> forM [ (n, table) | (n, table, _, UIDList) <- generatedNames (lines src) ] $ \(n, table) -> do
+    found <- lookupValueName (g ++ "." ++ n)
+    case found of
+      Nothing -> fail ("the generated module declares " ++ n ++ " but " ++ g ++ " does not export it")
+      Just nm -> [| (table, map (show . fst) $(varE nm)) |]
+  listE (map pure lists)
+
+-- | What a generated declaration is to the comparison.
+data DeclKind = Scalar' | Enumeration | UIDList
+  deriving (Eq)
 
 -- | Every @.hs@ file under a directory, sorted.
 haskellFiles :: FilePath -> IO [FilePath]
@@ -97,16 +125,22 @@ haskellFiles d = do
     if isDir then haskellFiles e else pure [ e | takeExtension e == ".hs" ]
 
 -- | The definitions of a generated module with the table and caption of the
---   provenance line above each: @-- | core-2.01 T46 AC_element (PDF 100 / ...@.
-generatedNames :: [String] -> [(String, String, String, Bool)]
+--   provenance line above each: @-- | core-2.01 T46 AC_element (PDF 100 / ...@;
+--   a provenance line that names no table (a signature block's) ends the
+--   table before it.
+generatedNames :: [String] -> [(String, String, String, DeclKind)]
 generatedNames = go Nothing
   where
     go _ [] = []
     go prov (l : ls)
-      | Just rest <- stripPrefix "-- | " l, Just p <- provenance rest = go (Just p) ls
-      | Just (table, caption) <- prov, Just n <- signature l = (n, table, caption, False) : go prov ls
-      | Just (table, caption) <- prov, Just n <- stripPrefix "data " l = (n, table, caption, True) : go prov ls
+      | Just rest <- stripPrefix "-- | " l, " (PDF " `isInfixOf` rest = go (provenance rest) ls
+      | Just (table, caption) <- prov, Just n <- signature l = (n, table, caption, Scalar') : go prov ls
+      | Just (table, caption) <- prov, Just n <- uidList l = (n, table, caption, UIDList) : go prov ls
+      | Just (table, caption) <- prov, Just n <- stripPrefix "data " l, "Core_" `isPrefixOf` n = (n, table, caption, Enumeration) : go prov ls
       | otherwise = go prov ls
+    uidList l = case words l of
+      [n, "::", "[(UID,", "String)]"] -> Just n
+      _                               -> Nothing
     -- "core-2.01 T46 AC_element (PDF 100 / p.83, ...": the table and its caption
     provenance rest = case words rest of
       _spec : table@('T' : number) : more | all isDigit number ->
@@ -120,16 +154,19 @@ generatedNames = go Nothing
 
 -- * The hand-written modules
 
--- | @$(handDefs "src/.../TypeUIDs.hs" "src/.../TableUIDs.hs" "H")@, both imported qualified as @H@.
-handDefs :: FilePath -> FilePath -> String -> Q Exp
-handDefs typeUIDs tableUIDs h = do
-  mapM_ addDependentFile [typeUIDs, tableUIDs]
-  types  <- runIO (readFile typeUIDs)
-  tables <- runIO (readFile tableUIDs)
-  typeDefs  <- forM (quasiquotes "ttype" (lines types)) typeRow
-  enumDefs  <- forM (quasiquotes "tenum" (lines types)) enumeration
-  tableDefs <- forM (quasiquotes "t240" (lines tables)) t240
-  listE (map pure (concat typeDefs ++ enumDefs ++ concat tableDefs))
+-- | @$(handDefs "src/.../TypeUIDs.hs" "src/.../TableUIDs.hs" "src/.../SpecialPurposeUIDs.hs" "H")@,
+--   all three imported qualified as @H@.
+handDefs :: FilePath -> FilePath -> FilePath -> String -> Q Exp
+handDefs typeUIDs tableUIDs specialUIDs h = do
+  mapM_ addDependentFile [typeUIDs, tableUIDs, specialUIDs]
+  types   <- runIO (readFile typeUIDs)
+  tables  <- runIO (readFile tableUIDs)
+  special <- runIO (readFile specialUIDs)
+  typeDefs    <- forM (quasiquotes "ttype" (lines types)) typeRow
+  enumDefs    <- forM (quasiquotes "tenum" (lines types)) enumeration
+  tableDefs   <- forM (quasiquotes "t240" (lines tables)) t240
+  specialDefs <- forM (captionedUIDs (lines special)) (\(caption, n) -> scalar caption n)
+  listE (map pure (concat typeDefs ++ enumDefs ++ concat tableDefs ++ specialDefs))
   where
     value n = maybe (fail (h ++ " does not define " ++ n ++ ", which its source promises")) pure
                 =<< lookupValueName (h ++ "." ++ n)
@@ -155,6 +192,20 @@ handDefs typeUIDs tableUIDs h = do
         mapM (scalar caption) (["u" ++ name ++ "TableObject", "u" ++ name ++ "Table", "h" ++ name] ++ typed)
       maps <- mapM (scalar caption) ["nameHalfUID", "nameUID"]
       pure (rows ++ maps)
+
+-- | Every top-level @name :: UID@ of a module with the caption of the last
+--   transcribed table above it, a line @Table N …@ in a comment.
+captionedUIDs :: [String] -> [(String, String)]
+captionedUIDs = go Nothing
+  where
+    go _ [] = []
+    go caption (l : ls)
+      | ("Table" : n : _) <- words l, all isDigit n, not (null n) = go (Just (trim l)) ls
+      | Just c <- caption, [name, "::", "UID"] <- words l, not (isSpace (head' l)) = (c, name) : go caption ls
+      | otherwise = go caption ls
+    head' l = case l of
+      c : _ -> c
+      []    -> ' '
 
 -- | @Table 46 AC_element@ gives @T46@.
 tableOf :: String -> String

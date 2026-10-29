@@ -12,7 +12,7 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 @hsedc compile@ on the committed Core extraction with the committed annotations:
-the 100 type rows and 19 enumerations of section 5.1.3 (read through their
+the 100 type rows and 20 enumerations of section 5.1.3 (T87 by its comment; read through their
 rules' modules), their provenance (the cell hash the manifest records), the
 module under each errata set, the T75 and T101 annotations each changing the
 module when dropped, a table left out with W-GEN-EXCLUDED (one that fails, and
@@ -70,9 +70,9 @@ spec = do
     describe "compileIR --errata scott" $ do
       cr <- runIO (compiled Scott)
       let ctx = mkContext Scott ir
-      it "declares the 100 type rows and the 19 enumerations of section 5.1.3, leaving none out" $ do
+      it "declares the 100 type rows and the 20 enumerations of section 5.1.3, leaving none out" $ do
         length (rowsOf ctx) `shouldBe` 100
-        length (enumsOf ctx) `shouldBe` 19
+        length (enumsOf ctx) `shouldBe` 20
         crExcluded cr `shouldBe` []
         filter isError (crFindings cr) `shouldBe` []
       it "records the provenance of design example E2, with the manifest's cell hash" $ do
@@ -91,6 +91,13 @@ spec = do
           `shouldBe` [([("Wait for AdvKey_Req", 0), ("Auto-advance keys", 1)] <> [ ("Reserved", v) | v <- [2 .. 7] ], (0, 7), [0, 0, 0, 5, 0, 0, 4, 0x0F])]
       it "names T101's value as its annotation corrects it" $
         [ e.ctors | e <- enumsOf ctx, e.name == "last_reenc_stat" ] `shouldSatisfy` all (elem ("Verify Error", 3))
+      it "reads T87 through its comment: two columns, \"7 to 31\", value 34 kept for its first label (design E4)" $ do
+        let gen = [ e | e <- enumsOf ctx, e.name == "gen_status" ]
+        map (.range) gen `shouldBe` [(0, 63)]
+        [ map snd e.ctors | e <- gen ] `shouldBe` [[0 .. 63]]
+        [ lookup 34 [ (v, l) | (l, v) <- e.ctors ] | e <- gen ] `shouldBe` [Just "active_reset_stop_detect"]
+        [ lookup 31 [ (v, l) | (l, v) <- e.ctors ] | e <- gen ] `shouldBe` [Just "reserved"]
+        [ e.ctors | e <- enumsOf (mkContext Published ir), e.name == "gen_status" ] `shouldBe` map (.ctors) gen
       it "takes the range of reencrypt_state from its Format, starting at 1" $
         [ e.range | e <- enumsOf ctx, e.name == "reencrypt_state" ] `shouldBe` [(1, 16)]
       it "writes the committed hsed/gen modules" $
@@ -148,4 +155,4 @@ spec = do
         cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott broken)
         crExcluded cr `shouldBe` [(TableId 52, "C-ENUM-RANGE failed")]
         [ Cm.code f | f <- crFindings cr, Cm.anchor f == Just "T52" ] `shouldBe` ["C-ENUM-RANGE", "W-GEN-EXCLUDED"]
-        length (enumsOf (mkContext Scott broken)) `shouldBe` 18
+        length (enumsOf (mkContext Scott broken)) `shouldBe` 19

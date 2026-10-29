@@ -127,7 +127,7 @@ spec = do
         let (_, ir) = withSidecar pristine (hsa <> "core-2.01 | T46 | frobnicate\n")
             os = orphans ir
         fmap Cm.code (lookup (TableId 46) os) `shouldBe` Just "E-GRAMMAR"
-        length os `shouldBe` 129
+        length os `shouldBe` 128
 
     describe "ledger" $ do
       it "applies one sidecar to the IR whose spec its lines name, and reads the others as they are" $

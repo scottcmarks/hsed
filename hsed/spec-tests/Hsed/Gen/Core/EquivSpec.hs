@@ -115,9 +115,9 @@ spec = do
 
   describe "every generated definition with a hand-written counterpart" $ do
     let (compared, unmatched) = equiv
-    it "covers the 100 type rows twice (UID, Format) and the 19 enumerations" $ do
+    it "covers the 100 type rows twice (UID, Format) and the 19 enumerations; T87's is new" $ do
       length compared `shouldBe` 219
-      unmatched `shouldBe` []
+      unmatched `shouldBe` ["Core_gen_status"]
     it "differs from the hand transcription exactly where it is known to" $
       sort (map cName (filter differs compared)) `shouldBe` sort [ n | (n, _, _) <- expectedDifferences ]
     it "differs there in exactly the way each difference is listed as" $

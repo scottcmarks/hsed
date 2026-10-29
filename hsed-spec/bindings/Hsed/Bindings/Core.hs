@@ -19,6 +19,10 @@ b_core_5_1_3 = at (anchor @'Heading "core-2.01" "5.1.3" "0/1278" 100) (rule type
 b_core_T75 :: Bound
 b_core_T75 = at (anchor @'TypeRow "core-2.01" "T75" "0/1429" 107) (erratum scott ["Fractoin" ~> "Fraction"] typeRow)
 
+{-# LINE 1 "core-2.01.pdf#page=109&T87" #-}
+b_core_T87 :: Bound
+b_core_T87 = at (anchor @'EnumValues "core-2.01" "T87" "0/1488" 109) (rangeWords ["to"] (cols 0 1 enumValues))
+
 {-# LINE 1 "core-2.01.pdf#page=113&T101" #-}
 b_core_T101 :: Bound
 b_core_T101 = at (anchor @'EnumValues "core-2.01" "T101" "0/1555" 113) (erratum scott ["Verify Eror" ~> "Verify Error"] enumValues)
@@ -27,12 +31,13 @@ b_core_T101 = at (anchor @'EnumValues "core-2.01" "T101" "0/1555" 113) (erratum 
 b_core_T149 :: Bound
 b_core_T149 = at (anchor @'TypeRow "core-2.01" "T149" "0/1792" 124) (waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "no erratum says which is wrong" typeRow)
 
-{-# LINE 31 "Hsed/Bindings/Core.hs" #-}
+{-# LINE 35 "Hsed/Bindings/Core.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_core_doc
   , b_core_5_1_3
   , b_core_T75
+  , b_core_T87
   , b_core_T101
   , b_core_T149
   ]

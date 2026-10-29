@@ -12,7 +12,7 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The rules of design section 3.4 on the committed Core extraction: scope only from
-the anchors, the M1 pair binding Tables 46-165 but T87, precedence by
+the anchors, the M1 pair binding Tables 46-165 (T87 by its comment), precedence by
 @refines@, the bare modifier chain of Table 75, bindings shaped by their
 target, the exemplars, and the validation of every annotation: an anchor of
 the payload's kind, naming something in the IR, alone on its anchor; @hsedc
@@ -99,7 +99,7 @@ spec = do
     describe "classify" $ do
       it "binds the 100 type rows and 19 enumerations of section 5.1.3 and Table 240, and nothing else" $ do
         count isRuleBound classes `shouldBe` 120
-        count isUnbound classes `shouldBe` 128
+        count isUnbound classes `shouldBe` 127
         Map.size classes `shouldBe` 248
       it "binds T46 by typeRow and T52 by enumValues, with no comment" $ do
         at' 46 `shouldBe` Just (RuleBound (RuleName "typeRow") [] (SomeBinding typeRow))
@@ -107,18 +107,17 @@ spec = do
       it "applies Table 75's bare erratum to the typeRow default" $
         at' 75 `shouldBe` Just (RuleBound (RuleName "typeRow") [Erratum Scott [("Fractoin", "Fraction")]]
                                           (SomeBinding (erratum scott ["Fractoin" ~> "Fraction"] typeRow)))
-      it "leaves T87 (three columns) and the tables outside 5.1.3 but T240 unbound, each a W-UNBOUND" $ do
-        at' 87 `shouldBe` Just Unbound
+      it "leaves the tables outside 5.1.3 but T240 unbound, each a W-UNBOUND" $ do
         at' 239 `shouldBe` Just Unbound
         at' 240 `shouldBe` Just (RuleBound (RuleName "tableUIDs") [] (SomeBinding tableUIDs))
         let (_, fs) = classifyWith ir
-        length [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning ] `shouldBe` 128
-        filter ("T87" `T.isInfixOf`) (map renderFinding fs)
-          `shouldBe` ["W-UNBOUND core-2.01.pdf#page=109&T87: no annotation binds it and no rule in scope fires on it (Table 87 gen_status Enumeration Values)"]
-      it "binds a wider enumeration through a full binding with cols" $ do
-        ir' <- annotated pristine (hsa <> "core-2.01 | T87 | rangeWords [\"to\"] (cols 0 1 enumValues)\n")
-        Map.lookup (TableId 87) (classify ir')
-          `shouldBe` Just (CommentBound (SomeBinding (rangeWords ["to"] (cols 0 1 enumValues))))
+        length [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning ] `shouldBe` 127
+        filter ("T239" `T.isInfixOf`) (map renderFinding fs)
+          `shouldBe` ["W-UNBOUND core-2.01.pdf#page=302&T239: no annotation binds it and no rule in scope fires on it (Table 239 Special Purpose UIDs)"]
+      it "binds a wider enumeration through a full binding with cols: T87's comment (design E4)" $ do
+        at' 87 `shouldBe` Just (CommentBound (SomeBinding (rangeWords ["to"] (cols 0 1 enumValues))))
+        ir' <- annotated pristine (withoutLine "T87" hsa)
+        Map.lookup (TableId 87) (classify ir') `shouldBe` Just Unbound
       it "refuses a bare modifier chain where no rule fires" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T239 | erratum scott [\"a\" ~> \"b\"]\n")
         fmap describeClassification (Map.lookup (TableId 239) (classify ir'))
@@ -155,7 +154,7 @@ spec = do
         explain ir (TableId 46) `shouldBe` "typeRow (exemplar core T46)"
         explain ir (TableId 52) `shouldBe` "enumValues (exemplar core T52)"
         explain ir (TableId 75) `shouldBe` "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow (exemplar core T46)"
-        explain ir (TableId 87) `shouldBe` "unbound"
+        explain ir (TableId 87) `shouldBe` "comment: rangeWords [\"to\"] (cols 0 1 enumValues)"
 
     describe "checkExemplars" $ do
       it "finds both exemplars still firing" $
@@ -206,8 +205,7 @@ spec = do
           `shouldBe` ["E-ANCHOR-KIND core-2.01.pdf#page=1&doc: the doc anchor takes doc core201 first, then rule tokens, not rule typeRow"]
       it "takes what each anchor's kind takes" $ do
         (checkErrs, bindErrs, _) <- errorsWith (T.unlines
-          [ "core-2.01 | 3.3.3.1 | behaviour \"Sync.x\"", "core-2.01 | 3.3.3#1 | law \"Sync.y\""
-          , "core-2.01 | T87 | rangeWords [\"to\"] (cols 0 1 enumValues)" ])
+          [ "core-2.01 | 3.3.3.1 | behaviour \"Sync.x\"", "core-2.01 | 3.3.3#1 | law \"Sync.y\"" ])
         (checkErrs, bindErrs) `shouldBe` ([], [])
 
     describe "an annotation naming nothing in the IR, or sharing its anchor (E-ANCHOR)" $ do

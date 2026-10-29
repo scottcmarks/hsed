@@ -47,6 +47,7 @@ spec = do
           , [ AnnotIR Doc "core-2.01" "doc" (StructPath "") 1 0 (Rect 36 720 108 756) 6 "doc core201 & rule tableUIDs"
             , AnnotIR Rule "core-2.01" "5.1.3" (StructPath "0/1278") 1 99 (Rect 90.0 595.61 215.4 613.67) 6 "rule typeRow & rule enumValues"
             , AnnotIR Bind "core-2.01" "T75" (StructPath "0/1429") 1 106 (Rect 170.88 559.18 468.12 671.1) 6 "erratum scott [\"Fractoin\" ~> \"Fraction\"]"
+            , AnnotIR Bind "core-2.01" "T87" (StructPath "0/1488") 1 108 (Rect 90.0 79.32 549.0 213.78) 6 "rangeWords [\"to\"] (cols 0 1 enumValues)"
             , AnnotIR Bind "core-2.01" "T101" (StructPath "0/1555") 1 112 (Rect 227.4 373.92 411.49 477.42) 6 "erratum scott [\"Verify Eror\" ~> \"Verify Error\"]"
             , AnnotIR Bind "core-2.01" "T149" (StructPath "0/1792") 1 123 (Rect 169.44 356.64 469.56 411.18) 6
                 "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" ] )

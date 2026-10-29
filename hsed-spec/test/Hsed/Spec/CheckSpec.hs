@@ -95,7 +95,7 @@ spec = do
         Map.lookup "W-ERRATUM-APPLIED" (codesOf scott) `shouldBe` Just 2
       it "reports the unbound tables, the repeated labels, the waived duplicate UID and the normalisations" $
         codesOf scott `shouldBe` Map.fromList
-          [ ("W-ERRATUM-APPLIED", 2), ("W-UNBOUND", 128), ("W-ENUM-LABEL-REPEATED", 2), ("C-UID-UNIQUE", 1)
+          [ ("W-ERRATUM-APPLIED", 2), ("W-UNBOUND", 127), ("W-ENUM-LABEL-REPEATED", 3), ("W-ENUM-OVERLAP", 1), ("C-UID-UNIQUE", 1)
           , ("N-CAPTION-NORMALISED", 7), ("N-FORMAT-NORMALISED", 14) ]
       it "demotes the duplicate UID the PDF prints for T94 and T149 to a Warning by T149's waiver" $ do
         about "T149" scott `shouldBe`
@@ -251,8 +251,8 @@ spec = do
       it "W-ENUM-OVERLAP: a value assigned twice, the first kept" $
         about "T52" (checkIR Scott (setCell "T52" 1 0 "0" ir)) `shouldBe`
           ["W-ENUM-OVERLAP core-2.01.pdf#page=102&T52: value 0 is assigned by \"Wait for AdvKey_Req\" and \"Auto-advance keys\"; the first is kept"]
-      it "the T87 comment of design E4: rangeWords, cols, an overlap and a repeated label" $ do
-        ir' <- annotated pristine (hsa <> "core-2.01 | T87 | rangeWords [\"to\"] (cols 0 1 enumValues)\n")
-        about "T87" (checkIR Scott ir') `shouldBe`
-          [ "W-ENUM-LABEL-REPEATED core-2.01.pdf#page=109&T87: the label \"reserved\" is used by 2 rows; its later values get suffixed constructors"
-          , "W-ENUM-OVERLAP core-2.01.pdf#page=109&T87: value 34 is assigned by \"active_reset_stop_detect\" and \"reserved\"; the first is kept" ]
+      it "the T87 comment of design E4: rangeWords, cols, an overlap and a repeated label, under either errata set" $
+        forM_ [scott, published] $ \fs ->
+          about "T87" fs `shouldBe`
+            [ "W-ENUM-LABEL-REPEATED core-2.01.pdf#page=109&T87: the label \"reserved\" is used by 2 rows; its later values get suffixed constructors"
+            , "W-ENUM-OVERLAP core-2.01.pdf#page=109&T87: value 34 is assigned by \"active_reset_stop_detect\" and \"reserved\"; the first is kept" ]

@@ -35,17 +35,18 @@ spec = withCore $ \pristine -> do
   ir  <- runIO (annotated pristine hsa)
 
   describe "bindEntries" $ do
-    it "gives the doc anchor, the rule anchor, T75, T101 and T149, in canonical order" $ do
+    it "gives the doc anchor, the rule anchor, T75, T87, T101 and T149, in canonical order" $ do
       let (fs, entries) = bindEntries ir
       fs `shouldBe` []
       [ (a, page, sp, printSomeBinding sb) | (_, a, page, sp, sb) <- entries ] `shouldBe`
         [ (DocId, 1, StructPath "", "doc core201 & rule tableUIDs")
         , (SectionId "5.1.3", 100, StructPath "0/1278", "rule typeRow & rule enumValues")
         , (TableId 75, 107, StructPath "0/1429", "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow")
+        , (TableId 87, 109, StructPath "0/1488", "rangeWords [\"to\"] (cols 0 1 enumValues)")
         , (TableId 101, 113, StructPath "0/1555", "erratum scott [\"Verify Eror\" ~> \"Verify Error\"] enumValues")
         , (TableId 149, 124, StructPath "0/1792", "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\" typeRow") ]
     it "prints nothing for a rule-bound table without a comment" $
-      length (snd (bindEntries ir)) `shouldBe` 5
+      length (snd (bindEntries ir)) `shouldBe` 6
     it "prints a binding shaped by its target at the target's shape" $ do
       ir' <- annotated pristine (hsa <> "core-2.01 | T47 | refines (core 46)\n")
       let (fs, result) = bindModule ir'
@@ -56,7 +57,7 @@ spec = withCore $ \pristine -> do
       ir' <- annotated pristine (hsa <> "core-2.01 | T47 | refines (opal 3)\n")
       let (fs, entries) = bindEntries ir'
       map renderFinding fs `shouldSatisfy` any ("E-SHAPE core-2.01.pdf#page=100&T47: the shape comes from Opal 3" `T.isPrefixOf`)
-      length entries `shouldBe` 5
+      length entries `shouldBe` length (snd (bindEntries ir))
     it "refuses an erratum of the published set, as hsedc check does" $ do
       ir' <- annotated pristine (hsa <> "core-2.01 | T46 | erratum published [\"AC_element\" ~> \"x\"]\n")
       map renderFinding (fst (bindEntries ir'))

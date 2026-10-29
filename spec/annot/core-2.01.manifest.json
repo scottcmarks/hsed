@@ -71,6 +71,41 @@
    "title": "clock_time"
   },
   {
+   "hash": "b3ec98a47f8614d0ef6db08cf236dfdb183ce86b66f1e3673b53d279bfa66990",
+   "header": [
+    "columnvalue",
+    "associatedvalue",
+    "meaning"
+   ],
+   "id": "T87",
+   "kind": "Bind",
+   "label": 92,
+   "ordinal": 89,
+   "page": 108,
+   "rects": [
+    [
+     108,
+     [
+      90.0,
+      79.32,
+      549.0,
+      213.78
+     ]
+    ],
+    [
+     109,
+     [
+      90.0,
+      465.24,
+      549.0,
+      720.54
+     ]
+    ]
+   ],
+   "struct": "0/1488",
+   "title": "gen_status Enumeration Values"
+  },
+  {
    "hash": "0456fc9013ded4e3577922bd25b98b11abe62fa14f21f521f61865d6bdb5fb9e",
    "header": [
     "enumerationvalue",

@@ -580,6 +580,79 @@ fgen_statusType = "Set_Type,0,63"
 tgen_status :: TypeDef
 tgen_status = SetType [(Lit 0,Lit 63)]
 
+-- | core-2.01 T87 gen_status Enumeration Values (PDF 109 / p.92, ord 89, sha256:b3ec98a47f86)
+data Core_gen_status
+  = Core_gen_status_None
+  | Core_gen_status_pending_tper_error
+  | Core_gen_status_active_tper_error
+  | Core_gen_status_active_pause_requested
+  | Core_gen_status_pend_pause_requested
+  | Core_gen_status_pend_reset_stop_detect
+  | Core_gen_status_key_error
+  | Core_gen_status_reserved
+  | Core_gen_status_reserved_8
+  | Core_gen_status_reserved_9
+  | Core_gen_status_reserved_10
+  | Core_gen_status_reserved_11
+  | Core_gen_status_reserved_12
+  | Core_gen_status_reserved_13
+  | Core_gen_status_reserved_14
+  | Core_gen_status_reserved_15
+  | Core_gen_status_reserved_16
+  | Core_gen_status_reserved_17
+  | Core_gen_status_reserved_18
+  | Core_gen_status_reserved_19
+  | Core_gen_status_reserved_20
+  | Core_gen_status_reserved_21
+  | Core_gen_status_reserved_22
+  | Core_gen_status_reserved_23
+  | Core_gen_status_reserved_24
+  | Core_gen_status_reserved_25
+  | Core_gen_status_reserved_26
+  | Core_gen_status_reserved_27
+  | Core_gen_status_reserved_28
+  | Core_gen_status_reserved_29
+  | Core_gen_status_reserved_30
+  | Core_gen_status_reserved_31
+  | Core_gen_status_wait_AvailableKeys
+  | Core_gen_status_wait_for_TPer_resources
+  | Core_gen_status_active_reset_stop_detect
+  | Core_gen_status_reserved_35
+  | Core_gen_status_reserved_36
+  | Core_gen_status_reserved_37
+  | Core_gen_status_reserved_38
+  | Core_gen_status_reserved_39
+  | Core_gen_status_reserved_40
+  | Core_gen_status_reserved_41
+  | Core_gen_status_reserved_42
+  | Core_gen_status_reserved_43
+  | Core_gen_status_reserved_44
+  | Core_gen_status_reserved_45
+  | Core_gen_status_reserved_46
+  | Core_gen_status_reserved_47
+  | Core_gen_status_reserved_48
+  | Core_gen_status_reserved_49
+  | Core_gen_status_reserved_50
+  | Core_gen_status_reserved_51
+  | Core_gen_status_reserved_52
+  | Core_gen_status_reserved_53
+  | Core_gen_status_reserved_54
+  | Core_gen_status_reserved_55
+  | Core_gen_status_reserved_56
+  | Core_gen_status_reserved_57
+  | Core_gen_status_reserved_58
+  | Core_gen_status_reserved_59
+  | Core_gen_status_reserved_60
+  | Core_gen_status_reserved_61
+  | Core_gen_status_reserved_62
+  | Core_gen_status_reserved_63
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | core-2.01 T87 gen_status Enumeration Values (PDF 109 / p.92, ord 89, sha256:b3ec98a47f86)
+instance Enumerated Core_gen_status where
+  typeUID = ugen_statusType
+  range   = (0, 63)
+
 -- | core-2.01 T88 hash_protocol (PDF 110 / p.93, ord 90, sha256:c953a53cdb6a)
 uhash_protocolType :: UID
 uhash_protocolType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x0d

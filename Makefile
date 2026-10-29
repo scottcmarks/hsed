@@ -1,7 +1,11 @@
 # Developer targets; `make check` is the local form of the CI gates
 # (docs/spec-as-source.md section 5.4).
 
+# the interpreter `make venv` builds .venv from: pikepdf and pillow need Python >= 3.11
+PYTHON3 ?= python3
 PY      := .venv/bin/python
+# the venv with tools/extract/requirements.txt installed; remade when the requirements change
+VENV    := build/venv.stamp
 EXTRACT := $(PY) -I tools/extract/extract_tables.py
 CORE    := tcg/TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf
 OPAL    := tcg/TCG_Storage-Opal_SSC_v2.30.pdf
@@ -22,6 +26,11 @@ COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/
 .PHONY: check test extract extract-test regen-diff annotate pdf-checks venv \
         hsedc ir-annotated bind hsedc-check compile gen gen-diff
 
+# The targets share files (spec/ir is rewritten by extract and read by annotate; build/*.hsed.* by
+# annotate, ir-annotated and the hsedc targets) and stack takes a lock: run them one at a time
+# whatever -j says.
+.NOTPARALLEL:
+
 ## everything CI runs (gen-diff before test, so the suites compile what gen wrote)
 check: extract-test regen-diff annotate pdf-checks gen-diff test
 
@@ -29,21 +38,27 @@ check: extract-test regen-diff annotate pdf-checks gen-diff test
 test:
 	stack test
 
-## the Python venv the extraction tools run in
-venv: $(PY)
+## the Python venv the extraction tools run in: made with $(PYTHON3) (refused below 3.11), and the
+## pinned wheels reinstalled whenever tools/extract/requirements.txt changes
+venv: $(VENV)
 $(PY):
-	python3 -m venv .venv
-	.venv/bin/pip install --quiet -r tools/extract/requirements.txt
+	@$(PYTHON3) -c 'import sys; sys.exit(sys.version_info < (3, 11))' || \
+	  { echo "venv: $(PYTHON3) is $$($(PYTHON3) --version 2>&1); the extraction wheels need Python >= 3.11 (make venv PYTHON3=python3.12)"; exit 1; }
+	$(PYTHON3) -m venv .venv
+$(VENV): tools/extract/requirements.txt $(PY)
+	mkdir -p build
+	$(PY) -m pip install --quiet -r tools/extract/requirements.txt
+	touch $@
 
 ## regenerate the IR v1 extractions under spec/ir from the pristine PDFs (docs/ir-v1.md);
 ## the extractor's sanity invariants (design 5.1 step 9) make these fail on a FAIL
-extract: $(PY)
+extract: $(VENV)
 	mkdir -p build
 	$(EXTRACT) $(CORE) spec/ir/core-2.01.json build/core-index.txt --spec core-2.01 --page-offset 17
 	$(EXTRACT) $(OPAL) spec/ir/opal-2.30.json build/opal-index.txt --spec opal-2.30 --page-offset 1 --check-against spec/ir/core-2.01.json
 
 ## unit tests of the extractor's pure rules (ragged join, section numbers, item labels, hashing)
-extract-test: $(PY)
+extract-test: $(VENV)
 	$(PY) -I -m unittest discover -s tools/extract -p 'test_*.py'
 
 ## the committed extractions must be what the extractor produces today
@@ -52,7 +67,7 @@ regen-diff: extract
 
 ## build/core-2.01.hsed.pdf from the committed sidecar: pristine + ONE incremental section;
 ## rewrites the committed .upd and manifest (which must then diff clean, see pdf-checks)
-annotate: $(PY)
+annotate: $(VENV)
 	mkdir -p build
 	$(PY) -I tools/extract/annotate.py $(CORE_ANNOT_ARGS)
 
@@ -72,17 +87,18 @@ hsedc:
 ir-annotated: annotate
 	$(EXTRACT) build/core-2.01.hsed.pdf $(CORE_IR) build/core-2.01.hsed-index.txt --spec core-2.01 --page-offset 17 --pristine $(CORE)
 
-## hsed-spec/bindings/Hsed/Bindings/Core.hs from the annotations of build/core-2.01.hsed.json;
-## only the hsed-spec:bindings test component compiles it
-bind: hsedc
+## hsed-spec/bindings/Hsed/Bindings/Core.hs from the annotations of build/core-2.01.hsed.json (made
+## afresh from the committed sidecar); only the hsed-spec:bindings test component compiles it, and
+## an Error leaves it as it was
+bind: ir-annotated hsedc
 	$(BIND_CMD)
 
 ## classify every numbered table and run the checks under Scott's errata (non-zero exit on an Error)
-hsedc-check: hsedc
+hsedc-check: ir-annotated hsedc
 	$(CHECK_CMD)
 
-## hsed/gen/Hsed/Gen/Core/Types.hs and build/report/{findings,coverage,ledger}.md
-compile: hsedc
+## hsed/gen/Hsed/Gen/Core/Types.hs and build/report/{findings,coverage,ledger}.md (nothing written on an Error)
+compile: ir-annotated hsedc
 	$(COMPILE_CMD)
 
 ## the whole chain, in order: annotate -> ir-annotated -> bind -> hsedc-check -> compile

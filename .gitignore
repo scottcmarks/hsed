@@ -3,6 +3,7 @@
 tarballs/
 .stack-work/
 *.lock
+!stack.yaml.lock
 dist-newstyle
 *.cabal
 build/
@@ -18,3 +19,5 @@ hsed.pdf
 hsedTred.pdf
 # agent worktrees the desktop app creates inside the checkout
 /.claude/
+# the Python venv of tools/extract (make venv); a link to another checkout's venv is ignored too
+/.venv

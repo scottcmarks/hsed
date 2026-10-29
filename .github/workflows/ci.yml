@@ -57,7 +57,8 @@ jobs:
       - run: stack --system-ghc --no-install-ghc test
       # The hsedc side of gate b (docs/spec-as-source.md sections 5.2, 5.4): annotate the pristine
       # Core PDF from the committed sidecar, extract the annotated PDF, then hsedc bind, check and
-      # compile; the committed bindings module and hsed/gen must be exactly what it writes. Ubuntu
+      # compile; the committed bindings module, hsed/gen and docs/LEDGER.md must be exactly what it
+      # writes (a module it no longer writes is removed, and the diff shows it). Ubuntu
       # only (one runner is enough for a determinism gate). The chain renders nothing, so it needs
       # the venv but not Ghostscript (the extract job's pdf-checks do the rendering).
       - if: runner.os == 'Linux'

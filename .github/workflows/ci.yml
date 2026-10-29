@@ -20,11 +20,29 @@ jobs:
           ghc-version: '9.4.7'
           enable-stack: true
           stack-version: 'latest'
+      # The GHC 9.4.7 Linux bindist hard-wires -fuse-ld=gold into its settings, and the gold
+      # linker is gone from ubuntu-26.04's binutils ("collect2: fatal error: cannot find 'ld'");
+      # let gcc pick the system linker instead.
+      - if: runner.os == 'Linux'
+        run: |
+          settings="$(ghc --print-libdir)/settings"
+          sudo sed -i 's/-fuse-ld=gold//g' "$settings"
+          grep -c 'fuse-ld' "$settings" || true
+      # On macos-26 the Command Line Tools' ld cannot read its own SDK's arm64e.x1 .tbd stubs
+      # ("tapi error: malformed file ... unknown architecture"); the newest Xcode's ld can.
+      - if: runner.os == 'macOS'
+        run: |
+          ls -d /Applications/Xcode*.app || true
+          xcode="$(ls -d /Applications/Xcode_*.app 2>/dev/null | sort -V | tail -1)"
+          if [ -n "$xcode" ]; then sudo xcode-select -s "$xcode"; fi
+          xcode-select -p
+          ld -v 2>&1 | head -1
+          xcrun --show-sdk-path
       - uses: actions/cache@v4
         with:
           path: |
             ~/.stack
-            .stack-work
+            **/.stack-work
           key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', '**/package.yaml') }}
           restore-keys: stack-${{ runner.os }}-
       - run: stack --system-ghc --no-install-ghc test

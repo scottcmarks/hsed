@@ -134,16 +134,14 @@ spec = do
           ir' <- annotated pristine (hsa <> "core-2.01 | T52 | erratum scott [\"Auto-advance keys\" ~> " <> tshow label <> "]\n")
           errorsOf Scott ir' `shouldBe`
             ["C-ENUM-RANGE core-2.01.pdf#page=102&T52: the value \"1\" has the label " <> tshow label <> ", which has no letter or digit to name a constructor"]
-          cr <- compiled ir'
-          crExcluded cr `shouldBe` [(TableId 52, "C-ENUM-RANGE failed")]
+          newlyExcluded ir ir' `shouldReturn` [(TableId 52, "C-ENUM-RANGE failed")]
       it "fails on a cols binding that points at a sparse column (T87's third)" $ do
         ir' <- annotated pristine (withoutLine "T87" hsa <> "core-2.01 | T87 | rangeWords [\"to\"] (cols 0 2 enumValues)\n")
         let errs = errorsOf Scott ir'
         errs `shouldSatisfy` (not . null)
         errs `shouldSatisfy` all ("C-ENUM-RANGE core-2.01.pdf#page=109&T87: the value " `T.isPrefixOf`)
         errs `shouldSatisfy` all ("has the label \"\", which has no letter or digit to name a constructor" `T.isSuffixOf`)
-        cr <- compiled ir'
-        crExcluded cr `shouldBe` [(TableId 87, "C-ENUM-RANGE failed")]
+        newlyExcluded ir ir' `shouldReturn` [(TableId 87, "C-ENUM-RANGE failed")]
 
     describe "the Warnings" $ do
       it "W-ENUM-OVERLAP: a value assigned twice, the first kept" $

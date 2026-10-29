@@ -146,7 +146,7 @@ spec = do
       it "is left out with W-GEN-EXCLUDED, its Error among the findings" $ do
         let broken = setCell "T52" 2 0 "2-8" ir
         cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott broken)
-        crExcluded cr `shouldBe` [(TableId 52, "C-ENUM-RANGE failed")]
+        newlyExcluded ir broken `shouldReturn` [(TableId 52, "C-ENUM-RANGE failed")]
         [ Cm.code f | f <- crFindings cr, Cm.anchor f == Just "T52" ] `shouldBe` ["C-ENUM-RANGE", "W-GEN-EXCLUDED"]
 
     describe "generatedModules" $ do

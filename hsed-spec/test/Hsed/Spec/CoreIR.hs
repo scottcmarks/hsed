@@ -26,6 +26,7 @@ module Hsed.Spec.CoreIR
   , setHeaderCell
   , dropTable
   , withoutLine
+  , newlyExcluded
   , core
   ) where
 
@@ -37,7 +38,9 @@ import           RIO.Directory     (doesFileExist)
 import qualified RIO.Text          as T
 import           Test.Hspec
 
-import           Hsed.Spec.Common  (Finding, SpecId (..))
+import           Hsed.Spec.Anchor  (AnchorId)
+import           Hsed.Spec.Common  (ErrataSet (..), Finding, SpecId (..))
+import           Hsed.Spec.Compile (CompileResult (..), compileIR)
 import           Hsed.Spec.IR
 import           Hsed.Spec.Sidecar (withSidecar)
 
@@ -92,6 +95,16 @@ setHeaderCell tid row col txt ir = ir { tables = map table ir.tables }
 -- | A sidecar without the line of one anchor (@withoutLine "T75"@).
 withoutLine :: Text -> Text -> Text
 withoutLine anchorId = T.unlines . filter (not . (("| " <> anchorId <> " |") `T.isInfixOf`)) . T.lines
+
+-- | The tables @hsedc compile@ (under Scott's errata) leaves out of an IR and
+--   not of a base IR, the committed annotations' run: what a test's edit makes a
+--   rule leave out, whatever the comments whose readers are still to come leave out.
+newlyExcluded :: SpecIR -> SpecIR -> IO [(AnchorId, Text)]
+newlyExcluded base ir = do
+  base'  <- excluded base
+  after' <- excluded ir
+  pure (filter (`notElem` base') after')
+  where excluded x = either (throwString . show) (pure . crExcluded) (compileIR Scott x)
 
 -- | The IR without a numbered table.
 dropTable :: Text -> SpecIR -> SpecIR

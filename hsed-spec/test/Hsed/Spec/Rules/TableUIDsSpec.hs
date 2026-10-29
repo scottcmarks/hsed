@@ -65,7 +65,7 @@ spec = withCore $ \pristine -> do
       let broken = setCell "T240" 6 1 "00 00 00 17 00 00 00 00" ir
       errorsOf broken `shouldBe`
         [ "C-T240-HALVES core-2.01.pdf#page=302&T240: row 7 AccessControl: the low half 00 00 00 07 of the descriptor object's UID is not the high half 00 00 00 17 of the table's UID" ]
-      fmap crExcluded (compileIR Scott broken) `shouldBe` Right [(TableId 240, "row 7 AccessControl: C-T240-HALVES or C-T240-NAME failed")]
+      newlyExcluded ir broken `shouldReturn` [(TableId 240, "row 7 AccessControl: C-T240-HALVES or C-T240-NAME failed")]
     it "fails on a UID cell that is not eight bytes" $
       errorsOf (setCell "T240" 0 0 "00 00 00 01 00 00 01" ir) `shouldBe`
         [ "C-T240-HALVES core-2.01.pdf#page=302&T240: row 1 Table: the descriptor object's UID cell \"00 00 00 01 00 00 01\" is not eight bytes" ]
@@ -74,7 +74,7 @@ spec = withCore $ \pristine -> do
       errorsOf moved `shouldBe`
         [ "C-T240-HALVES core-2.01.pdf#page=302&T240: row 2 SPInfo: the high half 00 00 00 09 of the descriptor object's UID is not 00 00 00 01, the half-UID of the table of tables (row 1 Table)"
         , "C-T240-HALVES core-2.01.pdf#page=302&T240: row 2 SPInfo: the low half 00 00 00 07 of the table's UID is not zero" ]
-      fmap crExcluded (compileIR Scott moved) `shouldBe` Right [(TableId 240, "row 2 SPInfo: C-T240-HALVES or C-T240-NAME failed")]
+      newlyExcluded ir moved `shouldReturn` [(TableId 240, "row 2 SPInfo: C-T240-HALVES or C-T240-NAME failed")]
     it "fails when no row, or more than one, is the table of tables" $ do
       errorsOf (setCell "T240" 0 1 "00 00 00 3F 00 00 00 00" (setCell "T240" 0 0 "00 00 00 01 00 00 00 3F" ir))
         `shouldSatisfy` elem "C-T240-HALVES core-2.01.pdf#page=302&T240: no row's descriptor object lies in its own table, so no row is the table of tables"

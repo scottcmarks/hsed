@@ -42,15 +42,19 @@ spec = do
     describe "resolveSidecar" $ do
       it "places the committed annotations where the extractor reads them back" $ do
         hsa <- committedHsa
-        resolveSidecar ir hsa `shouldBe`
-          ( []
-          , [ AnnotIR Doc "core-2.01" "doc" (StructPath "") 1 0 (Rect 36 720 108 756) 6 "doc core201 & rule tableUIDs"
-            , AnnotIR Rule "core-2.01" "5.1.3" (StructPath "0/1278") 1 99 (Rect 90.0 595.61 215.4 613.67) 6 "rule typeRow & rule enumValues"
-            , AnnotIR Bind "core-2.01" "T75" (StructPath "0/1429") 1 106 (Rect 170.88 559.18 468.12 671.1) 6 "erratum scott [\"Fractoin\" ~> \"Fraction\"]"
-            , AnnotIR Bind "core-2.01" "T87" (StructPath "0/1488") 1 108 (Rect 90.0 79.32 549.0 213.78) 6 "rangeWords [\"to\"] (cols 0 1 enumValues)"
-            , AnnotIR Bind "core-2.01" "T101" (StructPath "0/1555") 1 112 (Rect 227.4 373.92 411.49 477.42) 6 "erratum scott [\"Verify Eror\" ~> \"Verify Error\"]"
-            , AnnotIR Bind "core-2.01" "T149" (StructPath "0/1792") 1 123 (Rect 169.44 356.64 469.56 411.18) 6
-                "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\"" ] )
+        let (fs, as) = resolveSidecar ir hsa
+            ls = snd (parseSidecar hsa)
+        fs `shouldBe` []
+        map (.id) as `shouldBe` map slId ls
+        map (.contents) as `shouldBe` map slPayload ls
+        all (\a -> a.v == 1 && a.flags == 6 && a.spec == "core-2.01") as `shouldBe` True
+        [ (a.kind, a.id, a.struct, a.page, a.rect) | a <- as, a.id `elem` ["doc", "5.1.3", "T75", "T87", "T101", "T149"] ] `shouldBe`
+          [ (Doc, "doc", StructPath "", 0, Rect 36 720 108 756)
+          , (Rule, "5.1.3", StructPath "0/1278", 99, Rect 90.0 595.61 215.4 613.67)
+          , (Bind, "T75", StructPath "0/1429", 106, Rect 170.88 559.18 468.12 671.1)
+          , (Bind, "T87", StructPath "0/1488", 108, Rect 90.0 79.32 549.0 213.78)
+          , (Bind, "T101", StructPath "0/1555", 112, Rect 227.4 373.92 411.49 477.42)
+          , (Bind, "T149", StructPath "0/1792", 123, Rect 169.44 356.64 469.56 411.18) ]
       it "refuses an anchor the IR does not have, and another spec's line" $ do
         let (fs, as) = resolveSidecar ir "core-2.01 | T999 | typeRow\nopal-2.30 | T46 | typeRow\ncore-2.01 | 9.9.9 | rule typeRow\n"
         as `shouldBe` []

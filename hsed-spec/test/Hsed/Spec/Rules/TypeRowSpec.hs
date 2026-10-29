@@ -79,13 +79,14 @@ spec = do
         map ident [46, 72, 52, 171] `shouldBe` [Just "AC_element", Just "Certificates_object_ref", Nothing, Nothing]
       it "declares every one of them, leaving none out" $ do
         length (rowsOf ctx) `shouldBe` 100
-        fmap crExcluded (compileIR Scott ir) `shouldBe` Right []
+        let typeRows = [ aid | (aid, RuleBound (RuleName "typeRow") _ _) <- Map.toList (classify ir) ]
+        fmap (filter ((`elem` typeRows) . fst) . crExcluded) (compileIR Scott ir) `shouldBe` Right []
 
     describe "the Format environment" $ do
       it "holds the 100 Type objects of the type-row tables" $
         length (typeEnvFrom ctx) `shouldBe` 100
       it "has no table names to resolve uidref{...} against when tableUIDs binds nothing" $ do
-        noToken <- annotated pristine (DT.replace "doc core201 & rule tableUIDs" "doc core201" hsa)
+        noToken <- annotated pristine (DT.replace " & rule tableUIDs" "" hsa)
         errorsOf Scott noToken `shouldSatisfy`
           elem "C-FMT-RESOLVE core-2.01: no table bound by tableUIDs (T240's header) to resolve uidref{...} against"
 

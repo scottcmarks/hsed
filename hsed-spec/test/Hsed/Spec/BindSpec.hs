@@ -10,10 +10,10 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-@hsedc bind@ on the committed Core extraction: one entry per annotation, a bare
-modifier chain printed on its rule default, a binding shaped by its target
-printed at the target's shape, and the committed bindings module exactly what
-the committed annotations give.
+@hsedc bind@ on the committed Core extraction: one entry per annotation, in
+canonical order, a bare modifier chain printed on its rule default, a binding
+shaped by its target printed at the target's shape, and the committed bindings
+module exactly what the committed annotations give.
 -}
 module Hsed.Spec.BindSpec (spec) where
 
@@ -21,12 +21,12 @@ import qualified RIO.Text                 as T
 import           RIO
 import           Test.Hspec
 
-import           Hsed.Spec.Anchor         (AnchorId (..))
+import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Bind
 import           Hsed.Spec.Common         (isError, renderFinding)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.Grammar        (printSomeBinding)
-import           Hsed.Spec.IR             (StructPath (..))
+import           Hsed.Spec.IR             (AnnotIR (..), SpecIR (..), StructPath (..))
 
 
 spec :: Spec
@@ -35,18 +35,22 @@ spec = withCore $ \pristine -> do
   ir  <- runIO (annotated pristine hsa)
 
   describe "bindEntries" $ do
-    it "gives the doc anchor, the rule anchor, T75, T87, T101 and T149, in canonical order" $ do
+    it "gives one entry per annotation, in canonical order, a bare modifier chain printed on its rule default" $ do
       let (fs, entries) = bindEntries ir
+          docPayload = [ a.contents | a <- ir.annots, a.id == "doc" ]
       fs `shouldBe` []
-      [ (a, page, sp, printSomeBinding sb) | (_, a, page, sp, sb) <- entries ] `shouldBe`
-        [ (DocId, 1, StructPath "", "doc core201 & rule tableUIDs")
+      map (\(_, a, _, _, _) -> renderAnchorId a) entries `shouldBe` map (.id) ir.annots
+      [ (a, page, sp, printSomeBinding sb) | (_, a, page, sp, sb) <- entries
+                                            , a `elem` [DocId, SectionId "5.1.3", TableId 75, TableId 87, TableId 101, TableId 149] ] `shouldBe`
+        [ (DocId, 1, StructPath "", T.concat docPayload)
         , (SectionId "5.1.3", 100, StructPath "0/1278", "rule typeRow & rule enumValues")
         , (TableId 75, 107, StructPath "0/1429", "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow")
         , (TableId 87, 109, StructPath "0/1488", "rangeWords [\"to\"] (cols 0 1 enumValues)")
         , (TableId 101, 113, StructPath "0/1555", "erratum scott [\"Verify Eror\" ~> \"Verify Error\"] enumValues")
         , (TableId 149, 124, StructPath "0/1792", "waive \"C-UID-UNIQUE\" \"T94 00 00 00 05 00 00 02 15\" \"no erratum says which is wrong\" typeRow") ]
-    it "prints nothing for a rule-bound table without a comment" $
-      length (snd (bindEntries ir)) `shouldBe` 6
+    it "prints nothing for a rule-bound table without a comment" $ do
+      length (snd (bindEntries ir)) `shouldBe` length ir.annots
+      [ a | (_, a@(TableId 46), _, _, _) <- snd (bindEntries ir) ] `shouldBe` []
     it "prints a binding shaped by its target at the target's shape" $ do
       ir' <- annotated pristine (hsa <> "core-2.01 | T47 | refines (core 46)\n")
       let (fs, result) = bindModule ir'

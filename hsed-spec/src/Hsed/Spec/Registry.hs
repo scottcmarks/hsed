@@ -23,7 +23,9 @@ module Hsed.Spec.Registry
   ) where
 
 import           Hsed.Spec.RuleDef          (RuleDef)
+import           Hsed.Spec.Rules.Codes      (codesRule)
 import           Hsed.Spec.Rules.EnumValues (enumValuesRule)
+import           Hsed.Spec.Rules.StatusCodes (statusCodesRule)
 import           Hsed.Spec.Rules.TableUIDs  (tableUIDsRule)
 import           Hsed.Spec.Rules.TypeRow    (typeRowRule)
 
@@ -31,7 +33,9 @@ import           Hsed.Spec.Rules.TypeRow    (typeRowRule)
 -- | The rules, in alphabetical order.
 registry :: [RuleDef]
 registry =
-  [ enumValuesRule
+  [ codesRule
+  , enumValuesRule
+  , statusCodesRule
   , tableUIDsRule
   , typeRowRule
   ]

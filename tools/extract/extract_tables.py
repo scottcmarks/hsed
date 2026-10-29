@@ -1,6 +1,8 @@
 #!/usr/bin/env python -I
 """Extract a tagged TCG PDF (Core 2.01 / Opal SSC 2.30) into IR v1 (docs/ir-v1.md): every /Table,
-every /H1../H6 heading, every /P and /LI outside tables, and every hsed annotation in the input.
+every /H1../H6 heading, every /P and /LI outside tables, the method signature blocks among them, every
+"Table N" reference in them, the List of Tables entries of the front matter, and every hsed
+annotation in the input.
 
 Two independent views of the same document are joined by the structure-tree path:
 
@@ -15,7 +17,8 @@ Two independent views of the same document are joined by the structure-tree path
     rectangles from page.get_drawings() supply cell shading and underline strokes.
 
 Output: one sorted-key JSON document (irVersion 1; see `main` for the top level, `table_record`,
-`prose_records` and `annot_records` for the entries) plus a one-line-per-table index.  The run ends
+`prose_records`, `sig_blocks`, `xref_records`, `lot_records` and `annot_records` for the entries)
+plus a one-line-per-table index.  The run ends
 with the sanity invariants of design section 5.1 step 9, printed PASS/FAIL to stderr; any FAIL makes
 the exit status 1.  The output is deterministic (no timestamps, no absolute paths).
 
@@ -254,7 +257,7 @@ class PageCache:
     """Lazy per-page physical data (chars by struct path, fills) so each page is parsed once."""
 
     def __init__(self, doc):
-        self.doc, self._chars, self._fills, self._grid = doc, {}, {}, {}
+        self.doc, self._chars, self._fills, self._grid, self._links = doc, {}, {}, {}, {}
 
     def chars(self, pno):
         if pno not in self._chars:
@@ -279,6 +282,14 @@ class PageCache:
 
     def inv(self, pno):
         return ~self.doc[pno].transformation_matrix
+
+    def links(self, pno) -> list[tuple[pymupdf.Rect, int]]:
+        """The page's links to a page of this document: (the link's rect in MuPDF coords, the 0-based
+        page it goes to)."""
+        if pno not in self._links:
+            self._links[pno] = [(pymupdf.Rect(l["from"]), l["page"]) for l in self.doc[pno].get_links()
+                                if l.get("kind") in (pymupdf.LINK_GOTO, pymupdf.LINK_NAMED) and isinstance(l.get("page"), int) and l["page"] >= 0]
+        return self._links[pno]
 
 
 def chars_under(cache: PageCache, path: tuple, pages: Iterable[int], stop_tags: Iterable[str] = ("Table",)) -> list[tuple[int, dict]]:
@@ -319,14 +330,41 @@ def group_lines(recs: list[tuple[int, dict]]) -> list[list[dict]]:
     return lines
 
 
-def line_text(line: list[dict]) -> str:
-    """Join chars, inserting a space where consecutive glyphs leave a gap wider than 0.25 em."""
+def line_chars(line: list[dict]) -> list[tuple[str, dict | None]]:
+    """The characters of a visual line, each with the glyph it comes from: a space (glyph None) is
+    inserted where consecutive glyphs leave a gap wider than 0.25 em."""
     proj = frame(line[0])
     ends = [max(proj(x, y)[0] for x, y in ch["quad"]) for ch in line]
     starts = [min(proj(x, y)[0] for x, y in ch["quad"]) for ch in line]
     gaps = [False] + [s - e > 0.25 * ch["size"] and not (ch["c"].isspace() or prev["c"].isspace())
                       for prev, ch, e, s in zip(line, line[1:], ends, starts[1:])]
-    return "".join((" " if g else "") + ch["c"] for g, ch in zip(gaps, line))
+    return [pc for g, ch in zip(gaps, line) for pc in ([(" ", None)] if g else []) + [(ch["c"], ch)]]
+
+
+def line_text(line: list[dict]) -> str:
+    """Join chars, inserting a space where consecutive glyphs leave a gap wider than 0.25 em."""
+    return "".join(c for c, _ in line_chars(line))
+
+
+def collapse_chars(chars: Iterable[tuple[str, dict | None]]) -> list[tuple[str, dict | None]]:
+    """`norm` over (character, glyph) pairs: every run of whitespace becomes one space (glyph None),
+    none at either end."""
+    out, pending = [], False
+    for c, g in chars:
+        if c.isspace():
+            pending = True
+            continue
+        if pending and out:
+            out.append((" ", None))
+        pending = False
+        out.append((c, g))
+    return out
+
+
+def para_chars(recs: list[tuple[int, dict]]) -> list[tuple[str, dict | None]]:
+    """The text `norm(" ".join(text_lines(recs)))` gives, one (character, glyph) pair per character,
+    so that a match in the text can be located on the page."""
+    return collapse_chars(pc for line in group_lines(recs) for pc in line_chars(line) + [(" ", None)])
 
 
 def text_lines(recs: list[tuple[int, dict]]) -> list[str]:
@@ -859,12 +897,14 @@ def path_str(path: Iterable[int]) -> str:
     return "/".join(str(i) for i in path)
 
 
-def prose_records(cache: PageCache, root, page_of: dict) -> tuple[list[dict], list[dict], dict]:
-    """(headings, paras, counts) in document order: HeadingIR from every /H1../H6 (contents lines
-    skipped), ParaIR from every /P and /LI outside tables that has ink (empty spacer paragraphs
-    skipped).  `section` is the nearest preceding numbered heading; an /LI's `item` concatenates the
-    labels of its /LI ancestors and its own; its words exclude nested lists."""
-    headings, paras, counts = [], [], Counter()
+def prose_records(cache: PageCache, root, page_of: dict, captions: set[str]) -> tuple[list[dict], list[dict], list[dict], list[dict], dict]:
+    """(headings, paras, sigs, xrefs, counts) in document order: HeadingIR from every /H1../H6
+    (contents lines skipped), ParaIR from every /P and /LI outside tables that has ink (empty spacer
+    paragraphs skipped).  `section` is the nearest preceding numbered heading; an /LI's `item`
+    concatenates the labels of its /LI ancestors and its own; its words exclude nested lists.  SigIR
+    from the runs of /P paragraphs that are method signature blocks (`sig_blocks`), XrefIR from every
+    "Table N" in a paragraph that is not a table's caption (`captions`, the caption struct paths)."""
+    headings, paras, items, xrefs, counts = [], [], [], [], Counter()
     state = {"section": None}
 
     def recs_of(path, elem, stop):
@@ -892,7 +932,8 @@ def prose_records(cache: PageCache, root, page_of: dict) -> tuple[list[dict], li
             elif t in PARA_TAGS and not in_table:
                 n_li += t == "/LI"
                 recs = recs_of(p, k, ("Table", "L"))
-                text = norm(" ".join(text_lines(recs)))
+                chars = para_chars(recs)
+                text = "".join(c for c, _ in chars)
                 page, rect = glyph_rect(cache, recs)
                 label, body = parse_label(text) if t == "/LI" else (None, text)
                 own = f"{BULLET}{n_li}" if label == BULLET else label
@@ -902,10 +943,157 @@ def prose_records(cache: PageCache, root, page_of: dict) -> tuple[list[dict], li
                     paras.append({"section": state["section"], "item": item_label(labels + [own]) if t == "/LI" else None,
                                   "kind": t[1:], "page": page, "struct_path": path_str(p), "rect": rect,
                                   "hash": words_hash(norm_words(body)), "words": None})
+                    items.append({"path": p, "kind": t[1:], "text": text, "section": state["section"], "page": page, "rect": rect})
+                    if path_str(p) not in captions:
+                        xrefs.extend(xref_records(cache, chars, state["section"]))
             walk(k, p, labels + [own] if t == "/LI" else labels, in_table or t == "/Table")
 
     walk(root, (), [], False)
-    return headings, paras, dict(counts)
+    return headings, paras, sig_blocks(items), xrefs, dict(counts)
+
+
+# ----------------------------------------------------------------------------- method signature blocks (design 5.1 step 7)
+# A method signature is printed as consecutive /P paragraphs, one per line: the invocation head(s)
+# `<Invoker>.<Method> [` (two for a table-and-object method, `TableUID.Get [` then `ObjectUID.Get [`),
+# the parameters, `=>`, then the result; CloseSession (Core 5.2.3.5), which the TPer sends and which
+# has no response, has no `=>`.  The block ends where the result's brackets close (or, with no `=>`,
+# the parameters'), or at the first paragraph that is not the next /P sibling (an empty spacer
+# paragraph, a heading).
+HEAD_RE = re.compile(r"^([A-Za-z_]+\.[A-Za-z_]+) *\[")                 # design 5.1 step 7
+BARE_HEAD_RE = re.compile(r"^([A-Za-z_]+\.[A-Za-z_]+)$")                # a head printed without its bracket
+ARROW = "=>"
+
+
+def bracket_depth(text: str) -> int:
+    """Opening minus closing brackets, square and curly."""
+    return sum(1 for c in text if c in "[{") - sum(1 for c in text if c in "]}")
+
+
+def is_next_sibling(a: tuple, b: tuple) -> bool:
+    """Is struct path b the sibling right after a?"""
+    return len(a) == len(b) and a[:-1] == b[:-1] and b[-1] == a[-1] + 1
+
+
+def sig_head(item: dict) -> str | None:
+    m = HEAD_RE.match(item["text"]) or BARE_HEAD_RE.match(item["text"])
+    return m.group(1) if m and item["kind"] == "P" else None
+
+
+def sig_blocks(items: list[dict]) -> list[dict]:
+    """SigIR for every signature block among the paragraph items (document order; each item: path
+    (a tuple), kind, text, section, page, rect): a block starts at a /P that HEAD_RE matches, or at a
+    bare head followed by one; its heads are its leading head paragraphs; its text is its paragraphs,
+    one per line; its rect the union of its paragraphs' rects on its first page."""
+    out, i = [], 0
+    while i < len(items):
+        n = sig_block_length(items, i)
+        if n:
+            block = items[i:i + n]
+            first = block[0]
+            rects = [it["rect"] for it in block if it["page"] == first["page"] and it["rect"]]
+            out.append({"section": first["section"], "page": first["page"], "struct_path": path_str(first["path"]),
+                        "rect": [round(f(r[k] for r in rects), 2) for k, f in ((0, min), (1, min), (2, max), (3, max))],
+                        "heads": [sig_head(it) for it in takewhile(lambda it: sig_head(it) is not None, block)],
+                        "text": "\n".join(it["text"] for it in block)})
+        i += n or 1
+    return out
+
+
+def sig_block_length(items: list[dict], i: int) -> int:
+    """How many paragraphs from items[i] form a signature block; 0 when none starts there."""
+    run = list(takewhile(lambda k: k == i or (items[k]["kind"] == "P" and is_next_sibling(items[k - 1]["path"], items[k]["path"])),
+                         range(i, len(items))))
+    heads = list(takewhile(lambda k: sig_head(items[k]) is not None, run))
+    if not heads or not HEAD_RE.match(items[heads[-1]]["text"]):
+        return 0                                      # no head, or bare heads with no bracketed head after them
+    params, result, arrow, opened = 0, 0, False, False
+    for n, k in enumerate(run, 1):
+        text = items[k]["text"]
+        if arrow:
+            part = text
+        else:
+            before, sep, part = text.partition(ARROW)
+            params += bracket_depth(before)
+            arrow = bool(sep)
+        if arrow:
+            opened = opened or any(c in "[{" for c in part)
+            result += bracket_depth(part)
+            if opened and result <= 0:
+                return n                              # the result's brackets close
+        elif params <= 0:
+            nxt = items[run[n]] if n < len(run) else None
+            if nxt is None or not (nxt["text"].startswith(ARROW) or sig_head(nxt)):
+                return n                              # the parameters close and no `=>` follows: no response
+    return len(run)
+
+
+# ----------------------------------------------------------------------------- table references in the prose
+XREF_RE = re.compile(r"\bTable\s+(\d+)\b")
+SENTENCE_END_RE = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\"“(\[])")
+
+
+def sentence_at(text: str, pos: int) -> str:
+    """The sentence of `text` that contains position `pos`: from the end of the sentence before it
+    (a ., ! or ? then whitespace then a capital, digit, quote or bracket) to its own end."""
+    bounds = [(m.start(), m.end()) for m in SENTENCE_END_RE.finditer(text)]
+    start = max([e for s, e in bounds if e <= pos], default=0)
+    end = min([s for s, e in bounds if s >= pos], default=len(text))
+    return text[start:end]
+
+
+def xref_records(cache: PageCache, chars: list[tuple[str, dict | None]], section: str | None) -> list[dict]:
+    """XrefIR for every "Table N" in a paragraph (its characters with their glyphs, `para_chars`):
+    the number, the page and rect (PDF space) of its glyphs, the paragraph's section, the sentence it
+    is in, and the 0-based page the link over the number goes to (null when no link covers it)."""
+    text = "".join(c for c, _ in chars)
+
+    def record(m):
+        glyphs = [g for _, g in chars[m.start():m.end()] if g]
+        digits = [g for _, g in chars[m.start(1):m.end(1)] if g]
+        page = glyphs[0]["__page"]
+        rect = union_rect(pt for g in glyphs if g["__page"] == page for pt in g["quad"])
+        num = union_rect(pt for g in digits if g["__page"] == digits[0]["__page"] for pt in g["quad"])
+        centre = pymupdf.Point((num.x0 + num.x1) / 2, (num.y0 + num.y1) / 2)
+        target = next((tgt for r, tgt in cache.links(digits[0]["__page"]) if r.contains(centre)), None)
+        return {"number": int(m.group(1)), "page": page, "rect": to_pdf_space(rect, cache.inv(page)),
+                "section": section, "sentence": sentence_at(text, m.start()), "target": target}
+
+    return [record(m) for m in XREF_RE.finditer(text)]
+
+
+# ----------------------------------------------------------------------------- the List of Tables
+# Each entry of the front matter's List of Tables is a /TOCI: `Table 01 Global Terminology .... 2`
+# (Core), `Table 1 - Preconfiguration Tables Legend .... 11` (Opal); a long title wraps.
+LOT_RE = re.compile(r"^Table\s+(\d+)\s+(?:[-–—]\s+)?(.*?)[\s.…]*?(\d+)$")
+
+
+def parse_lot_entry(text: str) -> tuple[int, str, int] | None:
+    """(number, title, printed page) of a List of Tables entry; None for anything else."""
+    m = LOT_RE.match(text)
+    return (int(m.group(1)), m.group(2), int(m.group(3))) if m and m.group(2) else None
+
+
+def lot_records(cache: PageCache, root, page_of: dict) -> list[dict]:
+    """LotIR for every /TOCI that is a List of Tables entry, in document order: the table's number,
+    title and printed page as the entry gives them, and the entry's page and rect."""
+    out = []
+
+    def walk(node, path):
+        for i, k in enumerate(kids(node)):
+            if not is_elem(k):
+                continue
+            p = path + (i,)
+            if tag(k) == "/TOCI":
+                pages = leaf_pages(k, page_of)
+                recs = chars_under(cache, p, pages, stop_tags=()) if pages else []
+                entry = parse_lot_entry(norm(" ".join(text_lines(recs))))
+                if entry:
+                    page, rect = glyph_rect(cache, recs)
+                    out.append({"number": entry[0], "title": entry[1], "printed": entry[2], "page": page, "rect": rect})
+            walk(k, p)
+
+    walk(root, ())
+    return out
 
 
 # ----------------------------------------------------------------------------- hsed annotations in the input
@@ -961,6 +1149,19 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
         return (f"{tid} header equals {other_id} column {col}", mine == theirs, f"mine {mine} theirs {theirs}")
 
     t7_parts = [(t.get("part"), t.get("parts"), t["n_rows"]) for t in tables if t["id"] == "T7"]
+    sigs, lot, xrefs = (ir.get(k, []) for k in ("sigs", "lot", "xrefs"))
+
+    def sigs_check(n):
+        sections = [s["section"] for s in sigs]
+        return (f"{n} signature blocks, one per numbered section", len(sigs) == n and len(set(sections) - {None}) == n,
+                f"got {len(sigs)} in {len(set(sections) - {None})} numbered sections")
+
+    def lot_check(n):
+        got = sorted(e["number"] for e in lot)
+        return (f"{n} List of Tables entries, Tables 1-{n} once each", got == list(range(1, n + 1)), f"got {len(got)}: {got[:3]}...")
+
+    def xrefs_check(n):
+        return (f"{n} table references in the prose", len(xrefs) == n, f"got {len(xrefs)}")
     core = [
         ("heading 5.1.3 on page index 99, printed label 83",
          any(h["section"] == "5.1.3" and h["page"] == 99 and h["page"] + 1 - ir["labelOffset"] == 83 for h in headings),
@@ -973,11 +1174,20 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
         ("T7 two parts, one data row between them", t7_parts == [(1, 2, 0), (2, 2, 1)], f"got (part, parts, rows) {t7_parts}"),
         cells_check("T71", 3), cells_check("T81", 3),
         rows_check("T189", 14), rows_check("T233", 14), rows_check("T243", 17), rows_check("T244", 4), rows_check("T245", 5),
+        sigs_check(53),
+        ("Get (5.3.3.6, PDF 201) is invoked on a table and on an object",
+         [(s["page"], s["heads"]) for s in sigs if s["section"] == "5.3.3.6"] == [(200, ["TableUID.Get", "ObjectUID.Get"])],
+         f"got {[(s['page'], s['heads']) for s in sigs if s['section'] == '5.3.3.6']}"),
+        ("CloseSession (5.2.3.5) is the one block without =>", [s["section"] for s in sigs if ARROW not in s["text"]] == ["5.2.3.5"],
+         f"got {[s['section'] for s in sigs if ARROW not in s['text']]}"),
+        lot_check(248), xrefs_check(108),
+        ("Table 179 referenced on PDF 116", any(x["number"] == 179 and x["page"] == 115 for x in xrefs), "absent"),
     ]
     opal = [
         ("50 distinct numbered captions", len(numbered) == 50, f"got {len(numbered)}"),
         header_vs_column("T24", "T178", 1),
         rows_check("T17", 11), rows_check("T38", 96), rows_check("T22", 45),
+        sigs_check(3), lot_check(50), xrefs_check(63),
     ]
     return {"core-2.01": core, "opal-2.30": opal}.get(ir["spec"], [])
 
@@ -1057,7 +1267,9 @@ def main(argv=None) -> int:
     strip_private(mark_ids(records))
     for r in records:
         r["rects"] = table_rects(r)
-    headings, paras, prose_counts = prose_records(cache, pdf.Root.StructTreeRoot, page_of)
+    captions = {path_str(r["caption_path"]) for r in records if r["caption_path"]}
+    headings, paras, sigs, xrefs, prose_counts = prose_records(cache, pdf.Root.StructTreeRoot, page_of, captions)
+    lot = lot_records(cache, pdf.Root.StructTreeRoot, page_of)
     annots = annot_records(pdf)
     elapsed = time.time() - t0
 
@@ -1066,14 +1278,15 @@ def main(argv=None) -> int:
     counts = {"n_tables": len(records), "n_numbered": sum(r["table_number"] is not None for r in records),
               "distinct_numbers": len({r["table_number"] for r in records if r["table_number"] is not None}),
               "n_nested": sum(bool(r["nested_in"]) for r in records), "n_headings": len(headings),
-              "n_paras": len(paras), **prose_counts}
+              "n_paras": len(paras), "n_sigs": len(sigs), "n_xrefs": len(xrefs), "n_lot": len(lot), **prose_counts}
     # the counts travel under "extractor"; n_annots stays out so that an annotated input's IR differs
     # from the pristine one's in "annots" alone
     ir = {"irVersion": IR_VERSION, "spec": args.spec, "source": source, "pdfMd5": md5, "pages": len(pdf.pages),
           "labelOffset": args.page_offset, "notice": NOTICE,
           "extractor": {"script": os.path.basename(__file__), "version": IR_VERSION,
                         "pymupdf": pymupdf.__version__, "pikepdf": pikepdf.__version__, **counts},
-          "wordComplete": [], "tables": records, "headings": headings, "paras": paras, "sigs": [], "annots": annots}
+          "wordComplete": [], "tables": records, "headings": headings, "paras": paras, "sigs": sigs,
+          "lot": lot, "xrefs": xrefs, "annots": annots}
     with open(args.out_json, "w") as f:
         json.dump(ir, f, indent=1, ensure_ascii=False, sort_keys=True)
     with open(args.out_index, "w") as f:

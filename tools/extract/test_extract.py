@@ -1,10 +1,13 @@
 """Unit tests for the pure rules in extract_tables.py (no PDF needed):
-ragged-row join, section-number parsing, list-item labels, word normalisation and hashing.
+ragged-row join, section-number parsing, list-item labels, word normalisation and hashing,
+paragraph text located glyph by glyph, signature blocks, table references and List of Tables entries.
 
 Run:  .venv/bin/python -I -m unittest discover -s tools/extract -p 'test_*.py'   (make extract-test)
 """
 import hashlib
 import unittest
+
+import pymupdf
 
 import extract_tables as X
 
@@ -117,6 +120,136 @@ class Hashing(unittest.TestCase):
 
     def test_hash_ignores_case_and_punctuation(self):
         self.assertEqual(X.words_hash(X.norm_words("Hello, World!")), X.words_hash(X.norm_words("hello world")))
+
+
+def glyphs(text, x=100.0, y=100.0, page=0, gap_after=()):
+    """Synthetic glyph records for a line of text, 5 pt per character on a 10 pt font; a character
+    whose index is in gap_after is followed by a 5 pt gap (wider than 0.25 em: a space)."""
+    out, pos = [], x
+    for i, c in enumerate(text):
+        out.append((page, {"c": c, "quad": [(pos, y - 8), (pos + 5, y - 8), (pos, y + 2), (pos + 5, y + 2)], "origin": (pos, y),
+                           "size": 10.0, "dir": (1.0, 0.0), "seq": len(out)}))
+        pos += 5 + (5 if i in gap_after else 0)
+    return out
+
+
+class ParaChars(unittest.TestCase):
+    def test_gaps_become_spaces_without_glyphs(self):
+        chars = X.para_chars(glyphs("TableN", gap_after={4}))
+        self.assertEqual("".join(c for c, _ in chars), "Table N")
+        self.assertIsNone(chars[5][1])
+        self.assertEqual(chars[6][1]["c"], "N")
+
+    def test_the_text_is_what_text_lines_gives(self):
+        recs = glyphs("  Two  words ", gap_after={6}) + glyphs("next line", y=120.0)
+        self.assertEqual("".join(c for c, _ in X.para_chars(recs)), X.norm(" ".join(X.text_lines(recs))))
+
+    def test_collapse(self):
+        self.assertEqual(X.collapse_chars([(" ", None), ("a", 1), (" ", None), ("\t", None), ("b", 2), (" ", None)]),
+                         [("a", 1), (" ", None), ("b", 2)])
+
+
+def item(k, text, kind="P", section="5.3.3.6", page=200, parent=(0,)):
+    return {"path": parent + (k,), "kind": kind, "text": text, "section": section, "page": page, "rect": [90.0, 700.0 - 10 * k, 300.0, 710.0 - 10 * k]}
+
+
+def items(*texts, start=1):
+    return [item(start + i, t) for i, t in enumerate(texts)]
+
+
+class SignatureBlocks(unittest.TestCase):
+    def test_a_table_and_object_method_has_two_heads(self):
+        (sig,) = X.sig_blocks([item(0, "This method is used to fetch the values.")]
+                              + items("TableUID.Get [", "ObjectUID.Get [", "Cellblock : cell_block ]", "=>", "[ Result : bytes ]"))
+        self.assertEqual(sig["heads"], ["TableUID.Get", "ObjectUID.Get"])
+        self.assertEqual(sig["text"], "TableUID.Get [\nObjectUID.Get [\nCellblock : cell_block ]\n=>\n[ Result : bytes ]")
+        self.assertEqual((sig["section"], sig["page"], sig["struct_path"]), ("5.3.3.6", 200, "0/1"))
+        self.assertEqual(sig["rect"], [90.0, 650.0, 300.0, 700.0])
+
+    def test_the_block_ends_where_the_result_closes(self):
+        (sig,) = X.sig_blocks(items("SMUID.StartSession [ see StartSession definition in 5.2.3.1]", "=>", "SMUID.SyncSession [",
+                                    "HostSessionID : uinteger,", "SignedHash = bytes ]", "The SyncSession is returned by the TPer."))
+        self.assertEqual(sig["heads"], ["SMUID.StartSession"])
+        self.assertTrue(sig["text"].endswith("SignedHash = bytes ]"))
+
+    def test_a_method_with_no_response_ends_where_its_parameters_close(self):
+        (sig,) = X.sig_blocks(items("SMUID.CloseSession [", "RemoteSessionNumber : uinteger,", "LocalSessionNumber : uinteger ]",
+                                    "This is the portion of the session number."))
+        self.assertEqual(sig["text"], "SMUID.CloseSession [\nRemoteSessionNumber : uinteger,\nLocalSessionNumber : uinteger ]")
+
+    def test_a_head_printed_without_its_bracket(self):
+        (sig,) = X.sig_blocks(items("CredentialObjectUID.Sign", "HashObjectUID.Sign[", "BufferOut = cell_block ]", "=>", "[ Result : bytes ]"))
+        self.assertEqual(sig["heads"], ["CredentialObjectUID.Sign", "HashObjectUID.Sign"])
+
+    def test_an_unclosed_parameter_list_runs_to_the_arrow(self):
+        (sig,) = X.sig_blocks(items("CredentialObjectUID.GetPackage [", "Log = bytes", "=>", "[ Result : package ]", "This parameter defines it."))
+        self.assertEqual(sig["text"].splitlines()[-1], "[ Result : package ]")
+
+    def test_one_paragraph_heads_and_two_blocks_in_a_row(self):
+        sigs = X.sig_blocks(items("ThisSP.DeleteSP[]", "=>", "[ ]") + items("ThisSP.GetFreeSpace [ ]", "=>", "[ FreeSpace : uinteger ]", start=5))
+        self.assertEqual([s["heads"] for s in sigs], [["ThisSP.DeleteSP"], ["ThisSP.GetFreeSpace"]])
+
+    def test_the_block_stops_at_a_paragraph_that_is_not_the_next_sibling(self):
+        (sig,) = X.sig_blocks(items("ObjectUID.Delete[ ]", "=>") + [item(9, "[ ]"), item(10, "If invoked on an SP object.")])
+        self.assertEqual(sig["text"], "ObjectUID.Delete[ ]\n=>")
+
+    def test_no_block_without_a_bracketed_head(self):
+        self.assertEqual(X.sig_blocks(items("CredentialObjectUID.Sign", "Invoking SMUID.Properties[ ] is allowed.")), [])
+        self.assertEqual(X.sig_blocks([item(1, "TableUID.Get [", kind="LI")]), [])
+
+    def test_bracket_depth(self):
+        self.assertEqual(X.bracket_depth("typeOr { Bytes : bytes, RowValues : list [ x ] } ]"), -1)
+
+
+class FakeCache:
+    """The two things xref_records asks of a PageCache: links and the page matrix."""
+    def __init__(self, links):
+        self._links = links
+
+    def links(self, pno):
+        return self._links.get(pno, [])
+
+    def inv(self, pno):
+        return pymupdf.Identity
+
+
+class TableReferences(unittest.TestCase):
+    def test_a_reference_with_its_sentence_rect_and_link(self):
+        recs = glyphs("Seeabove.Valuesareset", gap_after={2, 8, 14, 17}) + glyphs("inTable179.", y=120.0, gap_after={1, 6})
+        link = (pymupdf.Rect(140.0, 110.0, 160.0, 125.0), 166)
+        (x,) = X.xref_records(FakeCache({0: [link]}), X.para_chars(recs), "5.1.3.55")
+        self.assertEqual((x["number"], x["page"], x["section"], x["target"]), (179, 0, "5.1.3.55", 166))
+        self.assertEqual(x["sentence"], "Values are set in Table 179.")
+        self.assertEqual(x["rect"], [115.0, 112.0, 160.0, 122.0])
+
+    def test_no_link_over_the_number_is_no_target(self):
+        (x,) = X.xref_records(FakeCache({}), X.para_chars(glyphs("Table03", gap_after={4})), None)
+        self.assertEqual((x["number"], x["target"]), (3, None))
+
+    def test_sentences(self):
+        text = "Hi there. The values are in Table 22 and Table 23. (See 3.2.) Done"
+        self.assertEqual(X.sentence_at(text, text.index("Table 23")), "The values are in Table 22 and Table 23.")
+        self.assertEqual(X.sentence_at(text, 0), "Hi there.")
+        self.assertEqual(X.sentence_at("e.g. a value in Table 5.", 16), "e.g. a value in Table 5.")
+
+
+class ListOfTables(unittest.TestCase):
+    def test_entries(self):
+        self.assertEqual(X.parse_lot_entry("Table 01 Global Terminology ................... 2"), (1, "Global Terminology", 2))
+        self.assertEqual(X.parse_lot_entry("Table 09 0-Length Byte Encoding .......... 17"), (9, "0-Length Byte Encoding", 17))
+        self.assertEqual(X.parse_lot_entry("Table 161 uinteger_8 ................ 109"), (161, "uinteger_8", 109))
+        self.assertEqual(X.parse_lot_entry("Table 184 C_AES_128 Table Description..........158"), (184, "C_AES_128 Table Description", 158))
+        self.assertEqual(X.parse_lot_entry("Table 26 - Admin SP – TPerInfo Columns ........ 48"), (26, "Admin SP – TPerInfo Columns", 48))
+
+    def test_a_wrapped_title(self):
+        self.assertEqual(X.parse_lot_entry("Table 185 C_AES_128/C_AES_256 ResidualData Column Values After "
+                                           "Encrypt/Decrypt/EncryptFinalize/DecryptFinalize ......... 159"),
+                         (185, "C_AES_128/C_AES_256 ResidualData Column Values After Encrypt/Decrypt/EncryptFinalize/DecryptFinalize", 159))
+
+    def test_not_entries(self):
+        self.assertIsNone(X.parse_lot_entry("Figure 1 Diagram of the Core Architecture ...... 5"))
+        self.assertIsNone(X.parse_lot_entry("Tables"))
+        self.assertIsNone(X.parse_lot_entry("Table 03"))
 
 
 if __name__ == "__main__":

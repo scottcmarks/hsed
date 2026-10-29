@@ -98,7 +98,24 @@
     { "section": "5.1.3", "item": null, "kind": "P", "page": 99, "struct_path": "0/1287", "rect": [90.0, 600.0, 522.0, 680.0],
       "hash": "2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae", "words": ["this", "section", "describes", "each", "column", "type"] }
   ],
-  "sigs": [],
+  "sigs": [
+    { "section": "5.3.3.6", "page": 200, "rect": [90.0, 495.36, 543.6, 551.47], "struct_path": "0/3381",
+      "heads": ["TableUID.Get", "ObjectUID.Get"],
+      "text": "TableUID.Get [\nObjectUID.Get [\nCellblock : cell_block ]\n=>\n[ Result : bytes ]" },
+    { "section": "5.2.3.5", "page": 152, "rect": [90.0, 147.96, 257.4, 183.67], "struct_path": "0/2312",
+      "heads": ["SMUID.CloseSession"], "text": "SMUID.CloseSession [\nLocalSessionNumber : uinteger ]" }
+  ],
+  "lot": [
+    { "number": 75, "title": "Fraction", "printed": 89, "page": 13, "rect": [72.0, 459.12, 540.02, 472.38] },
+    { "number": 185, "title": "C_AES_128/C_AES_256 ResidualData Column Values After Encrypt/Decrypt/EncryptFinalize/DecryptFinalize",
+      "printed": 159, "page": 14, "rect": [72.0, 70.92, 539.89, 95.82] }
+  ],
+  "xrefs": [
+    { "number": 179, "page": 115, "rect": [345.55, 561.24, 390.07, 574.5], "section": "5.1.3.55",
+      "sentence": "The enumeration values and their associations defined in Table 179.", "target": 166 },
+    { "number": 1, "page": 11, "rect": [102.52, 596.77, 137.51, 611.1], "section": null,
+      "sentence": "The legend in Table 1 defines the Preconfiguration tables cell color coding.", "target": null }
+  ],
   "annots": [
     { "kind": "Doc", "spec": "core-2.01", "id": "doc", "struct": "", "v": 1, "page": 0, "rect": [0.0, 720.0, 72.0, 792.0], "flags": 6,
       "contents": "doc core201" },

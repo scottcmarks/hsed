@@ -4,10 +4,13 @@
   "distinct_numbers": 50,
   "empty_paras_skipped": 133,
   "n_headings": 178,
+  "n_lot": 50,
   "n_nested": 0,
   "n_numbered": 50,
   "n_paras": 657,
+  "n_sigs": 3,
   "n_tables": 63,
+  "n_xrefs": 63,
   "pikepdf": "10.17.0",
   "pymupdf": "1.28.2",
   "script": "extract_tables.py",
@@ -2331,6 +2334,608 @@
  ],
  "irVersion": 1,
  "labelOffset": 1,
+ "lot": [
+  {
+   "number": 1,
+   "page": 8,
+   "printed": 11,
+   "rect": [
+    36.0,
+    657.25,
+    575.48,
+    671.58
+   ],
+   "title": "Preconfiguration Tables Legend"
+  },
+  {
+   "number": 2,
+   "page": 8,
+   "printed": 18,
+   "rect": [
+    36.0,
+    645.19,
+    575.48,
+    659.52
+   ],
+   "title": "Level 0 Discovery Header"
+  },
+  {
+   "number": 3,
+   "page": 8,
+   "printed": 19,
+   "rect": [
+    36.0,
+    633.13,
+    575.48,
+    647.46
+   ],
+   "title": "Level 0 Discovery - TPer Feature Descriptor"
+  },
+  {
+   "number": 4,
+   "page": 8,
+   "printed": 19,
+   "rect": [
+    36.0,
+    621.01,
+    575.48,
+    635.34
+   ],
+   "title": "Level 0 Discovery - Locking Feature Descriptor"
+  },
+  {
+   "number": 5,
+   "page": 8,
+   "printed": 20,
+   "rect": [
+    36.0,
+    608.95,
+    575.48,
+    623.28
+   ],
+   "title": "Level 0 Discovery - Geometry Reporting Feature Descriptor"
+  },
+  {
+   "number": 6,
+   "page": 8,
+   "printed": 22,
+   "rect": [
+    36.0,
+    596.89,
+    575.48,
+    611.22
+   ],
+   "title": "Level 0 Discovery - Opal SSC V2 Feature Descriptor"
+  },
+  {
+   "number": 7,
+   "page": 8,
+   "printed": 23,
+   "rect": [
+    36.0,
+    584.83,
+    575.48,
+    599.16
+   ],
+   "title": "SSC Minor Versions"
+  },
+  {
+   "number": 8,
+   "page": 8,
+   "printed": 24,
+   "rect": [
+    36.0,
+    572.71,
+    575.47,
+    587.04
+   ],
+   "title": "Level 0 Discovery – Supported Data Removal Mechanism Feature Descriptor"
+  },
+  {
+   "number": 9,
+   "page": 8,
+   "printed": 25,
+   "rect": [
+    36.0,
+    560.65,
+    575.48,
+    574.98
+   ],
+   "title": "Parameter explanation"
+  },
+  {
+   "number": 10,
+   "page": 8,
+   "printed": 26,
+   "rect": [
+    36.0,
+    548.59,
+    575.47,
+    562.92
+   ],
+   "title": "Supported Data Removal Mechanism"
+  },
+  {
+   "number": 11,
+   "page": 8,
+   "printed": 27,
+   "rect": [
+    36.0,
+    536.53,
+    575.47,
+    550.86
+   ],
+   "title": "Data Removal Time (Data Removal Time Format bit= 0)"
+  },
+  {
+   "number": 12,
+   "page": 8,
+   "printed": 27,
+   "rect": [
+    36.0,
+    524.41,
+    575.47,
+    538.74
+   ],
+   "title": "Data Removal Time (Data Removal Time Format bit= 1)"
+  },
+  {
+   "number": 13,
+   "page": 8,
+   "printed": 28,
+   "rect": [
+    36.0,
+    512.35,
+    575.47,
+    526.68
+   ],
+   "title": "TPER_RESET Command"
+  },
+  {
+   "number": 14,
+   "page": 8,
+   "printed": 29,
+   "rect": [
+    36.0,
+    500.29,
+    575.47,
+    514.62
+   ],
+   "title": "ComID Assignments"
+  },
+  {
+   "number": 15,
+   "page": 8,
+   "printed": 29,
+   "rect": [
+    36.0,
+    488.23,
+    575.47,
+    502.56
+   ],
+   "title": "Supported Tokens"
+  },
+  {
+   "number": 16,
+   "page": 8,
+   "printed": 31,
+   "rect": [
+    36.0,
+    476.17,
+    575.47,
+    490.5
+   ],
+   "title": "reset_types"
+  },
+  {
+   "number": 17,
+   "page": 8,
+   "printed": 32,
+   "rect": [
+    36.0,
+    464.05,
+    575.47,
+    478.38
+   ],
+   "title": "Properties Requirements"
+  },
+  {
+   "number": 18,
+   "page": 8,
+   "printed": 34,
+   "rect": [
+    36.0,
+    451.99,
+    575.47,
+    466.32
+   ],
+   "title": "Admin SP - SPInfo Table Preconfiguration"
+  },
+  {
+   "number": 19,
+   "page": 8,
+   "printed": 34,
+   "rect": [
+    36.0,
+    439.93,
+    575.47,
+    454.26
+   ],
+   "title": "Admin SP - SPTemplates Table Preconfiguration"
+  },
+  {
+   "number": 20,
+   "page": 8,
+   "printed": 35,
+   "rect": [
+    36.0,
+    427.87,
+    575.47,
+    442.2
+   ],
+   "title": "Admin SP - Table Table Preconfiguration"
+  },
+  {
+   "number": 21,
+   "page": 8,
+   "printed": 37,
+   "rect": [
+    36.0,
+    415.75,
+    575.47,
+    430.08
+   ],
+   "title": "Admin SP - MethodID Table Preconfiguration"
+  },
+  {
+   "number": 22,
+   "page": 8,
+   "printed": 38,
+   "rect": [
+    36.0,
+    403.69,
+    575.47,
+    418.02
+   ],
+   "title": "Admin SP - AccessControl Table Preconfiguration"
+  },
+  {
+   "number": 23,
+   "page": 8,
+   "printed": 45,
+   "rect": [
+    36.0,
+    391.63,
+    575.47,
+    405.96
+   ],
+   "title": "Admin SP - ACE Table Preconfiguration"
+  },
+  {
+   "number": 24,
+   "page": 8,
+   "printed": 47,
+   "rect": [
+    36.0,
+    379.57,
+    575.48,
+    393.9
+   ],
+   "title": "Admin SP - Authority Table Preconfiguration"
+  },
+  {
+   "number": 25,
+   "page": 8,
+   "printed": 47,
+   "rect": [
+    36.0,
+    367.45,
+    575.47,
+    381.78
+   ],
+   "title": "Admin SP - C_PIN Table Preconfiguration"
+  },
+  {
+   "number": 26,
+   "page": 8,
+   "printed": 48,
+   "rect": [
+    36.0,
+    355.39,
+    575.47,
+    369.72
+   ],
+   "title": "Admin SP – TPerInfo Columns"
+  },
+  {
+   "number": 27,
+   "page": 8,
+   "printed": 49,
+   "rect": [
+    36.0,
+    343.33,
+    575.47,
+    357.66
+   ],
+   "title": "Admin SP - TPerInfo Table Preconfiguration"
+  },
+  {
+   "number": 28,
+   "page": 8,
+   "printed": 49,
+   "rect": [
+    36.0,
+    331.27,
+    575.47,
+    345.6
+   ],
+   "title": "Admin SP - Template Table Preconfiguration"
+  },
+  {
+   "number": 29,
+   "page": 8,
+   "printed": 49,
+   "rect": [
+    36.0,
+    319.21,
+    575.47,
+    333.54
+   ],
+   "title": "Admin SP - SP Table Preconfiguration"
+  },
+  {
+   "number": 30,
+   "page": 8,
+   "printed": 50,
+   "rect": [
+    36.0,
+    307.09,
+    575.47,
+    321.42
+   ],
+   "title": "data_removal_mechanism Type Table Addition"
+  },
+  {
+   "number": 31,
+   "page": 8,
+   "printed": 50,
+   "rect": [
+    36.0,
+    295.03,
+    575.47,
+    309.36
+   ],
+   "title": "data_removal_mechanism Enumeration Values"
+  },
+  {
+   "number": 32,
+   "page": 8,
+   "printed": 50,
+   "rect": [
+    36.0,
+    282.97,
+    575.47,
+    297.3
+   ],
+   "title": "DataRemovalMechansim Table Description"
+  },
+  {
+   "number": 33,
+   "page": 8,
+   "printed": 51,
+   "rect": [
+    36.0,
+    270.91,
+    575.47,
+    285.24
+   ],
+   "title": "Admin SP – DataRemovalMechansim Table Preconfiguration"
+  },
+  {
+   "number": 34,
+   "page": 8,
+   "printed": 51,
+   "rect": [
+    36.0,
+    258.79,
+    575.47,
+    273.12
+   ],
+   "title": "Locking SP - SPInfo Table Preconfiguration"
+  },
+  {
+   "number": 35,
+   "page": 8,
+   "printed": 52,
+   "rect": [
+    36.0,
+    246.73,
+    575.47,
+    261.06
+   ],
+   "title": "Locking SP - SPTemplates Table Preconfiguration"
+  },
+  {
+   "number": 36,
+   "page": 8,
+   "printed": 52,
+   "rect": [
+    36.0,
+    234.67,
+    575.47,
+    249.0
+   ],
+   "title": "Locking SP - Table Table Preconfiguration"
+  },
+  {
+   "number": 37,
+   "page": 8,
+   "printed": 54,
+   "rect": [
+    36.0,
+    222.61,
+    575.46,
+    236.94
+   ],
+   "title": "Locking SP - MethodID Table Preconfiguration"
+  },
+  {
+   "number": 38,
+   "page": 8,
+   "printed": 55,
+   "rect": [
+    36.0,
+    210.49,
+    575.47,
+    224.82
+   ],
+   "title": "Locking SP - AccessControl Table Preconfiguration"
+  },
+  {
+   "number": 39,
+   "page": 8,
+   "printed": 77,
+   "rect": [
+    36.0,
+    198.43,
+    575.47,
+    212.76
+   ],
+   "title": "Locking SP - ACE Table Preconfiguration"
+  },
+  {
+   "number": 40,
+   "page": 8,
+   "printed": 81,
+   "rect": [
+    36.0,
+    186.37,
+    575.47,
+    200.7
+   ],
+   "title": "Locking SP - Authority Table Preconfiguration"
+  },
+  {
+   "number": 41,
+   "page": 8,
+   "printed": 83,
+   "rect": [
+    36.0,
+    174.31,
+    575.47,
+    188.64
+   ],
+   "title": "Locking SP - C_PIN Table Preconfiguration"
+  },
+  {
+   "number": 42,
+   "page": 8,
+   "printed": 83,
+   "rect": [
+    36.0,
+    162.19,
+    575.47,
+    176.52
+   ],
+   "title": "Locking SP - SecretProtect Table Preconfiguration"
+  },
+  {
+   "number": 43,
+   "page": 8,
+   "printed": 84,
+   "rect": [
+    36.0,
+    150.13,
+    575.47,
+    164.46
+   ],
+   "title": "Locking SP – LockingInfo Columns"
+  },
+  {
+   "number": 44,
+   "page": 8,
+   "printed": 84,
+   "rect": [
+    36.0,
+    138.07,
+    575.46,
+    152.4
+   ],
+   "title": "Locking SP - LockingInfo Table Preconfiguration"
+  },
+  {
+   "number": 45,
+   "page": 8,
+   "printed": 85,
+   "rect": [
+    36.0,
+    126.01,
+    575.47,
+    140.34
+   ],
+   "title": "Locking SP - Locking Table Preconfiguration"
+  },
+  {
+   "number": 46,
+   "page": 8,
+   "printed": 87,
+   "rect": [
+    36.0,
+    113.95,
+    575.47,
+    128.28
+   ],
+   "title": "Locking SP - MBRControl Table Preconfiguration"
+  },
+  {
+   "number": 47,
+   "page": 8,
+   "printed": 88,
+   "rect": [
+    36.0,
+    101.83,
+    575.47,
+    116.16
+   ],
+   "title": "Locking SP - K_AES_128 Table Preconfiguration"
+  },
+  {
+   "number": 48,
+   "page": 8,
+   "printed": 88,
+   "rect": [
+    36.0,
+    89.77,
+    575.47,
+    104.1
+   ],
+   "title": "Locking SP - K_AES_256 Table Preconfiguration"
+  },
+  {
+   "number": 49,
+   "page": 8,
+   "printed": 97,
+   "rect": [
+    36.0,
+    77.71,
+    575.47,
+    92.04
+   ],
+   "title": "Life Cycle State Type Table Modification"
+  },
+  {
+   "number": 50,
+   "page": 8,
+   "printed": 97,
+   "rect": [
+    36.0,
+    65.65,
+    575.47,
+    79.98
+   ],
+   "title": "Table Table Additional Columns"
+  }
+ ],
  "notice": "tcg/TCG-NOTICE.txt",
  "pages": 101,
  "paras": [
@@ -12191,7 +12796,53 @@
   }
  ],
  "pdfMd5": "054e505db3895b25c38dd9dfbcc36259",
- "sigs": [],
+ "sigs": [
+  {
+   "heads": [
+    "SPObjectUID.Activate"
+   ],
+   "page": 90,
+   "rect": [
+    36.0,
+    536.67,
+    174.02,
+    576.39
+   ],
+   "section": "5.1.1",
+   "struct_path": "0/699",
+   "text": "SPObjectUID.Activate[ ]\n=>\n[ ]"
+  },
+  {
+   "heads": [
+    "SPObjectUID.Revert"
+   ],
+   "page": 90,
+   "rect": [
+    36.0,
+    59.55,
+    162.01,
+    99.27
+   ],
+   "section": "5.1.2",
+   "struct_path": "0/716",
+   "text": "SPObjectUID.Revert[ ]\n=>\n[ ]"
+  },
+  {
+   "heads": [
+    "ThisSP.RevertSP"
+   ],
+   "page": 93,
+   "rect": [
+    36.0,
+    591.03,
+    318.1,
+    630.75
+   ],
+   "section": "5.1.3",
+   "struct_path": "0/756",
+   "text": "ThisSP.RevertSP[ KeepGlobalRangeKey = boolean ]\n=>\n[ ]"
+  }
+ ],
  "source": "TCG_Storage-Opal_SSC_v2.30.pdf",
  "spec": "opal-2.30",
  "tables": [
@@ -148290,5 +148941,826 @@
    ]
   }
  ],
- "wordComplete": []
+ "wordComplete": [],
+ "xrefs": [
+  {
+   "number": 1,
+   "page": 11,
+   "rect": [
+    102.52,
+    596.77,
+    137.51,
+    611.1
+   ],
+   "section": "1.3.4",
+   "sentence": "The legend in Table 1 defines the Preconfiguration tables cell color coding, with the RGB values for the shading of each cell indicated in parentheses.",
+   "target": null
+  },
+  {
+   "number": 2,
+   "page": 18,
+   "rect": [
+    218.47,
+    578.94,
+    253.47,
+    593.28
+   ],
+   "section": "3.1.1",
+   "sentence": "• Level 0 Discovery Header (see Table 2)",
+   "target": 18
+  },
+  {
+   "number": 3,
+   "page": 18,
+   "rect": [
+    205.63,
+    566.16,
+    240.62,
+    580.5
+   ],
+   "section": "3.1.1",
+   "sentence": "• TPer feature descriptor (see Table 3)",
+   "target": 19
+  },
+  {
+   "number": 4,
+   "page": 18,
+   "rect": [
+    219.12,
+    553.39,
+    254.12,
+    567.72
+   ],
+   "section": "3.1.1",
+   "sentence": "• Locking feature descriptor (see Table 4)",
+   "target": 19
+  },
+  {
+   "number": 6,
+   "page": 18,
+   "rect": [
+    245.34,
+    540.61,
+    280.34,
+    554.94
+   ],
+   "section": "3.1.1",
+   "sentence": "• Opal SSC V2 feature descriptor (see Table 6)",
+   "target": 22
+  },
+  {
+   "number": 5,
+   "page": 18,
+   "rect": [
+    277.42,
+    491.64,
+    312.41,
+    505.97
+   ],
+   "section": "3.1.1",
+   "sentence": "• Geometry Reporting feature descriptor (see Table 5)",
+   "target": 20
+  },
+  {
+   "number": 8,
+   "page": 18,
+   "rect": [
+    357.32,
+    478.86,
+    392.32,
+    493.19
+   ],
+   "section": "3.1.1",
+   "sentence": "• Supported Data Removal Mechanism feature descriptor (see Table 8)",
+   "target": 24
+  },
+  {
+   "number": 7,
+   "page": 22,
+   "rect": [
+    300.18,
+    245.64,
+    335.18,
+    259.98
+   ],
+   "section": "3.1.1.5",
+   "sentence": "• SSC Minor Version Number = As specified in Table 7",
+   "target": 23
+  },
+  {
+   "number": 9,
+   "page": 24,
+   "rect": [
+    380.35,
+    268.45,
+    415.41,
+    282.78
+   ],
+   "section": "3.1.1.6",
+   "sentence": "An Opal Compliant Storage Device SHALL return the parameters listed in Table 9:",
+   "target": 25
+  },
+  {
+   "number": 16,
+   "page": 25,
+   "rect": [
+    121.17,
+    224.89,
+    162.01,
+    239.22
+   ],
+   "section": "3.1.1.6.1",
+   "sentence": "The Data Removal Operation Processing bit SHALL be set to one if the data removal operation is restarted after a Power Cycle (see Table 16).",
+   "target": 31
+  },
+  {
+   "number": 10,
+   "page": 26,
+   "rect": [
+    306.84,
+    662.89,
+    347.65,
+    677.22
+   ],
+   "section": "3.1.1.6.3",
+   "sentence": "Each bit of the Supported Data Removal Mechanism (see Table 10) SHALL be set to one if the TPer supports the corresponding Data Removal Mechanism; otherwise, each bit SHALL be set to zero.",
+   "target": 26
+  },
+  {
+   "number": 10,
+   "page": 26,
+   "rect": [
+    355.12,
+    623.77,
+    396.08,
+    638.1
+   ],
+   "section": "3.1.1.6.3",
+   "sentence": "The TPer MAY support multiple Data Removal Mechanisms described in Table 10.",
+   "target": 26
+  },
+  {
+   "number": 10,
+   "page": 26,
+   "rect": [
+    452.16,
+    609.84,
+    492.97,
+    624.18
+   ],
+   "section": "3.1.1.6.3",
+   "sentence": "After a RevertSP method has completed without an error, the condition of user data SHALL be indicated as specified in Table 10.",
+   "target": 26
+  },
+  {
+   "number": 11,
+   "page": 27,
+   "rect": [
+    479.9,
+    630.84,
+    520.82,
+    645.18
+   ],
+   "section": "3.1.1.6.4",
+   "sentence": "a) if the Data Removal Time Format bit is set to zero, then the estimated time is defined in Table 11; and",
+   "target": 27
+  },
+  {
+   "number": 12,
+   "page": 27,
+   "rect": [
+    476.95,
+    612.78,
+    517.87,
+    627.12
+   ],
+   "section": "3.1.1.6.4",
+   "sentence": "b) if the Data Removal Time Format bit is set to one, then the estimated time is defined in Table 12.",
+   "target": 27
+  },
+  {
+   "number": 11,
+   "page": 27,
+   "rect": [
+    443.77,
+    594.72,
+    484.69,
+    609.06
+   ],
+   "section": "3.1.1.6.4",
+   "sentence": "The Data Removal Time Format bit and Data Removal Time Format field are defined in Table 11 and Table 12.",
+   "target": 27
+  },
+  {
+   "number": 12,
+   "page": 27,
+   "rect": [
+    508.08,
+    594.72,
+    548.89,
+    609.06
+   ],
+   "section": "3.1.1.6.4",
+   "sentence": "The Data Removal Time Format bit and Data Removal Time Format field are defined in Table 11 and Table 12.",
+   "target": 27
+  },
+  {
+   "number": 13,
+   "page": 28,
+   "rect": [
+    236.62,
+    483.88,
+    277.53,
+    498.21
+   ],
+   "section": "3.2.3",
+   "sentence": "The TPER_RESET command is defined in Table 13.",
+   "target": 28
+  },
+  {
+   "number": 14,
+   "page": 29,
+   "rect": [
+    344.16,
+    513.36,
+    385.06,
+    527.69
+   ],
+   "section": "3.3.3",
+   "sentence": "ComIDs SHALL be assigned based on the allocation presented in Table 14.",
+   "target": 29
+  },
+  {
+   "number": 15,
+   "page": 29,
+   "rect": [
+    227.82,
+    230.02,
+    266.57,
+    243.7
+   ],
+   "section": "3.3.4.1.1",
+   "sentence": "The TPer SHALL support tokens listed in Table 15.",
+   "target": 29
+  },
+  {
+   "number": 16,
+   "page": 31,
+   "rect": [
+    35.99,
+    620.64,
+    76.81,
+    634.97
+   ],
+   "section": "3.3.5.2",
+   "sentence": "Table 16 replaces the definition of TCG reset_types that are defined in [2]:",
+   "target": 31
+  },
+  {
+   "number": 17,
+   "page": 32,
+   "rect": [
+    452.54,
+    575.71,
+    493.51,
+    590.04
+   ],
+   "section": "4.1.1.1",
+   "sentence": "The requirements for support of the various TPer and Host properties, and the requirements for their values, are shown in Table 17.",
+   "target": 32
+  },
+  {
+   "number": 18,
+   "page": 34,
+   "rect": [
+    220.32,
+    446.05,
+    261.13,
+    460.38
+   ],
+   "section": "4.2.1.1",
+   "sentence": "The SPInfo table is defined in [2], and Table 18 defines the Preconfiguration Data for the SPInfo table.",
+   "target": 34
+  },
+  {
+   "number": 19,
+   "page": 34,
+   "rect": [
+    247.58,
+    187.62,
+    287.91,
+    201.95
+   ],
+   "section": "4.2.1.2",
+   "sentence": "The SPTemplates table is defined in [2], and Table 19 defines the Preconfiguration Data for the SPTemplates table.",
+   "target": 34
+  },
+  {
+   "number": 20,
+   "page": 35,
+   "rect": [
+    214.01,
+    546.13,
+    254.83,
+    560.46
+   ],
+   "section": "4.2.1.3",
+   "sentence": "The Table table is defined in [2], and Table 20 defines the Preconfiguration Data for the Table table.",
+   "target": 35
+  },
+  {
+   "number": 20,
+   "page": 36,
+   "rect": [
+    296.88,
+    84.25,
+    337.76,
+    98.58
+   ],
+   "section": "4.2.1.3",
+   "sentence": "[2] states, “The Table table in the Admin SP includes a row for each table that the TPer supports, in addition to a row for each table that exists in the Admin SP.” However, the Opal SSC requires only the tables from the Admin SP to be included in the Admin SP’s Table table, as indicated in Table 20.",
+   "target": 35
+  },
+  {
+   "number": 21,
+   "page": 37,
+   "rect": [
+    232.84,
+    662.89,
+    273.72,
+    677.22
+   ],
+   "section": "4.2.1.4",
+   "sentence": "The MethodID table is defined in [2], and Table 21 defines the Preconfiguration Data for the MethodID table.",
+   "target": 37
+  },
+  {
+   "number": 22,
+   "page": 37,
+   "rect": [
+    36.0,
+    185.71,
+    76.81,
+    200.04
+   ],
+   "section": "4.2.1.5",
+   "sentence": "Table 22 contains Optional rows identified by (O).",
+   "target": 38
+  },
+  {
+   "number": 23,
+   "page": 45,
+   "rect": [
+    35.99,
+    286.09,
+    76.8,
+    300.42
+   ],
+   "section": "4.2.1.6",
+   "sentence": "Table 23 contains Optional rows designated with (O).",
+   "target": 45
+  },
+  {
+   "number": 24,
+   "page": 46,
+   "rect": [
+    239.21,
+    167.77,
+    280.09,
+    182.1
+   ],
+   "section": "4.2.1.7",
+   "sentence": "The Authority table is defined in [2], and Table 24 defines the Preconfiguration Data for the Authority table.",
+   "target": 47
+  },
+  {
+   "number": 25,
+   "page": 47,
+   "rect": [
+    214.01,
+    160.69,
+    254.83,
+    175.02
+   ],
+   "section": "4.2.1.8",
+   "sentence": "The C_PIN table is defined in [2], and Table 25 defines the Preconfiguration Data for the C_PIN table.",
+   "target": 47
+  },
+  {
+   "number": 26,
+   "page": 48,
+   "rect": [
+    257.8,
+    223.03,
+    298.63,
+    237.36
+   ],
+   "section": "4.2.3.1",
+   "sentence": "The TPerInfo table has the column defined in Table 26, in addition to those defined in [2], and Table 27 defines the Preconfiguration Data for the TPerInfo table:",
+   "target": 48
+  },
+  {
+   "number": 27,
+   "page": 48,
+   "rect": [
+    481.07,
+    223.03,
+    521.89,
+    237.36
+   ],
+   "section": "4.2.3.1",
+   "sentence": "The TPerInfo table has the column defined in Table 26, in addition to those defined in [2], and Table 27 defines the Preconfiguration Data for the TPerInfo table:",
+   "target": 49
+  },
+  {
+   "number": 28,
+   "page": 49,
+   "rect": [
+    232.84,
+    388.87,
+    273.72,
+    403.2
+   ],
+   "section": "4.2.3.2",
+   "sentence": "The Template table is defined in [2], and Table 28 defines the Preconfiguration Data for the Template table.",
+   "target": 49
+  },
+  {
+   "number": 29,
+   "page": 49,
+   "rect": [
+    195.11,
+    219.25,
+    235.93,
+    233.58
+   ],
+   "section": "4.2.3.3",
+   "sentence": "The SP table is defined in [2], and Table 29 defines the Preconfiguration Data for the SP table.",
+   "target": 49
+  },
+  {
+   "number": 30,
+   "page": 50,
+   "rect": [
+    264.77,
+    592.09,
+    305.59,
+    606.42
+   ],
+   "section": "4.2.5.1",
+   "sentence": "The data_removal_mechanism type is defined in Table 30 for Opal:",
+   "target": 50
+  },
+  {
+   "number": 31,
+   "page": 50,
+   "rect": [
+    36.0,
+    476.65,
+    77.17,
+    490.98
+   ],
+   "section": "4.2.5.1",
+   "sentence": "Table 31 defines the enumeration values.",
+   "target": 50
+  },
+  {
+   "number": 10,
+   "page": 50,
+   "rect": [
+    36.0,
+    464.58,
+    76.81,
+    478.92
+   ],
+   "section": "4.2.5.1",
+   "sentence": "The mechanisms associated with each Enumeration Value are defined in Table 10.",
+   "target": 26
+  },
+  {
+   "number": 32,
+   "page": 50,
+   "rect": [
+    264.21,
+    247.5,
+    305.05,
+    261.84
+   ],
+   "section": "4.2.6.1",
+   "sentence": "The DataRemovalMchanism table is defined in Table 32",
+   "target": 50
+  },
+  {
+   "number": 33,
+   "page": 51,
+   "rect": [
+    335.39,
+    590.95,
+    376.2,
+    605.28
+   ],
+   "section": "4.2.7.1",
+   "sentence": "The DataRemovalMechanism table SHALL be supported (see Table 33).",
+   "target": 51
+  },
+  {
+   "number": 34,
+   "page": 51,
+   "rect": [
+    220.31,
+    244.87,
+    261.13,
+    259.2
+   ],
+   "section": "4.3.1.1",
+   "sentence": "The SPInfo table is defined in [2], and Table 34 defines the Preconfiguration Data for the SPInfo table.",
+   "target": 51
+  },
+  {
+   "number": 35,
+   "page": 51,
+   "rect": [
+    247.56,
+    57.49,
+    287.89,
+    71.82
+   ],
+   "section": "4.3.1.2",
+   "sentence": "The SPTemplates table is defined in [2], and Table 35 defines the Preconfiguration Data for the SPTemplates table.",
+   "target": 52
+  },
+  {
+   "number": 36,
+   "page": 52,
+   "rect": [
+    214.01,
+    502.27,
+    254.83,
+    516.6
+   ],
+   "section": "4.3.1.3",
+   "sentence": "The Table table is defined in [2], and Table 36 defines the Preconfiguration Data for the Table table.",
+   "target": 52
+  },
+  {
+   "number": 36,
+   "page": 52,
+   "rect": [
+    36.0,
+    483.3,
+    76.81,
+    497.64
+   ],
+   "section": "4.3.1.3",
+   "sentence": "Table 36 contains Optional rows designated with (O).",
+   "target": 52
+  },
+  {
+   "number": 37,
+   "page": 53,
+   "rect": [
+    232.81,
+    98.35,
+    273.69,
+    112.68
+   ],
+   "section": "4.3.1.5",
+   "sentence": "The MethodID table is defined in [2], and Table 37 defines the Preconfiguration Data for the MethodID table.",
+   "target": 54
+  },
+  {
+   "number": 38,
+   "page": 54,
+   "rect": [
+    36.0,
+    302.53,
+    76.81,
+    316.86
+   ],
+   "section": "4.3.1.6",
+   "sentence": "Table 38 contains Optional rows designated with (O).",
+   "target": 55
+  },
+  {
+   "number": 39,
+   "page": 77,
+   "rect": [
+    35.99,
+    465.43,
+    76.8,
+    479.76
+   ],
+   "section": "4.3.1.7",
+   "sentence": "Table 39 contains Optional rows designated with (O).",
+   "target": 77
+  },
+  {
+   "number": 40,
+   "page": 81,
+   "rect": [
+    36.0,
+    490.27,
+    76.81,
+    504.6
+   ],
+   "section": "4.3.1.8",
+   "sentence": "Table 40 contains Optional rows designated with (O).",
+   "target": 81
+  },
+  {
+   "number": 41,
+   "page": 82,
+   "rect": [
+    36.0,
+    172.33,
+    76.81,
+    186.66
+   ],
+   "section": "4.3.1.9",
+   "sentence": "Table 41 includes Optional rows designated with (O)",
+   "target": 83
+  },
+  {
+   "number": 42,
+   "page": 83,
+   "rect": [
+    204.07,
+    292.33,
+    244.88,
+    306.66
+   ],
+   "section": "4.3.1.10",
+   "sentence": "At least one of the objects shown in Table 42 SHALL be supported",
+   "target": 83
+  },
+  {
+   "number": 42,
+   "page": 83,
+   "rect": [
+    156.96,
+    105.13,
+    198.13,
+    119.46
+   ],
+   "section": "4.3.1.10",
+   "sentence": "Note: The “VU” entries in Table 42 indicate that this specification does not require a specific value to be reported in the ProtectMechanisms cell.",
+   "target": 83
+  },
+  {
+   "number": 43,
+   "page": 84,
+   "rect": [
+    282.76,
+    533.23,
+    323.6,
+    547.56
+   ],
+   "section": "4.3.5.1",
+   "sentence": "The LockingInfo table has the columns defined in Table 43, in addition to those defined in [2]:",
+   "target": 84
+  },
+  {
+   "number": 44,
+   "page": 85,
+   "rect": [
+    200.52,
+    600.36,
+    241.52,
+    614.7
+   ],
+   "section": "4.3.5.1",
+   "sentence": "The MaxRanges column in Table 44 specifies the number of supported ranges and SHALL have a minimum of 8 ranges.",
+   "target": 84
+  },
+  {
+   "number": 45,
+   "page": 85,
+   "rect": [
+    35.98,
+    555.18,
+    76.79,
+    569.52
+   ],
+   "section": "4.3.5.2",
+   "sentence": "Table 45 contains Optional rows designated with (O).",
+   "target": 85
+  },
+  {
+   "number": 46,
+   "page": 87,
+   "rect": [
+    245.49,
+    269.41,
+    286.31,
+    283.74
+   ],
+   "section": "4.3.5.3",
+   "sentence": "The MBRControl table is defined in [2], and Table 46 defines the Preconfiguration Data for the MBRControl table.",
+   "target": 87
+  },
+  {
+   "number": 47,
+   "page": 88,
+   "rect": [
+    201.76,
+    555.5,
+    242.58,
+    569.83
+   ],
+   "section": "4.3.5.5",
+   "sentence": "At least one of the following tables (Table 47 and Table 48) SHALL be supported.",
+   "target": 88
+  },
+  {
+   "number": 48,
+   "page": 88,
+   "rect": [
+    265.91,
+    555.5,
+    306.78,
+    569.83
+   ],
+   "section": "4.3.5.5",
+   "sentence": "At least one of the following tables (Table 47 and Table 48) SHALL be supported.",
+   "target": 88
+  },
+  {
+   "number": 47,
+   "page": 88,
+   "rect": [
+    35.99,
+    537.44,
+    76.8,
+    551.77
+   ],
+   "section": "4.3.5.5",
+   "sentence": "Table 47 contains Optional rows designated with (O).",
+   "target": 88
+  },
+  {
+   "number": 33,
+   "page": 91,
+   "rect": [
+    244.16,
+    308.47,
+    285.07,
+    322.8
+   ],
+   "section": "5.1.2.2",
+   "sentence": "• If the Locking SP is not in the “Manufactured-Inactive” life cycle state, then successful invocation of the Revert method on the Locking SP or Admin SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause the media encryption keys to be eradicated, which has the side effect of securely erasing all data in the User LBA portion of the Storage Device.",
+   "target": 51
+  },
+  {
+   "number": 33,
+   "page": 93,
+   "rect": [
+    244.14,
+    66.59,
+    285.06,
+    80.92
+   ],
+   "section": "5.1.3.3",
+   "sentence": "• If the KeepGlobalRangeKey parameter is not present or set to False, then successful invocation of the RevertSP method on the Locking SP or Admin SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause the media encryption keys to be eradicated, which has the side effect of securely erasing all data in the User LBA portion of the Storage Device.",
+   "target": 51
+  },
+  {
+   "number": 33,
+   "page": 94,
+   "rect": [
+    72.01,
+    652.15,
+    115.1,
+    666.49
+   ],
+   "section": "5.1.3.3",
+   "sentence": "• If the KeepGlobalRangeKey parameter is set to True, then successful invocation of the RevertSP method on the Locking SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause all media encryption keys to be eradicated except for the Global Range’s media encryption key (K_AES_{128,256}_GlobalRange_Key).",
+   "target": 51
+  },
+  {
+   "number": 49,
+   "page": 97,
+   "rect": [
+    317.39,
+    570.72,
+    358.2,
+    585.06
+   ],
+   "section": "5.2.3",
+   "sentence": "In order to accommodate the additional life cycle states defined in this specification, the definition of the life_cycle_state type is changed from [2] to that described in Table 49:",
+   "target": 97
+  },
+  {
+   "number": 50,
+   "page": 97,
+   "rect": [
+    444.54,
+    135.06,
+    485.36,
+    149.4
+   ],
+   "section": "5.3.1",
+   "sentence": "In order to allow a Storage Device to report its mandatory and recommended data alignment restrictions when accessing byte tables, the Table table SHALL contain the additional columns shown in Table 50.",
+   "target": 97
+  }
+ ]
 }

@@ -2,7 +2,9 @@
 
 `tools/extract/extract_tables.py` reads a (pristine or annotated) TCG PDF and writes one JSON
 file; `hsedc` reads nothing else. Committed instances live under `spec/ir/`. The shape is frozen
-at `irVersion` 1; additive fields bump nothing, a changed meaning bumps the version.
+at `irVersion` 1; additive fields bump nothing, a changed meaning bumps the version. M2b filled in
+`sigs` (an empty list before, with no schema) and added `lot` and `xrefs`: additive, so the version
+stays 1, and `hsedc` reads a file written before them with the three lists empty.
 Design: `docs/spec-as-source.md` §4.2 and §5.1. Page fields are 0-based PDF indices. The printed page label
 follows from **1-based PDF page = printed page + labelOffset** (Core 17, Opal 1).
 
@@ -21,7 +23,9 @@ follows from **1-based PDF page = printed page + labelOffset** (Core 17, Opal 1)
   "tables":   [ TableIR ],                  // document order, nested tables included
   "headings": [ HeadingIR ],                // document order
   "paras":    [ ParaIR ],                   // document order
-  "sigs":     [],                           // method signature blocks (M2b)
+  "sigs":     [ SigIR ],                    // method signature blocks, document order (M2b)
+  "lot":      [ LotIR ],                    // the List of Tables of the front matter, in order (M2b)
+  "xrefs":    [ XrefIR ],                   // every "Table N" in the prose, document order (M2b)
   "annots":   [ AnnotIR ]                   // hsed annotations found in the input PDF
 }
 ```
@@ -73,6 +77,56 @@ Every `/P` and `/LI` outside tables. `section` is the nearest preceding heading'
 null for a `/P`; `hash` is sha256 over the words lower-cased, punctuation stripped, joined by one
 space; `words` is the array only for sections listed in `wordComplete`, else null. Anchor id:
 `<section>#<item>` for a list item, `<section>#p<k>` for the k-th paragraph (1-based) of a section.
+
+## SigIR
+
+```jsonc
+{ "section": "5.3.3.6", "page": 200, "struct_path": "0/3381", "rect": [x0, y0, x1, y1],
+  "heads": ["TableUID.Get", "ObjectUID.Get"],
+  "text": "TableUID.Get [\nObjectUID.Get [\nCellblock : cell_block ]\n=>\n[ Result : typeOr { ... } ]" }
+```
+One method signature block (design §5.1 step 7). The PDFs print a signature as consecutive `/P`
+paragraphs, one line each: the invocation head(s) `<Invoker>.<Method> [`, the parameters, `=>`, the
+result. A block starts at a `/P` matching `^[A-Za-z_]+\.[A-Za-z_]+ *\[` (or at a head printed without
+its bracket, Core's `CredentialObjectUID.Sign`, followed by one) and runs over the next `/P` siblings
+until the result's brackets close (or, for a block with no `=>`, the parameters'), or until a
+paragraph that is not the next `/P` sibling (an empty spacer paragraph, a heading). `heads` are the
+block's leading head paragraphs' `Invoker.Method` (two for a table-and-object method); `text` is its
+paragraphs as printed, wrapped lines of one paragraph joined by a space, paragraphs by a newline
+(brackets, a missing `]` and spacing kept: Core's GetPackage prints no `]` before `=>`). `section` is
+the nearest preceding numbered heading's, `page` the 0-based page of the first line, `rect` the union
+of the block's lines on that page, `struct_path` the first paragraph's. Every block lies in a
+numbered section and no section holds two, so the block's anchor id is `<section>/sig`. Core 2.01
+has 53 (5.2.2.1, 5.2.3.1-5.2.3.5, 5.3.3.1-5.3.3.18, 5.4.3.1, 5.5.4.1-5.5.4.7, 5.6.4.1-5.6.4.17,
+5.8.3.1-5.8.3.4), 52 with `=>` and CloseSession (5.2.3.5), which the TPer sends and which has no
+response; Opal 2.30 has 3 (5.1.1 Activate, 5.1.2 Revert, 5.1.3 RevertSP).
+
+## LotIR
+
+```jsonc
+{ "number": 185, "title": "C_AES_128/C_AES_256 ResidualData Column Values After Encrypt/Decrypt/EncryptFinalize/DecryptFinalize",
+  "printed": 159, "page": 14, "rect": [x0, y0, x1, y1] }
+```
+One entry of the front matter's List of Tables: every `/TOCI` whose text is `Table N <title> .....
+<page>` (a long title wraps onto a second line). `number` (`Table 01` is 1), `title` without the
+number, a dash separator (Opal's `Table 1 - …`), the dot leaders and the page, `printed` the page
+the entry gives (printed, not PDF), `page` and `rect` the entry's own place. What LOT-VS-BODY
+compares with the body captions (`number`, `title`, `printed` against the caption's title and the
+printed page of the table's first page). Core 2.01: 248 entries, Tables 1-248 once each; Opal 2.30: 50.
+
+## XrefIR
+
+```jsonc
+{ "number": 179, "page": 115, "rect": [x0, y0, x1, y1], "section": "5.1.3.55",
+  "sentence": "The enumeration values and their associations defined in Table 179.", "target": 166 }
+```
+Every `Table N` (`\bTable\s+(\d+)\b`) in a `/P` or `/LI` outside the tables that is not a table's
+caption: `number`, `page` and `rect` of its glyphs, the paragraph's `section` (as ParaIR's), the
+`sentence` it is in, and `target`, the 0-based page the PDF's own link over the number goes to (null
+when no link covers it). What XREF-RESOLVES reads: the number against the numbered tables, the link
+against the table's pages, the sentence and section for what the reference claims. Core 2.01: 108
+references (every one with a link, each landing on a page of the table it names); Opal 2.30: 63
+(one, Table 1 on PDF 12, with no link).
 
 ## AnnotIR
 

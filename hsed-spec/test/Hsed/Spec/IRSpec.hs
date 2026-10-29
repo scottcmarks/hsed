@@ -1,6 +1,7 @@
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
 Module      : Hsed.Spec.IRSpec
@@ -12,14 +13,17 @@ Stability   : experimental
 
 The handwritten fixture @test/fixtures/mini-ir.json@ covers every record type
 of IR v1 in the shapes the extractor writes; it must decode, and survive a trip
-through 'toJSON' and 'fromJSON'. The committed @spec/ir/*.json@ must decode too,
-with the counts the extractor reports.
+through 'toJSON' and 'fromJSON'; without the fields M2b added (signature blocks,
+List of Tables, table references) it decodes with them empty. The committed
+@spec/ir/*.json@ must decode too, with the counts the extractor reports.
 -}
 module Hsed.Spec.IRSpec (spec) where
 
-import           Data.Aeson    (Result (..), encode, fromJSON, toJSON)
+import           Data.Aeson        (Result (..), Value (..), encode, fromJSON, toJSON)
+import qualified Data.Aeson.KeyMap as KM
+import qualified RIO.Text          as T
 import           RIO
-import           RIO.Directory (doesFileExist)
+import           RIO.Directory     (doesFileExist)
 import           Test.Hspec
 
 import           Hsed.Spec.IR
@@ -32,11 +36,12 @@ loadFixture :: IO SpecIR
 loadFixture = readIR fixture >>= either throwString pure
 
 -- | The committed extractions (relative to the package directory, where
--- @stack test@ runs) and their table, heading, para and annot counts.
-committed :: [(FilePath, (Int, Int, Int, Int))]
+-- @stack test@ runs) and their table, heading, para, annot, signature block,
+-- List of Tables and table reference counts.
+committed :: [(FilePath, (Int, Int, Int, Int), (Int, Int, Int))]
 committed =
-  [ ("../spec/ir/core-2.01.json", (263, 1346, 4112, 0))
-  , ("../spec/ir/opal-2.30.json", (63, 178, 657, 0))
+  [ ("../spec/ir/core-2.01.json", (263, 1346, 4112, 0), (53, 248, 108))
+  , ("../spec/ir/opal-2.30.json", (63, 178, 657, 0), (3, 50, 63))
   ]
 
 -- | Every cell of the header and data rows, tables in order.
@@ -53,7 +58,7 @@ spec = do
       ir.spec `shouldBe` "core-2.01"
       ir.extractor.script `shouldBe` "extract_tables.py"
       [length ir.tables, length ir.headings, length ir.paras, length ir.annots] `shouldBe` [2, 2, 2, 2]
-      ir.sigs `shouldBe` []
+      [length ir.sigs, length ir.lot, length ir.xrefs] `shouldBe` [2, 2, 2]
 
     it "reads the table records, structure paths in either spelling" $ do
       ir <- loadFixture
@@ -107,6 +112,30 @@ spec = do
       map (.id) ir.annots `shouldBe` ["doc", "T75"]
       map (.contents) (drop 1 ir.annots) `shouldBe` ["erratum scott [\"Fractoin\" ~> \"Fraction\"]"]
 
+    it "reads the signature blocks: section, page, heads and the lines as printed" $ do
+      ir <- loadFixture
+      map (\s -> (s.section, s.page, s.heads)) ir.sigs `shouldBe`
+        [("5.3.3.6", 200, ["TableUID.Get", "ObjectUID.Get"]), ("5.2.3.5", 152, ["SMUID.CloseSession"])]
+      map (.structPath) ir.sigs `shouldBe` [StructPath "0/3381", StructPath "0/2312"]
+      map (length . T.lines . (.text)) ir.sigs `shouldBe` [5, 2]
+      map (.rect) (take 1 ir.sigs) `shouldBe` [Rect 90 495.36 543.6 551.47]
+
+    it "reads the List of Tables and the table references" $ do
+      ir <- loadFixture
+      map (\e -> (e.number, e.printed, e.page)) ir.lot `shouldBe` [(75, 89, 13), (185, 159, 14)]
+      map (.title) (take 1 ir.lot) `shouldBe` ["Fraction"]
+      map (\x -> (x.number, x.page, x.section, x.target)) ir.xrefs `shouldBe`
+        [(179, 115, Just "5.1.3.55", Just 166), (1, 11, Nothing, Nothing)]
+      map (.sentence) (take 1 ir.xrefs) `shouldBe` ["The enumeration values and their associations defined in Table 179."]
+
+    it "reads a file written before M2b's fields with them empty, at version 1" $ do
+      ir <- loadFixture
+      let older = case toJSON ir of
+            Object o -> Object (foldr KM.delete o ["sigs", "lot", "xrefs"])
+            v        -> v
+      fmap (\(i :: SpecIR) -> (i.irVersion, length i.sigs, length i.lot, length i.xrefs, length i.tables)) (fromJSON older)
+        `shouldBe` Success (irVersion1, 0, 0, 0, 2)
+
     it "rejects another irVersion" $ do
       ir <- loadFixture
       result <- withSystemTempFile "ir.json" $ \path h -> do
@@ -116,13 +145,14 @@ spec = do
       either (`shouldContain` "irVersion 2, expected 1") (const (expectationFailure "accepted irVersion 2")) result
 
   describe "the committed extractions" $
-    forM_ committed $ \(path, counts) ->
+    forM_ committed $ \(path, counts, m2b) ->
       it ("decode " <> path <> " with the extractor's counts") $ do
         present <- doesFileExist path
         if present
           then do
             ir <- readIR path >>= either throwString pure
             (length ir.tables, length ir.headings, length ir.paras, length ir.annots) `shouldBe` counts
+            (length ir.sigs, length ir.lot, length ir.xrefs) `shouldBe` m2b
           else pendingWith (path <> " is not checked out")
 
   describe "JSON instances" $ do

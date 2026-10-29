@@ -19,7 +19,10 @@ and @hsedc@ reads: @docs/ir-v1.md@, design @docs/spec-as-source.md@ sections
 4.2 and 5.1. Field names follow the JSON: camelCase here, snake_case in the file
 where the schema says so ('snakeOptions'). Extra JSON fields are ignored, optional
 fields are 'Maybe', and a cell's repair flags default to 'False' when absent;
-@null@ for @bold@ and @underline@ (an empty cell) reads as 'False' too. The shapes
+@null@ for @bold@ and @underline@ (an empty cell) reads as 'False' too. The
+signature blocks, the List of Tables and the table references ('SigIR',
+'LotIR', 'XrefIR', since M2b) read as empty lists from a file written before
+them: additive fields, so the version stays 1. The shapes
 follow the committed @spec/ir/*.json@: a repeated header row is an object with its
 page and row index, a nested table has no ordinal, an empty cell has no page or
 bbox, and structure paths may be written as int arrays. Fields are accessed with
@@ -44,6 +47,10 @@ module Hsed.Spec.IR
   , HeadingIR (..)
   , ParaIR (..)
   , ParaKind (..)
+    -- * Signature blocks, the List of Tables, table references
+  , SigIR (..)
+  , LotIR (..)
+  , XrefIR (..)
     -- * Annotations
   , AnnotIR (..)
   , AnnotKind (..)
@@ -80,7 +87,9 @@ data SpecIR = SpecIR
   , tables       :: ![TableIR]     -- ^ document order, nested tables included
   , headings     :: ![HeadingIR]   -- ^ document order
   , paras        :: ![ParaIR]      -- ^ document order
-  , sigs         :: ![Value]       -- ^ method signature blocks: no schema before M2b
+  , sigs         :: ![SigIR]       -- ^ method signature blocks, document order
+  , lot          :: ![LotIR]       -- ^ the List of Tables entries of the front matter, in order
+  , xrefs        :: ![XrefIR]      -- ^ every @Table N@ in the prose, document order
   , annots       :: ![AnnotIR]     -- ^ hsed annotations found in the input PDF
   } deriving (Eq, Show, Generic)
 
@@ -203,6 +212,38 @@ data ParaIR = ParaIR
 data ParaKind = P | LI
   deriving (Eq, Show, Bounded, Enum, Generic)
 
+-- | One method signature block (design section 5.1 step 7): consecutive @/P@
+--   paragraphs, one printed line each, from the invocation head(s) through the
+--   parameters, @=>@ and the result (Core's CloseSession has no @=>@). One per
+--   section; its anchor id is @\<section\>/sig@.
+data SigIR = SigIR
+  { section    :: !Text         -- ^ the section it lies in
+  , page       :: !Int          -- ^ 0-based PDF page of its first line
+  , rect       :: !Rect         -- ^ its lines on that page
+  , structPath :: !StructPath   -- ^ its first paragraph
+  , heads      :: ![Text]       -- ^ @[TableUID.Get, ObjectUID.Get]@: the invocations before the parameters
+  , text       :: !Text         -- ^ its lines as printed, one per paragraph, joined by newlines
+  } deriving (Eq, Show, Generic)
+
+-- | One entry of the List of Tables: what the front matter says a table is called and where.
+data LotIR = LotIR
+  { number  :: !Int    -- ^ @Table 01@ is 1
+  , title   :: !Text   -- ^ as the entry prints it, without the number, a dash separator, the dot leaders and the page
+  , printed :: !Int    -- ^ the printed page the entry gives
+  , page    :: !Int    -- ^ 0-based PDF page of the entry
+  , rect    :: !Rect
+  } deriving (Eq, Show, Generic)
+
+-- | One @Table N@ in a paragraph or list item that is not a table's caption.
+data XrefIR = XrefIR
+  { number   :: !Int
+  , page     :: !Int            -- ^ 0-based PDF page of the reference
+  , rect     :: !Rect           -- ^ the glyphs of @Table N@
+  , section  :: !(Maybe Text)   -- ^ the paragraph's section
+  , sentence :: !Text           -- ^ the sentence it is in
+  , target   :: !(Maybe Int)    -- ^ 0-based page the link over the number goes to; Nothing without one
+  } deriving (Eq, Show, Generic)
+
 -- | One hsed annotation found in the input PDF (a @/Text@ annotation carrying @/HSED@).
 data AnnotIR = AnnotIR
   { kind     :: !AnnotKind
@@ -252,8 +293,26 @@ enumParser name render = withText name $ \t ->
   maybe (fail (name <> ": unknown value " <> show t)) pure
         (lookup t [ (render c, c) | c <- [minBound .. maxBound] ])
 
+-- | Hand-written so that a file written before the signature blocks, the List
+--   of Tables and the table references (M2b) reads them as empty.
 instance FromJSON SpecIR where
-  parseJSON = genericParseJSON defaultOptions
+  parseJSON = withObject "SpecIR" $ \o ->
+    SpecIR <$> o .:  "irVersion"
+           <*> o .:  "spec"
+           <*> o .:  "source"
+           <*> o .:  "pdfMd5"
+           <*> o .:  "pages"
+           <*> o .:  "labelOffset"
+           <*> o .:  "notice"
+           <*> o .:  "extractor"
+           <*> o .:  "wordComplete"
+           <*> o .:  "tables"
+           <*> o .:  "headings"
+           <*> o .:  "paras"
+           <*> o .:? "sigs" .!= []
+           <*> o .:? "lot" .!= []
+           <*> o .:? "xrefs" .!= []
+           <*> o .:  "annots"
 instance ToJSON SpecIR where
   toJSON     = genericToJSON defaultOptions
   toEncoding = genericToEncoding defaultOptions
@@ -356,6 +415,24 @@ instance FromJSON ParaKind where
   parseJSON = enumParser "ParaKind" tshow
 instance ToJSON ParaKind where
   toJSON = String . tshow
+
+instance FromJSON SigIR where
+  parseJSON = genericParseJSON snakeOptions
+instance ToJSON SigIR where
+  toJSON     = genericToJSON snakeOptions
+  toEncoding = genericToEncoding snakeOptions
+
+instance FromJSON LotIR where
+  parseJSON = genericParseJSON snakeOptions
+instance ToJSON LotIR where
+  toJSON     = genericToJSON snakeOptions
+  toEncoding = genericToEncoding snakeOptions
+
+instance FromJSON XrefIR where
+  parseJSON = genericParseJSON snakeOptions
+instance ToJSON XrefIR where
+  toJSON     = genericToJSON snakeOptions
+  toEncoding = genericToEncoding snakeOptions
 
 instance FromJSON AnnotIR where
   parseJSON = genericParseJSON snakeOptions

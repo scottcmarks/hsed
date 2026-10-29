@@ -47,10 +47,15 @@ rowsOf :: Context -> [TypeRowDecl]
 rowsOf ctx = rights [ typeRowDecl ctx tr | tr <- rights (typeRowReads ctx) ]
 
 about :: Text -> [Finding] -> [Text]
-about anchor = map renderFinding . filter ((== Just anchor) . Cm.anchor)
+about anchor = map renderFinding . filter ((== Just anchor) . Cm.anchor) . filter ownCheck
 
 errorsOf :: ErrataSet -> SpecIR -> [Text]
-errorsOf es = map renderFinding . filter isError . checkIR es
+errorsOf es = map renderFinding . filter isError . filter ownCheck . checkIR es
+
+-- | The findings of this rule's checks: not the ranges rule's C-UID-RANGE,
+--   which an edited UID also fails (its own tests are RangesSpec's).
+ownCheck :: Finding -> Bool
+ownCheck f = Cm.code f /= "C-UID-RANGE"
 
 -- | The committed sidecar's T149 line with another subject in its waiver.
 waiverFor :: Text -> Text
@@ -137,7 +142,7 @@ spec = do
         about "T149" fs `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T51 adv_key_mode (PDF 101)"
           , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the type rows with that UID are T51, T149" ]
-        map Cm.code (filter isError fs) `shouldBe` ["C-UID-UNIQUE"]
+        map Cm.code (filter isError (filter ownCheck fs)) `shouldBe` ["C-UID-UNIQUE"]
       it "waives nothing when a third table prints the UID too" $ do
         let three = setCell "T51" 0 0 "00 00 00 05 00 00 02 15" ir
         errorsOf Scott three `shouldBe`

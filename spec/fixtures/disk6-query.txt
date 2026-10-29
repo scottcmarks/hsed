@@ -1,0 +1,15 @@
+
+/dev/disk6 USB   SSD 970 EVO Plus 250GB            2B2QEXM7   S59BNM0RA15802W     
+TPer function (0x0001)
+    ACKNAK = N, ASYNC = N. BufferManagement = N, comIDManagement  = N, Streaming = Y, SYNC = Y
+Locking function (0x0002)
+    Locked = N, LockingEnabled = N, MBR shadowing Not Supported = N, MBRDone = N, MBREnabled = N, MediaEncrypt = Y
+Geometry function (0x0003)
+    Align = Y, Alignment Granularity = 8 (4096), Logical Block size = 512, Lowest Aligned LBA = 0
+DataStore function (0x0202)
+    Max Tables = 9, Max Size Tables = 10485760, Table size alignment = 1
+OPAL 2.15 function (0x0203)
+    Base comID = 0x1004, Initial PIN = 0x00, Reverted PIN = 0x00, comIDs = 1
+    Locking Admins = 4, Locking Users = 9, Range Crossing = N
+BlockSID function (0x0402)
+    BlockSIDState = N, SIDvalueState = 0, HardReset  = 0

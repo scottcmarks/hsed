@@ -25,6 +25,7 @@ module Hsed.Spec.Registry
 import           Hsed.Spec.RuleDef          (RuleDef)
 import           Hsed.Spec.Rules.EnumValues (enumValuesRule)
 import           Hsed.Spec.Rules.Ranges     (rangesRule)
+import           Hsed.Spec.Rules.Sig        (sigRule)
 import           Hsed.Spec.Rules.TableUIDs  (tableUIDsRule)
 import           Hsed.Spec.Rules.TypeRow    (typeRowRule)
 import           Hsed.Spec.Rules.UidTable   (uidTableRule)
@@ -35,6 +36,7 @@ registry :: [RuleDef]
 registry =
   [ enumValuesRule
   , rangesRule
+  , sigRule
   , tableUIDsRule
   , typeRowRule
   , uidTableRule

@@ -19,7 +19,7 @@ jobs:
         with:
           ghc-version: '9.4.7'
           enable-stack: true
-          stack-version: 'latest'
+          stack-version: '3.11.1'   # the version used locally (docs/spec-as-source.md 10.1)
       # The GHC 9.4.7 Linux bindist hard-wires -fuse-ld=gold (in its settings and in the hsc2hs
       # wrapper's --lflag), and the gold linker is gone from ubuntu-26.04's binutils
       # ("collect2: fatal error: cannot find 'ld'"). Strip it everywhere in the install so gcc

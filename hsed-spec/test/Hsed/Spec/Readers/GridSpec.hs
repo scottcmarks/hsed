@@ -21,7 +21,11 @@ a problem. The bit maps of T42 and T43 byte 4 equal sedutil's
 (@Common/DtaStructures.h@ lines 81-134, @Discovery0TPerFeatures@ and
 @Discovery0LockingFeatures@, which list each flag from bit 0 up). The extent
 rule's fallbacks are tested on T43 with its extents taken away: a finding, or
-the @bits@ modifier.
+the @bits@ modifier, which is held to the row it reads (each name a printed
+cell, which names the field; its bits descending left to right, each a bit
+of a byte listed once; a printed Reserved cell over a bit it leaves). A
+field's parenthesis that names its parts (T18's Session), and the fixed
+part's size running to the last byte a row prints.
 -}
 module Hsed.Spec.Readers.GridSpec (spec) where
 
@@ -32,7 +36,7 @@ import           RIO
 import           RIO.Directory          (doesFileExist)
 import           Test.Hspec
 
-import           Hsed.Core.Layout       (Field (..), Layout (..), tiling)
+import           Hsed.Core.Layout       (Field (..), Layout (..), TileProblem (..), tiling)
 import           Hsed.Spec.Anchor       (AnchorId (..))
 import           Hsed.Spec.Check        (mkContext)
 import           Hsed.Spec.Common       (ErrataSet (..))
@@ -167,6 +171,25 @@ spec = describe "Hsed.Spec.Readers.Grid" $ do
             byExtent = readGrid [] (table ir 43)
         spans byModifier `shouldBe` spans byExtent
         map fieldStart (layoutFields (gridLayout "x" byModifier)) `shouldSatisfy` (\os -> os == L.sort os)
+      it "names each field as the row prints it, whatever the modifier's spelling" $ do
+        let lowered = [ (b, T.toLower n) | (b, n) <- locking ]
+        spans (readGrid [(4, lowered)] bare) `shouldBe` spans (readGrid [(4, locking)] bare)
+      it "refuses a name no cell of the row prints, bits against the printed order, a bit outside 0-7 or listed twice (C-LAYOUT-EXTENT)" $ do
+        let problems ps = [ gpMessage p | p <- gProblems (readGrid [(4, ps)] bare), gpCode p == "C-LAYOUT-EXTENT" ]
+            phantom = (6, "Phantom") : locking
+            swapped = [ (b, n) | (b0, n) <- locking, let b = if b0 == 0 then 5 else if b0 == 5 then 0 else b0 ]
+        problems phantom `shouldBe` ["byte 4: its bits modifier names \"Phantom\" (bit 6), which no cell of the row prints"]
+        problems swapped `shouldSatisfy` \ms -> not (null ms) && all ("against the order the row prints them, bit 7 leftmost" `T.isSuffixOf`) ms
+        problems ((9, "Locked") : drop 3 locking <> take 2 locking) `shouldSatisfy`
+          elem "byte 4: its bits modifier lists bit 9 (\"Locked\"), not one of a byte's bits 7 to 0"
+        problems ((0, "Locked") : locking) `shouldSatisfy`
+          any ("byte 4: its bits modifier lists bit 0 2 times" `T.isPrefixOf`)
+        problems locking `shouldBe` []
+      it "refuses a printed Reserved cell over no bit the modifier leaves reserved (C-LAYOUT-EXTENT)" $ do
+        -- every bit listed: the Reserved cell printed before MBR Done lies over none of them
+        let full = (7, "Locked") : (6, "Locking Enabled") : [ p | p@(b, _) <- locking, b <= 5, b /= 2, b /= 1 ]
+        [ gpMessage p | p <- gProblems (readGrid [(4, full)] bare), gpCode p == "C-LAYOUT-EXTENT" ] `shouldSatisfy`
+          elem "byte 4: the cell \"Reserved\" lies where its bits modifier leaves no bit reserved"
       it "reports a bits modifier the extent rule leaves unused (W-LAYOUT-BITS-UNUSED)" $
         [ gpCode p | p <- gProblems (readGrid [(4, locking), (9, [(0, "X")])] (table ir 43)) ]
           `shouldBe` ["W-LAYOUT-BITS-UNUSED", "W-LAYOUT-BITS-UNUSED"]
@@ -175,6 +198,18 @@ spec = describe "Hsed.Spec.Readers.Grid" $ do
             noLsb = t { rows = map (map (\c -> if c.text == "(LSB)" then c { text = "" } else c)) t.rows }
         take 1 [ (gpCode p, gpMessage p) | p <- gProblems (readGrid [] noLsb) ]
           `shouldBe` [("C-LAYOUT-ENDIAN", "byte 4: an (MSB) inside the run of \"Reserved\"")]
+
+    describe "fieldParts and the fixed part's size" $ do
+      it "reads T18's Session (0-3 = TSN, 4-7 = HSN) as two parts, and no other parenthesis as parts" $ do
+        [ fieldParts f | f <- take 1 (gFields (grid 18)) ] `shouldBe` [Just [(0, 3, "TSN"), (4, 7, "HSN")]]
+        mapMaybe fieldParts (gFields (grid 17) <> gFields (grid 212)) `shouldBe` []
+      it "runs the fixed part to the last byte a row prints, so that bytes no field names are a gap, not a shorter layout" $ do
+        -- T39 cut after byte 15, then a row for byte 16 that names no field
+        let t39 = table ir 39
+            unnamed = t39 { rows = take 11 t39.rows <> [ [ c { text = if i == 0 then "16" else "" } | (i, c) <- zip [0 :: Int ..] (take 2 r) ] | r <- take 1 (drop 11 t39.rows) ] }
+        gSize (grid 39) `shouldBe` 48
+        gSize (readGrid [] unnamed) `shouldBe` 17
+        tiling (gridLayout "x" (readGrid [] unnamed)) `shouldBe` [Gap 128 135]
 
     describe "gridOf and gridFindings" $
       it "read a bound table with its bits modifiers, and locate the problems at their cells' page" $ do

@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings   #-}
@@ -15,22 +16,32 @@ What the rules that generate byte layouts share (design section 11 M2c): the
 ('layoutsModule', one value so that both name it identically), and those and
 @feature@ print a layout the same way ('layoutDecl'): a value of the runtime's
 "Hsed.Core.Layout".'Hsed.Core.Layout.Layout', its fields written as the grid
-prints them, @spanning "ComID" (4, 7) (5, 0) Unsigned@. A rule builds the
-'Layout' it prints from what it read (a byte grid's fields by 'gridLayout', its
-pins applied by the rule; a @Byte(s) | Field | Value(s)@ table's rows by
-"Hsed.Core.Layout".'Hsed.Core.Layout.byteRange'), and checks with
-'tileFindings' that its fields cover each bit of its fixed part once
+prints them, @spanning "ComID" (4, 7) (5, 0) Unsigned@, a pin at its field's
+width in hex digits (@Pinned 0x0001@ for 16 bits). Each makes its layout from
+its grid ('gridFields', 'gridLayout': a byte grid's fields, or a @Byte(s) |
+Field | Value(s)@ table's rows read as one), applies its constants, and checks
+with 'tileFindings' that its fields cover each bit of its fixed part once
 (@C-LAYOUT-TILE@, the same check generated code asserts with
-"Hsed.Core.Layout".'Hsed.Core.Layout.tiles').
+"Hsed.Core.Layout".'Hsed.Core.Layout.tiles'), under one policy for every
+rule ('tileSeverity'): bits no field names (a gap) are a Warning, the layout
+generated as printed, its comment naming them ('untiledNote'), with no record
+over it, and refused at run time until an erratum names them; any other
+tiling problem (an overlap, a field outside the size, a pin its field cannot
+hold, a tail starting inside the fixed part) is an Error, and the table is
+left out.
 -}
 module Hsed.Spec.Readers.Layout
   ( -- * The generated module
     layoutsModule
   , layoutDecl
+  , untiledNote
     -- * From a grid
+  , gridFields
   , gridLayout
   , gridFieldKind
     -- * Tiling
+  , gridTiling
+  , tileSeverity
   , tileFindings
   , describeTileProblem
     -- * Codes
@@ -38,15 +49,19 @@ module Hsed.Spec.Readers.Layout
   ) where
 
 import qualified Data.Text              as DT
+import qualified RIO.List               as L
 import qualified RIO.Text               as T
 import           RIO
 
-import           Hsed.Core.Layout       (Field (..), FieldKind (..), Layout (..), Tail (..), TileProblem (..),
+import           Hsed.Core.Layout       (Field (..), FieldKind (..), Layout (..), Tail (..), TileProblem (..), bitOffset,
                                          bitPosition, fieldEnd, tiling)
 import           Hsed.Spec.Common       (CodeDef (..), Finding, Reports (..), Severity (..), finding)
 import qualified Hsed.Spec.Gen          as Gen
-import           Hsed.Spec.Readers.Grid (BitPos (..), Grid (..), GridField (..), fieldConstant, fieldVariable, reservedName)
-import           Hsed.Spec.RuleDef      (BoundTable, Context, atTable)
+import           Hsed.Spec.IR           (CellIR)
+import           Hsed.Spec.Readers.Grid (BitPos (..), ByteRow (..), ByteSpan (..), Grid (..), GridField (..), fieldConstant,
+                                         fieldParts, fieldVariable, reservedName)
+import           Hsed.Spec.Readers.Text (hexDigits)
+import           Hsed.Spec.RuleDef      (BoundTable, Context, atCells, atTable)
 
 
 -- * The generated module
@@ -61,65 +76,102 @@ layoutsModule = Gen.GenModule
                       , "of their own. Every layout tiles its bytes, or its comment names the bytes no field covers." ] }
 
 -- | A layout's declaration: @name :: Layout@, its fields one to a line as
---   @spanning "\<name\>" (byte, bit) (byte, bit) \<kind\>@.
-layoutDecl :: Gen.Provenance -> Text -> Layout -> Gen.Decl
-layoutDecl p name l = (Gen.decl p name body)
+--   @spanning "\<name\>" (byte, bit) (byte, bit) \<kind\>@, a pin at its
+--   field's width in hex digits; the comment lines given printed after its
+--   provenance line.
+layoutDecl :: Gen.Provenance -> Text -> Layout -> [Text] -> Gen.Decl
+layoutDecl p name l comment = (Gen.decl p name body)
   { Gen.declImports = [ Gen.ImportSome Gen.layoutModule (["FieldKind (..)", "Layout (..)", "spanning"] <> [ "Tail (..)" | isJust (layoutTail l) ])
                       , Gen.ImportSome "Prelude" ["Maybe (..)"] ] }
   where
     body =
-      [ Gen.provenanceComment p
-      , name <> " :: Layout"
-      , name <> " = Layout"
-      , "  { layoutName   = " <> tshow (layoutName l)
-      , "  , layoutSize   = " <> tshow (layoutSize l)
-      , "  , layoutFields =" ]
+      [ Gen.provenanceComment p ]
+      <> comment
+      <> [ name <> " :: Layout"
+         , name <> " = Layout"
+         , "  { layoutName   = " <> tshow (layoutName l)
+         , "  , layoutSize   = " <> tshow (layoutSize l)
+         , "  , layoutFields =" ]
       <> Gen.listLines "      " (map fieldLine (layoutFields l))
       <> [ "  , layoutTail   = " <> maybe "Nothing" tailExpr (layoutTail l)
          , "  }" ]
-    fieldLine f = T.unwords ["spanning", tshow (fieldName f), pos (fieldStart f), pos (fieldEnd f - 1), kindExpr (fieldKind f)]
+    fieldLine f = T.unwords ["spanning", tshow (fieldName f), pos (fieldStart f), pos (fieldEnd f - 1), kindExpr (fieldWidth f) (fieldKind f)]
     pos o = let (byte, bit) = bitPosition o in "(" <> tshow byte <> ", " <> tshow bit <> ")"
-    kindExpr = \k -> case k of
-      Pinned v -> "(Pinned " <> hexInteger v <> ")"
-      _        -> tshow k
+    kindExpr width = \case
+      Pinned v -> "(Pinned " <> pinText width v <> ")"
+      k        -> tshow k
     tailExpr t = "Just (Tail " <> tshow (tailName t) <> " " <> maybe "Nothing" (\n -> "(Just " <> tshow n <> ")") (tailLength t)
-                 <> " " <> tshow (tailAlign t) <> ")"
+                 <> " " <> tshow (tailAlign t) <> " " <> kindExpr 0 (tailKind t) <> ")"
 
--- | @0x0c@, @0x0001@: a number in hex, an even count of digits.
-hexInteger :: Integer -> Text
-hexInteger v = "0x" <> T.justifyRight (even' (T.length digits)) '0' digits
-  where
-    digits = T.pack (go v "")
-    go n acc
-      | n < 16    = T.index "0123456789abcdef" (fromInteger n) : acc
-      | otherwise = go (n `div` 16) (T.index "0123456789abcdef" (fromInteger (n `mod` 16)) : acc)
-    even' k = k + k `mod` 2
+-- | A pinned value in hex at its field's width: as many digits as the field's
+--   bits take (@0x0001@ for 16 bits, @0x1@ for 4).
+pinText :: Int -> Integer -> Text
+pinText width = hexDigits ((width + 3) `div` 4)
+
+-- | The comment of a layout that does not tile: what keeps it from tiling,
+--   each problem a line.
+untiledNote :: [TileProblem] -> [Text]
+untiledNote = \case
+  [] -> []
+  ps -> [ "--", "-- It does not tile (C-LAYOUT-TILE): Hsed.Core.Layout refuses to encode or decode it, and it has"
+        , "-- no record, until an erratum names these bytes:", "--" ]
+        <> [ "-- * " <> describeTileProblem p | p <- ps ]
 
 
 -- * From a grid
 
--- | A grid's layout under a name: every field with a last bit in the fixed
---   part ('gridFieldKind'), named by its base (the name without the
---   parenthesis it ends with); the field without one, if any, the tail, its
+-- | A grid's fields with a last bit, as a layout's ('gridFieldKind'), each
+--   named by its base (the name without the parenthesis it ends with), with
+--   the grid field it was read from; a field whose parenthesis names its parts
+--   ('fieldParts': a run of its bytes and a name each, counted from its first
+--   byte or from byte 0, together its bytes) is one field per part, named by
+--   the part, each with the one grid field.
+gridFields :: Grid -> [(Field, GridField)]
+gridFields g = concat [ map (\f -> (f, gf)) (fieldsOf gf l) | gf <- gFields g, Just l <- [gfLast gf] ]
+  where
+    fieldsOf gf l =
+      let start = offset (gfFirst gf)
+          width = offset l - start + 1
+          whole = Field (baseName gf) start width (gridFieldKind gf)
+          b0 = bpByte (gfFirst gf)
+          nBytes = width `div` 8
+          tilesFrom o ps = map (\(a, b, _) -> (a, b)) ps == zip (o : [ b + 1 | (_, b, _) <- ps ]) [ b | (_, b, _) <- ps ]
+                           && maybe False (\(_, b, _) -> b == o + nBytes - 1) (L.lastMaybe ps)
+      in case fieldParts gf of
+           Just ps | fieldKind whole `elem` [Unsigned, Bytes], bpBit (gfFirst gf) == 7, width `mod` 8 == 0, any (`tilesFrom` ps) [0, b0] ->
+             let rel = if tilesFrom 0 ps then 0 else b0
+             in [ Field name (bitOffset (b0 + a - rel) 7) ((b - a + 1) * 8) (kindOfPart name ((b - a + 1) * 8)) | (a, b, name) <- ps ]
+           _ -> [whole]
+    offset (BitPos byte bit) = bitOffset byte bit
+    kindOfPart name w
+      | reservedName name = Reserved
+      | w > 64            = Bytes
+      | otherwise         = Unsigned
+
+-- | A grid's layout under a name (the caption's title): its fields
+--   ('gridFields'); the field without a last bit, if any, the tail, its
 --   length given by the field whose parenthesis names the variable its end
 --   refers to (@Length (n)@ and @20 to n + 19@), its padding the @modulo@ its
---   end gives (@(n+(-n modulo 4)) + 11@). A rule applies its pins to the
---   fields (as 'Pinned' kinds) before it prints the layout.
+--   end gives (@(n+(-n modulo 4)) + 11@), reserved bytes when its name says
+--   so (@46 to TRNSFLEN - 1 | Reserved@), else bytes. A rule applies its
+--   constants to the fields (as 'Pinned' kinds) before it prints the layout.
 gridLayout :: Text -> Grid -> Layout
 gridLayout name g = Layout
   { layoutName   = name
   , layoutSize   = gSize g
-  , layoutFields = [ Field (fieldName' f) (offset (gfFirst f)) (offset l - offset (gfFirst f) + 1) (gridFieldKind f)
-                   | f <- gFields g, Just l <- [gfLast f] ]
-  , layoutTail   = listToMaybe [ Tail (fieldName' f) (lengthFieldOf end) (alignOf end) | f <- gFields g, Nothing <- [gfLast f], let end = fromMaybe "" (gfEnd f) ] }
+  , layoutFields = map fst (gridFields g)
+  , layoutTail   = listToMaybe [ Tail (baseName f) (lengthFieldOf end) (alignOf end) (if reservedName (baseName f) then Reserved else Bytes)
+                               | f <- gFields g, Nothing <- [gfLast f], let end = fromMaybe "" (gfEnd f) ] }
   where
-    offset (BitPos byte bit) = byte * 8 + (7 - bit)
-    fieldName' f = if T.null (gfBase f) then gfName f else gfBase f
-    lengthFieldOf end = listToMaybe [ fieldName' f | f <- gFields g, Just v <- [fieldVariable f], v `elem` T.words (T.map spaced end) ]
+    lengthFieldOf end = listToMaybe [ baseName f | f <- gFields g, Just v <- [fieldVariable f], v `elem` T.words (T.map spaced end) ]
     spaced c = if c `elem` ("()+-" :: String) then ' ' else c
     alignOf end = case drop 1 (T.words (snd (DT.breakOn "modulo" (T.map spaced end)))) of
       w : _ | Just k <- readMaybe (T.unpack w), k > 0 -> k
       _                                              -> 1
+
+-- | A grid field's name in a layout: its base, else its name as printed.
+baseName :: GridField -> Text
+baseName f = if T.null (gfBase f) then gfName f else gfBase f
 
 -- | The kind of a grid's field: reserved by its name (@Reserved@, @Reserved for
 --   common SSC parameters@), pinned by a constant it prints (@0x02@, @NAA
@@ -134,37 +186,86 @@ gridFieldKind f
   | otherwise                                      = Unsigned
   where
     width = case gfLast f of
-      Just (BitPos b1 lo) -> (b1 * 8 + (7 - lo)) - (bpByte (gfFirst f) * 8 + (7 - bpBit (gfFirst f))) + 1
-      Nothing             -> 0
+      Just l  -> bitOffset (bpByte l) (bpBit l) - bitOffset (bpByte (gfFirst f)) (bpBit (gfFirst f)) + 1
+      Nothing -> 0
 
 
 -- * Tiling
 
+-- | Why a grid's layout does not tile: 'tiling', and a variable run that
+--   starts inside the fixed part (one that starts past it leaves bytes no
+--   field names, a gap, since the fixed part runs to where it starts).
+gridTiling :: Grid -> Layout -> [TileProblem]
+gridTiling g l = tiling l <> case [ gf | gf <- gFields g, isNothing (gfLast gf) ] of
+  gf : _ | start < layoutSize l * 8 ->
+    [ Overlap owner (baseName gf) start | owner <- take 1 [ fieldName f | f <- L.sortOn fieldStart (layoutFields l), fieldEnd f > start ] ]
+    where start = bitOffset (bpByte (gfFirst gf)) (bpBit (gfFirst gf))
+  _ -> []
+
+-- | The one policy of every grid rule: bits no field names are a Warning (the
+--   layout generated as printed, without a record, refused at run time); any
+--   other tiling problem is an Error.
+tileSeverity :: TileProblem -> Severity
+tileSeverity = \case
+  Gap {} -> Warning
+  _      -> Error
+
 -- | @C-LAYOUT-TILE@ at a bound table: each reason its layout's fields do not
---   cover every bit of its fixed part exactly once.
-tileFindings :: Context -> BoundTable -> Layout -> [Finding]
-tileFindings ctx bt l = [ atTable ctx bt (finding Error "C-LAYOUT-TILE" (layoutName l <> ": " <> describeTileProblem p)) | p <- tiling l ]
+--   cover every bit of its fixed part exactly once ('gridTiling'), its
+--   severity 'tileSeverity''s, at the page of the row it lies in: a gap's
+--   first byte's row, or the row of the field after it when no row prints
+--   that byte (Core T236's byte 8); an overlap's row; a field's own cells.
+tileFindings :: Context -> BoundTable -> Grid -> Layout -> [Finding]
+tileFindings ctx bt g l =
+  [ located (tileCells g p) (finding (tileSeverity p) "C-LAYOUT-TILE" (layoutName l <> ": " <> describeTileProblem p))
+  | p <- gridTiling g l ]
+  where located cells = if null cells then atTable ctx bt else atCells ctx bt cells
+
+-- | Where a tiling problem is printed.
+tileCells :: Grid -> TileProblem -> [CellIR]
+tileCells g = \case
+  Gap o0 o1     -> firstOf [rowOfByte (byteOf o0), startingAt (o1 + 1)]
+  Overlap _ _ o -> firstOf [startingAt o, rowOfByte (byteOf o)]
+  Outside n     -> named n
+  Unaligned n   -> named n
+  Unfit n _     -> named n
+  WideFlag n    -> named n
+  NoLength n    -> named n
+  PadNoLength n _ -> named n
+  TailKind n _  -> named n
+  BadAlign _    -> concat (take 1 [ gfCells gf | gf <- gFields g, isNothing (gfLast gf) ])
+  where
+    firstOf = concat . take 1 . filter (not . null)
+    byteOf o = fst (bitPosition o)
+    rowOfByte b = concat (take 1 [ brRow r | r <- gRows g, holds b (brSpan r) ])
+    holds b = \case
+      Just (OneByte n)     -> n == b
+      Just (ByteRange a c) -> a <= b && b <= c
+      _                    -> False
+    startingAt o = concat (take 1 [ gfCells gf | gf <- gFields g, bitOffset (bpByte (gfFirst gf)) (bpBit (gfFirst gf)) == o ])
+    named n = concat (take 1 ([ gfCells gf | (f, gf) <- gridFields g, fieldName f == n ]
+                              <> [ gfCells gf | gf <- gFields g, baseName gf == n ]))
 
 -- | A tiling problem in the grid's terms, bytes and bits.
 describeTileProblem :: TileProblem -> Text
-describeTileProblem = \p -> case p of
-  Overlap a b o -> tshow b <> " starts at " <> bit o <> ", inside " <> tshow a
-  Gap o0 o1     -> "no field covers " <> bit o0 <> (if o1 == o0 then "" else " to " <> bit o1)
-  Outside n     -> tshow n <> " has no bits, or bits outside the fixed part"
-  Unaligned n   -> tshow n <> " is a byte string not of whole bytes"
-  Unfit n v     -> tshow n <> " cannot hold its pinned value " <> hexInteger v
-  WideFlag n    -> tshow n <> " is a flag wider than a bit"
-  NoLength n    -> "the tail's length field " <> tshow n <> " is no unsigned field of the layout"
-  BadAlign k    -> "the tail's alignment " <> tshow k <> " is below 1"
+describeTileProblem = \case
+  Overlap a b o   -> tshow b <> " starts at " <> bit o <> ", inside " <> tshow a
+  Gap o0 o1       -> "no field covers " <> bit o0 <> (if o1 == o0 then "" else " to " <> bit o1)
+  Outside n       -> tshow n <> " has no bits, or bits outside the fixed part"
+  Unaligned n     -> tshow n <> " is a byte string not of whole bytes"
+  Unfit n v       -> tshow n <> " cannot hold its pinned value " <> hexDigits 1 v
+  WideFlag n      -> tshow n <> " is a flag wider than a bit"
+  NoLength n      -> "the tail's length field " <> tshow n <> " is no unsigned field of the layout"
+  BadAlign k      -> "the tail's alignment " <> tshow k <> " is below 1"
+  PadNoLength n k -> "the tail " <> tshow n <> " is padded to a multiple of " <> tshow k <> " with no length field to end it"
+  TailKind n k    -> "the tail " <> tshow n <> " is " <> tshow k <> ", neither bytes nor reserved"
   where bit o = let (byte, b) = bitPosition o in "byte " <> tshow byte <> " bit " <> tshow b
 
 
 -- * Codes
 
--- | The code of the tiling check, whichever rule makes it: an Error
---   ('tileFindings'), or a Warning where a rule generates the layout as
---   printed, its comment naming the bytes no field covers, until an erratum
---   names them (@byteFieldValue@'s bytes no row names).
+-- | The code of the tiling check, whichever rule makes it: an Error, or a
+--   Warning for bits no field names ('tileSeverity').
 layoutCodes :: [CodeDef]
 layoutCodes =
   [ CodeDef "C-LAYOUT-TILE" [Error, Warning] (Defect "a byte layout's fields do not cover each bit of its bytes exactly once") ]

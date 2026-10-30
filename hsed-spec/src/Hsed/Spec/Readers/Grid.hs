@@ -12,11 +12,13 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The reader of a byte grid (design section 3.4, examples E7 and E8), which the
-@byteGrid@ and @feature@ rules share and no comment names. A byte grid is a
-table whose first row is a corner cell then the bit columns @7 … 0@ (Core
-T17-T21, T38-T44, T212; Opal T2-T8): each further row is one byte, a range of
-bytes, or a variable run to an end the text gives, labelled in the corner
-column; its other cells are fields over the bits under them.
+@byteGrid@, @feature@ and @byteFieldValue@ rules share and no comment names.
+A byte grid is a table whose first row is a corner cell then the bit columns
+@7 … 0@ (Core T17, T18, T20, T21, T38, T39, T41-T44, T212; Opal T2-T6, T8;
+@byteFieldValue@ reads its tables' Byte(s) and Field columns as one, each row
+one cell over its bytes): each further row is one byte, a range of bytes, or a
+variable run to an end the text gives, labelled in the corner column; its
+other cells are fields over the bits under them.
 
 * The corner: @Byte\\Bit@, or as "Hsed.Spec.Shape".'gridCornerNormalisation'
   reads it (Core T17 prints @Bit@ over a row @Byte@ alone, which is no byte).
@@ -31,7 +33,12 @@ column; its other cells are fields over the bits under them.
   bit columns, a column under a cell when its centre lies within the cell's
   extent ('extentBits'); failing that, the @bits k [...]@ modifier of the
   byte (each listed bit a one-bit field of that name, the rest reserved),
-  reported as @N-LAYOUT-BITS@; failing that, @C-LAYOUT-EXTENT@.
+  reported as @N-LAYOUT-BITS@; failing that, @C-LAYOUT-EXTENT@. The modifier
+  names the cells the row prints and orders them as printed: each name it
+  lists is a cell of the row, which names the field as printed; its bits
+  descend from left to right; each is one of a byte's bits 7 to 0, listed
+  once; a printed @Reserved@ cell lies over a bit it does not list; else
+  @C-LAYOUT-EXTENT@.
 * The fields ('GridField'), in order: a cell over some bits of one byte; a
   run from an @(MSB)@ mark to an @(LSB)@ mark, over the rows between (Core
   T17's @0 (MSB) Reserved … 3 (LSB)@, T212's @(MSB) IEEE COMPANY ID@ in bits
@@ -40,7 +47,13 @@ column; its other cells are fields over the bits under them.
   byte range's one cell; a variable run's one cell, which has no last bit.
   Each field keeps its name as printed, the marks removed, and the
   parenthesis it ends with apart ('gfNote': @Length (n)@'s variable,
-  @NAA (0x05)@'s constant, @(see Table 39)@).
+  @NAA (0x05)@'s constant, @(see Table 39)@, or the parts it names,
+  @Session (0-3 = TSN, 4-7 = HSN)@, 'fieldParts'). A field whose name starts
+  @Reserved@ (@Reserved for common SSC parameters@) is reserved bits
+  ('reservedName'), the PDF's own word.
+* The fixed part's size ('gSize'): one past the last byte a row prints (a
+  byte, a range, the start of a variable run); bytes it prints that no field
+  names are a gap for the layout's tiling check, not a shorter layout.
 
 The reader returns data and the problems it found ('GridProblem', each with
 its code and cells); the rules locate them ('gridFindings') and emit them.
@@ -65,23 +78,24 @@ module Hsed.Spec.Readers.Grid
   , cellMarks
   , fieldConstant
   , fieldVariable
+  , fieldParts
   , reservedName
     -- * Codes
   , gridCodes
   ) where
 
-import qualified Data.Char         as DC
-import qualified Data.Text         as DT
-import qualified Data.Text.Read    as TR
-import qualified RIO.Char          as C
-import qualified RIO.List          as L
-import qualified RIO.Text          as T
+import qualified Data.Text              as DT
+import qualified Data.Text.Read         as TR
+import qualified RIO.Char               as C
+import qualified RIO.List               as L
+import qualified RIO.Text               as T
 import           RIO
 
-import           Hsed.Spec.Common  (CodeDef (..), Finding, Reports (..), Severity (..), finding)
-import           Hsed.Spec.IR      (CellIR (..), TableIR (..))
-import           Hsed.Spec.RuleDef (BoundTable (..), Context, Mods (..), atCells, atTable)
-import           Hsed.Spec.Shape   (gridCornerNormalisation)
+import           Hsed.Spec.Common       (CodeDef (..), Finding, Reports (..), Severity (..), finding)
+import           Hsed.Spec.IR           (CellIR (..), TableIR (..))
+import           Hsed.Spec.Readers.Text (nameKey, readNumber)
+import           Hsed.Spec.RuleDef      (BoundTable (..), Context, Mods (..), atCells, atTable)
+import           Hsed.Spec.Shape        (gridCornerNormalisation)
 
 
 -- * A table's byte grid
@@ -150,11 +164,10 @@ data GridProblem = GridProblem
 
 -- | A table's byte grid.
 data Grid = Grid
-  { gCorner   :: !Text                             -- ^ the corner cell as printed
-  , gColumns  :: ![(Int, Maybe (Double, Double))]  -- ^ each bit column, 7 to 0, with its header cell's drawn extent
+  { gCorner   :: !Text           -- ^ the corner cell as printed
   , gRows     :: ![ByteRow]
-  , gFields   :: ![GridField]                      -- ^ in order of their first bit
-  , gSize     :: !Int                              -- ^ the fixed part's bytes: one past the last byte a field with a last bit covers
+  , gFields   :: ![GridField]    -- ^ in order of their first bit
+  , gSize     :: !Int            -- ^ the fixed part's bytes: one past the last byte a row prints or a field covers, or where a variable run starts
   , gProblems :: ![GridProblem]
   }
   deriving (Eq, Show)
@@ -176,10 +189,9 @@ gridFindings ctx bt g =
 readGrid :: [(Int, [(Int, Text)])] -> TableIR -> Grid
 readGrid bitMaps t = Grid
   { gCorner   = maybe "" (.text) (listToMaybe header)
-  , gColumns  = columns
   , gRows     = rows
   , gFields   = fields
-  , gSize     = foldl' max 0 [ bpByte l + 1 | f <- fields, Just l <- [gfLast f] ]
+  , gSize     = foldl' max 0 ([ bpByte l + 1 | f <- fields, Just l <- [gfLast f] ] <> mapMaybe (printedEnd . brSpan) rows)
   , gProblems = assembled <> unused
   }
   where
@@ -198,6 +210,12 @@ readGrid bitMaps t = Grid
     why k
       | any (\r -> brSpan r == Just (OneByte k)) rows = "the extent rule reads that byte's cells"
       | otherwise                                    = "no row is that byte alone"
+    -- one past the bytes a row prints, or where a variable run starts
+    printedEnd = \case
+      Just (OneByte n)     -> Just (n + 1)
+      Just (ByteRange _ b) -> Just (b + 1)
+      Just (FromByte a _)  -> Just a
+      _                    -> Nothing
 
 -- | One row: its label (the cell over the corner column, else its first),
 --   the bytes it gives and its other cells' bits.
@@ -230,7 +248,7 @@ readRow bitMaps columns corner cells = ByteRow
       (1, _) -> (WholeByte, [ CellBits (T.strip c.text) (Just (7, 0)) c | c <- others ])
       (_, Just ps)
         | any (isNothing . cbBits) (named byExtent)
-          -> (ByModifier, [ cb { cbBits = (\b -> (b, b)) <$> L.lookup (key (cbText cb)) [ (key nm, b) | (b, nm) <- ps ] } | cb <- byExtent ])
+          -> (ByModifier, [ cb { cbBits = (\b -> (b, b)) <$> L.lookup (nameKey (cbText cb)) [ (nameKey nm, b) | (b, nm) <- ps ] } | cb <- byExtent ])
       _ -> (ByExtent, byExtent)
 
 -- | The bit columns under a drawn extent: those whose header cell's centre lies
@@ -278,22 +296,27 @@ cellMarks t0 = (isJust msb, T.strip (fromMaybe afterMsb (T.stripSuffix "(LSB)" a
 fieldConstant :: GridField -> Maybe Integer
 fieldConstant f = (gfNote f >>= readNumber) <|> readNumber (gfBase f)
 
+-- | The parts a field's parenthesis names, each a run of its bytes and a
+--   name: @Session (0-3 = TSN, 4-7 = HSN)@ gives @[(0, 3, "TSN"), (4, 7,
+--   "HSN")]@ (Core T18, whose Session §3.2.3.3.1.1 reads as two numbers, the
+--   TPer's first). Nothing for a parenthesis of another form.
+fieldParts :: GridField -> Maybe [(Int, Int, Text)]
+fieldParts f = gfNote f >>= \note -> case traverse part (DT.splitOn "," note) of
+  Just ps@(_ : _ : _) -> Just ps
+  _                   -> Nothing
+  where
+    part p = case DT.breakOn "=" p of
+      (range, rest) | Just name <- T.stripPrefix "=" rest, not (T.null (T.strip name)) -> do
+        ByteRange a b <- parseByteLabel (T.strip range)
+        pure (a, b, T.strip name)
+      _ -> Nothing
+
 -- | The variable a field's parenthesis names (@Length (n)@ gives @n@), which a
 --   variable run's end refers to.
 fieldVariable :: GridField -> Maybe Text
 fieldVariable f = case gfNote f of
   Just v | T.length v == 1, T.all C.isLower v -> Just v
   _                                          -> Nothing
-
-readNumber :: Text -> Maybe Integer
-readNumber t = case T.stripPrefix "0x" (T.toLower (T.strip t)) of
-  Just h | not (T.null h), T.all C.isHexDigit h -> Just (T.foldl' (\acc c -> acc * 16 + toInteger (DC.digitToInt c)) 0 h)
-  _ | not (T.null t), T.all C.isDigit (T.strip t) -> either (const Nothing) (Just . fst) (TR.decimal (T.strip t))
-    | otherwise -> Nothing
-
--- | A name compared whitespace-free and case-blind.
-key :: Text -> Text
-key = T.toLower . T.filter (not . C.isSpace)
 
 
 -- * The fields
@@ -328,19 +351,44 @@ assemble rows = (reverse fs, reverse ps <> unclosed)
       [cb] | isNothing run -> (run, field (cbText cb) from lastBit end [cbCell cb] : done, probs)
       cbs  -> (run, done, extent (brRow row) ("row " <> tshow i <> " (" <> brLabel row <> "): " <> tshow (length cbs)
                                               <> " named cells" <> (if isJust run then " inside a field's run" else "") <> ", not one field") : probs)
-    -- a byte read by its bits modifier: its listed bits, the rest reserved
+    -- a byte read by its bits modifier: its listed bits, each named as its cell prints it, the rest reserved; the
+    -- modifier holds to the row: each name a printed cell, its bits descending left to right as the row prints
+    -- them, each a bit of a byte listed once, a printed Reserved cell over a bit it leaves reserved
     modified n row run done probs =
       let listed = brBits row
-          cellsNamed nm = [ cbCell cb | cb <- named row, key (cbText cb) == key nm ]
-          flags = [ field nm (BitPos n b) (Just (BitPos n b)) Nothing (cellsNamed nm) | (b, nm) <- listed ]
-          reserved = [ field "Reserved" (BitPos n hi) (Just (BitPos n lo)) Nothing [] | (hi, lo) <- runsOf [ b | b <- [7, 6 .. 0], b `notElem` map fst listed ] ]
-          strays = [ extent [cbCell cb] ("byte " <> tshow n <> ": " <> tshow (cbText cb) <> " is none of the bits its bits modifier names")
-                   | cb <- named row, isNothing (cbBits cb), not (reservedName (cbText cb)) ]
+          cells = named row
+          bitOf cb = fst <$> cbBits cb
+          printedAs nm = listToMaybe [ cb | cb <- cells, nameKey (cbText cb) == nameKey nm ]
+          flags = [ field (maybe nm cbText cb) (BitPos n b) (Just (BitPos n b)) Nothing (map cbCell (maybeToList cb))
+                  | (b, nm) <- listed, let cb = printedAs nm ]
+          unlisted = [ b | b <- [7, 6 .. 0], b `notElem` map fst listed ]
+          reserved = [ field "Reserved" (BitPos n hi) (Just (BitPos n lo)) Nothing [] | (hi, lo) <- runsOf unlisted ]
+          byte = "byte " <> tshow n <> ": "
+          strays = [ extent [cbCell cb] (byte <> tshow (cbText cb) <> " is none of the bits its bits modifier names")
+                   | cb <- cells, isNothing (cbBits cb), not (reservedName (cbText cb)) ]
+          unprinted = [ extent (brRow row) (byte <> "its bits modifier names " <> tshow nm <> " (bit " <> tshow b <> "), which no cell of the row prints")
+                      | (b, nm) <- listed, isNothing (printedAs nm) ]
+          outside = [ extent (brRow row) (byte <> "its bits modifier lists bit " <> tshow b <> " (" <> tshow nm <> "), not one of a byte's bits 7 to 0")
+                    | (b, nm) <- listed, b < 0 || b > 7 ]
+          twice = [ extent (brRow row) (byte <> "its bits modifier lists bit " <> tshow b <> " " <> tshow (length nms) <> " times (" <> T.intercalate ", " nms <> ")")
+                  | b <- L.nub (map fst listed), let nms = [ nm | (b', nm) <- listed, b' == b ], length nms > 1 ]
+          -- the named cells' bits, left to right, must descend
+          ordered = [ (cbText cb, b) | cb <- cells, Just b <- [bitOf cb] ]
+          misordered = [ extent (map cbCell cells) (byte <> "its bits modifier gives " <> tshow a <> " bit " <> tshow ba <> " and " <> tshow c
+                                                     <> " bit " <> tshow bc <> ", against the order the row prints them, bit 7 leftmost")
+                       | ((a, ba), (c, bc)) <- zip ordered (drop 1 ordered), ba <= bc ]
+          -- a Reserved cell lies between the named cells beside it: over a bit between theirs that the modifier leaves
+          reservedCells = [ (i, cb) | (i, cb) <- zip [0 :: Int ..] cells, isNothing (cbBits cb), reservedName (cbText cb) ]
+          bitsBeside i = ( fromMaybe 8 (L.lastMaybe [ b | (j, cb) <- zip [0 ..] cells, j < i, Just b <- [bitOf cb] ])
+                         , fromMaybe (-1) (listToMaybe [ b | (j, cb) <- zip [0 ..] cells, j > i, Just b <- [bitOf cb] ]) )
+          overReserved = [ extent [cbCell cb] (byte <> "the cell " <> tshow (cbText cb) <> " lies where its bits modifier leaves no bit reserved")
+                         | (i, cb) <- reservedCells, let (hi, lo) = bitsBeside i, not (any (\u -> lo < u && u < hi) unlisted) ]
           note = GridProblem Note "N-LAYOUT-BITS" (brRow row)
                    ("byte " <> tshow n <> "'s bits read from its bits modifier, the extent rule reading none: "
                     <> T.intercalate ", " [ tshow b <> " " <> nm | (b, nm) <- listed ])
           inRun = [ endian (brRow row) ("byte " <> tshow n <> ", read by its bits modifier, lies inside a field's run") | isJust run ]
-      in (run, reverse (L.sortOn (inByte . gfFirst) (flags <> reserved)) <> done, reverse (note : strays <> inRun) <> probs)
+          found = strays <> unprinted <> outside <> twice <> misordered <> overReserved <> inRun
+      in (run, reverse (L.sortOn (inByte . gfFirst) (flags <> reserved)) <> done, reverse (note : found) <> probs)
     -- bit 7 first, as the other mappings give a byte's fields
     inByte (BitPos b i) = (b, negate i)
     -- one cell of a byte, left to right
@@ -352,13 +400,13 @@ assemble rows = (reverse fs, reverse ps <> unclosed)
         (True, _, Just r)     -> (run, done, endian [cbCell cb] ("byte " <> tshow n <> ": an (MSB) inside the run of " <> describe r) : probs)
         (True, False, Nothing) -> (Just (Run (nonEmpty name) (BitPos n hi) [cbCell cb]), done, probs)
         (False, True, Just r) -> case (runName r, nonEmpty name) of
-          (Just a, Just b) | key a /= key b ->
+          (Just a, Just b) | nameKey a /= nameKey b ->
             (Nothing, done, endian (runCells r <> [cbCell cb]) ("byte " <> tshow n <> ": the (LSB) of " <> tshow b <> " closes the run of " <> tshow a) : probs)
           (named', other) -> (Nothing, field (fromMaybe "" (named' <|> other)) (runFirst r) (Just (BitPos n lo)) Nothing (runCells r <> [cbCell cb]) : done, probs)
         (False, True, Nothing) -> (Nothing, done, endian [cbCell cb] ("byte " <> tshow n <> ": an (LSB) with no (MSB) before it") : probs)
         (False, False, Just r) -> case runName r of
           Nothing -> (Just r { runName = Just name, runCells = runCells r <> [cbCell cb] }, done, probs)
-          Just a | key a == key name -> (Just r { runCells = runCells r <> [cbCell cb] }, done, probs)
+          Just a | nameKey a == nameKey name -> (Just r { runCells = runCells r <> [cbCell cb] }, done, probs)
                  | otherwise -> (run, done, endian [cbCell cb] ("byte " <> tshow n <> ": " <> tshow name <> " inside the run of " <> tshow a) : probs)
         (False, False, Nothing) -> (Nothing, field name (BitPos n hi) (Just (BitPos n lo)) Nothing [cbCell cb] : done, probs)
     nonEmpty x = if T.null x then Nothing else Just x

@@ -25,10 +25,12 @@ import           Hsed.Spec.Common         (CodeDef)
 import           Hsed.Spec.Readers.Grid   (gridCodes)
 import           Hsed.Spec.Readers.Layout (layoutCodes)
 import           Hsed.Spec.Readers.Pins   (pinsCodes)
+import           Hsed.Spec.Readers.Record (recordCodes)
 
 
 -- | The codes the shared readers claim, reader by reader: the byte grid's
 --   (C-LAYOUT-EXTENT, C-LAYOUT-ENDIAN, N-LAYOUT-BITS, W-LAYOUT-BITS-UNUSED), the
---   layouts' (C-LAYOUT-TILE), the pins' (W-PINS-NONE).
+--   layouts' (C-LAYOUT-TILE), the pins' (W-PINS-NONE, C-PINS-WORDS), the
+--   records' (C-GRID-NAME).
 readerCodes :: [CodeDef]
-readerCodes = gridCodes <> layoutCodes <> pinsCodes
+readerCodes = gridCodes <> layoutCodes <> pinsCodes <> recordCodes

@@ -16,13 +16,18 @@ Table 39's two @The value of this field SHALL be …@ sentences (3.3.6.2.2,
 (3.3.6.4, 3.3.6.5), none for Table 44 (3.3.6.6, @W-PINS-NONE@ for the rule);
 Opal Tables 2-6's bullets after "SHALL return the following", VU and "or any
 version" kept as VU, "or larger" a minimum, nested bullets left out, and none
-for Table 8, whose section lists its values in a table. The values the tests
-expect are those the PDFs print, on the pages cited.
+for Table 8, whose section lists its values in a table. A value in hex with
+an @h@ after it or digits grouped by an underscore; a bullet's value ended by
+punctuation; a field heading the PDF numbers deeper than its outline, a list
+item, naming a CoreValue pin. Every byte grid's section, in both IRs, is
+word-complete and its pins read. The values the tests expect are those the
+PDFs print, on the pages cited.
 -}
 module Hsed.Spec.Readers.PinsSpec (spec) where
 
 import qualified RIO.Map                as Map
-import           RIO
+import qualified RIO.Text               as T
+import           RIO                    hiding (words)
 import           RIO.Directory          (doesFileExist)
 import           Test.Hspec
 
@@ -31,10 +36,11 @@ import           Hsed.Spec.Check        (mkContext)
 import           Hsed.Spec.Common       (ErrataSet (..))
 import           Hsed.Spec.CoreIR       (withCore)
 import           Hsed.Spec.DSL          (SomeBinding (..), feature)
-import           Hsed.Spec.IR           (SpecIR (..), TableIR (..), readIR)
+import           Hsed.Spec.IR           (CellIR (..), ParaIR (..), SpecIR (..), TableIR (..), readIR)
 import           Hsed.Spec.Readers.Pins
 import           Hsed.Spec.RuleDef      (BoundTable (..), modsOf, numberedTables)
 import           Hsed.Spec.Scope        (tableSections)
+import           Hsed.Spec.Shape        (isGrid8)
 
 
 -- | The pins of the section a numbered table lies in, as (schema, field, value, as printed).
@@ -45,10 +51,26 @@ pinsOf ir n = case Map.lookup (TableId n) (numberedTables ir) >>= \t -> join (Ma
 
 spec :: Spec
 spec = describe "Hsed.Spec.Readers.Pins" $ do
-  describe "readPinValue" $
+  describe "readPinValue" $ do
     it "reads a number, VU, a version the device chooses, a minimum, and anything else" $
       map readPinValue ["0x0001", "0x0C", "1", "VU", "0x1 or any version that supports the defined features in this SSC", "4 or larger", "0x0001 or larger", "**", "See section 3.1.1.3.1"]
         `shouldBe` [PinExact 1, PinExact 12, PinExact 1, PinVU, PinVU, PinAtLeast 4, PinAtLeast 1, PinOther, PinOther]
+    it "reads hex with an h after it and digits grouped by underscores; a word is no hex number" $
+      map readPinValue ["0001h", "0x0000_0004", "Each"] `shouldBe` [PinExact 1, PinExact 4, PinOther]
+
+  describe "every byte grid's section" $
+    forM_ [("Core", "../spec/ir/core-2.01.json"), ("Opal", "../spec/ir/opal-2.30.json")] $ \(name, path) ->
+      it ("is word-complete in " <> name <> "'s IR, and its pins read") $ do
+        present <- doesFileExist path
+        if not present then pendingWith (path <> " is not checked out") else do
+          ir <- readIR path >>= either throwString pure
+          let sections = Map.elems (Map.fromList
+                [ (n, join (Map.lookup t.structPath (tableSections ir)))
+                | (TableId n, t) <- Map.toList (numberedTables ir), isGrid8 t.nCols (map (.text) (concat (take 1 (t.headerRows <> t.rows)))) ])
+          sections `shouldSatisfy` (not . null)
+          [ s | Just s <- sections, s `notElem` ir.wordComplete ] `shouldBe` []
+          [ (s, e) | Just s <- sections, Left e <- [pinsInSection ir s] ] `shouldBe` []
+          length [ () | Nothing <- sections ] `shouldBe` 0
 
   withCore $ \ir -> do
     describe "Core" $ do
@@ -65,6 +87,15 @@ spec = describe "Hsed.Spec.Readers.Pins" $ do
         (pinsOf ir 44, pinsOf ir 41) `shouldBe` (Right [], Right [])
       it "says when the IR carries no words for a section's paragraphs" $
         pinsInSection ir "5.1.3" `shouldSatisfy` isLeft
+      it "names a CoreValue pin by the list item that numbers its field's heading deeper than the outline (3.2.3.4.2.1.2 Kind, PDF 45)" $ do
+        -- Kind's paragraph made a CoreValue sentence: the section's heading is 3.2.3.4.2.1's, its field the list item's
+        let kindPara :: ParaIR -> Bool
+            kindPara p = p.section == Just "3.2.3.4.2.1" && fmap (take 4) p.words == Just ["This", "field", "identifies", "the"]
+            edited = ir { paras = [ if kindPara p then p { words = Just (T.words "The value of this field SHALL be 0x8001.") } else p | p <- ir.paras ] }
+        length (filter kindPara ir.paras) `shouldBe` 1
+        fmap (map (\p -> (pinSchema p, pinField p, pinValue p))) (pinsInSection edited "3.2.3.4.2.1")
+          `shouldBe` Right [(CoreValue, "Kind", PinExact 0x8001)]
+        pinsInSection ir "3.2.3.4.2.1" `shouldBe` Right []
       it "reads a bound table's pins through its context" $ do
         let ctx = mkContext Scott ir
             t = fromMaybe (error "T42") (Map.lookup (TableId 42) (numberedTables ir))
@@ -79,6 +110,7 @@ spec = describe "Hsed.Spec.Readers.Pins" $ do
       if not present then pendingWith (path <> " is not checked out") else do
         opal <- readIR path >>= either throwString pure
         let fields n = map (\(_, f, v, _) -> (f, v)) <$> pinsOf opal n
+            fields' ir' n = map (\(_, f, v, t) -> (f, v, t)) <$> pinsOf ir' n
         fields 2 `shouldBe` Right [("Length of parameter data", PinVU), ("Data structure revision", PinVU), ("Vendor Specific", PinVU)]
         fields 3 `shouldBe` Right
           [ ("Feature Code", PinExact 1), ("Version", PinVU), ("Length", PinExact 12), ("ComID Mgmt Supported", PinVU)
@@ -96,3 +128,7 @@ spec = describe "Hsed.Spec.Readers.Pins" $ do
           , ("Initial C_PIN_SID PIN Indicator", PinVU), ("Behavior of C_PIN_SID PIN upon TPer Revert", PinVU) ]
         fields 8 `shouldBe` Right []
         fmap (all (\(s, _, _, _) -> s == OpalBullets)) (pinsOf opal 3) `shouldBe` Right True
+        -- a bullet's value ended by punctuation reads as the value
+        let punctuated = opal { paras = [ if p.words == Just ["Feature", "Code", "=", "0x0001"] && p.section == Just "3.1.1.2"
+                                            then p { words = Just ["Feature", "Code", "=", "0x0001;"] } else p | p <- opal.paras ] }
+        fmap (take 1) (fields' punctuated 3) `shouldBe` Right [("Feature Code", PinExact 1, "0x0001")]

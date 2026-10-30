@@ -21,6 +21,41 @@
    ],
    "struct": "",
    "title": null
+  },
+  {
+   "hash": "4bd794e9b123e237711cb3785d5ce1976a02800dd6b077d91ac5216ce44cc2ee",
+   "header": [
+    "propertyname",
+    "tperpropertyrequirementsandvaluesreported",
+    "hostpropertyrequirementsandvaluesaccepted"
+   ],
+   "id": "T17",
+   "kind": "Bind",
+   "label": 32,
+   "ordinal": 19,
+   "page": 32,
+   "rects": [
+    [
+     32,
+     [
+      58.5,
+      55.93,
+      553.5,
+      554.15
+     ]
+    ],
+    [
+     33,
+     [
+      58.5,
+      396.55,
+      512.34,
+      691.8
+     ]
+    ]
+   ],
+   "struct": "0/360",
+   "title": "- Properties Requirements"
   }
  ],
  "irVersion": 1,

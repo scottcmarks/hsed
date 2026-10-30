@@ -84,11 +84,15 @@ manifestHeadings = do
                   , Just (String h) <- [KM.lookup "hash" a], Just (String k) <- [KM.lookup "kind" a], k `elem` ["Rule", "Behaviour"] ]
     _ -> []
 
+-- | A sidecar without its behaviour and fails lines (M4a's five, or none), so that the units are these two alone.
+withoutBehaviours :: Text -> Text
+withoutBehaviours = T.unlines . filter (\l -> not (any (`T.isInfixOf` l) ["| behaviour ", "| fails "])) . T.lines
+
 spec :: Spec
 spec = withCore $ \pristine -> do
-  hsa <- runIO committedHsa
-  -- the committed sidecar with these two lines, whether it has them or not
-  ir  <- runIO (annotated pristine (foldr withoutLine hsa ["5.3.3.6", "5.3.3.6.3"] <> behaviours))
+  hsa <- runIO (withoutBehaviours <$> committedHsa)
+  -- the committed sidecar without its behaviour and fails lines, with these two
+  ir  <- runIO (annotated pristine (hsa <> behaviours))
   let ctx = mkContextWith (registry <> [stub]) Nothing Scott ir
       units = boundHeadings (ruleShape stub) ctx
 

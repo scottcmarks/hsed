@@ -17,3 +17,8 @@ core-2.01 | T231 | prose
 core-2.01 | 3.3.10.2.1#3a | law "Sync.ifSendWhileBusy"
 core-2.01 | 3.3.10.6#dc | law "Sync.discardToS1"
 core-2.01 | 3.3.10.7#a | law "Sync.ignorePacket"
+core-2.01 | 5.2.2.1 | behaviour "SessionManager.properties"
+core-2.01 | 5.2.3.1 | behaviour "SessionManager.startSession"
+core-2.01 | 5.2.3.5 | behaviour "SessionManager.closeSession"
+core-2.01 | 5.3.3.6 | behaviour "Base.get"
+core-2.01 | 5.3.3.6.3 | fails "Base.getFails"

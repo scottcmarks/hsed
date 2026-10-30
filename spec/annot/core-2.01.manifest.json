@@ -518,6 +518,116 @@
    ],
    "struct": "0/1102/0",
    "title": null
+  },
+  {
+   "hash": "07c968a2616798b83ee3f7787847fb7485e3d1ec5d30919c8ae90d0584e7f9bc",
+   "header": null,
+   "id": "5.2.2.1",
+   "kind": "Behaviour",
+   "label": 123,
+   "ordinal": null,
+   "page": 139,
+   "rects": [
+    [
+     139,
+     [
+      90.0,
+      477.1,
+      227.7,
+      490.98
+     ]
+    ]
+   ],
+   "struct": "0/2073",
+   "title": "Properties (Method)"
+  },
+  {
+   "hash": "d0b317d82b0ff51347f9b649bddef58c30ca39115f5a3adbc98ad6b2922f16e8",
+   "header": null,
+   "id": "5.2.3.1",
+   "kind": "Behaviour",
+   "label": 132,
+   "ordinal": null,
+   "page": 148,
+   "rects": [
+    [
+     148,
+     [
+      90.01,
+      707.13,
+      232.76,
+      721.01
+     ]
+    ]
+   ],
+   "struct": "0/2181",
+   "title": "StartSession Method"
+  },
+  {
+   "hash": "90ec3d0bc8d4608c70369894967e4fa835922a4d8a9341a1cef255fa99f6aea5",
+   "header": null,
+   "id": "5.2.3.5",
+   "kind": "Behaviour",
+   "label": 136,
+   "ordinal": null,
+   "page": 152,
+   "rects": [
+    [
+     152,
+     [
+      89.99,
+      226.28,
+      237.19,
+      240.16
+     ]
+    ]
+   ],
+   "struct": "0/2310",
+   "title": "CloseSession Method"
+  },
+  {
+   "hash": "a8df867de56310682849a678636fcf8e110ac77db95a7fe70f6e1bd66683909a",
+   "header": null,
+   "id": "5.3.3.6",
+   "kind": "Behaviour",
+   "label": 184,
+   "ordinal": null,
+   "page": 200,
+   "rects": [
+    [
+     200,
+     [
+      89.99,
+      570.45,
+      413.81,
+      584.34
+     ]
+    ]
+   ],
+   "struct": "0/3379",
+   "title": "Basic Table Method Group - Get (Table and Object Method)"
+  },
+  {
+   "hash": "c1481e2eb555ca92ca5a8c8683c0b974c33935ccc83ca48e24b3b9a4b16f156e",
+   "header": null,
+   "id": "5.3.3.6.3",
+   "kind": "Behaviour",
+   "label": 184,
+   "ordinal": null,
+   "page": 200,
+   "rects": [
+    [
+     200,
+     [
+      90.0,
+      243.58,
+      161.0,
+      256.12
+     ]
+    ]
+   ],
+   "struct": "0/3395",
+   "title": "Fails"
   }
  ],
  "irVersion": 1,

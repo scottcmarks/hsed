@@ -11,8 +11,13 @@ import Hsed.Spec.DSL
 b_opal_doc :: Bound
 b_opal_doc = at (anchor @'Doc "opal-2.30" "doc" "" 1) (doc opal230 & rule feature)
 
-{-# LINE 15 "Hsed/Bindings/Opal.hs" #-}
+{-# LINE 1 "opal-2.30.pdf#page=33&T17" #-}
+b_opal_T17 :: Bound
+b_opal_T17 = at (anchor @'PropsReq "opal-2.30" "T17" "0/360" 33) propsReq
+
+{-# LINE 19 "Hsed/Bindings/Opal.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_opal_doc
+  , b_opal_T17
   ]

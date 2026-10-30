@@ -67,6 +67,7 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Warning | W-ENUM-LABEL-REPEATED | 3 |
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
+| Warning | W-GEN-EXCLUDED | 5 |
 | Warning | W-PINS-NONE | 3 |
 | Warning | W-PROP-NAME-CASE | 1 |
 | Warning | XREF-RESOLVES | 2 |

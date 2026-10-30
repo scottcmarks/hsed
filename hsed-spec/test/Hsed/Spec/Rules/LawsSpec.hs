@@ -48,9 +48,10 @@ spec = withCore $ \pristine -> do
   let ctx = mkContext Scott ir
       compiled ir' = either (throwString . show) pure (compileIR Nothing Scott ir')
       lawFindings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f `elem` ["C-LAW-BOUND", "C-LAW-HASH"] ]
+      -- the law module's exclusions alone: since M4a the heading units no reader reads yet are W-GEN-EXCLUDED too
       excludedAt ir' = do
         cr <- compiled ir'
-        pure [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED" ]
+        pure [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", "left out of Hsed.Gen.Core.Laws" `T.isInfixOf` Cm.message f ]
       withComment aid payload = annotated pristine (withoutLine aid hsa <> "core-2.01 | " <> aid <> " | " <> payload <> "\n")
 
   describe "the law reader" $ do

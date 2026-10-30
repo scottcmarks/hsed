@@ -205,7 +205,8 @@ spec = do
       it "find none on the committed annotations that binds nothing or that another covers" $
         withCodes ["W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"] scott `shouldBe` []
       it "report an anchor whose scope binds nothing to its rule, and one another anchor of the rule covers" $ do
-        ir' <- annotated pristine (hsa <> "core-2.01 | 6.2 | rule uidTable\ncore-2.01 | 5.3.3.6 | rule sig\n")
+        -- 5.3.3.6 carries behaviour "Base.get" since M4a: the rule token takes its place here
+        ir' <- annotated pristine (withoutLine "5.3.3.6" hsa <> "core-2.01 | 6.2 | rule uidTable\ncore-2.01 | 5.3.3.6 | rule sig\n")
         rendered (withCodes ["W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"] (checkIR Nothing Scott ir')) `shouldBe`
           [ "W-RULE-SCOPE-EMPTY core-2.01.pdf#page=300&6.2: rule uidTable binds no table and no signature block in section 6.2"
           , "N-RULE-SCOPE-REDUNDANT core-2.01.pdf#page=201&5.3.3.6: rule sig here lies within its anchor's scope at the whole document: drop one"

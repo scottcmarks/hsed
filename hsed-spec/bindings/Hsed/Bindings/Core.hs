@@ -83,7 +83,27 @@ b_core_3_3_10_6_i_dc = at (anchor @'Sentence "core-2.01" "3.3.10.6#dc" "0/1090/3
 b_core_3_3_10_7_i_a :: Bound
 b_core_3_3_10_7_i_a = at (anchor @'Sentence "core-2.01" "3.3.10.7#a" "0/1102/0" 86) (law "Sync.ignorePacket")
 
-{-# LINE 87 "Hsed/Bindings/Core.hs" #-}
+{-# LINE 1 "core-2.01.pdf#page=140&5.2.2.1" #-}
+b_core_5_2_2_1 :: Bound
+b_core_5_2_2_1 = at (anchor @'Method "core-2.01" "5.2.2.1" "0/2073" 140) (behaviour "SessionManager.properties")
+
+{-# LINE 1 "core-2.01.pdf#page=149&5.2.3.1" #-}
+b_core_5_2_3_1 :: Bound
+b_core_5_2_3_1 = at (anchor @'Method "core-2.01" "5.2.3.1" "0/2181" 149) (behaviour "SessionManager.startSession")
+
+{-# LINE 1 "core-2.01.pdf#page=153&5.2.3.5" #-}
+b_core_5_2_3_5 :: Bound
+b_core_5_2_3_5 = at (anchor @'Method "core-2.01" "5.2.3.5" "0/2310" 153) (behaviour "SessionManager.closeSession")
+
+{-# LINE 1 "core-2.01.pdf#page=201&5.3.3.6" #-}
+b_core_5_3_3_6 :: Bound
+b_core_5_3_3_6 = at (anchor @'Method "core-2.01" "5.3.3.6" "0/3379" 201) (behaviour "Base.get")
+
+{-# LINE 1 "core-2.01.pdf#page=201&5.3.3.6.3" #-}
+b_core_5_3_3_6_3 :: Bound
+b_core_5_3_3_6_3 = at (anchor @'Method "core-2.01" "5.3.3.6.3" "0/3395" 201) (fails "Base.getFails")
+
+{-# LINE 107 "Hsed/Bindings/Core.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_core_doc
@@ -105,4 +125,9 @@ bindings =
   , b_core_3_3_10_2_1_i_3a
   , b_core_3_3_10_6_i_dc
   , b_core_3_3_10_7_i_a
+  , b_core_5_2_2_1
+  , b_core_5_2_3_1
+  , b_core_5_2_3_5
+  , b_core_5_3_3_6
+  , b_core_5_3_3_6_3
   ]

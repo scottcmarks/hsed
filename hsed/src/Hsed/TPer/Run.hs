@@ -9,4 +9,4 @@ import           Hsed.Import ()
 
 run :: RIO App ()
 run =
-  logInfo "We're inside the SED.MCTP.TPer application!"
+  logInfo "We're inside the hsed TPer application!"

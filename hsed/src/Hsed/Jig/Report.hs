@@ -427,7 +427,9 @@ comPacketText bytes = case decodeComPacket bytes of
     subText sp = let b = dataSubPacketPayload sp in case parseByteString b of
       Right call@(MethodCall (MethodHeader _ m) _ st)
         | generate call == b -> fromMaybe (tshow m) (methodName m) <> ", status " <> tshow st
-      _ -> let (ts, rest) = tokensOf b in tshow (length ts) <> " tokens" <> (if B.null rest then "" else ", then bytes that are no token")
+      _ -> let (ts, rest) = tokensOf b
+           in (if length ts <= 8 then T.unwords (map tshow ts) else tshow (length ts) <> " tokens")
+              <> (if B.null rest then "" else ", then bytes that are no token")
 
 
 -- * JUnit XML
@@ -438,7 +440,7 @@ junit :: RunResult -> Text
 junit rr = T.unlines $
   [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
   , "<testsuites name=\"hsed-jig\" " <> counts <> ">"
-  , "  <testsuite name=\"hsed-jig " <> attr target <> "\" " <> counts
+  , "  <testsuite name=\"hsed-jig " <> attr (renderTarget (roTarget (rrOptions rr))) <> "\" " <> counts
       <> " timestamp=\"" <> T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%S" (rrStarted rr)) <> "\">"
   , "    <properties>"
   , "      <property name=\"hsed\" value=\"" <> attr (rrVersion rr) <> "\"/>"
@@ -448,7 +450,7 @@ junit rr = T.unlines $
   <> concatMap testcase tests
   <> [ "  </testsuite>", "</testsuites>" ]
   where
-    target = renderTarget (roTarget (rrOptions rr))
+    target = slug (roTarget (rrOptions rr))
     tests  = [ (caseTitle (crKey cr), crVerdict cr) | cr <- rrCases rr ]
              <> [ (renderCaseKey (crKey cr) <> " extension: " <> n, v) | cr <- rrCases rr, (n, v) <- crExtensions cr ]
     counts = "tests=\"" <> tshow (length tests) <> "\" failures=\"" <> tshow (length [ () | (_, Fail _) <- tests ])

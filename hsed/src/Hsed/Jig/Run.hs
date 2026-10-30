@@ -261,7 +261,7 @@ runCase e c = runRIO (endEnv e) $ do
       Right ws -> do
         v <- attempt (cRun c)
         xs <- for (cExtensions c) $ \(name, s) -> (,) name <$> case tg of
-          SimTarget _ _ -> attempt s
+          SimTarget _ _ -> note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name) >> attempt s
           _             -> pure (Skipped "the simulator's alone")
         pure (CaseResult (cKey c) v ws xs)
 

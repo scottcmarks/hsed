@@ -258,14 +258,16 @@ discover = do
   unless (null (l0Problems l0)) (note ("Level 0 Discovery: " <> T.intercalate "; " (map tshow (l0Problems l0))))
   l0 <$ modifyCtx (\c -> c { rcLevel0 = Just l0 })
 
--- | One Level 0 IF-RECV, split.
+-- | One Level 0 IF-RECV, split; on a drive the CDB that carries it noted
+--   first.
 level0Of :: Word32 -> Script Level0
 level0Of len = do
-  r <- recvOn comPacketProtocol level0ComId len
   theEnd >>= \case
-    DriveEnd _ (Just di) -> note (either ("no CDB for it: " <>) (("its CDB, as the kext's shim builds it: " <>) . spacedHex)
-                                         (level0Cdb (diInterface di) (len `div` blockBytes)))
+    DriveEnd _ (Just di) -> note ("Level 0 Discovery, " <> tshow len <> " bytes: "
+                                  <> either ("no CDB: " <>) (("the CDB, as the kext's shim builds it, " <>) . spacedHex)
+                                            (level0Cdb (diInterface di) (len `div` blockBytes)))
     _                    -> pure ()
+  r <- recvOn comPacketProtocol level0ComId len
   unless (status r == Good) (unmet ("Level 0 Discovery: the IF-RECV answered " <> describeStatus (status r)))
   either (unmet . ("Level 0 Discovery: the response does not split: " <>) . tshow) pure (splitLevel0 (rpayload r))
 
@@ -484,5 +486,6 @@ verdictText v = case v of
 hex :: (Integral a, FiniteBits a) => a -> Text
 hex n = "0x" <> T.justifyRight (finiteBitSize n `div` 4) '0' (T.pack (showHex n ""))
 
+-- | Bytes in hex, two digits each, spaced: @a1 08 0e@.
 spacedHex :: ByteString -> Text
-spacedHex = T.unwords . map hex . B.unpack
+spacedHex = T.unwords . map (T.justifyRight 2 '0' . T.pack . (`showHex` "")) . B.unpack

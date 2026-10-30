@@ -22,7 +22,9 @@ fields are 'Maybe', and a cell's repair flags default to 'False' when absent;
 @null@ for @bold@ and @underline@ (an empty cell) reads as 'False' too. The
 signature blocks, the List of Tables and the table references ('SigIR',
 'LotIR', 'XrefIR', since M2b) read as empty lists from a file written before
-them: additive fields, so the version stays 1. The shapes
+them: additive fields, so the version stays 1; so are, since M2c, a byte
+grid's cells' drawn extents ('xExtent') and the words of the paragraphs a
+reader consumes ('ParaIR' @words@ in the 'wordComplete' sections). The shapes
 follow the committed @spec/ir/*.json@: a repeated header row is an object with its
 page and row index, a nested table has no ordinal, an empty cell has no page or
 bbox, and structure paths may be written as int arrays. Fields are accessed with
@@ -156,13 +158,16 @@ data CellIR = CellIR
   , adoptedOrphan       :: !(Maybe Text)       -- ^ the orphan text adopted into this cell
   , adoptedFrom         :: !(Maybe AdoptedFromIR)
   , movedOut            :: !(Maybe MovedOutIR)
+  , xExtent             :: !(Maybe (Double, Double))
+    -- ^ in a byte grid, @[x0, x1]@ of the drawn cell it occupies (PDF space): the
+    --   grid reader's extent rule maps it onto the header's bit columns
   } deriving (Eq, Show, Generic)
 
 -- | A cell with its text replaced (an erratum's correction): @text@ is a field of
 --   several records here, so a record update would be ambiguous.
 cellWithText :: Text -> CellIR -> CellIR
-cellWithText t (CellIR k _ ls p bb eb b u fs fr fb nt fg sm rg rj ao af mo) =
-  CellIR k t ls p bb eb b u fs fr fb nt fg sm rg rj ao af mo
+cellWithText t (CellIR k _ ls p bb eb b u fs fr fb nt fg sm rg rj ao af mo xe) =
+  CellIR k t ls p bb eb b u fs fr fb nt fg sm rg rj ao af mo xe
 
 -- | One piece of a cell that continues on another page.
 data FragmentIR = FragmentIR
@@ -365,6 +370,7 @@ instance FromJSON CellIR where
            <*> o .:? "adopted_orphan"
            <*> o .:? "adopted_from"
            <*> o .:? "moved_out"
+           <*> o .:? "x_extent"
     where flag o k = o .:? k .!= False
 instance ToJSON CellIR where
   toJSON     = genericToJSON snakeOptions

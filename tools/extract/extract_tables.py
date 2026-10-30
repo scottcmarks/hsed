@@ -695,6 +695,65 @@ def join_ragged_rows(records: list[dict], cache: PageCache) -> None:
             r["warnings"] = [w for w in r["warnings"] if not w.startswith("ragged rows:")] + ragged_warning(r["header_rows"] + kept) + joined
 
 
+# ----------------------------------------------------------------------------- byte grids: the drawn extent of each cell
+# A byte grid (Core T17-T21, T38-T44, T212; Opal T2-T8) has a first row that is a corner cell then the
+# bit columns 7 ... 0, and prints a field over several bits as one merged cell, which the structure
+# tree does not mark (no /ColSpan).  hsedc's grid reader maps a row's cells to bits by the extent rule
+# (design E8): eight cells positionally, one cell the whole byte, any other count by each cell's drawn
+# x-extent against the header's columns.  So every cell of a byte grid gets `x_extent`, [x0, x1] of
+# the drawn (lines_strict) cell it occupies, PDF space: a row's cells and the drawn cells of the
+# drawn row its glyphs lie in are zipped in order when they agree in number and every inked cell sits
+# in its own drawn cell; else each inked cell takes the drawn cell under its glyphs' centre, and an
+# empty one none.
+GRID_BITS = [str(b) for b in range(7, -1, -1)]
+
+
+def is_byte_grid(t: dict) -> bool:
+    """A first row (the header, or the first data row of a table without one) of nine cells whose last
+    eight read 7 ... 0."""
+    first = (t["header_rows"] or t["rows"] or [[]])[0]
+    return len(first) == 9 and [norm(c["text"]) for c in first[1:]] == GRID_BITS
+
+
+def row_extents(hits: list[tuple | None], drawn_rows: dict) -> list[list[float] | None]:
+    """The drawn extent of each cell of a row.  `hits` gives per cell the (drawn row key, index among
+    that row's drawn cells) of the drawn cell under its glyphs' centre, None for an empty cell or one
+    under no drawn cell; `drawn_rows` the extents of each drawn row's cells, left to right.  When the
+    inked cells all lie in one drawn row with as many cells as the row, each at its own position, the
+    two are zipped (the empty cells get theirs too); else each inked cell gets its own hit's."""
+    keys = {h[0] for h in hits if h}
+    if len(keys) == 1:
+        (key,) = keys
+        if len(drawn_rows[key]) == len(hits) and all(h is None or h[1] == i for i, h in enumerate(hits)):
+            return list(drawn_rows[key])
+    return [drawn_rows[h[0]][h[1]] if h else None for h in hits]
+
+
+def set_grid_extents(records: list[dict], cache: PageCache) -> None:
+    """`x_extent` on every cell of every byte grid (header and data rows) that a drawn cell holds."""
+    def drawn_row(pno: int, pt: pymupdf.Point) -> tuple | None:
+        for ti, t in enumerate(cache.grid(pno)):
+            for ri, grow in enumerate(t["rows"]):
+                cells = [c for c in grow if c]
+                for j, c in enumerate(cells):
+                    if c.contains(pt):
+                        return (pno, ti, ri), j
+        return None
+
+    for t in records:
+        if not is_byte_grid(t):
+            continue
+        for row in t["header_rows"] + t["rows"]:
+            hits = [drawn_row(c["page"], pymupdf.Point((c["bbox"][0] + c["bbox"][2]) / 2, (c["bbox"][1] + c["bbox"][3]) / 2) * ~cache.inv(c["page"]))
+                    if c.get("bbox") and c.get("page") is not None else None for c in row]
+            drawn = {key: [[round(x, 2) for x in to_pdf_space(c, cache.inv(key[0]))[0::2]]
+                           for c in cache.grid(key[0])[key[1]]["rows"][key[2]] if c]
+                     for key in {h[0] for h in hits if h}}
+            for c, ext in zip(row, row_extents(hits, drawn)):
+                if ext is not None:
+                    c["x_extent"] = ext
+
+
 # ----------------------------------------------------------------------------- captions and headers
 def element_text(cache: PageCache, path: tuple, pages: Iterable[int]) -> str:
     return norm(" ".join(text_lines(chars_under(cache, path, pages, stop_tags=()))))
@@ -945,7 +1004,7 @@ def prose_records(cache: PageCache, root, page_of: dict, captions: set[str]) -> 
                 else:
                     paras.append({"section": state["section"], "item": item_label(labels + [own]) if t == "/LI" else None,
                                   "kind": t[1:], "page": page, "struct_path": path_str(p), "rect": rect,
-                                  "hash": words_hash(norm_words(body)), "words": None})
+                                  "hash": words_hash(norm_words(body)), "words": None, "_words": body.split()})
                     items.append({"path": p, "kind": t[1:], "text": text, "section": state["section"], "page": page, "rect": rect})
                     if path_str(p) not in captions:
                         xrefs.extend(xref_records(cache, item_body_chars(chars, label), state["section"]))
@@ -953,6 +1012,47 @@ def prose_records(cache: PageCache, root, page_of: dict, captions: set[str]) -> 
 
     walk(root, (), [], False)
     return headings, paras, sig_blocks(items), xrefs, dict(counts)
+
+
+# ----------------------------------------------------------------------------- the words of the paragraphs a reader consumes
+# Design 5.1 step 7: a paragraph's words are in the IR when a reader of hsedc consumes its section.
+# The pins reader (design E8) reads the sentences that pin a byte grid's fields ("The Feature Code
+# field SHALL be set to 0x0001." in Core 3.3.6.4, "The value of this field SHALL be 0x0000." in
+# 3.3.6.2.2, Opal's "Feature Code = 0x0001" bullets in 3.1.1.2): the section of every byte grid and
+# its subsections are word-complete.  `words` is the paragraph as printed split at whitespace (a list
+# item's without its label), so that its `hash` is the sha256 of their normalised words.
+def path_key(path: str) -> tuple[int, ...]:
+    return tuple(int(x) for x in path.split("/") if x)
+
+
+def table_sections(headings: list[dict], records: list[dict]) -> dict[str, str | None]:
+    """The section of every table by its struct path: that of the nearest numbered heading before it
+    in structure-tree order, as hsedc's Hsed.Spec.Scope.tableSections has it."""
+    events = sorted([(path_key(h["struct_path"]), h["section"], None) for h in headings]
+                    + [(path_key(t["struct_path"]), None, t["struct_path"]) for t in records], key=lambda e: e[0])
+    current, out = None, {}
+    for _, section, tpath in events:
+        if tpath is None:
+            current = section or current
+        else:
+            out[tpath] = current
+    return out
+
+
+def word_complete_sections(headings: list[dict], records: list[dict]) -> list[str]:
+    """The section of every byte grid and its subsections, in document order."""
+    sections = table_sections(headings, records)
+    roots = {sections[t["struct_path"]] for t in records if is_byte_grid(t)} - {None}
+    return list(dict.fromkeys(h["section"] for h in headings
+                              if h["section"] and any(h["section"] == r or h["section"].startswith(r + ".") for r in roots)))
+
+
+def set_words(paras: list[dict], complete: list[str]) -> None:
+    """`words` on the paragraphs of the word-complete sections; the private copy dropped from all."""
+    wanted = set(complete)
+    for p in paras:
+        words = p.pop("_words")
+        p["words"] = words if p["section"] in wanted else None
 
 
 # ----------------------------------------------------------------------------- method signature blocks (design 5.1 step 7)
@@ -1165,10 +1265,35 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
 
     def xrefs_check(n):
         return (f"{n} table references in the prose", len(xrefs) == n, f"got {len(xrefs)}")
+    grids = [t for t in tables if is_byte_grid(t)]
+    sections = table_sections(headings, grids)
+    complete = set(ir.get("wordComplete", []))
+
+    def unplaced(t):
+        return [c["text"] for row in t["header_rows"] + t["rows"] for c in row if c.get("bbox") and "x_extent" not in c]
+
+    def bits_under(tid, row, cell):
+        """The bit columns whose drawn centre lies in a cell's drawn extent (the grid reader's extent rule)."""
+        t = table_by_id(ir, tid)
+        try:
+            x0, x1 = t["rows"][row][cell]["x_extent"]
+            cols = [(int(norm(h["text"])), sum(h["x_extent"]) / 2) for h in (t["header_rows"] or t["rows"])[0][1:]]
+        except (TypeError, KeyError, IndexError, ValueError):
+            return None
+        return [b for b, centre in cols if x0 < centre < x1]
+
     # every spec: a signature block's anchor id is <section>/sig, and the IR's SigIR.section is no null
     every = [
         ("every signature block lies in a numbered section", all(s.get("section") for s in sigs),
          f"none on PDF {sorted(s['page'] + 1 for s in sigs if not s.get('section'))}"),
+        # the grid reader's extent rule needs the drawn extent of every inked cell of a byte grid
+        ("every inked cell of a byte grid has its drawn x-extent", all(not unplaced(t) for t in grids),
+         f"{len(grids)} grids; unplaced {[(t['id'], unplaced(t)) for t in grids if unplaced(t)]}"),
+        # the pins reader reads the paragraphs of a byte grid's section and its subsections
+        ("the section of every byte grid is word-complete, and its paragraphs carry their words",
+         all(sections[t["struct_path"]] in complete for t in grids)
+         and all(p["words"] is not None for p in ir.get("paras", []) if p["section"] in complete),
+         f"sections {sorted({sections[t['struct_path']] for t in grids} - complete, key=str)} not word-complete"),
     ]
     core = [
         ("heading 5.1.3 on page index 99, printed label 83",
@@ -1191,11 +1316,22 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
         lot_check(248), xrefs_check(108),
         ("Table 179 referenced on PDF 116", any(x["number"] == 179 and x["page"] == 115 for x in xrefs),
          f"referenced on PDF {sorted(x['page'] + 1 for x in xrefs if x['number'] == 179)}"),
+        # design E8: T42 byte 2 is Version | Reserved, 4 + 4 by x-extent; T43 byte 4 has seven cells,
+        # Reserved over bits 7-6
+        ("T42 byte 2: Version over bits 7-4, Reserved over bits 3-0",
+         [bits_under("T42", 2, 1), bits_under("T42", 2, 2)] == [[7, 6, 5, 4], [3, 2, 1, 0]],
+         f"got {[bits_under('T42', 2, 1), bits_under('T42', 2, 2)]}"),
+        ("T43 byte 4: Reserved over bits 7-6, then one cell per bit",
+         [bits_under("T43", 4, k) for k in range(1, 8)] == [[7, 6], [5], [4], [3], [2], [1], [0]],
+         f"got {[bits_under('T43', 4, k) for k in range(1, 8)]}"),
+        ("the pins sections of Tables 39, 42 and 43 are word-complete (3.3.6.2.2, 3.3.6.2.3, 3.3.6.4, 3.3.6.5)",
+         {"3.3.6.2.2", "3.3.6.2.3", "3.3.6.4", "3.3.6.5"} <= complete, f"wordComplete {sorted(complete)[:6]}..."),
     ]
     opal = [
         ("50 distinct numbered captions", len(numbered) == 50, f"got {len(numbered)}"),
         header_vs_column("T24", "T178", 1),
         rows_check("T17", 11), rows_check("T38", 96), rows_check("T22", 45),
+        ("the bullets of 3.1.1.2 (Table 3) are word-complete", "3.1.1.2" in complete, f"wordComplete {sorted(complete)[:4]}..."),
         sigs_check(3), lot_check(50), xrefs_check(63),
     ]
     return every + {"core-2.01": core, "opal-2.30": opal}.get(ir["spec"], [])
@@ -1273,11 +1409,14 @@ def main(argv=None) -> int:
     adopt_stray_fragments(records, cache)
     adopt_orphans(records, cache)
     join_ragged_rows(records, cache)
+    set_grid_extents(records, cache)
     strip_private(mark_ids(records))
     for r in records:
         r["rects"] = table_rects(r)
     captions = {path_str(r["caption_path"]) for r in records if r["caption_path"]}
     headings, paras, sigs, xrefs, prose_counts = prose_records(cache, pdf.Root.StructTreeRoot, page_of, captions)
+    word_complete = word_complete_sections(headings, records)
+    set_words(paras, word_complete)
     lot = lot_records(cache, pdf.Root.StructTreeRoot, page_of)
     annots = annot_records(pdf)
     elapsed = time.time() - t0
@@ -1294,7 +1433,7 @@ def main(argv=None) -> int:
           "labelOffset": args.page_offset, "notice": NOTICE,
           "extractor": {"script": os.path.basename(__file__), "version": IR_VERSION,
                         "pymupdf": pymupdf.__version__, "pikepdf": pikepdf.__version__, **counts},
-          "wordComplete": [], "tables": records, "headings": headings, "paras": paras, "sigs": sigs,
+          "wordComplete": word_complete, "tables": records, "headings": headings, "paras": paras, "sigs": sigs,
           "lot": lot, "xrefs": xrefs, "annots": annots}
     with open(args.out_json, "w") as f:
         json.dump(ir, f, indent=1, ensure_ascii=False, sort_keys=True)

@@ -4887,7 +4887,15 @@
    ],
    "section": "3.1.1.1",
    "struct_path": "0/188",
-   "words": null
+   "words": [
+    "Table",
+    "2",
+    "-",
+    "Level",
+    "0",
+    "Discovery",
+    "Header"
+   ]
   },
   {
    "hash": "1659e5c6dd259be75fecd64b7968c9a588f99445b3e539b6e151f13cf75a4be8",
@@ -4902,7 +4910,18 @@
    ],
    "section": "3.1.1.1",
    "struct_path": "0/191",
-   "words": null
+   "words": [
+    "An",
+    "Opal",
+    "SSC",
+    "compliant",
+    "Storage",
+    "Device",
+    "SHALL",
+    "return",
+    "the",
+    "following:"
+   ]
   },
   {
    "hash": "07224ff86738483d79af9c26c76a20e314a0c11487c3d93fdfb7f0c566bcacce",
@@ -4917,7 +4936,14 @@
    ],
    "section": "3.1.1.1",
    "struct_path": "0/192/0",
-   "words": null
+   "words": [
+    "Length",
+    "of",
+    "parameter",
+    "data",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "992f8600d7eca1052b417f2ecef8dbe1bcd1f980e9ca64e4f1364de97581b7bd",
@@ -4932,7 +4958,24 @@
    ],
    "section": "3.1.1.1",
    "struct_path": "0/192/1",
-   "words": null
+   "words": [
+    "Data",
+    "structure",
+    "revision",
+    "=",
+    "0x00000001",
+    "or",
+    "any",
+    "version",
+    "that",
+    "supports",
+    "the",
+    "defined",
+    "features",
+    "in",
+    "this",
+    "SSC"
+   ]
   },
   {
    "hash": "ffceebd0fef68647ff4b3c65d37f9e3cf0d8eaa9f888231769ad98918e19014c",
@@ -4947,7 +4990,12 @@
    ],
    "section": "3.1.1.1",
    "struct_path": "0/192/2",
-   "words": null
+   "words": [
+    "Vendor",
+    "Specific",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "a120a7a7c5c841bb23f002272baa0eab7ac956e840fe652bf62168c34aaa5d36",
@@ -4962,7 +5010,18 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/194",
-   "words": null
+   "words": [
+    "Table",
+    "3",
+    "-",
+    "Level",
+    "0",
+    "Discovery",
+    "-",
+    "TPer",
+    "Feature",
+    "Descriptor"
+   ]
   },
   {
    "hash": "1659e5c6dd259be75fecd64b7968c9a588f99445b3e539b6e151f13cf75a4be8",
@@ -4977,7 +5036,18 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/197",
-   "words": null
+   "words": [
+    "An",
+    "Opal",
+    "SSC",
+    "compliant",
+    "Storage",
+    "Device",
+    "SHALL",
+    "return",
+    "the",
+    "following:"
+   ]
   },
   {
    "hash": "bfd912a70ebf794be0250bcaeff648f60353d863ca0090a6d74c95f9f960cf65",
@@ -4992,7 +5062,12 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/0",
-   "words": null
+   "words": [
+    "Feature",
+    "Code",
+    "=",
+    "0x0001"
+   ]
   },
   {
    "hash": "f0ebb5e20975d4cf013bcc1af928a961e9751ab2d58b308fc1fe21589ddf9649",
@@ -5007,7 +5082,22 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/1",
-   "words": null
+   "words": [
+    "Version",
+    "=",
+    "0x1",
+    "or",
+    "any",
+    "version",
+    "that",
+    "supports",
+    "the",
+    "defined",
+    "features",
+    "in",
+    "this",
+    "SSC"
+   ]
   },
   {
    "hash": "d8191944e6d7ff5255083ae6b6cecd3c33fd3f3039391e85c0b0144b7183dd07",
@@ -5022,7 +5112,11 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/2",
-   "words": null
+   "words": [
+    "Length",
+    "=",
+    "0x0C"
+   ]
   },
   {
    "hash": "bb732d5fabad997a2e21cb6cb6da5c4b3d7eccd0671b47ed99e2ae5cda830509",
@@ -5037,7 +5131,13 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/3",
-   "words": null
+   "words": [
+    "ComID",
+    "Mgmt",
+    "Supported",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "608c823b73cc262e16f96f7b02ee4eefec1adb5d4964f98b3c5d63d973a69355",
@@ -5052,7 +5152,12 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/4",
-   "words": null
+   "words": [
+    "Streaming",
+    "Supported",
+    "=",
+    "1"
+   ]
   },
   {
    "hash": "019544ddd274d1004dee48e5660ec849851d50afcc51503b7f36f44b075dc363",
@@ -5067,7 +5172,13 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/5",
-   "words": null
+   "words": [
+    "Buffer",
+    "Mgmt",
+    "Supported",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "178350c7966020e55328e632bc8f334e0ebc5d90c7e7ac28e9025cfe58997cf1",
@@ -5082,7 +5193,12 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/6",
-   "words": null
+   "words": [
+    "ACK/NACK",
+    "Supported",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "e081b5710715c6a7f373f6cda9a2b82468e115ce5bfbb18c3af1499934df3e57",
@@ -5097,7 +5213,12 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/7",
-   "words": null
+   "words": [
+    "Async",
+    "Supported",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "8e64c2bc118406034ae5d0561860346e0c616d3aef027c8f36e3944916e6ec4e",
@@ -5112,7 +5233,12 @@
    ],
    "section": "3.1.1.2",
    "struct_path": "0/198/8",
-   "words": null
+   "words": [
+    "Sync",
+    "Supported",
+    "=",
+    "1"
+   ]
   },
   {
    "hash": "3fc390fe54a39e590bae14d69abc8eb54bc8af0d0bc1fb99205303cf07b2bfae",
@@ -5127,7 +5253,18 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/201",
-   "words": null
+   "words": [
+    "**",
+    "means",
+    "the",
+    "present",
+    "current",
+    "state",
+    "of",
+    "the",
+    "respective",
+    "feature"
+   ]
   },
   {
    "hash": "459ad75986371856cc2b838898344d1c95c0f1e244de5327cc02d26e2a298b7f",
@@ -5142,7 +5279,18 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/202",
-   "words": null
+   "words": [
+    "Table",
+    "4",
+    "-",
+    "Level",
+    "0",
+    "Discovery",
+    "-",
+    "Locking",
+    "Feature",
+    "Descriptor"
+   ]
   },
   {
    "hash": "1659e5c6dd259be75fecd64b7968c9a588f99445b3e539b6e151f13cf75a4be8",
@@ -5157,7 +5305,18 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/205",
-   "words": null
+   "words": [
+    "An",
+    "Opal",
+    "SSC",
+    "compliant",
+    "Storage",
+    "Device",
+    "SHALL",
+    "return",
+    "the",
+    "following:"
+   ]
   },
   {
    "hash": "5f03a819269949ecc6038fcff02f24a888cdb5c391689fbbdf7390ee1e0801e7",
@@ -5172,7 +5331,12 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/0",
-   "words": null
+   "words": [
+    "Feature",
+    "Code",
+    "=",
+    "0x0002"
+   ]
   },
   {
    "hash": "239fa9f3920da344bd738106cb0b6cc5a9d1f7cc567bce8b68dcc22222833bef",
@@ -5187,7 +5351,22 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/1",
-   "words": null
+   "words": [
+    "Version",
+    "=",
+    "0x3",
+    "or",
+    "any",
+    "version",
+    "that",
+    "supports",
+    "the",
+    "defined",
+    "features",
+    "in",
+    "this",
+    "SSC"
+   ]
   },
   {
    "hash": "d8191944e6d7ff5255083ae6b6cecd3c33fd3f3039391e85c0b0144b7183dd07",
@@ -5202,7 +5381,11 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/2",
-   "words": null
+   "words": [
+    "Length",
+    "=",
+    "0x0C"
+   ]
   },
   {
    "hash": "aa569e95ba0708ea86d09c580b57b15d58d66da4c383f52aa08698770bb6cdb0",
@@ -5217,7 +5400,15 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/3",
-   "words": null
+   "words": [
+    "HW",
+    "Reset",
+    "for",
+    "LOR/DOR",
+    "Supported",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "28d9e6745dc740101fd7df1f15c4ae5b4c8a3d372466246fd977365c5629fc6d",
@@ -5232,7 +5423,14 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/4",
-   "words": null
+   "words": [
+    "MBR",
+    "Shadowing",
+    "Not",
+    "Supported",
+    "=",
+    "0"
+   ]
   },
   {
    "hash": "31122e92227e1c2a6eeaf637c1162f14b6d648c0b11a3280f0148a1c27a61424",
@@ -5247,7 +5445,17 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/4/0/1/0",
-   "words": null
+   "words": [
+    "MBR",
+    "Shadowing",
+    "feature",
+    "SHALL",
+    "be",
+    "supported.",
+    "See",
+    "section",
+    "4.3.5.4."
+   ]
   },
   {
    "hash": "f5e03ddc8d30dda813986ae2d08a42b69a1324ef2bddb1785cd8ac2808e337e2",
@@ -5262,7 +5470,12 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/5",
-   "words": null
+   "words": [
+    "MBR",
+    "Done",
+    "=",
+    "**"
+   ]
   },
   {
    "hash": "9a1007b83b16815942286d8955e51974288acc24e991d789b879173bd45a10e4",
@@ -5277,7 +5490,12 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/6",
-   "words": null
+   "words": [
+    "MBR",
+    "Enabled",
+    "=",
+    "**"
+   ]
   },
   {
    "hash": "d2e2b4b5bbfa11c89cbd2d69f49255f7c65a4e9a343d173ded1716f4ca51c87d",
@@ -5292,7 +5510,12 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/7",
-   "words": null
+   "words": [
+    "Media",
+    "Encryption",
+    "=",
+    "1"
+   ]
   },
   {
    "hash": "14493f5f5470ed48c3f103d917ec52ae9005fa3913128031d0fac2a49ac3cc41",
@@ -5307,7 +5530,11 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/8",
-   "words": null
+   "words": [
+    "Locked",
+    "=",
+    "**"
+   ]
   },
   {
    "hash": "a40c86d9868d8b099d3f2b3de92b68cb15ecc08bca9ead8830aff30f959a4147",
@@ -5322,7 +5549,14 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/9",
-   "words": null
+   "words": [
+    "Locking",
+    "Enabled",
+    "=",
+    "See",
+    "section",
+    "3.1.1.3.1"
+   ]
   },
   {
    "hash": "4eaa6a0829c0c4ba66de7ceeefebb539eb8c64f7a7bacfb8d93747ee6e0ec5b5",
@@ -5337,7 +5571,12 @@
    ],
    "section": "3.1.1.3",
    "struct_path": "0/206/10",
-   "words": null
+   "words": [
+    "Locking",
+    "Supported",
+    "=",
+    "1"
+   ]
   },
   {
    "hash": "fd3ab1c53bae717df619ef773f7da3a88e220f58809a7c8e09470f588727390a",
@@ -5352,7 +5591,20 @@
    ],
    "section": "3.1.1.3.1",
    "struct_path": "0/209",
-   "words": null
+   "words": [
+    "The",
+    "definition",
+    "of",
+    "the",
+    "LockingEnabled",
+    "bit",
+    "is",
+    "changed",
+    "from",
+    "[2]",
+    "as",
+    "follows:"
+   ]
   },
   {
    "hash": "277b3b452ea521bae05234bd91cfb7ef092e3b3ab13b661b5979b0c897d59260",
@@ -5367,7 +5619,42 @@
    ],
    "section": "3.1.1.3.1",
    "struct_path": "0/210",
-   "words": null
+   "words": [
+    "The",
+    "LockingEnabled",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "one",
+    "if",
+    "an",
+    "SP",
+    "that",
+    "incorporates",
+    "the",
+    "Locking",
+    "template",
+    "is",
+    "in",
+    "any",
+    "state",
+    "other",
+    "than",
+    "Nonexistent",
+    "or",
+    "Manufactured-Inactive;",
+    "otherwise,",
+    "the",
+    "LockingEnabled",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "zero."
+   ]
   },
   {
    "hash": "3def4d87df41792e89067f3e990ba0c0df37d59adf06673c65889ad40e4b8c56",
@@ -5382,7 +5669,35 @@
    ],
    "section": "3.1.1.4.1",
    "struct_path": "0/213",
-   "words": null
+   "words": [
+    "This",
+    "information",
+    "indicates",
+    "support",
+    "for",
+    "logical",
+    "block",
+    "and",
+    "physical",
+    "block",
+    "geometry.",
+    "This",
+    "feature",
+    "MAY",
+    "be",
+    "returned",
+    "in",
+    "the",
+    "Level",
+    "0",
+    "Discovery",
+    "response.",
+    "See",
+    "[2]",
+    "for",
+    "additional",
+    "information."
+   ]
   },
   {
    "hash": "8a0986b655429be5a46015b5d781a77226cc4fb0a8568aeaff67843ce6b2021a",
@@ -5397,7 +5712,19 @@
    ],
    "section": "3.1.1.4.1",
    "struct_path": "0/214",
-   "words": null
+   "words": [
+    "Table",
+    "5",
+    "-",
+    "Level",
+    "0",
+    "Discovery",
+    "-",
+    "Geometry",
+    "Reporting",
+    "Feature",
+    "Descriptor"
+   ]
   },
   {
    "hash": "1659e5c6dd259be75fecd64b7968c9a588f99445b3e539b6e151f13cf75a4be8",
@@ -5412,7 +5739,18 @@
    ],
    "section": "3.1.1.4.1",
    "struct_path": "0/217",
-   "words": null
+   "words": [
+    "An",
+    "Opal",
+    "SSC",
+    "compliant",
+    "Storage",
+    "Device",
+    "SHALL",
+    "return",
+    "the",
+    "following:"
+   ]
   },
   {
    "hash": "b0749af4d22ebd686e390361186e5e06d168a9636356403c8114a200943d92b5",
@@ -5427,7 +5765,12 @@
    ],
    "section": "3.1.1.4.1",
    "struct_path": "0/218/0",
-   "words": null
+   "words": [
+    "Feature",
+    "Code",
+    "=",
+    "0x0003"
+   ]
   },
   {
    "hash": "91ef1190ea68a3470296136d90e21bacf8daa5af4668e615de99bbbc96b4a7d9",
@@ -5442,7 +5785,11 @@
    ],
    "section": "3.1.1.4.1",
    "struct_path": "0/218/1",
-   "words": null
+   "words": [
+    "Version",
+    "=",
+    "0x01"
+   ]
   },
   {
    "hash": "bda7c79886eadfaeec867275e56c9044dd4a5528e6ed9e3d1ce274092b8ce03a",
@@ -5457,7 +5804,11 @@
    ],
    "section": "3.1.1.4.1",
    "struct_path": "0/218/2",
-   "words": null
+   "words": [
+    "Length",
+    "=",
+    "0x1C"
+   ]
   },
   {
    "hash": "8fba7615fabb9cb10902fe4a72217343e9e0ca2432786f493a37a4a7241909dc",
@@ -5532,7 +5883,20 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/230",
-   "words": null
+   "words": [
+    "Table",
+    "6",
+    "-",
+    "Level",
+    "0",
+    "Discovery",
+    "-",
+    "Opal",
+    "SSC",
+    "V2",
+    "Feature",
+    "Descriptor"
+   ]
   },
   {
    "hash": "1659e5c6dd259be75fecd64b7968c9a588f99445b3e539b6e151f13cf75a4be8",
@@ -5547,7 +5911,18 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/233",
-   "words": null
+   "words": [
+    "An",
+    "Opal",
+    "SSC",
+    "compliant",
+    "Storage",
+    "Device",
+    "SHALL",
+    "return",
+    "the",
+    "following:"
+   ]
   },
   {
    "hash": "26c20a5a1eb05cddb68729364c1decea4ab4bcf0b4f2cdc79c6200e275d79917",
@@ -5562,7 +5937,12 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/0",
-   "words": null
+   "words": [
+    "Feature",
+    "Code",
+    "=",
+    "0x0203"
+   ]
   },
   {
    "hash": "5090927c15dbdab55c18b719e514a00027f6cb9e3826c64f23d371b7a166ba71",
@@ -5577,7 +5957,25 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/1",
-   "words": null
+   "words": [
+    "Feature",
+    "Descriptor",
+    "Version",
+    "Number",
+    "=",
+    "0x2",
+    "or",
+    "any",
+    "version",
+    "that",
+    "supports",
+    "the",
+    "defined",
+    "features",
+    "in",
+    "this",
+    "SSC"
+   ]
   },
   {
    "hash": "39545fec05eac1193fcf37ecb5df3f2d0d212887d817b64688ec030371407e5b",
@@ -5592,7 +5990,18 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/2",
-   "words": null
+   "words": [
+    "SSC",
+    "Minor",
+    "Version",
+    "Number",
+    "=",
+    "As",
+    "specified",
+    "in",
+    "Table",
+    "7"
+   ]
   },
   {
    "hash": "8a3ad7ac295ffc2582f9e8e9e047fb4c0e0e92c3704d82047c12703e256af7d2",
@@ -5607,7 +6016,11 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/3",
-   "words": null
+   "words": [
+    "Length",
+    "=",
+    "0x10"
+   ]
   },
   {
    "hash": "4c35ce15332b9e0cd70bc64e86ff8b69d6bf5471d3e7ba2adba13ca5b6817bec",
@@ -5622,7 +6035,12 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/4",
-   "words": null
+   "words": [
+    "Base",
+    "ComID",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "49618f1f3e8c2cf53585af779c031a91571d511b54efff73b324020f66d8792a",
@@ -5637,7 +6055,15 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/5",
-   "words": null
+   "words": [
+    "Number",
+    "of",
+    "ComIDs",
+    "=",
+    "0x0001",
+    "or",
+    "larger"
+   ]
   },
   {
    "hash": "9291205c3a2a0f95535139d10fa181a7ded256e901f77aa9612ea6460c40719e",
@@ -5652,7 +6078,13 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/6",
-   "words": null
+   "words": [
+    "Range",
+    "Crossing",
+    "Behavior",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "3c265f4f56735ca739db47a46bf842a6ca94592d3a650319cf871430912db955",
@@ -5667,7 +6099,35 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/6/0/1/0",
-   "words": null
+   "words": [
+    "0",
+    "=",
+    "The",
+    "Storage",
+    "Device",
+    "supports",
+    "commands",
+    "addressing",
+    "consecutive",
+    "LBAs",
+    "in",
+    "more",
+    "than",
+    "one",
+    "LBA",
+    "range",
+    "if",
+    "all",
+    "the",
+    "LBA",
+    "ranges",
+    "addressed",
+    "are",
+    "unlocked.",
+    "See",
+    "section",
+    "4.3.7."
+   ]
   },
   {
    "hash": "2e0473470e0f8932edc46c4578b1ed9361a9ca33d598d3edba14c835de1d7166",
@@ -5682,7 +6142,26 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/6/0/1/1",
-   "words": null
+   "words": [
+    "1",
+    "=",
+    "The",
+    "Storage",
+    "Device",
+    "terminates",
+    "commands",
+    "addressing",
+    "consecutive",
+    "LBAs",
+    "in",
+    "more",
+    "than",
+    "one",
+    "LBA",
+    "range.",
+    "See",
+    "4.3.7"
+   ]
   },
   {
    "hash": "d2ccdd114c764d9faf5d6b1714445020bc3731d716af2ed9b303ac1ac512b8b6",
@@ -5697,7 +6176,18 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/7",
-   "words": null
+   "words": [
+    "Number",
+    "of",
+    "Locking",
+    "SP",
+    "Admin",
+    "Authorities",
+    "=",
+    "4",
+    "or",
+    "larger"
+   ]
   },
   {
    "hash": "b54e84f34b22f20e8032d0d11f0b3a74ee5fd7e0d05a5cc238490b49c626f3a4",
@@ -5712,7 +6202,18 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/8",
-   "words": null
+   "words": [
+    "Number",
+    "of",
+    "Locking",
+    "SP",
+    "User",
+    "Authorities",
+    "=",
+    "8",
+    "or",
+    "larger"
+   ]
   },
   {
    "hash": "89f07e3c68b8e9eec225699fcfba1fb3a14ce562730ef5858dd4f42aef4c6fe2",
@@ -5727,7 +6228,14 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/9",
-   "words": null
+   "words": [
+    "Initial",
+    "C_PIN_SID",
+    "PIN",
+    "Indicator",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "cf261ba5290434f6870e8cc576480a65e37f7e851d2f79626b3c75e4226868cd",
@@ -5742,7 +6250,22 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/9/0/1/0",
-   "words": null
+   "words": [
+    "0x00",
+    "=",
+    "The",
+    "initial",
+    "C_PIN_SID",
+    "PIN",
+    "value",
+    "is",
+    "equal",
+    "to",
+    "the",
+    "C_PIN_MSID",
+    "PIN",
+    "value"
+   ]
   },
   {
    "hash": "a603667297d7737c1682bfe263bf78fee34c3a52b27c9d6823dbb87a542c708c",
@@ -5757,7 +6280,27 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/9/0/1/1",
-   "words": null
+   "words": [
+    "0xFF",
+    "=",
+    "The",
+    "initial",
+    "C_PIN_SID",
+    "PIN",
+    "value",
+    "is",
+    "VU,",
+    "and",
+    "MAY",
+    "not",
+    "be",
+    "equal",
+    "to",
+    "the",
+    "C_PIN_MSID",
+    "PIN",
+    "value"
+   ]
   },
   {
    "hash": "1693c16ed87add5c7d328759bd6f4895180a837f1d76b5d3142ad3a84786e6bc",
@@ -5772,7 +6315,13 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/9/0/1/2",
-   "words": null
+   "words": [
+    "0x01",
+    "–",
+    "0xFE",
+    "=",
+    "Reserved"
+   ]
   },
   {
    "hash": "f5b69a4187796307677208b42e8631ab0d81a3eae702c51c7b32e5a6484ed103",
@@ -5787,7 +6336,17 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/10",
-   "words": null
+   "words": [
+    "Behavior",
+    "of",
+    "C_PIN_SID",
+    "PIN",
+    "upon",
+    "TPer",
+    "Revert",
+    "=",
+    "VU"
+   ]
   },
   {
    "hash": "a08ed17ce0aa2b4bbb4dda6e83db0c13439c2ff41ec5d3ca976a83eb69678d72",
@@ -5802,7 +6361,36 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/10/0/1/0",
-   "words": null
+   "words": [
+    "0x00",
+    "=",
+    "The",
+    "C_PIN_SID",
+    "PIN",
+    "value",
+    "becomes",
+    "the",
+    "value",
+    "of",
+    "the",
+    "C_PIN_MSID",
+    "PIN",
+    "column",
+    "after",
+    "successful",
+    "invocation",
+    "of",
+    "Revert",
+    "on",
+    "the",
+    "Admin",
+    "SP’s",
+    "object",
+    "in",
+    "the",
+    "SP",
+    "table"
+   ]
   },
   {
    "hash": "d8e5d09abf9ee5f4f1d5fb054e5f3f243d1e6b70c0dd1d6e24321c1067415499",
@@ -5817,7 +6405,43 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/10/0/1/1",
-   "words": null
+   "words": [
+    "0xFF",
+    "=",
+    "The",
+    "C_PIN_SID",
+    "PIN",
+    "value",
+    "changes",
+    "to",
+    "a",
+    "VU",
+    "value",
+    "after",
+    "successful",
+    "invocation",
+    "of",
+    "Revert",
+    "on",
+    "the",
+    "Admin",
+    "SP’s",
+    "object",
+    "in",
+    "the",
+    "SP",
+    "table,",
+    "and",
+    "MAY",
+    "not",
+    "be",
+    "equal",
+    "to",
+    "the",
+    "C_PIN_MSID",
+    "PIN",
+    "value"
+   ]
   },
   {
    "hash": "1693c16ed87add5c7d328759bd6f4895180a837f1d76b5d3142ad3a84786e6bc",
@@ -5832,7 +6456,13 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/234/10/0/1/2",
-   "words": null
+   "words": [
+    "0x01",
+    "–",
+    "0xFE",
+    "=",
+    "Reserved"
+   ]
   },
   {
    "hash": "b70e92cdd9364182d55c761fb751e81591b9f6f10f2d0ce62de606a7c4d57fd8",
@@ -5847,7 +6477,14 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/236",
-   "words": null
+   "words": [
+    "Table",
+    "7",
+    "-",
+    "SSC",
+    "Minor",
+    "Versions"
+   ]
   },
   {
    "hash": "956e4723e4951e09e5ddbe083ffe4104b2549c9bb272ee07a318d280e7a9b1a9",
@@ -5862,7 +6499,36 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/239",
-   "words": null
+   "words": [
+    "If",
+    "an",
+    "Opal",
+    "v2.00",
+    "SSC",
+    "implementation",
+    "is",
+    "backward",
+    "compatible",
+    "with",
+    "Opal",
+    "v1.00,",
+    "then",
+    "the",
+    "Storage",
+    "Device",
+    "SHALL",
+    "also",
+    "report",
+    "the",
+    "Opal",
+    "SSC",
+    "feature",
+    "descriptor",
+    "as",
+    "defined",
+    "in",
+    "[5]."
+   ]
   },
   {
    "hash": "8b2bdccdc3998bad7812537c4ae0b0a821e0948b8c7fe0a0a24b13fb1b033a43",
@@ -5877,7 +6543,12 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/240",
-   "words": null
+   "words": [
+    "Start",
+    "of",
+    "Informative",
+    "Comment"
+   ]
   },
   {
    "hash": "771b7209a8b858ef91f047c8da0a985a54ca338f1317dc105d7c7b6f13af00bf",
@@ -5892,7 +6563,85 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/241",
-   "words": null
+   "words": [
+    "An",
+    "Opal",
+    "v2.00",
+    "implementation",
+    "is",
+    "backward",
+    "compatible",
+    "to",
+    "Opal",
+    "v1.00",
+    "only",
+    "if",
+    "the",
+    "geometry",
+    "reported",
+    "by",
+    "the",
+    "Geometry",
+    "Reporting",
+    "feature",
+    "does",
+    "not",
+    "specify",
+    "any",
+    "alignment",
+    "restrictions",
+    "(i.e.",
+    "ALIGN",
+    "=",
+    "FALSE,",
+    "see",
+    "section",
+    "3.1.1.4.2)",
+    ",",
+    "and",
+    "if",
+    "the",
+    "TPer",
+    "does",
+    "not",
+    "specify",
+    "any",
+    "granularity",
+    "restrictions",
+    "for",
+    "byte",
+    "tables",
+    "(i.e.",
+    "MandatoryWriteGranularity",
+    "=",
+    "1",
+    "for",
+    "all",
+    "byte",
+    "tables,",
+    "see",
+    "section",
+    "5.3.1.1),",
+    "and",
+    "if",
+    "the",
+    "“Initial",
+    "C_PIN_SID",
+    "PIN",
+    "Indicator”",
+    "and",
+    "“Behavior",
+    "of",
+    "C_PIN_SID",
+    "PIN",
+    "upon",
+    "TPer",
+    "Revert”",
+    "fields",
+    "are",
+    "both",
+    "0x00."
+   ]
   },
   {
    "hash": "1877d6feeed5a6800745836f33087ffb0247495ca63768a53d95852dad593cc5",
@@ -5907,7 +6656,12 @@
    ],
    "section": "3.1.1.5",
    "struct_path": "0/242",
-   "words": null
+   "words": [
+    "End",
+    "of",
+    "Informative",
+    "Comment"
+   ]
   },
   {
    "hash": "3cf7f13b2f93d195237adfd6deaf78183245fa445c95b4263c2fbaf4714fb4e2",
@@ -5922,7 +6676,18 @@
    ],
    "section": "3.1.1.5.1",
    "struct_path": "0/244",
-   "words": null
+   "words": [
+    "The",
+    "Base",
+    "ComID",
+    "field",
+    "provides",
+    "the",
+    "lowest",
+    "static,",
+    "pre-assigned",
+    "ComID."
+   ]
   },
   {
    "hash": "fc8b0e4570e5bdfd8fe5ae9a0636994882bd9c0e0a72291586950d0f353a9459",
@@ -5937,7 +6702,20 @@
    ],
    "section": "3.1.1.5.2",
    "struct_path": "0/246",
-   "words": null
+   "words": [
+    "The",
+    "Number",
+    "of",
+    "ComIDs",
+    "field",
+    "provides",
+    "the",
+    "number",
+    "of",
+    "static,",
+    "pre-assigned",
+    "ComIDs."
+   ]
   },
   {
    "hash": "288cc702024f17d6c04a27e1646b80a8127f20ed73c4e8be568d820e9b3cc8a6",
@@ -5952,7 +6730,19 @@
    ],
    "section": "3.1.1.6",
    "struct_path": "0/249",
-   "words": null
+   "words": [
+    "This",
+    "feature",
+    "MAY",
+    "be",
+    "returned",
+    "in",
+    "the",
+    "Level",
+    "0",
+    "Discovery",
+    "response."
+   ]
   },
   {
    "hash": "f715ef835df687d8c5aad8ca7fc9323f872f104b7d95a2b4c91f1d39b2ca0f70",
@@ -5967,7 +6757,21 @@
    ],
    "section": "3.1.1.6",
    "struct_path": "0/250",
-   "words": null
+   "words": [
+    "Table",
+    "8",
+    "-",
+    "Level",
+    "0",
+    "Discovery",
+    "–",
+    "Supported",
+    "Data",
+    "Removal",
+    "Mechanism",
+    "Feature",
+    "Descriptor"
+   ]
   },
   {
    "hash": "b72be7a174b01256c560d4b1c54fdb377de89263b21b2ef97403425e686cb72a",
@@ -5982,7 +6786,21 @@
    ],
    "section": "3.1.1.6",
    "struct_path": "0/253",
-   "words": null
+   "words": [
+    "An",
+    "Opal",
+    "Compliant",
+    "Storage",
+    "Device",
+    "SHALL",
+    "return",
+    "the",
+    "parameters",
+    "listed",
+    "in",
+    "Table",
+    "9:"
+   ]
   },
   {
    "hash": "3e20098a212478f101f91f1f6c04fe794510f2a3fac0777c93fc88bbe2fe6163",
@@ -5997,7 +6815,13 @@
    ],
    "section": "3.1.1.6",
    "struct_path": "0/254",
-   "words": null
+   "words": [
+    "Table",
+    "9",
+    "-",
+    "Parameter",
+    "explanation"
+   ]
   },
   {
    "hash": "ee88e17e6a742f3dfac4fd62c888b1f0f88a36a4f1e227f5affb2cece60effe7",
@@ -6012,7 +6836,30 @@
    ],
    "section": "3.1.1.6.1",
    "struct_path": "0/258",
-   "words": null
+   "words": [
+    "The",
+    "Data",
+    "Removal",
+    "Operation",
+    "Processing",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "one",
+    "if",
+    "the",
+    "TPer",
+    "is",
+    "performing",
+    "any",
+    "supported",
+    "data",
+    "removal",
+    "operation",
+    "including:"
+   ]
   },
   {
    "hash": "07913239c9e8d42fcd39da156d79fea4dcc8b373ef5cd2696b49275bc7887669",
@@ -6027,7 +6874,9 @@
    ],
    "section": "3.1.1.6.1",
    "struct_path": "0/259/0",
-   "words": null
+   "words": [
+    "Revert,"
+   ]
   },
   {
    "hash": "da31e8e454ec754062ab4a6da79b20d3ea1d3367a54eeffc1a317d5b9bb03de3",
@@ -6042,7 +6891,10 @@
    ],
    "section": "3.1.1.6.1",
    "struct_path": "0/259/1",
-   "words": null
+   "words": [
+    "RevertSP,",
+    "or"
+   ]
   },
   {
    "hash": "afba395c797e9d699bdb285bbf49a695131bc4b0bfaa6a40f562c7cfc1770b53",
@@ -6057,7 +6909,9 @@
    ],
    "section": "3.1.1.6.1",
    "struct_path": "0/259/2",
-   "words": null
+   "words": [
+    "GenKey."
+   ]
   },
   {
    "hash": "7f51e7a65f06eb34fb02fc083c3665df15163cd278c6ce87f5ececb10e3304c6",
@@ -6072,7 +6926,66 @@
    ],
    "section": "3.1.1.6.1",
    "struct_path": "0/260",
-   "words": null
+   "words": [
+    "Otherwise,",
+    "the",
+    "Data",
+    "Removal",
+    "Operation",
+    "Processing",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "zero.",
+    "If",
+    "the",
+    "operation",
+    "is",
+    "in",
+    "progress,",
+    "the",
+    "security",
+    "transport",
+    "commands",
+    "such",
+    "as",
+    "the",
+    "security",
+    "send,",
+    "and",
+    "the",
+    "security",
+    "receive",
+    "SHALL",
+    "be",
+    "processed",
+    "by",
+    "the",
+    "Storage",
+    "Device.",
+    "The",
+    "Data",
+    "Removal",
+    "Operation",
+    "Processing",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "zero",
+    "upon",
+    "a",
+    "successful",
+    "completion",
+    "of",
+    "a",
+    "data",
+    "removal",
+    "operation."
+   ]
   },
   {
    "hash": "d79a2fd2249c997d3c3ef4cb7b9a0a47740631cdd5261eae018976673e2bbc9f",
@@ -6087,7 +7000,33 @@
    ],
    "section": "3.1.1.6.1",
    "struct_path": "0/261",
-   "words": null
+   "words": [
+    "The",
+    "Data",
+    "Removal",
+    "Operation",
+    "Processing",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "one",
+    "if",
+    "the",
+    "data",
+    "removal",
+    "operation",
+    "is",
+    "restarted",
+    "after",
+    "a",
+    "Power",
+    "Cycle",
+    "(see",
+    "Table",
+    "16)."
+   ]
   },
   {
    "hash": "c8bb082bf1e7ab14bd67091fb4447638353781844778d6a4804321d5765b80b5",
@@ -6102,7 +7041,62 @@
    ],
    "section": "3.1.1.6.2",
    "struct_path": "0/263",
-   "words": null
+   "words": [
+    "The",
+    "Data",
+    "Removal",
+    "Operation",
+    "Interrupted",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "one",
+    "if",
+    "a",
+    "previously",
+    "issued",
+    "data",
+    "removal",
+    "operation",
+    "such",
+    "as",
+    "Revert,",
+    "RevertSP",
+    "or",
+    "GenKey",
+    "was",
+    "interrupted",
+    "for",
+    "any",
+    "reason",
+    "(including,",
+    "power",
+    "loss,",
+    "interface",
+    "reset,",
+    "etc.).",
+    "The",
+    "Data",
+    "Removal",
+    "Operation",
+    "Interrupted",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "zero",
+    "after",
+    "successful",
+    "completion",
+    "of",
+    "a",
+    "data",
+    "removal",
+    "operation."
+   ]
   },
   {
    "hash": "8b2bdccdc3998bad7812537c4ae0b0a821e0948b8c7fe0a0a24b13fb1b033a43",
@@ -6117,7 +7111,12 @@
    ],
    "section": "3.1.1.6.2",
    "struct_path": "0/265",
-   "words": null
+   "words": [
+    "Start",
+    "of",
+    "Informative",
+    "Comment"
+   ]
   },
   {
    "hash": "a0870adb5440639d3a3b8961410948efa89a5819cba9714f06123f3f178034f0",
@@ -6132,7 +7131,46 @@
    ],
    "section": "3.1.1.6.2",
    "struct_path": "0/266",
-   "words": null
+   "words": [
+    "The",
+    "host",
+    "can",
+    "reissue",
+    "a",
+    "data",
+    "removal",
+    "operation",
+    "that",
+    "was",
+    "interrupted",
+    "(such",
+    "as",
+    "RevertSP,",
+    "Revert,",
+    "or",
+    "GenKey),",
+    "The",
+    "Storage",
+    "Device",
+    "can",
+    "be",
+    "in",
+    "a",
+    "locked",
+    "state",
+    "if",
+    "the",
+    "operation",
+    "was",
+    "interrupted",
+    "and",
+    "the",
+    "Storage",
+    "Device",
+    "is",
+    "now",
+    "operational."
+   ]
   },
   {
    "hash": "1877d6feeed5a6800745836f33087ffb0247495ca63768a53d95852dad593cc5",
@@ -6147,7 +7185,12 @@
    ],
    "section": "3.1.1.6.2",
    "struct_path": "0/267",
-   "words": null
+   "words": [
+    "End",
+    "of",
+    "Informative",
+    "Comment"
+   ]
   },
   {
    "hash": "47f19e9b34e7b38ca2f2c0b883391a210ab97601ffaf8d02c7f4178417b65eaf",
@@ -6162,7 +7205,96 @@
    ],
    "section": "3.1.1.6.3",
    "struct_path": "0/270",
-   "words": null
+   "words": [
+    "Each",
+    "bit",
+    "of",
+    "the",
+    "Supported",
+    "Data",
+    "Removal",
+    "Mechanism",
+    "(see",
+    "Table",
+    "10)",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "one",
+    "if",
+    "the",
+    "TPer",
+    "supports",
+    "the",
+    "corresponding",
+    "Data",
+    "Removal",
+    "Mechanism;",
+    "otherwise,",
+    "each",
+    "bit",
+    "SHALL",
+    "be",
+    "set",
+    "to",
+    "zero.",
+    "The",
+    "TPer",
+    "SHALL",
+    "support",
+    "the",
+    "Crypto",
+    "Erase",
+    "mechanism",
+    "and",
+    "MAY",
+    "support",
+    "the",
+    "Overwrite",
+    "Data",
+    "Erase",
+    "or",
+    "Block",
+    "Erase",
+    "or",
+    "other",
+    "mechanisms.",
+    "The",
+    "TPer",
+    "MAY",
+    "support",
+    "multiple",
+    "Data",
+    "Removal",
+    "Mechanisms",
+    "described",
+    "in",
+    "Table",
+    "10.",
+    "After",
+    "a",
+    "RevertSP",
+    "method",
+    "has",
+    "completed",
+    "without",
+    "an",
+    "error,",
+    "the",
+    "condition",
+    "of",
+    "user",
+    "data",
+    "SHALL",
+    "be",
+    "indicated",
+    "as",
+    "specified",
+    "in",
+    "Table",
+    "10."
+   ]
   },
   {
    "hash": "b2d2811949dfdf0ac4195ed2a70b30639e77772b124ba4c765168ed02af29e15",
@@ -6177,7 +7309,15 @@
    ],
    "section": "3.1.1.6.3",
    "struct_path": "0/272",
-   "words": null
+   "words": [
+    "Table",
+    "10",
+    "-",
+    "Supported",
+    "Data",
+    "Removal",
+    "Mechanism"
+   ]
   },
   {
    "hash": "7d4359d429b1fa8f6615b22827b3c756d97beab2475a82316e074a17aa86b2bb",
@@ -6192,7 +7332,56 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/276",
-   "words": null
+   "words": [
+    "Each",
+    "Data",
+    "Removal",
+    "Time",
+    "field",
+    "provides",
+    "the",
+    "worst",
+    "case",
+    "estimate",
+    "of",
+    "the",
+    "time",
+    "required",
+    "to",
+    "perform",
+    "the",
+    "erasure",
+    "corresponding",
+    "to",
+    "each",
+    "Data",
+    "Removal",
+    "Mechanism",
+    "defined",
+    "in",
+    "the",
+    "Supported",
+    "Data",
+    "Removal",
+    "Mechanism",
+    "field.",
+    "The",
+    "Data",
+    "Removal",
+    "Time",
+    "Format",
+    "bit",
+    "identifies",
+    "the",
+    "format",
+    "used",
+    "to",
+    "express",
+    "the",
+    "time",
+    "as",
+    "follows:"
+   ]
   },
   {
    "hash": "a964ae1bd9ed856988238e0610012d703df3069a3340d6ecc1833840c7851ed4",
@@ -6207,7 +7396,29 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/277/0",
-   "words": null
+   "words": [
+    "if",
+    "the",
+    "Data",
+    "Removal",
+    "Time",
+    "Format",
+    "bit",
+    "is",
+    "set",
+    "to",
+    "zero,",
+    "then",
+    "the",
+    "estimated",
+    "time",
+    "is",
+    "defined",
+    "in",
+    "Table",
+    "11;",
+    "and"
+   ]
   },
   {
    "hash": "7e37455fffe80d86dde21cb691f47edea26ba13621de7fb34f9498ccffcc8c3b",
@@ -6222,7 +7433,28 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/277/1",
-   "words": null
+   "words": [
+    "if",
+    "the",
+    "Data",
+    "Removal",
+    "Time",
+    "Format",
+    "bit",
+    "is",
+    "set",
+    "to",
+    "one,",
+    "then",
+    "the",
+    "estimated",
+    "time",
+    "is",
+    "defined",
+    "in",
+    "Table",
+    "12."
+   ]
   },
   {
    "hash": "655f3fff23fa8bee43478d35faa9cb8fa369dd27dd13f1bce55e021493b5eaa6",
@@ -6237,7 +7469,28 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/278",
-   "words": null
+   "words": [
+    "The",
+    "Data",
+    "Removal",
+    "Time",
+    "Format",
+    "bit",
+    "and",
+    "Data",
+    "Removal",
+    "Time",
+    "Format",
+    "field",
+    "are",
+    "defined",
+    "in",
+    "Table",
+    "11",
+    "and",
+    "Table",
+    "12."
+   ]
   },
   {
    "hash": "61fa924053f9b7b8f60a35db1377826f3965147ae4db1e12c773b0c73c5339c5",
@@ -6252,7 +7505,20 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/280",
-   "words": null
+   "words": [
+    "Table",
+    "11",
+    "-",
+    "Data",
+    "Removal",
+    "Time",
+    "(Data",
+    "Removal",
+    "Time",
+    "Format",
+    "bit=",
+    "0)"
+   ]
   },
   {
    "hash": "c233160aeef4bdd664f423145b407e2504bd5d4f27f30c0a383e3411227af134",
@@ -6267,7 +7533,20 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/283",
-   "words": null
+   "words": [
+    "Table",
+    "12",
+    "-",
+    "Data",
+    "Removal",
+    "Time",
+    "(Data",
+    "Removal",
+    "Time",
+    "Format",
+    "bit=",
+    "1)"
+   ]
   },
   {
    "hash": "8b2bdccdc3998bad7812537c4ae0b0a821e0948b8c7fe0a0a24b13fb1b033a43",
@@ -6282,7 +7561,12 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/286",
-   "words": null
+   "words": [
+    "Start",
+    "of",
+    "Informative",
+    "Comment"
+   ]
   },
   {
    "hash": "122ccf5a2da85389b83da7645ea42b4d7b1d2e4c8a6d60a5362d18f9291d9d25",
@@ -6297,7 +7581,44 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/287",
-   "words": null
+   "words": [
+    "Each",
+    "Data",
+    "Removal",
+    "Time",
+    "field",
+    "gives",
+    "an",
+    "estimate",
+    "of",
+    "the",
+    "total",
+    "time",
+    "required",
+    "to",
+    "perform",
+    "the",
+    "erasure",
+    "for",
+    "each",
+    "corresponding",
+    "Data",
+    "Removal",
+    "Mechanism.",
+    "This",
+    "field",
+    "is",
+    "not",
+    "a",
+    "dynamic",
+    "estimate",
+    "of",
+    "the",
+    "remaining",
+    "time",
+    "for",
+    "completion."
+   ]
   },
   {
    "hash": "9075393924e2f2807bc48bdca2910133bca098d7b28b399ade37244ed2be0d3a",
@@ -6312,7 +7633,87 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/288",
-   "words": null
+   "words": [
+    "When",
+    "GenKey",
+    "is",
+    "performed",
+    "on",
+    "a",
+    "range",
+    "that’s",
+    "less",
+    "than",
+    "the",
+    "global",
+    "range,",
+    "the",
+    "time",
+    "needed",
+    "for",
+    "the",
+    "completion",
+    "of",
+    "the",
+    "operation",
+    "can",
+    "be",
+    "less",
+    "than",
+    "the",
+    "time",
+    "reported",
+    "for",
+    "the",
+    "operation.",
+    "The",
+    "reported",
+    "estimated",
+    "time",
+    "for",
+    "the",
+    "data",
+    "removal",
+    "operation",
+    "will",
+    "be",
+    "for",
+    "the",
+    "entire",
+    "capacity",
+    "of",
+    "the",
+    "Storage",
+    "Device.",
+    "The",
+    "host",
+    "software",
+    "can",
+    "use",
+    "the",
+    "ratio",
+    "of",
+    "the",
+    "band",
+    "size",
+    "to",
+    "the",
+    "entire",
+    "capacity",
+    "of",
+    "the",
+    "Storage",
+    "Device,",
+    "to",
+    "derive",
+    "the",
+    "estimated",
+    "time",
+    "for",
+    "erasing",
+    "a",
+    "band."
+   ]
   },
   {
    "hash": "1877d6feeed5a6800745836f33087ffb0247495ca63768a53d95852dad593cc5",
@@ -6327,7 +7728,12 @@
    ],
    "section": "3.1.1.6.4",
    "struct_path": "0/289",
-   "words": null
+   "words": [
+    "End",
+    "of",
+    "Informative",
+    "Comment"
+   ]
   },
   {
    "hash": "73ea3eb2f133a17b0544fd9a188da0283a039717ca90604bd3cc42df2e9fc2f9",
@@ -16454,7 +17860,11 @@
       ],
       "page": 18,
       "text": "Bit Byte",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": [
@@ -16484,7 +17894,11 @@
       ],
       "page": 18,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       168.24
+      ]
      },
      {
       "bbox": [
@@ -16514,7 +17928,11 @@
       ],
       "page": 18,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       168.24,
+       222.96
+      ]
      },
      {
       "bbox": [
@@ -16544,7 +17962,11 @@
       ],
       "page": 18,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       222.96,
+       277.62
+      ]
      },
      {
       "bbox": [
@@ -16574,7 +17996,11 @@
       ],
       "page": 18,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       277.62,
+       332.34
+      ]
      },
      {
       "bbox": [
@@ -16604,7 +18030,11 @@
       ],
       "page": 18,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       332.34,
+       387.06
+      ]
      },
      {
       "bbox": [
@@ -16634,7 +18064,11 @@
       ],
       "page": 18,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       387.06,
+       441.72
+      ]
      },
      {
       "bbox": [
@@ -16664,7 +18098,11 @@
       ],
       "page": 18,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       441.72,
+       496.44
+      ]
      },
      {
       "bbox": [
@@ -16694,7 +18132,11 @@
       ],
       "page": 18,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       496.44,
+       553.26
+      ]
      }
     ]
    ],
@@ -16743,7 +18185,11 @@
       ],
       "page": 18,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": [
@@ -16764,7 +18210,11 @@
       ],
       "page": 18,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      },
      {
       "bbox": [
@@ -16785,7 +18235,11 @@
       ],
       "page": 18,
       "text": "Length of Parameter Data",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      },
      {
       "bbox": null,
@@ -16842,7 +18296,11 @@
       ],
       "page": 18,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -16916,7 +18374,11 @@
       ],
       "page": 18,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -16990,7 +18452,11 @@
       ],
       "page": 18,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -17028,7 +18494,11 @@
       ],
       "page": 18,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      }
     ],
     [
@@ -17051,7 +18521,11 @@
       ],
       "page": 18,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": [
@@ -17072,7 +18546,11 @@
       ],
       "page": 18,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      },
      {
       "bbox": [
@@ -17093,7 +18571,11 @@
       ],
       "page": 18,
       "text": "Data structure revision",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      },
      {
       "bbox": null,
@@ -17150,7 +18632,11 @@
       ],
       "page": 18,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -17224,7 +18710,11 @@
       ],
       "page": 18,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -17298,7 +18788,11 @@
       ],
       "page": 18,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -17336,7 +18830,11 @@
       ],
       "page": 18,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      }
     ],
     [
@@ -17359,7 +18857,11 @@
       ],
       "page": 18,
       "text": "8 - 15",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": [
@@ -17380,7 +18882,11 @@
       ],
       "page": 18,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      }
     ],
     [
@@ -17403,7 +18909,11 @@
       ],
       "page": 18,
       "text": "16",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": [
@@ -17424,7 +18934,11 @@
       ],
       "page": 18,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      },
      {
       "bbox": [
@@ -17445,7 +18959,11 @@
       ],
       "page": 18,
       "text": "Vendor Specific",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      },
      {
       "bbox": null,
@@ -17502,7 +19020,11 @@
       ],
       "page": 18,
       "text": "…",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -17576,7 +19098,11 @@
       ],
       "page": 18,
       "text": "47",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       58.71,
+       113.41
+      ]
      },
      {
       "bbox": null,
@@ -17614,7 +19140,11 @@
       ],
       "page": 18,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.41,
+       553.26
+      ]
      }
     ]
    ],
@@ -17667,7 +19197,11 @@
       ],
       "page": 19,
       "text": "Bit Byte",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -17697,7 +19231,11 @@
       ],
       "page": 19,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       168.61
+      ]
      },
      {
       "bbox": [
@@ -17727,7 +19265,11 @@
       ],
       "page": 19,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       168.61,
+       223.33
+      ]
      },
      {
       "bbox": [
@@ -17757,7 +19299,11 @@
       ],
       "page": 19,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       223.33,
+       277.99
+      ]
      },
      {
       "bbox": [
@@ -17787,7 +19333,11 @@
       ],
       "page": 19,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       277.99,
+       332.69
+      ]
      },
      {
       "bbox": [
@@ -17817,7 +19367,11 @@
       ],
       "page": 19,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       332.69,
+       387.43
+      ]
      },
      {
       "bbox": [
@@ -17847,7 +19401,11 @@
       ],
       "page": 19,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       387.43,
+       442.09
+      ]
      },
      {
       "bbox": [
@@ -17877,7 +19435,11 @@
       ],
       "page": 19,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       442.09,
+       498.31
+      ]
      },
      {
       "bbox": [
@@ -17907,7 +19469,11 @@
       ],
       "page": 19,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       498.31,
+       552.97
+      ]
      }
     ]
    ],
@@ -17956,7 +19522,11 @@
       ],
       "page": 19,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -17977,7 +19547,11 @@
       ],
       "page": 19,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      },
      {
       "bbox": [
@@ -17998,7 +19572,11 @@
       ],
       "page": 19,
       "text": "Feature Code (0x0001)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      },
      {
       "bbox": null,
@@ -18055,7 +19633,11 @@
       ],
       "page": 19,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": null,
@@ -18093,7 +19675,11 @@
       ],
       "page": 19,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      }
     ],
     [
@@ -18116,7 +19702,11 @@
       ],
       "page": 19,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -18137,7 +19727,11 @@
       ],
       "page": 19,
       "text": "Version",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       332.69
+      ]
      },
      {
       "bbox": [
@@ -18158,7 +19752,11 @@
       ],
       "page": 19,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       332.69,
+       552.97
+      ]
      }
     ],
     [
@@ -18181,7 +19779,11 @@
       ],
       "page": 19,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -18202,7 +19804,11 @@
       ],
       "page": 19,
       "text": "Length",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      }
     ],
     [
@@ -18225,7 +19831,11 @@
       ],
       "page": 19,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -18246,7 +19856,11 @@
       ],
       "page": 19,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       168.61
+      ]
      },
      {
       "bbox": [
@@ -18269,7 +19883,11 @@
       ],
       "page": 19,
       "text": "ComID Mgmt Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       168.61,
+       223.33
+      ]
      },
      {
       "bbox": [
@@ -18290,7 +19908,11 @@
       ],
       "page": 19,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       223.33,
+       277.99
+      ]
      },
      {
       "bbox": [
@@ -18312,7 +19934,11 @@
       ],
       "page": 19,
       "text": "Streaming Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       277.99,
+       332.69
+      ]
      },
      {
       "bbox": [
@@ -18334,7 +19960,11 @@
       ],
       "page": 19,
       "text": "Buffer Mgmt Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       332.69,
+       387.43
+      ]
      },
      {
       "bbox": [
@@ -18356,7 +19986,11 @@
       ],
       "page": 19,
       "text": "ACK/NAK Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       387.43,
+       442.09
+      ]
      },
      {
       "bbox": [
@@ -18378,7 +20012,11 @@
       ],
       "page": 19,
       "text": "Async Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       442.09,
+       498.31
+      ]
      },
      {
       "bbox": [
@@ -18400,7 +20038,11 @@
       ],
       "page": 19,
       "text": "Sync Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       498.31,
+       552.97
+      ]
      }
     ],
     [
@@ -18423,7 +20065,11 @@
       ],
       "page": 19,
       "text": "5 - 15",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -18444,7 +20090,11 @@
       ],
       "page": 19,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      }
     ]
    ],
@@ -18497,7 +20147,11 @@
       ],
       "page": 19,
       "text": "Bit Byte",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -18527,7 +20181,11 @@
       ],
       "page": 19,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       168.61
+      ]
      },
      {
       "bbox": [
@@ -18557,7 +20215,11 @@
       ],
       "page": 19,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       168.61,
+       223.33
+      ]
      },
      {
       "bbox": [
@@ -18587,7 +20249,11 @@
       ],
       "page": 19,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       223.33,
+       277.99
+      ]
      },
      {
       "bbox": [
@@ -18617,7 +20283,11 @@
       ],
       "page": 19,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       277.99,
+       332.69
+      ]
      },
      {
       "bbox": [
@@ -18647,7 +20317,11 @@
       ],
       "page": 19,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       332.69,
+       387.43
+      ]
      },
      {
       "bbox": [
@@ -18677,7 +20351,11 @@
       ],
       "page": 19,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       387.43,
+       442.09
+      ]
      },
      {
       "bbox": [
@@ -18707,7 +20385,11 @@
       ],
       "page": 19,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       442.09,
+       498.31
+      ]
      },
      {
       "bbox": [
@@ -18737,7 +20419,11 @@
       ],
       "page": 19,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       498.31,
+       552.97
+      ]
      }
     ]
    ],
@@ -18786,7 +20472,11 @@
       ],
       "page": 19,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -18807,7 +20497,11 @@
       ],
       "page": 19,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      },
      {
       "bbox": [
@@ -18828,7 +20522,11 @@
       ],
       "page": 19,
       "text": "Feature Code (0x0002)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      },
      {
       "bbox": null,
@@ -18885,7 +20583,11 @@
       ],
       "page": 19,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": null,
@@ -18923,7 +20625,11 @@
       ],
       "page": 19,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      }
     ],
     [
@@ -18946,7 +20652,11 @@
       ],
       "page": 19,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -18967,7 +20677,11 @@
       ],
       "page": 19,
       "text": "Version",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       332.69
+      ]
      },
      {
       "bbox": [
@@ -18988,7 +20702,11 @@
       ],
       "page": 19,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       332.69,
+       552.97
+      ]
      }
     ],
     [
@@ -19011,7 +20729,11 @@
       ],
       "page": 19,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -19032,7 +20754,11 @@
       ],
       "page": 19,
       "text": "Length",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      }
     ],
     [
@@ -19055,7 +20781,11 @@
       ],
       "page": 19,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -19079,7 +20809,11 @@
       ],
       "page": 19,
       "text": "HW Reset for LOR/DOR Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       168.61
+      ]
      },
      {
       "bbox": [
@@ -19103,7 +20837,11 @@
       ],
       "page": 19,
       "text": "MBR Shadowing Not Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       168.61,
+       223.33
+      ]
      },
      {
       "bbox": [
@@ -19124,7 +20862,11 @@
       ],
       "page": 19,
       "text": "MBR Done",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       223.33,
+       277.99
+      ]
      },
      {
       "bbox": [
@@ -19146,7 +20888,11 @@
       ],
       "page": 19,
       "text": "MBR Enabled",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       277.99,
+       332.69
+      ]
      },
      {
       "bbox": [
@@ -19168,7 +20914,11 @@
       ],
       "page": 19,
       "text": "Media Encryption",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       332.69,
+       387.43
+      ]
      },
      {
       "bbox": [
@@ -19189,7 +20939,11 @@
       ],
       "page": 19,
       "text": "Locked",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       387.43,
+       442.09
+      ]
      },
      {
       "bbox": [
@@ -19211,7 +20965,11 @@
       ],
       "page": 19,
       "text": "Locking Enabled",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       442.09,
+       498.31
+      ]
      },
      {
       "bbox": [
@@ -19233,7 +20991,11 @@
       ],
       "page": 19,
       "text": "Locking Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       498.31,
+       552.97
+      ]
      }
     ],
     [
@@ -19256,7 +21018,11 @@
       ],
       "page": 19,
       "text": "5 - 15",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.84
+      ]
      },
      {
       "bbox": [
@@ -19277,7 +21043,11 @@
       ],
       "page": 19,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.84,
+       552.97
+      ]
      }
     ]
    ],
@@ -19326,7 +21096,11 @@
       ],
       "page": 20,
       "text": "Bit Byte",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -19356,7 +21130,11 @@
       ],
       "page": 20,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       169.86
+      ]
      },
      {
       "bbox": [
@@ -19386,7 +21164,11 @@
       ],
       "page": 20,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       169.86,
+       224.28
+      ]
      },
      {
       "bbox": [
@@ -19416,7 +21198,11 @@
       ],
       "page": 20,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       224.28,
+       278.76
+      ]
      },
      {
       "bbox": [
@@ -19446,7 +21232,11 @@
       ],
       "page": 20,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       278.76,
+       333.24
+      ]
      },
      {
       "bbox": [
@@ -19476,7 +21266,11 @@
       ],
       "page": 20,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       333.24,
+       387.66
+      ]
      },
      {
       "bbox": [
@@ -19506,7 +21300,11 @@
       ],
       "page": 20,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       387.66,
+       442.14
+      ]
      },
      {
       "bbox": [
@@ -19536,7 +21334,11 @@
       ],
       "page": 20,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       442.14,
+       496.56
+      ]
      },
      {
       "bbox": [
@@ -19566,7 +21368,11 @@
       ],
       "page": 20,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       496.56,
+       551.14
+      ]
      }
     ]
    ],
@@ -19905,7 +21711,11 @@
       ],
       "page": 20,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -19926,7 +21736,11 @@
       ],
       "page": 20,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      },
      {
       "bbox": [
@@ -19947,7 +21761,11 @@
       ],
       "page": 20,
       "text": "Feature Code (0x0003)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      },
      {
       "bbox": null,
@@ -19987,7 +21805,11 @@
       ],
       "page": 20,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20025,7 +21847,11 @@
       ],
       "page": 20,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      }
     ],
     [
@@ -20048,7 +21874,11 @@
       ],
       "page": 20,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -20069,7 +21899,11 @@
       ],
       "page": 20,
       "text": "Version",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       333.24
+      ]
      },
      {
       "bbox": [
@@ -20090,7 +21924,11 @@
       ],
       "page": 20,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       333.24,
+       551.14
+      ]
      }
     ],
     [
@@ -20113,7 +21951,11 @@
       ],
       "page": 20,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -20134,7 +21976,11 @@
       ],
       "page": 20,
       "text": "Length",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      }
     ],
     [
@@ -20157,7 +22003,11 @@
       ],
       "page": 20,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -20178,7 +22028,11 @@
       ],
       "page": 20,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       496.56
+      ]
      },
      {
       "bbox": [
@@ -20199,7 +22053,11 @@
       ],
       "page": 20,
       "text": "ALIGN",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       496.56,
+       551.14
+      ]
      }
     ],
     [
@@ -20222,7 +22080,11 @@
       ],
       "page": 20,
       "text": "5 - 11",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -20243,7 +22105,11 @@
       ],
       "page": 20,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      }
     ],
     [
@@ -20266,7 +22132,11 @@
       ],
       "page": 20,
       "text": "12",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -20287,7 +22157,11 @@
       ],
       "page": 20,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      },
      {
       "bbox": [
@@ -20308,7 +22182,11 @@
       ],
       "page": 20,
       "text": "LogicalBlockSize",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      },
      {
       "bbox": null,
@@ -20348,7 +22226,11 @@
       ],
       "page": 20,
       "text": "13",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20405,7 +22287,11 @@
       ],
       "page": 20,
       "text": "14",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20462,7 +22348,11 @@
       ],
       "page": 20,
       "text": "15",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20500,7 +22390,11 @@
       ],
       "page": 20,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      }
     ],
     [
@@ -20523,7 +22417,11 @@
       ],
       "page": 20,
       "text": "16",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -20544,7 +22442,11 @@
       ],
       "page": 20,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      },
      {
       "bbox": [
@@ -20565,7 +22467,11 @@
       ],
       "page": 20,
       "text": "AlignmentGranularity",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.14
+      ]
      },
      {
       "bbox": null,
@@ -20605,7 +22511,11 @@
       ],
       "page": 20,
       "text": "17",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20662,7 +22572,11 @@
       ],
       "page": 20,
       "text": "18",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20719,7 +22633,11 @@
       ],
       "page": 20,
       "text": "19",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20776,7 +22694,11 @@
       ],
       "page": 20,
       "text": "20",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.91,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20833,7 +22755,11 @@
       ],
       "page": 21,
       "text": "21",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20890,7 +22816,11 @@
       ],
       "page": 21,
       "text": "22",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20947,7 +22877,11 @@
       ],
       "page": 21,
       "text": "23",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -20985,7 +22919,11 @@
       ],
       "page": 21,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.16
+      ]
      }
     ],
     [
@@ -21008,7 +22946,11 @@
       ],
       "page": 21,
       "text": "24",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "adopted_orphan": "(MSB)",
@@ -21031,7 +22973,11 @@
       ],
       "page": 21,
       "text": "(MSB) LowestAlignedLBA",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.16
+      ]
      },
      {
       "bbox": null,
@@ -21071,7 +23017,11 @@
       ],
       "page": 21,
       "text": "25",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -21128,7 +23078,11 @@
       ],
       "page": 21,
       "text": "26",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -21168,7 +23122,11 @@
       ],
       "page": 21,
       "text": "27",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -21208,7 +23166,11 @@
       ],
       "page": 21,
       "text": "28",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -21248,7 +23210,11 @@
       ],
       "page": 21,
       "text": "29",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -21288,7 +23254,11 @@
       ],
       "page": 21,
       "text": "30",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": null,
@@ -21328,7 +23298,11 @@
       ],
       "page": 21,
       "text": "31",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       60.9,
+       115.38
+      ]
      },
      {
       "bbox": [
@@ -21349,7 +23323,11 @@
       ],
       "page": 21,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       115.38,
+       551.16
+      ]
      }
     ]
    ],
@@ -21399,7 +23377,11 @@
       ],
       "page": 22,
       "text": "Bit Byte",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -21429,7 +23411,11 @@
       ],
       "page": 22,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       168.72
+      ]
      },
      {
       "bbox": [
@@ -21459,7 +23445,11 @@
       ],
       "page": 22,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       168.72,
+       223.62
+      ]
      },
      {
       "bbox": [
@@ -21489,7 +23479,11 @@
       ],
       "page": 22,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       223.62,
+       278.46
+      ]
      },
      {
       "bbox": [
@@ -21519,7 +23513,11 @@
       ],
       "page": 22,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       278.46,
+       333.01
+      ]
      },
      {
       "bbox": [
@@ -21549,7 +23547,11 @@
       ],
       "page": 22,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       333.01,
+       387.78
+      ]
      },
      {
       "bbox": [
@@ -21579,7 +23581,11 @@
       ],
       "page": 22,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       387.78,
+       442.38
+      ]
      },
      {
       "bbox": [
@@ -21609,7 +23615,11 @@
       ],
       "page": 22,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       442.38,
+       497.08
+      ]
      },
      {
       "bbox": [
@@ -21639,7 +23649,11 @@
       ],
       "page": 22,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       497.08,
+       552.94
+      ]
      }
     ]
    ],
@@ -21688,7 +23702,11 @@
       ],
       "page": 22,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -21709,7 +23727,11 @@
       ],
       "page": 22,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": [
@@ -21730,7 +23752,11 @@
       ],
       "page": 22,
       "text": "Feature Code (0x0203)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": null,
@@ -21787,7 +23813,11 @@
       ],
       "page": 22,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": null,
@@ -21825,7 +23855,11 @@
       ],
       "page": 22,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -21848,7 +23882,11 @@
       ],
       "page": 22,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -21869,7 +23907,11 @@
       ],
       "page": 22,
       "text": "Feature Descriptor Version Number",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       333.01
+      ]
      },
      {
       "bbox": [
@@ -21890,7 +23932,11 @@
       ],
       "page": 22,
       "text": "SSC Minor Version Number",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       333.01,
+       552.94
+      ]
      }
     ],
     [
@@ -21913,7 +23959,11 @@
       ],
       "page": 22,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -21934,7 +23984,11 @@
       ],
       "page": 22,
       "text": "Length",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -21957,7 +24011,11 @@
       ],
       "page": 22,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -21978,7 +24036,11 @@
       ],
       "page": 22,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": [
@@ -21999,7 +24061,11 @@
       ],
       "page": 22,
       "text": "Base ComID",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": null,
@@ -22056,7 +24122,11 @@
       ],
       "page": 22,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": null,
@@ -22094,7 +24164,11 @@
       ],
       "page": 22,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -22117,7 +24191,11 @@
       ],
       "page": 22,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -22138,7 +24216,11 @@
       ],
       "page": 22,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": [
@@ -22159,7 +24241,11 @@
       ],
       "page": 22,
       "text": "Number of ComIDs",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": null,
@@ -22216,7 +24302,11 @@
       ],
       "page": 22,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": null,
@@ -22254,7 +24344,11 @@
       ],
       "page": 22,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -22277,7 +24371,11 @@
       ],
       "page": 22,
       "text": "8",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -22298,7 +24396,11 @@
       ],
       "page": 22,
       "text": "Reserved for future common SSC parameters",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       497.08
+      ]
      },
      {
       "bbox": [
@@ -22321,7 +24423,11 @@
       ],
       "page": 22,
       "text": "Range Crossing Behavior",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       497.08,
+       552.94
+      ]
      }
     ],
     [
@@ -22344,7 +24450,11 @@
       ],
       "page": 22,
       "text": "9",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -22365,7 +24475,11 @@
       ],
       "page": 22,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": [
@@ -22386,7 +24500,11 @@
       ],
       "page": 22,
       "text": "Number of Locking SP Admin Authorities Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": null,
@@ -22443,7 +24561,11 @@
       ],
       "page": 22,
       "text": "10",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": null,
@@ -22481,7 +24603,11 @@
       ],
       "page": 22,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -22504,7 +24630,11 @@
       ],
       "page": 22,
       "text": "11",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -22525,7 +24655,11 @@
       ],
       "page": 22,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": [
@@ -22546,7 +24680,11 @@
       ],
       "page": 22,
       "text": "Number of Locking SP User Authorities Supported",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      },
      {
       "bbox": null,
@@ -22603,7 +24741,11 @@
       ],
       "page": 22,
       "text": "12",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": null,
@@ -22641,7 +24783,11 @@
       ],
       "page": 22,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -22664,7 +24810,11 @@
       ],
       "page": 22,
       "text": "13",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -22685,7 +24835,11 @@
       ],
       "page": 22,
       "text": "Initial C_PIN_SID PIN Indicator",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -22708,7 +24862,11 @@
       ],
       "page": 22,
       "text": "14",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -22729,7 +24887,11 @@
       ],
       "page": 22,
       "text": "Behavior of C_PIN_SID PIN upon TPer Revert",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ],
     [
@@ -22752,7 +24914,11 @@
       ],
       "page": 22,
       "text": "15 - 19",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       59.13,
+       113.71
+      ]
      },
      {
       "bbox": [
@@ -22773,7 +24939,11 @@
       ],
       "page": 22,
       "text": "Reserved for future common SSC parameters",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       113.71,
+       552.94
+      ]
      }
     ]
    ],
@@ -23128,7 +25298,11 @@
       ],
       "page": 24,
       "text": "Bit Byte",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23158,7 +25332,11 @@
       ],
       "page": 24,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       163.56
+      ]
      },
      {
       "bbox": [
@@ -23188,7 +25366,11 @@
       ],
       "page": 24,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       163.56,
+       218.15
+      ]
      },
      {
       "bbox": [
@@ -23218,7 +25400,11 @@
       ],
       "page": 24,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       218.15,
+       272.93
+      ]
      },
      {
       "bbox": [
@@ -23248,7 +25434,11 @@
       ],
       "page": 24,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       272.93,
+       327.67
+      ]
      },
      {
       "bbox": [
@@ -23278,7 +25468,11 @@
       ],
       "page": 24,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       327.67,
+       382.43
+      ]
      },
      {
       "bbox": [
@@ -23308,7 +25502,11 @@
       ],
       "page": 24,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       382.43,
+       436.83
+      ]
      },
      {
       "bbox": [
@@ -23338,7 +25536,11 @@
       ],
       "page": 24,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       436.83,
+       495.79
+      ]
      },
      {
       "bbox": [
@@ -23368,7 +25570,11 @@
       ],
       "page": 24,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       495.79,
+       557.82
+      ]
      }
     ]
    ],
@@ -23417,7 +25623,11 @@
       ],
       "page": 24,
       "text": "0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23438,7 +25648,11 @@
       ],
       "page": 24,
       "text": "(MSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      },
      {
       "bbox": [
@@ -23459,7 +25673,11 @@
       ],
       "page": 24,
       "text": "Feature Code (0x0404)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      },
      {
       "bbox": null,
@@ -23516,7 +25734,11 @@
       ],
       "page": 24,
       "text": "1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": null,
@@ -23554,7 +25776,11 @@
       ],
       "page": 24,
       "text": "(LSB)",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -23577,7 +25803,11 @@
       ],
       "page": 24,
       "text": "2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23598,7 +25828,11 @@
       ],
       "page": 24,
       "text": "Version",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       327.67
+      ]
      },
      {
       "bbox": [
@@ -23619,7 +25853,11 @@
       ],
       "page": 24,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       327.67,
+       557.82
+      ]
      }
     ],
     [
@@ -23642,7 +25880,11 @@
       ],
       "page": 24,
       "text": "3",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23663,7 +25905,11 @@
       ],
       "page": 24,
       "text": "Length",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -23686,7 +25932,11 @@
       ],
       "page": 24,
       "text": "4",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23707,7 +25957,11 @@
       ],
       "page": 24,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -23730,7 +25984,11 @@
       ],
       "page": 24,
       "text": "5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23751,7 +26009,11 @@
       ],
       "page": 24,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       436.83
+      ]
      },
      {
       "bbox": [
@@ -23775,7 +26037,11 @@
       ],
       "page": 24,
       "text": "Data Removal Operation Interrupted",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       436.83,
+       495.79
+      ]
      },
      {
       "bbox": [
@@ -23799,7 +26065,11 @@
       ],
       "page": 24,
       "text": "Data Removal Operation Processing",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       495.79,
+       557.82
+      ]
      }
     ],
     [
@@ -23822,7 +26092,11 @@
       ],
       "page": 24,
       "text": "6",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23843,7 +26117,11 @@
       ],
       "page": 24,
       "text": "Supported Data Removal Mechanism",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -23866,7 +26144,11 @@
       ],
       "page": 24,
       "text": "7",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -23887,7 +26169,11 @@
       ],
       "page": 24,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       218.15
+      ]
      },
      {
       "bbox": [
@@ -23912,7 +26198,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time Format for Bit 5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       218.15,
+       272.93
+      ]
      },
      {
       "bbox": [
@@ -23933,7 +26223,11 @@
       ],
       "page": 24,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       272.93,
+       382.43
+      ]
      },
      {
       "bbox": [
@@ -23958,7 +26252,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time Format for Bit 2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       382.43,
+       436.83
+      ]
      },
      {
       "bbox": [
@@ -23983,7 +26281,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time Format for Bit 1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       436.83,
+       495.79
+      ]
      },
      {
       "bbox": [
@@ -24008,7 +26310,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time Format for Bit 0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       495.79,
+       557.82
+      ]
      }
     ],
     [
@@ -24031,7 +26337,11 @@
       ],
       "page": 24,
       "text": "8 - 9",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -24052,7 +26362,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time for Supported Data Removal Mechanism Bit 0",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -24075,7 +26389,11 @@
       ],
       "page": 24,
       "text": "10 - 11",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -24096,7 +26414,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time for Supported Data Removal Mechanism Bit 1",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -24119,7 +26441,11 @@
       ],
       "page": 24,
       "text": "12 - 13",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -24140,7 +26466,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time for Supported Data Removal Mechanism Bit 2",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -24163,7 +26493,11 @@
       ],
       "page": 24,
       "text": "14 - 17",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -24184,7 +26518,11 @@
       ],
       "page": 24,
       "text": "Reserved",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -24207,7 +26545,11 @@
       ],
       "page": 24,
       "text": "18 - 19",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -24228,7 +26570,11 @@
       ],
       "page": 24,
       "text": "Data Removal Time for Supported Data Removal Mechanism Bit 5",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ],
     [
@@ -24251,7 +26597,11 @@
       ],
       "page": 24,
       "text": "20 - 35",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       54.23,
+       108.61
+      ]
      },
      {
       "bbox": [
@@ -24272,7 +26622,11 @@
       ],
       "page": 24,
       "text": "Reserved for future Supported Data Removal Mechanism parameters",
-      "underline": false
+      "underline": false,
+      "x_extent": [
+       108.61,
+       557.82
+      ]
      }
     ]
    ],
@@ -148941,7 +151295,21 @@
    ]
   }
  ],
- "wordComplete": [],
+ "wordComplete": [
+  "3.1.1.1",
+  "3.1.1.2",
+  "3.1.1.3",
+  "3.1.1.3.1",
+  "3.1.1.4.1",
+  "3.1.1.5",
+  "3.1.1.5.1",
+  "3.1.1.5.2",
+  "3.1.1.6",
+  "3.1.1.6.1",
+  "3.1.1.6.2",
+  "3.1.1.6.3",
+  "3.1.1.6.4"
+ ],
  "xrefs": [
   {
    "number": 1,

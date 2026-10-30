@@ -15,7 +15,9 @@ The handwritten fixture @test/fixtures/mini-ir.json@ covers every record type
 of IR v1 in the shapes the extractor writes; it must decode, and survive a trip
 through 'toJSON' and 'fromJSON'; without the fields M2b added (signature blocks,
 List of Tables, table references) it decodes with them empty. The committed
-@spec/ir/*.json@ must decode too, with the counts the extractor reports.
+@spec/ir/*.json@ must decode too, with the counts the extractor reports, the
+drawn extents of the byte grids' cells and the words of the paragraphs the
+pins reader reads (M2c).
 -}
 module Hsed.Spec.IRSpec (spec) where
 
@@ -43,6 +45,12 @@ committed =
   [ ("../spec/ir/core-2.01.json", (263, 1346, 4112, 0), (53, 248, 108))
   , ("../spec/ir/opal-2.30.json", (63, 178, 657, 0), (3, 50, 63))
   ]
+
+-- | Run a check on a committed extraction, pending when it is not checked out.
+withIR :: FilePath -> (SpecIR -> IO ()) -> IO ()
+withIR path check = do
+  present <- doesFileExist path
+  if present then readIR path >>= either throwString check else pendingWith (path <> " is not checked out")
 
 -- | Every cell of the header and data rows, tables in order.
 bodyCells :: SpecIR -> [CellIR]
@@ -89,6 +97,7 @@ spec = do
       map (.bold) cells `shouldBe` [True, True, True, False, False, False, False, False]
       map (.fonts) cells `shouldBe` [["Arial-BoldMT"], ["Arial-BoldMT"], ["Arial-BoldMT"], ["ArialMT"], ["ArialMT"], ["ArialMT", "ArialMT"], [], ["ArialMT"]]
       map (.fillRgb) (take 1 cells) `shouldBe` [Just (RGB 225 225 225)]
+      map (.xExtent) (drop 6 cells) `shouldBe` [Nothing, Just (428.5, 501.25)]
 
     it "reads the repair flags and their payloads" $ do
       ir <- loadFixture
@@ -144,7 +153,7 @@ spec = do
         readIR path
       either (`shouldContain` "irVersion 2, expected 1") (const (expectationFailure "accepted irVersion 2")) result
 
-  describe "the committed extractions" $
+  describe "the committed extractions" $ do
     forM_ committed $ \(path, counts, m2b) ->
       it ("decode " <> path <> " with the extractor's counts") $ do
         present <- doesFileExist path
@@ -154,6 +163,25 @@ spec = do
             (length ir.tables, length ir.headings, length ir.paras, length ir.annots) `shouldBe` counts
             (length ir.sigs, length ir.lot, length ir.xrefs) `shouldBe` m2b
           else pendingWith (path <> " is not checked out")
+    it "give every inked cell of Core's byte grids its drawn extent: T43 byte 4's seven cells, Reserved over two columns" $
+      withIR "../spec/ir/core-2.01.json" $ \ir -> do
+        let t43 = [ t | t <- ir.tables, t.id == Just "T43" ]
+            row4 = [ map (.xExtent) cells | t <- t43, cells@(c : _) <- t.rows, c.text == "4" ]
+            header = [ map (.xExtent) (drop 1 h) | t <- t43, h : _ <- [t.headerRows] ]
+            -- the header columns a drawn extent covers, by their centres
+            covered cols (x0, x1) = [ b | (b, Just (c0, c1)) <- zip [7, 6 .. 0 :: Int] cols, x0 < (c0 + c1) / 2, (c0 + c1) / 2 < x1 ]
+        case (header, row4) of
+          ([cols], [_ : fields]) -> map (fmap (covered cols)) fields `shouldBe` map Just [[7, 6], [5], [4], [3], [2], [1], [0]]
+          other                  -> expectationFailure (show other)
+    it "carry the words of the paragraphs the pins reader reads: Core 3.3.6.4's, Opal 3.1.1.2's bullets" $ do
+      withIR "../spec/ir/core-2.01.json" $ \ir -> do
+        ir.wordComplete `shouldSatisfy` (\ws -> all (`elem` ws) ["3.3.6.2.2", "3.3.6.4", "3.3.6.5"])
+        [ T.unwords ws | p <- ir.paras, p.section == Just "3.3.6.4", Just ws <- [p.words] ] `shouldContain`
+          ["The Feature Code field SHALL be set to 0x0001."]
+        [ () | p <- ir.paras, p.section `notElem` map Just ir.wordComplete, isJust p.words ] `shouldBe` []
+      withIR "../spec/ir/opal-2.30.json" $ \ir ->
+        [ T.unwords ws | p <- ir.paras, p.section == Just "3.1.1.2", p.kind == LI, Just ws <- [p.words] ] `shouldSatisfy`
+          (\bullets -> all (`elem` bullets) ["Feature Code = 0x0001", "Sync Supported = 1"])
 
   describe "JSON instances" $ do
     it "round-trip the fixture through toJSON and fromJSON" $ do

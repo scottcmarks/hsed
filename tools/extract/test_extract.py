@@ -1,6 +1,7 @@
 """Unit tests for the pure rules in extract_tables.py (no PDF needed):
 ragged-row join, section-number parsing, list-item labels, word normalisation and hashing,
-paragraph text located glyph by glyph, signature blocks, table references and List of Tables entries.
+paragraph text located glyph by glyph, signature blocks, table references and List of Tables entries,
+byte grids and their cells' drawn extents, the sections whose paragraphs carry their words.
 
 Run:  .venv/bin/python -I -m unittest discover -s tools/extract -p 'test_*.py'   (make extract-test)
 """
@@ -215,7 +216,7 @@ class SignatureBlocks(unittest.TestCase):
     def test_every_spec_fails_a_block_in_no_numbered_section(self):
         ir = {"spec": "test-1.0", "labelOffset": 0, "tables": [], "headings": [], "lot": [], "xrefs": [],
               "sigs": [{"section": None, "page": 4, "heads": ["A.b"], "text": "A.b [ ]"}]}
-        (name, ok, detail), = [r for r in X.invariants(ir, None)]
+        (name, ok, detail), = [r for r in X.invariants(ir, None) if "signature" in r[0]]
         self.assertEqual((name, ok, detail), ("every signature block lies in a numbered section", False, "none on PDF [5]"))
 
     def test_bracket_depth(self):
@@ -271,6 +272,56 @@ class ListOfTables(unittest.TestCase):
         self.assertIsNone(X.parse_lot_entry("Figure 1 Diagram of the Core Architecture ...... 5"))
         self.assertIsNone(X.parse_lot_entry("Tables"))
         self.assertIsNone(X.parse_lot_entry("Table 03"))
+
+def grid_table(path, first_row):
+    return {"struct_path": path, "header_rows": [[{"text": t} for t in first_row]], "rows": []}
+
+
+GRID_ROW = ["Bit Byte"] + [str(b) for b in range(7, -1, -1)]
+
+
+class ByteGrids(unittest.TestCase):
+    def test_a_first_row_of_a_corner_then_seven_to_zero(self):
+        self.assertTrue(X.is_byte_grid(grid_table("0/1", GRID_ROW)))
+        self.assertTrue(X.is_byte_grid({"header_rows": [], "rows": [[{"text": t} for t in ["Bit"] + GRID_ROW[1:]]]}))   # Core T17: no header
+        self.assertFalse(X.is_byte_grid(grid_table("0/1", ["Byte", "Field", "Value"])))
+        self.assertFalse(X.is_byte_grid(grid_table("0/1", GRID_ROW[:-1] + ["1"])))
+        self.assertFalse(X.is_byte_grid({"header_rows": [], "rows": []}))
+
+    def test_cells_zipped_with_the_drawn_cells_of_their_row(self):
+        # Core T42 byte 0: '0' | '(MSB)' | 'Feature Code' | '' under four drawn cells; the empty one gets its own
+        drawn = {"r": [[73.0, 127.0], [127.0, 182.0], [182.0, 510.0], [510.0, 566.0]]}
+        self.assertEqual(X.row_extents([("r", 0), ("r", 1), ("r", 2), None], drawn), drawn["r"])
+
+    def test_cells_in_one_drawn_cell_each_take_their_own(self):
+        # Core T17 byte 0: '(MSB)' and 'Reserved' both lie in the one merged drawn cell of the row
+        drawn = {"r": [[144.0, 209.0], [209.0, 495.0]]}
+        self.assertEqual(X.row_extents([("r", 0), ("r", 1), ("r", 1), None], drawn),
+                         [[144.0, 209.0], [209.0, 495.0], [209.0, 495.0], None])
+
+    def test_cells_over_two_drawn_rows_take_their_own(self):
+        drawn = {"a": [[0.0, 10.0], [10.0, 20.0]], "b": [[0.0, 10.0], [10.0, 20.0]]}
+        self.assertEqual(X.row_extents([("a", 0), ("b", 1)], drawn), [[0.0, 10.0], [10.0, 20.0]])
+        self.assertEqual(X.row_extents([None, None], {}), [None, None])
+
+
+class WordComplete(unittest.TestCase):
+    HEADINGS = [{"section": "3.3.6", "struct_path": "0/10"}, {"section": "3.3.6.4", "struct_path": "0/20"},
+                {"section": None, "struct_path": "0/25"}, {"section": "3.3.6.4.1", "struct_path": "0/30"},
+                {"section": "3.3.6.5", "struct_path": "0/40"}, {"section": "3.3.7", "struct_path": "0/50"}]
+
+    def test_the_section_of_a_table_is_that_of_the_numbered_heading_before_it(self):
+        tables = [grid_table("0/5", GRID_ROW), grid_table("0/21", GRID_ROW), grid_table("0/26", GRID_ROW), grid_table("0/100", GRID_ROW)]
+        self.assertEqual(X.table_sections(self.HEADINGS, tables), {"0/5": None, "0/21": "3.3.6.4", "0/26": "3.3.6.4", "0/100": "3.3.7"})
+
+    def test_the_section_of_a_byte_grid_and_its_subsections(self):
+        tables = [grid_table("0/21", GRID_ROW), grid_table("0/45", ["Byte", "Field", "Value"])]
+        self.assertEqual(X.word_complete_sections(self.HEADINGS, tables), ["3.3.6.4", "3.3.6.4.1"])
+
+    def test_words_on_the_paragraphs_of_those_sections_only(self):
+        paras = [{"section": "3.3.6.4", "_words": ["The", "Length", "field"]}, {"section": "3.3.7", "_words": ["x"]}]
+        X.set_words(paras, ["3.3.6.4"])
+        self.assertEqual(paras, [{"section": "3.3.6.4", "words": ["The", "Length", "field"]}, {"section": "3.3.7", "words": None}])
 
 
 if __name__ == "__main__":

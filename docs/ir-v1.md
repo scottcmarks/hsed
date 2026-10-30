@@ -4,7 +4,9 @@
 file; `hsedc` reads nothing else. Committed instances live under `spec/ir/`. The shape is frozen
 at `irVersion` 1; additive fields bump nothing, a changed meaning bumps the version. M2b filled in
 `sigs` (an empty list before, with no schema) and added `lot` and `xrefs`: additive, so the version
-stays 1, and `hsedc` reads a file written before them with the three lists empty.
+stays 1, and `hsedc` reads a file written before them with the three lists empty. M2c added a byte
+grid's cells' `x_extent` and filled in `wordComplete` and the `words` of those sections' paragraphs,
+additive too (a file without them reads with no extents and no words).
 Design: `docs/spec-as-source.md` §4.2 and §5.1. Page fields are 0-based PDF indices. The printed page label
 follows from **1-based PDF page = printed page + labelOffset** (Core 17, Opal 1).
 
@@ -19,7 +21,7 @@ follows from **1-based PDF page = printed page + labelOffset** (Core 17, Opal 1)
   "labelOffset": 17,
   "notice": "tcg/TCG-NOTICE.txt",
   "extractor": { "script": "extract_tables.py", "version": 1, "pymupdf": "...", "pikepdf": "..." },
-  "wordComplete": [],                       // sections whose paras carry "words" (none at M1)
+  "wordComplete": ["3.3.6.2", "3.3.6.2.1", ...], // sections whose paras carry "words" (M2c: every byte grid's and its subsections)
   "tables":   [ TableIR ],                  // document order, nested tables included
   "headings": [ HeadingIR ],                // document order
   "paras":    [ ParaIR ],                   // document order
@@ -51,6 +53,21 @@ Unchanged: `table_number`, `caption`, `caption_path`, `nested_in` (both still in
 the repair flags (`split_from_merged`, `recovered_by_geometry`, `adopted_from`, `moved_out`,
 `adopted_orphan`, `ragged_join`).
 
+Byte grids (since M2c): a table whose first row (its header, or its first data row when it has none,
+Core T17) is nine cells ending `7 … 0` (Core T17, T18, T20, T21, T38, T39, T41-T44, T212; Opal T2-T8)
+prints a field over several bits as one merged cell, which the tag tree does not mark (no cell has
+`/ColSpan`). Each of its cells, header and data rows, carries `x_extent`, `[x0, x1]` of the drawn cell
+it occupies (pymupdf's `lines_strict` grid, PDF space), for the grid reader's extent rule (design E8:
+eight cells positionally, one the whole byte, any other count by extent against the header's bit
+columns): a row's cells and the drawn cells of the drawn row its glyphs lie in are zipped in order when
+they agree in number and each inked cell sits in its own drawn cell (Core T42 byte 0: `0 | (MSB) |
+Feature Code | ` under four drawn cells, the empty one included); otherwise each inked cell takes the
+drawn cell under its glyphs' centre (Core T17 byte 0, whose `(MSB)` and `Reserved` lie in one merged
+drawn cell spanning the eight bits and four rows) and an empty cell has none. Every inked cell of a
+byte grid has one (an invariant); T43 byte 4's seven cells cover bits 7-6, 5, …, 0 and T42 byte 2's two
+cells 7-4 and 3-0 (invariants). Opal T2-T8 print some byte numbers in the second cell of their row
+(`'' | 1 | '' | (LSB)`): the cell over the corner column is the byte's, whatever its place.
+
 Ragged-row join (design §5.1 step 5): a data row with fewer cells than the header, all of them
 non-empty, is appended to its predecessor in the columns its x-extents overlap and flagged
 `ragged_join`; a full-width row is never joined.
@@ -75,8 +92,18 @@ section string.
 Every `/P` and `/LI` outside tables. `section` is the nearest preceding heading's section;
 `item` is the list label for an `/LI` (nested labels concatenated, `3` then `a` giving `3a`),
 null for a `/P`; `hash` is sha256 over the words lower-cased, punctuation stripped, joined by one
-space; `words` is the array only for sections listed in `wordComplete`, else null. Anchor id:
+space; `words` is the array only for sections listed in `wordComplete`, else null: the paragraph as
+printed split at whitespace, case and punctuation kept (a list item's without its label: Opal's
+`["Feature", "Code", "=", "0x0001"]`), so that `hash` is the sha256 of their normalised words. Anchor id:
 `<section>#<item>` for a list item, `<section>#p<k>` for the k-th paragraph (1-based) of a section.
+
+`wordComplete` (design §5.1 step 7: the words of every paragraph a reader consumes) lists, in
+document order, the section of every byte grid (the nearest numbered heading before it in structure
+order, as `hsedc` computes a table's section) and each of its subsections: there the pins reader
+(design E8) finds the sentences that pin a descriptor's fields (Core §3.3.6.4 `The Feature Code field
+SHALL be set to 0x0001.`, §3.3.6.2.2 `The value of this field SHALL be 0x0000.`; Opal §3.1.1.2's
+bullets `Feature Code = 0x0001`). Core 2.01: 51 sections, 108 paragraphs; Opal 2.30: 13 sections, 93
+paragraphs. Every paragraph of a listed section carries its words (an invariant).
 
 ## SigIR
 

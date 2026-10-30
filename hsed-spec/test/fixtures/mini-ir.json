@@ -81,6 +81,7 @@
           { "kind": "TD", "text": "", "lines": [], "page": null, "bbox": null, "bold": null, "underline": null, "fill_rgb": null,
             "est_bbox": [360.0, 410.0, 430.0, 430.0], "nested_tables": [[0, 1340, 1, 1, 0]] },
           { "kind": "TD", "text": "(MSB) numerator", "lines": ["(MSB)", "numerator"], "page": 106, "bbox": [430.0, 410.0, 500.0, 430.0],
+            "x_extent": [428.5, 501.25],
             "bold": false, "underline": false, "fonts": ["ArialMT"], "fill_rgb": null, "fill_bbox": null,
             "moved_out": { "text": "denominator", "to_struct_path": [0, 1407] }, "adopted_orphan": "(MSB)", "extra_field_tolerated": 42 }
         ]

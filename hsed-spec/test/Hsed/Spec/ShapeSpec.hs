@@ -47,7 +47,7 @@ mkTable anchorId caption header rows = TableIR
       { kind = k, text = t, lines = [t], page = Just 99, bbox = Nothing, estBbox = Nothing
       , bold = k == TH, underline = False, fonts = [], fillRgb = Nothing, fillBbox = Nothing
       , nestedTables = [], fragments = [], splitFromMerged = False, recoveredByGeometry = False
-      , raggedJoin = False, adoptedOrphan = Nothing, adoptedFrom = Nothing, movedOut = Nothing }
+      , raggedJoin = False, adoptedOrphan = Nothing, adoptedFrom = Nothing, movedOut = Nothing, xExtent = Nothing }
 
 t46, t52, t42, t17, t87 :: TableIR
 t46 = mkTable "T46" "Table 46 AC_element" ["UID", "Name", "Format"]

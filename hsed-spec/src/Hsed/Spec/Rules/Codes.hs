@@ -50,7 +50,7 @@ writes the same module.
 module Hsed.Spec.Rules.Codes
   ( codesRule
   , codesModule
-    -- * Code cells
+    -- * Code cells (a number as "Hsed.Spec.Readers.Text" reads and prints it)
   , Number (..)
   , CodeCell (..)
   , parseCodeCell
@@ -67,13 +67,11 @@ module Hsed.Spec.Rules.Codes
   , codeRowsDecl
   ) where
 
-import qualified Data.Char         as DC
 import qualified Data.Text         as DT
 import qualified RIO.Char          as C
 import qualified RIO.List          as L
 import qualified RIO.Text          as T
 import           RIO
-import           Numeric           (showHex)
 
 import           Hsed.Core.Code    (Span (..))
 import           Hsed.Spec.Anchor  (AnchorId (..))
@@ -82,7 +80,7 @@ import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.DSL     (SomeBinding (..), codes)
 import qualified Hsed.Spec.Gen     as Gen
 import           Hsed.Spec.IR      (CellIR (..), TableIR (..))
-import           Hsed.Spec.Readers.Text (titleIdent)
+import           Hsed.Spec.Readers.Text (Number (..), numberExpr, parseNumber, titleIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TypeRow (typeEnvFrom)
 import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), captionTitle, shapeMismatch)
@@ -125,13 +123,6 @@ codesModule = Gen.GenModule
 
 -- * Code cells
 
--- | A number as printed: its value, and how many hex digits it was printed with (Nothing in decimal).
-data Number = Number
-  { nValue     :: !Integer
-  , nHexDigits :: !(Maybe Int)
-  }
-  deriving (Eq, Show)
-
 -- | A code cell read: the values it assigns, its numbers as printed.
 data CodeCell
   = CodeOne !Number
@@ -156,18 +147,6 @@ parseCodeCell cell
     squeezed = T.filter (not . C.isSpace) t
     pieces = if ".." `T.isInfixOf` squeezed then DT.splitOn ".." squeezed else T.split (== '-') squeezed
 
--- | A number in hex (@0x07FF@, @0003h@) or in decimal (@10@).
-parseNumber :: Text -> Maybe Number
-parseNumber n
-  | Just h <- T.stripPrefix "0x" lower, isHex h = Just (Number (hexValue h) (Just (T.length h)))
-  | Just h <- T.stripSuffix "h" lower, isHex h  = Just (Number (hexValue h) (Just (T.length h)))
-  | not (T.null n), T.all C.isDigit n           = Number <$> readMaybe (T.unpack n) <*> pure Nothing
-  | otherwise                                   = Nothing
-  where
-    lower = T.toLower n
-    isHex h = not (T.null h) && T.all C.isHexDigit h
-    hexValue = T.foldl' (\acc c -> acc * 16 + toInteger (DC.digitToInt c)) 0
-
 -- | The values a code cell assigns.
 cellSpan :: CodeCell -> Span
 cellSpan = \case
@@ -183,12 +162,6 @@ codeCellExpr = \case
   CodeBetween a b -> "Between " <> numberExpr a <> " " <> numberExpr b
   CodeAbove a     -> "Above " <> numberExpr a
   CodeOthers      -> "Others"
-
--- | A number as Haskell, as printed: hex with its digits (@0x07ff@), or decimal.
-numberExpr :: Number -> Text
-numberExpr (Number v hex) = case hex of
-  Just w  -> let digits = T.pack (showHex v "") in "0x" <> T.replicate (w - T.length digits) "0" <> digits
-  Nothing -> tshow v
 
 -- | The code column of a table: the first column every row of which holds a
 --   code, one of them a value or a range (not only @All others@). The table's

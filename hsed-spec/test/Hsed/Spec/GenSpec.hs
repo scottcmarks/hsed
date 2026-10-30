@@ -232,6 +232,13 @@ spec = do
         `shouldBe` "-- | core-2.01 T4 Token Types (PDF 32 / p.15, ord 6, sha256:00)"
       provenanceComment (prov "T4" "Table 40 Feature Codes" 32 15 6 "0/1" "00")
         `shouldBe` "-- | core-2.01 T4 Table 40 Feature Codes (PDF 32 / p.15, ord 6, sha256:00)"
+    it "prints a caption in ASCII, a dash as -, as every comment of a generated module is (Core Table 22, PDF 46)" $
+      provenanceComment (prov "T22" "Table 22 Secure Messaging Packet \x2013 Payload Field" 46 29 24 "0/1" "00")
+        `shouldBe` "-- | core-2.01 T22 Secure Messaging Packet - Payload Field (PDF 46 / p.29, ord 24, sha256:00)"
+
+  describe "ascii" $
+    it "makes a dash -, an ellipsis ..., curly quotes straight, anything else not ASCII ?" $
+      ascii "a \x2013 b \x2014 c\x2026 \x201c\&d\x201d \x2018\&e\x2019 \x00e9" `shouldBe` "a - b - c... \"d\" 'e' ?"
 
   describe "tableNumber" $
     it "reads the number of an anchor id, and sorts an id without one last" $

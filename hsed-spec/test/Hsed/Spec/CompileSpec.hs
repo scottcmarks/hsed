@@ -104,6 +104,8 @@ spec = do
         forM_ (crModules cr) $ \(modName, text) -> do
           file <- readFileUtf8 (Gen.modulePath "../hsed/gen" modName)
           text `shouldBe` file
+      it "writes every module in ASCII (docs/adding-a-rule.md), its comments' captions included" $
+        [ (modName, T.take 60 l) | (modName, text) <- crModules cr, l <- T.lines text, T.any (> '\DEL') l ] `shouldBe` []
       it "writes the committed ledger docs/LEDGER.md: the binding and finding totals" $ do
         committed <- readFileUtf8 "../docs/LEDGER.md"
         ledgerMarkdown Scott [(ledger ir, crFindings cr)] `shouldBe` committed

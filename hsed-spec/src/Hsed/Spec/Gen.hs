@@ -32,7 +32,11 @@ reader's).
 
 Every definition carries a Haddock line naming its table, PDF and printed
 page, structure ordinal and the hash of its cells ('provenanceComment',
-design example E2).
+design example E2). A generated module is ASCII (docs/adding-a-rule.md): a
+text literal is printed with 'tshow', which escapes what is not, and the
+text of a comment, a caption as printed among it, is made ASCII by 'ascii'
+(which 'provenanceComment' and the module's header apply, and a rule applies
+to any other comment it prints of the PDF's text).
 -}
 module Hsed.Spec.Gen
   ( -- * Where a definition comes from
@@ -63,6 +67,7 @@ module Hsed.Spec.Gen
   , bytesExpr
   , hexByte
   , wrapText
+  , ascii
   , listLines
   , listBlock
   , listDefinition
@@ -190,12 +195,12 @@ renderModule modName gm decls = T.unlines (header <> importLines (concatMap (.de
       [ ""
       , "{-|"
       , "Module      : " <> modName
-      , "Description : " <> gm.description <> ", generated from " <> T.intercalate ", " specs
+      , "Description : " <> ascii gm.description <> ", generated from " <> T.intercalate ", " specs
       , "Copyright   : (c) Magnolia Heights R&D, 2026"
       , "License     : BSD3"
       , "Maintainer  : scott@magnolia-heights.com"
       , "" ]
-      <> wrapText 80 (T.unwords (generatedNote : gm.notes))
+      <> wrapText 80 (ascii (T.unwords (generatedNote : gm.notes)))
       <> [ "-}"
          , "module " <> modName <> " where"
          , "" ]
@@ -265,10 +270,26 @@ wrapText width = reverse . map T.unwords . foldl' place [] . T.words
       | T.length (T.unwords (current <> [w])) <= width = (current <> [w]) : done
       | otherwise = [w] : current : done
 
+-- | Text as printed made ASCII for a comment: a dash as @-@, an ellipsis as
+--   @...@, curly quotes straight, anything else not ASCII as @?@.
+--
+-- >>> ascii "Packet \x2013 Payload\x2026 \x201cx\x201d \x00e9"
+-- "Packet - Payload... \"x\" ?"
+ascii :: Text -> Text
+ascii = T.concatMap $ \c -> if C.isAscii c then T.singleton c else case c of
+  '\x2013' -> "-"
+  '\x2014' -> "-"
+  '\x2026' -> "..."
+  '\x2018' -> "'"
+  '\x2019' -> "'"
+  '\x201c' -> "\""
+  '\x201d' -> "\""
+  _        -> "?"
+
 -- | @-- | core-2.01 T46 AC_element (PDF 100 \/ p.83, ord 48, sha256:3f1a2b3c4d5e)@
 provenanceComment :: Provenance -> Text
 provenanceComment p = T.concat
-  [ "-- | ", specIdText p.spec, " ", p.tableId, " ", title
+  [ "-- | ", specIdText p.spec, " ", p.tableId, " ", ascii title
   , " (PDF ", tshow p.pdfPage1, " / p.", tshow p.printedPage, ", ord ", tshow p.ordinal
   , ", sha256:", T.take 12 p.cellsHash, ")" ]
   where

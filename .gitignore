@@ -2,6 +2,8 @@
 *.swp
 tarballs/
 .stack-work/
+# make werror's work dir, in the root and in each package
+.stack-work-werror/
 *.lock
 !stack.yaml.lock
 dist-newstyle

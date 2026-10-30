@@ -47,13 +47,17 @@ jobs:
           xcode-select -p
           ld -v 2>&1 | head -1
           ls -l /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+      # A run restores the newest cache of its runner (restore-keys), and GHC does not compile a
+      # module again for -Werror alone (docs/spec-as-source.md section 12): the v2 prefix started
+      # from nothing once, after the first runs had cached objects compiled without it, so that
+      # every object the cache holds was compiled with -Werror.
       - uses: actions/cache@v4
         with:
           path: |
             ~/.stack
             **/.stack-work
-          key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', '**/package.yaml') }}
-          restore-keys: stack-${{ runner.os }}-
+          key: stack-v2-${{ runner.os }}-${{ hashFiles('stack.yaml', '**/package.yaml') }}
+          restore-keys: stack-v2-${{ runner.os }}-
       # -Werror turns each package's own warnings (-Wall and the rest of its ghc-options) into
       # errors here only, so the house rule "-Wall clean" is enforced without blocking local work.
       - run: stack --system-ghc --no-install-ghc test --ghc-options=-Werror

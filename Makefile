@@ -25,7 +25,7 @@ CHECK_CMD   := $(HSEDC) check $(CORE_IR) --errata scott
 COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/gen --report build/report \
                && cp build/report/ledger.md docs/LEDGER.md
 
-.PHONY: check test extract extract-test regen-diff annotate pdf-checks venv \
+.PHONY: check test werror extract extract-test regen-diff annotate pdf-checks venv \
         hsedc ir-annotated bind hsedc-check compile gen gen-diff splices
 
 # The targets share files (spec/ir is rewritten by extract and read by annotate; build/*.hsed.* by
@@ -39,6 +39,12 @@ check: extract-test regen-diff annotate pdf-checks gen-diff test
 ## both Haskell test suites
 test:
 	stack test
+
+## CI's test command (gate a: every package's warnings errors) in a work dir of its own,
+## .stack-work-werror, which no plain build fills: in .stack-work a module a plain build compiled
+## is not compiled again for -Werror alone (design section 12). Not part of check.
+werror:
+	stack --work-dir .stack-work-werror --system-ghc --no-install-ghc test --ghc-options=-Werror
 
 ## the Python venv the extraction tools run in: made with $(PYTHON3) (refused below 3.11), and the
 ## pinned wheels reinstalled whenever tools/extract/requirements.txt changes

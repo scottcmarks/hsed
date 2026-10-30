@@ -12,8 +12,14 @@ Stability   : experimental
 
 What a run writes (design 9.2): @build/report/jig-<target>-<UTC stamp>@ as
 JSON (the wire types' own, "Hsed.Wire.Internal"), as Markdown (the
-verdicts, each waiver with its reason and page, the decodes, the pair
-comparison) and as JUnit XML, through "Hsed.Jig.Files"; and the commands
+verdicts, each end's beside a pair's joined one, each waiver with its reason
+and page, the decodes, the pair comparison, the run's problems) and as JUnit
+XML, through "Hsed.Jig.Files"; a run that started in the same second as
+another's reports in the directory takes the next free suffix (@-2@, @-3@).
+The JUnit report holds a test case for each case and extension, for the
+pair, for each problem (a capture, the pair not computed), for no IF-SEND on
+a drive, and one for the exit code, so that its failures never say less
+than the exit code does. And the commands
 that read a report back without privilege: @verify-transcript@ (the
 commands issued, each with its end; a failure if a drive's end was issued
 an IF-SEND, or anything but Level 0 Discovery's IF-RECV, when asked) and
@@ -53,6 +59,7 @@ import qualified Data.ByteString.Base16 as B16
 import           Data.Time              (UTCTime, defaultTimeLocale, formatTime)
 import qualified RIO.ByteString         as B
 import qualified RIO.Char               as C
+import           RIO.Directory          (doesFileExist)
 import           RIO.FilePath           (takeBaseName, (<.>), (</>))
 import qualified RIO.List               as L
 import           RIO
@@ -69,7 +76,7 @@ import           Hsed.Gen.Core.UIDs     (methodIDUIDs, sessionManagerMethodUIDs)
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (writeOwned)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
-import           Hsed.Jig.Pair          (FieldDiff (..), PairReport (..), allowed, pairFails, pairLevel0)
+import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairReport (..), judged, pairFails, pairLevel0)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
 import           Hsed.Jig.Script        (Verdict (..), describeStatus, t45Of, t45RowOf, verdictText)
 import           Hsed.Jig.Transcript    (TEntry (..))
@@ -82,12 +89,14 @@ import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..),
                                          comPacketProtocol, hex, level0ComId)
 
 
--- | What one case came to: its verdict, what it waived, and its extensions'.
+-- | What one case came to: its verdict, what it waived, and its extensions';
+--   on a pair, each end's verdict beside the joined one.
 data CaseResult = CaseResult
   { crKey        :: !CaseKey
   , crVerdict    :: !Verdict
   , crWaivers    :: ![Waiver]
   , crExtensions :: ![(Text, Verdict)]
+  , crEnds       :: ![(Text, Verdict)]  -- ^ each end's verdict, by the end's name; none for a run of one end
   }
   deriving (Eq, Show)
 
@@ -102,6 +111,7 @@ data RunResult = RunResult
   , rrLevel0     :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name
   , rrPair       :: !(Maybe PairReport)
   , rrIfSends    :: !Int                -- ^ the IF-SENDs issued on a drive (none at M3)
+  , rrProblems   :: ![Text]             -- ^ what else failed the run: the capture, a pair not computed
   , rrExit       :: !ExitCode
   }
   deriving (Eq, Show)
@@ -109,14 +119,22 @@ data RunResult = RunResult
 
 -- * Writing
 
--- | Write a run's reports into a directory: the files written.
+-- | Write a run's reports into a directory: the files written, named for
+--   the target and the start's second, with the first suffix (@-2@, @-3@)
+--   no report there has taken if one has the name.
 writeReports :: FilePath -> RunResult -> IO [FilePath]
-writeReports outDir rr = for files (\(path, bytes) -> path <$ writeOwned path bytes)
+writeReports outDir rr = do
+  base <- firstFree (stamped : [ stamped <> "-" <> show n | n <- [2 :: Int ..] ])
+  for (files base) (\(path, bytes) -> path <$ writeOwned path bytes)
   where
-    base  = outDir </> ("jig-" <> T.unpack (slug (roTarget (rrOptions rr))) <> "-" <> formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" (rrStarted rr))
-    files = [ (base <.> "json", toStrictBytes (A.encode rr))
-            , (base <.> "md", encodeUtf8 (markdown rr))
-            , (base <.> "xml", encodeUtf8 (junit rr)) ]
+    stamped    = outDir </> ("jig-" <> T.unpack (slug (roTarget (rrOptions rr))) <> "-" <> formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" (rrStarted rr))
+    files base = [ (base <.> "json", toStrictBytes (A.encode rr))
+                 , (base <.> "md", encodeUtf8 (markdown rr))
+                 , (base <.> "xml", encodeUtf8 (junit rr)) ]
+    firstFree = \case
+      b : rest -> anyM (doesFileExist . fst) (files b) >>= \taken -> if taken then firstFree rest else pure b
+      []       -> pure stamped
+    anyM p = fmap or . traverse p
 
 -- | A target as a report's name has it.
 slug :: TargetSpec -> Text
@@ -153,6 +171,7 @@ instance A.ToJSON CaseResult where
         , "printed"    A..= fmap cePrinted (entryOf (crKey cr))
         , "waivers"    A..= map (waiverJSON (crKey cr)) (crWaivers cr)
         , "extensions" A..= [ A.Object (KM.fromList ["name" A..= n] <> objectOf v) | (n, v) <- crExtensions cr ]
+        , "ends"       A..= [ A.Object (KM.fromList ["end" A..= n] <> objectOf v) | (n, v) <- crEnds cr ]
         ]
       verdictFields = objectOf (crVerdict cr)
       objectOf v = case A.toJSON v of
@@ -171,6 +190,7 @@ instance A.ToJSON RunResult where
                             | (end, l0) <- rrLevel0 rr ]
     , "pair"           A..= rrPair rr
     , "if_send_issued" A..= rrIfSends rr
+    , "problems"       A..= rrProblems rr
     , "exit"           A..= exitNumber (rrExit rr)
     ]
     where
@@ -297,9 +317,11 @@ markdown rr = T.unlines $
   , ""
   , "- hsed: " <> rrVersion rr
   , "- started: " <> T.pack (formatTime defaultTimeLocale "%Y-%m-%dT%H:%M:%SZ" (rrStarted rr))
-  , "- simulator: units " <> unitName (spUnits (roSim o)) <> ", hold " <> tshow (roHold o)
-      <> maybe "" ((", profile " <>) . T.pack) (roProfile o)
-  , "- IF-SENDs issued on a drive: " <> tshow (rrIfSends rr)
+  ]
+  <> [ "- simulator: units " <> unitName (spUnits (roSim o)) <> ", hold " <> tshow (roHold o)
+         <> maybe "" ((", profile " <>) . T.pack) (roProfile o)
+     | hasSimulator rr ]
+  <> [ "- IF-SENDs issued on a drive: " <> tshow (rrIfSends rr)
   , "- exit: " <> tshow (exitNumber (rrExit rr))
   , ""
   , "## Targets"
@@ -314,8 +336,18 @@ markdown rr = T.unlines $
   <> concatMap caseLines (rrCases rr)
   <> level0Lines (rrLevel0 rr)
   <> maybe [] pairLines (rrPair rr)
+  <> concat [ ["## Problems", ""] <> map ("- " <>) (rrProblems rr) <> [""] | not (null (rrProblems rr)) ]
   <> transcriptLines (rrTranscript rr)
   where o = rrOptions rr
+
+-- | Whether a run had the simulator for an end: a target that says it is a
+--   TPer ("Hsed.Transport.InProc").
+hasSimulator :: RunResult -> Bool
+hasSimulator rr = any ((== "tper") . dRole) (rrTargets rr)
+
+-- | Whether a run had a drive for an end, its own or a replay.
+hasDrive :: RunResult -> Bool
+hasDrive rr = any ((/= "tper") . dRole) (rrTargets rr)
 
 -- | A case: its verdict and why, each item of its section's list, its
 --   extensions.
@@ -324,6 +356,7 @@ caseLines cr =
   [ "### " <> caseTitle (crKey cr) <> ": " <> verdictWord (crVerdict cr), "" ]
   <> [ "- " <> r | r <- verdictReasons (crVerdict cr) ]
   <> [ "" | not (null (verdictReasons (crVerdict cr))) ]
+  <> concat [ ["Each end:", ""] <> [ "- " <> n <> ": " <> verdictText v | (n, v) <- crEnds cr ] <> [""] | not (null (crEnds cr)) ]
   <> [ "Prerequisites, Test Cases " <> fst (listAt section) <> " (PDF " <> tshow (snd (listAt section)) <> "):", "" ]
   <> [ "- " <> prereqLine p | (p, _) <- common section ]
   <> concat [ ["", "Extensions, apart from the TCG verdict:", ""] <> [ "- " <> n <> ": " <> verdictText v | (n, v) <- crExtensions cr ]
@@ -374,14 +407,26 @@ pairLines r =
   [ "## Pair: the simulator against the drive", ""
   , "- extra, the simulator's alone (no failure): " <> codesText (prExtra r)
   , "- missing, the drive's alone (a failure): " <> codesText (prMissing r)
-  , "- " <> tshow (length (prAllowed r)) <> " differences allowed, " <> tshow (length (prDiffs r)) <> " not"
+  , "- " <> pairCounts r
   , "- " <> if pairFails r then "fail" else "pass"
   , "" ]
-  <> concat [ [ "| code | field | sim | drive | allowance | allowed |", "|---|---|---|---|---|---|" ] <> map diffRow ds <> [""]
-            | let ds = prAllowed r <> prDiffs r, not (null ds) ]
+  <> concat [ [ "| code | field | sim | drive | allowance | judged |", "|---|---|---|---|---|---|" ] <> map diffRow ds <> [""]
+            | let ds = prAllowed r <> prUnchecked r <> prDiffs r, not (null ds) ]
   where
     diffRow fd = row [ hex (fdCode fd), fdField fd, contentText (fdSim fd), contentText (fdDrive fd)
-                     , maybe "none" allowanceText (fdAllowance fd), if allowed fd then "yes" else "no" ]
+                     , maybe "none" allowanceText (fdAllowance fd), judgementText (judged fd) ]
+
+-- | A comparison's differences counted: allowed, unchecked (as printed,
+--   not evaluated), not allowed.
+pairCounts :: PairReport -> Text
+pairCounts r = tshow (length (prAllowed r)) <> " differences allowed, " <> tshow (length (prUnchecked r))
+               <> " unchecked (as printed, not evaluated), " <> tshow (length (prDiffs r)) <> " not"
+
+judgementText :: Judgement -> Text
+judgementText = \case
+  Allowed    -> "allowed"
+  Unchecked  -> "unchecked"
+  NotAllowed -> "not allowed"
 
 -- | The transcript, an entry a row, each command with the end it went to.
 transcriptLines :: [TEntry] -> [Text]
@@ -435,7 +480,12 @@ comPacketText bytes = case decodeComPacket bytes of
 -- * JUnit XML
 
 -- | The JUnit report: a test case for each case and for each extension, a
---   skip or an unobservable verdict skipped, a failure failed.
+--   skip or an unobservable verdict skipped, a failure failed; one for the
+--   pair, when there was one, failed where it fails; one for each problem
+--   (the capture, a pair not computed), failed; one for no IF-SEND issued on
+--   a drive, when there was a drive, failed if one was; and one for the exit
+--   code, failed when it is not 0, so that the failures never say less than
+--   the exit code.
 junit :: RunResult -> Text
 junit rr = T.unlines $
   [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -453,6 +503,17 @@ junit rr = T.unlines $
     target = slug (roTarget (rrOptions rr))
     tests  = [ (caseTitle (crKey cr), crVerdict cr) | cr <- rrCases rr ]
              <> [ (renderCaseKey (crKey cr) <> " extension: " <> n, v) | cr <- rrCases rr, (n, v) <- crExtensions cr ]
+             <> [ ("Pair: the simulator's Level 0 against the drive's", pairVerdict r) | Just r <- [rrPair rr] ]
+             <> [ ("problem " <> tshow i, Fail [p]) | (i, p) <- zip [1 :: Int ..] (rrProblems rr) ]
+             <> [ ("no IF-SEND issued on a drive (design 9.3)", if rrIfSends rr > 0 then Fail [tshow (rrIfSends rr) <> " issued"] else Pass)
+                | hasDrive rr ]
+             <> [ ("exit code", case rrExit rr of
+                     ExitSuccess -> Pass
+                     code        -> Fail ["exit " <> tshow (exitNumber code) <> ": " <> T.intercalate "; " (exitReasons rr)]) ]
+    pairVerdict r
+      | pairFails r = Fail ([ "missing " <> codesText (prMissing r) | not (null (prMissing r)) ]
+                            <> [ hex (fdCode fd) <> " " <> fdField fd <> " not allowed" | fd <- prDiffs r ])
+      | otherwise   = Pass
     counts = "tests=\"" <> tshow (length tests) <> "\" failures=\"" <> tshow (length [ () | (_, Fail _) <- tests ])
              <> "\" skipped=\"" <> tshow (length [ () | (_, v) <- tests, skipped v ]) <> "\""
     skipped = \case
@@ -466,6 +527,17 @@ junit rr = T.unlines $
         Fail rs        -> [open <> ">", "      <failure message=\"" <> attr (T.intercalate "; " rs) <> "\"/>", "    </testcase>"]
         Skipped r      -> [open <> ">", "      <skipped message=\"" <> attr r <> "\"/>", "    </testcase>"]
         Unobservable r -> [open <> ">", "      <skipped message=\"unobservable: " <> attr r <> "\"/>", "    </testcase>"]
+
+-- | Why a run's exit code is not 0: each case not passed, each extension
+--   failed, the pair's failure, the problems, the IF-SENDs issued on a
+--   drive.
+exitReasons :: RunResult -> [Text]
+exitReasons rr =
+  [ renderCaseKey (crKey cr) <> " " <> verdictWord (crVerdict cr) | cr <- rrCases rr, crVerdict cr /= Pass ]
+  <> [ renderCaseKey (crKey cr) <> " extension " <> n <> " failed" | cr <- rrCases rr, (n, Fail _) <- crExtensions cr ]
+  <> [ "the pair fails" | Just r <- [rrPair rr], pairFails r ]
+  <> rrProblems rr
+  <> [ tshow (rrIfSends rr) <> " IF-SENDs issued on a drive" | rrIfSends rr > 0 ]
 
 -- | Text as an XML attribute's value.
 attr :: Text -> Text
@@ -488,15 +560,15 @@ summary rr paths =
   [ "hsed-jig " <> renderTarget (roTarget (rrOptions rr)) <> ": " <> T.intercalate "; " (map targetText (rrTargets rr)) ]
   <> concatMap caseText (rrCases rr)
   <> maybe [] (\r -> [ "pair: extra " <> codesText (prExtra r) <> "; missing " <> codesText (prMissing r) <> "; "
-                       <> tshow (length (prAllowed r)) <> " differences allowed, " <> tshow (length (prDiffs r)) <> " not"
-                       <> if pairFails r then ": fail" else ": pass" ]) (rrPair rr)
+                       <> pairCounts r <> if pairFails r then ": fail" else ": pass" ]) (rrPair rr)
   <> [ "IF-SENDs issued on a drive: " <> tshow (rrIfSends rr) ]
   <> [ "reports: " <> T.intercalate ", " (map T.pack paths) | not (null paths) ]
   <> [ "exit " <> tshow (exitNumber (rrExit rr)) ]
   where
     targetText d = dRole d <> " " <> dImpl d <> ", " <> unitName (dUnits d) <> maybe "" (", " <>) (dDevice d)
     caseText cr = (caseTitle (crKey cr) <> ": " <> verdictText (crVerdict cr))
-      : map (("  " <>) . waiverLine (crKey cr)) (crWaivers cr)
+      : [ "  on the " <> n <> ": " <> verdictText v | (n, v) <- crEnds cr ]
+      <> map (("  " <>) . waiverLine (crKey cr)) (crWaivers cr)
       <> [ "  extension, " <> n <> ": " <> verdictText v | (n, v) <- crExtensions cr ]
 
 

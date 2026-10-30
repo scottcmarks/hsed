@@ -51,9 +51,13 @@ module Hsed.Level0
   , DecodedDescriptor (..)
   , decodeDescriptor
   , featureDescriptor
+  , setBitsAt
+    -- * Opal's SSC minor versions
+  , sscMinorVersions
   ) where
 
 import qualified Data.Aeson             as A
+import           Data.Bits              (testBit)
 import qualified Data.ByteString.Base16 as B16
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
@@ -276,6 +280,36 @@ known =
   where
     entry :: Feature f => Text -> Proxy f -> [(Text, Allowance)] -> (Word16, (Text, Layout, [(Text, Allowance)]))
     entry source p more = (fromInteger (featureCode p), (source, recordLayout p, featureAllowances p <> more))
+
+-- | The bits a reserved field of a descriptor was read with set, each as the
+--   byte of the descriptor it lies in and its bit there (7 the most
+--   significant): the field found in the layout of the code by its name and
+--   first bit ("Hsed.Core.Layout".'ReservedNotZero' gives those and the
+--   field's value), a reserved run of a tail being the one byte the
+--   difference names. 'Nothing' for another difference, or a code hsed has no
+--   layout of.
+--
+-- >>> setBitsAt 0x0002 (ReservedNotZero "Reserved" 40 (2 ^ 80))
+-- Just [(5,0)]
+setBitsAt :: Word16 -> Difference -> Maybe [(Int, Int)]
+setBitsAt code = \case
+  ReservedNotZero name at v -> do
+    (_, layout, _) <- L.lookup code known
+    let width = maybe 8 fieldWidth (L.find (\f -> fieldName f == name && fieldStart f == at) (layoutFields layout))
+    pure [ ((at + i) `div` 8, 7 - (at + i) `mod` 8) | i <- [0 .. width - 1], testBit v (width - 1 - i) ]
+  _ -> Nothing
+
+-- | Opal 2.30 Table 7, SSC Minor Versions (PDF 24): the values the Opal SSC
+--   V2 descriptor's SSC Minor Version Number may hold, each with the
+--   specification it references; every other value is Reserved. Written by
+--   hand: Opal's tables other than its descriptors are not compiled until M5.
+sscMinorVersions :: [(Integer, Text)]
+sscMinorVersions =
+  [ (0x0, "TCG Opal SSC Specification v2.00")
+  , (0x1, "TCG Opal SSC Specification v2.01")
+  , (0x2, "TCG Opal SSC Specification v2.02")
+  , (0x3, "TCG Opal SSC Specification v2.30")
+  ]
 
 -- | A feature record as a response carries it: its code, version and bytes,
 --   read back from its encoding; an encoding whose length field does not

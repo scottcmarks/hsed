@@ -11,8 +11,12 @@ Stability   : experimental
 
 A run's reports (design 9.2): three files, @jig-<target>-<UTC stamp>@ as
 JSON, Markdown and JUnit XML, the target's part @sim@, @dev-disk6@ or
-@sim+replay-<file>@; each case with its verdict and waivers, a waiver with
-its item and page (LockingManufactured, Test Cases 5.2 item 2, PDF 29); the
+@sim+replay-<file>@, a second run of the same second suffixed @-2@; each
+case with its verdict and waivers, a pair's each end's verdict beside it, a
+waiver with its item and page (LockingManufactured, Test Cases 5.2 item 2,
+PDF 29); the simulator's options only where a simulator ran; the run's
+problems; the JUnit report failing the pair, each problem, an IF-SEND on a
+drive and the exit code wherever the exit code fails; the
 transcript with each IF-SEND's methods decoded and each command's end; the
 JUnit counts. @verify-transcript@ fails a report whose drive was issued an
 IF-SEND only when asked to, the simulator's IF-SENDs counting for nothing,
@@ -38,6 +42,7 @@ import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uSMUID)
 import           Hsed.Jig.Catalogue    (CaseKey (..), TestId (..))
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), defaultRunOptions)
+import           Hsed.Jig.Pair         (PairReport (..))
 import           Hsed.Jig.Prereq       (lockingSPUntouched, noSessionOpened)
 import           Hsed.Jig.Report
 import           Hsed.Jig.Script       (Verdict (..), controlComPacket)
@@ -65,9 +70,9 @@ sample = RunResult
   , rrStarted    = noon
   , rrTargets    = [Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing]
   , rrCases      =
-      [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) []
-      , CaseResult (CaseKey (SPF 2) (Just 1) Nothing Nothing) (Fail ["step 1: not so"]) [lockingSPUntouched] [("an extension", Pass)]
-      , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] []
+      [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) [] []
+      , CaseResult (CaseKey (SPF 2) (Just 1) Nothing Nothing) (Fail ["step 1: not so"]) [lockingSPUntouched] [("an extension", Pass)] []
+      , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] [] []
       ]
   , rrTranscript =
       [ Note 1 "UCT-01 on the sim"
@@ -77,7 +82,23 @@ sample = RunResult
   , rrLevel0     = []
   , rrPair       = Nothing
   , rrIfSends    = 0
+  , rrProblems   = []
   , rrExit       = ExitFailure 1
+  }
+
+-- | A pair of the simulator and a replay: UCT-01 passed on the simulator,
+--   skipped on the replay; the pair failing on a missing code; a capture
+--   problem; an IF-SEND issued on the drive.
+paired :: RunResult
+paired = sample
+  { rrOptions  = defaultRunOptions { roTarget = TPair TSim (TReplay "disk6.bin") }
+  , rrTargets  = rrTargets sample <> [Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin")]
+  , rrCases    = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "replay: no Level 0") [] []
+                     [("sim", Pass), ("replay", Skipped "no Level 0")] ]
+  , rrPair     = Just (PairReport [0x0005] [0x0403] [] [] [])
+  , rrIfSends  = 1
+  , rrProblems = ["--capture-level0 x.bin: no drive to capture"]
+  , rrExit     = ExitFailure 3
   }
 
 -- | The same with the transcript's IF-SEND not issued.
@@ -139,37 +160,65 @@ spec = do
                      | e <- entries', Just (A.Array ps) <- [atPath ["decode", "request", "packets"] e]
                      , p <- toList ps, Just (A.Array sps) <- [at "subpackets" p], sp <- toList sps ]
       methods `shouldBe` replicate 2 (Just (A.String "Properties"))
-    it "counts JUnit's tests, failures and skips, an extension a test" $
+    it "counts JUnit's tests, failures and skips, an extension a test, the exit code one" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         _ <- writeReports dir sample
         xml <- readFileUtf8 (dir </> "jig-sim-20261030T120000Z.xml")
-        xml `shouldSatisfy` T.isInfixOf "<testsuites name=\"hsed-jig\" tests=\"4\" failures=\"1\" skipped=\"1\">"
+        xml `shouldSatisfy` T.isInfixOf "<testsuites name=\"hsed-jig\" tests=\"5\" failures=\"2\" skipped=\"1\">"
         xml `shouldSatisfy` T.isInfixOf "<failure message=\"step 1: not so\"/>"
+        xml `shouldSatisfy` T.isInfixOf "<failure message=\"exit 1: SPF-02:1 fail; ETC-02 skipped\"/>"
+    it "fails in JUnit the pair, each problem, an IF-SEND on a drive and the exit code, as the exit code does" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        paths <- writeReports dir paired
+        xml <- readFileUtf8 (fromMaybe "" (L.find (".xml" `L.isSuffixOf`) paths))
+        xml `shouldSatisfy` T.isInfixOf "tests=\"5\" failures=\"4\" skipped=\"1\""
+        for_ [ "<failure message=\"missing 0x0403\"/>", "<failure message=\"--capture-level0 x.bin: no drive to capture\"/>"
+             , "<failure message=\"1 issued\"/>" ] $ \f -> xml `shouldSatisfy` T.isInfixOf f
+    it "gives a pair's each end's verdict, and the problems, in JSON and Markdown; the simulator's options only where it ran" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        paths <- writeReports dir paired
+        json <- readFileBinary (fromMaybe "" (L.find (".json" `L.isSuffixOf`) paths)) >>= either throwString pure . A.eitherDecodeStrict'
+        md <- readFileUtf8 (fromMaybe "" (L.find (".md" `L.isSuffixOf`) paths))
+        [ (at "end" e, at "verdict" e) | Just (A.Array cs) <- [at "cases" json], c <- toList cs, Just (A.Array es) <- [at "ends" c], e <- toList es ]
+          `shouldBe` [(Just "sim", Just "pass"), (Just "replay", Just "skipped")]
+        at "problems" json `shouldBe` Just (A.toJSON ["--capture-level0 x.bin: no drive to capture" :: Text])
+        md `shouldSatisfy` T.isInfixOf "- replay: skipped: no Level 0"
+        md `shouldSatisfy` T.isInfixOf "## Problems"
+        md `shouldSatisfy` T.isInfixOf "- simulator: units"
+        (_, _, replayOnly) <- written sample { rrTargets = drop 1 (rrTargets paired) }
+        replayOnly `shouldNotSatisfy` T.isInfixOf "- simulator: units"
+    it "suffixes a second run's reports of the same second, overwriting none" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        one <- writeReports dir sample
+        two <- writeReports dir quiet
+        three <- writeReports dir quiet
+        map (L.drop (length dir + 1)) (one <> two <> three) `shouldBe`
+          [ "jig-sim-20261030T120000Z" <> s <> e | s <- ["", "-2", "-3"], e <- [".json", ".md", ".xml"] ]
 
   describe "verifyTranscript" $ do
-    let report dir = dir </> "jig-sim-20261030T120000Z.json"
+    let report dir rr = writeReports dir rr <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)
     it "fails a transcript whose drive was issued an IF-SEND when asked to, not otherwise" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
-        _ <- writeReports dir onDrive
-        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitFailure 1
-        silently (verifyTranscript (report dir) False False) `shouldReturn` ExitSuccess
+        r <- report dir onDrive
+        silently (verifyTranscript r True False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript r False False) `shouldReturn` ExitSuccess
     it "passes one whose IF-SENDs are the simulator's, a pair's, or that issued none, a blocked IF-SEND being none" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
-        _ <- writeReports dir sample
-        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitSuccess
-        _ <- writeReports dir quiet
-        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitSuccess
+        r1 <- report dir sample
+        silently (verifyTranscript r1 True False) `shouldReturn` ExitSuccess
+        r2 <- report dir quiet
+        silently (verifyTranscript r2 True False) `shouldReturn` ExitSuccess
     it "with --level0-only, fails a drive issued anything but Level 0 Discovery's IF-RECV" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
-        _ <- writeReports dir (recvs [(0x01, 0x0001)])
-        silently (verifyTranscript (report dir) True True) `shouldReturn` ExitSuccess
-        _ <- writeReports dir (recvs [(0x01, 0x0001), (0x01, 0x1004)])
-        silently (verifyTranscript (report dir) True True) `shouldReturn` ExitFailure 1
-        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitSuccess
-        _ <- writeReports dir (recvs [(0x02, 0x0001)])
-        silently (verifyTranscript (report dir) False True) `shouldReturn` ExitFailure 1
-        _ <- writeReports dir onDrive
-        silently (verifyTranscript (report dir) False True) `shouldReturn` ExitFailure 1
+        r1 <- report dir (recvs [(0x01, 0x0001)])
+        silently (verifyTranscript r1 True True) `shouldReturn` ExitSuccess
+        r2 <- report dir (recvs [(0x01, 0x0001), (0x01, 0x1004)])
+        silently (verifyTranscript r2 True True) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript r2 True False) `shouldReturn` ExitSuccess
+        r3 <- report dir (recvs [(0x02, 0x0001)])
+        silently (verifyTranscript r3 False True) `shouldReturn` ExitFailure 1
+        r4 <- report dir onDrive
+        silently (verifyTranscript r4 False True) `shouldReturn` ExitFailure 1
     it "counts an issued entry that names no end as a drive's" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         let entry = A.object [ "n" A..= (1 :: Int), "entry" A..= ("issued" :: Text)

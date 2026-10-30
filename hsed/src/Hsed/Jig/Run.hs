@@ -17,10 +17,14 @@ read the profile, open the target, establish or check
 each case's prerequisites and run it, its waivers printed, and its
 extensions on the simulator; on a drive, capture its Level 0 response when
 asked, and check that no IF-SEND was issued; write the reports. The exit
-code: 0 every selected case passed (waived prerequisites printed); 1 a
-failure, or a skip without a waiver; 2 a usage error (a drive target without
-@--expect-serial@ among them); 3 a safety violation (a drive target without
-root, or an IF-SEND issued on a drive).
+code: 0 every selected case passed (waived prerequisites printed), no
+extension failed, a pair found only allowed differences (or unchecked ones)
+and the capture asked for was written; 1 a failure: a case failed, or was
+skipped or unobservable without a waiver, an extension failed, the pair
+found a code missing or a difference not allowed, the capture failed, or a
+profile or target named could not be read or opened; 2 a usage error (a key
+the catalogue lacks, a drive target without @--expect-serial@); 3 a safety
+violation (a drive target without root, or an IF-SEND issued on a drive).
 
 The cases run in the catalogue's order, whatever the order of @--tests@ (the
 Test Cases run section 5's in sequence, 3.1, PDF 25); a key naming a whole
@@ -107,7 +111,7 @@ runJig opts0 = do
                                       <> "privilege (design 9.3)")) devs
           pure (ExitFailure 3)
       | otherwise -> withProfile opts0 >>= \case
-          Left e     -> complain e $> ExitFailure 2
+          Left e     -> complain e $> ExitFailure 1
           Right opts -> tryAny (openTarget opts) >>= \case
             Left e           -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> tshow e) $> ExitFailure 1
             Right (Left e)   -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> e) $> ExitFailure 1
@@ -202,8 +206,9 @@ runOn opts started chosen tg = do
     ifSends <- sum <$> for [ own | e <- ends, Just (own, _) <- [endDrive e] ] (fmap ifSendsIssued . entries)
     transcript <- entries t
     let pairProblems = [ "pair: " <> e | Just (Left e) <- [pairing] ]
+        allProblems  = pairProblems <> problems
         failed = any (not . passed) results || any pairFails [ r | Just (Right r) <- [pairing] ]
-                 || not (null (pairProblems <> problems))
+                 || not (null allProblems)
         exit | ifSends > 0 = ExitFailure 3
              | failed      = ExitFailure 1
              | otherwise   = ExitSuccess
@@ -217,9 +222,10 @@ runOn opts started chosen tg = do
           , rrLevel0     = level0s
           , rrPair       = either (const Nothing) Just =<< pairing
           , rrIfSends    = ifSends
+          , rrProblems   = allProblems
           , rrExit       = exit
           }
-    traverse_ complain (pairProblems <> problems)
+    traverse_ complain allProblems
     when (ifSends > 0) $
       complain ("hsed-jig: " <> tshow ifSends <> " IF-SENDs issued on a drive: a safety violation (design 9.3)")
     tryAny (writeReports (roReportDir opts) rr) >>= \case
@@ -236,11 +242,12 @@ passed cr = crVerdict cr == Pass && null [ () | (_, Fail _) <- crExtensions cr ]
 -- | A case's results on a run's ends as one: alone, as it is; on a pair, a
 --   pass where every end passed, else the failures (or the first other
 --   verdict) each with its end's name; the waivers every end made, and
---   those of some ends with their names; the extensions with their end's.
+--   those of some ends with their names; the extensions with their end's;
+--   and each end's own verdict beside the joined one.
 joined :: Bool -> Case -> [(Text, CaseResult)] -> CaseResult
 joined named c rs
   | not named, [(_, r)] <- rs = r
-  | otherwise = CaseResult (cKey c) verdict waivers extensions
+  | otherwise = CaseResult (cKey c) verdict waivers extensions [ (n, crVerdict r) | (n, r) <- rs ]
   where
     verdict = case [ (n, crVerdict r) | (n, r) <- rs, crVerdict r /= Pass ] of
       []  -> Pass
@@ -274,15 +281,15 @@ runCase e c = runRIO (endEnv e) $ do
   note heading
   tg <- asks reTarget
   case lacking tg (cNeeds c) of
-    Just why -> pure (CaseResult (cKey c) (Skipped why) [] [])
+    Just why -> pure (CaseResult (cKey c) (Skipped why) [] [] [])
     Nothing  -> prerequisites c >>= \case
-      Left why -> pure (CaseResult (cKey c) (Skipped ("prerequisite unmet: " <> why)) [] [])
+      Left why -> pure (CaseResult (cKey c) (Skipped ("prerequisite unmet: " <> why)) [] [] [])
       Right ws -> do
         v <- attempt (cRun c)
         xs <- for (cExtensions c) $ \(name, s) -> (,) name <$> case tg of
           SimTarget _ _ -> note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name) >> attempt s
           _             -> pure (Skipped "the simulator's alone")
-        pure (CaseResult (cKey c) v ws xs)
+        pure (CaseResult (cKey c) v ws xs [])
 
 -- | Why a target cannot run a case that needs these, if it cannot: a drive
 --   at M3 answers Level 0 Discovery alone.

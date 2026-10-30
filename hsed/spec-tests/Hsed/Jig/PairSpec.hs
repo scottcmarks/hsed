@@ -10,9 +10,11 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The Pair runner's comparison of Level 0 (design 9.2): what an allowance
-allows (a vendor unique value, any version, a condition as printed, a
-minimum the drive's value meets); the fields of two decodes compared by
-name, a reserved bit the drive sets a difference nothing allows; the
+allows (a vendor unique value, any version, a minimum the drive's value
+meets), what it leaves unchecked (a condition as printed hsed does not
+evaluate) and what it evaluates (Table 7's SSC minor versions); the fields
+of two decodes compared by name, a reserved bit the drive sets a difference
+nothing allows, named by its byte and bit; the
 descriptor sets first, a code the drive alone reports missing and a
 failure, one the simulator alone reports extra and none. Then the
 milestone's comparison: the simulator against a drive-like
@@ -54,12 +56,19 @@ split = either (throwString . show) pure . splitLevel0
 
 spec :: Spec
 spec = do
-  describe "allowed" $ do
-    it "allows a vendor unique value, any version and a condition as printed, whatever the values" $
-      map allowed [ diffOf (Just VendorUnique) (Number 0x1004) (Number 0x1000)
-                  , diffOf (Just (AnyVersion 2)) (Number 2) (Number 1)
-                  , diffOf (Just (AsPrinted "**")) (Number 0) (Number 1) ]
-        `shouldBe` [True, True, True]
+  describe "judged" $ do
+    it "allows a vendor unique value and any version, whatever the values" $
+      map judged [ diffOf (Just VendorUnique) (Number 0x1004) (Number 0x1000)
+                 , diffOf (Just (AnyVersion 2)) (Number 2) (Number 1) ]
+        `shouldBe` [Allowed, Allowed]
+    it "leaves a condition as printed unchecked, no failure but not allowed" $ do
+      judged (diffOf (Just (AsPrinted "**")) (Number 0) (Number 1)) `shouldBe` Unchecked
+      allowed (diffOf (Just (AsPrinted "**")) (Number 0) (Number 1)) `shouldBe` False
+    it "evaluates the SSC Minor Version Number against Opal 2.30 Table 7: 0x0 to 0x3, the rest reserved" $
+      [ judged (diffOf (Just (AsPrinted "As specified in Table 7")) (Number 3) (Number v)) | v <- [0, 1, 2, 4, 0xF] ]
+        `shouldBe` [Allowed, Allowed, Allowed, NotAllowed, NotAllowed]
+    it "fails nothing for an unchecked difference" $
+      pairFails (PairReport [] [] [] [diffOf (Just (AsPrinted "**")) (Number 0) (Number 1)] []) `shouldBe` False
     it "allows a drive's value at or above a minimum, not below it, and no bytes against one" $
       map allowed [ diffOf (Just (Minimum 8)) (Number 9) (Number 8)
                   , diffOf (Just (Minimum 8)) (Number 8) (Number 7)
@@ -77,16 +86,17 @@ spec = do
                  [("Base ComID", VendorUnique), ("Users", Minimum 8)])
         `shouldBe` [ FieldDiff 0x0203 "Number of ComIDs" (Number 1) (Number 2) Nothing
                    , FieldDiff 0x0203 "Users" (Number 8) (Number 9) (Just (Minimum 8)) ]
-    it "reports reserved bits the drive sets and the simulator does not, which nothing allows" $
-      fieldDiffs 0x0002 (decoded [] [] []) (decoded [] [ReservedNotZero "Reserved" 40 1] [])
-        `shouldBe` [FieldDiff 0x0002 "Reserved (reserved at bit 40)" (Number 0) (Number 1) Nothing]
+    it "reports each reserved bit the drive sets and the simulator does not, by its byte and bit, which nothing allows" $
+      fieldDiffs 0x0002 (decoded [] [] []) (decoded [] [ReservedNotZero "Reserved" 40 (2 ^ (80 :: Int) + 2 ^ (3 :: Int))] [])
+        `shouldBe` [ FieldDiff 0x0002 "Reserved, byte 5 bit 0 (reserved)" (Number 0) (Number 1) Nothing
+                   , FieldDiff 0x0002 "Reserved, byte 15 bit 3 (reserved)" (Number 0) (Number 1) Nothing ]
 
   describe "pairLevel0" $ do
     it "compares the sets of codes first: the drive's alone missing, a failure; the simulator's alone extra, none" $ do
       let same = B.replicate 16 7
           r    = pairLevel0 (level0Of [(0x0001, same), (0x0005, same), (0x0404, same)])
                             (level0Of [(0x0001, same), (0x0403, same)])
-      (prExtra r, prMissing r, prAllowed r, prDiffs r) `shouldBe` ([0x0005, 0x0404], [0x0403], [], [])
+      (prExtra r, prMissing r, prAllowed r, prUnchecked r, prDiffs r) `shouldBe` ([0x0005, 0x0404], [0x0403], [], [], [])
       pairFails r `shouldBe` True
     it "passes descriptors whose bytes are equal, and extra codes, without decoding them" $ do
       let r = pairLevel0 (level0Of [(0x0001, "a"), (0x0005, "b")]) (level0Of [(0x0001, "a")])

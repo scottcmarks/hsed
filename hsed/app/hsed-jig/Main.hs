@@ -44,7 +44,7 @@ hsedJig = info (commands <**> helper <**> versionOption)
     versionOption = infoOption (T.unpack hsedVersion) (long "version" <> help "Show the version")
 
 exitCodes :: String
-exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed); 1 a failure, or a skip without a waiver; 2 a usage error; 3 a safety violation (a drive target without root, or an IF-SEND issued on a drive)."
+exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed), no simulator extension failed, a pair found only allowed or unchecked differences, and a capture asked for was written; 1 a failure: a case failed or was skipped or unobservable without a waiver, an extension failed, the pair found a code missing or a difference not allowed, the capture failed, or a profile or target named could not be read or opened; 2 a usage error (a key the catalogue lacks, a drive target without --expect-serial); 3 a safety violation (a drive target without root, or an IF-SEND issued on a drive)."
 
 -- | A subcommand: its parser and its description (hsubparser gives it
 --   --help), a usage error exiting 2.

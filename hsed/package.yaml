@@ -70,6 +70,7 @@ tests:
     - directory          # EquivTH: every generated module of the spec
     - filepath
     - hspec
+    - QuickCheck         # PacketSpec: frames round trip
     - template-haskell   # EquivTH: every definition of either side, from source
     build-tools:
     - hspec-discover

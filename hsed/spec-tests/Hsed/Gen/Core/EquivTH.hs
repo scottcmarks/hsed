@@ -39,7 +39,8 @@ time:
   compilation;
 * 'handEnumerations' reads the fixture's @tenum@ quasiquotes again: each
   enumeration with its constructors under the fixture's own names and its
-  rows as printed, which a test holds 'asGenerated''s renames to.
+  rows as printed, against which a test holds the renames 'asGenerated'
+  makes.
 
 A value is 'Scalar' ('show' of it) or, for an enumeration, 'Entries': each
 constructor with the value the spec assigns it (the generated module's

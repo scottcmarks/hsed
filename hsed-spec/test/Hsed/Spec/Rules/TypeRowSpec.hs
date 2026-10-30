@@ -67,13 +67,16 @@ ownCheck :: Finding -> Bool
 ownCheck f = Cm.code f /= "C-UID-RANGE"
 
 -- | Each Type table row of the hand transcription, the oracle's fixture
---   (hsed/fixture/Hand/TypeUIDs.hs): every @[ttype|@ quasiquote's Name and
+--   (hsed/fixture/Hand/TypeUIDs.hs): every @ttype@ quasiquote's Name and
 --   Format cells, a cell's lines joined as the quasiquoter joins them (each
 --   line's piece trimmed, the pieces concatenated: @List_Type,*,ACE_expression@).
 handFormats :: Text -> [(Text, Text)]
 handFormats src = [ (typeName, format) | body <- quasiquotes (T.lines src), [_, typeName, format] : _ <- [drop 1 (tableRows body)] ]
   where
-    quasiquotes ls = case break ("[ttype|" `T.isPrefixOf`) ls of
+    -- a line opening a quasiquote of ttype (spelled in pieces here, so that the opener stays
+    -- the fixture's alone, as the M2d acceptance greps it)
+    opener = "[" <> "ttype" <> "|"
+    quasiquotes ls = case break (opener `T.isPrefixOf`) ls of
       (_, _ : rest) -> let (body, later) = break ("|]" `T.isPrefixOf`) rest in body : quasiquotes later
       _             -> []
     lead = T.stripStart

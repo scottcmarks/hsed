@@ -37,9 +37,9 @@ import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.Properties (initialAssumptions, properties)
 import           Hsed.Gen.Core.UIDs       (uProperties, uSMUID, uStartSession, uThisSP)
 import           Hsed.Sim.SessionManager  (answer)
-import           Hsed.Sim.Types           (SimParams (..), defaultSimParams, hostRequirements, maxComPacketSizeName,
-                                           maxMethodsName, maxPacketSizeName, maxPacketsName, maxResponseComPacketSizeName,
-                                           maxSubpacketsName)
+import           Hsed.Sim.Types           (SimParams (..), TPerState, defaultSimParams, hostRequirements, initialState,
+                                           maxComPacketSizeName, maxMethodsName, maxPacketSizeName, maxPacketsName,
+                                           maxResponseComPacketSizeName, maxSubpacketsName)
 
 
 spec :: Spec
@@ -94,28 +94,42 @@ spec = describe "the simulated Session Manager" $ do
   describe "anything else" $ do
     let call = invocation uSMUID (Methods.Properties Nothing)
     it "another Session Manager method is no answer" $
-      answer defaultSimParams call { _header = MethodHeader uSMUID uStartSession } `shouldBe` Nothing
+      answerIn defaultSimParams call { _header = MethodHeader uSMUID uStartSession } `shouldBe` Nothing
     it "Properties invoked on another object is no answer" $
-      answer defaultSimParams call { _header = MethodHeader uThisSP uProperties } `shouldBe` Nothing
+      answerIn defaultSimParams call { _header = MethodHeader uThisSP uProperties } `shouldBe` Nothing
     it "a Properties invocation the host aborted (status other than SUCCESS) is answered, aborted: its status, an empty list" $
       forM_ [1, 0x10, 0x3F] $ \s ->
-        answer defaultSimParams call { _statusCode = s }
+        answerIn defaultSimParams call { _statusCode = s }
           `shouldBe` Just (MethodCall (MethodHeader uSMUID uProperties) (Parameters [L (List [])] []) s)
     it "another method the host aborted is still no answer" $
-      answer defaultSimParams call { _header = MethodHeader uSMUID uStartSession, _statusCode = 1 } `shouldBe` Nothing
+      answerIn defaultSimParams call { _header = MethodHeader uSMUID uStartSession, _statusCode = 1 } `shouldBe` Nothing
     it "a required parameter, Properties having none, is no answer (ETC-08's StartList after StartList)" $
-      answer defaultSimParams call { _parameters = Parameters [L (List [])] [] } `shouldBe` Nothing
+      answerIn defaultSimParams call { _parameters = Parameters [L (List [])] [] } `shouldBe` Nothing
     it "an optional parameter other than HostProperties is no answer" $
-      answer defaultSimParams call { _parameters = Parameters [] [optionalParameter 1 (List [])] } `shouldBe` Nothing
+      answerIn defaultSimParams call { _parameters = Parameters [] [optionalParameter 1 (List [])] } `shouldBe` Nothing
     it "HostProperties other than Named uintegers is no answer" $ do
-      answer defaultSimParams (invocation uSMUID (Methods.Properties (Just (D (Datum (Unsigned 3)))))) `shouldBe` Nothing
-      answer defaultSimParams (invocation uSMUID (Methods.Properties (Just (L (List [D (Datum (Unsigned 3))])))))
+      answerIn defaultSimParams (invocation uSMUID (Methods.Properties (Just (D (Datum (Unsigned 3)))))) `shouldBe` Nothing
+      answerIn defaultSimParams (invocation uSMUID (Methods.Properties (Just (L (List [D (Datum (Unsigned 3))])))))
         `shouldBe` Nothing
 
+  describe "the TPer's state" $
+    it "is as it was after every answer, Properties being stateless at the M4a scaffold" $ do
+      let st = initialState defaultSimParams
+          calls = [ invocation uSMUID (Methods.Properties Nothing)
+                  , invocation uSMUID (Methods.Properties (Just (L (List [N (("MaxPackets" :: ByteString) .: (2 :: Natural))]))))
+                  , (invocation uSMUID (Methods.Properties Nothing)) { _header = MethodHeader uSMUID uStartSession }
+                  , (invocation uSMUID (Methods.Properties Nothing)) { _statusCode = 1 } ]
+      map (snd . (\c -> answer (spBaseComId defaultSimParams) c st)) calls `shouldBe` replicate 4 st
+
+
+-- | The Session Manager's answer to a call on the base ComID of a TPer as it
+--   starts with these parameters.
+answerIn :: SimParams -> MethodCall -> Maybe MethodCall
+answerIn p call = fst (answer (spBaseComId p) call (initialState p :: TPerState))
 
 -- | Run an expectation on the answer to a call, failing if there is none.
 withAnswer :: SimParams -> MethodCall -> (MethodCall -> Expectation) -> Expectation
-withAnswer p call check = maybe (expectationFailure "no answer") check (answer p call)
+withAnswer p call check = maybe (expectationFailure "no answer") check (answerIn p call)
 
 -- | The TPer's properties a response reports: its required parameter, a list of Named values.
 tperProperties :: MethodCall -> [(Text, Natural)]

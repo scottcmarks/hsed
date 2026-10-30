@@ -45,7 +45,7 @@ import           Hsed.Sim.Gen              (genNoActionPayload, genOverfullPaylo
                                             genUnresolvablePayload)
 import           Hsed.Sim.Sync             (Delivery (..), T45Row (..), t45Fields, t45Quantity, t45Rows)
 import           Hsed.Sim.Types            (ComIdState (..), Input (..), Limits (..), Output (..), SimParams (..), SyncState (..),
-                                            TPerState (..), hostLimits)
+                                            TPerState (..), comIdHostLimits)
 import           Hsed.Wire                 (Dir (..), IfStatus (..), Request (..), Response (..), comPacketHeaderSize,
                                             comPacketProtocol, roundUp)
 
@@ -143,7 +143,7 @@ table45 = Law
       , forAll genState $ \st ->
         forAll (elements (Map.toList (tsComIds st))) $ \(c, cs) ->
         forAll (recvLength st (cSync cs)) $ \len ->
-          let (row, d, after) = selected (hostLimits (tsParams st)) len (cSync cs)
+          let (row, d, after) = selected (comIdHostLimits (tsParams st) (cHostProps cs)) len (cSync cs)
               (out, st')      = step (Cmd (Request IfRecv comPacketProtocol c len mempty)) st
           in conjoin
                [ counterexample "the generated row evaluates to the law's own numbers" $ t45Fields row d === Right (expected row d)

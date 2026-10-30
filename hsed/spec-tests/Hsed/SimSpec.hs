@@ -84,7 +84,7 @@ spec = describe "a step of the simulated TPer" $ do
       codeCells <$> codeRow cProtocolIDs 0x01 `shouldBe` Just ["Defined in this document"]
       codeCells <$> codeRow cProtocolIDs 0x02 `shouldBe` Just ["Defined in this document"]
       codeCells <$> codeRow cProtocolIDs 0x00 `shouldBe` Just ["See [6]"]
-    it "0x02, ComID management, is M4a's; IF-RECV on 0x00 is not simulated" $ do
+    it "0x02, ComID management, is group G2's; IF-RECV on 0x00 is not simulated" $ do
       status (answerTo (tper id) (sendOn 0x02 0x0004 512)) `shouldSatisfy` isUnsupported
       status (answerTo (tper id) (recvOn 0x00 0x0000 512)) `shouldSatisfy` isUnsupported
     it "0x00 is not defined for IF-SEND: an Invalid Security Protocol ID, the TPer unchanged (SIIS 1.20 Tables 12, 23; Opal 3.3.2)" $
@@ -167,7 +167,7 @@ spec = describe "a step of the simulated TPer" $ do
 
   describe "events and ticks" $ do
     it "an event puts every static ComID back to awaiting IF-SEND, Good" $ do
-      let st = (tper (\p -> p { spNComIds = 3 })) { tsComIds = Map.fromList [ (base + i, ComIdState 0 Issued s) | (i, s) <- zip [0 ..] [S1, S2 ["a"], S3 ["b"]] ] }
+      let st = (tper (\p -> p { spNComIds = 3 })) { tsComIds = Map.fromList [ (base + i, ComIdState 0 Issued s initialHostProperties (MgmtBuffer False Nothing)) | (i, s) <- zip [0 ..] [S1, S2 ["a"], S3 ["b"]] ] }
       forM_ [minBound .. maxBound] $ \e ->
         step (Ev e) st `shouldBe` (Evented Good, tper (\p -> p { spNComIds = 3 }))
     it "a Tick releases a prepared response, S2 to S3, and leaves any other state" $ do

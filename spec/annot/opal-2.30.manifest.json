@@ -1,0 +1,32 @@
+{
+ "anchors": [
+  {
+   "hash": null,
+   "header": null,
+   "id": "doc",
+   "kind": "Doc",
+   "label": null,
+   "ordinal": null,
+   "page": 0,
+   "rects": [
+    [
+     0,
+     [
+      36.0,
+      720.0,
+      108.0,
+      756.0
+     ]
+    ]
+   ],
+   "struct": "",
+   "title": null
+  }
+ ],
+ "irVersion": 1,
+ "labelOffset": 1,
+ "md5": "054e505db3895b25c38dd9dfbcc36259",
+ "pages": 101,
+ "source": "TCG_Storage-Opal_SSC_v2.30.pdf",
+ "spec": "opal-2.30"
+}

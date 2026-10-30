@@ -531,7 +531,7 @@ hsed/
   spec/fixtures/disk6-query.json (M0), disk6-level0.bin (M3)
   tools/extract/{extract_tables,hsed_annot,annotate,apply,dump,pdf_checks}.py, requirements.txt, render_check.sh; tools/land.sh
   tcg/                                        pristine PDFs, untouched; TCG-NOTICE.txt (verbatim TCG licence text)
-  docs/{spec-as-source.md (this), wire.md, annotation-grammar.md, LEDGER.md (generated)}
+  docs/{spec-as-source.md (this), wire.md, annotation-grammar.md, LEDGER.md and, since M3, LEDGER-opal.md (generated)}
   dev/                                        not compiled: the 2019 material (DevMain.hs, the ghci scripts and transcripts; since
                                               M2d, §13.20, Token-prose.txt, Table.hs, GDPTest.hs, SingTest.hs, the Instances stub and
                                               TypesSpec'.transcript; since the M2d review TypeTests.hs), the splice dumps

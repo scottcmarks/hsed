@@ -80,7 +80,8 @@ mechanics (pypdf incremental update, render identity, three-reader read-back):
   elsewhere); pikepdf, pypdf and pymupdf read back the same annotations, each as the format
   defines it and where the manifest says; `dump(apply(upd)) == hsa`; a second `annotate` run
   reproduces `.upd`, manifest and PDF byte for byte. Renders and the re-run's outputs are left
-  under `build/pdf-checks/` with `report.json`. Non-zero exit on any FAIL.
+  under `--work` (`make pdf-checks` gives each spec its own, `build/pdf-checks/<spec>/`, Opal's
+  pages 1, 20 and 23 rendered besides its anchors') with `report.json`. Non-zero exit on any FAIL.
 
 The M1 prototype (`compile.py`, `equiv_check.py`, `probe.py`, `run_all.sh`) was retired on
 2026-10-29; its results are recorded in `docs/evidence/2026-10-25/m1_report.md`. Generation and

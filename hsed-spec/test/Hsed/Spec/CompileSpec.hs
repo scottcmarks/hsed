@@ -12,7 +12,9 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 @hsedc compile@ on the committed Core extraction with the committed
-annotations: no Error, and no table left out but those a comment binds to a
+annotations (and on Opal's, over Core's base, its unbound units Warnings:
+no Error, its committed modules and @docs/LEDGER-opal.md@ what the run
+gives): no Error, and no table left out but those a comment binds to a
 shape no rule of the registry reads yet (a reader still to come, each a
 W-GEN-EXCLUDED Warning); the committed @hsed/gen@ modules
 exactly what the committed annotations give, file for file (a module no rule
@@ -36,7 +38,7 @@ import           RIO.FilePath      (dropExtension, makeRelative, takeExtension, 
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor  (AnchorId (..))
-import           Hsed.Spec.Check   (mkContext)
+import           Hsed.Spec.Check   (mkContext, partially)
 import           Hsed.Spec.Common  (ErrataSet (..), isError, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.Compile
@@ -108,10 +110,27 @@ spec = do
         [ (modName, T.take 60 l) | (modName, text) <- crModules cr, l <- T.lines text, T.any (> '\DEL') l ] `shouldBe` []
       it "writes the committed ledger docs/LEDGER.md: the binding and finding totals" $ do
         committed <- readFileUtf8 "../docs/LEDGER.md"
-        ledgerMarkdown Scott [(ledger ir, crFindings cr)] `shouldBe` committed
+        ledgerMarkdown "build/report/ledger.md" Scott [(ledger ir, crFindings cr)] `shouldBe` committed
       it "writes the same text whatever the order of the IR's tables" $ do
         cr' <- either (throwString . T.unpack . renderFinding) pure (compileIR Nothing Scott ir { tables = reverse ir.tables })
         crModules cr' `shouldBe` crModules cr
+
+    describe "compileIR of Opal over Core's base, Opal annotated in part (hsedc --base, --partial)" $
+      withOpal $ \opalPristine -> do
+        opal <- runIO (committedOpalHsa >>= annotated opalPristine)
+        cr <- runIO (either (throwString . T.unpack . renderFinding) pure (compileIR (Just (mkContext Scott ir)) Scott opal))
+        let fs = partially ["opal-2.30"] (crFindings cr)
+        it "finds no Error once its unbound units are Warnings" $
+          filter isError fs `shouldBe` []
+        it "writes the committed hsed/gen/Hsed/Gen/Opal modules, and only those" $ do
+          committed <- committedModules "../hsed/gen" (Gen.specModuleDir "../hsed/gen" (Cm.SpecId "opal-2.30"))
+          L.sort committed `shouldBe` map fst (crModules cr)
+          forM_ (crModules cr) $ \(modName, text) -> do
+            file <- readFileUtf8 (Gen.modulePath "../hsed/gen" modName)
+            text `shouldBe` file
+        it "writes the committed ledger docs/LEDGER-opal.md" $ do
+          committed <- readFileUtf8 "../docs/LEDGER-opal.md"
+          ledgerMarkdown "build/report/opal/ledger.md" Scott [(ledger opal, fs)] `shouldBe` committed
 
     describe "the per-table annotations" $ do
       cr <- runIO (compiled Scott)

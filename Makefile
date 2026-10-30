@@ -9,21 +9,35 @@ VENV    := build/venv.stamp
 EXTRACT := $(PY) -I tools/extract/extract_tables.py
 CORE    := tcg/TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf
 OPAL    := tcg/TCG_Storage-Opal_SSC_v2.30.pdf
-# the annotation round trip of docs/spec-as-source.md section 5.3 (M1: Core only)
+# the annotation round trip of docs/spec-as-source.md section 5.3, for each spec (Core since M1, Opal since
+# M3); pdf-checks renders Opal's pages 1, 20 and 23 besides its anchors' (its default pages are Core's)
 ANNOT   := spec/annot
 CORE_ANNOT_ARGS := --spec core-2.01 --pristine $(CORE) --ir spec/ir/core-2.01.json --hsa $(ANNOT)/core-2.01.hsa \
                    --out build/core-2.01.hsed.pdf --upd $(ANNOT)/core-2.01.upd --manifest $(ANNOT)/core-2.01.manifest.json
+OPAL_ANNOT_ARGS := --spec opal-2.30 --pristine $(OPAL) --ir spec/ir/opal-2.30.json --hsa $(ANNOT)/opal-2.30.hsa \
+                   --out build/opal-2.30.hsed.pdf --upd $(ANNOT)/opal-2.30.upd --manifest $(ANNOT)/opal-2.30.manifest.json
+OPAL_PAGES      := 1,20,23
 
-# the hsedc side of the pipeline (docs/spec-as-source.md section 5.2): the annotated PDF extracted,
+# the hsedc side of the pipeline (docs/spec-as-source.md section 5.2): each annotated PDF extracted,
 # then bind, check and compile; what it writes under hsed-spec/bindings and hsed/gen is committed, and
-# so is its ledger (docs/LEDGER.md: the binding and finding totals the tests do not pin)
+# so are its ledgers (docs/LEDGER.md for Core, docs/LEDGER-opal.md for Opal: the binding and finding
+# totals the tests do not pin). Opal is read over Core, Core's Context its base (--base, design 13.26
+# (g)), and annotated in part until M5, its units nothing binds yet Warnings (--partial, 13.26 (k)).
 HSEDC       := stack exec -- hsedc
 CORE_IR     := build/core-2.01.hsed.json
-BINDINGS    := hsed-spec/bindings/Hsed/Bindings/Core.hs
-BIND_CMD    := $(HSEDC) bind $(CORE_IR) -o $(BINDINGS)
-CHECK_CMD   := $(HSEDC) check $(CORE_IR) --errata scott
+OPAL_IR     := build/opal-2.30.hsed.json
+BINDINGS    := hsed-spec/bindings/Hsed/Bindings
+OPAL_RUN    := --base $(CORE_IR) --partial opal-2.30
+BIND_CMD    := $(HSEDC) bind $(CORE_IR) -o $(BINDINGS)/Core.hs \
+               && $(HSEDC) bind $(OPAL_IR) $(OPAL_RUN) -o $(BINDINGS)/Opal.hs
+CHECK_CMD   := $(HSEDC) check $(CORE_IR) --errata scott \
+               && $(HSEDC) check $(OPAL_IR) $(OPAL_RUN) --errata scott
 COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/gen --report build/report \
-               && cp build/report/ledger.md docs/LEDGER.md
+               && cp build/report/ledger.md docs/LEDGER.md \
+               && $(HSEDC) compile $(OPAL_IR) $(OPAL_RUN) --errata scott --target opal230 -o hsed/gen --report build/report/opal \
+               && cp build/report/opal/ledger.md docs/LEDGER-opal.md
+# what gen writes and gen-diff holds to the committed files
+GENERATED   := hsed-spec/bindings hsed/gen docs/LEDGER.md docs/LEDGER-opal.md
 
 .PHONY: check test werror extract extract-test regen-diff annotate pdf-checks venv \
         hsedc ir-annotated bind hsedc-check compile gen gen-diff splices
@@ -75,40 +89,46 @@ extract-test: $(VENV)
 regen-diff: extract
 	git diff --exit-code --stat spec/ir
 
-## build/core-2.01.hsed.pdf from the committed sidecar: pristine + ONE incremental section;
+## build/<spec>.hsed.pdf from each spec's committed sidecar: pristine + ONE incremental section;
 ## rewrites the committed .upd and manifest (which must then diff clean, see pdf-checks)
 annotate: $(VENV)
 	mkdir -p build
 	$(PY) -I tools/extract/annotate.py $(CORE_ANNOT_ARGS)
+	$(PY) -I tools/extract/annotate.py $(OPAL_ANNOT_ARGS)
 
 ## the PDF gates (design 5.4 c-e): byte prefix, pristine + upd == annotated, tail budget, identical
 ## renders (gs, MuPDF, sips where present), three-reader read-back, dump(apply(upd)) == hsa,
-## annotate(hsa) == upd; then the committed .upd and manifest must be what annotate produced
+## annotate(hsa) == upd, for each spec (its work dir build/pdf-checks/<spec>); then the committed .upd
+## and manifest must be what annotate produced
 pdf-checks: annotate
-	$(PY) -I tools/extract/pdf_checks.py $(CORE_ANNOT_ARGS) --work build/pdf-checks
+	$(PY) -I tools/extract/pdf_checks.py $(CORE_ANNOT_ARGS) --work build/pdf-checks/core-2.01
+	$(PY) -I tools/extract/pdf_checks.py $(OPAL_ANNOT_ARGS) --pages $(OPAL_PAGES) --work build/pdf-checks/opal-2.30
 	git diff --exit-code --stat $(ANNOT)
 
 ## the spec compiler
 hsedc:
 	stack build hsed-spec:exe:hsedc
 
-## build/core-2.01.hsed.json: the annotated PDF extracted (pristine + the committed annotations); it
-## differs from spec/ir/core-2.01.json in its annots alone, which is what hsedc reads
+## build/<spec>.hsed.json: each annotated PDF extracted (pristine + the committed annotations); it
+## differs from spec/ir/<spec>.json in its annots alone, which is what hsedc reads
 ir-annotated: annotate
 	$(EXTRACT) build/core-2.01.hsed.pdf $(CORE_IR) build/core-2.01.hsed-index.txt --spec core-2.01 --page-offset 17 --pristine $(CORE)
+	$(EXTRACT) build/opal-2.30.hsed.pdf $(OPAL_IR) build/opal-2.30.hsed-index.txt --spec opal-2.30 --page-offset 1 --pristine $(OPAL) --check-against spec/ir/core-2.01.json
 
-## hsed-spec/bindings/Hsed/Bindings/Core.hs from the annotations of build/core-2.01.hsed.json (made
-## afresh from the committed sidecar); only the hsed-spec:bindings test component compiles it, and
-## an Error leaves it as it was
+## hsed-spec/bindings/Hsed/Bindings/{Core,Opal}.hs from the annotations of build/<spec>.hsed.json (made
+## afresh from the committed sidecars); only the hsed-spec:bindings test component compiles them, and
+## an Error leaves them as they were
 bind: ir-annotated hsedc
 	$(BIND_CMD)
 
-## classify every numbered table and run the checks under Scott's errata (non-zero exit on an Error)
+## classify every numbered table of each spec and run the checks under Scott's errata (non-zero exit on
+## an Error; Opal's unbound units are Warnings until M5)
 hsedc-check: ir-annotated hsedc
 	$(CHECK_CMD)
 
-## hsed/gen/Hsed/Gen/Core/*.hs (any other module there removed), build/report/{findings,coverage,ERRATA,ledger}.md
-## and docs/LEDGER.md, the committed copy of the ledger (nothing written on an Error)
+## hsed/gen/Hsed/Gen/{Core,Opal}/*.hs (any other module there removed), the reports
+## build/report/{findings,coverage,ERRATA,ledger}.md (Opal's under build/report/opal) and the committed
+## copies of the ledgers, docs/LEDGER.md and docs/LEDGER-opal.md (nothing written on an Error)
 compile: ir-annotated hsedc
 	$(COMPILE_CMD)
 
@@ -118,11 +138,11 @@ gen: ir-annotated hsedc
 	$(CHECK_CMD)
 	$(COMPILE_CMD)
 
-## the committed bindings, generated code and ledger must be what gen produces today (changed, removed
+## the committed bindings, generated code and ledgers must be what gen produces today (changed, removed
 ## or new files)
 gen-diff: gen
-	git diff --exit-code --stat hsed-spec/bindings hsed/gen docs/LEDGER.md
-	@new=$$(git status --porcelain --untracked-files=all -- hsed-spec/bindings hsed/gen docs/LEDGER.md); \
+	git diff --exit-code --stat $(GENERATED)
+	@new=$$(git status --porcelain --untracked-files=all -- $(GENERATED)); \
 	  if [ -n "$$new" ]; then echo "$$new"; echo "gen-diff: generated files are not committed"; exit 1; fi
 
 ## dev/TableUIDs.txt: GHCi's -ddump-splices transcript of the hand-written TableUIDs (since M2d the

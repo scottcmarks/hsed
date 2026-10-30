@@ -161,9 +161,9 @@ runWith out err = \case
         createDirectoryIfMissing True reportTo
         writeFileUtf8 (reportTo </> "findings.md") (findingsMarkdown sid es fs)
         writeFileUtf8 (reportTo </> "coverage.md") (coverageMarkdown ir)
-        writeFileUtf8 (reportTo </> "ERRATA.md") (errataMarkdown (mkContext es ir) fs)
-        writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown es [(ledger ir, fs)])
-        say err ("hsedc compile: wrote " <> display (T.intercalate ", " (map (T.pack . fst) paths)) <> " ("
+        writeFileUtf8 (reportTo </> "ERRATA.md") (errataMarkdown (reportTo </> "ERRATA.md") (mkContext es ir) fs)
+        writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown (reportTo </> "ledger.md") es [(ledger ir, fs)])
+        say err ("hsedc compile: wrote " <> (if null paths then "no module" else display (T.intercalate ", " (map (T.pack . fst) paths))) <> " ("
                     <> display (length (crDecls cr)) <> " declarations, "
                     <> display (length (crExcluded cr)) <> " units left out)"
                     <> (if null stale then "" else ", removed " <> display (T.intercalate ", " (map T.pack stale)))

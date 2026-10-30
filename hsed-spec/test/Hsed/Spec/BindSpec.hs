@@ -13,8 +13,8 @@ Stability   : experimental
 @hsedc bind@ on the committed Core extraction: one entry per annotation, in
 canonical order, a bare modifier chain printed on its rule default, a binding
 shaped by its target printed at the target's shape, a law at its paragraph's
-shape, and the committed bindings module exactly what the committed annotations
-give.
+shape, and the committed bindings modules, Core's and Opal's, exactly what the
+committed annotations give.
 -}
 module Hsed.Spec.BindSpec (spec) where
 
@@ -74,9 +74,16 @@ spec = withCore $ \pristine -> do
       map renderFinding (fst (bindEntries ir'))
         `shouldBe` ["E-ERRATUM-PUBLISHED core-2.01.pdf#page=100&T46: 1:9: erratum published: the published set is the text as printed and takes no corrections; write erratum scott"]
 
-  describe "bindModule" $
+  describe "bindModule" $ do
     it "prints the committed hsed-spec/bindings/Hsed/Bindings/Core.hs" $ do
       committed <- readFileUtf8 "bindings/Hsed/Bindings/Core.hs"
       let (fs, result) = bindModule ir
       filter isError fs `shouldBe` []
       result `shouldBe` Right committed
+    withOpal $ \opalPristine ->
+      it "prints the committed hsed-spec/bindings/Hsed/Bindings/Opal.hs from the committed Opal sidecar" $ do
+        opal <- committedOpalHsa >>= annotated opalPristine
+        committed <- readFileUtf8 "bindings/Hsed/Bindings/Opal.hs"
+        let (fs, result) = bindModule opal
+        filter isError fs `shouldBe` []
+        result `shouldBe` Right committed

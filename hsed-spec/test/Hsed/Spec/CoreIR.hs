@@ -14,12 +14,16 @@ The tests of rules, checks, bindings and the generator run on
 @spec\/ir\/core-2.01.json@ (pristine, no annotations) with a sidecar's
 annotations resolved into it ("Hsed.Spec.Sidecar"), the committed
 @spec\/annot\/core-2.01.hsa@ or a few lines of their own; the same IR the
-extractor gives for the annotated PDF. Cells are edited through their JSON
-form, the one way to set a field several IR records share.
+extractor gives for the annotated PDF. Since M3 the same for Opal
+(@spec\/ir\/opal-2.30.json@, @spec\/annot\/opal-2.30.hsa@), which is read over
+Core. Cells are edited through their JSON form, the one way to set a field
+several IR records share.
 -}
 module Hsed.Spec.CoreIR
   ( withCore
   , committedHsa
+  , withOpal
+  , committedOpalHsa
   , annotated
   , annotatedWith
   , setCell
@@ -60,6 +64,19 @@ withCore k = do
 -- | The committed sidecar.
 committedHsa :: IO Text
 committedHsa = readFileUtf8 "../spec/annot/core-2.01.hsa"
+
+-- | The committed Opal extraction, read once for a group of tests; pending where it is not checked out.
+withOpal :: (SpecIR -> Spec) -> Spec
+withOpal k = do
+  let path = "../spec/ir/opal-2.30.json"
+  present <- runIO (doesFileExist path)
+  if present
+    then runIO (readIR path) >>= either (\e -> it "reads the committed Opal IR" (expectationFailure e)) k
+    else it "needs the committed Opal IR" (pendingWith (path <> " is not checked out"))
+
+-- | The committed Opal sidecar.
+committedOpalHsa :: IO Text
+committedOpalHsa = readFileUtf8 "../spec/annot/opal-2.30.hsa"
 
 -- | The IR with a sidecar's annotations; a sidecar that does not resolve is a test failure.
 annotated :: SpecIR -> Text -> IO SpecIR

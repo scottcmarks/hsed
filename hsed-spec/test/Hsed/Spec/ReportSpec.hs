@@ -50,7 +50,7 @@ spec = withCore $ \pristine -> do
   cr  <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
   let fs     = crFindings cr
       ctx    = mkContext Scott ir
-      errata = errataMarkdown ctx fs
+      errata = errataMarkdown "build/report/ERRATA.md" ctx fs
       lines' = T.lines errata
       has t  = any (t `T.isInfixOf`) lines'
 
@@ -92,12 +92,12 @@ spec = withCore $ \pristine -> do
         `shouldBe` []
     it "lists the findings of a code its catalogue does not name apart, so that none is dropped" $ do
       let new = (finding Warning "W-NOVEL" "something new") { Cm.spec = Just core, Cm.page = Just 40, Cm.anchor = Just "T17" }
-          text = errataMarkdown ctx [new]
+          text = errataMarkdown "build/report/ERRATA.md" ctx [new]
       forM_ ["## Not yet classified", "### W-NOVEL (1)", "- `core-2.01.pdf#page=40&T17` (Table 17, printed page 23): something new"] $ \l ->
         T.lines text `shouldContain` [l]
     it "says when no annotation carries a correction" $ do
       bare <- annotated pristine (withoutLine "T75" (withoutLine "T101" hsa))
-      T.lines (errataMarkdown (mkContext Scott bare) []) `shouldContain` ["No annotation carries a correction."]
+      T.lines (errataMarkdown "build/report/ERRATA.md" (mkContext Scott bare) []) `shouldContain` ["No annotation carries a correction."]
 
   describe "coverage.md" $ do
     let cov = T.lines (coverageMarkdown ir)

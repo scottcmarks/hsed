@@ -33,8 +33,8 @@ import           System.Environment       (lookupEnv)
 import           System.Process           (readProcessWithExitCode)
 import           Test.Hspec
 
-import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), TileProblem (..), byteRange,
-                                           spanning)
+import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), TailKind (..), TileProblem (..),
+                                           byteRange, spanning)
 import           Hsed.Spec.Anchor         (AnchorId (..))
 import           Hsed.Spec.Check          (mkContext)
 import           Hsed.Spec.Common         (ErrataSet (..), Severity (..))
@@ -83,7 +83,7 @@ spec = describe "Hsed.Spec.Readers.Layout" $ do
         (layoutSize l, map (\f -> (fieldName f, fieldKind f)) (layoutFields l)) `shouldBe`
           (20, [ ("Reserved", Reserved), ("ComID", Unsigned), ("ComID Extension", Unsigned), ("OutstandingData", Unsigned)
                , ("MinTransfer", Unsigned), ("Length", Unsigned) ])
-        layoutTail l `shouldBe` Just (Tail "Payload" (Just "Length") 1 Bytes)
+        layoutTail l `shouldBe` Just (Tail "Payload" (Just "Length") 1 Payload)
       it "T18: the Session as the two numbers its parenthesis names, TSN bytes 0-3 and HSN 4-7 (PDF 41, 3.2.3.3.1.1)" $ do
         let (t, l) = layoutOf ir 18
         [ (fieldName f, fieldStart f, fieldWidth f, fieldKind f) | f <- take 2 (layoutFields l) ]
@@ -91,7 +91,7 @@ spec = describe "Hsed.Spec.Readers.Layout" $ do
         [ (fieldName f, gfName gf) | (f, gf) <- take 2 (gridFields (readGrid [] t)) ]
           `shouldBe` [("TSN", "Session (0-3 = TSN, 4-7 = HSN)"), ("HSN", "Session (0-3 = TSN, 4-7 = HSN)")]
       it "T20: the payload padded to four bytes, as its end's modulo 4 says" $
-        layoutTail (snd (layoutOf ir 20)) `shouldBe` Just (Tail "Payload" (Just "Length") 4 Bytes)
+        layoutTail (snd (layoutOf ir 20)) `shouldBe` Just (Tail "Payload" (Just "Length") 4 Payload)
       it "T42: one-bit flags, reserved bits, the 4-bit Version" $ do
         let (_, l) = layoutOf ir 42
         [ (fieldName f, fieldWidth f, fieldKind f) | f <- layoutFields l, fieldName f `elem` ["Version", "Sync Supported", "Feature Code"] ]
@@ -112,7 +112,7 @@ spec = describe "Hsed.Spec.Readers.Layout" $ do
         let ls = T.lines text
         ls `shouldContain` ["comPacketFormat :: Layout"]
         ls `shouldContain` ["      , spanning \"ComID\" (4, 7) (5, 0) Unsigned"]
-        ls `shouldContain` ["  , layoutTail   = Just (Tail \"Payload\" (Just \"Length\") 1 Bytes)"]
+        ls `shouldContain` ["  , layoutTail   = Just (Tail \"Payload\" (Just \"Length\") 1 Payload)"]
         ls `shouldContain` ["      , spanning \"IEEE COMPANY ID\" (4, 3) (7, 4) Unsigned"]
         ls `shouldContain` ["      , spanning \"NAA\" (4, 7) (4, 4) (Pinned 0x5)"]
       it "prints a pin at its field's width in hex digits: 0x0001 for 16 bits, 0x1 for 4, 0x0c for 8" $ do

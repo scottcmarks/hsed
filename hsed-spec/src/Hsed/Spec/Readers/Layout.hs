@@ -53,8 +53,8 @@ import qualified RIO.List               as L
 import qualified RIO.Text               as T
 import           RIO
 
-import           Hsed.Core.Layout       (Field (..), FieldKind (..), Layout (..), Tail (..), TileProblem (..), bitOffset,
-                                         bitPosition, fieldEnd, tiling)
+import           Hsed.Core.Layout       (Field (..), FieldKind (..), Layout (..), Tail (..), TailKind (..), TileProblem (..),
+                                         bitOffset, bitPosition, fieldEnd, tiling)
 import           Hsed.Spec.Common       (CodeDef (..), Finding, Reports (..), Severity (..), finding)
 import qualified Hsed.Spec.Gen          as Gen
 import           Hsed.Spec.IR           (CellIR)
@@ -81,7 +81,7 @@ layoutsModule = Gen.GenModule
 --   provenance line.
 layoutDecl :: Gen.Provenance -> Text -> Layout -> [Text] -> Gen.Decl
 layoutDecl p name l comment = (Gen.decl p name body)
-  { Gen.declImports = [ Gen.ImportSome Gen.layoutModule (["FieldKind (..)", "Layout (..)", "spanning"] <> [ "Tail (..)" | isJust (layoutTail l) ])
+  { Gen.declImports = [ Gen.ImportSome Gen.layoutModule (["FieldKind (..)", "Layout (..)", "spanning"] <> concat [ ["Tail (..)", "TailKind (..)"] | isJust (layoutTail l) ])
                       , Gen.ImportSome "Prelude" ["Maybe (..)"] ] }
   where
     body =
@@ -101,7 +101,7 @@ layoutDecl p name l comment = (Gen.decl p name body)
       Pinned v -> "(Pinned " <> pinText width v <> ")"
       k        -> tshow k
     tailExpr t = "Just (Tail " <> tshow (tailName t) <> " " <> maybe "Nothing" (\n -> "(Just " <> tshow n <> ")") (tailLength t)
-                 <> " " <> tshow (tailAlign t) <> " " <> kindExpr 0 (tailKind t) <> ")"
+                 <> " " <> tshow (tailAlign t) <> " " <> tshow (tailKind t) <> ")"
 
 -- | A pinned value in hex at its field's width: as many digits as the field's
 --   bits take (@0x0001@ for 16 bits, @0x1@ for 4).
@@ -152,15 +152,15 @@ gridFields g = concat [ map (\f -> (f, gf)) (fieldsOf gf l) | gf <- gFields g, J
 --   ('gridFields'); the field without a last bit, if any, the tail, its
 --   length given by the field whose parenthesis names the variable its end
 --   refers to (@Length (n)@ and @20 to n + 19@), its padding the @modulo@ its
---   end gives (@(n+(-n modulo 4)) + 11@), reserved bytes when its name says
---   so (@46 to TRNSFLEN - 1 | Reserved@), else bytes. A rule applies its
+--   end gives (@(n+(-n modulo 4)) + 11@), a 'ReservedRun' when its name says
+--   so (@46 to TRNSFLEN - 1 | Reserved@), else a 'Payload'. A rule applies its
 --   constants to the fields (as 'Pinned' kinds) before it prints the layout.
 gridLayout :: Text -> Grid -> Layout
 gridLayout name g = Layout
   { layoutName   = name
   , layoutSize   = gSize g
   , layoutFields = map fst (gridFields g)
-  , layoutTail   = listToMaybe [ Tail (baseName f) (lengthFieldOf end) (alignOf end) (if reservedName (baseName f) then Reserved else Bytes)
+  , layoutTail   = listToMaybe [ Tail (baseName f) (lengthFieldOf end) (alignOf end) (if reservedName (baseName f) then ReservedRun else Payload)
                                | f <- gFields g, Nothing <- [gfLast f], let end = fromMaybe "" (gfEnd f) ] }
   where
     lengthFieldOf end = listToMaybe [ baseName f | f <- gFields g, Just v <- [fieldVariable f], v `elem` T.words (T.map spaced end) ]
@@ -232,7 +232,6 @@ tileCells g = \case
   WideFlag n    -> named n
   NoLength n    -> named n
   PadNoLength n _ -> named n
-  TailKind n _  -> named n
   BadAlign _    -> concat (take 1 [ gfCells gf | gf <- gFields g, isNothing (gfLast gf) ])
   where
     firstOf = concat . take 1 . filter (not . null)
@@ -258,7 +257,6 @@ describeTileProblem = \case
   NoLength n      -> "the tail's length field " <> tshow n <> " is no unsigned field of the layout"
   BadAlign k      -> "the tail's alignment " <> tshow k <> " is below 1"
   PadNoLength n k -> "the tail " <> tshow n <> " is padded to a multiple of " <> tshow k <> " with no length field to end it"
-  TailKind n k    -> "the tail " <> tshow n <> " is " <> tshow k <> ", neither bytes nor reserved"
   where bit o = let (byte, b) = bitPosition o in "byte " <> tshow byte <> " bit " <> tshow b
 
 

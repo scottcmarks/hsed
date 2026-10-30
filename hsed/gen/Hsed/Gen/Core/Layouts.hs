@@ -20,7 +20,7 @@ module Hsed.Gen.Core.Layouts where
 
 import           Data.ByteString  (ByteString)
 import           Data.Word        (Word16, Word32, Word64, Word8)
-import           Hsed.Core.Layout (FieldKind (..), Layout (..), spanning, Tail (..))
+import           Hsed.Core.Layout (FieldKind (..), Layout (..), spanning, Tail (..), TailKind (..))
 import           Hsed.Core.Record (LayoutRecord (..), number, numberField, octets, octetsField)
 import           Prelude          ((<*>), Eq, Maybe (..), pure, Show)
 
@@ -37,7 +37,7 @@ comPacketLayout = Layout
       , spanning "MinTransfer" (12, 7) (15, 0) Unsigned
       , spanning "Length" (16, 7) (19, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 1 Bytes)
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 1 Payload)
   }
 
 -- | core-2.01 T17 ComPacket Format (PDF 40 / p.23, ord 19, sha256:ed3ade79df72):
@@ -90,7 +90,7 @@ packetLayout = Layout
       , spanning "Acknowledgement" (16, 7) (19, 0) Unsigned
       , spanning "Length" (20, 7) (23, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 1 Bytes)
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 1 Payload)
   }
 
 -- | core-2.01 T18 Packet Format (PDF 41 / p.24, ord 20, sha256:4ab98ce7838b):
@@ -142,7 +142,7 @@ dataSubPacketLayout = Layout
       , spanning "Kind" (6, 7) (7, 0) Unsigned
       , spanning "Length" (8, 7) (11, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 4 Bytes)
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 4 Payload)
   }
 
 -- | core-2.01 T20 Data SubPacket Format (PDF 44 / p.27, ord 22, sha256:8504436a1774):
@@ -253,7 +253,7 @@ noResponseAvailableLayout = Layout
       , spanning "Reserved" (8, 7) (9, 0) Reserved
       , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x0000)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 ReservedRun)
   }
 
 -- | core-2.01 T31 No Response Available (PDF 63 / p.46, ord 33, sha256:99bb191570ea):
@@ -288,7 +288,7 @@ verify_COMID_VALIDRequestLayout = Layout
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
       , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000001)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 ReservedRun)
   }
 
 -- | core-2.01 T32 VERIFY_COMID_VALID Request (PDF 63 / p.46, ord 34, sha256:0b4e3d76f94c):
@@ -332,7 +332,7 @@ verify_COMID_VALIDCommandResponseLayout = Layout
       , spanning "Absolute time of expiry relative to last reset of TPer" (26, 7) (35, 0) Bytes
       , spanning "Time since last reset of TPer" (36, 7) (45, 0) Bytes
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 ReservedRun)
   }
 
 -- | core-2.01 T33 VERIFY_COMID_VALID Command Response (PDF 64 / p.47, ord 35, sha256:d94bcebf4a38):
@@ -379,7 +379,7 @@ stack_RESETCommandRequestLayout = Layout
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
       , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000002)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 ReservedRun)
   }
 
 -- | core-2.01 T35 STACK_RESET Command Request (PDF 65 / p.48, ord 37, sha256:f4d0ea8420e5):
@@ -417,7 +417,7 @@ stack_RESETCommandResponseLayout = Layout
       , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x0004)
       , spanning "Success/Failure" (12, 7) (15, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 ReservedRun)
   }
 
 -- | core-2.01 T36 STACK_RESET Command Response (PDF 66 / p.49, ord 38, sha256:6562688c304f):
@@ -457,7 +457,7 @@ stack_RESETPendingLayout = Layout
       , spanning "Reserved" (8, 7) (9, 0) Reserved
       , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x0000)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 ReservedRun)
   }
 
 -- | core-2.01 T37 STACK_RESET Pending (PDF 66 / p.49, ord 39, sha256:868b2bdf9a74):
@@ -486,7 +486,7 @@ level0DiscoveryResponseDataLayout = Layout
   , layoutFields =
       [ spanning "Level 0 Discovery header" (0, 7) (47, 0) Bytes
       ]
-  , layoutTail   = Just (Tail "Feature Descriptor(s)" Nothing 1 Bytes)
+  , layoutTail   = Just (Tail "Feature Descriptor(s)" Nothing 1 Payload)
   }
 
 -- | core-2.01 T38 Level 0 Discovery Response Data Format (PDF 67 / p.50, ord 40, sha256:ba4135a89777):
@@ -561,7 +561,7 @@ featureDescriptorTemplateLayout = Layout
       , spanning "Reserved" (2, 3) (2, 0) Reserved
       , spanning "Length" (3, 7) (3, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Feature Dependent Data" Nothing 1 Bytes)
+  , layoutTail   = Just (Tail "Feature Dependent Data" Nothing 1 Payload)
   }
 
 -- | core-2.01 T41 Feature Descriptor Template Format (PDF 69 / p.52, ord 43, sha256:c9df3b45c5f9):

@@ -57,7 +57,7 @@ frameLayout = Layout
       , byteRange "Version" 5 5 (Pinned 1)
       , byteRange "Tag" 6 14 Bytes
       , byteRange "Length" 15 16 Unsigned ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 4 Bytes) }
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 4 Payload) }
 
 instance LayoutRecord Frame where
   recordLayout _ = frameLayout

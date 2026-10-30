@@ -65,7 +65,8 @@ import qualified RIO.Text                 as T
 import           RIO
 
 import           Hsed.Core.Feature        (FeatureHeader (..))
-import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), bitPosition, fieldEnd)
+import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), TailKind (..), bitPosition,
+                                           fieldEnd)
 import           Hsed.Spec.Common         (CodeDef (..), Finding, Reports (..), Severity (..), finding)
 import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR)
@@ -156,7 +157,7 @@ data RecordField = RecordField
 --   | Reserved@), which, like reserved bits, is the layout's: encoding writes
 --   none of it, decoding reports it read other than zero.
 recordTail :: Layout -> Maybe Tail
-recordTail l = mfilter ((/= Reserved) . tailKind) (layoutTail l)
+recordTail l = mfilter ((== Payload) . tailKind) (layoutTail l)
 
 -- | The fields of a structure's record, in order: every field of its layout
 --   but the reserved ones, the pinned ones and the one that gives its tail's
@@ -329,7 +330,8 @@ declScope ds = L.nub (concat [ itemNames x | d <- ds, Gen.ImportSome _ xs <- d.d
     members = Map.fromList
       [ ("FieldKind", map constructor [Unsigned, Flag, Bytes, Reserved, Pinned 0])
       , ("Layout", recordSyntax (Layout "" 0 [] Nothing))
-      , ("Tail", recordSyntax (Tail "" Nothing 1 Bytes))
+      , ("Tail", recordSyntax (Tail "" Nothing 1 Payload))
+      , ("TailKind", map constructor [minBound .. maxBound :: TailKind])
       , ("FeatureHeader", recordSyntax (FeatureHeader 0 ""))
       , ("LayoutRecord", ["recordLayout", "recordFields", "fromFields"])
       , ("Feature", ["featureCode", "featureVersion", "featureLength", "featureHeader"])

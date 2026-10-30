@@ -60,12 +60,12 @@ instance Arbitrary Tiled where
     let lengthField = Field "length" (nBytes * 8) 8 Unsigned
         (size, fs, tl) = case tailChoice of
           NoTail       -> (nBytes, fields, Nothing)
-          RestOfInput  -> (nBytes, fields, Just (Tail "tail" Nothing 1 Bytes))
-          WithLength   -> (nBytes + 1, fields <> [lengthField], Just (Tail "tail" (Just "length") align Bytes))
-          ReservedRest -> (nBytes, fields, Just (Tail "tail" Nothing 1 Reserved))
+          RestOfInput  -> (nBytes, fields, Just (Tail "tail" Nothing 1 Payload))
+          WithLength   -> (nBytes + 1, fields <> [lengthField], Just (Tail "tail" (Just "length") align Payload))
+          ReservedRest -> (nBytes, fields, Just (Tail "tail" Nothing 1 ReservedRun))
         layout' = Layout "example" size fs tl
     values <- concat <$> traverse (valueFor tl payload) fs
-    pure (Tiled layout' (values <> [ ("tail", Octets payload) | Just t <- [tl], tailKind t /= Reserved ]) payload)
+    pure (Tiled layout' (values <> [ ("tail", Octets payload) | Just t <- [tl], tailKind t == Payload ]) payload)
     where
       -- widths summing to n, none wider than 24
       partition n
@@ -126,7 +126,7 @@ spec = describe "Hsed.Core.Layout" $ do
         _ -> pure ()
     prop "reports a reserved tail's first byte other than zero, at its offset, strict or not" $ \(Tiled l vs _) (rest :: [Word8]) ->
       case (layoutTail l, encode l vs) of
-        (Just t, Right bytes) | tailKind t == Reserved -> do
+        (Just t, Right bytes) | tailKind t == ReservedRun -> do
           let expected = [ ReservedNotZero (tailName t) ((layoutSize l + i) * 8) (toInteger w) | (i, w) <- take 1 (filter ((/= 0) . snd) (zip [0 ..] rest)) ]
           fmap decodedDifferences (decode l (bytes <> B.pack rest)) `shouldBe` Right expected
           fmap decodedDifferences (decodeStrict l (bytes <> B.pack rest)) `shouldBe` Right expected
@@ -140,7 +140,7 @@ spec = describe "Hsed.Core.Layout" $ do
 
   describe "encode" $ do
     let l = Layout "x" 2 [byteRange "A" 0 0 Unsigned, spanning "B" (1, 7) (1, 7) Flag, spanning "R" (1, 6) (1, 0) Reserved]
-                   (Just (Tail "T" (Just "A") 4 Bytes))
+                   (Just (Tail "T" (Just "A") 4 Payload))
     it "pads the tail to its alignment and sets its length field" $
       encode l [("B", Number 1), ("T", Octets "abcde")] `shouldBe` Right "\x05\x80\&abcde\0\0\0"
     it "refuses a length field that disagrees with the tail, a value for reserved bits, a name it does not have" $ do
@@ -151,7 +151,7 @@ spec = describe "Hsed.Core.Layout" $ do
       encode l { layoutSize = 3 } [("B", Number 1)] `shouldBe` Left (NotTiled [Gap 16 23])
 
   describe "decode" $ do
-    let l = Layout "x" 1 [byteRange "A" 0 0 Unsigned] (Just (Tail "T" (Just "A") 4 Bytes))
+    let l = Layout "x" 1 [byteRange "A" 0 0 Unsigned] (Just (Tail "T" (Just "A") 4 Payload))
     it "needs the tail its length field gives, padding included" $ do
       decode l "\x05\&abcde\0\0" `shouldBe` Left (Truncated 9 8)
       fmap decodedFields (decode l "\x05\&abcde\0\0\0") `shouldBe` Right [("A", Number 5), ("T", Octets "abcde")]
@@ -160,14 +160,14 @@ spec = describe "Hsed.Core.Layout" $ do
       fmap decodedDifferences (decodeStrict l "\x05\&abcde\0\x09\0") `shouldBe` Right [PaddingNotZero "T" 48 0x0900]
       fmap decodedRest (decode l "\x05\&abcde\0\x09\0next") `shouldBe` Right "next"
     it "refuses a length past the input, however large, rather than wrapping it" $ do
-      let wide = Layout "w" 8 [byteRange "N" 0 7 Unsigned] (Just (Tail "T" (Just "N") 1 Bytes))
+      let wide = Layout "w" 8 [byteRange "N" 0 7 Unsigned] (Just (Tail "T" (Just "N") 1 Payload))
           huge = B.pack [0x80, 0, 0, 0, 0, 0, 0, 1]
       decode wide (huge <> "abc") `shouldSatisfy` \case
         Left (Truncated _ 11) -> True
         _                     -> False
 
   describe "a reserved tail (the rest of a transfer)" $ do
-    let l = Layout "x" 1 [byteRange "A" 0 0 Unsigned] (Just (Tail "Reserved" Nothing 1 Reserved))
+    let l = Layout "x" 1 [byteRange "A" 0 0 Unsigned] (Just (Tail "Reserved" Nothing 1 ReservedRun))
     it "takes no value, and is written as none" $ do
       encode l [("A", Number 1)] `shouldBe` Right "\x01"
       encode l [("A", Number 1), ("Reserved", Octets "\xff")] `shouldBe` Left (ReservedGiven "Reserved")
@@ -181,11 +181,9 @@ spec = describe "Hsed.Core.Layout" $ do
       done <- timeout 5000000 (fmap decodedDifferences (decodeStrict l big) `shouldBe` Right [ReservedNotZero "Reserved" ((1 + 1024 * 1024) * 8) 7])
       done `shouldBe` Just ()
 
-  describe "tiling a tail" $ do
+  describe "tiling a tail" $
     it "refuses padding without a length field, which could not tell the tail from its padding" $
-      tiling (Layout "x" 1 [byteRange "A" 0 0 Unsigned] (Just (Tail "T" Nothing 4 Bytes))) `shouldBe` [PadNoLength "T" 4]
-    it "refuses a tail of a kind other than bytes or reserved" $
-      tiling (Layout "x" 1 [byteRange "A" 0 0 Unsigned] (Just (Tail "T" Nothing 1 Flag))) `shouldBe` [TailKind "T" Flag]
+      tiling (Layout "x" 1 [byteRange "A" 0 0 Unsigned] (Just (Tail "T" Nothing 4 Payload))) `shouldBe` [PadNoLength "T" 4]
 
   describe "differences" $
     it "tell apart two reserved fields of one name by their first bits" $ do

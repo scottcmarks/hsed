@@ -54,6 +54,7 @@ module Hsed.Core.Layout
     -- * Layouts
   , Layout (..)
   , Tail (..)
+  , TailKind (..)
     -- * Tiling
   , TileProblem (..)
   , tiling
@@ -146,17 +147,21 @@ fieldEnd f = fieldStart f + fieldWidth f
 -- | What follows a layout's fixed part: a byte string, its length given by a
 --   field of the fixed part (or the rest of the input when no field does),
 --   padded with zeros to a multiple of an alignment (Core Table 20's payload
---   to four bytes; 1 for none), of one of two kinds: 'Bytes', a value of its
---   own (a payload), or 'Reserved', bytes that are zeros, as reserved bits are
---   (Core Table 31's reserved bytes to the end of the transfer): written as
---   none, taking no value, and, read other than zero, a 'Difference'.
+--   to four bytes; 1 for none), of one of two kinds ('TailKind').
 data Tail = Tail
   { tailName   :: !Text
   , tailLength :: !(Maybe Text)
   , tailAlign  :: !Int
-  , tailKind   :: !FieldKind
+  , tailKind   :: !TailKind
   }
   deriving (Eq, Show)
+
+-- | What a tail holds.
+data TailKind
+  = Payload      -- ^ a byte string, a value of its own (Core Table 20's payload)
+  | ReservedRun  -- ^ bytes that are zeros, as reserved bits are (Core Table 31's reserved bytes to the end of the
+                 --   transfer): written as none, taking no value, and, read other than zero, a 'Difference'
+  deriving (Eq, Ord, Show, Enum, Bounded)
 
 -- | A structure of bytes: its name, the size of its fixed part in bytes, the
 --   fields of the fixed part, and what follows it.
@@ -183,13 +188,12 @@ data TileProblem
   | NoLength !Text            -- ^ the tail's length field is no unsigned field of the layout
   | BadAlign !Int             -- ^ a tail alignment below 1
   | PadNoLength !Text !Int    -- ^ a tail padded to this alignment with no length field to tell its bytes from its padding
-  | TailKind !Text !FieldKind -- ^ a tail of a kind other than 'Bytes' or 'Reserved'
   deriving (Eq, Show)
 
 -- | Every reason a layout does not tile, in order: fields outside the fixed
 --   part, misaligned byte strings, pins that do not fit, flags wider than a
 --   bit, then the gaps and overlaps from the first bit to the last, then the
---   tail's (its length field, its alignment, its kind).
+--   tail's (its length field, its alignment).
 --
 -- >>> tiling header
 -- []
@@ -199,7 +203,7 @@ data TileProblem
 -- [Overlap "Length" "Late" 23]
 -- >>> tiling header { layoutFields = [spanning "Version" (0, 7) (0, 4) (Pinned 16), spanning "Rest" (0, 3) (2, 0) Bytes] }
 -- [Unaligned "Rest",Unfit "Version" 16]
--- >>> tiling header { layoutTail = Just (Tail "Data" Nothing 4 Bytes) }
+-- >>> tiling header { layoutTail = Just (Tail "Data" Nothing 4 Payload) }
 -- [PadNoLength "Data" 4]
 tiling :: Layout -> [TileProblem]
 tiling l = outside <> unaligned <> unfit <> flags <> coverage <> tailProblems
@@ -224,7 +228,6 @@ tiling l = outside <> unaligned <> unfit <> flags <> coverage <> tailProblems
       Just t  -> [ BadAlign (tailAlign t) | tailAlign t < 1 ]
                  <> [ NoLength n | Just n <- [tailLength t], not (any (\f -> fieldName f == n && fieldKind f == Unsigned) fs) ]
                  <> [ PadNoLength (tailName t) (tailAlign t) | tailAlign t > 1, isNothing (tailLength t) ]
-                 <> [ TailKind (tailName t) (tailKind t) | tailKind t `notElem` [Bytes, Reserved] ]
 
 -- | Whether every bit of a layout's fixed part is covered by exactly one
 --   field (and its tail is sound): what a generated layout asserts.
@@ -291,7 +294,7 @@ data LayoutError
 -- Left (OutOfRange "Version" 16)
 -- >>> encode header [("Version", Number 2)]
 -- Left (MissingField "Length")
--- >>> encode header { layoutTail = Just (Tail "Rest" Nothing 1 Reserved) } [("Version", Number 2), ("Length", Number 0), ("Rest", Octets "x")]
+-- >>> encode header { layoutTail = Just (Tail "Rest" Nothing 1 ReservedRun) } [("Version", Number 2), ("Length", Number 0), ("Rest", Octets "x")]
 -- Left (ReservedGiven "Rest")
 encode :: Layout -> [(Text, Content)] -> Either LayoutError ByteString
 encode l vs = do
@@ -309,10 +312,10 @@ encode l vs = do
     total  = layoutSize l * 8
     place f v = v `shiftL` (total - fieldEnd f)
     tailOf t = case (tailKind t, Map.lookup (tailName t) given) of
-      (Reserved, Just _)   -> Left (ReservedGiven (tailName t))
-      (_, Nothing)         -> Right mempty
-      (_, Just (Octets b)) -> Right b
-      (_, Just (Number _)) -> Left (WrongContent (tailName t))
+      (ReservedRun, Just _) -> Left (ReservedGiven (tailName t))
+      (_, Nothing)          -> Right mempty
+      (_, Just (Octets b))  -> Right b
+      (_, Just (Number _))  -> Left (WrongContent (tailName t))
     valueOf lengthOf f = case (fieldKind f, Map.lookup (fieldName f) given) of
       (Reserved, Nothing)           -> Right 0
       (Reserved, Just _)            -> Left (ReservedGiven (fieldName f))
@@ -348,10 +351,10 @@ encode l vs = do
 -- Right (Decoded {decodedFields = [("Version",Number 2),("Length",Number 4660)], decodedDifferences = [ReservedNotZero "Reserved" 4 15], decodedRest = "rest"})
 -- >>> decode header "\x20"
 -- Left (Truncated 3 1)
--- >>> let framed = Layout "Framed" 1 [byteRange "Length" 0 0 Unsigned] (Just (Tail "Data" (Just "Length") 4 Bytes))
+-- >>> let framed = Layout "Framed" 1 [byteRange "Length" 0 0 Unsigned] (Just (Tail "Data" (Just "Length") 4 Payload))
 -- >>> decode framed "\x02\&ab\x00\x07next"
 -- Right (Decoded {decodedFields = [("Length",Number 2),("Data",Octets "ab")], decodedDifferences = [PaddingNotZero "Data" 24 7], decodedRest = "next"})
--- >>> decodedDifferences <$> decode header { layoutTail = Just (Tail "Rest" Nothing 1 Reserved) } "\x20\x00\x00\x00\x01\x02"
+-- >>> decodedDifferences <$> decode header { layoutTail = Just (Tail "Rest" Nothing 1 ReservedRun) } "\x20\x00\x00\x00\x01\x02"
 -- Right [ReservedNotZero "Rest" 32 1]
 decode :: Layout -> ByteString -> Either LayoutError Decoded
 decode l input = do
@@ -369,9 +372,9 @@ decode l input = do
         let n' = fromInteger n
             end' = fromInteger end
         Right (Just (t, B.take n' (B.drop size input)), B.take (end' - size - n') (B.drop (size + n') input), B.drop end' input)
-  let tailField = [ (tailName t, Octets bs) | Just (t, bs) <- [tailBytes], tailKind t /= Reserved ]
+  let tailField = [ (tailName t, Octets bs) | Just (t, bs) <- [tailBytes], tailKind t == Payload ]
       tailDiffs = concat
-        [ [ ReservedNotZero (tailName t) ((size + i) * 8) (toInteger w) | tailKind t == Reserved, Just (i, w) <- [firstNonZero bs] ]
+        [ [ ReservedNotZero (tailName t) ((size + i) * 8) (toInteger w) | tailKind t == ReservedRun, Just (i, w) <- [firstNonZero bs] ]
           <> [ PaddingNotZero (tailName t) ((size + B.length bs) * 8) (bytesInteger padding) | B.any (/= 0) padding ]
         | Just (t, bs) <- [tailBytes] ]
   pure (Decoded (values <> tailField) (differences <> tailDiffs) rest)

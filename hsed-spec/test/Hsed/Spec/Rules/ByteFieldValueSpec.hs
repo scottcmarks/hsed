@@ -32,7 +32,8 @@ import           RIO.Directory                (doesFileExist)
 import           Test.Hspec
 
 import           Hsed.Core.Layout             (Content (..), Decoded (..), Difference (..), Field (..), FieldKind (..), Layout (..),
-                                               LayoutError (..), Tail (..), TileProblem (..), bitPosition, decode, decodeStrict, encode,
+                                               LayoutError (..), Tail (..), TailKind (..), TileProblem (..), bitPosition, decode,
+                                               decodeStrict, encode,
                                                fieldEnd, tiling)
 import           Hsed.Spec.Anchor             (AnchorId (..))
 import           Hsed.Spec.Check              (checkIR, mkContext)
@@ -136,7 +137,7 @@ spec = do
     describe "the layouts" $ do
       it "gives each its fixed part's size and the run to the end of the transfer as its tail" $ do
         [ (n, layoutSize l, layoutTail l) | n <- [28, 31, 32, 33, 35, 36, 37], let l = bfLayout (readOf ir n) ] `shouldBe`
-          [ (28, 4, Nothing) ] <> [ (n, s, Just (Tail "Reserved" Nothing 1 Reserved)) | (n, s) <- [(31, 12), (32, 8), (33, 46), (35, 8), (36, 16), (37, 12)] ]
+          [ (28, 4, Nothing) ] <> [ (n, s, Just (Tail "Reserved" Nothing 1 ReservedRun)) | (n, s) <- [(31, 12), (32, 8), (33, 46), (35, 8), (36, 16), (37, 12)] ]
       it "T33: 46 bytes, the numbers, the reserved bytes, the pinned constants and the three 10-byte times (PDF 64)" $
         map printed (layoutFields (bfLayout (readOf ir 33))) `shouldBe`
           [ ("Extended ComID", (0, 7), (3, 0), Unsigned)
@@ -260,7 +261,7 @@ spec = do
           [ "      , spanning \"Request Code\" (4, 7) (7, 0) (Pinned 0x00000001)"
           , "      , spanning \"Reserved\" (8, 7) (9, 0) Reserved"
           , "      , spanning \"Available Data Length in bytes\" (10, 7) (11, 0) (Pinned 0x0022)" ]
-        lns `shouldContain` ["  , layoutTail   = Just (Tail \"Reserved\" Nothing 1 Reserved)"]
+        lns `shouldContain` ["  , layoutTail   = Just (Tail \"Reserved\" Nothing 1 ReservedRun)"]
         lns `shouldContain` ["-- > \"16 to 25\" | \"Absolute time of allocation relative to last reset of TPer\" | \"10 byte format \\8211 see Table 34.\""]
         lns `shouldContain` ["-- > \"12 to 15\" | \"Success/Failure\" | \"00 00 00 00/ 00 00 00 01\""]
         filter (T.any (> '\DEL')) lns `shouldBe` []

@@ -41,7 +41,7 @@ import           System.Environment       (lookupEnv)
 import           System.Process           (readProcessWithExitCode)
 import           Test.Hspec
 
-import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), tiling)
+import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), TailKind (..), tiling)
 import           Hsed.Spec.Anchor         (AnchorId (..))
 import           Hsed.Spec.Check          (checkIR, mkContext)
 import           Hsed.Spec.Common         (ErrataSet (..), RuleName (..), Severity (..), SpecId (..), renderFinding)
@@ -128,7 +128,7 @@ spec = do
         [ (n, tiling (grLayout (readOf n))) | n <- grids ] `shouldBe` [ (n, []) | n <- grids ]
       it "gives T17, T18 and T20 their payload, its length the Length field, T20's padded to four bytes" $
         [ layoutTail (grLayout (readOf n)) | n <- [17, 18, 20] ] `shouldBe`
-          [ Just (Tail "Payload" (Just "Length") 1 Bytes), Just (Tail "Payload" (Just "Length") 1 Bytes), Just (Tail "Payload" (Just "Length") 4 Bytes) ]
+          [ Just (Tail "Payload" (Just "Length") 1 Payload), Just (Tail "Payload" (Just "Length") 1 Payload), Just (Tail "Payload" (Just "Length") 4 Payload) ]
       it "pins T39's versions by 3.3.6.2.2 and 3.3.6.2.3 (PDF 68), and pins nothing of T38, which shares the section" $ do
         let t39 = readOf 39
         [ (fieldName f, fieldKind f) | f <- layoutFields (grLayout t39) ] `shouldBe`
@@ -212,7 +212,7 @@ spec = do
           , "data GUDIDColumnContentsDescription = GUDIDColumnContentsDescription" ]
         lns `shouldContain` [ "instance LayoutRecord ComPacket where", "  recordLayout _ = comPacketLayout", "  recordFields r =" ]
         lns `shouldContain` [ "  { comPacketHeader  :: !ComPacketHeader", "  , comPacketPayload :: !ByteString       -- ^ from byte 20, Length bytes" ]
-        lns `shouldContain` [ "  , layoutTail   = Just (Tail \"Payload\" (Just \"Length\") 4 Bytes)" ]
+        lns `shouldContain` [ "  , layoutTail   = Just (Tail \"Payload\" (Just \"Length\") 4 Payload)" ]
         lns `shouldContain` [ "      , spanning \"Data Structure Major Version\" (4, 7) (5, 0) (Pinned 0x0000)" ]
       it "stays ASCII" $
         T.filter (> '\DEL') text `shouldBe` ""

@@ -27,7 +27,7 @@ import           Hsed.Jig.Cli        (Command (..), runCommand)
 import           Hsed.Jig.Options    (RunOptions (..), defaultRunOptions, parseTarget)
 import           Hsed.Sim.Types      (SimParams (..))
 import           Hsed.Version        (hsedVersion)
-import           Hsed.Wire           (Unit (..))
+import           Hsed.Wire           (Unit (..), mostCarried)
 
 
 main :: IO ()
@@ -103,8 +103,9 @@ runOptions = options <**> laterMilestones
             <> help "drive: the serial (trimmed IDENTIFY) the drive must have"))
       <*> optional (strOption (long "capture-level0" <> metavar "FILE"
             <> help "drive: write its Level 0 response to FILE and its sidecar to FILE.json"))
-      <*> option auto (long "level0-len" <> metavar "BYTES" <> value (roLevel0Len defaultRunOptions) <> showDefault
-            <> help "drive: the Level 0 IF-RECV's transfer length")
+      <*> option (eitherReader level0Len) (long "level0-len" <> metavar "BYTES" <> value (roLevel0Len defaultRunOptions) <> showDefault
+            <> help ("the Level 0 IF-RECV's transfer length, on the simulator or a drive: 1 to " <> show mostLevel0
+                     <> " bytes, rounded up to the target's unit (a drive carries at most 255 blocks of 512)"))
       <*> strOption (long "report-dir" <> metavar "DIR" <> value (roReportDir defaultRunOptions) <> showDefault
             <> help "where the reports go")
     mk target tests u holding holdN profile discard serial capture len dir = defaultRunOptions
@@ -118,6 +119,11 @@ runOptions = options <**> laterMilestones
       , roExpectSerial = T.pack <$> serial
       , roLevel0Len    = len
       }
+    -- a length some transport carries: none carries more than 1 MiB (Hsed.Wire.mostCarried)
+    mostLevel0 = mostCarried UnitBytes
+    level0Len s = case readMaybe s of
+      Just n | n >= 1 && n <= toInteger mostLevel0 -> Right (fromInteger n)
+      _ -> Left ("--level0-len " <> s <> ": a length of 1 to " <> show mostLevel0 <> " bytes")
     units = \case
       "bytes"     -> Right UnitBytes
       "blocks512" -> Right UnitBlocks512

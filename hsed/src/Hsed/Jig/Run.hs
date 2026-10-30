@@ -63,7 +63,7 @@ import           Hsed.Jig.Cases.SPF02   (spf02case1)
 import           Hsed.Jig.Cases.UCT01   (uct01)
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (runningAsRoot)
-import           Hsed.Jig.Guard         (comPacketProtocol, guarding, level0ComId)
+import           Hsed.Jig.Guard         (guarding)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (pairFails, pairLevel0)
 import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common)
@@ -81,7 +81,7 @@ import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
 import           Hsed.Version           (hsedVersion)
 import           Hsed.Wire              (Describe, Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
-                                         describeTransport, newChannel, transferLength)
+                                         comPacketProtocol, describeTransport, level0ComId, newChannel, transferLength)
 
 
 -- | The cases the jig runs, one for each entry of the catalogue.

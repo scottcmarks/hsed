@@ -29,9 +29,10 @@ transport refuses what its policy does whoever asks (the host's exchange of
 a ComPacket among them).
 
 Level 0 Discovery's ComID and the Data subpacket's Kind are the generated
-code tables' (Core Tables 26 and 19); the security protocol of ComPackets is
-written here ('comPacketProtocol'), Core Table 25 naming protocols 1 and 2
-alike.
+code tables' (Core Tables 26 and 19) and the security protocol of ComPackets
+is written by hand, Core Table 25 naming protocols 1 and 2 alike, each
+defined once, in "Hsed.Wire". Were Table 26 ever to lose Level 0's row, its
+ComID would read 0x0000, the reserved ComID, which 'Level0Only' refuses.
 -}
 module Hsed.Jig.Guard
   ( Policy (..)
@@ -39,34 +40,27 @@ module Hsed.Jig.Guard
   , guardedSend
   , guardedRecv
   , guarding
-    -- * Where Level 0 Discovery and ComPackets go
-  , comPacketProtocol
-  , level0ComId
-  , dataKind
   ) where
 
-import           Data.Bits             (FiniteBits (..))
-import           Numeric               (showHex)
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
 import           RIO
 import qualified RIO.Text              as T
 
 import           Hsed.Core.Call        (MethodCall (..), MethodHeader (..), Parameters (..))
-import           Hsed.Core.Code        (CodeRow (..), Span (..), codeRowsNamed)
 import           Hsed.Core.Method      (MethodSignature (..), Param (..), Signature (..))
 import           Hsed.Core.StreamItem  (StreamItem (..))
 import           Hsed.Core.Token       (IsToken (..), Token (..))
 import           Hsed.Core.UID         (UID)
 import           Hsed.Core.Value       (Datum (..), Name (..), NamedValue (..), Value)
-import           Hsed.Gen.Core.Codes   (cComIDAssignments, cSubpacketTypes)
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, uAuthority_Anybody, uProperties, uSMUID,
                                         uSP_Admin, uStartSession)
 import           Hsed.Jig.Transcript   (TEntry (..), Transcript, record)
 import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
-import           Hsed.Wire             (Cap (..), Dir (..), IfStatus (..), Request (..), Response (..))
+import           Hsed.Wire             (Cap (..), Dir (..), IfStatus (..), Request (..), Response (..), comPacketProtocol,
+                                        dataKind, hex, level0ComId)
 import           Hsed.Wire.Internal    (Transport (..))
 
 
@@ -114,10 +108,13 @@ pass t policy tr q = either (refuse t q) (const (Right <$> tExchange tr q)) (dec
 refuse :: Transcript -> Request -> Text -> IO (Either Text Response)
 refuse t q why = Left why <$ record t (Blocked 0 q why)
 
--- | What a policy says of a command.
+-- | What a policy says of a command. Level0Only admits Level 0's IF-RECV on
+--   the ComID Core Table 26 gives it, and nothing on the reserved ComID
+--   0x0000, which "Hsed.Wire".'level0ComId' would read were the row lost.
 decide :: Policy -> Request -> Either Text ()
 decide policy q = case policy of
   Level0Only
+    | level0ComId == 0x0000 -> Left "Level0Only: Core Table 26 gives Level 0 Discovery no ComID: nothing reaches a drive"
     | dir q == IfRecv && proto q == comPacketProtocol && comId q == level0ComId -> Right ()
     | dir q == IfSend -> Left "Level0Only: no IF-SEND reaches a drive at M3 (design 9.3)"
     | otherwise       -> Left ("Level0Only: IF-RECV of Level 0 Discovery alone (protocol " <> hex comPacketProtocol
@@ -187,33 +184,3 @@ need allowed a what
   | a `elem` allowed = Right ()
   | otherwise        = Left (what <> " is not in the allow list")
 
-
--- * Where Level 0 Discovery and ComPackets go
-
--- | The security protocol of Level 0 Discovery and of ComPackets on the
---   static ComIDs: 0x01 (Core 3.3.6.1, PDF 67; Test Cases Table 5, PDF 26).
---   Core Table 25 (PDF 53) prints 0x01 and 0x02 alike, "Defined in this
---   document", so the value is written here.
-comPacketProtocol :: Word8
-comPacketProtocol = 0x01
-
--- | Level 0 Discovery's ComID: Core Table 26's row "Level 0 Device
---   Discovery" (PDF 55), 0x0001. Were the row ever missing, ComID 0x0000
---   (Reserved) would stand in, which no Level 0 response comes from.
-level0ComId :: Word16
-level0ComId = maybe 0 fromInteger (assigned cComIDAssignments "Level 0 Device Discovery")
-
--- | The Kind of a Data subpacket: Core Table 19's row "Data" (PDF 43),
---   0x0000.
-dataKind :: Word16
-dataKind = maybe 0 fromInteger (assigned cSubpacketTypes "Data")
-
--- | The one value a code table's row of a name assigns.
-assigned :: [CodeRow] -> Text -> Maybe Integer
-assigned rows name = case [ v | CodeRow (One v) _ <- codeRowsNamed rows name ] of
-  [v] -> Just v
-  _   -> Nothing
-
--- | A number in hex, as many digits as its type has.
-hex :: (Integral a, FiniteBits a) => a -> Text
-hex n = "0x" <> T.justifyRight (finiteBitSize n `div` 4) '0' (T.pack (showHex n ""))

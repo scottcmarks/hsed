@@ -71,7 +71,6 @@ module Hsed.Jig.Script
   ) where
 
 import qualified Data.Aeson             as A
-import           Data.Bits              (FiniteBits (..))
 import           Numeric                (showHex)
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
@@ -93,7 +92,7 @@ import qualified Hsed.Gen.Core.Methods  as Methods
 import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Gen.Core.UIDs     (uProperties, uSMUID)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
-import           Hsed.Jig.Guard         (Policy (..), comPacketProtocol, dataKind, guardedRecv, guardedSend, level0ComId)
+import           Hsed.Jig.Guard         (Policy (..), guardedRecv, guardedSend)
 import           Hsed.Jig.Options       (RunOptions (..))
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, record)
@@ -103,9 +102,9 @@ import           Hsed.Sim.Sync          (T45Row (..), t45Rows)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Wire              (Cap (..), Channel, Dir (..), ExchangeError (..), ExchangeOpts (..), IfStatus (..),
-                                         Request (..), Response (..), Transport, Unit (..), defaultExchangeOpts,
-                                         exchangeComPacket, ifRecv, ifSend, ifStatusDetail, ifStatusName, roundUp,
-                                         transferLength, unitOf)
+                                         Request (..), Response (..), Transport, Unit (..), comPacketProtocol, dataKind,
+                                         defaultExchangeOpts, exchangeComPacket, hex, ifRecv, ifSend, ifStatusDetail,
+                                         ifStatusName, level0ComId, roundUp, transferLength, unitOf)
 
 
 -- * The run's environment
@@ -482,9 +481,6 @@ verdictText v = case v of
   Fail rs        -> "fail: " <> T.intercalate "; " rs
   Skipped r      -> "skipped: " <> r
   Unobservable r -> "unobservable: " <> r
-
-hex :: (Integral a, FiniteBits a) => a -> Text
-hex n = "0x" <> T.justifyRight (finiteBitSize n `div` 4) '0' (T.pack (showHex n ""))
 
 -- | Bytes in hex, two digits each, spaced: @a1 08 0e@.
 spacedHex :: ByteString -> Text

@@ -28,7 +28,7 @@ import           Test.QuickCheck
 
 import           Hsed.Transport.Cdb
 import           Hsed.Transport.Drive  (InterfaceType (..))
-import           Hsed.Wire             (Dir (..), Request (..))
+import           Hsed.Wire             (Dir (..), Request (..), comPacketProtocol, level0ComId)
 
 
 -- | The kext's attach-time CDBs, Level 0 IF-RECV of 4 blocks (2048 bytes).
@@ -62,9 +62,11 @@ spec = describe "Hsed.Transport.Cdb" $ do
         `shouldBe` []
 
   describe "the one command a drive transport carries" $ do
-    it "is Level 0 Discovery's: protocol 0x01 (Core 3.3.6.2, PDF 67) and ComID 0x0001 (Core Table 26, PDF 55)" $ do
-      level0Protocol `shouldBe` 0x01
-      level0ComId `shouldBe` 0x0001
+    it "is Level 0 Discovery's: protocol 0x01 (Core 3.3.6.2, PDF 67) and ComID 0x0001 (Core Table 26, PDF 55), the shim's" $
+      (comPacketProtocol, level0ComId, shimComId) `shouldBe` (0x01, 0x0001, 0x0001)
+    it "is nothing at all were Core Table 26 to give Level 0 another ComID (a lost row reads 0x0000): it fails closed" $
+      filter isRight [ level0BlocksOf other (recv 0x01 c 2048) | other <- [0x0000, 0x0002], c <- [0x0000, 0x0001, 0x0002] ]
+        `shouldBe` []
     it "counts 512-byte blocks, at most 255 of them (SIIS 1.20 Tables 13 and 17, PDF 31 and 41; the kext's count byte)" $
       (blockBytes, maxLevel0Blocks) `shouldBe` (512, 255)
     it "is IF-RECV on protocol 1, ComID 1, of whole blocks: their count" $

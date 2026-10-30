@@ -21,17 +21,21 @@ records and the tests hold to the kext's.
 
 The drive transports (the kext's, "Hsed.Transport.MacKext", and a replay of
 a capture, "Hsed.Transport.Replay") carry that one command at M3 and refuse
-every other: 'level0Blocks' says which requests it is.
+every other: 'level0Blocks' says which requests it is. Its ComID is the one
+the shim's templates carry ('shimComId'), and a drive transport carries
+nothing at all unless Core Table 26 gives Level 0 that ComID ("Hsed.Wire".'level0ComId'):
+were the table's row lost, every command is refused before the shim is
+called, not sent as ComID 1 and judged after.
 -}
 module Hsed.Transport.Cdb
   ( level0Cdb
   , cdbHex
     -- * The one command a drive transport carries
-  , level0Protocol
-  , level0ComId
+  , shimComId
   , blockBytes
   , maxLevel0Blocks
   , level0Blocks
+  , level0BlocksOf
   ) where
 
 import           Data.Bits            (shiftR)
@@ -40,10 +44,8 @@ import qualified RIO.ByteString       as B
 import           RIO
 import qualified RIO.Text             as T
 
-import           Hsed.Core.Code       (CodeRow (..), Span (..), codeRowsNamed)
-import           Hsed.Gen.Core.Codes  (cComIDAssignments)
 import           Hsed.Transport.Drive (InterfaceType (..))
-import           Hsed.Wire            (Dir (..), Request (..))
+import           Hsed.Wire            (Dir (..), Request (..), comPacketProtocol, hex, level0ComId)
 
 
 -- | The 12 bytes of a Level 0 IF-RECV of a number of 512-byte blocks, or why
@@ -70,8 +72,8 @@ level0Cdb iface blocks
     n = fromIntegral blocks
     (comIdHigh, comIdLow) = (fromIntegral (level0ComId `shiftR` 8), fromIntegral level0ComId)
     cdb = \case
-      IfSAT  -> [0xA1, 0x08, 0x0E, level0Protocol, n, 0x00, comIdLow, comIdHigh, 0x00, 0x5C, 0x00, 0x00]
-      IfSCSI -> [0xA2, level0Protocol, comIdHigh, comIdLow, 0x80, 0x00, 0x00, 0x00, 0x00, n, 0x00, 0x00]
+      IfSAT  -> [0xA1, 0x08, 0x0E, comPacketProtocol, n, 0x00, comIdLow, comIdHigh, 0x00, 0x5C, 0x00, 0x00]
+      IfSCSI -> [0xA2, comPacketProtocol, comIdHigh, comIdLow, 0x80, 0x00, 0x00, 0x00, 0x00, n, 0x00, 0x00]
 
 -- | A CDB as the jig prints it: lower-case hex, a space between bytes.
 cdbHex :: ByteString -> Text
@@ -81,18 +83,12 @@ cdbHex = T.unwords . map byte . B.unpack
 
 -- * The one command a drive transport carries
 
--- | Level 0 Discovery's security protocol: IF-RECV with Protocol ID = 0x01
---   (Core 3.3.6.2, PDF 67).
-level0Protocol :: Word8
-level0Protocol = 0x01
-
--- | Level 0 Discovery's ComID: Core Table 26's \"Level 0 Device Discovery\"
---   (PDF 55), 0x0001. Should the table ever lose the row, 0x0000, the
---   reserved ComID, which every drive transport then refuses (the tests hold
---   it to the PDF's value).
-level0ComId :: Word16
-level0ComId = maybe 0 fromInteger $
-  listToMaybe [ c | CodeRow (One c) _ <- codeRowsNamed cComIDAssignments "Level 0 Device Discovery" ]
+-- | The ComID the shim's two templates carry, 0x0001 (cbits/hsed_kext.c: SAT's
+--   LBA 15 to 8, SCSI's SECURITY PROTOCOL SPECIFIC; "Hsed.Transport.KextSourceSpec"
+--   holds them to 'level0Cdb', which writes "Hsed.Wire".'level0ComId'): the
+--   ComID of the one command a drive transport carries.
+shimComId :: Word16
+shimComId = 0x0001
 
 -- | The bytes of the block an IF-RECV's transfer length counts: 512 (SIIS
 --   1.20 Table 17 for ATA, PDF 41; Table 13 with INC_512 set for SCSI, PDF 31).
@@ -110,8 +106,17 @@ maxLevel0Blocks = 255
 --   ComID 1, in whole 512-byte blocks, 1 to 255 of them. Any other is
 --   refused with why, the detail of the transport's 'Hsed.Wire.Unsupported'.
 level0Blocks :: Request -> Either Text Word8
-level0Blocks r
-  | dir r /= IfRecv || proto r /= level0Protocol || comId r /= level0ComId = Left "M3: Level 0 only"
+level0Blocks = level0BlocksOf level0ComId
+
+-- | 'level0Blocks' given the ComID Core Table 26 gives Level 0 Discovery:
+--   every request is refused unless that ComID is the shim's ('shimComId'),
+--   so that a table that lost its row (0x0000) fails closed.
+level0BlocksOf :: Word16 -> Request -> Either Text Word8
+level0BlocksOf level0 r
+  | level0 /= shimComId =
+      Left ("M3: Level 0 only, and Core Table 26 gives Level 0 the ComID " <> hex level0 <> ", not the "
+            <> hex shimComId <> " the kext shim's CDB carries: nothing is carried")
+  | dir r /= IfRecv || proto r /= comPacketProtocol || comId r /= level0 = Left "M3: Level 0 only"
   | len == 0 || len `mod` blockBytes /= 0 || len > maxLevel0Blocks * blockBytes =
       Left ("M3: Level 0 only, of 1 to 255 whole 512-byte blocks, not " <> tshow len <> " bytes")
   | otherwise = Right (fromIntegral (len `div` blockBytes))

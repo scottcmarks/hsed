@@ -34,8 +34,7 @@ import           RIO
 import           Test.QuickCheck           (Gen, Property, arbitrary, conjoin, counterexample, elements, forAll, oneof, suchThat,
                                             (===), (==>))
 
-import           Hsed.Core.Layout          (Layout (..))
-import           Hsed.Core.Record          (LayoutRecord (..), encodeRecord)
+import           Hsed.Core.Record          (encodeRecord)
 import           Hsed.Core.Sync            (Setting (..), StateRow (..), StateTable (..))
 import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..))
 import qualified Hsed.Gen.Core.StateTables as StateTables
@@ -45,7 +44,8 @@ import           Hsed.Sim                  (step, syncOf)
 import           Hsed.Sim.Gen              (genNoActionPayload, genState, genStaticRequest, genUnresolvablePayload)
 import           Hsed.Sim.Sync             (Delivery (..), T45Row (..), t45Fields, t45Quantity, t45Rows)
 import           Hsed.Sim.Types            (ComIdState (..), Input (..), Output (..), SimParams (..), SyncState (..), TPerState (..))
-import           Hsed.Wire                 (Dir (..), IfStatus (..), Request (..), Response (..), roundUp)
+import           Hsed.Wire                 (Dir (..), IfStatus (..), Request (..), Response (..), comPacketHeaderSize,
+                                            comPacketProtocol, roundUp)
 
 
 -- | Core 3.3.10.2.1 item 3 a (PDF 82, @core-2.01 | 3.3.10.2.1#3a@): an
@@ -131,7 +131,7 @@ table45 = Law
         forAll (elements (Map.toList (tsComIds st))) $ \(c, cs) ->
         forAll (recvLength st (cSync cs)) $ \len ->
           let (row, d, after) = selected len (cSync cs)
-              (out, st')      = step (Cmd (Request IfRecv 0x01 c len mempty)) st
+              (out, st')      = step (Cmd (Request IfRecv comPacketProtocol c len mempty)) st
           in either (`counterexample` False)
                     (\resp -> conjoin [ out === Out resp, syncOf c st' === Just after ])
                     (answerOf c (cExt cs) len row d)
@@ -153,9 +153,9 @@ discardedAtIfSend payloadOn =
   forAll (payloadOn c) $ \bytes ->
   let st   = st0 { tsComIds = Map.adjust (\cs -> cs { cSync = S1 }) c (tsComIds st0) }
       len  = roundUp (spUnits (tsParams st)) (fromIntegral (B.length bytes))
-      sent = step (Cmd (Request IfSend 0x01 c len (bytes <> B.replicate (fromIntegral len - B.length bytes) 0))) st
+      sent = step (Cmd (Request IfSend comPacketProtocol c len (bytes <> B.replicate (fromIntegral len - B.length bytes) 0))) st
   in forAll (lenBytes <$> (genStaticRequest st `suchThat` ((== IfRecv) . dir))) $ \recvLen ->
-     let received = step (Cmd (Request IfRecv 0x01 c recvLen mempty)) (snd sent)
+     let received = step (Cmd (Request IfRecv comPacketProtocol c recvLen mempty)) (snd sent)
      in conjoin
           [ counterexample "the IF-SEND accepted, the TPer unchanged" $ sent === (Out (Response Good mempty), st)
           , counterexample "the IF-RECV after it" $
@@ -200,10 +200,6 @@ selected len = \case
     where
       room         = fromIntegral len - comPacketHeaderSize
       (sent, rest) = L.splitAt (length (takeWhile (<= room) (L.scanl1 (+) (map B.length ps)))) ps
-
--- | The size of a ComPacket's header, Core Table 17's fixed part (PDF 40).
-comPacketHeaderSize :: Int
-comPacketHeaderSize = layoutSize (recordLayout (Proxy :: Proxy ComPacket))
 
 -- | The answer an IF-RECV of a length on a ComID gets from a row over a
 --   delivery: exactly that many bytes of the ComPacket the row's fields

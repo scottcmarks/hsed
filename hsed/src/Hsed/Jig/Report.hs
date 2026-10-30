@@ -48,9 +48,7 @@ import qualified Data.Aeson             as A
 import qualified Data.Aeson.KeyMap      as KM
 import qualified Data.Aeson.Types       as A (Parser, parseEither, parseFail)
 import qualified Data.ByteString.Base16 as B16
-import           Data.Bits              (FiniteBits (..))
 import           Data.Time              (UTCTime, defaultTimeLocale, formatTime)
-import           Numeric                (showHex)
 import qualified RIO.ByteString         as B
 import qualified RIO.Char               as C
 import           RIO.FilePath           (takeBaseName, (<.>), (</>))
@@ -68,7 +66,6 @@ import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..
 import           Hsed.Gen.Core.UIDs     (methodIDUIDs, sessionManagerMethodUIDs)
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (writeOwned)
-import           Hsed.Jig.Guard         (comPacketProtocol, level0ComId)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (FieldDiff (..), PairReport (..), allowed, pairFails, pairLevel0)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
@@ -79,7 +76,8 @@ import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..),
 import           Hsed.Sim.Sync          (T45Row (..))
 import           Hsed.Sim.Types         (SimParams (..))
 import           Hsed.Transport.Drive   (maskSerial)
-import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Unit (..))
+import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
+                                         comPacketProtocol, hex, level0ComId)
 
 
 -- | What one case came to: its verdict, what it waived, and its extensions'.
@@ -634,9 +632,6 @@ triple (l, o, m) = "(" <> tshow l <> ", " <> tshow o <> ", " <> tshow m <> ")"
 -- | A Markdown table's row, a bar in a cell escaped.
 row :: [Text] -> Text
 row cs = "| " <> T.intercalate " | " (map (T.concatMap (\c -> if c == '|' then "\\|" else T.singleton c)) cs) <> " |"
-
-hex :: (Integral a, FiniteBits a) => a -> Text
-hex n = "0x" <> T.justifyRight (finiteBitSize n `div` 4) '0' (T.pack (showHex n ""))
 
 say :: Text -> IO ()
 say t = hPutBuilder stdout (getUtf8Builder (display t <> "\n"))

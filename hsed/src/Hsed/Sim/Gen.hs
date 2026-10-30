@@ -27,18 +27,16 @@ import qualified RIO.Map               as Map
 import           RIO
 import           Test.QuickCheck       (Gen, arbitrary, chooseInt, elements, oneof, suchThat, suchThatMap, vectorOf)
 
-import           Hsed.Core.Code        (CodeRow (..), Span (..), codeRowsNamed)
 import           Hsed.Core.Method      (invocation)
 import           Hsed.Core.StreamItem  (StreamItem (generate))
 import           Hsed.Core.Token       (Token (Empty))
-import           Hsed.Gen.Core.Codes   (cSubpacketTypes)
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uSMUID)
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
 import           Hsed.Sim.Types        (ComIdState (..), SimParams (..), SyncState (..), TPerState (..), defaultSimParams,
                                         initialState)
-import           Hsed.Wire             (Dir (..), Request (..), Unit (..), transferLength)
+import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPacketProtocol, dataKind, transferLength)
 
 
 -- | A TPer of the default parameters but for its unit (either), its number
@@ -70,7 +68,7 @@ genStaticRequest st = do
   body <- case d of
             IfSend -> B.pack <$> vectorOf (fromIntegral len) arbitrary
             IfRecv -> pure mempty
-  pure (Request d 0x01 c len body)
+  pure (Request d comPacketProtocol c len body)
 
 -- | A ComPacket on a ComID that asks nothing (Core 3.3.10.6 S2:S1 d, PDF
 --   85-86): no packets; control session packets without payload; or such
@@ -129,4 +127,3 @@ controlHeader = PacketHeader 0 0 0 0 0
 -- | A data subpacket of a payload: Core Table 19's Data Kind (PDF 43).
 dataSubPacket :: ByteString -> DataSubPacket
 dataSubPacket = DataSubPacket (DataSubPacketHeader dataKind)
-  where dataKind = fromMaybe 0 (listToMaybe [ fromInteger k | CodeRow (One k) _ <- codeRowsNamed cSubpacketTypes "Data" ])

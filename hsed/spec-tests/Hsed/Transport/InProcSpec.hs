@@ -128,6 +128,16 @@ spec = do
       (t, _) <- simulator UnitBlocks512 0
       forM_ [512, 4096] (level0Answer t)
       ifRecv t 0x01 0x0001 100 `shouldReturn` Response OtherInvalidCommandParameter mempty
+    it "carries at most 1 MiB in bytes or 255 blocks, either way: past it Other Invalid Command Parameter, the TPer untouched" $ do
+      (t, ctl) <- simulator UnitBytes 0
+      st <- scPeek ctl
+      ifRecv t 0x01 0x0001 (1024 * 1024 + 1) `shouldReturn` Response OtherInvalidCommandParameter mempty
+      ifSend t 0x01 base (1024 * 1024 + 1) "x" `shouldReturn` Response OtherInvalidCommandParameter mempty
+      scPeek ctl `shouldReturn` st
+      B.length . rpayload <$> ifRecv t 0x01 0x0001 (1024 * 1024) `shouldReturn` 1048576
+      (b, _) <- simulator UnitBlocks512 0
+      ifRecv b 0x01 0x0001 (256 * 512) `shouldReturn` Response OtherInvalidCommandParameter mempty
+      B.length . rpayload <$> ifRecv b 0x01 0x0001 (255 * 512) `shouldReturn` 130560
     it "accepts IF-SEND and discards it, outside the synchronous protocol (Core 3.3.6.1, 3.3.10.3 b)" $ do
       (t, ctl) <- simulator UnitBytes 0
       st <- scPeek ctl

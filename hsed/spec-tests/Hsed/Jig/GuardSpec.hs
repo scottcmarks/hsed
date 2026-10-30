@@ -38,6 +38,7 @@ import           Hsed.Gen.Core.UIDs    (uAuthority_Anybody, uAuthority_SID, uC_P
 import           Hsed.Jig.Guard
 import           Hsed.Jig.Transcript
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
+import           Hsed.Wire             (comPacketProtocol, dataKind, level0ComId)
 import           Hsed.Wire.Internal    (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
                                         Transport (..), Unit (..))
 
@@ -182,6 +183,6 @@ spec = do
       es <- entries t
       length [ () | Blocked {} <- es ] `shouldBe` 1
 
-  describe "the protocol, ComID and Kind it reads" $
+  describe "the protocol, ComID and Kind it reads (Hsed.Wire's)" $
     it "are Core's: protocol 0x01 (Table 25), Level 0 Discovery's ComID 0x0001 (Table 26), the Data Kind 0x0000 (Table 19)" $
       (comPacketProtocol, level0ComId, dataKind) `shouldBe` (0x01, 0x0001, 0x0000)

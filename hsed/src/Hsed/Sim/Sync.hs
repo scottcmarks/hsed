@@ -46,9 +46,8 @@ import qualified RIO.List                  as L
 import           RIO
 
 import           Hsed.Core.Call            (MethodCall)
-import           Hsed.Core.Code            (CodeRow (..), Span (..), codeRowsNamed, inSpan)
-import           Hsed.Core.Layout          (Layout (..))
-import           Hsed.Core.Record          (LayoutRecord (..), encodeRecord)
+import           Hsed.Core.Code            (CodeRow (..), codeRowsNamed, inSpan)
+import           Hsed.Core.Record          (encodeRecord)
 import           Hsed.Core.StreamItem      (StreamItem (..))
 import           Hsed.Core.Sync            (Setting (..), StateTable (..), settingOf)
 import           Hsed.Core.Token           (Token (..))
@@ -58,7 +57,8 @@ import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..)
 import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodePacket)
 import           Hsed.Sim.Types            (ComIdState (..), Outcome (..), SyncState (..))
-import           Hsed.Wire                 (IfStatus (..), Response (..))
+import           Hsed.Wire                 (IfStatus (..), Response (..), comPacketHeaderSize, dataKind, exactly,
+                                            staticExtension)
 
 
 -- * Core Table 45
@@ -221,16 +221,6 @@ controlSession h = packetTSN h == 0 && packetHSN h == 0
 controlHeader :: PacketHeader
 controlHeader = PacketHeader 0 0 0 0 0
 
--- | The extension of a ComID the TPer does not assign dynamically, a static
---   one (Core 3.3.3.1, PDF 57).
-staticExtension :: Word16
-staticExtension = 0x0000
-
--- | The Kind a data subpacket has: Core Table 19's @Data@ (PDF 43), which
---   3.2.3.4.1.1.2 (PDF 44) says is zeroes.
-dataKind :: Word16
-dataKind = fromMaybe 0 (listToMaybe [ fromInteger k | CodeRow (One k) _ <- codeRowsNamed cSubpacketTypes "Data" ])
-
 -- | Whether a subpacket is a data subpacket, by its Kind (Core Table 19).
 isData :: DataSubPacket -> Bool
 isData sp = any (\r -> inSpan (codeSpan r) (toInteger (dataSubPacketKind (dataSubPacketHeader sp)))) (codeRowsNamed cSubpacketTypes "Data")
@@ -265,11 +255,3 @@ atoms stream
     readToken :: ByteString -> Either String Token
     readToken = parseByteString
 
--- | The size of the ComPacket header, Core Table 17's fixed part (PDF 40).
-comPacketHeaderSize :: Int
-comPacketHeaderSize = layoutSize (recordLayout (Proxy :: Proxy ComPacket))
-
--- | Exactly so many bytes: cut to the length, or zero-padded to it.
-exactly :: Word32 -> ByteString -> ByteString
-exactly len bytes = B.take n (bytes <> B.replicate (n - B.length bytes) 0)
-  where n = fromIntegral len

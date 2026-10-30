@@ -19,18 +19,22 @@ against a scripted transport (built with the constructor of
 with a header of Core Table 45 (PDF 83): it asks again at the larger of the
 MinTransfer and its length, with or without packets in that ComPacket
 (rows 2 and 3), polls past Response(s) to come (row 1), and gives up after
-its timeout.
+its timeout, or past the bounds on the whole exchange (its time, the bytes it
+collects) against a TPer that never stops answering; an answer of another
+extension than the one sent is malformed. And the wire's constants, each
+defined once.
 -}
 module Hsed.WireSpec (spec) where
 
 import qualified RIO.ByteString        as B
+import qualified RIO.List              as L
 import           RIO
 import           Test.Hspec
 import           Test.Hspec.QuickCheck (prop)
 import           Test.QuickCheck       (Positive (..), (===), (==>))
 
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
-import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
+import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
 import           Hsed.Wire
 import           Hsed.Wire.Internal    (Transport (..))
 
@@ -64,9 +68,6 @@ comPacket h ps = either (const mempty) id (encodeComPacket (ComPacketFrame h ps)
 packet :: ByteString -> PacketFrame
 packet = PacketFrame (PacketHeader 0 0 0 0 0) . pure . DataSubPacket (DataSubPacketHeader 0)
 
-exactly :: Word32 -> ByteString -> ByteString
-exactly len bytes = B.take (fromIntegral len) (bytes <> B.replicate (fromIntegral len - B.length bytes) 0)
-
 -- | Exchange a ComPacket on 0x1004 through the transport's own IF-SEND.
 exchanged :: ExchangeOpts -> Transport 'ReadWrite -> IO (Either ExchangeError [PacketFrame])
 exchanged opts t = do
@@ -91,6 +92,11 @@ spec = do
       transferLength UnitBytes 1 `shouldBe` 1
       transferLength UnitBlocks512 4 `shouldBe` 2048
       transferLength UnitBytes (-1) `shouldBe` 0
+    it "saturates a count past what 32 bits hold at the last whole unit, never wrapping" $ do
+      map (transferLength UnitBlocks512) [8388607, 8388608, 8388609, maxBound] `shouldBe` replicate 4 0xFFFFFE00
+      transferLength UnitBytes 4294967297 `shouldBe` maxBound
+    prop "is n units' bytes, or the most a length holds" $ \n ->
+      toInteger (transferLength UnitBlocks512 n) === min 0xFFFFFE00 (toInteger (max 0 n) * 512)
     it "rounds a length up to whole blocks, and leaves bytes as they are" $ do
       map (roundUp UnitBlocks512) [0, 1, 511, 512, 513, 2048, 2049] `shouldBe` [0, 512, 512, 512, 1024, 2048, 2560]
       map (roundUp UnitBytes) [0, 1, 513] `shouldBe` [0, 1, 513]
@@ -197,6 +203,29 @@ spec = do
       exchanged quick inactive >>= (`shouldSatisfy` isMalformed)
       (row2, _) <- scripted UnitBytes [\h -> comPacket h { comPacketOutstandingData = 100, comPacketMinTransfer = 100 } []]
       exchanged quick row2 >>= (`shouldSatisfy` isMalformed)
+    it "calls an answer of another extension than the ComPacket sent malformed: the ComID is in use elsewhere (Core 3.3.3.1)" $ do
+      (other, _) <- scripted UnitBytes [\h -> comPacket h { comPacketComIDExtension = 0x1234 } []]
+      exchanged quick other >>= (`shouldSatisfy` isMalformed)
+    it "gives up on a TPer that keeps returning a packet with more to come (row 4), past the exchange's time" $ do
+      (t, _) <- scripted UnitBytes (L.repeat (\h -> comPacket h { comPacketOutstandingData = 1 } [packet "x"]))
+      timeout 5000000 (exchanged quick { xTotalMicros = 200000 } t) `shouldReturn` Just (Left TimedOut)
+    it "gives up on a TPer that keeps returning packets at once (row 3), past the bytes it collects" $ do
+      (t, seen) <- scripted UnitBytes (L.repeat (\h -> comPacket h { comPacketOutstandingData = 100, comPacketMinTransfer = 80 } [packet "x"]))
+      r <- timeout 5000000 (exchanged quick { xResponseBytes = 4096 } t)
+      r `shouldSatisfy` \case Just (Left (Malformed _)) -> True; _ -> False
+      -- every answer one packet more, until they hold more than 4096 bytes
+      let each = either (const 0) B.length (encodePacket (packet "x"))
+      length . recvLengths <$> seen `shouldReturn` (4096 `div` each + 1)
+
+  describe "the wire's constants" $ do
+    it "are Core's: protocol 0x01, a 20-byte ComPacket header, extensions 0x0000 static and 0xFFFF inactive" $
+      (comPacketProtocol, comPacketHeaderSize, staticExtension, inactiveExtension) `shouldBe` (0x01, 20, 0x0000, 0xFFFF)
+    it "carry at most 255 blocks, or 1 MiB" $
+      (mostCarried UnitBlocks512, mostCarried UnitBytes) `shouldBe` (130560, 1048576)
+    it "cut or pad a transfer to exactly its length" $
+      map (`exactly` "ab") [0, 1, 2, 4] `shouldBe` ["", "a", "ab", "ab\0\0"]
+    it "print a number in hex, as many digits as its type has" $
+      (hex (0x1004 :: Word16), hex (1 :: Word8), hex (0x5c :: Word32)) `shouldBe` ("0x1004", "0x01", "0x0000005c")
   where
     isRefused   = \case Left (Refused _) -> True; _ -> False
     isMalformed = \case Left (Malformed _) -> True; _ -> False

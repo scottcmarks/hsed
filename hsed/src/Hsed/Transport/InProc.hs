@@ -17,6 +17,12 @@ unless the run holds it for a number of IF-RECVs (@--hold-processing@), so
 that the host's loop sees the TPer still processing (Core Table 45 row 1,
 PDF 83). A @'ReadWrite@ transport, with a 'SimControl' the jig's simulator
 extensions use: release a ComID now, look at the state.
+
+Like every transport it carries at most "Hsed.Wire".'mostCarried' bytes in
+one command (255 blocks, or 1 MiB in bytes): a longer transfer, either way,
+is answered Other Invalid Command Parameter (SIIS 1.20 4.3.1.2 and 4.3.2.2,
+PDF 30-31) before the TPer sees it, so that no answer is built of a length
+no transport could carry.
 -}
 module Hsed.Transport.InProc
   ( InProcOpts (..)
@@ -30,6 +36,7 @@ import           RIO
 import           Hsed.Sim           (step, syncOf)
 import           Hsed.Sim.Types     (Input (..), Output (..), SimParams (..), SyncState (..), TPerState, initialState)
 import           Hsed.Version       (hsedVersion)
+import           Hsed.Wire          (mostCarried)
 import           Hsed.Wire.Internal (Cap (..), Describe (..), Dir (..), Event, IfStatus (..), Request (..), Response (..),
                                      Transport (..), Unit)
 
@@ -67,7 +74,9 @@ newInProc params opts = do
   let p = params { spUnits = ioUnits opts }
   var <- newMVar (Sim (initialState p) mempty)
   let transport = MkTransport
-        { tExchange = \r -> modifyMVar var (pure . exchange (ioHoldIfRecvs opts) r)
+        { tExchange = \r -> if lenBytes r > mostCarried (ioUnits opts)
+                                then pure (Response OtherInvalidCommandParameter mempty)
+                                else modifyMVar var (pure . exchange (ioHoldIfRecvs opts) r)
         , tInject   = \e -> modifyMVar var (pure . event e)
         , tUnit     = ioUnits opts
         , tDescribe = Describe

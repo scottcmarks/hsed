@@ -44,7 +44,8 @@ import           Hsed.Sim.SessionManager (answer)
 import           Hsed.Sim.Sync           (classifyIfSend, ifRecvStatic)
 import           Hsed.Sim.Types          (ComIdLife (..), ComIdState (..), Input (..), Outcome (..), Output (..), SimParams (..),
                                           SyncState (..), TPerState (..))
-import           Hsed.Wire               (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), roundUp)
+import           Hsed.Wire               (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketProtocol,
+                                          exactly, inactiveExtension, roundUp)
 
 
 -- | One step of the TPer:
@@ -80,8 +81,8 @@ syncOf c = fmap cSync . Map.lookup c . tsComIds
 command :: Request -> TPerState -> (Response, TPerState)
 command r st
   | not (whole (spUnits (tsParams st)) (lenBytes r)) = refused OtherInvalidCommandParameter
+  | proto r == comPacketProtocol = comPacketCommand r st
   | otherwise = case proto r of
-      0x01 -> comPacketCommand r st
       0x02 -> refused (Unsupported "protocol 0x02, ComID management (TPER_RESET, STACK_RESET): M4a")
       0x00 -> refused (Unsupported "protocol 0x00, the security protocol information: not simulated")
       _    -> refused InvalidSecurityProtocolId
@@ -149,9 +150,4 @@ reserved c = not (any ("non-reserved" `T.isInfixOf`) (maybe [] codeCells (codeRo
 --   the ComID's, its extension 0xFFFF and the rest zero (Core 3.3.3.3 a.i,
 --   PDF 58).
 inactiveHeader :: Word16 -> ByteString
-inactiveHeader c = either (const mempty) id (encodeRecord (ComPacket (ComPacketHeader c 0xFFFF 0 0) mempty))
-
--- | Exactly so many bytes: cut to the length, or zero-padded to it.
-exactly :: Word32 -> ByteString -> ByteString
-exactly len bytes = B.take n (bytes <> B.replicate (n - B.length bytes) 0)
-  where n = fromIntegral len
+inactiveHeader c = either (const mempty) id (encodeRecord (ComPacket (ComPacketHeader c inactiveExtension 0 0) mempty))

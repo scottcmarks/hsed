@@ -25,7 +25,7 @@ import list; lists are united and sorted), and prints the declarations sorted
 by table number, then rank within the table, then name. The same declarations
 print the same text in any order. The runtime modules the declarations of
 several rules import are named once here ('uidModule', 'coreTypesModule',
-'coreTableModule', 'codeModule', 'fieldModule'); one that a single rule's
+'coreTableModule', 'codeModule', 'fieldModule', 'layoutModule'); one that a single rule's
 declarations import is named in that rule (@Hsed.Core.Method@ in @sig@'s,
 @Hsed.Core.Sync@ in @stateTable@'s, @Hsed.Core.Properties@ in the Props
 reader's).
@@ -54,6 +54,7 @@ module Hsed.Spec.Gen
   , coreTableModule
   , codeModule
   , fieldModule
+  , layoutModule
     -- * Printing
   , renderModule
     -- * Pieces for the rules' printers
@@ -160,6 +161,11 @@ codeModule = "Hsed.Core.Code"
 -- | @FieldValue@, @FieldConst@ and @FieldDef@: the rows of a record table.
 fieldModule :: Text
 fieldModule = "Hsed.Core.Field"
+
+-- | @Layout@, @Field@, @FieldKind@, @Tail@: a byte layout, which the byte grid,
+--   feature and byte-field-value rules all generate.
+layoutModule :: Text
+layoutModule = "Hsed.Core.Layout"
 
 
 -- * Printing

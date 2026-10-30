@@ -1,9 +1,11 @@
 #!/usr/bin/env python -I
-"""Regenerate what hsed's TypeUIDs.hs hand-transcribes from spec/ir/core-2.01.json and diff the two.
+"""Regenerate what the hand transcription holds from spec/ir/core-2.01.json and diff the two.
 
+The hand transcription is hsed/fixture/Hand/TypeUIDs.hs, the runtime oracle's test fixture
+since M2d (hsed's library before; "hsed" below and in the report's fields means it).
 Core Spec 2.01 section 5.1.3 (Tables 46-165) holds, per column type, one 'Type table' row
 (UID / Name / Format) and, for enumerations and sets, a companion 'Enumeration Values' /
-'Set Values' table (value-or-range / label).  hsed embeds them as ttype ... and
+'Set Values' table (value-or-range / label).  The fixture embeds them as ttype ... and
 tenum ... ASCII-art quasiquotes.  This script:
 
   1. reads the extracted tables and derives the (UID bytes, Name, [Format tokens]) triple of
@@ -11,10 +13,10 @@ tenum ... ASCII-art quasiquotes.  This script:
   2. parses the quasiquote blocks of TypeUIDs.hs with the same grammar the TH parsers use
      (fields are fixed-width, consecutive lines of a row are concatenated per column);
   3. pairs them in document order (100 ttype blocks <-> 100 Type tables, 19 tenum blocks <->
-     19 enum/set tables; Table 87 gen_status is a commented-out FIXME in hsed) and reports
-     every difference, classified.
+     19 enum/set tables; Table 87 gen_status is a commented-out FIXME in the fixture) and
+     reports every difference, classified.
 
-Usage:  python -I regen_typeuids.py spec/ir/core-2.01.json TypeUIDs.hs regen_report.txt regen_typeuids.json
+Usage:  python -I regen_typeuids.py spec/ir/core-2.01.json hsed/fixture/Hand/TypeUIDs.hs regen_report.txt regen_typeuids.json
 """
 from __future__ import annotations
 
@@ -233,7 +235,8 @@ def main(argv):
     by_class = {c: [d for d in diffs if d["class"] == c] for c in classes}
 
     summary = [
-        "REGEN REPORT: Core Spec 2.01 Tables 46-165 (section 5.1.3) extracted from the PDF vs hsed TypeUIDs.hs",
+        "REGEN REPORT: Core Spec 2.01 Tables 46-165 (section 5.1.3) extracted from the PDF vs the hand transcription"
+        " (the oracle's fixture hsed/fixture/Hand/TypeUIDs.hs)",
         "=" * 100,
         f"PDF Type tables (UID/Name/Format): {len(pdf_types)}   hsed ttype blocks: {len(hs_types)}",
         f"PDF enum/set tables:               {len(pdf_enums)}   hsed tenum blocks: {len(hs_enums)}"

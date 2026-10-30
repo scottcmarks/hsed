@@ -6,6 +6,8 @@
 # sides, and on a line whose value is not the one it computes. The fixture's enumerations are compared
 # under the generator's naming rule (EquivTH.asGenerated, design section 13.15: every value of a label
 # that names several suffixed with it, the first included; dEnum left the first bare).
+# In a reason, "hsed" means that 2019 hand transcription, hsed's library until M2d and the fixture
+# since (the reasons date from M2a and M2b; the comments below say "the hand transcription").
 #
 #   subject | kind | value | reason
 #
@@ -22,14 +24,14 @@
 #                   hand-written value
 #   caption         generated / hand-written caption, spacing aside
 
-# the four UIDs hsed transcribed wrongly (design section 1)
+# the four UIDs the hand transcription has wrong (design section 1)
 uSecondsType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x14 0x06 | T129: hsed has all zeros
 ufeedback_sizeType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x02 0x14 | T83: hsed carries date's 18 04
 ufraction_enumType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x1c | T85: hsed carries date's 18 04
 ugen_statusType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x1a 0x02 | T86: hsed carries date's 18 04
 
 # spacing only: an enumeration's constructors that differ in underscores alone (T98: hsedc joins the
-# PDF's two lines of a label with a space, hsed's tenum joined its lines with none)
+# PDF's two lines of a label with a space, the fixture's tenum joins its lines with none)
 Core_keys_avail_conds | spacing | +[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLocked_WriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] -[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLockedWriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] | T98: both break the label after ReadLocked,; hsedc joins the PDF's lines with a space (ReadLocked, WriteLocked), hsed's tenum joins its lines with none (ReadLocked,WriteLocked), and the comma dropped leaves ReadLockedWriteLocked
 
 # enumerations whose range starts at 1
@@ -45,7 +47,7 @@ T161 | caption | Table 161 uinteger_8 / Table 160 uinteger_8 | hsed numbers Tabl
 # newly generated
 Core_gen_status | new | 64 constructors, values 0..63, names fnv1a64:f39dd06ee2026dbb | T87: generated through its rangeWords comment; hsed has only a FIXME
 
-# the typed half-UIDs hsed derives from a hard-coded table kind
+# the typed half-UIDs the hand transcription derives from a hard-coded table kind
 bthMBR | typed-half-uid | btHalfUID 0x00 0x00 0x08 0x04 | T240: hsed hard-codes MBR as the one byte table; Core gives no table kind (Opal's Kind column, M5)
 othACE | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x08 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othAccessControl | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x07 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
@@ -93,8 +95,8 @@ othTable | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x01 | T240: object table b
 othTemplate | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x04 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othType | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x05 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 
-# M2b: the UIDs of the tables hsed does not transcribe (uidTable, Tables 242-248; T241's six and the
-# invoking IDs ThisSP and SMUID of T239 are hsed's names and values)
+# M2b: the UIDs of the tables the hand transcription leaves out (uidTable, Tables 242-248; T241's six
+# and the invoking IDs ThisSP and SMUID of T239 are its names and values)
 uMethodID_DeleteSP | new | uid 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x01 | T242 MethodID UIDs: hsed transcribes no row UIDs of this table
 uMethodID_CreateTable | new | uid 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x02 | T242 MethodID UIDs: hsed transcribes no row UIDs of this table
 uMethodID_Delete | new | uid 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x03 | T242 MethodID UIDs: hsed transcribes no row UIDs of this table
@@ -211,6 +213,7 @@ uSecretProtect_C_HMAC_512_0x03 | new | uid 0x00 0x00 0x00 0x1d 0x00 0x00 0x00 0x
 uSecretProtect_K_AES_128_0x03 | new | uid 0x00 0x00 0x00 0x1d 0x00 0x00 0x00 0x1d | T248 SecretProtect Table UIDs: hsed transcribes no row UIDs of this table
 uSecretProtect_K_AES_256_0x03 | new | uid 0x00 0x00 0x00 0x1d 0x00 0x00 0x00 0x1e | T248 SecretProtect Table UIDs: hsed transcribes no row UIDs of this table
 
-# M2b: the special purpose UIDs Table 239 describes and names nowhere (hsed named them itself)
+# M2b: the special purpose UIDs Table 239 describes and names nowhere (the hand transcription named
+# them itself)
 uNULL | unnamed | uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 | T239 row 1, the null uid: in specialPurposeUIDs
 uC_PINCharSetUnrestrictedUID | unnamed | uid 0x00 0x00 0x00 0x0b 0x00 0x00 0x00 0x01 | T239 row 5, the unrestricted GenKey character set: in specialPurposeUIDs

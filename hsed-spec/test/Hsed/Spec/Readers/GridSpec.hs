@@ -32,7 +32,7 @@ import           RIO
 import           RIO.Directory          (doesFileExist)
 import           Test.Hspec
 
-import           Hsed.Core.Layout       (tiling)
+import           Hsed.Core.Layout       (Field (..), Layout (..), tiling)
 import           Hsed.Spec.Anchor       (AnchorId (..))
 import           Hsed.Spec.Check        (mkContext)
 import           Hsed.Spec.Common       (ErrataSet (..))
@@ -162,6 +162,11 @@ spec = describe "Hsed.Spec.Readers.Grid" $ do
         flagsOf 4 g `shouldBe` locking
         [ s | s@("Reserved", (4, _), _) <- spans g ] `shouldBe` [("Reserved", (4, 7), Just (4, 6))]
         tiling (gridLayout "x" g) `shouldBe` []
+      it "lists the fields of a byte its bits modifier reads bit 7 first, as the extent rule does, so a layout prints them in order" $ do
+        let byModifier = readGrid [(4, locking)] bare
+            byExtent = readGrid [] (table ir 43)
+        spans byModifier `shouldBe` spans byExtent
+        map fieldStart (layoutFields (gridLayout "x" byModifier)) `shouldSatisfy` (\os -> os == L.sort os)
       it "reports a bits modifier the extent rule leaves unused (W-LAYOUT-BITS-UNUSED)" $
         [ gpCode p | p <- gProblems (readGrid [(4, locking), (9, [(0, "X")])] (table ir 43)) ]
           `shouldBe` ["W-LAYOUT-BITS-UNUSED", "W-LAYOUT-BITS-UNUSED"]

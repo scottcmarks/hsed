@@ -45,7 +45,7 @@ import           Hsed.Core.Layout       (Field (..), FieldKind (..), Layout (..)
                                          bitPosition, fieldEnd, tiling)
 import           Hsed.Spec.Common       (CodeDef (..), Finding, Reports (..), Severity (..), finding)
 import qualified Hsed.Spec.Gen          as Gen
-import           Hsed.Spec.Readers.Grid (BitPos (..), Grid (..), GridField (..), fieldConstant, fieldVariable)
+import           Hsed.Spec.Readers.Grid (BitPos (..), Grid (..), GridField (..), fieldConstant, fieldVariable, reservedName)
 import           Hsed.Spec.RuleDef      (BoundTable, Context, atTable)
 
 
@@ -127,7 +127,7 @@ gridLayout name g = Layout
 --   else an unsigned number.
 gridFieldKind :: GridField -> FieldKind
 gridFieldKind f
-  | "reserved" `T.isPrefixOf` T.toLower (gfBase f) = Reserved
+  | reservedName (gfBase f)                        = Reserved
   | Just c <- fieldConstant f                      = Pinned c
   | width == 1                                     = Flag
   | width > 64, width `mod` 8 == 0                 = Bytes

@@ -65,6 +65,7 @@ module Hsed.Spec.Readers.Grid
   , cellMarks
   , fieldConstant
   , fieldVariable
+  , reservedName
     -- * Codes
   , gridCodes
   ) where
@@ -339,7 +340,9 @@ assemble rows = (reverse fs, reverse ps <> unclosed)
                    ("byte " <> tshow n <> "'s bits read from its bits modifier, the extent rule reading none: "
                     <> T.intercalate ", " [ tshow b <> " " <> nm | (b, nm) <- listed ])
           inRun = [ endian (brRow row) ("byte " <> tshow n <> ", read by its bits modifier, lies inside a field's run") | isJust run ]
-      in (run, reverse (L.sortOn gfFirst (flags <> reserved)) <> done, reverse (note : strays <> inRun) <> probs)
+      in (run, reverse (L.sortOn (inByte . gfFirst) (flags <> reserved)) <> done, reverse (note : strays <> inRun) <> probs)
+    -- bit 7 first, as the other mappings give a byte's fields
+    inByte (BitPos b i) = (b, negate i)
     -- one cell of a byte, left to right
     cell n (run, done, probs) cb = case (cbBits cb, cellMarks (cbText cb)) of
       (Nothing, _) -> (run, done, extent [cbCell cb] ("byte " <> tshow n <> ": the cell " <> tshow (cbText cb)
@@ -371,7 +374,9 @@ field name from lastBit end cells = GridField
       Just open | (b, p) <- DT.breakOnEnd "(" open, not (T.null b) -> (T.strip (T.dropEnd 1 b), Just (T.strip p))
       _                                                             -> (name, Nothing)
 
--- | A field named reserved: @Reserved@, @Reserved for common SSC parameters@.
+-- | A name that says its bits are reserved: a field's (@Reserved@, @Reserved
+--   for common SSC parameters@), or a variable run's (the reserved bytes to the
+--   end of a transfer).
 reservedName :: Text -> Bool
 reservedName = T.isPrefixOf "reserved" . T.toLower
 

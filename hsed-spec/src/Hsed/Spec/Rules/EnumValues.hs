@@ -314,12 +314,13 @@ enumTypeName :: SpecId -> Text -> Text
 enumTypeName sid typeName = Gen.specLabel sid <> "_" <> typeName
 
 -- | The constructors of an enumeration's data type ('enumTypeName') in value
---   order: the type, then the label scrubbed ('scrubLabel'), and @_NA@ for
---   every value of the range no label covers; a label (or @_NA@) given several
---   values names each of them suffixed @_\<v\>@, the first included, and one
---   given a single value stays bare (design section 13.15: a name carries its
---   value, so Core's @Reserved_4@ (T128) and Opal's (T16) name the same value
---   wherever their ranges start).
+--   order: the type, then the label scrubbed (commas dropped, every character
+--   but a letter, a digit, an underscore or an apostrophe made an underscore),
+--   and @_NA@ for every value of the range no label covers; a label (or
+--   @_NA@) given several values names each of them suffixed @_\<v\>@, the
+--   first included, and one given a single value stays bare (design section
+--   13.15: a name carries its value, so Core's @Reserved_4@ (T128) and Opal's
+--   (T16) name the same value wherever their ranges start).
 constructorNames :: Text -> (Int, Int) -> [(Text, Int)] -> [(Text, Int)]
 constructorNames coreName rng given = sortOn snd (concatMap suffixed (Map.toList (constructorGroups coreName rng given)))
   where

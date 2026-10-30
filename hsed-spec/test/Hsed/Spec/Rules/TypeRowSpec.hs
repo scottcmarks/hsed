@@ -68,8 +68,12 @@ ownCheck f = Cm.code f /= "C-UID-RANGE"
 
 -- | Each Type table row of the hand transcription, the oracle's fixture
 --   (hsed/fixture/Hand/TypeUIDs.hs): every @ttype@ quasiquote's Name and
---   Format cells, a cell's lines joined as the quasiquoter joins them (each
---   line's piece trimmed, the pieces concatenated: @List_Type,*,ACE_expression@).
+--   Format cells, a cell's lines joined, each line's piece stripped and the
+--   pieces concatenated (@List_Type,*,ACE_expression@). On this fixture that
+--   is the quasiquoter's text, though the quasiquoter cuts a line at the
+--   separator's columns, trims trailing space only and drops a final comma:
+--   no bar lies off those columns, no piece starts with a space and no Format
+--   ends in a comma.
 handFormats :: Text -> [(Text, Text)]
 handFormats src = [ (typeName, format) | body <- quasiquotes (T.lines src), [_, typeName, format] : _ <- [drop 1 (tableRows body)] ]
   where

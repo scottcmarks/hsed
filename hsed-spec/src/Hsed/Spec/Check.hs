@@ -20,7 +20,7 @@ checks, each emitting findings with the code in brackets:
 
 * classification: annotations refused (@E-ANCHOR@, @E-ANCHOR-KIND@,
   @E-SYNTAX@, @E-GRAMMAR@, @E-ERRATUM-PUBLISHED@, @E-MODIFIER@), @E-AMBIGUOUS@,
-  @W-UNBOUND@, @W-RULE-UNIMPLEMENTED@ ("Hsed.Spec.Rules"), for the numbered
+  @E-UNBOUND@, @W-RULE-UNIMPLEMENTED@ ("Hsed.Spec.Rules"), for the numbered
   tables and the signature units alike;
 * @C-EXEMPLAR@: each rule still fires on its exemplar;
 * @W-RULE-SCOPE-EMPTY@, @N-RULE-SCOPE-REDUNDANT@: a rule anchor whose scope

@@ -33,8 +33,8 @@ on a table whose identifier ('ruleIdent') a table of the joined rule names too.
   annotation that is a bare modifier chain, applied in order to the default of
   the single rule that fires;
 * ambiguous: two rules fire and neither refines the other (@E-AMBIGUOUS@);
-* unbound: nothing binds it, the Warning @W-UNBOUND@ (design M2b promotes it
-  to @E-UNBOUND@);
+* unbound: nothing binds it, the Error @E-UNBOUND@ (a Warning, @W-UNBOUND@,
+  until every numbered table of Core had its rule, design section 11 M2c);
 
 plus 'Invalid' for an annotation that does not parse or whose modifiers do not
 apply. A rule name of "Hsed.Spec.DSL" that the registry does not implement
@@ -45,7 +45,7 @@ signature blocks, IR @sigs@), which carry no annotation and which a rule
 binds by its scope alone: each unit whose section a rule anchor covers is
 bound to the rule whose shape takes signature units
 ('Hsed.Spec.Shape.shapeUnit'); a unit no such rule covers is unbound
-(@W-UNBOUND@, as an unbound table), one two such rules cover is
+(@E-UNBOUND@, as an unbound table), one two such rules cover is
 @E-AMBIGUOUS@.
 
 Every annotation is validated once, in "Hsed.Spec.Scope".'parseAnnots', so
@@ -163,7 +163,7 @@ classify :: SpecIR -> Map AnchorId Classification
 classify = fst . classifyWith
 
 -- | The classification and its findings: parse failures, @E-AMBIGUOUS@,
---   @W-UNBOUND@, rule names hsedc does not implement yet.
+--   @E-UNBOUND@, rule names hsedc does not implement yet.
 classifyWith :: SpecIR -> (Map AnchorId Classification, [Finding])
 classifyWith = classifyWithRules rules
 
@@ -242,7 +242,7 @@ classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatM
       (Invalid f, _)            -> [f]
       (Ambiguous rs, Just t)    -> [here aid t (finding Error "E-AMBIGUOUS"
                                      ("rules " <> T.intercalate " and " (map ruleNameText rs) <> " both fire and neither refines the other"))]
-      (Unbound, Just t)         -> [here aid t (finding Warning "W-UNBOUND"
+      (Unbound, Just t)         -> [here aid t (finding Error "E-UNBOUND"
                                      ("no annotation binds it and no rule in scope fires on it (" <> fromMaybe "no caption" t.caption <> ")"))]
       _                         -> []
 
@@ -260,7 +260,7 @@ classifySignatures = classifySignaturesWith rules
 
 -- | The classification of every signature unit, and its findings, under a set of
 --   rules: a unit is bound to the rule whose shape takes signature units and
---   whose scope covers the unit's section; @W-UNBOUND@ where none does,
+--   whose scope covers the unit's section; @E-UNBOUND@ where none does,
 --   @E-AMBIGUOUS@ where several do.
 classifySignaturesWith :: [RuleDef] -> SpecIR -> (Map AnchorId Classification, [Finding])
 classifySignaturesWith ruleSet ir = (classes, concatMap located (Map.toList classes))
@@ -275,7 +275,7 @@ classifySignaturesWith ruleSet ir = (classes, concatMap located (Map.toList clas
       []  -> Unbound
       rs  -> Ambiguous (map ruleName rs)
     located (aid, c) = case (c, Map.lookup aid units) of
-      (Unbound, Just u)      -> [here aid u (finding Warning "W-UNBOUND"
+      (Unbound, Just u)      -> [here aid u (finding Error "E-UNBOUND"
                                   ("no rule in scope binds this signature block (" <> T.intercalate ", " u.heads <> ")"))]
       (Ambiguous rs, Just u) -> [here aid u (finding Error "E-AMBIGUOUS"
                                   ("rules " <> T.intercalate " and " (map ruleNameText rs) <> " both bind this signature block"))]

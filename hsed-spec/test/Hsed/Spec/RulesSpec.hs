@@ -106,22 +106,25 @@ spec = do
         Map.keys classes `shouldBe` Map.keys (numberedTables ir)
         Map.size classes `shouldBe` 248
         [ aid | (aid, c) <- Map.toList classes, isAmbiguousOrInvalid c ] `shouldBe` []
-      it "reports one W-UNBOUND per unbound table, at the table" $ do
+      it "reports one E-UNBOUND, an Error, per unbound table, at the table" $ do
         let (_, fs) = classifyWith ir
-        L.sort [ a | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning, Just a <- [Cm.anchor f] ]
+        L.sort [ a | f <- fs, Cm.code f == "E-UNBOUND", Cm.severity f == Error, Just a <- [Cm.anchor f] ]
           `shouldBe` L.sort [ renderAnchorId aid | (aid, Unbound) <- Map.toList classes ]
+        [ f | f <- fs, Cm.code f == "W-UNBOUND" ] `shouldBe` []
+      it "leaves no numbered table of Core unbound (design section 11 M2c: E-UNBOUND an Error, orphans empty)" $
+        [ aid | (aid, Unbound) <- Map.toList classes ] `shouldBe` []
       it "binds T46 by typeRow and T52 by enumValues, with no comment" $ do
         at' 46 `shouldBe` Just (RuleBound (RuleName "typeRow") [] (SomeBinding typeRow))
         at' 52 `shouldBe` Just (RuleBound (RuleName "enumValues") [] (SomeBinding enumValues))
       it "applies Table 75's bare erratum to the typeRow default" $
         at' 75 `shouldBe` Just (RuleBound (RuleName "typeRow") [Erratum Scott [("Fractoin", "Fraction")]]
                                           (SomeBinding (erratum scott ["Fractoin" ~> "Fraction"] typeRow)))
-      it "leaves every table of the pristine IR unbound, each a W-UNBOUND naming its caption" $ do
+      it "leaves every table of the pristine IR unbound, each an E-UNBOUND Error naming its caption" $ do
         let (pristineClasses, fs) = classifyWith pristine
         L.nub (Map.elems pristineClasses) `shouldBe` [Unbound]
-        length [ f | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning ] `shouldBe` Map.size pristineClasses
+        length [ f | f <- fs, Cm.code f == "E-UNBOUND", Cm.severity f == Error ] `shouldBe` Map.size pristineClasses
         filter ("T239" `T.isInfixOf`) (map renderFinding fs)
-          `shouldBe` ["W-UNBOUND core-2.01.pdf#page=302&T239: no annotation binds it and no rule in scope fires on it (Table 239 Special Purpose UIDs)"]
+          `shouldBe` ["E-UNBOUND core-2.01.pdf#page=302&T239: no annotation binds it and no rule in scope fires on it (Table 239 Special Purpose UIDs)"]
       it "binds a wider enumeration through a full binding with cols: T87's comment (design E4)" $ do
         at' 87 `shouldBe` Just (CommentBound (SomeBinding (rangeWords ["to"] (cols 0 1 enumValues))))
         ir' <- annotated pristine (withoutLine "T87" hsa)
@@ -223,7 +226,8 @@ spec = do
       it "refuses a doc anchor naming another spec, or without its doc token first" $ do
         let doc' payload = annotated pristine (T.unlines (("core-2.01 | doc | " <> payload) : drop 1 (T.lines hsa)))
         ir1 <- doc' "doc opal230 & rule typeRow & rule enumValues"
-        map renderFinding (filter isError (snd (classifyWith ir1)))
+        -- the tables the other doc tokens bound are left unbound, each an E-UNBOUND
+        map renderFinding (filter (\f -> isError f && Cm.code f /= "E-UNBOUND") (snd (classifyWith ir1)))
           `shouldBe` ["E-ANCHOR-KIND core-2.01.pdf#page=1&doc: the doc anchor of core-2.01 names its own spec, doc core201, not doc opal230 & rule typeRow & rule enumValues"]
         ir2 <- doc' "rule typeRow"
         map renderFinding (filter isError (fst (bindEntries ir2)))

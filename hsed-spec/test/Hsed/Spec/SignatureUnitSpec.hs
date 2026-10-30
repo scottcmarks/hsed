@@ -17,8 +17,8 @@ anchor covers to the rule whose shape takes signature units, and the rule
 reads them from the 'Context' as 'BoundSig's. A stub rule stands in for the
 registered signature rule (taken out of the registry here), proving the
 interface: the scope from a doc
-token or a heading, @W-UNBOUND@ for a block no rule covers (a Warning through
-M2b, like an unbound table), @E-AMBIGUOUS@ for two such rules, a rule that
+token or a heading, @E-UNBOUND@ for a block no rule covers (an Error since
+the end of M2c, like an unbound table), @E-AMBIGUOUS@ for two such rules, a rule that
 never fires on a table, a signature exemplar, findings and declarations
 located at the block, and the blocks in the ledger and among the orphans.
 -}
@@ -70,7 +70,7 @@ tableRules :: [RuleDef]
 tableRules = [ r | r <- registry, fmap shapeUnit (ruleShape r) /= Just SignatureUnit ]
 
 unbound :: [Finding] -> [Text]
-unbound fs = [ a | f <- fs, Cm.code f == "W-UNBOUND", Cm.severity f == Warning, Just a <- [Cm.anchor f] ]
+unbound fs = [ a | f <- fs, Cm.code f == "E-UNBOUND", Cm.severity f == Error, Just a <- [Cm.anchor f] ]
 
 spec :: Spec
 spec = withCore $ \pristine -> do
@@ -91,7 +91,7 @@ spec = withCore $ \pristine -> do
       let (classes, fs) = classifySignaturesWith (tableRules <> [stub]) ir
       bound classes `shouldBe` Map.keys (signatureUnits ir)
       fs `shouldBe` []
-    it "binds only the blocks under a heading the rule is anchored at, the others W-UNBOUND at the block" $ do
+    it "binds only the blocks under a heading the rule is anchored at, the others E-UNBOUND at the block" $ do
       ir <- annotated pristine "core-2.01 | doc | doc core201\ncore-2.01 | 5.3.3 | rule sig\n"
       let (classes, fs) = classifySignaturesWith [stub] ir
           under = [ aid | aid@(SigId s) <- Map.keys classes, "5.3.3." `T.isPrefixOf` s ]
@@ -99,7 +99,7 @@ spec = withCore $ \pristine -> do
       length under `shouldBe` 18
       L.sort (unbound fs) `shouldBe` L.sort [ renderAnchorId aid | (aid, Unbound) <- Map.toList classes ]
       filter ("5.2.2.1/sig" `T.isInfixOf`) (map renderFinding fs)
-        `shouldBe` ["W-UNBOUND core-2.01.pdf#page=140&5.2.2.1/sig: no rule in scope binds this signature block (SMUID.Properties)"]
+        `shouldBe` ["E-UNBOUND core-2.01.pdf#page=140&5.2.2.1/sig: no rule in scope binds this signature block (SMUID.Properties)"]
     it "leaves every block unbound when no rule takes signature units, the rule token being only W-RULE-UNIMPLEMENTED" $ do
       ir <- docLine "doc core201 & rule sig"
       let (classes, fs) = classifySignaturesWith tableRules ir
@@ -133,7 +133,7 @@ spec = withCore $ \pristine -> do
     it "is checked by its exemplar, a signature block" $ do
       checkExemplarsWith [stub] ir `shouldBe` []
       map Cm.code (checkExemplarsWith [stub { exemplar = (SpecId "core-2.01", SigId "9.9") }] ir) `shouldBe` ["C-EXEMPLAR"]
-    it "puts the W-UNBOUND of the blocks it does not bind among the context's findings" $ do
+    it "puts the E-UNBOUND of the blocks it does not bind among the context's findings" $ do
       ir' <- annotated pristine "core-2.01 | doc | doc core201\ncore-2.01 | 5.3.3 | rule sig\n"
       length (unbound (cxClassFindings (mkContextWith [stub] Scott ir')) `L.intersect` map renderAnchorId (Map.keys (signatureUnits ir')))
         `shouldBe` Map.size (signatureUnits ir') - 18

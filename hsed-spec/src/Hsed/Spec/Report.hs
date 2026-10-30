@@ -296,7 +296,7 @@ genericCodes =
   ]
   <> [ CodeDef c [Warning] Correction | c <- ["W-ERRATUM-APPLIED", "W-ERRATUM-KNOWN", "W-ERRATUM-UNUSED"] ]
   <> [ CodeDef c sevs Bookkeeping | (c, sevs) <-
-    [ ("W-UNBOUND", [Warning]), ("E-UNBOUND", [Error]), ("E-AMBIGUOUS", [Error]), ("W-RULE-UNIMPLEMENTED", [Warning])
+    [ ("E-UNBOUND", [Error]), ("E-AMBIGUOUS", [Error]), ("W-RULE-UNIMPLEMENTED", [Warning])
     , ("W-GEN-EXCLUDED", [Warning]), ("C-EXEMPLAR", [Error]), ("W-RULE-SCOPE-EMPTY", [Warning]), ("N-RULE-SCOPE-REDUNDANT", [Note])
     , ("E-SHAPE", [Error, Warning]), ("E-ANCHOR", [Error]), ("E-ANCHOR-KIND", [Error]), ("E-SYNTAX", [Error]), ("E-GRAMMAR", [Error])
     , ("E-MODIFIER", [Error]), ("E-SIDECAR", [Error]), ("E-ERRATUM-PUBLISHED", [Error]), ("E-GEN-MODULE", [Error])
@@ -393,7 +393,7 @@ errataMarkdown ctx fs = T.unlines $
     printed p = tshow (p - ir.labelOffset)
     quote t = "\"" <> t <> "\""
 
--- | The tables nothing binds: unbound (@W-UNBOUND@), ambiguous (@E-AMBIGUOUS@)
+-- | The tables nothing binds: unbound (@E-UNBOUND@), ambiguous (@E-AMBIGUOUS@)
 --   or with an annotation that does not bind (its Error), each as its finding
 --   says it; then the signature units nothing binds, likewise.
 orphans :: SpecIR -> [(AnchorId, Finding)]
@@ -410,4 +410,4 @@ orphans ir =
       c         -> take 1 [ f | f <- fs, Cm.code f == codeOf c, Cm.anchor f == Just (renderAnchorId aid) ]
     codeOf = \case
       Ambiguous _ -> "E-AMBIGUOUS"
-      _           -> "W-UNBOUND"
+      _           -> "E-UNBOUND"

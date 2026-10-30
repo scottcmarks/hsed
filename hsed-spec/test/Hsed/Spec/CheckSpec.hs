@@ -23,6 +23,7 @@ counts.
 -}
 module Hsed.Spec.CheckSpec (spec) where
 
+import qualified Data.Text        as DT
 import qualified RIO.List         as L
 import qualified RIO.Map          as Map
 import qualified RIO.Text         as T
@@ -67,7 +68,7 @@ spec = do
 
   describe "sortFindings" $
     it "orders the anchors of one page naturally: T8, T9, T10" $ do
-      let at' a = (finding Warning "W-UNBOUND" "x") { Cm.spec = Nothing, Cm.anchor = Just a, Cm.page = Just 34 }
+      let at' a = (finding Error "E-UNBOUND" "x") { Cm.spec = Nothing, Cm.anchor = Just a, Cm.page = Just 34 }
       map Cm.anchor (sortFindings (map at' ["T10", "T8", "T9"])) `shouldBe` map Just ["T8", "T9", "T10"]
 
   withCore $ \pristine -> do
@@ -83,12 +84,18 @@ spec = do
     describe "checkIR under --errata scott" $ do
       it "finds no Error" $
         filter isError scott `shouldBe` []
-      it "reports everything the classification found, one W-UNBOUND per unbound table or signature block" $ do
+      it "reports everything the classification found, one E-UNBOUND per unbound table or signature block" $ do
         let (classes, classFindings) = classifyWith ir
             (sigClasses, sigFindings) = classifySignatures ir
         filter (`notElem` scott) (classFindings <> sigFindings) `shouldBe` []
-        Map.lookup "W-UNBOUND" (codesOf scott) `shouldBe`
+        Map.lookup "E-UNBOUND" (codesOf scott) `shouldBe`
           (let n = length (filter (== Unbound) (Map.elems classes <> Map.elems sigClasses)) in if n == 0 then Nothing else Just n)
+        Map.lookup "W-UNBOUND" (codesOf scott) `shouldBe` Nothing
+      it "fails on a table nothing binds: E-UNBOUND is an Error (T236's rule token removed)" $ do
+        ir' <- annotated pristine (DT.replace " & rule byteFieldValue" "" hsa)
+        [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "E-UNBOUND", Cm.anchor f == Just "T236" ]
+          `shouldBe` ["E-UNBOUND core-2.01.pdf#page=297&T236: no annotation binds it and no rule in scope fires on it (Table 236 System Log Entry Structure)"]
+        length [ () | f <- checkIR Scott ir', isError f, Cm.code f == "E-UNBOUND" ] `shouldBe` 8
       it "applies the corrections of the T75 and T101 annotations, and of no other table" $ do
         about "T75" scott `shouldBe`
           ["W-ERRATUM-APPLIED core-2.01.pdf#page=107&T75: Format \"Fractoin\" -> \"Fraction\" (annotation at core-2.01.pdf#page=107&T75)"]

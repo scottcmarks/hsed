@@ -124,7 +124,7 @@ spec = do
             quietly (CmdCompile (Input coreIR (Just file)) Scott target (dir </> "gen") (dir </> "report")) `shouldReturn` True
 
     describe "orphans, ledger and explain" $ do
-      it "exit zero on the committed sidecar (the unbound tables are Warnings at M1)" $
+      it "exit zero on the committed sidecar (no table or signature block of Core unbound since M2c)" $
         withSidecarFile hsa $ \_ file -> do
           quietly (CmdOrphans (Input coreIR (Just file))) `shouldReturn` False
           quietly (CmdLedger [coreIR] (Just file)) `shouldReturn` False
@@ -151,7 +151,10 @@ spec = do
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
-    describe "orphans" $
+    describe "orphans" $ do
+      it "is empty on the committed sidecar: every numbered table and signature block of Core bound (design section 11 M2c)" $ do
+        orphans (snd (withSidecar pristine hsa)) `shouldBe` []
+        withSidecarFile hsa $ \_ file -> captured (CmdOrphans (Input coreIR (Just file))) `shouldReturn` (False, "")
       it "lists the invalid tables beside the unbound ones" $ do
         let (_, ir) = withSidecar pristine (hsa <> "core-2.01 | T46 | frobnicate\n")
             os = orphans ir
@@ -163,8 +166,12 @@ spec = do
         withSidecarFile hsa $ \_ file -> do
           opal <- readIR opalIR >>= either throwString pure
           (failed, out) <- captured (CmdLedger [coreIR, opalIR] (Just file))
-          failed `shouldBe` False
-          out `shouldBe` renderLedger [ledger (snd (withSidecar pristine hsa)), ledger opal]
+          -- Opal has no anchors until M3: each of its 50 tables and 3 signature blocks is E-UNBOUND, an Error since M2c
+          failed `shouldBe` True
+          out `shouldSatisfy` (renderLedger [ledger (snd (withSidecar pristine hsa)), ledger opal] `T.isSuffixOf`)
+          let errs = [ l | l <- T.lines out, "E-" `T.isPrefixOf` l ]
+          length errs `shouldBe` 53
+          errs `shouldSatisfy` all ("E-UNBOUND opal-2.30.pdf#page=" `T.isPrefixOf`)
       it "refuses a sidecar line naming none of the IRs' specs" $ do
         withSidecarFile (hsa <> "core-2.02 | T46 | typeRow\n") $ \_ file ->
           quietly (CmdLedger [coreIR, opalIR] (Just file)) `shouldReturn` True

@@ -15,6 +15,19 @@ copyright:           Magnolia Heights R&D
 # common to point users to the README.md file.
 description:         Please see the README on Github at <https://github.com/scottcmarks/hsed#readme>
 
+# the kext shim's header, compiled into the library only under the kext flag
+extra-source-files:
+- cbits/*.h
+
+flags:
+  # The macOS drive transport (Hsed.Transport.MacKext): the C shim cbits/hsed_kext.c over IOKit, which can
+  # issue Level 0 IF-RECV alone (design 7.2, 9.3). Manual and off: never in CI's builds; on with
+  # stack build hsed --flag hsed:kext, built as yourself, never with sudo stack.
+  kext:
+    description: Build the kext transport's C shim (macOS only)
+    manual: true
+    default: false
+
 dependencies:
 - base >= 4.10 && < 10
 - rio >= 0.1.1.0
@@ -34,15 +47,53 @@ library:
   - gen
   dependencies:
   - hsed-core
-  - containers    # Hsed.Gen.Core.TableUIDs (Data.Map)
-  - lens          # Hsed.App
-  - text          # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)
-  - bytestring    # Hsed.Gen.Core.Layouts (generated code imports Data.ByteString, not RIO)
+  - aeson              # the wire types' and the jig reports' JSON (M3)
+  - base16-bytestring  # hex in transcripts, reports and the capture sidecar (M3)
+  - bytestring         # Hsed.Gen.Core.Layouts (generated code imports Data.ByteString, not RIO)
+  - containers         # Hsed.Gen.Core.TableUIDs (Data.Map)
+  - directory          # Hsed.Jig.Files, the reports (M3)
+  - filepath
+  - githash            # GitHash.Extras.GitVersion: both executables' version, and Hsed.Version's (M3)
+  - lens               # Hsed.App
+  - QuickCheck         # Hsed.Law's properties, Hsed.Sim.Gen's generators (M3)
+  - template-haskell   # GitHash.Extras.GitVersion
+  - text               # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)
+  - time               # the reports' UTC stamps (M3)
+  when:
+  # Hsed.Jig.Files: files written under sudo handed to SUDO_UID/SUDO_GID; the euid 0 gate
+  - condition: '!os(windows)'
+    dependencies:
+    - unix
+  # the kext shim, and Hsed.Transport.MacKext's foreign imports of it (CPP HSED_KEXT)
+  - condition: flag(kext) && os(darwin)
+    c-sources:
+    - cbits/hsed_kext.c
+    include-dirs:
+    - cbits
+    frameworks:
+    - IOKit
+    - CoreFoundation
+    cpp-options:
+    - -DHSED_KEXT
 
 executables:
+  # the host test jig (design 9.2, M3): its command line; what each command does is Hsed.Jig.Cli
+  hsed-jig:
+    main:                Main.hs
+    source-dirs:         app/hsed-jig
+    dependencies:
+    - hsed
+    - optparse-applicative
+
+    # -threaded: the kext's FFI call is a safe one, which blocks its own OS thread alone
+    ghc-options:
+    - -threaded
+    - -rtsopts
+
+  # the 2019 stub (logs a line through Hsed.TPer.Run), kept at M3 beside hsed-jig: design 13.27 (c)
   hsed:
     main:                Main.hs
-    source-dirs:         app
+    source-dirs:         app/hsed
     dependencies:
     - hsed
     - githash
@@ -64,15 +115,16 @@ tests:
     dependencies:
     - hsed
     - hsed-core
+    - aeson              # the wire types' JSON (M3)
     - containers         # EquivSpec: the two sides by name; the fixture's TableUIDs and TH parsers
     - ghc-prim           # the fixture's quasiquotes (GHC.Classes, GHC.Types)
     - attoparsec         # the fixture's TH parsers (Hand.TypeUIDs.TH, Hand.TableUIDs.TH)
     - bytestring         # the same parsers' input (Data.ByteString)
-    - directory          # EquivTH: every generated module of the spec
+    - directory          # EquivTH: every generated module of the spec; CapabilitySpec: every source module
     - filepath
     - hspec
     - QuickCheck         # PacketSpec: frames round trip
-    - template-haskell   # EquivTH: every definition of either side, from source
+    - template-haskell   # EquivTH: every definition of either side, from source; CapabilitySpec: the signatures
     build-tools:
     - hspec-discover
 

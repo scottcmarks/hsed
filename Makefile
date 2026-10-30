@@ -129,8 +129,14 @@ gen-diff: gen
 ## oracle's test fixture hsed/fixture/Hand/TableUIDs.hs), the definitions the t240 quasiquoter makes
 ## (design 5.5: secondary to the runtime oracle, regenerated at M2a and M2d); paths made relative to
 ## the checkout, and the notices stack prints for a test component before 'Configuring GHCi' left
-## out. Not part of check.
+## out. Written to build/TableUIDs.txt first and moved over dev/TableUIDs.txt only when it holds the
+## splices: a stack ghci that fails leaves the committed file as it was, and make fails. Not part of
+## check.
 splices:
+	mkdir -p build
 	printf ':set -ddump-splices\n:load Hand.TableUIDs\n' \
 	  | stack ghci hsed:test:hsed-test --no-load --ghci-options='-ignore-dot-ghci' 2>&1 \
-	  | sed -e '/^Configuring GHCi/,$$!d' -e 's|$(CURDIR)/||g' > dev/TableUIDs.txt
+	  | sed -e '/^Configuring GHCi/,$$!d' -e 's|$(CURDIR)/||g' > build/TableUIDs.txt
+	@grep -q 'Splicing declarations' build/TableUIDs.txt || \
+	  { echo "splices: build/TableUIDs.txt holds no splices (stack ghci failed?); dev/TableUIDs.txt left as it was"; exit 1; }
+	mv build/TableUIDs.txt dev/TableUIDs.txt

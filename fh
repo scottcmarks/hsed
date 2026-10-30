@@ -1,6 +1,7 @@
 #!/bin/bash
+# grep the Haskell sources of the three packages (their build directories left out)
 cd ~/hsed
-find app src test \
-    -type f \
-    -name '*.lhs' -or -name '*.hs' -not -name '*.th.hs' \
+find hsed-core hsed-spec hsed \
+    -name .stack-work -prune -o \
+    -type f \( -name '*.lhs' -o -name '*.hs' \) -not -name '*.th.hs' \
     -exec grep -nH "$*" {} ';'

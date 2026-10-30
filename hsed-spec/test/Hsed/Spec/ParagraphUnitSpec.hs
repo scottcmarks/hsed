@@ -20,8 +20,8 @@ units a context holds and a rule reads ('boundParas', in the anchors' natural
 order, each with its IR hash), a rule that never fires on a table, an item
 exemplar, findings and declarations located at the paragraph, a comment whose
 anchor names several paragraphs refused, and @W-GEN-EXCLUDED@ for a sentence
-no rule of the registry reads. The hashes are the IR's of the paragraphs on
-Core PDF 82 and 86.
+no rule of the registry reads (pending once one does). The hashes are the IR's
+of the paragraphs on Core PDF 82 and 86.
 -}
 module Hsed.Spec.ParagraphUnitSpec (spec) where
 
@@ -42,6 +42,7 @@ import qualified Hsed.Spec.IR      as IR
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules   (checkExemplarsWith, classifyWithRules)
+import           Hsed.Spec.Shape   (UnitKind (..), shapeUnit)
 
 
 -- | What the rule reading paragraph units looks like: an ordinary 'RuleDef' of
@@ -111,10 +112,13 @@ spec = withCore $ \pristine -> do
         `shouldBe` ["C-EXEMPLAR core-2.01: the exemplar 3.3.10.6#c of rule law is not in the IR: 4 paragraphs labelled 3.3.10.6#c in the IR"]
 
   describe "a sentence no rule of the registry reads" $
-    it "is W-GEN-EXCLUDED at the paragraph, and among the units compile leaves out" $ do
-      cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
-      [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
-        `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=" <> pg <> "&" <> aid
-                     <> ": hsedc generates nothing for a Sentence paragraph yet (no rule of the registry reads one)"
-                   | (pg, aid) <- [("82", "3.3.10.2.1#3a"), ("86", "3.3.10.6#dc"), ("86", "3.3.10.7#a")] ]
-      [ aid | (aid@(ItemId _ _), _) <- crExcluded cr ] `shouldBe` map bpAnchor paras
+    it "is W-GEN-EXCLUDED at the paragraph, and among the units compile leaves out" $
+      if any ((== Just ParagraphUnit) . fmap shapeUnit . ruleShape) registry
+        then pendingWith "a rule of the registry reads the paragraph units (the law reader)"
+        else do
+          cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
+          [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
+            `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=" <> pg <> "&" <> aid
+                         <> ": hsedc generates nothing for a Sentence paragraph yet (no rule of the registry reads one)"
+                       | (pg, aid) <- [("82", "3.3.10.2.1#3a"), ("86", "3.3.10.6#dc"), ("86", "3.3.10.7#a")] ]
+          [ aid | (aid@(ItemId _ _), _) <- crExcluded cr ] `shouldBe` map bpAnchor paras

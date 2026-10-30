@@ -5,7 +5,7 @@
 
 {-|
 Module      : Hsed.Core.Feature
-Description : The runtime form of a feature descriptor: a record over its layout, its code, version, length and header
+Description : The runtime form of a feature descriptor: a record over its layout, its code, version, length, header and allowances
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -27,7 +27,14 @@ adds what a descriptor is besides its fields:
   header);
 * 'featureHeader', the general format's size and the name of its length
   field, which say where a descriptor ends: its header and as many bytes as
-  its length field holds.
+  its length field holds;
+* 'featureAllowances', each field the spec lists a value of other than an
+  exact one (an exact one is a pin of the layout), by its name, with what
+  the spec allows it ('Allowance': a vendor unique value, any version, a
+  minimum, or a condition as printed, as Opal lists a descriptor's values):
+  where two TPers' descriptors may differ, which a host comparing them (the
+  jig's Pair runner, design section 9.2) allows. None by default, which
+  Core's instances keep.
 
 A pinned field (the header's, and any other the spec pins) and reserved bits
 are no fields of the record: they are written as the layout has them and, read
@@ -43,6 +50,8 @@ module Hsed.Core.Feature
   , FeatureHeader (..)
   , decodeFeature
   , decodeFeatureStrict
+    -- * Allowances
+  , Allowance (..)
     -- * The bit map
   , bitMap
   ) where
@@ -59,7 +68,20 @@ import           Hsed.Core.Record (DecodedRecord (..), LayoutRecord (..))
 -- $setup
 -- >>> :set -XOverloadedStrings
 -- >>> import Hsed.Core.Layout (FieldKind (..), spanning)
+-- >>> import Hsed.Core.Record (flag, flagField, number, numberField)
 -- >>> let small = Layout "Small" 2 [spanning "Code" (0, 7) (0, 4) (Pinned 3), spanning "Reserved" (0, 3) (0, 1) Reserved, spanning "Ready" (0, 0) (0, 0) Flag, spanning "Count" (1, 7) (1, 0) Unsigned] Nothing
+-- >>> :{
+-- data Small = Small { smallReady :: Bool, smallCount :: Word8 } deriving (Eq, Show)
+-- instance LayoutRecord Small where
+--   recordLayout _ = small
+--   recordFields s = [("Ready", flag (smallReady s)), ("Count", number (smallCount s))]
+--   fromFields vs = pure Small <*> flagField "Ready" vs <*> numberField "Count" vs
+-- instance Feature Small where
+--   featureCode _    = 3
+--   featureVersion _ = Nothing
+--   featureLength _  = Nothing
+--   featureHeader _  = FeatureHeader 2 "Count"
+-- :}
 
 
 -- * Feature descriptors
@@ -73,17 +95,25 @@ data FeatureHeader = FeatureHeader
   }
   deriving (Eq, Show, Data)
 
--- | A feature descriptor's record: a record over its layout, and the
---   constants of its header.
+-- | A feature descriptor's record: a record over its layout, the constants
+--   of its header, and what the spec allows its fields.
 class LayoutRecord f => Feature f where
   -- | The code the header's first field holds: which feature the descriptor describes.
-  featureCode    :: proxy f -> Integer
+  featureCode       :: proxy f -> Integer
   -- | The version the header holds, when the spec pins one.
-  featureVersion :: proxy f -> Maybe Integer
+  featureVersion    :: proxy f -> Maybe Integer
   -- | The length the header holds, the bytes of the descriptor after its header, when the spec pins it.
-  featureLength  :: proxy f -> Maybe Integer
+  featureLength     :: proxy f -> Maybe Integer
   -- | The header's general format: where a descriptor ends.
-  featureHeader  :: proxy f -> FeatureHeader
+  featureHeader     :: proxy f -> FeatureHeader
+  -- | Each field the spec lists a value of other than an exact one, by its
+  --   name in the layout, with what the spec allows it; none unless the
+  --   instance names some (Core's name none):
+  --
+  -- >>> featureAllowances (Proxy :: Proxy Small)
+  -- []
+  featureAllowances :: proxy f -> [(Text, Allowance)]
+  featureAllowances _ = []
 
 -- | A descriptor from the start of an input, a pin read with another value
 --   and reserved bits read other than zero reported (as
@@ -119,6 +149,27 @@ decodeWith reader input = do
   d <- reader l input
   r <- fromFields (decodedFields d)
   pure (DecodedRecord r (decodedDifferences d) (B.drop clipped input))
+
+
+-- * Allowances
+
+-- | What a spec allows a feature descriptor's field to hold where the value
+--   it lists for the field is not exact (an exact one is a pin of the
+--   layout). Opal lists a descriptor's values as bullets,
+--   @\<Field\> = \<V\>@, after @SHALL return the following@ (Opal 2.30
+--   section 3.1.1, PDF 19-23). A TPer's descriptor holds its own value in
+--   such a field, and a host comparing two TPers' descriptors allows them to
+--   differ there (a 'Minimum' only at or above it).
+data Allowance
+  = VendorUnique         -- ^ @VU@: any value, the vendor's (@ComID Mgmt Supported = VU@, Opal 3.1.1.2, PDF 20)
+  | AnyVersion !Integer  -- ^ @V or any version that supports the defined features in this SSC@: V, the version printed, or
+                         --   another that supports the SSC's features (@Version = 0x1 or any version …@, Opal 3.1.1.2, PDF 20)
+  | Minimum !Integer     -- ^ @N or larger@: N, the value printed, or more (@Number of Locking SP Admin Authorities = 4 or
+                         --   larger@, Opal 3.1.1.5, PDF 23)
+  | AsPrinted !Text      -- ^ any other, its text as printed: the feature's present state (@MBR Done = **@, Opal 3.1.1.3,
+                         --   PDF 20-21) or a reference (@Locking Enabled = See section 3.1.1.3.1@, PDF 21; @SSC Minor Version
+                         --   Number = As specified in Table 7@, Opal 3.1.1.5, PDF 23)
+  deriving (Eq, Show, Data)
 
 
 -- * The bit map

@@ -229,7 +229,11 @@ data MethodResponse = MethodResponse { results :: [Value], status :: (Word8, Wor
 --                        generated instances (the byte grids', the byteFieldValue tables' and, since the M2c review, the features')
 -- Hsed.Core.Feature      (M2c; since the M2c review) class LayoutRecord f => Feature f (featureCode :: proxy f -> Integer;
 --                        featureVersion, featureLength :: proxy f -> Maybe Integer, Nothing where the spec pins none; featureHeader ::
---                        proxy f -> FeatureHeader { headerSize, headerLengthField }, the general format, which ends a descriptor);
+--                        proxy f -> FeatureHeader { headerSize, headerLengthField }, the general format, which ends a descriptor;
+--                        since M3 featureAllowances :: proxy f -> [(Text, Allowance)], each field the spec lists a value of other
+--                        than an exact one, by name, [] by default, which Core's instances keep); Allowance = VendorUnique |
+--                        AnyVersion Integer | Minimum Integer | AsPrinted Text (M3: Opal's bullets VU, "V or any version …", "N or
+--                        larger" and any other as printed, the differences a Pair diff allows, §9.2);
 --                        decodeFeature, decodeFeatureStrict -> DecodedRecord f, the rest after the header and its Length's bytes
 --                        (a Length below the layout's: LengthBelowLayout, with where the descriptor ends, the next one's start);
 --                        bitMap :: Layout -> [((byte, bit), Maybe Field)] (Hsed.Gen.Core.Features' instances)

@@ -8,9 +8,9 @@ import           RIO.Process
 
 import           GitHash.Extras.GitVersion          (gitVersion)
 import           Hsed.App
+import           Hsed.Host.Run                      as Host ()
+import           Hsed.TPer.Run                      as TPer (run)
 import qualified Paths_hsed
-import           System.SED.MCTP.Host.Run        as Host ()
-import           System.SED.MCTP.TPer.Run        as TPer (run)
 
 main :: IO ()
 main = do

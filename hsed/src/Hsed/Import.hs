@@ -1,9 +1,9 @@
 {-# LANGUAGE NoImplicitPrelude #-}
-module System.SED.MCTP.Common.Import
+module Hsed.Import
   ( module RIO
-  , module System.SED.MCTP.Common.Types
+  , module Hsed.Types
   ) where
 
+import           Hsed.Types
 import           RIO                          hiding (drop, length, lookup, map,
                                                replicate, take, toList)
-import           System.SED.MCTP.Common.Types

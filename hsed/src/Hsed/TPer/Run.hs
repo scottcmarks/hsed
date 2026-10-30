@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module System.SED.MCTP.TPer.Run (run) where
+module Hsed.TPer.Run (run) where
 
 import           RIO
 
 import           Hsed.App
-import           System.SED.MCTP.Common.Import ()
+import           Hsed.Import ()
 
 run :: RIO App ()
 run =

@@ -1,26 +1,31 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 {-|
-Module      : System.SED.MCTP.Common.Types
+Module      : Hsed.Types
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Datatypes for @hsed@.
+Datatypes for @hsed@: hsed-core's codec and the Core tables' generated Type
+objects, enumerations and UIDs, under one import. It re-exports neither
+"Hsed.Gen.Core.Methods", whose method records share their names with RIO's
+(@Set@), nor "Hsed.Core.Layout", whose field kinds share theirs with
+"Hsed.Core.Token"'s: import those qualified (design docs/spec-as-source.md
+sections 13.25 (k) and 13.26 (l)).
 
 -}
 
 
-module System.SED.MCTP.Common.Types
+module Hsed.Types
   ( module Hsed.Core.Base_Type
   , module Hsed.Core.Call
-  , module System.SED.MCTP.Common.TypeUIDs
+  , module Hsed.TypeUIDs
   , module Hsed.Core.Simple_Type
-  , module System.SED.MCTP.Common.SpecialPurposeUIDs
+  , module Hsed.SpecialPurposeUIDs
   , module Hsed.Core.Reference_Types
   , module Hsed.Core.StreamItem
-  , module System.SED.MCTP.Common.TableUIDs
+  , module Hsed.TableUIDs
   , module Hsed.Core.Token
   , module Hsed.Core.UID
   , module Hsed.Core.Value
@@ -35,6 +40,6 @@ import           Hsed.Core.StreamItem
 import           Hsed.Core.Token
 import           Hsed.Core.UID
 import           Hsed.Core.Value
-import           System.SED.MCTP.Common.SpecialPurposeUIDs
-import           System.SED.MCTP.Common.TableUIDs
-import           System.SED.MCTP.Common.TypeUIDs
+import           Hsed.SpecialPurposeUIDs
+import           Hsed.TableUIDs
+import           Hsed.TypeUIDs

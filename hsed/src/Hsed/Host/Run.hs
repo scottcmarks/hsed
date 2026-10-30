@@ -1,11 +1,11 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
-module System.SED.MCTP.Host.Run (run) where
+module Hsed.Host.Run (run) where
 
 import           RIO
 
 import           Hsed.App
-import           System.SED.MCTP.Common.Import ()
+import           Hsed.Import ()
 
 run :: RIO App ()
 run =

@@ -1,5 +1,5 @@
 {-|
-Module      : System.SED.MCTP.Common.SpecialPurposeUIDs
+Module      : Hsed.SpecialPurposeUIDs
 Description : The special purpose UIDs and Session Manager method UIDs, generated from the PDF
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
@@ -13,7 +13,7 @@ hsed/fixture/Hand/SpecialPurposeUIDs.hs (section 5.5); the names it gave UIDs
 the PDF names nowhere (uNULL, uC_PINCharSetUnrestrictedUID) and uSMMethodUID
 stay there.
 -}
-module System.SED.MCTP.Common.SpecialPurposeUIDs
+module Hsed.SpecialPurposeUIDs
   ( -- * Table 239 Special Purpose UIDs: the invoking IDs the PDF names
     specialPurposeUIDs
   , uSMUID

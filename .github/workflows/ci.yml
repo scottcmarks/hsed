@@ -50,7 +50,9 @@ jobs:
       # A run restores the newest cache of its runner (restore-keys), and GHC does not compile a
       # module again for -Werror alone (docs/spec-as-source.md section 12): the v2 prefix started
       # from nothing once, after the first runs had cached objects compiled without it, so that
-      # every object the cache holds was compiled with -Werror.
+      # every object of the three packages (hsed-core, hsed-spec, hsed) the cache holds was
+      # compiled with -Werror. The snapshot's packages it holds under ~/.stack were not, and need
+      # not be: --ghc-options applies to the project's packages alone.
       - uses: actions/cache@v4
         with:
           path: |

@@ -93,12 +93,9 @@ genNoActionPayload c = comPacketOn c =<< oneof
 genUnresolvablePayload :: Word16 -> Gen ByteString
 genUnresolvablePayload c = comPacketOn c =<< (chooseInt (1, 3) >>= (`vectorOf` sessionPacket))
   where
-    sessionPacket = PacketFrame <$> session <*> (chooseInt (0, 2) >>= (`vectorOf` (dataSubPacket <$> body)))
+    sessionPacket = PacketFrame <$> session <*> (chooseInt (0, 2) >>= (`vectorOf` (dataSubPacket <$> genControlBody)))
     session       = (PacketHeader <$> arbitrary <*> arbitrary <*> pure 0 <*> pure 0 <*> pure 0)
                       `suchThat` (\h -> packetTSN h /= 0 || packetHSN h /= 0)
-    body          = oneof [ pure (generate (invocation uSMUID (Methods.Properties Nothing)))
-                          , pure mempty
-                          , B.pack <$> (chooseInt (1, 32) >>= (`vectorOf` arbitrary)) ]
 
 
 -- | A ComPacket on a ComID whose one control session packet holds more
@@ -109,14 +106,18 @@ genUnresolvablePayload c = comPacketOn c =<< (chooseInt (1, 3) >>= (`vectorOf` s
 --   of packet requirements (3.3.10.7 a, PDF 86); what ETC-15 sends (Test Cases
 --   PDF 88).
 genOverfullPayload :: Word16 -> Gen ByteString
-genOverfullPayload c = comPacketOn c . pure . PacketFrame controlHeader =<< (chooseInt (2, 3) >>= (`vectorOf` (dataSubPacket <$> body)))
-  where
-    body = oneof [ pure (generate (invocation uSMUID (Methods.Properties Nothing)))
-                 , pure mempty
-                 , B.pack <$> (chooseInt (1, 32) >>= (`vectorOf` arbitrary)) ]
+genOverfullPayload c = comPacketOn c . pure . PacketFrame controlHeader =<< (chooseInt (2, 3) >>= (`vectorOf` (dataSubPacket <$> genControlBody)))
 
 
 -- * Parts
+
+-- | A data subpacket's payload as a control session packet carries it: a
+--   Properties call the Session Manager answers, no payload, or random
+--   bytes.
+genControlBody :: Gen ByteString
+genControlBody = oneof [ pure (generate (invocation uSMUID (Methods.Properties Nothing)))
+                       , pure mempty
+                       , B.pack <$> (chooseInt (1, 32) >>= (`vectorOf` arbitrary)) ]
 
 -- | A ComID's synchronous protocol state.
 genSync :: Gen SyncState

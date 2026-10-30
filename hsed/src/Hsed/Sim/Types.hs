@@ -26,11 +26,15 @@ end of the TPer's processing of a ComID's command, 'Tick') and gives an
 
 Parameters out of range are refused, not wrapped or dropped
 ('simParamsProblems': a ComID past 0xFFFF or in Core Table 26's reserved
-range, a version past its 4-bit field, a limit of none), so that every
-descriptor the simulator sends encodes and every static ComID is one a TPer
-may have; the in-process transport is opened only with parameters that
-pass. 'Limits' are what each end takes in a ComPacket (Core 5.2.2.4.1): the
-TPer's from its properties, the host's Opal 2.30 Table 17's initial
+range, a version past its 4-bit field, a TPer property below the least
+Opal 2.30 Table 17 has a TPer report), so that every descriptor the
+simulator sends encodes, every static ComID is one a TPer may have and
+every limit is one an Opal TPer may report; the in-process transport is
+opened only with parameters that pass. Table 17's two columns are written
+once each: 'tperRequirements', the TPer's, which the default parameters
+report and a property not reported falls back to, and 'hostRequirements',
+the host's. 'Limits' are what each end takes in a ComPacket (Core
+5.2.2.4.1): the TPer's from its properties, the host's Table 17's initial
 assumptions, the host's properties not being kept before M4a.
 -}
 module Hsed.Sim.Types
@@ -48,6 +52,7 @@ module Hsed.Sim.Types
   , maxPacketsName
   , maxSubpacketsName
   , maxMethodsName
+  , tperRequirements
   , hostRequirements
   , Limits (..)
   , tperLimits
@@ -137,10 +142,8 @@ data SimParams = SimParams
 --   PDF 96);
 -- * a command to an inactive ComID refused with Other Invalid Command
 --   Parameter, which Core allows beside discarding it (3.3.3.2-3, PDF 58-59);
--- * the TPer properties at Opal 2.30 Table 17's minima (PDF 33-34), the
---   numeric ones (DefSessionTimeout, mandatory with a VU value, is reported
---   from M4a, with sessions: design 8.5); their names are Core Table 167's
---   (Hsed.Gen.Core.Properties);
+-- * the TPer properties at the least Opal 2.30 Table 17 has a TPer report
+--   ('tperRequirements', PDF 33-34);
 -- * SSC Minor Version Number 0x3, v2.30's (Opal 2.30 Table 7, PDF 24);
 -- * SIIS Revision Number 0x20, v1.20's (SIIS 1.20 Table 3, PDF 22);
 -- * the Supported Data Removal Mechanism descriptor's version 0x02 (Opal
@@ -160,18 +163,7 @@ defaultSimParams = SimParams
   , spUnits                = UnitBytes
   , spLockingOFS           = ManufacturedInactive
   , spInactiveComIdDiscard = False
-  , spTPerProperties       =
-      [ (maxComPacketSizeName, 2048)
-      , (maxResponseComPacketSizeName, 2048)
-      , (maxPacketSizeName, 2028)
-      , ("MaxIndTokenSize", 1992)
-      , (maxPacketsName, 1)
-      , (maxSubpacketsName, 1)
-      , (maxMethodsName, 1)
-      , ("MaxSessions", 1)
-      , ("MaxAuthentications", 2)
-      , ("MaxTransactionLimit", 1)
-      ]
+  , spTPerProperties       = [ (name, toInteger least) | (name, least) <- tperRequirements ]
   , spSscMinor             = 0x3
   , spSiisRevision         = 0x20
   , spDataRemovalVersion   = 0x02
@@ -193,7 +185,11 @@ defaultSimParams = SimParams
 --   Opal 2.30 Table 14, PDF 30, the same), so that none wraps to 0x0000;
 -- * an SSC minor version or a Data Removal version past its descriptor's
 --   4-bit field (Opal 2.30 Tables 6 and 8, PDF 23-24);
--- * a limit the simulator reads of its properties ('tperLimits') of none.
+-- * a TPer property below the least Opal 2.30 Table 17 has a TPer report
+--   ('tperRequirements', PDF 33-34), the limits the simulator reads of its
+--   properties ('tperLimits') among them: so that no limit is one of none,
+--   and every answer the simulator stages, RESPONSE_OVERFLOW's own included,
+--   fits a response of the least MaxResponseComPacketSize.
 simParamsProblems :: SimParams -> [Text]
 simParamsProblems p = concat
   [ [ "no static ComID (Number of ComIDs is 0x0001 or larger, Opal 2.30 Table 6)" | spNComIds p == 0 ]
@@ -201,11 +197,11 @@ simParamsProblems p = concat
   , [ "static ComID " <> hex c <> " is reserved (Core Table 26)" | c <- staticComIds p, reservedComId c ]
   , [ "SSC Minor Version Number " <> tshow (spSscMinor p) <> " is past its 4 bits" | spSscMinor p > 0xF ]
   , [ "Data Removal version " <> tshow (spDataRemovalVersion p) <> " is past its 4 bits" | spDataRemovalVersion p > 0xF ]
-  , [ name <> " " <> tshow v <> ": a limit of none" | (name, v) <- spTPerProperties p, name `elem` limitNames, v < 1 ]
+  , [ name <> " " <> tshow v <> ": below the " <> tshow least <> " Opal 2.30 Table 17 has a TPer report at least (PDF 33-34)"
+    | (name, v) <- spTPerProperties p, Just least <- [L.lookup name tperRequirements], v < toInteger least ]
   ]
   where
-    lastComId  = toInteger (spBaseComId p) + toInteger (spNComIds p) - 1 :: Integer
-    limitNames = [maxComPacketSizeName, maxResponseComPacketSizeName, maxPacketSizeName, maxPacketsName, maxSubpacketsName, maxMethodsName]
+    lastComId = toInteger (spBaseComId p) + toInteger (spNComIds p) - 1 :: Integer
 
 
 -- * Properties, and what each end takes
@@ -223,10 +219,32 @@ maxPacketsName               = "MaxPackets"
 maxSubpacketsName            = "MaxSubpackets"
 maxMethodsName               = "MaxMethods"
 
--- | Opal 2.30 Table 17 (PDF 33-34), Host Property Requirements: each host
---   property an Opal TPer accepts (M), with the least it allows, which is
---   also its Initial Assumption; MaxResponseComPacketSize (N), which a TPer
---   may ignore and leave out of the HostProperties result, is not among them.
+-- | Opal 2.30 Table 17 (PDF 33-34), Properties Requirements, the TPer's
+--   column: each TPer property an Opal TPer reports (M) with the least value
+--   it reports, the numeric ones (DefSessionTimeout, mandatory with a VU
+--   value, is reported from M4a, with sessions: design 8.5); their names are
+--   Core Table 167's ("Hsed.Gen.Core.Properties"). The default parameters
+--   report exactly these, and a property a TPer does not report falls back
+--   to its least ('tperLimits').
+tperRequirements :: [(Text, Natural)]
+tperRequirements =
+  [ (maxComPacketSizeName, 2048)
+  , (maxResponseComPacketSizeName, 2048)
+  , (maxPacketSizeName, 2028)
+  , ("MaxIndTokenSize", 1992)
+  , (maxPacketsName, 1)
+  , (maxSubpacketsName, 1)
+  , (maxMethodsName, 1)
+  , ("MaxSessions", 1)
+  , ("MaxAuthentications", 2)
+  , ("MaxTransactionLimit", 1)
+  ]
+
+-- | Opal 2.30 Table 17 (PDF 33-34), Properties Requirements, the host's
+--   column: each host property an Opal TPer accepts (M), with the least it
+--   allows, which is also its Initial Assumption; MaxResponseComPacketSize
+--   (N), which a TPer may ignore and leave out of the HostProperties result,
+--   is not among them.
 hostRequirements :: [(Text, Natural)]
 hostRequirements =
   [ (maxComPacketSizeName, 2048)
@@ -251,16 +269,19 @@ data Limits = Limits
   deriving (Eq, Show)
 
 -- | What the TPer takes, from its properties ('spTPerProperties'); a property
---   it does not report, Opal 2.30 Table 17's minimum (PDF 33).
+--   it does not report, the least Opal 2.30 Table 17 has a TPer report
+--   ('tperRequirements').
 tperLimits :: SimParams -> Limits
 tperLimits p = Limits
-  { lPackets       = prop maxPacketsName 1
-  , lSubpackets    = prop maxSubpacketsName 1
-  , lMethods       = prop maxMethodsName 1
-  , lPacketSize    = prop maxPacketSizeName 2028
-  , lComPacketSize = prop maxComPacketSizeName 2048
+  { lPackets       = prop maxPacketsName
+  , lSubpackets    = prop maxSubpacketsName
+  , lMethods       = prop maxMethodsName
+  , lPacketSize    = prop maxPacketSizeName
+  , lComPacketSize = prop maxComPacketSizeName
   }
-  where prop name least = fromInteger (fromMaybe least (L.lookup name (spTPerProperties p)))
+  where
+    prop name  = fromInteger (fromMaybe (least name) (L.lookup name (spTPerProperties p)))
+    least name = maybe 1 toInteger (L.lookup name tperRequirements)
 
 -- | What the host takes of the TPer's responses: Opal 2.30 Table 17's initial
 --   assumptions ('hostRequirements'), the host's properties not being kept

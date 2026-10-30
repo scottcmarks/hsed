@@ -170,7 +170,10 @@ t45Fields row d = do
 --   MaxMethods, MaxSubpackets and MaxPackets are one until its properties are
 --   kept (M4a). An answer that with its packet does not fit the host's
 --   MaxPacketSize or its ComPacket is answered instead with an empty list and
---   RESPONSE_OVERFLOW, and nothing after it (Opal 2.30 3.3.1, PDF 29).
+--   RESPONSE_OVERFLOW, and nothing after it (Opal 2.30 3.3.1, PDF 29); where
+--   even that answer would not fit (no host within Opal 2.30 Table 17's
+--   minima, PDF 33), the payload is discarded with the reason, nothing
+--   staged that no IF-RECV could carry.
 classifyIfSend :: Limits -> Limits -> (MethodCall -> Maybe MethodCall) -> Word16 -> ByteString -> Outcome
 classifyIfSend tper host respond c bytes = case decodeComPacket bytes of
   Left e -> Discarded ("not a ComPacket (Core 3.3.10.7 a, PDF 86): " <> tshow e)
@@ -205,13 +208,17 @@ classifyIfSend tper host respond c bytes = case decodeComPacket bytes of
           Just ("a control session packet of more bytes than the TPer's MaxPacketSize " <> tshow (lPacketSize tper)
                 <> ": discarded and ignored (Core 5.2.2.4.1.2, PDF 145)")
       | otherwise = Nothing
-    -- each answer a response packet; the first that does not fit replaced by its overflow, nothing after it
-    answered answers = traverse framed (fitting answers)
+    -- each answer a response packet; the first that does not fit replaced by its overflow, nothing after it; an
+    -- overflow answer that does not fit either discards the payload
+    answered answers = fitting answers >>= traverse framed
     fitting = \case
-      []       -> []
+      []       -> Right []
       a : rest
-        | fits a    -> a : fitting rest
-        | otherwise -> [overflowed a]
+        | fits a              -> (a :) <$> fitting rest
+        | fits (overflowed a) -> Right [overflowed a]
+        | otherwise           -> Left ("the host's ComPacket of " <> tshow (lComPacketSize host) <> " bytes, or its packet of "
+                                       <> tshow (lPacketSize host) <> ", cannot carry even RESPONSE_OVERFLOW's answer "
+                                       <> "(Opal 2.30 3.3.1, PDF 29): discarded, nothing staged that no IF-RECV could carry")
     fits a = either (const False) (\p -> B.length p <= lPacketSize host && comPacketHeaderSize + B.length p <= lComPacketSize host) (framed a)
     framed a = first (("the response does not frame: " <>) . tshow)
                      (encodePacket (PacketFrame controlHeader [DataSubPacket (DataSubPacketHeader dataKind) (generate a)]))

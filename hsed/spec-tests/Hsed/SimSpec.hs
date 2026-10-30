@@ -147,15 +147,23 @@ spec = describe "a step of the simulated TPer" $ do
       Map.keys (tsComIds (tper (\p -> p { spBaseComId = 0x0FFF, spNComIds = 2 }))) `shouldBe` [0x1000]
       command (recvOn 0x01 0x0000 64) (tper (\p -> p { spBaseComId = 0xFFFF, spNComIds = 2 }))
         `shouldBe` (refused OtherInvalidCommandParameter, tper (\p -> p { spBaseComId = 0xFFFF, spNComIds = 2 }))
-    it "are refused out of range: ComIDs past 0xFFFF or reserved, none, a version past 4 bits, a limit of none" $
+    it "are refused out of range: ComIDs past 0xFFFF or reserved, none, a version past 4 bits, a TPer property below Table 17's least" $
       map (length . simParamsProblems . ($ defaultSimParams))
         [ \p -> p { spBaseComId = 0xFFFF, spNComIds = 2 }
         , \p -> p { spBaseComId = 0x0800 }
         , \p -> p { spNComIds = 0 }
         , \p -> p { spSscMinor = 0x10 }
         , \p -> p { spDataRemovalVersion = 0x10 }
-        , \p -> p { spTPerProperties = [(maxMethodsName, 0)] } ]
+        , \p -> p { spTPerProperties = [(maxMethodsName, 0)] }
+        , \p -> p { spTPerProperties = [(maxResponseComPacketSizeName, 40)] }
+        , \p -> p { spTPerProperties = [(maxComPacketSizeName, 1)] }
+        , \p -> p { spTPerProperties = [("MaxAuthentications", 1)] } ]
         `shouldSatisfy` all (> 0)
+    it "report Opal 2.30 Table 17's TPer column by default, and a property left out falls back to it" $ do
+      spTPerProperties defaultSimParams `shouldBe` [ (n, toInteger v) | (n, v) <- tperRequirements ]
+      filter (`notElem` map fst tperRequirements) (map fst hostRequirements) `shouldBe` []
+      tperLimits defaultSimParams { spTPerProperties = [] } `shouldBe` tperLimits defaultSimParams
+      lComPacketSize (tperLimits defaultSimParams { spTPerProperties = [(maxComPacketSizeName, 4096)] }) `shouldBe` 4096
 
   describe "events and ticks" $ do
     it "an event puts every static ComID back to awaiting IF-SEND, Good" $ do

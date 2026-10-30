@@ -207,6 +207,12 @@ spec = do
       classifyIfSend tper { lMethods = 2 } host (const (Just big)) base
                      (comPacketOf [control [generate propertiesCall <> generate propertiesCall]])
         `shouldBe` either Discarded Prepared (responseOf [overflowed])
+    it "discards the payload where even RESPONSE_OVERFLOW's answer would not fit the host's ComPacket, staging nothing (no host within Table 17's minima)" $ do
+      let outcome = classifyIfSend tper host { lComPacketSize = 40 } respond base (comPacketOf [control [generate propertiesCall]])
+      outcome `shouldSatisfy` discarded
+      outcome `shouldSatisfy` \o -> case o of
+        Discarded why -> "RESPONSE_OVERFLOW" `T.isInfixOf` why
+        _             -> False
     it "discards a call the Session Manager does not answer, and tokens that are no call" $ do
       classify (const Nothing) base (comPacketOf [control [generate propertiesCall]]) `shouldSatisfy` discarded
       classify respond base (comPacketOf [control ["\xf0\xf1"]]) `shouldSatisfy` discarded

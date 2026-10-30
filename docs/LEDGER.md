@@ -7,7 +7,7 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| core-2.01 | 248 | 219 | 3 | 10 | 19 | 0 | 0 |
+| core-2.01 | 248 | 221 | 3 | 10 | 17 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
@@ -34,6 +34,7 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | rule codes | 8 |
 | rule constValues | 9 |
 | rule enumValues | 19 |
+| rule feature | 2 |
 | rule fieldType | 3 |
 | rule fieldValue | 3 |
 | rule preconfig | 2 |
@@ -64,8 +65,8 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
 | Warning | W-PROP-NAME-CASE | 1 |
-| Warning | W-RULE-UNIMPLEMENTED | 3 |
-| Warning | W-UNBOUND | 19 |
+| Warning | W-RULE-UNIMPLEMENTED | 2 |
+| Warning | W-UNBOUND | 17 |
 | Warning | XREF-RESOLVES | 2 |
 | Note | C-SIG-METHOD | 1 |
 | Note | N-CAPTION-NORMALISED | 7 |

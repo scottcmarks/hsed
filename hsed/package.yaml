@@ -126,6 +126,11 @@ tests:
     - hspec
     - QuickCheck         # PacketSpec: frames round trip
     - template-haskell   # EquivTH: every definition of either side, from source; CapabilitySpec: the signatures
+    when:
+    # FilesSpec: links, owners and groups, as Hsed.Jig.Files writes as root
+    - condition: '!os(windows)'
+      dependencies:
+      - unix
     build-tools:
     - hspec-discover
 

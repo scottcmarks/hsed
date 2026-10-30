@@ -340,7 +340,7 @@ inGridOrder = L.sortOn (\f -> (bpByte (gfFirst f), negate (bpBit (gfFirst f))))
 checkFeature :: Context -> [FeatureRead] -> FeatureRead -> [Finding]
 checkFeature ctx frs fr =
   gridFindings ctx bt (frGrid fr)
-  <> (if reads then tileFindings ctx bt (frGrid fr) (frLayout fr) else [])
+  <> tileFindings ctx bt (frGrid fr) (frLayout fr)
   <> nameFindings ctx (earlierNames (map frStructure frs) (frStructure fr)) (declScope (concatMap (decls ctx) frs)) (frStructure fr)
   <> pinsFindings ctx bt name (length (frUnmatched fr) < length (fromRight [] (frPins fr)))
   <> map (atTable ctx bt) (template <> code <> lengthPin <> pinned <> fields)
@@ -348,7 +348,6 @@ checkFeature ctx frs fr =
   where
     bt = frBound fr
     name = layoutName (frLayout fr)
-    reads = not (any ((== Error) . gpSeverity) (gProblems (frGrid fr)))
     secText = fromMaybe "its section" (frSection fr)
     template = case frHeader fr of
       Left why -> [ finding Error "C-FEATURE-TEMPLATE" (name <> ": " <> why) ]

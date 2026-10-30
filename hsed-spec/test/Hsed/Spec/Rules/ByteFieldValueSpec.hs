@@ -227,9 +227,11 @@ spec = do
           [ "C-BYTES-ROW core-2.01.pdf#page=64&T33: row 4: the field \"Available Data Length in bytes\" has no value"
           , "C-BYTES-ROW core-2.01.pdf#page=64&T33: row 5 has 2 cells, not its bytes, a field and a value"
           , "C-LAYOUT-TILE core-2.01.pdf#page=64&T33: VERIFY_COMID_VALID Command Response: no field covers byte 12 bit 7 to byte 15 bit 0" ]
-      it "C-LAYOUT-EXTENT: a row whose bytes do not read, as the grid reader reports it" $
-        filter ("C-LAYOUT-EXTENT" `T.isPrefixOf`) (findings (setCell "T28" 0 0 "zero to three" ir)) `shouldBe`
+      it "C-LAYOUT-EXTENT: a row whose bytes do not read, as the grid reader reports it, and no C-LAYOUT-TILE for the bits it leaves" $ do
+        let broken = setCell "T28" 0 0 "zero to three" ir
+        filter ("C-LAYOUT-EXTENT" `T.isPrefixOf`) (findings broken) `shouldBe`
           [ "C-LAYOUT-EXTENT core-2.01.pdf#page=61&T28: row 1: the byte number \"zero to three\" does not read" ]
+        filter (\f -> "C-LAYOUT-TILE" `T.isPrefixOf` f && "&T28:" `T.isInfixOf` f) (findings broken) `shouldBe` []
 
     describe "the generated layouts module" $ do
       cr <- runIO (either (throwString . show) pure (compileIR Scott ir))

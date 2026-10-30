@@ -157,7 +157,8 @@ rule), `Hsed.Spec.Readers.Layout` (`layoutsModule`, the one `GenModule` of `Hsed
 `gridFields`, each field with the grid field it was read from; `gridLayout`; `layoutDecl`, a
 `Hsed.Core.Layout.Layout` printed as the grid prints its fields, a pin at its field's width;
 `untiledNote`; `gridTiling` and `tileFindings`, C-LAYOUT-TILE by the one policy of the grid rules, bits
-no field names a Warning and any other tiling problem an Error, at the row) and, since the M2c review,
+no field names a Warning and any other tiling problem an Error, at the row, and none over a grid whose
+reading found an Error, whichever rule calls it) and, since the M2c review,
 `Hsed.Spec.Readers.Record` (`Structure`, a table read as a byte structure, and `structure`; the names
 `typeName`, `layoutValue`, `fieldIdent`, `recordNames`; `recordFieldsOf`, `haskellType`, `recordDecl`,
 the record over a layout and its `LayoutRecord` instance; `nameFindings`, C-GRID-NAME, with

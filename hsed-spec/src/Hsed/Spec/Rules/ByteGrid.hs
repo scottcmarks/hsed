@@ -34,8 +34,9 @@ Checks:
 
 * what reading the grid finds (@C-LAYOUT-EXTENT@, @C-LAYOUT-ENDIAN@, each at
   its row's page; @N-LAYOUT-BITS@, @W-LAYOUT-BITS-UNUSED@);
-* @C-LAYOUT-TILE@, on a grid that reads, by the one policy of the grid rules
-  ("Hsed.Spec.Readers.Layout".'tileFindings'): bits no field names a Warning
+* @C-LAYOUT-TILE@, on a grid whose reading found no Error, by the one policy
+  of the grid rules ("Hsed.Spec.Readers.Layout".'tileFindings', which holds
+  that condition for every grid rule): bits no field names a Warning
   (the layout generated as printed, without a record), any other tiling
   problem an Error; each at the page of the row it lies in;
 * @C-GRID-NAME@ ("Hsed.Spec.Readers.Record".'nameFindings'): every field that
@@ -76,12 +77,12 @@ import           RIO
 
 import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..))
 import           Hsed.Spec.Anchor         (AnchorId (..))
-import           Hsed.Spec.Common         (Finding, RuleName (..), Severity (..), SpecId (..))
+import           Hsed.Spec.Common         (Finding, RuleName (..), SpecId (..))
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.DSL            (SomeBinding (..), byteGrid)
 import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (TableIR (..))
-import           Hsed.Spec.Readers.Grid   (Grid (..), GridField (..), GridProblem (..), gridFindings, gridOf)
+import           Hsed.Spec.Readers.Grid   (Grid (..), GridField (..), gridFindings, gridOf)
 import           Hsed.Spec.Readers.Layout (gridFields, gridTiling, layoutDecl, layoutsModule, tileFindings, untiledNote)
 import           Hsed.Spec.Readers.Pins   (Pin (..), PinValue (..), pinsFindings, tablePins)
 import           Hsed.Spec.Readers.Record (Structure (..), declScope, earlierNames, layoutValue, nameFindings, recordDecl,
@@ -176,14 +177,13 @@ structureName title = case T.stripSuffix " Format" title of
 checkGrid :: Context -> [GridRead] -> GridRead -> [Finding]
 checkGrid ctx grs gr =
   gridFindings ctx bt (grGrid gr)
-  <> (if reads then tileFindings ctx bt (grGrid gr) l else [])
+  <> tileFindings ctx bt (grGrid gr) l
   <> nameFindings ctx (earlierNames (map grStructure grs) st) (declScope (concatMap (decls ctx) grs)) st
   <> pinsFindings ctx bt (layoutName l) (not (null (grPinned gr)))
   where
     st = grStructure gr
     bt = stBound st
     l = stLayout st
-    reads = not (any ((== Error) . gpSeverity) (gProblems (grGrid gr)))
 
 
 -- * Declarations

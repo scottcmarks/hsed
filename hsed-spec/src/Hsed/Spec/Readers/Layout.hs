@@ -58,8 +58,8 @@ import           Hsed.Core.Layout       (Field (..), FieldKind (..), Layout (..)
 import           Hsed.Spec.Common       (CodeDef (..), Finding, Reports (..), Severity (..), finding)
 import qualified Hsed.Spec.Gen          as Gen
 import           Hsed.Spec.IR           (CellIR)
-import           Hsed.Spec.Readers.Grid (BitPos (..), ByteRow (..), ByteSpan (..), Grid (..), GridField (..), fieldConstant,
-                                         fieldParts, fieldVariable, reservedName)
+import           Hsed.Spec.Readers.Grid (BitPos (..), ByteRow (..), ByteSpan (..), Grid (..), GridField (..), GridProblem (..),
+                                         fieldConstant, fieldParts, fieldVariable, reservedName)
 import           Hsed.Spec.Readers.Text (hexDigits)
 import           Hsed.Spec.RuleDef      (BoundTable, Context, atCells, atTable)
 
@@ -215,10 +215,13 @@ tileSeverity = \case
 --   severity 'tileSeverity''s, at the page of the row it lies in: a gap's
 --   first byte's row, or the row of the field after it when no row prints
 --   that byte (Core T236's byte 8); an overlap's row; a field's own cells.
+--   None for a grid whose reading found an Error (a row whose bytes do not
+--   read leaves bits no field covers, which are that Error's consequence,
+--   not a tiling problem of their own), whichever rule reads it.
 tileFindings :: Context -> BoundTable -> Grid -> Layout -> [Finding]
 tileFindings ctx bt g l =
   [ located (tileCells g p) (finding (tileSeverity p) "C-LAYOUT-TILE" (layoutName l <> ": " <> describeTileProblem p))
-  | p <- gridTiling g l ]
+  | not (any ((== Error) . gpSeverity) (gProblems g)), p <- gridTiling g l ]
   where located cells = if null cells then atTable ctx bt else atCells ctx bt cells
 
 -- | Where a tiling problem is printed.

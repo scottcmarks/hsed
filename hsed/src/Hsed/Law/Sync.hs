@@ -90,24 +90,25 @@ discardToS1 = Law
 
 -- | Core 3.3.10.7 item a (PDF 86, @core-2.01 | 3.3.10.7#a@): a packet whose
 --   session the TPer cannot resolve, or that violates the packet
---   requirements, is ignored, and the TPer awaits an IF-SEND at once. ETC-15
---   observes the second (M4a's jig): a control session packet of more
---   subpackets than the TPer's MaxSubpackets, which it SHALL discard and
---   ignore (5.2.2.4.1.1, PDF 145). The property: on a ComID awaiting
---   IF-SEND, an IF-SEND whose packets name sessions the TPer does not have
---   ("Hsed.Sim.Gen".'genUnresolvablePayload'), or whose control session
---   packet holds too many subpackets ('genOverfullPayload'), each even
---   holding a call the Session Manager answers, is accepted (Good), the TPer
---   unchanged, the ComID still in S1, and an IF-RECV after it is answered
---   with Table 45's last row. (ETC-08 observes 3.2.2.4.2, a law of its own
---   once item anchors can name its items, M4a; ETC-04 and ETC-13 the first
---   clause, once sessions exist, M4a: design 13.29.)
+--   requirements, is ignored, and the TPer awaits an IF-SEND at once. ETC-04
+--   observes the first clause (a Get in a packet of an open session's TSN
+--   and another HSN, Test Cases PDF 78) and ETC-15 the second (a control
+--   session packet of more subpackets than the TPer's MaxSubpackets, which
+--   it SHALL discard and ignore, 5.2.2.4.1.1, PDF 145; PDF 88). The
+--   property: on a ComID awaiting IF-SEND, an IF-SEND whose packets name
+--   sessions the TPer does not have ("Hsed.Sim.Gen".'genUnresolvablePayload'),
+--   or whose control session packet holds too many subpackets
+--   ('genOverfullPayload'), each even holding a call the Session Manager
+--   answers, is accepted (Good), the TPer unchanged, the ComID still in S1,
+--   and an IF-RECV after it is answered with Table 45's last row. (ETC-08
+--   observes Opal 2.30 3.3.4.1.3 with Core 3.2.2.4.2 items 1 and 4, which no
+--   anchor can name yet: design 13.29 (j).)
 ignorePacket :: Law
 ignorePacket = Law
   { lawName  = "Sync.ignorePacket"
   , lawHash  = "cda4e92af591"
   , lawProp  = Just (discardedAtIfSend (\c -> oneof [genUnresolvablePayload c, genOverfullPayload c]))
-  , lawCases = [whole (ETC 15)]
+  , lawCases = [whole (ETC 4), whole (ETC 15)]
   }
 
 -- | Core Table 45 (PDF 83), bound by its comment @stateTable

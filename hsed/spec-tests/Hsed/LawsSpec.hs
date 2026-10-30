@@ -20,10 +20,10 @@ hand-written laws ("Hsed.Law.Sync".@laws@) to each other: by name, both ways;
 each entry's law is the law of its name, and states the hash its paragraph or
 table has in the IR (the first 12 hex digits the entry carries). Then it runs
 each law's property under QuickCheck, over the simulator, and finds each case
-a law names in the jig's catalogue; a case a later milestone's jig runs pends
-with that milestone (ETC-15 is M4a's, design section 11). A law without a
-property fails, as does a case that neither the catalogue nor a later
-milestone has.
+a law names in the jig's catalogue; a case a later milestone's jig runs would
+pend with that milestone (none since M4a's catalogue took ETC-04 and ETC-15,
+design section 11). A law without a property fails, as does a case that
+neither the catalogue nor a later milestone has.
 -}
 module Hsed.LawsSpec (spec) where
 
@@ -34,7 +34,7 @@ import           Test.Hspec
 import           Test.QuickCheck    (property)
 
 import qualified Hsed.Gen.Core.Laws as Generated
-import           Hsed.Jig.Catalogue (CaseKey (..), CatalogueEntry (..), TestId (..), catalogue, renderCaseKey)
+import           Hsed.Jig.Catalogue (CaseKey, CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Law           (Law (..), LawRef (..))
 import qualified Hsed.Law.Sync      as Sync
 
@@ -44,9 +44,9 @@ handWritten :: [Law]
 handWritten = Sync.laws
 
 -- | The cases a law names that a later milestone's jig runs, with that
---   milestone (design section 11: ETC-15 at M4a).
+--   milestone (design section 11): none since M4a's catalogue.
 later :: [(CaseKey, String)]
-later = [ (CaseKey (ETC 15) Nothing Nothing Nothing, "M4a") ]
+later = []
 
 -- | No name twice.
 distinct :: [Text] -> Bool

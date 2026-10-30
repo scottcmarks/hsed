@@ -148966,7 +148966,7 @@
     593.28
    ],
    "section": "3.1.1",
-   "sentence": "• Level 0 Discovery Header (see Table 2)",
+   "sentence": "Level 0 Discovery Header (see Table 2)",
    "target": 18
   },
   {
@@ -148979,7 +148979,7 @@
     580.5
    ],
    "section": "3.1.1",
-   "sentence": "• TPer feature descriptor (see Table 3)",
+   "sentence": "TPer feature descriptor (see Table 3)",
    "target": 19
   },
   {
@@ -148992,7 +148992,7 @@
     567.72
    ],
    "section": "3.1.1",
-   "sentence": "• Locking feature descriptor (see Table 4)",
+   "sentence": "Locking feature descriptor (see Table 4)",
    "target": 19
   },
   {
@@ -149005,7 +149005,7 @@
     554.94
    ],
    "section": "3.1.1",
-   "sentence": "• Opal SSC V2 feature descriptor (see Table 6)",
+   "sentence": "Opal SSC V2 feature descriptor (see Table 6)",
    "target": 22
   },
   {
@@ -149018,7 +149018,7 @@
     505.97
    ],
    "section": "3.1.1",
-   "sentence": "• Geometry Reporting feature descriptor (see Table 5)",
+   "sentence": "Geometry Reporting feature descriptor (see Table 5)",
    "target": 20
   },
   {
@@ -149031,7 +149031,7 @@
     493.19
    ],
    "section": "3.1.1",
-   "sentence": "• Supported Data Removal Mechanism feature descriptor (see Table 8)",
+   "sentence": "Supported Data Removal Mechanism feature descriptor (see Table 8)",
    "target": 24
   },
   {
@@ -149044,7 +149044,7 @@
     259.98
    ],
    "section": "3.1.1.5",
-   "sentence": "• SSC Minor Version Number = As specified in Table 7",
+   "sentence": "SSC Minor Version Number = As specified in Table 7",
    "target": 23
   },
   {
@@ -149122,7 +149122,7 @@
     645.18
    ],
    "section": "3.1.1.6.4",
-   "sentence": "a) if the Data Removal Time Format bit is set to zero, then the estimated time is defined in Table 11; and",
+   "sentence": "if the Data Removal Time Format bit is set to zero, then the estimated time is defined in Table 11; and",
    "target": 27
   },
   {
@@ -149135,7 +149135,7 @@
     627.12
    ],
    "section": "3.1.1.6.4",
-   "sentence": "b) if the Data Removal Time Format bit is set to one, then the estimated time is defined in Table 12.",
+   "sentence": "if the Data Removal Time Format bit is set to one, then the estimated time is defined in Table 12.",
    "target": 27
   },
   {
@@ -149707,7 +149707,7 @@
     322.8
    ],
    "section": "5.1.2.2",
-   "sentence": "• If the Locking SP is not in the “Manufactured-Inactive” life cycle state, then successful invocation of the Revert method on the Locking SP or Admin SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause the media encryption keys to be eradicated, which has the side effect of securely erasing all data in the User LBA portion of the Storage Device.",
+   "sentence": "If the Locking SP is not in the “Manufactured-Inactive” life cycle state, then successful invocation of the Revert method on the Locking SP or Admin SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause the media encryption keys to be eradicated, which has the side effect of securely erasing all data in the User LBA portion of the Storage Device.",
    "target": 51
   },
   {
@@ -149720,7 +149720,7 @@
     80.92
    ],
    "section": "5.1.3.3",
-   "sentence": "• If the KeepGlobalRangeKey parameter is not present or set to False, then successful invocation of the RevertSP method on the Locking SP or Admin SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause the media encryption keys to be eradicated, which has the side effect of securely erasing all data in the User LBA portion of the Storage Device.",
+   "sentence": "If the KeepGlobalRangeKey parameter is not present or set to False, then successful invocation of the RevertSP method on the Locking SP or Admin SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause the media encryption keys to be eradicated, which has the side effect of securely erasing all data in the User LBA portion of the Storage Device.",
    "target": 51
   },
   {
@@ -149733,7 +149733,7 @@
     666.49
    ],
    "section": "5.1.3.3",
-   "sentence": "• If the KeepGlobalRangeKey parameter is set to True, then successful invocation of the RevertSP method on the Locking SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause all media encryption keys to be eradicated except for the Global Range’s media encryption key (K_AES_{128,256}_GlobalRange_Key).",
+   "sentence": "If the KeepGlobalRangeKey parameter is set to True, then successful invocation of the RevertSP method on the Locking SP SHALL cause user data removal as defined by the ActiveDataRemovalMechanism (see Table 33) and cause all media encryption keys to be eradicated except for the Global Range’s media encryption key (K_AES_{128,256}_GlobalRange_Key).",
    "target": 51
   },
   {

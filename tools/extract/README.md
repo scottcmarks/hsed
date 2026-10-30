@@ -14,9 +14,14 @@ mechanics (pypdf incremental update, render identity, three-reader read-back):
   ordinal, per-page rects, caption, struct path, header/data rows, per-cell text, bbox, bold,
   underline, fill colour), `headings` (/H1../H6 with section number, title, level, page, rect),
   `paras` (every /P and /LI outside tables with section, list-item label, page, rect and a sha256
-  of the normalised words) and `annots` (every /Text annotation carrying an /HSED dictionary).
-  The run ends with the design's sanity invariants printed PASS/FAIL to stderr (a FAIL makes the
-  exit status 1) and a one-line JSON summary. Committed output: `spec/ir/<spec>.json`:
+  of the normalised words), `sigs` (the method signature blocks, one per numbered section: heads,
+  text, page, rect), `lot` (the List of Tables entries: number, title, printed page), `xrefs`
+  (every `Table N` in a paragraph or list item outside the tables and not a caption, its label
+  left out: number, sentence, page, rect, link target) and `annots` (every /Text annotation
+  carrying an /HSED dictionary). The run ends with the design's sanity invariants printed
+  PASS/FAIL to stderr (a FAIL makes the exit status 1; Core's include 53 signature blocks, 248 List
+  of Tables entries and 108 table references, Opal's 3, 50 and 63, and every spec's signature
+  blocks each lie in a numbered section) and a one-line JSON summary. Committed output: `spec/ir/<spec>.json`:
   `.venv/bin/python -I tools/extract/extract_tables.py tcg/TCG_Storage_Architecture_Core_Spec_v2.01_r1.00.pdf spec/ir/core-2.01.json build/core-index.txt --spec core-2.01 --page-offset 17`
   `.venv/bin/python -I tools/extract/extract_tables.py tcg/TCG_Storage-Opal_SSC_v2.30.pdf spec/ir/opal-2.30.json build/opal-index.txt --spec opal-2.30 --page-offset 1 --check-against spec/ir/core-2.01.json`
   (`make extract`). Core 2.01 and Opal 2.30 are pinned to their PDFs' md5 (`PINNED_MD5`, design
@@ -28,7 +33,8 @@ mechanics (pypdf incremental update, render identity, three-reader read-back):
   column names); without it that check is SKIP. `--pages a-b` restricts a debugging run
   (invariants skipped).
 - `test_extract.py` — unit tests of the pure rules (ragged-row join, section-number parsing,
-  item-label concatenation, word normalisation and hashing); `test_annot.py` — the sidecar's
+  item-label concatenation, word normalisation and hashing, a paragraph's characters located glyph
+  by glyph, signature blocks, table references, List of Tables entries); `test_annot.py` — the sidecar's
   vocabulary check, kinds and order, the tail's self-listing xref stream, a heading `behaviour`
   annotated end to end, the md5 pins and the Table 7 invariant: `make extract-test`.
 - `regen_typeuids.py` — regenerates Core Tables 46-165 from the JSON and diffs them against the

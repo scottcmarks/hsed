@@ -42,7 +42,7 @@ import time
 import unicodedata
 import xml.etree.ElementTree as ET
 from collections import Counter, defaultdict
-from itertools import takewhile
+from itertools import groupby, takewhile
 from typing import Iterable
 
 import pikepdf
@@ -349,16 +349,19 @@ def line_text(line: list[dict]) -> str:
 def collapse_chars(chars: Iterable[tuple[str, dict | None]]) -> list[tuple[str, dict | None]]:
     """`norm` over (character, glyph) pairs: every run of whitespace becomes one space (glyph None),
     none at either end."""
-    out, pending = [], False
-    for c, g in chars:
-        if c.isspace():
-            pending = True
-            continue
-        if pending and out:
-            out.append((" ", None))
-        pending = False
-        out.append((c, g))
-    return out
+    runs = [(space, list(run)) for space, run in groupby(chars, key=lambda cg: cg[0].isspace())]
+    inner = runs[1:] if runs and runs[0][0] else runs
+    inner = inner[:-1] if inner and inner[-1][0] else inner
+    return [pc for space, run in inner for pc in ([(" ", None)] if space else run)]
+
+
+def item_body_chars(chars: list[tuple[str, dict | None]], label: str | None) -> list[tuple[str, dict | None]]:
+    """The characters of a list item's body: with a label (`parse_label`), the label and the space
+    after it dropped, so that the words before a table reference in its sentence are the item's own."""
+    if label is None:
+        return chars
+    head, sep, _ = "".join(c for c, _ in chars).partition(" ")
+    return chars[len(head) + len(sep):]
 
 
 def para_chars(recs: list[tuple[int, dict]]) -> list[tuple[str, dict | None]]:
@@ -945,7 +948,7 @@ def prose_records(cache: PageCache, root, page_of: dict, captions: set[str]) -> 
                                   "hash": words_hash(norm_words(body)), "words": None})
                     items.append({"path": p, "kind": t[1:], "text": text, "section": state["section"], "page": page, "rect": rect})
                     if path_str(p) not in captions:
-                        xrefs.extend(xref_records(cache, chars, state["section"]))
+                        xrefs.extend(xref_records(cache, item_body_chars(chars, label), state["section"]))
             walk(k, p, labels + [own] if t == "/LI" else labels, in_table or t == "/Table")
 
     walk(root, (), [], False)
@@ -1162,6 +1165,11 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
 
     def xrefs_check(n):
         return (f"{n} table references in the prose", len(xrefs) == n, f"got {len(xrefs)}")
+    # every spec: a signature block's anchor id is <section>/sig, and the IR's SigIR.section is no null
+    every = [
+        ("every signature block lies in a numbered section", all(s.get("section") for s in sigs),
+         f"none on PDF {sorted(s['page'] + 1 for s in sigs if not s.get('section'))}"),
+    ]
     core = [
         ("heading 5.1.3 on page index 99, printed label 83",
          any(h["section"] == "5.1.3" and h["page"] == 99 and h["page"] + 1 - ir["labelOffset"] == 83 for h in headings),
@@ -1190,7 +1198,7 @@ def invariants(ir: dict, against: dict | None) -> list[tuple[str, bool | None, s
         rows_check("T17", 11), rows_check("T38", 96), rows_check("T22", 45),
         sigs_check(3), lot_check(50), xrefs_check(63),
     ]
-    return {"core-2.01": core, "opal-2.30": opal}.get(ir["spec"], [])
+    return every + {"core-2.01": core, "opal-2.30": opal}.get(ir["spec"], [])
 
 
 def index_line(r: dict) -> str:

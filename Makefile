@@ -59,7 +59,8 @@ extract: $(VENV)
 	$(EXTRACT) $(CORE) spec/ir/core-2.01.json build/core-index.txt --spec core-2.01 --page-offset 17
 	$(EXTRACT) $(OPAL) spec/ir/opal-2.30.json build/opal-index.txt --spec opal-2.30 --page-offset 1 --check-against spec/ir/core-2.01.json
 
-## unit tests of the extractor's pure rules (ragged join, section numbers, item labels, hashing)
+## unit tests of the extractor's pure rules (ragged join, section numbers, item labels, hashing,
+## paragraph characters, signature blocks, table references, List of Tables entries)
 extract-test: $(VENV)
 	$(PY) -I -m unittest discover -s tools/extract -p 'test_*.py'
 

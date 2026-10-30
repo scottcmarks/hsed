@@ -148,6 +148,21 @@ class ParaChars(unittest.TestCase):
         self.assertEqual(X.collapse_chars([(" ", None), ("a", 1), (" ", None), ("\t", None), ("b", 2), (" ", None)]),
                          [("a", 1), (" ", None), ("b", 2)])
 
+    def test_collapse_is_norm_glyph_by_glyph(self):
+        for text in ["", " ", "a", "  a  b\t\tc ", "a \n b", " x ", "ab  "]:
+            pairs = [(c, i) for i, c in enumerate(text)]
+            out = X.collapse_chars(pairs)
+            self.assertEqual("".join(c for c, _ in out), X.norm(text), text)
+            self.assertTrue(all(g is None if c == " " else text[g] == c for c, g in out), text)
+
+    def test_item_body_drops_the_label_and_its_space(self):
+        chars = [(c, i) for i, c in enumerate("a) if the bit is set, see Table 11")]
+        label, body = X.parse_label("".join(c for c, _ in chars))
+        self.assertEqual(label, "a")
+        self.assertEqual("".join(c for c, _ in X.item_body_chars(chars, label)), body)
+        self.assertEqual(X.item_body_chars(chars, label)[0], ("i", 3))
+        self.assertEqual(X.item_body_chars(chars, None), chars)
+
 
 def item(k, text, kind="P", section="5.3.3.6", page=200, parent=(0,)):
     return {"path": parent + (k,), "kind": kind, "text": text, "section": section, "page": page, "rect": [90.0, 700.0 - 10 * k, 300.0, 710.0 - 10 * k]}
@@ -196,6 +211,12 @@ class SignatureBlocks(unittest.TestCase):
     def test_no_block_without_a_bracketed_head(self):
         self.assertEqual(X.sig_blocks(items("CredentialObjectUID.Sign", "Invoking SMUID.Properties[ ] is allowed.")), [])
         self.assertEqual(X.sig_blocks([item(1, "TableUID.Get [", kind="LI")]), [])
+
+    def test_every_spec_fails_a_block_in_no_numbered_section(self):
+        ir = {"spec": "test-1.0", "labelOffset": 0, "tables": [], "headings": [], "lot": [], "xrefs": [],
+              "sigs": [{"section": None, "page": 4, "heads": ["A.b"], "text": "A.b [ ]"}]}
+        (name, ok, detail), = [r for r in X.invariants(ir, None)]
+        self.assertEqual((name, ok, detail), ("every signature block lies in a numbered section", False, "none on PDF [5]"))
 
     def test_bracket_depth(self):
         self.assertEqual(X.bracket_depth("typeOr { Bytes : bytes, RowValues : list [ x ] } ]"), -1)

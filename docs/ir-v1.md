@@ -96,7 +96,9 @@ paragraphs as printed, wrapped lines of one paragraph joined by a space, paragra
 (brackets, a missing `]` and spacing kept: Core's GetPackage prints no `]` before `=>`). `section` is
 the nearest preceding numbered heading's, `page` the 0-based page of the first line, `rect` the union
 of the block's lines on that page, `struct_path` the first paragraph's. Every block lies in a
-numbered section and no section holds two, so the block's anchor id is `<section>/sig`. Core 2.01
+numbered section and no section holds two, so the block's anchor id is `<section>/sig` (an
+invariant for every spec: a block before the first numbered heading would be a FAIL, its `section`
+null, which hsedc could not read). Core 2.01
 has 53 (5.2.2.1, 5.2.3.1-5.2.3.5, 5.3.3.1-5.3.3.18, 5.4.3.1, 5.5.4.1-5.5.4.7, 5.6.4.1-5.6.4.17,
 5.8.3.1-5.8.3.4), 52 with `=>` and CloseSession (5.2.3.5), which the TPer sends and which has no
 response; Opal 2.30 has 3 (5.1.1 Activate, 5.1.2 Revert, 5.1.3 RevertSP).
@@ -121,8 +123,9 @@ printed page of the table's first page). Core 2.01: 248 entries, Tables 1-248 on
   "sentence": "The enumeration values and their associations defined in Table 179.", "target": 166 }
 ```
 Every `Table N` (`\bTable\s+(\d+)\b`) in a `/P` or `/LI` outside the tables that is not a table's
-caption: `number`, `page` and `rect` of its glyphs, the paragraph's `section` (as ParaIR's), the
-`sentence` it is in, and `target`, the 0-based page the PDF's own link over the number goes to (null
+caption (a reference in a table's cell is not read): `number`, `page` and `rect` of its glyphs, the
+paragraph's `section` (as ParaIR's), the `sentence` it is in (a list item's without its label: `a)`,
+`•`), and `target`, the 0-based page the PDF's own link over the number goes to (null
 when no link covers it). What XREF-RESOLVES reads: the number against the numbered tables, the link
 against the table's pages, the sentence and section for what the reference claims. Core 2.01: 108
 references (every one with a link, each landing on a page of the table it names); Opal 2.30: 63

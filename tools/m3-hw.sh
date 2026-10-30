@@ -41,8 +41,9 @@ cd "$(git -C "$(dirname "$0")/.." rev-parse --show-toplevel)"
 printf 'M3 hardware pre-flight: /dev/%s, serial %s\n\n' "$disk" "$serial"
 
 # The kext, and what its binary checks (design 9.3, 13.12). Its build number names no source revision
-# (macos-driver's SEDBase.xcodeproj says 625 in three configurations and 626 in one at every revision from
-# 513e429 to 8bf2635), so the binary itself is read: the loaded kext's UUID, the installed kext whose
+# (macos-driver's SEDBase.xcodeproj and SEDDriver.xcodeproj say 625 in their five Debug configurations and 626 in
+# their five Release ones at every revision from 513e429 to 8bf2635: a Release rebuild says 626 with no source
+# change), so the binary itself is read: the loaded kext's UUID, the installed kext whose
 # Mach-O carries that UUID, and whether that binary imports IOUserClient::clientHasPrivilege (macos-driver
 # 2be586e). Its ATA-command whitelist (switch on cdb[9], macos-driver 7856c9c) shows in no symbol: only a
 # disassembly, or a UUID recorded below once one was disassembled, confirms it.
@@ -153,8 +154,8 @@ cat <<EOF
 4. The drive run: one Level 0 IF-RECV, UCT-01, the capture. Expect exit 0, and on stderr the CDB
    a1 08 0e 01 04 00 01 00 00 5c 00 00, kIOReturnSuccess, 2048 bytes transferred, the sha256 and the
    Length of Parameter Data; the files written stay yours. --expect-serial is required. If it says the kext
-   moved fewer bytes than asked, stop there: it captured nothing, its JSON report keeps the bytes, and
-   design 13.29 (d) is yours to settle before another run.
+   moved another count of bytes than the 2048 asked, stop there: it captured nothing, its JSON report keeps the
+   bytes, and design 13.29 (d) is yours to settle before another run.
      cd ~/hsed && sudo build/bin/hsed-jig --target /dev/${disk} --tests UCT-01 --expect-serial ${serial} \\
          --capture-level0 spec/fixtures/${disk}-level0.bin --report-dir build/report
 5. Optional live Pair run, one more Level 0 IF-RECV: expect extra 0x0005 and 0x0404, none missing,

@@ -18,10 +18,18 @@ checks made to fail by one edited cell (C-UID-TABLE, C-UID-UNIQUE and T149's
 waiver, C-FMT-RESOLVE, the N-FORMAT-NORMALISED Notes), and its declarations:
 the provenance of E2, T46, and T75 under each errata set. 'joinFormat', a
 Format cell's text as the hand transcription states it, is tested on its own.
+
+The Format column of the hand transcription, the oracle's test fixture
+(hsed/fixture/Hand/TypeUIDs.hs, design 5.5), is compared here since M2d
+retired the generated Format strings the oracle compared with it: each of its
+100 @ttype@ rows' Format, read from the fixture's source, parses to the
+TypeDef the generator prints as that row's @t\<Name\>@.
 -}
 module Hsed.Spec.Rules.TypeRowSpec (spec) where
 
 import qualified Data.Text               as DT
+import qualified RIO.Char                as C
+import qualified RIO.List                as L
 import qualified RIO.Map                 as Map
 import qualified RIO.Text                as T
 import           RIO
@@ -34,6 +42,7 @@ import           Hsed.Spec.Common        (ErrataSet (..), Finding, RuleName (..)
 import qualified Hsed.Spec.Common        as Cm
 import           Hsed.Spec.Compile       (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
+import           Hsed.Spec.Format        (parseFormat)
 import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (SpecIR)
 import           Hsed.Spec.RuleDef       (Classification (..), Context, numberedTables)
@@ -56,6 +65,27 @@ errorsOf es = map renderFinding . filter isError . filter ownCheck . checkIR es
 --   which an edited UID also fails (its own tests are RangesSpec's).
 ownCheck :: Finding -> Bool
 ownCheck f = Cm.code f /= "C-UID-RANGE"
+
+-- | Each Type table row of the hand transcription, the oracle's fixture
+--   (hsed/fixture/Hand/TypeUIDs.hs): every @[ttype|@ quasiquote's Name and
+--   Format cells, a cell's lines joined as the quasiquoter joins them (each
+--   line's piece trimmed, the pieces concatenated: @List_Type,*,ACE_expression@).
+handFormats :: Text -> [(Text, Text)]
+handFormats src = [ (typeName, format) | body <- quasiquotes (T.lines src), [_, typeName, format] : _ <- [drop 1 (tableRows body)] ]
+  where
+    quasiquotes ls = case break ("[ttype|" `T.isPrefixOf`) ls of
+      (_, _ : rest) -> let (body, later) = break ("|]" `T.isPrefixOf`) rest in body : quasiquotes later
+      _             -> []
+    lead = T.stripStart
+    tableRows = map joinRow . filter (not . null) . rowGroups . filter (\l -> any (`T.isPrefixOf` lead l) ["|", "+"])
+    rowGroups ls = case break (("+" `T.isPrefixOf`) . lead) ls of
+      (row, _ : rest) -> row : rowGroups rest
+      (row, [])       -> [row]
+    joinRow ls = map T.concat (L.transpose [ map T.strip (pieces l) | l <- ls ])
+    -- the cells of a line, the blank piece after its last bar dropped
+    pieces l = case reverse (T.split (== '|') (T.drop 1 (lead l))) of
+      z : zs | T.all C.isSpace z -> reverse zs
+      zs                         -> reverse zs
 
 -- | The committed sidecar's T149 line with another subject in its waiver.
 waiverFor :: Text -> Text
@@ -196,3 +226,15 @@ spec = do
         cr <- either (throwString . show) pure (compileIR Published ir)
         T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Types" (crModules cr)))
           `shouldSatisfy` elem "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
+
+    describe "the hand transcription's Format column (the oracle's fixture, design 5.5)" $ do
+      hand <- runIO (handFormats <$> readFileUtf8 "../hsed/fixture/Hand/TypeUIDs.hs")
+      let generated = Map.fromList [ (r.name, r.typeDef) | r <- rowsOf ctx ]
+          env       = fst (formatEnv ctx)
+      it "gives a Format to each of the 100 type rows, once" $
+        L.sort (map fst hand) `shouldBe` Map.keys generated
+      it "reads them joined as the quasiquoter joined them (T46)" $
+        lookup "AC_element" hand `shouldBe` Just "List_Type,*,ACE_expression"
+      it "parses each to the TypeDef generated from the PDF's Format, the row's t<Name>" $
+        [ (n, f) | (n, f) <- hand, either (const True) (\d -> Map.lookup n generated /= Just (Just d)) (parseFormat env f) ]
+          `shouldBe` []

@@ -34,13 +34,9 @@ library:
   - gen
   dependencies:
   - hsed-core
-  - containers    # Hsed.Gen.Core.TableUIDs (Data.Map), GDPTest
-  - name: gdp     # GDPTest; its Data.Refined would shadow hsed-core's
-    mixin:
-    - hiding (Data.Refined)
+  - containers    # Hsed.Gen.Core.TableUIDs (Data.Map)
   - ghc-prim      # TypeTests
   - lens          # Hsed.App
-  - singletons    # SingTest
   - text          # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)
   - bytestring    # Hsed.Gen.Core.Layouts (generated code imports Data.ByteString, not RIO)
 

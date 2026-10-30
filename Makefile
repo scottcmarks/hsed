@@ -125,5 +125,5 @@ gen-diff: gen
 ## checkout. Not part of check.
 splices:
 	printf ':set -ddump-splices\n:load Hand.TableUIDs\n' \
-	  | stack ghci hsed:test:hsed-test --no-load --ghci-options='-ignore-dot-ghci -hide-package gdp' 2>&1 \
+	  | stack ghci hsed:test:hsed-test --no-load --ghci-options='-ignore-dot-ghci' 2>&1 \
 	  | sed -e 's|$(CURDIR)/||g' > dev/TableUIDs.txt

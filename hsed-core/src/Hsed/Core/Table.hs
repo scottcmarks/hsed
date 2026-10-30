@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 {-|
@@ -25,7 +26,8 @@ A 'Row' is the values a table of values gives some columns of one row, by
 column number, each read as its column's type says ('Cell'); a column it does
 not give keeps the column's default. A preconfigured row is a 'Pre': the row
 and, where the SSC's legend says so, the access each of its cells has
-('Access'); Core gives no access.
+('Access'); Core gives no access. 'cellValue' is a cell as a method carries
+it in the messaging stream (Core 5.1.2, PDF 99-100).
 -}
 module Hsed.Core.Table
   ( -- * Table descriptions
@@ -36,6 +38,7 @@ module Hsed.Core.Table
   , columnNamed
     -- * Rows
   , Cell (..)
+  , cellValue
   , Row
   , Pre (..)
   , Access (..)
@@ -44,7 +47,9 @@ module Hsed.Core.Table
 import           RIO
 import qualified RIO.List                   as L
 
+import           Hsed.Core.Token            (IsToken (..), Token (..))
 import           Hsed.Core.UID              (UID)
+import           Hsed.Core.Value            (Datum (..), List (..), Value (..))
 
 
 -- * Table descriptions
@@ -90,7 +95,28 @@ data Cell
   | RefCell !Text !UID    -- ^ a reference to an object, printed as the object's name: the name and the object's UID
   | UIntCell !Integer     -- ^ a @uinteger@ type
   | IntCell !Integer      -- ^ an @integer@ type
+  | BytesCell !ByteString -- ^ a @bytes@ type of other than a uid's eight, or a @password@ (Opal's C_PIN PIN)
+  | ListCell ![Cell]      -- ^ a list or set type: an ACL, an ACE's BooleanExpr or Columns
   deriving (Eq, Show)
+
+-- | A cell as a method carries it (Core 5.1.2, PDF 99-100): a uid, a
+--   reference and bytes as a byte string, text as the bytes of its UTF-8, an
+--   enumeration as its value, a uinteger and an integer as themselves (a
+--   UIntCell below zero, which no uinteger column holds, as a signed
+--   integer), a list or a set as a list of its elements' values (5.1.2 d
+--   and i). An alternative type's Named encoding (5.1.2 c) is no cell's.
+cellValue :: Cell -> Value
+cellValue = \case
+  UIDCell u    -> D (Datum (token u))
+  TextCell t   -> D (Datum (Bytes (encodeUtf8 t)))
+  EnumCell _ v -> D (Datum (Unsigned (fromIntegral (max 0 v))))
+  RefCell _ u  -> D (Datum (token u))
+  UIntCell n
+    | n < 0     -> D (Datum (Signed n))
+    | otherwise -> D (Datum (Unsigned (fromInteger n)))
+  IntCell i    -> D (Datum (Signed i))
+  BytesCell bs -> D (Datum (Bytes bs))
+  ListCell cs  -> L (List (map cellValue cs))
 
 -- | The values a table of values gives some columns of one row, by column number, in order.
 type Row = [(ColNum, Cell)]

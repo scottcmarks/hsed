@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications    #-}
 
@@ -47,7 +48,7 @@ spec = describe "the generated method records" $ do
     length Methods.methods `shouldBe` 52
     length (nub (map someMethodUID Methods.methods)) `shouldBe` 52
     map (sigMethod . someSignature) (take 3 Methods.methods) `shouldBe` ["Properties", "StartSession", "SyncSession"]
-    filter ((== "Stir") . sigMethod . someSignature) Methods.methods `shouldSatisfy` null
+    any ((== "Stir") . sigMethod . someSignature) Methods.methods `shouldBe` False
   it "finds a method by its UID, and none by a UID no method has" $ do
     fmap (sigMethod . someSignature) (methodWithUID Methods.methods uMethodID_Get) `shouldBe` Just "Get"
     fmap (sigMethod . someSignature) (methodWithUID Methods.methods uProperties) `shouldBe` Just "Properties"

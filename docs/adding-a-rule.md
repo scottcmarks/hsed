@@ -146,8 +146,9 @@ to its own codes, since the edit may fail another rule's check as well (`TypeRow
 One shape has one `RuleDef`. Where several bindings share a shape (`propsNames` and `propsInitial` both
 bind `Props`), the shape's rule reads every table bound with it and tells them apart by `btBinding`.
 A reader reached only by a comment (`stateTable`, `propsNames`/`propsInitial`, `propsReq`, `legend`,
-`decision`) is such a `RuleDef`: its name is no rule token, `fires` is `\_ _ _ -> False`, and its
-exemplar is the table its comment sits on (only acceptance is checked).
+`decision`, and since M3 `law`, whose reader is `laws`, below) is such a `RuleDef`: its name is no rule
+token, `fires` is `\_ _ _ -> False`, and its exemplar is the table its comment sits on, or for a
+paragraph unit's reader the list item (only acceptance is checked).
 
 What rules may import besides each other: `Hsed.Spec.Scope` (sections, the scope the anchors give,
 the validated annotations; it sits below the registry, while `Hsed.Spec.Rules` imports the registry and
@@ -224,9 +225,35 @@ tables (`[]`) and read the bound paragraphs themselves: `boundParas (ruleShape <
 `structPath`, `hash`, and `words` where the section is word-complete) and its comment's binding
 (`bpBinding`). Locate a finding with `atPara ctx bp` (`core-2.01.pdf#page=82&3.3.10.2.1#3a`) and give
 a declaration `paraProvenanceOf ctx bp` (`list item 3a` as its caption, its 1-based place among the
-paragraphs as its ordinal, the IR's hash). Until a rule takes the shape, a paragraph a comment binds
-with it is `W-GEN-EXCLUDED` at the paragraph (`hsedc compile`), as a table bound to a shape no rule
-reads. `ParagraphUnitSpec` proves the interface with a stub rule.
+paragraphs as its ordinal, the IR's hash). A paragraph a comment binds with a shape no rule reads is
+`W-GEN-EXCLUDED` at the paragraph (`hsedc compile`), as a table bound to a shape no rule reads, and so
+is a paragraph its rule leaves out (`Excluded` with its item anchor). `ParagraphUnitSpec` proves the
+interface with a stub rule.
+
+Since M3 the sentence shape's rule is the law reader, `Hsed.Spec.Rules.Laws` (`lawsRule`). Its name is
+`laws`, not `law`: `RegistrySpec` bans a registered rule's name from the generic modules' code, string
+literals included, and `Hsed.Spec.Scope` prints the binding's keyword in its `E-ANCHOR-KIND` message
+(`a list item or paragraph anchor takes law, fails or behaviour`), so a reader reached by a comment
+takes a name no generic module prints. It reads the sentences (`boundParas`) and, through the
+`stateTable` reader (`stateTableReads`, less the tables that rule leaves out), the state tables, which
+a `stateTable "Module.name"` comment binds to a law the same way: `lawReads`, the sentences in the
+anchors' natural order, then the tables. Its checks: `C-LAW-BOUND`, the comment's name is a qualified
+Haskell name (`Module.name`: ASCII, the modules capitalised, the name a variable and no keyword) and
+no two units of the spec are bound to one name (each after the first is refused, citing the first),
+and `C-LAW-HASH`, the sentence has its sha256 in the IR. It compiles one declaration, `laws ::
+[LawRef]` in `Hsed.Gen.<Spec>.Laws`: an entry per unit its checks pass, each under the unit's
+provenance line (a `--` comment inside the list, since one declaration lists several units), with
+the anchor (`core-2.01:3.3.10.2.1#3a`), the 1-based PDF page, the first 12 hex digits of the hash,
+the name, and the law the name refers to (`Hsed.Law.Sync.ifSendWhileBusy`, its module imported
+qualified); a unit a check refuses is left out, and a spec that binds no law (Opal) gets no module.
+That module is generated code importing hand-written code (hsed's `Hsed.Law` and
+`Hsed.Law.<Module>`): it declares nothing the oracle compares, so `EquivSpec` needs no import line
+for it; `GenSpec`'s `ghc -fno-code` against hsed-core cannot compile it, so `Rules/LawsSpec` checks its
+text and `stack build hsed` its names (a law a comment names and the code lacks fails to compile,
+`C-LAW-BOUND`'s half at build time); and hsed's `Hsed.LawsSpec` holds it to the hand-written laws, by
+name both ways and by hash, runs each law's property and finds each case a law names in the jig's
+catalogue. Nothing a law module imports may import `Hsed.Gen.<Spec>.Laws`, which would be a module
+cycle.
 
 ## Generated code (`Hsed.Spec.Gen`)
 
@@ -248,8 +275,10 @@ modules export too (`Hsed.Gen.<Spec>.Methods`: `Get`, `Set`, `Next`, the PDF's m
 `Set` meets) is imported qualified and re-exported by no umbrella module (design §13.25 (k)), as are
 runtime modules whose names meet (`Hsed.Core.Field`'s and `Hsed.Core.Sync`'s `Constant`).
 `Gen.renderModule` assembles each module from the declarations of every rule that names it:
-pragmas (the declarations' extensions with the two every module has), header, merged imports,
-declarations sorted by table number, rank, name. A declaration goes to the rule's module (`Emit`) or to
+pragmas (the declarations' extensions with the two every module has), header, merged imports
+(`Gen.ImportAll`, `Gen.ImportSome` lists united, and since M3 `Gen.ImportQualified`, a line of its
+own: the law reader's `import qualified Hsed.Law.Sync`), declarations sorted by table number, rank,
+name. A declaration goes to the rule's module (`Emit`) or to
 another one (`EmitIn`, for a rule that writes several). Rules naming one module must give it one
 description; their notes are united. A module is written when it has a declaration, and `hsedc compile`
 removes the spec's modules it did not write. Rules that print one kind of declaration print it through

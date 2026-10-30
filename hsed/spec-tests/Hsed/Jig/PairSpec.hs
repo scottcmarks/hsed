@@ -26,6 +26,7 @@ simulator's 8 among them (Opal 2.30 Table 6's "8 or larger", PDF 23).
 module Hsed.Jig.PairSpec (spec) where
 
 import qualified RIO.ByteString      as B
+import qualified RIO.List            as L
 import           RIO
 import           RIO.FilePath        ((</>))
 import qualified RIO.Text            as T
@@ -36,7 +37,7 @@ import           Hsed.Core.Layout    (Content (..), Difference (..))
 import           Hsed.Jig.Pair
 import           Hsed.Jig.Support    (disk6Like)
 import           Hsed.Level0         (DecodedDescriptor (..), Descriptor (..), Level0 (..), splitLevel0)
-import           Hsed.Sim.Level0     (level0Response)
+import           Hsed.Sim.Level0     (level0Response, simDescriptors)
 import           Hsed.Sim.Profile    (loadProfile)
 import           Hsed.Sim.Types      (SimParams (..), defaultSimParams, initialState)
 
@@ -101,6 +102,23 @@ spec = do
     it "passes descriptors whose bytes are equal, and extra codes, without decoding them" $ do
       let r = pairLevel0 (level0Of [(0x0001, "a"), (0x0005, "b")]) (level0Of [(0x0001, "a")])
       (prExtra r, prMissing r, pairFails r) `shouldBe` ([0x0005], [], False)
+
+  describe "what the descriptors with hand-written allowances allow" $ do
+    let own c = L.find ((== c) . dCode) (simDescriptors (initialState defaultSimParams))
+        poked c at v = fmap (\d -> d { dBytes = B.take at (dBytes d) <> B.singleton v <> B.drop (at + 1) (dBytes d) }) (own c)
+        compared c at v = case (own c, poked c at v) of
+          (Just s, Just d) -> pairLevel0 (level0Of [(c, dBytes s)]) (level0Of [(c, dBytes d)])
+          _                -> PairReport [] [] [] [] []
+    it "Supported Data Removal Mechanism: a time of the drive's own allowed, and its state unchecked (Opal 3.1.1.6)" $ do
+      let timed = compared 0x0404 13 30
+      (length (prAllowed timed), prDiffs timed, pairFails timed) `shouldBe` (1, [], False)
+      let processing = compared 0x0404 5 0x01
+      (length (prUnchecked processing), prDiffs processing, pairFails processing) `shouldBe` (1, [], False)
+    it "Block SID: a flag of the TPer's present state unchecked, not a failure" $
+      -- byte 4 bit 0 SID Value State, bit 1 SID Blocked State; byte 5 bit 0 Hardware Reset
+      forM_ [(4, 0x01), (4, 0x02), (5, 0x01)] $ \(at, b) -> do
+        let r = compared 0x0402 at b
+        (length (prUnchecked r), prDiffs r, pairFails r) `shouldBe` (1, [], False)
 
   describe "the simulator against a drive-like response synthesized from disk6's sedutil query" $ do
     it "without a profile, finds 0x0403 missing, a failure" $ do

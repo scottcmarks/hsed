@@ -35,7 +35,8 @@ shorter version) is kept and stepped past like any other, and only
 'decodeDescriptor' declines it; one whose Length runs past the end of the
 response is kept with the bytes there are and reported. The response's
 problems are reported, not refused: 'splitLevel0' fails only on a
-transfer shorter than Table 39's header.
+transfer shorter than Table 39's header. Opal 2.30 allows one of Core's: a
+data structure revision other than Table 39's ('allowedByOpal').
 
 The JSON of these types (aeson's 'A.ToJSON') is what the jig's reports
 print of a Level 0 response; bytes in hex ("Hsed.Wire".'trimmedHex').
@@ -45,6 +46,8 @@ module Hsed.Level0
     Level0 (..)
   , Descriptor (..)
   , Level0Problem (..)
+  , allowedByOpal
+  , cutShort
   , splitLevel0
   , renderLevel0
     -- * Descriptors, decoded
@@ -76,7 +79,7 @@ import           Hsed.Gen.Opal.Features (Level0DiscoveryGeometryReportingFeature
                                          Level0DiscoverySupportedDataRemovalMechanismFeature,
                                          Level0DiscoveryTPerFeature)
 import           Hsed.Sim.FeatureSets   (BlockSIDFeature, DataStoreFeature, NamespaceLockingFeature, SiisFeature,
-                                         geometryAllowances)
+                                         dataRemovalAllowances, geometryAllowances)
 import           Hsed.Wire              (trimmedHex)
 
 
@@ -93,13 +96,42 @@ data Descriptor = Descriptor
 
 -- | What does not hold of a response as split.
 data Level0Problem
-  = HeaderDiffers ![Difference]       -- ^ the header read other than Table 39 pins it (its versions)
-  | BeyondTransfer !Word32 !Int       -- ^ Length of Parameter Data asks for more than the transfer holds: the bytes it
-                                      --   asks for (its origin and itself), the bytes the transfer holds
-  | OutOfCodeOrder !Word16 !Word16    -- ^ a descriptor's code, then a next one not larger (3.3.6.3, PDF 68)
-  | NonZeroPadding !Int               -- ^ the offset of the first byte other than zero after the descriptors
-  | DescriptorTruncated !Word16       -- ^ a descriptor (its code) whose length runs past Length of Parameter Data
+  = HeaderDiffers ![Difference]          -- ^ the header read other than Table 39 pins it (its versions)
+  | ParameterDataShort !Word32           -- ^ Length of Parameter Data counts fewer bytes than the header holds after it
+                                         --   (3.3.6.2.1, PDF 68: it counts the valid bytes after itself)
+  | BeyondTransfer !Word32 !Int          -- ^ Length of Parameter Data asks for more than the transfer holds: the bytes it
+                                         --   asks for (its origin and itself), the bytes the transfer holds
+  | OutOfCodeOrder !Word16 !Word16       -- ^ a descriptor's code, then a next one not larger (3.3.6.3, PDF 68)
+  | LengthNotFourfold !Word16 !Int       -- ^ a descriptor (its code) whose Length is no multiple of 4 (3.3.6.3.1.3, PDF 69)
+  | ReservedCode !Int                    -- ^ the offset of the first descriptor of code 0x0000, Core Table 40's Reserved
+                                         --   (PDF 69), which no feature has: likely zeros Length of Parameter Data counts
+  | NonZeroPadding !Int                  -- ^ the offset of the first byte other than zero after the descriptors
+  | DescriptorTruncated !(Maybe Word16)  -- ^ a descriptor whose length runs past Length of Parameter Data: its code, if
+                                         --   its bytes hold it
   deriving (Eq, Show)
+
+-- | Whether Opal 2.30 allows a problem Core's split reports: a header whose
+--   data structure revision is other than Core Table 39's 0x0000 and 0x0001,
+--   which Opal 2.30 Table 2 allows (\"0x00000001 or any version that
+--   supports the defined features in this SSC\", PDF 19), with nothing else
+--   of it read otherwise.
+allowedByOpal :: Level0Problem -> Bool
+allowedByOpal = \case
+  HeaderDiffers ds@(_ : _) -> all revision ds
+  _                        -> False
+  where
+    revision = \case
+      PinDiffers name _ _ _ -> name `elem` ["Data Structure Major Version", "Data Structure Minor Version"]
+      _                     -> False
+
+-- | Whether a problem says the response was cut short, its descriptors some
+--   of the drive's or part of one: Length of Parameter Data past the
+--   transfer, or a descriptor past Length of Parameter Data.
+cutShort :: Level0Problem -> Bool
+cutShort = \case
+  BeyondTransfer _ _    -> True
+  DescriptorTruncated _ -> True
+  _                     -> False
 
 -- | A response split: its header (Table 39's bytes), its Length of
 --   Parameter Data, its descriptors in the order sent, what follows them to
@@ -120,11 +152,14 @@ data Level0 = Level0
 --
 --   The descriptors run from the end of the header to the end Length of
 --   Parameter Data gives, or to the end of the transfer if that comes first
---   ('BeyondTransfer'); a descriptor whose length runs past it is kept with
---   the bytes there are ('DescriptorTruncated'); each code must be larger
---   than the one before ('OutOfCodeOrder'), and what follows the
---   descriptors zeros ('NonZeroPadding'). A transfer shorter than the
---   header is 'Hsed.Core.Layout.Truncated'.
+--   ('BeyondTransfer'); Length of Parameter Data counts at least the
+--   header's bytes after it ('ParameterDataShort'); a descriptor whose
+--   length runs past it is kept with the bytes there are
+--   ('DescriptorTruncated'); each code must be larger than the one before
+--   ('OutOfCodeOrder'), each Length a multiple of 4 ('LengthNotFourfold'),
+--   no code the reserved 0x0000 ('ReservedCode'), and what follows the
+--   descriptors zeros ('NonZeroPadding'). A transfer shorter than the header
+--   is 'Hsed.Core.Layout.Truncated'.
 splitLevel0 :: ByteString -> Either LayoutError Level0
 splitLevel0 input = do
   DecodedRecord header differences _ <- decodeRecord input
@@ -136,6 +171,7 @@ splitLevel0 input = do
       end                   = max headerEnd (fromInteger (min asked (toInteger held)))
       pieces                = L.unfoldr (piece end) headerEnd
       descriptors           = mapMaybe pieceDescriptor pieces
+      offsets               = L.scanl (+) headerEnd (map (B.length . dBytes) descriptors)
       codes                 = map dCode descriptors
       padding               = B.drop end input
   pure Level0
@@ -145,8 +181,11 @@ splitLevel0 input = do
     , l0Padding               = padding
     , l0Problems              = concat
         [ [ HeaderDiffers differences | not (null differences) ]
+        , [ ParameterDataShort lengthOfParameterData | toInteger lengthOfParameterData < toInteger (headerEnd - lengthOrigin) ]
         , [ BeyondTransfer (fromInteger (min asked (toInteger (maxBound :: Word32)))) held | asked > toInteger held ]
         , [ OutOfCodeOrder a b | (a, b) <- zip codes (drop 1 codes), b <= a ]
+        , [ LengthNotFourfold (dCode d) n | Whole d <- pieces, let n = B.length (dBytes d) - headerSize generalHeader, n `mod` 4 /= 0 ]
+        , take 1 [ ReservedCode at | (d, at) <- zip descriptors offsets, dCode d == 0x0000 ]
         , [ DescriptorTruncated c | Cut _ c <- pieces ]
         , [ NonZeroPadding (end + i) | Just i <- [B.findIndex (/= 0) padding] ]
         ]
@@ -159,27 +198,32 @@ splitLevel0 input = do
       | otherwise = Just $ case descriptorHeader generalHeader region of
           Right (code, version, size)
             | size <= B.length region -> (Whole (Descriptor code version (B.take size region)), at + size)
-            | otherwise               -> (Cut (Just (Descriptor code version region)) code, end)
+            | otherwise               -> (Cut (Just (Descriptor code version region)) (Just code), end)
           Left _                      -> (Cut Nothing (partialCode region), end)
       where region = B.take (end - at) (B.drop at input)
 
 -- | One step of the walk over a response's descriptors: a descriptor, or one
 --   cut short by the end of the response (its bytes, when its header is
---   there, and its code).
+--   there, and its code, when its bytes hold it).
 data Piece
   = Whole Descriptor
-  | Cut (Maybe Descriptor) Word16
+  | Cut (Maybe Descriptor) (Maybe Word16)
 
 pieceDescriptor :: Piece -> Maybe Descriptor
 pieceDescriptor = \case
   Whole d -> Just d
   Cut d _ -> d
 
--- | The code of a descriptor too short for its header, as far as its bytes
---   give it.
-partialCode :: ByteString -> Word16
-partialCode bytes =
-  either (const 0) (\(code, _, _) -> code) (descriptorHeader generalHeader (fitted (headerSize generalHeader) bytes))
+-- | The code of a descriptor too short for its header, if its bytes hold
+--   Table 41's Feature Code whole; none is made up of zeros.
+partialCode :: ByteString -> Maybe Word16
+partialCode bytes
+  | B.length bytes >= codeEnd =
+      either (const Nothing) (\(code, _, _) -> Just code) (descriptorHeader generalHeader (fitted (headerSize generalHeader) bytes))
+  | otherwise = Nothing
+  where
+    codeEnd = maybe (headerSize generalHeader) ((`div` 8) . fieldEnd)
+                    (L.find ((== "Feature Code") . fieldName) (layoutFields featureDescriptorTemplateLayout))
 
 -- | A response from a header's vendor unique bytes and descriptors, its
 --   Length of Parameter Data theirs, truncated or zero-padded to a transfer
@@ -265,8 +309,9 @@ decodeDescriptor d = do
 
 -- | The descriptors hsed has a layout of, by code: Opal's (generated from
 --   Opal 2.30 Tables 3-6 and 8), what the simulator allows Geometry
---   Reporting until M5 ("Hsed.Sim.FeatureSets".'geometryAllowances'), and
---   the hand-written feature sets'.
+--   Reporting until M5 ("Hsed.Sim.FeatureSets".'geometryAllowances') and
+--   Supported Data Removal Mechanism ('dataRemovalAllowances', Tables 9-12),
+--   and the hand-written feature sets'.
 known :: [(Word16, (Text, Layout, [(Text, Allowance)]))]
 known =
   [ entry "opal-2.30 T3" (Proxy :: Proxy Level0DiscoveryTPerFeature) []
@@ -277,7 +322,7 @@ known =
   , entry "opal-2.30 T6" (Proxy :: Proxy Level0DiscoveryOpalSSCV2Feature) []
   , entry "sedutil Discovery0BlockSIDFeatures" (Proxy :: Proxy BlockSIDFeature) []
   , entry "cnl-1.30 T6" (Proxy :: Proxy NamespaceLockingFeature) []
-  , entry "opal-2.30 T8" (Proxy :: Proxy Level0DiscoverySupportedDataRemovalMechanismFeature) []
+  , entry "opal-2.30 T8" (Proxy :: Proxy Level0DiscoverySupportedDataRemovalMechanismFeature) dataRemovalAllowances
   ]
   where
     entry :: Feature f => Text -> Proxy f -> [(Text, Allowance)] -> (Word16, (Text, Layout, [(Text, Allowance)]))
@@ -339,8 +384,11 @@ instance A.ToJSON Descriptor where
 instance A.ToJSON Level0Problem where
   toJSON = \case
     HeaderDiffers ds       -> A.object ["problem" A..= ("header_differs" :: Text), "differences" A..= map differenceJSON ds]
+    ParameterDataShort n   -> A.object ["problem" A..= ("parameter_data_short" :: Text), "length_of_parameter_data" A..= n]
     BeyondTransfer need n  -> A.object ["problem" A..= ("beyond_transfer" :: Text), "asked" A..= need, "transferred" A..= n]
     OutOfCodeOrder a b     -> A.object ["problem" A..= ("out_of_code_order" :: Text), "code" A..= a, "next" A..= b]
+    LengthNotFourfold c n  -> A.object ["problem" A..= ("length_not_fourfold" :: Text), "code" A..= c, "length" A..= n]
+    ReservedCode at        -> A.object ["problem" A..= ("reserved_code" :: Text), "offset" A..= at]
     NonZeroPadding at      -> A.object ["problem" A..= ("non_zero_padding" :: Text), "offset" A..= at]
     DescriptorTruncated c  -> A.object ["problem" A..= ("descriptor_truncated" :: Text), "code" A..= c]
 

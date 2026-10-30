@@ -16,13 +16,18 @@ that the tests can run them:
 
 * @run@ (the default): run cases against a target ("Hsed.Jig.Run");
 * @level0 decode FILE [--against QUERY.txt]@: split and decode a Level 0
-  response, a capture or a synthesized one; with @--against@, compare it
-  with every value sedutil printed of the drive ("Hsed.Level0.Sedutil") and
-  ask it to hold the Configurable Namespace Locking descriptor, which
-  sedutil prints no line for though the kext reports it on disk6 (design
-  11, M3);
+  response, a capture or a synthesized one, a failure for a problem Opal
+  2.30 does not allow (a data structure revision other than Core's it does,
+  "Hsed.Level0".'allowedByOpal'); with @--against@, compare it with every
+  value sedutil printed of the drive ("Hsed.Level0.Sedutil"), print what
+  sedutil printed that is not compared, and ask it to hold the Configurable
+  Namespace Locking descriptor, which sedutil prints no line for though the
+  kext reports it on disk6 (design 11, M3): an assumption of disk6's, which
+  the command's help names;
 * @level0 synthesize QUERY.txt OUT.bin@: a drive-like response from
-  sedutil's values, a test aid until the drive's own is captured;
+  sedutil's values, with disk6's Configurable Namespace Locking descriptor
+  added (of zeros but its pins), a test aid until the drive's own is
+  captured;
 * @verify-transcript REPORT.json [--no-if-send] [--level0-only]@ and
   @diff A.json B.json@: a run's report read back ("Hsed.Jig.Report").
 
@@ -50,9 +55,9 @@ import           Hsed.Jig.Files       (runningAsRoot, writeOwned)
 import           Hsed.Jig.Options     (TargetSpec (..))
 import           Hsed.Jig.Report      (diffReports, verifyTranscript)
 import           Hsed.Jig.Run         (RunOptions (..), runJig)
-import           Hsed.Level0          (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor,
-                                       splitLevel0)
-import           Hsed.Level0.Sedutil  (compareQuery, parseQuery, synthesize)
+import           Hsed.Level0          (DecodedDescriptor (..), Descriptor (..), Level0 (..), allowedByOpal,
+                                       decodeDescriptor, splitLevel0)
+import           Hsed.Level0.Sedutil  (SedutilQuery (..), compareQuery, parseQuery, synthesize)
 import           Hsed.Sim.FeatureSets (NamespaceLockingFeature)
 
 
@@ -106,8 +111,9 @@ run opts = case devices (roTarget opts) of
 -- * level0
 
 -- | Split a response, print it and its descriptors decoded, and, against
---   sedutil's printed query, every value that disagrees: a failure if the
---   split found problems or the comparison anything.
+--   sedutil's printed query, every value that disagrees and what sedutil
+--   printed that is not compared: a failure if the split found a problem
+--   Opal 2.30 does not allow, or the comparison anything.
 level0Decode :: FilePath -> Maybe FilePath -> IO ExitCode
 level0Decode file against = do
   bytes <- readFileBinary file
@@ -115,18 +121,21 @@ level0Decode file against = do
     Left e   -> failWith ("level0 decode: " <> T.pack file <> ": " <> tshow e)
     Right l0 -> do
       traverse_ say (describeLevel0 l0)
-      disagreements <- maybe (pure []) (againstQuery l0) against
+      (disagreements, skipped) <- maybe (pure ([], [])) (againstQuery l0) against
+      traverse_ (say . ("not compared, as sedutil prints it: " <>)) skipped
       traverse_ (say . ("disagrees: " <>)) disagreements
-      pure (if null (l0Problems l0) && null disagreements then ExitSuccess else ExitFailure 1)
+      pure (if all allowedByOpal (l0Problems l0) && null disagreements then ExitSuccess else ExitFailure 1)
 
 -- | What a response holds that sedutil's printed query says otherwise, and
---   the Configurable Namespace Locking descriptor if it lacks one.
-againstQuery :: Level0 -> FilePath -> IO [Text]
+--   the Configurable Namespace Locking descriptor if it lacks one (disk6's
+--   kext reports one, design 11); and what sedutil printed that is not
+--   compared.
+againstQuery :: Level0 -> FilePath -> IO ([Text], [Text])
 againstQuery l0 queryFile = do
   query <- readFileUtf8 queryFile
   pure $ case parseQuery query of
-    Left e  -> [T.pack queryFile <> ": " <> e]
-    Right q -> compareQuery q l0 <> [ noNamespaceLocking | cnl `notElem` map dCode (l0Descriptors l0) ]
+    Left e  -> ([T.pack queryFile <> ": " <> e], [])
+    Right q -> (compareQuery q l0 <> [ noNamespaceLocking | cnl `notElem` map dCode (l0Descriptors l0) ], sqSkipped q)
   where
     cnl = fromInteger (featureCode (Proxy :: Proxy NamespaceLockingFeature))
     noNamespaceLocking = "no Configurable Namespace Locking descriptor (" <> hex cnl <> ")"
@@ -148,7 +157,7 @@ level0Synthesize queryFile out = do
 describeLevel0 :: Level0 -> [Text]
 describeLevel0 l0 =
   ("Length of Parameter Data " <> tshow (l0LengthOfParameterData l0) <> ", " <> tshow (length (l0Descriptors l0)) <> " descriptors")
-  : map (("problem: " <>) . tshow) (l0Problems l0)
+  : map (\p -> (if allowedByOpal p then "allowed (Opal 2.30 Table 2, PDF 19): " else "problem: ") <> tshow p) (l0Problems l0)
   <> concatMap descriptor (l0Descriptors l0)
   where
     descriptor d =

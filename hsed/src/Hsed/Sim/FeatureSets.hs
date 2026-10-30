@@ -64,6 +64,8 @@ module Hsed.Sim.FeatureSets
   , namespaceLockingFeatureLayout
     -- * Geometry Reporting, until M5
   , geometryAllowances
+    -- * Supported Data Removal Mechanism
+  , dataRemovalAllowances
   ) where
 
 import           RIO
@@ -248,13 +250,22 @@ instance LayoutRecord BlockSIDFeature where
     <*> flagField "Hardware Reset" vs
 
 -- | No source in @tcg/@ lists what its fields may hold: the version decided
---   at M3 (see the module header), 0x1 or another, alone.
+--   at M3 (see the module header), 0x1 or another; and its three flags, each
+--   the TPer's present state, which a host's Block SID command and the
+--   resets set (sedutil's @Discovery0BlockSIDFeatures@), not a constant of
+--   the descriptor: as printed, compared unchecked (UCT-01 step 4c holds SID
+--   Value State to 0 where the case asks it, Test Cases PDF 30).
 instance Feature BlockSIDFeature where
   featureCode _       = 0x0402
   featureVersion _    = Nothing
   featureLength _     = Just 0x0c
   featureHeader _     = featureHeader generalHeader
-  featureAllowances _ = [("Version", AnyVersion 0x1)]
+  featureAllowances _ =
+    [ ("Version", AnyVersion 0x1)
+    , ("SID Value State", AsPrinted "the present state: whether C_PIN_SID's PIN is still MSID's")
+    , ("SID Blocked State", AsPrinted "the present state: whether a Block SID command has blocked SID's authentication")
+    , ("Hardware Reset", AsPrinted "the present state: whether a hardware reset clears the block, as the Block SID command set it")
+    ]
 
 
 -- * Configurable Namespace Locking (0x0403)
@@ -341,3 +352,35 @@ geometryAllowances =
   , ("AlignmentGranularity", AsPrinted "the value of the AlignmentGranularity column in the LockingInfo table")  -- 3.1.1.4.4
   , ("LowestAlignedLBA", AsPrinted "the value of the LowestAlignedLBA column in the LockingInfo table")          -- 3.1.1.4.5
   ]
+
+
+-- * Supported Data Removal Mechanism
+
+-- | What Opal 2.30 allows the Supported Data Removal Mechanism descriptor's
+--   fields (Table 8; Tables 9-12, PDF 25-28), by the field names of the
+--   generated layout, whose bullets give no allowance (Table 9 is a table,
+--   not bullets):
+--
+-- * each Data Removal Time Format bit and Data Removal Time, the device's
+--   own worst-case estimate of its mechanism, any value Tables 11 and 12
+--   give a meaning (0 not reported): any value (3.1.1.6.4);
+-- * the Supported Data Removal Mechanism, a bit for each mechanism the TPer
+--   supports, Cryptographic Erase (bit 2) mandatory (3.1.1.6.3, Table 10):
+--   as printed;
+-- * Data Removal Operation Processing and Interrupted, the TPer's present
+--   state (3.1.1.6.1-2): as printed.
+--
+-- Its Version has none: Table 9 prints 0x02 alone, with no other version
+-- allowed (decided at the M3 review, reversible: design 13.29).
+dataRemovalAllowances :: [(Text, Allowance)]
+dataRemovalAllowances =
+  [ ("Data Removal Operation Processing", AsPrinted "see section 3.1.1.6.1: set while a data removal operation is in progress")
+  , ("Data Removal Operation Interrupted", AsPrinted "see section 3.1.1.6.2: set while one was interrupted")
+  , ("Supported Data Removal Mechanism", AsPrinted "see section 3.1.1.6.3: a bit for each mechanism supported, Cryptographic Erase (bit 2) mandatory")
+  ]
+  <> [ (format b, VendorUnique) | b <- bits ]
+  <> [ (time b, VendorUnique) | b <- bits ]
+  where
+    bits     = ["0", "1", "2", "5"] :: [Text]
+    format b = "Data Removal Time Format for Bit " <> b
+    time b   = "Data Removal Time for Supported Data Removal Mechanism Bit " <> b

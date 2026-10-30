@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -29,7 +28,7 @@ module Hsed.Sim.Profile
 import           RIO
 import qualified RIO.Text       as T
 
-import           Hsed.Level0    (Level0 (..), Level0Problem (..), splitLevel0)
+import           Hsed.Level0    (Level0 (..), cutShort, splitLevel0)
 import           Hsed.Sim.Types (Level0Profile (..))
 
 
@@ -43,8 +42,3 @@ loadProfile path = do
     case filter cutShort (l0Problems level0) of
       []       -> Right (Level0Profile path (l0Descriptors level0))
       problems -> Left (T.pack path <> ": the response is cut short: " <> T.intercalate ", " (map tshow problems))
-  where
-    cutShort = \case
-      BeyondTransfer _ _    -> True
-      DescriptorTruncated _ -> True
-      _                     -> False

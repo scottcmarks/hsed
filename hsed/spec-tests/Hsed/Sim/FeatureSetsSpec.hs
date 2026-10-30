@@ -93,12 +93,27 @@ spec = describe "the hand-written feature descriptors" $ do
       (featureVersion (Proxy :: Proxy DataStoreFeature), featureVersion (Proxy :: Proxy BlockSIDFeature))
         `shouldBe` (Nothing, Nothing)
       L.lookup "Version" (featureAllowances (Proxy :: Proxy DataStoreFeature)) `shouldBe` Just (AnyVersion 0x1)
-      featureAllowances (Proxy :: Proxy BlockSIDFeature) `shouldBe` [("Version", AnyVersion 0x1)]
+      L.lookup "Version" (featureAllowances (Proxy :: Proxy BlockSIDFeature)) `shouldBe` Just (AnyVersion 0x1)
       [ dVersion d | d <- own, dCode d `elem` [0x0202, 0x0402] ] `shouldBe` [0x1, 0x1]
     it "the DataStore descriptor allows the least UCT-01 accepts (step 4b, Test Cases PDF 30)" $
       drop 1 (featureAllowances (Proxy :: Proxy DataStoreFeature)) `shouldBe`
         [ ("Maximum number of DataStore Tables", Minimum 1), ("Maximum total size of DataStore Tables", Minimum 0xA0000)
         , ("DataStore Table size alignment", Minimum 1) ]
+
+  describe "the Block SID descriptor's flags" $
+    it "are each the TPer's present state, as printed, compared unchecked" $
+      [ (n, isPrinted a) | (n, a) <- featureAllowances (Proxy :: Proxy BlockSIDFeature), n /= "Version" ]
+        `shouldBe` [("SID Value State", True), ("SID Blocked State", True), ("Hardware Reset", True)]
+
+  describe "Supported Data Removal Mechanism's allowances (Opal 2.30 Tables 9-12)" $ do
+    it "name fields of the generated layout: its times and formats any value, its mechanisms and states as printed" $ do
+      filter (`notElem` map fieldName (layoutFields level0DiscoverySupportedDataRemovalMechanismFeatureLayout))
+             (map fst dataRemovalAllowances) `shouldBe` []
+      length [ () | (_, VendorUnique) <- dataRemovalAllowances ] `shouldBe` 8
+      [ n | (n, a) <- dataRemovalAllowances, isPrinted a ] `shouldBe`
+        ["Data Removal Operation Processing", "Data Removal Operation Interrupted", "Supported Data Removal Mechanism"]
+    it "allow its Version nothing: Table 9 prints 0x02 alone" $
+      L.lookup "Version" dataRemovalAllowances `shouldBe` Nothing
 
   describe "Geometry Reporting's allowances, until M5" $
     it "name each of Table 5's value fields, as the LockingInfo table has it (3.1.1.4.2-5, PDF 22)" $ do
@@ -240,6 +255,11 @@ instanceFacts name p = it (name <> ": code, Length and header agree with its lay
   featureLength p `shouldBe` Just (toInteger (layoutSize l - headerSize (featureHeader p)))
   featureHeader p `shouldBe` FeatureHeader 4 "Length"
   filter (`notElem` map fieldName (layoutFields l)) (map fst (featureAllowances p)) `shouldBe` []
+
+isPrinted :: Allowance -> Bool
+isPrinted = \a -> case a of
+  AsPrinted _ -> True
+  _           -> False
 
 -- | A record's encoding decoded strictly is the record, nothing differing, nothing left.
 roundTrip :: (Feature f, Eq f, Show f) => Gen f -> Property

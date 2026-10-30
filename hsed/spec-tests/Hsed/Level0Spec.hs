@@ -16,8 +16,11 @@ itself, 3.3.6.2.1, PDF 68), then descriptors in increasing code order
 Length the count of the bytes after them), then zeros to the transfer length
 (3.3.6.2, PDF 67). Rendering and splitting are inverses; the simulator's
 default response is its eight descriptors, 216 valid bytes; a response cut
-short, a descriptor shorter than hsed's layout of its code, codes out of
-order and padding not zero are each reported, and splitting goes on.
+short, a Length of Parameter Data short of the header, a descriptor shorter
+than hsed's layout of its code, codes out of order, a Length no multiple of
+4, the reserved code 0x0000 and padding not zero are each reported, and
+splitting goes on; a header cut to a byte names no code it does not hold;
+Opal 2.30 allows a data structure revision other than Core's.
 -}
 module Hsed.Level0Spec (spec) where
 
@@ -94,7 +97,7 @@ spec = describe "a Level 0 Discovery response" $ do
         .&&. map dCode (simDescriptors (initialState p)) === [0x0001, 0x0002, 0x0003, 0x0005, 0x0202, 0x0203, 0x0402, 0x0404]
     it "cut at 100 bytes, asks for 216 (BeyondTransfer) and its third descriptor runs past the end" $
       withSplit (level0Response (initialState defaultSimParams) 100) $ \l0 -> do
-        l0Problems l0 `shouldBe` [BeyondTransfer 216 100, DescriptorTruncated 0x0003]
+        l0Problems l0 `shouldBe` [BeyondTransfer 216 100, DescriptorTruncated (Just 0x0003)]
         map dCode (l0Descriptors l0) `shouldBe` [0x0001, 0x0002, 0x0003]
         map (B.length . dBytes) (l0Descriptors l0) `shouldBe` [16, 16, 20]
         l0Padding l0 `shouldBe` B.empty
@@ -150,14 +153,44 @@ spec = describe "a Level 0 Discovery response" $ do
       -- a TPer descriptor whose Length says 12 bytes follow, eight of them there
       let cut = Descriptor 0x0001 0x1 (B.pack [0x00, 0x01, 0x10, 0x0C, 0x11, 0, 0, 0, 0, 0, 0, 0])
       withSplit (renderLevel0 mempty [cut] 2048) $ \l0 -> do
-        l0Problems l0 `shouldBe` [DescriptorTruncated 0x0001]
+        l0Problems l0 `shouldBe` [DescriptorTruncated (Just 0x0001)]
         l0Descriptors l0 `shouldBe` [cut]
-    it "a header whose versions are not Table 39's pins is reported" $ do
+    it "a header whose versions are not Table 39's pins is reported, which Opal 2.30 Table 2 allows" $ do
       let r = level0Response (initialState defaultSimParams) 2048
           major = B.take 4 r <> B.pack [0x00, 0x02] <> B.drop 6 r
       withSplit major $ \l0 -> do
         l0Problems l0 `shouldBe` [HeaderDiffers [PinDiffers "Data Structure Major Version" 32 0 2]]
         map dCode (l0Descriptors l0) `shouldBe` map dCode own
+        map allowedByOpal (l0Problems l0) `shouldBe` [True]
+    it "Opal allows nothing else: reserved header bytes set, or any other problem" $ do
+      allowedByOpal (HeaderDiffers [ReservedNotZero "Reserved" 64 1]) `shouldBe` False
+      allowedByOpal (HeaderDiffers []) `shouldBe` False
+      map allowedByOpal [OutOfCodeOrder 1 1, NonZeroPadding 300, BeyondTransfer 300 200] `shouldBe` [False, False, False]
+    it "a Length of Parameter Data short of the header's 44 bytes after it is reported" $
+      forM_ [0, 20, 43] $ \n ->
+        withSplit (B.pack [0, 0, 0, n, 0, 0, 0, 1] <> B.replicate 2040 0) $ \l0 ->
+          l0Problems l0 `shouldBe` [ParameterDataShort (fromIntegral n)]
+    it "a descriptor whose Length is no multiple of 4 is reported, and stepped past" $ do
+      let odd' = Descriptor 0x0001 0x1 (B.pack ([0x00, 0x01, 0x10, 0x0D] <> replicate 13 0))
+      withSplit (renderLevel0 mempty (odd' : code' 0x0002) 2048) $ \l0 -> do
+        l0Problems l0 `shouldBe` [LengthNotFourfold 0x0001 13]
+        map dCode (l0Descriptors l0) `shouldBe` [0x0001, 0x0002]
+    it "a descriptor of the reserved code 0x0000 is reported once, at the first, where zeros Length of Parameter Data counts begin" $ do
+      let r = renderLevel0 mempty (code' 0x0001) 2048
+          lopd = 44 + 16 + 4 * 10 :: Int
+          zeros = B.pack [0, 0, 0, fromIntegral lopd] <> B.take (48 + 16 - 4) (B.drop 4 r) <> B.replicate (2048 - 64) 0
+      withSplit zeros $ \l0 -> do
+        filter (\p -> case p of ReservedCode _ -> True; _ -> False) (l0Problems l0) `shouldBe` [ReservedCode 64]
+        length (l0Descriptors l0) `shouldBe` 11
+    it "a header cut to one byte names no code, and to two or three the code they hold" $ do
+      let r  = renderLevel0 mempty (code' 0x0001 <> code' 0x0402) 2048
+          at n = B.pack [0, 0, 0, fromIntegral (44 + 16 + n)] <> B.take (48 + 16 + n - 4) (B.drop 4 r) <> B.replicate (2048 - 64 - n) 0
+      withSplit (at 1) $ \l0 -> l0Problems l0 `shouldBe` [DescriptorTruncated Nothing]
+      withSplit (at 2) $ \l0 -> l0Problems l0 `shouldBe` [DescriptorTruncated (Just 0x0402)]
+      withSplit (at 3) $ \l0 -> l0Problems l0 `shouldBe` [DescriptorTruncated (Just 0x0402)]
+    it "cutShort says which problems mean the response was cut short" $
+      map cutShort [BeyondTransfer 300 200, DescriptorTruncated Nothing, OutOfCodeOrder 1 1, ReservedCode 48]
+        `shouldBe` [True, True, False, False]
 
   describe "decoding a descriptor" $ do
     let own = simDescriptors (initialState defaultSimParams)
@@ -167,6 +200,12 @@ spec = describe "a Level 0 Discovery response" $ do
         [ "opal-2.30 T3", "opal-2.30 T4", "opal-2.30 T5", "siis-1.20 T2", "sedutil Discovery0DatastoreTable"
         , "opal-2.30 T6", "sedutil Discovery0BlockSIDFeatures", "opal-2.30 T8" ]
       map (fmap ddDifferences) decoded `shouldBe` map (const (Just [])) own
+    it "allows Supported Data Removal Mechanism its times and their formats, its mechanisms and states as printed (Opal Tables 9-12)" $ do
+      let allowances = ddAllowances <$> (L.find ((== 0x0404) . dCode) own >>= decodeDescriptor)
+      fmap (L.lookup "Data Removal Time for Supported Data Removal Mechanism Bit 2") allowances `shouldBe` Just (Just VendorUnique)
+      fmap (L.lookup "Data Removal Time Format for Bit 5") allowances `shouldBe` Just (Just VendorUnique)
+      fmap (fmap isAsPrinted . L.lookup "Data Removal Operation Processing") allowances `shouldBe` Just (Just True)
+      fmap (L.lookup "Version") allowances `shouldBe` Just Nothing
     it "gives the pinned fields' values too" $ do
       let tper = L.find ((== 0x0001) . dCode) own >>= decodeDescriptor
       (tper >>= L.lookup "Feature Code" . ddFields) `shouldBe` Just (Number 0x0001)
@@ -194,6 +233,11 @@ spec = describe "a Level 0 Discovery response" $ do
       fmap dCode (featureDescriptor (Level0DiscoveryTPerFeature 0x1 False False False False)) `shouldBe` Right 0x0001
 
 
+isAsPrinted :: Allowance -> Bool
+isAsPrinted = \a -> case a of
+  AsPrinted _ -> True
+  _           -> False
+
 -- | Run an expectation on a response split, failing if it is refused.
 withSplit :: ByteString -> (Level0 -> Expectation) -> Expectation
 withSplit bytes check = either (expectationFailure . ("refused: " <>) . show) check (splitLevel0 bytes)
@@ -202,12 +246,14 @@ withSplit bytes check = either (expectationFailure . ("refused: " <>) . show) ch
 --   payload its Length counts.
 genDescriptors :: Gen [Descriptor]
 genDescriptors = do
-  codes <- L.nub . L.sort <$> resize 12 (listOf (choose (0, maxBound)))
+  codes <- L.nub . L.sort <$> resize 12 (listOf (choose (1, maxBound)))
   traverse genDescriptor codes
   where
+    -- a Length SHALL be a multiple of 4 (Core 3.3.6.3.1.3), the code 0x0000 reserved (Table 40)
+    fourfold xs = take (length xs - length xs `mod` 4) xs
     genDescriptor code = do
       version <- choose (0, 15)
-      payload <- B.pack <$> resize 40 (listOf (choose (0, 255)))
+      payload <- B.pack . fourfold <$> resize 40 (listOf (choose (0, 255)))
       let fields = [ ("Feature Code", Number (toInteger code)), ("Version", Number version)
                    , ("Length", Number (toInteger (B.length payload))), ("Feature Dependent Data", Octets payload) ]
       either (error . show) (pure . Descriptor code (fromInteger version)) (encode featureDescriptorTemplateLayout fields)

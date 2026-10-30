@@ -74,8 +74,10 @@ level0Commands = hsubparser
       (Level0Decode
          <$> strArgument (metavar "FILE" <> help "the response, as the IF-RECV returned it")
          <*> optional (strOption (long "against" <> metavar "QUERY.txt"
-               <> help "compare with every value sedutil-cli --query printed, and ask for the Configurable Namespace Locking descriptor sedutil does not print")))
- <> subcommand "synthesize" "Render a drive-like Level 0 response from sedutil's printed query (a test aid)"
+               <> help ("compare with every value sedutil-cli 1.49.1 --query printed, and, as disk6's kext reports one, "
+                        <> "ask for the Configurable Namespace Locking descriptor (0x0403) sedutil does not print"))))
+ <> subcommand "synthesize" ("Render a drive-like Level 0 response from sedutil's printed query, adding disk6's Configurable "
+                              <> "Namespace Locking descriptor (0x0403), which sedutil does not print (a test aid)")
       (Level0Synthesize
          <$> strArgument (metavar "QUERY.txt" <> help "what sedutil-cli --query printed")
          <*> strArgument (metavar "OUT.bin" <> help "the response to write")) )

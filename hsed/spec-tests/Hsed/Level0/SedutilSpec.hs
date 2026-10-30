@@ -15,7 +15,9 @@ TPer line separates ASYNC with a full stop, its comIDManagement and
 HardReset take two spaces before @=@, its granularity a parenthesized
 byte count); a drive-like response synthesized from it holds disk6's codes
 and every value sedutil printed; and a response that holds other values,
-or lacks a code, is told so.
+or lacks a code, is told so. What 1.49.1 prints other than as name = value
+(the Data Removal block, the count of codes it does not know) is read and
+kept, not compared.
 -}
 module Hsed.Level0.SedutilSpec (spec) where
 
@@ -61,6 +63,22 @@ spec = describe "sedutil's printed Level 0" $ do
       parseQuery "/dev/disk6 USB\nLocking function (0x0002)\n    Locked = maybe\n" `shouldSatisfy` isLeft
     it "a line at the margin that is no heading" $
       parseQuery "/dev/disk6 USB\nLocking (0x0002)\n    Locked = N\n" `shouldSatisfy` isLeft
+
+  describe "reading what 1.49.1 prints otherwise, as kept and not compared" $ do
+    it "the count of codes it does not know, and the Data Removal block (DtaDev.cpp:368-383 at a7eafd5)" $ do
+      text <- readFileUtf8 "../spec/fixtures/disk6-query.txt"
+      let removal = [ "DataRemoval 1.1 function (0x0404)"
+                    , "    DataRemoval OperationProcessing 0x00, DataRemoval Machanisim 0x04"
+                    , "    DataRemoval TimeFormat Bit 5 : 0x00 0x0000"
+                    , "    DataRemoval TimeFormat Bit 2 : 0x00 0x001e" ]
+          unknown = "**** 1 **** Unknown function codes IGNORED "
+      case parseQuery (text <> T.unlines (removal <> [unknown])) of
+        Left e  -> expectationFailure (T.unpack e)
+        Right q -> do
+          map sfCode (sqFeatures q) `shouldBe` [0x0001, 0x0002, 0x0003, 0x0202, 0x0203, 0x0402]
+          sqSkipped q `shouldBe` map T.strip (removal <> [unknown])
+          withSplit (synthesize q) $ \l0 -> compareQuery q l0 `shouldBe` []
+    it "nothing, in disk6's fixture" $ withQuery $ \q -> sqSkipped q `shouldBe` []
 
   describe "a drive-like response synthesized from it" $ do
     it "is a capture's length, disk6's codes {1, 2, 3, 0x202, 0x203, 0x402, 0x403}, nothing wrong" $ withQuery $ \q -> do

@@ -15,7 +15,13 @@ response, the oracle the M3 fixture @spec/fixtures/disk6-query.txt@ holds
 each feature it knows a heading, @TPer function (0x0001)@, and lines of
 @name = value@ pairs separated by commas (one by a full stop), each value
 @Y@ or @N@, a decimal or hex number, or a number with another in
-parentheses (@8 (4096)@).
+parentheses (@8 (4096)@). Two things 1.49.1 prints otherwise are read and
+not compared ('sqSkipped'): the Supported Data Removal Mechanism block
+(@DataRemoval 1.n function (0x0404)@, its values not @name = value@,
+sedutil a7eafd5's DtaDev.cpp:368-377) and the count of codes it does not know
+(@**** n **** Unknown function codes IGNORED@, DtaDev.cpp:383). Later
+sedutil's labels (136389c's @ACKNACK@) are outside 1.49.1's and this
+module's scope.
 
 Each label sedutil prints names a field of hsed's layout of the code
 ('compareQuery' and 'synthesize' share the map): Opal 2.30's TPer, Locking,
@@ -24,7 +30,9 @@ DataStore and Block SID descriptors ("Hsed.Sim.FeatureSets"). sedutil prints
 no line of a descriptor's version, of Locking's HW Reset for LOR/DOR
 Supported or of Opal SSC V2's SSC Minor Version Number, and none at all of
 the Configurable Namespace Locking descriptor (0x0403) that the kext reports
-on disk6 (design 11, M3).
+on disk6 (design 11, M3): 'synthesize' adds one, and the jig's @level0
+decode --against@ asks for one, both for disk6, an assumption the commands'
+help names.
 
 'compareQuery' holds a decoded response to every value sedutil printed (its
 @OPAL 2.15@ heading is sedutil's arithmetic, not the drive's version,
@@ -66,11 +74,13 @@ import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..)
 import           Hsed.Sim.FeatureSets   (BlockSIDFeature, DataStoreFeature, NamespaceLockingFeature)
 
 
--- | sedutil's printed Level 0: the device line as printed, and each
---   feature's heading and values.
+-- | sedutil's printed Level 0: the device line as printed, each feature's
+--   heading and values, and the lines read and not compared (the Data
+--   Removal block, the count of unknown codes).
 data SedutilQuery = SedutilQuery
   { sqDevice   :: !Text
   , sqFeatures :: ![SedutilFeature]
+  , sqSkipped  :: ![Text]
   }
   deriving (Eq, Show)
 
@@ -89,21 +99,36 @@ data SedutilFeature = SedutilFeature
 
 -- | sedutil's @--query@ text read: blank lines skipped, the first line the
 --   device's, then each feature's heading (a line at the margin) and its
---   indented value lines. A line that is none of these is refused, by its
---   number.
+--   indented value lines; the Data Removal block (code 0x0404) and the
+--   count of unknown codes kept as lines not compared. A line that is none
+--   of these is refused, by its number.
 parseQuery :: Text -> Either Text SedutilQuery
 parseQuery text = case filter (not . T.null . T.strip . snd) (zip [1 :: Int ..] (T.lines text)) of
   [] -> Left "no device line"
   (n, device) : rest
     | indented device || isJust (heading device) -> Left (at n "the first line names no device")
-    | otherwise -> SedutilQuery (T.strip device) <$> traverse feature (NE.groupBy (\_ next -> indented (snd next)) rest)
+    | otherwise -> do
+        groups <- traverse feature (NE.groupBy (\_ next -> indented (snd next)) rest)
+        pure (SedutilQuery (T.strip device) (lefts groups) (concat (rights groups)))
   where
-    feature lines' = do
-      let (n, line) = NE.head lines'
-      (name, code) <- maybe (Left (at n ("no feature heading: " <> T.strip line))) Right (heading line)
-      SedutilFeature code name . concat <$> traverse pairs (NE.tail lines')
+    feature lines'
+      | unknownCodes line = Right (Right (map (T.strip . snd) (NE.toList lines')))
+      | otherwise = do
+          (name, code) <- maybe (Left (at n ("no feature heading: " <> T.strip line))) Right (heading line)
+          if code == dataRemovalCode
+            then Right (Right (map (T.strip . snd) (NE.toList lines')))
+            else Left . SedutilFeature code name . concat <$> traverse pairs (NE.tail lines')
+      where (n, line) = NE.head lines'
     indented = maybe False (isSpace . fst) . T.uncons
     at n e = "line " <> tshow n <> ": " <> e
+    -- @**** n **** Unknown function codes IGNORED@ (DtaDev.cpp:383 at a7eafd5)
+    unknownCodes line = "****" `T.isPrefixOf` T.strip line && "Unknown function codes" `T.isInfixOf` line
+
+-- | The code sedutil 1.49.1 prints its Data Removal block under, Opal's
+--   Supported Data Removal Mechanism (Table 8, PDF 25), whose values it
+--   prints other than as @name = value@.
+dataRemovalCode :: Word16
+dataRemovalCode = 0x0404
 
 -- | A feature's heading, @TPer function (0x0001)@: its name and its code.
 heading :: Text -> Maybe (Text, Word16)

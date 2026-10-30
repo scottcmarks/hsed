@@ -75,4 +75,5 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Note | N-STATUS-NAME-SUFFIXED | 1 |
 | Note | N-STATUS-UNDESCRIBED | 1 |
 | Note | N-UID-RANGE-NO-TEMPLATE | 1 |
+| Note | N-UID-SHARED | 1 |
 | Note | N-UID-UNNAMED | 4 |

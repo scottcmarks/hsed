@@ -22,8 +22,8 @@ import           Hsed.Gen.Core.Types
 import           Prelude         (Bool (..), Maybe (..))
 
 -- | core-2.01 T169 SPInfo Table Description (PDF 154 / p.137, ord 171, sha256:03415cf4d68d)
-sPInfoTableDesc :: TableDesc
-sPInfoTableDesc = TableDesc
+spInfoTableDesc :: TableDesc
+spInfoTableDesc = TableDesc
   { tdName      = "SPInfo"
   , tdTableUID  = uSPInfoTable
   , tdObjectUID = uSPInfoTableObject
@@ -39,8 +39,8 @@ sPInfoTableDesc = TableDesc
   }
 
 -- | core-2.01 T170 SPTemplates Table Description (PDF 156 / p.139, ord 172, sha256:361f04aadc46)
-sPTemplatesTableDesc :: TableDesc
-sPTemplatesTableDesc = TableDesc
+spTemplatesTableDesc :: TableDesc
+spTemplatesTableDesc = TableDesc
   { tdName      = "SPTemplates"
   , tdTableUID  = uSPTemplatesTable
   , tdObjectUID = uSPTemplatesTableObject
@@ -163,8 +163,8 @@ secretProtectTableDesc = TableDesc
   }
 
 -- | core-2.01 T177 ACE Table Description (PDF 164 / p.147, ord 179, sha256:63fe76e74f77)
-aCETableDesc :: TableDesc
-aCETableDesc = TableDesc
+aceTableDesc :: TableDesc
+aceTableDesc = TableDesc
   { tdName      = "ACE"
   , tdTableUID  = uACETable
   , tdObjectUID = uACETableObject
@@ -659,8 +659,8 @@ templateTableDesc = TableDesc
   }
 
 -- | core-2.01 T215 SP Table Description (PDF 232 / p.215, ord 217, sha256:8258f265a27e)
-sPTableDesc :: TableDesc
-sPTableDesc = TableDesc
+spTableDesc :: TableDesc
+spTableDesc = TableDesc
   { tdName      = "SP"
   , tdTableUID  = uSPTable
   , tdObjectUID = uSPTableObject
@@ -842,8 +842,8 @@ k_AES_256TableDesc = TableDesc
   }
 
 -- | core-2.01 T229 MBRControl Table Description (PDF 278 / p.261, ord 231, sha256:7783bcb92f54)
-mBRControlTableDesc :: TableDesc
-mBRControlTableDesc = TableDesc
+mbrControlTableDesc :: TableDesc
+mbrControlTableDesc = TableDesc
   { tdName      = "MBRControl"
   , tdTableUID  = uMBRControlTable
   , tdObjectUID = uMBRControlTableObject

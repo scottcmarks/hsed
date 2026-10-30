@@ -62,7 +62,7 @@ initialAssumptions =
       , ("MaxMethods", 1)
       , ("ContinuedTokens", 0)  -- "False"
       , ("SequenceNumbers", 0)  -- "False"
-      , ("AckNak", 0)  -- "False"
+      , ("AckNak", 0)  -- printed "AckNAK": "False"
       , ("Asynchronous", 0)  -- "False"
       ]
   , Assumptions TPer Host  -- "Initial TPer Assumption About Host"
@@ -75,7 +75,7 @@ initialAssumptions =
       , ("MaxMethods", 1)
       , ("ContinuedTokens", 0)  -- "False"
       , ("SequenceNumbers", 0)  -- "False"
-      , ("AckNak", 0)  -- "False"
+      , ("AckNak", 0)  -- printed "AckNAK": "False"
       , ("Asynchronous", 0)  -- "False"
       ]
   ]

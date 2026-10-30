@@ -20,7 +20,15 @@ module Hsed.Gen.Core.UIDs where
 import           Prelude                    (String)
 import           System.SED.MCTP.Common.UID (UID, uid)
 
--- | core-2.01 T239 Special Purpose UIDs (PDF 302 / p.285, ord 241, sha256:332f2880cb70): every UID the table prints, with its row's other cells
+-- | core-2.01 T239 Special Purpose UIDs (PDF 302 / p.285, ord 241, sha256:332f2880cb70), row 2: the invoking ID ThisSP of the signature heads
+uThisSP :: UID
+uThisSP = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01
+
+-- | core-2.01 T239 Special Purpose UIDs (PDF 302 / p.285, ord 241, sha256:332f2880cb70), row 3: the invoking ID SMUID of the signature heads
+uSMUID :: UID
+uSMUID = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff
+
+-- | core-2.01 T239 Special Purpose UIDs (PDF 302 / p.285, ord 241, sha256:332f2880cb70): every eight-byte UID the table prints, with its row's other cells
 specialPurposeUIDs :: [(UID, String)]
 specialPurposeUIDs =
   [ (uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00, "Used to represent null uid")
@@ -53,7 +61,7 @@ uSyncTrustedSession = uid 0x00 0x00 0x00 0x00 0x00 0x00 0xff 0x05
 uCloseSession :: UID
 uCloseSession = uid 0x00 0x00 0x00 0x00 0x00 0x00 0xff 0x06
 
--- | core-2.01 T241 Session Manager Method UIDs (PDF 303 / p.286, ord 243, sha256:c95b860d7088): every UID the table prints, with its row's other cells
+-- | core-2.01 T241 Session Manager Method UIDs (PDF 303 / p.286, ord 243, sha256:c95b860d7088): every eight-byte UID the table prints, with its row's other cells
 sessionManagerMethodUIDs :: [(UID, String)]
 sessionManagerMethodUIDs =
   [ (uid 0x00 0x00 0x00 0x00 0x00 0x00 0xff 0x01, "Properties")
@@ -252,7 +260,7 @@ uMethodID_ClearLog = uid 0x00 0x00 0x00 0x06 0x00 0x00 0x0a 0x03
 uMethodID_FlushLog :: UID
 uMethodID_FlushLog = uid 0x00 0x00 0x00 0x06 0x00 0x00 0x0a 0x04
 
--- | core-2.01 T242 MethodID UIDs (PDF 303 / p.286, ord 244, sha256:e895ef45fc8d): every UID the table prints, with its row's other cells
+-- | core-2.01 T242 MethodID UIDs (PDF 303 / p.286, ord 244, sha256:e895ef45fc8d): every eight-byte UID the table prints, with its row's other cells
 methodIDUIDs :: [(UID, String)]
 methodIDUIDs =
   [ (uid 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x01, "DeleteSP | Base")
@@ -379,7 +387,7 @@ uAuthority_Reserve2 = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x07
 uAuthority_Reserve3 :: UID
 uAuthority_Reserve3 = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x08
 
--- | core-2.01 T243 Authority UIDs (PDF 304 / p.287, ord 245, sha256:d74e5f44de3f): every UID the table prints, with its row's other cells
+-- | core-2.01 T243 Authority UIDs (PDF 304 / p.287, ord 245, sha256:d74e5f44de3f): every eight-byte UID the table prints, with its row's other cells
 authorityUIDs :: [(UID, String)]
 authorityUIDs =
   [ (uid 0x00 0x00 0x00 0x09 0x00 0x00 0x00 0x01, "Anybody | Base")
@@ -417,7 +425,7 @@ uLockingInfo_Row = uid 0x00 0x00 0x08 0x01 0x00 0x00 0x00 0x01
 uMBRControl_Row :: UID
 uMBRControl_Row = uid 0x00 0x00 0x08 0x03 0x00 0x00 0x00 0x01
 
--- | core-2.01 T244 Single Row Table Row UIDs (PDF 305 / p.288, ord 246, sha256:18a941aa520a): every UID the table prints, with its row's other cells
+-- | core-2.01 T244 Single Row Table Row UIDs (PDF 305 / p.288, ord 246, sha256:18a941aa520a): every eight-byte UID the table prints, with its row's other cells
 singleRowTableRowUIDs :: [(UID, String)]
 singleRowTableRowUIDs =
   [ (uid 0x00 0x00 0x00 0x02 0x00 0x00 0x00 0x01, "SPInfo")
@@ -446,7 +454,7 @@ uLogList_Log = uid 0x00 0x00 0x0a 0x02 0x00 0x00 0x00 0x01
 uLocking_GlobalRange :: UID
 uLocking_GlobalRange = uid 0x00 0x00 0x08 0x02 0x00 0x00 0x00 0x01
 
--- | core-2.01 T245 Table Default Rows (PDF 305 / p.288, ord 247, sha256:0f8eacc3405c): every UID the table prints, with its row's other cells
+-- | core-2.01 T245 Table Default Rows (PDF 305 / p.288, ord 247, sha256:0f8eacc3405c): every eight-byte UID the table prints, with its row's other cells
 tableDefaultRows :: [(UID, String)]
 tableDefaultRows =
   [ (uid 0x00 0x00 0x00 0x0b 0x00 0x00 0x00 0x01, "C_PIN | SID")
@@ -480,7 +488,7 @@ uTemplate_Log = uid 0x00 0x00 0x02 0x04 0x00 0x00 0x00 0x05
 uTemplate_Locking :: UID
 uTemplate_Locking = uid 0x00 0x00 0x02 0x04 0x00 0x00 0x00 0x06
 
--- | core-2.01 T246 Template Table UIDs (PDF 305 / p.288, ord 248, sha256:26284e30e3f0): every UID the table prints, with its row's other cells
+-- | core-2.01 T246 Template Table UIDs (PDF 305 / p.288, ord 248, sha256:26284e30e3f0): every eight-byte UID the table prints, with its row's other cells
 templateTableUIDs :: [(UID, String)]
 templateTableUIDs =
   [ (uid 0x00 0x00 0x02 0x04 0x00 0x00 0x00 0x01, "Base")
@@ -516,7 +524,7 @@ uSPTemplates_Log = uid 0x00 0x00 0x00 0x03 0x00 0x00 0x00 0x05
 uSPTemplates_Locking :: UID
 uSPTemplates_Locking = uid 0x00 0x00 0x00 0x03 0x00 0x00 0x00 0x06
 
--- | core-2.01 T247 SPTemplates Table UIDs (PDF 305 / p.288, ord 249, sha256:7d977259c0a2): every UID the table prints, with its row's other cells
+-- | core-2.01 T247 SPTemplates Table UIDs (PDF 305 / p.288, ord 249, sha256:7d977259c0a2): every eight-byte UID the table prints, with its row's other cells
 spTemplatesTableUIDs :: [(UID, String)]
 spTemplatesTableUIDs =
   [ (uid 0x00 0x00 0x00 0x03 0x00 0x00 0x00 0x01, "Base")
@@ -648,7 +656,7 @@ uSecretProtect_K_AES_128_0x03 = uid 0x00 0x00 0x00 0x1d 0x00 0x00 0x00 0x1d
 uSecretProtect_K_AES_256_0x03 :: UID
 uSecretProtect_K_AES_256_0x03 = uid 0x00 0x00 0x00 0x1d 0x00 0x00 0x00 0x1e
 
--- | core-2.01 T248 SecretProtect Table UIDs (PDF 306 / p.289, ord 250, sha256:a17f1ee66de9): every UID the table prints, with its row's other cells
+-- | core-2.01 T248 SecretProtect Table UIDs (PDF 306 / p.289, ord 250, sha256:a17f1ee66de9): every eight-byte UID the table prints, with its row's other cells
 secretProtectTableUIDs :: [(UID, String)]
 secretProtectTableUIDs =
   [ (uid 0x00 0x00 0x00 0x1d 0x00 0x00 0x00 0x01, "C_PIN | 0x03")

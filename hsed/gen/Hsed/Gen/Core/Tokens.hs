@@ -17,10 +17,10 @@ by hand.
 -}
 module Hsed.Gen.Core.Tokens where
 
-import           RIO (Text)
+import           Data.Text (Text)
 
 -- | core-2.01 T4 Token Types (PDF 32 / p.15, ord 5, sha256:cd3ca596f683)
---   The tables of Core 3.2.2 the hand-written codec (System.SED.MCTP.Common.Token)
+--   The tables of Core 3.2.2.3 the hand-written codec (System.SED.MCTP.Common.Token)
 --   implements, each with its SpecRef and title under its provenance: the token table
 --   is checked against the codec on every hsedc run (C-TOKEN-CODEC), the atom
 --   diagrams are the codec's by hand.

@@ -62,7 +62,7 @@ import           Hsed.Spec.DSL    (Binding (..), SomeBinding (..), stateTable)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Shape  (Shape (..), normaliseCaption)
+import           Hsed.Spec.Shape  (Shape (..))
 
 
 -- | The reader: reached only by a @stateTable@ comment.
@@ -212,7 +212,7 @@ stateTableDecl ctx r = (Gen.decl p (stName r) body)
   { Gen.declImports = [Gen.ImportSome Gen.syncModule ["Setting (..)", "StateRow (..)", "StateTable (..)"]] }
   where
     bt   = stBound r
-    p    = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+    p    = boundProvenance ctx bt
     body =
       [ Gen.provenanceComment p ]
       <> map ("--   " <>) (Gen.wrapText 86 (T.unwords
@@ -224,19 +224,9 @@ stateTableDecl ctx r = (Gen.decl p (stName r) body)
       , "  { boundTo = " <> tshow (stQName r)
       , "  , fields  = [" <> T.intercalate ", " (map tshow (stFields r)) <> "]"
       , "  , states  =" ]
-      <> listLines "      " (map row (stRows r))
+      <> Gen.listBlock "      " (map row (stRows r))
       <> [ "  }" ]
-    row (s, cells) = ("StateRow " <> tshow s) : map ("    " <>) (listLines "" (map (pure . setting . readSetting) cells))
+    row (s, cells) = ("StateRow " <> tshow s) : map ("    " <>) (Gen.listLines "" (map (setting . readSetting) cells))
     setting = \case
       Constant _ printed -> "Constant " <> printed
       Quantity q         -> "Quantity " <> tshow q
-
--- | A list literal, one item to a line or more: @[ a@, @, b@, @]@ under an indent.
-listLines :: Text -> [[Text]] -> [Text]
-listLines indent items = case items of
-  [] -> [indent <> "[]"]
-  _  -> concat (zipWith item [0 :: Int ..] items) <> [indent <> "]"]
-  where
-    item i ls = case ls of
-      l : rest -> (indent <> (if i == 0 then "[ " else ", ") <> l) : map ((indent <> "  ") <>) rest
-      []       -> []

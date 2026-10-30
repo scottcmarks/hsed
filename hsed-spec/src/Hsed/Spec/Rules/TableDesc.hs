@@ -91,11 +91,13 @@ import           Hsed.Spec.DSL             (SomeBinding (..), tableDesc)
 import           Hsed.Spec.Format          (nearest)
 import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
+import           Hsed.Spec.Readers.Text    (lowerIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads, parseEnumValue)
-import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows, tableUIDsModule)
-import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeRowReads, typesModule)
-import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption,
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableObjectUIDName, tableUIDName, tableUIDRows, tableUIDsModule,
+                                            tableUIDsNamed)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure,
                                             shapeMismatch)
 
 
@@ -180,18 +182,14 @@ parseColNumber t = case T.stripPrefix "0x" (T.toLower (T.strip t)) of
 descSection :: Context -> DescRead -> Maybe Text
 descSection ctx = sectionOf ctx . drBound
 
--- | @authorityTableDesc@: the table's name, its first letter in lower case, then @TableDesc@.
+-- | @authorityTableDesc@: the table's name as a value's name ('lowerIdent', the
+--   convention of every generated value: @MBRControl@ gives
+--   @mbrControlTableDesc@), then @TableDesc@.
 descDeclName :: Text -> Text
-descDeclName n = maybe n (\(c, cs) -> T.cons (C.toLower c) cs) (T.uncons n) <> "TableDesc"
+descDeclName n = lowerIdent n <> "TableDesc"
 
 
 -- * Checks
-
--- | A finding about one row, located on the page the row is printed on.
-atCells :: Context -> BoundTable -> [CellIR] -> Finding -> Finding
-atCells ctx bt cells = case listToMaybe (mapMaybe (\c -> c.page) cells) of
-  Just p0 -> locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (p0 + 1)
-  Nothing -> atTable ctx bt
 
 -- | Every finding about one description.
 descFindings :: Context -> DescRead -> [Finding]
@@ -240,7 +238,7 @@ descFindings ctx d = shortRows <> contig <> cellChecks <> typeChecks <> tableChe
       (Nothing, _) -> [atTable ctx bt (finding Error "C-DESC-TABLE" "the caption names no table (\"<T> Table Description\")")]
       (Just n, Just Nothing)
         | null (rights (tableUIDRows ctx)) ->
-            [atTable ctx bt (finding Error "C-DESC-TABLE" ("no table is bound by tableUIDs (T240's header) to give " <> n <> " its UID"))]
+            [atTable ctx bt (finding Error "C-DESC-TABLE" ("no table is bound by " <> tableUIDsNamed <> " to give " <> n <> " its UID"))]
         | otherwise ->
             [atTable ctx bt (finding Error "C-DESC-TABLE" ("the caption names " <> n <> ", which no row of the table of table UIDs names"))]
       _ -> []
@@ -410,19 +408,19 @@ descDecl ctx d n = (Gen.decl p name body)
   where
     sid  = cxSpec ctx
     bt   = drBound d
-    p    = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+    p    = boundProvenance ctx bt
     name = descDeclName n
     colLine i cr = (if i == (0 :: Int) then "      [ " else "      , ")
       <> T.unwords [ "Col", colNumberLit (fromMaybe i (crNumber cr)), tshow (crName cr)
                    , if crUnique cr == "Yes" then "True" else "False", tshow (crType cr)
-                   , maybe "Nothing" (\tr -> "(Just u" <> trName tr <> "Type)") (crTypeRow cr) ]
+                   , maybe "Nothing" (\tr -> "(Just " <> typeUIDName (trName tr) <> ")") (crTypeRow cr) ]
     body =
       [ Gen.provenanceComment p
       , name <> " :: TableDesc"
       , name <> " = TableDesc"
       , "  { tdName      = " <> tshow n
-      , "  , tdTableUID  = u" <> n <> "Table"
-      , "  , tdObjectUID = u" <> n <> "TableObject"
+      , "  , tdTableUID  = " <> tableUIDName n
+      , "  , tdObjectUID = " <> tableObjectUIDName n
       , "  , tdColumns   =" ]
       <> zipWith colLine [0 ..] (drColumns d)
       <> [ "      ]", "  }" ]

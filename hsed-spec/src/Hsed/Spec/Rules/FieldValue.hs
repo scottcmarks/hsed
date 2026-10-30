@@ -37,7 +37,6 @@ module Hsed.Spec.Rules.FieldValue
   , ValueRead (..)
   , ValueRow (..)
   , valueReads
-  , FieldValue' (..)
   , parseFieldValue
   ) where
 
@@ -50,13 +49,14 @@ import           RIO
 
 import           Hsed.Spec.Anchor      (AnchorId (..))
 import           Hsed.Spec.Common      (Finding, RuleName (..), Severity (..), SpecId (..), finding)
+import           Hsed.Core.Field       (FieldValue (..))
 import qualified Hsed.Spec.Common      as Cm
 import           Hsed.Spec.DSL         (SomeBinding (..), fieldValue)
 import qualified Hsed.Spec.Gen         as Gen
 import           Hsed.Spec.IR          (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.Codes (listLines, titleIdent)
-import           Hsed.Spec.Shape       (Shape (..), captionTitle, normaliseCaption, shapeMismatch)
+import           Hsed.Spec.Readers.Text (titleIdent)
+import           Hsed.Spec.Shape       (Shape (..), captionTitle, shapeMismatch)
 
 
 -- | The rule.
@@ -102,13 +102,8 @@ data ValueRow = ValueRow
   , vwField :: !Text
   , vwCell  :: !Text            -- ^ the VALUE cell
   , vwWidth :: !Int             -- ^ the row's cells
+  , vwRow   :: ![CellIR]        -- ^ the row as printed, which locates a finding about it
   }
-
--- | A VALUE cell read.
-data FieldValue'
-  = Constant' ![Word8]          -- ^ bytes in hex: @02@, @00 01@, @0x0004@
-  | Symbolic' !Text             -- ^ a name for a value the text defines
-  deriving (Eq, Show)
 
 -- | Every table bound to the rule's shape, read under the errata set.
 valueReads :: Context -> [ValueRead]
@@ -126,17 +121,19 @@ readValues = map readOne
       { vwIndex = i
       , vwField = maybe "" (T.strip . (.text)) (listToMaybe cells)
       , vwCell  = maybe "" (T.strip . (.text)) (listToMaybe (drop 1 cells))
-      , vwWidth = length cells }
+      , vwWidth = length cells
+      , vwRow   = cells }
 
 -- | A VALUE cell: bytes when every word is two hex digits (@00 01@) or the
 --   cell is one hex number (@0x0004@, two digits a byte, the first byte
---   padded), else a name.
-parseFieldValue :: Text -> FieldValue'
+--   padded), else a name: the runtime's "Hsed.Core.Field".'FieldValue', which
+--   the generated row is printed as.
+parseFieldValue :: Text -> FieldValue
 parseFieldValue cell
-  | not (null ws), all byteWord ws                           = Constant' (map hexByte ws)
+  | not (null ws), all byteWord ws                           = Constant (map hexByte ws)
   | [w] <- ws, Just h <- T.stripPrefix "0x" (T.toLower w)
-  , not (T.null h), T.all C.isHexDigit h                     = Constant' (map hexByte (DT.chunksOf 2 (padded h)))
-  | otherwise                                                = Symbolic' (T.unwords ws)
+  , not (T.null h), T.all C.isHexDigit h                     = Constant (map hexByte (DT.chunksOf 2 (padded h)))
+  | otherwise                                                = Symbolic (T.unwords ws)
   where
     ws = T.words cell
     byteWord w = T.length w == 2 && T.all C.isHexDigit w
@@ -147,15 +144,15 @@ parseFieldValue cell
 -- * Checks
 
 checkValues :: Context -> ValueRead -> [Finding]
-checkValues ctx vr = map (atTable ctx (vrBound vr)) (widths <> missing <> twice)
+checkValues ctx vr = widths <> missing <> twice
   where
     rows = vrRows vr
     rowLabel r = "row " <> tshow (vwIndex r + 1)
-    bad = finding Error "C-FIELD-VALUE"
-    widths = [ bad (rowLabel r <> " has " <> tshow (vwWidth r) <> " cells, not a field and a value") | r <- rows, vwWidth r /= 2 ]
-    missing = [ bad (rowLabel r <> ": " <> what) | r <- rows, vwWidth r == 2
+    bad r = atCells ctx (vrBound vr) (vwRow r) . finding Error "C-FIELD-VALUE"
+    widths = [ bad r (rowLabel r <> " has " <> tshow (vwWidth r) <> " cells, not a field and a value") | r <- rows, vwWidth r /= 2 ]
+    missing = [ bad r (rowLabel r <> ": " <> what) | r <- rows, vwWidth r == 2
               , what <- [ "the field has no name" | T.null (vwField r) ] <> [ "the field " <> vwField r <> " has no value" | T.null (vwCell r) ] ]
-    twice = concat [ [ bad (rowLabel r <> ": the field " <> vwField r <> " is also row " <> tshow (vwIndex f + 1)) | r <- rest ]
+    twice = concat [ [ bad r (rowLabel r <> ": the field " <> vwField r <> " is also row " <> tshow (vwIndex f + 1)) | r <- rest ]
                    | f : rest <- Map.elems (Map.fromListWith (flip (<>)) [ (vwField r, [r]) | r <- rows, not (T.null (vwField r)) ]) ]
 
 
@@ -174,12 +171,12 @@ valueDecl ctx vr = (Gen.decl p name body)
   { Gen.declImports = [Gen.ImportSome Gen.fieldModule ["FieldConst (..)", "FieldValue (..)"]] }
   where
     bt = vrBound vr
-    p = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+    p = boundProvenance ctx bt
     name = "v" <> titleIdent (vrTitle vr)
     body =
       [ Gen.provenanceComment p
       , name <> " :: [FieldConst]" ]
-      <> listLines (name <> " =") [ "FieldConst " <> tshow (vwField r) <> " (" <> valueExpr (parseFieldValue (vwCell r)) <> ")" | r <- vrRows vr ]
+      <> Gen.listDefinition (name <> " =") [ "FieldConst " <> tshow (vwField r) <> " (" <> valueExpr (parseFieldValue (vwCell r)) <> ")" | r <- vrRows vr ]
     valueExpr = \case
-      Constant' bs -> "Constant [" <> T.intercalate ", " (map Gen.hexByte bs) <> "]"
-      Symbolic' t  -> "Symbolic " <> tshow t
+      Constant bs -> "Constant [" <> T.intercalate ", " (map Gen.hexByte bs) <> "]"
+      Symbolic t  -> "Symbolic " <> tshow t

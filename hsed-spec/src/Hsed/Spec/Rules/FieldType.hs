@@ -54,10 +54,11 @@ import           Hsed.Spec.DSL           (SomeBinding (..), fieldType)
 import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.Codes   (CodeCell (..), Number (..), codeCellExpr, listLines, parseCodeCell, titleIdent)
+import           Hsed.Spec.Readers.Text  (titleIdent)
+import           Hsed.Spec.Rules.Codes   (CodeCell (..), Number (..), codeCellExpr, parseCodeCell)
 import           Hsed.Spec.Rules.FieldValue (fieldsModule)
-import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typesModule)
-import           Hsed.Spec.Shape         (Shape (..), captionTitle, normaliseCaption, shapeMismatch)
+import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Shape         (Shape (..), captionTitle, shapeMismatch)
 
 
 -- | The rule.
@@ -96,6 +97,7 @@ data TypeField = TypeField
   , fRangeCell :: !(Maybe Text)         -- ^ the Range cell of a three-column table
   , fRange     :: !(Maybe CodeCell)
   , fWidth     :: !Int                  -- ^ the row's cells
+  , fCells     :: ![CellIR]             -- ^ the row as printed, which locates a finding about it
   }
 
 -- | Every table bound to the rule's shape, read under the errata set, each
@@ -119,7 +121,7 @@ readFields ctx = map readOne
           range = if cols >= 3 then Just (cell 2) else Nothing
       in TypeField
            { fIndex = i, fName = cell 0, fTypeName = cell 1, fType = Map.lookup (cell 1) types
-           , fRangeCell = range, fRange = range >>= parseCodeCell, fWidth = length cells }
+           , fRangeCell = range, fRange = range >>= parseCodeCell, fWidth = length cells, fCells = cells }
 
 -- | The bytes a field's type takes when its Format sizes it (@uinteger_2@ is
 --   @Simple_Type, uinteger, 2@): Table 34's ten.
@@ -132,7 +134,7 @@ fieldBytes f = case fType f >>= either (const Nothing) Just . trTypeDef of
 -- * Checks
 
 checkFields :: Context -> TypeFieldsRead -> [Finding]
-checkFields ctx tf = map (atTable ctx (tfBound tf)) (concatMap rowProblems (tfRows tf) <> twice)
+checkFields ctx tf = concat [ map (atCells ctx (tfBound tf) (fCells f)) (rowProblems f) | f <- tfRows tf ] <> twice
   where
     bad = finding Error "C-FIELD-TYPE"
     rowLabel f = "row " <> tshow (fIndex f + 1) <> (if T.null (fName f) then "" else " " <> fName f)
@@ -157,7 +159,7 @@ checkFields ctx tf = map (atTable ctx (tfBound tf)) (concatMap rowProblems (tfRo
       Just n | hi >= 256 ^ n -> Just ("the range reaches " <> tshow hi <> ", more than the " <> tshow n <> " bytes of " <> fTypeName f <> " hold")
       _                      -> Nothing
     guarded c msg = if c then Just msg else Nothing
-    twice = concat [ [ bad (rowLabel f <> ": the field is also row " <> tshow (fIndex g + 1)) | f <- rest ]
+    twice = concat [ [ atCells ctx (tfBound tf) (fCells f) (bad (rowLabel f <> ": the field is also row " <> tshow (fIndex g + 1))) | f <- rest ]
                    | g : rest <- Map.elems (Map.fromListWith (flip (<>)) [ (fName f, [f]) | f <- tfRows tf, not (T.null (fName f)) ]) ]
 
 
@@ -179,13 +181,13 @@ fieldsDecl ctx tf = (Gen.decl p name body)
                          | typesModule /= fieldsModule ] }
   where
     bt = tfBound tf
-    p = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+    p = boundProvenance ctx bt
     name = "r" <> titleIdent (tfTitle tf)
-    uidName f = "u" <> maybe (fTypeName f) trName (fType f) <> "Type"
+    uidName f = typeUIDName (maybe (fTypeName f) trName (fType f))
     body =
       [ Gen.provenanceComment p
       , name <> " :: [FieldDef]" ]
-      <> listLines (name <> " =")
+      <> Gen.listDefinition (name <> " =")
            [ "FieldDef " <> tshow (fName f) <> " " <> tshow (fTypeName f) <> " " <> uidName f <> " "
                <> maybe "Nothing" (\c -> "(Just (" <> codeCellExpr c <> "))") (fRange f)
            | f <- tfRows tf ]

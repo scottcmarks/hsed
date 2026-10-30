@@ -46,6 +46,11 @@ module Hsed.Spec.Rules.TableUIDs
   , TableUIDRow (..)
   , tableUIDRows
   , tableNames
+    -- * Generated names
+  , tableUIDName
+  , tableObjectUIDName
+    -- * Messages
+  , tableUIDsNamed
   ) where
 
 import qualified RIO.Char         as C
@@ -54,13 +59,13 @@ import qualified RIO.Map          as Map
 import qualified RIO.Text         as T
 import           RIO
 
-import           Hsed.Spec.Anchor (AnchorId (..))
+import           Hsed.Spec.Anchor (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Common (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import           Hsed.Spec.DSL    (SomeBinding (..), tableUIDs)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Shape  (Shape (..), normaliseCaption, shapeMismatch)
+import           Hsed.Spec.Shape  (Shape (..), shapeMismatch)
 
 
 -- | The rule.
@@ -126,7 +131,7 @@ tableNames ctx = [ tuName r | Right r <- tableUIDRows ctx, not (T.null (tuName r
 -- * Checks
 
 rowChecks :: Context -> Either Text (TableUIDRow, [Word8]) -> TableUIDRow -> [Finding]
-rowChecks ctx tables r = map (atTable ctx (tuBound r) . finding Error "C-T240-HALVES" . (label r <>)) (halvesProblems tables r)
+rowChecks ctx tables r = map (atCells ctx (tuBound r) (tuCells r) . finding Error "C-T240-HALVES" . (label r <>)) (halvesProblems tables r)
 
 -- | The table of tables: the one row whose descriptor object lies in its own
 --   table (its descriptor's high half is its table's half-UID), with that
@@ -169,7 +174,7 @@ halvesProblems tables r = case (tuObject r, tuTable r) of
   where unless' ok msg = if ok then Nothing else Just msg
 
 nameChecks :: Context -> [BoundTable] -> [Finding]
-nameChecks ctx bts = [ atTable ctx (tuBound r) (finding Error "C-T240-NAME" (label r <> why)) | (r, why) <- nameProblems [ r | Right r <- readRows bts ] ]
+nameChecks ctx bts = [ atCells ctx (tuBound r) (tuCells r) (finding Error "C-T240-NAME" (label r <> why)) | (r, why) <- nameProblems [ r | Right r <- readRows bts ] ]
 
 -- | What C-T240-NAME finds wrong with the rows: a name that is no identifier,
 --   or one an earlier row has.
@@ -205,7 +210,21 @@ compile ctx bts = map one rows <> maps
       r0 : _  -> [Emit (mapsDecl (provenance ctx r0) (length rows) kept)]
 
 provenance :: Context -> TableUIDRow -> Gen.Provenance
-provenance ctx r = let bt = tuBound r in provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+provenance ctx r = let bt = tuBound r in boundProvenance ctx bt
+
+-- | The rule as a message names it when no table is bound to it, by its
+--   exemplar: @tableUIDs (exemplar core-2.01 T240)@.
+tableUIDsNamed :: Text
+tableUIDsNamed = ruleNameText (ruleName tableUIDsRule) <> " (exemplar " <> specIdText (fst ex) <> " " <> renderAnchorId (snd ex) <> ")"
+  where ex = exemplar tableUIDsRule
+
+-- | The name of a table's generated UID, @u\<T\>Table@ (@uAuthorityTable@).
+tableUIDName :: Text -> Text
+tableUIDName n = "u" <> n <> "Table"
+
+-- | The name of a table's descriptor object's generated UID, @u\<T\>TableObject@.
+tableObjectUIDName :: Text -> Text
+tableObjectUIDName n = "u" <> n <> "TableObject"
 
 -- | @u\<T\>TableObject@, @u\<T\>Table@ and @h\<T\>@ for one row, citing the page it is printed on.
 rowDecl :: Context -> TableUIDRow -> [Word8] -> [Word8] -> Gen.Decl
@@ -217,8 +236,8 @@ rowDecl ctx r object table = (Gen.decl p n body)
     n    = tuName r
     doc  = Gen.provenanceComment p <> ", row " <> tshow (tuRow r + 1) <> ": " <> n
     body =
-      [ doc, "u" <> n <> "TableObject :: UID", "u" <> n <> "TableObject = " <> Gen.uidExpr object
-      , "", doc, "u" <> n <> "Table :: UID", "u" <> n <> "Table = " <> Gen.uidExpr table
+      [ doc, tableObjectUIDName n <> " :: UID", tableObjectUIDName n <> " = " <> Gen.uidExpr object
+      , "", doc, tableUIDName n <> " :: UID", tableUIDName n <> " = " <> Gen.uidExpr table
       , "", doc, "h" <> n <> " :: HalfUID", "h" <> n <> " = " <> Gen.bytesExpr "halfUID" (take 4 table) ]
 
 -- | @nameHalfUID@ and @nameUID@, after every row.
@@ -234,11 +253,10 @@ mapsDecl p rank rows = (Gen.decl p "nameHalfUID" body)
       [ doc "each table's half-UID, by name"
       , "nameHalfUID :: Map HalfUID String"
       , "nameHalfUID = fromList" ]
-      <> listLines [ "(h" <> n <> ", " <> tshow n <> ")" | n <- names ]
+      <> Gen.listLines "  " [ "(h" <> n <> ", " <> tshow n <> ")" | n <- names ]
       <> [ ""
          , doc "each table's UID and its descriptor object's UID, by name"
          , "nameUID :: Map UID String"
          , "nameUID = fromList" ]
-      <> listLines (concat [ [ "(u" <> n <> "Table, " <> tshow (n <> " Table") <> ")"
-                             , "(u" <> n <> "TableObject, " <> tshow (n <> " Table Object") <> ")" ] | n <- names ])
-    listLines items = zipWith (\i x -> (if i == (0 :: Int) then "  [ " else "  , ") <> x) [0 ..] items <> ["  ]"]
+      <> Gen.listLines "  " (concat [ [ "(" <> tableUIDName n <> ", " <> tshow (n <> " Table") <> ")"
+                                      , "(" <> tableObjectUIDName n <> ", " <> tshow (n <> " Table Object") <> ")" ] | n <- names ])

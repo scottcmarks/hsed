@@ -56,6 +56,7 @@ module Hsed.Spec.Rules.TypeRow
   , typeRowDecl
   , renderTypeRow
   , joinFormat
+  , typeUIDName
   ) where
 
 import qualified Data.Text        as DT
@@ -73,7 +74,7 @@ import           Hsed.Spec.Format (Env, formatNormalisations, mkEnv, parseFormat
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableNames, tableUIDRows)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableNames, tableUIDRows, tableUIDsNamed)
 import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption, shapeMismatch)
 
 
@@ -152,7 +153,7 @@ formatEnv ctx = (mkEnv types names, nameFindings)
     types = typeEnvFrom ctx
     names = tableNames ctx
     nameFindings =
-      [ (finding Error "C-FMT-RESOLVE" "no table bound by tableUIDs (T240's header) to resolve uidref{...} against")
+      [ (finding Error "C-FMT-RESOLVE" ("no table bound by " <> tableUIDsNamed <> " to resolve uidref{...} against"))
           { Cm.spec = Just (cxSpec ctx) }
       | null names, not (null types) ]
 
@@ -267,17 +268,23 @@ typeRowDecl ctx tr = case trUID tr of
     , typeDef    = either (const Nothing) Just (trTypeDef tr)
     , provenance = provenanceOf ctx (trAnchor tr) (trTable tr) (trCaption tr) }
 
+-- | The name of a type row's generated UID, @u\<Name\>Type@ (@uAC_elementType@):
+--   what every other rule that names a Type object's UID refers to.
+typeUIDName :: Text -> Text
+typeUIDName n = "u" <> n <> "Type"
+
 -- | @u\<Name\>Type@, @f\<Name\>Type@ and, when the Format parsed, @t\<Name\>@.
 renderTypeRow :: TypeRowDecl -> Gen.Decl
 renderTypeRow r = (Gen.decl r.provenance r.name body)
   { Gen.declImports = [ Gen.ImportAll Gen.coreTypesModule | isJust r.typeDef ]
                       <> [ Gen.ImportSome "Prelude" ["String"], Gen.ImportSome Gen.uidModule ["UID", "uid"] ] }
   where
-    tag = r.name <> "Type"
+    u   = typeUIDName r.name
+    f   = "f" <> r.name <> "Type"
     doc = Gen.provenanceComment r.provenance
     body =
-      [ doc, "u" <> tag <> " :: UID", "u" <> tag <> " = " <> Gen.uidExpr r.uidBytes
-      , "", doc, "f" <> tag <> " :: String", "f" <> tag <> " = " <> tshow (joinFormat r.formatText)
+      [ doc, u <> " :: UID", u <> " = " <> Gen.uidExpr r.uidBytes
+      , "", doc, f <> " :: String", f <> " = " <> tshow (joinFormat r.formatText)
       , "" ]
       <> maybe [ "-- t" <> r.name <> ": no TypeDef, the Format did not parse under this errata set" ]
                (\t -> [ doc, "t" <> r.name <> " :: TypeDef", "t" <> r.name <> " = " <> tshow t ])

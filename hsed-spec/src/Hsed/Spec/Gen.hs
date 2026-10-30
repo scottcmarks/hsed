@@ -1,4 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NoFieldSelectors      #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedRecordDot   #-}
@@ -60,6 +61,9 @@ module Hsed.Spec.Gen
   , bytesExpr
   , hexByte
   , wrapText
+  , listLines
+  , listBlock
+  , listDefinition
   ) where
 
 import qualified Data.Text        as T
@@ -227,6 +231,29 @@ bytesExpr fn bytes = T.unwords (fn : map hexByte bytes)
 hexByte :: Word8 -> Text
 hexByte b = "0x" <> T.pack [digit (b `div` 16), digit (b `mod` 16)]
   where digit d = T.index "0123456789abcdef" (fromIntegral d)
+
+-- | A list literal, one item to a line under an indent: @[ a@, @, b@, @]@;
+--   @[]@ when empty.
+listLines :: Text -> [Text] -> [Text]
+listLines indent = listBlock indent . map pure
+
+-- | A list literal whose items take a line or more: each item's first line
+--   after @[ @ or @, @, its other lines two spaces further in; @[]@ when empty.
+listBlock :: Text -> [[Text]] -> [Text]
+listBlock indent = \case
+  []    -> [indent <> "[]"]
+  items -> concat (zipWith item [0 :: Int ..] items) <> [indent <> "]"]
+  where
+    item i = \case
+      l : rest -> (indent <> (if i == 0 then "[ " else ", ") <> l) : map ((indent <> "  ") <>) rest
+      []       -> []
+
+-- | A definition whose right side is such a list: @name =@, then the list two
+--   spaces in; @name = []@ when empty.
+listDefinition :: Text -> [Text] -> [Text]
+listDefinition lhs = \case
+  []    -> [lhs <> " []"]
+  items -> lhs : listLines "  " items
 
 -- | Greedy word wrap: as many words to a line as fit in the width.
 wrapText :: Int -> Text -> [Text]

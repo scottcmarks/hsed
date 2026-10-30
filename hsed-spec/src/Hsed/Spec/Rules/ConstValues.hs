@@ -74,7 +74,7 @@ import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TableDesc (CellValue (..), ColKind (..), ColRead (..), DescRead (..), colKind,
                                            colNumberLit, descReads, descSection, renderCell)
 import           Hsed.Spec.Scope          (Section (..), covers)
-import           Hsed.Spec.Shape          (Shape (..), captionTitle, normaliseCaption, shapeMismatch)
+import           Hsed.Spec.Shape          (Shape (..), captionTitle, shapeMismatch)
 
 
 -- | The rule.
@@ -227,12 +227,6 @@ parseConstNumber hex cell = do
 
 -- * Checks
 
--- | A finding about one row, located on the page the row is printed on.
-atCells :: Context -> BoundTable -> [CellIR] -> Finding -> Finding
-atCells ctx bt cells = case listToMaybe (mapMaybe (\c -> c.page) cells) of
-  Just p0 -> locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (p0 + 1)
-  Nothing -> atTable ctx bt
-
 -- | Every finding about one table of values: its description, then each row.
 constFindings :: Context -> ConstRead -> [Finding]
 constFindings ctx k = case kDesc k of
@@ -286,7 +280,7 @@ defaultsDecl ctx k d n values = (Gen.decl p name body)
   { Gen.declImports = [Gen.ImportSome Gen.coreTableModule ["Cell (..)", "Row"]] }
   where
     bt   = kBound k
-    p    = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+    p    = boundProvenance ctx bt
     name = maybe n (\(c, cs) -> T.cons (C.toLower c) cs) (T.uncons n) <> "Defaults"
     sorted = L.sortOn (crNumber . fst) values
     item i (col, cell) = (if i == (0 :: Int) then "  [ " else "  , ")

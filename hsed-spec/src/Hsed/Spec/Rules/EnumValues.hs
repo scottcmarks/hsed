@@ -72,7 +72,7 @@ import           Hsed.Spec.DSL           (SomeBinding (..), enumValues)
 import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typesModule)
+import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
 import           Hsed.Spec.Shape         (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption,
                                           shapeMismatch)
 
@@ -278,7 +278,7 @@ renderEnum ref e = (Gen.decl e.provenance e.name body)
          , ""
          , doc
          , "instance Enumerated " <> coreName <> " where"
-         , "  typeUID = " <> if ref == Literal then Gen.uidExpr e.typeUID else "u" <> e.name <> "Type"
+         , "  typeUID = " <> if ref == Literal then Gen.uidExpr e.typeUID else typeUIDName e.name
          , "  range   = (" <> tshow (fst e.range) <> ", " <> tshow (snd e.range) <> ")"
          ]
 

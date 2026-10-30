@@ -41,6 +41,9 @@ Checks, each with the code its findings carry:
 * @N-RANGE-UNCHECKED@: a range table whose first header names categories no
   rows are checked against (none in Core 2.01).
 
+A finding about one row (of a range table, of Table 240, of a UID table) is
+located at the page the row is printed on ('atCells').
+
 Compiled into 'rangesModule': per table, @\<x\>Ranges :: [(String, (Word32,
 Word32))]@, each category with its first and last LSB, in the table's order
 (a list, not a map: a category such as @Unassigned@ can hold several ranges),
@@ -68,8 +71,9 @@ import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows)
 import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeRowReads)
-import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), lowerIdent, rowText, uidRows)
-import           Hsed.Spec.Shape           (Shape (..), normHeader, normaliseCaption, shapeMismatch)
+import           Hsed.Spec.Readers.Text    (lowerIdent, readHexByte)
+import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), rowText, uidRows)
+import           Hsed.Spec.Shape           (Shape (..), normHeader, shapeMismatch)
 
 
 -- | The rule.
@@ -127,11 +131,8 @@ tableRows bt = zipWith row [0 ..] (btRead bt).rows
       [n, v]    -> RangeRow bt i cells n (value v) (value v) True
       ns        -> RangeRow bt i cells (T.intercalate " | " ns) Nothing Nothing False
     value t = case T.words t of
-      ws@[_, _, _, _] -> foldl' (\acc b -> acc * 256 + fromIntegral b) 0 <$> traverse hexByte ws
+      ws@[_, _, _, _] -> foldl' (\acc b -> acc * 256 + fromIntegral b) 0 <$> traverse readHexByte ws
       _               -> Nothing
-    hexByte w = case parseUIDCell (T.replicate 7 "00" <> w) of
-      Just bs | T.length w == 2 -> listToMaybe (reverse bs)
-      _                         -> Nothing
 
 -- | The LSB of a UID: its lower four bytes.
 lsb :: [Word8] -> Word32
@@ -149,6 +150,7 @@ spaced w = hexUID [ fromIntegral (w `div` (256 ^ k) `mod` 256) | k <- [3, 2, 1, 
 -- | A row another table gives a category and a UID: where it is, what it says.
 data Subject = Subject
   { sBound    :: !BoundTable
+  , sCells    :: ![CellIR]       -- ^ its row's cells, which locate a finding about it
   , sLabel    :: !Text
   , sCategory :: !(Maybe Text)
   , sLSB      :: !Word32
@@ -158,7 +160,7 @@ checks :: Context -> [BoundTable] -> [Finding]
 checks ctx bts = concatMap tableChecks bts
   where
     tableChecks bt = let rs = tableRows bt in concatMap (rowChecks bt) rs <> overlaps bt rs <> members bt rs
-    rowChecks bt r = map (atTable ctx bt) $
+    rowChecks bt r = map (atCells ctx bt (rgCells r)) $
       [ finding Error "C-UID-RANGE" (rowLabel r <> "the " <> what <> " " <> tshow cell <> " is not four bytes")
       | (what, Nothing, cell) <- [("start", rgStart r, cellText 1), ("end", rgEnd r, cellText (if rgOneCell r then 1 else 2))] ]
       <> [ finding Error "C-UID-RANGE" (rowLabel r <> "the range starts at " <> spaced s <> ", after its end " <> spaced e)
@@ -167,7 +169,7 @@ checks ctx bts = concatMap tableChecks bts
          | rgOneCell r, Just s <- [rgStart r] ]
       where cellText i = maybe "" (\c -> c.text) (listToMaybe (drop i (rgCells r)))
     overlaps bt rs =
-      [ atTable ctx bt (finding Error "C-UID-RANGE" (rowLabel b <> "the range " <> spaced bs <> " to " <> spaced be <> " overlaps row "
+      [ atCells ctx bt (rgCells b) (finding Error "C-UID-RANGE" (rowLabel b <> "the range " <> spaced bs <> " to " <> spaced be <> " overlaps row "
                                                     <> tshow (rgRow a + 1) <> " " <> rgName a <> ", " <> spaced as' <> " to " <> spaced ae))
       | (a, i) <- zip rs [0 :: Int ..], (b, j) <- zip rs [0 ..], i < j
       , Just as' <- [rgStart a], Just ae <- [rgEnd a], Just bs <- [rgStart b], Just be <- [rgEnd b], as' <= be, bs <= ae ]
@@ -181,16 +183,16 @@ checks ctx bts = concatMap tableChecks bts
     templateMembers bt rs = concatMap check subjects <> untemplated
       where
         subjects =
-          [ Subject (tuBound r) ("row " <> tshow (tuRow r + 1) <> " " <> tuName r <> ": ")
+          [ Subject (tuBound r) (tuCells r) ("row " <> tshow (tuRow r + 1) <> " " <> tuName r <> ": ")
                     (mfilter (not . T.null) (T.strip . (.text) <$> listToMaybe (drop 3 (tuCells r)))) (lsb o)
           | Right r <- tableUIDRows ctx, Just o <- [tuObject r] ]
-          <> [ Subject (urBound r) ("row " <> tshow (urRow r + 1) <> " \"" <> rowText r <> "\": ") (urTemplate r) (lsb bs)
+          <> [ Subject (urBound r) (urCells r) ("row " <> tshow (urRow r + 1) <> " \"" <> rowText r <> "\": ") (urTemplate r) (lsb bs)
              | r <- uidRows ctx, Exact bs <- [urValue r], any (isJust . urTemplate) (sameTable r) ]
         sameTable r = [ x | x <- uidRows ctx, btAnchor (urBound x) == btAnchor (urBound r) ]
         check s = case sCategory s of
           Nothing -> []
           Just t -> case [ r | r <- rs, rgName r == t ] of
-            [] -> [ atTable ctx (sBound s) (finding Error "C-UID-RANGE" (sLabel s <> "the template " <> t <> " is none "
+            [] -> [ atCells ctx (sBound s) (sCells s) (finding Error "C-UID-RANGE" (sLabel s <> "the template " <> t <> " is none "
                                                                           <> renderAnchorId (btAnchor bt) <> " gives a range")) ]
             named -> outside bt s t named
         untemplated =
@@ -214,7 +216,7 @@ checks ctx bts = concatMap tableChecks bts
                               | not (any (inside (lsb bs)) named) ]
         here tr = locatedAt (cxSpec ctx) (renderAnchorId (trAnchor tr)) (fromMaybe 1 (tablePage (trTable tr)))
         normalised =
-          [ atTable ctx bt (finding Note "N-RANGE-NAME-NORMALISED"
+          [ atCells ctx bt (rgCells r) (finding Note "N-RANGE-NAME-NORMALISED"
               (rowLabel r <> "read as " <> T.map (\c -> if c == ' ' then '_' else c) (rgName r) <> ", the name " <> tshow (length trs) <> " type rows' Format gives ("
                 <> T.intercalate ", " (map renderAnchorId trs) <> ")"))
           | r <- rs
@@ -223,7 +225,7 @@ checks ctx bts = concatMap tableChecks bts
 
     -- a subject named in the table, outside every range its category has
     outside bt s t named =
-      [ atTable ctx (sBound s) (finding Error "C-UID-RANGE" (sLabel s <> "the LSB " <> spaced (sLSB s) <> " lies outside "
+      [ atCells ctx (sBound s) (sCells s) (finding Error "C-UID-RANGE" (sLabel s <> "the LSB " <> spaced (sLSB s) <> " lies outside "
                                                              <> ranged named <> ", which " <> renderAnchorId (btAnchor bt)
                                                              <> " gives " <> t))
       | not (any (inside (sLSB s)) named) ]
@@ -261,7 +263,7 @@ formatRanges rs name = case (by exact name, by loose name) of
 compile :: Context -> [BoundTable] -> [Emitted]
 compile ctx = map table
   where
-    table bt = Emit (rangesDecl (provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption)))
+    table bt = Emit (rangesDecl (boundProvenance ctx bt)
                                 (lowerIdent (rangeKey bt) <> "Ranges") (tableRows bt))
 
 -- | A table's ranges, each category with its first and last LSB.
@@ -272,4 +274,4 @@ rangesDecl p n rows = (Gen.decl p n body)
     entries = [ "(" <> tshow (rgName r) <> ", (" <> hex32 lo <> ", " <> hex32 hi <> "))" | r <- rows, Just (lo, hi) <- [bounds r] ]
     body = [ Gen.provenanceComment p <> ": each category's first and last LSB"
            , n <> " :: [(String, (Word32, Word32))]", n <> " =" ]
-           <> zipWith (\i e -> (if i == (0 :: Int) then "  [ " else "  , ") <> e) [0 ..] entries <> ["  ]"]
+           <> Gen.listLines "  " entries

@@ -62,9 +62,10 @@ import           Hsed.Spec.DSL        (SomeBinding (..), statusCodes)
 import qualified Hsed.Spec.Gen        as Gen
 import           Hsed.Spec.IR         (CellIR (..), HeadingIR (..), SpecIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
+import           Hsed.Spec.Readers.Text (titleIdent)
 import           Hsed.Spec.Rules.Codes (CodeCell (..), Number (..), codeRowsDecl, codesModule, numberExpr,
-                                        parseCodeCell, titleIdent)
-import           Hsed.Spec.Shape      (Shape (..), captionTitle, normaliseCaption, shapeMismatch)
+                                        parseCodeCell)
+import           Hsed.Spec.Shape      (Shape (..), captionTitle, shapeMismatch)
 
 
 -- | The rule.
@@ -106,6 +107,7 @@ data StatusRow = StatusRow
   , stCell  :: !Text            -- ^ the value cell
   , stValue :: !(Maybe Number)  -- ^ when the cell is one value
   , stWidth :: !Int             -- ^ the row's cells
+  , stRow   :: ![CellIR]        -- ^ the row as printed, which locates a finding about it
   }
 
 -- | Every table bound to the rule's shape, read under the errata set.
@@ -127,7 +129,8 @@ readStatus = map readOne
       , stValue = case parseCodeCell (maybe "" (.text) (listToMaybe (drop 1 cells))) of
           Just (CodeOne n) -> Just n
           _                -> Nothing
-      , stWidth = length cells }
+      , stWidth = length cells
+      , stRow   = cells }
 
 -- | The type of a table's statuses: the caption's title as an identifier, its
 --   last word made singular by dropping an @s@ that does not end @ss@ or @us@
@@ -155,19 +158,20 @@ patternNames rows = [ (r, name r) | r <- rows ]
 -- * Checks
 
 checkStatus :: Context -> StatusRead -> [Finding]
-checkStatus ctx sr = map (atTable ctx (srBound sr)) (shapeOfRows <> names <> values <> twice <> clashes <> suffixed)
+checkStatus ctx sr = shapeOfRows <> names <> values <> twice <> map (atTable ctx (srBound sr)) (clashes <> suffixed)
                      <> sections ctx sr
   where
     rows = srRows sr
     rowLabel r = "row " <> tshow (stIndex r + 1)
     bad = finding Error "C-STATUS-CODE"
-    shapeOfRows = [ bad (rowLabel r <> " has " <> tshow (stWidth r) <> " cells, not a name and a value") | r <- rows, stWidth r /= 2 ]
-    names = [ bad (rowLabel r <> ": the name " <> tshow (stName r) <> " cannot name a pattern (an identifier starting with a capital letter)")
+    at r = atCells ctx (srBound sr) (stRow r)
+    shapeOfRows = [ at r (bad (rowLabel r <> " has " <> tshow (stWidth r) <> " cells, not a name and a value")) | r <- rows, stWidth r /= 2 ]
+    names = [ at r (bad (rowLabel r <> ": the name " <> tshow (stName r) <> " cannot name a pattern (an identifier starting with a capital letter)"))
             | r <- rows, stWidth r == 2, not (isPatternName (stName r)) ]
-    values = [ bad (rowLabel r <> " " <> stName r <> ": the value " <> tshow (stCell r) <> " is not one value")
+    values = [ at r (bad (rowLabel r <> " " <> stName r <> ": the value " <> tshow (stCell r) <> " is not one value"))
              | r <- rows, stWidth r == 2, isNothing (stValue r) ]
-    twice = concat [ [ bad (rowLabel r <> " " <> stName r <> ": the value " <> numberExpr' r <> " is also that of "
-                            <> rowLabel f <> " " <> stName f) | r <- rest ]
+    twice = concat [ [ at r (bad (rowLabel r <> " " <> stName r <> ": the value " <> numberExpr' r <> " is also that of "
+                                  <> rowLabel f <> " " <> stName f)) | r <- rest ]
                    | f : rest <- Map.elems (Map.fromListWith (flip (<>)) [ (nValue v, [r]) | r <- rows, Just v <- [stValue r] ]) ]
     clashes = [ bad ("two rows get the pattern name " <> n) | (n, k) <- Map.toList (Map.fromListWith (+) [ (n, 1 :: Int) | (_, n) <- patternNames rows ]), k > 1 ]
     suffixed =
@@ -220,7 +224,7 @@ statusDecl ctx sr = (Gen.decl p typeName body)
   , Gen.declExtensions = ["PatternSynonyms"] }
   where
     bt = srBound sr
-    p = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+    p = boundProvenance ctx bt
     typeName = statusTypeName (srTitle sr)
     doc = Gen.provenanceComment p
     rowsDecl = codeRowsDecl p ("c" <> titleIdent (srTitle sr)) (header 1, [header 0]) 0

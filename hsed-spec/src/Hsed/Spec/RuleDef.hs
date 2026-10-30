@@ -75,11 +75,13 @@ module Hsed.Spec.RuleDef
   , locatedAt
   , tablePage
   , atTable
+  , atCells
   , numberedTables
     -- * Cells and provenance
   , parseUIDCell
   , hexUID
   , provenanceOf
+  , boundProvenance
   , atRow
   , cellsHash
   ) where
@@ -96,10 +98,10 @@ import           RIO
 import           Hsed.Spec.Anchor (AnchorId (..), parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Common (ErrataSet (..), Finding, RuleName, SpecId (..))
 import qualified Hsed.Spec.Common as Cm
-import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), someBindingShape)
+import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), bindingAccepts, someBindingShape)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), SigIR (..), SpecIR (..), StructPath (..), TableIR (..))
-import           Hsed.Spec.Shape  (Form, Shape (..))
+import           Hsed.Spec.Shape  (Form, Shape (..), measure, normaliseCaption)
 
 
 -- * Rules
@@ -297,6 +299,14 @@ numberedTables :: SpecIR -> Map AnchorId TableIR
 numberedTables ir = Map.fromListWith earlier
   [ (aid, t) | t <- ir.tables, Just i <- [t.id], Just aid@(TableId _) <- [parseAnchorId i] ]
   where
+-- | Locate a finding about one row at the page the row is printed on (that of
+--   its first cell that has one; a table spanning pages prints a row on the
+--   page it lies on), else at its table.
+atCells :: Context -> BoundTable -> [CellIR] -> Finding -> Finding
+atCells ctx bt cells = case listToMaybe (mapMaybe (\c -> c.page) cells) of
+  Just p0 -> locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (p0 + 1)
+  Nothing -> atTable ctx bt
+
     earlier a b = if order a <= order b then a else b
     order :: TableIR -> (Maybe Int, Maybe Int)
     order t = (t.part, t.ordinal)
@@ -340,6 +350,11 @@ provenanceOf ctx aid t caption = Gen.Provenance
 atRow :: Context -> [CellIR] -> Gen.Provenance -> Gen.Provenance
 atRow ctx cells p = case listToMaybe (mapMaybe (\c -> c.page) cells) of
   Nothing -> p
+-- | The provenance of a bound table's declarations, under its caption as read
+--   ('btRead': corrected under the errata set) and normalised.
+boundProvenance :: Context -> BoundTable -> Gen.Provenance
+boundProvenance ctx bt = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+
   Just page0 -> p { Gen.pdfPage1 = page0 + 1, Gen.printedPage = page0 + 1 - (cxIR ctx).labelOffset }
 
 -- | sha256 over a table's cell texts, header rows first, a tab between cells and

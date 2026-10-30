@@ -64,9 +64,7 @@ module Hsed.Spec.Rules.Codes
   , CodeRowRead (..)
   , codeReads
     -- * Declarations
-  , titleIdent
   , codeRowsDecl
-  , listLines
   ) where
 
 import qualified Data.Char         as DC
@@ -84,9 +82,10 @@ import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.DSL     (SomeBinding (..), codes)
 import qualified Hsed.Spec.Gen     as Gen
 import           Hsed.Spec.IR      (CellIR (..), TableIR (..))
+import           Hsed.Spec.Readers.Text (titleIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TypeRow (typeEnvFrom)
-import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), captionTitle, normaliseCaption, shapeMismatch)
+import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), captionTitle, shapeMismatch)
 
 
 -- | The rule.
@@ -220,6 +219,7 @@ data CodeRowRead = CodeRowRead
   { rrIndex :: !Int                 -- ^ 0-based among the data rows
   , rrCode  :: !CodeCell
   , rrCells :: ![Text]              -- ^ the row's other cells, in column order
+  , rrRow   :: ![CellIR]            -- ^ the row as printed, which locates a finding about it
   }
 
 -- | Every table bound to the rule's shape, read under the errata set; a table
@@ -239,7 +239,7 @@ readCodes ctx = map readOne
         , crTitle  = fromMaybe "" (t.caption >>= captionTitle)
         , crColumn = i
         , crHeader = maybe [] (map (.text)) (listToMaybe t.headerRows)
-        , crRows   = [ CodeRowRead n code (map (.text) (dropAt i r))
+        , crRows   = [ CodeRowRead n code (map (.text) (dropAt i r)) r
                      | (n, r) <- zip [0 ..] (filter ((== t.nCols) . length) t.rows)
                      , Just code <- [parseCodeCell (maybe "" (.text) (listToMaybe (drop i r)))] ] }
       where t = btRead bt
@@ -249,16 +249,17 @@ readCodes ctx = map readOne
 -- * Checks
 
 checkCodes :: Context -> CodeRead -> [Finding]
-checkCodes ctx cr = map (atTable ctx (crBound cr)) (reversed <> others <> overlaps <> typeNamed)
+checkCodes ctx cr = reversed <> others <> overlaps <> map (atTable ctx (crBound cr)) typeNamed
   where
     rowLabel r = "row " <> tshow (rrIndex r + 1)
-    reversed = [ finding Error "C-CODE-VALUE" (rowLabel r <> ": the range " <> codeCellExpr (rrCode r) <> " runs downwards")
+    at r = atCells ctx (crBound cr) (rrRow r)
+    reversed = [ at r (finding Error "C-CODE-VALUE" (rowLabel r <> ": the range " <> codeCellExpr (rrCode r) <> " runs downwards"))
                | r <- crRows cr, CodeBetween a b <- [rrCode r], nValue a > nValue b ]
     others = case [ r | r <- crRows cr, rrCode r == CodeOthers ] of
-      _ : extra@(_ : _) -> [ finding Error "C-CODE-VALUE" (rowLabel r <> ": a second All others row") | r <- extra ]
+      _ : extra@(_ : _) -> [ at r (finding Error "C-CODE-VALUE" (rowLabel r <> ": a second All others row")) | r <- extra ]
       _                 -> []
     overlaps =
-      [ finding Warning "W-CODE-OVERLAP" (rowLabel b <> " (" <> codeCellExpr (rrCode b) <> ") assigns values "
+      [ at b $ finding Warning "W-CODE-OVERLAP" (rowLabel b <> " (" <> codeCellExpr (rrCode b) <> ") assigns values "
           <> rowLabel a <> " (" <> codeCellExpr (rrCode a) <> ") assigns too; the first is kept")
       | (a, rest) <- zip (crRows cr) (drop 1 (L.tails (crRows cr))), b <- rest
       , intersects (interval (rrCode a)) (interval (rrCode b)) ]
@@ -292,18 +293,10 @@ compile ctx bts = map one (rights (readCodes ctx bts))
       | any Cm.isError (checkCodes ctx cr) = Excluded (btAnchor (crBound cr)) "C-CODE-VALUE or C-CODE-TYPE failed"
       | otherwise = Emit (codeRowsDecl (provenance cr) ("c" <> titleIdent (crTitle cr)) (header cr) 0
                             [ (rrCode r, rrCells r) | r <- crRows cr ])
-    provenance cr = let bt = crBound cr in provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+    provenance cr = let bt = crBound cr in boundProvenance ctx bt
     header cr = case L.splitAt (crColumn cr) (crHeader cr) of
       (before, code : after) -> (code, before <> after)
       _                      -> ("", [])
-
--- | An identifier from a caption's title: its words, each capitalised, joined,
---   every character but a letter, a digit or an underscore dropped:
---   @ComID Assignments@ gives @ComIDAssignments@, @GET_COMID Command Block@
---   gives @GET_COMIDCommandBlock@.
-titleIdent :: Text -> Text
-titleIdent = T.concat . map capitalise . T.split (\c -> not (C.isAlphaNum c || c == '_'))
-  where capitalise w = maybe w (\(c, cs) -> T.cons (C.toUpper c) cs) (T.uncons w)
 
 -- | @\<name\> :: [CodeRow]@: one 'Hsed.Core.Code.CodeRow' per row, its span and
 --   its other cells; the Haddock names the code column and the others.
@@ -316,11 +309,5 @@ codeRowsDecl p name (codeHeader, otherHeaders) rank rows = (Gen.decl p name body
       [ Gen.provenanceComment p <> ": by " <> T.unwords (T.words codeHeader)
           <> (if null otherHeaders then "" else "; " <> T.intercalate ", " (map (T.unwords . T.words) otherHeaders))
       , name <> " :: [CodeRow]" ]
-      <> listLines (name <> " =") [ "CodeRow " <> atom (codeCellExpr code) <> " [" <> T.intercalate ", " (map tshow cells) <> "]" | (code, cells) <- rows ]
+      <> Gen.listDefinition (name <> " =") [ "CodeRow " <> atom (codeCellExpr code) <> " [" <> T.intercalate ", " (map tshow cells) <> "]" | (code, cells) <- rows ]
     atom e = if T.any C.isSpace e then "(" <> e <> ")" else e
-
--- | A list, one item to a line: @name =@, then @  [ a@, @  , b@, @  ]@; @name = []@ when empty.
-listLines :: Text -> [Text] -> [Text]
-listLines lhs = \case
-  []    -> [lhs <> " []"]
-  items -> lhs : zipWith (\i x -> (if i == (0 :: Int) then "  [ " else "  , ") <> x) [0 ..] items <> ["  ]"]

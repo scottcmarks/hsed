@@ -231,12 +231,6 @@ columnOf d h = L.find ((== normHeader h) . normHeader . crName) (drColumns d)
 
 -- * Checks
 
--- | A finding about one row, located on the page the row is printed on.
-atCells :: Context -> BoundTable -> [CellIR] -> Finding -> Finding
-atCells ctx bt cells = case listToMaybe (mapMaybe (\c -> c.page) cells) of
-  Just p0 -> locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (p0 + 1)
-  Nothing -> atTable ctx bt
-
 rowLabel :: PreRow -> Text
 rowLabel r = "row " <> tshow (prRow r + 1) <> maybe "" (" " <>) (lookup "Name" (prValues r) <|> nameLike) <> ": "
   where nameLike = listToMaybe [ v | (h, v) <- prValues r, normHeader h == "name", not (T.null v) ]

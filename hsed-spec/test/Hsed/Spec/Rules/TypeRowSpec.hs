@@ -93,7 +93,7 @@ spec = do
       it "has no table names to resolve uidref{...} against when tableUIDs binds nothing" $ do
         noToken <- annotated pristine (DT.replace " & rule tableUIDs" "" hsa)
         errorsOf Scott noToken `shouldSatisfy`
-          elem "C-FMT-RESOLVE core-2.01: no table bound by tableUIDs (T240's header) to resolve uidref{...} against"
+          elem "C-FMT-RESOLVE core-2.01: no table bound by tableUIDs (exemplar core-2.01 T240) to resolve uidref{...} against"
 
     describe "C-UID-TABLE" $ do
       it "passes on the 100 type rows, all in the table of half-UID 00 00 00 05" $

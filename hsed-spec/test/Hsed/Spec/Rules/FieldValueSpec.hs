@@ -24,6 +24,7 @@ import           RIO
 import           RIO.Directory             (doesFileExist)
 import           Test.Hspec
 
+import           Hsed.Core.Field           (FieldValue (..))
 import           Hsed.Spec.Anchor          (AnchorId (..))
 import           Hsed.Spec.Check           (checkIR)
 import           Hsed.Spec.Common          (ErrataSet (..), RuleName (..), SpecId (..), renderFinding)
@@ -46,10 +47,10 @@ spec :: Spec
 spec = do
   describe "parseFieldValue" $ do
     it "reads bytes printed in hex, and a hex number as its bytes" $ do
-      map parseFieldValue ["02", "00 01", "0x0004", "0x2"] `shouldBe` map Constant' [[0x02], [0x00, 0x01], [0x00, 0x04], [0x02]]
+      map parseFieldValue ["02", "00 01", "0x0004", "0x2"] `shouldBe` map Constant [[0x02], [0x00, 0x01], [0x00, 0x04], [0x02]]
     it "reads anything else as a name, its spacing squeezed" $
       map parseFieldValue ["IF-RECV", "Allocated  ComID", "Request_ComID", "Non-zero", "0x"] `shouldBe`
-        map Symbolic' ["IF-RECV", "Allocated ComID", "Request_ComID", "Non-zero", "0x"]
+        map Symbolic ["IF-RECV", "Allocated ComID", "Request_ComID", "Non-zero", "0x"]
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa

@@ -82,19 +82,19 @@ spec = withCore $ \pristine -> do
         [ "C-UID-RANGE core-2.01.pdf#page=302&T240: row 31 CryptoSuite: the LSB 00 00 02 03 lies outside 00 00 00 01 to 00 00 02 00, which T237 gives Base" ]
     it "fails on a MethodID UID outside its template's range" $
       rangeErrors (setCell "T242" 19 2 "Admin" ir) `shouldBe`
-        [ "C-UID-RANGE core-2.01.pdf#page=303&T242: row 20 \"Get | Admin\": the LSB 00 00 00 16 lies outside 00 00 02 01 to 00 00 04 00, which T237 gives Admin" ]
+        [ "C-UID-RANGE core-2.01.pdf#page=304&T242: row 20 \"Get | Admin\": the LSB 00 00 00 16 lies outside 00 00 02 01 to 00 00 04 00, which T237 gives Admin" ]
     it "fails on an authority outside its template's range, and on a template Table 237 does not name" $ do
       rangeErrors (setCell "T243" 9 2 "Base" ir) `shouldBe`
-        [ "C-UID-RANGE core-2.01.pdf#page=304&T243: row 10 \"Issuers | Base\": the LSB 00 00 02 01 lies outside 00 00 00 01 to 00 00 02 00, which T237 gives Base" ]
+        [ "C-UID-RANGE core-2.01.pdf#page=305&T243: row 10 \"Issuers | Base\": the LSB 00 00 02 01 lies outside 00 00 00 01 to 00 00 02 00, which T237 gives Base" ]
       rangeErrors (setCell "T243" 0 2 "Basic" ir) `shouldBe`
         [ "C-UID-RANGE core-2.01.pdf#page=304&T243: row 1 \"Anybody | Basic\": the template Basic is none T237 gives a range" ]
 
   describe "C-UID-RANGE against Table 238" $ do
     it "passes for the 100 type rows, reading two range names' spaces as underscores" $
       [ renderFinding f | f <- scott, Cm.anchor f == Just "T238" ] `shouldBe`
-        [ "N-RANGE-NAME-NORMALISED core-2.01.pdf#page=300&T238: row 13 Struct Type: read as Struct_Type, the name 3 type rows' Format gives (T75, T78, T99)"
-        , "N-RANGE-NAME-NORMALISED core-2.01.pdf#page=300&T238: row 14 Set Type: read as Set_Type, the name 5 type rows' Format gives (T47, T53, T86, T123, T127)"
-        , "N-RANGE-ONE-CELL core-2.01.pdf#page=300&T238: row 16 Unassigned: one cell spans Start and End: the range is 00 00 00 00 alone" ]
+        [ "N-RANGE-NAME-NORMALISED core-2.01.pdf#page=301&T238: row 13 Struct Type: read as Struct_Type, the name 3 type rows' Format gives (T75, T78, T99)"
+        , "N-RANGE-NAME-NORMALISED core-2.01.pdf#page=301&T238: row 14 Set Type: read as Set_Type, the name 5 type rows' Format gives (T47, T53, T86, T123, T127)"
+        , "N-RANGE-ONE-CELL core-2.01.pdf#page=301&T238: row 16 Unassigned: one cell spans Start and End: the range is 00 00 00 00 alone" ]
     it "fails on a type row outside its format's range" $
       rangeErrors (setCell "T46" 0 0 "00 00 00 05 00 00 04 01" ir) `shouldBe`
         [ "C-UID-RANGE core-2.01.pdf#page=100&T46: AC_element: the LSB 00 00 04 01 of 00 00 00 05 00 00 04 01 lies outside 00 00 08 01 to 00 00 0A 00, which T238 gives List_Type" ]

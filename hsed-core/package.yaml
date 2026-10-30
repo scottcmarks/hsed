@@ -67,8 +67,8 @@ tests:
     dependencies:
     - hsed-core
     - doctest
-    build-tools:
-    - doctest-discover
+    - directory          # DocTest: the modules under src, listed when the suite runs
+    - filepath
 
     ghc-options:
     - -threaded

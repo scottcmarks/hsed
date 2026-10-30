@@ -53,11 +53,11 @@ import qualified Data.Map                               as Map (lookup)
 import           Data.Refined                           (plain)
 import           GHC.Base                               (String, (.), (<>))
 import           GHC.Maybe                              (Maybe)
+import           Hand.TableUIDs.TH                      (t240)
 import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
                                                          IsTable_HalfUID (..),
                                                          Null_Table_HalfUID,
                                                          Object_Table_HalfUID)
-import           System.SED.MCTP.Common.TableUIDs.TH    (t240)
 import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..))
 
 

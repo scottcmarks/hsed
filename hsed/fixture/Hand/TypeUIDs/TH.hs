@@ -18,7 +18,7 @@
 {-# LANGUAGE TypeOperators       #-}
 
 {-|
-Module      : System.SED.MCTP.Common.TypeUIDs.TH
+Module      : Hand.TypeUIDs.TH
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -29,7 +29,7 @@ Template Haskell for parsing Table column types in Section 5.1.3.
 -}
 
 
-module System.SED.MCTP.Common.TypeUIDs.TH where
+module Hand.TypeUIDs.TH where
 
 
 import           Data.Attoparsec.ByteString       (takeTill)

@@ -1,9 +1,10 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoImplicitPrelude          #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE TemplateHaskell            #-}
 
 {-|
-Module      : System.SED.MCTP.Common.TableUIDS.TH
+Module      : Hand.TableUIDs.TH
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -13,7 +14,7 @@ TableUIDs Template Haskell.
 
 -}
 
-module System.SED.MCTP.Common.TableUIDs.TH (t240)
+module Hand.TableUIDs.TH (t240)
 where
 
 import           Control.Applicative                    (many, (*>), (<$>),
@@ -30,6 +31,7 @@ import           Data.Foldable                          (foldr, mapM_)
 import           Data.List                              (concat, elem, init,
                                                          map, (!!))
 import           Data.Map                               (Map, fromList)
+import           Data.String                            (IsString)
 
 import           GHC.Base                               (Eq (..), Int,
                                                          Maybe (..), Monoid,
@@ -53,8 +55,6 @@ import           GHC.Base                               (pure)
 
 import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
                                                          Object_Table_HalfUID)
-import           System.SED.MCTP.Common.Table           (TableName (..),
-                                                         TemplateName (..))
 import           System.SED.MCTP.Common.THUtil          (dSig, dVal,
                                                          eByte_Table_HalfUID,
                                                          eHalfUID,
@@ -102,6 +102,14 @@ t240Decs s = concat [ us
 
 
 
+
+-- | A table name and a template name as Table 240 prints them (from the placeholder
+--   Table module of hsed-core, retired at M2d to dev/Table.hs).
+newtype TableName    = TableName    ByteString deriving (Eq, IsString)
+instance Show TableName where show (TableName bs) = show bs
+
+newtype TemplateName = TemplateName ByteString deriving (Eq, IsString)
+instance Show TemplateName where show (TemplateName bs) = show bs
 
 data UIDRow = UIDRow UID UID HalfUID TableName TemplateName
     deriving (Eq)

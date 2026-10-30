@@ -69,8 +69,10 @@ tests:
     dependencies:
     - hsed
     - hsed-core
-    - containers         # EquivSpec: the two sides by name; the fixture's TableUIDs
+    - containers         # EquivSpec: the two sides by name; the fixture's TableUIDs and TH parsers
     - ghc-prim           # the fixture's quasiquotes (GHC.Classes, GHC.Types)
+    - attoparsec         # the fixture's TH parsers (Hand.TypeUIDs.TH, Hand.TableUIDs.TH)
+    - bytestring
     - directory          # EquivTH: every generated module of the spec
     - filepath
     - hspec

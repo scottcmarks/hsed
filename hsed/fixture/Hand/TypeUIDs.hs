@@ -20,8 +20,8 @@ hsed's test suite. TCG's text: see tcg/TCG-NOTICE.txt.
 module Hand.TypeUIDs
 where
 
-import           Hand.TableUIDs                     ()   -- instances for the generated declarations
-import           System.SED.MCTP.Common.TypeUIDs.TH (tenum, ttype)
+import           Hand.TableUIDs   ()   -- instances for the generated declarations
+import           Hand.TypeUIDs.TH (tenum, ttype)
 
 
 {-

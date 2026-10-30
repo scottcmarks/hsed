@@ -109,7 +109,8 @@ printed split at whitespace, case and punctuation kept (a list item's without it
 an id naming several paragraphs (Core 3.3.10.6 labels `c` under four transitions) anchors nothing.
 Since M3 item anchors carry laws (`core-2.01 | 3.3.10.2.1#3a | law "Sync.ifSendWhileBusy"`), each
 binding its paragraph as a unit of its own (hsedc's paragraph unit); a law's paragraph is known by
-this `hash`, which needs no `words`.
+this `hash`, which needs no `words` (the law reader keeps its first 12 hex digits in
+`Hsed.Gen.Core.Laws`, which the hand-written law's must equal).
 
 `wordComplete` (design §5.1 step 7: the words of every paragraph a reader consumes) lists, in
 document order, the section of every byte grid (the nearest numbered heading before it in structure

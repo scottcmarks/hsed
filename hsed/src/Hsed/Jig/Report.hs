@@ -15,8 +15,10 @@ JSON (the wire types' own, "Hsed.Wire.Internal"), as Markdown (the
 verdicts, each waiver with its reason and page, the decodes, the pair
 comparison) and as JUnit XML, through "Hsed.Jig.Files"; and the commands
 that read a report back without privilege: @verify-transcript@ (the
-commands issued; a failure if an IF-SEND was) and @diff@ (two reports' Level
-0 decodes compared as the Pair runner compares them).
+commands issued, each with its end; a failure if a drive's end was issued
+an IF-SEND, or anything but Level 0 Discovery's IF-RECV, when asked) and
+@diff@ (two reports' Level 0 decodes compared as the Pair runner compares
+them).
 
 The target's part of a report's name is @sim@, @dev-disk6@,
 @replay-<file>@, or the two ends' joined by @+@ (@sim+dev-disk6@); the stamp
@@ -210,8 +212,8 @@ entryJSON e = case A.toJSON e of
 --   response or ComPacket.
 decodeOf :: TEntry -> Maybe A.Value
 decodeOf = \case
-  Issued _ q r  -> objectIf (requestDecode q <> responseDecode q r)
-  Blocked _ q _ -> objectIf (requestDecode q)
+  Issued _ _ q r  -> objectIf (requestDecode q <> responseDecode q r)
+  Blocked _ _ q _ -> objectIf (requestDecode q)
   Note _ _      -> Nothing
   where
     objectIf ps = if null ps then Nothing else Just (A.object ps)
@@ -381,17 +383,17 @@ pairLines r =
     diffRow fd = row [ hex (fdCode fd), fdField fd, contentText (fdSim fd), contentText (fdDrive fd)
                      , maybe "none" allowanceText (fdAllowance fd), if allowed fd then "yes" else "no" ]
 
--- | The transcript, an entry a row.
+-- | The transcript, an entry a row, each command with the end it went to.
 transcriptLines :: [TEntry] -> [Text]
 transcriptLines es =
-  [ "## Transcript", "", "| # | entry | command | answer |", "|---|---|---|---|" ]
+  [ "## Transcript", "", "| # | entry | end | command | answer |", "|---|---|---|---|---|" ]
   <> map entryRow es
   <> [""]
   where
     entryRow = \case
-      Issued n q r  -> row [tshow n, "issued", commandText q, answerText q r]
-      Blocked n q w -> row [tshow n, "blocked", commandText q, "blocked by the Guard: " <> w]
-      Note n t      -> row [tshow n, "note", "", t]
+      Issued n e q r  -> row [tshow n, "issued", e, commandText q, answerText q r]
+      Blocked n e q w -> row [tshow n, "blocked", e, commandText q, "blocked by the Guard: " <> w]
+      Note n t        -> row [tshow n, "note", "", "", t]
 
 -- | A command in words, an IF-SEND's methods with it.
 commandText :: Request -> Text
@@ -500,19 +502,28 @@ summary rr paths =
 
 -- * Reading reports again
 
--- | @verify-transcript REPORT.json [--no-if-send]@: print the commands a
---   report's transcript issued; with the flag, fail if one was an IF-SEND
---   (a pair's transcript holds the simulator's commands too).
-verifyTranscript :: FilePath -> Bool -> IO ExitCode
-verifyTranscript path noIfSend = readReport path >>= \case
+-- | @verify-transcript REPORT.json [--no-if-send] [--level0-only]@: print
+--   the commands a report's transcript issued, each with the end it went to
+--   (its transport's role); with @--no-if-send@, fail if a drive's end was
+--   issued an IF-SEND; with @--level0-only@, fail if a drive's end was
+--   issued anything but Level 0 Discovery's IF-RECV (protocol 0x01, ComID
+--   0x0001). A drive's end is any but the simulator's (@tper@): a pair's
+--   simulator IF-SENDs count for neither, and an entry that names no end (a
+--   report from before ends were recorded) counts as a drive's.
+verifyTranscript :: FilePath -> Bool -> Bool -> IO ExitCode
+verifyTranscript path noIfSend level0Only = readReport path >>= \case
   Left e       -> failWith ("verify-transcript: " <> e)
   Right report -> case A.parseEither (A.withObject "report" (A..: "transcript")) report of
     Left e   -> failWith ("verify-transcript: " <> T.pack path <> ": " <> T.pack e)
     Right es -> do
       traverse_ (say . entryLine) es
-      let sends = length (filter issuedSend es)
-      say ("IF-SENDs issued: " <> tshow sends)
-      pure (if noIfSend && sends > 0 then ExitFailure 1 else ExitSuccess)
+      let issued     = mapMaybe issuedOnDrive es
+          sends      = [ q | q@(op, _, _) <- issued, op == "if_send" ]
+          notLevel0  = [ q | q <- issued, q /= ("if_recv", comPacketProtocol, level0ComId) ]
+      say ("IF-SENDs issued on a drive: " <> tshow (length sends))
+      when level0Only $
+        say ("commands issued on a drive other than Level 0 Discovery's IF-RECV: " <> tshow (length notLevel0))
+      pure (if noIfSend && not (null sends) || level0Only && not (null notLevel0) then ExitFailure 1 else ExitSuccess)
   where
     entryLine v = either (const ("an entry not as a report prints one: " <> decodeUtf8Lenient (toStrictBytes (A.encode v))))
                          id (A.parseEither entryText v)
@@ -522,6 +533,7 @@ verifyTranscript path noIfSend = readReport path >>= \case
       case kind :: Text of
         "note" -> (\t -> "#" <> tshow n <> " note: " <> t) <$> o A..: "text"
         _      -> do
+          end <- fromMaybe "an end unnamed" <$> o A..:? "end"
           command <- o A..: "request" >>= A.withObject "request" (\q -> do
             op  <- q A..: "op"
             p   <- q A..: "proto"
@@ -532,12 +544,15 @@ verifyTranscript path noIfSend = readReport path >>= \case
             then ("blocked by the Guard: " <>) <$> o A..: "reason"
             else o A..: "response" >>= A.withObject "response" (\r -> (\st n' -> st <> ", " <> tshow (n' :: Int) <> " bytes")
                                                                          <$> r A..: "status" <*> r A..: "len")
-          pure ("#" <> tshow n <> " " <> kind <> " " <> command <> ": " <> outcome)
-    issuedSend v = either (const False) id $ flip A.parseEither v $ A.withObject "entry" $ \o -> do
+          pure ("#" <> tshow n <> " " <> kind <> " on the " <> end <> " " <> command <> ": " <> outcome)
+    -- an issued command on a drive's end: its op, protocol and ComID
+    issuedOnDrive v = either (const Nothing) id $ flip A.parseEither v $ A.withObject "entry" $ \o -> do
       kind <- o A..: "entry"
-      if kind /= ("issued" :: Text)
-        then pure False
-        else o A..: "request" >>= A.withObject "request" (\q -> (== ("if_send" :: Text)) <$> q A..: "op")
+      end  <- o A..:? "end"
+      if kind /= ("issued" :: Text) || end == Just ("tper" :: Text)
+        then pure Nothing
+        else o A..: "request" >>= A.withObject "request" (\q ->
+               (\op p c -> Just (op :: Text, p :: Word8, c :: Word16)) <$> q A..: "op" <*> q A..: "proto" <*> q A..: "comid")
 
 -- | @diff A.json B.json@: two reports' Level 0 decodes compared as the Pair
 --   runner compares them, A's as the simulator's and B's as the drive's,

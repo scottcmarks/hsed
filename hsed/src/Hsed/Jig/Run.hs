@@ -362,8 +362,8 @@ endLevel0 e = readIORef (reCtx (endEnv e)) >>= \ctx -> case rcLevel0 ctx of
           v    -> pure (Left (endName e <> "'s Level 0 Discovery: " <> verdictText v))
   where
     level0Issued = \case
-      Issued _ q _ -> isLevel0 q
-      _            -> False
+      Issued _ _ q _ -> isLevel0 q
+      _              -> False
 
 -- | The capture @--capture-level0@ asks for: the drive's last Level 0
 --   response that succeeded (discovered now if it was never asked for
@@ -384,7 +384,7 @@ capture opts ends = case roCapture opts of
           Left why  -> pure ["--capture-level0 " <> T.pack file <> ": no CDB for the IF-RECV: " <> why]
           Right cdb -> tryAny (captureLevel0 file di cdb r) <&> either (\ex -> ["--capture-level0 " <> T.pack file <> ": " <> tshow ex]) (const [])
   where
-    lastLevel0 own = entries own <&> \es -> L.lastMaybe [ (q, r) | Issued _ q r <- es, isLevel0 q, status r == Good ]
+    lastLevel0 own = entries own <&> \es -> L.lastMaybe [ (q, r) | Issued _ _ q r <- es, isLevel0 q, status r == Good ]
 
 -- | Whether a command is Level 0 Discovery's IF-RECV.
 isLevel0 :: Request -> Bool

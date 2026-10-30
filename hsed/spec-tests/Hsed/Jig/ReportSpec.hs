@@ -13,10 +13,13 @@ A run's reports (design 9.2): three files, @jig-<target>-<UTC stamp>@ as
 JSON, Markdown and JUnit XML, the target's part @sim@, @dev-disk6@ or
 @sim+replay-<file>@; each case with its verdict and waivers, a waiver with
 its item and page (LockingManufactured, Test Cases 5.2 item 2, PDF 29); the
-transcript with each IF-SEND's methods decoded; the JUnit counts.
-@verify-transcript@ fails a report whose transcript issued an IF-SEND only
-when asked to, and a file that is no report; @diff@ compares two reports'
-Level 0 responses as the Pair runner does.
+transcript with each IF-SEND's methods decoded and each command's end; the
+JUnit counts. @verify-transcript@ fails a report whose drive was issued an
+IF-SEND only when asked to, the simulator's IF-SENDs counting for nothing,
+and with @--level0-only@ one whose drive was issued anything but Level 0
+Discovery's IF-RECV; an entry of no end counts as a drive's; a file that is
+no report fails; @diff@ compares two reports' Level 0 responses as the Pair
+runner does.
 -}
 module Hsed.Jig.ReportSpec (spec) where
 
@@ -68,8 +71,8 @@ sample = RunResult
       ]
   , rrTranscript =
       [ Note 1 "UCT-01 on the sim"
-      , Issued 2 propertiesSend (Response Good mempty)
-      , Blocked 3 propertiesSend "Level0Only: no IF-SEND reaches a drive at M3 (design 9.3)"
+      , Issued 2 "tper" propertiesSend (Response Good mempty)
+      , Blocked 3 "drive" propertiesSend "Level0Only: no IF-SEND reaches a drive at M3 (design 9.3)"
       ]
   , rrLevel0     = []
   , rrPair       = Nothing
@@ -83,6 +86,17 @@ quiet = sample { rrTranscript = [ e | e <- rrTranscript sample, not (isIssued e)
   where isIssued e = case e of
           Issued {} -> True
           _         -> False
+
+-- | The same with the IF-SEND issued on a drive.
+onDrive :: RunResult
+onDrive = sample { rrTranscript = map toDrive (rrTranscript sample) }
+  where toDrive e = case e of
+          Issued n _ q r -> Issued n "drive" q r
+          _              -> e
+
+-- | A drive's transcript of IF-RECVs alone: Level 0 Discovery's, and others.
+recvs :: [(Word8, Word16)] -> RunResult
+recvs cs = quiet { rrTranscript = [ Issued n "drive-replay" (Request IfRecv p c 512 mempty) (Response Good mempty) | (n, (p, c)) <- zip [1 ..] cs ] }
 
 -- | A report written, read back: its files, its JSON and its Markdown.
 written :: RunResult -> IO ([FilePath], A.Value, Text)
@@ -133,21 +147,42 @@ spec = do
         xml `shouldSatisfy` T.isInfixOf "<failure message=\"step 1: not so\"/>"
 
   describe "verifyTranscript" $ do
-    it "fails a transcript that issued an IF-SEND when asked to, not otherwise" $
+    let report dir = dir </> "jig-sim-20261030T120000Z.json"
+    it "fails a transcript whose drive was issued an IF-SEND when asked to, not otherwise" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        _ <- writeReports dir onDrive
+        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript (report dir) False False) `shouldReturn` ExitSuccess
+    it "passes one whose IF-SENDs are the simulator's, a pair's, or that issued none, a blocked IF-SEND being none" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         _ <- writeReports dir sample
-        let report = dir </> "jig-sim-20261030T120000Z.json"
-        silently (verifyTranscript report True) `shouldReturn` ExitFailure 1
-        silently (verifyTranscript report False) `shouldReturn` ExitSuccess
-    it "passes one that issued none, a blocked IF-SEND being none" $
-      withSystemTempDirectory "hsed-report" $ \dir -> do
+        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitSuccess
         _ <- writeReports dir quiet
-        silently (verifyTranscript (dir </> "jig-sim-20261030T120000Z.json") True) `shouldReturn` ExitSuccess
+        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitSuccess
+    it "with --level0-only, fails a drive issued anything but Level 0 Discovery's IF-RECV" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        _ <- writeReports dir (recvs [(0x01, 0x0001)])
+        silently (verifyTranscript (report dir) True True) `shouldReturn` ExitSuccess
+        _ <- writeReports dir (recvs [(0x01, 0x0001), (0x01, 0x1004)])
+        silently (verifyTranscript (report dir) True True) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript (report dir) True False) `shouldReturn` ExitSuccess
+        _ <- writeReports dir (recvs [(0x02, 0x0001)])
+        silently (verifyTranscript (report dir) False True) `shouldReturn` ExitFailure 1
+        _ <- writeReports dir onDrive
+        silently (verifyTranscript (report dir) False True) `shouldReturn` ExitFailure 1
+    it "counts an issued entry that names no end as a drive's" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        let entry = A.object [ "n" A..= (1 :: Int), "entry" A..= ("issued" :: Text)
+                             , "request" A..= A.object ["op" A..= ("if_send" :: Text), "proto" A..= (1 :: Int), "comid" A..= (4100 :: Int), "len" A..= (512 :: Int)]
+                             , "response" A..= A.object ["status" A..= ("good" :: Text), "len" A..= (0 :: Int)] ]
+        writeFileBinary (dir </> "old.json") (toStrictBytes (A.encode (A.object ["transcript" A..= [entry]])))
+        silently (verifyTranscript (dir </> "old.json") True False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript (dir </> "old.json") False False) `shouldReturn` ExitSuccess
     it "fails a file that is no report" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         writeFileUtf8 (dir </> "not.json") "not JSON"
-        silently (verifyTranscript (dir </> "not.json") False) `shouldReturn` ExitFailure 1
-        silently (verifyTranscript (dir </> "absent.json") False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript (dir </> "not.json") False False) `shouldReturn` ExitFailure 1
+        silently (verifyTranscript (dir </> "absent.json") False False) `shouldReturn` ExitFailure 1
 
   describe "diffReports" $
     it "compares two reports' Level 0 responses as the Pair runner does" $

@@ -59,8 +59,8 @@ import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, 
                                         uSP_Admin, uStartSession)
 import           Hsed.Jig.Transcript   (TEntry (..), Transcript, record)
 import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
-import           Hsed.Wire             (Cap (..), Dir (..), IfStatus (..), Request (..), Response (..), comPacketProtocol,
-                                        dataKind, hex, level0ComId)
+import           Hsed.Wire             (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
+                                        comPacketProtocol, dataKind, hex, level0ComId)
 import           Hsed.Wire.Internal    (Transport (..))
 
 
@@ -84,13 +84,13 @@ data Allowed
 --   recorded, and the transport never called.
 guardedSend :: Transcript -> Policy -> Transport 'ReadOnly -> Request -> IO (Either Text Response)
 guardedSend t policy tr q
-  | dir q /= IfSend = refuse t q "guardedSend takes an IF-SEND"
+  | dir q /= IfSend = refuse t tr q "guardedSend takes an IF-SEND"
   | otherwise       = pass t policy tr q
 
 -- | An IF-RECV, if the policy allows it; otherwise the reason, recorded.
 guardedRecv :: Transcript -> Policy -> Transport c -> Request -> IO (Either Text Response)
 guardedRecv t policy tr q
-  | dir q /= IfRecv = refuse t q "guardedRecv takes an IF-RECV"
+  | dir q /= IfRecv = refuse t tr q "guardedRecv takes an IF-RECV"
   | otherwise       = pass t policy tr q
 
 -- | A transport whose every command passes the Guard first: one the policy
@@ -102,11 +102,11 @@ guarding t policy tr = tr { tExchange = fmap (either blocked id) . pass t policy
 
 -- | A command through the policy: issued, or refused and recorded.
 pass :: Transcript -> Policy -> Transport c -> Request -> IO (Either Text Response)
-pass t policy tr q = either (refuse t q) (const (Right <$> tExchange tr q)) (decide policy q)
+pass t policy tr q = either (refuse t tr q) (const (Right <$> tExchange tr q)) (decide policy q)
 
--- | A command refused: recorded as blocked, with why.
-refuse :: Transcript -> Request -> Text -> IO (Either Text Response)
-refuse t q why = Left why <$ record t (Blocked 0 q why)
+-- | A command refused: recorded as blocked, with the end it was for and why.
+refuse :: Transcript -> Transport c -> Request -> Text -> IO (Either Text Response)
+refuse t tr q why = Left why <$ record t (Blocked 0 (dRole (tDescribe tr)) q why)
 
 -- | What a policy says of a command. Level0Only admits Level 0's IF-RECV on
 --   the ComID Core Table 26 gives it, and nothing on the reserved ComID

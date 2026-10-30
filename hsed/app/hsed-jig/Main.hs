@@ -61,7 +61,9 @@ commands = hsubparser
   where
     verifyTranscript = VerifyTranscript
       <$> strArgument (metavar "REPORT.json" <> help "a run's JSON report")
-      <*> switch (long "no-if-send" <> help "fail (exit 1) if the transcript issued an IF-SEND")
+      <*> switch (long "no-if-send" <> help "fail (exit 1) if a drive's end was issued an IF-SEND (the simulator's are its own)")
+      <*> switch (long "level0-only"
+            <> help "fail (exit 1) if a drive's end was issued anything but Level 0 Discovery's IF-RECV (protocol 0x01, ComID 0x0001)")
     diffReports = Diff
       <$> strArgument (metavar "A.json" <> help "a run's JSON report")
       <*> strArgument (metavar "B.json" <> help "another")

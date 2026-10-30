@@ -179,7 +179,7 @@ spec = do
           md `shouldSatisfy` T.isInfixOf w
         reports <- listDirectory (dir </> "report")
         for_ [ f | f <- reports, takeExtension f == ".json" ] $ \f ->
-          silently (verifyTranscript (dir </> "report" </> f) True) `shouldReturn` ExitSuccess
+          silently (verifyTranscript (dir </> "report" </> f) True True) `shouldReturn` ExitSuccess
     it "passes UCT-01 alone: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"

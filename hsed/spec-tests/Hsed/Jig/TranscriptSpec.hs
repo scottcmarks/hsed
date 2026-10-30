@@ -49,27 +49,28 @@ spec = do
     it "number the entries 1, 2, 3 in the order added, whatever number they carry" $ do
       t <- newTranscript
       record t (Note 7 "first")
-      record t (Blocked 0 send "refused")
+      record t (Blocked 0 "drive" send "refused")
       record t (Note 0 "third")
-      entries t `shouldReturn` [Note 1 "first", Blocked 2 send "refused", Note 3 "third"]
+      entries t `shouldReturn` [Note 1 "first", Blocked 2 "drive" send "refused", Note 3 "third"]
 
   describe "recording" $ do
-    it "adds each command with its answer, and an event as a note" $ do
+    it "adds each command with its answer and its transport's role, and an event as a note" $ do
       t <- newTranscript
       let tr = recording t (fake False)
       r1 <- tExchange tr recv
       r2 <- tExchange tr send
       s <- tInject tr PowerCycle
       s `shouldBe` Good
-      entries t `shouldReturn` [Issued 1 recv r1, Issued 2 send r2, Note 3 "event PowerCycle: good"]
+      entries t `shouldReturn` [Issued 1 "tper" recv r1, Issued 2 "tper" send r2, Note 3 "event PowerCycle: good"]
     it "adds a command whose transport threw as a transport failure, then rethrows" $ do
       t <- newTranscript
       tExchange (recording t (fake True)) send `shouldThrow` anyException
       entries t >>= \es -> case es of
-        [Issued 1 q (Response (TransportFailure _) _)] -> q `shouldBe` send
+        [Issued 1 "tper" q (Response (TransportFailure _) _)] -> q `shouldBe` send
         other                                          -> expectationFailure ("not one failed IF-SEND: " <> show other)
 
   describe "ifSendsIssued" $
     it "counts the issued IF-SENDs, not an IF-RECV or a blocked IF-SEND" $
-      ifSendsIssued [Issued 1 recv (Response Good mempty), Blocked 2 send "no", Issued 3 send (Response Good mempty), Note 4 "x"]
+      ifSendsIssued [ Issued 1 "drive" recv (Response Good mempty), Blocked 2 "drive" send "no"
+                    , Issued 3 "drive" send (Response Good mempty), Note 4 "x" ]
         `shouldBe` 1

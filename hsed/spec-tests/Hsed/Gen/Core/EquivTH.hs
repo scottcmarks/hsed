@@ -36,7 +36,10 @@ time:
   @SpecialPurposeUIDs@ with the caption of the transcribed table above it
   (@Table 239 Special Purpose UIDs@, @Table 241 Session Manager Method
   UIDs@). A name the source promises and the module does not define stops the
-  compilation.
+  compilation;
+* 'handEnumerations' reads the fixture's @tenum@ quasiquotes again: each
+  enumeration with its constructors under the fixture's own names and its
+  rows as printed, which a test holds 'asGenerated''s renames to.
 
 A value is 'Scalar' ('show' of it) or, for an enumeration, 'Entries': each
 constructor with the value the spec assigns it (the generated module's
@@ -51,6 +54,7 @@ module Hsed.Gen.Core.EquivTH
   , generatedDefs
   , generatedUIDLists
   , handDefs
+  , handEnumerations
   , asGenerated
   ) where
 
@@ -184,13 +188,9 @@ handDefs typeUIDs tableUIDs specialUIDs h = do
       [_, name, _] : _ -> mapM (scalar caption) ["u" ++ name ++ "Type"]
       _                -> fail ("no Type table row under " ++ caption)
     -- an enumeration: its caption names the type, Core_<type>
-    enumeration (caption, _) = case words caption of
-      _ : _ : ident : _ -> do
-        let n = "Core_" ++ ident
-        found <- lookupTypeName (h ++ "." ++ n)
-        nm <- maybe (fail (h ++ " does not define " ++ n ++ ", which its source promises")) pure found
-        [| Def n (tableOf caption) caption (Entries (asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: $(conT nm)] ])) |]
-      _ -> fail ("no enumeration named by " ++ caption)
+    enumeration (caption, _) = do
+      (n, nm) <- enumerationType h caption
+      [| Def n (tableOf caption) caption (Entries (asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: $(conT nm)] ])) |]
     -- Table 240: three UIDs per row, the typed half-UID the module has, then the two maps
     t240 (caption, body) = do
       rows <- fmap concat $ forM [ name | [_, _, name, _] <- drop 1 (tableRows body) ] $ \name -> do
@@ -199,6 +199,31 @@ handDefs typeUIDs tableUIDs specialUIDs h = do
       maps <- mapM (scalar caption) ["nameHalfUID", "nameUID"]
       pure (rows ++ maps)
 
+-- | @$(handEnumerations "fixture/Hand/TypeUIDs.hs" "H")@: each enumeration of
+--   the fixture (@Core_\<type\>@), its constructors under the fixture's own
+--   names (@dEnum@'s, before 'asGenerated') with their values, and its rows as
+--   its @tenum@ quasiquote prints them (the value cell, the label).
+handEnumerations :: FilePath -> String -> Q Exp
+handEnumerations typeUIDs h = do
+  addDependentFile typeUIDs
+  types <- runIO (readFile typeUIDs)
+  enums <- forM (quasiquotes "tenum" (lines types)) $ \(caption, body) -> do
+    (n, nm) <- enumerationType h caption
+    let rows = [ (cell, label) | [cell, label] <- drop 1 (tableRows body) ]
+    [| (n, [ (show x, fromEnum x) | x <- [minBound .. maxBound :: $(conT nm)] ], rows) |]
+  listE (map pure enums)
+
+-- | The enumeration a @tenum@ caption names (@Table 52 adv_key_mode
+--   Enumeration Values@ names @Core_adv_key_mode@), and its type in the module
+--   imported as @h@.
+enumerationType :: String -> String -> Q (String, Name)
+enumerationType h caption = case words caption of
+  _ : _ : ident : _ -> do
+    let n = "Core_" ++ ident
+    found <- lookupTypeName (h ++ "." ++ n)
+    maybe (fail (h ++ " does not define " ++ n ++ ", which its source promises")) (\nm -> pure (n, nm)) found
+  _ -> fail ("no enumeration named by " ++ caption)
+
 -- | An enumeration of the fixture, each constructor with its value, named as
 --   the generator names it (design section 13.15, M2d): every value of a label
 --   that names several is suffixed with the value, the first included. The
@@ -206,6 +231,17 @@ handDefs typeUIDs tableUIDs specialUIDs h = do
 --   @C_\<v\>@ when a sibling @C_\<w\>@ carries its own value @w@; a name that
 --   merely ends in a number (@Core_hash_protocol_SHA_1@, value 1, beside
 --   @SHA_256@, value 2) has no such sibling and stays as it is.
+--
+--   The rename goes by names, not labels, and takes a bare @C@ beside a
+--   @C_\<w\>@ for the first value of one label. That holds of this fixture,
+--   whose every rename is at a label that names several values (a test holds
+--   each to the fixture's rows, 'handEnumerations'); without that test a label
+--   mistyped as its sibling's (@SHA@ for @SHA 1@ beside @SHA 2@) would be
+--   renamed and pass, and a label beside one with its own value as suffix
+--   (@SHA@ at 0, @SHA 1@ at 1) renamed wrongly and fail. A single label printed
+--   over values the PDF names one by one (@SHA@ over 1-2 for @SHA 1@ and @SHA
+--   2@) gets the generator's names under section 13.15 and cannot be told
+--   apart by any name.
 asGenerated :: [(String, Int)] -> [(String, Int)]
 asGenerated es = [ (if any (\(d, w) -> d == c ++ "_" ++ show w) es then c ++ "_" ++ show v else c, v) | (c, v) <- es ]
 

@@ -40,9 +40,13 @@ its value column equal to what this module computes for the difference
 The fixture's enumerations are compared under the generator's names
 ("Hsed.Gen.Core.EquivTH".'asGenerated', design section 13.15): its @dEnum@
 left the first value of a label that names several bare, where the generator
-suffixes every one (@Core_adv_key_mode_Reserved_2@). A wrong renaming cannot
-pass: the enumeration would then differ where no line says it does, or
-otherwise than its line records.
+suffixes every one (@Core_adv_key_mode_Reserved_2@). A wrong renaming of this
+fixture cannot pass: the enumeration would then differ where no line says it
+does, or otherwise than its line records, and each rename is held to the
+fixture's rows (its label names several values), so that a label mistyped as
+its sibling's, which the rename by names alone would launder, fails too. A
+single label printed over values the PDF names one by one gets the
+generator's names and cannot be told apart.
 
 Two rules of M2b have a hand counterpart other than a definition: the
 method status codes (Core Table 166, @statusCodes@) are what hsed-core's codec
@@ -69,6 +73,7 @@ import           Data.Word                                 (Word32, Word64)
 import           GHC.Exts                                  (toList)
 import           Numeric                                   (showHex)
 import           Test.Hspec
+import           Text.Read                                 (readMaybe)
 
 import qualified RIO.ByteString                            as B
 import qualified RIO.Text                                  as T
@@ -103,6 +108,25 @@ generatedLists = $(generatedUIDLists "gen/Hsed/Gen/Core" "G")
 -- | Every hand-written definition the fixture's quasiquoters make, and its special purpose UIDs.
 handWritten :: [Def]
 handWritten = $(handDefs "fixture/Hand/TypeUIDs.hs" "fixture/Hand/TableUIDs.hs" "fixture/Hand/SpecialPurposeUIDs.hs" "H")
+
+-- | Every enumeration of the fixture: its constructors under dEnum's names, and its rows as printed.
+handEnums :: [(String, [(String, Int)], [(String, String)])]
+handEnums = $(handEnumerations "fixture/Hand/TypeUIDs.hs" "H")
+
+-- | How many values the label of value @v@ names among an enumeration's
+--   printed rows: those of every row whose label dEnum names alike (commas
+--   dropped, spaces and dashes underscores); 0 when no row gives @v@.
+labelValues :: [(String, String)] -> Int -> Int
+labelValues rows v = case [ label | (cell, label) <- rows, v `elem` cellValues cell ] of
+  label : _ -> sum [ length (cellValues cell) | (cell, label') <- rows, named label' == named label ]
+  []        -> 0
+  where
+    named = map (\c -> if c == ' ' || c == '-' then '_' else c) . filter (/= ',')
+    cellValues :: String -> [Int]
+    cellValues cell = case break (== '-') (filter (not . isSpace) cell) of
+      (a, '-' : b) | Just x <- readMaybe a, Just y <- readMaybe b -> [x .. y]
+      (a, "")      | Just x <- readMaybe a                         -> [x]
+      _                                                            -> []
 
 
 -- * Differences
@@ -253,6 +277,15 @@ spec = do
       Map.size (hands Map.\\ gens) `shouldBe` 48
     it "names the hand transcription's enumerations as the generator does (design 13.15)" $
       asGenerated [("R", 2), ("R_3", 3), ("SHA_1", 1), ("NA", 0)] `shouldBe` [("R_2", 2), ("R_3", 3), ("SHA_1", 1), ("NA", 0)]
+    it "renames 18 constructors in 15 enumerations, each the first value of a label the fixture gives several (design 13.15)" $ do
+      let renames = [ (n, c, v, rows) | (n, es, rows) <- handEnums, ((c, v), (c', _)) <- zip es (asGenerated es), c /= c' ]
+      (length renames, length (nub [ n | (n, _, _, _) <- renames ])) `shouldBe` (18, 15)
+      [ (n, c) | (n, c, v, rows) <- renames, labelValues rows v < 2 ] `shouldBe` []
+    it "would refuse a rename at a label that names one value (SHA for SHA 1 beside SHA 2)" $ do
+      let rows = [("0", "None"), ("1", "SHA"), ("2", "SHA 2")]
+          es   = [("Core_x_None", 0), ("Core_x_SHA", 1), ("Core_x_SHA_2", 2)]
+      [ v | ((c, v), (c', _)) <- zip es (asGenerated es), c /= c', labelValues rows v < 2 ] `shouldBe` [1]
+      labelValues [("0", "None"), ("1-2", "SHA")] 1 `shouldBe` 2
     it "has the hand-written Session Manager method UIDs and invoking IDs (Tables 241 and 239)" $ do
       [G.uProperties, G.uStartSession, G.uSyncSession, G.uStartTrustedSession, G.uSyncTrustedSession, G.uCloseSession]
         `shouldBe` [H.uProperties, H.uStartSession, H.uSyncSession, H.uStartTrustedSession, H.uSyncTrustedSession, H.uCloseSession]

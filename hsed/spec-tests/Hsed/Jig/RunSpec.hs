@@ -120,7 +120,7 @@ spec :: Spec
 spec = do
   describe "what a run refuses before it opens anything" $ do
     it "a key the catalogue lacks: exit 2" $
-      silently (runJig defaultRunOptions { roTests = keys "UCT-02" }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roTests = keys "SPF-11" }) `shouldReturn` ExitFailure 2
     it "a drive without --expect-serial, alone or paired, root or not: exit 2" $ do
       silently (runJig defaultRunOptions { roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roTarget = TPair TSim (TDevice "/dev/disk99") }) `shouldReturn` ExitFailure 2

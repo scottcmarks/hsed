@@ -9,19 +9,20 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The case keys @--tests@ takes and prints; the catalogue's four cases of M3
-with their titles and pages (Test Cases 1.02: UCT-01 PDF 29, SPF-02 case 1
-PDF 52, ETC-02 PDF 77, ETC-03 PDF 78), each with the case the runner runs
-and the keys the laws name (ETC-02, SPF-02:1); the common prerequisites of
-sections 5.2 (PDF 29), 6.2 (PDF 49) and 7.2 (PDF 76), and the section each
-family's tests are in.
+The case keys @--tests@ takes and prints; the catalogue's ten cases of M4a
+with their titles and pages (Test Cases 1.02: UCT-01 PDF 29, UCT-02 PDF 31,
+UCT-03 PDF 32, SPF-02 case 1 PDF 52, ETC-02 PDF 77, ETC-03 and ETC-04 PDF
+78, ETC-08 PDF 81, ETC-15 PDF 88, ETC-21 PDF 92), each with the case the
+runner runs and the keys the laws name (ETC-02, SPF-02:1, ETC-04, ETC-15);
+the common prerequisites of sections 5.2 (PDF 29), 6.2 (PDF 49) and 7.2
+(PDF 76), and the section each family's tests are in.
 -}
 module Hsed.Jig.CatalogueSpec (spec) where
 
 import           RIO
 import           Test.Hspec
 
-import           Hsed.Jig.Case      (Case (..))
+import           Hsed.Jig.Case      (Case (..), Need (..))
 import           Hsed.Jig.Catalogue
 import           Hsed.Jig.Prereq
 import           Hsed.Jig.Run       (cases)
@@ -45,26 +46,38 @@ spec = do
       map (isLeft . parseCaseKeys) ["", "UCT", "XYZ-01", "UCT-01:", "UCT-01/", "UCT-x1"] `shouldBe` replicate 6 True
 
   describe "catalogue" $ do
-    it "holds M3's four cases in the Test Cases' order, at their pages (PDF 29, 52, 77, 78; printed 28, 51, 76, 77)" $
+    it "holds M4a's ten cases in the Test Cases' order, at their pages (PDF 29, 31, 32, 52, 77, 78, 78, 81, 88, 92; printed one less)" $
       [ (renderCaseKey (ceKey e), cePdf e, cePrinted e) | e <- catalogue ]
-        `shouldBe` [("UCT-01", 29, 28), ("SPF-02:1", 52, 51), ("ETC-02", 77, 76), ("ETC-03", 78, 77)]
+        `shouldBe` [ ("UCT-01", 29, 28), ("UCT-02", 31, 30), ("UCT-03:1a-1c", 32, 31), ("SPF-02:1", 52, 51), ("ETC-02", 77, 76)
+                   , ("ETC-03", 78, 77), ("ETC-04", 78, 77), ("ETC-08", 81, 80), ("ETC-15", 88, 87), ("ETC-21/adminsp", 92, 91) ]
     it "gives the pages of UCT-01, ETC-02, ETC-03 and SPF-02:1 as 29, 77, 78 and 52" $
       [ cePdf e | Right ks <- [parseCaseKeys "UCT-01,ETC-02,ETC-03,SPF-02:1"], k <- ks, e <- catalogue, ceKey e == k ]
         `shouldBe` [29, 77, 78, 52]
-    it "titles them as the Test Cases head them (ETC-02's dash an en dash)" $
+    it "titles them as the Test Cases head them (ETC-02's, ETC-08's and ETC-15's dashes en dashes, ETC-04's a hyphen)" $
       map ceTitle catalogue `shouldBe`
         [ "Level 0 Discovery"
+        , "Properties"
+        , "Taking Ownership of an SD, steps 1a to 1c: a session to the Admin SP, the MSID read, the session closed"
         , "IF-RECV Behavior Tests, Case 1: an IF-RECV while the SD is in Awaiting IF-SEND"
         , "General \x2013 IF-SEND/IF-RECV Synchronous Protocol"
-        , "Invalid IF-SEND Transfer Length" ]
+        , "Invalid IF-SEND Transfer Length"
+        , "Invalid SessionID - Regular Session"
+        , "Unexpected Token in the Method Parameter List \x2013 Control Session"
+        , "Exceed TPer Properties \x2013 Control Session"
+        , "StartSession with Incorrect HostChallenge, the Admin SP variant: SID with a wrong HostChallenge" ]
     it "has a case for each entry, and an entry for each case, in its order" $
       map cKey cases `shouldBe` map ceKey catalogue
-    it "holds the cases the synchronous protocol's laws name: ETC-02 and SPF-02 case 1" $
-      [ k | k <- [key (ETC 2) Nothing, key (SPF 2) (Just 1)], k `elem` map ceKey catalogue ]
-        `shouldBe` [key (ETC 2) Nothing, key (SPF 2) (Just 1)]
+    it "holds the cases the synchronous protocol's laws name: ETC-02, SPF-02 case 1, ETC-04 and ETC-15" $
+      [ k | k <- [key (ETC 2) Nothing, key (SPF 2) (Just 1), key (ETC 4) Nothing, key (ETC 15) Nothing], k `elem` map ceKey catalogue ]
+        `shouldBe` [key (ETC 2) Nothing, key (SPF 2) (Just 1), key (ETC 4) Nothing, key (ETC 15) Nothing]
     it "puts each case in its family's section, whose list it waives LockingManufactured of" $ do
       [ cSection c | c <- cases ] `shouldBe` [ sectionOf (ckTest (cKey c)) | c <- cases ]
-      [ LockingManufactured `elem` map wPrereq (cWaives c) | c <- cases ] `shouldBe` replicate 4 True
+      [ LockingManufactured `elem` map wPrereq (cWaives c) | c <- cases ] `shouldBe` replicate 10 True
+    it "needs of a target what each case does: the error paths ETC-02, ETC-03, ETC-08 and ETC-15, the simulator alone ETC-21/adminsp, IF-SEND UCT-02, UCT-03 and ETC-04" $ do
+      [ renderCaseKey (cKey c) | c <- cases, NeedErrorPath `elem` cNeeds c ] `shouldBe` ["ETC-02", "ETC-03", "ETC-08", "ETC-15"]
+      [ renderCaseKey (cKey c) | c <- cases, NeedSimOnly `elem` cNeeds c ] `shouldBe` ["ETC-21/adminsp"]
+      [ renderCaseKey (cKey c) | c <- cases, NeedIfSend `elem` cNeeds c ] `shouldBe` ["UCT-02", "UCT-03:1a-1c", "ETC-04"]
+      [ renderCaseKey (cKey c) | c <- cases, cNeeds c == [NeedLevel0] ] `shouldBe` ["UCT-01"]
 
   describe "common" $ do
     it "lists 5.2's six prerequisites (PDF 29) and 6.2's, the same (PDF 49)" $ do

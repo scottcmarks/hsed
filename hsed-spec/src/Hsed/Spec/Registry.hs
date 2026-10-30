@@ -27,6 +27,7 @@ import           Hsed.Spec.Rules.ByteGrid      (byteGridRule)
 import           Hsed.Spec.Rules.Codes         (codesRule)
 import           Hsed.Spec.Rules.ConstValues   (constValuesRule)
 import           Hsed.Spec.Rules.EnumValues    (enumValuesRule)
+import           Hsed.Spec.Rules.Feature       (featureRule)
 import           Hsed.Spec.Rules.FieldType     (fieldTypeRule)
 import           Hsed.Spec.Rules.FieldValue    (fieldValueRule)
 import           Hsed.Spec.Rules.Preconfig     (preconfigRule)
@@ -50,6 +51,7 @@ registry =
   , codesRule
   , constValuesRule
   , enumValuesRule
+  , featureRule
   , fieldTypeRule
   , fieldValueRule
   , preconfigRule

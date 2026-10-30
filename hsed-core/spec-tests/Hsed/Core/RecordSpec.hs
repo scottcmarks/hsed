@@ -57,7 +57,7 @@ frameLayout = Layout
       , byteRange "Version" 5 5 (Pinned 1)
       , byteRange "Tag" 6 14 Bytes
       , byteRange "Length" 15 16 Unsigned ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 4) }
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 4 Bytes) }
 
 instance LayoutRecord Frame where
   recordLayout _ = frameLayout
@@ -97,7 +97,7 @@ spec = describe "Hsed.Core.Record" $ do
     let altered = "\xE7" <> B.take 4 (B.drop 1 encoded) <> "\x02" <> B.drop 6 encoded
     B.take 6 encoded `shouldBe` "\x07\x01\x02\x03\x04\x01"
     (drDifferences <$> (decodeRecord altered :: Either LayoutError (DecodedRecord Frame)))
-      `shouldBe` Right [ReservedNotZero "Reserved" 7, PinDiffers "Version" 1 2]
+      `shouldBe` Right [ReservedNotZero "Reserved" 0 7, PinDiffers "Version" 40 1 2]
     (drRecord <$> (decodeRecordStrict altered :: Either LayoutError (DecodedRecord Frame))) `shouldBe` Left (PinViolated "Version" 1 2)
   it "refuses a value the field's width cannot hold, and a byte string of the wrong length" $ do
     encodeRecord (Frame (FrameHeader 16 False 0 (B.replicate 9 0)) "") `shouldBe` Left (OutOfRange "Kind" 16)

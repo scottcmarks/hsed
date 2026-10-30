@@ -30,7 +30,15 @@ string, reserved bits, or a constant a TPer SHALL send (a pin, design example
 E8). Pins are what the drive must send: 'decode', for a host reading a
 drive's reply, reports a pin read with another value as a 'Difference' and
 goes on; 'decodeStrict' refuses it. Reserved bits are written as zeros and,
-read as anything else, are reported too.
+read as anything else, are reported too, as are a tail's padding and a tail
+of reserved bytes (the rest of a transfer) read other than zero. A lenient
+'decode' that reports a pin read otherwise is no match for the layout: to
+tell several layouts apart by their pins (a STACK_RESET response from its
+pending reply), 'matching' keeps those whose every pin the input holds.
+
+The kinds' constructors 'Unsigned' and 'Bytes' share their names with those
+of "Hsed.Core.Token"'s @Token@: a module that needs both imports one of the
+two qualified.
 -}
 module Hsed.Core.Layout
   ( -- * Fields
@@ -56,6 +64,7 @@ module Hsed.Core.Layout
   , encode
   , decode
   , decodeStrict
+  , matching
   ) where
 
 import           Data.Bits      (shiftL, shiftR, (.&.), (.|.))
@@ -135,11 +144,15 @@ fieldEnd f = fieldStart f + fieldWidth f
 -- | What follows a layout's fixed part: a byte string, its length given by a
 --   field of the fixed part (or the rest of the input when no field does),
 --   padded with zeros to a multiple of an alignment (Core Table 20's payload
---   to four bytes; 1 for none).
+--   to four bytes; 1 for none), of one of two kinds: 'Bytes', a value of its
+--   own (a payload), or 'Reserved', bytes that are zeros, as reserved bits are
+--   (Core Table 31's reserved bytes to the end of the transfer): written as
+--   none, taking no value, and, read other than zero, a 'Difference'.
 data Tail = Tail
   { tailName   :: !Text
   , tailLength :: !(Maybe Text)
   , tailAlign  :: !Int
+  , tailKind   :: !FieldKind
   }
   deriving (Eq, Show)
 
@@ -167,12 +180,14 @@ data TileProblem
   | WideFlag !Text            -- ^ a flag of more than one bit
   | NoLength !Text            -- ^ the tail's length field is no unsigned field of the layout
   | BadAlign !Int             -- ^ a tail alignment below 1
+  | PadNoLength !Text !Int    -- ^ a tail padded to this alignment with no length field to tell its bytes from its padding
+  | TailKind !Text !FieldKind -- ^ a tail of a kind other than 'Bytes' or 'Reserved'
   deriving (Eq, Show)
 
 -- | Every reason a layout does not tile, in order: fields outside the fixed
 --   part, misaligned byte strings, pins that do not fit, flags wider than a
 --   bit, then the gaps and overlaps from the first bit to the last, then the
---   tail's.
+--   tail's (its length field, its alignment, its kind).
 --
 -- >>> tiling header
 -- []
@@ -182,6 +197,8 @@ data TileProblem
 -- [Overlap "Length" "Late" 23]
 -- >>> tiling header { layoutFields = [spanning "Version" (0, 7) (0, 4) (Pinned 16), spanning "Rest" (0, 3) (2, 0) Bytes] }
 -- [Unaligned "Rest",Unfit "Version" 16]
+-- >>> tiling header { layoutTail = Just (Tail "Data" Nothing 4 Bytes) }
+-- [PadNoLength "Data" 4]
 tiling :: Layout -> [TileProblem]
 tiling l = outside <> unaligned <> unfit <> flags <> coverage <> tailProblems
   where
@@ -204,6 +221,8 @@ tiling l = outside <> unaligned <> unfit <> flags <> coverage <> tailProblems
       Nothing -> []
       Just t  -> [ BadAlign (tailAlign t) | tailAlign t < 1 ]
                  <> [ NoLength n | Just n <- [tailLength t], not (any (\f -> fieldName f == n && fieldKind f == Unsigned) fs) ]
+                 <> [ PadNoLength (tailName t) (tailAlign t) | tailAlign t > 1, isNothing (tailLength t) ]
+                 <> [ TailKind (tailName t) (tailKind t) | tailKind t `notElem` [Bytes, Reserved] ]
 
 -- | Whether every bit of a layout's fixed part is covered by exactly one
 --   field (and its tail is sound): what a generated layout asserts.
@@ -223,15 +242,20 @@ data Content
   | Octets !ByteString
   deriving (Eq, Show)
 
--- | What a lenient 'decode' reports and goes on from.
+-- | What a lenient 'decode' reports and goes on from, each with the name of
+--   its field (or tail) and the offset of its first bit as 'bitOffset' counts
+--   it, which tells apart fields of one name (a layout has several
+--   @Reserved@), then the value read as a big-endian number.
 data Difference
-  = PinDiffers !Text !Integer !Integer  -- ^ a pinned field read with another value: the pin, the value read
-  | ReservedNotZero !Text !Integer      -- ^ reserved bits read other than zero
+  = PinDiffers !Text !Int !Integer !Integer  -- ^ a pinned field read with another value: the pin, the value read
+  | ReservedNotZero !Text !Int !Integer      -- ^ reserved bits, or a reserved tail's bytes, read other than zero
+  | PaddingNotZero !Text !Int !Integer       -- ^ the zeros a tail is padded with read other than zero: the tail's name
   deriving (Eq, Show)
 
 -- | A decoded layout: every field's value but the reserved ones', in field
---   order, then the tail's; what differs from the layout's pins and reserved
---   bits; and the input after the layout (after the tail's padding).
+--   order, then the tail's (none for a reserved tail); what differs from the
+--   layout's pins, reserved bits and zeros; and the input after the layout
+--   (after the tail's padding).
 data Decoded = Decoded
   { decodedFields      :: ![(Text, Content)]
   , decodedDifferences :: ![Difference]
@@ -254,9 +278,10 @@ data LayoutError
   deriving (Eq, Show)
 
 -- | Encode values, by field name, as a layout's bytes: the fixed part, then the
---   tail and its padding. A reserved field takes no value and is zeros; a pin
---   is written as itself (a value given for it must be the pin); the tail's
---   length field, if not given, is the tail's length.
+--   tail and its padding. A reserved field takes no value and is zeros, and a
+--   reserved tail takes none and is written as none; a pin is written as
+--   itself (a value given for it must be the pin); the tail's length field, if
+--   not given, is the tail's length.
 --
 -- >>> encode header [("Version", Number 2), ("Length", Number 0x1234)]
 -- Right " \DC24"
@@ -264,14 +289,16 @@ data LayoutError
 -- Left (OutOfRange "Version" 16)
 -- >>> encode header [("Version", Number 2)]
 -- Left (MissingField "Length")
+-- >>> encode header { layoutTail = Just (Tail "Rest" Nothing 1 Reserved) } [("Version", Number 2), ("Length", Number 0), ("Rest", Octets "x")]
+-- Left (ReservedGiven "Rest")
 encode :: Layout -> [(Text, Content)] -> Either LayoutError ByteString
 encode l vs = do
   unless (tiles l) (Left (NotTiled (tiling l)))
   traverse_ (\(n, _) -> unless (n `elem` names) (Left (UnknownField n))) vs
   tailBytes <- traverse tailOf (layoutTail l)
   let lengthOf = case (layoutTail l, tailBytes) of
-        (Just (Tail _ (Just lf) _), Just bs) -> Just (lf, B.length bs)
-        _                                    -> Nothing
+        (Just (Tail _ (Just lf) _ _), Just bs) -> Just (lf, B.length bs)
+        _                                      -> Nothing
   fixed <- foldM (\acc f -> (acc .|.) . place f <$> valueOf lengthOf f) 0 (layoutFields l)
   pure (integerBytes (layoutSize l) fixed <> maybe mempty (padded (maybe 1 tailAlign (layoutTail l))) tailBytes)
   where
@@ -279,10 +306,11 @@ encode l vs = do
     given  = Map.fromListWith (\_ old -> old) vs
     total  = layoutSize l * 8
     place f v = v `shiftL` (total - fieldEnd f)
-    tailOf t = case Map.lookup (tailName t) given of
-      Nothing         -> Right mempty
-      Just (Octets b) -> Right b
-      Just (Number _) -> Left (WrongContent (tailName t))
+    tailOf t = case (tailKind t, Map.lookup (tailName t) given) of
+      (Reserved, Just _)   -> Left (ReservedGiven (tailName t))
+      (_, Nothing)         -> Right mempty
+      (_, Just (Octets b)) -> Right b
+      (_, Just (Number _)) -> Left (WrongContent (tailName t))
     valueOf lengthOf f = case (fieldKind f, Map.lookup (fieldName f) given) of
       (Reserved, Nothing)           -> Right 0
       (Reserved, Just _)            -> Left (ReservedGiven (fieldName f))
@@ -306,27 +334,42 @@ encode l vs = do
     padded align b = b <> B.replicate ((negate (B.length b)) `mod` align) 0
 
 -- | Decode a layout from the start of the input, reporting a pin read with
---   another value and reserved bits read other than zero ('Difference') rather
---   than refusing them: how a host reads what a drive sent.
+--   another value, reserved bits read other than zero and a tail's zeros
+--   (its padding, a reserved tail) read other than zero ('Difference') rather
+--   than refusing them: how a host reads what a drive sent. A length field
+--   that gives more bytes than the input holds is 'Truncated'.
 --
 -- >>> decode header "\x2f\x12\x34rest"
--- Right (Decoded {decodedFields = [("Version",Number 2),("Length",Number 4660)], decodedDifferences = [ReservedNotZero "Reserved" 15], decodedRest = "rest"})
+-- Right (Decoded {decodedFields = [("Version",Number 2),("Length",Number 4660)], decodedDifferences = [ReservedNotZero "Reserved" 4 15], decodedRest = "rest"})
 -- >>> decode header "\x20"
 -- Left (Truncated 3 1)
+-- >>> let framed = Layout "Framed" 1 [byteRange "Length" 0 0 Unsigned] (Just (Tail "Data" (Just "Length") 4 Bytes))
+-- >>> decode framed "\x02\&ab\x00\x07next"
+-- Right (Decoded {decodedFields = [("Length",Number 2),("Data",Octets "ab")], decodedDifferences = [PaddingNotZero "Data" 24 7], decodedRest = "next"})
+-- >>> decodedDifferences <$> decode header { layoutTail = Just (Tail "Rest" Nothing 1 Reserved) } "\x20\x00\x00\x00\x01"
+-- Right [ReservedNotZero "Rest" 24 1]
 decode :: Layout -> ByteString -> Either LayoutError Decoded
 decode l input = do
   unless (tiles l) (Left (NotTiled (tiling l)))
   when (B.length input < size) (Left (Truncated size (B.length input)))
-  (tailField, rest) <- case layoutTail l of
-    Nothing -> Right ([], B.drop size input)
+  (tailBytes, padding, rest) <- case layoutTail l of
+    Nothing -> Right (Nothing, mempty, B.drop size input)
     Just t  -> case tailLength t of
-      Nothing -> Right ([(tailName t, Octets (B.drop size input))], mempty)
+      Nothing -> Right (Just (t, B.drop size input), mempty, mempty)
       Just lf -> do
-        let n = maybe 0 fromInteger (L.lookup lf [ (name, v) | (name, Number v) <- values ])
-            end = size + n + (negate n `mod` tailAlign t)
-        when (B.length input < end) (Left (Truncated end (B.length input)))
-        Right ([(tailName t, Octets (B.take n (B.drop size input)))], B.drop end input)
-  pure (Decoded (values <> tailField) differences rest)
+        let n = fromMaybe 0 (L.lookup lf [ (name, v) | (name, Number v) <- values ])
+            end = toInteger size + n + (negate n `mod` toInteger (tailAlign t))
+            short = Truncated (fromInteger (min end (toInteger (maxBound :: Int)))) (B.length input)
+        when (toInteger (B.length input) < end) (Left short)
+        let n' = fromInteger n
+            end' = fromInteger end
+        Right (Just (t, B.take n' (B.drop size input)), B.take (end' - size - n') (B.drop (size + n') input), B.drop end' input)
+  let tailField = [ (tailName t, Octets bs) | Just (t, bs) <- [tailBytes], tailKind t /= Reserved ]
+      tailDiffs = concat
+        [ [ ReservedNotZero (tailName t) (size * 8) (bytesInteger bs) | tailKind t == Reserved, B.any (/= 0) bs ]
+          <> [ PaddingNotZero (tailName t) ((size + B.length bs) * 8) (bytesInteger padding) | B.any (/= 0) padding ]
+        | Just (t, bs) <- [tailBytes] ]
+  pure (Decoded (values <> tailField) (differences <> tailDiffs) rest)
   where
     size  = layoutSize l
     total = size * 8
@@ -339,8 +382,8 @@ decode l input = do
       _        -> Just (fieldName f, Number (raw f))
     differences = mapMaybe differs (layoutFields l)
     differs f = case fieldKind f of
-      Pinned p | raw f /= p -> Just (PinDiffers (fieldName f) p (raw f))
-      Reserved | raw f /= 0 -> Just (ReservedNotZero (fieldName f) (raw f))
+      Pinned p | raw f /= p -> Just (PinDiffers (fieldName f) (fieldStart f) p (raw f))
+      Reserved | raw f /= 0 -> Just (ReservedNotZero (fieldName f) (fieldStart f) (raw f))
       _                     -> Nothing
 
 -- | 'decode', refusing a pin read with another value: how a TPer's own
@@ -353,9 +396,22 @@ decode l input = do
 -- >>> decodedFields <$> decodeStrict pinned "\x10\x00\x05"
 -- Right [("Version",Number 1),("Length",Number 5)]
 decodeStrict :: Layout -> ByteString -> Either LayoutError Decoded
-decodeStrict l input = decode l input >>= \d -> case [ PinViolated n p v | PinDiffers n p v <- decodedDifferences d ] of
+decodeStrict l input = decode l input >>= \d -> case [ PinViolated n p v | PinDiffers n _ p v <- decodedDifferences d ] of
   e : _ -> Left e
   []    -> Right d
+
+-- | The layouts among several whose every pin the input holds, each with what
+--   it decodes to: which of several structures the input is, told apart by
+--   their constants ('decodeStrict'), reserved bits and zeros read otherwise
+--   still only reported. A lenient 'decode' that reports a pin read otherwise
+--   is not a match: a STACK_RESET pending reply decoded as a response reads
+--   as a response, its Available Data Length a mere 'Difference'.
+--
+-- >>> let reply k = Layout ("Reply " <> tshow k) 2 [byteRange "Code" 0 0 (Pinned k), byteRange "Value" 1 1 Unsigned] Nothing
+-- >>> map (layoutName . fst) (matching [reply 1, reply 2] "\x02\x09")
+-- ["Reply 2"]
+matching :: [Layout] -> ByteString -> [(Layout, Decoded)]
+matching ls input = [ (l, d) | l <- ls, Right d <- [decodeStrict l input] ]
 
 
 -- * Bytes and integers

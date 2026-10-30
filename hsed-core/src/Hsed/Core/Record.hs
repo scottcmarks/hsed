@@ -10,18 +10,21 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The typed side of a byte layout ("Hsed.Core.Layout"). The @byteGrid@ rule
-(design docs/spec-as-source.md example E7) generates, beside each byte grid's
-'Layout', a record with one field for each field of the layout that carries a
-value (an unsigned number as the narrowest of 'Word8' to 'Word64' that holds
-it, a flag as 'Bool', a byte string as 'ByteString'), and an instance of
+The typed side of a byte layout ("Hsed.Core.Layout"). The spec compiler
+(design docs/spec-as-source.md examples E7 and E8) generates, beside each
+layout of the @byteGrid@, @byteFieldValue@ and @feature@ rules, a record with
+one field for each field of the layout that carries a value (an unsigned
+number as the narrowest of 'Word8' to 'Word64' that holds it, 'Natural'
+beyond, a flag as 'Bool', a byte string as 'ByteString'), and an instance of
 'LayoutRecord' that names the layout and maps the record's fields to the
-layout's by name. What the layout fixes is not in the record: reserved bits
-(written as zeros), the constants a TPer SHALL send (pins), and the field
-that gives a variable tail's length (computed from the tail when encoding,
-used to find it when decoding). A layout with a tail gives two records, the
-fixed part's (@ComPacketHeader@) and the whole (@ComPacket@: the header and
-the tail's bytes), and the whole is the instance.
+layout's by name (a feature descriptor's record is also an instance of
+"Hsed.Core.Feature"'s subclass). What the layout fixes is not in the record:
+reserved bits (written as zeros), a reserved tail (written as none), the
+constants a TPer SHALL send (pins), and the field that gives a variable
+tail's length (computed from the tail when encoding, used to find it when
+decoding). A layout with a tail gives two records, the fixed part's
+(@ComPacketHeader@) and the whole (@ComPacket@: the header and the tail's
+bytes), and the whole is the instance.
 
 'encodeRecord' and 'decodeRecord' are 'Hsed.Core.Layout.encode' and
 'Hsed.Core.Layout.decode' through the instance; the helpers 'number',
@@ -100,7 +103,7 @@ encodeRecord a = encode (recordLayout (Proxy :: Proxy a)) (recordFields a)
 -- >>> decodeRecord "(*rest" :: Either LayoutError (DecodedRecord Header)
 -- Right (DecodedRecord {drRecord = Header {hVersion = 2, hBusy = True}, drDifferences = [], drRest = "rest"})
 -- >>> drDifferences <$> (decodeRecord "\x2f\x2b" :: Either LayoutError (DecodedRecord Header))
--- Right [ReservedNotZero "Reserved" 7,PinDiffers "Code" 42 43]
+-- Right [ReservedNotZero "Reserved" 5 7,PinDiffers "Code" 8 42 43]
 decodeRecord :: forall a. LayoutRecord a => ByteString -> Either LayoutError (DecodedRecord a)
 decodeRecord = decodeWith decode
 

@@ -16,10 +16,11 @@ name and no UID (C-FMT-RESOLVE in docs/LEDGER.md).
 -}
 module Hsed.Gen.Core.TableDescs where
 
-import           Hsed.Core.Table (Col (..), TableDesc (..))
+import           Hsed.Core.Table    (Col (..), TableDesc (..))
+import           Hsed.Core.TypeName (TypeName (..))
 import           Hsed.Gen.Core.TableUIDs
 import           Hsed.Gen.Core.Types
-import           Prelude         (Bool (..), Maybe (..))
+import           Prelude            (Bool (..), Maybe (..))
 
 -- | core-2.01 T169 SPInfo Table Description (PDF 154 / p.137, ord 171, sha256:03415cf4d68d)
 spInfoTableDesc :: TableDesc
@@ -28,13 +29,13 @@ spInfoTableDesc = TableDesc
   , tdTableUID  = uSPInfoTable
   , tdObjectUID = uSPInfoTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "SPID" False "uid" (Just uuidType)
-      , Col 0x02 "Name" False "name" (Just unameType)
-      , Col 0x03 "Size" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x04 "SizeInUse" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x05 "SPSessionTimeout" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x06 "Enabled" False "boolean" (Just ubooleanType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "SPID" False (TypeName "uid" (Just uuidType))
+      , Col 0x02 "Name" False (TypeName "name" (Just unameType))
+      , Col 0x03 "Size" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x04 "SizeInUse" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x05 "SPSessionTimeout" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x06 "Enabled" False (TypeName "boolean" (Just ubooleanType))
       ]
   }
 
@@ -45,10 +46,10 @@ spTemplatesTableDesc = TableDesc
   , tdTableUID  = uSPTemplatesTable
   , tdObjectUID = uSPTemplatesTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "TemplateID" False "Template_object_ref" (Just uTemplate_object_refType)
-      , Col 0x02 "Name" False "name" (Just unameType)
-      , Col 0x03 "Version" False "bytes_4" (Just ubytes_4Type)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "TemplateID" False (TypeName "Template_object_ref" (Just uTemplate_object_refType))
+      , Col 0x02 "Name" False (TypeName "name" (Just unameType))
+      , Col 0x03 "Version" False (TypeName "bytes_4" (Just ubytes_4Type))
       ]
   }
 
@@ -59,19 +60,19 @@ tableTableDesc = TableDesc
   , tdTableUID  = uTableTable
   , tdObjectUID = uTableTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "TemplateID" True "Template_object_ref" (Just uTemplate_object_refType)
-      , Col 0x04 "Kind" False "table_kind" (Just utable_kindType)
-      , Col 0x05 "Column" False "Column_object_ref" (Just uColumn_object_refType)
-      , Col 0x06 "NumColumns" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x07 "Rows" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x08 "RowsFree" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x09 "RowBytes" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x0A "LastID" False "uid" (Just uuidType)
-      , Col 0x0B "MinSize" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x0C "MaxSize" False "uinteger_4" (Just uuinteger_4Type)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "TemplateID" True (TypeName "Template_object_ref" (Just uTemplate_object_refType))
+      , Col 0x04 "Kind" False (TypeName "table_kind" (Just utable_kindType))
+      , Col 0x05 "Column" False (TypeName "Column_object_ref" (Just uColumn_object_refType))
+      , Col 0x06 "NumColumns" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x07 "Rows" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x08 "RowsFree" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x09 "RowBytes" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x0A "LastID" False (TypeName "uid" (Just uuidType))
+      , Col 0x0B "MinSize" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x0C "MaxSize" False (TypeName "uinteger_4" (Just uuinteger_4Type))
       ]
   }
 
@@ -82,15 +83,15 @@ columnTableDesc = TableDesc
   , tdTableUID  = uColumnTable
   , tdObjectUID = uColumnTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" False "name" (Just unameType)
-      , Col 0x02 "CommonName" False "name" (Just unameType)
-      , Col 0x03 "Type" False "Type_object_ref" (Just uType_object_refType)
-      , Col 0x04 "IsUnique" False "boolean" (Just ubooleanType)
-      , Col 0x05 "ColumnNumber" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x06 "Transactional" False "boolean_def_true" Nothing
-      , Col 0x07 "Next" False "Column_object_ref" (Just uColumn_object_refType)
-      , Col 0x08 "AttributeFlags" False "attr_flags" (Just uattr_flagsType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" False (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" False (TypeName "name" (Just unameType))
+      , Col 0x03 "Type" False (TypeName "Type_object_ref" (Just uType_object_refType))
+      , Col 0x04 "IsUnique" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x05 "ColumnNumber" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x06 "Transactional" False (TypeName "boolean_def_true" Nothing)
+      , Col 0x07 "Next" False (TypeName "Column_object_ref" (Just uColumn_object_refType))
+      , Col 0x08 "AttributeFlags" False (TypeName "attr_flags" (Just uattr_flagsType))
       ]
   }
 
@@ -101,11 +102,11 @@ typeTableDesc = TableDesc
   , tdTableUID  = uTypeTable
   , tdObjectUID = uTypeTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Format" False "type_def" (Just utype_defType)
-      , Col 0x04 "Size" False "uinteger_2" (Just uuinteger_2Type)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Format" False (TypeName "type_def" (Just utype_defType))
+      , Col 0x04 "Size" False (TypeName "uinteger_2" (Just uuinteger_2Type))
       ]
   }
 
@@ -116,10 +117,10 @@ methodIDTableDesc = TableDesc
   , tdTableUID  = uMethodIDTable
   , tdObjectUID = uMethodIDTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "TemplateID" True "Template_object_ref" (Just uTemplate_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "TemplateID" True (TypeName "Template_object_ref" (Just uTemplate_object_refType))
       ]
   }
 
@@ -130,21 +131,21 @@ accessControlTableDesc = TableDesc
   , tdTableUID  = uAccessControlTable
   , tdObjectUID = uAccessControlTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "InvokingID" True "table_or_object_ref" (Just utable_or_object_refType)
-      , Col 0x02 "MethodID" True "MethodID_object_ref" (Just uMethodID_object_refType)
-      , Col 0x03 "CommonName" False "name" (Just unameType)
-      , Col 0x04 "ACL" False "ACL" (Just uACLType)
-      , Col 0x05 "Log" False "log_select" (Just ulog_selectType)
-      , Col 0x06 "AddACEACL" False "ACL" (Just uACLType)
-      , Col 0x07 "RemoveACEACL" False "ACL" (Just uACLType)
-      , Col 0x08 "GetACLACL" False "ACL" (Just uACLType)
-      , Col 0x09 "DeleteMethodACL" False "ACL" (Just uACLType)
-      , Col 0x0A "AddACELog" False "log_select" (Just ulog_selectType)
-      , Col 0x0B "RemoveACELog" False "log_select" (Just ulog_selectType)
-      , Col 0x0C "GetACLLog" False "log_select" (Just ulog_selectType)
-      , Col 0x0D "DeleteMethodLog" False "log_select" (Just ulog_selectType)
-      , Col 0x0E "LogTo" False "LogList_object_ref" (Just uLogList_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "InvokingID" True (TypeName "table_or_object_ref" (Just utable_or_object_refType))
+      , Col 0x02 "MethodID" True (TypeName "MethodID_object_ref" (Just uMethodID_object_refType))
+      , Col 0x03 "CommonName" False (TypeName "name" (Just unameType))
+      , Col 0x04 "ACL" False (TypeName "ACL" (Just uACLType))
+      , Col 0x05 "Log" False (TypeName "log_select" (Just ulog_selectType))
+      , Col 0x06 "AddACEACL" False (TypeName "ACL" (Just uACLType))
+      , Col 0x07 "RemoveACEACL" False (TypeName "ACL" (Just uACLType))
+      , Col 0x08 "GetACLACL" False (TypeName "ACL" (Just uACLType))
+      , Col 0x09 "DeleteMethodACL" False (TypeName "ACL" (Just uACLType))
+      , Col 0x0A "AddACELog" False (TypeName "log_select" (Just ulog_selectType))
+      , Col 0x0B "RemoveACELog" False (TypeName "log_select" (Just ulog_selectType))
+      , Col 0x0C "GetACLLog" False (TypeName "log_select" (Just ulog_selectType))
+      , Col 0x0D "DeleteMethodLog" False (TypeName "log_select" (Just ulog_selectType))
+      , Col 0x0E "LogTo" False (TypeName "LogList_object_ref" (Just uLogList_object_refType))
       ]
   }
 
@@ -155,10 +156,10 @@ secretProtectTableDesc = TableDesc
   , tdTableUID  = uSecretProtectTable
   , tdObjectUID = uSecretProtectTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Table" False "Table_object_ref" (Just uTable_object_refType)
-      , Col 0x02 "ColumnNumber" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x03 "ProtectMechanisms" False "protect_types" (Just uprotect_typesType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Table" False (TypeName "Table_object_ref" (Just uTable_object_refType))
+      , Col 0x02 "ColumnNumber" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x03 "ProtectMechanisms" False (TypeName "protect_types" (Just uprotect_typesType))
       ]
   }
 
@@ -169,11 +170,11 @@ aceTableDesc = TableDesc
   , tdTableUID  = uACETable
   , tdObjectUID = uACETableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "BooleanExpr" False "AC_element" (Just uAC_elementType)
-      , Col 0x04 "Columns" False "ACE_columns" (Just uACE_columnsType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "BooleanExpr" False (TypeName "AC_element" (Just uAC_elementType))
+      , Col 0x04 "Columns" False (TypeName "ACE_columns" (Just uACE_columnsType))
       ]
   }
 
@@ -184,25 +185,25 @@ authorityTableDesc = TableDesc
   , tdTableUID  = uAuthorityTable
   , tdObjectUID = uAuthorityTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "IsClass" False "boolean" (Just ubooleanType)
-      , Col 0x04 "Class" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x05 "Enabled" False "boolean" (Just ubooleanType)
-      , Col 0x06 "Secure" False "messaging_type" (Just umessaging_typeType)
-      , Col 0x07 "HashAndSign" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x08 "PresentCertificate" False "boolean" (Just ubooleanType)
-      , Col 0x09 "Operation" False "auth_method" (Just uauth_methodType)
-      , Col 0x0A "Credential" False "cred_object_uidref" (Just ucred_object_uidrefType)
-      , Col 0x0B "ResponseSign" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x0C "ResponseExch" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x0D "ClockStart" False "date" (Just udateType)
-      , Col 0x0E "ClockEnd" False "date" (Just udateType)
-      , Col 0x0F "Limit" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x10 "Uses" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x11 "Log" False "log_select" (Just ulog_selectType)
-      , Col 0x12 "LogTo" False "LogList_object_ref" (Just uLogList_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "IsClass" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x04 "Class" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x05 "Enabled" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x06 "Secure" False (TypeName "messaging_type" (Just umessaging_typeType))
+      , Col 0x07 "HashAndSign" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x08 "PresentCertificate" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x09 "Operation" False (TypeName "auth_method" (Just uauth_methodType))
+      , Col 0x0A "Credential" False (TypeName "cred_object_uidref" (Just ucred_object_uidrefType))
+      , Col 0x0B "ResponseSign" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x0C "ResponseExch" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x0D "ClockStart" False (TypeName "date" (Just udateType))
+      , Col 0x0E "ClockEnd" False (TypeName "date" (Just udateType))
+      , Col 0x0F "Limit" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x10 "Uses" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x11 "Log" False (TypeName "log_select" (Just ulog_selectType))
+      , Col 0x12 "LogTo" False (TypeName "LogList_object_ref" (Just uLogList_object_refType))
       ]
   }
 
@@ -213,11 +214,11 @@ certificatesTableDesc = TableDesc
   , tdTableUID  = uCertificatesTable
   , tdObjectUID = uCertificatesTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "CertData" False "byte_table_ref" (Just ubyte_table_refType)
-      , Col 0x04 "CertSize" False "uinteger_4" (Just uuinteger_4Type)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "CertData" False (TypeName "byte_table_ref" (Just ubyte_table_refType))
+      , Col 0x04 "CertSize" False (TypeName "uinteger_4" (Just uuinteger_4Type))
       ]
   }
 
@@ -228,14 +229,14 @@ c_PINTableDesc = TableDesc
   , tdTableUID  = uC_PINTable
   , tdObjectUID = uC_PINTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "PIN" False "password" (Just upasswordType)
-      , Col 0x04 "CharSet" False "byte_table_ref" (Just ubyte_table_refType)
-      , Col 0x05 "TryLimit" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x06 "Tries" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x07 "Persistence" False "boolean" (Just ubooleanType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "PIN" False (TypeName "password" (Just upasswordType))
+      , Col 0x04 "CharSet" False (TypeName "byte_table_ref" (Just ubyte_table_refType))
+      , Col 0x05 "TryLimit" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x06 "Tries" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x07 "Persistence" False (TypeName "boolean" (Just ubooleanType))
       ]
   }
 
@@ -246,21 +247,21 @@ c_RSA_1024TableDesc = TableDesc
   , tdTableUID  = uC_RSA_1024Table
   , tdObjectUID = uC_RSA_1024TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Format" False "padding_type" (Just upadding_typeType)
-      , Col 0x04 "Pu_Exp" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x05 "Mod" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x06 "Pr_Exp" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x07 "P" False "uinteger_64" (Just uuinteger_64Type)
-      , Col 0x08 "Q" False "uinteger_64" (Just uuinteger_64Type)
-      , Col 0x09 "Dmp1" False "uinteger_64" (Just uuinteger_64Type)
-      , Col 0x0A "Dmq1" False "uinteger_64" (Just uuinteger_64Type)
-      , Col 0x0B "Iqmp" False "uinteger_64" (Just uuinteger_64Type)
-      , Col 0x0C "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0D "ChainLimit" False "int_1_def_0" Nothing
-      , Col 0x0E "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Format" False (TypeName "padding_type" (Just upadding_typeType))
+      , Col 0x04 "Pu_Exp" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x05 "Mod" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x06 "Pr_Exp" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x07 "P" False (TypeName "uinteger_64" (Just uuinteger_64Type))
+      , Col 0x08 "Q" False (TypeName "uinteger_64" (Just uuinteger_64Type))
+      , Col 0x09 "Dmp1" False (TypeName "uinteger_64" (Just uuinteger_64Type))
+      , Col 0x0A "Dmq1" False (TypeName "uinteger_64" (Just uuinteger_64Type))
+      , Col 0x0B "Iqmp" False (TypeName "uinteger_64" (Just uuinteger_64Type))
+      , Col 0x0C "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0D "ChainLimit" False (TypeName "int_1_def_0" Nothing)
+      , Col 0x0E "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -271,21 +272,21 @@ c_RSA_2048TableDesc = TableDesc
   , tdTableUID  = uC_RSA_2048Table
   , tdObjectUID = uC_RSA_2048TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Format" False "padding_type" (Just upadding_typeType)
-      , Col 0x04 "Pu_Exp" False "uinteger_256" (Just uuinteger_256Type)
-      , Col 0x05 "Mod" False "uinteger_256" (Just uuinteger_256Type)
-      , Col 0x06 "Pr_Exp" False "uinteger_256" (Just uuinteger_256Type)
-      , Col 0x07 "P" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x08 "Q" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x09 "Dmp1" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x0A "Dmq1" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x0B "Iqmp" False "uinteger_128" (Just uuinteger_128Type)
-      , Col 0x0C "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0D "ChainLimit" False "int_1_def_0" Nothing
-      , Col 0x0E "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Format" False (TypeName "padding_type" (Just upadding_typeType))
+      , Col 0x04 "Pu_Exp" False (TypeName "uinteger_256" (Just uuinteger_256Type))
+      , Col 0x05 "Mod" False (TypeName "uinteger_256" (Just uuinteger_256Type))
+      , Col 0x06 "Pr_Exp" False (TypeName "uinteger_256" (Just uuinteger_256Type))
+      , Col 0x07 "P" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x08 "Q" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x09 "Dmp1" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x0A "Dmq1" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x0B "Iqmp" False (TypeName "uinteger_128" (Just uuinteger_128Type))
+      , Col 0x0C "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0D "ChainLimit" False (TypeName "int_1_def_0" Nothing)
+      , Col 0x0E "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -296,14 +297,14 @@ c_AES_128TableDesc = TableDesc
   , tdTableUID  = uC_AES_128Table
   , tdObjectUID = uC_AES_128TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "bytes_16" (Just ubytes_16Type)
-      , Col 0x04 "Mode" False "symmetric_mode" (Just usymmetric_modeType)
-      , Col 0x05 "FeedbackSize" False "feedback_size" (Just ufeedback_sizeType)
-      , Col 0x06 "ResidualData" False "bytes_16" (Just ubytes_16Type)
-      , Col 0x07 "Hash" False "hash_protocol" (Just uhash_protocolType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "bytes_16" (Just ubytes_16Type))
+      , Col 0x04 "Mode" False (TypeName "symmetric_mode" (Just usymmetric_modeType))
+      , Col 0x05 "FeedbackSize" False (TypeName "feedback_size" (Just ufeedback_sizeType))
+      , Col 0x06 "ResidualData" False (TypeName "bytes_16" (Just ubytes_16Type))
+      , Col 0x07 "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
       ]
   }
 
@@ -314,14 +315,14 @@ c_AES_256TableDesc = TableDesc
   , tdTableUID  = uC_AES_256Table
   , tdObjectUID = uC_AES_256TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "bytes_32" (Just ubytes_32Type)
-      , Col 0x04 "Mode" False "symmetric_mode" (Just usymmetric_modeType)
-      , Col 0x05 "FeedbackSize" False "feedback_size" (Just ufeedback_sizeType)
-      , Col 0x06 "ResidualData" False "bytes_16" (Just ubytes_16Type)
-      , Col 0x07 "Hash" False "hash_protocol" (Just uhash_protocolType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "bytes_32" (Just ubytes_32Type))
+      , Col 0x04 "Mode" False (TypeName "symmetric_mode" (Just usymmetric_modeType))
+      , Col 0x05 "FeedbackSize" False (TypeName "feedback_size" (Just ufeedback_sizeType))
+      , Col 0x06 "ResidualData" False (TypeName "bytes_16" (Just ubytes_16Type))
+      , Col 0x07 "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
       ]
   }
 
@@ -332,20 +333,20 @@ c_EC_160TableDesc = TableDesc
   , tdTableUID  = uC_EC_160Table
   , tdObjectUID = uC_EC_160TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "p" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x04 "r" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x05 "b" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x06 "x" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x07 "y" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x08 "alpha" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x09 "u" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x0A "v" False "uinteger_20" (Just uuinteger_20Type)
-      , Col 0x0B "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0C "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x0D "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "p" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x04 "r" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x05 "b" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x06 "x" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x07 "y" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x08 "alpha" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x09 "u" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x0A "v" False (TypeName "uinteger_20" (Just uuinteger_20Type))
+      , Col 0x0B "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0C "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x0D "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -356,20 +357,20 @@ c_EC_192TableDesc = TableDesc
   , tdTableUID  = uC_EC_192Table
   , tdObjectUID = uC_EC_192TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "p" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x04 "r" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x05 "b" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x06 "x" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x07 "y" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x08 "alpha" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x09 "u" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x0A "v" False "uinteger_24" (Just uuinteger_24Type)
-      , Col 0x0B "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0C "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x0D "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "p" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x04 "r" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x05 "b" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x06 "x" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x07 "y" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x08 "alpha" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x09 "u" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x0A "v" False (TypeName "uinteger_24" (Just uuinteger_24Type))
+      , Col 0x0B "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0C "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x0D "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -380,20 +381,20 @@ c_EC_224TableDesc = TableDesc
   , tdTableUID  = uC_EC_224Table
   , tdObjectUID = uC_EC_224TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "p" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x04 "r" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x05 "b" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x06 "x" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x07 "y" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x08 "alpha" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x09 "u" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x0A "v" False "uinteger_28" (Just uuinteger_28Type)
-      , Col 0x0B "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0C "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x0D "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "p" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x04 "r" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x05 "b" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x06 "x" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x07 "y" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x08 "alpha" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x09 "u" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x0A "v" False (TypeName "uinteger_28" (Just uuinteger_28Type))
+      , Col 0x0B "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0C "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x0D "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -404,20 +405,20 @@ c_EC_256TableDesc = TableDesc
   , tdTableUID  = uC_EC_256Table
   , tdObjectUID = uC_EC_256TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "p" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x04 "r" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x05 "b" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x06 "x" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x07 "y" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x08 "alpha" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x09 "u" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x0A "v" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x0B "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0C "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x0D "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "p" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x04 "r" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x05 "b" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x06 "x" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x07 "y" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x08 "alpha" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x09 "u" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x0A "v" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x0B "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0C "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x0D "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -428,20 +429,20 @@ c_EC_384TableDesc = TableDesc
   , tdTableUID  = uC_EC_384Table
   , tdObjectUID = uC_EC_384TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "p" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x04 "r" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x05 "b" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x06 "x" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x07 "y" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x08 "alpha" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x09 "u" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x0A "v" False "uinteger_48" (Just uuinteger_48Type)
-      , Col 0x0B "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0C "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x0D "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "p" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x04 "r" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x05 "b" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x06 "x" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x07 "y" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x08 "alpha" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x09 "u" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x0A "v" False (TypeName "uinteger_48" (Just uuinteger_48Type))
+      , Col 0x0B "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0C "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x0D "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -452,20 +453,20 @@ c_EC_521TableDesc = TableDesc
   , tdTableUID  = uC_EC_521Table
   , tdObjectUID = uC_EC_521TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "p" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x04 "r" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x05 "b" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x06 "x" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x07 "y" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x08 "alpha" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x09 "u" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x0A "v" False "uinteger_66" (Just uuinteger_66Type)
-      , Col 0x0B "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0C "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x0D "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "p" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x04 "r" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x05 "b" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x06 "x" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x07 "y" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x08 "alpha" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x09 "u" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x0A "v" False (TypeName "uinteger_66" (Just uuinteger_66Type))
+      , Col 0x0B "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0C "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x0D "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -476,23 +477,23 @@ c_EC_163TableDesc = TableDesc
   , tdTableUID  = uC_EC_163Table
   , tdObjectUID = uC_EC_163TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "k1" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x04 "k2" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x05 "k3" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x06 "r" False "uinteger_21" (Just uuinteger_21Type)
-      , Col 0x07 "a" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x08 "b" False "uinteger_21" (Just uuinteger_21Type)
-      , Col 0x09 "x" False "uinteger_21" (Just uuinteger_21Type)
-      , Col 0x0A "y" False "uinteger_21" (Just uuinteger_21Type)
-      , Col 0x0B "alpha" False "uinteger_21" (Just uuinteger_21Type)
-      , Col 0x0C "u" False "uinteger_21" (Just uuinteger_21Type)
-      , Col 0x0D "v" False "uinteger_21" (Just uuinteger_21Type)
-      , Col 0x0E "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0F "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x10 "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "k1" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x04 "k2" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x05 "k3" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x06 "r" False (TypeName "uinteger_21" (Just uuinteger_21Type))
+      , Col 0x07 "a" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x08 "b" False (TypeName "uinteger_21" (Just uuinteger_21Type))
+      , Col 0x09 "x" False (TypeName "uinteger_21" (Just uuinteger_21Type))
+      , Col 0x0A "y" False (TypeName "uinteger_21" (Just uuinteger_21Type))
+      , Col 0x0B "alpha" False (TypeName "uinteger_21" (Just uuinteger_21Type))
+      , Col 0x0C "u" False (TypeName "uinteger_21" (Just uuinteger_21Type))
+      , Col 0x0D "v" False (TypeName "uinteger_21" (Just uuinteger_21Type))
+      , Col 0x0E "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0F "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x10 "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -503,21 +504,21 @@ c_EC_233TableDesc = TableDesc
   , tdTableUID  = uC_EC_233Table
   , tdObjectUID = uC_EC_233TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "k" False "uinteger_2" (Just uuinteger_2Type)
-      , Col 0x04 "r" False "uinteger_30" (Just uuinteger_30Type)
-      , Col 0x05 "a" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x06 "b" False "uinteger_30" (Just uuinteger_30Type)
-      , Col 0x07 "x" False "uinteger_30" (Just uuinteger_30Type)
-      , Col 0x08 "y" False "uinteger_30" (Just uuinteger_30Type)
-      , Col 0x09 "alpha" False "uinteger_30" (Just uuinteger_30Type)
-      , Col 0x0A "u" False "uinteger_30" (Just uuinteger_30Type)
-      , Col 0x0B "v" False "uinteger_30" (Just uuinteger_30Type)
-      , Col 0x0C "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0D "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x0E "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "k" False (TypeName "uinteger_2" (Just uuinteger_2Type))
+      , Col 0x04 "r" False (TypeName "uinteger_30" (Just uuinteger_30Type))
+      , Col 0x05 "a" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x06 "b" False (TypeName "uinteger_30" (Just uuinteger_30Type))
+      , Col 0x07 "x" False (TypeName "uinteger_30" (Just uuinteger_30Type))
+      , Col 0x08 "y" False (TypeName "uinteger_30" (Just uuinteger_30Type))
+      , Col 0x09 "alpha" False (TypeName "uinteger_30" (Just uuinteger_30Type))
+      , Col 0x0A "u" False (TypeName "uinteger_30" (Just uuinteger_30Type))
+      , Col 0x0B "v" False (TypeName "uinteger_30" (Just uuinteger_30Type))
+      , Col 0x0C "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0D "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x0E "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -528,23 +529,23 @@ c_EC_283TableDesc = TableDesc
   , tdTableUID  = uC_EC_283Table
   , tdObjectUID = uC_EC_283TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "k1" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x04 "k2" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x05 "k3" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x06 "r" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x07 "a" False "uinteger_1" (Just uuinteger_1Type)
-      , Col 0x08 "b" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x09 "x" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x0A "y" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x0B "alpha" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x0C "u" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x0D "v" False "uinteger_36" (Just uuinteger_36Type)
-      , Col 0x0E "Hash" False "hash_protocol" (Just uhash_protocolType)
-      , Col 0x0F "ChainLimit" False "integer_1" (Just uinteger_1Type)
-      , Col 0x10 "Certificate" False "Certificates_object_ref" (Just uCertificates_object_refType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "k1" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x04 "k2" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x05 "k3" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x06 "r" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x07 "a" False (TypeName "uinteger_1" (Just uuinteger_1Type))
+      , Col 0x08 "b" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x09 "x" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x0A "y" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x0B "alpha" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x0C "u" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x0D "v" False (TypeName "uinteger_36" (Just uuinteger_36Type))
+      , Col 0x0E "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
+      , Col 0x0F "ChainLimit" False (TypeName "integer_1" (Just uinteger_1Type))
+      , Col 0x10 "Certificate" False (TypeName "Certificates_object_ref" (Just uCertificates_object_refType))
       ]
   }
 
@@ -555,11 +556,11 @@ c_HMAC_160TableDesc = TableDesc
   , tdTableUID  = uC_HMAC_160Table
   , tdObjectUID = uC_HMAC_160TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "bytes_20" (Just ubytes_20Type)
-      , Col 0x04 "Hash" False "hash_protocol" (Just uhash_protocolType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "bytes_20" (Just ubytes_20Type))
+      , Col 0x04 "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
       ]
   }
 
@@ -570,11 +571,11 @@ c_HMAC_256TableDesc = TableDesc
   , tdTableUID  = uC_HMAC_256Table
   , tdObjectUID = uC_HMAC_256TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "bytes_32" (Just ubytes_32Type)
-      , Col 0x04 "Hash" False "hash_protocol" (Just uhash_protocolType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "bytes_32" (Just ubytes_32Type))
+      , Col 0x04 "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
       ]
   }
 
@@ -585,11 +586,11 @@ c_HMAC_384TableDesc = TableDesc
   , tdTableUID  = uC_HMAC_384Table
   , tdObjectUID = uC_HMAC_384TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "bytes_48" (Just ubytes_48Type)
-      , Col 0x04 "Hash" False "hash_protocol" (Just uhash_protocolType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "bytes_48" (Just ubytes_48Type))
+      , Col 0x04 "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
       ]
   }
 
@@ -600,11 +601,11 @@ c_HMAC_512TableDesc = TableDesc
   , tdTableUID  = uC_HMAC_512Table
   , tdObjectUID = uC_HMAC_512TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "bytes_64" (Just ubytes_64Type)
-      , Col 0x04 "Hash" False "hash_protocol" (Just uhash_protocolType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "bytes_64" (Just ubytes_64Type))
+      , Col 0x04 "Hash" False (TypeName "hash_protocol" (Just uhash_protocolType))
       ]
   }
 
@@ -615,14 +616,14 @@ tPerInfoTableDesc = TableDesc
   , tdTableUID  = uTPerInfoTable
   , tdObjectUID = uTPerInfoTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Bytes" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x02 "GUDID" False "bytes_12" (Just ubytes_12Type)
-      , Col 0x03 "Generation" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x04 "FirmwareVersion" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x05 "ProtocolVersion" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x06 "SpaceForIssuance" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x07 "SSC" False "SSC" (Just uSSCType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Bytes" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x02 "GUDID" False (TypeName "bytes_12" (Just ubytes_12Type))
+      , Col 0x03 "Generation" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x04 "FirmwareVersion" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x05 "ProtocolVersion" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x06 "SpaceForIssuance" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x07 "SSC" False (TypeName "SSC" (Just uSSCType))
       ]
   }
 
@@ -633,13 +634,13 @@ cryptoSuiteTableDesc = TableDesc
   , tdTableUID  = uCryptoSuiteTable
   , tdObjectUID = uCryptoSuiteTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "CryptoCall" False "name" (Just unameType)
-      , Col 0x02 "CryptoLen" False "uinteger_2" (Just uuinteger_2Type)
-      , Col 0x03 "CryptoOp" False "name" (Just unameType)
-      , Col 0x04 "Special" False "boolean" (Just ubooleanType)
-      , Col 0x05 "Time" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x06 "Variance" False "uinteger_4" (Just uuinteger_4Type)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "CryptoCall" False (TypeName "name" (Just unameType))
+      , Col 0x02 "CryptoLen" False (TypeName "uinteger_2" (Just uuinteger_2Type))
+      , Col 0x03 "CryptoOp" False (TypeName "name" (Just unameType))
+      , Col 0x04 "Special" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x05 "Time" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x06 "Variance" False (TypeName "uinteger_4" (Just uuinteger_4Type))
       ]
   }
 
@@ -650,11 +651,11 @@ templateTableDesc = TableDesc
   , tdTableUID  = uTemplateTable
   , tdObjectUID = uTemplateTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "RevisionNumber" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x03 "Instances" False "uinteger_2" (Just uuinteger_2Type)
-      , Col 0x04 "MaxInstances" False "uinteger_2" (Just uuinteger_2Type)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "RevisionNumber" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x03 "Instances" False (TypeName "uinteger_2" (Just uuinteger_2Type))
+      , Col 0x04 "MaxInstances" False (TypeName "uinteger_2" (Just uuinteger_2Type))
       ]
   }
 
@@ -665,14 +666,14 @@ spTableDesc = TableDesc
   , tdTableUID  = uSPTable
   , tdObjectUID = uSPTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "ORG" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x03 "EffectiveAuth" False "max_bytes_32" (Just umax_bytes_32Type)
-      , Col 0x04 "DateofIssue" False "date" (Just udateType)
-      , Col 0x05 "Bytes" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x06 "LifeCycleState" False "life_cycle_state" (Just ulife_cycle_stateType)
-      , Col 0x07 "Frozen" False "boolean_def_false" Nothing
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "ORG" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x03 "EffectiveAuth" False (TypeName "max_bytes_32" (Just umax_bytes_32Type))
+      , Col 0x04 "DateofIssue" False (TypeName "date" (Just udateType))
+      , Col 0x05 "Bytes" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x06 "LifeCycleState" False (TypeName "life_cycle_state" (Just ulife_cycle_stateType))
+      , Col 0x07 "Frozen" False (TypeName "boolean_def_false" Nothing)
       ]
   }
 
@@ -683,20 +684,20 @@ clockTimeTableDesc = TableDesc
   , tdTableUID  = uClockTimeTable
   , tdObjectUID = uClockTimeTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "HaveHigh" False "boolean" (Just ubooleanType)
-      , Col 0x02 "HighByWhom" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x03 "HighSetTime" False "clock_time" (Just uclock_timeType)
-      , Col 0x04 "HighInitialTimer" False "clock_time" (Just uclock_timeType)
-      , Col 0x05 "HighLag" False "lag" (Just ulagType)
-      , Col 0x06 "HaveLow" False "boolean" (Just ubooleanType)
-      , Col 0x07 "LowByWhom" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x08 "LowSetTime" False "clock_time" (Just uclock_timeType)
-      , Col 0x09 "LowInitialTimer" False "clock_time" (Just uclock_timeType)
-      , Col 0x0A "LowLag" False "lag" (Just ulagType)
-      , Col 0x0B "MonotonicBase" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x0C "MonotonicReserve" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x0D "TrustMode" False "clock_kind" (Just uclock_kindType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "HaveHigh" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x02 "HighByWhom" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x03 "HighSetTime" False (TypeName "clock_time" (Just uclock_timeType))
+      , Col 0x04 "HighInitialTimer" False (TypeName "clock_time" (Just uclock_timeType))
+      , Col 0x05 "HighLag" False (TypeName "lag" (Just ulagType))
+      , Col 0x06 "HaveLow" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x07 "LowByWhom" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x08 "LowSetTime" False (TypeName "clock_time" (Just uclock_timeType))
+      , Col 0x09 "LowInitialTimer" False (TypeName "clock_time" (Just uclock_timeType))
+      , Col 0x0A "LowLag" False (TypeName "lag" (Just ulagType))
+      , Col 0x0B "MonotonicBase" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x0C "MonotonicReserve" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x0D "TrustMode" False (TypeName "clock_kind" (Just uclock_kindType))
       ]
   }
 
@@ -707,12 +708,12 @@ h_SHA_1TableDesc = TableDesc
   , tdTableUID  = uH_SHA_1Table
   , tdObjectUID = uH_SHA_1TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Proof" False "bytes_20" (Just ubytes_20Type)
-      , Col 0x04 "Accumulator" False "bytes_20" (Just ubytes_20Type)
-      , Col 0x05 "Signer" False "cred_object_uidref" (Just ucred_object_uidrefType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Proof" False (TypeName "bytes_20" (Just ubytes_20Type))
+      , Col 0x04 "Accumulator" False (TypeName "bytes_20" (Just ubytes_20Type))
+      , Col 0x05 "Signer" False (TypeName "cred_object_uidref" (Just ucred_object_uidrefType))
       ]
   }
 
@@ -723,12 +724,12 @@ h_SHA_256TableDesc = TableDesc
   , tdTableUID  = uH_SHA_256Table
   , tdObjectUID = uH_SHA_256TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Proof" False "bytes_32" (Just ubytes_32Type)
-      , Col 0x04 "Accumulator" False "bytes_32" (Just ubytes_32Type)
-      , Col 0x05 "Signer" False "cred_object_uidref" (Just ucred_object_uidrefType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Proof" False (TypeName "bytes_32" (Just ubytes_32Type))
+      , Col 0x04 "Accumulator" False (TypeName "bytes_32" (Just ubytes_32Type))
+      , Col 0x05 "Signer" False (TypeName "cred_object_uidref" (Just ucred_object_uidrefType))
       ]
   }
 
@@ -739,12 +740,12 @@ h_SHA_384TableDesc = TableDesc
   , tdTableUID  = uH_SHA_384Table
   , tdObjectUID = uH_SHA_384TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Proof" False "bytes_48" (Just ubytes_48Type)
-      , Col 0x04 "Accumulator" False "bytes_48" (Just ubytes_48Type)
-      , Col 0x05 "Signer" False "cred_object_uidref" (Just ucred_object_uidrefType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Proof" False (TypeName "bytes_48" (Just ubytes_48Type))
+      , Col 0x04 "Accumulator" False (TypeName "bytes_48" (Just ubytes_48Type))
+      , Col 0x05 "Signer" False (TypeName "cred_object_uidref" (Just ucred_object_uidrefType))
       ]
   }
 
@@ -755,12 +756,12 @@ h_SHA_512TableDesc = TableDesc
   , tdTableUID  = uH_SHA_512Table
   , tdObjectUID = uH_SHA_512TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Proof" False "bytes_64" (Just ubytes_64Type)
-      , Col 0x04 "Accumulator" False "bytes_64" (Just ubytes_64Type)
-      , Col 0x05 "Signer" False "cred_object_uidref" (Just ucred_object_uidrefType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Proof" False (TypeName "bytes_64" (Just ubytes_64Type))
+      , Col 0x04 "Accumulator" False (TypeName "bytes_64" (Just ubytes_64Type))
+      , Col 0x05 "Signer" False (TypeName "cred_object_uidref" (Just ucred_object_uidrefType))
       ]
   }
 
@@ -771,13 +772,13 @@ lockingInfoTableDesc = TableDesc
   , tdTableUID  = uLockingInfoTable
   , tdObjectUID = uLockingInfoTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" False "name" (Just unameType)
-      , Col 0x02 "Version" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x03 "EncryptSupport" False "enc_supported" (Just uenc_supportedType)
-      , Col 0x04 "MaxRanges" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x05 "MaxReEncryptions" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x06 "KeysAvailableCfg" False "keys_avail_conds" (Just ukeys_avail_condsType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" False (TypeName "name" (Just unameType))
+      , Col 0x02 "Version" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x03 "EncryptSupport" False (TypeName "enc_supported" (Just uenc_supportedType))
+      , Col 0x04 "MaxRanges" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x05 "MaxReEncryptions" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x06 "KeysAvailableCfg" False (TypeName "keys_avail_conds" (Just ukeys_avail_condsType))
       ]
   }
 
@@ -788,26 +789,26 @@ lockingTableDesc = TableDesc
   , tdTableUID  = uLockingTable
   , tdObjectUID = uLockingTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" False "name" (Just unameType)
-      , Col 0x02 "CommonName" False "name" (Just unameType)
-      , Col 0x03 "RangeStart" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x04 "RangeLength" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x05 "ReadLockEnabled" False "boolean" (Just ubooleanType)
-      , Col 0x06 "WriteLockEnabled" False "boolean" (Just ubooleanType)
-      , Col 0x07 "ReadLocked" False "boolean" (Just ubooleanType)
-      , Col 0x08 "WriteLocked" False "boolean" (Just ubooleanType)
-      , Col 0x09 "LockOnReset" False "reset_types" (Just ureset_typesType)
-      , Col 0x0A "ActiveKey" False "mediakey_object_uidref" (Just umediakey_object_uidrefType)
-      , Col 0x0B "NextKey" False "mediakey_object_uidref" (Just umediakey_object_uidrefType)
-      , Col 0x0C "ReEncryptState" False "reencrypt_state" (Just ureencrypt_stateType)
-      , Col 0x0D "ReEncryptRequest" False "reencrypt_request" (Just ureencrypt_requestType)
-      , Col 0x0E "AdvKeyMode" False "adv_key_mode" (Just uadv_key_modeType)
-      , Col 0x0F "VerifyMode" False "verify_mode" (Just uverify_modeType)
-      , Col 0x10 "ContOnReset" False "reset_types" (Just ureset_typesType)
-      , Col 0x11 "LastReEncryptLBA" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x12 "LastReEncStat" False "last_reenc_stat" (Just ulast_reenc_statType)
-      , Col 0x13 "GeneralStatus" False "gen_status" (Just ugen_statusType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" False (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" False (TypeName "name" (Just unameType))
+      , Col 0x03 "RangeStart" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x04 "RangeLength" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x05 "ReadLockEnabled" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x06 "WriteLockEnabled" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x07 "ReadLocked" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x08 "WriteLocked" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x09 "LockOnReset" False (TypeName "reset_types" (Just ureset_typesType))
+      , Col 0x0A "ActiveKey" False (TypeName "mediakey_object_uidref" (Just umediakey_object_uidrefType))
+      , Col 0x0B "NextKey" False (TypeName "mediakey_object_uidref" (Just umediakey_object_uidrefType))
+      , Col 0x0C "ReEncryptState" False (TypeName "reencrypt_state" (Just ureencrypt_stateType))
+      , Col 0x0D "ReEncryptRequest" False (TypeName "reencrypt_request" (Just ureencrypt_requestType))
+      , Col 0x0E "AdvKeyMode" False (TypeName "adv_key_mode" (Just uadv_key_modeType))
+      , Col 0x0F "VerifyMode" False (TypeName "verify_mode" (Just uverify_modeType))
+      , Col 0x10 "ContOnReset" False (TypeName "reset_types" (Just ureset_typesType))
+      , Col 0x11 "LastReEncryptLBA" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x12 "LastReEncStat" False (TypeName "last_reenc_stat" (Just ulast_reenc_statType))
+      , Col 0x13 "GeneralStatus" False (TypeName "gen_status" (Just ugen_statusType))
       ]
   }
 
@@ -818,11 +819,11 @@ k_AES_128TableDesc = TableDesc
   , tdTableUID  = uK_AES_128Table
   , tdObjectUID = uK_AES_128TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "key_128" (Just ukey_128Type)
-      , Col 0x04 "Mode" False "symmetric_mode_media" (Just usymmetric_mode_mediaType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "key_128" (Just ukey_128Type))
+      , Col 0x04 "Mode" False (TypeName "symmetric_mode_media" (Just usymmetric_mode_mediaType))
       ]
   }
 
@@ -833,11 +834,11 @@ k_AES_256TableDesc = TableDesc
   , tdTableUID  = uK_AES_256Table
   , tdObjectUID = uK_AES_256TableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Key" False "key_256" (Just ukey_256Type)
-      , Col 0x04 "Mode" False "symmetric_mode_media" (Just usymmetric_mode_mediaType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Key" False (TypeName "key_256" (Just ukey_256Type))
+      , Col 0x04 "Mode" False (TypeName "symmetric_mode_media" (Just usymmetric_mode_mediaType))
       ]
   }
 
@@ -848,10 +849,10 @@ mbrControlTableDesc = TableDesc
   , tdTableUID  = uMBRControlTable
   , tdObjectUID = uMBRControlTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Enable" False "boolean" (Just ubooleanType)
-      , Col 0x02 "Done" False "boolean" (Just ubooleanType)
-      , Col 0x03 "MBRDoneOnReset" False "reset_types" (Just ureset_typesType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Enable" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x02 "Done" False (TypeName "boolean" (Just ubooleanType))
+      , Col 0x03 "MBRDoneOnReset" False (TypeName "reset_types" (Just ureset_typesType))
       ]
   }
 
@@ -862,20 +863,20 @@ logTableDesc = TableDesc
   , tdTableUID  = uLogTable
   , tdObjectUID = uLogTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Prev" False "log_row_ref" (Just ulog_row_refType)
-      , Col 0x02 "Next" False "log_row_ref" (Just ulog_row_refType)
-      , Col 0x03 "Session" False "uinteger_4" (Just uuinteger_4Type)
-      , Col 0x04 "SigningAuthority" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x05 "SigningAuthName" False "name" (Just unameType)
-      , Col 0x06 "ExchangeAuthority" False "Authority_object_ref" (Just uAuthority_object_refType)
-      , Col 0x07 "ExchangeAuthName" False "name" (Just unameType)
-      , Col 0x08 "MonotonicTime" False "uinteger_8" (Just uuinteger_8Type)
-      , Col 0x09 "ExactTime" False "clock_time" (Just uclock_timeType)
-      , Col 0x0A "TimeKind" False "clock_kind" (Just uclock_kindType)
-      , Col 0x0B "LogKind" False "log_kind" Nothing
-      , Col 0x0C "Name" False "name" (Just unameType)
-      , Col 0x0D "Data" False "max_bytes_64" (Just umax_bytes_64Type)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Prev" False (TypeName "log_row_ref" (Just ulog_row_refType))
+      , Col 0x02 "Next" False (TypeName "log_row_ref" (Just ulog_row_refType))
+      , Col 0x03 "Session" False (TypeName "uinteger_4" (Just uuinteger_4Type))
+      , Col 0x04 "SigningAuthority" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x05 "SigningAuthName" False (TypeName "name" (Just unameType))
+      , Col 0x06 "ExchangeAuthority" False (TypeName "Authority_object_ref" (Just uAuthority_object_refType))
+      , Col 0x07 "ExchangeAuthName" False (TypeName "name" (Just unameType))
+      , Col 0x08 "MonotonicTime" False (TypeName "uinteger_8" (Just uuinteger_8Type))
+      , Col 0x09 "ExactTime" False (TypeName "clock_time" (Just uclock_timeType))
+      , Col 0x0A "TimeKind" False (TypeName "clock_kind" (Just uclock_kindType))
+      , Col 0x0B "LogKind" False (TypeName "log_kind" Nothing)
+      , Col 0x0C "Name" False (TypeName "name" (Just unameType))
+      , Col 0x0D "Data" False (TypeName "max_bytes_64" (Just umax_bytes_64Type))
       ]
   }
 
@@ -886,11 +887,11 @@ logListTableDesc = TableDesc
   , tdTableUID  = uLogListTable
   , tdObjectUID = uLogListTableObject
   , tdColumns   =
-      [ Col 0x00 "UID" False "uid" (Just uuidType)
-      , Col 0x01 "Name" True "name" (Just unameType)
-      , Col 0x02 "CommonName" True "name" (Just unameType)
-      , Col 0x03 "Log" False "Table_object_ref" (Just uTable_object_refType)
-      , Col 0x04 "Serial" False "log_row_ref" (Just ulog_row_refType)
-      , Col 0x05 "HighSecurity" False "boolean" (Just ubooleanType)
+      [ Col 0x00 "UID" False (TypeName "uid" (Just uuidType))
+      , Col 0x01 "Name" True (TypeName "name" (Just unameType))
+      , Col 0x02 "CommonName" True (TypeName "name" (Just unameType))
+      , Col 0x03 "Log" False (TypeName "Table_object_ref" (Just uTable_object_refType))
+      , Col 0x04 "Serial" False (TypeName "log_row_ref" (Just ulog_row_refType))
+      , Col 0x05 "HighSecurity" False (TypeName "boolean" (Just ubooleanType))
       ]
   }

@@ -239,20 +239,28 @@ data MethodResponse = MethodResponse { results :: [Value], status :: (Word8, Wor
 --                        bitMap :: Layout -> [((byte, bit), Maybe Field)] (Hsed.Gen.Core.Features' instances)
 -- Hsed.Core.Types        runtime TypeDef (BaseType | SimpleType | EnumType | AltType | ListType | RestrictedRef | GeneralRef | GeneralRefTable | Named* | StructType | SetType)
 class Enumerated e where typeUID :: UID; range :: (Int, Int)
--- Hsed.Core.Table        (M2b) TableDesc { tdName, tdTableUID, tdObjectUID, tdColumns }, Col { colNumber, colName, colUnique, colType,
---                        colTypeUID :: Maybe UID }; Cell = UIDCell | TextCell | EnumCell label value | RefCell name uid | UIntCell | IntCell
+-- Hsed.Core.TypeName     (M4a) TypeName { typeNameText :: Text, typeNameUID :: Maybe UID }: a type as the spec names it, its text and
+--                        its Type object's UID when a type row defines it; the one type reference of Col, FieldDef, Property and
+--                        Param (the M2b review: four shapes until M4a)
+-- Hsed.Core.Table        (M2b) TableDesc { tdName, tdTableUID, tdObjectUID, tdColumns }, Col { colNumber, colName, colUnique, colType ::
+--                        TypeName (since M4a; colType :: Text and colTypeUID :: Maybe UID until then) };
+--                        Cell = UIDCell | TextCell | EnumCell label value | RefCell name uid | UIntCell | IntCell
 --                        | BytesCell ByteString | ListCell [Cell] (the last two M4a's: a password, an ACL or an ACE's expression);
 --                        cellValue :: Cell -> Value, a cell as a method carries it (Core 5.1.2; M4a);
 --                        type Row = [(ColNum, Cell)]; data Pre r = Pre { row :: r, access :: [(ColNum, Access)] };
 --                        Access = ReadOnlySpecified | ReadOnlyVU | WritePersonalizable | WriteFixed | NotDefined | Unspecified
 --                        (superseded the 2019 placeholder Table, retired at M2d to dev/Table.hs)
--- Hsed.Core.Method       (M2b) class MethodSignature m (signature :: Signature; requiredValues, optionalValues), class Method m (methodUID);
---                        Signature, Param, SigResponse = Results | Invocation | InvocationOf | NoResponse (not Response, §6.1's
---                        wire answer); parameters, invocation; since M4a the TPer's direction: invocationWith status, responseParameters
---                        (an answer given as an invocation), positional :: [Param] -> [Param] -> Parameters -> Either ParamError
---                        ([Value], [Maybe Value]) (3.2.4.1: required values counted, optional ones placed by index, in order),
---                        namedComponents (a grouped abstract type's Named components, 5.1.4.1), ParamError = RequiredCount |
---                        OptionalNotIndexed | OptionalIndex | OptionalOrder | WrongShape, paramErrorText
+-- Hsed.Core.Method       (M2b) class MethodSignature m (signature :: Signature; requiredValues, optionalValues; since M4a fromValues ::
+--                        [Value] -> [Maybe Value] -> Maybe m, generated per record), class Method m (methodUID);
+--                        Signature, Param { paramName, paramType :: TypeName (since M4a; Text until then) }, SigResponse = Results |
+--                        Invocation | InvocationOf | NoResponse (not Response, §6.1's wire answer); parameters, invocation; since M4a
+--                        the TPer's direction: invocationWith status, responseParameters (an answer given as an invocation),
+--                        positional :: [Param] -> [Param] -> Parameters -> Either ParamError ([Value], [Maybe Value]) (3.2.4.1:
+--                        required values counted, optional ones placed by index, in order), namedComponents (a grouped abstract
+--                        type's Named components, 5.1.4.1), ParamError = RequiredCount | OptionalNotIndexed | OptionalIndex |
+--                        OptionalOrder | WrongShape, paramErrorText, decodeParameters @m (the record from a call's parameters),
+--                        fromCall @m (from an invocation of its method alone), and the methods list's element SomeMethod (Proxy m),
+--                        someMethodUID, someSignature, methodWithUID (the generated methods :: [SomeMethod], 52 in Core)
 -- Hsed.Core.Stream       (M4a) the total reading of a subpacket's payload (Core 3.2.2.4; §13.29 (f)): atoms :: AtomPolicy -> ByteString
 --                        -> Either (Int, Text) [Atom] (each atom's offset, size with header and token, Empty atoms dropped; a policy
 --                        hostPolicy or tperPolicy MaxIndTokenSize refusing an atom over the size, a signed integer or a continued
@@ -269,9 +277,11 @@ class Enumerated e where typeUID :: UID; range :: (Int, Int)
 --                        (OnObject | OnObjectTable last column | OnByteTable last row) -> CellBlock -> Either Text CellsAsked (Columns
 --                        | ObjectRow uid | ByteRows), the context rules a.a-e.b and Get's Fails b-d applied, the Left naming the rule
 -- Hsed.Core.Code         (M2b) Span = One | Between | Above | Others; CodeRow Span [Text]; codeRow
--- Hsed.Core.Field        (M2b) FieldValue = Constant [Word8] | Symbolic Text; FieldConst; FieldDef (field, type name, type UID, range)
+-- Hsed.Core.Field        (M2b) FieldValue = Constant [Word8] | Symbolic Text; FieldConst; FieldDef { fdName, fdType :: TypeName (since
+--                        M4a; a type name and a type UID until then), fdRange :: Maybe Span }
 -- Hsed.Core.Sync         (M2b) StateTable { boundTo, fields, states }, StateRow, Setting = Constant Natural | Quantity Text
--- Hsed.Core.Properties   (M2b) Communicator = Host | TPer, Property { propertyName, propertyType :: UID, appliesTo }, Assumptions, assumption
+-- Hsed.Core.Properties   (M2b) Communicator = Host | TPer, Property { propertyName, propertyType :: TypeName (since M4a; a UID until
+--                        then), appliesTo }, Assumptions, assumption
 -- Hsed.Core.TH           (THUtil until M2d) parseTable, dData/dSig/dVal/dTyp, eUID/eHalfUID/eID/eLitS/eValP: the helpers the
 --                        quasiquoters of the oracle's fixture (hsed/fixture/Hand) build their declarations with; Base_Type.TH's
 --                        ci/cu/cb'/cm stay in Hsed.Core.Base_Type.TH (doctested; not merged here: Base_Type re-exports them, and

@@ -19,23 +19,24 @@ module Hsed.Gen.Core.Fields where
 
 import           Hsed.Core.Code      (Span (..))
 import           Hsed.Core.Field     (FieldConst (..), FieldDef (..), FieldValue (..))
+import           Hsed.Core.TypeName  (TypeName (..))
 import           Hsed.Gen.Core.Types (ubytesType, uuinteger_1Type, uuinteger_2Type, uuintegerType)
 import           Prelude             (Maybe (..))
 
 -- | core-2.01 T22 Secure Messaging Packet - Payload Field (PDF 46 / p.29, ord 24, sha256:1c9f1fb578a5)
 rSecureMessagingPacketPayloadField :: [FieldDef]
 rSecureMessagingPacketPayloadField =
-  [ FieldDef "IV" "bytes" ubytesType Nothing
-  , FieldDef "SecureData" "bytes" ubytesType Nothing
-  , FieldDef "MAC" "bytes" ubytesType Nothing
+  [ FieldDef "IV" (TypeName "bytes" (Just ubytesType)) Nothing
+  , FieldDef "SecureData" (TypeName "bytes" (Just ubytesType)) Nothing
+  , FieldDef "MAC" (TypeName "bytes" (Just ubytesType)) Nothing
   ]
 
 -- | core-2.01 T23 Secure Messaging Packet Payload- SecureData Field (PDF 46 / p.29, ord 25, sha256:cd8d352e390c)
 rSecureMessagingPacketPayloadSecureDataField :: [FieldDef]
 rSecureMessagingPacketPayloadSecureDataField =
-  [ FieldDef "DataLength" "uinteger" uuintegerType Nothing
-  , FieldDef "Data" "bytes" ubytesType Nothing
-  , FieldDef "Pad" "bytes" ubytesType Nothing
+  [ FieldDef "DataLength" (TypeName "uinteger" (Just uuintegerType)) Nothing
+  , FieldDef "Data" (TypeName "bytes" (Just ubytesType)) Nothing
+  , FieldDef "Pad" (TypeName "bytes" (Just ubytesType)) Nothing
   ]
 
 -- | core-2.01 T27 GET_COMID Command Block (PDF 60 / p.43, ord 29, sha256:7c937340fe0c)
@@ -68,12 +69,12 @@ vGET_COMID_RESPONSECommandBlock =
 -- | core-2.01 T34 Date Values (PDF 64 / p.47, ord 36, sha256:7ff880364ae9)
 rDateValues :: [FieldDef]
 rDateValues =
-  [ FieldDef "Year" "uinteger_2" uuinteger_2Type (Just (Between 1970 9999))
-  , FieldDef "Month" "uinteger_1" uuinteger_1Type (Just (Between 1 12))
-  , FieldDef "Day" "uinteger_1" uuinteger_1Type (Just (Between 1 31))
-  , FieldDef "Hour" "uinteger_1" uuinteger_1Type (Just (Between 0 23))
-  , FieldDef "Minute" "uinteger_1" uuinteger_1Type (Just (Between 0 59))
-  , FieldDef "Second" "uinteger_1" uuinteger_1Type (Just (Between 0 59))
-  , FieldDef "Fraction" "uinteger_2" uuinteger_2Type (Just (Between 0 999))
-  , FieldDef "Reserved" "uinteger_1" uuinteger_1Type (Just (One 0))
+  [ FieldDef "Year" (TypeName "uinteger_2" (Just uuinteger_2Type)) (Just (Between 1970 9999))
+  , FieldDef "Month" (TypeName "uinteger_1" (Just uuinteger_1Type)) (Just (Between 1 12))
+  , FieldDef "Day" (TypeName "uinteger_1" (Just uuinteger_1Type)) (Just (Between 1 31))
+  , FieldDef "Hour" (TypeName "uinteger_1" (Just uuinteger_1Type)) (Just (Between 0 23))
+  , FieldDef "Minute" (TypeName "uinteger_1" (Just uuinteger_1Type)) (Just (Between 0 59))
+  , FieldDef "Second" (TypeName "uinteger_1" (Just uuinteger_1Type)) (Just (Between 0 59))
+  , FieldDef "Fraction" (TypeName "uinteger_2" (Just uuinteger_2Type)) (Just (Between 0 999))
+  , FieldDef "Reserved" (TypeName "uinteger_1" (Just uuinteger_1Type)) (Just (One 0))
   ]

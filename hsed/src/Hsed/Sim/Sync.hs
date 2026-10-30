@@ -349,7 +349,7 @@ noAction = maybe False (all ((== Empty) . snd)) . atoms
 -- | The status of a method response that does not fit the response buffer
 --   (Core Table 166; Opal 2.30 3.3.1, PDF 29).
 responseOverflow :: Natural
-responseOverflow = case RESPONSE_OVERFLOW of StatusCode n -> n
+responseOverflow = statusValue RESPONSE_OVERFLOW
 
 -- | The atoms of a token stream in order, each its bytes and its token, or
 --   Nothing where an atom does not read (Core 3.2.2.3.1, PDF 33-36).

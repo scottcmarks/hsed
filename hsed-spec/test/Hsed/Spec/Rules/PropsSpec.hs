@@ -113,11 +113,11 @@ spec = withCore $ \pristine -> do
   describe "the generated module" $ do
     cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Properties" (crModules cr)))
-    it "declares the properties, each typed by its type row's UID" $ do
-      lns `shouldContain` ["properties :: [Property]", "properties =", "  [ Property \"MaxMethods\" uuintegerType [Host, TPer]"]
-      lns `shouldContain` ["  , Property \"AckNak\" ubooleanType [Host, TPer]"]
+    it "declares the properties, each type a TypeName with its type row's UID" $ do
+      lns `shouldContain` ["properties :: [Property]", "properties =", "  [ Property \"MaxMethods\" (TypeName \"uinteger\" (Just uuintegerType)) [Host, TPer]"]
+      lns `shouldContain` ["  , Property \"AckNak\" (TypeName \"boolean\" (Just ubooleanType)) [Host, TPer]"]
       length [ l | l <- lns, "Property \"" `T.isInfixOf` l ] `shouldBe` 23
-      lns `shouldContain` ["import           Hsed.Gen.Core.Types  (ubooleanType, uuintegerType)"]
+      lns `shouldContain` ["import           Hsed.Core.TypeName   (TypeName (..))", "import           Hsed.Gen.Core.Types  (ubooleanType, uuintegerType)"]
     it "declares the initial assumptions, the property's own spelling, the name as printed where it differs, and each value's printed form kept" $ do
       lns `shouldContain` ["initialAssumptions :: [Assumptions]", "initialAssumptions =", "  [ Assumptions Host TPer  -- \"Initial Host Assumption About TPer\""]
       lns `shouldContain` ["      , (\"AckNak\", 0)  -- printed \"AckNAK\": \"False\""]

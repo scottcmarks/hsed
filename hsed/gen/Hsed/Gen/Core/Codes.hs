@@ -80,7 +80,7 @@ cFeatureCodes =
   ]
 
 -- | core-2.01 T166 Status Codes (PDF 137 / p.120, ord 168, sha256:1196fb53069b): any status the wire carries; a pattern names each value the table gives
-newtype StatusCode = StatusCode Natural
+newtype StatusCode = StatusCode { statusValue :: Natural }
   deriving (Eq, Ord, Show)
 
 -- | core-2.01 T166 Status Codes (PDF 137 / p.120, ord 168, sha256:1196fb53069b), row 1: SUCCESS

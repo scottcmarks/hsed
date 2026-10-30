@@ -82,7 +82,7 @@ answer p (MethodCall (MethodHeader invoker method) (Parameters required named) s
 
 -- | The status of a method that succeeded (Core Table 166).
 success :: Natural
-success = case SUCCESS of StatusCode s -> s
+success = statusValue SUCCESS
 
 -- | The TPer's properties as the response carries them: each a Named value,
 --   a property Core Table 167 gives the TPer, a uinteger.

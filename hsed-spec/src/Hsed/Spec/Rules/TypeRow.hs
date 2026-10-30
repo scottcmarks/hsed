@@ -40,7 +40,10 @@ Checks, each with the code its findings carry:
 Compiled into 'typesModule': @u\<Name\>Type :: UID@ and, when the Format
 parsed, @t\<Name\> :: TypeDef@. (The Format strings @f\<Name\>Type :: String@,
 printed for M2a's runtime comparison with the hand transcription, were
-retired at M2d.)
+retired at M2d.) Every other rule that prints a type as the spec names it, a
+column's, a field's, a property's or a parameter's, prints it through
+'typeNameExpr': the runtime's @TypeName@ ("Hsed.Core.TypeName"), the text
+and, when a type row defines it, @u\<Name\>Type@.
 -}
 module Hsed.Spec.Rules.TypeRow
   ( typeRowRule
@@ -57,6 +60,7 @@ module Hsed.Spec.Rules.TypeRow
   , renderTypeRow
   , joinFormat
   , typeUIDName
+  , typeNameExpr
   ) where
 
 import qualified Data.Text        as DT
@@ -277,6 +281,14 @@ typeRowDecl ctx tr = case trUID tr of
 --   what every other rule that names a Type object's UID refers to.
 typeUIDName :: Text -> Text
 typeUIDName n = "u" <> n <> "Type"
+
+-- | A type as the spec names it, as the runtime's @TypeName@ expression, in
+--   parentheses: its text as printed and, when a type row defines it, its
+--   @u\<Name\>Type@ (@(TypeName "uinteger" (Just uuintegerType))@;
+--   @(TypeName "cell_block" Nothing)@). The declaration printing it imports
+--   "Hsed.Spec.Gen".'Gen.typeNameModule' and, for the UID, 'typesModule'.
+typeNameExpr :: Text -> Maybe TypeRowRead -> Text
+typeNameExpr text tr = "(TypeName " <> tshow text <> " " <> maybe "Nothing" (\r -> "(Just " <> typeUIDName (trName r) <> ")") tr <> ")"
 
 -- | @u\<Name\>Type@ and, when the Format parsed, @t\<Name\>@.
 renderTypeRow :: TypeRowDecl -> Gen.Decl

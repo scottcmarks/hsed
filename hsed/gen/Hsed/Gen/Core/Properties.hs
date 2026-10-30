@@ -17,34 +17,36 @@ as itself, a boolean as its enumeration value.
 module Hsed.Gen.Core.Properties where
 
 import           Hsed.Core.Properties (Assumptions (..), Communicator (..), Property (..))
+import           Hsed.Core.TypeName   (TypeName (..))
 import           Hsed.Gen.Core.Types  (ubooleanType, uuintegerType)
+import           Prelude              (Maybe (..))
 
 -- | core-2.01 T167 Properties Method Response (PDF 141 / p.124, ord 169, sha256:19b1daba0f71)
 properties :: [Property]
 properties =
-  [ Property "MaxMethods" uuintegerType [Host, TPer]
-  , Property "MaxSubpackets" uuintegerType [Host, TPer]
-  , Property "MaxPacketSize" uuintegerType [Host, TPer]
-  , Property "MaxPackets" uuintegerType [Host, TPer]
-  , Property "MaxComPacketSize" uuintegerType [Host, TPer]
-  , Property "MaxResponseComPacketSize" uuintegerType [Host, TPer]
-  , Property "MaxSessions" uuintegerType [TPer]
-  , Property "MaxReadSessions" uuintegerType [TPer]
-  , Property "MaxIndTokenSize" uuintegerType [Host, TPer]
-  , Property "MaxAggTokenSize" uuintegerType [Host, TPer]
-  , Property "MaxAuthentications" uuintegerType [TPer]
-  , Property "MaxTransactionLimit" uuintegerType [TPer]
-  , Property "DefSessionTimeout" uuintegerType [TPer]
-  , Property "MaxSessionTimeout" uuintegerType [TPer]
-  , Property "MinSessionTimeout" uuintegerType [TPer]
-  , Property "DefTransTimeout" uuintegerType [TPer]
-  , Property "MaxTransTimeout" uuintegerType [TPer]
-  , Property "MinTransTimeout" uuintegerType [TPer]
-  , Property "MaxComIDTime" uuintegerType [TPer]
-  , Property "ContinuedTokens" ubooleanType [Host, TPer]
-  , Property "SequenceNumbers" ubooleanType [Host, TPer]
-  , Property "AckNak" ubooleanType [Host, TPer]
-  , Property "Asynchronous" ubooleanType [Host, TPer]
+  [ Property "MaxMethods" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxSubpackets" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxPacketSize" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxPackets" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxComPacketSize" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxResponseComPacketSize" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxSessions" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MaxReadSessions" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MaxIndTokenSize" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxAggTokenSize" (TypeName "uinteger" (Just uuintegerType)) [Host, TPer]
+  , Property "MaxAuthentications" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MaxTransactionLimit" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "DefSessionTimeout" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MaxSessionTimeout" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MinSessionTimeout" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "DefTransTimeout" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MaxTransTimeout" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MinTransTimeout" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "MaxComIDTime" (TypeName "uinteger" (Just uuintegerType)) [TPer]
+  , Property "ContinuedTokens" (TypeName "boolean" (Just ubooleanType)) [Host, TPer]
+  , Property "SequenceNumbers" (TypeName "boolean" (Just ubooleanType)) [Host, TPer]
+  , Property "AckNak" (TypeName "boolean" (Just ubooleanType)) [Host, TPer]
+  , Property "Asynchronous" (TypeName "boolean" (Just ubooleanType)) [Host, TPer]
   ]
 
 -- | core-2.01 T168 Communications Initial Assumptions (PDF 144 / p.127, ord 170, sha256:bb874c331851)

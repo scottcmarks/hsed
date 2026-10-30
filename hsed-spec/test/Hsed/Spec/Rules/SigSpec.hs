@@ -21,6 +21,7 @@ module has a record per method, its signature and, when joined, its UID.
 -}
 module Hsed.Spec.Rules.SigSpec (spec) where
 
+import qualified Data.Text                as DT
 import qualified RIO.List                 as L
 import qualified RIO.Map                  as Map
 import qualified RIO.Text                 as T
@@ -156,8 +157,30 @@ spec = do
       it "gives Get its field and its UID as E9 does" $ do
         lns `shouldContain` [ "-- | core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get (PDF 201 / p.184, ord 12, sha256:9d67d740e4cb)"
                             , "data Get = Get", "  { getCellblock :: Value", "  }", "  deriving (Eq, Show)" ]
-        lns `shouldContain` [ "    , sigInvokers = [\"TableUID\", \"ObjectUID\"]", "    , sigRequired = [Param \"Cellblock\" \"cell_block\"]" ]
+        lns `shouldContain` [ "    , sigInvokers = [\"TableUID\", \"ObjectUID\"]", "    , sigRequired = [Param \"Cellblock\" (TypeName \"cell_block\" Nothing)]" ]
+        lns `shouldContain` [ "  fromValues [r1] [] = Just (Get r1)", "  fromValues _ _ = Nothing" ]
         lns `shouldContain` [ "instance Method Get where", "  methodUID = uMethodID_Get" ]
+      it "types each parameter by name, with its Type object's UID where the whole text is a type row's name: 90 of 147" $ do
+        let text = fromMaybe "" (lookup "Hsed.Gen.Core.Methods" (crModules cr))
+        DT.count "Param \"" text `shouldBe` 147
+        DT.count "\" (Just u" text `shouldBe` 90
+        DT.count "\" Nothing)" text `shouldBe` 57
+        lns `shouldContain` [ "        [ Param \"HostSessionID\" (TypeName \"uinteger\" (Just uuintegerType))"
+                            , "        , Param \"SPID\" (TypeName \"uidref {SPObjectUID}\" Nothing)" ]
+        lns `shouldContain` [ "import           Hsed.Core.TypeName  (TypeName (..))" ]
+        lns `shouldSatisfy` any (\l -> "import           Hsed.Gen.Core.Types" `T.isPrefixOf` l && "ubooleanType, ubytesType" `T.isInfixOf` l && "uuintegerType" `T.isInfixOf` l)
+      it "gives every record fromValues, the record from values of its signature's arity, a wrapped line where it is long" $ do
+        length [ l | l <- lns, "  fromValues [" `T.isPrefixOf` l ] `shouldBe` 53
+        length [ l | l <- lns, l == "  fromValues _ _ = Nothing" ] `shouldBe` 53
+        lns `shouldContain` [ "  fromValues [] [] = Just DeleteSP" ]
+        lns `shouldContain` [ "  fromValues [r1, r2, r3] [o1, o2, o3, o4, o5, o6, o7, o8, o9] =", "    Just (StartSession r1 r2 r3 o1 o2 o3 o4 o5 o6 o7 o8 o9)" ]
+      it "lists the 52 methods with a UID, Stir left out, under the first block's provenance, last in the module" $ do
+        lns `shouldContain` [ "methods :: [SomeMethod]", "methods =", "  [ SomeMethod (Proxy :: Proxy Properties)", "  , SomeMethod (Proxy :: Proxy StartSession)" ]
+        length [ l | l <- lns, "SomeMethod (Proxy :: Proxy " `T.isInfixOf` l ] `shouldBe` 52
+        filter ("Proxy Stir" `T.isInfixOf`) lns `shouldBe` []
+        lns `shouldSatisfy` any (\l -> "-- | core-2.01 5.2.2.1/sig SMUID.Properties (PDF 140" `T.isPrefixOf` l && "every signature block after it" `T.isInfixOf` l)
+        L.lastMaybe [ l | l <- lns, " :: " `T.isInfixOf` l, not (" " `T.isPrefixOf` l) ] `shouldBe` Just "methods :: [SomeMethod]"
+        lns `shouldContain` [ "import           Data.Proxy          (Proxy (..))" ]
       it "makes optional parameters Maybe fields, in the signature's order" $
         lns `shouldContain` [ "data Set = Set", "  { setWhere :: Maybe Value", "  , setValues :: Maybe Value", "  }" ]
       it "says which method a block defines when its heads name another (SyncSession's, headed StartSession)" $ do

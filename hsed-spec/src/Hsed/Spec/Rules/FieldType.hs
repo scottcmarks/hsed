@@ -29,8 +29,9 @@ fits the bytes of a type sized in its Format (@uinteger_2@: two).
 
 Compiled into the fields module ("Hsed.Spec.Rules.FieldValue".'fieldsModule'):
 for each table @r\<Title\> :: [FieldDef]@ (the caption's words joined,
-@rDateValues@), one 'Hsed.Core.Field.FieldDef' per row: the field, its type's
-name and UID (@u\<type\>Type@ of the type rows' module) and its range.
+@rDateValues@), one 'Hsed.Core.Field.FieldDef' per row: the field, its type as
+a @TypeName@, its name and UID (@u\<type\>Type@ of the type rows' module,
+"Hsed.Spec.Rules.TypeRow".'typeNameExpr'), and its range.
 -}
 module Hsed.Spec.Rules.FieldType
   ( fieldTypeRule
@@ -57,7 +58,7 @@ import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Readers.Text  (titleIdent)
 import           Hsed.Spec.Rules.Codes   (CodeCell (..), Number (..), codeCellExpr, parseCodeCell)
 import           Hsed.Spec.Rules.FieldValue (fieldsModule)
-import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeNameExpr, typeRowReads, typeUIDName, typesModule)
 import           Hsed.Spec.Shape         (Shape (..), captionTitle, shapeMismatch)
 
 
@@ -177,19 +178,19 @@ compile ctx bts = map one (readFields ctx bts)
 -- | @r\<Title\> :: [FieldDef]@, each type by its UID's name in the type rows' module.
 fieldsDecl :: Context -> TypeFieldsRead -> Gen.Decl
 fieldsDecl ctx tf = (Gen.decl p name body)
-  { Gen.declImports = [Gen.ImportSome Gen.fieldModule ["FieldDef (..)"], Gen.ImportSome "Prelude" ["Maybe (..)"]]
+  { Gen.declImports = [ Gen.ImportSome Gen.fieldModule ["FieldDef (..)"], Gen.ImportSome Gen.typeNameModule ["TypeName (..)"]
+                      , Gen.ImportSome "Prelude" ["Maybe (..)"] ]
                       <> [ Gen.ImportSome Gen.codeModule ["Span (..)"] | any (isJust . fRange) (tfRows tf) ]
-                      <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) (L.nub (map uidName (tfRows tf)))
-                         | typesModule /= fieldsModule ] }
+                      <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) uidNames | not (null uidNames) ] }
   where
     bt = tfBound tf
     p = boundProvenance ctx bt
     name = "r" <> titleIdent (tfTitle tf)
-    uidName f = typeUIDName (maybe (fTypeName f) trName (fType f))
+    uidNames = L.nub [ typeUIDName (trName tr) | f <- tfRows tf, Just tr <- [fType f] ]
     body =
       [ Gen.provenanceComment p
       , name <> " :: [FieldDef]" ]
       <> Gen.listDefinition (name <> " =")
-           [ "FieldDef " <> tshow (fName f) <> " " <> tshow (fTypeName f) <> " " <> uidName f <> " "
+           [ "FieldDef " <> tshow (fName f) <> " " <> typeNameExpr (fTypeName f) (fType f) <> " "
                <> maybe "Nothing" (\c -> "(Just (" <> codeCellExpr c <> "))") (fRange f)
            | f <- tfRows tf ]

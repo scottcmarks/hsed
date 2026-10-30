@@ -12,7 +12,7 @@ What the spec compiler generates from the tables @propsNames@ and
 @propsInitial@ comments bind (Core Table 167, the properties the Properties
 method reports; Core Table 168, what host and TPer assume of each other until
 a Properties exchange has succeeded, Core 5.2.2.4): each 'Property' with its
-Type object and the communicators it describes, and each communicator's
+Type object ("Hsed.Core.TypeName") and the communicators it describes, and each communicator's
 'Assumptions' about the other. A value is the one the Properties method
 carries: a uinteger as itself, a boolean as its enumeration value.
 -}
@@ -25,7 +25,7 @@ module Hsed.Core.Properties
 
 import           RIO
 
-import           Hsed.Core.UID (UID)
+import           Hsed.Core.TypeName (TypeName)
 
 
 -- | The two ends of a ComID's communications.
@@ -35,7 +35,7 @@ data Communicator = Host | TPer
 -- | One property of the Properties method.
 data Property = Property
   { propertyName :: !Text            -- ^ as the table prints it, the name it is sent under
-  , propertyType :: !UID             -- ^ its Type object
+  , propertyType :: !TypeName        -- ^ its Type object, by name and UID
   , appliesTo    :: ![Communicator]  -- ^ the communicators it describes
   }
   deriving (Eq, Show)

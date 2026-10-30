@@ -18,9 +18,10 @@ docs/spec-as-source.md section 4.1).
 A 'TableDesc' is one table: its name and its two UIDs from Table 240 and its
 columns. A 'Col' is one row of the description: column number, name,
 whether it takes part in the table's unique value (Core 3.2.5.4) and its
-type, the Type object the description names, with that object's UID when a
-Type table row defines it (Core 2.01 names four column types no Type row
-defines; the spec compiler reports them).
+type, the Type object the description names ("Hsed.Core.TypeName": the
+name, with that object's UID when a Type table row defines it; Core 2.01
+names four column types no Type row defines, and the spec compiler reports
+them).
 
 A 'Row' is the values a table of values gives some columns of one row, by
 column number, each read as its column's type says ('Cell'); a column it does
@@ -48,6 +49,7 @@ import           RIO
 import qualified RIO.List                   as L
 
 import           Hsed.Core.Token            (IsToken (..), Token (..))
+import           Hsed.Core.TypeName         (TypeName)
 import           Hsed.Core.UID              (UID)
 import           Hsed.Core.Value            (Datum (..), List (..), Value (..))
 
@@ -71,8 +73,7 @@ data Col = Col
   { colNumber  :: !ColNum
   , colName    :: !Text
   , colUnique  :: !Bool          -- ^ @IsUnique@: part of the table's unique value
-  , colType    :: !Text          -- ^ the Column Type as the description prints it: a Type object's name
-  , colTypeUID :: !(Maybe UID)   -- ^ that Type object's UID; Nothing when no Type table row defines it
+  , colType    :: !TypeName      -- ^ the Column Type as the description prints it, a Type object's name, with its UID when a Type table row defines it
   }
   deriving (Eq, Show)
 

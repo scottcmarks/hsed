@@ -85,6 +85,7 @@ import           Hsed.Core.Call                            (MethodResponse (..))
 import           Hsed.Core.Code                            (CodeRow (..), Span (..))
 import           Hsed.Core.Field                           (FieldDef (..))
 import           Hsed.Core.StreamItem                      (StreamItem (..))
+import           Hsed.Core.TypeName                        (TypeName (..))
 import           Hsed.Core.Types                           (Enumerated (..), enumValue)
 import           Hsed.Core.UID                             (UID, uidLower)
 import qualified Hsed.Gen.Core.Codes                       as G
@@ -337,8 +338,9 @@ spec = do
       let hands  = byName handWritten
           fields = G.rSecureMessagingPacketPayloadField ++ G.rSecureMessagingPacketPayloadSecureDataField ++ G.rDateValues
       length fields `shouldBe` 14
-      [ (fdName f, fdTypeName f) | f <- fields
-                                 , fmap dValue (Map.lookup ("u" ++ T.unpack (fdTypeName f) ++ "Type") hands) /= Just (Scalar (show (fdType f))) ]
+      [ (fdName f, typeNameText (fdType f)) | f <- fields
+                                            , fmap dValue (Map.lookup ("u" ++ T.unpack (typeNameText (fdType f)) ++ "Type") hands)
+                                                /= fmap (Scalar . show) (typeNameUID (fdType f)) ]
         `shouldBe` []
   where
     lookup' h = case mapMaybe (`stripPrefix` dName h) ["oth", "bth"] of

@@ -60,10 +60,18 @@ Checks:
   the table is left out.
 
 Compiled into the layouts module ('layoutsModule', which @byteGrid@ writes
-too): for each table @\<name\> :: Layout@, named after its caption's title
-('lowerIdent': @verify_COMID_VALIDCommandResponse@) or its @layout "Name"@
-modifier, printed by 'layoutDecl', its comment listing the values the layout
-does not hold and the bytes no field covers.
+too), named and printed as @byteGrid@ names and prints its grids (the rule
+reads a table as that rule's 'GridRead', 'asGridRead', and calls its
+'layoutValue', 'recordDecl' and 'nameFindings'), so the two rules' declarations
+follow one convention: for each table @\<name\>Layout :: Layout@, the name
+its caption's title gives (@verify_COMID_VALIDCommandResponseLayout@) or its
+@layout "Name"@ modifier, printed by 'layoutDecl', its comment listing the
+values the layout does not hold and the bytes no field covers; and, for a
+table whose layout tiles, the record of the fields that carry a value with
+its @LayoutRecord@ instance (@VERIFY_COMID_VALIDCommandResponse@, the run of
+reserved bytes to the end of the transfer the layout's). A name the
+declarations share with @byteGrid@'s or an earlier table's is @byteGrid@'s
+@C-GRID-NAME@ (an Error).
 -}
 module Hsed.Spec.Rules.ByteFieldValue
   ( byteFieldValueRule
@@ -74,6 +82,7 @@ module Hsed.Spec.Rules.ByteFieldValue
   , bytesReads
   , readBytes
   , readValue
+  , asGridRead
   ) where
 
 import qualified Data.Text.Read           as TR
@@ -92,8 +101,9 @@ import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR (..), TableIR (..), cellWithText)
 import           Hsed.Spec.Readers.Grid   (BitPos (..), Grid (..), GridField (..), gridFindings, readGrid)
 import           Hsed.Spec.Readers.Layout (describeTileProblem, gridFieldKind, gridLayout, layoutDecl, layoutsModule)
-import           Hsed.Spec.Readers.Text   (lowerIdent, readHexByte)
+import           Hsed.Spec.Readers.Text   (readHexByte)
 import           Hsed.Spec.RuleDef
+import           Hsed.Spec.Rules.ByteGrid (GridRead (..), gridReads, layoutValue, nameFindings, recordDecl, structureName)
 import           Hsed.Spec.Shape          (Shape (ByteFieldValue), captionTitle, shapeMismatch)
 
 
@@ -112,7 +122,7 @@ byteFieldValueRule = RuleDef
       [ CodeDef "C-BYTES-ROW"       [Error] (Defect "a row of a Byte(s) | Field | Value(s) table is not its bytes, a field and its value, or a second run to the end of the transfer")
       , CodeDef "C-BYTES-VALUE"     [Error] (Defect "a value printed as hex bytes, other than as many as its field's, or a reserved field's value other than zero")
       , CodeDef "N-BYTES-IN-HEADER" [Note]  (AsPrinted "a row's bytes read from the header cell the PDF's tags put them in, where the row prints them in its first column") ]
-  , ruleChecks  = \ctx bts -> concatMap (checkBytes ctx . readBytes) bts
+  , ruleChecks  = \ctx bts -> concatMap snd (checked ctx bts)
   , ruleCompile = compile
   }
 
@@ -230,8 +240,31 @@ readValue width cell
 squeeze :: Text -> Text
 squeeze = T.unwords . T.words
 
+-- | A table as the @byteGrid@ rule's printer takes it: its grid and layout,
+--   the structure named by its caption's title (or its @layout "Name"@), no
+--   pins of its section (its constants are its VALUE column's).
+asGridRead :: BytesRead -> GridRead
+asGridRead br = GridRead
+  { grBound  = bfBound br
+  , grGrid   = bfGrid br
+  , grTitle  = title
+  , grName   = fromMaybe (structureName title) (mLayout (btMods (bfBound br)))
+  , grLayout = bfLayout br
+  , grPins   = Right []
+  , grPinned = [] }
+  where title = fromMaybe "" ((btRead (bfBound br)).caption >>= captionTitle)
+
 
 -- * Checks
+
+-- | Every bound table read, with its findings: its own, and @C-GRID-NAME@ for
+--   a name its declarations share with the @byteGrid@ rule's grids or an
+--   earlier table's (the one layouts module defines each once).
+checked :: Context -> [BoundTable] -> [(BytesRead, [Finding])]
+checked ctx bts = [ (br, checkBytes ctx br <> nameFindings ctx named (asGridRead br)) | br <- brs ]
+  where
+    brs = map readBytes bts
+    named = gridReads ctx <> map asGridRead brs
 
 checkBytes :: Context -> BytesRead -> [Finding]
 checkBytes ctx br = moved <> rowShape <> gridFindings ctx bt (bfGrid br) <> values <> tiles
@@ -321,26 +354,26 @@ offset p = bitOffset (bpByte p) (bpBit p)
 -- * Declarations
 
 compile :: Context -> [BoundTable] -> [Emitted]
-compile ctx bts = map one (map readBytes bts)
+compile ctx bts = concatMap one (checked ctx bts)
   where
-    one br = case L.nub [ Cm.code f | f <- checkBytes ctx br, Cm.isError f ] of
-      []    -> Emit (bytesDecl ctx br)
-      codes -> Excluded (btAnchor (bfBound br)) (T.intercalate ", " codes <> " failed")
+    one (br, fs) = case L.nub [ Cm.code f | f <- fs, Cm.isError f ] of
+      []    -> Emit (bytesDecl ctx br) : [ Emit (recordDecl ctx (asGridRead br)) | null (tileProblems br) ]
+      codes -> [ Excluded (btAnchor (bfBound br)) (T.intercalate ", " codes <> " failed") ]
 
--- | @\<name\> :: Layout@, its Haddock listing the rows whose VALUE the layout
---   does not hold, as printed, and the bytes no field covers.
+-- | @\<name\>Layout :: Layout@, its Haddock listing the rows whose VALUE the
+--   layout does not hold, as printed, and the bytes no field covers.
 bytesDecl :: Context -> BytesRead -> Gen.Decl
 bytesDecl ctx br = d { Gen.declBody = take 1 d.declBody <> values <> gaps <> drop 1 d.declBody }
   where
-    d = layoutDecl (boundProvenance ctx (bfBound br)) (lowerIdent (bfName br)) (bfLayout br)
+    d = layoutDecl (boundProvenance ctx (bfBound br)) (layoutValue (asGridRead br)) (bfLayout br)
     values = case unheld br of
       [] -> []
       rs -> [ "--", "-- The VALUE cells the layout does not hold (bytes | field | value, as printed):", "--" ]
             <> [ "-- > " <> T.intercalate " | " (map tshow [squeeze (bwLabel r).text, squeeze (bwField r).text, v]) | (r, v) <- rs ]
     gaps = case tileProblems br of
       [] -> []
-      ps -> [ "--", "-- It does not tile (C-LAYOUT-TILE), so Hsed.Core.Layout refuses to encode or decode it until an"
-            , "-- erratum names these bytes:", "--" ]
+      ps -> [ "--", "-- It does not tile (C-LAYOUT-TILE): Hsed.Core.Layout refuses to encode or decode it, and it has"
+            , "-- no record, until an erratum names these bytes:", "--" ]
             <> [ "-- * " <> describeTileProblem p | p <- ps ]
 
 -- | The rows whose value the layout does not hold: all but a pinned field's

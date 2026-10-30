@@ -55,14 +55,17 @@ caption less a trailing @Format@ (Table 17 ComPacket Format gives
 'Word64', 'Natural' beyond, 'Bool' for a one-bit flag, 'ByteString' for a
 run of more than eight whole bytes), the reserved bits, the pins and the
 tail's length field left to the layout; and its instance of
-"Hsed.Core.Record".@LayoutRecord@ ('recordModule'). A grid with a variable
-tail gives two records, as example E7 has them: the fixed part's
-(@ComPacketHeader@) and the whole (@ComPacket@: the header and the tail's
-bytes), the whole being the instance.
+"Hsed.Core.Record".@LayoutRecord@ ("Hsed.Spec.Gen".'Gen.recordModule'). A
+grid with a variable tail gives two records, as example E7 has them: the
+fixed part's (@ComPacketHeader@) and the whole (@ComPacket@: the header and
+the tail's bytes), the whole being the instance; a tail of reserved bytes is
+the layout's, as reserved bits are ('recordTail'). The @byteFieldValue@ rule
+names and prints its layouts and records with this module's functions
+('layoutValue', 'recordDecl', 'nameFindings'), so the two rules' declarations
+in the one module follow one convention.
 -}
 module Hsed.Spec.Rules.ByteGrid
   ( byteGridRule
-  , recordModule
     -- * Reading the bound tables
   , GridRead (..)
   , gridReads
@@ -72,8 +75,14 @@ module Hsed.Spec.Rules.ByteGrid
     -- * Records
   , RecordField (..)
   , recordFieldsOf
+  , recordTail
   , fieldType
+  , typeName
+  , layoutValue
   , recordNames
+  , recordDecl
+    -- * Checks
+  , nameFindings
   ) where
 
 import qualified RIO.Char                 as C
@@ -91,7 +100,7 @@ import           Hsed.Spec.DSL            (SomeBinding (..), byteGrid)
 import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR, SpecIR (..), TableIR (..))
 import           Hsed.Spec.Readers.Grid   (BitPos (..), ByteRow (..), ByteSpan (..), Grid (..), GridField (..),
-                                           GridProblem (..), gridFindings, gridOf)
+                                           GridProblem (..), gridFindings, gridOf, reservedName)
 import           Hsed.Spec.Readers.Layout (describeTileProblem, gridLayout, layoutDecl, layoutsModule)
 import           Hsed.Spec.Readers.Pins   (Pin (..), PinValue (..), pinsInSection, tablePins)
 import           Hsed.Spec.Readers.Text   (lowerIdent, titleIdent)
@@ -116,13 +125,6 @@ byteGridRule = RuleDef
   , ruleChecks  = \ctx bts -> let grs = readGrids ctx bts in concatMap (checkGrid ctx grs) grs
   , ruleCompile = compile
   }
-
--- | @Hsed.Core.Record@: the class of a record over a layout, and the helpers
---   its generated instances are written with. Only this rule's declarations
---   import it.
-recordModule :: Text
-recordModule = "Hsed.Core.Record"
-
 
 -- * Reading the bound tables
 
@@ -200,6 +202,13 @@ data RecordField = RecordField
   , rfCells   :: ![CellIR]
   }
 
+-- | The tail a record carries: the layout's, unless its name says its bytes
+--   are reserved (@byteFieldValue@'s runs to the end of the transfer, @46 to
+--   TRNSFLEN - 1 | Reserved@), which, like reserved bits, is the layout's:
+--   encoding writes none of it, decoding skips it.
+recordTail :: Layout -> Maybe Tail
+recordTail l = mfilter (not . reservedName . tailName) (layoutTail l)
+
 -- | The fields of a grid's record, in order: every field of its layout but the
 --   reserved ones, the pinned ones and the one that gives its tail's length.
 recordFieldsOf :: GridRead -> [RecordField]
@@ -273,7 +282,7 @@ headerField gr = valuePrefix gr <> "Header"
 recordNames :: GridRead -> [Text]
 recordNames gr =
   [layoutValue gr, typeName gr]
-  <> concat [ [headerType gr, headerField gr, fieldIdent gr (tailName t)] | Just t <- [layoutTail (grLayout gr)] ]
+  <> concat [ [headerType gr, headerField gr, fieldIdent gr (tailName t)] | Just t <- [recordTail (grLayout gr)] ]
   <> map rfIdent (recordFieldsOf gr)
 
 
@@ -345,8 +354,10 @@ sizeFindings ctx gr =
       _                    -> Nothing
 
 -- | @C-GRID-NAME@: a field that carries a value without a name that makes an
---   identifier; two fields of the grid named alike; a name another grid's
---   declarations define first.
+--   identifier; two fields of the grid named alike; a name the declarations
+--   of a read before it in the list define first (the @byteFieldValue@ rule
+--   passes this rule's reads, then its own, so that each name of the one
+--   layouts module is defined once).
 nameFindings :: Context -> [GridRead] -> GridRead -> [Finding]
 nameFindings ctx grs gr = unnamed <> twice <> clashing
   where
@@ -357,7 +368,7 @@ nameFindings ctx grs gr = unnamed <> twice <> clashing
     unnamed = [ bad (rfCells f) (rfWhere f <> ": the field " <> tshow (rfPrinted f) <> " has no name that makes an identifier")
               | f <- fields, noIdent (rfName f) ]
               <> [ bad [] ("the tail " <> tshow (tailName t) <> " has no name that makes an identifier")
-                 | Just t <- [layoutTail (grLayout gr)], noIdent (tailName t) ]
+                 | Just t <- [recordTail (grLayout gr)], noIdent (tailName t) ]
               <> [ bad [] ("the name " <> tshow (grName gr) <> " makes no type name") | not (typeIdent (typeName gr)) ]
     twice = [ bad (concatMap rfCells fs) ("the fields " <> T.intercalate " and " (map (\f -> tshow (rfPrinted f) <> " (" <> rfWhere f <> ")") fs)
                                           <> " are named alike: " <> n)
@@ -407,12 +418,13 @@ compile ctx bts = concatMap one grs
       []    -> [ Emit (layoutDecl (boundProvenance ctx (grBound gr)) (layoutValue gr) (grLayout gr)), Emit (recordDecl ctx gr) ]
       codes -> [ Excluded (btAnchor (grBound gr)) (T.intercalate ", " codes <> " failed") ]
 
--- | The record(s) of a grid and the instance over its layout.
+-- | The record(s) of a grid, or of a @byteFieldValue@ table read as one, and
+--   the instance over its layout.
 recordDecl :: Context -> GridRead -> Gen.Decl
 recordDecl ctx gr = (Gen.decl p (typeName gr) body)
   { Gen.declRank    = 1
   , Gen.declImports =
-      [ Gen.ImportSome recordModule (["LayoutRecord (..)"] <> L.nub (concatMap helpers fields) <> [ h | isJust tl, h <- ["octets", "octetsField"] ])
+      [ Gen.ImportSome Gen.recordModule (["LayoutRecord (..)"] <> L.nub (concatMap helpers fields) <> [ h | isJust tl, h <- ["octets", "octetsField"] ])
       , Gen.ImportSome "Prelude" (["Eq", "Show", "pure"] <> [ "(<*>)" | not (null fields) || isJust tl ]) ]
       <> [ Gen.ImportSome "Data.Word" ws | let ws = L.nub [ t | f <- fields, t <- [rfType f], "Word" `T.isPrefixOf` t ], not (null ws) ]
       <> [ Gen.ImportSome "Data.ByteString" ["ByteString"] | isJust tl || any ((== "ByteString") . rfType) fields ]
@@ -420,7 +432,7 @@ recordDecl ctx gr = (Gen.decl p (typeName gr) body)
   where
     p = boundProvenance ctx (grBound gr)
     l = grLayout gr
-    tl = layoutTail l
+    tl = recordTail l
     fields = recordFieldsOf gr
     doc = Gen.provenanceComment p
     helpers f = case rfKind f of
@@ -436,9 +448,11 @@ recordDecl ctx gr = (Gen.decl p (typeName gr) body)
     -- the layout's constants and what it leaves out, said once
     leftOut = T.intercalate "; " $
       [ "the layout's reserved bits are zeros" | any ((== Reserved) . fieldKind) (layoutFields l) ]
-      <> [ "the constants the grid prints are the layout's: " <> T.intercalate ", " printed | not (null printed) ]
+      <> [ "the constants the table prints are the layout's: " <> T.intercalate ", " printed | not (null printed) ]
       <> [ "the layout pins " <> T.intercalate ", " byPins | not (null byPins) ]
       <> [ n <> " is the length of " <> tailName t | Just t <- [tl], Just n <- [tailLength t] ]
+      <> [ "the " <> T.toLower (tailName t) <> " bytes from byte " <> tshow (layoutSize l) <> " to the end are the layout's, written as none and skipped when read"
+         | Just t <- [layoutTail l], isNothing tl ]
     pinned = [ (fieldName f, v) | f <- layoutFields l, Pinned v <- [fieldKind f] ]
     -- a constant printed as the field's name (0x02) or after it (NAA (0x05))
     printed = [ if hexText v == T.toLower n then n else n <> " " <> hexText v | (n, v) <- pinned, isNothing (L.lookup n (grPinned gr)) ]

@@ -182,7 +182,8 @@ spec = do
       it "names the layout and its declaration" $ do
         layoutName (bfLayout (readOf named 28)) `shouldBe` "GetComIDPayload"
         cr <- either (throwString . show) pure (compileIR Scott named)
-        T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))) `shouldContain` ["getComIDPayload :: Layout"]
+        T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))) `shouldContain` ["getComIDPayloadLayout :: Layout"]
+        T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))) `shouldContain` ["data GetComIDPayload = GetComIDPayload"]
 
     describe "the findings of edited tables" $ do
       it "C-BYTES-VALUE: hex bytes not as many as the field's, a reserved field's value not zero; the table is left out" $ do
@@ -218,14 +219,28 @@ spec = do
     describe "the generated layouts module" $ do
       cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr)))
-      it "declares a layout for each table, named after its caption" $
+      it "declares a layout for each table, named after its caption as byteGrid names its layouts" $
         [ T.takeWhile (/= ' ') l | l <- lns, " :: Layout" `T.isSuffixOf` l, any (`T.isPrefixOf` l) ["get_", "noR", "verify", "stack", "system"] ] `shouldBe`
-          [ "get_COMIDPayload", "noResponseAvailable", "verify_COMID_VALIDRequest", "verify_COMID_VALIDCommandResponse"
-          , "stack_RESETCommandRequest", "stack_RESETCommandResponse", "stack_RESETPending", "systemLogEntryStructure" ]
+          [ "get_COMIDPayloadLayout", "noResponseAvailableLayout", "verify_COMID_VALIDRequestLayout", "verify_COMID_VALIDCommandResponseLayout"
+          , "stack_RESETCommandRequestLayout", "stack_RESETCommandResponseLayout", "stack_RESETPendingLayout", "systemLogEntryStructureLayout" ]
+      it "declares a record for each table whose layout tiles, as byteGrid's records, its reserved run to the end the layout's; none for Table 236" $ do
+        [ l | l <- lns, "data " `T.isPrefixOf` l, any (`T.isInfixOf` l) ["_COMID", "_RESET", "NoResponse", "SystemLog"] ] `shouldBe`
+          [ "data GET_COMIDPayload = GET_COMIDPayload", "data NoResponseAvailable = NoResponseAvailable"
+          , "data VERIFY_COMID_VALIDRequest = VERIFY_COMID_VALIDRequest", "data VERIFY_COMID_VALIDCommandResponse = VERIFY_COMID_VALIDCommandResponse"
+          , "data STACK_RESETCommandRequest = STACK_RESETCommandRequest", "data STACK_RESETCommandResponse = STACK_RESETCommandResponse"
+          , "data STACK_RESETPending = STACK_RESETPending" ]
+        lns `shouldContain`
+          [ "data STACK_RESETCommandRequest = STACK_RESETCommandRequest"
+          , "  { stack_RESETCommandRequestExtendedComID :: !Word32  -- ^ bytes 0 to 3"
+          , "  }"
+          , "  deriving (Eq, Show)"
+          , ""
+          , "instance LayoutRecord STACK_RESETCommandRequest where"
+          , "  recordLayout _ = stack_RESETCommandRequestLayout" ]
       it "says in the comment of Table 236's layout which bytes no field covers" $
         lns `shouldContain`
-          [ "-- It does not tile (C-LAYOUT-TILE), so Hsed.Core.Layout refuses to encode or decode it until an"
-          , "-- erratum names these bytes:", "--", "-- * no field covers byte 8 bit 7 to byte 8 bit 0", "systemLogEntryStructure :: Layout" ]
+          [ "-- It does not tile (C-LAYOUT-TILE): Hsed.Core.Layout refuses to encode or decode it, and it has"
+          , "-- no record, until an erratum names these bytes:", "--", "-- * no field covers byte 8 bit 7 to byte 8 bit 0", "systemLogEntryStructureLayout :: Layout" ]
       it "prints the fields, the pins, the tail, and the values the layout does not hold, as printed and in ASCII" $ do
         lns `shouldContain`
           [ "      , spanning \"Request Code\" (4, 7) (7, 0) (Pinned 0x01)"

@@ -121,9 +121,10 @@ gen-diff: gen
 
 ## dev/TableUIDs.txt: GHCi's -ddump-splices transcript of the hand-written TableUIDs (since M2d the
 ## oracle's test fixture hsed/fixture/Hand/TableUIDs.hs), the definitions the t240 quasiquoter makes
-## (design 5.5: secondary to the runtime oracle, regenerated at M2a); paths made relative to the
-## checkout. Not part of check.
+## (design 5.5: secondary to the runtime oracle, regenerated at M2a and M2d); paths made relative to
+## the checkout, and the notices stack prints for a test component before 'Configuring GHCi' left
+## out. Not part of check.
 splices:
 	printf ':set -ddump-splices\n:load Hand.TableUIDs\n' \
 	  | stack ghci hsed:test:hsed-test --no-load --ghci-options='-ignore-dot-ghci' 2>&1 \
-	  | sed -e 's|$(CURDIR)/||g' > dev/TableUIDs.txt
+	  | sed -e '/^Configuring GHCi/,$$!d' -e 's|$(CURDIR)/||g' > dev/TableUIDs.txt

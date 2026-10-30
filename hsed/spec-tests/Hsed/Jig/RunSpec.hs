@@ -30,6 +30,7 @@ a key the catalogue lacks (exit 2), a drive without the serial it must have
 module Hsed.Jig.RunSpec (spec) where
 
 import qualified Data.Aeson             as A
+import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
 import           RIO
 import           RIO.Directory          (doesFileExist, listDirectory)
@@ -46,6 +47,7 @@ import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
 import           Hsed.Jig.Support       (at, atPath, disk6Like, silently)
 import           Hsed.Jig.Target        (Target (..))
+import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..), parseQuery, synthesize)
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.Types         (SimParams (..), defaultSimParams)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..))
@@ -186,6 +188,24 @@ spec = do
         disk6Like >>= writeFileBinary file
         (code, _, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
         code `shouldBe` ExitSuccess
+    it "fails UCT-01's step 1c on a response whose Length of Parameter Data asks for more than 255 blocks" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        let file = dir </> "huge.bin"
+        bytes <- disk6Like
+        writeFileBinary file (B.pack [0x00, 0x03, 0x0D, 0x40] <> B.drop 4 bytes)
+        (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
+        code `shouldBe` ExitFailure 1
+        [ r | c <- elements (at "cases" json), A.String r <- elements (at "reasons" c) ] `shouldSatisfy` any ("1c:" `T.isPrefixOf`)
+    it "says UCT-01's step 4c is not evaluated on a response without the Block SID descriptor, with Table 7's version" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        let file = dir </> "no-block-sid.bin"
+        query <- readFileUtf8 "../spec/fixtures/disk6-query.txt"
+        q <- either (throwString . T.unpack) pure (parseQuery query)
+        writeFileBinary file (synthesize q { sqFeatures = filter ((/= 0x0402) . sfCode) (sqFeatures q) })
+        (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
+        code `shouldBe` ExitSuccess
+        [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e], "UCT-01 4c not evaluated" `T.isPrefixOf` t ]
+          `shouldSatisfy` any ("TCG Opal SSC Specification v2.00 (Opal 2.30 Table 7, PDF 24)" `T.isInfixOf`)
 
   describe "a replay standing in for the kext's drive, with what the IORegistry would say of disk6" $
     it "notes the CDB the hardware run expects, issues no IF-SEND, and captures the response with its sidecar" $

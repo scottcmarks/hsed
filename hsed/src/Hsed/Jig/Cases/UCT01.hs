@@ -11,10 +11,12 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 UCT-01 (Test Cases 1.02, PDF 29-31): one IF-RECV of Level 0
-Discovery; the TPer and Locking descriptors, and, for Opal 2.00 to 2.30,
-the Opal SSC V2, Additional DataStore Table and Block SID descriptors, each
-with the values the case requires (steps 2 and 4); the base ComID recorded
-for the cases after it. On a drive at M3 the run waives SyncIdle and
+Discovery, the whole response retrieved (step 1c: a response whose Length
+of Parameter Data asks for more than the 255 blocks a Level 0 IF-RECV can,
+or whose last descriptor runs past it, fails step 1); the TPer and Locking
+descriptors, and, for Opal 2.00 to 2.30, the Opal SSC V2, Additional
+DataStore Table and Block SID descriptors, each with the values the case
+requires (steps 2 and 4); the base ComID recorded for the cases after it. On a drive at M3 the run waives SyncIdle and
 NoSessions for it, a case that needs Level 0 alone, which Level0Only cannot
 observe (Core 3.3.10.3 b, PDF 84; 3.3.6.2, PDF 67).
 
@@ -27,9 +29,15 @@ value at least some number, the number is the one the spec allows the field
 PDF 23, the same 1, 4 and 8 as step 4a; the DataStore minima of step 4b).
 The case's expected responses for Opal 1.00, Opalite, Pyrite and Ruby
 (steps 3 and 5 to 8, PDF 30-31) are not M3's: a response without the Opal
-SSC V2 descriptor fails step 4. Step 4c applies where the Block SID
-descriptor is reported (the SSC version the case conditions it on is the
-vendor's statement, Test Cases 4.3, PDF 28, which Level 0 does not carry).
+SSC V2 descriptor fails step 4. Step 4c is checked where the Block SID
+descriptor is reported. The case conditions it on the device supporting
+Opal 2.02 or 2.30, which the Test Cases take as the vendor's statement (4.3,
+PDF 28); the device's Level 0 states its own, the Opal SSC V2 descriptor's
+SSC Minor Version Number (Opal 2.30 Table 7, PDF 24), and whether the jig
+should read that instead, failing 4c where 0x2 or 0x3 is reported without
+the descriptor, is design 13.29 (a), Scott's. Until then a response
+without the descriptor leaves 4c not evaluated, said in a note of the
+transcript with the SSC version Level 0 reports, never passed silently.
 -}
 module Hsed.Jig.Cases.UCT01
   ( uct01
@@ -48,8 +56,8 @@ import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq        (Section (..), lockingSPUntouched, noSessionOpened)
-import           Hsed.Jig.Script        (RunCtx (..), RunEnv (..), Script, Verdict (..), discover, featureIn)
-import           Hsed.Level0            (Level0)
+import           Hsed.Jig.Script        (RunCtx (..), RunEnv (..), Script, Verdict (..), discover, featureIn, note)
+import           Hsed.Level0            (Level0 (..), cutShort, sscMinorVersions)
 import           Hsed.Sim.FeatureSets   (BlockSIDFeature (..), DataStoreFeature)
 
 
@@ -64,9 +72,10 @@ uct01 = Case
   , cExtensions = []
   }
 
--- | Step 1 (discovery fails the case when the IF-RECV does not succeed),
---   then the expected responses 2 and 4, every one checked; the base ComID
---   recorded for the cases after it (the case's Notes, PDF 29).
+-- | Step 1 (discovery fails the case when the IF-RECV does not succeed, and
+--   step 1c when the whole response was not retrieved), then the expected
+--   responses 2 and 4, every one checked; the base ComID recorded for the
+--   cases after it (the case's Notes, PDF 29); step 4c not evaluated, said.
 run :: Script Verdict
 run = do
   l0 <- discover
@@ -74,9 +83,35 @@ run = do
     Just (Right d) -> asks reCtx >>= \ref ->
       modifyIORef' ref (\c -> c { rcBaseComId = Just (level0DiscoveryOpalSSCV2FeatureBaseComID (drRecord d)) })
     _ -> pure ()
-  pure $ case concat [step2a l0, step2b l0, step4 l0] of
+  traverse_ note (step4cUnevaluated l0)
+  pure $ case concat [step1c l0, step2a l0, step2b l0, step4 l0] of
     []       -> Pass
     failures -> Fail failures
+
+-- | 1c: the transfer length large enough to retrieve the entire response
+--   (PDF 29): after discovery's one retry, a response still cut short
+--   ("Hsed.Level0".'cutShort': Length of Parameter Data past the transfer,
+--   a descriptor past Length of Parameter Data) was not retrieved whole.
+step1c :: Level0 -> [Text]
+step1c l0 = [ "1c: the whole response was not retrieved: " <> T.intercalate ", " (map tshow cut) | let cut = filter cutShort (l0Problems l0), not (null cut) ]
+
+-- | 4c not evaluated, said: no Block SID descriptor, the SSC version the
+--   case conditions 4c on being the vendor's statement (Test Cases 4.3, PDF
+--   28), with the SSC Minor Version Number Level 0 reports and the version
+--   Opal 2.30 Table 7 (PDF 24) gives it.
+step4cUnevaluated :: Level0 -> [Text]
+step4cUnevaluated l0 = case featureIn l0 :: Maybe (Either LayoutError (DecodedRecord BlockSIDFeature)) of
+  Just _  -> []
+  Nothing -> [ "UCT-01 4c not evaluated: no Block SID Authentication descriptor (0x0402); the case asks for it of a device "
+               <> "that supports Opal 2.02 or 2.30, the vendor's statement (Test Cases 4.3, PDF 28)" <> minorVersion
+               <> "; reading that instead is design 13.29 (a)" ]
+  where
+    minorVersion = case featureIn l0 of
+      Just (Right d) ->
+        let m = toInteger (level0DiscoveryOpalSSCV2FeatureSSCMinorVersionNumber (drRecord d))
+        in "; Level 0's SSC Minor Version Number is " <> tshow m <> ", "
+           <> maybe "Reserved" id (L.lookup m sscMinorVersions) <> " (Opal 2.30 Table 7, PDF 24)"
+      _ -> ""
 
 -- | 2a: the TPer Feature (0x0001), Streaming Supported and Sync Supported 1.
 step2a :: Level0 -> [Text]

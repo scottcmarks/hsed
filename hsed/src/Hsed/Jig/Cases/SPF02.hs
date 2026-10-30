@@ -64,7 +64,7 @@ run = do
   base <- baseComId
   r <- ifRecvOn base
   expectStatus "step 1: the IF-RECV" Good r
-  expectT45 "step 1: the IF-RECV's ComPacket header" AllReturnedNoData r
+  expectT45 "step 1: the IF-RECV's ComPacket header" base AllReturnedNoData r
   pure Pass
 
 -- | The extension: the IF-SEND succeeds, the ComID stays in S1, and the next
@@ -80,5 +80,5 @@ emptyAtoms = fmap (fromMaybe (Skipped "the simulator's alone")) . simOnly $ do
     SimTarget _ control -> liftIO (syncOf base <$> scPeek control)
     _                   -> pure Nothing
   unless (after == Just S1) (unmet ("after the IF-SEND the ComID is in " <> maybe "no state" tshow after <> ", not S1"))
-  ifRecvOn base >>= expectT45 "the next IF-RECV" AllReturnedNoData
+  ifRecvOn base >>= expectT45 "the next IF-RECV" base AllReturnedNoData
   pure Pass

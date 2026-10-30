@@ -19,6 +19,9 @@ encoding; an IF-RECV's header read for Table 45; the matcher's field names
 the generated table's, and MaxComPacketSize a property Core Table 167
 names; and each answer named by its row of Table 45, through
 "Hsed.Sim.Sync".@t45Rows@, which reads the generated table's rows in order.
+An answer expected of a static ComID is a ComPacket of it and a static
+extension; the drain classifies answers as the host's loop does, so that
+those Core allows an SSC drain too; ETC-02's drain is outside its verdict.
 -}
 module Hsed.Jig.ScriptSpec (spec) where
 
@@ -34,6 +37,8 @@ import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..)
                                             PacketHeader (..))
 import qualified Hsed.Gen.Core.Properties  as P
 import           Hsed.Gen.Core.StateTables (table45)
+import           Hsed.Jig.Case             (Case (..))
+import           Hsed.Jig.Cases.ETC02      (etc02)
 import           Hsed.Jig.Options          (defaultRunOptions)
 import           Hsed.Jig.Script
 import           Hsed.Jig.Target           (Target (..))
@@ -43,7 +48,8 @@ import           Hsed.Sim.Sync             (T45Row (..))
 import           Hsed.Sim.Types            (defaultSimParams, initialState)
 import           Hsed.Transport.InProc     (SimControl (..))
 import           Hsed.Wire                 (newChannel)
-import           Hsed.Wire.Internal        (Describe (..), IfStatus (..), Response (..), Transport (..), Unit (..))
+import           Hsed.Wire.Internal        (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Transport (..),
+                                            Unit (..))
 
 
 -- | A transport that counts what reaches it and answers Good.
@@ -73,7 +79,31 @@ scripted sim s = do
 -- | A response holding a ComPacket header: Length bytes of payload,
 --   OutstandingData, MinTransfer.
 answerOf :: Int -> Word32 -> Word32 -> Response
-answerOf l o m = Response Good (either (error . show) id (encodeRecord (ComPacket (ComPacketHeader 0x1004 0 o m) (B.replicate l 0))) <> B.replicate 64 0)
+answerOf = answerOn 0x1004 0
+
+-- | The same of a ComID and extension.
+answerOn :: Word16 -> Word16 -> Int -> Word32 -> Word32 -> Response
+answerOn c ext l o m = Response Good (either (error . show) id (encodeRecord (ComPacket (ComPacketHeader c ext o m) (B.replicate l 0))) <> B.replicate 64 0)
+
+-- | A simulator's end whose IF-SENDs are answered from one list and IF-RECVs
+--   from another (past either, Good and nothing), the base ComID 0x1004
+--   recorded: what a script came to, and the IF-RECVs and the transcript.
+replying :: [IfStatus] -> [Response] -> Script a -> IO (a, Int, [TEntry])
+replying sends recvs s = do
+  sent <- newIORef sends
+  rcvd <- newIORef recvs
+  n <- newIORef (0 :: Int)
+  t <- newTranscript
+  channel <- newChannel
+  ctx <- newIORef (RunCtx Nothing (Just 0x1004) Nothing)
+  let next ref end = atomicModifyIORef' ref (\xs -> (drop 1 xs, fromMaybe end (listToMaybe xs)))
+      tr = (counted n)
+        { tExchange = \q -> case dir q of
+            IfSend -> (`Response` mempty) <$> next sent Good
+            IfRecv -> modifyIORef' n (+ 1) >> next rcvd (Response Good mempty) }
+      target = SimTarget tr (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
+  a <- runRIO (RunEnv target t channel ctx defaultRunOptions (mkLogFunc (\_ _ _ _ -> pure ()))) s
+  (,,) a <$> readIORef n <*> entries t
 
 spec :: Spec
 spec = do
@@ -133,7 +163,39 @@ spec = do
     it "matches the generated table's fields by their names, and MaxComPacketSize is Core Table 167's" $ do
       fields table45 `shouldBe` ["Length", "OutstandingData", "MinTransfer"]
       maxComPacketSizeName `shouldSatisfy` (`elem` map propertyName P.properties)
+    it "reads an answer of a static ComID as such, and refuses another ComID's or extension's (Core 3.3.10.5)" $ do
+      t45On 0x1004 (answerOf 40 0 0) `shouldBe` Right (40, 0, 0)
+      t45On 0x1005 (answerOf 40 0 0) `shouldSatisfy` isLeft
+      t45On 0x1004 (answerOn 0x1004 0x1234 0 0 0) `shouldSatisfy` isLeft
+      (v, _, _) <- scripted True (attempt (Pass <$ expectT45 "an IF-RECV" 0x1005 AllReturnedNoData (answerOf 0 0 0)))
+      v `shouldSatisfy` \x -> case x of
+        Fail [r] -> "ComID 0x1004, not 0x1005" `T.isInfixOf` r
+        _        -> False
     it "names each answer's row, in the order the simulator reads the generated rows" $
       map t45RowOf [(0, 1, 0), (0, 100, 128), (40, 100, 128), (40, 1, 0), (40, 0, 0), (0, 0, 0), (0, 0, 7)]
         `shouldBe` [ Just ResponsesToCome, Just InsufficientLength, Just AdditionalAvailable, Just AdditionalToCome
                    , Just AllReturnedWithData, Just AllReturnedNoData, Nothing ]
+
+  describe "drain" $ do
+    it "takes what Core 3.3.10.2.1 3.d.ii allows an SSC, no row of Table 45 though they are: (100, 500, 0), (100, 0, 50)" $
+      forM_ [answerOf 100 500 0, answerOf 100 0 50] $ \first' -> do
+        (v, recvs, _) <- replying [] [first', answerOf 0 0 0] (attempt (Pass <$ drain 0x1004))
+        (v, recvs) `shouldBe` (Pass, 2)
+    it "asks again at the MinTransfer, and refuses one no larger with no packets" $ do
+      (v1, recvs, _) <- replying [] [answerOf 0 300 4096, answerOf 300 0 0] (attempt (Pass <$ drain 0x1004))
+      (v1, recvs) `shouldBe` (Pass, 2)
+      (v2, _, _) <- replying [] [answerOf 0 100 100] (attempt (Pass <$ drain 0x1004))
+      v2 `shouldSatisfy` \x -> case x of
+        Fail [r] -> "no row of Table 45" `T.isInfixOf` r
+        _        -> False
+    it "refuses an answer of another ComID" $ do
+      (v, _, _) <- replying [] [answerOn 0x1005 0 0 0 0] (attempt (Pass <$ drain 0x1004))
+      v `shouldSatisfy` \x -> case x of
+        Fail _ -> True
+        _      -> False
+
+  describe "ETC-02" $
+    it "passes on its two steps alone, its drain after them outside its verdict, a drain that fails said in a note" $ do
+      (v, _, es) <- replying [Good, SynchronousProtocolViolation] [Response Good "not a ComPacket"] (attempt (cRun etc02))
+      v `shouldBe` Pass
+      [ t | Note _ t <- es, "ETC-02's drain of 0x1004 after its steps, outside its verdict" `T.isPrefixOf` t ] `shouldSatisfy` (not . null)

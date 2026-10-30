@@ -1,5 +1,6 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE MultiWayIf          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -27,14 +28,18 @@ the Guard under M3's policy ('drivePolicy', Level0Only), so that a refused
 one is recorded and answered 'Unsupported', never issued.
 
 An expectation that does not hold ends the script ('unmet'); 'attempt'
-turns what a script comes to into its 'Verdict'. The host's side of Table 45
-is read from the generated table ("Hsed.Gen.Core.StateTables".@table45@):
-an answer's Length, OutstandingData and MinTransfer match a row when each
-equals what the row prints and is not zero where the row names a quantity
-('t45Of', 'expectT45', and 'drain', which asks again as the row says until
-everything is returned). The ComPackets the jig sends are the Test Cases'
-(Table 6, PDF 27): one packet of the control session holding one Data
-subpacket ('controlComPacket').
+turns what a script comes to into its 'Verdict'; 'note' adds a line to the
+transcript, for what a case does apart from its verdict. The host's side of
+Table 45 is read from the generated table
+("Hsed.Gen.Core.StateTables".@table45@): an answer's Length,
+OutstandingData and MinTransfer match a row when each equals what the row
+prints and is not zero where the row names a quantity ('t45Of',
+'expectT45'), an answer being a ComPacket of the ComID asked and a static
+ComID's extension ('t45On'); 'drain' asks again as the host's loop does
+("Hsed.Wire".@exchangeComPacket@), by MinTransfer, then by OutstandingData,
+until everything is returned. The ComPackets the jig sends are the Test
+Cases' (Table 6, PDF 27): one packet of the control session holding one
+Data subpacket ('controlComPacket').
 -}
 module Hsed.Jig.Script
   ( -- * The run's environment
@@ -45,6 +50,7 @@ module Hsed.Jig.Script
   , Verdict (..)
   , attempt
   , unmet
+  , note
     -- * Verbs
   , discover
   , ifRecvOn
@@ -64,6 +70,7 @@ module Hsed.Jig.Script
   , propertiesCall
   , maxComPacketSizeName
   , t45Of
+  , t45On
   , t45RowOf
   , describeStatus
   , describeExchange
@@ -105,7 +112,7 @@ import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Wire              (Cap (..), Channel, Dir (..), ExchangeError (..), ExchangeOpts (..), IfStatus (..),
                                          Request (..), Response (..), Transport, Unit (..), comPacketProtocol, dataKind,
                                          defaultExchangeOpts, exchangeComPacket, hex, ifRecv, ifSend, ifStatusDetail,
-                                         ifStatusName, level0ComId, roundUp, transferLength, unitOf)
+                                         ifStatusName, level0ComId, roundUp, staticExtension, transferLength, unitOf)
 
 
 -- * The run's environment
@@ -346,22 +353,29 @@ expectStatus name expected r = unless (status r == expected) $ theEnd >>= \case
                      <> "), which carries no interface status (design 6.2)"))
   _ -> unmet (name <> ": " <> describeStatus (status r) <> ", not " <> describeStatus expected)
 
--- | Expect an IF-RECV response's ComPacket header to be a Table 45 row's.
-expectT45 :: Text -> T45Row -> Response -> Script ()
-expectT45 name row r = do
+-- | Expect an IF-RECV response on a ComID to be a ComPacket of it whose
+--   header is a Table 45 row's (Core 3.3.10.5, PDF 84-85: a response
+--   ComPacket for the ExtendedComID specified).
+expectT45 :: Text -> Word16 -> T45Row -> Response -> Script ()
+expectT45 name c row r = do
   expectStatus name Good r
-  answer <- either (unmet . ((name <> ": ") <>)) pure (t45Of r)
+  answer <- either (unmet . ((name <> ": ") <>)) pure (t45On c r)
   case L.lookup row (zip t45Rows (states table45)) of
     Nothing -> unmet (name <> ": Table 45 has no row " <> tshow row)
     Just sr -> unless (matches sr answer) $
       unmet (name <> ": answered " <> showAnswer answer <> ", not Table 45's \"" <> state sr <> "\"")
 
--- | IF-RECV on a ComID until all is returned (Table 45's last row): the
---   synchronous protocol idle again. Each answer is classified by Table 45:
---   all returned (rows 5 and 6) ends it; responses to come (rows 1 and 4)
---   ask again after the host's poll interval; a MinTransfer (rows 2 and 3)
---   asks again with at least that length. It gives up after as many polls
---   as the host's timeout holds ('defaultExchangeOpts').
+-- | IF-RECV on a ComID until all is returned: the synchronous protocol
+--   idle again. Each answer, a ComPacket of the ComID and a static ComID's
+--   extension ('t45On'), is classified as the host's loop classifies it
+--   ("Hsed.Wire".@exchangeComPacket@; Core Table 45, PDF 83): a MinTransfer
+--   not zero (rows 2 and 3) asks again at once with at least that length,
+--   and with no packets and no longer a length is no row; else
+--   OutstandingData zero (rows 5 and 6) ends it; else the TPer has more to
+--   come (rows 1 and 4), asked again after the host's poll interval. So an
+--   answer Core 3.3.10.2.1 3.d.ii allows an SSC (OutstandingData the total,
+--   or MinTransfer zero, PDF 83) drains as well. It gives up after as many
+--   polls as the host's timeout holds ('defaultExchangeOpts').
 drain :: Word16 -> Script ()
 drain c = recvLength >>= go 0
   where
@@ -371,17 +385,15 @@ drain c = recvLength >>= go 0
       | otherwise = do
           r <- recvOn comPacketProtocol c len
           unless (status r == Good) (unmet ("drain " <> hex c <> ": the IF-RECV answered " <> describeStatus (status r)))
-          answer@(_, _, minTransfer) <- either (unmet . (("drain " <> hex c <> ": ") <>)) pure (t45Of r)
+          answer@(returned, outstanding, minTransfer) <- either (unmet . (("drain " <> hex c <> ": ") <>)) pure (t45On c r)
           u <- endUnit
           let longer = max len (roundUp u (fromInteger minTransfer))
-          case t45RowOf answer of
-            Just AllReturnedNoData   -> pure ()
-            Just AllReturnedWithData -> pure ()
-            Just ResponsesToCome     -> threadDelay (xPollMicros defaultExchangeOpts) >> go (n + 1) len
-            Just AdditionalToCome    -> threadDelay (xPollMicros defaultExchangeOpts) >> go (n + 1) len
-            Just InsufficientLength  -> go (n + 1) longer
-            Just AdditionalAvailable -> go (n + 1) longer
-            Nothing                  -> unmet ("drain " <> hex c <> ": answered " <> showAnswer answer <> ", no row of Table 45")
+          if | minTransfer /= 0, returned == 0, longer <= len ->
+                 unmet ("drain " <> hex c <> ": answered " <> showAnswer answer <> ", a MinTransfer no larger than the request with "
+                        <> "no packets: no row of Table 45")
+             | minTransfer /= 0 -> go (n + 1) longer
+             | outstanding == 0 -> pure ()
+             | otherwise        -> threadDelay (xPollMicros defaultExchangeOpts) >> go (n + 1) len
 
 -- | Run a step on the simulator alone: 'Nothing' on a drive.
 simOnly :: Script a -> Script (Maybe a)
@@ -437,10 +449,25 @@ propertiesCall = generate (invocation uSMUID (Methods.Properties Nothing))
 -- | An IF-RECV response's ComPacket header as Table 45 has it: its Length
 --   (its payload's), OutstandingData and MinTransfer.
 t45Of :: Response -> Either Text (Integer, Integer, Integer)
-t45Of r = case decodeRecord (rpayload r) of
+t45Of = fmap snd . comPacketHeaderOf
+
+-- | 't45Of' an answer on a static ComID: a ComPacket of that ComID and a
+--   static ComID's extension, 0x0000 (Core 3.3.3.1, PDF 57), or why not.
+t45On :: Word16 -> Response -> Either Text (Integer, Integer, Integer)
+t45On c r = do
+  (h, answer) <- comPacketHeaderOf r
+  unless (comPacketComID h == c) $ Left ("a ComPacket of ComID " <> hex (comPacketComID h) <> ", not " <> hex c)
+  unless (comPacketComIDExtension h == staticExtension) $
+    Left ("a ComPacket of extension " <> hex (comPacketComIDExtension h) <> ", not a static ComID's " <> hex staticExtension)
+  pure answer
+
+-- | A response's ComPacket header, and its Length, OutstandingData and
+--   MinTransfer.
+comPacketHeaderOf :: Response -> Either Text (ComPacketHeader, (Integer, Integer, Integer))
+comPacketHeaderOf r = case decodeRecord (rpayload r) of
   Left e -> Left ("no ComPacket in the response: " <> tshow e)
   Right (DecodedRecord (ComPacket h body) _ _) ->
-    Right (toInteger (B.length body), toInteger (comPacketOutstandingData h), toInteger (comPacketMinTransfer h))
+    Right (h, (toInteger (B.length body), toInteger (comPacketOutstandingData h), toInteger (comPacketMinTransfer h)))
 
 -- | The row of Table 45 an answer is: its fields each what the row prints,
 --   or not zero where the row names a quantity.

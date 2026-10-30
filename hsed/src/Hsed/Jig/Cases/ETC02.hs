@@ -16,12 +16,15 @@ the second IF-SEND's status Synchronous Protocol Violation (Core
 jig's extension: with the simulator holding its response, the first IF-RECV
 of the drain answers responses to come (Core Table 45 row 1, PDF 83).
 
-The case drains the ComID after its two steps, so that the next case finds
-the synchronous protocol idle. Its extension runs the same two IF-SENDs
-with the simulator holding the first's response in S2 (@--hold-processing@,
-Core 3.3.10.5 S2 b, PDF 85; the violating IF-SEND leaves the state as it
-was, 3.3.10.2.1 3 a), then drains; without a hold the simulator releases
-the response at once, and the extension is skipped.
+The case drains the ComID after its two steps, so that the next case, and
+the extension, find the synchronous protocol idle: a step of the jig's own,
+outside the case's verdict, which is the two steps' alone (Test Cases PDF
+77); a drain that does not end is said in a note of the transcript, and the
+next case's SyncIdle prerequisite drains again. Its extension runs the same
+two IF-SENDs with the simulator holding the first's response in S2
+(@--hold-processing@, Core 3.3.10.5 S2 b, PDF 85; the violating IF-SEND
+leaves the state as it was, 3.3.10.2.1 3 a), then drains; without a hold
+the simulator releases the response at once, and the extension is skipped.
 -}
 module Hsed.Jig.Cases.ETC02
   ( etc02
@@ -33,10 +36,11 @@ import           Hsed.Jig.Case      (Case (..), Need (..))
 import           Hsed.Jig.Catalogue (CaseKey (..), TestId (..))
 import           Hsed.Jig.Options   (RunOptions (..))
 import           Hsed.Jig.Prereq    (Section (..), lockingSPUntouched, noSessionOpened)
-import           Hsed.Jig.Script    (RunEnv (..), Script, Verdict (..), baseComId, controlComPacket, drain, expectStatus,
-                                     expectT45, ifRecvOn, propertiesCall, rawIfSend, sendLength, unmet)
+import           Hsed.Jig.Script    (RunEnv (..), Script, Verdict (..), attempt, baseComId, controlComPacket, drain,
+                                     expectStatus, expectT45, ifRecvOn, note, propertiesCall, rawIfSend, sendLength, unmet,
+                                     verdictText)
 import           Hsed.Sim.Sync      (T45Row (..))
-import           Hsed.Wire          (IfStatus (..))
+import           Hsed.Wire          (IfStatus (..), hex)
 
 
 -- | The case.
@@ -50,11 +54,18 @@ etc02 = Case
   , cExtensions = [("held: the first IF-RECV answers responses to come (Core Table 45 row 1, PDF 83)", held)]
   }
 
--- | Steps 1 and 2, then the drain.
+-- | Steps 1 and 2, the verdict; then the drain, outside it.
 run :: Script Verdict
 run = do
   base <- twoIfSends
-  Pass <$ drain base
+  Pass <$ cleanUp base
+
+-- | The drain after the steps, the jig's own: a failure said in a note, not
+--   the case's.
+cleanUp :: Word16 -> Script ()
+cleanUp base = attempt (Pass <$ drain base) >>= \v -> case v of
+  Pass -> pure ()
+  _    -> note ("ETC-02's drain of " <> hex base <> " after its steps, outside its verdict: " <> verdictText v)
 
 -- | Properties in an IF-SEND on the base ComID (step 1: it succeeds), and
 --   again on that ComID before any IF-RECV (step 2: Synchronous Protocol
@@ -77,5 +88,5 @@ held = do
     then pure (Skipped "needs --hold-processing: without it the simulator releases the response before any IF-RECV")
     else do
       base <- twoIfSends
-      ifRecvOn base >>= expectT45 "the first IF-RECV after them" ResponsesToCome
+      ifRecvOn base >>= expectT45 "the first IF-RECV after them" base ResponsesToCome
       Pass <$ drain base

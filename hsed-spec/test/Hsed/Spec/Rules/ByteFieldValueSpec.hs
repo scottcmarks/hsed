@@ -15,10 +15,11 @@ with the committed annotations (design section 3.4, example E7): the eight
 tables it binds from the doc anchor; the first row of Tables 31 and 37, whose
 bytes the PDF's tags put in the header; the layouts, each tiling its bytes but
 Table 236's, which leaves byte 8 to no row (a Warning, the layout generated as
-printed and saying so, until an erratum names the byte, as one does here); the
-constants pinned from the VALUE
-column, checked against what the PDF prints of them; the findings of edited
-tables; the declarations of the layouts module.
+printed and saying so, until an erratum names the byte, as one does here), its
+fields named by the first sentence of their Values cells; the constants pinned
+from the VALUE column, checked against what the PDF prints of them; the
+reserved run to the end of the transfer, a reserved tail; the findings of
+edited tables; the declarations of the layouts module.
 -}
 module Hsed.Spec.Rules.ByteFieldValueSpec (spec) where
 
@@ -30,8 +31,9 @@ import           RIO
 import           RIO.Directory                (doesFileExist)
 import           Test.Hspec
 
-import           Hsed.Core.Layout             (Content (..), Decoded (..), Field (..), FieldKind (..), Layout (..), Tail (..),
-                                               TileProblem (..), bitPosition, decodeStrict, encode, fieldEnd, tiling)
+import           Hsed.Core.Layout             (Content (..), Decoded (..), Difference (..), Field (..), FieldKind (..), Layout (..),
+                                               LayoutError (..), Tail (..), TileProblem (..), bitPosition, decode, decodeStrict, encode,
+                                               fieldEnd, tiling)
 import           Hsed.Spec.Anchor             (AnchorId (..))
 import           Hsed.Spec.Check              (checkIR, mkContext)
 import           Hsed.Spec.Common             (ErrataSet (..), RuleName (..), Severity (..), SpecId (..), renderFinding)
@@ -41,6 +43,7 @@ import           Hsed.Spec.CoreIR
 import           Hsed.Spec.IR                 (CellIR (..), SpecIR (..), TableIR (..), readIR)
 import           Hsed.Spec.RuleDef            (BoundTable (..), Classification (..), RuleDef (..), numberedTables)
 import           Hsed.Spec.Rules              (classify, explain)
+import           Hsed.Spec.Readers.Record     (Structure (..))
 import           Hsed.Spec.Rules.ByteFieldValue
 import           Hsed.Spec.Shape              (measure)
 
@@ -86,6 +89,13 @@ spec = do
       map (readValue (Just 4)) ["Allocated  ComID", "00 00 00 00/ 00 00 00 01", "zero", "0x", ""]
         `shouldBe` map Printed ["Allocated ComID", "00 00 00 00/ 00 00 00 01", "zero", "0x", ""]
 
+  describe "firstSentence" $
+    it "names a two-column table's field by the first sentence of its Values cell, its full stop dropped" $
+      map firstSentence [ "The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes."
+                        , "Status code for the operation.", "The invoking uid of the method (either a table or object UID, or this SP)" ]
+        `shouldBe` [ "The uid of the method involved in the operation", "Status code for the operation"
+                   , "The invoking uid of the method (either a table or object UID, or this SP)" ]
+
   describe "the rule's codes" $
     it "claims C-BYTES-ROW, C-BYTES-VALUE and N-BYTES-IN-HEADER, and none of the readers'" $
       map Cm.codeName (ruleCodes byteFieldValueRule) `shouldBe` ["C-BYTES-ROW", "C-BYTES-VALUE", "N-BYTES-IN-HEADER"]
@@ -126,7 +136,7 @@ spec = do
     describe "the layouts" $ do
       it "gives each its fixed part's size and the run to the end of the transfer as its tail" $ do
         [ (n, layoutSize l, layoutTail l) | n <- [28, 31, 32, 33, 35, 36, 37], let l = bfLayout (readOf ir n) ] `shouldBe`
-          [ (28, 4, Nothing) ] <> [ (n, s, Just (Tail "Reserved" Nothing 1)) | (n, s) <- [(31, 12), (32, 8), (33, 46), (35, 8), (36, 16), (37, 12)] ]
+          [ (28, 4, Nothing) ] <> [ (n, s, Just (Tail "Reserved" Nothing 1 Reserved)) | (n, s) <- [(31, 12), (32, 8), (33, 46), (35, 8), (36, 16), (37, 12)] ]
       it "T33: 46 bytes, the numbers, the reserved bytes, the pinned constants and the three 10-byte times (PDF 64)" $
         map printed (layoutFields (bfLayout (readOf ir 33))) `shouldBe`
           [ ("Extended ComID", (0, 7), (3, 0), Unsigned)
@@ -151,8 +161,9 @@ spec = do
         let l = bfLayout (readOf ir 236)
         (layoutSize l, map printed (layoutFields l)) `shouldBe`
           ( 18, [ ("The invoking uid of the method", (0, 7), (7, 0), Unsigned)
-                , ("The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes.", (9, 7), (15, 0), Unsigned)
-                , ("Status code for the operation.", (16, 7), (17, 0), Unsigned) ] )
+                , ("The uid of the method involved in the operation", (9, 7), (15, 0), Unsigned)
+                , ("Status code for the operation", (16, 7), (17, 0), Unsigned) ] )
+        stTiles (bfStructure (readOf ir 236)) `shouldBe` False
         tiling l `shouldBe` [Gap 64 71]
         filter ("C-LAYOUT-TILE" `T.isPrefixOf`) (findings ir) `shouldBe`
           [ "C-LAYOUT-TILE core-2.01.pdf#page=298&T236: System Log Entry Structure: no field covers byte 8 bit 7 to byte 8 bit 0" ]
@@ -164,23 +175,26 @@ spec = do
 
     describe "Table 236 under an erratum naming byte 8" $ do
       fixed <- runIO (annotated pristine (hsa <> "core-2.01 | T236 | erratum scott [\"9 to 15\" ~> \"8 to 15\"]\n"))
-      it "tiles 18 bytes, each field named by its Values cell, a parenthesis apart, and says nothing of a gap" $ do
+      it "tiles 18 bytes, each field named by the first sentence of its Values cell, a parenthesis apart, and says nothing of a gap" $ do
         let l = bfLayout (readOf fixed 236)
         map printed (layoutFields l) `shouldBe`
           [ ("The invoking uid of the method", (0, 7), (7, 0), Unsigned)
-          , ("The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes.", (8, 7), (15, 0), Unsigned)
-          , ("Status code for the operation.", (16, 7), (17, 0), Unsigned) ]
+          , ("The uid of the method involved in the operation", (8, 7), (15, 0), Unsigned)
+          , ("Status code for the operation", (16, 7), (17, 0), Unsigned) ]
         tiling l `shouldBe` []
         filter ("C-LAYOUT-TILE" `T.isPrefixOf`) (findings fixed) `shouldBe` []
         cr <- either (throwString . show) pure (compileIR Scott fixed)
         let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr)))
-        lns `shouldContain` ["      , spanning \"The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes.\" (8, 7) (15, 0) Unsigned"]
+        lns `shouldContain` ["      , spanning \"The uid of the method involved in the operation\" (8, 7) (15, 0) Unsigned"]
+        lns `shouldContain` ["-- > \"8 to 15\" | \"The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes.\""]
+        [ T.unwords (T.words ln) | ln <- lns, "  { systemLogEntryStructureTheInvokingUidOfTheMethod " `T.isPrefixOf` ln ]
+          `shouldBe` [ "{ systemLogEntryStructureTheInvokingUidOfTheMethod :: !Word64 -- ^ bytes 0 to 7: The invoking uid of the method (either a table or object UID, or this SP)" ]
         filter ("-- It does not tile" `T.isPrefixOf`) lns `shouldBe` []
 
     describe "the layout modifier" $ do
       named <- runIO (annotated pristine (hsa <> "core-2.01 | T28 | layout \"GetComIDPayload\"\n"))
-      it "names the layout and its declaration" $ do
-        layoutName (bfLayout (readOf named 28)) `shouldBe` "GetComIDPayload"
+      it "names the record and the layout's value as written; the layout keeps the caption's title" $ do
+        layoutName (bfLayout (readOf named 28)) `shouldBe` "GET_COMID Payload"
         cr <- either (throwString . show) pure (compileIR Scott named)
         T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))) `shouldContain` ["getComIDPayloadLayout :: Layout"]
         T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))) `shouldContain` ["data GetComIDPayload = GetComIDPayload"]
@@ -243,15 +257,20 @@ spec = do
           , "-- no record, until an erratum names these bytes:", "--", "-- * no field covers byte 8 bit 7 to byte 8 bit 0", "systemLogEntryStructureLayout :: Layout" ]
       it "prints the fields, the pins, the tail, and the values the layout does not hold, as printed and in ASCII" $ do
         lns `shouldContain`
-          [ "      , spanning \"Request Code\" (4, 7) (7, 0) (Pinned 0x01)"
+          [ "      , spanning \"Request Code\" (4, 7) (7, 0) (Pinned 0x00000001)"
           , "      , spanning \"Reserved\" (8, 7) (9, 0) Reserved"
-          , "      , spanning \"Available Data Length in bytes\" (10, 7) (11, 0) (Pinned 0x22)" ]
-        lns `shouldContain` ["  , layoutTail   = Just (Tail \"Reserved\" Nothing 1)"]
+          , "      , spanning \"Available Data Length in bytes\" (10, 7) (11, 0) (Pinned 0x0022)" ]
+        lns `shouldContain` ["  , layoutTail   = Just (Tail \"Reserved\" Nothing 1 Reserved)"]
         lns `shouldContain` ["-- > \"16 to 25\" | \"Absolute time of allocation relative to last reset of TPer\" | \"10 byte format \\8211 see Table 34.\""]
         lns `shouldContain` ["-- > \"12 to 15\" | \"Success/Failure\" | \"00 00 00 00/ 00 00 00 01\""]
         filter (T.any (> '\DEL')) lns `shouldBe` []
 
-    describe "the runtime" $
+    describe "the runtime" $ do
+      it "takes no value for the reserved run to the end of the transfer, and reports it read other than zero (T32, PDF 63)" $ do
+        let l = bfLayout (readOf ir 32)
+        encode l [("Extended ComID", Number 0x07FE0000), ("Reserved", Octets "\xff\xee")] `shouldBe` Left (ReservedGiven "Reserved")
+        fmap decodedFields (decode l (B.pack [7, 0xFE, 0, 0, 0, 0, 0, 1, 0, 0, 0])) `shouldBe` Right [("Extended ComID", Number 0x07FE0000), ("Request Code", Number 1)]
+        fmap decodedDifferences (decode l (B.pack [7, 0xFE, 0, 0, 0, 0, 0, 1, 0, 0xff, 0])) `shouldBe` Right [ReservedNotZero "Reserved" 64 0xff00]
       it "encodes T33 with its pins and reserved bytes, and decodes it strictly" $ do
         let l = bfLayout (readOf ir 33)
             time k = Octets (B.pack (map fromIntegral [k .. k + 9 :: Int]))
@@ -263,5 +282,4 @@ spec = do
         B.length bytes `shouldBe` 46
         B.unpack (B.take 12 bytes) `shouldBe` [0x07, 0xFE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x22]
         fmap decodedFields (decodeStrict l bytes) `shouldBe` Right
-          ( take 1 values <> [("Request Code", Number 1), ("Available Data Length in bytes", Number 0x22)]
-            <> drop 1 values <> [("Reserved", Octets "")] )
+          ( take 1 values <> [("Request Code", Number 1), ("Available Data Length in bytes", Number 0x22)] <> drop 1 values )

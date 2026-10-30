@@ -19,7 +19,11 @@ picks out those two across Core, so the rule rides on the @doc@ anchor (design
 13.24). A descriptor is read with the shared readers:
 
 * its grid ("Hsed.Spec.Readers.Grid": the extent rule, a @bits k [...]@
-  modifier as its fallback) and its layout ("Hsed.Spec.Readers.Layout");
+  modifier as its fallback) and its layout and record
+  ("Hsed.Spec.Readers.Record".'Structure', as @byteGrid@'s), the layout named
+  by the caption's title, the record by the title less its last word
+  (@TPer Feature Descriptor@ gives @TPerFeature@) or by @layout \"Name\"@ as
+  written;
 * its pins ("Hsed.Spec.Readers.Pins", @The \<Field\> field SHALL be set to
   \<V\>.@ in its section and their subsections), matched to its fields by
   name: an exact pin makes its field a constant of the layout;
@@ -36,7 +40,9 @@ picks out those two across Core, so the rule rides on the @doc@ anchor (design
   Table 40: @0001h | TPer feature | See 3.3.6.4@).
 
 Checks (besides the readers' @C-LAYOUT-EXTENT@, @C-LAYOUT-ENDIAN@,
-@N-LAYOUT-BITS@, @W-LAYOUT-BITS-UNUSED@, @C-LAYOUT-TILE@ and @W-PINS-NONE@):
+@N-LAYOUT-BITS@, @W-LAYOUT-BITS-UNUSED@, @C-LAYOUT-TILE@, @C-GRID-NAME@,
+@W-PINS-NONE@ and @C-PINS-WORDS@, each by the criterion every grid rule
+shares):
 
 * @C-FEATURE-TEMPLATE@ (Error): no sentence names the general format of the
   descriptor, the table it names reads as no byte grid whose fixed part has a
@@ -49,17 +55,18 @@ Checks (besides the readers' @C-LAYOUT-EXTENT@, @C-LAYOUT-ENDIAN@,
   after the header;
 * @C-FEATURE-PIN@ (Error): a field pinned to two values; @W-FEATURE-PIN@
   (Warning): a pin of its section that names no field of it;
-* @C-FEATURE-FIELD@ (Error): two fields a record cannot tell apart (one name,
-  or one identifier), or a variable part.
+* @C-FEATURE-FIELD@ (Error): a variable part, which a descriptor has none of
+  (two fields a record cannot tell apart are @C-GRID-NAME@).
 
 Compiled into 'featuresModule', for each descriptor: its layout (@layoutDecl@,
-@tPerFeatureDescriptor :: Layout@, the pins as 'Hsed.Core.Layout.Pinned'
-fields), and a record named after the layout without its last word
-(@TPerFeature@), one field for each field neither pinned nor reserved (a flag
-@Bool@, a number @Natural@, bytes @ByteString@, named after the record and the
-field: @tPerFeatureSyncSupported@), with its instance of
-"Hsed.Core.Feature".'Hsed.Core.Feature.Feature'. The @layout "Name"@ modifier
-renames the layout, and so the record.
+@tPerFeatureLayout :: Layout@, the pins as 'Hsed.Core.Layout.Pinned'
+fields); and, when it tiles, its record over the layout as @byteGrid@'s are
+printed (@TPerFeature@, one field for each field neither pinned nor reserved,
+typed by its width, a flag @Bool@, named after the record and the field:
+@tPerFeatureSyncSupported@, with its instance of
+"Hsed.Core.Record".@LayoutRecord@), and its instance of
+"Hsed.Core.Feature".'Hsed.Core.Feature.Feature': its code, version and length,
+and its header's size and length field, which say where a descriptor ends.
 -}
 module Hsed.Spec.Rules.Feature
   ( featureRule
@@ -69,39 +76,39 @@ module Hsed.Spec.Rules.Feature
   , FeatureRead (..)
   , Template (..)
   , Header (..)
-  , RecordField (..)
-  , FieldType (..)
+  , frLayout
   , featureReads
   , readFeature
   , templateOf
   , conformingSubject
   , listedCodes
-  , featureTypeName
+  , featureStructureName
   ) where
 
-import qualified Data.Text              as DT
-import qualified RIO.Char               as C
-import qualified RIO.List               as L
-import qualified RIO.Map                as Map
-import qualified RIO.Text               as T
+import qualified Data.Text                as DT
+import qualified RIO.Char                 as C
+import qualified RIO.List                 as L
+import qualified RIO.Map                  as Map
+import qualified RIO.Text                 as T
 import           RIO
 
-import           Hsed.Core.Layout       (Field (..), FieldKind (..), Layout (..), Tail (..), bitPosition, fieldEnd)
-import           Hsed.Spec.Anchor       (AnchorId (..), renderAnchorId)
-import           Hsed.Spec.Common       (Finding, RuleName (..), Severity (..), SpecId (..), finding)
-import qualified Hsed.Spec.Common       as Cm
-import           Hsed.Spec.DSL          (SomeBinding (..), feature)
-import qualified Hsed.Spec.Gen          as Gen
-import           Hsed.Spec.IR           (CellIR (..), SpecIR (..), TableIR (..), XrefIR (..))
-import           Hsed.Spec.Readers.Grid (BitPos (..), Grid (..), GridField (..), GridProblem (..), gridFindings, gridOf,
-                                         readGrid)
-import           Hsed.Spec.Readers.Layout (gridFieldKind, gridLayout, layoutDecl, tileFindings)
-import           Hsed.Spec.Readers.Pins (Pin (..), PinValue (..), tablePins)
-import           Hsed.Spec.Readers.Text (lowerIdent, titleIdent)
+import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..))
+import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
+import           Hsed.Spec.Common         (Finding, RuleName (..), Severity (..), SpecId (..), finding)
+import qualified Hsed.Spec.Common         as Cm
+import           Hsed.Spec.DSL            (SomeBinding (..), feature)
+import qualified Hsed.Spec.Gen            as Gen
+import           Hsed.Spec.IR             (CellIR (..), SpecIR (..), TableIR (..), XrefIR (..))
+import           Hsed.Spec.Readers.Grid   (BitPos (..), Grid (..), GridField (..), GridProblem (..), gridFindings, gridOf,
+                                           readGrid)
+import           Hsed.Spec.Readers.Layout (gridFieldKind, gridTiling, layoutDecl, tileFindings, untiledNote)
+import           Hsed.Spec.Readers.Pins   (Pin (..), PinValue (..), pinsFindings, tablePins)
+import           Hsed.Spec.Readers.Record (Structure (..), declScope, earlierNames, layoutValue, nameFindings, recordDecl,
+                                           structure, typeName)
+import           Hsed.Spec.Readers.Text   (Number (..), nameKey, numberExpr, parseNumber)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.Codes  (CodeCell (..), CodeRead (..), CodeRowRead (..), Number (..), codeReads,
-                                         numberExpr, parseNumber)
-import           Hsed.Spec.Shape        (Shape (..), captionTitle, shapeMismatch)
+import           Hsed.Spec.Rules.Codes    (CodeCell (..), CodeRead (..), CodeRowRead (..), codeReads)
+import           Hsed.Spec.Shape          (Shape (..), captionTitle, shapeMismatch)
 
 
 -- | The rule.
@@ -122,8 +129,8 @@ featureRule = RuleDef
       , CodeDef "C-FEATURE-LENGTH"   [Error]   (Defect "a feature descriptor's length pin is not the count of its bytes after the header")
       , CodeDef "C-FEATURE-PIN"      [Error]   (Defect "a field of a feature descriptor pinned to two values")
       , CodeDef "W-FEATURE-PIN"      [Warning] (Suspect "a pin of a feature descriptor's section naming no field of the descriptor")
-      , CodeDef "C-FEATURE-FIELD"    [Error]   (Defect "fields of a feature descriptor a record cannot tell apart, or a variable part") ]
-  , ruleChecks  = \ctx bts -> concatMap (checkFeature ctx . readFeature ctx) bts
+      , CodeDef "C-FEATURE-FIELD"    [Error]   (Defect "a feature descriptor with a variable part") ]
+  , ruleChecks  = \ctx bts -> let frs = map (readFeature ctx) bts in concatMap (checkFeature ctx frs) frs
   , ruleCompile = compile
   }
 
@@ -133,8 +140,8 @@ featuresModule = Gen.GenModule
   { Gen.leaf        = "Features"
   , Gen.description = "Feature descriptors: a record per descriptor, its code, version, length and layout"
   , Gen.notes       = [ "Each descriptor is a Layout (Hsed.Core.Layout), its header and every field the spec pins"
-                      , "constants of it, and a record of its other fields, flags as Bool, with an instance of"
-                      , "Feature (Hsed.Core.Feature) that encodes and decodes it." ] }
+                      , "constants of it, and a record of its other fields over it (Hsed.Core.Record), flags as Bool,"
+                      , "with an instance of Feature (Hsed.Core.Feature): its code, version, length and header." ] }
 
 -- | The runtime module of the records' class, which this rule alone imports.
 featureModule :: Text
@@ -160,23 +167,9 @@ data Header = Header
   }
   deriving (Eq, Show)
 
--- | What a record field holds.
-data FieldType = FlagField | NumberField | OctetsField
-  deriving (Eq, Show)
-
--- | A field of the record: a field of the layout neither pinned nor reserved.
-data RecordField = RecordField
-  { rfName  :: !Text       -- ^ its name in the layout
-  , rfIdent :: !Text       -- ^ the record's field
-  , rfType  :: !FieldType
-  , rfField :: !Field
-  }
-  deriving (Eq, Show)
-
 -- | One descriptor read under the errata set.
 data FeatureRead = FeatureRead
   { frBound     :: !BoundTable
-  , frName      :: !Text                      -- ^ the layout's name: its @layout@ modifier's, else the caption's title
   , frSection   :: !(Maybe Text)
   , frGrid      :: !Grid
   , frPins      :: !(Either Text [Pin])       -- ^ the pins of its section ('tablePins')
@@ -186,9 +179,12 @@ data FeatureRead = FeatureRead
   , frHeader    :: !(Either Text Header)      -- ^ the header, when it conforms to the template
   , frListed    :: ![(CodeRead, CodeRowRead, Number)]  -- ^ the code rows naming its section
   , frCode      :: !(Maybe Number)            -- ^ the code: its pin's, else the code table's
-  , frLayout    :: !Layout                    -- ^ its grid's layout, its pins (and its code) as constants
-  , frFields    :: ![RecordField]
+  , frStructure :: !Structure                 -- ^ its layout, its pins (and its code) as constants, and its record's name
   }
+
+-- | A descriptor's layout.
+frLayout :: FeatureRead -> Layout
+frLayout = stLayout . frStructure
 
 -- | Every descriptor bound to the rule's shape.
 featureReads :: Context -> [FeatureRead]
@@ -198,28 +194,25 @@ featureReads ctx = map (readFeature ctx) (boundTables (Just Feature) ctx)
 readFeature :: Context -> BoundTable -> FeatureRead
 readFeature ctx bt = FeatureRead
   { frBound     = bt
-  , frName      = name
   , frSection   = sec
   , frGrid      = grid
   , frPins      = pins
   , frPinned    = pinned
-  , frUnmatched = [ p | p <- allPins, key (pinField p) `notElem` fieldKeys ]
+  , frUnmatched = [ p | p <- allPins, nameKey (pinField p) `notElem` fieldKeys ]
   , frTemplate  = template
   , frHeader    = header
   , frListed    = listed
   , frCode      = code
-  , frLayout    = layout
-  , frFields    = recordFields (featureTypeName name) layout
+  , frStructure = st { stConstants = constants }
   }
   where
     title = fromMaybe "" ((btRead bt).caption >>= captionTitle)
-    name = fromMaybe title (mLayout (btMods bt))
     sec = sectionOf ctx bt
     grid = gridOf bt
     pins = tablePins ctx bt
     allPins = fromRight [] pins
-    fieldKeys = map (key . gfBase) (gFields grid) <> map (key . gfName) (gFields grid)
-    pinned = Map.fromListWith (flip (<>)) [ (key (pinField p), [p]) | p <- allPins, PinExact _ <- [pinValue p], key (pinField p) `elem` fieldKeys ]
+    fieldKeys = map (nameKey . gfBase) (gFields grid) <> map (nameKey . gfName) (gFields grid)
+    pinned = Map.fromListWith (flip (<>)) [ (nameKey (pinField p), [p]) | p <- allPins, PinExact _ <- [pinValue p], nameKey (pinField p) `elem` fieldKeys ]
     template = templateOf ctx title
     header = template >>= conforms grid
     listed = case (header, sec) of
@@ -231,14 +224,19 @@ readFeature ctx bt = FeatureRead
         [n] -> Just n
         _   -> Nothing
       Left _  -> Nothing
-    codeKey = either (const Nothing) (Just . key . hdCode) header
-    -- in the grid's order, bit 7 of byte 0 first, however the reader ordered a byte its bits modifier read
-    layout = let l0 = gridLayout name grid in l0 { layoutFields = map pin (L.sortOn fieldStart (layoutFields l0)) }
-    pin f = case (fieldKind f, pinOf (fieldName f)) of
+    codeKey = either (const Nothing) (Just . nameKey . hdCode) header
+    st = structure bt (fromMaybe (featureStructureName title) (mLayout (btMods bt))) title grid pin
+    pin (f, _) = case (fieldKind f, pinOf (fieldName f)) of
       (Reserved, _)  -> f
       (_, Just n)    -> f { fieldKind = Pinned (nValue n) }
-      _ | Just (key (fieldName f)) == codeKey, Just n <- code -> f { fieldKind = Pinned (nValue n) }
+      _ | Just (nameKey (fieldName f)) == codeKey, Just n <- code -> f { fieldKind = Pinned (nValue n) }
         | otherwise  -> f
+    -- where each constant comes from: a pin of the section, or the code table
+    constants = [ "the layout pins " <> T.intercalate ", " ps | let ps = mapMaybe source (stFields st), not (null ps) ]
+    source (f, _) = case (fieldKind f, Map.findWithDefault [] (nameKey (fieldName f)) pinned) of
+      (Pinned _, p : _) -> Just (fieldName f <> " to " <> pinText p <> " (" <> pinSection p <> ", PDF " <> tshow (pinPage p + 1) <> ")")
+      (Pinned _, [])    -> listToMaybe [ fieldName f <> " to " <> codeCell cr r <> " (" <> codeRowRef cr r <> ")" | (cr, r, _) <- listed ]
+      _                 -> Nothing
 
 -- | The template a descriptor's caption title names: the table of the first
 --   sentence of the spec saying that descriptors of a kind its title ends
@@ -288,7 +286,7 @@ conforms g tm
                          <> " fields besides reserved ones (" <> T.intercalate ", " named <> "), not a code, a version and a length")
   where
     own = inGridOrder [ f | f <- gFields g, Just l <- [gfLast f], bpByte l < tmSize tm ]
-    shape f = (key (gfBase f), gfFirst f, gfLast f)
+    shape f = (nameKey (gfBase f), gfFirst f, gfLast f)
     describe fs = T.intercalate ", " [ gfBase f <> " " <> span' f | f <- fs ]
     span' f = pos (gfFirst f) <> maybe "" (("-" <>) . pos) (gfLast f)
     pos (BitPos b i) = tshow b <> "." <> tshow i
@@ -299,29 +297,17 @@ conforms g tm
 listedCodes :: Context -> Text -> Text -> [(CodeRead, CodeRowRead, Number)]
 listedCodes ctx codeField sec =
   [ (cr, r, n)
-  | Right cr <- codeReads ctx, maybe False ((== key codeField) . key) (listToMaybe (drop (crColumn cr) (crHeader cr)))
+  | Right cr <- codeReads ctx, maybe False ((== nameKey codeField) . nameKey) (listToMaybe (drop (crColumn cr) (crHeader cr)))
   , r <- crRows cr, CodeOne n <- [rrCode r], any (names . T.words) (rrCells r) ]
   where names = any ((== sec) . T.dropWhileEnd (`elem` (".,;:)" :: String)))
 
--- | The record of a layout's name: the name without its last word (the
---   @Descriptor@ the shape's captions end with), as an identifier:
---   @TPer Feature Descriptor@ gives @TPerFeature@.
-featureTypeName :: Text -> Text
-featureTypeName name = case T.words name of
-  ws@(_ : _ : _) -> titleIdent (T.unwords (take (length ws - 1) ws))
-  _              -> titleIdent name
-
--- | The record's fields: the layout's flags, numbers and bytes, in order.
-recordFields :: Text -> Layout -> [RecordField]
-recordFields typeName l =
-  [ RecordField (fieldName f) (lowerIdent typeName <> titleIdent (fieldName f)) ty f
-  | f <- layoutFields l, Just ty <- [typeOf (fieldKind f)] ]
-  where
-    typeOf = \case
-      Flag     -> Just FlagField
-      Unsigned -> Just NumberField
-      Bytes    -> Just OctetsField
-      _        -> Nothing
+-- | The structure a descriptor's caption title names: the title without its
+--   last word (the @Descriptor@ the shape's captions end with): @TPer Feature
+--   Descriptor@ gives @TPer Feature@, its record @TPerFeature@.
+featureStructureName :: Text -> Text
+featureStructureName name = case T.words name of
+  ws@(_ : _ : _) -> T.unwords (take (length ws - 1) ws)
+  _              -> name
 
 -- | The value the exact pins of a field agree on, as printed (Nothing when
 --   none pins it, or two disagree).
@@ -329,75 +315,77 @@ agreedPin :: Map Text [Pin] -> Text -> Maybe Number
 agreedPin pinned k = case L.nub [ v | PinExact v <- map pinValue pins ] of
   [v] -> listToMaybe (mapMaybe (parseNumber . pinText) pins) <|> Just (Number v Nothing)
   _   -> Nothing
-  where pins = Map.findWithDefault [] (key k) pinned
+  where pins = Map.findWithDefault [] (nameKey k) pinned
 
 -- | A row of a code table: @Table 40 row 2 (PDF 69)@.
 codeRowRef :: CodeRead -> CodeRowRead -> Text
 codeRowRef cr r = "Table " <> maybe "?" tshow (btTable (crBound cr)).tableNumber <> " row " <> tshow (rrIndex r + 1)
                   <> maybe "" (\pg -> " (PDF " <> tshow (pg + 1) <> ")") (listToMaybe (mapMaybe (\c -> c.page) (rrRow r)))
 
+-- | A code row's code as printed: @0001h@.
+codeCell :: CodeRead -> CodeRowRead -> Text
+codeCell cr r = maybe "" (\c -> T.strip c.text) (listToMaybe (drop (crColumn cr) (rrRow r)))
+
 -- | Fields in the order the grid prints them: byte 0 first, bit 7 first in
 --   each byte.
 inGridOrder :: [GridField] -> [GridField]
 inGridOrder = L.sortOn (\f -> (bpByte (gfFirst f), negate (bpBit (gfFirst f))))
 
--- | A name compared whitespace-free and case-blind.
-key :: Text -> Text
-key = T.toLower . T.filter (not . C.isSpace)
-
 
 -- * Checks
 
-checkFeature :: Context -> FeatureRead -> [Finding]
-checkFeature ctx fr =
-  gridFindings ctx bt (frGrid fr) <> tileFindings ctx bt (frLayout fr) <> map (atTable ctx bt) (none <> template <> code <> lengthPin <> pinned <> fields)
+-- | A descriptor's findings, given every descriptor the rule reads (whose
+--   names come before its own, and whose declarations' imports are its
+--   module's).
+checkFeature :: Context -> [FeatureRead] -> FeatureRead -> [Finding]
+checkFeature ctx frs fr =
+  gridFindings ctx bt (frGrid fr)
+  <> (if reads then tileFindings ctx bt (frGrid fr) (frLayout fr) else [])
+  <> nameFindings ctx (earlierNames (map frStructure frs) (frStructure fr)) (declScope (concatMap (decls ctx) frs)) (frStructure fr)
+  <> pinsFindings ctx bt name (length (frUnmatched fr) < length (fromRight [] (frPins fr)))
+  <> map (atTable ctx bt) (template <> code <> lengthPin <> pinned <> fields)
   <> unmatched <> unlisted
   where
     bt = frBound fr
+    name = layoutName (frLayout fr)
+    reads = not (any ((== Error) . gpSeverity) (gProblems (frGrid fr)))
     secText = fromMaybe "its section" (frSection fr)
-    none = case frPins fr of
-      Left why -> [ finding Warning "W-PINS-NONE" (frName fr <> ": no pins read: " <> why) ]
-      Right [] -> [ finding Warning "W-PINS-NONE" (frName fr <> ": no sentence of " <> secText <> " or its subsections pins a field") ]
-      Right _  -> []
     template = case frHeader fr of
-      Left why -> [ finding Error "C-FEATURE-TEMPLATE" (frName fr <> ": " <> why) ]
+      Left why -> [ finding Error "C-FEATURE-TEMPLATE" (name <> ": " <> why) ]
       Right _  -> []
     listedValues = L.nub [ nValue n | (_, _, n) <- frListed fr ]
     code = case frHeader fr of
       Left _ -> []
       Right h
         | length listedValues > 1 ->
-            [ finding Error "C-FEATURE-CODE" (frName fr <> ": the code tables give " <> secText <> " the codes " <> T.intercalate " and " (map listedRef (frListed fr))) ]
+            [ finding Error "C-FEATURE-CODE" (name <> ": the code tables give " <> secText <> " the codes " <> T.intercalate " and " (map listedRef (frListed fr))) ]
         | Just n <- agreedPin (frPinned fr) (hdCode h), [v] <- listedValues, nValue n /= v ->
-            [ finding Error "C-FEATURE-CODE" (frName fr <> ": its " <> hdCode h <> " is pinned to " <> numberExpr n <> ", but "
+            [ finding Error "C-FEATURE-CODE" (name <> ": its " <> hdCode h <> " is pinned to " <> numberExpr n <> ", but "
                                               <> T.intercalate ", " (map listedRef (frListed fr))) ]
         | isNothing (frCode fr) ->
-            [ finding Error "C-FEATURE-CODE" (frName fr <> ": no pin gives its " <> hdCode h <> " and no code table lists " <> secText) ]
+            [ finding Error "C-FEATURE-CODE" (name <> ": no pin gives its " <> hdCode h <> " and no code table lists " <> secText) ]
         | otherwise -> []
     lengthPin = case frHeader fr of
-      Right h | Just f <- L.find ((== key (hdLength h)) . key . fieldName) (layoutFields (frLayout fr))
+      Right h | Just f <- L.find ((== nameKey (hdLength h)) . nameKey . fieldName) (layoutFields (frLayout fr))
               , Pinned v <- fieldKind f, Right tm <- frTemplate fr
               , v /= toInteger (layoutSize (frLayout fr) - tmSize tm) ->
-        [ finding Error "C-FEATURE-LENGTH" (frName fr <> ": its " <> hdLength h <> " is pinned to " <> tshow v <> ", but "
+        [ finding Error "C-FEATURE-LENGTH" (name <> ": its " <> hdLength h <> " is pinned to " <> tshow v <> ", but "
                                             <> tshow (layoutSize (frLayout fr) - tmSize tm) <> " of its " <> tshow (layoutSize (frLayout fr))
                                             <> " bytes follow the " <> tshow (tmSize tm) <> "-byte header") ]
       _ -> []
     pinned =
-      [ finding Error "C-FEATURE-PIN" (frName fr <> ": " <> T.intercalate " and " [ pinField p <> " = " <> pinText p <> " (" <> pinSection p <> ")" | p <- ps ])
+      [ finding Error "C-FEATURE-PIN" (name <> ": " <> T.intercalate " and " [ pinField p <> " = " <> pinText p <> " (" <> pinSection p <> ")" | p <- ps ])
       | ps <- Map.elems (frPinned fr), length (L.nub [ v | p <- ps, PinExact v <- [pinValue p] ]) > 1 ]
     fields =
-      [ finding Error "C-FEATURE-FIELD" (frName fr <> ": " <> tshow (length ns) <> " fields, " <> T.intercalate " and " (map tshow (L.nub ns))
-                                         <> ", give the record one field, " <> i)
-      | (i, ns) <- Map.toList (Map.fromListWith (flip (<>)) [ (rfIdent f, [rfName f]) | f <- frFields fr ]), length ns > 1 ]
-      <> [ finding Error "C-FEATURE-FIELD" (frName fr <> ": the variable part " <> tshow (tailName t) <> " is no field of a record")
-         | Just t <- [layoutTail (frLayout fr)] ]
+      [ finding Error "C-FEATURE-FIELD" (name <> ": the variable part " <> tshow (tailName t) <> " is no field of a descriptor's record")
+      | Just t <- [layoutTail (frLayout fr)] ]
     unmatched =
       [ locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (pinPage p + 1)
-          (finding Warning "W-FEATURE-PIN" (frName fr <> ": " <> pinSection p <> " pins " <> pinField p <> " (" <> pinText p <> "), no field of it"))
+          (finding Warning "W-FEATURE-PIN" (name <> ": " <> pinSection p <> " pins " <> pinField p <> " (" <> pinText p <> "), no field of it"))
       | p <- frUnmatched fr ]
     unlisted = case (frHeader fr, frListed fr) of
       (Right _, []) | isJust (frCode fr) ->
-        [ atTable ctx bt (finding Warning "W-FEATURE-UNLISTED" (frName fr <> ": no code table lists " <> secText)) ]
+        [ atTable ctx bt (finding Warning "W-FEATURE-UNLISTED" (name <> ": no code table lists " <> secText)) ]
       _ -> []
     listedRef (cr, r, n) = codeRowRef cr r <> " gives " <> numberExpr n
 
@@ -405,82 +393,47 @@ checkFeature ctx fr =
 -- * Declarations
 
 compile :: Context -> [BoundTable] -> [Emitted]
-compile ctx = concatMap (one . readFeature ctx)
+compile ctx bts = concatMap one frs
   where
-    one fr = case L.nub [ Cm.code f | f <- checkFeature ctx fr, Cm.isError f ] of
-      []     -> [ Emit (layoutDecl (boundProvenance ctx (frBound fr)) (lowerIdent (frName fr)) (frLayout fr)), Emit (featureDecl ctx fr) ]
+    frs = map (readFeature ctx) bts
+    one fr = case L.nub [ Cm.code f | f <- checkFeature ctx frs fr, Cm.isError f ] of
+      []     -> map Emit (decls ctx fr)
       failed -> [ Excluded (btAnchor (frBound fr)) (T.intercalate ", " failed <> " failed") ]
 
--- | The record of a descriptor and its instance of @Feature@, after its layout.
+-- | A descriptor's declarations: its layout; when it tiles, its record over
+--   it and its instance of @Feature@.
+decls :: Context -> FeatureRead -> [Gen.Decl]
+decls ctx fr =
+  layoutDecl (boundProvenance ctx (frBound fr)) (layoutValue st) (frLayout fr) (untiledNote (gridTiling (frGrid fr) (frLayout fr)))
+  : (if stTiles st then [recordDecl ctx st, featureDecl ctx fr] else [])
+  where st = frStructure fr
+
+-- | A descriptor's instance of @Feature@, after its record: its code,
+--   version and length, and its header, citing where they come from.
 featureDecl :: Context -> FeatureRead -> Gen.Decl
-featureDecl ctx fr = (Gen.decl p typeName body) { Gen.declRank = 1, Gen.declImports = imports }
+featureDecl ctx fr = (Gen.decl p name body)
+  { Gen.declRank    = 2
+  , Gen.declImports = [ Gen.ImportSome featureModule ["Feature (..)", "FeatureHeader (..)"], Gen.ImportSome "Prelude" ["Maybe (..)"] ] }
   where
     p = boundProvenance ctx (frBound fr)
-    typeName = featureTypeName (frName fr)
-    fs = frFields fr
+    name = typeName (frStructure fr)
     header = either (const Nothing) Just (frHeader fr)
-    body = [ Gen.provenanceComment p <> ": the feature, its fields neither pinned nor reserved" ]
-           <> record <> [""] <> provenance <> [ "instance Feature " <> typeName <> " where" ] <> constants <> values <> fromValues
-    -- the record
-    width = foldl' max 0 [ T.length (rfIdent f) | f <- fs ]
-    typeWidth = foldl' max 0 [ T.length (typeText (rfType f)) | f <- fs ]
-    fieldLine f = rfIdent f <> T.replicate (width - T.length (rfIdent f)) " " <> " :: " <> typeText (rfType f)
-                  <> T.replicate (typeWidth - T.length (typeText (rfType f))) " "
-                  <> "  -- ^ " <> rfName f <> ", " <> bitsText (rfField f)
-    record = case fs of
-      []       -> [ "data " <> typeName <> " = " <> typeName, "  deriving (Eq, Show)" ]
-      f : more -> [ "data " <> typeName <> " = " <> typeName, "  { " <> fieldLine f ] <> map (("  , " <>) . fieldLine) more
-                  <> [ "  }", "  deriving (Eq, Show)" ]
-    -- where the constants come from
+    body = [ Gen.provenanceComment p <> ": its header" ] <> provenance <> [ "instance Feature " <> name <> " where" ] <> constants
     headerPins = [ (pinField q, q) | Just h <- [header], k <- [hdCode h, hdVersion h, hdLength h]
-                                   , q <- take 1 (Map.findWithDefault [] (key k) (frPinned fr)) ]
+                                   , q <- take 1 (Map.findWithDefault [] (nameKey k) (frPinned fr)) ]
     provenance =
-      [ "-- the header of " <> typeName <> (if null headerPins then ": no pin" else " as pinned by "
+      [ "-- the header of " <> name <> (if null headerPins then ": no pin" else " as pinned by "
           <> T.intercalate ", " (L.nub [ pinSection q <> " (PDF " <> tshow (pinPage q + 1) <> ")" | (_, q) <- headerPins ])
           <> ": " <> T.intercalate ", " [ f <> " = " <> pinText q | (f, q) <- headerPins ]) ]
       <> [ "-- the code " <> codeRowRef cr r <> " gives " <> fromMaybe "its section" (frSection fr) <> ": " <> codeCell cr r
          | (cr, r, _) <- frListed fr ]
-    codeCell cr r = maybe "" (\c -> T.strip c.text) (listToMaybe (drop (crColumn cr) (rrRow r)))
-    -- the instance
+      <> [ "-- its general format Table " <> tshow (tmNumber tm) <> " (PDF " <> tshow ((tmSentence tm).page + 1) <> "): "
+           <> tshow (tmSize tm) <> " bytes, " <> hdLength h <> " the count of the bytes after them"
+         | Right tm <- [frTemplate fr], Just h <- [header] ]
     pinNumber = agreedPin (frPinned fr)
     justOr = maybe "Nothing" (("Just " <>) . numberExpr)
     constants =
-      [ "  featureCode       = " <> maybe "0" numberExpr (frCode fr)
-      , "  featureVersion    = " <> justOr (header >>= pinNumber . hdVersion)
-      , "  featureLength     = " <> justOr (header >>= pinNumber . hdLength)
-      , "  featureLayout     = " <> lowerIdent (frName fr) ]
-    values = case fs of
-      [] -> [ "  featureValues _ = []" ]
-      _  -> "  featureValues f =" : Gen.listLines "    " [ put x <> " " <> tshow (rfName x) <> " (" <> rfIdent x <> " f)" | x <- fs ]
-    fromValues = case fs of
-      []       -> [ "  featureFromValues _ = Right " <> typeName ]
-      x : more -> ("  featureFromValues vs = " <> typeName) : ("    <$> " <> get x) : map (("    <*> " <>) . get) more
-    get x = put x <> "Of " <> tshow (rfName x) <> " vs"
-    put x = case rfType x of
-      FlagField   -> "flag"
-      NumberField -> "number"
-      OctetsField -> "octets"
-    has t = any ((== t) . rfType) fs
-    imports =
-      [ Gen.ImportSome featureModule (["Feature (..)"] <> concat [ [n, n <> "Of"] | (t, n) <- [(FlagField, "flag"), (NumberField, "number"), (OctetsField, "octets")], has t ])
-      , Gen.ImportSome "Prelude" (["Eq", "Maybe (..)", "Show"] <> [ "Bool" | has FlagField ] <> [ "(<$>)" | not (null fs) ]
-                                  <> [ "(<*>)" | length fs > 1 ] <> [ "Either (..)" | null fs ]) ]
-      <> [ Gen.ImportSome "Numeric.Natural" ["Natural"] | has NumberField ]
-      <> [ Gen.ImportSome "Data.ByteString" ["ByteString"] | has OctetsField ]
-
--- | A record field's type.
-typeText :: FieldType -> Text
-typeText = \case
-  FlagField   -> "Bool"
-  NumberField -> "Natural"
-  OctetsField -> "ByteString"
-
--- | Where a field lies: @byte 4 bit 6@, @byte 2 bits 7-4@, @byte 0 bit 7 to byte 1 bit 0@.
-bitsText :: Field -> Text
-bitsText f
-  | (b0, i0) == (b1, i1) = "byte " <> tshow b0 <> " bit " <> tshow i0
-  | b0 == b1             = "byte " <> tshow b0 <> " bits " <> tshow i0 <> "-" <> tshow i1
-  | otherwise            = "byte " <> tshow b0 <> " bit " <> tshow i0 <> " to byte " <> tshow b1 <> " bit " <> tshow i1
-  where
-    (b0, i0) = bitPosition (fieldStart f)
-    (b1, i1) = bitPosition (fieldEnd f - 1)
+      [ "  featureCode _    = " <> maybe "0" numberExpr (frCode fr)
+      , "  featureVersion _ = " <> justOr (header >>= pinNumber . hdVersion)
+      , "  featureLength _  = " <> justOr (header >>= pinNumber . hdLength)
+      , "  featureHeader _  = FeatureHeader " <> either (const "0") (tshow . tmSize) (frTemplate fr) <> " " <> tshow (maybe "" hdLength header) ]

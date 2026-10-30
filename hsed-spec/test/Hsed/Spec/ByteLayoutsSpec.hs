@@ -16,9 +16,11 @@ refines @byteGrid@, so Tables 42 and 43 are @feature@'s alone, and stay so
 were @byteGrid@'s shape to take them too; @feature@ reads its template,
 Table 41, through @byteGrid@'s binding of it; @byteGrid@ and
 @byteFieldValue@ write one module, "Hsed.Gen.Core.Layouts", their layouts and
-records named by the same functions, each name declared once, and a name
-the two would share is @C-GRID-NAME@ at the @byteFieldValue@ table; both
-rules' records import the one runtime module named in "Hsed.Spec.Gen".
+records named by the same functions ("Hsed.Spec.Readers.Record"), each name
+declared once, and a name the two would share is @C-GRID-NAME@ at the
+@byteFieldValue@ table; all three rules' records import the one runtime module
+named in "Hsed.Spec.Gen"; and the three give @C-LAYOUT-TILE@ by one policy, a
+gap a Warning and an overlap an Error, whichever rule binds the table.
 -}
 module Hsed.Spec.ByteLayoutsSpec (spec) where
 
@@ -41,8 +43,9 @@ import           Hsed.Spec.Registry             (registry)
 import           Hsed.Spec.RuleDef              (BoundTable (..), Classification (..), Emitted (..), RuleDef (..),
                                                  boundTables)
 import           Hsed.Spec.Rules                (classify, classifyWithRules)
-import           Hsed.Spec.Rules.ByteFieldValue (BytesRead (..), asGridRead, bytesReads)
-import           Hsed.Spec.Rules.ByteGrid       (byteGridRule, gridReads, layoutValue, recordNames, typeName)
+import           Hsed.Spec.Readers.Record       (Structure (..), layoutValue, recordNames, typeName)
+import           Hsed.Spec.Rules.ByteFieldValue (BytesRead (..), bytesReads)
+import           Hsed.Spec.Rules.ByteGrid       (byteGridRule, gridStructures)
 import           Hsed.Spec.Rules.Feature        (Template (..), templateOf)
 import           Hsed.Spec.Shape                (Form (..), Shape (..))
 
@@ -90,17 +93,17 @@ spec = withCore $ \pristine -> do
         (bts, tm) -> expectationFailure ("T41 bound " <> show (length bts) <> " times; the template: " <> either T.unpack (const "read") tm)
 
   describe "byteGrid and byteFieldValue in the one layouts module" $ do
-    let grids = gridReads ctx
-        bytes = bytesReads ctx
-        records = grids <> [ asGridRead br | br <- bytes, tiles (bfLayout br) ]
-    it "name every layout and record by byteGrid's functions" $ do
-      L.sort [ n | n <- names, "Layout" `T.isSuffixOf` n ] `shouldBe` L.sort (map layoutValue (grids <> map asGridRead bytes))
+    let grids = gridStructures ctx
+        bytes = map bfStructure (bytesReads ctx)
+        records = [ st | st <- grids <> bytes, tiles (stLayout st) ]
+    it "name every layout and record by the one record printer" $ do
+      L.sort [ n | n <- names, "Layout" `T.isSuffixOf` n ] `shouldBe` L.sort (map layoutValue (grids <> bytes))
       [ typeName r | r <- records, typeName r `notElem` names ] `shouldBe` []
-      map (layoutValue . asGridRead) (take 2 bytes) `shouldBe` ["get_COMIDPayloadLayout", "noResponseAvailableLayout"]
+      map layoutValue (take 2 bytes) `shouldBe` ["get_COMIDPayloadLayout", "noResponseAvailableLayout"]
     it "declare each name once, the two rules' names distinct" $ do
       [ n | (n, k) <- Map.toList (Map.fromListWith (+) [ (n, 1 :: Int) | n <- names ]), k > 1 ] `shouldBe` []
       let ours = concatMap recordNames grids
-          theirs = concatMap recordNames (map asGridRead bytes)
+          theirs = concatMap recordNames bytes
       filter (`elem` ours) theirs `shouldBe` []
     it "find a name byteFieldValue would share with byteGrid (C-GRID-NAME, an Error at the byteFieldValue table, which is left out)" $ do
       clash <- annotated pristine (hsa <> "core-2.01 | T28 | layout \"ComPacket\"\n")
@@ -108,11 +111,30 @@ spec = withCore $ \pristine -> do
         [ (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: ComPacket is also a name of an earlier grid's declarations")
         , (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: comPacketLayout is also a name of an earlier grid's declarations") ]
       newlyExcluded ir clash `shouldReturn` [(TableId 28, "C-GRID-NAME failed")]
-    it "import the record class from the one runtime module Hsed.Spec.Gen names" $ do
-      let recordImports r = [ () | Emit d <- ruleCompile r ctx (boundTables (ruleShape' r) ctx)
+    it "import the record class from the one runtime module Hsed.Spec.Gen names, as feature's records do" $ do
+      let recordImports r = [ () | Emit d <- ruleCompile r ctx (boundTables (shapeOf r) ctx)
                                  , Gen.ImportSome m _ <- d.declImports, m == Gen.recordModule ]
-          ruleShape' r = if ruleName r == RuleName "byteGrid" then Just ByteGrid else Just ByteFieldValue
+          shapeOf r = lookup (ruleName r) [(RuleName "byteGrid", ByteGrid), (RuleName "byteFieldValue", ByteFieldValue), (RuleName "feature", Feature)]
           byName n = L.find ((== RuleName n) . ruleName) registry
-      [ (n, not (null (recordImports r))) | n <- ["byteGrid", "byteFieldValue"], Just r <- [byName n] ]
-        `shouldBe` [("byteGrid", True), ("byteFieldValue", True)]
+      [ (n, not (null (recordImports r))) | n <- ["byteGrid", "byteFieldValue", "feature"], Just r <- [byName n] ]
+        `shouldBe` [("byteGrid", True), ("byteFieldValue", True), ("feature", True)]
       [ l | l <- T.lines layouts, "import" `T.isPrefixOf` l, Gen.recordModule `T.isInfixOf` l ] `shouldSatisfy` ((== 1) . length)
+
+  describe "the one tiling policy of the three rules" $ do
+    let tileSeverities ir' tid = [ Cm.severity f | f <- checkIR Scott ir', Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just tid ]
+    it "gives a gap a Warning, generating the layout without a record, in byteGrid's, byteFieldValue's and feature's tables alike" $ do
+      -- Table 39's byte 15 relabelled 13 (bytes 14-15 in no row); Table 42's 5 - 15 relabelled 6 - 15 (byte 5 in no row);
+      -- Table 236 as printed (byte 8 in no row)
+      let gaps = setCell "T42" 5 0 "6 - 15" (setCell "T39" 10 0 "13" ir)
+      [ (tid, tileSeverities gaps tid) | tid <- ["T39", "T42", "T236"] ]
+        `shouldBe` [("T39", [Warning]), ("T42", [Warning]), ("T236", [Warning])]
+      cr' <- either (throwString . show) pure (compileIR Scott gaps)
+      let declared' m = concatMap declared (T.lines (fromMaybe "" (lookup m (crModules cr'))))
+      [ n | n <- declared' "Hsed.Gen.Core.Layouts", n `elem` ["level0DiscoveryHeaderLayout", "Level0DiscoveryHeader"] ] `shouldBe` ["level0DiscoveryHeaderLayout"]
+      [ n | n <- declared' "Hsed.Gen.Core.Features", n `elem` ["tPerFeatureLayout", "TPerFeature"] ] `shouldBe` ["tPerFeatureLayout"]
+    it "gives an overlap an Error, leaving the table out, in each rule's tables alike" $ do
+      let overlaps = setCell "T42" 5 0 "4 - 15" (setCell "T33" 1 2 "00 00 00 00 01" (setCell "T33" 1 0 "4 to 8" (setCell "T18" 13 0 "14" ir)))
+      -- an overlap of each field of Table 42's byte 4 with the run 4 - 15
+      [ (tid, L.nub (tileSeverities overlaps tid)) | tid <- ["T18", "T33", "T42"] ] `shouldBe` [("T18", [Error]), ("T33", [Error]), ("T42", [Error])]
+      L.sort <$> newlyExcluded ir overlaps `shouldReturn`
+        [(TableId 18, "C-LAYOUT-TILE failed"), (TableId 33, "C-LAYOUT-TILE failed"), (TableId 42, "C-LAYOUT-TILE failed")]

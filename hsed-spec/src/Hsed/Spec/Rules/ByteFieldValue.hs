@@ -28,10 +28,14 @@ whole of each row's bytes. So the two rules read labels, name fields and
 type them alike ('gridLayout': reserved by name, a flag at one bit, a byte
 string wider than eight bytes, else an unsigned number; a field named as
 printed, a parenthesis it ends with apart), and the run to the end is the
-layout's tail, its length the rest of the input. Tables 31 and 37 print their
-first row's bytes in the BYTES column, but the PDF's tags put them in the
-VALUE header cell (@VALUE@, @0 to 3@ its two lines) and leave the row two
-cells: the rule reads them as that row's (@N-BYTES-IN-HEADER@, a Note).
+layout's tail, its length the rest of the input, reserved bytes when its name
+says so. In two columns a field is named by the first sentence of its Values
+cell (Table 236's @The uid of the method involved in the operation.@, its
+@If there is no method, these bytes SHALL be zeroes.@ kept in the layout's
+comment). Tables 31 and 37 print their first row's bytes in the BYTES
+column, but the PDF's tags put them in the VALUE header cell (@VALUE@, @0 to
+3@ its two lines) and leave the row two cells: the rule reads them as that
+row's (@N-BYTES-IN-HEADER@, a Note).
 
 A VALUE cell ('readValue') is hex bytes, as many as the field's (@00 00 00
 01@), or a number (@0x0004@, or decimal digits not two to a word), which pins
@@ -50,28 +54,29 @@ Checks:
   reserved field's is zero.
 * the byte grid's codes (@C-LAYOUT-EXTENT@: a row whose bytes do not read).
 * @C-LAYOUT-TILE@: the fields cover each byte of the fixed part once and the
-  run to the end starts where they end. Bytes no row names are a Warning: the
-  layout is generated as printed, its comment naming them, and
-  "Hsed.Core.Layout" refuses to encode or decode it (@NotTiled@) until an
-  erratum names them. Table 236 prints @9 to 15@ after @0 to 7@ (PDF 298),
-  byte 8 in no row, and which of its rows is misprinted is not for hsedc to
-  guess, as an unjoined signature waits on one (design 13.25 (b)). Any other
-  tiling problem (an overlap, a pin its field cannot hold) is an Error, and
-  the table is left out.
+  run to the end starts where they end, by the one policy of the grid rules
+  ("Hsed.Spec.Readers.Layout".'tileFindings'). Bytes no row names are a
+  Warning: the layout is generated as printed, its comment naming them, with
+  no record, and "Hsed.Core.Layout" refuses to encode or decode it
+  (@NotTiled@) until an erratum names them. Table 236 prints @9 to 15@ after
+  @0 to 7@ (PDF 298), byte 8 in no row, and which of its rows is misprinted
+  is not for hsedc to guess (design 13.26 (a)). Any other tiling problem (an
+  overlap, a pin its field cannot hold) is an Error, and the table is left
+  out.
 
 Compiled into the layouts module ('layoutsModule', which @byteGrid@ writes
-too), named and printed as @byteGrid@ names and prints its grids (the rule
-reads a table as that rule's 'GridRead', 'asGridRead', and calls its
-'layoutValue', 'recordDecl' and 'nameFindings'), so the two rules' declarations
-follow one convention: for each table @\<name\>Layout :: Layout@, the name
-its caption's title gives (@verify_COMID_VALIDCommandResponseLayout@) or its
-@layout "Name"@ modifier, printed by 'layoutDecl', its comment listing the
-values the layout does not hold and the bytes no field covers; and, for a
-table whose layout tiles, the record of the fields that carry a value with
-its @LayoutRecord@ instance (@VERIFY_COMID_VALIDCommandResponse@, the run of
-reserved bytes to the end of the transfer the layout's). A name the
-declarations share with @byteGrid@'s or an earlier table's is @byteGrid@'s
-@C-GRID-NAME@ (an Error).
+too), named and printed as @byteGrid@ names and prints its grids, each table
+read as a "Hsed.Spec.Readers.Record".'Structure' and printed by that
+module's 'layoutValue', 'recordDecl' and 'nameFindings', so the two rules'
+declarations follow one convention: for each table @\<name\>Layout ::
+Layout@, the name its caption's title gives
+(@verify_COMID_VALIDCommandResponseLayout@) or its @layout "Name"@ modifier,
+printed by 'layoutDecl', its comment listing the values the layout does not
+hold and the bytes no field covers; and, for a table whose layout tiles, the
+record of the fields that carry a value with its @LayoutRecord@ instance
+(@VERIFY_COMID_VALIDCommandResponse@, the run of reserved bytes to the end of
+the transfer the layout's). A name the declarations share with @byteGrid@'s
+or an earlier table's is @C-GRID-NAME@ (an Error).
 -}
 module Hsed.Spec.Rules.ByteFieldValue
   ( byteFieldValueRule
@@ -79,31 +84,32 @@ module Hsed.Spec.Rules.ByteFieldValue
   , BytesRead (..)
   , BytesRow (..)
   , Value (..)
+  , bfLayout
   , bytesReads
   , readBytes
   , readValue
-  , asGridRead
+  , firstSentence
   ) where
 
-import qualified Data.Text.Read           as TR
-import qualified RIO.Char                 as C
+import qualified Data.Text                as DT
 import qualified RIO.List                 as L
 import qualified RIO.Text                 as T
 import           RIO
 
-import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), TileProblem (..), bitOffset,
-                                           fieldEnd, tiling)
+import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..))
 import           Hsed.Spec.Anchor         (AnchorId (..))
 import           Hsed.Spec.Common         (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.DSL            (SomeBinding (..), byteFieldValue)
 import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR (..), TableIR (..), cellWithText)
-import           Hsed.Spec.Readers.Grid   (BitPos (..), Grid (..), GridField (..), gridFindings, readGrid)
-import           Hsed.Spec.Readers.Layout (describeTileProblem, gridFieldKind, gridLayout, layoutDecl, layoutsModule)
-import           Hsed.Spec.Readers.Text   (readHexByte)
+import           Hsed.Spec.Readers.Grid   (Grid (..), GridField (..), gridFindings, readGrid)
+import           Hsed.Spec.Readers.Layout (gridFieldKind, gridTiling, layoutDecl, layoutsModule, tileFindings, untiledNote)
+import           Hsed.Spec.Readers.Record (Structure (..), declScope, earlierNames, layoutValue, nameFindings, recordDecl,
+                                           structure)
+import           Hsed.Spec.Readers.Text   (readHexByte, readNumber)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.ByteGrid (GridRead (..), gridReads, layoutValue, nameFindings, recordDecl, structureName)
+import           Hsed.Spec.Rules.ByteGrid (gridDecls, gridStructures, structureName)
 import           Hsed.Spec.Shape          (Shape (ByteFieldValue), captionTitle, shapeMismatch)
 
 
@@ -131,22 +137,26 @@ byteFieldValueRule = RuleDef
 
 -- | One table read under the errata set.
 data BytesRead = BytesRead
-  { bfBound   :: !BoundTable
-  , bfName    :: !Text                -- ^ the layout's: the caption's title, or the @layout "Name"@ modifier's
-  , bfRows    :: ![BytesRow]          -- ^ the rows that read as bytes, a field and a value
-  , bfBadRows :: ![(Int, [CellIR])]   -- ^ the rows of another number of cells (0-based)
-  , bfHeader  :: !(Maybe CellIR)      -- ^ the header cell the first row's bytes were read from
-  , bfGrid    :: !Grid                -- ^ the Byte(s) and Field columns read as a byte grid
-  , bfLayout  :: !Layout              -- ^ the grid's layout, the VALUE column's constants pinned
+  { bfBound     :: !BoundTable
+  , bfRows      :: ![BytesRow]          -- ^ the rows that read as bytes, a field and a value
+  , bfBadRows   :: ![(Int, [CellIR])]   -- ^ the rows of another number of cells (0-based)
+  , bfHeader    :: !(Maybe CellIR)      -- ^ the header cell the first row's bytes were read from
+  , bfGrid      :: !Grid                -- ^ the Byte(s) and Field columns read as a byte grid
+  , bfStructure :: !Structure           -- ^ the grid's layout, the VALUE column's constants pinned, and its record's name
   }
+
+-- | A table's layout.
+bfLayout :: BytesRead -> Layout
+bfLayout = stLayout . bfStructure
 
 -- | One row: its bytes, its field, its value.
 data BytesRow = BytesRow
-  { bwIndex :: !Int            -- ^ 0-based among the data rows
-  , bwLabel :: !CellIR         -- ^ the Byte(s) cell (or the header cell's lines that print it)
-  , bwField :: !CellIR         -- ^ the Field cell; in two columns, the Values cell
-  , bwValue :: !(Maybe Text)   -- ^ the VALUE cell, its spacing squeezed; Nothing in two columns
-  , bwRow   :: ![CellIR]       -- ^ the row as printed, which locates a finding about it
+  { bwIndex   :: !Int            -- ^ 0-based among the data rows
+  , bwLabel   :: !CellIR         -- ^ the Byte(s) cell (or the header cell's lines that print it)
+  , bwField   :: !CellIR         -- ^ the Field cell; in two columns, the Values cell, named by its first sentence
+  , bwPrinted :: !Text           -- ^ the Field (Values) cell as printed
+  , bwValue   :: !(Maybe Text)   -- ^ the VALUE cell, its spacing squeezed; Nothing in two columns
+  , bwRow     :: ![CellIR]       -- ^ the row as printed, which locates a finding about it
   }
 
 -- | A VALUE cell as the rule reads it, for a field of so many bytes (Nothing
@@ -163,21 +173,20 @@ bytesReads :: Context -> [BytesRead]
 bytesReads ctx = map readBytes (boundTables (Just ByteFieldValue) ctx)
 
 -- | A table read: its rows; its Byte(s) and Field columns read as a byte grid,
---   each row one cell over its bytes; the grid's layout, each field the VALUE
---   column gives a constant pinned to it.
+--   each row one cell over its bytes; the grid's structure, each field the
+--   VALUE column gives a constant pinned to it.
 readBytes :: BoundTable -> BytesRead
 readBytes bt = BytesRead
-  { bfBound   = bt
-  , bfName    = name
-  , bfRows    = good
-  , bfBadRows = [ (i, cells) | Left (i, cells) <- classified ]
-  , bfHeader  = if moved then headerValue else Nothing
-  , bfGrid    = grid
-  , bfLayout  = layout0 { layoutFields = zipWith pin fixed (layoutFields layout0) }
+  { bfBound     = bt
+  , bfRows      = good
+  , bfBadRows   = [ (i, cells) | Left (i, cells) <- classified ]
+  , bfHeader    = if moved then headerValue else Nothing
+  , bfGrid      = grid
+  , bfStructure = st { stConstants = constants }
   }
   where
     t = btRead bt
-    name = fromMaybe (fromMaybe "" (t.caption >>= captionTitle)) (mLayout (btMods bt))
+    title = fromMaybe "" (t.caption >>= captionTitle)
     header = concat (take 1 t.headerRows)
     threeColumns = length header == 3
     headerValue = listToMaybe (drop 2 header)
@@ -192,18 +201,26 @@ readBytes bt = BytesRead
     good = rights classified
     row :: Int -> [CellIR] -> Either (Int, [CellIR]) BytesRow
     row i cells = case cells of
-      [b, f, v] | threeColumns                          -> Right (BytesRow i b f (Just (squeeze v.text)) cells)
-      [f, v] | threeColumns, i == 0, Just l <- headerLabel -> Right (BytesRow i l f (Just (squeeze v.text)) cells)
-      [b, v] | not threeColumns                         -> Right (BytesRow i b v Nothing cells)
+      [b, f, v] | threeColumns                          -> Right (BytesRow i b f f.text (Just (squeeze v.text)) cells)
+      [f, v] | threeColumns, i == 0, Just l <- headerLabel -> Right (BytesRow i l f f.text (Just (squeeze v.text)) cells)
+      [b, v] | not threeColumns                         -> Right (BytesRow i b (cellWithText (firstSentence v.text) v) v.text Nothing cells)
       _                                                 -> Left (i, cells)
     grid = readGrid [] t { headerRows = [take 2 header], rows = [ [bwLabel r, bwField r] | r <- good ], nCols = 2 }
-    layout0 = gridLayout name grid
-    -- the grid's fields with a last bit, in order: gridLayout's fields, one for one
-    fixed = [ gf | gf <- gFields grid, isJust (gfLast gf) ]
-    pin gf f = case (fieldKind f, rowOf good gf >>= bwValue) of
+    st = structure bt (fromMaybe (structureName title) (mLayout (btMods bt))) title grid pin
+    pin (f, gf) = case (fieldKind f, rowOf good gf >>= bwValue) of
       (Reserved, _) -> f
       (_, Just v) | Exact n <- readValue (Just (fieldWidth f `div` 8)) v -> f { fieldKind = Pinned n }
       _ -> f
+    constants = [ "the constants the table prints are the layout's: " <> T.intercalate ", " ps
+                | let ps = [ fieldName f <> " " <> v | (f, gf) <- stFields st, Pinned _ <- [fieldKind f], Just r <- [rowOf good gf], Just v <- [bwValue r] ]
+                , not (null ps) ]
+
+-- | The first sentence of a cell, its full stop dropped: what names a field
+--   in a two-column table, whose Values cell may go on (@The uid of the method
+--   involved in the operation. If there is no method, these bytes SHALL be
+--   zeroes.@ gives @The uid of the method involved in the operation@).
+firstSentence :: Text -> Text
+firstSentence cell = T.dropWhileEnd (== '.') (T.strip (fst (DT.breakOn ". " (squeeze cell))))
 
 -- | The row a grid field was read from: the one whose field cell it is.
 rowOf :: [BytesRow] -> GridField -> Maybe BytesRow
@@ -227,32 +244,13 @@ readValue width cell
       Nothing -> Fill bs
       Just n | length bs == n -> Exact (L.foldl' (\acc b -> acc * 256 + toInteger b) 0 bs)
              | otherwise      -> Misfit (length bs)
-  | [w] <- ws, Just v <- hexNumber w <|> decimal w = Exact v
+  | [w] <- ws, Just v <- readNumber w = Exact v
   | otherwise = Printed (T.unwords ws)
   where
     ws = T.words cell
-    hexNumber w = case T.stripPrefix "0x" (T.toLower w) of
-      Just h | not (T.null h), T.all C.isHexDigit h -> either (const Nothing) whole (TR.hexadecimal h)
-      _                                              -> Nothing
-    decimal w = if T.all C.isDigit w then either (const Nothing) whole (TR.decimal w) else Nothing
-    whole (v, rest) = if T.null rest then Just v else Nothing
 
 squeeze :: Text -> Text
 squeeze = T.unwords . T.words
-
--- | A table as the @byteGrid@ rule's printer takes it: its grid and layout,
---   the structure named by its caption's title (or its @layout "Name"@), no
---   pins of its section (its constants are its VALUE column's).
-asGridRead :: BytesRead -> GridRead
-asGridRead br = GridRead
-  { grBound  = bfBound br
-  , grGrid   = bfGrid br
-  , grTitle  = title
-  , grName   = fromMaybe (structureName title) (mLayout (btMods (bfBound br)))
-  , grLayout = bfLayout br
-  , grPins   = Right []
-  , grPinned = [] }
-  where title = fromMaybe "" ((btRead (bfBound br)).caption >>= captionTitle)
 
 
 -- * Checks
@@ -261,10 +259,13 @@ asGridRead br = GridRead
 --   a name its declarations share with the @byteGrid@ rule's grids or an
 --   earlier table's (the one layouts module defines each once).
 checked :: Context -> [BoundTable] -> [(BytesRead, [Finding])]
-checked ctx bts = [ (br, checkBytes ctx br <> nameFindings ctx named (asGridRead br)) | br <- brs ]
+checked ctx bts = [ (br, checkBytes ctx br <> names br) | br <- brs ]
   where
     brs = map readBytes bts
-    named = gridReads ctx <> map asGridRead brs
+    named = gridStructures ctx <> map bfStructure brs
+    -- the one layouts module's imports: byteGrid's declarations' and these tables'
+    scope = declScope (gridDecls ctx <> concatMap (decls ctx) brs)
+    names br = nameFindings ctx (earlierNames named (bfStructure br)) scope (bfStructure br)
 
 checkBytes :: Context -> BytesRead -> [Finding]
 checkBytes ctx br = moved <> rowShape <> gridFindings ctx bt (bfGrid br) <> values <> tiles
@@ -286,7 +287,7 @@ checkBytes ctx br = moved <> rowShape <> gridFindings ctx bt (bfGrid br) <> valu
                                                                        <> ": only one can follow the fixed part"))
          | gf <- drop 1 (runs br) ]
     columns = length (concat (take 1 (btRead bt).headerRows))
-    values = concat [ valueFindings r gf (Just (fieldWidth f `div` 8)) | (gf, f) <- fixedFields br, Just r <- [rowOf (bfRows br) gf] ]
+    values = concat [ valueFindings r gf (Just (fieldWidth f `div` 8)) | (f, gf) <- stFields (bfStructure br), Just r <- [rowOf (bfRows br) gf] ]
           <> concat [ valueFindings r gf Nothing | gf <- take 1 (runs br), Just r <- [rowOf (bfRows br) gf] ]
     valueFindings r gf width = case readValue width <$> bwValue r of
       Just (Misfit k) -> [ bad r (rowLabel (bwIndex r) <> ": " <> describe r <> " prints " <> tshow k <> " bytes for a field of " <> maybe "" tshow width) ]
@@ -298,57 +299,11 @@ checkBytes ctx br = moved <> rowShape <> gridFindings ctx bt (bfGrid br) <> valu
       Fill bs -> any (/= 0) bs
       _       -> False
     describe r = tshow (squeeze (bwField r).text) <> " (" <> squeeze (bwLabel r).text <> ")"
-    tiles = [ located p (finding (tileSeverity p) "C-LAYOUT-TILE" (layoutName (bfLayout br) <> ": " <> describeTileProblem p)) | p <- tileProblems br ]
-    located p = case cellsOf br p of
-      []    -> atTable ctx bt
-      cells -> atCells ctx bt cells
-
--- | A gap, bytes no row names, is a Warning (the layout generated as printed,
---   its comment naming them, until an erratum does); any other tiling problem
---   an Error.
-tileSeverity :: TileProblem -> Severity
-tileSeverity = \case
-  Gap {} -> Warning
-  _      -> Error
-
--- | The grid fields with a last bit and the layout fields made from them.
-fixedFields :: BytesRead -> [(GridField, Field)]
-fixedFields br = zip [ gf | gf <- gFields (bfGrid br), isJust (gfLast gf) ] (layoutFields (bfLayout br))
+    tiles = tileFindings ctx bt (bfGrid br) (bfLayout br)
 
 -- | The grid fields that run to an end the text gives; the first is the layout's tail.
 runs :: BytesRead -> [GridField]
 runs br = [ gf | gf <- gFields (bfGrid br), isNothing (gfLast gf) ]
-
--- | Why the layout does not tile: its fixed part's problems, then whether its
---   tail starts where the fixed part ends.
-tileProblems :: BytesRead -> [TileProblem]
-tileProblems br = tiling l <> case (runs br, layoutTail l) of
-  (gf : _, Just tl)
-    | start > size -> [Gap size (start - 1)]
-    | start < size -> [ Overlap owner (tailName tl) start | owner <- take 1 [ fieldName f | f <- L.sortOn fieldStart (layoutFields l), fieldEnd f > start ] ]
-    where start = offset (gfFirst gf)
-  _ -> []
-  where
-    l = bfLayout br
-    size = layoutSize l * 8
-
--- | Where a tiling problem is printed: the row of the field it starts at or
---   names; none for one about the layout as a whole.
-cellsOf :: BytesRead -> TileProblem -> [CellIR]
-cellsOf br = \case
-  Gap _ o1      -> startingAt (o1 + 1)
-  Overlap _ _ o -> startingAt o
-  Outside n     -> named n
-  Unaligned n   -> named n
-  Unfit n _     -> named n
-  WideFlag n    -> named n
-  _             -> []
-  where
-    startingAt o = concat (take 1 [ gfCells gf | gf <- gFields (bfGrid br), offset (gfFirst gf) == o ])
-    named n = concat (take 1 [ gfCells gf | (gf, f) <- fixedFields br, fieldName f == n ])
-
-offset :: BitPos -> Int
-offset p = bitOffset (bpByte p) (bpBit p)
 
 
 -- * Declarations
@@ -357,24 +312,27 @@ compile :: Context -> [BoundTable] -> [Emitted]
 compile ctx bts = concatMap one (checked ctx bts)
   where
     one (br, fs) = case L.nub [ Cm.code f | f <- fs, Cm.isError f ] of
-      []    -> Emit (bytesDecl ctx br) : [ Emit (recordDecl ctx (asGridRead br)) | null (tileProblems br) ]
+      []    -> map Emit (decls ctx br)
       codes -> [ Excluded (btAnchor (bfBound br)) (T.intercalate ", " codes <> " failed") ]
 
--- | @\<name\>Layout :: Layout@, its Haddock listing the rows whose VALUE the
---   layout does not hold, as printed, and the bytes no field covers.
-bytesDecl :: Context -> BytesRead -> Gen.Decl
-bytesDecl ctx br = d { Gen.declBody = take 1 d.declBody <> values <> gaps <> drop 1 d.declBody }
+-- | A table's declarations: @\<name\>Layout :: Layout@, its Haddock listing
+--   the rows whose VALUE the layout does not hold, as printed, the Values
+--   cells its field names shorten, and the bytes no field covers; and its
+--   record when the layout tiles.
+decls :: Context -> BytesRead -> [Gen.Decl]
+decls ctx br =
+  layoutDecl (boundProvenance ctx (bfBound br)) (layoutValue st) (bfLayout br) (values <> shortened <> untiledNote (gridTiling (bfGrid br) (bfLayout br)))
+  : [ recordDecl ctx st | stTiles st ]
   where
-    d = layoutDecl (boundProvenance ctx (bfBound br)) (layoutValue (asGridRead br)) (bfLayout br)
+    st = bfStructure br
     values = case unheld br of
       [] -> []
       rs -> [ "--", "-- The VALUE cells the layout does not hold (bytes | field | value, as printed):", "--" ]
             <> [ "-- > " <> T.intercalate " | " (map tshow [squeeze (bwLabel r).text, squeeze (bwField r).text, v]) | (r, v) <- rs ]
-    gaps = case tileProblems br of
+    shortened = case [ r | r <- bfRows br, isNothing (bwValue r), let n = (bwField r).text, squeeze (bwPrinted r) `notElem` [n, n <> "."] ] of
       [] -> []
-      ps -> [ "--", "-- It does not tile (C-LAYOUT-TILE): Hsed.Core.Layout refuses to encode or decode it, and it has"
-            , "-- no record, until an erratum names these bytes:", "--" ]
-            <> [ "-- * " <> describeTileProblem p | p <- ps ]
+      rs -> [ "--", "-- The Values cells whose first sentence names a field (bytes | values, as printed):", "--" ]
+            <> [ "-- > " <> T.intercalate " | " (map tshow [squeeze (bwLabel r).text, squeeze (bwPrinted r)]) | r <- rs ]
 
 -- | The rows whose value the layout does not hold: all but a pinned field's
 --   constant and a reserved field's zero.
@@ -385,7 +343,7 @@ unheld br = [ (r, v) | r <- bfRows br, Just v <- [bwValue r], not (held r) ]
                     Pinned _ -> True
                     Reserved -> maybe False (zero . readValue (Just (fieldWidth f `div` 8))) (bwValue r)
                     _        -> False
-                | (gf, f) <- fixedFields br, bwField r `elem` gfCells gf ]
+                | (f, gf) <- stFields (bfStructure br), bwField r `elem` gfCells gf ]
     zero = \case
       Exact 0 -> True
       _        -> False

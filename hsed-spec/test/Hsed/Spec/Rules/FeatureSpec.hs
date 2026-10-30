@@ -19,8 +19,11 @@ PDF 69), its pins from 3.3.6.4 and 3.3.6.5 (PDF 70, 71), its code from Table
 40 (PDF 69), and finds nothing on the committed run. Each check made to fire
 by an edit of the IR (a cell, a paragraph's words); a descriptor without pins
 takes its code from Table 40 and leaves its version and length to the record;
-byte 4 of Table 43 read by a @bits@ modifier when its drawn extents are gone.
-The generated module, and an edited one type-checked under @-Wall -Werror@.
+a section whose words the IR lacks is an Error; byte 4 of Table 43 read by a
+@bits@ modifier when its drawn extents are gone. The generated module (a
+record over the layout as byteGrid's, its @LayoutRecord@ and @Feature@
+instances, a pin printed at its field's width), and an edited one
+type-checked under @-Wall -Werror@.
 Opal Table 3's bullets matched to its grid's fields, for M3. The values the
 tests expect are those the PDFs print, on the pages cited; the bit maps against
 sedutil's are hsed's acceptance test (@Hsed.Gen.Core.FeaturesSpec@).
@@ -48,7 +51,8 @@ import           Hsed.Spec.DSL           (SomeBinding (..), feature)
 import           Hsed.Spec.IR            (CellIR (..), ParaIR (..), SpecIR (..), TableIR (..), XrefIR (..), readIR)
 import           Hsed.Spec.Readers.Grid  (GridField (..))
 import           Hsed.Spec.Readers.Pins  (Pin (..), PinValue (..))
-import           Hsed.Spec.Rules.Codes   (Number (..))
+import           Hsed.Spec.Readers.Record (RecordField (..), Structure (..), recordFieldsOf)
+import           Hsed.Spec.Readers.Text  (Number (..))
 import           Hsed.Spec.RuleDef       (BoundTable (..), Classification (..), RuleDef (..), modsOf, numberedTables)
 import           Hsed.Spec.Rules         (classify, explain)
 import           Hsed.Spec.Rules.Feature
@@ -81,7 +85,11 @@ withoutExtents tid label ir = ir { tables = map table ir.tables }
 -- | The codes the rule and the readers it uses give.
 featureCodes :: [Text]
 featureCodes = map Cm.codeName (ruleCodes featureRule)
-  <> ["C-LAYOUT-EXTENT", "C-LAYOUT-ENDIAN", "N-LAYOUT-BITS", "W-LAYOUT-BITS-UNUSED", "C-LAYOUT-TILE", "W-PINS-NONE"]
+  <> ["C-LAYOUT-EXTENT", "C-LAYOUT-ENDIAN", "N-LAYOUT-BITS", "W-LAYOUT-BITS-UNUSED", "C-LAYOUT-TILE", "C-GRID-NAME", "W-PINS-NONE", "C-PINS-WORDS"]
+
+-- | A line with its spacing squeezed, so that an assertion holds whatever the alignment.
+squeezed :: Text -> Text
+squeezed = T.unwords . T.words
 
 -- | @ghc -fno-code -Wall -Werror@ on a printed module against hsed-core (as LayoutSpec does).
 compiles :: Text -> Text -> Expectation
@@ -100,10 +108,10 @@ compiles modName text = withSystemTempDirectory "hsed-features" $ \dir -> do
 
 spec :: Spec
 spec = do
-  describe "featureTypeName" $
-    it "names the record after the layout's name without its last word" $
-      map featureTypeName ["TPer Feature Descriptor", "Locking Feature Descriptor", "Level 0 Discovery - TPer Feature Descriptor", "Feature"]
-        `shouldBe` ["TPerFeature", "LockingFeature", "Level0DiscoveryTPerFeature", "Feature"]
+  describe "featureStructureName" $
+    it "names the record after the caption's title without its last word" $
+      map featureStructureName ["TPer Feature Descriptor", "Locking Feature Descriptor", "Level 0 Discovery - TPer Feature Descriptor", "Feature"]
+        `shouldBe` ["TPer Feature", "Locking Feature", "Level 0 Discovery - TPer Feature", "Feature"]
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
@@ -147,12 +155,13 @@ spec = do
           [ (fieldName f, fieldKind f) | f <- take 4 (layoutFields (frLayout (readOf n))) ]
             `shouldBe` [("Feature Code", Pinned c), ("Version", Pinned 1), ("Reserved", Reserved), ("Length", Pinned 12)]
       it "makes a record of the flags of byte 4, named from the cells, at the bits the grid prints them over (PDF 70, 71)" $ do
-        [ (rfIdent f, rfType f, fieldStart (rfField f)) | f <- frFields (readOf 42) ] `shouldBe`
-          [ ("tPerFeatureComIDMgmtSupported", FlagField, 33), ("tPerFeatureStreamingSupported", FlagField, 35)
-          , ("tPerFeatureBufferMgmtSupported", FlagField, 36), ("tPerFeatureACKNAKSupported", FlagField, 37)
-          , ("tPerFeatureAsyncSupported", FlagField, 38), ("tPerFeatureSyncSupported", FlagField, 39) ]
-        [ (rfName f, fieldStart (rfField f)) | f <- frFields (readOf 43) ] `shouldBe`
-          [ ("MBR Done", 34), ("MBR Enabled", 35), ("Media Encryption", 36), ("Locked", 37), ("Locking Enabled", 38), ("Locking Supported", 39) ]
+        [ (rfIdent f, rfType f, rfWhere f) | f <- recordFieldsOf (frStructure (readOf 42)) ] `shouldBe`
+          [ ("tPerFeatureComIDMgmtSupported", "Bool", "byte 4 bit 6"), ("tPerFeatureStreamingSupported", "Bool", "byte 4 bit 4")
+          , ("tPerFeatureBufferMgmtSupported", "Bool", "byte 4 bit 3"), ("tPerFeatureACKNAKSupported", "Bool", "byte 4 bit 2")
+          , ("tPerFeatureAsyncSupported", "Bool", "byte 4 bit 1"), ("tPerFeatureSyncSupported", "Bool", "byte 4 bit 0") ]
+        [ (rfName f, rfWhere f) | f <- recordFieldsOf (frStructure (readOf 43)) ] `shouldBe`
+          [ ("MBR Done", "byte 4 bit 5"), ("MBR Enabled", "byte 4 bit 4"), ("Media Encryption", "byte 4 bit 3"), ("Locked", "byte 4 bit 2")
+          , ("Locking Enabled", "byte 4 bit 1"), ("Locking Supported", "byte 4 bit 0") ]
         layoutSize (frLayout (readOf 43)) `shouldBe` 16
 
     describe "the checks" $ do
@@ -184,23 +193,34 @@ spec = do
       it "C-FEATURE-PIN: a field pinned to two values" $
         findings (editWords "3.3.6.4" (fmap (\ws -> if "0x01." `elem` ws then ws <> T.words "The Version field SHALL be set to 0x02." else ws)) ir)
           `shouldBe` [ "C-FEATURE-PIN core-2.01.pdf#page=69&T42: TPer Feature Descriptor: Version = 0x01 (3.3.6.4) and Version = 0x02 (3.3.6.4)" ]
-      it "C-FEATURE-FIELD: two fields of one name" $
-        findings (setCell "T42" 4 7 "Sync Supported" ir) `shouldBe`
-          [ "C-FEATURE-FIELD core-2.01.pdf#page=69&T42: TPer Feature Descriptor: 2 fields, \"Sync Supported\", give the record one field, tPerFeatureSyncSupported" ]
+      it "C-GRID-NAME, as byteGrid's: two fields of one name, at their row; the table left out" $ do
+        let broken = setCell "T42" 4 7 "Sync Supported" ir
+        findings broken `shouldBe`
+          [ "C-GRID-NAME core-2.01.pdf#page=70&T42: the fields \"Sync Supported\" (byte 4 bit 1) and \"Sync Supported\" (byte 4 bit 0) are named alike: tPerFeatureSyncSupported" ]
+        newlyExcluded ir broken `shouldReturn` [(TableId 42, "C-GRID-NAME failed")]
 
     describe "a descriptor without pins (W-PINS-NONE)" $ do
-      let unpinned = editWords "3.3.6.4" (const Nothing) ir
-      it "is a Warning, not an error: its code is Table 40's" $ do
+      let unpinned = editWords "3.3.6.4" (fmap (const ["No", "pins", "here."])) ir
+      it "is a Warning, not an error, by the criterion byteGrid's grids share: its code is Table 40's" $ do
         findings unpinned `shouldBe`
-          [ "W-PINS-NONE core-2.01.pdf#page=69&T42: TPer Feature Descriptor: no pins read: section 3.3.6.4 has a paragraph without its words in the IR (wordComplete)" ]
+          [ "W-PINS-NONE core-2.01.pdf#page=69&T42: TPer Feature Descriptor: no sentence of 3.3.6.4 or its subsections pins one of its fields,"
+            <> " while 3.3.6.2.2, 3.3.6.2.3, 3.3.6.5 pin fields of the grids beside it" ]
         newlyExcluded ir unpinned `shouldReturn` []
       text <- runIO (moduleOf unpinned)
-      it "leaves its version and length to the record, numbers" $ do
-        T.lines text `shouldContain` ["  featureCode       = 0x0001", "  featureVersion    = Nothing", "  featureLength     = Nothing"]
-        T.lines text `shouldContain` ["  { tPerFeatureVersion             :: Natural  -- ^ Version, byte 2 bits 7-4"]
-        T.lines text `shouldContain` ["    <*> numberOf \"Length\" vs"]
+      it "leaves its version and length to the record, numbers typed by their widths" $ do
+        T.lines text `shouldContain` ["  featureCode _    = 0x0001", "  featureVersion _ = Nothing", "  featureLength _  = Nothing"]
+        map squeezed (T.lines text) `shouldContain` ["{ tPerFeatureVersion :: !Word8 -- ^ byte 2 bits 7-4"]
+        T.lines text `shouldContain` ["    <*> numberField \"Length\" vs"]
       it "type-checks under -Wall -Werror" $
         compiles "Hsed.Gen.Core.Features" text
+
+    describe "a section whose words the IR lacks (C-PINS-WORDS)" $
+      it "is an Error, the IR breaking its own contract, and the table is left out" $ do
+        let wordless = editWords "3.3.6.4" (const Nothing) ir
+        findings wordless `shouldBe`
+          [ "C-PINS-WORDS core-2.01.pdf#page=69&T42: TPer Feature Descriptor: its section's pins cannot be read:"
+            <> " section 3.3.6.4 has a paragraph without its words in the IR (wordComplete)" ]
+        newlyExcluded ir wordless `shouldReturn` [(TableId 42, "C-PINS-WORDS failed")]
 
     describe "the bits fallback" $
       it "reads Table 43's byte 4 by its bits modifier when its drawn extents are gone, as the extent rule does" $ do
@@ -211,25 +231,28 @@ spec = do
         [ frLayout fr | fr <- featureReads (mkContext Scott bare), btAnchor (frBound fr) == TableId 43 ] `shouldBe` [frLayout (readOf 43)]
 
     describe "the layout modifier" $
-      it "renames the layout and so the record; the template is still the caption's" $ do
+      it "names the record as written, as byteGrid's does; the layout keeps the caption's title, and the template is still the caption's" $ do
         renamed <- annotated pristine (hsa <> "core-2.01 | T42 | layout \"TPer Descriptor\"\n")
         lns <- T.lines <$> moduleOf renamed
-        lns `shouldContain` ["tPerDescriptor :: Layout", "tPerDescriptor = Layout", "  { layoutName   = \"TPer Descriptor\""]
-        lns `shouldContain` ["data TPer = TPer", "  { tPerComIDMgmtSupported  :: Bool  -- ^ ComID Mgmt Supported, byte 4 bit 6"]
+        lns `shouldContain` ["tPerDescriptorLayout :: Layout", "tPerDescriptorLayout = Layout", "  { layoutName   = \"TPer Feature Descriptor\""]
+        lns `shouldContain` ["data TPerDescriptor = TPerDescriptor"]
+        map squeezed lns `shouldContain` ["{ tPerDescriptorComIDMgmtSupported :: !Bool -- ^ byte 4 bit 6"]
         findings renamed `shouldBe` []
 
     describe "the generated module" $ do
       text <- runIO (moduleOf ir)
       let lns = T.lines text
-      it "declares each descriptor's layout, its header pinned" $ do
-        lns `shouldContain` ["tPerFeatureDescriptor :: Layout"]
-        lns `shouldContain` ["      [ spanning \"Feature Code\" (0, 7) (1, 0) (Pinned 0x01)"]
+      it "declares each descriptor's layout, its header pinned at its fields' widths (0x0001 for the 16-bit Feature Code)" $ do
+        lns `shouldContain` ["tPerFeatureLayout :: Layout"]
+        lns `shouldContain` ["      [ spanning \"Feature Code\" (0, 7) (1, 0) (Pinned 0x0001)", "      , spanning \"Version\" (2, 7) (2, 4) (Pinned 0x1)"]
         lns `shouldContain` ["      , spanning \"Reserved\" (4, 7) (4, 6) Reserved"]
-      it "declares a record of its flags and its instance, citing where its constants come from" $ do
+      it "declares a record of its flags over the layout and its instances, citing where its constants come from" $ do
         lns `shouldContain` ["data LockingFeature = LockingFeature"]
+        lns `shouldContain` ["instance LayoutRecord LockingFeature where", "  recordLayout _ = lockingFeatureLayout"]
         lns `shouldContain` ["-- the header of TPerFeature as pinned by 3.3.6.4 (PDF 70): Feature Code = 0x0001, Version = 0x01, Length = 0x0C"]
         lns `shouldContain` ["-- the code Table 40 row 3 (PDF 69) gives 3.3.6.5: 0002h"]
-        lns `shouldContain` ["instance Feature TPerFeature where", "  featureCode       = 0x0001", "  featureVersion    = Just 0x01", "  featureLength     = Just 0x0c"]
+        lns `shouldContain` [ "instance Feature TPerFeature where", "  featureCode _    = 0x0001", "  featureVersion _ = Just 0x01", "  featureLength _  = Just 0x0c"
+                            , "  featureHeader _  = FeatureHeader 4 \"Length\"" ]
       it "type-checks under -Wall -Werror" $
         compiles "Hsed.Gen.Core.Features" text
 
@@ -242,12 +265,13 @@ spec = do
         let ctx = mkContext Scott opal
             t = fromMaybe (error "T3") (Map.lookup (TableId 3) (numberedTables opal))
             fr = readFeature ctx (BoundTable (TableId 3) t t (SomeBinding feature) (modsOf (SomeBinding feature)))
-        frName fr `shouldBe` "Level 0 Discovery - TPer Feature Descriptor"
+        layoutName (frLayout fr) `shouldBe` "Level 0 Discovery - TPer Feature Descriptor"
+        stName (frStructure fr) `shouldBe` "Level 0 Discovery - TPer Feature"
         [ (fieldName f, fieldKind f) | f <- layoutFields (frLayout fr), fieldKind f /= Reserved ] `shouldBe`
           [ ("Feature Code", Pinned 1), ("Version", Unsigned), ("Length", Pinned 12), ("ComID Mgmt Supported", Flag)
           , ("Streaming Supported", Pinned 1), ("Buffer Mgmt Supported", Flag), ("ACK/NAK Supported", Flag)
           , ("Async Supported", Flag), ("Sync Supported", Pinned 1) ]
         [ (pinField p, pinValue p) | p <- frUnmatched fr ] `shouldBe` [("ACK/NACK Supported", PinVU)]
-        map rfName (frFields fr) `shouldBe` ["Version", "ComID Mgmt Supported", "Buffer Mgmt Supported", "ACK/NAK Supported", "Async Supported"]
+        map rfName (recordFieldsOf (frStructure fr)) `shouldBe` ["Version", "ComID Mgmt Supported", "Buffer Mgmt Supported", "ACK/NAK Supported", "Async Supported"]
         -- Opal prints no sentence naming the general format: M3 takes Core's Table 41
         frTemplate fr `shouldSatisfy` isLeft

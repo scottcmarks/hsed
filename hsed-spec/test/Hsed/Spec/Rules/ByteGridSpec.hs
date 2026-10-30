@@ -19,10 +19,14 @@ Format, PDF 40, bytes 0-19 then the payload; Table 18, PDF 41-42, 0-23; Table
 passes); Table 39's two versions pinned by 3.3.6.2.2 and 3.3.6.2.3 (PDF 68);
 the committed run's three W-PINS-NONE (Tables 38, 41 and 44, where section
 3.3.6 pins other grids' fields) and no other finding of its codes;
-C-LAYOUT-TILE, C-LAYOUT-ENDIAN and C-GRID-NAME made to fire by edited cells,
-each at the page of its row; the records and instances the layouts module
-declares, type-checked with @ghc -fno-code -Wall -Werror@ against hsed-core
-(pending where ghc cannot run); and @layout \"Name\"@ renaming a grid.
+C-LAYOUT-TILE (an overlap an Error, a gap a Warning whose layout has no
+record), C-LAYOUT-ENDIAN and C-GRID-NAME made to fire by edited cells, each at
+the page of its row; the records and instances the layouts module declares,
+type-checked with @ghc -fno-code -Wall -Werror@ against hsed-core (pending
+where ghc cannot run), a grid with one-bit flags among them; @layout
+\"Name\"@ naming a grid's record as written, its layout keeping the
+caption's title, and refused where it names what the module imports or is
+given twice.
 -}
 module Hsed.Spec.Rules.ByteGridSpec (spec) where
 
@@ -40,12 +44,13 @@ import           Test.Hspec
 import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), tiling)
 import           Hsed.Spec.Anchor         (AnchorId (..))
 import           Hsed.Spec.Check          (checkIR, mkContext)
-import           Hsed.Spec.Common         (ErrataSet (..), RuleName (..), SpecId (..), renderFinding)
+import           Hsed.Spec.Common         (ErrataSet (..), RuleName (..), Severity (..), SpecId (..), renderFinding)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.Compile        (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.IR             (SpecIR (..), readIR)
 import           Hsed.Spec.Readers.Pins   (Pin (..))
+import           Hsed.Spec.Readers.Record (RecordField (..), Structure (..), haskellType, recordFieldsOf, recordNames)
 import           Hsed.Spec.RuleDef        (BoundTable (..), Classification (..), RuleDef (..), numberedTables)
 import           Hsed.Spec.Rules          (classify, explain)
 import           Hsed.Spec.Rules.ByteGrid
@@ -82,9 +87,9 @@ spec = do
     it "drops a trailing Format, which names the table as a format of the structure" $
       map structureName ["ComPacket Format", "Level 0 Discovery Header Format", "Common SSC Information", "Format"]
         `shouldBe` ["ComPacket", "Level 0 Discovery Header", "Common SSC Information", "Format"]
-  describe "fieldType" $
+  describe "haskellType" $
     it "types a field by its kind and width" $
-      map fieldType [ Field "a" 0 1 Flag, Field "b" 0 4 Unsigned, Field "c" 0 16 Unsigned, Field "d" 0 24 Unsigned
+      map haskellType [ Field "a" 0 1 Flag, Field "b" 0 4 Unsigned, Field "c" 0 16 Unsigned, Field "d" 0 24 Unsigned
                     , Field "e" 0 36 Unsigned, Field "f" 0 256 Bytes, Field "g" 0 72 Unsigned ]
         `shouldBe` ["Bool", "Word8", "Word16", "Word32", "Word64", "ByteString", "Natural"]
 
@@ -92,7 +97,8 @@ spec = do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
     let ctx = mkContext Scott ir
-        readOf n = fromMaybe (error ("no grid " <> show n)) (L.find ((== TableId n) . btAnchor . grBound) (gridReads ctx))
+        readOf n = fromMaybe (error ("no grid " <> show n)) (L.find ((== TableId n) . btAnchor . stBound . grStructure) (gridReads ctx))
+        grLayout = stLayout . grStructure
         ruleCodes' = ["C-LAYOUT-TILE", "C-LAYOUT-ENDIAN", "C-LAYOUT-EXTENT", "C-GRID-NAME", "W-PINS-NONE", "N-LAYOUT-BITS", "W-LAYOUT-BITS-UNUSED"]
         -- the findings of the rule's codes at its tables (feature and byteFieldValue give some of the codes too)
         ours ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f `elem` ruleCodes'
@@ -122,7 +128,7 @@ spec = do
         [ (n, tiling (grLayout (readOf n))) | n <- grids ] `shouldBe` [ (n, []) | n <- grids ]
       it "gives T17, T18 and T20 their payload, its length the Length field, T20's padded to four bytes" $
         [ layoutTail (grLayout (readOf n)) | n <- [17, 18, 20] ] `shouldBe`
-          [ Just (Tail "Payload" (Just "Length") 1), Just (Tail "Payload" (Just "Length") 1), Just (Tail "Payload" (Just "Length") 4) ]
+          [ Just (Tail "Payload" (Just "Length") 1 Bytes), Just (Tail "Payload" (Just "Length") 1 Bytes), Just (Tail "Payload" (Just "Length") 4 Bytes) ]
       it "pins T39's versions by 3.3.6.2.2 and 3.3.6.2.3 (PDF 68), and pins nothing of T38, which shares the section" $ do
         let t39 = readOf 39
         [ (fieldName f, fieldKind f) | f <- layoutFields (grLayout t39) ] `shouldBe`
@@ -133,13 +139,13 @@ spec = do
         (length <$> grPins (readOf 38), grPinned (readOf 38)) `shouldBe` (Right 2, [])
 
     describe "the records" $ do
-      let fieldsOf n = [ (rfIdent f, rfType f) | f <- recordFieldsOf (readOf n) ]
+      let fieldsOf n = [ (rfIdent f, rfType f) | f <- recordFieldsOf (grStructure (readOf n)) ]
       it "T17: the header's fields by width, the reserved bytes and Length (the payload's) left to the layout" $
         fieldsOf 17 `shouldBe`
           [ ("comPacketComID", "Word16"), ("comPacketComIDExtension", "Word16"), ("comPacketOutstandingData", "Word32")
           , ("comPacketMinTransfer", "Word32") ]
-      it "T18 and T20: the packet's 8-byte Session, the subpacket's Kind" $ do
-        fieldsOf 18 `shouldBe` [ ("packetSession", "Word64"), ("packetSeqNumber", "Word32"), ("packetAckType", "Word16"), ("packetAcknowledgement", "Word32") ]
+      it "T18 and T20: the packet's Session as its two numbers, TSN and HSN (PDF 41: Session (0-3 = TSN, 4-7 = HSN)), the subpacket's Kind" $ do
+        fieldsOf 18 `shouldBe` [ ("packetTSN", "Word32"), ("packetHSN", "Word32"), ("packetSeqNumber", "Word32"), ("packetAckType", "Word16"), ("packetAcknowledgement", "Word32") ]
         fieldsOf 20 `shouldBe` [("dataSubPacketKind", "Word16")]
       it "T39: the pinned versions left to the layout, Vendor Unique bytes; T41: a sub-byte Version; T44: no field" $ do
         fieldsOf 39 `shouldBe` [("level0DiscoveryHeaderLengthOfParameterData", "Word32"), ("level0DiscoveryHeaderVendorUnique", "ByteString")]
@@ -164,11 +170,18 @@ spec = do
         added broken `shouldBe`
           ["C-LAYOUT-TILE core-2.01.pdf#page=42&T18: Packet Format: \"AckType\" starts at byte 14 bit 7, inside \"Reserved\""]
         newlyExcluded ir broken `shouldReturn` [(TableId 18, "C-LAYOUT-TILE failed")]
-      it "C-LAYOUT-TILE: a payload not right after the fixed part, a gap no row prints (at the table)" $ do
-        added (setCell "T17" 22 0 "If Length > 0, 21 to n + 20" ir) `shouldBe`
-          ["C-LAYOUT-TILE core-2.01.pdf#page=40&T17: ComPacket Format: \"Payload\" starts at byte 21, the fixed part ends at byte 19"]
-        added (setCell "T39" 10 0 "13" ir) `shouldBe`
+      it "C-LAYOUT-TILE: bytes no row names, before a payload or among the fixed part, a Warning: the layout as printed, no record" $ do
+        let late = setCell "T17" 22 0 "If Length > 0, 21 to n + 20" ir
+            short = setCell "T39" 10 0 "13" ir
+        added late `shouldBe`
+          ["C-LAYOUT-TILE core-2.01.pdf#page=40&T17: ComPacket Format: no field covers byte 20 bit 7 to byte 20 bit 0"]
+        added short `shouldBe`
           ["C-LAYOUT-TILE core-2.01.pdf#page=68&T39: Level 0 Discovery Header Format: no field covers byte 14 bit 7 to byte 15 bit 0"]
+        [ Cm.severity f | f <- checkIR Scott short, Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just "T39" ] `shouldBe` [Warning]
+        newlyExcluded ir short `shouldReturn` []
+        lns <- T.lines <$> layoutsOf short
+        lns `shouldContain` ["-- * no field covers byte 14 bit 7 to byte 15 bit 0", "level0DiscoveryHeaderLayout :: Layout"]
+        filter ("data Level0DiscoveryHeader " `T.isPrefixOf`) lns `shouldBe` []
       it "C-LAYOUT-ENDIAN: an (MSB) whose (LSB) is gone, at the page of its row" $
         added (setCell "T18" 13 2 "" ir) `shouldContain`
           ["C-LAYOUT-ENDIAN core-2.01.pdf#page=42&T18: byte 14: an (MSB) inside the run of \"Reserved\""]
@@ -185,7 +198,7 @@ spec = do
       text <- runIO (layoutsOf ir)
       let lns = T.lines text
       it "declares each grid's layout, its record(s) and its instance (beside byteFieldValue's, in the one module)" $ do
-        let gridNames = concatMap recordNames (gridReads ctx)
+        let gridNames = concatMap (recordNames . grStructure) (gridReads ctx)
         [ n | l <- lns, " :: Layout" `T.isSuffixOf` l, let n = T.takeWhile (/= ' ') l, n `elem` gridNames ] `shouldBe`
           [ "comPacketLayout", "packetLayout", "dataSubPacketLayout", "creditControlSubpacketLayout", "level0DiscoveryResponseDataLayout"
           , "level0DiscoveryHeaderLayout", "featureDescriptorTemplateLayout", "commonSSCInformationLayout", "gudidColumnContentsDescriptionLayout" ]
@@ -199,16 +212,33 @@ spec = do
           , "data GUDIDColumnContentsDescription = GUDIDColumnContentsDescription" ]
         lns `shouldContain` [ "instance LayoutRecord ComPacket where", "  recordLayout _ = comPacketLayout", "  recordFields r =" ]
         lns `shouldContain` [ "  { comPacketHeader  :: !ComPacketHeader", "  , comPacketPayload :: !ByteString       -- ^ from byte 20, Length bytes" ]
-        lns `shouldContain` [ "  , layoutTail   = Just (Tail \"Payload\" (Just \"Length\") 4)" ]
-        lns `shouldContain` [ "      , spanning \"Data Structure Major Version\" (4, 7) (5, 0) (Pinned 0x00)" ]
+        lns `shouldContain` [ "  , layoutTail   = Just (Tail \"Payload\" (Just \"Length\") 4 Bytes)" ]
+        lns `shouldContain` [ "      , spanning \"Data Structure Major Version\" (4, 7) (5, 0) (Pinned 0x0000)" ]
       it "stays ASCII" $
         T.filter (> '\DEL') text `shouldBe` ""
       it "type-checks under -Wall -Werror" $
         compiles "Hsed.Gen.Core.Layouts" text
+      it "imports Bool for a grid's one-bit flags, and type-checks (Table 42 read as a byte grid by a comment)" $ do
+        asGrid <- annotated pristine (hsa <> "core-2.01 | T42 | as @'ByteGrid byteGrid\n")
+        flagged <- layoutsOf asGrid
+        [ l | l <- T.lines flagged, "import           Prelude" `T.isPrefixOf` l ] `shouldSatisfy` all (" Bool," `T.isInfixOf`)
+        T.lines flagged `shouldContain` ["  { tPerFeatureDescriptorComIDMgmtSupported  :: !Bool  -- ^ byte 4 bit 6"]
+        compiles "Hsed.Gen.Core.Layouts" flagged
 
-    describe "layout \"Name\"" $
-      it "names a grid's layout and record where the caption will not do" $ do
+    describe "layout \"Name\"" $ do
+      it "names a grid's record as written, its layout keeping the caption's title" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T212 | layout \"GUDID\"\n")
         lns <- T.lines <$> layoutsOf ir'
         [ l | l <- lns, "gudid" `T.isInfixOf` T.toLower l, "data " `T.isPrefixOf` l || " :: Layout" `T.isSuffixOf` l ]
           `shouldBe` ["gudidLayout :: Layout", "data GUDID = GUDID"]
+        lns `shouldContain` ["gudidLayout = Layout", "  { layoutName   = \"GUDID Column Contents Description\""]
+      it "refuses a name the module imports (C-GRID-NAME), which GHC would find ambiguous" $ do
+        forM_ ["Layout", "Tail", "Byte String"] $ \n -> do
+          ir' <- annotated pristine (hsa <> "core-2.01 | T212 | layout \"" <> n <> "\"\n")
+          [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-GRID-NAME" ] `shouldSatisfy`
+            any (("is also a name its module imports" `T.isSuffixOf`) . T.strip)
+          newlyExcluded ir ir' `shouldReturn` [(TableId 212, "C-GRID-NAME failed")]
+      it "refuses a second layout name on one table (E-MODIFIER)" $ do
+        ir' <- annotated pristine (hsa <> "core-2.01 | T212 | layout \"A\" layout \"B\"\n")
+        [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "E-MODIFIER" ] `shouldBe`
+          ["E-MODIFIER core-2.01.pdf#page=230&T212: a second layout name, \"A\" beside \"B\": a binding takes one"]

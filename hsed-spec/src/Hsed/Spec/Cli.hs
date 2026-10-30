@@ -20,6 +20,12 @@ can be checked without annotating and re-extracting the PDF. @ledger@ takes
 several IRs and one sidecar: the sidecar replaces the annotations of the IRs
 whose spec its lines name, and the others are read as they are.
 
+A spec annotated only in part until its last binding milestone (Opal until
+M5) is named by @--partial SPEC@ ('Options', repeatable, on every command that
+reads an IR): each of its units nothing binds yet is reported as the Warning
+@W-UNBOUND@ rather than the Error @E-UNBOUND@
+("Hsed.Spec.Check".'Hsed.Spec.Check.partially', design 13.26 (k)).
+
 Findings print in 'renderFinding' form on stdout, errors first; a one-line
 summary goes to stderr. @compile@ writes the reports of "Hsed.Spec.Report" beside
 the modules: @findings.md@, @coverage.md@ (every numbered table, signature
@@ -37,6 +43,8 @@ renamed, disappears from the tree and @make gen-diff@ reports it.
 -}
 module Hsed.Spec.Cli
   ( Input (..)
+  , Options (..)
+  , noOptions
   , Command (..)
   , defaultIR
   , run
@@ -53,7 +61,7 @@ import qualified RIO.Text                 as T
 
 import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Bind           (bindModule)
-import           Hsed.Spec.Check          (checkIR, mkContext, sortFindings)
+import           Hsed.Spec.Check          (checkIR, mkContext, partially, sortFindings)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, RuleName (..), SpecId (..), errataSetName,
                                            isError, matchesSpec, renderFinding)
@@ -71,14 +79,25 @@ import           Hsed.Spec.Sidecar        (withSidecar, withSidecarOn)
 -- | Where the IR comes from: a file, and optionally a sidecar replacing its annotations.
 data Input = Input FilePath (Maybe FilePath)
 
+-- | How a run reads its specs, besides the IR: the specs annotated only in
+--   part (@--partial SPEC@, each named as @--target@ names one), whose units
+--   nothing binds yet are Warnings.
+data Options = Options
+  { optPartial :: ![Text]
+  }
+
+-- | A run over specs annotated in full (Core since M2c).
+noOptions :: Options
+noOptions = Options []
+
 data Command
   = CmdIrSummary FilePath
-  | CmdBind Input FilePath
-  | CmdCheck Input ErrataSet
-  | CmdCompile Input ErrataSet Text FilePath FilePath
-  | CmdExplain Text AnchorId Input
-  | CmdOrphans Input
-  | CmdLedger [FilePath] (Maybe FilePath)
+  | CmdBind Options Input FilePath
+  | CmdCheck Options Input ErrataSet
+  | CmdCompile Options Input ErrataSet Text FilePath FilePath
+  | CmdExplain Options Text AnchorId Input
+  | CmdOrphans Options Input
+  | CmdLedger Options [FilePath] (Maybe FilePath)
   | CmdNotImplemented Text [Text]   -- ^ the subcommand and whatever followed it
 
 defaultIR :: FilePath
@@ -92,10 +111,10 @@ run = runWith stdout stderr
 runWith :: Handle -> Handle -> Command -> IO ()
 runWith out err = \case
   CmdIrSummary path -> readIR path >>= either (failWith err . fromString) (say out . summary)
-  CmdBind inp file -> do
+  CmdBind o inp file -> do
     (ir, sideFs) <- load err inp
     let (fs, result) = bindModule ir
-        found = sortFindings (sideFs <> fs <> either pure (const []) result)
+        found = sortFindings (partially (optPartial o) (sideFs <> fs <> either pure (const []) result))
     report out found
     case result of
       Right text | not (any isError found) -> do
@@ -103,20 +122,20 @@ runWith out err = \case
         writeFileUtf8 file text
         say err ("hsedc bind: wrote " <> fromString file <> "; " <> display (findingCounts found) <> "\n")
       _ -> failWith err ("hsedc bind: " <> display (findingCounts found) <> "; " <> fromString file <> " not written")
-  CmdCheck inp es -> do
+  CmdCheck o inp es -> do
     (ir, sideFs) <- load err inp
-    let fs = sortFindings (sideFs <> checkIR es ir)
+    let fs = sortFindings (partially (optPartial o) (sideFs <> checkIR es ir))
     report out fs
     say err ("hsedc check: " <> display ir.spec <> ", errata " <> display (errataSetName es) <> ": " <> display (findingCounts fs) <> "\n")
     exitOnErrors fs
-  CmdCompile inp es target dir reportTo -> do
+  CmdCompile o inp es target dir reportTo -> do
     (ir, sideFs) <- load err inp
     unless (matchesSpec target (SpecId ir.spec)) $
       failWith err ("hsedc compile: --target " <> display target <> " does not name the IR's spec " <> display ir.spec)
     case compileIR es ir of
       Left f -> report out (sideFs <> [f]) >> failWith err "hsedc compile: nothing written"
       Right cr -> do
-        let fs    = sortFindings (sideFs <> crFindings cr)
+        let fs    = sortFindings (partially (optPartial o) (sideFs <> crFindings cr))
             sid   = SpecId ir.spec
             paths = [ (modulePath dir name, text) | (name, text) <- crModules cr ]
         report out fs
@@ -139,12 +158,12 @@ runWith out err = \case
                     <> (if null stale then "" else ", removed " <> display (T.intercalate ", " (map T.pack stale)))
                     <> " and " <> fromString reportTo
                     <> "/{findings,coverage,ERRATA,ledger}.md; " <> display (findingCounts fs) <> "\n")
-  CmdExplain specName aid inp -> do
+  CmdExplain o specName aid inp -> do
     (ir, sideFs) <- load err inp
     unless (matchesSpec specName (SpecId ir.spec)) $
       failWith err ("hsedc explain: the IR is " <> display ir.spec <> ", not " <> display specName)
     let (sigClasses, sigFs) = classifySignatures ir
-        errs = sortFindings (sideFs <> filter isError (snd (classifyWith ir) <> sigFs))
+        errs = sortFindings (sideFs <> filter isError (partially (optPartial o) (snd (classifyWith ir) <> sigFs)))
         -- the unit's own Errors (and the sidecar's), the rest counted: a partly annotated spec's other units
         -- would bury it (Opal's 53 E-UNBOUND before M3)
         (ours, others) = L.partition (\f -> f `elem` sideFs || Cm.anchor f == Just (renderAnchorId aid)) errs
@@ -164,11 +183,11 @@ runWith out err = \case
         (Just c, Just t) -> say out ("  " <> where' ir aid t <> how c <> "\n")
         _                -> exitFailure
     exitOnErrors errs
-  CmdOrphans inp -> do
+  CmdOrphans o inp -> do
     (ir, sideFs) <- load err inp
     let os  = orphans ir
         (sigOs, tableOs) = L.partition (isSigId . fst) os
-        fs  = sortFindings (sideFs <> map snd os <> otherErrors ir (map snd os))
+        fs  = sortFindings (partially (optPartial o) (sideFs <> map snd os <> otherErrors ir (map snd os)))
         n c = length [ () | (aid, _) <- tableOs, Map.lookup aid (classify ir) & maybe False c ]
     report out fs
     say err ("hsedc orphans: " <> display (length tableOs) <> " of " <> display (Map.size (numberedTables ir))
@@ -177,11 +196,12 @@ runWith out err = \case
                 <> display (n isInvalid) <> " invalid), and " <> display (length sigOs) <> " of "
                 <> display (Map.size (signatureUnits ir)) <> " signature blocks\n")
     exitOnErrors fs
-  CmdLedger paths hsa -> do
+  CmdLedger o paths hsa -> do
     irs  <- traverse (readOrFail err) (if null paths then [defaultIR] else paths)
     side <- traverse readFileUtf8 hsa
     let (sideFs, irs') = maybe ([], irs) (withSidecarOn irs) side
-        errs = sortFindings (sideFs <> concat [ filter isError (snd (classifyWith ir) <> snd (classifySignatures ir)) | ir <- irs' ])
+        errs = sortFindings (sideFs <> concat [ filter isError (partially (optPartial o) (snd (classifyWith ir) <> snd (classifySignatures ir)))
+                                              | ir <- irs' ])
     report out errs
     say out (display (renderLedger (map ledger irs')))
     exitOnErrors errs

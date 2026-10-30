@@ -21,7 +21,8 @@ checks, each emitting findings with the code in brackets:
 * classification: annotations refused (@E-ANCHOR@, @E-ANCHOR-KIND@,
   @E-SYNTAX@, @E-GRAMMAR@, @E-ERRATUM-PUBLISHED@, @E-MODIFIER@), @E-AMBIGUOUS@,
   @E-UNBOUND@, @W-RULE-UNIMPLEMENTED@ ("Hsed.Spec.Rules"), for the numbered
-  tables and the signature units alike;
+  tables and the signature units alike; over a spec annotated only in part
+  (@hsedc --partial@, 'partially'), its @E-UNBOUND@ is the Warning @W-UNBOUND@;
 * @C-EXEMPLAR@: each rule still fires on its exemplar;
 * @W-RULE-SCOPE-EMPTY@, @N-RULE-SCOPE-REDUNDANT@: a rule anchor whose scope
   binds nothing to its rule, or that another anchor of the rule covers;
@@ -55,6 +56,7 @@ module Hsed.Spec.Check
   , checks
   , checkIR
   , sortFindings
+  , partially
   ) where
 
 import qualified RIO.List          as L
@@ -62,7 +64,7 @@ import qualified RIO.Map           as Map
 import           RIO
 
 import           Hsed.Spec.Anchor  (AnchorId (..), anchorParagraph, locationText, naturalKey, renderAnchorId)
-import           Hsed.Spec.Common  (ErrataSet (..), Finding, Severity (..), SpecId (..), finding)
+import           Hsed.Spec.Common  (ErrataSet (..), Finding, Severity (..), SpecId (..), finding, matchesSpec)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.DSL     (SomeBinding (..), bindingAccepts, someBindingShape)
 import           Hsed.Spec.Document (documentChecks)
@@ -192,3 +194,16 @@ checkIR es ir = sortFindings (checks (mkContext es ir))
 --   natural order (T8 before T10), code and message.
 sortFindings :: [Finding] -> [Finding]
 sortFindings = L.sortOn (\f -> (Cm.severity f, Cm.page f, naturalKey <$> Cm.anchor f, Cm.code f, Cm.message f))
+
+-- | The findings of a run over specs annotated only in part (@hsedc --partial
+--   SPEC@, each spec named as @--target@ names one; Opal until M5, design 13.26
+--   (k)): each @E-UNBOUND@ of a unit of one of them, a numbered table or a
+--   signature block nothing binds yet, is the Warning @W-UNBOUND@ (bookkeeping:
+--   the spec's comments are still to come); every other finding is as it was.
+--   No PDF byte and no spec data: the spec named is the run's choice.
+partially :: [Text] -> [Finding] -> [Finding]
+partially names = map relax
+  where
+    relax f
+      | Cm.code f == "E-UNBOUND", Just s <- Cm.spec f, any (`matchesSpec` s) names = f { Cm.severity = Warning, Cm.code = "W-UNBOUND" }
+      | otherwise = f

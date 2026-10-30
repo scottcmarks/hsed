@@ -281,9 +281,11 @@ findingCounts fs = T.intercalate ", " [ tshow (n sev) <> " " <> w | (sev, w) <- 
 -- | The codes the generic modules give (design section 2 Q2): the
 --   classification and the annotations ("Hsed.Spec.Rules", "Hsed.Spec.Scope",
 --   "Hsed.Spec.Grammar", "Hsed.Spec.DSL", "Hsed.Spec.Shape",
---   "Hsed.Spec.Sidecar"), the errata ("Hsed.Spec.Errata"), the normalisations
---   ("Hsed.Spec.Check"), the Format parser ("Hsed.Spec.Format"), compilation
---   ("Hsed.Spec.Compile") and the document checks ("Hsed.Spec.Document"). A
+--   "Hsed.Spec.Sidecar"; @W-UNBOUND@, an unbound unit of a spec annotated in
+--   part, "Hsed.Spec.Check".'Hsed.Spec.Check.partially'), the errata
+--   ("Hsed.Spec.Errata"), the normalisations ("Hsed.Spec.Check"), the Format
+--   parser ("Hsed.Spec.Format"), compilation ("Hsed.Spec.Compile") and the
+--   document checks ("Hsed.Spec.Document"). A
 --   rule's codes are its own ('ruleCodes'), a shared reader's its
 --   ("Hsed.Spec.Readers".'readerCodes').
 genericCodes :: [CodeDef]
@@ -296,7 +298,7 @@ genericCodes =
   ]
   <> [ CodeDef c [Warning] Correction | c <- ["W-ERRATUM-APPLIED", "W-ERRATUM-KNOWN", "W-ERRATUM-UNUSED"] ]
   <> [ CodeDef c sevs Bookkeeping | (c, sevs) <-
-    [ ("E-UNBOUND", [Error]), ("E-AMBIGUOUS", [Error]), ("W-RULE-UNIMPLEMENTED", [Warning])
+    [ ("E-UNBOUND", [Error]), ("W-UNBOUND", [Warning]), ("E-AMBIGUOUS", [Error]), ("W-RULE-UNIMPLEMENTED", [Warning])
     , ("W-GEN-EXCLUDED", [Warning]), ("C-EXEMPLAR", [Error]), ("W-RULE-SCOPE-EMPTY", [Warning]), ("N-RULE-SCOPE-REDUNDANT", [Note])
     , ("E-SHAPE", [Error, Warning]), ("E-ANCHOR", [Error]), ("E-ANCHOR-KIND", [Error]), ("E-SYNTAX", [Error]), ("E-GRAMMAR", [Error])
     , ("E-MODIFIER", [Error]), ("E-SIDECAR", [Error]), ("E-ERRATUM-PUBLISHED", [Error]), ("E-GEN-MODULE", [Error])

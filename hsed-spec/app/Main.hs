@@ -14,9 +14,10 @@ Stability   : experimental
 The command line of the spec compiler (docs/spec-as-source.md sections 4.2 and
 5.2); what each command does is "Hsed.Spec.Cli". Every command reads an IR v1
 file, by default the annotated extraction @build/core-2.01.hsed.json@ (@make
-ir-annotated@); @--hsa FILE@ replaces the IR's annotations with a sidecar's.
-Every command exits non-zero on any Error, and @bind@ and @compile@ then write
-nothing.
+ir-annotated@); @--hsa FILE@ replaces the IR's annotations with a sidecar's;
+@--partial SPEC@ names a spec annotated only in part, whose unbound units are
+then Warnings. Every command exits non-zero on any Error, and @bind@ and
+@compile@ then write nothing.
 -}
 module Main (main) where
 
@@ -43,25 +44,27 @@ commands :: Parser Command
 commands = hsubparser $ mconcat
   [ command "ir-summary" (info (CmdIrSummary <$> strArgument (metavar "FILE" <> help "an IR v1 JSON file"))
       (progDesc "Count the tables, headings, paras and annots in an IR file"))
-  , command "bind" (info (CmdBind <$> input <*> outFile)
+  , command "bind" (info (CmdBind <$> options <*> input <*> outFile)
       (progDesc "Write the bindings module of the IR's annotations (hsed-spec/bindings/Hsed/Bindings/<Spec>.hs)"))
-  , command "check" (info (CmdCheck <$> input <*> errataOpt)
+  , command "check" (info (CmdCheck <$> options <*> input <*> errataOpt)
       (progDesc "Classify every numbered table and run the checks; non-zero exit on any Error"))
-  , command "compile" (info (CmdCompile <$> input <*> errataOpt <*> targetOpt <*> outDir <*> reportDir)
+  , command "compile" (info (CmdCompile <$> options <*> input <*> errataOpt <*> targetOpt <*> outDir <*> reportDir)
       (progDesc "Check, then write the generated modules DIR/Hsed/Gen/<Spec>/*.hs (removing the other modules there) and the reports findings.md, coverage.md, ERRATA.md, ledger.md"))
-  , command "explain" (info (CmdExplain <$> strArgument (metavar "SPEC" <> help "core or opal")
+  , command "explain" (info (CmdExplain <$> options <*> strArgument (metavar "SPEC" <> help "core or opal")
                                      <*> argument (maybeReader (explainedId . T.pack))
                                            (metavar "ID" <> help "a table, 46 or T46, or a method signature block by its anchor id (docs/ir-v1.md)")
                                      <*> input)
       (progDesc "Say how a table or a signature block is bound: hsedc explain core 46"))
-  , command "orphans" (info (CmdOrphans <$> input) (progDesc "List the numbered tables and signature blocks nothing binds: unbound, ambiguous or with an annotation that does not bind"))
-  , command "ledger" (info (CmdLedger <$> many (strArgument (metavar "IR...")) <*> hsaOpt)
+  , command "orphans" (info (CmdOrphans <$> options <*> input) (progDesc "List the numbered tables and signature blocks nothing binds: unbound, ambiguous or with an annotation that does not bind"))
+  , command "ledger" (info (CmdLedger <$> options <*> many (strArgument (metavar "IR...")) <*> hsaOpt)
       (progDesc "Count rule-bound, comment-bound and unbound tables and signature blocks per spec; --hsa applies to the IRs whose spec its lines name"))
   , command "dump" (info (CmdNotImplemented "dump" <$> many (strArgument (metavar "ARG")))
       (progDesc "Dump the annotations of a PDF as a sidecar (not implemented: tools/extract/dump.py)"))
   ]
   where
     input     = Input <$> strArgument (metavar "IR" <> value defaultIR <> showDefault <> help "an IR v1 JSON file") <*> hsaOpt
+    options   = Options <$> many (strOption (long "partial" <> metavar "SPEC"
+                  <> help "a spec annotated in part, until its last binding milestone: its tables and signature blocks nothing binds yet are the Warning W-UNBOUND, not the Error E-UNBOUND (repeatable)"))
     errataOpt = option (maybeReader (parseErrataSet . T.pack))
                   (long "errata" <> metavar "SET" <> value Scott <> showDefaultWith (T.unpack . errataSetName)
                    <> help "scott (the corrections) or published (the text as printed)")

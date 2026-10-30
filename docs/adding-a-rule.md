@@ -213,8 +213,10 @@ name with `titleIdent` (`cComIDAssignments`); refer to another rule's generated 
 rule's function, never by building the string again (`typeUIDName` of `typeRow`, `tableUIDName` and
 `tableObjectUIDName` of `tableUIDs`). A label, or a status name, given to several values names each with
 its value (`Core_adv_key_mode_Reserved_2`, `OBSOLETE_2`); one given a single value stays bare (design
-§13.15). A generated text is `Text`, imported from `Data.Text` (not RIO); `String` only where the oracle
-compares it with a hand-written one (the Table 240 name maps). A generated module whose names other
+§13.15). A generated text is `Text`, imported from `Data.Text` (not RIO); `String` only in the Table 240
+name maps, which the oracle compares with the hand transcription's, in the `[(UID, String)]` lists of a
+table's UIDs, whose UIDs it reads (EquivTH matches that signature), and in `UIDRanges`' lists of names
+and ranges (`templateRanges`, `typeFormatRanges`). A generated module whose names other
 modules export too (`Hsed.Gen.<Spec>.Methods`: `Get`, `Set`, `Next`, the PDF's method names, which RIO's
 `Set` meets) is imported qualified and re-exported by no umbrella module (design §13.25 (k)), as are
 runtime modules whose names meet (`Hsed.Core.Field`'s and `Hsed.Core.Sync`'s `Constant`).

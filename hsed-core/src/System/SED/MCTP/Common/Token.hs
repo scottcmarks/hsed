@@ -297,7 +297,11 @@ generateToken = go
     go (Unsigned       n ) = unsigned n
     go (Signed         i ) = signed   i
     go (Bytes          bs) = bytes   bs
-    go (ContinuedBytes bs) = cbytes  bs
+    go (ContinuedBytes bs)
+      | null bs            = mempty  -- no atom: Core 3.2.2.3.1.2 permits length 0 only for a
+                                     -- non-continued byte sequence, and an empty segment adds
+                                     -- nothing to the value it continues
+      | otherwise          = cbytes  bs
     go Empty               = singleton 0xFF
     go StartList           = singleton 0xF0
     go EndList             = singleton 0xF1
@@ -342,7 +346,7 @@ instance Arbitrary Token where
         [ (10, Unsigned       <$> arbitrary)
         , (10, Signed         <$> arbitrary)
         , (15, Bytes          <$> arbitrary)
-        , ( 5, ContinuedBytes <$> arbitrary)
+        , ( 5, ContinuedBytes . pack . getNonEmpty <$> arbitrary)
         , ( 3, pure StartName)
         , ( 3, pure EndName)
         , ( 3, pure StartList)

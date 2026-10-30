@@ -54,6 +54,15 @@ spec = do
       ts <- tokens (generate (Unsigned 7) <> generate (ContinuedBytes (pack [0x61])) <> generate (Bytes (pack [0x62])) <> generate (Unsigned 9))
       ts `shouldBe` [Unsigned 7, Bytes (pack [0x61, 0x62]), Unsigned 9]
 
+  describe "an empty continued byte sequence (Core 3.2.2.3.1.2: length 0 only for non-continued bytes)" $ do
+    it "is written as no atom, not as B0, which the parser refuses" $
+      generate (ContinuedBytes mempty) `shouldBe` mempty
+    prop "leaves the value it continues the same: the segments read back joined" $
+      \segs final -> ioProperty $ do
+        let parts = fmap pack segs <> [mempty]
+        ts <- tokens (foldMap (generate . ContinuedBytes) parts <> generate (Bytes (pack final)))
+        pure (ts === [Bytes (mconcat parts <> pack final)])
+
   describe "tokenParser" $ do
     prop "is the inverse of generateToken for an unsigned byte" $
       (\b -> inRange (0,63) b ==>
@@ -78,7 +87,7 @@ spec = do
       (\bs -> pg (Bytes bs) `shouldBe` Just (Bytes bs))
 
     prop "is the inverse of generateToken for a continued ByteString" $
-      (\bs -> (not . null) bs ==>
+      (\(NonEmpty ws) -> let bs = pack ws in
         pg (ContinuedBytes bs) `shouldBe` Just (ContinuedBytes bs))
 
     it "is the inverse of generateToken for StartList" $

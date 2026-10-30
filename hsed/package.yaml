@@ -42,6 +42,7 @@ library:
   - lens          # Hsed.App
   - singletons    # SingTest
   - text          # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)
+  - bytestring    # Hsed.Gen.Core.Layouts (generated code imports Data.ByteString, not RIO)
 
 executables:
   hsed:

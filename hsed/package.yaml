@@ -53,6 +53,19 @@ library:
     - unix
 
 executables:
+  # the host test jig (design 9.2, M3): its command line; what each command does is Hsed.Jig.Cli
+  hsed-jig:
+    main:                Main.hs
+    source-dirs:         app/hsed-jig
+    dependencies:
+    - hsed
+    - optparse-applicative
+
+    # -threaded: the kext's FFI call is a safe one, which blocks its own OS thread alone
+    ghc-options:
+    - -threaded
+    - -rtsopts
+
   # the 2019 stub (logs a line through Hsed.TPer.Run), kept at M3 beside hsed-jig: design 13.27 (c)
   hsed:
     main:                Main.hs

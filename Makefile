@@ -129,12 +129,16 @@ gen-diff: gen
 ## oracle's test fixture hsed/fixture/Hand/TableUIDs.hs), the definitions the t240 quasiquoter makes
 ## (design 5.5: secondary to the runtime oracle, regenerated at M2a and M2d); paths made relative to
 ## the checkout, and the notices stack prints for a test component before 'Configuring GHCi' left
-## out. Written to build/TableUIDs.txt first and moved over dev/TableUIDs.txt only when it holds the
-## splices and GHCi's 'Ok, ' line (GHCi exits 0 when a :load fails, after the splices it ran): a
-## stack ghci or a load that fails leaves the committed file as it was, and make fails. Not part of
-## check.
+## out. hsed's library is built first: GHCi runs the test component against the installed library
+## (-package hsed), and stack ghci builds hsed-core as a plain dependency, under another unit id
+## than stack test registers it with, but not hsed's library, which after a stack test names an
+## hsed-core no longer installed ("cannot satisfy -package hsed"). Written to build/TableUIDs.txt
+## first and moved over dev/TableUIDs.txt only when it holds the splices and GHCi's 'Ok, ' line
+## (GHCi exits 0 when a :load fails, after the splices it ran): a stack ghci or a load that fails
+## leaves the committed file as it was, and make fails. Not part of check.
 splices:
 	mkdir -p build
+	stack build hsed
 	printf ':set -ddump-splices\n:load Hand.TableUIDs\n' \
 	  | stack ghci hsed:test:hsed-test --no-load --ghci-options='-ignore-dot-ghci' 2>&1 \
 	  | sed -e '/^Configuring GHCi/,$$!d' -e 's|$(CURDIR)/||g' > build/TableUIDs.txt

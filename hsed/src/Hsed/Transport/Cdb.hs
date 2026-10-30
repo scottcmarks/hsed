@@ -1,4 +1,6 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 {-|
 Module      : Hsed.Transport.Cdb
@@ -17,18 +19,100 @@ sends when it attaches (TPerDriver.cpp:1506-1557), and the C shim builds the
 same, the only CDB it can (cbits/hsed_kext.c); these are what the jig
 records and the tests hold to the kext's.
 
-'level0Cdb' is milestone M3's group G4's; until it lands it is a stub.
+The drive transports (the kext's, "Hsed.Transport.MacKext", and a replay of
+a capture, "Hsed.Transport.Replay") carry that one command at M3 and refuse
+every other: 'level0Blocks' says which requests it is.
 -}
 module Hsed.Transport.Cdb
   ( level0Cdb
+  , cdbHex
+    -- * The one command a drive transport carries
+  , level0Protocol
+  , level0ComId
+  , blockBytes
+  , maxLevel0Blocks
+  , level0Blocks
   ) where
 
+import           Data.Bits            (shiftR)
+import           Numeric              (showHex)
+import qualified RIO.ByteString       as B
 import           RIO
+import qualified RIO.Text             as T
 
-import           Hsed.Transport.Drive (InterfaceType)
+import           Hsed.Core.Code       (CodeRow (..), Span (..), codeRowsNamed)
+import           Hsed.Gen.Core.Codes  (cComIDAssignments)
+import           Hsed.Transport.Drive (InterfaceType (..))
+import           Hsed.Wire            (Dir (..), Request (..))
 
 
 -- | The 12 bytes of a Level 0 IF-RECV of a number of 512-byte blocks, or why
 --   not (no blocks, or more than a count byte holds).
+--
+-- * SAT (SAT's ATA PASS-THROUGH (12) carrying ACS's TRUSTED RECEIVE; SIIS
+--   1.20 Table 17, PDF 41): @A1@; PROTOCOL 4, PIO Data-In, in bits 4 to 1;
+--   T_DIR from the device, BYTE_BLOCK, T_LENGTH in COUNT; FEATURES the
+--   protocol; COUNT the blocks; LBA 7 to 0 zero (the length's high byte);
+--   LBA 15 to 8 and 23 to 16 the ComID, low byte first; DEVICE 0; @5C@;
+--   reserved; CONTROL.
+-- * SCSI (SPC's SECURITY PROTOCOL IN; SIIS 1.20 Table 13, PDF 31): @A2@; the
+--   protocol; the ComID, high byte first; INC_512; reserved; ALLOCATION
+--   LENGTH, the blocks in its low byte; reserved; CONTROL.
+--
+-- >>> cdbHex <$> level0Cdb IfSAT 4
+-- Right "a1 08 0e 01 04 00 01 00 00 5c 00 00"
 level0Cdb :: InterfaceType -> Word32 -> Either Text ByteString
-level0Cdb = error "G4: level0Cdb"
+level0Cdb iface blocks
+  | blocks == 0 || blocks > maxLevel0Blocks =
+      Left ("a Level 0 IF-RECV of " <> tshow blocks <> " blocks: its length is 1 to 255 blocks of 512 bytes")
+  | otherwise = Right (B.pack (cdb iface))
+  where
+    n = fromIntegral blocks
+    (comIdHigh, comIdLow) = (fromIntegral (level0ComId `shiftR` 8), fromIntegral level0ComId)
+    cdb = \case
+      IfSAT  -> [0xA1, 0x08, 0x0E, level0Protocol, n, 0x00, comIdLow, comIdHigh, 0x00, 0x5C, 0x00, 0x00]
+      IfSCSI -> [0xA2, level0Protocol, comIdHigh, comIdLow, 0x80, 0x00, 0x00, 0x00, 0x00, n, 0x00, 0x00]
+
+-- | A CDB as the jig prints it: lower-case hex, a space between bytes.
+cdbHex :: ByteString -> Text
+cdbHex = T.unwords . map byte . B.unpack
+  where byte w = T.pack ((if w < 0x10 then ('0' :) else id) (showHex w ""))
+
+
+-- * The one command a drive transport carries
+
+-- | Level 0 Discovery's security protocol: IF-RECV with Protocol ID = 0x01
+--   (Core 3.3.6.2, PDF 67).
+level0Protocol :: Word8
+level0Protocol = 0x01
+
+-- | Level 0 Discovery's ComID: Core Table 26's \"Level 0 Device Discovery\"
+--   (PDF 55), 0x0001. Should the table ever lose the row, 0x0000, the
+--   reserved ComID, which every drive transport then refuses (the tests hold
+--   it to the PDF's value).
+level0ComId :: Word16
+level0ComId = maybe 0 fromInteger $
+  listToMaybe [ c | CodeRow (One c) _ <- codeRowsNamed cComIDAssignments "Level 0 Device Discovery" ]
+
+-- | The bytes of the block an IF-RECV's transfer length counts: 512 (SIIS
+--   1.20 Table 17 for ATA, PDF 41; Table 13 with INC_512 set for SCSI, PDF 31).
+blockBytes :: Word32
+blockBytes = 512
+
+-- | The most blocks a Level 0 IF-RECV asks for, 255: the kext sizes an ATA
+--   PASS-THROUGH transfer from its COUNT byte alone, ignoring the length's
+--   high byte (CDBAccess.cpp:46-50; design 6.2).
+maxLevel0Blocks :: Word32
+maxLevel0Blocks = 255
+
+-- | The blocks a request asks for when it is the one command a drive
+--   transport carries at M3: IF-RECV of Level 0 Discovery, protocol 1 and
+--   ComID 1, in whole 512-byte blocks, 1 to 255 of them. Any other is
+--   refused with why, the detail of the transport's 'Hsed.Wire.Unsupported'.
+level0Blocks :: Request -> Either Text Word8
+level0Blocks r
+  | dir r /= IfRecv || proto r /= level0Protocol || comId r /= level0ComId = Left "M3: Level 0 only"
+  | len == 0 || len `mod` blockBytes /= 0 || len > maxLevel0Blocks * blockBytes =
+      Left ("M3: Level 0 only, of 1 to 255 whole 512-byte blocks, not " <> tshow len <> " bytes")
+  | otherwise = Right (fromIntegral (len `div` blockBytes))
+  where len = lenBytes r

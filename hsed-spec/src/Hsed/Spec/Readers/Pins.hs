@@ -33,17 +33,21 @@ stop. It reads as a number when it is one ('PinExact': @0x0001@, @0001h@,
 "Hsed.Spec.Readers.Text".'Hsed.Spec.Readers.Text.readNumber' reads a word: a
 digit first, or hex digits in upper case before an @h@), followed by nothing,
 a parenthesis or a comma (@0x0001 (one)@, @0x0001, …@); as vendor unique
-(@VU@, or @0x1 or any version that supports the defined features in this
-SSC@: 'PinVU'); as a minimum (@4 or larger@: 'PinAtLeast'); or not
-('PinOther', @**@, @See section 3.1.1.3.1@, @0x0001 or 0x0002@), the text as
-printed kept beside it. Only these sentences pin: Core's @For data
+(@VU@: 'PinVU'); as a version the device chooses (@0x1 or any version that
+supports the defined features in this SSC@: 'PinAnyVersion', the version
+printed kept, since M3; one printed without a number is 'PinVU'); as a minimum
+(@4 or larger@: 'PinAtLeast'); or not ('PinOther', @**@, @See section
+3.1.1.3.1@, @0x0001 or 0x0002@), the text as printed kept beside it. Only
+these sentences pin: Core's @For data
 subpackets, this field is set to zeroes.@ (3.2.3.4.1.1.2, PDF 44), @For
 Credit Control Subpackets, this field is set to 0x8001.@ and @This is always
 0x00000004 …@ (3.2.3.4.2.1.2 and 3.2.3.4.2.1.3, PDF 45) are read by none of
 the schemas (design 13.26 (j)). The reader returns
 the pins of a table's section ('tablePins', 'pinsInSection'), in document
-order, as data; matching them to the grid's fields is the rules', and
-'pinsFindings' the one criterion of its codes, whichever rule asks. It reads
+order, as data; matching them to the grid's fields is the rules' (the
+@feature@ rule's by 'pinTarget': a field named as the pin names it, else the
+one field whose name the pin's words start, since M3), and 'pinsFindings' the
+one criterion of its codes, whichever rule asks. It reads
 the words of the paragraphs (IR @words@, design section 5.1 step 7), which the
 extractor gives for every paragraph of a section a byte grid lies in and of
 its subsections (IR @wordComplete@); a section without them is a Left, and
@@ -58,6 +62,7 @@ module Hsed.Spec.Readers.Pins
   , tablePins
   , readPinValue
   , pinWord
+  , pinTarget
   , pinsFindings
     -- * Codes
   , pinsCodes
@@ -72,7 +77,7 @@ import           RIO
 
 import           Hsed.Spec.Common       (CodeDef (..), Finding, Reports (..), Severity (..), finding)
 import           Hsed.Spec.IR           (HeadingIR (..), ParaIR (..), ParaKind (..), SpecIR (..))
-import           Hsed.Spec.Readers.Text (readNumber)
+import           Hsed.Spec.Readers.Text (nameKey, readNumber)
 import           Hsed.Spec.RuleDef      (BoundTable, Context (..), atTable, sectionOf)
 import           Hsed.Spec.Scope        (Section (..), covers)
 
@@ -83,10 +88,12 @@ data PinSchema = CoreSet | CoreValue | OpalBullets
 
 -- | What a pin's value says.
 data PinValue
-  = PinExact !Integer    -- ^ @0x0001@, @1@
-  | PinVU                -- ^ @VU@, or a value "or any version …" the device chooses
-  | PinAtLeast !Integer  -- ^ @0x0001 or larger@
-  | PinOther             -- ^ anything else (@**@, @See section 3.1.1.3.1@): see 'pinText'
+  = PinExact !Integer       -- ^ @0x0001@, @1@
+  | PinVU                   -- ^ @VU@: the vendor's (or a version "or any version …" printed without a number)
+  | PinAnyVersion !Integer  -- ^ @0x1 or any version that supports the defined features in this SSC@: the version printed,
+                            --   or another the device chooses
+  | PinAtLeast !Integer     -- ^ @0x0001 or larger@
+  | PinOther                -- ^ anything else (@**@, @See section 3.1.1.3.1@): see 'pinText'
   deriving (Eq, Show)
 
 -- | One pin: the field as the sentence names it, its value, and where it is.
@@ -165,14 +172,14 @@ sentences lead marker t =
       (s, rest) | not (T.null rest) -> T.strip s
       _                             -> T.dropWhileEnd (== '.') (T.strip a)
 
--- | A pin's value as printed: vendor unique, a minimum, a number (its word,
---   up to a space, a comma or a parenthesis and without a trailing full
---   stop, followed by nothing, a parenthesis or a comma: @0x0001 (one)@), or
---   other.
+-- | A pin's value as printed: vendor unique, a version the device chooses
+--   (the version printed kept), a minimum, a number (its word, up to a
+--   space, a comma or a parenthesis and without a trailing full stop,
+--   followed by nothing, a parenthesis or a comma: @0x0001 (one)@), or other.
 readPinValue :: Text -> PinValue
 readPinValue t
   | ws == ["VU"]                                       = PinVU
-  | "or any version" `T.isInfixOf` t                   = PinVU
+  | "or any version" `T.isInfixOf` t                   = maybe PinVU PinAnyVersion (readNumber (pinWord t))
   | [w, "or", "larger"] <- ws, Just n <- readNumber w  = PinAtLeast n
   | Just n <- readNumber (pinWord t), alone            = PinExact n
   | otherwise                                          = PinOther
@@ -189,6 +196,24 @@ pinWord = T.dropWhileEnd (`elem` (".;:" :: String)) . word0
 -- | A value's text up to its first space, comma or parenthesis.
 word0 :: Text -> Text
 word0 = T.takeWhile (\c -> not (C.isSpace c) && c `notElem` (",(" :: String)) . T.strip
+
+-- | The field of a grid a pin names, among the names of the grid's fields:
+--   the one named as the pin names it (whitespace and case aside, as
+--   "Hsed.Spec.Readers.Text".'Hsed.Spec.Readers.Text.nameKey' compares
+--   names), else the one field whose name's words start with the pin's (case
+--   aside), where one alone does: Opal 3.1.1.5's @Number of Locking SP Admin
+--   Authorities = 4 or larger@ names Table 6's @Number of Locking SP Admin
+--   Authorities Supported@ (PDF 23). Nothing when no field is named so, or
+--   several are (a pin naming two fields names neither).
+pinTarget :: [Text] -> Pin -> Maybe Text
+pinTarget names p = case [ n | n <- names, nameKey n == nameKey (pinField p) ] of
+  n : _ -> Just n
+  []    -> case [ n | not (null ws), n <- names, ws `L.isPrefixOf` lowerWords n ] of
+    [n] -> Just n
+    _   -> Nothing
+  where
+    ws = lowerWords (pinField p)
+    lowerWords = T.words . T.toLower
 
 
 -- * Findings

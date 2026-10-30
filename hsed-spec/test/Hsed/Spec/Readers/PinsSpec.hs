@@ -14,9 +14,11 @@ The three schemas of design example E8 on the committed extractions: Core
 Table 39's two @The value of this field SHALL be …@ sentences (3.3.6.2.2,
 3.3.6.2.3), Tables 42 and 43's three @The … field SHALL be set to …@ each
 (3.3.6.4, 3.3.6.5), none for Table 44 (3.3.6.6, @W-PINS-NONE@ for the rule);
-Opal Tables 2-6's bullets after "SHALL return the following", VU and "or any
-version" kept as VU, "or larger" a minimum, nested bullets left out, and none
-for Table 8, whose section lists its values in a table. A value in hex with
+Opal Tables 2-6's bullets after "SHALL return the following", VU kept as VU,
+"V or any version" as a version the device chooses with V kept (since M3), "or
+larger" a minimum, nested bullets left out, and none for Table 8, whose
+section lists its values in a table. A pin names a field by its name, else by
+a unique word prefix of it (Opal 3.1.1.5's admin and user counts, M3). A value in hex with
 an @h@ after it or digits grouped by an underscore; a bullet's value ended by
 punctuation; a field heading the PDF numbers deeper than its outline, a list
 item, naming a CoreValue pin. Every byte grid's section, in both IRs, is
@@ -52,15 +54,29 @@ pinsOf ir n = case Map.lookup (TableId n) (numberedTables ir) >>= \t -> join (Ma
 spec :: Spec
 spec = describe "Hsed.Spec.Readers.Pins" $ do
   describe "readPinValue" $ do
-    it "reads a number, VU, a version the device chooses, a minimum, and anything else" $
+    it "reads a number, VU, a version the device chooses (keeping the version printed), a minimum, and anything else" $ do
       map readPinValue ["0x0001", "0x0C", "1", "VU", "0x1 or any version that supports the defined features in this SSC", "4 or larger", "0x0001 or larger", "**", "See section 3.1.1.3.1"]
-        `shouldBe` [PinExact 1, PinExact 12, PinExact 1, PinVU, PinVU, PinAtLeast 4, PinAtLeast 1, PinOther, PinOther]
+        `shouldBe` [PinExact 1, PinExact 12, PinExact 1, PinVU, PinAnyVersion 1, PinAtLeast 4, PinAtLeast 1, PinOther, PinOther]
+      map readPinValue ["0x00000001 or any version that supports the defined features in this SSC", "a later or any version"]
+        `shouldBe` [PinAnyVersion 1, PinVU]
     it "reads hex with an h after it and digits grouped by underscores; a word is no hex number" $
       map readPinValue ["0001h", "0x0000_0004", "Each", "C000h"] `shouldBe` [PinExact 1, PinExact 4, PinOther, PinExact 0xC000]
     it "reads a number followed by its full stop, a parenthesis or a comma, but not by more words" $ do
       map readPinValue ["0x01.", "1.", "0x0001 (one)", "0x0001, the TPer feature", "0x0001 or 0x0002"]
         `shouldBe` [PinExact 1, PinExact 1, PinExact 1, PinExact 1, PinOther]
       map pinWord ["0x0001 (one)", "1.", "0x0001, the TPer feature", " VU "] `shouldBe` ["0x0001", "1", "0x0001", "VU"]
+
+  describe "pinTarget" $ do
+    let pin f = Pin OpalBullets f PinVU "VU" "3.1.1.5" 22
+        names = [ "Number of Locking SP Admin Authorities Supported", "Number of Locking SP User Authorities Supported"
+                , "Number of ComIDs", "ACK/NAK Supported" ]
+    it "names the field named as the pin names it, whitespace and case aside" $
+      map (pinTarget names . pin) ["Number of ComIDs", "number of  comids"] `shouldBe` replicate 2 (Just "Number of ComIDs")
+    it "else the one field whose name's words start with the pin's (Opal 3.1.1.5 against Table 6, PDF 23)" $
+      map (pinTarget names . pin) ["Number of Locking SP Admin Authorities", "Number of Locking SP User Authorities"]
+        `shouldBe` [Just "Number of Locking SP Admin Authorities Supported", Just "Number of Locking SP User Authorities Supported"]
+    it "names none where no field is so named, or several start so (3.1.1.2's ACK/NACK, PDF 20)" $
+      map (pinTarget names . pin) ["ACK/NACK Supported", "Number of Locking SP", "Number", ""] `shouldBe` replicate 4 Nothing
 
   describe "every byte grid's section" $
     forM_ [("Core", "../spec/ir/core-2.01.json"), ("Opal", "../spec/ir/opal-2.30.json")] $ \(name, path) ->
@@ -123,18 +139,18 @@ spec = describe "Hsed.Spec.Readers.Pins" $ do
         opal <- readIR path >>= either throwString pure
         let fields n = map (\(_, f, v, _) -> (f, v)) <$> pinsOf opal n
             fields' ir' n = map (\(_, f, v, t) -> (f, v, t)) <$> pinsOf ir' n
-        fields 2 `shouldBe` Right [("Length of parameter data", PinVU), ("Data structure revision", PinVU), ("Vendor Specific", PinVU)]
+        fields 2 `shouldBe` Right [("Length of parameter data", PinVU), ("Data structure revision", PinAnyVersion 1), ("Vendor Specific", PinVU)]
         fields 3 `shouldBe` Right
-          [ ("Feature Code", PinExact 1), ("Version", PinVU), ("Length", PinExact 12), ("ComID Mgmt Supported", PinVU)
+          [ ("Feature Code", PinExact 1), ("Version", PinAnyVersion 1), ("Length", PinExact 12), ("ComID Mgmt Supported", PinVU)
           , ("Streaming Supported", PinExact 1), ("Buffer Mgmt Supported", PinVU), ("ACK/NACK Supported", PinVU)
           , ("Async Supported", PinVU), ("Sync Supported", PinExact 1) ]
         fields 4 `shouldBe` Right
-          [ ("Feature Code", PinExact 2), ("Version", PinVU), ("Length", PinExact 12), ("HW Reset for LOR/DOR Supported", PinVU)
+          [ ("Feature Code", PinExact 2), ("Version", PinAnyVersion 3), ("Length", PinExact 12), ("HW Reset for LOR/DOR Supported", PinVU)
           , ("MBR Shadowing Not Supported", PinExact 0), ("MBR Done", PinOther), ("MBR Enabled", PinOther), ("Media Encryption", PinExact 1)
           , ("Locked", PinOther), ("Locking Enabled", PinOther), ("Locking Supported", PinExact 1) ]
         fields 5 `shouldBe` Right [("Feature Code", PinExact 3), ("Version", PinExact 1), ("Length", PinExact 28)]
         fields 6 `shouldBe` Right
-          [ ("Feature Code", PinExact 0x0203), ("Feature Descriptor Version Number", PinVU), ("SSC Minor Version Number", PinOther)
+          [ ("Feature Code", PinExact 0x0203), ("Feature Descriptor Version Number", PinAnyVersion 2), ("SSC Minor Version Number", PinOther)
           , ("Length", PinExact 16), ("Base ComID", PinVU), ("Number of ComIDs", PinAtLeast 1), ("Range Crossing Behavior", PinVU)
           , ("Number of Locking SP Admin Authorities", PinAtLeast 4), ("Number of Locking SP User Authorities", PinAtLeast 8)
           , ("Initial C_PIN_SID PIN Indicator", PinVU), ("Behavior of C_PIN_SID PIN upon TPer Revert", PinVU) ]

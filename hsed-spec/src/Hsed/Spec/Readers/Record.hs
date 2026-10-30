@@ -69,7 +69,7 @@ import qualified RIO.Map                  as Map
 import qualified RIO.Text                 as T
 import           RIO
 
-import           Hsed.Core.Feature        (FeatureHeader (..))
+import           Hsed.Core.Feature        (Allowance, FeatureHeader (..))
 import           Hsed.Core.Layout         (Field (..), FieldKind (..), Layout (..), Tail (..), TailKind (..), bitPosition,
                                            fieldEnd)
 import           Hsed.Spec.Common         (CodeDef (..), Finding, Reports (..), Severity (..), finding)
@@ -352,7 +352,8 @@ declScope ds = L.nub (concat [ itemNames x | d <- ds, Gen.ImportSome _ xs <- d.d
 typeMembers :: Map Text [Text]
 typeMembers = Map.fromList
   [ members (Proxy :: Proxy FieldKind), members (Proxy :: Proxy Layout), members (Proxy :: Proxy Tail)
-  , members (Proxy :: Proxy TailKind), members (Proxy :: Proxy FeatureHeader), members (Proxy :: Proxy (Maybe ())) ]
+  , members (Proxy :: Proxy TailKind), members (Proxy :: Proxy FeatureHeader), members (Proxy :: Proxy (Maybe ()))
+  , members (Proxy :: Proxy Allowance) ]
   where
     members :: forall a. Data a => Proxy a -> (Text, [Text])
     members _ = ( T.takeWhileEnd (/= '.') (T.pack (dataTypeName dt))

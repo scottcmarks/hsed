@@ -163,8 +163,8 @@ headerNote sid (aid, t) =
   | (bad, good) <- headerNormalisations t ]
 
 -- | @N-HEADER-NORMALISED@: a byte grid's corner read as @Byte\\Bit@ (design
---   section 3.4: Core T17's @Bit@ over a row @Byte@, @Bit Byte@ in T18-T21 and
---   T38-T44).
+--   section 3.4: Core T17's @Bit@ over a row @Byte@, @Bit Byte@ in T18, T20,
+--   T21, T38, T39 and T41-T44, and in Opal T2-T6 and T8).
 cornerNote :: SpecId -> (AnchorId, TableIR) -> [Finding]
 cornerNote sid (aid, t) =
   [ locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))

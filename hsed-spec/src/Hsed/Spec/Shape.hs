@@ -396,9 +396,10 @@ isGrid8 nCols row = case map normHeader row of
 -- | How a byte grid prints its corner, when it is not @Byte\\Bit@ (bytes down,
 --   bits across, Core T212): the corner cell, and the row under it that holds
 --   only the rest of the corner (design section 3.4: Core T17 prints @Bit@ over
---   a row @Byte@ alone; T18-T21, T38-T44 print @Bit Byte@). Nothing for a table
---   that is no byte grid or prints @Byte\\Bit@. Each is read as @Byte\\Bit@ and
---   reported as a Note (@N-HEADER-NORMALISED@).
+--   a row @Byte@ alone; T18, T20, T21, T38, T39 and T41-T44, and Opal T2-T6
+--   and T8, print @Bit Byte@). Nothing for a table that is no byte grid or
+--   prints @Byte\\Bit@. Each is read as @Byte\\Bit@ and reported as a Note
+--   (@N-HEADER-NORMALISED@).
 gridCornerNormalisation :: TableIR -> Maybe (Text, Maybe Text)
 gridCornerNormalisation t = case t.headerRows <> t.rows of
   row0@(corner : _) : rest

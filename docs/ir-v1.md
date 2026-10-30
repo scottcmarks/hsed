@@ -75,7 +75,7 @@ cells 7-4 and 3-0 (invariants). The repeated header rows of a grid that runs ont
 T18, T42, T44; Opal T5) carry no extents: the grid reader maps every row against the first page's
 header columns, which holds for every grid today (a continuation page's drawn columns lie within the
 same snap of the first's), and would need each page's own header if a grid's columns moved between
-pages. Opal T2-T6 and T8 print some byte numbers in the second cell of their row (`'' | 1 | '' |
+pages. Opal T2-T4, T6 and T8 print some byte numbers in the second cell of their row (`'' | 1 | '' |
 (LSB)`): the cell over the corner column is the byte's, whatever its place.
 
 Ragged-row join (design §5.1 step 5): a data row with fewer cells than the header, all of them

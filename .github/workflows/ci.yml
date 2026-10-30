@@ -65,11 +65,11 @@ jobs:
       - run: stack --system-ghc --no-install-ghc test --ghc-options=-Werror
       # The kext transport (design 7.2) compiled and linked on macOS, never run: the C shim over IOKit
       # and CoreFoundation and the flag-on half of Hsed.Transport.MacKext, which no other build compiles,
-      # the flag being manual and off. After the tests, so that they run flag-off; it builds hsed's library
-      # and executables again with the flag, with -Werror as above (the next run's tests build them
-      # flag-off again).
+      # the flag being manual and off. In a work dir of its own, .stack-work-kext, which the cache above
+      # does not hold, so that the cached .stack-work stays flag-off and the next run's tests do not
+      # rebuild hsed (design 5.4 a); the snapshot's packages come from the cached ~/.stack.
       - if: runner.os == 'macOS'
-        run: stack --system-ghc --no-install-ghc build hsed --flag hsed:kext --ghc-options=-Werror
+        run: stack --system-ghc --no-install-ghc --work-dir .stack-work-kext build hsed --flag hsed:kext --ghc-options=-Werror
       # The hsedc side of gate b (docs/spec-as-source.md sections 5.2, 5.4): annotate the pristine
       # Core and Opal PDFs from the committed sidecars, extract the annotated PDFs, then hsedc bind,
       # check and compile each (Opal over Core's Context, its unbound units Warnings until M5); the

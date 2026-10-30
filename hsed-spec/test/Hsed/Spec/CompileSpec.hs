@@ -48,7 +48,7 @@ import           Hsed.Spec.IR      (SpecIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.Report  (ledger, ledgerMarkdown)
 import           Hsed.Spec.DSL     (someBindingShape)
-import           Hsed.Spec.RuleDef (Context (..), boundBinding, ruleShape)
+import           Hsed.Spec.RuleDef (BoundPara (..), Context (..), boundBinding, paragraphUnits, ruleShape)
 import           Hsed.Spec.Rules.TypeRow (typesModule)
 import           Hsed.Spec.Shape   (Shape (..), shapeGenerates, shapeName)
 
@@ -94,10 +94,11 @@ spec = do
 
     describe "compileIR --errata scott" $ do
       cr <- runIO (compiled Scott)
-      it "finds no Error, and leaves out only the tables bound to a shape no rule of the registry reads" $ do
+      it "finds no Error, and leaves out only the tables and paragraphs bound to a shape no rule of the registry reads" $ do
         let ctx = mkContext Scott ir
-            unread = [ aid | (aid, c) <- Map.toList (cxClasses ctx), Just sb <- [boundBinding c], Just shape <- [someBindingShape sb]
-                           , shapeGenerates shape, Just shape `notElem` map ruleShape registry ]
+            unreadShape sb = maybe False (\shape -> shapeGenerates shape && Just shape `notElem` map ruleShape registry) (someBindingShape sb)
+            unread = [ aid | (aid, c) <- Map.toList (cxClasses ctx), Just sb <- [boundBinding c], unreadShape sb ]
+                     <> [ bpAnchor bp | bp <- paragraphUnits ctx, unreadShape (bpBinding bp) ]
         map fst (crExcluded cr) `shouldBe` unread
         filter isError (crFindings cr) `shouldBe` []
       it "writes the committed hsed/gen modules, and only those: no other module of the spec is committed" $ do

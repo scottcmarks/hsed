@@ -14,3 +14,6 @@ core-2.01 | T168 | propsInitial
 core-2.01 | T185 | prose
 core-2.01 | T230 | prose
 core-2.01 | T231 | prose
+core-2.01 | 3.3.10.2.1#3a | law "Sync.ifSendWhileBusy"
+core-2.01 | 3.3.10.6#dc | law "Sync.discardToS1"
+core-2.01 | 3.3.10.7#a | law "Sync.ignorePacket"

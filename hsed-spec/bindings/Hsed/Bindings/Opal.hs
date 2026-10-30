@@ -9,7 +9,7 @@ import Hsed.Spec.DSL
 
 {-# LINE 1 "opal-2.30.pdf#page=1&doc" #-}
 b_opal_doc :: Bound
-b_opal_doc = at (anchor @'Doc "opal-2.30" "doc" "" 1) (doc opal230)
+b_opal_doc = at (anchor @'Doc "opal-2.30" "doc" "" 1) (doc opal230 & rule feature)
 
 {-# LINE 15 "Hsed/Bindings/Opal.hs" #-}
 bindings :: [Bound]

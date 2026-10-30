@@ -71,7 +71,19 @@ b_core_T230 = at (anchor @'Prose "core-2.01" "T230" "0/5057" 284) prose
 b_core_T231 :: Bound
 b_core_T231 = at (anchor @'Prose "core-2.01" "T231" "0/5060" 285) prose
 
-{-# LINE 75 "Hsed/Bindings/Core.hs" #-}
+{-# LINE 1 "core-2.01.pdf#page=82&3.3.10.2.1#3a" #-}
+b_core_3_3_10_2_1_i_3a :: Bound
+b_core_3_3_10_2_1_i_3a = at (anchor @'Sentence "core-2.01" "3.3.10.2.1#3a" "0/1058/2/0/1/0" 82) (law "Sync.ifSendWhileBusy")
+
+{-# LINE 1 "core-2.01.pdf#page=86&3.3.10.6#dc" #-}
+b_core_3_3_10_6_i_dc :: Bound
+b_core_3_3_10_6_i_dc = at (anchor @'Sentence "core-2.01" "3.3.10.6#dc" "0/1090/3/0/1/2" 86) (law "Sync.discardToS1")
+
+{-# LINE 1 "core-2.01.pdf#page=86&3.3.10.7#a" #-}
+b_core_3_3_10_7_i_a :: Bound
+b_core_3_3_10_7_i_a = at (anchor @'Sentence "core-2.01" "3.3.10.7#a" "0/1102/0" 86) (law "Sync.ignorePacket")
+
+{-# LINE 87 "Hsed/Bindings/Core.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_core_doc
@@ -90,4 +102,7 @@ bindings =
   , b_core_T185
   , b_core_T230
   , b_core_T231
+  , b_core_3_3_10_2_1_i_3a
+  , b_core_3_3_10_6_i_dc
+  , b_core_3_3_10_7_i_a
   ]

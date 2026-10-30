@@ -452,6 +452,72 @@
    ],
    "struct": "0/5060",
    "title": "Interface Write Command Access"
+  },
+  {
+   "hash": "37bedfb193437be963e1d3f153541acd0af5fd20cc3c608750de8ca3f2c0d6fa",
+   "header": null,
+   "id": "3.3.10.2.1#3a",
+   "kind": "Law",
+   "label": 65,
+   "ordinal": null,
+   "page": 81,
+   "rects": [
+    [
+     81,
+     [
+      143.98,
+      245.12,
+      548.86,
+      281.42
+     ]
+    ]
+   ],
+   "struct": "0/1058/2/0/1/0",
+   "title": null
+  },
+  {
+   "hash": "cb4d5d489fc02ebd9d2b1db7d2155e8433c328771610c126766a44168d395577",
+   "header": null,
+   "id": "3.3.10.6#dc",
+   "kind": "Law",
+   "label": 69,
+   "ordinal": null,
+   "page": 85,
+   "rects": [
+    [
+     85,
+     [
+      144.0,
+      684.47,
+      549.0,
+      720.77
+     ]
+    ]
+   ],
+   "struct": "0/1090/3/0/1/2",
+   "title": null
+  },
+  {
+   "hash": "cda4e92af591bd74a0a95ccb12a15dfb0a14af18171d70874f9aff8a610070dc",
+   "header": null,
+   "id": "3.3.10.7#a",
+   "kind": "Law",
+   "label": 69,
+   "ordinal": null,
+   "page": 85,
+   "rects": [
+    [
+     85,
+     [
+      107.92,
+      188.45,
+      548.89,
+      236.28
+     ]
+    ]
+   ],
+   "struct": "0/1102/0",
+   "title": null
   }
  ],
  "irVersion": 1,

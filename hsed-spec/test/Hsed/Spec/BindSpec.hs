@@ -59,7 +59,7 @@ spec = withCore $ \pristine -> do
       fmap T.lines result `shouldSatisfy` either (const False)
         (elem "b_core_T47 = at (anchor @'TypeRow \"core-2.01\" \"T47\" \"0/1294\" 100) (refines (core 46))")
     it "prints a law on its list item at the Sentence shape, a paragraph unit's" $ do
-      ir' <- annotated pristine (hsa <> "core-2.01 | 3.3.10.2.1#3a | law \"Sync.ifSendWhileBusy\"\n")
+      ir' <- annotated pristine (withoutLine "3.3.10.2.1#3a" hsa <> "core-2.01 | 3.3.10.2.1#3a | law \"Sync.ifSendWhileBusy\"\n")
       let (fs, result) = bindModule ir'
       fs `shouldBe` []
       fmap T.lines result `shouldSatisfy` either (const False)

@@ -73,7 +73,8 @@ laws = T.unlines
 spec :: Spec
 spec = withCore $ \pristine -> do
   hsa <- runIO committedHsa
-  ir  <- runIO (annotated pristine (hsa <> laws))
+  -- the committed sidecar with these three lines, whether it has them or not
+  ir  <- runIO (annotated pristine (foldr withoutLine hsa ["3.3.10.2.1#3a", "3.3.10.6#dc", "3.3.10.7#a"] <> laws))
   let ctx = mkContextWith (registry <> [stub]) Nothing Scott ir
       paras = boundParas (ruleShape stub) ctx
 

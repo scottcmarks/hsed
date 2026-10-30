@@ -105,7 +105,11 @@ null for a `/P`; `hash` is sha256 over the words lower-cased, punctuation stripp
 space; `words` is the array only for sections listed in `wordComplete`, else null: the paragraph as
 printed split at whitespace, case and punctuation kept (a list item's without its label: Opal's
 `["Feature", "Code", "=", "0x0001"]`), so that `hash` is the sha256 of their normalised words. Anchor id:
-`<section>#<item>` for a list item, `<section>#p<k>` for the k-th paragraph (1-based) of a section.
+`<section>#<item>` for a list item, `<section>#p<k>` for the k-th paragraph (1-based) of a section;
+an id naming several paragraphs (Core 3.3.10.6 labels `c` under four transitions) anchors nothing.
+Since M3 item anchors carry laws (`core-2.01 | 3.3.10.2.1#3a | law "Sync.ifSendWhileBusy"`), each
+binding its paragraph as a unit of its own (hsedc's paragraph unit); a law's paragraph is known by
+this `hash`, which needs no `words`.
 
 `wordComplete` (design §5.1 step 7: the words of every paragraph a reader consumes) lists, in
 document order, the section of every byte grid (the nearest numbered heading before it in structure

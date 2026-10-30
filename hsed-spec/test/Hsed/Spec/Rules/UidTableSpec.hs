@@ -16,9 +16,10 @@ tables of section 6.3 besides Table 240 by the doc anchor's @rule uidTable@;
 Table 243 yields its 17 authorities; every UID lies in the table its upper
 half names, and in the one a header, caption or cell claims; the Special
 Purpose UIDs' pattern covers Table 241; C-UID-TABLE, C-UID-UNIQUE and
-C-UID-NAME fail on edited cells; Table 243 gives the 17 authorities Tables 209
-and 216 preconfigure (C-PRECONF-UID); the generated module names every named
-row and lists every table.
+C-UID-NAME fail on edited cells; the one UID two of the tables print is a
+Note (N-UID-SHARED); the generated module names every named row and lists
+every table. Whether Table 243 gives the authorities Tables 209 and 216
+preconfigure is the preconfig rule's check (PreconfigSpec).
 -}
 module Hsed.Spec.Rules.UidTableSpec (spec) where
 
@@ -37,12 +38,13 @@ import           Hsed.Spec.CoreIR
 import           Hsed.Spec.IR              (SpecIR)
 import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..))
 import           Hsed.Spec.Rules           (classify, explain)
-import           Hsed.Spec.Rules.Preconfig (PreEntry (..), preEntries)
 import           Hsed.Spec.Rules.UidTable
 
 
+-- | The Errors of a run, but the preconfig rule's C-PRECONF-UID, which an
+--   edited row of Table 243 also fails (its own tests are PreconfigSpec's).
 errorsOf :: SpecIR -> [Text]
-errorsOf = map renderFinding . filter isError . checkIR Scott
+errorsOf = map renderFinding . filter (\f -> isError f && Cm.code f /= "C-PRECONF-UID") . checkIR Scott
 
 spec :: Spec
 spec = do
@@ -50,11 +52,6 @@ spec = do
     it "takes one word, or several capitalised words joined, and nothing else" $
       map asName ["Get", "Global Range", "C_RSA_1024", "0x0A", "Reserved for SSC Usage", "OBSOLETE *", ""]
         `shouldBe` [Just "Get", Just "GlobalRange", Just "C_RSA_1024", Just "0x0A", Nothing, Nothing, Nothing]
-
-  describe "lowerIdent" $
-    it "joins a title's words and lowers its leading capitals" $
-      map lowerIdent ["MethodID UIDs", "SPTemplates Table UIDs", "Table Default Rows", "XOR", "HMACInit", "Type Format"]
-        `shouldBe` ["methodIDUIDs", "spTemplatesTableUIDs", "tableDefaultRows", "xor", "hmacInit", "typeFormat"]
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
@@ -106,44 +103,35 @@ spec = do
           [ "C-UID-TABLE core-2.01.pdf#page=303&T241: row 1 of T241: the UID 00 00 00 00 00 00 FE 01 does not match the pattern 00 00 00 00 00 00 FF xx that T239 row 4 gives for the UIDs of Table 241" ]
       it "fails on a UID cell that is neither eight bytes nor a pattern" $
         errorsOf (setCell "T247" 2 0 "00 00 00 03 00 00 03" ir) `shouldBe`
-          [ "C-UID-TABLE core-2.01.pdf#page=305&T247: row 3 \"Clock\": the UID cell \"00 00 00 03 00 00 03\" is neither eight bytes nor a pattern ending xx" ]
+          [ "C-UID-TABLE core-2.01.pdf#page=306&T247: row 3 \"Clock\": the UID cell \"00 00 00 03 00 00 03\" is neither eight bytes nor a pattern ending xx" ]
 
     describe "C-UID-UNIQUE and C-UID-NAME" $ do
       it "fail on two rows of one table with one UID" $
         errorsOf (setCell "T243" 1 0 "00 00 00 09 00 00 00 01" ir) `shouldBe`
-          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: T209 row 2 preconfigures Admins, 00 00 00 09 00 00 00 02, which is not among the rows"
-          , "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 2 \"Admins | Base\": it is Anybody in T209 row 1"
-          , "C-UID-UNIQUE core-2.01.pdf#page=304&T243: row 2 \"Admins | Base\": the UID 00 00 00 09 00 00 00 01 is also that of row 1" ]
+          [ "C-UID-UNIQUE core-2.01.pdf#page=304&T243: row 2 \"Admins | Base\": the UID 00 00 00 09 00 00 00 01 is also that of row 1" ]
       it "fail on two rows that give one name, and leave both out of the module" $ do
         let twice = setCell "T243" 1 1 "Anybody" ir
         errorsOf twice `shouldBe`
-          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 2 \"Anybody | Base\": it is Admins in T209 row 2"
-          , "C-UID-NAME core-2.01.pdf#page=304&T243: row 2 \"Anybody | Base\": it is generated as uAuthority_Anybody, as T243 row 1 is" ]
+          [ "C-UID-NAME core-2.01.pdf#page=304&T243: row 2 \"Anybody | Base\": it is generated as uAuthority_Anybody, as T243 row 1 is" ]
         newlyExcluded ir twice `shouldReturn`
           [ (TableId 243, "row 1 \"Anybody | Base\": C-UID-NAME failed"), (TableId 243, "row 2 \"Anybody | Base\": C-UID-NAME failed") ]
 
-    describe "C-PRECONF-UID, Table 243 against the default authorities of Tables 209 and 216" $ do
-      let preconf ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-PRECONF-UID" ]
-      it "passes: the 17 rows are those the two tables preconfigure, in order, with their names, UIDs and templates" $ do
-        preconf ir `shouldBe` []
-        [ (peName e, peUID e, peTemplate e) | e <- preEntries ctx, peTarget e == "Authority" ]
-          `shouldBe` [ (fromMaybe "" (urName r), bs, urTemplate r) | r <- of' 243, Exact bs <- [urValue r] ]
-        map peWhere (preEntries ctx) `shouldBe` map (\i -> "T209 row " <> tshow i) [1 .. 9 :: Int] <> map (\i -> "T216 row " <> tshow i) [1 .. 8 :: Int]
-      it "fails on a name the preconfiguration gives otherwise" $
-        preconf (setCell "T243" 9 1 "Issuer" ir) `shouldBe`
-          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 10 \"Issuer | Admin\": it is Issuers in T216 row 1" ]
-      it "fails on a UID one side gives and the other lacks" $
-        preconf (setCell "T216" 7 1 "00 00 00 09 00 00 02 09" ir) `shouldBe`
-          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: T216 row 8 preconfigures Reserve3, 00 00 00 09 00 00 02 09, which is not among the rows"
-          , "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 17 \"Reserve3 | Admin\": no row preconfigured for the Authority table (T209, T216) has this UID" ]
-      it "fails on a template other than the one the preconfiguration's caption names" $
-        preconf (setCell "T243" 0 2 "Admin" ir) `shouldBe`
-          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 1 \"Anybody | Admin\": T209 row 1 preconfigures it for the Base template" ]
+    describe "N-UID-SHARED" $ do
+      it "finds the one UID two of the tables print: Table 239's GenKey CharSet value is Table 245's C_PIN SID, a Note at the later row" $
+        [ renderFinding f | f <- checkIR Scott ir, Cm.code f == "N-UID-SHARED" ] `shouldBe`
+          [ "N-UID-SHARED core-2.01.pdf#page=305&T245: row 1 \"C_PIN | SID\": the UID 00 00 00 0B 00 00 00 01 is also that of T239 row 5 (PDF 302), "
+            <> "\"Used in the C_PIN table's CharSet column to indicate that the GenKey character set is not restricted (all byte values are legal).\"" ]
+      it "finds another, and leaves one UID printed twice in one table to C-UID-UNIQUE" $ do
+        [ renderFinding f | f <- checkIR Scott (setCell "T246" 0 0 "00 00 00 09 00 00 00 01" ir), Cm.code f == "N-UID-SHARED"
+                          , Cm.anchor f == Just "T246" ] `shouldBe`
+          [ "N-UID-SHARED core-2.01.pdf#page=305&T246: row 1 \"Base\": the UID 00 00 00 09 00 00 00 01 is also that of T243 row 1 (PDF 304), \"Anybody | Base\"" ]
+        [ Cm.code f | f <- checkIR Scott (setCell "T243" 1 0 "00 00 00 09 00 00 00 01" ir), Cm.code f `elem` ["N-UID-SHARED", "C-UID-UNIQUE"]
+                    , Cm.anchor f == Just "T243" ] `shouldBe` ["C-UID-UNIQUE"]
 
     describe "N-UID-UNNAMED" $
       it "lists the rows that name no definition, once per table" $
         [ renderFinding f | f <- checkIR Scott ir, Cm.code f == "N-UID-UNNAMED", Cm.anchor f == Just "T242" ] `shouldBe`
-          [ "N-UID-UNNAMED core-2.01.pdf#page=303&T242: rows that name no definition (listed in methodIDUIDs where their UID is eight bytes): "
+          [ "N-UID-UNNAMED core-2.01.pdf#page=303&T242: rows uidTable gives no name (listed in methodIDUIDs where their UID is eight bytes): "
             <> "6 \"OBSOLETE *\"; 7 \"OBSOLETE *\"; 12 \"OBSOLETE *\"; 17 \"Reserved for SSC Usage\"; 24 \"Reserved for SSC Usage\"; "
             <> "25 \"Reserved for SSC Usage\"; 54 \"Reserved for SSC Usage\"" ]
 
@@ -151,8 +139,8 @@ spec = do
       cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.UIDs" (crModules cr)))
           uids = [ T.takeWhile (/= ' ') l | l <- lns, " :: UID" `T.isSuffixOf` l ]
-      it "names every named row: 6 + 47 + 17 + 4 + 5 + 6 + 6 + 30 UIDs" $ do
-        length uids `shouldBe` 121
+      it "names every named row: 6 + 47 + 17 + 4 + 5 + 6 + 6 + 30 UIDs, beside the sig rule's two invoking IDs" $ do
+        length uids `shouldBe` 121 + 2
         filter (`elem` uids) ["uProperties", "uCloseSession", "uMethodID_DeleteSP"] `shouldBe` ["uProperties", "uCloseSession", "uMethodID_DeleteSP"]
         filter (`elem` uids) [ "uMethodID_Get", "uAuthority_SID", "uSPInfo_Row", "uC_PIN_SID", "uLocking_GlobalRange"
                              , "uTemplate_Locking", "uSPTemplates_Base", "uSecretProtect_C_PIN_0x03" ]

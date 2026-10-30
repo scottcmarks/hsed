@@ -42,14 +42,21 @@ Checks, each with the code its findings carry:
 * @C-UID-UNIQUE@: no two rows preconfigured for one table share a UID;
 * @C-PRECONF-CELL@: every printed cell reads as its column's type (an
   enumeration's label, a name's text, a reference to a preconfigured row);
-* @W-PRECONF-TEMPLATE@: a template row, left out of the generated rows.
+* @W-PRECONF-TEMPLATE@: a template row, left out of the generated rows;
+* @C-PRECONF-UID@: the table of a table's UIDs, which the @uidTable@ rule
+  reads ("Hsed.Spec.Rules.UidTable": its header or caption claims every row
+  for that table, Core Table 243 for the Authority table), gives exactly the
+  rows preconfigured for that table ('preEntries': Tables 209 and 216), UID
+  for UID, each with the same name and in the template the
+  preconfiguration's caption names; one finding per difference, at the table
+  of UIDs (at its row, where the difference is one). Rows are matched by
+  UID: their order is not compared (Table 243 lists Table 209's rows, then
+  Table 216's, but a reordering would pass).
 
 Compiled into 'preconfigModule': per table the caption's words in camel case
 (@defaultBaseTemplateAuthorities :: [Pre Row]@), one 'Hsed.Core.Table.Pre' per
 row giving its cells by column number; Core gives no access ('access' is
-@[]@). Whether the rows' UIDs and names agree with the table of the target's
-UIDs (Core Table 243 for the authorities) is the @uidTable@ rule's to check
-(@C-PRECONF-UID@; 'preEntries' gives them).
+@[]@).
 -}
 module Hsed.Spec.Rules.Preconfig
   ( preconfigRule
@@ -60,7 +67,6 @@ module Hsed.Spec.Rules.Preconfig
   , preReads
   , targetNoun
   , captionTemplate
-  , preRowsFor
   , PreEntry (..)
   , preEntries
   , preDeclName
@@ -85,6 +91,8 @@ import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TableDesc (CellValue (..), ColRead (..), DescRead (..), colKind, colNumberLit,
                                             descReads, readCell, renderCell)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows)
+import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), tableClaim, uidRows)
+import qualified Hsed.Spec.Rules.UidTable  as UidTable (rowLabel)
 import           Hsed.Spec.Shape           (Shape (..), captionTitle, normHeader, normaliseCaption, shapeMismatch)
 
 
@@ -99,7 +107,7 @@ preconfigRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch Preconfig form)
   , ruleIdent   = const Nothing
   , ruleModule  = preconfigModule
-  , ruleChecks  = \ctx bts -> let ps = readPres ctx bts in concatMap (preFindings ctx ps) ps <> uidUnique ctx ps
+  , ruleChecks  = \ctx bts -> let ps = readPres ctx bts in concatMap (preFindings ctx ps) ps <> uidUnique ctx ps <> preconfUID ctx ps
   , ruleCompile = compile
   }
 
@@ -193,11 +201,6 @@ captionTemplate p = do
   guard (not (T.null after) && not (T.null template))
   pure template
 
--- | The name and UID of every row preconfigured for a table, in anchor and
---   row order: what the table of that table's UIDs must agree with.
-preRowsFor :: Context -> Text -> [(Text, [Word8])]
-preRowsFor ctx n = [ (name, uid) | (tn, name, uid, _, _) <- index (preReads ctx), tn == n ]
-
 -- | One row preconfigured for a table, as the table of that table's UIDs
 --   must give it.
 data PreEntry = PreEntry
@@ -209,11 +212,14 @@ data PreEntry = PreEntry
   }
 
 -- | Every row preconfigured for a table, in anchor and row order (the
---   template rows left out, as 'preRowsFor' leaves them).
+--   template rows left out): what the table of that table's UIDs must give.
 preEntries :: Context -> [PreEntry]
-preEntries ctx =
+preEntries ctx = entriesOf (preReads ctx)
+
+entriesOf :: [PreRead] -> [PreEntry]
+entriesOf ps =
   [ PreEntry tn name uid (captionTemplate p) (renderAnchorId (btAnchor (pBound p)) <> " row " <> tshow (prRow r + 1))
-  | (tn, name, uid, p, r) <- index (preReads ctx) ]
+  | (tn, name, uid, p, r) <- index ps ]
 
 -- | Every non-template row of a table with a target, by the target's name: its
 --   Name column's cell (blank without one), its UID, its table and row.
@@ -303,6 +309,35 @@ uidUnique ctx ps = concat
         (rowLabel r <> "the UID " <> hexUID uid <> " is also that of " <> renderAnchorId (btAnchor (pBound p0)) <> " " <> T.dropEnd 2 (rowLabel r0)))
     | (p, r) <- rest ]
   | ((_, uid), (p0, r0) : rest) <- Map.toList (Map.fromListWith (flip (<>)) [ ((tn, uid), [(p, r)]) | (tn, _, uid, p, r) <- index ps ]) ]
+
+
+-- | C-PRECONF-UID: every table of UIDs the @uidTable@ rule reads that claims
+--   its rows for a table something preconfigures, against those rows.
+preconfUID :: Context -> [PreRead] -> [Finding]
+preconfUID ctx ps =
+  [ f
+  | bt <- boundTables (Just UidTable) ctx, Just t <- [tableClaim bt]
+  , let es = [ e | e <- entriesOf ps, peTarget e == t ], not (null es)
+  , f <- preconfDifferences ctx bt t [ r | r <- uidRows ctx, btAnchor (urBound r) == btAnchor bt ] es ]
+
+-- | How the rows of the table of a table's UIDs differ from the rows
+--   preconfigured for that table: a UID one side has and the other lacks, or
+--   one UID with another name or in another template.
+preconfDifferences :: Context -> BoundTable -> Text -> [UidRow] -> [PreEntry] -> [Finding]
+preconfDifferences ctx bt t trs es =
+  [ atRow' r (UidTable.rowLabel r <> "no row preconfigured for the " <> t <> " table (" <> wheres <> ") has this UID")
+  | (r, bs) <- exact, bs `notElem` map peUID es ]
+  <> [ atTable ctx bt (bad (peWhere e <> " preconfigures " <> peName e <> ", " <> hexUID (peUID e) <> ", which is not among the rows"))
+     | e <- es, peUID e `notElem` map snd exact ]
+  <> concat [ [ atRow' r (UidTable.rowLabel r <> "it is " <> peName e <> " in " <> peWhere e) | Just (peName e) /= urName r ]
+              <> [ atRow' r (UidTable.rowLabel r <> peWhere e <> " preconfigures it for the " <> tpl <> " template")
+                 | Just tpl <- [peTemplate e], Just tpl /= urTemplate r ]
+            | (r, bs) <- exact, e <- es, peUID e == bs ]
+  where
+    bad      = finding Error "C-PRECONF-UID"
+    atRow' r = atCells ctx bt (urCells r) . bad
+    exact    = [ (r, bs) | r <- trs, Exact bs <- [urValue r] ]
+    wheres   = T.intercalate ", " (L.nub (map (T.takeWhile (/= ' ') . peWhere) es))
 
 
 -- * Declarations

@@ -40,15 +40,20 @@ Checks, each with the code its findings carry:
   half is that table's half-UID; a pattern whose row cites a table (@see
   Table 241@) covers every UID of that table;
 * @C-UID-UNIQUE@: no two rows of one table print one UID;
+* @N-UID-SHARED@: a UID two of the tables print, each row its own (Core:
+  Table 239's CharSet value @00 00 00 0B 00 00 00 01@ is Table 245's C_PIN
+  SID), a Note at the later row naming the earlier, worth a look;
 * @C-UID-NAME@: no two rows give one generated name;
-* @C-PRECONF-UID@: the table of a table's UIDs (its header or caption claims
-  every row for that table: Table 243 for the Authority table) gives the rows
-  the @preconfig@ rule reads for that table ("Hsed.Spec.Rules.Preconfig":
-  Tables 209 and 216), UID for UID, each with the same name, and in the
-  template the preconfiguration's caption names; one finding per difference;
-* @N-UID-UNNAMED@: the rows of a table that name no definition (a placeholder
+* @N-UID-UNNAMED@: the rows of a table this rule gives no name (a placeholder
   such as @Reserved for SSC Usage@ or @OBSOLETE *@, a pattern, or a table whose
-  rows carry a purpose and no name), listed once per table.
+  rows carry a purpose and no name), listed once per table; another rule may
+  name such a row (the @sig@ rule names Table 239's invoking IDs).
+
+A finding about one row is located at the page the row is printed on
+('atCells'). Whether the table of a table's UIDs (Table 243 for the
+Authority table, 'tableClaim') gives the rows preconfigured for that table is
+the @preconfig@ rule's check (@C-PRECONF-UID@, "Hsed.Spec.Rules.Preconfig"),
+which reads this rule's rows ('uidRows').
 
 Compiled into 'uidsModule': one @u…:: UID@ per named row, @u\<T\>_\<Name\>@
 for a row in table @T@ (@uMethodID_Get@, @uAuthority_SID@, @uC_PIN_SID@,
@@ -69,14 +74,16 @@ module Hsed.Spec.Rules.UidTable
   , UidValue (..)
   , uidRows
   , uidHeaders
+  , tableClaim
   , rowText
+  , rowLabel
+  , rowRef
+  , rowPage
   , tablesByHalf
     -- * Names
   , asName
-  , lowerIdent
   ) where
 
-import qualified Data.Char        as DC
 import qualified RIO.Char         as C
 import qualified RIO.List         as L
 import qualified RIO.Map          as Map
@@ -88,10 +95,10 @@ import           Hsed.Spec.Common (Finding, RuleName (..), Severity (..), SpecId
 import           Hsed.Spec.DSL    (SomeBinding (..), uidTable)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
+import           Hsed.Spec.Readers.Text (lowerIdent, readHexByte)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.Preconfig (PreEntry (..), preEntries)
-import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows)
-import           Hsed.Spec.Shape  (Shape (..), captionTitle, normHeader, normaliseCaption, shapeMismatch)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows, tableUIDsNamed)
+import           Hsed.Spec.Shape  (Shape (..), captionTitle, normHeader, shapeMismatch)
 
 
 -- | The rule.
@@ -203,6 +210,11 @@ tableRows ctx bt = zipWith row [0 ..] (btRead bt).rows
           (Exact bs, Just l) -> Just ("u" <> maybe l (<> ("_" <> l)) (Map.lookup (take 4 bs) halves))
           _                  -> Nothing
 
+-- | The table a table of UIDs claims every row for, by its header (@UID in
+--   Authority Table@) or its caption (@Template Table UIDs@).
+tableClaim :: BoundTable -> Maybe Text
+tableClaim bt = headerClaim (fst (uidHeaders bt)) <|> captionClaim bt
+
 -- | @UID in MethodID Table@ claims MethodID.
 headerClaim :: [Text] -> Maybe Text
 headerClaim raw = case T.words <$> listToMaybe raw of
@@ -222,13 +234,10 @@ readUID :: Text -> UidValue
 readUID cell
   | Just bs <- parseUIDCell cell = Exact bs
   | length ws == 8, (fixed, wild@(_ : _)) <- L.span (/= "xx") (map T.toLower ws), all (== "xx") wild
-  , Just bs <- traverse hexByte fixed = Pattern bs (length wild)
+  , Just bs <- traverse readHexByte fixed = Pattern bs (length wild)
   | otherwise = Unreadable
   where
     ws = T.words cell
-    hexByte w = case T.unpack w of
-      [a, b] | C.isHexDigit a, C.isHexDigit b -> Just (fromIntegral (DC.digitToInt a * 16 + DC.digitToInt b))
-      _                                       -> Nothing
 
 -- | A cell that is a name: one word, or several capitalised words, each of
 --   letters, digits and underscores; joined into one identifier piece.
@@ -241,19 +250,6 @@ asName cell = case T.words cell of
     wordOk w = not (T.null w) && T.all (\c -> C.isAlphaNum c || c == '_') w
     capital w = maybe False (\(c, _) -> C.isUpper c || C.isDigit c) (T.uncons w)
 
--- | An identifier from a title: its words joined, the leading capitals lowered
---   (the last kept when a lower-case letter follows): @SPTemplates Table UIDs@
---   gives @spTemplatesTableUIDs@, @HMACInit@ gives @hmacInit@.
-lowerIdent :: Text -> Text
-lowerIdent title = lowered <> rest
-  where
-    joined = T.concat [ capitalise (T.filter (\c -> C.isAlphaNum c || c == '_') w) | w <- T.words title ]
-    capitalise w = maybe w (\(c, cs) -> T.cons (C.toUpper c) cs) (T.uncons w)
-    (caps, after) = T.span C.isUpper joined
-    (lowered, rest)
-      | T.length caps > 1, maybe False (C.isLower . fst) (T.uncons after) = (T.toLower (T.dropEnd 1 caps), T.takeEnd 1 caps <> after)
-      | otherwise = (T.toLower caps, after)
-
 -- | A row's cells after its UID, the empty ones left out, as one line: @Get | Base@.
 rowText :: UidRow -> Text
 rowText r = T.intercalate " | " (filter (not . T.null) [ T.unwords (T.words c.text) | c <- drop 1 (urCells r) ])
@@ -262,18 +258,19 @@ rowText r = T.intercalate " | " (filter (not . T.null) [ T.unwords (T.words c.te
 -- * Checks
 
 checks :: Context -> [BoundTable] -> [Finding]
-checks ctx bts = concatMap tableCheck (L.groupBy sameTable rows) <> patternChecks <> nameChecks <> noTables <> preconfChecks
+checks ctx bts = concatMap tableCheck (L.groupBy sameTable rows) <> shared <> patternChecks <> nameChecks <> noTables
   where
     rows = concatMap (tableRows ctx) bts
     halves = tablesByHalf ctx
     named = Map.fromList [ (n, h) | (h, n) <- Map.toList halves ]
     sameTable a b = btAnchor (urBound a) == btAnchor (urBound b)
-    at r = atTable ctx (urBound r)
-    noTables = [ at r (finding Error "C-UID-TABLE" "no table bound by tableUIDs (T240's header) to resolve the tables the UID tables name against")
+    at r = atCells ctx (urBound r) (urCells r)
+    noTables = [ atTable ctx (urBound r) (finding Error "C-UID-TABLE" ("no table bound by " <> tableUIDsNamed
+                                                                        <> " to resolve the tables the UID tables name against"))
                | Map.null halves, r : _ <- [filter (isJust . urClaimed) rows] ]
 
     tableCheck trs = concatMap rowCheck trs <> uniqueness trs <> unnamed trs
-    rowCheck r = map (at r . finding Error "C-UID-TABLE" . (label r <>)) $ case (urValue r, urClaimed r) of
+    rowCheck r = map (at r . finding Error "C-UID-TABLE" . (rowLabel r <>)) $ case (urValue r, urClaimed r) of
       (Unreadable, _) -> ["the UID cell " <> tshow (urUIDText r) <> " is neither eight bytes nor a pattern ending xx"]
       (Exact bs, Just t) | not (Map.null halves) -> case Map.lookup t named of
         Nothing -> ["it lies in the " <> t <> " table, which no row of Table 240 names"]
@@ -282,14 +279,22 @@ checks ctx bts = concatMap tableCheck (L.groupBy sameTable rows) <> patternCheck
         _ -> []
       _ -> []
     uniqueness trs =
-      [ at r (finding Error "C-UID-UNIQUE" (label r <> "the UID " <> hexUID bs <> " is also that of row " <> tshow (urRow r0 + 1)))
+      [ at r (finding Error "C-UID-UNIQUE" (rowLabel r <> "the UID " <> hexUID bs <> " is also that of row " <> tshow (urRow r0 + 1)))
       | (bs, r0 : rest) <- Map.toList (Map.fromListWith (flip (<>)) [ (bs, [r]) | r <- trs, Exact bs <- [urValue r] ])
       , r <- rest ]
     unnamed trs = case [ r | r <- trs, isNothing (urIdent r) ] of
       [] -> []
-      rs@(r : _) -> [ at r (finding Note "N-UID-UNNAMED"
-                       ("rows that name no definition (listed in " <> listName (urBound r) <> " where their UID is eight bytes): "
+      rs@(r : _) -> [ atTable ctx (urBound r) (finding Note "N-UID-UNNAMED"
+                       ("rows uidTable gives no name (listed in " <> listName (urBound r) <> " where their UID is eight bytes): "
                          <> T.intercalate "; " [ tshow (urRow x + 1) <> " \"" <> rowText x <> "\"" | x <- rs ])) ]
+
+    -- one UID printed in two tables: a Note at each later row, naming the first
+    shared =
+      [ at r (finding Note "N-UID-SHARED"
+          (rowLabel r <> "the UID " <> hexUID bs <> " is also that of " <> rowRef r0 <> " (PDF " <> tshow (rowPage r0) <> "), \""
+            <> rowText r0 <> "\""))
+      | (bs, r0 : rest) <- Map.toList (Map.fromListWith (flip (<>)) [ (bs, [r]) | r <- rows, Exact bs <- [urValue r] ])
+      , r <- rest, not (sameTable r r0) ]
 
     -- a pattern whose row cites a table covers that table's UIDs
     patternChecks =
@@ -301,33 +306,10 @@ checks ctx bts = concatMap tableCheck (L.groupBy sameTable rows) <> patternCheck
       , r <- rows, btAnchor (urBound r) == TableId n, Exact bs <- [urValue r], take (length fixed) bs /= fixed ]
 
     nameChecks =
-      [ at r (finding Error "C-UID-NAME" (label r <> "it is generated as " <> i <> ", as " <> renderAnchorId (btAnchor (urBound r0))
+      [ at r (finding Error "C-UID-NAME" (rowLabel r <> "it is generated as " <> i <> ", as " <> renderAnchorId (btAnchor (urBound r0))
                                             <> " row " <> tshow (urRow r0 + 1) <> " is"))
       | (i, r0 : rest) <- Map.toList (Map.fromListWith (flip (<>)) [ (i, [r]) | r <- rows, Just i <- [urIdent r] ])
       , r <- rest ]
-
-    -- the table of a table's UIDs against the rows preconfigured for that table
-    preconfChecks =
-      [ atTable ctx bt (finding Error "C-PRECONF-UID" m)
-      | bt <- bts, Just t <- [headerClaim (fst (uidHeaders bt)) <|> captionClaim bt]
-      , let es = [ e | e <- preEntries ctx, peTarget e == t ], not (null es)
-      , m <- preconfDifferences t [ r | r <- rows, btAnchor (urBound r) == btAnchor bt ] es ]
-
--- | How the rows of the table of a table's UIDs differ from the rows
---   preconfigured for that table: a UID one side has and the other lacks, or
---   one UID with another name or in another template.
-preconfDifferences :: Text -> [UidRow] -> [PreEntry] -> [Text]
-preconfDifferences t trs es =
-  [ label r <> "no row preconfigured for the " <> t <> " table (" <> wheres <> ") has this UID"
-  | (r, bs) <- exact, bs `notElem` map peUID es ]
-  <> [ peWhere e <> " preconfigures " <> peName e <> ", " <> hexUID (peUID e) <> ", which is not among the rows"
-     | e <- es, peUID e `notElem` map snd exact ]
-  <> concat [ [ label r <> "it is " <> peName e <> " in " <> peWhere e | Just (peName e) /= urName r ]
-              <> [ label r <> peWhere e <> " preconfigures it for the " <> tpl <> " template" | Just tpl <- [peTemplate e], Just tpl /= urTemplate r ]
-            | (r, bs) <- exact, e <- es, peUID e == bs ]
-  where
-    exact  = [ (r, bs) | r <- trs, Exact bs <- [urValue r] ]
-    wheres = T.intercalate ", " (L.nub (map (T.takeWhile (/= ' ') . peWhere) es))
 
 -- | The tables a row's text cites, @see Table 241@.
 citedTables :: UidRow -> [Int]
@@ -335,8 +317,17 @@ citedTables r = [ n | (w, next) <- zip ws (drop 1 ws), w == "Table", Just n <- [
                     , T.any C.isDigit next ]
   where ws = T.words (T.map (\c -> if C.isAlphaNum c then c else ' ') (rowText r))
 
-label :: UidRow -> Text
-label r = "row " <> tshow (urRow r + 1) <> " \"" <> rowText r <> "\": "
+-- | @row 2 "Admins | Base": @, a message's start about one row.
+rowLabel :: UidRow -> Text
+rowLabel r = "row " <> tshow (urRow r + 1) <> " \"" <> rowText r <> "\": "
+
+-- | @T242 row 34@
+rowRef :: UidRow -> Text
+rowRef r = renderAnchorId (btAnchor (urBound r)) <> " row " <> tshow (urRow r + 1)
+
+-- | The 1-based PDF page a row is printed on: its first cell's that has one, else its table's.
+rowPage :: UidRow -> Int
+rowPage r = fromMaybe (fromMaybe 1 (tablePage (btTable (urBound r)))) (listToMaybe (mapMaybe (\c -> (+ 1) <$> c.page) (urCells r)))
 
 
 -- * Declarations
@@ -355,7 +346,7 @@ compile ctx bts = concatMap table bts
       [] -> []
       trs@(r0 : _) ->
         [ if i `elem` clash
-            then Excluded (btAnchor bt) (label r <> "C-UID-NAME failed")
+            then Excluded (btAnchor bt) (rowLabel r <> "C-UID-NAME failed")
             else Emit (rowDecl ctx r i bs)
         | r <- trs, Just i <- [urIdent r], Exact bs <- [urValue r] ]
         <> [ Emit (listDecl (provenance ctx r0) (length trs) (listName bt) trs) | any (isExact . urValue) trs ]
@@ -364,7 +355,7 @@ compile ctx bts = concatMap table bts
       _       -> False
 
 provenance :: Context -> UidRow -> Gen.Provenance
-provenance ctx r = let bt = urBound r in provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+provenance ctx r = let bt = urBound r in boundProvenance ctx bt
 
 -- | One named row's UID, citing the page it is printed on.
 rowDecl :: Context -> UidRow -> Text -> [Word8] -> Gen.Decl
@@ -383,6 +374,6 @@ listDecl p rank n rows = (Gen.decl p n body)
   , Gen.declImports = [Gen.ImportSome "Prelude" ["String"], Gen.ImportSome Gen.uidModule ["UID", "uid"]] }
   where
     entries = [ "(" <> Gen.uidExpr bs <> ", " <> tshow (rowText r) <> ")" | r <- rows, Exact bs <- [urValue r] ]
-    body = [ Gen.provenanceComment p <> ": every UID the table prints, with its row's other cells"
+    body = [ Gen.provenanceComment p <> ": every eight-byte UID the table prints, with its row's other cells"
            , n <> " :: [(UID, String)]", n <> " =" ]
-           <> zipWith (\i e -> (if i == (0 :: Int) then "  [ " else "  , ") <> e) [0 ..] entries <> ["  ]"]
+           <> Gen.listLines "  " entries

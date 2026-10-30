@@ -17,9 +17,10 @@ committed annotations: Tables 209 and 216, the default authorities of the
 Base and Admin templates, bound from the doc anchor's rule token, both rows of
 the Authority table (T178), their 17 rows read as the description types their
 columns; C-PRECONF-HEADER, C-UID-TABLE, C-UID-UNIQUE and C-PRECONF-CELL made to
-fail by one edited cell; an informative column dropped, a group row read as
-context, a template row left out; the generated rows. Opal's Table 24, the
-design's exemplar, fires too.
+fail by one edited cell; Table 243, which the uidTable rule reads, gives the
+17 authorities the two tables preconfigure (C-PRECONF-UID); an informative
+column dropped, a group row read as context, a template row left out; the
+generated rows. Opal's Table 24, the design's exemplar, fires too.
 -}
 module Hsed.Spec.Rules.PreconfigSpec (spec) where
 
@@ -35,17 +36,17 @@ import           Hsed.Spec.Common          (ErrataSet (..), RuleName (..), SpecI
 import qualified Hsed.Spec.Common          as Cm
 import           Hsed.Spec.Compile         (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
-import           Hsed.Spec.IR              (SpecIR (..), TableIR (..), readIR)
+import           Hsed.Spec.IR              (CellIR (..), SpecIR (..), TableIR (..), readIR)
 import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..), RuleDef (..))
 import           Hsed.Spec.Rules           (classify, explain)
 import           Hsed.Spec.Rules.Preconfig
 import           Hsed.Spec.Rules.TableDesc (DescRead (..))
+import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), uidRows)
 import           Hsed.Spec.Shape           (measure)
 
 
--- | The Errors of a run, but the uidTable rule's C-PRECONF-UID, which an
---   edited UID or row also fails where Table 243 lists the authorities (its own
---   tests are UidTableSpec's).
+-- | The Errors of a run, but C-PRECONF-UID, which an edited UID or row also
+--   fails where Table 243 lists the authorities (tested on its own below).
 errorsOf :: SpecIR -> [Text]
 errorsOf = map renderFinding . filter (\f -> isError f && Cm.code f /= "C-PRECONF-UID") . checkIR Scott
 
@@ -94,12 +95,38 @@ spec = do
         [ (btAnchor (pBound p), either (const Nothing) (Just . btAnchor . drBound) (pTarget p), captionTemplate p) | p <- ps ]
           `shouldBe` [ (TableId 209, Just (TableId 178), Just "Base"), (TableId 216, Just (TableId 178), Just "Admin") ]
       it "gives the 17 default authorities' names and UIDs, for the table of authority UIDs to agree with" $ do
-        let rows = preRowsFor ctx "Authority"
+        let rows = [ (peName e, peUID e) | e <- preEntries ctx, peTarget e == "Authority" ]
         length rows `shouldBe` 17
         take 1 rows `shouldBe` [("Anybody", [0, 0, 0, 9, 0, 0, 0, 1])]
         drop 16 rows `shouldBe` [("Reserve3", [0, 0, 0, 9, 0, 0, 2, 8])]
       it "finds no Error on the committed annotations" $
         errorsOf ir `shouldBe` []
+
+    describe "C-PRECONF-UID, Table 243 against the default authorities of Tables 209 and 216" $ do
+      let preconf ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-PRECONF-UID" ]
+      it "passes: the 17 rows are those the two tables preconfigure, with their names, UIDs and templates" $ do
+        preconf ir `shouldBe` []
+        [ (peName e, peUID e, peTemplate e) | e <- preEntries ctx, peTarget e == "Authority" ]
+          `shouldBe` [ (fromMaybe "" (urName r), bs, urTemplate r) | r <- uidRows ctx, btAnchor (urBound r) == TableId 243, Exact bs <- [urValue r] ]
+        map peWhere (preEntries ctx) `shouldBe` map (\i -> "T209 row " <> tshow i) [1 .. 9 :: Int] <> map (\i -> "T216 row " <> tshow i) [1 .. 8 :: Int]
+      it "fails on a name the preconfiguration gives otherwise, at the row" $
+        preconf (setCell "T243" 9 1 "Issuer" ir) `shouldBe`
+          [ "C-PRECONF-UID core-2.01.pdf#page=305&T243: row 10 \"Issuer | Admin\": it is Issuers in T216 row 1" ]
+      it "fails on a UID one side gives and the other lacks" $
+        preconf (setCell "T216" 7 1 "00 00 00 09 00 00 02 09" ir) `shouldBe`
+          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: T216 row 8 preconfigures Reserve3, 00 00 00 09 00 00 02 09, which is not among the rows"
+          , "C-PRECONF-UID core-2.01.pdf#page=305&T243: row 17 \"Reserve3 | Admin\": no row preconfigured for the Authority table (T209, T216) has this UID" ]
+      it "fails on a template other than the one the preconfiguration's caption names" $
+        preconf (setCell "T243" 0 2 "Admin" ir) `shouldBe`
+          [ "C-PRECONF-UID core-2.01.pdf#page=304&T243: row 1 \"Anybody | Admin\": T209 row 1 preconfigures it for the Base template" ]
+      it "matches rows by UID, not by order: Table 243's first two rows swapped still pass" $ do
+        let swapped = foldr (\(c, a, b) -> setCell "T243" 1 c b . setCell "T243" 0 c a) ir
+                        [ (c, cellOf 1 c, cellOf 0 c) | c <- [0 .. 2] ]
+            cellOf r c = maybe "" (\t -> t.text) (do t <- listToMaybe [ t | t <- ir.tables, t.id == Just "T243" ]
+                                                     row <- listToMaybe (drop r t.rows)
+                                                     listToMaybe (drop c row))
+        preconf swapped `shouldBe` []
+        take 2 [ urName r | r <- uidRows (mkContext Scott swapped), btAnchor (urBound r) == TableId 243 ] `shouldBe` [Just "Admins", Just "Anybody"]
 
     describe "C-PRECONF-HEADER" $
       it "fails on a header naming no column of the target, and leaves the table out" $ do
@@ -135,7 +162,7 @@ spec = do
       it "reads a row whose first cell alone is printed as the context of the rows below it" $ do
         let grouped = foldr (\c -> setCell "T209" 0 c "") ir [1 .. 5]
         errorsOf grouped `shouldBe` []
-        length (preRowsFor (mkContext Scott grouped) "Authority") `shouldBe` 16
+        length [ e | e <- preEntries (mkContext Scott grouped), peTarget e == "Authority" ] `shouldBe` 16
         lns <- generated grouped
         take 1 (drop 2 (block "defaultBaseTemplateAuthorities" lns)) `shouldBe` ["  [ Pre  -- row 2 Admins (group Anybody)"]
       it "leaves a template row out, with a Warning" $ do

@@ -215,14 +215,18 @@ spec = do
           "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not law \"Foo.bar\""
       it "refuses a table binding, a cross-spec binding and a doc token on a heading" $ do
         refused "core-2.01 | 5.1.4 | typeRow\n"
-          "E-ANCHOR-KIND core-2.01.pdf#page=128&5.1.4: a heading anchor takes rule tokens or a behaviour, not typeRow"
+          "E-ANCHOR-KIND core-2.01.pdf#page=128&5.1.4: a heading anchor takes rule tokens, a behaviour or fails, not typeRow"
         refused "core-2.01 | 5.1.5 | refines (core 46)\n"
-          "E-ANCHOR-KIND core-2.01.pdf#page=137&5.1.5: a heading anchor takes rule tokens or a behaviour, not refines (core 46)"
+          "E-ANCHOR-KIND core-2.01.pdf#page=137&5.1.5: a heading anchor takes rule tokens, a behaviour or fails, not refines (core 46)"
         refused "core-2.01 | 5.1.5 | doc opal230\n"
-          "E-ANCHOR-KIND core-2.01.pdf#page=137&5.1.5: a heading anchor takes rule tokens or a behaviour, not doc opal230"
-      it "refuses a rule token on a paragraph" $
+          "E-ANCHOR-KIND core-2.01.pdf#page=137&5.1.5: a heading anchor takes rule tokens, a behaviour or fails, not doc opal230"
+      it "refuses a rule token, a behaviour and a fails on a paragraph: since M4a behaviour and fails sit on headings alone" $ do
         refused "core-2.01 | 5.1.3#p1 | rule typeRow\n"
-          "E-ANCHOR-KIND core-2.01.pdf#page=100&5.1.3#p1: a list item or paragraph anchor takes law, fails or behaviour, not rule typeRow"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&5.1.3#p1: a list item or paragraph anchor takes law, not rule typeRow"
+        refused "core-2.01 | 5.1.3#p1 | behaviour \"Foo.bar\"\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&5.1.3#p1: a list item or paragraph anchor takes law, not behaviour \"Foo.bar\""
+        refused "core-2.01 | 5.1.3#p1 | fails \"Foo.bar\"\n"
+          "E-ANCHOR-KIND core-2.01.pdf#page=100&5.1.3#p1: a list item or paragraph anchor takes law, not fails \"Foo.bar\""
       it "refuses a doc anchor naming another spec, or without its doc token first" $ do
         let doc' payload = annotated pristine (T.unlines (("core-2.01 | doc | " <> payload) : drop 1 (T.lines hsa)))
         ir1 <- doc' "doc opal230 & rule typeRow & rule enumValues"
@@ -232,9 +236,9 @@ spec = do
         ir2 <- doc' "rule typeRow"
         map renderFinding (filter isError (fst (bindEntries ir2)))
           `shouldBe` ["E-ANCHOR-KIND core-2.01.pdf#page=1&doc: the doc anchor takes doc core201 first, then rule tokens, not rule typeRow"]
-      it "takes what each anchor's kind takes" $ do
+      it "takes what each anchor's kind takes: a behaviour and a fails on headings, a law on an item" $ do
         (checkErrs, bindErrs, _) <- errorsWith (T.unlines
-          [ "core-2.01 | 3.3.3.1 | behaviour \"Sync.x\"", "core-2.01 | 3.3.3#1 | law \"Sync.y\"" ])
+          [ "core-2.01 | 3.3.3.1 | behaviour \"Sync.x\"", "core-2.01 | 3.3.3.2 | fails \"Sync.z\"", "core-2.01 | 3.3.3#1 | law \"Sync.y\"" ])
         (checkErrs, bindErrs) `shouldBe` ([], [])
 
     describe "an annotation naming nothing in the IR, or sharing its anchor (E-ANCHOR)" $ do

@@ -14,7 +14,7 @@ Design section 4.2. 'mkContext' builds the shared, read-only
 'Hsed.Spec.RuleDef.Context' every rule reads: one IR under one errata set,
 its numbered tables, their classification ("Hsed.Spec.Rules"), every table's
 section ("Hsed.Spec.Scope"), the bound tables read under the errata set and
-the paragraph units its comments bind; 'mkContextWith' the same over a base,
+the paragraph and heading units its comments bind; 'mkContextWith' the same over a base,
 the read-only Context of the spec this one is read over (Core's for an Opal
 run, @hsedc --base@), whose checks are its own run's. 'checks' runs the generic checks, then the
 checks of every rule of "Hsed.Spec.Registry" on the tables bound to its shape
@@ -73,7 +73,7 @@ import           Hsed.Spec.DSL     (SomeBinding (..), bindingAccepts, someBindin
 import           Hsed.Spec.Document (documentChecks)
 import           Hsed.Spec.Errata  (Erratum (..), correctTable)
 import           Hsed.Spec.Grammar (Payload (..))
-import           Hsed.Spec.IR      (ParaIR, SpecIR (..), TableIR (..))
+import           Hsed.Spec.IR      (HeadingIR (..), ParaIR, SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules   (checkExemplars, checkRuleAnchors, classifySignaturesWith, classifyWithRules)
@@ -106,6 +106,7 @@ mkContextWith ruleSet base es ir = Context
   , cxSigs           = signatureUnits ir
   , cxSigClasses     = sigClasses
   , cxParas          = paragraphBindings ir
+  , cxHeadingUnits   = headingBindings ir
   , cxBase           = base
   }
   where
@@ -124,6 +125,16 @@ paragraphBindings ir = Map.fromList
   [ (aid, (p, sb))
   | pa <- parseAnnots ir, Just aid@(ItemId _ _) <- [paAnchor pa], Right (Full sb) <- [paPayload pa]
   , fmap shapeUnit (someBindingShape sb) == Just ParagraphUnit, Right p <- [anchorParagraph ir aid] ]
+
+-- | The heading units of an IR: each heading whose comment (validated as every
+--   annotation is, so that it names exactly one heading) binds it with a shape
+--   that takes heading units, with that binding. A heading carrying rule tokens
+--   is a rule anchor, not a unit.
+headingBindings :: SpecIR -> Map AnchorId (HeadingIR, SomeBinding)
+headingBindings ir = Map.fromList
+  [ (aid, (h, sb))
+  | pa <- parseAnnots ir, Just aid@(SectionId s) <- [paAnchor pa], Right (Full sb) <- [paPayload pa]
+  , fmap shapeUnit (someBindingShape sb) == Just HeadingUnit, h : _ <- [[ h | h <- ir.headings, h.section == Just s ]] ]
 
 -- | Every bound table read under an errata set, with what reading it found: its
 --   caption and cells corrected by the @erratum scott@ pairs of its own binding.

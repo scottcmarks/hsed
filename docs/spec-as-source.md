@@ -54,7 +54,7 @@ Winner per question is the design adopted as base; *corrected* lists what the sk
 - Flags `/F 6`. No `/Popup`, `/NM`, `/AP`, `/C` (pypdf emits a harmless `/Flags 0` beside `/F`).
 - `/HSED` is identity only: schema version, spec, anchor id, struct path (`/K` index path, `0/1288` for Core T46). Ordinal, page and label, header, words hash, fragment Rects and caption are derivable from the pristine PDF, so they live in `spec/annot/<spec>.manifest.json` and are recomputed at `hsedc verify`; a table annotation stays near the 150-byte floor the M1 probe measured.
 - One annotation per logical table, on its first fragment; the manifest lists fragments (Opal T38 spans PDF 56-78). The struct tree stitches a table's page fragments; Word's split tables (Core T7) stay two struct tables, which the IR records as parts 1 and 2 of one id and the annotation anchors on the first; repeated header rows are dropped by rule.
-- Kinds: `/Doc` (one per PDF, also carrying document-wide `rule` tokens), `/Rule` (at a governing heading), `/Bind` (table), `/Law` (sentence or list item), `/Behaviour` (method heading or Fails list). Signature blocks are rule-bound and carry no annotation. A binding must be of its anchor's kind (`E-ANCHOR-KIND`): the doc anchor takes `doc <its own spec>` first, then rule tokens; a heading takes rule tokens or `behaviour`; a table takes a table binding or a bare modifier chain; a list item or paragraph takes `law`, `fails` or `behaviour`. One annotation per anchor; an id that names nothing in the IR is `E-ANCHOR`. A section whose payload starts with `behaviour`/`fails` is /Behaviour. The manifest carries `spec`, `source`, `md5`, `pages`, `labelOffset`, `anchors`, `irVersion` (*corrected, the M2c review:* not `rules` or `wordComplete`, which an earlier draft listed and no step reads: the rule tokens are the annotations', the word-complete sections the IR's, docs/ir-v1.md; reanchoring, M6, adds what it needs).
+- Kinds: `/Doc` (one per PDF, also carrying document-wide `rule` tokens), `/Rule` (at a governing heading), `/Bind` (table), `/Law` (sentence or list item), `/Behaviour` (method heading or Fails heading). Signature blocks are rule-bound and carry no annotation. A binding must be of its anchor's kind (`E-ANCHOR-KIND`): the doc anchor takes `doc <its own spec>` first, then rule tokens; a heading takes rule tokens, `behaviour` or `fails` (*since M4a:* `fails` sits on the Fails list's heading, a heading unit as the method's heading is, §13.16, and no longer on a list item); a table takes a table binding or a bare modifier chain; a list item or paragraph takes `law`. One annotation per anchor; an id that names nothing in the IR is `E-ANCHOR`. A section whose payload starts with `behaviour`/`fails` is /Behaviour. The manifest carries `spec`, `source`, `md5`, `pages`, `labelOffset`, `anchors`, `irVersion` (*corrected, the M2c review:* not `rules` or `wordComplete`, which an earlier draft listed and no step reads: the rule tokens are the annotations', the word-complete sections the IR's, docs/ir-v1.md; reanchoring, M6, adds what it needs).
 
 ### 3.2 Anchor record and re-anchoring
 
@@ -303,15 +303,16 @@ class Enumerated e where typeUID :: UID; range :: (Int, Int)
 -- Hsed.Spec.Form (measured; total)   data Form = Form { cols :: Int, headerSource :: HeaderSource, headerNorm :: [Text], grid8 :: Bool, captionKind :: CaptionKind, ragged :: Bool }
 -- Hsed.Spec.Shape (asserted)
 data Shape = TypeRow | EnumValues | TableDesc | ColumnsAddition | TableUIDs | UidTable | StatusCodes | Codes | FieldValue | FieldType | ByteFieldValue
-           | ByteGrid | Feature | ConstValues | Ranges | Preconfig | Tokens | StateTable | Props | PropsReq | Legend | Decision | Prose | Sentence | Doc | Heading | Sig
+           | ByteGrid | Feature | ConstValues | Ranges | Preconfig | Tokens | StateTable | Props | PropsReq | Legend | Decision | Prose | Sentence | Doc | Heading | Sig | Method
            -- Sentence (M3): a law's sentence, a paragraph unit, which accepts no table
+           -- Method (M4a): a method's heading, or its Fails list's, a behaviour or a fails binds, a heading unit, which accepts no table
 accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule defaults, Warning under `as`)
 -- Hsed.Spec.Anchor   data Anchor (s :: Shape) = Anchor { aId :: AnchorId, aSpec :: SpecId, aStruct :: Text, aPage :: Int }  -- rest from the manifest
 -- Hsed.Spec.Grammar  parse :: Text -> Either Finding SomeBinding; print :: SomeBinding -> Text; parse . print == id
 -- Hsed.Spec.DSL   data Binding (s :: Shape): one constructor per Shape (Doc, Rule, TypeRowB, EnumValues, TableDescB, TableUIDs, UidTableB, StatusCodes, CodesB,
 --   FieldValue, FieldType, ByteFieldValue, ByteGridB, FeatureB, ConstValues, Ranges, PreconfigB, Tokens,
---   StateTable QName, PropsNames, PropsInitial, PropsReq, Legend, Decision QName, SigB, Behaviour QName, Fails QName, Law QName (:: Binding 'Sentence
---   since M3; 'Prose before), ProseB) plus shape-polymorphic
+--   StateTable QName, PropsNames, PropsInitial, PropsReq, Legend, Decision QName, SigB, Behaviour QName, Fails QName (both :: Binding 'Method
+--   since M4a; 'Heading and 'Prose before), Law QName (:: Binding 'Sentence since M3; 'Prose before), ProseB) plus shape-polymorphic
 --   Refines Ref, Narrows [Ref], Replaces [Ref], Extends Ref :: Binding 'ColumnsAddition, Also (&); type Mod s = Binding s -> Binding s with cols, rangeWords,
 --   enumInDescription, expand, erratum, waive, as @s', and since M2c's scaffold layout "Name" (byte grid, feature, byteFieldValue)
 --   and bits k [(bit, name)] (byte grid, feature), each with its field in RuleDef.Mods (mLayout, mBits);
@@ -323,10 +324,15 @@ accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule 
 --                       ruleCodes :: [CodeDef] (M2c scaffold: the codes it claims, CodeDef { codeName, codeSeverities, codeReports }) };
 --                     Emitted = Emit Decl | EmitIn GenModule Decl | Excluded; one per module Hsed.Spec.Rules.<Rule>, listed one
 --                     line each by Hsed.Spec.Registry (docs/adding-a-rule.md); one RuleDef per shape (propsNames and propsInitial
---                     share Props: one RuleDef dispatching on the binding); three units: numbered tables (BoundTable),
---                     since M2b signature blocks (BoundSig, boundSigs) and since M3 paragraphs, each bound by its own comment
+--                     share Props: one RuleDef dispatching on the binding); four units: numbered tables (BoundTable),
+--                     since M2b signature blocks (BoundSig, boundSigs), since M3 paragraphs, each bound by its own comment
 --                     alone, with no scope and no classification (BoundPara { bpAnchor, bpPara :: ParaIR, bpBinding }, boundParas,
---                     atPara, paraProvenanceOf; the Context's cxParas); Shape.shapeUnit names the shape that takes each kind
+--                     atPara, paraProvenanceOf; the Context's cxParas), and since M4a headings, bound likewise by their own
+--                     behaviour or fails comment (BoundHeading { bhAnchor, bhHeading :: HeadingIR, bhBinding }, boundHeadings,
+--                     headingUnits, atHeading, headingProvenanceOf, whose hash is the manifest's, headingHash; the Context's
+--                     cxHeadingUnits; a heading carrying rule tokens is a rule anchor, not a unit); Shape.shapeUnit names the
+--                     shape that takes each kind (Sig, Sentence, Method); a fourth kind cloned as M3 cloned the third, the
+--                     generalisation into one bound-unit abstraction M4b's first scaffold step (the M4a plan's answer 6)
 -- Hsed.Spec.Scope     (M2a) sections (tableSections), scopeOf :: SpecIR -> RuleName -> [Section] (from anchors only), parseAnnots;
 --                     below the registry, so rule modules may import it; the Context carries the sections (cxSections)
 -- Hsed.Spec.Rules     rules = registry; checkExemplars; classify, classifySignatures (E-UNBOUND, E-AMBIGUOUS); re-exports Hsed.Spec.Scope

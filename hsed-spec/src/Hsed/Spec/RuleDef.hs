@@ -31,32 +31,38 @@ knows lives in its 'RuleDef':
   findings report), from which "Hsed.Spec.Report" assembles the catalogue, so
   that a new rule names its own codes and edits no generic module.
 
-Three kinds of unit are bound ('Hsed.Spec.Shape.shapeUnit' of the rule's
+Four kinds of unit are bound ('Hsed.Spec.Shape.shapeUnit' of the rule's
 shape): the numbered tables, which a rule fires on by their form and reads
 as 'BoundTable's; the method signature blocks (IR @sigs@, design section
 5.1 step 7), the signature units, which carry no annotation: every one in a
 rule's scope is bound to the rule whose shape takes signature units
 ("Hsed.Spec.Rules".'Hsed.Spec.Rules.classifySignatures'), and that rule
 reads them as 'BoundSig's ('boundSigs'; 'ruleChecks' and 'ruleCompile' get
-it no tables, and its 'fires' is never true of a table); and the paragraphs
+it no tables, and its 'fires' is never true of a table); the paragraphs
 (IR @paras@: a list item, @3.3.10.2.1#3a@, or the k-th paragraph of a
 section, @#p\<k\>@), the paragraph units, which their own comment alone binds
 (a @law@ binds its sentence): there is no scope and no classification, a
 paragraph no comment names being bound by nothing and missed by nothing; the
 rule whose shape takes paragraph units reads them as 'BoundPara's
 ('boundParas'), and, like a signature unit's rule, gets no tables and fires
-on none. A signature unit's anchor id is @\<section\>/sig@; locate its
-findings with 'atSig' and its declarations with 'sigProvenanceOf'; a
-paragraph unit's, @\<section\>#\<item\>@, with 'atPara' and
-'paraProvenanceOf'.
+on none; and, since M4a, the headings (IR @headings@: a method's section,
+@5.3.3.6@, or its Fails list's, @5.3.3.6.3@), the heading units, which their
+own comment alone binds likewise (a @behaviour@ or a @fails@, design section
+13.16; a heading carrying rule tokens is a rule anchor, not a unit): the rule
+whose shape takes heading units reads them as 'BoundHeading's
+('boundHeadings'), gets no tables and fires on none. A signature unit's
+anchor id is @\<section\>/sig@; locate its findings with 'atSig' and its
+declarations with 'sigProvenanceOf'; a paragraph unit's,
+@\<section\>#\<item\>@, with 'atPara' and 'paraProvenanceOf'; a heading
+unit's, @\<section\>@, with 'atHeading' and 'headingProvenanceOf'.
 
 A rule that needs what another rule reads (an enumeration takes its range from
 its type row) imports that rule's module and calls its readers on the same
 'Context'. The 'Context' itself holds only what is generic: one IR under one
 errata set, its numbered tables, their classification, the section of every
 table ("Hsed.Spec.Scope"), the bound tables read under the errata set, the
-signature units and their classification, and the paragraph units the comments
-bind ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext' builds it); and, for a spec
+signature units and their classification, and the paragraph and heading units
+the comments bind ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext' builds it); and, for a spec
 read over another (Opal over Core, @hsedc --base@), that spec's Context, its
 base ('cxBase'), read-only: a lookup this spec does not answer (a feature
 descriptor's general format, its code) runs in the base, wholly there, since
@@ -94,6 +100,13 @@ module Hsed.Spec.RuleDef
   , paragraphUnits
   , atPara
   , paraProvenanceOf
+    -- * Heading units
+  , BoundHeading (..)
+  , boundHeadings
+  , headingUnits
+  , atHeading
+  , headingProvenanceOf
+  , headingHash
   , Mods (..)
   , modsOf
     -- * Locating findings
@@ -125,8 +138,8 @@ import           Hsed.Spec.Common (CodeDef (..), ErrataSet (..), Finding, Report
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), bindingAccepts, someBindingShape)
 import qualified Hsed.Spec.Gen    as Gen
-import           Hsed.Spec.IR     (CellIR (..), ParaIR (..), ParaKind (..), SigIR (..), SpecIR (..), StructPath (..),
-                                   TableIR (..))
+import           Hsed.Spec.IR     (CellIR (..), HeadingIR (..), ParaIR (..), ParaKind (..), SigIR (..), SpecIR (..),
+                                   StructPath (..), TableIR (..))
 import           Hsed.Spec.Shape  (Form, Shape (..), measure, normaliseCaption)
 
 
@@ -216,6 +229,10 @@ data Context = Context
   , cxParas          :: !(Map AnchorId (ParaIR, SomeBinding))
     -- ^ the paragraph units: each paragraph or list item a valid comment binds
     --   with a shape that takes paragraph units, with that binding
+  , cxHeadingUnits   :: !(Map AnchorId (HeadingIR, SomeBinding))
+    -- ^ the heading units: each heading a valid comment binds with a shape that
+    --   takes heading units, with that binding ('cxSections' is the tables'
+    --   sections, "Hsed.Spec.Scope".'Hsed.Spec.Scope.tableSections')
   , cxBase           :: !(Maybe Context)
     -- ^ the Context of the spec this one is read over, read-only (Core's for
     --   Opal, @hsedc --base@); none for a spec read alone
@@ -337,6 +354,68 @@ paraProvenanceOf ctx bp = Gen.Provenance
   , Gen.structPath  = let StructPath sp = p.structPath in sp
   , Gen.cellsHash   = p.hash }
   where p = bpPara bp
+
+
+-- * Heading units
+
+-- | One heading unit (a method's heading, or its Fails list's) bound to a
+--   rule's shape by its comment. It is read as printed: its section number and
+--   title, the IR's.
+data BoundHeading = BoundHeading
+  { bhAnchor  :: !AnchorId      -- ^ @5.3.3.6@
+  , bhHeading :: !HeadingIR
+  , bhBinding :: !SomeBinding   -- ^ its comment's binding (@behaviour "Base.get"@)
+  }
+
+-- | Every heading unit, in the anchors' natural order (@5.2.3.5@ before
+--   @5.3.3.6@, @5.3.3.6@ before @5.3.3.6.3@).
+headingUnits :: Context -> [BoundHeading]
+headingUnits ctx =
+  L.sortOn (naturalKey . renderAnchorId . bhAnchor) [ BoundHeading aid h sb | (aid, (h, sb)) <- Map.toList (cxHeadingUnits ctx) ]
+
+-- | The heading units bound with a shape, in the anchors' natural order.
+boundHeadings :: Maybe Shape -> Context -> [BoundHeading]
+boundHeadings shape ctx = [ bh | isJust shape, bh <- headingUnits ctx, someBindingShape (bhBinding bh) == shape ]
+
+-- | Locate a finding at a heading unit: @core-2.01.pdf#page=201&5.3.3.6@.
+atHeading :: Context -> BoundHeading -> Finding -> Finding
+atHeading ctx bh = locatedAt (cxSpec ctx) (renderAnchorId (bhAnchor bh)) ((bhHeading bh).page + 1)
+
+-- | Where a declaration made from a heading unit comes from: its anchor id,
+--   its title as the caption, its PDF and printed page, its 1-based position
+--   among the IR's headings as the ordinal, its structure path and its hash
+--   ('headingHash': the manifest's hash of a heading anchor, the sha256 of
+--   its title's normalised words).
+headingProvenanceOf :: Context -> BoundHeading -> Gen.Provenance
+headingProvenanceOf ctx bh = Gen.Provenance
+  { Gen.spec        = cxSpec ctx
+  , Gen.tableId     = renderAnchorId (bhAnchor bh)
+  , Gen.caption     = h.title
+  , Gen.pdfPage1    = h.page + 1
+  , Gen.printedPage = h.page + 1 - (cxIR ctx).labelOffset
+  , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex h (cxIR ctx).headings)
+  , Gen.structPath  = let StructPath sp = h.structPath in sp
+  , Gen.cellsHash   = headingHash h.title }
+  where h = bhHeading bh
+
+-- | The hash the manifest records for a heading anchor (@tools/extract/annotate.py@,
+--   @words_hash (norm_words title)@): the sha256 of the title's words, lower-cased,
+--   each stripped of its punctuation, symbol and control characters (the
+--   underscore kept, an identifier character in these specs), split on
+--   whitespace, the empty ones dropped, joined by single spaces.
+--
+-- >>> T.take 12 (headingHash "Column Types")
+-- "dbddb70a974e"
+-- >>> headingHash "Basic Table Method Group - Get (Table and Object Method)" == headingHash "basic table method group get table and object method"
+-- True
+headingHash :: Text -> Text
+headingHash title = tshow (hashWith SHA256 (encodeUtf8 (T.unwords (filter (not . T.null) (map (T.filter keep) (T.words (T.toLower title)))))))
+  where
+    keep c = c == '_' || C.generalCategory c `notElem` stripped
+    stripped =
+      [ C.ConnectorPunctuation, C.DashPunctuation, C.OpenPunctuation, C.ClosePunctuation, C.InitialQuote, C.FinalQuote
+      , C.OtherPunctuation, C.MathSymbol, C.CurrencySymbol, C.ModifierSymbol, C.OtherSymbol
+      , C.Control, C.Format, C.Surrogate, C.PrivateUse, C.NotAssigned ]
 
 
 -- | The modifiers of a binding a rule reads, one field for each modifier of

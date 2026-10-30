@@ -31,7 +31,9 @@ class Vocabulary(unittest.TestCase):
     def test_every_word_has_its_anchors(self):
         self.assertEqual(H.VOCABULARY["rule"], ("section",))
         self.assertEqual(H.VOCABULARY["doc"], ("doc",))
-        self.assertEqual(H.VOCABULARY["behaviour"], ("section", "item"))
+        self.assertEqual(H.VOCABULARY["behaviour"], ("section",))
+        self.assertEqual(H.VOCABULARY["fails"], ("section",))
+        self.assertEqual(H.VOCABULARY["law"], ("item",))
         self.assertEqual(H.VOCABULARY["sig"], ())
         self.assertTrue(all(H.VOCABULARY[w] == ("table",) for w in ("typeRow", "erratum", "waive", "as", "refines", "prose")))
 
@@ -39,7 +41,8 @@ class Vocabulary(unittest.TestCase):
         for anchor_id, payload in (("doc", "doc core201"), ("5.1.3", "rule typeRow & rule enumValues"),
                                    ("T75", 'erratum scott ["Fractoin" ~> "Fraction"]'),
                                    ("T149", 'waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "no erratum says which is wrong"'),
-                                   ("3.3.10.2.1#3a", 'law "Sync.ifSendWhileBusy"'), ("5.3.3.6", 'behaviour "Base.get"')):
+                                   ("3.3.10.2.1#3a", 'law "Sync.ifSendWhileBusy"'), ("5.3.3.6", 'behaviour "Base.get"'),
+                                   ("5.3.3.6.3", 'fails "Base.getFails"')):
             self.assertIsNone(H.payload_problem(anchor_id, payload), (anchor_id, payload))
 
     def test_a_payload_on_the_wrong_kind_of_anchor_is_refused(self):
@@ -50,6 +53,9 @@ class Vocabulary(unittest.TestCase):
         self.assertEqual(H.payload_problem("T46", "doc core201"), "'doc' belongs on the doc anchor, not on a table anchor")
         self.assertEqual(H.payload_problem("T46", 'law "Foo.bar"'), "'law' belongs on a item anchor, not on a table anchor")
         self.assertEqual(H.payload_problem("T46", "sig"), "'sig' belongs on no anchor, not on a table anchor")
+        # since M4a behaviour and fails sit on headings alone (design 13.16)
+        self.assertEqual(H.payload_problem("5.3.3.6.3#a", 'fails "Base.getFails"'), "'fails' belongs on a section anchor, not on a item anchor")
+        self.assertEqual(H.payload_problem("5.3.3.6#p1", 'behaviour "Base.get"'), "'behaviour' belongs on a section anchor, not on a item anchor")
 
     def test_an_unknown_first_word_is_refused(self):
         self.assertIn("unknown name 'frobnicate'", H.payload_problem("T46", "frobnicate"))

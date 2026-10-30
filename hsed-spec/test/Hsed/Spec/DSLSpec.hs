@@ -50,7 +50,8 @@ examples =
   , at (anchor @'PropsReq "opal-2.30" "T17" "0/360" 33) propsReq
   , at (anchor @'StateTable "core-2.01" "T45" "0/1061" 83) (stateTable "Sync.table45")
   , at (anchor @'Sentence "core-2.01" "3.3.10.2.1#3a" "0/1058/2/0/1/0" 82) (law "Sync.ifSendWhileBusy")
-  , at (anchor @'Heading "core-2.01" "5.3.3.6" "0/3379" 201) (behaviour "Base.get")
+  , at (anchor @'Method "core-2.01" "5.3.3.6" "0/3379" 201) (behaviour "Base.get")
+  , at (anchor @'Method "core-2.01" "5.3.3.6.3" "0/3395" 201) (fails "Base.getFails")
   , at (anchor @'Prose "core-2.01" "T2" "0/199" 28) prose
   , at (anchor @'Codes "core-2.01" "T25" "0/589" 53) (as @'Codes codes)
   , at (anchor @'Feature "core-2.01" "T43" "0/861" 71) (bits 5 [(0, "KeyChangeZone"), (1, "IdScope")] feature)
@@ -64,7 +65,7 @@ spec = do
     it "type-checks the design's examples and knows their shapes" $
       [ bindingShape b | Bound _ b <- examples ] `shouldBe`
         [ Doc, Heading, TypeRow, TypeRow, EnumValues, ColumnsAddition, Feature, Codes, EnumValues, Legend
-        , PropsReq, StateTable, Sentence, Heading, Prose, Codes, Feature, Preconfig, Heading ]
+        , PropsReq, StateTable, Sentence, Method, Method, Prose, Codes, Feature, Preconfig, Heading ]
 
     it "names every rule of design section 3.4" $ do
       length knownRules `shouldBe` 19

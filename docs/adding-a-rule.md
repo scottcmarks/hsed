@@ -68,10 +68,14 @@ Some changes are generic and are made in a small commit of their own, before the
   grid, a feature, a byteFieldValue table: the record's name as written, the layout keeping the caption's
   title) and `bits k [(bit, "Name")]` (`mBits`; a byte grid, a feature: held to the row it reads); a
   binding takes one `layout` and one `bits` for each byte (`applyModifier`, `E-MODIFIER`).
-- **A unit that is not a table.** `RuleDef` binds three kinds of unit: the numbered tables, since
-  M2b the method signature blocks, and since M3 the paragraphs a comment binds (a law's sentence;
-  both below). Another kind (a Fails list) needs its IR schema, the extractor, its classification
-  (or, as the paragraphs, none) and its bound unit in `RuleDef` first, as these had.
+- **A unit that is not a table.** `RuleDef` binds four kinds of unit: the numbered tables, since
+  M2b the method signature blocks, since M3 the paragraphs a comment binds (a law's sentence) and
+  since M4a the headings a comment binds (a method's by `behaviour`, its Fails list's by `fails`; all
+  three below). Each kind was cloned from the one before (its `UnitKind`, its bound record in
+  `RuleDef`, its field in the `Context`, its `W-GEN-EXCLUDED` in `Compile`, its exemplar check in
+  `Rules`); the IR already held what the fourth needed (the headings, and for a Fails list its
+  labelled items with their hashes), so no extractor work came with it. Generalising the four into
+  one bound-unit abstraction is M4b's first scaffold step (the M4a plan's answer 6).
 - **A milestone's anchors.** Every rule token and heading anchor the milestone's rules need goes into
   the `.hsa` in one commit, with the `.upd`, manifest and bindings `make gen` regenerates, so that the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
@@ -235,7 +239,7 @@ interface with a stub rule.
 Since M3 the sentence shape's rule is the law reader, `Hsed.Spec.Rules.Laws` (`lawsRule`). Its name is
 `laws`, not `law`: `RegistrySpec` bans a registered rule's name from the generic modules' code, string
 literals included, and `Hsed.Spec.Scope` prints the binding's keyword in its `E-ANCHOR-KIND` message
-(`a list item or paragraph anchor takes law, fails or behaviour`), so a reader reached by a comment
+(`a list item or paragraph anchor takes law`), so a reader reached by a comment
 takes a name no generic module prints. It reads the sentences (`boundParas`) and, through the
 `stateTable` reader (`stateTableReads`, less the tables that rule leaves out), the state tables, which
 a `stateTable "Module.name"` comment binds to a law the same way: `lawReads`, the sentences in the
@@ -256,6 +260,33 @@ text and `stack build hsed` its names (a law a comment names and the code lacks 
 name both ways and by hash, runs each law's property and finds each case a law names in the jig's
 catalogue. Nothing a law module imports may import `Hsed.Gen.<Spec>.Laws`, which would be a module
 cycle.
+
+## A rule over heading units
+
+The headings of the IR (`headings`, `docs/ir-v1.md`: each with its section number, title, level,
+page and structure path) are the fourth kind of unit, since M4a (design §13.16). A heading is bound
+by its own comment alone, on its section anchor: `behaviour "Base.get"` on a method's heading
+(`core-2.01 | 5.3.3.6 | behaviour "Base.get"`), `fails "Base.getFails"` on its Fails list's heading
+(`5.3.3.6.3`); both words sit on headings alone (a `fails` on a list item is `E-ANCHOR-KIND`, as
+`annotate.py` refuses it by `hsed_annot.VOCABULARY`). A heading carrying rule tokens is a rule
+anchor, not a unit; a heading no comment names is bound by nothing and missed by nothing; and an
+anchor whose number several headings carry is `E-ANCHOR`, as for a rule anchor.
+`Hsed.Spec.Shape.shapeUnit` says which shape takes them (the method shape, `Method`, which
+`behaviour` and `fails` bind and which accepts no table); its rule is an ordinary module under
+`Rules/` whose `RuleDef` has `bindsTo` its binding (`SomeBinding (behaviour "")`), `fires = \_ _ _ ->
+False`, `ruleIdent = const Nothing`, and an exemplar that is a section anchor (`C-EXEMPLAR` asks only
+that the IR numbers the heading once). `ruleChecks` and `ruleCompile` get no tables (`[]`) and read
+the bound headings themselves: `boundHeadings (ruleShape <rule>) ctx :: [BoundHeading]`, in the
+anchors' natural order, each with its anchor id (`bhAnchor`, `SectionId "5.3.3.6"`), its `HeadingIR`
+(`bhHeading`: `section`, `title`, `level`, `page` 0-based, `structPath`, `rect`) and its comment's
+binding (`bhBinding`, whose constructor tells a `behaviour` from a `fails`). Locate a finding with
+`atHeading ctx bh` (`core-2.01.pdf#page=201&5.3.3.6`) and give a declaration `headingProvenanceOf
+ctx bh` (the title as its caption, its 1-based place among the headings as its ordinal, and as its
+hash the manifest's hash of a heading anchor, `headingHash`: the sha256 of the title's normalised
+words, as `annotate.py` records it). A heading a comment binds with a shape no rule reads is
+`W-GEN-EXCLUDED` at the heading (`hsedc compile`), and so is a heading its rule leaves out
+(`Excluded` with its section anchor). `HeadingUnitSpec` proves the interface with a stub rule; the
+registry's reader of the method shape is M4a's behaviours reader (its group G4).
 
 ## Generated code (`Hsed.Spec.Gen`)
 

@@ -152,12 +152,18 @@ spec = do
         , Just ("E-SHAPE core-2.01.pdf#page=100&T42: Sentence does not accept this table: it binds a paragraph or a list item, never a table;"
                 <> " measured 9 columns, header [\"bitbyte\",\"7\",\"6\",\"5\",\"4\",\"3\",\"2\",\"1\",\"0\"], caption CaptionFeature, byte grid, ragged") ]
 
+    it "Method accepts no table: a behaviour or a fails binds a method's heading" $
+      [ fmap renderFinding (accepts Method f) | f <- [form46] ] `shouldBe`
+        [ Just ("E-SHAPE core-2.01.pdf#page=100&T46: Method does not accept this table: it binds a method's heading, never a table;"
+                <> " measured 3 columns, header [\"uid\",\"name\",\"format\"], caption CaptionIdent \"AC_element\"") ]
+
     it "projectColumns refuses a column the table lacks" $
       either (const True) (const False) (projectColumns 0 3 form87) `shouldBe` True
 
   describe "shapeUnit" $
-    it "binds a signature block with Sig, a paragraph with Sentence, a table with every other shape" $
-      [ (s, shapeUnit s) | s <- [minBound .. maxBound], shapeUnit s /= TableUnit ] `shouldBe` [(Sentence, ParagraphUnit), (Sig, SignatureUnit)]
+    it "binds a signature block with Sig, a paragraph with Sentence, a heading with Method, a table with every other shape" $
+      [ (s, shapeUnit s) | s <- [minBound .. maxBound], shapeUnit s /= TableUnit ]
+        `shouldBe` [(Sentence, ParagraphUnit), (Sig, SignatureUnit), (Method, HeadingUnit)]
 
   describe "the committed Core extraction" $ do
     let path = "../spec/ir/core-2.01.json"

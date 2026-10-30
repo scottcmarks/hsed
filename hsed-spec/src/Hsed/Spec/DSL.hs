@@ -36,10 +36,11 @@ shape-polymorphic here and 'PolyBinding' carries them until the rules resolve
 the target.
 
 'bindingKind' says which anchors a binding belongs on (design section 3.1):
-@doc@ and its rule tokens on the document, rule tokens or a @behaviour@ on a
-heading, a table binding (with its modifiers) on a table, @law@, @fails@ or
-@behaviour@ on a list item or paragraph. "Hsed.Spec.Rules" refuses a binding
-on an anchor of another kind.
+@doc@ and its rule tokens on the document, rule tokens, a @behaviour@ or a
+@fails@ on a heading (a method's, or its Fails list's: a heading unit of the
+'Method' shape, since M4a), a table binding (with its modifiers) on a table,
+@law@ on a list item or paragraph. "Hsed.Spec.Rules" refuses a binding on an
+anchor of another kind.
 -}
 module Hsed.Spec.DSL
   ( -- * Bindings
@@ -172,8 +173,8 @@ data Binding (s :: Shape) where
   SigB                  :: Binding 'Sig
   ProseB                :: Binding 'Prose
   -- prose bindings
-  Behaviour             :: QName -> Binding 'Heading
-  Fails                 :: QName -> Binding 'Prose
+  Behaviour             :: QName -> Binding 'Method     -- ^ a heading unit: the method's heading it sits on
+  Fails                 :: QName -> Binding 'Method     -- ^ a heading unit: the Fails heading it sits on
   Law                   :: QName -> Binding 'Sentence   -- ^ a paragraph unit: the sentence or list item it sits on
   -- cross-spec bindings, shaped by their target
   Refines               :: KnownShape s => Ref -> Binding s
@@ -226,8 +227,8 @@ shapeOfBinding = \case
   DecisionB               -> SDecision
   SigB                    -> SSig
   ProseB                  -> SProse
-  Behaviour _             -> SHeading
-  Fails _                 -> SProse
+  Behaviour _             -> SMethod
+  Fails _                 -> SMethod
   Law _                   -> SSentence
   Refines _               -> shapeSing
   Narrows _               -> shapeSing
@@ -281,8 +282,8 @@ data BindingKind
   = DocKind [SpecId] Bool  -- ^ @doc@ tokens (with any rule tokens), and whether a @doc@ token comes first
   | RuleKind               -- ^ rule tokens only
   | TableKind              -- ^ a table binding, with or without modifiers
-  | BehaviourKind          -- ^ @behaviour "M.f"@
-  | LawKind                -- ^ @law "M.f"@ or @fails "M.f"@
+  | BehaviourKind          -- ^ @behaviour "M.f"@ or @fails "M.f"@, on a heading
+  | LawKind                -- ^ @law "M.f"@, on a list item or paragraph
   | SigKind                -- ^ @sig@: signature blocks are rule-bound and carry no annotation
   | ModifiedKind BindingKind  -- ^ modifiers on a binding that is not a table's
   deriving stock (Eq, Show)
@@ -294,8 +295,8 @@ bindingKind b = case b of
   RuleB _                 -> rules
   Also _ _                -> rules
   Behaviour _             -> BehaviourKind
+  Fails _                 -> BehaviourKind
   Law _                   -> LawKind
-  Fails _                 -> LawKind
   SigB                    -> SigKind
   WithErratum _ _ inner   -> modified inner
   WithWaiver _ _ _ inner  -> modified inner
@@ -628,12 +629,14 @@ sig = SigB
 prose :: Binding 'Prose
 prose = ProseB
 
--- | @behaviour "Base.get"@ on a method heading.
-behaviour :: QName -> Binding 'Heading
+-- | @behaviour "Base.get"@ on a method's heading: the heading, a unit of its
+--   own shape ('Method', a heading unit), is bound to the hand-written
+--   behaviour the name gives.
+behaviour :: QName -> Binding 'Method
 behaviour = Behaviour
 
--- | @fails "Base.getFails"@ on a Fails list.
-fails :: QName -> Binding 'Prose
+-- | @fails "Base.getFails"@ on a method's Fails heading, a heading unit likewise.
+fails :: QName -> Binding 'Method
 fails = Fails
 
 -- | @law "Sync.ifSendWhileBusy"@ on a normative sentence or list item: the

@@ -21,7 +21,8 @@ ignored:
 
 Kind follows from the id: `doc` -> Doc, a section number -> Rule, `T<n>` -> Bind,
 `<section>#<item>` -> Law; a section or an item whose payload starts with `behaviour` or `fails` is
-Behaviour (design section 3.1: a method heading or a Fails list), as hsedc's annotKind has it.
+Behaviour (design section 3.1: a method's heading or its Fails list's heading; on an item VOCABULARY
+refuses both words, since M4a), as hsedc's annotKind has it.
 What a payload may say on each kind of anchor is VOCABULARY below, by its first word; a sidecar line
 whose first word does not belong on its anchor is refused here, before hsedc (whose grammar and
 anchor-kind check, Hsed.Spec.Rules.anchorKindMismatch, are the authority) would refuse it.
@@ -46,7 +47,7 @@ DOC_ID = "doc"                       # the one document-level anchor
 DOC_PAGE = 0                         # it sits on the first page ...
 DOC_RECT = (36.0, 720.0, 108.0, 756.0)                   # ... in the top-left inch
 DOC_STRUCT = ""                      # ... anchored at /StructTreeRoot (the empty /K path)
-BEHAVIOUR_WORDS = ("behaviour", "fails")                 # payload heads that make an item anchor a Behaviour
+BEHAVIOUR_WORDS = ("behaviour", "fails")                 # payload heads that make a section anchor a Behaviour
 HSA_SEP = " | "
 
 SECTION_RE = re.compile(r"^\d+(?:\.\d+)*$")                       # 5.1.3
@@ -64,9 +65,9 @@ FIRST_WORD_RE = re.compile(r"[\s(]*([A-Za-z_][A-Za-z0-9_']*)")
 VOCABULARY = {
     "doc": ("doc",),
     "rule": ("section",),
-    "behaviour": ("section", "item"),
+    "behaviour": ("section",),
     "law": ("item",),
-    "fails": ("item",),
+    "fails": ("section",),
     "sig": (),
     "typeRow": ("table",),
     "enumValues": ("table",),

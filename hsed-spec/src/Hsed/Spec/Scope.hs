@@ -31,8 +31,8 @@ cycle; design section 3.4, docs/adding-a-rule.md):
   @E-ERRATUM-PUBLISHED@), and the binding must be of the anchor's kind
   (@E-ANCHOR-KIND@, 'anchorKindMismatch'): the @doc@ anchor takes @doc
   \<spec\>@ naming this spec, first, and rule tokens; a heading takes rule
-  tokens or a @behaviour@; a table takes a table binding or a bare modifier
-  chain; a list item or paragraph takes @law@, @fails@ or @behaviour@.
+  tokens, a @behaviour@ or a @fails@; a table takes a table binding or a bare
+  modifier chain; a list item or paragraph takes @law@.
 -}
 module Hsed.Spec.Scope
   ( -- * Sections
@@ -169,10 +169,9 @@ anchorKindMismatch sid aid payload = case (aid, payload) of
       (DocId, _)               -> Just ("the doc anchor takes doc " <> specName sid <> " first, then rule tokens")
       (SectionId _, RuleKind)      -> Nothing
       (SectionId _, BehaviourKind) -> Nothing
-      (SectionId _, _)         -> Just "a heading anchor takes rule tokens or a behaviour"
+      (SectionId _, _)         -> Just "a heading anchor takes rule tokens, a behaviour or fails"
       (TableId _, TableKind)   -> Nothing
       (TableId _, _)           -> Just "a table anchor takes a table binding or a bare modifier chain"
-      (ItemId _ _, LawKind)       -> Nothing
-      (ItemId _ _, BehaviourKind) -> Nothing
-      (ItemId _ _, _)          -> Just "a list item or paragraph anchor takes law, fails or behaviour"
+      (ItemId _ _, LawKind)    -> Nothing
+      (ItemId _ _, _)          -> Just "a list item or paragraph anchor takes law"
       (SigId _, _)             -> Just "a signature block is rule-bound and carries no annotation"

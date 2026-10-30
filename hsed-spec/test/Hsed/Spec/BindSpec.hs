@@ -64,6 +64,12 @@ spec = withCore $ \pristine -> do
       fs `shouldBe` []
       fmap T.lines result `shouldSatisfy` either (const False)
         (elem "b_core_3_3_10_2_1_i_3a = at (anchor @'Sentence \"core-2.01\" \"3.3.10.2.1#3a\" \"0/1058/2/0/1/0\" 82) (law \"Sync.ifSendWhileBusy\")")
+    it "prints a behaviour on its heading at the Method shape, a heading unit's (M4a)" $ do
+      ir' <- annotated pristine (withoutLine "5.3.3.6" hsa <> "core-2.01 | 5.3.3.6 | behaviour \"Base.get\"\n")
+      let (fs, result) = bindModule ir'
+      fs `shouldBe` []
+      fmap T.lines result `shouldSatisfy` either (const False)
+        (elem "b_core_5_3_3_6 = at (anchor @'Method \"core-2.01\" \"5.3.3.6\" \"0/3379\" 201) (behaviour \"Base.get\")")
     it "reports an annotation it cannot resolve, citing the page, and leaves it out" $ do
       ir' <- annotated pristine (hsa <> "core-2.01 | T47 | refines (opal 3)\n")
       let (fs, entries) = bindEntries ir'

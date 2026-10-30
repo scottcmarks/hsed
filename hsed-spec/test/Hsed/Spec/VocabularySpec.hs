@@ -30,7 +30,10 @@ T42, T43; Opal T3-T6, T8), @ByteFieldValue@ the @[Byte(s), Field, Value(s)]@
 tables and T236's @[Bytes, Values]@; every byte grid's corner but T212's
 @Byte\\Bit@ is read as @Byte\\Bit@ and reported as a Note. M3's: a @law@ binds
 its sentence, a list item or paragraph, as a unit of its own shape
-(@Sentence@, a paragraph unit), which takes no table.
+(@Sentence@, a paragraph unit), which takes no table. M4a's: a @behaviour@ or
+a @fails@ binds its heading, a method's or its Fails list's, as a unit of its
+own shape (@Method@, a heading unit), which takes no table; neither sits on a
+list item any more (design 13.16).
 -}
 module Hsed.Spec.VocabularySpec (spec) where
 
@@ -109,7 +112,9 @@ coreReadiness =
   , (Feature, WholeDocument, [42, 43])
   , (ByteFieldValue, WholeDocument, [28, 31, 32, 33, 35, 36, 37, 236])
     -- M3: a law's sentence, a paragraph unit, which no table is
-  , (Sentence, WholeDocument, []) ]
+  , (Sentence, WholeDocument, [])
+    -- M4a: a behaviour's or a fails' heading, a heading unit, which no table is
+  , (Method, WholeDocument, []) ]
 
 spec :: Spec
 spec = do
@@ -162,6 +167,14 @@ spec = do
       [ (shape, shapeUnit shape) | Right (Full sb@(SomeBinding _)) <- [parsePayload "law \"Sync.ifSendWhileBusy\""]
                                  , Just shape <- [someBindingShape sb] ]
         `shouldBe` [(Sentence, ParagraphUnit)]
+
+  describe "the vocabulary of M4a" $
+    it "binds a behaviour or a fails on a heading alone, a unit of its own shape that takes no table" $ do
+      accepted "behaviour \"Base.get\"" `shouldBe` ["section"]
+      accepted "fails \"Base.getFails\"" `shouldBe` ["section"]
+      [ (shape, shapeUnit shape) | c <- ["behaviour \"Base.get\"", "fails \"Base.getFails\""]
+                                 , Right (Full sb@(SomeBinding _)) <- [parsePayload c], Just shape <- [someBindingShape sb] ]
+        `shouldBe` [(Method, HeadingUnit), (Method, HeadingUnit)]
 
   source <- runIO (readFileUtf8 "../tools/extract/hsed_annot.py")
   let python = pythonVocabulary source

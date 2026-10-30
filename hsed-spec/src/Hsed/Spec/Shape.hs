@@ -80,12 +80,13 @@ import           Hsed.Spec.IR       (CellIR (..), HeaderSource (..), TableIR (..
 -- | Every shape of design section 4.2. The table shapes name what a rule or a
 --   comment asserts a table to be; 'Doc', 'Heading', 'Prose' and 'Sig' accept
 --   any form; 'Sentence', a normative sentence or list item a @law@ binds (a
---   paragraph unit), accepts none.
+--   paragraph unit), and 'Method', a method's heading a @behaviour@ or a
+--   @fails@ binds (a heading unit, M4a), accept none.
 data Shape
   = TypeRow | EnumValues | TableDesc | ColumnsAddition | TableUIDs | UidTable
   | StatusCodes | Codes | FieldValue | FieldType | ByteFieldValue | ByteGrid
   | Feature | ConstValues | Ranges | Preconfig | Tokens | StateTable | Props
-  | PropsReq | Legend | Decision | Prose | Sentence | Doc | Heading | Sig
+  | PropsReq | Legend | Decision | Prose | Sentence | Doc | Heading | Sig | Method
   deriving stock (Eq, Ord, Show, Enum, Bounded)
 
 -- | The constructor's name, as @as \@'Codes@ spells it.
@@ -107,17 +108,21 @@ shapeGenerates = (/= Prose)
 --   @3.3.10.2.1#3a@, or the k-th paragraph of a section, @#p\<k\>@, IR
 --   @paras@), which its own comment alone binds: there is no rule scope and no
 --   classification for it, and a paragraph no comment names is bound by
---   nothing and missed by nothing. The generic modules ask this rather than
---   name the shape.
-data UnitKind = TableUnit | SignatureUnit | ParagraphUnit
+--   nothing and missed by nothing; or a heading (IR @headings@, since M4a), a
+--   method's section a @behaviour@ binds or a Fails list's a @fails@ binds, which
+--   its own comment alone binds likewise. The generic modules ask this rather
+--   than name the shape.
+data UnitKind = TableUnit | SignatureUnit | ParagraphUnit | HeadingUnit
   deriving stock (Eq, Show)
 
 -- | 'SignatureUnit' for the shape of the signature blocks, 'ParagraphUnit'
---   for that of the sentences a @law@ binds, 'TableUnit' for every other.
+--   for that of the sentences a @law@ binds, 'HeadingUnit' for that of the
+--   headings a @behaviour@ or a @fails@ binds, 'TableUnit' for every other.
 shapeUnit :: Shape -> UnitKind
 shapeUnit = \case
   Sig      -> SignatureUnit
   Sentence -> ParagraphUnit
+  Method   -> HeadingUnit
   _        -> TableUnit
 
 -- | The singleton of 'Shape'.
@@ -149,6 +154,7 @@ data SShape (s :: Shape) where
   SDoc             :: SShape 'Doc
   SHeading         :: SShape 'Heading
   SSig             :: SShape 'Sig
+  SMethod          :: SShape 'Method
 
 deriving stock instance Show (SShape s)
 deriving stock instance Eq (SShape s)
@@ -184,6 +190,7 @@ instance KnownShape 'Sentence        where shapeSing = SSentence
 instance KnownShape 'Doc             where shapeSing = SDoc
 instance KnownShape 'Heading         where shapeSing = SHeading
 instance KnownShape 'Sig             where shapeSing = SSig
+instance KnownShape 'Method          where shapeSing = SMethod
 
 -- | Demote a singleton.
 sShape :: SShape s -> Shape
@@ -215,6 +222,7 @@ sShape = \case
   SDoc             -> Doc
   SHeading         -> Heading
   SSig             -> Sig
+  SMethod          -> Method
 
 -- | A singleton whose shape is known only at run time, with its 'KnownShape' dictionary.
 data SomeShape = forall s. KnownShape s => SomeShape (SShape s)
@@ -249,6 +257,7 @@ toSomeShape = \case
   Doc             -> SomeShape SDoc
   Heading         -> SomeShape SHeading
   Sig             -> SomeShape SSig
+  Method          -> SomeShape SMethod
 
 instance TestEquality SShape where
   testEquality a b = case (a, b) of
@@ -279,6 +288,7 @@ instance TestEquality SShape where
     (SDoc, SDoc)                         -> Just Refl
     (SHeading, SHeading)                 -> Just Refl
     (SSig, SSig)                         -> Just Refl
+    (SMethod, SMethod)                   -> Just Refl
     _                                    -> Nothing
 
 
@@ -463,7 +473,8 @@ describe form = T.concat
 --   (Core Table 45), so that a @stateTable@ comment on any other table is
 --   @E-SHAPE@ rather than a table silently read as states. 'Sentence' takes
 --   no table: it binds a paragraph or a list item (a paragraph unit), so a
---   @law@ comment on a table is refused whatever the table's form.
+--   @law@ comment on a table is refused whatever the table's form; nor does
+--   'Method', which binds a method's heading (a heading unit).
 shapeMismatch :: Shape -> Form -> Maybe Text
 shapeMismatch shape form = case shape of
   TypeRow         -> header ["uid", "name", "format"]
@@ -496,6 +507,7 @@ shapeMismatch shape form = case shape of
   Doc             -> Nothing
   Heading         -> Nothing
   Sig             -> Nothing
+  Method          -> Just "it binds a method's heading, never a table"
   where
     hs = fHeaderNorm form
     tableDescHeader = ["columnnumber", "columnname", "isunique", "columntype"]

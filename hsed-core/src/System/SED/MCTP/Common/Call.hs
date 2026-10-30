@@ -208,7 +208,7 @@ instance StreamItem MethodHeader where
     generate (MethodHeader i m) = generate i <> generate m
 
 instance StreamItem Parameters where
-    -- 3.2.4.2: the parameter list is a List; required parameters come first,
+    -- 3.2.4.2: the parameter list is a List; 3.2.4.1: required parameters come first,
     -- positionally, and are never Named values, so the first Named value starts
     -- the optional parameters.
     parser = require StartList
@@ -219,7 +219,7 @@ instance StreamItem Parameters where
     generate (Parameters r o) = generate (List (r <> (N <$> o)))
 
 -- | An optional parameter is a Named value whose name is a uinteger: its 0-based
---   position among the method signature's optional parameters (3.2.4.2).
+--   position among the method signature's optional parameters (3.2.4.1).
 optionalParameter :: (IsValue v) => Natural -> v -> NamedValue
 optionalParameter i = (i .:)
 

@@ -78,7 +78,7 @@ spec = do
     it "refuses a parameter that is not Name : type or Name = type, and a required one after an optional one" $ do
       fmap fst (parseBlock "ThisSP.X [ Count uinteger ]") `shouldBe` Left "the invocation: \"Count uinteger\" is not Name : type or Name = type"
       fmap fst (parseBlock "ThisSP.X [ A = bytes, B : bytes ]")
-        `shouldBe` Left "the invocation: the required parameter B follows an optional one (3.2.4.2)"
+        `shouldBe` Left "the invocation: the required parameter B follows an optional one (3.2.4.1)"
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
@@ -160,6 +160,11 @@ spec = do
         lns `shouldContain` [ "instance Method Get where", "  methodUID = uMethodID_Get" ]
       it "makes optional parameters Maybe fields, in the signature's order" $
         lns `shouldContain` [ "data Set = Set", "  { setWhere :: Maybe Value", "  , setValues :: Maybe Value", "  }" ]
-      it "gives the invoking IDs SMUID and ThisSP as constants, from Table 239" $ do
-        lns `shouldContain` ["uThisSP :: UID", "uThisSP = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01"]
-        lns `shouldContain` ["uSMUID :: UID", "uSMUID = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff"]
+      it "says which method a block defines when its heads name another (SyncSession's, headed StartSession)" $ do
+        lns `shouldSatisfy` any ("-- | core-2.01 5.2.3.2/sig SMUID.StartSession => SyncSession (PDF " `T.isPrefixOf`)
+        lns `shouldSatisfy` any ("-- | core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get (PDF " `T.isPrefixOf`)
+      it "gives the invoking IDs SMUID and ThisSP as constants, from Table 239, in the UIDs module beside its other rows" $ do
+        let uids = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.UIDs" (crModules cr)))
+        uids `shouldContain` ["uThisSP :: UID", "uThisSP = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01"]
+        uids `shouldContain` ["uSMUID :: UID", "uSMUID = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff"]
+        filter (\l -> "uThisSP" `T.isPrefixOf` l || "uSMUID" `T.isPrefixOf` l) lns `shouldBe` []

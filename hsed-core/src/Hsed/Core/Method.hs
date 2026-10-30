@@ -5,7 +5,7 @@
 
 {-|
 Module      : Hsed.Core.Method
-Description : The runtime form of a method signature (Core 3.2.4.2, 5.x): what a generated method record is
+Description : The runtime form of a method signature (Core 3.2.4, 5.x): what a generated method record is
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -26,17 +26,22 @@ docs/spec-as-source.md example E9):
 
 'parameters' and 'invocation' build the codec's 'Parameters' and
 'MethodCall': required parameters positional, optional ones Named by their
-0-based index among the signature's optional parameters (3.2.4.2), so an
-invocation cannot name an optional parameter wrongly.
+0-based index among the signature's optional parameters (3.2.4.1 orders and
+numbers them, 3.2.4.2 encodes the Named value), so an invocation cannot name
+an optional parameter wrongly.
 
 The fields are untyped ('Value'): the Type objects a parameter's type names
 are 'Hsed.Core.Types.TypeDef' values, not yet Haskell types, so the types
 stay text here and the result types are not yet at the type level.
+
+The generated records are named after their methods (@Get@, @Set@, @Next@,
+@Random@), names other modules export too (RIO exports Data.Set's @Set@):
+import @Hsed.Gen.\<Spec\>.Methods@ qualified wherever such a name is in scope.
 -}
 module Hsed.Core.Method
   ( -- * Signatures
     Param (..)
-  , Response (..)
+  , SigResponse (..)
   , Signature (..)
     -- * Method records
   , MethodSignature (..)
@@ -63,8 +68,9 @@ data Param = Param
   }
   deriving (Eq, Show)
 
--- | What answers an invocation.
-data Response
+-- | What answers an invocation. (Not @Response@, the name design section 6.1
+--   gives the wire's IF-SEND/IF-RECV answer.)
+data SigResponse
   = Results ![Param] ![Param]
     -- ^ @=> [ … ]@: the results, the required then the optional ones
   | Invocation !Text ![Param] ![Param]
@@ -83,7 +89,7 @@ data Signature = Signature
   , sigInvokers :: ![Text]        -- ^ the invoking IDs its heads name: @TableUID@, @ObjectUID@
   , sigRequired :: ![Param]       -- ^ positional
   , sigOptional :: ![Param]       -- ^ Named by their 0-based index
-  , sigResponse :: !Response
+  , sigResponse :: !SigResponse
   , sigAnswers  :: !(Maybe Text)  -- ^ the method it answers (SyncSession answers StartSession)
   , sigSpecRef  :: !Text          -- ^ @core-2.01:5.3.3.6@
   }
@@ -105,7 +111,7 @@ class MethodSignature m => Method m where
 
 -- | The parameter list of an invocation: the required parameters, then each
 --   optional one given as a Named value whose name is its 0-based index among
---   the signature's optional parameters (3.2.4.2).
+--   the signature's optional parameters (3.2.4.1).
 parameters :: MethodSignature m => m -> Parameters
 parameters m = Parameters (requiredValues m) [ optionalParameter i v | (i, Just v) <- zip [0 ..] (optionalValues m) ]
 

@@ -70,7 +70,6 @@ import qualified Hsed.Gen.Core.Codes                       as G
 import qualified Hsed.Gen.Core.Enums                       as G
 import           Hsed.Gen.Core.EquivTH
 import qualified Hsed.Gen.Core.Fields                      as G
-import qualified Hsed.Gen.Core.Methods                     as G
 import qualified Hsed.Gen.Core.TableUIDs                   as G
 import qualified Hsed.Gen.Core.Types                       as G
 import qualified Hsed.Gen.Core.UIDRanges                   as G

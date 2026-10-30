@@ -21,7 +21,7 @@ then, unless nothing answers it, @=>@ and the response: a result list @[ …
 (@SMUID.SyncSession [ … ]@), whose list may be only a reference to another
 block (@[ see SyncSession definition in 5.2.3.2 ]@). A parameter is @Name :
 type@ (required, positional) or @Name = type@ (optional, Named by its 0-based
-index among the optional ones, Core 3.2.4.2); the required ones come first.
+index among the optional ones); the required ones come first (Core 3.2.4.1).
 The method a block defines is the one its section's heading names: the
 invocation's, or the response's when the block defines the answer (5.2.3.2
 SyncSession answers StartSession).
@@ -43,10 +43,13 @@ Compiled into 'methodsModule' ("Hsed.Core.Method" is the runtime): per block
 a record named after the method, one field per parameter (@getCellblock ::
 Value@; an optional one @Maybe Value@), an @instance MethodSignature@ with the
 signature as printed, and, when joined, an @instance Method@ whose
-@methodUID@ is the joined row's generated UID. An invoking ID the heads name
-that a row of the UID tables without names describes (@SMUID@, @ThisSP@ in
-the Special Purpose UIDs' Purpose column, word for word) is given as a
-constant, @uSMUID :: UID@, with that row's provenance.
+@methodUID@ is the joined row's generated UID; a block whose heads name
+another method than the one it defines (SyncSession's, headed
+@SMUID.StartSession@) says which in its provenance line. An invoking ID the
+heads name that a row of the UID tables without names describes (@SMUID@,
+@ThisSP@ in the Special Purpose UIDs' Purpose column, word for word) is given
+as a constant, @uSMUID :: UID@, with that row's provenance, in the uidTable
+rule's module beside the other UIDs ('uidsModule').
 -}
 module Hsed.Spec.Rules.Sig
   ( sigRule
@@ -54,7 +57,7 @@ module Hsed.Spec.Rules.Sig
     -- * Reading the bound blocks
   , SigParam (..)
   , ParamList (..)
-  , SigResponse (..)
+  , ResponseRead (..)
   , SigRead (..)
   , sigReads
   , methodRows
@@ -75,10 +78,10 @@ import           Hsed.Spec.Common         (Finding, RuleName (..), Severity (..)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.DSL            (SomeBinding (..), sig)
 import qualified Hsed.Spec.Gen            as Gen
-import           Hsed.Spec.IR             (CellIR (..), HeadingIR (..), SigIR (..), SpecIR (..), TableIR (..))
+import           Hsed.Spec.IR             (HeadingIR (..), SigIR (..), SpecIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.UidTable (UidRow (..), UidValue (..), lowerIdent, rowText, uidHeaders, uidRows, uidsModule)
-import           Hsed.Spec.Shape          (normaliseCaption)
+import           Hsed.Spec.Readers.Text   (lowerIdent)
+import           Hsed.Spec.Rules.UidTable (UidRow (..), UidValue (..), rowPage, rowRef, rowText, uidHeaders, uidRows, uidsModule)
 
 
 -- | The rule.
@@ -102,7 +105,8 @@ methodsModule = Gen.GenModule
   { Gen.leaf        = "Methods"
   , Gen.description = "Methods: a record per method signature, its signature as printed and its UID"
   , Gen.notes       = [ "The parameters are untyped (Value) and their types text: the Type objects they name are"
-                      , "TypeDef values, not yet Haskell types." ] }
+                      , "TypeDef values, not yet Haskell types. The records are named after their methods (Get,"
+                      , "Set, Next), names other modules export too: import this module qualified." ] }
 
 
 -- * Parsing a block
@@ -190,7 +194,7 @@ paramList what content
       params <- traverse param given
       let (req, rest) = L.span fst params
       case filter fst rest of
-        (_, p) : _ -> Left (what <> ": the required parameter " <> spName p <> " follows an optional one (3.2.4.2)")
+        (_, p) : _ -> Left (what <> ": the required parameter " <> spName p <> " follows an optional one (3.2.4.1)")
         [] -> pure ()
       let names = map (spName . snd) params
       when (L.nub names /= names) (Left (what <> " names a parameter twice"))
@@ -228,8 +232,9 @@ collapse = T.unwords . T.words
 
 -- * Reading the bound blocks
 
--- | What answers a method, as the rule reads it.
-data SigResponse
+-- | What answers a method, as the rule reads it (the runtime's is
+--   "Hsed.Core.Method".@SigResponse@).
+data ResponseRead
   = SResults ![SigParam] ![SigParam]
   | SInvocation !Text ![SigParam] ![SigParam]
   | SInvocationOf !Text
@@ -243,7 +248,7 @@ data SigRead = SigRead
   , srInvokers :: ![Text]
   , srRequired :: ![SigParam]
   , srOptional :: ![SigParam]
-  , srResponse :: !SigResponse
+  , srResponse :: !ResponseRead
   , srAnswers  :: !(Maybe Text)
   , srFindings :: ![Finding]       -- ^ what reading it found besides an Error (located)
   }
@@ -329,17 +334,11 @@ checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck row
           (finding Note "C-SIG-METHOD" (rowRef r <> ", " <> n <> ", has no signature block"))
       | not (null reads), (n, r) <- methodRows ctx, isJust (urIdent r), n `notElem` defined ]
 
-rowRef :: UidRow -> Text
-rowRef r = renderAnchorId (btAnchor (urBound r)) <> " row " <> tshow (urRow r + 1)
-
-rowPage :: UidRow -> Int
-rowPage r = fromMaybe (fromMaybe 1 (tablePage (btTable (urBound r)))) (listToMaybe (mapMaybe (\c -> (+ 1) <$> c.page) (urCells r)))
-
 
 -- * Declarations
 
 compile :: Context -> [Emitted]
-compile ctx = map (Emit . invokerDecl ctx) invokers <> concat [ map Emit (methodDecls ctx sr (joins ctx sr)) | Right sr <- sigReads ctx ]
+compile ctx = map (EmitIn uidsModule . invokerDecl ctx) invokers <> concat [ map Emit (methodDecls ctx sr (joins ctx sr)) | Right sr <- sigReads ctx ]
   where
     invokers = [ (i, r) | i <- L.nub (concat [ srInvokers sr | Right sr <- sigReads ctx ]), [r] <- [invokerRows ctx i] ]
 
@@ -350,7 +349,7 @@ invokerDecl ctx (i, r) = (Gen.decl p n body)
   , Gen.declImports = [Gen.ImportSome Gen.uidModule ["UID", "uid"]] }
   where
     bt = urBound r
-    p  = atRow ctx (urCells r) (provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption)))
+    p  = atRow ctx (urCells r) (boundProvenance ctx bt)
     n  = "u" <> i
     bs = case urValue r of
       Exact b -> b
@@ -363,8 +362,11 @@ methodDecls :: Context -> SigRead -> [UidRow] -> [Gen.Decl]
 methodDecls ctx sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Gen.declImports = imports } ]
   where
     bs   = srBound sr
-    p    = sigProvenanceOf ctx bs
     m    = srMethod sr
+    -- a block headed by another method than the one it defines says which it defines
+    p    = let p0 = sigProvenanceOf ctx bs
+           in if m `elem` map (T.takeWhileEnd (/= '.')) (bsSig bs).heads then p0
+              else p0 { Gen.caption = p0.caption <> " => " <> m }
     s    = bsSig bs
     doc  = Gen.provenanceComment p
     field prm = lowerIdent m <> capitalise (spName prm)
@@ -421,7 +423,7 @@ methodDecls ctx sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Ge
     body = [doc] <> record <> signatureInstance <> methodInstance
     usesValue = not (null fields)
     imports =
-      [ Gen.ImportSome Gen.methodModule (["MethodSignature (..)", "Response (..)", "Signature (..)"]
+      [ Gen.ImportSome Gen.methodModule (["MethodSignature (..)", "SigResponse (..)", "Signature (..)"]
                                            <> [ "Param (..)" | usesParam ] <> [ "Value" | usesValue ]
                                            <> [ "Method (..)" | hasMethod ])
       , Gen.ImportSome "Prelude" ["Eq", "Maybe (..)", "Show"] ]

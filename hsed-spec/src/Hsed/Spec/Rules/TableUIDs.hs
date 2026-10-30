@@ -92,8 +92,9 @@ tableUIDsModule :: Gen.GenModule
 tableUIDsModule = Gen.GenModule
   { Gen.leaf        = "TableUIDs"
   , Gen.description = "Table UIDs: each table's UID, its descriptor object's UID and its half-UID"
-  , Gen.notes       = [ "The typed half-UIDs of hsed's hand-written TableUIDs (oth\\<T\\>, bth\\<T\\>) need each"
-                      , "table's kind, which Core does not give as data; they are not generated here." ] }
+  , Gen.notes       = [ "The typed half-UIDs of the hand transcription's TableUIDs (oth\\<T\\>, bth\\<T\\>;"
+                      , "the oracle's test fixture, Hand.TableUIDs) need each table's kind, which Core does"
+                      , "not give as data; they are not generated here." ] }
 
 
 -- * Reading the bound tables

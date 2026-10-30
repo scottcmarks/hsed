@@ -91,7 +91,7 @@ spec = withCore $ \pristine -> do
     cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
     let text  = fromMaybe "" (lookup "Hsed.Gen.Core.TableUIDs" (crModules cr))
         lns   = T.lines text
-    it "declares u<T>TableObject, u<T>Table and h<T> for every row, as hsed's hand module names them" $ do
+    it "declares u<T>TableObject, u<T>Table and h<T> for every row, as the hand transcription (the oracle's fixture) names them" $ do
       length [ l | l <- lns, " :: UID" `T.isSuffixOf` l ] `shouldBe` 92
       length [ l | l <- lns, " :: HalfUID" `T.isSuffixOf` l ] `shouldBe` 46
       lns `shouldContain` ["uAccessControlTableObject :: UID", "uAccessControlTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x07"]

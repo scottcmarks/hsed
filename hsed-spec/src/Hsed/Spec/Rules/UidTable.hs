@@ -60,9 +60,10 @@ for a row in table @T@ (@uMethodID_Get@, @uAuthority_SID@, @uC_PIN_SID@,
 @uLocking_GlobalRange@), @u\<T\>_Row@ for the row of a single-row table
 (@uSPInfo_Row@), @u\<T\>_\<cells\>@ for a row named by its cells alone
 (@uSecretProtect_C_PIN_0x03@), and @u\<Name\>@ for a UID that lies in no table
-(the Session Manager methods, @uProperties@, as hsed's hand-written
-@SpecialPurposeUIDs@ names them); and per table the list of its UIDs with
-their rows' text (@methodIDUIDs :: [(UID, String)]@), named after its caption.
+(the Session Manager methods, @uProperties@, as the hand transcription's
+@SpecialPurposeUIDs@, the oracle's test fixture, names them); and per table
+the list of its UIDs with their rows' text (@methodIDUIDs :: [(UID,
+String)]@), named after its caption.
 A name is a cell of one word, or of several capitalised words joined
 (@Global Range@ gives @GlobalRange@).
 -}

@@ -74,7 +74,7 @@ spec = do
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
-    let findings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f `elem` ["C-CODE-VALUE", "W-CODE-OVERLAP", "C-CODE-TYPE"] ]
+    let findings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f `elem` ["C-CODE-VALUE", "W-CODE-OVERLAP", "C-CODE-TYPE"] ]
 
     describe "the codes rule" $ do
       it "binds the eight code tables of design 3.4, and no other table, by the doc anchor's rule token" $ do
@@ -115,7 +115,7 @@ spec = do
         Map.lookup (TableId 235) (classify (setCell "T235" 3 0 "three" ir)) `shouldBe` Just Unbound
 
     describe "the generated module" $ do
-      cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+      cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Codes" (crModules cr)))
       it "declares each table's rows, named after its caption" $
         [ T.takeWhile (/= ' ') l | l <- lns, " :: [CodeRow]" `T.isSuffixOf` l ] `shouldBe`

@@ -44,7 +44,7 @@ import           Hsed.Spec.Rules.UidTable
 -- | The Errors of a run, but the preconfig rule's C-PRECONF-UID, which an
 --   edited row of Table 243 also fails (its own tests are PreconfigSpec's).
 errorsOf :: SpecIR -> [Text]
-errorsOf = map renderFinding . filter (\f -> isError f && Cm.code f /= "C-PRECONF-UID") . checkIR Scott
+errorsOf = map renderFinding . filter (\f -> isError f && Cm.code f /= "C-PRECONF-UID") . checkIR Nothing Scott
 
 spec :: Spec
 spec = do
@@ -87,7 +87,7 @@ spec = do
 
     describe "C-UID-TABLE" $ do
       it "passes on every row, and the pattern covers the six UIDs of Table 241" $
-        [ f | f <- map renderFinding (checkIR Scott ir), any (`T.isPrefixOf` f) ["C-UID-TABLE", "C-UID-UNIQUE", "C-UID-NAME"]
+        [ f | f <- map renderFinding (checkIR Nothing Scott ir), any (`T.isPrefixOf` f) ["C-UID-TABLE", "C-UID-UNIQUE", "C-UID-NAME"]
             , not ("T149" `T.isInfixOf` f) ] `shouldBe` []
       it "fails on a UID whose upper half is not that of the table its header names" $
         errorsOf (setCell "T242" 0 0 "00 00 00 09 00 00 00 01" ir) `shouldBe`
@@ -118,25 +118,25 @@ spec = do
 
     describe "N-UID-SHARED" $ do
       it "finds the one UID two of the tables print: Table 239's GenKey CharSet value is Table 245's C_PIN SID, a Note at the later row" $
-        [ renderFinding f | f <- checkIR Scott ir, Cm.code f == "N-UID-SHARED" ] `shouldBe`
+        [ renderFinding f | f <- checkIR Nothing Scott ir, Cm.code f == "N-UID-SHARED" ] `shouldBe`
           [ "N-UID-SHARED core-2.01.pdf#page=305&T245: row 1 \"C_PIN | SID\": the UID 00 00 00 0B 00 00 00 01 is also that of T239 row 5 (PDF 302), "
             <> "\"Used in the C_PIN table's CharSet column to indicate that the GenKey character set is not restricted (all byte values are legal).\"" ]
       it "finds another, and leaves one UID printed twice in one table to C-UID-UNIQUE" $ do
-        [ renderFinding f | f <- checkIR Scott (setCell "T246" 0 0 "00 00 00 09 00 00 00 01" ir), Cm.code f == "N-UID-SHARED"
+        [ renderFinding f | f <- checkIR Nothing Scott (setCell "T246" 0 0 "00 00 00 09 00 00 00 01" ir), Cm.code f == "N-UID-SHARED"
                           , Cm.anchor f == Just "T246" ] `shouldBe`
           [ "N-UID-SHARED core-2.01.pdf#page=305&T246: row 1 \"Base\": the UID 00 00 00 09 00 00 00 01 is also that of T243 row 1 (PDF 304), \"Anybody | Base\"" ]
-        [ Cm.code f | f <- checkIR Scott (setCell "T243" 1 0 "00 00 00 09 00 00 00 01" ir), Cm.code f `elem` ["N-UID-SHARED", "C-UID-UNIQUE"]
+        [ Cm.code f | f <- checkIR Nothing Scott (setCell "T243" 1 0 "00 00 00 09 00 00 00 01" ir), Cm.code f `elem` ["N-UID-SHARED", "C-UID-UNIQUE"]
                     , Cm.anchor f == Just "T243" ] `shouldBe` ["C-UID-UNIQUE"]
 
     describe "N-UID-UNNAMED" $
       it "lists the rows that name no definition, once per table" $
-        [ renderFinding f | f <- checkIR Scott ir, Cm.code f == "N-UID-UNNAMED", Cm.anchor f == Just "T242" ] `shouldBe`
+        [ renderFinding f | f <- checkIR Nothing Scott ir, Cm.code f == "N-UID-UNNAMED", Cm.anchor f == Just "T242" ] `shouldBe`
           [ "N-UID-UNNAMED core-2.01.pdf#page=303&T242: rows uidTable gives no name (listed in methodIDUIDs where their UID is eight bytes): "
             <> "6 \"OBSOLETE *\"; 7 \"OBSOLETE *\"; 12 \"OBSOLETE *\"; 17 \"Reserved for SSC Usage\"; 24 \"Reserved for SSC Usage\"; "
             <> "25 \"Reserved for SSC Usage\"; 54 \"Reserved for SSC Usage\"" ]
 
     describe "the generated module" $ do
-      cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+      cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.UIDs" (crModules cr)))
           uids = [ T.takeWhile (/= ' ') l | l <- lns, " :: UID" `T.isSuffixOf` l ]
       it "names every named row: 6 + 47 + 17 + 4 + 5 + 6 + 6 + 30 UIDs, beside the sig rule's two invoking IDs" $ do

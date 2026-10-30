@@ -24,7 +24,14 @@ A spec annotated only in part until its last binding milestone (Opal until
 M5) is named by @--partial SPEC@ ('Options', repeatable, on every command that
 reads an IR): each of its units nothing binds yet is reported as the Warning
 @W-UNBOUND@ rather than the Error @E-UNBOUND@
-("Hsed.Spec.Check".'Hsed.Spec.Check.partially', design 13.26 (k)).
+("Hsed.Spec.Check".'Hsed.Spec.Check.partially', design 13.26 (k)). A spec read
+over another (Opal over Core) names the other's IR by @--base IR@ (the
+annotated extraction, @build/core-2.01.hsed.json@): @check@ and @compile@,
+which run the rules, read it under the run's errata set as the base Context
+of the run, read-only ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContextWith',
+design 13.26 (g)); the other commands take it too, so that one argument list
+serves every command of a spec, and read nothing of it until a classification
+resolves through it.
 
 Findings print in 'renderFinding' form on stdout, errors first; a one-line
 summary goes to stderr. @compile@ writes the reports of "Hsed.Spec.Report" beside
@@ -69,7 +76,7 @@ import           Hsed.Spec.Compile
 import           Hsed.Spec.Gen            (modulePath, specModuleDir)
 import           Hsed.Spec.IR
 import           Hsed.Spec.Report
-import           Hsed.Spec.RuleDef        (signatureUnits)
+import           Hsed.Spec.RuleDef        (Context, signatureUnits)
 import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifySignatures, classifyWith,
                                            explain, numberedTables, scopeOf, tablePage)
 import           Hsed.Spec.Shape          (captionTitle)
@@ -81,14 +88,16 @@ data Input = Input FilePath (Maybe FilePath)
 
 -- | How a run reads its specs, besides the IR: the specs annotated only in
 --   part (@--partial SPEC@, each named as @--target@ names one), whose units
---   nothing binds yet are Warnings.
+--   nothing binds yet are Warnings; and the IR of the spec this one is read
+--   over (@--base IR@), whose Context the rules fall back to.
 data Options = Options
   { optPartial :: ![Text]
+  , optBase    :: !(Maybe FilePath)
   }
 
--- | A run over specs annotated in full (Core since M2c).
+-- | A run over a spec annotated in full and read alone (Core since M2c).
 noOptions :: Options
-noOptions = Options []
+noOptions = Options [] Nothing
 
 data Command
   = CmdIrSummary FilePath
@@ -124,7 +133,8 @@ runWith out err = \case
       _ -> failWith err ("hsedc bind: " <> display (findingCounts found) <> "; " <> fromString file <> " not written")
   CmdCheck o inp es -> do
     (ir, sideFs) <- load err inp
-    let fs = sortFindings (partially (optPartial o) (sideFs <> checkIR es ir))
+    base <- loadBase err o es
+    let fs = sortFindings (partially (optPartial o) (sideFs <> checkIR base es ir))
     report out fs
     say err ("hsedc check: " <> display ir.spec <> ", errata " <> display (errataSetName es) <> ": " <> display (findingCounts fs) <> "\n")
     exitOnErrors fs
@@ -132,7 +142,8 @@ runWith out err = \case
     (ir, sideFs) <- load err inp
     unless (matchesSpec target (SpecId ir.spec)) $
       failWith err ("hsedc compile: --target " <> display target <> " does not name the IR's spec " <> display ir.spec)
-    case compileIR es ir of
+    base <- loadBase err o es
+    case compileIR base es ir of
       Left f -> report out (sideFs <> [f]) >> failWith err "hsedc compile: nothing written"
       Right cr -> do
         let fs    = sortFindings (partially (optPartial o) (sideFs <> crFindings cr))
@@ -239,6 +250,11 @@ load err (Input path hsa) = do
       text <- readFileUtf8 f
       let (fs, ir') = withSidecar ir text
       pure (ir', fs)
+
+-- | The base Context of a run (@--base IR@): the IR read, under the run's
+--   errata set; none without one.
+loadBase :: Handle -> Options -> ErrataSet -> IO (Maybe Context)
+loadBase err o es = traverse (fmap (mkContext es) . readOrFail err) (optBase o)
 
 -- | Every @.hs@ file under a directory, at any depth; none when it does not exist.
 haskellFiles :: FilePath -> IO [FilePath]

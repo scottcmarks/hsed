@@ -55,7 +55,7 @@ spec = do
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
-    let findings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-FIELD-VALUE" ]
+    let findings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f == "C-FIELD-VALUE" ]
 
     describe "the fieldValue rule" $ do
       it "binds the three command blocks, and no other table, by the doc anchor's rule token" $ do
@@ -83,7 +83,7 @@ spec = do
         newlyExcluded ir broken `shouldReturn` [(TableId 30, "C-FIELD-VALUE failed")]
 
     describe "the generated module" $ do
-      cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+      cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Fields" (crModules cr)))
       it "declares each command block's fields with their constants, named after its caption" $ do
         [ T.takeWhile (/= ' ') l | l <- lns, " :: [FieldConst]" `T.isSuffixOf` l ] `shouldBe`

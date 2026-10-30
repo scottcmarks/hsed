@@ -41,7 +41,7 @@ import           Hsed.Spec.Rules.TableDesc  (DescRead (..))
 
 
 errorsOf :: SpecIR -> [Text]
-errorsOf = map renderFinding . filter isError . checkIR Scott
+errorsOf = map renderFinding . filter isError . checkIR Nothing Scott
 
 -- | The IR with a table's caption replaced.
 withCaption :: Text -> Text -> SpecIR -> SpecIR
@@ -114,7 +114,7 @@ spec = do
           [ "C-CONST-DESC core-2.01.pdf#page=180&T190: the caption names no table (\"… Values for <T>\")" ]
 
     describe "the generated module" $ do
-      cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+      cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.ColumnDefaults" (crModules cr)))
           block n = takeWhile (/= "") (dropWhile (/= (n <> " :: Row")) lns)
       it "declares one Row of defaults per table, nine in all" $

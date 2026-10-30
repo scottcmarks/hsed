@@ -54,7 +54,7 @@ about :: Text -> [Finding] -> [Text]
 about anchor = map renderFinding . filter ((== Just anchor) . Cm.anchor)
 
 errorsOf :: ErrataSet -> SpecIR -> [Text]
-errorsOf es = map renderFinding . filter isError . checkIR es
+errorsOf es = map renderFinding . filter isError . checkIR Nothing es
 
 spec :: Spec
 spec = do
@@ -109,9 +109,9 @@ spec = do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
     let ctx       = mkContext Scott ir
-        scott     = checkIR Scott ir
-        published = checkIR Published ir
-        compiled ir' = either (throwString . show) pure (compileIR Scott ir')
+        scott     = checkIR Nothing Scott ir
+        published = checkIR Nothing Published ir
+        compiled ir' = either (throwString . show) pure (compileIR Nothing Scott ir')
 
     describe "the enumValues rule" $ do
       it "binds the 19 enumerations of section 5.1.3, from the rule anchor there, and T87 through its comment" $ do
@@ -167,7 +167,7 @@ spec = do
 
     describe "the Warnings" $ do
       it "W-ENUM-OVERLAP: a value assigned twice, the first kept" $
-        about "T52" (checkIR Scott (setCell "T52" 1 0 "0" ir)) `shouldBe`
+        about "T52" (checkIR Nothing Scott (setCell "T52" 1 0 "0" ir)) `shouldBe`
           ["W-ENUM-OVERLAP core-2.01.pdf#page=102&T52: value 0 is assigned by \"Wait for AdvKey_Req\" and \"Auto-advance keys\"; the first is kept"]
       it "the T87 comment of design E4: rangeWords, cols, an overlap and a repeated label, under either errata set, each at the page of its first row (PDF 110; the table starts on 109)" $
         forM_ [scott, published] $ \fs ->

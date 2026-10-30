@@ -45,7 +45,7 @@ import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows)
 
 
 errorsOf :: SpecIR -> [Text]
-errorsOf = map renderFinding . filter isError . checkIR Scott
+errorsOf = map renderFinding . filter isError . checkIR Nothing Scott
 
 coded :: Text -> [Finding] -> [Text]
 coded c = map renderFinding . filter ((== c) . Cm.code)
@@ -85,14 +85,14 @@ spec = withCore $ \pristine -> do
 
   describe "C-FMT-RESOLVE" $ do
     it "warns of the four column types no Type row defines, at the page of each row" $
-      coded "C-FMT-RESOLVE" (checkIR Scott ir) `shouldBe`
+      coded "C-FMT-RESOLVE" (checkIR Nothing Scott ir) `shouldBe`
         [ "C-FMT-RESOLVE core-2.01.pdf#page=158&T172: column 0x06 Transactional: the column type boolean_def_true names no Type object (no type row binds it); nearest: boolean_ACE, T60; generated with its name and no UID"
         , "C-FMT-RESOLVE core-2.01.pdf#page=172&T182: column 0x0D ChainLimit: the column type int_1_def_0 names no Type object (no type row binds it); nearest: integer_1, T93; generated with its name and no UID"
         , "C-FMT-RESOLVE core-2.01.pdf#page=173&T183: column 0x0D ChainLimit: the column type int_1_def_0 names no Type object (no type row binds it); nearest: integer_1, T93; generated with its name and no UID"
         , "C-FMT-RESOLVE core-2.01.pdf#page=233&T215: column 0x07 Frozen: the column type boolean_def_false names no Type object (no type row binds it); nearest: boolean_ACE, T60; generated with its name and no UID"
         , "C-FMT-RESOLVE core-2.01.pdf#page=291&T233: column 0x0B LogKind: the column type log_kind names no Type object (no type row binds it); nearest: clock_kind, T73; generated with its name and no UID" ]
     it "makes them Warnings: the description is still generated" $
-      all ((== Warning) . Cm.severity) (filter ((== "C-FMT-RESOLVE") . Cm.code) (checkIR Scott ir)) `shouldBe` True
+      all ((== Warning) . Cm.severity) (filter ((== "C-FMT-RESOLVE") . Cm.code) (checkIR Nothing Scott ir)) `shouldBe` True
     it "resolves every other column type to a type row" $
       length [ () | d <- ds, cr <- drColumns d, isJust (crTypeRow cr) ] `shouldBe` sum (map (length . drColumns) ds) - 5
 
@@ -148,7 +148,7 @@ spec = withCore $ \pristine -> do
       renderCell (CvUInt 255 Nothing) `shouldBe` Right "UIntCell 255"
 
   describe "the generated module" $ do
-    cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+    cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let text = fromMaybe "" (lookup "Hsed.Gen.Core.TableDescs" (crModules cr))
         lns  = T.lines text
         block n = takeWhile (/= "") (dropWhile (/= (n <> " :: TableDesc")) lns)

@@ -43,7 +43,7 @@ spec = withCore $ \pristine -> do
   ir  <- runIO (annotated pristine hsa)
   let ctx  = mkContext Scott ir
       rows = rights (tableUIDRows ctx)
-      errorsOf ir' = map renderFinding (filter isError (checkIR Scott ir'))
+      errorsOf ir' = map renderFinding (filter isError (checkIR Nothing Scott ir'))
 
   describe "the tableUIDs rule" $ do
     it "binds Table 240, and no other table, by the doc anchor's rule token" $ do
@@ -88,7 +88,7 @@ spec = withCore $ \pristine -> do
         , "C-T240-NAME core-2.01.pdf#page=302&T240: row 3 SP Templates: the table name is not an identifier" ]
 
   describe "the generated module" $ do
-    cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+    cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let text  = fromMaybe "" (lookup "Hsed.Gen.Core.TableUIDs" (crModules cr))
         lns   = T.lines text
     it "declares u<T>TableObject, u<T>Table and h<T> for every row, as the hand transcription (the oracle's fixture) names them" $ do

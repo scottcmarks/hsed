@@ -50,7 +50,7 @@ spec = withCore $ \pristine -> do
   let ctx   = mkContext Scott ir
       props = rights (propertyReads ctx)
       cols  = assumptionsReads ctx
-      propFindings ir' = L.sort [ renderFinding f | f <- checkIR Scott ir', any (`T.isInfixOf` Cm.code f) ["-PROP-"] ]
+      propFindings ir' = L.sort [ renderFinding f | f <- checkIR Nothing Scott ir', any (`T.isInfixOf` Cm.code f) ["-PROP-"] ]
 
   describe "the Props reader" $ do
     it "reads Tables 167 and 168, which their comments bind, telling them apart by the binding" $ do
@@ -108,10 +108,10 @@ spec = withCore $ \pristine -> do
     it "leave a table with an Error out of the module" $ do
       let broken = setCell "T168" 7 1 "Maybe" ir
       newlyExcluded ir broken `shouldReturn` [(TableId 168, "C-PROP-NAME, C-PROP-TYPE or C-PROP-INITIAL failed")]
-      filter isError (checkIR Scott ir) `shouldBe` []
+      filter isError (checkIR Nothing Scott ir) `shouldBe` []
 
   describe "the generated module" $ do
-    cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+    cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Properties" (crModules cr)))
     it "declares the properties, each typed by its type row's UID" $ do
       lns `shouldContain` ["properties :: [Property]", "properties =", "  [ Property \"MaxMethods\" uuintegerType [Host, TPer]"]

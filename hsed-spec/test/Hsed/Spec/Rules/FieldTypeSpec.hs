@@ -48,7 +48,7 @@ spec = withCore $ \pristine -> do
   hsa <- runIO committedHsa
   ir  <- runIO (annotated pristine hsa)
   let ctx = mkContext Scott ir
-      findings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-FIELD-TYPE" ]
+      findings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f == "C-FIELD-TYPE" ]
 
   describe "the fieldType rule" $ do
     it "binds Tables 22, 23 and 34, and no other table, by the doc anchor's rule token" $ do
@@ -80,7 +80,7 @@ spec = withCore $ \pristine -> do
         [ "C-FIELD-TYPE core-2.01.pdf#page=64&T34: row 8 Reserved: the range \"zero\" is not a value or a range" ]
 
   describe "the generated module" $ do
-    cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+    cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Fields" (crModules cr)))
     it "declares each table's typed fields, named after its caption" $
       [ T.takeWhile (/= ' ') l | l <- lns, " :: [FieldDef]" `T.isSuffixOf` l ] `shouldBe`

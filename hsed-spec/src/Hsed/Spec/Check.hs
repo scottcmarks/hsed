@@ -13,7 +13,10 @@ Stability   : experimental
 Design section 4.2. 'mkContext' builds the shared, read-only
 'Hsed.Spec.RuleDef.Context' every rule reads: one IR under one errata set,
 its numbered tables, their classification ("Hsed.Spec.Rules"), every table's
-section ("Hsed.Spec.Scope") and the bound tables read under the errata set. 'checks' runs the generic checks, then the
+section ("Hsed.Spec.Scope"), the bound tables read under the errata set and
+the paragraph units its comments bind; 'mkContextWith' the same over a base,
+the read-only Context of the spec this one is read over (Core's for an Opal
+run, @hsedc --base@), whose checks are its own run's. 'checks' runs the generic checks, then the
 checks of every rule of "Hsed.Spec.Registry" on the tables bound to its shape
 (each rule's own module documents its checks and their codes). The generic
 checks, each emitting findings with the code in brackets:
@@ -81,13 +84,16 @@ import           Hsed.Spec.Shape   (UnitKind (..), gridCornerNormalisation, head
 
 -- * The shared context
 
--- | The context of one IR under one errata set.
+-- | The context of one IR under one errata set, read alone (no base).
 mkContext :: ErrataSet -> SpecIR -> Context
-mkContext = mkContextWith registry
+mkContext = mkContextWith registry Nothing
 
--- | 'mkContext' with the units classified by a set of rules (a test's stub rule beside the registry's).
-mkContextWith :: [RuleDef] -> ErrataSet -> SpecIR -> Context
-mkContextWith ruleSet es ir = Context
+-- | 'mkContext' with the units classified by a set of rules (a test's stub
+--   rule beside the registry's), over a base or none: the Context of the
+--   spec this one is read over, read-only (Core's for an Opal run, @hsedc
+--   --base@), where a rule's lookup this spec does not answer runs.
+mkContextWith :: [RuleDef] -> Maybe Context -> ErrataSet -> SpecIR -> Context
+mkContextWith ruleSet base es ir = Context
   { cxIR             = ir
   , cxSpec           = sid
   , cxErrata         = es
@@ -100,6 +106,7 @@ mkContextWith ruleSet es ir = Context
   , cxSigs           = signatureUnits ir
   , cxSigClasses     = sigClasses
   , cxParas          = paragraphBindings ir
+  , cxBase           = base
   }
   where
     sid                       = SpecId ir.spec
@@ -186,9 +193,9 @@ cornerNote sid (aid, t) =
          <> maybe "" (\l -> " and the row " <> tshow l <> " under it") lone <> " read as Byte\\Bit: bytes down, bits 7 to 0 across"))
   | Just (corner, lone) <- [gridCornerNormalisation t] ]
 
--- | Every check of one IR under one errata set, errors first.
-checkIR :: ErrataSet -> SpecIR -> [Finding]
-checkIR es ir = sortFindings (checks (mkContext es ir))
+-- | Every check of one IR under one errata set, over a base or none, errors first.
+checkIR :: Maybe Context -> ErrataSet -> SpecIR -> [Finding]
+checkIR base es ir = sortFindings (checks (mkContextWith registry base es ir))
 
 -- | Errors, then Warnings, then Notes; within each by page, anchor in its
 --   natural order (T8 before T10), code and message.

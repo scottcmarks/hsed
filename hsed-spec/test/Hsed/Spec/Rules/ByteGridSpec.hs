@@ -101,12 +101,12 @@ spec = do
         grLayout = stLayout . grStructure
         ruleCodes' = ["C-LAYOUT-TILE", "C-LAYOUT-ENDIAN", "C-LAYOUT-EXTENT", "C-GRID-NAME", "W-PINS-NONE", "N-LAYOUT-BITS", "W-LAYOUT-BITS-UNUSED"]
         -- the findings of the rule's codes at its tables (feature and byteFieldValue give some of the codes too)
-        ours ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f `elem` ruleCodes'
+        ours ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f `elem` ruleCodes'
                    , Cm.anchor f `elem` map (Just . ("T" <>) . tshow) grids ]
         -- what an edit adds to the committed run's findings
         added ir' = filter (`notElem` ours ir) (ours ir')
         layoutsOf ir' = do
-          cr <- either (throwString . show) pure (compileIR Scott ir')
+          cr <- either (throwString . show) pure (compileIR Nothing Scott ir')
           pure (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr)))
 
     describe "the byteGrid rule" $ do
@@ -177,7 +177,7 @@ spec = do
           ["C-LAYOUT-TILE core-2.01.pdf#page=40&T17: ComPacket Format: no field covers byte 20 bit 7 to byte 20 bit 0"]
         added short `shouldBe`
           ["C-LAYOUT-TILE core-2.01.pdf#page=68&T39: Level 0 Discovery Header Format: no field covers byte 14 bit 7 to byte 15 bit 0"]
-        [ Cm.severity f | f <- checkIR Scott short, Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just "T39" ] `shouldBe` [Warning]
+        [ Cm.severity f | f <- checkIR Nothing Scott short, Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just "T39" ] `shouldBe` [Warning]
         newlyExcluded ir short `shouldReturn` []
         lns <- T.lines <$> layoutsOf short
         lns `shouldContain` ["-- * no field covers byte 14 bit 7 to byte 15 bit 0", "level0DiscoveryHeaderLayout :: Layout"]
@@ -235,10 +235,10 @@ spec = do
       it "refuses a name the module imports (C-GRID-NAME), which GHC would find ambiguous" $ do
         forM_ ["Layout", "Tail", "Byte String"] $ \n -> do
           ir' <- annotated pristine (hsa <> "core-2.01 | T212 | layout \"" <> n <> "\"\n")
-          [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-GRID-NAME" ] `shouldSatisfy`
+          [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f == "C-GRID-NAME" ] `shouldSatisfy`
             any (("is also a name its module imports" `T.isSuffixOf`) . T.strip)
           newlyExcluded ir ir' `shouldReturn` [(TableId 212, "C-GRID-NAME failed")]
       it "refuses a second layout name on one table (E-MODIFIER)" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T212 | layout \"A\" layout \"B\"\n")
-        [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "E-MODIFIER" ] `shouldBe`
+        [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f == "E-MODIFIER" ] `shouldBe`
           ["E-MODIFIER core-2.01.pdf#page=230&T212: a second layout name, \"A\" beside \"B\": a binding takes one"]

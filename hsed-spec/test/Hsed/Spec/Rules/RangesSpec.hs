@@ -39,7 +39,7 @@ import           Hsed.Spec.Rules.Ranges
 
 -- | The C-UID-RANGE Errors of an IR.
 rangeErrors :: SpecIR -> [Text]
-rangeErrors = map renderFinding . filter (\f -> isError f && Cm.code f == "C-UID-RANGE") . checkIR Scott
+rangeErrors = map renderFinding . filter (\f -> isError f && Cm.code f == "C-UID-RANGE") . checkIR Nothing Scott
 
 spec :: Spec
 spec = withCore $ \pristine -> do
@@ -48,7 +48,7 @@ spec = withCore $ \pristine -> do
   let ctx = mkContext Scott ir
       rows = rangeRows ctx
       of' n = [ r | r <- rows, btAnchor (rgBound r) == TableId n ]
-      scott = checkIR Scott ir
+      scott = checkIR Nothing Scott ir
 
   describe "the ranges rule" $ do
     it "binds Tables 237 and 238, and no other table, by the doc anchor's rule token" $ do
@@ -118,7 +118,7 @@ spec = withCore $ \pristine -> do
         [ "C-UID-RANGE core-2.01.pdf#page=300&T237: row 4 Clock: the start \"00 00 04\" is not four bytes" ]
 
   describe "the generated module" $ do
-    cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+    cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.UIDRanges" (crModules cr)))
     it "lists each table's ranges, named after its first header" $ do
       lns `shouldContain` [ "templateRanges :: [(String, (Word32, Word32))]", "templateRanges =", "  [ (\"Unassigned\", (0x00000000, 0x00000000))"

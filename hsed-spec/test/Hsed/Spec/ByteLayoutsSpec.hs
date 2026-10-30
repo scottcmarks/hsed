@@ -74,7 +74,7 @@ spec = withCore $ \pristine -> do
   ir  <- runIO (annotated pristine hsa)
   let ctx = mkContext Scott ir
       classes = classify ir
-  cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+  cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
   let layouts = fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))
       names = concatMap declared (T.lines layouts)
 
@@ -113,14 +113,14 @@ spec = withCore $ \pristine -> do
       filter (`elem` ours) theirs `shouldBe` []
     it "find a name byteFieldValue would share with byteGrid (C-GRID-NAME, an Error at the byteFieldValue table, which is left out)" $ do
       clash <- annotated pristine (hsa <> "core-2.01 | T28 | layout \"ComPacket\"\n")
-      [ (Cm.severity f, renderFinding f) | f <- checkIR Scott clash, Cm.code f == "C-GRID-NAME" ] `shouldBe`
+      [ (Cm.severity f, renderFinding f) | f <- checkIR Nothing Scott clash, Cm.code f == "C-GRID-NAME" ] `shouldBe`
         [ (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: ComPacket is also a name of an earlier grid's declarations")
         , (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: comPacketLayout is also a name of an earlier grid's declarations") ]
       newlyExcluded ir clash `shouldReturn` [(TableId 28, "C-GRID-NAME failed")]
     it "find a byteGrid name only byteFieldValue's declarations import (C-GRID-NAME at those tables), which byteGrid's check cannot see" $ do
       -- T212 alone bound to byteGrid, so no grid has a tail; its record named Tail, which the reserved runs' layouts import
       only212 <- annotated pristine (DT.replace " & rule byteGrid" "" hsa <> "core-2.01 | T212 | layout \"Tail\" byteGrid\n")
-      [ renderFinding f | f <- checkIR Scott only212, Cm.code f == "C-GRID-NAME" ] `shouldBe`
+      [ renderFinding f | f <- checkIR Nothing Scott only212, Cm.code f == "C-GRID-NAME" ] `shouldBe`
         [ "C-GRID-NAME core-2.01.pdf#page=" <> pg <> "&T" <> n <> ": Tail, a name of byteGrid's GUDID Column Contents Description, is also a name these declarations import"
         | (pg, n) <- [("63", "31"), ("63", "32"), ("64", "33"), ("65", "35"), ("66", "36"), ("66", "37")] ]
     it "import the record class from the one runtime module Hsed.Spec.Gen names, as feature's records do" $ do
@@ -146,14 +146,14 @@ spec = withCore $ \pristine -> do
       [ t | t <- imported, length (declScope [importing [t <> " (..)"]]) < 2 ] `shouldBe` []
 
   describe "the one tiling policy of the three rules" $ do
-    let tileSeverities ir' tid = [ Cm.severity f | f <- checkIR Scott ir', Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just tid ]
+    let tileSeverities ir' tid = [ Cm.severity f | f <- checkIR Nothing Scott ir', Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just tid ]
     it "gives a gap a Warning, generating the layout without a record, in byteGrid's, byteFieldValue's and feature's tables alike" $ do
       -- Table 39's byte 15 relabelled 13 (bytes 14-15 in no row); Table 42's 5 - 15 relabelled 6 - 15 (byte 5 in no row);
       -- Table 236 as printed (byte 8 in no row)
       let gaps = setCell "T42" 5 0 "6 - 15" (setCell "T39" 10 0 "13" ir)
       [ (tid, tileSeverities gaps tid) | tid <- ["T39", "T42", "T236"] ]
         `shouldBe` [("T39", [Warning]), ("T42", [Warning]), ("T236", [Warning])]
-      cr' <- either (throwString . show) pure (compileIR Scott gaps)
+      cr' <- either (throwString . show) pure (compileIR Nothing Scott gaps)
       let declared' m = concatMap declared (T.lines (fromMaybe "" (lookup m (crModules cr'))))
       [ n | n <- declared' "Hsed.Gen.Core.Layouts", n `elem` ["level0DiscoveryHeaderLayout", "Level0DiscoveryHeader"] ] `shouldBe` ["level0DiscoveryHeaderLayout"]
       [ n | n <- declared' "Hsed.Gen.Core.Features", n `elem` ["tPerFeatureLayout", "TPerFeature"] ] `shouldBe` ["tPerFeatureLayout"]

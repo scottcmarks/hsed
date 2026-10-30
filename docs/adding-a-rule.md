@@ -122,7 +122,11 @@ comment binding a table to a shape it is not, whose one finding is then that Err
 (`btTable`) and read under the errata set
 (`btRead`), with its binding (`btBinding`) and its modifiers (`btMods`). The `Context` is read-only and
 generic: the IR, spec, errata set, numbered tables, classification, every table's section
-(`cxSections`; `sectionOf ctx bt`) and corrected tables. A rule that needs another rule's reading (an
+(`cxSections`; `sectionOf ctx bt`) and corrected tables, the signature and paragraph units, and,
+since M3, for a spec read over another (Opal over Core, `hsedc --base`), the other's Context, its
+base (`cxBase`), read-only: a lookup the spec does not answer runs wholly in the base (ids are a
+spec's own), and what it finds there is located in the base's spec (`atTable base bt`). A rule that
+needs another rule's reading (an
 enumeration's range from its type row; a table description's UID from Table 240) imports that rule's
 module and calls its reader on the same `Context`; it never adds fields to the `Context`. A rule
 exports its readers (`<rule>Reads`, `uidRows`) whether or not another rule calls them yet. Locate a

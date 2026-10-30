@@ -122,9 +122,9 @@ spec = do
           fr : _ -> fr
           []     -> error ("no feature read of T" <> show n)
         -- the findings of the rule's codes at its tables (byteGrid gives some of the readers' codes too: T38, T41, T44's W-PINS-NONE)
-        findings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f `elem` featureCodes, Cm.anchor f `elem` [Just "T42", Just "T43"] ]
+        findings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f `elem` featureCodes, Cm.anchor f `elem` [Just "T42", Just "T43"] ]
         moduleOf ir' = do
-          cr <- either (throwString . show) pure (compileIR Scott ir')
+          cr <- either (throwString . show) pure (compileIR Nothing Scott ir')
           pure (fromMaybe "" (lookup "Hsed.Gen.Core.Features" (crModules cr)))
 
     describe "the feature rule" $ do

@@ -47,7 +47,7 @@ spec :: Spec
 spec = withCore $ \pristine -> do
   hsa <- runIO committedHsa
   ir  <- runIO (annotated pristine hsa)
-  cr  <- runIO (either (throwString . show) pure (compileIR Scott ir))
+  cr  <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
   let fs     = crFindings cr
       ctx    = mkContext Scott ir
       errata = errataMarkdown ctx fs

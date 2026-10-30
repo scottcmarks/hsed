@@ -105,8 +105,8 @@ spec = do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
     let ours = ["C-BYTES-ROW", "C-BYTES-VALUE", "N-BYTES-IN-HEADER", "C-LAYOUT-TILE", "C-LAYOUT-EXTENT"]
-        findings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f `elem` ours ]
-        severities ir' = [ Cm.severity f | f <- checkIR Scott ir', Cm.code f `elem` ours ]
+        findings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f `elem` ours ]
+        severities ir' = [ Cm.severity f | f <- checkIR Nothing Scott ir', Cm.code f `elem` ours ]
 
     describe "the byteFieldValue rule" $ do
       it "binds T28, T31-T33, T35-T37 and T236, and no other table, by the doc anchor's rule token" $ do
@@ -129,7 +129,7 @@ spec = do
         [ ((bwLabel r).text, bwValue r) | r <- bfRows (readOf ir 236) ] `shouldBe` [("0 to 7", Nothing), ("9 to 15", Nothing), ("16 to 17", Nothing)]
       it "reads the first row of T31 and T37 with the bytes the header cell's later lines print (N-BYTES-IN-HEADER)" $ do
         [ ((bwLabel r).text, (bwField r).text) | r <- take 1 (bfRows (readOf ir 31)) ] `shouldBe` [("0 to 3", "Extended ComID")]
-        [ (Cm.code f, Cm.severity f) | f <- checkIR Scott ir, Cm.code f == "N-BYTES-IN-HEADER" ] `shouldBe` replicate 2 ("N-BYTES-IN-HEADER", Note)
+        [ (Cm.code f, Cm.severity f) | f <- checkIR Nothing Scott ir, Cm.code f == "N-BYTES-IN-HEADER" ] `shouldBe` replicate 2 ("N-BYTES-IN-HEADER", Note)
         filter ("N-BYTES-IN-HEADER" `T.isPrefixOf`) (findings ir) `shouldBe`
           [ "N-BYTES-IN-HEADER core-2.01.pdf#page=63&T31: row 1 has no bytes cell: its bytes \"0 to 3\" are read from the header cell \"VALUE 0 to 3\", whose later lines print them"
           , "N-BYTES-IN-HEADER core-2.01.pdf#page=66&T37: row 1 has no bytes cell: its bytes \"0 to 3\" are read from the header cell \"VALUE 0 to 3\", whose later lines print them" ]
@@ -168,8 +168,8 @@ spec = do
         tiling l `shouldBe` [Gap 64 71]
         filter ("C-LAYOUT-TILE" `T.isPrefixOf`) (findings ir) `shouldBe`
           [ "C-LAYOUT-TILE core-2.01.pdf#page=298&T236: System Log Entry Structure: no field covers byte 8 bit 7 to byte 8 bit 0" ]
-        [ s | f <- checkIR Scott ir, Cm.code f == "C-LAYOUT-TILE", let s = Cm.severity f ] `shouldBe` [Warning]
-        cr <- either (throwString . show) pure (compileIR Scott ir)
+        [ s | f <- checkIR Nothing Scott ir, Cm.code f == "C-LAYOUT-TILE", let s = Cm.severity f ] `shouldBe` [Warning]
+        cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
         [ e | e@(TableId 236, _) <- crExcluded cr ] `shouldBe` []
       it "gives no Error on the committed run" $
         filter (== Error) (severities ir) `shouldBe` []
@@ -184,7 +184,7 @@ spec = do
           , ("Status code for the operation", (16, 7), (17, 0), Unsigned) ]
         tiling l `shouldBe` []
         filter ("C-LAYOUT-TILE" `T.isPrefixOf`) (findings fixed) `shouldBe` []
-        cr <- either (throwString . show) pure (compileIR Scott fixed)
+        cr <- either (throwString . show) pure (compileIR Nothing Scott fixed)
         let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr)))
         lns `shouldContain` ["      , spanning \"The uid of the method involved in the operation\" (8, 7) (15, 0) Unsigned"]
         lns `shouldContain` ["-- > \"8 to 15\" | \"The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes.\""]
@@ -196,7 +196,7 @@ spec = do
       named <- runIO (annotated pristine (hsa <> "core-2.01 | T28 | layout \"GetComIDPayload\"\n"))
       it "names the record and the layout's value as written; the layout keeps the caption's title" $ do
         layoutName (bfLayout (readOf named 28)) `shouldBe` "GET_COMID Payload"
-        cr <- either (throwString . show) pure (compileIR Scott named)
+        cr <- either (throwString . show) pure (compileIR Nothing Scott named)
         T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))) `shouldContain` ["getComIDPayloadLayout :: Layout"]
         T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))) `shouldContain` ["data GetComIDPayload = GetComIDPayload"]
 
@@ -212,11 +212,11 @@ spec = do
           [ "C-BYTES-VALUE core-2.01.pdf#page=65&T35: row 3: \"Reserved\" (8 to TRNSFLEN - 1) is reserved, its value not zero" ]
       it "C-LAYOUT-TILE: rows that overlap are an Error, and the table is left out" $ do
         let broken = setCell "T33" 1 2 "00 00 00 00 01" (setCell "T33" 1 0 "4 to 8" ir)
-        [ (Cm.severity f, renderFinding f) | f <- checkIR Scott broken, Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just "T33" ] `shouldBe`
+        [ (Cm.severity f, renderFinding f) | f <- checkIR Nothing Scott broken, Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just "T33" ] `shouldBe`
           [ (Error, "C-LAYOUT-TILE core-2.01.pdf#page=64&T33: VERIFY_COMID_VALID Command Response: \"Reserved\" starts at byte 8 bit 7, inside \"Request Code\"") ]
         newlyExcluded ir broken `shouldReturn` [(TableId 33, "C-LAYOUT-TILE failed")]
       it "C-LAYOUT-TILE: a run to the end of the transfer that starts past the fixed part leaves a gap, a Warning" $
-        [ (Cm.severity f, renderFinding f) | f <- checkIR Scott (setCell "T33" 8 0 "47 to TRNSFLEN - 1" ir), Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just "T33" ]
+        [ (Cm.severity f, renderFinding f) | f <- checkIR Nothing Scott (setCell "T33" 8 0 "47 to TRNSFLEN - 1" ir), Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just "T33" ]
           `shouldBe` [ (Warning, "C-LAYOUT-TILE core-2.01.pdf#page=64&T33: VERIFY_COMID_VALID Command Response: no field covers byte 46 bit 7 to byte 46 bit 0") ]
       it "C-BYTES-ROW: a second run to the end of the transfer" $
         filter ("C-BYTES-ROW" `T.isPrefixOf`) (findings (setCell "T33" 7 0 "36 to TRNSFLEN - 1" ir)) `shouldBe`
@@ -234,7 +234,7 @@ spec = do
         filter (\f -> "C-LAYOUT-TILE" `T.isPrefixOf` f && "&T28:" `T.isInfixOf` f) (findings broken) `shouldBe` []
 
     describe "the generated layouts module" $ do
-      cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+      cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr)))
       it "declares a layout for each table, named after its caption as byteGrid names its layouts" $
         [ T.takeWhile (/= ' ') l | l <- lns, " :: Layout" `T.isSuffixOf` l, any (`T.isPrefixOf` l) ["get_", "noR", "verify", "stack", "system"] ] `shouldBe`

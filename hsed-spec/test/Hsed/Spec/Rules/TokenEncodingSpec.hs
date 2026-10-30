@@ -47,7 +47,7 @@ spec = withCore $ \pristine -> do
   ir  <- runIO (annotated pristine hsa)
   let ctx  = mkContext Scott ir
       rows = concatMap (rights . snd) (tokenRows ctx)
-      tokenFindingsOf ir' = L.sort [ renderFinding f | f <- checkIR Scott ir', "C-TOKEN-" `T.isPrefixOf` Cm.code f ]
+      tokenFindingsOf ir' = L.sort [ renderFinding f | f <- checkIR Nothing Scott ir', "C-TOKEN-" `T.isPrefixOf` Cm.code f ]
 
   describe "the tokenEncoding rule" $ do
     it "binds Tables 4-14, and no other table, by the rule token at Core 3.2.2" $ do
@@ -121,7 +121,7 @@ spec = withCore $ \pristine -> do
         , "C-TOKEN-TABLE core-2.01.pdf#page=32&T4: row 5 has no Hex cell: [\"\",\"\",\"TCG Reserved\"]" ]
 
   describe "the generated module" $ do
-    cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+    cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Tokens" (crModules cr)))
     it "records the eleven tables the codec implements, each with its SpecRef and title" $ do
       lns `shouldContain` ["codecTables :: [(Text, Text)]", "codecTables ="]

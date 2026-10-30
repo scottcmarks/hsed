@@ -16,8 +16,9 @@ The command line of the spec compiler (docs/spec-as-source.md sections 4.2 and
 file, by default the annotated extraction @build/core-2.01.hsed.json@ (@make
 ir-annotated@); @--hsa FILE@ replaces the IR's annotations with a sidecar's;
 @--partial SPEC@ names a spec annotated only in part, whose unbound units are
-then Warnings. Every command exits non-zero on any Error, and @bind@ and
-@compile@ then write nothing.
+then Warnings; @--base IR@ the IR of the spec this one is read over, whose
+Context the rules fall back to. Every command exits non-zero on any Error, and
+@bind@ and @compile@ then write nothing.
 -}
 module Main (main) where
 
@@ -63,8 +64,11 @@ commands = hsubparser $ mconcat
   ]
   where
     input     = Input <$> strArgument (metavar "IR" <> value defaultIR <> showDefault <> help "an IR v1 JSON file") <*> hsaOpt
-    options   = Options <$> many (strOption (long "partial" <> metavar "SPEC"
-                  <> help "a spec annotated in part, until its last binding milestone: its tables and signature blocks nothing binds yet are the Warning W-UNBOUND, not the Error E-UNBOUND (repeatable)"))
+    options   = Options
+                  <$> many (strOption (long "partial" <> metavar "SPEC"
+                        <> help "a spec annotated in part, until its last binding milestone: its tables and signature blocks nothing binds yet are the Warning W-UNBOUND, not the Error E-UNBOUND (repeatable)"))
+                  <*> optional (strOption (long "base" <> metavar "IR"
+                        <> help "the IR of the spec this one is read over (Opal over Core: build/core-2.01.hsed.json), whose Context, read-only, the rules of check and compile fall back to"))
     errataOpt = option (maybeReader (parseErrataSet . T.pack))
                   (long "errata" <> metavar "SET" <> value Scott <> showDefaultWith (T.unpack . errataSetName)
                    <> help "scott (the corrections) or published (the text as printed)")

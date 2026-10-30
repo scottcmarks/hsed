@@ -19,7 +19,9 @@ changes). The tests hold invariants, not totals: how many findings of each
 code a run gives is in the committed ledger @docs/LEDGER.md@
 ("Hsed.Spec.CompileSpec"), and each rule's own checks are tested in
 @Rules/\<Rule\>Spec.hs@, so a new rule edits neither this module nor its
-counts.
+counts. A spec read over another keeps the other's Context as its base,
+read-only; 'partially' makes an unbound unit of a spec annotated in part a
+Warning.
 -}
 module Hsed.Spec.CheckSpec (spec) where
 
@@ -35,8 +37,9 @@ import           Hsed.Spec.Check
 import           Hsed.Spec.Common (ErrataSet (..), Finding, Severity (..), finding, isError, renderFinding)
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.CoreIR
-import           Hsed.Spec.IR     (SpecIR)
-import           Hsed.Spec.RuleDef (Classification (..), Mods (..), boundBinding, modsOf, parseUIDCell)
+import           Hsed.Spec.IR     (SpecIR, readIR)
+import           Hsed.Spec.Registry (registry)
+import           Hsed.Spec.RuleDef (Classification (..), Context (..), Mods (..), boundBinding, modsOf, parseUIDCell)
 import           Hsed.Spec.Rules  (classify, classifySignatures, classifyWith)
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads)
 
@@ -51,7 +54,7 @@ about :: Text -> [Finding] -> [Text]
 about anchor = rendered . filter ((== Just anchor) . Cm.anchor)
 
 errorsOf :: ErrataSet -> SpecIR -> [Text]
-errorsOf es = rendered . filter isError . checkIR es
+errorsOf es = rendered . filter isError . checkIR Nothing es
 
 -- | The findings of some codes.
 withCodes :: [Text] -> [Finding] -> [Finding]
@@ -71,17 +74,35 @@ spec = do
       let at' a = (finding Error "E-UNBOUND" "x") { Cm.spec = Nothing, Cm.anchor = Just a, Cm.page = Just 34 }
       map Cm.anchor (sortFindings (map at' ["T10", "T8", "T9"])) `shouldBe` map Just ["T8", "T9", "T10"]
 
+  describe "partially" $
+    it "makes an E-UNBOUND of a spec it names W-UNBOUND, a Warning, and leaves every other finding as it was" $ do
+      let at' sid c = (finding Error c "x") { Cm.spec = Just (Cm.SpecId sid), Cm.anchor = Just "T3", Cm.page = Just 20 }
+          fs = [at' "opal-2.30" "E-UNBOUND", at' "core-2.01" "E-UNBOUND", at' "opal-2.30" "E-SHAPE"]
+      map (\f -> (Cm.severity f, Cm.code f)) (partially ["opal"] fs)
+        `shouldBe` [(Warning, "W-UNBOUND"), (Error, "E-UNBOUND"), (Error, "E-SHAPE")]
+      partially [] fs `shouldBe` fs
+
+  describe "mkContextWith over a base" $
+    it "keeps the base's Context, read-only, for a spec read over another (Opal over Core, hsedc --base)" $ do
+      let path s = "../spec/ir/" <> s <> ".json"
+      coreSpec <- readIR (path "core-2.01") >>= either throwString pure
+      opalSpec <- readIR (path "opal-2.30") >>= either throwString pure
+      let base = mkContext Scott coreSpec
+          ctx  = mkContextWith registry (Just base) Scott opalSpec
+      (cxSpec ctx, fmap cxSpec (cxBase ctx), fmap (isJust . cxBase) (cxBase ctx)) `shouldBe` (Cm.SpecId "opal-2.30", Just (Cm.SpecId "core-2.01"), Just False)
+      isNothing (cxBase (mkContext Scott opalSpec)) `shouldBe` True
+
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
-    let scott     = checkIR Scott ir
-        published = checkIR Published ir
+    let scott     = checkIR Nothing Scott ir
+        published = checkIR Nothing Published ir
         without a = annotated pristine (withoutLine a hsa)
         -- the tables whose binding carries an erratum scott, from the classification
         withErrata = L.sort [ renderAnchorId aid | (aid, c) <- Map.toList (classify ir), Just sb <- [boundBinding c]
                                                  , not (null (mErrata (modsOf sb))) ]
 
-    describe "checkIR under --errata scott" $ do
+    describe "checkIR Nothing under --errata scott" $ do
       it "finds no Error" $
         filter isError scott `shouldBe` []
       it "reports everything the classification found, one E-UNBOUND per unbound table or signature block" $ do
@@ -93,9 +114,9 @@ spec = do
         Map.lookup "W-UNBOUND" (codesOf scott) `shouldBe` Nothing
       it "fails on a table nothing binds: E-UNBOUND is an Error (T236's rule token removed)" $ do
         ir' <- annotated pristine (DT.replace " & rule byteFieldValue" "" hsa)
-        [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "E-UNBOUND", Cm.anchor f == Just "T236" ]
+        [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f == "E-UNBOUND", Cm.anchor f == Just "T236" ]
           `shouldBe` ["E-UNBOUND core-2.01.pdf#page=297&T236: no annotation binds it and no rule in scope fires on it (Table 236 System Log Entry Structure)"]
-        length [ () | f <- checkIR Scott ir', isError f, Cm.code f == "E-UNBOUND" ] `shouldBe` 8
+        length [ () | f <- checkIR Nothing Scott ir', isError f, Cm.code f == "E-UNBOUND" ] `shouldBe` 8
       it "applies the corrections of the T75 and T101 annotations, and of no other table" $ do
         about "T75" scott `shouldBe`
           ["W-ERRATUM-APPLIED core-2.01.pdf#page=107&T75: Format \"Fractoin\" -> \"Fraction\" (annotation at core-2.01.pdf#page=107&T75)"]
@@ -109,7 +130,7 @@ spec = do
       it "lists errors first" $
         map Cm.severity scott `shouldBe` L.sort (map Cm.severity scott)
 
-    describe "checkIR under --errata published (acceptance (e))" $ do
+    describe "checkIR Nothing under --errata published (acceptance (e))" $ do
       it "leaves Fractoin as printed and fails to resolve it, citing the page" $
         filter ("T75" `T.isInfixOf`) (errorsOf Published ir) `shouldBe`
           ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
@@ -128,29 +149,29 @@ spec = do
         noT75 <- without "T75"
         errorsOf Scott noT75 `shouldBe`
           ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
-        about "T75" (checkIR Published noT75) `shouldBe` ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
+        about "T75" (checkIR Nothing Published noT75) `shouldBe` ["E-FMT-RESOLVE core-2.01.pdf#page=107&T75: unresolved type name Fractoin (nearest: Fraction, T84)"]
       it "T101: without it, nothing corrects Verify Eror and nothing reports it" $ do
         noT101 <- without "T101"
-        about "T101" (checkIR Scott noT101) `shouldBe` []
-        about "T101" (checkIR Published noT101) `shouldBe` []
+        about "T101" (checkIR Nothing Scott noT101) `shouldBe` []
+        about "T101" (checkIR Nothing Published noT101) `shouldBe` []
       it "T149: without it, the duplicate UID is an Error" $ do
         noT149 <- without "T149"
-        map Cm.code (filter isError (checkIR Scott noT149)) `shouldBe` ["C-UID-UNIQUE"]
+        map Cm.code (filter isError (checkIR Nothing Scott noT149)) `shouldBe` ["C-UID-UNIQUE"]
 
     describe "the errata" $ do
       it "refuse an erratum of the published set: published is the text as printed" $ do
         ir' <- annotated pristine (withoutLine "T75" hsa <> "core-2.01 | T75 | erratum published [\"Fractoin\" ~> \"Fraction\"]\n")
         forM_ [Scott, Published] $ \es ->
-          about "T75" (filter isError (checkIR es ir')) `shouldBe`
+          about "T75" (filter isError (checkIR Nothing es ir')) `shouldBe`
             ["E-ERRATUM-PUBLISHED core-2.01.pdf#page=107&T75: 1:9: erratum published: the published set is the text as printed and takes no corrections; write erratum scott"]
       it "apply a chain in order and call none of it unused" $ do
         ir' <- annotated pristine (withoutLine "T75" hsa <> "core-2.01 | T75 | erratum scott [\"Fractoin\" ~> \"Zq\", \"Zq\" ~> \"Fraction\"]\n")
-        let fs = checkIR Scott ir'
+        let fs = checkIR Nothing Scott ir'
         filter isError fs `shouldBe` []
         map Cm.code (filter ((== Just "T75") . Cm.anchor) fs) `shouldBe` ["W-ERRATUM-APPLIED", "W-ERRATUM-APPLIED"]
       it "reach every cell: a value cell of an enumeration" $ do
         ir' <- annotated pristine (withoutLine "T101" hsa <> "core-2.01 | T101 | erratum scott [\"4-7\" ~> \"4-6\"]\n")
-        about "T101" (checkIR Scott ir') `shouldBe`
+        about "T101" (checkIR Nothing Scott ir') `shouldBe`
           ["W-ERRATUM-APPLIED core-2.01.pdf#page=113&T101: Enumeration Value \"4-7\" -> \"4-6\" (annotation at core-2.01.pdf#page=113&T101)"]
       it "reach the identifier a caption names" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T52 | erratum scott [\"adv_key_mode Enumeration\" ~> \"adv_key_mod Enumeration\"]\n")
@@ -161,12 +182,12 @@ spec = do
       it "report a correction that matches no text of the table" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T46 | erratum scott [\"Nonesuch\" ~> \"X\"]\n")
         forM_ [Scott, Published] $ \es ->
-          about "T46" (checkIR es ir') `shouldBe`
+          about "T46" (checkIR Nothing es ir') `shouldBe`
             ["W-ERRATUM-UNUSED core-2.01.pdf#page=100&T46: the annotation's correction \"Nonesuch\" -> \"X\" matches no text of the table"]
 
     describe "the normalisations" $
       it "report a header read through the typo table" $
-        about "T46" (checkIR Scott (setHeaderCell "T46" 0 0 "Colum Type" ir)) `shouldContain`
+        about "T46" (checkIR Nothing Scott (setHeaderCell "T46" 0 0 "Colum Type" ir)) `shouldContain`
           ["N-HEADER-NORMALISED core-2.01.pdf#page=100&T46: header \"Colum Type\" read as \"Column Type\""]
 
     describe "E-SHAPE" $ do
@@ -176,7 +197,7 @@ spec = do
       it "leaves a table its binding's shape refuses to no rule: the one Error is E-SHAPE" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T25 | uidTable\n")
         errorsOf Scott ir' `shouldSatisfy` \es -> length es == 1 && all ("E-SHAPE core-2.01.pdf#page=53&T25: UidTable does not accept" `T.isPrefixOf`) es
-        about "T25" (checkIR Scott ir') `shouldSatisfy` all ("E-SHAPE " `T.isPrefixOf`)
+        about "T25" (checkIR Nothing Scott ir') `shouldSatisfy` all ("E-SHAPE " `T.isPrefixOf`)
         ir'' <- annotated pristine (hsa <> "core-2.01 | T166 | propsNames\n")
         errorsOf Scott ir'' `shouldSatisfy` \es -> length es == 1 && all ("E-SHAPE core-2.01.pdf#page=137&T166: Props does not accept" `T.isPrefixOf`) es
 
@@ -185,7 +206,7 @@ spec = do
         withCodes ["W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"] scott `shouldBe` []
       it "report an anchor whose scope binds nothing to its rule, and one another anchor of the rule covers" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | 6.2 | rule uidTable\ncore-2.01 | 5.3.3.6 | rule sig\n")
-        rendered (withCodes ["W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"] (checkIR Scott ir')) `shouldBe`
+        rendered (withCodes ["W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"] (checkIR Nothing Scott ir')) `shouldBe`
           [ "W-RULE-SCOPE-EMPTY core-2.01.pdf#page=300&6.2: rule uidTable binds no table and no signature block in section 6.2"
           , "N-RULE-SCOPE-REDUNDANT core-2.01.pdf#page=201&5.3.3.6: rule sig here lies within its anchor's scope at the whole document: drop one"
           , "N-RULE-SCOPE-REDUNDANT core-2.01.pdf#page=300&6.2: rule uidTable here lies within its anchor's scope at the whole document: drop one" ]

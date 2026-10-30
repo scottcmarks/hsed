@@ -324,11 +324,15 @@ accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule 
 --                     claiming the codes several rules give through it; accessControl to come
 -- Hsed.Spec.Format    parseFormat :: Env -> Text -> Either Finding TypeDef; corpus test = dev/Formats.txt (82 strings)
 -- Hsed.Spec.Check     Finding { severity :: Error|Warning|Note, code, anchor, page, message }; mkContext :: ErrataSet -> SpecIR -> Context;
+--                     since M3 mkContextWith rules (base :: Maybe Context), checkIR base and compileIR base: an Opal run over
+--                     Core's Context (cxBase, read-only; hsedc --base), the lookups Opal does not answer run there (13.26 (g));
+--                     partially: E-UNBOUND of a spec annotated in part as W-UNBOUND (hsedc --partial, 13.26 (k));
 --                     the generic checks, then every rule's ruleChecks (M2a: pure functions of the Context replace the M1 RWST and Compile')
 -- Hsed.Spec.Overlay   Patch = Pin | Narrow | Replace | AddColumns | AddTable | Rows; applyOverlay ordered: pins, comms, schema (T26/T43/T50), preconfig
 -- Hsed.Spec.Errata (mechanics only; the corrections are the annotations'), Hsed.Spec.Cli (the commands, testable), Hsed.Spec.Gen (deterministic printer, golden-tested; each generated module assembled from the declarations the rules emit for it; the runtime modules the generated code of several rules imports named once: uidModule, coreTypesModule, coreTableModule, codeModule, fieldModule, and since M2c's scaffold layoutModule, since its rules recordModule (byteGrid's, byteFieldValue's and, since the M2c review, feature's records); one a single rule imports named in that rule: methodModule in sig, syncModule in stateTable, propertiesModule in Props, featureModule in feature; since the M2c review `ascii`, which makes the PDF's text in a comment ASCII, applied by provenanceComment and the module header), Hsed.Spec.Sidecar (.hsa, manifest, reanchor), Hsed.Spec.Pdf (M1: python shims; M6: Pdf.Core.Writer)
 -- exe hsedc: gen | extract | bind | check | compile | annotate | apply | dump | verify | adopt | reanchor | explain | orphans | ledger | coverage
---            (since M3 every command reading an IR takes --partial SPEC, a spec annotated only in part: its unbound units W-UNBOUND)
+--            (since M3 every command reading an IR takes --partial SPEC, a spec annotated only in part: its unbound units W-UNBOUND,
+--            and --base IR, the spec it is read over, whose Context check and compile fall back to)
 -- test:bindings  hsed-spec/bindings/Hsed/Bindings/{Core,Opal}.hs (generated, committed) + test/negative/*.hsa fixtures
 ```
 

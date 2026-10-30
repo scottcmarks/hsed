@@ -111,7 +111,7 @@ spec = do
       it "finds every other reference resolving to the table it names, by number, link and name" $
         [ (Cm.page f, Cm.anchor f) | f <- xrefChecks ir ] `shouldBe` [(Just 116, Just "5.1.3.55"), (Just 121, Just "5.1.3.73")]
       it "is among the findings of hsedc check, as Warnings" $ do
-        let fromCheck = filter ((== "XREF-RESOLVES") . Cm.code) (checkIR Scott ir)
+        let fromCheck = filter ((== "XREF-RESOLVES") . Cm.code) (checkIR Nothing Scott ir)
         L.sort (rendered fromCheck) `shouldBe` L.sort found
         map Cm.severity fromCheck `shouldSatisfy` all (== Cm.Warning)
       it "reports a number no table has" $

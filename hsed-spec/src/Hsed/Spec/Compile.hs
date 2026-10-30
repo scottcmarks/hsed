@@ -57,10 +57,11 @@ data CompileResult = CompileResult
   , crFindings :: ![Finding]              -- ^ 'sortFindings' order
   }
 
--- | Compile one IR under one errata set; Left when two rules give one module
---   name different descriptions.
-compileIR :: ErrataSet -> SpecIR -> Either Finding CompileResult
-compileIR es ir = do
+-- | Compile one IR under one errata set, over a base Context or none (Core's
+--   for an Opal run: "Hsed.Spec.Check".'Hsed.Spec.Check.mkContextWith'); Left
+--   when two rules give one module name different descriptions.
+compileIR :: Maybe Context -> ErrataSet -> SpecIR -> Either Finding CompileResult
+compileIR base es ir = do
   modules <- generatedModules ctx decls
   pure CompileResult
     { crModules  = [ (name, Gen.renderModule name gm ds) | (name, gm, ds) <- modules ]
@@ -68,7 +69,7 @@ compileIR es ir = do
     , crExcluded = map fst excluded
     , crFindings = sortFindings (checks ctx <> map snd excluded) }
   where
-    ctx      = mkContext es ir
+    ctx      = mkContextWith registry base es ir
     emitted  = [ (r, e) | r <- registry, e <- ruleCompile r ctx (boundTables (ruleShape r) ctx) ]
     decls    = concat [ case e of
                           Emit d      -> [(ruleModule r, d)]

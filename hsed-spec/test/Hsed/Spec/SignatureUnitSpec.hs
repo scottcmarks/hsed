@@ -118,7 +118,7 @@ spec = withCore $ \pristine -> do
 
   describe "a rule reading signature units" $ do
     ir <- runIO (docLine "doc core201 & rule tableUIDs & rule sig")
-    let ctx = mkContextWith (tableRules <> [stub]) Scott ir
+    let ctx = mkContextWith (tableRules <> [stub]) Nothing Scott ir
         sigs' = boundSigs (ruleShape stub) ctx
     it "reads every bound block, and no table" $ do
       map bsAnchor sigs' `shouldBe` Map.keys (signatureUnits ir)
@@ -135,7 +135,7 @@ spec = withCore $ \pristine -> do
       map Cm.code (checkExemplarsWith [stub { exemplar = (SpecId "core-2.01", SigId "9.9") }] ir) `shouldBe` ["C-EXEMPLAR"]
     it "puts the E-UNBOUND of the blocks it does not bind among the context's findings" $ do
       ir' <- annotated pristine "core-2.01 | doc | doc core201\ncore-2.01 | 5.3.3 | rule sig\n"
-      length (unbound (cxClassFindings (mkContextWith [stub] Scott ir')) `L.intersect` map renderAnchorId (Map.keys (signatureUnits ir')))
+      length (unbound (cxClassFindings (mkContextWith [stub] Nothing Scott ir')) `L.intersect` map renderAnchorId (Map.keys (signatureUnits ir')))
         `shouldBe` Map.size (signatureUnits ir') - 18
 
   describe "the reports" $ do

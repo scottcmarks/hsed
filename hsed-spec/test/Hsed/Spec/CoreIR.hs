@@ -104,7 +104,7 @@ newlyExcluded base ir = do
   base'  <- excluded base
   after' <- excluded ir
   pure (filter (`notElem` base') after')
-  where excluded x = either (throwString . show) (pure . crExcluded) (compileIR Scott x)
+  where excluded x = either (throwString . show) (pure . crExcluded) (compileIR Nothing Scott x)
 
 -- | The IR without a numbered table.
 dropTable :: Text -> SpecIR -> SpecIR

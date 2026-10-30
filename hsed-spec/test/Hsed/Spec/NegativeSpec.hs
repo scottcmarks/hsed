@@ -63,7 +63,7 @@ spec = withCore $ \ir -> do
   forM_ fixtures $ \name -> describe name $ do
     text <- runIO (readFileUtf8 (dir </> name))
     let (sideFs, ir') = annotatedWith ir text
-        checkErrors   = map renderFinding (filter isError (checkIR Scott ir'))
+        checkErrors   = map renderFinding (filter isError (checkIR Nothing Scott ir'))
         bindErrors    = map renderFinding (filter isError (fst (bindEntries ir')))
     it "resolves against the IR" $
       sideFs `shouldBe` []

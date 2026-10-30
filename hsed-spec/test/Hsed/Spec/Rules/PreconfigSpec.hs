@@ -48,12 +48,12 @@ import           Hsed.Spec.Shape           (measure)
 -- | The Errors of a run, but C-PRECONF-UID, which an edited UID or row also
 --   fails where Table 243 lists the authorities (tested on its own below).
 errorsOf :: SpecIR -> [Text]
-errorsOf = map renderFinding . filter (\f -> isError f && Cm.code f /= "C-PRECONF-UID") . checkIR Scott
+errorsOf = map renderFinding . filter (\f -> isError f && Cm.code f /= "C-PRECONF-UID") . checkIR Nothing Scott
 
 -- | The generated module of an IR.
 generated :: SpecIR -> IO [Text]
 generated ir = do
-  cr <- either (throwString . show) pure (compileIR Scott ir)
+  cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
   pure (T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Preconfig" (crModules cr))))
 
 -- | The lines of one declaration.
@@ -103,7 +103,7 @@ spec = do
         errorsOf ir `shouldBe` []
 
     describe "C-PRECONF-UID, Table 243 against the default authorities of Tables 209 and 216" $ do
-      let preconf ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-PRECONF-UID" ]
+      let preconf ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f == "C-PRECONF-UID" ]
       it "passes: the 17 rows are those the two tables preconfigure, with their names, UIDs and templates" $ do
         preconf ir `shouldBe` []
         [ (peName e, peUID e, peTemplate e) | e <- preEntries ctx, peTarget e == "Authority" ]
@@ -168,7 +168,7 @@ spec = do
       it "leaves a template row out, with a Warning" $ do
         let templated = setCell "T216" 7 1 "00 00 00 09 00 00 02 08 (+XX)" ir
         errorsOf templated `shouldBe` []
-        map renderFinding (filter ((== "W-PRECONF-TEMPLATE") . Cm.code) (checkIR Scott templated)) `shouldBe`
+        map renderFinding (filter ((== "W-PRECONF-TEMPLATE") . Cm.code) (checkIR Nothing Scott templated)) `shouldBe`
           [ "W-PRECONF-TEMPLATE core-2.01.pdf#page=236&T216: row 8 Reserve3: a template row ((+XX)), not generated: the expand modifier is to expand it" ]
         lns <- generated templated
         length (filter ("Pre  -- " `T.isInfixOf`) (block "defaultAdminTemplateAuthorities" lns)) `shouldBe` 7

@@ -54,7 +54,7 @@ readOf :: Context -> Text -> Maybe SigRead
 readOf ctx section = listToMaybe [ sr | Right sr <- sigReads ctx, bsAnchor (srBound sr) == SigId section ]
 
 sigFindings :: SpecIR -> [Text]
-sigFindings = map renderFinding . filter (\f -> any (`T.isPrefixOf` Cm.code f) ["C-SIG", "N-SIG"]) . checkIR Scott
+sigFindings = map renderFinding . filter (\f -> any (`T.isPrefixOf` Cm.code f) ["C-SIG", "N-SIG"]) . checkIR Nothing Scott
 
 spec :: Spec
 spec = do
@@ -116,13 +116,13 @@ spec = do
     describe "C-SIG-METHOD (acceptance: signatures joined to T242/T241)" $ do
       it "joins 52 blocks, each to one row: 6 of T241 and 46 of T242" $ do
         length [ sr | sr <- rows, [_] <- [joined sr] ] `shouldBe` 52
-        L.sort (L.nub [ Cm.code f | f <- checkIR Scott ir, Cm.code f == "C-SIG-METHOD", Cm.severity f == Error ]) `shouldBe` []
+        L.sort (L.nub [ Cm.code f | f <- checkIR Nothing Scott ir, Cm.code f == "C-SIG-METHOD", Cm.severity f == Error ]) `shouldBe` []
       it "reports the one block no row names with its page, and the one method row no block defines" $
         filter ("C-SIG-METHOD" `T.isPrefixOf`) (sigFindings ir) `shouldBe`
           [ "C-SIG-METHOD core-2.01.pdf#page=252&5.6.4.2/sig: Stir has no UID: no row of T241 or T242 names it"
           , "C-SIG-METHOD core-2.01.pdf#page=304&T242: T242 row 34, Salt, has no signature block" ]
       it "is an Error when two rows name one method" $
-        [ renderFinding f | f <- checkIR Scott (setCell "T242" 33 1 "Get" ir), Cm.code f == "C-SIG-METHOD", Cm.severity f == Error ]
+        [ renderFinding f | f <- checkIR Nothing Scott (setCell "T242" 33 1 "Get" ir), Cm.code f == "C-SIG-METHOD", Cm.severity f == Error ]
           `shouldBe` ["C-SIG-METHOD core-2.01.pdf#page=201&5.3.3.6/sig: Get is named by T242 row 20 and T242 row 34"]
 
     describe "C-SIG-PARSE" $ do
@@ -132,12 +132,12 @@ spec = do
           , "N-SIG-NORMALISED core-2.01.pdf#page=209&5.3.3.18/sig: the invocation's parameter list ends with a comma before ]: read without it" ]
       it "is an Error at the block when a block does not parse, and the block is left out" $ do
         let broken = withSigText "5.3.3.8" "TableUID.Next [\nWhere uidref ]\n=>\n[ Result : list [ uidref ... ] ]" ir
-        [ renderFinding f | f <- checkIR Scott broken, Cm.code f == "C-SIG-PARSE", Cm.severity f == Error ] `shouldBe`
+        [ renderFinding f | f <- checkIR Nothing Scott broken, Cm.code f == "C-SIG-PARSE", Cm.severity f == Error ] `shouldBe`
           ["C-SIG-PARSE core-2.01.pdf#page=203&5.3.3.8/sig: the invocation: \"Where uidref\" is not Name : type or Name = type"]
       it "is an Error when the heads read are not the IR's, or when the heading names neither method of the block" $ do
-        [ renderFinding f | f <- checkIR Scott (withSigText "5.5.4.2" "ClockTimeTableUID.Reset [ ]\n=>\n[ ]" ir), Cm.code f == "C-SIG-PARSE", Cm.severity f == Error ]
+        [ renderFinding f | f <- checkIR Nothing Scott (withSigText "5.5.4.2" "ClockTimeTableUID.Reset [ ]\n=>\n[ ]" ir), Cm.code f == "C-SIG-PARSE", Cm.severity f == Error ]
           `shouldBe` ["C-SIG-PARSE core-2.01.pdf#page=240&5.5.4.2/sig: the heads read are [(\"ClockTimeTableUID\",\"Reset\")], the IR's [\"ClockTimeTableUID.ResetClock\"]"]
-        [ renderFinding f | f <- checkIR Scott (withSig "5.5.4.2" ["ClockTimeTableUID.Reset"] "ClockTimeTableUID.Reset [ ]\n=>\n[ ]" ir), Cm.code f == "C-SIG-PARSE", Cm.severity f == Error ]
+        [ renderFinding f | f <- checkIR Nothing Scott (withSig "5.5.4.2" ["ClockTimeTableUID.Reset"] "ClockTimeTableUID.Reset [ ]\n=>\n[ ]" ir), Cm.code f == "C-SIG-PARSE", Cm.severity f == Error ]
           `shouldBe` ["C-SIG-PARSE core-2.01.pdf#page=240&5.5.4.2/sig: the heading \"ResetClock (Table Method)\" names neither Reset"]
 
     describe "the invoking IDs" $
@@ -146,7 +146,7 @@ spec = do
           `shouldBe` [("SMUID", [3]), ("ThisSP", [2]), ("TableUID", []), ("ObjectUID", [])]
 
     describe "the generated module" $ do
-      cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+      cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Methods" (crModules cr)))
       it "has a record per block, a signature instance per block, and a Method instance per joined block" $ do
         length [ l | l <- lns, "data " `T.isPrefixOf` l ] `shouldBe` 53

@@ -56,7 +56,11 @@ its type row) imports that rule's module and calls its readers on the same
 errata set, its numbered tables, their classification, the section of every
 table ("Hsed.Spec.Scope"), the bound tables read under the errata set, the
 signature units and their classification, and the paragraph units the comments
-bind ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext' builds it).
+bind ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext' builds it); and, for a spec
+read over another (Opal over Core, @hsedc --base@), that spec's Context, its
+base ('cxBase'), read-only: a lookup this spec does not answer (a feature
+descriptor's general format, its code) runs in the base, wholly there, since
+ids are a spec's own, and what it finds there is located in the base's spec.
 
 Several bindings may share a shape (@propsNames@ and @propsInitial@ are both
 @Props@): the shape has one 'RuleDef', which reads every table bound with it
@@ -212,6 +216,9 @@ data Context = Context
   , cxParas          :: !(Map AnchorId (ParaIR, SomeBinding))
     -- ^ the paragraph units: each paragraph or list item a valid comment binds
     --   with a shape that takes paragraph units, with that binding
+  , cxBase           :: !(Maybe Context)
+    -- ^ the Context of the spec this one is read over, read-only (Core's for
+    --   Opal, @hsedc --base@); none for a spec read alone
   }
 
 -- | One table bound to a rule's shape.

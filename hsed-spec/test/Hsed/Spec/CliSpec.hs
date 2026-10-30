@@ -20,7 +20,8 @@ and ambiguous tables beside the unbound ones; @ledger@ with several IRs and one
 sidecar applies it to the IR whose spec it names; @--target@ and @explain@ name
 a spec only in full (@core@, @core-2.01@, @core201@); @explain@ takes a
 signature block as well as a table; @--partial@ makes the unbound units of the
-spec it names Warnings (@W-UNBOUND@), and the commands exit zero on them.
+spec it names Warnings (@W-UNBOUND@), and the commands exit zero on them;
+@--base@ names a base IR the run reads, refused when it cannot be read.
 -}
 module Hsed.Spec.CliSpec (spec) where
 
@@ -158,20 +159,23 @@ spec = do
 
   describe "--partial" $ do
     it "makes each unbound unit of the spec it names W-UNBOUND, a Warning (the pristine Opal IR: 50 tables, 3 signature blocks)" $ do
-      (failed, out) <- captured (CmdCheck (Options ["opal-2.30"]) (Input opalIR Nothing) Scott)
+      (failed, out) <- captured (CmdCheck (Options ["opal-2.30"] Nothing) (Input opalIR Nothing) Scott)
       failed `shouldBe` False
       let unbound = [ l | l <- T.lines out, "W-UNBOUND opal-2.30.pdf#page=" `T.isPrefixOf` l ]
       length unbound `shouldBe` 53
       take 1 unbound `shouldBe` ["W-UNBOUND opal-2.30.pdf#page=12&T1: no annotation binds it and no rule in scope fires on it (Table 1 - Preconfiguration Tables Legend)"]
       [ l | l <- T.lines out, "E-" `T.isPrefixOf` l ] `shouldBe` []
     it "names a spec as --target does, and leaves another spec's E-UNBOUND an Error" $ do
-      forM_ ["opal", "opal230"] $ \name -> quietly (CmdCheck (Options [name]) (Input opalIR Nothing) Scott) `shouldReturn` False
-      forM_ [[], ["core"], ["o"]] $ \names -> quietly (CmdCheck (Options names) (Input opalIR Nothing) Scott) `shouldReturn` True
+      forM_ ["opal", "opal230"] $ \name -> quietly (CmdCheck (Options [name] Nothing) (Input opalIR Nothing) Scott) `shouldReturn` False
+      forM_ [[], ["core"], ["o"]] $ \names -> quietly (CmdCheck (Options names Nothing) (Input opalIR Nothing) Scott) `shouldReturn` True
+    it "takes --base, the IR of the spec the run reads over, and refuses a file that is no IR" $ do
+      quietly (CmdCheck (Options ["opal-2.30"] (Just coreIR)) (Input opalIR Nothing) Scott) `shouldReturn` False
+      quietly (CmdCheck (Options ["opal-2.30"] (Just "../spec/annot/core-2.01.manifest.json")) (Input opalIR Nothing) Scott) `shouldReturn` True
     it "lets orphans and explain exit zero over the spec it names, listing its unbound units as Warnings" $ do
-      (failed, out) <- captured (CmdOrphans (Options ["opal-2.30"]) (Input opalIR Nothing))
+      (failed, out) <- captured (CmdOrphans (Options ["opal-2.30"] Nothing) (Input opalIR Nothing))
       failed `shouldBe` False
       length [ l | l <- T.lines out, "W-UNBOUND" `T.isPrefixOf` l ] `shouldBe` 53
-      quietly (CmdExplain (Options ["opal-2.30"]) "opal" (TableId 3) (Input opalIR Nothing)) `shouldReturn` False
+      quietly (CmdExplain (Options ["opal-2.30"] Nothing) "opal" (TableId 3) (Input opalIR Nothing)) `shouldReturn` False
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
@@ -198,11 +202,11 @@ spec = do
           errs `shouldSatisfy` all ("E-UNBOUND opal-2.30.pdf#page=" `T.isPrefixOf`)
       it "under --partial opal-2.30, reports Opal's unbound units as W-UNBOUND and exits zero on them, Core's Errors kept" $
         withSidecarFile hsa $ \_ file -> do
-          (failed, out) <- captured (CmdLedger (Options ["opal-2.30"]) [coreIR, opalIR] (Just file))
+          (failed, out) <- captured (CmdLedger (Options ["opal-2.30"] Nothing) [coreIR, opalIR] (Just file))
           failed `shouldBe` False
           [ l | l <- T.lines out, "E-" `T.isPrefixOf` l || "W-UNBOUND" `T.isPrefixOf` l ] `shouldBe` []
           withSidecarFile (hsa <> "core-2.01 | T46 | rule typeRow\n") $ \_ bad ->
-            quietly (CmdLedger (Options ["opal-2.30"]) [coreIR, opalIR] (Just bad)) `shouldReturn` True
+            quietly (CmdLedger (Options ["opal-2.30"] Nothing) [coreIR, opalIR] (Just bad)) `shouldReturn` True
       it "refuses a sidecar line naming none of the IRs' specs" $ do
         withSidecarFile (hsa <> "core-2.02 | T46 | typeRow\n") $ \_ file ->
           quietly (CmdLedger noOptions [coreIR, opalIR] (Just file)) `shouldReturn` True

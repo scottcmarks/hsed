@@ -59,7 +59,7 @@ about :: Text -> [Finding] -> [Text]
 about anchor = map renderFinding . filter ((== Just anchor) . Cm.anchor) . filter ownCheck
 
 errorsOf :: ErrataSet -> SpecIR -> [Text]
-errorsOf es = map renderFinding . filter isError . filter ownCheck . checkIR es
+errorsOf es = map renderFinding . filter isError . filter ownCheck . checkIR Nothing es
 
 -- | The findings of this rule's checks: not the ranges rule's C-UID-RANGE,
 --   which an edited UID also fails (its own tests are RangesSpec's).
@@ -105,7 +105,7 @@ spec = do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
     let ctx       = mkContext Scott ir
-        scott     = checkIR Scott ir
+        scott     = checkIR Nothing Scott ir
         without a = annotated pristine (withoutLine a hsa)
 
     describe "the typeRow rule" $ do
@@ -118,7 +118,7 @@ spec = do
       it "declares every one of them, leaving none out" $ do
         length (rowsOf ctx) `shouldBe` 100
         let typeRows = [ aid | (aid, RuleBound (RuleName "typeRow") _ _) <- Map.toList (classify ir) ]
-        fmap (filter ((`elem` typeRows) . fst) . crExcluded) (compileIR Scott ir) `shouldBe` Right []
+        fmap (filter ((`elem` typeRows) . fst) . crExcluded) (compileIR Nothing Scott ir) `shouldBe` Right []
 
     describe "the Format environment" $ do
       it "holds the 100 Type objects of the type-row tables" $
@@ -157,21 +157,21 @@ spec = do
     describe "the waiver" $ do
       it "waives only the UID it records: on another UID it is unused and the Error stands" $ do
         ir' <- annotated pristine (withoutLine "T149" hsa <> waiverFor "T94 00 00 00 05 00 00 09 99")
-        let fs = checkIR Scott ir'
+        let fs = checkIR Nothing Scott ir'
         about "T149" fs `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
           , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 09 99\", and the table's UID cell is \"00 00 00 05 00 00 02 15\"" ]
       it "becomes W-WAIVER-UNUSED when the PDF no longer prints the UID twice, and the Error moves with a new clash (ir-uid999)" $ do
         let moved = setCell "T94" 0 0 "00 00 00 05 00 00 09 99" (setCell "T149" 0 0 "00 00 00 05 00 00 09 99" ir)
-        about "T149" (checkIR Scott moved) `shouldBe`
+        about "T149" (checkIR Nothing Scott moved) `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 09 99 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
           , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 09 99\"" ]
         let fixed = setCell "T149" 0 0 "00 00 00 05 00 00 02 16" ir
-        about "T149" (checkIR Scott fixed) `shouldBe`
+        about "T149" (checkIR Nothing Scott fixed) `shouldBe`
           [ "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the table's UID cell is \"00 00 00 05 00 00 02 16\"" ]
       it "waives only the clash with the table it names: T149 against T51 stays an Error (ir-partner)" $ do
         let partner = setCell "T94" 0 0 "00 00 00 05 00 00 09 99" (setCell "T51" 0 0 "00 00 00 05 00 00 02 15" ir)
-            fs = checkIR Scott partner
+            fs = checkIR Nothing Scott partner
         about "T149" fs `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T51 adv_key_mode (PDF 101)"
           , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the type rows with that UID are T51, T149" ]
@@ -181,16 +181,16 @@ spec = do
         errorsOf Scott three `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=111&T94: the UID 00 00 00 05 00 00 02 15 of integer_2 is also that of T51 adv_key_mode (PDF 101)"
           , "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T51 adv_key_mode (PDF 101)" ]
-        about "T149" (checkIR Scott three) `shouldContain`
+        about "T149" (checkIR Nothing Scott three) `shouldContain`
           [ "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"T94 00 00 00 05 00 00 02 15\", and the type rows with that UID are T51, T94, T149" ]
       it "waives nothing when its subject does not name the other table" $ do
         ir' <- annotated pristine (withoutLine "T149" hsa <> waiverFor "00 00 00 05 00 00 02 15")
-        about "T149" (checkIR Scott ir') `shouldBe`
+        about "T149" (checkIR Nothing Scott ir') `shouldBe`
           [ "C-UID-UNIQUE core-2.01.pdf#page=124&T149: the UID 00 00 00 05 00 00 02 15 of uinteger_2 is also that of T94 integer_2 (PDF 111)"
           , "W-WAIVER-UNUSED core-2.01.pdf#page=124&T149: the annotation waives C-UID-UNIQUE for \"00 00 00 05 00 00 02 15\", and that is not a table and a UID (\"T<n> 00 00 00 05 ...\")" ]
       it "waives nothing on the first of the two tables, where no finding is reported" $ do
         ir' <- annotated pristine (withoutLine "T149" hsa <> "core-2.01 | T94 | waive \"C-UID-UNIQUE\" \"T149 00 00 00 05 00 00 02 15\" \"x\"\n")
-        let fs = checkIR Scott ir'
+        let fs = checkIR Nothing Scott ir'
         about "T94" fs `shouldBe`
           ["W-WAIVER-UNUSED core-2.01.pdf#page=111&T94: the annotation waives C-UID-UNIQUE for \"T149 00 00 00 05 00 00 02 15\", and no type row before it has that UID"]
         filter isError fs `shouldSatisfy` any ((== "C-UID-UNIQUE") . Cm.code)
@@ -209,7 +209,7 @@ spec = do
           , "N-FORMAT-NORMALISED core-2.01.pdf#page=107&T76: Format read with \"uidref {ColumnTable_UID}\" as \"uidref{ColumnTable_UID}\", \"ColumnTable_UID\" as \"ColumnTableUID\"" ]
         let notes fs = length [ () | f <- fs, Cm.code f == "N-FORMAT-NORMALISED" ]
         notes scott `shouldBe` 14
-        notes (checkIR Published ir) `shouldBe` notes scott
+        notes (checkIR Nothing Published ir) `shouldBe` notes scott
 
     describe "the declarations" $ do
       it "record the provenance of design example E2, with the manifest's cell hash" $ do
@@ -226,7 +226,7 @@ spec = do
       it "keep Fractoin under published, giving T75 no TypeDef and the module a comment saying so" $ do
         [ (joinFormat r.formatText, r.typeDef) | r <- rowsOf (mkContext Published ir), r.name == "clock_time" ]
           `shouldBe` [("Struct_Type,Year,Month,Day,Hour,Minute,Seconds,Fractoin", Nothing)]
-        cr <- either (throwString . show) pure (compileIR Published ir)
+        cr <- either (throwString . show) pure (compileIR Nothing Published ir)
         T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Types" (crModules cr)))
           `shouldSatisfy` elem "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
 

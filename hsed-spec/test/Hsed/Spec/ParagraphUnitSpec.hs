@@ -74,7 +74,7 @@ spec :: Spec
 spec = withCore $ \pristine -> do
   hsa <- runIO committedHsa
   ir  <- runIO (annotated pristine (hsa <> laws))
-  let ctx = mkContextWith (registry <> [stub]) Scott ir
+  let ctx = mkContextWith (registry <> [stub]) Nothing Scott ir
       paras = boundParas (ruleShape stub) ctx
 
   describe "a paragraph unit" $ do
@@ -87,7 +87,7 @@ spec = withCore $ \pristine -> do
     it "is no unit where its comment's anchor names several paragraphs (3.3.10.6 labels c under four transitions), an E-ANCHOR" $ do
       let stray = AnnotIR { kind = IR.Law, spec = "core-2.01", id = "3.3.10.6#c", struct = StructPath "0/1086/2", v = 1
                           , page = 83, rect = Rect 0 0 0 0, flags = 6, contents = "law \"Sync.discardToS1\"" }
-          ctx' = mkContextWith (registry <> [stub]) Scott ir { annots = ir.annots <> [stray] }
+          ctx' = mkContextWith (registry <> [stub]) Nothing Scott ir { annots = ir.annots <> [stray] }
       map bpAnchor (paragraphUnits ctx') `shouldBe` map bpAnchor paras
       [ renderFinding f | f <- cxClassFindings ctx', Cm.code f == "E-ANCHOR" ]
         `shouldBe` ["E-ANCHOR core-2.01.pdf#page=84&3.3.10.6#c: 4 paragraphs labelled 3.3.10.6#c in the IR"]
@@ -111,7 +111,7 @@ spec = withCore $ \pristine -> do
 
   describe "a sentence no rule of the registry reads" $
     it "is W-GEN-EXCLUDED at the paragraph, and among the units compile leaves out" $ do
-      cr <- either (throwString . show) pure (compileIR Scott ir)
+      cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
       [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
         `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=" <> pg <> "&" <> aid
                      <> ": hsedc generates nothing for a Sentence paragraph yet (no rule of the registry reads one)"

@@ -88,7 +88,7 @@ spec = do
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
-    let compiled es = either (throwString . T.unpack . renderFinding) pure (compileIR es ir)
+    let compiled es = either (throwString . T.unpack . renderFinding) pure (compileIR Nothing es ir)
 
     describe "compileIR --errata scott" $ do
       cr <- runIO (compiled Scott)
@@ -110,14 +110,14 @@ spec = do
         committed <- readFileUtf8 "../docs/LEDGER.md"
         ledgerMarkdown Scott [(ledger ir, crFindings cr)] `shouldBe` committed
       it "writes the same text whatever the order of the IR's tables" $ do
-        cr' <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir { tables = reverse ir.tables })
+        cr' <- either (throwString . T.unpack . renderFinding) pure (compileIR Nothing Scott ir { tables = reverse ir.tables })
         crModules cr' `shouldBe` crModules cr
 
     describe "the per-table annotations" $ do
       cr <- runIO (compiled Scott)
       let without a = do
             ir' <- annotated pristine (withoutLine a hsa)
-            either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir')
+            either (throwString . T.unpack . renderFinding) pure (compileIR Nothing Scott ir')
       it "T75: without it, clock_time has no TypeDef and the module changes" $ do
         cr' <- without "T75"
         typesText cr' `shouldNotBe` typesText cr
@@ -137,7 +137,7 @@ spec = do
         if null unreadShapes then pendingWith "a rule reads every shape the test can bind" else do
           let others = foldr (\(n, _, _) -> withoutLine ("T" <> tshow n)) hsa unreadShapes
           ir' <- annotated pristine (others <> T.unlines [ "core-2.01 | T" <> tshow n <> " | " <> payload | (n, payload, _) <- unreadShapes ])
-          cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott ir')
+          cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Nothing Scott ir')
           crExcluded cr `shouldSatisfy` \ex -> all (`elem` ex)
             [ (TableId n, "hsedc generates nothing for a " <> shapeName shape <> " table yet (no rule of the registry reads one)")
             | (n, _, shape) <- unreadShapes ]
@@ -147,7 +147,7 @@ spec = do
     describe "a table that cannot be generated" $
       it "is left out with W-GEN-EXCLUDED, its Error among the findings" $ do
         let broken = setCell "T52" 2 0 "2-8" ir
-        cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Scott broken)
+        cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Nothing Scott broken)
         newlyExcluded ir broken `shouldReturn` [(TableId 52, "C-ENUM-RANGE failed")]
         [ Cm.code f | f <- crFindings cr, Cm.anchor f == Just "T52" ] `shouldBe` ["C-ENUM-RANGE", "W-GEN-EXCLUDED"]
 

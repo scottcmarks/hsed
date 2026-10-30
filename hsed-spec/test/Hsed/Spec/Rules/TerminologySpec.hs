@@ -56,7 +56,7 @@ spec = withCore $ \pristine -> do
         [ (1, True), (2, False), (3, False), (24, False), (185, False), (210, True), (217, True), (219, True)
         , (224, True), (230, False), (231, False), (232, True) ]
     it "finds nothing in them, leaves none out and generates nothing" $ do
-      cr <- either (throwString . show) pure (compileIR Scott ir)
-      [ f | f <- checkIR Scott ir, Cm.anchor f `elem` map Just anchors ] `shouldBe` []
+      cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
+      [ f | f <- checkIR Nothing Scott ir, Cm.anchor f `elem` map Just anchors ] `shouldBe` []
       [ aid | (aid, _) <- crExcluded cr, TableId n <- [aid], n `elem` map fst tables ] `shouldBe` []
       lookup "Hsed.Gen.Core.Prose" (crModules cr) `shouldBe` Nothing

@@ -54,7 +54,7 @@ spec = do
     hsa <- runIO committedHsa
     ir  <- runIO (annotated pristine hsa)
     let ctx = mkContext Scott ir
-        findings ir' = [ renderFinding f | f <- checkIR Scott ir'
+        findings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir'
                        , Cm.code f `elem` ["C-STATUS-CODE", "N-STATUS-NAME-SUFFIXED", "W-STATUS-SECTION", "N-STATUS-UNDESCRIBED"] ]
 
     describe "the statusCodes rule" $ do
@@ -91,7 +91,7 @@ spec = do
           , "N-STATUS-UNDESCRIBED core-2.01.pdf#page=137&T166: no subsection of 5.1.5 describes SP_BUSIED (0x03)" ]
 
     describe "the generated module" $ do
-      cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+      cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Codes" (crModules cr)))
       it "declares the statuses' type, open to any value the wire carries" $
         lns `shouldContain` ["newtype StatusCode = StatusCode Natural", "  deriving (Eq, Ord, Show)"]

@@ -41,7 +41,7 @@ spec = withCore $ \pristine -> do
   hsa <- runIO committedHsa
   ir  <- runIO (annotated pristine hsa)
   let ctx = mkContext Scott ir
-      stateFindings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f == "C-STATE-TABLE" ]
+      stateFindings ir' = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.code f == "C-STATE-TABLE" ]
       withComment payload = annotated pristine (withoutLine "T45" hsa <> "core-2.01 | T45 | " <> payload <> "\n")
 
   describe "the stateTable reader" $ do
@@ -88,12 +88,12 @@ spec = withCore $ \pristine -> do
     it "is E-SHAPE on a type, a code, a column-value and a UID table, each read by nothing" $
       forM_ [("T46", "100"), ("T179", "167"), ("T188", "179"), ("T243", "304")] $ \(tid, page) -> do
         ir' <- annotated pristine (withoutLine tid hsa <> "core-2.01 | " <> tid <> " | stateTable \"Sync.tableX\"\n")
-        let errs = [ renderFinding f | f <- checkIR Scott ir', Cm.isError f ]
+        let errs = [ renderFinding f | f <- checkIR Nothing Scott ir', Cm.isError f ]
         errs `shouldSatisfy` \es -> length es == 1 && all (("E-SHAPE core-2.01.pdf#page=" <> page <> "&" <> tid <> ": StateTable does not accept this table: expects header cells after the first naming fields") `T.isPrefixOf`) es
         map stQName (stateTableReads (mkContext Scott ir')) `shouldBe` ["Sync.table45"]
 
   describe "the generated module" $ do
-    cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+    cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.StateTables" (crModules cr)))
     it "declares table45, recording the code its comment binds it to, for M3" $ do
       lns `shouldContain` ["table45 :: StateTable", "table45 = StateTable", "  { boundTo = \"Sync.table45\""

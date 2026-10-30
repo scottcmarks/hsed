@@ -22,7 +22,10 @@ a two-digit number, then @:@ and a case number or a step range, then @/@ and
 a variant, each optional; a part after @:@ of digits alone is a case, any
 other a step range.
 
-The catalogue is milestone M3's group G3's; until it lands it is a stub.
+At M3 the catalogue holds the four cases the milestone runs (design 9.1):
+UCT-01, SPF-02 case 1, ETC-02 and ETC-03; each title is the Test Cases'
+heading, a case's (which its outline alone names) its test's with the case's
+number and what its Notes say it does.
 -}
 module Hsed.Jig.Catalogue
   ( -- * Keys
@@ -35,9 +38,10 @@ module Hsed.Jig.Catalogue
   , catalogue
   ) where
 
+import qualified Data.Aeson as A
 import           RIO
-import qualified RIO.Char as C
-import qualified RIO.Text as T
+import qualified RIO.Char   as C
+import qualified RIO.Text   as T
 
 
 -- * Keys
@@ -114,6 +118,10 @@ renderCaseKey (CaseKey test c steps variant) =
       (Nothing, Nothing) -> ""
       _                  -> ":" <> maybe "" tshow c <> fromMaybe "" steps
 
+-- | A key as @--tests@ takes it.
+instance A.ToJSON CaseKey where
+  toJSON = A.String . renderCaseKey
+
 
 -- * The catalogue
 
@@ -127,6 +135,21 @@ data CatalogueEntry = CatalogueEntry
   }
   deriving (Eq, Show)
 
--- | Every case the jig runs, in the Test Cases' order.
+-- | Every case the jig runs, in the Test Cases' order (Use Case Tests,
+--   Specific Functionality, Error Cases: sections 5 to 7), each with the
+--   page of its heading in the PDF and as printed (Test Cases 1.02, the PDF's
+--   outline and its page footers).
 catalogue :: [CatalogueEntry]
-catalogue = error "G3: catalogue"
+catalogue =
+  [ -- 5, UCT-01 (PDF 29-31, printed 28-30)
+    CatalogueEntry (whole (UCT 1)) "Level 0 Discovery" 29 28
+    -- 6, SPF-02: its cases 1 and 2 both begin on PDF 52 (printed 51); case 2 is M5's
+  , CatalogueEntry (caseOf (SPF 2) 1) "IF-RECV Behavior Tests, Case 1: an IF-RECV while the SD is in Awaiting IF-SEND" 52 51
+    -- 7, ETC-02 (PDF 77, printed 76), its heading's dash an en dash
+  , CatalogueEntry (whole (ETC 2)) "General \x2013 IF-SEND/IF-RECV Synchronous Protocol" 77 76
+    -- 7, ETC-03 (PDF 78, printed 77)
+  , CatalogueEntry (whole (ETC 3)) "Invalid IF-SEND Transfer Length" 78 77
+  ]
+  where
+    whole t    = CaseKey t Nothing Nothing Nothing
+    caseOf t c = CaseKey t (Just c) Nothing Nothing

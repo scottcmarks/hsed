@@ -8,8 +8,8 @@ copyright:           Magnolia Heights R&D
 synopsis:            TCG SWG storage codec and table machinery, no generated spec data
 description:         The hsed codec (stream items, tokens, values, method calls and
                      responses, UIDs, base and reference types), the table machinery
-                     and the generic compile-time table parsers. No generated spec
-                     data lives here; see the hsed package for that and
+                     and Template Haskell helpers. No generated spec data lives here;
+                     see the hsed package for that and
                      <https://github.com/scottcmarks/hsed#readme> for the project.
 
 # The doctest suite interprets the library sources, so it needs every library

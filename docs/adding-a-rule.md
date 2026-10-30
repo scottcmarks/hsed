@@ -60,6 +60,9 @@ Some changes are generic and are made in a small commit of their own, before the
   its `Shape` and binding constructor, the grammar and `tools/extract/hsed_annot.py`'s `VOCABULARY`. A
   new shape, binding or modifier changes DSL, Shape (with its `shapeMismatch` line), Grammar,
   `hsed_annot.py` and `VocabularySpec`; a new modifier also gets its field in `Hsed.Spec.RuleDef.Mods`.
+  M2c's are in: the `ByteGrid`, `Feature` and `ByteFieldValue` shapes, each held to its §3.4 tables, the
+  byte grid's corner read as `Byte\Bit` (a Note), and the modifiers `layout "Name"` (`mLayout`; a byte
+  grid, a feature, a byteFieldValue table) and `bits k [(bit, "Name")]` (`mBits`; a byte grid, a feature).
 - **A unit that is not a table.** `RuleDef` binds two kinds of unit: the numbered tables and, since
   M2b, the method signature blocks (below). Another kind (a Fails list, a law sentence) needs its IR
   schema, the extractor, its classification and its bound unit in `RuleDef` first, as the
@@ -69,11 +72,12 @@ Some changes are generic and are made in a small commit of their own, before the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
   `W-RULE-UNIMPLEMENTED`, and a table a comment binds to a shape no registered rule reads (T45's
   `stateTable`, T167/T168's `propsNames`/`propsInitial` before their reader) is `W-GEN-EXCLUDED`. M2b's
-  are in: an M2b rule or reader edits no `.hsa`. A rule test that edits a table and expects the rule
+  are in: an M2b rule or reader edits no `.hsa`; so are M2c's (`rule byteFieldValue & rule byteGrid &
+  rule feature` on the doc line, three `W-RULE-UNIMPLEMENTED` until the rules are registered). A rule test that edits a table and expects the rule
   to leave it out compares with the committed run (`CoreIR.newlyExcluded`), not with an empty list.
 - **A runtime module** the generated code of several rules imports: named once in `Hsed.Spec.Gen`
-  (`uidModule`, `coreTypesModule`; since M2b also `coreTableModule`, `codeModule`, `fieldModule`), the
-  module itself in hsed-core. A runtime module one rule alone imports is named in that rule (`sig`'s
+  (`uidModule`, `coreTypesModule`; since M2b also `coreTableModule`, `codeModule`, `fieldModule`; since
+  M2c `layoutModule`, `Hsed.Core.Layout`), the module itself in hsed-core. A runtime module one rule alone imports is named in that rule (`sig`'s
   `methodModule`, `stateTable`'s `syncModule`, the Props reader's `propertiesModule`), and the rule's
   group may write it in hsed-core beside the rule.
 
@@ -137,8 +141,14 @@ What rules may import besides each other: `Hsed.Spec.Scope` (sections, the scope
 the validated annotations; it sits below the registry, while `Hsed.Spec.Rules` imports the registry and
 so every rule, and a rule importing it would be a module cycle), and `Hsed.Spec.Readers.<X>`, the home
 of helpers several rules share and no comment names: `Hsed.Spec.Readers.Text` since M2b (`titleIdent`
-and `lowerIdent`, the two conventions of generated names, and `readHexByte`), `pins` and
-`accessControl` to come. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
+and `lowerIdent`, the two conventions of generated names, and `readHexByte`); since M2c
+`Hsed.Spec.Readers.Grid` (`gridOf`: a byte grid's rows, its cells' bits by the extent rule and its
+fields; its problems as data, located by `gridFindings`), `Hsed.Spec.Readers.Pins` (`tablePins`: the
+pins of a table's section, the rule matching them to its fields and emitting `W-PINS-NONE`) and
+`Hsed.Spec.Readers.Layout` (`layoutsModule`, the one `GenModule` of `Hsed.Gen.<Spec>.Layouts`;
+`gridLayout`; `layoutDecl`, a `Hsed.Core.Layout.Layout` printed as the grid prints its fields;
+`tileFindings`); `accessControl` to come. A reader returns data; a code several rules give through it
+is the reader's (its `CodeDef`s, listed by `Hsed.Spec.Readers.readerCodes`), which no rule lists. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
 `boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
 `listDefinition`). A helper never goes under `Rules/`, where every module must be a registered rule.
 

@@ -14,8 +14,10 @@ Core 2.01 Tables 17, 18 and 20: random frames decode to themselves; each
 Length field is what follows it (a subpacket's its data's, without the
 padding, Table 20's "If Length > 0, 12 to (n+(-n modulo 4)) + 11", PDF 44); a
 subpacket is padded to a multiple of four bytes; what follows the ComPacket is
-kept; one frame's bytes written out from the three grids; reserved bytes
-read other than zero reported; a Length past the end refused.
+kept; one frame's bytes written out from the three grids, the packet's
+Session as its TSN and HSN (Table 18's @Session (0-3 = TSN, 4-7 = HSN)@);
+reserved bytes and a subpacket's padding (§3.2.3.4.1.2.2: its pad bytes SHALL
+be zeroes) read other than zero reported; a Length past the end refused.
 -}
 module Hsed.PacketSpec (spec) where
 
@@ -42,7 +44,7 @@ subPacket = DataSubPacket <$> (DataSubPacketHeader <$> arbitrary) <*> payload
 
 packetFrame :: Gen PacketFrame
 packetFrame = PacketFrame
-  <$> (PacketHeader <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
+  <$> (PacketHeader <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
   <*> (chooseInt (0, 3) >>= (`vectorOf` subPacket))
 
 comPacketFrame :: Gen ComPacketFrame
@@ -87,7 +89,7 @@ spec = describe "Hsed.Packet" $ do
 
   it "writes one ComPacket as the three grids place its bytes" $ do
     let frame = ComPacketFrame (ComPacketHeader 0x07fe 0 0 0)
-                  [PacketFrame (PacketHeader 0x0000000100000069 1 0 0) [DataSubPacket (DataSubPacketHeader 0) "\xf8\xa8\xf0"]]
+                  [PacketFrame (PacketHeader 0x00000001 0x00000069 1 0 0) [DataSubPacket (DataSubPacketHeader 0) "\xf8\xa8\xf0"]]
         subBytes = B.replicate 6 0 <> "\x00\x00" <> "\x00\x00\x00\x03" <> "\xf8\xa8\xf0" <> "\x00"
         packetBytes = "\x00\x00\x00\x01\x00\x00\x00\x69" <> "\x00\x00\x00\x01" <> "\x00\x00" <> "\x00\x00" <> "\x00\x00\x00\x00"
                       <> "\x00\x00\x00\x10" <> subBytes
@@ -96,10 +98,15 @@ spec = describe "Hsed.Packet" $ do
     B.length comPacketBytes `shouldBe` 60
     decodeComPacket comPacketBytes `shouldBe` Right (DecodedFrame frame [] "")
   it "reports a subpacket's reserved bytes read other than zero, and decodes on" $ do
-    let frame = ComPacketFrame (ComPacketHeader 1 0 0 0) [PacketFrame (PacketHeader 1 1 0 0) [DataSubPacket (DataSubPacketHeader 0) "x"]]
+    let frame = ComPacketFrame (ComPacketHeader 1 0 0 0) [PacketFrame (PacketHeader 0 1 1 0 0) [DataSubPacket (DataSubPacketHeader 0) "x"]]
     bytes <- encoded encodeComPacket frame
     let altered = B.take 44 bytes <> "\x01" <> B.drop 45 bytes   -- byte 0 of the subpacket, after 20 + 24 bytes
-    decodeComPacket altered `shouldBe` Right (DecodedFrame frame [ReservedNotZero "Reserved" 0x010000000000] "")
+    decodeComPacket altered `shouldBe` Right (DecodedFrame frame [ReservedNotZero "Reserved" 0 0x010000000000] "")
+  it "reports a subpacket's pad bytes read other than zero, and decodes on" $ do
+    let frame = ComPacketFrame (ComPacketHeader 1 0 0 0) [PacketFrame (PacketHeader 0 1 1 0 0) [DataSubPacket (DataSubPacketHeader 0) "x"]]
+    bytes <- encoded encodeComPacket frame
+    let altered = B.take 57 bytes <> "\x01" <> B.drop 58 bytes   -- the first pad byte: the subpacket's byte 13, after its 12 and its one of data
+    decodeComPacket altered `shouldBe` Right (DecodedFrame frame [PaddingNotZero "Payload" 104 0x010000] "")
   it "refuses a ComPacket whose Length runs past the bytes" $ do
     bytes <- encoded encodeComPacket (ComPacketFrame (ComPacketHeader 1 0 0 0) [])
     decodeComPacket (B.take 16 bytes <> "\x00\x00\x00\x08") `shouldBe` Left (Truncated 28 20)

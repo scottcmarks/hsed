@@ -25,10 +25,16 @@ subpacket data stays bytes (the token stream, which the codec reads).
 It lives in hsed, not hsed-core, because it imports the generated layouts,
 which hsed holds (@gen/@) and hsed-core cannot depend on.
 
-Decoding is lenient, as a host reads what a TPer sent: reserved bits read
-other than zero are reported ('dfDifferences') and decoding goes on; a frame
-that does not fit its bytes (a length past the end) is an error. What
-follows the ComPacket (the padding of the transfer) is returned as it is.
+Decoding is lenient, as a host reads what a TPer sent: reserved bits and a
+subpacket's pad bytes (which SHALL be zeroes, Core 3.2.3.4.1.2.2) read other
+than zero are reported ('dfDifferences') and decoding goes on; a frame that
+does not fit its bytes (a length past the end) is an error. What follows the
+ComPacket (the padding of the transfer) is returned as it is. Every
+subpacket is read as a data subpacket (Table 20): Table 20's Kind is no
+constant of its layout (3.2.3.4.1.1.2 says it "is set to zeroes", in words
+none of the pin schemas reads, design 13.26), so a credit control subpacket
+(Table 21, Kind 0x8001) reads as a data subpacket of that Kind, its credit
+its data.
 -}
 module Hsed.Packet
   ( -- * Frames

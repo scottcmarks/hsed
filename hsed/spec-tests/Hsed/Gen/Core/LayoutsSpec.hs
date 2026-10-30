@@ -47,10 +47,11 @@ spec = describe "Hsed.Gen.Core.Layouts" $ do
     -- outstandingData, minTransfer, length (uint32 each)
     bytesOf comPacketLayout `shouldBe`
       [("Reserved", 0, 4), ("ComID", 4, 2), ("ComID Extension", 6, 2), ("OutstandingData", 8, 4), ("MinTransfer", 12, 4), ("Length", 16, 4)]
-    -- DtaStructures.h:428-436 DTA_PacketHeader: TSN and HSN (uint32 each, the Session), seqNumber, reserved0 (uint16),
-    -- ackType (uint16), acknowledgement, length
+    -- DtaStructures.h:428-436 DTA_PacketHeader: TSN and HSN (uint32 each, the Session, as Table 18's parenthesis names
+    -- them), seqNumber, reserved0 (uint16), ackType (uint16), acknowledgement, length
     bytesOf packetLayout `shouldBe`
-      [("Session", 0, 8), ("SeqNumber", 8, 4), ("Reserved", 12, 2), ("AckType", 14, 2), ("Acknowledgement", 16, 4), ("Length", 20, 4)]
+      [ ("TSN", 0, 4), ("HSN", 4, 4), ("SeqNumber", 8, 4), ("Reserved", 12, 2), ("AckType", 14, 2), ("Acknowledgement", 16, 4)
+      , ("Length", 20, 4) ]
     -- DtaStructures.h:439-443 DTA_DataSubPacketHeader: reserved0[6], kind (uint16), length (uint32)
     bytesOf dataSubPacketLayout `shouldBe` [("Reserved", 0, 6), ("Kind", 6, 2), ("Length", 8, 4)]
     -- DtaStructures.h:69-75 Discovery0Header: length, revision (the major and minor versions), reserved01 and

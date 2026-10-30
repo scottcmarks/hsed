@@ -272,9 +272,8 @@ compile ctx bts = map one (readConsts ctx bts)
   where
     one k = case kDesc k of
       Right d | not (any Cm.isError (constFindings ctx k)), Just n <- drTable d
-              , Right values <- traverse (rowValue ctx k d) (kRows k)
-              , Right cells <- traverse (renderCell . snd) values ->
-          Emit (defaultsDecl ctx k d n (zip (map fst values) cells))
+              , Right values <- traverse (rowValue ctx k d) (kRows k) ->
+          Emit (defaultsDecl ctx k d n [ (col, renderCell v) | (col, v) <- values ])
       _ -> Excluded (btAnchor (kBound k)) "C-CONST-DESC or C-CONST-VALUE failed"
 
 -- | @\<t\>Defaults :: Row@, its values in column order.

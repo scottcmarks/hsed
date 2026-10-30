@@ -126,8 +126,9 @@ spec = withCore $ \pristine -> do
   describe "colKind and readCell" $ do
     let kind = colKind ctx
         noRefs _ _ = Left "no references here"
-    it "reads a column's kind from its Type object's Format" $ do
-      kind "uid" `shouldBe` Right (KBytes 8)
+    it "reads a column's kind from its Type object's Format; uid is its own kind (Table 145), the other bytes types theirs" $ do
+      kind "uid" `shouldBe` Right KUID
+      kind "bytes_32" `shouldBe` Right (KBytes 32)
       kind "name" `shouldBe` Right (KText 32)
       kind "uinteger_20" `shouldBe` Right (KUInt 20)
       kind "integer_1" `shouldBe` Right (KInt 1)
@@ -140,12 +141,19 @@ spec = withCore $ \pristine -> do
     it "reads cells as their kind holds them" $ do
       (kind "auth_method" >>= \k -> readCell noRefs k "Sign") `shouldBe` Right (CvEnum "Sign" 3)
       (kind "auth_method" >>= \k -> readCell noRefs k "Sing") `shouldSatisfy` isLeft
-      (kind "uid" >>= \k -> readCell noRefs k "00 00 00 09 00 00 00 01") `shouldBe` Right (CvBytes [0, 0, 0, 9, 0, 0, 0, 1])
+      (kind "uid" >>= \k -> readCell noRefs k "00 00 00 09 00 00 00 01") `shouldBe` Right (CvUID [0, 0, 0, 9, 0, 0, 0, 1])
+      (kind "uid" >>= \k -> readCell noRefs k "00 00 00 09") `shouldSatisfy` isLeft
+      (kind "bytes_4" >>= \k -> readCell noRefs k "00 00 00 02") `shouldBe` Right (CvBytes [0, 0, 0, 2])
       (kind "uinteger_1" >>= \k -> readCell noRefs k "256") `shouldBe` Left "\"256\" does not fit in 1 bytes"
       (kind "integer_1" >>= \k -> readCell noRefs k "-1") `shouldBe` Right (CvInt (-1))
-      renderCell (CvRef "Makers" [0, 0, 0, 9, 0, 0, 0, 3]) `shouldBe` Right "RefCell \"Makers\" (uid 0x00 0x00 0x00 0x09 0x00 0x00 0x00 0x03)"
-      renderCell (CvUInt 255 (Just 4)) `shouldBe` Right "UIntCell 0x00FF"
-      renderCell (CvUInt 255 Nothing) `shouldBe` Right "UIntCell 255"
+      renderCell (CvRef "Makers" [0, 0, 0, 9, 0, 0, 0, 3]) `shouldBe` "RefCell \"Makers\" (uid 0x00 0x00 0x00 0x09 0x00 0x00 0x00 0x03)"
+      renderCell (CvUID [0, 0, 0, 9, 0, 0, 0, 1]) `shouldBe` "UIDCell (uid 0x00 0x00 0x00 0x09 0x00 0x00 0x00 0x01)"
+      renderCell (CvUInt 255 (Just 4)) `shouldBe` "UIntCell 0x00FF"
+      renderCell (CvUInt 255 Nothing) `shouldBe` "UIntCell 255"
+    it "prints bytes of any other type as a BytesCell, its byte string a literal, however many bytes (M4a)" $ do
+      renderCell (CvBytes [0, 0, 0, 2]) `shouldBe` "BytesCell \"\\NUL\\NUL\\NUL\\STX\""
+      renderCell (CvBytes [0x4D, 0x53, 0x49, 0x44]) `shouldBe` "BytesCell \"MSID\""
+      renderCell (CvBytes [0, 0, 0, 9, 0, 0, 0, 1]) `shouldBe` "BytesCell \"\\NUL\\NUL\\NUL\\t\\NUL\\NUL\\NUL\\SOH\""
 
   describe "the generated module" $ do
     cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
@@ -162,27 +170,30 @@ spec = withCore $ \pristine -> do
         , "  , tdTableUID  = uTableTable"
         , "  , tdObjectUID = uTableTableObject"
         , "  , tdColumns   ="
-        , "      [ Col 0x00 \"UID\" False \"uid\" (Just uuidType)"
-        , "      , Col 0x01 \"Name\" True \"name\" (Just unameType)"
-        , "      , Col 0x02 \"CommonName\" True \"name\" (Just unameType)"
-        , "      , Col 0x03 \"TemplateID\" True \"Template_object_ref\" (Just uTemplate_object_refType)"
-        , "      , Col 0x04 \"Kind\" False \"table_kind\" (Just utable_kindType)"
-        , "      , Col 0x05 \"Column\" False \"Column_object_ref\" (Just uColumn_object_refType)"
-        , "      , Col 0x06 \"NumColumns\" False \"uinteger_4\" (Just uuinteger_4Type)"
-        , "      , Col 0x07 \"Rows\" False \"uinteger_4\" (Just uuinteger_4Type)"
-        , "      , Col 0x08 \"RowsFree\" False \"uinteger_4\" (Just uuinteger_4Type)"
-        , "      , Col 0x09 \"RowBytes\" False \"uinteger_4\" (Just uuinteger_4Type)"
-        , "      , Col 0x0A \"LastID\" False \"uid\" (Just uuidType)"
-        , "      , Col 0x0B \"MinSize\" False \"uinteger_4\" (Just uuinteger_4Type)"
-        , "      , Col 0x0C \"MaxSize\" False \"uinteger_4\" (Just uuinteger_4Type)"
+        , "      [ Col 0x00 \"UID\" False (TypeName \"uid\" (Just uuidType))"
+        , "      , Col 0x01 \"Name\" True (TypeName \"name\" (Just unameType))"
+        , "      , Col 0x02 \"CommonName\" True (TypeName \"name\" (Just unameType))"
+        , "      , Col 0x03 \"TemplateID\" True (TypeName \"Template_object_ref\" (Just uTemplate_object_refType))"
+        , "      , Col 0x04 \"Kind\" False (TypeName \"table_kind\" (Just utable_kindType))"
+        , "      , Col 0x05 \"Column\" False (TypeName \"Column_object_ref\" (Just uColumn_object_refType))"
+        , "      , Col 0x06 \"NumColumns\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
+        , "      , Col 0x07 \"Rows\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
+        , "      , Col 0x08 \"RowsFree\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
+        , "      , Col 0x09 \"RowBytes\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
+        , "      , Col 0x0A \"LastID\" False (TypeName \"uid\" (Just uuidType))"
+        , "      , Col 0x0B \"MinSize\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
+        , "      , Col 0x0C \"MaxSize\" False (TypeName \"uinteger_4\" (Just uuinteger_4Type))"
         , "      ]"
         , "  }" ]
-    it "gives T233 its 14 columns, the one whose type no Type row defines without a UID" $ do
+    it "gives T233 its 14 columns, the one whose type no Type row defines without a UID; 424 columns, 419 with one" $ do
       length [ l | l <- block "logTableDesc", "Col 0x" `T.isInfixOf` l ] `shouldBe` 14
-      block "logTableDesc" `shouldContain` ["      , Col 0x0B \"LogKind\" False \"log_kind\" Nothing"]
+      block "logTableDesc" `shouldContain` ["      , Col 0x0B \"LogKind\" False (TypeName \"log_kind\" Nothing)"]
+      length [ l | l <- lns, "Col 0x" `T.isInfixOf` l ] `shouldBe` 424
+      length [ l | l <- lns, "Col 0x" `T.isInfixOf` l, "\" (Just u" `T.isInfixOf` l ] `shouldBe` 419
     it "cites the table, with its PDF and printed page" $
       lns `shouldContain` ["-- | core-2.01 T233 Log Table Description (PDF 291 / p.274, ord 235, sha256:"
                              <> T.take 12 (maybe "" cellsHash (Map.lookup (TableId 233) (numberedTables ir))) <> ")"]
-    it "imports the UIDs it names from the modules the tableUIDs and typeRow rules write" $ do
+    it "imports the UIDs it names from the modules the tableUIDs and typeRow rules write, and TypeName from the runtime" $ do
       lns `shouldSatisfy` any ("import           Hsed.Core.Table " `T.isPrefixOf`)
+      lns `shouldSatisfy` any ("import           Hsed.Core.TypeName " `T.isPrefixOf`)
       lns `shouldContain` ["import           Hsed.Gen.Core.TableUIDs", "import           Hsed.Gen.Core.Types"]

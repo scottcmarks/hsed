@@ -44,8 +44,9 @@ Checks, each with the code its findings carry:
   @a = b = n@ whose every arithmetic term comes to @n@); the property describes
   the communicator assumed about; no row names a property twice.
 
-Compiled into 'propsModule': @properties :: [Property]@ (each type its type
-row's @u\<type\>Type@) and @initialAssumptions :: [Assumptions]@ (one per
+Compiled into 'propsModule': @properties :: [Property]@ (each type a
+@TypeName@, its text and its type row's @u\<type\>Type@,
+"Hsed.Spec.Rules.TypeRow".'typeNameExpr') and @initialAssumptions :: [Assumptions]@ (one per
 assuming communicator, a boolean as its enumeration value), the runtime
 types of "Hsed.Core.Properties".
 -}
@@ -80,7 +81,7 @@ import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads, parseEnumValue)
-import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeNameExpr, typeRowReads, typeUIDName, typesModule)
 import           Hsed.Spec.Shape           (Shape (..), normHeader)
 
 
@@ -366,12 +367,14 @@ decl ctx rs = case propsKind (btBinding bt) of
     typeName tr = typeUIDName (trName tr)
     propertiesDecl = (Gen.decl p "properties" body)
       { Gen.declImports = [ Gen.ImportSome propertiesModule ["Communicator (..)", "Property (..)"]
-                          , Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) (L.nub (map (typeName . snd) (rsProps rs))) ] }
+                          , Gen.ImportSome Gen.typeNameModule ["TypeName (..)"]
+                          , Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) (L.nub (map (typeName . snd) (rsProps rs)))
+                          , Gen.ImportSome "Prelude" ["Maybe (..)"] ] }
       where
         body = [ Gen.provenanceComment p
                , "properties :: [Property]"
                , "properties =" ]
-               <> Gen.listLines "  " [ "Property " <> tshow (prName r) <> " " <> typeName tr <> " " <> communicators (prApplies r)
+               <> Gen.listLines "  " [ "Property " <> tshow (prName r) <> " " <> typeNameExpr (prTypeText r) (Just tr) <> " " <> communicators (prApplies r)
                                  | (r, tr) <- rsProps rs ]
     assumptionsDecl = (Gen.decl p "initialAssumptions" body)
       { Gen.declImports = [ Gen.ImportSome propertiesModule ["Assumptions (..)", "Communicator (..)"] ] }

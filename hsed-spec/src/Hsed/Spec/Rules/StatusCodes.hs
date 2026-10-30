@@ -35,9 +35,10 @@ Checks:
 
 Compiled into the codes module ("Hsed.Spec.Rules.Codes".'codesModule'): a
 @newtype@ over 'Numeric.Natural.Natural' named after the caption (Table 166
-Status Codes gives @StatusCode@), which carries any status the wire does (the
-codec's @MethodResponse@ status is a bare uinteger, and SIIS adds values Core
-does not, design section 8); a bidirectional pattern per row, named as the
+Status Codes gives @StatusCode@), its field @statusValue@ the value it
+carries, which is any status the wire does (the codec's @MethodResponse@
+status is a bare uinteger, and SIIS adds values Core does not, design section
+8); a bidirectional pattern per row, named as the
 table names the value (@SUCCESS@, @NOT_AUTHORIZED@); and the table as
 @c\<Title\> :: [CodeRow]@ like every code table, for a value's name.
 -}
@@ -240,7 +241,7 @@ statusDecl ctx sr = (Gen.decl p typeName body)
     header i = maybe "" (.text) (listToMaybe (drop i (concat (take 1 (btRead bt).headerRows))))
     body =
       [ doc <> ": any status the wire carries; a pattern names each value the table gives"
-      , "newtype " <> typeName <> " = " <> typeName <> " Natural"
+      , "newtype " <> typeName <> " = " <> typeName <> " { statusValue :: Natural }"
       , "  deriving (Eq, Ord, Show)" ]
       <> concat [ [ "", doc <> ", row " <> tshow (stIndex r + 1) <> ": " <> stName r
                   , "pattern " <> n <> " :: " <> typeName

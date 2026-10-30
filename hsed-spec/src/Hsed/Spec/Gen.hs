@@ -26,7 +26,8 @@ own, after the module's unqualified one), and prints the declarations sorted
 by table number, then rank within the table, then name. The same declarations
 print the same text in any order. The runtime modules the declarations of
 several rules import are named once here ('uidModule', 'coreTypesModule',
-'coreTableModule', 'codeModule', 'fieldModule', 'layoutModule', 'recordModule'); one that a single rule's
+'coreTableModule', 'codeModule', 'fieldModule', 'layoutModule', 'recordModule',
+'typeNameModule'); one that a single rule's
 declarations import is named in that rule (@Hsed.Core.Method@ in @sig@'s,
 @Hsed.Core.Sync@ in @stateTable@'s, @Hsed.Core.Properties@ in the Props
 reader's).
@@ -61,6 +62,7 @@ module Hsed.Spec.Gen
   , fieldModule
   , layoutModule
   , recordModule
+  , typeNameModule
     -- * Printing
   , renderModule
     -- * Pieces for the rules' printers
@@ -180,6 +182,12 @@ layoutModule = "Hsed.Core.Layout"
 --   declarations both import.
 recordModule :: Text
 recordModule = "Hsed.Core.Record"
+
+-- | @TypeName@: a type as the spec names it, its text and its Type object's
+--   UID, which the table descriptions, the typed records, the properties and
+--   the method signatures all print.
+typeNameModule :: Text
+typeNameModule = "Hsed.Core.TypeName"
 
 
 -- * Printing

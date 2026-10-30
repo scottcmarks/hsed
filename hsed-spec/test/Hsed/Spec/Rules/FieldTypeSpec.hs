@@ -85,8 +85,8 @@ spec = withCore $ \pristine -> do
     it "declares each table's typed fields, named after its caption" $
       [ T.takeWhile (/= ' ') l | l <- lns, " :: [FieldDef]" `T.isSuffixOf` l ] `shouldBe`
         ["rSecureMessagingPacketPayloadField", "rSecureMessagingPacketPayloadSecureDataField", "rDateValues"]
-    it "names each field's Type object and its UID from the type rows' module, and its range" $ do
-      lns `shouldContain` ["import           Hsed.Gen.Core.Types (ubytesType, uuinteger_1Type, uuinteger_2Type, uuintegerType)"]
-      lns `shouldContain` [ "rDateValues =", "  [ FieldDef \"Year\" \"uinteger_2\" uuinteger_2Type (Just (Between 1970 9999))" ]
-      lns `shouldContain` [ "  , FieldDef \"Reserved\" \"uinteger_1\" uuinteger_1Type (Just (One 0))", "  ]" ]
-      lns `shouldContain` [ "  [ FieldDef \"IV\" \"bytes\" ubytesType Nothing" ]
+    it "names each field's Type object as a TypeName, its UID from the type rows' module, and its range" $ do
+      lns `shouldContain` ["import           Hsed.Core.TypeName  (TypeName (..))", "import           Hsed.Gen.Core.Types (ubytesType, uuinteger_1Type, uuinteger_2Type, uuintegerType)"]
+      lns `shouldContain` [ "rDateValues =", "  [ FieldDef \"Year\" (TypeName \"uinteger_2\" (Just uuinteger_2Type)) (Just (Between 1970 9999))" ]
+      lns `shouldContain` [ "  , FieldDef \"Reserved\" (TypeName \"uinteger_1\" (Just uuinteger_1Type)) (Just (One 0))", "  ]" ]
+      lns `shouldContain` [ "  [ FieldDef \"IV\" (TypeName \"bytes\" (Just ubytesType)) Nothing" ]

@@ -42,10 +42,17 @@ Checks, each with the code its findings carry:
 Compiled into 'methodsModule' ("Hsed.Core.Method" is the runtime): per block
 a record named after the method, one field per parameter (@getCellblock ::
 Value@; an optional one @Maybe Value@), an @instance MethodSignature@ with the
-signature as printed, and, when joined, an @instance Method@ whose
+signature as printed (each parameter's type a @TypeName@, its text and, when
+the whole text is a type row's Name, that Type object's UID, printed through
+"Hsed.Spec.Rules.TypeRow".'typeNameExpr'; the join of the other texts, the
+abstract types and the groupings, is M4a's G4) and @fromValues@, the record
+from values of its arity, and, when joined, an @instance Method@ whose
 @methodUID@ is the joined row's generated UID; a block whose heads name
 another method than the one it defines (SyncSession's, headed
-@SMUID.StartSession@) says which in its provenance line. An invoking ID the
+@SMUID.StartSession@) says which in its provenance line; and @methods ::
+[SomeMethod]@, every joined record once, in the blocks' order, declared
+under the first block's provenance (no table's, so the oracle never reads
+it). An invoking ID the
 heads name that a row of the UID tables without names describes (@SMUID@,
 @ThisSP@ in the Special Purpose UIDs' Purpose column, word for word) is given
 as a constant, @uSMUID :: UID@, with that row's provenance, in the uidTable
@@ -70,6 +77,7 @@ module Hsed.Spec.Rules.Sig
 import qualified Data.Text                as DT
 import qualified RIO.Char                 as C
 import qualified RIO.List                 as L
+import qualified RIO.Map                  as Map
 import qualified RIO.Text                 as T
 import           RIO
 
@@ -81,6 +89,7 @@ import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (HeadingIR (..), SigIR (..), SpecIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Readers.Text   (lowerIdent)
+import           Hsed.Spec.Rules.TypeRow  (TypeRowRead (..), typeNameExpr, typeRowReads, typeUIDName, typesModule)
 import           Hsed.Spec.Rules.UidTable (UidRow (..), UidValue (..), rowPage, rowRef, rowText, uidHeaders, uidRows, uidsModule)
 
 
@@ -113,9 +122,11 @@ methodsModule :: Gen.GenModule
 methodsModule = Gen.GenModule
   { Gen.leaf        = "Methods"
   , Gen.description = "Methods: a record per method signature, its signature as printed and its UID"
-  , Gen.notes       = [ "The parameters are untyped (Value) and their types text: the Type objects they name are"
-                      , "TypeDef values, not yet Haskell types. The records are named after their methods (Get,"
-                      , "Set, Next), names other modules export too: import this module qualified." ] }
+  , Gen.notes       = [ "The parameters are untyped (Value); each type is a TypeName, its text as printed and the"
+                      , "UID of the Type object where the text is a type row's name: the Type objects are TypeDef"
+                      , "values, not yet Haskell types. The records are named after their methods (Get, Set, Next),"
+                      , "names other modules export too: import this module qualified. methods lists every record"
+                      , "with a UID." ] }
 
 
 -- * Parsing a block
@@ -347,9 +358,13 @@ checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck row
 -- * Declarations
 
 compile :: Context -> [Emitted]
-compile ctx = map (EmitIn uidsModule . invokerDecl ctx) invokers <> concat [ map Emit (methodDecls ctx sr (joins ctx sr)) | Right sr <- sigReads ctx ]
+compile ctx = map (EmitIn uidsModule . invokerDecl ctx) invokers
+  <> concat [ map Emit (methodDecls ctx types sr (joins ctx sr)) | sr <- reads ]
+  <> map Emit (maybeToList (methodsDecl ctx [ (sr, i) | sr <- reads, [r] <- [joins ctx sr], Just i <- [urIdent r] ]))
   where
-    invokers = [ (i, r) | i <- L.nub (concat [ srInvokers sr | Right sr <- sigReads ctx ]), [r] <- [invokerRows ctx i] ]
+    reads    = rights (sigReads ctx)
+    invokers = [ (i, r) | i <- L.nub (concatMap srInvokers reads), [r] <- [invokerRows ctx i] ]
+    types    = Map.fromListWith (\_ earlier -> earlier) [ (trName tr, tr) | tr <- rights (typeRowReads ctx) ]
 
 -- | @uSMUID :: UID@, from the row that describes it.
 invokerDecl :: Context -> (Text, UidRow) -> Gen.Decl
@@ -366,9 +381,25 @@ invokerDecl ctx (i, r) = (Gen.decl p n body)
     body = [ Gen.provenanceComment p <> ", row " <> tshow (urRow r + 1) <> ": the invoking ID " <> i <> " of the signature heads"
            , n <> " :: UID", n <> " = " <> Gen.uidExpr bs ]
 
+-- | @methods :: [SomeMethod]@: every record with a UID, in the blocks' order,
+--   under the first block's provenance.
+methodsDecl :: Context -> [(SigRead, Text)] -> Maybe Gen.Decl
+methodsDecl ctx = \case
+  [] -> Nothing
+  joined@((sr0, _) : _) ->
+    let p = sigProvenanceOf ctx (srBound sr0)
+    in Just (Gen.decl p "methods" (body p joined))
+         { Gen.declRank    = maxBound
+         , Gen.declImports = [ Gen.ImportSome methodModule ["SomeMethod (..)"], Gen.ImportSome "Data.Proxy" ["Proxy (..)"] ] }
+  where
+    body p joined =
+      [ Gen.provenanceComment p <> ", and every signature block after it: the method records with a UID, one SomeMethod each, in the blocks' order"
+      , "methods :: [SomeMethod]" ]
+      <> Gen.listDefinition "methods =" [ "SomeMethod (Proxy :: Proxy " <> srMethod sr <> ")" | (sr, _) <- joined ]
+
 -- | A block's record and instances.
-methodDecls :: Context -> SigRead -> [UidRow] -> [Gen.Decl]
-methodDecls ctx sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Gen.declImports = imports } ]
+methodDecls :: Context -> Map Text TypeRowRead -> SigRead -> [UidRow] -> [Gen.Decl]
+methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Gen.declImports = imports } ]
   where
     bs   = srBound sr
     m    = srMethod sr
@@ -384,7 +415,14 @@ methodDecls ctx sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Ge
     record = case fields of
       [] -> [ "data " <> m <> " = " <> m, "  deriving (Eq, Show)" ]
       f : fs -> [ "data " <> m <> " = " <> m, "  { " <> f ] <> map ("  , " <>) fs <> [ "  }", "  deriving (Eq, Show)" ]
-    paramExpr prm = "Param " <> tshow (spName prm) <> " " <> tshow (spType prm)
+    -- a parameter's type: the whole collapsed text a type row's name, or not
+    typeRow prm = Map.lookup (spType prm) types
+    paramExpr prm = "Param " <> tshow (spName prm) <> " " <> typeNameExpr (spType prm) (typeRow prm)
+    everyParam = srRequired sr <> srOptional sr <> case srResponse sr of
+      SResults a b      -> a <> b
+      SInvocation _ a b -> a <> b
+      _                 -> []
+    typeUIDs = L.nub [ typeUIDName (trName tr) | prm <- everyParam, Just tr <- [typeRow prm] ]
     listExpr indent = \case
       []     -> ["[]"]
       [x]    -> ["[" <> x <> "]"]
@@ -419,11 +457,21 @@ methodDecls ctx sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Ge
         | T.length oneLine <= 100 -> [oneLine]
         | otherwise -> ("  " <> name <> " m =") : ("    [ " <> a) : map ("    , " <>) more <> ["    ]"]
         where oneLine = "  " <> name <> " m = [" <> T.intercalate ", " (a : more) <> "]"
+    -- the record from values of the signature's arity: r1.. the required, o1.. the optional
+    fromValuesLines =
+      let rs = [ "r" <> tshow i | i <- [1 .. length (srRequired sr)] ]
+          os = [ "o" <> tshow i | i <- [1 .. length (srOptional sr)] ]
+          listPat xs = "[" <> T.intercalate ", " xs <> "]"
+          lhs = "  fromValues " <> listPat rs <> " " <> listPat os
+          made = if null (rs <> os) then m else "(" <> T.unwords (m : rs <> os) <> ")"
+          oneLine = lhs <> " = Just " <> made
+      in (if T.length oneLine <= 100 then [oneLine] else [lhs <> " =", "    Just " <> made]) <> ["  fromValues _ _ = Nothing"]
     signatureInstance =
       [ "", "-- the signature of " <> m <> ", " <> renderAnchorId (bsAnchor bs) <> " (PDF " <> tshow (s.page + 1) <> ")"
       , "instance MethodSignature " <> m <> " where" ]
       <> sigLines
       <> accessors "requiredValues" (srRequired sr) <> accessors "optionalValues" (srOptional sr)
+      <> fromValuesLines
     methodInstance = case joined of
       [r] | Just i <- urIdent r ->
         [ "", "-- the UID of " <> m <> ", " <> rowRef r <> " (PDF " <> tshow (rowPage r) <> ")"
@@ -436,6 +484,8 @@ methodDecls ctx sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Ge
                                        <> [ "Param (..)" | usesParam ] <> [ "Value" | usesValue ]
                                        <> [ "Method (..)" | hasMethod ])
       , Gen.ImportSome "Prelude" ["Eq", "Maybe (..)", "Show"] ]
+      <> [ Gen.ImportSome Gen.typeNameModule ["TypeName (..)"] | usesParam ]
+      <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) typeUIDs | not (null typeUIDs) ]
       <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) uidsModule) [i] | [r] <- [joined], Just i <- [urIdent r] ]
     hasMethod = case joined of
       [r] -> isJust (urIdent r)

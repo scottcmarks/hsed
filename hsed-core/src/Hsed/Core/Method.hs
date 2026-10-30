@@ -1,9 +1,10 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE LambdaCase          #-}
-{-# LANGUAGE NoImplicitPrelude   #-}
-{-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE AllowAmbiguousTypes       #-}
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeApplications          #-}
 
 {-|
 Module      : Hsed.Core.Method
@@ -20,8 +21,9 @@ docs/spec-as-source.md example E9):
 
 * 'MethodSignature': the signature as printed ('Signature': the invoking IDs
   the heads name, the required and the optional parameters and the response,
-  each type as its text), and the record's parameters as 'Value's, required
-  ones in order and optional ones by their 0-based position;
+  each type as the spec names it, 'Hsed.Core.TypeName.TypeName'), the
+  record's parameters as 'Value's, required ones in order and optional ones
+  by their 0-based position, and the record from such values ('fromValues');
 * 'Method': its UID, joined by name from the MethodID UIDs or the Session
   Manager Method UIDs. A method the spec gives a signature and no UID has no
   'Method' instance.
@@ -38,13 +40,18 @@ given as an invocation (Properties', 5.2.2.1).
 The other direction, a TPer's, is 'positional': the parameters of a call
 read against a signature, the required values counted, each optional one
 found by its index, in order, a 'ParamError' where they are not what 3.2.4.1
-says (INVALID_PARAMETER, 5.1.5.11). 'namedComponents' does the same for the
-Named components of a grouped abstract type, which 5.1.4.1 (PDF 128) numbers
-as 3.2.4.1 numbers optional parameters.
+says (INVALID_PARAMETER, 5.1.5.11); 'decodeParameters' makes the record of
+them, and 'fromCall' takes the invocation of a record's method and no
+other. 'namedComponents' does the same for the Named components of a grouped
+abstract type, which 5.1.4.1 (PDF 128) numbers as 3.2.4.1 numbers optional
+parameters. The generated @methods :: ['SomeMethod']@ lists every record with
+a UID, so that a TPer finds the record of a call by its MethodID
+('methodWithUID') and reads the call with it.
 
 The fields are untyped ('Value'): the Type objects a parameter's type names
-are 'Hsed.Core.Types.TypeDef' values, not yet Haskell types, so the types
-stay text here and the result types are not yet at the type level.
+are 'Hsed.Core.Types.TypeDef' values, not yet Haskell types, so a type is
+its name here, with the Type object's UID where the spec compiler joined one,
+and the result types are not yet at the type level.
 
 The generated records are named after their methods (@Get@, @Set@, @Next@,
 @Random@), names other modules export too (RIO exports Data.Set's @Set@):
@@ -67,25 +74,34 @@ module Hsed.Core.Method
   , paramErrorText
   , positional
   , namedComponents
+  , decodeParameters
+  , fromCall
+    -- * The methods
+  , SomeMethod (..)
+  , someMethodUID
+  , someSignature
+  , methodWithUID
     -- * Re-exported for the generated records
   , Value
   ) where
 
 import           RIO
-import qualified RIO.List        as L
+import qualified RIO.List           as L
 
-import           Hsed.Core.Call  (MethodCall (..), MethodHeader (..), Parameters (..),
-                                  optionalParameter)
-import           Hsed.Core.Token (Token (..))
-import           Hsed.Core.UID   (UID)
-import           Hsed.Core.Value (Datum (..), Name (..), NamedValue (..), Value (..))
+import           Hsed.Core.Call     (MethodCall (..), MethodHeader (..), Parameters (..),
+                                     optionalParameter)
+import           Hsed.Core.Token    (Token (..))
+import           Hsed.Core.TypeName (TypeName)
+import           Hsed.Core.UID      (UID)
+import           Hsed.Core.Value    (Datum (..), Name (..), NamedValue (..), Value (..))
 
 
 -- | One parameter or result as a signature prints it: @Cellblock : cell_block@
---   is @Param "Cellblock" "cell_block"@.
+--   is @Param "Cellblock" (TypeName "cell_block" Nothing)@, and @HostSessionID
+--   : uinteger@ names the type row @uinteger@'s UID.
 data Param = Param
   { paramName :: !Text
-  , paramType :: !Text   -- ^ the type as printed, spacing collapsed
+  , paramType :: !TypeName   -- ^ the type as printed, spacing collapsed, with its Type object's UID when it is a type row's name
   }
   deriving (Eq, Show)
 
@@ -116,15 +132,18 @@ data Signature = Signature
   }
   deriving (Eq, Show)
 
--- | A generated method record: its signature, and its fields as the
---   parameters of an invocation. Use 'signature' with a type application,
---   @signature \@Get@.
+-- | A generated method record: its signature, its fields as the parameters
+--   of an invocation, and the record from such parameters. Use 'signature'
+--   with a type application, @signature \@Get@.
 class MethodSignature m where
   signature :: Signature
   -- | The required parameters, in the signature's order.
   requiredValues :: m -> [Value]
   -- | The optional parameters, one per optional parameter of the signature, in its order.
   optionalValues :: m -> [Maybe Value]
+  -- | The record from its required values and its optional ones, each in its
+  --   place: Nothing unless there are as many of each as the signature has.
+  fromValues :: [Value] -> [Maybe Value] -> Maybe m
 
 -- | A method record whose method has a UID: @methodUID \@Get@.
 class MethodSignature m => Method m where
@@ -218,3 +237,38 @@ namedComponents count vs = do
         | otherwise              -> Left (OptionalIndex i count)
       N (NamedValue nm _) -> Left (OptionalNotIndexed nm)
       v -> Left (WrongShape ("a component that is no Named value: " <> tshow v <> " (Core 5.1.4.1, PDF 128)"))
+
+-- | A record from a call's parameters, read against its signature
+--   ('positional'), or why they are not its method's.
+decodeParameters :: forall m. MethodSignature m => Parameters -> Either ParamError m
+decodeParameters ps = do
+  (rs, os) <- positional (sigRequired sg) (sigOptional sg) ps
+  maybe (Left (WrongShape (sigMethod sg <> "'s record takes no values of its signature's arity"))) Right (fromValues rs os)
+  where sg = signature @m
+
+-- | A record from an invocation of its method: Nothing for an invocation of
+--   another method (by its MethodID), else the record or why the parameters
+--   are not its. Use it with a type application, @fromCall \@SyncSession@.
+fromCall :: forall m. Method m => MethodCall -> Maybe (Either ParamError m)
+fromCall (MethodCall (MethodHeader _ method) ps _)
+  | method == methodUID @m = Just (decodeParameters ps)
+  | otherwise              = Nothing
+
+
+-- * The methods
+
+-- | A method record with a UID, its type hidden: an entry of the generated
+--   list of methods, which names each record by a proxy of its type.
+data SomeMethod = forall m. (Method m, Eq m, Show m) => SomeMethod (Proxy m)
+
+-- | The method's UID.
+someMethodUID :: SomeMethod -> UID
+someMethodUID (SomeMethod (_ :: Proxy m)) = methodUID @m
+
+-- | The method's signature.
+someSignature :: SomeMethod -> Signature
+someSignature (SomeMethod (_ :: Proxy m)) = signature @m
+
+-- | The method a MethodID names, among the given.
+methodWithUID :: [SomeMethod] -> UID -> Maybe SomeMethod
+methodWithUID ms u = L.find ((== u) . someMethodUID) ms

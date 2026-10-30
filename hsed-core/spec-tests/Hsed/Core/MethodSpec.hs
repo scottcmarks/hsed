@@ -25,6 +25,7 @@ import           Test.Hspec
 import           Hsed.Core.Call                (MethodCall (..), MethodHeader (..), Parameters (..))
 import           Hsed.Core.Method
 import           Hsed.Core.Token               (Token (..))
+import           Hsed.Core.TypeName            (TypeName (..))
 import           Hsed.Core.UID                 (uid)
 import           Hsed.Core.Value               (Datum (..), IsValue (..), List (..), Name (..), NamedValue (..), Value (..), (.:))
 
@@ -41,13 +42,16 @@ instance MethodSignature Set where
     { sigMethod   = "Set"
     , sigInvokers = ["TableUID", "ObjectUID"]
     , sigRequired = []
-    , sigOptional = [Param "Where" "row_address", Param "Values" "typeOr { Bytes : bytes, RowValues : list [ ColumnNumber = <type of column> ... ] }"]
+    , sigOptional = [ Param "Where" (TypeName "row_address" Nothing)
+                    , Param "Values" (TypeName "typeOr { Bytes : bytes, RowValues : list [ ColumnNumber = <type of column> ... ] }" Nothing) ]
     , sigResponse = Results [] []
     , sigAnswers  = Nothing
     , sigSpecRef  = "core-2.01:5.3.3.7"
     }
   requiredValues _ = []
   optionalValues m = [setWhere m, setValues m]
+  fromValues [] [o1, o2] = Just (Set o1 o2)
+  fromValues _ _ = Nothing
 
 instance Method Set where
   methodUID = uid 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x17
@@ -69,8 +73,9 @@ spec = do
       _statusCode (invocationWith 12 (uid 0x00 0x00 0x08 0x02 0x00 0x00 0x00 0x01) (Set Nothing Nothing)) `shouldBe` 12
       invocationWith 0 (uid 0x00 0x00 0x08 0x02 0x00 0x00 0x00 0x01) (Set (Just values) Nothing)
         `shouldBe` invocation (uid 0x00 0x00 0x08 0x02 0x00 0x00 0x00 0x01) (Set (Just values) Nothing)
-    it "keeps the signature as printed" $ do
+    it "keeps the signature as printed, each type as the spec names it" $ do
       map paramName (sigOptional (signature @Set)) `shouldBe` ["Where", "Values"]
+      map (typeNameText . paramType) (sigOptional (signature @Set)) `shouldBe` ["row_address", "typeOr { Bytes : bytes, RowValues : list [ ColumnNumber = <type of column> ... ] }"]
       sigSpecRef (signature @Set) `shouldBe` "core-2.01:5.3.3.7"
     it "names its first optional parameter 0, an unsigned name" $
       case parameters (Set (Just values) Nothing) of
@@ -78,9 +83,9 @@ spec = do
         other                                         -> expectationFailure (show other)
 
   describe "positional, a call's parameters read against a signature" $ do
-    let a = Param "A" "uinteger"
-        w = Param "W" "row_address"
-        v = Param "V" "bytes"
+    let a = Param "A" (TypeName "uinteger" Nothing)
+        w = Param "W" (TypeName "row_address" Nothing)
+        v = Param "V" (TypeName "bytes" Nothing)
         one = value (1 :: Natural)
         two = value (2 :: Natural)
         named i x = (i :: Natural) .: x
@@ -101,6 +106,16 @@ spec = do
     it "reads the record's own parameters back" $
       positional (sigRequired (signature @Set)) (sigOptional (signature @Set)) (parameters (Set Nothing (Just two)))
         `shouldBe` Right ([], [Nothing, Just two])
+    it "makes the record of them (decodeParameters), and refuses parameters that are not the signature's" $ do
+      decodeParameters (parameters (Set Nothing (Just two))) `shouldBe` Right (Set Nothing (Just two))
+      decodeParameters (Parameters [] [named 0 one, named 1 two]) `shouldBe` Right (Set (Just one) (Just two))
+      decodeParameters @Set (Parameters [one] []) `shouldBe` Left (RequiredCount 0 1)
+      decodeParameters @Set (Parameters [] [named 2 one]) `shouldBe` Left (OptionalIndex 2 2)
+    it "reads the record from an invocation of its method, and refuses another method's" $ do
+      let invoker = uid 0x00 0x00 0x08 0x02 0x00 0x00 0x00 0x01
+      fromCall @Set (invocation invoker (Set (Just one) Nothing)) `shouldBe` Just (Right (Set (Just one) Nothing))
+      fromCall @Set (MethodCall (MethodHeader invoker (uid 0x00 0x00 0x00 0x06 0x00 0x00 0x00 0x16)) (Parameters [] []) 0) `shouldBe` Nothing
+      fromCall @Set (MethodCall (MethodHeader invoker (methodUID @Set)) (Parameters [one] []) 0) `shouldBe` Just (Left (RequiredCount 0 1))
     it "says each error in words" $
       map (\e -> paramErrorText e == "") [RequiredCount 1 0, OptionalNotIndexed (Name (Datum (Bytes "x"))), OptionalIndex 2 2, OptionalOrder 1 0, WrongShape "a list"]
         `shouldBe` [False, False, False, False, False]
@@ -117,8 +132,8 @@ spec = do
         _                   -> False
 
   describe "responseParameters, an answer given as an invocation" $ do
-    let p = Param "Properties" "list [ name = value ... ]"
-        h = Param "HostProperties" "list [ name = value ... ]"
+    let p = Param "Properties" (TypeName "list [ name = value ... ]" Nothing)
+        h = Param "HostProperties" (TypeName "list [ name = value ... ]" Nothing)
         tper = L (List [N (("MaxMethods" :: String) .: (1 :: Natural))])
         host = L (List [])
     it "gives the required values and each optional one Named by its index, as a record's parameters are" $ do

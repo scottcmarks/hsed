@@ -355,9 +355,8 @@ compile ctx bts = map one ps
     one p = case pTarget p of
       Right d | not (any Cm.isError (preFindings ctx ps p))
               , not (any ((== Just (renderAnchorId (btAnchor (pBound p)))) . Cm.anchor) unique)
-              , Right rows <- traverse (\r -> (r,) <$> sequence (rowCells ctx ps d r)) [ r | r <- pRows p, not (prTemplate r) ]
-              , Right printed <- traverse (\(r, vs) -> (r,) <$> traverse (\(c, v) -> (c,) <$> renderCell v) vs) rows ->
-          Emit (preDecl ctx p d printed)
+              , Right rows <- traverse (\r -> (r,) <$> sequence (rowCells ctx ps d r)) [ r | r <- pRows p, not (prTemplate r) ] ->
+          Emit (preDecl ctx p d [ (r, [ (c, renderCell v) | (c, v) <- vs ]) | (r, vs) <- rows ])
       _ -> Excluded (btAnchor (pBound p)) "C-PRECONF-HEADER, C-UID-TABLE, C-UID-UNIQUE or C-PRECONF-CELL failed"
 
 -- | @defaultBaseTemplateAuthorities@: the caption's words, the first in lower case.

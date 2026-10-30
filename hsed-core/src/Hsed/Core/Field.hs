@@ -17,8 +17,9 @@ docs/spec-as-source.md section 3.4):
   GET_COMID_RESPONSE) gives each field a constant: bytes printed in hex, or a
   name for a value the text defines ('FieldConst');
 * a @Field | Type@ or @Value | Type | Range@ table (the @fieldType@ rule;
-  Tables 22, 23 and 34) gives each field a Type object of the spec, and may
-  narrow its values ('FieldDef').
+  Tables 22, 23 and 34) gives each field a Type object of the spec
+  ("Hsed.Core.TypeName": its name and its UID), and may narrow its values
+  ('FieldDef').
 
 The generated modules (@Hsed.Gen.\<Spec\>.Fields@) hold each table as a list of
 its rows.
@@ -38,7 +39,7 @@ import           RIO
 import qualified RIO.List                   as L
 
 import           Hsed.Core.Code             (Span)
-import           Hsed.Core.UID              (UID)
+import           Hsed.Core.TypeName         (TypeName)
 
 
 -- $setup
@@ -57,13 +58,12 @@ data FieldConst = FieldConst
   }
   deriving (Eq, Show)
 
--- | One row of a @Field | Type@ or @Value | Type | Range@ table: a field, the
---   name and UID of its Type object, and the values its Range cell allows.
+-- | One row of a @Field | Type@ or @Value | Type | Range@ table: a field, its
+--   Type object by name and UID, and the values its Range cell allows.
 data FieldDef = FieldDef
-  { fdName     :: !Text
-  , fdTypeName :: !Text
-  , fdType     :: !UID
-  , fdRange    :: !(Maybe Span)
+  { fdName  :: !Text
+  , fdType  :: !TypeName
+  , fdRange :: !(Maybe Span)
   }
   deriving (Eq, Show)
 

@@ -41,15 +41,19 @@ Checks, each with the code its findings carry:
 Compiled into 'tableDescsModule': @\<t\>TableDesc :: TableDesc@ per description
 (the table's name with its first letter in lower case, @tableTableDesc@ for
 Table 171), the runtime 'Hsed.Core.Table.TableDesc' whose UIDs are Table 240's
-@u\<T\>Table@ and @u\<T\>TableObject@ and whose columns name their Type object's
-@u\<type\>Type@, both by name from the modules the two rules write.
+@u\<T\>Table@ and @u\<T\>TableObject@ and whose columns' types are
+@TypeName@s, each its text and its Type object's @u\<type\>Type@
+("Hsed.Spec.Rules.TypeRow".'typeNameExpr'), both by name from the modules the
+two rules write.
 
 The module also reads, for the rules whose tables a description types
 (@constValues@'s default values, @preconfig@'s rows): what a column holds
 ('ColKind', from its Type object's Format and, for an enumeration, its
-enumeration table, "Hsed.Spec.Rules.EnumValues"), a cell read as that kind
-('readCell') and the runtime 'Hsed.Core.Table.Cell' it prints as
-('renderCell').
+enumeration table, "Hsed.Spec.Rules.EnumValues"; a column of the @uid@ type,
+Core Table 145, PDF 123, is 'KUID', a uid cell, where any other @bytes@ type
+is 'KBytes'), a cell read as that kind ('readCell') and the runtime
+'Hsed.Core.Table.Cell' it prints as ('renderCell': a 'UIDCell', a
+'BytesCell' for bytes of any other type, since M4a).
 -}
 module Hsed.Spec.Rules.TableDesc
   ( tableDescRule
@@ -96,7 +100,7 @@ import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads, parseEnumValue)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableObjectUIDName, tableUIDName, tableUIDRows, tableUIDsModule,
                                             tableUIDsNamed)
-import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeNameExpr, typeRowReads, typesModule)
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure,
                                             shapeMismatch)
 
@@ -274,7 +278,8 @@ isIdent n = case T.uncons n of
 
 -- | What a column of a described table holds, as its Type object's Format says.
 data ColKind
-  = KBytes !Int                    -- ^ a Simple_Type of @bytes@: that many bytes (@uid@: eight)
+  = KUID                           -- ^ the @uid@ type (Core Table 145): a uid of eight bytes
+  | KBytes !Int                    -- ^ a Simple_Type of @bytes@ other than @uid@: that many bytes (@bytes_32@)
   | KText !Int                     -- ^ a Simple_Type of @max_bytes@: text of at most that many bytes (@name@)
   | KUInt !Int                     -- ^ a Simple_Type of @uinteger@: an unsigned integer of that many bytes
   | KInt !Int                      -- ^ a Simple_Type of @integer@
@@ -296,7 +301,9 @@ colKind ctx name = do
       btr <- maybe (Left (name <> "'s base " <> base <> " names no Type object")) Right (lookupType base)
       case trTypeDef btr of
         Right BaseType -> case base of
-          "bytes"     -> Right (KBytes n)
+          "bytes"
+            | name == "uid" -> Right KUID
+            | otherwise     -> Right (KBytes n)
           "max_bytes" -> Right (KText n)
           "uinteger"  -> Right (KUInt n)
           "integer"   -> Right (KInt n)
@@ -320,7 +327,8 @@ colKind ctx name = do
 
 -- | A cell read as what its column holds.
 data CellValue
-  = CvBytes ![Word8]
+  = CvUID ![Word8]                 -- ^ a @uid@'s eight bytes
+  | CvBytes ![Word8]
   | CvText !Text
   | CvUInt !Integer !(Maybe Int)   -- ^ the value, and the hex digits it is printed with (Nothing: in decimal)
   | CvInt !Integer
@@ -333,6 +341,9 @@ data CellValue
 --   the type allows to the object's UID.
 readCell :: (Text -> [TableRef] -> Either Text [Word8]) -> ColKind -> Text -> Either Text CellValue
 readCell resolve kind raw = case kind of
+  KUID -> case bytesOf cell of
+    Just bs | length bs == 8 -> Right (CvUID bs)
+    _ -> Left (tshow cell <> " is not a uid of eight bytes in hex")
   KBytes n -> case bytesOf cell of
     Just bs | length bs == n -> Right (CvBytes bs)
     _ -> Left (tshow cell <> " is not " <> tshow n <> " bytes in hex")
@@ -368,17 +379,18 @@ readCell resolve kind raw = case kind of
                      then Just (map byte (DT.chunksOf 2 hex)) else Nothing
     byte = T.foldl' (\acc c -> acc * 16 + fromIntegral (DC.digitToInt c)) 0
 
--- | The runtime 'Hsed.Core.Table.Cell' a value prints as; Left for a kind the
---   runtime has no cell for (bytes other than a UID's eight).
-renderCell :: CellValue -> Either Text Text
+-- | The runtime 'Hsed.Core.Table.Cell' a value prints as: bytes of a type
+--   other than @uid@ a @BytesCell@, its byte string a literal (the module's
+--   OverloadedStrings), however many bytes.
+renderCell :: CellValue -> Text
 renderCell = \case
-  CvBytes bs | length bs == 8 -> Right ("UIDCell (" <> Gen.uidExpr bs <> ")")
-             | otherwise      -> Left ("a cell of " <> tshow (length bs) <> " bytes has no runtime cell yet")
-  CvText t                    -> Right ("TextCell " <> tshow t)
-  CvUInt v digits             -> Right ("UIntCell " <> maybe (tshow v) (hexLiteral v) digits)
-  CvInt v                     -> Right ("IntCell " <> if v < 0 then "(" <> tshow v <> ")" else tshow v)
-  CvEnum l v                  -> Right ("EnumCell " <> tshow l <> " " <> tshow v)
-  CvRef n bs                  -> Right ("RefCell " <> tshow n <> " (" <> Gen.uidExpr bs <> ")")
+  CvUID bs        -> "UIDCell (" <> Gen.uidExpr bs <> ")"
+  CvBytes bs      -> "BytesCell " <> tshow (B.pack bs)
+  CvText t        -> "TextCell " <> tshow t
+  CvUInt v digits -> "UIntCell " <> maybe (tshow v) (hexLiteral v) digits
+  CvInt v         -> "IntCell " <> if v < 0 then "(" <> tshow v <> ")" else tshow v
+  CvEnum l v      -> "EnumCell " <> tshow l <> " " <> tshow v
+  CvRef n bs      -> "RefCell " <> tshow n <> " (" <> Gen.uidExpr bs <> ")"
   where hexLiteral v w = "0x" <> T.justifyRight w '0' (T.toUpper (T.pack (showHexInteger v)))
 
 showHexInteger :: Integer -> String
@@ -406,6 +418,7 @@ descDecl :: Context -> DescRead -> Text -> Gen.Decl
 descDecl ctx d n = (Gen.decl p name body)
   { Gen.declImports =
       [ Gen.ImportSome Gen.coreTableModule ["Col (..)", "TableDesc (..)"]
+      , Gen.ImportSome Gen.typeNameModule ["TypeName (..)"]
       , Gen.ImportAll (Gen.moduleName sid tableUIDsModule)
       , Gen.ImportSome "Prelude" ["Bool (..)", "Maybe (..)"] ]
       <> [ Gen.ImportAll (Gen.moduleName sid typesModule) | any (isJust . crTypeRow) (drColumns d) ] }
@@ -416,8 +429,7 @@ descDecl ctx d n = (Gen.decl p name body)
     name = descDeclName n
     colLine i cr = (if i == (0 :: Int) then "      [ " else "      , ")
       <> T.unwords [ "Col", colNumberLit (fromMaybe i (crNumber cr)), tshow (crName cr)
-                   , if crUnique cr == "Yes" then "True" else "False", tshow (crType cr)
-                   , maybe "Nothing" (\tr -> "(Just " <> typeUIDName (trName tr) <> ")") (crTypeRow cr) ]
+                   , if crUnique cr == "Yes" then "True" else "False", typeNameExpr (crType cr) (crTypeRow cr) ]
     body =
       [ Gen.provenanceComment p
       , name <> " :: TableDesc"

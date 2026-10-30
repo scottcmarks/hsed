@@ -83,7 +83,9 @@ Some changes are generic and are made in a small commit of their own, before the
 - **A runtime module** the generated code of several rules imports: named once in `Hsed.Spec.Gen`
   (`uidModule`, `coreTypesModule`; since M2b also `coreTableModule`, `codeModule`, `fieldModule`; since
   M2c `layoutModule`, `Hsed.Core.Layout`, and, once byteFieldValue's records were printed as byteGrid's,
-  `recordModule`, `Hsed.Core.Record`), the module itself in hsed-core. A runtime module one rule alone imports is named in that rule (`sig`'s
+  `recordModule`, `Hsed.Core.Record`; since M4a `typeNameModule`, `Hsed.Core.TypeName`, the type reference
+  the table descriptions, the typed records, the properties and the method signatures print through
+  `Rules.TypeRow.typeNameExpr`), the module itself in hsed-core. A runtime module one rule alone imports is named in that rule (`sig`'s
   `methodModule`, `stateTable`'s `syncModule`, the Props reader's `propertiesModule`, `feature`'s
   `featureModule`), and the rule's group may write it in hsed-core beside the rule.
 

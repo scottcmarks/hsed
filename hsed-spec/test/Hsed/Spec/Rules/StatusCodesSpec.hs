@@ -93,8 +93,8 @@ spec = do
     describe "the generated module" $ do
       cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
       let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Codes" (crModules cr)))
-      it "declares the statuses' type, open to any value the wire carries" $
-        lns `shouldContain` ["newtype StatusCode = StatusCode Natural", "  deriving (Eq, Ord, Show)"]
+      it "declares the statuses' type, open to any value the wire carries, its value a field" $
+        lns `shouldContain` ["newtype StatusCode = StatusCode { statusValue :: Natural }", "  deriving (Eq, Ord, Show)"]
       it "declares a pattern per row, named as the table names the value, its value as printed" $ do
         length [ l | l <- lns, "pattern " `T.isPrefixOf` l, " :: StatusCode" `T.isSuffixOf` l ] `shouldBe` 19
         lns `shouldContain` ["pattern NOT_AUTHORIZED :: StatusCode", "pattern NOT_AUTHORIZED = StatusCode 0x01"]

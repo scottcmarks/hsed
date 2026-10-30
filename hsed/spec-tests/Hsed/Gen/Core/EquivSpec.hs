@@ -3,7 +3,7 @@
 
 {-|
 Module      : Hsed.Gen.Core.EquivSpec
-Description : The generated Core modules beside hsed's hand-written TypeUIDs, TableUIDs and SpecialPurposeUIDs, at run time
+Description : The generated Core modules beside the hand transcription of TypeUIDs, TableUIDs and SpecialPurposeUIDs, at run time
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -12,8 +12,9 @@ Stability   : experimental
 Design docs/spec-as-source.md section 5.5, the regenerate-and-compare oracle
 (M2a): every definition @hsedc compile@ generated from the PDF (every module
 under @gen/Hsed/Gen/Core@, each imported here as @G@) beside its
-counterpart in the hand transcription (@System.SED.MCTP.Common.{TypeUIDs,TableUIDs,SpecialPurposeUIDs}@,
-as @H@), definition by definition and table caption by table caption
+counterpart in the hand transcription (@Hand.{TypeUIDs,TableUIDs,SpecialPurposeUIDs}@,
+the test fixture hsed/fixture/Hand, as @H@), definition by definition and
+table caption by table caption
 ("Hsed.Gen.Core.EquivTH"). The differences must be exactly the lines of
 @spec/expected-diff.txt@: a missing line fails the test as surely as an extra
 one, and each line is checked by value, its kind holding of the two sides and
@@ -44,9 +45,10 @@ unassigned are listed; and each field of a typed record (Tables 22, 23 and 34,
 @fieldType@) names a Type object whose UID the hand transcription has.
 
 The M1 slice is kept by name above it (M1 acceptance (d)). The hand-written
-side is read where it lives, in hsed's library; when M2d makes those modules
-re-exports of the generated ones, the hand transcription is kept as a test
-fixture and 'handDefs' points at it (design section 11, M2d).
+side is the 2019 transcription, kept since M2d as the test fixture
+hsed/fixture/Hand and compiled only by this test suite; hsed's library
+re-exports the generated modules in its place, so 'handDefs' reads the
+fixture (design sections 5.5 and 11, M2d).
 -}
 module Hsed.Gen.Core.EquivSpec (spec) where
 
@@ -63,6 +65,9 @@ import           Test.Hspec
 import qualified RIO.ByteString                            as B
 import qualified RIO.Text                                  as T
 
+import qualified Hand.SpecialPurposeUIDs                   as H
+import qualified Hand.TableUIDs                            as H
+import qualified Hand.TypeUIDs                             as H
 import           Hsed.Core.Code                            (CodeRow (..), Span (..))
 import           Hsed.Core.Field                           (FieldDef (..))
 import           Hsed.Core.Types                           (Enumerated (..), enumValue)
@@ -75,10 +80,7 @@ import qualified Hsed.Gen.Core.Types                       as G
 import qualified Hsed.Gen.Core.UIDRanges                   as G
 import qualified Hsed.Gen.Core.UIDs                        as G
 import           System.SED.MCTP.Common.Call               (MethodResponse (..))
-import qualified System.SED.MCTP.Common.SpecialPurposeUIDs as H
 import           System.SED.MCTP.Common.StreamItem         (StreamItem (..))
-import qualified System.SED.MCTP.Common.TableUIDs          as H
-import qualified System.SED.MCTP.Common.TypeUIDs           as H
 import           System.SED.MCTP.Common.UID                (UID, uidLower)
 
 
@@ -90,10 +92,9 @@ generated = $(generatedDefs "gen/Hsed/Gen/Core" "G")
 generatedLists :: [(String, [String])]
 generatedLists = $(generatedUIDLists "gen/Hsed/Gen/Core" "G")
 
--- | Every hand-written definition the quasiquoters make, and the special purpose UIDs.
+-- | Every hand-written definition the fixture's quasiquoters make, and its special purpose UIDs.
 handWritten :: [Def]
-handWritten = $(handDefs "src/System/SED/MCTP/Common/TypeUIDs.hs" "src/System/SED/MCTP/Common/TableUIDs.hs"
-                         "src/System/SED/MCTP/Common/SpecialPurposeUIDs.hs" "H")
+handWritten = $(handDefs "fixture/Hand/TypeUIDs.hs" "fixture/Hand/TableUIDs.hs" "fixture/Hand/SpecialPurposeUIDs.hs" "H")
 
 
 -- * Differences

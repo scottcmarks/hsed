@@ -31,8 +31,8 @@ Checks:
 Each row's definitions cite the page the row is printed on (Table 240 spans
 two), with the table's ordinal and cell hash.
 
-Compiled into 'tableUIDsModule' in the shapes hsed's hand-written
-@System.SED.MCTP.Common.TableUIDs@ has: @u\<T\>TableObject :: UID@, @u\<T\>Table ::
+Compiled into 'tableUIDsModule' in the shapes the hand transcription (the
+oracle's fixture, @Hand.TableUIDs@) has: @u\<T\>TableObject :: UID@, @u\<T\>Table ::
 UID@ and @h\<T\> :: HalfUID@ per row, @nameHalfUID :: Map HalfUID String@ and
 @nameUID :: Map UID String@ (@"\<T\> Table"@, @"\<T\> Table Object"@). The typed
 half-UIDs @oth\<T\>@ and @bth\<T\>@ need each table's kind (byte or object

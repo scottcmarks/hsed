@@ -23,16 +23,16 @@ classified once, one `E-UNBOUND` per unbound table, the committed modules exactl
 the committed ledger exactly what the run gives), not totals: how many tables each rule binds and how
 many findings of each code a run gives are in `docs/LEDGER.md`. A new rule edits none of them.
 
-A rule whose definitions have a hand-written counterpart in hsed (the M2a-M2d comparison, design §5.5)
-also extends `hsed/spec-tests/Hsed/Gen/Core/EquivTH.hs` (`handDefs`) and adds its expected differences to
-`spec/expected-diff.txt`; a new generated module needs one import line in `EquivSpec.hs`, which reads
-every module under `gen/Hsed/Gen/Core` and refuses to compile without it as soon as the module declares a
-definition the oracle compares (`name :: UID`, `String`, `HalfUID`, the two name maps, a `[(UID, String)]`
-list of a table's UIDs, or a `data Core_<enum>`; any other `data`, a record such as a method's, is no
-enumeration to it). Generated modules stay ASCII: EquivTH reads them with the locale's `readFile`, so a
-text literal prints non-ASCII escaped (`tshow`), and a comment's text of the PDF goes through
-`Gen.ascii` (`Gen.provenanceComment` and the module header apply it; `CompileSpec` holds every module
-to ASCII).
+A rule whose definitions have a hand-written counterpart (the oracle, design §5.5; since M2d its hand side
+is the test fixture hsed/fixture/Hand) also extends `hsed/spec-tests/Hsed/Gen/Core/EquivTH.hs`
+(`handDefs`) and adds its expected differences to `spec/expected-diff.txt`; a new generated module needs
+one import line in `EquivSpec.hs`, which reads every module under `gen/Hsed/Gen/Core` and refuses to
+compile without it as soon as the module declares a definition the oracle compares (`name :: UID`,
+`String`, `HalfUID`, the two name maps, a `[(UID, String)]` list of a table's UIDs, or a
+`data Core_<enum>`; any other `data`, a record such as a method's, is no enumeration to it). Generated
+modules stay ASCII: EquivTH reads them with the locale's `readFile`, so a text literal prints non-ASCII
+escaped (`tshow`), and a comment's text of the PDF goes through `Gen.ascii` (`Gen.provenanceComment` and
+the module header apply it; `CompileSpec` holds every module to ASCII).
 
 A rule names its own finding codes: its `ruleCodes` lists each code it claims as a `CodeDef` (the code,
 the severities its findings take, and what they report: a defect of the PDF, text read other than as

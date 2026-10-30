@@ -26,9 +26,10 @@ time:
 * 'generatedUIDLists' reads the same modules' lists of a table's UIDs
   (@name :: [(UID, String)]@), each with its table: what a hand-written UID of
   a table whose rows the PDF names nowhere is found in;
-* 'handDefs' reads hsed's hand-written modules: every @[ttype|@ quasiquote
-  (@u\<Name\>Type@, @f\<Name\>Type@), every @[tenum|@ (@Core_\<enum\>@), the
-  @[t240|@ rows (@h\<T\>@, @u\<T\>Table@, @u\<T\>TableObject@, and whichever of
+* 'handDefs' reads the hand transcription, the test fixture hsed/fixture/Hand
+  (hsed's library until M2d): every @ttype@ quasiquote (@u\<Name\>Type@,
+  @f\<Name\>Type@), every @tenum@ quasiquote (@Core_\<enum\>@), the @t240@
+  quasiquote's rows (@h\<T\>@, @u\<T\>Table@, @u\<T\>TableObject@, and whichever of
   the typed @oth\<T\>@ or @bth\<T\>@ the module defines; then @nameHalfUID@ and
   @nameUID@), each with the caption the quasiquote prints, and every @name ::
   UID@ of @SpecialPurposeUIDs@ with the caption of the transcribed table above
@@ -154,8 +155,8 @@ generatedNames = go Nothing
 
 -- * The hand-written modules
 
--- | @$(handDefs "src/.../TypeUIDs.hs" "src/.../TableUIDs.hs" "src/.../SpecialPurposeUIDs.hs" "H")@,
---   all three imported qualified as @H@.
+-- | @$(handDefs "fixture/Hand/TypeUIDs.hs" "fixture/Hand/TableUIDs.hs" "fixture/Hand/SpecialPurposeUIDs.hs" "H")@,
+--   the fixture's three modules, all imported qualified as @H@.
 handDefs :: FilePath -> FilePath -> FilePath -> String -> Q Exp
 handDefs typeUIDs tableUIDs specialUIDs h = do
   mapM_ addDependentFile [typeUIDs, tableUIDs, specialUIDs]

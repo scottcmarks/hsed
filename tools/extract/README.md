@@ -41,7 +41,7 @@ mechanics (pypdf incremental update, render identity, three-reader read-back):
   vocabulary check, kinds and order, the tail's self-listing xref stream, a heading `behaviour`
   annotated end to end, the md5 pins and the Table 7 invariant: `make extract-test`.
 - `regen_typeuids.py` — regenerates Core Tables 46-165 from the JSON and diffs them against the
-  hand transcription in `src/System/SED/MCTP/Common/TypeUIDs.hs` (27 differences, all explained).
+  hand transcription in `hsed/fixture/Hand/TypeUIDs.hs` (27 differences, all explained).
 
 ## Annotation round trip (design §5.3; `hsedc annotate/apply/dump` until they move to Haskell)
 

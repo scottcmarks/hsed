@@ -1,7 +1,7 @@
-# The runtime oracle's expected differences (docs/spec-as-source.md section 5.5, M2a, M2b):
+# The runtime oracle's expected differences (docs/spec-as-source.md section 5.5, M2a, M2b, M2d):
 # every way the code hsedc generates from the PDF (every module of hsed/gen/Hsed/Gen/Core)
-# differs from hsed's hand transcription (System.SED.MCTP.Common.{TypeUIDs,TableUIDs,SpecialPurposeUIDs}),
-# one per line.
+# differs from the hand transcription, the oracle's test fixture
+# hsed/fixture/Hand/{TypeUIDs,TableUIDs,SpecialPurposeUIDs}.hs, one per line.
 # hsed's EquivSpec fails on a missing or an extra line, on a line whose kind does not hold of the two
 # sides, and on a line whose value is not the one it computes.
 #

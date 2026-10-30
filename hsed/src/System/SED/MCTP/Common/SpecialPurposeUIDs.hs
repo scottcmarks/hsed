@@ -1,101 +1,32 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 {-|
 Module      : System.SED.MCTP.Common.SpecialPurposeUIDs
-Copyright   : (c) Magnolia Heights R&D, 2019
-License     : All rights reserved
+Description : The special purpose UIDs and Session Manager method UIDs, generated from the PDF
+Copyright   : (c) Magnolia Heights R&D, 2026
+License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Special Purpose UIDs.
-
+Since M2d a re-export of the Core Table 239 and Table 241 names of
+"Hsed.Gen.Core.UIDs" (design docs/spec-as-source.md section 4.1). The hand
+transcription this module held is the oracle's test fixture,
+hsed/fixture/Hand/SpecialPurposeUIDs.hs (section 5.5); the names it gave UIDs
+the PDF names nowhere (uNULL, uC_PINCharSetUnrestrictedUID) and uSMMethodUID
+stay there.
 -}
+module System.SED.MCTP.Common.SpecialPurposeUIDs
+  ( -- * Table 239 Special Purpose UIDs: the invoking IDs the PDF names
+    specialPurposeUIDs
+  , uSMUID
+  , uThisSP
+    -- * Table 241 Session Manager Method UIDs
+  , sessionManagerMethodUIDs
+  , uCloseSession
+  , uProperties
+  , uStartSession
+  , uStartTrustedSession
+  , uSyncSession
+  , uSyncTrustedSession
+  ) where
 
-
-module System.SED.MCTP.Common.SpecialPurposeUIDs where
-
-import           Data.Word
-
-import           System.SED.MCTP.Common.UID
-
-
-{-
-
-                                   Table 239 Special Purpose UIDs
-    +-----------------------+--------------------------------------------------------------------+
-    |UID                    |Purpose                                                             |
-    +-----------------------+--------------------------------------------------------------------+
-    |00 00 00 00 00 00 00 00|Used to represent null uid                                          |
-    +-----------------------+--------------------------------------------------------------------+
-    |00 00 00 00 00 00 00 01|Used as the SPUID, the UID that identifies "This SP" -- used as the |
-    |                       |InvokingID for invocation of SP methods                             |
-    +-----------------------+--------------------------------------------------------------------+
-    |00 00 00 00 00 00 00 FF|Used as the SMUID, the UID that identifies "the Session manager" -- |
-    |                       |used as InvokingID for invocation of Session Manager layer methods  |
-    +-----------------------+--------------------------------------------------------------------+
-    |00 00 00 00 00 00 FF xx|Identifies UIDs assigned to Session Manager layer methods, where xx |
-    |                       |is the UID assigned to a particular method (see Table 241)          |
-    +-----------------------+--------------------------------------------------------------------+
-    |00 00 00 0B 00 00 00 01|Used in the C_PIN table's CharSet column to indicate that the GenKey|
-    |                       |character set is not restricted (all byte values are legal).        |
-    +-----------------------+--------------------------------------------------------------------+
-
-
-
--}
-
--- | Indicate that no object is being referenced.
-uNULL   :: UID
-uNULL                        = uid  0x00 0x00 0x00 0x00  0x00 0x00 0x00 0x00
-
--- | For SP methods invoked within a session
-uThisSP :: UID
-uThisSP                      = uid  0x00 0x00 0x00 0x00  0x00 0x00 0x00 0x01
-
--- | For methods invoked at the Session Manager Layer
-uSMUID  :: UID
-uSMUID                       = uid  0x00 0x00 0x00 0x00  0x00 0x00 0x00 0xFF
-
--- |
-uSMMethodUID :: Word8 -> UID
-uSMMethodUID                 = uid  0x00 0x00 0x00 0x00  0x00 0x00 0xFF
-
--- | For SP methods invoked within a session
-uC_PINCharSetUnrestrictedUID :: UID
-uC_PINCharSetUnrestrictedUID = uid  0x00 0x00 0x00 0x00B  0x00 0x00 0x00 0x01
-{-
-
-        Table 241 Session Manager Method UIDs
-    +-----------------------+-------------------+
-    |Method UID             |Method Name        |
-    +-----------------------+-------------------+
-    |00 00 00 00 00 00 FF 01|Properties         |
-    +-----------------------+-------------------+
-    |00 00 00 00 00 00 FF 02|StartSession       |
-    +-----------------------+-------------------+
-    |00 00 00 00 00 00 FF 03|SyncSession        |
-    +-----------------------+-------------------+
-    |00 00 00 00 00 00 FF 04|StartTrustedSession|
-    +-----------------------+-------------------+
-    |00 00 00 00 00 00 FF 05|SyncTrustedSession |
-    +-----------------------+-------------------+
-    |00 00 00 00 00 00 FF 06|CloseSession       |
-    +-----------------------+-------------------+
-
--}
-uProperties          :: UID
-uProperties                  = uSMMethodUID 0x01
-
-uStartSession        :: UID
-uStartSession                = uSMMethodUID 0x02
-
-uSyncSession         :: UID
-uSyncSession                 = uSMMethodUID 0x03
-
-uStartTrustedSession :: UID
-uStartTrustedSession         = uSMMethodUID 0x04
-
-uSyncTrustedSession  :: UID
-uSyncTrustedSession          = uSMMethodUID 0x05
-
-uCloseSession        :: UID
-uCloseSession                = uSMMethodUID 0x06
+import           Hsed.Gen.Core.UIDs (sessionManagerMethodUIDs, specialPurposeUIDs, uCloseSession, uProperties, uSMUID,
+                                     uStartSession, uStartTrustedSession, uSyncSession, uSyncTrustedSession, uThisSP)

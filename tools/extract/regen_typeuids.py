@@ -3,8 +3,8 @@
 
 Core Spec 2.01 section 5.1.3 (Tables 46-165) holds, per column type, one 'Type table' row
 (UID / Name / Format) and, for enumerations and sets, a companion 'Enumeration Values' /
-'Set Values' table (value-or-range / label).  hsed embeds them as [ttype| ... |] and
-[tenum| ... |] ASCII-art quasiquotes.  This script:
+'Set Values' table (value-or-range / label).  hsed embeds them as ttype ... and
+tenum ... ASCII-art quasiquotes.  This script:
 
   1. reads the extracted tables and derives the (UID bytes, Name, [Format tokens]) triple of
      every Type table and the [(lo, hi, label)] pairs of every enumeration/set table;
@@ -235,8 +235,8 @@ def main(argv):
     summary = [
         "REGEN REPORT: Core Spec 2.01 Tables 46-165 (section 5.1.3) extracted from the PDF vs hsed TypeUIDs.hs",
         "=" * 100,
-        f"PDF Type tables (UID/Name/Format): {len(pdf_types)}   hsed [ttype| blocks: {len(hs_types)}",
-        f"PDF enum/set tables:               {len(pdf_enums)}   hsed [tenum| blocks: {len(hs_enums)}"
+        f"PDF Type tables (UID/Name/Format): {len(pdf_types)}   hsed ttype blocks: {len(hs_types)}",
+        f"PDF enum/set tables:               {len(pdf_enums)}   hsed tenum blocks: {len(hs_enums)}"
         f"   (PDF enum tables not embedded in hsed: {[p['table'] for p in pdf_enums_missing]})",
         f"Other tables in 46-165:            {[t['table_number'] for t in pdf_other]}",
         f"Table numbers paired in order:     types {[p['table'] for p in pdf_types] == sorted(p['table'] for p in pdf_types)}, "

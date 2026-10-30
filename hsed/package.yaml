@@ -34,7 +34,7 @@ library:
   - gen
   dependencies:
   - hsed-core
-  - containers    # TableUIDs, GDPTest
+  - containers    # Hsed.Gen.Core.TableUIDs (Data.Map), GDPTest
   - name: gdp     # GDPTest; its Data.Refined would shadow hsed-core's
     mixin:
     - hiding (Data.Refined)
@@ -62,11 +62,15 @@ executables:
 tests:
   hsed-test:
     main:                Spec.hs
-    source-dirs:         spec-tests
+    # fixture/Hand: the 2019 hand transcription the oracle compares (design 5.5, M2d)
+    source-dirs:
+    - spec-tests
+    - fixture
     dependencies:
     - hsed
     - hsed-core
-    - containers         # EquivSpec: the two sides by name
+    - containers         # EquivSpec: the two sides by name; the fixture's TableUIDs
+    - ghc-prim           # the fixture's quasiquotes (GHC.Classes, GHC.Types)
     - directory          # EquivTH: every generated module of the spec
     - filepath
     - hspec

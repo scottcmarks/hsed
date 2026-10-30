@@ -37,7 +37,7 @@ comPacketLayout = Layout
       , spanning "MinTransfer" (12, 7) (15, 0) Unsigned
       , spanning "Length" (16, 7) (19, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 1)
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 1 Bytes)
   }
 
 -- | core-2.01 T17 ComPacket Format (PDF 40 / p.23, ord 19, sha256:ed3ade79df72):
@@ -82,21 +82,23 @@ packetLayout = Layout
   { layoutName   = "Packet Format"
   , layoutSize   = 24
   , layoutFields =
-      [ spanning "Session" (0, 7) (7, 0) Unsigned
+      [ spanning "TSN" (0, 7) (3, 0) Unsigned
+      , spanning "HSN" (4, 7) (7, 0) Unsigned
       , spanning "SeqNumber" (8, 7) (11, 0) Unsigned
       , spanning "Reserved" (12, 7) (13, 0) Reserved
       , spanning "AckType" (14, 7) (15, 0) Unsigned
       , spanning "Acknowledgement" (16, 7) (19, 0) Unsigned
       , spanning "Length" (20, 7) (23, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 1)
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 1 Bytes)
   }
 
 -- | core-2.01 T18 Packet Format (PDF 41 / p.24, ord 20, sha256:4ab98ce7838b):
 --   the fixed part's fields that carry a value; the layout's reserved bits are zeros; Length is the
 --   length of Payload.
 data PacketHeader = PacketHeader
-  { packetSession         :: !Word64  -- ^ bytes 0 to 7: Session (0-3 = TSN, 4-7 = HSN)
+  { packetTSN             :: !Word32  -- ^ bytes 0 to 3: Session (0-3 = TSN, 4-7 = HSN)
+  , packetHSN             :: !Word32  -- ^ bytes 4 to 7: Session (0-3 = TSN, 4-7 = HSN)
   , packetSeqNumber       :: !Word32  -- ^ bytes 8 to 11
   , packetAckType         :: !Word16  -- ^ bytes 14 to 15
   , packetAcknowledgement :: !Word32  -- ^ bytes 16 to 19
@@ -113,7 +115,8 @@ data Packet = Packet
 instance LayoutRecord Packet where
   recordLayout _ = packetLayout
   recordFields r =
-    [ ("Session", number (packetSession (packetHeader r)))
+    [ ("TSN", number (packetTSN (packetHeader r)))
+    , ("HSN", number (packetHSN (packetHeader r)))
     , ("SeqNumber", number (packetSeqNumber (packetHeader r)))
     , ("AckType", number (packetAckType (packetHeader r)))
     , ("Acknowledgement", number (packetAcknowledgement (packetHeader r)))
@@ -121,7 +124,8 @@ instance LayoutRecord Packet where
     ]
   fromFields vs = pure Packet
     <*> (pure PacketHeader
-           <*> numberField "Session" vs
+           <*> numberField "TSN" vs
+           <*> numberField "HSN" vs
            <*> numberField "SeqNumber" vs
            <*> numberField "AckType" vs
            <*> numberField "Acknowledgement" vs
@@ -138,7 +142,7 @@ dataSubPacketLayout = Layout
       , spanning "Kind" (6, 7) (7, 0) Unsigned
       , spanning "Length" (8, 7) (11, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Payload" (Just "Length") 4)
+  , layoutTail   = Just (Tail "Payload" (Just "Length") 4 Bytes)
   }
 
 -- | core-2.01 T20 Data SubPacket Format (PDF 44 / p.27, ord 22, sha256:8504436a1774):
@@ -245,17 +249,18 @@ noResponseAvailableLayout = Layout
   , layoutSize   = 12
   , layoutFields =
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
-      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00)
+      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000000)
       , spanning "Reserved" (8, 7) (9, 0) Reserved
-      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x00)
+      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x0000)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
   }
 
 -- | core-2.01 T31 No Response Available (PDF 63 / p.46, ord 33, sha256:99bb191570ea):
 --   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
---   prints are the layout's: Request Code 0x00, Available Data Length in bytes 0x00; the reserved
---   bytes from byte 12 to the end are the layout's, written as none and skipped when read.
+--   prints are the layout's: Request Code 00 00 00 00, Available Data Length in bytes 00 00; the
+--   reserved bytes from byte 12 to the end are the layout's, written as none and, read other than
+--   zero, reported.
 data NoResponseAvailable = NoResponseAvailable
   { noResponseAvailableExtendedComID :: !Word32  -- ^ bytes 0 to 3
   }
@@ -281,15 +286,15 @@ verify_COMID_VALIDRequestLayout = Layout
   , layoutSize   = 8
   , layoutFields =
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
-      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x01)
+      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000001)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
   }
 
 -- | core-2.01 T32 VERIFY_COMID_VALID Request (PDF 63 / p.46, ord 34, sha256:0b4e3d76f94c):
---   the fields that carry a value; the constants the table prints are the layout's: Request Code
---   0x01; the reserved bytes from byte 8 to the end are the layout's, written as none and skipped
---   when read.
+--   the fields that carry a value; the constants the table prints are the layout's: Request Code 00
+--   00 00 01; the reserved bytes from byte 8 to the end are the layout's, written as none and, read
+--   other than zero, reported.
 data VERIFY_COMID_VALIDRequest = VERIFY_COMID_VALIDRequest
   { verify_COMID_VALIDRequestExtendedComID :: !Word32  -- ^ bytes 0 to 3
   }
@@ -319,21 +324,22 @@ verify_COMID_VALIDCommandResponseLayout = Layout
   , layoutSize   = 46
   , layoutFields =
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
-      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x01)
+      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000001)
       , spanning "Reserved" (8, 7) (9, 0) Reserved
-      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x22)
+      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x0022)
       , spanning "Current state of Extended ComID" (12, 7) (15, 0) Unsigned
       , spanning "Absolute time of allocation relative to last reset of TPer" (16, 7) (25, 0) Bytes
       , spanning "Absolute time of expiry relative to last reset of TPer" (26, 7) (35, 0) Bytes
       , spanning "Time since last reset of TPer" (36, 7) (45, 0) Bytes
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
   }
 
 -- | core-2.01 T33 VERIFY_COMID_VALID Command Response (PDF 64 / p.47, ord 35, sha256:d94bcebf4a38):
 --   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
---   prints are the layout's: Request Code 0x01, Available Data Length in bytes 0x22; the reserved
---   bytes from byte 46 to the end are the layout's, written as none and skipped when read.
+--   prints are the layout's: Request Code 00 00 00 01, Available Data Length in bytes 00 22; the
+--   reserved bytes from byte 46 to the end are the layout's, written as none and, read other than
+--   zero, reported.
 data VERIFY_COMID_VALIDCommandResponse = VERIFY_COMID_VALIDCommandResponse
   { verify_COMID_VALIDCommandResponseExtendedComID                                     :: !Word32      -- ^ bytes 0 to 3
   , verify_COMID_VALIDCommandResponseCurrentStateOfExtendedComID                       :: !Word32      -- ^ bytes 12 to 15
@@ -371,15 +377,15 @@ stack_RESETCommandRequestLayout = Layout
   , layoutSize   = 8
   , layoutFields =
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
-      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x02)
+      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000002)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
   }
 
 -- | core-2.01 T35 STACK_RESET Command Request (PDF 65 / p.48, ord 37, sha256:f4d0ea8420e5):
---   the fields that carry a value; the constants the table prints are the layout's: Request Code
---   0x02; the reserved bytes from byte 8 to the end are the layout's, written as none and skipped
---   when read.
+--   the fields that carry a value; the constants the table prints are the layout's: Request Code 00
+--   00 00 02; the reserved bytes from byte 8 to the end are the layout's, written as none and, read
+--   other than zero, reported.
 data STACK_RESETCommandRequest = STACK_RESETCommandRequest
   { stack_RESETCommandRequestExtendedComID :: !Word32  -- ^ bytes 0 to 3
   }
@@ -406,18 +412,19 @@ stack_RESETCommandResponseLayout = Layout
   , layoutSize   = 16
   , layoutFields =
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
-      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x02)
+      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000002)
       , spanning "Reserved" (8, 7) (9, 0) Reserved
-      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x04)
+      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x0004)
       , spanning "Success/Failure" (12, 7) (15, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
   }
 
 -- | core-2.01 T36 STACK_RESET Command Response (PDF 66 / p.49, ord 38, sha256:6562688c304f):
 --   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
---   prints are the layout's: Request Code 0x02, Available Data Length in bytes 0x04; the reserved
---   bytes from byte 16 to the end are the layout's, written as none and skipped when read.
+--   prints are the layout's: Request Code 00 00 00 02, Available Data Length in bytes 00 04; the
+--   reserved bytes from byte 16 to the end are the layout's, written as none and, read other than
+--   zero, reported.
 data STACK_RESETCommandResponse = STACK_RESETCommandResponse
   { stack_RESETCommandResponseExtendedComID  :: !Word32  -- ^ bytes 0 to 3
   , stack_RESETCommandResponseSuccessFailure :: !Word32  -- ^ bytes 12 to 15
@@ -446,17 +453,18 @@ stack_RESETPendingLayout = Layout
   , layoutSize   = 12
   , layoutFields =
       [ spanning "Extended ComID" (0, 7) (3, 0) Unsigned
-      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x02)
+      , spanning "Request Code" (4, 7) (7, 0) (Pinned 0x00000002)
       , spanning "Reserved" (8, 7) (9, 0) Reserved
-      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x00)
+      , spanning "Available Data Length in bytes" (10, 7) (11, 0) (Pinned 0x0000)
       ]
-  , layoutTail   = Just (Tail "Reserved" Nothing 1)
+  , layoutTail   = Just (Tail "Reserved" Nothing 1 Reserved)
   }
 
 -- | core-2.01 T37 STACK_RESET Pending (PDF 66 / p.49, ord 39, sha256:868b2bdf9a74):
 --   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
---   prints are the layout's: Request Code 0x02, Available Data Length in bytes 0x00; the reserved
---   bytes from byte 12 to the end are the layout's, written as none and skipped when read.
+--   prints are the layout's: Request Code 00 00 00 02, Available Data Length in bytes 00 00; the
+--   reserved bytes from byte 12 to the end are the layout's, written as none and, read other than
+--   zero, reported.
 data STACK_RESETPending = STACK_RESETPending
   { stack_RESETPendingExtendedComID :: !Word32  -- ^ bytes 0 to 3
   }
@@ -478,7 +486,7 @@ level0DiscoveryResponseDataLayout = Layout
   , layoutFields =
       [ spanning "Level 0 Discovery header" (0, 7) (47, 0) Bytes
       ]
-  , layoutTail   = Just (Tail "Feature Descriptor(s)" Nothing 1)
+  , layoutTail   = Just (Tail "Feature Descriptor(s)" Nothing 1 Bytes)
   }
 
 -- | core-2.01 T38 Level 0 Discovery Response Data Format (PDF 67 / p.50, ord 40, sha256:ba4135a89777):
@@ -514,8 +522,8 @@ level0DiscoveryHeaderLayout = Layout
   , layoutSize   = 48
   , layoutFields =
       [ spanning "Length of Parameter Data" (0, 7) (3, 0) Unsigned
-      , spanning "Data Structure Major Version" (4, 7) (5, 0) (Pinned 0x00)
-      , spanning "Data Structure Minor Version" (6, 7) (7, 0) (Pinned 0x01)
+      , spanning "Data Structure Major Version" (4, 7) (5, 0) (Pinned 0x0000)
+      , spanning "Data Structure Minor Version" (6, 7) (7, 0) (Pinned 0x0001)
       , spanning "Reserved" (8, 7) (15, 0) Reserved
       , spanning "Vendor Unique" (16, 7) (47, 0) Bytes
       ]
@@ -553,7 +561,7 @@ featureDescriptorTemplateLayout = Layout
       , spanning "Reserved" (2, 3) (2, 0) Reserved
       , spanning "Length" (3, 7) (3, 0) Unsigned
       ]
-  , layoutTail   = Just (Tail "Feature Dependent Data" Nothing 1)
+  , layoutTail   = Just (Tail "Feature Dependent Data" Nothing 1 Bytes)
   }
 
 -- | core-2.01 T41 Feature Descriptor Template Format (PDF 69 / p.52, ord 43, sha256:c9df3b45c5f9):
@@ -619,7 +627,7 @@ gudidColumnContentsDescriptionLayout = Layout
       , spanning "0x23" (1, 7) (1, 0) (Pinned 0x23)
       , spanning "0x00" (2, 7) (2, 0) (Pinned 0x00)
       , spanning "0x08" (3, 7) (3, 0) (Pinned 0x08)
-      , spanning "NAA" (4, 7) (4, 4) (Pinned 0x05)
+      , spanning "NAA" (4, 7) (4, 4) (Pinned 0x5)
       , spanning "IEEE COMPANY ID" (4, 3) (7, 4) Unsigned
       , spanning "VENDOR-SPECIFIC IDENTIFIER" (7, 3) (11, 0) Unsigned
       ]
@@ -628,7 +636,7 @@ gudidColumnContentsDescriptionLayout = Layout
 
 -- | core-2.01 T212 GUDID Column Contents Description (PDF 230 / p.213, ord 214, sha256:7a5d897055d3):
 --   the fields that carry a value; the constants the table prints are the layout's: 0x02, 0x23,
---   0x00, 0x08, NAA 0x05.
+--   0x00, 0x08, NAA (0x05).
 data GUDIDColumnContentsDescription = GUDIDColumnContentsDescription
   { gudidColumnContentsDescriptionIEEECOMPANYID            :: !Word32  -- ^ byte 4 bit 3 to byte 7 bit 4
   , gudidColumnContentsDescriptionVENDORSPECIFICIDENTIFIER :: !Word64  -- ^ byte 7 bit 3 to byte 11 bit 0
@@ -647,6 +655,10 @@ instance LayoutRecord GUDIDColumnContentsDescription where
 
 -- | core-2.01 T236 System Log Entry Structure (PDF 297 / p.280, ord 238, sha256:9b15bf3df21f)
 --
+-- The Values cells whose first sentence names a field (bytes | values, as printed):
+--
+-- > "9 to 15" | "The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes."
+--
 -- It does not tile (C-LAYOUT-TILE): Hsed.Core.Layout refuses to encode or decode it, and it has
 -- no record, until an erratum names these bytes:
 --
@@ -657,8 +669,8 @@ systemLogEntryStructureLayout = Layout
   , layoutSize   = 18
   , layoutFields =
       [ spanning "The invoking uid of the method" (0, 7) (7, 0) Unsigned
-      , spanning "The uid of the method involved in the operation. If there is no method, these bytes SHALL be zeroes." (9, 7) (15, 0) Unsigned
-      , spanning "Status code for the operation." (16, 7) (17, 0) Unsigned
+      , spanning "The uid of the method involved in the operation" (9, 7) (15, 0) Unsigned
+      , spanning "Status code for the operation" (16, 7) (17, 0) Unsigned
       ]
   , layoutTail   = Nothing
   }

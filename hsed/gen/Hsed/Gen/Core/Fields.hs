@@ -22,7 +22,7 @@ import           Hsed.Core.Field     (FieldConst (..), FieldDef (..), FieldValue
 import           Hsed.Gen.Core.Types (ubytesType, uuinteger_1Type, uuinteger_2Type, uuintegerType)
 import           Prelude             (Maybe (..))
 
--- | core-2.01 T22 Secure Messaging Packet – Payload Field (PDF 46 / p.29, ord 24, sha256:1c9f1fb578a5)
+-- | core-2.01 T22 Secure Messaging Packet - Payload Field (PDF 46 / p.29, ord 24, sha256:1c9f1fb578a5)
 rSecureMessagingPacketPayloadField :: [FieldDef]
 rSecureMessagingPacketPayloadField =
   [ FieldDef "IV" "bytes" ubytesType Nothing
@@ -30,7 +30,7 @@ rSecureMessagingPacketPayloadField =
   , FieldDef "MAC" "bytes" ubytesType Nothing
   ]
 
--- | core-2.01 T23 Secure Messaging Packet Payload– SecureData Field (PDF 46 / p.29, ord 25, sha256:cd8d352e390c)
+-- | core-2.01 T23 Secure Messaging Packet Payload- SecureData Field (PDF 46 / p.29, ord 25, sha256:cd8d352e390c)
 rSecureMessagingPacketPayloadSecureDataField :: [FieldDef]
 rSecureMessagingPacketPayloadSecureDataField =
   [ FieldDef "DataLength" "uinteger" uuintegerType Nothing

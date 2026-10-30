@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable  #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -70,7 +71,7 @@ data FeatureHeader = FeatureHeader
   { headerSize        :: !Int
   , headerLengthField :: !Text
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data)
 
 -- | A feature descriptor's record: a record over its layout, and the
 --   constants of its header.

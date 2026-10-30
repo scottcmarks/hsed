@@ -106,7 +106,7 @@ import           Hsed.Spec.IR             (CellIR (..), TableIR (..), cellWithTe
 import           Hsed.Spec.Readers.Grid   (Grid (..), GridField (..), gridFindings, readGrid)
 import           Hsed.Spec.Readers.Layout (gridFieldKind, gridTiling, layoutDecl, layoutsModule, tileFindings, untiledNote)
 import           Hsed.Spec.Readers.Record (Structure (..), declScope, earlierNames, layoutValue, nameFindings, recordDecl,
-                                           structure)
+                                           recordNames, structure)
 import           Hsed.Spec.Readers.Text   (readHexByte, readNumber)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.ByteGrid (gridDecls, gridStructures, structureName)
@@ -257,15 +257,24 @@ squeeze = T.unwords . T.words
 
 -- | Every bound table read, with its findings: its own, and @C-GRID-NAME@ for
 --   a name its declarations share with the @byteGrid@ rule's grids or an
---   earlier table's (the one layouts module defines each once).
+--   earlier table's (the one layouts module defines each once), or with what
+--   the module imports; and for a name of a @byteGrid@ grid that its own
+--   declarations import and @byteGrid@'s do not, which the @byteGrid@ rule,
+--   below this one, cannot see (it checks its names against its own
+--   declarations' imports).
 checked :: Context -> [BoundTable] -> [(BytesRead, [Finding])]
-checked ctx bts = [ (br, checkBytes ctx br <> names br) | br <- brs ]
+checked ctx bts = [ (br, checkBytes ctx br <> names br <> gridNames br) | br <- brs ]
   where
     brs = map readBytes bts
     named = gridStructures ctx <> map bfStructure brs
     -- the one layouts module's imports: byteGrid's declarations' and these tables'
     scope = declScope (gridDecls ctx <> concatMap (decls ctx) brs)
     names br = nameFindings ctx (earlierNames named (bfStructure br)) scope (bfStructure br)
+    gridScope = declScope (gridDecls ctx)
+    gridNames br =
+      [ atTable ctx (bfBound br) (finding Error "C-GRID-NAME" (n <> ", a name of byteGrid's " <> layoutName (stLayout st)
+                                                               <> ", is also a name these declarations import"))
+      | let here = declScope (decls ctx br), st <- gridStructures ctx, n <- L.nub (recordNames st), n `elem` here, n `notElem` gridScope ]
 
 checkBytes :: Context -> BytesRead -> [Finding]
 checkBytes ctx br = moved <> rowShape <> gridFindings ctx bt (bfGrid br) <> values <> tiles

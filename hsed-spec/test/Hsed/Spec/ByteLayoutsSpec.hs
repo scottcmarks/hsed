@@ -18,12 +18,18 @@ Table 41, through @byteGrid@'s binding of it; @byteGrid@ and
 @byteFieldValue@ write one module, "Hsed.Gen.Core.Layouts", their layouts and
 records named by the same functions ("Hsed.Spec.Readers.Record"), each name
 declared once, and a name the two would share is @C-GRID-NAME@ at the
-@byteFieldValue@ table; all three rules' records import the one runtime module
+@byteFieldValue@ table, as is a @byteGrid@ name that only the
+@byteFieldValue@ declarations import; the names a module imports are each
+import's, a type's members taken from the runtime's @Data@ (every type the
+generated layouts and features import with @(..)@ known); all three rules'
+records import the one runtime module
 named in "Hsed.Spec.Gen"; and the three give @C-LAYOUT-TILE@ by one policy, a
 gap a Warning and an overlap an Error, whichever rule binds the table.
 -}
 module Hsed.Spec.ByteLayoutsSpec (spec) where
 
+import qualified Data.Text                      as DT
+import qualified RIO.Char                       as C
 import qualified RIO.List                       as L
 import qualified RIO.Map                        as Map
 import qualified RIO.Text                       as T
@@ -33,7 +39,7 @@ import           Test.Hspec
 import           Hsed.Core.Layout               (tiles)
 import           Hsed.Spec.Anchor               (AnchorId (..))
 import           Hsed.Spec.Check                (checkIR, mkContext)
-import           Hsed.Spec.Common               (ErrataSet (..), RuleName (..), Severity (..), renderFinding)
+import           Hsed.Spec.Common               (ErrataSet (..), RuleName (..), Severity (..), SpecId (..), renderFinding)
 import qualified Hsed.Spec.Common               as Cm
 import           Hsed.Spec.Compile              (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
@@ -43,7 +49,7 @@ import           Hsed.Spec.Registry             (registry)
 import           Hsed.Spec.RuleDef              (BoundTable (..), Classification (..), Emitted (..), RuleDef (..),
                                                  boundTables)
 import           Hsed.Spec.Rules                (classify, classifyWithRules)
-import           Hsed.Spec.Readers.Record       (Structure (..), layoutValue, recordNames, typeName)
+import           Hsed.Spec.Readers.Record       (Structure (..), declScope, layoutValue, recordNames, typeName)
 import           Hsed.Spec.Rules.ByteFieldValue (BytesRead (..), bytesReads)
 import           Hsed.Spec.Rules.ByteGrid       (byteGridRule, gridStructures)
 import           Hsed.Spec.Rules.Feature        (Template (..), templateOf)
@@ -111,6 +117,12 @@ spec = withCore $ \pristine -> do
         [ (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: ComPacket is also a name of an earlier grid's declarations")
         , (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: comPacketLayout is also a name of an earlier grid's declarations") ]
       newlyExcluded ir clash `shouldReturn` [(TableId 28, "C-GRID-NAME failed")]
+    it "find a byteGrid name only byteFieldValue's declarations import (C-GRID-NAME at those tables), which byteGrid's check cannot see" $ do
+      -- T212 alone bound to byteGrid, so no grid has a tail; its record named Tail, which the reserved runs' layouts import
+      only212 <- annotated pristine (DT.replace " & rule byteGrid" "" hsa <> "core-2.01 | T212 | layout \"Tail\" byteGrid\n")
+      [ renderFinding f | f <- checkIR Scott only212, Cm.code f == "C-GRID-NAME" ] `shouldBe`
+        [ "C-GRID-NAME core-2.01.pdf#page=" <> pg <> "&T" <> n <> ": Tail, a name of byteGrid's GUDID Column Contents Description, is also a name these declarations import"
+        | (pg, n) <- [("63", "31"), ("63", "32"), ("64", "33"), ("65", "35"), ("66", "36"), ("66", "37")] ]
     it "import the record class from the one runtime module Hsed.Spec.Gen names, as feature's records do" $ do
       let recordImports r = [ () | Emit d <- ruleCompile r ctx (boundTables (shapeOf r) ctx)
                                  , Gen.ImportSome m _ <- d.declImports, m == Gen.recordModule ]
@@ -119,6 +131,19 @@ spec = withCore $ \pristine -> do
       [ (n, not (null (recordImports r))) | n <- ["byteGrid", "byteFieldValue", "feature"], Just r <- [byName n] ]
         `shouldBe` [("byteGrid", True), ("byteFieldValue", True), ("feature", True)]
       [ l | l <- T.lines layouts, "import" `T.isPrefixOf` l, Gen.recordModule `T.isInfixOf` l ] `shouldSatisfy` ((== 1) . length)
+
+  describe "the names a generated layouts or features module imports (declScope, for C-GRID-NAME)" $ do
+    let prov = Gen.Provenance (SpecId "core-2.01") "T1" "Table 1" 1 1 1 "0/1" ""
+        importing xs = (Gen.decl prov "x" []) { Gen.declImports = [Gen.ImportSome "M" xs] }
+        features = fromMaybe "" (lookup "Hsed.Gen.Core.Features" (crModules cr))
+        imported = L.nub [ T.takeWhileEnd C.isAlphaNum upTo | l <- T.lines (layouts <> "\n" <> features), "import" `T.isPrefixOf` l
+                                                           , (upTo, _) <- DT.breakOnAll " (..)" l ]
+    it "are each import's names: a class and the methods it lists, a type and its constructors and fields (the runtime's Data)" $
+      declScope [importing ["TailKind (..)", "Tail (..)", "LayoutRecord (recordLayout, fromFields)", "(<*>)", "spanning"]] `shouldBe`
+        ["TailKind", "Payload", "ReservedRun", "Tail", "tailName", "tailLength", "tailAlign", "tailKind", "LayoutRecord", "recordLayout", "fromFields", "<*>", "spanning"]
+    it "know the members of every type the generated layouts and features import with (..)" $ do
+      imported `shouldBe` ["FieldKind", "Layout", "Tail", "TailKind", "Maybe", "FeatureHeader"]
+      [ t | t <- imported, length (declScope [importing [t <> " (..)"]]) < 2 ] `shouldBe` []
 
   describe "the one tiling policy of the three rules" $ do
     let tileSeverities ir' tid = [ Cm.severity f | f <- checkIR Scott ir', Cm.code f == "C-LAYOUT-TILE", Cm.anchor f == Just tid ]

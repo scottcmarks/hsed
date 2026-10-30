@@ -414,7 +414,8 @@ decls ctx fr =
 featureDecl :: Context -> FeatureRead -> Gen.Decl
 featureDecl ctx fr = (Gen.decl p name body)
   { Gen.declRank    = 2
-  , Gen.declImports = [ Gen.ImportSome featureModule ["Feature (..)", "FeatureHeader (..)"], Gen.ImportSome "Prelude" ["Maybe (..)"] ] }
+  , Gen.declImports = [ Gen.ImportSome featureModule ["Feature (featureCode, featureVersion, featureLength, featureHeader)", "FeatureHeader (..)"]
+                      , Gen.ImportSome "Prelude" ["Maybe (..)"] ] }
   where
     p = boundProvenance ctx (frBound fr)
     name = typeName (frStructure fr)

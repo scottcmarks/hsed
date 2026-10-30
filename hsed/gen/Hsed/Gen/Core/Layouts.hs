@@ -21,7 +21,7 @@ module Hsed.Gen.Core.Layouts where
 import           Data.ByteString  (ByteString)
 import           Data.Word        (Word16, Word32, Word64, Word8)
 import           Hsed.Core.Layout (FieldKind (..), Layout (..), spanning, Tail (..), TailKind (..))
-import           Hsed.Core.Record (LayoutRecord (..), number, numberField, octets, octetsField)
+import           Hsed.Core.Record (LayoutRecord (recordLayout, recordFields, fromFields), number, numberField, octets, octetsField)
 import           Prelude          ((<*>), Eq, Maybe (..), pure, Show)
 
 -- | core-2.01 T17 ComPacket Format (PDF 40 / p.23, ord 19, sha256:ed3ade79df72)

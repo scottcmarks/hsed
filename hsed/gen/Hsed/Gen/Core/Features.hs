@@ -18,9 +18,9 @@ over it (Hsed.Core.Record), flags as Bool, with an instance of Feature
 -}
 module Hsed.Gen.Core.Features where
 
-import           Hsed.Core.Feature (Feature (..), FeatureHeader (..))
+import           Hsed.Core.Feature (Feature (featureCode, featureVersion, featureLength, featureHeader), FeatureHeader (..))
 import           Hsed.Core.Layout  (FieldKind (..), Layout (..), spanning)
-import           Hsed.Core.Record  (flag, flagField, LayoutRecord (..))
+import           Hsed.Core.Record  (flag, flagField, LayoutRecord (recordLayout, recordFields, fromFields))
 import           Prelude           ((<*>), Bool, Eq, Maybe (..), pure, Show)
 
 -- | core-2.01 T42 TPer Feature Descriptor (PDF 69 / p.52, ord 44, sha256:a3465265c881)

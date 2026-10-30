@@ -162,7 +162,12 @@ reading found an Error, whichever rule calls it) and, since the M2c review,
 `Hsed.Spec.Readers.Record` (`Structure`, a table read as a byte structure, and `structure`; the names
 `typeName`, `layoutValue`, `fieldIdent`, `recordNames`; `recordFieldsOf`, `haskellType`, `recordDecl`,
 the record over a layout and its `LayoutRecord` instance; `nameFindings`, C-GRID-NAME, with
-`earlierNames` and `declScope`); `accessControl` to come. A reader returns data; a code several rules give through it
+`earlierNames` and `declScope`, the names a module's imports bring: a printer imports a class with the
+methods its instances define listed, `LayoutRecord (recordLayout, recordFields, fromFields)`, and a type
+with `(..)`, whose constructors and fields `declScope` takes from the runtime's `Data` instance, so a new
+type imported so derives `Data` and is listed in `typeMembers`, which `ByteLayoutsSpec` holds the
+generated modules to; byteFieldValue also reports a byteGrid name only its own declarations import,
+which byteGrid, the rule below it, cannot see); `accessControl` to come. A reader returns data; a code several rules give through it
 is the reader's (its `CodeDef`s, listed by `Hsed.Spec.Readers.readerCodes`), which no rule lists. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
 `boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
 `listDefinition`). A helper never goes under `Rules/`, where every module must be a registered rule.

@@ -1,5 +1,6 @@
-{-# LANGUAGE NoImplicitPrelude #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE NoImplicitPrelude  #-}
+{-# LANGUAGE OverloadedStrings  #-}
 
 {-|
 Module      : Hsed.Core.Layout
@@ -37,10 +38,11 @@ rest of a transfer, which is read no further than that byte). A lenient
 tell several layouts apart by their pins (a STACK_RESET response from its
 pending reply), 'matching' keeps those whose every pin the input holds.
 
-The kinds' constructors 'Unsigned' and 'Bytes' share their names with those
-of "System.SED.MCTP.Common.Token"'s @Token@ (the module the design calls
-@Hsed.Core.Token@): a module that needs both imports one of the two
-qualified.
+The types derive 'Data', from which the spec compiler takes the names a
+generated module imports with them. The kinds' constructors 'Unsigned' and
+'Bytes' share their names with those of "System.SED.MCTP.Common.Token"'s
+@Token@ (the module the design calls @Hsed.Core.Token@): a module that needs
+both imports one of the two qualified.
 -}
 module Hsed.Core.Layout
   ( -- * Fields
@@ -91,7 +93,7 @@ data FieldKind
   | Bytes             -- ^ a byte string: whole bytes, on byte boundaries
   | Reserved          -- ^ written as zeros; read as anything else, a 'Difference'
   | Pinned !Integer   -- ^ a constant the TPer SHALL send: written as it is, read and compared
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Data)
 
 -- | One field: its name as the spec prints it, its first (most significant)
 --   bit as an offset from bit 7 of byte 0 ('bitOffset'), its width in bits,
@@ -102,7 +104,7 @@ data Field = Field
   , fieldWidth :: !Int
   , fieldKind  :: !FieldKind
   }
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Data)
 
 -- | The offset of bit @b@ (7 the most significant) of byte @n@ from bit 7 of byte 0.
 --
@@ -154,14 +156,14 @@ data Tail = Tail
   , tailAlign  :: !Int
   , tailKind   :: !TailKind
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data)
 
 -- | What a tail holds.
 data TailKind
   = Payload      -- ^ a byte string, a value of its own (Core Table 20's payload)
   | ReservedRun  -- ^ bytes that are zeros, as reserved bits are (Core Table 31's reserved bytes to the end of the
                  --   transfer): written as none, taking no value, and, read other than zero, a 'Difference'
-  deriving (Eq, Ord, Show, Enum, Bounded)
+  deriving (Eq, Ord, Show, Enum, Bounded, Data)
 
 -- | A structure of bytes: its name, the size of its fixed part in bytes, the
 --   fields of the fixed part, and what follows it.
@@ -171,7 +173,7 @@ data Layout = Layout
   , layoutFields :: ![Field]
   , layoutTail   :: !(Maybe Tail)
   }
-  deriving (Eq, Show)
+  deriving (Eq, Show, Data)
 
 
 -- * Tiling

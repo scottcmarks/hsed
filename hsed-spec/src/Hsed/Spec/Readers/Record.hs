@@ -2,6 +2,7 @@
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
 Module      : Hsed.Spec.Readers.Record
@@ -31,7 +32,9 @@ does not tile has no record ('stTiles').
 @C-GRID-NAME@ ('nameFindings'), whichever rule prints the structure: a field
 that carries a value without a name that makes an identifier, two fields named
 alike, a name the declarations of a structure before it in its module define
-first, or a name the module imports unqualified.
+first, or a name the module imports unqualified ('declScope': what each
+import list names, a class's methods as the printers list them, a type's
+constructors and fields as the runtime's 'Data' instances give them).
 -}
 module Hsed.Spec.Readers.Record
   ( -- * A structure and its names
@@ -49,6 +52,7 @@ module Hsed.Spec.Readers.Record
   , haskellType
   , spanText
   , recordDecl
+  , recordMethods
     -- * Checks
   , nameFindings
   , earlierNames
@@ -57,6 +61,7 @@ module Hsed.Spec.Readers.Record
   , recordCodes
   ) where
 
+import           Data.Data                (constrFields, dataTypeConstrs, dataTypeName, showConstr)
 import qualified Data.Text                as DT
 import qualified RIO.Char                 as C
 import qualified RIO.List                 as L
@@ -206,7 +211,8 @@ recordDecl :: Context -> Structure -> Gen.Decl
 recordDecl ctx st = (Gen.decl p (typeName st) body)
   { Gen.declRank    = 1
   , Gen.declImports =
-      [ Gen.ImportSome Gen.recordModule (["LayoutRecord (..)"] <> L.nub (concatMap helpers fields) <> [ h | isJust tl, h <- ["octets", "octetsField"] ])
+      [ Gen.ImportSome Gen.recordModule (["LayoutRecord (" <> T.intercalate ", " recordMethods <> ")"] <> L.nub (concatMap helpers fields)
+                                          <> [ h | isJust tl, h <- ["octets", "octetsField"] ])
       , Gen.ImportSome "Prelude" (["Eq", "Show", "pure"] <> [ "(<*>)" | not (null fields) || isJust tl ] <> [ "Bool" | "Bool" `elem` types ]) ]
       <> [ Gen.ImportSome "Data.Word" ws | let ws = L.nub [ t | t <- types, "Word" `T.isPrefixOf` t ], not (null ws) ]
       <> [ Gen.ImportSome "Data.ByteString" ["ByteString"] | isJust tl || "ByteString" `elem` types ]
@@ -282,6 +288,12 @@ recordDecl ctx st = (Gen.decl p (typeName st) body)
       <> fromLines
     body = fixedDoc <> record fixedType fields <> whole <> inst
 
+-- | The methods of "Hsed.Core.Record"'s @LayoutRecord@ a generated instance
+--   defines (the three lines 'recordDecl' prints), which its import names, so
+--   that they and no others come into the module's scope ('declScope').
+recordMethods :: [Text]
+recordMethods = ["recordLayout", "recordFields", "fromFields"]
+
 
 -- * Checks
 
@@ -318,30 +330,34 @@ earlierNames :: [Structure] -> Structure -> [Text]
 earlierNames sts st = concatMap recordNames (takeWhile ((/= btAnchor (stBound st)) . btAnchor . stBound) sts)
 
 -- | The names declarations bring into their module's scope unqualified: each
---   name an import list gives, and the members of a type or class it imports
---   with them (@Layout (..)@: @Layout@, @layoutName@, …), as the runtime
---   shows them.
+--   name an import list gives, with the names it lists in parentheses after
+--   it (a class and the methods its instances define, as the printers import
+--   a class: @LayoutRecord (recordLayout, recordFields, fromFields)@), and,
+--   for a type imported with @(..)@, every constructor and field its runtime
+--   'Data' instance has ('typeMembers': @Layout (..)@ brings @Layout@,
+--   @layoutName@, …).
 declScope :: [Gen.Decl] -> [Text]
 declScope ds = L.nub (concat [ itemNames x | d <- ds, Gen.ImportSome _ xs <- d.declImports, x <- xs ])
   where
-    itemNames x = case T.stripSuffix " (..)" x of
-      Just t  -> t : Map.findWithDefault [] t members
-      Nothing -> [T.filter (`notElem` ("()" :: String)) x]
-    members = Map.fromList
-      [ ("FieldKind", map constructor [Unsigned, Flag, Bytes, Reserved, Pinned 0])
-      , ("Layout", recordSyntax (Layout "" 0 [] Nothing))
-      , ("Tail", recordSyntax (Tail "" Nothing 1 Payload))
-      , ("TailKind", map constructor [minBound .. maxBound :: TailKind])
-      , ("FeatureHeader", recordSyntax (FeatureHeader 0 ""))
-      , ("LayoutRecord", ["recordLayout", "recordFields", "fromFields"])
-      , ("Feature", ["featureCode", "featureVersion", "featureLength", "featureHeader"])
-      , ("Maybe", ["Just", "Nothing"])
-      , ("Either", ["Left", "Right"]) ]
-    constructor :: Show a => a -> Text
-    constructor = T.takeWhile (/= ' ') . tshow
-    -- a record's constructor and fields, from its derived Show: @Layout {layoutName = …, …}@
-    recordSyntax :: Show a => a -> [Text]
-    recordSyntax v = constructor v : [ T.takeWhileEnd C.isAlphaNum before | (before, _) <- DT.breakOnAll " = " (tshow v) ]
+    itemNames x = case DT.breakOn " (" x of
+      (t, rest) | not (T.null t), Just inner <- T.stripPrefix " (" rest >>= T.stripSuffix ")" ->
+        t : if T.strip inner == ".." then Map.findWithDefault [] t typeMembers else map T.strip (T.split (== ',') inner)
+      _ -> [T.filter (`notElem` ("()" :: String)) x]
+
+-- | The constructors and fields of each type the layout, record and feature
+--   printers import with @(..)@, by the type's name, as its 'Data' instance
+--   gives them (the runtime's types derive it). A type missing here would
+--   bring only its own name into 'declScope': the tests hold every @(..)@
+--   import of the generated layouts and features to this map.
+typeMembers :: Map Text [Text]
+typeMembers = Map.fromList
+  [ members (Proxy :: Proxy FieldKind), members (Proxy :: Proxy Layout), members (Proxy :: Proxy Tail)
+  , members (Proxy :: Proxy TailKind), members (Proxy :: Proxy FeatureHeader), members (Proxy :: Proxy (Maybe ())) ]
+  where
+    members :: forall a. Data a => Proxy a -> (Text, [Text])
+    members _ = ( T.takeWhileEnd (/= '.') (T.pack (dataTypeName dt))
+                , concat [ T.pack (showConstr c) : map T.pack (constrFields c) | c <- dataTypeConstrs dt ] )
+      where dt = dataTypeOf (undefined :: a)
 
 
 -- * Codes

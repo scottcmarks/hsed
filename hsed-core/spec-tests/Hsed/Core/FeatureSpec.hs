@@ -18,8 +18,10 @@ to 1 and a length pinned to 1, reserved bits, two flags and a number. Every
 record encodes and decodes back to itself, its pins and reserved bits as the
 layout has them; a pin read with another value is a difference to
 'decodeFeature' and an error to 'decodeFeatureStrict'; the input after a
-descriptor starts where its length field says, whatever its pin says; a
-record whose values are missing or out of range is refused.
+descriptor starts where its length field says, whatever its pin says, and a
+length field giving fewer bytes than the layout's is refused with where the
+descriptor ends; a record whose values are missing or out of range is
+refused.
 -}
 module Hsed.Core.FeatureSpec (spec) where
 
@@ -86,9 +88,11 @@ spec = describe "a feature descriptor's record" $ do
     fmap drRest (decodeFeature longer :: Either LayoutError (DecodedRecord Toy)) `shouldBe` Right "next"
     fmap snd (decoded (decodeFeature longer)) `shouldBe` Right [PinDiffers "Length" 8 1 2]
     decoded (decodeFeatureStrict longer) `shouldBe` Left (PinViolated "Length" 1 2)
-  it "refuses a length field giving fewer bytes than the layout's, or more than the input holds" $ do
-    decoded (decodeFeature "\x55\x00\x50") `shouldBe` Left (Truncated 3 2)
+  it "refuses a length field giving more bytes than the input holds, or fewer than the layout's, saying where that one ends" $ do
     decoded (decodeFeature "\x55\x09\x50") `shouldBe` Left (Truncated 11 3)
+    decoded (decodeFeature "\x55\x00\x50") `shouldBe` Left (LengthBelowLayout "Length" 2 3)
+    decoded (decodeFeature "\x55\x00") `shouldBe` Left (LengthBelowLayout "Length" 2 3)
+    decoded (decodeFeature "\x55") `shouldBe` Left (Truncated 2 1)
   it "refuses a count the field cannot hold, and a short input" $ do
     encodeRecord (Toy False False 8) `shouldBe` Left (OutOfRange "Count" 8)
     decoded (decodeFeature (B.take 2 "\x55\x01\x50")) `shouldBe` Left (Truncated 3 2)

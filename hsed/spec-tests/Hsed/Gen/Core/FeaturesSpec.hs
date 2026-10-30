@@ -40,7 +40,8 @@ encodes to sixteen bytes with the code, version and length the spec pins
 back to itself; a descriptor as a drive would send it reads as sedutil reads
 it; a descriptor longer than its pin says ends where its Length says (the
 general format of Table 41: four bytes and Length more), so the next one is
-read from its first byte; and the descriptors are told apart by their pins.
+read from its first byte, and one shorter than its layout is refused with
+where it ends; and the descriptors are told apart by their pins.
 -}
 module Hsed.Gen.Core.FeaturesSpec (spec) where
 
@@ -176,6 +177,11 @@ spec = describe "the generated feature descriptors" $ do
       fmap drRest (decodeFeature (longer <> next) :: Either LayoutError (DecodedRecord TPerFeature)) `shouldBe` Right next
       (decodeFeature (longer <> next) >>= \d -> decodeFeature (drRest (d :: DecodedRecord TPerFeature)))
         `shouldBe` Right (DecodedRecord (LockingFeature False False False True True True) [] B.empty)
+    it "says where a descriptor shorter than its layout ends (an older version's, Length 8), so a walk steps past it to the next" $ do
+      let shorter = B.pack ([0x00, 0x01, 0x10, 0x08, 0x11] <> replicate 7 0)
+          next = B.pack ([0x00, 0x02, 0x10, 0x0C, 0x07] <> replicate 11 0)
+      fmap drRecord (decodeFeature (shorter <> next) :: Either LayoutError (DecodedRecord TPerFeature)) `shouldBe` Left (LengthBelowLayout "Length" 12 16)
+      fmap drRecord (decodeFeatureStrict (B.drop 12 (shorter <> next))) `shouldBe` Right (LockingFeature False False False True True True)
     it "tells the descriptors apart by their pins (a lenient decode's PinDiffers is no match)" $ do
       let bytes = B.pack ([0x00, 0x02, 0x10, 0x0C, 0x07] <> replicate 11 0)
       map (layoutName . fst) (matching [recordLayout tper, recordLayout locking] bytes) `shouldBe` ["Locking Feature Descriptor"]

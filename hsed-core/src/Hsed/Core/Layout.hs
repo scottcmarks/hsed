@@ -280,6 +280,9 @@ data LayoutError
   | PinViolated !Text !Integer !Integer -- ^ a pinned field given, or read strictly, with another value: the pin, the value
   | LengthDisagrees !Text !Integer !Int -- ^ the tail's length field given another value than the tail's length
   | Truncated !Int !Int                 -- ^ bytes needed, bytes there
+  | LengthBelowLayout !Text !Int !Int   -- ^ a length field ending its structure before the layout's fixed part ends: the
+                                        --   field, the bytes it gives the structure (where what follows it starts), the
+                                        --   layout's size
   deriving (Eq, Show)
 
 -- | Encode values, by field name, as a layout's bytes: the fixed part, then the

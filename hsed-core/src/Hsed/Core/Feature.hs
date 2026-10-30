@@ -51,7 +51,7 @@ import qualified RIO.List         as L
 import           RIO
 
 import           Hsed.Core.Layout (Content (..), Decoded (..), Field (..), Layout (..), LayoutError (..), bitOffset,
-                                   decode, decodeStrict)
+                                   decode, decodeStrict, fieldEnd)
 import           Hsed.Core.Record (DecodedRecord (..), LayoutRecord (..))
 
 
@@ -88,8 +88,11 @@ class LayoutRecord f => Feature f where
 --   and reserved bits read other than zero reported (as
 --   "Hsed.Core.Record".'Hsed.Core.Record.decodeRecord' reports them), the
 --   rest of the input after the bytes its length field gives: how a host
---   reads what a drive sent. A length field giving fewer bytes than the
---   layout's, or more than the input holds, is 'Truncated'.
+--   reads what a drive sent. Its header is read first: a length field giving
+--   more bytes than the input holds is 'Truncated'; one giving fewer than the
+--   layout's (an older, shorter version of the descriptor) is
+--   'LengthBelowLayout', which says where the descriptor ends, so that a
+--   walk over a Level 0 Discovery response can step past it to the next.
 decodeFeature :: forall f. Feature f => ByteString -> Either LayoutError (DecodedRecord f)
 decodeFeature = decodeWith decode
 
@@ -102,14 +105,17 @@ decodeWith reader input = do
   let p = Proxy :: Proxy f
       l = recordLayout p
       h = featureHeader p
-  d <- reader l input
-  n <- case L.lookup (headerLengthField h) (decodedFields d) of
+      -- the header alone: the layout's fields within its bytes
+      header = l { layoutSize = headerSize h, layoutFields = filter ((<= headerSize h * 8) . fieldEnd) (layoutFields l), layoutTail = Nothing }
+  hd <- decode header input
+  n <- case L.lookup (headerLengthField h) (decodedFields hd) of
     Just (Number v) -> Right v
     _               -> Left (MissingField (headerLengthField h))
   let end = toInteger (headerSize h) + n
       clipped = fromInteger (min end (toInteger (maxBound :: Int)))
-  when (end < toInteger (layoutSize l)) (Left (Truncated (layoutSize l) clipped))
   when (end > toInteger (B.length input)) (Left (Truncated clipped (B.length input)))
+  when (end < toInteger (layoutSize l)) (Left (LengthBelowLayout (headerLengthField h) clipped (layoutSize l)))
+  d <- reader l input
   r <- fromFields (decodedFields d)
   pure (DecodedRecord r (decodedDifferences d) (B.drop clipped input))
 

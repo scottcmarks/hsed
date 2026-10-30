@@ -64,6 +64,7 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Warning | W-ENUM-OVERLAP | 1 |
 | Warning | W-ERRATUM-APPLIED | 2 |
 | Warning | W-PROP-NAME-CASE | 1 |
+| Warning | W-RULE-UNIMPLEMENTED | 3 |
 | Warning | W-UNBOUND | 19 |
 | Warning | XREF-RESOLVES | 2 |
 | Note | C-SIG-METHOD | 1 |

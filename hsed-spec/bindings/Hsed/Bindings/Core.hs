@@ -9,7 +9,7 @@ import Hsed.Spec.DSL
 
 {-# LINE 1 "core-2.01.pdf#page=1&doc" #-}
 b_core_doc :: Bound
-b_core_doc = at (anchor @'Doc "core-2.01" "doc" "" 1) (doc core201 & rule tableDesc & rule tableUIDs & rule uidTable & rule statusCodes & rule codes & rule fieldValue & rule fieldType & rule constValues & rule ranges & rule preconfig & rule terminology & rule sig)
+b_core_doc = at (anchor @'Doc "core-2.01" "doc" "" 1) (doc core201 & rule tableDesc & rule tableUIDs & rule uidTable & rule statusCodes & rule codes & rule fieldValue & rule fieldType & rule constValues & rule ranges & rule preconfig & rule terminology & rule sig & rule byteFieldValue & rule byteGrid & rule feature)
 
 {-# LINE 1 "core-2.01.pdf#page=31&3.2.2" #-}
 b_core_3_2_2 :: Bound

@@ -1,4 +1,4 @@
-core-2.01 | doc | doc core201 & rule tableDesc & rule tableUIDs & rule uidTable & rule statusCodes & rule codes & rule fieldValue & rule fieldType & rule constValues & rule ranges & rule preconfig & rule terminology & rule sig
+core-2.01 | doc | doc core201 & rule tableDesc & rule tableUIDs & rule uidTable & rule statusCodes & rule codes & rule fieldValue & rule fieldType & rule constValues & rule ranges & rule preconfig & rule terminology & rule sig & rule byteFieldValue & rule byteGrid & rule feature
 core-2.01 | 3.2.2 | rule tokenEncoding
 core-2.01 | 5.1.3 | rule typeRow & rule enumValues
 core-2.01 | T2 | prose

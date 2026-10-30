@@ -44,6 +44,9 @@ import qualified RIO.Char   as C
 import qualified RIO.Text   as T
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 -- * Keys
 
 -- | A test: its family and number.

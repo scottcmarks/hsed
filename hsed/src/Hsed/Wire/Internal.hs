@@ -63,6 +63,9 @@ import qualified RIO.ByteString         as B
 import           RIO
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 -- * Requests and responses
 
 -- | The interface command: IF-SEND carries a payload to the TPer, IF-RECV

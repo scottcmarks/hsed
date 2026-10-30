@@ -33,6 +33,9 @@ import           Hsed.Jig.Catalogue (CaseKey)
 import           Hsed.Sim.Types     (SimParams, defaultSimParams)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 -- * Targets
 
 -- | What a run talks to.

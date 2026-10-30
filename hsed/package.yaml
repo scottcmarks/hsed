@@ -140,3 +140,36 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+
+  # doctest over every module under src that holds an example (a `-- >>>` line), listed when the suite
+  # runs, as hsed-core's suite lists its modules (design 12). The suite interprets the library's sources
+  # (src and gen on its path), so it needs the library's dependencies, listed here again.
+  hsed-doc-test:
+    main:                DocTest.hs
+    source-dirs:         doc-tests
+    dependencies:
+    - hsed-core
+    - aeson
+    - base16-bytestring
+    - bytestring
+    - containers
+    - cryptonite
+    - directory
+    - doctest
+    - filepath
+    - githash
+    - lens
+    - memory
+    - QuickCheck
+    - template-haskell
+    - text
+    - time
+    when:
+    - condition: '!os(windows)'
+      dependencies:
+      - unix
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N

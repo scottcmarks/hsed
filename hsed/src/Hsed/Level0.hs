@@ -84,6 +84,9 @@ import           Hsed.Sim.FeatureSets   (BlockSIDFeature, DataStoreFeature, Name
 import           Hsed.Wire              (trimmedHex)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 -- * A response, split
 
 -- | One feature descriptor of a response: its code and version (Core Table

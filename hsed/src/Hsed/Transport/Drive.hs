@@ -30,6 +30,9 @@ import           RIO
 import qualified RIO.Text   as T
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 -- | How the kext reaches the drive's TPer: its IORegistry @TPer Interface Type@.
 data InterfaceType
   = IfSAT   -- ^ ATA commands through SCSI-ATA Translation (the RTL9210 bridge of disk6)

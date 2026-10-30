@@ -3,7 +3,7 @@
 
 {-|
 Module      : Hsed.Jig.Support
-Description : What the jig's tests share: a run silenced, a report's JSON read, a drive-like response
+Description : What hsed's tests share: a run silenced, a report's JSON read, a drive-like response, an allowance as printed
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -11,7 +11,8 @@ Stability   : experimental
 
 'silently' keeps a run's printing out of the test's output; 'at' and
 'atPath' read into a report's JSON; 'disk6Like' is a drive-like Level 0
-response synthesized from what sedutil printed of disk6.
+response synthesized from what sedutil printed of disk6; 'isAsPrinted'
+tells an allowance that is a condition as printed.
 -}
 module Hsed.Jig.Support
   ( -- * Running quietly
@@ -20,6 +21,8 @@ module Hsed.Jig.Support
   , at
   , atPath
   , disk6Like
+    -- * Allowances
+  , isAsPrinted
   ) where
 
 import qualified Data.Aeson               as A
@@ -29,6 +32,7 @@ import           GHC.IO.Handle            (hDuplicate, hDuplicateTo)
 import           RIO
 import qualified RIO.Text                 as T
 
+import           Hsed.Core.Feature        (Allowance (..))
 import           Hsed.Level0.Sedutil      (parseQuery, synthesize)
 
 
@@ -66,3 +70,13 @@ disk6Like :: IO ByteString
 disk6Like = do
   query <- readFileUtf8 "../spec/fixtures/disk6-query.txt"
   either (throwString . T.unpack) (pure . synthesize) (parseQuery query)
+
+
+-- * Allowances
+
+-- | Whether an allowance is a condition as printed ('AsPrinted'), which the
+--   Pair compares unchecked unless it evaluates it.
+isAsPrinted :: Allowance -> Bool
+isAsPrinted = \a -> case a of
+  AsPrinted _ -> True
+  _           -> False

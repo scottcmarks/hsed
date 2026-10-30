@@ -49,6 +49,7 @@ import           Hsed.Core.Layout       (Difference, Field (..), FieldKind (..),
                                          bitPosition, fieldEnd, tiling)
 import           Hsed.Core.Record       (DecodedRecord (..), LayoutRecord (..), encodeRecord)
 import           Hsed.Gen.Opal.Features
+import           Hsed.Jig.Support       (isAsPrinted)
 import           Hsed.Level0            (Descriptor (..))
 import           Hsed.Sim.FeatureSets
 import           Hsed.Sim.Level0        (simDescriptors)
@@ -102,7 +103,7 @@ spec = describe "the hand-written feature descriptors" $ do
 
   describe "the Block SID descriptor's flags" $
     it "are each the TPer's present state, as printed, compared unchecked" $
-      [ (n, isPrinted a) | (n, a) <- featureAllowances (Proxy :: Proxy BlockSIDFeature), n /= "Version" ]
+      [ (n, isAsPrinted a) | (n, a) <- featureAllowances (Proxy :: Proxy BlockSIDFeature), n /= "Version" ]
         `shouldBe` [("SID Value State", True), ("SID Blocked State", True), ("Hardware Reset", True)]
 
   describe "Supported Data Removal Mechanism's allowances (Opal 2.30 Tables 9-12)" $ do
@@ -110,7 +111,7 @@ spec = describe "the hand-written feature descriptors" $ do
       filter (`notElem` map fieldName (layoutFields level0DiscoverySupportedDataRemovalMechanismFeatureLayout))
              (map fst dataRemovalAllowances) `shouldBe` []
       length [ () | (_, VendorUnique) <- dataRemovalAllowances ] `shouldBe` 8
-      [ n | (n, a) <- dataRemovalAllowances, isPrinted a ] `shouldBe`
+      [ n | (n, a) <- dataRemovalAllowances, isAsPrinted a ] `shouldBe`
         ["Data Removal Operation Processing", "Data Removal Operation Interrupted", "Supported Data Removal Mechanism"]
     it "allow its Version nothing: Table 9 prints 0x02 alone" $
       L.lookup "Version" dataRemovalAllowances `shouldBe` Nothing
@@ -255,11 +256,6 @@ instanceFacts name p = it (name <> ": code, Length and header agree with its lay
   featureLength p `shouldBe` Just (toInteger (layoutSize l - headerSize (featureHeader p)))
   featureHeader p `shouldBe` FeatureHeader 4 "Length"
   filter (`notElem` map fieldName (layoutFields l)) (map fst (featureAllowances p)) `shouldBe` []
-
-isPrinted :: Allowance -> Bool
-isPrinted = \a -> case a of
-  AsPrinted _ -> True
-  _           -> False
 
 -- | A record's encoding decoded strictly is the record, nothing differing, nothing left.
 roundTrip :: (Feature f, Eq f, Show f) => Gen f -> Property

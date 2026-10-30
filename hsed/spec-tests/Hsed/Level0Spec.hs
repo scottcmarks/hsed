@@ -38,6 +38,7 @@ import           Hsed.Core.Layout       (Content (..), Difference (..), Field (.
 import           Hsed.Gen.Core.Features (LockingFeature, TPerFeature)
 import           Hsed.Gen.Core.Layouts  (featureDescriptorTemplateLayout, level0DiscoveryHeaderLayout)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryGeometryReportingFeature (..), Level0DiscoveryTPerFeature (..))
+import           Hsed.Jig.Support       (isAsPrinted)
 import           Hsed.Level0
 import           Hsed.Sim.FeatureSets   (geometryAllowances)
 import           Hsed.Sim.Level0        (level0Response, simDescriptors)
@@ -236,11 +237,6 @@ spec = describe "a Level 0 Discovery response" $ do
         `shouldBe` Right (0x0003, 0x1, 32, 0x1C)
       fmap dCode (featureDescriptor (Level0DiscoveryTPerFeature 0x1 False False False False)) `shouldBe` Right 0x0001
 
-
-isAsPrinted :: Allowance -> Bool
-isAsPrinted = \a -> case a of
-  AsPrinted _ -> True
-  _           -> False
 
 -- | Run an expectation on a response split, failing if it is refused.
 withSplit :: ByteString -> (Level0 -> Expectation) -> Expectation

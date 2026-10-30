@@ -56,6 +56,9 @@ import           Hsed.Transport.Cdb    (cdbHex, level0Cdb)
 import           Hsed.Transport.Drive  (DriveInfo (..), InterfaceType (..), maskSerial)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
 -- * hsed_kext_info
 
 -- | Where @hsed_kext_info@'s fields lie (cbits/hsed_kext.h), in bytes: its

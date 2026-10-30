@@ -209,11 +209,13 @@ Gen.declImports = [...], Gen.declExtensions = [...] }`, its lines starting with
 literal. Name a value with `lowerIdent` (`spTemplatesTableUIDs`, `mbrControlTableDesc`) and a prefixed
 name with `titleIdent` (`cComIDAssignments`); refer to another rule's generated names through that
 rule's function, never by building the string again (`typeUIDName` of `typeRow`, `tableUIDName` and
-`tableObjectUIDName` of `tableUIDs`). A generated text is `Text`, imported from `Data.Text` (not RIO);
-`String` only where the oracle compares it with a hand-written one (the Table 240 name maps). A
-generated module whose names other modules export too (`Hsed.Gen.<Spec>.Methods`: `Get`, `Set`, `Next`)
-is imported qualified, as are runtime modules whose names meet (`Hsed.Core.Field`'s and
-`Hsed.Core.Sync`'s `Constant`).
+`tableObjectUIDName` of `tableUIDs`). A label, or a status name, given to several values names each with
+its value (`Core_adv_key_mode_Reserved_2`, `OBSOLETE_2`); one given a single value stays bare (design
+§13.15). A generated text is `Text`, imported from `Data.Text` (not RIO); `String` only where the oracle
+compares it with a hand-written one (the Table 240 name maps). A generated module whose names other
+modules export too (`Hsed.Gen.<Spec>.Methods`: `Get`, `Set`, `Next`, the PDF's method names, which RIO's
+`Set` meets) is imported qualified and re-exported by no umbrella module (design §13.25 (k)), as are
+runtime modules whose names meet (`Hsed.Core.Field`'s and `Hsed.Core.Sync`'s `Constant`).
 `Gen.renderModule` assembles each module from the declarations of every rule that names it:
 pragmas (the declarations' extensions with the two every module has), header, merged imports,
 declarations sorted by table number, rank, name. A declaration goes to the rule's module (`Emit`) or to

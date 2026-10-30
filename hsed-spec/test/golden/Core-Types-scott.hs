@@ -31,7 +31,7 @@ tAC_element = ListType Star (Ref "ACE_expression")
 data Core_adv_key_mode
   = Core_adv_key_mode_Wait_for_AdvKey_Req
   | Core_adv_key_mode_Auto_advance_keys
-  | Core_adv_key_mode_Reserved
+  | Core_adv_key_mode_Reserved_2
   | Core_adv_key_mode_Reserved_3
   | Core_adv_key_mode_Reserved_4
   | Core_adv_key_mode_Reserved_5

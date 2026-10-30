@@ -12,11 +12,12 @@ Stability   : experimental
 
 The statusCodes rule on the committed Core extraction with the committed
 annotations (design section 3.4): it binds Table 166 alone from the doc
-anchor; its 19 rows, three of them OBSOLETE, give the pattern names with the
-later OBSOLETEs suffixed (a Note); the subsections 5.1.5.1-5.1.5.16 describe
-every status but OBSOLETE (a Note); C-STATUS-CODE and W-STATUS-SECTION made to
-fire by one edited cell; the type, patterns and rows the codes module
-declares. The comparison with hsed-core's codec is in hsed's EquivSpec.
+anchor; its 19 rows, three of them OBSOLETE, give the pattern names with
+each OBSOLETE suffixed with its value (a Note; design 13.15); the
+subsections 5.1.5.1-5.1.5.16 describe every status but OBSOLETE (a Note);
+C-STATUS-CODE and W-STATUS-SECTION made to fire by one edited cell; the
+type, patterns and rows the codes module declares. The comparison with
+hsed-core's codec is in hsed's EquivSpec.
 -}
 module Hsed.Spec.Rules.StatusCodesSpec (spec) where
 
@@ -62,18 +63,18 @@ spec = do
         explain ir (TableId 166) `shouldBe` "statusCodes (exemplar core T166)"
       it "fires on no other table of Core" $
         firesOn statusCodesRule ir `shouldBe` [166]
-      it "reads 19 statuses, three of them OBSOLETE, the later two suffixed with their value" $ do
+      it "reads 19 statuses, three of them OBSOLETE, each suffixed with its value" $ do
         let rows = concatMap srRows (statusReads ctx)
         length rows `shouldBe` 19
-        [ n | (r, n) <- patternNames rows, stName r == "OBSOLETE" ] `shouldBe` ["OBSOLETE", "OBSOLETE_13", "OBSOLETE_14"]
-        [ n | (_, n) <- patternNames rows ] `shouldSatisfy` \ns -> take 3 ns == ["SUCCESS", "NOT_AUTHORIZED", "OBSOLETE"] && drop 18 ns == ["FAIL"]
+        [ n | (r, n) <- patternNames rows, stName r == "OBSOLETE" ] `shouldBe` ["OBSOLETE_2", "OBSOLETE_13", "OBSOLETE_14"]
+        [ n | (_, n) <- patternNames rows ] `shouldSatisfy` \ns -> take 3 ns == ["SUCCESS", "NOT_AUTHORIZED", "OBSOLETE_2"] && drop 18 ns == ["FAIL"]
       it "leaves the table unbound when a value cell holds no single value" $
         Map.lookup (TableId 166) (classify (setCell "T166" 11 1 "0x0C-0x0D" ir)) `shouldBe` Just Unbound
 
     describe "the checks" $ do
       it "find on the committed run the suffixed OBSOLETEs and that no subsection describes them, nothing else" $
         findings ir `shouldBe`
-          [ "N-STATUS-NAME-SUFFIXED core-2.01.pdf#page=137&T166: the name OBSOLETE is given to 0x02, 0x0d, 0x0e: the patterns are OBSOLETE, OBSOLETE_13, OBSOLETE_14"
+          [ "N-STATUS-NAME-SUFFIXED core-2.01.pdf#page=137&T166: the name OBSOLETE is given to 0x02, 0x0d, 0x0e: the patterns are OBSOLETE_2, OBSOLETE_13, OBSOLETE_14"
           , "N-STATUS-UNDESCRIBED core-2.01.pdf#page=137&T166: no subsection of 5.1.5 describes OBSOLETE (0x02, 0x0d, 0x0e)" ]
       it "C-STATUS-CODE: a value given twice, and the table left out" $ do
         let broken = setCell "T166" 11 1 "0x0A" ir
@@ -97,6 +98,7 @@ spec = do
       it "declares a pattern per row, named as the table names the value, its value as printed" $ do
         length [ l | l <- lns, "pattern " `T.isPrefixOf` l, " :: StatusCode" `T.isSuffixOf` l ] `shouldBe` 19
         lns `shouldContain` ["pattern NOT_AUTHORIZED :: StatusCode", "pattern NOT_AUTHORIZED = StatusCode 0x01"]
+        lns `shouldContain` ["pattern OBSOLETE_2 :: StatusCode", "pattern OBSOLETE_2 = StatusCode 0x02"]
         lns `shouldContain` ["pattern OBSOLETE_13 :: StatusCode", "pattern OBSOLETE_13 = StatusCode 0x0d"]
         lns `shouldContain` ["pattern FAIL :: StatusCode", "pattern FAIL = StatusCode 0x3f"]
       it "declares the table's rows, each value with its name" $

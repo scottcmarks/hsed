@@ -41,7 +41,9 @@ time:
 A value is 'Scalar' ('show' of it) or, for an enumeration, 'Entries': each
 constructor with the value the spec assigns it (the generated module's
 'Hsed.Core.Types.enumValue'; the hand-written module's 'fromEnum', since its
-enumerations start at 0).
+enumerations start at 0). The fixture's constructors are compared under the
+names the generator gives them ('asGenerated', design section 13.15): its
+@dEnum@ left the first value of a label that names several bare.
 -}
 module Hsed.Gen.Core.EquivTH
   ( Def (..)
@@ -49,6 +51,7 @@ module Hsed.Gen.Core.EquivTH
   , generatedDefs
   , generatedUIDLists
   , handDefs
+  , asGenerated
   ) where
 
 import           Control.Monad              (forM)
@@ -186,7 +189,7 @@ handDefs typeUIDs tableUIDs specialUIDs h = do
         let n = "Core_" ++ ident
         found <- lookupTypeName (h ++ "." ++ n)
         nm <- maybe (fail (h ++ " does not define " ++ n ++ ", which its source promises")) pure found
-        [| Def n (tableOf caption) caption (Entries [ (show x, fromEnum x) | x <- [minBound .. maxBound :: $(conT nm)] ]) |]
+        [| Def n (tableOf caption) caption (Entries (asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: $(conT nm)] ])) |]
       _ -> fail ("no enumeration named by " ++ caption)
     -- Table 240: three UIDs per row, the typed half-UID the module has, then the two maps
     t240 (caption, body) = do
@@ -195,6 +198,16 @@ handDefs typeUIDs tableUIDs specialUIDs h = do
         mapM (scalar caption) (["u" ++ name ++ "TableObject", "u" ++ name ++ "Table", "h" ++ name] ++ typed)
       maps <- mapM (scalar caption) ["nameHalfUID", "nameUID"]
       pure (rows ++ maps)
+
+-- | An enumeration of the fixture, each constructor with its value, named as
+--   the generator names it (design section 13.15, M2d): every value of a label
+--   that names several is suffixed with the value, the first included. The
+--   fixture's @dEnum@ left that first value bare, so a bare @C@ is renamed
+--   @C_\<v\>@ when a sibling @C_\<w\>@ carries its own value @w@; a name that
+--   merely ends in a number (@Core_hash_protocol_SHA_1@, value 1, beside
+--   @SHA_256@, value 2) has no such sibling and stays as it is.
+asGenerated :: [(String, Int)] -> [(String, Int)]
+asGenerated es = [ (if any (\(d, w) -> d == c ++ "_" ++ show w) es then c ++ "_" ++ show v else c, v) | (c, v) <- es ]
 
 -- | Every top-level @name :: UID@ of a module with the caption of the last
 --   transcribed table above it, a line @Table N …@ in a comment.

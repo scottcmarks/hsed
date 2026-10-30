@@ -26,15 +26,18 @@ value is assigned once (@W-ENUM-OVERLAP@ otherwise, the first row kept), every
 label has a letter or a digit to name a constructor (an empty cell, or a
 @cols@ binding pointing at a sparse column, is an Error), the constructors are
 distinct, and two labels that scrub to one constructor are an Error; a label
-used for more than one row is @W-ENUM-LABEL-REPEATED@ (its later values get
-suffixed constructors).
+used for more than one row is @W-ENUM-LABEL-REPEATED@ (each of its values gets
+a suffixed constructor).
 
 Compiled into 'enumsModule': @data Core_\<type\>@ (the spec's label,
-"Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with the constructor names
-today's @dEnum@ produces (the label scrubbed, the first value of a label bare
-and the later ones suffixed @_\<v\>@, @_NA@ fillers for the gaps of the range),
-plus an 'Hsed.Core.Types.Enumerated' instance naming the type row's
-@u\<type\>Type@ and the range.
+"Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with a constructor per
+value (the label scrubbed; a label that names several values, a range or
+repeated rows, gives each its own constructor suffixed @_\<v\>@, the first
+included, @Core_adv_key_mode_Reserved_2@, and a label naming one value stays
+bare; @_NA@ fills the gaps of the range, each suffixed when there are several:
+design section 13.15, as decided at M2d), plus an
+'Hsed.Core.Types.Enumerated' instance naming the type row's @u\<type\>Type@
+and the range.
 -}
 module Hsed.Spec.Rules.EnumValues
   ( enumValuesRule
@@ -103,9 +106,10 @@ enumsModule :: Gen.GenModule
 enumsModule = Gen.GenModule
   { Gen.leaf        = "Enums"
   , Gen.description = "Enumerations of the Type objects: each value's constructor, the type's UID and range"
-  , Gen.notes       = [ "The constructors are named as hsed's hand-written dEnum names them (the label"
-                      , "scrubbed, a label's later values suffixed, _NA for the gaps of the range), for"
-                      , "the M2a runtime comparison." ] }
+  , Gen.notes       = [ "The constructors are the type's name and each label scrubbed (commas dropped,"
+                      , "spaces and dashes made underscores); a label that names several values gives"
+                      , "each its own constructor suffixed with the value, _NA the gaps of the range"
+                      , "(each suffixed when there are several)." ] }
 
 -- | The type an enumeration's caption names: @\<ident\> Enumeration Values@ or @\<ident\> Set Values@.
 enumIdent :: Form -> Maybe Text
@@ -198,7 +202,7 @@ checkEnum ctx rows e = case companion of
                                               <> " of " <> renderAnchorId (trAnchor tr) <> " " <> trName tr)) outside
                      <> map (\(c, l) -> bad ("the value " <> tshow c <> " has the label " <> tshow l <> ", which has no letter or digit to name a constructor")) nameless
                      <> map (\(v, ls) -> warn "W-ENUM-OVERLAP" ("value " <> tshow v <> " is assigned by " <> T.intercalate " and " (map tshow ls) <> "; the first is kept")) overlaps
-                     <> map (\(l, n) -> warn "W-ENUM-LABEL-REPEATED" ("the label " <> tshow l <> " is used by " <> tshow n <> " rows; its later values get suffixed constructors")) repeated
+                     <> map (\(l, n) -> warn "W-ENUM-LABEL-REPEATED" ("the label " <> tshow l <> " is used by " <> tshow n <> " rows; each of its values gets a suffixed constructor")) repeated
                      <> map (\n -> bad ("the constructor " <> n <> " would be defined twice")) clashes
                      <> map (\ls -> bad ("the labels " <> T.intercalate " and " (map tshow ls) <> " give the same constructor")) merged
         in EnumCheck findings
@@ -292,17 +296,19 @@ enumTypeName :: SpecId -> Text -> Text
 enumTypeName sid typeName = Gen.specLabel sid <> "_" <> typeName
 
 -- | The constructors of an enumeration's data type ('enumTypeName') in value
---   order, as today's @dEnum@ names them: the type, then the label with commas
---   dropped and spaces and dashes turned to underscores, the first value of a
---   label bare and the later ones suffixed @_\<v\>@, and @_NA@ for every value
---   of the range no label covers.
+--   order: the type, then the label with commas dropped and spaces and dashes
+--   turned to underscores, and @_NA@ for every value of the range no label
+--   covers; a label (or @_NA@) given several values names each of them
+--   suffixed @_\<v\>@, the first included, and one given a single value
+--   stays bare (design section 13.15: a name carries its value, so Core's
+--   @Reserved_3@ and Opal's are one constructor wherever their ranges start).
 constructorNames :: Text -> (Int, Int) -> [(Text, Int)] -> [(Text, Int)]
 constructorNames coreName (lo, hi) given = sortOn snd (concatMap suffixed (Map.toList groups))
   where
     groups   = Map.fromListWith (flip (<>)) ([ (coreName <> "_" <> scrub label, [v]) | (label, v) <- given ] <> filler)
     missing  = [lo .. hi] \\ map snd given
     filler   = [ (coreName <> "_NA", missing) | not (null missing) ]
-    suffixed (n, v : vs) = (n, v) : [ (n <> "_" <> tshow v', v') | v' <- vs ]
-    suffixed (_, [])     = []
+    suffixed (n, [v]) = [(n, v)]
+    suffixed (n, vs)  = [ (n <> "_" <> tshow v, v) | v <- vs ]
     scrub = T.map identifier . T.intercalate "_" . T.split (`elem` [' ', '-']) . T.filter (/= ',')
     identifier c = if C.isAlphaNum c || c == '_' || c == '\'' then c else '_'

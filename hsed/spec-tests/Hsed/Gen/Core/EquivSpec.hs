@@ -37,6 +37,13 @@ its value column equal to what this module computes for the difference
 * @caption@: a table whose caption the two sides print differently (spacing
   aside); @generated / hand-written@.
 
+The fixture's enumerations are compared under the generator's names
+("Hsed.Gen.Core.EquivTH".'asGenerated', design section 13.15): its @dEnum@
+left the first value of a label that names several bare, where the generator
+suffixes every one (@Core_adv_key_mode_Reserved_2@). A wrong renaming cannot
+pass: the enumeration would then differ where no line says it does, or
+otherwise than its line records.
+
 Two rules of M2b have a hand counterpart other than a definition: the
 method status codes (Core Table 166, @statusCodes@) are what hsed-core's codec
 carries as a bare uinteger in a response's status list, so every one of them
@@ -218,15 +225,17 @@ spec = do
       G.uattr_flagsType     `shouldBe` H.uattr_flagsType
       G.uauth_methodType    `shouldBe` H.uauth_methodType
       G.uclock_timeType     `shouldBe` H.uclock_timeType
-    it "has Core_adv_key_mode's constructors in the hand-written order (T52)" $ do
-      map show [minBound .. maxBound :: G.Core_adv_key_mode] `shouldBe` map show [minBound .. maxBound :: H.Core_adv_key_mode]
-      map fromEnum [minBound .. maxBound :: G.Core_adv_key_mode] `shouldBe` map fromEnum [minBound .. maxBound :: H.Core_adv_key_mode]
+    it "has Core_adv_key_mode's constructors in the hand-written order, named as the generator names them (T52)" $
+      [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_adv_key_mode] ]
+        `shouldBe` asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_adv_key_mode] ]
     it "ties Core_adv_key_mode to its Type object and range" $ do
       typeUID @G.Core_adv_key_mode `shouldBe` H.uadv_key_modeType
       range @G.Core_adv_key_mode `shouldBe` (0, 7)
     it "has the hand-written enumerations of Tables 54 and 56" $ do
-      map show [minBound .. maxBound :: G.Core_attr_flags] `shouldBe` map show [minBound .. maxBound :: H.Core_attr_flags]
-      map show [minBound .. maxBound :: G.Core_auth_method] `shouldBe` map show [minBound .. maxBound :: H.Core_auth_method]
+      map show [minBound .. maxBound :: G.Core_attr_flags]
+        `shouldBe` map fst (asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_attr_flags] ])
+      map show [minBound .. maxBound :: G.Core_auth_method]
+        `shouldBe` map fst (asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_auth_method] ])
 
   describe "every generated definition beside its hand-written counterpart (design 5.5)" $ do
     expected <- runIO (parseExpected <$> readFile "../spec/expected-diff.txt")
@@ -242,6 +251,8 @@ spec = do
       Map.size (gens Map.\\ hands) `shouldBe` 116
       -- lacked: the 46 typed half-UIDs, and the two special purpose UIDs the PDF names nowhere
       Map.size (hands Map.\\ gens) `shouldBe` 48
+    it "names the hand transcription's enumerations as the generator does (design 13.15)" $
+      asGenerated [("R", 2), ("R_3", 3), ("SHA_1", 1), ("NA", 0)] `shouldBe` [("R_2", 2), ("R_3", 3), ("SHA_1", 1), ("NA", 0)]
     it "has the hand-written Session Manager method UIDs and invoking IDs (Tables 241 and 239)" $ do
       [G.uProperties, G.uStartSession, G.uSyncSession, G.uStartTrustedSession, G.uSyncTrustedSession, G.uCloseSession]
         `shouldBe` [H.uProperties, H.uStartSession, H.uSyncSession, H.uStartTrustedSession, H.uSyncTrustedSession, H.uCloseSession]
@@ -267,9 +278,9 @@ spec = do
       [ (eSubject e, eValue e, summary d) | e <- expected, d <- matching e, summary d /= eValue e ] `shouldBe` []
     it "agrees on the value of every constructor where only the range's start differs (T126, T138)" $ do
       [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_reencrypt_state] ]
-        `shouldBe` [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_reencrypt_state], x /= H.Core_reencrypt_state_NA ]
+        `shouldBe` asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_reencrypt_state], x /= H.Core_reencrypt_state_NA ]
       [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_table_kind] ]
-        `shouldBe` [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_table_kind], x /= H.Core_table_kind_NA ]
+        `shouldBe` asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_table_kind], x /= H.Core_table_kind_NA ]
     it "finds every typed half-UID's table among the generated half-UIDs" $
       [ dName h | h <- Map.elems (hands Map.\\ gens), any (`isPrefixOf` dName h) ["oth", "bth"], isNothing (lookup' h) ] `shouldBe` []
 

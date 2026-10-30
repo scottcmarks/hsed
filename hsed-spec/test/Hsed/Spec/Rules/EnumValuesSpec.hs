@@ -71,23 +71,25 @@ spec = do
       enumTypeName (Cm.SpecId "opal-2.30") "life_cycle_state" `shouldBe` "Opal_life_cycle_state"
 
   describe "constructorNames" $ do
-    it "names adv_key_mode as today's dEnum does: first value of a label bare, later ones suffixed" $
+    it "names every value of a label that names several with the value, the first included, and a single-valued label bare (design 13.15)" $
       map fst (constructorNames "Core_adv_key_mode" (0, 7) advKeyMode)
-        `shouldBe` [ "Core_adv_key_mode_Wait_for_AdvKey_Req", "Core_adv_key_mode_Auto_advance_keys", "Core_adv_key_mode_Reserved"
+        `shouldBe` [ "Core_adv_key_mode_Wait_for_AdvKey_Req", "Core_adv_key_mode_Auto_advance_keys", "Core_adv_key_mode_Reserved_2"
                    , "Core_adv_key_mode_Reserved_3", "Core_adv_key_mode_Reserved_4", "Core_adv_key_mode_Reserved_5"
                    , "Core_adv_key_mode_Reserved_6", "Core_adv_key_mode_Reserved_7" ]
     it "treats a repeated label as one label (padding_type's two None rows)" $
       take 2 (constructorNames "Core_padding_type" (0, 15) paddingType)
-        `shouldBe` [("Core_padding_type_None", 0), ("Core_padding_type_None_1", 1)]
+        `shouldBe` [("Core_padding_type_None_0", 0), ("Core_padding_type_None_1", 1)]
     it "keeps a label's values in table order across its rows (life_cycle_state's Unassigned)" $
       filter (T.isInfixOf "Unassigned" . fst) (constructorNames "Core_life_cycle_state" (0, 15) lifeCycleState)
-        `shouldBe` [ ("Core_life_cycle_state_Unassigned", 5), ("Core_life_cycle_state_Unassigned_6", 6), ("Core_life_cycle_state_Unassigned_7", 7)
+        `shouldBe` [ ("Core_life_cycle_state_Unassigned_5", 5), ("Core_life_cycle_state_Unassigned_6", 6), ("Core_life_cycle_state_Unassigned_7", 7)
                    , ("Core_life_cycle_state_Unassigned_14", 14), ("Core_life_cycle_state_Unassigned_15", 15) ]
-    it "fills the gaps of the range with _NA from the range's lower bound" $ do
+    it "fills the gaps of the range with _NA from the range's lower bound, each suffixed when there are several" $ do
       constructorNames "Core_x" (1, 4) [("Idle", 1), ("Active", 3)]
-        `shouldBe` [("Core_x_Idle", 1), ("Core_x_NA", 2), ("Core_x_Active", 3), ("Core_x_NA_4", 4)]
+        `shouldBe` [("Core_x_Idle", 1), ("Core_x_NA_2", 2), ("Core_x_Active", 3), ("Core_x_NA_4", 4)]
       constructorNames "Core_x" (0, 3) [("A", 2)]
-        `shouldBe` [("Core_x_NA", 0), ("Core_x_NA_1", 1), ("Core_x_A", 2), ("Core_x_NA_3", 3)]
+        `shouldBe` [("Core_x_NA_0", 0), ("Core_x_NA_1", 1), ("Core_x_A", 2), ("Core_x_NA_3", 3)]
+      constructorNames "Core_x" (0, 2) [("A", 0), ("B", 2)]
+        `shouldBe` [("Core_x_A", 0), ("Core_x_NA", 1), ("Core_x_B", 2)]
       map fst (constructorNames "Core_reencrypt_state" (1, 16) reencryptState) `shouldSatisfy` notElem "Core_reencrypt_state_NA"
       map snd (constructorNames "Core_reencrypt_state" (1, 16) reencryptState) `shouldBe` [1 .. 16]
     it "scrubs a label to an identifier: commas dropped, spaces and dashes to underscores" $
@@ -150,7 +152,7 @@ spec = do
       it "the T87 comment of design E4: rangeWords, cols, an overlap and a repeated label, under either errata set" $
         forM_ [scott, published] $ \fs ->
           about "T87" fs `shouldBe`
-            [ "W-ENUM-LABEL-REPEATED core-2.01.pdf#page=109&T87: the label \"reserved\" is used by 2 rows; its later values get suffixed constructors"
+            [ "W-ENUM-LABEL-REPEATED core-2.01.pdf#page=109&T87: the label \"reserved\" is used by 2 rows; each of its values gets a suffixed constructor"
             , "W-ENUM-OVERLAP core-2.01.pdf#page=109&T87: value 34 is assigned by \"active_reset_stop_detect\" and \"reserved\"; the first is kept" ]
       it "W-ENUM-LABEL-REPEATED on T87, T103 and T121, under either errata set" $
         forM_ [scott, published] $ \fs ->

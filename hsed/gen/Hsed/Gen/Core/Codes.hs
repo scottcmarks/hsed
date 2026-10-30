@@ -92,8 +92,8 @@ pattern NOT_AUTHORIZED :: StatusCode
 pattern NOT_AUTHORIZED = StatusCode 0x01
 
 -- | core-2.01 T166 Status Codes (PDF 137 / p.120, ord 168, sha256:1196fb53069b), row 3: OBSOLETE
-pattern OBSOLETE :: StatusCode
-pattern OBSOLETE = StatusCode 0x02
+pattern OBSOLETE_2 :: StatusCode
+pattern OBSOLETE_2 = StatusCode 0x02
 
 -- | core-2.01 T166 Status Codes (PDF 137 / p.120, ord 168, sha256:1196fb53069b), row 4: SP_BUSY
 pattern SP_BUSY :: StatusCode

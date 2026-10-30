@@ -3,7 +3,9 @@
 # differs from the hand transcription, the oracle's test fixture
 # hsed/fixture/Hand/{TypeUIDs,TableUIDs,SpecialPurposeUIDs}.hs, one per line.
 # hsed's EquivSpec fails on a missing or an extra line, on a line whose kind does not hold of the two
-# sides, and on a line whose value is not the one it computes.
+# sides, and on a line whose value is not the one it computes. The fixture's enumerations are compared
+# under the generator's naming rule (EquivTH.asGenerated, design section 13.15: every value of a label
+# that names several suffixed with it, the first included; dEnum left the first bare).
 #
 #   subject | kind | value | reason
 #
@@ -14,7 +16,7 @@
 #   range-from-1    a range starting at 1, hand-written with _NA fillers from 0; as for spacing
 #   typed-half-uid  a hand-written oth<T>/bth<T> not generated, its bytes those of h<T>; the hand-written value
 #   new             generated, not in the hand transcription; its value (an enumeration's size, range and
-#                   the FNV-1a digest of its constructor names)
+#                   the FNV-1a digest of its constructor names, the names in hsed/gen)
 #   unnamed         a hand-written UID of a table whose rows the PDF names nowhere (T239's Purpose column),
 #                   not generated under its name, its value in the generated list of that table; the
 #                   hand-written value
@@ -41,7 +43,7 @@ T157 | caption | Table 157 uinteger_4 / Table 147 uinteger_1 | hsed's caption fo
 T161 | caption | Table 161 uinteger_8 / Table 160 uinteger_8 | hsed numbers Table 161 as 160
 
 # newly generated
-Core_gen_status | new | 64 constructors, values 0..63, names fnv1a64:12da542bacb6d98d | T87: generated through its rangeWords comment; hsed has only a FIXME
+Core_gen_status | new | 64 constructors, values 0..63, names fnv1a64:f39dd06ee2026dbb | T87: generated through its rangeWords comment; hsed has only a FIXME
 
 # the typed half-UIDs hsed derives from a hard-coded table kind
 bthMBR | typed-half-uid | btHalfUID 0x00 0x00 0x08 0x04 | T240: hsed hard-codes MBR as the one byte table; Core gives no table kind (Opal's Kind column, M5)

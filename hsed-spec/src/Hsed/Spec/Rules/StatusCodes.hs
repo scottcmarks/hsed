@@ -22,9 +22,10 @@ Checks:
   name a pattern (an identifier starting with a capital letter); no value is
   given twice; no two patterns get one name;
 * @N-STATUS-NAME-SUFFIXED@ (Note): a name the table gives several values
-  (@OBSOLETE@: 0x02, 0x0D, 0x0E) names the first, and the later ones get the
-  value as a suffix, as the enumerations' constructors do
-  ("Hsed.Spec.Rules.EnumValues");
+  (@OBSOLETE@: 0x02, 0x0D, 0x0E) names each of them with the value as a
+  suffix, the first included (@OBSOLETE_2@, @OBSOLETE_13@, @OBSOLETE_14@), as
+  the enumerations' constructors do ("Hsed.Spec.Rules.EnumValues", design
+  section 13.15);
 * the subsections of the table's section are the statuses described one by
   one (Core 5.1.5.1 SUCCESS to 5.1.5.16 FAIL): a subsection titled with an
   identifier that names no status of the table is @W-STATUS-SECTION@
@@ -81,7 +82,7 @@ statusCodesRule = RuleDef
   , ruleModule  = codesModule
   , ruleCodes   =
       [ CodeDef "C-STATUS-CODE"          [Error]          (Defect "a status row is not one name and one value, or gives a value twice")
-      , CodeDef "N-STATUS-NAME-SUFFIXED" [Note]           (AsPrinted "a status name given to several values, the later ones suffixed")
+      , CodeDef "N-STATUS-NAME-SUFFIXED" [Note]           (AsPrinted "a status name given to several values, each suffixed with its value")
       , CodeDef "W-STATUS-SECTION"       [Warning]        (Suspect "a subsection of the status table's section names no status of it")
       , CodeDef "N-STATUS-UNDESCRIBED"   [Note]           (Suspect "a status no subsection of its section describes") ]
   , ruleChecks  = \ctx bts -> concatMap (checkStatus ctx) (readStatus bts)
@@ -148,15 +149,16 @@ statusTypeName title = titleIdent (T.unwords (initWords <> map singular lastWord
       | any (`T.isSuffixOf` w) ["ss", "us"] = w
       | otherwise = fromMaybe w (T.stripSuffix "s" w >>= \w' -> if T.null w' then Nothing else Just w')
 
--- | Each row's pattern name: the row's name, a name given to several values
---   suffixed after its first with the value in decimal (@OBSOLETE@,
---   @OBSOLETE_13@, @OBSOLETE_14@), as the enumerations' constructors are.
+-- | Each row's pattern name: the row's name, and a name given to several
+--   values each suffixed with its value in decimal, the first included
+--   (@OBSOLETE_2@, @OBSOLETE_13@, @OBSOLETE_14@), as the enumerations'
+--   constructors are (design section 13.15).
 patternNames :: [StatusRow] -> [(StatusRow, Text)]
 patternNames rows = [ (r, name r) | r <- rows ]
   where
-    firsts = Map.fromListWith (\_ earlier -> earlier) [ (stName r, stIndex r) | r <- rows ]
+    given = Map.fromListWith (+) [ (stName r, 1 :: Int) | r <- rows ]
     name r
-      | Map.lookup (stName r) firsts == Just (stIndex r) = stName r
+      | Map.lookup (stName r) given == Just 1 = stName r
       | otherwise = stName r <> "_" <> maybe (tshow (stIndex r + 1)) (tshow . nValue) (stValue r)
 
 

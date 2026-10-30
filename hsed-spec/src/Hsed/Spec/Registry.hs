@@ -34,6 +34,7 @@ import           Hsed.Spec.Rules.FieldValue    (fieldValueRule)
 import           Hsed.Spec.Rules.Laws          (lawsRule)
 import           Hsed.Spec.Rules.Preconfig     (preconfigRule)
 import           Hsed.Spec.Rules.Props         (propsRule)
+import           Hsed.Spec.Rules.PropsReq      (propsReqRule)
 import           Hsed.Spec.Rules.Ranges        (rangesRule)
 import           Hsed.Spec.Rules.Sig           (sigRule)
 import           Hsed.Spec.Rules.StateTable    (stateTableRule)
@@ -60,6 +61,7 @@ registry =
   , lawsRule
   , preconfigRule
   , propsRule
+  , propsReqRule
   , rangesRule
   , sigRule
   , stateTableRule

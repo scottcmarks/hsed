@@ -60,6 +60,7 @@ module Hsed.Spec.Rules.Props
   , propertyReads
   , AssumptionsRead (..)
   , assumptionsReads
+  , assumptionValues
   , communicatorsIn
   , readValue
   ) where
@@ -166,6 +167,17 @@ propertyReads ctx = readNames ctx (boundTables (Just Props) ctx)
 -- | Every value column of every @propsInitial@ table, in anchor order.
 assumptionsReads :: Context -> [AssumptionsRead]
 assumptionsReads ctx = readInitial (boundTables (Just Props) ctx)
+
+-- | The initial assumptions the spec's @propsInitial@ table gives, resolved
+--   (the table has no Error): each value column, with each row's property as
+--   the names table spells it, its name as printed, its value and its cell;
+--   empty where no table is bound or the table has an Error. What a spec read
+--   over this one patches ("Hsed.Spec.Rules.PropsReq", Opal Table 17 over
+--   Core Table 168).
+assumptionValues :: Context -> [(AssumptionsRead, [(Text, Text, Natural, Text)])]
+assumptionValues ctx =
+  concat [ rsAssume rs | (_, Right rs) <- snd (resolve ctx (boundTables (Just Props) ctx))
+                       , propsKind (btBinding (rsTable rs)) == Just Initial ]
 
 ofKind :: PropsKind -> [BoundTable] -> [BoundTable]
 ofKind k = filter ((== Just k) . propsKind . btBinding)

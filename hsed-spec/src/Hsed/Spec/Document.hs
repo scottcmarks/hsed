@@ -23,22 +23,25 @@ the PDF, never hsed, so both are Warnings; @hsedc compile@ lists them in
   An IR without a List of Tables (a document that has none, or a file written
   before M2b) has nothing to compare.
 
-* @XREF-RESOLVES@: every @Table N@ in the prose against the table it names.
-  The number must name a numbered table, and the PDF's own link over it, when
-  it has one, must land on a page of that table. Where the text says which
-  table it means, it must be that one:
+* @XREF-RESOLVES@: every @Table N@ in the prose (a paragraph or a list item;
+  a reference in a table's cell is out of scope, as the IR's @xrefs@ are)
+  against the table it names. The number must name a numbered table, and the
+  PDF's own link over it, when it has one, must land on a page of that table.
+  Where the text says which table it means, it must be that one:
 
     * a name printed just before the reference, @Special Purpose UIDs (Table
       239)@, must be the caption's title, its words in order, a word of the
       caption left out allowed (@Single Row Table UIDs@ for @Single Row Table
-      Row UIDs@);
+      Row UIDs@); the name is the words after the last comma, semicolon or
+      colon before it;
     * in a section that defines an identifier (its heading is the identifier
       and it holds the table captioned with it alone, as a type's section in
       Core 5.1.3 does), a reference names one of that identifier's tables, a
       table whose caption starts with it. The finding names the tables that
       do, and another reference to the same table whose sentence names the
       identifier, which may make the reference right after all (the Secure
-      column's values are messaging_type's, PDF 167).
+      column's values are messaging_type's, PDF 167); the finding quotes the
+      reference's own sentence first, then that other reference by its page.
 
   A reference followed by @of [k]@ or @in [k]@ names a table of another
   document and is not checked. Each finding is located at the reference's
@@ -171,9 +174,9 @@ xrefChecks ir = concatMap check (filter (not . elsewhere) ir.xrefs)
     subject x t = case definedIn x of
       Just (ident, defining) | firstWord (title t) /= ident ->
         [here x (T.concat
-          [ ref x, " names ", title t, sectionText (sectionOfTable t), ", but section ", fromMaybe "" x.section
-          , " defines ", ident, " (Table ", tshow (tableNo defining), ") and this is no table of it; "
-          , candidates ident defining, corroborated x ident, quoted x ])]
+          [ ref x, " in ", quote x.sentence, " names ", title t, sectionText (sectionOfTable t), ", but section "
+          , fromMaybe "" x.section, " defines ", ident, " (Table ", tshow (tableNo defining), ") and this is no table of it; "
+          , candidates ident defining, corroborated x ident ])]
       _ -> []
     definedIn :: XrefIR -> Maybe (Text, TableIR)
     definedIn x = do
@@ -188,7 +191,8 @@ xrefChecks ir = concatMap check (filter (not . elsewhere) ir.xrefs)
       ts -> "its own: " <> T.intercalate ", " [ "Table " <> tshow (tableNo c) <> " " <> title c <> sectionText (sectionOfTable c) | c <- ts ]
     corroborated :: XrefIR -> Text -> Text
     corroborated x ident = T.concat
-      [ "; the reference to Table " <> tshow x.number <> " on PDF " <> tshow (o.page + 1) <> sectionText o.section <> " names " <> ident
+      [ "; yet the reference to Table " <> tshow x.number <> " on PDF " <> tshow (o.page + 1) <> sectionText o.section
+          <> " names " <> ident <> ", which may make this one right"
       | o <- take 1 [ o | o <- ir.xrefs, o.number == x.number, o /= x, T.toLower ident `elem` wordsOf o.sentence ] ]
     sectionText = maybe "" (\s -> " (section " <> s <> ")")
     tableNo :: TableIR -> Int
@@ -209,15 +213,16 @@ afterRefs n sentence =
         digits = T.takeWhile C.isDigit rest
   , readMaybe (T.unpack digits) == Just n ]
 
--- | The name a sentence prints just before @(Table N)@, from the sentence's start.
+-- | The name a sentence prints just before @(Table N)@: the words after the
+--   last comma, semicolon or colon before it, or from the sentence's start.
 nameBefore :: XrefIR -> Maybe Text
 nameBefore x = listToMaybe
-  [ T.strip before
+  [ T.strip (T.takeWhileEnd (`notElem` (",;:" :: String)) before)
   | (before, rest) <- DT.breakOnAll "(Table " x.sentence
   , let digits = T.takeWhile C.isDigit (T.drop 7 rest)
   , readMaybe (T.unpack digits) == Just x.number
   , ")" `T.isPrefixOf` T.drop (7 + T.length digits) rest
-  , not (null (wordsOf before)) ]
+  , not (null (wordsOf (T.takeWhileEnd (`notElem` (",;:" :: String)) before))) ]
 
 -- | Words for comparing names: runs of letters, digits and underscores, case folded.
 wordsOf :: Text -> [Text]

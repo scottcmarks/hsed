@@ -95,18 +95,19 @@ spec = do
 
     describe "XREF-RESOLVES on Core" $ do
       let found = rendered (xrefChecks ir)
-      it "reports \"Table 179\" at PDF 116: section 5.1.3.55 defines messaging_type and Table 179 is none of its tables" $
+      it "reports \"Table 179\" at PDF 116, its own sentence first, then PDF 167's reference that may make it right" $
         found `shouldContain`
-          [ "XREF-RESOLVES core-2.01.pdf#page=116&5.1.3.55: \"Table 179\" names Secure Column Values (section 5.3.2.10.7), "
-            <> "but section 5.1.3.55 defines messaging_type (Table 113) and this is no table of it; no other table's caption "
-            <> "starts with messaging_type; the reference to Table 179 on PDF 167 (section 5.3.2.10.7) names messaging_type: "
-            <> "\"The enumeration values and their associations defined in Table 179.\"" ]
+          [ "XREF-RESOLVES core-2.01.pdf#page=116&5.1.3.55: \"Table 179\" in "
+            <> "\"The enumeration values and their associations defined in Table 179.\" names Secure Column Values "
+            <> "(section 5.3.2.10.7), but section 5.1.3.55 defines messaging_type (Table 113) and this is no table of it; "
+            <> "no other table's caption starts with messaging_type; yet the reference to Table 179 on PDF 167 "
+            <> "(section 5.3.2.10.7) names messaging_type, which may make this one right" ]
       it "reports \"Table 134\" at PDF 121, where section 5.1.3.73's own enumeration is Table 136" $
         found `shouldContain`
-          [ "XREF-RESOLVES core-2.01.pdf#page=121&5.1.3.73: \"Table 134\" names symmetric_mode Enumeration Values (section 5.1.3.72), "
-            <> "but section 5.1.3.73 defines symmetric_mode_media (Table 135) and this is no table of it; its own: "
-            <> "Table 136 symmetric_mode_media Enumeration Values (section 5.1.3.73): "
-            <> "\"The enumeration values are associated as defined in Table 134.\"" ]
+          [ "XREF-RESOLVES core-2.01.pdf#page=121&5.1.3.73: \"Table 134\" in "
+            <> "\"The enumeration values are associated as defined in Table 134.\" names symmetric_mode Enumeration Values "
+            <> "(section 5.1.3.72), but section 5.1.3.73 defines symmetric_mode_media (Table 135) and this is no table of it; "
+            <> "its own: Table 136 symmetric_mode_media Enumeration Values (section 5.1.3.73)" ]
       it "finds every other reference resolving to the table it names, by number, link and name" $
         [ (Cm.page f, Cm.anchor f) | f <- xrefChecks ir ] `shouldBe` [(Just 116, Just "5.1.3.55"), (Just 121, Just "5.1.3.73")]
       it "is among the findings of hsedc check, as Warnings" $ do
@@ -124,6 +125,9 @@ spec = do
         rendered (xrefChecks renamed) `shouldContain`
           ["XREF-RESOLVES core-2.01.pdf#page=301&6.3: the text calls Table 239 \"Authority UIDs\", its caption \"Special Purpose UIDs\": \"Authority UIDs (Table 239) – this descriptive table contains UIDs.\""]
         [ x.sentence | x <- ir.xrefs, x.number == 244 ] `shouldSatisfy` any ("Single Row Table UIDs (Table 244)" `T.isPrefixOf`)
+      it "takes the name before (Table N) from the last clause break, not the sentence's start" $ do
+        let clause = editXref 239 301 (withSentence "As the appendix lists them, Special Purpose UIDs (Table 239) – this descriptive table contains UIDs.") ir
+        [ f | f <- xrefChecks clause, Cm.page f == Just 301 ] `shouldBe` []
       it "does not check a reference to another document's table" $ do
         let cited = editXref 25 53 (withNumber 250 . withSentence "See Table 250 of [2] for the protocols.") ir
         [ f | f <- xrefChecks cited, Cm.page f == Just 53 ] `shouldBe` []

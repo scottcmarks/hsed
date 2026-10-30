@@ -35,7 +35,6 @@ library:
   dependencies:
   - hsed-core
   - containers    # Hsed.Gen.Core.TableUIDs (Data.Map)
-  - ghc-prim      # TypeTests
   - lens          # Hsed.App
   - text          # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)
   - bytestring    # Hsed.Gen.Core.Layouts (generated code imports Data.ByteString, not RIO)

@@ -25,8 +25,9 @@ summary goes to stderr. @compile@ writes the reports of "Hsed.Spec.Report" besid
 the modules: @findings.md@, @coverage.md@ (every numbered table, signature
 block and anchor), @ERRATA.md@ (the corrections and the findings that report
 the PDF) and @ledger.md@. @explain@ takes a table (@46@ or @T46@) or a
-signature block (@5.3.3.6/sig@); @orphans@ and @ledger@ count both. Every command exits non-zero when any Error was found,
-the sidecar's included. @bind@ and @compile@ write nothing then: an Error
+signature block (@5.3.3.6/sig@) and prints its Errors (and the sidecar's),
+counting the others; @orphans@ and @ledger@ count both. Every command exits
+non-zero when any Error was found, the sidecar's included (design 5.2). @bind@ and @compile@ write nothing then: an Error
 leaves the committed bindings and generated module as they were.
 
 @compile@ owns the directory of its spec's generated modules
@@ -53,6 +54,7 @@ import qualified RIO.Text                 as T
 import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Bind           (bindModule)
 import           Hsed.Spec.Check          (checkIR, mkContext, sortFindings)
+import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, RuleName (..), SpecId (..), errataSetName,
                                            isError, matchesSpec, renderFinding)
 import           Hsed.Spec.Compile
@@ -143,11 +145,16 @@ runWith out err = \case
       failWith err ("hsedc explain: the IR is " <> display ir.spec <> ", not " <> display specName)
     let (sigClasses, sigFs) = classifySignatures ir
         errs = sortFindings (sideFs <> filter isError (snd (classifyWith ir) <> sigFs))
+        -- the unit's own Errors (and the sidecar's), the rest counted: a partly annotated spec's other units
+        -- would bury it (Opal's 53 E-UNBOUND before M3)
+        (ours, others) = L.partition (\f -> f `elem` sideFs || Cm.anchor f == Just (renderAnchorId aid)) errs
         how = \case
           RuleBound r _ _ -> ": rule " <> display (ruleNameText r) <> ", anchored at "
                                <> display (T.intercalate ", " (map scope (scopeOf ir r)))
           _               -> ""
-    report out errs
+    report out ours
+    unless (null others) $
+      say err ("hsedc explain: " <> display (length others) <> " Errors at other units of " <> display ir.spec <> " (hsedc check lists them)\n")
     say out (display (explain ir aid) <> "\n")
     case aid of
       SigId _ -> case (Map.lookup aid sigClasses, Map.lookup aid (signatureUnits ir)) of

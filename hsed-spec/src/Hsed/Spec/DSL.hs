@@ -343,9 +343,35 @@ data Modifier
   deriving stock (Eq, Show)
 
 -- | Apply a modifier to a binding, checking at run time what the smart
---   constructors check at compile time.
+--   constructors check at compile time, and that a binding takes one
+--   @layout@ and one @bits@ for each byte (a second would be read by no one).
 applyModifier :: forall s. Modifier -> Binding s -> Either Finding (Binding s)
 applyModifier m b = case m of
+  LayoutName n
+    | l : _ <- layoutsOf b -> Left (finding Error "E-MODIFIER" ("a second layout name, " <> tshow n <> " beside " <> tshow l <> ": a binding takes one"))
+  Bits k _
+    | k `elem` bitsBytesOf b -> Left (finding Error "E-MODIFIER" ("a second bits modifier for byte " <> tshow k <> ": a binding takes one for each byte"))
+  _ -> applyModifier' m b
+
+-- | The layout names and the bytes of the bits modifiers a binding already carries.
+layoutsOf :: Binding s -> [Text]
+layoutsOf = \case
+  WithLayout n b          -> n : layoutsOf b
+  WithBits _ _ b          -> layoutsOf b
+  WithErratum _ _ b       -> layoutsOf b
+  WithAs b                -> layoutsOf b
+  _                       -> []
+
+bitsBytesOf :: Binding s -> [Int]
+bitsBytesOf = \case
+  WithBits k _ b          -> k : bitsBytesOf b
+  WithLayout _ b          -> bitsBytesOf b
+  WithErratum _ _ b       -> bitsBytesOf b
+  WithAs b                -> bitsBytesOf b
+  _                       -> []
+
+applyModifier' :: forall s. Modifier -> Binding s -> Either Finding (Binding s)
+applyModifier' m b = case m of
   Erratum e ps      -> Right (WithErratum e ps b)
   Waive c s r       -> onShape STypeRow (WithWaiver c s r)
   Cols a c          -> onShape SEnumValues (WithCols a c)

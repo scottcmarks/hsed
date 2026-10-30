@@ -101,6 +101,13 @@ spec = do
         , "expand applies to a Preconfig binding, not to a EnumValues one"
         , "rangeWords applies to a EnumValues binding, not to a Codes one"
         , "waive applies to a TypeRow binding, not to a EnumValues one" ]
+    it "refuses a second layout, and a second bits for one byte, which nothing would read (E-MODIFIER)" $ do
+      let twice = [ either C.message (const "accepted") (applyModifier (LayoutName "B") (layout "A" byteGrid))
+                  , either C.message (const "accepted") (applyModifier (Bits 4 [(0, "Y")]) (layout "A" (bits 4 [(0, "X")] feature))) ]
+      twice `shouldBe`
+        [ "a second layout name, \"B\" beside \"A\": a binding takes one"
+        , "a second bits modifier for byte 4: a binding takes one for each byte" ]
+      applyModifier (Bits 5 [(0, "Y")]) (bits 4 [(0, "X")] feature) `shouldBe` Right (bits 5 [(0, "Y")] (bits 4 [(0, "X")] feature))
 
   describe "SomeBinding" $ do
     it "compares across shapes" $ do

@@ -145,6 +145,12 @@ spec = do
           failed `shouldBe` False
           T.lines out `shouldSatisfy` any ("  core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get, PDF 201" `T.isPrefixOf`)
           quietly (CmdExplain "core" (SigId "9.9") (Input coreIR (Just file))) `shouldReturn` True
+      it "explain a unit of a spec with Errors at other units: its own printed, the others counted, and exit non-zero (design 5.2)" $ do
+        -- Opal has no anchors until M3: each of its 50 tables and 3 signature blocks is E-UNBOUND
+        (failed, out) <- captured (CmdExplain "opal" (TableId 3) (Input opalIR Nothing))
+        failed `shouldBe` True
+        [ l | l <- T.lines out, "E-" `T.isPrefixOf` l ] `shouldSatisfy` \ls -> length ls == 1 && all ("E-UNBOUND opal-2.30.pdf#page=" `T.isPrefixOf`) ls
+        [ l | l <- T.lines out, "E-" `T.isPrefixOf` l ] `shouldSatisfy` all ("&T3:" `T.isInfixOf`)
       it "refuse a spec named only in part" $
         withSidecarFile hsa $ \_ file ->
           forM_ ["", "c"] $ \name -> quietly (CmdExplain name (TableId 46) (Input coreIR (Just file))) `shouldReturn` True

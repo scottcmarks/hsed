@@ -15,11 +15,12 @@ The value cells an enumeration reads and the constructor names it prints; then
 the rule (design example E4) on the committed Core extraction with the
 committed annotations: the 19 enumerations of section 5.1.3 it binds, T87
 through its comment, the 20 it declares, a range printed with a spaced en dash
-read as one, C-ENUM-RANGE made to fail by one
-edited cell (a value outside the range, a value cell that is no number, a
-constructor defined twice, two labels giving one constructor, a label with
-nothing to name a constructor), the overlap and repeated-label Warnings, and
-the declarations of T52, T87, T101 and T126.
+read as one, two labels told apart as their names are, C-ENUM-RANGE made to
+fail by one edited cell (a value outside the range, a value cell that is no
+number, a constructor defined twice, two labels giving one constructor, a
+label giving the one the gaps take, a label with nothing to name a
+constructor), the overlap and repeated-label Warnings, and the declarations
+of T52, T87, T101 and T126.
 -}
 module Hsed.Spec.Rules.EnumValuesSpec (spec) where
 
@@ -101,6 +102,8 @@ spec = do
     it "scrubs a label to an identifier: commas dropped, spaces and dashes to underscores" $
       map fst (constructorNames "Core_e" (0, 3) [("RSAES-PKCS1-v1_5", 0), ("SHA 1", 1), ("Issued-Disabled-Frozen", 2), ("ReadLocked, WriteLocked or (none)", 3)])
         `shouldBe` ["Core_e_RSAES_PKCS1_v1_5", "Core_e_SHA_1", "Core_e_Issued_Disabled_Frozen", "Core_e_ReadLocked_WriteLocked_or__none_"]
+    it "keeps an apostrophe, which a name may hold" $
+      map fst (constructorNames "Core_e" (0, 1) [("Don't", 0), ("Don_t", 1)]) `shouldBe` ["Core_e_Don't", "Core_e_Don_t"]
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
@@ -141,6 +144,11 @@ spec = do
       it "fails on two labels that give one constructor" $
         errorsOf Scott (setCell "T52" 1 1 "Wait-for AdvKey_Req" ir) `shouldSatisfy`
           any ("C-ENUM-RANGE core-2.01.pdf#page=102&T52: the labels \"Wait for AdvKey_Req\" and \"Wait-for AdvKey_Req\" give the same constructor" ==)
+      it "passes two labels that give two constructors, as the names are scrubbed (an apostrophe kept)" $
+        filter ("C-ENUM-RANGE" `T.isPrefixOf`) (errorsOf Scott (setCell "T52" 0 1 "Don't" (setCell "T52" 1 1 "Don_t" ir))) `shouldBe` []
+      it "fails on a label that gives the constructor the gaps of the range take (NA)" $
+        errorsOf Scott (setCell "T52" 0 1 "NA" (setCell "T52" 2 0 "2-6" ir)) `shouldSatisfy`
+          elem "C-ENUM-RANGE core-2.01.pdf#page=102&T52: the label \"NA\" and the gaps of the range (_NA) give the same constructor"
       it "fails on a label with no letter or digit, an erratum's empty correction included, and generates nothing for it" $
         forM_ (["", "+"] :: [Text]) $ \label -> do
           ir' <- annotated pristine (hsa <> "core-2.01 | T52 | erratum scott [\"Auto-advance keys\" ~> " <> tshow label <> "]\n")

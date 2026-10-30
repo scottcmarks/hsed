@@ -25,9 +25,11 @@ Format's lower bound, so @reencrypt_state@'s 1..16 gets no @_NA@ at 0), each
 value is assigned once (@W-ENUM-OVERLAP@ otherwise, the first row kept), every
 label has a letter or a digit to name a constructor (an empty cell, or a
 @cols@ binding pointing at a sparse column, is an Error), the constructors are
-distinct, and two labels that scrub to one constructor are an Error; a label
-used for more than one row is @W-ENUM-LABEL-REPEATED@ (each of its values gets
-a suffixed constructor).
+distinct, and two labels that scrub to one constructor, or a label that scrubs
+to the one the gaps of the range take (@NA@), are an Error (the names
+'constructorNames' gives are the ones checked); a label used for more than one
+row is @W-ENUM-LABEL-REPEATED@ (each of its values gets a suffixed
+constructor).
 
 Compiled into 'enumsModule': @data Core_\<type\>@ (the spec's label,
 "Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with a constructor per
@@ -198,16 +200,17 @@ checkEnum ctx rows e = case companion of
             repeated  = [ (l, n) | (l, n) <- Map.toList (Map.fromListWith (+) [ (label, 1 :: Int) | (label, _) <- given ]), n > 1 ]
             labelled  = [ (label, v) | (v, label) <- kept ]
             nameless  = [ (cell, label) | (cell, label) <- erRows e, not (T.any C.isAlphaNum label) ]
-            names     = map fst (constructorNames (enumTypeName sid (trName tr)) (lo, hi) labelled)
+            coreName  = enumTypeName sid (trName tr)
+            names     = map fst (constructorNames coreName (lo, hi) labelled)
             clashes   = [ n | (n, k) <- Map.toList (Map.fromListWith (+) [ (n, 1 :: Int) | n <- names ]), k > 1 ]
-            merged    = [ ls | ls <- map L.nub (Map.elems (Map.fromListWith (flip (<>)) [ (scrubbed l, [l]) | (l, _) <- given ])), length ls > 1 ]
+            merged    = [ srcs | srcs <- map (L.nub . map fst) (Map.elems (constructorGroups coreName (lo, hi) labelled)), length srcs > 1 ]
             findings  = map (\(v, l) -> bad ("value " <> tshow v <> " (" <> tshow l <> ") lies outside " <> tshow lo <> ".." <> tshow hi
                                               <> " of " <> renderAnchorId (trAnchor tr) <> " " <> trName tr)) outside
                      <> map (\(c, l) -> bad ("the value " <> tshow c <> " has the label " <> tshow l <> ", which has no letter or digit to name a constructor")) nameless
                      <> map (\(v, ls) -> warn "W-ENUM-OVERLAP" ("value " <> tshow v <> " is assigned by " <> T.intercalate " and " (map tshow ls) <> "; the first is kept")) overlaps
                      <> map (\(l, n) -> warn "W-ENUM-LABEL-REPEATED" ("the label " <> tshow l <> " is used by " <> tshow n <> " rows; each of its values gets a suffixed constructor")) repeated
                      <> map (\n -> bad ("the constructor " <> n <> " would be defined twice")) clashes
-                     <> map (\ls -> bad ("the labels " <> T.intercalate " and " (map tshow ls) <> " give the same constructor")) merged
+                     <> map (\srcs -> bad ("the " <> merging srcs <> " give the same constructor")) merged
         in EnumCheck findings
              (if any Cm.isError findings then Nothing
               else (\uidBytes -> (trName tr, labelled, uidBytes, (lo, hi))) <$> trUID tr)
@@ -220,6 +223,9 @@ checkEnum ctx rows e = case companion of
     companion = erIdent e >>= \i -> L.find ((== Just i) . trIdent) rows
     parsed (cell, label) = maybe (Left (bad ("the value cell " <> tshow cell <> " is not a number or a range")))
                                  (Right . (label,)) (parseEnumValue (erRangeWords e) cell)
+    -- the labels a merge joins, and the gaps of the range when their constructor is among them
+    merging srcs = (if length (catMaybes srcs) > 1 then "labels " else "label ") <> T.intercalate " and " (map tshow (catMaybes srcs))
+                   <> (if any isNothing srcs then " and the gaps of the range (_NA)" else "")
     rangeOf tr td = case td of
       EnumType ps -> bounds tr ps
       SetType ps  -> bounds tr ps
@@ -229,7 +235,6 @@ checkEnum ctx rows e = case companion of
       _ -> Left (bad ("the range of " <> renderAnchorId (trAnchor tr) <> " " <> trName tr <> " is not literal"))
     lits (Lit a, Lit b) = Just (a, b)
     lits _              = Nothing
-    scrubbed l = T.map (\c -> if C.isAlphaNum c then c else '_') (T.filter (/= ',') l)
 
 
 -- * Declarations
@@ -299,19 +304,31 @@ enumTypeName :: SpecId -> Text -> Text
 enumTypeName sid typeName = Gen.specLabel sid <> "_" <> typeName
 
 -- | The constructors of an enumeration's data type ('enumTypeName') in value
---   order: the type, then the label with commas dropped and spaces and dashes
---   turned to underscores, and @_NA@ for every value of the range no label
---   covers; a label (or @_NA@) given several values names each of them
---   suffixed @_\<v\>@, the first included, and one given a single value
---   stays bare (design section 13.15: a name carries its value, so Core's
---   @Reserved_3@ and Opal's are one constructor wherever their ranges start).
+--   order: the type, then the label scrubbed ('scrubLabel'), and @_NA@ for
+--   every value of the range no label covers; a label (or @_NA@) given several
+--   values names each of them suffixed @_\<v\>@, the first included, and one
+--   given a single value stays bare (design section 13.15: a name carries its
+--   value, so Core's @Reserved_4@ (T128) and Opal's (T16) name the same value
+--   wherever their ranges start).
 constructorNames :: Text -> (Int, Int) -> [(Text, Int)] -> [(Text, Int)]
-constructorNames coreName (lo, hi) given = sortOn snd (concatMap suffixed (Map.toList groups))
+constructorNames coreName rng given = sortOn snd (concatMap suffixed (Map.toList (constructorGroups coreName rng given)))
   where
-    groups   = Map.fromListWith (flip (<>)) ([ (coreName <> "_" <> scrub label, [v]) | (label, v) <- given ] <> filler)
-    missing  = [lo .. hi] \\ map snd given
-    filler   = [ (coreName <> "_NA", missing) | not (null missing) ]
-    suffixed (n, [v]) = [(n, v)]
-    suffixed (n, vs)  = [ (n <> "_" <> tshow v, v) | v <- vs ]
-    scrub = T.map identifier . T.intercalate "_" . T.split (`elem` [' ', '-']) . T.filter (/= ',')
-    identifier c = if C.isAlphaNum c || c == '_' || c == '\'' then c else '_'
+    suffixed (n, [(_, v)]) = [(n, v)]
+    suffixed (n, vs)       = [ (n <> "_" <> tshow v, v) | (_, v) <- vs ]
+
+-- | Each constructor's name before its suffix, with the values it names and
+--   what gives each: its label, or the gaps of the range ('Nothing', @_NA@).
+--   A name given by two labels, or by a label and the gaps, merges them, which
+--   'checkEnum' refuses.
+constructorGroups :: Text -> (Int, Int) -> [(Text, Int)] -> Map Text [(Maybe Text, Int)]
+constructorGroups coreName (lo, hi) given = Map.fromListWith (flip (<>))
+  ([ (coreName <> "_" <> scrubLabel label, [(Just label, v)]) | (label, v) <- given ]
+   <> [ (coreName <> "_NA", [ (Nothing, v) | v <- missing ]) | not (null missing) ])
+  where
+    missing = [lo .. hi] \\ map snd given
+
+-- | A label as a constructor's name takes it: commas dropped, and every
+--   character a name cannot hold (a space, a dash, a parenthesis) an
+--   underscore; letters, digits, underscores and apostrophes kept.
+scrubLabel :: Text -> Text
+scrubLabel = T.map (\c -> if C.isAlphaNum c || c == '_' || c == '\'' then c else '_') . T.filter (/= ',')

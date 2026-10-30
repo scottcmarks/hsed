@@ -163,7 +163,7 @@ spec = do
             (length ir.tables, length ir.headings, length ir.paras, length ir.annots) `shouldBe` counts
             (length ir.sigs, length ir.lot, length ir.xrefs) `shouldBe` m2b
           else pendingWith (path <> " is not checked out")
-    it "give every inked cell of Core's byte grids its drawn extent: T43 byte 4's seven cells, Reserved over two columns" $
+    it "give T43 byte 4's seven cells their drawn extents, Reserved over two columns (every inked cell of every grid: the extractor's invariant)" $
       withIR "../spec/ir/core-2.01.json" $ \ir -> do
         let t43 = [ t | t <- ir.tables, t.id == Just "T43" ]
             row4 = [ map (.xExtent) cells | t <- t43, cells@(c : _) <- t.rows, c.text == "4" ]

@@ -299,10 +299,41 @@ class ByteGrids(unittest.TestCase):
         self.assertEqual(X.row_extents([("r", 0), ("r", 1), ("r", 1), None], drawn),
                          [[144.0, 209.0], [209.0, 495.0], [209.0, 495.0], None])
 
+    def test_an_inked_cell_under_no_drawn_cell_takes_no_zipped_extent(self):
+        # the third cell has glyphs but lies under no drawn cell: no zip, and it takes none
+        drawn = {"r": [[73.0, 127.0], [127.0, 182.0], [182.0, 510.0], [510.0, 566.0]]}
+        self.assertEqual(X.row_extents([("r", 0), ("r", 1), None, None], drawn, [True, True, True, False]),
+                         [[73.0, 127.0], [127.0, 182.0], None, None])
+        self.assertEqual(X.row_extents([("r", 0), ("r", 1), None, None], drawn, [True, True, False, False]), drawn["r"])
+
     def test_cells_over_two_drawn_rows_take_their_own(self):
         drawn = {"a": [[0.0, 10.0], [10.0, 20.0]], "b": [[0.0, 10.0], [10.0, 20.0]]}
         self.assertEqual(X.row_extents([("a", 0), ("b", 1)], drawn), [[0.0, 10.0], [10.0, 20.0]])
         self.assertEqual(X.row_extents([None, None], {}), [None, None])
+
+
+class GridInvariants(unittest.TestCase):
+    PLACED = {"text": "A", "bbox": [0.0, 0.0, 1.0, 1.0], "x_extent": [0.0, 1.0]}
+
+    def ir(self, cell, complete):
+        header = [{"text": t, "bbox": [0.0, 0.0, 1.0, 1.0], "x_extent": [0.0, 1.0]} for t in GRID_ROW]
+        grid = {"id": "T1", "table_number": 1, "n_rows": 1, "struct_path": "0/21", "header_rows": [header],
+                "rows": [[dict(self.PLACED, text="0"), cell]]}
+        return {"spec": "test-1.0", "labelOffset": 0, "tables": [grid], "headings": [{"section": "3.3.6.4", "struct_path": "0/20"}],
+                "lot": [], "xrefs": [], "sigs": [], "paras": [], "wordComplete": complete}
+
+    def ok(self, ir, start):
+        (row,) = [r for r in X.invariants(ir, None) if r[0].startswith(start)]
+        return row[1]
+
+    def test_an_inked_grid_cell_without_its_drawn_extent_fails(self):
+        unplaced = {"text": "A", "bbox": [0.0, 0.0, 1.0, 1.0]}
+        self.assertTrue(self.ok(self.ir(self.PLACED, ["3.3.6.4"]), "every inked cell of a byte grid"))
+        self.assertFalse(self.ok(self.ir(unplaced, ["3.3.6.4"]), "every inked cell of a byte grid"))
+
+    def test_a_grid_section_missing_from_word_complete_fails(self):
+        self.assertTrue(self.ok(self.ir(self.PLACED, ["3.3.6.4"]), "the section of every byte grid"))
+        self.assertFalse(self.ok(self.ir(self.PLACED, []), "the section of every byte grid"))
 
 
 class WordComplete(unittest.TestCase):

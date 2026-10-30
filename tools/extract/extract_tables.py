@@ -634,7 +634,7 @@ def fill_empty_cells(rows: list[list[dict]], cache: PageCache) -> None:
 # as a short extra row holding only the continued columns: Opal T17 row 7 'Initial Assumption: 1
 # Minimum' belongs to MaxSubpackets' third cell, Core T26 'these are "non-reserved" ComIDs.' to the
 # Description above it.  Such a row is appended to its predecessor.  The merged byte-layout rows
-# ('3 | Length' under a nine-column Bit header, Opal T2-T8, Core T38-T44) are short too, but they
+# ('3 | Length' under a nine-column Bit header, Opal T2-T6 and T8, Core T38, T39, T41-T44) are short too, but they
 # are full-width rows: they start in the first column, and are never joined.
 
 def cell_box(c: dict) -> list[float] | None:
@@ -696,15 +696,16 @@ def join_ragged_rows(records: list[dict], cache: PageCache) -> None:
 
 
 # ----------------------------------------------------------------------------- byte grids: the drawn extent of each cell
-# A byte grid (Core T17-T21, T38-T44, T212; Opal T2-T8) has a first row that is a corner cell then the
+# A byte grid (Core T17, T18, T20, T21, T38, T39, T41-T44, T212; Opal T2-T6, T8) has a first row that is a corner cell then the
 # bit columns 7 ... 0, and prints a field over several bits as one merged cell, which the structure
 # tree does not mark (no /ColSpan).  hsedc's grid reader maps a row's cells to bits by the extent rule
 # (design E8): eight cells positionally, one cell the whole byte, any other count by each cell's drawn
 # x-extent against the header's columns.  So every cell of a byte grid gets `x_extent`, [x0, x1] of
 # the drawn (lines_strict) cell it occupies, PDF space: a row's cells and the drawn cells of the
-# drawn row its glyphs lie in are zipped in order when they agree in number and every inked cell sits
-# in its own drawn cell; else each inked cell takes the drawn cell under its glyphs' centre, and an
-# empty one none.
+# drawn row its glyphs lie in are zipped in order when they agree in number and every inked cell's
+# glyphs lie in its own drawn cell; else each inked cell takes the drawn cell under its glyphs' centre,
+# and an empty one none.  An inked cell under no drawn cell takes none either way, which the invariant
+# "every inked cell of a byte grid has its drawn x-extent" then reports.
 GRID_BITS = [str(b) for b in range(7, -1, -1)]
 
 
@@ -715,16 +716,19 @@ def is_byte_grid(t: dict) -> bool:
     return len(first) == 9 and [norm(c["text"]) for c in first[1:]] == GRID_BITS
 
 
-def row_extents(hits: list[tuple | None], drawn_rows: dict) -> list[list[float] | None]:
+def row_extents(hits: list[tuple | None], drawn_rows: dict, inked: list[bool] | None = None) -> list[list[float] | None]:
     """The drawn extent of each cell of a row.  `hits` gives per cell the (drawn row key, index among
     that row's drawn cells) of the drawn cell under its glyphs' centre, None for an empty cell or one
-    under no drawn cell; `drawn_rows` the extents of each drawn row's cells, left to right.  When the
-    inked cells all lie in one drawn row with as many cells as the row, each at its own position, the
-    two are zipped (the empty cells get theirs too); else each inked cell gets its own hit's."""
+    under no drawn cell; `drawn_rows` the extents of each drawn row's cells, left to right; `inked`
+    whether each cell has glyphs (by default, those with a hit).  When the inked cells all lie in one
+    drawn row with as many cells as the row, each in its own drawn cell at its own position, the two are
+    zipped (the empty cells get theirs too); else each inked cell gets its own hit's, and one under no
+    drawn cell none."""
+    inked = inked if inked is not None else [h is not None for h in hits]
     keys = {h[0] for h in hits if h}
     if len(keys) == 1:
         (key,) = keys
-        if len(drawn_rows[key]) == len(hits) and all(h is None or h[1] == i for i, h in enumerate(hits)):
+        if len(drawn_rows[key]) == len(hits) and all(h[1] == i if h else not ink for i, (h, ink) in enumerate(zip(hits, inked))):
             return list(drawn_rows[key])
     return [drawn_rows[h[0]][h[1]] if h else None for h in hits]
 
@@ -749,7 +753,7 @@ def set_grid_extents(records: list[dict], cache: PageCache) -> None:
             drawn = {key: [[round(x, 2) for x in to_pdf_space(c, cache.inv(key[0]))[0::2]]
                            for c in cache.grid(key[0])[key[1]]["rows"][key[2]] if c]
                      for key in {h[0] for h in hits if h}}
-            for c, ext in zip(row, row_extents(hits, drawn)):
+            for c, ext in zip(row, row_extents(hits, drawn, [bool(c.get("bbox")) for c in row])):
                 if ext is not None:
                     c["x_extent"] = ext
 

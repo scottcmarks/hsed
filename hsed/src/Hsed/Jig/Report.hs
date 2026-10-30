@@ -581,7 +581,10 @@ summary rr paths =
 --   issued anything but Level 0 Discovery's IF-RECV (protocol 0x01, ComID
 --   0x0001). A drive's end is any but the simulator's (@tper@): a pair's
 --   simulator IF-SENDs count for neither, and an entry that names no end (a
---   report from before ends were recorded) counts as a drive's.
+--   report from before ends were recorded) counts as a drive's. An entry
+--   that does not read as a report prints one (no kind it has, an issued
+--   command whose request does not read) may have been anything, so it
+--   counts against both checks: either fails on it.
 verifyTranscript :: FilePath -> Bool -> Bool -> IO ExitCode
 verifyTranscript path noIfSend level0Only = readReport path >>= \case
   Left e       -> failWith ("verify-transcript: " <> e)
@@ -589,13 +592,16 @@ verifyTranscript path noIfSend level0Only = readReport path >>= \case
     Left e   -> failWith ("verify-transcript: " <> T.pack path <> ": " <> T.pack e)
     Right es -> do
       traverse_ (say . entryLine) es
-      let issued     = mapMaybe issuedOnDrive es
-          sends      = [ q | q@(op, _, _) <- issued, op == "if_send" ]
-          notLevel0  = [ q | q <- issued, q /= ("if_recv", comPacketProtocol, level0ComId) ]
-      say ("IF-SENDs issued on a drive: " <> tshow (length sends))
+      let issued    = mapMaybe issuedOnDrive es
+          unread    = length [ () | Nothing <- issued ]
+          sends     = length [ () | Just (op, _, _) <- issued, op == "if_send" ]
+          notLevel0 = length [ () | Just q <- issued, q /= ("if_recv", comPacketProtocol, level0ComId) ]
+      say ("IF-SENDs issued on a drive: " <> tshow sends)
       when level0Only $
-        say ("commands issued on a drive other than Level 0 Discovery's IF-RECV: " <> tshow (length notLevel0))
-      pure (if noIfSend && not (null sends) || level0Only && not (null notLevel0) then ExitFailure 1 else ExitSuccess)
+        say ("commands issued on a drive other than Level 0 Discovery's IF-RECV: " <> tshow notLevel0)
+      when (unread > 0) $
+        say ("entries that do not read as a report prints them, each counted against both checks: " <> tshow unread)
+      pure (if noIfSend && sends + unread > 0 || level0Only && notLevel0 + unread > 0 then ExitFailure 1 else ExitSuccess)
   where
     entryLine v = either (const ("an entry not as a report prints one: " <> decodeUtf8Lenient (toStrictBytes (A.encode v))))
                          id (A.parseEither entryText v)
@@ -617,14 +623,19 @@ verifyTranscript path noIfSend level0Only = readReport path >>= \case
             else o A..: "response" >>= A.withObject "response" (\r -> (\st n' -> st <> ", " <> tshow (n' :: Int) <> " bytes")
                                                                          <$> r A..: "status" <*> r A..: "len")
           pure ("#" <> tshow n <> " " <> kind <> " on the " <> end <> " " <> command <> ": " <> outcome)
-    -- an issued command on a drive's end: its op, protocol and ComID
-    issuedOnDrive v = either (const Nothing) id $ flip A.parseEither v $ A.withObject "entry" $ \o -> do
+    -- a command issued on a drive's end, its op, protocol and ComID, or 'Nothing' for an entry that does not
+    -- read; nothing for a note, a blocked command, or one issued on the simulator's end
+    issuedOnDrive v = either (const (Just Nothing)) id $ flip A.parseEither v $ A.withObject "entry" $ \o -> do
       kind <- o A..: "entry"
       end  <- o A..:? "end"
-      if kind /= ("issued" :: Text) || end == Just ("tper" :: Text)
-        then pure Nothing
-        else o A..: "request" >>= A.withObject "request" (\q ->
-               (\op p c -> Just (op :: Text, p :: Word8, c :: Word16)) <$> q A..: "op" <*> q A..: "proto" <*> q A..: "comid")
+      case kind :: Text of
+        "note"    -> pure Nothing
+        "blocked" -> pure Nothing
+        "issued"
+          | end == Just ("tper" :: Text) -> pure Nothing
+          | otherwise -> o A..: "request" >>= A.withObject "request" (\q ->
+              (\op p c -> Just (Just (op :: Text, p :: Word8, c :: Word16))) <$> q A..: "op" <*> q A..: "proto" <*> q A..: "comid")
+        _         -> A.parseFail "an entry of no kind a report prints"
 
 -- | @diff A.json B.json@: two reports' Level 0 decodes compared as the Pair
 --   runner compares them, A's as the simulator's and B's as the drive's,

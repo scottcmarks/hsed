@@ -21,8 +21,8 @@ transcript with each IF-SEND's methods decoded and each command's end; the
 JUnit counts. @verify-transcript@ fails a report whose drive was issued an
 IF-SEND only when asked to, the simulator's IF-SENDs counting for nothing,
 and with @--level0-only@ one whose drive was issued anything but Level 0
-Discovery's IF-RECV; an entry of no end counts as a drive's; a file that is
-no report fails; @diff@ compares two reports' Level 0 responses as the Pair
+Discovery's IF-RECV; an entry of no end counts as a drive's, and one that
+does not read against both; a file that is no report fails; @diff@ compares two reports' Level 0 responses as the Pair
 runner does.
 -}
 module Hsed.Jig.ReportSpec (spec) where
@@ -227,6 +227,22 @@ spec = do
         writeFileBinary (dir </> "old.json") (toStrictBytes (A.encode (A.object ["transcript" A..= [entry]])))
         silently (verifyTranscript (dir </> "old.json") True False) `shouldReturn` ExitFailure 1
         silently (verifyTranscript (dir </> "old.json") False False) `shouldReturn` ExitSuccess
+    it "counts an entry that does not read against both checks, and a note or a blocked command against neither" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        let transcriptOf name es = (dir </> name) <$ writeFileBinary (dir </> name) (toStrictBytes (A.encode (A.object ["transcript" A..= es])))
+            note    = A.object ["n" A..= (1 :: Int), "entry" A..= ("note" :: Text), "text" A..= ("a note" :: Text)]
+            blocked = A.object [ "n" A..= (2 :: Int), "entry" A..= ("blocked" :: Text), "end" A..= ("drive" :: Text)
+                               , "request" A..= A.object ["op" A..= ("if_send" :: Text), "proto" A..= (1 :: Int), "comid" A..= (4100 :: Int), "len" A..= (512 :: Int)]
+                               , "reason" A..= ("a Set" :: Text) ]
+        quietOnes <- transcriptOf "quiet.json" [note, blocked]
+        silently (verifyTranscript quietOnes True True) `shouldReturn` ExitSuccess
+        forM_ [ A.object ["n" A..= (3 :: Int), "entry" A..= ("issued" :: Text), "end" A..= ("drive" :: Text)]
+              , A.object ["n" A..= (3 :: Int), "entry" A..= ("sent" :: Text)]
+              , A.String "an entry" ] $ \unreadable -> do
+          r <- transcriptOf "unreadable.json" [note, unreadable]
+          silently (verifyTranscript r True False) `shouldReturn` ExitFailure 1
+          silently (verifyTranscript r False True) `shouldReturn` ExitFailure 1
+          silently (verifyTranscript r False False) `shouldReturn` ExitSuccess
     it "fails a file that is no report" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         writeFileUtf8 (dir </> "not.json") "not JSON"

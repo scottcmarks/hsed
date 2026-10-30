@@ -146,7 +146,7 @@ spec = describe "the kext shim, cbits/hsed_kext.c" $ do
       root <- runningAsRoot
       if root
         then pendingWith "the suite runs as root: never (no sudo stack)"
-        else openKext (KextOpts "/dev/disk-hsed-test-none" Nothing) >>= (`shouldBe` Left "built without -fkext") . void
+        else openKext (KextOpts "/dev/disk-hsed-test-none" "S0000000000000") >>= (`shouldBe` Left "built without -fkext") . void
 
   describe "tools/m3-hw.sh, the hardware run's checklist" $
     it "runs no sudo: each it names is in the commands it prints, or a comment" $ do

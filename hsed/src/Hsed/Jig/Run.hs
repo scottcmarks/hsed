@@ -11,14 +11,16 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-@hsed-jig run@ (design 9.2): refuse a drive target unless root (hsed's own
-gate, design 9.3), read the profile, open the target, establish or check
+@hsed-jig run@ (design 9.2): refuse a drive target without the serial it
+must have (a usage error) or without root (hsed's own gate, design 9.3),
+read the profile, open the target, establish or check
 each case's prerequisites and run it, its waivers printed, and its
 extensions on the simulator; on a drive, capture its Level 0 response when
 asked, and check that no IF-SEND was issued; write the reports. The exit
 code: 0 every selected case passed (waived prerequisites printed); 1 a
-failure, or a skip without a waiver; 2 a usage error; 3 a safety violation
-(a drive target without root, or an IF-SEND issued on a drive).
+failure, or a skip without a waiver; 2 a usage error (a drive target without
+@--expect-serial@ among them); 3 a safety violation (a drive target without
+root, or an IF-SEND issued on a drive).
 
 The cases run in the catalogue's order, whatever the order of @--tests@ (the
 Test Cases run section 5's in sequence, 3.1, PDF 25); a key naming a whole
@@ -96,6 +98,10 @@ runJig opts0 = do
   case selected (roTests opts0) of
     Left e -> complain e $> ExitFailure 2
     Right chosen
+      | devs@(_ : _) <- devices (roTarget opts0), isNothing (roExpectSerial opts0) -> do
+          traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs --expect-serial SERIAL: a drive is opened only as "
+                                      <> "the one named")) devs
+          pure (ExitFailure 2)
       | not root, devs@(_ : _) <- devices (roTarget opts0) -> do
           traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs root (sudo), hsed's own gate: the kext checks no "
                                       <> "privilege (design 9.3)")) devs

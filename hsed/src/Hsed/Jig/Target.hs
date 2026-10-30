@@ -20,8 +20,9 @@ together for the Pair runner. Only the transport differs between targets.
 'openTarget' opens the transports as they are; the run ("Hsed.Jig.Run")
 puts its transcript and, on a drive, the Guard in front of each before any
 command is issued. A drive needs root, hsed's own gate (the kext's build 625
-checks no privilege, design 9.3): "Hsed.Jig.Cli" refuses a drive target
-without it before the run starts, and 'openTarget' refuses again.
+checks no privilege, design 9.3), and the serial it must have
+(@--expect-serial@): "Hsed.Jig.Cli" refuses a drive target without either
+before the run starts, and 'openTarget' refuses again.
 -}
 module Hsed.Jig.Target
   ( TargetSpec (..)
@@ -52,8 +53,9 @@ data Target
 
 -- | Open a run's target, or why not: the simulator with the run's
 --   parameters, units and hold; a replay of a file; a drive by its BSD name,
---   held to the serial the run expects, as root alone; both ends of a pair,
---   the first closed again when the second cannot be opened.
+--   held to the serial the run expects (which it must name), as root alone;
+--   both ends of a pair, the first closed again when the second cannot be
+--   opened.
 openTarget :: RunOptions -> IO (Either Text Target)
 openTarget opts = open (roTarget opts)
   where
@@ -64,9 +66,10 @@ openTarget opts = open (roTarget opts)
       TReplay file -> fmap (`DriveTarget` Nothing) <$> openReplay file
       TDevice dev -> do
         root <- runningAsRoot
-        if root
-          then fmap (\(tr, di) -> DriveTarget tr (Just di)) <$> openKext (KextOpts (bsdName dev) (roExpectSerial opts))
-          else pure (Left (dev <> " needs root (sudo): hsed's own gate, the kext checking no privilege (design 9.3)"))
+        case roExpectSerial opts of
+          _ | not root -> pure (Left (dev <> " needs root (sudo): hsed's own gate, the kext checking no privilege (design 9.3)"))
+          Nothing      -> pure (Left (dev <> " needs --expect-serial SERIAL: a drive is opened only as the one named"))
+          Just serial  -> fmap (\(tr, di) -> DriveTarget tr (Just di)) <$> openKext (KextOpts (bsdName dev) serial)
       TPair a b -> open a >>= \case
         Left e   -> pure (Left e)
         Right ta -> open b >>= \case

@@ -100,7 +100,7 @@ runOptions = options <**> laterMilestones
       <*> switch (long "inactive-comid-discard"
             <> help "simulator: discard a command to an inactive ComID rather than refuse it")
       <*> optional (strOption (long "expect-serial" <> metavar "SERIAL"
-            <> help "drive: the serial (trimmed IDENTIFY) the drive must have"))
+            <> help "drive: the serial (trimmed IDENTIFY) the drive must have; required for a /dev target"))
       <*> optional (strOption (long "capture-level0" <> metavar "FILE"
             <> help "drive: write its Level 0 response to FILE and its sidecar to FILE.json"))
       <*> option (eitherReader level0Len) (long "level0-len" <> metavar "BYTES" <> value (roLevel0Len defaultRunOptions) <> showDefault

@@ -18,7 +18,7 @@ module that calls the C shim is compiled only under the package's flag
 * what @hsed_kext_locate@ read of the TPer ('Located', laid out as
   'infoLayout' says @hsed_kext_info@ is) admitted as the drive to open, or
   refused: other user clients already on it, or a serial other than the
-  one expected ('admit');
+  one expected, which a drive target must name ('admit');
 * the buffer an IF-RECV moves into ('bufferBytes', 'ifRecvBuffer'), and
   what one @hsed_kext_level0@ call answered, judged ('judgeLevel0') and
   printed ('level0Line');
@@ -42,9 +42,9 @@ module Hsed.Transport.Kext
   , kernReturn
   ) where
 
-import           Foreign.ForeignPtr    (ForeignPtr, withForeignPtr)
+import           Foreign.ForeignPtr    (ForeignPtr, mallocForeignPtrBytes, plusForeignPtr, withForeignPtr)
 import           Foreign.Marshal.Utils (fillBytes)
-import           GHC.ForeignPtr        (mallocForeignPtrAlignedBytes)
+import           Foreign.Ptr           (alignPtr, minusPtr)
 import           Numeric               (showHex)
 import qualified RIO.ByteString        as B
 import           RIO
@@ -119,8 +119,12 @@ diskName target
   | otherwise = Left (target <> ": not a whole disk, /dev/diskN")
   where name = fromMaybe target (T.stripPrefix "/dev/" target)
 
--- | The drive a located TPer is, or why the kext transport opens nothing:
+-- | The drive a located TPer is, given the serial it must have (a drive
+--   target names one, @--expect-serial@), or why the kext transport opens
+--   nothing:
 --
+-- * no serial expected (empty once trimmed): a drive is opened only as the
+--   drive named;
 -- * user clients of the kext already on the TPer (sedutil, the ToolBox's
 --   daemon), or none counted: the kext allows one opener, and one already
 --   open may be in the middle of its own session;
@@ -129,14 +133,16 @@ diskName target
 --
 -- The serial kept is the trimmed one; a kext build that could not be read
 -- is @unknown@.
-admit :: Maybe Text -> Text -> Located -> Either Text DriveInfo
+admit :: Text -> Text -> Located -> Either Text DriveInfo
 admit expected disk l
+  | T.null e =
+      Left (disk <> ": no serial expected: a drive is opened only as the one --expect-serial names")
   | lOtherClients l < 0 =
       Left (disk <> ": the kext's user clients on its TPer could not be counted")
   | lOtherClients l > 0 =
       Left (disk <> ": " <> tshow (lOtherClients l) <> " of the kext's user clients already open on its TPer "
             <> "(sedutil-cli, the ToolBox's sedd?): the kext allows one")
-  | Just e <- T.strip <$> expected, e /= serial =
+  | e /= serial =
       Left (disk <> ": its serial is " <> maskSerial serial <> ", not the " <> maskSerial e <> " expected")
   | otherwise = Right DriveInfo
       { diBsd        = disk
@@ -145,7 +151,9 @@ admit expected disk l
       , diInterface  = lInterface l
       , diRegistryId = lRegistryId l
       }
-  where serial = T.strip (lSerial l)
+  where
+    serial = T.strip (lSerial l)
+    e      = T.strip expected
 
 
 -- * One Level 0 IF-RECV through the shim
@@ -167,13 +175,26 @@ bufferBytes :: Word32 -> Int
 bufferBytes len = max 1 ((fromIntegral len + pageBytes - 1) `div` pageBytes) * pageBytes
 
 -- | A buffer for a transfer and its size: 'bufferBytes' of them, zeroed,
---   aligned to 'pageBytes', pinned (the shim's call is a safe one, during
---   which the collector may run, and the kext writes the buffer from the
---   kernel).
+--   aligned to 'pageBytes', and pinned, so that it stays where the shim and
+--   the kernel were told it is: the shim's call is a safe one, during which
+--   the collector may run (an idle, a minor or a major collection), and the
+--   kext writes the buffer from the kernel.
+--
+--   Its bytes are an array 'mallocForeignPtrBytes' pins, a page less a byte
+--   longer than the buffer, which the pointer returned starts inside at the
+--   first page boundary; 'plusForeignPtr' keeps the whole array alive with
+--   it. Not "GHC.ForeignPtr"'s @mallocForeignPtrAlignedBytes size 16384@: GHC
+--   9.4's RTS lays an array aligned past its 4 KiB block out with its header
+--   in a later block of the group than the first, whose descriptor says
+--   nothing of pinning, and then moves it at a collection though its
+--   payload is aligned (design 7.2; the test reads the RTS's pinned flag and
+--   the array's address across collections).
 ifRecvBuffer :: Word32 -> IO (ForeignPtr Word8, Int)
 ifRecvBuffer len = do
   let size = bufferBytes len
-  buf <- mallocForeignPtrAlignedBytes size pageBytes
+  raw <- mallocForeignPtrBytes (size + pageBytes - 1)
+  offset <- withForeignPtr raw $ \p -> pure (alignPtr p pageBytes `minusPtr` p)
+  let buf = raw `plusForeignPtr` offset
   withForeignPtr buf $ \p -> fillBytes p 0 size
   pure (buf, size)
 
@@ -181,22 +202,35 @@ ifRecvBuffer len = do
 --   blocks asked, the @kern_return_t@, the 16 bytes of CDB the shim wrote
 --   back, the bytes the kext says it moved and the payload (the buffer's
 --   first bytes, as many as asked): the payload, or why the transport fails
---   the command, and with it every command after (a failed command leaves a
---   SCSI task in the kext, so none is retried):
+--   the command, with the bytes kept of it, and with it every command after:
 --
--- * a @kern_return_t@ other than success;
--- * a CDB other than hsed's ("Hsed.Transport.Cdb"), its last four bytes zero;
--- * fewer bytes moved than asked: the rest would be the kernel's zeros, not
---   the TPer's.
-judgeLevel0 :: InterfaceType -> Word8 -> Word32 -> ByteString -> Word64 -> ByteString -> Either Text ByteString
+-- * a @kern_return_t@ other than success: the kext returned before releasing
+--   the command's SCSI task (TPerDriver.cpp's PerformSCSICommand), which a
+--   retry would leak again; nothing is kept;
+-- * a CDB other than hsed's ("Hsed.Transport.Cdb"), its last four bytes
+--   zero: the drive was asked something other than hsed meant; nothing is
+--   kept;
+-- * success with another count of bytes moved than asked (a residue): the
+--   rest of the buffer would be its own zeros, not the TPer's, so nothing is
+--   captured, and the payload is kept beside the failure as evidence alone
+--   (the run's JSON report prints it with the command), the message saying
+--   what to do. Whether a residue on a good transfer may be taken, the
+--   kext's count written beside the capture, is design 13.29 (d), Scott's.
+judgeLevel0 :: InterfaceType -> Word8 -> Word32 -> ByteString -> Word64 -> ByteString -> Either (Text, ByteString) ByteString
 judgeLevel0 iface blocks kr cdb moved payload
-  | kr /= 0 = Left ("hsed_kext_level0: " <> kernReturn kr)
+  | kr /= 0 = Left ("hsed_kext_level0: " <> kernReturn kr, mempty)
   | Right cdb /= expected =
-      Left ("hsed_kext_level0 issued the CDB " <> cdbHex cdb <> ", not hsed's " <> either id cdbHex expected)
-  | moved /= fromIntegral (B.length payload) =
-      Left ("hsed_kext_level0: " <> tshow moved <> " of " <> tshow (B.length payload) <> " bytes transferred")
+      Left ("hsed_kext_level0 issued the CDB " <> cdbHex cdb <> ", not hsed's " <> either id cdbHex expected, mempty)
+  | moved /= fromIntegral (B.length payload) = Left (residue, payload)
   | otherwise = Right payload
-  where expected = (<> B.replicate 4 0) <$> level0Cdb iface (fromIntegral blocks)
+  where
+    expected = (<> B.replicate 4 0) <$> level0Cdb iface (fromIntegral blocks)
+    asked    = tshow (B.length payload)
+    residue  =
+      "hsed_kext_level0: the kext moved " <> tshow moved <> " of the " <> asked <> " bytes asked, its kern_return success: "
+      <> "hsed takes no transfer of another length (design 13.29 (d)), so nothing is captured and nothing more is issued "
+      <> "on this drive in this run; the " <> asked <> " bytes the buffer held are kept, as evidence only, with this "
+      <> "command in the run's JSON report. Stop here: keep that report, and settle design 13.29 (d) before another run"
 
 -- | The line the kext transport prints of each command it issues: the disk,
 --   the CDB, the @kern_return_t@ and the bytes transferred.

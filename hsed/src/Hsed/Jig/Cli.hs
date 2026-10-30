@@ -28,10 +28,11 @@ that the tests can run them:
 
 Each gives the process's exit code: 0 success, 1 a failure, 2 a usage
 error, and for @run@ 3 a safety violation. The first of @run@'s safety
-gates is here, before anything else runs: a drive target (@/dev/diskN@,
-alone or paired) needs root, which hsed itself requires, the loaded kext
-(build 625) checking no privilege (design 9.3); the run itself checks that
-no IF-SEND was issued on a drive.
+gates are here, before anything else runs: a drive target (@/dev/diskN@,
+alone or paired) needs @--expect-serial@ (a usage error without it), and
+root, which hsed itself requires, the loaded kext (build 625) checking no
+privilege (design 9.3); the run itself checks that no IF-SEND was issued on
+a drive.
 -}
 module Hsed.Jig.Cli
   ( Command (..)
@@ -76,19 +77,24 @@ runCommand = \case
 
 -- * run
 
--- | Run the jig, a drive target refused without root (exit 3) before
---   anything is opened.
+-- | Run the jig, a drive target refused before anything is opened: without
+--   @--expect-serial@ (exit 2, a usage error), or without root (exit 3).
 run :: RunOptions -> IO ExitCode
 run opts = case devices (roTarget opts) of
   []      -> runJig opts
-  devs    -> do
-    root <- runningAsRoot
-    if root
-      then runJig opts
-      else do
-        traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs root (sudo), hsed's own gate: the kext checks no "
-                                    <> "privilege (design 9.3); build as yourself, never with sudo stack")) devs
-        pure (ExitFailure 3)
+  devs
+    | isNothing (roExpectSerial opts) -> do
+        traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs --expect-serial SERIAL: a drive is opened only as "
+                                    <> "the one named")) devs
+        pure (ExitFailure 2)
+    | otherwise -> do
+        root <- runningAsRoot
+        if root
+          then runJig opts
+          else do
+            traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs root (sudo), hsed's own gate: the kext checks no "
+                                        <> "privilege (design 9.3); build as yourself, never with sudo stack")) devs
+            pure (ExitFailure 3)
   where
     devices = \case
       TDevice d -> [d]

@@ -29,19 +29,26 @@ types or in the shim; and the process must run as root, hsed's own gate
    its interface (SAT or SCSI), its IDENTIFY serial, its registry entry id,
    the kext's build and the kext's user clients already on it;
 4. there are none of those, and the serial (trimmed) is the one expected
-   (@--expect-serial@), when one is;
+   (@--expect-serial@, which a drive target must give);
 5. @hsed_kext_open@ opens the user client, exclusively (another opener gets
    @kIOReturnExclusiveAccess@).
 
 The transport then answers IF-RECV of Level 0 Discovery (protocol 1, ComID
 1) of 1 to 255 whole 512-byte blocks through @hsed_kext_level0@, its
 payload exactly the length asked; any other request is 'Unsupported'
-@M3: Level 0 only@ without the shim being called. A @kern_return_t@ other
-than success, a CDB other than hsed's, or fewer bytes moved than asked is a
-'TransportFailure' naming it, and after one the transport issues nothing
-more (a failed command leaves a SCSI task in the kext: none is retried).
-Each command it issues it prints on stderr: the CDB, the @kern_return_t@,
-the bytes transferred. Closing it closes the user client, once.
+@M3: Level 0 only@ without the shim being called (this refusal and the
+shim's fixed templates are the barriers below the Guard, design 9.3). A
+@kern_return_t@ other than success, a CDB other than hsed's, or another
+count of bytes moved than asked is a 'TransportFailure' naming it, and
+after one the transport issues nothing more: a command the kext fails
+leaves its SCSI task unreleased (TPerDriver.cpp's PerformSCSICommand
+returns before ReleaseSCSITask), which a retry would leak again, and a
+drive that answered other than hsed asked is not asked again. A residue on
+a good transfer keeps the bytes the buffer held beside the failure, as
+evidence for design 13.29 (d), never as a capture
+("Hsed.Transport.Kext".'judgeLevel0'). Each command it issues it prints on
+stderr: the CDB, the @kern_return_t@, the bytes transferred. Closing it
+closes the user client, once.
 
 Built without the flag (the default, and CI's), 'openKext' refuses, and the
 shim is neither compiled nor linked.
@@ -79,10 +86,11 @@ import           Hsed.Wire                (Cap (..), Transport)
 
 
 -- | The drive to open: its BSD name (@disk6@, or the device @/dev/disk6@),
---   and the serial it must have.
+--   and the serial it must have (required: a drive is opened only as the
+--   drive named).
 data KextOpts = KextOpts
   { koBsd          :: !Text
-  , koExpectSerial :: !(Maybe Text)
+  , koExpectSerial :: !Text
   }
   deriving (Eq, Show)
 
@@ -150,7 +158,7 @@ kextTransport disk di info state = MkTransport
         Failed why -> pure (Failed why, failure ("a command failed before (" <> why <> "); nothing is retried"))
         Ready      -> do
           answer <- level0 (diInterface di) blocks (lenBytes r)
-          pure (either Failed (const Ready) answer, either failure (Response Good) answer)
+          pure (either (Failed . fst) (const Ready) answer, either (\(why, kept) -> Response (TransportFailure why) kept) (Response Good) answer)
     failure why = Response (TransportFailure why) mempty
 
     -- one IF-RECV through the shim, into a zeroed page-aligned buffer

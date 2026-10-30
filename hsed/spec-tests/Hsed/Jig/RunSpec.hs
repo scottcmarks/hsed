@@ -24,7 +24,8 @@ missing without a profile and the comparison passes with it; standing in
 for the kext's drive, the replay's transcript notes the hardware run's CDB
 and the capture is written; a drive whose Level 0 Discovery fails is asked
 once and never again. And what the run refuses before it opens anything:
-a key the catalogue lacks (exit 2), a drive without root (exit 3).
+a key the catalogue lacks (exit 2), a drive without the serial it must have
+(exit 2), a drive without root (exit 3).
 -}
 module Hsed.Jig.RunSpec (spec) where
 
@@ -115,13 +116,17 @@ spec = do
   describe "what a run refuses before it opens anything" $ do
     it "a key the catalogue lacks: exit 2" $
       silently (runJig defaultRunOptions { roTests = keys "UCT-02" }) `shouldReturn` ExitFailure 2
+    it "a drive without --expect-serial, alone or paired, root or not: exit 2" $ do
+      silently (runJig defaultRunOptions { roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roTarget = TPair TSim (TDevice "/dev/disk99") }) `shouldReturn` ExitFailure 2
     it "a drive without root, alone or paired: exit 3" $ do
       root <- runningAsRoot
+      let named = defaultRunOptions { roExpectSerial = Just "S0000000000000" }
       if root
         then pendingWith "running as root: the gate lets a drive through"
         else do
-          silently (runJig defaultRunOptions { roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 3
-          silently (runJig defaultRunOptions { roTarget = TPair TSim (TDevice "/dev/disk99") }) `shouldReturn` ExitFailure 3
+          silently (runJig named { roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 3
+          silently (runJig named { roTarget = TPair TSim (TDevice "/dev/disk99") }) `shouldReturn` ExitFailure 3
 
   describe "UCT-01's minima" $
     it "are the ones Opal and the DataStore feature set allow, the Test Cases' (PDF 30): 1, 4, 8; 1, 0xA0000, 1" $ do

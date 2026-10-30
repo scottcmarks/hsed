@@ -113,7 +113,8 @@ spec = do
         readOf n = case [ fr | fr <- reads', btAnchor (frBound fr) == TableId n ] of
           fr : _ -> fr
           []     -> error ("no feature read of T" <> show n)
-        findings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f `elem` featureCodes ]
+        -- the findings of the rule's codes at its tables (byteGrid gives some of the readers' codes too: T38, T41, T44's W-PINS-NONE)
+        findings ir' = [ renderFinding f | f <- checkIR Scott ir', Cm.code f `elem` featureCodes, Cm.anchor f `elem` [Just "T42", Just "T43"] ]
         moduleOf ir' = do
           cr <- either (throwString . show) pure (compileIR Scott ir')
           pure (fromMaybe "" (lookup "Hsed.Gen.Core.Features" (crModules cr)))

@@ -1,0 +1,118 @@
+{-# LANGUAGE NoImplicitPrelude   #-}
+{-# LANGUAGE OverloadedRecordDot #-}
+{-# LANGUAGE OverloadedStrings   #-}
+
+{-|
+Module      : Hsed.Spec.ByteLayoutsSpec
+Description : The three byte-layout rules together: byteGrid, feature and byteFieldValue
+Copyright   : (c) Magnolia Heights R&D, 2026
+License     : BSD3
+Maintainer  : scott@magnolia-heights.com
+Stability   : experimental
+
+What holds between the rules of design section 11 M2c once all three are
+registered, on the committed Core extraction and annotations: @feature@
+refines @byteGrid@, so Tables 42 and 43 are @feature@'s alone, and stay so
+were @byteGrid@'s shape to take them too; @feature@ reads its template,
+Table 41, through @byteGrid@'s binding of it; @byteGrid@ and
+@byteFieldValue@ write one module, "Hsed.Gen.Core.Layouts", their layouts and
+records named by the same functions, each name declared once, and a name
+the two would share is @C-GRID-NAME@ at the @byteFieldValue@ table; both
+rules' records import the one runtime module named in "Hsed.Spec.Gen".
+-}
+module Hsed.Spec.ByteLayoutsSpec (spec) where
+
+import qualified RIO.List                       as L
+import qualified RIO.Map                        as Map
+import qualified RIO.Text                       as T
+import           RIO
+import           Test.Hspec
+
+import           Hsed.Core.Layout               (tiles)
+import           Hsed.Spec.Anchor               (AnchorId (..))
+import           Hsed.Spec.Check                (checkIR, mkContext)
+import           Hsed.Spec.Common               (ErrataSet (..), RuleName (..), Severity (..), renderFinding)
+import qualified Hsed.Spec.Common               as Cm
+import           Hsed.Spec.Compile              (CompileResult (..), compileIR)
+import           Hsed.Spec.CoreIR
+import qualified Hsed.Spec.Gen                  as Gen
+import           Hsed.Spec.Readers.Grid         (Grid (..), GridField (..), gridOf)
+import           Hsed.Spec.Registry             (registry)
+import           Hsed.Spec.RuleDef              (BoundTable (..), Classification (..), Emitted (..), RuleDef (..),
+                                                 boundTables)
+import           Hsed.Spec.Rules                (classify, classifyWithRules)
+import           Hsed.Spec.Rules.ByteFieldValue (BytesRead (..), asGridRead, bytesReads)
+import           Hsed.Spec.Rules.ByteGrid       (byteGridRule, gridReads, layoutValue, recordNames, typeName)
+import           Hsed.Spec.Rules.Feature        (Template (..), templateOf)
+import           Hsed.Spec.Shape                (Form (..), Shape (..))
+
+
+-- | The tables a classification binds to a rule, by number.
+boundTo :: Text -> Map AnchorId Classification -> [Int]
+boundTo r classes = [ n | (TableId n, RuleBound (RuleName r') _ _) <- Map.toList classes, r' == r ]
+
+-- | The names a line of a module declares at the top level: a value's
+--   signature (@comPacketLayout :: Layout@) or a data type (@data ComPacket = ComPacket@).
+declared :: Text -> [Text]
+declared l = case T.words l of
+  "data" : n : _                                     -> [n]
+  n : "::" : _ | not (T.null n), not (" " `T.isPrefixOf` l) -> [n]
+  _                                                  -> []
+
+spec :: Spec
+spec = withCore $ \pristine -> do
+  hsa <- runIO committedHsa
+  ir  <- runIO (annotated pristine hsa)
+  let ctx = mkContext Scott ir
+      classes = classify ir
+  cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
+  let layouts = fromMaybe "" (lookup "Hsed.Gen.Core.Layouts" (crModules cr))
+      names = concatMap declared (T.lines layouts)
+
+  describe "feature and byteGrid" $ do
+    it "bind Tables 42 and 43 to feature alone, and byteGrid's nine grids to byteGrid" $ do
+      boundTo "feature" classes `shouldBe` [42, 43]
+      boundTo "byteGrid" classes `shouldBe` [17, 18, 20, 21, 38, 39, 41, 44, 212]
+      [ aid | (aid, Ambiguous _) <- Map.toList classes ] `shouldBe` []
+    it "never both bind them: were byteGrid to fire on every byte grid, feature, which refines it, still wins" $ do
+      let wide = byteGridRule { fires = \_ _ form -> fGrid8 form }
+          everyRule = [ if ruleName r == RuleName "byteGrid" then wide else r | r <- registry ]
+          (wider, _) = classifyWithRules everyRule ir
+      boundTo "feature" wider `shouldBe` [42, 43]
+      boundTo "byteGrid" wider `shouldBe` [17, 18, 20, 21, 38, 39, 41, 44, 212]
+      [ aid | (aid, Ambiguous _) <- Map.toList wider ] `shouldBe` []
+    it "lets feature read its template, Table 41, as byteGrid binds and reads it" $
+      case ([ bt | bt <- boundTables (Just ByteGrid) ctx, btAnchor bt == TableId 41 ], templateOf ctx "TPer Feature Descriptor") of
+        ([t41], Right tm) -> do
+          tmNumber tm `shouldBe` 41
+          tmSize tm `shouldBe` gSize (gridOf t41)
+          tmFields tm `shouldBe` [ f | f <- gFields (gridOf t41), isJust (gfLast f) ]
+        (bts, tm) -> expectationFailure ("T41 bound " <> show (length bts) <> " times; the template: " <> either T.unpack (const "read") tm)
+
+  describe "byteGrid and byteFieldValue in the one layouts module" $ do
+    let grids = gridReads ctx
+        bytes = bytesReads ctx
+        records = grids <> [ asGridRead br | br <- bytes, tiles (bfLayout br) ]
+    it "name every layout and record by byteGrid's functions" $ do
+      L.sort [ n | n <- names, "Layout" `T.isSuffixOf` n ] `shouldBe` L.sort (map layoutValue (grids <> map asGridRead bytes))
+      [ typeName r | r <- records, typeName r `notElem` names ] `shouldBe` []
+      map (layoutValue . asGridRead) (take 2 bytes) `shouldBe` ["get_COMIDPayloadLayout", "noResponseAvailableLayout"]
+    it "declare each name once, the two rules' names distinct" $ do
+      [ n | (n, k) <- Map.toList (Map.fromListWith (+) [ (n, 1 :: Int) | n <- names ]), k > 1 ] `shouldBe` []
+      let ours = concatMap recordNames grids
+          theirs = concatMap recordNames (map asGridRead bytes)
+      filter (`elem` ours) theirs `shouldBe` []
+    it "find a name byteFieldValue would share with byteGrid (C-GRID-NAME, an Error at the byteFieldValue table, which is left out)" $ do
+      clash <- annotated pristine (hsa <> "core-2.01 | T28 | layout \"ComPacket\"\n")
+      [ (Cm.severity f, renderFinding f) | f <- checkIR Scott clash, Cm.code f == "C-GRID-NAME" ] `shouldBe`
+        [ (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: ComPacket is also a name of an earlier grid's declarations")
+        , (Error, "C-GRID-NAME core-2.01.pdf#page=61&T28: comPacketLayout is also a name of an earlier grid's declarations") ]
+      newlyExcluded ir clash `shouldReturn` [(TableId 28, "C-GRID-NAME failed")]
+    it "import the record class from the one runtime module Hsed.Spec.Gen names" $ do
+      let recordImports r = [ () | Emit d <- ruleCompile r ctx (boundTables (ruleShape' r) ctx)
+                                 , Gen.ImportSome m _ <- d.declImports, m == Gen.recordModule ]
+          ruleShape' r = if ruleName r == RuleName "byteGrid" then Just ByteGrid else Just ByteFieldValue
+          byName n = L.find ((== RuleName n) . ruleName) registry
+      [ (n, not (null (recordImports r))) | n <- ["byteGrid", "byteFieldValue"], Just r <- [byName n] ]
+        `shouldBe` [("byteGrid", True), ("byteFieldValue", True)]
+      [ l | l <- T.lines layouts, "import" `T.isPrefixOf` l, Gen.recordModule `T.isInfixOf` l ] `shouldSatisfy` ((== 1) . length)

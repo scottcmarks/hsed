@@ -26,8 +26,8 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck (prop)
 import           Test.QuickCheck
 
-import           Hsed.Core.Layout      (Content (..), Decoded (..), Difference (..), LayoutError (..), decode)
-import           Hsed.Core.Record      (encodeRecord)
+import           Hsed.Core.Layout      (Content (..), Decoded (..), Difference (..), Layout (..), LayoutError (..), decode)
+import           Hsed.Core.Record      (LayoutRecord (..), encodeRecord)
 import           Hsed.Gen.Core.Layouts
 import           Hsed.Packet
 
@@ -60,6 +60,12 @@ lengthIn = L.lookup "Length" . decodedFields
 
 spec :: Spec
 spec = describe "Hsed.Packet" $ do
+  it "frames with the generated layouts of Tables 17, 18 and 20 (PDF 40, 41, 44), through their records" $ do
+    map layoutName [ recordLayout (Proxy :: Proxy ComPacket), recordLayout (Proxy :: Proxy Packet), recordLayout (Proxy :: Proxy DataSubPacket) ]
+      `shouldBe` ["ComPacket Format", "Packet Format", "Data SubPacket Format"]
+    [ recordLayout (Proxy :: Proxy ComPacket), recordLayout (Proxy :: Proxy Packet), recordLayout (Proxy :: Proxy DataSubPacket) ]
+      `shouldBe` [comPacketLayout, packetLayout, dataSubPacketLayout]
+    map layoutSize [comPacketLayout, packetLayout, dataSubPacketLayout] `shouldBe` [20, 24, 12]
   prop "decodes the ComPacket it encoded, every level, nothing left over" $ forAll comPacketFrame $ \f -> do
     bytes <- encoded encodeComPacket f
     decodeComPacket bytes `shouldBe` Right (DecodedFrame f [] "")

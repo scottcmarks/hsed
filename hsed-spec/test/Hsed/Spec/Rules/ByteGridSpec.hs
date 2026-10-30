@@ -184,11 +184,12 @@ spec = do
     describe "the generated module" $ do
       text <- runIO (layoutsOf ir)
       let lns = T.lines text
-      it "declares each grid's layout, its record(s) and its instance" $ do
-        [ T.takeWhile (/= ' ') l | l <- lns, " :: Layout" `T.isSuffixOf` l ] `shouldBe`
+      it "declares each grid's layout, its record(s) and its instance (beside byteFieldValue's, in the one module)" $ do
+        let gridNames = concatMap recordNames (gridReads ctx)
+        [ n | l <- lns, " :: Layout" `T.isSuffixOf` l, let n = T.takeWhile (/= ' ') l, n `elem` gridNames ] `shouldBe`
           [ "comPacketLayout", "packetLayout", "dataSubPacketLayout", "creditControlSubpacketLayout", "level0DiscoveryResponseDataLayout"
           , "level0DiscoveryHeaderLayout", "featureDescriptorTemplateLayout", "commonSSCInformationLayout", "gudidColumnContentsDescriptionLayout" ]
-        [ l | l <- lns, "data " `T.isPrefixOf` l ] `shouldBe`
+        [ l | l <- lns, "data " `T.isPrefixOf` l, _ : n : _ <- [T.words l], n `elem` gridNames ] `shouldBe`
           [ "data ComPacketHeader = ComPacketHeader", "data ComPacket = ComPacket", "data PacketHeader = PacketHeader", "data Packet = Packet"
           , "data DataSubPacketHeader = DataSubPacketHeader", "data DataSubPacket = DataSubPacket"
           , "data CreditControlSubpacket = CreditControlSubpacket"

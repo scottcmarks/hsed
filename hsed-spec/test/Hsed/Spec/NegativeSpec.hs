@@ -15,12 +15,15 @@ page come from the IR's tables) and must make the check logic fail with an
 Error whose text cites @core-2.01.pdf#page=@, and the binding step too where
 it has something to refuse; the expected text of each fixture is in
 'expected', and a fixture without an entry there fails the suite. @hsedc
-check@ refuses all three. @hsedc bind@ refuses @unknown-name.hsa@ (hsedc's
+check@ refuses all four. @hsedc bind@ refuses @unknown-name.hsa@ (hsedc's
 @E-GRAMMAR@ at the page, not a GHC error) and @wrong-kind.hsa@
 (@E-ANCHOR-KIND@), so neither reaches a generated module. @wrong-shape.hsa@
 does reach the bindings module: @feature@ on a @'Feature@ anchor type-checks,
 and only the table's measured form says Table 46 is no feature, which check's
-@E-SHAPE@ alone sees. (GHC's own rejection of an unknown name, should one ever
+@E-SHAPE@ alone sees. So does @law-qname.hsa@ (M3): a law's name is any
+string to the grammar, and only the law reader's @C-LAW-BOUND@ says @sync.x@
+names no law, at the sentence's page (PDF 82), before the generated laws
+would name it to GHC. (GHC's own rejection of an unknown name, should one ever
 reach a generated bindings module, is tested in
 "Hsed.Spec.Bindings.PrintSpec".) Nothing here compiles generated code, so
 @stack build hsed-spec@ stays green while the fixtures fail.
@@ -50,6 +53,8 @@ expected =
                          , Just "E-GRAMMAR core-2.01.pdf#page=100&T46: 1:1: unknown name frobnicate" ))
   , ("wrong-kind.hsa",   ( "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not rule typeRow"
                          , Just "E-ANCHOR-KIND core-2.01.pdf#page=100&T46: a table anchor takes a table binding or a bare modifier chain, not rule typeRow" ))
+  , ("law-qname.hsa",    ( "C-LAW-BOUND core-2.01.pdf#page=82&3.3.10.2.1#3a: the comment's name \"sync.x\" is not a qualified name"
+                         , Nothing ))
   ]
 
 dir :: FilePath

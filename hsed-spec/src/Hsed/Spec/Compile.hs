@@ -20,8 +20,9 @@ table number. A module is written when some rule emits a declaration for it;
 ("Hsed.Spec.Cli"). Rules naming one module must give it one description; their
 notes are united, in registry order (@E-GEN-MODULE@ otherwise).
 
-A bound table a rule leaves out is the Warning @W-GEN-EXCLUDED@ saying why (its
-Error is already among the findings); so is a table bound (by a comment) to a
+A unit a rule leaves out, a bound table (at the table) or a paragraph unit (at
+its paragraph), is the Warning @W-GEN-EXCLUDED@ saying why (its Error is
+already among the findings); so is a table bound (by a comment) to a
 shape no rule of the registry reads, and so is a paragraph unit (a sentence a
 @law@ binds) of a shape no rule reads, at the paragraph; each counts among the
 units left out. A table of a shape with nothing to generate
@@ -87,9 +88,11 @@ compileIR base es ir = do
                , let why = "hsedc generates nothing for a " <> shapeName shape <> " paragraph yet (no rule of the registry reads one)" ]
     -- the shape of a binding no rule of the registry reads, when it has something to generate
     unread sb = mfilter (\shape -> shapeGenerates shape && Just shape `notElem` map ruleShape registry) (someBindingShape sb)
-    excludedFinding aid why = case Map.lookup aid (cxTables ctx) of
-      Just t  -> locatedAt (cxSpec ctx) (renderAnchorId aid) (fromMaybe 1 (tablePage t)) (finding Warning "W-GEN-EXCLUDED" why)
-      Nothing -> finding Warning "W-GEN-EXCLUDED" why
+    -- at the table, or at the paragraph of a paragraph unit
+    excludedFinding aid why = case (Map.lookup aid (cxTables ctx), L.find ((== aid) . bpAnchor) (paragraphUnits ctx)) of
+      (Just t, _)  -> locatedAt (cxSpec ctx) (renderAnchorId aid) (fromMaybe 1 (tablePage t)) (finding Warning "W-GEN-EXCLUDED" why)
+      (_, Just bp) -> atPara ctx bp (finding Warning "W-GEN-EXCLUDED" why)
+      _            -> finding Warning "W-GEN-EXCLUDED" why
 
 -- | The declarations grouped by the module they go to, by module name, each
 --   module's notes those of every descriptor naming it, united in order; Left

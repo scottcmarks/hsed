@@ -31,6 +31,7 @@ import           Hsed.Spec.Rules.EnumValues    (enumValuesRule)
 import           Hsed.Spec.Rules.Feature       (featureRule)
 import           Hsed.Spec.Rules.FieldType     (fieldTypeRule)
 import           Hsed.Spec.Rules.FieldValue    (fieldValueRule)
+import           Hsed.Spec.Rules.Laws          (lawsRule)
 import           Hsed.Spec.Rules.Preconfig     (preconfigRule)
 import           Hsed.Spec.Rules.Props         (propsRule)
 import           Hsed.Spec.Rules.Ranges        (rangesRule)
@@ -56,6 +57,7 @@ registry =
   , featureRule
   , fieldTypeRule
   , fieldValueRule
+  , lawsRule
   , preconfigRule
   , propsRule
   , rangesRule

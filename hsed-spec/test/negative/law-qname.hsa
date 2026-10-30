@@ -1,0 +1,4 @@
+# Must fail `hsedc check` with C-LAW-BOUND citing core-2.01.pdf#page=82&3.3.10.2.1#3a: a law comment
+# names its hand-written law by a qualified name, Module.name, the module capitalised (design example
+# E10, M3), and `sync.x` is none. `hsedc bind` takes it: the grammar reads any name a law gives.
+core-2.01 | 3.3.10.2.1#3a | law "sync.x"

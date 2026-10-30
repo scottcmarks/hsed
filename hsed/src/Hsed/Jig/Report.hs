@@ -14,9 +14,10 @@ What a run writes (design 9.2): @build/report/jig-<target>-<UTC stamp>@ as
 JSON (the wire types' own, "Hsed.Wire.Internal"), as Markdown (the
 verdicts, each end's beside a pair's joined one, each waiver with its reason
 and page, the decodes, the pair comparison, the run's problems) and as JUnit
-XML, through "Hsed.Jig.Files"; a run that started in the same second as
-another's reports in the directory takes the next free suffix (@-2@, @-3@).
-The JUnit report holds a test case for each case and extension, for the
+XML, through "Hsed.Jig.Files", each name claimed exclusively, so that a run
+that started in the same second as another, or together with it, takes the
+next free suffix (@-2@, @-3@) and neither writes over the other's. The
+JUnit report holds a test case for each case and extension, for the
 pair, for each problem (a capture, the pair not computed), for no IF-SEND on
 a drive, and one for the exit code, so that its failures never say less
 than the exit code does. And the commands
@@ -59,7 +60,6 @@ import qualified Data.ByteString.Base16 as B16
 import           Data.Time              (UTCTime, defaultTimeLocale, formatTime)
 import qualified RIO.ByteString         as B
 import qualified RIO.Char               as C
-import           RIO.Directory          (doesFileExist)
 import           RIO.FilePath           (takeBaseName, (<.>), (</>))
 import qualified RIO.List               as L
 import           RIO
@@ -74,7 +74,7 @@ import           Hsed.Core.UID          (UID)
 import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import           Hsed.Gen.Core.UIDs     (methodIDUIDs, sessionManagerMethodUIDs)
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
-import           Hsed.Jig.Files         (writeOwned)
+import           Hsed.Jig.Files         (createOwned, writeOwned)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairReport (..), judged, pairFails, pairLevel0)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
@@ -121,20 +121,26 @@ data RunResult = RunResult
 
 -- | Write a run's reports into a directory: the files written, named for
 --   the target and the start's second, with the first suffix (@-2@, @-3@)
---   no report there has taken if one has the name.
+--   whose JSON report no run has written. The JSON report's name is
+--   claimed exclusively ("Hsed.Jig.Files".'createOwned'), so that two runs
+--   of the same second, or started together, take different names and
+--   neither writes over the other's; the Markdown and JUnit reports follow
+--   their JSON's name (one of that name alone, left by a run that was
+--   stopped, is replaced).
 writeReports :: FilePath -> RunResult -> IO [FilePath]
-writeReports outDir rr = do
-  base <- firstFree (stamped : [ stamped <> "-" <> show n | n <- [2 :: Int ..] ])
-  for (files base) (\(path, bytes) -> path <$ writeOwned path bytes)
+writeReports outDir rr = claim (1 :: Int)
   where
+    claim n = do
+      let base = suffixed n
+      claimed <- createOwned (base <.> "json") (toStrictBytes (A.encode rr))
+      if claimed
+        then do
+          writeOwned (base <.> "md") (encodeUtf8 (markdown rr))
+          writeOwned (base <.> "xml") (encodeUtf8 (junit rr))
+          pure [base <.> "json", base <.> "md", base <.> "xml"]
+        else claim (n + 1)
+    suffixed n = stamped <> (if n == 1 then "" else "-" <> show n)
     stamped    = outDir </> ("jig-" <> T.unpack (slug (roTarget (rrOptions rr))) <> "-" <> formatTime defaultTimeLocale "%Y%m%dT%H%M%SZ" (rrStarted rr))
-    files base = [ (base <.> "json", toStrictBytes (A.encode rr))
-                 , (base <.> "md", encodeUtf8 (markdown rr))
-                 , (base <.> "xml", encodeUtf8 (junit rr)) ]
-    firstFree = \case
-      b : rest -> anyM (doesFileExist . fst) (files b) >>= \taken -> if taken then firstFree rest else pure b
-      []       -> pure stamped
-    anyM p = fmap or . traverse p
 
 -- | A target as a report's name has it.
 slug :: TargetSpec -> Text

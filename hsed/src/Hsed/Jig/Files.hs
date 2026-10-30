@@ -18,31 +18,39 @@ creates and a file it writes are handed to the user sudo names
 (@SUDO_UID@, @SUDO_GID@) when the jig runs as root, and left as they are
 otherwise. Never @sudo stack@: that leaves a root-owned @.stack-work@.
 
-As root it writes nothing a link planted by another process could redirect:
+Every writer, root or not, writes a file to a new name beside the target,
+created exclusively (@O_CREAT|O_EXCL@, which no link satisfies), handed
+over through its open descriptor (@fchown@) where there is someone to hand
+it to, then renamed over the target: a link planted at the target is
+replaced, not written through ('writeAs'). Or it creates the file at its
+own name, exclusively, where the name must be its alone ('createAs'): a
+name taken, by a file or a link, is left to whoever took it, nothing
+written, and the writer told. As root it refuses besides what a link
+planted by another process could redirect:
 
-* a path with a @..@ component is refused, so that a directory it names
-  is the one it seems to be, and only the directories it creates are
-  handed over, never one that was there;
-* a directory on the path that is a symbolic link is refused unless root
-  owns the link (the system's own, @/tmp@ on macOS), a link of the user's
-  being one their processes could have planted;
-* a file is written to a new name beside the target, created exclusively
-  (@O_CREAT|O_EXCL@, which no link satisfies), handed over through its open
-  descriptor (@fchown@), then renamed over the target, so that a link at
-  the target is replaced, not written through; a directory it creates is
-  handed over with @lchown@.
+* a path with a @..@ component, so that a directory it names is the one it
+  seems to be, and only the directories it creates are handed over, never
+  one that was there;
+* a directory on the path that is a symbolic link, unless root owns the
+  link (the system's own, @/tmp@ on macOS), a link of the user's being one
+  their processes could have planted;
 
-A file is written so whoever writes it ('Writer'): 'writeOwned' and
-'createDirOwned' as the process is, the tests as any writer.
+and a directory it creates is handed over with @lchown@.
+
+A file is written so whoever writes it ('Writer'): 'writeOwned',
+'createOwned' and 'createDirOwned' as the process is, the tests as any
+writer.
 -}
 module Hsed.Jig.Files
   ( writeOwned
+  , createOwned
   , createDirOwned
   , runningAsRoot
     -- * As a given writer
   , Writer (..)
   , currentWriter
   , writeAs
+  , createAs
   , createDirAs
   ) where
 
@@ -51,7 +59,7 @@ import qualified RIO.List           as L
 import           RIO
 import           RIO.FilePath       (joinPath, splitDirectories, takeDirectory, takeFileName, (</>))
 #if defined(mingw32_HOST_OS)
-import           RIO.Directory      (createDirectoryIfMissing)
+import           RIO.Directory      (createDirectoryIfMissing, doesFileExist)
 #else
 import           RIO.Directory      (createDirectory, doesDirectoryExist)
 import           System.Environment (lookupEnv)
@@ -60,6 +68,7 @@ import           System.Posix.Files (fileOwner, getSymbolicLinkStatus, isDirecto
                                      setFdOwnerAndGroup, setSymbolicLinkOwnerAndGroup)
 import           System.Posix.IO    (OpenFileFlags (..), OpenMode (..), defaultFileFlags, fdToHandle, openFd)
 import           System.Posix.Process (getProcessID)
+import           System.Posix.Types (Fd)
 import           System.Posix.User  (getEffectiveUserID)
 #endif
 
@@ -85,6 +94,11 @@ currentWriter = do
 writeOwned :: FilePath -> ByteString -> IO ()
 writeOwned path bytes = currentWriter >>= \w -> writeAs w path bytes
 
+-- | Create a file at its name, exclusively, handed to the user who ran
+--   sudo: 'False', nothing written, where the name was taken ('createAs').
+createOwned :: FilePath -> ByteString -> IO Bool
+createOwned path bytes = currentWriter >>= \w -> createAs w path bytes
+
 -- | Create a directory and its missing parents, each handed to the user who
 --   ran sudo.
 createDirOwned :: FilePath -> IO ()
@@ -101,7 +115,8 @@ runningAsRoot = (== 0) <$> getEffectiveUserID
 
 -- | Write a file as a writer: its directory created ('createDirAs'), the
 --   bytes written to a new file beside it, created exclusively and handed
---   over through its descriptor, then renamed over the file.
+--   over through its descriptor ('claim', 'through'), then renamed over the
+--   file.
 writeAs :: Writer -> FilePath -> ByteString -> IO ()
 #if defined(mingw32_HOST_OS)
 writeAs _ path bytes = createDirectoryIfMissing True (takeDirectory path) >> writeFileBinary path bytes
@@ -111,14 +126,50 @@ writeAs w path bytes = do
   createDirAs w (takeDirectory path)
   pid <- getProcessID
   let fresh = takeDirectory path </> ("." <> takeFileName path <> ".hsed-" <> show pid)
-  fd <- tryIO (openFd fresh WriteOnly (Just 0o666) defaultFileFlags { exclusive = True }) >>=
-          either (\e -> throwString (path <> ": " <> fresh <> " could not be created beside it: " <> displayException e)) pure
+  fd <- tryIO (claim fresh) >>= \case
+    Left e          -> throwString (path <> ": " <> fresh <> " could not be created beside it: " <> displayException e)
+    Right Nothing   -> throwString (path <> ": " <> fresh <> " could not be created beside it: a file of that name is there")
+    Right (Just fd) -> pure fd
+  through w fresh fd bytes
+  rename fresh path `onException` tryIO (removeLink fresh)
+#endif
+
+-- | Create a file at its name as a writer, exclusively: its directory
+--   created ('createDirAs'), then the file ('claim': a name taken, by a
+--   file or a link, is nobody else's), handed over through its descriptor
+--   and written ('through'); 'False', nothing written, where the name was
+--   taken. On Windows the name is checked, not claimed.
+createAs :: Writer -> FilePath -> ByteString -> IO Bool
+#if defined(mingw32_HOST_OS)
+createAs _ path bytes = do
+  createDirectoryIfMissing True (takeDirectory path)
+  taken <- doesFileExist path
+  unless taken (writeFileBinary path bytes)
+  pure (not taken)
+#else
+createAs w path bytes = do
+  noParent w path
+  createDirAs w (takeDirectory path)
+  claim path >>= maybe (pure False) (\fd -> True <$ through w path fd bytes)
+
+-- | A file created at a path, exclusively (@O_CREAT|O_EXCL@, which neither
+--   a file nor a link there satisfies), open for writing; 'Nothing' where
+--   the name was taken.
+claim :: FilePath -> IO (Maybe Fd)
+claim path = tryIO (openFd path WriteOnly (Just 0o666) defaultFileFlags { exclusive = True }) >>= \case
+  Right fd                        -> pure (Just fd)
+  Left e | isAlreadyExistsError e -> pure Nothing
+         | otherwise              -> throwIO e
+
+-- | A claimed file handed over through its descriptor, as the writer says,
+--   filled and closed; removed again if that fails.
+through :: Writer -> FilePath -> Fd -> ByteString -> IO ()
+through w path fd bytes = do
   h <- fdToHandle fd
   (do for_ (wOwner w) (\(u, g) -> setFdOwnerAndGroup fd (fromInteger u) (fromInteger g))
       B.hPut h bytes
-      hClose h
-      rename fresh path)
-    `onException` (hClose h >> tryIO (removeLink fresh))
+      hClose h)
+    `onException` (hClose h >> tryIO (removeLink path))
 #endif
 
 -- | Create a directory and its missing parents as a writer: each it creates

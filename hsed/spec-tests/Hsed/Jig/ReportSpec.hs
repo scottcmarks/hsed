@@ -11,7 +11,8 @@ Stability   : experimental
 
 A run's reports (design 9.2): three files, @jig-<target>-<UTC stamp>@ as
 JSON, Markdown and JUnit XML, the target's part @sim@, @dev-disk6@ or
-@sim+replay-<file>@, a second run of the same second suffixed @-2@; each
+@sim+replay-<file>@, a second run of the same second suffixed @-2@, runs
+started together each with a name of their own; each
 case with its verdict and waivers, a pair's each end's verdict beside it, a
 waiver with its item and page (LockingManufactured, Test Cases 5.2 item 2,
 PDF 29); the simulator's options only where a simulator ran; the run's
@@ -194,6 +195,14 @@ spec = do
         three <- writeReports dir quiet
         map (L.drop (length dir + 1)) (one <> two <> three) `shouldBe`
           [ "jig-sim-20261030T120000Z" <> s <> e | s <- ["", "-2", "-3"], e <- [".json", ".md", ".xml"] ]
+    it "claims each name exclusively: runs started together write different reports, each its own, none over another's" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        written' <- mapConcurrently (\n -> writeReports dir sample { rrVersion = tshow n }) [1 .. 6 :: Int]
+        L.sort (map (L.drop (length dir + 1)) (concat written')) `shouldBe`
+          L.sort [ "jig-sim-20261030T120000Z" <> s <> e | s <- "" : [ "-" <> show n | n <- [2 .. 6 :: Int] ], e <- [".json", ".md", ".xml"] ]
+        versions <- for (filter (".json" `L.isSuffixOf`) (concat written')) $ \f ->
+          readFileBinary f >>= either throwString (pure . at "hsed") . A.eitherDecodeStrict'
+        L.sort versions `shouldBe` map (Just . A.String . tshow) [1 .. 6 :: Int]
 
   describe "verifyTranscript" $ do
     let report dir rr = writeReports dir rr <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)

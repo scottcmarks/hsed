@@ -12,10 +12,14 @@ Stability   : experimental
 What the jig does when it writes as root (design 9.3), run here as the user
 with a writer that says it is root: a path with @..@ refused; a directory
 on the path that is a link the user owns refused, nothing written through
-it; a link planted at the file replaced, its target untouched; the
-directories it creates and the file handed over (to a group of the user's
-other than the one they would get), the directories that were there left
-as they were. A writer that is not root writes as the jig always did.
+it; the directories it creates and the file handed over (to a group of the
+user's other than the one they would get), the directories that were there
+left as they were. Those two refusals are root's alone: a writer that is
+not root writes through a @..@ or a link on the way. What every writer
+does: a link planted at the file replaced, its target untouched, never
+written through; a name created exclusively taken once, a second creation
+refused with nothing written, a link planted at the name counting as
+taken.
 -}
 module Hsed.Jig.FilesSpec (spec) where
 
@@ -65,13 +69,27 @@ spec = describe "Hsed.Jig.Files" $ do
       writeAs asUser (tmp </> "link" </> "f") "x"
       doesFileExist (tmp </> "real" </> "f") `shouldReturn` True
 
-  it "replaces a link planted at the file, its target untouched" $ withSystemTempDirectory "hsed-files" $ \tmp -> do
-    writeFileBinary (tmp </> "victim") "keep"
-    createSymbolicLink (tmp </> "victim") (tmp </> "out.bin")
-    writeAs asRoot (tmp </> "out.bin") "new"
-    readFileBinary (tmp </> "victim") `shouldReturn` "keep"
-    readFileBinary (tmp </> "out.bin") `shouldReturn` "new"
-    isSymbolicLink <$> getSymbolicLinkStatus (tmp </> "out.bin") `shouldReturn` False
+  it "as any writer, replaces a link planted at the file, its target untouched" $ withSystemTempDirectory "hsed-files" $ \tmp ->
+    for_ [("root", asRoot), ("user", asUser)] $ \(who, w) -> do
+      createDirectory (tmp </> who)
+      writeFileBinary (tmp </> who </> "victim") "keep"
+      createSymbolicLink (tmp </> who </> "victim") (tmp </> who </> "out.bin")
+      writeAs w (tmp </> who </> "out.bin") "new"
+      readFileBinary (tmp </> who </> "victim") `shouldReturn` "keep"
+      readFileBinary (tmp </> who </> "out.bin") `shouldReturn` "new"
+      isSymbolicLink <$> getSymbolicLinkStatus (tmp </> who </> "out.bin") `shouldReturn` False
+
+  it "as any writer, creates a file at its name once: a second creation is refused with nothing written, a planted link counts as taken" $
+    withSystemTempDirectory "hsed-files" $ \tmp ->
+      for_ [("root", asRoot), ("user", asUser)] $ \(who, w) -> do
+        createAs w (tmp </> who </> "a" </> "first.bin") "one" `shouldReturn` True
+        createAs w (tmp </> who </> "a" </> "first.bin") "two" `shouldReturn` False
+        readFileBinary (tmp </> who </> "a" </> "first.bin") `shouldReturn` "one"
+        writeFileBinary (tmp </> who </> "victim") "keep"
+        createSymbolicLink (tmp </> who </> "victim") (tmp </> who </> "linked.bin")
+        createAs w (tmp </> who </> "linked.bin") "new" `shouldReturn` False
+        readFileBinary (tmp </> who </> "victim") `shouldReturn` "keep"
+        isSymbolicLink <$> getSymbolicLinkStatus (tmp </> who </> "linked.bin") `shouldReturn` True
 
   it "leaves nothing beside the file when the write fails" $ withSystemTempDirectory "hsed-files" $ \tmp -> do
     createDirectory (tmp </> "out.bin")

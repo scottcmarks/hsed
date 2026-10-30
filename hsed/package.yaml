@@ -15,6 +15,19 @@ copyright:           Magnolia Heights R&D
 # common to point users to the README.md file.
 description:         Please see the README on Github at <https://github.com/scottcmarks/hsed#readme>
 
+# the kext shim's header, compiled into the library only under the kext flag
+extra-source-files:
+- cbits/*.h
+
+flags:
+  # The macOS drive transport (Hsed.Transport.MacKext): the C shim cbits/hsed_kext.c over IOKit, which can
+  # issue Level 0 IF-RECV alone (design 7.2, 9.3). Manual and off: never in CI's builds; on with
+  # stack build hsed --flag hsed:kext, built as yourself, never with sudo stack.
+  kext:
+    description: Build the kext transport's C shim (macOS only)
+    manual: true
+    default: false
+
 dependencies:
 - base >= 4.10 && < 10
 - rio >= 0.1.1.0
@@ -51,6 +64,17 @@ library:
   - condition: '!os(windows)'
     dependencies:
     - unix
+  # the kext shim, and Hsed.Transport.MacKext's foreign imports of it (CPP HSED_KEXT)
+  - condition: flag(kext) && os(darwin)
+    c-sources:
+    - cbits/hsed_kext.c
+    include-dirs:
+    - cbits
+    frameworks:
+    - IOKit
+    - CoreFoundation
+    cpp-options:
+    - -DHSED_KEXT
 
 executables:
   # the host test jig (design 9.2, M3): its command line; what each command does is Hsed.Jig.Cli

@@ -94,8 +94,8 @@ paired :: RunResult
 paired = sample
   { rrOptions  = defaultRunOptions { roTarget = TPair TSim (TReplay "disk6.bin") }
   , rrTargets  = rrTargets sample <> [Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin")]
-  , rrCases    = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "replay: no Level 0") [] []
-                     [("sim", Pass), ("replay", Skipped "no Level 0")] ]
+  , rrCases    = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "drive-replay: no Level 0") [] []
+                     [("tper", Pass), ("drive-replay", Skipped "no Level 0")] ]
   , rrPair     = Just (PairReport [0x0005] [0x0403] [] [] [])
   , rrIfSends  = 1
   , rrProblems = ["--capture-level0 x.bin: no drive to capture"]
@@ -181,9 +181,9 @@ spec = do
         json <- readFileBinary (fromMaybe "" (L.find (".json" `L.isSuffixOf`) paths)) >>= either throwString pure . A.eitherDecodeStrict'
         md <- readFileUtf8 (fromMaybe "" (L.find (".md" `L.isSuffixOf`) paths))
         [ (at "end" e, at "verdict" e) | Just (A.Array cs) <- [at "cases" json], c <- toList cs, Just (A.Array es) <- [at "ends" c], e <- toList es ]
-          `shouldBe` [(Just "sim", Just "pass"), (Just "replay", Just "skipped")]
+          `shouldBe` [(Just "tper", Just "pass"), (Just "drive-replay", Just "skipped")]
         at "problems" json `shouldBe` Just (A.toJSON ["--capture-level0 x.bin: no drive to capture" :: Text])
-        md `shouldSatisfy` T.isInfixOf "- replay: skipped: no Level 0"
+        md `shouldSatisfy` T.isInfixOf "- drive-replay: skipped: no Level 0"
         md `shouldSatisfy` T.isInfixOf "## Problems"
         md `shouldSatisfy` T.isInfixOf "- simulator: units"
         (_, _, replayOnly) <- written sample { rrTargets = drop 1 (rrTargets paired) }

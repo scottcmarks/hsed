@@ -80,7 +80,8 @@ import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairRep
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
 import           Hsed.Jig.Script        (Verdict (..), describeStatus, t45Of, t45RowOf, verdictText)
 import           Hsed.Jig.Transcript    (TEntry (..))
-import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, splitLevel0)
+import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, describeProblem,
+                                         splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
 import           Hsed.Sim.Sync          (T45Row (..))
 import           Hsed.Sim.Types         (SimParams (..))
@@ -96,7 +97,8 @@ data CaseResult = CaseResult
   , crVerdict    :: !Verdict
   , crWaivers    :: ![Waiver]
   , crExtensions :: ![(Text, Verdict)]
-  , crEnds       :: ![(Text, Verdict)]  -- ^ each end's verdict, by the end's name; none for a run of one end
+  , crEnds       :: ![(Text, Verdict)]  -- ^ each end's verdict, by the end's name, its transport's role (@tper@, @drive@,
+                                        --   @drive-replay@, as the transcript's entries name it); none for a run of one end
   }
   deriving (Eq, Show)
 
@@ -108,7 +110,7 @@ data RunResult = RunResult
   , rrTargets    :: ![Describe]         -- ^ what each transport said it is (two for a pair)
   , rrCases      :: ![CaseResult]
   , rrTranscript :: ![TEntry]
-  , rrLevel0     :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name
+  , rrLevel0     :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name (its transport's role)
   , rrPair       :: !(Maybe PairReport)
   , rrIfSends    :: !Int                -- ^ the IF-SENDs issued on a drive (none at M3)
   , rrProblems   :: ![Text]             -- ^ what else failed the run: the capture, a pair not computed
@@ -397,7 +399,7 @@ level0Lines l0s = ["## Level 0", ""] <> concatMap end l0s
     end (name, l0) =
       [ "### " <> name <> ": Length of Parameter Data " <> tshow (l0LengthOfParameterData l0) <> ", "
           <> tshow (length (l0Descriptors l0)) <> " descriptors", "" ]
-      <> [ "- problem: " <> tshow p | p <- l0Problems l0 ]
+      <> [ "- " <> describeProblem p | p <- l0Problems l0 ]
       <> [ "" | not (null (l0Problems l0)) ]
       <> [ "| code | version | bytes | read as | fields |", "|---|---|---|---|---|" ]
       <> map descriptorRow (l0Descriptors l0)

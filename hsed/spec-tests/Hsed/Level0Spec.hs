@@ -166,6 +166,10 @@ spec = describe "a Level 0 Discovery response" $ do
       allowedByOpal (HeaderDiffers [ReservedNotZero "Reserved" 64 1]) `shouldBe` False
       allowedByOpal (HeaderDiffers []) `shouldBe` False
       map allowedByOpal [OutOfCodeOrder 1 1, NonZeroPadding 300, BeyondTransfer 300 200] `shouldBe` [False, False, False]
+    it "is printed as allowed, with where Opal allows it, or as a problem, wherever the jig prints one" $ do
+      describeProblem (HeaderDiffers [PinDiffers "Data Structure Minor Version" 48 1 2])
+        `shouldBe` "allowed (Opal 2.30 Table 2, PDF 19): HeaderDiffers [PinDiffers \"Data Structure Minor Version\" 48 1 2]"
+      describeProblem (NonZeroPadding 300) `shouldBe` "problem: NonZeroPadding 300"
     it "a Length of Parameter Data short of the header's 44 bytes after it is reported" $
       forM_ [0, 20, 43] $ \n ->
         withSplit (B.pack [0, 0, 0, n, 0, 0, 0, 1] <> B.replicate 2040 0) $ \l0 ->

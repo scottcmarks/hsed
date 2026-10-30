@@ -23,8 +23,9 @@ and the capture asked for was written; 1 a failure: a case failed, or was
 skipped or unobservable without a waiver, an extension failed, the pair
 found a code missing or a difference not allowed, the capture failed, or a
 profile or target named could not be read or opened; 2 a usage error (a key
-the catalogue lacks, a drive target without @--expect-serial@); 3 a safety
-violation (a drive target without root, or an IF-SEND issued on a drive).
+the catalogue lacks, a drive target without @--expect-serial@, a Level 0
+transfer length a drive or a replay cannot carry); 3 a safety violation (a
+drive target without root, or an IF-SEND issued on a drive).
 
 The cases run in the catalogue's order, whatever the order of @--tests@ (the
 Test Cases run section 5's in sequence, 3.1, PDF 25); a key naming a whole
@@ -34,7 +35,9 @@ and a drive's is put behind the Guard (Level0Only), every command it is
 given checked first, and also records into a transcript of its own, from
 which the IF-SENDs issued on the drive are counted. A pair's ends run each
 case in turn, the simulator first, each case's verdicts joined, each with
-its end's name; then the two Level 0 responses are compared
+its end's name, its transport's role (@tper@, @drive@, @drive-replay@: the
+one name the transcript's entries carry, "Hsed.Jig.Transcript"); then the
+two Level 0 responses are compared
 ("Hsed.Jig.Pair"), discovered after the cases when UCT-01 did not. A drive
 is never asked for Level 0 again once it was asked (a failed kext command
 leaks a SCSI task in the kext), for the pair or for the capture.
@@ -86,8 +89,9 @@ import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
 import           Hsed.Version           (hsedVersion)
-import           Hsed.Wire              (Describe, Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
-                                         comPacketProtocol, describeTransport, level0ComId, newChannel, transferLength)
+import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
+                                         comPacketProtocol, describeTransport, level0ComId, mostCarried, newChannel, roundUp,
+                                         transferLength)
 
 
 -- | The cases the jig runs, one for each entry of the catalogue.
@@ -106,6 +110,7 @@ runJig opts0 = do
           traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs --expect-serial SERIAL: a drive is opened only as "
                                       <> "the one named")) devs
           pure (ExitFailure 2)
+      | Just why <- level0LenProblem opts0 -> complain why $> ExitFailure 2
       | not root, devs@(_ : _) <- devices (roTarget opts0) -> do
           traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs root (sudo), hsed's own gate: the kext checks no "
                                       <> "privilege (design 9.3)")) devs
@@ -134,6 +139,31 @@ devices = \case
   TPair a b -> devices a <> devices b
   _         -> []
 
+-- | Whether a target has a drive's end, its own or a replay.
+hasDriveEnd :: TargetSpec -> Bool
+hasDriveEnd = \case
+  TSim      -> False
+  TDevice _ -> True
+  TReplay _ -> True
+  TPair a b -> hasDriveEnd a || hasDriveEnd b
+
+-- | Why the run's Level 0 transfer length (@--level0-len@) is one a drive
+--   cannot carry, if it is: more than 255 blocks of 512 bytes once rounded
+--   up to blocks, the count byte of the kext's CDB ("Hsed.Transport.Cdb",
+--   design 6.2), on a target with a drive's end (a replay stands in for the
+--   drive command for command). A usage error, found before anything opens:
+--   the transport would otherwise refuse the IF-RECV at run time and the
+--   case fail on it.
+level0LenProblem :: RunOptions -> Maybe Text
+level0LenProblem opts
+  | hasDriveEnd (roTarget opts), roundUp UnitBlocks512 len > most =
+      Just ("hsed-jig: --level0-len " <> tshow len <> ": a drive or a replay carries at most " <> tshow most
+            <> " bytes, 255 blocks of 512 (the count byte of the kext's CDB, design 6.2)")
+  | otherwise = Nothing
+  where
+    len  = roLevel0Len opts
+    most = mostCarried UnitBlocks512
+
 -- | The cases @--tests@ selects, in the catalogue's order: all of them for
 --   none; a key naming a whole test, every case of it.
 selected :: [CaseKey] -> Either Text [Case]
@@ -158,8 +188,10 @@ withProfile opts = case roProfile opts of
 
 -- * The ends of a run
 
--- | One end of a run: its name, its environment, and for a drive the
---   transcript of what was issued to it and what the IORegistry says of it.
+-- | One end of a run: its name (its transport's role, the name the
+--   transcript's entries carry: @tper@, @drive@, @drive-replay@), its
+--   environment, and for a drive the transcript of what was issued to it
+--   and what the IORegistry says of it.
 data End = End
   { endName  :: !Text
   , endEnv   :: !RunEnv
@@ -170,12 +202,13 @@ data End = End
 --   drive's also into its own, behind the Guard.
 endsOf :: RunOptions -> Transcript -> LogFunc -> Target -> IO [End]
 endsOf opts t lf = \case
-  SimTarget tr control -> pure <$> end "sim" (SimTarget (recording t tr) control) Nothing
+  SimTarget tr control -> pure <$> end (roleOf tr) (SimTarget (recording t tr) control) Nothing
   DriveTarget tr di    -> do
     own <- newTranscript
-    pure <$> end (maybe "replay" (const "drive") di) (DriveTarget (guarding t drivePolicy (recording t (recording own tr))) di) (Just (own, di))
+    pure <$> end (roleOf tr) (DriveTarget (guarding t drivePolicy (recording t (recording own tr))) di) (Just (own, di))
   PairTarget a b       -> (<>) <$> endsOf opts t lf a <*> endsOf opts t lf b
   where
+    roleOf tr = dRole (describeTransport tr)
     end name tg drive = do
       channel <- newChannel
       ctx <- newIORef (RunCtx Nothing Nothing Nothing)

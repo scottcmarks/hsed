@@ -56,7 +56,7 @@ import           Hsed.Jig.Options     (TargetSpec (..))
 import           Hsed.Jig.Report      (diffReports, verifyTranscript)
 import           Hsed.Jig.Run         (RunOptions (..), runJig)
 import           Hsed.Level0          (DecodedDescriptor (..), Descriptor (..), Level0 (..), allowedByOpal,
-                                       decodeDescriptor, splitLevel0)
+                                       decodeDescriptor, describeProblem, splitLevel0)
 import           Hsed.Level0.Sedutil  (SedutilQuery (..), compareQuery, parseQuery, synthesize)
 import           Hsed.Sim.FeatureSets (NamespaceLockingFeature)
 
@@ -157,7 +157,7 @@ level0Synthesize queryFile out = do
 describeLevel0 :: Level0 -> [Text]
 describeLevel0 l0 =
   ("Length of Parameter Data " <> tshow (l0LengthOfParameterData l0) <> ", " <> tshow (length (l0Descriptors l0)) <> " descriptors")
-  : map (\p -> (if allowedByOpal p then "allowed (Opal 2.30 Table 2, PDF 19): " else "problem: ") <> tshow p) (l0Problems l0)
+  : map describeProblem (l0Problems l0)
   <> concatMap descriptor (l0Descriptors l0)
   where
     descriptor d =

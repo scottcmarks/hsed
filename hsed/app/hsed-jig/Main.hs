@@ -44,7 +44,7 @@ hsedJig = info (commands <**> helper <**> versionOption)
     versionOption = infoOption (T.unpack hsedVersion) (long "version" <> help "Show the version")
 
 exitCodes :: String
-exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed), no simulator extension failed, a pair found only allowed or unchecked differences, and a capture asked for was written; 1 a failure: a case failed or was skipped or unobservable without a waiver, an extension failed, the pair found a code missing or a difference not allowed, the capture failed, or a profile or target named could not be read or opened; 2 a usage error (a key the catalogue lacks, a drive target without --expect-serial); 3 a safety violation (a drive target without root, or an IF-SEND issued on a drive)."
+exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed), no simulator extension failed, a pair found only allowed or unchecked differences, and a capture asked for was written; 1 a failure: a case failed or was skipped or unobservable without a waiver, an extension failed, the pair found a code missing or a difference not allowed, the capture failed, or a profile or target named could not be read or opened; 2 a usage error (a key the catalogue lacks, a drive target without --expect-serial, a --level0-len a drive or a replay cannot carry); 3 a safety violation (a drive target without root, or an IF-SEND issued on a drive)."
 
 -- | A subcommand: its parser and its description (hsubparser gives it
 --   --help), a usage error exiting 2.
@@ -109,7 +109,8 @@ runOptions = options <**> laterMilestones
             <> help "drive: write its Level 0 response to FILE and its sidecar to FILE.json"))
       <*> option (eitherReader level0Len) (long "level0-len" <> metavar "BYTES" <> value (roLevel0Len defaultRunOptions) <> showDefault
             <> help ("the Level 0 IF-RECV's transfer length, on the simulator or a drive: 1 to " <> show mostLevel0
-                     <> " bytes, rounded up to the target's unit (a drive carries at most 255 blocks of 512)"))
+                     <> " bytes, rounded up to the target's unit (a drive or a replay carries at most 255 blocks of 512, "
+                     <> show (mostCarried UnitBlocks512) <> " bytes: more is a usage error)"))
       <*> strOption (long "report-dir" <> metavar "DIR" <> value (roReportDir defaultRunOptions) <> showDefault
             <> help "where the reports go")
     mk target tests u holding holdN profile discard serial capture len dir = defaultRunOptions

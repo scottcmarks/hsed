@@ -36,7 +36,9 @@ shorter version) is kept and stepped past like any other, and only
 response is kept with the bytes there are and reported. The response's
 problems are reported, not refused: 'splitLevel0' fails only on a
 transfer shorter than Table 39's header. Opal 2.30 allows one of Core's: a
-data structure revision other than Table 39's ('allowedByOpal').
+data structure revision other than Table 39's ('allowedByOpal'), which the
+jig says is allowed wherever it prints a problem ('describeProblem': the
+transcript's note, the reports, @level0 decode@).
 
 The JSON of these types (aeson's 'A.ToJSON') is what the jig's reports
 print of a Level 0 response; bytes in hex ("Hsed.Wire".'trimmedHex').
@@ -47,6 +49,7 @@ module Hsed.Level0
   , Descriptor (..)
   , Level0Problem (..)
   , allowedByOpal
+  , describeProblem
   , cutShort
   , splitLevel0
   , renderLevel0
@@ -121,6 +124,12 @@ allowedByOpal = \case
     revision = \case
       PinDiffers name _ _ _ -> name `elem` ["Data Structure Major Version", "Data Structure Minor Version"]
       _                     -> False
+
+-- | A problem as the jig prints it, in a run's transcript and reports and
+--   by @level0 decode@: one Opal 2.30 allows ('allowedByOpal') said so,
+--   with where it does; any other a problem.
+describeProblem :: Level0Problem -> Text
+describeProblem p = (if allowedByOpal p then "allowed (Opal 2.30 Table 2, PDF 19): " else "problem: ") <> tshow p
 
 -- | Whether a problem says the response was cut short, its descriptors some
 --   of the drive's or part of one: Length of Parameter Data past the

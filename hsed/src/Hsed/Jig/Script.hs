@@ -103,7 +103,7 @@ import           Hsed.Jig.Guard         (Policy (..), guardedRecv, guardedSend)
 import           Hsed.Jig.Options       (RunOptions (..))
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, record)
-import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), splitLevel0)
+import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
 import           Hsed.Sim.Sync          (T45Row (..), t45Rows)
 import           Hsed.Sim.Types         (maxComPacketSizeName)
@@ -252,7 +252,8 @@ modifyCtx f = asks reCtx >>= (`modifyIORef'` f)
 --   length, up to 255 blocks of 512 bytes (the count byte of the kext's CDB,
 --   design 6.2), and only after a response that succeeded (a failed kext
 --   command leaks a SCSI task in the kext, so none is asked again). On a
---   drive the kext's CDB is noted; the split's problems are noted too.
+--   drive the kext's CDB is noted; the split's problems are noted too, one
+--   Opal allows said so ("Hsed.Level0".'describeProblem').
 discover :: Script Level0
 discover = do
   u <- endUnit
@@ -262,7 +263,7 @@ discover = do
     asked : _ | again > len -> level0Of again
       where again = min level0Most (roundUp u asked)
     _ -> pure firstTry
-  unless (null (l0Problems l0)) (note ("Level 0 Discovery: " <> T.intercalate "; " (map tshow (l0Problems l0))))
+  unless (null (l0Problems l0)) (note ("Level 0 Discovery: " <> T.intercalate "; " (map describeProblem (l0Problems l0))))
   l0 <$ modifyCtx (\c -> c { rcLevel0 = Just l0 })
 
 -- | One Level 0 IF-RECV, split; on a drive the CDB that carries it noted

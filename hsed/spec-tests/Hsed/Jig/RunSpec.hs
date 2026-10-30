@@ -23,9 +23,12 @@ LockingManufactured are printed; paired with the simulator, 0x0403 is
 missing without a profile and the comparison passes with it; standing in
 for the kext's drive, the replay's transcript notes the hardware run's CDB
 and the capture is written; a drive whose Level 0 Discovery fails is asked
-once and never again. And what the run refuses before it opens anything:
-a key the catalogue lacks (exit 2), a drive without the serial it must have
-(exit 2), a drive without root (exit 3).
+once and never again; a header revision Opal allows is noted as allowed.
+On a pair each end's verdicts and Level 0 are named by its transport's
+role, as the transcript's entries are. And what the run refuses before it
+opens anything: a key the catalogue lacks (exit 2), a drive without the
+serial it must have (exit 2), a Level 0 length a drive or a replay cannot
+carry (exit 2), a drive without root (exit 3).
 -}
 module Hsed.Jig.RunSpec (spec) where
 
@@ -121,6 +124,11 @@ spec = do
     it "a drive without --expect-serial, alone or paired, root or not: exit 2" $ do
       silently (runJig defaultRunOptions { roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roTarget = TPair TSim (TDevice "/dev/disk99") }) `shouldReturn` ExitFailure 2
+    it "a Level 0 length a drive or a replay cannot carry (255 blocks of 512), alone or paired: exit 2; one it can, opened" $ do
+      silently (runJig defaultRunOptions { roTarget = TReplay "nowhere.bin", roLevel0Len = 1048576 }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roTarget = TReplay "nowhere.bin", roLevel0Len = 130561 }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roTarget = TPair TSim (TReplay "nowhere.bin"), roLevel0Len = 1048576 }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roTarget = TReplay "nowhere.bin", roLevel0Len = 130560 }) `shouldReturn` ExitFailure 1
     it "a drive without root, alone or paired: exit 3" $ do
       root <- runningAsRoot
       let named = defaultRunOptions { roExpectSerial = Just "S0000000000000" }
@@ -188,6 +196,16 @@ spec = do
         disk6Like >>= writeFileBinary file
         (code, _, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
         code `shouldBe` ExitSuccess
+    it "notes a header revision Opal 2.30 Table 2 allows as allowed, in the transcript and the Markdown, and passes UCT-01" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        let file = dir </> "minor-2.bin"
+        bytes <- disk6Like
+        writeFileBinary file (B.take 6 bytes <> B.pack [0x00, 0x02] <> B.drop 8 bytes)
+        (code, json, md) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
+        code `shouldBe` ExitSuccess
+        [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e], "Level 0 Discovery: " `T.isPrefixOf` t ]
+          `shouldSatisfy` any (T.isPrefixOf "Level 0 Discovery: allowed (Opal 2.30 Table 2, PDF 19): HeaderDiffers")
+        md `shouldSatisfy` T.isInfixOf "- allowed (Opal 2.30 Table 2, PDF 19): HeaderDiffers"
     it "fails UCT-01's step 1c on a response whose Length of Parameter Data asks for more than 255 blocks" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "huge.bin"
@@ -258,6 +276,9 @@ spec = do
         (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TPair TSim (TReplay file), roTests = keys "UCT-01" }
         atPath ["pair", "missing"] json `shouldBe` Just (A.toJSON [0x0403 :: Int])
         code `shouldBe` ExitFailure 1
+        [ at "end" e | c <- elements (at "cases" json), e <- elements (at "ends" c) ] `shouldBe` [str "tper", str "drive-replay"]
+        [ at "end" l | l <- elements (at "level0" json) ] `shouldBe` [str "tper", str "drive-replay"]
+        L.nub [ at "end" e | e <- elements (at "transcript" json), at "entry" e == str "issued" ] `shouldBe` [str "tper", str "drive-replay"]
     it "with it as the profile, finds extra 0x0005 and 0x0404, only differences allowed: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"

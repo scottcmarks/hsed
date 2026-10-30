@@ -46,6 +46,7 @@ library:
   source-dirs:
   - src
   - gen
+  # mirrored by hsed-doc-test's list below, which interprets these sources: a dependency added here is added there
   dependencies:
   - hsed-core
   - aeson              # the wire types' and the jig reports' JSON (M3)
@@ -143,7 +144,8 @@ tests:
 
   # doctest over every module under src that holds an example (a `-- >>>` line), listed when the suite
   # runs, as hsed-core's suite lists its modules (design 12). The suite interprets the library's sources
-  # (src and gen on its path), so it needs the library's dependencies, listed here again.
+  # (src and gen on its path), so it needs the library's dependencies, listed here again: a dependency added to the
+  # library above is added here too (its list says so).
   hsed-doc-test:
     main:                DocTest.hs
     source-dirs:         doc-tests

@@ -69,7 +69,8 @@ jobs:
       # does not hold, so that the cached .stack-work stays flag-off and the next run's tests do not
       # rebuild hsed (design 5.4 a); the snapshot's packages come from the cached ~/.stack. That work dir
       # has a cache of its own, under its own key, so that the step compiles only what changed since the
-      # last run rather than hsed-core, hsed-spec and hsed from nothing each time.
+      # cache was last saved (actions/cache saves on a key miss alone: a run that changed stack.yaml or a
+      # package.yaml) rather than hsed-core, hsed-spec and hsed from nothing each time.
       - if: runner.os == 'macOS'
         uses: actions/cache@v4
         with:

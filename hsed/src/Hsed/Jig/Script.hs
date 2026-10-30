@@ -112,7 +112,8 @@ import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Wire              (Cap (..), Channel, Dir (..), ExchangeError (..), ExchangeOpts (..), IfStatus (..),
                                          Request (..), Response (..), Transport, Unit (..), comPacketProtocol, dataKind,
                                          defaultExchangeOpts, exchangeComPacket, hex, ifRecv, ifSend, ifStatusDetail,
-                                         ifStatusName, level0ComId, roundUp, staticExtension, transferLength, unitOf)
+                                         ifStatusName, level0ComId, mostCarried, roundUp, staticExtension, transferLength,
+                                         unitOf)
 
 
 -- * The run's environment
@@ -280,10 +281,11 @@ level0Of len = do
   either (unmet . ("Level 0 Discovery: the response does not split: " <>) . tshow) pure (splitLevel0 (rpayload r))
 
 -- | The bytes of a 512-byte block, and the most a Level 0 IF-RECV asks for:
---   255 of them, the count byte of the kext's CDB (design 6.2).
+--   255 of them, the count byte of the kext's CDB, "Hsed.Wire".'mostCarried'
+--   (design 6.2).
 blockBytes, level0Most :: Word32
 blockBytes = transferLength UnitBlocks512 1
-level0Most = transferLength UnitBlocks512 (fromIntegral (maxBound :: Word8))
+level0Most = mostCarried UnitBlocks512
 
 -- | IF-RECV of the run's transfer length on a ComID: the MaxComPacketSize
 --   Properties reported, or the least an Opal TPer reports

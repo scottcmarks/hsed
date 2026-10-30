@@ -76,7 +76,7 @@ sample = RunResult
       , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] [] []
       ]
   , rrTranscript =
-      [ Note 1 "UCT-01 on the sim"
+      [ Note 1 "UCT-01 on the tper"
       , Issued 2 "tper" propertiesSend (Response Good mempty)
       , Blocked 3 "drive" propertiesSend "Level0Only: no IF-SEND reaches a drive at M3 (design 9.3)"
       ]
@@ -262,7 +262,7 @@ spec = do
     it "compares two reports' Level 0 responses as the Pair runner does" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         let level0 ds = Level0 mempty 0 [ Descriptor c 1 (B.replicate 12 (fromIntegral c)) | c <- ds ] mempty []
-            report sub ds = writeReports (dir </> sub) quiet { rrLevel0 = [("sim", level0 ds)] } >>= \paths -> case paths of
+            report sub ds = writeReports (dir </> sub) quiet { rrLevel0 = [("tper", level0 ds)] } >>= \paths -> case paths of
               json : _ -> pure json
               []       -> throwString "no report written"
         sim <- report "a" [0x0001, 0x0005]

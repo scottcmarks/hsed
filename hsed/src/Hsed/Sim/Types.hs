@@ -31,9 +31,10 @@ Opal 2.30 Table 17 has a TPer report), so that every descriptor the
 simulator sends encodes, every static ComID is one a TPer may have and
 every limit is one an Opal TPer may report; the in-process transport is
 opened only with parameters that pass. Table 17's two columns are written
-once each: 'tperRequirements', the TPer's, which the default parameters
-report and a property not reported falls back to, and 'hostRequirements',
-the host's. 'Limits' are what each end takes in a ComPacket (Core
+once each in the simulator: 'tperRequirements', the TPer's, which the
+default parameters report and a property not reported falls back to, and
+'hostRequirements', the host's (the host's default receive length in
+"Hsed.Wire" cites the same MaxComPacketSize cell). 'Limits' are what each end takes in a ComPacket (Core
 5.2.2.4.1): the TPer's from its properties, the host's Table 17's initial
 assumptions, the host's properties not being kept before M4a.
 -}

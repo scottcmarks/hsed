@@ -14,10 +14,10 @@ What a run writes (design 9.2): @build/report/jig-<target>-<UTC stamp>@ as
 JSON (the wire types' own, "Hsed.Wire.Internal"), as Markdown (the
 verdicts, each end's beside a pair's joined one, each waiver with its reason
 and page, the decodes, the pair comparison, the run's problems) and as JUnit
-XML, through "Hsed.Jig.Files", each name claimed exclusively, so that a run
-that started in the same second as another, or together with it, takes the
-next free suffix (@-2@, @-3@) and neither writes over the other's. The
-JUnit report holds a test case for each case and extension, for the
+XML, through "Hsed.Jig.Files", the JSON's name claimed exclusively and the
+Markdown's and JUnit's following it, so that a run that started in the same
+second as another, or together with it, takes the next free suffix (@-2@,
+@-3@) and neither writes over the other's. The JUnit report holds a test case for each case and extension, for the
 pair, for each problem (a capture, the pair not computed), for no IF-SEND on
 a drive, and one for the exit code, so that its failures never say less
 than the exit code does. And the commands

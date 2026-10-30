@@ -36,7 +36,9 @@ its page, until Opal's tables other than its descriptors are compiled (M5):
 Table 7, the SSC minor versions ('sscMinorVersions', PDF 24), which the
 Pair runner evaluates the Opal SSC V2 descriptor's SSC Minor Version Number
 against and UCT-01 names in its note. No other module of hsed writes a
-value of either spec by hand (design 13.28 (11)).
+Level 0 descriptor or a table of descriptor values by hand; Opal Table 17's
+two columns are "Hsed.Sim.Types"' (design 8.1) and the wire's constants
+"Hsed.Wire"'s (design 13.28 (11)).
 
 Verified at M3 (group G2) against the sources: SIIS byte 2 (Data Structure
 Version bits 7-4, reserved 3-0) and byte 5 (reserved bits 7-3, Identifier

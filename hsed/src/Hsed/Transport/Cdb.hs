@@ -45,7 +45,7 @@ import           RIO
 import qualified RIO.Text             as T
 
 import           Hsed.Transport.Drive (InterfaceType (..))
-import           Hsed.Wire            (Dir (..), Request (..), comPacketProtocol, hex, level0ComId)
+import           Hsed.Wire            (Dir (..), Request (..), Unit (..), comPacketProtocol, hex, level0ComId, mostCarried)
 
 
 -- | The 12 bytes of a Level 0 IF-RECV of a number of 512-byte blocks, or why
@@ -97,9 +97,10 @@ blockBytes = 512
 
 -- | The most blocks a Level 0 IF-RECV asks for, 255: the kext sizes an ATA
 --   PASS-THROUGH transfer from its COUNT byte alone, ignoring the length's
---   high byte (CDBAccess.cpp:46-50; design 6.2).
+--   high byte (CDBAccess.cpp:46-50; design 6.2). The count is
+--   "Hsed.Wire".'mostCarried''s, in blocks.
 maxLevel0Blocks :: Word32
-maxLevel0Blocks = 255
+maxLevel0Blocks = mostCarried UnitBlocks512 `div` blockBytes
 
 -- | The blocks a request asks for when it is the one command a drive
 --   transport carries at M3: IF-RECV of Level 0 Discovery, protocol 1 and

@@ -13,7 +13,10 @@ main goes stale without a rebuild: design docs/spec-as-source.md section 12).
 The modules are interpreted with @src@ and @gen@ on the path, so that the
 generated modules they import are found; none of those holds an example, and
 the modules without one are left out, which keeps the run to the examples'
-closure. Until the M3 review's verification hsed had no doctest suite, so its
+closure. That closure reaches @Hsed.Version@ and its @Paths_hsed@, which no
+source directory holds: GHC takes it from the built library in stack's
+package database, so the suite runs after the library is built, as a test
+suite does. Until the M3 review's verification hsed had no doctest suite, so its
 thirteen examples in nine modules (Hsed.Wire, Hsed.Level0 and
 Hsed.Transport.Kext among them) were read and never run.
 -}

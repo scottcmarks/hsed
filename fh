@@ -1,7 +1,8 @@
 #!/bin/bash
-# grep the Haskell sources of the three packages (their build directories left out)
+# grep the Haskell sources of the three packages (their work dirs, .stack-work and make werror's
+# .stack-work-werror, left out)
 cd ~/hsed
 find hsed-core hsed-spec hsed \
-    -name .stack-work -prune -o \
+    -name '.stack-work*' -prune -o \
     -type f \( -name '*.lhs' -o -name '*.hs' \) -not -name '*.th.hs' \
     -exec grep -nH "$*" {} ';'

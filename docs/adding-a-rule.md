@@ -128,8 +128,10 @@ module and calls its reader on the same `Context`; it never adds fields to the `
 exports its readers (`<rule>Reads`, `uidRows`) whether or not another rule calls them yet. Locate a
 finding about a table with `atTable ctx bt`, and one about one row with `atCells ctx bt cells`, which
 puts it on the page the row is printed on (a table spanning pages prints a row on its own page; the
-`stateTable` and `enumValues` readers' findings are about a table's rows together and stay at the
-table); give every finding a catalogue code. A check that joins two rules' readings belongs to the
+`stateTable` reader's findings are about a table's rows together and stay at the table, and since
+the M2d review `enumValues` puts a finding about rows, an overlap or a repeated label among them, at
+the page of the first of them and one about the table as a whole at the table); give every finding
+a catalogue code. A check that joins two rules' readings belongs to the
 rule whose module imports the other's: a rule imports the readers of the rules it reads and never the
 reverse, so no join can make a module cycle, and `atTable`/`atCells` place a finding at any bound
 table, whichever rule binds it (`preconfig`'s C-PRECONF-UID reads `uidTable`'s rows, `uidRows`, and

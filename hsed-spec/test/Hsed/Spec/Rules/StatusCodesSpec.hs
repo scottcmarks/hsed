@@ -74,7 +74,7 @@ spec = do
     describe "the checks" $ do
       it "find on the committed run the suffixed OBSOLETEs and that no subsection describes them, nothing else" $
         findings ir `shouldBe`
-          [ "N-STATUS-NAME-SUFFIXED core-2.01.pdf#page=137&T166: the name OBSOLETE is given to 0x02, 0x0d, 0x0e: the patterns are OBSOLETE_2, OBSOLETE_13, OBSOLETE_14"
+          [ "N-STATUS-NAME-SUFFIXED core-2.01.pdf#page=137&T166: the name OBSOLETE is given to 0x02, 0x0d, 0x0e: the patterns are OBSOLETE_2, OBSOLETE_13, OBSOLETE_14, each value's suffix in decimal"
           , "N-STATUS-UNDESCRIBED core-2.01.pdf#page=137&T166: no subsection of 5.1.5 describes OBSOLETE (0x02, 0x0d, 0x0e)" ]
       it "C-STATUS-CODE: a value given twice, and the table left out" $ do
         let broken = setCell "T166" 11 1 "0x0A" ir

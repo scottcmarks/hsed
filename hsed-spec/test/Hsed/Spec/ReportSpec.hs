@@ -78,7 +78,7 @@ spec = withCore $ \pristine -> do
       has "- `core-2.01.pdf#page=116&5.1.3.55` (section 5.1.3.55, printed page 99): \"Table 179\" in \"The enumeration values and their associations defined in Table 179.\" names Secure Column Values" `shouldBe` True
       has "- `core-2.01.pdf#page=124&T149` (Table 149, printed page 107): the UID 00 00 00 05 00 00 02 15 of uinteger_2" `shouldBe` True
       has "waived by its annotation" `shouldBe` True
-      has "- `core-2.01.pdf#page=109&T87` (Table 87, printed page 92): value 34 is assigned by" `shouldBe` True
+      has "- `core-2.01.pdf#page=110&T87` (Table 87, printed page 93): value 34 is assigned by" `shouldBe` True
       L.sort [ l | l <- lines', "### " `T.isPrefixOf` l, any (`T.isInfixOf` l) ["XREF-RESOLVES", "C-UID-UNIQUE", "W-ENUM-OVERLAP"] ]
         `shouldBe` L.sort [ "### " <> c <> ": " <> d <> " (" <> tshow n <> ")"
                           | c <- ["XREF-RESOLVES", "C-UID-UNIQUE", "W-ENUM-OVERLAP"], Just (Defect d) <- [reportsOf c]

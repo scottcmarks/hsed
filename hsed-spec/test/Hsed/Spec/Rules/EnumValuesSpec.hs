@@ -159,7 +159,9 @@ spec = do
         ir' <- annotated pristine (withoutLine "T87" hsa <> "core-2.01 | T87 | rangeWords [\"to\"] (cols 0 2 enumValues)\n")
         let errs = errorsOf Scott ir'
         errs `shouldSatisfy` (not . null)
-        errs `shouldSatisfy` all ("C-ENUM-RANGE core-2.01.pdf#page=109&T87: the value " `T.isPrefixOf`)
+        -- each at the page its row is printed on: T87 runs over PDF 109 and 110
+        errs `shouldSatisfy` all (\x -> any (`T.isPrefixOf` x) [ "C-ENUM-RANGE core-2.01.pdf#page=" <> p <> "&T87: the value " | p <- ["109", "110"] ])
+        errs `shouldSatisfy` elem "C-ENUM-RANGE core-2.01.pdf#page=110&T87: the value \"34-63\" has the label \"\", which has no letter or digit to name a constructor"
         errs `shouldSatisfy` all ("has the label \"\", which has no letter or digit to name a constructor" `T.isSuffixOf`)
         newlyExcluded ir ir' `shouldReturn` [(TableId 87, "C-ENUM-RANGE failed")]
 
@@ -167,11 +169,11 @@ spec = do
       it "W-ENUM-OVERLAP: a value assigned twice, the first kept" $
         about "T52" (checkIR Scott (setCell "T52" 1 0 "0" ir)) `shouldBe`
           ["W-ENUM-OVERLAP core-2.01.pdf#page=102&T52: value 0 is assigned by \"Wait for AdvKey_Req\" and \"Auto-advance keys\"; the first is kept"]
-      it "the T87 comment of design E4: rangeWords, cols, an overlap and a repeated label, under either errata set" $
+      it "the T87 comment of design E4: rangeWords, cols, an overlap and a repeated label, under either errata set, each at the page of its first row (PDF 110; the table starts on 109)" $
         forM_ [scott, published] $ \fs ->
           about "T87" fs `shouldBe`
-            [ "W-ENUM-LABEL-REPEATED core-2.01.pdf#page=109&T87: the label \"reserved\" is used by 2 rows; each of its values gets a suffixed constructor"
-            , "W-ENUM-OVERLAP core-2.01.pdf#page=109&T87: value 34 is assigned by \"active_reset_stop_detect\" and \"reserved\"; the first is kept" ]
+            [ "W-ENUM-LABEL-REPEATED core-2.01.pdf#page=110&T87: the label \"reserved\" is used by 2 rows; each of its values gets a suffixed constructor"
+            , "W-ENUM-OVERLAP core-2.01.pdf#page=110&T87: value 34 is assigned by \"active_reset_stop_detect\" and \"reserved\"; the first is kept" ]
       it "W-ENUM-LABEL-REPEATED on T87, T103 and T121, under either errata set" $
         forM_ [scott, published] $ \fs ->
           [ a | f <- fs, Cm.code f == "W-ENUM-LABEL-REPEATED", Just a <- [Cm.anchor f] ] `shouldBe` ["T87", "T103", "T121"]

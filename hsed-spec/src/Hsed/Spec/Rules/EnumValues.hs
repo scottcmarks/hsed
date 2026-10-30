@@ -29,7 +29,9 @@ distinct, and two labels that scrub to one constructor, or a label that scrubs
 to the one the gaps of the range take (@NA@), are an Error (the names
 'constructorNames' gives are the ones checked); a label used for more than one
 row is @W-ENUM-LABEL-REPEATED@ (each of its values gets a suffixed
-constructor).
+constructor). A finding about rows is located at the page the first of them
+is printed on (a table may span pages); one about the table as a whole (its
+range, a constructor defined twice, two labels merged) at the table.
 
 Compiled into 'enumsModule': @data Core_\<type\>@ (the spec's label,
 "Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with a constructor per
@@ -131,6 +133,7 @@ data EnumRead = EnumRead
   , erCaption    :: !Text                 -- ^ after errata, normalised
   , erIdent      :: !(Maybe Text)         -- ^ the type the corrected caption names
   , erRows       :: ![(Text, Text)]       -- ^ value cell and label after errata, in the bound columns
+  , erPages      :: ![Maybe Int]          -- ^ the 1-based page each row is printed on
   , erRangeWords :: ![Text]
   }
 
@@ -150,6 +153,7 @@ readEnums ctx = map readEnum
       in Right EnumRead
            { erAnchor = btAnchor bt, erTable = btTable bt, erCaption = normaliseCaption (fromMaybe "" t'.caption)
            , erIdent = enumIdent (measure (cxSpec ctx) t'), erRows = [ (cell a r, cell b r) | r <- t'.rows ]
+           , erPages = [ (+ 1) <$> listToMaybe (mapMaybe (.page) r) | r <- t'.rows ]
            , erRangeWords = mRangeWords (btMods bt) }
 
 -- | An enumeration's value cell: @n@, @a-b@ (a hyphen, an en dash or an em
@@ -190,25 +194,27 @@ checkEnum ctx rows e = case companion of
   Nothing -> failed [bad ("no type row for " <> fromMaybe "the caption's type" (erIdent e) <> " to take the range from")]
   Just tr -> case trTypeDef tr >>= rangeOf tr of
     Left f         -> failed [f]
-    Right (lo, hi) -> case traverse parsed (erRows e) of
+    Right (lo, hi) -> case traverse parsed (zip [0 ..] (erRows e)) of
       Left f      -> failed [f]
       Right given ->
-        let assigned  = concat [ [ (v, label) | v <- vs ] | (label, vs) <- given ]
-            outside   = [ (v, label) | (v, label) <- assigned, v < lo || v > hi ]
-            kept      = Map.toList (Map.fromListWith (\_ old -> old) [ (v, label) | (v, label) <- assigned ])
-            overlaps  = [ (v, ls) | (v, ls) <- Map.toList (Map.fromListWith (flip (<>)) [ (v, [l]) | (v, l) <- assigned ]), length ls > 1 ]
-            repeated  = [ (l, n) | (l, n) <- Map.toList (Map.fromListWith (+) [ (label, 1 :: Int) | (label, _) <- given ]), n > 1 ]
+        let assigned  = concat [ [ (v, (label, i)) | v <- vs ] | (i, label, vs) <- given ]
+            outside   = [ (v, label, i) | (v, (label, i)) <- assigned, v < lo || v > hi ]
+            kept      = Map.toList (Map.fromListWith (\_ old -> old) [ (v, label) | (v, (label, _)) <- assigned ])
+            overlaps  = [ (v, lis) | (v, lis) <- Map.toList (Map.fromListWith (flip (<>)) [ (v, [li]) | (v, li) <- assigned ]), length lis > 1 ]
+            repeated  = [ (l, is) | (l, is) <- Map.toList (Map.fromListWith (flip (<>)) [ (label, [i]) | (i, label, _) <- given ]), length is > 1 ]
             labelled  = [ (label, v) | (v, label) <- kept ]
-            nameless  = [ (cell, label) | (cell, label) <- erRows e, not (T.any C.isAlphaNum label) ]
+            nameless  = [ (cell, label, i) | (i, (cell, label)) <- zip [0 ..] (erRows e), not (T.any C.isAlphaNum label) ]
             coreName  = enumTypeName sid (trName tr)
             names     = map fst (constructorNames coreName (lo, hi) labelled)
             clashes   = [ n | (n, k) <- Map.toList (Map.fromListWith (+) [ (n, 1 :: Int) | n <- names ]), k > 1 ]
             merged    = [ srcs | srcs <- map (L.nub . map fst) (Map.elems (constructorGroups coreName (lo, hi) labelled)), length srcs > 1 ]
-            findings  = map (\(v, l) -> bad ("value " <> tshow v <> " (" <> tshow l <> ") lies outside " <> tshow lo <> ".." <> tshow hi
-                                              <> " of " <> renderAnchorId (trAnchor tr) <> " " <> trName tr)) outside
-                     <> map (\(c, l) -> bad ("the value " <> tshow c <> " has the label " <> tshow l <> ", which has no letter or digit to name a constructor")) nameless
-                     <> map (\(v, ls) -> warn "W-ENUM-OVERLAP" ("value " <> tshow v <> " is assigned by " <> T.intercalate " and " (map tshow ls) <> "; the first is kept")) overlaps
-                     <> map (\(l, n) -> warn "W-ENUM-LABEL-REPEATED" ("the label " <> tshow l <> " is used by " <> tshow n <> " rows; each of its values gets a suffixed constructor")) repeated
+            findings  = map (\(v, l, i) -> atRows [i] (err ("value " <> tshow v <> " (" <> tshow l <> ") lies outside " <> tshow lo <> ".." <> tshow hi
+                                                            <> " of " <> renderAnchorId (trAnchor tr) <> " " <> trName tr))) outside
+                     <> map (\(c, l, i) -> atRows [i] (err ("the value " <> tshow c <> " has the label " <> tshow l <> ", which has no letter or digit to name a constructor"))) nameless
+                     <> map (\(v, lis) -> atRows (map snd lis) (finding Warning "W-ENUM-OVERLAP"
+                                            ("value " <> tshow v <> " is assigned by " <> T.intercalate " and " (map (tshow . fst) lis) <> "; the first is kept"))) overlaps
+                     <> map (\(l, is) -> atRows is (finding Warning "W-ENUM-LABEL-REPEATED"
+                                           ("the label " <> tshow l <> " is used by " <> tshow (length is) <> " rows; each of its values gets a suffixed constructor"))) repeated
                      <> map (\n -> bad ("the constructor " <> n <> " would be defined twice")) clashes
                      <> map (\srcs -> bad ("the " <> merging srcs <> " give the same constructor")) merged
         in EnumCheck findings
@@ -216,13 +222,17 @@ checkEnum ctx rows e = case companion of
               else (\uidBytes -> (trName tr, labelled, uidBytes, (lo, hi))) <$> trUID tr)
   where
     sid      = cxSpec ctx
-    here     = locatedAt sid (renderAnchorId (erAnchor e)) (fromMaybe 1 (tablePage (erTable e)))
-    bad      = here . finding Error "C-ENUM-RANGE"
-    warn c   = here . finding Warning c
+    aid      = renderAnchorId (erAnchor e)
+    atTable' = fromMaybe 1 (tablePage (erTable e))
+    here     = locatedAt sid aid atTable'
+    -- a finding about rows, at the page the first of them is printed on
+    atRows is = locatedAt sid aid (fromMaybe atTable' (listToMaybe (mapMaybe (\i -> join (listToMaybe (drop i (erPages e)))) (L.sort is))))
+    err      = finding Error "C-ENUM-RANGE"
+    bad      = here . err
     failed fs = EnumCheck fs Nothing
     companion = erIdent e >>= \i -> L.find ((== Just i) . trIdent) rows
-    parsed (cell, label) = maybe (Left (bad ("the value cell " <> tshow cell <> " is not a number or a range")))
-                                 (Right . (label,)) (parseEnumValue (erRangeWords e) cell)
+    parsed (i, (cell, label)) = maybe (Left (atRows [i] (err ("the value cell " <> tshow cell <> " is not a number or a range"))))
+                                      (Right . (i, label,)) (parseEnumValue (erRangeWords e) cell)
     -- the labels a merge joins, and the gaps of the range when their constructor is among them
     merging srcs = (if length (catMaybes srcs) > 1 then "labels " else "label ") <> T.intercalate " and " (map tshow (catMaybes srcs))
                    <> (if any isNothing srcs then " and the gaps of the range (_NA)" else "")

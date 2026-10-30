@@ -23,9 +23,10 @@ Checks:
   given twice; no two patterns get one name;
 * @N-STATUS-NAME-SUFFIXED@ (Note): a name the table gives several values
   (@OBSOLETE@: 0x02, 0x0D, 0x0E) names each of them with the value as a
-  suffix, the first included (@OBSOLETE_2@, @OBSOLETE_13@, @OBSOLETE_14@), as
-  the enumerations' constructors do ("Hsed.Spec.Rules.EnumValues", design
-  section 13.15);
+  suffix, in decimal, the first included (@OBSOLETE_2@, @OBSOLETE_13@,
+  @OBSOLETE_14@), as the enumerations' constructors do
+  ("Hsed.Spec.Rules.EnumValues", design section 13.15); the Note says the
+  suffix is decimal, its values being printed in hex;
 * the subsections of the table's section are the statuses described one by
   one (Core 5.1.5.1 SUCCESS to 5.1.5.16 FAIL): a subsection titled with an
   identifier that names no status of the table is @W-STATUS-SECTION@
@@ -184,7 +185,7 @@ checkStatus ctx sr = shapeOfRows <> names <> values <> twice <> map (atTable ctx
     suffixed =
       [ finding Note "N-STATUS-NAME-SUFFIXED"
           ("the name " <> name <> " is given to " <> T.intercalate ", " (map numberExpr' rs) <> ": the patterns are "
-            <> T.intercalate ", " [ n | (r, n) <- patternNames rows, stIndex r `elem` map stIndex rs ])
+            <> T.intercalate ", " [ n | (r, n) <- patternNames rows, stIndex r `elem` map stIndex rs ] <> ", each value's suffix in decimal")
       | (name, rs) <- Map.toList (Map.fromListWith (flip (<>)) [ (stName r, [r]) | r <- rows ]), length rs > 1 ]
     numberExpr' r = maybe (tshow (stCell r)) numberExpr (stValue r)
 

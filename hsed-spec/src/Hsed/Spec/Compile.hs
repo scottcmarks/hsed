@@ -22,9 +22,10 @@ notes are united, in registry order (@E-GEN-MODULE@ otherwise).
 
 A bound table a rule leaves out is the Warning @W-GEN-EXCLUDED@ saying why (its
 Error is already among the findings); so is a table bound (by a comment) to a
-shape no rule of the registry reads, and both count among the tables left out.
-A table of a shape with nothing to generate ('Hsed.Spec.Shape.shapeGenerates')
-is not counted.
+shape no rule of the registry reads, and so is a paragraph unit (a sentence a
+@law@ binds) of a shape no rule reads, at the paragraph; each counts among the
+units left out. A table of a shape with nothing to generate
+('Hsed.Spec.Shape.shapeGenerates') is not counted.
 -}
 module Hsed.Spec.Compile
   ( CompileResult (..)
@@ -78,8 +79,13 @@ compileIR es ir = do
                | (r, Excluded aid why) <- emitted ]
             <> [ ((aid, why), excludedFinding aid why)
                | (aid, _) <- Map.toList (cxTables ctx), Just sb <- [bindingOf ctx aid]
-               , Just shape <- [someBindingShape sb], shapeGenerates shape, Just shape `notElem` map ruleShape registry
+               , Just shape <- [unread sb]
                , let why = "hsedc generates nothing for a " <> shapeName shape <> " table yet (no rule of the registry reads one)" ]
+            <> [ ((bpAnchor bp, why), atPara ctx bp (finding Warning "W-GEN-EXCLUDED" why))
+               | bp <- paragraphUnits ctx, Just shape <- [unread (bpBinding bp)]
+               , let why = "hsedc generates nothing for a " <> shapeName shape <> " paragraph yet (no rule of the registry reads one)" ]
+    -- the shape of a binding no rule of the registry reads, when it has something to generate
+    unread sb = mfilter (\shape -> shapeGenerates shape && Just shape `notElem` map ruleShape registry) (someBindingShape sb)
     excludedFinding aid why = case Map.lookup aid (cxTables ctx) of
       Just t  -> locatedAt (cxSpec ctx) (renderAnchorId aid) (fromMaybe 1 (tablePage t)) (finding Warning "W-GEN-EXCLUDED" why)
       Nothing -> finding Warning "W-GEN-EXCLUDED" why

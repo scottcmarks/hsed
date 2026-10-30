@@ -272,13 +272,15 @@ class Enumerated e where typeUID :: UID; range :: (Int, Int)
 -- Hsed.Spec.Form (measured; total)   data Form = Form { cols :: Int, headerSource :: HeaderSource, headerNorm :: [Text], grid8 :: Bool, captionKind :: CaptionKind, ragged :: Bool }
 -- Hsed.Spec.Shape (asserted)
 data Shape = TypeRow | EnumValues | TableDesc | ColumnsAddition | TableUIDs | UidTable | StatusCodes | Codes | FieldValue | FieldType | ByteFieldValue
-           | ByteGrid | Feature | ConstValues | Ranges | Preconfig | Tokens | StateTable | Props | PropsReq | Legend | Decision | Prose | Doc | Heading | Sig
+           | ByteGrid | Feature | ConstValues | Ranges | Preconfig | Tokens | StateTable | Props | PropsReq | Legend | Decision | Prose | Sentence | Doc | Heading | Sig
+           -- Sentence (M3): a law's sentence, a paragraph unit, which accepts no table
 accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule defaults, Warning under `as`)
 -- Hsed.Spec.Anchor   data Anchor (s :: Shape) = Anchor { aId :: AnchorId, aSpec :: SpecId, aStruct :: Text, aPage :: Int }  -- rest from the manifest
 -- Hsed.Spec.Grammar  parse :: Text -> Either Finding SomeBinding; print :: SomeBinding -> Text; parse . print == id
 -- Hsed.Spec.DSL   data Binding (s :: Shape): one constructor per Shape (Doc, Rule, TypeRowB, EnumValues, TableDescB, TableUIDs, UidTableB, StatusCodes, CodesB,
 --   FieldValue, FieldType, ByteFieldValue, ByteGridB, FeatureB, ConstValues, Ranges, PreconfigB, Tokens,
---   StateTable QName, PropsNames, PropsInitial, PropsReq, Legend, Decision QName, SigB, Behaviour QName, Fails QName, Law QName, ProseB) plus shape-polymorphic
+--   StateTable QName, PropsNames, PropsInitial, PropsReq, Legend, Decision QName, SigB, Behaviour QName, Fails QName, Law QName (:: Binding 'Sentence
+--   since M3; 'Prose before), ProseB) plus shape-polymorphic
 --   Refines Ref, Narrows [Ref], Replaces [Ref], Extends Ref :: Binding 'ColumnsAddition, Also (&); type Mod s = Binding s -> Binding s with cols, rangeWords,
 --   enumInDescription, expand, erratum, waive, as @s', and since M2c's scaffold layout "Name" (byte grid, feature, byteFieldValue)
 --   and bits k [(bit, name)] (byte grid, feature), each with its field in RuleDef.Mods (mLayout, mBits);
@@ -290,8 +292,10 @@ accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule 
 --                       ruleCodes :: [CodeDef] (M2c scaffold: the codes it claims, CodeDef { codeName, codeSeverities, codeReports }) };
 --                     Emitted = Emit Decl | EmitIn GenModule Decl | Excluded; one per module Hsed.Spec.Rules.<Rule>, listed one
 --                     line each by Hsed.Spec.Registry (docs/adding-a-rule.md); one RuleDef per shape (propsNames and propsInitial
---                     share Props: one RuleDef dispatching on the binding); two units: numbered tables (BoundTable) and,
---                     since M2b, signature blocks (BoundSig, boundSigs; Shape.shapeUnit names the shape that takes them)
+--                     share Props: one RuleDef dispatching on the binding); three units: numbered tables (BoundTable),
+--                     since M2b signature blocks (BoundSig, boundSigs) and since M3 paragraphs, each bound by its own comment
+--                     alone, with no scope and no classification (BoundPara { bpAnchor, bpPara :: ParaIR, bpBinding }, boundParas,
+--                     atPara, paraProvenanceOf; the Context's cxParas); Shape.shapeUnit names the shape that takes each kind
 -- Hsed.Spec.Scope     (M2a) sections (tableSections), scopeOf :: SpecIR -> RuleName -> [Section] (from anchors only), parseAnnots;
 --                     below the registry, so rule modules may import it; the Context carries the sections (cxSections)
 -- Hsed.Spec.Rules     rules = registry; checkExemplars; classify, classifySignatures (E-UNBOUND, E-AMBIGUOUS); re-exports Hsed.Spec.Scope

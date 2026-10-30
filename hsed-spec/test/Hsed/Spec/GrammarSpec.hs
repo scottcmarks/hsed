@@ -122,7 +122,7 @@ failures =
   , ("as @'Codex", "E-GRAMMAR", "1:4: unknown shape Codex")
   , ("typeRow & rule codes", "E-GRAMMAR", "1:1: only doc and rule tokens join with &")
   , ("rule codes & doc core201 & typeRow", "E-GRAMMAR", "1:28: only doc and rule tokens join with &")
-  , ("law \"x\" (cols 0 1)", "E-MODIFIER", "cols 0 1 applies to a EnumValues binding, not to a Prose one")
+  , ("law \"x\" (cols 0 1)", "E-MODIFIER", "cols 0 1 applies to a EnumValues binding, not to a Sentence one")
   , ("refines core 42", "E-GRAMMAR", "1:9: expected a reference: core N, opal N or section \"x.y\"")
   , ("[\"to\"", "E-SYNTAX", "1:6:")
   , ("cols 0 1 \"x\"", "E-GRAMMAR", "1:10: expected a binding or a modifier")

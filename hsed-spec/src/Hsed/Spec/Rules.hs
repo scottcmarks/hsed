@@ -46,7 +46,10 @@ binds by its scope alone: each unit whose section a rule anchor covers is
 bound to the rule whose shape takes signature units
 ('Hsed.Spec.Shape.shapeUnit'); a unit no such rule covers is unbound
 (@E-UNBOUND@, as an unbound table), one two such rules cover is
-@E-AMBIGUOUS@.
+@E-AMBIGUOUS@. The paragraph units (a list item or paragraph a @law@ binds)
+have no classification: their comments alone bind them
+("Hsed.Spec.RuleDef".'Hsed.Spec.RuleDef.boundParas'). A rule whose shape
+takes signature or paragraph units fires on no table.
 
 Every annotation is validated once, in "Hsed.Spec.Scope".'parseAnnots', so
 that @hsedc check@ and @hsedc bind@ refuse the same ones; the sections, the
@@ -100,7 +103,7 @@ import qualified RIO.Set           as Set
 import qualified RIO.Text          as T
 import           RIO
 
-import           Hsed.Spec.Anchor  (AnchorId (..), renderAnchorId)
+import           Hsed.Spec.Anchor  (AnchorId (..), anchorParagraph, renderAnchorId)
 import           Hsed.Spec.Common  (Finding, RuleName (..), Severity (..), SpecId (..), finding,
                                     renderFinding)
 import qualified Hsed.Spec.Common  as Cm
@@ -182,10 +185,10 @@ classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatM
                                       , fires r sid t form, Just i <- [ruleIdent r form] ])
       | r <- ruleSet ]
     commentsOn aid = [ pa | pa <- parsed, paAnchor pa == Just aid ]
-    -- a rule whose shape takes signature units fires on no table, whatever its 'fires' says
+    -- a rule whose shape takes signature or paragraph units fires on no table, whatever its 'fires' says
     firing t form = precedence
       [ r | r <- ruleSet
-          , fmap shapeUnit (ruleShape r) /= Just SignatureUnit
+          , maybe True ((== TableUnit) . shapeUnit) (ruleShape r)
           , any (`covers` Map.findWithDefault Nothing t.structPath sections) (Map.findWithDefault [] (ruleName r) scopes)
           , fires r sid t form
           , maybe True (\joined -> maybe False (`Set.member` Map.findWithDefault mempty joined idents) (ruleIdent r form)) (joinsTo r) ]
@@ -346,22 +349,26 @@ checkExemplars :: SpecIR -> [Finding]
 checkExemplars = checkExemplarsWith rules
 
 -- | 'checkExemplars' under a set of rules. The exemplar of a rule binding
---   signature units is a signature unit, which need only be in the IR.
+--   signature units is a signature unit, which need only be in the IR; that of
+--   a rule binding paragraph units is a list item or paragraph, which the IR
+--   need only have, once.
 checkExemplarsWith :: [RuleDef] -> SpecIR -> [Finding]
 checkExemplarsWith ruleSet ir = concatMap check [ r | r <- ruleSet, fst (exemplar r) == sid ]
   where
     sid    = SpecId ir.spec
     tables = numberedTables ir
     check r = case snd (exemplar r) of
-      SigId _ -> sigExemplar r
-      _       -> tableExemplar r
+      SigId _    -> sigExemplar r
+      ItemId _ _ -> itemExemplar r
+      _          -> tableExemplar r
+    missing r why = [finding Error "C-EXEMPLAR" ("the exemplar " <> renderAnchorId (snd (exemplar r)) <> " of rule "
+                       <> ruleNameText (ruleName r) <> " is not in the IR" <> why) & \f -> f { Cm.spec = Just sid }]
     sigExemplar r
       | Map.member (snd (exemplar r)) (signatureUnits ir) = []
-      | otherwise = [finding Error "C-EXEMPLAR" ("the exemplar " <> renderAnchorId (snd (exemplar r)) <> " of rule "
-                       <> ruleNameText (ruleName r) <> " is not in the IR") & \f -> f { Cm.spec = Just sid }]
+      | otherwise = missing r ""
+    itemExemplar r = either (missing r . (": " <>)) (const []) (anchorParagraph ir (snd (exemplar r)))
     tableExemplar r = case Map.lookup (snd (exemplar r)) tables of
-      Nothing -> [finding Error "C-EXEMPLAR" ("the exemplar " <> renderAnchorId (snd (exemplar r)) <> " of rule "
-                    <> ruleNameText (ruleName r) <> " is not in the IR") & \f -> f { Cm.spec = Just sid }]
+      Nothing -> missing r ""
       Just t  ->
         let form   = measure sid t
             here   = locatedAt sid (renderAnchorId (snd (exemplar r))) (fromMaybe 1 (tablePage t))

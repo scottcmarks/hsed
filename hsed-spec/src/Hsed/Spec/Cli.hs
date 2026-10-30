@@ -135,7 +135,7 @@ runWith out err = \case
         writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown es [(ledger ir, fs)])
         say err ("hsedc compile: wrote " <> display (T.intercalate ", " (map (T.pack . fst) paths)) <> " ("
                     <> display (length (crDecls cr)) <> " declarations, "
-                    <> display (length (crExcluded cr)) <> " tables left out)"
+                    <> display (length (crExcluded cr)) <> " units left out)"
                     <> (if null stale then "" else ", removed " <> display (T.intercalate ", " (map T.pack stale)))
                     <> " and " <> fromString reportTo
                     <> "/{findings,coverage,ERRATA,ledger}.md; " <> display (findingCounts fs) <> "\n")

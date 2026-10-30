@@ -61,19 +61,20 @@ import qualified RIO.List          as L
 import qualified RIO.Map           as Map
 import           RIO
 
-import           Hsed.Spec.Anchor  (AnchorId, locationText, naturalKey, renderAnchorId)
+import           Hsed.Spec.Anchor  (AnchorId (..), anchorParagraph, locationText, naturalKey, renderAnchorId)
 import           Hsed.Spec.Common  (ErrataSet (..), Finding, Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common  as Cm
-import           Hsed.Spec.DSL     (SomeBinding (..), bindingAccepts)
+import           Hsed.Spec.DSL     (SomeBinding (..), bindingAccepts, someBindingShape)
 import           Hsed.Spec.Document (documentChecks)
 import           Hsed.Spec.Errata  (Erratum (..), correctTable)
-import           Hsed.Spec.IR      (SpecIR (..), TableIR (..))
+import           Hsed.Spec.Grammar (Payload (..))
+import           Hsed.Spec.IR      (ParaIR, SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules   (checkExemplars, checkRuleAnchors, classifySignaturesWith, classifyWithRules)
-import           Hsed.Spec.Scope   (tableSections)
-import           Hsed.Spec.Shape   (gridCornerNormalisation, headerNormalisations, measure, normaliseCaption,
-                                    rawCaptionTitle)
+import           Hsed.Spec.Scope   (ParsedAnnot (..), parseAnnots, tableSections)
+import           Hsed.Spec.Shape   (UnitKind (..), gridCornerNormalisation, headerNormalisations, measure,
+                                    normaliseCaption, rawCaptionTitle, shapeUnit)
 
 
 -- * The shared context
@@ -96,6 +97,7 @@ mkContextWith ruleSet es ir = Context
   , cxErrataFindings = concatMap snd (Map.elems corrected)
   , cxSigs           = signatureUnits ir
   , cxSigClasses     = sigClasses
+  , cxParas          = paragraphBindings ir
   }
   where
     sid                       = SpecId ir.spec
@@ -103,6 +105,16 @@ mkContextWith ruleSet es ir = Context
     (classes, classFindings)  = classifyWithRules ruleSet ir
     (sigClasses, sigFindings) = classifySignaturesWith ruleSet ir
     corrected                 = correctedUnder es sid tables classes
+
+-- | The paragraph units of an IR: each list item or paragraph whose comment
+--   (validated as every annotation is, "Hsed.Spec.Scope".'parseAnnots') binds
+--   it with a shape that takes paragraph units, with that binding. A comment
+--   that does not validate is reported by the classification, as any other.
+paragraphBindings :: SpecIR -> Map AnchorId (ParaIR, SomeBinding)
+paragraphBindings ir = Map.fromList
+  [ (aid, (p, sb))
+  | pa <- parseAnnots ir, Just aid@(ItemId _ _) <- [paAnchor pa], Right (Full sb) <- [paPayload pa]
+  , fmap shapeUnit (someBindingShape sb) == Just ParagraphUnit, Right p <- [anchorParagraph ir aid] ]
 
 -- | Every bound table read under an errata set, with what reading it found: its
 --   caption and cells corrected by the @erratum scott@ pairs of its own binding.

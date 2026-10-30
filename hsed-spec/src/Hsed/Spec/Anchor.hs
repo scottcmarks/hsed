@@ -31,6 +31,7 @@ module Hsed.Spec.Anchor
   , annotKind
   , naturalKey
   , anchorTarget
+  , anchorParagraph
     -- * Anchors
   , Anchor (..)
   , anchor
@@ -129,13 +130,24 @@ anchorTarget ir = \case
     [h] -> Right (h.structPath, h.page, h.rect)
     []  -> Left ("no heading numbered " <> s <> " in the IR")
     hs  -> Left (tshow (length hs) <> " headings numbered " <> s <> " in the IR")
-  ItemId s item -> case paraHits s item of
-    [p] -> Right (p.structPath, p.page, p.rect)
-    []  -> Left ("no paragraph " <> s <> "#" <> item <> " in the IR")
-    ps  -> Left (tshow (length ps) <> " paragraphs labelled " <> s <> "#" <> item <> " in the IR")
+  aid@(ItemId _ _) -> (\p -> (p.structPath, p.page, p.rect)) <$> anchorParagraph ir aid
   SigId s
     | any (\b -> b.section == s) ir.sigs -> Left ("signature blocks are rule-bound and carry no annotation: " <> s <> "/sig")
     | otherwise                          -> Left ("no signature block " <> s <> "/sig in the IR")
+
+-- | The paragraph an item anchor names: the list item of its section that
+--   carries its label (@3.3.10.2.1#3a@), or the k-th paragraph of the section,
+--   list items not counted (@5.2.2#p1@); Left when it names none, or several
+--   (Core 3.3.10.6 labels its items @c@ and @d@ under two transitions each, so
+--   @3.3.10.6#c@ names no one paragraph, and @3.3.10.6#dc@, item c of the
+--   second @d@, does). Left for an id that is no item's.
+anchorParagraph :: SpecIR -> AnchorId -> Either Text ParaIR
+anchorParagraph ir = \case
+  ItemId s item -> case paraHits s item of
+    [p] -> Right p
+    []  -> Left ("no paragraph " <> s <> "#" <> item <> " in the IR")
+    ps  -> Left (tshow (length ps) <> " paragraphs labelled " <> s <> "#" <> item <> " in the IR")
+  aid -> Left (renderAnchorId aid <> " names no paragraph")
   where
     paraHits s item =
       let inSection = [ p | p <- ir.paras, p.section == Just s ]

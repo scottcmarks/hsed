@@ -31,23 +31,32 @@ knows lives in its 'RuleDef':
   findings report), from which "Hsed.Spec.Report" assembles the catalogue, so
   that a new rule names its own codes and edits no generic module.
 
-Two kinds of unit are bound ('Hsed.Spec.Shape.shapeUnit' of the rule's
+Three kinds of unit are bound ('Hsed.Spec.Shape.shapeUnit' of the rule's
 shape): the numbered tables, which a rule fires on by their form and reads
-as 'BoundTable's, and the method signature blocks (IR @sigs@, design section
+as 'BoundTable's; the method signature blocks (IR @sigs@, design section
 5.1 step 7), the signature units, which carry no annotation: every one in a
 rule's scope is bound to the rule whose shape takes signature units
 ("Hsed.Spec.Rules".'Hsed.Spec.Rules.classifySignatures'), and that rule
 reads them as 'BoundSig's ('boundSigs'; 'ruleChecks' and 'ruleCompile' get
-it no tables, and its 'fires' is never true of a table). A signature unit's
-anchor id is @\<section\>/sig@; locate its findings with 'atSig' and its
-declarations with 'sigProvenanceOf'.
+it no tables, and its 'fires' is never true of a table); and the paragraphs
+(IR @paras@: a list item, @3.3.10.2.1#3a@, or the k-th paragraph of a
+section, @#p\<k\>@), the paragraph units, which their own comment alone binds
+(a @law@ binds its sentence): there is no scope and no classification, a
+paragraph no comment names being bound by nothing and missed by nothing; the
+rule whose shape takes paragraph units reads them as 'BoundPara's
+('boundParas'), and, like a signature unit's rule, gets no tables and fires
+on none. A signature unit's anchor id is @\<section\>/sig@; locate its
+findings with 'atSig' and its declarations with 'sigProvenanceOf'; a
+paragraph unit's, @\<section\>#\<item\>@, with 'atPara' and
+'paraProvenanceOf'.
 
 A rule that needs what another rule reads (an enumeration takes its range from
 its type row) imports that rule's module and calls its readers on the same
 'Context'. The 'Context' itself holds only what is generic: one IR under one
 errata set, its numbered tables, their classification, the section of every
-table ("Hsed.Spec.Scope") and the bound tables read under the errata set
-("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext' builds it).
+table ("Hsed.Spec.Scope"), the bound tables read under the errata set, the
+signature units and their classification, and the paragraph units the comments
+bind ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContext' builds it).
 
 Several bindings may share a shape (@propsNames@ and @propsInitial@ are both
 @Props@): the shape has one 'RuleDef', which reads every table bound with it
@@ -75,6 +84,12 @@ module Hsed.Spec.RuleDef
   , signatureUnits
   , atSig
   , sigProvenanceOf
+    -- * Paragraph units
+  , BoundPara (..)
+  , boundParas
+  , paragraphUnits
+  , atPara
+  , paraProvenanceOf
   , Mods (..)
   , modsOf
     -- * Locating findings
@@ -101,12 +116,13 @@ import qualified RIO.Map          as Map
 import qualified RIO.Text         as T
 import           RIO
 
-import           Hsed.Spec.Anchor (AnchorId (..), parseAnchorId, renderAnchorId)
+import           Hsed.Spec.Anchor (AnchorId (..), naturalKey, parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Common (CodeDef (..), ErrataSet (..), Finding, Reports (..), RuleName, SpecId (..))
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), bindingAccepts, someBindingShape)
 import qualified Hsed.Spec.Gen    as Gen
-import           Hsed.Spec.IR     (CellIR (..), SigIR (..), SpecIR (..), StructPath (..), TableIR (..))
+import           Hsed.Spec.IR     (CellIR (..), ParaIR (..), ParaKind (..), SigIR (..), SpecIR (..), StructPath (..),
+                                   TableIR (..))
 import           Hsed.Spec.Shape  (Form, Shape (..), measure, normaliseCaption)
 
 
@@ -193,6 +209,9 @@ data Context = Context
   , cxErrataFindings :: ![Finding]                        -- ^ what reading them under the set found
   , cxSigs           :: !(Map AnchorId SigIR)             -- ^ the signature units, by id ('signatureUnits')
   , cxSigClasses     :: !(Map AnchorId Classification)    -- ^ their classification
+  , cxParas          :: !(Map AnchorId (ParaIR, SomeBinding))
+    -- ^ the paragraph units: each paragraph or list item a valid comment binds
+    --   with a shape that takes paragraph units, with that binding
   }
 
 -- | One table bound to a rule's shape.
@@ -265,6 +284,52 @@ sigProvenanceOf ctx bs = Gen.Provenance
   , Gen.structPath  = let StructPath sp = s.structPath in sp
   , Gen.cellsHash   = tshow (hashWith SHA256 (encodeUtf8 s.text)) }
   where s = bsSig bs
+
+
+-- * Paragraph units
+
+-- | One paragraph unit (a list item or a paragraph) bound to a rule's shape
+--   by its comment. It is read as printed: its words where the IR has them
+--   (a word-complete section's, docs/ir-v1.md), and its hash always.
+data BoundPara = BoundPara
+  { bpAnchor  :: !AnchorId      -- ^ @3.3.10.2.1#3a@
+  , bpPara    :: !ParaIR
+  , bpBinding :: !SomeBinding   -- ^ its comment's binding (@law "Sync.ifSendWhileBusy"@)
+  }
+
+-- | Every paragraph unit, in the anchors' natural order (@3.3.10.2.1#3a@
+--   before @3.3.10.10#a@).
+paragraphUnits :: Context -> [BoundPara]
+paragraphUnits ctx =
+  L.sortOn (naturalKey . renderAnchorId . bpAnchor) [ BoundPara aid p sb | (aid, (p, sb)) <- Map.toList (cxParas ctx) ]
+
+-- | The paragraph units bound with a shape, in the anchors' natural order.
+boundParas :: Maybe Shape -> Context -> [BoundPara]
+boundParas shape ctx = [ bp | isJust shape, bp <- paragraphUnits ctx, someBindingShape (bpBinding bp) == shape ]
+
+-- | Locate a finding at a paragraph unit: @core-2.01.pdf#page=82&3.3.10.2.1#3a@.
+atPara :: Context -> BoundPara -> Finding -> Finding
+atPara ctx bp = locatedAt (cxSpec ctx) (renderAnchorId (bpAnchor bp)) ((bpPara bp).page + 1)
+
+-- | Where a declaration made from a paragraph unit comes from: its anchor id,
+--   what it is as the caption (@list item 3a@, @paragraph 2@), its PDF and
+--   printed page, its 1-based position among the IR's paragraphs as the
+--   ordinal, its structure path and its hash (the sha256 of its normalised
+--   words, the IR's).
+paraProvenanceOf :: Context -> BoundPara -> Gen.Provenance
+paraProvenanceOf ctx bp = Gen.Provenance
+  { Gen.spec        = cxSpec ctx
+  , Gen.tableId     = renderAnchorId (bpAnchor bp)
+  , Gen.caption     = case (bpAnchor bp, p.kind) of
+      (ItemId _ item, LI) -> "list item " <> item
+      (ItemId _ item, P)  -> "paragraph " <> T.drop 1 item
+      (aid, _)            -> renderAnchorId aid
+  , Gen.pdfPage1    = p.page + 1
+  , Gen.printedPage = p.page + 1 - (cxIR ctx).labelOffset
+  , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex p (cxIR ctx).paras)
+  , Gen.structPath  = let StructPath sp = p.structPath in sp
+  , Gen.cellsHash   = p.hash }
+  where p = bpPara bp
 
 
 -- | The modifiers of a binding a rule reads, one field for each modifier of

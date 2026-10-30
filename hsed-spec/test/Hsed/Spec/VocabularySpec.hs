@@ -28,7 +28,9 @@ section 3.2.2), save tables a comment binds anyway (T3 and T24 @prose@, T87
 does not end @Feature Descriptor@, @Feature@ those whose caption does (Core
 T42, T43; Opal T3-T6, T8), @ByteFieldValue@ the @[Byte(s), Field, Value(s)]@
 tables and T236's @[Bytes, Values]@; every byte grid's corner but T212's
-@Byte\\Bit@ is read as @Byte\\Bit@ and reported as a Note.
+@Byte\\Bit@ is read as @Byte\\Bit@ and reported as a Note. M3's: a @law@ binds
+its sentence, a list item or paragraph, as a unit of its own shape
+(@Sentence@, a paragraph unit), which takes no table.
 -}
 module Hsed.Spec.VocabularySpec (spec) where
 
@@ -43,13 +45,13 @@ import           RIO.Directory     (doesFileExist)
 import           Hsed.Spec.Anchor  (AnchorId (..))
 import           Hsed.Spec.Common  (RuleName (..), SpecId (..))
 import           Hsed.Spec.CoreIR  (withCore)
-import           Hsed.Spec.DSL     (knownRules)
-import           Hsed.Spec.Grammar (parsePayload, vocabulary)
+import           Hsed.Spec.DSL     (SomeBinding (..), knownRules, someBindingShape)
+import           Hsed.Spec.Grammar (Payload (..), parsePayload, vocabulary)
 import           Hsed.Spec.IR      (SpecIR (..), TableIR (..), readIR)
 import           Hsed.Spec.RuleDef (numberedTables)
 import           Hsed.Spec.Rules   (anchorKindMismatch, covers, Section (..), tableSections)
-import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), gridCornerNormalisation, measure,
-                                    shapeMismatch)
+import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), UnitKind (..), gridCornerNormalisation, measure,
+                                    shapeMismatch, shapeUnit)
 
 
 -- | The @VOCABULARY = {...}@ entries of hsed_annot.py: one @"word": ("class", ...),@ per line.
@@ -105,7 +107,9 @@ coreReadiness =
     -- M2c: the byte grids, the feature descriptors among them by their caption, and the byte layouts
   , (ByteGrid, WholeDocument, [17, 18, 20, 21, 38, 39, 41, 44, 212])
   , (Feature, WholeDocument, [42, 43])
-  , (ByteFieldValue, WholeDocument, [28, 31, 32, 33, 35, 36, 37, 236]) ]
+  , (ByteFieldValue, WholeDocument, [28, 31, 32, 33, 35, 36, 37, 236])
+    -- M3: a law's sentence, a paragraph unit, which no table is
+  , (Sentence, WholeDocument, []) ]
 
 spec :: Spec
 spec = do
@@ -151,6 +155,13 @@ spec = do
         (acceptedIn WholeDocument opal Codes, acceptedIn WholeDocument opal FieldValue) `shouldBe` ([7, 10, 11, 12, 14], [13])
         -- design 3.4: byteGrid Opal T2, feature T3-T6 and T8 (Opal has no byteFieldValue table)
         map (acceptedIn WholeDocument opal) [ByteGrid, Feature, ByteFieldValue] `shouldBe` [[2], [3, 4, 5, 6, 8], []]
+
+  describe "the vocabulary of M3" $
+    it "binds a law's sentence on a list item or paragraph alone, a unit of its own shape that takes no table" $ do
+      accepted "law \"Sync.ifSendWhileBusy\"" `shouldBe` ["item"]
+      [ (shape, shapeUnit shape) | Right (Full sb@(SomeBinding _)) <- [parsePayload "law \"Sync.ifSendWhileBusy\""]
+                                 , Just shape <- [someBindingShape sb] ]
+        `shouldBe` [(Sentence, ParagraphUnit)]
 
   source <- runIO (readFileUtf8 "../tools/extract/hsed_annot.py")
   let python = pythonVocabulary source

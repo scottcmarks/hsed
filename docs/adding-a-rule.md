@@ -68,10 +68,10 @@ Some changes are generic and are made in a small commit of their own, before the
   grid, a feature, a byteFieldValue table: the record's name as written, the layout keeping the caption's
   title) and `bits k [(bit, "Name")]` (`mBits`; a byte grid, a feature: held to the row it reads); a
   binding takes one `layout` and one `bits` for each byte (`applyModifier`, `E-MODIFIER`).
-- **A unit that is not a table.** `RuleDef` binds two kinds of unit: the numbered tables and, since
-  M2b, the method signature blocks (below). Another kind (a Fails list, a law sentence) needs its IR
-  schema, the extractor, its classification and its bound unit in `RuleDef` first, as the
-  signature blocks had.
+- **A unit that is not a table.** `RuleDef` binds three kinds of unit: the numbered tables, since
+  M2b the method signature blocks, and since M3 the paragraphs a comment binds (a law's sentence;
+  both below). Another kind (a Fails list) needs its IR schema, the extractor, its classification
+  (or, as the paragraphs, none) and its bound unit in `RuleDef` first, as these had.
 - **A milestone's anchors.** Every rule token and heading anchor the milestone's rules need goes into
   the `.hsa` in one commit, with the `.upd`, manifest and bindings `make gen` regenerates, so that the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
@@ -200,6 +200,29 @@ orphans` lists the unbound ones after the tables, and the coverage report lists 
 blocks are in the `Context` (`cxSigs`, `cxSigClasses`); a rule that needs a table's reading too (the
 method UIDs of Table 242) calls that rule's reader on the same `Context`. `SignatureUnitSpec` proves
 the interface with a stub rule.
+
+## A rule over paragraph units
+
+The paragraphs of the IR (`paras`, `docs/ir-v1.md`: a list item, or a paragraph, each with its
+section, its label, its page and the sha256 of its words) are the third kind of unit, since M3. A
+paragraph is bound by its own comment alone, on its item anchor (`core-2.01 | 3.3.10.2.1#3a | law
+"Sync.ifSendWhileBusy"`, design example E10; `<section>#p<k>` names the k-th paragraph of a
+section): there is no rule scope and no classification, so a paragraph no comment names is bound by
+nothing and missed by nothing, and an anchor naming several paragraphs (Core 3.3.10.6 labels its items
+`c` and `d` under several transitions) is `E-ANCHOR`. `Hsed.Spec.Shape.shapeUnit` says which shape
+takes them (the sentence shape, which `law` binds and which accepts no table); its rule is an
+ordinary module under `Rules/` whose `RuleDef` has `bindsTo` its binding (`SomeBinding (law "")`),
+`fires = \_ _ _ -> False`, `ruleIdent = const Nothing`, and an exemplar that is an item anchor
+(`C-EXEMPLAR` asks only that the IR has the paragraph, once). `ruleChecks` and `ruleCompile` get no
+tables (`[]`) and read the bound paragraphs themselves: `boundParas (ruleShape <rule>) ctx ::
+[BoundPara]`, in the anchors' natural order, each with its anchor id (`bpAnchor`, `ItemId
+"3.3.10.2.1" "3a"`), its `ParaIR` (`bpPara`: `section`, `item`, `kind`, `page` 0-based, `rect`,
+`structPath`, `hash`, and `words` where the section is word-complete) and its comment's binding
+(`bpBinding`). Locate a finding with `atPara ctx bp` (`core-2.01.pdf#page=82&3.3.10.2.1#3a`) and give
+a declaration `paraProvenanceOf ctx bp` (`list item 3a` as its caption, its 1-based place among the
+paragraphs as its ordinal, the IR's hash). Until a rule takes the shape, a paragraph a comment binds
+with it is `W-GEN-EXCLUDED` at the paragraph (`hsedc compile`), as a table bound to a shape no rule
+reads. `ParagraphUnitSpec` proves the interface with a stub rule.
 
 ## Generated code (`Hsed.Spec.Gen`)
 

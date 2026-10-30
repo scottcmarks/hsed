@@ -79,12 +79,13 @@ import           Hsed.Spec.IR       (CellIR (..), HeaderSource (..), TableIR (..
 
 -- | Every shape of design section 4.2. The table shapes name what a rule or a
 --   comment asserts a table to be; 'Doc', 'Heading', 'Prose' and 'Sig' accept
---   any form.
+--   any form; 'Sentence', a normative sentence or list item a @law@ binds (a
+--   paragraph unit), accepts none.
 data Shape
   = TypeRow | EnumValues | TableDesc | ColumnsAddition | TableUIDs | UidTable
   | StatusCodes | Codes | FieldValue | FieldType | ByteFieldValue | ByteGrid
   | Feature | ConstValues | Ranges | Preconfig | Tokens | StateTable | Props
-  | PropsReq | Legend | Decision | Prose | Doc | Heading | Sig
+  | PropsReq | Legend | Decision | Prose | Sentence | Doc | Heading | Sig
   deriving stock (Eq, Ord, Show, Enum, Bounded)
 
 -- | The constructor's name, as @as \@'Codes@ spells it.
@@ -100,18 +101,24 @@ readShape t = lookup t [ (shapeName s, s) | s <- [minBound .. maxBound] ]
 shapeGenerates :: Shape -> Bool
 shapeGenerates = (/= Prose)
 
--- | What a binding of a shape binds: a numbered table, or a method signature
+-- | What a binding of a shape binds: a numbered table; a method signature
 --   block (design section 5.1 step 7, IR @sigs@), which no annotation carries
---   and @hsedc@ classifies apart from the tables. The generic modules ask this
---   rather than name the shape.
-data UnitKind = TableUnit | SignatureUnit
+--   and @hsedc@ classifies apart from the tables; or a paragraph (a list item,
+--   @3.3.10.2.1#3a@, or the k-th paragraph of a section, @#p\<k\>@, IR
+--   @paras@), which its own comment alone binds: there is no rule scope and no
+--   classification for it, and a paragraph no comment names is bound by
+--   nothing and missed by nothing. The generic modules ask this rather than
+--   name the shape.
+data UnitKind = TableUnit | SignatureUnit | ParagraphUnit
   deriving stock (Eq, Show)
 
--- | 'SignatureUnit' for the shape of the signature blocks, 'TableUnit' for every other.
+-- | 'SignatureUnit' for the shape of the signature blocks, 'ParagraphUnit'
+--   for that of the sentences a @law@ binds, 'TableUnit' for every other.
 shapeUnit :: Shape -> UnitKind
 shapeUnit = \case
-  Sig -> SignatureUnit
-  _   -> TableUnit
+  Sig      -> SignatureUnit
+  Sentence -> ParagraphUnit
+  _        -> TableUnit
 
 -- | The singleton of 'Shape'.
 data SShape (s :: Shape) where
@@ -138,6 +145,7 @@ data SShape (s :: Shape) where
   SLegend          :: SShape 'Legend
   SDecision        :: SShape 'Decision
   SProse           :: SShape 'Prose
+  SSentence        :: SShape 'Sentence
   SDoc             :: SShape 'Doc
   SHeading         :: SShape 'Heading
   SSig             :: SShape 'Sig
@@ -172,6 +180,7 @@ instance KnownShape 'PropsReq        where shapeSing = SPropsReq
 instance KnownShape 'Legend          where shapeSing = SLegend
 instance KnownShape 'Decision        where shapeSing = SDecision
 instance KnownShape 'Prose           where shapeSing = SProse
+instance KnownShape 'Sentence        where shapeSing = SSentence
 instance KnownShape 'Doc             where shapeSing = SDoc
 instance KnownShape 'Heading         where shapeSing = SHeading
 instance KnownShape 'Sig             where shapeSing = SSig
@@ -202,6 +211,7 @@ sShape = \case
   SLegend          -> Legend
   SDecision        -> Decision
   SProse           -> Prose
+  SSentence        -> Sentence
   SDoc             -> Doc
   SHeading         -> Heading
   SSig             -> Sig
@@ -235,6 +245,7 @@ toSomeShape = \case
   Legend          -> SomeShape SLegend
   Decision        -> SomeShape SDecision
   Prose           -> SomeShape SProse
+  Sentence        -> SomeShape SSentence
   Doc             -> SomeShape SDoc
   Heading         -> SomeShape SHeading
   Sig             -> SomeShape SSig
@@ -264,6 +275,7 @@ instance TestEquality SShape where
     (SLegend, SLegend)                   -> Just Refl
     (SDecision, SDecision)               -> Just Refl
     (SProse, SProse)                     -> Just Refl
+    (SSentence, SSentence)               -> Just Refl
     (SDoc, SDoc)                         -> Just Refl
     (SHeading, SHeading)                 -> Just Refl
     (SSig, SSig)                         -> Just Refl
@@ -449,7 +461,9 @@ describe form = T.concat
 --   with no header row). 'StateTable' takes a table whose first column names
 --   states and whose other header cells name fields, each a @… Field Value@
 --   (Core Table 45), so that a @stateTable@ comment on any other table is
---   @E-SHAPE@ rather than a table silently read as states.
+--   @E-SHAPE@ rather than a table silently read as states. 'Sentence' takes
+--   no table: it binds a paragraph or a list item (a paragraph unit), so a
+--   @law@ comment on a table is refused whatever the table's form.
 shapeMismatch :: Shape -> Form -> Maybe Text
 shapeMismatch shape form = case shape of
   TypeRow         -> header ["uid", "name", "format"]
@@ -478,6 +492,7 @@ shapeMismatch shape form = case shape of
   Legend          -> atLeast 2 <|> firstSuch "a first header cell mentioning the legend" ("legend" `T.isInfixOf`)
   Decision        -> atLeast 2 <|> lastIs "requiredbehavior"
   Prose           -> Nothing
+  Sentence        -> Just "it binds a paragraph or a list item, never a table"
   Doc             -> Nothing
   Heading         -> Nothing
   Sig             -> Nothing

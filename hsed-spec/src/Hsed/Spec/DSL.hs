@@ -174,7 +174,7 @@ data Binding (s :: Shape) where
   -- prose bindings
   Behaviour             :: QName -> Binding 'Heading
   Fails                 :: QName -> Binding 'Prose
-  Law                   :: QName -> Binding 'Prose
+  Law                   :: QName -> Binding 'Sentence   -- ^ a paragraph unit: the sentence or list item it sits on
   -- cross-spec bindings, shaped by their target
   Refines               :: KnownShape s => Ref -> Binding s
   Narrows               :: KnownShape s => Ref -> Binding s
@@ -228,7 +228,7 @@ shapeOfBinding = \case
   ProseB                  -> SProse
   Behaviour _             -> SHeading
   Fails _                 -> SProse
-  Law _                   -> SProse
+  Law _                   -> SSentence
   Refines _               -> shapeSing
   Narrows _               -> shapeSing
   Replaces _              -> shapeSing
@@ -636,8 +636,10 @@ behaviour = Behaviour
 fails :: QName -> Binding 'Prose
 fails = Fails
 
--- | @law "Sync.ifSendWhileBusy"@ on a normative sentence or list item.
-law :: QName -> Binding 'Prose
+-- | @law "Sync.ifSendWhileBusy"@ on a normative sentence or list item: the
+--   paragraph, a unit of its own shape ('Sentence'), is bound to the
+--   hand-written law the name gives.
+law :: QName -> Binding 'Sentence
 law = Law
 
 -- | @refines (core 42)@: the same shape as the target, with this table's differences.

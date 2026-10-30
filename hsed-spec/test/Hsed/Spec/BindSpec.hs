@@ -12,8 +12,9 @@ Stability   : experimental
 
 @hsedc bind@ on the committed Core extraction: one entry per annotation, in
 canonical order, a bare modifier chain printed on its rule default, a binding
-shaped by its target printed at the target's shape, and the committed bindings
-module exactly what the committed annotations give.
+shaped by its target printed at the target's shape, a law at its paragraph's
+shape, and the committed bindings module exactly what the committed annotations
+give.
 -}
 module Hsed.Spec.BindSpec (spec) where
 
@@ -57,6 +58,12 @@ spec = withCore $ \pristine -> do
       fs `shouldBe` []
       fmap T.lines result `shouldSatisfy` either (const False)
         (elem "b_core_T47 = at (anchor @'TypeRow \"core-2.01\" \"T47\" \"0/1294\" 100) (refines (core 46))")
+    it "prints a law on its list item at the Sentence shape, a paragraph unit's" $ do
+      ir' <- annotated pristine (hsa <> "core-2.01 | 3.3.10.2.1#3a | law \"Sync.ifSendWhileBusy\"\n")
+      let (fs, result) = bindModule ir'
+      fs `shouldBe` []
+      fmap T.lines result `shouldSatisfy` either (const False)
+        (elem "b_core_3_3_10_2_1_i_3a = at (anchor @'Sentence \"core-2.01\" \"3.3.10.2.1#3a\" \"0/1058/2/0/1/0\" 82) (law \"Sync.ifSendWhileBusy\")")
     it "reports an annotation it cannot resolve, citing the page, and leaves it out" $ do
       ir' <- annotated pristine (hsa <> "core-2.01 | T47 | refines (opal 3)\n")
       let (fs, entries) = bindEntries ir'

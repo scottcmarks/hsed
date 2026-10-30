@@ -84,6 +84,9 @@ spec = withCore $ \pristine -> do
         , ("E4..EF", "TCG Reserved", [Refused]), ("F4..F7", "TCG Reserved", [Refused]), ("FD..FE", "TCG Reserved", [Refused]) ]
     it "is refused exactly where the codec refuses a zero-length short atom" $
       [ b | b <- [0x80 .. 0xBF], codecTag b == Refused ] `shouldBe` [0x80, 0x90, 0xB0]
+    it "probes the empty continued byte sequence, which the codec writes as no atom (none may encode it), and every other atom round-trips" $ do
+      (ContinuedBytes mempty, 0) `elem` probe `shouldBe` True
+      roundTrips `shouldBe` []
 
   describe "an edited Table 4" $ do
     it "reports a token's byte moved into a reserved range: the table (pattern, coverage) and the codec" $

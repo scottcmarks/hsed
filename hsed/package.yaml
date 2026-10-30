@@ -41,6 +41,7 @@ library:
   - ghc-prim      # TypeTests
   - lens          # Hsed.App
   - singletons    # SingTest
+  - text          # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)
 
 executables:
   hsed:

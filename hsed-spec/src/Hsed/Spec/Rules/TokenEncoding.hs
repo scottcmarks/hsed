@@ -41,7 +41,13 @@ Checks, each with the code its findings carry:
   reserved range is refused by the codec's parser and starts nothing it
   writes; the codec writes atoms starting with bytes of each atom range, each
   with the row's header length, and no byte of an atom range decodes alone to
-  a token; every atom the codec writes decodes back to itself.
+  a token; every atom of a probe (every tiny integer, values of every length
+  up to 17 and around every multiple of 256 to 2049, and the empty byte
+  sequences, continued or not) the codec writes decodes back to itself, and
+  the one it writes as nothing is the empty continued byte sequence, which
+  adds nothing to the value it continues and which no atom may encode (Core
+  3.2.2.3.1.2 permits length 0 only for a byte sequence that is not
+  continued).
 
 Compiled into 'tokensModule': @codecTables@, the SpecRef and title of every
 table bound with the shape, each under its provenance, so that a change of a
@@ -61,11 +67,12 @@ module Hsed.Spec.Rules.TokenEncoding
   , CodecTag (..)
   , codecTag
   , tokenFindings
+  , probe
+  , roundTrips
   ) where
 
 import           Data.Attoparsec.ByteString (parseOnly)
 import qualified Data.ByteString            as B
-import qualified Data.Char                  as DC
 import qualified Data.Text                  as DT
 import qualified RIO.Char                   as C
 import qualified RIO.List                   as L
@@ -78,6 +85,7 @@ import           Hsed.Spec.Common           (Finding, RuleName (..), Severity (.
 import           Hsed.Spec.DSL              (SomeBinding (..), tokens)
 import qualified Hsed.Spec.Gen              as Gen
 import           Hsed.Spec.IR               (CellIR (..), SpecIR (..), StructPath (..), TableIR (..))
+import           Hsed.Spec.Readers.Text     (readHexByte)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Shape            (Form (..), Shape (..), captionTitle, measure, shapeMismatch)
 import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
@@ -159,16 +167,12 @@ readTokenRow i cells = case reverse cells of
 -- | @F0@ or @00..7F@.
 hexRange :: Text -> Maybe (Word8, Word8)
 hexRange cell = case DT.splitOn ".." cell of
-  [a]    -> (\x -> (x, x)) <$> byte a
+  [a]    -> (\x -> (x, x)) <$> readHexByte a
   [a, b] -> do
-    lo <- byte a
-    hi <- byte b
+    lo <- readHexByte a
+    hi <- readHexByte b
     if lo <= hi then Just (lo, hi) else Nothing
   _      -> Nothing
-  where
-    byte t
-      | T.length t == 2, T.all C.isHexDigit t = Just (T.foldl' (\n c -> n * 16 + fromIntegral (DC.digitToInt c)) 0 t)
-      | otherwise = Nothing
 
 -- | How many bits a cell of a bit pattern stands for: one for a single
 --   character, @h - l + 1@ for a field @x\<h..l\>@.
@@ -229,15 +233,15 @@ written = Map.map (L.sort . L.nub) (Map.fromListWith (<>)
   [ (B.head enc, [B.length enc - payload]) | (t, payload) <- probe, let enc = generate t, not (B.null enc) ])
 
 -- | The atoms the probe has the codec write, each with the length of its value:
---   every integer a tiny atom holds, and integers, byte sequences and
---   continued byte sequences of every length up to 17 and around every
---   multiple of 256 up to 2049.
+--   every integer a tiny atom holds, integers, byte sequences and continued
+--   byte sequences of every length up to 17 and around every multiple of 256
+--   up to 2049, and the empty byte sequence and the empty continued one.
 probe :: [(Token, Int)]
 probe =
   [ (Unsigned n, 0) | n <- [0 .. 63] ] <> [ (Signed i, 0) | i <- [-32 .. 31] ]
   <> concat [ [ (Unsigned (2 ^ (8 * k - 1)), k), (Signed (negate (2 ^ (8 * k - 1))), k)
               , (Bytes (B.replicate k 0), k), (ContinuedBytes (B.replicate k 0), k) ] | k <- lengths ]
-  <> [ (Bytes B.empty, 0) ]
+  <> [ (Bytes B.empty, 0), (ContinuedBytes B.empty, 0) ]
   where lengths = [1 .. 17] <> concat [ [256 * j - 1, 256 * j, 256 * j + 1] | j <- [1 .. 8] ]
 
 -- | A token that carries a value: an atom.
@@ -327,12 +331,22 @@ sentence c bs = case c of
   Refused  -> "the codec refuses " <> byteList bs
   ReadOnly -> "the codec writes nothing starting with " <> byteList bs <> " but decodes it"
 
--- | C-TOKEN-CODEC on the codec alone: every atom of the probe decodes back to itself.
+-- | C-TOKEN-CODEC on the codec alone: every atom of the probe it writes
+--   decodes back to itself, and it writes nothing only for an atom that adds
+--   nothing to a value, a continued byte sequence with no bytes.
 roundTrips :: [Text]
-roundTrips =
-  [ "the codec writes " <> short t <> " as " <> bytesText (B.take 4 enc) <> "..., which it decodes as " <> either T.pack short back
-  | (t, _) <- probe, let enc = generate t, let back = parseOnly (parser @Token) enc, back /= Right t ]
-  where short = T.take 60 . tshow
+roundTrips = mapMaybe (\(t, _) -> problem t (generate t)) probe
+  where
+    problem t enc
+      | B.null enc = if addsNothing t then Nothing else Just ("the codec writes nothing for " <> short t)
+      | otherwise = case parseOnly (parser @Token) enc of
+          Right back | back == t -> Nothing
+          back -> Just ("the codec writes " <> short t <> " as " <> bytesText (B.take 4 enc) <> "..., which it decodes as "
+                        <> either T.pack short back)
+    addsNothing = \case
+      ContinuedBytes bs -> B.null bs
+      _                 -> False
+    short = T.take 60 . tshow
 
 -- | Bytes grouped by what the codec does with them, in the order first met.
 grouped :: [(CodecTag, Word8)] -> [(CodecTag, [Word8])]
@@ -365,13 +379,13 @@ bytesText = T.unwords . map hexByte . B.unpack
 --   nested in its cells).
 codecTablesDecl :: Context -> BoundTable -> [BoundTable] -> Gen.Decl
 codecTablesDecl ctx first' bts = (Gen.decl (provenance first') "codecTables" body)
-  { Gen.declImports = [Gen.ImportSome "RIO" ["Text"]] }
+  { Gen.declImports = [Gen.ImportSome "Data.Text" ["Text"]] }
   where
     -- the caption's title, which the provenance prints whatever the caption's number looks like (Table 04)
     provenance bt = provenanceOf ctx (btAnchor bt) (btTable bt) (title bt)
     body =
       [ Gen.provenanceComment (provenance first')
-      , "--   The tables of Core 3.2.2 the hand-written codec (System.SED.MCTP.Common.Token)"
+      , "--   The tables of " <> Gen.specLabel (cxSpec ctx) <> within <> " the hand-written codec (System.SED.MCTP.Common.Token)"
       , "--   implements, each with its SpecRef and title under its provenance: the token table"
       , "--   is checked against the codec on every hsedc run (C-TOKEN-CODEC), the atom"
       , "--   diagrams are the codec's by hand."
@@ -382,6 +396,10 @@ codecTablesDecl ctx first' bts = (Gen.decl (provenance first') "codecTables" bod
     element i bt =
       [ "    -- " <> fromMaybe "" (T.stripPrefix "-- | " (Gen.provenanceComment (provenance bt))) <> nestedNote bt
       , "  " <> (if i == 0 then "[ " else ", ") <> "(" <> tshow (specRef bt) <> ", " <> tshow (title bt) <> ")" ]
+    -- the section every table lies in: the longest common prefix of their sections
+    within = case [ DT.splitOn "." s | bt <- bts, Just s <- [sectionOf ctx bt] ] of
+      s : ss | common@(_ : _) <- foldl' (\a b -> map fst (takeWhile (uncurry (==)) (zip a b))) s ss -> " " <> T.intercalate "." common
+      _ -> ""
     specRef bt = specIdText (cxSpec ctx) <> ":" <> renderAnchorId (btAnchor bt)
     title bt = fromMaybe "" ((btRead bt).caption >>= captionTitle)
     nestedNote bt = case nestedCount (btTable bt) of

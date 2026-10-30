@@ -26,3 +26,16 @@ o20_init,o20_rev,o20_ver,o20_minor = struct.unpack_from("<BBBB", b, off); off+=4
 o20_admins,o20_users,o20_rc = struct.unpack_from("<HHB", b, off); off+=5
 print("DataStore maxTables",ds_max,"maxSize",hex(ds_size),"align",ds_align)
 print("OPAL20 base",hex(o20_base),"n",o20_n,"initialPIN",hex(o20_init),"revertedPIN",hex(o20_rev),"version",o20_ver,"minor",o20_minor,"admins",o20_admins,"users",o20_users,"rangeCrossing",o20_rc)
+# Namespace Locking 0x0403 (CNL 1.30 Table 6, PDF 51), added at the M3 review. The blob is sedutil a7eafd5's
+# DTA_DEVICE_INFO (Common/DtaStructures.h:483-652, #pragma pack(1)); its NSLocking fields lie at 117-130, the
+# device type at 139 and the serial at 143 anchoring the offsets. The kext copies them unswapped
+# (TPerDriver.cpp:1399-1406 at macos-driver 8bf2635) from a descriptor struct one field off CNL's
+# (DtaStructures.h:398-407: a reserved byte where CNL has Length, then three u32), so the fields it calls
+# Max_Key_Count, Unused_Key_Count and Max_Range_Per_NS hold CNL's bytes 4-7, 8-11 and 12-15 as the drive sent
+# them (big-endian); the descriptor's Length and its bytes 16-19 (Maximum Ranges Per Namespace) are not in the
+# blob. Read 2026-10-30: version 1, byte 4 0x80 (Range_C 1), Maximum Key Count 9, Unused Key Count 8.
+ns_version, ns_byte4 = b[117], b[119]
+ns_max_keys, ns_unused_keys = struct.unpack_from(">II", b, 123)
+print("NSLocking version", ns_version, "byte4", hex(ns_byte4), "Range_C", ns_byte4 >> 7 & 1, "Range_P", ns_byte4 >> 6 & 1,
+      "SUM_C", ns_byte4 >> 5 & 1, "maxKeyCount", ns_max_keys, "unusedKeyCount", ns_unused_keys,
+      "devType", struct.unpack_from("<I", b, 139)[0], "serial", b[143:163].decode("ascii", "replace").strip())

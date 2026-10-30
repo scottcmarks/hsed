@@ -7,7 +7,7 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| core-2.01 | 248 | 228 | 3 | 10 | 10 | 0 | 0 |
+| core-2.01 | 248 | 238 | 3 | 10 | 0 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
@@ -31,10 +31,12 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | comment Props | 2 |
 | comment Prose | 6 |
 | comment StateTable | 1 |
+| rule byteFieldValue | 8 |
 | rule byteGrid | 9 |
 | rule codes | 8 |
 | rule constValues | 9 |
 | rule enumValues | 19 |
+| rule feature | 2 |
 | rule fieldType | 3 |
 | rule fieldValue | 3 |
 | rule preconfig | 2 |
@@ -58,6 +60,7 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | severity | code | findings |
 |---|---|---:|
 | Warning | C-FMT-RESOLVE | 5 |
+| Warning | C-LAYOUT-TILE | 1 |
 | Warning | C-SIG-METHOD | 1 |
 | Warning | C-SIG-PARSE | 1 |
 | Warning | C-UID-UNIQUE | 1 |
@@ -66,10 +69,9 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Warning | W-ERRATUM-APPLIED | 2 |
 | Warning | W-PINS-NONE | 3 |
 | Warning | W-PROP-NAME-CASE | 1 |
-| Warning | W-RULE-UNIMPLEMENTED | 2 |
-| Warning | W-UNBOUND | 10 |
 | Warning | XREF-RESOLVES | 2 |
 | Note | C-SIG-METHOD | 1 |
+| Note | N-BYTES-IN-HEADER | 2 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |
 | Note | N-HEADER-NORMALISED | 10 |

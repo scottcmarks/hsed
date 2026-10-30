@@ -58,7 +58,7 @@ layoutsModule = Gen.GenModule
   , Gen.description = "Byte layouts: the structures the spec prints as a grid of bytes and bits, or as rows of byte ranges"
   , Gen.notes       = [ "Each is a Layout (Hsed.Core.Layout): its fields at the bits the table prints them over, the size of"
                       , "its fixed part and its variable tail; reserved bits and the constants a TPer SHALL send are fields"
-                      , "of their own, and every layout tiles its bytes." ] }
+                      , "of their own. Every layout tiles its bytes, or its comment names the bytes no field covers." ] }
 
 -- | A layout's declaration: @name :: Layout@, its fields one to a line as
 --   @spanning "\<name\>" (byte, bit) (byte, bit) \<kind\>@.
@@ -161,7 +161,10 @@ describeTileProblem = \p -> case p of
 
 -- * Codes
 
--- | The code of the tiling check, whichever rule makes it.
+-- | The code of the tiling check, whichever rule makes it: an Error
+--   ('tileFindings'), or a Warning where a rule generates the layout as
+--   printed, its comment naming the bytes no field covers, until an erratum
+--   names them (@byteFieldValue@'s bytes no row names).
 layoutCodes :: [CodeDef]
 layoutCodes =
-  [ CodeDef "C-LAYOUT-TILE" [Error] (Defect "a byte layout's fields do not cover each bit of its bytes exactly once") ]
+  [ CodeDef "C-LAYOUT-TILE" [Error, Warning] (Defect "a byte layout's fields do not cover each bit of its bytes exactly once") ]

@@ -23,6 +23,7 @@ module Hsed.Spec.Registry
   ) where
 
 import           Hsed.Spec.RuleDef             (RuleDef)
+import           Hsed.Spec.Rules.ByteFieldValue (byteFieldValueRule)
 import           Hsed.Spec.Rules.ByteGrid      (byteGridRule)
 import           Hsed.Spec.Rules.Codes         (codesRule)
 import           Hsed.Spec.Rules.ConstValues   (constValuesRule)
@@ -47,7 +48,8 @@ import           Hsed.Spec.Rules.UidTable      (uidTableRule)
 -- | The rules, in alphabetical order.
 registry :: [RuleDef]
 registry =
-  [ byteGridRule
+  [ byteFieldValueRule
+  , byteGridRule
   , codesRule
   , constValuesRule
   , enumValuesRule

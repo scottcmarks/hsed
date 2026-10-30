@@ -19,7 +19,7 @@ and the files `make gen` rewrites, which are committed and never edited by hand:
 `spec/annot/<spec>.{upd,manifest.json}` and `hsed-spec/bindings/`.
 
 The generic tests (`CheckSpec`, `RulesSpec`, `CompileSpec`, `CliSpec`) hold invariants (every table
-classified once, one `W-UNBOUND` per unbound table, the committed modules exactly those compile writes,
+classified once, one `E-UNBOUND` per unbound table, the committed modules exactly those compile writes,
 the committed ledger exactly what the run gives), not totals: how many tables each rule binds and how
 many findings of each code a run gives are in `docs/LEDGER.md`. A new rule edits none of them.
 
@@ -39,7 +39,8 @@ printed, worth a look, or hsedc's bookkeeping, which sorts `build/report/ERRATA.
 the shared readers' (`Hsed.Spec.Readers.readerCodes`) and every rule's, so a new rule edits no generic
 module for its codes. Each code is claimed once (`RegistrySpec`): a code several rules give belongs to the
 rule the others import or that defined it first (`typeRow`'s C-UID-TABLE, C-UID-UNIQUE and C-FMT-RESOLVE,
-which `uidTable`, `preconfig` and `tableDesc` give too), or to the reader under `Hsed.Spec.Readers` they
+which `uidTable`, `preconfig` and `tableDesc` give too; `byteGrid`'s C-GRID-NAME, which `byteFieldValue`
+gives too), or to the reader under `Hsed.Spec.Readers` they
 give it through, and is listed by neither rule. A code the catalogue does not name is listed in
 `ERRATA.md` under "Not yet classified", and `ReportSpec` fails while the committed run gives one, or gives
 a finding a severity its code's entry does not list. The integrator adds the new codes to design §2 Q2.
@@ -77,9 +78,10 @@ Some changes are generic and are made in a small commit of their own, before the
   to leave it out compares with the committed run (`CoreIR.newlyExcluded`), not with an empty list.
 - **A runtime module** the generated code of several rules imports: named once in `Hsed.Spec.Gen`
   (`uidModule`, `coreTypesModule`; since M2b also `coreTableModule`, `codeModule`, `fieldModule`; since
-  M2c `layoutModule`, `Hsed.Core.Layout`), the module itself in hsed-core. A runtime module one rule alone imports is named in that rule (`sig`'s
-  `methodModule`, `stateTable`'s `syncModule`, the Props reader's `propertiesModule`), and the rule's
-  group may write it in hsed-core beside the rule.
+  M2c `layoutModule`, `Hsed.Core.Layout`, and, once byteFieldValue's records were printed as byteGrid's,
+  `recordModule`, `Hsed.Core.Record`), the module itself in hsed-core. A runtime module one rule alone imports is named in that rule (`sig`'s
+  `methodModule`, `stateTable`'s `syncModule`, the Props reader's `propertiesModule`, `feature`'s
+  `featureModule`), and the rule's group may write it in hsed-core beside the rule.
 
 `RegistrySpec` fails if a module under `Rules/` is not in the registry, if two rules share a name or a
 shape, or if a generic module (`Rules`, `Scope`, `Check`, `Compile`, `Gen`, `Cli`, `RuleDef`, `Report`,
@@ -171,8 +173,8 @@ signature shape, `sig`); its rule is an ordinary module under `Rules/` whose `Ru
   heads as its caption, its 1-based place among the blocks as its ordinal, the sha256 of its text).
 
 `Hsed.Spec.Rules.classifySignatures` binds every block whose section a `rule <token>` anchor covers
-to that rule (the doc anchor covers them all); a block no such rule covers is `W-UNBOUND` at the
-block, as an unbound table is (an Error with E-UNBOUND at the end of M2c), and one two such rules
+to that rule (the doc anchor covers them all); a block no such rule covers is `E-UNBOUND` at the
+block, an Error as an unbound table is (since the end of M2c; `W-UNBOUND`, a Warning, before), and one two such rules
 cover is `E-AMBIGUOUS`. The ledger counts the blocks beside the tables (`docs/LEDGER.md`), `hsedc
 orphans` lists the unbound ones after the tables, and the coverage report lists every block. The
 blocks are in the `Context` (`cxSigs`, `cxSigClasses`); a rule that needs a table's reading too (the
@@ -198,7 +200,11 @@ pragmas (the declarations' extensions with the two every module has), header, me
 declarations sorted by table number, rank, name. A declaration goes to the rule's module (`Emit`) or to
 another one (`EmitIn`, for a rule that writes several). Rules naming one module must give it one
 description; their notes are united. A module is written when it has a declaration, and `hsedc compile`
-removes the spec's modules it did not write.
+removes the spec's modules it did not write. Rules that write one module name and print their
+declarations by one rule's functions, imported as a reader is, so that the module follows one convention
+and defines each name once: `byteFieldValue` reads a table as `byteGrid`'s `GridRead` and calls its
+`layoutValue`, `recordDecl` and `nameFindings` (`C-GRID-NAME`, byteGrid's code, at the byteFieldValue
+table whose names byteGrid's or an earlier table's declarations define).
 
 ## The annotation, if the rule needs an anchor
 

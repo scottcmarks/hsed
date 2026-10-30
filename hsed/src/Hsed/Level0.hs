@@ -30,7 +30,7 @@ and descriptors to the bytes of a transfer length, as the simulator
 answers.
 
 The JSON of these types (aeson's 'A.ToJSON') is what the jig's reports
-print of a Level 0 response; bytes in hex ("Hsed.Wire.Internal".'trimmedHex').
+print of a Level 0 response; bytes in hex ("Hsed.Wire".'trimmedHex').
 
 The bodies are milestone M3's group G2's; until it lands they are stubs.
 -}
@@ -54,7 +54,7 @@ import           RIO
 
 import           Hsed.Core.Feature      (Allowance (..), Feature (featureCode))
 import           Hsed.Core.Layout       (Content (..), Difference (..), LayoutError)
-import           Hsed.Wire.Internal     (trimmedHex)
+import           Hsed.Wire              (trimmedHex)
 
 
 -- * A response, split

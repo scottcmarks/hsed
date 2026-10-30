@@ -67,6 +67,8 @@ module Hsed.Wire
   , defaultExchangeOpts
   , ExchangeError (..)
   , exchangeComPacket
+    -- * Bytes in JSON
+  , trimmedHex
   ) where
 
 import qualified Data.Aeson         as A

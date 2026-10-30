@@ -23,7 +23,9 @@ a problem. The bit maps of T42 and T43 byte 4 equal sedutil's
 rule's fallbacks are tested on T43 with its extents taken away: a finding, or
 the @bits@ modifier, which is held to the row it reads (each name a printed
 cell, which names the field; its bits descending left to right, each a bit
-of a byte listed once; a printed Reserved cell over a bit it leaves). A
+of a byte listed once; a printed Reserved cell over a bit it leaves, and
+each bit it leaves under a printed Reserved or empty cell, so that a map
+shifted by a bit is refused). A
 field's parenthesis that names its parts (T18's Session), and the fixed
 part's size running to the last byte a row prints.
 -}
@@ -190,6 +192,15 @@ spec = describe "Hsed.Spec.Readers.Grid" $ do
         let full = (7, "Locked") : (6, "Locking Enabled") : [ p | p@(b, _) <- locking, b <= 5, b /= 2, b /= 1 ]
         [ gpMessage p | p <- gProblems (readGrid [(4, full)] bare), gpCode p == "C-LAYOUT-EXTENT" ] `shouldSatisfy`
           elem "byte 4: the cell \"Reserved\" lies where its bits modifier leaves no bit reserved"
+      it "refuses a map leaving bits reserved where the row prints no Reserved or empty cell: shifted by a bit (C-LAYOUT-EXTENT)" $ do
+        -- the PDF prints Locking Supported in the bit 0 column (PDF 71) and nothing after it: a map one bit up leaves
+        -- bit 0 reserved under no cell, and bit 7 under the Reserved cell the row prints first
+        let problems ps = [ gpMessage p | p <- gProblems (readGrid [(4, ps)] bare), gpCode p == "C-LAYOUT-EXTENT" ]
+        problems [ (b + 1, n) | (b, n) <- locking ]
+          `shouldBe` ["byte 4: its bits modifier leaves bit 0 reserved where the row prints no Reserved or empty cell"]
+        -- MBR Done one bit up: bit 5 left reserved between it and MBR Enabled, where the row prints no cell
+        problems [ (if b == 5 then 6 else b, n) | (b, n) <- locking ]
+          `shouldBe` ["byte 4: its bits modifier leaves bit 5 reserved where the row prints no Reserved or empty cell"]
       it "reports a bits modifier the extent rule leaves unused (W-LAYOUT-BITS-UNUSED)" $
         [ gpCode p | p <- gProblems (readGrid [(4, locking), (9, [(0, "X")])] (table ir 43)) ]
           `shouldBe` ["W-LAYOUT-BITS-UNUSED", "W-LAYOUT-BITS-UNUSED"]

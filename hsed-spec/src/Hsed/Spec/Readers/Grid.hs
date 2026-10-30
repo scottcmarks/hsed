@@ -37,7 +37,10 @@ other cells are fields over the bits under them.
   names the cells the row prints and orders them as printed: each name it
   lists is a cell of the row, which names the field as printed; its bits
   descend from left to right; each is one of a byte's bits 7 to 0, listed
-  once; a printed @Reserved@ cell lies over a bit it does not list; else
+  once; a printed @Reserved@ cell lies over a bit it does not list, and each
+  run of bits it does not list under a printed @Reserved@ or empty cell, where
+  the row prints it among the named cells (before the first, between two,
+  after the last: a map shifted by a bit leaves one under none); else
   @C-LAYOUT-EXTENT@.
 * The fields ('GridField'), in order: a cell over some bits of one byte; a
   run from an @(MSB)@ mark to an @(LSB)@ mark, over the rows between (Core
@@ -353,7 +356,8 @@ assemble rows = (reverse fs, reverse ps <> unclosed)
                                               <> " named cells" <> (if isJust run then " inside a field's run" else "") <> ", not one field") : probs)
     -- a byte read by its bits modifier: its listed bits, each named as its cell prints it, the rest reserved; the
     -- modifier holds to the row: each name a printed cell, its bits descending left to right as the row prints
-    -- them, each a bit of a byte listed once, a printed Reserved cell over a bit it leaves reserved
+    -- them, each a bit of a byte listed once, a printed Reserved cell over a bit it leaves reserved, and each run of
+    -- bits it leaves reserved under a printed Reserved or empty cell
     modified n row run done probs =
       let listed = brBits row
           cells = named row
@@ -383,11 +387,25 @@ assemble rows = (reverse fs, reverse ps <> unclosed)
                          , fromMaybe (-1) (listToMaybe [ b | (j, cb) <- zip [0 ..] cells, j > i, Just b <- [bitOf cb] ]) )
           overReserved = [ extent [cbCell cb] (byte <> "the cell " <> tshow (cbText cb) <> " lies where its bits modifier leaves no bit reserved")
                          | (i, cb) <- reservedCells, let (hi, lo) = bitsBeside i, not (any (\u -> lo < u && u < hi) unlisted) ]
+          -- and conversely, each run of bits the modifier leaves reserved lies under a Reserved or empty cell printed where
+          -- the run lies among the named cells: between the cell of the listed bit above it (or the row's start) and the cell
+          -- of the listed bit below it (or the row's end); a map shifted by one bit leaves a bit at an end under no cell
+          printed = zip [0 :: Int ..] (brCells row)
+          cellOf b = listToMaybe [ i | (i, cb) <- printed, fmap fst (cbBits cb) == Just b ]
+          filler cb = isNothing (cbBits cb) && (T.null (cbText cb) || reservedName (cbText cb))
+          bitsText hi lo = if hi == lo then "bit " <> tshow hi else "bits " <> tshow hi <> "-" <> tshow lo
+          underNone =
+            [ extent (brRow row) (byte <> "its bits modifier leaves " <> bitsText hi lo <> " reserved where the row prints no Reserved or empty cell")
+            | null misordered
+            , (hi, lo) <- runsOf unlisted
+            , let after = fromMaybe (-1) (listToMaybe (mapMaybe cellOf (filter (> hi) [0 .. 7])))
+                  before = fromMaybe (length printed) (listToMaybe (mapMaybe cellOf (filter (< lo) [7, 6 .. 0])))
+            , not (any (\(i, cb) -> after < i && i < before && filler cb) printed) ]
           note = GridProblem Note "N-LAYOUT-BITS" (brRow row)
                    ("byte " <> tshow n <> "'s bits read from its bits modifier, the extent rule reading none: "
                     <> T.intercalate ", " [ tshow b <> " " <> nm | (b, nm) <- listed ])
           inRun = [ endian (brRow row) ("byte " <> tshow n <> ", read by its bits modifier, lies inside a field's run") | isJust run ]
-          found = strays <> unprinted <> outside <> twice <> misordered <> overReserved <> inRun
+          found = strays <> unprinted <> outside <> twice <> misordered <> overReserved <> underNone <> inRun
       in (run, reverse (L.sortOn (inByte . gfFirst) (flags <> reserved)) <> done, reverse (note : found) <> probs)
     -- bit 7 first, as the other mappings give a byte's fields
     inByte (BitPos b i) = (b, negate i)

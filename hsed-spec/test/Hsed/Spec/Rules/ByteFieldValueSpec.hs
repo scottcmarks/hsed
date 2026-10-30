@@ -266,11 +266,11 @@ spec = do
         filter (T.any (> '\DEL')) lns `shouldBe` []
 
     describe "the runtime" $ do
-      it "takes no value for the reserved run to the end of the transfer, and reports it read other than zero (T32, PDF 63)" $ do
+      it "takes no value for the reserved run to the end of the transfer, and reports its first byte other than zero (T32, PDF 63)" $ do
         let l = bfLayout (readOf ir 32)
         encode l [("Extended ComID", Number 0x07FE0000), ("Reserved", Octets "\xff\xee")] `shouldBe` Left (ReservedGiven "Reserved")
         fmap decodedFields (decode l (B.pack [7, 0xFE, 0, 0, 0, 0, 0, 1, 0, 0, 0])) `shouldBe` Right [("Extended ComID", Number 0x07FE0000), ("Request Code", Number 1)]
-        fmap decodedDifferences (decode l (B.pack [7, 0xFE, 0, 0, 0, 0, 0, 1, 0, 0xff, 0])) `shouldBe` Right [ReservedNotZero "Reserved" 64 0xff00]
+        fmap decodedDifferences (decode l (B.pack [7, 0xFE, 0, 0, 0, 0, 0, 1, 0, 0xff, 0])) `shouldBe` Right [ReservedNotZero "Reserved" 72 0xff]
       it "encodes T33 with its pins and reserved bytes, and decodes it strictly" $ do
         let l = bfLayout (readOf ir 33)
             time k = Octets (B.pack (map fromIntegral [k .. k + 9 :: Int]))

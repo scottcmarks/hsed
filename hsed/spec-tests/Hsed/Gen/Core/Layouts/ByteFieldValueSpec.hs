@@ -49,10 +49,10 @@ spec = describe "the byteFieldValue layouts (core-2.01 T28, T31-T33, T35-T37)" $
   it "No Response Available: the rest of the transfer its tail (T31, PDF 63)" $
     fmap decodedFields (decode noResponseAvailableLayout (B.pack ([0x07, 0xFE, 0, 0] <> replicate 12 0)))
       `shouldBe` Right [ ("Extended ComID", Number 0x07FE0000), ("Request Code", Number 0), ("Available Data Length in bytes", Number 0) ]
-  it "the reserved rest of the transfer: no value taken, read other than zero reported (T35, PDF 65)" $ do
+  it "the reserved rest of the transfer: no value taken, its first byte other than zero reported at its offset (T35, PDF 65)" $ do
     encode stack_RESETCommandRequestLayout [("Extended ComID", Number 0x07FE0000), ("Reserved", Octets "\xff")] `shouldBe` Left (ReservedGiven "Reserved")
-    fmap drDifferences (decodeRecord (B.pack ([0x07, 0xFE, 0, 0, 0, 0, 0, 2] <> [0, 0xff])) :: Either LayoutError (DecodedRecord STACK_RESETCommandRequest))
-      `shouldBe` Right [ReservedNotZero "Reserved" 64 0xff]
+    fmap drDifferences (decodeRecord (B.pack ([0x07, 0xFE, 0, 0, 0, 0, 0, 2] <> [0, 0xff, 0x01])) :: Either LayoutError (DecodedRecord STACK_RESETCommandRequest))
+      `shouldBe` Right [ReservedNotZero "Reserved" 72 0xff]
   it "tells a STACK_RESET pending reply from a response by their pins (T36, T37, PDF 66), a lenient decode's PinDiffers no match" $ do
     let pendingReply = B.pack ([0x07, 0xFE, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0] <> replicate 8 0)
         response = B.pack ([0x07, 0xFE, 0, 0, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 0] <> replicate 4 0)

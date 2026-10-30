@@ -12,13 +12,16 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 Round trips over random layouts that tile (fields of every kind at any bit
-position and width, a tail with or without a length field): decoding what
+position and width, a tail with or without a length field, or a reserved
+tail): decoding what
 was encoded gives the values back, encoding what was decoded gives the bytes
 back; a pin read with another value is a difference to 'decode' and an error
-to 'decodeStrict', each difference at its field's first bit; a field taken
-away leaves a gap, one added twice an overlap. Then the tails: padding and a
-reserved tail written as zeros and, read otherwise, reported; a reserved
-tail taking no value; a length past the input, however large, refused; a
+to 'decodeStrict', each difference at its field's first bit, a reserved
+tail's at its first byte other than zero; a field taken away leaves a gap,
+one added twice an overlap. Then the tails: padding and a reserved tail
+written as zeros and, read otherwise, reported; a reserved tail taking no
+value, and a long one (the rest of a large transfer) read in linear time; a
+length past the input, however large, refused; a
 padded tail without a length field refused; and 'matching' telling layouts
 apart by their pins. The layouts are random, not the spec's: the spec's are
 generated (@Hsed.Gen.\<Spec\>.Layouts@) and tested in hsed.
@@ -38,26 +41,31 @@ import           Hsed.Core.Layout
 
 -- | A layout whose fields tile its fixed part, with values for it: each field
 --   a random kind and width, in order; and a tail, possibly with its length
---   in a one-byte field of its own at the end of the fixed part.
+--   in a one-byte field of its own at the end of the fixed part, or reserved.
 data Tiled = Tiled !Layout ![(Text, Content)] !ByteString
   deriving (Show)
+
+-- | What follows a random layout's fixed part.
+data TailChoice = NoTail | RestOfInput | WithLength | ReservedRest
+  deriving (Eq, Show, Enum, Bounded)
 
 instance Arbitrary Tiled where
   arbitrary = do
     nBytes <- chooseInt (1, 8)
     widths <- partition (nBytes * 8)
     fields <- traverse field (L.zip3 [0 :: Int ..] (L.scanl (+) 0 widths) widths)
-    tailChoice <- elements [Nothing, Just False, Just True]   -- no tail, a rest-of-input tail, a tail with a length field
+    tailChoice <- elements [minBound .. maxBound]
     payload <- B.pack <$> (chooseInt (0, 9) >>= vector)
     align <- elements [1, 4]
     let lengthField = Field "length" (nBytes * 8) 8 Unsigned
         (size, fs, tl) = case tailChoice of
-          Nothing    -> (nBytes, fields, Nothing)
-          Just False -> (nBytes, fields, Just (Tail "tail" Nothing 1 Bytes))
-          Just True  -> (nBytes + 1, fields <> [lengthField], Just (Tail "tail" (Just "length") align Bytes))
+          NoTail       -> (nBytes, fields, Nothing)
+          RestOfInput  -> (nBytes, fields, Just (Tail "tail" Nothing 1 Bytes))
+          WithLength   -> (nBytes + 1, fields <> [lengthField], Just (Tail "tail" (Just "length") align Bytes))
+          ReservedRest -> (nBytes, fields, Just (Tail "tail" Nothing 1 Reserved))
         layout' = Layout "example" size fs tl
     values <- concat <$> traverse (valueFor tl payload) fs
-    pure (Tiled layout' (values <> [ ("tail", Octets payload) | isJust tl ]) payload)
+    pure (Tiled layout' (values <> [ ("tail", Octets payload) | Just t <- [tl], tailKind t /= Reserved ]) payload)
     where
       -- widths summing to n, none wider than 24
       partition n
@@ -116,6 +124,13 @@ spec = describe "Hsed.Core.Layout" $ do
           fmap decodedDifferences (decode l raised) `shouldBe` Right expected
           fmap decodedDifferences (decodeStrict l raised) `shouldBe` Right expected
         _ -> pure ()
+    prop "reports a reserved tail's first byte other than zero, at its offset, strict or not" $ \(Tiled l vs _) (rest :: [Word8]) ->
+      case (layoutTail l, encode l vs) of
+        (Just t, Right bytes) | tailKind t == Reserved -> do
+          let expected = [ ReservedNotZero (tailName t) ((layoutSize l + i) * 8) (toInteger w) | (i, w) <- take 1 (filter ((/= 0) . snd) (zip [0 ..] rest)) ]
+          fmap decodedDifferences (decode l (bytes <> B.pack rest)) `shouldBe` Right expected
+          fmap decodedDifferences (decodeStrict l (bytes <> B.pack rest)) `shouldBe` Right expected
+        _ -> pure ()
     prop "leaves a gap where a field is taken away, and an overlap where one is added twice" $ \(Tiled l _ _) ->
       case layoutFields l of
         f : rest -> do
@@ -156,10 +171,15 @@ spec = describe "Hsed.Core.Layout" $ do
     it "takes no value, and is written as none" $ do
       encode l [("A", Number 1)] `shouldBe` Right "\x01"
       encode l [("A", Number 1), ("Reserved", Octets "\xff")] `shouldBe` Left (ReservedGiven "Reserved")
-    it "is no decoded field; its bytes read other than zero are reported at its first byte, strict or not" $ do
+    it "is no decoded field; its first byte other than zero is reported, alone and at its offset, strict or not" $ do
       decode l "\x01\x00\x00" `shouldBe` Right (Decoded [("A", Number 1)] [] "")
-      fmap decodedDifferences (decode l "\x01\x00\xff") `shouldBe` Right [ReservedNotZero "Reserved" 8 0xff]
-      fmap decodedDifferences (decodeStrict l "\x01\x00\xff") `shouldBe` Right [ReservedNotZero "Reserved" 8 0xff]
+      fmap decodedDifferences (decode l "\x01\x00\xff\x01") `shouldBe` Right [ReservedNotZero "Reserved" 16 0xff]
+      fmap decodedDifferences (decodeStrict l "\x01\x00\xff\x01") `shouldBe` Right [ReservedNotZero "Reserved" 16 0xff]
+    it "reads a long one (the rest of a large transfer) in linear time, never as one number" $ do
+      -- a MiB of zeros, then 7, then more: folding the run into an Integer took seconds per MiB, growing with its square
+      let big = "\x01" <> B.replicate (1024 * 1024) 0 <> "\x07" <> B.replicate 4096 0xff
+      done <- timeout 5000000 (fmap decodedDifferences (decodeStrict l big) `shouldBe` Right [ReservedNotZero "Reserved" ((1 + 1024 * 1024) * 8) 7])
+      done `shouldBe` Just ()
 
   describe "tiling a tail" $ do
     it "refuses padding without a length field, which could not tell the tail from its padding" $

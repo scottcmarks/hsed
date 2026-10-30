@@ -30,15 +30,17 @@ string, reserved bits, or a constant a TPer SHALL send (a pin, design example
 E8). Pins are what the drive must send: 'decode', for a host reading a
 drive's reply, reports a pin read with another value as a 'Difference' and
 goes on; 'decodeStrict' refuses it. Reserved bits are written as zeros and,
-read as anything else, are reported too, as are a tail's padding and a tail
-of reserved bytes (the rest of a transfer) read other than zero. A lenient
+read as anything else, are reported too, as are a tail's padding read other
+than zero and the first byte other than zero of a tail of reserved bytes (the
+rest of a transfer, which is read no further than that byte). A lenient
 'decode' that reports a pin read otherwise is no match for the layout: to
 tell several layouts apart by their pins (a STACK_RESET response from its
 pending reply), 'matching' keeps those whose every pin the input holds.
 
 The kinds' constructors 'Unsigned' and 'Bytes' share their names with those
-of "Hsed.Core.Token"'s @Token@: a module that needs both imports one of the
-two qualified.
+of "System.SED.MCTP.Common.Token"'s @Token@ (the module the design calls
+@Hsed.Core.Token@): a module that needs both imports one of the two
+qualified.
 -}
 module Hsed.Core.Layout
   ( -- * Fields
@@ -248,7 +250,7 @@ data Content
 --   @Reserved@), then the value read as a big-endian number.
 data Difference
   = PinDiffers !Text !Int !Integer !Integer  -- ^ a pinned field read with another value: the pin, the value read
-  | ReservedNotZero !Text !Int !Integer      -- ^ reserved bits, or a reserved tail's bytes, read other than zero
+  | ReservedNotZero !Text !Int !Integer      -- ^ reserved bits read other than zero; for a reserved tail, its first byte other than zero, at that byte's offset
   | PaddingNotZero !Text !Int !Integer       -- ^ the zeros a tail is padded with read other than zero: the tail's name
   deriving (Eq, Show)
 
@@ -336,8 +338,11 @@ encode l vs = do
 -- | Decode a layout from the start of the input, reporting a pin read with
 --   another value, reserved bits read other than zero and a tail's zeros
 --   (its padding, a reserved tail) read other than zero ('Difference') rather
---   than refusing them: how a host reads what a drive sent. A length field
---   that gives more bytes than the input holds is 'Truncated'.
+--   than refusing them: how a host reads what a drive sent. A reserved tail,
+--   which may be the rest of a large transfer, is read up to its first byte
+--   other than zero, which is reported alone, at its offset (the whole run is
+--   no number). A length field that gives more bytes than the input holds is
+--   'Truncated'.
 --
 -- >>> decode header "\x2f\x12\x34rest"
 -- Right (Decoded {decodedFields = [("Version",Number 2),("Length",Number 4660)], decodedDifferences = [ReservedNotZero "Reserved" 4 15], decodedRest = "rest"})
@@ -346,8 +351,8 @@ encode l vs = do
 -- >>> let framed = Layout "Framed" 1 [byteRange "Length" 0 0 Unsigned] (Just (Tail "Data" (Just "Length") 4 Bytes))
 -- >>> decode framed "\x02\&ab\x00\x07next"
 -- Right (Decoded {decodedFields = [("Length",Number 2),("Data",Octets "ab")], decodedDifferences = [PaddingNotZero "Data" 24 7], decodedRest = "next"})
--- >>> decodedDifferences <$> decode header { layoutTail = Just (Tail "Rest" Nothing 1 Reserved) } "\x20\x00\x00\x00\x01"
--- Right [ReservedNotZero "Rest" 24 1]
+-- >>> decodedDifferences <$> decode header { layoutTail = Just (Tail "Rest" Nothing 1 Reserved) } "\x20\x00\x00\x00\x01\x02"
+-- Right [ReservedNotZero "Rest" 32 1]
 decode :: Layout -> ByteString -> Either LayoutError Decoded
 decode l input = do
   unless (tiles l) (Left (NotTiled (tiling l)))
@@ -366,7 +371,7 @@ decode l input = do
         Right (Just (t, B.take n' (B.drop size input)), B.take (end' - size - n') (B.drop (size + n') input), B.drop end' input)
   let tailField = [ (tailName t, Octets bs) | Just (t, bs) <- [tailBytes], tailKind t /= Reserved ]
       tailDiffs = concat
-        [ [ ReservedNotZero (tailName t) (size * 8) (bytesInteger bs) | tailKind t == Reserved, B.any (/= 0) bs ]
+        [ [ ReservedNotZero (tailName t) ((size + i) * 8) (toInteger w) | tailKind t == Reserved, Just (i, w) <- [firstNonZero bs] ]
           <> [ PaddingNotZero (tailName t) ((size + B.length bs) * 8) (bytesInteger padding) | B.any (/= 0) padding ]
         | Just (t, bs) <- [tailBytes] ]
   pure (Decoded (values <> tailField) (differences <> tailDiffs) rest)
@@ -380,6 +385,8 @@ decode l input = do
       Reserved -> Nothing
       Bytes    -> Just (fieldName f, Octets (B.take (fieldWidth f `div` 8) (B.drop (fieldStart f `div` 8) input)))
       _        -> Just (fieldName f, Number (raw f))
+    -- the first byte other than zero, and its index: a linear scan, the run never folded into one number
+    firstNonZero bs = let nonZero = B.dropWhile (== 0) bs in (\(w, _) -> (B.length bs - B.length nonZero, w)) <$> B.uncons nonZero
     differences = mapMaybe differs (layoutFields l)
     differs f = case fieldKind f of
       Pinned p | raw f /= p -> Just (PinDiffers (fieldName f) (fieldStart f) p (raw f))

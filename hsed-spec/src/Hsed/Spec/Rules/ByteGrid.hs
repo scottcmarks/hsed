@@ -46,10 +46,12 @@ Checks:
 * @W-PINS-NONE@ and @C-PINS-WORDS@ ("Hsed.Spec.Readers.Pins".'pinsFindings'):
   no pin names a field of the grid where pins are in use around it (Tables
   38, 41, 44), or its section's pins cannot be read. Core's ComPacket family
-  states constants for Kind and Length (3.2.3.4.1.1, 3.2.3.4.2.1: @For
-  Credit Control Subpackets, this field is set to 0x8001.@, @This is always
-  0x00000004 …@) in sentences none of the three schemas reads, so they pin
-  nothing and their grids get no W-PINS-NONE (design 13.26).
+  states constants for Kind and Length (3.2.3.4.1.1.2, PDF 44: @For data
+  subpackets, this field is set to zeroes.@; 3.2.3.4.2.1.2 and
+  3.2.3.4.2.1.3, PDF 45: @For Credit Control Subpackets, this field is set to
+  0x8001.@, @This is always 0x00000004 …@) in sentences none of the three
+  schemas reads, so they pin nothing and their grids get no W-PINS-NONE
+  (design 13.26 (j)).
 
 Compiled into the shared layouts module ('layoutsModule', which the
 @byteFieldValue@ rule writes too), for each table: its 'Layout' as

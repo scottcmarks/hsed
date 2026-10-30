@@ -45,8 +45,9 @@ spec = do
     it "reads hex with 0x or an h after it, underscores between groups, and decimal, keeping the hex digits" $
       map parseNumber ["0x0C", "0001h", "0x0000_0001", "12", "VU", "0x", "0x_1"]
         `shouldBe` [Just (Number 12 (Just 2)), Just (Number 1 (Just 4)), Just (Number 1 (Just 8)), Just (Number 12 Nothing), Nothing, Nothing, Nothing]
-    it "reads as a number only what starts with a digit (a name such as Each is no hex eac with an h)" $
+    it "reads as a number only what starts with a digit, or upper-case hex digits before an h (a name such as Each is no hex eac with an h)" $ do
       map readNumber ["0x02", "12", "0001h", "Each", " 0x05 ", "Ah"] `shouldBe` [Just 2, Just 12, Just 1, Nothing, Just 5, Nothing]
+      map readNumber ["C000h", "FFFFh", "each", "EACH", "beach", "C000H"] `shouldBe` [Just 0xC000, Just 0xFFFF, Nothing, Nothing, Nothing, Nothing]
     it "prints a number as it was printed: hex with its digits, or decimal" $
       map numberExpr [Number 1 (Just 4), Number 0x7ff (Just 4), Number 10 Nothing] `shouldBe` ["0x0001", "0x07ff", "10"]
 

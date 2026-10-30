@@ -106,15 +106,20 @@ parseNumber n
     hexValue = T.foldl' (\acc c -> acc * 16 + toInteger (DC.digitToInt c)) 0 . digits
 
 -- | A number printed as a value of its own, a field's name or a cell: as
---   'parseNumber' reads it, its first character a digit (a name such as
---   @Each@ is no hex number @eac@ with an @h@ after it).
+--   'parseNumber' reads it, its first character a digit, or two or more hex
+--   digits in upper case before a lower-case @h@ (@C000h@, @FFFFh@, as Core
+--   prints Table 40's codes): a word such as @Each@, @each@, @EACH@ or @Ah@
+--   is no hex number with an @h@ after it.
 --
--- >>> map readNumber ["0x02", "12", "0001h", "Each", " 0x05 "]
--- [Just 2,Just 12,Just 1,Nothing,Just 5]
+-- >>> map readNumber ["0x02", "12", "0001h", "Each", " 0x05 ", "C000h", "FFFFh", "each", "EACH", "Ah"]
+-- [Just 2,Just 12,Just 1,Nothing,Just 5,Just 49152,Just 65535,Nothing,Nothing,Nothing]
 readNumber :: Text -> Maybe Integer
-readNumber t = case T.uncons (T.strip t) of
-  Just (c, _) | C.isDigit c -> nValue <$> parseNumber (T.strip t)
-  _                         -> Nothing
+readNumber t = case T.uncons s of
+  Just (c, _) | C.isDigit c || upperHex -> nValue <$> parseNumber s
+  _                                     -> Nothing
+  where
+    s = T.strip t
+    upperHex = maybe False (\b -> T.length b >= 2 && T.all (\x -> C.isDigit x || x `elem` ("ABCDEF" :: String)) b) (T.stripSuffix "h" s)
 
 -- | A number as printed: hex with as many digits as it printed, else decimal.
 numberExpr :: Number -> Text

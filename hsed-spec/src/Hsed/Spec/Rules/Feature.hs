@@ -102,7 +102,7 @@ import           Hsed.Spec.IR             (CellIR (..), SpecIR (..), TableIR (..
 import           Hsed.Spec.Readers.Grid   (BitPos (..), Grid (..), GridField (..), GridProblem (..), gridFindings, gridOf,
                                            readGrid)
 import           Hsed.Spec.Readers.Layout (gridFieldKind, gridTiling, hexAtWidth, layoutDecl, tileFindings, untiledNote)
-import           Hsed.Spec.Readers.Pins   (Pin (..), PinValue (..), pinsFindings, tablePins)
+import           Hsed.Spec.Readers.Pins   (Pin (..), PinValue (..), pinWord, pinsFindings, tablePins)
 import           Hsed.Spec.Readers.Record (Structure (..), declScope, earlierNames, layoutValue, nameFindings, recordDecl,
                                            structure, typeName)
 import           Hsed.Spec.Readers.Text   (Number (..), nameKey, numberExpr, parseNumber)
@@ -313,7 +313,7 @@ featureStructureName name = case T.words name of
 --   none pins it, or two disagree).
 agreedPin :: Map Text [Pin] -> Text -> Maybe Number
 agreedPin pinned k = case L.nub [ v | PinExact v <- map pinValue pins ] of
-  [v] -> listToMaybe (mapMaybe (parseNumber . pinText) pins) <|> Just (Number v Nothing)
+  [v] -> listToMaybe (mapMaybe (parseNumber . pinWord . pinText) pins) <|> Just (Number v Nothing)
   _   -> Nothing
   where pins = Map.findWithDefault [] (nameKey k) pinned
 

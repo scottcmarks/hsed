@@ -56,7 +56,11 @@ spec = describe "Hsed.Spec.Readers.Pins" $ do
       map readPinValue ["0x0001", "0x0C", "1", "VU", "0x1 or any version that supports the defined features in this SSC", "4 or larger", "0x0001 or larger", "**", "See section 3.1.1.3.1"]
         `shouldBe` [PinExact 1, PinExact 12, PinExact 1, PinVU, PinVU, PinAtLeast 4, PinAtLeast 1, PinOther, PinOther]
     it "reads hex with an h after it and digits grouped by underscores; a word is no hex number" $
-      map readPinValue ["0001h", "0x0000_0004", "Each"] `shouldBe` [PinExact 1, PinExact 4, PinOther]
+      map readPinValue ["0001h", "0x0000_0004", "Each", "C000h"] `shouldBe` [PinExact 1, PinExact 4, PinOther, PinExact 0xC000]
+    it "reads a number followed by its full stop, a parenthesis or a comma, but not by more words" $ do
+      map readPinValue ["0x01.", "1.", "0x0001 (one)", "0x0001, the TPer feature", "0x0001 or 0x0002"]
+        `shouldBe` [PinExact 1, PinExact 1, PinExact 1, PinExact 1, PinOther]
+      map pinWord ["0x0001 (one)", "1.", "0x0001, the TPer feature", " VU "] `shouldBe` ["0x0001", "1", "0x0001", "VU"]
 
   describe "every byte grid's section" $
     forM_ [("Core", "../spec/ir/core-2.01.json"), ("Opal", "../spec/ir/opal-2.30.json")] $ \(name, path) ->
@@ -96,6 +100,14 @@ spec = describe "Hsed.Spec.Readers.Pins" $ do
         fmap (map (\p -> (pinSchema p, pinField p, pinValue p))) (pinsInSection edited "3.2.3.4.2.1")
           `shouldBe` Right [(CoreValue, "Kind", PinExact 0x8001)]
         pinsInSection ir "3.2.3.4.2.1" `shouldBe` Right []
+      it "reads a sentence's value to its full stop: a number with a parenthesis or a comma after it pins, one with more words is kept as printed" $ do
+        let kindPara :: ParaIR -> Bool
+            kindPara p = p.section == Just "3.2.3.4.2.1" && fmap (take 4) p.words == Just ["This", "field", "identifies", "the"]
+            saying s = ir { paras = [ if kindPara p then p { words = Just (T.words s) } else p | p <- ir.paras ] }
+            read' s = fmap (map (\p -> (pinValue p, pinText p))) (pinsInSection (saying s) "3.2.3.4.2.1")
+        read' "The value of this field SHALL be 0x8001 (credit control). Next." `shouldBe` Right [(PinExact 0x8001, "0x8001 (credit control)")]
+        read' "The value of this field SHALL be 0x8001, for credit control." `shouldBe` Right [(PinExact 0x8001, "0x8001, for credit control")]
+        read' "The value of this field SHALL be 0x8001 or 0x0000." `shouldBe` Right [(PinOther, "0x8001 or 0x0000")]
       it "reads a bound table's pins through its context" $ do
         let ctx = mkContext Scott ir
             t = fromMaybe (error "T42") (Map.lookup (TableId 42) (numberedTables ir))

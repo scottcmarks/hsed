@@ -27,14 +27,20 @@ in one of three schemas:
   saying the device @SHALL return the following@ (Opal 3.1.1.1-3.1.1.6, Tables
   2-8: @Feature Code = 0x0001@, @Sync Supported = 1@, @Base ComID = VU@).
 
-A value reads as a number ('PinExact': @0x0001@, @0001h@, @0x0000_0001@, @1@,
-as "Hsed.Spec.Readers.Text".'Hsed.Spec.Readers.Text.parseNumber' reads it),
-as vendor unique (@VU@, or @0x1 or any version that supports the defined
-features in this SSC@: 'PinVU'), as a minimum (@4 or larger@: 'PinAtLeast'),
-or not ('PinOther', @**@, @See section 3.1.1.3.1@), the text as printed kept
-beside it. Only these sentences pin: Core's @For Credit Control Subpackets,
-this field is set to 0x8001.@ and @This is always 0x00000004 …@ (3.2.3.4.2.1,
-PDF 45) are read by none of the schemas (design 13.26). The reader returns
+A sentence's value is what it says after the schema's words, to its full
+stop. It reads as a number when it is one ('PinExact': @0x0001@, @0001h@,
+@C000h@, @0x0000_0001@, @1@, as
+"Hsed.Spec.Readers.Text".'Hsed.Spec.Readers.Text.readNumber' reads a word: a
+digit first, or hex digits in upper case before an @h@), followed by nothing,
+a parenthesis or a comma (@0x0001 (one)@, @0x0001, …@); as vendor unique
+(@VU@, or @0x1 or any version that supports the defined features in this
+SSC@: 'PinVU'); as a minimum (@4 or larger@: 'PinAtLeast'); or not
+('PinOther', @**@, @See section 3.1.1.3.1@, @0x0001 or 0x0002@), the text as
+printed kept beside it. Only these sentences pin: Core's @For data
+subpackets, this field is set to zeroes.@ (3.2.3.4.1.1.2, PDF 44), @For
+Credit Control Subpackets, this field is set to 0x8001.@ and @This is always
+0x00000004 …@ (3.2.3.4.2.1.2 and 3.2.3.4.2.1.3, PDF 45) are read by none of
+the schemas (design 13.26 (j)). The reader returns
 the pins of a table's section ('tablePins', 'pinsInSection'), in document
 order, as data; matching them to the grid's fields is the rules', and
 'pinsFindings' the one criterion of its codes, whichever rule asks. It reads
@@ -51,12 +57,14 @@ module Hsed.Spec.Readers.Pins
   , pinsInSection
   , tablePins
   , readPinValue
+  , pinWord
   , pinsFindings
     -- * Codes
   , pinsCodes
   ) where
 
 import qualified Data.Text              as DT
+import qualified RIO.Char               as C
 import qualified RIO.List               as L
 import qualified RIO.Map                as Map
 import qualified RIO.Text               as T
@@ -84,7 +92,7 @@ data PinValue
 -- | One pin: the field as the sentence names it, its value, and where it is.
 data Pin = Pin
   { pinSchema  :: !PinSchema
-  , pinField   :: !Text      -- ^ @Feature Code@; for 'CoreValue', its section's heading title
+  , pinField   :: !Text      -- ^ @Feature Code@; for 'CoreValue', the list item numbering its field below the outline (@Kind@), else its section's heading title
   , pinValue   :: !PinValue
   , pinText    :: !Text      -- ^ the value as printed
   , pinSection :: !Text
@@ -139,26 +147,48 @@ pinsInSection ir sec = case [ p | p <- paras, isNothing p.words ] of
 
 -- | Each sentence of a text that is @\<lead\>\<Field\>\<marker\>\<V\>.@: the
 --   field (the words between the lead, at the start of a sentence, and the
---   marker) and the value (the word after the marker, its full stop dropped).
+--   marker) and the value (what the sentence says after the marker, to its
+--   full stop: @0x0001@, @0x0001 (one)@, @0x1 or any version …@), which
+--   'readPinValue' reads.
 sentences :: Text -> Text -> Text -> [(Text, Text)]
 sentences lead marker t =
   [ (f, v)
   | (before, after) <- DT.breakOnAll marker t
   , Just f <- [T.stripPrefix lead (lastSentence before)]
-  , Just v <- [T.stripSuffix "." =<< listToMaybe (T.words (T.drop (T.length marker) after))] ]
+  , let v = toFullStop (T.drop (T.length marker) after)
+  , not (T.null v) ]
   where
     -- the text after the last sentence end before the marker
     lastSentence before = maybe before (T.drop 2 . snd) (L.lastMaybe (DT.breakOnAll ". " before))
+    -- the text before the sentence's end: the first ". ", else the text's own last full stop
+    toFullStop a = case DT.breakOn ". " a of
+      (s, rest) | not (T.null rest) -> T.strip s
+      _                             -> T.dropWhileEnd (== '.') (T.strip a)
 
--- | A pin's value as printed: a number, vendor unique, a minimum, or other.
+-- | A pin's value as printed: vendor unique, a minimum, a number (its word,
+--   up to a space, a comma or a parenthesis and without a trailing full
+--   stop, followed by nothing, a parenthesis or a comma: @0x0001 (one)@), or
+--   other.
 readPinValue :: Text -> PinValue
 readPinValue t
   | ws == ["VU"]                                       = PinVU
-  | Just n <- readNumber t                             = PinExact n
   | "or any version" `T.isInfixOf` t                   = PinVU
   | [w, "or", "larger"] <- ws, Just n <- readNumber w  = PinAtLeast n
+  | Just n <- readNumber (pinWord t), alone            = PinExact n
   | otherwise                                          = PinOther
-  where ws = T.words t
+  where
+    ws = T.words (T.dropWhileEnd (`elem` (".;" :: String)) (T.strip t))
+    alone = maybe True ((`elem` (",(" :: String)) . fst) (T.uncons (T.strip (T.drop (T.length (word0 t)) (T.strip t))))
+
+-- | The word a pin's value starts with, as printed: up to its first space,
+--   comma or parenthesis, a trailing full stop, semicolon or colon dropped
+--   (@0x0001 (one)@ gives @0x0001@, @1.@ gives @1@).
+pinWord :: Text -> Text
+pinWord = T.dropWhileEnd (`elem` (".;:" :: String)) . word0
+
+-- | A value's text up to its first space, comma or parenthesis.
+word0 :: Text -> Text
+word0 = T.takeWhile (\c -> not (C.isSpace c) && c `notElem` (",(" :: String)) . T.strip
 
 
 -- * Findings

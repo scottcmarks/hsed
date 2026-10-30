@@ -23,6 +23,15 @@ that a law can say a step leaves the state as it was. A step
 ("Hsed.Sim".@step@) takes an 'Input' (an interface command, an event, or the
 end of the TPer's processing of a ComID's command, 'Tick') and gives an
 'Output'; an accepted IF-SEND's payload is an 'Outcome'.
+
+Parameters out of range are refused, not wrapped or dropped
+('simParamsProblems': a ComID past 0xFFFF or in Core Table 26's reserved
+range, a version past its 4-bit field, a limit of none), so that every
+descriptor the simulator sends encodes and every static ComID is one a TPer
+may have; the in-process transport is opened only with parameters that
+pass. 'Limits' are what each end takes in a ComPacket (Core 5.2.2.4.1): the
+TPer's from its properties, the host's Opal 2.30 Table 17's initial
+assumptions, the host's properties not being kept before M4a.
 -}
 module Hsed.Sim.Types
   ( -- * Parameters
@@ -31,23 +40,40 @@ module Hsed.Sim.Types
   , LifeCycle (..)
   , Geometry (..)
   , Level0Profile (..)
+  , simParamsProblems
+    -- * Properties, and what each end takes
+  , maxComPacketSizeName
+  , maxResponseComPacketSizeName
+  , maxPacketSizeName
+  , maxPacketsName
+  , maxSubpacketsName
+  , maxMethodsName
+  , hostRequirements
+  , Limits (..)
+  , tperLimits
+  , hostLimits
     -- * State
   , TPerState (..)
   , ComIdState (..)
   , ComIdLife (..)
   , SyncState (..)
   , initialState
+  , reservedComId
     -- * A step
   , Input (..)
   , Output (..)
   , Outcome (..)
   ) where
 
-import qualified RIO.Map     as Map
+import qualified RIO.List            as L
+import qualified RIO.Map             as Map
 import           RIO
+import qualified RIO.Text            as T
 
-import           Hsed.Level0 (Descriptor)
-import           Hsed.Wire   (Event, IfStatus, Request, Response, Unit (..))
+import           Hsed.Core.Code      (CodeRow (..), codeRow)
+import           Hsed.Gen.Core.Codes (cComIDAssignments)
+import           Hsed.Level0         (Descriptor)
+import           Hsed.Wire           (Event, IfStatus, Request, Response, Unit (..), hex)
 
 
 -- * Parameters
@@ -112,8 +138,9 @@ data SimParams = SimParams
 -- * a command to an inactive ComID refused with Other Invalid Command
 --   Parameter, which Core allows beside discarding it (3.3.3.2-3, PDF 58-59);
 -- * the TPer properties at Opal 2.30 Table 17's minima (PDF 33-34), the
---   numeric ones (DefSessionTimeout, VU, is reported from M4a, with
---   sessions); their names are Core Table 167's (Hsed.Gen.Core.Properties);
+--   numeric ones (DefSessionTimeout, mandatory with a VU value, is reported
+--   from M4a, with sessions: design 8.5); their names are Core Table 167's
+--   (Hsed.Gen.Core.Properties);
 -- * SSC Minor Version Number 0x3, v2.30's (Opal 2.30 Table 7, PDF 24);
 -- * SIIS Revision Number 0x20, v1.20's (SIIS 1.20 Table 3, PDF 22);
 -- * the Supported Data Removal Mechanism descriptor's version 0x02 (Opal
@@ -121,9 +148,10 @@ data SimParams = SimParams
 -- * the geometry the LockingInfo table would give (Opal 2.30 3.1.1.4.2-5,
 --   PDF 22): alignment required, 512-byte logical blocks, a granularity of
 --   8 and the lowest aligned LBA 0, as disk6 reports them;
--- * the DataStore table descriptor at the least UCT-01 accepts: 1 table,
---   0xA0000 bytes in all, an alignment of 1 (Test Cases 1.02 UCT-01 step
---   4b, PDF 30);
+-- * the DataStore table descriptor: 1 table, 0xA00000 bytes in all, an
+--   alignment of 1: the DataStore table an Opal 2.30 TPer SHALL have, at
+--   least 10 MB (Opal 2.30 4.3.8.1, PDF 90: its Rows at least 0x00A00000),
+--   above UCT-01 step 4b's least of 0xA0000 (Test Cases 1.02, PDF 30);
 -- * no profile.
 defaultSimParams :: SimParams
 defaultSimParams = SimParams
@@ -133,13 +161,13 @@ defaultSimParams = SimParams
   , spLockingOFS           = ManufacturedInactive
   , spInactiveComIdDiscard = False
   , spTPerProperties       =
-      [ ("MaxComPacketSize", 2048)
-      , ("MaxResponseComPacketSize", 2048)
-      , ("MaxPacketSize", 2028)
+      [ (maxComPacketSizeName, 2048)
+      , (maxResponseComPacketSizeName, 2048)
+      , (maxPacketSizeName, 2028)
       , ("MaxIndTokenSize", 1992)
-      , ("MaxPackets", 1)
-      , ("MaxSubpackets", 1)
-      , ("MaxMethods", 1)
+      , (maxPacketsName, 1)
+      , (maxSubpacketsName, 1)
+      , (maxMethodsName, 1)
       , ("MaxSessions", 1)
       , ("MaxAuthentications", 2)
       , ("MaxTransactionLimit", 1)
@@ -153,9 +181,103 @@ defaultSimParams = SimParams
       , gGranularity      = 8
       , gLowestAligned    = 0
       }
-  , spDataStore            = (1, 0xA0000, 1)
+  , spDataStore            = (1, 0xA00000, 1)
   , spProfile              = Nothing
   }
+
+-- | What is out of range in a run's parameters; none for parameters the
+--   simulator takes:
+--
+-- * no static ComID, or one past 0xFFFF, or one Core Table 26 reserves
+--   (PDF 55: 0x0000-0x0FFF are Level 0's, TPER_RESET's, TCG's and vendors';
+--   Opal 2.30 Table 14, PDF 30, the same), so that none wraps to 0x0000;
+-- * an SSC minor version or a Data Removal version past its descriptor's
+--   4-bit field (Opal 2.30 Tables 6 and 8, PDF 23-24);
+-- * a limit the simulator reads of its properties ('tperLimits') of none.
+simParamsProblems :: SimParams -> [Text]
+simParamsProblems p = concat
+  [ [ "no static ComID (Number of ComIDs is 0x0001 or larger, Opal 2.30 Table 6)" | spNComIds p == 0 ]
+  , [ "static ComIDs from " <> hex (spBaseComId p) <> ", " <> tshow (spNComIds p) <> " of them, run past 0xFFFF" | lastComId > 0xFFFF ]
+  , [ "static ComID " <> hex c <> " is reserved (Core Table 26)" | c <- staticComIds p, reservedComId c ]
+  , [ "SSC Minor Version Number " <> tshow (spSscMinor p) <> " is past its 4 bits" | spSscMinor p > 0xF ]
+  , [ "Data Removal version " <> tshow (spDataRemovalVersion p) <> " is past its 4 bits" | spDataRemovalVersion p > 0xF ]
+  , [ name <> " " <> tshow v <> ": a limit of none" | (name, v) <- spTPerProperties p, name `elem` limitNames, v < 1 ]
+  ]
+  where
+    lastComId  = toInteger (spBaseComId p) + toInteger (spNComIds p) - 1 :: Integer
+    limitNames = [maxComPacketSizeName, maxResponseComPacketSizeName, maxPacketSizeName, maxPacketsName, maxSubpacketsName, maxMethodsName]
+
+
+-- * Properties, and what each end takes
+
+-- | The properties of Core Table 167 (PDF 141-142; "Hsed.Gen.Core.Properties")
+--   the simulator and the jig read, by name: the largest ComPacket an end
+--   takes, the largest ComPacket response, packet, packets per ComPacket,
+--   subpackets per packet and method invocations or responses per
+--   subpacket.
+maxComPacketSizeName, maxResponseComPacketSizeName, maxPacketSizeName, maxPacketsName, maxSubpacketsName, maxMethodsName :: Text
+maxComPacketSizeName         = "MaxComPacketSize"
+maxResponseComPacketSizeName = "MaxResponseComPacketSize"
+maxPacketSizeName            = "MaxPacketSize"
+maxPacketsName               = "MaxPackets"
+maxSubpacketsName            = "MaxSubpackets"
+maxMethodsName               = "MaxMethods"
+
+-- | Opal 2.30 Table 17 (PDF 33-34), Host Property Requirements: each host
+--   property an Opal TPer accepts (M), with the least it allows, which is
+--   also its Initial Assumption; MaxResponseComPacketSize (N), which a TPer
+--   may ignore and leave out of the HostProperties result, is not among them.
+hostRequirements :: [(Text, Natural)]
+hostRequirements =
+  [ (maxComPacketSizeName, 2048)
+  , (maxPacketSizeName, 2028)
+  , ("MaxIndTokenSize", 1992)
+  , (maxPacketsName, 1)
+  , (maxSubpacketsName, 1)
+  , (maxMethodsName, 1)
+  ]
+
+-- | What one end takes in a ComPacket it is sent (Core 5.2.2.4.1, PDF
+--   145-146): packets in a ComPacket, subpackets in a packet, method
+--   invocations or responses in a subpacket, a packet's bytes and a
+--   ComPacket's (each with its header).
+data Limits = Limits
+  { lPackets       :: !Int
+  , lSubpackets    :: !Int
+  , lMethods       :: !Int
+  , lPacketSize    :: !Int
+  , lComPacketSize :: !Int
+  }
+  deriving (Eq, Show)
+
+-- | What the TPer takes, from its properties ('spTPerProperties'); a property
+--   it does not report, Opal 2.30 Table 17's minimum (PDF 33).
+tperLimits :: SimParams -> Limits
+tperLimits p = Limits
+  { lPackets       = prop maxPacketsName 1
+  , lSubpackets    = prop maxSubpacketsName 1
+  , lMethods       = prop maxMethodsName 1
+  , lPacketSize    = prop maxPacketSizeName 2028
+  , lComPacketSize = prop maxComPacketSizeName 2048
+  }
+  where prop name least = fromInteger (fromMaybe least (L.lookup name (spTPerProperties p)))
+
+-- | What the host takes of the TPer's responses: Opal 2.30 Table 17's initial
+--   assumptions ('hostRequirements'), the host's properties not being kept
+--   before M4a (Core 5.2.2.4.1, PDF 145: the TPer SHALL NOT send more than the
+--   host's), its ComPacket bounded by the TPer's MaxResponseComPacketSize as
+--   well (Opal 2.30 3.3.1, PDF 29: a response SHALL fit the response buffer).
+hostLimits :: SimParams -> Limits
+hostLimits p = Limits
+  { lPackets       = host maxPacketsName
+  , lSubpackets    = host maxSubpacketsName
+  , lMethods       = host maxMethodsName
+  , lPacketSize    = host maxPacketSizeName
+  , lComPacketSize = min (host maxComPacketSizeName) responseBuffer
+  }
+  where
+    host name      = maybe 1 fromIntegral (L.lookup name hostRequirements)
+    responseBuffer = maybe maxBound fromInteger (L.lookup maxResponseComPacketSizeName (spTPerProperties p))
 
 
 -- * State
@@ -193,13 +315,24 @@ data TPerState = TPerState
   deriving (Eq, Show)
 
 -- | A TPer as it starts: its static ComIDs, the base and the ones after it,
---   each Issued, with extension 0, awaiting IF-SEND.
+--   each Issued, with extension 0, awaiting IF-SEND; none past 0xFFFF or
+--   reserved (parameters with such a ComID are refused, 'simParamsProblems').
 initialState :: SimParams -> TPerState
 initialState p = TPerState
   { tsParams = p
-  , tsComIds = Map.fromList
-      [ (spBaseComId p + i, ComIdState 0 Issued S1) | i <- takeWhile (< spNComIds p) [0 ..] ]
+  , tsComIds = Map.fromList [ (c, ComIdState 0 Issued S1) | c <- staticComIds p, not (reservedComId c) ]
   }
+
+-- | The static ComIDs parameters name: the base and the ones after it, as
+--   far as 0xFFFF, counted in Integer so that none wraps.
+staticComIds :: SimParams -> [Word16]
+staticComIds p = [ fromInteger c | c <- [base .. base + toInteger (spNComIds p) - 1], c <= 0xFFFF ]
+  where base = toInteger (spBaseComId p)
+
+-- | Whether Core Table 26 reserves a ComID (PDF 55): any its rows do not
+--   call non-reserved, for ComID management.
+reservedComId :: Word16 -> Bool
+reservedComId c = not (any ("non-reserved" `T.isInfixOf`) (maybe [] codeCells (codeRow cComIDAssignments (toInteger c))))
 
 
 -- * A step

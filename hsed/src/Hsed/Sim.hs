@@ -30,20 +30,18 @@ module Hsed.Sim
   ) where
 
 import qualified RIO.ByteString          as B
-import qualified RIO.List                as L
 import qualified RIO.Map                 as Map
-import qualified RIO.Text                as T
 import           RIO
 
-import           Hsed.Core.Code          (CodeRow (..), codeRow, codeRowsNamed, inSpan)
+import           Hsed.Core.Code          (CodeRow (..), codeRowsNamed, inSpan)
 import           Hsed.Core.Record        (encodeRecord)
 import           Hsed.Gen.Core.Codes     (cComIDAssignments)
 import           Hsed.Gen.Core.Layouts   (ComPacket (..), ComPacketHeader (..))
 import           Hsed.Sim.Level0         (level0Response)
 import           Hsed.Sim.SessionManager (answer)
 import           Hsed.Sim.Sync           (classifyIfSend, ifRecvStatic)
-import           Hsed.Sim.Types          (ComIdLife (..), ComIdState (..), Input (..), Outcome (..), Output (..), SimParams (..),
-                                          SyncState (..), TPerState (..))
+import           Hsed.Sim.Types          (ComIdLife (..), ComIdState (..), Input (..), Limits (..), Outcome (..), Output (..),
+                                          SimParams (..), SyncState (..), TPerState (..), hostLimits, reservedComId, tperLimits)
 import           Hsed.Wire               (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketProtocol,
                                           exactly, inactiveExtension, roundUp)
 
@@ -77,14 +75,19 @@ syncOf c = fmap cSync . Map.lookup c . tsComIds
 --   count it, design 6.2). Then the protocol (SIIS 1.20 Tables 12-13, PDF
 --   30-31; Core Table 25, PDF 53): 0x01 the ComPackets and Level 0; 0x02,
 --   ComID management, not simulated before M4a; 0x00, the security protocol
---   information, not simulated; any other an Invalid Security Protocol ID.
+--   information, which IF-RECV alone has (SIIS 1.20 Tables 12 and 23, PDF 30
+--   and 52: it is not defined for IF-SEND, which an Opal TPer takes on 0x01
+--   and 0x02 alone, Opal 2.30 3.3.2, PDF 29-30), so an IF-SEND on it an
+--   Invalid Security Protocol ID (Core 3.3.2, PDF 54) and an IF-RECV not
+--   simulated; any other an Invalid Security Protocol ID.
 command :: Request -> TPerState -> (Response, TPerState)
 command r st
   | not (whole (spUnits (tsParams st)) (lenBytes r)) = refused OtherInvalidCommandParameter
   | proto r == comPacketProtocol = comPacketCommand r st
   | otherwise = case proto r of
       0x02 -> refused (Unsupported "protocol 0x02, ComID management (TPER_RESET, STACK_RESET): M4a")
-      0x00 -> refused (Unsupported "protocol 0x00, the security protocol information: not simulated")
+      0x00 | dir r == IfSend -> refused InvalidSecurityProtocolId
+           | otherwise       -> refused (Unsupported "protocol 0x00, the security protocol information: not simulated")
       _    -> refused InvalidSecurityProtocolId
   where
     refused s = (Response s mempty, st)
@@ -113,7 +116,7 @@ comPacketCommand r st
       IfRecv -> (Response Good (level0Response st (lenBytes r)), st)
   | Just cs <- Map.lookup c (tsComIds st), cLife cs /= Inactive =
       let (resp, cs') = static cs in (resp, st { tsComIds = Map.insert c cs' (tsComIds st) })
-  | reserved c = (Response OtherInvalidCommandParameter mempty, st)
+  | reservedComId c = (Response OtherInvalidCommandParameter mempty, st)
   | spInactiveComIdDiscard p = case dir r of
       IfSend -> (Response Good mempty, st)
       IfRecv -> (Response Good (exactly (lenBytes r) (inactiveHeader c)), st)
@@ -122,12 +125,13 @@ comPacketCommand r st
     c = comId r
     p = tsParams st
     static cs = case dir r of
-      IfRecv -> ifRecvStatic c (lenBytes r) cs
+      IfRecv -> ifRecvStatic (hostLimits p) c (lenBytes r) cs
       IfSend -> case cSync cs of
-        S1 | maybe False (toInteger (lenBytes r) >) (L.lookup "MaxComPacketSize" (spTPerProperties p))
+        S1 | fromIntegral (lenBytes r) > lComPacketSize (tperLimits p)
                 -> (Response InvalidTransferLengthOnIfSend mempty, cs)
            | otherwise
-                -> (Response Good mempty, cs { cSync = after (classifyIfSend (answer p) c (B.take (fromIntegral (lenBytes r)) (payload r))) })
+                -> (Response Good mempty, cs { cSync = after (classifyIfSend (tperLimits p) (hostLimits p) (answer p) c
+                                                                             (B.take (fromIntegral (lenBytes r)) (payload r))) })
         _       -> (Response SynchronousProtocolViolation mempty, cs)
     -- Prepared: processing (S1:S2, PDF 85); a session aborted with its CloseSession prepared likewise (3.3.10.7 b,
     -- PDF 86); otherwise Awaiting IF-SEND kept, decided at the IF-SEND (design 8.2)
@@ -140,11 +144,6 @@ comPacketCommand r st
 --   55).
 level0 :: Word16 -> Bool
 level0 c = any (\row -> inSpan (codeSpan row) (toInteger c)) (codeRowsNamed cComIDAssignments "Level 0 Device Discovery")
-
--- | Whether a ComID is reserved: Core Table 26 (PDF 55) calls the others,
---   for ComID management, non-reserved.
-reserved :: Word16 -> Bool
-reserved c = not (any ("non-reserved" `T.isInfixOf`) (maybe [] codeCells (codeRow cComIDAssignments (toInteger c))))
 
 -- | The answer to IF-RECV on an inactive ComID: a ComPacket header alone,
 --   the ComID's, its extension 0xFFFF and the rest zero (Core 3.3.3.3 a.i,

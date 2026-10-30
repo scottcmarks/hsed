@@ -1,6 +1,7 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms   #-}
 
 {-|
 Module      : Hsed.Sim.Sync
@@ -39,24 +40,26 @@ module Hsed.Sim.Sync
     -- * The synchronous protocol of a static ComID
   , classifyIfSend
   , ifRecvStatic
+    -- * Reading a control session's data subpacket
+  , controlInvocations
   ) where
 
 import qualified RIO.ByteString            as B
 import qualified RIO.List                  as L
 import           RIO
 
-import           Hsed.Core.Call            (MethodCall)
+import           Hsed.Core.Call            (MethodCall (..), Parameters (..), statusList)
 import           Hsed.Core.Code            (CodeRow (..), codeRowsNamed, inSpan)
 import           Hsed.Core.Record          (encodeRecord)
 import           Hsed.Core.StreamItem      (StreamItem (..))
 import           Hsed.Core.Sync            (Setting (..), StateTable (..), settingOf)
 import           Hsed.Core.Token           (Token (..))
-import           Hsed.Gen.Core.Codes       (cSubpacketTypes)
+import           Hsed.Gen.Core.Codes       (StatusCode (..), cSubpacketTypes, pattern RESPONSE_OVERFLOW)
 import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
                                             PacketHeader (..))
 import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodePacket)
-import           Hsed.Sim.Types            (ComIdState (..), Outcome (..), SyncState (..))
+import           Hsed.Sim.Types            (ComIdState (..), Limits (..), Outcome (..), SyncState (..))
 import           Hsed.Wire                 (IfStatus (..), Response (..), comPacketHeaderSize, dataKind, exactly,
                                             staticExtension)
 
@@ -126,30 +129,50 @@ t45Fields row d = do
 
 -- * The synchronous protocol of a static ComID
 
--- | What an IF-SEND accepted in S1 on a ComID comes to, given how the
---   Session Manager answers a control session's method call: its response
+-- | What an IF-SEND accepted in S1 on a ComID comes to, given what the TPer
+--   and the host each take in a ComPacket ("Hsed.Sim.Types".'Limits') and how
+--   the Session Manager answers a control session's method call: its response
 --   packets prepared, or the payload discarded and why. Discarded:
 --
 --   * what is no ComPacket of the ComID, or names an extension other than a
 --     static ComID's 0x0000 (Core 3.3.3.1, PDF 57-58; 3.3.10.7 a, PDF 86);
---   * a ComPacket with no packets, or whose packets' data subpackets have no
---     payload or Empty atoms alone: no action (3.3.10.6 S2:S1 d, PDF 85-86); a
---     subpacket of another Kind than data (Table 19, PDF 43) is no data;
+--   * a ComPacket with no packets: no action (3.3.10.6 S2:S1 d, PDF 85-86);
 --   * a packet that names a session (any but the control session, Session 0,
 --     3.3.7.1.2, PDF 73), since the TPer has none before M4a: the session
 --     cannot be resolved (3.3.10.7 a, PDF 86);
+--   * a control session packet of more subpackets than the TPer's
+--     MaxSubpackets, or of more bytes than its MaxPacketSize, which the TPer
+--     SHALL discard and ignore (5.2.2.4.1.1-2, PDF 145; 3.3.10.7 a, a
+--     violation of packet requirements); packets past the TPer's MaxPackets
+--     are ignored, as it MAY (5.2.2.4.1.3, PDF 145-146);
+--   * packets whose data subpackets have no payload or Empty atoms alone: no
+--     action (3.3.10.6 S2:S1 d); a subpacket of another Kind than data
+--     (Table 19, PDF 43) is no data;
+--   * tokens that are no method invocations: a token that does not read, one
+--     outside an invocation, a Call inside one, an invocation cut short, or a
+--     status list of other than three or more uintegers (Core 3.2.2.4, PDF
+--     38-39), an error on the Session Manager whose payload the TPer SHALL
+--     discard (Opal 2.30 3.3.4.1.3, PDF 31);
 --   * method calls none of which the Session Manager answers: an
 --     unrecognized invocation outside a regular session is ignored, no
---     response sent (3.2.4.2, PDF 49). At M3 the Session Manager answers
---     Properties alone; a call it does not answer is discarded here, which
---     is M3's gap.
+--     response sent (3.2.4.2, PDF 49), as is one whose header or parameters
+--     do not read (3.2.2.4.2 items 3-4). At M3 the Session Manager answers
+--     Properties alone.
 --
---   The answers, in the order called, are one response packet on the control
---   session, one data subpacket of their tokens. Empty atoms are dropped
---   wherever they are (Core 3.2.2.3.1.5, Table 14, PDF 36), and each data
---   subpacket's tokens are read as invocations, each from its Call token.
-classifyIfSend :: (MethodCall -> Maybe MethodCall) -> Word16 -> ByteString -> Outcome
-classifyIfSend respond c bytes = case decodeComPacket bytes of
+--   The tokens are read as a control session reads them (3.3.7.1.3, PDF 73):
+--   Empty atoms dropped wherever they are (3.2.2.3.1.5, Table 14, PDF 36),
+--   End of Session and the Transaction Control tokens, each with the status
+--   after it, ignored; the invocations of a subpacket past the TPer's
+--   MaxMethods ignored, as it MAY (5.2.2.4.1.7, PDF 146).
+--
+--   The answers, in the order called, each in a response packet of its own
+--   on the control session, one data subpacket of its tokens: the host's
+--   MaxMethods, MaxSubpackets and MaxPackets are one until its properties are
+--   kept (M4a). An answer that with its packet does not fit the host's
+--   MaxPacketSize or its ComPacket is answered instead with an empty list and
+--   RESPONSE_OVERFLOW, and nothing after it (Opal 2.30 3.3.1, PDF 29).
+classifyIfSend :: Limits -> Limits -> (MethodCall -> Maybe MethodCall) -> Word16 -> ByteString -> Outcome
+classifyIfSend tper host respond c bytes = case decodeComPacket bytes of
   Left e -> Discarded ("not a ComPacket (Core 3.3.10.7 a, PDF 86): " <> tshow e)
   Right (DecodedFrame (ComPacketFrame h ps) _ _)
     | comPacketComID h /= c ->
@@ -160,45 +183,76 @@ classifyIfSend respond c bytes = case decodeComPacket bytes of
     | null ps -> Discarded "no packets: no action (Core 3.3.10.6 S2:S1 d, PDF 85-86)"
     | any (not . controlSession . pfHeader) ps ->
         Discarded "a packet names a session the TPer does not have (Core 3.3.10.7 a, PDF 86)"
-    | otherwise -> case filter (not . noAction) [ dataSubPacketPayload sp | p <- ps, sp <- pfSubPackets p, isData sp ] of
-        []    -> Discarded "no subpacket with a payload of more than Empty atoms: no action (Core 3.3.10.6 S2:S1 d, PDF 85-86)"
-        asked -> case mapMaybe respond (concatMap invocations asked) of
-          []      -> Discarded "no call the Session Manager answers: ignored, no response sent (Core 3.2.4.2, PDF 49)"
-          answers -> either (Discarded . ("the response does not frame: " <>) . tshow) (Prepared . pure)
-                            (encodePacket (PacketFrame controlHeader [DataSubPacket (DataSubPacketHeader dataKind) (foldMap generate answers)]))
+    | otherwise -> either Discarded Prepared (asked (take (lPackets tper) ps) >>= answered)
+  where
+    -- the calls of the packets the TPer reads, those it answers answered
+    asked considered = do
+      let kept = filter (isNothing . violation) considered
+      when (null kept) $ Left (fromMaybe "no packet the TPer reads" (listToMaybe (mapMaybe violation considered)))
+      case filter (not . noAction) [ dataSubPacketPayload sp | p <- kept, sp <- pfSubPackets p, isData sp ] of
+        []       -> Left "no subpacket with a payload of more than Empty atoms: no action (Core 3.3.10.6 S2:S1 d, PDF 85-86)"
+        payloads -> do
+          calls <- concat <$> traverse (fmap (take (lMethods tper)) . controlInvocations) payloads
+          case mapMaybe (>>= respond) calls of
+            []      -> Left "no call the Session Manager answers: ignored, no response sent (Core 3.2.4.2, PDF 49)"
+            answers -> Right answers
+    -- why the TPer discards and ignores a control session packet, if it does
+    violation p
+      | length (pfSubPackets p) > lSubpackets tper =
+          Just ("a control session packet of " <> tshow (length (pfSubPackets p)) <> " subpackets, more than the TPer's MaxSubpackets "
+                <> tshow (lSubpackets tper) <> ": discarded and ignored (Core 5.2.2.4.1.1, PDF 145)")
+      | either (const True) ((> lPacketSize tper) . B.length) (encodePacket p) =
+          Just ("a control session packet of more bytes than the TPer's MaxPacketSize " <> tshow (lPacketSize tper)
+                <> ": discarded and ignored (Core 5.2.2.4.1.2, PDF 145)")
+      | otherwise = Nothing
+    -- each answer a response packet; the first that does not fit replaced by its overflow, nothing after it
+    answered answers = traverse framed (fitting answers)
+    fitting = \case
+      []       -> []
+      a : rest
+        | fits a    -> a : fitting rest
+        | otherwise -> [overflowed a]
+    fits a = either (const False) (\p -> B.length p <= lPacketSize host && comPacketHeaderSize + B.length p <= lComPacketSize host) (framed a)
+    framed a = first (("the response does not frame: " <>) . tshow)
+                     (encodePacket (PacketFrame controlHeader [DataSubPacket (DataSubPacketHeader dataKind) (generate a)]))
+    overflowed (MethodCall hdr _ _) = MethodCall hdr (Parameters [] []) responseOverflow
 
--- | An IF-RECV of a transfer length on a static ComID in a state: the
---   answer, exactly that many bytes, and the state after it. The answer is
---   a ComPacket of the ComID and its extension, its header the fields of the
---   Table 45 row the state selects (3.3.10.5, PDF 84-85), its payload the
---   packets returned, zero-padded:
+-- | An IF-RECV of a transfer length on a static ComID in a state, given what
+--   the host takes in a ComPacket: the answer, exactly that many bytes, and
+--   the state after it. The answer is a ComPacket of the ComID and its
+--   extension, its header the fields of the Table 45 row the state selects
+--   (3.3.10.5, PDF 84-85), its payload the packets returned, zero-padded:
 --
 --   * S1: All Response(s) returned, no further data; S1 stays;
 --   * S2: Response(s) to come, none available; S2 stays;
---   * S3, the transfer shorter than the first packet staged and the
---     ComPacket header: Response ready, insufficient transfer length; S3
---     stays;
---   * S3 otherwise: the packets staged that fit, in order; if all, Response,
---     all Response(s) returned, then S1 (3.3.10.6 S3:S1 c, PDF 86); else
---     Response, additional Response(s) available, S3 with the rest (S3:S3
---     c).
+--   * S3, the transfer, or the host's ComPacket, shorter than the first
+--     packet staged and the ComPacket header: Response ready, insufficient
+--     transfer length; S3 stays;
+--   * S3 otherwise: the packets staged that fit, in order, as many as the
+--     host's MaxPackets (Core 5.2.2.4.1.3-4, PDF 145-146: the TPer SHALL NOT
+--     send more packets, or a larger ComPacket, than the host takes); if all,
+--     Response, all Response(s) returned, then S1 (3.3.10.6 S3:S1 c, PDF
+--     86); else Response, additional Response(s) available, S3 with the rest
+--     (S3:S3 c).
 --
 --   Table 45's fourth row, more to come and none available, is no state's at
 --   M3: the Session Manager prepares a command's whole response at once. A
 --   row this code cannot evaluate is answered 'Unsupported', the state
 --   unchanged.
-ifRecvStatic :: Word16 -> Word32 -> ComIdState -> (Response, ComIdState)
-ifRecvStatic c len cs = case cSync cs of
+ifRecvStatic :: Limits -> Word16 -> Word32 -> ComIdState -> (Response, ComIdState)
+ifRecvStatic host c len cs = case cSync cs of
   S1   -> reply AllReturnedNoData (Delivery [] []) cs
   S2 _ -> reply ResponsesToCome (Delivery [] []) cs
   S3 staged
-    | null staged                                                   -> reply AllReturnedNoData (Delivery [] []) cs { cSync = S1 }
-    | n < comPacketHeaderSize + maybe 0 B.length (listToMaybe staged) -> reply InsufficientLength (Delivery staged []) cs
-    | null rest                                                     -> reply AllReturnedWithData (Delivery staged sent) cs { cSync = S1 }
-    | otherwise                                                     -> reply AdditionalAvailable (Delivery staged sent) cs { cSync = S3 rest }
+    | null staged                                -> reply AllReturnedNoData (Delivery [] []) cs { cSync = S1 }
+    | room < maybe 0 B.length (listToMaybe staged) -> reply InsufficientLength (Delivery staged []) cs
+    | null rest                                  -> reply AllReturnedWithData (Delivery staged sent) cs { cSync = S1 }
+    | otherwise                                  -> reply AdditionalAvailable (Delivery staged sent) cs { cSync = S3 rest }
     where
-      n            = fromIntegral len
-      (sent, rest) = L.splitAt (length (takeWhile (<= n - comPacketHeaderSize) (L.scanl1 (+) (map B.length staged)))) staged
+      -- the bytes of packets the answer can carry: the transfer's, and the host's ComPacket's, less the header
+      room         = min (fromIntegral len) (lComPacketSize host) - comPacketHeaderSize
+      fits         = length (takeWhile (<= room) (L.scanl1 (+) (map B.length staged)))
+      (sent, rest) = L.splitAt (min (lPackets host) fits) staged
   where
     reply row d after = either (\why -> (Response (Unsupported why) mempty, cs)) (\bytes -> (Response Good (exactly len bytes), after)) $ do
       (l, od, mt) <- t45Fields row d
@@ -206,6 +260,61 @@ ifRecvStatic c len cs = case cSync cs of
       unless (fromIntegral l == B.length returned) $
         Left ("Core Table 45's row " <> tshow row <> " sets Length " <> tshow l <> " where " <> tshow (B.length returned) <> " bytes are returned")
       first (("the answer does not frame: " <>) . tshow) (encodeRecord (ComPacket (ComPacketHeader c (cExt cs) od mt) returned))
+
+
+-- * Reading a control session's data subpacket
+
+-- | The method invocations a control session's data subpacket makes, in
+--   order: each a call where its header and parameters read exactly as its
+--   tokens are, its status the host's first value (the reserved ones
+--   ignored, Core 3.2.4.2 item 2), or 'Nothing', an invocation the control
+--   session ignores (3.2.2.4.2 items 3-4); or why the tokens are no
+--   invocations at all, which discards the payload ('classifyIfSend').
+--
+--   Empty atoms are dropped first, then End of Session and the Transaction
+--   Control tokens, each with the uinteger status after it, which the TPer
+--   SHALL ignore on the control session (3.3.7.1.3, PDF 73). Then the stream
+--   is invocations alone, each a Call, the tokens to the first End of Data
+--   (no Call among them, 3.2.2.3.4 a), and a status list of three or more
+--   uintegers (3.2.4.2 item 5); a token anywhere else stops it (3.2.2.4.2
+--   items 2 and 5).
+controlInvocations :: ByteString -> Either Text [Maybe MethodCall]
+controlInvocations bytes = do
+  as <- maybe (Left "a token that does not read (Core 3.2.2.4.1, PDF 38)") Right (atoms bytes)
+  invocationsOf (ignored (filter ((/= Empty) . snd) as))
+  where
+    ignored = \case
+      (_, EndOfSession) : rest                                      -> ignored rest
+      (_, t) : (_, Unsigned _) : rest | t `elem` transactionControl -> ignored rest
+      (_, t) : rest | t `elem` transactionControl                   -> ignored rest
+      a : rest                                                      -> a : ignored rest
+      []                                                            -> []
+    transactionControl = [StartTransaction, EndTransaction]
+    invocationsOf = \case
+      [] -> Right []
+      call@(_, Call) : rest -> do
+        let (body, after) = L.break ((== EndOfData) . snd) rest
+        when (any ((== Call) . snd) body) $ Left "a Call inside a method invocation (Core 3.2.2.3.4 a, PDF 38)"
+        (eod, afterEod) <- maybe (Left "a method invocation with no End of Data (Core 3.2.4.2, PDF 49)") Right (L.uncons after)
+        (first', rest') <- statusAfter afterEod
+        (readCall (call : body <> [eod]) first' :) <$> invocationsOf rest'
+      (_, t) : _ -> Left ("a token outside a method invocation, " <> tshow t <> " (Core 3.2.2.4.2 item 2, PDF 39)")
+    -- the status list after End of Data: its first value, and the tokens after it
+    statusAfter = \case
+      (_, StartList) : rest -> case L.break ((== EndList) . snd) rest of
+        (values, _ : rest')
+          | length values >= 3, Just (v : _) <- traverse (uinteger . snd) values -> Right (v, rest')
+          | otherwise -> Left "a status list of other than three or more uintegers (Core 3.2.2.4.2 item 5, PDF 39)"
+        (_, []) -> Left "a status list with no End List (Core 3.2.4.2, PDF 49)"
+      _ -> Left "a method invocation with no status list after its End of Data (Core 3.2.4.2, PDF 49)"
+    uinteger = \case
+      Unsigned n -> Just n
+      _          -> Nothing
+    -- a call read exactly as its tokens are, to its End of Data
+    readCall toks sc = case parseByteString (foldMap fst toks <> generate (statusList sc)) of
+      Right mc | fmap (map snd) (atoms (toEndOfData mc)) == Just (map snd toks) -> Just mc
+      _                                                                        -> Nothing
+    toEndOfData mc = generate Call <> generate (_header mc) <> generate (_parameters mc) <> generate EndOfData
 
 
 -- * The parts of an IF-SEND's payload
@@ -230,16 +339,10 @@ isData sp = any (\r -> inSpan (codeSpan r) (toInteger (dataSubPacketKind (dataSu
 noAction :: ByteString -> Bool
 noAction = maybe False (all ((== Empty) . snd)) . atoms
 
--- | The method calls a data subpacket's tokens make, Empty atoms dropped,
---   each from its Call token to the token before the next: those that read
---   as a call, all of their tokens (Core 3.2.4.2, PDF 48-49); a stream that
---   does not read as atoms makes none.
-invocations :: ByteString -> [MethodCall]
-invocations = maybe [] (mapMaybe call . L.groupBy (\_ a -> snd a /= Call) . filter ((/= Empty) . snd)) . atoms
-  where
-    call chunk = case parseByteString (foldMap fst chunk) of
-      Right mc | fmap (map snd) (atoms (generate mc)) == Just (map snd chunk) -> Just mc
-      _                                                                       -> Nothing
+-- | The status of a method response that does not fit the response buffer
+--   (Core Table 166; Opal 2.30 3.3.1, PDF 29).
+responseOverflow :: Natural
+responseOverflow = case RESPONSE_OVERFLOW of StatusCode n -> n
 
 -- | The atoms of a token stream in order, each its bytes and its token, or
 --   Nothing where an atom does not read (Core 3.2.2.3.1, PDF 33-36).
@@ -254,4 +357,3 @@ atoms stream
   where
     readToken :: ByteString -> Either String Token
     readToken = parseByteString
-

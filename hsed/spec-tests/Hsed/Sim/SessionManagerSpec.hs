@@ -16,8 +16,10 @@ and ETC-03 send, SMUID.Properties with no HostProperties (Test Cases PDF
 the codec reads back: the TPer's properties, each a property Core Table 167
 gives the TPer (MaxComPacketSize 2048, Opal 2.30 Table 17's least, PDF 33);
 it echoes HostProperties, each at least what Opal Table 17 allows the host
-and so at least Core Table 168's assumption (5.2.2.3, PDF 143); and it
-answers nothing else.
+and so at least Core Table 168's assumption (5.2.2.3, PDF 143); a Properties
+invocation the host aborted it answers in the normal form with the host's
+status and an empty list (Core 3.2.4.2 item 1, PDF 49); and it answers
+nothing else. The property names it and the jig read are Core Table 167's.
 -}
 module Hsed.Sim.SessionManagerSpec (spec) where
 
@@ -35,7 +37,9 @@ import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.Properties (initialAssumptions, properties)
 import           Hsed.Gen.Core.UIDs       (uProperties, uSMUID, uStartSession, uThisSP)
 import           Hsed.Sim.SessionManager  (answer)
-import           Hsed.Sim.Types           (SimParams (..), defaultSimParams)
+import           Hsed.Sim.Types           (SimParams (..), defaultSimParams, hostRequirements, maxComPacketSizeName,
+                                           maxMethodsName, maxPacketSizeName, maxPacketsName, maxResponseComPacketSizeName,
+                                           maxSubpacketsName)
 
 
 spec :: Spec
@@ -80,14 +84,25 @@ spec = describe "the simulated Session Manager" $ do
         [ (n, v, a) | (n, v) <- reported, Just a <- [L.lookup n tperAssumes], v < a ] `shouldBe` []
         map fst reported `shouldSatisfy` all (`elem` map fst tperAssumes)
 
+  describe "the properties it and the jig read" $
+    it "are named as Core Table 167 names them, and Opal Table 17's host requirements as well" $ do
+      filter (`notElem` map propertyName properties)
+        [maxComPacketSizeName, maxResponseComPacketSizeName, maxPacketSizeName, maxPacketsName, maxSubpacketsName, maxMethodsName]
+        `shouldBe` []
+      filter (`notElem` hostNames) (map fst hostRequirements) `shouldBe` []
+
   describe "anything else" $ do
     let call = invocation uSMUID (Methods.Properties Nothing)
     it "another Session Manager method is no answer" $
       answer defaultSimParams call { _header = MethodHeader uSMUID uStartSession } `shouldBe` Nothing
     it "Properties invoked on another object is no answer" $
       answer defaultSimParams call { _header = MethodHeader uThisSP uProperties } `shouldBe` Nothing
-    it "a Properties invocation the host aborted (status other than SUCCESS) is no answer" $
-      answer defaultSimParams call { _statusCode = 1 } `shouldBe` Nothing
+    it "a Properties invocation the host aborted (status other than SUCCESS) is answered, aborted: its status, an empty list" $
+      forM_ [1, 0x10, 0x3F] $ \s ->
+        answer defaultSimParams call { _statusCode = s }
+          `shouldBe` Just (MethodCall (MethodHeader uSMUID uProperties) (Parameters [L (List [])] []) s)
+    it "another method the host aborted is still no answer" $
+      answer defaultSimParams call { _header = MethodHeader uSMUID uStartSession, _statusCode = 1 } `shouldBe` Nothing
     it "a required parameter, Properties having none, is no answer (ETC-08's StartList after StartList)" $
       answer defaultSimParams call { _parameters = Parameters [L (List [])] [] } `shouldBe` Nothing
     it "an optional parameter other than HostProperties is no answer" $

@@ -31,12 +31,20 @@ use, its optional one (the response's signature, "Hsed.Gen.Core.Methods").
   where it sent none. Keeping them per ComID for the sessions that follow is
   M4a's, with sessions.
 
+A Properties invocation the host aborts, its status other than SUCCESS, is
+answered in the normal form with that status and its processing aborted, an
+empty list of the TPer's properties and no HostProperties: a Session Manager
+method recognized but failing SHALL have its normal response format, and a
+host's abort SHALL be returned as the status (Core 3.2.4.2 item 1, PDF 49).
+The status list's reserved values are ignored where it is read (item 2,
+"Hsed.Sim.Sync").
+
 Anything else is no answer, its payload discarded: another Session Manager
-method (M4a's), a Properties invocation the host aborted (its status other
-than SUCCESS), or one whose parameters are not Properties' (a required
-parameter, an optional one other than HostProperties, a HostProperties other
-than Named byte-string names with uinteger values), which a TPer may ignore
-rather than answer with INVALID_PARAMETER (Test Cases ETC-08, PDF 81).
+method (M4a's), or a Properties invocation whose parameters are not
+Properties' (a required parameter, an optional one other than
+HostProperties, a HostProperties other than Named byte-string names with
+uinteger values), which a TPer may ignore rather than answer with
+INVALID_PARAMETER (Test Cases ETC-08, PDF 81).
 -}
 module Hsed.Sim.SessionManager
   ( answer
@@ -55,19 +63,22 @@ import           Hsed.Gen.Core.Codes      (StatusCode (..), pattern SUCCESS)
 import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.Properties (properties)
 import           Hsed.Gen.Core.UIDs       (uProperties, uSMUID)
-import           Hsed.Sim.Types           (SimParams (..))
+import           Hsed.Sim.Types           (SimParams (..), hostRequirements)
 
 
 -- | The Session Manager's answer to a method call on the control session,
---   if it has one: at M3, SMUID.Properties alone.
+--   if it has one: at M3, SMUID.Properties alone, or, aborted by the host,
+--   its normal form carrying the host's status.
 answer :: SimParams -> MethodCall -> Maybe MethodCall
 answer p (MethodCall (MethodHeader invoker method) (Parameters required named) status)
-  | invoker == uSMUID, method == uProperties, null required, status == success = respond <$> hostProperties named
-  | otherwise                                                                 = Nothing
+  | invoker == uSMUID, method == uProperties, status /= success = Just aborted
+  | invoker == uSMUID, method == uProperties, null required    = respond <$> hostProperties named
+  | otherwise                                                 = Nothing
   where
     respond host = MethodCall (MethodHeader uSMUID uProperties)
                               (Parameters [L (List (tperProperties p))] (maybe [] hostResult host))
                               success
+    aborted = MethodCall (MethodHeader uSMUID uProperties) (Parameters [L (List [])] []) status
 
 -- | The status of a method that succeeded (Core Table 166).
 success :: Natural
@@ -95,20 +106,6 @@ hostProperties = \case
     namedUinteger (N (NamedValue (Name (Datum (Bytes name))) (D (Datum (Unsigned n))))) =
       either (const Nothing) (\t -> Just (t, n)) (decodeUtf8' name)
     namedUinteger _ = Nothing
-
--- | Opal 2.30 Table 17 (PDF 33-34), Host Property Requirements: each host
---   property an Opal TPer accepts (M), with the least it allows, which is
---   also its Initial Assumption; MaxResponseComPacketSize (N), which a TPer
---   may ignore and leave out of the HostProperties result, is not among them.
-hostRequirements :: [(Text, Natural)]
-hostRequirements =
-  [ ("MaxComPacketSize", 2048)
-  , ("MaxPacketSize", 2028)
-  , ("MaxIndTokenSize", 1992)
-  , ("MaxPackets", 1)
-  , ("MaxSubpackets", 1)
-  , ("MaxMethods", 1)
-  ]
 
 -- | The HostProperties the TPer will use (5.2.2.1.2.2, PDF 141), as the
 --   response's optional parameter: each of Table 17's host properties, the

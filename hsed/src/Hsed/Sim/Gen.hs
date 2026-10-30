@@ -11,7 +11,8 @@ Stability   : experimental
 
 What the laws of "Hsed.Law.Sync" quantify over: states of the simulated
 TPer, requests on their static ComIDs, and IF-SEND payloads that ask
-nothing or name no session the TPer has. Generators ('Gen' values), not
+nothing, name no session the TPer has, or break a control session packet's
+requirements. Generators ('Gen' values), not
 'Test.QuickCheck.Arbitrary' instances, so that no type here or in the codec
 gets an orphan instance (design 12).
 -}
@@ -20,6 +21,7 @@ module Hsed.Sim.Gen
   , genStaticRequest
   , genNoActionPayload
   , genUnresolvablePayload
+  , genOverfullPayload
   ) where
 
 import qualified RIO.ByteString        as B
@@ -97,6 +99,21 @@ genUnresolvablePayload c = comPacketOn c =<< (chooseInt (1, 3) >>= (`vectorOf` s
     body          = oneof [ pure (generate (invocation uSMUID (Methods.Properties Nothing)))
                           , pure mempty
                           , B.pack <$> (chooseInt (1, 32) >>= (`vectorOf` arbitrary)) ]
+
+
+-- | A ComPacket on a ComID whose one control session packet holds more
+--   subpackets than the default TPer's MaxSubpackets, one (Opal 2.30 Table 17,
+--   PDF 33): two or three data subpackets, each a Properties call the
+--   Session Manager answers, no payload or random bytes. The TPer SHALL
+--   discard and ignore such a packet (Core 5.2.2.4.1.1, PDF 145), a violation
+--   of packet requirements (3.3.10.7 a, PDF 86); what ETC-15 sends (Test Cases
+--   PDF 88).
+genOverfullPayload :: Word16 -> Gen ByteString
+genOverfullPayload c = comPacketOn c . pure . PacketFrame controlHeader =<< (chooseInt (2, 3) >>= (`vectorOf` (dataSubPacket <$> body)))
+  where
+    body = oneof [ pure (generate (invocation uSMUID (Methods.Properties Nothing)))
+                 , pure mempty
+                 , B.pack <$> (chooseInt (1, 32) >>= (`vectorOf` arbitrary)) ]
 
 
 -- * Parts

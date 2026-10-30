@@ -99,6 +99,7 @@ import           Hsed.Jig.Transcript    (TEntry (..), Transcript, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
 import           Hsed.Sim.Sync          (T45Row (..), t45Rows)
+import           Hsed.Sim.Types         (maxComPacketSizeName)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Wire              (Cap (..), Channel, Dir (..), ExchangeError (..), ExchangeOpts (..), IfStatus (..),
@@ -334,11 +335,6 @@ propertiesOf packets = do
       Unsigned n -> Just (toInteger n)
       Signed i   -> Just i
       _          -> Nothing
-
--- | The property a TPer reports its largest ComPacket under (Core Table 167,
---   PDF 141; "Hsed.Gen.Core.Properties").
-maxComPacketSizeName :: Text
-maxComPacketSizeName = "MaxComPacketSize"
 
 -- | Expect a response's status, the expectation named. On a drive an error
 --   the kext answers as a transport failure cannot show which (design 6.2):

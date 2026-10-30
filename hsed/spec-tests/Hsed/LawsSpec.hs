@@ -21,9 +21,9 @@ each entry's law is the law of its name, and states the hash its paragraph or
 table has in the IR (the first 12 hex digits the entry carries). Then it runs
 each law's property under QuickCheck, over the simulator, and finds each case
 a law names in the jig's catalogue; a case a later milestone's jig runs pends
-with that milestone (ETC-08 and ETC-15 are M4a's, design section 11). A
-law without a property fails, as does a case that neither the catalogue nor
-a later milestone has.
+with that milestone (ETC-15 is M4a's, design section 11). A law without a
+property fails, as does a case that neither the catalogue nor a later
+milestone has.
 -}
 module Hsed.LawsSpec (spec) where
 
@@ -44,9 +44,9 @@ handWritten :: [Law]
 handWritten = Sync.laws
 
 -- | The cases a law names that a later milestone's jig runs, with that
---   milestone (design section 11: ETC-08 and ETC-15 at M4a).
+--   milestone (design section 11: ETC-15 at M4a).
 later :: [(CaseKey, String)]
-later = [ (CaseKey (ETC n) Nothing Nothing Nothing, "M4a") | n <- [8, 15] ]
+later = [ (CaseKey (ETC 15) Nothing Nothing Nothing, "M4a") ]
 
 -- | No name twice.
 distinct :: [Text] -> Bool

@@ -79,12 +79,11 @@ spec = describe "sedutil's printed Level 0" $ do
         let ten (l, v) = (l, if l == "Locking Users" then 10 else v)
             users      = q { sqFeatures = map (\f -> f { sfValues = map ten (sfValues f) }) (sqFeatures q) }
         compareQuery users l0 `shouldSatisfy` \ds -> length ds == 1 && all ("Locking Users = 10" `T.isInfixOf`) ds
-    it "finds the simulator's defaults other than disk6's in DataStore's two maxima and the Users" $ withQuery $ \q ->
+    it "finds the simulator's defaults other than disk6's in DataStore's tables and the Users" $ withQuery $ \q ->
       withSplit (level0Response (initialState defaultSimParams) 2048) $ \l0 -> do
         let found = compareQuery q l0
-        length found `shouldBe` 3
-        map (\l -> any (l `T.isInfixOf`) found) ["Max Tables = 9", "Max Size Tables = 10485760", "Locking Users = 9"]
-          `shouldBe` [True, True, True]
+        length found `shouldBe` 2
+        map (\l -> any (l `T.isInfixOf`) found) ["Max Tables = 9", "Locking Users = 9"] `shouldBe` [True, True]
     it "says when the response lacks a code sedutil printed" $ withQuery $ \q ->
       withSplit (synthesize q { sqFeatures = filter ((/= 0x0402) . sfCode) (sqFeatures q) }) $ \l0 ->
         compareQuery q l0 `shouldSatisfy` \ds -> length ds == 1 && all ("BlockSID (0x402)" `T.isPrefixOf`) ds

@@ -146,7 +146,7 @@ spec = describe "the hand-written feature descriptors" $ do
       decodedAs (Proxy :: Proxy Level0DiscoveryGeometryReportingFeature) `shouldBe`
         Just (Level0DiscoveryGeometryReportingFeature True 512 8 0)
       decodedAs (Proxy :: Proxy SiisFeature) `shouldBe` Just (SiisFeature 0x20 0 False)
-      decodedAs (Proxy :: Proxy DataStoreFeature) `shouldBe` Just (DataStoreFeature 0x1 1 0xA0000 1)
+      decodedAs (Proxy :: Proxy DataStoreFeature) `shouldBe` Just (DataStoreFeature 0x1 1 0xA00000 1)
       decodedAs (Proxy :: Proxy Level0DiscoveryOpalSSCV2Feature) `shouldBe`
         Just (Level0DiscoveryOpalSSCV2Feature 0x2 0x3 0x1004 1 False 4 8 0 0)
       decodedAs (Proxy :: Proxy BlockSIDFeature) `shouldBe` Just (BlockSIDFeature 0x1 False False False)

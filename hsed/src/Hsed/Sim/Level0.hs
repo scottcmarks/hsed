@@ -31,7 +31,10 @@ shadowing enabled or done at M3) unless the parameters choose it
 the SIIS revision, the DataStore tables, the ComIDs, the SSC minor version,
 the data removal version). A profile (@--profile@, a drive's response) adds
 each descriptor of a code the simulator lacks, as it is; none of the
-simulator's is dropped or replaced (design 9.2).
+simulator's is dropped or replaced (design 9.2). Every one of its own
+descriptors encodes for parameters in range ("Hsed.Sim.Types".'simParamsProblems',
+which the transport is opened only without); one that does not is an error,
+never a descriptor left out.
 -}
 module Hsed.Sim.Level0
   ( level0Response
@@ -64,13 +67,16 @@ level0Response st = renderLevel0 mempty (simDescriptors st)
 -- | The simulator's descriptors, in increasing code order: Opal's and the
 --   hand-written feature sets' ("Hsed.Sim.FeatureSets"), their values from
 --   the parameters and the state, and a profile's codes the simulator lacks.
+--   An own descriptor that does not encode is an error naming it: parameters
+--   out of range, which the transport refuses.
 simDescriptors :: TPerState -> [Descriptor]
 simDescriptors st = L.sortOn dCode (own <> added)
   where
     p = tsParams st
     (tables, size, alignment) = spDataStore p
     geometry = spGeometry p
-    own = rights
+    own = either (\e -> error ("Hsed.Sim.Level0: an own descriptor does not encode, the parameters out of range: " <> show e)) id
+        $ sequence
       [ described (id :: Level0DiscoveryTPerFeature -> Level0DiscoveryTPerFeature)
         -- LockingEnabled is one once an SP of the Locking template is other than Nonexistent or
         -- Manufactured-Inactive (Opal 3.1.1.3.1, PDF 21)

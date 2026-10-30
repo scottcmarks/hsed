@@ -41,9 +41,11 @@ import qualified Hsed.Gen.Core.StateTables as StateTables
 import           Hsed.Jig.Catalogue        (CaseKey (..), TestId (..))
 import           Hsed.Law                  (Law (..))
 import           Hsed.Sim                  (step, syncOf)
-import           Hsed.Sim.Gen              (genNoActionPayload, genState, genStaticRequest, genUnresolvablePayload)
+import           Hsed.Sim.Gen              (genNoActionPayload, genOverfullPayload, genState, genStaticRequest,
+                                            genUnresolvablePayload)
 import           Hsed.Sim.Sync             (Delivery (..), T45Row (..), t45Fields, t45Quantity, t45Rows)
-import           Hsed.Sim.Types            (ComIdState (..), Input (..), Output (..), SimParams (..), SyncState (..), TPerState (..))
+import           Hsed.Sim.Types            (ComIdState (..), Input (..), Limits (..), Output (..), SimParams (..), SyncState (..),
+                                            TPerState (..), hostLimits)
 import           Hsed.Wire                 (Dir (..), IfStatus (..), Request (..), Response (..), comPacketHeaderSize,
                                             comPacketProtocol, roundUp)
 
@@ -87,19 +89,25 @@ discardToS1 = Law
   }
 
 -- | Core 3.3.10.7 item a (PDF 86, @core-2.01 | 3.3.10.7#a@): a packet whose
---   session the TPer cannot resolve is ignored, and the TPer awaits an
---   IF-SEND at once. ETC-08 and ETC-15 observe it (M4a). The property: on a
---   ComID awaiting IF-SEND, an IF-SEND whose packets name sessions the TPer
---   does not have ("Hsed.Sim.Gen".'genUnresolvablePayload', even holding a
---   call the Session Manager answers) is accepted (Good), the TPer
+--   session the TPer cannot resolve, or that violates the packet
+--   requirements, is ignored, and the TPer awaits an IF-SEND at once. ETC-15
+--   observes the second (M4a's jig): a control session packet of more
+--   subpackets than the TPer's MaxSubpackets, which it SHALL discard and
+--   ignore (5.2.2.4.1.1, PDF 145). The property: on a ComID awaiting
+--   IF-SEND, an IF-SEND whose packets name sessions the TPer does not have
+--   ("Hsed.Sim.Gen".'genUnresolvablePayload'), or whose control session
+--   packet holds too many subpackets ('genOverfullPayload'), each even
+--   holding a call the Session Manager answers, is accepted (Good), the TPer
 --   unchanged, the ComID still in S1, and an IF-RECV after it is answered
---   with Table 45's last row.
+--   with Table 45's last row. (ETC-08 observes 3.2.2.4.2, a law of its own
+--   once item anchors can name its items, M4a; ETC-04 and ETC-13 the first
+--   clause, once sessions exist, M4a: design 13.29.)
 ignorePacket :: Law
 ignorePacket = Law
   { lawName  = "Sync.ignorePacket"
   , lawHash  = "cda4e92af591"
-  , lawProp  = Just (discardedAtIfSend genUnresolvablePayload)
-  , lawCases = [whole (ETC 8), whole (ETC 15)]
+  , lawProp  = Just (discardedAtIfSend (\c -> oneof [genUnresolvablePayload c, genOverfullPayload c]))
+  , lawCases = [whole (ETC 15)]
   }
 
 -- | Core Table 45 (PDF 83), bound by its comment @stateTable
@@ -114,9 +122,14 @@ ignorePacket = Law
 --   * an IF-RECV of any length the unit allows on any static ComID in any
 --     state is answered with exactly that many bytes: a ComPacket of the
 --     ComID and its extension whose header is the row that state selects
---     (Core 3.3.10.5, PDF 84-85) evaluated over what it returns, its
---     Length the bytes returned, and the ComID's state after it as Core
---     3.3.10.6 (PDF 85-86) says.
+--     (Core 3.3.10.5, PDF 84-85), the packets it returns as many as fit the
+--     transfer, the host's ComPacket and its MaxPackets (5.2.2.4.1.3-4, PDF
+--     145-146), and the ComID's state after it as Core 3.3.10.6 (PDF 85-86)
+--     says; the header's Length, OutstandingData and MinTransfer are the
+--     numbers this law computes itself (the packets returned; the ComPacket
+--     header and the packets left, or all of them; the header and the next
+--     packet, or the first), which the generated row, evaluated
+--     ("Hsed.Sim.Sync".'t45Fields'), must also give.
 table45 :: Law
 table45 = Law
   { lawName  = "Sync.table45"
@@ -130,11 +143,14 @@ table45 = Law
       , forAll genState $ \st ->
         forAll (elements (Map.toList (tsComIds st))) $ \(c, cs) ->
         forAll (recvLength st (cSync cs)) $ \len ->
-          let (row, d, after) = selected len (cSync cs)
+          let (row, d, after) = selected (hostLimits (tsParams st)) len (cSync cs)
               (out, st')      = step (Cmd (Request IfRecv comPacketProtocol c len mempty)) st
-          in either (`counterexample` False)
-                    (\resp -> conjoin [ out === Out resp, syncOf c st' === Just after ])
-                    (answerOf c (cExt cs) len row d)
+          in conjoin
+               [ counterexample "the generated row evaluates to the law's own numbers" $ t45Fields row d === Right (expected row d)
+               , either (`counterexample` False)
+                        (\resp -> conjoin [ out === Out resp, syncOf c st' === Just after ])
+                        (answerOf c (cExt cs) len (expected row d) d)
+               ]
       ]
   , lawCases = [caseOf (SPF 2) 1, whole (ETC 2)]
   }
@@ -144,8 +160,8 @@ table45 = Law
 -- | What a law says of an IF-SEND whose payload, on its ComID, the TPer
 --   discards: on a ComID awaiting IF-SEND, of a TPer in any state otherwise,
 --   accepted (Good, no bytes), the TPer as it was, and an IF-RECV of any
---   length after it answered with Table 45's last row (Core 3.3.10.5 S1 b,
---   PDF 84), the TPer still as it was.
+--   length after it answered with Table 45's last row, (0, 0, 0) (Core
+--   3.3.10.5 S1 b, PDF 84), the TPer still as it was.
 discardedAtIfSend :: (Word16 -> Gen ByteString) -> Property
 discardedAtIfSend payloadOn =
   forAll genState $ \st0 ->
@@ -160,7 +176,7 @@ discardedAtIfSend payloadOn =
           [ counterexample "the IF-SEND accepted, the TPer unchanged" $ sent === (Out (Response Good mempty), st)
           , counterexample "the IF-RECV after it" $
               either (`counterexample` False) (\resp -> received === (Out resp, st))
-                     (answerOf c (maybe 0 cExt (Map.lookup c (tsComIds st))) recvLen AllReturnedNoData (Delivery [] []))
+                     (answerOf c (maybe 0 cExt (Map.lookup c (tsComIds st))) recvLen (0, 0, 0) (Delivery [] []))
           ]
 
 -- | The length of an IF-RECV on a ComID in a state: any its unit allows, or,
@@ -182,14 +198,16 @@ recvLength st = \case
     edges ps  = [ l | run <- L.scanl1 (+) (map B.length ps), side <- [-1, 0, 1]
                     , let l = roundUp u (fromIntegral (comPacketHeaderSize + run + side)), l > 0 ]
 
--- | The row an IF-RECV of a length selects in a synchronous state, what it
---   returns, and the state after it (Core 3.3.10.5, PDF 84-85; 3.3.10.6, PDF
---   85-86): in S1 the last row; in S2 the first; in S3, a length short of
---   the ComPacket header and the first packet staged the second; else the
---   packets that fit, the fifth row if they are all of them (then S1), the
---   third if not (S3 with the rest).
-selected :: Word32 -> SyncState -> (T45Row, Delivery, SyncState)
-selected len = \case
+-- | The row an IF-RECV of a length selects in a synchronous state, given
+--   what the host takes, what it returns, and the state after it (Core
+--   3.3.10.5, PDF 84-85; 3.3.10.6, PDF 85-86): in S1 the last row; in S2 the
+--   first; in S3, room short of the ComPacket header and the first packet
+--   staged the second (the room the transfer's and the host's ComPacket's,
+--   whichever is less); else the packets that fit, as many as the host's
+--   MaxPackets, the fifth row if they are all of them (then S1), the third
+--   if not (S3 with the rest).
+selected :: Limits -> Word32 -> SyncState -> (T45Row, Delivery, SyncState)
+selected host len = \case
   S1    -> (AllReturnedNoData, Delivery [] [], S1)
   S2 ps -> (ResponsesToCome, Delivery [] [], S2 ps)
   S3 ps
@@ -198,19 +216,40 @@ selected len = \case
     | null rest                                -> (AllReturnedWithData, Delivery ps sent, S1)
     | otherwise                                -> (AdditionalAvailable, Delivery ps sent, S3 rest)
     where
-      room         = fromIntegral len - comPacketHeaderSize
-      (sent, rest) = L.splitAt (length (takeWhile (<= room) (L.scanl1 (+) (map B.length ps)))) ps
+      room         = min (fromIntegral len) (lComPacketSize host) - comPacketHeaderSize
+      (sent, rest) = L.splitAt (min (lPackets host) (length (takeWhile (<= room) (L.scanl1 (+) (map B.length ps))))) ps
 
--- | The answer an IF-RECV of a length on a ComID gets from a row over a
---   delivery: exactly that many bytes of the ComPacket the row's fields
---   head, the packets returned its payload; Left if the row does not
---   evaluate, or its Length is not the bytes returned.
-answerOf :: Word16 -> Word16 -> Word32 -> T45Row -> Delivery -> Either String Response
-answerOf c ext len row d = do
-  (l, od, mt) <- first T.unpack (t45Fields row d)
+-- | A row's Length, OutstandingData and MinTransfer over a delivery, as this
+--   law computes them from Table 45's words (PDF 83) and 3.2.3.2.1.4-6 (PDF
+--   41: the overhead counted): Length the bytes of the packets returned;
+--   OutstandingData, where the row names it, the ComPacket header and every
+--   packet staged (row 2) or every packet left (row 3); MinTransfer, where
+--   the row names it, the header and the first packet staged (row 2) or the
+--   next left (row 3); row 1 (0, 1, 0), row 4 (Length, 1, 0), the rest (Length, 0, 0).
+expected :: T45Row -> Delivery -> (Word32, Word32, Word32)
+expected row d = case row of
+  ResponsesToCome     -> (0, 1, 0)
+  InsufficientLength  -> (0, carrying staged, carrying (take 1 staged))
+  AdditionalAvailable -> (len, carrying left, carrying (take 1 left))
+  AdditionalToCome    -> (len, 1, 0)
+  AllReturnedWithData -> (len, 0, 0)
+  AllReturnedNoData   -> (0, 0, 0)
+  where
+    staged     = dlStaged d
+    left       = drop (length (dlReturned d)) staged
+    len        = sizeOf (dlReturned d)
+    carrying ps = if null ps then 0 else fromIntegral comPacketHeaderSize + sizeOf ps
+    sizeOf     = fromIntegral . sum . map B.length
+
+-- | The answer an IF-RECV of a length on a ComID gets with header fields
+--   over a delivery: exactly that many bytes of the ComPacket they head, the
+--   packets returned its payload; Left if its Length is not the bytes
+--   returned.
+answerOf :: Word16 -> Word16 -> Word32 -> (Word32, Word32, Word32) -> Delivery -> Either String Response
+answerOf c ext len (l, od, mt) d = do
   let returned = mconcat (dlReturned d)
   unless (fromIntegral l == B.length returned) $
-    Left ("row " <> show row <> " gives Length " <> show l <> " to " <> show (B.length returned) <> " bytes returned")
+    Left ("Length " <> show l <> " to " <> show (B.length returned) <> " bytes returned")
   bytes <- first show (encodeRecord (ComPacket (ComPacketHeader c ext od mt) returned))
   pure (Response Good (B.take (fromIntegral len) (bytes <> B.replicate (fromIntegral len - B.length bytes) 0)))
 

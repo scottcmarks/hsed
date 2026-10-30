@@ -37,7 +37,7 @@ import qualified RIO.Text              as T
 
 import           Hsed.Jig.Files        (runningAsRoot)
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), parseTarget)
-import           Hsed.Sim.Types        (SimParams (..))
+import           Hsed.Sim.Types        (SimParams (..), simParamsProblems)
 import           Hsed.Transport.Drive  (DriveInfo)
 import           Hsed.Transport.InProc (InProcOpts (..), SimControl, newInProc)
 import           Hsed.Transport.MacKext (KextOpts (..), openKext)
@@ -52,7 +52,7 @@ data Target
   | PairTarget !Target !Target                            -- ^ the simulator, then the drive
 
 -- | Open a run's target, or why not: the simulator with the run's
---   parameters, units and hold; a replay of a file; a drive by its BSD name,
+--   parameters (refused out of range), units and hold; a replay of a file; a drive by its BSD name,
 --   held to the serial the run expects (which it must name), as root alone;
 --   both ends of a pair, the first closed again when the second cannot be
 --   opened.
@@ -60,9 +60,10 @@ openTarget :: RunOptions -> IO (Either Text Target)
 openTarget opts = open (roTarget opts)
   where
     open = \case
-      TSim -> do
-        let sim = roSim opts
-        Right . uncurry SimTarget <$> newInProc sim (InProcOpts (spUnits sim) (roHold opts))
+      TSim -> case simParamsProblems sim of
+        []       -> Right . uncurry SimTarget <$> newInProc sim (InProcOpts (spUnits sim) (roHold opts))
+        problems -> pure (Left ("the simulator's parameters: " <> T.intercalate "; " problems))
+        where sim = roSim opts
       TReplay file -> fmap (`DriveTarget` Nothing) <$> openReplay file
       TDevice dev -> do
         root <- runningAsRoot

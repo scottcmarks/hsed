@@ -14,8 +14,11 @@ The simulator's step (design 8.2): a command held to its unit (SIIS 1.20
 25, PDF 53) and by ComID (Core Table 26, PDF 55): Level 0 outside the
 synchronous protocol (3.3.6, PDF 67; 3.3.10.3 b, PDF 84), a static ComID to
 its synchronous protocol, a reserved or inactive ComID refused or, if the
-run says so, discarded (3.3.3.2-3, PDF 58-59). An event and a Tick, on
-states built directly.
+run says so, discarded (3.3.3.2-3, PDF 58-59); an IF-SEND on protocol 0x00,
+which is not defined for IF-SEND, an Invalid Security Protocol ID (SIIS 1.20
+Tables 12 and 23). An event and a Tick, on states built directly. And the
+parameters a TPer starts from: static ComIDs that neither wrap past 0xFFFF
+nor fall among the reserved ones, and the parameters out of range refused.
 -}
 module Hsed.SimSpec (spec) where
 
@@ -81,9 +84,11 @@ spec = describe "a step of the simulated TPer" $ do
       codeCells <$> codeRow cProtocolIDs 0x01 `shouldBe` Just ["Defined in this document"]
       codeCells <$> codeRow cProtocolIDs 0x02 `shouldBe` Just ["Defined in this document"]
       codeCells <$> codeRow cProtocolIDs 0x00 `shouldBe` Just ["See [6]"]
-    it "0x02, ComID management, is M4a's; 0x00 is not simulated" $ do
+    it "0x02, ComID management, is M4a's; IF-RECV on 0x00 is not simulated" $ do
       status (answerTo (tper id) (sendOn 0x02 0x0004 512)) `shouldSatisfy` isUnsupported
       status (answerTo (tper id) (recvOn 0x00 0x0000 512)) `shouldSatisfy` isUnsupported
+    it "0x00 is not defined for IF-SEND: an Invalid Security Protocol ID, the TPer unchanged (SIIS 1.20 Tables 12, 23; Opal 3.3.2)" $
+      command (sendOn 0x00 0x0000 512) (tper id) `shouldBe` (refused InvalidSecurityProtocolId, tper id)
     it "any other is an Invalid Security Protocol ID, either way, the TPer unchanged" $
       forM_ [0x03, 0x06, 0xEE, 0xFF] $ \p -> do
         command (recvOn p base 2048) (tper id) `shouldBe` (refused InvalidSecurityProtocolId, tper id)
@@ -132,6 +137,25 @@ spec = describe "a step of the simulated TPer" $ do
     it "inactive in the TPer's own list is inactive" $ do
       let st = (tper id) { tsComIds = Map.adjust (\cs -> cs { cLife = Inactive }) base (tsComIds (tper id)) }
       command (recvOn 0x01 base 2048) st `shouldBe` (refused OtherInvalidCommandParameter, st)
+
+  describe "the parameters a TPer starts from" $ do
+    it "the defaults pass, the DataStore table Opal 2.30 4.3.8.1's 10 MB" $ do
+      simParamsProblems defaultSimParams `shouldBe` []
+      spDataStore defaultSimParams `shouldBe` (1, 0xA00000, 1)
+    it "give static ComIDs as far as 0xFFFF, none wrapping to the reserved 0x0000" $ do
+      Map.keys (tsComIds (tper (\p -> p { spBaseComId = 0xFFFF, spNComIds = 2 }))) `shouldBe` [0xFFFF]
+      Map.keys (tsComIds (tper (\p -> p { spBaseComId = 0x0FFF, spNComIds = 2 }))) `shouldBe` [0x1000]
+      command (recvOn 0x01 0x0000 64) (tper (\p -> p { spBaseComId = 0xFFFF, spNComIds = 2 }))
+        `shouldBe` (refused OtherInvalidCommandParameter, tper (\p -> p { spBaseComId = 0xFFFF, spNComIds = 2 }))
+    it "are refused out of range: ComIDs past 0xFFFF or reserved, none, a version past 4 bits, a limit of none" $
+      map (length . simParamsProblems . ($ defaultSimParams))
+        [ \p -> p { spBaseComId = 0xFFFF, spNComIds = 2 }
+        , \p -> p { spBaseComId = 0x0800 }
+        , \p -> p { spNComIds = 0 }
+        , \p -> p { spSscMinor = 0x10 }
+        , \p -> p { spDataRemovalVersion = 0x10 }
+        , \p -> p { spTPerProperties = [(maxMethodsName, 0)] } ]
+        `shouldSatisfy` all (> 0)
 
   describe "events and ticks" $ do
     it "an event puts every static ComID back to awaiting IF-SEND, Good" $ do

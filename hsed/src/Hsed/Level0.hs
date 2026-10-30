@@ -189,8 +189,9 @@ renderLevel0 :: ByteString -> [Descriptor] -> Word32 -> ByteString
 renderLevel0 vendorUnique descriptors len = fitted (fromIntegral len) (header <> body)
   where
     body   = foldMap dBytes descriptors
-    -- the generated layout tiles and the vendor unique bytes fit their field: the header always encodes
-    header = either (const mempty) id $ encodeRecord Level0DiscoveryHeader
+    -- the generated layout tiles and the vendor unique bytes fit their field: the header always encodes, but for
+    -- descriptors past what Length of Parameter Data's 32 bits count, an error
+    header = either (\e -> error ("Hsed.Level0.renderLevel0: the header does not encode: " <> show e)) id $ encodeRecord Level0DiscoveryHeader
       { level0DiscoveryHeaderLengthOfParameterData = fromIntegral (headerEnd - lengthOrigin + B.length body)
       , level0DiscoveryHeaderVendorUnique          = fitted (B.length noVendorUnique) vendorUnique
       }
@@ -205,7 +206,8 @@ fitted n bytes = B.take n (bytes <> B.replicate (n - B.length bytes) 0)
 -- | Where Length of Parameter Data starts counting: the end of that field of
 --   Table 39 (it counts the bytes after itself, 3.3.6.2.1, PDF 68).
 lengthOrigin :: Int
-lengthOrigin = maybe 0 ((`div` 8) . fieldEnd) (L.find ((== "Length of Parameter Data") . fieldName) header)
+lengthOrigin = maybe (error "Hsed.Level0: Core Table 39's layout has no Length of Parameter Data") ((`div` 8) . fieldEnd)
+                     (L.find ((== "Length of Parameter Data") . fieldName) header)
   where header = layoutFields level0DiscoveryHeaderLayout
 
 -- | Where the header ends and the first descriptor starts (Table 38, PDF 67).

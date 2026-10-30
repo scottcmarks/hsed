@@ -26,8 +26,8 @@ import qualified RIO.List               as L
 import           RIO
 import           Test.Hspec
 import           Test.Hspec.QuickCheck  (prop)
-import           Test.QuickCheck        (Gen, choose, counterexample, forAll, listOf, resize, vectorOf, (.&&.),
-                                         (===))
+import           Test.QuickCheck        (Gen, arbitrary, choose, counterexample, elements, forAll, listOf, resize, vectorOf,
+                                         (.&&.), (===))
 
 import           Hsed.Core.Feature      (Allowance (..), Feature (..), FeatureHeader (..))
 import           Hsed.Core.Layout       (Content (..), Difference (..), Field (..), Layout (..), LayoutError (..),
@@ -38,8 +38,25 @@ import           Hsed.Gen.Opal.Features (Level0DiscoveryGeometryReportingFeature
 import           Hsed.Level0
 import           Hsed.Sim.FeatureSets   (geometryAllowances)
 import           Hsed.Sim.Level0        (level0Response, simDescriptors)
-import           Hsed.Sim.Types         (defaultSimParams, initialState)
+import           Hsed.Sim.Types         (Geometry (..), SimParams (..), defaultSimParams, initialState, simParamsProblems)
 
+
+-- | Parameters in range: every field the descriptors carry any value its
+--   field holds, the versions 4 bits, the ComIDs non-reserved and within
+--   0xFFFF.
+inRange :: Gen SimParams
+inRange = do
+  base     <- choose (0x1000, 0xFFF0)
+  n        <- choose (1, 0x0F)
+  minor    <- choose (0, 0xF)
+  removal  <- choose (0, 0xF)
+  siis     <- arbitrary
+  store    <- (,,) <$> arbitrary <*> arbitrary <*> arbitrary
+  geometry <- Geometry <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
+  ofs      <- elements [minBound .. maxBound]
+  pure defaultSimParams
+    { spBaseComId = base, spNComIds = n, spSscMinor = minor, spDataRemovalVersion = removal, spSiisRevision = siis
+    , spDataStore = store, spGeometry = geometry, spLockingOFS = ofs }
 
 spec :: Spec
 spec = describe "a Level 0 Discovery response" $ do
@@ -71,6 +88,10 @@ spec = describe "a Level 0 Discovery response" $ do
     it "is its descriptors, as the simulator gives them" $
       withSplit response $ \l0 ->
         l0Descriptors l0 `shouldBe` simDescriptors (initialState defaultSimParams)
+    prop "has its eight descriptors, none left out, whatever parameters in range it is given" $
+      forAll inRange $ \p ->
+        counterexample (show (simParamsProblems p)) (null (simParamsProblems p))
+        .&&. map dCode (simDescriptors (initialState p)) === [0x0001, 0x0002, 0x0003, 0x0005, 0x0202, 0x0203, 0x0402, 0x0404]
     it "cut at 100 bytes, asks for 216 (BeyondTransfer) and its third descriptor runs past the end" $
       withSplit (level0Response (initialState defaultSimParams) 100) $ \l0 -> do
         l0Problems l0 `shouldBe` [BeyondTransfer 216 100, DescriptorTruncated 0x0003]

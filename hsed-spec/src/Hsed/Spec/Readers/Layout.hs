@@ -214,7 +214,7 @@ tileSeverity = \case
 
 -- | @C-LAYOUT-TILE@ at a bound table: each reason its layout's fields do not
 --   cover every bit of its fixed part exactly once ('gridTiling'), its
---   severity 'tileSeverity''s, at the page of the row it lies in: a gap's
+--   severity by 'tileSeverity', at the page of the row it lies in: a gap's
 --   first byte's row, or the row of the field after it when no row prints
 --   that byte (Core T236's byte 8); an overlap's row; a field's own cells.
 --   None for a grid whose reading found an Error (a row whose bytes do not

@@ -25,9 +25,10 @@ TRNSFLEN - 1@ (the rest of the transfer); a field; and its value. A table is
 read as the byte grid it is (@Hsed.Spec.Readers.Grid@): its Byte(s) column the
 corner, its Field column (two columns: its Values column) one cell over the
 whole of each row's bytes. So the two rules read labels, name fields and
-type them alike ('gridLayout': reserved by name, a flag at one bit, a byte
-string wider than eight bytes, else an unsigned number; a field named as
-printed, a parenthesis it ends with apart), and the run to the end is the
+type them alike ("Hsed.Spec.Readers.Layout".'Hsed.Spec.Readers.Layout.gridLayout':
+reserved by name, a flag at one bit, a byte string wider than eight bytes,
+else an unsigned number; a field named as printed, a parenthesis it ends
+with apart), and the run to the end is the
 layout's tail, its length the rest of the input, reserved bytes when its name
 says so. In two columns a field is named by the first sentence of its Values
 cell (Table 236's @The uid of the method involved in the operation.@, its
@@ -229,8 +230,9 @@ rowOf rows gf = L.find (\r -> bwField r `elem` gfCells gf) rows
 -- | A VALUE cell, for a field of so many bytes (Nothing: the run to the end of
 --   the transfer). Two hex digits to a word are bytes: as many as the field's,
 --   a number, big-endian (@00 00 00 01@); for the run, each of its bytes
---   (@00@); any other count, a misfit. One word that is a @0x@ number or
---   decimal digits is that number. Anything else is prose, its spacing
+--   (@00@); any other count, a misfit. One word that is a number as
+--   "Hsed.Spec.Readers.Text".'readNumber' reads it (@0x0004@, @1024@,
+--   @0004h@, @C000h@) is that number. Anything else is prose, its spacing
 --   squeezed.
 --
 -- >>> map (readValue (Just 4)) ["00 00 00 01", "0x0004", "1024", "00 00", "Allocated  ComID"]

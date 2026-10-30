@@ -334,7 +334,7 @@ earlierNames sts st = concatMap recordNames (takeWhile ((/= btAnchor (stBound st
 --   it (a class and the methods its instances define, as the printers import
 --   a class: @LayoutRecord (recordLayout, recordFields, fromFields)@), and,
 --   for a type imported with @(..)@, every constructor and field its runtime
---   'Data' instance has ('typeMembers': @Layout (..)@ brings @Layout@,
+--   'Data' instance has (@typeMembers@: @Layout (..)@ brings @Layout@,
 --   @layoutName@, …).
 declScope :: [Gen.Decl] -> [Text]
 declScope ds = L.nub (concat [ itemNames x | d <- ds, Gen.ImportSome _ xs <- d.declImports, x <- xs ])

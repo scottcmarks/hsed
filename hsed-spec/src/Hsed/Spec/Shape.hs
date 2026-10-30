@@ -439,8 +439,9 @@ describe form = T.concat
 --   two shapes' structures overlap, the looser one leaves the other's tables to
 --   it ('notAlso'): a UID table is not a type table, the table of table UIDs or
 --   a preconfiguration; a code table is not an enumeration or a typed record.
---   A byte grid captioned @… Feature Descriptor@ is 'Feature''s (Core T42,
---   T43), any other 'ByteGrid''s (T17, T41's template, T44, ...).
+--   A byte grid captioned @… Feature Descriptor@ is the 'Feature' shape's
+--   (Core T42, T43), any other the 'ByteGrid' shape's (T17, T41's template,
+--   T44, ...).
 --   'ByteFieldValue' takes Core T236's two columns @[Bytes, Values]@ beside
 --   the three of T28, T31-T33 and T35-T37.
 --   'Tokens' takes the token table of Core Table 4 and the atom diagrams that

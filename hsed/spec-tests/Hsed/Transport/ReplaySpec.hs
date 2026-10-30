@@ -19,8 +19,7 @@ a length the kext could not carry) Unsupported, as the kext's transport
 answers; the same answer every time; what it says it is. A file that is no
 Level 0 response is refused. And the same on the disk6-like response
 "Hsed.Level0.Sedutil" synthesizes from sedutil's printed query
-(@spec/fixtures/disk6-query.txt@), once group G2's parser and synthesizer
-have landed (until then that example is pending).
+(@spec/fixtures/disk6-query.txt@).
 
 The transport's own exchange is called (its constructor's field, as the
 suite may), so that these hold of the transport whatever the host's verbs
@@ -28,7 +27,6 @@ in "Hsed.Wire" do.
 -}
 module Hsed.Transport.ReplaySpec (spec) where
 
-import           Control.Exception     (ErrorCall (..))
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
 import           RIO
@@ -115,15 +113,12 @@ spec = describe "Hsed.Transport.Replay" $ do
   describe "a replay of the disk6-like response synthesized from sedutil's query" $
     it "answers Level 0 IF-RECV of 512 and 2048 bytes, truncated or padded, and refuses ComID 0x1004" $ do
       query <- readFileUtf8 "../spec/fixtures/disk6-query.txt"
-      synthesized <- try (either (throwString . T.unpack) (evaluate . synthesize) =<< evaluate (parseQuery query))
-      case synthesized of
-        Left (ErrorCall msg) | "G2: " `L.isPrefixOf` msg -> pendingWith ("until group G2 lands: " <> msg)
-        Left e -> throwIO e
-        Right bytes -> withReplay bytes $ \_ t -> do
-          answers <- traverse (tExchange t) [level0 512, level0 2048, recv 0x01 0x1004 2048]
-          answers `shouldBe`
-            [ Response Good (padded 512 bytes), Response Good (padded 2048 bytes)
-            , Response (Unsupported "M3: Level 0 only") "" ]
+      bytes <- either (throwString . T.unpack) (evaluate . synthesize) (parseQuery query)
+      withReplay bytes $ \_ t -> do
+        answers <- traverse (tExchange t) [level0 512, level0 2048, recv 0x01 0x1004 2048]
+        answers `shouldBe`
+          [ Response Good (padded 512 bytes), Response Good (padded 2048 bytes)
+          , Response (Unsupported "M3: Level 0 only") "" ]
 
 -- | Whether a status is a refusal to carry the command.
 unsupported :: IfStatus -> Bool

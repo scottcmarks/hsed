@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -22,16 +21,12 @@ each entry's law is the law of its name, and states the hash its paragraph or
 table has in the IR (the first 12 hex digits the entry carries). Then it runs
 each law's property under QuickCheck, over the simulator, and finds each case
 a law names in the jig's catalogue; a case a later milestone's jig runs pends
-with that milestone (ETC-08 and ETC-15 are M4a's, design section 11).
-
-Milestone M3's laws have no property until its group G1 lands, and the
-catalogue is a stub until its group G3 lands (@error "G3: catalogue"@): until
-then those examples pend, each naming what it waits on, and they run by
-themselves once the code is in.
+with that milestone (ETC-08 and ETC-15 are M4a's, design section 11). A
+law without a property fails, as does a case that neither the catalogue nor
+a later milestone has.
 -}
 module Hsed.LawsSpec (spec) where
 
-import           Control.Exception  (ErrorCall (..))
 import qualified RIO.List           as L
 import qualified RIO.Text           as T
 import           RIO
@@ -57,15 +52,9 @@ later = [ (CaseKey (ETC n) Nothing Nothing Nothing, "M4a") | n <- [8, 15] ]
 distinct :: [Text] -> Bool
 distinct xs = L.nub xs == xs
 
--- | The keys of the jig's catalogue, or why there are none yet: until M3's
---   group G3 lands it is a stub, @error "G3: catalogue"@. Any other error is
---   the test's failure.
-catalogueKeys :: IO (Either String [CaseKey])
-catalogueKeys = try (evaluate (length catalogue)) >>= \case
-  Right _ -> pure (Right (map ceKey catalogue))
-  Left e@(ErrorCall msg)
-    | "G3: " `L.isPrefixOf` msg -> pure (Left ("the jig's catalogue is the stub " <> show msg <> " until M3's group G3 lands"))
-    | otherwise                 -> throwIO e
+-- | The keys of the jig's catalogue.
+catalogueKeys :: [CaseKey]
+catalogueKeys = map ceKey catalogue
 
 spec :: Spec
 spec = do
@@ -88,14 +77,11 @@ spec = do
     forM_ handWritten $ \l -> case lawProp l of
       Just p  -> it (T.unpack (lawName l) <> " holds") (property p)
       Nothing -> it (T.unpack (lawName l) <> " holds") $
-        pendingWith (T.unpack (lawName l) <> " has no property until M3's group G1 lands (Hsed.Law.Sync)")
+        expectationFailure (T.unpack (lawName l) <> " has no property (Hsed.Law.Sync)")
 
   describe "each case a law names, in the jig's catalogue" $
     forM_ [ (l, k) | l <- handWritten, k <- lawCases l ] $ \(l, k) ->
       it (T.unpack (renderCaseKey k) <> ", which " <> T.unpack (lawName l) <> " names") $
-        catalogueKeys >>= \case
-          Left why -> pendingWith why
-          Right keys
-            | k `elem` keys              -> pure ()
-            | Just m <- lookup k later   -> pendingWith (T.unpack (renderCaseKey k) <> " is run by the jig of " <> m <> " (design section 11)")
-            | otherwise                  -> expectationFailure (T.unpack (renderCaseKey k) <> " is not in the jig's catalogue")
+        if k `elem` catalogueKeys then pure () else case lookup k later of
+          Just m  -> pendingWith (T.unpack (renderCaseKey k) <> " is run by the jig of " <> m <> " (design section 11)")
+          Nothing -> expectationFailure (T.unpack (renderCaseKey k) <> " is not in the jig's catalogue")

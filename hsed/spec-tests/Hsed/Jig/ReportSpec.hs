@@ -16,7 +16,7 @@ its item and page (LockingManufactured, Test Cases 5.2 item 2, PDF 29); the
 transcript with each IF-SEND's methods decoded; the JUnit counts.
 @verify-transcript@ fails a report whose transcript issued an IF-SEND only
 when asked to, and a file that is no report; @diff@ compares two reports'
-Level 0 responses as the Pair runner does (after G2, which decodes them).
+Level 0 responses as the Pair runner does.
 -}
 module Hsed.Jig.ReportSpec (spec) where
 
@@ -38,7 +38,7 @@ import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), defaul
 import           Hsed.Jig.Prereq       (lockingSPUntouched, noSessionOpened)
 import           Hsed.Jig.Report
 import           Hsed.Jig.Script       (Verdict (..), controlComPacket)
-import           Hsed.Jig.Support      (at, atPath, g2, needing, silently)
+import           Hsed.Jig.Support      (at, atPath, silently)
 import           Hsed.Jig.Transcript   (TEntry (..))
 import           Hsed.Level0           (Descriptor (..), Level0 (..))
 import           Hsed.Wire             (Describe (..), Dir (..), IfStatus (..), Request (Request), Response (Response), Unit (..))
@@ -150,7 +150,7 @@ spec = do
         silently (verifyTranscript (dir </> "absent.json") False) `shouldReturn` ExitFailure 1
 
   describe "diffReports" $
-    it "compares two reports' Level 0 responses as the Pair runner does" $ needing [g2] $
+    it "compares two reports' Level 0 responses as the Pair runner does" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         let level0 ds = Level0 mempty 0 [ Descriptor c 1 (B.replicate 12 (fromIntegral c)) | c <- ds ] mempty []
             report sub ds = writeReports (dir </> sub) quiet { rrLevel0 = [("sim", level0 ds)] } >>= \paths -> case paths of

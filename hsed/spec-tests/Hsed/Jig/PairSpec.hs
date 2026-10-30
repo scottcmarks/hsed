@@ -15,7 +15,7 @@ minimum the drive's value meets); the fields of two decodes compared by
 name, a reserved bit the drive sets a difference nothing allows; the
 descriptor sets first, a code the drive alone reports missing and a
 failure, one the simulator alone reports extra and none. Then the
-milestone's comparison (after G2): the simulator against a drive-like
+milestone's comparison: the simulator against a drive-like
 response synthesized from what sedutil printed of disk6, 0x0403 missing
 without a profile; with the response as the profile, extra 0x0005 and
 0x0404 and every difference allowed, the 9 Locking SP users against the
@@ -32,7 +32,7 @@ import           Test.Hspec
 import           Hsed.Core.Feature   (Allowance (..))
 import           Hsed.Core.Layout    (Content (..), Difference (..))
 import           Hsed.Jig.Pair
-import           Hsed.Jig.Support    (disk6Like, g2, needing)
+import           Hsed.Jig.Support    (disk6Like)
 import           Hsed.Level0         (DecodedDescriptor (..), Descriptor (..), Level0 (..), splitLevel0)
 import           Hsed.Sim.Level0     (level0Response)
 import           Hsed.Sim.Profile    (loadProfile)
@@ -93,14 +93,14 @@ spec = do
       (prExtra r, prMissing r, pairFails r) `shouldBe` ([0x0005], [], False)
 
   describe "the simulator against a drive-like response synthesized from disk6's sedutil query" $ do
-    it "without a profile, finds 0x0403 missing, a failure" $ needing [g2] $ do
+    it "without a profile, finds 0x0403 missing, a failure" $ do
       drive <- disk6Like >>= split
       sim <- split (level0Response (initialState defaultSimParams) 2048)
       let r = pairLevel0 sim drive
       prMissing r `shouldBe` [0x0403]
       pairFails r `shouldBe` True
     it "with the response as the profile, finds extra 0x0005 and 0x0404, and only differences allowed, the users among them" $
-      needing [g2] $ withSystemTempDirectory "hsed-pair" $ \dir -> do
+      withSystemTempDirectory "hsed-pair" $ \dir -> do
         bytes <- disk6Like
         let file = dir </> "disk6-like-level0.bin"
         writeFileBinary file bytes

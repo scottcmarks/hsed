@@ -19,10 +19,9 @@ item 3 a, PDF 82); a response held for N IF-RECVs answered (0, 1, 0) N times
 does not have discarded, the ComID still awaiting IF-SEND (3.3.10.6 S2:S1 d,
 3.3.10.7 a, PDF 85-86); the lengths, protocols and ComIDs the TPer refuses
 (SIIS 1.20 4.3, PDF 30-31; Core 3.3.3.2-3, PDF 58-59; 3.3.10.7 c, PDF 86).
-
-The examples that need the Session Manager to answer Properties pend until
-it does ("Hsed.Sim.SessionManager".@answer@, group G2's): until then a
-Properties IF-SEND is accepted and discarded.
+The Properties examples rest on the Session Manager's answer
+("Hsed.Sim.SessionManager".@answer@), without which a Properties IF-SEND is
+accepted and discarded.
 -}
 module Hsed.Transport.InProcSpec (spec) where
 
@@ -41,7 +40,6 @@ import qualified Hsed.Gen.Core.Methods   as Methods
 import           Hsed.Gen.Core.UIDs      (uSMUID)
 import           Hsed.Packet             (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
 import           Hsed.Sim                (syncOf)
-import           Hsed.Sim.SessionManager (answer)
 import           Hsed.Sim.Types          (SimParams (..), SyncState (..), defaultSimParams)
 import           Hsed.Transport.InProc
 import           Hsed.Version            (hsedVersion)
@@ -103,13 +101,6 @@ t45 r = do
 allReturnedWithData :: (Integer, Integer, Integer) -> Bool
 allReturnedWithData (l, od, mt) = l > 0 && od == 0 && mt == 0
 
--- | An example that needs the Session Manager to answer Properties: pending
---   while it does not (G2's answer, a working stub that answers nothing).
-needsProperties :: Expectation -> Expectation
-needsProperties e = case answer defaultSimParams (invocation uSMUID (Methods.Properties Nothing)) of
-  Nothing -> pendingWith "needs Hsed.Sim.SessionManager.answer (group G2) to answer Properties: until it does, a Properties IF-SEND is discarded"
-  Just _  -> e
-
 -- | A simulator in a unit, holding responses for so many IF-RECVs.
 simulator :: Unit -> Int -> IO (Transport 'ReadWrite, SimControl)
 simulator u hold = newInProc defaultSimParams (InProcOpts u hold)
@@ -158,43 +149,40 @@ spec = do
         (t, _) <- simulator u 0
         send t properties `shouldReturn` Response Good mempty
     it "then a second IF-SEND is a Synchronous Protocol Violation, the TPer unchanged: S3 without a hold, S2 with hold 1" $
-      needsProperties $ forM_ [UnitBytes, UnitBlocks512] $ \u -> forM_ [(0, isS3), (1, isS2)] $ \(hold, inState) -> do
+      forM_ [UnitBytes, UnitBlocks512] $ \u -> forM_ [(0, isS3), (1, isS2)] $ \(hold, inState) -> do
         (t, ctl) <- simulator u hold
         send t properties `shouldReturn` Response Good mempty
         st <- scPeek ctl
         syncOf base st `shouldSatisfy` inState
         send t properties `shouldReturn` Response SynchronousProtocolViolation mempty
         scPeek ctl `shouldReturn` st
-    it "is answered at once without a hold: the response, then (0, 0, 0)" $
-      needsProperties $ do
-        (t, _) <- simulator UnitBytes 0
-        _ <- send t properties
-        recv t >>= t45 >>= (`shouldSatisfy` allReturnedWithData)
-        recv t >>= t45 >>= (`shouldBe` (0, 0, 0))
+    it "is answered at once without a hold: the response, then (0, 0, 0)" $ do
+      (t, _) <- simulator UnitBytes 0
+      _ <- send t properties
+      recv t >>= t45 >>= (`shouldSatisfy` allReturnedWithData)
+      recv t >>= t45 >>= (`shouldBe` (0, 0, 0))
     it "held for N IF-RECVs (N = 1, 2, 3) is answered (0, 1, 0) N times, then the response, then (0, 0, 0)" $
-      needsProperties $ forM_ [1, 2, 3] $ \n -> do
+      forM_ [1, 2, 3] $ \n -> do
         (t, _) <- simulator UnitBytes n
         _ <- send t properties
         replicateM_ n (recv t >>= t45 >>= (`shouldBe` (0, 1, 0)))
         recv t >>= t45 >>= (`shouldSatisfy` allReturnedWithData)
         recv t >>= t45 >>= (`shouldBe` (0, 0, 0))
-    it "held, is released by the control before the hold is over" $
-      needsProperties $ do
-        (t, ctl) <- simulator UnitBytes 3
-        _ <- send t properties
-        recv t >>= t45 >>= (`shouldBe` (0, 1, 0))
-        scRelease ctl base
-        syncOf base <$> scPeek ctl >>= (`shouldSatisfy` isS3)
-        recv t >>= t45 >>= (`shouldSatisfy` allReturnedWithData)
-    it "held, is dropped by an event, every ComID awaiting IF-SEND" $
-      needsProperties $ do
-        (t, ctl) <- simulator UnitBytes 1
-        _ <- send t properties
-        inject t PowerCycle `shouldReturn` Good
-        syncOf base <$> scPeek ctl `shouldReturn` Just S1
-        recv t >>= t45 >>= (`shouldBe` (0, 0, 0))
+    it "held, is released by the control before the hold is over" $ do
+      (t, ctl) <- simulator UnitBytes 3
+      _ <- send t properties
+      recv t >>= t45 >>= (`shouldBe` (0, 1, 0))
+      scRelease ctl base
+      syncOf base <$> scPeek ctl >>= (`shouldSatisfy` isS3)
+      recv t >>= t45 >>= (`shouldSatisfy` allReturnedWithData)
+    it "held, is dropped by an event, every ComID awaiting IF-SEND" $ do
+      (t, ctl) <- simulator UnitBytes 1
+      _ <- send t properties
+      inject t PowerCycle `shouldReturn` Good
+      syncOf base <$> scPeek ctl `shouldReturn` Just S1
+      recv t >>= t45 >>= (`shouldBe` (0, 0, 0))
     it "is exchanged by the host's loop, which polls past (0, 1, 0)" $
-      needsProperties $ forM_ [(UnitBytes, 0), (UnitBytes, 2), (UnitBlocks512, 1)] $ \(u, hold) -> do
+      forM_ [(UnitBytes, 0), (UnitBytes, 2), (UnitBlocks512, 1)] $ \(u, hold) -> do
         (t, _) <- simulator u hold
         ch <- newChannel
         r <- exchangeComPacket defaultExchangeOpts { xPollMicros = 1000 } (\q -> Right <$> ifSend t (proto q) (comId q) (lenBytes q) (payload q))

@@ -23,10 +23,8 @@ LockingManufactured are printed; paired with the simulator, 0x0403 is
 missing without a profile and the comparison passes with it; standing in
 for the kext's drive, the replay's transcript notes the hardware run's CDB
 and the capture is written; a drive whose Level 0 Discovery fails is asked
-once and never again. These need the
-other groups' code and pend until it is merged ("Hsed.Jig.Support"). What
-the run refuses before it opens anything needs none: a key the catalogue
-lacks (exit 2), a drive without root (exit 3).
+once and never again. And what the run refuses before it opens anything:
+a key the catalogue lacks (exit 2), a drive without root (exit 3).
 -}
 module Hsed.Jig.RunSpec (spec) where
 
@@ -45,7 +43,7 @@ import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
-import           Hsed.Jig.Support       (at, atPath, disk6Like, g1, g2, g4, needing, silently)
+import           Hsed.Jig.Support       (at, atPath, disk6Like, silently)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.Types         (SimParams (..), defaultSimParams)
@@ -136,30 +134,30 @@ spec = do
 
   describe "--target sim --tests UCT-01,ETC-02,ETC-03,SPF-02:1" $ do
     for_ [(UnitBytes, 0), (UnitBlocks512, 0), (UnitBytes, 1), (UnitBlocks512, 1)] $ \(u, hold) ->
-      it ("passes in " <> show u <> (if hold > 0 then ", a response held for an IF-RECV" else "")) $ needing [g1, g2] $ do
+      it ("passes in " <> show u <> (if hold > 0 then ", a response held for an IF-RECV" else "")) $ do
         (code, json, md) <- jig (onSim u hold)
         verdicts json `shouldBe` [ (str k, str "pass") | k <- ["UCT-01", "SPF-02:1", "ETC-02", "ETC-03"] ]
         code `shouldBe` ExitSuccess
         sendStatuses json `shouldSatisfy` elem "synchronous_protocol_violation"
         t45s json `shouldSatisfy` elem "all_returned_no_data"
         md `shouldSatisfy` T.isInfixOf "LockingManufactured (Test Cases 5.2 item 2, PDF 29) waived"
-    it "held, answers an IF-RECV (0, 1, 0), and passes both extensions" $ needing [g1, g2] $ do
+    it "held, answers an IF-RECV (0, 1, 0), and passes both extensions" $ do
       (_, json, _) <- jig (onSim UnitBytes 1)
       t45s json `shouldSatisfy` elem "responses_to_come"
       extensionVerdicts json `shouldBe` [str "pass", str "pass"]
-    it "asks for Level 0 once more, at its whole length, when the length asked for cut it short" $ needing [g1, g2] $ do
+    it "asks for Level 0 once more, at its whole length, when the length asked for cut it short" $ do
       (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "UCT-01", roLevel0Len = 100 }
       code `shouldBe` ExitSuccess
       [ n | e <- elements (at "transcript" json), atPath ["request", "comid"] e == Just (A.Number 1)
           , Just (A.Number n) <- [atPath ["request", "len"] e] ]
         `shouldBe` [100, 216]
-    it "not held, passes the Empty-atom extension and skips the one that needs a response held" $ needing [g1, g2] $ do
+    it "not held, passes the Empty-atom extension and skips the one that needs a response held" $ do
       (_, json, _) <- jig (onSim UnitBytes 0)
       extensionVerdicts json `shouldBe` [str "pass", str "skipped"]
       t45s json `shouldSatisfy` notElem "responses_to_come"
 
   describe "a drive-like response replayed as the drive" $ do
-    it "passes UCT-01, skips the others with their reasons, issues no IF-SEND, prints the waivers" $ needing [g2, g4] $
+    it "passes UCT-01, skips the others with their reasons, issues no IF-SEND, prints the waivers" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
         disk6Like >>= writeFileBinary file
@@ -177,7 +175,7 @@ spec = do
         reports <- listDirectory (dir </> "report")
         for_ [ f | f <- reports, takeExtension f == ".json" ] $ \f ->
           silently (verifyTranscript (dir </> "report" </> f) True) `shouldReturn` ExitSuccess
-    it "passes UCT-01 alone: exit 0" $ needing [g2, g4] $
+    it "passes UCT-01 alone: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
         disk6Like >>= writeFileBinary file
@@ -185,7 +183,7 @@ spec = do
         code `shouldBe` ExitSuccess
 
   describe "a replay standing in for the kext's drive, with what the IORegistry would say of disk6" $
-    it "notes the CDB the hardware run expects, issues no IF-SEND, and captures the response with its sidecar" $ needing [g2, g4] $
+    it "notes the CDB the hardware run expects, issues no IF-SEND, and captures the response with its sidecar" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         bytes <- disk6Like
         let file    = dir </> "disk6-like-level0.bin"
@@ -207,7 +205,7 @@ spec = do
         at "if_send_issued" json `shouldBe` Just (A.Number 0)
 
   describe "a drive whose Level 0 Discovery fails" $
-    it "is asked once: UCT-01 fails, and neither the pair nor the capture asks it again" $ needing [g1, g2, g4] $
+    it "is asked once: UCT-01 fails, and neither the pair nor the capture asks it again" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         asked <- newIORef (0 :: Int)
         let failing = MkTransport
@@ -228,14 +226,14 @@ spec = do
         doesFileExist capture `shouldReturn` False
 
   describe "the simulator paired with the replay (the Pair runner)" $ do
-    it "finds 0x0403 missing without a profile: exit 1" $ needing [g1, g2, g4] $
+    it "finds 0x0403 missing without a profile: exit 1" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
         disk6Like >>= writeFileBinary file
         (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TPair TSim (TReplay file), roTests = keys "UCT-01" }
         atPath ["pair", "missing"] json `shouldBe` Just (A.toJSON [0x0403 :: Int])
         code `shouldBe` ExitFailure 1
-    it "with it as the profile, finds extra 0x0005 and 0x0404, only differences allowed: exit 0" $ needing [g1, g2, g4] $
+    it "with it as the profile, finds extra 0x0005 and 0x0404, only differences allowed: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
         disk6Like >>= writeFileBinary file

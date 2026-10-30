@@ -17,7 +17,8 @@ the Guard before the transport, recorded. The ComPacket the jig sends is
 the Test Cases' (Table 6, PDF 27), its Properties call design 11's M0
 encoding; an IF-RECV's header read for Table 45; the matcher's field names
 the generated table's, and MaxComPacketSize a property Core Table 167
-names. Table 45's rows read through G1's order (pending until it merges).
+names; and each answer named by its row of Table 45, through
+"Hsed.Sim.Sync".@t45Rows@, which reads the generated table's rows in order.
 -}
 module Hsed.Jig.ScriptSpec (spec) where
 
@@ -35,7 +36,6 @@ import qualified Hsed.Gen.Core.Properties  as P
 import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Jig.Options          (defaultRunOptions)
 import           Hsed.Jig.Script
-import           Hsed.Jig.Support          (g1, needing)
 import           Hsed.Jig.Target           (Target (..))
 import           Hsed.Jig.Transcript       (TEntry (..), entries, newTranscript)
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
@@ -133,7 +133,7 @@ spec = do
     it "matches the generated table's fields by their names, and MaxComPacketSize is Core Table 167's" $ do
       fields table45 `shouldBe` ["Length", "OutstandingData", "MinTransfer"]
       maxComPacketSizeName `shouldSatisfy` (`elem` map propertyName P.properties)
-    it "names each answer's row (after G1, whose order the rows are read in)" $ needing [g1] $
+    it "names each answer's row, in the order the simulator reads the generated rows" $
       map t45RowOf [(0, 1, 0), (0, 100, 128), (40, 100, 128), (40, 1, 0), (40, 0, 0), (0, 0, 0), (0, 0, 7)]
         `shouldBe` [ Just ResponsesToCome, Just InsufficientLength, Just AdditionalAvailable, Just AdditionalToCome
                    , Just AllReturnedWithData, Just AllReturnedNoData, Nothing ]

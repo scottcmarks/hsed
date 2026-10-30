@@ -3,7 +3,7 @@
 
 {-|
 Module      : Hsed.Sim.SyncSpec
-Description : Test specifications for Hsed.Sim.Sync: Table 45, the outcomes of an IF-SEND, the answers to IF-RECV
+Description : Test specifications for Hsed.Sim.Sync and the laws of Hsed.Law.Sync: Table 45, the outcomes of an IF-SEND, the answers to IF-RECV
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -13,15 +13,19 @@ The synchronous protocol of a static ComID (Core 3.3.10, PDF 82-87): the
 generated Table 45 (PDF 83), its six rows by position and its five
 quantities in words; what an IF-SEND accepted in S1 comes to, with a Session
 Manager of the test's own that answers Properties (the simulator's own,
-group G2's, answers it from M3's integration on); and the answer to IF-RECV
-in each state, exactly the length asked.
+group G2's, answers it from M3's integration on); the answer to IF-RECV in
+each state, exactly the length asked; and the four laws of "Hsed.Law.Sync",
+each run as a QuickCheck property of 100 cases.
 -}
 module Hsed.Sim.SyncSpec (spec) where
 
 import qualified RIO.ByteString            as B
 import qualified RIO.List                  as L
+import qualified RIO.Text                  as T
 import           RIO
 import           Test.Hspec
+import           Test.Hspec.QuickCheck     (modifyMaxSuccess)
+import           Test.QuickCheck           (counterexample, property)
 
 import           Hsed.Core.Call            (MethodCall (..), MethodHeader (..), statusList)
 import           Hsed.Core.Method          (invocation)
@@ -32,6 +36,8 @@ import           Hsed.Gen.Core.Layouts     (ComPacketHeader (..), DataSubPacket 
 import qualified Hsed.Gen.Core.Methods     as Methods
 import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Gen.Core.UIDs        (uSMUID, uStartSession)
+import           Hsed.Law                  (Law (..))
+import qualified Hsed.Law.Sync             as Law
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, decodePacket,
                                             encodeComPacket, encodePacket)
 import           Hsed.Sim.Sync
@@ -185,5 +191,11 @@ spec = do
     it "in S3, room for all, returns them all, (their length, 0, 0), then S1" $ do
       let (r, cs') = ifRecvStatic base 112 (cs (S3 [p1, p2]))
       (B.length (rpayload r), frameOf r, cSync cs') `shouldBe` (112, Just (ComPacketHeader base 0 0 0, map packetFrame [p1, p2]), S1)
+
+  describe "the laws of Hsed.Law.Sync" $
+    modifyMaxSuccess (const 100) $
+      forM_ Law.laws $ \l ->
+        it (T.unpack (lawName l) <> ", over the simulator") $
+          fromMaybe (counterexample "the law has no property" (property False)) (lawProp l)
   where
     packetFrame p = either (const (PacketFrame (PacketHeader 1 1 1 1 1) [])) dfFrame (decodePacket p)

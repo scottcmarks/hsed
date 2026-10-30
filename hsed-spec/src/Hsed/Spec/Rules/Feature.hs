@@ -77,8 +77,9 @@ shares):
   the layout pins to that count;
 * @C-FEATURE-PIN@ (Error): a field pinned to two values; @W-FEATURE-PIN@
   (Warning): a pin of its section that names no field of it (Opal 3.1.1.2's
-  @ACK/NACK Supported@, which names Table 3's @ACK/NAK Supported@ by neither
-  rule, PDF 20);
+  @ACK/NACK Supported@ named Table 3's @ACK/NAK Supported@ by neither rule,
+  PDF 20, until a reviewed spelling read it so,
+  'Hsed.Spec.Readers.Pins.reviewedSpellings');
 * @C-FEATURE-FIELD@ (Error): a variable part, which a descriptor has none of
   (two fields a record cannot tell apart are @C-GRID-NAME@).
 

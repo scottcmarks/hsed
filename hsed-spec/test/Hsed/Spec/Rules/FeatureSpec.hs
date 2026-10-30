@@ -308,14 +308,16 @@ spec = do
             , [("Feature Code", 0x203), ("Length", 0x10)]
             , [("Feature Code", 0x404), ("Length", 0x20)] ]
           map frLength oreads `shouldBe` [Nothing, Nothing, Nothing, Nothing, Just 32]
-        it "matches Table 6's admin and user counts by word prefix (PDF 23); Table 3's ACK/NACK names no field (PDF 20)" $ do
+        it "matches Table 6's admin and user counts by word prefix (PDF 23), Table 3's ACK/NACK by its reviewed spelling (PDF 20)" $ do
           [ (n, pinField p) | (n, p) <- frMatched (oread 6), "Number of Locking" `T.isPrefixOf` n ] `shouldBe`
             [ ("Number of Locking SP Admin Authorities Supported", "Number of Locking SP Admin Authorities")
             , ("Number of Locking SP User Authorities Supported", "Number of Locking SP User Authorities") ]
-          map (map pinField . frUnmatched) oreads `shouldBe` [["ACK/NACK Supported"], [], [], [], []]
+          [ (n, pinField p) | (n, p) <- frMatched (oread 3), "ACK" `T.isPrefixOf` n ] `shouldBe` [("ACK/NAK Supported", "ACK/NACK Supported")]
+          map (map pinField . frUnmatched) oreads `shouldBe` [[], [], [], [], []]
         it "lists what the bullets allow each field they give no exact value: VU, a version, a minimum, the text as printed" $ do
           map frAllowances [oread 3, oread 5, oread 8] `shouldBe`
-            [ [("Version", AnyVersion 1), ("ComID Mgmt Supported", VendorUnique), ("Buffer Mgmt Supported", VendorUnique), ("Async Supported", VendorUnique)]
+            [ [ ("Version", AnyVersion 1), ("ComID Mgmt Supported", VendorUnique), ("Buffer Mgmt Supported", VendorUnique)
+              , ("ACK/NAK Supported", VendorUnique), ("Async Supported", VendorUnique) ]
             , [], [] ]
           frAllowances (oread 4) `shouldBe`
             [ ("Version", AnyVersion 3), ("HW Reset for LOR/DOR Supported", VendorUnique), ("MBR Done", AsPrinted "**"), ("MBR Enabled", AsPrinted "**")
@@ -329,10 +331,9 @@ spec = do
           map (typeName . frStructure) oreads `shouldBe`
             [ "Level0DiscoveryTPerFeature", "Level0DiscoveryLockingFeature", "Level0DiscoveryGeometryReportingFeature"
             , "Level0DiscoveryOpalSSCV2Feature", "Level0DiscoverySupportedDataRemovalMechanismFeature" ]
-        it "finds no Error: Table 3's ACK/NACK, three codes Core's Table 40 gives only within a range, Table 8 without pins, and two Notes" $
+        it "finds no Error: three codes Core's Table 40 gives only within a range, Table 8 without pins, and two Notes" $
           [ renderFinding f | f <- checkIR (Just base) Scott opal, Cm.code f `elem` featureCodes ] `shouldBe`
-            [ "W-FEATURE-PIN opal-2.30.pdf#page=20&T3: Level 0 Discovery - TPer Feature Descriptor: 3.1.1.2 pins ACK/NACK Supported (VU), no field of it"
-            , "W-FEATURE-UNLISTED opal-2.30.pdf#page=21&T5: Level 0 Discovery - Geometry Reporting Feature Descriptor: no code table lists 3.1.1.4.1,"
+            [ "W-FEATURE-UNLISTED opal-2.30.pdf#page=21&T5: Level 0 Discovery - Geometry Reporting Feature Descriptor: no code table lists 3.1.1.4.1,"
               <> " nor does one of core-2.01 list its code 0x0003 alone (Table 40 row 4 (PDF 69) gives it only within 0003h – 00FFh, Reserved)"
             , "W-FEATURE-UNLISTED opal-2.30.pdf#page=23&T6: Level 0 Discovery - Opal SSC V2 Feature Descriptor: no code table lists 3.1.1.5,"
               <> " nor does one of core-2.01 list its code 0x0203 alone (Table 40 row 5 (PDF 69) gives it only within 0100h – 03FFh, SSCs)"
@@ -368,7 +369,7 @@ spec = do
           compiles "Hsed.Gen.Opal.Features" text
 
   describe "Opal Table 3 (for M3)" $
-    it "matches the bullets of 3.1.1.2 (PDF 20) to the grid's fields: Streaming and Sync pinned to 1, the others VU, ACK/NACK naming no field" $ do
+    it "matches the bullets of 3.1.1.2 (PDF 20) to the grid's fields: Streaming and Sync pinned to 1, the others VU, ACK/NACK the grid's ACK/NAK" $ do
       let path = "../spec/ir/opal-2.30.json"
       present <- doesFileExist path
       if not present then pendingWith (path <> " is not checked out") else do
@@ -382,7 +383,8 @@ spec = do
           [ ("Feature Code", Pinned 1), ("Version", Unsigned), ("Length", Pinned 12), ("ComID Mgmt Supported", Flag)
           , ("Streaming Supported", Pinned 1), ("Buffer Mgmt Supported", Flag), ("ACK/NAK Supported", Flag)
           , ("Async Supported", Flag), ("Sync Supported", Pinned 1) ]
-        [ (pinField p, pinValue p) | p <- frUnmatched fr ] `shouldBe` [("ACK/NACK Supported", PinVU)]
+        [ (pinField p, pinValue p) | p <- frUnmatched fr ] `shouldBe` []
+        [ (n, pinValue p) | (n, p) <- frMatched fr, n == "ACK/NAK Supported" ] `shouldBe` [("ACK/NAK Supported", PinVU)]
         map rfName (recordFieldsOf (frStructure fr)) `shouldBe` ["Version", "ComID Mgmt Supported", "Buffer Mgmt Supported", "ACK/NAK Supported", "Async Supported"]
         -- Opal prints no sentence naming the general format: read alone (no base), it has none (Core's Table 41 over the base above)
         frTemplate fr `shouldSatisfy` isLeft

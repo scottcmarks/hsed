@@ -75,8 +75,11 @@ spec = describe "Hsed.Spec.Readers.Pins" $ do
     it "else the one field whose name's words start with the pin's (Opal 3.1.1.5 against Table 6, PDF 23)" $
       map (pinTarget names . pin) ["Number of Locking SP Admin Authorities", "Number of Locking SP User Authorities"]
         `shouldBe` [Just "Number of Locking SP Admin Authorities Supported", Just "Number of Locking SP User Authorities Supported"]
-    it "names none where no field is so named, or several start so (3.1.1.2's ACK/NACK, PDF 20)" $
-      map (pinTarget names . pin) ["ACK/NACK Supported", "Number of Locking SP", "Number", ""] `shouldBe` replicate 4 Nothing
+    it "names the field a reviewed spelling of the pin's names (3.1.1.2's ACK/NACK, Table 3's ACK/NAK, PDF 20)" $ do
+      map (pinTarget names . pin) ["ACK/NACK Supported", "ack/nack  supported"] `shouldBe` replicate 2 (Just "ACK/NAK Supported")
+      pinTarget (filter (/= "ACK/NAK Supported") names) (pin "ACK/NACK Supported") `shouldBe` Nothing
+    it "names none where no field is so named, or several start so" $
+      map (pinTarget names . pin) ["ACK/NACKS Supported", "Number of Locking SP", "Number", ""] `shouldBe` replicate 4 Nothing
 
   describe "every byte grid's section" $
     forM_ [("Core", "../spec/ir/core-2.01.json"), ("Opal", "../spec/ir/opal-2.30.json")] $ \(name, path) ->

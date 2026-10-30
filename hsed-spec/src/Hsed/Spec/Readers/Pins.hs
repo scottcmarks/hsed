@@ -63,6 +63,7 @@ module Hsed.Spec.Readers.Pins
   , readPinValue
   , pinWord
   , pinTarget
+  , reviewedSpellings
   , pinsFindings
     -- * Codes
   , pinsCodes
@@ -200,20 +201,30 @@ word0 = T.takeWhile (\c -> not (C.isSpace c) && c `notElem` (",(" :: String)) . 
 -- | The field of a grid a pin names, among the names of the grid's fields:
 --   the one named as the pin names it (whitespace and case aside, as
 --   "Hsed.Spec.Readers.Text".'Hsed.Spec.Readers.Text.nameKey' compares
---   names), else the one field whose name's words start with the pin's (case
---   aside), where one alone does: Opal 3.1.1.5's @Number of Locking SP Admin
---   Authorities = 4 or larger@ names Table 6's @Number of Locking SP Admin
---   Authorities Supported@ (PDF 23). Nothing when no field is named so, or
---   several are (a pin naming two fields names neither).
+--   names), or as a reviewed spelling of the pin's names it
+--   ('reviewedSpellings'), else the one field whose name's words start with
+--   the pin's (case aside), where one alone does: Opal 3.1.1.5's @Number of
+--   Locking SP Admin Authorities = 4 or larger@ names Table 6's @Number of
+--   Locking SP Admin Authorities Supported@ (PDF 23). Nothing when no field
+--   is named so, or several are (a pin naming two fields names neither).
 pinTarget :: [Text] -> Pin -> Maybe Text
-pinTarget names p = case [ n | n <- names, nameKey n == nameKey (pinField p) ] of
+pinTarget names p = case [ n | n <- names, nameKey n `elem` keys ] of
   n : _ -> Just n
   []    -> case [ n | not (null ws), n <- names, ws `L.isPrefixOf` lowerWords n ] of
     [n] -> Just n
     _   -> Nothing
   where
+    keys = nameKey (pinField p) : [ nameKey grid | (pin', grid) <- reviewedSpellings, nameKey pin' == nameKey (pinField p) ]
     ws = lowerWords (pinField p)
     lowerWords = T.words . T.toLower
+
+-- | A pin's name and the grid's field it names, where the two are spelled
+--   apart, each reviewed against its page: Opal 2.30 3.1.1.2's bullet
+--   @ACK/NACK Supported = VU@ names Table 3's @ACK/NAK Supported@ (PDF 20),
+--   the flag Core Table 42 spells so too (PDF 70); reviewed at the M3 review
+--   (design 13.26 (g), 13.29 (c)).
+reviewedSpellings :: [(Text, Text)]
+reviewedSpellings = [("ACK/NACK Supported", "ACK/NAK Supported")]
 
 
 -- * Findings

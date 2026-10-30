@@ -90,6 +90,7 @@ instance Feature Level0DiscoveryTPerFeature where
     [ ("Version", AnyVersion 0x1)
     , ("ComID Mgmt Supported", VendorUnique)
     , ("Buffer Mgmt Supported", VendorUnique)
+    , ("ACK/NAK Supported", VendorUnique)
     , ("Async Supported", VendorUnique)
     ]
 

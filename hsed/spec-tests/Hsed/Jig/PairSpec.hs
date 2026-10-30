@@ -114,6 +114,9 @@ spec = do
       (length (prAllowed timed), prDiffs timed, pairFails timed) `shouldBe` (1, [], False)
       let processing = compared 0x0404 5 0x01
       (length (prUnchecked processing), prDiffs processing, pairFails processing) `shouldBe` (1, [], False)
+    it "Opal's TPer descriptor: ACK/NAK Supported, VU by Opal 2.30's bullet (its ACK/NACK, PDF 20), allowed" $ do
+      let r = compared 0x0001 4 0x15
+      (map fdField (prAllowed r), prDiffs r, pairFails r) `shouldBe` (["ACK/NAK Supported"], [], False)
     it "Block SID: a flag of the TPer's present state unchecked, not a failure" $
       -- byte 4 bit 0 SID Value State, bit 1 SID Blocked State; byte 5 bit 0 Hardware Reset
       forM_ [(4, 0x01), (4, 0x02), (5, 0x01)] $ \(at, b) -> do

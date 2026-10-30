@@ -33,7 +33,6 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 
 | severity | code | findings |
 |---|---|---:|
-| Warning | W-FEATURE-PIN | 1 |
 | Warning | W-FEATURE-UNLISTED | 3 |
 | Warning | W-PINS-NONE | 1 |
 | Warning | W-UNBOUND | 48 |

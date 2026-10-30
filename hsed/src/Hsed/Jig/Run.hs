@@ -29,7 +29,9 @@ given checked first, and also records into a transcript of its own, from
 which the IF-SENDs issued on the drive are counted. A pair's ends run each
 case in turn, the simulator first, each case's verdicts joined, each with
 its end's name; then the two Level 0 responses are compared
-("Hsed.Jig.Pair"), discovered after the cases when UCT-01 did not.
+("Hsed.Jig.Pair"), discovered after the cases when UCT-01 did not. A drive
+is never asked for Level 0 again once it was asked (a failed kext command
+leaks a SCSI task in the kext), for the pair or for the capture.
 
 A case's prerequisites are its section's list, in order (Test Cases 3.2.3,
 PDF 25): one it waives is printed with its reason; on the simulator the run
@@ -337,19 +339,30 @@ note text = asks reTranscript >>= \t -> liftIO (record t (Note 0 text))
 
 -- * Level 0 after the cases
 
--- | An end's Level 0 response: the one discovered, else discovered now.
+-- | An end's Level 0 response: the one discovered, else discovered now,
+--   unless a drive was already asked for it (a failed kext command is never
+--   repeated: it leaks a SCSI task in the kext).
 endLevel0 :: End -> IO (Either Text Level0)
 endLevel0 e = readIORef (reCtx (endEnv e)) >>= \ctx -> case rcLevel0 ctx of
   Just l0 -> pure (Right l0)
-  Nothing -> runRIO (endEnv e) $ do
-    note ("Level 0 Discovery on the " <> endName e <> ", for the pair")
-    attempt (Pass <$ discover) >>= \case
-      Pass -> maybe (Left (endName e <> ": no Level 0 response")) Right . rcLevel0 <$> (asks reCtx >>= readIORef)
-      v    -> pure (Left (endName e <> "'s Level 0 Discovery: " <> verdictText v))
+  Nothing -> do
+    asked <- maybe (pure False) (fmap (any level0Issued) . entries . fst) (endDrive e)
+    if asked
+      then pure (Left (endName e <> ": its Level 0 Discovery did not succeed, and a drive is not asked again"))
+      else runRIO (endEnv e) $ do
+        note ("Level 0 Discovery on the " <> endName e <> ", after the cases")
+        attempt (Pass <$ discover) >>= \case
+          Pass -> maybe (Left (endName e <> ": no Level 0 response")) Right . rcLevel0 <$> (asks reCtx >>= readIORef)
+          v    -> pure (Left (endName e <> "'s Level 0 Discovery: " <> verdictText v))
+  where
+    level0Issued = \case
+      Issued _ q _ -> isLevel0 q
+      _            -> False
 
 -- | The capture @--capture-level0@ asks for: the drive's last Level 0
---   response that succeeded (discovered now if it has none), its CDB and
---   what the IORegistry says of the drive; what went wrong.
+--   response that succeeded (discovered now if it was never asked for
+--   one), its CDB and what the IORegistry says of the drive; what went
+--   wrong.
 capture :: RunOptions -> [End] -> IO [Text]
 capture opts ends = case roCapture opts of
   Nothing   -> pure []
@@ -360,13 +373,16 @@ capture opts ends = case roCapture opts of
         Just x  -> pure (Just x)
         Nothing -> endLevel0 e >> lastLevel0 own
       case found of
-        Nothing     -> pure ["--capture-level0 " <> T.pack file <> ": the drive answered no Level 0 Discovery"]
+        Nothing     -> pure ["--capture-level0 " <> T.pack file <> ": the drive answered no Level 0 Discovery that succeeded"]
         Just (q, r) -> case level0Cdb (diInterface di) (lenBytes q `div` transferLength UnitBlocks512 1) of
           Left why  -> pure ["--capture-level0 " <> T.pack file <> ": no CDB for the IF-RECV: " <> why]
           Right cdb -> tryAny (captureLevel0 file di cdb r) <&> either (\ex -> ["--capture-level0 " <> T.pack file <> ": " <> tshow ex]) (const [])
   where
-    lastLevel0 own = entries own <&> \es -> L.lastMaybe
-      [ (q, r) | Issued _ q r <- es, dir q == IfRecv, proto q == comPacketProtocol, comId q == level0ComId, status r == Good ]
+    lastLevel0 own = entries own <&> \es -> L.lastMaybe [ (q, r) | Issued _ q r <- es, isLevel0 q, status r == Good ]
+
+-- | Whether a command is Level 0 Discovery's IF-RECV.
+isLevel0 :: Request -> Bool
+isLevel0 q = dir q == IfRecv && proto q == comPacketProtocol && comId q == level0ComId
 
 
 -- * Printing

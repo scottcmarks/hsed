@@ -20,7 +20,10 @@ synthesized from disk6's sedutil query, replayed as a drive: UCT-01 passes,
 the cases that need more than Level 0 are skipped with their reasons, no
 IF-SEND is issued, and the waivers of SyncIdle, NoSessions and
 LockingManufactured are printed; paired with the simulator, 0x0403 is
-missing without a profile and the comparison passes with it. These need the
+missing without a profile and the comparison passes with it; standing in
+for the kext's drive, the replay's transcript notes the hardware run's CDB
+and the capture is written; a drive whose Level 0 Discovery fails is asked
+once and never again. These need the
 other groups' code and pend until it is merged ("Hsed.Jig.Support"). What
 the run refuses before it opens anything needs none: a key the catalogue
 lacks (exit 2), a drive without root (exit 3).
@@ -47,8 +50,9 @@ import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.Types         (SimParams (..), defaultSimParams)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..))
+import           Hsed.Transport.InProc  (InProcOpts (..), newInProc)
 import           Hsed.Transport.Replay  (openReplay)
-import           Hsed.Wire              (Unit (..))
+import           Hsed.Wire.Internal     (Describe (..), IfStatus (..), Response (..), Transport (..), Unit (..))
 
 
 keys :: Text -> [CaseKey]
@@ -201,6 +205,27 @@ spec = do
         [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e] ]
           `shouldSatisfy` any ("a1 08 0e 01 04 00 01 00 00 5c 00 00" `T.isInfixOf`)
         at "if_send_issued" json `shouldBe` Just (A.Number 0)
+
+  describe "a drive whose Level 0 Discovery fails" $
+    it "is asked once: UCT-01 fails, and neither the pair nor the capture asks it again" $ needing [g1, g2, g4] $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        asked <- newIORef (0 :: Int)
+        let failing = MkTransport
+              { tExchange = \_ -> Response (TransportFailure "0xe00002bc") mempty <$ modifyIORef' asked (+ 1)
+              , tInject   = \_ -> pure (Unsupported "a drive")
+              , tUnit     = UnitBlocks512
+              , tDescribe = Describe "drive" "a failing test drive" UnitBlocks512 Nothing Nothing Nothing Nothing
+              , tClose    = pure ()
+              }
+            capture = dir </> "capture" </> "disk6-level0.bin"
+        (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+        code <- silently $ runOpened
+          defaultRunOptions { roTarget = TPair TSim (TReplay "a failing drive"), roTests = keys "UCT-01"
+                            , roCapture = Just capture, roReportDir = dir </> "report" }
+          (PairTarget (SimTarget sim control) (DriveTarget failing (Just (DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0))))
+        code `shouldBe` ExitFailure 1
+        readIORef asked `shouldReturn` 1
+        doesFileExist capture `shouldReturn` False
 
   describe "the simulator paired with the replay (the Pair runner)" $ do
     it "finds 0x0403 missing without a profile: exit 1" $ needing [g1, g2, g4] $

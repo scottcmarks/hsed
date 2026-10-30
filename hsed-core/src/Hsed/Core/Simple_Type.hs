@@ -5,7 +5,7 @@
 
 
 {-|
-Module      : System.SED.MCTP.Common.Simple_Type
+Module      : Hsed.Core.Simple_Type
 Copyright   : (c) Magnolia Heights R&D, 2020
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -15,7 +15,7 @@ Core data "simple" type formats
 
 -}
 
-module System.SED.MCTP.Common.Simple_Type
+module Hsed.Core.Simple_Type
   (   Core_bytes(..)
   ,   Core_integer(..)
   ,   Core_max_bytes(..)
@@ -70,7 +70,7 @@ where
 
 import           GHC.Base                         (Symbol, Type)
 import           GHC.TypeLits                     (Nat)
-import           System.SED.MCTP.Common.Base_Type (Core_bytes (..),
+import           Hsed.Core.Base_Type              (Core_bytes (..),
                                                    Core_integer (..),
                                                    Core_max_bytes (..),
                                                    Core_uinteger (..))

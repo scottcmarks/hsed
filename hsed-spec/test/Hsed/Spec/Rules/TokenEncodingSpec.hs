@@ -29,6 +29,7 @@ import qualified RIO.Text                     as T
 import           RIO
 import           Test.Hspec
 
+import           Hsed.Core.Token              (Token (..))
 import           Hsed.Spec.Anchor             (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Check              (checkIR, mkContext)
 import           Hsed.Spec.Common             (ErrataSet (..), RuleName (..), renderFinding)
@@ -38,7 +39,6 @@ import           Hsed.Spec.CoreIR
 import           Hsed.Spec.RuleDef            (BoundTable (..), Classification (..))
 import           Hsed.Spec.Rules              (classify, explain)
 import           Hsed.Spec.Rules.TokenEncoding
-import           System.SED.MCTP.Common.Token (Token (..))
 
 
 spec :: Spec
@@ -65,7 +65,7 @@ spec = withCore $ \pristine -> do
         , ("Medium atom", ["1", "1", "0", "B", "S", "n<10..0>"])
         , ("Long atom", ["1", "1", "1", "0", "0", "0", "B", "S", "n<23..16>", "n<15..8>", "n<7..0>"]) ]
 
-  describe "Table 4 against the codec (System.SED.MCTP.Common.Token), the M2b acceptance" $ do
+  describe "Table 4 against the codec (Hsed.Core.Token), the M2b acceptance" $ do
     it "finds nothing: the token table equals the codec's constants" $
       tokenFindingsOf ir `shouldBe` []
     it "has the codec's single-byte tokens: each Acronym row's byte decodes alone to the token its Meaning names" $

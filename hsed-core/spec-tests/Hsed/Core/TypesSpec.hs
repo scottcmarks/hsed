@@ -17,7 +17,7 @@ import qualified RIO.Set                    as Set
 import           Test.Hspec
 
 import           Hsed.Core.Types
-import           System.SED.MCTP.Common.UID (UID, uid)
+import           Hsed.Core.UID              (UID, uid)
 
 
 -- | Core Table 52 adv_key_mode as the generator would print it: range 0..7, every

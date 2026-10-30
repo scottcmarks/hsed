@@ -16,8 +16,8 @@ rows ((+XX)) are not generated yet.
 -}
 module Hsed.Gen.Core.Preconfig where
 
-import           Hsed.Core.Table            (Cell (..), Pre (..), Row)
-import           System.SED.MCTP.Common.UID (uid)
+import           Hsed.Core.Table (Cell (..), Pre (..), Row)
+import           Hsed.Core.UID   (uid)
 
 -- | core-2.01 T209 Default Base Template Authorities (PDF 211 / p.194, ord 211, sha256:5f9e19d32556): rows of the Authority table (T178)
 defaultBaseTemplateAuthorities :: [Pre Row]

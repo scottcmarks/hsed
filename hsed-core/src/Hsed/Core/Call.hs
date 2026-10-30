@@ -2,7 +2,7 @@
 
 
 {-|
-Module      : System.SED.MCTP.Common.Call
+Module      : Hsed.Core.Call
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -12,15 +12,15 @@ Parse and generate method invocations and responses.
 
 -}
 
-module System.SED.MCTP.Common.Call where
+module Hsed.Core.Call where
 
 import           RIO
 import           Test.QuickCheck                   hiding (generate)
 
-import           System.SED.MCTP.Common.StreamItem
-import           System.SED.MCTP.Common.Token
-import           System.SED.MCTP.Common.UID
-import           System.SED.MCTP.Common.Value
+import           Hsed.Core.StreamItem
+import           Hsed.Core.Token
+import           Hsed.Core.UID
+import           Hsed.Core.Value
 
 {-
 3.2.4.1 Method Syntax

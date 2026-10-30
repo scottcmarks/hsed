@@ -17,9 +17,9 @@ they are not generated here.
 -}
 module Hsed.Gen.Core.TableUIDs where
 
-import           Data.Map                   (fromList, Map)
-import           Prelude                    (String)
-import           System.SED.MCTP.Common.UID (HalfUID, halfUID, UID, uid)
+import           Data.Map      (fromList, Map)
+import           Hsed.Core.UID (HalfUID, halfUID, UID, uid)
+import           Prelude       (String)
 
 -- | core-2.01 T240 Table UIDs (PDF 302 / p.285, ord 242, sha256:2cd1f420bb70), row 1: Table
 uTableTableObject :: UID

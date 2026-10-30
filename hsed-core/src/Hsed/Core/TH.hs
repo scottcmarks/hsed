@@ -2,18 +2,22 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-|
-Module      : System.SED.MCTP.Common.THUtil
-Description : SED table UIDs Template Haskell
+Module      : Hsed.Core.TH
+Description : Template Haskell helpers: declarations and UID expressions
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-TableUIDs Template Haskell
+The helpers the quasiquoters of the oracle's test fixture (hsed/fixture/Hand)
+build their declarations with: a table parser run at compile time
+('parseTable'), declarations ('dData', 'dSig', 'dVal', 'dTyp') and expressions
+for UIDs, half-UIDs and literals ('eUID', 'eHalfUID', 'eID', 'eLitS', 'eValP').
+Called THUtil until M2d.
 -}
 
 
-module System.SED.MCTP.Common.THUtil
+module Hsed.Core.TH
 where
 
 import           Data.Attoparsec.ByteString             (Parser, parseOnly)
@@ -30,17 +34,17 @@ import           GHC.Real                               (Integral (..),
 import           GHC.TypeLits                           (KnownNat)
 import           GHC.Word                               (Word8 (..))
 
+import           Hsed.Core.Base_Type                    (Core_bytes (..),
+                                                         toList)
+import           Hsed.Core.Reference_Types              (btHalfUID, otHalfUID)
+import           Hsed.Core.UID                          (HalfUID (..), UID (..),
+                                                         halfUID, uid)
 import           Language.Haskell.TH                    (Body (..), Con (..),
                                                          Dec (..),
                                                          DerivClause (..),
                                                          Exp (..), Lit (..),
                                                          Name, Pat (..),
                                                          TyLit (..), Type (..))
-import           System.SED.MCTP.Common.Base_Type       (Core_bytes (..),
-                                                         toList)
-import           System.SED.MCTP.Common.Reference_Types (btHalfUID, otHalfUID)
-import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..),
-                                                         halfUID, uid)
 
 -- | Run a table parser (any parser, really) producing a result or throwing an error.
 --   This is safe only in TH code, where an error is a compilation error.

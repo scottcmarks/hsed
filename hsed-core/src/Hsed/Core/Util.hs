@@ -2,7 +2,7 @@
 {-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE TypeOperators     #-}
 {-|
-Module      : System.SED.MCTP.Common.Util
+Module      : Hsed.Core.Util
 Description : Utilities
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -16,7 +16,7 @@ Utilities
 {-# LANGUAGE NoImplicitPrelude #-}
 
 
-module System.SED.MCTP.Common.Util where
+module Hsed.Core.Util where
 
 import           Data.Attoparsec.ByteString.Char8 (isSpace_w8)
 import           Data.ByteString                  (ByteString, filter, null,
@@ -33,10 +33,10 @@ import           Data.ByteString                  (empty)
 import           GHC.Base                         (const)
 #endif
 
-import           System.SED.MCTP.Common.Base_Type (Core_bytes (..),
+import           Hsed.Core.Base_Type              (Core_bytes (..),
                                                    Implementation_bytes (..),
                                                    safeCreate)
-import           System.SED.MCTP.Common.UID
+import           Hsed.Core.UID
 
 -- | Convert to a UID from a string of eight hex digit pairs divided by a single space
 --

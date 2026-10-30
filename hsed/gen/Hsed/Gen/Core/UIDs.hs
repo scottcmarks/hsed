@@ -17,8 +17,8 @@ its UIDs with its rows' text.
 -}
 module Hsed.Gen.Core.UIDs where
 
-import           Prelude                    (String)
-import           System.SED.MCTP.Common.UID (UID, uid)
+import           Hsed.Core.UID (UID, uid)
+import           Prelude       (String)
 
 -- | core-2.01 T239 Special Purpose UIDs (PDF 302 / p.285, ord 241, sha256:332f2880cb70), row 2: the invoking ID ThisSP of the signature heads
 uThisSP :: UID

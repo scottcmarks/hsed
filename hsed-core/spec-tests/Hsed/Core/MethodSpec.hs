@@ -20,11 +20,11 @@ module Hsed.Core.MethodSpec (spec) where
 import           RIO                           hiding (Set)
 import           Test.Hspec
 
+import           Hsed.Core.Call                (MethodCall (..), MethodHeader (..), Parameters (..))
 import           Hsed.Core.Method
-import           System.SED.MCTP.Common.Call  (MethodCall (..), MethodHeader (..), Parameters (..))
-import           System.SED.MCTP.Common.UID   (uid)
-import           System.SED.MCTP.Common.Value (IsValue (..), NamedValue (..), Name (..), Datum (..), (.:))
-import           System.SED.MCTP.Common.Token (Token (..))
+import           Hsed.Core.Token               (Token (..))
+import           Hsed.Core.UID                 (uid)
+import           Hsed.Core.Value               (IsValue (..), NamedValue (..), Name (..), Datum (..), (.:))
 
 
 -- | Core 5.3.3.7 as generated.

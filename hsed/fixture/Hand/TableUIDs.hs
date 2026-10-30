@@ -54,11 +54,11 @@ import           Data.Refined                           (plain)
 import           GHC.Base                               (String, (.), (<>))
 import           GHC.Maybe                              (Maybe)
 import           Hand.TableUIDs.TH                      (t240)
-import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
+import           Hsed.Core.Reference_Types              (Byte_Table_HalfUID,
                                                          IsTable_HalfUID (..),
                                                          Null_Table_HalfUID,
                                                          Object_Table_HalfUID)
-import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..))
+import           Hsed.Core.UID                          (HalfUID (..), UID (..))
 
 
 -- * Table HalfUID, UIDs, and Object UIDs

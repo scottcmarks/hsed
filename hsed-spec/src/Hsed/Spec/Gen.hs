@@ -150,7 +150,7 @@ modulePath dir name = dir </> T.unpack (T.replace "." "/" name) <> ".hs"
 
 -- | @UID@, @uid@, @HalfUID@, @halfUID@.
 uidModule :: Text
-uidModule = "System.SED.MCTP.Common.UID"
+uidModule = "Hsed.Core.UID"
 
 -- | @TypeDef@ and its constructors, the @Enumerated@ class.
 coreTypesModule :: Text

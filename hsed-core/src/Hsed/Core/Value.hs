@@ -2,7 +2,7 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE PolyKinds         #-}
 {-|
-Module      : System.SED.MCTP.Common.Value
+Module      : Hsed.Core.Value
 Copyright   : (c) Magnolia Heights R&D, 2020
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -13,14 +13,14 @@ Parse and generate values used in method invocations and responses.
 -}
 
 
-module System.SED.MCTP.Common.Value where
+module Hsed.Core.Value where
 
 import           RIO                               hiding (foldr, length, map,
                                                     mask, reverse, take)
 import           Test.QuickCheck                   hiding (generate)
 
-import           System.SED.MCTP.Common.StreamItem
-import           System.SED.MCTP.Common.Token
+import           Hsed.Core.StreamItem
+import           Hsed.Core.Token
 
 {-
 

@@ -54,10 +54,10 @@ module Hsed.Core.Method
 
 import           RIO
 
-import           System.SED.MCTP.Common.Call  (MethodCall (..), MethodHeader (..), Parameters (..),
-                                               optionalParameter)
-import           System.SED.MCTP.Common.UID   (UID)
-import           System.SED.MCTP.Common.Value (Value)
+import           Hsed.Core.Call  (MethodCall (..), MethodHeader (..), Parameters (..),
+                                  optionalParameter)
+import           Hsed.Core.UID   (UID)
+import           Hsed.Core.Value (Value)
 
 
 -- | One parameter or result as a signature prints it: @Cellblock : cell_block@

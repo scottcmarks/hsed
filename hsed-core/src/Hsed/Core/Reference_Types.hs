@@ -23,7 +23,7 @@
 {-# LANGUAGE UndecidableInstances      #-}
 
 {-|
-Module      : System.SED.MCTP.Common.Reference_Types
+Module      : Hsed.Core.Reference_Types
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -36,7 +36,7 @@ Reference_Types per Core Spec
 
 
 
-module System.SED.MCTP.Common.Reference_Types
+module Hsed.Core.Reference_Types
 
 where
 import           Data.Attoparsec.ByteString        (anyWord8)
@@ -52,9 +52,9 @@ import           GHC.Real                          (fromIntegral)
 import           GHC.Show                          (Show (..))
 import           Test.QuickCheck                   (Arbitrary (..))
 
-import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
-import           System.SED.MCTP.Common.Token      (IsToken (..))
-import           System.SED.MCTP.Common.UID        (HalfUID (..), UID (..),
+import           Hsed.Core.StreamItem              (StreamItem (..))
+import           Hsed.Core.Token                   (IsToken (..))
+import           Hsed.Core.UID                     (HalfUID (..), UID (..),
                                                     hNull, halfUID,
                                                     showtaggedCore_bytes, uid,
                                                     uidUpper, (+:+))

@@ -1,5 +1,5 @@
 {-|
-Module      : System.SED.MCTP.Common.StreamItem
+Module      : Hsed.Core.StreamItem
 Description : SED tokens
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -13,7 +13,7 @@ Parse and generate stream items.
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module System.SED.MCTP.Common.StreamItem (StreamItem(..), Parser, require)
+module Hsed.Core.StreamItem (StreamItem(..), Parser, require)
 
 where
 

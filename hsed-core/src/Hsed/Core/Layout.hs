@@ -40,9 +40,8 @@ pending reply), 'matching' keeps those whose every pin the input holds.
 
 The types derive 'Data', from which the spec compiler takes the names a
 generated module imports with them. The kinds' constructors 'Unsigned' and
-'Bytes' share their names with those of "System.SED.MCTP.Common.Token"'s
-@Token@ (the module the design calls @Hsed.Core.Token@): a module that needs
-both imports one of the two qualified.
+'Bytes' share their names with those of "Hsed.Core.Token"'s @Token@: a
+module that needs both imports one of the two qualified.
 -}
 module Hsed.Core.Layout
   ( -- * Fields

@@ -87,19 +87,19 @@ import           Language.Haskell.TH.Syntax             (Dec, mkName)
 
 import           Data.BoundedSize                       (type (?),
                                                          BoundedSize (..))
-import           System.SED.MCTP.Common.Reference_Types (Byte_Table_UID,
+import           Hsed.Core.Reference_Types              (Byte_Table_UID,
                                                          Object_Table_UID,
                                                          Table_Kind)
 
-import           System.SED.MCTP.Common.Base_Type       (Core_integer, Core_uinteger, Core_max_bytes)
+import           Hsed.Core.Base_Type                    (Core_integer, Core_uinteger, Core_max_bytes)
 
 import           Data.BoundedSize                       (Predicate(..), fromNat)
-import           System.SED.MCTP.Common.THUtil          (dData, dSig, dVal,
+import           Hsed.Core.TH                           (dData, dSig, dVal,
                                                          eLitS, eUID,
                                                          parseTable)
-import           System.SED.MCTP.Common.Token           (ordw)
-import           System.SED.MCTP.Common.UID             (UID)
-import           System.SED.MCTP.Common.Util            (hexUID,
+import           Hsed.Core.Token                        (ordw)
+import           Hsed.Core.UID                          (UID)
+import           Hsed.Core.Util                         (hexUID,
                                                          trimTrailingWhitespace)
 
 {-

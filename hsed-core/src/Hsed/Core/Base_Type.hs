@@ -7,7 +7,7 @@
 
 
 {-|
-Module      : System.SED.MCTP.Common.Base_Type
+Module      : Hsed.Core.Base_Type
 Description : Core data type formats
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -18,7 +18,7 @@ Formats.
 
 -}
 
-module System.SED.MCTP.Common.Base_Type
+module Hsed.Core.Base_Type
   ( Implementation_integer       (..)
   , Implementation_uinteger      (..)
   , Implementation_bytes         (..)
@@ -53,9 +53,9 @@ where
 import           GHC.Base                               (($))
 import           GHC.Exts                               (IsList (..))
 import           GHC.Word                               (Word8 (..))
-import           System.SED.MCTP.Common.Base_Type.TH    (cb', ci, ci', cm, cm',
+import           Hsed.Core.Base_Type.TH                 (cb', ci, ci', cm, cm',
                                                          cu, cu')
-import           System.SED.MCTP.Common.Base_Type.Types (Core_bytes (..),
+import           Hsed.Core.Base_Type.Types              (Core_bytes (..),
                                                          Core_integer (..),
                                                          Core_max_bytes (..),
                                                          Core_uinteger (..),

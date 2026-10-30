@@ -13,7 +13,7 @@
 
 
 {-|
-Module      : System.SED.MCTP.Common.Format
+Module      : Hsed.Core.Format
 Description : Core data type formats
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -25,7 +25,7 @@ Formats.
 -}
 
 
-module System.SED.MCTP.Common.Format
+module Hsed.Core.Format
     where
 
 import           Data.Attoparsec.ByteString         (anyWord8, many1)
@@ -40,11 +40,11 @@ import           GHC.Real                           (fromIntegral)
 import           GHC.Show                           (Show)
 import           GHC.TypeLits                       (KnownNat, Nat, natVal)
 
-import           System.SED.MCTP.Common.Simple_Type (Core_integer_2,
+import           Hsed.Core.Simple_Type              (Core_integer_2,
                                                      Core_max_bytes_32,
                                                      Core_uinteger_2)
-import           System.SED.MCTP.Common.StreamItem
-import           System.SED.MCTP.Common.UID         (UID (..))
+import           Hsed.Core.StreamItem
+import           Hsed.Core.UID                      (UID (..))
 
 data Max_bytes :: Nat -> Type
 deriving instance Show(Max_bytes n)

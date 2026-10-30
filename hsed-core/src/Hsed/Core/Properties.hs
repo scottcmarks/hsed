@@ -25,7 +25,7 @@ module Hsed.Core.Properties
 
 import           RIO
 
-import           System.SED.MCTP.Common.UID (UID)
+import           Hsed.Core.UID (UID)
 
 
 -- | The two ends of a ComID's communications.

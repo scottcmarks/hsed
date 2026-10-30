@@ -1,24 +1,24 @@
 {-|
-Module      : System.SED.MCTP.Common.ValueSpec
-Description : Test specifications for System.SED.MCTP.Common.Value
+Module      : Hsed.Core.ValueSpec
+Description : Test specifications for Hsed.Core.Value
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Test specifications for System.SED.MCTP.Common.Value
+Test specifications for Hsed.Core.Value
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
 
-module System.SED.MCTP.Common.ValueSpec (spec) where
+module Hsed.Core.ValueSpec (spec) where
 
 import           RIO
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 
-import           System.SED.MCTP.Common.StreamItem
-import           System.SED.MCTP.Common.Value
+import           Hsed.Core.StreamItem
+import           Hsed.Core.Value
 
 
 -- | test suite

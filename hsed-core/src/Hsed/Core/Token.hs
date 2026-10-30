@@ -1,5 +1,5 @@
 {-|
-Module      : System.SED.MCTP.Common.Token
+Module      : Hsed.Core.Token
 Description : SED tokens
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -12,7 +12,7 @@ Define the types used in SEDs, and in the hsed program in particular.
 
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module System.SED.MCTP.Common.Token
+module Hsed.Core.Token
   (
     Token(..)
   , IsToken(..)
@@ -53,6 +53,7 @@ import           Data.Functor                         ((<&>))
 import           Data.Maybe                           (Maybe (..), fromMaybe,
                                                        maybe)
 import           GHC.Word                             (Word8)
+import           Hsed.Core.StreamItem
 import           Prelude                              (Bounded (..), Char,
                                                        Eq (..), Int, Integer,
                                                        Integral (..),
@@ -63,7 +64,6 @@ import           Prelude                              (Bounded (..), Char,
                                                        otherwise, pure, snd,
                                                        ($), (-), (.), (<),
                                                        (<$>), (<*>), (<=), (<>))
-import           System.SED.MCTP.Common.StreamItem
 {-
 
 Due to the nature of method parameters and results, there are two additional constructs defined for

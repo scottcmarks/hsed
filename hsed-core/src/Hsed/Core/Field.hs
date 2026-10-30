@@ -38,7 +38,7 @@ import           RIO
 import qualified RIO.List                   as L
 
 import           Hsed.Core.Code             (Span)
-import           System.SED.MCTP.Common.UID (UID)
+import           Hsed.Core.UID              (UID)
 
 
 -- $setup

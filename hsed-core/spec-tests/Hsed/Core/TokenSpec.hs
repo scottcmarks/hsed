@@ -1,17 +1,17 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-|
-Module      : System.SED.MCTP.Common.TokenSpec
-Description : Test specifications for System.SED.MCTP.Common.Types
+Module      : Hsed.Core.TokenSpec
+Description : Test specifications for Hsed.Core.Token
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Test specifications for System.SED.MCTP.Common.Token
+Test specifications for Hsed.Core.Token
 -}
 
-module System.SED.MCTP.Common.TokenSpec (spec) where
+module Hsed.Core.TokenSpec (spec) where
 
 
 import           Data.Bits                            ((.&.))
@@ -23,8 +23,8 @@ import           Data.Ix
 import           Data.Word
 import           RIO                                  hiding (null)
 
-import           System.SED.MCTP.Common.StreamItem
-import           System.SED.MCTP.Common.Token
+import           Hsed.Core.StreamItem
+import           Hsed.Core.Token
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 import           Test.QuickCheck                      hiding (generate, (.&.))

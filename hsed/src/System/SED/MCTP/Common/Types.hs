@@ -13,28 +13,28 @@ Datatypes for @hsed@.
 
 
 module System.SED.MCTP.Common.Types
-  ( module System.SED.MCTP.Common.Base_Type
-  , module System.SED.MCTP.Common.Call
+  ( module Hsed.Core.Base_Type
+  , module Hsed.Core.Call
   , module System.SED.MCTP.Common.TypeUIDs
-  , module System.SED.MCTP.Common.Simple_Type
+  , module Hsed.Core.Simple_Type
   , module System.SED.MCTP.Common.SpecialPurposeUIDs
-  , module System.SED.MCTP.Common.Reference_Types
-  , module System.SED.MCTP.Common.StreamItem
+  , module Hsed.Core.Reference_Types
+  , module Hsed.Core.StreamItem
   , module System.SED.MCTP.Common.TableUIDs
-  , module System.SED.MCTP.Common.Token
-  , module System.SED.MCTP.Common.UID
-  , module System.SED.MCTP.Common.Value
+  , module Hsed.Core.Token
+  , module Hsed.Core.UID
+  , module Hsed.Core.Value
   )
 where
 
-import           System.SED.MCTP.Common.Base_Type
-import           System.SED.MCTP.Common.Call
-import           System.SED.MCTP.Common.Reference_Types
-import           System.SED.MCTP.Common.Simple_Type
+import           Hsed.Core.Base_Type
+import           Hsed.Core.Call
+import           Hsed.Core.Reference_Types
+import           Hsed.Core.Simple_Type
+import           Hsed.Core.StreamItem
+import           Hsed.Core.Token
+import           Hsed.Core.UID
+import           Hsed.Core.Value
 import           System.SED.MCTP.Common.SpecialPurposeUIDs
-import           System.SED.MCTP.Common.StreamItem
 import           System.SED.MCTP.Common.TableUIDs
-import           System.SED.MCTP.Common.Token
 import           System.SED.MCTP.Common.TypeUIDs
-import           System.SED.MCTP.Common.UID
-import           System.SED.MCTP.Common.Value

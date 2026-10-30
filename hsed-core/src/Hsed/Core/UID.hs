@@ -19,7 +19,7 @@
 {-# LANGUAGE UndecidableInstances      #-}
 
 {-|
-Module      : System.SED.MCTP.Common.UID
+Module      : Hsed.Core.UID
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -32,7 +32,7 @@ Datatypes for UIDs and HalfUIDs.
 
 
 
-module System.SED.MCTP.Common.UID where
+module Hsed.Core.UID where
 
 import           Data.ByteString                    (singleton)
 import           Data.ByteString.Base16             (encode)
@@ -54,13 +54,13 @@ import           Text.ParserCombinators.ReadPrec    (ReadPrec, lift)
 
 import           Test.QuickCheck                    (Arbitrary (..))
 
-import           System.SED.MCTP.Common.Base_Type   (Core_bytes (..), append,
+import           Hsed.Core.Base_Type                (Core_bytes (..), append,
                                                      core_bytes_4, core_bytes_8,
                                                      drop, take)
-import           System.SED.MCTP.Common.Simple_Type (Core_halfuid, Core_uid)
+import           Hsed.Core.Simple_Type              (Core_halfuid, Core_uid)
 
-import           System.SED.MCTP.Common.StreamItem  (StreamItem (..))
-import           System.SED.MCTP.Common.Token       (IsToken (..))
+import           Hsed.Core.StreamItem               (StreamItem (..))
+import           Hsed.Core.Token                    (IsToken (..))
 
 
 

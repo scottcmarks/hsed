@@ -1,6 +1,6 @@
 {-|
-Module      : System.SED.MCTP.Common.CallSpec
-Description : Test specifications for System.SED.MCTP.Common.Call
+Module      : Hsed.Core.CallSpec
+Description : Test specifications for Hsed.Core.Call
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : All rights reserved
 Maintainer  : scott@magnolia-heights.com
@@ -10,17 +10,17 @@ Method invocation and response encoding (Core Spec 2.01 section 3.2.4.2).
 -}
 {-# LANGUAGE NoImplicitPrelude #-}
 
-module System.SED.MCTP.Common.CallSpec (spec) where
+module Hsed.Core.CallSpec (spec) where
 
 import           Data.ByteString                           (pack)
 import           RIO
 import           Test.Hspec
 import           Test.Hspec.QuickCheck
 
-import           System.SED.MCTP.Common.Call
-import           System.SED.MCTP.Common.StreamItem
-import           System.SED.MCTP.Common.UID                (UID, uid)
-import           System.SED.MCTP.Common.Value
+import           Hsed.Core.Call
+import           Hsed.Core.StreamItem
+import           Hsed.Core.UID                             (UID, uid)
+import           Hsed.Core.Value
 
 -- | The SMUID and the Properties method UID (Core Spec Tables 239 and 241),
 -- spelled out here so the codec's tests do not depend on the spec data package.

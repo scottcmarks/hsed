@@ -53,17 +53,17 @@ import           GHC.Base                               (pure)
 
 
 
-import           System.SED.MCTP.Common.Reference_Types (Byte_Table_HalfUID,
+import           Hsed.Core.Reference_Types              (Byte_Table_HalfUID,
                                                          Object_Table_HalfUID)
-import           System.SED.MCTP.Common.THUtil          (dSig, dVal,
+import           Hsed.Core.TH                           (dSig, dVal,
                                                          eByte_Table_HalfUID,
                                                          eHalfUID,
                                                          eObject_Table_HalfUID,
                                                          eUID, eValP,
                                                          parseTable)
-import           System.SED.MCTP.Common.UID             (HalfUID (..), UID (..),
+import           Hsed.Core.UID                          (HalfUID (..), UID (..),
                                                          uidLower, uidUpper)
-import           System.SED.MCTP.Common.Util            (hexUID,
+import           Hsed.Core.Util                         (hexUID,
                                                          trimTrailingWhitespace)
 
 -- | Bespoke QuasiQuoter for Table 240

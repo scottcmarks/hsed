@@ -44,7 +44,7 @@ module Hsed.Core.Table
 import           RIO
 import qualified RIO.List                   as L
 
-import           System.SED.MCTP.Common.UID (UID)
+import           Hsed.Core.UID              (UID)
 
 
 -- * Table descriptions

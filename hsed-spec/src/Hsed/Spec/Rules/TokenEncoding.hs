@@ -18,7 +18,7 @@ Acronym, Meaning]@) and the atom diagrams after it (Tables 5-14, the first
 header cell naming the atom's @Header@, or two columns and no header row),
 anchored at Core 3.2.2: across the document the shape would also take Table 24.
 The codec that encodes and decodes tokens is hand-written
-("System.SED.MCTP.Common.Token"); the rule reads the token table with the
+("Hsed.Core.Token"); the rule reads the token table with the
 @tokens@ reader ('tokenRows') and checks the codec against it on every run.
 The diagrams, with the 13 tables nested in their cells, are the codec's by
 hand: they are recorded, not read.
@@ -80,6 +80,8 @@ import qualified RIO.Map                    as Map
 import qualified RIO.Text                   as T
 import           RIO
 
+import           Hsed.Core.StreamItem       (StreamItem (..))
+import           Hsed.Core.Token            (Token (..))
 import           Hsed.Spec.Anchor           (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Common           (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import           Hsed.Spec.DSL              (SomeBinding (..), tokens)
@@ -88,8 +90,6 @@ import           Hsed.Spec.IR               (CellIR (..), SpecIR (..), StructPat
 import           Hsed.Spec.Readers.Text     (readHexByte)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Shape            (Form (..), Shape (..), captionTitle, measure, shapeMismatch)
-import           System.SED.MCTP.Common.StreamItem (StreamItem (..))
-import           System.SED.MCTP.Common.Token      (Token (..))
 
 
 -- | The rule.
@@ -117,7 +117,7 @@ tokensModule :: Gen.GenModule
 tokensModule = Gen.GenModule
   { Gen.leaf        = "Tokens"
   , Gen.description = "The token tables the hand-written codec implements"
-  , Gen.notes       = [ "The codec is System.SED.MCTP.Common.Token: hsedc checks it against the token table"
+  , Gen.notes       = [ "The codec is Hsed.Core.Token: hsedc checks it against the token table"
                       , "on every run (C-TOKEN-CODEC); the atom diagrams are its by hand." ] }
 
 
@@ -388,7 +388,7 @@ codecTablesDecl ctx first' bts = (Gen.decl (provenance first') "codecTables" bod
     provenance bt = provenanceOf ctx (btAnchor bt) (btTable bt) (title bt)
     body =
       [ Gen.provenanceComment (provenance first')
-      , "--   The tables of " <> Gen.specLabel (cxSpec ctx) <> within <> " the hand-written codec (System.SED.MCTP.Common.Token)"
+      , "--   The tables of " <> Gen.specLabel (cxSpec ctx) <> within <> " the hand-written codec (Hsed.Core.Token)"
       , "--   implements, each with its SpecRef and title under its provenance: the token table"
       , "--   is checked against the codec on every hsedc run (C-TOKEN-CODEC), the atom"
       , "--   diagrams are the codec's by hand."

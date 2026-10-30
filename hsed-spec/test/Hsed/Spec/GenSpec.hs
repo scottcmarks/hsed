@@ -179,8 +179,8 @@ spec = do
       elsewhere.declBody `shouldSatisfy` elem "  typeUID = uadv_key_modeType"
       elsewhere.declImports `shouldSatisfy` elem (ImportAll "Hsed.Gen.Core.Types")
     it "imports only what its definitions use" $ do
-      renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           Prelude                    (Bounded, Enum, Eq, Ord, Show)\n"
-      renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           System.SED.MCTP.Common.UID (uid)\n"
+      renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           Prelude       (Bounded, Enum, Eq, Ord, Show)\n"
+      renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           Hsed.Core.UID (uid)\n"
       renderModule coreTypes goldenModule [t46 env] `shouldSatisfy` (not . T.isInfixOf "import           Prelude")
       renderModule coreTypes goldenModule [t75 env Published] `shouldSatisfy` (not . T.isInfixOf "import           Hsed.Core.Types")
       renderModule coreTypes goldenModule [] `shouldSatisfy` (not . T.isInfixOf "import")
@@ -195,9 +195,9 @@ spec = do
     let d imports = (decl (prov "T1" "Table 1 x" 1 1 1 "0/1" "") "x" ["x = ()"]) { declImports = imports }
         importsOf ds = filter ("import" `T.isPrefixOf`) (T.lines (renderModule "M" typesModule ds))
     it "unite the lists of one module, sorted case-insensitively, and align them on the longest module name" $
-      importsOf [d [ImportSome "Prelude" ["String"], ImportSome "System.SED.MCTP.Common.UID" ["uid"]], d [ImportSome "Prelude" ["Eq", "String"], ImportSome "System.SED.MCTP.Common.UID" ["UID"]]]
-        `shouldBe` [ "import           Prelude                    (Eq, String)"
-                   , "import           System.SED.MCTP.Common.UID (UID, uid)" ]
+      importsOf [d [ImportSome "Prelude" ["String"], ImportSome "Hsed.Core.UID" ["uid"]], d [ImportSome "Prelude" ["Eq", "String"], ImportSome "Hsed.Core.UID" ["UID"]]]
+        `shouldBe` [ "import           Hsed.Core.UID (UID, uid)"
+                   , "import           Prelude       (Eq, String)" ]
     it "let a whole-module import win over a list of the same module" $
       importsOf [d [ImportSome "Data.Map" ["Map"]], d [ImportAll "Data.Map"]] `shouldBe` ["import           Data.Map"]
 

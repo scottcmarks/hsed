@@ -19,7 +19,7 @@ module Hand.SpecialPurposeUIDs where
 
 import           Data.Word
 
-import           System.SED.MCTP.Common.UID
+import           Hsed.Core.UID
 
 
 {-

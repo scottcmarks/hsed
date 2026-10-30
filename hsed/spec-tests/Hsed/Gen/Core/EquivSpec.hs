@@ -76,9 +76,12 @@ import qualified RIO.Text                                  as T
 import qualified Hand.SpecialPurposeUIDs                   as H
 import qualified Hand.TableUIDs                            as H
 import qualified Hand.TypeUIDs                             as H
+import           Hsed.Core.Call                            (MethodResponse (..))
 import           Hsed.Core.Code                            (CodeRow (..), Span (..))
 import           Hsed.Core.Field                           (FieldDef (..))
+import           Hsed.Core.StreamItem                      (StreamItem (..))
 import           Hsed.Core.Types                           (Enumerated (..), enumValue)
+import           Hsed.Core.UID                             (UID, uidLower)
 import qualified Hsed.Gen.Core.Codes                       as G
 import qualified Hsed.Gen.Core.Enums                       as G
 import           Hsed.Gen.Core.EquivTH
@@ -87,9 +90,6 @@ import qualified Hsed.Gen.Core.TableUIDs                   as G
 import qualified Hsed.Gen.Core.Types                       as G
 import qualified Hsed.Gen.Core.UIDRanges                   as G
 import qualified Hsed.Gen.Core.UIDs                        as G
-import           System.SED.MCTP.Common.Call               (MethodResponse (..))
-import           System.SED.MCTP.Common.StreamItem         (StreamItem (..))
-import           System.SED.MCTP.Common.UID                (UID, uidLower)
 
 
 -- | Every generated definition a hand-written module could have.

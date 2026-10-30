@@ -20,7 +20,7 @@ reads at run time. The spec writes Type objects by name in place of their UIDs
 (Core 5.1.3), so a reference is a 'TypeRef' carrying the name until it is
 resolved, and an asterisk is 'Star', an SSC-specific or implementation-specific
 value. The binary type_def encoding is not here (that is
-"System.SED.MCTP.Common.Format").
+"Hsed.Core.Format").
 
 'Enumerated' ties a generated enumeration type back to its Type object
 (design docs/spec-as-source.md section 4.1).
@@ -46,7 +46,7 @@ module Hsed.Core.Types
 import           Prelude                    (toEnum)
 import           RIO
 
-import           System.SED.MCTP.Common.UID (UID)
+import           Hsed.Core.UID              (UID)
 
 
 -- | A @uinteger_2@ operand of a Format: a literal, or the spec's @*@, which marks

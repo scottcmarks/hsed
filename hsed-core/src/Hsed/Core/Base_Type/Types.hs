@@ -15,7 +15,7 @@
 
 
 {-|
-Module      : System.SED.MCTP.Common.Base_Type.Types
+Module      : Hsed.Core.Base_Type.Types
 Description : Core data type formats
 Copyright   : (c) Magnolia Heights R&D, 2019
 License     : All rights reserved
@@ -26,7 +26,7 @@ Internal file with all types and instances.
 
 -}
 
-module System.SED.MCTP.Common.Base_Type.Types
+module Hsed.Core.Base_Type.Types
   ( Implementation_integer  (..)
   , Implementation_uinteger (..)
   , Implementation_bytes    (..)
@@ -86,8 +86,8 @@ import           GHC.TypeLits                      (KnownNat)
 import           GHC.Word                          (Word8)
 import           Numeric.Natural                   (Natural)
 
-import           System.SED.MCTP.Common.StreamItem
-import           System.SED.MCTP.Common.Token      (IsToken (..), Token (..))
+import           Hsed.Core.StreamItem
+import           Hsed.Core.Token                   (IsToken (..), Token (..))
 import           Text.ParserCombinators.ReadP      (ReadP, count, pfail)
 import           Text.ParserCombinators.ReadPrec   (lift)
 import           Text.Read.Lex                     (Lexeme (..), lex,

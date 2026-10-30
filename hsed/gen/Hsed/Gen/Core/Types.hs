@@ -16,7 +16,7 @@ tcg/TCG-NOTICE.txt.
 module Hsed.Gen.Core.Types where
 
 import           Hsed.Core.Types
-import           System.SED.MCTP.Common.UID (UID, uid)
+import           Hsed.Core.UID (UID, uid)
 
 -- | core-2.01 T46 AC_element (PDF 100 / p.83, ord 48, sha256:caa39084636e)
 uAC_elementType :: UID

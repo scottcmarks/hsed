@@ -54,19 +54,29 @@ the repair flags (`split_from_merged`, `recovered_by_geometry`, `adopted_from`, 
 `adopted_orphan`, `ragged_join`).
 
 Byte grids (since M2c): a table whose first row (its header, or its first data row when it has none,
-Core T17) is nine cells ending `7 … 0` (Core T17, T18, T20, T21, T38, T39, T41-T44, T212; Opal T2-T8)
-prints a field over several bits as one merged cell, which the tag tree does not mark (no cell has
-`/ColSpan`). Each of its cells, header and data rows, carries `x_extent`, `[x0, x1]` of the drawn cell
-it occupies (pymupdf's `lines_strict` grid, PDF space), for the grid reader's extent rule (design E8:
-eight cells positionally, one the whole byte, any other count by extent against the header's bit
-columns): a row's cells and the drawn cells of the drawn row its glyphs lie in are zipped in order when
-they agree in number and each inked cell sits in its own drawn cell (Core T42 byte 0: `0 | (MSB) |
-Feature Code | ` under four drawn cells, the empty one included); otherwise each inked cell takes the
-drawn cell under its glyphs' centre (Core T17 byte 0, whose `(MSB)` and `Reserved` lie in one merged
-drawn cell spanning the eight bits and four rows) and an empty cell has none. Every inked cell of a
-byte grid has one (an invariant); T43 byte 4's seven cells cover bits 7-6, 5, …, 0 and T42 byte 2's two
-cells 7-4 and 3-0 (invariants). Opal T2-T8 print some byte numbers in the second cell of their row
-(`'' | 1 | '' | (LSB)`): the cell over the corner column is the byte's, whatever its place.
+Core T17) is nine cells ending `7 … 0` (Core T17, T18, T20, T21, T38, T39, T41-T44, T212; Opal T2-T6,
+T8; Core T19 and T40 and Opal T7 are code tables, not grids) prints a field over several bits as one
+merged cell, which the tag tree does not mark (no cell has `/ColSpan`). Each of its cells, header and
+data rows, carries `x_extent`, `[x0, x1]` of the drawn cell it occupies (pymupdf's `lines_strict` grid,
+PDF space: the grid lines_strict snaps across a page, within about 2pt of the rules drawn through the
+row, e.g. Opal T3, T4, T8 at the bit 1|0 boundary and Core T41, T42's header at 5|4, 1-1.5pt off; the
+grid reader compares column centres, about 55pt apart, so the snap reads no bit otherwise), for the
+grid reader's extent rule (design E8: eight cells positionally, one the whole byte, any other count by
+extent against the header's bit columns): a row's cells and the drawn cells of the drawn row its glyphs
+lie in are zipped in order when they agree in number and each inked cell's glyphs lie in its own drawn
+cell at its own place (Core T42 byte 0: `0 | (MSB) | Feature Code | ` under four drawn cells, the
+empty one included: Core's 11 empty cells with an extent, T39 rows 1/5/7/9/12 cell 3, T41-T43 row 1
+cell 3 and row 2 cell 1, get theirs this way, none over the corner column); otherwise each inked cell
+takes the drawn cell under its glyphs' centre (Core T17 byte 0, whose `(MSB)` and `Reserved` lie in
+one merged drawn cell spanning the eight bits and four rows), an inked cell under no drawn cell none,
+and an empty cell none. Every inked cell of a byte grid has one (an invariant, which an inked cell
+under no drawn cell fails); T43 byte 4's seven cells cover bits 7-6, 5, …, 0 and T42 byte 2's two
+cells 7-4 and 3-0 (invariants). The repeated header rows of a grid that runs onto another page (Core
+T18, T42, T44; Opal T5) carry no extents: the grid reader maps every row against the first page's
+header columns, which holds for every grid today (a continuation page's drawn columns lie within the
+same snap of the first's), and would need each page's own header if a grid's columns moved between
+pages. Opal T2-T6 and T8 print some byte numbers in the second cell of their row (`'' | 1 | '' |
+(LSB)`): the cell over the corner column is the byte's, whatever its place.
 
 Ragged-row join (design §5.1 step 5): a data row with fewer cells than the header, all of them
 non-empty, is appended to its predecessor in the columns its x-extents overlap and flagged
@@ -103,7 +113,15 @@ order, as `hsedc` computes a table's section) and each of its subsections: there
 (design E8) finds the sentences that pin a descriptor's fields (Core §3.3.6.4 `The Feature Code field
 SHALL be set to 0x0001.`, §3.3.6.2.2 `The value of this field SHALL be 0x0000.`; Opal §3.1.1.2's
 bullets `Feature Code = 0x0001`). Core 2.01: 51 sections, 108 paragraphs; Opal 2.30: 13 sections, 93
-paragraphs. Every paragraph of a listed section carries its words (an invariant).
+paragraphs. Every paragraph of a listed section carries its words (an invariant, which holds by
+construction: the extractor lists and fills the same sections; what checks it independently is
+`hsedc`'s side, `PinsSpec`: every byte grid's section, by `hsedc`'s own table sections, listed and its
+pins read, in both IRs; and `hsedc check` makes a grid section without words `C-PINS-WORDS`, an
+Error). A field heading the PDF numbers deeper than the outline's six levels (Core 3.2.3.4.2.1.2
+Kind) is an `/LI` paragraph of the level-6 section (`item` null, words `["3.2.3.4.2.1.2", "Kind"]`),
+not a heading; the pins reader names a field after such an item. Opal T5's section is 3.1.1.4.1
+Overview: its field-definition siblings 3.1.1.4.2-.5 are not listed (they state no pin a schema
+reads), which a reader of field definitions would need to change.
 
 ## SigIR
 

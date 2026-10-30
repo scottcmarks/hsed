@@ -30,7 +30,9 @@ every module under `gen/Hsed/Gen/Core` and refuses to compile without it as soon
 definition the oracle compares (`name :: UID`, `String`, `HalfUID`, the two name maps, a `[(UID, String)]`
 list of a table's UIDs, or a `data Core_<enum>`; any other `data`, a record such as a method's, is no
 enumeration to it). Generated modules stay ASCII: EquivTH reads them with the locale's `readFile`, so a
-text literal prints non-ASCII escaped (`tshow`).
+text literal prints non-ASCII escaped (`tshow`), and a comment's text of the PDF goes through
+`Gen.ascii` (`Gen.provenanceComment` and the module header apply it; `CompileSpec` holds every module
+to ASCII).
 
 A rule names its own finding codes: its `ruleCodes` lists each code it claims as a `CodeDef` (the code,
 the severities its findings take, and what they report: a defect of the PDF, text read other than as
@@ -39,9 +41,9 @@ printed, worth a look, or hsedc's bookkeeping, which sorts `build/report/ERRATA.
 the shared readers' (`Hsed.Spec.Readers.readerCodes`) and every rule's, so a new rule edits no generic
 module for its codes. Each code is claimed once (`RegistrySpec`): a code several rules give belongs to the
 rule the others import or that defined it first (`typeRow`'s C-UID-TABLE, C-UID-UNIQUE and C-FMT-RESOLVE,
-which `uidTable`, `preconfig` and `tableDesc` give too; `byteGrid`'s C-GRID-NAME, which `byteFieldValue`
-gives too), or to the reader under `Hsed.Spec.Readers` they
-give it through, and is listed by neither rule. A code the catalogue does not name is listed in
+which `uidTable`, `preconfig` and `tableDesc` give too), or to the reader under `Hsed.Spec.Readers` they
+give it through (the byte-layout rules' C-LAYOUT-TILE, C-GRID-NAME, W-PINS-NONE and C-PINS-WORDS), and is
+listed by neither rule. A code the catalogue does not name is listed in
 `ERRATA.md` under "Not yet classified", and `ReportSpec` fails while the committed run gives one, or gives
 a finding a severity its code's entry does not list. The integrator adds the new codes to design §2 Q2.
 
@@ -63,7 +65,9 @@ Some changes are generic and are made in a small commit of their own, before the
   `hsed_annot.py` and `VocabularySpec`; a new modifier also gets its field in `Hsed.Spec.RuleDef.Mods`.
   M2c's are in: the `ByteGrid`, `Feature` and `ByteFieldValue` shapes, each held to its §3.4 tables, the
   byte grid's corner read as `Byte\Bit` (a Note), and the modifiers `layout "Name"` (`mLayout`; a byte
-  grid, a feature, a byteFieldValue table) and `bits k [(bit, "Name")]` (`mBits`; a byte grid, a feature).
+  grid, a feature, a byteFieldValue table: the record's name as written, the layout keeping the caption's
+  title) and `bits k [(bit, "Name")]` (`mBits`; a byte grid, a feature: held to the row it reads); a
+  binding takes one `layout` and one `bits` for each byte (`applyModifier`, `E-MODIFIER`).
 - **A unit that is not a table.** `RuleDef` binds two kinds of unit: the numbered tables and, since
   M2b, the method signature blocks (below). Another kind (a Fails list, a law sentence) needs its IR
   schema, the extractor, its classification and its bound unit in `RuleDef` first, as the
@@ -143,13 +147,21 @@ What rules may import besides each other: `Hsed.Spec.Scope` (sections, the scope
 the validated annotations; it sits below the registry, while `Hsed.Spec.Rules` imports the registry and
 so every rule, and a rule importing it would be a module cycle), and `Hsed.Spec.Readers.<X>`, the home
 of helpers several rules share and no comment names: `Hsed.Spec.Readers.Text` since M2b (`titleIdent`
-and `lowerIdent`, the two conventions of generated names, and `readHexByte`); since M2c
-`Hsed.Spec.Readers.Grid` (`gridOf`: a byte grid's rows, its cells' bits by the extent rule and its
-fields; its problems as data, located by `gridFindings`), `Hsed.Spec.Readers.Pins` (`tablePins`: the
-pins of a table's section, the rule matching them to its fields and emitting `W-PINS-NONE`) and
-`Hsed.Spec.Readers.Layout` (`layoutsModule`, the one `GenModule` of `Hsed.Gen.<Spec>.Layouts`;
-`gridLayout`; `layoutDecl`, a `Hsed.Core.Layout.Layout` printed as the grid prints its fields;
-`tileFindings`); `accessControl` to come. A reader returns data; a code several rules give through it
+and `lowerIdent`, the two conventions of generated names, and `readHexByte`; since the M2c review also
+`nameKey`, names compared as headers are, and the one reading and printing of numbers, `Number`,
+`parseNumber`, `readNumber`, `numberExpr`, `hexDigits`); since M2c `Hsed.Spec.Readers.Grid` (`gridOf`:
+a byte grid's rows, its cells' bits by the extent rule and its fields; its problems as data, located by
+`gridFindings`), `Hsed.Spec.Readers.Pins` (`tablePins`: the pins of a table's section, which the rule
+matches to its fields; `pinsFindings`: W-PINS-NONE and C-PINS-WORDS by one criterion for every grid
+rule), `Hsed.Spec.Readers.Layout` (`layoutsModule`, the one `GenModule` of `Hsed.Gen.<Spec>.Layouts`;
+`gridFields`, each field with the grid field it was read from; `gridLayout`; `layoutDecl`, a
+`Hsed.Core.Layout.Layout` printed as the grid prints its fields, a pin at its field's width;
+`untiledNote`; `gridTiling` and `tileFindings`, C-LAYOUT-TILE by the one policy of the grid rules, bits
+no field names a Warning and any other tiling problem an Error, at the row) and, since the M2c review,
+`Hsed.Spec.Readers.Record` (`Structure`, a table read as a byte structure, and `structure`; the names
+`typeName`, `layoutValue`, `fieldIdent`, `recordNames`; `recordFieldsOf`, `haskellType`, `recordDecl`,
+the record over a layout and its `LayoutRecord` instance; `nameFindings`, C-GRID-NAME, with
+`earlierNames` and `declScope`); `accessControl` to come. A reader returns data; a code several rules give through it
 is the reader's (its `CodeDef`s, listed by `Hsed.Spec.Readers.readerCodes`), which no rule lists. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
 `boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
 `listDefinition`). A helper never goes under `Rules/`, where every module must be a registered rule.
@@ -200,11 +212,14 @@ pragmas (the declarations' extensions with the two every module has), header, me
 declarations sorted by table number, rank, name. A declaration goes to the rule's module (`Emit`) or to
 another one (`EmitIn`, for a rule that writes several). Rules naming one module must give it one
 description; their notes are united. A module is written when it has a declaration, and `hsedc compile`
-removes the spec's modules it did not write. Rules that write one module name and print their
-declarations by one rule's functions, imported as a reader is, so that the module follows one convention
-and defines each name once: `byteFieldValue` reads a table as `byteGrid`'s `GridRead` and calls its
-`layoutValue`, `recordDecl` and `nameFindings` (`C-GRID-NAME`, byteGrid's code, at the byteFieldValue
-table whose names byteGrid's or an earlier table's declarations define).
+removes the spec's modules it did not write. Rules that print one kind of declaration print it through
+one shared reader, so that a module follows one convention and defines each name once: `byteGrid`,
+`byteFieldValue` and `feature` read each table as a `Hsed.Spec.Readers.Record.Structure` and print its
+layout and record through `layoutDecl`, `layoutValue` and `recordDecl` (feature adding its `Feature`
+instance); a name is `C-GRID-NAME` (the reader's code) where a structure's declarations define it after
+an earlier one's in the module (byteFieldValue lists byteGrid's, `gridStructures`, before its own) or
+the module imports it (the imports of every declaration of the module the rule knows: byteFieldValue
+takes byteGrid's, `gridDecls`).
 
 ## The annotation, if the rule needs an anchor
 

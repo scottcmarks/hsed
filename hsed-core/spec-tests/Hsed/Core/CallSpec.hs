@@ -29,6 +29,15 @@ uSMUID      = uid 0x00 0x00 0x00 0x00  0x00 0x00 0x00 0xFF
 uProperties = uid 0x00 0x00 0x00 0x00  0x00 0x00 0xFF 0x01
 
 
+-- | SMUID.Properties with no parameters, its status list these bytes (each a
+--   tiny atom: 0x41, a signed one).
+propertiesWith :: [Word8] -> ByteString
+propertiesWith statuses = pack $
+  [ 0xF8
+  , 0xA8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
+  , 0xA8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x01
+  , 0xF0, 0xF1, 0xF9, 0xF0 ] <> statuses <> [0xF1]
+
 -- | test suite
 spec :: Spec
 spec = do
@@ -60,15 +69,19 @@ spec = do
                         , 0xF0, 0xF1                                              -- no parameters
                         , 0xF9                                                    -- EndOfData
                         , 0xF0, 0x00, 0x00, 0x00, 0xF1 ]                          -- status list
-    it "rejects a status list whose second value is not zero" $
-      (parseByteString (pack [ 0xF8
-                             , 0xA8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF
-                             , 0xA8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x01
-                             , 0xF0, 0xF1, 0xF9
-                             , 0xF0, 0x00, 0x01, 0x00, 0xF1 ]) :: Either String MethodCall)
-        `shouldSatisfy` isLeft
+    it "reads a status list's reserved values and any after them, and ignores them (3.2.4.2 items 2, ii, iii)" $
+      map (\statuses -> parseByteString (propertiesWith statuses) :: Either String MethodCall)
+          [[0x00, 0x01, 0x00], [0x10, 0x00, 0x07], [0x00, 0x00, 0x00, 0x05]]
+        `shouldBe` map (Right . MethodCall (MethodHeader uSMUID uProperties) (Parameters [] [])) [0x00, 0x10, 0x00]
+    it "rejects a status list of fewer than three values, or one holding no uinteger" $
+      map (\statuses -> parseByteString (propertiesWith statuses) :: Either String MethodCall)
+          [[0x00, 0x00], [0x00], [], [0x00, 0x00, 0x41]]
+        `shouldSatisfy` all isLeft
 
   describe "MethodResponse" $ do
+    it "reads a status list of more than three values, the first the status" $
+      (parseByteString (pack [0xF0, 0xF1, 0xF9, 0xF0, 0x0F, 0x00, 0x00, 0x03, 0xF1]) :: Either String MethodResponse)
+        `shouldBe` Right (MethodResponse [] 0x0F)
     prop "round-trips" $
       (\r -> pg r `shouldBe` Just (r::MethodResponse))
     it "encodes an empty result with status SUCCESS" $

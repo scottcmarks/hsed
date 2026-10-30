@@ -231,15 +231,20 @@ d = D . Datum . Unsigned
 statusList :: Natural -> List
 statusList sc = List [d sc, d 0, d 0]
 
+-- | The status list read (3.2.4.2 item 5): its first uinteger the status. The
+--   second and third are reserved, defined to be zero, and SHOULD be ignored by
+--   the TPer (item 2) and by the host (item ii); a TPer MAY return more values
+--   after them (item iii): all are read and ignored. Fewer than three values, or
+--   a value that is no uinteger, is no status list.
 statusParser :: Parser Natural
 statusParser = parser >>= status
   where
-    status (List [ D (Datum (Unsigned sc))
-                 , D (Datum (Unsigned  0))
-                 , D (Datum (Unsigned  0))]) = pure sc
+    status (List (D (Datum (Unsigned sc)) : rest@(_ : _ : _)))
+      | all uinteger rest = pure sc
     status (List l) =
-        fail $ "Status code list should be 3 uintegers, \
-               \with the second and third being zero, but is " <> show l
+        fail $ "Status code list should be 3 or more uintegers, but is " <> show l
+    uinteger (D (Datum (Unsigned _))) = True
+    uinteger _                        = False
 
 instance StreamItem MethodCall where
     parser = MethodCall

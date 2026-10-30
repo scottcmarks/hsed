@@ -12,7 +12,9 @@ Stability   : experimental
 The Pair runner's comparison of Level 0 (design 9.2): what an allowance
 allows (a vendor unique value, any version, a minimum the drive's value
 meets), what it leaves unchecked (a condition as printed hsed does not
-evaluate) and what it evaluates (Table 7's SSC minor versions); the fields
+evaluate) and what it evaluates (Table 7's SSC minor versions, by the
+descriptor and field, whatever the bullet's wording, CNL's like-worded
+minor version unchecked); the fields
 of two decodes compared by name, a reserved bit the drive sets a difference
 nothing allows, named by its byte and bit; the
 descriptor sets first, a code the drive alone reports missing and a
@@ -65,9 +67,13 @@ spec = do
     it "leaves a condition as printed unchecked, no failure but not allowed" $ do
       judged (diffOf (Just (AsPrinted "**")) (Number 0) (Number 1)) `shouldBe` Unchecked
       allowed (diffOf (Just (AsPrinted "**")) (Number 0) (Number 1)) `shouldBe` False
-    it "evaluates the SSC Minor Version Number against Opal 2.30 Table 7: 0x0 to 0x3, the rest reserved" $
-      [ judged (diffOf (Just (AsPrinted "As specified in Table 7")) (Number 3) (Number v)) | v <- [0, 1, 2, 4, 0xF] ]
+    it "evaluates the Opal SSC V2 descriptor's SSC Minor Version Number against Opal 2.30 Table 7: 0x0 to 0x3, the rest reserved" $
+      [ judged (FieldDiff 0x0203 "SSC Minor Version Number" (Number 3) (Number v) (Just (AsPrinted "As specified in Table 7"))) | v <- [0, 1, 2, 4, 0xF] ]
         `shouldBe` [Allowed, Allowed, Allowed, NotAllowed, NotAllowed]
+    it "evaluates it by the descriptor and the field, whatever the bullet's wording; CNL's like-worded minor version stays unchecked" $ do
+      judged (FieldDiff 0x0203 "SSC Minor Version Number" (Number 3) (Number 7) (Just (AsPrinted "as specified in table 7"))) `shouldBe` NotAllowed
+      judged (FieldDiff 0x0403 "Feature Set Minor Version Number" (Number 0) (Number 7) (Just (AsPrinted "a value as specified in Table 7"))) `shouldBe` Unchecked
+      judged (FieldDiff 0x0203 "Base ComID" (Number 0x1004) (Number 7) (Just (AsPrinted "As specified in Table 7"))) `shouldBe` Unchecked
     it "fails nothing for an unchecked difference" $
       pairFails (PairReport [] [] [] [diffOf (Just (AsPrinted "**")) (Number 0) (Number 1)] []) `shouldBe` False
     it "allows a drive's value at or above a minimum, not below it, and no bytes against one" $

@@ -3,7 +3,7 @@
 
 {-|
 Module      : Hsed.Sim.FeatureSets
-Description : The feature descriptors no generated module has: SIIS 0x0005, DataStore 0x0202, Block SID 0x0402, Configurable Namespace Locking 0x0403
+Description : The feature descriptors no generated module has (SIIS 0x0005, DataStore 0x0202, Block SID 0x0402, Configurable Namespace Locking 0x0403), and Opal's Table 7
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -30,6 +30,13 @@ code, version, length, Core Table 41's general header (as the generated
 descriptors have it) and what its source allows the fields
 ('featureAllowances'). 'geometryAllowances' is what the simulator allows
 Opal's Geometry Reporting descriptor until LockingInfo is simulated (M5).
+
+One table of Opal's that is no descriptor is hand-written here too, with
+its page, until Opal's tables other than its descriptors are compiled (M5):
+Table 7, the SSC minor versions ('sscMinorVersions', PDF 24), which the
+Pair runner evaluates the Opal SSC V2 descriptor's SSC Minor Version Number
+against and UCT-01 names in its note. No other module of hsed writes a
+value of either spec by hand (design 13.28 (11)).
 
 Verified at M3 (group G2) against the sources: SIIS byte 2 (Data Structure
 Version bits 7-4, reserved 3-0) and byte 5 (reserved bits 7-3, Identifier
@@ -66,6 +73,8 @@ module Hsed.Sim.FeatureSets
   , geometryAllowances
     -- * Supported Data Removal Mechanism
   , dataRemovalAllowances
+    -- * Opal Table 7, until M5
+  , sscMinorVersions
   ) where
 
 import           RIO
@@ -384,3 +393,20 @@ dataRemovalAllowances =
     bits     = ["0", "1", "2", "5"] :: [Text]
     format b = "Data Removal Time Format for Bit " <> b
     time b   = "Data Removal Time for Supported Data Removal Mechanism Bit " <> b
+
+
+-- * Opal Table 7, until M5
+
+-- | Opal 2.30 Table 7, SSC Minor Versions (PDF 24): the values the Opal SSC
+--   V2 descriptor's SSC Minor Version Number may hold (Table 6's bullets,
+--   PDF 23: \"As specified in Table 7\"), each with the specification it
+--   references; every other value is Reserved. Written by hand, as the
+--   module header says: Opal's tables other than its descriptors are not
+--   compiled until M5.
+sscMinorVersions :: [(Integer, Text)]
+sscMinorVersions =
+  [ (0x0, "TCG Opal SSC Specification v2.00")
+  , (0x1, "TCG Opal SSC Specification v2.01")
+  , (0x2, "TCG Opal SSC Specification v2.02")
+  , (0x3, "TCG Opal SSC Specification v2.30")
+  ]

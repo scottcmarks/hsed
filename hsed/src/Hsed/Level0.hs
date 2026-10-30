@@ -55,8 +55,6 @@ module Hsed.Level0
   , decodeDescriptor
   , featureDescriptor
   , setBitsAt
-    -- * Opal's SSC minor versions
-  , sscMinorVersions
   ) where
 
 import qualified Data.Aeson             as A
@@ -345,18 +343,6 @@ setBitsAt code = \case
     let width = maybe 8 fieldWidth (L.find (\f -> fieldName f == name && fieldStart f == at) (layoutFields layout))
     pure [ ((at + i) `div` 8, 7 - (at + i) `mod` 8) | i <- [0 .. width - 1], testBit v (width - 1 - i) ]
   _ -> Nothing
-
--- | Opal 2.30 Table 7, SSC Minor Versions (PDF 24): the values the Opal SSC
---   V2 descriptor's SSC Minor Version Number may hold, each with the
---   specification it references; every other value is Reserved. Written by
---   hand: Opal's tables other than its descriptors are not compiled until M5.
-sscMinorVersions :: [(Integer, Text)]
-sscMinorVersions =
-  [ (0x0, "TCG Opal SSC Specification v2.00")
-  , (0x1, "TCG Opal SSC Specification v2.01")
-  , (0x2, "TCG Opal SSC Specification v2.02")
-  , (0x3, "TCG Opal SSC Specification v2.30")
-  ]
 
 -- | A feature record as a response carries it: its code, version and bytes,
 --   read back from its encoding; an encoding whose length field does not

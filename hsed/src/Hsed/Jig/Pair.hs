@@ -19,9 +19,13 @@ field ("Hsed.Core.Feature".'Allowance'): allowed for a vendor unique value,
 any version, or a minimum the drive's value meets; unchecked for a condition
 as printed that hsed does not evaluate (the present state of a feature, a
 LockingInfo column), reported apart and no failure; and a failure
-otherwise. A condition as printed that names a table of values hsed holds
-is evaluated: the SSC Minor Version Number \"As specified in Table 7\", one
-of Opal 2.30 Table 7's ("Hsed.Level0".'sscMinorVersions', PDF 24).
+otherwise. A condition as printed hsed evaluates is known by the
+descriptor and field it is printed for, not by its wording: the Opal SSC V2
+descriptor's SSC Minor Version Number (Opal 2.30 Table 6's bullets, PDF 23,
+\"As specified in Table 7\"), one of Opal 2.30 Table 7's values
+("Hsed.Sim.FeatureSets".'sscMinorVersions', PDF 24); another feature set's
+like-worded condition (CNL 1.30 Table 6's minor version, \"a value as
+specified in Table 7\", CNL's own Table 7) stays unchecked.
 
 Each shared descriptor is read through the layout of its code
 ("Hsed.Level0".'decodeDescriptor'), its fields compared by name and the
@@ -53,11 +57,12 @@ import qualified RIO.List               as L
 import           RIO
 
 import           Hsed.Core.Code         (CodeRow (..), codeRowsNamed, inSpan)
-import           Hsed.Core.Feature      (Allowance (..))
+import           Hsed.Core.Feature      (Allowance (..), Feature (..))
 import           Hsed.Core.Layout       (Content (..), Difference (..))
 import           Hsed.Gen.Core.Codes    (cFeatureCodes)
-import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, setBitsAt,
-                                         sscMinorVersions)
+import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
+import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, setBitsAt)
+import           Hsed.Sim.FeatureSets   (sscMinorVersions)
 
 
 -- | A field of a descriptor both report whose values differ, and what the
@@ -136,27 +141,32 @@ data Judgement
 
 -- | A difference judged: allowed for a vendor unique value, any version, a
 --   minimum the drive's value meets, or a condition as printed that hsed
---   evaluates and the drive's value meets; unchecked for one it does not
---   evaluate; not allowed otherwise.
+--   evaluates for the field and the drive's value meets; unchecked for one
+--   it does not evaluate; not allowed otherwise.
 judged :: FieldDiff -> Judgement
 judged fd = case fdAllowance fd of
   Nothing              -> NotAllowed
   Just VendorUnique    -> Allowed
   Just (AnyVersion _)  -> Allowed
-  Just (AsPrinted t)   -> maybe Unchecked (\holds -> if numberIs holds then Allowed else NotAllowed) (evaluated t)
+  Just (AsPrinted _)   -> maybe Unchecked (\holds -> if numberIs holds then Allowed else NotAllowed) (evaluated (fdCode fd) (fdField fd))
   Just (Minimum least) -> if numberIs (>= least) then Allowed else NotAllowed
   where
     numberIs p = case fdDrive fd of
       Number v -> p v
       Octets _ -> False
 
--- | A condition as printed that hsed evaluates: \"As specified in Table 7\",
---   the SSC Minor Version Number of Opal 2.30 Table 6's bullets (PDF 23), one
---   of Table 7's values (PDF 24).
-evaluated :: Text -> Maybe (Integer -> Bool)
-evaluated t
-  | t == "As specified in Table 7" = Just (`elem` map fst sscMinorVersions)
-  | otherwise                      = Nothing
+-- | A condition as printed that hsed evaluates, by the descriptor's code
+--   and the field it is printed for: the Opal SSC V2 descriptor's SSC Minor
+--   Version Number, which Opal 2.30 Table 6's bullets give \"As specified in
+--   Table 7\" (PDF 23), one of Table 7's values (PDF 24). Keyed on the code
+--   and the field, not on the bullet's wording, which another feature set
+--   shares for a table of its own (CNL 1.30 Table 6's minor version, CNL's
+--   Table 7), and which a regenerated bullet may print otherwise.
+evaluated :: Word16 -> Text -> Maybe (Integer -> Bool)
+evaluated code field
+  | code == opalSscV2, field == "SSC Minor Version Number" = Just (`elem` map fst sscMinorVersions)
+  | otherwise                                             = Nothing
+  where opalSscV2 = fromInteger (featureCode (Proxy :: Proxy Level0DiscoveryOpalSSCV2Feature))
 
 -- | Whether the spec allows a difference ('judged' 'Allowed').
 allowed :: FieldDiff -> Bool

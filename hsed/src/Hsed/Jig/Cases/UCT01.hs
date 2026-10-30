@@ -57,8 +57,8 @@ import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq        (Section (..), lockingSPUntouched, noSessionOpened)
 import           Hsed.Jig.Script        (RunCtx (..), RunEnv (..), Script, Verdict (..), discover, featureIn, note)
-import           Hsed.Level0            (Level0 (..), cutShort, sscMinorVersions)
-import           Hsed.Sim.FeatureSets   (BlockSIDFeature (..), DataStoreFeature)
+import           Hsed.Level0            (Level0 (..), cutShort)
+import           Hsed.Sim.FeatureSets   (BlockSIDFeature (..), DataStoreFeature, sscMinorVersions)
 
 
 -- | The case.

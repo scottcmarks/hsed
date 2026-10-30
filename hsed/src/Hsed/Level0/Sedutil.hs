@@ -67,7 +67,8 @@ import           Hsed.Core.Record       (LayoutRecord (..))
 import           Hsed.Gen.Core.Layouts  (FeatureDescriptorTemplate (..), FeatureDescriptorTemplateHeader (..),
                                          featureDescriptorTemplateLayout)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryGeometryReportingFeature, Level0DiscoveryLockingFeature,
-                                         Level0DiscoveryOpalSSCV2Feature, Level0DiscoveryTPerFeature)
+                                         Level0DiscoveryOpalSSCV2Feature, Level0DiscoverySupportedDataRemovalMechanismFeature,
+                                         Level0DiscoveryTPerFeature)
 import           Hsed.Jig.Options       (RunOptions (..), defaultRunOptions)
 import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor,
                                          renderLevel0)
@@ -125,10 +126,10 @@ parseQuery text = case filter (not . T.null . T.strip . snd) (zip [1 :: Int ..] 
     unknownCodes line = "****" `T.isPrefixOf` T.strip line && "Unknown function codes" `T.isInfixOf` line
 
 -- | The code sedutil 1.49.1 prints its Data Removal block under, Opal's
---   Supported Data Removal Mechanism (Table 8, PDF 25), whose values it
---   prints other than as @name = value@.
+--   Supported Data Removal Mechanism (Table 8, PDF 25; the generated
+--   descriptor's code), whose values it prints other than as @name = value@.
 dataRemovalCode :: Word16
-dataRemovalCode = 0x0404
+dataRemovalCode = fromInteger (featureCode (Proxy :: Proxy Level0DiscoverySupportedDataRemovalMechanismFeature))
 
 -- | A feature's heading, @TPer function (0x0001)@: its name and its code.
 heading :: Text -> Maybe (Text, Word16)

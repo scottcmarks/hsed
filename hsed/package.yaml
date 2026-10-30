@@ -21,8 +21,9 @@ extra-source-files:
 
 flags:
   # The macOS drive transport (Hsed.Transport.MacKext): the C shim cbits/hsed_kext.c over IOKit, which can
-  # issue Level 0 IF-RECV alone (design 7.2, 9.3). Manual and off: never in CI's builds; on with
-  # stack build hsed --flag hsed:kext, built as yourself, never with sudo stack.
+  # issue Level 0 IF-RECV alone (design 7.2, 9.3). Manual and off: CI's tests build without it, and one
+  # macOS step of CI compiles it, never running it; on with stack build hsed --flag hsed:kext, built as
+  # yourself, never with sudo stack.
   kext:
     description: Build the kext transport's C shim (macOS only)
     manual: true

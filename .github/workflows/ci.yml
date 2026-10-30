@@ -54,7 +54,9 @@ jobs:
             **/.stack-work
           key: stack-${{ runner.os }}-${{ hashFiles('stack.yaml', '**/package.yaml') }}
           restore-keys: stack-${{ runner.os }}-
-      - run: stack --system-ghc --no-install-ghc test
+      # -Werror turns each package's own warnings (-Wall and the rest of its ghc-options) into
+      # errors here only, so the house rule "-Wall clean" is enforced without blocking local work.
+      - run: stack --system-ghc --no-install-ghc test --ghc-options=-Werror
       # The hsedc side of gate b (docs/spec-as-source.md sections 5.2, 5.4): annotate the pristine
       # Core PDF from the committed sidecar, extract the annotated PDF, then hsedc bind, check and
       # compile; the committed bindings module, hsed/gen and docs/LEDGER.md must be exactly what it

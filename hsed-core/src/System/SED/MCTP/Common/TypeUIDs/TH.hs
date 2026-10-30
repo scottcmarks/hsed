@@ -61,6 +61,7 @@ import           Data.Set                               (Set
                                                         )
 import           Data.String                            (String, IsString(..))
 import           Data.Tuple                             (fst, snd)
+import           Data.Type.Equality                     (type (~))
 
 import           GHC.Arr                                (range)
 import           GHC.Base                               (Monoid (..), Type,

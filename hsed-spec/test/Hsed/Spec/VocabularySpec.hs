@@ -20,10 +20,15 @@ it) the same anchors.
 The vocabulary is ready for a rule when its shape's line in
 'Hsed.Spec.Shape.shapeMismatch' accepts the tables design section 3.4 lists
 for the rule and no table another rule takes: on the committed extractions,
-each M2b shape accepts exactly its tables across the whole document (where
-its rule rides on the doc anchor) or within its heading (tokenEncoding's
+each M2b and M2c shape accepts exactly its tables across the whole document
+(where its rule rides on the doc anchor) or within its heading (tokenEncoding's
 section 3.2.2), save tables a comment binds anyway (T3 and T24 @prose@, T87
-@enumValues@); the M2b rule tokens and readers parse.
+@enumValues@); the M2b and M2c rule tokens, readers and modifiers parse. M2c's:
+@ByteGrid@ takes the byte grids (a corner cell, then @7 … 0@) whose caption
+does not end @Feature Descriptor@, @Feature@ those whose caption does (Core
+T42, T43; Opal T3-T6, T8), @ByteFieldValue@ the @[Byte(s), Field, Value(s)]@
+tables and T236's @[Bytes, Values]@; every byte grid's corner but T212's
+@Byte\\Bit@ is read as @Byte\\Bit@ and reported as a Note.
 -}
 module Hsed.Spec.VocabularySpec (spec) where
 
@@ -43,7 +48,8 @@ import           Hsed.Spec.Grammar (parsePayload, vocabulary)
 import           Hsed.Spec.IR      (SpecIR (..), TableIR (..), readIR)
 import           Hsed.Spec.RuleDef (numberedTables)
 import           Hsed.Spec.Rules   (anchorKindMismatch, covers, Section (..), tableSections)
-import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), measure, shapeMismatch)
+import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), gridCornerNormalisation, measure,
+                                    shapeMismatch)
 
 
 -- | The @VOCABULARY = {...}@ entries of hsed_annot.py: one @"word": ("class", ...),@ per line.
@@ -59,8 +65,8 @@ samples :: [(Text, Text)]
 samples =
   [ ("doc", "doc core201 & rule typeRow"), ("rule", "rule typeRow & rule enumValues")
   , ("behaviour", "behaviour \"Base.get\""), ("law", "law \"Sync.x\""), ("fails", "fails \"Base.getFails\"")
-  , ("sig", "sig"), ("layout", "layout \"ComPacket\""), ("featureNamed", "featureNamed \"TPerFeature\"")
-  , ("bits", "bits 5 [(0, \"KeyChangeZone\")]"), ("stateTable", "stateTable \"Sync.table45\"")
+  , ("sig", "sig"), ("layout", "layout \"ComPacket\""), ("bits", "bits 5 [(0, \"KeyChangeZone\")]")
+  , ("stateTable", "stateTable \"Sync.table45\"")
   , ("refines", "refines (core 42)"), ("narrows", "narrows (core 26)"), ("replaces", "replaces [core 127]")
   , ("extends", "extends (core 171)"), ("erratum", "erratum scott [\"a\" ~> \"b\"]"), ("cols", "cols 0 1")
   , ("rangeWords", "rangeWords [\"to\"]"), ("enumInDescription", "enumInDescription"), ("expand", "expand")
@@ -95,7 +101,11 @@ coreReadiness =
   , (Preconfig, WholeDocument, [209, 216])
   , (Tokens, Subtree "3.2.2", [4 .. 14])
   , (Tokens, WholeDocument, [4 .. 14] <> [24])
-  , (Props, WholeDocument, [167, 168]) ]
+  , (Props, WholeDocument, [167, 168])
+    -- M2c: the byte grids, the feature descriptors among them by their caption, and the byte layouts
+  , (ByteGrid, WholeDocument, [17, 18, 20, 21, 38, 39, 41, 44, 212])
+  , (Feature, WholeDocument, [42, 43])
+  , (ByteFieldValue, WholeDocument, [28, 31, 32, 33, 35, 36, 37, 236]) ]
 
 spec :: Spec
 spec = do
@@ -108,6 +118,24 @@ spec = do
     it "parses every M2b reader's comment on a table" $
       forM_ ["stateTable \"Sync.table45\"", "propsNames", "propsInitial", "prose"] $ \c ->
         (c, accepted c) `shouldBe` (c, ["table"])
+  describe "the vocabulary of the M2c rules" $ do
+    it "parses every M2c rule token on the doc anchor and on a heading" $
+      forM_ ["byteGrid", "byteFieldValue", "feature"] $ \r -> do
+        RuleName r `shouldSatisfy` (`elem` knownRules)
+        (r, accepted ("doc core201 & rule " <> r), accepted ("rule " <> r)) `shouldBe` (r, ["doc"], ["section"])
+    it "parses the M2c modifiers on a table, bare or on the binding they name" $
+      forM_ [ "layout \"ComPacketHeader\"", "layout \"ComPacketHeader\" byteGrid", "layout \"GetComIDPayload\" byteFieldValue"
+            , "bits 5 [(0, \"KeyChangeZone\"), (1, \"IdScope\")]", "bits 5 [(0, \"KeyChangeZone\")] feature"
+            , "layout \"LockingFeature\" (bits 4 [(0, \"LockingSupported\")] feature)" ] $ \c ->
+        (c, accepted c) `shouldBe` (c, ["table"])
+    withCore $ \ir ->
+      it "reads every byte grid's corner as Byte\\Bit, a Note for each but Table 212's, which prints it so" $ do
+        let grids = [ n | (TableId n, t) <- Map.toList (numberedTables ir), fGrid8 (measure (SpecId "core-2.01") t) ]
+            noted = [ n | (TableId n, t) <- Map.toList (numberedTables ir), isJust (gridCornerNormalisation t) ]
+        grids `shouldBe` [17, 18, 20, 21, 38, 39, 41, 42, 43, 44, 212]
+        noted `shouldBe` filter (/= 212) grids
+        [ lone | Just t <- [Map.lookup (TableId 17) (numberedTables ir)], Just (_, lone) <- [gridCornerNormalisation t] ]
+          `shouldBe` [Just "Byte"]
     withCore $ \ir -> do
       forM_ coreReadiness $ \(shape, scope, tables) ->
         it ("accepts with " <> show shape <> " in " <> show scope <> " exactly the tables design 3.4 lists") $
@@ -115,12 +143,14 @@ spec = do
       it "reads the terminology captions, the tables of rule terminology" $
         [ n | (TableId n, t) <- Map.toList (numberedTables ir), fCaptionKind (measure (SpecId "core-2.01") t) == CaptionTerminology ]
           `shouldBe` [1, 210, 217, 219, 224, 232]
-    it "accepts with Codes and FieldValue exactly Opal's tables design 3.4 lists" $ do
+    it "accepts with Codes, FieldValue, ByteGrid, Feature and ByteFieldValue exactly Opal's tables design 3.4 lists" $ do
       let path = "../spec/ir/opal-2.30.json"
       present <- doesFileExist path
       if not present then pendingWith (path <> " is not checked out") else do
         opal <- readIR path >>= either throwString pure
         (acceptedIn WholeDocument opal Codes, acceptedIn WholeDocument opal FieldValue) `shouldBe` ([7, 10, 11, 12, 14], [13])
+        -- design 3.4: byteGrid Opal T2, feature T3-T6 and T8 (Opal has no byteFieldValue table)
+        map (acceptedIn WholeDocument opal) [ByteGrid, Feature, ByteFieldValue] `shouldBe` [[2], [3, 4, 5, 6, 8], []]
 
   source <- runIO (readFileUtf8 "../tools/extract/hsed_annot.py")
   let python = pythonVocabulary source

@@ -269,9 +269,11 @@ sigProvenanceOf ctx bs = Gen.Provenance
 
 -- | The modifiers of a binding a rule reads, one field for each modifier of
 --   "Hsed.Spec.DSL": Scott's corrections (the grammar admits no other set), the
---   bound columns, the range words, the waivers, and whether the binding is
---   under @enumInDescription@, @expand@ or @as@. A new modifier adds its field
---   here, in the serial commit that adds it to the vocabulary.
+--   bound columns, the range words, the waivers, whether the binding is under
+--   @enumInDescription@, @expand@ or @as@, the layout's name (@layout "Name"@)
+--   and the declared bit maps (@bits k [...]@, one per byte, in the order
+--   written). A new modifier adds its field here, in the serial commit that adds
+--   it to the vocabulary.
 data Mods = Mods
   { mErrata            :: [(Text, Text)]
   , mCols              :: Maybe (Int, Int)
@@ -280,6 +282,8 @@ data Mods = Mods
   , mEnumInDescription :: Bool
   , mExpand            :: Bool
   , mAs                :: Bool
+  , mLayout            :: Maybe Text
+  , mBits              :: [(Int, [(Int, Text)])]
   }
 
 modsOf :: SomeBinding -> Mods
@@ -297,7 +301,9 @@ modsOf = \case
       WithEnumInDescription b   -> (go b) { mEnumInDescription = True }
       WithExpand b              -> (go b) { mExpand = True }
       WithAs b                  -> (go b) { mAs = True }
-      _                         -> Mods [] Nothing [] [] False False False
+      WithLayout n b            -> (go b) { mLayout = Just n }
+      WithBits k ps b           -> let m = go b in m { mBits = (k, ps) : mBits m }
+      _                         -> Mods [] Nothing [] [] False False False Nothing []
 
 
 -- * Locating findings

@@ -83,8 +83,18 @@ examples =
     , Full (SomeBinding (waive "C-UID-UNIQUE" "x" "y" typeRow))
     , "waive \"C-UID-UNIQUE\" \"x\" \"y\" typeRow" )
   , ( "bits 5 [(0, \"KeyChangeZone\"), (1, \"IdScope\")]"
-    , Full (SomeBinding (bits 5 [(0, "KeyChangeZone"), (1, "IdScope")]))
+    , Modifiers [Bits 5 [(0, "KeyChangeZone"), (1, "IdScope")]]
     , "bits 5 [(0, \"KeyChangeZone\"), (1, \"IdScope\")]" )
+  , ( "bits 5 [(0, \"KeyChangeZone\"), (1, \"IdScope\")] feature"
+    , Full (SomeBinding (bits 5 [(0, "KeyChangeZone"), (1, "IdScope")] feature))
+    , "bits 5 [(0, \"KeyChangeZone\"), (1, \"IdScope\")] feature" )
+  , ( "layout \"ComPacketHeader\"", Modifiers [LayoutName "ComPacketHeader"], "layout \"ComPacketHeader\"" )
+  , ( "layout \"TPerFeature\" (bits 4 [(0, \"Sync\")] feature)"
+    , Full (SomeBinding (layout "TPerFeature" (bits 4 [(0, "Sync")] feature)))
+    , "layout \"TPerFeature\" (bits 4 [(0, \"Sync\")] feature)" )
+  , ( "layout \"GetComIDPayload\" byteFieldValue"
+    , Full (SomeBinding (layout "GetComIDPayload" byteFieldValue))
+    , "layout \"GetComIDPayload\" byteFieldValue" )
   , ( "replaces [§ \"5.1.3\", opal 0x10]"
     , Full (PolyBinding (replaces [section "5.1.3", opal 16]))
     , "replaces [section \"5.1.3\", opal 16]" )
@@ -116,6 +126,11 @@ failures =
   , ("refines core 42", "E-GRAMMAR", "1:9: expected a reference: core N, opal N or section \"x.y\"")
   , ("[\"to\"", "E-SYNTAX", "1:6:")
   , ("cols 0 1 \"x\"", "E-GRAMMAR", "1:10: expected a binding or a modifier")
+  , ("layout \"X\" typeRow", "E-MODIFIER", "layout applies to a ByteGrid, Feature, ByteFieldValue binding, not to a TypeRow one")
+  , ("bits 4 [(0, \"A\")] byteFieldValue", "E-MODIFIER", "bits 4 applies to a ByteGrid, Feature binding, not to a ByteFieldValue one")
+  , ("bits 4 [0]", "E-GRAMMAR", "1:9: expected (BIT, \"Field\")")
+  , ("layout \"X\" (refines (core 39))", "E-MODIFIER", "layout applies to a binding whose shape is fixed")
+  , ("featureNamed \"X\"", "E-GRAMMAR", "1:1: unknown name featureNamed")
   ]
 
 spec :: Spec
@@ -185,7 +200,9 @@ genModifier = oneof
   , pure EnumInDescription
   , pure Expand
   , As <$> elements [minBound .. maxBound]
-  , Waive <$> elements waivableChecks <*> text <*> text ]
+  , Waive <$> elements waivableChecks <*> text <*> text
+  , LayoutName <$> text
+  , Bits <$> small <*> listOf ((,) <$> small <*> text) ]
 
 -- | A fixed-shape table or prose binding without modifiers.
 genCore :: Gen SomeBinding
@@ -197,9 +214,6 @@ genCore = oneof
       , SomeBinding feature, SomeBinding constValues, SomeBinding ranges, SomeBinding preconfig
       , SomeBinding tokens, SomeBinding propsNames, SomeBinding propsInitial, SomeBinding propsReq
       , SomeBinding legend, SomeBinding decision, SomeBinding sig, SomeBinding prose ]
-  , SomeBinding . layout <$> text
-  , SomeBinding . featureNamed <$> text
-  , SomeBinding <$> (bits <$> small <*> listOf ((,) <$> small <*> text))
   , SomeBinding . stateTable <$> text
   , SomeBinding . behaviour <$> text
   , SomeBinding . fails <$> text

@@ -56,6 +56,7 @@ module Hsed.Spec.Shape
   , normaliseCaption
   , classifyCaption
   , isGrid8
+  , gridCornerNormalisation
     -- * The E-SHAPE check
   , accepts
   , acceptsAs
@@ -278,7 +279,7 @@ data CaptionKind
   | CaptionEnumValues Text      -- ^ @Table 52 adv_key_mode Enumeration Values@
   | CaptionTableDesc Text       -- ^ @Table 171 Table Table Description@
   | CaptionColumns Text         -- ^ @Table 26 - Admin SP – TPerInfo Columns@
-  | CaptionFeature              -- ^ mentions @Feature Descriptor@
+  | CaptionFeature              -- ^ ends @Feature Descriptor@ (Core T42, T43; not T41's @Feature Descriptor Template Format@)
   | CaptionPreconfig            -- ^ @… Table Preconfiguration@ (Opal) or @Default … Authorities@ (Core)
   | CaptionTerminology          -- ^ ends @Terminology@ or @Example@
   | CaptionOther Text           -- ^ anything else, the title kept
@@ -364,7 +365,7 @@ normaliseCaption = DT.replace "_object _ref" "_object_ref"
 -- | Classify a caption's title (design section 3.4).
 classifyCaption :: Text -> CaptionKind
 classifyCaption title
-  | "feature descriptor" `T.isInfixOf` lower        = CaptionFeature
+  | "feature descriptor" `T.isSuffixOf` lower       = CaptionFeature
   | "table preconfiguration" `T.isSuffixOf` lower    = CaptionPreconfig
   | "default " `T.isPrefixOf` lower
     && "authorities" `T.isSuffixOf` lower            = CaptionPreconfig
@@ -391,6 +392,22 @@ isGrid8 nCols row = case map normHeader row of
   corner : bits -> nCols == 9 && corner `elem` corners && bits == map tshow [7, 6 .. 0 :: Int]
   []            -> False
   where corners = ["bit", "bitbyte", "byte\\bit", "bytebit"]
+
+-- | How a byte grid prints its corner, when it is not @Byte\\Bit@ (bytes down,
+--   bits across, Core T212): the corner cell, and the row under it that holds
+--   only the rest of the corner (design section 3.4: Core T17 prints @Bit@ over
+--   a row @Byte@ alone; T18-T21, T38-T44 print @Bit Byte@). Nothing for a table
+--   that is no byte grid or prints @Byte\\Bit@. Each is read as @Byte\\Bit@ and
+--   reported as a Note (@N-HEADER-NORMALISED@).
+gridCornerNormalisation :: TableIR -> Maybe (Text, Maybe Text)
+gridCornerNormalisation t = case t.headerRows <> t.rows of
+  row0@(corner : _) : rest
+    | isGrid8 t.nCols (map (.text) row0), normHeader corner.text /= "byte\\bit" -> Just (corner.text, lone rest)
+  _ -> Nothing
+  where
+    lone = \case
+      [c] : _ | normHeader c.text == "byte" -> Just c.text
+      _                                      -> Nothing
 
 
 -- * The E-SHAPE check
@@ -421,6 +438,10 @@ describe form = T.concat
 --   two shapes' structures overlap, the looser one leaves the other's tables to
 --   it ('notAlso'): a UID table is not a type table, the table of table UIDs or
 --   a preconfiguration; a code table is not an enumeration or a typed record.
+--   A byte grid captioned @… Feature Descriptor@ is 'Feature''s (Core T42,
+--   T43), any other 'ByteGrid''s (T17, T41's template, T44, ...).
+--   'ByteFieldValue' takes Core T236's two columns @[Bytes, Values]@ beside
+--   the three of T28, T31-T33 and T35-T37.
 --   'Tokens' takes the token table of Core Table 4 and the atom diagrams that
 --   follow it (a first header cell naming the atom's header, or two columns
 --   with no header row). 'StateTable' takes a table whose first column names
@@ -441,9 +462,9 @@ shapeMismatch shape form = case shape of
                        <|> notAlso [EnumValues, FieldType]
   FieldValue      -> header ["field", "value"]
   FieldType       -> header ["field", "type"] >> header ["value", "type", "range"]
-  ByteFieldValue  -> columns 3 <|> cells "[Byte(s), Field, Value(s)]" byteFieldValue
-  ByteGrid        -> grid
-  Feature         -> grid
+  ByteFieldValue  -> cells "[Byte(s), Field, Value(s)] or [Bytes, Values]" byteFieldValue
+  ByteGrid        -> grid <|> notAlso [Feature]
+  Feature         -> grid <|> featureCaption
   ConstValues     -> header ["column", "value"]
   Ranges          -> columns 3 <|> cells "[<X> Name, … Start, … End]" ranges
   Preconfig       -> atLeast 2 <|> caption
@@ -486,8 +507,11 @@ shapeMismatch shape form = case shape of
     cells what p
       | p hs = Nothing
       | otherwise = Just ("expects the header " <> what)
+    -- three columns (T31 prints its first row's byte cell in the VALUE header: "VALUE 0 to 3"),
+    -- or two, a byte range and what it holds (T236)
     byteFieldValue = \case
       [b, f, v] -> b `elem` ["byte", "bytes"] && f == "field" && "value" `T.isPrefixOf` v
+      [b, v]    -> b == "bytes" && v == "values"
       _         -> False
     ranges = \case
       [n, s, e] -> "name" `T.isSuffixOf` n && "start" `T.isSuffixOf` s && "end" `T.isSuffixOf` e
@@ -495,6 +519,9 @@ shapeMismatch shape form = case shape of
     grid
       | fGrid8 form = Nothing
       | otherwise = Just "expects a byte grid (corner cell then 7 … 0)"
+    featureCaption = case fCaptionKind form of
+      CaptionFeature -> Nothing
+      _              -> Just "expects a caption ending Feature Descriptor"
     caption = case fCaptionKind form of
       CaptionPreconfig -> Nothing
       _                -> Just "expects a caption ending Table Preconfiguration or Default … Authorities"

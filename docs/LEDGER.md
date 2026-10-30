@@ -69,6 +69,7 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Note | C-SIG-METHOD | 1 |
 | Note | N-CAPTION-NORMALISED | 7 |
 | Note | N-FORMAT-NORMALISED | 14 |
+| Note | N-HEADER-NORMALISED | 10 |
 | Note | N-RANGE-NAME-NORMALISED | 2 |
 | Note | N-RANGE-ONE-CELL | 1 |
 | Note | N-SIG-NORMALISED | 1 |

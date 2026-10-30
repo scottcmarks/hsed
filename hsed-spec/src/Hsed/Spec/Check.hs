@@ -41,8 +41,9 @@ text as printed. 'errataFindingsUnder' gives what the same corrections report
 under either set, for @build/report/ERRATA.md@ ("Hsed.Spec.Report").
 
 Normalisations, the same under both sets, are Notes: a caption printed
-@\<X\>_object _ref@ (@N-CAPTION-NORMALISED@) and a header cell in the typo table
-(@N-HEADER-NORMALISED@), on every numbered table.
+@\<X\>_object _ref@ (@N-CAPTION-NORMALISED@), and a header cell in the typo table
+or a byte grid's corner read as @Byte\\Bit@ (@N-HEADER-NORMALISED@), on every
+numbered table.
 -}
 module Hsed.Spec.Check
   ( -- * The shared context
@@ -71,7 +72,8 @@ import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules   (checkExemplars, checkRuleAnchors, classifySignaturesWith, classifyWithRules)
 import           Hsed.Spec.Scope   (tableSections)
-import           Hsed.Spec.Shape   (headerNormalisations, measure, normaliseCaption, rawCaptionTitle)
+import           Hsed.Spec.Shape   (gridCornerNormalisation, headerNormalisations, measure, normaliseCaption,
+                                    rawCaptionTitle)
 
 
 -- * The shared context
@@ -142,6 +144,7 @@ checks ctx = concat
   , cxErrataFindings ctx
   , concatMap (captionNote (cxSpec ctx)) (Map.toList (cxTables ctx))
   , concatMap (headerNote (cxSpec ctx)) (Map.toList (cxTables ctx))
+  , concatMap (cornerNote (cxSpec ctx)) (Map.toList (cxTables ctx))
   , concat [ ruleChecks r ctx (boundTables (ruleShape r) ctx) | r <- registry ]
   ]
 
@@ -158,6 +161,16 @@ headerNote sid (aid, t) =
   [ locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))
       (finding Note "N-HEADER-NORMALISED" ("header " <> tshow bad <> " read as " <> tshow good))
   | (bad, good) <- headerNormalisations t ]
+
+-- | @N-HEADER-NORMALISED@: a byte grid's corner read as @Byte\\Bit@ (design
+--   section 3.4: Core T17's @Bit@ over a row @Byte@, @Bit Byte@ in T18-T21 and
+--   T38-T44).
+cornerNote :: SpecId -> (AnchorId, TableIR) -> [Finding]
+cornerNote sid (aid, t) =
+  [ locatedAt sid (renderAnchorId aid) (fromMaybe 1 (tablePage t))
+      (finding Note "N-HEADER-NORMALISED" ("the byte grid's corner " <> tshow corner
+         <> maybe "" (\l -> " and the row " <> tshow l <> " under it") lone <> " read as Byte\\Bit: bytes down, bits 7 to 0 across"))
+  | Just (corner, lone) <- [gridCornerNormalisation t] ]
 
 -- | Every check of one IR under one errata set, errors first.
 checkIR :: ErrataSet -> SpecIR -> [Finding]

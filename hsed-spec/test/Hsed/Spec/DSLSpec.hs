@@ -53,7 +53,7 @@ examples =
   , at (anchor @'Heading "core-2.01" "5.3.3.6" "0/3379" 201) (behaviour "Base.get")
   , at (anchor @'Prose "core-2.01" "T2" "0/199" 28) prose
   , at (anchor @'Codes "core-2.01" "T25" "0/589" 53) (as @'Codes codes)
-  , at (anchor @'Feature "core-2.01" "T43" "0/861" 71) (bits 5 [(0, "KeyChangeZone"), (1, "IdScope")])
+  , at (anchor @'Feature "core-2.01" "T43" "0/861" 71) (bits 5 [(0, "KeyChangeZone"), (1, "IdScope")] feature)
   , at (anchor @'Preconfig "opal-2.30" "T24" "0/455" 48) (expand preconfig)
   , at (anchor @'Heading "core-2.01" "3.2.2" "0/200" 30) (rule tokenEncoding & rule sig)
   ]

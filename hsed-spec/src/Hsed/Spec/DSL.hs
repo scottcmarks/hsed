@@ -47,6 +47,8 @@ module Hsed.Spec.DSL
   , QName
   , Ref (..)
   , RuleBearing
+  , LayoutShape
+  , GridShape
   , RuleToken (..)
   , shapeOfBinding
   , bindingShape
@@ -71,7 +73,7 @@ module Hsed.Spec.DSL
   , doc, rule
     -- ** Table bindings
   , typeRow, enumValues, tableDesc, columnsAddition, tableUIDs, uidTable, statusCodes, codes
-  , fieldValue, fieldType, byteFieldValue, byteGrid, layout, feature, featureNamed, bits
+  , fieldValue, fieldType, byteFieldValue, byteGrid, feature
   , constValues, ranges, preconfig, tokens, stateTable, propsNames, propsInitial, propsReq
   , legend, decision, sig, prose
     -- ** Prose bindings
@@ -82,7 +84,7 @@ module Hsed.Spec.DSL
     -- ** Joining rule tokens
   , (&)
     -- ** Modifiers
-  , erratum, cols, rangeWords, enumInDescription, expand, as, waive
+  , erratum, cols, rangeWords, enumInDescription, expand, as, waive, layout, bits
   , (~>), scott, waivableChecks
     -- ** Names
   , core201, opal230, knownSpecs, specName, specByName
@@ -125,6 +127,19 @@ class KnownShape s => RuleBearing (s :: Shape)
 instance RuleBearing 'Doc
 instance RuleBearing 'Heading
 
+-- | The shapes a byte layout is generated from, which @layout "Name"@ names:
+--   a byte grid, a feature descriptor, a @Byte(s) | Field | Value(s)@ table.
+class KnownShape s => LayoutShape (s :: Shape)
+instance LayoutShape 'ByteGrid
+instance LayoutShape 'Feature
+instance LayoutShape 'ByteFieldValue
+
+-- | The shapes read as a grid of bytes and bits, whose bit map @bits k [...]@
+--   declares where the extent rule cannot read one (design example E8).
+class LayoutShape s => GridShape (s :: Shape)
+instance GridShape 'ByteGrid
+instance GridShape 'Feature
+
 -- | What a comment asserts about an anchor of shape @s@.
 data Binding (s :: Shape) where
   -- document and rule anchors
@@ -142,9 +157,8 @@ data Binding (s :: Shape) where
   FieldValueB           :: Binding 'FieldValue
   FieldTypeB            :: Binding 'FieldType
   ByteFieldValueB       :: Binding 'ByteFieldValue
-  LayoutB               :: Maybe Text -> Binding 'ByteGrid       -- ^ the type's name when the caption's will not do
-  FeatureB              :: Maybe Text -> Binding 'Feature
-  Bits                  :: Int -> [(Int, Text)] -> Binding 'Feature -- ^ the declared bit map fallback
+  ByteGridB             :: Binding 'ByteGrid
+  FeatureB              :: Binding 'Feature
   ConstValuesB          :: Binding 'ConstValues
   RangesB               :: Binding 'Ranges
   PreconfigB            :: Binding 'Preconfig
@@ -176,6 +190,8 @@ data Binding (s :: Shape) where
   WithEnumInDescription :: Binding 'EnumValues -> Binding 'EnumValues
   WithExpand            :: Binding 'Preconfig -> Binding 'Preconfig
   WithAs                :: Binding s -> Binding s
+  WithLayout            :: LayoutShape s => Text -> Binding s -> Binding s        -- ^ the layout's name when the caption's will not do
+  WithBits              :: GridShape s => Int -> [(Int, Text)] -> Binding s -> Binding s  -- ^ a byte's declared bit map
 
 deriving stock instance Show (Binding s)
 deriving stock instance Eq (Binding s)
@@ -196,9 +212,8 @@ shapeOfBinding = \case
   FieldValueB             -> SFieldValue
   FieldTypeB              -> SFieldType
   ByteFieldValueB         -> SByteFieldValue
-  LayoutB _               -> SByteGrid
-  FeatureB _              -> SFeature
-  Bits _ _                -> SFeature
+  ByteGridB               -> SByteGrid
+  FeatureB                -> SFeature
   ConstValuesB            -> SConstValues
   RangesB                 -> SRanges
   PreconfigB              -> SPreconfig
@@ -226,6 +241,8 @@ shapeOfBinding = \case
   WithEnumInDescription _ -> SEnumValues
   WithExpand _            -> SPreconfig
   WithAs b                -> shapeOfBinding b
+  WithLayout _ b          -> shapeOfBinding b
+  WithBits _ _ b          -> shapeOfBinding b
 
 bindingShape :: Binding s -> Shape
 bindingShape = sShape . shapeOfBinding
@@ -244,8 +261,8 @@ isAtomicBinding = \case
   FieldValueB      -> True
   FieldTypeB       -> True
   ByteFieldValueB  -> True
-  LayoutB Nothing  -> True
-  FeatureB Nothing -> True
+  ByteGridB        -> True
+  FeatureB         -> True
   ConstValuesB     -> True
   RangesB          -> True
   PreconfigB       -> True
@@ -321,6 +338,8 @@ data Modifier
   | Expand                             -- ^ expand the @(+XX)@ template rows of a preconfiguration
   | As Shape                           -- ^ @as \@'Codes@: the form is odd; E-SHAPE is a Warning
   | Waive Text Text Text               -- ^ @waive "C-UID-UNIQUE" "T94 00 00 00 05 00 00 02 15" "reason"@
+  | LayoutName Text                    -- ^ @layout "ComPacketHeader"@: the layout's name, the caption's overridden
+  | Bits Int [(Int, Text)]             -- ^ @bits 5 [(0, "KeyChangeZone"), (1, "IdScope")]@: a byte's bit map
   deriving stock (Eq, Show)
 
 -- | Apply a modifier to a binding, checking at run time what the smart
@@ -336,6 +355,15 @@ applyModifier m b = case m of
   As sh
     | sh == have    -> Right (WithAs b)
     | otherwise     -> Left (mismatch sh)
+  LayoutName n      -> case shapeOfBinding b of
+    SByteGrid       -> Right (WithLayout n b)
+    SFeature        -> Right (WithLayout n b)
+    SByteFieldValue -> Right (WithLayout n b)
+    _               -> Left (mismatchAny [ByteGrid, Feature, ByteFieldValue])
+  Bits k ps         -> case shapeOfBinding b of
+    SByteGrid       -> Right (WithBits k ps b)
+    SFeature        -> Right (WithBits k ps b)
+    _               -> Left (mismatchAny [ByteGrid, Feature])
   where
     have = bindingShape b
     onShape :: SShape t -> (Binding t -> Binding t) -> Either Finding (Binding s)
@@ -344,6 +372,8 @@ applyModifier m b = case m of
       Nothing   -> Left (mismatch (sShape want))
     mismatch want = finding Error "E-MODIFIER"
       (modifierWord m <> " applies to a " <> shapeName want <> " binding, not to a " <> shapeName have <> " one")
+    mismatchAny wants = finding Error "E-MODIFIER"
+      (modifierWord m <> " applies to a " <> T.intercalate ", " (map shapeName wants) <> " binding, not to a " <> shapeName have <> " one")
 
 modifierWord :: Modifier -> Text
 modifierWord = \case
@@ -354,6 +384,8 @@ modifierWord = \case
   EnumInDescription -> "enumInDescription"
   Expand            -> "expand"
   As sh             -> "as @'" <> shapeName sh
+  LayoutName _      -> "layout"
+  Bits k _          -> "bits " <> tshow k
 
 
 -- * Packed bindings and bound anchors
@@ -399,6 +431,13 @@ applyModifierSome m (PolyBinding b) = case m of
   Expand            -> Right (SomeBinding (WithExpand b))
   As sh             -> case toSomeShape sh of
     SomeShape (_ :: SShape t) -> Right (SomeBinding (WithAs (b :: Binding t)))
+  LayoutName _      -> Left (unshaped "layout")
+  Bits k _          -> Left (unshaped ("bits " <> tshow k))
+  where
+    -- layout and bits apply to several shapes, so they cannot fix the shape of a
+    -- binding that takes its shape from its target
+    unshaped w = finding Error "E-MODIFIER"
+      (w <> " applies to a binding whose shape is fixed, not to one that takes its shape from its target (refines, narrows, replaces)")
 
 -- | An anchor with its binding, the two agreeing on the shape.
 data Bound = forall s. Bound (Anchor s) (Binding s)
@@ -427,6 +466,8 @@ bindingAccepts = go Error
       WithWaiver _ _ _ inner      -> go sev inner form
       WithRangeWords _ inner      -> go sev inner form
       WithExpand inner            -> go sev inner form
+      WithLayout _ inner          -> go sev inner form
+      WithBits _ _ inner          -> go sev inner form
       WithEnumInDescription inner -> description sev form <|> go sev inner form { fCols = 2, fHeaderNorm = ["enumerationvalue", "description"] }
       _                           -> acceptsWith sev (bindingShape b) form
     description sev form
@@ -518,21 +559,11 @@ byteFieldValue = ByteFieldValueB
 
 -- | A byte layout named by its caption.
 byteGrid :: Binding 'ByteGrid
-byteGrid = LayoutB Nothing
+byteGrid = ByteGridB
 
--- | @layout "Name"@: a byte layout with the type name given.
-layout :: Text -> Binding 'ByteGrid
-layout = LayoutB . Just
-
+-- | A feature descriptor: a byte grid captioned @… Feature Descriptor@.
 feature :: Binding 'Feature
-feature = FeatureB Nothing
-
-featureNamed :: Text -> Binding 'Feature
-featureNamed = FeatureB . Just
-
--- | @bits 5 [(0, "KeyChangeZone"), (1, "IdScope")]@: the declared bit map of a feature byte.
-bits :: Int -> [(Int, Text)] -> Binding 'Feature
-bits = Bits
+feature = FeatureB
 
 constValues :: Binding 'ConstValues
 constValues = ConstValuesB
@@ -650,6 +681,21 @@ enumInDescription = WithEnumInDescription
 -- | @expand preconfig@: expand the @(+XX)@ template rows.
 expand :: Binding 'Preconfig -> Binding 'Preconfig
 expand = WithExpand
+
+-- | @layout "ComPacketHeader" byteGrid@: the layout's name, where the
+--   caption's will not do (design section 3.4: "name from the caption;
+--   @layout "Name"@ overrides"); on a byte grid, a feature descriptor or a
+--   @Byte(s) | Field | Value(s)@ table.
+layout :: LayoutShape s => Text -> Binding s -> Binding s
+layout = WithLayout
+
+-- | @bits 5 [(0, "KeyChangeZone"), (1, "IdScope")] feature@: the bit map of
+--   byte 5, each listed bit a one-bit field of that name, the rest reserved:
+--   the extent rule's declared fallback where a byte's cells are neither eight,
+--   one, nor drawn over the header's bit columns (design example E8); on a byte
+--   grid or a feature descriptor. Several bytes take several.
+bits :: GridShape s => Int -> [(Int, Text)] -> Binding s -> Binding s
+bits = WithBits
 
 -- | @as \@'Codes codes@: the form is odd and known to be; E-SHAPE is a Warning.
 as :: forall s. Binding s -> Binding s

@@ -296,7 +296,7 @@ modifierArity n = lookup n modifierArities
 modifierArities :: [(Text, Int)]
 modifierArities =
   [ ("erratum", 2), ("cols", 2), ("rangeWords", 1), ("enumInDescription", 0), ("expand", 0), ("as", 1)
-  , ("waive", 3) ]
+  , ("waive", 3), ("layout", 1), ("bits", 2) ]
 
 -- | Every name a payload may start with: @doc@, @rule@, the bindings and the
 --   modifiers. @tools/extract/hsed_annot.py@ keeps the anchors each may sit on,
@@ -320,13 +320,18 @@ modifierOf p n own = case (n, own) of
   ("enumInDescription", [])               -> Right EnumInDescription
   ("expand", [])                          -> Right Expand
   ("as", [EShape sp s])                   -> maybe (Left (grammarError (Just sp) ("unknown shape " <> s))) (Right . As) (readShape s)
+  ("layout", [EStr _ s])                  -> Right (LayoutName s)
+  ("bits", [EInt _ k, EList _ ps])        -> Bits (fromInteger k) <$> traverse bit ps
   _                                       -> Left (grammarError (Just p) (n <> ": expected " <> usage))
   where
     usage = fromMaybe "" (lookup n
       [ ("erratum", "erratum scott [\"old\" ~> \"new\", ...]"), ("cols", "cols A B")
       , ("rangeWords", "rangeWords [\"to\", ...]"), ("enumInDescription", "no arguments")
       , ("expand", "no arguments"), ("as", "as @'Shape")
-      , ("waive", "waive \"C-UID-UNIQUE\" \"subject\" \"reason\"") ])
+      , ("waive", "waive \"C-UID-UNIQUE\" \"subject\" \"reason\""), ("layout", "layout \"Name\"")
+      , ("bits", "bits BYTE [(BIT, \"Field\"), ...]") ])
+    bit (EPair (EInt _ i) (EStr _ s)) = Right (fromInteger i, s)
+    bit e                             = Left (grammarError (posOf e) "expected (BIT, \"Field\")")
 
 -- | The binding names and how many arguments each takes.
 bindingArity :: Text -> Maybe Int
@@ -336,8 +341,8 @@ bindingArities :: [(Text, Int)]
 bindingArities =
   [ ("typeRow", 0), ("enumValues", 0), ("tableDesc", 0), ("columnsAddition", 0), ("tableUIDs", 0)
   , ("uidTable", 0), ("statusCodes", 0), ("codes", 0), ("fieldValue", 0), ("fieldType", 0)
-  , ("byteFieldValue", 0), ("byteGrid", 0), ("layout", 1), ("feature", 0), ("featureNamed", 1)
-  , ("bits", 2), ("constValues", 0), ("ranges", 0), ("preconfig", 0), ("tokens", 0)
+  , ("byteFieldValue", 0), ("byteGrid", 0), ("feature", 0), ("constValues", 0), ("ranges", 0)
+  , ("preconfig", 0), ("tokens", 0)
   , ("stateTable", 1), ("propsNames", 0), ("propsInitial", 0), ("propsReq", 0), ("legend", 0)
   , ("decision", 0), ("sig", 0), ("prose", 0), ("behaviour", 1), ("fails", 1), ("law", 1)
   , ("refines", 1), ("narrows", 1), ("replaces", 1), ("extends", 1) ]
@@ -355,11 +360,8 @@ construct p n own = case (n, own) of
   ("fieldValue", [])           -> fixed FieldValueB
   ("fieldType", [])            -> fixed FieldTypeB
   ("byteFieldValue", [])       -> fixed ByteFieldValueB
-  ("byteGrid", [])             -> fixed (LayoutB Nothing)
-  ("layout", [EStr _ s])       -> fixed (LayoutB (Just s))
-  ("feature", [])              -> fixed (FeatureB Nothing)
-  ("featureNamed", [EStr _ s]) -> fixed (FeatureB (Just s))
-  ("bits", [EInt _ k, EList _ ps]) -> fixed . Bits (fromInteger k) =<< traverse bit ps
+  ("byteGrid", [])             -> fixed ByteGridB
+  ("feature", [])              -> fixed FeatureB
   ("constValues", [])          -> fixed ConstValuesB
   ("ranges", [])               -> fixed RangesB
   ("preconfig", [])            -> fixed PreconfigB
@@ -384,14 +386,11 @@ construct p n own = case (n, own) of
     fixed :: Binding s -> Either Finding SomeBinding
     fixed = Right . SomeBinding
     usage = fromMaybe "no arguments" (lookup n
-      [ ("layout", "layout \"TypeName\""), ("featureNamed", "featureNamed \"TypeName\"")
-      , ("bits", "bits BYTE [(BIT, \"Field\"), ...]"), ("stateTable", "stateTable \"Module.name\"")
+      [ ("stateTable", "stateTable \"Module.name\"")
       , ("behaviour", "behaviour \"Module.name\""), ("fails", "fails \"Module.name\"")
       , ("law", "law \"Module.name\""), ("refines", "refines (core N)")
       , ("narrows", "narrows (core N)"), ("replaces", "replaces [core N, ...]")
       , ("extends", "extends (core N)") ])
-    bit (EPair (EInt _ i) (EStr _ s)) = Right (fromInteger i, s)
-    bit e                         = Left (grammarError (posOf e) "expected (BIT, \"Field\")")
 
 ref :: Expr -> Either Finding Ref
 ref = \case
@@ -439,6 +438,8 @@ printModifier = \case
   Expand            -> "expand"
   As sh             -> "as @'" <> shapeName sh
   Waive c sj r      -> "waive " <> T.unwords (map haskellString [c, sj, r])
+  LayoutName n      -> "layout " <> haskellString n
+  Bits k fs         -> "bits " <> tshow k <> " " <> list [ "(" <> tshow i <> ", " <> haskellString f <> ")" | (i, f) <- fs ]
 
 -- | A bare modifier chain, innermost first: @[Cols 0 1, RangeWords ["to"]]@ is @rangeWords ["to"] (cols 0 1)@.
 printModifiers :: [Modifier] -> Text
@@ -467,11 +468,8 @@ printBinding = \case
   FieldValueB             -> "fieldValue"
   FieldTypeB              -> "fieldType"
   ByteFieldValueB         -> "byteFieldValue"
-  LayoutB Nothing         -> "byteGrid"
-  LayoutB (Just s)        -> "layout " <> haskellString s
-  FeatureB Nothing        -> "feature"
-  FeatureB (Just s)       -> "featureNamed " <> haskellString s
-  Bits k fs               -> "bits " <> tshow k <> " " <> list [ "(" <> tshow i <> ", " <> haskellString s <> ")" | (i, s) <- fs ]
+  ByteGridB               -> "byteGrid"
+  FeatureB                -> "feature"
   ConstValuesB            -> "constValues"
   RangesB                 -> "ranges"
   PreconfigB              -> "preconfig"
@@ -499,6 +497,8 @@ printBinding = \case
   WithEnumInDescription b -> "enumInDescription " <> operand b
   WithExpand b            -> "expand " <> operand b
   WithAs b                -> printModifier (As (bindingShape b)) <> " " <> operand b
+  WithLayout n b          -> printModifier (LayoutName n) <> " " <> operand b
+  WithBits k fs b         -> printModifier (Bits k fs) <> " " <> operand b
   where
     operand b
       | isAtomicBinding b = printBinding b

@@ -80,10 +80,7 @@ VOCABULARY = {
     "fieldType": ("table",),
     "byteFieldValue": ("table",),
     "byteGrid": ("table",),
-    "layout": ("table",),
     "feature": ("table",),
-    "featureNamed": ("table",),
-    "bits": ("table",),
     "constValues": ("table",),
     "ranges": ("table",),
     "preconfig": ("table",),
@@ -106,6 +103,8 @@ VOCABULARY = {
     "expand": ("table",),
     "as": ("table",),
     "waive": ("table",),
+    "layout": ("table",),
+    "bits": ("table",),
 }
 
 

@@ -98,17 +98,25 @@ naming an identifier). The shape's line in `shapeMismatch` is vocabulary; a rule
 changes it in a serial commit.
 
 `ruleChecks` and `ruleCompile` get every table bound to the rule's shape (rule-bound or
-comment-bound, in anchor order), each as printed (`btTable`) and read under the errata set
+comment-bound, in anchor order), but not one its binding's shape refuses (`E-SHAPE`, an Error: a
+comment binding a table to a shape it is not, whose one finding is then that Error), each as printed
+(`btTable`) and read under the errata set
 (`btRead`), with its binding (`btBinding`) and its modifiers (`btMods`). The `Context` is read-only and
 generic: the IR, spec, errata set, numbered tables, classification, every table's section
 (`cxSections`; `sectionOf ctx bt`) and corrected tables. A rule that needs another rule's reading (an
 enumeration's range from its type row; a table description's UID from Table 240) imports that rule's
-module and calls its reader on the same `Context`; it never adds fields to the `Context`. Locate
-findings with `atTable ctx bt`; give every finding a catalogue code. A check that joins two rules' readings
-belongs to the rule whose table it locates its findings at (`uidTable`'s C-PRECONF-UID holds Table 243
-against the rows `preconfig` reads, `preEntries`). A rule test that compares the exact Errors of an edited
-run keeps to its own codes, since the edit may fail another rule's check as well (`TypeRowSpec` leaves out
-`ranges`' C-UID-RANGE, `PreconfigSpec` `uidTable`'s C-PRECONF-UID).
+module and calls its reader on the same `Context`; it never adds fields to the `Context`. A rule
+exports its readers (`<rule>Reads`, `uidRows`) whether or not another rule calls them yet. Locate a
+finding about a table with `atTable ctx bt`, and one about one row with `atCells ctx bt cells`, which
+puts it on the page the row is printed on (a table spanning pages prints a row on its own page; the
+`stateTable` and `enumValues` readers' findings are about a table's rows together and stay at the
+table); give every finding a catalogue code. A check that joins two rules' readings belongs to the
+rule whose module imports the other's: a rule imports the readers of the rules it reads and never the
+reverse, so no join can make a module cycle, and `atTable`/`atCells` place a finding at any bound
+table, whichever rule binds it (`preconfig`'s C-PRECONF-UID reads `uidTable`'s rows, `uidRows`, and
+locates its findings at Table 243). A rule test that compares the exact Errors of an edited run keeps
+to its own codes, since the edit may fail another rule's check as well (`TypeRowSpec` leaves out
+`ranges`' C-UID-RANGE, `UidTableSpec` `preconfig`'s C-PRECONF-UID).
 
 One shape has one `RuleDef`. Where several bindings share a shape (`propsNames` and `propsInitial` both
 bind `Props`), the shape's rule reads every table bound with it and tells them apart by `btBinding`.
@@ -118,9 +126,12 @@ exemplar is the table its comment sits on (only acceptance is checked).
 
 What rules may import besides each other: `Hsed.Spec.Scope` (sections, the scope the anchors give,
 the validated annotations; it sits below the registry, while `Hsed.Spec.Rules` imports the registry and
-so every rule, and a rule importing it would be a module cycle), and `Hsed.Spec.Readers(.<X>)`, the home
-of helpers several rules share and no comment names (`pins`, `accessControl`). A helper never goes under
-`Rules/`, where every module must be a registered rule.
+so every rule, and a rule importing it would be a module cycle), and `Hsed.Spec.Readers.<X>`, the home
+of helpers several rules share and no comment names: `Hsed.Spec.Readers.Text` since M2b (`titleIdent`
+and `lowerIdent`, the two conventions of generated names, and `readHexByte`), `pins` and
+`accessControl` to come. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
+`boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
+`listDefinition`). A helper never goes under `Rules/`, where every module must be a registered rule.
 
 ## A rule over signature units
 
@@ -128,7 +139,8 @@ The method signature blocks of the IR (`sigs`, `docs/ir-v1.md`: one per section,
 printed) are the second kind of unit. `Hsed.Spec.Shape.shapeUnit` says which shape takes them (the
 signature shape, `sig`); its rule is an ordinary module under `Rules/` whose `RuleDef` has:
 
-- `bindsTo = SomeBinding sig`, `fires = \_ _ _ -> False` (it never fires on a table), `ruleIdent =
+- `bindsTo = SomeBinding sig`, `fires = \_ _ _ -> False` (it never fires on a table, and the table
+  classifier passes over a rule whose shape takes signature units whatever its `fires` says), `ruleIdent =
   const Nothing`, and an exemplar that is a signature block, `(SpecId "core-2.01", SigId "5.3.3.6")`
   (`C-EXEMPLAR` asks only that the IR has it);
 - `ruleChecks` and `ruleCompile`, which get no tables (`[]`) and read the bound blocks themselves:
@@ -152,9 +164,17 @@ the interface with a stub rule.
 
 Print each declaration yourself: `(Gen.decl provenance name lines) { Gen.declRank = row,
 Gen.declImports = [...], Gen.declExtensions = [...] }`, its lines starting with
-`Gen.provenanceComment provenance` (`provenanceOf ctx aid table caption`; `atRow ctx cells` moves it to
-the page a row is printed on). Name the spec in identifiers with `Gen.specLabel` (`Core`), never a
-literal. `Gen.renderModule` assembles each module from the declarations of every rule that names it:
+`Gen.provenanceComment provenance` (`boundProvenance ctx bt`, or `provenanceOf ctx aid table caption`;
+`atRow ctx cells` moves it to the page a row is printed on), a list literal printed by `Gen.listLines`
+(or `listBlock`, `listDefinition`). Name the spec in identifiers with `Gen.specLabel` (`Core`), never a
+literal. Name a value with `lowerIdent` (`spTemplatesTableUIDs`, `mbrControlTableDesc`) and a prefixed
+name with `titleIdent` (`cComIDAssignments`); refer to another rule's generated names through that
+rule's function, never by building the string again (`typeUIDName` of `typeRow`, `tableUIDName` and
+`tableObjectUIDName` of `tableUIDs`). A generated text is `Text`, imported from `Data.Text` (not RIO);
+`String` only where the oracle compares it with a hand-written `String`. A generated module whose names
+other modules export too (`Hsed.Gen.<Spec>.Methods`: `Get`, `Set`, `Next`) is imported qualified, as
+are runtime modules whose names meet (`Hsed.Core.Field`'s and `Hsed.Core.Sync`'s `Constant`).
+`Gen.renderModule` assembles each module from the declarations of every rule that names it:
 pragmas (the declarations' extensions with the two every module has), header, merged imports,
 declarations sorted by table number, rank, name. A declaration goes to the rule's module (`Emit`) or to
 another one (`EmitIn`, for a rule that writes several). Rules naming one module must give it one
@@ -167,7 +187,9 @@ Scope comes only from anchors. Prefer a token on the existing doc line
 (`core-2.01 | doc | doc core201 & rule fooBar`, about 17 bytes) when the firing condition is
 unambiguous document-wide (design §13.24); a heading anchor costs about 555 bytes on a page without
 `/Annots`, about 264 on one that has them. `make pdf-checks` holds the tail's objects (the bytes before
-its xref stream) to 400 bytes per anchor on average; never raise the budget silently.
+its xref stream) to 400 bytes per anchor on average; never raise the budget silently. An anchor whose
+scope binds nothing to its rule is `W-RULE-SCOPE-EMPTY`, and one inside another anchor's scope of the
+same rule `N-RULE-SCOPE-REDUNDANT`: both say the annotation is to move or go.
 
 ## Checking it
 

@@ -76,9 +76,15 @@ stateTableRule = RuleDef
   , fires       = \_ _ _ -> False
   , ruleIdent   = const Nothing
   , ruleModule  = stateTablesModule
+  , ruleCodes   =
+      [ CodeDef "C-STATE-TABLE" [Error]          (Defect "a state table's row names no state, or leaves a field without a setting") ]
   , ruleChecks  = \ctx bts -> concatMap (\r -> map (atTable ctx (stBound r)) (problems (readAll bts) r)) (readAll bts)
   , ruleCompile = compile
   }
+
+-- | The runtime module of a state table: @StateTable@, @StateRow@, @Setting@.
+syncModule :: Text
+syncModule = "Hsed.Core.Sync"
 
 -- | @Hsed.Gen.\<Spec\>.StateTables@.
 stateTablesModule :: Gen.GenModule
@@ -209,7 +215,7 @@ compile ctx bts =
 -- | @table45 :: StateTable@, its rows in the order printed.
 stateTableDecl :: Context -> StateTableRead -> Gen.Decl
 stateTableDecl ctx r = (Gen.decl p (stName r) body)
-  { Gen.declImports = [Gen.ImportSome Gen.syncModule ["Setting (..)", "StateRow (..)", "StateTable (..)"]] }
+  { Gen.declImports = [Gen.ImportSome syncModule ["Setting (..)", "StateRow (..)", "StateTable (..)"]] }
   where
     bt   = stBound r
     p    = boundProvenance ctx bt

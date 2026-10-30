@@ -32,11 +32,17 @@ list of a table's UIDs, or a `data Core_<enum>`; any other `data`, a record such
 enumeration to it). Generated modules stay ASCII: EquivTH reads them with the locale's `readFile`, so a
 text literal prints non-ASCII escaped (`tshow`).
 
-A rule's finding codes are named in `Hsed.Spec.Report.catalogue` by what they report (a defect of the PDF,
-text read other than as printed, worth a look, or hsedc's bookkeeping), which sorts `build/report/ERRATA.md`;
-a code it does not name is listed there under "Not yet classified", and `ReportSpec` fails while the
-committed run gives one. That is one line in a generic module: rules written in parallel leave it to the
-integrator, who also adds the codes to design §2 Q2.
+A rule names its own finding codes: its `ruleCodes` lists each code it claims as a `CodeDef` (the code,
+the severities its findings take, and what they report: a defect of the PDF, text read other than as
+printed, worth a look, or hsedc's bookkeeping, which sorts `build/report/ERRATA.md`), and
+`Hsed.Spec.Report.codeCatalogue` assembles the catalogue from the generic modules' codes (`genericCodes`),
+the shared readers' (`Hsed.Spec.Readers.readerCodes`) and every rule's, so a new rule edits no generic
+module for its codes. Each code is claimed once (`RegistrySpec`): a code several rules give belongs to the
+rule the others import or that defined it first (`typeRow`'s C-UID-TABLE, C-UID-UNIQUE and C-FMT-RESOLVE,
+which `uidTable`, `preconfig` and `tableDesc` give too), or to the reader under `Hsed.Spec.Readers` they
+give it through, and is listed by neither rule. A code the catalogue does not name is listed in
+`ERRATA.md` under "Not yet classified", and `ReportSpec` fails while the committed run gives one, or gives
+a finding a severity its code's entry does not list. The integrator adds the new codes to design §2 Q2.
 
 ## When two rules are added in parallel
 
@@ -65,9 +71,11 @@ Some changes are generic and are made in a small commit of their own, before the
   `stateTable`, T167/T168's `propsNames`/`propsInitial` before their reader) is `W-GEN-EXCLUDED`. M2b's
   are in: an M2b rule or reader edits no `.hsa`. A rule test that edits a table and expects the rule
   to leave it out compares with the committed run (`CoreIR.newlyExcluded`), not with an empty list.
-- **A runtime module** generated code imports: named once in `Hsed.Spec.Gen` (`uidModule`,
-  `coreTypesModule`; since M2b also `coreTableModule`, `methodModule`, `codeModule`, `fieldModule`,
-  `syncModule`, `propertiesModule`), the module itself in hsed-core.
+- **A runtime module** the generated code of several rules imports: named once in `Hsed.Spec.Gen`
+  (`uidModule`, `coreTypesModule`; since M2b also `coreTableModule`, `codeModule`, `fieldModule`), the
+  module itself in hsed-core. A runtime module one rule alone imports is named in that rule (`sig`'s
+  `methodModule`, `stateTable`'s `syncModule`, the Props reader's `propertiesModule`), and the rule's
+  group may write it in hsed-core beside the rule.
 
 `RegistrySpec` fails if a module under `Rules/` is not in the registry, if two rules share a name or a
 shape, or if a generic module (`Rules`, `Scope`, `Check`, `Compile`, `Gen`, `Cli`, `RuleDef`, `Report`,
@@ -89,6 +97,7 @@ data RuleDef = RuleDef
   , ruleModule  :: GenModule                          -- leaf, Haddock description, notes
   , ruleChecks  :: Context -> [BoundTable] -> [Finding]
   , ruleCompile :: Context -> [BoundTable] -> [Emitted] -- Emit Decl | EmitIn GenModule Decl | Excluded AnchorId reason
+  , ruleCodes   :: [CodeDef]                          -- CodeDef "C-FOO-BAR" [Error] (Defect "what it finds")
   }
 ```
 

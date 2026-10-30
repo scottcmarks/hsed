@@ -95,9 +95,18 @@ sigRule = RuleDef
   , fires       = \_ _ _ -> False
   , ruleIdent   = const Nothing
   , ruleModule  = methodsModule
+  , ruleCodes   =
+      [ CodeDef "C-SIG-PARSE"      [Error, Warning]       (Defect "a method signature does not parse as printed")
+      , CodeDef "C-SIG-METHOD"     [Error, Warning, Note] (Defect "a method signature and the UID tables disagree: a signature no UID row names, or a method UID with no signature")
+      , CodeDef "N-SIG-NORMALISED" [Note]                 (AsPrinted "a method signature read with its punctuation normalised") ]
   , ruleChecks  = \ctx _ -> checks ctx
   , ruleCompile = \ctx _ -> compile ctx
   }
+
+-- | The runtime module of the method records: the @Method@ and @MethodSignature@ classes they
+--   instantiate, @Signature@, @Param@, @SigResponse@, @Value@.
+methodModule :: Text
+methodModule = "Hsed.Core.Method"
 
 -- | @Hsed.Gen.\<Spec\>.Methods@.
 methodsModule :: Gen.GenModule
@@ -423,9 +432,9 @@ methodDecls ctx sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Ge
     body = [doc] <> record <> signatureInstance <> methodInstance
     usesValue = not (null fields)
     imports =
-      [ Gen.ImportSome Gen.methodModule (["MethodSignature (..)", "SigResponse (..)", "Signature (..)"]
-                                           <> [ "Param (..)" | usesParam ] <> [ "Value" | usesValue ]
-                                           <> [ "Method (..)" | hasMethod ])
+      [ Gen.ImportSome methodModule (["MethodSignature (..)", "SigResponse (..)", "Signature (..)"]
+                                       <> [ "Param (..)" | usesParam ] <> [ "Value" | usesValue ]
+                                       <> [ "Method (..)" | hasMethod ])
       , Gen.ImportSome "Prelude" ["Eq", "Maybe (..)", "Show"] ]
       <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) uidsModule) [i] | [r] <- [joined], Just i <- [urIdent r] ]
     hasMethod = case joined of

@@ -58,6 +58,7 @@ stub = RuleDef
   , joinsTo     = Nothing
   , fires       = \_ _ _ -> False
   , ruleIdent   = const Nothing
+  , ruleCodes   = []
   , ruleModule  = Gen.GenModule { Gen.leaf = "Methods", Gen.description = "Methods", Gen.notes = [] }
   , ruleChecks  = \ctx _ -> [ atSig ctx bs (finding Note "N-STUB" (T.intercalate ", " (bsSig bs).heads)) | bs <- boundSigs (ruleShape stub) ctx ]
   , ruleCompile = \ctx _ -> [ Emit (Gen.decl (sigProvenanceOf ctx bs) "m" [Gen.provenanceComment (sigProvenanceOf ctx bs)])

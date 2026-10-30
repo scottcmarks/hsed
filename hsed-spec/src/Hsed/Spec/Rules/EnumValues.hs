@@ -90,6 +90,10 @@ enumValuesRule = RuleDef
                               && isJust (enumIdent form)
   , ruleIdent   = enumIdent
   , ruleModule  = enumsModule
+  , ruleCodes   =
+      [ CodeDef "C-ENUM-RANGE"          [Error]          (Defect "an enumeration's values do not fit its type's range")
+      , CodeDef "W-ENUM-OVERLAP"        [Warning]        (Defect "two rows of an enumeration assign one value")
+      , CodeDef "W-ENUM-LABEL-REPEATED" [Warning]        (Suspect "an enumeration gives one label to several rows") ]
   , ruleChecks  = \ctx bts -> concatMap (either pure (ecFindings . checkEnum ctx (rights (typeRowReads ctx)))) (readEnums ctx bts)
   , ruleCompile = compile
   }

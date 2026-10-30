@@ -73,6 +73,8 @@ fieldTypeRule = RuleDef
                                 && all (\r -> length r == t.nCols && all (not . T.null . T.strip . (.text)) (take 2 r)) t.rows
   , ruleIdent   = const Nothing
   , ruleModule  = fieldsModule
+  , ruleCodes   =
+      [ CodeDef "C-FIELD-TYPE" [Error]          (Defect "a record field's type names no Type object, or its range is not one the type holds") ]
   , ruleChecks  = \ctx bts -> concatMap (checkFields ctx) (readFields ctx bts)
   , ruleCompile = compile
   }

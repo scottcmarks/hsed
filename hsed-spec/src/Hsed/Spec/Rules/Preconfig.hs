@@ -107,6 +107,11 @@ preconfigRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch Preconfig form)
   , ruleIdent   = const Nothing
   , ruleModule  = preconfigModule
+  , ruleCodes   =
+      [ CodeDef "C-PRECONF-HEADER"   [Error]          (Defect "a preconfiguration table's columns are not its table's")
+      , CodeDef "C-PRECONF-CELL"     [Error]          (Defect "a preconfigured cell does not read as its column's type")
+      , CodeDef "C-PRECONF-UID"      [Error]          (Defect "the table of a table's UIDs disagrees with the rows preconfigured for that table")
+      , CodeDef "W-PRECONF-TEMPLATE" [Warning]        Bookkeeping ]
   , ruleChecks  = \ctx bts -> let ps = readPres ctx bts in concatMap (preFindings ctx ps) ps <> uidUnique ctx ps <> preconfUID ctx ps
   , ruleCompile = compile
   }

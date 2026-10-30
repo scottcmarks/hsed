@@ -30,9 +30,12 @@ rule edits no generic test.
 @ERRATA.md@ ('errataMarkdown') is the list Scott can send to TCG: the
 corrections the annotations carry, under each errata set, then the findings
 whose code reports the PDF ('catalogue'): its defects, the text hsedc reads
-other than as printed, and what is worth a look. A finding of a code the
-catalogue does not know is listed apart, so that a new rule's finding is
-never dropped from the report before the catalogue names its code.
+other than as printed, and what is worth a look. The catalogue is assembled
+('codeCatalogue') from the codes the generic modules give ('genericCodes'),
+those of the readers several rules share ("Hsed.Spec.Readers") and those each
+rule claims ('Hsed.Spec.RuleDef.ruleCodes'), so that a new rule names its own
+codes and edits no generic module. A finding of a code the catalogue does not
+know is listed apart, so that it is never dropped from the report.
 -}
 module Hsed.Spec.Report
   ( Ledger (..)
@@ -43,6 +46,9 @@ module Hsed.Spec.Report
   , findingsMarkdown
   , errataMarkdown
   , Reports (..)
+  , CodeDef (..)
+  , genericCodes
+  , codeCatalogue
   , catalogue
   , reportsOf
   , orphans
@@ -57,12 +63,13 @@ import           RIO
 
 import           Hsed.Spec.Anchor (AnchorId (..), locationText, parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Check  (errataFindingsUnder)
-import           Hsed.Spec.Common (ErrataSet (..), Finding, RuleName (..), Severity (..), SpecId (..), errataSetName,
-                                   renderFinding)
+import           Hsed.Spec.Common (CodeDef (..), ErrataSet (..), Finding, Reports (..), RuleName (..), Severity (..),
+                                   SpecId (..), errataSetName, renderFinding)
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (someBindingShape)
 import           Hsed.Spec.Grammar (printPayload)
 import           Hsed.Spec.IR     (AnnotIR (..), SigIR (..), SpecIR (..), TableIR (..))
+import           Hsed.Spec.Readers (readerCodes)
 import           Hsed.Spec.RuleDef (Context (..), Mods (..), modsOf)
 import           Hsed.Spec.Rules
 import           Hsed.Spec.Shape  (captionTitle, shapeName)
@@ -271,83 +278,39 @@ findingCounts fs = T.intercalate ", " [ tshow (n sev) <> " " <> w | (sev, w) <- 
 
 -- * ERRATA.md
 
--- | What the findings of a code say, for @ERRATA.md@.
-data Reports
-  = Defect !Text     -- ^ the PDF is wrong, or disagrees with itself: what the code finds
-  | AsPrinted !Text  -- ^ hsedc reads the text other than as printed, the same under both errata sets
-  | Suspect !Text    -- ^ the text may be wrong: worth a look
-  | Correction       -- ^ an annotation's erratum, applied, left as printed, or matching nothing
-  | Bookkeeping      -- ^ hsedc's own state: what binds what, what is generated, the annotations themselves
-  deriving (Eq, Show)
+-- | The codes the generic modules give (design section 2 Q2): the
+--   classification and the annotations ("Hsed.Spec.Rules", "Hsed.Spec.Scope",
+--   "Hsed.Spec.Grammar", "Hsed.Spec.DSL", "Hsed.Spec.Shape",
+--   "Hsed.Spec.Sidecar"), the errata ("Hsed.Spec.Errata"), the normalisations
+--   ("Hsed.Spec.Check"), the Format parser ("Hsed.Spec.Format"), compilation
+--   ("Hsed.Spec.Compile") and the document checks ("Hsed.Spec.Document"). A
+--   rule's codes are its own ('ruleCodes'), a shared reader's its
+--   ("Hsed.Spec.Readers".'readerCodes').
+genericCodes :: [CodeDef]
+genericCodes =
+  [ CodeDef "LOT-VS-BODY"          [Warning] (Defect "the List of Tables disagrees with the captions in the body")
+  , CodeDef "XREF-RESOLVES"        [Warning] (Defect "a table reference in the prose names no table, or not the table its text means (one in a table cell is not read)")
+  , CodeDef "E-FMT-RESOLVE"        [Error]   (Defect "a Format names a type no table defines")
+  , CodeDef "N-CAPTION-NORMALISED" [Note]    (AsPrinted "a caption read as one identifier where the PDF prints a space in it")
+  , CodeDef "N-HEADER-NORMALISED"  [Note]    (AsPrinted "a header cell read through the typo table")
+  ]
+  <> [ CodeDef c [Warning] Correction | c <- ["W-ERRATUM-APPLIED", "W-ERRATUM-KNOWN", "W-ERRATUM-UNUSED"] ]
+  <> [ CodeDef c sevs Bookkeeping | (c, sevs) <-
+    [ ("W-UNBOUND", [Warning]), ("E-UNBOUND", [Error]), ("E-AMBIGUOUS", [Error]), ("W-RULE-UNIMPLEMENTED", [Warning])
+    , ("W-GEN-EXCLUDED", [Warning]), ("C-EXEMPLAR", [Error]), ("W-RULE-SCOPE-EMPTY", [Warning]), ("N-RULE-SCOPE-REDUNDANT", [Note])
+    , ("E-SHAPE", [Error, Warning]), ("E-ANCHOR", [Error]), ("E-ANCHOR-KIND", [Error]), ("E-SYNTAX", [Error]), ("E-GRAMMAR", [Error])
+    , ("E-MODIFIER", [Error]), ("E-SIDECAR", [Error]), ("E-ERRATUM-PUBLISHED", [Error]), ("E-GEN-MODULE", [Error])
+    , ("E-FMT-SYNTAX", [Error]), ("E-FMT-CODE", [Error]), ("E-FMT-ARITY", [Error]) ] ]
 
--- | The catalogue codes (design section 4.2) by what their findings say. A
---   code it does not name is listed apart in @ERRATA.md@ until it does.
+-- | Every code of the catalogue: the generic ones, the shared readers', then
+--   each rule's in registry order. Each is claimed once (@RegistrySpec@).
+codeCatalogue :: [CodeDef]
+codeCatalogue = genericCodes <> readerCodes <> concatMap ruleCodes rules
+
+-- | The catalogue codes by what their findings say. A code it does not name
+--   is listed apart in @ERRATA.md@ until its rule claims it.
 catalogue :: Map Text Reports
-catalogue = Map.fromList $
-  [ (c, Defect d) | (c, d) <-
-    [ ("LOT-VS-BODY",      "the List of Tables disagrees with the captions in the body")
-    , ("XREF-RESOLVES",    "a table reference in the prose names no table, or not the table its text means (one in a table cell is not read)")
-    , ("C-UID-UNIQUE",     "a UID printed twice, in one table or in two")
-    , ("C-UID-TABLE",      "a UID is not one of its table's")
-    , ("C-UID-RANGE",      "a UID lies outside the range assigned to its kind")
-    , ("C-ENUM-RANGE",     "an enumeration's values do not fit its type's range")
-    , ("C-T240-HALVES",    "a table's UIDs disagree with its descriptor object's")
-    , ("C-T240-NAME",      "a table name is no identifier, or names two tables")
-    , ("C-FMT-RESOLVE",    "a Format or a column's type names a type no table defines")
-    , ("E-FMT-RESOLVE",    "a Format names a type no table defines")
-    , ("C-COL-CONTIG",     "a table description's column numbers leave a gap")
-    , ("C-COL-CELL",       "a table description's row is not four cells, or names a column twice or by no identifier")
-    , ("C-DESC-TABLE",     "a table description names no table of Table 240, or one another description names")
-    , ("C-CONST-DESC",     "a table of column values names no described table enclosing it, or one another names")
-    , ("C-CONST-VALUE",    "a column value names no column, does not read or fit, or disagrees with its remark")
-    , ("C-LAYOUT-TILE",    "a byte layout's fields do not tile its bytes")
-    , ("C-LAYOUT-ENDIAN",  "a field's (MSB) and (LSB) marks disagree")
-    , ("C-PRECONF-HEADER", "a preconfiguration table's columns are not its table's")
-    , ("C-PRECONF-CELL",   "a preconfigured cell does not read as its column's type")
-    , ("C-PRECONF-UID",    "the table of a table's UIDs disagrees with the rows preconfigured for that table")
-    , ("C-UID-NAME",       "two rows of the UID tables give one name")
-    , ("C-SIG-PARSE",      "a method signature does not parse as printed")
-    , ("C-CODE-VALUE",     "a code table has no code column, a row of another width, a downward range or two catch-alls")
-    , ("W-CODE-OVERLAP",   "two rows of a code table assign one value")
-    , ("C-CODE-TYPE",      "a code column's type names no Type object")
-    , ("C-STATUS-CODE",    "a status row is not one name and one value, or gives a value twice")
-    , ("C-FIELD-VALUE",    "a command block's row is not one named field and its value, or names a field twice")
-    , ("C-FIELD-TYPE",     "a record field's type names no Type object, or its range is not one the type holds")
-    , ("C-TOKEN-TABLE",    "the token table covers a byte twice or not at all, or a row's bit pattern and hex range disagree")
-    , ("C-STATE-TABLE",    "a state table's row names no state, or leaves a field without a setting")
-    , ("C-PROP-TYPE",      "a property's type names no Type object, or its applicability no communicator")
-    , ("C-PROP-INITIAL",   "an initial assumption does not read by its property's type, or its arithmetic does not hold")
-    , ("C-LEGEND-TOTAL",   "a preconfiguration cell's style maps to no class of the colour key")
-    , ("C-PATCH-UID",      "an SSC's change to a Core definition changes its UID")
-    , ("C-PATCH-MONOTONE", "an SSC's value lies below the Core minimum")
-    , ("C-PROP-NAME",      "a property name the Properties tables do not give")
-    , ("C-SIG-METHOD",     "a method signature and the UID tables disagree: a signature no UID row names, or a method UID with no signature")
-    , ("C-ACL-REFS",       "an access control row names no ACE, authority or method")
-    , ("W-ENUM-OVERLAP",   "two rows of an enumeration assign one value")
-    , ("W-LEGEND-OFFSCALE", "a cell's fill is none of the colour key's") ] ]
-  <> [ (c, AsPrinted d) | (c, d) <-
-    [ ("N-CAPTION-NORMALISED", "a caption read as one identifier where the PDF prints a space in it")
-    , ("N-HEADER-NORMALISED",  "a header cell read through the typo table")
-    , ("N-FORMAT-NORMALISED",  "a Format cell read with its spacing or spelling normalised")
-    , ("N-SIG-NORMALISED",     "a method signature read with its punctuation normalised")
-    , ("N-RANGE-NAME-NORMALISED", "a type format's name read as the Format cells spell it")
-    , ("N-RANGE-ONE-CELL",     "a range printed as one cell spanning its start and end")
-    , ("N-STATUS-NAME-SUFFIXED", "a status name given to several values, the later ones suffixed")
-    , ("W-PROP-NAME-CASE",     "a property name printed in two spellings, read as the Properties table spells it") ] ]
-  <> [ (c, Suspect d) | (c, d) <-
-    [ ("W-ENUM-LABEL-REPEATED",   "an enumeration gives one label to several rows")
-    , ("C-TOKEN-CODEC",           "the token table and hsed's hand-written codec disagree")
-    , ("W-STATUS-SECTION",        "a subsection of the status table's section names no status of it")
-    , ("N-STATUS-UNDESCRIBED",    "a status no subsection of its section describes")
-    , ("N-UID-RANGE-NO-TEMPLATE", "UID rows that name no template, with the template range each lies in")
-    , ("N-UID-SHARED",            "a UID two of the UID tables print, each for its own purpose") ] ]
-  <> [ (c, Correction) | c <- ["W-ERRATUM-APPLIED", "W-ERRATUM-KNOWN", "W-ERRATUM-UNUSED"] ]
-  <> [ (c, Bookkeeping) | c <-
-    [ "W-UNBOUND", "E-UNBOUND", "E-AMBIGUOUS", "W-RULE-UNIMPLEMENTED", "W-GEN-EXCLUDED", "C-EXEMPLAR", "W-WAIVER-UNUSED"
-    , "W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"
-    , "W-PINS-NONE", "E-SHAPE", "E-ANCHOR", "E-ANCHOR-KIND", "E-SYNTAX", "E-GRAMMAR", "E-MODIFIER", "E-SIDECAR"
-    , "E-ERRATUM-PUBLISHED", "E-GEN-MODULE", "E-FMT-SYNTAX", "E-FMT-CODE", "E-FMT-ARITY"
-    , "N-UID-UNNAMED", "N-RANGE-UNCHECKED", "W-PRECONF-TEMPLATE" ] ]
+catalogue = Map.fromList [ (codeName c, codeReports c) | c <- codeCatalogue ]
 
 -- | What a code's findings say; Nothing for a code the catalogue does not name.
 reportsOf :: Text -> Maybe Reports

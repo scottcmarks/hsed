@@ -89,6 +89,12 @@ typeRowRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch TypeRow form) && fCols form == 3 && isJust (typeIdent form)
   , ruleIdent   = typeIdent
   , ruleModule  = typesModule
+  , ruleCodes   =
+      [ CodeDef "C-UID-TABLE"         [Error]          (Defect "a UID is not one of its table's")
+      , CodeDef "C-UID-UNIQUE"        [Error, Warning] (Defect "a UID printed twice, in one table or in two")
+      , CodeDef "C-FMT-RESOLVE"       [Error, Warning] (Defect "a Format or a column's type names a type no table defines")
+      , CodeDef "N-FORMAT-NORMALISED" [Note]           (AsPrinted "a Format cell read with its spacing or spelling normalised")
+      , CodeDef "W-WAIVER-UNUSED"     [Warning]        Bookkeeping ]
   , ruleChecks  = checks
   , ruleCompile = compile
   }

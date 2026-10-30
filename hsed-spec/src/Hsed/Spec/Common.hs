@@ -8,9 +8,10 @@ Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 
-Findings, spec identities and errata sets, kept apart so that the grammar, the
-rules, the format parser and the generator can all name them without importing
-one another (docs/spec-as-source.md section 4.2).
+Findings, the codes they carry, spec identities and errata sets, kept apart so
+that the grammar, the rules, the readers, the format parser and the generator
+can all name them without importing one another (docs/spec-as-source.md
+section 4.2).
 -}
 module Hsed.Spec.Common
   ( SpecId (..)
@@ -24,6 +25,9 @@ module Hsed.Spec.Common
   , finding
   , renderFinding
   , isError
+    -- * The catalogue of finding codes
+  , Reports (..)
+  , CodeDef (..)
   ) where
 
 import           RIO
@@ -92,3 +96,29 @@ renderFinding f = T.concat [code f, " ", location, ": ", message f]
       (Just s, Nothing, Nothing) -> specIdText s
       (Nothing, _, Just a) -> a
       (Nothing, _, Nothing) -> "-"
+
+
+-- * The catalogue of finding codes
+
+-- | What the findings of a code say, for @build/report/ERRATA.md@, which sorts
+--   them by it ("Hsed.Spec.Report").
+data Reports
+  = Defect !Text     -- ^ the PDF is wrong, or disagrees with itself: what the code finds
+  | AsPrinted !Text  -- ^ hsedc reads the text other than as printed, the same under both errata sets
+  | Suspect !Text    -- ^ the text may be wrong: worth a look
+  | Correction       -- ^ an annotation's erratum, applied, left as printed, or matching nothing
+  | Bookkeeping      -- ^ hsedc's own state: what binds what, what is generated, the annotations themselves
+  deriving stock (Eq, Show)
+
+-- | One finding code of the catalogue (design section 2 Q2): its name, the
+--   severities its findings are given, and what they report. Each code is
+--   claimed once: by the rule that gives it ("Hsed.Spec.RuleDef".@ruleCodes@),
+--   by the shared reader several rules give it through, or by the generic
+--   modules ("Hsed.Spec.Report".@genericCodes@); "Hsed.Spec.Report" assembles
+--   the catalogue from the three.
+data CodeDef = CodeDef
+  { codeName       :: !Text        -- ^ @C-UID-UNIQUE@
+  , codeSeverities :: ![Severity]  -- ^ every severity a finding of the code may have
+  , codeReports    :: !Reports
+  }
+  deriving stock (Eq, Show)

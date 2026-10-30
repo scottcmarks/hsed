@@ -87,6 +87,12 @@ rangesRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch Ranges form)
   , ruleIdent   = const Nothing
   , ruleModule  = rangesModule
+  , ruleCodes   =
+      [ CodeDef "C-UID-RANGE"             [Error]          (Defect "a UID lies outside the range assigned to its kind")
+      , CodeDef "N-RANGE-NAME-NORMALISED" [Note]           (AsPrinted "a type format's name read as the Format cells spell it")
+      , CodeDef "N-RANGE-ONE-CELL"        [Note]           (AsPrinted "a range printed as one cell spanning its start and end")
+      , CodeDef "N-UID-RANGE-NO-TEMPLATE" [Note]           (Suspect "UID rows that name no template, with the template range each lies in")
+      , CodeDef "N-RANGE-UNCHECKED"       [Note]           Bookkeeping ]
   , ruleChecks  = checks
   , ruleCompile = compile
   }

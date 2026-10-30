@@ -95,9 +95,18 @@ propsRule = RuleDef
   , fires       = \_ _ _ -> False
   , ruleIdent   = const Nothing
   , ruleModule  = propsModule
+  , ruleCodes   =
+      [ CodeDef "C-PROP-TYPE"      [Error]          (Defect "a property's type names no Type object, or its applicability no communicator")
+      , CodeDef "C-PROP-INITIAL"   [Error]          (Defect "an initial assumption does not read by its property's type, or its arithmetic does not hold")
+      , CodeDef "C-PROP-NAME"      [Error]          (Defect "a property name the Properties tables do not give")
+      , CodeDef "W-PROP-NAME-CASE" [Warning]        (AsPrinted "a property name printed in two spellings, read as the Properties table spells it") ]
   , ruleChecks  = \ctx bts -> fst (resolve ctx bts)
   , ruleCompile = compile
   }
+
+-- | The runtime module of the Properties tables: @Property@, @Communicator@, @Assumptions@.
+propertiesModule :: Text
+propertiesModule = "Hsed.Core.Properties"
 
 -- | @Hsed.Gen.\<Spec\>.Properties@.
 propsModule :: Gen.GenModule
@@ -356,7 +365,7 @@ decl ctx rs = case propsKind (btBinding bt) of
     p  = boundProvenance ctx bt
     typeName tr = typeUIDName (trName tr)
     propertiesDecl = (Gen.decl p "properties" body)
-      { Gen.declImports = [ Gen.ImportSome Gen.propertiesModule ["Communicator (..)", "Property (..)"]
+      { Gen.declImports = [ Gen.ImportSome propertiesModule ["Communicator (..)", "Property (..)"]
                           , Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) (L.nub (map (typeName . snd) (rsProps rs))) ] }
       where
         body = [ Gen.provenanceComment p
@@ -365,7 +374,7 @@ decl ctx rs = case propsKind (btBinding bt) of
                <> Gen.listLines "  " [ "Property " <> tshow (prName r) <> " " <> typeName tr <> " " <> communicators (prApplies r)
                                  | (r, tr) <- rsProps rs ]
     assumptionsDecl = (Gen.decl p "initialAssumptions" body)
-      { Gen.declImports = [ Gen.ImportSome Gen.propertiesModule ["Assumptions (..)", "Communicator (..)"] ] }
+      { Gen.declImports = [ Gen.ImportSome propertiesModule ["Assumptions (..)", "Communicator (..)"] ] }
       where
         body = [ Gen.provenanceComment p
                , "--   Each communicator's assumptions about the other's properties until a Properties"

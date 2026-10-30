@@ -79,6 +79,9 @@ tableUIDsRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch TableUIDs form)
   , ruleIdent   = const Nothing
   , ruleModule  = tableUIDsModule
+  , ruleCodes   =
+      [ CodeDef "C-T240-HALVES" [Error]          (Defect "a table's UIDs disagree with its descriptor object's")
+      , CodeDef "C-T240-NAME"   [Error]          (Defect "a table name is no identifier, or names two tables") ]
   , ruleChecks  = \ctx bts -> concatMap (either (\(bt, f) -> [atTable ctx bt f]) (rowChecks ctx (tablesTable bts))) (readRows bts)
                                <> tablesTableChecks ctx bts <> nameChecks ctx bts
   , ruleCompile = compile

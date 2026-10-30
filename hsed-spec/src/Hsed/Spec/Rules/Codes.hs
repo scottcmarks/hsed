@@ -99,6 +99,10 @@ codesRule = RuleDef
   , fires       = \_ t form -> isNothing (shapeMismatch Codes form) && not (enumeration form) && isJust (codeColumn t)
   , ruleIdent   = const Nothing
   , ruleModule  = codesModule
+  , ruleCodes   =
+      [ CodeDef "C-CODE-VALUE"   [Error]          (Defect "a code table has no code column, a row of another width, a downward range or two catch-alls")
+      , CodeDef "W-CODE-OVERLAP" [Warning]        (Defect "two rows of a code table assign one value")
+      , CodeDef "C-CODE-TYPE"    [Error]          (Defect "a code column's type names no Type object") ]
   , ruleChecks  = \ctx bts -> concatMap (either pure (checkCodes ctx)) (readCodes ctx bts)
   , ruleCompile = compile
   }

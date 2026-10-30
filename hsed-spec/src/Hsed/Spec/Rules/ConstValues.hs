@@ -88,6 +88,9 @@ constValuesRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch ConstValues form)
   , ruleIdent   = const Nothing
   , ruleModule  = columnDefaultsModule
+  , ruleCodes   =
+      [ CodeDef "C-CONST-DESC"  [Error]          (Defect "a table of column values names no described table enclosing it, or one another names")
+      , CodeDef "C-CONST-VALUE" [Error]          (Defect "a column value names no column, does not read or fit, or disagrees with its remark") ]
   , ruleChecks  = \ctx bts -> concatMap (constFindings ctx) (readConsts ctx bts)
   , ruleCompile = compile
   }

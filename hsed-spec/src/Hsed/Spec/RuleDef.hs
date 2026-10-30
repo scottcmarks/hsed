@@ -26,7 +26,10 @@ knows lives in its 'RuleDef':
   bound to its shape ('BoundTable', rule-bound or comment-bound alike);
 * its compilation of the same tables to declarations ('Hsed.Spec.Gen.Decl')
   for its generated module ('Hsed.Spec.Gen.GenModule'), or for another module
-  it names ('EmitIn'), or the tables it leaves out and why.
+  it names ('EmitIn'), or the tables it leaves out and why;
+* the finding codes it claims ('CodeDef': the code, its severities, what its
+  findings report), from which "Hsed.Spec.Report" assembles the catalogue, so
+  that a new rule names its own codes and edits no generic module.
 
 Two kinds of unit are bound ('Hsed.Spec.Shape.shapeUnit' of the rule's
 shape): the numbered tables, which a rule fires on by their form and reads
@@ -55,6 +58,9 @@ module Hsed.Spec.RuleDef
     RuleDef (..)
   , ruleShape
   , Emitted (..)
+    -- * Finding codes
+  , CodeDef (..)
+  , Reports (..)
     -- * Classification
   , Classification (..)
   , boundBinding
@@ -96,7 +102,7 @@ import qualified RIO.Text         as T
 import           RIO
 
 import           Hsed.Spec.Anchor (AnchorId (..), parseAnchorId, renderAnchorId)
-import           Hsed.Spec.Common (ErrataSet (..), Finding, RuleName, SpecId (..))
+import           Hsed.Spec.Common (CodeDef (..), ErrataSet (..), Finding, Reports (..), RuleName, SpecId (..))
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), bindingAccepts, someBindingShape)
 import qualified Hsed.Spec.Gen    as Gen
@@ -130,6 +136,15 @@ data RuleDef = RuleDef
     -- ^ its checks of the tables bound to its shape
   , ruleCompile :: Context -> [BoundTable] -> [Emitted]
     -- ^ its declarations for 'ruleModule', and the tables it leaves out
+  , ruleCodes   :: ![CodeDef]
+    -- ^ the finding codes it claims: each code its checks give that no other
+    --   rule, shared reader or generic module claims, with the severities it
+    --   gives it and what its findings report ("Hsed.Spec.Report" assembles
+    --   the catalogue from every rule's). A code several rules give is
+    --   claimed once: by the rule the others import or that defined it first
+    --   (@typeRow@'s C-UID-TABLE, C-UID-UNIQUE and C-FMT-RESOLVE, which
+    --   @uidTable@, @preconfig@ and @tableDesc@ give too), or by the reader
+    --   under "Hsed.Spec.Readers" they give it through
   }
 
 -- | The shape of the tables a rule reads: that of its default binding.

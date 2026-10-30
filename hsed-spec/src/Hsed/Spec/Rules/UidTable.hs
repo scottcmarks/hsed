@@ -112,6 +112,10 @@ uidTableRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch UidTable form)
   , ruleIdent   = const Nothing
   , ruleModule  = uidsModule
+  , ruleCodes   =
+      [ CodeDef "C-UID-NAME"    [Error]          (Defect "two rows of the UID tables give one name")
+      , CodeDef "N-UID-SHARED"  [Note]           (Suspect "a UID two of the UID tables print, each for its own purpose")
+      , CodeDef "N-UID-UNNAMED" [Note]           Bookkeeping ]
   , ruleChecks  = checks
   , ruleCompile = compile
   }

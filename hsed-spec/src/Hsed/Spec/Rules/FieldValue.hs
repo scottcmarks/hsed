@@ -70,6 +70,8 @@ fieldValueRule = RuleDef
   , fires       = \_ t form -> isNothing (shapeMismatch FieldValue form) && all named t.rows
   , ruleIdent   = const Nothing
   , ruleModule  = fieldsModule
+  , ruleCodes   =
+      [ CodeDef "C-FIELD-VALUE" [Error]          (Defect "a command block's row is not one named field and its value, or names a field twice") ]
   , ruleChecks  = \ctx bts -> concatMap (checkValues ctx) (readValues bts)
   , ruleCompile = compile
   }

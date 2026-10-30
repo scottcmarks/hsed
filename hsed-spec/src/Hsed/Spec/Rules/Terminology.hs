@@ -53,6 +53,7 @@ terminologyRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch Prose form) && fCaptionKind form == CaptionTerminology
   , ruleIdent   = const Nothing
   , ruleModule  = proseModule
+  , ruleCodes   = []
   , ruleChecks  = \_ _ -> []
   , ruleCompile = \_ _ -> []
   }

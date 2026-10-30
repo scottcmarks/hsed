@@ -112,6 +112,10 @@ tableDescRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch TableDesc form) && isJust (descIdent form)
   , ruleIdent   = descIdent
   , ruleModule  = tableDescsModule
+  , ruleCodes   =
+      [ CodeDef "C-COL-CONTIG" [Error]          (Defect "a table description's column numbers leave a gap")
+      , CodeDef "C-COL-CELL"   [Error]          (Defect "a table description's row is not four cells, or names a column twice or by no identifier")
+      , CodeDef "C-DESC-TABLE" [Error]          (Defect "a table description names no table of Table 240, or one another description names") ]
   , ruleChecks  = \ctx bts -> let ds = readDescs ctx bts in concatMap (descFindings ctx) ds <> twice ctx ds
   , ruleCompile = compile
   }

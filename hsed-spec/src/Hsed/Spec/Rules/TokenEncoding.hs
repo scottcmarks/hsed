@@ -103,6 +103,9 @@ tokenEncodingRule = RuleDef
   , fires       = \_ _ form -> isNothing (shapeMismatch Tokens form)
   , ruleIdent   = const Nothing
   , ruleModule  = tokensModule
+  , ruleCodes   =
+      [ CodeDef "C-TOKEN-TABLE" [Error]          (Defect "the token table covers a byte twice or not at all, or a row's bit pattern and hex range disagree")
+      , CodeDef "C-TOKEN-CODEC" [Error]          (Suspect "the token table and hsed's hand-written codec disagree") ]
   , ruleChecks  = \ctx bts -> concat [ map (atTable ctx bt) (tokenFindings rows) | (bt, rows) <- readTables ctx bts ]
   , ruleCompile = \ctx bts -> case bts of
       first' : _ -> [Emit (codecTablesDecl ctx first' bts)]

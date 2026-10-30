@@ -23,9 +23,12 @@ every module has; the module's Haddock with the description and notes),
 merges the imports of every declaration (a whole-module import wins over an
 import list; lists are united and sorted), and prints the declarations sorted
 by table number, then rank within the table, then name. The same declarations
-print the same text in any order. The runtime modules the declarations import
-are named once here ('uidModule', 'coreTypesModule', 'coreTableModule',
-'methodModule', 'codeModule', 'fieldModule', 'syncModule', 'propertiesModule').
+print the same text in any order. The runtime modules the declarations of
+several rules import are named once here ('uidModule', 'coreTypesModule',
+'coreTableModule', 'codeModule', 'fieldModule'); one that a single rule's
+declarations import is named in that rule (@Hsed.Core.Method@ in @sig@'s,
+@Hsed.Core.Sync@ in @stateTable@'s, @Hsed.Core.Properties@ in the Props
+reader's).
 
 Every definition carries a Haddock line naming its table, PDF and printed
 page, structure ordinal and the hash of its cells ('provenanceComment',
@@ -49,11 +52,8 @@ module Hsed.Spec.Gen
   , uidModule
   , coreTypesModule
   , coreTableModule
-  , methodModule
   , codeModule
   , fieldModule
-  , syncModule
-  , propertiesModule
     -- * Printing
   , renderModule
     -- * Pieces for the rules' printers
@@ -153,10 +153,6 @@ coreTypesModule = "Hsed.Core.Types"
 coreTableModule :: Text
 coreTableModule = "Hsed.Core.Table"
 
--- | The @Method@ and @MethodSignature@ classes a method record instantiates, @Signature@, @Param@, @Response@, @Value@.
-methodModule :: Text
-methodModule = "Hsed.Core.Method"
-
 -- | @Span@ and @CodeRow@: the rows of a code table.
 codeModule :: Text
 codeModule = "Hsed.Core.Code"
@@ -164,14 +160,6 @@ codeModule = "Hsed.Core.Code"
 -- | @FieldValue@, @FieldConst@ and @FieldDef@: the rows of a record table.
 fieldModule :: Text
 fieldModule = "Hsed.Core.Field"
-
--- | A state table's runtime form: @StateTable@, @StateRow@, @Setting@.
-syncModule :: Text
-syncModule = "Hsed.Core.Sync"
-
--- | The Properties method's runtime form: @Property@, @Communicator@, @Assumptions@.
-propertiesModule :: Text
-propertiesModule = "Hsed.Core.Properties"
 
 
 -- * Printing

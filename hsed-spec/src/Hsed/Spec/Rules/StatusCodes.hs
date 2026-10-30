@@ -79,6 +79,11 @@ statusCodesRule = RuleDef
   , fires       = \_ t form -> isNothing (shapeMismatch StatusCodes form) && all oneValue t.rows
   , ruleIdent   = const Nothing
   , ruleModule  = codesModule
+  , ruleCodes   =
+      [ CodeDef "C-STATUS-CODE"          [Error]          (Defect "a status row is not one name and one value, or gives a value twice")
+      , CodeDef "N-STATUS-NAME-SUFFIXED" [Note]           (AsPrinted "a status name given to several values, the later ones suffixed")
+      , CodeDef "W-STATUS-SECTION"       [Warning]        (Suspect "a subsection of the status table's section names no status of it")
+      , CodeDef "N-STATUS-UNDESCRIBED"   [Note]           (Suspect "a status no subsection of its section describes") ]
   , ruleChecks  = \ctx bts -> concatMap (checkStatus ctx) (readStatus bts)
   , ruleCompile = compile
   }

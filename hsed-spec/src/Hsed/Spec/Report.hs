@@ -63,7 +63,7 @@ import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (someBindingShape)
 import           Hsed.Spec.Grammar (printPayload)
 import           Hsed.Spec.IR     (AnnotIR (..), SigIR (..), SpecIR (..), TableIR (..))
-import           Hsed.Spec.RuleDef (Context (..), Mods (..), modsOf, signatureUnits)
+import           Hsed.Spec.RuleDef (Context (..), Mods (..), modsOf)
 import           Hsed.Spec.Rules
 import           Hsed.Spec.Shape  (captionTitle, shapeName)
 
@@ -236,13 +236,10 @@ coverageMarkdown ir = T.unlines $
     -- what each rule token of an anchor binds within the anchor's scope
     scoped sec p = case ruleTokens p of
       [] -> "the document"
-      rs -> T.intercalate "; " (map (bindsWithin sec) rs)
-    bindsWithin sec r = T.concat
+      rs -> T.intercalate "; " (map (bindsWithinText sec) rs)
+    bindsWithinText sec r = T.concat
       [ "rule ", ruleNameText r, ": "
-      , case ( length [ () | (aid, RuleBound r' _ _) <- Map.toList classes, r' == r
-                           , Just t <- [Map.lookup aid tables], covers sec (sectionOf t) ]
-             , length [ () | (aid, RuleBound r' _ _) <- Map.toList sigClasses, r' == r
-                           , Just s <- [Map.lookup aid (signatureUnits ir)], covers sec (Just s.section) ] ) of
+      , case bindsWithin ir classes sigClasses sec r of
           (0, 0) | isNothing (ruleNamed r) -> "not implemented yet"
                  | otherwise               -> "binds nothing here"
           (n, 0) -> counted n "table"
@@ -347,6 +344,7 @@ catalogue = Map.fromList $
   <> [ (c, Bookkeeping) | c <-
     [ "W-UNBOUND", "E-UNBOUND", "E-AMBIGUOUS", "W-RULE-UNIMPLEMENTED", "W-GEN-EXCLUDED", "C-EXEMPLAR", "W-WAIVER-UNUSED"
     , "W-PINS-NONE", "E-SHAPE", "E-ANCHOR", "E-ANCHOR-KIND", "E-SYNTAX", "E-GRAMMAR", "E-MODIFIER", "E-SIDECAR"
+    , "W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"
     , "E-ERRATUM-PUBLISHED", "E-GEN-MODULE", "E-FMT-SYNTAX", "E-FMT-CODE", "E-FMT-ARITY"
     , "N-UID-UNNAMED", "N-RANGE-UNCHECKED", "W-PRECONF-TEMPLATE" ] ]
 

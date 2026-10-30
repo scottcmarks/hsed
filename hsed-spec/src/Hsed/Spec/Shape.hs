@@ -423,7 +423,10 @@ describe form = T.concat
 --   a preconfiguration; a code table is not an enumeration or a typed record.
 --   'Tokens' takes the token table of Core Table 4 and the atom diagrams that
 --   follow it (a first header cell naming the atom's header, or two columns
---   with no header row).
+--   with no header row). 'StateTable' takes a table whose first column names
+--   states and whose other header cells name fields, each a @… Field Value@
+--   (Core Table 45), so that a @stateTable@ comment on any other table is
+--   @E-SHAPE@ rather than a table silently read as states.
 shapeMismatch :: Shape -> Form -> Maybe Text
 shapeMismatch shape form = case shape of
   TypeRow         -> header ["uid", "name", "format"]
@@ -445,7 +448,8 @@ shapeMismatch shape form = case shape of
   Ranges          -> columns 3 <|> cells "[<X> Name, … Start, … End]" ranges
   Preconfig       -> atLeast 2 <|> caption
   Tokens          -> (atLeast 4 <|> prefix ["byte", "hex", "acronym", "meaning"]) >> atomDiagram
-  StateTable      -> atLeast 2
+  StateTable      -> atLeast 2 <|> restSuch "header cells after the first naming fields, each ending Field Value"
+                                              ("fieldvalue" `T.isSuffixOf`)
   Props           -> atLeast 3 <|> firstSuch "a first header cell starting with Property" ("property" `T.isPrefixOf`)
   PropsReq        -> columns 3 <|> prefix ["propertyname"]
   Legend          -> atLeast 2 <|> firstSuch "a first header cell mentioning the legend" ("legend" `T.isInfixOf`)
@@ -473,6 +477,9 @@ shapeMismatch shape form = case shape of
     firstSuch what p = case hs of
       h : _ | p h -> Nothing
       _           -> Just ("expects " <> what)
+    restSuch what p = case hs of
+      _ : rest@(_ : _) | all p rest -> Nothing
+      _                             -> Just ("expects " <> what)
     lastIs cell = case reverse hs of
       h : _ | h == cell -> Nothing
       _                 -> Just ("expects the last header cell " <> tshow cell)

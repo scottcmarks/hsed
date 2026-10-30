@@ -84,6 +84,14 @@ spec = withCore $ \pristine -> do
       stateFindings (setCell "T45" 3 0 "" ir) `shouldBe`
         [ "C-STATE-TABLE core-2.01.pdf#page=83&T45: row 4 names no state" ]
 
+  describe "a stateTable comment on another table" $
+    it "is E-SHAPE on a type, a code, a column-value and a UID table, each read by nothing" $
+      forM_ [("T46", "100"), ("T179", "167"), ("T188", "179"), ("T243", "304")] $ \(tid, page) -> do
+        ir' <- annotated pristine (withoutLine tid hsa <> "core-2.01 | " <> tid <> " | stateTable \"Sync.tableX\"\n")
+        let errs = [ renderFinding f | f <- checkIR Scott ir', Cm.isError f ]
+        errs `shouldSatisfy` \es -> length es == 1 && all (("E-SHAPE core-2.01.pdf#page=" <> page <> "&" <> tid <> ": StateTable does not accept this table: expects header cells after the first naming fields") `T.isPrefixOf`) es
+        map stQName (stateTableReads (mkContext Scott ir')) `shouldBe` ["Sync.table45"]
+
   describe "the generated module" $ do
     cr <- runIO (either (throwString . show) pure (compileIR Scott ir))
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.StateTables" (crModules cr)))

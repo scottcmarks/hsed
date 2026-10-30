@@ -162,7 +162,23 @@ spec = do
         about "T46" (checkIR Scott (setHeaderCell "T46" 0 0 "Colum Type" ir)) `shouldContain`
           ["N-HEADER-NORMALISED core-2.01.pdf#page=100&T46: header \"Colum Type\" read as \"Column Type\""]
 
-    describe "E-SHAPE" $
+    describe "E-SHAPE" $ do
       it "fails on a binding whose shape does not accept the table: a feature comment on a type table" $ do
         ir' <- annotated pristine (hsa <> "core-2.01 | T46 | feature\n")
         errorsOf Scott ir' `shouldSatisfy` any ("E-SHAPE core-2.01.pdf#page=100&T46: Feature does not accept this table" `T.isPrefixOf`)
+      it "leaves a table its binding's shape refuses to no rule: the one Error is E-SHAPE" $ do
+        ir' <- annotated pristine (hsa <> "core-2.01 | T25 | uidTable\n")
+        errorsOf Scott ir' `shouldSatisfy` \es -> length es == 1 && all ("E-SHAPE core-2.01.pdf#page=53&T25: UidTable does not accept" `T.isPrefixOf`) es
+        about "T25" (checkIR Scott ir') `shouldSatisfy` all ("E-SHAPE " `T.isPrefixOf`)
+        ir'' <- annotated pristine (hsa <> "core-2.01 | T166 | propsNames\n")
+        errorsOf Scott ir'' `shouldSatisfy` \es -> length es == 1 && all ("E-SHAPE core-2.01.pdf#page=137&T166: Props does not accept" `T.isPrefixOf`) es
+
+    describe "the rule anchors" $ do
+      it "find none on the committed annotations that binds nothing or that another covers" $
+        withCodes ["W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"] scott `shouldBe` []
+      it "report an anchor whose scope binds nothing to its rule, and one another anchor of the rule covers" $ do
+        ir' <- annotated pristine (hsa <> "core-2.01 | 6.2 | rule uidTable\ncore-2.01 | 5.3.3.6 | rule sig\n")
+        rendered (withCodes ["W-RULE-SCOPE-EMPTY", "N-RULE-SCOPE-REDUNDANT"] (checkIR Scott ir')) `shouldBe`
+          [ "W-RULE-SCOPE-EMPTY core-2.01.pdf#page=300&6.2: rule uidTable binds no table and no signature block in section 6.2"
+          , "N-RULE-SCOPE-REDUNDANT core-2.01.pdf#page=201&5.3.3.6: rule sig here lies within its anchor's scope at the whole document: drop one"
+          , "N-RULE-SCOPE-REDUNDANT core-2.01.pdf#page=300&6.2: rule uidTable here lies within its anchor's scope at the whole document: drop one" ]

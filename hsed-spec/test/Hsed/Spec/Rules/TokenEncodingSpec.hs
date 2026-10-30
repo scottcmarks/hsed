@@ -52,7 +52,7 @@ spec = withCore $ \pristine -> do
   describe "the tokenEncoding rule" $ do
     it "binds Tables 4-14, and no other table, by the rule token at Core 3.2.2" $ do
       [ n | (TableId n, RuleBound (RuleName "tokenEncoding") _ _) <- Map.toList (classify ir) ] `shouldBe` [4 .. 14]
-      explain ir (TableId 4) `shouldBe` "tokens (exemplar core T4)"
+      explain ir (TableId 4) `shouldBe` "tokenEncoding (exemplar core T4), binding tokens"
     it "reads Table 4, the one token table, row by row: 17 rows, every one whole" $ do
       [ (renderAnchorId (btAnchor bt), length rs, lefts rs) | (bt, rs) <- tokenRows ctx ]
         `shouldBe` [("T4", 17, [])]

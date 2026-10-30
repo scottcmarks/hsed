@@ -23,6 +23,8 @@ checks, each emitting findings with the code in brackets:
   @W-UNBOUND@, @W-RULE-UNIMPLEMENTED@ ("Hsed.Spec.Rules"), for the numbered
   tables and the signature units alike;
 * @C-EXEMPLAR@: each rule still fires on its exemplar;
+* @W-RULE-SCOPE-EMPTY@, @N-RULE-SCOPE-REDUNDANT@: a rule anchor whose scope
+  binds nothing to its rule, or that another anchor of the rule covers;
 * @E-SHAPE@: every bound table's form is accepted by its binding;
 * the checks of the document as a whole ("Hsed.Spec.Document"): its List of
   Tables against the captions (@LOT-VS-BODY@) and every table reference in its
@@ -67,7 +69,7 @@ import           Hsed.Spec.Errata  (Erratum (..), correctTable)
 import           Hsed.Spec.IR      (SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules   (checkExemplars, classifySignaturesWith, classifyWithRules)
+import           Hsed.Spec.Rules   (checkExemplars, checkRuleAnchors, classifySignaturesWith, classifyWithRules)
 import           Hsed.Spec.Scope   (tableSections)
 import           Hsed.Spec.Shape   (headerNormalisations, measure, normaliseCaption, rawCaptionTitle)
 
@@ -130,6 +132,7 @@ checks :: Context -> [Finding]
 checks ctx = concat
   [ cxClassFindings ctx
   , checkExemplars (cxIR ctx)
+  , checkRuleAnchors (cxIR ctx) (cxClasses ctx) (cxSigClasses ctx)
     -- E-SHAPE on every bound table
   , [ f | (aid, t) <- Map.toList (cxTables ctx), Just (SomeBinding b) <- [bindingOf ctx aid]
         , Just f <- [bindingAccepts b (measure (cxSpec ctx) t)] ]

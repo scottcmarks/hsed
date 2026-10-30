@@ -178,7 +178,7 @@ spec = do
       it "names the rule and its exemplar (acceptance (g))" $ do
         explain ir (TableId 46) `shouldBe` "typeRow (exemplar core T46)"
         explain ir (TableId 52) `shouldBe` "enumValues (exemplar core T52)"
-        explain ir (TableId 75) `shouldBe` "erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow (exemplar core T46)"
+        explain ir (TableId 75) `shouldBe` "typeRow (exemplar core T46), binding erratum scott [\"Fractoin\" ~> \"Fraction\"] typeRow"
         explain ir (TableId 87) `shouldBe` "comment: rangeWords [\"to\"] (cols 0 1 enumValues)"
 
     describe "checkExemplars" $ do

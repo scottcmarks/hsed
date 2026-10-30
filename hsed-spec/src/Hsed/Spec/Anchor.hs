@@ -48,7 +48,7 @@ import           Hsed.Spec.Common (Finding, SpecId (..))
 import qualified Hsed.Spec.Common as C
 import qualified Hsed.Spec.IR     as IR
 import           Hsed.Spec.IR     (HeadingIR (..), ParaIR (..), ParaKind (..), PageRect (..), Rect (..),
-                                   SpecIR (..), StructPath (..), TableIR (..))
+                                   SigIR (..), SpecIR (..), StructPath (..), TableIR (..))
 import           Hsed.Spec.Shape  (Shape)
 
 
@@ -133,7 +133,9 @@ anchorTarget ir = \case
     [p] -> Right (p.structPath, p.page, p.rect)
     []  -> Left ("no paragraph " <> s <> "#" <> item <> " in the IR")
     ps  -> Left (tshow (length ps) <> " paragraphs labelled " <> s <> "#" <> item <> " in the IR")
-  SigId s -> Left ("signature blocks are rule-bound and carry no annotation: " <> s <> "/sig")
+  SigId s
+    | any (\b -> b.section == s) ir.sigs -> Left ("signature blocks are rule-bound and carry no annotation: " <> s <> "/sig")
+    | otherwise                          -> Left ("no signature block " <> s <> "/sig in the IR")
   where
     paraHits s item =
       let inSection = [ p | p <- ir.paras, p.section == Just s ]

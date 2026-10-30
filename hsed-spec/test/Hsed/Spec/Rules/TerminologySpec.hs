@@ -46,7 +46,7 @@ spec = withCore $ \pristine -> do
     it "binds as prose the six Terminology and Example tables, and no other, by the doc anchor's rule token" $ do
       [ (n, sb) | (TableId n, RuleBound (RuleName "terminology") _ sb) <- Map.toList (classify ir) ]
         `shouldBe` map (\n -> (n, SomeBinding prose)) [1, 210, 217, 219, 224, 232]
-      explain ir (TableId 1) `shouldBe` "prose (exemplar core T1)"
+      explain ir (TableId 1) `shouldBe` "terminology (exemplar core T1), binding prose"
     it "leaves Table 3, the Foo Table Description, to its prose comment" $
       Map.lookup (TableId 3) (classify ir) `shouldBe` Just (CommentBound (SomeBinding prose))
 

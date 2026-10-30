@@ -189,13 +189,19 @@ data BoundTable = BoundTable
   , btMods    :: !Mods          -- ^ the binding's modifiers
   }
 
--- | The tables bound with a shape, by a rule or by a comment, in anchor order.
+-- | The tables bound with a shape, by a rule or by a comment, in anchor order;
+--   not a table the shape refuses (@E-SHAPE@, an Error: a comment binding it
+--   to a shape it is not), whose one finding is then that Error. A table bound
+--   under @as@ is read: its @E-SHAPE@ is a Warning.
 boundTables :: Maybe Shape -> Context -> [BoundTable]
 boundTables shape ctx =
   [ BoundTable aid t (Map.findWithDefault t aid (cxCorrected ctx)) sb (modsOf sb)
   | isJust shape
   , (aid, t) <- Map.toList (cxTables ctx), Just sb <- [Map.lookup aid (cxClasses ctx) >>= boundBinding]
-  , someBindingShape sb == shape ]
+  , someBindingShape sb == shape, not (refused sb t) ]
+  where
+    refused (SomeBinding b) t = maybe False Cm.isError (bindingAccepts b (measure (cxSpec ctx) t))
+    refused (PolyBinding _) _ = False
 
 -- | The section of a bound table: that of the nearest numbered heading before it.
 sectionOf :: Context -> BoundTable -> Maybe Text
@@ -293,12 +299,6 @@ tablePage t = (+ 1) <$> listToMaybe t.pages
 atTable :: Context -> BoundTable -> Finding -> Finding
 atTable ctx bt = locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (fromMaybe 1 (tablePage (btTable bt)))
 
--- | Every numbered table by its anchor id; a table Word split in two (Core T7)
---   is its first part.
-numberedTables :: SpecIR -> Map AnchorId TableIR
-numberedTables ir = Map.fromListWith earlier
-  [ (aid, t) | t <- ir.tables, Just i <- [t.id], Just aid@(TableId _) <- [parseAnchorId i] ]
-  where
 -- | Locate a finding about one row at the page the row is printed on (that of
 --   its first cell that has one; a table spanning pages prints a row on the
 --   page it lies on), else at its table.
@@ -307,6 +307,12 @@ atCells ctx bt cells = case listToMaybe (mapMaybe (\c -> c.page) cells) of
   Just p0 -> locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (p0 + 1)
   Nothing -> atTable ctx bt
 
+-- | Every numbered table by its anchor id; a table Word split in two (Core T7)
+--   is its first part.
+numberedTables :: SpecIR -> Map AnchorId TableIR
+numberedTables ir = Map.fromListWith earlier
+  [ (aid, t) | t <- ir.tables, Just i <- [t.id], Just aid@(TableId _) <- [parseAnchorId i] ]
+  where
     earlier a b = if order a <= order b then a else b
     order :: TableIR -> (Maybe Int, Maybe Int)
     order t = (t.part, t.ordinal)
@@ -344,17 +350,17 @@ provenanceOf ctx aid t caption = Gen.Provenance
   , Gen.cellsHash   = cellsHash t }
   where page = fromMaybe 1 (tablePage t)
 
+-- | The provenance of a bound table's declarations, under its caption as read
+--   ('btRead': corrected under the errata set) and normalised.
+boundProvenance :: Context -> BoundTable -> Gen.Provenance
+boundProvenance ctx bt = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+
 -- | A provenance moved to the page of one row: the PDF and printed page of the
 --   row's first cell that has one (a table spanning pages prints a row on the
 --   page it lies on); the table's ordinal and hash are kept.
 atRow :: Context -> [CellIR] -> Gen.Provenance -> Gen.Provenance
 atRow ctx cells p = case listToMaybe (mapMaybe (\c -> c.page) cells) of
   Nothing -> p
--- | The provenance of a bound table's declarations, under its caption as read
---   ('btRead': corrected under the errata set) and normalised.
-boundProvenance :: Context -> BoundTable -> Gen.Provenance
-boundProvenance ctx bt = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
-
   Just page0 -> p { Gen.pdfPage1 = page0 + 1, Gen.printedPage = page0 + 1 - (cxIR ctx).labelOffset }
 
 -- | sha256 over a table's cell texts, header rows first, a tab between cells and

@@ -62,11 +62,12 @@ spec = do
           [ "E-SIDECAR core-2.01: line 1: no table T999 in the IR"
           , "E-SIDECAR core-2.01: line 2: spec is opal-2.30, the IR is core-2.01"
           , "E-SIDECAR core-2.01: line 3: no heading numbered 9.9.9 in the IR" ]
-      it "refuses a paragraph the IR does not have and a signature block" $ do
-        let (fs, _) = resolveSidecar ir "core-2.01 | 5.1.3#p99 | law \"A.b\"\ncore-2.01 | 5.3.3.6/sig | sig\n"
+      it "refuses a paragraph the IR does not have, a signature block, and one the IR does not have" $ do
+        let (fs, _) = resolveSidecar ir "core-2.01 | 5.1.3#p99 | law \"A.b\"\ncore-2.01 | 5.3.3.6/sig | sig\ncore-2.01 | 5.3.3.99/sig | prose\n"
         map renderFinding fs `shouldBe`
           [ "E-SIDECAR core-2.01: line 1: no paragraph 5.1.3#p99 in the IR"
-          , "E-SIDECAR core-2.01: line 2: signature blocks are rule-bound and carry no annotation: 5.3.3.6/sig" ]
+          , "E-SIDECAR core-2.01: line 2: signature blocks are rule-bound and carry no annotation: 5.3.3.6/sig"
+          , "E-SIDECAR core-2.01: line 3: no signature block 5.3.3.99/sig in the IR" ]
     describe "withSidecar" $
       it "orders the annotations canonically: kind, then the id's natural order" $ do
         let (_, ir') = withSidecar ir "core-2.01 | T75 | erratum scott [\"a\" ~> \"b\"]\ncore-2.01 | T101 | enumValues\ncore-2.01 | T46 | typeRow\ncore-2.01 | doc | doc core201\n"

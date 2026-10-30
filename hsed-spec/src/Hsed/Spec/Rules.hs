@@ -54,7 +54,10 @@ scope and that validation live in "Hsed.Spec.Scope", below the registry, so
 that a rule module can use them too, and this module re-exports them.
 
 A rule binds only where an anchor puts it in scope, so design section 3.4's
-@C-RULE-ANCHORED@ holds by construction and is not checked separately.
+@C-RULE-ANCHORED@ holds by construction and is not checked separately. What
+is checked is the converse ('checkRuleAnchors'): a @rule X@ token whose scope
+binds nothing to X (@W-RULE-SCOPE-EMPTY@), or whose scope another anchor of X
+already covers (@N-RULE-SCOPE-REDUNDANT@), says nothing.
 -}
 module Hsed.Spec.Rules
   ( -- * Rules
@@ -85,6 +88,8 @@ module Hsed.Spec.Rules
   , locatedAt
   , checkExemplars
   , checkExemplarsWith
+  , checkRuleAnchors
+  , bindsWithin
   , anchorKindMismatch
   ) where
 
@@ -132,12 +137,17 @@ describeClassification = \case
   Unbound            -> "unbound"
   Invalid f          -> "invalid: " <> renderFinding f
 
--- | The rule and its exemplar for a rule-bound table, @\<binding\> (exemplar core T46)@ (design acceptance M1 (g)).
+-- | The rule and its exemplar for a rule-bound table, @\<rule\> (exemplar core
+--   T46)@ (design acceptance M1 (g)), then its binding where that is not the
+--   rule's name alone: @tokenEncoding (exemplar core T4), binding tokens@, or
+--   a bare modifier comment's @typeRow (exemplar core T46), binding erratum
+--   scott [...] typeRow@.
 explain :: SpecIR -> AnchorId -> Text
 explain ir aid = case Map.lookup aid (classes aid) of
   Nothing -> "no " <> unit aid <> " " <> renderAnchorId aid <> " in " <> ir.spec
   Just c@(RuleBound r _ sb) -> case ruleNamed r of
-    Just rl -> printSomeBinding sb <> " (exemplar " <> prefix (fst (exemplar rl)) <> " " <> renderAnchorId (snd (exemplar rl)) <> ")"
+    Just rl -> ruleNameText r <> " (exemplar " <> prefix (fst (exemplar rl)) <> " " <> renderAnchorId (snd (exemplar rl)) <> ")"
+                 <> (if printSomeBinding sb == ruleNameText r then "" else ", binding " <> printSomeBinding sb)
     Nothing -> describeClassification c
   Just c -> describeClassification c
   where
@@ -172,8 +182,10 @@ classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatM
                                       , fires r sid t form, Just i <- [ruleIdent r form] ])
       | r <- ruleSet ]
     commentsOn aid = [ pa | pa <- parsed, paAnchor pa == Just aid ]
+    -- a rule whose shape takes signature units fires on no table, whatever its 'fires' says
     firing t form = precedence
       [ r | r <- ruleSet
+          , fmap shapeUnit (ruleShape r) /= Just SignatureUnit
           , any (`covers` Map.findWithDefault Nothing t.structPath sections) (Map.findWithDefault [] (ruleName r) scopes)
           , fires r sid t form
           , maybe True (\joined -> maybe False (`Set.member` Map.findWithDefault mempty joined idents) (ruleIdent r form)) (joinsTo r) ]
@@ -269,6 +281,52 @@ classifySignaturesWith ruleSet ir = (classes, concatMap located (Map.toList clas
                                   ("rules " <> T.intercalate " and " (map ruleNameText rs) <> " both bind this signature block"))]
       _                      -> []
     here aid u = locatedAt sid (renderAnchorId aid) (u.page + 1)
+
+-- | How many numbered tables and how many signature units a classification
+--   binds to a rule within a scope.
+bindsWithin :: SpecIR -> Map AnchorId Classification -> Map AnchorId Classification -> Section -> RuleName -> (Int, Int)
+bindsWithin ir classes sigClasses sec r =
+  ( length [ () | (aid, RuleBound r' _ _) <- Map.toList classes, r' == r
+                , Just t <- [Map.lookup aid tables], covers sec (join (Map.lookup t.structPath sections)) ]
+  , length [ () | (aid, RuleBound r' _ _) <- Map.toList sigClasses, r' == r
+                , Just s <- [Map.lookup aid (signatureUnits ir)], covers sec (Just s.section) ] )
+  where
+    tables   = numberedTables ir
+    sections = tableSections ir
+
+-- | The rule anchors that say nothing, for the rules of "Hsed.Spec.Registry":
+--   a @rule X@ token whose scope binds no table and no signature block to X is
+--   @W-RULE-SCOPE-EMPTY@ (bookkeeping: the anchor is misplaced, or the rule no
+--   longer fires where it stands), and one whose scope another anchor of X
+--   covers is @N-RULE-SCOPE-REDUNDANT@ (an annotation to drop, whose bytes
+--   the tail budget pays for). A token naming a rule hsedc does not implement
+--   is @W-RULE-UNIMPLEMENTED@'s, not these.
+checkRuleAnchors :: SpecIR -> Map AnchorId Classification -> Map AnchorId Classification -> [Finding]
+checkRuleAnchors ir classes sigClasses =
+  concat [ findingsFor pa sec r | pa <- parsed, Right p <- [paPayload pa], Just sec <- [paAnchor pa >>= scopeAt]
+                                , r <- ruleTokens p, isJust (ruleNamed r) ]
+  where
+    parsed = parseAnnots ir
+    sid    = SpecId ir.spec
+    scopeAt = \case
+      DocId       -> Just WholeDocument
+      SectionId s -> Just (Subtree s)
+      _           -> Nothing
+    here pa = locatedAt sid (paAnnot pa).id ((paAnnot pa).page + 1)
+    describe = \case
+      WholeDocument -> "the whole document"
+      Subtree s     -> "section " <> s
+    -- does one scope cover another
+    coversScope o = \case
+      WholeDocument -> o == WholeDocument
+      Subtree s     -> covers o (Just s)
+    findingsFor pa sec r =
+      [ here pa (finding Warning "W-RULE-SCOPE-EMPTY"
+          ("rule " <> ruleNameText r <> " binds no table and no signature block in " <> describe sec))
+      | bindsWithin ir classes sigClasses sec r == (0, 0) ]
+      <> [ here pa (finding Note "N-RULE-SCOPE-REDUNDANT"
+             ("rule " <> ruleNameText r <> " here lies within its anchor's scope at " <> describe other <> ": drop one"))
+         | other <- take 1 [ o | o <- scopesFrom parsed r, o /= sec, coversScope o sec ] ]
 
 -- | The tables a binding shaped by its target names.
 polyTargets :: Binding s -> [Ref]

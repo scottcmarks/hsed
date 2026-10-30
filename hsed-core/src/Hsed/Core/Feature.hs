@@ -1,12 +1,10 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications    #-}
 
 {-|
 Module      : Hsed.Core.Feature
-Description : The runtime form of a feature descriptor: a record of its fields, its code, version, length and layout
+Description : The runtime form of a feature descriptor: a record over its layout, its code, version, length and header
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -16,50 +14,45 @@ The back end of the @feature@ rule (design docs/spec-as-source.md example E8).
 A feature descriptor is a byte grid captioned @… Feature Descriptor@ (Core
 Tables 42 and 43): a header in the general format its spec defines (Core Table
 41: a code, a version, reserved bits and a length), then the feature's own
-fields. The spec compiler makes each a record, its flags 'Bool' fields, its
-other numbers 'Natural' ones, and an instance of 'Feature':
+fields. The spec compiler makes each a record over its layout, as it makes
+every byte grid's ("Hsed.Core.Record": a 'LayoutRecord', its fields typed by
+their widths, flags 'Bool'), and an instance of 'Feature', the subclass that
+adds what a descriptor is besides its fields:
 
 * 'featureCode', the code the header's first field holds, which identifies
   the descriptor among the others of a Level 0 Discovery response; and the
   version and the length the header holds, when the spec pins them
   ('featureVersion', 'featureLength': the length counts the bytes after the
   header);
-* 'featureLayout', the descriptor as a "Hsed.Core.Layout" 'Layout': its
-  header pinned, its reserved bits, its fields at the bits the grid prints
-  them over;
-* 'featureValues' and 'featureFromValues', the record's fields by the names
-  the layout gives them, which 'encodeFeature' and 'decodeFeature' pass to and
-  take from 'encode' and 'decode'.
+* 'featureHeader', the general format's size and the name of its length
+  field, which say where a descriptor ends: its header and as many bytes as
+  its length field holds.
 
 A pinned field (the header's, and any other the spec pins) and reserved bits
 are no fields of the record: they are written as the layout has them and, read
 as anything else, reported ('decodeFeature') or refused
 ('decodeFeatureStrict': how a TPer's own descriptor is held to what it SHALL
-send).
+send). Either way the input after a descriptor starts where its length field
+says it ends, whatever its pins say, so that the next descriptor of a Level 0
+Discovery response is read from its first byte.
 -}
 module Hsed.Core.Feature
   ( -- * Feature descriptors
     Feature (..)
-  , DecodedFeature (..)
-  , encodeFeature
+  , FeatureHeader (..)
   , decodeFeature
   , decodeFeatureStrict
     -- * The bit map
   , bitMap
-    -- * A record's fields by name, for the generated instances
-  , flag
-  , flagOf
-  , number
-  , numberOf
-  , octets
-  , octetsOf
   ) where
 
+import qualified RIO.ByteString   as B
 import qualified RIO.List         as L
 import           RIO
 
-import           Hsed.Core.Layout (Content (..), Decoded (..), Difference, Field (..), Layout (..), LayoutError (..),
-                                   bitOffset, decode, decodeStrict, encode)
+import           Hsed.Core.Layout (Content (..), Decoded (..), Field (..), Layout (..), LayoutError (..), bitOffset,
+                                   decode, decodeStrict)
+import           Hsed.Core.Record (DecodedRecord (..), LayoutRecord (..))
 
 
 -- $setup
@@ -70,51 +63,55 @@ import           Hsed.Core.Layout (Content (..), Decoded (..), Difference, Field
 
 -- * Feature descriptors
 
--- | A feature descriptor's record. Use the class's constants with a type
---   application: @featureCode \@TPerFeature@.
-class Feature f where
-  -- | The code the header's first field holds: which feature the descriptor describes.
-  featureCode :: Integer
-  -- | The version the header holds, when the spec pins one.
-  featureVersion :: Maybe Integer
-  -- | The length the header holds, the bytes of the descriptor after its header, when the spec pins it.
-  featureLength :: Maybe Integer
-  -- | The descriptor: the header and every pinned field as 'Hsed.Core.Layout.Pinned', reserved bits, the record's fields.
-  featureLayout :: Layout
-  -- | The record's fields by their names in the layout, as 'encode' takes them.
-  featureValues :: f -> [(Text, Content)]
-  -- | The record from the values of the layout's fields by name, as 'decode' gives them.
-  featureFromValues :: [(Text, Content)] -> Either LayoutError f
-
--- | A descriptor read from the start of an input: the record, what differs
---   from the layout's pins and reserved bits, and the input after it.
-data DecodedFeature f = DecodedFeature
-  { decodedFeature     :: !f
-  , featureDifferences :: ![Difference]
-  , featureRest        :: !ByteString
+-- | The general format a feature descriptor's header conforms to (Core Table
+--   41): its size in bytes, and the field of it whose value is the count of
+--   the descriptor's bytes after the header.
+data FeatureHeader = FeatureHeader
+  { headerSize        :: !Int
+  , headerLengthField :: !Text
   }
   deriving (Eq, Show)
 
--- | A descriptor's bytes: its pins as pinned, its reserved bits zeros, its
---   fields the record's.
-encodeFeature :: forall f. Feature f => f -> Either LayoutError ByteString
-encodeFeature = encode (featureLayout @f) . featureValues
+-- | A feature descriptor's record: a record over its layout, and the
+--   constants of its header.
+class LayoutRecord f => Feature f where
+  -- | The code the header's first field holds: which feature the descriptor describes.
+  featureCode    :: proxy f -> Integer
+  -- | The version the header holds, when the spec pins one.
+  featureVersion :: proxy f -> Maybe Integer
+  -- | The length the header holds, the bytes of the descriptor after its header, when the spec pins it.
+  featureLength  :: proxy f -> Maybe Integer
+  -- | The header's general format: where a descriptor ends.
+  featureHeader  :: proxy f -> FeatureHeader
 
 -- | A descriptor from the start of an input, a pin read with another value
---   and reserved bits read other than zero reported ('decode'): how a host
---   reads what a drive sent.
-decodeFeature :: forall f. Feature f => ByteString -> Either LayoutError (DecodedFeature f)
-decodeFeature = decodedWith (decode (featureLayout @f))
+--   and reserved bits read other than zero reported (as
+--   "Hsed.Core.Record".'Hsed.Core.Record.decodeRecord' reports them), the
+--   rest of the input after the bytes its length field gives: how a host
+--   reads what a drive sent. A length field giving fewer bytes than the
+--   layout's, or more than the input holds, is 'Truncated'.
+decodeFeature :: forall f. Feature f => ByteString -> Either LayoutError (DecodedRecord f)
+decodeFeature = decodeWith decode
 
--- | 'decodeFeature', refusing a pin read with another value ('decodeStrict').
-decodeFeatureStrict :: forall f. Feature f => ByteString -> Either LayoutError (DecodedFeature f)
-decodeFeatureStrict = decodedWith (decodeStrict (featureLayout @f))
+-- | 'decodeFeature', refusing a pin read with another value.
+decodeFeatureStrict :: forall f. Feature f => ByteString -> Either LayoutError (DecodedRecord f)
+decodeFeatureStrict = decodeWith decodeStrict
 
-decodedWith :: Feature f => (ByteString -> Either LayoutError Decoded) -> ByteString -> Either LayoutError (DecodedFeature f)
-decodedWith reader input = do
-  d <- reader input
-  f <- featureFromValues (decodedFields d)
-  pure (DecodedFeature f (decodedDifferences d) (decodedRest d))
+decodeWith :: forall f. Feature f => (Layout -> ByteString -> Either LayoutError Decoded) -> ByteString -> Either LayoutError (DecodedRecord f)
+decodeWith reader input = do
+  let p = Proxy :: Proxy f
+      l = recordLayout p
+      h = featureHeader p
+  d <- reader l input
+  n <- case L.lookup (headerLengthField h) (decodedFields d) of
+    Just (Number v) -> Right v
+    _               -> Left (MissingField (headerLengthField h))
+  let end = toInteger (headerSize h) + n
+      clipped = fromInteger (min end (toInteger (maxBound :: Int)))
+  when (end < toInteger (layoutSize l)) (Left (Truncated (layoutSize l) clipped))
+  when (end > toInteger (B.length input)) (Left (Truncated clipped (B.length input)))
+  r <- fromFields (decodedFields d)
+  pure (DecodedRecord r (decodedDifferences d) (B.drop clipped input))
 
 
 -- * The bit map
@@ -129,52 +126,3 @@ bitMap l =
   [ ((byte, bit), L.find (covers (bitOffset byte bit)) (layoutFields l))
   | byte <- [0 .. layoutSize l - 1], bit <- [7, 6 .. 0] ]
   where covers o f = fieldStart f <= o && o < fieldStart f + fieldWidth f
-
-
--- * A record's fields by name
-
--- | A flag's value, by its field's name: 1 for True.
---
--- >>> map (flag "Ready") [False, True]
--- [("Ready",Number 0),("Ready",Number 1)]
-flag :: Text -> Bool -> (Text, Content)
-flag name b = (name, Number (if b then 1 else 0))
-
--- | A flag among a layout's values by name.
---
--- >>> map (flagOf "Ready") [[("Ready", Number 1)], [("Ready", Number 2)], [("Count", Number 1)]]
--- [Right True,Left (OutOfRange "Ready" 2),Left (MissingField "Ready")]
-flagOf :: Text -> [(Text, Content)] -> Either LayoutError Bool
-flagOf name vs = case L.lookup name vs of
-  Just (Number 0) -> Right False
-  Just (Number 1) -> Right True
-  Just (Number v) -> Left (OutOfRange name v)
-  Just (Octets _) -> Left (WrongContent name)
-  Nothing         -> Left (MissingField name)
-
--- | An unsigned number's value, by its field's name.
-number :: Text -> Natural -> (Text, Content)
-number name n = (name, Number (toInteger n))
-
--- | An unsigned number among a layout's values by name.
---
--- >>> numberOf "Count" [("Ready", Number 1), ("Count", Number 7)]
--- Right 7
-numberOf :: Text -> [(Text, Content)] -> Either LayoutError Natural
-numberOf name vs = case L.lookup name vs of
-  Just (Number v)
-    | v >= 0      -> Right (fromInteger v)
-    | otherwise   -> Left (OutOfRange name v)
-  Just (Octets _) -> Left (WrongContent name)
-  Nothing         -> Left (MissingField name)
-
--- | A byte string's value, by its field's name.
-octets :: Text -> ByteString -> (Text, Content)
-octets name b = (name, Octets b)
-
--- | A byte string among a layout's values by name.
-octetsOf :: Text -> [(Text, Content)] -> Either LayoutError ByteString
-octetsOf name vs = case L.lookup name vs of
-  Just (Octets b) -> Right b
-  Just (Number _) -> Left (WrongContent name)
-  Nothing         -> Left (MissingField name)

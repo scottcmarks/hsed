@@ -30,6 +30,24 @@ code, version, length, Core Table 41's general header (as the generated
 descriptors have it) and what its source allows the fields
 ('featureAllowances'). 'geometryAllowances' is what the simulator allows
 Opal's Geometry Reporting descriptor until LockingInfo is simulated (M5).
+
+Verified at M3 (group G2) against the sources: SIIS byte 2 (Data Structure
+Version bits 7-4, reserved 3-0) and byte 5 (reserved bits 7-3, Identifier
+Usage Scope 2-1, Key Change Zone Behavior 0) by the column rules of Table 2's
+grid (PDF 21-22); CNL Table 6's bytes 2 and 4 by its grid's (PDF 51); the
+DataStore and Block SID layouts bit for bit against sedutil's structures,
+which declare a byte's bitfields bit 0 first (the test suite holds both).
+
+Decided at M3 (group G2), reversible: the DataStore and Block SID
+descriptors' Version. Their feature sets' PDFs (Opal 2.30's references [6]
+and [8], 2.10, PDF 18) are not in @tcg/@ and sedutil reads the version nibble
+without pinning or printing it, so no source gives a value: the simulator
+sends 0x1, the first version a feature set's descriptor takes (as Core's
+Tables 42-43 and SIIS's Table 2 pin it), and each instance allows another
+('AnyVersion' 0x1), as Opal's own descriptors allow theirs, so that a
+drive's version differs from the simulator's only as an allowed difference.
+Neither pins it ('featureVersion' 'Nothing'). Open for Scott: check both
+against the feature sets' PDFs when they are added to @tcg/@.
 -}
 module Hsed.Sim.FeatureSets
   ( -- * SIIS (0x0005)
@@ -165,14 +183,16 @@ instance LayoutRecord DataStoreFeature where
     <*> numberField "Maximum total size of DataStore Tables" vs
     <*> numberField "DataStore Table size alignment" vs
 
--- | The least UCT-01 accepts of each value (step 4b, Test Cases PDF 30).
+-- | The least UCT-01 accepts of each value (step 4b, Test Cases PDF 30), and
+--   the version decided at M3 (see the module header): 0x1 or another.
 instance Feature DataStoreFeature where
   featureCode _       = 0x0202
   featureVersion _    = Nothing
   featureLength _     = Just 0x0c
   featureHeader _     = featureHeader generalHeader
   featureAllowances _ =
-    [ ("Maximum number of DataStore Tables", Minimum 1)
+    [ ("Version", AnyVersion 0x1)
+    , ("Maximum number of DataStore Tables", Minimum 1)
     , ("Maximum total size of DataStore Tables", Minimum 0xA0000)
     , ("DataStore Table size alignment", Minimum 1)
     ]
@@ -227,12 +247,14 @@ instance LayoutRecord BlockSIDFeature where
     <*> flagField "SID Value State" vs
     <*> flagField "Hardware Reset" vs
 
--- | No source in @tcg/@ lists what its fields may hold.
+-- | No source in @tcg/@ lists what its fields may hold: the version decided
+--   at M3 (see the module header), 0x1 or another, alone.
 instance Feature BlockSIDFeature where
-  featureCode _    = 0x0402
-  featureVersion _ = Nothing
-  featureLength _  = Just 0x0c
-  featureHeader _  = featureHeader generalHeader
+  featureCode _       = 0x0402
+  featureVersion _    = Nothing
+  featureLength _     = Just 0x0c
+  featureHeader _     = featureHeader generalHeader
+  featureAllowances _ = [("Version", AnyVersion 0x1)]
 
 
 -- * Configurable Namespace Locking (0x0403)
@@ -308,6 +330,14 @@ instance Feature NamespaceLockingFeature where
 -- | What the simulator allows Opal's Geometry Reporting descriptor (Opal
 --   2.30 Table 5): ALIGN, LogicalBlockSize, AlignmentGranularity and
 --   LowestAlignedLBA as the LockingInfo table has them (3.1.1.4.2-5, PDF 22),
---   by the field names of the generated Opal layout.
+--   by the field names of the generated Opal layout. Table 5's bullets pin
+--   only its header (PDF 22), so the generated instance allows nothing; each
+--   value is the LockingInfo table's, which the simulator's parameters stand
+--   in for until M5, and a drive's own LockingInfo may differ.
 geometryAllowances :: [(Text, Allowance)]
-geometryAllowances = error "G2: geometryAllowances"
+geometryAllowances =
+  [ ("ALIGN", AsPrinted "the AlignmentRequired column of the LockingInfo table")                                -- 3.1.1.4.2
+  , ("LogicalBlockSize", AsPrinted "the value of the LogicalBlockSize column in the LockingInfo table")          -- 3.1.1.4.3
+  , ("AlignmentGranularity", AsPrinted "the value of the AlignmentGranularity column in the LockingInfo table")  -- 3.1.1.4.4
+  , ("LowestAlignedLBA", AsPrinted "the value of the LowestAlignedLBA column in the LockingInfo table")          -- 3.1.1.4.5
+  ]

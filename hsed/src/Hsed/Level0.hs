@@ -29,10 +29,16 @@ an unknown code stays undecoded. 'renderLevel0' is the other way: a header
 and descriptors to the bytes of a transfer length, as the simulator
 answers.
 
+A descriptor is stepped by its own header alone, whatever its code: one
+whose Length gives fewer bytes than hsed's layout of its code (an older,
+shorter version) is kept and stepped past like any other, and only
+'decodeDescriptor' declines it; one whose Length runs past the end of the
+response is kept with the bytes there are and reported. The response's
+problems are reported, not refused: 'splitLevel0' fails only on a
+transfer shorter than Table 39's header.
+
 The JSON of these types (aeson's 'A.ToJSON') is what the jig's reports
 print of a Level 0 response; bytes in hex ("Hsed.Wire".'trimmedHex').
-
-The bodies are milestone M3's group G2's; until it lands they are stubs.
 -}
 module Hsed.Level0
   ( -- * A response, split
@@ -50,10 +56,23 @@ module Hsed.Level0
 import qualified Data.Aeson             as A
 import qualified Data.ByteString.Base16 as B16
 import qualified RIO.ByteString         as B
+import qualified RIO.List               as L
 import           RIO
 
-import           Hsed.Core.Feature      (Allowance (..), Feature (featureCode))
-import           Hsed.Core.Layout       (Content (..), Difference (..), LayoutError)
+import           Hsed.Core.Feature      (Allowance (..), Feature (..), FeatureHeader (..))
+import           Hsed.Core.Layout       (Content (..), Decoded (..), Difference (..), Field (..), Layout (..),
+                                         LayoutError (..), decode, fieldEnd)
+import           Hsed.Core.Record       (DecodedRecord (..), LayoutRecord (..), decodeRecord, encodeRecord, numberField)
+import           Hsed.Gen.Core.Features (TPerFeature)
+import           Hsed.Gen.Core.Layouts  (FeatureDescriptorTemplate (..), FeatureDescriptorTemplateHeader (..),
+                                         Level0DiscoveryHeader (..), featureDescriptorTemplateLayout,
+                                         level0DiscoveryHeaderLayout)
+import           Hsed.Gen.Opal.Features (Level0DiscoveryGeometryReportingFeature, Level0DiscoveryLockingFeature,
+                                         Level0DiscoveryOpalSSCV2Feature,
+                                         Level0DiscoverySupportedDataRemovalMechanismFeature,
+                                         Level0DiscoveryTPerFeature)
+import           Hsed.Sim.FeatureSets   (BlockSIDFeature, DataStoreFeature, NamespaceLockingFeature, SiisFeature,
+                                         geometryAllowances)
 import           Hsed.Wire              (trimmedHex)
 
 
@@ -94,14 +113,120 @@ data Level0 = Level0
 --   header through Table 39's layout (its versions read leniently), the
 --   descriptors to the end Length of Parameter Data gives, each stepped by
 --   Table 41's header.
+--
+--   The descriptors run from the end of the header to the end Length of
+--   Parameter Data gives, or to the end of the transfer if that comes first
+--   ('BeyondTransfer'); a descriptor whose length runs past it is kept with
+--   the bytes there are ('DescriptorTruncated'); each code must be larger
+--   than the one before ('OutOfCodeOrder'), and what follows the
+--   descriptors zeros ('NonZeroPadding'). A transfer shorter than the
+--   header is 'Hsed.Core.Layout.Truncated'.
 splitLevel0 :: ByteString -> Either LayoutError Level0
-splitLevel0 = error "G2: splitLevel0"
+splitLevel0 input = do
+  DecodedRecord header differences _ <- decodeRecord input
+  let lengthOfParameterData = level0DiscoveryHeaderLengthOfParameterData header
+      asked                 = toInteger lengthOrigin + toInteger lengthOfParameterData
+      held                  = B.length input
+      -- where the descriptors end and the padding starts: what Length of Parameter Data asks, as far as the
+      -- transfer holds it, and never inside the header
+      end                   = max headerEnd (fromInteger (min asked (toInteger held)))
+      pieces                = L.unfoldr (piece end) headerEnd
+      descriptors           = mapMaybe pieceDescriptor pieces
+      codes                 = map dCode descriptors
+      padding               = B.drop end input
+  pure Level0
+    { l0Header                = B.take headerEnd input
+    , l0LengthOfParameterData = lengthOfParameterData
+    , l0Descriptors           = descriptors
+    , l0Padding               = padding
+    , l0Problems              = concat
+        [ [ HeaderDiffers differences | not (null differences) ]
+        , [ BeyondTransfer (fromInteger (min asked (toInteger (maxBound :: Word32)))) held | asked > toInteger held ]
+        , [ OutOfCodeOrder a b | (a, b) <- zip codes (drop 1 codes), b <= a ]
+        , [ DescriptorTruncated c | Cut _ c <- pieces ]
+        , [ NonZeroPadding (end + i) | Just i <- [B.findIndex (/= 0) padding] ]
+        ]
+    }
+  where
+    -- the descriptor starting at a byte, up to an end, and where the next one starts: its header read through
+    -- Table 41, its bytes the header's and as many more as its length field gives
+    piece end at
+      | at >= end = Nothing
+      | otherwise = Just $ case descriptorHeader generalHeader region of
+          Right (code, version, size)
+            | size <= B.length region -> (Whole (Descriptor code version (B.take size region)), at + size)
+            | otherwise               -> (Cut (Just (Descriptor code version region)) code, end)
+          Left _                      -> (Cut Nothing (partialCode region), end)
+      where region = B.take (end - at) (B.drop at input)
+
+-- | One step of the walk over a response's descriptors: a descriptor, or one
+--   cut short by the end of the response (its bytes, when its header is
+--   there, and its code).
+data Piece
+  = Whole Descriptor
+  | Cut (Maybe Descriptor) Word16
+
+pieceDescriptor :: Piece -> Maybe Descriptor
+pieceDescriptor = \case
+  Whole d -> Just d
+  Cut d _ -> d
+
+-- | The code of a descriptor too short for its header, as far as its bytes
+--   give it.
+partialCode :: ByteString -> Word16
+partialCode bytes =
+  either (const 0) (\(code, _, _) -> code) (descriptorHeader generalHeader (fitted (headerSize generalHeader) bytes))
 
 -- | A response from a header's vendor unique bytes and descriptors, its
 --   Length of Parameter Data theirs, truncated or zero-padded to a transfer
---   length (3.3.6.2, PDF 67).
+--   length (3.3.6.2, PDF 67). The vendor unique bytes are fitted to Table
+--   39's field, truncated or zero-padded: 'mempty' for none.
 renderLevel0 :: ByteString -> [Descriptor] -> Word32 -> ByteString
-renderLevel0 = error "G2: renderLevel0"
+renderLevel0 vendorUnique descriptors len = fitted (fromIntegral len) (header <> body)
+  where
+    body   = foldMap dBytes descriptors
+    -- the generated layout tiles and the vendor unique bytes fit their field: the header always encodes
+    header = either (const mempty) id $ encodeRecord Level0DiscoveryHeader
+      { level0DiscoveryHeaderLengthOfParameterData = fromIntegral (headerEnd - lengthOrigin + B.length body)
+      , level0DiscoveryHeaderVendorUnique          = fitted (B.length noVendorUnique) vendorUnique
+      }
+
+-- | Bytes truncated or zero-padded to a length.
+fitted :: Int -> ByteString -> ByteString
+fitted n bytes = B.take n (bytes <> B.replicate (n - B.length bytes) 0)
+
+
+-- * Table 39 and Table 41, as the generated layouts give them
+
+-- | Where Length of Parameter Data starts counting: the end of that field of
+--   Table 39 (it counts the bytes after itself, 3.3.6.2.1, PDF 68).
+lengthOrigin :: Int
+lengthOrigin = maybe 0 ((`div` 8) . fieldEnd) (L.find ((== "Length of Parameter Data") . fieldName) header)
+  where header = layoutFields level0DiscoveryHeaderLayout
+
+-- | Where the header ends and the first descriptor starts (Table 38, PDF 67).
+headerEnd :: Int
+headerEnd = layoutSize level0DiscoveryHeaderLayout
+
+-- | Table 39's vendor unique bytes, as many as its layout gives them: zeros.
+noVendorUnique :: ByteString
+noVendorUnique = either (const mempty) (level0DiscoveryHeaderVendorUnique . drRecord) (decodeRecord (B.replicate headerEnd 0))
+
+-- | Core Table 41's general format of a descriptor's header, as the
+--   generated descriptors have it: its size and its length field.
+generalHeader :: FeatureHeader
+generalHeader = featureHeader (Proxy :: Proxy TPerFeature)
+
+-- | A descriptor's code, version and size (its header and the bytes its
+--   length field gives), from bytes that hold at least its header: the
+--   header read through Table 41's layout, its size and its length field
+--   as a 'FeatureHeader' gives them.
+descriptorHeader :: FeatureHeader -> ByteString -> Either LayoutError (Word16, Word8, Int)
+descriptorHeader h bytes = do
+  Decoded fields _ _ <- decode featureDescriptorTemplateLayout bytes
+  FeatureDescriptorTemplate (FeatureDescriptorTemplateHeader code version _) _ <- fromFields fields
+  len <- numberField (headerLengthField h) fields
+  pure (code, version, headerSize h + len)
 
 
 -- * Descriptors, decoded
@@ -120,12 +245,49 @@ data DecodedDescriptor = DecodedDescriptor
 
 -- | A descriptor decoded by its code: Opal's T3-T6 and T8, the hand-written
 --   feature sets; 'Nothing' for a vendor's or an unknown code.
+--
+--   Read leniently ("Hsed.Core.Layout".'Hsed.Core.Layout.decode'): a pin read
+--   otherwise (a drive's older version of a descriptor) and reserved bits not
+--   zero are 'ddDifferences'. A descriptor longer than its layout is read as
+--   far as the layout goes (its Length a difference); one shorter than its
+--   layout is not decoded.
 decodeDescriptor :: Descriptor -> Maybe DecodedDescriptor
-decodeDescriptor = error "G2: decodeDescriptor"
+decodeDescriptor d = do
+  (source, layout, allowances) <- L.lookup (dCode d) known
+  Decoded fields differences _ <- either (const Nothing) Just (decode layout (dBytes d))
+  pure (DecodedDescriptor source fields differences allowances)
 
--- | A feature record as a response carries it: its code, version and bytes.
+-- | The descriptors hsed has a layout of, by code: Opal's (generated from
+--   Opal 2.30 Tables 3-6 and 8), what the simulator allows Geometry
+--   Reporting until M5 ("Hsed.Sim.FeatureSets".'geometryAllowances'), and
+--   the hand-written feature sets'.
+known :: [(Word16, (Text, Layout, [(Text, Allowance)]))]
+known =
+  [ entry "opal-2.30 T3" (Proxy :: Proxy Level0DiscoveryTPerFeature) []
+  , entry "opal-2.30 T4" (Proxy :: Proxy Level0DiscoveryLockingFeature) []
+  , entry "opal-2.30 T5" (Proxy :: Proxy Level0DiscoveryGeometryReportingFeature) geometryAllowances
+  , entry "siis-1.20 T2" (Proxy :: Proxy SiisFeature) []
+  , entry "sedutil Discovery0DatastoreTable" (Proxy :: Proxy DataStoreFeature) []
+  , entry "opal-2.30 T6" (Proxy :: Proxy Level0DiscoveryOpalSSCV2Feature) []
+  , entry "sedutil Discovery0BlockSIDFeatures" (Proxy :: Proxy BlockSIDFeature) []
+  , entry "cnl-1.30 T6" (Proxy :: Proxy NamespaceLockingFeature) []
+  , entry "opal-2.30 T8" (Proxy :: Proxy Level0DiscoverySupportedDataRemovalMechanismFeature) []
+  ]
+  where
+    entry :: Feature f => Text -> Proxy f -> [(Text, Allowance)] -> (Word16, (Text, Layout, [(Text, Allowance)]))
+    entry source p more = (fromInteger (featureCode p), (source, recordLayout p, featureAllowances p <> more))
+
+-- | A feature record as a response carries it: its code, version and bytes,
+--   read back from its encoding; an encoding whose length field does not
+--   count the bytes after its header is 'LengthDisagrees'.
 featureDescriptor :: Feature f => f -> Either LayoutError Descriptor
-featureDescriptor f = error ("G2: featureDescriptor, code " <> show (featureCode (Just f)))
+featureDescriptor f = do
+  bytes <- encodeRecord f
+  let h = featureHeader (Just f)
+  (code, version, size) <- descriptorHeader h bytes
+  unless (size == B.length bytes)
+    (Left (LengthDisagrees (headerLengthField h) (toInteger (size - headerSize h)) (B.length bytes - headerSize h)))
+  pure (Descriptor code version bytes)
 
 
 -- * JSON

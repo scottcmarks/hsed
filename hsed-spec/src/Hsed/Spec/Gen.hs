@@ -21,7 +21,8 @@ from, the language extensions they need) and names the module they go to
 the header (the pragmas, every declaration's extensions united with the two
 every module has; the module's Haddock with the description and notes),
 merges the imports of every declaration (a whole-module import wins over an
-import list; lists are united and sorted), and prints the declarations sorted
+import list; lists are united and sorted; a qualified import is a line of its
+own, after the module's unqualified one), and prints the declarations sorted
 by table number, then rank within the table, then name. The same declarations
 print the same text in any order. The runtime modules the declarations of
 several rules import are named once here ('uidModule', 'coreTypesModule',
@@ -110,6 +111,7 @@ data GenModule = GenModule
 data Import
   = ImportAll !Text           -- ^ @import M@
   | ImportSome !Text ![Text]  -- ^ @import M (a, b)@
+  | ImportQualified !Text     -- ^ @import qualified M@
   deriving (Eq, Show)
 
 -- | One declaration as a rule printed it.
@@ -212,18 +214,21 @@ renderModule modName gm decls = T.unlines (header <> importLines (concatMap (.de
 
 -- | The import lines: one per module, in module order, a whole-module import
 --   winning over a list; the lists united, sorted case-insensitively, and
---   aligned on the longest module name that has one.
+--   aligned on the longest module name that has one; a qualified import a line
+--   of its own, after the module's unqualified one.
 importLines :: [Import] -> [Text]
 importLines is = map line (Map.toList merged)
   where
     merged = Map.fromListWith combine [ entry i | i <- is ]
-    entry (ImportAll m)       = (m, Nothing)
-    entry (ImportSome m xs)   = (m, Just (Set.fromList xs))
+    entry (ImportAll m)       = ((m, False), Nothing)
+    entry (ImportSome m xs)   = ((m, False), Just (Set.fromList xs))
+    entry (ImportQualified m) = ((m, True), Nothing)
     combine a b = (<>) <$> a <*> b
-    width = 1 + foldl' max 0 [ T.length m | (m, Just _) <- Map.toList merged ]
-    line (m, Nothing) = "import           " <> m
-    line (m, Just xs) = "import           " <> m <> T.replicate (width - T.length m) " "
-                        <> "(" <> T.intercalate ", " (sortOn (\x -> (T.toLower x, x)) (Set.toList xs)) <> ")"
+    width = 1 + foldl' max 0 [ T.length m | ((m, _), Just _) <- Map.toList merged ]
+    line ((m, True), _)        = "import qualified " <> m
+    line ((m, False), Nothing) = "import           " <> m
+    line ((m, False), Just xs) = "import           " <> m <> T.replicate (width - T.length m) " "
+                                 <> "(" <> T.intercalate ", " (sortOn (\x -> (T.toLower x, x)) (Set.toList xs)) <> ")"
 
 -- | @uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01@
 uidExpr :: [Word8] -> Text

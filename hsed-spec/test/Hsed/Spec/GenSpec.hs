@@ -200,6 +200,12 @@ spec = do
                    , "import           Prelude       (Eq, String)" ]
     it "let a whole-module import win over a list of the same module" $
       importsOf [d [ImportSome "Data.Map" ["Map"]], d [ImportAll "Data.Map"]] `shouldBe` ["import           Data.Map"]
+    it "print a qualified import once, on a line of its own after the module's unqualified one" $
+      importsOf [ d [ImportQualified "Hsed.Law.Sync", ImportSome "Hsed.Law" ["LawRef (..)"]]
+                , d [ImportQualified "Hsed.Law.Sync", ImportAll "Hsed.Law.Sync"] ]
+        `shouldBe` [ "import           Hsed.Law (LawRef (..))"
+                   , "import           Hsed.Law.Sync"
+                   , "import qualified Hsed.Law.Sync" ]
 
   describe "the module header" $ do
     it "wraps the module's notes into the generated-by paragraph" $

@@ -14,14 +14,15 @@ Stability   : experimental
 A list item or a paragraph of the IR (@paras@, docs/ir-v1.md) is a unit its own
 comment binds (a @law@ binds its sentence, design example E10): no rule
 scope, no classification, a paragraph no comment names being bound by nothing
-and missed by nothing. A stub reader stands in for the law reader to come (no
-rule of the registry takes paragraph units yet), proving the interface: the
-units a context holds and a rule reads ('boundParas', in the anchors' natural
-order, each with its IR hash), a rule that never fires on a table, an item
-exemplar, findings and declarations located at the paragraph, a comment whose
-anchor names several paragraphs refused, and @W-GEN-EXCLUDED@ for a sentence
-no rule of the registry reads (pending once one does). The hashes are the IR's
-of the paragraphs on Core PDF 82 and 86.
+and missed by nothing. A stub reader stands in for any rule over paragraph
+units (the registry's, M3's law reader, is tested in @Rules/LawsSpec@),
+proving the interface: the units a context holds and a rule reads
+('boundParas', in the anchors' natural order, each with its IR hash), a rule
+that never fires on a table, an item exemplar, findings and declarations
+located at the paragraph, a comment whose anchor names several paragraphs
+refused, and @W-GEN-EXCLUDED@ for a sentence no rule of the registry reads
+(pending since the law reader reads them). The hashes are the IR's of the
+paragraphs on Core PDF 82 and 86.
 -}
 module Hsed.Spec.ParagraphUnitSpec (spec) where
 

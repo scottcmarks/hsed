@@ -11,8 +11,8 @@ Stability   : experimental
 
 The case keys @--tests@ takes and prints; the catalogue's four cases of M3
 with their titles and pages (Test Cases 1.02: UCT-01 PDF 29, SPF-02 case 1
-PDF 52, ETC-02 PDF 77, ETC-03 PDF 78), among them the keys the laws name
-(ETC-02, SPF-02:1); the common prerequisites of
+PDF 52, ETC-02 PDF 77, ETC-03 PDF 78), each with the case the runner runs
+and the keys the laws name (ETC-02, SPF-02:1); the common prerequisites of
 sections 5.2 (PDF 29), 6.2 (PDF 49) and 7.2 (PDF 76), and the section each
 family's tests are in.
 -}
@@ -21,8 +21,10 @@ module Hsed.Jig.CatalogueSpec (spec) where
 import           RIO
 import           Test.Hspec
 
+import           Hsed.Jig.Case      (Case (..))
 import           Hsed.Jig.Catalogue
 import           Hsed.Jig.Prereq
+import           Hsed.Jig.Run       (cases)
 
 
 key :: TestId -> Maybe Int -> CaseKey
@@ -55,9 +57,14 @@ spec = do
         , "IF-RECV Behavior Tests, Case 1: an IF-RECV while the SD is in Awaiting IF-SEND"
         , "General \x2013 IF-SEND/IF-RECV Synchronous Protocol"
         , "Invalid IF-SEND Transfer Length" ]
+    it "has a case for each entry, and an entry for each case, in its order" $
+      map cKey cases `shouldBe` map ceKey catalogue
     it "holds the cases the synchronous protocol's laws name: ETC-02 and SPF-02 case 1" $
       [ k | k <- [key (ETC 2) Nothing, key (SPF 2) (Just 1)], k `elem` map ceKey catalogue ]
         `shouldBe` [key (ETC 2) Nothing, key (SPF 2) (Just 1)]
+    it "puts each case in its family's section, whose list it waives LockingManufactured of" $ do
+      [ cSection c | c <- cases ] `shouldBe` [ sectionOf (ckTest (cKey c)) | c <- cases ]
+      [ LockingManufactured `elem` map wPrereq (cWaives c) | c <- cases ] `shouldBe` replicate 4 True
 
   describe "common" $ do
     it "lists 5.2's six prerequisites (PDF 29) and 6.2's, the same (PDF 49)" $ do

@@ -208,8 +208,8 @@ instance LayoutRecord CreditControlSubpacket where
 -- The VALUE cells the layout does not hold (bytes | field | value, as printed):
 --
 -- > "0 to 3" | "Extended ComID" | "Allocated ComID"
-get_COMIDPayload :: Layout
-get_COMIDPayload = Layout
+get_COMIDPayloadLayout :: Layout
+get_COMIDPayloadLayout = Layout
   { layoutName   = "GET_COMID Payload"
   , layoutSize   = 4
   , layoutFields =
@@ -218,14 +218,29 @@ get_COMIDPayload = Layout
   , layoutTail   = Nothing
   }
 
+-- | core-2.01 T28 GET_COMID Payload (PDF 61 / p.44, ord 30, sha256:7dfa719b27e5):
+--   the fields that carry a value.
+data GET_COMIDPayload = GET_COMIDPayload
+  { get_COMIDPayloadExtendedComID :: !Word32  -- ^ bytes 0 to 3
+  }
+  deriving (Eq, Show)
+
+instance LayoutRecord GET_COMIDPayload where
+  recordLayout _ = get_COMIDPayloadLayout
+  recordFields r =
+    [ ("Extended ComID", number (get_COMIDPayloadExtendedComID r))
+    ]
+  fromFields vs = pure GET_COMIDPayload
+    <*> numberField "Extended ComID" vs
+
 -- | core-2.01 T31 No Response Available (PDF 63 / p.46, ord 33, sha256:99bb191570ea)
 --
 -- The VALUE cells the layout does not hold (bytes | field | value, as printed):
 --
 -- > "0 to 3" | "Extended ComID" | "Allocated ComID"
 -- > "12 to TRNSFLEN - 1" | "Reserved" | "00"
-noResponseAvailable :: Layout
-noResponseAvailable = Layout
+noResponseAvailableLayout :: Layout
+noResponseAvailableLayout = Layout
   { layoutName   = "No Response Available"
   , layoutSize   = 12
   , layoutFields =
@@ -237,14 +252,31 @@ noResponseAvailable = Layout
   , layoutTail   = Just (Tail "Reserved" Nothing 1)
   }
 
+-- | core-2.01 T31 No Response Available (PDF 63 / p.46, ord 33, sha256:99bb191570ea):
+--   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
+--   prints are the layout's: Request Code 0x00, Available Data Length in bytes 0x00; the reserved
+--   bytes from byte 12 to the end are the layout's, written as none and skipped when read.
+data NoResponseAvailable = NoResponseAvailable
+  { noResponseAvailableExtendedComID :: !Word32  -- ^ bytes 0 to 3
+  }
+  deriving (Eq, Show)
+
+instance LayoutRecord NoResponseAvailable where
+  recordLayout _ = noResponseAvailableLayout
+  recordFields r =
+    [ ("Extended ComID", number (noResponseAvailableExtendedComID r))
+    ]
+  fromFields vs = pure NoResponseAvailable
+    <*> numberField "Extended ComID" vs
+
 -- | core-2.01 T32 VERIFY_COMID_VALID Request (PDF 63 / p.46, ord 34, sha256:0b4e3d76f94c)
 --
 -- The VALUE cells the layout does not hold (bytes | field | value, as printed):
 --
 -- > "0 to 3" | "Extended ComID" | "Allocated ComID"
 -- > "8 to TRNSFLEN - 1" | "Reserved" | "zero"
-verify_COMID_VALIDRequest :: Layout
-verify_COMID_VALIDRequest = Layout
+verify_COMID_VALIDRequestLayout :: Layout
+verify_COMID_VALIDRequestLayout = Layout
   { layoutName   = "VERIFY_COMID_VALID Request"
   , layoutSize   = 8
   , layoutFields =
@@ -253,6 +285,23 @@ verify_COMID_VALIDRequest = Layout
       ]
   , layoutTail   = Just (Tail "Reserved" Nothing 1)
   }
+
+-- | core-2.01 T32 VERIFY_COMID_VALID Request (PDF 63 / p.46, ord 34, sha256:0b4e3d76f94c):
+--   the fields that carry a value; the constants the table prints are the layout's: Request Code
+--   0x01; the reserved bytes from byte 8 to the end are the layout's, written as none and skipped
+--   when read.
+data VERIFY_COMID_VALIDRequest = VERIFY_COMID_VALIDRequest
+  { verify_COMID_VALIDRequestExtendedComID :: !Word32  -- ^ bytes 0 to 3
+  }
+  deriving (Eq, Show)
+
+instance LayoutRecord VERIFY_COMID_VALIDRequest where
+  recordLayout _ = verify_COMID_VALIDRequestLayout
+  recordFields r =
+    [ ("Extended ComID", number (verify_COMID_VALIDRequestExtendedComID r))
+    ]
+  fromFields vs = pure VERIFY_COMID_VALIDRequest
+    <*> numberField "Extended ComID" vs
 
 -- | core-2.01 T33 VERIFY_COMID_VALID Command Response (PDF 64 / p.47, ord 35, sha256:d94bcebf4a38)
 --
@@ -264,8 +313,8 @@ verify_COMID_VALIDRequest = Layout
 -- > "26 to 35" | "Absolute time of expiry relative to last reset of TPer" | "10 byte format \8211 see Table 34."
 -- > "36 to 45" | "Time since last reset of TPer" | "10 byte format \8211 see Table 34."
 -- > "46 to TRNSFLEN - 1" | "Reserved" | "00"
-verify_COMID_VALIDCommandResponse :: Layout
-verify_COMID_VALIDCommandResponse = Layout
+verify_COMID_VALIDCommandResponseLayout :: Layout
+verify_COMID_VALIDCommandResponseLayout = Layout
   { layoutName   = "VERIFY_COMID_VALID Command Response"
   , layoutSize   = 46
   , layoutFields =
@@ -281,14 +330,43 @@ verify_COMID_VALIDCommandResponse = Layout
   , layoutTail   = Just (Tail "Reserved" Nothing 1)
   }
 
+-- | core-2.01 T33 VERIFY_COMID_VALID Command Response (PDF 64 / p.47, ord 35, sha256:d94bcebf4a38):
+--   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
+--   prints are the layout's: Request Code 0x01, Available Data Length in bytes 0x22; the reserved
+--   bytes from byte 46 to the end are the layout's, written as none and skipped when read.
+data VERIFY_COMID_VALIDCommandResponse = VERIFY_COMID_VALIDCommandResponse
+  { verify_COMID_VALIDCommandResponseExtendedComID                                     :: !Word32      -- ^ bytes 0 to 3
+  , verify_COMID_VALIDCommandResponseCurrentStateOfExtendedComID                       :: !Word32      -- ^ bytes 12 to 15
+  , verify_COMID_VALIDCommandResponseAbsoluteTimeOfAllocationRelativeToLastResetOfTPer :: !ByteString  -- ^ bytes 16 to 25
+  , verify_COMID_VALIDCommandResponseAbsoluteTimeOfExpiryRelativeToLastResetOfTPer     :: !ByteString  -- ^ bytes 26 to 35
+  , verify_COMID_VALIDCommandResponseTimeSinceLastResetOfTPer                          :: !ByteString  -- ^ bytes 36 to 45
+  }
+  deriving (Eq, Show)
+
+instance LayoutRecord VERIFY_COMID_VALIDCommandResponse where
+  recordLayout _ = verify_COMID_VALIDCommandResponseLayout
+  recordFields r =
+    [ ("Extended ComID", number (verify_COMID_VALIDCommandResponseExtendedComID r))
+    , ("Current state of Extended ComID", number (verify_COMID_VALIDCommandResponseCurrentStateOfExtendedComID r))
+    , ("Absolute time of allocation relative to last reset of TPer", octets (verify_COMID_VALIDCommandResponseAbsoluteTimeOfAllocationRelativeToLastResetOfTPer r))
+    , ("Absolute time of expiry relative to last reset of TPer", octets (verify_COMID_VALIDCommandResponseAbsoluteTimeOfExpiryRelativeToLastResetOfTPer r))
+    , ("Time since last reset of TPer", octets (verify_COMID_VALIDCommandResponseTimeSinceLastResetOfTPer r))
+    ]
+  fromFields vs = pure VERIFY_COMID_VALIDCommandResponse
+    <*> numberField "Extended ComID" vs
+    <*> numberField "Current state of Extended ComID" vs
+    <*> octetsField "Absolute time of allocation relative to last reset of TPer" vs
+    <*> octetsField "Absolute time of expiry relative to last reset of TPer" vs
+    <*> octetsField "Time since last reset of TPer" vs
+
 -- | core-2.01 T35 STACK_RESET Command Request (PDF 65 / p.48, ord 37, sha256:f4d0ea8420e5)
 --
 -- The VALUE cells the layout does not hold (bytes | field | value, as printed):
 --
 -- > "0 to 3" | "Extended ComID" | "Allocated ComID"
 -- > "8 to TRNSFLEN - 1" | "Reserved" | "00"
-stack_RESETCommandRequest :: Layout
-stack_RESETCommandRequest = Layout
+stack_RESETCommandRequestLayout :: Layout
+stack_RESETCommandRequestLayout = Layout
   { layoutName   = "STACK_RESET Command Request"
   , layoutSize   = 8
   , layoutFields =
@@ -298,6 +376,23 @@ stack_RESETCommandRequest = Layout
   , layoutTail   = Just (Tail "Reserved" Nothing 1)
   }
 
+-- | core-2.01 T35 STACK_RESET Command Request (PDF 65 / p.48, ord 37, sha256:f4d0ea8420e5):
+--   the fields that carry a value; the constants the table prints are the layout's: Request Code
+--   0x02; the reserved bytes from byte 8 to the end are the layout's, written as none and skipped
+--   when read.
+data STACK_RESETCommandRequest = STACK_RESETCommandRequest
+  { stack_RESETCommandRequestExtendedComID :: !Word32  -- ^ bytes 0 to 3
+  }
+  deriving (Eq, Show)
+
+instance LayoutRecord STACK_RESETCommandRequest where
+  recordLayout _ = stack_RESETCommandRequestLayout
+  recordFields r =
+    [ ("Extended ComID", number (stack_RESETCommandRequestExtendedComID r))
+    ]
+  fromFields vs = pure STACK_RESETCommandRequest
+    <*> numberField "Extended ComID" vs
+
 -- | core-2.01 T36 STACK_RESET Command Response (PDF 66 / p.49, ord 38, sha256:6562688c304f)
 --
 -- The VALUE cells the layout does not hold (bytes | field | value, as printed):
@@ -305,8 +400,8 @@ stack_RESETCommandRequest = Layout
 -- > "0 to 3" | "Extended ComID" | "Allocated ComID"
 -- > "12 to 15" | "Success/Failure" | "00 00 00 00/ 00 00 00 01"
 -- > "16 to TRNSFLEN - 1" | "Reserved" | "00"
-stack_RESETCommandResponse :: Layout
-stack_RESETCommandResponse = Layout
+stack_RESETCommandResponseLayout :: Layout
+stack_RESETCommandResponseLayout = Layout
   { layoutName   = "STACK_RESET Command Response"
   , layoutSize   = 16
   , layoutFields =
@@ -319,14 +414,34 @@ stack_RESETCommandResponse = Layout
   , layoutTail   = Just (Tail "Reserved" Nothing 1)
   }
 
+-- | core-2.01 T36 STACK_RESET Command Response (PDF 66 / p.49, ord 38, sha256:6562688c304f):
+--   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
+--   prints are the layout's: Request Code 0x02, Available Data Length in bytes 0x04; the reserved
+--   bytes from byte 16 to the end are the layout's, written as none and skipped when read.
+data STACK_RESETCommandResponse = STACK_RESETCommandResponse
+  { stack_RESETCommandResponseExtendedComID  :: !Word32  -- ^ bytes 0 to 3
+  , stack_RESETCommandResponseSuccessFailure :: !Word32  -- ^ bytes 12 to 15
+  }
+  deriving (Eq, Show)
+
+instance LayoutRecord STACK_RESETCommandResponse where
+  recordLayout _ = stack_RESETCommandResponseLayout
+  recordFields r =
+    [ ("Extended ComID", number (stack_RESETCommandResponseExtendedComID r))
+    , ("Success/Failure", number (stack_RESETCommandResponseSuccessFailure r))
+    ]
+  fromFields vs = pure STACK_RESETCommandResponse
+    <*> numberField "Extended ComID" vs
+    <*> numberField "Success/Failure" vs
+
 -- | core-2.01 T37 STACK_RESET Pending (PDF 66 / p.49, ord 39, sha256:868b2bdf9a74)
 --
 -- The VALUE cells the layout does not hold (bytes | field | value, as printed):
 --
 -- > "0 to 3" | "Extended ComID" | "Allocated ComID"
 -- > "12 to TRNSFLEN - 1" | "Reserved" | "00"
-stack_RESETPending :: Layout
-stack_RESETPending = Layout
+stack_RESETPendingLayout :: Layout
+stack_RESETPendingLayout = Layout
   { layoutName   = "STACK_RESET Pending"
   , layoutSize   = 12
   , layoutFields =
@@ -337,6 +452,23 @@ stack_RESETPending = Layout
       ]
   , layoutTail   = Just (Tail "Reserved" Nothing 1)
   }
+
+-- | core-2.01 T37 STACK_RESET Pending (PDF 66 / p.49, ord 39, sha256:868b2bdf9a74):
+--   the fields that carry a value; the layout's reserved bits are zeros; the constants the table
+--   prints are the layout's: Request Code 0x02, Available Data Length in bytes 0x00; the reserved
+--   bytes from byte 12 to the end are the layout's, written as none and skipped when read.
+data STACK_RESETPending = STACK_RESETPending
+  { stack_RESETPendingExtendedComID :: !Word32  -- ^ bytes 0 to 3
+  }
+  deriving (Eq, Show)
+
+instance LayoutRecord STACK_RESETPending where
+  recordLayout _ = stack_RESETPendingLayout
+  recordFields r =
+    [ ("Extended ComID", number (stack_RESETPendingExtendedComID r))
+    ]
+  fromFields vs = pure STACK_RESETPending
+    <*> numberField "Extended ComID" vs
 
 -- | core-2.01 T38 Level 0 Discovery Response Data Format (PDF 67 / p.50, ord 40, sha256:ba4135a89777)
 level0DiscoveryResponseDataLayout :: Layout
@@ -495,8 +627,8 @@ gudidColumnContentsDescriptionLayout = Layout
   }
 
 -- | core-2.01 T212 GUDID Column Contents Description (PDF 230 / p.213, ord 214, sha256:7a5d897055d3):
---   the fields that carry a value; the constants the grid prints are the layout's: 0x02, 0x23, 0x00,
---   0x08, NAA 0x05.
+--   the fields that carry a value; the constants the table prints are the layout's: 0x02, 0x23,
+--   0x00, 0x08, NAA 0x05.
 data GUDIDColumnContentsDescription = GUDIDColumnContentsDescription
   { gudidColumnContentsDescriptionIEEECOMPANYID            :: !Word32  -- ^ byte 4 bit 3 to byte 7 bit 4
   , gudidColumnContentsDescriptionVENDORSPECIFICIDENTIFIER :: !Word64  -- ^ byte 7 bit 3 to byte 11 bit 0
@@ -515,12 +647,12 @@ instance LayoutRecord GUDIDColumnContentsDescription where
 
 -- | core-2.01 T236 System Log Entry Structure (PDF 297 / p.280, ord 238, sha256:9b15bf3df21f)
 --
--- It does not tile (C-LAYOUT-TILE), so Hsed.Core.Layout refuses to encode or decode it until an
--- erratum names these bytes:
+-- It does not tile (C-LAYOUT-TILE): Hsed.Core.Layout refuses to encode or decode it, and it has
+-- no record, until an erratum names these bytes:
 --
 -- * no field covers byte 8 bit 7 to byte 8 bit 0
-systemLogEntryStructure :: Layout
-systemLogEntryStructure = Layout
+systemLogEntryStructureLayout :: Layout
+systemLogEntryStructureLayout = Layout
   { layoutName   = "System Log Entry Structure"
   , layoutSize   = 18
   , layoutFields =

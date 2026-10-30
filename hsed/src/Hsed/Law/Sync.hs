@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -12,8 +13,10 @@ Stability   : experimental
 The laws the comments of Core 3.3.10 bind (design example E10, milestone
 M3): each names the paragraph or table it implements by the first 12 hex
 digits of its IR hash (@spec/ir/core-2.01.json@), and the Test Cases'
-cases that observe it. Their properties ('lawProp') are milestone M3's group
-G1's, over "Hsed.Sim" and "Hsed.Sim.Gen"; until it lands they are none.
+cases that observe it. Each says what it holds as a QuickCheck property
+('lawProp') over the simulator's step ("Hsed.Sim") and the generators of
+"Hsed.Sim.Gen": states of every unit, one to three static ComIDs in every
+synchronous state, requests of every length a unit allows.
 -}
 module Hsed.Law.Sync
   ( ifSendWhileBusy
@@ -23,59 +26,208 @@ module Hsed.Law.Sync
   , laws
   ) where
 
+import qualified RIO.ByteString            as B
+import qualified RIO.List                  as L
+import qualified RIO.Map                   as Map
+import qualified RIO.Text                  as T
 import           RIO
+import           Test.QuickCheck           (Gen, Property, arbitrary, conjoin, counterexample, elements, forAll, oneof, suchThat,
+                                            (===), (==>))
 
-import           Hsed.Jig.Catalogue (CaseKey (..), TestId (..))
-import           Hsed.Law           (Law (..))
+import           Hsed.Core.Layout          (Layout (..))
+import           Hsed.Core.Record          (LayoutRecord (..), encodeRecord)
+import           Hsed.Core.Sync            (Setting (..), StateRow (..), StateTable (..))
+import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..))
+import qualified Hsed.Gen.Core.StateTables as StateTables
+import           Hsed.Jig.Catalogue        (CaseKey (..), TestId (..))
+import           Hsed.Law                  (Law (..))
+import           Hsed.Sim                  (step, syncOf)
+import           Hsed.Sim.Gen              (genNoActionPayload, genState, genStaticRequest, genUnresolvablePayload)
+import           Hsed.Sim.Sync             (Delivery (..), T45Row (..), t45Fields, t45Quantity, t45Rows)
+import           Hsed.Sim.Types            (ComIdState (..), Input (..), Output (..), SimParams (..), SyncState (..), TPerState (..))
+import           Hsed.Wire                 (Dir (..), IfStatus (..), Request (..), Response (..), roundUp)
 
 
 -- | Core 3.3.10.2.1 item 3 a (PDF 82, @core-2.01 | 3.3.10.2.1#3a@): an
 --   IF-SEND on a ComID whose previous IF-SEND's response the host has not
 --   retrieved SHALL be aborted with Synchronous Protocol Violation; the
---   TPer's state is as it was. ETC-02 observes it.
+--   TPer's state is as it was. ETC-02 observes it. The property: for a
+--   ComID processing (S2) or awaiting IF-RECV (S3), any IF-SEND on it, of
+--   any length its unit allows, is answered Synchronous Protocol Violation
+--   with no bytes, the TPer unchanged.
 ifSendWhileBusy :: Law
 ifSendWhileBusy = Law
   { lawName  = "Sync.ifSendWhileBusy"
   , lawHash  = "37bedfb19343"
-  , lawProp  = Nothing
+  , lawProp  = Just $
+      forAll (genState `suchThat` (not . null . busy)) $ \st ->
+      forAll (elements (busy st)) $ \c ->
+      forAll (genStaticRequest st `suchThat` (\r -> dir r == IfSend && comId r == c)) $ \r ->
+        step (Cmd r) st === (Out (Response SynchronousProtocolViolation mempty), st)
   , lawCases = [whole (ETC 2)]
   }
+  where
+    busy st = [ c | (c, cs) <- Map.toList (tsComIds st), cSync cs /= S1 ]
 
 -- | Core 3.3.10.6, S2:S1 item d.c (PDF 86, @core-2.01 | 3.3.10.6#dc@): an
 --   IF-SEND whose packets' subpackets have no payload or Empty atoms alone
 --   returns the ComID to Awaiting IF-SEND, and the next IF-RECV has nothing
 --   to return (design 8.2 decides it at the IF-SEND). SPF-02 case 1's
---   simulator extension observes it.
+--   simulator extension observes it. The property: on a ComID awaiting
+--   IF-SEND, such an IF-SEND ("Hsed.Sim.Gen".'genNoActionPayload', with its
+--   other cases of item d) is accepted (Good), the TPer unchanged, the ComID
+--   still in S1, and an IF-RECV after it is answered with Table 45's last
+--   row.
 discardToS1 :: Law
 discardToS1 = Law
   { lawName  = "Sync.discardToS1"
   , lawHash  = "cb4d5d489fc0"
-  , lawProp  = Nothing
+  , lawProp  = Just (discardedAtIfSend genNoActionPayload)
   , lawCases = [caseOf (SPF 2) 1]
   }
 
 -- | Core 3.3.10.7 item a (PDF 86, @core-2.01 | 3.3.10.7#a@): a packet whose
 --   session the TPer cannot resolve is ignored, and the TPer awaits an
---   IF-SEND at once. ETC-08 and ETC-15 observe it (M4a).
+--   IF-SEND at once. ETC-08 and ETC-15 observe it (M4a). The property: on a
+--   ComID awaiting IF-SEND, an IF-SEND whose packets name sessions the TPer
+--   does not have ("Hsed.Sim.Gen".'genUnresolvablePayload', even holding a
+--   call the Session Manager answers) is accepted (Good), the TPer
+--   unchanged, the ComID still in S1, and an IF-RECV after it is answered
+--   with Table 45's last row.
 ignorePacket :: Law
 ignorePacket = Law
   { lawName  = "Sync.ignorePacket"
   , lawHash  = "cda4e92af591"
-  , lawProp  = Nothing
+  , lawProp  = Just (discardedAtIfSend genUnresolvablePayload)
   , lawCases = [whole (ETC 8), whole (ETC 15)]
   }
 
 -- | Core Table 45 (PDF 83), bound by its comment @stateTable
 --   "Sync.table45"@ ("Hsed.Gen.Core.StateTables".@table45@): the ComPacket
 --   header fields an IF-RECV is answered with in each state. SPF-02 case 1
---   and ETC-02 observe it.
+--   and ETC-02 observe it. The property:
+--
+--   * the generated rows are 'T45Row''s, one each, in order, and each is
+--     the state it names ('rowState');
+--   * every quantity a row names in words is computed ("Hsed.Sim.Sync".'t45Quantity'),
+--     and words the table does not use are not;
+--   * an IF-RECV of any length the unit allows on any static ComID in any
+--     state is answered with exactly that many bytes: a ComPacket of the
+--     ComID and its extension whose header is the row that state selects
+--     (Core 3.3.10.5, PDF 84-85) evaluated over what it returns, its
+--     Length the bytes returned, and the ComID's state after it as Core
+--     3.3.10.6 (PDF 85-86) says.
 table45 :: Law
 table45 = Law
   { lawName  = "Sync.table45"
   , lawHash  = "498ea00e3c6a"
-  , lawProp  = Nothing
+  , lawProp  = Just $ conjoin
+      [ counterexample "Table 45's rows are T45Row's, in order" $
+          (t45Rows, map state (states StateTables.table45)) === ([minBound .. maxBound], map rowState [minBound .. maxBound])
+      , counterexample "a quantity Table 45 names is computed by no code" $
+          conjoin [ counterexample (T.unpack q) (isJust (t45Quantity q)) | q <- quantities ]
+      , forAll (T.pack <$> arbitrary) $ \t -> t `notElem` quantities ==> isNothing (t45Quantity t)
+      , forAll genState $ \st ->
+        forAll (elements (Map.toList (tsComIds st))) $ \(c, cs) ->
+        forAll (recvLength st (cSync cs)) $ \len ->
+          let (row, d, after) = selected len (cSync cs)
+              (out, st')      = step (Cmd (Request IfRecv 0x01 c len mempty)) st
+          in either (`counterexample` False)
+                    (\resp -> conjoin [ out === Out resp, syncOf c st' === Just after ])
+                    (answerOf c (cExt cs) len row d)
+      ]
   , lawCases = [caseOf (SPF 2) 1, whole (ETC 2)]
   }
+  where
+    quantities = L.nub [ q | r <- states StateTables.table45, Quantity q <- settings r ]
+
+-- | What a law says of an IF-SEND whose payload, on its ComID, the TPer
+--   discards: on a ComID awaiting IF-SEND, of a TPer in any state otherwise,
+--   accepted (Good, no bytes), the TPer as it was, and an IF-RECV of any
+--   length after it answered with Table 45's last row (Core 3.3.10.5 S1 b,
+--   PDF 84), the TPer still as it was.
+discardedAtIfSend :: (Word16 -> Gen ByteString) -> Property
+discardedAtIfSend payloadOn =
+  forAll genState $ \st0 ->
+  forAll (elements (Map.keys (tsComIds st0))) $ \c ->
+  forAll (payloadOn c) $ \bytes ->
+  let st   = st0 { tsComIds = Map.adjust (\cs -> cs { cSync = S1 }) c (tsComIds st0) }
+      len  = roundUp (spUnits (tsParams st)) (fromIntegral (B.length bytes))
+      sent = step (Cmd (Request IfSend 0x01 c len (bytes <> B.replicate (fromIntegral len - B.length bytes) 0))) st
+  in forAll (lenBytes <$> (genStaticRequest st `suchThat` ((== IfRecv) . dir))) $ \recvLen ->
+     let received = step (Cmd (Request IfRecv 0x01 c recvLen mempty)) (snd sent)
+     in conjoin
+          [ counterexample "the IF-SEND accepted, the TPer unchanged" $ sent === (Out (Response Good mempty), st)
+          , counterexample "the IF-RECV after it" $
+              either (`counterexample` False) (\resp -> received === (Out resp, st))
+                     (answerOf c (maybe 0 cExt (Map.lookup c (tsComIds st))) recvLen AllReturnedNoData (Delivery [] []))
+          ]
+
+-- | The length of an IF-RECV on a ComID in a state: any its unit allows, or,
+--   two times in three when packets are staged, one that falls short of the
+--   ComPacket header and the first packet, or one at the edge of a run of
+--   them fitting (the header and the run, a byte either side, rounded up to
+--   the unit), so that each row of S3 is often met.
+recvLength :: TPerState -> SyncState -> Gen Word32
+recvLength st = \case
+  S3 ps@(p : _) -> oneof [anyLength, short p, elements (edges ps)]
+  _             -> anyLength
+  where
+    u         = spUnits (tsParams st)
+    anyLength = lenBytes <$> (genStaticRequest st `suchThat` ((== IfRecv) . dir))
+    short p   = case takeWhile (< fromIntegral (comPacketHeaderSize + B.length p)) (L.iterate (+ least) least) of
+      [] -> anyLength
+      ls -> elements ls
+    least     = roundUp u 1
+    edges ps  = [ l | run <- L.scanl1 (+) (map B.length ps), side <- [-1, 0, 1]
+                    , let l = roundUp u (fromIntegral (comPacketHeaderSize + run + side)), l > 0 ]
+
+-- | The row an IF-RECV of a length selects in a synchronous state, what it
+--   returns, and the state after it (Core 3.3.10.5, PDF 84-85; 3.3.10.6, PDF
+--   85-86): in S1 the last row; in S2 the first; in S3, a length short of
+--   the ComPacket header and the first packet staged the second; else the
+--   packets that fit, the fifth row if they are all of them (then S1), the
+--   third if not (S3 with the rest).
+selected :: Word32 -> SyncState -> (T45Row, Delivery, SyncState)
+selected len = \case
+  S1    -> (AllReturnedNoData, Delivery [] [], S1)
+  S2 ps -> (ResponsesToCome, Delivery [] [], S2 ps)
+  S3 ps
+    | null ps                                  -> (AllReturnedNoData, Delivery [] [], S1)
+    | room < maybe 0 B.length (listToMaybe ps) -> (InsufficientLength, Delivery ps [], S3 ps)
+    | null rest                                -> (AllReturnedWithData, Delivery ps sent, S1)
+    | otherwise                                -> (AdditionalAvailable, Delivery ps sent, S3 rest)
+    where
+      room         = fromIntegral len - comPacketHeaderSize
+      (sent, rest) = L.splitAt (length (takeWhile (<= room) (L.scanl1 (+) (map B.length ps)))) ps
+
+-- | The size of a ComPacket's header, Core Table 17's fixed part (PDF 40).
+comPacketHeaderSize :: Int
+comPacketHeaderSize = layoutSize (recordLayout (Proxy :: Proxy ComPacket))
+
+-- | The answer an IF-RECV of a length on a ComID gets from a row over a
+--   delivery: exactly that many bytes of the ComPacket the row's fields
+--   head, the packets returned its payload; Left if the row does not
+--   evaluate, or its Length is not the bytes returned.
+answerOf :: Word16 -> Word16 -> Word32 -> T45Row -> Delivery -> Either String Response
+answerOf c ext len row d = do
+  (l, od, mt) <- first T.unpack (t45Fields row d)
+  let returned = mconcat (dlReturned d)
+  unless (fromIntegral l == B.length returned) $
+    Left ("row " <> show row <> " gives Length " <> show l <> " to " <> show (B.length returned) <> " bytes returned")
+  bytes <- first show (encodeRecord (ComPacket (ComPacketHeader c ext od mt) returned))
+  pure (Response Good (B.take (fromIntegral len) (bytes <> B.replicate (fromIntegral len - B.length bytes) 0)))
+
+-- | The state each of Table 45's rows names, as printed (two hold an en
+--   dash, U+2013).
+rowState :: T45Row -> Text
+rowState = \case
+  ResponsesToCome     -> "Response(s) to come, no Response(s) available"
+  InsufficientLength  -> "Response ready, insufficient transfer length request"
+  AdditionalAvailable -> "Response, additional Response(s) available"
+  AdditionalToCome    -> "Response, additional Response(s) to come, no Response(s) available"
+  AllReturnedWithData -> "Response, all Response(s) returned \8211 no further data"
+  AllReturnedNoData   -> "All Response(s) returned \8211 no further data"
 
 -- | Every law of the module.
 laws :: [Law]

@@ -28,11 +28,11 @@ is the test fixture hsed/fixture/Hand) also extends `hsed/spec-tests/Hsed/Gen/Co
 (`handDefs`) and adds its expected differences to `spec/expected-diff.txt`; a new generated module needs
 one import line in `EquivSpec.hs`, which reads every module under `gen/Hsed/Gen/Core` and refuses to
 compile without it as soon as the module declares a definition the oracle compares (`name :: UID`,
-`String`, `HalfUID`, the two name maps, a `[(UID, String)]` list of a table's UIDs, or a
-`data Core_<enum>`; any other `data`, a record such as a method's, is no enumeration to it). Generated
-modules stay ASCII: EquivTH reads them with the locale's `readFile`, so a text literal prints non-ASCII
-escaped (`tshow`), and a comment's text of the PDF goes through `Gen.ascii` (`Gen.provenanceComment` and
-the module header apply it; `CompileSpec` holds every module to ASCII).
+`HalfUID`, the two name maps, a `[(UID, String)]` list of a table's UIDs, or a `data Core_<enum>`; any
+other `data`, a record such as a method's, is no enumeration to it). Generated modules stay ASCII: EquivTH
+reads them with the locale's `readFile`, so a text literal prints non-ASCII escaped (`tshow`), and a
+comment's text of the PDF goes through `Gen.ascii` (`Gen.provenanceComment` and the module header apply
+it; `CompileSpec` holds every module to ASCII).
 
 A rule names its own finding codes: its `ruleCodes` lists each code it claims as a `CodeDef` (the code,
 the severities its findings take, and what they report: a defect of the PDF, text read other than as
@@ -210,9 +210,10 @@ literal. Name a value with `lowerIdent` (`spTemplatesTableUIDs`, `mbrControlTabl
 name with `titleIdent` (`cComIDAssignments`); refer to another rule's generated names through that
 rule's function, never by building the string again (`typeUIDName` of `typeRow`, `tableUIDName` and
 `tableObjectUIDName` of `tableUIDs`). A generated text is `Text`, imported from `Data.Text` (not RIO);
-`String` only where the oracle compares it with a hand-written `String`. A generated module whose names
-other modules export too (`Hsed.Gen.<Spec>.Methods`: `Get`, `Set`, `Next`) is imported qualified, as
-are runtime modules whose names meet (`Hsed.Core.Field`'s and `Hsed.Core.Sync`'s `Constant`).
+`String` only where the oracle compares it with a hand-written one (the Table 240 name maps). A
+generated module whose names other modules export too (`Hsed.Gen.<Spec>.Methods`: `Get`, `Set`, `Next`)
+is imported qualified, as are runtime modules whose names meet (`Hsed.Core.Field`'s and
+`Hsed.Core.Sync`'s `Constant`).
 `Gen.renderModule` assembles each module from the declarations of every rule that names it:
 pragmas (the declarations' extensions with the two every module has), header, merged imports,
 declarations sorted by table number, rank, name. A declaration goes to the rule's module (`Emit`) or to

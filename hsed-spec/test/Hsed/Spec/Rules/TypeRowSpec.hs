@@ -16,8 +16,8 @@ committed annotations: the 100 type-row tables of section 5.1.3 it binds and
 declares, the identifier a caption names, the Format environment, each of its
 checks made to fail by one edited cell (C-UID-TABLE, C-UID-UNIQUE and T149's
 waiver, C-FMT-RESOLVE, the N-FORMAT-NORMALISED Notes), and its declarations:
-the provenance of E2, T46, and T75 under each errata set. The Format string a
-type row prints for the M2a comparison is tested on its own.
+the provenance of E2, T46, and T75 under each errata set. 'joinFormat', a
+Format cell's text as the hand transcription states it, is tested on its own.
 -}
 module Hsed.Spec.Rules.TypeRowSpec (spec) where
 
@@ -64,7 +64,7 @@ waiverFor subject = "core-2.01 | T149 | waive \"C-UID-UNIQUE\" \"" <> subject <>
 spec :: Spec
 spec = do
   describe "joinFormat" $
-    it "joins the pieces with commas and no spaces, as hsed's quasiquoter does" $
+    it "joins the pieces with commas and no spaces, as the fixture's quasiquoter does" $
       map joinFormat [ "List_Type, *, ACE_expression", "Simple_Type,uinteger, 2", "Restricted_Reference_Type{6}, uidref {AuthorityTableUID}", "Base_Type" ]
         `shouldBe` [ "List_Type,*,ACE_expression", "Simple_Type,uinteger,2", "Restricted_Reference_Type{6},uidref {AuthorityTableUID}", "Base_Type" ]
 

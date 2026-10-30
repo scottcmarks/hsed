@@ -37,10 +37,10 @@ Checks, each with the code its findings carry:
   cell's spacing at a brace or its table's @Table_UID@ or @Table@ suffix is the
   Note @N-FORMAT-NORMALISED@.
 
-Compiled into 'typesModule': @u\<Name\>Type :: UID@, @f\<Name\>Type :: String@
-(the Format cell joined as hsed's hand transcription joins it, commas and no
-spaces, for the M2a runtime comparison) and @t\<Name\> :: TypeDef@ when the
-Format parsed.
+Compiled into 'typesModule': @u\<Name\>Type :: UID@ and, when the Format
+parsed, @t\<Name\> :: TypeDef@. (The Format strings @f\<Name\>Type :: String@,
+printed for M2a's runtime comparison with the hand transcription, were
+retired at M2d.)
 -}
 module Hsed.Spec.Rules.TypeRow
   ( typeRowRule
@@ -103,9 +103,8 @@ typeRowRule = RuleDef
 typesModule :: Gen.GenModule
 typesModule = Gen.GenModule
   { Gen.leaf        = "Types"
-  , Gen.description = "Type objects: each Type table row's UID, Format and TypeDef"
-  , Gen.notes       = [ "The @f\\<Name\\>Type@ strings are the Format cells joined as hsed's hand"
-                      , "transcription joins them, for the M2a runtime comparison." ] }
+  , Gen.description = "Type objects: each Type table row's UID and the TypeDef its Format gives"
+  , Gen.notes       = [] }
 
 -- | The type a type row's caption names: a single identifier.
 typeIdent :: Form -> Maybe Text
@@ -279,24 +278,24 @@ typeRowDecl ctx tr = case trUID tr of
 typeUIDName :: Text -> Text
 typeUIDName n = "u" <> n <> "Type"
 
--- | @u\<Name\>Type@, @f\<Name\>Type@ and, when the Format parsed, @t\<Name\>@.
+-- | @u\<Name\>Type@ and, when the Format parsed, @t\<Name\>@.
 renderTypeRow :: TypeRowDecl -> Gen.Decl
 renderTypeRow r = (Gen.decl r.provenance r.name body)
   { Gen.declImports = [ Gen.ImportAll Gen.coreTypesModule | isJust r.typeDef ]
-                      <> [ Gen.ImportSome "Prelude" ["String"], Gen.ImportSome Gen.uidModule ["UID", "uid"] ] }
+                      <> [ Gen.ImportSome Gen.uidModule ["UID", "uid"] ] }
   where
     u   = typeUIDName r.name
-    f   = "f" <> r.name <> "Type"
     doc = Gen.provenanceComment r.provenance
     body =
       [ doc, u <> " :: UID", u <> " = " <> Gen.uidExpr r.uidBytes
-      , "", doc, f <> " :: String", f <> " = " <> tshow (joinFormat r.formatText)
       , "" ]
       <> maybe [ "-- t" <> r.name <> ": no TypeDef, the Format did not parse under this errata set" ]
                (\t -> [ doc, "t" <> r.name <> " :: TypeDef", "t" <> r.name <> " = " <> tshow t ])
                r.typeDef
 
--- | The Format cell as hsed's quasiquoter joins the table's lines: the pieces
---   between commas trimmed, no space after a comma.
+-- | The Format cell's pieces trimmed and joined by commas, no space after a
+--   comma, as the fixture's quasiquoter joined a table's lines: the Format's
+--   text as the hand transcription states it (the generated module no longer
+--   prints it, since M2d).
 joinFormat :: Text -> Text
 joinFormat = T.intercalate "," . map T.strip . DT.splitOn ","

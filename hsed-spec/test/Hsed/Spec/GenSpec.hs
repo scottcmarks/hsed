@@ -106,8 +106,7 @@ coreTypes = "Hsed.Gen.Core.Types"
 goldenModule :: GenModule
 goldenModule = GenModule
   { leaf = "Types", description = "Type objects and their enumerations"
-  , notes = [ "The @f\\<Name\\>Type@ strings are the Format cells joined as hsed's hand"
-            , "transcription joins them, for the M2a runtime comparison." ] }
+  , notes = [] }
 
 
 -- * Type-checking a printed module
@@ -158,19 +157,18 @@ spec = do
     it "gives every definition its provenance line" $ do
       let text = renderModule coreTypes goldenModule (golden env Scott)
           count needle = length (T.breakOnAll needle text)
-      count "-- | core-2.01 T46 AC_element (PDF 100 / p.83, ord 48, sha256:5b2d8106fd18)" `shouldBe` 3
+      count "-- | core-2.01 T46 AC_element (PDF 100 / p.83, ord 48, sha256:5b2d8106fd18)" `shouldBe` 2
       count "-- | core-2.01 T52 adv_key_mode Enumeration Values (PDF 102 / p.85, ord 54, sha256:3aa5da037978)" `shouldBe` 2
-      count "-- | core-2.01 T75 clock_time (PDF 107 / p.90, ord 77, sha256:c349b5b0b0ba)" `shouldBe` 3
-    it "prints the three shapes of a Type row as hsed's TypeUIDs.hs has them" $ do
+      count "-- | core-2.01 T75 clock_time (PDF 107 / p.90, ord 77, sha256:c349b5b0b0ba)" `shouldBe` 2
+    it "prints the two shapes of a Type row: its UID and, when the Format parsed, its TypeDef" $ do
       let text = renderModule coreTypes goldenModule [t46 env]
       text `shouldSatisfy` T.isInfixOf "uAC_elementType :: UID\nuAC_elementType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x08 0x01\n"
-      text `shouldSatisfy` T.isInfixOf "fAC_elementType :: String\nfAC_elementType = \"List_Type,*,ACE_expression\"\n"
+      text `shouldSatisfy` (not . T.isInfixOf "fAC_elementType")
       text `shouldSatisfy` T.isInfixOf "tAC_element :: TypeDef\ntAC_element = ListType Star (Ref \"ACE_expression\")\n"
     it "omits the TypeDef of a Format that did not parse" $ do
       let text = renderModule coreTypes goldenModule (golden env Published)
       text `shouldSatisfy` T.isInfixOf "-- tclock_time: no TypeDef, the Format did not parse under this errata set"
       text `shouldSatisfy` (not . T.isInfixOf "tclock_time ::")
-      text `shouldSatisfy` T.isInfixOf "fclock_timeType = \"Struct_Type,Year,Month,Day,Hour,Minute,Seconds,Fractoin\""
       renderModule coreTypes goldenModule (golden env Scott)
         `shouldSatisfy` T.isInfixOf "tclock_time = StructType [Ref \"Year\",Ref \"Month\",Ref \"Day\",Ref \"Hour\",Ref \"Minute\",Ref \"Seconds\",Ref \"Fraction\"]"
     it "refers to the row's UID name in its module or another, or spells the UID out" $ do
@@ -183,7 +181,7 @@ spec = do
     it "imports only what its definitions use" $ do
       renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           Prelude                    (Bounded, Enum, Eq, Ord, Show)\n"
       renderModule coreTypes goldenModule [t52] `shouldSatisfy` T.isInfixOf "import           System.SED.MCTP.Common.UID (uid)\n"
-      renderModule coreTypes goldenModule [t46 env] `shouldSatisfy` T.isInfixOf "import           Prelude                    (String)\n"
+      renderModule coreTypes goldenModule [t46 env] `shouldSatisfy` (not . T.isInfixOf "import           Prelude")
       renderModule coreTypes goldenModule [t75 env Published] `shouldSatisfy` (not . T.isInfixOf "import           Hsed.Core.Types")
       renderModule coreTypes goldenModule [] `shouldSatisfy` (not . T.isInfixOf "import")
 

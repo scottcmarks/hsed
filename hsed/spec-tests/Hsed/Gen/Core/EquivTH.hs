@@ -16,24 +16,25 @@ time:
 * 'generatedDefs' reads every module @hsedc compile@ wrote for the spec (all
   of @gen/Hsed/Gen/Core@, so that a new generated module cannot escape the
   comparison: one not imported by "Hsed.Gen.Core.EquivSpec" stops the
-  compilation): every signature
-  @name :: T@ whose type the hand-written modules also have (@UID@, @String@,
-  @HalfUID@ and the two name maps; a @TypeDef@ has no hand-written
-  counterpart) and every @data Core_\<enum\>@ (another data type, a record,
-  is no enumeration), each with the caption of the table its provenance line
+  compilation): every signature @name :: T@ whose type the hand-written
+  modules also have (@UID@, @HalfUID@ and the two name maps; a @TypeDef@ has
+  no hand-written counterpart, and since M2d no Format @String@ is generated
+  or read) and every @data Core_\<enum\>@ (another data type, a record, is
+  no enumeration), each with the caption of the table its provenance line
   names (a definition under the provenance of a signature block,
   @5.3.3.6/sig@, names no table and is not read);
 * 'generatedUIDLists' reads the same modules' lists of a table's UIDs
   (@name :: [(UID, String)]@), each with its table: what a hand-written UID of
   a table whose rows the PDF names nowhere is found in;
 * 'handDefs' reads the hand transcription, the test fixture hsed/fixture/Hand
-  (hsed's library until M2d): every @ttype@ quasiquote (@u\<Name\>Type@,
-  @f\<Name\>Type@), every @tenum@ quasiquote (@Core_\<enum\>@), the @t240@
-  quasiquote's rows (@h\<T\>@, @u\<T\>Table@, @u\<T\>TableObject@, and whichever of
-  the typed @oth\<T\>@ or @bth\<T\>@ the module defines; then @nameHalfUID@ and
-  @nameUID@), each with the caption the quasiquote prints, and every @name ::
-  UID@ of @SpecialPurposeUIDs@ with the caption of the transcribed table above
-  it (@Table 239 Special Purpose UIDs@, @Table 241 Session Manager Method
+  (hsed's library until M2d): every @ttype@ quasiquote (@u\<Name\>Type@;
+  its @f\<Name\>Type@ is not read), every @tenum@ quasiquote
+  (@Core_\<enum\>@), the @t240@ quasiquote's rows (@h\<T\>@, @u\<T\>Table@,
+  @u\<T\>TableObject@, and whichever of the typed @oth\<T\>@ or @bth\<T\>@
+  the module defines; then @nameHalfUID@ and @nameUID@), each with the
+  caption the quasiquote prints, and every @name :: UID@ of
+  @SpecialPurposeUIDs@ with the caption of the transcribed table above it
+  (@Table 239 Special Purpose UIDs@, @Table 241 Session Manager Method
   UIDs@). A name the source promises and the module does not define stops the
   compilation.
 
@@ -150,7 +151,7 @@ generatedNames = go Nothing
     signature l = case words l of
       n : "::" : ty | unwords ty `elem` handTypes -> Just n
       _ -> Nothing
-    handTypes = ["UID", "String", "HalfUID", "Map HalfUID String", "Map UID String"]
+    handTypes = ["UID", "HalfUID", "Map HalfUID String", "Map UID String"]
 
 
 -- * The hand-written modules
@@ -174,9 +175,10 @@ handDefs typeUIDs tableUIDs specialUIDs h = do
     scalar caption n = do
       nm <- value n
       [| Def n (tableOf caption) caption (Scalar (show $(varE nm))) |]
-    -- a Type table row: its Name cell names u<Name>Type and f<Name>Type
+    -- a Type table row: its Name cell names u<Name>Type (the fixture's f<Name>Type, a
+    -- Format string, has had no generated counterpart since M2d)
     typeRow (caption, body) = case drop 1 (tableRows body) of
-      [_, name, _] : _ -> mapM (scalar caption) ["u" ++ name ++ "Type", "f" ++ name ++ "Type"]
+      [_, name, _] : _ -> mapM (scalar caption) ["u" ++ name ++ "Type"]
       _                -> fail ("no Type table row under " ++ caption)
     -- an enumeration: its caption names the type, Core_<type>
     enumeration (caption, _) = case words caption of

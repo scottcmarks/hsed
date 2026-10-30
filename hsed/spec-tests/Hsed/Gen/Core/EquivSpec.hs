@@ -44,11 +44,12 @@ is encoded and decoded by the codec here and the values the table leaves
 unassigned are listed; and each field of a typed record (Tables 22, 23 and 34,
 @fieldType@) names a Type object whose UID the hand transcription has.
 
-The M1 slice is kept by name above it (M1 acceptance (d)). The hand-written
-side is the 2019 transcription, kept since M2d as the test fixture
-hsed/fixture/Hand and compiled only by this test suite; hsed's library
-re-exports the generated modules in its place, so 'handDefs' reads the
-fixture (design sections 5.5 and 11, M2d).
+The M1 slice is kept by name above it (M1 acceptance (d), less its Format
+strings, retired with @f\<Name\>Type@ at M2d on both sides). The
+hand-written side is the 2019 transcription, kept since M2d as the test
+fixture hsed/fixture/Hand and compiled only by this test suite; hsed's
+library re-exports the generated modules in its place, so 'handDefs' reads
+the fixture (design sections 5.5 and 11, M2d).
 -}
 module Hsed.Gen.Core.EquivSpec (spec) where
 
@@ -217,16 +218,6 @@ spec = do
       G.uattr_flagsType     `shouldBe` H.uattr_flagsType
       G.uauth_methodType    `shouldBe` H.uauth_methodType
       G.uclock_timeType     `shouldBe` H.uclock_timeType
-    it "has the hand-written Format strings (T75 under the scott errata)" $ do
-      G.fAC_elementType     `shouldBe` H.fAC_elementType
-      G.fACE_columnsType    `shouldBe` H.fACE_columnsType
-      G.fACE_expressionType `shouldBe` H.fACE_expressionType
-      G.fACE_object_refType `shouldBe` H.fACE_object_refType
-      G.fACLType            `shouldBe` H.fACLType
-      G.fadv_key_modeType   `shouldBe` H.fadv_key_modeType
-      G.fattr_flagsType     `shouldBe` H.fattr_flagsType
-      G.fauth_methodType    `shouldBe` H.fauth_methodType
-      G.fclock_timeType     `shouldBe` H.fclock_timeType
     it "has Core_adv_key_mode's constructors in the hand-written order (T52)" $ do
       map show [minBound .. maxBound :: G.Core_adv_key_mode] `shouldBe` map show [minBound .. maxBound :: H.Core_adv_key_mode]
       map fromEnum [minBound .. maxBound :: G.Core_adv_key_mode] `shouldBe` map fromEnum [minBound .. maxBound :: H.Core_adv_key_mode]
@@ -242,9 +233,9 @@ spec = do
     let gens  = byName generated
         hands = byName handWritten
         matching e = [ d | d <- differences, subject d == eSubject e ]
-    it "reads 483 generated definitions and 415 hand-written ones: 367 on both sides, 116 new, 48 the generated lack" $ do
-      (Map.size gens, Map.size hands) `shouldBe` (483, 415)
-      Map.size (Map.intersection gens hands) `shouldBe` 367
+    it "reads 383 generated definitions and 315 hand-written ones: 267 on both sides, 116 new, 48 the generated lack" $ do
+      (Map.size gens, Map.size hands) `shouldBe` (383, 315)
+      Map.size (Map.intersection gens hands) `shouldBe` 267
       -- new: Core_gen_status, and the UIDs of the tables hsed does not transcribe (Tables 242-248)
       [ n | (n, g) <- Map.toList (gens Map.\\ hands), dTable g `notElem` map (('T' :) . show) [242 .. 248 :: Int] ]
         `shouldBe` ["Core_gen_status"]

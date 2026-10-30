@@ -26,18 +26,8 @@ ufeedback_sizeType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x02 0x14 | T83
 ufraction_enumType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x1c | T85: hsed carries date's 18 04
 ugen_statusType | pdf-uid | uid 0x00 0x00 0x00 0x05 0x00 0x00 0x1a 0x02 | T86: hsed carries date's 18 04
 
-# spacing only: the two sides differ in spaces alone, either side having the extra one (the generated
-# value keeps the PDF's spaces within a line and joins the PDF's lines, hsed's quasiquoters join the
-# lines of its transcription without a space)
-fAuthority_object_refType | spacing | "Restricted_Reference_Type{6},uidref {AuthorityTableUID}" | T57: uidref {AuthorityTableUID} in the PDF, uidref{...} in hsed
-fCertificates_object_refType | spacing | "Restricted_Reference_Type{6},uidref {CertificatesTableUID}" | T72: uidref {CertificatesTableUID} in the PDF
-fTemplate_object_refType | spacing | "Restricted_Reference_Type{6},uidref {TemplateTableUID}" | T142: uidref {TemplateTableUID} in the PDF
-fbyte_row_refType | spacing | "General_Reference_Type {7}" | T62: General_Reference_Type {7} in the PDF
-fobject_refType | spacing | "General_Reference_Type {8}" | T119: General_Reference_Type {8} in the PDF
-ftable_refType | spacing | "General_Reference_Type {9}" | T141: General_Reference_Type {9} in the PDF
-flog_row_refType | spacing | "Restricted_Reference_Type {6},uidref{LogTableUID},*" | T105: Restricted_Reference_Type {6} in the PDF; hsed split the cell differently
-fcred_object_uidrefType | spacing | "Restricted_Reference_Type{6},uidref {C_PINTableUID},uidref {C_AES_*TableUID},uidref {C_RSA_*TableUID},uidref{C_EC_*TableUID},uidref{C_HMAC_*TableUID}" | T77: the PDF spaces three uidrefs and closes two; hsed spaces all five
-fuinteger_2Type | spacing | "Simple_Type,uinteger,2" | T149: hsed writes uinteger, 2 on one line and keeps its space; the PDF prints the cell on three lines, which the generated value joins without spaces
+# spacing only: an enumeration's constructors that differ in underscores alone (T98: hsedc joins the
+# PDF's two lines of a label with a space, hsed's tenum joined its lines with none)
 Core_keys_avail_conds | spacing | +[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLocked_WriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] -[("Core_keys_avail_conds_Authentication_of_an_authority_with_Set_access_to_any_of_the_ReadLockedWriteLocked_ReadLockEnabled_or_WriteLockEnabled_columns_for_that_LBA_range",1)] | T98: both break the label after ReadLocked,; hsedc joins the PDF's lines with a space (ReadLocked, WriteLocked), hsed's tenum joins its lines with none (ReadLocked,WriteLocked), and the comma dropped leaves ReadLockedWriteLocked
 
 # enumerations whose range starts at 1

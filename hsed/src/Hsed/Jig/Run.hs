@@ -43,6 +43,7 @@ protocol (Core 3.3.10.3 b, PDF 84) and answered whatever the sessions
 module Hsed.Jig.Run
   ( RunOptions (..)
   , runJig
+  , runOpened
   , cases
   ) where
 
@@ -103,6 +104,16 @@ runJig opts0 = do
             Left e           -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> tshow e) $> ExitFailure 1
             Right (Left e)   -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> e) $> ExitFailure 1
             Right (Right tg) -> runOn opts started chosen tg `finally` closeTarget tg
+
+-- | Run the selected cases on a target the caller opened and closes: what
+--   'runJig' does once its target is open, without its gates (root, the
+--   profile), which the caller answers for; a test's drive that is a replay
+--   with what the IORegistry would say of a drive. A key the catalogue lacks
+--   is still exit 2.
+runOpened :: RunOptions -> Target -> IO ExitCode
+runOpened opts tg = case selected (roTests opts) of
+  Left e       -> complain e $> ExitFailure 2
+  Right chosen -> getCurrentTime >>= \started -> runOn opts started chosen tg
 
 -- | The drives a target names.
 devices :: TargetSpec -> [Text]

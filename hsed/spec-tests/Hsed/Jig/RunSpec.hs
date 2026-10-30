@@ -30,7 +30,7 @@ module Hsed.Jig.RunSpec (spec) where
 import qualified Data.Aeson             as A
 import qualified RIO.List               as L
 import           RIO
-import           RIO.Directory          (listDirectory)
+import           RIO.Directory          (doesFileExist, listDirectory)
 import           RIO.FilePath           (takeExtension, (</>))
 import qualified RIO.Text               as T
 import           Test.Hspec
@@ -43,8 +43,11 @@ import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
 import           Hsed.Jig.Support       (at, atPath, disk6Like, g1, g2, g4, needing, silently)
+import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.Types         (SimParams (..), defaultSimParams)
+import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..))
+import           Hsed.Transport.Replay  (openReplay)
 import           Hsed.Wire              (Unit (..))
 
 
@@ -140,6 +143,12 @@ spec = do
       (_, json, _) <- jig (onSim UnitBytes 1)
       t45s json `shouldSatisfy` elem "responses_to_come"
       extensionVerdicts json `shouldBe` [str "pass", str "pass"]
+    it "asks for Level 0 once more, at its whole length, when the length asked for cut it short" $ needing [g1, g2] $ do
+      (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "UCT-01", roLevel0Len = 100 }
+      code `shouldBe` ExitSuccess
+      [ n | e <- elements (at "transcript" json), atPath ["request", "comid"] e == Just (A.Number 1)
+          , Just (A.Number n) <- [atPath ["request", "len"] e] ]
+        `shouldBe` [100, 216]
     it "not held, passes the Empty-atom extension and skips the one that needs a response held" $ needing [g1, g2] $ do
       (_, json, _) <- jig (onSim UnitBytes 0)
       extensionVerdicts json `shouldBe` [str "pass", str "skipped"]
@@ -170,6 +179,28 @@ spec = do
         disk6Like >>= writeFileBinary file
         (code, _, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
         code `shouldBe` ExitSuccess
+
+  describe "a replay standing in for the kext's drive, with what the IORegistry would say of disk6" $
+    it "notes the CDB the hardware run expects, issues no IF-SEND, and captures the response with its sidecar" $ needing [g2, g4] $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        bytes <- disk6Like
+        let file    = dir </> "disk6-like-level0.bin"
+            capture = dir </> "capture" </> "disk6-level0.bin"
+            reports = dir </> "report"
+        writeFileBinary file bytes
+        tr <- openReplay file >>= either (throwString . T.unpack) pure
+        code <- silently $ runOpened
+          defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01", roCapture = Just capture, roReportDir = reports }
+          (DriveTarget tr (Just (DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0)))
+        code `shouldBe` ExitSuccess
+        readFileBinary capture `shouldReturn` bytes
+        doesFileExist (dir </> "capture" </> "disk6-level0.json") `shouldReturn` True
+        json <- listDirectory reports >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
+          [f] -> readFileBinary (reports </> f) >>= either throwString pure . A.eitherDecodeStrict'
+          _   -> throwString "not one report"
+        [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e] ]
+          `shouldSatisfy` any ("a1 08 0e 01 04 00 01 00 00 5c 00 00" `T.isInfixOf`)
+        at "if_send_issued" json `shouldBe` Just (A.Number 0)
 
   describe "the simulator paired with the replay (the Pair runner)" $ do
     it "finds 0x0403 missing without a profile: exit 1" $ needing [g1, g2, g4] $

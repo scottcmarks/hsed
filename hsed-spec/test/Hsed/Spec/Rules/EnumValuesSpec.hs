@@ -14,7 +14,8 @@ Stability   : experimental
 The value cells an enumeration reads and the constructor names it prints; then
 the rule (design example E4) on the committed Core extraction with the
 committed annotations: the 19 enumerations of section 5.1.3 it binds, T87
-through its comment, the 20 it declares, C-ENUM-RANGE made to fail by one
+through its comment, the 20 it declares, a range printed with a spaced en dash
+read as one, C-ENUM-RANGE made to fail by one
 edited cell (a value outside the range, a value cell that is no number, a
 constructor defined twice, two labels giving one constructor, a label with
 nothing to name a constructor), the overlap and repeated-label Warnings, and
@@ -57,13 +58,18 @@ errorsOf es = map renderFinding . filter isError . checkIR es
 spec :: Spec
 spec = do
   describe "parseEnumValue" $
-    it "reads a value, a dash or en-dash range, and a declared range word" $ do
+    it "reads a value, a dash or en-dash range spaced or not, and a declared range word" $ do
       parseEnumValue [] "2" `shouldBe` Just [2]
       parseEnumValue [] "2-7" `shouldBe` Just [2 .. 7]
       parseEnumValue [] "14–15" `shouldBe` Just [14, 15]
+      parseEnumValue [] "3 – 4" `shouldBe` Just [3, 4]
+      parseEnumValue [] "3 - 4" `shouldBe` Just [3, 4]
+      parseEnumValue [] "3 —4" `shouldBe` Just [3, 4]
+      parseEnumValue ["–"] "3 – 4" `shouldBe` Just [3, 4]
       parseEnumValue [] "7 to 31" `shouldBe` Nothing
       parseEnumValue ["to"] "7 to 31" `shouldBe` Just [7 .. 31]
       parseEnumValue [] "7-2" `shouldBe` Nothing
+      parseEnumValue [] "3 – – 4" `shouldBe` Nothing
 
   describe "enumTypeName" $
     it "prefixes the type's name with the spec's label" $ do
@@ -119,6 +125,10 @@ spec = do
       it "passes for T51/T52 (M1 acceptance (d))" $ do
         about "T51" scott `shouldBe` []
         about "T52" scott `shouldBe` []
+      it "reads a range printed with a spaced en dash as the hyphen's (Opal T31's 3 – 4)" $ do
+        let ir' = setCell "T52" 2 0 "2 – 7" ir
+        errorsOf Scott ir' `shouldBe` []
+        map (.ctors) (enumsOf (mkContext Scott ir')) `shouldBe` map (.ctors) (enumsOf ctx)
       it "fails on a value outside the type's range" $
         errorsOf Scott (setCell "T52" 2 0 "2-8" ir) `shouldBe`
           ["C-ENUM-RANGE core-2.01.pdf#page=102&T52: value 8 (\"Reserved\") lies outside 0..7 of T51 adv_key_mode"]

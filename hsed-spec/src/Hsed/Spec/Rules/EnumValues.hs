@@ -150,10 +150,11 @@ readEnums ctx = map readEnum
            , erIdent = enumIdent (measure (cxSpec ctx) t'), erRows = [ (cell a r, cell b r) | r <- t'.rows ]
            , erRangeWords = mRangeWords (btMods bt) }
 
--- | An enumeration's value cell: @n@, @a-b@ (a hyphen or an en dash), or @a W b@
+-- | An enumeration's value cell: @n@, @a-b@ (a hyphen, an en dash or an em
+--   dash, spaced or not: Opal T31 prints @3 – 4@, Core T52 @2-7@), or @a W b@
 --   for a range word @W@ the binding declares (@rangeWords ["to"]@).
 parseEnumValue :: [Text] -> Text -> Maybe [Int]
-parseEnumValue rangeWords cell = case T.words (T.map dash (T.strip cell)) of
+parseEnumValue rangeWords cell = case T.words (squeezed cell) of
   [single] -> case DT.splitOn "-" single of
     [n]    -> pure <$> number n
     [a, b] -> fromTo a b
@@ -161,7 +162,9 @@ parseEnumValue rangeWords cell = case T.words (T.map dash (T.strip cell)) of
   [a, w, b] | w `elem` rangeWords -> fromTo a b
   _ -> Nothing
   where
-    dash c = if c == '–' then '-' else c
+    -- every dash a hyphen, with no space on either side of it
+    squeezed = T.intercalate "-" . map T.strip . DT.splitOn "-" . T.map dash . T.strip
+    dash c = if c `elem` ['–', '—'] then '-' else c
     number n = if not (T.null n) && T.all C.isDigit n then readMaybe (T.unpack n) else Nothing
     fromTo a b = do
       lo <- number a

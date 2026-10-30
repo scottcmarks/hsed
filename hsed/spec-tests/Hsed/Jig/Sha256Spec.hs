@@ -9,7 +9,7 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The capture sidecar's SHA-256 against the examples of FIPS 180-4's
+The capture sidecar's SHA-256 (cryptonite's) against the examples of FIPS 180-4's
 publication (one block, two blocks, a million bytes) and against digests
 another implementation (Python's hashlib) gave for the lengths around a
 block's padding boundary (55 to 65 bytes, and 119 and 120).

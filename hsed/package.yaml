@@ -52,10 +52,12 @@ library:
   - base16-bytestring  # hex in transcripts, reports and the capture sidecar (M3)
   - bytestring         # Hsed.Gen.Core.Layouts (generated code imports Data.ByteString, not RIO)
   - containers         # Hsed.Gen.Core.TableUIDs (Data.Map)
+  - cryptonite         # Hsed.Jig.Sha256: the capture's SHA-256 (M3 review; in the snapshot, as hsed-spec's)
   - directory          # Hsed.Jig.Files, the reports (M3)
   - filepath
   - githash            # GitHash.Extras.GitVersion: both executables' version, and Hsed.Version's (M3)
   - lens               # Hsed.App
+  - memory             # Hsed.Jig.Sha256: cryptonite's digest as bytes (Data.ByteArray)
   - QuickCheck         # Hsed.Law's properties, Hsed.Sim.Gen's generators (M3)
   - template-haskell   # GitHash.Extras.GitVersion
   - text               # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)

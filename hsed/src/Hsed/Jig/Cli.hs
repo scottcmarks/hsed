@@ -27,7 +27,11 @@ that the tests can run them:
   a run's report read back ("Hsed.Jig.Report").
 
 Each gives the process's exit code: 0 success, 1 a failure, 2 a usage
-error, and for @run@ 3 a safety violation.
+error, and for @run@ 3 a safety violation. The first of @run@'s safety
+gates is here, before anything else runs: a drive target (@/dev/diskN@,
+alone or paired) needs root, which hsed itself requires, the loaded kext
+(build 625) checking no privilege (design 9.3); the run itself checks that
+no IF-SEND was issued on a drive.
 -}
 module Hsed.Jig.Cli
   ( Command (..)
@@ -41,9 +45,10 @@ import qualified RIO.Text             as T
 
 import           Hsed.Core.Feature    (Allowance (..), Feature (featureCode))
 import           Hsed.Core.Layout     (Content (..))
-import           Hsed.Jig.Files       (writeOwned)
+import           Hsed.Jig.Files       (runningAsRoot, writeOwned)
+import           Hsed.Jig.Options     (TargetSpec (..))
 import           Hsed.Jig.Report      (diffReports, verifyTranscript)
-import           Hsed.Jig.Run         (RunOptions, runJig)
+import           Hsed.Jig.Run         (RunOptions (..), runJig)
 import           Hsed.Level0          (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor,
                                        splitLevel0)
 import           Hsed.Level0.Sedutil  (compareQuery, parseQuery, synthesize)
@@ -62,11 +67,33 @@ data Command
 -- | Run a command: the exit code.
 runCommand :: Command -> IO ExitCode
 runCommand = \case
-  Run opts                      -> runJig opts
+  Run opts                      -> run opts
   Level0Decode file against     -> level0Decode file against
   Level0Synthesize query out    -> level0Synthesize query out
   VerifyTranscript report noIfs -> verifyTranscript report noIfs
   Diff a b                      -> diffReports a b
+
+
+-- * run
+
+-- | Run the jig, a drive target refused without root (exit 3) before
+--   anything is opened.
+run :: RunOptions -> IO ExitCode
+run opts = case devices (roTarget opts) of
+  []      -> runJig opts
+  devs    -> do
+    root <- runningAsRoot
+    if root
+      then runJig opts
+      else do
+        traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs root (sudo), hsed's own gate: the kext checks no "
+                                    <> "privilege (design 9.3); build as yourself, never with sudo stack")) devs
+        pure (ExitFailure 3)
+  where
+    devices = \case
+      TDevice d -> [d]
+      TPair a b -> devices a <> devices b
+      _         -> []
 
 
 -- * level0
@@ -141,5 +168,8 @@ hex n = "0x" <> T.pack (showHex n "")
 say :: Text -> IO ()
 say t = hPutBuilder stdout (getUtf8Builder (display t <> "\n"))
 
+complain :: Text -> IO ()
+complain t = hPutBuilder stderr (getUtf8Builder (display t <> "\n"))
+
 failWith :: Text -> IO ExitCode
-failWith t = hPutBuilder stderr (getUtf8Builder (display t <> "\n")) >> pure (ExitFailure 1)
+failWith t = complain t >> pure (ExitFailure 1)

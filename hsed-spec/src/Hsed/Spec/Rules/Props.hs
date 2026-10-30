@@ -80,8 +80,8 @@ import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads, parseEnumValue)
-import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeRowReads, typesModule)
-import           Hsed.Spec.Shape           (Shape (..), normHeader, normaliseCaption)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Shape           (Shape (..), normHeader)
 
 
 -- | The reader: reached only by a @propsNames@ or @propsInitial@ comment.
@@ -238,7 +238,7 @@ readValue labels cell = case labels of
 data Resolved = Resolved
   { rsTable  :: !BoundTable
   , rsProps  :: ![(PropertyRead, TypeRowRead)]          -- ^ the names table's rows, every one resolved
-  , rsAssume :: ![(AssumptionsRead, [(Text, Natural, Text)])]  -- ^ each value column: property, value, cell
+  , rsAssume :: ![(AssumptionsRead, [(Text, Text, Natural, Text)])]  -- ^ each value column: property, its name as printed, value, cell
   }
 
 -- | The findings of every table bound with the shape, and what each table that
@@ -268,10 +268,10 @@ resolve ctx bts = (findings, results)
     nameFindings = lefts reads
       <> [ secondTable "propsNames" kept bt | kept : rest <- [nameTables], bt <- rest ]
       <> concatMap rowFindings rows
-      <> [ here (prBound r) (finding Error "C-PROP-NAME" ("the property " <> prName r <> " is also row " <> tshow (prRow first')))
+      <> [ atCells ctx (prBound r) (prCells r) (finding Error "C-PROP-NAME" ("the property " <> prName r <> " is also row " <> tshow (prRow first')))
          | rs <- Map.elems (Map.fromListWith (flip (<>)) [ ((btAnchor (prBound r), prName r), [r]) | r <- rows ])
          , first' : rest <- [rs], r <- rest ]
-    rowFindings r = map (here (prBound r)) $
+    rowFindings r = map (atCells ctx (prBound r) (prCells r)) $
       [ finding Error "C-PROP-NAME" (label r <> "the property's name is not an identifier") | not (identifier (prName r)) ]
       <> [ finding Error "C-PROP-TYPE" (label r <> "the Type " <> tshow (prTypeText r) <> " names no type row") | isNothing (prType r) ]
       <> [ finding Error "C-PROP-TYPE" (label r <> "Applicable To " <> tshow (prAppliesText r) <> " names neither communicator")
@@ -331,7 +331,7 @@ resolve ctx bts = (findings, results)
     resolved bt = Resolved
       { rsTable  = bt
       , rsProps  = [ (r, tr) | r <- definedRows, btAnchor (prBound r) == btAnchor bt, Just tr <- [prType r] ]
-      , rsAssume = [ (c, [ (prName p, v, cell) | (_, n, cell) <- arValues c, Right (p, _) <- [lookupProperty n]
+      , rsAssume = [ (c, [ (prName p, n, v, cell) | (_, n, cell) <- arValues c, Right (p, _) <- [lookupProperty n]
                                                 , Just tr <- [prType p], Right v <- [readValue (labelsOf tr) cell] ])
                    | c <- columnsOf bt ] }
 
@@ -353,8 +353,8 @@ decl ctx rs = case propsKind (btBinding bt) of
   _            -> propertiesDecl
   where
     bt = rsTable rs
-    p  = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
-    typeName tr = "u" <> trName tr <> "Type"
+    p  = boundProvenance ctx bt
+    typeName tr = typeUIDName (trName tr)
     propertiesDecl = (Gen.decl p "properties" body)
       { Gen.declImports = [ Gen.ImportSome Gen.propertiesModule ["Communicator (..)", "Property (..)"]
                           , Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) (L.nub (map (typeName . snd) (rsProps rs))) ] }
@@ -362,7 +362,7 @@ decl ctx rs = case propsKind (btBinding bt) of
         body = [ Gen.provenanceComment p
                , "properties :: [Property]"
                , "properties =" ]
-               <> listLines "  " [ "Property " <> tshow (prName r) <> " " <> typeName tr <> " " <> communicators (prApplies r)
+               <> Gen.listLines "  " [ "Property " <> tshow (prName r) <> " " <> typeName tr <> " " <> communicators (prApplies r)
                                  | (r, tr) <- rsProps rs ]
     assumptionsDecl = (Gen.decl p "initialAssumptions" body)
       { Gen.declImports = [ Gen.ImportSome Gen.propertiesModule ["Assumptions (..)", "Communicator (..)"] ] }
@@ -376,13 +376,11 @@ decl ctx rs = case propsKind (btBinding bt) of
         column i (c, values) = case arWho c of
           Just (who, subject) ->
             ((if i == 0 then "  [ " else "  , ") <> "Assumptions " <> tshow who <> " " <> tshow subject <> "  -- " <> tshow (arHeader c))
-              : map ("      " <>) (listLines "" [ pair n v cell | (n, v, cell) <- values ])
+              : map ("      " <>) (Gen.listLines "" [ pair n printed v cell | (n, printed, v, cell) <- values ])
           Nothing -> []
-        pair n v cell = "(" <> tshow n <> ", " <> tshow v <> ")" <> if tshow v == cell then "" else "  -- " <> tshow cell
+        -- the name as printed where W-PROP-NAME-CASE read it as the names table spells it, and the cell where it is no number
+        pair n printed v cell = "(" <> tshow n <> ", " <> tshow v <> ")" <> case
+          ([ "printed " <> tshow printed | printed /= n ], [ tshow cell | tshow v /= cell ]) of
+            ([], [])  -> ""
+            (as, bs)  -> "  -- " <> T.intercalate ": " (as <> bs)
     communicators cs = "[" <> T.intercalate ", " (map tshow cs) <> "]"
-
--- | A list literal, one item to a line: @[ a@, @, b@, @]@ under an indent.
-listLines :: Text -> [Text] -> [Text]
-listLines indent = \case
-  []    -> [indent <> "[]"]
-  items -> zipWith (\i x -> indent <> (if i == (0 :: Int) then "[ " else ", ") <> x) [0 ..] items <> [indent <> "]"]

@@ -97,7 +97,7 @@ spec = withCore $ \pristine -> do
       filter ("C-" `T.isPrefixOf`) (propFindings (setCell "T167" 0 1 "uintegr" ir)) `shouldBe`
         [ "C-PROP-TYPE core-2.01.pdf#page=141&T167: row 1 MaxMethods: the Type \"uintegr\" names no type row" ]
       filter ("C-" `T.isPrefixOf`) (propFindings (setCell "T167" 6 3 "Drive Property" ir)) `shouldBe`
-        [ "C-PROP-TYPE core-2.01.pdf#page=141&T167: row 7 MaxSessions: Applicable To \"Drive Property\" names neither communicator" ]
+        [ "C-PROP-TYPE core-2.01.pdf#page=142&T167: row 7 MaxSessions: Applicable To \"Drive Property\" names neither communicator" ]
     it "C-PROP-INITIAL: refuses a value that does not read, a sum that does not add up, and a property of the other communicator" $ do
       filter ("C-" `T.isPrefixOf`) (propFindings (setCell "T168" 7 1 "Maybe" ir)) `shouldBe`
         [ "C-PROP-INITIAL core-2.01.pdf#page=144&T168: row 8 ContinuedTokens: Initial Host Assumption About TPer: \"Maybe\" is no label of the type's enumeration (False, True)" ]
@@ -118,9 +118,10 @@ spec = withCore $ \pristine -> do
       lns `shouldContain` ["  , Property \"AckNak\" ubooleanType [Host, TPer]"]
       length [ l | l <- lns, "Property \"" `T.isInfixOf` l ] `shouldBe` 23
       lns `shouldContain` ["import           Hsed.Gen.Core.Types  (ubooleanType, uuintegerType)"]
-    it "declares the initial assumptions, the property's own spelling and each value's printed form kept" $ do
+    it "declares the initial assumptions, the property's own spelling, the name as printed where it differs, and each value's printed form kept" $ do
       lns `shouldContain` ["initialAssumptions :: [Assumptions]", "initialAssumptions =", "  [ Assumptions Host TPer  -- \"Initial Host Assumption About TPer\""]
-      lns `shouldContain` ["      , (\"AckNak\", 0)  -- \"False\""]
+      lns `shouldContain` ["      , (\"AckNak\", 0)  -- printed \"AckNAK\": \"False\""]
+      lns `shouldContain` ["      , (\"Asynchronous\", 0)  -- \"False\""]
       lns `shouldContain` ["      , (\"MaxPacketSize\", 1004)  -- \"1024 \\8211 (ComPacket Header size) = 1004\""]
       length [ l | l <- lns, "(\"AckNAK\"" `T.isInfixOf` l ] `shouldBe` 0
     it "leaves neither table out: both are generated, no longer W-GEN-EXCLUDED" $

@@ -84,7 +84,7 @@ instance LayoutRecord TPerFeature where
 -- its general format Table 41 (PDF 69): 4 bytes, Length the count of the bytes after them
 instance Feature TPerFeature where
   featureCode _    = 0x0001
-  featureVersion _ = Just 0x01
+  featureVersion _ = Just 0x1
   featureLength _  = Just 0x0c
   featureHeader _  = FeatureHeader 4 "Length"
 
@@ -148,6 +148,6 @@ instance LayoutRecord LockingFeature where
 -- its general format Table 41 (PDF 69): 4 bytes, Length the count of the bytes after them
 instance Feature LockingFeature where
   featureCode _    = 0x0002
-  featureVersion _ = Just 0x01
+  featureVersion _ = Just 0x1
   featureLength _  = Just 0x0c
   featureHeader _  = FeatureHeader 4 "Length"

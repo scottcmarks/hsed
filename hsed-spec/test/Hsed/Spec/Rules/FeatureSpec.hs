@@ -246,12 +246,12 @@ spec = do
         lns `shouldContain` ["tPerFeatureLayout :: Layout"]
         lns `shouldContain` ["      [ spanning \"Feature Code\" (0, 7) (1, 0) (Pinned 0x0001)", "      , spanning \"Version\" (2, 7) (2, 4) (Pinned 0x1)"]
         lns `shouldContain` ["      , spanning \"Reserved\" (4, 7) (4, 6) Reserved"]
-      it "declares a record of its flags over the layout and its instances, citing where its constants come from" $ do
+      it "declares a record of its flags over the layout and its instances, its constants at their fields' widths as the pins, citing where they come from" $ do
         lns `shouldContain` ["data LockingFeature = LockingFeature"]
         lns `shouldContain` ["instance LayoutRecord LockingFeature where", "  recordLayout _ = lockingFeatureLayout"]
         lns `shouldContain` ["-- the header of TPerFeature as pinned by 3.3.6.4 (PDF 70): Feature Code = 0x0001, Version = 0x01, Length = 0x0C"]
         lns `shouldContain` ["-- the code Table 40 row 3 (PDF 69) gives 3.3.6.5: 0002h"]
-        lns `shouldContain` [ "instance Feature TPerFeature where", "  featureCode _    = 0x0001", "  featureVersion _ = Just 0x01", "  featureLength _  = Just 0x0c"
+        lns `shouldContain` [ "instance Feature TPerFeature where", "  featureCode _    = 0x0001", "  featureVersion _ = Just 0x1", "  featureLength _  = Just 0x0c"
                             , "  featureHeader _  = FeatureHeader 4 \"Length\"" ]
       it "type-checks under -Wall -Werror" $
         compiles "Hsed.Gen.Core.Features" text

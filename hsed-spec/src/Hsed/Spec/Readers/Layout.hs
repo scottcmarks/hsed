@@ -34,6 +34,7 @@ module Hsed.Spec.Readers.Layout
   ( -- * The generated module
     layoutsModule
   , layoutDecl
+  , hexAtWidth
   , untiledNote
     -- * From a grid
   , gridFields
@@ -98,15 +99,16 @@ layoutDecl p name l comment = (Gen.decl p name body)
     fieldLine f = T.unwords ["spanning", tshow (fieldName f), pos (fieldStart f), pos (fieldEnd f - 1), kindExpr (fieldWidth f) (fieldKind f)]
     pos o = let (byte, bit) = bitPosition o in "(" <> tshow byte <> ", " <> tshow bit <> ")"
     kindExpr width = \case
-      Pinned v -> "(Pinned " <> pinText width v <> ")"
+      Pinned v -> "(Pinned " <> hexAtWidth width v <> ")"
       k        -> tshow k
     tailExpr t = "Just (Tail " <> tshow (tailName t) <> " " <> maybe "Nothing" (\n -> "(Just " <> tshow n <> ")") (tailLength t)
                  <> " " <> tshow (tailAlign t) <> " " <> tshow (tailKind t) <> ")"
 
--- | A pinned value in hex at its field's width: as many digits as the field's
---   bits take (@0x0001@ for 16 bits, @0x1@ for 4).
-pinText :: Int -> Integer -> Text
-pinText width = hexDigits ((width + 3) `div` 4)
+-- | A constant in hex at its field's width: as many digits as the field's
+--   bits take (@0x0001@ for 16 bits, @0x1@ for 4), as a layout prints its
+--   pins and the @feature@ rule its header's constants.
+hexAtWidth :: Int -> Integer -> Text
+hexAtWidth width = hexDigits ((width + 3) `div` 4)
 
 -- | The comment of a layout that does not tile: what keeps it from tiling,
 --   each problem a line.

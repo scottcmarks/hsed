@@ -101,7 +101,7 @@ import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR (..), SpecIR (..), TableIR (..), XrefIR (..))
 import           Hsed.Spec.Readers.Grid   (BitPos (..), Grid (..), GridField (..), GridProblem (..), gridFindings, gridOf,
                                            readGrid)
-import           Hsed.Spec.Readers.Layout (gridFieldKind, gridTiling, layoutDecl, tileFindings, untiledNote)
+import           Hsed.Spec.Readers.Layout (gridFieldKind, gridTiling, hexAtWidth, layoutDecl, tileFindings, untiledNote)
 import           Hsed.Spec.Readers.Pins   (Pin (..), PinValue (..), pinsFindings, tablePins)
 import           Hsed.Spec.Readers.Record (Structure (..), declScope, earlierNames, layoutValue, nameFindings, recordDecl,
                                            structure, typeName)
@@ -408,7 +408,9 @@ decls ctx fr =
   where st = frStructure fr
 
 -- | A descriptor's instance of @Feature@, after its record: its code,
---   version and length, and its header, citing where they come from.
+--   version and length, each at its header field's width as the layout
+--   prints its pins (@0x0001@, @0x1@, @0x0c@), and its header, citing where
+--   they come from in comments made ASCII.
 featureDecl :: Context -> FeatureRead -> Gen.Decl
 featureDecl ctx fr = (Gen.decl p name body)
   { Gen.declRank    = 2
@@ -417,7 +419,7 @@ featureDecl ctx fr = (Gen.decl p name body)
     p = boundProvenance ctx (frBound fr)
     name = typeName (frStructure fr)
     header = either (const Nothing) Just (frHeader fr)
-    body = [ Gen.provenanceComment p <> ": its header" ] <> provenance <> [ "instance Feature " <> name <> " where" ] <> constants
+    body = [ Gen.provenanceComment p <> ": its header" ] <> map Gen.ascii provenance <> [ "instance Feature " <> name <> " where" ] <> constants
     headerPins = [ (pinField q, q) | Just h <- [header], k <- [hdCode h, hdVersion h, hdLength h]
                                    , q <- take 1 (Map.findWithDefault [] (nameKey k) (frPinned fr)) ]
     provenance =
@@ -429,10 +431,12 @@ featureDecl ctx fr = (Gen.decl p name body)
       <> [ "-- its general format Table " <> tshow (tmNumber tm) <> " (PDF " <> tshow ((tmSentence tm).page + 1) <> "): "
            <> tshow (tmSize tm) <> " bytes, " <> hdLength h <> " the count of the bytes after them"
          | Right tm <- [frTemplate fr], Just h <- [header] ]
-    pinNumber = agreedPin (frPinned fr)
-    justOr = maybe "Nothing" (("Just " <>) . numberExpr)
+    -- a constant at the width of the header field it is (as printed when the layout has no such field)
+    printedAt k n = maybe (numberExpr n) (\f -> hexAtWidth (fieldWidth f) (nValue n)) (L.find ((== nameKey k) . nameKey . fieldName) (layoutFields (frLayout fr)))
+    pinned k = (,) k <$> agreedPin (frPinned fr) k
+    justOr = maybe "Nothing" (\(k, n) -> "Just " <> printedAt k n)
     constants =
-      [ "  featureCode _    = " <> maybe "0" numberExpr (frCode fr)
-      , "  featureVersion _ = " <> justOr (header >>= pinNumber . hdVersion)
-      , "  featureLength _  = " <> justOr (header >>= pinNumber . hdLength)
+      [ "  featureCode _    = " <> maybe "0" (printedAt (maybe "" hdCode header)) (frCode fr)
+      , "  featureVersion _ = " <> justOr (header >>= pinned . hdVersion)
+      , "  featureLength _  = " <> justOr (header >>= pinned . hdLength)
       , "  featureHeader _  = FeatureHeader " <> either (const "0") (tshow . tmSize) (frTemplate fr) <> " " <> tshow (maybe "" hdLength header) ]

@@ -16,7 +16,8 @@ The behaviours the @behaviour@ and @fails@ comments of M4a bind (design
 as its comment names it, with the first 12 hex digits of its signature
 block's hash in the IR (@spec/ir/core-2.01.json@: 5.2.2.1, 5.2.3.1, 5.2.3.5
 and 5.3.3.6), the UID of its method, and cases the jig's catalogue has;
-Get's Fails list, items a to d with their statuses; and the dispatch,
+Get's Fails list, items a to d with their statuses, each item's property
+run (the simulator fails Get so, "Hsed.Sim.Base"); and the dispatch,
 'runSome', which runs a behaviour on its method's calls alone, reading the
 parameters against the signature. The TPer's CloseSession carries the
 session's HSN and TSN (Core 5.2.3.5, PDF 153).
@@ -27,6 +28,7 @@ import qualified RIO.List                as L
 import           RIO
 import qualified RIO.Text                as T
 import           Test.Hspec
+import           Test.QuickCheck         (counterexample, property)
 
 import           Hsed.Core.Call          (MethodCall (..), MethodHeader (..), Parameters (..))
 import           Hsed.Core.Method        (ParamError (..), fromCall, invocation)
@@ -75,13 +77,17 @@ spec = do
     it "show their name, hash and cases, and their run as present" $
       show SessionManager.properties `shouldSatisfy` \s -> "SessionManager.properties" `L.isInfixOf` s && "behRun = <run>" `L.isInfixOf` s
 
-  describe "Get's Fails list" $
-    it "has items a to d with the IR's hashes: a NOT_AUTHORIZED, b to d INVALID_PARAMETER, their properties group G1's" $ do
+  describe "Get's Fails list" $ do
+    it "has items a to d with the IR's hashes: a NOT_AUTHORIZED, b to d INVALID_PARAMETER, each with its property" $ do
       failsName Base.getFails `shouldBe` "Base.getFails"
       [ (fiLabel i, fiHash i, fiStatus i) | i <- failsItems Base.getFails ] `shouldBe`
         [ ("a", "fbdda8fb3e3a", NOT_AUTHORIZED), ("b", "ca5584e1ccdf", INVALID_PARAMETER)
         , ("c", "46db34a6034d", INVALID_PARAMETER), ("d", "1b371d07bd3b", INVALID_PARAMETER) ]
       show (forFails Base.getFails) `shouldSatisfy` ("Base.getFails" `L.isInfixOf`)
+      show (forFails Base.getFails) `shouldSatisfy` ("Just <property>" `L.isInfixOf`)
+    forM_ (failsItems Base.getFails) $ \i ->
+      it ("item " <> T.unpack (fiLabel i) <> " holds over the simulator, the method failing with " <> show (fiStatus i)) $
+        fromMaybe (counterexample "the item has no property (Hsed.Sim.Base)" (property False)) (fiProp i)
 
   describe "runSome" $ do
     it "runs a behaviour on its method's call alone: Properties answered, StartSession not its" $ do

@@ -29,10 +29,9 @@ session to the SP, the Locking SP Manufactured-Inactive, an unknown SPID, a
 read-only session or an unsupported parameter, as SID the PIN authenticated
 with the Tries rule (5.3.4.1.1.2, PDF 210-211), a class, a disabled
 authority, Anybody with a challenge, an individual authority of Operation
-None, and the TPer's MaxSessions. A host's abort is echoed before the
-parameters are read (3.2.4.2 item 5.1, PDF 49). A host's
-abort is echoed in the normal form (3.2.4.2, PDF 49) and the rest is no
-answer (3.3.7.1.3, PDF 73-74), the TPer unchanged either way.
+None, and the TPer's MaxSessions. A host's abort is echoed in the normal
+form before the parameters are read (3.2.4.2 item 5.1, PDF 49), the rest
+no answer (3.3.7.1.3, PDF 73-74), the TPer unchanged either way.
 -}
 module Hsed.Sim.SessionManagerSpec (spec) where
 

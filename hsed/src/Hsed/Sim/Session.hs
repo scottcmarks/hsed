@@ -92,7 +92,7 @@ dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
       _                                   -> (MethodResponse [] (statusValue FAIL), st)
   where
     granted = isJust (Map.lookup (sesSP ses) (tsSPs st) >>= \sps -> grantedColumns sps ses invoker method)
-    invoked = Invoked { ivComId = sesComId ses, ivSession = Just ses, ivInvoker = invoker, ivStatus = status }
+    invoked = Invoked { ivComId = sesComId ses, ivSession = Just ses, ivInvoker = invoker }
 
 -- | One data subpacket of a session's packet, its items as
 --   "Hsed.Core.Stream".@items@ read them with the fault that stopped the

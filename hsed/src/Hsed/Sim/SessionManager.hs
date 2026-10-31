@@ -58,13 +58,16 @@ form with that status, its processing aborted and the TPer unchanged: a
 non-0x00 first status SHALL cause the TPer to abort processing on that
 method and return that value as the first value in the status list, and a
 Session Manager method recognized but failing SHALL have its normal response
-format (Core 3.2.4.2 item 5.1 and the paragraph after it, PDF 49; the lead's
-answer 4; design 13.30 (4)): Properties with an empty list of the TPer's
-properties and no HostProperties, whatever the parameters sent; StartSession
-with SyncSession [HostSessionID, 0] where its first required parameter reads
-as an HSN, else no answer (the identifying parameter invalid, which the
-TPer MAY ignore, PDF 50). The status list's reserved values are ignored
-where it is read (item 2, "Hsed.Sim.Sync").
+format (Core 3.2.4.2 item 5.1 and the section's paragraph on Session Manager
+invocations recognized but failing, PDF 49; the lead's answer 4; design
+13.30 (4)): Properties with an empty list of the TPer's properties and no
+HostProperties, whatever the parameters sent; StartSession with SyncSession
+[HostSessionID, 0] where its first required parameter reads as an HSN, else
+no answer (the identifying parameter invalid, which the TPer MAY ignore, PDF
+50). The echo is 'answer''s alone: a behaviour runs on a call of status 0,
+as the Base Template's do ("Hsed.Sim.Session".@dispatch@ echoes a regular
+session's abort the same way, before any behaviour). The status list's
+reserved values are ignored where it is read (item 2, "Hsed.Sim.Sync").
 
 Anything else is no answer, its payload discarded, the TPer unchanged
 (3.3.7.1.3, PDF 73-74): a method invoked on another than SMUID, a Session
@@ -142,7 +145,7 @@ answer c mc@(MethodCall (MethodHeader invoker method) params status) st
       [Right (ReplyCall reply, st')] -> (Just reply, st')
       _                              -> (Nothing, st)
   where
-    invoked = Invoked { ivComId = c, ivSession = Nothing, ivInvoker = invoker, ivStatus = status }
+    invoked = Invoked { ivComId = c, ivSession = Nothing, ivInvoker = invoker }
     -- a host's abort in the method's normal response form, the parameters unread: Properties with an empty list,
     -- StartSession as SyncSession [HostSessionID, 0] where its first required parameter is an HSN (else no answer,
     -- the identifying parameter invalid, PDF 50), no answer for a method the TPer does not answer
@@ -161,10 +164,9 @@ success = statusValue SUCCESS
 -- | SMUID.Properties (Core 5.2.2.1, PDF 140; @behaviour
 --   "SessionManager.properties"@): the TPer's properties and, where the host
 --   sent its own, the host's it will use, kept on the invoking ComID
---   (5.2.2.3-4, PDF 143-145); a host's abort echoed with an empty list (which
---   'answer' does before the parameters are read; here for a run of the
---   behaviour alone); no answer where HostProperties is not a list of Named
---   byte-string names with uinteger values. UCT-02 reads it, ETC-02, ETC-03,
+--   (5.2.2.3-4, PDF 143-145); no answer where HostProperties is not a list
+--   of Named byte-string names with uinteger values (a host's abort 'answer'
+--   echoes before any behaviour runs). UCT-02 reads it, ETC-02, ETC-03,
 --   ETC-08 and ETC-15 invoke it.
 properties :: Behaviour Methods.Properties
 properties = Behaviour
@@ -174,15 +176,13 @@ properties = Behaviour
   , behRun   = run
   }
   where
-    run iv (Methods.Properties host) st
-      | ivStatus iv /= success = (ReplyCall (propertiesReply (ivStatus iv) [] Nothing), st)
-      | otherwise = case hostProperties host of
-          Nothing          -> (NoReply, st)
-          Just Nothing     -> (ReplyCall (propertiesReply success (tperProperties p) Nothing), st)
-          Just (Just sent) ->
-            let st'  = st { tsComIds = Map.adjust (\cs -> cs { cHostProps = acceptHostProperties p sent (cHostProps cs) }) (ivComId iv) (tsComIds st) }
-                kept = maybe initialHostProperties cHostProps (Map.lookup (ivComId iv) (tsComIds st'))
-            in (ReplyCall (propertiesReply success (tperProperties p) (Just (hostResult kept))), st')
+    run iv (Methods.Properties host) st = case hostProperties host of
+      Nothing          -> (NoReply, st)
+      Just Nothing     -> (ReplyCall (propertiesReply success (tperProperties p) Nothing), st)
+      Just (Just sent) ->
+        let st'  = st { tsComIds = Map.adjust (\cs -> cs { cHostProps = acceptHostProperties p sent (cHostProps cs) }) (ivComId iv) (tsComIds st) }
+            kept = maybe initialHostProperties cHostProps (Map.lookup (ivComId iv) (tsComIds st'))
+        in (ReplyCall (propertiesReply success (tperProperties p) (Just (hostResult kept))), st')
       where p = tsParams st
 
 -- | SMUID.StartSession (Core 5.2.3.1, PDF 149; @behaviour
@@ -194,10 +194,9 @@ properties = Behaviour
 --     another type, or one that does not fit the HSN, is an invalid
 --     identifying parameter, which the TPer MAY ignore (3.2.4.2, PDF 50;
 --     Core 5.1.5.11 f's INVALID_PARAMETER for a value out of range, PDF
---     139, would also do); then a host's abort echoed, SyncSession
---     [HostSessionID, 0] with its status (item 5.1, PDF 49; 'answer' does
---     it before the parameters are read, this branch serving a run of the
---     behaviour alone);
+--     139, would also do; a host's abort, SyncSession [HostSessionID, 0]
+--     with its status, 'answer' echoes before any behaviour runs, item 5.1,
+--     PDF 49);
 --   * SPID a row of the Admin SP's SP table (5.2.3.1.2), else
 --     INVALID_PARAMETER (5.1.5.11, PDF 139); an SP Manufactured-Inactive,
 --     to which no session can be opened (Opal 2.30 5.2.2.1 item 1, PDF 96;
@@ -245,16 +244,14 @@ startSession = Behaviour
   }
   where
     run iv m st = case hostSessionId (Methods.startSessionHostSessionID m) of
-      Nothing -> (NoReply, st)
-      Just hsn
-        | ivStatus iv /= success -> (ReplyCall (syncSession (ivStatus iv) hsn 0), st)
-        | otherwise -> case admitted m st of
-            Left status -> (ReplyCall (syncSession (statusValue status) hsn 0), st)
-            Right spid  -> case authenticated spid m st of
-              (Left status, st')       -> (ReplyCall (syncSession (statusValue status) hsn 0), st')
-              (Right authorities, st') ->
-                let (session, st'') = openSession (ivComId iv) hsn spid True authorities st'
-                in (ReplyCall (syncSession success hsn (sesTSN session)), st'')
+      Nothing  -> (NoReply, st)
+      Just hsn -> case admitted m st of
+        Left status -> (ReplyCall (syncSession (statusValue status) hsn 0), st)
+        Right spid  -> case authenticated spid m st of
+          (Left status, st')       -> (ReplyCall (syncSession (statusValue status) hsn 0), st')
+          (Right authorities, st') ->
+            let (session, st'') = openSession (ivComId iv) hsn spid True authorities st'
+            in (ReplyCall (syncSession success hsn (sesTSN session)), st'')
 
 -- | SMUID.CloseSession (Core 5.2.3.5, PDF 153; @behaviour
 --   "SessionManager.closeSession"@): a method only the TPer transmits, so a

@@ -238,7 +238,7 @@ getAsAnybody :: UID -> CellBlock -> Reply
 getAsAnybody u block = fst (behRun get invoked (Methods.Get (cellBlockValue block)) st)
   where
     (ses, st) = asAnybody
-    invoked   = Invoked { ivComId = sesComId ses, ivSession = Just ses, ivInvoker = u, ivStatus = 0 }
+    invoked   = Invoked { ivComId = sesComId ses, ivSession = Just ses, ivInvoker = u }
 
 
 -- | The Base Template's behaviours a session dispatches to.

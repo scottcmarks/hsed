@@ -70,13 +70,15 @@ import           Hsed.Sim.Types     (Session, TPerState)
 -- * A method invoked
 
 -- | What a call arrives with: the ComID, the session it is in (none on the
---   control session), its InvokingID and the host's status, the first value
---   of its status list (Core 3.2.4.2, PDF 49).
+--   control session) and its InvokingID. Not the host's status, the first
+--   value of its status list: a call the host aborted is echoed before any
+--   behaviour runs ("Hsed.Sim.SessionManager".@answer@ on the control
+--   session, "Hsed.Sim.Session".@dispatch@ in a regular one; Core 3.2.4.2
+--   item 5.1, PDF 49), so a behaviour runs on a call of status 0.
 data Invoked = Invoked
   { ivComId   :: !Word16
   , ivSession :: !(Maybe Session)
   , ivInvoker :: !UID
-  , ivStatus  :: !Natural
   }
   deriving (Eq, Show)
 

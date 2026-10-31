@@ -54,7 +54,7 @@ base = spBaseComId defaultSimParams
 
 -- | A call on the control session.
 invoked :: MethodCall -> Invoked
-invoked mc = Invoked base Nothing (_invokingID (_header mc)) (_statusCode mc)
+invoked mc = Invoked base Nothing (_invokingID (_header mc))
 
 propertiesCall :: MethodCall
 propertiesCall = invocation uSMUID (Methods.Properties Nothing)

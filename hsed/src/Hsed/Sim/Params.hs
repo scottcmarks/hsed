@@ -24,14 +24,18 @@ range, a version past its 4-bit field, a TPer property below the least Opal
 every descriptor the simulator sends encodes, every static ComID is one a
 TPer may have, every limit is one an Opal TPer may report and every hand row
 holds; the in-process transport is opened only with parameters that pass.
-Table 17's two columns are written once each here: 'tperRequirements', the
-TPer's, which the default parameters report and a property not reported
-falls back to, and 'hostRequirements', the host's, its initial assumptions
-('initialHostProperties', what a ComID's host properties start as; the host's
-default receive length in "Hsed.Wire" cites the same MaxComPacketSize cell).
-'Limits' are what each end takes in a ComPacket (Core 5.2.2.4.1): the TPer's
-from its properties ('tperLimits'), the host's from the properties a ComID
-keeps of it ('comIdHostLimits'; 'hostLimits' those a ComID starts with).
+Opal 2.30 Table 17 is read from its generated form ("Hsed.Gen.Opal.Properties",
+bound by @propsReq@, design 11): 'tperRequirements' is its TPer column, which
+the default parameters report and a property not reported falls back to;
+'hostRequirements' the host properties it has a TPer accept, each with the
+least allowed; and 'initialHostProperties' the TPer's initial assumptions
+about the host (Core Table 168 patched by Table 17's Initial Assumption cells,
+the generated @initialAssumptions@), those of the host properties the TPer
+supports: what a ComID's host properties start as (the host's default receive
+length in "Hsed.Wire" cites the same MaxComPacketSize cell). 'Limits' are what
+each end takes in a ComPacket (Core 5.2.2.4.1): the TPer's from its properties
+('tperLimits'), the host's from the properties a ComID keeps of it
+('comIdHostLimits'; 'hostLimits' those a ComID starts with).
 -}
 module Hsed.Sim.Params
   ( -- * Parameters
@@ -51,9 +55,11 @@ module Hsed.Sim.Params
   , maxPacketsName
   , maxSubpacketsName
   , maxMethodsName
+  , maxSessionsName
   , defSessionTimeoutName
   , tperRequirements
   , hostRequirements
+  , supportedHostProperties
   , initialHostProperties
   , Limits (..)
   , tperLimits
@@ -67,10 +73,13 @@ import qualified RIO.Map             as Map
 import           RIO
 import qualified RIO.Text            as T
 
-import           Hsed.Core.Code      (CodeRow (..), codeRow)
-import           Hsed.Gen.Core.Codes (cComIDAssignments)
-import           Hsed.Level0         (Descriptor)
-import           Hsed.Wire           (Unit (..), hex)
+import           Hsed.Core.Code           (CodeRow (..), codeRow)
+import           Hsed.Core.Properties     (Assumptions (..), Communicator (..), HostRequirement (..), PropertyRequirement (..),
+                                           Requirement (..), TPerRequirement (..))
+import           Hsed.Gen.Core.Codes      (cComIDAssignments)
+import           Hsed.Gen.Opal.Properties (initialAssumptions, propertyRequirements)
+import           Hsed.Level0              (Descriptor)
+import           Hsed.Wire                (Unit (..), hex)
 
 
 -- * Parameters
@@ -252,9 +261,10 @@ reservedComId c = not (any ("non-reserved" `T.isInfixOf`) (maybe [] codeCells (c
 --   the simulator and the jig read, by name: the largest ComPacket an end
 --   takes, the largest ComPacket response, packet and token, packets per
 --   ComPacket, subpackets per packet, method invocations or responses per
---   subpacket, and a session's default timeout.
+--   subpacket, sessions across the TPer's ComIDs, and a session's default
+--   timeout.
 maxComPacketSizeName, maxResponseComPacketSizeName, maxPacketSizeName, maxIndTokenSizeName, maxPacketsName, maxSubpacketsName,
-  maxMethodsName, defSessionTimeoutName :: Text
+  maxMethodsName, maxSessionsName, defSessionTimeoutName :: Text
 maxComPacketSizeName         = "MaxComPacketSize"
 maxResponseComPacketSizeName = "MaxResponseComPacketSize"
 maxPacketSizeName            = "MaxPacketSize"
@@ -262,52 +272,48 @@ maxIndTokenSizeName          = "MaxIndTokenSize"
 maxPacketsName               = "MaxPackets"
 maxSubpacketsName            = "MaxSubpackets"
 maxMethodsName               = "MaxMethods"
+maxSessionsName              = "MaxSessions"
 defSessionTimeoutName        = "DefSessionTimeout"
 
 -- | Opal 2.30 Table 17 (PDF 33-34), Properties Requirements, the TPer's
---   column: each TPer property an Opal TPer reports (M) with the least value
---   it reports; DefSessionTimeout, mandatory with a VU value, at 0, no limit
---   (Core Table 167, PDF 142: a session's default timeout, which the
---   simulator, with no clock, never applies); their names are Core Table
---   167's ("Hsed.Gen.Core.Properties"). The default parameters report exactly
---   these, and a property a TPer does not report falls back to its least
---   ('tperLimits').
+--   column, as generated ("Hsed.Gen.Opal.Properties".@propertyRequirements@):
+--   each TPer property an Opal TPer reports (M) with the least value it
+--   reports; one whose least is VU (DefSessionTimeout) at 0, no limit (Core
+--   Table 167, PDF 142: a session's default timeout, which the simulator, with
+--   no clock, never applies; the lead's M4a decision, design 13.30); their
+--   names are Core Table 167's ("Hsed.Gen.Core.Properties"). The default
+--   parameters report exactly these, and a property a TPer does not report
+--   falls back to its least ('tperLimits').
 tperRequirements :: [(Text, Natural)]
 tperRequirements =
-  [ (maxComPacketSizeName, 2048)
-  , (maxResponseComPacketSizeName, 2048)
-  , (maxPacketSizeName, 2028)
-  , (maxIndTokenSizeName, 1992)
-  , (maxPacketsName, 1)
-  , (maxSubpacketsName, 1)
-  , (maxMethodsName, 1)
-  , ("MaxSessions", 1)
-  , ("MaxAuthentications", 2)
-  , ("MaxTransactionLimit", 1)
-  , (defSessionTimeoutName, 0)
-  ]
+  [ (reqName r, fromMaybe 0 (tprMinimum t)) | r <- propertyRequirements, Just t <- [reqTPer r], tprRequired t /= NotRequired ]
 
 -- | Opal 2.30 Table 17 (PDF 33-34), Properties Requirements, the host's
---   column: each host property an Opal TPer accepts (M), with the least it
---   allows, which is also its Initial Assumption; MaxResponseComPacketSize
+--   column, as generated: each host property an Opal TPer accepts ((M), or
+--   (O) were there one), with the least it allows; MaxResponseComPacketSize
 --   (N), which a TPer may ignore and leave out of the HostProperties result,
---   is not among them.
+--   is not among them. These are the host properties the simulator supports
+--   (Core 5.2.2.3-4, PDF 143-144: the ones it keeps, raises to their least,
+--   and returns; any other the host sends is ignored and not returned).
 hostRequirements :: [(Text, Natural)]
-hostRequirements =
-  [ (maxComPacketSizeName, 2048)
-  , (maxPacketSizeName, 2028)
-  , (maxIndTokenSizeName, 1992)
-  , (maxPacketsName, 1)
-  , (maxSubpacketsName, 1)
-  , (maxMethodsName, 1)
-  ]
+hostRequirements = [ (reqName r, least) | (r, h) <- supportedHostProperties, Just least <- [hrMinimum h] ]
+
+-- | The host properties the TPer supports, with what Table 17 requires of
+--   each: the rows whose host requirement is (M) or (O), in the table's
+--   order.
+supportedHostProperties :: [(PropertyRequirement, HostRequirement)]
+supportedHostProperties = [ (r, h) | r <- propertyRequirements, Just h <- [reqHost r], hrRequired h /= NotRequired ]
 
 -- | The host's properties a ComID starts with, and returns to after a reset
 --   (Core 5.2.2.4, PDF 144-145; 5.2.2.4.4-5, PDF 148): the TPer's initial
---   assumptions about the host, Opal 2.30 Table 17's (PDF 33-34), until the
---   generated Opal properties give them (design 11, M4a's propsReq).
+--   assumptions about the host, Core Table 168's patched by Opal 2.30 Table
+--   17's Initial Assumption cells (PDF 33-34), as generated
+--   ("Hsed.Gen.Opal.Properties".@initialAssumptions@, the TPer's about the
+--   host), those of the host properties the TPer supports
+--   ('supportedHostProperties': the others it never reads nor returns, 5.2.2.4).
 initialHostProperties :: Map Text Natural
-initialHostProperties = Map.fromList hostRequirements
+initialHostProperties = Map.fromList
+  [ (name, v) | Assumptions TPer Host vs <- initialAssumptions, (name, v) <- vs, name `elem` map fst hostRequirements ]
 
 -- | What one end takes in a ComPacket it is sent (Core 5.2.2.4.1, PDF
 --   145-146): packets in a ComPacket, subpackets in a packet, method
@@ -357,7 +363,7 @@ comIdHostLimits p props = Limits
     host name      = maybe (least name) bound (Map.lookup name props)
     bound 0        = maxBound
     bound n        = fromInteger (min (toInteger n) (toInteger (maxBound :: Int)))
-    least name     = maybe 1 fromIntegral (L.lookup name hostRequirements)
+    least name     = maybe 1 fromIntegral (Map.lookup name initialHostProperties)
     responseBuffer = maybe maxBound fromInteger (L.lookup maxResponseComPacketSizeName (spTPerProperties p))
 
 -- | What the host takes before any Properties exchange: Opal 2.30 Table 17's

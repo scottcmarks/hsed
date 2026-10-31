@@ -25,10 +25,13 @@ SP's SP table holds).
 Parameters out of range are refused, not wrapped or dropped
 ('simParamsProblems': a ComID past 0xFFFF or in Core Table 26's reserved
 range, a version past its 4-bit field, a TPer property below the least Opal
-2.30 Table 17 has a TPer report, a PIN longer than its column holds), so that
-every descriptor the simulator sends encodes, every static ComID is one a
-TPer may have, every limit is one an Opal TPer may report and every hand row
-holds; the in-process transport is opened only with parameters that pass.
+2.30 Table 17 has a TPer report, a PIN longer than its column holds, no
+Admin authority or more than Table 24's template numbers, a GUDID not in
+Core Table 212's format), so that every descriptor the simulator sends
+encodes, every static ComID is one a TPer may have, every limit is one an
+Opal TPer may report, every hand row holds and every Admin authority the
+preconfiguration's fold instantiates has a UID of its own; the in-process
+transport is opened only with parameters that pass.
 Opal 2.30 Table 17 is read from its generated form ("Hsed.Gen.Opal.Properties",
 bound by @propsReq@, design 11): 'tperRequirements' is its TPer column, which
 the default parameters report and a property not reported falls back to;
@@ -81,13 +84,14 @@ import           RIO
 import qualified RIO.Text            as T
 
 import           Hsed.Core.Code           (CodeRow (..), codeRow)
+import           Hsed.Core.Layout         (Layout (..), LayoutError)
 import           Hsed.Core.Properties     (Assumptions (..), Communicator (..), HostRequirement (..), PropertyRequirement (..),
                                            Requirement (..), TPerRequirement (..))
-import           Hsed.Core.Record         (encodeRecord)
+import           Hsed.Core.Record         (DecodedRecord, decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Types          (enumValue)
 import           Hsed.Gen.Core.Codes      (cComIDAssignments)
 import           Hsed.Gen.Core.Enums      (Core_life_cycle_state (..))
-import           Hsed.Gen.Core.Layouts    (GUDIDColumnContentsDescription (..))
+import           Hsed.Gen.Core.Layouts    (GUDIDColumnContentsDescription (..), gudidColumnContentsDescriptionLayout)
 import           Hsed.Gen.Opal.Properties (initialAssumptions, propertyRequirements)
 import           Hsed.Level0              (Descriptor)
 import           Hsed.Wire                (Unit (..), hex)
@@ -209,11 +213,14 @@ data SimParams = SimParams
 --   PDF 48);
 -- * TPER_RESET disabled, TPerInfo's ProgrammaticResetEnable FALSE at the
 --   factory (Opal 2.30 Table 27, PDF 50);
--- * the GUDID @02 23 00 08 50 00 00 00 48 53 45 44@: Core Table 212's NAA
+-- * the GUDID @02 23 00 08 50 20 00 00 48 53 45 44@: Core Table 212's NAA
 --   IEEE Registered format, encoded through its generated layout (PDF 230;
---   Opal 2.30 *TP1, PDF 50), with an IEEE company ID of zeros and the
---   vendor-specific identifier 0x48534544, @HSED@ in ASCII, a value VU
---   (Table 27, PDF 50) that names the simulator, as the MSID does;
+--   Opal 2.30 *TP1, PDF 50), with the IEEE company ID 0x020000, whose first
+--   octet, 0x02, has the U/L bit set: a locally administered ID, which no
+--   OUI the IEEE assigns carries, so that it names no real company (the
+--   lead's M4b decision, design 13.32); and the vendor-specific identifier
+--   0x48534544, @HSED@ in ASCII, a value VU (Table 27, PDF 50) that names
+--   the simulator, as the MSID does;
 -- * no maximum on a host property (Opal 2.30 Table 17: Maximum allowed VU,
 --   PDF 33-34);
 -- * CloseSession prepared when a session is aborted, as the TPer MAY (Core
@@ -244,7 +251,7 @@ defaultSimParams = SimParams
   , spAdminSPAdmins        = 1
   , spTPerResetEnabled     = False
   , spGudid                = either (\e -> error ("Hsed.Sim.Params: the default GUDID does not encode in Core Table 212's layout: " <> show e)) id
-                                    (encodeRecord (GUDIDColumnContentsDescription 0x000000 0x48534544))
+                                    (encodeRecord (GUDIDColumnContentsDescription 0x020000 0x48534544))
   , spHostPropertyMax      = []
   , spCloseSessionOnAbort  = True
   }
@@ -264,7 +271,14 @@ defaultSimParams = SimParams
 --   fits a response of the least MaxResponseComPacketSize;
 -- * an MSID of no bytes (UCT-03 step 1b reads a PIN of some, Test Cases PDF
 --   32), or an MSID or a SID PIN of more than the 32 the PIN column holds
---   (Core Table 122, password, PDF 118).
+--   (Core Table 122, password, PDF 118);
+-- * no Admin authority (Opal 2.30 PDF 47: Admin1 (M) is required), or more
+--   than Table 24's @AdminXX@ numbers, its placeholder one byte past the
+--   base @00 00 00 09 00 00 02 00@, so 255 at most (PDF 48);
+-- * a GUDID that is not Core Table 212's 12 bytes (PDF 230; Opal 2.30
+--   *TP1, PDF 50: the GUDID SHALL be in that format), its four constant
+--   bytes and its NAA among them, as the generated layout reads them
+--   strictly.
 simParamsProblems :: SimParams -> [Text]
 simParamsProblems p = concat
   [ [ "no static ComID (Number of ComIDs is 0x0001 or larger, Opal 2.30 Table 6)" | spNComIds p == 0 ]
@@ -277,11 +291,21 @@ simParamsProblems p = concat
   , [ "an MSID of no bytes: UCT-03 step 1b reads a PIN of some (Test Cases PDF 32)" | B.null (spMsid p) ]
   , [ what <> " of " <> tshow (B.length pin) <> " bytes: the PIN column holds at most " <> tshow pinMost <> " (Core Table 122, password, PDF 118)"
     | (what, pin) <- [("the MSID", spMsid p)] <> [ ("the SID's PIN", sid) | Just sid <- [spSidPin p] ], B.length pin > pinMost ]
+  , [ "no Admin authority: Opal 2.30 requires Admin1 (PDF 47)" | spAdminSPAdmins p == 0 ]
+  , [ tshow (spAdminSPAdmins p) <> " Admin authorities: Opal 2.30 Table 24's AdminXX numbers them in one byte, 255 at most (PDF 48)"
+    | spAdminSPAdmins p > adminsMost ]
+  , [ "a GUDID of " <> tshow (B.length (spGudid p)) <> " bytes: Core Table 212's format has 12 (PDF 230)" | B.length (spGudid p) /= gudidBytes ]
+  , [ "a GUDID not in Core Table 212's format (PDF 230): " <> tshow e | B.length (spGudid p) == gudidBytes, Left e <- [gudid] ]
   ]
   where
     lastComId = toInteger (spBaseComId p) + toInteger (spNComIds p) - 1 :: Integer
     -- the size limitation of the password type (Core 5.1.3.63, Table 122, PDF 118: max_bytes, 32)
     pinMost = 32
+    -- Table 24's AdminXX, 00 00 00 09 00 00 02 00 (+XX): the instance's number added in one byte (Opal 2.30, PDF 48)
+    adminsMost = 255
+    -- Core Table 212's GUDID, read strictly through its generated layout (PDF 230)
+    gudidBytes = layoutSize gudidColumnContentsDescriptionLayout
+    gudid      = decodeRecordStrict (spGudid p) :: Either LayoutError (DecodedRecord GUDIDColumnContentsDescription)
 
 -- | The static ComIDs parameters name: the base and the ones after it, as
 --   far as 0xFFFF, counted in Integer so that none wraps.

@@ -13,7 +13,8 @@ The access control of M4a (design 8.2) over the Admin SP's hand-written rows
 and over rows built here: the ACL of an InvokingID and MethodID (Core
 5.3.2.9, PDF 160-165; none, NOT_AUTHORIZED, 5.1.5.2, PDF 137); the
 authorities a session makes true, their classes with them and Anybody always
-(3.4.2.1-2, PDF 88-89; 5.3.4.1.2.1, PDF 211); an ACE's BooleanExpr read in
+(3.4.2.1-2, PDF 88-89; 5.3.4.1.2.1, PDF 211), a Class of the NULL UID none
+(5.3.2.10.5, PDF 166); an ACE's BooleanExpr read in
 postfix, And, Or and Not over authenticated and unauthenticated authorities
 (5.3.4.3.2, Table 210, PDF 226-227), an empty expression false (5.3.4.3.3,
 PDF 227); the ACL satisfied when any ACE is; and the columns granted, the
@@ -28,10 +29,10 @@ import           Test.Hspec
 
 import           Hsed.Core.Table          (Cell (..), Col (..), Row, columnNamed)
 import           Hsed.Core.Types          (enumValue)
-import           Hsed.Core.UID            (UID, uid)
+import           Hsed.Core.UID            (UID, uNull, uid)
 import           Hsed.Gen.Core.Enums      (Core_boolean_ACE (..))
-import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc, c_PINTableDesc)
-import           Hsed.Gen.Core.TableUIDs  (uACETable, uAccessControlTable, uC_PINTable)
+import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc, authorityTableDesc, c_PINTableDesc)
+import           Hsed.Gen.Core.TableUIDs  (uACETable, uAccessControlTable, uAuthorityTable, uC_PINTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get,
                                            uMethodID_Next, uSP_Admin)
 import           Hsed.OpalUIDs            (uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1, uC_PIN_MSID)
@@ -115,6 +116,14 @@ spec = do
     it "add no class for an authority of none, or one the SP has no row for" $ do
       authenticated adminSP [uAuthority_SID] `shouldNotSatisfy` elem uAuthority_Admins
       authenticated adminSP [a] `shouldBe` [uAuthority_Anybody, a]
+    it "add no class for an authority whose Class is the NULL UID, a member of none (Core 5.3.2.10.5, PDF 166; PDF 96: a null pointer)" $ do
+      let classOf cls = [ (c, cls) | Just c <- [columnOf authorityTableDesc "Class"] ]
+          authorities rows = adminSP { spsTables = Map.insert uAuthorityTable rows (spsTables adminSP) }
+          noClass = RefCell "Null" uNull
+      authenticated (authorities [(0, UIDCell a) : classOf noClass]) [a] `shouldBe` [uAuthority_Anybody, a]
+      authenticated (authorities [(0, UIDCell a) : classOf (UIDCell uNull)]) [a] `shouldBe` [uAuthority_Anybody, a]
+      authenticated (authorities [(0, UIDCell a) : classOf (RefCell "Admins" uAuthority_Admins), (0, UIDCell uAuthority_Admins) : classOf noClass]) [a]
+        `shouldBe` [uAuthority_Anybody, a, uAuthority_Admins]
 
   describe "an ACE's BooleanExpr in postfix (aceGrant)" $ do
     let grant expr auths = aceGrant (withRows [aceRow e1 expr [1]] Nothing) auths e1

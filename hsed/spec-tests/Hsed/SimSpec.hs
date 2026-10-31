@@ -94,8 +94,8 @@ spec = describe "a step of the simulated TPer" $ do
       codeCells <$> codeRow cProtocolIDs 0x01 `shouldBe` Just ["Defined in this document"]
       codeCells <$> codeRow cProtocolIDs 0x02 `shouldBe` Just ["Defined in this document"]
       codeCells <$> codeRow cProtocolIDs 0x00 `shouldBe` Just ["See [6]"]
-    it "0x02, ComID management, is group G2's; IF-RECV on 0x00 is not simulated" $ do
-      status (answerTo (tper id) (sendOn 0x02 0x0004 512)) `shouldSatisfy` isUnsupported
+    it "0x02 is ComID management's (Hsed.Sim.ComIdMgmt): TPER_RESET on 0x0004, disabled at the factory, is Other Invalid Command Parameter (Opal 3.2.3, Table 13, PDF 28-29); IF-RECV on 0x00 is not simulated" $ do
+      status (answerTo (tper id) (sendOn 0x02 0x0004 512)) `shouldBe` OtherInvalidCommandParameter
       status (answerTo (tper id) (recvOn 0x00 0x0000 512)) `shouldSatisfy` isUnsupported
     it "0x00 is not defined for IF-SEND: an Invalid Security Protocol ID, the TPer unchanged (SIIS 1.20 Tables 12, 23; Opal 3.3.2)" $
       command (sendOn 0x00 0x0000 512) (tper id) `shouldBe` (refused InvalidSecurityProtocolId, tper id)

@@ -19,8 +19,8 @@ the LockingManufactured waiver with PDF 29. M4a's acceptance (design 11):
 UCT-02, ETC-08 and ETC-15 pass on the scaffold's Session Manager now,
 UCT-02 observing both tables (DefSessionTimeout 0 met as no limit, the
 lead's decision) and its echo extension passing, ETC-08 and ETC-15
-observing (0, 0, 0); and, once the simulator's sessions land (groups G1 and
-G2: 'sessionsLanded', the waits the integrator removes), the ten cases pass
+observing (0, 0, 0); and, with the simulator's sessions (groups G1 and G2,
+merged at the integration, which retired the waits), the ten cases pass
 in the four configurations, UCT-03 with its partial-verdict text and its
 extensions (NOT_AUTHORIZED, SP_BUSY, the MSID the simulator's), ETC-04
 observing (0, 0, 0), ETC-21/adminsp seeing NOT_AUTHORIZED, the MSID masked
@@ -60,7 +60,7 @@ import           Hsed.Core.StreamItem   (StreamItem (..))
 import           Hsed.Core.Token        (IsToken (..))
 import           Hsed.Core.Value        (IsValue (..))
 import qualified Hsed.Gen.Core.Methods  as Methods
-import           Hsed.Gen.Core.UIDs     (uAuthority_Anybody, uSMUID, uSP_Admin)
+import           Hsed.Gen.Core.UIDs     (uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
 import           Hsed.Jig.Catalogue     (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Files         (runningAsRoot)
@@ -72,9 +72,7 @@ import           Hsed.Jig.Support       (at, atPath, disk6Like, silently)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..), parseQuery, synthesize)
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
-import           Hsed.Sim.Session       (sessionPayload)
-import           Hsed.Sim.SessionManager (answer)
-import           Hsed.Sim.Types         (Session (..), SimParams (..), TPerState (..), defaultSimParams, initialState)
+import           Hsed.Sim.Types         (SimParams (..), TPerState (..), defaultSimParams)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..))
 import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..), newInProc)
 import           Hsed.Transport.Replay  (openReplay)
@@ -204,26 +202,6 @@ startSessionCall = generate $ invocation uSMUID Methods.StartSession
   , Methods.startSessionSignedHash            = Nothing
   }
 
--- | Whether the simulator's sessions have landed (M4a's groups G1 and G2,
---   design 11): its Session Manager answers a StartSession, and a session's
---   payload is processed rather than stopped by a stub's error. The
---   examples of the six M4a cases that open sessions wait on both; the
---   integrator removes the waits once G1 and G2 are merged.
-sessionsLanded :: IO Bool
-sessionsLanded = do
-  let st = initialState defaultSimParams
-      call = either error id (parseByteString startSessionCall)
-      answered = isJust (fst (answer (spBaseComId defaultSimParams) call st))
-      session = Session (spBaseComId defaultSimParams) 4096 1 uSP_Admin True [uAuthority_Anybody] mempty
-  processed <- isRight <$> tryAny (evaluate (fst (sessionPayload session [] Nothing st)))
-  pure (answered && processed)
-
--- | An example that needs the simulator's sessions: pending until they
---   land, naming the groups that retire the wait.
-awaiting :: String -> Expectation -> Expectation
-awaiting what act = sessionsLanded >>= \landed ->
-  if landed then act else pendingWith ("needs groups G1 and G2 of M4a (the simulator's sessions and Session Manager): " <> what)
-
 spec :: Spec
 spec = do
   describe "what a run refuses before it opens anything" $ do
@@ -297,15 +275,14 @@ spec = do
 
   describe "--target sim --tests <the ten cases of M4a>" $
     for_ configurations $ \c@(u, hold) ->
-      it ("passes in " <> configured c) $ awaiting "the ten cases on the simulator" $ do
+      it ("passes in " <> configured c) $ do
         (code, json, _) <- jig (onSim u hold) { roTests = tenCases }
         verdicts json `shouldBe` [ (str k, str "pass") | k <- ["UCT-01", "UCT-02", "UCT-03:1a-1c", "SPF-02:1", "ETC-02", "ETC-03", "ETC-04", "ETC-08", "ETC-15", "ETC-21/adminsp"] ]
         code `shouldBe` ExitSuccess
         extensionVerdicts json `shouldSatisfy` notElem (str "fail")
 
   describe "UCT-03:1a-1c, ETC-04 and ETC-21/adminsp on the simulator" $ do
-    it "UCT-03 passes, its partial-verdict text observed, its extensions passing: NOT_AUTHORIZED, SP_BUSY, the MSID the simulator's" $
-      awaiting "UCT-03's session to the Admin SP" $ do
+    it "UCT-03 passes, its partial-verdict text observed, its extensions passing: NOT_AUTHORIZED, SP_BUSY, the MSID the simulator's" $ do
         (code, json, md) <- jig (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c" }
         verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "pass")]
         code `shouldBe` ExitSuccess
@@ -313,8 +290,7 @@ spec = do
         extensionVerdicts json `shouldBe` [str "pass", str "pass", str "pass"]
         md `shouldSatisfy` T.isInfixOf "1a-1c of step 1; 1d-1f set the SID PIN and are not run"
         answeredCalls json `shouldSatisfy` elem (str "SyncSession", Just (A.Number 3))
-    it "ETC-04 observes (0, 0, 0) after its packet of another Session, and ETC-21/adminsp sees NOT_AUTHORIZED, its Tries extension passing" $
-      awaiting "ETC-04's and ETC-21's sessions" $ do
+    it "ETC-04 observes (0, 0, 0) after its packet of another Session, and ETC-21/adminsp sees NOT_AUTHORIZED, its Tries extension passing" $ do
         (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "ETC-04,ETC-21/adminsp" }
         verdicts json `shouldBe` [(str "ETC-04", str "pass"), (str "ETC-21/adminsp", str "pass")]
         code `shouldBe` ExitSuccess
@@ -323,21 +299,19 @@ spec = do
         extensionVerdicts json `shouldBe` [str "pass"]
 
   describe "the secrets a run reads (design 9.3 item 5)" $ do
-    it "masks the MSID UCT-03 reads in every report, each giving its length and digest; --show-msid shows it" $
-      awaiting "UCT-03 step 1b's MSID" $ do
+    it "masks the MSID UCT-03 reads in every report, each giving its length and digest; --show-msid shows it" $ do
         let msid = spMsid defaultSimParams
         (code, json, md, xml) <- jigTexts (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c" }
         code `shouldBe` ExitSuccess
         for_ [json, md, xml] $ \report -> do
           report `shouldNotSatisfy` T.isInfixOf (hexOf msid)
           report `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient msid)
-          report `shouldSatisfy` T.isInfixOf "32 bytes, sha256 a6c4ca3911e4"
-        json `shouldSatisfy` T.isInfixOf "\"shown\":false"
+        for_ [md, xml] $ \report -> report `shouldSatisfy` T.isInfixOf "32 bytes, sha256 a6c4ca3911e4"
+        json `shouldSatisfy` T.isInfixOf "\"secrets\":[{\"len\":32,\"sha256\":\"a6c4ca3911e4\",\"shown\":false}]"
         (_, shownJson, _, _) <- jigTexts (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c", roShowMsid = True }
         shownJson `shouldSatisfy` T.isInfixOf (hexOf msid)
         shownJson `shouldSatisfy` T.isInfixOf "\"shown\":true"
-    it "with --sim-sid-pin, UCT-03:1a-1c is skipped: step 2 needs the vendor's SID PIN" $
-      awaiting "G2's Level 0 Initial C_PIN_SID PIN Indicator from the SID PIN" $ do
+    it "with --sim-sid-pin, UCT-03:1a-1c is skipped: step 2 needs the vendor's SID PIN" $ do
         (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c", roSim = defaultSimParams { spSidPin = Just "SID!" } }
         verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "skipped")]
         [ r | c <- elements (at "cases" json), Just (A.String r) <- [at "reason" c] ] `shouldSatisfy` all ("step 2 needs the vendor's SID PIN" `T.isInfixOf`)
@@ -345,7 +319,6 @@ spec = do
 
   describe "a case that stops with a session open" $
     it "leaves the next case runnable: its NoSessions is established by STACK_RESET on the ComID, noted in the transcript" $
-      awaiting "StartSession and STACK_RESET on the simulator" $
         withSystemTempDirectory "hsed-jig" $ \dir -> do
           (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
           channel <- newChannel

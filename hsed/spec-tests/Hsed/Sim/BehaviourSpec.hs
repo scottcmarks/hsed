@@ -25,6 +25,7 @@ session's HSN and TSN (Core 5.2.3.5, PDF 153).
 module Hsed.Sim.BehaviourSpec (spec) where
 
 import qualified RIO.List                as L
+import qualified RIO.Map                 as Map
 import           RIO
 import qualified RIO.Text                as T
 import           Test.Hspec
@@ -36,13 +37,13 @@ import           Hsed.Core.Token         (IsToken (..))
 import           Hsed.Core.Value         (IsValue (..), List (..), Value (..))
 import           Hsed.Gen.Core.Codes     (pattern INVALID_PARAMETER, pattern NOT_AUTHORIZED)
 import qualified Hsed.Gen.Core.Methods   as Methods
-import           Hsed.Gen.Core.UIDs      (uCloseSession, uMethodID_Get, uProperties, uSMUID, uStartSession, uSP_Admin)
+import           Hsed.Gen.Core.UIDs      (uCloseSession, uMethodID_Get, uProperties, uSMUID, uStartSession, uSyncSession, uSP_Admin)
 import           Hsed.Jig.Catalogue      (CatalogueEntry (..), catalogue, renderCaseKey)
 import qualified Hsed.Sim.Base           as Base
 import           Hsed.Sim.Behaviour
 import qualified Hsed.Sim.SessionManager as SessionManager
 import           Hsed.Sim.State          (openSession)
-import           Hsed.Sim.Types          (TPerState, defaultSimParams, initialState, spBaseComId)
+import           Hsed.Sim.Types          (TPerState (..), defaultSimParams, initialState, spBaseComId)
 
 
 st0 :: TPerState
@@ -90,7 +91,7 @@ spec = do
         fromMaybe (counterexample "the item has no property (Hsed.Sim.Base)" (property False)) (fiProp i)
 
   describe "runSome" $ do
-    it "runs a behaviour on its method's call alone: Properties answered, StartSession not its" $ do
+    it "runs a behaviour on its method's call alone: Properties answered, StartSession not its; StartSession's own answers SyncSession and opens the session (Core 3.3.4.5, PDF 62)" $ do
       case runSome (forMethod SessionManager.properties) (invoked propertiesCall) propertiesCall st0 of
         Just (Right (ReplyCall r, st')) -> do
           _header r `shouldBe` MethodHeader uSMUID uProperties
@@ -112,7 +113,12 @@ spec = do
             , Methods.startSessionSignedHash            = Nothing
             }
       isNothing (runSome (forMethod SessionManager.properties) (invoked start) start st0) `shouldBe` True
-      fmap (either (const False) ((== NoReply) . fst)) (runSome (forMethod SessionManager.startSession) (invoked start) start st0) `shouldBe` Just True
+      case runSome (forMethod SessionManager.startSession) (invoked start) start st0 of
+        Just (Right (ReplyCall r, st')) -> do
+          _header r `shouldBe` MethodHeader uSMUID uSyncSession
+          _statusCode r `shouldBe` 0
+          Map.size (tsSessions st') `shouldBe` 1
+        other -> expectationFailure (show other)
     it "reads the parameters against the signature: ETC-08's required list is a ParamError" $ do
       let etc08 = propertiesCall { _parameters = Parameters [L (List [])] [] }
       runSome (forMethod SessionManager.properties) (invoked etc08) etc08 st0 `shouldSatisfy` \r -> case r of

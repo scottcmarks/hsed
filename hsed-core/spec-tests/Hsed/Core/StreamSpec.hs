@@ -11,7 +11,9 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The total reading of a subpacket's payload (Core 3.2.2.4, PDF 38-39): every
-token the codec writes is one atom; Empty atoms are dropped; the policies
+token the codec writes is one atom, in a mixed stream of every kind and
+size too; Empty atoms are dropped; a fault names a byte sequence by its
+length, never its bytes; the policies
 refuse what Opal's TPer does not take (Table 15, PDF 31) and what is past
 MaxIndTokenSize; invocations are read whole, M0's Properties and ETC-08's
 among them, and a token out of place is a fault at 3.2.2.4.2's place, read
@@ -36,6 +38,51 @@ import           Hsed.Core.StreamItem  (StreamItem (..))
 import           Hsed.Core.Token
 import           Hsed.Core.UID         (UID, uid)
 import           Hsed.Core.Value
+
+
+-- | The pieces of a mixed stream: a token of any kind but Empty and
+--   ContinuedBytes, byte sequences and uintegers of every atom size among
+--   them (tiny, short, medium and long atoms, Core 3.2.2.3.1, PDF 33-36), or
+--   a continued run, segments ended by a byte sequence. Each piece's atom
+--   is the token, or the run joined into one byte sequence spanning its
+--   segments.
+data Piece = Plain Token | Run [ByteString] ByteString
+  deriving (Show)
+
+genPiece :: Gen Piece
+genPiece = frequency
+  [ (8, Plain <$> plainToken)
+  , (2, Run <$> listOf1 (B.pack <$> listOf1 arbitrary) <*> (B.pack <$> arbitrary)) ]
+  where
+    plainToken = frequency
+      [ (3, Unsigned . fromIntegral <$> (arbitrary :: Gen Word64))
+      , (1, Unsigned . (+ 2 ^ (70 :: Int)) . fromIntegral <$> (arbitrary :: Gen Word64))
+      , (2, Signed <$> arbitrary)
+      , (3, Bytes . B.pack <$> arbitrary)
+      , (1, Bytes . B.pack <$> (chooseInt (16, 100) >>= (`vectorOf` arbitrary)))
+      , (1, Bytes . B.pack <$> (chooseInt (2048, 2200) >>= (`vectorOf` arbitrary)))
+      , (3, elements [StartName, EndName, StartList, EndList, Call, EndOfData, EndOfSession, StartTransaction, EndTransaction]) ]
+
+-- | A mixed stream's bytes, Empty atoms before, between and after its
+--   pieces and inside its continued runs, and the atoms expected of it:
+--   each piece's token at its offset, a run from its first segment's start
+--   to its byte sequence's end.
+mixedStream :: Gen (ByteString, [Atom])
+mixedStream = do
+  pieces <- listOf genPiece
+  gaps   <- vectorOf (length pieces + 1) (chooseInt (0, 2))
+  let empties n = B.replicate n 0xFF
+      step (bytes, expected) (gap, piece) =
+        let off  = B.length bytes + gap
+            body = case piece of
+              Plain t        -> generate t
+              Run segs final -> foldMap (\s -> generate (ContinuedBytes s) <> empties 1) segs <> generate (Bytes final)
+            atom = case piece of
+              Plain t        -> Atom off (B.length body) t
+              Run segs final -> Atom off (B.length body) (Bytes (B.concat segs <> final))
+        in (bytes <> empties gap <> body, expected <> [atom])
+      (stream, atoms') = foldl' step (mempty, []) (zip gaps pieces)
+  pure (stream <> empties (fromMaybe 0 (listToMaybe (reverse gaps))), atoms')
 
 
 -- | The SMUID and the Properties method UID (Core Spec Tables 239 and 241),
@@ -117,6 +164,9 @@ spec = do
       atoms hostPolicy (pack [0x01, 0xA3, 0x01]) `shouldSatisfy` failsAt 1 "does not read"
     it "reads nothing from nothing" $
       atoms (tperPolicy 1992) mempty `shouldBe` Right []
+    prop "reads back a mixed stream of every token kind the codec writes, tiny to long atoms, Empty atoms anywhere dropped and continued runs joined, each atom at its offset" $
+      forAll mixedStream $ \(stream, expected) ->
+        atoms (AtomPolicy Nothing True True) stream === Right expected
 
   describe "items, a TPer's reading" $ do
     it "reads M0's SMUID.Properties[] as one invocation, on either stream" $ do
@@ -173,6 +223,11 @@ spec = do
       summary (items SessionStream [StartTransaction]) `shouldBe` ([], Just (1, Unfinished))
     it "drops Empty atoms given among the tokens, the indexes those given" $
       summary (items SessionStream ([Empty, Call, Empty, EndList, EndOfData] <> status)) `shouldBe` ([Left (3, InHeader)], Nothing)
+    it "names a byte sequence out of place by its length, never its bytes (a secret may be among them)" $ do
+      let why = faultWhy <$> snd (items SessionStream [Bytes "a secret"])
+      why `shouldSatisfy` maybe False ("a byte sequence of 8 bytes" `T.isInfixOf`)
+      why `shouldSatisfy` maybe False (not . ("secret" `T.isInfixOf`))
+      fmap faultWhy (snd (returnedItems [StartList, EndList, Bytes "a secret"])) `shouldSatisfy` maybe False ("a byte sequence of 8 bytes where End of Data" `T.isInfixOf`)
     prop "reads back the invocations the codec writes, each with its status" $
       \calls -> fmap (items SessionStream) (tokensOf (foldMap generate (calls :: [MethodCall]))) === Right (map Invoke calls, Nothing)
 
@@ -192,6 +247,11 @@ spec = do
       at (returnedItems [StartTransaction]) `shouldBe` (0, Just (1, Unfinished))
     prop "reads back the responses the codec writes" $
       \rs -> fmap returnedItems (tokensOf (foldMap generate (rs :: [MethodResponse]))) === Right (map ReturnedResults rs, Nothing)
+    prop "reads back a response holding a long byte sequence and a large uinteger, Empty atoms between its tokens" $
+      forAll ((,) <$> (chooseInt (2048, 2200) >>= (`vectorOf` arbitrary)) <*> (arbitrary :: Gen Word64)) $ \(bytes, n) ->
+        let mr     = MethodResponse [D (Datum (Bytes (B.pack bytes))), D (Datum (Unsigned (fromIntegral n + 2 ^ (70 :: Int))))] 0
+            spaced = foldMap (\t -> generate t <> generate Empty) (toks (generate mr))
+        in fmap (returnedItems . map atomToken) (atoms hostPolicy spaced) === Right ([ReturnedResults mr], Nothing)
   where
     plain t = case t of
       Empty            -> False

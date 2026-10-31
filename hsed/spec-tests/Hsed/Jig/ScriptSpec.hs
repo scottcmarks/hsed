@@ -76,6 +76,7 @@ import           Hsed.Gen.Opal.Features    (Level0DiscoveryOpalSSCV2Feature (..)
 import           Hsed.Jig.Case             (Case (..))
 import           Hsed.Jig.Cases.ETC02      (etc02)
 import           Hsed.Jig.Cases.ETC08      (etc08Payload)
+import           Hsed.Jig.Cases.ETC15      (etc15)
 import           Hsed.Jig.Cases.UCT02      (hostProperties, tperExpected, uct02)
 import           Hsed.Jig.Options          (defaultRunOptions)
 import           Hsed.Jig.Script
@@ -429,6 +430,22 @@ spec = do
       map (\(s, _, _) -> s) tperExpected `shouldBe` [ "2" <> T.singleton c | c <- ['a' .. 'k'] ]
       [ (n, least) | (_, n, least) <- tperExpected, n `elem` ["MaxComPacketSize", "MaxTransactionLimit", "DefSessionTimeout"] ]
         `shouldBe` [("MaxComPacketSize", 2048), ("MaxTransactionLimit", 1), ("DefSessionTimeout", 0)]
+
+  describe "ETC-15's not-applicable skips (design 13.29 (b)), over a TPer the simulator's parameters could not be" $ do
+    let tperWith :: [(Text, Natural)] -> Response
+        tperWith props = controlAnswer (generate (MethodCall (MethodHeader uSMUID uProperties)
+                                                             (Parameters [L (List [ N (encodeUtf8 n .: v) | (n, v) <- props ])] []) 0))
+        skippedSaying what v = case v of
+          Skipped r -> all (`T.isInfixOf` r) what
+          _         -> False
+    it "a MaxSubpackets of 0, no limit, which step 2 cannot exceed: Skipped (NA), after step 1's Properties alone" $ do
+      (v, qs, _) <- harness [Good] [tperWith [("MaxSubpackets", 0), ("MaxComPacketSize", 2048)]] (attempt (cRun etc15))
+      v `shouldSatisfy` skippedSaying ["MaxSubpackets = 0", "no limit", "not applicable"]
+      length [ () | q <- qs, dir q == IfSend ] `shouldBe` 1
+    it "a MaxSubpackets so large that n + 1 subpackets exceed MaxComPacketSize: Skipped, the IF-SEND would fail for its length (Core 3.3.10.7 c), nothing sent for step 2" $ do
+      (v, qs, _) <- harness [Good] [tperWith [("MaxSubpackets", 100), ("MaxComPacketSize", 2048)]] (attempt (cRun etc15))
+      v `shouldSatisfy` skippedSaying ["101 Properties subpackets take", "more than MaxComPacketSize 2048", "would fail for its length"]
+      length [ () | q <- qs, dir q == IfSend ] `shouldBe` 1
 
   describe "statuses and expectations" $ do
     it "names a status by Core Table 166's row, with its value" $ do

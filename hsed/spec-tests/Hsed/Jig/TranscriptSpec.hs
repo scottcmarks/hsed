@@ -94,11 +94,13 @@ spec = do
     it "replaces each occurrence of a secret in a command's payload and in its answer with as many 0x2A bytes, and nothing else" $
       maskSecrets [msid] (Issued 1 "tper" send { payload = "abc" <> msid <> "def" } (Response Good (msid <> "--" <> msid)))
         `shouldBe` Issued 1 "tper" send { payload = "abc" <> stars 32 <> "def" } (Response Good (stars 32 <> "--" <> stars 32))
-    it "masks a blocked command's payload; leaves an empty secret, bytes without the secret, and a note alone" $ do
-      maskSecrets ["x"] (Blocked 2 "drive" send { payload = "axb" } "why") `shouldBe` Blocked 2 "drive" send { payload = "a*b" } "why"
+    it "masks a blocked command's payload and its reason, and a note's text as text, hex or as shown; leaves an empty secret and bytes without the secret alone" $ do
+      maskSecrets ["x"] (Blocked 2 "drive" send { payload = "axb" } "why x") `shouldBe` Blocked 2 "drive" send { payload = "a*b" } "why *"
       maskSecrets [""] (Issued 1 "tper" send (Response Good "abc")) `shouldBe` Issued 1 "tper" send (Response Good "abc")
       maskSecrets ["zz"] (Issued 1 "tper" send (Response Good "abc")) `shouldBe` Issued 1 "tper" send (Response Good "abc")
-      maskSecrets ["abc"] (Note 3 "abc") `shouldBe` Note 3 "abc"
+      maskSecrets ["abc"] (Note 3 "abc, 616263, Bytes \"abc\"") `shouldBe` Note 3 "***, ***, Bytes \"***\""
+      maskSecrets ["abc"] (Note 3 "abd") `shouldBe` Note 3 "abd"
+      maskText ["\255!"] ("shown " <> tshow ("\255!" :: ByteString)) `shouldBe` "shown \"**\""
     it "masks several secrets, each where it occurs" $
       maskSecrets ["MSID", "PIN!"] (Issued 1 "tper" send (Response Good "the MSID and the PIN!"))
         `shouldBe` Issued 1 "tper" send (Response Good ("the " <> stars 4 <> " and the " <> stars 4))

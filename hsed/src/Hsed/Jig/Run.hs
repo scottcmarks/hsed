@@ -40,8 +40,12 @@ one name the transcript's entries carry, "Hsed.Jig.Transcript"); then the
 two Level 0 responses are compared
 ("Hsed.Jig.Pair"), discovered after the cases when UCT-01 did not. A drive
 is never asked for Level 0 again once it was asked (a failed kext command
-leaks a SCSI task in the kext), for the pair or for the capture. What a
-case observes ("Hsed.Jig.Script".@observe@) goes into its result, and the
+leaks a SCSI task in the kext), for the pair or for the capture. A case
+whose TCG verdict is Skipped or Unobservable does not run its extensions:
+each is reported Skipped with the case's reason (design 9.1, 13.29 (b)),
+as are those of a case its target cannot run or whose prerequisite is
+unmet. What a case observes ("Hsed.Jig.Script".@observe@) goes into its
+result, what an extension observes under the extension's name, and the
 secrets the ends read (UCT-03's MSID, a PIN the run reads from the
 simulator's state) into the run's, masked in the reports unless
 @--show-msid@ (design 9.3 item 5).
@@ -310,11 +314,12 @@ passed cr = crVerdict cr == Pass && null [ () | (_, Fail _) <- crExtensions cr ]
 --   pass where every end passed, else the failures (or the first other
 --   verdict) each with its end's name; the waivers every end made, and
 --   those of some ends with their names; the extensions and the observations
---   with their end's; and each end's own verdict beside the joined one.
+--   with their end's; each end's own verdict beside the joined one; and the
+--   prerequisites established where every end established them.
 joined :: Bool -> Case -> [(Text, CaseResult)] -> CaseResult
 joined named c rs
   | not named, [(_, r)] <- rs = r
-  | otherwise = CaseResult (cKey c) verdict waivers extensions observations [ (n, crVerdict r) | (n, r) <- rs ]
+  | otherwise = CaseResult (cKey c) verdict waivers extensions observations [ (n, crVerdict r) | (n, r) <- rs ] (all (crEstablished . snd) rs)
   where
     verdict = case [ (n, crVerdict r) | (n, r) <- rs, crVerdict r /= Pass ] of
       []  -> Pass
@@ -340,28 +345,44 @@ joined named c rs
 -- * A case on an end
 
 -- | A case on one end: skipped if the end lacks what it needs or a
---   prerequisite is unmet; else run to its verdict, then its extensions,
---   on the simulator alone; what the case and its extensions observed goes
---   into its result, and the next case starts with none.
+--   prerequisite is unmet, its extensions skipped with that reason and its
+--   prerequisites not reached; else run to its verdict, then its extensions
+--   on the simulator alone, unless the verdict is Skipped or Unobservable,
+--   when each extension is Skipped with the case's reason (design 9.1,
+--   13.29 (b)); what the case observed goes into its result, what each
+--   extension observed under the extension's name, and the next case starts
+--   with none.
 runCase :: End -> Case -> IO CaseResult
 runCase e c = runRIO (endEnv e) $ do
   let heading = renderCaseKey (cKey c) <> " on the " <> endName e
   logInfo (display heading)
   note heading
   tg <- asks reTarget
-  ref <- asks reCtx
-  modifyIORef' ref (\x -> x { rcObservations = [] })
+  _ <- observed
   case lacking tg (cNeeds c) of
-    Just why -> pure (CaseResult (cKey c) (Skipped why) [] [] [] [])
+    Just why -> pure (notRun (Skipped why))
     Nothing  -> prerequisites c >>= \case
-      Left why -> pure (CaseResult (cKey c) (Skipped ("prerequisite unmet: " <> why)) [] [] [] [])
+      Left why -> pure (notRun (Skipped ("prerequisite unmet: " <> why)))
       Right ws -> do
         v <- attempt (cRun c)
-        xs <- for (cExtensions c) $ \(name, s) -> (,) name <$> case tg of
-          SimTarget _ _ -> note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name) >> attempt s
-          _             -> pure (Skipped "the simulator's alone")
-        observations <- rcObservations <$> readIORef ref
-        pure (CaseResult (cKey c) v ws xs observations [])
+        own <- observed
+        xs <- for (cExtensions c) $ \(name, s) -> case (v, tg) of
+          (Skipped _, _)        -> pure ((name, unrun v), [])
+          (Unobservable _, _)   -> pure ((name, unrun v), [])
+          (_, SimTarget _ _)    -> do
+            note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name)
+            xv <- attempt s
+            obs <- observed
+            pure ((name, xv), map (first ((name <> ": ") <>)) obs)
+          _                     -> pure ((name, Skipped "the simulator's alone"), [])
+        pure (CaseResult (cKey c) v ws (map fst xs) (own <> concatMap snd xs) [] True)
+  where
+    -- an extension not run, the case's verdict its reason
+    unrun v = Skipped ("not run, the case " <> verdictText v)
+    -- a case not run at all: its extensions not run either, its prerequisites not reached
+    notRun v = CaseResult (cKey c) v [] [ (name, unrun v) | (name, _) <- cExtensions c ] [] [] False
+    -- what the case or the extension running has observed, taken; the next starts with none
+    observed = asks reCtx >>= \ref -> atomicModifyIORef' ref (\x -> (x { rcObservations = [] }, rcObservations x))
 
 -- | Why a target cannot run a case that needs these, if it cannot: a drive
 --   before M4c answers Level 0 Discovery alone, and after it the allow

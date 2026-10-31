@@ -52,7 +52,7 @@ import           Hsed.Jig.Script        (MethodOutcome (..), RunCtx (..), RunEnv
                                          exchanged, expectMethodStatus, getCells, namedColumn, note, observe, opalV2Of, opened,
                                          peekSim, properties, startSession, statusName, unmet, withSession)
 import           Hsed.OpalUIDs          (uC_PIN_MSID)
-import           Hsed.Sim.Types         (SimParams (..), TPerState (..))
+import           Hsed.Sim.Types         (SimParams (..), TPerState (..), maxSessionsName)
 import           Hsed.Wire              (hex)
 
 
@@ -159,7 +159,7 @@ secondSession :: Script Verdict
 secondSession = withSession adminSPAsAnybody $ \_ -> do
   answer <- startSession adminSPAsAnybody >>= exchanged "a second StartSession while the first is open"
   tper <- maybe (properties >>= exchanged "Properties, for MaxSessions") pure . rcTPerProperties =<< (asks reCtx >>= readIORef)
-  let maxSessions = L.lookup "MaxSessions" tper  -- Core Table 167's name (PDF 142)
+  let maxSessions = L.lookup maxSessionsName tper
   case answer of
     SyncFailed st
       | st == SP_BUSY -> Pass <$ observe "a second StartSession" (statusName st)

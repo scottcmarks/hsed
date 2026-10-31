@@ -15,11 +15,13 @@ JSON, Markdown and JUnit XML, the target's part @sim@, @dev-disk6@ or
 started together each with a name of their own; each
 case with its verdict and waivers, a pair's each end's verdict beside it, a
 waiver with its item and page (LockingManufactured, Test Cases 5.2 item 2,
-PDF 29); the simulator's options only where a simulator ran; the run's
-problems; the JUnit report failing the pair, each problem, an IF-SEND on a
-drive and the exit code wherever the exit code fails; the
-transcript with each IF-SEND's methods decoded and each command's end; the
-JUnit counts. The secrets a run read are masked in every report, each
+PDF 29), each prerequisite established or not reached; the simulator's
+options only where a simulator ran; the run's problems; the JUnit report
+failing the pair, each problem, an IF-SEND on a drive and the exit code
+wherever the exit code fails; the transcript with each IF-SEND's methods
+decoded and each command's end, a subpacket of several items decoded as
+each in order; the JUnit counts. The secrets a run read are masked in every
+report, in the transcript's bytes and in every text a case came to, each
 given by its length and the first 12 hex digits of its SHA-256, in clear
 with @--show-msid@ alone (design 9.3 item 5), and the simulator's SID PIN
 is given the same way among the options. @verify-transcript@ fails a
@@ -45,13 +47,14 @@ import           Test.Hspec
 import           Hsed.Core.Call        (MethodResponse (..))
 import           Hsed.Core.Method      (invocation)
 import           Hsed.Core.StreamItem  (StreamItem (..))
+import           Hsed.Core.Token       (Token (..))
 import           Hsed.Core.Value       (List (..), Value (..), (.:))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uSMUID)
 import           Hsed.Jig.Catalogue    (CaseKey (..), TestId (..))
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Pair         (PairReport (..))
-import           Hsed.Jig.Prereq       (lockingSPUntouched, noSessionOpened)
+import           Hsed.Jig.Prereq       (Waiver (..), lockingSPUntouched, noSessionOpened)
 import           Hsed.Jig.Report
 import           Hsed.Jig.Script       (SessionHandle (..), Verdict (..), controlComPacket, sessionComPacket)
 import           Hsed.Jig.Support      (at, atPath, silently)
@@ -79,10 +82,10 @@ sample = RunResult
   , rrStarted    = noon
   , rrTargets    = [Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing]
   , rrCases      =
-      [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) [] [] []
+      [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) [] [] [] True
       , CaseResult (CaseKey (SPF 2) (Just 1) Nothing Nothing) (Fail ["step 1: not so"]) [lockingSPUntouched] [("an extension", Pass)]
-          [("MaxComPacketSize", "2048")] []
-      , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] [] [] []
+          [("MaxComPacketSize", "2048")] [] True
+      , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] [] [] [] False
       ]
   , rrTranscript =
       [ Note 1 "UCT-01 on the tper"
@@ -105,7 +108,7 @@ paired = sample
   { rrOptions  = defaultRunOptions { roTarget = TPair TSim (TReplay "disk6.bin") }
   , rrTargets  = rrTargets sample <> [Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin")]
   , rrCases    = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "drive-replay: no Level 0") [] [] []
-                     [("tper", Pass), ("drive-replay", Skipped "no Level 0")] ]
+                     [("tper", Pass), ("drive-replay", Skipped "no Level 0")] False ]
   , rrPair     = Just (PairReport [0x0005] [0x0403] [] [] [])
   , rrIfSends  = 1
   , rrProblems = ["--capture-level0 x.bin: no drive to capture"]
@@ -155,6 +158,12 @@ secretive showing = sample
     result    = either (error . show) id (sessionComPacket h (generate (MethodResponse [L (List [N ((3 :: Natural) .: msid)])] 0)))
     challenge = either (error . show) id (sessionComPacket h (msid <> "!"))
     padded b  = b <> B.replicate (2048 - B.length b) 0
+
+-- | A JSON array's elements.
+arr :: Maybe A.Value -> [A.Value]
+arr = \v -> case v of
+  Just (A.Array xs) -> toList xs
+  _                 -> []
 
 -- | A report written, read back: its files, its JSON and its Markdown.
 written :: RunResult -> IO ([FilePath], A.Value, Text)
@@ -208,6 +217,29 @@ spec = do
                      | e <- entries', Just (A.Array ps) <- [atPath ["decode", "request", "packets"] e]
                      , p <- toList ps, Just (A.Array sps) <- [at "subpackets" p], sp <- toList sps ]
       methods `shouldBe` replicate 2 (Just (A.String "Properties"))
+    it "decodes a subpacket of a method response followed by the TPer's End of Session as both, in order, in the JSON's items and the Markdown (Hsed.Core.Stream); Empty atoms alone are counted" $ do
+      let h       = SessionHandle 0x1004 4096 1
+          result  = MethodResponse [L (List [N ((3 :: Natural) .: ("abc" :: ByteString))])] 0
+          answer  = either (error . show) id (sessionComPacket h (generate result <> generate EndOfSession))
+          empties = either (error . show) id (controlComPacket 0x1004 (B.replicate 4 0xFF))
+          recv    = Request IfRecv 1 0x1004 2048 mempty
+          rr      = sample { rrTranscript = [ Issued 1 "tper" recv (Response Good (answer <> B.replicate (2048 - B.length answer) 0))
+                                            , Issued 2 "tper" (Request IfSend 1 0x1004 512 (empties <> B.replicate (512 - B.length empties) 0)) (Response Good mempty) ] }
+      (_, json, md) <- written rr
+      let subpackets side = [ sp | e <- arr (at "transcript" json), p <- arr (atPath ["decode", side, "packets"] e), sp <- arr (at "subpackets" p) ]
+      [ (at "method_response" i, at "end_of_session" i) | sp <- subpackets "response", i <- arr (at "items" sp) ]
+        `shouldBe` [(Just (A.String (tshow result)), Nothing), (Nothing, Just (A.Bool True))]
+      [ (at "items" sp, at "empty_atoms" sp) | sp <- subpackets "request" ] `shouldBe` [(Just (A.Array mempty), Just (A.Number 4))]
+      md `shouldSatisfy` T.isInfixOf ("results " <> tshow (_results result) <> ", status 0; EndOfSession")
+      md `shouldSatisfy` T.isInfixOf ": 4 Empty atoms"
+    it "prints a prerequisite as established or checked where the case's own script skipped it, and as not reached where the target or an unmet prerequisite stopped the case first" $ do
+      let skippedBy established = sample { rrCases = [CaseResult (CaseKey (UCT 3) Nothing (Just "1a-1c") Nothing) (Skipped "why") [] [] [] [] established] }
+      (_, json, own) <- written (skippedBy True)
+      own `shouldSatisfy` T.isInfixOf "SyncIdle (Test Cases 5.2 item 1, PDF 29): established or checked by the run"
+      map (at "prerequisites") (arr (at "cases" json)) `shouldBe` [Just (A.String "established")]
+      (_, json', earlier) <- written (skippedBy False)
+      earlier `shouldSatisfy` T.isInfixOf "SyncIdle (Test Cases 5.2 item 1, PDF 29): not reached"
+      map (at "prerequisites") (arr (at "cases" json')) `shouldBe` [Just (A.String "not reached")]
     it "counts JUnit's tests, failures and skips, an extension a test, the exit code one" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         _ <- writeReports dir sample
@@ -285,6 +317,25 @@ spec = do
     it "says in the summary how many secrets were read and how they are printed" $ do
       summary (secretive False) [] `shouldSatisfy` any (T.isPrefixOf "secrets read: 1, masked as 0x2A in the transcript")
       summary sample [] `shouldNotSatisfy` any (T.isPrefixOf "secrets read")
+    it "masks a secret quoted in a verdict's reason, an extension's, an observation, a waiver's reason, a note or a problem, as text, hex or as shown, in all three reports and the summary; in clear with --show-msid" $ do
+      let quoting shown = (secretive shown)
+            { rrCases = [ CaseResult (CaseKey (UCT 3) Nothing (Just "1a-1c") Nothing)
+                            (Fail ["an answer that does not read: Bytes " <> tshow msid <> " where End of Data is expected"])
+                            [lockingSPUntouched { wReason = "waived over " <> hexOf msid }]
+                            [("an extension", Skipped ("skipped over " <> decodeUtf8Lenient msid))]
+                            [("seen", "the MSID " <> decodeUtf8Lenient msid)] [] True ]
+            , rrTranscript = rrTranscript (secretive shown) <> [Note 3 ("a note quoting " <> decodeUtf8Lenient msid)]
+            , rrProblems   = ["a problem quoting " <> hexOf msid] }
+      (json, md, xml) <- texts (quoting False)
+      for_ [json, md, xml] $ \report -> do
+        report `shouldNotSatisfy` T.isInfixOf (hexOf msid)
+        report `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient msid)
+      md `shouldSatisfy` T.isInfixOf ("- an answer that does not read: Bytes \"" <> T.replicate 32 "*" <> "\" where End of Data is expected")
+      md `shouldSatisfy` T.isInfixOf ("- a problem quoting " <> T.replicate 32 "*")
+      summary (quoting False) [] `shouldNotSatisfy` any (T.isInfixOf (decodeUtf8Lenient msid))
+      (shownJson, shownMd, _) <- texts (quoting True)
+      shownJson `shouldSatisfy` T.isInfixOf (decodeUtf8Lenient msid)
+      shownMd `shouldSatisfy` T.isInfixOf ("a note quoting " <> decodeUtf8Lenient msid)
 
   describe "verifyTranscript" $ do
     let report dir rr = writeReports dir rr <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)

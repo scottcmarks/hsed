@@ -199,7 +199,7 @@ data Place
 
 -- | A token out of place: which token (its index among those given, 0
 --   first; the count of tokens for a stream that ends too soon), where, and
---   why.
+--   why, a byte sequence named by its length and never its bytes ('named').
 data Fault = Fault
   { faultAt    :: !Int
   , faultPlace :: !Place
@@ -238,7 +238,7 @@ items mode toks = go (indexed toks)
           SessionStream -> ([EndOfSessionItem], Nothing)
         StartTransaction -> transaction StartTransactionItem rest
         EndTransaction   -> transaction EndTransactionItem rest
-        _ -> ([], Just (Fault i OutsideCall (tshow t <> " outside a method invocation (Core 3.2.2.4.2 item 2, PDF 39)")))
+        _ -> ([], Just (Fault i OutsideCall (named t <> " outside a method invocation (Core 3.2.2.4.2 item 2, PDF 39)")))
     -- a transaction control token and the uinteger status after it: ignored on the control session, an item in a
     -- regular one
     transaction item rest = case (mode, rest) of
@@ -246,7 +246,7 @@ items mode toks = go (indexed toks)
       (ControlStream, _)                      -> go rest
       (SessionStream, (_, Unsigned n) : more) -> first (item n :) (go more)
       (SessionStream, (j, t) : _)             ->
-        ([], Just (Fault j OutsideCall (tshow t <> " where the transaction control token's uinteger status is expected "
+        ([], Just (Fault j OutsideCall (named t <> " where the transaction control token's uinteger status is expected "
                                         <> "(Core 3.2.2.3.3.4-5, PDF 37)")))
       (SessionStream, [])                     -> ([], Just (unfinishedAt count))
     -- a method invocation after its Call: read whole, or read to its End of Data and status list after a fault in
@@ -257,7 +257,7 @@ items mode toks = go (indexed toks)
         Left h -> resync (fault (InParameters hdr) h) (Just hdr) afterHeader
         Right (ps, afterParams) -> case afterParams of
           (_, EndOfData) : afterEod -> status (Just hdr) afterEod $ \st more -> first (Invoke (MethodCall hdr ps st) :) (go more)
-          (j, t) : _ -> resync (Fault j (InParameters hdr) (tshow t <> " after the parameter list, before End of Data "
+          (j, t) : _ -> resync (Fault j (InParameters hdr) (named t <> " after the parameter list, before End of Data "
                                                               <> "(Core 3.2.2.4.2 item 4, PDF 39)")) (Just hdr) afterParams
           [] -> ([], Just (unfinishedAt count))
     -- after a fault in the header or the parameter list: the invocation's End of Data and status list, then the
@@ -272,7 +272,7 @@ items mode toks = go (indexed toks)
       (_, StartList) : values -> case statusValues values of
         Right (st, more) -> k st more
         Left h           -> ([], Just (fault (InStatusList mhdr) h))
-      (j, t) : _ -> ([], Just (Fault j OutsideCall (tshow t <> " after End of Data, where the status list's Start List is "
+      (j, t) : _ -> ([], Just (Fault j OutsideCall (named t <> " after End of Data, where the status list's Start List is "
                                                     <> "expected (Core 3.2.2.4.2 item 2, PDF 39)")))
       [] -> ([], Just (unfinishedAt count))
 
@@ -306,10 +306,10 @@ returnedItems toks = go (indexed toks)
       (_, EndOfSession) : rest -> first (ReturnedEndOfSession :) (go rest)
       (_, t) : (_, Unsigned n) : rest | isTransaction t -> first (ReturnedTransaction t n :) (go rest)
       (_, t) : (j, u) : _ | isTransaction t ->
-        stop (Fault j OutsideCall (tshow u <> " where the transaction control token's uinteger status is expected "
+        stop (Fault j OutsideCall (named u <> " where the transaction control token's uinteger status is expected "
                                    <> "(Core 3.2.2.3.3.4-5, PDF 37)"))
       [(_, t)] | isTransaction t -> stop (unfinishedAt count)
-      (i, t) : _ -> stop (Fault i OutsideCall (tshow t <> " outside a method invocation or response (Core 3.2.2.4.2 item 2, PDF 39)"))
+      (i, t) : _ -> stop (Fault i OutsideCall (named t <> " outside a method invocation or response (Core 3.2.2.4.2 item 2, PDF 39)"))
     stop f = ([], Just f)
     isTransaction t = t == StartTransaction || t == EndTransaction
     -- an invocation after its Call, whole: any fault stops the host's reading
@@ -328,16 +328,26 @@ returnedItems toks = go (indexed toks)
     unList (List vs) = vs
     endOfData place = \case
       (_, EndOfData) : s -> Right s
-      (j, t) : _ -> Left (Fault j place (tshow t <> " where End of Data is expected (Core 3.2.4.2, PDF 48-49)"))
+      (j, t) : _ -> Left (Fault j place (named t <> " where End of Data is expected (Core 3.2.4.2, PDF 48-49)"))
       [] -> Left (unfinishedAt count)
     statusList place = \case
       (_, StartList) : s -> first (fault place) (statusValues s)
-      (j, t) : _ -> Left (Fault j OutsideCall (tshow t <> " after End of Data, where the status list's Start List is expected "
+      (j, t) : _ -> Left (Fault j OutsideCall (named t <> " after End of Data, where the status list's Start List is expected "
                                                <> "(Core 3.2.2.4.2 item 2, PDF 39)"))
       [] -> Left (unfinishedAt count)
 
 
 -- * Reading tokens
+
+-- | A token in a fault's words: a byte sequence by its length, never its
+--   bytes (a secret may be among them, and a fault is printed where the
+--   stream came from, a jig's report among those places), any other token
+--   as shown.
+named :: Token -> Text
+named = \case
+  Bytes bs          -> "a byte sequence of " <> tshow (B.length bs) <> " bytes"
+  ContinuedBytes bs -> "a continued byte sequence of " <> tshow (B.length bs) <> " bytes"
+  t                 -> tshow t
 
 -- | A stream's tokens with their indexes, Empty atoms dropped.
 type Indexed = [(Int, Token)]
@@ -367,12 +377,12 @@ header s0 = do
   (method, s2)  <- uidAt "the MethodID" s1
   case s2 of
     (_, StartList) : s3 -> Right (MethodHeader invoker method, s3)
-    (j, t) : _          -> Left (HaltAt j (tshow t <> " where the parameter list's Start List is expected (Core 3.2.4.2 item 3, PDF 48)"))
+    (j, t) : _          -> Left (HaltAt j (named t <> " where the parameter list's Start List is expected (Core 3.2.4.2 item 3, PDF 48)"))
     []                  -> Left HaltEnd
   where
     uidAt what = \case
       (_, t) : s | Just u <- fromToken t -> Right (u :: UID, s)
-      (j, t) : _ -> Left (HaltAt j (tshow t <> " where " <> what <> ", an eight-byte UID, is expected (Core 3.2.4.2 item 2, PDF 48)"))
+      (j, t) : _ -> Left (HaltAt j (named t <> " where " <> what <> ", an eight-byte UID, is expected (Core 3.2.4.2 item 2, PDF 48)"))
       []         -> Left HaltEnd
 
 -- | A parameter list after its Start List, to its End List: the required
@@ -399,15 +409,15 @@ value = \case
     (v, s2)  <- value s1
     case s2 of
       (_, EndName) : s3 -> Right (N (NamedValue nm v), s3)
-      (j, t) : _ -> Left (HaltAt j (tshow t <> " where the Named value's End Name is expected (Core 3.2.2.3.2.1, PDF 36)"))
+      (j, t) : _ -> Left (HaltAt j (named t <> " where the Named value's End Name is expected (Core 3.2.2.3.2.1, PDF 36)"))
       []         -> Left HaltEnd
   (_, StartList) : s -> first L <$> listValues s
-  (j, t) : _ -> Left (HaltAt j (tshow t <> " where a value is expected (Core 3.2.2.3.2, PDF 36)"))
+  (j, t) : _ -> Left (HaltAt j (named t <> " where a value is expected (Core 3.2.2.3.2, PDF 36)"))
   []         -> Left HaltEnd
   where
     nameAt = \case
       (_, t) : s | Just d <- maybeDatumToken t -> Right (Name (Datum d), s)
-      (j, t) : _ -> Left (HaltAt j (tshow t <> " where a Named value's name, a byte string or an integer, is expected "
+      (j, t) : _ -> Left (HaltAt j (named t <> " where a Named value's name, a byte string or an integer, is expected "
                                     <> "(Core 3.2.2.3.2.1, PDF 36)"))
       []         -> Left HaltEnd
 
@@ -431,5 +441,5 @@ statusValues = loop []
         st : _ | length acc >= 3 -> Right (st, s)
         _ -> Left (HaltAt j ("a status list of " <> tshow (length acc) <> " values, fewer than three (Core 3.2.4.2 item 5, PDF 49)"))
       (_, Unsigned n) : s -> loop (n : acc) s
-      (j, t) : _ -> Left (HaltAt j (tshow t <> " in the status list, a list of uintegers (Core 3.2.2.4.2 item 5, PDF 39)"))
+      (j, t) : _ -> Left (HaltAt j (named t <> " in the status list, a list of uintegers (Core 3.2.2.4.2 item 5, PDF 39)"))
       [] -> Left HaltEnd

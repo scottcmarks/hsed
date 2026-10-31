@@ -28,8 +28,10 @@ An entry carries the bytes as the wire had them, the secrets a run read
 among them (UCT-03 step 1b's MSID, Test Cases PDF 32); the reports print
 them masked ('maskSecrets': each secret's bytes as 0x2A, the asterisk, so
 that the token stream keeps its shape and still decodes, the report giving
-the secret's length and digest beside it, design 9.3 item 5) unless the run
-asked for them in clear (@--show-msid@, "Hsed.Jig.Options").
+the secret's length and digest beside it, design 9.3 item 5; a note's text
+and a blocked command's reason masked as text, 'maskText', as the reports
+mask every verdict, observation and problem) unless the run asked for them
+in clear (@--show-msid@, "Hsed.Jig.Options").
 -}
 module Hsed.Jig.Transcript
   ( TEntry (..)
@@ -41,12 +43,17 @@ module Hsed.Jig.Transcript
   , ifSendsIssued
     -- * Secrets
   , maskSecrets
+  , maskText
   , maskByte
   ) where
 
-import qualified Data.Aeson         as A
-import qualified RIO.ByteString     as B
+import qualified Data.Aeson             as A
+import qualified Data.ByteString.Base16 as B16
+import qualified Data.Text              as DT (replace)
+import qualified RIO.ByteString         as B
+import qualified RIO.List               as L
 import           RIO
+import qualified RIO.Text               as T
 
 import           Hsed.Wire          (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), ifStatusName)
 import           Hsed.Wire.Internal (Transport (..))
@@ -132,20 +139,43 @@ maskByte = 0x2A
 --   and its answer's replaced by as many 'maskByte's, so that a byte string
 --   atom carrying the secret keeps its length and the stream around it its
 --   shape (the reports decode the masked bytes as they decode any); an empty
---   secret masks nothing. A note is never masked: no verb writes a secret
---   into one.
+--   secret masks nothing. A note's text and a blocked command's reason are
+--   masked as text ('maskText'): no verb writes a secret into one, but a
+--   transport's or the Guard's words might quote what it saw.
 --
 -- >>> let q = Request IfSend 1 0x1004 8 "ab-MSID1"
 -- >>> maskSecrets ["MSID1"] (Issued 1 "tper" q (Response Good "MSID1MSID1"))
 -- Issued 1 "tper" (Request {dir = IfSend, proto = 1, comId = 4100, lenBytes = 8, payload = "ab-*****"}) (Response {status = Good, rpayload = "**********"})
+-- >>> maskSecrets ["MSID1"] (Note 2 "a note quoting MSID1")
+-- Note 2 "a note quoting *****"
 maskSecrets :: [ByteString] -> TEntry -> TEntry
 maskSecrets secrets = \case
   Issued n e q r  -> Issued n e (request q) r { rpayload = bytes (rpayload r) }
-  Blocked n e q w -> Blocked n e (request q) w
-  note            -> note
+  Blocked n e q w -> Blocked n e (request q) (maskText secrets w)
+  Note n t        -> Note n (maskText secrets t)
   where
     request q = q { payload = bytes (payload q) }
     bytes     = foldr ((.) . maskAll) id (filter (not . B.null) secrets)
+
+-- | Text with every spelling of each secret masked: its bytes as text
+--   (UTF-8, read leniently), as hex (two lower-case digits a byte, as the
+--   reports print bytes) and as Haskell shows them (a decode's @Bytes
+--   "..."@, a fault's words), each occurrence replaced by as many asterisks
+--   as the secret has bytes, so that a verdict's reason, an observation, a
+--   note or a problem that quotes a secret never prints it (design 9.3 item
+--   5); an empty secret masks nothing. A short secret masks its every
+--   occurrence, a one-byte PIN's letter wherever the prose has it: the price
+--   of never leaking one.
+--
+-- >>> maskText ["MSID1"] "read MSID1, its hex 4d53494431, shown as Bytes \"MSID1\""
+-- "read *****, its hex *****, shown as Bytes \"*****\""
+maskText :: [ByteString] -> Text -> Text
+maskText secrets t0 = L.foldl' maskOne t0 (filter (not . B.null) secrets)
+  where
+    -- Data.Text's replace, which RIO.Text leaves out as partial: the needle is never empty here
+    maskOne t secret = L.foldl' (\acc form -> DT.replace form (T.replicate (B.length secret) "*") acc) t (spellings secret)
+    spellings secret = L.nub (filter (not . T.null)
+      [decodeUtf8Lenient secret, decodeUtf8Lenient (B16.encode secret), T.dropEnd 1 (T.drop 1 (tshow secret))])
 
 -- | Every occurrence of a (non-empty) secret in bytes replaced by as many
 --   'maskByte's, left to right, occurrences not overlapping.

@@ -23,8 +23,10 @@ observing (0, 0, 0); and, with the simulator's sessions (groups G1 and G2,
 merged at the integration, which retired the waits), the ten cases pass
 in the four configurations, UCT-03 with its partial-verdict text and its
 extensions (NOT_AUTHORIZED, SP_BUSY, the MSID the simulator's), ETC-04
-observing (0, 0, 0), ETC-21/adminsp seeing NOT_AUTHORIZED, the MSID masked
-in every report unless @--show-msid@, UCT-03 skipped with @--sim-sid-pin@,
+observing (0, 0, 0), ETC-21/adminsp seeing NOT_AUTHORIZED (and, at TryLimit
+3, counting Tries; at its limit, skipped, its extension with it), the MSID
+masked in every report unless @--show-msid@, UCT-03 skipped with
+@--sim-sid-pin@, its extensions not run, and UCT-01 failing 4c.ii there,
 and a session left open before a case established closed by STACK_RESET,
 noted. Then a drive-like response
 synthesized from disk6's sedutil query, replayed as a drive: UCT-01 passes,
@@ -58,9 +60,10 @@ import           Hsed.Core.Feature      (Allowance (..), Feature (..))
 import           Hsed.Core.Method       (invocation)
 import           Hsed.Core.StreamItem   (StreamItem (..))
 import           Hsed.Core.Token        (IsToken (..))
+import           Hsed.Core.UID          (UID)
 import           Hsed.Core.Value        (IsValue (..))
 import qualified Hsed.Gen.Core.Methods  as Methods
-import           Hsed.Gen.Core.UIDs     (uSMUID, uSP_Admin)
+import           Hsed.Gen.Core.UIDs     (uAuthority_SID, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
 import           Hsed.Jig.Catalogue     (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Files         (runningAsRoot)
@@ -187,20 +190,34 @@ hexOf = T.pack . concatMap (\w -> (if w < 16 then "0" else "") <> showHex w "") 
 -- | StartSession to the Admin SP as Anybody, HSN 1, read-write (what the
 --   jig's UCT-03 1a sends), as tokens.
 startSessionCall :: ByteString
-startSessionCall = generate $ invocation uSMUID Methods.StartSession
+startSessionCall = startAs Nothing Nothing
+
+-- | StartSession to the Admin SP as SID with a wrong HostChallenge (what
+--   ETC-21/adminsp sends), as tokens.
+wrongSidCall :: ByteString
+wrongSidCall = startAs (Just uAuthority_SID) (Just "wrong")
+
+startAs :: Maybe UID -> Maybe ByteString -> ByteString
+startAs authority challenge = generate $ invocation uSMUID Methods.StartSession
   { Methods.startSessionHostSessionID         = value (1 :: Natural)
   , Methods.startSessionSPID                  = value (token uSP_Admin)
   , Methods.startSessionWrite                 = value (1 :: Natural)
-  , Methods.startSessionHostChallenge         = Nothing
+  , Methods.startSessionHostChallenge         = value <$> challenge
   , Methods.startSessionHostExchangeAuthority = Nothing
   , Methods.startSessionHostExchangeCert      = Nothing
-  , Methods.startSessionHostSigningAuthority  = Nothing
+  , Methods.startSessionHostSigningAuthority  = value . token <$> authority
   , Methods.startSessionHostSigningCert       = Nothing
   , Methods.startSessionSessionTimeout        = Nothing
   , Methods.startSessionTransTimeout          = Nothing
   , Methods.startSessionInitialCredit         = Nothing
   , Methods.startSessionSignedHash            = Nothing
   }
+
+-- | The one JSON report a run wrote under a directory's @report@.
+reportIn :: FilePath -> IO A.Value
+reportIn dir = listDirectory (dir </> "report") >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
+  [f] -> readFileBinary (dir </> "report" </> f) >>= either throwString pure . A.eitherDecodeStrict'
+  _   -> throwString "not one report"
 
 spec :: Spec
 spec = do
@@ -311,11 +328,45 @@ spec = do
         (_, shownJson, _, _) <- jigTexts (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c", roShowMsid = True }
         shownJson `shouldSatisfy` T.isInfixOf (hexOf msid)
         shownJson `shouldSatisfy` T.isInfixOf "\"shown\":true"
-    it "with --sim-sid-pin, UCT-03:1a-1c is skipped: step 2 needs the vendor's SID PIN" $ do
-        (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c", roSim = defaultSimParams { spSidPin = Just "SID!" } }
-        verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "skipped")]
-        [ r | c <- elements (at "cases" json), Just (A.String r) <- [at "reason" c] ] `shouldSatisfy` all ("step 2 needs the vendor's SID PIN" `T.isInfixOf`)
+    it "with --sim-sid-pin, UCT-03:1a-1c is skipped (step 2 needs the vendor's SID PIN) and its extensions are not run, each skipped with its reason, no session opened; UCT-01 fails 4c.ii, a set SID PIN leaving the Test Cases' factory-state baseline (TC 4.2, PDF 28); ETC-21/adminsp's SID PIN is the one secret read" $ do
+        (code, json, md, _) <- jigTexts (onSim UnitBytes 0) { roTests = keys "UCT-01,UCT-03:1a-1c,ETC-21/adminsp", roSim = defaultSimParams { spSidPin = Just "SID!" } }
+        let decoded = either error id (A.eitherDecodeStrict' (encodeUtf8 json))
+        verdicts decoded `shouldBe` [(str "UCT-01", str "fail"), (str "UCT-03:1a-1c", str "skipped"), (str "ETC-21/adminsp", str "pass")]
+        [ r | c <- elements (at "cases" decoded), at "key" c == str "UCT-01", A.String r <- elements (at "reasons" c) ] `shouldBe` ["4c.ii: SID Value State = 1, not 0"]
+        [ r | c <- elements (at "cases" decoded), Just (A.String r) <- [at "reason" c] ] `shouldSatisfy` all ("step 2 needs the vendor's SID PIN" `T.isInfixOf`)
+        let uct03Extensions = [ (at "verdict" x, at "reason" x) | c <- elements (at "cases" decoded), at "key" c == str "UCT-03:1a-1c", x <- elements (at "extensions" c) ]
+        length uct03Extensions `shouldBe` 3
+        uct03Extensions `shouldSatisfy` all (\(v, r) -> v == str "skipped" && case r of
+                                                                           Just (A.String t) -> "not run, the case skipped: " `T.isPrefixOf` t && "step 2 needs the vendor's SID PIN" `T.isInfixOf` t
+                                                                           _                 -> False)
+        answeredCalls decoded `shouldSatisfy` all (\(m, s) -> m /= str "SyncSession" || s /= Just (A.Number 0))
+        md `shouldSatisfy` T.isInfixOf "- secrets read: 1,"
+        md `shouldSatisfy` T.isInfixOf "Initial C_PIN_SID PIN Indicator 255"
+        md `shouldSatisfy` T.isInfixOf "SID Value State 1"
         code `shouldBe` ExitFailure 1
+    it "ETC-21/adminsp at TryLimit 3: the case passes, Tries 1 after it, and its Tries extension sees 1 before and 2 after, observed under the extension's name" $ do
+        (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "ETC-21/adminsp", roSim = defaultSimParams { spSidTryLimit = 3 } }
+        verdicts json `shouldBe` [(str "ETC-21/adminsp", str "pass")]
+        code `shouldBe` ExitSuccess
+        extensionVerdicts json `shouldBe` [str "pass"]
+        observations json "ETC-21/adminsp" `shouldSatisfy` elem ("prerequisite", "C_PIN_SID TryLimit 3, Tries 0 (Test Cases ETC-21 prerequisite 1, PDF 92)")
+        observations json "ETC-21/adminsp" `shouldSatisfy` any (\(n, v) -> "the Tries rule" `T.isPrefixOf` n && ": Tries" `T.isSuffixOf` n && v == "1 before, 2 after, TryLimit 3")
+    it "ETC-21/adminsp with Tries at its TryLimit is skipped, its own prerequisite unmet, the common ones established, its extension skipped with the case's reason" $
+        withSystemTempDirectory "hsed-jig" $ \dir -> do
+          (sim, control) <- newInProc defaultSimParams { spSidTryLimit = 1 } (InProcOpts UnitBytes 0)
+          channel <- newChannel
+          let base = spBaseComId defaultSimParams
+              bytes = either (error . show) id (controlComPacket base wrongSidCall)
+          failed <- exchangeComPacket defaultExchangeOpts (\q -> Right <$> ifSend sim (proto q) (comId q) (lenBytes q) (payload q)) channel sim base bytes
+          failed `shouldSatisfy` isRight
+          code <- silently (runOpened defaultRunOptions { roTests = keys "ETC-21/adminsp", roReportDir = dir </> "report" } (SimTarget sim control))
+          code `shouldBe` ExitFailure 1
+          json <- reportIn dir
+          verdicts json `shouldBe` [(str "ETC-21/adminsp", str "skipped")]
+          [ r | c <- elements (at "cases" json), Just (A.String r) <- [at "reason" c] ] `shouldBe` ["prerequisite unmet: C_PIN_SID's Tries 1 is not below its TryLimit 1"]
+          [ (at "verdict" x, at "reason" x) | c <- elements (at "cases" json), x <- elements (at "extensions" c) ]
+            `shouldBe` [(str "skipped", str "not run, the case skipped: prerequisite unmet: C_PIN_SID's Tries 1 is not below its TryLimit 1")]
+          map (at "prerequisites") (elements (at "cases" json)) `shouldBe` [str "established"]
 
   describe "a case that stops with a session open" $
     it "leaves the next case runnable: its NoSessions is established by STACK_RESET on the ComID, noted in the transcript" $
@@ -332,9 +383,7 @@ spec = do
           code `shouldBe` ExitSuccess
           released <- scPeek control
           Map.null (tsSessions released) `shouldBe` True
-          json <- listDirectory (dir </> "report") >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
-            [f] -> readFileBinary (dir </> "report" </> f) >>= either throwString pure . A.eitherDecodeStrict'
-            _   -> throwString "not one report"
+          json <- reportIn dir
           notes json `shouldSatisfy` any (T.isPrefixOf "NoSessions: STACK_RESET on 0x1004")
           verdicts json `shouldBe` [(str "UCT-02", str "pass")]
 

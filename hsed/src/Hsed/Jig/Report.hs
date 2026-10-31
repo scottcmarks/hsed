@@ -40,10 +40,19 @@ is printed with the item and page of its section's list ("Hsed.Jig.Prereq").
 The secrets a run read ('rrSecrets': UCT-03's MSID, a PIN read from the
 simulator's state) are masked in every report (design 9.3 item 5): each
 occurrence in an entry's bytes becomes 0x2A bytes before the entry is
-printed or decoded ("Hsed.Jig.Transcript".'maskSecrets'), and each secret is
-given by its length and the first 12 hex digits of its SHA-256
-("Hsed.Jig.Sha256") in the JSON, the Markdown and the JUnit properties, never
-by its bytes; @--show-msid@ leaves the bytes in clear and says so.
+printed or decoded ("Hsed.Jig.Transcript".'maskSecrets'), each occurrence
+in a verdict's reasons, an extension's, an observation, a waiver's reason,
+a note or a problem is masked as text, hex or as Haskell shows it
+('maskText'; 'printable' is the result as the reports and the summary
+print it), and each secret is given by its length and the first 12 hex
+digits of its SHA-256 ("Hsed.Jig.Sha256") in the JSON, the Markdown and the
+JUnit properties, never by its bytes; @--show-msid@ leaves everything in
+clear and says so.
+
+A subpacket's tokens are decoded as the host reads a TPer's stream
+("Hsed.Core.Stream": the atoms under the host's policy, then its returned
+items, which read a host's invocations too): one invocation or one method
+response as such, anything else as its items in order, with any fault.
 
 @verify-transcript@ and @diff@ read a report as JSON values (there is no
 FromJSON for the wire types): the transcript's entries, and the Level 0
@@ -53,6 +62,7 @@ from the hex and length printed.
 module Hsed.Jig.Report
   ( CaseResult (..)
   , RunResult (..)
+  , printable
   , writeReports
   , verifyTranscript
   , diffReports
@@ -78,8 +88,7 @@ import qualified RIO.Text               as T
 import           Hsed.Core.Call         (MethodCall (..), MethodHeader (..), MethodResponse (..))
 import           Hsed.Core.Feature      (Allowance (..))
 import           Hsed.Core.Layout       (Content (..))
-import           Hsed.Core.StreamItem   (StreamItem (..))
-import           Hsed.Core.Token        (Token)
+import           Hsed.Core.Stream       (Atom (..), Fault (..), Returned (..), atoms, hostPolicy, returnedItems)
 import           Hsed.Core.UID          (UID)
 import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import           Hsed.Gen.Core.UIDs     (methodIDUIDs, sessionManagerMethodUIDs)
@@ -90,7 +99,7 @@ import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairRep
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
 import           Hsed.Jig.Script        (Verdict (..), describeStatus, t45Of, t45RowOf, verdictText)
 import           Hsed.Jig.Sha256        (sha256Hex)
-import           Hsed.Jig.Transcript    (TEntry (..), maskSecrets)
+import           Hsed.Jig.Transcript    (TEntry (..), maskSecrets, maskText)
 import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, describeProblem,
                                          splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
@@ -106,8 +115,9 @@ import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..),
 
 -- | What one case came to: its verdict, what it waived, its extensions' and
 --   what it observed (a table a case reads, UCT-02's properties: name and
---   value, reported apart from the verdict); on a pair, each end's verdict
---   beside the joined one.
+--   value, reported apart from the verdict; an extension's under the
+--   extension's name); on a pair, each end's verdict beside the joined one;
+--   and whether its prerequisites were established or checked before it ran.
 data CaseResult = CaseResult
   { crKey          :: !CaseKey
   , crVerdict      :: !Verdict
@@ -116,6 +126,9 @@ data CaseResult = CaseResult
   , crObservations :: ![(Text, Text)]
   , crEnds         :: ![(Text, Verdict)]  -- ^ each end's verdict, by the end's name, its transport's role (@tper@, @drive@,
                                           --   @drive-replay@, as the transcript's entries name it); none for a run of one end
+  , crEstablished  :: !Bool               -- ^ whether the prerequisites not waived were established or checked on the
+                                          --   end (false where the target lacked what the case needs or one was unmet,
+                                          --   so that none after it was reached)
   }
   deriving (Eq, Show)
 
@@ -149,8 +162,9 @@ data RunResult = RunResult
 --   their JSON's name (one of that name alone, left by a run that was
 --   stopped, is replaced).
 writeReports :: FilePath -> RunResult -> IO [FilePath]
-writeReports outDir rr = claim (1 :: Int)
+writeReports outDir rr0 = claim (1 :: Int)
   where
+    rr = printable rr0
     claim n = do
       let base = suffixed n
       claimed <- createOwned (base <.> "json") (toStrictBytes (A.encode rr))
@@ -192,12 +206,33 @@ exitNumber = \case
 shown :: RunResult -> Bool
 shown = roShowMsid . rrOptions
 
--- | A transcript entry as the reports print it: its secrets masked unless
---   the run shows them.
-masked :: RunResult -> TEntry -> TEntry
-masked rr
-  | shown rr  = id
-  | otherwise = maskSecrets (rrSecrets rr)
+-- | A run's result as the reports and the summary print it: as it is where
+--   the run shows its secrets (@--show-msid@); else each transcript entry
+--   with its secrets masked in its bytes ("Hsed.Jig.Transcript".'maskSecrets')
+--   and every text a case or the run came to, a verdict's reasons, an
+--   extension's, an observation, a waiver's reason, a problem, with them
+--   masked as text, hex or as shown ('maskText'), so that a reason quoting
+--   an answer that did not read never prints one (design 9.3 item 5).
+printable :: RunResult -> RunResult
+printable rr
+  | shown rr  = rr
+  | otherwise = rr { rrCases = map maskCase (rrCases rr), rrTranscript = map (maskSecrets secrets) (rrTranscript rr)
+                   , rrProblems = map text (rrProblems rr) }
+  where
+    secrets = rrSecrets rr
+    text    = maskText secrets
+    maskCase cr = cr
+      { crVerdict      = verdict (crVerdict cr)
+      , crWaivers      = map (\w -> w { wReason = text (wReason w) }) (crWaivers cr)
+      , crExtensions   = map (bimap text verdict) (crExtensions cr)
+      , crObservations = map (bimap text text) (crObservations cr)
+      , crEnds         = map (second verdict) (crEnds cr)
+      }
+    verdict = \case
+      Pass           -> Pass
+      Fail rs        -> Fail (map text rs)
+      Skipped r      -> Skipped (text r)
+      Unobservable r -> Unobservable (text r)
 
 -- | A secret as the reports give it (design 9.3 item 5): its length and
 --   the first 12 hex digits of its SHA-256, never its bytes.
@@ -228,12 +263,14 @@ instance A.ToJSON CaseResult where
         , "extensions" A..= [ A.Object (KM.fromList ["name" A..= n] <> objectOf v) | (n, v) <- crExtensions cr ]
         , "observations" A..= [ A.object ["name" A..= n, "value" A..= v] | (n, v) <- crObservations cr ]
         , "ends"       A..= [ A.Object (KM.fromList ["end" A..= n] <> objectOf v) | (n, v) <- crEnds cr ]
+        , "prerequisites" A..= (if crEstablished cr then "established" else "not reached" :: Text)
         ]
       verdictFields = objectOf (crVerdict cr)
       objectOf v = case A.toJSON v of
         A.Object o -> o
         _          -> mempty
 
+-- | A run's result as given: 'writeReports' prints 'printable'.
 instance A.ToJSON RunResult where
   toJSON rr = A.object
     [ "hsed"           A..= rrVersion rr
@@ -241,7 +278,7 @@ instance A.ToJSON RunResult where
     , "options"        A..= optionsJSON (rrOptions rr)
     , "targets"        A..= rrTargets rr
     , "cases"          A..= rrCases rr
-    , "transcript"     A..= map (entryJSON . masked rr) (rrTranscript rr)
+    , "transcript"     A..= map entryJSON (rrTranscript rr)
     , "level0"         A..= [ A.object ["end" A..= end, "response" A..= l0, "decoded" A..= map decodedJSON (l0Descriptors l0)]
                             | (end, l0) <- rrLevel0 rr ]
     , "pair"           A..= rrPair rr
@@ -331,33 +368,38 @@ comPacketJSON recv bytes = case decodeComPacket bytes of
     subJSON sp = A.object
       (("kind" A..= dataSubPacketKind (dataSubPacketHeader sp)) : ("length" A..= B.length (dataSubPacketPayload sp)) : tokensJSON (dataSubPacketPayload sp))
 
--- | A subpacket's tokens: a method invocation (a Session Manager response
---   is one), a method response, or the tokens one by one.
+-- | A subpacket's tokens, read as the host reads a TPer's stream
+--   ("Hsed.Core.Stream".'returnedItems', which reads a host's invocations
+--   too, a Session Manager response being one): one invocation as
+--   @method_call@, one method response as @method_response@, else the items
+--   in order as @items@ (each a call, a response, @end_of_session@ or a
+--   transaction token with its status) with any fault at its token
+--   (@fault@), Empty atoms alone counted (@empty_atoms@); bytes whose atoms
+--   do not read have the fault and the bytes from it (@undecoded@).
 tokensJSON :: ByteString -> [(A.Key, A.Value)]
-tokensJSON bytes = case parseByteString bytes of
-  Right call | generate call == bytes -> ["method_call" A..= callJSON call]
-  _ -> case parseByteString bytes :: Either String MethodResponse of
-    Right resp | generate resp == bytes -> ["method_response" A..= tshow resp]
-    _ -> let (ts, rest) = tokensOf bytes
-         in ("tokens" A..= map tshow ts) : [ "undecoded" A..= decodeUtf8Lenient (B16.encode rest) | not (B.null rest) ]
+tokensJSON bytes = case atoms hostPolicy bytes of
+  Left (off, why) -> [ "items" A..= ([] :: [A.Value]), "fault" A..= ("at byte " <> tshow off <> ": " <> why)
+                     , "undecoded" A..= decodeUtf8Lenient (B16.encode (B.drop off bytes)) ]
+  Right as -> case returnedItems (map atomToken as) of
+    ([ReturnedCall mc], Nothing)    -> ["method_call" A..= callJSON mc]
+    ([ReturnedResults mr], Nothing) -> ["method_response" A..= tshow mr]
+    (items', fault) -> ("items" A..= map itemJSON items')
+                       : [ "fault" A..= ("at token " <> tshow (faultAt f) <> ": " <> faultWhy f) | Just f <- [fault] ]
+                       <> [ "empty_atoms" A..= B.length bytes | not (B.null bytes), B.all (== 0xFF) bytes ]
   where
     callJSON (MethodCall (MethodHeader invoker method) ps st) = A.object
       [ "invoking_id" A..= tshow invoker, "method_id" A..= tshow method, "method" A..= methodName method
       , "status" A..= st, "parameters" A..= tshow ps ]
+    itemJSON = \case
+      ReturnedCall mc         -> A.object ["method_call" A..= callJSON mc]
+      ReturnedResults mr      -> A.object ["method_response" A..= tshow mr]
+      ReturnedEndOfSession    -> A.object ["end_of_session" A..= True]
+      ReturnedTransaction t n -> A.object ["transaction" A..= tshow t, "status" A..= n]
 
 -- | A method's name, from the generated UID tables (Core Tables 241 and
 --   242).
 methodName :: UID -> Maybe Text
 methodName u = T.pack <$> L.lookup u (sessionManagerMethodUIDs <> methodIDUIDs)
-
--- | Tokens from the start of bytes, as far as each reads in its canonical
---   form; the rest.
-tokensOf :: ByteString -> ([Token], ByteString)
-tokensOf bytes
-  | B.null bytes = ([], bytes)
-  | otherwise = case parseByteString bytes of
-      Right t | let g = generate (t :: Token), not (B.null g), g `B.isPrefixOf` bytes -> first (t :) (tokensOf (B.drop (B.length g) bytes))
-      _ -> ([], bytes)
 
 t45Name :: T45Row -> Text
 t45Name = \case
@@ -401,7 +443,7 @@ markdown rr = T.unlines $
   <> maybe [] pairLines (rrPair rr)
   <> concat [ ["## Problems", ""] <> map ("- " <>) (rrProblems rr) <> [""] | not (null (rrProblems rr)) ]
   <> secretLines rr
-  <> transcriptLines (map (masked rr) (rrTranscript rr))
+  <> transcriptLines (rrTranscript rr)
   where o = rrOptions rr
 
 -- | The run's secrets, each by its length and digest (design 9.3 item 5).
@@ -439,9 +481,7 @@ caseLines cr =
     section = sectionOf (ckTest (crKey cr))
     prereqLine p = case L.find ((== p) . wPrereq) (crWaivers cr) of
       Just w  -> waiverLine (crKey cr) w
-      Nothing -> tshow p <> " (" <> itemRef (crKey cr) p <> "): " <> case crVerdict cr of
-        Skipped _ -> "not reached"
-        _         -> "established or checked by the run"
+      Nothing -> tshow p <> " (" <> itemRef (crKey cr) p <> "): " <> if crEstablished cr then "established or checked by the run" else "not reached"
 
 -- | A waiver as the reports print it: the prerequisite, its item and page,
 --   the reason.
@@ -536,22 +576,29 @@ answerText q r = describeStatus (status r) <> ", " <> tshow (B.length (rpayload 
                                "" -> ""
                                t  -> "; " <> t
 
--- | A ComPacket's methods, a method's results with its status (a regular
---   session's answer, UCT-03's @[[3 = the MSID]]@ among them, its secrets
---   masked as the JSON's decode has them), or its tokens' count.
+-- | A ComPacket's subpackets, each its items as the host reads them
+--   ("Hsed.Core.Stream"): a method by name with its status, a method's
+--   results with its status (a regular session's answer, UCT-03's @[[3 =
+--   the MSID]]@ among them, its secrets masked as the JSON's decode has
+--   them), the TPer's End of Session, a transaction token; and any fault.
 comPacketText :: ByteString -> Text
 comPacketText bytes = case decodeComPacket bytes of
   Left e -> "no ComPacket: " <> tshow e
   Right (DecodedFrame (ComPacketFrame _ ps) _ _) -> T.intercalate "; " (map subText (concatMap pfSubPackets ps))
   where
-    subText sp = let b = dataSubPacketPayload sp in case parseByteString b of
-      Right call@(MethodCall (MethodHeader _ m) _ st)
-        | generate call == b -> fromMaybe (tshow m) (methodName m) <> ", status " <> tshow st
-      _ -> case parseByteString b :: Either String MethodResponse of
-        Right resp | generate resp == b -> "results " <> tshow (_results resp) <> ", status " <> tshow (_resultStatus resp)
-        _ -> let (ts, rest) = tokensOf b
-             in (if length ts <= 8 then T.unwords (map tshow ts) else tshow (length ts) <> " tokens")
-                <> (if B.null rest then "" else ", then bytes that are no token")
+    subText sp = let b = dataSubPacketPayload sp in case atoms hostPolicy b of
+      Left (off, why) -> "tokens that do not read at byte " <> tshow off <> ": " <> why
+      Right as -> case returnedItems (map atomToken as) of
+        ([], Nothing)
+          | B.null b          -> "an empty subpacket"
+          | B.all (== 0xFF) b -> tshow (B.length b) <> " Empty atoms"
+          | otherwise         -> "no invocation or response in " <> tshow (B.length b) <> " bytes"
+        (items', fault) -> T.intercalate "; " (map itemText items' <> [ "a fault at token " <> tshow (faultAt f) <> ": " <> faultWhy f | Just f <- [fault] ])
+    itemText = \case
+      ReturnedCall (MethodCall (MethodHeader _ m) _ st) -> fromMaybe (tshow m) (methodName m) <> ", status " <> tshow st
+      ReturnedResults resp    -> "results " <> tshow (_results resp) <> ", status " <> tshow (_resultStatus resp)
+      ReturnedEndOfSession    -> "EndOfSession"
+      ReturnedTransaction t n -> tshow t <> " " <> tshow n
 
 
 -- * JUnit XML
@@ -638,7 +685,7 @@ attr = T.concatMap $ \case
 --   a drive, the secrets read (by length and digest), the reports written,
 --   the exit code.
 summary :: RunResult -> [FilePath] -> [Text]
-summary rr paths =
+summary rr0 paths =
   [ "hsed-jig " <> renderTarget (roTarget (rrOptions rr)) <> ": " <> T.intercalate "; " (map targetText (rrTargets rr)) ]
   <> concatMap caseText (rrCases rr)
   <> maybe [] (\r -> [ "pair: extra " <> codesText (prExtra r) <> "; missing " <> codesText (prMissing r) <> "; "
@@ -656,6 +703,7 @@ summary rr paths =
       <> map (("  " <>) . waiverLine (crKey cr)) (crWaivers cr)
       <> [ "  extension, " <> n <> ": " <> verdictText v | (n, v) <- crExtensions cr ]
       <> [ "  observed, " <> n <> ": " <> v | (n, v) <- crObservations cr ]
+    rr = printable rr0
 
 
 -- * Reading reports again

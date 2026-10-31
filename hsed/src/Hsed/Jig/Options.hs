@@ -32,6 +32,7 @@ module Hsed.Jig.Options
 
 import qualified Data.ByteString.Base16 as B16
 import qualified RIO.ByteString         as B
+import qualified RIO.List               as L
 import           RIO
 import qualified RIO.Text               as T
 
@@ -112,23 +113,31 @@ defaultRunOptions = RunOptions
   }
 
 -- | @--sim-sid-pin HEX@: the simulator's C_PIN_SID PIN as hex digits, two a
---   byte, 1 to 32 bytes (the PIN column's most, Core Table 122, password,
---   PDF 118), or why not. The bytes go to "Hsed.Sim.Params".@spSidPin@, so
---   that the simulated TPer's Initial C_PIN_SID PIN Indicator is other than
---   the MSID's and UCT-03's step 1 does not apply (Test Cases PDF 33).
+--   byte, an optional @0x@ before them, 1 to 32 bytes (the PIN column's
+--   most, Core Table 122, password, PDF 118), or why not. The bytes go to
+--   "Hsed.Sim.Params".@spSidPin@, so that the simulated TPer's Initial
+--   C_PIN_SID PIN Indicator is other than the MSID's and UCT-03's step 1
+--   does not apply (Test Cases PDF 33); a set SID PIN also fails UCT-01's
+--   step 4c.ii, SID Value State 1 (PDF 30), the Test Cases taking the
+--   drive at its original factory state (4.2, PDF 28).
 --
 -- >>> parseSidPin "53494421"
 -- Right "SID!"
+-- >>> parseSidPin "0x53494421"
+-- Right "SID!"
 -- >>> parseSidPin "5349442"
--- Left "--sim-sid-pin 5349442: an even count of hex digits, two a byte"
+-- Left "--sim-sid-pin 5349442: hex digits, two a byte (an even count)"
+-- >>> parseSidPin "zz"
+-- Left "--sim-sid-pin zz: hex digits, two a byte (an even count)"
 parseSidPin :: String -> Either String ByteString
-parseSidPin s = case B16.decode (fromString s) of
+parseSidPin s = case B16.decode (fromString digits) of
   Right bytes
     | B.null bytes          -> Left (prefix <> "no bytes")
     | B.length bytes > most -> Left (prefix <> "more than " <> show most <> " bytes, the PIN column's most (Core Table 122, PDF 118)")
     | otherwise             -> Right bytes
-  Left _ -> Left (prefix <> "an even count of hex digits, two a byte")
+  Left _ -> Left (prefix <> "hex digits, two a byte (an even count)")
   where
+    digits = fromMaybe s (L.stripPrefix "0x" s <|> L.stripPrefix "0X" s)
     prefix = "--sim-sid-pin " <> s <> ": "
     -- the size limitation of the password type (Core 5.1.3.63, Table 122, PDF 118: max_bytes, 32)
     most = 32 :: Int

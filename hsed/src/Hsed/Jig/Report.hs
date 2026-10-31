@@ -90,15 +90,18 @@ import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..),
                                          comPacketProtocol, hex, level0ComId)
 
 
--- | What one case came to: its verdict, what it waived, and its extensions';
---   on a pair, each end's verdict beside the joined one.
+-- | What one case came to: its verdict, what it waived, its extensions' and
+--   what it observed (a table a case reads, UCT-02's properties: name and
+--   value, reported apart from the verdict); on a pair, each end's verdict
+--   beside the joined one.
 data CaseResult = CaseResult
-  { crKey        :: !CaseKey
-  , crVerdict    :: !Verdict
-  , crWaivers    :: ![Waiver]
-  , crExtensions :: ![(Text, Verdict)]
-  , crEnds       :: ![(Text, Verdict)]  -- ^ each end's verdict, by the end's name, its transport's role (@tper@, @drive@,
-                                        --   @drive-replay@, as the transcript's entries name it); none for a run of one end
+  { crKey          :: !CaseKey
+  , crVerdict      :: !Verdict
+  , crWaivers      :: ![Waiver]
+  , crExtensions   :: ![(Text, Verdict)]
+  , crObservations :: ![(Text, Text)]
+  , crEnds         :: ![(Text, Verdict)]  -- ^ each end's verdict, by the end's name, its transport's role (@tper@, @drive@,
+                                          --   @drive-replay@, as the transcript's entries name it); none for a run of one end
   }
   deriving (Eq, Show)
 
@@ -179,6 +182,7 @@ instance A.ToJSON CaseResult where
         , "printed"    A..= fmap cePrinted (entryOf (crKey cr))
         , "waivers"    A..= map (waiverJSON (crKey cr)) (crWaivers cr)
         , "extensions" A..= [ A.Object (KM.fromList ["name" A..= n] <> objectOf v) | (n, v) <- crExtensions cr ]
+        , "observations" A..= [ A.object ["name" A..= n, "value" A..= v] | (n, v) <- crObservations cr ]
         , "ends"       A..= [ A.Object (KM.fromList ["end" A..= n] <> objectOf v) | (n, v) <- crEnds cr ]
         ]
       verdictFields = objectOf (crVerdict cr)
@@ -358,7 +362,7 @@ hasDrive :: RunResult -> Bool
 hasDrive rr = any ((/= "tper") . dRole) (rrTargets rr)
 
 -- | A case: its verdict and why, each item of its section's list, its
---   extensions.
+--   extensions, its observations.
 caseLines :: CaseResult -> [Text]
 caseLines cr =
   [ "### " <> caseTitle (crKey cr) <> ": " <> verdictWord (crVerdict cr), "" ]
@@ -369,6 +373,7 @@ caseLines cr =
   <> [ "- " <> prereqLine p | (p, _) <- common section ]
   <> concat [ ["", "Extensions, apart from the TCG verdict:", ""] <> [ "- " <> n <> ": " <> verdictText v | (n, v) <- crExtensions cr ]
             | not (null (crExtensions cr)) ]
+  <> concat [ ["", "Observations:", ""] <> [ "- " <> n <> ": " <> v | (n, v) <- crObservations cr ] | not (null (crObservations cr)) ]
   <> [""]
   where
     section = sectionOf (ckTest (crKey cr))

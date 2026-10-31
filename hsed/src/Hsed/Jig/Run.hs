@@ -68,8 +68,14 @@ import           Hsed.Jig.Capture       (captureLevel0)
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Cases.ETC02   (etc02)
 import           Hsed.Jig.Cases.ETC03   (etc03)
+import           Hsed.Jig.Cases.ETC04   (etc04)
+import           Hsed.Jig.Cases.ETC08   (etc08)
+import           Hsed.Jig.Cases.ETC15   (etc15)
+import           Hsed.Jig.Cases.ETC21   (etc21adminsp)
 import           Hsed.Jig.Cases.SPF02   (spf02case1)
 import           Hsed.Jig.Cases.UCT01   (uct01)
+import           Hsed.Jig.Cases.UCT02   (uct02)
+import           Hsed.Jig.Cases.UCT03   (uct03steps1a1c)
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Guard         (guarding)
@@ -78,11 +84,12 @@ import           Hsed.Jig.Pair          (pairFails, pairLevel0)
 import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common)
 import           Hsed.Jig.Report        (CaseResult (..), RunResult (..), renderTarget, summary, writeReports)
 import           Hsed.Jig.Script        (RunCtx (..), RunEnv (..), Script, Verdict (..), attempt, discover, drain,
-                                         drivePolicy, verdictText)
+                                         drivePolicy, emptyRunCtx, verdictText)
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
 import           Hsed.Level0            (Level0)
 import           Hsed.Sim.Profile       (loadProfile)
+import           Hsed.Sim.State         (lifeOf)
 import           Hsed.Sim.Types         (ComIdLife (Associated), ComIdState (..), LifeCycle (..), SimParams (..),
                                          SyncState (..), TPerState (..))
 import           Hsed.Transport.Cdb     (level0Cdb)
@@ -94,9 +101,10 @@ import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..),
                                          transferLength)
 
 
--- | The cases the jig runs, one for each entry of the catalogue.
+-- | The cases the jig runs, one for each entry of the catalogue, in its
+--   order.
 cases :: [Case]
-cases = [uct01, spf02case1, etc02, etc03]
+cases = [uct01, uct02, uct03steps1a1c, spf02case1, etc02, etc03, etc04, etc08, etc15, etc21adminsp]
 
 -- | Run the jig.
 runJig :: RunOptions -> IO ExitCode
@@ -211,7 +219,7 @@ endsOf opts t lf = \case
     roleOf tr = dRole (describeTransport tr)
     end name tg drive = do
       channel <- newChannel
-      ctx <- newIORef (RunCtx Nothing Nothing Nothing)
+      ctx <- newIORef emptyRunCtx
       pure (End name (RunEnv tg t channel ctx opts lf) drive)
 
 -- | What an end's transport says it is.
@@ -275,12 +283,12 @@ passed cr = crVerdict cr == Pass && null [ () | (_, Fail _) <- crExtensions cr ]
 -- | A case's results on a run's ends as one: alone, as it is; on a pair, a
 --   pass where every end passed, else the failures (or the first other
 --   verdict) each with its end's name; the waivers every end made, and
---   those of some ends with their names; the extensions with their end's;
---   and each end's own verdict beside the joined one.
+--   those of some ends with their names; the extensions and the observations
+--   with their end's; and each end's own verdict beside the joined one.
 joined :: Bool -> Case -> [(Text, CaseResult)] -> CaseResult
 joined named c rs
   | not named, [(_, r)] <- rs = r
-  | otherwise = CaseResult (cKey c) verdict waivers extensions [ (n, crVerdict r) | (n, r) <- rs ]
+  | otherwise = CaseResult (cKey c) verdict waivers extensions observations [ (n, crVerdict r) | (n, r) <- rs ]
   where
     verdict = case [ (n, crVerdict r) | (n, r) <- rs, crVerdict r /= Pass ] of
       []  -> Pass
@@ -292,6 +300,7 @@ joined named c rs
     waivers = [ if length holders == length rs then w else w { wReason = T.intercalate ", " holders <> ": " <> wReason w }
               | w <- L.nub (concatMap (crWaivers . snd) rs), let holders = [ n | (n, r) <- rs, w `elem` crWaivers r ] ]
     extensions = [ (n <> ": " <> x, v) | (n, r) <- rs, (x, v) <- crExtensions r ]
+    observations = [ (n <> ": " <> k, v) | (n, r) <- rs, (k, v) <- crObservations r ]
     isFail = \case
       Fail _ -> True
       _      -> False
@@ -314,27 +323,31 @@ runCase e c = runRIO (endEnv e) $ do
   note heading
   tg <- asks reTarget
   case lacking tg (cNeeds c) of
-    Just why -> pure (CaseResult (cKey c) (Skipped why) [] [] [])
+    Just why -> pure (CaseResult (cKey c) (Skipped why) [] [] [] [])
     Nothing  -> prerequisites c >>= \case
-      Left why -> pure (CaseResult (cKey c) (Skipped ("prerequisite unmet: " <> why)) [] [] [])
+      Left why -> pure (CaseResult (cKey c) (Skipped ("prerequisite unmet: " <> why)) [] [] [] [])
       Right ws -> do
         v <- attempt (cRun c)
         xs <- for (cExtensions c) $ \(name, s) -> (,) name <$> case tg of
           SimTarget _ _ -> note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name) >> attempt s
           _             -> pure (Skipped "the simulator's alone")
-        pure (CaseResult (cKey c) v ws xs [])
+        pure (CaseResult (cKey c) v ws xs [] [])
 
 -- | Why a target cannot run a case that needs these, if it cannot: a drive
---   at M3 answers Level 0 Discovery alone.
+--   before M4c answers Level 0 Discovery alone, and after it the allow
+--   list's IF-SENDs, never an error path without opting in nor what the
+--   simulator alone can run.
 lacking :: Target -> [Need] -> Maybe Text
-lacking tg needs = listToMaybe [ why | n <- [NeedIfSend, NeedSimControl, NeedIfRecv, NeedLevel0], n `elem` needs, Just why <- [lack n] ]
+lacking tg needs = listToMaybe [ why | n <- [NeedSimOnly, NeedErrorPath, NeedIfSend, NeedSimControl, NeedIfRecv, NeedLevel0], n `elem` needs, Just why <- [lack n] ]
   where
     lack n = case tg of
       SimTarget _ _   -> Nothing
       DriveTarget _ _ -> case n of
         NeedLevel0     -> Nothing
-        NeedIfRecv     -> Just "needs IF-RECV beyond Level 0 Discovery, outside Level0Only, a drive's policy at M3 (design 9.3; M4c)"
-        NeedIfSend     -> Just "needs IF-SEND; the drive is 'ReadOnly at M3 (design 9.3)"
+        NeedIfRecv     -> Just "needs IF-RECV beyond Level 0 Discovery, outside Level0Only, a drive's policy before M4c (design 9.3)"
+        NeedIfSend     -> Just "needs IF-SEND; the drive is 'ReadOnly before M4c (design 9.3)"
+        NeedErrorPath  -> Just "needs an IF-SEND off the allow list, an error path: the simulator's until a drive run opts in (design 9.3 item 6; M4c)"
+        NeedSimOnly    -> Just "the simulator's alone: no drive policy admits it (design 9.3)"
         NeedSimControl -> Just "needs the simulator's control"
       PairTarget _ _  -> Just "a pair's ends run a case one at a time"
 
@@ -370,7 +383,7 @@ establish c p = asks reTarget >>= \case
         attempt (Pass <$ traverse_ drain busy) <&> \case
           Pass -> Right Nothing
           v    -> Left ("SyncIdle: " <> verdictText v)
-      NoSessions -> pure $ case [ comid | (comid, s) <- Map.toList (tsComIds st), cLife s == Associated ] of
+      NoSessions -> pure $ case [ comid | comid <- Map.keys (tsComIds st), lifeOf comid st == Just Associated ] of
         []   -> Right Nothing
         held -> Left ("NoSessions: sessions hold ComIDs " <> T.unwords (map tshow held))
       LockingManufactured

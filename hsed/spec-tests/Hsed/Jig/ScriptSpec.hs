@@ -70,7 +70,7 @@ scripted sim s = do
   n <- newIORef 0
   t <- newTranscript
   channel <- newChannel
-  ctx <- newIORef (RunCtx Nothing Nothing Nothing)
+  ctx <- newIORef emptyRunCtx
   let target | sim       = SimTarget (counted n) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
              | otherwise = DriveTarget (counted n) Nothing
   a <- runRIO (RunEnv target t channel ctx defaultRunOptions (mkLogFunc (\_ _ _ _ -> pure ()))) s
@@ -95,7 +95,7 @@ replying sends recvs s = do
   n <- newIORef (0 :: Int)
   t <- newTranscript
   channel <- newChannel
-  ctx <- newIORef (RunCtx Nothing (Just 0x1004) Nothing)
+  ctx <- newIORef emptyRunCtx { rcBaseComId = Just 0x1004 }
   let next ref end = atomicModifyIORef' ref (\xs -> (drop 1 xs, fromMaybe end (listToMaybe xs)))
       tr = (counted n)
         { tExchange = \q -> case dir q of

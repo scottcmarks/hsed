@@ -71,9 +71,10 @@ sample = RunResult
   , rrStarted    = noon
   , rrTargets    = [Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing]
   , rrCases      =
-      [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) [] []
-      , CaseResult (CaseKey (SPF 2) (Just 1) Nothing Nothing) (Fail ["step 1: not so"]) [lockingSPUntouched] [("an extension", Pass)] []
-      , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] [] []
+      [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) [] [] []
+      , CaseResult (CaseKey (SPF 2) (Just 1) Nothing Nothing) (Fail ["step 1: not so"]) [lockingSPUntouched] [("an extension", Pass)]
+          [("MaxComPacketSize", "2048")] []
+      , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] [] [] []
       ]
   , rrTranscript =
       [ Note 1 "UCT-01 on the tper"
@@ -94,7 +95,7 @@ paired :: RunResult
 paired = sample
   { rrOptions  = defaultRunOptions { roTarget = TPair TSim (TReplay "disk6.bin") }
   , rrTargets  = rrTargets sample <> [Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin")]
-  , rrCases    = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "drive-replay: no Level 0") [] []
+  , rrCases    = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "drive-replay: no Level 0") [] [] []
                      [("tper", Pass), ("drive-replay", Skipped "no Level 0")] ]
   , rrPair     = Just (PairReport [0x0005] [0x0403] [] [] [])
   , rrIfSends  = 1

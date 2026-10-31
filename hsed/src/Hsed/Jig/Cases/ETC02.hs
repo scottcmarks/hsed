@@ -49,7 +49,7 @@ etc02 = Case
   { cKey        = CaseKey (ETC 2) Nothing Nothing Nothing
   , cSection    = ErrorCases
   , cWaives     = lockingSPUntouched : noSessionOpened
-  , cNeeds      = [NeedIfRecv, NeedIfSend]
+  , cNeeds      = [NeedIfRecv, NeedErrorPath]
   , cRun        = run
   , cExtensions = [("held: the first IF-RECV answers responses to come (Core Table 45 row 1, PDF 83)", held)]
   }

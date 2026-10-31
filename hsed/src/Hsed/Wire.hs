@@ -30,8 +30,8 @@ used here, IF-RECV at any capability ('ifRecv'), IF-SEND and events only at
   (PDF 82-86) have the host do, polling while the TPer is busy and asking
   again with a larger length when the TPer names a minimum transfer
   (sedutil stops there instead, design 6.1), within a bound on the whole.
-* The wire's constants, each defined here alone: the ComPacket protocol, Level
-  0 Discovery's ComID, the Data subpacket's Kind, the extension of an inactive
+* The wire's constants, each defined here alone: the ComPacket and the ComID
+  management protocols, Level 0 Discovery's ComID, the Data subpacket's Kind, the extension of an inactive
   ComID, the ComPacket header's size, the most a transport carries; and
   'exactly', a transfer's bytes, and 'hex', a number as the jig prints it.
 -}
@@ -71,6 +71,7 @@ module Hsed.Wire
   , exchangeComPacket
     -- * The wire's constants
   , comPacketProtocol
+  , comIdManagementProtocol
   , level0ComId
   , dataKind
   , staticExtension
@@ -365,6 +366,16 @@ comPacketOf c ext bytes = case decodeComPacket bytes of
 --   "Defined in this document", so the value is written here, once.
 comPacketProtocol :: Word8
 comPacketProtocol = 0x01
+
+-- | The security protocol of ComID management: TCG's 0x02 (SIIS 1.20 Tables
+--   12-13, PDF 30-31; Opal 2.30 3.3.2, PDF 29-30), the protocol of
+--   TPER_RESET (Opal 2.30 Table 13, PDF 29), GET_COMID, HANDLE_COMID_REQUEST
+--   and GET_COMID_RESPONSE (Core 3.3.4.3 and 3.3.4.7, PDF 61-66), outside
+--   the synchronous protocol (Core 3.3.10.3 b, PDF 84). Core Table 25 (PDF
+--   53) prints it as it prints 0x01, so the value is written here, once, for
+--   the simulator and the Guard alike (design 13.29 (g)).
+comIdManagementProtocol :: Word8
+comIdManagementProtocol = 0x02
 
 -- | Level 0 Discovery's ComID: Core Table 26's row \"Level 0 Device
 --   Discovery\" (PDF 55), 0x0001. Were the row ever missing, 0x0000, the

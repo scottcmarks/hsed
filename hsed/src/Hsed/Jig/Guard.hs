@@ -18,9 +18,14 @@ and never issued. At M3 a drive's policy is 'Level0Only': IF-RECV of Level
 0 Discovery (protocol 1, ComID 1) and nothing else. 'AllowList' is M4c's,
 written now for its test: an IF-SEND whose ComPacket parses to methods every
 one of which is allowed (SMUID.Properties; SMUID.StartSession to the Admin
-SP as Anybody or no one; a bare EndOfSession), the UIDs those of
-"Hsed.Gen.Core.UIDs", and IF-RECV of protocol 1; ComID management
-(protocol 2) and anything that does not parse are refused.
+SP as Anybody or no one; Get on C_PIN_MSID of its UID and PIN columns; a bare
+EndOfSession), the UIDs those of "Hsed.Gen.Core.UIDs" and, for C_PIN_MSID
+until M4b generates it, "Hsed.OpalUIDs", and IF-RECV of protocol 1; ComID
+management (protocol 2) is refused but for STACK_RESET on the base ComID and
+its GET_COMID_RESPONSE under 'AllowStackReset' (@--recover@, design 9.3),
+and anything that does not parse is refused. /At the M4a scaffold/ the
+checks behind 'AllowGetCPinMSID' and 'AllowStackReset' refuse, naming group
+G3, which writes them (design 11).
 
 The Guard sends on a @'ReadOnly@ transport, which no other module can:
 'guardedSend' and 'guardedRecv' decide one command each; 'guarding' puts
@@ -55,12 +60,13 @@ import           Hsed.Core.UID         (UID)
 import           Hsed.Core.Value       (Datum (..), Name (..), NamedValue (..), Value)
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
-import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, uAuthority_Anybody, uProperties, uSMUID,
-                                        uSP_Admin, uStartSession)
+import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, uAuthority_Anybody, uMethodID_Get, uProperties,
+                                        uSMUID, uSP_Admin, uStartSession)
 import           Hsed.Jig.Transcript   (TEntry (..), Transcript, record)
+import           Hsed.OpalUIDs         (uC_PIN_MSID)
 import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
 import           Hsed.Wire             (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
-                                        comPacketProtocol, dataKind, hex, level0ComId)
+                                        comIdManagementProtocol, comPacketProtocol, dataKind, hex, level0ComId)
 import           Hsed.Wire.Internal    (Transport (..))
 
 
@@ -74,7 +80,9 @@ data Policy
 data Allowed
   = AllowProperties           -- ^ SMUID.Properties
   | AllowStartSessionAdminSP  -- ^ SMUID.StartSession to the Admin SP, as Anybody or no one
+  | AllowGetCPinMSID          -- ^ Get on C_PIN_MSID, of its UID and PIN columns alone (UCT-03 step 1b)
   | AllowEndOfSession         -- ^ a bare EndOfSession
+  | AllowStackReset           -- ^ STACK_RESET on the base ComID and its GET_COMID_RESPONSE, protocol 2 (@--recover@)
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 
@@ -120,6 +128,8 @@ decide policy q = case policy of
     | otherwise       -> Left ("Level0Only: IF-RECV of Level 0 Discovery alone (protocol " <> hex comPacketProtocol
                                <> ", ComID " <> hex level0ComId <> "), not protocol " <> hex (proto q) <> ", ComID " <> hex (comId q))
   AllowList allowed
+    | proto q == comIdManagementProtocol, AllowStackReset `elem` allowed ->
+        Left "AllowList: G3: AllowStackReset's check (STACK_RESET on the base ComID and its GET_COMID_RESPONSE alone) is not written: refused"
     | proto q /= comPacketProtocol -> Left ("AllowList: protocol " <> hex (proto q) <> " refused, ComID management among them")
     | dir q == IfRecv              -> Right ()
     | otherwise                    -> first ("AllowList: " <>) (allowedSend allowed q)
@@ -154,6 +164,9 @@ allowedCall allowed (MethodCall (MethodHeader invoker method) ps _)
   | invoker == uSMUID && method == uProperties   = need allowed AllowProperties "SMUID.Properties"
   | invoker == uSMUID && method == uStartSession =
       need allowed AllowStartSessionAdminSP "SMUID.StartSession" >> startSessionAllowed ps
+  | invoker == uC_PIN_MSID && method == uMethodID_Get =
+      need allowed AllowGetCPinMSID "Get on C_PIN_MSID"
+        >> Left "G3: AllowGetCPinMSID's check (one cell_block naming the UID and PIN columns alone) is not written: refused"
   | otherwise = Left ("the method " <> named method <> " on " <> tshow invoker <> " is not allowed")
   where named u = maybe (tshow u) (\n -> T.pack n <> " (" <> tshow u <> ")") (L.lookup u (sessionManagerMethodUIDs <> methodIDUIDs))
 

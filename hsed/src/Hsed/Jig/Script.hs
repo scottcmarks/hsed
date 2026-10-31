@@ -44,6 +44,7 @@ Data subpacket ('controlComPacket').
 module Hsed.Jig.Script
   ( -- * The run's environment
     RunCtx (..)
+  , emptyRunCtx
   , RunEnv (..)
   , Script
     -- * Verdicts
@@ -60,6 +61,24 @@ module Hsed.Jig.Script
   , expectT45
   , drain
   , simOnly
+    -- * Session verbs (group G3's)
+  , PropertiesAnswer (..)
+  , StartArgs (..)
+  , SessionHandle (..)
+  , SyncAnswer (..)
+  , MethodOutcome (..)
+  , propertiesWith
+  , startSession
+  , getCells
+  , endSession
+  , sessionComPacket
+  , controlSubpackets
+  , expectNoResponse
+  , expectMethodStatus
+  , expectSyncStatus
+  , stackReset
+  , opalV2Of
+  , withSession
     -- * What the verbs build on
   , drivePolicy
   , baseComId
@@ -85,6 +104,7 @@ import           RIO
 import qualified RIO.Text               as T
 
 import           Hsed.Core.Call         (MethodCall (..), MethodHeader (..), Parameters (..))
+import           Hsed.Core.CellBlock    (CellBlock)
 import           Hsed.Core.Feature      (Feature (..), decodeFeature)
 import           Hsed.Core.Layout       (LayoutError)
 import           Hsed.Core.Method       (invocation)
@@ -92,7 +112,9 @@ import           Hsed.Core.Record       (DecodedRecord (..), decodeRecord)
 import           Hsed.Core.StreamItem   (StreamItem (..))
 import           Hsed.Core.Sync         (Setting (..), StateRow (..), StateTable (..), settingOf)
 import           Hsed.Core.Token        (Token (..))
+import           Hsed.Core.UID          (UID)
 import           Hsed.Core.Value        (Datum (..), List (..), Name (..), NamedValue (..), Value (..))
+import           Hsed.Gen.Core.Codes    (StatusCode)
 import           Hsed.Gen.Core.Layouts  (ComPacket (..), ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
                                          PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods  as Methods
@@ -120,11 +142,19 @@ import           Hsed.Wire              (Cap (..), Channel, Dir (..), ExchangeEr
 
 -- | What the run has learned that later cases use.
 data RunCtx = RunCtx
-  { rcLevel0           :: !(Maybe Level0)  -- ^ the target's Level 0 response, once discovered
-  , rcBaseComId        :: !(Maybe Word16)  -- ^ the base ComID UCT-01 records (Test Cases PDF 29)
-  , rcMaxComPacketSize :: !(Maybe Word32)  -- ^ the TPer's MaxComPacketSize, once Properties reported it
+  { rcLevel0           :: !(Maybe Level0)           -- ^ the target's Level 0 response, once discovered
+  , rcBaseComId        :: !(Maybe Word16)           -- ^ the base ComID UCT-01 records (Test Cases PDF 29)
+  , rcMaxComPacketSize :: !(Maybe Word32)           -- ^ the TPer's MaxComPacketSize, once Properties reported it
+  , rcSession          :: !(Maybe SessionHandle)    -- ^ the session open, if a case left one (M4a)
+  , rcSecrets          :: ![ByteString]             -- ^ the secrets read (the MSID), masked in every report unless @--show-msid@
+  , rcTPerProperties   :: !(Maybe [(Text, Integer)]) -- ^ the TPer's properties, once Properties reported them
+  , rcHostProperties   :: !(Maybe [(Text, Integer)]) -- ^ the host's, as the TPer answered them
   }
   deriving (Eq, Show)
+
+-- | What a run starts knowing: nothing.
+emptyRunCtx :: RunCtx
+emptyRunCtx = RunCtx Nothing Nothing Nothing Nothing [] Nothing Nothing
 
 -- | A script's environment: the run's target, transcript, channel, what it
 --   has learned, its options, and where it logs.
@@ -403,6 +433,115 @@ simOnly :: Script a -> Script (Maybe a)
 simOnly s = asks reTarget >>= \case
   SimTarget _ _ -> Just <$> s
   _             -> pure Nothing
+
+
+-- * Session verbs (group G3's)
+
+-- | What Properties answered: the TPer's properties, and the host's where
+--   the host sent its own (Core 5.2.2.1, PDF 140).
+data PropertiesAnswer = PropertiesAnswer
+  { paTPer :: ![(Text, Integer)]
+  , paHost :: !(Maybe [(Text, Integer)])
+  }
+  deriving (Eq, Show)
+
+-- | What StartSession is sent with (Core 5.2.3.1, PDF 149; Opal 2.30
+--   4.1.1.2, PDF 34): the SP, the HostSigningAuthority if any, its
+--   HostChallenge if any, Write.
+data StartArgs = StartArgs
+  { saSP        :: !UID
+  , saAuthority :: !(Maybe UID)
+  , saChallenge :: !(Maybe ByteString)
+  , saWrite     :: !Bool
+  }
+  deriving (Eq, Show)
+
+-- | A session the jig has open: its ComID, the TPer's TSN and the host's
+--   HSN (Core 3.3.7.1.1, PDF 72).
+data SessionHandle = SessionHandle
+  { shComId :: !Word16
+  , shTSN   :: !Word32
+  , shHSN   :: !Word32
+  }
+  deriving (Eq, Show)
+
+-- | What SyncSession answered: a session open, the startup failed with a
+--   status (Core 5.3.4.1.5, PDF 215), or no SyncSession at all and why.
+data SyncAnswer
+  = Synced !SessionHandle
+  | SyncFailed !StatusCode
+  | NoSync !Text
+  deriving (Eq, Show)
+
+-- | A method's response in a session: its results and its status (Core
+--   3.2.4.2, PDF 49).
+data MethodOutcome = MethodOutcome
+  { moResults :: ![Value]
+  , moStatus  :: !StatusCode
+  }
+  deriving (Eq, Show)
+
+-- | SMUID.Properties, a whole exchange on the base ComID, with the host's
+--   properties where given (UCT-02): the TPer's properties and the host's
+--   answered; both kept in the run's context.
+propertiesWith :: Maybe [(Text, Natural)] -> Script (Either ExchangeError PropertiesAnswer)
+propertiesWith = error "G3: Script.propertiesWith"
+
+-- | SMUID.StartSession on the base ComID with HSN 1 (Test Cases 4.1 h, PDF
+--   26), its SyncSession read back ("Hsed.Core.Method".@fromCall@).
+startSession :: StartArgs -> Script (Either ExchangeError SyncAnswer)
+startSession = error "G3: Script.startSession"
+
+-- | Get on an object in a session, the cells a cell_block asks
+--   ("Hsed.Core.CellBlock"), its results and status.
+getCells :: SessionHandle -> UID -> CellBlock -> Script (Either ExchangeError MethodOutcome)
+getCells = error "G3: Script.getCells"
+
+-- | The host's End of Session on a session (CLOSE_SESSION, Test Cases PDF
+--   21): whether the TPer answered with its own.
+endSession :: SessionHandle -> Script (Either ExchangeError Bool)
+endSession = error "G3: Script.endSession"
+
+-- | A ComPacket of one packet of a session, one data subpacket of these
+--   tokens (Test Cases Table 6, PDF 27).
+sessionComPacket :: SessionHandle -> ByteString -> Either LayoutError ByteString
+sessionComPacket = error "G3: Script.sessionComPacket"
+
+-- | A ComPacket of one control session packet of these data subpackets
+--   (ETC-15's n + 1).
+controlSubpackets :: Word16 -> [ByteString] -> Either LayoutError ByteString
+controlSubpackets = error "G3: Script.controlSubpackets"
+
+-- | Expect an exchange to have returned no packets, the TPer's (0, 0, 0)
+--   (ETC-04, ETC-08, ETC-15), the expectation named.
+expectNoResponse :: Text -> Either ExchangeError [PacketFrame] -> Script ()
+expectNoResponse = error "G3: Script.expectNoResponse"
+
+-- | Expect a method's status, by Core Table 166's pattern, the expectation
+--   named; an aborted session is accepted where the Test Cases accept
+--   either (7.1, PDF 76).
+expectMethodStatus :: Text -> StatusCode -> MethodOutcome -> Script ()
+expectMethodStatus = error "G3: Script.expectMethodStatus"
+
+-- | Expect SyncSession's status, likewise.
+expectSyncStatus :: Text -> StatusCode -> SyncAnswer -> Script ()
+expectSyncStatus = error "G3: Script.expectSyncStatus"
+
+-- | STACK_RESET on a ComID (Core 3.3.4.7.5, PDF 65-66): protocol 2,
+--   Tables 35-36; the response's status, or why none came.
+stackReset :: Word16 -> Script (Either Text Word32)
+stackReset = error "G3: Script.stackReset"
+
+-- | The Opal SSC V2 descriptor of a Level 0 response, decoded (Opal 2.30
+--   Table 6, PDF 23), if it has one.
+opalV2Of :: Level0 -> Maybe Level0DiscoveryOpalSSCV2Feature
+opalV2Of = error "G3: Script.opalV2Of"
+
+-- | A session opened, the steps run in it, the session ended on the way
+--   out; on a failure on the simulator, STACK_RESET, so that the next case
+--   finds no session.
+withSession :: StartArgs -> (SessionHandle -> Script Verdict) -> Script Verdict
+withSession = error "G3: Script.withSession"
 
 
 -- * What the verbs build on

@@ -190,8 +190,8 @@ which byteGrid, the rule below it, cannot see); since M4b's scaffold `Hsed.Spec.
 column reader `tableDesc` had, which `constValues` and `preconfig` share: `ColKind`, `colKind` over a
 `TypeEnv` of Type objects and enumeration labels, which `Hsed.Spec.Rules.TableDesc.typeEnv` gives a spec
 and its base, `readCell`, `renderCell`; `cellCodes`) and `Hsed.Spec.Readers.AccessControl` (the
-AccessControl and ACE reader of the preconfiguration tables, its codes `accessControlCodes`; a skeleton
-until the preconfiguration group writes it). A reader returns data; a code several rules give through it
+AccessControl and ACE reader of the preconfiguration tables, its codes `accessControlCodes`).
+A reader returns data; a code several rules give through it
 is the reader's (its `CodeDef`s, listed by `Hsed.Spec.Readers.readerCodes`), which no rule lists. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
 `boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
 `listDefinition`). A helper never goes under `Rules/`, where every module must be a registered rule.

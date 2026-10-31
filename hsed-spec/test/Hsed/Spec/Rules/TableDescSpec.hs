@@ -141,8 +141,8 @@ spec = withCore $ \pristine -> do
       kind "Authority_object_ref" `shouldBe` Right (KRef [Table "Authority"])
       fmap (\k -> case k of KEnum n rs ls -> Just (n, rs, ls); _ -> Nothing) (kind "boolean")
         `shouldBe` Right (Just ("boolean", [(0, 1)], [("False", 0), ("True", 1)]))
-    it "refuses a type it does not read from a cell" $ do
-      kind "date" `shouldBe` Left "a column of type date (Struct_Type) is not read from a table cell"
+    it "refuses a type it does not read from a cell (a date it reads blank since M4b: Readers.CellSpec)" $ do
+      kind "ACE_expression" `shouldBe` Left "a column of type ACE_expression (Alternative_Type) is not read from a table cell"
       kind "log_kind" `shouldBe` Left "log_kind names no Type object"
     it "reads cells as their kind holds them" $ do
       (kind "auth_method" >>= \k -> readCell noRefs k "Sign") `shouldBe` Right (CvEnum "Sign" 3)

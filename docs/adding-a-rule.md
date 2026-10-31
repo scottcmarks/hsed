@@ -212,6 +212,26 @@ blocks are in the `Context` (`cxSigs`, `cxSigClasses`); a rule that needs a tabl
 method UIDs of Table 242) calls that rule's reader on the same `Context`. `SignatureUnitSpec` proves
 the interface with a stub rule.
 
+Since M4a the sig rule also joins the types (the M4a plan's answer 2, design §13.25 (j)): each
+parameter's and result's type text is read (`Rules.Sig.parseType`: a name, `uidref` with or without
+a table in braces, `list [ X ... ]`, `list [ n = X ... ]`, `typeOr { L : X, ... }`, or a type in
+angle brackets) and each leaf of it resolved (`resolveLeaf`, against `typeEnv ctx`): a name against
+the type rows (`typeRowReads`, 100 in Core; a type row wins over an abstract type of the same name,
+Core 5.1.4 saying abstract types are not in the Type table) and then the abstract types (the titles
+of the subsections of the heading `Abstract Type Definitions`, 5.1.4.2.1-18, read from the IR's
+headings, never listed by hand); a `uidref`'s target against the tables of Table 240 (`tableNames`,
+its `ObjectUID`, `TableUID` or `UID` suffix stripped: `SPObjectUID` names the SP table). A leaf
+nothing defines is `C-SIG-TYPE`, a Warning at the block naming the parameter and the leaf (Core's
+ten: `{SP/table/object}` on DeleteMethod, GetACL, AddACE and RemoveACE, `{CredentialObjectUID}` on
+GetPackage's and SetPackage's keys, `{ByteTable}` on XOR, and IssueSP's bare `TemplateObjectUID`);
+the type of a Named list's values that nothing defines (Properties' `name = value`, Get's
+`ColumnNumber = Value`), like a type said in angle brackets (Set's `<type of column>`), is the
+context's, given by the name beside it: `N-SIG-TYPE-CONTEXT`, a Note at the block (Core's five).
+The join generates nothing: a parameter's `TypeName` carries a UID only where its whole text is a
+type row's name (`typeNameExpr`), and the abstract types and groupings stay `Value` until M6. A spec
+read over a base (Opal over Core) resolves against the base's rows, types and tables where it has
+none of its own.
+
 ## A rule over paragraph units
 
 The paragraphs of the IR (`paras`, `docs/ir-v1.md`: a list item, or a paragraph, each with its
@@ -285,8 +305,44 @@ ctx bh` (the title as its caption, its 1-based place among the headings as its o
 hash the manifest's hash of a heading anchor, `headingHash`: the sha256 of the title's normalised
 words, as `annotate.py` records it). A heading a comment binds with a shape no rule reads is
 `W-GEN-EXCLUDED` at the heading (`hsedc compile`), and so is a heading its rule leaves out
-(`Excluded` with its section anchor). `HeadingUnitSpec` proves the interface with a stub rule; the
-registry's reader of the method shape is M4a's behaviours reader (its group G4).
+(`Excluded` with its section anchor). `HeadingUnitSpec` proves the interface with a stub rule (its
+`W-GEN-EXCLUDED` example pends while a rule of the registry reads the heading units, as
+`ParagraphUnitSpec`'s does).
+
+Since M4a the method shape's rule is the behaviours reader, `Hsed.Spec.Rules.Behaviours`
+(`behavioursRule`). Its name is `behaviours`, not `behaviour`, for the reason the law reader's is
+`laws`: `Hsed.Spec.Scope` prints the binding's keywords in its `E-ANCHOR-KIND` message (`a heading
+anchor takes rule tokens, a behaviour or fails`). It reads the heading units (`boundHeadings`), the
+binding's constructor telling a `behaviour` from a `fails`: `behaviourReads`, in the anchors'
+natural order. Its checks, each an Error at the heading: `C-BEHAVIOUR-BOUND`, the comment's name is
+a qualified Haskell name (`Rules.Laws.qualifiedLaw`) and no two units of the spec, behaviours and
+Fails lists together, are bound to one name (each after the first is refused, citing the first);
+`C-BEHAVIOUR-METHOD`, a behaviour's heading is a method's: its section has a signature block
+(`Rules.Sig.sigReads`, the unit `<section>/sig`), bound and read, whose method the sig rule joins to
+a UID (`Rules.Sig.joinedUID`; the record then has an `instance Method`, which a behaviour needs to
+run it, and 5.6.4.2 Stir has none); and `C-FAILS-LIST`, a `fails` comment sits on a heading titled
+`Fails` whose parent section (`parentSection`) is bound by a behaviour, bound once, with at least one
+labelled list item in the IR (`failsItemsOf`: the IR already holds every heading and every list
+item's label and hash, so a Fails list needed no new IR schema and no extractor work), each with its
+sha256. It compiles one declaration, `behaviours :: [BehaviourRef]` in `Hsed.Gen.<Spec>.Behaviours`:
+an entry per behaviour its checks pass, each under its heading's provenance line, with the anchor
+(`core-2.01:5.3.3.6`), the 1-based PDF page, the first 12 hex digits of the signature block's hash
+(the one the behaviour states), the name, the behaviour the name refers to at its method's record
+(`forMethod @Hsed.Gen.Core.Methods.Get Hsed.Sim.Base.get`, both modules imported qualified, so the
+module needs `TypeApplications`) and, where a `fails` comment binds the method's Fails list, that
+list under the Fails heading's provenance line (`FailsRef`: anchor, page, name, each item's label
+with the first 12 hex digits of its hash, and `forFails @... Hsed.Sim.Base.getFails`); a unit a check
+refuses is left out, a Fails list whose method's heading is left out goes with it, and a spec that
+binds no behaviour (Opal) gets no module. The module is generated code importing hand-written code
+(hsed's `Hsed.Sim.Behaviour` and `Hsed.Sim.<Module>`): it declares nothing the oracle compares and
+nothing under a table's provenance, so `EquivSpec` needs no import line for it; `Rules/BehavioursSpec`
+checks its text and `stack build hsed` its names and records (a behaviour a comment names and the
+code lacks, or one of another method's record, fails to compile: the build-time half of
+`C-BEHAVIOUR-BOUND` and `C-BEHAVIOUR-METHOD`); and hsed's `Hsed.BehavioursSpec` holds it to the
+hand-written dispatch lists (`Hsed.Sim.SessionManager.behaviours`, `Hsed.Sim.Base.behaviours`) by
+name both ways, by hash and by method UID, holds each Fails list's items to the hand-written ones,
+runs each item's property and finds each case a behaviour names in the jig's catalogue. No
+`Hsed.Sim` module may import `Hsed.Gen.<Spec>.Behaviours`, which would be a module cycle.
 
 ## Generated code (`Hsed.Spec.Gen`)
 

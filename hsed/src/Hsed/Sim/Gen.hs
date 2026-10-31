@@ -54,29 +54,33 @@ import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPa
 --   of static ComIDs (one to three), what it does with a command to an
 --   inactive ComID (either), its MaxComPacketSize (Opal 2.30 Table 17's
 --   least, 2048, or twice that, so that a packet over its MaxPacketSize can
---   arrive within it) and its Locking SP Manufactured (so that a session
---   can open to it); each static ComID keeping the host's properties as the
---   host may have sent them ('genHostProperties') and awaiting IF-SEND,
---   processing or awaiting IF-RECV with one to three response packets
---   prepared, as the Session Manager might stage them or as 'packets'
---   frames them within those properties ('genStagedPackets'); and none to
---   two regular sessions open on its ComIDs ("Hsed.Sim.State".'openSession'),
---   one per SP, the Admin SP's first, as Anybody or as SID, with any HSN (a
---   second read-write session to one SP is SP_BUSY, Core 5.1.5.3, PDF 138,
---   so no state the protocol reaches holds two on one SP).
+--   arrive within it) and its Locking SP's life, Manufactured where a
+--   session opens to it and else either, the shipping default
+--   Manufactured-Inactive or Manufactured (no session opens to an SP
+--   Manufactured-Inactive, Opal 2.30 5.2.2.1 item 1, PDF 96); each static
+--   ComID keeping the host's properties as the host may have sent them
+--   ('genHostProperties') and awaiting IF-SEND, processing or awaiting
+--   IF-RECV with one to three response packets prepared, as the Session
+--   Manager might stage them or as 'packets' frames them within those
+--   properties ('genStagedPackets'); and none to two regular sessions open
+--   on its ComIDs ("Hsed.Sim.State".'openSession'), one per SP, the Admin
+--   SP's first, as Anybody or as SID, with any HSN (a second read-write
+--   session to one SP is SP_BUSY, Core 5.1.5.3, PDF 138, so no state the
+--   protocol reaches holds two on one SP).
 genState :: Gen TPerState
 genState = do
-  units   <- elements [minBound .. maxBound]
-  n       <- chooseInt (1, 3)
-  discard <- arbitrary
-  roomier <- arbitrary
+  units    <- elements [minBound .. maxBound]
+  n        <- chooseInt (1, 3)
+  discard  <- arbitrary
+  roomier  <- arbitrary
+  sessions <- chooseInt (0, 2)
+  locking  <- if sessions == 2 then pure Manufactured else elements [ManufacturedInactive, Manufactured]
   let p  = defaultSimParams
-             { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard, spLockingOFS = Manufactured
+             { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard, spLockingOFS = locking
              , spTPerProperties = [ (name, if roomier && name == maxComPacketSizeName then 2 * v else v)
                                   | (name, v) <- spTPerProperties defaultSimParams ] }
       st = initialState p
-  comIds   <- traverse (\cs -> genHostProperties >>= \props -> (\s -> cs { cSync = s, cHostProps = props }) <$> genSync p props) (tsComIds st)
-  sessions <- chooseInt (0, 2)
+  comIds <- traverse (\cs -> genHostProperties >>= \props -> (\s -> cs { cSync = s, cHostProps = props }) <$> genSync p props) (tsComIds st)
   foldM opened st { tsComIds = comIds } (take sessions [uSP_Admin, uSP_Locking])
   where
     opened st sp = do

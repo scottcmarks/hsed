@@ -23,20 +23,28 @@ each law's property under QuickCheck, over the simulator, and finds each case
 a law names in the jig's catalogue; a case a later milestone's jig runs would
 pend with that milestone (none since M4a's catalogue took ETC-04 and ETC-15,
 design section 11). A law without a property fails, as does a case that
-neither the catalogue nor a later milestone has.
+neither the catalogue nor a later milestone has. The states the laws
+quantify over ("Hsed.Sim.Gen".@genState@) open at most one session per SP,
+the Locking SP Manufactured where one is open to it and in either life
+else, the shipping default Manufactured-Inactive among them.
 -}
 module Hsed.LawsSpec (spec) where
 
-import qualified RIO.List           as L
-import qualified RIO.Text           as T
+import qualified RIO.List              as L
+import qualified RIO.Map               as Map
+import qualified RIO.Text              as T
 import           RIO
 import           Test.Hspec
-import           Test.QuickCheck    (property)
+import           Test.Hspec.QuickCheck (modifyMaxSuccess, prop)
+import           Test.QuickCheck       (counterexample, forAll, property, vectorOf)
 
-import qualified Hsed.Gen.Core.Laws as Generated
-import           Hsed.Jig.Catalogue (CaseKey, CatalogueEntry (..), catalogue, renderCaseKey)
-import           Hsed.Law           (Law (..), LawRef (..))
-import qualified Hsed.Law.Sync      as Sync
+import qualified Hsed.Gen.Core.Laws    as Generated
+import           Hsed.Jig.Catalogue    (CaseKey, CatalogueEntry (..), catalogue, renderCaseKey)
+import           Hsed.Law              (Law (..), LawRef (..))
+import qualified Hsed.Law.Sync         as Sync
+import           Hsed.OpalUIDs         (uSP_Locking)
+import           Hsed.Sim.Gen          (genState)
+import           Hsed.Sim.Types        (LifeCycle (..), Session (..), SimParams (..), TPerState (..))
 
 
 -- | Every hand-written law: those of each module of "Hsed.Law" (M3: Sync's).
@@ -85,3 +93,14 @@ spec = do
         if k `elem` catalogueKeys then pure () else case lookup k later of
           Just m  -> pendingWith (T.unpack (renderCaseKey k) <> " is run by the jig of " <> m <> " (design section 11)")
           Nothing -> expectationFailure (T.unpack (renderCaseKey k) <> " is not in the jig's catalogue")
+
+  describe "the states the laws quantify over (Hsed.Sim.Gen.genState)" $ modifyMaxSuccess (const 20) $
+    prop "open at most one session per SP, the Locking SP Manufactured where one is open to it and in either life else, the shipping default Manufactured-Inactive among them" $
+      forAll (vectorOf 60 genState) $ \sts ->
+        let sps st         = map sesSP (Map.elems (tsSessions st))
+            locking st     = spLockingOFS (tsParams st)
+            onePerSP st    = L.nub (sps st) == sps st
+            lockingOpen st = uSP_Locking `elem` sps st
+        in counterexample (show [ (sps st, locking st) | st <- sts ])
+             (all (\st -> onePerSP st && (not (lockingOpen st) || locking st == Manufactured)) sts
+              && any ((== ManufacturedInactive) . locking) sts && any lockingOpen sts)

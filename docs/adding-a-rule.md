@@ -41,11 +41,16 @@ printed, worth a look, or hsedc's bookkeeping, which sorts `build/report/ERRATA.
 the shared readers' (`Hsed.Spec.Readers.readerCodes`) and every rule's, so a new rule edits no generic
 module for its codes. Each code is claimed once (`RegistrySpec`): a code several rules give belongs to the
 rule the others import or that defined it first (`typeRow`'s C-UID-TABLE, C-UID-UNIQUE and C-FMT-RESOLVE,
-which `uidTable`, `preconfig` and `tableDesc` give too), or to the reader under `Hsed.Spec.Readers` they
-give it through (the byte-layout rules' C-LAYOUT-TILE, C-GRID-NAME, W-PINS-NONE and C-PINS-WORDS), and is
-listed by neither rule. A code the catalogue does not name is listed in
-`ERRATA.md` under "Not yet classified", and `ReportSpec` fails while the committed run gives one, or gives
-a finding a severity its code's entry does not list. The integrator adds the new codes to design §2 Q2.
+which `uidTable`, `preconfig` and `tableDesc` give too, and since M4b `enumValues`, C-UID-TABLE for the
+type row an enumeration in a Description column makes, and `columnsAddition`, C-FMT-RESOLVE for a column
+it adds; `uidTable`'s C-UID-NAME, which `preconfig` gives an SSC's rows; `legend`'s three, which
+`preconfig`, importing `Rules.Legend`, gives at a preconfiguration cell), or to the reader under
+`Hsed.Spec.Readers` they give it through (the byte-layout rules' C-LAYOUT-TILE, C-GRID-NAME, W-PINS-NONE
+and C-PINS-WORDS; since M4b the cell reader's N-PRECONF-LABEL and W-PRECONF-NAME-LENGTH and the
+AccessControl and ACE reader's C-ACL-REFS and C-ACL-EXPR, which `preconfig` gives), and is listed by
+neither rule. A code the catalogue does not name is listed in `ERRATA.md` under "Not yet classified", and
+`ReportSpec` fails while the committed run gives one, or gives a finding a severity its code's entry does
+not list. The integrator adds the new codes to design §2 Q2.
 
 ## When two rules are added in parallel
 
@@ -67,7 +72,10 @@ Some changes are generic and are made in a small commit of their own, before the
   byte grid's corner read as `Byte\Bit` (a Note), and the modifiers `layout "Name"` (`mLayout`; a byte
   grid, a feature, a byteFieldValue table: the record's name as written, the layout keeping the caption's
   title) and `bits k [(bit, "Name")]` (`mBits`; a byte grid, a feature: held to the row it reads); a
-  binding takes one `layout` and one `bits` for each byte (`applyModifier`, `E-MODIFIER`).
+  binding takes one `layout` and one `bits` for each byte (`applyModifier`, `E-MODIFIER`). M4b's scaffold
+  made `legend` a rule token (below) and added the caption typo `DataRemovalMechansim`
+  (`Shape.captionTypos`); the modifier `expand` stays in the vocabulary, unused since M4b, the
+  preconfiguration reader seeing a `(+XX)` template by its structure (design §13.32 (7)).
 - **A unit that is not a table.** `RuleDef` binds four kinds of unit: the numbered tables, since
   M2b the method signature blocks, since M3 the paragraphs a comment binds (a law's sentence) and
   since M4a the headings a comment binds (a method's by `behaviour`, its Fails list's by `fails`; all
@@ -76,10 +84,11 @@ Some changes are generic and are made in a small commit of their own, before the
   `Rules`); the IR already held what the fourth needed (the headings, and for a Fails list its
   labelled items with their hashes), so no extractor work came with it. M4b's first scaffold step
   generalised the four into one bound-unit abstraction (the M4a plan's answer 6): `RuleDef`'s class
-  `BoundUnit`, the four records its instances, with `boundUnits`, `allUnits`, `atUnit`, `unitNamed`
-  and `unitNoun` (the per-kind names kept), one `commentUnits` in `Check`, one exclusion of a shape no
-  rule reads in `Compile` and one exemplar lookup in `Rules`; a fifth kind is an instance, its field in
-  the `Context` and its `UnitKind`.
+  `BoundUnit` (`unitKind`, `unitAnchor`, `unitBinding`, `unitPage`, `unitProvenance`, `unitsAll`, and
+  `unitReadable`, False only for a table its binding's shape refuses), the four records its instances,
+  with `boundUnits`, `allUnits`, `atUnit`, `unitNamed` and `unitNoun` (the per-kind names kept), one
+  `commentUnits` in `Check`, one exclusion of a shape no rule reads in `Compile` and one exemplar lookup
+  in `Rules`; a fifth kind is an instance, its field in the `Context` and its `UnitKind`.
 - **A milestone's anchors.** Every rule token and heading anchor the milestone's rules need goes into
   the `.hsa` in one commit, with the `.upd`, manifest and bindings `make gen` regenerates, so that the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
@@ -134,8 +143,18 @@ comment binding a table to a shape it is not, whose one finding is then that Err
 generic: the IR, spec, errata set, numbered tables, classification, every table's section
 (`cxSections`; `sectionOf ctx bt`) and corrected tables, the signature and paragraph units, and,
 since M3, for a spec read over another (Opal over Core, `hsedc --base`), the other's Context, its
-base (`cxBase`), read-only: a lookup the spec does not answer runs wholly in the base (ids are a
-spec's own), and what it finds there is located in the base's spec (`atTable base bt`). A rule that
+base (`cxBase`), read-only: a lookup the spec does not answer runs wholly in the base (ids are a spec's
+own), and what it finds there is located in the base's spec (`atTable base bt`). Since M4b's scaffold a
+reading over a spec and its base is one function, `RuleDef.ownThenBase :: Ord k => (Context -> [a]) -> (a
+-> k) -> Context -> [(Context, a)]`: the spec's own items, then its base's (recursively) whose key the
+spec does not give, each with the Context that owns it, so that a finding or a declaration about an item
+is located and named in its own spec. Four readings are built on it: `TypeRow.allTypeRows` (by name:
+Opal's T30, then Core's 100), `EnumValues.allEnums` (by type: Opal's T31 and T49, then Core's less T103,
+which T49 replaces), `TableUIDs.allTableUIDRows` (the spec's Table 240 rows, then the rows of its
+preconfigured Table table for tables no Table 240 in the chain names, Opal T20 row 12's
+DataRemovalMechanism, then the base's) and `ColumnsAddition.allDescs` (the spec's own descriptions, then
+the base's it extends, its additions appended and owned by the spec, then the rest of the base's); a rule
+reads another spec's data through these, never through a Context of its own. A rule that
 needs another rule's reading (an
 enumeration's range from its type row; a table description's UID from Table 240) imports that rule's
 module and calls its reader on the same `Context`; it never adds fields to the `Context`. A rule
@@ -160,7 +179,22 @@ and since M3 `law`, whose reader is `laws`, below) is such a `RuleDef`: its name
 `fires` is `\_ _ _ -> False`, and its exemplar is the table its comment sits on, or for a paragraph
 unit's reader the list item (only acceptance is checked). `legend` was one until M4b, whose scaffold
 made it a rule token (`knownRules`, `RuleToken (Binding 'Legend)`): `rule legend` on the doc line
-binds Opal T1, the one table whose first header cell mentions the legend, its exemplar.
+binds Opal T1, the one table whose first header cell mentions the legend, its exemplar. The legend rule
+generates nothing: `legendScale` reads the scale Table 1 prints (two greys from the RGB values its rows
+print, a style from the words bold and under, a class from the R-W, Value and Access Control cells, the
+NotDefined marker from the `Not Defined` row's Value) and `cellAccess` classes a cell by it, which
+`preconfig`, importing `Rules.Legend`, calls on every kept cell of an SSC's tables, giving the legend's
+findings at the cell; the rule's own check is C-LEGEND-TOTAL at a legend that prints no scale (design
+E11).
+
+A rule that refines another (`feature` refines `byteGrid`, `columnsAddition` refines `tableDesc`) wins
+where both fire, its shape the other's narrowed by a caption. Since M4b `columnsAddition` reads the
+columns an SSC adds to a table its base describes (Opal T26, T43, T50, their target named by their caption,
+`<T> [Table] [Additional] Columns`), checks them (C-COLS-TARGET where the caption names no description of
+the spec or its base; `tableDesc`'s column checks through `TableDesc.columnFindings`, `ColumnsFrom` running
+the numbers on from the target's) and compiles the base's description with the columns appended, under the
+name the base gives it (`tPerInfoTableDesc`), into the spec's `TableDescs` module (design E5); its reading,
+`allDescs`, is what other rules type an SSC's tables by.
 
 What rules may import besides each other: `Hsed.Spec.Scope` (sections, the scope the anchors give,
 the validated annotations; it sits below the registry, while `Hsed.Spec.Rules` imports the registry and
@@ -189,8 +223,14 @@ generated modules to; byteFieldValue also reports a byteGrid name only its own d
 which byteGrid, the rule below it, cannot see); since M4b's scaffold `Hsed.Spec.Readers.Cell` (the
 column reader `tableDesc` had, which `constValues` and `preconfig` share: `ColKind`, `colKind` over a
 `TypeEnv` of Type objects and enumeration labels, which `Hsed.Spec.Rules.TableDesc.typeEnv` gives a spec
-and its base, `readCell`, `renderCell`; `cellCodes`) and `Hsed.Spec.Readers.AccessControl` (the
-AccessControl and ACE reader of the preconfiguration tables, its codes `accessControlCodes`).
+and its base, `readCell`, `renderCell`; since M4b an SSC's preconfiguration cells too: `readCellWith`,
+references and columns resolved and what the reading noticed returned as remarks, `printedCell`, a cell's
+footnote markers, `(O)`, placeholder, quotes and line breaks, and `zeroValue`, a kind's default; `cellCodes`,
+N-PRECONF-LABEL and W-PRECONF-NAME-LENGTH, which `preconfig` gives from the remarks) and
+`Hsed.Spec.Readers.AccessControl` (since M4b the AccessControl and ACE reader of an SP's preconfiguration
+tables, which it tells by their columns' kinds, never by name: invoking IDs and the every-object rows, the
+tables an ACE applies to; its codes `accessControlCodes`, C-ACL-REFS and C-ACL-EXPR, which `preconfig` gives
+through `aclCode`).
 A reader returns data; a code several rules give through it
 is the reader's (its `CodeDef`s, listed by `Hsed.Spec.Readers.readerCodes`), which no rule lists. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
 `boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
@@ -379,7 +419,15 @@ pragmas (the declarations' extensions with the two every module has), header, me
 (`Gen.ImportAll`, `Gen.ImportSome` lists united, and since M3 `Gen.ImportQualified`, a line of its
 own: the law reader's `import qualified Hsed.Law.Sync`), declarations sorted by table number, rank,
 name. A declaration goes to the rule's module (`Emit`) or to
-another one (`EmitIn`, for a rule that writes several). Rules naming one module must give it one
+another one (`EmitIn`, for a rule that writes several: since M4b `preconfig` writes an SSC's tables into
+its SP's module, `Preconfig.preconfigModuleFor`, `Hsed.Gen.Opal.Preconfig.AdminSP`, a dotted leaf nesting a
+directory, and `tableDesc` the table UIDs an SSC's Table table gives into the spec's `TableUIDs`). A
+declaration imports by origin (since M4b): the modules of its own spec whole (`Gen.ImportAll`), a base's
+names by list (`Gen.ImportSome`), so that a name both specs define (Opal's `tPerInfoTableDesc` and
+Core's) is never ambiguous; `TableDesc.tableDescDecl` imports each UID and type name from the module of
+the spec that defines it, and an enumeration's `typeUID` comes from the `Types` module of the spec whose
+type row it is (`EnumValues.UIDRef`: `SameModule`, `InModule`, `Literal`, and since M4b `ImportedFrom`,
+Opal's life_cycle_state taking Core's `ulife_cycle_stateType`). Rules naming one module must give it one
 description; their notes are united. A module is written when it has a declaration, and `hsedc compile`
 removes the spec's modules it did not write. Rules that print one kind of declaration print it through
 one shared reader, so that a module follows one convention and defines each name once: `byteGrid`,

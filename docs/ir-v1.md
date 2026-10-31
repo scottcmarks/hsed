@@ -53,6 +53,21 @@ Unchanged: `table_number`, `caption`, `caption_path`, `nested_in` (both still in
 the repair flags (`split_from_merged`, `recovered_by_geometry`, `adopted_from`, `moved_out`,
 `adopted_orphan`, `ragged_join`).
 
+A cell's style (design §5.1 step 6), which the legend of an SSC's preconfiguration tables reads since M4b
+(design E11): a cell with ink carries `bold` (every inked glyph bold, by its font's flag or name),
+`underline` (every inked glyph over a thin filled rect at its baseline), `fonts` (its inked glyphs' font
+names, sorted), `color` only where some glyph is not black, and `fill_rgb` with `fill_bbox`, the top-most
+non-thin filled rect under the centre of its first fragment, `[r, g, b]` on 0-255 (Opal's two greys
+measure 231 and 180-181 where its Table 1 prints 230 and 179), or null where there is none; a cell over
+several pages carries its `fragments` (each a page and a bbox). A cell with no ink has a null `bbox`,
+`bold`, `underline` and `fill_rgb` and no `fonts`; where its row and column place it on one page it
+carries that `page` and `est_bbox`, the rectangle their extents give it, with the `fill_rgb` and
+`fill_bbox` found under its centre. `hsedc` reads a null or missing `bold` or `underline` as false and a
+missing `fonts` as none, so a cell with text and no fonts is one whose style the IR does not record (the
+legend's C-LEGEND-TOTAL). `lines` are a cell's visual lines as printed, which `text` joins with a space; a
+reader that needs a word broken across lines joined reads them (since M4b the preconfiguration's cell
+reader, which joins an identifier's line break with nothing: design §5.1 step 5).
+
 Byte grids (since M2c): a table whose first row (its header, or its first data row when it has none,
 Core T17) is nine cells ending `7 … 0` (Core T17, T18, T20, T21, T38, T39, T41-T44, T212; Opal T2-T6,
 T8; Core T19 and T40 and Opal T7 are code tables, not grids) prints a field over several bits as one

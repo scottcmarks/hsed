@@ -17,8 +17,10 @@ parameter list's values go (the bytes @F8 A8 00 00 00 00 00 00 00 FF A8 00
 Properties, a parameter list holding one empty list, End of Data, the status
 list, 'etc08Payload'), which the TPer may ignore, the next IF-RECV answering
 (0, 0, 0) (1a), or answer INVALID_PARAMETER (1b); SUCCESS fails the case.
-The simulator ignores it (Core 3.2.4.2 MAY; Opal 2.30 3.3.4.1.3, PDF 31;
-design 13.29 (h)).
+The simulator ignores it: a parameter-shape error with status 0, read as a
+streaming violation on the Session Manager, whose payload an Opal TPer
+discards (Opal 2.30 3.3.4.1.3, PDF 31; the lead's answer 8, design 13.29 (h)
+and 13.30 (8)).
 -}
 module Hsed.Jig.Cases.ETC08
   ( etc08

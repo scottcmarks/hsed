@@ -36,9 +36,10 @@ C_PIN_MSID's, a fact of manufacture the state holds
 Table 6's bullets, PDF 23; changed by no Set, only by M5's Revert of the
 Admin SP after SID authenticated, Opal 5.1.2.2.1 item 2 a, PDF 93), and the
 Block SID descriptor's SID Value State whether C_PIN_SID's PIN is C_PIN_MSID's
-now, read from the Admin SP's C_PIN rows (Test Cases UCT-01 step 4c and
-UCT-03 step 1, PDF 30-32: on a drive taken ownership of, byte 13 stays 0x00
-while SID Value State goes 1). A profile (@--profile@, a drive's response) adds
+now, read from the Admin SP's C_PIN rows (Test Cases UCT-01 step 4c, PDF
+30-31, and UCT-03 step 1, PDF 33: on a drive taken ownership of, byte 13
+stays 0x00 while SID Value State goes 1). A profile (@--profile@, a drive's
+response) adds
 each descriptor of a code the simulator lacks, as it is; none of the
 simulator's is dropped or replaced (design 9.2). Every one of its own
 descriptors encodes for parameters in range ("Hsed.Sim.Types".'simParamsProblems',

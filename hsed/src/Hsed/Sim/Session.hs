@@ -31,9 +31,11 @@ host's MaxSubpackets, MaxPacketSize and MaxComPacketSize ('packets';
 nor than what the ComPacket that must carry it holds past its header), a
 response that fits no packet, or no ComPacket the host takes, answered
 instead with an empty list and RESPONSE_OVERFLOW, which ends the processing
-of the IF-SEND's payload ('Processed'; Opal 2.30 3.3.1 item 1, PDF 29). The
-control session's answers are framed the same way, by the same code
-('fits', 'packets', 'controlHeader').
+of the IF-SEND's payload ('Processed'; Opal 2.30 3.3.1 item 1, PDF 29, over
+Core 3.3.10.7 d, PDF 87, which has the TPer continue with the methods sent
+in that payload: the SSC refines Core, the lead's answer 8's principle,
+design 13.31 (a)). The control session's answers are framed the same way,
+by the same code ('fits', 'packets', 'controlHeader').
 -}
 module Hsed.Sim.Session
   ( -- * A session's invocations and packets
@@ -123,8 +125,11 @@ dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
 --   and the result says the payload's processing ends there ('prEnds': Opal
 --   2.30 3.3.1 item 1, PDF 29, the TPer SHALL terminate processing of the
 --   IF-SEND command payload, so "Hsed.Sim.Sync" reads no further subpacket
---   or packet of it; the state changes of the invocations run before stand,
---   the overflowed one's among them, the method having run). No items and
+--   or packet of it, over Core 3.3.10.7 d, PDF 87, where the TPer SHALL
+--   continue processing the methods sent in that payload, the SSC refining
+--   Core, the lead's answer 8's principle, design 13.31 (a); the state
+--   changes of the invocations run before stand, the overflowed one's among
+--   them, the method having run). No items and
 --   no fault is 'Prepared' of no packets, the TPer unchanged (no action,
 --   Core 3.3.10.6 S2:S1 d, PDF 85-86).
 --

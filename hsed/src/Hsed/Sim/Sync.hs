@@ -188,8 +188,11 @@ t45Fields row d = do
 --   Then the considered packets are processed in order, the TPer's state
 --   threaded. A control packet's calls go to the Session Manager
 --   ('answer'), in order; an unrecognized invocation outside a regular
---   session is ignored, no response sent (3.2.4.2, PDF 49), as is one
---   whose parameters are not its method's (3.2.4.2 MAY; ETC-08, PDF 81).
+--   session is ignored, no response sent (3.2.4.2, PDF 49), as is one with
+--   status 0 whose parameters are not its method's: a parameter-shape
+--   error read as a streaming violation on the Session Manager (Opal 2.30
+--   3.3.4.1.3, PDF 31; the lead's answer 8, design 13.30 (8); ETC-08
+--   accepts the discard, PDF 81).
 --   The answers, each in a data subpacket of its own, are packed into
 --   control session packets within the host's MaxSubpackets and
 --   MaxPacketSize ("Hsed.Sim.Session".'packets'), SeqNumber, AckType and
@@ -197,7 +200,9 @@ t45Fields row d = do
 --   packet of the host's, or no ComPacket, is answered instead with an empty
 --   list and RESPONSE_OVERFLOW, and the processing of the payload ends
 --   there: the calls after it are not run and no later packet is processed
---   (Opal 2.30 3.3.1 item 1, PDF 29); where even that answer would not fit
+--   (Opal 2.30 3.3.1 item 1, PDF 29, over Core 3.3.10.7 d, PDF 87, which
+--   has the TPer continue: the SSC refines Core); where even that answer
+--   would not fit
 --   (no host within Opal 2.30 Table 17's minima, PDF 33), the payload is
 --   discarded with the reason, nothing staged that no IF-RECV could carry.
 --   A regular session's packet

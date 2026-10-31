@@ -18,7 +18,12 @@ names a table of Table 240 (all but MBR, a byte table); T233 has 14 columns
 (M2b acceptance); the four column types no Type row defines are the five
 C-FMT-RESOLVE Warnings; C-COL-CONTIG, C-COL-CELL and C-DESC-TABLE made to fail
 by one edited cell or caption; what a column holds, read from its Type
-object; the generated descriptions.
+object; the generated descriptions. Then Opal under the M4b sidecar, read
+over Core: Table 32, DataRemovalMechanism, takes its UIDs from Opal's Table
+20 row 12 (PDF 37), which no Table 240 names (C-DESC-TABLE made to fail by
+moving that row's UID out of the table of tables), and is declared with
+those UIDs in @Hsed.Gen.Opal.TableUIDs@ and each name imported from the
+module of the spec that defines it.
 -}
 module Hsed.Spec.Rules.TableDescSpec (spec) where
 
@@ -31,14 +36,15 @@ import           Test.Hspec
 import           Hsed.Core.Types           (TableRef (..))
 import           Hsed.Spec.Anchor          (AnchorId (..))
 import           Hsed.Spec.Check           (checkIR, mkContext)
-import           Hsed.Spec.Common          (ErrataSet (..), Finding, RuleName (..), Severity (..), isError,
+import           Hsed.Spec.Common          (ErrataSet (..), Finding, RuleName (..), Severity (..), SpecId (..), isError,
                                             renderFinding)
 import qualified Hsed.Spec.Common          as Cm
 import           Hsed.Spec.Compile         (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.DSL             (SomeBinding (..), prose)
+import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (SpecIR (..), TableIR (..))
-import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..), cellsHash, numberedTables)
+import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..), Context (..), cellsHash, numberedTables)
 import           Hsed.Spec.Rules           (classify, explain)
 import           Hsed.Spec.Rules.TableDesc
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows)
@@ -213,3 +219,51 @@ spec = withCore $ \pristine -> do
       lns `shouldSatisfy` any ("import           Hsed.Core.Table " `T.isPrefixOf`)
       lns `shouldSatisfy` any ("import           Hsed.Core.TypeName " `T.isPrefixOf`)
       lns `shouldContain` ["import           Hsed.Gen.Core.TableUIDs", "import           Hsed.Gen.Core.Types"]
+
+  describe "on Opal under the M4b sidecar, read over Core" $ withOpal $ \opalPristine -> do
+    opal <- runIO (annotated opalPristine m4bOpalHsa)
+    cr   <- runIO (either (throwString . show) pure (compileIR (Just ctx) Scott opal))
+    let octx = opalOver ctx opal
+        fs   = checkIR (Just ctx) Scott opal
+        errorsAt a ir' = [ renderFinding f | f <- checkIR (Just ctx) Scott ir', isError f, Cm.anchor f == Just a ]
+        moduleLines n = T.lines (fromMaybe "" (lookup n (crModules cr)))
+        opalDescs = moduleLines "Hsed.Gen.Opal.TableDescs"
+        opalUIDs  = moduleLines "Hsed.Gen.Opal.TableUIDs"
+    it "binds Table 32 alone, DataRemovalMechanism, its caption read through the typo table (PDF 51)" $
+      [ (btAnchor (drBound d), drTable d) | d <- descReads octx ] `shouldBe` [(TableId 32, Just "DataRemovalMechanism")]
+    it "finds its UIDs in Opal's Table 20 row 12 (PDF 37), which Core's Table 240 does not name, and Core's tables in Core's: no C-DESC-TABLE" $ do
+      fmap (\(c, r) -> (cxSpec c, btAnchor (tuBound r), tuRow r + 1)) (tableUIDRowNamed octx "DataRemovalMechanism")
+        `shouldBe` Just (SpecId "opal-2.30", TableId 20, 12)
+      fmap (\(c, r) -> (cxSpec c, btAnchor (tuBound r))) (tableUIDRowNamed octx "TPerInfo") `shouldBe` Just (core, TableId 240)
+      coded "C-DESC-TABLE" fs `shouldBe` []
+      errorsAt "T32" opal `shouldBe` []
+    it "C-DESC-TABLE when Table 20's row lies in no table of tables (its UID edited), and Table 32 left out" $ do
+      let moved = setCell "T20" 11 0 "00 00 00 02 00 00 11 01" opal
+      errorsAt "T32" moved `shouldBe`
+        [ "C-DESC-TABLE opal-2.30.pdf#page=51&T32: the caption names DataRemovalMechanism, which no row of the table of table UIDs names" ]
+      cr' <- either (throwString . show) pure (compileIR (Just ctx) Scott moved)
+      [ why | (TableId 32, why) <- crExcluded cr' ] `shouldBe` ["C-COL-CONTIG, C-COL-CELL or C-DESC-TABLE failed"]
+    it "declares dataRemovalMechanismTableDesc: its UIDs Table 20 row 12's, its second column's type Opal's Table 30" $
+      takeWhile (/= "") (dropWhile (/= "dataRemovalMechanismTableDesc :: TableDesc") opalDescs) `shouldBe`
+        [ "dataRemovalMechanismTableDesc :: TableDesc"
+        , "dataRemovalMechanismTableDesc = TableDesc"
+        , "  { tdName      = \"DataRemovalMechanism\""
+        , "  , tdTableUID  = uDataRemovalMechanismTable"
+        , "  , tdObjectUID = uDataRemovalMechanismTableObject"
+        , "  , tdColumns   ="
+        , "      [ Col 0x00 \"UID\" False (TypeName \"uid\" (Just uuidType))"
+        , "      , Col 0x01 \"ActiveDataRemovalMechanism\" False (TypeName \"data_removal_mechanism\" (Just udata_removal_mechanismType))"
+        , "      ]"
+        , "  }" ]
+    it "declares those UIDs in Hsed.Gen.Opal.TableUIDs, citing Table 20 row 12 (PDF 37): table 00 00 11 01 00 00 00 00, descriptor 00 00 00 01 00 00 11 01" $ do
+      opalUIDs `shouldContain` ["uDataRemovalMechanismTableObject :: UID", "uDataRemovalMechanismTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x11 0x01"]
+      opalUIDs `shouldContain` ["uDataRemovalMechanismTable :: UID", "uDataRemovalMechanismTable = uid 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x00"]
+      opalUIDs `shouldContain` ["hDataRemovalMechanism :: HalfUID", "hDataRemovalMechanism = halfUID 0x00 0x00 0x11 0x01"]
+      [ l | l <- opalUIDs, " :: UID" `T.isSuffixOf` l || " :: HalfUID" `T.isSuffixOf` l ]
+        `shouldBe` ["uDataRemovalMechanismTableObject :: UID", "uDataRemovalMechanismTable :: UID", "hDataRemovalMechanism :: HalfUID"]
+      opalUIDs `shouldSatisfy` any ("-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:" `T.isPrefixOf`)
+    it "imports each name from the module of the spec that defines it: Core's uid type by name, Opal's own modules whole" $
+      [ d.declImports | d <- crDecls cr, d.declName == "dataRemovalMechanismTableDesc" ]
+        `shouldBe` [ [ Gen.ImportSome "Hsed.Core.Table" ["Col (..)", "TableDesc (..)"], Gen.ImportSome "Hsed.Core.TypeName" ["TypeName (..)"]
+                     , Gen.ImportAll "Hsed.Gen.Opal.TableUIDs", Gen.ImportSome "Prelude" ["Bool (..)", "Maybe (..)"]
+                     , Gen.ImportSome "Hsed.Gen.Core.Types" ["uuidType"], Gen.ImportAll "Hsed.Gen.Opal.Types" ] ]

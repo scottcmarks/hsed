@@ -29,7 +29,11 @@ vendor unique value and for a present state, nothing being locked and no MBR
 shadowing enabled or done at M3) unless the parameters choose it
 ("Hsed.Sim.Types".'SimParams': the Locking SP's life cycle, the geometry,
 the SIIS revision, the DataStore tables, the ComIDs, the SSC minor version,
-the data removal version). A profile (@--profile@, a drive's response) adds
+the data removal version) or the state does: the Opal SSC V2 descriptor's
+Initial C_PIN_SID PIN Indicator and the Block SID descriptor's SID Value
+State both say whether C_PIN_SID's PIN is still C_PIN_MSID's, read from the
+Admin SP's C_PIN rows (Opal Table 6's bullets, PDF 23; Test Cases UCT-01
+step 4c and UCT-03 step 1, PDF 30-32). A profile (@--profile@, a drive's response) adds
 each descriptor of a code the simulator lacks, as it is; none of the
 simulator's is dropped or replaced (design 9.2). Every one of its own
 descriptors encodes for parameters in range ("Hsed.Sim.Types".'simParamsProblems',
@@ -46,17 +50,23 @@ import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
 import           RIO
 
-import           Hsed.Core.Feature      (Allowance (..), Feature (..))
-import           Hsed.Core.Layout       (Content (..), Field (..), FieldKind (..), Layout (..), LayoutError)
-import           Hsed.Core.Record       (LayoutRecord (..))
-import           Hsed.Gen.Opal.Features (Level0DiscoveryGeometryReportingFeature (..),
-                                         Level0DiscoveryLockingFeature (..), Level0DiscoveryOpalSSCV2Feature (..),
-                                         Level0DiscoverySupportedDataRemovalMechanismFeature (..),
-                                         Level0DiscoveryTPerFeature)
-import           Hsed.Level0            (Descriptor (..), featureDescriptor, renderLevel0)
-import           Hsed.Sim.FeatureSets   (BlockSIDFeature, DataStoreFeature (..), SiisFeature (..))
-import           Hsed.Sim.Types         (Geometry (..), Level0Profile (..), LifeCycle (..), SimParams (..),
-                                         TPerState (..))
+import           Hsed.Core.Feature        (Allowance (..), Feature (..))
+import           Hsed.Core.Layout         (Content (..), Field (..), FieldKind (..), Layout (..), LayoutError)
+import           Hsed.Core.Record         (LayoutRecord (..))
+import           Hsed.Core.Table          (Cell (..))
+import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
+import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
+import           Hsed.Gen.Core.UIDs       (uC_PIN_SID, uSP_Admin)
+import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeature (..),
+                                           Level0DiscoveryLockingFeature (..), Level0DiscoveryOpalSSCV2Feature (..),
+                                           Level0DiscoverySupportedDataRemovalMechanismFeature (..),
+                                           Level0DiscoveryTPerFeature)
+import           Hsed.Level0              (Descriptor (..), featureDescriptor, renderLevel0)
+import           Hsed.OpalUIDs            (uC_PIN_MSID)
+import           Hsed.Sim.FeatureSets     (BlockSIDFeature (..), DataStoreFeature (..), SiisFeature (..))
+import           Hsed.Sim.State           (cellOf, columnOf, rowWithUID)
+import           Hsed.Sim.Types           (Geometry (..), Level0Profile (..), LifeCycle (..), SimParams (..),
+                                           TPerState (..))
 
 
 -- | The response to a Level 0 IF-RECV of a transfer length: exactly that
@@ -91,11 +101,16 @@ simDescriptors st = L.sortOn dCode (own <> added)
       , described (\r -> r { dataStoreFeatureMaximumNumberOfDataStoreTables    = tables
                            , dataStoreFeatureMaximumTotalSizeOfDataStoreTables = size
                            , dataStoreFeatureDataStoreTableSizeAlignment       = alignment })
-      , described (\r -> r { level0DiscoveryOpalSSCV2FeatureSSCMinorVersionNumber = spSscMinor p
-                           , level0DiscoveryOpalSSCV2FeatureBaseComID             = spBaseComId p
-                           , level0DiscoveryOpalSSCV2FeatureNumberOfComIDs        = spNComIds p })
-        -- SID Value State 0: C_PIN_SID's PIN is MSID's, as UCT-01 step 4c asks (Test Cases PDF 30)
-      , described (id :: BlockSIDFeature -> BlockSIDFeature)
+        -- the Initial C_PIN_SID PIN Indicator (byte 13): 0x00 where C_PIN_SID's PIN equals C_PIN_MSID's, 0xFF where
+        -- it is VU and may differ (Opal Table 6's bullets, PDF 23); the generated allowance is VU, the whole byte,
+        -- though the bullets make only 0x00 and 0xFF valid and 0x01 to 0xFE reserved
+      , described (\r -> r { level0DiscoveryOpalSSCV2FeatureSSCMinorVersionNumber    = spSscMinor p
+                           , level0DiscoveryOpalSSCV2FeatureBaseComID                = spBaseComId p
+                           , level0DiscoveryOpalSSCV2FeatureNumberOfComIDs           = spNComIds p
+                           , level0DiscoveryOpalSSCV2FeatureInitialC_PIN_SIDPINIndicator = if sidPinIsMsid then 0x00 else 0xFF })
+        -- SID Value State (byte 4 bit 0): 0 while C_PIN_SID's PIN is MSID's, as UCT-01 step 4c asks of a drive at
+        -- its factory state (Test Cases PDF 30), 1 once it is another
+      , described (\r -> r { blockSIDFeatureSIDValueState = not sidPinIsMsid })
         -- Cryptographic Erase, bit 2 of Supported Data Removal Mechanism, which an Opal TPer SHALL support
         -- (3.1.1.6.3, Table 10, PDF 27); no removal processing or interrupted, no time reported (Table 11, PDF 28)
       , described (\r -> r { level0DiscoverySupportedDataRemovalMechanismFeatureVersion = spDataRemovalVersion p
@@ -104,6 +119,13 @@ simDescriptors st = L.sortOn dCode (own <> added)
     -- a profile's descriptors of codes the simulator lacks, the first of each code
     added = L.nubBy ((==) `on` dCode)
       [ d | d <- maybe [] lpDescriptors (spProfile p), dCode d `notElem` map dCode own ]
+    -- whether C_PIN_SID's PIN is C_PIN_MSID's, read from the Admin SP's C_PIN rows (Opal Table 25, PDF 48-49),
+    -- which the parameters fill (spSidPin, spMsid) and a Set may later change; a row without a PIN cell holds the
+    -- parameters' value
+    sidPinIsMsid = pinOf uC_PIN_SID (fromMaybe (spMsid p) (spSidPin p)) == pinOf uC_PIN_MSID (spMsid p)
+    pinOf u fallback = case rowWithUID uSP_Admin uC_PINTable u st >>= \row -> columnOf c_PINTableDesc "PIN" >>= (`cellOf` row) of
+      Just (BytesCell pin) -> pin
+      _                    -> fallback
 
 -- | A descriptor whose fields hold what its allowances give them, then what
 --   the simulator chooses of them.

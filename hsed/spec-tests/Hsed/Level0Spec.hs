@@ -20,7 +20,11 @@ short, a Length of Parameter Data short of the header, a descriptor shorter
 than hsed's layout of its code, codes out of order, a Length no multiple of
 4, the reserved code 0x0000 and padding not zero are each reported, and
 splitting goes on; a header cut to a byte names no code it does not hold;
-Opal 2.30 allows a data structure revision other than Core's.
+Opal 2.30 allows a data structure revision other than Core's. At M4a (group
+G2) the simulator's Opal SSC V2 descriptor says whether C_PIN_SID's PIN is
+still C_PIN_MSID's (Initial C_PIN_SID PIN Indicator, Opal Table 6's bullets,
+PDF 23) and its Block SID descriptor's SID Value State says the same, both
+from the Admin SP's C_PIN rows.
 -}
 module Hsed.Level0Spec (spec) where
 
@@ -32,17 +36,22 @@ import           Test.Hspec.QuickCheck  (prop)
 import           Test.QuickCheck        (Gen, arbitrary, choose, counterexample, elements, forAll, listOf, resize, vectorOf,
                                          (.&&.), (===))
 
-import           Hsed.Core.Feature      (Allowance (..), Feature (..), FeatureHeader (..))
-import           Hsed.Core.Layout       (Content (..), Difference (..), Field (..), Layout (..), LayoutError (..),
-                                         encode, fieldEnd)
-import           Hsed.Gen.Core.Features (LockingFeature, TPerFeature)
-import           Hsed.Gen.Core.Layouts  (featureDescriptorTemplateLayout, level0DiscoveryHeaderLayout)
-import           Hsed.Gen.Opal.Features (Level0DiscoveryGeometryReportingFeature (..), Level0DiscoveryTPerFeature (..))
-import           Hsed.Jig.Support       (isAsPrinted)
+import           Hsed.Core.Feature        (Allowance (..), Feature (..), FeatureHeader (..))
+import           Hsed.Core.Layout         (Content (..), Difference (..), Field (..), Layout (..), LayoutError (..),
+                                           encode, fieldEnd)
+import           Hsed.Core.Table          (Cell (..))
+import           Hsed.Gen.Core.Features   (LockingFeature, TPerFeature)
+import           Hsed.Gen.Core.Layouts    (featureDescriptorTemplateLayout, level0DiscoveryHeaderLayout)
+import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
+import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
+import           Hsed.Gen.Core.UIDs       (uC_PIN_SID, uSP_Admin)
+import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeature (..), Level0DiscoveryTPerFeature (..))
+import           Hsed.Jig.Support         (isAsPrinted)
 import           Hsed.Level0
-import           Hsed.Sim.FeatureSets   (geometryAllowances)
-import           Hsed.Sim.Level0        (level0Response, simDescriptors)
-import           Hsed.Sim.Types         (Geometry (..), SimParams (..), defaultSimParams, initialState, simParamsProblems)
+import           Hsed.Sim.FeatureSets     (geometryAllowances)
+import           Hsed.Sim.Level0          (level0Response, simDescriptors)
+import           Hsed.Sim.State           (columnOf, updateRow)
+import           Hsed.Sim.Types           (Geometry (..), SimParams (..), defaultSimParams, initialState, simParamsProblems)
 
 
 -- | Parameters in range: every field the descriptors carry any value its
@@ -230,6 +239,21 @@ spec = describe "a Level 0 Discovery response" $ do
       decodeDescriptor (Descriptor 0xC000 0x1 (B.pack ([0xC0, 0x00, 0x10, 0x0C] <> replicate 12 0))) `shouldBe` Nothing
       decodeDescriptor (Descriptor 0x0100 0x1 (B.pack ([0x01, 0x00, 0x10, 0x0C] <> replicate 12 0))) `shouldBe` Nothing
 
+  describe "the SID PIN indicators, from the Admin SP's C_PIN rows (M4a)" $ do
+    let indicators st = ( fieldOf 0x0203 "Initial C_PIN_SID PIN Indicator" (simDescriptors st)
+                        , fieldOf 0x0402 "SID Value State" (simDescriptors st) )
+    it "with C_PIN_SID's PIN the MSID's (spSidPin Nothing), byte 13 of the Opal SSC V2 descriptor is 0x00 and SID Value State 0" $
+      indicators (initialState defaultSimParams) `shouldBe` (Just (Number 0x00), Just (Number 0))
+    it "with a SID PIN of its own, 0xFF (VU, may differ from the MSID's) and SID Value State 1" $
+      indicators (initialState defaultSimParams { spSidPin = Just "a SID PIN of its own" }) `shouldBe` (Just (Number 0xFF), Just (Number 1))
+    it "with a SID PIN given equal to the MSID, 0x00 and 0 still" $
+      indicators (initialState defaultSimParams { spSidPin = Just (spMsid defaultSimParams) }) `shouldBe` (Just (Number 0x00), Just (Number 0))
+    it "follow the C_PIN_SID row as the state holds it, not the parameters alone" $ do
+      let st     = initialState defaultSimParams
+          pinCol = columnOf c_PINTableDesc "PIN"
+          reset  = updateRow uSP_Admin uC_PINTable uC_PIN_SID (map (\(col, cell) -> (col, if Just col == pinCol then BytesCell "changed by Set" else cell))) st
+      indicators reset `shouldBe` (Just (Number 0xFF), Just (Number 1))
+
   describe "a feature record as a descriptor" $
     it "has its code, its version and its bytes, Length counting those after the header" $ do
       let geometry = Level0DiscoveryGeometryReportingFeature True 512 8 0
@@ -241,6 +265,10 @@ spec = describe "a Level 0 Discovery response" $ do
 -- | Run an expectation on a response split, failing if it is refused.
 withSplit :: ByteString -> (Level0 -> Expectation) -> Expectation
 withSplit bytes check = either (expectationFailure . ("refused: " <>) . show) check (splitLevel0 bytes)
+
+-- | A field of the descriptor of a code among some, as decoded by hsed's layout of the code.
+fieldOf :: Word16 -> Text -> [Descriptor] -> Maybe Content
+fieldOf code name ds = L.find ((== code) . dCode) ds >>= decodeDescriptor >>= L.lookup name . ddFields
 
 -- | Descriptors in increasing code order, each Table 41's header and a
 --   payload its Length counts.

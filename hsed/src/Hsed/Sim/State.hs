@@ -22,10 +22,13 @@ regular sessions and the resets share (design 8.1-8.2, M4a):
   is open, else what the ComID holds);
 * an SP's tables: a table's rows and its description as the SP holds them,
   the row of an object by its UID (column 0x00), a row changed, a cell by
-  column number and a column by name in a generated description;
+  column number, a column by name in a generated description, and a row's
+  cell by its column's name in the description the SP holds;
 * an SP's life cycle: the LifeCycleState cell of the SP's row of the Admin
   SP's SP table (Core 4.1, PDF 91), the one place the TPer keeps it, which
   the Session Manager, Level 0's Locking descriptor and the jig read;
+* TPER_RESET's enabling: the ProgrammaticResetEnable cell of the Admin SP's
+  TPerInfo row (Opal 2.30 3.2.3 and Table 26, PDF 28-29 and 49);
 * the properties: the TPer's by name from the parameters, the host's by
   name from what a ComID or a session keeps, and what a ComID starts with
   ('initialHostProperties', "Hsed.Sim.Params"').
@@ -45,8 +48,11 @@ module Hsed.Sim.State
   , updateRow
   , cellOf
   , columnOf
+  , cellNamedIn
     -- * Life cycles
   , spLifeCycle
+    -- * TPER_RESET
+  , programmaticResetEnabled
     -- * Properties
   , tperProperty
   , hostProperty
@@ -58,8 +64,10 @@ import qualified RIO.Map                 as Map
 import           RIO
 
 import           Hsed.Core.Table         (Cell (..), Col (..), ColNum, Row, TableDesc, columnNamed)
+import           Hsed.Core.Types         (enumFromValue)
 import           Hsed.Core.UID           (UID)
-import           Hsed.Gen.Core.TableUIDs (uSPTable)
+import           Hsed.Gen.Core.Enums     (Core_boolean (..))
+import           Hsed.Gen.Core.TableUIDs (uSPTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs      (uSP_Admin)
 import           Hsed.Sim.Types
 
@@ -158,6 +166,15 @@ cellOf = L.lookup
 columnOf :: TableDesc -> Text -> Maybe ColNum
 columnOf desc name = colNumber <$> columnNamed name desc
 
+-- | A row's cell in the column of a name, the column found in the
+--   description an SP holds of the row's table, by the table's UID
+--   ("Hsed.Sim.Types".@spsDescs@: the description with an SSC's columns
+--   added, as Opal 2.30 adds TPerInfo's ProgrammaticResetEnable, Table 26,
+--   PDF 49, which no generated Core description has); 'Nothing' where the SP
+--   describes no such table or column, or the row gives no cell in it.
+cellNamedIn :: SPState -> UID -> Text -> Row -> Maybe Cell
+cellNamedIn sps table name r = Map.lookup table (spsDescs sps) >>= \desc -> columnOf desc name >>= (`cellOf` r)
+
 
 -- * Life cycles
 
@@ -180,6 +197,28 @@ spLifeCycle sp st = do
   col  <- columnOf desc "LifeCycleState"
   rowWithUID uSP_Admin uSPTable sp st >>= cellOf col >>= \case
     EnumCell _ v -> Just v
+    _            -> Nothing
+
+
+-- * TPER_RESET
+
+-- | Whether TPER_RESET is enabled: the ProgrammaticResetEnable cell of the
+--   Admin SP's TPerInfo row, TRUE enabling the command (Opal 2.30 3.2.3, PDF
+--   28-29; Table 26, PDF 49; FALSE at the factory, Table 27, PDF 50), a
+--   boolean (Core Table 59, PDF 103). The row is the table's one (Core
+--   5.4.2.1, PDF 229: exactly one row), whatever its UID (Opal 2.30 Table
+--   27's, PDF 50, is not Core Table 244's, PDF 305), and the column is found
+--   by name in the Admin SP's description of the table ('cellNamedIn').
+--   'Nothing' where the Admin SP holds no TPerInfo row, or the row no
+--   boolean in that column: so on the hand-written stand-in, which has no
+--   TPerInfo table, until M4b's generated Admin SP ("Hsed.Sim.Preconfig"
+--   folds the cell from the parameters' @spTPerResetEnabled@).
+programmaticResetEnabled :: TPerState -> Maybe Bool
+programmaticResetEnabled st = do
+  sps <- Map.lookup uSP_Admin (tsSPs st)
+  r   <- listToMaybe (tableRows uSP_Admin uTPerInfoTable st)
+  cellNamedIn sps uTPerInfoTable "ProgrammaticResetEnable" r >>= \case
+    EnumCell _ v -> (== Core_boolean_True) <$> enumFromValue v
     _            -> Nothing
 
 

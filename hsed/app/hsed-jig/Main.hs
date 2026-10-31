@@ -104,8 +104,9 @@ runOptions = options <**> laterMilestones
       <*> switch (long "inactive-comid-discard"
             <> help "simulator: discard a command to an inactive ComID rather than refuse it")
       <*> optional (option (eitherReader parseSidPin) (long "sim-sid-pin" <> metavar "HEX"
-            <> help ("simulator: C_PIN_SID's PIN as hex digits, 1 to 32 bytes, other than the MSID's, so that Level 0's Initial "
-                     <> "C_PIN_SID PIN Indicator is not 0 and UCT-03 step 1 does not apply (Test Cases PDF 33)")))
+            <> help ("simulator: C_PIN_SID's PIN as hex digits, two a byte (an optional 0x before them), 1 to 32 bytes, other than "
+                     <> "the MSID's, so that Level 0's Initial C_PIN_SID PIN Indicator is 0xFF and SID Value State 1: UCT-03 step 1 "
+                     <> "does not apply and UCT-01 step 4c.ii fails, the drive being past its factory state (Test Cases PDF 30, 33)")))
       <*> optional (strOption (long "expect-serial" <> metavar "SERIAL"
             <> help "drive: the serial (trimmed IDENTIFY) the drive must have; required for a /dev target"))
       <*> optional (strOption (long "capture-level0" <> metavar "FILE"

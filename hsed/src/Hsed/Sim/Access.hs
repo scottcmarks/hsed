@@ -42,7 +42,7 @@ import           RIO
 
 import           Hsed.Core.Table          (Cell (..), ColNum, Row, TableDesc (..))
 import           Hsed.Core.Types          (enumValue)
-import           Hsed.Core.UID            (UID)
+import           Hsed.Core.UID            (UID, uNull)
 import           Hsed.Gen.Core.Enums      (Core_boolean_ACE (..))
 import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc, authorityTableDesc)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody)
@@ -71,7 +71,10 @@ accessControlList sps invoker method =
 --   to, one level more (Core 3.4.2.2, PDF 89; 5.3.4.1.2, PDF 211: a class
 --   authority is authenticated when any member is, and classes nest one
 --   level), and Anybody, which is always authenticated within a session
---   (5.3.4.1.2.1, PDF 211). Each once, Anybody first, then as given.
+--   (5.3.4.1.2.1, PDF 211). Each once, Anybody first, then as given. An
+--   authority whose Class is the NULL UID is of no class (5.3.2.10.5, PDF
+--   166: the Class of an authority that is no class's member; PDF 96: the
+--   NULL UID, all zeroes, a null pointer), so its Class adds nothing.
 --
 -- >>> import qualified RIO.Map as Map
 -- >>> import Hsed.Gen.Core.UIDs (uAuthority_Admins, uSP_Admin)
@@ -84,7 +87,9 @@ authenticated :: SPState -> [UID] -> [UID]
 authenticated sps auths = L.nub (uAuthority_Anybody : auths <> classes <> mapMaybe classOf classes)
   where
     classes   = mapMaybe classOf auths
-    classOf a = rowWith authorityTableDesc a sps >>= cellNamed authorityTableDesc "Class" >>= refOf
+    classOf a = rowWith authorityTableDesc a sps >>= cellNamed authorityTableDesc "Class" >>= refOf >>= aClass
+    -- a Class that names a class: the NULL UID names none
+    aClass c  = c <$ guard (c /= uNull)
 
 -- | What an ACE grants the authenticated authorities: its Columns where its
 --   BooleanExpr holds (an empty list meaning every column, Core 5.3.2.9.5,

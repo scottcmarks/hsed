@@ -18,7 +18,8 @@ Format]@ whose caption is a single identifier (@Table 46 AC_element@; the seven
 table holds one row of the Type table: its UID, its name and its Format, which
 "Hsed.Spec.Format" parses into a 'TypeDef' against the Type objects of every
 type row and the table names a @uidref{...}@ may name, those of the table the
-@tableUIDs@ rule binds (Table 240).
+@tableUIDs@ rule binds (Table 240), the spec's and then its base's (since M4b:
+Opal's Table 30 is read over Core's Table 240, 'formatEnv').
 
 Checks, each with the code its findings carry:
 
@@ -79,7 +80,7 @@ import           Hsed.Spec.Format (Env, formatNormalisations, mkEnv, parseFormat
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableNames, tableUIDRows, tableUIDsNamed)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, tableUIDRows, tableUIDsNamed)
 import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption, shapeMismatch)
 
 
@@ -161,13 +162,17 @@ readRows ctx = map readRow
 
 -- | The environment the Format cells resolve against: the Type objects of the
 --   type rows and the table names a @uidref{...}@ may name, those of the tables
---   bound by @tableUIDs@ ("Hsed.Spec.Rules.TableUIDs"); with what building it
---   found: @C-FMT-RESOLVE@ when there are type rows and no such table.
+--   bound by @tableUIDs@ ("Hsed.Spec.Rules.TableUIDs"), the spec's and then its
+--   base's ('allTableUIDRows': Opal, which binds Table 30 and has no table of
+--   table UIDs, resolves against Core's Table 240 and its own Table 20 row 12;
+--   Core's names are its Table 240's, as before); with what building it found,
+--   the spec's own: @C-FMT-RESOLVE@ when there are type rows and no such table
+--   in the spec or its base.
 formatEnv :: Context -> (Env, [Finding])
 formatEnv ctx = (mkEnv types names, nameFindings)
   where
     types = typeEnvFrom ctx
-    names = tableNames ctx
+    names = [ tuName r | (_, r) <- allTableUIDRows ctx, not (T.null (tuName r)) ]
     nameFindings =
       [ (finding Error "C-FMT-RESOLVE" ("no table bound by " <> tableUIDsNamed <> " to resolve uidref{...} against"))
           { Cm.spec = Just (cxSpec ctx) }

@@ -18,6 +18,10 @@ checks made to fail by one edited cell (C-UID-TABLE, C-UID-UNIQUE and T149's
 waiver, C-FMT-RESOLVE, the N-FORMAT-NORMALISED Notes), and its declarations:
 the provenance of E2, T46, and T75 under each errata set. 'joinFormat', a
 Format cell's text as the hand transcription states it, is tested on its own.
+On Opal under the M4b sidecar, read over Core: the Format environment's
+table names, Core's Table 240 and Opal's Table 20 row 12 (the lead's answer
+13 to the M4b plan; Core's names unchanged, Opal read alone still the
+Error), Table 30 declared in @Hsed.Gen.Opal.Types@, and 'allTypeRows'.
 
 The Format column of the hand transcription, the oracle's test fixture
 (hsed/fixture/Hand/TypeUIDs.hs, design 5.5), is compared here since M2d
@@ -31,6 +35,7 @@ import qualified Data.Text               as DT
 import qualified RIO.Char                as C
 import qualified RIO.List                as L
 import qualified RIO.Map                 as Map
+import qualified RIO.Set                 as Set
 import qualified RIO.Text                as T
 import           RIO
 import           Test.Hspec
@@ -42,11 +47,12 @@ import           Hsed.Spec.Common        (ErrataSet (..), Finding, RuleName (..)
 import qualified Hsed.Spec.Common        as Cm
 import           Hsed.Spec.Compile       (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
-import           Hsed.Spec.Format        (parseFormat)
+import           Hsed.Spec.Format        (Env (..), mkEnv, parseFormat)
 import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (SpecIR)
 import           Hsed.Spec.RuleDef       (Classification (..), Context (..), numberedTables, ownThenBase)
 import           Hsed.Spec.Rules         (Section (..), classify, scopeOf)
+import           Hsed.Spec.Rules.TableUIDs (tableNames)
 import           Hsed.Spec.Rules.TypeRow
 import           Hsed.Spec.Shape         (measure)
 
@@ -249,6 +255,30 @@ spec = do
   withM4bOpal $ \base opal -> do
     let octx = opalOver base opal
         alls = allTypeRows octx
+    describe "the Format environment over the base (the lead's answer 13 to the M4b plan)" $ do
+      it "gives Core the table names of its own Table 240, as before" $
+        formatEnv base `shouldBe` (mkEnv (typeEnvFrom base) (tableNames base), [])
+      it "resolves Opal's uidref{...} names against Core's Table 240 and Opal's own Table 20 row 12: no spec-level C-FMT-RESOLVE" $ do
+        Set.toList (envTables (fst (formatEnv octx))) `shouldBe` L.sort ("DataRemovalMechanism" : tableNames base)
+        snd (formatEnv octx) `shouldBe` []
+        [ renderFinding f | f <- checkIR (Just base) Scott opal, Cm.code f == "C-FMT-RESOLVE", isNothing (Cm.anchor f) ] `shouldBe` []
+      it "keeps its findings the spec's own: Opal read alone, Table 30 bound and no table of table UIDs, is still the Error" $
+        map renderFinding (snd (formatEnv (mkContext Scott opal)))
+          `shouldBe` ["C-FMT-RESOLVE opal-2.30: no table bound by tableUIDs (exemplar core-2.01 T240) to resolve uidref{...} against"]
+
+    describe "Table 30, data_removal_mechanism (PDF 51), on Opal under the M4b sidecar" $ do
+      cr <- runIO (either (throwString . show) pure (compileIR (Just base) Scott opal))
+      let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.Types" (crModules cr)))
+      it "is read and checked as Opal's one type row, with no finding" $ do
+        map (\tr -> (tr.trName, tr.trUID, joinFormat tr.trFormat)) (rights (typeRowReads octx))
+          `shouldBe` [("data_removal_mechanism", Just [0, 0, 0, 5, 0, 0, 4, 0x20], "Enumeration_Type,0,7")]
+        about "T30" (checkIR (Just base) Scott opal) `shouldBe` []
+      it "is declared in Hsed.Gen.Opal.Types: its UID and its TypeDef, an enumeration 0..7" $ do
+        lns `shouldContain` ["udata_removal_mechanismType :: UID", "udata_removal_mechanismType = uid 0x00 0x00 0x00 0x05 0x00 0x00 0x04 0x20"]
+        lns `shouldContain` ["tdata_removal_mechanism :: TypeDef", "tdata_removal_mechanism = EnumType [(Lit 0,Lit 7)]"]
+        lns `shouldSatisfy` any ("-- | opal-2.30 T30 - data_removal_mechanism Type Table Addition (PDF 51 / p.50, ord 32, sha256:" `T.isPrefixOf`)
+        [ l | l <- lns, " :: UID" `T.isSuffixOf` l ] `shouldBe` ["udata_removal_mechanismType :: UID"]
+
     describe "allTypeRows, on Opal under the M4b sidecar, read over Core (ownThenBase)" $ do
       it "gives Opal's own type row first, Table 30's data_removal_mechanism (PDF 51), then Core's hundred, each with its spec" $ do
         [ (cxSpec c, tr.trAnchor, tr.trName) | (c, tr) <- take 1 alls ] `shouldBe` [(SpecId "opal-2.30", TableId 30, "data_removal_mechanism")]

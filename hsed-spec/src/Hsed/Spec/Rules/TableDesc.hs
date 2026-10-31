@@ -29,14 +29,22 @@ Checks, each with the code its findings carry:
   column name is an identifier (Core 3.2.5: a letter, then letters, digits or
   underscores) and no two columns of a table share one;
 * @C-FMT-RESOLVE@: every Column Type names a Type object, the Name of a table
-  the @typeRow@ rule binds ("Hsed.Spec.Rules.TypeRow"). Core 2.01 prints four
-  column types no Type table row defines (@boolean_def_true@, T172;
-  @int_1_def_0@, T182 and T183; @boolean_def_false@, T215; @log_kind@, T233)
-  and no erratum of Scott's notes corrects them: each is a Warning citing the
-  page its row is printed on, and the column is generated with its type's
-  name and no UID;
-* @C-DESC-TABLE@: the caption names a table of Table 240, and no other
+  the @typeRow@ rule binds ("Hsed.Spec.Rules.TypeRow"), the spec's or its
+  base's. Core 2.01 prints four column types no Type table row defines
+  (@boolean_def_true@, T172; @int_1_def_0@, T182 and T183;
+  @boolean_def_false@, T215; @log_kind@, T233) and no erratum of Scott's
+  notes corrects them: each is a Warning citing the page its row is printed
+  on and the nearest type name (a base's with its spec), and the column is
+  generated with its type's name and no UID;
+* @C-DESC-TABLE@: the caption names a table of Table 240, the spec's or its
+  base's ("Hsed.Spec.Rules.TableUIDs".'allTableUIDRows', which for Opal
+  adds the DataRemovalMechanism row of its Table 20, PDF 37), and no other
   description names it.
+
+The column checks are 'columnFindings', which @columnsAddition@
+("Hsed.Spec.Rules.ColumnsAddition") runs on the columns a table adds to
+another's description, their numbers running on from that description's
+('ColumnsFrom').
 
 Compiled into 'tableDescsModule': @\<t\>TableDesc :: TableDesc@ per description
 (the table's name with its first letter in lower case, @tableTableDesc@ for
@@ -44,7 +52,13 @@ Table 171), the runtime 'Hsed.Core.Table.TableDesc' whose UIDs are Table 240's
 @u\<T\>Table@ and @u\<T\>TableObject@ and whose columns' types are
 @TypeName@s, each its text and its Type object's @u\<type\>Type@
 ("Hsed.Spec.Rules.TypeRow".'typeNameExpr'), both by name from the modules the
-two rules write.
+two rules write ('tableDescDecl'): each name from the generated module of the
+spec whose read defines it, the spec's own whole and a base's by name (since
+M4b: Opal's descriptions take Core's types from @Hsed.Gen.Core.Types@ and
+their own from @Hsed.Gen.Opal.Types@). A table whose UIDs only an SP's
+preconfiguration of the table of tables gives (Opal's DataRemovalMechanism,
+Table 20 row 12, PDF 37) has them declared beside its description, in the
+spec's 'tableUIDsModule' ("Hsed.Spec.Rules.TableUIDs".'rowDecl').
 
 The rules whose tables a description types (@constValues@'s default values,
 @preconfig@'s rows) read a column through "Hsed.Spec.Readers.Cell" (since
@@ -71,6 +85,12 @@ module Hsed.Spec.Rules.TableDesc
   , descDeclName
   , descSection
   , parseColNumber
+  , tableUIDRowNamed
+    -- * Checking a table's columns
+  , ColumnsFrom (..)
+  , columnFindings
+    -- * Declarations
+  , tableDescDecl
     -- * What a column holds ("Hsed.Spec.Readers.Cell")
   , TypeEnv (..)
   , typeEnv
@@ -93,7 +113,7 @@ import           RIO
 import           Hsed.Spec.Anchor          (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Common          (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common          as Cm
-import           Hsed.Spec.DSL             (SomeBinding (..), tableDesc)
+import           Hsed.Spec.DSL             (SomeBinding (..), someBindingShape, tableDesc)
 import           Hsed.Spec.Format          (nearest)
 import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
@@ -101,9 +121,9 @@ import           Hsed.Spec.Readers.Cell    (CellValue (..), ColKind (..), TypeEn
 import           Hsed.Spec.Readers.Text    (lowerIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), allEnums, parseEnumValue)
-import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableObjectUIDName, tableUIDName, tableUIDRows, tableUIDsModule,
-                                            tableUIDsNamed)
-import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeNameExpr, typeRowReads, typesModule)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, rowDecl, tableObjectUIDName, tableUIDName,
+                                            tableUIDsModule, tableUIDsNamed)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeNameExpr, typeUIDName, typesModule)
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure,
                                             shapeMismatch)
 
@@ -206,25 +226,72 @@ descDeclName n = lowerIdent n <> "TableDesc"
 
 -- | Every finding about one description.
 descFindings :: Context -> DescRead -> [Finding]
-descFindings ctx d = shortRows <> contig <> cellChecks <> typeChecks <> tableCheck
+descFindings ctx d = columnFindings ctx bt FromStart (drShort d) (drColumns d) <> tableCheck
   where
     bt = drBound d
-    cols = drColumns d
+    -- C-DESC-TABLE: the table the caption names is one of Table 240's, the spec's or its base's
+    tableCheck = case (drTable d, tableUIDRowNamed ctx <$> drTable d) of
+      (Nothing, _) -> [atTable ctx bt (finding Error "C-DESC-TABLE" "the caption names no table (\"<T> Table Description\")")]
+      (Just n, Just Nothing)
+        | null (allTableUIDRows ctx) ->
+            [atTable ctx bt (finding Error "C-DESC-TABLE" ("no table is bound by " <> tableUIDsNamed <> " to give " <> n <> " its UID"))]
+        | otherwise ->
+            [atTable ctx bt (finding Error "C-DESC-TABLE" ("the caption names " <> n <> ", which no row of the table of table UIDs names"))]
+      _ -> []
+
+-- | Where the columns a table's rows give begin ('columnFindings'): a
+--   description's own, at 0x00; after the columns of the description of the
+--   table they extend, named by the table and where its columns are read (a
+--   column addition: Opal Table 26's 0x08 after Core Table 211's TPerInfo
+--   columns 0x00 to 0x07, PDF 49 and 229); or nowhere known (an addition
+--   whose target no description describes, C-COLS-TARGET's).
+data ColumnsFrom
+  = FromStart
+  | After !Text ![Text] ![ColRead]
+    -- ^ the table (@TPerInfo@), the tables its columns are read from
+    --   (@core-2.01 T211@) and its columns, in order
+  | Unplaced
+
+-- | The findings about a table's rows read as a description's columns,
+--   each located at the row it is about (the page the row is printed on):
+--
+--   * @C-COL-CELL@: a row that is not four cells, an IsUnique that is not
+--     @Yes@ or blank, a name that is no identifier, a name two of the
+--     columns give, or one of them and a column they extend;
+--   * @C-COL-CONTIG@: a column number that is not @0x@ and hex digits, and
+--     the first number out of place, the numbers running on from where
+--     'ColumnsFrom' says, in row order;
+--   * @C-FMT-RESOLVE@: a type no type row of the spec or its base defines,
+--     a Warning naming the nearest type name (a base's with its spec): the
+--     column is generated with its type's name and no UID.
+columnFindings :: Context -> BoundTable -> ColumnsFrom -> [(Int, [CellIR])] -> [ColRead] -> [Finding]
+columnFindings ctx bt from short cols = shortRows <> contig <> cellChecks <> typeChecks
+  where
     here = atCells ctx bt
     err c cells msg = here cells (finding Error c msg)
     label cr = "column " <> crNumberText cr <> " " <> crName cr <> ": "
+    extended = case from of
+      After _ _ cs -> cs
+      _            -> []
+    k = length extended
+    sources srcs = " (" <> T.intercalate ", " srcs <> ")"
 
     shortRows = [ err "C-COL-CELL" cells ("row " <> tshow (i + 1) <> " has " <> tshow (length cells) <> " cells, not four")
-                | (i, cells) <- drShort d ]
+                | (i, cells) <- short ]
 
     -- C-COL-CONTIG: one finding for the first number out of place, every unreadable number
     unreadable = [ err "C-COL-CONTIG" (crCells cr) ("the column number " <> tshow (crNumberText cr) <> " is not 0x and hex digits")
                  | cr <- cols, isNothing (crNumber cr) ]
-    misplaced  = take 1 [ err "C-COL-CONTIG" (crCells cr)
-                            (label cr <> "the column numbers run 0x00 to " <> colNumberLit (length cols - 1)
-                              <> " in row order, and row " <> tshow (crRow cr + 1) <> " is " <> crNumberText cr
-                              <> " where " <> colNumberLit i <> " is expected")
-                        | (i, cr) <- zip [0 ..] cols, Just n <- [crNumber cr], n /= i ]
+    misplaced  = case from of
+      Unplaced -> []
+      _        -> take 1 [ err "C-COL-CONTIG" (crCells cr)
+                             (label cr <> "the column numbers run 0x00 to " <> colNumberLit (k + length cols - 1)
+                               <> " in row order" <> runOn <> ", and row " <> tshow (crRow cr + 1) <> " is " <> crNumberText cr
+                               <> " where " <> colNumberLit i <> " is expected")
+                         | (i, cr) <- zip [k ..] cols, Just n <- [crNumber cr], n /= i ]
+    runOn = case from of
+      After t srcs (_ : _) -> ", " <> t <> "'s 0x00 to " <> colNumberLit (k - 1) <> " first" <> sources srcs
+      _                    -> ""
     contig = unreadable <> misplaced
 
     -- C-COL-CELL: IsUnique, names
@@ -233,28 +300,28 @@ descFindings ctx d = shortRows <> contig <> cellChecks <> typeChecks <> tableChe
       | cr <- cols, crUnique cr `notElem` ["", "Yes"] ]
       <> [ err "C-COL-CELL" (crCells cr) (label cr <> "the column name is not an identifier (a letter, then letters, digits or underscores)")
          | cr <- cols, not (isIdent (crName cr)) ]
+      <> [ err "C-COL-CELL" (crCells cr) (label cr <> "the column name is also that of " <> t <> "'s column " <> crNumberText c0 <> sources srcs)
+         | After t srcs _ <- [from], cr <- cols, Just c0 <- [L.find ((== crName cr) . crName) extended] ]
       <> concat [ [ err "C-COL-CELL" (crCells cr) (label cr <> "the column name is also that of column " <> crNumberText c0) | cr <- rest ]
                 | c0 : rest <- Map.elems (Map.fromListWith (flip (<>)) [ (crName cr, [cr]) | cr <- cols ]) ]
 
     -- C-FMT-RESOLVE: the column type is a Type object's name; a Warning, generated without a UID
-    known = map trName (rights (typeRowReads ctx))
     typeChecks =
       [ here (crCells cr) (finding Warning "C-FMT-RESOLVE"
           (label cr <> "the column type " <> crType cr <> " names no Type object (no type row binds it)"
-            <> maybe "" (\n -> "; nearest: " <> n <> nearestTable n) (nearest known (crType cr))
+            <> maybe "" ("; nearest: " <>) (nearestType ctx (crType cr))
             <> "; generated with its name and no UID"))
       | cr <- cols, isNothing (crTypeRow cr) ]
-    nearestTable n = maybe "" (\tr -> ", " <> renderAnchorId (trAnchor tr)) (L.find ((== n) . trName) (rights (typeRowReads ctx)))
 
-    -- C-DESC-TABLE: the table the caption names is one of Table 240's
-    tableCheck = case (drTable d, tableUIDRowNamed ctx <$> drTable d) of
-      (Nothing, _) -> [atTable ctx bt (finding Error "C-DESC-TABLE" "the caption names no table (\"<T> Table Description\")")]
-      (Just n, Just Nothing)
-        | null (rights (tableUIDRows ctx)) ->
-            [atTable ctx bt (finding Error "C-DESC-TABLE" ("no table is bound by " <> tableUIDsNamed <> " to give " <> n <> " its UID"))]
-        | otherwise ->
-            [atTable ctx bt (finding Error "C-DESC-TABLE" ("the caption names " <> n <> ", which no row of the table of table UIDs names"))]
-      _ -> []
+-- | The type name nearest a column type no type row defines, among the
+--   spec's and its base's ('allTypeRows'), with the table that defines it:
+--   @integer_1, T93@; a base's with its spec, @uinteger_8, core-2.01 T157@.
+nearestType :: Context -> Text -> Maybe Text
+nearestType ctx t = do
+  n <- nearest (map (trName . snd) rows) t
+  (c, tr) <- L.find ((== n) . trName . snd) rows
+  pure (n <> ", " <> (if cxSpec c == cxSpec ctx then "" else specIdText (cxSpec c) <> " ") <> renderAnchorId (trAnchor tr))
+  where rows = allTypeRows ctx
 
 -- | C-DESC-TABLE: a table two descriptions name, reported at every one after the first.
 twice :: Context -> [DescRead] -> [Finding]
@@ -269,9 +336,11 @@ repeats ds = concat
   [ [ (n, d0, d) | d <- rest ]
   | (n, d0 : rest) <- Map.toList (Map.fromListWith (flip (<>)) [ (n, [d]) | d <- ds, Just n <- [drTable d] ]) ]
 
--- | The row of Table 240 naming a table.
-tableUIDRowNamed :: Context -> Text -> Maybe TableUIDRow
-tableUIDRowNamed ctx n = L.find ((== n) . tuName) (rights (tableUIDRows ctx))
+-- | The row of a table of table UIDs naming a table, the spec's or its
+--   base's ('allTableUIDRows': Core's Table 240, and for Opal its Table 20's
+--   DataRemovalMechanism row), with the Context that owns it.
+tableUIDRowNamed :: Context -> Text -> Maybe (Context, TableUIDRow)
+tableUIDRowNamed ctx n = L.find ((== n) . tuName . snd) (allTableUIDRows ctx)
 
 isIdent :: Text -> Bool
 isIdent n = case T.uncons n of
@@ -308,40 +377,62 @@ colNumberLit n = "0x" <> T.justifyRight 2 '0' (T.toUpper (T.pack (showHexInteger
 
 -- * Declarations
 
+-- | Each description's declaration, or why it has none; with it, for a
+--   table whose UIDs only the spec's preconfiguration of the table of tables
+--   gives (Opal's DataRemovalMechanism, Table 20 row 12, PDF 37), those
+--   UIDs' declarations in the spec's 'tableUIDsModule', which no table of
+--   table UIDs of the spec writes ("Hsed.Spec.Rules.TableUIDs".'rowDecl').
 compile :: Context -> [BoundTable] -> [Emitted]
-compile ctx bts = map one ds
+compile ctx bts = concatMap one ds
   where
     ds = readDescs ctx bts
     later = [ btAnchor (drBound d) | (_, _, d) <- repeats ds ]
     one d = case (drTable d >>= tableUIDRowNamed ctx, any Cm.isError (descFindings ctx d)) of
-      (Just tu, False) | isJust (tuObject tu), isJust (tuTable tu), btAnchor (drBound d) `notElem` later ->
-        Emit (descDecl ctx d (tuName tu))
-      _ -> Excluded (btAnchor (drBound d)) "C-COL-CONTIG, C-COL-CELL or C-DESC-TABLE failed"
+      (Just row@(owner, tu), False) | Just o <- tuObject tu, Just t <- tuTable tu, btAnchor (drBound d) `notElem` later ->
+        Emit (tableDescDecl ctx (boundProvenance ctx (drBound d)) [] d row)
+          : [ EmitIn tableUIDsModule (rowDecl owner tu o t) | cxSpec owner == cxSpec ctx, not (fromTableUIDs tu) ]
+      _ -> [Excluded (btAnchor (drBound d)) "C-COL-CONTIG, C-COL-CELL or C-DESC-TABLE failed"]
+    fromTableUIDs tu = someBindingShape (btBinding (tuBound tu)) == Just TableUIDs
 
--- | @\<t\>TableDesc :: TableDesc@.
-descDecl :: Context -> DescRead -> Text -> Gen.Decl
-descDecl ctx d n = (Gen.decl p name body)
-  { Gen.declImports =
+-- | @\<t\>TableDesc :: TableDesc@ for a description read in a spec's
+--   Context, under a provenance and the comment lines that follow it: its
+--   UIDs those of the table's row of a table of table UIDs, with the Context
+--   that owns the row ('tableUIDRowNamed'), and its columns' types the type
+--   rows the spec reads by their names, its own and then its base's
+--   ('allTypeRows'). Each name is imported from the generated module of the
+--   spec whose read defines it, by origin: the spec's own module whole (as
+--   Core's descriptions import @Hsed.Gen.Core.TableUIDs@ and
+--   @Hsed.Gen.Core.Types@), a base's by name (Opal's TPerInfo takes
+--   @uTPerInfoTable@ from @Hsed.Gen.Core.TableUIDs@ and @ubooleanType@ from
+--   @Hsed.Gen.Core.Types@, its DataRemovalMechanism @udata_removal_mechanismType@
+--   from its own @Hsed.Gen.Opal.Types@).
+tableDescDecl :: Context -> Gen.Provenance -> [Text] -> DescRead -> (Context, TableUIDRow) -> Gen.Decl
+tableDescDecl ctx p notes d (owner, tu) = (Gen.decl p name body) { Gen.declImports = imports }
+  where
+    sid   = cxSpec ctx
+    n     = tuName tu
+    name  = descDeclName n
+    types = Map.fromListWith (\_ firstOne -> firstOne) [ (trName tr, (cxSpec c, tr)) | (c, tr) <- allTypeRows ctx ]
+    typed cr = Map.lookup (crType cr) types
+    byOrigin m s names
+      | s == sid  = Gen.ImportAll (Gen.moduleName sid m)
+      | otherwise = Gen.ImportSome (Gen.moduleName s m) names
+    imports =
       [ Gen.ImportSome Gen.coreTableModule ["Col (..)", "TableDesc (..)"]
       , Gen.ImportSome Gen.typeNameModule ["TypeName (..)"]
-      , Gen.ImportAll (Gen.moduleName sid tableUIDsModule)
+      , byOrigin tableUIDsModule (cxSpec owner) [tableUIDName n, tableObjectUIDName n]
       , Gen.ImportSome "Prelude" ["Bool (..)", "Maybe (..)"] ]
-      <> [ Gen.ImportAll (Gen.moduleName sid typesModule) | any (isJust . crTypeRow) (drColumns d) ] }
-  where
-    sid  = cxSpec ctx
-    bt   = drBound d
-    p    = boundProvenance ctx bt
-    name = descDeclName n
+      <> [ byOrigin typesModule s [typeUIDName (trName tr)] | cr <- drColumns d, Just (s, tr) <- [typed cr] ]
     colLine i cr = (if i == (0 :: Int) then "      [ " else "      , ")
       <> T.unwords [ "Col", colNumberLit (fromMaybe i (crNumber cr)), tshow (crName cr)
-                   , if crUnique cr == "Yes" then "True" else "False", typeNameExpr (crType cr) (crTypeRow cr) ]
+                   , if crUnique cr == "Yes" then "True" else "False", typeNameExpr (crType cr) (snd <$> typed cr) ]
     body =
-      [ Gen.provenanceComment p
-      , name <> " :: TableDesc"
-      , name <> " = TableDesc"
-      , "  { tdName      = " <> tshow n
-      , "  , tdTableUID  = " <> tableUIDName n
-      , "  , tdObjectUID = " <> tableObjectUIDName n
-      , "  , tdColumns   =" ]
+      Gen.provenanceComment p : notes
+      <> [ name <> " :: TableDesc"
+         , name <> " = TableDesc"
+         , "  { tdName      = " <> tshow n
+         , "  , tdTableUID  = " <> tableUIDName n
+         , "  , tdObjectUID = " <> tableObjectUIDName n
+         , "  , tdColumns   =" ]
       <> zipWith colLine [0 ..] (drColumns d)
       <> [ "      ]", "  }" ]

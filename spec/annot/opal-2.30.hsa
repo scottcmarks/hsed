@@ -1,2 +1,4 @@
-opal-2.30 | doc | doc opal230 & rule feature
+opal-2.30 | doc | doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow & rule enumValues & rule tableDesc
+opal-2.30 | 4.2 | rule preconfig
 opal-2.30 | T17 | propsReq
+opal-2.30 | T49 | enumInDescription (replaces [core 102, core 103])

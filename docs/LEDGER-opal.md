@@ -7,7 +7,7 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| opal-2.30 | 50 | 5 | 0 | 1 | 44 | 0 | 0 |
+| opal-2.30 | 50 | 25 | 0 | 2 | 23 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
@@ -27,17 +27,33 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 
 | binding | tables |
 |---|---:|
+| comment EnumValues | 1 |
 | comment PropsReq | 1 |
+| rule columnsAddition | 3 |
+| rule enumValues | 1 |
 | rule feature | 5 |
+| rule fieldValue | 1 |
+| rule legend | 1 |
+| rule preconfig | 12 |
+| rule tableDesc | 1 |
+| rule typeRow | 1 |
 
 ## opal-2.30: findings under --errata scott
 
 | severity | code | findings |
 |---|---|---:|
+| Warning | C-FMT-RESOLVE | 1 |
+| Warning | W-ENUM-LABEL-REPEATED | 2 |
 | Warning | W-FEATURE-UNLISTED | 3 |
+| Warning | W-LEGEND-OFFSCALE | 10 |
+| Warning | W-LEGEND-STYLE | 3 |
 | Warning | W-PINS-NONE | 1 |
-| Warning | W-UNBOUND | 47 |
+| Warning | W-PRECONF-NAME-LENGTH | 2 |
+| Warning | W-UNBOUND | 26 |
 | Note | N-CAPTION-NORMALISED | 2 |
 | Note | N-FEATURE-HEADER | 1 |
 | Note | N-FEATURE-LENGTH | 1 |
 | Note | N-HEADER-NORMALISED | 7 |
+| Note | N-PRECONF-HEADER | 1 |
+| Note | N-PRECONF-LABEL | 9 |
+| Note | N-PRECONF-UID-TPER | 1 |

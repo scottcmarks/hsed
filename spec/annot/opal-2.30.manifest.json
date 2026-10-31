@@ -23,6 +23,28 @@
    "title": null
   },
   {
+   "hash": "ca1d3093791618c006a5cedf5a602eb592846d84dde7457bfbda423362eba612",
+   "header": null,
+   "id": "4.2",
+   "kind": "Rule",
+   "label": 34,
+   "ordinal": null,
+   "page": 34,
+   "rects": [
+    [
+     34,
+     [
+      36.0,
+      552.08,
+      134.48,
+      572.1
+     ]
+    ]
+   ],
+   "struct": "0/378",
+   "title": "Admin SP"
+  },
+  {
    "hash": "4bd794e9b123e237711cb3785d5ce1976a02800dd6b077d91ac5216ce44cc2ee",
    "header": [
     "propertyname",
@@ -56,6 +78,34 @@
    ],
    "struct": "0/360",
    "title": "- Properties Requirements"
+  },
+  {
+   "hash": "b2ab6fe06b9abcad7608962412d22d915cdc27d810c5feac74c882eaaf1e5a34",
+   "header": [
+    "uid",
+    "name",
+    "format",
+    "size",
+    "description"
+   ],
+   "id": "T49",
+   "kind": "Bind",
+   "label": 97,
+   "ordinal": 53,
+   "page": 97,
+   "rects": [
+    [
+     97,
+     [
+      80.58,
+      308.05,
+      531.42,
+      548.39
+     ]
+    ]
+   ],
+   "struct": "0/842",
+   "title": "- Life Cycle State Type Table Modification"
   }
  ],
  "irVersion": 1,

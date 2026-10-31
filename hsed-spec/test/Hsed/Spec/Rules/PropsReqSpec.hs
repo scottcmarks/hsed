@@ -180,9 +180,11 @@ spec = do
     describe "the generated module" $ do
       text <- runIO (moduleOf opal)
       let lns = T.lines text
-      it "is Hsed.Gen.Opal.Properties, beside the features, under Table 17's provenance" $ do
+      it "is Hsed.Gen.Opal.Properties, beside the features and the modules M4b's sidecar gives, under Table 17's provenance" $ do
         cr <- either (throwString . show) pure (compileIR (Just base) Scott opal)
-        map fst (crModules cr) `shouldBe` ["Hsed.Gen.Opal.Features", "Hsed.Gen.Opal.Properties"]
+        map fst (crModules cr) `shouldBe`
+          [ "Hsed.Gen.Opal.Enums", "Hsed.Gen.Opal.Features", "Hsed.Gen.Opal.Fields", "Hsed.Gen.Opal.Preconfig.AdminSP"
+          , "Hsed.Gen.Opal.Properties", "Hsed.Gen.Opal.TableDescs", "Hsed.Gen.Opal.TableUIDs", "Hsed.Gen.Opal.Types" ]
         lns `shouldSatisfy` any ("-- | opal-2.30 T17 - Properties Requirements (PDF 33 / p.32, ord 19, sha256:" `T.isPrefixOf`)
         lns `shouldContain` [ "import           Hsed.Core.Properties (Assumptions (..), Communicator (..), HostRequirement (..), PropertyRequirement (..), Requirement (..), TPerRequirement (..))" ]
       it "declares Core Table 168's assumptions, the host's as they stand, the TPer's about the host patched by name, each value sourced" $ do

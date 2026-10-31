@@ -15,8 +15,8 @@ headings, are each a record of its own and an instance of
 "Hsed.Spec.RuleDef".'BoundUnit' (M4b's scaffold, the M4a plan's answer 6):
 on the committed Core run 'allUnits' holds the 248 numbered tables, the 53
 signature blocks, the 3 sentences the laws bind and the 5 headings the
-behaviours and fails bind, kind after kind; on Opal read over Core, its 6
-bound tables and nothing else. The per-kind names are the class's at their
+behaviours and fails bind, kind after kind; on Opal read over Core, the 27
+tables M4b binds and nothing else. The per-kind names are the class's at their
 types: 'boundUnits' reads what 'boundTables' does, a table its comment binds
 to a shape that refuses it held ('unitsAll') but not read ('unitReadable');
 'atUnit' locates as 'atTable', 'atSig', 'atPara' and 'atHeading' do;
@@ -90,11 +90,11 @@ spec = withCore $ \pristine -> do
       [ anchorOf u | u <- allUnits ctx, kindOf u == HeadingUnit ] `shouldBe` map bhAnchor (headingUnits ctx)
       map bpAnchor (paragraphUnits ctx) `shouldBe` [ItemId "3.3.10.2.1" "3a", ItemId "3.3.10.6" "dc", ItemId "3.3.10.7" "a"]
     withOpal $ \opalPristine ->
-      it "holds Opal's 6 bound tables, read over Core, and nothing else" $ do
+      it "holds Opal's 27 bound tables, read over Core, and nothing else (M4b's sidecar: 25 by rule tokens, T17 and T49 by comments)" $ do
         opal <- committedOpalHsa >>= annotated opalPristine
         let octx = mkContextWith registry (Just ctx) Scott opal
-        kindCounts octx `shouldBe` [(TableUnit, 6)]
-        map anchorOf (allUnits octx) `shouldBe` map TableId [3, 4, 5, 6, 8, 17]
+        kindCounts octx `shouldBe` [(TableUnit, 27)]
+        map anchorOf (allUnits octx) `shouldBe` map TableId ([1, 3, 4, 5, 6, 8, 13, 17] <> [18 .. 33] <> [43, 49, 50])
 
   describe "boundUnits" $ do
     it "reads, shape by shape, the tables boundTables does: every bound table, once" $ do
@@ -156,12 +156,13 @@ spec = withCore $ \pristine -> do
       [ aid | (aid, payload) <- lines', not (unitAnchorLine (aid, payload)), isJust (unitNamed ctx aid) ] `shouldBe` []
       length (filter unitAnchorLine lines') `shouldBe` 21
     withOpal $ \opalPristine ->
-      it "finds every unit anchor of the committed Opal sidecar, read over Core, and no unit at its doc anchor" $ do
+      it "finds every unit anchor of the committed Opal sidecar, read over Core, and no unit at its doc anchor or its rule anchor (4.2)" $ do
         ohsa <- committedOpalHsa
         opal <- annotated opalPristine ohsa
         let octx = mkContextWith registry (Just ctx) Scott opal
             lines' = sidecarAnchors ohsa
-        [ renderAnchorId aid | (aid, payload) <- lines', unitAnchorLine (aid, payload) ] `shouldBe` ["T17"]
+        [ renderAnchorId aid | (aid, payload) <- lines', unitAnchorLine (aid, payload) ] `shouldBe` ["T17", "T49"]
         [ aid | (aid, payload) <- lines', unitAnchorLine (aid, payload), isNothing (unitNamed octx aid) ] `shouldBe` []
+        [ aid | (aid, payload) <- lines', not (unitAnchorLine (aid, payload)), isJust (unitNamed octx aid) ] `shouldBe` []
         fmap anchorOf (unitNamed octx DocId) `shouldBe` Nothing
-        fmap anchorOf (unitNamed octx (TableId 1)) `shouldBe` Nothing
+        fmap anchorOf (unitNamed octx (TableId 2)) `shouldBe` Nothing

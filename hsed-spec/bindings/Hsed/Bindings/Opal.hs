@@ -9,15 +9,25 @@ import Hsed.Spec.DSL
 
 {-# LINE 1 "opal-2.30.pdf#page=1&doc" #-}
 b_opal_doc :: Bound
-b_opal_doc = at (anchor @'Doc "opal-2.30" "doc" "" 1) (doc opal230 & rule feature)
+b_opal_doc = at (anchor @'Doc "opal-2.30" "doc" "" 1) (doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow & rule enumValues & rule tableDesc)
+
+{-# LINE 1 "opal-2.30.pdf#page=35&4.2" #-}
+b_opal_4_2 :: Bound
+b_opal_4_2 = at (anchor @'Heading "opal-2.30" "4.2" "0/378" 35) (rule preconfig)
 
 {-# LINE 1 "opal-2.30.pdf#page=33&T17" #-}
 b_opal_T17 :: Bound
 b_opal_T17 = at (anchor @'PropsReq "opal-2.30" "T17" "0/360" 33) propsReq
 
-{-# LINE 19 "Hsed/Bindings/Opal.hs" #-}
+{-# LINE 1 "opal-2.30.pdf#page=98&T49" #-}
+b_opal_T49 :: Bound
+b_opal_T49 = at (anchor @'EnumValues "opal-2.30" "T49" "0/842" 98) (enumInDescription (replaces [core 102, core 103]))
+
+{-# LINE 27 "Hsed/Bindings/Opal.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_opal_doc
+  , b_opal_4_2
   , b_opal_T17
+  , b_opal_T49
   ]

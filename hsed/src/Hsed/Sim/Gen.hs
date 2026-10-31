@@ -10,11 +10,11 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 What the laws of "Hsed.Law.Sync" quantify over: states of the simulated
-TPer, requests on their static ComIDs, and IF-SEND payloads that ask
-nothing, name no session the TPer has, or break a control session packet's
-requirements. Generators ('Gen' values), not
-'Test.QuickCheck.Arbitrary' instances, so that no type here or in the codec
-gets an orphan instance (design 12).
+TPer, with sessions open and the host's properties kept per ComID; requests
+on their static ComIDs; and IF-SEND payloads that ask nothing, name no
+session the TPer has, or break a control session packet's requirements.
+Generators ('Gen' values), not 'Test.QuickCheck.Arbitrary' instances, so
+that no type here or in the codec gets an orphan instance (design 12).
 -}
 module Hsed.Sim.Gen
   ( genState
@@ -34,25 +34,46 @@ import           Hsed.Core.StreamItem  (StreamItem (generate))
 import           Hsed.Core.Token       (Token (Empty))
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
-import           Hsed.Gen.Core.UIDs    (uSMUID)
+import           Hsed.Gen.Core.UIDs    (uAuthority_Anybody, uAuthority_SID, uSMUID, uSP_Admin)
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
-import           Hsed.Sim.Types        (ComIdState (..), SimParams (..), SyncState (..), TPerState (..), defaultSimParams,
-                                        initialState)
-import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPacketProtocol, dataKind, transferLength)
+import           Hsed.Sim.State        (openSession, sessionsOn)
+import           Hsed.Sim.Types        (ComIdState (..), Limits (..), Session (..), SimParams (..), SyncState (..), TPerState (..),
+                                        defaultSimParams, initialHostProperties, initialState, maxComPacketSizeName,
+                                        maxMethodsName, maxPacketSizeName, maxPacketsName, maxSubpacketsName, tperLimits)
+import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPacketHeaderSize, comPacketProtocol, dataKind, roundUp,
+                                        transferLength)
 
 
 -- | A TPer of the default parameters but for its unit (either), its number
---   of static ComIDs (one to three) and what it does with a command to an
---   inactive ComID (either), each static ComID awaiting IF-SEND, processing
---   or awaiting IF-RECV, with one to three response packets prepared.
+--   of static ComIDs (one to three), what it does with a command to an
+--   inactive ComID (either) and its MaxComPacketSize (Opal 2.30 Table 17's
+--   least, 2048, or twice that, so that a packet over its MaxPacketSize can
+--   arrive within it); each static ComID awaiting IF-SEND, processing or
+--   awaiting IF-RECV, with one to three response packets prepared, and
+--   keeping the host's properties as the host may have sent them
+--   ('genHostProperties'); and none to two regular sessions open on its
+--   ComIDs ("Hsed.Sim.State".'openSession'), to the Admin SP, as Anybody or
+--   as SID, with any HSN.
 genState :: Gen TPerState
 genState = do
   units   <- elements [minBound .. maxBound]
   n       <- chooseInt (1, 3)
   discard <- arbitrary
-  let st = initialState defaultSimParams { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard }
-  comIds <- traverse (\cs -> (\s -> cs { cSync = s }) <$> genSync) (tsComIds st)
-  pure st { tsComIds = comIds }
+  roomier <- arbitrary
+  let p  = defaultSimParams
+             { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard
+             , spTPerProperties = [ (name, if roomier && name == maxComPacketSizeName then 2 * v else v)
+                                  | (name, v) <- spTPerProperties defaultSimParams ] }
+      st = initialState p
+  comIds   <- traverse (\cs -> (\s props -> cs { cSync = s, cHostProps = props }) <$> genSync <*> genHostProperties) (tsComIds st)
+  sessions <- chooseInt (0, 2)
+  foldM (\s _ -> opened s) st { tsComIds = comIds } [1 .. sessions]
+  where
+    opened st = do
+      c           <- elements (Map.keys (tsComIds st))
+      hsn         <- arbitrary
+      authorities <- elements [[uAuthority_Anybody], [uAuthority_Anybody, uAuthority_SID]]
+      pure (snd (openSession c hsn uSP_Admin True authorities st))
 
 -- | An IF-SEND or IF-RECV of protocol 1 (the ComPacket protocol, SIIS 1.20
 --   Tables 12-13, PDF 30-31) on one of a state's static ComIDs (on its base
@@ -85,28 +106,57 @@ genNoActionPayload c = comPacketOn c =<< oneof
   where
     emptyAtoms = dataSubPacket . mconcat . (`replicate` generate Empty) <$> chooseInt (0, 16)
 
--- | A ComPacket on a ComID whose packets each name a session (Session other
---   than 0, the control session's, Core 3.3.7.1.2, PDF 73), which no TPer
---   has before M4a opens sessions (Core 3.3.10.7 a, PDF 86): one to three
---   packets, each of up to two data subpackets holding a Properties call, no
---   payload or random bytes.
-genUnresolvablePayload :: Word16 -> Gen ByteString
-genUnresolvablePayload c = comPacketOn c =<< (chooseInt (1, 3) >>= (`vectorOf` sessionPacket))
+-- | A ComPacket on a ComID of a TPer whose packets each name a session the
+--   TPer does not have on that ComID (Core 3.3.10.7 a, PDF 86): a Session
+--   other than 0, the control session's (3.3.7.1.2, PDF 73), and other than
+--   any session open on the ComID; among them an open session's TSN with
+--   another HSN (what ETC-04 sends, Test Cases PDF 78) and a session open
+--   on another ComID, where the TPer has them. One to three packets, each
+--   of up to two data subpackets holding a Properties call, no payload or
+--   random bytes.
+genUnresolvablePayload :: TPerState -> Word16 -> Gen ByteString
+genUnresolvablePayload st c = comPacketOn c =<< (chooseInt (1, 3) >>= (`vectorOf` sessionPacket))
   where
-    sessionPacket = PacketFrame <$> session <*> (chooseInt (0, 2) >>= (`vectorOf` (dataSubPacket <$> genControlBody)))
-    session       = (PacketHeader <$> arbitrary <*> arbitrary <*> pure 0 <*> pure 0 <*> pure 0)
-                      `suchThat` (\h -> packetTSN h /= 0 || packetHSN h /= 0)
+    open          = [ (sesTSN s, sesHSN s) | s <- sessionsOn c st ]
+    elsewhere     = [ (sesTSN s, sesHSN s) | ((c', _), s) <- Map.toList (tsSessions st), c' /= c ]
+    sessionPacket = PacketFrame <$> (header <$> session) <*> (chooseInt (0, 2) >>= (`vectorOf` (dataSubPacket <$> genControlBody)))
+    header (tsn, hsn) = PacketHeader tsn hsn 0 0 0
+    session       = oneof ([random] <> [ otherHSN | not (null open) ] <> [ elements elsewhere | not (null elsewhere) ])
+                      `suchThat` (\s -> s /= (0, 0) && s `notElem` open)
+    random        = (,) <$> arbitrary <*> arbitrary
+    otherHSN      = do
+      (tsn, hsn) <- elements open
+      (,) tsn <$> arbitrary `suchThat` (/= hsn)
 
-
--- | A ComPacket on a ComID whose one control session packet holds more
---   subpackets than the default TPer's MaxSubpackets, one (Opal 2.30 Table 17,
---   PDF 33): two or three data subpackets, each a Properties call the
---   Session Manager answers, no payload or random bytes. The TPer SHALL
---   discard and ignore such a packet (Core 5.2.2.4.1.1, PDF 145), a violation
---   of packet requirements (3.3.10.7 a, PDF 86); what ETC-15 sends (Test Cases
---   PDF 88).
-genOverfullPayload :: Word16 -> Gen ByteString
-genOverfullPayload c = comPacketOn c . pure . PacketFrame controlHeader =<< (chooseInt (2, 3) >>= (`vectorOf` (dataSubPacket <$> genControlBody)))
+-- | A ComPacket on a ComID of a TPer whose one control session packet
+--   breaks the TPer's packet requirements (Core 5.2.2.4.1.1-2, PDF 145): more
+--   data subpackets than its MaxSubpackets (one or two more, each a
+--   Properties call the Session Manager answers, no payload or random
+--   bytes), or, where the TPer's MaxComPacketSize leaves room for one
+--   ('genState' doubles it in half the states), one data subpacket making
+--   the packet larger than its MaxPacketSize, a Properties call padded with
+--   Empty atoms, the ComPacket still within its MaxComPacketSize when its
+--   length is rounded up to the unit. The TPer SHALL discard and ignore
+--   such a packet, a violation of packet requirements (3.3.10.7 a, PDF 86);
+--   the first is what ETC-15 sends (Test Cases PDF 88).
+genOverfullPayload :: TPerState -> Word16 -> Gen ByteString
+genOverfullPayload st c = oneof ([tooMany] <> [ tooLarge | leastData <= mostData ])
+  where
+    p       = tsParams st
+    tper    = tperLimits p
+    tooMany = comPacketOn c . pure . PacketFrame controlHeader
+                =<< (chooseInt (lSubpackets tper + 1, lSubpackets tper + 2) >>= (`vectorOf` (dataSubPacket <$> genControlBody)))
+    -- a data subpacket's bytes (a multiple of four) that make the packet exceed MaxPacketSize, the packet and subpacket
+    -- headers counted, and the most the ComPacket carries within MaxComPacketSize, in whole units
+    packetOverhead = 36
+    leastData      = 4 * ((lPacketSize tper - packetOverhead) `div` 4 + 1)
+    mostData       = 4 * ((wholeUnits (lComPacketSize tper) - comPacketHeaderSize - packetOverhead) `div` 4)
+    wholeUnits n   = (n `div` unitBytes) * unitBytes
+    unitBytes      = fromIntegral (roundUp (spUnits p) 1)
+    tooLarge = do
+      size <- (* 4) <$> chooseInt (leastData `div` 4, mostData `div` 4)
+      let call = generate (invocation uSMUID (Methods.Properties Nothing))
+      comPacketOn c [PacketFrame controlHeader [dataSubPacket (B.take size (call <> B.replicate size 0xFF))]]
 
 
 -- * Parts
@@ -122,6 +172,19 @@ genControlBody = oneof [ pure (generate (invocation uSMUID (Methods.Properties N
 -- | A ComID's synchronous protocol state.
 genSync :: Gen SyncState
 genSync = oneof [pure S1, S2 <$> genResponse, S3 <$> genResponse]
+
+-- | The host's properties a ComID keeps, as the host may have sent them
+--   (Core 5.2.2.3-4, PDF 143-145): each of the five the TPer's framing
+--   reads (MaxComPacketSize, MaxPacketSize, MaxPackets, MaxSubpackets,
+--   MaxMethods) either never sent (Opal 2.30 Table 17's initial assumption
+--   applies), sent as 0, no limit (Core Table 167, PDF 141-142), or sent as
+--   a value from its initial assumption up (a value below it is raised to
+--   it, 5.2.2.4).
+genHostProperties :: Gen (Map Text Natural)
+genHostProperties = Map.fromList . catMaybes <$> traverse one [maxComPacketSizeName, maxPacketSizeName, maxPacketsName, maxSubpacketsName, maxMethodsName]
+  where
+    one name = oneof [ pure Nothing, pure (Just (name, 0)), (\v -> Just (name, v)) <$> from (fromMaybe 1 (Map.lookup name initialHostProperties)) ]
+    from least = (least +) . fromIntegral <$> chooseInt (0, if least > 16 then 2048 else 3)
 
 -- | Response packets as the Session Manager prepares them, one to three
 --   control session packets, each of one or two data subpackets of up to

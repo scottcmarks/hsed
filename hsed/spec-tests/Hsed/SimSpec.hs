@@ -14,7 +14,9 @@ The simulator's step (design 8.2): a command held to its unit (SIIS 1.20
 25, PDF 53) and by ComID (Core Table 26, PDF 55): Level 0 outside the
 synchronous protocol (3.3.6, PDF 67; 3.3.10.3 b, PDF 84), a static ComID to
 its synchronous protocol, a reserved or inactive ComID refused or, if the
-run says so, discarded (3.3.3.2-3, PDF 58-59); an IF-SEND on protocol 0x00,
+run says so, discarded (3.3.3.2-3, PDF 58-59); two answers staged as two
+packets and returned one IF-RECV at a time for a host taking one (5.2.2.4.1.3,
+PDF 145-146; Table 45 row 3 first); an IF-SEND on protocol 0x00,
 which is not defined for IF-SEND, an Invalid Security Protocol ID (SIIS 1.20
 Tables 12 and 23). An event and a Tick, on states built directly. And the
 parameters a TPer starts from: static ComIDs that neither wrap past 0xFFFF
@@ -28,10 +30,18 @@ import           RIO
 import           Test.Hspec
 
 import           Hsed.Core.Code        (CodeRow (..), codeRow)
+import           Hsed.Core.Method      (invocation)
+import           Hsed.Core.Properties  (HostRequirement (..), PropertyRequirement (..), Requirement (..), TPerRequirement (..))
+import           Hsed.Core.StreamItem  (StreamItem (generate))
 import           Hsed.Gen.Core.Codes   (cComIDAssignments, cProtocolIDs)
-import           Hsed.Gen.Core.Layouts (ComPacketHeader (..))
-import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), decodeComPacket)
+import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
+import qualified Hsed.Gen.Core.Methods as Methods
+import           Hsed.Gen.Core.UIDs    (uSMUID)
+import           Hsed.Gen.Opal.Properties (propertyRequirements)
+import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket,
+                                        encodePacket)
 import           Hsed.Sim
+import           Hsed.Sim.SessionManager (answer)
 import           Hsed.Sim.Types
 import           Hsed.Wire
 
@@ -116,6 +126,27 @@ spec = describe "a step of the simulated TPer" $ do
     it "answers IF-RECV with Table 45 for its state" $ do
       let (r, st') = command (recvOn 0x01 base 2048) (withSync (S2 ["p"]) (tper id))
       (dfFrame <$> decodeComPacket (rpayload r), st') `shouldBe` (Right (ComPacketFrame (ComPacketHeader base 0 1 0) []), withSync (S2 ["p"]) (tper id))
+    it "stages a packet per answer and returns them one IF-RECV at a time for a host taking one packet, the first with Table 45 row 3's fields (Core 5.2.2.4.1.3)" $ do
+      let st = tper (\p -> p { spTPerProperties = [ (n, if n == maxMethodsName then 2 else v) | (n, v) <- spTPerProperties p ] })
+          properties = invocation uSMUID (Methods.Properties Nothing)
+          twoCalls = either (const mempty) id (encodeComPacket (ComPacketFrame (ComPacketHeader base 0 0 0)
+                       [PacketFrame (PacketHeader 0 0 0 0 0) [DataSubPacket (DataSubPacketHeader 0) (generate properties <> generate properties)]]))
+          reply = fromMaybe (error "no Properties answer") (fst (answer base properties st))
+          answerPacket = either (const mempty) id (encodePacket (PacketFrame (PacketHeader 0 0 0 0 0) [DataSubPacket (DataSubPacketHeader 0) (generate reply)]))
+          frame r = dfFrame <$> decodeComPacket (rpayload r)
+          (sent, st1) = command (Request IfSend 0x01 base (fromIntegral (B.length twoCalls)) twoCalls) st
+      sent `shouldBe` Response Good mempty
+      syncOf base st1 `shouldBe` Just (S2 [answerPacket, answerPacket])
+      let (_, st2) = step (Tick base) st1
+          (r1, st3) = command (recvOn 0x01 base 2048) st2
+          (r2, st4) = command (recvOn 0x01 base 2048) st3
+          (r3, _)   = command (recvOn 0x01 base 2048) st4
+          len = fromIntegral (B.length answerPacket) :: Word32
+      fmap cpfHeader (frame r1) `shouldBe` Right (ComPacketHeader base 0 (20 + len) (20 + len))
+      fmap (map dataSubPacketPayload . concatMap pfSubPackets . cpfPackets) (frame r1) `shouldBe` Right [generate reply]
+      fmap cpfHeader (frame r2) `shouldBe` Right (ComPacketHeader base 0 0 0)
+      fmap (length . cpfPackets) (frame r2) `shouldBe` Right 1
+      frame r3 `shouldBe` Right (ComPacketFrame (ComPacketHeader base 0 0 0) [])
 
   describe "a ComID neither Level 0's nor static" $ do
     it "reserved (Core Table 26: 0x0000-0x0FFF), is refused either way, discarding or not (3.3.3.2-3)" $
@@ -159,9 +190,9 @@ spec = describe "a step of the simulated TPer" $ do
         , \p -> p { spTPerProperties = [(maxComPacketSizeName, 1)] }
         , \p -> p { spTPerProperties = [("MaxAuthentications", 1)] } ]
         `shouldSatisfy` all (> 0)
-    it "report Opal 2.30 Table 17's TPer column by default, and a property left out falls back to it" $ do
-      spTPerProperties defaultSimParams `shouldBe` [ (n, toInteger v) | (n, v) <- tperRequirements ]
-      filter (`notElem` map fst tperRequirements) (map fst hostRequirements) `shouldBe` []
+    it "report Opal 2.30 Table 17's TPer column by default, the generated requirements' least (DefSessionTimeout VU, 0), and a property left out falls back to it" $ do
+      spTPerProperties defaultSimParams `shouldBe` [ (reqName r, maybe 0 toInteger (reqTPer r >>= tprMinimum)) | r <- propertyRequirements ]
+      [ reqName r | r <- propertyRequirements, Just h <- [reqHost r], hrRequired h == Mandatory, isNothing (reqTPer r) ] `shouldBe` []
       tperLimits defaultSimParams { spTPerProperties = [] } `shouldBe` tperLimits defaultSimParams
       lComPacketSize (tperLimits defaultSimParams { spTPerProperties = [(maxComPacketSizeName, 4096)] }) `shouldBe` 4096
 

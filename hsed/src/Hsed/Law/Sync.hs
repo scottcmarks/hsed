@@ -16,7 +16,9 @@ digits of its IR hash (@spec/ir/core-2.01.json@), and the Test Cases'
 cases that observe it. Each says what it holds as a QuickCheck property
 ('lawProp') over the simulator's step ("Hsed.Sim") and the generators of
 "Hsed.Sim.Gen": states of every unit, one to three static ComIDs in every
-synchronous state, requests of every length a unit allows.
+synchronous state, each keeping the host's properties as the host may have
+sent them, none to two regular sessions open (M4a), requests of every
+length a unit allows.
 -}
 module Hsed.Law.Sync
   ( ifSendWhileBusy
@@ -84,7 +86,7 @@ discardToS1 :: Law
 discardToS1 = Law
   { lawName  = "Sync.discardToS1"
   , lawHash  = "cb4d5d489fc0"
-  , lawProp  = Just (discardedAtIfSend genNoActionPayload)
+  , lawProp  = Just (discardedAtIfSend (const genNoActionPayload))
   , lawCases = [caseOf (SPF 2) 1]
   }
 
@@ -95,19 +97,22 @@ discardToS1 = Law
 --   and another HSN, Test Cases PDF 78) and ETC-15 the second (a control
 --   session packet of more subpackets than the TPer's MaxSubpackets, which
 --   it SHALL discard and ignore, 5.2.2.4.1.1, PDF 145; PDF 88). The
---   property: on a ComID awaiting IF-SEND, an IF-SEND whose packets name
---   sessions the TPer does not have ("Hsed.Sim.Gen".'genUnresolvablePayload'),
---   or whose control session packet holds too many subpackets
---   ('genOverfullPayload'), each even holding a call the Session Manager
---   answers, is accepted (Good), the TPer unchanged, the ComID still in S1,
---   and an IF-RECV after it is answered with Table 45's last row. (ETC-08
---   observes Opal 2.30 3.3.4.1.3 with Core 3.2.2.4.2 items 1 and 4, which no
---   anchor can name yet: design 13.29 (j).)
+--   property: on a ComID awaiting IF-SEND, of a TPer with sessions open or
+--   none, an IF-SEND whose packets name sessions the TPer does not have on
+--   that ComID, an open session's TSN with another HSN among them
+--   ("Hsed.Sim.Gen".'genUnresolvablePayload'), or whose control session
+--   packet holds more subpackets than the TPer's MaxSubpackets or more
+--   bytes than its MaxPacketSize ('genOverfullPayload'), each even holding a
+--   call the Session Manager answers, is accepted (Good), the TPer
+--   unchanged, its sessions among the rest, the ComID still in S1, and an
+--   IF-RECV after it is answered with Table 45's last row. (ETC-08 observes
+--   Opal 2.30 3.3.4.1.3 with Core 3.2.2.4.2 items 1 and 4, which no anchor
+--   can name yet: design 13.29 (j).)
 ignorePacket :: Law
 ignorePacket = Law
   { lawName  = "Sync.ignorePacket"
   , lawHash  = "cda4e92af591"
-  , lawProp  = Just (discardedAtIfSend (\c -> oneof [genUnresolvablePayload c, genOverfullPayload c]))
+  , lawProp  = Just (discardedAtIfSend (\st c -> oneof [genUnresolvablePayload st c, genOverfullPayload st c]))
   , lawCases = [whole (ETC 4), whole (ETC 15)]
   }
 
@@ -159,17 +164,20 @@ table45 = Law
     quantities = L.nub [ q | r <- states StateTables.table45, Quantity q <- settings r ]
 
 -- | What a law says of an IF-SEND whose payload, on its ComID, the TPer
---   discards: on a ComID awaiting IF-SEND, of a TPer in any state otherwise,
---   accepted (Good, no bytes), the TPer as it was, and an IF-RECV of any
---   length after it answered with Table 45's last row, (0, 0, 0) (Core
---   3.3.10.5 S1 b, PDF 84), the TPer still as it was.
-discardedAtIfSend :: (Word16 -> Gen ByteString) -> Property
+--   discards (the payload generated for the ComID of the TPer as it is,
+--   its sessions known): on a ComID awaiting IF-SEND, of a TPer in any
+--   state otherwise, accepted (Good, no bytes), the TPer as it was, the
+--   whole of it (its sessions, the properties its ComIDs keep of the host,
+--   its SPs' rows and its ComID management buffers among the rest), and an
+--   IF-RECV of any length after it answered with Table 45's last row,
+--   (0, 0, 0) (Core 3.3.10.5 S1 b, PDF 84), the TPer still as it was.
+discardedAtIfSend :: (TPerState -> Word16 -> Gen ByteString) -> Property
 discardedAtIfSend payloadOn =
   forAll genState $ \st0 ->
   forAll (elements (Map.keys (tsComIds st0))) $ \c ->
-  forAll (payloadOn c) $ \bytes ->
-  let st   = st0 { tsComIds = Map.adjust (\cs -> cs { cSync = S1 }) c (tsComIds st0) }
-      len  = roundUp (spUnits (tsParams st)) (fromIntegral (B.length bytes))
+  let st   = st0 { tsComIds = Map.adjust (\cs -> cs { cSync = S1 }) c (tsComIds st0) } in
+  forAll (payloadOn st c) $ \bytes ->
+  let len  = roundUp (spUnits (tsParams st)) (fromIntegral (B.length bytes))
       sent = step (Cmd (Request IfSend comPacketProtocol c len (bytes <> B.replicate (fromIntegral len - B.length bytes) 0))) st
   in forAll (lenBytes <$> (genStaticRequest st `suchThat` ((== IfRecv) . dir))) $ \recvLen ->
      let received = step (Cmd (Request IfRecv comPacketProtocol c recvLen mempty)) (snd sent)

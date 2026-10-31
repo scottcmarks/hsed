@@ -23,9 +23,12 @@ answered in each state with the ComPacket header fields Core Table 45 gives
 Each packet of an IF-SEND names a session (3.3.7.1.2, PDF 73): the control
 session, Session 0, whose invocations the Session Manager answers
 ("Hsed.Sim.SessionManager".@answer@, the TPer's state threaded through
-them), or a regular session the TPer has open ("Hsed.Sim.State", M4a), whose
-packet "Hsed.Sim.Session" processes; one it has not is ignored (3.3.10.7 a,
-PDF 86).
+them), or a regular session the TPer has open ("Hsed.Sim.State"), whose
+data subpackets "Hsed.Sim.Session" processes; one it has not is ignored
+(3.3.10.7 a, PDF 86). The token streams are read by "Hsed.Core.Stream":
+the atoms under the TPer's policy (its MaxIndTokenSize; no signed integer,
+no continued byte sequence, Opal 2.30 Table 15, PDF 30-31), then the items
+as the control session or a regular session reads them.
 
 Table 45 is generated ("Hsed.Gen.Core.StateTables".@table45@) and bound by
 its comment to this code (@Sync.table45@, the law "Hsed.Law.Sync"). Two of
@@ -47,8 +50,6 @@ module Hsed.Sim.Sync
     -- * The synchronous protocol of a static ComID
   , classifyIfSend
   , ifRecvStatic
-    -- * Reading a control session's data subpacket
-  , controlInvocations
   ) where
 
 import qualified RIO.ByteString            as B
@@ -56,25 +57,23 @@ import qualified RIO.List                  as L
 import qualified RIO.Map                   as Map
 import           RIO
 
-import           Hsed.Core.Call            (MethodCall (..), Parameters (..), statusList)
+import           Hsed.Core.Call            (MethodCall (..), Parameters (..))
 import           Hsed.Core.Code            (CodeRow (..), codeRowsNamed, inSpan)
 import           Hsed.Core.Record          (encodeRecord)
 import qualified Hsed.Core.Stream          as Stream
 import           Hsed.Core.StreamItem      (StreamItem (..))
 import           Hsed.Core.Sync            (Setting (..), StateTable (..), settingOf)
-import           Hsed.Core.Token           (Token (..))
 import           Hsed.Gen.Core.Codes       (StatusCode (..), cSubpacketTypes, pattern RESPONSE_OVERFLOW)
 import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
                                             PacketHeader (..))
 import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodePacket)
-import           Hsed.Sim.Session          (sessionPayload)
+import           Hsed.Sim.Session          (controlHeader, fits, packets, sessionPayload)
 import           Hsed.Sim.SessionManager   (answer)
 import           Hsed.Sim.State            (resolveSession, tperProperty)
-import           Hsed.Sim.Types            (ComIdState (..), Limits (..), Outcome (..), SimParams, SyncState (..), TPerState (..),
-                                            comIdHostLimits, maxIndTokenSizeName, tperLimits)
-import           Hsed.Wire                 (IfStatus (..), Response (..), comPacketHeaderSize, dataKind, exactly, hex,
-                                            staticExtension)
+import           Hsed.Sim.Types            (ComIdState (..), Limits (..), Outcome (..), Session (..), SimParams, SyncState (..),
+                                            TPerState (..), comIdHostLimits, maxIndTokenSizeName, tperLimits)
+import           Hsed.Wire                 (IfStatus (..), Response (..), comPacketHeaderSize, exactly, hex, staticExtension)
 
 
 -- * Core Table 45
@@ -146,58 +145,71 @@ t45Fields row d = do
 --   it: its response packets prepared, the payload discarded and why (the
 --   TPer as it was), or a session aborted. The TPer's limits are its
 --   properties' ("Hsed.Sim.Params".'tperLimits') and the host's those the
---   ComID keeps of it ('comIdHostLimits'). Discarded:
+--   ComID keeps of it ('comIdHostLimits', 0 = no limit).
 --
---   * what is no ComPacket of the ComID, or names an extension other than a
---     static ComID's 0x0000 (Core 3.3.3.1, PDF 57-58; 3.3.10.7 a, PDF 86);
---   * a ComPacket with no packets: no action (3.3.10.6 S2:S1 d, PDF 85-86);
---   * a packet that names a session the TPer has not open (3.3.10.7 a, PDF
---     86: the session cannot be resolved; what ETC-04 sends, Test Cases PDF
---     78), the whole payload, the TPer unchanged;
---   * a control session packet of more subpackets than the TPer's
---     MaxSubpackets, or of more bytes than its MaxPacketSize, which the TPer
---     SHALL discard and ignore (5.2.2.4.1.1-2, PDF 145; 3.3.10.7 a, a
---     violation of packet requirements; what ETC-15 sends, PDF 88); packets
---     past the TPer's MaxPackets are ignored, as it MAY (5.2.2.4.1.3, PDF
---     145-146);
---   * packets whose data subpackets have no payload or Empty atoms alone: no
---     action (3.3.10.6 S2:S1 d); a subpacket of another Kind than data
---     (Table 19, PDF 43) is no data;
---   * tokens that are no method invocations: a token that does not read, one
---     outside an invocation, a Call inside one, an invocation cut short, or a
---     status list of other than three or more uintegers (Core 3.2.2.4, PDF
---     38-39), an error on the Session Manager whose payload the TPer SHALL
---     discard (Opal 2.30 3.3.4.1.3, PDF 31);
---   * method calls none of which the Session Manager answers: an
---     unrecognized invocation outside a regular session is ignored, no
---     response sent (3.2.4.2, PDF 49), as is one whose header or parameters
---     do not read (3.2.2.4.2 items 3-4).
+--   The ComPacket must be the ComID's, its extension a static ComID's
+--   0x0000, with a packet (Core 3.3.3.1, PDF 57-58; 3.3.10.7 a, PDF 86;
+--   3.3.10.6 S2:S1 d, PDF 85-86), else the payload is discarded. The first
+--   TPer-MaxPackets packets are considered, the rest ignored, as it MAY
+--   (5.2.2.4.1.3, PDF 145-146). Each considered packet names a session
+--   (3.3.7.1.2, PDF 73): Session 0 is the control session; an open
+--   session's TSN and HSN ("Hsed.Sim.State".'resolveSession') is that
+--   session; any other packet discards the whole payload, the TPer
+--   unchanged (3.3.10.7 a: the session cannot be resolved; what ETC-04
+--   sends, Test Cases PDF 78; the law @Sync.ignorePacket@).
 --
---   The control session's tokens are read as it reads them (3.3.7.1.3, PDF
---   73): Empty atoms dropped wherever they are (3.2.2.3.1.5, Table 14, PDF
---   36), End of Session and the Transaction Control tokens, each with the
---   status after it, ignored; the invocations of a subpacket past the TPer's
---   MaxMethods ignored, as it MAY (5.2.2.4.1.7, PDF 146). Every call is read
---   before any is answered, so that a payload the TPer discards changes
---   nothing (the law @Sync.ignorePacket@); the calls are then answered in
---   order, the TPer's state threaded through the Session Manager.
+--   The control session's packets are read before anything changes, so
+--   that a payload the TPer discards changes nothing:
 --
---   The answers, in the order called, each in a response packet of its own
---   on the control session, one data subpacket of its tokens (the host's
---   MaxMethods, MaxSubpackets and MaxPackets being what the ComID keeps of
---   it, Opal 2.30 Table 17's initial assumptions until Properties sets them).
---   An answer that with its packet does not fit the host's MaxPacketSize or
---   its ComPacket is answered instead with an empty list and
---   RESPONSE_OVERFLOW, and nothing after it (Opal 2.30 3.3.1, PDF 29); where
---   even that answer would not fit (no host within Opal 2.30 Table 17's
---   minima, PDF 33), the payload is discarded with the reason, nothing
---   staged that no IF-RECV could carry.
+--   * a packet of more subpackets than the TPer's MaxSubpackets, or of more
+--     bytes than its MaxPacketSize, is discarded and ignored, the others
+--     read (5.2.2.4.1.1-2, PDF 145; 3.3.10.7 a, a violation of packet
+--     requirements; what ETC-15 sends, PDF 88);
+--   * each data subpacket's atoms are read under the TPer's policy
+--     ("Hsed.Core.Stream".'Stream.atoms': Empty atoms dropped wherever they
+--     are, Table 14, PDF 36), then its items as the control session reads
+--     them ('Stream.items' 'Stream.ControlStream': End of Session and the
+--     transaction control tokens ignored, each with the status after it,
+--     3.3.7.1.3, PDF 73); a token that does not read, is signed or too
+--     large (3.2.2.4.1, PDF 38; Opal 2.30 Table 15, PDF 30-31), an
+--     invocation whose header or parameter list does not read, a token
+--     outside an invocation or in a status list, or a stream ending inside
+--     an invocation (3.2.2.4.2, PDF 39; 3.3.10.3 a) is a streaming error on
+--     the Session Manager, which discards the whole payload (Opal 2.30
+--     3.3.4.1.3, PDF 31; the lead's M4a decision 8);
+--   * a subpacket of another Kind than data (Table 19, PDF 43) is not read;
+--     the invocations of a subpacket past the TPer's MaxMethods are ignored,
+--     as it MAY (5.2.2.4.1.7, PDF 146).
 --
---   A packet of a regular session the TPer has open goes to
---   "Hsed.Sim.Session".'sessionPayload' with its data subpackets' items as
---   a session reads them ("Hsed.Core.Stream", the TPer's atom policy from
---   its MaxIndTokenSize) and the fault, if any, that stopped the reading
---   (group G1's, design 11: no session opens before G2 answers StartSession).
+--   Then the considered packets are processed in order, the TPer's state
+--   threaded. A control packet's calls go to the Session Manager
+--   ('answer'), in order; an unrecognized invocation outside a regular
+--   session is ignored, no response sent (3.2.4.2, PDF 49), as is one
+--   whose parameters are not its method's (3.2.4.2 MAY; ETC-08, PDF 81).
+--   The answers, each in a data subpacket of its own, are packed into
+--   control session packets within the host's MaxSubpackets and
+--   MaxPacketSize ("Hsed.Sim.Session".'packets'), SeqNumber, AckType and
+--   Acknowledgement 0 (5.2.2.4.1.9-10, PDF 146-147). An answer that fits no
+--   packet of the host's, or no ComPacket, is answered instead with an empty
+--   list and RESPONSE_OVERFLOW, and nothing after it (Opal 2.30 3.3.1, PDF
+--   29); where even that answer would not fit (no host within Opal 2.30
+--   Table 17's minima, PDF 33), the payload is discarded with the reason,
+--   nothing staged that no IF-RECV could carry. A regular session's packet
+--   goes to "Hsed.Sim.Session": one over the TPer's MaxSubpackets or
+--   MaxPacketSize aborts the session (5.2.2.4.1.1-2), else each data
+--   subpacket's atoms are read as above, a token that does not read
+--   aborting the session with the results completed before it (3.2.2.4.1
+--   item 1), and its items as a regular session reads them
+--   ('Stream.SessionStream') go to 'sessionPayload'; the subpackets after
+--   one that closes or aborts the session are not read, and a later packet
+--   of a session a packet before it closed is ignored.
+--
+--   The outcome: 'Prepared', the response packets of every packet
+--   processed, in order; 'SessionAborted' where a session's packet aborted
+--   it, with the packets prepared before and its CloseSession where the run
+--   prepares one, the packets after it not processed; or 'Discarded' where
+--   nothing was answered (3.2.4.2; no action, 3.3.10.6 S2:S1 d), the TPer as
+--   it was.
 classifyIfSend :: Word16 -> ByteString -> TPerState -> (Outcome, TPerState)
 classifyIfSend c bytes st = case Map.lookup c (tsComIds st) of
   Nothing -> (Discarded ("no static ComID " <> hex c), st)
@@ -210,64 +222,95 @@ classifyIfSend c bytes st = case Map.lookup c (tsComIds st) of
           discard ("an invalid Extended ComID: extension " <> tshow (comPacketComIDExtension h)
                    <> ", a static ComID's being 0x0000 (Core 3.3.3.1, PDF 57-58)")
       | null ps -> discard "no packets: no action (Core 3.3.10.6 S2:S1 d, PDF 85-86)"
-      | otherwise -> case traverse sessionOf ps of
-          Nothing -> discard "a packet names a session the TPer does not have (Core 3.3.10.7 a, PDF 86)"
-          Just sessions -> case [ (ses, p) | (Just ses, p) <- zip sessions ps ] of
-            []           -> either discard id (control cs (take (lPackets tper) ps))
-            (ses, p) : _ -> regular ses p
+      | otherwise -> either discard (run (comIdHostLimits p0 (cHostProps cs)) st [] []) $
+          traverse resolved (take (lPackets tper) ps) >>= traverse prepare
   where
     p0   = tsParams st
     tper = tperLimits p0
     discard why = (Discarded why, st)
-    -- the session a packet names: the control session (Nothing), or an open regular session; none for any other
-    sessionOf p
-      | controlSession (pfHeader p) = Just Nothing
-      | otherwise                   = Just <$> resolveSession c (packetTSN (pfHeader p)) (packetHSN (pfHeader p)) st
-    -- a regular session's packet: its data subpackets' items as a session reads them, then the session's processing
-    regular ses p = sessionPayload ses items fault st
-      where
-        tokens = traverse (fmap (map Stream.atomToken) . Stream.atoms tperPolicy . dataSubPacketPayload) (filter isData (pfSubPackets p))
-        (items, fault) = case tokens of
-          Right toks    -> Stream.items Stream.SessionStream (concat toks)
-          Left (_, why) -> ([], Just (Stream.Fault 0 Stream.OutsideCall why))
-    tperPolicy = Stream.tperPolicy (maybe 0 fromInteger (tperProperty maxIndTokenSizeName p0))
-    -- the control session's packets the TPer reads: every call read first, those the Session Manager answers answered
-    -- in order with the TPer's state threaded, then framed within the host's limits
-    control cs considered = do
-      let host = comIdHostLimits p0 (cHostProps cs)
-          kept = filter (isNothing . violation) considered
-      when (null kept) $ Left (fromMaybe "no packet the TPer reads" (listToMaybe (mapMaybe violation considered)))
-      case filter (not . noAction) [ dataSubPacketPayload sp | p <- kept, sp <- pfSubPackets p, isData sp ] of
-        []       -> Left "no subpacket with a payload of more than Empty atoms: no action (Core 3.3.10.6 S2:S1 d, PDF 85-86)"
-        payloads -> do
-          calls <- concat <$> traverse (fmap (take (lMethods tper)) . controlInvocations) payloads
-          let (st', replies) = L.mapAccumL (\s mc -> let (reply, s') = answer c mc s in (s', reply)) st (catMaybes calls)
-          case catMaybes replies of
-            []      -> Left "no call the Session Manager answers: ignored, no response sent (Core 3.2.4.2, PDF 49)"
-            answers -> (\packets -> (Prepared packets, st')) <$> (fitting host answers >>= traverse framed)
-    -- why the TPer discards and ignores a control session packet, if it does
-    violation p
-      | length (pfSubPackets p) > lSubpackets tper =
-          Just ("a control session packet of " <> tshow (length (pfSubPackets p)) <> " subpackets, more than the TPer's MaxSubpackets "
-                <> tshow (lSubpackets tper) <> ": discarded and ignored (Core 5.2.2.4.1.1, PDF 145)")
-      | either (const True) ((> lPacketSize tper) . B.length) (encodePacket p) =
-          Just ("a control session packet of more bytes than the TPer's MaxPacketSize " <> tshow (lPacketSize tper)
-                <> ": discarded and ignored (Core 5.2.2.4.1.2, PDF 145)")
-      | otherwise = Nothing
-    -- each answer a response packet; the first that does not fit replaced by its overflow, nothing after it; an
+    policy = Stream.tperPolicy (maybe 0 fromInteger (tperProperty maxIndTokenSizeName p0))
+    -- the session a packet names: the control session (Nothing) or an open regular session; any other discards the payload
+    resolved pkt
+      | controlSession (pfHeader pkt) = Right (Nothing, pkt)
+      | otherwise = maybe (Left "a packet names a session the TPer does not have (Core 3.3.10.7 a, PDF 86)")
+                          (\ses -> Right (Just ses, pkt))
+                          (resolveSession c (packetTSN (pfHeader pkt)) (packetHSN (pfHeader pkt)) st)
+    -- a control packet's calls, all read before any is answered; a regular session's packet, processed later in order
+    prepare = \case
+      (Just ses, pkt) -> Right (SessionPacket ses pkt)
+      (Nothing, pkt)  -> case overLimits tper pkt of
+        Just why -> Right (Dropped (why <> ": discarded and ignored (Core 5.2.2.4.1.1-2, PDF 145)"))
+        Nothing  -> ControlCalls . concat <$> traverse (calls . dataSubPacketPayload) (filter isData (pfSubPackets pkt))
+    -- a control session subpacket's invocations, as far as the TPer's MaxMethods; Left, a streaming error on the Session Manager
+    calls payload = do
+      as <- first (\(off, why) -> "at byte " <> tshow off <> " of a control session subpacket, " <> why <> onSessionManager)
+                  (Stream.atoms policy payload)
+      let (items, fault) = Stream.items Stream.ControlStream (map Stream.atomToken as)
+      traverse_ (\f -> Left ("at token " <> tshow (Stream.faultAt f) <> " of a control session subpacket, " <> Stream.faultWhy f <> onSessionManager)) fault
+      take (lMethods tper) <$> traverse invocation items
+    invocation = \case
+      Stream.Invoke mc -> Right mc
+      Stream.BadCall f -> Left ("a method invocation that does not read on the control session, " <> Stream.faultWhy f <> onSessionManager)
+      other            -> Left ("the control session does not read " <> tshow other <> onSessionManager)
+    onSessionManager = ": a streaming error on the Session Manager, the payload discarded (Opal 2.30 3.3.4.1.3, PDF 31)"
+    -- the considered packets processed in order, the state threaded, the response packets gathered; nothing gathered is
+    -- Discarded with the TPer as it was, for the first reason found
+    run host st' acc whys = \case
+      []
+        | null acc  -> discard (fromMaybe "no action (Core 3.3.10.6 S2:S1 d, PDF 85-86)" (listToMaybe (reverse whys)))
+        | otherwise -> (Prepared acc, st')
+      Dropped why : rest -> run host st' acc (why : whys) rest
+      ControlCalls mcs : rest ->
+        let (st'', replies) = L.mapAccumL (\s mc -> let (reply, s') = answer c mc s in (s', reply)) st' mcs
+            why | null mcs  = "no subpacket with a payload of more than Empty atoms: no action (Core 3.3.10.6 S2:S1 d, PDF 85-86)"
+                | otherwise = "no call the Session Manager answers: ignored, no response sent (Core 3.2.4.2, PDF 49)"
+        in case catMaybes replies of
+             []      -> run host st' acc (why : whys) rest
+             answers -> either discard (\packets' -> run host st'' (acc <> packets') whys rest)
+                               (fitting host answers >>= packets host controlHeader . map generate)
+      SessionPacket ses pkt : rest
+        | isNothing (resolveSession c (sesTSN ses) (sesHSN ses) st') ->
+            run host st' acc ("a packet names a session closed by a packet before it in the payload: ignored (Core 3.3.10.7 a, PDF 86)" : whys) rest
+        | otherwise -> case regular ses pkt st' of
+            (Prepared [], st'')              -> run host st'' acc ("no action in a regular session's packet (Core 3.3.10.6 S2:S1 d, PDF 85-86)" : whys) rest
+            (Prepared packets', st'')        -> run host st'' (acc <> packets') whys rest
+            (SessionAborted results closing, st'') -> (SessionAborted (acc <> results) closing, st'')
+            (Discarded why, st'')            -> run host st'' acc (why : whys) rest
+    -- each answer a response packet of its own; the first that does not fit replaced by its overflow, nothing after it; an
     -- overflow answer that does not fit either discards the payload
     fitting host = \case
       []       -> Right []
       a : rest
-        | fits host a              -> (a :) <$> fitting host rest
-        | fits host (overflowed a) -> Right [overflowed a]
-        | otherwise                -> Left ("the host's ComPacket of " <> tshow (lComPacketSize host) <> " bytes, or its packet of "
-                                            <> tshow (lPacketSize host) <> ", cannot carry even RESPONSE_OVERFLOW's answer "
-                                            <> "(Opal 2.30 3.3.1, PDF 29): discarded, nothing staged that no IF-RECV could carry")
-    fits host a = either (const False) (\p -> B.length p <= lPacketSize host && comPacketHeaderSize + B.length p <= lComPacketSize host) (framed a)
-    framed a = first (("the response does not frame: " <>) . tshow)
-                     (encodePacket (PacketFrame controlHeader [DataSubPacket (DataSubPacketHeader dataKind) (generate a)]))
-    overflowed (MethodCall hdr _ _) = MethodCall hdr (Parameters [] []) responseOverflow
+        | fits host controlHeader (generate a)              -> (a :) <$> fitting host rest
+        | fits host controlHeader (generate (overflowed a)) -> Right [overflowed a]
+        | otherwise -> Left ("the host's ComPacket of " <> tshow (lComPacketSize host) <> " bytes, or its packet of "
+                             <> tshow (lPacketSize host) <> ", cannot carry even RESPONSE_OVERFLOW's answer "
+                             <> "(Opal 2.30 3.3.1, PDF 29): discarded, nothing staged that no IF-RECV could carry")
+    overflowed (MethodCall hdr _ _) = MethodCall hdr (Parameters [] []) (statusValue RESPONSE_OVERFLOW)
+    -- a regular session's packet: over the TPer's limits, aborted; else its data subpackets read and processed one by
+    -- one until the session closes or aborts
+    regular ses pkt st1 = case overLimits tper pkt of
+      Just why -> sessionPayload ses [] (Just (Stream.Fault 0 Stream.OutsideCall (why <> ": the session aborted (Core 5.2.2.4.1.1-2, PDF 145)"))) st1
+      Nothing  -> subpackets ses st1 [] (map dataSubPacketPayload (filter isData (pfSubPackets pkt)))
+    subpackets ses st1 acc = \case
+      []             -> (Prepared acc, st1)
+      payload : rest -> case Stream.atoms policy payload of
+        Left (off, why) -> continued ses acc rest (sessionPayload ses [] (Just (Stream.Fault 0 Stream.OutsideCall ("at byte " <> tshow off <> ", " <> why))) st1)
+        Right as        -> continued ses acc rest (uncurry (sessionPayload ses) (Stream.items Stream.SessionStream (map Stream.atomToken as)) st1)
+    continued ses acc rest (outcome, st1) = case outcome of
+      Prepared ps
+        | isJust (resolveSession c (sesTSN ses) (sesHSN ses) st1) -> subpackets ses st1 (acc <> ps) rest
+        | otherwise                                               -> (Prepared (acc <> ps), st1)
+      SessionAborted results closing -> (SessionAborted (acc <> results) closing, st1)
+      Discarded why                  -> (Discarded why, st1)
+
+-- | A considered packet, ready to process: a control packet's calls, all
+--   read; a regular session's packet, to read with its session; a control
+--   packet dropped for breaking the TPer's limits, with why.
+data Work
+  = ControlCalls ![MethodCall]
+  | SessionPacket !Session !PacketFrame
+  | Dropped !Text
 
 -- | An IF-RECV of a transfer length on a static ComID in a state: the
 --   answer, exactly that many bytes, and the state after it, within what
@@ -303,8 +346,8 @@ ifRecvStatic p c len cs = case cSync cs of
     where
       -- the bytes of packets the answer can carry: the transfer's, and the host's ComPacket's, less the header
       room         = min (fromIntegral len) (lComPacketSize host) - comPacketHeaderSize
-      fits         = length (takeWhile (<= room) (L.scanl1 (+) (map B.length staged)))
-      (sent, rest) = L.splitAt (min (lPackets host) fits) staged
+      fitting      = length (takeWhile (<= room) (L.scanl1 (+) (map B.length staged)))
+      (sent, rest) = L.splitAt (min (lPackets host) fitting) staged
   where
     host = comIdHostLimits p (cHostProps cs)
     reply row d after = either (\why -> (Response (Unsupported why) mempty, cs)) (\bytes -> (Response Good (exactly len bytes), after)) $ do
@@ -315,61 +358,6 @@ ifRecvStatic p c len cs = case cSync cs of
       first (("the answer does not frame: " <>) . tshow) (encodeRecord (ComPacket (ComPacketHeader c (cExt cs) od mt) returned))
 
 
--- * Reading a control session's data subpacket
-
--- | The method invocations a control session's data subpacket makes, in
---   order: each a call where its header and parameters read exactly as its
---   tokens are, its status the host's first value (the reserved ones
---   ignored, Core 3.2.4.2 item 2), or 'Nothing', an invocation the control
---   session ignores (3.2.2.4.2 items 3-4); or why the tokens are no
---   invocations at all, which discards the payload ('classifyIfSend').
---
---   Empty atoms are dropped first, then End of Session and the Transaction
---   Control tokens, each with the uinteger status after it, which the TPer
---   SHALL ignore on the control session (3.3.7.1.3, PDF 73). Then the stream
---   is invocations alone, each a Call, the tokens to the first End of Data
---   (no Call among them, 3.2.2.3.4 a), and a status list of three or more
---   uintegers (3.2.4.2 item 5); a token anywhere else stops it (3.2.2.4.2
---   items 2 and 5).
-controlInvocations :: ByteString -> Either Text [Maybe MethodCall]
-controlInvocations bytes = do
-  as <- maybe (Left "a token that does not read (Core 3.2.2.4.1, PDF 38)") Right (atoms bytes)
-  invocationsOf (ignored (filter ((/= Empty) . snd) as))
-  where
-    ignored = \case
-      (_, EndOfSession) : rest                                      -> ignored rest
-      (_, t) : (_, Unsigned _) : rest | t `elem` transactionControl -> ignored rest
-      (_, t) : rest | t `elem` transactionControl                   -> ignored rest
-      a : rest                                                      -> a : ignored rest
-      []                                                            -> []
-    transactionControl = [StartTransaction, EndTransaction]
-    invocationsOf = \case
-      [] -> Right []
-      call@(_, Call) : rest -> do
-        let (body, after) = L.break ((== EndOfData) . snd) rest
-        when (any ((== Call) . snd) body) $ Left "a Call inside a method invocation (Core 3.2.2.3.4 a, PDF 38)"
-        (eod, afterEod) <- maybe (Left "a method invocation with no End of Data (Core 3.2.4.2, PDF 49)") Right (L.uncons after)
-        (first', rest') <- statusAfter afterEod
-        (readCall (call : body <> [eod]) first' :) <$> invocationsOf rest'
-      (_, t) : _ -> Left ("a token outside a method invocation, " <> tshow t <> " (Core 3.2.2.4.2 item 2, PDF 39)")
-    -- the status list after End of Data: its first value, and the tokens after it
-    statusAfter = \case
-      (_, StartList) : rest -> case L.break ((== EndList) . snd) rest of
-        (values, _ : rest')
-          | length values >= 3, Just (v : _) <- traverse (uinteger . snd) values -> Right (v, rest')
-          | otherwise -> Left "a status list of other than three or more uintegers (Core 3.2.2.4.2 item 5, PDF 39)"
-        (_, []) -> Left "a status list with no End List (Core 3.2.4.2, PDF 49)"
-      _ -> Left "a method invocation with no status list after its End of Data (Core 3.2.4.2, PDF 49)"
-    uinteger = \case
-      Unsigned n -> Just n
-      _          -> Nothing
-    -- a call read exactly as its tokens are, to its End of Data
-    readCall toks sc = case parseByteString (foldMap fst toks <> generate (statusList sc)) of
-      Right mc | fmap (map snd) (atoms (toEndOfData mc)) == Just (map snd toks) -> Just mc
-      _                                                                        -> Nothing
-    toEndOfData mc = generate Call <> generate (_header mc) <> generate (_parameters mc) <> generate EndOfData
-
-
 -- * The parts of an IF-SEND's payload
 
 -- | Whether a packet is the control session's: Session 0, its TSN and HSN
@@ -377,38 +365,18 @@ controlInvocations bytes = do
 controlSession :: PacketHeader -> Bool
 controlSession h = packetTSN h == 0 && packetHSN h == 0
 
--- | The header of a response packet on the control session: Session 0, no
---   sequence number and no acknowledgement (the synchronous protocol uses
---   neither).
-controlHeader :: PacketHeader
-controlHeader = PacketHeader 0 0 0 0 0
+-- | Why a packet breaks the TPer's limits, if it does: more subpackets than
+--   its MaxSubpackets, or more bytes with its header than its MaxPacketSize
+--   (Core 5.2.2.4.1.1-2, PDF 145), which discards a control session packet
+--   and aborts a regular session.
+overLimits :: Limits -> PacketFrame -> Maybe Text
+overLimits tper pkt
+  | length (pfSubPackets pkt) > lSubpackets tper =
+      Just ("a packet of " <> tshow (length (pfSubPackets pkt)) <> " subpackets, more than the TPer's MaxSubpackets " <> tshow (lSubpackets tper))
+  | either (const True) ((> lPacketSize tper) . B.length) (encodePacket pkt) =
+      Just ("a packet of more bytes than the TPer's MaxPacketSize " <> tshow (lPacketSize tper))
+  | otherwise = Nothing
 
 -- | Whether a subpacket is a data subpacket, by its Kind (Core Table 19).
 isData :: DataSubPacket -> Bool
 isData sp = any (\r -> inSpan (codeSpan r) (toInteger (dataSubPacketKind (dataSubPacketHeader sp)))) (codeRowsNamed cSubpacketTypes "Data")
-
--- | Whether a data subpacket asks nothing: no payload, or Empty atoms alone
---   (Core 3.3.10.6 S2:S1 d, PDF 85-86).
-noAction :: ByteString -> Bool
-noAction = maybe False (all ((== Empty) . snd)) . atoms
-
--- | The status of a method response that does not fit the response buffer
---   (Core Table 166; Opal 2.30 3.3.1, PDF 29).
-responseOverflow :: Natural
-responseOverflow = statusValue RESPONSE_OVERFLOW
-
--- | The atoms of a token stream in order, each its bytes and its token, or
---   Nothing where an atom does not read (Core 3.2.2.3.1, PDF 33-36).
---   An atom is the shortest start of the stream that reads as a token: its
---   header says how many bytes it has, and the codec reads that many.
---   ("Hsed.Core.Stream".'Stream.atoms' is the linear reader that replaces it,
---   group G1's.)
-atoms :: ByteString -> Maybe [(ByteString, Token)]
-atoms stream
-  | B.null stream = Just []
-  | otherwise     = do
-      (raw, t) <- listToMaybe [ (raw, t) | n <- [1 .. B.length stream], let raw = B.take n stream, Right t <- [readToken raw] ]
-      ((raw, t) :) <$> atoms (B.drop (B.length raw) stream)
-  where
-    readToken :: ByteString -> Either String Token
-    readToken = parseByteString

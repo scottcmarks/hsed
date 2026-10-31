@@ -1,5 +1,7 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms   #-}
 
 {-|
 Module      : Hsed.Sim.SyncSpec
@@ -17,13 +19,19 @@ the TPer and the host each take (Core 5.2.2.4.1: a packet of more subpackets
 than the TPer's MaxSubpackets discarded, as ETC-15's is; invocations past
 its MaxMethods and packets past its MaxPackets ignored; an answer too large
 for the host RESPONSE_OVERFLOW, the host's limits the properties the ComID
-keeps of it), the control session's tokens read in order (a stray token
-discarding the payload, as ETC-07's does; End of Session and Transaction
-Control tokens ignored; a status list's reserved values ignored), a packet
-on a session the TPer has not open discarded with the TPer unchanged; the
-answer to IF-RECV in each state, exactly the length asked, as many packets
-as the host takes; and the four laws of "Hsed.Law.Sync", each run as a
-QuickCheck property of 100 cases.
+keeps of it), the control session's tokens read in order by "Hsed.Core.Stream" (a
+stray token discarding the payload, as ETC-07's does; End of Session and
+Transaction Control tokens ignored; a status list's reserved values ignored;
+an S-bit atom, ETC-08's bytes, a call on ThisSP and a host's CloseSession
+each discarded), a packet on a session the TPer has not open discarded with
+the TPer unchanged; a regular session's packet, opened directly
+("Hsed.Sim.State".@openSession@), answered in a packet carrying its TSN and
+HSN, [Get, EOS] closing it, a bare EOS echoed, (TSN, HSN + 1) discarded
+with the session kept (ETC-04), the error cases aborting it with the TPer's
+CloseSession or answering NOT_AUTHORIZED (ETC-05, ETC-06, ETC-14's shape);
+the answer to IF-RECV in each state, exactly the length asked, as many
+packets as the host takes; and the four laws of "Hsed.Law.Sync", each run
+as a QuickCheck property of 100 cases.
 -}
 module Hsed.Sim.SyncSpec (spec) where
 
@@ -36,27 +44,34 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck     (modifyMaxSuccess)
 import           Test.QuickCheck           (counterexample, property)
 
-import           Hsed.Core.Call            (MethodCall (..), MethodHeader (..), Parameters (..), statusList)
+import           Hsed.Core.Call            (MethodCall (..), MethodHeader (..), MethodResponse (..), Parameters (..), statusList)
+import           Hsed.Core.CellBlock       (cellBlockValue, columnRange)
 import           Hsed.Core.Method          (invocation)
 import           Hsed.Core.StreamItem      (StreamItem (generate))
 import           Hsed.Core.Sync            (Setting (..), StateRow (..), StateTable (..))
 import           Hsed.Core.Token           (Token (..))
-import           Hsed.Core.Value           (List (..), Value (..))
+import           Hsed.Core.Value           (List (..), Value (..), (.:))
+import           Hsed.Gen.Core.Codes       (StatusCode (..), pattern NOT_AUTHORIZED)
 import           Hsed.Gen.Core.Layouts     (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods     as Methods
 import           Hsed.Gen.Core.StateTables (table45)
-import           Hsed.Gen.Core.UIDs        (uSMUID, uStartSession)
+import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uCloseSession, uProperties, uSMUID, uSP_Admin, uStartSession,
+                                            uThisSP)
 import           Hsed.Law                  (Law (..))
 import qualified Hsed.Law.Sync             as Law
+import           Hsed.OpalUIDs             (uC_PIN_MSID)
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, decodePacket,
                                             encodeComPacket, encodePacket)
-import           Hsed.Sim.SessionManager   (answer)
+import           Hsed.Sim                  (step)
+import           Hsed.Sim.SessionManager   (answer, closeSessionCall)
+import           Hsed.Sim.State            (lifeOf, openSession, resolveSession)
 import           Hsed.Sim.Sync
-import           Hsed.Sim.Types            (ComIdLife (..), ComIdState (..), MgmtBuffer (..), Outcome (..), SimParams (..),
-                                            SyncState (..), TPerState (..), defaultSimParams, initialHostProperties, initialState,
-                                            maxComPacketSizeName, maxMethodsName, maxPacketSizeName, maxPacketsName,
-                                            maxSubpacketsName)
-import           Hsed.Wire                 (IfStatus (..), Response (..))
+import           Hsed.Sim.Types            (ComIdLife (..), ComIdState (..), Input (..), MgmtBuffer (..), Outcome (..), Output (..),
+                                            Session (..), SimParams (..), SyncState (..), TPerState (..), defaultSimParams,
+                                            initialHostProperties, initialState, maxComPacketSizeName, maxMethodsName,
+                                            maxPacketSizeName, maxPacketsName, maxSubpacketsName)
+import           Hsed.Wire                 (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketProtocol,
+                                            roundUp)
 
 
 -- * Frames
@@ -151,6 +166,50 @@ comIdIn s = ComIdState 0 Issued s initialHostProperties (MgmtBuffer False Nothin
 -- | The same with one of the host's properties set.
 hostOf :: Text -> Natural -> ComIdState -> ComIdState
 hostOf name v cs = cs { cHostProps = Map.insert name v (cHostProps cs) }
+
+-- | The TPer with a regular session open on its base ComID: an Admin SP
+--   session as Anybody, HSN 0x51, TSN 4096.
+ses :: Session
+st1 :: TPerState
+(ses, st1) = openSession base 0x51 uSP_Admin True [uAuthority_Anybody] st0
+
+-- | A packet of the session.
+inSession :: [ByteString] -> PacketFrame
+inSession = packetIn (sesTSN ses, sesHSN ses)
+
+-- | UCT-03 step 1b's Get, C_PIN_MSID's PIN column, and its result.
+getCall :: MethodCall
+getCall = invocation uC_PIN_MSID (Methods.Get (cellBlockValue (columnRange 3 3)))
+
+getResult :: MethodResponse
+getResult = MethodResponse [L (List [N ((3 :: Natural) .: spMsid defaultSimParams)])] 0
+
+-- | A response packet of the session of these payloads, encoded.
+sessionPacket :: [ByteString] -> ByteString
+sessionPacket payloads = either (const mempty) id (encodePacket (inSession payloads))
+
+-- | The TPer's CloseSession for the session, a control session packet.
+closing :: ByteString
+closing = either (const mempty) id (encodePacket (control [generate (closeSessionCall ses)]))
+
+-- | Whether the session is still open in a TPer.
+open :: TPerState -> Bool
+open = isJust . resolveSession base (sesTSN ses) (sesHSN ses)
+
+-- | An IF-SEND of a payload on the base ComID through the simulator's step,
+--   in bytes, then a Tick and an IF-RECV of 2048 bytes: the IF-SEND's answer
+--   and the TPer after it, and the IF-RECV's.
+sent :: ByteString -> TPerState -> (Output, TPerState)
+sent bytes = step (Cmd (Request IfSend comPacketProtocol base (roundUp UnitBytes (fromIntegral (B.length bytes))) bytes))
+
+received :: TPerState -> (Output, TPerState)
+received st = step (Cmd (Request IfRecv comPacketProtocol base 2048 mempty)) (snd (step (Tick base) st))
+
+-- | The ComPacket an IF-RECV's output holds.
+frameOut :: Output -> Maybe (ComPacketHeader, [PacketFrame])
+frameOut = \case
+  Out r -> frameOf r
+  _     -> Nothing
 
 
 spec :: Spec
@@ -263,22 +322,122 @@ spec = do
     it "discards on a ComID the TPer does not have" $
       fst (classifyIfSend 0x1005 (comPacketOn 0x1005 0 [control [generate propertiesCall]]) st0) `shouldSatisfy` discarded
 
-  describe "a control session's data subpacket, read" $ do
-    it "is its invocations in order, a status list's reserved values and any after them ignored (Core 3.2.4.2 item 2)" $
-      map (controlInvocations . propertiesWith) [[0x00, 0x00, 0x00], [0x00, 0x01, 0x00], [0x00, 0x00, 0x07, 0x05], [0x10, 0x00, 0x00]]
-        `shouldBe` map (Right . pure . Just) [propertiesCall, propertiesCall, propertiesCall, propertiesCall { _statusCode = 0x10 }]
-    it "is no invocations at a status list of fewer than three values, or one of a signed one (3.2.2.4.2 item 5)" $
-      map (controlInvocations . propertiesWith) [[0x00, 0x00], [], [0x00, 0x00, 0x41]] `shouldSatisfy` all isLeft
-    it "ignores an invocation whose header does not read: a uinteger where its InvokingID goes (3.2.2.4.2 item 3)" $ do
+  describe "a control session's tokens, read by Hsed.Core.Stream" $ do
+    it "answers an invocation whatever its status list's reserved values and any after them, a host status echoed (Core 3.2.4.2 item 2)" $ do
+      forM_ [[0x00, 0x00, 0x00], [0x00, 0x01, 0x00], [0x00, 0x00, 0x07, 0x05]] $ \statuses ->
+        classify (comPacketOf [control [propertiesWith statuses]]) `shouldBe` prepared [reply]
+      classify (comPacketOf [control [propertiesWith [0x10, 0x00, 0x00]]])
+        `shouldBe` prepared [MethodCall (MethodHeader uSMUID uProperties) (Parameters [L (List [])] []) 0x10]
+    it "discards the payload at a status list of fewer than three values, or one holding an S-bit atom (3.2.2.4.2 item 5; Opal Table 15)" $
+      forM_ [[0x00, 0x00], [], [0x00, 0x00, 0x41]] $ \statuses ->
+        classify (comPacketOf [control [propertiesWith statuses]]) `shouldSatisfy` discarded
+    it "discards the payload at an invocation whose header does not read: a uinteger where its InvokingID goes (3.2.2.4.2 item 3; Opal 3.3.4.1.3)" $ do
       let unread = generate Call <> "\x01" <> generate (_methodID (_header propertiesCall)) <> generate (_parameters propertiesCall)
                    <> generate EndOfData <> generate (statusList 0)
-      controlInvocations unread `shouldBe` Right [Nothing]
       classify (comPacketOf [control [unread]]) `shouldSatisfy` discarded
-    it "reads ETC-08's StartList after StartList as a call with a list for a parameter, which the Session Manager does not answer" $ do
-      let etc08 = generate Call <> generate (_header propertiesCall) <> B.pack [0xF0, 0xF0, 0xF1, 0xF1] <> generate EndOfData
-                  <> generate (statusList 0)
-      controlInvocations etc08 `shouldBe` Right [Just propertiesCall { _parameters = Parameters [L (List [])] [] }]
-      classify (comPacketOf [control [etc08]]) `shouldSatisfy` discarded
+    it "discards ETC-08's bytes, a Properties call with a list for a required parameter, which the Session Manager does not answer (Test Cases PDF 81)" $ do
+      let etc08 = B.pack [ 0xF8, 0xA8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xA8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x01
+                         , 0xF0, 0xF0, 0xF1, 0xF1, 0xF9, 0xF0, 0x00, 0x00, 0x00, 0xF1 ]
+      etc08 `shouldBe` generate Call <> generate (_header propertiesCall) <> B.pack [0xF0, 0xF0, 0xF1, 0xF1] <> generate EndOfData <> generate (statusList 0)
+      let (outcome, st') = classifyIfSend base (comPacketOf [control [etc08]]) st0
+      outcome `shouldSatisfy` discarded
+      st' `shouldBe` st0
+    it "answers [Properties, EOS] with one Properties answer and no End of Session (3.3.7.1.3)" $
+      case classify (comPacketOf [control [generate propertiesCall <> generate EndOfSession]]) of
+        Prepared [p] -> dfFrame <$> decodePacket p `shouldBe` Right (control [generate reply])
+        other        -> expectationFailure (show other)
+    it "discards a call on ThisSP, and a host's CloseSession, which only the TPer transmits (3.3.7.1.3; 5.2.3.5)" $ do
+      classify (comPacketOf [control [generate propertiesCall { _header = MethodHeader uThisSP uProperties }]]) `shouldSatisfy` discarded
+      classify (comPacketOf [control [generate (closeSessionCall ses)]]) `shouldSatisfy` discarded
+      classify (comPacketOf [control [generate propertiesCall { _header = MethodHeader uSMUID uCloseSession }]]) `shouldSatisfy` discarded
+    it "discards a control session packet of more bytes than the TPer's MaxPacketSize, the TPer unchanged (Core 5.2.2.4.1.2)" $ do
+      let roomy = withTPer maxComPacketSizeName 4096 st0
+          large = generate propertiesCall <> B.replicate 2000 0xff   -- a packet of 36 + 2036 bytes, past MaxPacketSize 2028
+      let (outcome, st') = classifyIfSend base (comPacketOf [control [large]]) roomy
+      outcome `shouldSatisfy` discarded
+      st' `shouldBe` roomy
+      classifyIn (withTPer maxPacketSizeName 2100 roomy) (comPacketOf [control [large]]) `shouldBe` prepared [replyIn (withTPer maxPacketSizeName 2100 roomy)]
+    it "through the step, ETC-15: a packet of two Properties subpackets is Good, the ComID in S1, the TPer unchanged, and the next IF-RECV (0, 0, 0)" $ do
+      let (out, st') = sent (comPacketOf [control [generate propertiesCall, generate propertiesCall]]) st0
+      (out, st') `shouldBe` (Out (Response Good mempty), st0)
+      frameOut (fst (received st')) `shouldBe` Just (ComPacketHeader base 0 0 0, [])
+    it "through the step, a packet over the TPer's MaxPacketSize does the same" $ do
+      let roomy = withTPer maxComPacketSizeName 4096 st0
+          (out, st') = sent (comPacketOf [control [generate propertiesCall <> B.replicate 2000 0xff]]) roomy
+      (out, st') `shouldBe` (Out (Response Good mempty), roomy)
+      frameOut (fst (received st')) `shouldBe` Just (ComPacketHeader base 0 0 0, [])
+
+  describe "a regular session's packet" $ do
+    it "answers a Get in a packet carrying the session's TSN and HSN, one data subpacket of the result, the TPer otherwise as it was" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate getCall]]) st1
+      outcome `shouldBe` Prepared [sessionPacket [generate getResult]]
+      st' `shouldBe` st1
+    it "answers [Get, EOS] with the result then the TPer's End of Session, the session closed, the ComID Issued (3.2.2.3.3.3; 3.3.7.1.5)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate getCall <> generate EndOfSession]]) st1
+      outcome `shouldBe` Prepared [sessionPacket [generate getResult <> generate EndOfSession]]
+      open st' `shouldBe` False
+      lifeOf base st' `shouldBe` Just Issued
+    it "echoes a bare End of Session and closes the session; the tokens after it are ignored" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate EndOfSession <> generate getCall]]) st1
+      outcome `shouldBe` Prepared [sessionPacket [generate EndOfSession]]
+      open st' `shouldBe` False
+    it "discards a packet of the session's TSN and another HSN, or another TSN, the session kept (3.3.10.7 a; ETC-04)" $
+      forM_ [(sesTSN ses, sesHSN ses + 1), (sesTSN ses + 1, sesHSN ses), (sesTSN ses, 0), (0, sesHSN ses)] $ \session -> do
+        let (outcome, st') = classifyIfSend base (comPacketOf [packetIn session [generate getCall]]) st1
+        outcome `shouldSatisfy` discarded
+        st' `shouldBe` st1
+    it "discards a session packet that asks nothing: no data subpacket, or Empty atoms alone, the session kept" $ do
+      forM_ [inSession [], inSession ["\xff\xff\xff\xff"]] $ \p -> do
+        let (outcome, st') = classifyIfSend base (comPacketOf [p]) st1
+        outcome `shouldSatisfy` discarded
+        st' `shouldBe` st1
+    it "aborts the session at EndList before Call, preparing the TPer's CloseSession [HSN, TSN] on the control session (3.2.2.4.2 item 2; 3.3.10.7 b; ETC-05)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate EndList <> generate getCall]]) st1
+      outcome `shouldBe` SessionAborted [] (Just closing)
+      open st' `shouldBe` False
+      lifeOf base st' `shouldBe` Just Issued
+    it "aborts without a CloseSession where the run prepares none (spCloseSessionOnAbort False)" $ do
+      let (quiet, stQ) = openSession base 0x51 uSP_Admin True [uAuthority_Anybody] (initialState defaultSimParams { spCloseSessionOnAbort = False })
+          (outcome, st') = classifyIfSend base (comPacketOf [packetIn (sesTSN quiet, sesHSN quiet) [generate EndList <> generate getCall]]) stQ
+      outcome `shouldBe` SessionAborted [] Nothing
+      isJust (resolveSession base (sesTSN quiet) (sesHSN quiet) st') `shouldBe` False
+    it "answers Call EndList, a header that does not read, with NOT_AUTHORIZED and an empty result, the session kept (3.2.2.4.2 item 3; ETC-06)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate Call <> generate EndList <> B.drop 1 (generate getCall)]]) st1
+      outcome `shouldBe` Prepared [sessionPacket [generate (MethodResponse [] (statusValue NOT_AUTHORIZED))]]
+      open st' `shouldBe` True
+    it "aborts at a Start Transaction, the TPer starting no transaction (3.2.2.3.3.4)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate StartTransaction <> "\x00" <> generate getCall]]) st1
+      outcome `shouldBe` SessionAborted [] (Just closing)
+      open st' `shouldBe` False
+    it "aborts at a packet of two subpackets, more than the TPer's MaxSubpackets (5.2.2.4.1.1; ETC-14's shape)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate getCall, generate getCall]]) st1
+      outcome `shouldBe` SessionAborted [] (Just closing)
+      open st' `shouldBe` False
+    it "aborts at a packet of more bytes than the TPer's MaxPacketSize (5.2.2.4.1.2)" $ do
+      let roomy = withTPer maxComPacketSizeName 4096 st1
+          (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate getCall <> B.replicate 2000 0xff]]) roomy
+      outcome `shouldBe` SessionAborted [] (Just closing)
+      open st' `shouldBe` False
+    it "answers the first of two invocations in a subpacket, then aborts, past the TPer's MaxMethods (5.2.2.4.1.7)" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate getCall <> generate getCall]]) st1
+      outcome `shouldBe` SessionAborted [sessionPacket [generate getResult]] (Just closing)
+      open st' `shouldBe` False
+    it "aborts at an S-bit atom, a token the TPer does not read (Opal Table 15), with the results completed before it" $ do
+      let (outcome, st') = classifyIfSend base (comPacketOf [inSession [generate getCall <> "\x41"]]) st1
+      outcome `shouldBe` SessionAborted [] (Just closing)
+      open st' `shouldBe` False
+    it "processes a control packet and a session packet of one ComPacket in order, within the TPer's MaxPackets" $ do
+      let two = withTPer maxPacketsName 2 st1
+      classifyIn two (comPacketOf [control [generate propertiesCall], inSession [generate getCall]])
+        `shouldBe` either Discarded Prepared ((<>) <$> responseOf [replyIn two] <*> pure [sessionPacket [generate getResult]])
+      classifyIn st1 (comPacketOf [control [generate propertiesCall], inSession [generate getCall]]) `shouldBe` prepared [replyIn st1]
+      classifyIn two (comPacketOf [control [generate propertiesCall { _header = MethodHeader uSMUID uStartSession }], inSession [generate getCall]])
+        `shouldBe` Prepared [sessionPacket [generate getResult]]
+    it "through the step: the Get's answer at the next IF-RECV, in the session's packet" $ do
+      let (out, st') = sent (comPacketOf [inSession [generate getCall]]) st1
+      out `shouldBe` Out (Response Good mempty)
+      fmap (map (\p -> (pfHeader p, map dataSubPacketPayload (pfSubPackets p))) . snd) (frameOut (fst (received st')))
+        `shouldBe` Just [(PacketHeader (sesTSN ses) (sesHSN ses) 0 0 0, [generate getResult])]
 
   describe "the answer to IF-RECV on a static ComID" $ do
     let p1 = packetOfSize 4    -- 40 bytes

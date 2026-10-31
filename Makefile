@@ -39,7 +39,7 @@ COMPILE_CMD := $(HSEDC) compile $(CORE_IR) --errata scott --target core -o hsed/
 # what gen writes and gen-diff holds to the committed files
 GENERATED   := hsed-spec/bindings hsed/gen docs/LEDGER.md docs/LEDGER-opal.md
 
-.PHONY: check test werror extract extract-test regen-diff annotate pdf-checks venv \
+.PHONY: check test werror werror-cold extract extract-test regen-diff annotate pdf-checks venv \
         hsedc ir-annotated bind hsedc-check compile gen gen-diff splices
 
 # The targets share files (spec/ir is rewritten by extract and read by annotate; build/*.hsed.* by
@@ -59,6 +59,14 @@ test:
 ## is not compiled again for -Werror alone (design section 12). Not part of check.
 werror:
 	stack --work-dir .stack-work-werror --system-ghc --no-install-ghc test --ghc-options=-Werror
+
+## werror from nothing, the acceptance's "fresh work dir" (design sections 11 and 14): the -Werror work dirs
+## removed first, the root's and each package's (stack keeps a .stack-work-werror under every package
+## directory too, so removing the root's alone leaves an incremental build), then every module compiled
+## again with -Werror. Not part of check.
+werror-cold:
+	rm -rf .stack-work-werror hsed-core/.stack-work-werror hsed-spec/.stack-work-werror hsed/.stack-work-werror
+	$(MAKE) werror
 
 ## the Python venv the extraction tools run in: made with $(PYTHON3) (refused below 3.11), and the
 ## pinned wheels reinstalled whenever tools/extract/requirements.txt changes

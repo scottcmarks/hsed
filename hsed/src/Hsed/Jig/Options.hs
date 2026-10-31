@@ -124,14 +124,20 @@ defaultRunOptions = RunOptions
 --   MSID's and UCT-03's step 1 does not apply (Test Cases PDF 33); a set
 --   SID PIN also fails UCT-01's step 4c.ii, SID Value State 1 (PDF 30),
 --   the Test Cases taking the drive at its original factory state (4.2,
---   PDF 28).
+--   PDF 28). A PIN of four bytes or more that is itself a word of the
+--   reports' prose (@Core@, @Opal@, @MSID@) is still masked out of it
+--   wherever it stands, the user's choice; the floor is the jig's own rule,
+--   reversible (Core Table 122 allows 0 to 32 bytes), and the MSID a drive
+--   reports passes through the same masking with no floor (M4c).
 --
 -- >>> parseSidPin "53494421"
 -- Right "SID!"
 -- >>> parseSidPin "0x53494421"
 -- Right "SID!"
 -- >>> parseSidPin "534944"
--- Left "--sim-sid-pin 534944: 3 bytes; at least 4, so that masking the PIN in the reports' texts rewrites none of their words (design 9.3 item 5)"
+-- Left "--sim-sid-pin 534944: 3 bytes; at least 4, so that masking the PIN in the reports' texts rewrites none of their short words or page numbers (design 9.3 item 5)"
+-- >>> parseSidPin "31"
+-- Left "--sim-sid-pin 31: 1 byte; at least 4, so that masking the PIN in the reports' texts rewrites none of their short words or page numbers (design 9.3 item 5)"
 -- >>> parseSidPin "5349442"
 -- Left "--sim-sid-pin 5349442: hex digits, two a byte (an even count)"
 -- >>> parseSidPin "zz"
@@ -140,8 +146,8 @@ parseSidPin :: String -> Either String ByteString
 parseSidPin s = case B16.decode (fromString digits) of
   Right bytes
     | B.null bytes           -> Left (prefix <> "no bytes")
-    | B.length bytes < least -> Left (prefix <> show (B.length bytes) <> " bytes; at least " <> show least
-                                      <> ", so that masking the PIN in the reports' texts rewrites none of their words (design 9.3 item 5)")
+    | B.length bytes < least -> Left (prefix <> bytesWord (B.length bytes) <> "; at least " <> show least
+                                      <> ", so that masking the PIN in the reports' texts rewrites none of their short words or page numbers (design 9.3 item 5)")
     | B.length bytes > most  -> Left (prefix <> "more than " <> show most <> " bytes, the PIN column's most (Core Table 122, PDF 118)")
     | otherwise              -> Right bytes
   Left _ -> Left (prefix <> "hex digits, two a byte (an even count)")
@@ -153,3 +159,4 @@ parseSidPin s = case B16.decode (fromString digits) of
     -- the jig's own floor: the PIN is masked wherever the reports' texts have it (design 9.3 item 5), and one under
     -- four bytes is a word or a number of theirs
     least = 4 :: Int
+    bytesWord n = show n <> (if n == 1 then " byte" else " bytes")

@@ -30,10 +30,15 @@ shadowing enabled or done at M3) unless the parameters choose it
 ("Hsed.Sim.Types".'SimParams': the Locking SP's life cycle, the geometry,
 the SIIS revision, the DataStore tables, the ComIDs, the SSC minor version,
 the data removal version) or the state does: the Opal SSC V2 descriptor's
-Initial C_PIN_SID PIN Indicator and the Block SID descriptor's SID Value
-State both say whether C_PIN_SID's PIN is still C_PIN_MSID's, read from the
-Admin SP's C_PIN rows (Opal Table 6's bullets, PDF 23; Test Cases UCT-01
-step 4c and UCT-03 step 1, PDF 30-32). A profile (@--profile@, a drive's response) adds
+Initial C_PIN_SID PIN Indicator says whether the initial C_PIN_SID PIN was
+C_PIN_MSID's, a fact of manufacture the state holds
+("Hsed.Sim.Types".@tsInitialSidPinIsMsid@, set from the parameters; Opal
+Table 6's bullets, PDF 23; changed by no Set, only by M5's Revert of the
+Admin SP after SID authenticated, Opal 5.1.2.2.1 item 2 a, PDF 93), and the
+Block SID descriptor's SID Value State whether C_PIN_SID's PIN is C_PIN_MSID's
+now, read from the Admin SP's C_PIN rows (Test Cases UCT-01 step 4c and
+UCT-03 step 1, PDF 30-32: on a drive taken ownership of, byte 13 stays 0x00
+while SID Value State goes 1). A profile (@--profile@, a drive's response) adds
 each descriptor of a code the simulator lacks, as it is; none of the
 simulator's is dropped or replaced (design 9.2). Every one of its own
 descriptors encodes for parameters in range ("Hsed.Sim.Types".'simParamsProblems',
@@ -101,15 +106,16 @@ simDescriptors st = L.sortOn dCode (own <> added)
       , described (\r -> r { dataStoreFeatureMaximumNumberOfDataStoreTables    = tables
                            , dataStoreFeatureMaximumTotalSizeOfDataStoreTables = size
                            , dataStoreFeatureDataStoreTableSizeAlignment       = alignment })
-        -- the Initial C_PIN_SID PIN Indicator (byte 13): 0x00 where C_PIN_SID's PIN equals C_PIN_MSID's, 0xFF where
-        -- it is VU and may differ (Opal Table 6's bullets, PDF 23); the generated allowance is VU, the whole byte,
-        -- though the bullets make only 0x00 and 0xFF valid and 0x01 to 0xFE reserved
+        -- the Initial C_PIN_SID PIN Indicator (byte 13): 0x00 where the initial C_PIN_SID PIN equalled C_PIN_MSID's,
+        -- 0xFF where it was VU and may differ (Opal Table 6's bullets, PDF 23), a fact of manufacture the state
+        -- holds; the generated allowance is VU, the whole byte, though the bullets make only 0x00 and 0xFF valid and
+        -- 0x01 to 0xFE reserved
       , described (\r -> r { level0DiscoveryOpalSSCV2FeatureSSCMinorVersionNumber    = spSscMinor p
                            , level0DiscoveryOpalSSCV2FeatureBaseComID                = spBaseComId p
                            , level0DiscoveryOpalSSCV2FeatureNumberOfComIDs           = spNComIds p
-                           , level0DiscoveryOpalSSCV2FeatureInitialC_PIN_SIDPINIndicator = if sidPinIsMsid then 0x00 else 0xFF })
+                           , level0DiscoveryOpalSSCV2FeatureInitialC_PIN_SIDPINIndicator = if tsInitialSidPinIsMsid st then 0x00 else 0xFF })
         -- SID Value State (byte 4 bit 0): 0 while C_PIN_SID's PIN is MSID's, as UCT-01 step 4c asks of a drive at
-        -- its factory state (Test Cases PDF 30), 1 once it is another
+        -- its factory state (Test Cases PDF 30), 1 once it is another: the present state, from the live rows
       , described (\r -> r { blockSIDFeatureSIDValueState = not sidPinIsMsid })
         -- Cryptographic Erase, bit 2 of Supported Data Removal Mechanism, which an Opal TPer SHALL support
         -- (3.1.1.6.3, Table 10, PDF 27); no removal processing or interrupted, no time reported (Table 11, PDF 28)
@@ -119,9 +125,9 @@ simDescriptors st = L.sortOn dCode (own <> added)
     -- a profile's descriptors of codes the simulator lacks, the first of each code
     added = L.nubBy ((==) `on` dCode)
       [ d | d <- maybe [] lpDescriptors (spProfile p), dCode d `notElem` map dCode own ]
-    -- whether C_PIN_SID's PIN is C_PIN_MSID's, read from the Admin SP's C_PIN rows (Opal Table 25, PDF 48-49),
-    -- which the parameters fill (spSidPin, spMsid) and a Set may later change; a row without a PIN cell holds the
-    -- parameters' value
+    -- whether C_PIN_SID's PIN is C_PIN_MSID's now, read from the Admin SP's C_PIN rows (Opal Table 25, PDF 48-49),
+    -- which the parameters fill (spSidPin, spMsid) and a Set may later change (M5); a row without a PIN cell holds
+    -- the parameters' value
     sidPinIsMsid = pinOf uC_PIN_SID (fromMaybe (spMsid p) (spSidPin p)) == pinOf uC_PIN_MSID (spMsid p)
     pinOf u fallback = case rowWithUID uSP_Admin uC_PINTable u st >>= \row -> columnOf c_PINTableDesc "PIN" >>= (`cellOf` row) of
       Just (BytesCell pin) -> pin

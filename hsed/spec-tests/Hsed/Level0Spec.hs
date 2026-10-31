@@ -51,7 +51,8 @@ import           Hsed.Level0
 import           Hsed.Sim.FeatureSets     (geometryAllowances)
 import           Hsed.Sim.Level0          (level0Response, simDescriptors)
 import           Hsed.Sim.State           (columnOf, updateRow)
-import           Hsed.Sim.Types           (Geometry (..), SimParams (..), defaultSimParams, initialState, simParamsProblems)
+import           Hsed.Sim.Types           (Geometry (..), SimParams (..), TPerState (..), defaultSimParams, initialState,
+                                           simParamsProblems)
 
 
 -- | Parameters in range: every field the descriptors carry any value its
@@ -239,7 +240,7 @@ spec = describe "a Level 0 Discovery response" $ do
       decodeDescriptor (Descriptor 0xC000 0x1 (B.pack ([0xC0, 0x00, 0x10, 0x0C] <> replicate 12 0))) `shouldBe` Nothing
       decodeDescriptor (Descriptor 0x0100 0x1 (B.pack ([0x01, 0x00, 0x10, 0x0C] <> replicate 12 0))) `shouldBe` Nothing
 
-  describe "the SID PIN indicators, from the Admin SP's C_PIN rows (M4a)" $ do
+  describe "the SID PIN indicators: the Initial C_PIN_SID PIN Indicator the state's, SID Value State the Admin SP's C_PIN rows' (M4a)" $ do
     let indicators st = ( fieldOf 0x0203 "Initial C_PIN_SID PIN Indicator" (simDescriptors st)
                         , fieldOf 0x0402 "SID Value State" (simDescriptors st) )
     it "with C_PIN_SID's PIN the MSID's (spSidPin Nothing), byte 13 of the Opal SSC V2 descriptor is 0x00 and SID Value State 0" $
@@ -248,11 +249,12 @@ spec = describe "a Level 0 Discovery response" $ do
       indicators (initialState defaultSimParams { spSidPin = Just "a SID PIN of its own" }) `shouldBe` (Just (Number 0xFF), Just (Number 1))
     it "with a SID PIN given equal to the MSID, 0x00 and 0 still" $
       indicators (initialState defaultSimParams { spSidPin = Just (spMsid defaultSimParams) }) `shouldBe` (Just (Number 0x00), Just (Number 0))
-    it "follow the C_PIN_SID row as the state holds it, not the parameters alone" $ do
+    it "after the C_PIN_SID row's PIN changes, keep the indicator at 0x00, the initial PIN's fact (Opal Table 6, PDF 23; changed by Revert alone, 5.1.2.2.1, PDF 93), and set SID Value State 1 from the row" $ do
       let st     = initialState defaultSimParams
           pinCol = columnOf c_PINTableDesc "PIN"
           reset  = updateRow uSP_Admin uC_PINTable uC_PIN_SID (map (\(col, cell) -> (col, if Just col == pinCol then BytesCell "changed by Set" else cell))) st
-      indicators reset `shouldBe` (Just (Number 0xFF), Just (Number 1))
+      indicators reset `shouldBe` (Just (Number 0x00), Just (Number 1))
+      indicators st { tsInitialSidPinIsMsid = False } `shouldBe` (Just (Number 0xFF), Just (Number 0))
 
   describe "a feature record as a descriptor" $
     it "has its code, its version and its bytes, Length counting those after the header" $ do

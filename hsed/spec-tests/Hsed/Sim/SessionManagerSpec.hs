@@ -28,7 +28,9 @@ and SPSessionID 4096, the statuses of 5.1.5 (PDF 137-139) for a second
 session to the SP, the Locking SP Manufactured-Inactive, an unknown SPID, a
 read-only session or an unsupported parameter, as SID the PIN authenticated
 with the Tries rule (5.3.4.1.1.2, PDF 210-211), a class, a disabled
-authority, Anybody with a challenge, and the TPer's MaxSessions. A host's
+authority, Anybody with a challenge, an individual authority of Operation
+None, and the TPer's MaxSessions. A host's abort is echoed before the
+parameters are read (3.2.4.2 item 5.1, PDF 49). A host's
 abort is echoed in the normal form (3.2.4.2, PDF 49) and the rest is no
 answer (3.3.7.1.3, PDF 73-74), the TPer unchanged either way.
 -}
@@ -56,14 +58,14 @@ import           Hsed.Gen.Core.Codes      (StatusCode (..), pattern AUTHORITY_LO
 import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.Properties (initialAssumptions, properties)
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
-import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
+import           Hsed.Gen.Core.TableUIDs  (uAuthorityTable, uC_PINTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uProperties,
                                            uSMUID, uSP_Admin, uStartSession, uThisSP)
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.OpalUIDs            (uAuthority_Admin1, uSP_Locking)
 import           Hsed.Sim.SessionManager  (answer)
 import           Hsed.Sim.State           (abortSessions, cellOf, columnOf, lifeOf, rowWithUID, sessionsOn)
-import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), LifeCycle (..), Session (..), SimParams (..),
+import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), LifeCycle (..), SPState (..), Session (..), SimParams (..),
                                            TPerState (..), defaultSimParams, hostRequirements, initialHostProperties,
                                            initialState, maxComPacketSizeName, maxIndTokenSizeName, maxMethodsName,
                                            maxPacketSizeName, maxPacketsName, maxResponseComPacketSizeName,
@@ -194,6 +196,18 @@ spec = describe "the simulated Session Manager" $ do
       st' `shouldBe` st0
     it "another method the host aborted is still no answer" $
       answer base call { _header = MethodHeader uSMUID uStartSession, _statusCode = 1 } st0 `shouldBe` (Nothing, st0)
+    it "is read before the parameters (Core 3.2.4.2 item 5.1, PDF 49): a malformed Properties the host aborted is still echoed, ETC-08's shape and a HostProperties of the wrong shape alike, the TPer unchanged" $
+      forM_ [ call { _parameters = Parameters [L (List [])] [] }
+            , call { _parameters = Parameters [] [optionalParameter 1 (List [])] }
+            , invocation uSMUID (Methods.Properties (Just (D (Datum (Unsigned 3))))) ] $ \malformed ->
+        answer base malformed { _statusCode = 7 } st0
+          `shouldBe` (Just (MethodCall (MethodHeader uSMUID uProperties) (Parameters [L (List [])] []) 7), st0)
+    it "echoes a StartSession the host aborted as SyncSession [HostSessionID, 0] wherever the HostSessionID reads as an HSN, its other parameters unread; one whose HostSessionID is none stays unanswered (PDF 50)" $ do
+      let (r, st') = answer base (startCall uSP_Admin Nothing Nothing) { _parameters = Parameters [value (9 :: Natural), value (7 :: Natural)] [], _statusCode = 7 } st0
+      syncOf r `shouldBe` Just (9, 0, 7)
+      st' `shouldBe` st0
+      answer base (startCall uSP_Admin Nothing Nothing) { _parameters = Parameters [value ("one" :: ByteString)] [], _statusCode = 7 } st0 `shouldBe` (Nothing, st0)
+      answer base (startCall uSP_Admin Nothing Nothing) { _parameters = Parameters [value (0x100000000 :: Natural)] [], _statusCode = 7 } st0 `shouldBe` (Nothing, st0)
 
   describe "SMUID.StartSession to the Admin SP (UCT-03 step 1a)" $ do
     let (r1, st1) = answer base (startCall uSP_Admin Nothing Nothing) st0
@@ -273,6 +287,13 @@ spec = describe "the simulated Session Manager" $ do
       let (r, st') = answer base (startCall uSP_Admin (Just uAuthority_Anybody) (Just "ignored")) st0
       syncOf r `shouldBe` Just (1, 4096, statusValue SUCCESS)
       map sesAuthorities (sessionsOn base st') `shouldBe` [[uAuthority_Anybody]]
+    it "an enabled individual authority with Operation None, were an SP to have one beside Anybody, starts a session as the HostSigningAuthority with no credential to check (Core 5.3.4.1.3 a, PDF 213)" $ do
+      let none = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x00 0x42
+          copied = [ (col, if col == 0 then UIDCell none else cell) | Just row <- [rowWithUID uSP_Admin uAuthorityTable uAuthority_Anybody st0], (col, cell) <- row ]
+          withRow = st0 { tsSPs = Map.adjust (\sps -> sps { spsTables = Map.adjust (<> [copied]) uAuthorityTable (spsTables sps) }) uSP_Admin (tsSPs st0) }
+          (r, st') = answer base (startCall uSP_Admin (Just none) (Just "ignored")) withRow
+      syncOf r `shouldBe` Just (1, 4096, statusValue SUCCESS)
+      map sesAuthorities (sessionsOn base st') `shouldBe` [[uAuthority_Anybody, none]]
     it "with the Locking SP Manufactured, a Locking SP session while an Admin SP session is open is NO_SESSIONS_AVAILABLE at MaxSessions 1 (Core 5.1.5.7; ETC-22)" $ do
       let manufactured = initialState defaultSimParams { spLockingOFS = Manufactured }
           (_, opened)  = answer base (startCall uSP_Admin Nothing Nothing) manufactured

@@ -71,6 +71,12 @@ spec = do
     it "wrap back to 4096 past the last TSN" $ do
       let (s, st') = openSession base 1 uSP_Admin True [] st0 { tsNextTSN = maxBound }
       (sesTSN s, tsNextTSN st') `shouldBe` (maxBound, firstTSN)
+    it "skip a TSN a session of the ComID still holds, so that every session on a ComID has its own (Core 3.3.7.1.1)" $ do
+      let (s3, st3) = openSession base 3 uSP_Admin True [] st1 { tsNextTSN = maxBound }
+          (s4, st4) = openSession base 4 uSP_Admin True [] st3
+      (sesTSN s3, sesTSN s4, tsNextTSN st4) `shouldBe` (maxBound, 4097, 4098)
+      Map.keys (tsSessions st4) `shouldBe` [(base, 4096), (base, 4097), (base, maxBound)]
+      resolveSession base 4096 1 st4 `shouldBe` Just s1
     it "resolve by the ComID, TSN and HSN a packet names, and by nothing else (Core 3.3.7.1.2)" $ do
       resolveSession base 4096 1 st2 `shouldBe` Just s1
       resolveSession base 4097 7 st2 `shouldBe` Just s2

@@ -21,9 +21,11 @@ or of no length, and enabled resets the whole TPer; STACK_RESET (Core
 Success response that GET_COMID_RESPONSE returns once (Table 36 a) and then
 No Response Available (Table 31, PDF 63; its Extended ComID zeros before any
 request, PDF 66); a short request is Invalid Transfer Length on IF-SEND, a
-request of another Extended ComID or an unknown code leaves No Response
-Available; VERIFY_COMID_VALID (Tables 32-33, PDF 63-64) reports the ComID's
-state, Issued or Associated, with zero times; GET_COMID (Tables 27-28, PDF
+STACK_RESET of another Extended ComID or a request of an unknown code leaves
+No Response Available; VERIFY_COMID_VALID (Tables 32-33, PDF 63-64) reports
+the state of the Extended ComID verified, Issued or Associated for the
+ComID's own, another active ComID's own, Invalid for a stale extension or a
+ComID the TPer lacks, with zero times; GET_COMID (Tables 27-28, PDF
 60-61) assigns no ComID, zeros; and a ComID in any synchronous state takes
 the protocol.
 -}
@@ -193,6 +195,18 @@ spec = describe "protocol 0x02, ComID management, through a step of the simulato
       let (_, st') = verify busy
           (r, _)   = command (recv base 46) st'
       fmap verify_COMID_VALIDCommandResponseCurrentStateOfExtendedComID (decoded (rpayload r)) `shouldBe` Just 3
+    it "about another Extended ComID answers Table 33 for the ComID verified (3.3.4.7.4; PDF 64): the other static ComID's own state, a stale extension or a ComID the TPer lacks Invalid (0; 3.3.3.1, PDF 57), never No Response Available" $ do
+      let about ext st = let (_, st') = command (send base (encoded (VERIFY_COMID_VALIDRequest ext))) st
+                             (r, _)   = command (recv base 46) st'
+                         in (\resp -> (verify_COMID_VALIDCommandResponseExtendedComID resp, verify_COMID_VALIDCommandResponseCurrentStateOfExtendedComID resp))
+                            <$> (decoded (rpayload r) :: Maybe VERIFY_COMID_VALIDCommandResponse)
+      about (extended (base + 1)) busy `shouldBe` Just (extended (base + 1), 3)
+      about (extended (base + 1)) (initialState defaultSimParams { spNComIds = 2 }) `shouldBe` Just (extended (base + 1), 2)
+      about (extended base .|. 1) busy `shouldBe` Just (extended base .|. 1, 0)
+      about 0x20000000 busy `shouldBe` Just (0x20000000, 0)
+      about (extended (base + 1)) (initialState defaultSimParams) `shouldBe` Just (extended (base + 1), 0)
+      let (_, st') = command (send base (encoded (VERIFY_COMID_VALIDRequest 0x20000000))) busy
+      fmap cSync (comIdOf base st') `shouldBe` Just (S3 ["staged"])
 
   describe "GET_COMID, an IF-RECV on ComID 0x0000 (Core 3.3.4.3, Tables 27-28)" $ do
     it "assigns no ComID: all zeros, cut or padded to the transfer length (3.3.4.3.1 a)" $ do

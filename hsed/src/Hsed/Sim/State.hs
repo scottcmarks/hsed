@@ -59,14 +59,18 @@ import           Hsed.Sim.Types
 -- | Open a regular session on a ComID: the host's HSN, the SP, whether it
 --   is read-write, the authorities authenticated at startup (and their
 --   classes, Core 3.3.7.1.4, PDF 74-75); the TPer assigns the next TSN
---   ('tsNextTSN', 'firstTSN' first, back to it past the last) and the
---   session keeps the ComID's host properties as they are (5.2.2.4, PDF
---   144-145). The session, and the TPer with it open.
+--   ('tsNextTSN', 'firstTSN' first, back to it past the last, skipping one a
+--   session of the ComID still holds, so that every session on a ComID has
+--   a TSN of its own, 3.3.7.1.1, PDF 72) and the session keeps the ComID's
+--   host properties as they are (5.2.2.4, PDF 144-145). The session, and
+--   the TPer with it open.
 openSession :: Word16 -> Word32 -> UID -> Bool -> [UID] -> TPerState -> (Session, TPerState)
 openSession c hsn sp write authorities st =
   (session, st { tsSessions = Map.insert (c, tsn) session (tsSessions st), tsNextTSN = next })
   where
-    tsn     = tsNextTSN st
+    -- the next TSN not held on the ComID, from tsNextTSN round to the one before it (the first free is found at once
+    -- unless 2^32 - 4096 sessions were opened on one TPer and that one is still open)
+    tsn     = fromMaybe (tsNextTSN st) (L.find (\t -> Map.notMember (c, t) (tsSessions st)) ([tsNextTSN st .. maxBound] <> [firstTSN .. tsNextTSN st - 1]))
     next    = if tsn == maxBound then firstTSN else tsn + 1
     session = Session
       { sesComId       = c

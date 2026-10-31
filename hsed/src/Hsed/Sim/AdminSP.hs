@@ -48,7 +48,7 @@ import           RIO
 
 import           Hsed.Core.Table         (Cell (..), Col (..), Row, TableDesc (..), columnNamed)
 import           Hsed.Core.Types         (Enumerated, enumValue)
-import           Hsed.Core.UID           (UID)
+import           Hsed.Core.UID           (UID, uNull)
 import           Hsed.Gen.Core.Enums     (Core_auth_method (..), Core_boolean (..), Core_boolean_ACE (..),
                                           Core_life_cycle_state (..))
 import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc, authorityTableDesc, c_PINTableDesc,
@@ -66,9 +66,15 @@ adminSPTables :: SimParams -> Map UID [Row]
 adminSPTables p = Map.fromListWith (flip (<>)) [ (tdTableUID desc, [rowOf desc cells]) | (desc, cells) <- handRows p ]
 
 -- | The fourteen rows, each its table's description and its cells by column
---   name, in column order: a column a row does not give keeps its default
---   (Core 5.1.2; "Hsed.Core.Table"). Exported for the test that holds every
---   name to its table's description.
+--   name, in column order. A column a row does not give is absent from the
+--   row, and a Get that asks it returns no cell for it, which a host reads
+--   as a column it may not read (Core 5.3.4.2.2, PDF 223), so every column
+--   an ACE grants is given here where the type has a default the spec's
+--   table prints (C_PIN_SID's CharSet, Null: a zero uidref, Opal Table 25,
+--   PDF 48; Core 5.3.4.1.1.1, PDF 210); M4b's generated preconfiguration
+--   supplies the type's default for every column of the description a row
+--   lacks (design 13.31 (a)). Exported for the test that holds every name
+--   to its table's description.
 handRows :: SimParams -> [(TableDesc, [(Text, Cell)])]
 handRows p =
   [ -- Opal 2.30 Table 21, MethodID (PDF 38): the one method M4a dispatches
@@ -102,10 +108,11 @@ handRows p =
                          , ("Operation", enumCell "Password" Core_auth_method_Password)
                          , ("Credential", RefCell "C_PIN_Admin1" uC_PIN_Admin1) ])
     -- Table 25, C_PIN (PDF 48-49): C_PIN_SID's PIN the parameters' (the MSID's by default, 4.2.1.8, PDF 49), its
-    -- TryLimit the parameters' (VU), its Tries 0, the count a new C_PIN object starts at (Core 5.3.4.1.1.2, PDF 210);
-    -- C_PIN_MSID's PIN the MSID, its other cells blank; C_PIN_Admin1's PIN empty, its limits 0
+    -- CharSet Null, the zero uidref the column defaults to (Core 5.3.4.1.1.1, PDF 210: zeroes), its TryLimit the
+    -- parameters' (VU), its Tries 0, the count a new C_PIN object starts at (Core 5.3.4.1.1.2, PDF 210); C_PIN_MSID's
+    -- PIN the MSID, its other cells blank as Table 25 prints them; C_PIN_Admin1's PIN empty, its limits 0
   , (c_PINTableDesc, [ ("UID", UIDCell uC_PIN_SID), ("Name", TextCell "C_PIN_SID")
-                     , ("PIN", BytesCell (fromMaybe (spMsid p) (spSidPin p)))
+                     , ("PIN", BytesCell (fromMaybe (spMsid p) (spSidPin p))), ("CharSet", RefCell "Null" uNull)
                      , ("TryLimit", UIntCell (toInteger (spSidTryLimit p))), ("Tries", UIntCell 0)
                      , ("Persistence", boolCell False) ])
   , (c_PINTableDesc, [ ("UID", UIDCell uC_PIN_MSID), ("Name", TextCell "C_PIN_MSID"), ("PIN", BytesCell (spMsid p)) ])

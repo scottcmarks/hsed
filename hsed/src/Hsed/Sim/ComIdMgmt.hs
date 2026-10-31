@@ -40,15 +40,22 @@ synchronous state takes them), routed here by "Hsed.Sim" by their ComID:
 
     * a request of fewer than 8 bytes, Invalid Transfer Length parameter on
       IF-SEND (3.3.4.7.5, PDF 65), nothing changed;
-    * a request whose Extended ComID is not the ComID's (the static ComID
-      with extension 0x0000, 3.3.3.1, PDF 57), or whose request code is
-      neither VERIFY_COMID_VALID's nor STACK_RESET's (an error in the
-      payload, PDF 66 b), is answered No Response Available (Table 31, PDF
-      63) with the ComID's Extended ComID;
-    * VERIFY_COMID_VALID (Table 32, PDF 63-64): the response of Table 33
-      (PDF 64) with the ComID's state as "Hsed.Sim.State".'lifeOf' gives it
-      (Issued 2, Associated 3) and its three times all zeros, the simulator
-      having no clock; kept until the next request;
+    * a request whose request code is neither VERIFY_COMID_VALID's nor
+      STACK_RESET's (an error in the payload, PDF 66 b), or a STACK_RESET
+      whose Extended ComID is not the ComID's (the static ComID with
+      extension 0x0000, 3.3.3.1, PDF 57: Table 35's bytes 0-3 name the ComID
+      to reset, Table 29's command ComID being the one allocated, PDF 62 and
+      65), is answered No Response Available (Table 31, PDF 63) with the
+      ComID's Extended ComID;
+    * VERIFY_COMID_VALID (Table 32, PDF 63-64) about any Extended ComID,
+      which the TPer checks against the ComIDs it has (3.3.4.7.4, PDF 63):
+      the response of Table 33 (PDF 64) with the Extended ComID requested,
+      "the ComID being verified", and its state: a static ComID's (extension
+      0x0000) as "Hsed.Sim.State".'lifeOf' gives it (Inactive 1, Issued 2,
+      Associated 3), Invalid (0) for a ComID the TPer lacks or an extension
+      it never issued (3.3.3.1, PDF 57: an inquiry with such an Extended
+      ComID is answered that it is invalid), and its three times all zeros,
+      the simulator having no clock; kept until the next request;
     * STACK_RESET (Table 35, PDF 65): the ComID's stack reset
       ("Hsed.Sim.Reset".'Reset.stackReset') and the response of Table 36
       (PDF 66), Success, staged; cleared once the host retrieves it entire
@@ -73,7 +80,7 @@ module Hsed.Sim.ComIdMgmt
   ( command
   ) where
 
-import           Data.Bits             (shiftL, (.|.))
+import           Data.Bits             (shiftL, shiftR, (.&.), (.|.))
 import qualified RIO.ByteString        as B
 import qualified RIO.Map               as Map
 import           RIO
@@ -87,7 +94,8 @@ import qualified Hsed.Sim.Reset        as Reset
 import           Hsed.Sim.State        (lifeOf)
 import           Hsed.Sim.Types        (ComIdLife (..), ComIdState (..), MgmtBuffer (..), SimParams (..), TPerState (..),
                                         reservedComId)
-import           Hsed.Wire             (Dir (..), IfStatus (..), Request (..), Response (..), exactly, inactiveExtension)
+import           Hsed.Wire             (Dir (..), IfStatus (..), Request (..), Response (..), exactly, inactiveExtension,
+                                        staticExtension)
 
 
 -- | A command of protocol 0x02 answered, and the TPer after it, as the
@@ -120,12 +128,13 @@ command r st
       IfRecv -> let (bytes, cs') = response cs in (Response Good (exactly (lenBytes r) bytes), kept cs')
     kept cs' = st { tsComIds = Map.insert c cs' (tsComIds st) }
     own cs   = extended c (cExt cs)
-    -- HANDLE_COMID_REQUEST: the request's code by the pins of its layout (Tables 32 and 35), its Extended ComID
-    -- the ComID's; a wrong one or an unknown code leaves No Response Available (an error in the payload, PDF 66 b)
+    -- HANDLE_COMID_REQUEST: the request's code by the pins of its layout (Tables 32 and 35); VERIFY_COMID_VALID
+    -- about any Extended ComID, answered with that ComID's state; STACK_RESET's Extended ComID the ComID's; a
+    -- STACK_RESET of another or an unknown code leaves No Response Available (an error in the payload, PDF 66 b)
     handleRequest cs bytes
       | B.length bytes < 8 = refused InvalidTransferLengthOnIfSend
-      | Just ext <- requested @VERIFY_COMID_VALIDRequest verify_COMID_VALIDRequestExtendedComID bytes, ext == own cs =
-          (Response Good mempty, kept cs { cMgmt = MgmtBuffer True (Just (verifyCode, verifyResponse cs)) })
+      | Just ext <- requested @VERIFY_COMID_VALIDRequest verify_COMID_VALIDRequestExtendedComID bytes =
+          (Response Good mempty, kept cs { cMgmt = MgmtBuffer True (Just (verifyCode, verifyResponse ext)) })
       | Just ext <- requested @STACK_RESETCommandRequest stack_RESETCommandRequestExtendedComID bytes, ext == own cs =
           let st' = Reset.stackReset c st
           in (Response Good mempty, st' { tsComIds = Map.adjust (\cs' -> cs' { cMgmt = MgmtBuffer True (Just (stackResetCode, stackResetResponse cs')) }) c (tsComIds st') })
@@ -133,14 +142,18 @@ command r st
     -- the Extended ComID a request of a layout carries, if the payload holds that layout's pins (its request code)
     requested :: forall a. LayoutRecord a => (a -> Word32) -> ByteString -> Maybe Word32
     requested ext bytes = either (const Nothing) (Just . ext . drRecord) (decodeRecordStrict @a bytes)
-    -- VERIFY_COMID_VALID's response (Table 33): the state as lifeOf gives it, the times zero (no clock, PDF 64)
-    verifyResponse cs = encoded VERIFY_COMID_VALIDCommandResponse
-      { verify_COMID_VALIDCommandResponseExtendedComID                                     = own cs
-      , verify_COMID_VALIDCommandResponseCurrentStateOfExtendedComID                       = stateCode (lifeOf c st)
+    -- VERIFY_COMID_VALID's response (Table 33): the Extended ComID requested and its state, the times zero (no clock,
+    -- PDF 64); a static ComID's state as lifeOf gives it (Invalid for one the TPer lacks), another extension Invalid
+    verifyResponse ext = encoded VERIFY_COMID_VALIDCommandResponse
+      { verify_COMID_VALIDCommandResponseExtendedComID                                     = ext
+      , verify_COMID_VALIDCommandResponseCurrentStateOfExtendedComID                       = stateOf ext
       , verify_COMID_VALIDCommandResponseAbsoluteTimeOfAllocationRelativeToLastResetOfTPer = noTime
       , verify_COMID_VALIDCommandResponseAbsoluteTimeOfExpiryRelativeToLastResetOfTPer     = noTime
       , verify_COMID_VALIDCommandResponseTimeSinceLastResetOfTPer                          = noTime
       }
+    stateOf ext
+      | fromIntegral (ext .&. 0xFFFF) == staticExtension = stateCode (lifeOf (fromIntegral (ext `shiftR` 16)) st)
+      | otherwise                                        = stateCode Nothing
     -- STACK_RESET's response (Table 36): Success
     stackResetResponse cs = encoded (STACK_RESETCommandResponse (own cs) stackResetSuccess)
     -- GET_COMID_RESPONSE: the response staged, a STACK_RESET's cleared once returned entire (PDF 66 a), a

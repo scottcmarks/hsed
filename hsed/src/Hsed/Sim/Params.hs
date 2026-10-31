@@ -63,6 +63,7 @@ module Hsed.Sim.Params
   , initialHostProperties
   , Limits (..)
   , tperLimits
+  , tperIndTokenSize
   , hostLimits
   , comIdHostLimits
   ) where
@@ -333,15 +334,25 @@ data Limits = Limits
 --   ('tperRequirements').
 tperLimits :: SimParams -> Limits
 tperLimits p = Limits
-  { lPackets       = prop maxPacketsName
-  , lSubpackets    = prop maxSubpacketsName
-  , lMethods       = prop maxMethodsName
-  , lPacketSize    = prop maxPacketSizeName
-  , lComPacketSize = prop maxComPacketSizeName
+  { lPackets       = tperProp maxPacketsName p
+  , lSubpackets    = tperProp maxSubpacketsName p
+  , lMethods       = tperProp maxMethodsName p
+  , lPacketSize    = tperProp maxPacketSizeName p
+  , lComPacketSize = tperProp maxComPacketSizeName p
   }
-  where
-    prop name  = fromInteger (fromMaybe (least name) (L.lookup name (spTPerProperties p)))
-    least name = maybe 1 toInteger (L.lookup name tperRequirements)
+
+-- | The most the TPer takes of one token, its header and data: its
+--   MaxIndTokenSize (Core 5.2.2.4.1.5, PDF 146; 0 no limit, Table 167, PDF
+--   142), with 'tperLimits'' fallback for a property not reported.
+tperIndTokenSize :: SimParams -> Int
+tperIndTokenSize = tperProp maxIndTokenSizeName
+
+-- | A TPer property as a limit: the parameters' value, or, for a property
+--   not reported, the least Opal 2.30 Table 17 has a TPer report
+--   ('tperRequirements'; 1 for a name the table lacks).
+tperProp :: Text -> SimParams -> Int
+tperProp name p = fromInteger (fromMaybe least (L.lookup name (spTPerProperties p)))
+  where least = maybe 1 toInteger (L.lookup name tperRequirements)
 
 -- | What the host takes of the TPer's responses, from the host's properties a
 --   ComID keeps of it ("Hsed.Sim.Types".@cHostProps@: Opal 2.30 Table 17's

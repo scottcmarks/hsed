@@ -16,10 +16,12 @@ generated Table 45 (PDF 83), its six rows by position and its five
 quantities in words; what an IF-SEND accepted in S1 comes to, over the TPer's
 state, the simulator's own Session Manager answering Properties, within what
 the TPer and the host each take (Core 5.2.2.4.1: a packet of more subpackets
-than the TPer's MaxSubpackets discarded, as ETC-15's is; invocations past
-its MaxMethods and packets past its MaxPackets ignored; an answer too large
-for the host RESPONSE_OVERFLOW, the host's limits the properties the ComID
-keeps of it), the control session's tokens read in order by "Hsed.Core.Stream" (a
+than the TPer's MaxSubpackets discarded with the whole payload, as ETC-15's
+is, wherever it comes among the packets considered, 3.3.10.7 a; invocations
+past its MaxMethods and packets past its MaxPackets ignored; an answer too
+large for the host RESPONSE_OVERFLOW, which ends the payload's processing,
+the host's limits the properties the ComID keeps of it, and every packet
+staged one its ComPacket can carry), the control session's tokens read in order by "Hsed.Core.Stream" (a
 stray token discarding the payload, as ETC-07's does; End of Session and
 Transaction Control tokens ignored; a status list's reserved values ignored;
 an S-bit atom, ETC-08's bytes, a call on ThisSP and a host's CloseSession
@@ -51,10 +53,12 @@ import           Hsed.Core.StreamItem      (StreamItem (generate))
 import           Hsed.Core.Sync            (Setting (..), StateRow (..), StateTable (..))
 import           Hsed.Core.Token           (Token (..))
 import           Hsed.Core.Value           (List (..), Value (..), (.:))
-import           Hsed.Gen.Core.Codes       (StatusCode (..), pattern NOT_AUTHORIZED)
+import           Hsed.Gen.Core.Codes       (StatusCode (..), pattern NOT_AUTHORIZED, pattern RESPONSE_OVERFLOW)
 import           Hsed.Gen.Core.Layouts     (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods     as Methods
 import           Hsed.Gen.Core.StateTables (table45)
+import           Hsed.Core.Token           (IsToken (..))
+import           Hsed.Core.Value           (IsValue (..))
 import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uCloseSession, uProperties, uSMUID, uSP_Admin, uStartSession,
                                             uThisSP)
 import           Hsed.Law                  (Law (..))
@@ -98,6 +102,23 @@ control = packetIn (0, 0)
 -- | The host's Properties invocation.
 propertiesCall :: MethodCall
 propertiesCall = invocation uSMUID (Methods.Properties Nothing)
+
+-- | The host's StartSession to the Admin SP as Anybody, HSN 1, read-write.
+startSessionCall :: MethodCall
+startSessionCall = invocation uSMUID Methods.StartSession
+  { Methods.startSessionHostSessionID         = value (1 :: Natural)
+  , Methods.startSessionSPID                  = value (token uSP_Admin)
+  , Methods.startSessionWrite                 = value (1 :: Natural)
+  , Methods.startSessionHostChallenge         = Nothing
+  , Methods.startSessionHostExchangeAuthority = Nothing
+  , Methods.startSessionHostExchangeCert      = Nothing
+  , Methods.startSessionHostSigningAuthority  = Nothing
+  , Methods.startSessionHostSigningCert       = Nothing
+  , Methods.startSessionSessionTimeout        = Nothing
+  , Methods.startSessionTransTimeout          = Nothing
+  , Methods.startSessionInitialCredit         = Nothing
+  , Methods.startSessionSignedHash            = Nothing
+  }
 
 -- | The default TPer, awaiting IF-SEND on its base ComID.
 st0 :: TPerState
@@ -291,6 +312,32 @@ spec = do
       let overflowed = reply { _parameters = Parameters [] [], _statusCode = 0x11 }
           small      = withHost maxPacketSizeName 100 (withTPer maxMethodsName 2 st0)
       classifyIn small (comPacketOf [control [generate propertiesCall <> generate propertiesCall]]) `shouldBe` prepared [overflowed]
+    it "ends the payload at an overflow on the control session: the calls after the overflowed one are not run, a StartSession among them opening nothing (Opal 3.3.1 item 1)" $ do
+      let overflowed = reply { _parameters = Parameters [] [], _statusCode = statusValue RESPONSE_OVERFLOW }
+          small      = withHost maxPacketSizeName 100 (withTPer maxMethodsName 2 (withTPer maxPacketsName 2 st0))
+          (outcome, st') = classifyIfSend base (comPacketOf [control [generate propertiesCall <> generate startSessionCall], control [generate startSessionCall]]) small
+      outcome `shouldBe` prepared [overflowed]
+      tsSessions st' `shouldBe` mempty
+    it "discards the whole payload at a control packet over the TPer's limits, wherever it comes among the packets considered, the TPer unchanged (Core 3.3.10.7 a; 5.2.2.4.1.1-2; TPer MaxPackets 2)" $ do
+      let two = withTPer maxPacketsName 2 st0
+      forM_ [ [control [generate propertiesCall, generate propertiesCall], control [generate propertiesCall]]
+            , [control [generate propertiesCall], control [generate propertiesCall, generate propertiesCall]] ] $ \ps -> do
+        let (outcome, st') = classifyIfSend base (comPacketOf ps) two
+        outcome `shouldSatisfy` discarded
+        st' `shouldBe` two
+      classifyIn two (comPacketOf [control [generate propertiesCall], control [generate propertiesCall]])
+        `shouldBe` either Discarded Prepared (concat <$> traverse (responseOf . pure) [replyIn two, replyIn two])
+    it "through the step, stages packets an IF-RECV can carry for a host taking eight subpackets a packet of any size, within its ComPacket (Core 5.2.2.4.1.4): the first IF-RECV returns a packet" $ do
+      let wide = withHost maxSubpacketsName 8 (withHost maxPacketSizeName 0 (withTPer maxMethodsName 8 st0))
+          (out, st') = sent (comPacketOf [control [mconcat (replicate 8 (generate propertiesCall))]]) wide
+          staged = case Map.lookup base (tsComIds st') of
+            Just ComIdState { cSync = S2 ps } -> ps
+            _                                 -> []
+      out `shouldBe` Out (Response Good mempty)
+      length staged `shouldSatisfy` (>= 2)
+      sum (map B.length staged) `shouldSatisfy` (> 2028)
+      staged `shouldSatisfy` all ((<= 2028) . B.length)
+      fmap (not . null . snd) (frameOut (fst (received st'))) `shouldBe` Just True
     it "discards the payload where even RESPONSE_OVERFLOW's answer would not fit the host's ComPacket, staging nothing (no host within Table 17's minima)" $ do
       let outcome = classifyIn (withHost maxComPacketSizeName 40 st0) (comPacketOf [control [generate propertiesCall]])
       outcome `shouldSatisfy` discarded
@@ -386,6 +433,11 @@ spec = do
         let (outcome, st') = classifyIfSend base (comPacketOf [packetIn session [generate getCall]]) st1
         outcome `shouldSatisfy` discarded
         st' `shouldBe` st1
+    it "ends the payload at an overflow in a regular session: the subpackets after the overflowed one are not processed (Opal 3.3.1 item 1; TPer MaxSubpackets 2)" $ do
+      let (narrow, stN) = openSession base 0x52 uSP_Admin True [uAuthority_Anybody] (withHost maxPacketSizeName 60 (withTPer maxSubpacketsName 2 st0))
+          (outcome, st') = classifyIfSend base (comPacketOf [packetIn (sesTSN narrow, sesHSN narrow) [generate getCall, generate getCall]]) stN
+      outcome `shouldBe` Prepared [either (const mempty) id (encodePacket (packetIn (sesTSN narrow, sesHSN narrow) [generate (MethodResponse [] (statusValue RESPONSE_OVERFLOW))]))]
+      isJust (resolveSession base (sesTSN narrow) (sesHSN narrow) st') `shouldBe` True
     it "discards a session packet that asks nothing: no data subpacket, or Empty atoms alone, the session kept" $ do
       forM_ [inSession [], inSession ["\xff\xff\xff\xff"]] $ \p -> do
         let (outcome, st') = classifyIfSend base (comPacketOf [p]) st1

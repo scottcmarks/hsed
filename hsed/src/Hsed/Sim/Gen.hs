@@ -22,6 +22,9 @@ module Hsed.Sim.Gen
   , genNoActionPayload
   , genUnresolvablePayload
   , genOverfullPayload
+    -- * Parts the specs quantify over too
+  , genHostProperties
+  , genStagedPackets
   ) where
 
 import qualified RIO.ByteString        as B
@@ -35,25 +38,32 @@ import           Hsed.Core.Token       (Token (Empty))
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uAuthority_Anybody, uAuthority_SID, uSMUID, uSP_Admin)
+import           Hsed.OpalUIDs         (uSP_Locking)
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
+import           Hsed.Sim.Session      (packets)
 import           Hsed.Sim.State        (openSession, sessionsOn)
-import           Hsed.Sim.Types        (ComIdState (..), Limits (..), Session (..), SimParams (..), SyncState (..), TPerState (..),
-                                        defaultSimParams, initialHostProperties, initialState, maxComPacketSizeName,
-                                        maxMethodsName, maxPacketSizeName, maxPacketsName, maxSubpacketsName, tperLimits)
+import           Hsed.Sim.Types        (ComIdState (..), LifeCycle (..), Limits (..), Session (..), SimParams (..), SyncState (..),
+                                        TPerState (..), comIdHostLimits, defaultSimParams, initialHostProperties, initialState,
+                                        maxComPacketSizeName, maxMethodsName, maxPacketSizeName, maxPacketsName, maxSubpacketsName,
+                                        tperLimits)
 import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPacketHeaderSize, comPacketProtocol, dataKind, roundUp,
                                         transferLength)
 
 
 -- | A TPer of the default parameters but for its unit (either), its number
 --   of static ComIDs (one to three), what it does with a command to an
---   inactive ComID (either) and its MaxComPacketSize (Opal 2.30 Table 17's
+--   inactive ComID (either), its MaxComPacketSize (Opal 2.30 Table 17's
 --   least, 2048, or twice that, so that a packet over its MaxPacketSize can
---   arrive within it); each static ComID awaiting IF-SEND, processing or
---   awaiting IF-RECV, with one to three response packets prepared, and
---   keeping the host's properties as the host may have sent them
---   ('genHostProperties'); and none to two regular sessions open on its
---   ComIDs ("Hsed.Sim.State".'openSession'), to the Admin SP, as Anybody or
---   as SID, with any HSN.
+--   arrive within it) and its Locking SP Manufactured (so that a session
+--   can open to it); each static ComID keeping the host's properties as the
+--   host may have sent them ('genHostProperties') and awaiting IF-SEND,
+--   processing or awaiting IF-RECV with one to three response packets
+--   prepared, as the Session Manager might stage them or as 'packets'
+--   frames them within those properties ('genStagedPackets'); and none to
+--   two regular sessions open on its ComIDs ("Hsed.Sim.State".'openSession'),
+--   one per SP, the Admin SP's first, as Anybody or as SID, with any HSN (a
+--   second read-write session to one SP is SP_BUSY, Core 5.1.5.3, PDF 138,
+--   so no state the protocol reaches holds two on one SP).
 genState :: Gen TPerState
 genState = do
   units   <- elements [minBound .. maxBound]
@@ -61,19 +71,19 @@ genState = do
   discard <- arbitrary
   roomier <- arbitrary
   let p  = defaultSimParams
-             { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard
+             { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard, spLockingOFS = Manufactured
              , spTPerProperties = [ (name, if roomier && name == maxComPacketSizeName then 2 * v else v)
                                   | (name, v) <- spTPerProperties defaultSimParams ] }
       st = initialState p
-  comIds   <- traverse (\cs -> (\s props -> cs { cSync = s, cHostProps = props }) <$> genSync <*> genHostProperties) (tsComIds st)
+  comIds   <- traverse (\cs -> genHostProperties >>= \props -> (\s -> cs { cSync = s, cHostProps = props }) <$> genSync p props) (tsComIds st)
   sessions <- chooseInt (0, 2)
-  foldM (\s _ -> opened s) st { tsComIds = comIds } [1 .. sessions]
+  foldM opened st { tsComIds = comIds } (take sessions [uSP_Admin, uSP_Locking])
   where
-    opened st = do
+    opened st sp = do
       c           <- elements (Map.keys (tsComIds st))
       hsn         <- arbitrary
       authorities <- elements [[uAuthority_Anybody], [uAuthority_Anybody, uAuthority_SID]]
-      pure (snd (openSession c hsn uSP_Admin True authorities st))
+      pure (snd (openSession c hsn sp True authorities st))
 
 -- | An IF-SEND or IF-RECV of protocol 1 (the ComPacket protocol, SIIS 1.20
 --   Tables 12-13, PDF 30-31) on one of a state's static ComIDs (on its base
@@ -169,9 +179,11 @@ genControlBody = oneof [ pure (generate (invocation uSMUID (Methods.Properties N
                        , pure mempty
                        , B.pack <$> (chooseInt (1, 32) >>= (`vectorOf` arbitrary)) ]
 
--- | A ComID's synchronous protocol state.
-genSync :: Gen SyncState
-genSync = oneof [pure S1, S2 <$> genResponse, S3 <$> genResponse]
+-- | A ComID's synchronous protocol state, its staged packets 'genResponse''s
+--   or 'genStagedPackets'' within the host's properties it keeps.
+genSync :: SimParams -> Map Text Natural -> Gen SyncState
+genSync p props = oneof [pure S1, S2 <$> staged, S3 <$> staged]
+  where staged = oneof [genResponse, genStagedPackets p props]
 
 -- | The host's properties a ComID keeps, as the host may have sent them
 --   (Core 5.2.2.3-4, PDF 143-145): each of the five the TPer's framing
@@ -195,6 +207,18 @@ genResponse = chooseInt (1, 3) >>= (`vectorOf` packet)
   where
     packet = (PacketFrame controlHeader <$> (chooseInt (1, 2) >>= (`vectorOf` subPacket))) `suchThatMap` (either (const Nothing) Just . encodePacket)
     subPacket = dataSubPacket . B.pack <$> (chooseInt (0, 600) >>= (`vectorOf` arbitrary))
+
+-- | Response packets as "Hsed.Sim.Session".'packets' frames one to eight
+--   token streams of up to 600 bytes for a host keeping these properties on
+--   its ComID, on the control session: within its MaxSubpackets,
+--   MaxPacketSize and the ComPacket its MaxComPacketSize and the TPer's
+--   MaxResponseComPacketSize allow (Core 5.2.2.4.1.1-2 and 4, PDF 145-146;
+--   the host properties 'genHostProperties' gives leave room for every such
+--   stream, so the framing never refuses one).
+genStagedPackets :: SimParams -> Map Text Natural -> Gen [ByteString]
+genStagedPackets p props = do
+  streams <- chooseInt (1, 8) >>= (`vectorOf` (B.pack <$> (chooseInt (0, 600) >>= (`vectorOf` arbitrary))))
+  pure (either (const []) id (packets (comIdHostLimits p props) controlHeader streams))
 
 -- | A ComPacket's bytes on a ComID, its extension a static ComID's (0x0000,
 --   Core 3.3.3.1, PDF 57), its packets these.

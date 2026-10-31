@@ -26,16 +26,20 @@ completed before it and the TPer's CloseSession where the run prepares one
 The responses are framed within the host's properties the session keeps
 ('sesHostProps', Core 5.2.2.4, PDF 144-145): each response a data subpacket
 of its own, the subpackets packed into packets of the session within the
-host's MaxSubpackets and MaxPacketSize ('packets'; 5.2.2.4.1.1-2, PDF 145),
-a response that fits no packet, or no ComPacket the host takes, answered
-instead with an empty list and RESPONSE_OVERFLOW (Opal 2.30 3.3.1, PDF 29).
-The control session's answers are framed the same way, by the same code
+host's MaxSubpackets, MaxPacketSize and MaxComPacketSize ('packets';
+5.2.2.4.1.1-2 and 4, PDF 145-146: no packet larger than the host's packet,
+nor than what the ComPacket that must carry it holds past its header), a
+response that fits no packet, or no ComPacket the host takes, answered
+instead with an empty list and RESPONSE_OVERFLOW, which ends the processing
+of the IF-SEND's payload ('Processed'; Opal 2.30 3.3.1 item 1, PDF 29). The
+control session's answers are framed the same way, by the same code
 ('fits', 'packets', 'controlHeader').
 -}
 module Hsed.Sim.Session
   ( -- * A session's invocations and packets
     dispatch
   , sessionPayload
+  , Processed (..)
     -- * Framing responses
   , controlHeader
   , sessionHeader
@@ -115,10 +119,14 @@ dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
 --
 --   The responses are framed as the module's description says, each
 --   checked to fit as it is made: one that does not is answered with an
---   empty list and RESPONSE_OVERFLOW and the processing of the payload ends
---   there (Opal 2.30 3.3.1, PDF 29). No items and no fault is 'Prepared' of
---   no packets, the TPer unchanged (no action, Core 3.3.10.6 S2:S1 d, PDF
---   85-86).
+--   empty list and RESPONSE_OVERFLOW, the items after it are not processed,
+--   and the result says the payload's processing ends there ('prEnds': Opal
+--   2.30 3.3.1 item 1, PDF 29, the TPer SHALL terminate processing of the
+--   IF-SEND command payload, so "Hsed.Sim.Sync" reads no further subpacket
+--   or packet of it; the state changes of the invocations run before stand,
+--   the overflowed one's among them, the method having run). No items and
+--   no fault is 'Prepared' of no packets, the TPer unchanged (no action,
+--   Core 3.3.10.6 S2:S1 d, PDF 85-86).
 --
 --   An abort is 'SessionAborted': the packets of the results completed
 --   before it, the TPer's CloseSession on the control session, with the
@@ -126,7 +134,7 @@ dispatch ses mc@(MethodCall (MethodHeader invoker method) _ status) st
 --   where the run prepares one ('spCloseSessionOnAbort'; 3.3.10.7 b, PDF 86;
 --   3.3.7.1.5 item 3, PDF 75), and the session gone
 --   ("Hsed.Sim.State".'abortSessions').
-sessionPayload :: Session -> [Item] -> Maybe Fault -> TPerState -> (Outcome, TPerState)
+sessionPayload :: Session -> [Item] -> Maybe Fault -> TPerState -> Processed
 sessionPayload ses items fault st0 = go st0 [] (0 :: Int) items
   where
     p    = tsParams st0
@@ -134,7 +142,7 @@ sessionPayload ses items fault st0 = go st0 [] (0 :: Int) items
     host = comIdHostLimits p (sesHostProps ses)
     hdr  = sessionHeader ses
     go st done n = \case
-      []          -> maybe (prepared st done Nothing) (const (abort st done)) fault
+      []          -> maybe (prepared st done Nothing False) (const (abort st done)) fault
       item : rest -> case item of
         Invoke mc
           | n >= lMethods tper -> abort st done
@@ -145,15 +153,15 @@ sessionPayload ses items fault st0 = go st0 [] (0 :: Int) items
               InHeader       -> respond st done (n + 1) (MethodResponse [] (statusValue NOT_AUTHORIZED)) rest
               InParameters _ -> respond st done (n + 1) (MethodResponse [] (statusValue INVALID_PARAMETER)) rest
               _              -> abort st done
-        EndOfSessionItem       -> prepared (closeSession (sesComId ses) (sesTSN ses) st) done (Just (generate EndOfSession))
+        EndOfSessionItem       -> prepared (closeSession (sesComId ses) (sesTSN ses) st) done (Just (generate EndOfSession)) False
         StartTransactionItem _ -> abort st done
         EndTransactionItem _   -> abort st done
-    -- a response that fits goes on; one that does not is RESPONSE_OVERFLOW's, and ends the payload's processing
+    -- a response that fits goes on; one that does not is RESPONSE_OVERFLOW's, and the payload's processing ends there
     respond st done n resp rest
       | fits host hdr (generate resp) = go st (done <> [generate resp]) n rest
-      | otherwise                     = prepared st (done <> [generate (MethodResponse [] (statusValue RESPONSE_OVERFLOW))]) Nothing
-    prepared st done eos = case packets host hdr (withEnd done eos) of
-      Right ps -> (Prepared ps, st)
+      | otherwise                     = prepared st (done <> [generate (MethodResponse [] (statusValue RESPONSE_OVERFLOW))]) Nothing True
+    prepared st done eos ends = case packets host hdr (withEnd done eos) of
+      Right ps -> Processed (Prepared ps) st ends
       Left _   -> abort st []
     -- the TPer's End of Session after the last response, in its subpacket where it fits, else in one of its own
     withEnd done = \case
@@ -162,13 +170,27 @@ sessionPayload ses items fault st0 = go st0 [] (0 :: Int) items
         []                                        -> [eos]
         lastOne : before | fits host hdr (lastOne <> eos) -> reverse before <> [lastOne <> eos]
                          | otherwise                      -> done <> [eos]
-    abort st done = (SessionAborted (either (const []) id (packets host hdr done)) closing, abortSessions same st)
+    abort st done = Processed (SessionAborted (either (const []) id (packets host hdr done)) closing) (abortSessions same st) True
       where
         closing = if spCloseSessionOnAbort p then closeSessionPacket st else Nothing
         same s  = sesComId s == sesComId ses && sesTSN s == sesTSN ses
     -- the TPer's CloseSession framed as a control session packet within the properties its ComID keeps of the host
     closeSessionPacket st = either (const Nothing) listToMaybe (packets (comIdHostLimits p props) controlHeader [generate (closeSessionCall ses)])
       where props = maybe initialHostProperties cHostProps (Map.lookup (sesComId ses) (tsComIds st))
+
+
+-- | What a data subpacket's items came to: the outcome, the TPer after it,
+--   and whether the payload's processing ends with it: after a response
+--   answered RESPONSE_OVERFLOW (Opal 2.30 3.3.1 item 1, PDF 29) or an
+--   abort, "Hsed.Sim.Sync" reads no further subpacket or packet of the
+--   IF-SEND; after End of Session the session is closed, and a later
+--   subpacket or packet of it is ignored there.
+data Processed = Processed
+  { prOutcome :: !Outcome
+  , prState   :: !TPerState
+  , prEnds    :: !Bool
+  }
+  deriving (Eq, Show)
 
 
 -- * Framing responses
@@ -196,11 +218,15 @@ fits host hdr stream =
          (framed hdr [stream])
 
 -- | Token streams, each a data subpacket, packed in order into packets with
---   this header within the host's MaxSubpackets and MaxPacketSize (Core
---   5.2.2.4.1.1-2, PDF 145): each packet takes the next subpackets while
---   both hold. Left where a stream fits no packet of its own ('fits'), with
---   why; the packets are then for an IF-RECV to return, as many as the
---   host's MaxPackets at a time ("Hsed.Sim.Sync").
+--   this header within the host's MaxSubpackets, MaxPacketSize and
+--   MaxComPacketSize (Core 5.2.2.4.1.1-2 and 4, PDF 145-146): each packet
+--   takes the next subpackets while all three hold, never larger than the
+--   host's packet nor than what the ComPacket carrying it holds past the
+--   ComPacket header (Opal 2.30 3.3.1, PDF 29: a response fits the response
+--   buffer), so that every packet staged is one some IF-RECV can return.
+--   Left where a stream fits no packet of its own ('fits'), with why; the
+--   packets are then for an IF-RECV to return, as many as the host's
+--   MaxPackets at a time ("Hsed.Sim.Sync").
 packets :: Limits -> PacketHeader -> [ByteString] -> Either Text [ByteString]
 packets host hdr streams = do
   unless (all (fits host hdr) streams) $
@@ -214,7 +240,9 @@ packets host hdr streams = do
     extend group = \case
       s : rest | length group < lSubpackets host, fitsPacket (group <> [s]) -> extend (group <> [s]) rest
       rest -> (group, rest)
-    fitsPacket ss = either (const False) ((<= lPacketSize host) . B.length) (framed hdr ss)
+    fitsPacket ss = either (const False) ((<= most) . B.length) (framed hdr ss)
+    -- the host's packet, or what its ComPacket carries past the header, whichever is less
+    most = min (lPacketSize host) (lComPacketSize host - comPacketHeaderSize)
 
 -- | A packet with a header of data subpackets of these streams, encoded.
 framed :: PacketHeader -> [ByteString] -> Either Text ByteString

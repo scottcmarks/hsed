@@ -6,7 +6,7 @@
 
 {-|
 Module      : Hsed.Sim.SessionSpec
-Description : Test specifications for Hsed.Sim.Session: a regular session's items dispatched, End of Session, aborts and the TPer's CloseSession, the framing, and the simulator's answers to the error cases
+Description : Test specifications for Hsed.Sim.Session: a regular session's items dispatched, End of Session, aborts and the TPer's CloseSession, an overflow ending the payload, the framing, and the simulator's answers to the error cases
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -23,8 +23,10 @@ PDF 39); a fault, a transaction token or a second invocation past the
 TPer's MaxMethods aborting the session with the results completed before it
 and the TPer's CloseSession where the run prepares one (3.3.10.7 b, PDF 86;
 5.2.2.4.1.7, PDF 146); a response the host's packet cannot hold
-RESPONSE_OVERFLOW (Opal 2.30 3.3.1, PDF 29); the framing within the host's
-MaxSubpackets and MaxPacketSize (5.2.2.4.1.1-2, PDF 145). Then the whole
+RESPONSE_OVERFLOW, which ends the payload's processing (Opal 2.30 3.3.1,
+PDF 29); the framing within the host's MaxSubpackets, MaxPacketSize and
+MaxComPacketSize (5.2.2.4.1.1-2 and 4, PDF 145-146), a packet never larger
+than the ComPacket that carries it, over any host properties. Then the whole
 path through the simulator's step: ETC-05's EndList before Call, answered
 by CloseSession at the next IF-RECV or by (0, 0, 0) without one; ETC-06's
 Call EndList, NOT_AUTHORIZED with the session kept; ETC-14's shape, a
@@ -36,6 +38,8 @@ import qualified RIO.ByteString          as B
 import qualified RIO.Map                 as Map
 import           RIO
 import           Test.Hspec
+import           Test.Hspec.QuickCheck   (prop)
+import           Test.QuickCheck         (arbitrary, chooseInt, counterexample, forAll, vectorOf)
 
 import           Hsed.Core.Call          (MethodCall (..), MethodHeader (..), MethodResponse (..), Parameters (..))
 import           Hsed.Core.CellBlock     (cellBlockValue, columnRange, noCells)
@@ -54,11 +58,13 @@ import           Hsed.OpalUIDs           (uC_PIN_MSID)
 import           Hsed.Packet             (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, decodePacket,
                                           encodeComPacket)
 import           Hsed.Sim                (step)
+import           Hsed.Sim.Gen            (genHostProperties)
 import           Hsed.Sim.Session
 import           Hsed.Sim.SessionManager (closeSessionCall)
 import           Hsed.Sim.State          (lifeOf, openSession, resolveSession)
 import           Hsed.Sim.Types
-import           Hsed.Wire               (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketProtocol, roundUp)
+import           Hsed.Wire               (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), comPacketHeaderSize,
+                                          comPacketProtocol, roundUp)
 
 
 base :: Word16
@@ -122,13 +128,13 @@ spec :: Spec
 spec = do
   describe "one data subpacket's items (sessionPayload)" $ do
     it "answers a Get in a packet of the session, TSN then HSN, one data subpacket of the result, the session kept" $ do
-      let (outcome, st') = sessionPayload ses [Invoke getCall] Nothing st1
+      let Processed outcome st' _ = sessionPayload ses [Invoke getCall] Nothing st1
       case outcome of
         Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate getResult])
         other        -> expectationFailure (show other)
       st' `shouldBe` st1
     it "answers [Get, EOS] with the result then the TPer's End of Session, in one subpacket, and closes the session: the ComID Issued again" $ do
-      let (outcome, st') = sessionPayload ses [Invoke getCall, EndOfSessionItem] Nothing st1
+      let Processed outcome st' _ = sessionPayload ses [Invoke getCall, EndOfSessionItem] Nothing st1
       case outcome of
         Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate getResult <> generate EndOfSession])
         other        -> expectationFailure (show other)
@@ -136,23 +142,23 @@ spec = do
       lifeOf base st' `shouldBe` Just Issued
       st' `shouldBe` (initialState defaultSimParams) { tsNextTSN = tsNextTSN st1 }
     it "echoes a bare End of Session and closes the session (Core 3.2.2.3.3.3; Test Cases' CLOSE_SESSION)" $ do
-      let (outcome, st') = sessionPayload ses [EndOfSessionItem] Nothing st1
+      let Processed outcome st' _ = sessionPayload ses [EndOfSessionItem] Nothing st1
       case outcome of
         Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate EndOfSession])
         other        -> expectationFailure (show other)
       open ses st' `shouldBe` False
     it "prepares nothing for no items and no fault, the TPer unchanged (no action)" $
-      sessionPayload ses [] Nothing st1 `shouldBe` (Prepared [], st1)
+      sessionPayload ses [] Nothing st1 `shouldBe` Processed (Prepared []) st1 False
     it "answers an invocation whose header does not read NOT_AUTHORIZED, one whose parameters do not INVALID_PARAMETER, the session kept (3.2.2.4.2 items 3-4)" $ do
       let hdr = _header getCall
       forM_ [ (InHeader, NOT_AUTHORIZED), (InParameters hdr, INVALID_PARAMETER) ] $ \(place, code) -> do
-        let (outcome, st') = sessionPayload ses [BadCall (Fault 1 place "out of place")] Nothing st1
+        let Processed outcome st' _ = sessionPayload ses [BadCall (Fault 1 place "out of place")] Nothing st1
         case outcome of
           Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate (MethodResponse [] (statusOf code))])
           other        -> expectationFailure (show other)
         open ses st' `shouldBe` True
     it "aborts the session at a fault, with no results, preparing the TPer's CloseSession [HSN, TSN] on the control session (3.3.10.7 b; 5.2.3.5)" $ do
-      let (outcome, st') = sessionPayload ses [] (Just (Fault 0 OutsideCall "EndList outside a method invocation")) st1
+      let Processed outcome st' _ = sessionPayload ses [] (Just (Fault 0 OutsideCall "EndList outside a method invocation")) st1
       case outcome of
         SessionAborted [] (Just closing) -> do
           decoded closing `shouldBe` Just (controlHeader, [generate (closeSessionCall ses)])
@@ -164,30 +170,30 @@ spec = do
       open ses st' `shouldBe` False
       lifeOf base st' `shouldBe` Just Issued
     it "aborts with no CloseSession where the run prepares none (spCloseSessionOnAbort False), the session gone all the same" $ do
-      let (outcome, st') = sessionPayload quietSes [] (Just (Fault 0 OutsideCall "EndList outside a method invocation")) quietSt1
+      let Processed outcome st' _ = sessionPayload quietSes [] (Just (Fault 0 OutsideCall "EndList outside a method invocation")) quietSt1
       outcome `shouldBe` SessionAborted [] Nothing
       open quietSes st' `shouldBe` False
     it "aborts at a transaction control token, the TPer starting no transaction (Core 3.2.2.3.3.4)" $
       forM_ [StartTransactionItem 0, EndTransactionItem 0, EndTransactionItem 1] $ \t -> do
-        let (outcome, st') = sessionPayload ses [t] Nothing st1
+        let Processed outcome st' _ = sessionPayload ses [t] Nothing st1
         outcome `shouldSatisfy` \o -> case o of
           SessionAborted [] (Just _) -> True
           _                          -> False
         open ses st' `shouldBe` False
     it "sends the results completed before the fault: a Get, then an unexpected token" $ do
-      let (outcome, st') = sessionPayload ses [Invoke getCall] (Just (Fault 9 OutsideCall "StartName outside a method invocation")) st1
+      let Processed outcome st' _ = sessionPayload ses [Invoke getCall] (Just (Fault 9 OutsideCall "StartName outside a method invocation")) st1
       case outcome of
         SessionAborted [p] (Just _) -> decoded p `shouldBe` Just (sessionHdr, [generate getResult])
         other                       -> expectationFailure (show other)
       open ses st' `shouldBe` False
     it "aborts at a second invocation past the TPer's MaxMethods, 1, after answering the first (Core 5.2.2.4.1.7)" $ do
-      let (outcome, st') = sessionPayload ses [Invoke getCall, Invoke getCall] Nothing st1
+      let Processed outcome st' _ = sessionPayload ses [Invoke getCall, Invoke getCall] Nothing st1
       case outcome of
         SessionAborted [p] (Just _) -> decoded p `shouldBe` Just (sessionHdr, [generate getResult])
         other                       -> expectationFailure (show other)
       open ses st' `shouldBe` False
     it "answers two invocations within a TPer MaxMethods of 2, each in a packet of its own for a host taking one subpacket a packet" $ do
-      let (outcome, st') = sessionPayload ses [Invoke getCall, Invoke getCall] Nothing (withTPer maxMethodsName 2 st1)
+      let Processed outcome st' _ = sessionPayload ses [Invoke getCall, Invoke getCall] Nothing (withTPer maxMethodsName 2 st1)
       case outcome of
         Prepared [p, q] -> do
           decoded p `shouldBe` Just (sessionHdr, [generate getResult])
@@ -195,15 +201,26 @@ spec = do
         other -> expectationFailure (show other)
       open ses st' `shouldBe` True
     it "packs two responses into one packet of two subpackets for a host whose MaxSubpackets is 2" $ do
-      let (outcome, _) = sessionPayload (hostOf maxSubpacketsName 2 ses) [Invoke getCall, Invoke getCall] Nothing (withTPer maxMethodsName 2 st1)
+      let Processed outcome _ _ = sessionPayload (hostOf maxSubpacketsName 2 ses) [Invoke getCall, Invoke getCall] Nothing (withTPer maxMethodsName 2 st1)
       case outcome of
         Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate getResult, generate getResult])
         other        -> expectationFailure (show other)
     it "answers RESPONSE_OVERFLOW, an empty list, for a result the host's packet cannot hold (Opal 3.3.1)" $ do
-      let (outcome, _) = sessionPayload (hostOf maxPacketSizeName 60 ses) [Invoke getCall] Nothing st1
+      let Processed outcome _ _ = sessionPayload (hostOf maxPacketSizeName 60 ses) [Invoke getCall] Nothing st1
       case outcome of
         Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
         other        -> expectationFailure (show other)
+    it "ends the payload's processing at an overflow, the items after it not processed (Opal 3.3.1 item 1): a second Get within MaxMethods 2 goes unanswered, the session kept" $ do
+      let Processed outcome st' ends = sessionPayload (hostOf maxPacketSizeName 60 ses) [Invoke getCall, Invoke getCall] Nothing (withTPer maxMethodsName 2 st1)
+      ends `shouldBe` True
+      case outcome of
+        Prepared [p] -> decoded p `shouldBe` Just (sessionHdr, [generate (MethodResponse [] (statusOf RESPONSE_OVERFLOW))])
+        other        -> expectationFailure (show other)
+      open ses st' `shouldBe` True
+    it "says the payload goes on after a response that fits or an End of Session, and ends at an abort" $ do
+      prEnds (sessionPayload ses [Invoke getCall] Nothing st1) `shouldBe` False
+      prEnds (sessionPayload ses [Invoke getCall, EndOfSessionItem] Nothing st1) `shouldBe` False
+      prEnds (sessionPayload ses [] (Just (Fault 0 OutsideCall "EndList outside a method invocation")) st1) `shouldBe` True
     it "reads the items a session's stream gives: ETC-06's Call EndList is a header that does not read, EndList before Call a fault" $ do
       let (badHeader, noFault) = itemsOf (generate Call <> generate EndList <> B.drop 1 (generate getCall))
       noFault `shouldBe` Nothing
@@ -244,6 +261,18 @@ spec = do
       fits (comIdHostLimits defaultSimParams (Map.fromList [(maxComPacketSizeName, 60)])) sessionHdr (generate getResult) `shouldBe` False
       packets (comIdHostLimits defaultSimParams (Map.fromList [(maxPacketSizeName, 60)])) sessionHdr streams `shouldSatisfy` isLeft
       packets host sessionHdr [] `shouldBe` Right []
+    it "bounds a packet by the host's ComPacket as well as its packet: six subpackets a packet of any size, within a ComPacket of 2048, make packets of at most 2028 bytes, three subpackets each (Core 5.2.2.4.1.4)" $ do
+      let wide = comIdHostLimits defaultSimParams (Map.fromList [(maxSubpacketsName, 6), (maxPacketSizeName, 0)])
+          big  = replicate 6 (B.replicate 600 7)
+      fmap (map B.length) (packets wide sessionHdr big) `shouldSatisfy` either (const False) (all (<= 2048 - comPacketHeaderSize))
+      fmap (map (fmap (length . snd) . decoded)) (packets wide sessionHdr big) `shouldBe` Right [Just 3, Just 3]
+    prop "stages no packet larger than the host's packet, nor than what its ComPacket carries, over any host properties the host may have sent (Core 5.2.2.4.1.2 and 4)" $
+      forAll genHostProperties $ \props ->
+      forAll (chooseInt (1, 8) >>= (`vectorOf` (B.pack <$> (chooseInt (0, 600) >>= (`vectorOf` arbitrary))))) $ \payloads ->
+        let host' = comIdHostLimits defaultSimParams props
+            most  = min (lPacketSize host') (lComPacketSize host' - comPacketHeaderSize)
+        in counterexample (show (props, fmap (map B.length) (packets host' sessionHdr payloads)))
+             (either (const False) (all ((<= most) . B.length)) (packets host' sessionHdr payloads))
 
   describe "through the simulator's step: the error cases on a regular session" $ do
     let packetOf hdr payloads = PacketFrame hdr (map (DataSubPacket (DataSubPacketHeader 0)) payloads)

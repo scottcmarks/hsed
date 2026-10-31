@@ -29,7 +29,7 @@ import           Hsed.Core.Call           (MethodCall (..), MethodResponse (..),
 import           Hsed.Core.CellBlock      (CellBlock (..), RowAddress (..), cellBlockValue, columnRange, noCells)
 import           Hsed.Core.Method         (invocation)
 import           Hsed.Core.Token          (IsToken (..), Token (..))
-import           Hsed.Core.UID            (UID, uid)
+import           Hsed.Core.UID            (UID, uNull, uid)
 import           Hsed.Core.Value          (Datum (..), List (..), Name (..), NamedValue (..), Value (..), (.:))
 import           Hsed.Gen.Core.Codes      (StatusCode (..), pattern INVALID_PARAMETER, pattern NOT_AUTHORIZED)
 import qualified Hsed.Gen.Core.Methods    as Methods
@@ -96,12 +96,13 @@ spec = do
       getWith anybody stA uC_PIN_MSID (columnRange 4 4) `shouldBe` MethodResponse [L (List [])] 0
     it "C_PIN_SID as Anybody is NOT_AUTHORIZED with an empty result (Core 5.1.5.2): the NOPIN ACE wants Admins or SID" $
       getWith anybody stA uC_PIN_SID noCells `shouldBe` MethodResponse [] (status NOT_AUTHORIZED)
-    it "C_PIN_SID as SID gives the NOPIN columns the row holds, never 3: UID, TryLimit, Tries, Persistence" $ do
+    it "C_PIN_SID as SID gives every NOPIN column, never 3: UID, CharSet (Null, Opal Table 25, PDF 48; its default, Core 5.3.4.1.1.1, PDF 210), TryLimit, Tries, Persistence" $ do
       let r = getWith sid stS uC_PIN_SID noCells
       _resultStatus r `shouldBe` 0
-      columnsOf r `shouldBe` [0, 5, 6, 7]
+      columnsOf r `shouldBe` [0, 4, 5, 6, 7]
+      [ v | N (NamedValue (Name (Datum (Unsigned 4))) v) <- concat [ vs | L (List vs) <- _results r ] ] `shouldBe` [D (Datum (token uNull))]
       columnsOf (getWith sid stS uC_PIN_SID (columnRange 3 3)) `shouldBe` []
-      columnsOf (getWith sid stS uC_PIN_SID (columnRange 3 7)) `shouldBe` [5, 6, 7]
+      columnsOf (getWith sid stS uC_PIN_SID (columnRange 3 7)) `shouldBe` [4, 5, 6, 7]
     it "C_PIN_MSID as SID gives the UID and PIN too, Anybody being authenticated in every session" $
       columnsOf (getWith sid stS uC_PIN_MSID noCells) `shouldBe` [0, 3]
     it "an object the SP does not have, 00 00 08 01 AA BB CC DD, is NOT_AUTHORIZED (Fails a; Core 5.1.5.2: no AccessControl row)" $

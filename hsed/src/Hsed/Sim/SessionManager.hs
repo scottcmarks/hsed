@@ -52,25 +52,33 @@ session packet, threading the TPer's state.
   the method, 5.2.3.5), and 'closeSessionCall' is the TPer's own, which a
   session abort stages (3.3.7.1.5, PDF 75; 3.3.10.7 b, PDF 86).
 
-An invocation the host aborts, its status other than SUCCESS, is answered in
-the normal form with that status and its processing aborted, the TPer
-unchanged: a Session Manager method recognized but failing SHALL have its
-normal response format, and a host's abort SHALL be returned as the status
-(Core 3.2.4.2 item 1, PDF 49; the lead's answer 4): Properties with an empty
-list of the TPer's properties and no HostProperties, StartSession with
-SyncSession [HostSessionID, 0]. The status list's reserved values are
-ignored where it is read (item 2, "Hsed.Sim.Sync").
+An invocation the host aborts, its first status other than SUCCESS, is
+answered before its parameters are read, in the method's normal response
+form with that status, its processing aborted and the TPer unchanged: a
+non-0x00 first status SHALL cause the TPer to abort processing on that
+method and return that value as the first value in the status list, and a
+Session Manager method recognized but failing SHALL have its normal response
+format (Core 3.2.4.2 item 5.1 and the paragraph after it, PDF 49; the lead's
+answer 4; design 13.30 (4)): Properties with an empty list of the TPer's
+properties and no HostProperties, whatever the parameters sent; StartSession
+with SyncSession [HostSessionID, 0] where its first required parameter reads
+as an HSN, else no answer (the identifying parameter invalid, which the
+TPer MAY ignore, PDF 50). The status list's reserved values are ignored
+where it is read (item 2, "Hsed.Sim.Sync").
 
 Anything else is no answer, its payload discarded, the TPer unchanged
 (3.3.7.1.3, PDF 73-74): a method invoked on another than SMUID, a Session
 Manager method the TPer does not answer (the host's SyncSession,
 CloseSession, the trusted-session pair: Opal 2.30 4.1.1 supports no
-StartTrustedSession), an invocation whose parameters are not its method's
-(a required parameter missing or extra, an optional one misnamed, a
-HostProperties other than Named byte-string names with uinteger values, a
-HostSessionID that is no uinteger), which a TPer may ignore rather than
-answer with INVALID_PARAMETER (3.2.4.2 MAY, PDF 49-50; Test Cases ETC-08,
-PDF 81).
+StartTrustedSession), a StartSession whose HostSessionID is no uinteger a
+4-byte HSN holds (an invalid identifying parameter, PDF 50's MAY), and an
+invocation with status 0 whose parameters are not its method's (a required
+parameter missing or extra, an optional one misnamed, a HostProperties other
+than Named byte-string names with uinteger values): a parameter-shape error
+on the control session read as a streaming violation, whose payload an Opal
+TPer discards (Opal 2.30 3.3.4.1.3, PDF 31; the lead's answer 8, over Core
+3.2.2.4.2 item 4's INVALID_PARAMETER, PDF 39; Test Cases ETC-08 accepts the
+discard, PDF 81; design 13.30 (4) and (8)).
 -}
 module Hsed.Sim.SessionManager
   ( -- * The answer on the control session
@@ -105,7 +113,7 @@ import qualified Hsed.Gen.Core.Methods     as Methods
 import qualified Hsed.Gen.Core.Properties  as P
 import           Hsed.Gen.Core.TableDescs  (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs   (uAuthorityTable, uC_PINTable, uSPTable)
-import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uProperties, uSMUID, uSP_Admin)
+import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uProperties, uSMUID, uSP_Admin, uStartSession)
 import           Hsed.Jig.Catalogue        (CaseKey (..), TestId (..))
 import           Hsed.Sim.Behaviour        (Behaviour (..), Invoked (..), Reply (..), SomeBehaviour, forMethod, runSome)
 import           Hsed.Sim.State            (cellOf, columnOf, openSession, rowWithUID, tperProperty, updateRow)
@@ -117,20 +125,31 @@ import           Hsed.Sim.Types            (ComIdState (..), LifeCycle (..), SPS
 -- * The answer on the control session
 
 -- | The Session Manager's answer to a method invocation on a ComID's
---   control session, and the TPer after it: an invocation of SMUID whose
---   method a behaviour runs (its parameters read against the record's
---   signature, a ParamError leaving it unanswered, 3.2.4.2 MAY); 'Nothing',
---   the TPer unchanged, for anything else (an invoker other than SMUID, a
---   method no behaviour answers, a behaviour that replies with nothing or
---   with results, which no control session carries).
+--   control session, and the TPer after it: an invocation of SMUID the host
+--   aborted, its status other than SUCCESS, answered in its normal form
+--   with that status before its parameters are read ('aborted'; Core
+--   3.2.4.2 item 5.1, PDF 49); else one whose method a behaviour runs (its
+--   parameters read against the record's signature, a ParamError leaving it
+--   unanswered: Opal 2.30 3.3.4.1.3's discard, the lead's answer 8);
+--   'Nothing', the TPer unchanged, for anything else (an invoker other than
+--   SMUID, a method no behaviour answers, a behaviour that replies with
+--   nothing or with results, which no control session carries).
 answer :: Word16 -> MethodCall -> TPerState -> (Maybe MethodCall, TPerState)
-answer c mc@(MethodCall (MethodHeader invoker _) _ status) st
+answer c mc@(MethodCall (MethodHeader invoker method) params status) st
   | invoker /= uSMUID = (Nothing, st)
+  | status /= success = (aborted, st)
   | otherwise = case mapMaybe (\b -> runSome b invoked mc st) behaviours of
       [Right (ReplyCall reply, st')] -> (Just reply, st')
       _                              -> (Nothing, st)
   where
     invoked = Invoked { ivComId = c, ivSession = Nothing, ivInvoker = invoker, ivStatus = status }
+    -- a host's abort in the method's normal response form, the parameters unread: Properties with an empty list,
+    -- StartSession as SyncSession [HostSessionID, 0] where its first required parameter is an HSN (else no answer,
+    -- the identifying parameter invalid, PDF 50), no answer for a method the TPer does not answer
+    aborted
+      | method == uProperties   = Just (propertiesReply status [] Nothing)
+      | method == uStartSession = (\hsn -> syncSession status hsn 0) <$> (listToMaybe (_required params) >>= hostSessionId)
+      | otherwise               = Nothing
 
 -- | The status of a method that succeeded (Core Table 166).
 success :: Natural
@@ -142,10 +161,11 @@ success = statusValue SUCCESS
 -- | SMUID.Properties (Core 5.2.2.1, PDF 140; @behaviour
 --   "SessionManager.properties"@): the TPer's properties and, where the host
 --   sent its own, the host's it will use, kept on the invoking ComID
---   (5.2.2.3-4, PDF 143-145); a host's abort echoed with an empty list; no
---   answer where HostProperties is not a list of Named byte-string names
---   with uinteger values. UCT-02 reads it, ETC-02, ETC-03, ETC-08 and ETC-15
---   invoke it.
+--   (5.2.2.3-4, PDF 143-145); a host's abort echoed with an empty list (which
+--   'answer' does before the parameters are read; here for a run of the
+--   behaviour alone); no answer where HostProperties is not a list of Named
+--   byte-string names with uinteger values. UCT-02 reads it, ETC-02, ETC-03,
+--   ETC-08 and ETC-15 invoke it.
 properties :: Behaviour Methods.Properties
 properties = Behaviour
   { behName  = "SessionManager.properties"
@@ -169,11 +189,15 @@ properties = Behaviour
 --   "SessionManager.startSession"@), answered by SyncSession (5.2.3.2, PDF
 --   150). UCT-03 step 1a, ETC-04 and ETC-21/adminsp invoke it. In order:
 --
---   * HostSessionID a uinteger the packet header's HSN holds (5.2.3.1.1, PDF
---     149; 3.3.7.1.1, PDF 72), else no answer: an identifying parameter of
---     the wrong type, which the TPer MAY ignore (3.2.4.2, PDF 49-50); then a
---     host's abort echoed, SyncSession [HostSessionID, 0] with its status
---     (item 1, PDF 49);
+--   * HostSessionID a uinteger the packet header's 4-byte HSN holds
+--     (5.2.3.1.1, PDF 149; 3.3.7.1.1, PDF 72), else no answer: a value of
+--     another type, or one that does not fit the HSN, is an invalid
+--     identifying parameter, which the TPer MAY ignore (3.2.4.2, PDF 50;
+--     Core 5.1.5.11 f's INVALID_PARAMETER for a value out of range, PDF
+--     139, would also do); then a host's abort echoed, SyncSession
+--     [HostSessionID, 0] with its status (item 5.1, PDF 49; 'answer' does
+--     it before the parameters are read, this branch serving a run of the
+--     behaviour alone);
 --   * SPID a row of the Admin SP's SP table (5.2.3.1.2), else
 --     INVALID_PARAMETER (5.1.5.11, PDF 139); an SP Manufactured-Inactive,
 --     to which no session can be opened (Opal 2.30 5.2.2.1 item 1, PDF 96;
@@ -199,9 +223,13 @@ properties = Behaviour
 --     AUTHORITY_LOCKED_OUT (5.1.5.15, PDF 139, as the TPer MAY); the PIN,
 --     Tries 0; another challenge NOT_AUTHORIZED, Tries one more while TryLimit
 --     is not 0 and never past it (5.3.4.1.1.2, PDF 210-211), the C_PIN row
---     changed on the SP named (3.3.7.1.3, PDF 73); any other Operation
---     INVALID_PARAMETER (5.3.4.1.3: of M4a's rows only Anybody and the class
---     Admins have None);
+--     changed on the SP named (3.3.7.1.3, PDF 73); an authority with
+--     Operation None, which 5.3.4.1.3 a lets a session start with as the
+--     HostSigningAuthority with no credential to check (PDF 213), authenticated
+--     as Anybody is, any HostChallenge ignored (no Opal row but Anybody's is
+--     one, Opal 2.30 Tables 24 and 40, PDF 48 and 82); the challenge-response
+--     Operations the simulator lacks (Sign, SymK, HMAC) and Exchange, no
+--     signing authority (5.3.4.1.3 c-f), INVALID_PARAMETER;
 --   * the session opened ("Hsed.Sim.State".@openSession@) with the authority
 --     and its classes authenticated (3.3.7.1.4, PDF 75; 3.4.2.2, PDF 89;
 --     5.3.4.1.2, PDF 211: a class's class too, one level), Anybody always
@@ -343,7 +371,8 @@ syncSession status hsn tsn = invocationWith status uSMUID Methods.SyncSession
 
 -- | The HostSessionID as the HSN it becomes (5.2.3.1.1, PDF 149): a
 --   uinteger the packet header's 4-byte HSN holds (3.3.7.1.1, PDF 72);
---   anything else is no session number.
+--   anything else, a value of another type or one past 2^32 - 1, is no
+--   session number.
 hostSessionId :: Value -> Maybe Word32
 hostSessionId = \case
   D (Datum (Unsigned n)) | n <= fromIntegral (maxBound :: Word32) -> Just (fromIntegral n)
@@ -409,6 +438,7 @@ authenticated spid m st = case Methods.startSessionHostSigningAuthority m of
             | enumIs Core_boolean_True (cellNamed authorityTableDesc "IsClass" row)              -> (Left INVALID_PARAMETER, st)
             | not (enumIs Core_boolean_True (cellNamed authorityTableDesc "Enabled" row))        -> (Left NOT_AUTHORIZED, st)
             | enumIs Core_auth_method_Password (cellNamed authorityTableDesc "Operation" row)   -> password auth row
+            | enumIs Core_auth_method_None (cellNamed authorityTableDesc "Operation" row)       -> (Right (L.nub (uAuthority_Anybody : auth : classesOf row)), st)
             | otherwise                                                                          -> (Left INVALID_PARAMETER, st)
   where
     -- a Password authority: its C_PIN credential (5.3.4.1.3 b, PDF 213; 5.2.3.1.7, PDF 149), the HostChallenge the

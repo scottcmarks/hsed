@@ -131,13 +131,21 @@ data SPState = SPState
   deriving (Eq, Show)
 
 -- | The TPer: its parameters, its ComIDs, its sessions by ComID and TSN,
---   the next TSN it assigns, and its SPs by UID.
+--   the next TSN it assigns, its SPs by UID, and whether the initial
+--   C_PIN_SID PIN was the MSID's: what Level 0's Initial C_PIN_SID PIN
+--   Indicator reports (Opal 2.30 Table 6, PDF 23: "the initial C_PIN_SID
+--   PIN value is equal to the C_PIN_MSID PIN value", a fact of manufacture
+--   that a Set of the PIN does not change and only a Revert of the Admin SP
+--   after SID authenticated sets to 0x00, Opal 5.1.2.2.1 item 2 a, PDF 93,
+--   M5's), apart from the live C_PIN_SID row, which the Block SID
+--   descriptor's SID Value State follows ("Hsed.Sim.Level0").
 data TPerState = TPerState
-  { tsParams   :: !SimParams
-  , tsComIds   :: !(Map Word16 ComIdState)
-  , tsSessions :: !(Map (Word16, Word32) Session)
-  , tsNextTSN  :: !Word32
-  , tsSPs      :: !(Map UID SPState)
+  { tsParams              :: !SimParams
+  , tsComIds              :: !(Map Word16 ComIdState)
+  , tsSessions            :: !(Map (Word16, Word32) Session)
+  , tsNextTSN             :: !Word32
+  , tsSPs                 :: !(Map UID SPState)
+  , tsInitialSidPinIsMsid :: !Bool
   }
   deriving (Eq, Show)
 
@@ -148,18 +156,21 @@ data TPerState = TPerState
 --   session, the first TSN to assign 'firstTSN'; the Admin SP, Manufactured
 --   (Opal 2.30 Table 29, PDF 50), with its hand-written rows
 --   ("Hsed.Sim.AdminSP"), and the Locking SP in its Original Factory State
---   ('spLockingOFS'), its tables M5's.
+--   ('spLockingOFS'), its tables M5's; the initial C_PIN_SID PIN the MSID's
+--   unless the parameters give the SID a PIN of its own ('spSidPin' other
+--   than the MSID, Opal 2.30 4.2.1.8, PDF 49).
 initialState :: SimParams -> TPerState
 initialState p = TPerState
-  { tsParams   = p
-  , tsComIds   = Map.fromList [ (c, ComIdState 0 Issued S1 initialHostProperties (MgmtBuffer False Nothing))
-                              | c <- staticComIds p, not (reservedComId c) ]
-  , tsSessions = mempty
-  , tsNextTSN  = firstTSN
-  , tsSPs      = Map.fromList
+  { tsParams              = p
+  , tsComIds              = Map.fromList [ (c, ComIdState 0 Issued S1 initialHostProperties (MgmtBuffer False Nothing))
+                                         | c <- staticComIds p, not (reservedComId c) ]
+  , tsSessions            = mempty
+  , tsNextTSN             = firstTSN
+  , tsSPs                 = Map.fromList
       [ (uSP_Admin, SPState uSP_Admin Manufactured (adminSPTables p))
       , (uSP_Locking, SPState uSP_Locking (spLockingOFS p) mempty)
       ]
+  , tsInitialSidPinIsMsid = maybe True (== spMsid p) (spSidPin p)
   }
 
 -- | The first TSN a TPer assigns a regular session: 4096, the TSNs 0 to 4095

@@ -210,9 +210,8 @@ spLifeCycle sp st = do
 --   27's, PDF 50, is not Core Table 244's, PDF 305), and the column is found
 --   by name in the Admin SP's description of the table ('cellNamedIn').
 --   'Nothing' where the Admin SP holds no TPerInfo row, or the row no
---   boolean in that column: so on the hand-written stand-in, which has no
---   TPerInfo table, until M4b's generated Admin SP ("Hsed.Sim.Preconfig"
---   folds the cell from the parameters' @spTPerResetEnabled@).
+--   boolean in that column; the generated Admin SP holds the row, its cell
+--   folded from the parameters' @spTPerResetEnabled@ ("Hsed.Sim.Preconfig").
 programmaticResetEnabled :: TPerState -> Maybe Bool
 programmaticResetEnabled st = do
   sps <- Map.lookup uSP_Admin (tsSPs st)

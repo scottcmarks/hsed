@@ -15,8 +15,9 @@ Milestone M4a's group G2 (design 11): protocol 0x02, outside the synchronous
 protocol (Core 3.3.10.3 b, PDF 84), each command sent through "Hsed.Sim".@step@
 to a TPer with sessions open, responses staged and host properties set.
 TPER_RESET (Opal 2.30 3.2.3 and Table 13, PDF 28-29) is Other Invalid
-Command Parameter while disabled, as it is at the factory (Table 27, PDF 50),
-or of no length, and enabled resets the whole TPer; STACK_RESET (Core
+Command Parameter while disabled, as it is at the factory (Table 27, PDF 50:
+TPerInfo's ProgrammaticResetEnable FALSE, the cell alone deciding, Table 26,
+PDF 49), or of no length, and enabled resets the whole TPer; STACK_RESET (Core
 3.3.4.7.5 and Tables 35-36, PDF 65-66) resets its ComID's stack and stages a
 Success response that GET_COMID_RESPONSE returns once (Table 36 a) and then
 No Response Available (Table 31, PDF 63; its Extended ComID zeros before any
@@ -39,18 +40,21 @@ import           Test.Hspec
 
 import           Hsed.Core.Record         (DecodedRecord (..), LayoutRecord, decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Table          (Cell (..))
+import           Hsed.Core.Types          (enumValue)
+import           Hsed.Gen.Core.Enums      (Core_boolean (..))
 import           Hsed.Gen.Core.Layouts    (NoResponseAvailable (..), STACK_RESETCommandRequest (..),
                                            STACK_RESETCommandResponse (..), VERIFY_COMID_VALIDCommandResponse (..),
                                            VERIFY_COMID_VALIDRequest (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
-import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
+import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uC_PIN_SID, uSP_Admin)
 import           Hsed.OpalUIDs            (tperResetComId, uSP_Locking)
 import           Hsed.Sim                 (step, syncOf)
-import           Hsed.Sim.State           (cellOf, columnOf, openSession, rowWithUID, sessionsOn, updateRow)
+import           Hsed.Sim.State           (cellOf, columnOf, openSession, programmaticResetEnabled, rowWithUID, sessionsOn,
+                                           updateRow)
 import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), Input (..), LifeCycle (..), MgmtBuffer (..),
-                                           Output (..), SimParams (..), SyncState (..), TPerState (..), defaultSimParams,
-                                           initialHostProperties, initialState, maxPacketsName)
+                                           Output (..), SPState (..), SimParams (..), SyncState (..), TPerState (..),
+                                           defaultSimParams, initialHostProperties, initialState, maxPacketsName)
 import           Hsed.Wire                (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
                                            comIdManagementProtocol)
 
@@ -72,6 +76,17 @@ busy = st3 { tsComIds = Map.adjust onBase base (Map.adjust onNext (base + 1) (ts
     onBase cs = cs { cSync = S3 ["staged"], cHostProps = Map.insert maxPacketsName 4 (cHostProps cs)
                    , cMgmt = MgmtBuffer True (Just (1, "a verify response")) }
     onNext cs = cs { cSync = S2 ["prepared"], cHostProps = Map.insert maxPacketsName 2 (cHostProps cs) }
+
+-- | The TPer with TPerInfo's ProgrammaticResetEnable set in the Admin SP's
+--   TPerInfo row (Opal 2.30 Table 26, PDF 49; a boolean, Core Table 59, PDF
+--   103), the column found by name in the description the SP holds.
+withResetEnable :: Bool -> TPerState -> TPerState
+withResetEnable enabled st = st { tsSPs = Map.adjust setIn uSP_Admin (tsSPs st) }
+  where
+    flag = if enabled then EnumCell "True" (enumValue Core_boolean_True) else EnumCell "False" (enumValue Core_boolean_False)
+    setIn sps = case Map.lookup uTPerInfoTable (spsDescs sps) >>= (`columnOf` "ProgrammaticResetEnable") of
+      Just col -> sps { spsTables = Map.adjust (map (map (\(c, cell) -> (c, if c == col then flag else cell)))) uTPerInfoTable (spsTables sps) }
+      Nothing  -> sps
 
 -- | A command's answer and the TPer after it.
 command :: Request -> TPerState -> (Response, TPerState)
@@ -108,9 +123,16 @@ triesOf st = rowWithUID uSP_Admin uC_PINTable uC_PIN_SID st >>= \row -> columnOf
 spec :: Spec
 spec = describe "protocol 0x02, ComID management, through a step of the simulator" $ do
   describe "TPER_RESET, an IF-SEND on ComID 0x0004 (Opal 3.2.3, Table 13)" $ do
-    it "disabled, as at the factory (Table 27), is Other Invalid Command Parameter, the TPer unchanged" $ do
-      let disabled = busy { tsParams = (tsParams busy) { spTPerResetEnabled = False } }
+    it "disabled, TPerInfo's ProgrammaticResetEnable FALSE as at the factory (Tables 26-27, PDF 49-50), is Other Invalid Command Parameter, the TPer unchanged" $ do
+      let disabled = withResetEnable False busy
+      programmaticResetEnabled busy `shouldBe` Just True
+      programmaticResetEnabled disabled `shouldBe` Just False
       command (send tperResetComId "\x00") disabled `shouldBe` (Response OtherInvalidCommandParameter mempty, disabled)
+    it "is enabled by the cell, not the parameter that seeds it at the fold: the parameter changed afterwards changes nothing" $ do
+      let paramOnly = busy { tsParams = (tsParams busy) { spTPerResetEnabled = False } }
+      fst (command (send tperResetComId "\x00") paramOnly) `shouldBe` Response Good mempty
+      let reenabled = withResetEnable True ((withResetEnable False busy) { tsParams = (tsParams busy) { spTPerResetEnabled = False } })
+      fst (command (send tperResetComId "\x00") reenabled) `shouldBe` Response Good mempty
     it "enabled is Good: every session gone, every ComID awaiting IF-SEND with the host's initial properties and an empty buffer, Tries kept" $ do
       let (r, st') = command (send tperResetComId "\x00") busy
       r `shouldBe` Response Good mempty

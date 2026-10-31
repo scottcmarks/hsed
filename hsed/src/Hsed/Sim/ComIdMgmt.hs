@@ -17,15 +17,16 @@ synchronous state takes them), routed here by "Hsed.Sim" by their ComID:
 
 * TPER_RESET, an IF-SEND on ComID 0x0004 ("Hsed.OpalUIDs".'tperResetComId';
   Opal 2.30 3.2.3 and Table 13, PDF 28-29; Table 14, PDF 30): with the
-  command enabled (TPerInfo's ProgrammaticResetEnable,
-  "Hsed.Sim.Params".@spTPerResetEnabled@, FALSE at the factory, Opal Table
-  27, PDF 50) and a transfer length other than zero, accepted at the
-  interface, Good, its data ignored, and the TPer reset
-  ("Hsed.Sim.Reset".'Reset.resetTPer' 'Reset.OnTPerReset'); disabled, or of
-  no length, aborted with Other Invalid Command Parameter. There is no
-  IF-RECV response to it: an IF-RECV on 0x0004 is Other Invalid Command
-  Parameter too (Opal 3.2.3: the ComID is the command's alone; Core 3.3.3.3,
-  PDF 59, a reserved ComID the TPer does not support for it).
+  command enabled (the ProgrammaticResetEnable cell of the Admin SP's
+  TPerInfo row, "Hsed.Sim.State".'programmaticResetEnabled', TRUE; Opal
+  Table 26, PDF 49; FALSE at the factory, Table 27, PDF 50, the fold seeding
+  it from "Hsed.Sim.Params".@spTPerResetEnabled@) and a transfer length
+  other than zero, accepted at the interface, Good, its data ignored, and
+  the TPer reset ("Hsed.Sim.Reset".'Reset.resetTPer' 'Reset.OnTPerReset');
+  disabled, or of no length, aborted with Other Invalid Command Parameter.
+  There is no IF-RECV response to it: an IF-RECV on 0x0004 is Other Invalid
+  Command Parameter too (Opal 3.2.3: the ComID is the command's alone; Core
+  3.3.3.3, PDF 59, a reserved ComID the TPer does not support for it).
 * GET_COMID, an IF-RECV on ComID 0x0000 (Core 3.3.4.3 and Tables 27-28,
   PDF 60-61): the simulator assigns no ComID dynamically, so the Extended
   ComID is all zeros (3.3.4.3.1 a), cut or padded to the transfer length;
@@ -91,7 +92,7 @@ import           Hsed.Gen.Core.Layouts (GET_COMIDPayload (..), NoResponseAvailab
                                         VERIFY_COMID_VALIDRequest (..))
 import           Hsed.OpalUIDs         (tperResetComId)
 import qualified Hsed.Sim.Reset        as Reset
-import           Hsed.Sim.State        (lifeOf)
+import           Hsed.Sim.State        (lifeOf, programmaticResetEnabled)
 import           Hsed.Sim.Types        (ComIdLife (..), ComIdState (..), MgmtBuffer (..), SimParams (..), TPerState (..),
                                         reservedComId)
 import           Hsed.Wire             (Dir (..), IfStatus (..), Request (..), Response (..), exactly, inactiveExtension,
@@ -114,10 +115,11 @@ command r st
     c = comId r
     p = tsParams st
     refused s = (Response s mempty, st)
-    -- TPER_RESET: enabled and of a length, Good and the TPer reset; else aborted at the interface (Opal 3.2.3)
+    -- TPER_RESET: enabled (TPerInfo's ProgrammaticResetEnable TRUE) and of a length, Good and the TPer reset; else
+    -- aborted at the interface (Opal 3.2.3; Table 26, PDF 49)
     tperReset = case dir r of
-      IfSend | spTPerResetEnabled p && lenBytes r /= 0 -> (Response Good mempty, Reset.resetTPer Reset.OnTPerReset st)
-      _                                                -> refused OtherInvalidCommandParameter
+      IfSend | programmaticResetEnabled st == Just True && lenBytes r /= 0 -> (Response Good mempty, Reset.resetTPer Reset.OnTPerReset st)
+      _                                                                    -> refused OtherInvalidCommandParameter
     -- GET_COMID: no ComID to assign, all zeros (3.3.4.3.1 a)
     getComId = case dir r of
       IfRecv -> (Response Good (exactly (lenBytes r) (encoded (GET_COMIDPayload 0))), st)

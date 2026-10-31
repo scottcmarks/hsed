@@ -9,9 +9,9 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The access control of M4a (design 8.2) over the Admin SP's hand-written rows
-and over rows built here: the ACL of an InvokingID and MethodID (Core
-5.3.2.9, PDF 160-165; none, NOT_AUTHORIZED, 5.1.5.2, PDF 137); the
+The access control of M4a (design 8.2) over the Admin SP's rows (generated
+since M4b) and over rows built here: the ACL of an InvokingID and MethodID
+(Core 5.3.2.9, PDF 160-165; none, NOT_AUTHORIZED, 5.1.5.2, PDF 137); the
 authorities a session makes true, their classes with them and Anybody always
 (3.4.2.1-2, PDF 88-89; 5.3.4.1.2.1, PDF 211), a Class of the NULL UID none
 (5.3.2.10.5, PDF 166); an ACE's BooleanExpr read in
@@ -41,7 +41,7 @@ import           Hsed.Sim.State           (columnOf)
 import           Hsed.Sim.Types
 
 
--- | The Admin SP of the default TPer, with its hand-written rows.
+-- | The Admin SP of the default TPer, with its generated rows.
 adminSP :: SPState
 adminSP = fromMaybe (error "the default TPer has no Admin SP") (Map.lookup uSP_Admin (tsSPs (initialState defaultSimParams)))
 

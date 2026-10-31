@@ -15,8 +15,8 @@ has it: a TPer with static ComIDs, each with its synchronous protocol state
 144-145) and its ComID management buffer (3.3.4.7, PDF 62-66); its regular
 sessions, each on a ComID (3.3.7.1, PDF 72-75); and its SPs, each with its
 tables and their descriptions, the Admin SP's folded from its preconfiguration
-("Hsed.Sim.Preconfig"; its rows hand-written until M4b's generated ones,
-"Hsed.Sim.AdminSP"), an SP's life cycle the LifeCycleState cell of its row of
+("Hsed.Sim.Preconfig", the generated "Hsed.Gen.Opal.Preconfig.AdminSP" since
+M4b), an SP's life cycle the LifeCycleState cell of its row of
 the Admin SP's SP table ("Hsed.Sim.State".@spLifeCycle@).
 
 'SimParams' are what a run chooses ("Hsed.Sim.Params", re-exported here).
@@ -160,9 +160,9 @@ data TPerState = TPerState
 --   properties and an empty management buffer; none past 0xFFFF or reserved
 --   (parameters with such a ComID are refused, 'simParamsProblems'); no
 --   session, the first TSN to assign 'firstTSN'; the Admin SP folded from
---   its preconfiguration tables ("Hsed.Sim.Preconfig": the hand-written rows
---   of "Hsed.Sim.AdminSP" until M4b's generated ones), its SP table holding
---   the Admin SP Manufactured (Opal 2.30 Table 29, PDF 50) and the Locking SP
+--   its preconfiguration tables ("Hsed.Sim.Preconfig": Opal 2.30's, generated,
+--   "Hsed.Gen.Opal.Preconfig.AdminSP"), its SP table holding the Admin SP
+--   Manufactured (Opal 2.30 Table 29, PDF 50) and the Locking SP
 --   in its Original Factory State ('spLockingOFS'), and the Locking SP, whose
 --   tables are M5's; the initial C_PIN_SID PIN the MSID's unless the
 --   parameters give the SID a PIN of its own ('spSidPin' other than the MSID,

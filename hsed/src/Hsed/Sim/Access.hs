@@ -11,7 +11,7 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 The access control of Core 3.4 and 5.3.4.3 over the rows an SP holds
-("Hsed.Sim.State"; the Admin SP's hand-written until M4b, "Hsed.Sim.AdminSP"):
+("Hsed.Sim.State"; the Admin SP's generated since M4b, "Hsed.Sim.Preconfig"):
 the AccessControl row of an InvokingID and MethodID and its ACL (5.3.2.9,
 PDF 160-165); an ACE's BooleanExpr, a postfix list of authorities and
 And/Or/Not (5.3.4.3.2-3, PDF 226-227; Table 61, PDF 104), in which an

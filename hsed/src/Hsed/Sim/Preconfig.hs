@@ -36,13 +36,10 @@ sections 8.1 and 8.3; M4b). 'foldTables' does it in five passes:
 
 The fold reads a run's parameters and nothing of the state, so that the
 initial state can run it ("Hsed.Sim.Types".@initialState@), and a Revert can
-run it again (M5); it imports the parameters ("Hsed.Sim.Params"), hsed-core,
-the generated Core modules and the Admin SP's hand-written rows
-("Hsed.Sim.AdminSP"), its stand-in until M4b's generated preconfiguration,
-never a module that imports the state's types. The stand-in prints no
-template, no cell the TPer chooses, no default and no every-object row, and
-its cells are those the parameters choose, the Locking SP's life cycle
-among them, so it folds to its rows as written.
+run it again (M5); it imports the parameters ("Hsed.Sim.Params"), hsed-core
+and the generated modules, the Admin SP's preconfiguration among them
+("Hsed.Gen.Opal.Preconfig.AdminSP": Opal 2.30's Admin SP tables as hsedc
+generates them, since M4b), never a module that imports the state's types.
 -}
 module Hsed.Sim.Preconfig
   ( adminSPTables
@@ -51,36 +48,39 @@ module Hsed.Sim.Preconfig
   , instances
   ) where
 
-import qualified RIO.List                 as L
-import qualified RIO.Map                  as Map
+import qualified RIO.List                        as L
+import qualified RIO.Map                         as Map
 import           RIO
-import qualified RIO.Set                  as Set
-import qualified RIO.Text                 as T
+import qualified RIO.Set                         as Set
+import qualified RIO.Text                        as T
 
-import           Hsed.Core.Preconfig      (Placeholder (..), PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..),
-                                           instanceUID, instantiate)
-import           Hsed.Core.Table          (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNamed,
-                                           columnNumbered)
-import           Hsed.Core.Types          (enumValue)
-import           Hsed.Core.UID            (HalfUID, UID, uidUpper)
-import           Hsed.Gen.Core.Enums      (Core_boolean (..))
-import           Hsed.Gen.Core.TableUIDs  (uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable, uTemplateTable)
-import           Hsed.Gen.Core.UIDs       (uC_PIN_SID, uTemplate_Base)
-import           Hsed.OpalUIDs            (uSP_Locking)
-import           Hsed.Sim.AdminSP         (handTables)
-import           Hsed.Sim.Params          (LifeCycle (..), SimParams (..), lifeCycleValue)
+import           Hsed.Core.Preconfig             (Placeholder (..), PreCell (..), PreconfRow (..), PreconfTable (..),
+                                                  RowKind (..), instanceUID, instantiate)
+import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNamed,
+                                                  columnNumbered)
+import           Hsed.Core.Types                 (enumValue)
+import           Hsed.Core.UID                   (HalfUID, UID, uidUpper)
+import           Hsed.Gen.Core.Enums             (Core_boolean (..))
+import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable, uTemplateTable)
+import           Hsed.Gen.Core.UIDs              (uC_PIN_SID, uTemplate_Base)
+import           Hsed.Gen.Opal.Enums             (Opal_data_removal_mechanism (..))
+import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP)
+import           Hsed.Gen.Opal.TableUIDs         (uDataRemovalMechanismTable)
+import           Hsed.OpalUIDs                   (uSP_Locking)
+import           Hsed.Sim.Params                 (LifeCycle (..), SimParams (..), lifeCycleValue)
 
 
 -- $setup
 -- >>> :set -XOverloadedStrings
 
 
--- | The Admin SP's preconfiguration tables for a run: until M4b's generated
---   Opal tables (Opal 2.30 Tables 18-25, 27-29 and 33, PDF 35-52), the
---   fourteen hand-written rows of six of them, the cells the parameters
---   choose already filled ("Hsed.Sim.AdminSP".'handTables').
+-- | The Admin SP's preconfiguration tables for a run: Opal 2.30's, Tables
+--   18-25, 27-29 and 33 (PDF 35-52), as hsedc generates them
+--   ("Hsed.Gen.Opal.Preconfig.AdminSP".'adminSP'), whatever the parameters:
+--   what a run chooses ('vendorCell', 'instances' and the overrides) the fold
+--   fills in ('foldTables').
 adminSPTables :: SimParams -> [PreconfTable]
-adminSPTables = handTables
+adminSPTables = const adminSP
 
 -- | An SP's tables folded from its preconfiguration tables: each table's
 --   description and its rows, both by the table's UID ('tdTableUID'), the
@@ -163,12 +163,12 @@ foldTables p tables =
 --     Manufactured-Inactive counting (Opal 2.30 Table 28, PDF 50; 5.2.2.1,
 --     PDF 96);
 --   * DataRemovalMechanism's ActiveDataRemovalMechanism (@VU@): 2,
---     Cryptographic Erase (Table 31, PDF 51), the mechanism an Opal TPer
---     SHALL support and the one the simulator's Level 0 Supported Data
---     Removal Mechanism descriptor reports ("Hsed.Sim.Level0"; Opal 2.30
---     Table 10, PDF 27; Table 33 and 4.2.6.1.2, PDF 51-52). The table's UID
---     is Opal's (Table 20, PDF 37), which no generated Core module holds, so
---     the table is the one its description names DataRemovalMechanism.
+--     Cryptographic Erase (Table 31, PDF 51, the generated
+--     @Opal_data_removal_mechanism@), the mechanism an Opal TPer SHALL
+--     support and the one the simulator's Level 0 Supported Data Removal
+--     Mechanism descriptor reports ("Hsed.Sim.Level0"; Opal 2.30 Table 10,
+--     PDF 27; Table 33 and 4.2.6.1.2, PDF 51-52). The table's UID is Opal's
+--     (Table 20 row 12, PDF 37), generated in "Hsed.Gen.Opal.TableUIDs".
 --
 -- >>> import Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 -- >>> import Hsed.Sim.Params (defaultSimParams)
@@ -381,7 +381,8 @@ vendorCells =
   , Vendor (isTable uTPerInfoTable) anyRow "GUDID" "VU" (BytesCell . spGudid)
   , Vendor (isTable uTemplateTable) (isObject uTemplate_Base) "Instances" "VU" (const (UIntCell 2))
   , Vendor (isTable uTemplateTable) (isObject uTemplate_Base) "MaxInstances" "VU" (const (UIntCell 2))
-  , Vendor ((== "DataRemovalMechanism") . tdName) anyRow "ActiveDataRemovalMechanism" "VU" (const (EnumCell "Cryptographic Erase" 2))
+  , Vendor (isTable uDataRemovalMechanismTable) anyRow "ActiveDataRemovalMechanism" "VU"
+      (const (EnumCell "Cryptographic Erase" (enumValue Opal_data_removal_mechanism_Cryptographic_Erase)))
   ]
   where
     isTable u desc = tdTableUID desc == u

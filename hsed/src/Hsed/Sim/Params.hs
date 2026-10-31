@@ -15,9 +15,8 @@ The parameters of the simulated TPer (design docs/spec-as-source.md section
 value the spec allows, each citing where (design 13.17: parameters, not
 comments). They sit below "Hsed.Sim.Types", which re-exports them, so that
 the fold of an SP's preconfiguration tables ("Hsed.Sim.Preconfig"), which the
-initial state runs, and the Admin SP's hand-written rows it folds until M4b's
-generated ones ("Hsed.Sim.AdminSP"), which read the MSID, the SID's PIN and
-its TryLimit from the parameters, import no module that imports them. A life
+initial state runs and which reads the MSID, the SID's PIN and its TryLimit
+from the parameters, imports no module that imports them. A life
 cycle state is a parameter's ('LifeCycle', the Locking SP's Original Factory
 State) and a cell's value ('lifeCycleValue', what an SP's row of the Admin
 SP's SP table holds).
@@ -29,7 +28,7 @@ range, a version past its 4-bit field, a TPer property below the least Opal
 Admin authority or more than Table 24's template numbers, a GUDID not in
 Core Table 212's format), so that every descriptor the simulator sends
 encodes, every static ComID is one a TPer may have, every limit is one an
-Opal TPer may report, every hand row holds and every Admin authority the
+Opal TPer may report, every PIN fits its column and every Admin authority the
 preconfiguration's fold instantiates has a UID of its own; the in-process
 transport is opened only with parameters that pass.
 Opal 2.30 Table 17 is read from its generated form ("Hsed.Gen.Opal.Properties",
@@ -90,8 +89,8 @@ import           Hsed.Core.Properties     (Assumptions (..), Communicator (..), 
 import           Hsed.Core.Record         (DecodedRecord, decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Types          (enumValue)
 import           Hsed.Gen.Core.Codes      (cComIDAssignments)
-import           Hsed.Gen.Core.Enums      (Core_life_cycle_state (..))
 import           Hsed.Gen.Core.Layouts    (GUDIDColumnContentsDescription (..), gudidColumnContentsDescriptionLayout)
+import           Hsed.Gen.Opal.Enums      (Opal_life_cycle_state (..))
 import           Hsed.Gen.Opal.Properties (initialAssumptions, propertyRequirements)
 import           Hsed.Level0              (Descriptor)
 import           Hsed.Wire                (Unit (..), hex)
@@ -110,15 +109,16 @@ data LifeCycle
 --   the life_cycle_state enumeration (the cell of the SP's row of the Admin
 --   SP's SP table, Core 4.1, PDF 91): Opal 2.30 Table 49 (PDF 98) assigns
 --   Manufactured-Inactive 8 and Manufactured 9, values Core Table 103 (PDF
---   113) reserves for SSC usage, read from Core's generated enumeration until
---   Opal's is generated (M4b).
+--   113) reserves for SSC usage, read from Opal's generated enumeration
+--   (Table 49, which replaces Core's Tables 102 and 103 by
+--   @enumInDescription@, "Hsed.Gen.Opal.Enums"; M4b).
 --
 -- >>> map lifeCycleValue [minBound .. maxBound]
 -- [8,9]
 lifeCycleValue :: LifeCycle -> Int
 lifeCycleValue = \case
-  ManufacturedInactive -> enumValue Core_life_cycle_state_Reserved_for_SSC_Usage_8
-  Manufactured         -> enumValue Core_life_cycle_state_Reserved_for_SSC_Usage_9
+  ManufacturedInactive -> enumValue Opal_life_cycle_state_manufactured_inactive
+  Manufactured         -> enumValue Opal_life_cycle_state_manufactured
 
 -- | What the Geometry Reporting descriptor reports (Opal 2.30 Table 5 and
 --   3.1.1.4.2-5, PDF 21-22), which Opal takes from the LockingInfo table:

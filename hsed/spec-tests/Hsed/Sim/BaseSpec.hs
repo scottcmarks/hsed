@@ -92,7 +92,7 @@ spec = do
       r `shouldBe` MethodResponse [L (List [N ((0 :: Natural) .: token uC_PIN_MSID), N ((3 :: Natural) .: msid)])] 0
     it "C_PIN_MSID asked for columns 0 to 2 gives the UID alone, the Name not granted and that no error (Core 5.3.4.2.2)" $
       getWith anybody stA uC_PIN_MSID (columnRange 0 2) `shouldBe` MethodResponse [L (List [N ((0 :: Natural) .: token uC_PIN_MSID)])] 0
-    it "C_PIN_MSID asked for a column it does not hold, 4, gives an empty RowValues list" $
+    it "C_PIN_MSID asked for a column the ACE does not grant, 4, gives an empty RowValues list (the row holds it, its default since M4b)" $
       getWith anybody stA uC_PIN_MSID (columnRange 4 4) `shouldBe` MethodResponse [L (List [])] 0
     it "C_PIN_SID as Anybody is NOT_AUTHORIZED with an empty result (Core 5.1.5.2): the NOPIN ACE wants Admins or SID" $
       getWith anybody stA uC_PIN_SID noCells `shouldBe` MethodResponse [] (status NOT_AUTHORIZED)
@@ -107,7 +107,7 @@ spec = do
       columnsOf (getWith sid stS uC_PIN_MSID noCells) `shouldBe` [0, 3]
     it "an object the SP does not have, 00 00 08 01 AA BB CC DD, is NOT_AUTHORIZED (Fails a; Core 5.1.5.2: no AccessControl row)" $
       getWith anybody stA (uid 0x00 0x00 0x08 0x01 0xAA 0xBB 0xCC 0xDD) noCells `shouldBe` MethodResponse [] (status NOT_AUTHORIZED)
-    it "the C_PIN table itself, with startRow C_PIN_MSID, is NOT_AUTHORIZED at M4a: the Admin SP has no AccessControl row for Get on a table" $
+    it "the C_PIN table itself, with startRow C_PIN_MSID, is NOT_AUTHORIZED: Opal 2.30 Table 22 gives the C_PIN table only Next (PDF 42)" $
       getWith anybody stA uC_PINTable noCells { cbStartRow = Just (RowUID uC_PIN_MSID) } `shouldBe` MethodResponse [] (status NOT_AUTHORIZED)
     it "leaves the TPer as it was" $
       snd (dispatch anybody (invocation uC_PIN_MSID (Methods.Get (cellBlockValue noCells))) stA) `shouldBe` stA

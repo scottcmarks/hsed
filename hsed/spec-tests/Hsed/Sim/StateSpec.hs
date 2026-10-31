@@ -69,7 +69,7 @@ tPerInfoRow :: Bool -> Row
 tPerInfoRow enabled = [(0, UIDCell (uid 0x00 0x00 0x02 0x01 0x00 0x03 0x00 0x01)), (0x08, EnumCell (tshow enabled) (if enabled then 1 else 0))]
 
 -- | The TPer with the Admin SP holding a TPerInfo table of a description
---   and rows, which the hand-written stand-in has none of.
+--   and rows, in place of the generated one.
 withTPerInfo :: TableDesc -> [Row] -> TPerState -> TPerState
 withTPerInfo desc rows st = st { tsSPs = Map.adjust holding uSP_Admin (tsSPs st) }
   where
@@ -86,9 +86,9 @@ spec = do
       map (\cs -> (cLife cs, cSync cs, cHostProps cs, cMgmt cs)) (Map.elems (tsComIds st0))
         `shouldBe` [(Issued, S1, initialHostProperties, MgmtBuffer False Nothing)]
       initialHostProperties `shouldBe` Map.fromList hostRequirements
-    it "has the Admin SP Manufactured with its hand-written tables, and the Locking SP in its Original Factory State with none" $ do
+    it "has the Admin SP Manufactured with its twelve generated tables (Opal 2.30 Tables 18-25, 27-29 and 33), and the Locking SP in its Original Factory State with none" $ do
       spLifeCycle uSP_Admin st0 `shouldBe` Just (lifeCycleValue Manufactured)
-      fmap (Map.size . spsTables) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` Just 6
+      fmap (Map.size . spsTables) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` Just 12
       spLifeCycle uSP_Locking st0 `shouldBe` Just (lifeCycleValue ManufacturedInactive)
       spLifeCycle uSP_Locking (initialState defaultSimParams { spLockingOFS = Manufactured }) `shouldBe` Just (lifeCycleValue Manufactured)
       fmap (Map.size . spsTables) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just 0
@@ -193,8 +193,9 @@ spec = do
         `shouldBe` Nothing
 
   describe "TPER_RESET's enabling (programmaticResetEnabled; Opal 2.30 3.2.3, PDF 28-29)" $ do
-    it "is none on the hand-written stand-in, which has no TPerInfo table" $
-      programmaticResetEnabled st0 `shouldBe` Nothing
+    it "is FALSE on the generated Admin SP's TPerInfo row, as Table 27 prints it (PDF 50), and TRUE where the parameters enable it" $ do
+      programmaticResetEnabled st0 `shouldBe` Just False
+      programmaticResetEnabled (initialState defaultSimParams { spTPerResetEnabled = True }) `shouldBe` Just True
     it "is the ProgrammaticResetEnable cell of the Admin SP's TPerInfo row, its column by name in the Admin SP's description (Opal 2.30 Table 26)" $ do
       programmaticResetEnabled (withTPerInfo tPerInfoDesc [tPerInfoRow False] st0) `shouldBe` Just False
       programmaticResetEnabled (withTPerInfo tPerInfoDesc [tPerInfoRow True] st0) `shouldBe` Just True

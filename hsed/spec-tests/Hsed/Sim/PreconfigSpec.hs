@@ -10,8 +10,9 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The fold of M4b (design 8.1 and 8.3), on the hand-written stand-in and on
-preconfiguration tables built here as M4b's generated ones have them (the
+The fold of M4b (design 8.1 and 8.3), the Admin SP's tables the generated
+ones (held to the initial state both ways in Hsed.Gen.Opal.PreconfigSpec),
+on preconfiguration tables built here as M4b's generated ones have them (the
 cells' form the lead decided for M4b, design 13.32: an every-object row
 without an InvokingID cell, a template's UID or InvokingID its base,
 MethodID and the ACLs references, no default for the UID), from Opal 2.30's
@@ -53,8 +54,8 @@ import           Hsed.Gen.Core.UIDs      (uAuthority_Admins, uAuthority_Anybody,
                                           uMethodID_Get, uMethodID_Set, uSP_Admin, uTemplate_Admin, uTemplate_Base,
                                           uTemplate_Locking)
 import           Hsed.Gen.Opal.Features  (Level0DiscoverySupportedDataRemovalMechanismFeature (..))
+import qualified Hsed.Gen.Opal.Preconfig.AdminSP as Generated
 import           Hsed.Level0             (Descriptor (..))
-import           Hsed.Sim.AdminSP        (handTables)
 import           Hsed.Sim.Level0         (simDescriptors)
 import           Hsed.Sim.Preconfig      (adminSPTables, foldTables, instances, vendorCell)
 import           Hsed.Sim.Types          (LifeCycle (..), SimParams (..), defaultSimParams, initialState, lifeCycleValue)
@@ -334,13 +335,9 @@ spec = do
       Map.keys tables `shouldBe` Map.keys descs
       map (L.lookup 0) (rowsIn [c_PIN, sp] c_PINTableDesc) `shouldBe` [Just (UIDCell msid), Just (UIDCell sid)]
       rowsIn [c_PIN, sp] spTableDesc `shouldBe` [[(0, UIDCell (uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x01)), (1, TextCell "Admin")]]
-    it "of the Admin SP are, until M4b's generated ones, the hand-written stand-in (Hsed.Sim.AdminSP)" $
-      adminSPTables defaultSimParams `shouldBe` handTables defaultSimParams
-    it "fold the stand-in to exactly the cells it prints, as M4b's scaffold did, whatever the Locking SP's Original Factory State" $
-      forM_ [defaultSimParams, defaultSimParams { spLockingOFS = Manufactured, spTPerResetEnabled = True }] $ \p ->
-        snd (foldTables p (handTables p)) `shouldBe`
-          Map.fromListWith (flip (<>)) [ (tdTableUID (ptDesc t), [ [ (c, cell) | (c, Given cell) <- prCells (row r) ] | r <- ptRows t ])
-                                       | t <- handTables p ]
+    it "of the Admin SP are Opal 2.30's as hsedc generates them (Hsed.Gen.Opal.Preconfig.AdminSP), whatever the parameters" $
+      forM_ [defaultSimParams, admins 3, defaultSimParams { spLockingOFS = Manufactured, spTPerResetEnabled = True }] $ \p ->
+        adminSPTables p `shouldBe` Generated.adminSP
 
   describe "the cells the TPer chooses (vendorCell)" $ do
     let pin    = cellNamed c_PINTableDesc "PIN"

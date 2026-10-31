@@ -129,12 +129,14 @@ data Pre r = Pre
   }
   deriving (Eq, Show)
 
--- | The access a preconfigured cell has, in an SSC's legend (design example E11).
+-- | The access a preconfigured cell has, in an SSC's legend (design example
+--   E11; Opal 2.30 Table 1, PDF 12, which calls its colouring informative
+--   only: documentation, which gates nothing, design 13.32).
 data Access
-  = ReadOnlySpecified     -- ^ read-only, its value specified
-  | ReadOnlyVU            -- ^ read-only, its value vendor unique
-  | WritePersonalizable   -- ^ writable, personalizable
-  | WriteFixed            -- ^ writable, its value fixed at manufacture
-  | NotDefined            -- ^ the column is not defined for this SSC
-  | Unspecified           -- ^ the legend says nothing
+  = ReadOnlySpecified     -- ^ read-only, its value the SSC's, its access control fixed
+  | ReadOnlyVU            -- ^ read-only, its value vendor unique, its access control fixed
+  | WritePersonalizable   -- ^ writable, its value and its access control preconfigured and personalizable
+  | WriteFixed            -- ^ writable, its value preconfigured and personalizable, its access control fixed
+  | NotDefined            -- ^ its content (N), its access control not defined: a Get may omit the column
+  | Unspecified           -- ^ the legend says nothing (a blank cell, or one no legend grey shades)
   deriving (Eq, Ord, Show, Enum, Bounded)

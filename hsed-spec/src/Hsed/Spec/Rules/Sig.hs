@@ -37,15 +37,38 @@ Checks, each with the code its findings carry:
   and the Session Manager Method UIDs, "Hsed.Spec.Rules.UidTable"); a block
   no row names is a Warning at the block (the PDF names the method one way in
   its signature and another, or not at all, in the tables), two rows an
-  Error; a method row no block defines is a Note at its row.
+  Error; a method row no block defines is a Note at its row;
+* @C-SIG-TYPE@ and @N-SIG-TYPE-CONTEXT@, the type join (M4a, the plan's
+  answer 2): each parameter's and result's type is read as printed
+  ('parseType': a name, @uidref@ with or without a table in braces, @list [ X
+  ... ]@, @list [ n = X ... ]@, @typeOr { L : X, ... }@, or a type in angle
+  brackets) and each leaf of it resolved ('resolveLeaf'): a name against the
+  type rows ("Hsed.Spec.Rules.TypeRow", which win over an abstract type of the
+  same name: Core 5.1.4, PDF 128, says abstract types are not in the Type
+  table) and then the abstract types (the titles of the subsections of
+  @Abstract Type Definitions@, 5.1.4.2, PDF 128-136, read from the IR's
+  headings); a @uidref@'s target against the tables of the table of tables
+  ("Hsed.Spec.Rules.TableUIDs", its @ObjectUID@, @TableUID@ or @UID@ suffix
+  stripped: @SPObjectUID@ names the SP table). A leaf nothing defines is the
+  Warning @C-SIG-TYPE@ at the block, naming the parameter and the leaf (Core
+  2.01's braced placeholders, @{SP/table/object}@, @{CredentialObjectUID}@,
+  @{ByteTable}@, and IssueSP's @TemplateObjectUID@: ten; a Warning until
+  design 13.25 (b) and (j) are settled). The type of a Named list's values
+  that nothing defines (@name = value@, 5.2.2.1 Properties, PDF 140;
+  @ColumnNumber = Value@, 5.3.3.6 Get, PDF 201), like a type in angle
+  brackets (@\<type of column\>@, 5.3.3.7 Set, PDF 202), is the context's,
+  given by the name beside it: the Note @N-SIG-TYPE-CONTEXT@ at the block
+  (five). The join changes nothing generated: a parameter's @TypeName@
+  carries a UID only where the whole text is a type row's name.
 
 Compiled into 'methodsModule' ("Hsed.Core.Method" is the runtime): per block
 a record named after the method, one field per parameter (@getCellblock ::
 Value@; an optional one @Maybe Value@), an @instance MethodSignature@ with the
 signature as printed (each parameter's type a @TypeName@, its text and, when
 the whole text is a type row's Name, that Type object's UID, printed through
-"Hsed.Spec.Rules.TypeRow".'typeNameExpr'; the join of the other texts, the
-abstract types and the groupings, is M4a's G4) and @fromValues@, the record
+"Hsed.Spec.Rules.TypeRow".'typeNameExpr'; the abstract types and the
+groupings are checked by the type join above and stay untyped, @Value@,
+until M6 gives each Type object a Haskell type) and @fromValues@, the record
 from values of its arity, and, when joined, an @instance Method@ whose
 @methodUID@ is the joined row's generated UID; a block whose heads name
 another method than the one it defines (SyncSession's, headed
@@ -67,30 +90,43 @@ module Hsed.Spec.Rules.Sig
   , ResponseRead (..)
   , SigRead (..)
   , sigReads
+  , paramsOf
+  , joinedUID
   , methodRows
   , invokerRows
     -- * Parsing a block
   , Part (..)
   , parseBlock
+    -- * The type join
+  , TypeText (..)
+  , parseType
+  , LeafRole (..)
+  , typeLeaves
+  , TypeEnv (..)
+  , typeEnv
+  , TypeSource (..)
+  , Resolution (..)
+  , resolveLeaf
   ) where
 
-import qualified Data.Text                as DT
-import qualified RIO.Char                 as C
-import qualified RIO.List                 as L
-import qualified RIO.Map                  as Map
-import qualified RIO.Text                 as T
+import qualified Data.Text                 as DT
+import qualified RIO.Char                  as C
+import qualified RIO.List                  as L
+import qualified RIO.Map                   as Map
+import qualified RIO.Text                  as T
 import           RIO
 
-import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
-import           Hsed.Spec.Common         (Finding, RuleName (..), Severity (..), SpecId (..), finding)
-import qualified Hsed.Spec.Common         as Cm
-import           Hsed.Spec.DSL            (SomeBinding (..), sig)
-import qualified Hsed.Spec.Gen            as Gen
-import           Hsed.Spec.IR             (HeadingIR (..), SigIR (..), SpecIR (..))
+import           Hsed.Spec.Anchor          (AnchorId (..), renderAnchorId)
+import           Hsed.Spec.Common          (Finding, RuleName (..), Severity (..), SpecId (..), finding)
+import qualified Hsed.Spec.Common          as Cm
+import           Hsed.Spec.DSL             (SomeBinding (..), sig)
+import qualified Hsed.Spec.Gen             as Gen
+import           Hsed.Spec.IR              (HeadingIR (..), SigIR (..), SpecIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Readers.Text   (lowerIdent)
-import           Hsed.Spec.Rules.TypeRow  (TypeRowRead (..), typeNameExpr, typeRowReads, typeUIDName, typesModule)
-import           Hsed.Spec.Rules.UidTable (UidRow (..), UidValue (..), rowPage, rowRef, rowText, uidHeaders, uidRows, uidsModule)
+import           Hsed.Spec.Readers.Text    (lowerIdent)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableNames, tableUIDRows, tableUIDsNamed)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeNameExpr, typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), rowPage, rowRef, rowText, uidHeaders, uidRows, uidsModule)
 
 
 -- | The rule.
@@ -107,7 +143,9 @@ sigRule = RuleDef
   , ruleCodes   =
       [ CodeDef "C-SIG-PARSE"      [Error, Warning]       (Defect "a method signature does not parse as printed")
       , CodeDef "C-SIG-METHOD"     [Error, Warning, Note] (Defect "a method signature and the UID tables disagree: a signature no UID row names, or a method UID with no signature")
-      , CodeDef "N-SIG-NORMALISED" [Note]                 (AsPrinted "a method signature read with its punctuation normalised") ]
+      , CodeDef "N-SIG-NORMALISED" [Note]                 (AsPrinted "a method signature read with its punctuation normalised")
+      , CodeDef "C-SIG-TYPE"         [Warning]              (Defect "a method parameter's type names a type nothing defines: no type row, no abstract type, and for a uidref's target no table of the table of tables")
+      , CodeDef "N-SIG-TYPE-CONTEXT" [Note]                 (AsPrinted "a method parameter's type the spec leaves to its context: a Named list's values typed by the name beside them, read as untyped") ]
   , ruleChecks  = \ctx _ -> checks ctx
   , ruleCompile = \ctx _ -> compile ctx
   }
@@ -314,6 +352,23 @@ readSig ctx bs = first (atSig ctx bs . finding Error "C-SIG-PARSE") $ do
       Params a b -> Right (a, b)
       SeeRef m _ -> Left (what <> "'s parameters are only a reference to " <> m)
 
+-- | Every parameter and result of a block, each with what it is: the
+--   invocation's parameters, the results, or a response invocation's parameters.
+paramsOf :: SigRead -> [(Text, SigParam)]
+paramsOf sr = [ ("the parameter", p) | p <- srRequired sr <> srOptional sr ] <> case srResponse sr of
+  SResults a b      -> [ ("the result", p) | p <- a <> b ]
+  SInvocation _ a b -> [ ("the response's parameter", p) | p <- a <> b ]
+  _                 -> []
+
+-- | The generated UID a block's method joins to, @uMethodID_Get@: the identifier
+--   of the one row of the UID tables that names it (@C-SIG-METHOD@), under
+--   which the record gets its @instance Method@; Nothing for none or several
+--   (5.6.4.2 Stir).
+joinedUID :: Context -> SigRead -> Maybe Text
+joinedUID ctx sr = case joins ctx sr of
+  [r] -> urIdent r
+  _   -> Nothing
+
 -- | The rows of the UID tables that list methods (their name column is
 --   @Method Name@), each with its method name.
 methodRows :: Context -> [(Text, UidRow)]
@@ -337,10 +392,11 @@ joins :: Context -> SigRead -> [UidRow]
 joins ctx sr = [ r | (n, r) <- methodRows ctx, n == srMethod sr, Exact _ <- [urValue r] ]
 
 checks :: Context -> [Finding]
-checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck rows <> unsigned
+checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck rows <> unsigned <> concatMap (typeChecks ctx env) rows
   where
     reads = sigReads ctx
     rows  = rights reads
+    env   = typeEnv ctx
     tables = L.nub [ renderAnchorId (btAnchor (urBound r)) | (_, r) <- methodRows ctx ]
     joinCheck sr = case joins ctx sr of
       [_] -> []
@@ -353,6 +409,185 @@ checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck row
       [ locatedAt (cxSpec ctx) (renderAnchorId (btAnchor (urBound r))) (rowPage r)
           (finding Note "C-SIG-METHOD" (rowRef r <> ", " <> n <> ", has no signature block"))
       | not (null reads), (n, r) <- methodRows ctx, isJust (urIdent r), n `notElem` defined ]
+
+
+-- * The type join
+
+-- | A parameter's type as printed, read (Core 5.1.4, PDF 128: a pseudo-code
+--   signature names a column type, an abstract type, or a grouping of them).
+data TypeText
+  = TName !Text                      -- ^ @uinteger@: a type row's name, an abstract type's, or one the context gives
+  | TUidref !(Maybe Text)            -- ^ @uidref@, or @uidref {SPObjectUID}@: a reference, into the table named
+  | TList !(Maybe Text) !TypeText    -- ^ @list [ X ... ]@, or @list [ n = X ... ]@: a list of X, each a Named value
+  | TOr ![(Text, TypeText)]          -- ^ @typeOr { L : X, ... }@: one of the alternatives, each labelled
+  | TContext !Text                   -- ^ @\<type of column\>@: a type the context gives, said in angle brackets
+  deriving (Eq, Show)
+
+-- | Read a type as the signature blocks print it (the spacing free), or say why it is none.
+--
+-- >>> parseType "list [ ColumnNumber = Value ... ]"
+-- Right (TList (Just "ColumnNumber") (TName "Value"))
+-- >>> parseType "uidref { SP/table/object }"
+-- Right (TUidref (Just "SP/table/object"))
+parseType :: Text -> Either Text TypeText
+parseType text = do
+  (ty, rest) <- typeText (T.strip text)
+  unless (T.null (T.strip rest)) (Left ("text after the type: " <> tshow (T.strip rest)))
+  pure ty
+
+-- | A type at the front of the text, and what follows it.
+typeText :: Text -> Either Text (TypeText, Text)
+typeText t0
+  | Just inner <- T.stripPrefix "<" t = case DT.breakOn ">" inner of
+      (said, rest) | Just after <- T.stripPrefix ">" rest -> Right (TContext (T.strip said), after)
+      _ -> Left ("an unclosed < in " <> tshow t)
+  | T.null name = Left ("no type at " <> tshow t)
+  | name == "uidref" = case T.stripPrefix "{" (T.stripStart rest0) of
+      Just inner -> case DT.breakOn "}" inner of
+        (target, rest) | Just after <- T.stripPrefix "}" rest -> Right (TUidref (Just (T.strip target)), after)
+        _ -> Left ("an unclosed { after uidref in " <> tshow t)
+      Nothing -> Right (TUidref Nothing, rest0)
+  | name == "list" = do
+      body <- expect "[" "list" (T.stripStart rest0)
+      let (label, body') = case T.span identChar (T.stripStart body) of
+            (n, r) | not (T.null n), Just r' <- T.stripPrefix "=" (T.stripStart r) -> (Just n, r')
+            _                                                                      -> (Nothing, body)
+      (x, after) <- typeText body'
+      after'  <- expect "..." "list" (T.stripStart after)
+      after'' <- expect "]" "list" (T.stripStart after')
+      Right (TList label x, after'')
+  | name == "typeOr" = expect "{" "typeOr" (T.stripStart rest0) >>= alternatives []
+  | otherwise = Right (TName name, rest0)
+  where
+    t = T.stripStart t0
+    (name, rest0) = T.span identChar t
+    expect token what s = maybe (Left (what <> " without " <> token <> " at " <> tshow s)) Right (T.stripPrefix token s)
+    alternatives acc s = do
+      let (label, afterLabel) = T.span identChar (T.stripStart s)
+      when (T.null label) (Left ("typeOr: no label at " <> tshow (T.stripStart s)))
+      body <- expect ":" "typeOr's alternative" (T.stripStart afterLabel)
+      (x, after) <- typeText body
+      let acc' = acc <> [(label, x)]
+      case T.uncons (T.stripStart after) of
+        Just (',', more) -> alternatives acc' more
+        Just ('}', more) -> Right (TOr acc', more)
+        _                -> Left ("typeOr: , or } expected at " <> tshow (T.stripStart after))
+
+-- | What a leaf of a type is: a name on its own, a @uidref@'s target (a
+--   table's name), the type of a Named list's values (@n = X@), or a type
+--   said in angle brackets.
+data LeafRole = NameLeaf | TargetLeaf | ElementLeaf | ContextLeaf
+  deriving (Eq, Show)
+
+-- | The leaves of a type, each with its role, in printed order; @uidref@ on
+--   its own is the abstract type of that name.
+--
+-- >>> typeLeaves (TOr [("Bytes", TName "bytes"), ("RowValues", TList (Just "ColumnNumber") (TName "Value"))])
+-- [(NameLeaf,"bytes"),(ElementLeaf,"Value")]
+typeLeaves :: TypeText -> [(LeafRole, Text)]
+typeLeaves = \case
+  TName n                   -> [(NameLeaf, n)]
+  TUidref Nothing           -> [(NameLeaf, "uidref")]
+  TUidref (Just target)     -> [(TargetLeaf, target)]
+  TList Nothing x           -> typeLeaves x
+  TList (Just _) (TName n)  -> [(ElementLeaf, n)]
+  TList (Just _) x          -> typeLeaves x
+  TOr alternatives          -> concatMap (typeLeaves . snd) alternatives
+  TContext said             -> [(ContextLeaf, said)]
+
+-- | What the leaves resolve against.
+data TypeEnv = TypeEnv
+  { teTypeRows :: ![Text]   -- ^ the Type table rows' names ("Hsed.Spec.Rules.TypeRow"; 100 in Core)
+  , teAbstract :: ![Text]   -- ^ the abstract types' names ('abstractTypes'; 18 in Core)
+  , teTables   :: ![Text]   -- ^ the tables' names, the table of tables' ("Hsed.Spec.Rules.TableUIDs"; 46 in Core)
+  , teTablesAt :: ![Text]   -- ^ the anchors the table names are read from (@T240@), for the messages
+  }
+  deriving (Eq, Show)
+
+-- | The environment of a context: its own readings, or, where it has none of
+--   its own, those of the spec it is read over (Opal's methods use Core's types).
+typeEnv :: Context -> TypeEnv
+typeEnv ctx = TypeEnv
+  { teTypeRows = ownOrBase (\c -> [ trName tr | Right tr <- typeRowReads c ]) ctx
+  , teAbstract = ownOrBase abstractTypes ctx
+  , teTables   = ownOrBase tableNames ctx
+  , teTablesAt = ownOrBase (\c -> L.nub [ renderAnchorId (btAnchor (tuBound r)) | Right r <- tableUIDRows c ]) ctx }
+
+-- | A reading of a context, or of its base where the context gives none.
+ownOrBase :: (Context -> [a]) -> Context -> [a]
+ownOrBase f c = case f c of
+  [] -> maybe [] (ownOrBase f) (cxBase c)
+  xs -> xs
+
+-- | The abstract types of a spec: the titles of the subsections of the heading
+--   titled @Abstract Type Definitions@ (Core 5.1.4.2, PDF 128: 5.1.4.2.1
+--   @access_control_list@ to 5.1.4.2.18 @uidref@, PDF 128-136), the
+--   pseudo-code parameter types the Type table does not hold (5.1.4, PDF
+--   128), read from the IR's headings.
+abstractTypes :: Context -> [Text]
+abstractTypes ctx =
+  [ T.strip h.title
+  | parent <- headings, T.words (T.toLower parent.title) == ["abstract", "type", "definitions"], Just ps <- [parent.section]
+  , h <- headings, Just s <- [h.section], Just k <- [T.stripPrefix (ps <> ".") s], not (T.null k), T.all C.isDigit k ]
+  where headings = (cxIR ctx).headings
+
+-- | Where a leaf's type is defined.
+data TypeSource
+  = ATypeRow            -- ^ a row of the Type table
+  | AnAbstractType      -- ^ a subsection of 5.1.4.2
+  | ATable !Text        -- ^ a table of the table of tables, by name (@SP@ for @SPObjectUID@)
+  deriving (Eq, Show)
+
+-- | What a leaf resolves to: a definition; the context (a Named list's values
+--   are typed by the name beside them: Core 5.2.2.1 @name = value@, PDF 140;
+--   5.3.3.6 @ColumnNumber = Value@, PDF 201; 5.3.3.7 @ColumnNumber = \<type of
+--   column\>@, PDF 202); or nothing, with why.
+data Resolution = Resolved !TypeSource | ContextTyped | Unresolved !Text
+  deriving (Eq, Show)
+
+-- | Resolve a leaf by its role: a name against the type rows (a type row wins
+--   over an abstract type of the same name: Core 5.1.4, PDF 128, says
+--   abstract types are not in the Type table, so a row of that name is the
+--   type) and then the abstract types; a @uidref@'s target against the
+--   tables, its @ObjectUID@, @TableUID@ or @UID@ suffix stripped; the type of a
+--   Named list's values against the type rows and the abstract types, else
+--   the context's; a type in angle brackets the context's.
+resolveLeaf :: TypeEnv -> LeafRole -> Text -> Resolution
+resolveLeaf env role leaf = case role of
+  ContextLeaf -> ContextTyped
+  ElementLeaf -> maybe ContextTyped Resolved named
+  NameLeaf    -> maybe (Unresolved ("no type row and no abstract type (5.1.4.2) is named " <> tshow leaf)) Resolved named
+  TargetLeaf
+    | stripped `elem` teTables env -> Resolved (ATable stripped)
+    | otherwise -> Unresolved ("no row of " <> tablesAt <> " names a table " <> tshow stripped
+                               <> (if stripped == leaf then "" else " (" <> tshow leaf <> " less its suffix)"))
+  where
+    named
+      | leaf `elem` teTypeRows env = Just ATypeRow
+      | leaf `elem` teAbstract env = Just AnAbstractType
+      | otherwise                  = Nothing
+    stripped = fromMaybe leaf (listToMaybe (mapMaybe (`T.stripSuffix` leaf) ["ObjectUID", "TableUID", "UID"]))
+    tablesAt = case teTablesAt env of
+      [] -> "the tables bound by " <> tableUIDsNamed
+      as -> T.intercalate " or " as
+
+-- | @C-SIG-TYPE@ and @N-SIG-TYPE-CONTEXT@ over one block's parameters and results, at the block.
+typeChecks :: Context -> TypeEnv -> SigRead -> [Finding]
+typeChecks ctx env sr = concatMap one (paramsOf sr)
+  where
+    here = atSig ctx (srBound sr)
+    one (what, prm) = case parseType (spType prm) of
+      Left why -> [ here (finding Warning "C-SIG-TYPE" (what <> " " <> spName prm <> ": the type " <> tshow (spType prm)
+                                                          <> " does not read as a type: " <> why)) ]
+      Right ty -> concat [ leafFinding what prm role leaf | (role, leaf) <- typeLeaves ty ]
+    leafFinding what prm role leaf = case resolveLeaf env role leaf of
+      Resolved _     -> []
+      Unresolved why -> [ here (finding Warning "C-SIG-TYPE" (what <> " " <> spName prm <> ": the type " <> tshow (spType prm)
+                                                                <> " names " <> tshow leaf <> ", which nothing defines: " <> why)) ]
+      ContextTyped   -> [ here (finding Note "N-SIG-TYPE-CONTEXT" (what <> " " <> spName prm <> ": " <> case role of
+                            ContextLeaf -> "the type <" <> leaf <> "> is the context's, said in words rather than named"
+                            _           -> "the type of each named value, " <> tshow leaf
+                                           <> ", is the context's, given by the name beside it; no type row or abstract type is so named")) ]
 
 
 -- * Declarations
@@ -418,10 +653,7 @@ methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordin
     -- a parameter's type: the whole collapsed text a type row's name, or not
     typeRow prm = Map.lookup (spType prm) types
     paramExpr prm = "Param " <> tshow (spName prm) <> " " <> typeNameExpr (spType prm) (typeRow prm)
-    everyParam = srRequired sr <> srOptional sr <> case srResponse sr of
-      SResults a b      -> a <> b
-      SInvocation _ a b -> a <> b
-      _                 -> []
+    everyParam = map snd (paramsOf sr)
     typeUIDs = L.nub [ typeUIDName (trName tr) | prm <- everyParam, Just tr <- [typeRow prm] ]
     listExpr indent = \case
       []     -> ["[]"]

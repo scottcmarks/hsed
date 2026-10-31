@@ -1,0 +1,5 @@
+# Must fail `hsedc check` with C-BEHAVIOUR-METHOD citing core-2.01.pdf#page=143&5.2.2.3: a behaviour
+# binds a method's heading, whose section has the method's signature block (design 13.16, M4a), and
+# 5.2.2.3 Setting HostProperties has none. `hsedc bind` takes it: the grammar reads any name, and a
+# heading anchor takes a behaviour.
+core-2.01 | 5.2.2.3 | behaviour "SessionManager.setHostProperties"

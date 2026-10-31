@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedRecordDot #-}
 {-# LANGUAGE OverloadedStrings   #-}
@@ -53,10 +54,12 @@ module Hsed.Spec.Check
   ( -- * The shared context
     mkContext
   , mkContextWith
+  , commentUnits
   , bindingOf
   , errataFindingsUnder
     -- * Checks
   , checks
+  , checksWith
   , checkIR
   , sortFindings
   , partially
@@ -76,7 +79,7 @@ import           Hsed.Spec.Grammar (Payload (..))
 import           Hsed.Spec.IR      (HeadingIR (..), ParaIR, SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules   (checkExemplars, checkRuleAnchors, classifySignaturesWith, classifyWithRules)
+import           Hsed.Spec.Rules   (checkExemplarsWith, checkRuleAnchors, classifySignaturesWith, classifyWithRules)
 import           Hsed.Spec.Scope   (ParsedAnnot (..), parseAnnots, tableSections)
 import           Hsed.Spec.Shape   (UnitKind (..), gridCornerNormalisation, headerNormalisations, measure,
                                     normaliseCaption, rawCaptionTitle, shapeUnit)
@@ -105,8 +108,8 @@ mkContextWith ruleSet base es ir = Context
   , cxErrataFindings = concatMap snd (Map.elems corrected)
   , cxSigs           = signatureUnits ir
   , cxSigClasses     = sigClasses
-  , cxParas          = paragraphBindings ir
-  , cxHeadingUnits   = headingBindings ir
+  , cxParas          = commentUnits ParagraphUnit paragraphOf ir
+  , cxHeadingUnits   = commentUnits HeadingUnit headingOf ir
   , cxBase           = base
   }
   where
@@ -115,26 +118,27 @@ mkContextWith ruleSet base es ir = Context
     (classes, classFindings)  = classifyWithRules ruleSet ir
     (sigClasses, sigFindings) = classifySignaturesWith ruleSet ir
     corrected                 = correctedUnder es sid tables classes
+    -- a list item or paragraph the id names once
+    paragraphOf :: SpecIR -> AnchorId -> Maybe ParaIR
+    paragraphOf ir' aid = either (const Nothing) Just (anchorParagraph ir' aid)
+    -- the first heading the id numbers (the comment's validation makes it the one)
+    headingOf :: SpecIR -> AnchorId -> Maybe HeadingIR
+    headingOf ir' = \case
+      SectionId s -> L.find (\h -> h.section == Just s) ir'.headings
+      _           -> Nothing
 
--- | The paragraph units of an IR: each list item or paragraph whose comment
+-- | The units of one kind that comments bind: each anchor whose comment
 --   (validated as every annotation is, "Hsed.Spec.Scope".'parseAnnots') binds
---   it with a shape that takes paragraph units, with that binding. A comment
---   that does not validate is reported by the classification, as any other.
-paragraphBindings :: SpecIR -> Map AnchorId (ParaIR, SomeBinding)
-paragraphBindings ir = Map.fromList
-  [ (aid, (p, sb))
-  | pa <- parseAnnots ir, Just aid@(ItemId _ _) <- [paAnchor pa], Right (Full sb) <- [paPayload pa]
-  , fmap shapeUnit (someBindingShape sb) == Just ParagraphUnit, Right p <- [anchorParagraph ir aid] ]
-
--- | The heading units of an IR: each heading whose comment (validated as every
---   annotation is, so that it names exactly one heading) binds it with a shape
---   that takes heading units, with that binding. A heading carrying rule tokens
---   is a rule anchor, not a unit.
-headingBindings :: SpecIR -> Map AnchorId (HeadingIR, SomeBinding)
-headingBindings ir = Map.fromList
-  [ (aid, (h, sb))
-  | pa <- parseAnnots ir, Just aid@(SectionId s) <- [paAnchor pa], Right (Full sb) <- [paPayload pa]
-  , fmap shapeUnit (someBindingShape sb) == Just HeadingUnit, h : _ <- [[ h | h <- ir.headings, h.section == Just s ]] ]
+--   it with a shape that takes units of the kind and names one of them in the
+--   IR (a function of the id), with that binding. The paragraph units are the
+--   list items and paragraphs so bound, the heading units the headings (a
+--   heading carrying rule tokens is a rule anchor, not a unit). A comment that
+--   does not validate is reported by the classification, as any other.
+commentUnits :: UnitKind -> (SpecIR -> AnchorId -> Maybe ir) -> SpecIR -> Map AnchorId (ir, SomeBinding)
+commentUnits kind target ir = Map.fromList
+  [ (aid, (u, sb))
+  | pa <- parseAnnots ir, Just aid <- [paAnchor pa], Right (Full sb) <- [paPayload pa]
+  , fmap shapeUnit (someBindingShape sb) == Just kind, Just u <- [target ir aid] ]
 
 -- | Every bound table read under an errata set, with what reading it found: its
 --   caption and cells corrected by the @erratum scott@ pairs of its own binding.
@@ -163,9 +167,14 @@ bindingOf ctx aid = Map.lookup aid (cxClasses ctx) >>= boundBinding
 
 -- | Every check: the generic ones, then each rule's on the tables bound to its shape.
 checks :: Context -> [Finding]
-checks ctx = concat
+checks = checksWith registry
+
+-- | 'checks' with the exemplars and the checks of a set of rules (the one the
+--   Context was classified with: a test's stub rule beside the registry's).
+checksWith :: [RuleDef] -> Context -> [Finding]
+checksWith ruleSet ctx = concat
   [ cxClassFindings ctx
-  , checkExemplars (cxIR ctx)
+  , checkExemplarsWith ruleSet (cxIR ctx)
   , checkRuleAnchors (cxIR ctx) (cxClasses ctx) (cxSigClasses ctx)
     -- E-SHAPE on every bound table
   , [ f | (aid, t) <- Map.toList (cxTables ctx), Just (SomeBinding b) <- [bindingOf ctx aid]
@@ -177,7 +186,7 @@ checks ctx = concat
   , concatMap (captionNote (cxSpec ctx)) (Map.toList (cxTables ctx))
   , concatMap (headerNote (cxSpec ctx)) (Map.toList (cxTables ctx))
   , concatMap (cornerNote (cxSpec ctx)) (Map.toList (cxTables ctx))
-  , concat [ ruleChecks r ctx (boundTables (ruleShape r) ctx) | r <- registry ]
+  , concat [ ruleChecks r ctx (boundTables (ruleShape r) ctx) | r <- ruleSet ]
   ]
 
 -- | @N-CAPTION-NORMALISED@: a caption read other than as printed.

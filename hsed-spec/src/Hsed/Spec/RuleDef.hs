@@ -56,6 +56,17 @@ declarations with 'sigProvenanceOf'; a paragraph unit's,
 @\<section\>#\<item\>@, with 'atPara' and 'paraProvenanceOf'; a heading
 unit's, @\<section\>@, with 'atHeading' and 'headingProvenanceOf'.
 
+The four kinds are one abstraction (M4b's scaffold, the M4a plan's answer
+6): each record is an instance of 'BoundUnit', which gives its kind, its
+anchor id, its binding, its page, its provenance, every unit of the kind a
+binding holds ('unitsAll') and whether its binding can read it
+('unitReadable': a table its binding's shape refuses cannot). 'boundUnits'
+is the one comprehension behind 'boundTables', 'boundSigs', 'boundParas' and
+'boundHeadings'; 'atUnit' the one locating behind 'atTable', 'atSig',
+'atPara' and 'atHeading'; 'allUnits' every unit of a Context, each a
+'SomeUnit', and 'unitNamed' the one an anchor id names. The per-kind names
+stay, each the class's at its own type, so that no rule changes.
+
 A rule that needs what another rule reads (an enumeration takes its range from
 its type row) imports that rule's module and calls its readers on the same
 'Context'. The 'Context' itself holds only what is generic: one IR under one
@@ -85,6 +96,15 @@ module Hsed.Spec.RuleDef
   , boundBinding
     -- * The shared context
   , Context (..)
+    -- * Bound units
+  , BoundUnit (..)
+  , SomeUnit (..)
+  , boundUnits
+  , allUnits
+  , atUnit
+  , unitNamed
+  , unitNoun
+    -- * Tables
   , BoundTable (..)
   , boundTables
   , sectionOf
@@ -140,7 +160,7 @@ import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), bin
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), HeadingIR (..), ParaIR (..), ParaKind (..), SigIR (..), SpecIR (..),
                                    StructPath (..), TableIR (..))
-import           Hsed.Spec.Shape  (Form, Shape (..), measure, normaliseCaption)
+import           Hsed.Spec.Shape  (Form, Shape (..), UnitKind (..), measure, normaliseCaption)
 
 
 -- * Rules
@@ -238,6 +258,69 @@ data Context = Context
     --   Opal, @hsedc --base@); none for a spec read alone
   }
 
+-- * Bound units
+
+-- | A unit a binding holds: a numbered table, a signature block, a paragraph
+--   or a heading, each kind a record of its own ('BoundTable', 'BoundSig',
+--   'BoundPara', 'BoundHeading').
+class BoundUnit u where
+  -- | The kind of unit the record holds (what "Hsed.Spec.Shape".'Hsed.Spec.Shape.shapeUnit'
+  --   gives for the shapes that read it).
+  unitKind       :: Proxy u -> UnitKind
+  -- | Its anchor id: @T46@, @5.3.3.6/sig@, @3.3.10.2.1#3a@, @5.3.3.6@.
+  unitAnchor     :: u -> AnchorId
+  -- | The binding it is bound with.
+  unitBinding    :: u -> SomeBinding
+  -- | The 1-based PDF page a finding about it is located at.
+  unitPage       :: u -> Int
+  -- | Where a declaration made from it comes from.
+  unitProvenance :: Context -> u -> Gen.Provenance
+  -- | Every unit of the kind a binding holds, in the order the rules read
+  --   them; a table its binding's shape refuses included.
+  unitsAll       :: Context -> [u]
+  -- | Whether its binding can read it: any unit but a table its binding's shape refuses.
+  unitReadable   :: Context -> u -> Bool
+  unitReadable _ _ = True
+
+-- | A unit of any kind.
+data SomeUnit = forall u. BoundUnit u => SomeUnit u
+
+-- | The units of one kind bound with a shape, in the order 'unitsAll' gives
+--   them, but for one its binding cannot read ('unitReadable').
+boundUnits :: BoundUnit u => Maybe Shape -> Context -> [u]
+boundUnits shape ctx =
+  [ u | isJust shape, u <- unitsAll ctx, someBindingShape (unitBinding u) == shape, unitReadable ctx u ]
+
+-- | Every unit a binding holds in a Context: the tables in anchor order (those
+--   their shape refuses included), then the signature blocks in anchor order,
+--   the paragraphs and the headings in the anchors' natural order.
+allUnits :: Context -> [SomeUnit]
+allUnits ctx = concat
+  [ map SomeUnit (unitsAll ctx :: [BoundTable])
+  , map SomeUnit (unitsAll ctx :: [BoundSig])
+  , map SomeUnit (unitsAll ctx :: [BoundPara])
+  , map SomeUnit (unitsAll ctx :: [BoundHeading]) ]
+
+-- | Locate a finding at a unit, at its anchor id and page:
+--   @core-2.01.pdf#page=100&T46@, @core-2.01.pdf#page=201&5.3.3.6/sig@.
+atUnit :: BoundUnit u => Context -> u -> Finding -> Finding
+atUnit ctx u = locatedAt (cxSpec ctx) (renderAnchorId (unitAnchor u)) (unitPage u)
+
+-- | The unit an anchor id names, when a binding holds one.
+unitNamed :: Context -> AnchorId -> Maybe SomeUnit
+unitNamed ctx aid = L.find (\(SomeUnit u) -> unitAnchor u == aid) (allUnits ctx)
+
+-- | What a message calls a unit of a kind.
+unitNoun :: UnitKind -> Text
+unitNoun = \case
+  TableUnit     -> "table"
+  SignatureUnit -> "signature block"
+  ParagraphUnit -> "paragraph"
+  HeadingUnit   -> "heading"
+
+
+-- * Tables
+
 -- | One table bound to a rule's shape.
 data BoundTable = BoundTable
   { btAnchor  :: !AnchorId
@@ -247,19 +330,30 @@ data BoundTable = BoundTable
   , btMods    :: !Mods          -- ^ the binding's modifiers
   }
 
+-- | A table is located at the page of its first fragment, and its
+--   declarations come from it under its caption as read ('btRead': corrected
+--   under the errata set) and normalised. A table its shape refuses (@E-SHAPE@,
+--   an Error: a comment binding it to a shape it is not) is unreadable, its
+--   one finding then that Error; a table bound under @as@ is read, its
+--   @E-SHAPE@ a Warning.
+instance BoundUnit BoundTable where
+  unitKind _  = TableUnit
+  unitAnchor  = btAnchor
+  unitBinding = btBinding
+  unitPage bt = fromMaybe 1 (tablePage (btTable bt))
+  unitProvenance ctx bt = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+  unitsAll ctx =
+    [ BoundTable aid t (Map.findWithDefault t aid (cxCorrected ctx)) sb (modsOf sb)
+    | (aid, t) <- Map.toList (cxTables ctx), Just sb <- [Map.lookup aid (cxClasses ctx) >>= boundBinding] ]
+  unitReadable ctx bt = not (refused (btBinding bt) (btTable bt))
+    where
+      refused (SomeBinding b) t = maybe False Cm.isError (bindingAccepts b (measure (cxSpec ctx) t))
+      refused (PolyBinding _) _ = False
+
 -- | The tables bound with a shape, by a rule or by a comment, in anchor order;
---   not a table the shape refuses (@E-SHAPE@, an Error: a comment binding it
---   to a shape it is not), whose one finding is then that Error. A table bound
---   under @as@ is read: its @E-SHAPE@ is a Warning.
+--   not a table the shape refuses ('unitReadable').
 boundTables :: Maybe Shape -> Context -> [BoundTable]
-boundTables shape ctx =
-  [ BoundTable aid t (Map.findWithDefault t aid (cxCorrected ctx)) sb (modsOf sb)
-  | isJust shape
-  , (aid, t) <- Map.toList (cxTables ctx), Just sb <- [Map.lookup aid (cxClasses ctx) >>= boundBinding]
-  , someBindingShape sb == shape, not (refused sb t) ]
-  where
-    refused (SomeBinding b) t = maybe False Cm.isError (bindingAccepts b (measure (cxSpec ctx) t))
-    refused (PolyBinding _) _ = False
+boundTables = boundUnits
 
 -- | The section of a bound table: that of the nearest numbered heading before it.
 sectionOf :: Context -> BoundTable -> Maybe Text
@@ -276,13 +370,34 @@ data BoundSig = BoundSig
   , bsBinding :: !SomeBinding   -- ^ the binding rule's default
   }
 
+-- | A signature unit is located at the page of its first line. A declaration
+--   made from it comes from its anchor id, its heads as the caption, its PDF
+--   and printed page, its 1-based position among the IR's signature blocks as
+--   the ordinal, its first paragraph's structure path and the sha256 of its
+--   text. Every bound one, in anchor order.
+instance BoundUnit BoundSig where
+  unitKind _  = SignatureUnit
+  unitAnchor  = bsAnchor
+  unitBinding = bsBinding
+  unitPage bs = (bsSig bs).page + 1
+  unitProvenance ctx bs = Gen.Provenance
+    { Gen.spec        = cxSpec ctx
+    , Gen.tableId     = renderAnchorId (bsAnchor bs)
+    , Gen.caption     = T.intercalate ", " s.heads
+    , Gen.pdfPage1    = s.page + 1
+    , Gen.printedPage = s.page + 1 - (cxIR ctx).labelOffset
+    , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex s (cxIR ctx).sigs)
+    , Gen.ordinalOf   = "block"
+    , Gen.structPath  = let StructPath sp = s.structPath in sp
+    , Gen.cellsHash   = tshow (hashWith SHA256 (encodeUtf8 s.text)) }
+    where s = bsSig bs
+  unitsAll ctx =
+    [ BoundSig aid s sb
+    | (aid, s) <- Map.toList (cxSigs ctx), Just sb <- [Map.lookup aid (cxSigClasses ctx) >>= boundBinding] ]
+
 -- | The signature units bound with a shape, in anchor order.
 boundSigs :: Maybe Shape -> Context -> [BoundSig]
-boundSigs shape ctx =
-  [ BoundSig aid s sb
-  | isJust shape
-  , (aid, s) <- Map.toList (cxSigs ctx), Just sb <- [Map.lookup aid (cxSigClasses ctx) >>= boundBinding]
-  , someBindingShape sb == shape ]
+boundSigs = boundUnits
 
 -- | Every signature unit of an IR by its anchor id, @\<section\>/sig@: the IR
 --   has one block per section (docs/ir-v1.md); a second would be the first's.
@@ -291,24 +406,11 @@ signatureUnits ir = Map.fromListWith (\_ firstOne -> firstOne) [ (SigId s.sectio
 
 -- | Locate a finding at a signature unit: @core-2.01.pdf#page=201&5.3.3.6/sig@.
 atSig :: Context -> BoundSig -> Finding -> Finding
-atSig ctx bs = locatedAt (cxSpec ctx) (renderAnchorId (bsAnchor bs)) ((bsSig bs).page + 1)
+atSig = atUnit
 
--- | Where a declaration made from a signature unit comes from: its anchor id,
---   its heads as the caption, its PDF and printed page, its 1-based position
---   among the IR's signature blocks as the ordinal, its first paragraph's
---   structure path and the sha256 of its text.
+-- | Where a declaration made from a signature unit comes from ('unitProvenance').
 sigProvenanceOf :: Context -> BoundSig -> Gen.Provenance
-sigProvenanceOf ctx bs = Gen.Provenance
-  { Gen.spec        = cxSpec ctx
-  , Gen.tableId     = renderAnchorId (bsAnchor bs)
-  , Gen.caption     = T.intercalate ", " s.heads
-  , Gen.pdfPage1    = s.page + 1
-  , Gen.printedPage = s.page + 1 - (cxIR ctx).labelOffset
-  , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex s (cxIR ctx).sigs)
-  , Gen.ordinalOf   = "block"
-  , Gen.structPath  = let StructPath sp = s.structPath in sp
-  , Gen.cellsHash   = tshow (hashWith SHA256 (encodeUtf8 s.text)) }
-  where s = bsSig bs
+sigProvenanceOf = unitProvenance
 
 
 -- * Paragraph units
@@ -322,40 +424,49 @@ data BoundPara = BoundPara
   , bpBinding :: !SomeBinding   -- ^ its comment's binding (@law "Sync.ifSendWhileBusy"@)
   }
 
--- | Every paragraph unit, in the anchors' natural order (@3.3.10.2.1#3a@
---   before @3.3.10.10#a@).
+-- | A paragraph unit is located at its page. A declaration made from it
+--   comes from its anchor id, what it is as the caption (@list item 3a@,
+--   @paragraph 2@), its PDF and printed page, its 1-based position among the
+--   IR's paragraphs as the ordinal, its structure path and its hash (the
+--   sha256 of its normalised words, the IR's). Every one, in the anchors'
+--   natural order (@3.3.10.2.1#3a@ before @3.3.10.10#a@).
+instance BoundUnit BoundPara where
+  unitKind _  = ParagraphUnit
+  unitAnchor  = bpAnchor
+  unitBinding = bpBinding
+  unitPage bp = (bpPara bp).page + 1
+  unitProvenance ctx bp = Gen.Provenance
+    { Gen.spec        = cxSpec ctx
+    , Gen.tableId     = renderAnchorId (bpAnchor bp)
+    , Gen.caption     = case (bpAnchor bp, p.kind) of
+        (ItemId _ item, LI) -> "list item " <> item
+        (ItemId _ item, P)  -> "paragraph " <> T.drop 1 item
+        (aid, _)            -> renderAnchorId aid
+    , Gen.pdfPage1    = p.page + 1
+    , Gen.printedPage = p.page + 1 - (cxIR ctx).labelOffset
+    , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex p (cxIR ctx).paras)
+    , Gen.ordinalOf   = "paragraph"
+    , Gen.structPath  = let StructPath sp = p.structPath in sp
+    , Gen.cellsHash   = p.hash }
+    where p = bpPara bp
+  unitsAll ctx =
+    L.sortOn (naturalKey . renderAnchorId . bpAnchor) [ BoundPara aid p sb | (aid, (p, sb)) <- Map.toList (cxParas ctx) ]
+
+-- | Every paragraph unit, in the anchors' natural order.
 paragraphUnits :: Context -> [BoundPara]
-paragraphUnits ctx =
-  L.sortOn (naturalKey . renderAnchorId . bpAnchor) [ BoundPara aid p sb | (aid, (p, sb)) <- Map.toList (cxParas ctx) ]
+paragraphUnits = unitsAll
 
 -- | The paragraph units bound with a shape, in the anchors' natural order.
 boundParas :: Maybe Shape -> Context -> [BoundPara]
-boundParas shape ctx = [ bp | isJust shape, bp <- paragraphUnits ctx, someBindingShape (bpBinding bp) == shape ]
+boundParas = boundUnits
 
 -- | Locate a finding at a paragraph unit: @core-2.01.pdf#page=82&3.3.10.2.1#3a@.
 atPara :: Context -> BoundPara -> Finding -> Finding
-atPara ctx bp = locatedAt (cxSpec ctx) (renderAnchorId (bpAnchor bp)) ((bpPara bp).page + 1)
+atPara = atUnit
 
--- | Where a declaration made from a paragraph unit comes from: its anchor id,
---   what it is as the caption (@list item 3a@, @paragraph 2@), its PDF and
---   printed page, its 1-based position among the IR's paragraphs as the
---   ordinal, its structure path and its hash (the sha256 of its normalised
---   words, the IR's).
+-- | Where a declaration made from a paragraph unit comes from ('unitProvenance').
 paraProvenanceOf :: Context -> BoundPara -> Gen.Provenance
-paraProvenanceOf ctx bp = Gen.Provenance
-  { Gen.spec        = cxSpec ctx
-  , Gen.tableId     = renderAnchorId (bpAnchor bp)
-  , Gen.caption     = case (bpAnchor bp, p.kind) of
-      (ItemId _ item, LI) -> "list item " <> item
-      (ItemId _ item, P)  -> "paragraph " <> T.drop 1 item
-      (aid, _)            -> renderAnchorId aid
-  , Gen.pdfPage1    = p.page + 1
-  , Gen.printedPage = p.page + 1 - (cxIR ctx).labelOffset
-  , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex p (cxIR ctx).paras)
-  , Gen.ordinalOf   = "paragraph"
-  , Gen.structPath  = let StructPath sp = p.structPath in sp
-  , Gen.cellsHash   = p.hash }
-  where p = bpPara bp
+paraProvenanceOf = unitProvenance
 
 
 -- * Heading units
@@ -369,37 +480,47 @@ data BoundHeading = BoundHeading
   , bhBinding :: !SomeBinding   -- ^ its comment's binding (@behaviour "Base.get"@)
   }
 
--- | Every heading unit, in the anchors' natural order (@5.2.3.5@ before
---   @5.3.3.6@, @5.3.3.6@ before @5.3.3.6.3@).
+-- | A heading unit is located at its page. A declaration made from it comes
+--   from its anchor id, its title as the caption, its PDF and printed page,
+--   its 1-based position among the IR's headings as the ordinal, its
+--   structure path and its hash ('headingHash': the manifest's hash of a
+--   heading anchor, the sha256 of its title's normalised words). Every one,
+--   in the anchors' natural order (@5.2.3.5@ before @5.3.3.6@, @5.3.3.6@
+--   before @5.3.3.6.3@).
+instance BoundUnit BoundHeading where
+  unitKind _  = HeadingUnit
+  unitAnchor  = bhAnchor
+  unitBinding = bhBinding
+  unitPage bh = (bhHeading bh).page + 1
+  unitProvenance ctx bh = Gen.Provenance
+    { Gen.spec        = cxSpec ctx
+    , Gen.tableId     = renderAnchorId (bhAnchor bh)
+    , Gen.caption     = h.title
+    , Gen.pdfPage1    = h.page + 1
+    , Gen.printedPage = h.page + 1 - (cxIR ctx).labelOffset
+    , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex h (cxIR ctx).headings)
+    , Gen.ordinalOf   = "heading"
+    , Gen.structPath  = let StructPath sp = h.structPath in sp
+    , Gen.cellsHash   = headingHash h.title }
+    where h = bhHeading bh
+  unitsAll ctx =
+    L.sortOn (naturalKey . renderAnchorId . bhAnchor) [ BoundHeading aid h sb | (aid, (h, sb)) <- Map.toList (cxHeadingUnits ctx) ]
+
+-- | Every heading unit, in the anchors' natural order.
 headingUnits :: Context -> [BoundHeading]
-headingUnits ctx =
-  L.sortOn (naturalKey . renderAnchorId . bhAnchor) [ BoundHeading aid h sb | (aid, (h, sb)) <- Map.toList (cxHeadingUnits ctx) ]
+headingUnits = unitsAll
 
 -- | The heading units bound with a shape, in the anchors' natural order.
 boundHeadings :: Maybe Shape -> Context -> [BoundHeading]
-boundHeadings shape ctx = [ bh | isJust shape, bh <- headingUnits ctx, someBindingShape (bhBinding bh) == shape ]
+boundHeadings = boundUnits
 
 -- | Locate a finding at a heading unit: @core-2.01.pdf#page=201&5.3.3.6@.
 atHeading :: Context -> BoundHeading -> Finding -> Finding
-atHeading ctx bh = locatedAt (cxSpec ctx) (renderAnchorId (bhAnchor bh)) ((bhHeading bh).page + 1)
+atHeading = atUnit
 
--- | Where a declaration made from a heading unit comes from: its anchor id,
---   its title as the caption, its PDF and printed page, its 1-based position
---   among the IR's headings as the ordinal, its structure path and its hash
---   ('headingHash': the manifest's hash of a heading anchor, the sha256 of
---   its title's normalised words).
+-- | Where a declaration made from a heading unit comes from ('unitProvenance').
 headingProvenanceOf :: Context -> BoundHeading -> Gen.Provenance
-headingProvenanceOf ctx bh = Gen.Provenance
-  { Gen.spec        = cxSpec ctx
-  , Gen.tableId     = renderAnchorId (bhAnchor bh)
-  , Gen.caption     = h.title
-  , Gen.pdfPage1    = h.page + 1
-  , Gen.printedPage = h.page + 1 - (cxIR ctx).labelOffset
-  , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex h (cxIR ctx).headings)
-  , Gen.ordinalOf   = "heading"
-  , Gen.structPath  = let StructPath sp = h.structPath in sp
-  , Gen.cellsHash   = headingHash h.title }
-  where h = bhHeading bh
+headingProvenanceOf = unitProvenance
 
 -- | The hash the manifest records for a heading anchor (@tools/extract/annotate.py@,
 --   @words_hash (norm_words title)@): the sha256 of the title's words, lower-cased,
@@ -472,7 +593,7 @@ tablePage t = (+ 1) <$> listToMaybe t.pages
 
 -- | Locate a finding at a bound table: @core-2.01.pdf#page=100&T46@.
 atTable :: Context -> BoundTable -> Finding -> Finding
-atTable ctx bt = locatedAt (cxSpec ctx) (renderAnchorId (btAnchor bt)) (fromMaybe 1 (tablePage (btTable bt)))
+atTable = atUnit
 
 -- | Locate a finding about one row at the page the row is printed on (that of
 --   its first cell that has one; a table spanning pages prints a row on the
@@ -527,9 +648,9 @@ provenanceOf ctx aid t caption = Gen.Provenance
   where page = fromMaybe 1 (tablePage t)
 
 -- | The provenance of a bound table's declarations, under its caption as read
---   ('btRead': corrected under the errata set) and normalised.
+--   ('btRead': corrected under the errata set) and normalised ('unitProvenance').
 boundProvenance :: Context -> BoundTable -> Gen.Provenance
-boundProvenance ctx bt = provenanceOf ctx (btAnchor bt) (btTable bt) (normaliseCaption (fromMaybe "" (btRead bt).caption))
+boundProvenance = unitProvenance
 
 -- | A provenance moved to the page of one row: the PDF and printed page of the
 --   row's first cell that has one (a table spanning pages prints a row on the

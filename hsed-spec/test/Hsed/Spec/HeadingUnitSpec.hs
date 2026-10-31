@@ -21,8 +21,10 @@ interface: the units a context holds and a rule reads ('boundHeadings', in the
 anchors' natural order, each with its title and page), a rule that never fires
 on a table, a heading exemplar, findings and declarations located at the
 heading, a comment on a list item refused (@E-ANCHOR-KIND@: @behaviour@ and
-@fails@ sit on headings alone), and @W-GEN-EXCLUDED@ for a heading no rule of
-the registry reads (pending once a reader reads them). The provenance hash
+@fails@ sit on headings alone), and @W-GEN-EXCLUDED@ for a heading no rule
+reads (compiled with the registry less the behaviours reader,
+'compileIRWith', since M4b's scaffold: until then pending, the behaviours
+reader reading them). The provenance hash
 of a heading is the manifest's, held to the committed manifest's heading anchors.
 -}
 module Hsed.Spec.HeadingUnitSpec (spec) where
@@ -38,7 +40,7 @@ import           Hsed.Spec.Anchor  (AnchorId (..))
 import           Hsed.Spec.Check   (mkContextWith)
 import           Hsed.Spec.Common  (ErrataSet (..), RuleName (..), Severity (..), SpecId (..), finding, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
-import           Hsed.Spec.Compile (CompileResult (..), compileIR)
+import           Hsed.Spec.Compile (CompileResult (..), compileIR, compileIRWith)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.DSL     (SomeBinding (..), behaviour, fails)
 import qualified Hsed.Spec.Gen     as Gen
@@ -140,14 +142,15 @@ spec = withCore $ \pristine -> do
       map renderFinding (checkExemplarsWith [stub { exemplar = (SpecId "core-2.01", SectionId "5.3.3.99") }] ir)
         `shouldBe` ["C-EXEMPLAR core-2.01: the exemplar 5.3.3.99 of rule headingStub is not in the IR: no heading numbered 5.3.3.99 in the IR"]
 
-  describe "a heading no rule of the registry reads" $
-    it "is W-GEN-EXCLUDED at the heading, and among the units compile leaves out" $
-      if any ((== Just HeadingUnit) . fmap shapeUnit . ruleShape) registry
-        then pendingWith "a rule of the registry reads the heading units (the behaviours reader)"
-        else do
-          cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
-          [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
-            `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=201&" <> aid
-                         <> ": hsedc generates nothing for a Method heading yet (no rule of the registry reads one)"
-                       | aid <- ["5.3.3.6", "5.3.3.6.3"] ]
-          [ aid | (aid@(SectionId _), _) <- crExcluded cr ] `shouldBe` map bhAnchor units
+  describe "a heading no rule of the rule set reads" $
+    it "is W-GEN-EXCLUDED at the heading, and among the units compile leaves out (the registry without the behaviours reader)" $ do
+      let ruleSet = [ r | r <- registry, fmap shapeUnit (ruleShape r) /= Just HeadingUnit ]
+      length ruleSet `shouldBe` length registry - 1
+      cr <- either (throwString . show) pure (compileIRWith ruleSet Nothing Scott ir)
+      [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
+        `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=201&" <> aid
+                     <> ": hsedc generates nothing for a Method heading yet (no rule of the registry reads one)"
+                   | aid <- ["5.3.3.6", "5.3.3.6.3"] ]
+      [ aid | (aid@(SectionId _), _) <- crExcluded cr ] `shouldBe` map bhAnchor units
+      cr' <- either (throwString . show) pure (compileIR Nothing Scott ir)
+      [ aid | (aid@(SectionId _), _) <- crExcluded cr' ] `shouldBe` []

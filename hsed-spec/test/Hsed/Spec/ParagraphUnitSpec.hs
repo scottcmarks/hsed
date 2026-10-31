@@ -20,8 +20,9 @@ proving the interface: the units a context holds and a rule reads
 ('boundParas', in the anchors' natural order, each with its IR hash), a rule
 that never fires on a table, an item exemplar, findings and declarations
 located at the paragraph, a comment whose anchor names several paragraphs
-refused, and @W-GEN-EXCLUDED@ for a sentence no rule of the registry reads
-(pending since the law reader reads them). The hashes are the IR's of the
+refused, and @W-GEN-EXCLUDED@ for a sentence no rule reads (compiled with
+the registry less the law reader, 'compileIRWith', since M4b's scaffold:
+until then pending, the law reader reading them). The hashes are the IR's of the
 paragraphs on Core PDF 82 and 86.
 -}
 module Hsed.Spec.ParagraphUnitSpec (spec) where
@@ -34,7 +35,7 @@ import           Hsed.Spec.Anchor  (AnchorId (..))
 import           Hsed.Spec.Check   (mkContextWith)
 import           Hsed.Spec.Common  (ErrataSet (..), RuleName (..), Severity (..), SpecId (..), finding, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
-import           Hsed.Spec.Compile (CompileResult (..), compileIR)
+import           Hsed.Spec.Compile (CompileResult (..), compileIR, compileIRWith)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.DSL     (SomeBinding (..), law)
 import qualified Hsed.Spec.Gen     as Gen
@@ -112,14 +113,15 @@ spec = withCore $ \pristine -> do
       map renderFinding (checkExemplarsWith [stub { exemplar = (SpecId "core-2.01", ItemId "3.3.10.6" "c") }] ir)
         `shouldBe` ["C-EXEMPLAR core-2.01: the exemplar 3.3.10.6#c of rule law is not in the IR: 4 paragraphs labelled 3.3.10.6#c in the IR"]
 
-  describe "a sentence no rule of the registry reads" $
-    it "is W-GEN-EXCLUDED at the paragraph, and among the units compile leaves out" $
-      if any ((== Just ParagraphUnit) . fmap shapeUnit . ruleShape) registry
-        then pendingWith "a rule of the registry reads the paragraph units (the law reader)"
-        else do
-          cr <- either (throwString . show) pure (compileIR Nothing Scott ir)
-          [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
-            `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=" <> pg <> "&" <> aid
-                         <> ": hsedc generates nothing for a Sentence paragraph yet (no rule of the registry reads one)"
-                       | (pg, aid) <- [("82", "3.3.10.2.1#3a"), ("86", "3.3.10.6#dc"), ("86", "3.3.10.7#a")] ]
-          [ aid | (aid@(ItemId _ _), _) <- crExcluded cr ] `shouldBe` map bpAnchor paras
+  describe "a sentence no rule of the rule set reads" $
+    it "is W-GEN-EXCLUDED at the paragraph, and among the units compile leaves out (the registry without the law reader)" $ do
+      let ruleSet = [ r | r <- registry, fmap shapeUnit (ruleShape r) /= Just ParagraphUnit ]
+      length ruleSet `shouldBe` length registry - 1
+      cr <- either (throwString . show) pure (compileIRWith ruleSet Nothing Scott ir)
+      [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
+        `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=" <> pg <> "&" <> aid
+                     <> ": hsedc generates nothing for a Sentence paragraph yet (no rule of the registry reads one)"
+                   | (pg, aid) <- [("82", "3.3.10.2.1#3a"), ("86", "3.3.10.6#dc"), ("86", "3.3.10.7#a")] ]
+      [ aid | (aid@(ItemId _ _), _) <- crExcluded cr ] `shouldBe` map bpAnchor paras
+      cr' <- either (throwString . show) pure (compileIR Nothing Scott ir)
+      [ aid | (aid@(ItemId _ _), _) <- crExcluded cr' ] `shouldBe` []

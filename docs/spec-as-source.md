@@ -341,7 +341,12 @@ accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule 
 --                     headingUnits, atHeading, headingProvenanceOf, whose hash is the manifest's, headingHash; the Context's
 --                     cxHeadingUnits; a heading carrying rule tokens is a rule anchor, not a unit); Shape.shapeUnit names the
 --                     shape that takes each kind (Sig, Sentence, Method); a fourth kind cloned as M3 cloned the third, the
---                     generalisation into one bound-unit abstraction M4b's first scaffold step (the M4a plan's answer 6)
+--                     four generalised at M4b's scaffold into one bound-unit abstraction (the M4a plan's answer 6): class
+--                     BoundUnit (unitKind, unitAnchor, unitBinding, unitPage, unitProvenance, unitsAll, unitReadable, the
+--                     last False only for a table its shape refuses) with the four records as instances, SomeUnit,
+--                     boundUnits (the one comprehension), allUnits (tables, signature blocks, paragraphs, headings),
+--                     atUnit, unitNamed, unitNoun; the per-kind names (boundTables, atSig, paraProvenanceOf, ...) kept,
+--                     each the class's at its type, so no rule changed
 -- Hsed.Spec.Scope     (M2a) sections (tableSections), scopeOf :: SpecIR -> RuleName -> [Section] (from anchors only), parseAnnots;
 --                     below the registry, so rule modules may import it; the Context carries the sections (cxSections)
 -- Hsed.Spec.Rules     rules = registry; checkExemplars; classify, classifySignatures (E-UNBOUND, E-AMBIGUOUS); re-exports Hsed.Spec.Scope
@@ -372,6 +377,9 @@ accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule 
 -- Hsed.Spec.Check     Finding { severity :: Error|Warning|Note, code, anchor, page, message }; mkContext :: ErrataSet -> SpecIR -> Context;
 --                     since M3 mkContextWith rules (base :: Maybe Context), checkIR base and compileIR base: an Opal run over
 --                     Core's Context (cxBase, read-only; hsedc --base), the lookups Opal does not answer run there (13.26 (g));
+--                     since M4b's scaffold one commentUnits for the paragraph and the heading units, and checksWith and
+--                     compileIRWith, the rule set a parameter (the units of a shape no rule of the set reads W-GEN-EXCLUDED,
+--                     one comprehension over allUnits);
 --                     partially: E-UNBOUND of a spec annotated in part as W-UNBOUND (hsedc --partial, 13.26 (k));
 --                     the generic checks, then every rule's ruleChecks (M2a: pure functions of the Context replace the M1 RWST and Compile')
 -- Hsed.Spec.Overlay   Patch = Pin | Narrow | Replace | AddColumns | AddTable | Rows; applyOverlay ordered: pins, comms, schema (T26/T43/T50), preconfig

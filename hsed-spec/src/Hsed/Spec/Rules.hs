@@ -104,7 +104,7 @@ import qualified RIO.Set           as Set
 import qualified RIO.Text          as T
 import           RIO
 
-import           Hsed.Spec.Anchor  (AnchorId (..), anchorParagraph, anchorTarget, renderAnchorId)
+import           Hsed.Spec.Anchor  (AnchorId (..), anchorTarget, renderAnchorId)
 import           Hsed.Spec.Common  (Finding, RuleName (..), Severity (..), SpecId (..), finding,
                                     renderFinding)
 import qualified Hsed.Spec.Common  as Cm
@@ -350,27 +350,17 @@ checkExemplars :: SpecIR -> [Finding]
 checkExemplars = checkExemplarsWith rules
 
 -- | 'checkExemplars' under a set of rules. The exemplar of a rule binding
---   signature units is a signature unit, which need only be in the IR; that of
---   a rule binding paragraph units is a list item or paragraph, which the IR
---   need only have, once; that of a rule binding heading units is a heading,
---   which the IR need only number once.
+--   units other than tables is such a unit, which the IR need only have: a
+--   signature unit, a list item or paragraph (once) or a heading (numbered
+--   once) ('unitInIR').
 checkExemplarsWith :: [RuleDef] -> SpecIR -> [Finding]
 checkExemplarsWith ruleSet ir = concatMap check [ r | r <- ruleSet, fst (exemplar r) == sid ]
   where
     sid    = SpecId ir.spec
     tables = numberedTables ir
-    check r = case snd (exemplar r) of
-      SigId _     -> sigExemplar r
-      ItemId _ _  -> itemExemplar r
-      SectionId _ -> headingExemplar r
-      _           -> tableExemplar r
+    check r = maybe (tableExemplar r) (either (missing r . (": " <>)) (const [])) (unitInIR ir (snd (exemplar r)))
     missing r why = [finding Error "C-EXEMPLAR" ("the exemplar " <> renderAnchorId (snd (exemplar r)) <> " of rule "
                        <> ruleNameText (ruleName r) <> " is not in the IR" <> why) & \f -> f { Cm.spec = Just sid }]
-    sigExemplar r
-      | Map.member (snd (exemplar r)) (signatureUnits ir) = []
-      | otherwise = missing r ""
-    itemExemplar r = either (missing r . (": " <>)) (const []) (anchorParagraph ir (snd (exemplar r)))
-    headingExemplar r = either (missing r . (": " <>)) (const []) (anchorTarget ir (snd (exemplar r)))
     tableExemplar r = case Map.lookup (snd (exemplar r)) tables of
       Nothing -> missing r ""
       Just t  ->
@@ -390,3 +380,15 @@ checkExemplarsWith ruleSet ir = concatMap check [ r | r <- ruleSet, fst (exempla
              , guarded (isRule && not joins) (finding Error "C-EXEMPLAR" ("rule " <> ruleNameText (ruleName r) <> ": the exemplar has no table to join"))
              , shape ])
     guarded c f = if c then Just f else Nothing
+
+-- | Whether the IR has the unit an id names, for a unit that is no table: a
+--   signature unit, the one list item or paragraph an item id names, the one
+--   heading a section id numbers; Left saying why not. Nothing for a table's
+--   id or the document's, whose exemplars are checked as tables.
+unitInIR :: SpecIR -> AnchorId -> Maybe (Either Text ())
+unitInIR ir aid = case aid of
+  TableId _ -> Nothing
+  DocId     -> Nothing
+  SigId _
+    | Map.member aid (signatureUnits ir) -> Just (Right ())
+  _ -> Just (void (anchorTarget ir aid))

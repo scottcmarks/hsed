@@ -106,10 +106,11 @@ import           Hsed.Jig.Script        (Credential (..), RunCtx (..), RunEnv (.
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
 import           Hsed.Level0            (Level0)
+import           Hsed.OpalUIDs          (uSP_Locking)
 import           Hsed.Sim.Profile       (loadProfile)
-import           Hsed.Sim.State         (lifeOf)
+import           Hsed.Sim.State         (lifeOf, spLifeCycle)
 import           Hsed.Sim.Types         (ComIdLife (Associated), ComIdState (..), LifeCycle (..), SimParams (..),
-                                         SyncState (..), TPerState (..))
+                                         SyncState (..), TPerState (..), lifeCycleValue)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
@@ -419,7 +420,9 @@ prerequisites c = go (common (cSection c))
 --   ComID not in Awaiting IF-SEND; NoSessions sends STACK_RESET on every
 --   ComID a session holds (Core 3.3.4.7.5 item 1, PDF 65: every session on
 --   it aborted, no CloseSession prepared), noted, and reads the state again;
---   LockingManufactured reads the Locking SP's Original Factory State;
+--   LockingManufactured reads the Locking SP's life cycle, its row of the
+--   Admin SP's SP table ("Hsed.Sim.State".'spLifeCycle'), which its
+--   Original Factory State seeds;
 --   CredentialsKnown is vacuous for a case that authenticates no authority
 --   ('authenticating'), and for one that does reads the authority's PIN from
 --   the state ("Hsed.Jig.Script".'simCredential'), a secret of the run;
@@ -457,7 +460,7 @@ establish c p = asks reTarget >>= \case
             []    -> Right Nothing
             still -> Left ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET")
       LockingManufactured
-        | spLockingOFS (tsParams st) == Manufactured -> met
+        | spLifeCycle uSP_Locking st == Just (lifeCycleValue Manufactured) -> met
         | otherwise -> pure (Left "LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State (design 9.1; M5)")
       CredentialsKnown -> case authority of
         Nothing -> Right Nothing <$ note "CredentialsKnown: vacuous, the case authenticates no authority (a session as Anybody needs no credential, Core 5.3.4.1.2.1, PDF 211)"

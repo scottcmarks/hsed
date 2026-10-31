@@ -14,20 +14,26 @@ its first TSN 4096 (Core 3.3.7.1.1, PDF 72), the Admin SP Manufactured and
 the Locking SP in its Original Factory State; sessions open with distinct
 TSNs from 4096, snapshot their ComID's host properties, resolve by TSN and
 HSN alone, close and abort; a ComID is Associated while a session is open on
-it (Core 3.3.3, PDF 56); an SP's rows and cells are read and changed; and
-the limits a ComID's host properties give follow Core Table 167's 0, no
-limit, and Opal 2.30 Table 17's initial assumptions.
+it (Core 3.3.3, PDF 56); an SP's rows, cells and table descriptions are read
+and changed, and its life cycle read from its row of the Admin SP's SP table
+alone (Core 4.1, PDF 91; since M4b's scaffold); and the limits a ComID's host
+properties give follow Core Table 167's 0, no limit, and Opal 2.30 Table
+17's initial assumptions. The parameters M4b adds have defaults the spec
+allows: one Admin authority, and a GUDID in Core Table 212's format.
 -}
 module Hsed.Sim.StateSpec (spec) where
 
+import qualified RIO.ByteString      as B
 import qualified RIO.List            as L
 import qualified RIO.Map             as Map
 import           RIO
 import           Test.Hspec
 
-import           Hsed.Core.Table     (Cell (..), Col (..), columnNamed)
-import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
-import           Hsed.Gen.Core.TableUIDs (uC_PINTable)
+import           Hsed.Core.Record    (DecodedRecord (..), decodeRecordStrict)
+import           Hsed.Core.Table     (Cell (..), Col (..), TableDesc (..), columnNamed)
+import           Hsed.Gen.Core.Layouts (GUDIDColumnContentsDescription (..))
+import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, spTableDesc)
+import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uSPTable)
 import           Hsed.Gen.Core.UIDs  (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uSP_Admin)
 import           Hsed.OpalUIDs       (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Sim.State
@@ -51,11 +57,17 @@ spec = do
         `shouldBe` [(Issued, S1, initialHostProperties, MgmtBuffer False Nothing)]
       initialHostProperties `shouldBe` Map.fromList hostRequirements
     it "has the Admin SP Manufactured with its hand-written tables, and the Locking SP in its Original Factory State with none" $ do
-      fmap spsLife (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` Just Manufactured
+      spLifeCycle uSP_Admin st0 `shouldBe` Just (lifeCycleValue Manufactured)
       fmap (Map.size . spsTables) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` Just 6
-      fmap spsLife (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just ManufacturedInactive
-      fmap spsLife (Map.lookup uSP_Locking (tsSPs (initialState defaultSimParams { spLockingOFS = Manufactured }))) `shouldBe` Just Manufactured
+      spLifeCycle uSP_Locking st0 `shouldBe` Just (lifeCycleValue ManufacturedInactive)
+      spLifeCycle uSP_Locking (initialState defaultSimParams { spLockingOFS = Manufactured }) `shouldBe` Just (lifeCycleValue Manufactured)
       fmap (Map.size . spsTables) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just 0
+    it "describes each table an SP holds, and no other, by the table's UID" $ do
+      fmap (Map.keys . spsDescs) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` fmap (Map.keys . spsTables) (Map.lookup uSP_Admin (tsSPs st0))
+      fmap (\sps -> and [ k == tdTableUID d | (k, d) <- Map.toList (spsDescs sps) ]) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` Just True
+      fmap (Map.size . spsDescs) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just 0
+    it "records a life cycle state by the value Opal 2.30 Table 49 gives it (PDF 98): Manufactured-Inactive 8, Manufactured 9" $
+      map lifeCycleValue [ManufacturedInactive, Manufactured] `shouldBe` [8, 9]
 
   describe "sessions" $ do
     let (s1, st1) = openSession base 1 uSP_Admin True [uAuthority_Anybody] st0
@@ -120,6 +132,25 @@ spec = do
       columnOf c_PINTableDesc "PIN" `shouldBe` Just pin
       columnOf c_PINTableDesc "UID" `shouldBe` Just 0
       columnOf c_PINTableDesc "NoSuchColumn" `shouldBe` Nothing
+    it "have their tables' descriptions as the SP holds them, by the SP's and the table's UIDs" $ do
+      descOf uSP_Admin uC_PINTable st0 `shouldBe` Just c_PINTableDesc
+      descOf uSP_Admin uSPTable st0 `shouldBe` Just spTableDesc
+      descOf uSP_Locking uC_PINTable st0 `shouldBe` Nothing
+      descOf uSP_Admin uSP_Admin st0 `shouldBe` Nothing
+      descOf uC_PIN_SID uC_PINTable st0 `shouldBe` Nothing
+
+  describe "an SP's life cycle (Core 4.1, PDF 91)" $ do
+    let lifeCycleState = maybe (-1) colNumber (columnNamed "LifeCycleState" spTableDesc)
+        setLife v r    = [ (n, if n == lifeCycleState then EnumCell "Manufactured" v else c) | (n, c) <- r ]
+    it "is the LifeCycleState cell of its row of the Admin SP's SP table, read nowhere else: changing the cell changes it" $ do
+      let activated = updateRow uSP_Admin uSPTable uSP_Locking (setLife (lifeCycleValue Manufactured)) st0
+      spLifeCycle uSP_Locking activated `shouldBe` Just (lifeCycleValue Manufactured)
+      spLifeCycle uSP_Admin activated `shouldBe` spLifeCycle uSP_Admin st0
+      Map.lookup uSP_Locking (tsSPs activated) `shouldBe` Map.lookup uSP_Locking (tsSPs st0)
+    it "is none for a UID the Admin SP's SP table has no row for" $ do
+      spLifeCycle uC_PIN_SID st0 `shouldBe` Nothing
+      spLifeCycle uSP_Locking st0 { tsSPs = Map.adjust (\sps -> sps { spsTables = Map.insert uSPTable [] (spsTables sps) }) uSP_Admin (tsSPs st0) }
+        `shouldBe` Nothing
 
   describe "the properties" $ do
     it "read the TPer's by name from the parameters, and the host's from what a ComID keeps" $ do
@@ -145,3 +176,12 @@ spec = do
       simParamsProblems defaultSimParams { spMsid = "123456789012345678901234567890123" } `shouldSatisfy` (not . null)
       simParamsProblems defaultSimParams { spSidPin = Just "123456789012345678901234567890123" } `shouldSatisfy` (not . null)
       simParamsProblems defaultSimParams { spSidPin = Just "12345678901234567890123456789012" } `shouldBe` []
+
+  describe "the parameters M4b's preconfiguration reads" $ do
+    it "give the Admin SP one Admin authority, Admin1, the one Opal 2.30 requires (PDF 47)" $
+      spAdminSPAdmins defaultSimParams `shouldBe` 1
+    it "give TPerInfo a GUDID of 12 bytes in Core Table 212's format (PDF 230), which decodes strictly, the company ID zeros and the identifier HSED" $ do
+      B.length (spGudid defaultSimParams) `shouldBe` 12
+      fmap (\d -> (drRecord d, drRest d)) (decodeRecordStrict (spGudid defaultSimParams))
+        `shouldBe` Right (GUDIDColumnContentsDescription 0 0x48534544, "")
+      B.drop 8 (spGudid defaultSimParams) `shouldBe` "HSED"

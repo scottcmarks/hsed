@@ -48,12 +48,18 @@ import           Hsed.Core.Feature      (Allowance (..), Feature (..), FeatureHe
 import           Hsed.Core.Layout       (Difference, Field (..), FieldKind (..), Layout (..), LayoutError,
                                          bitPosition, fieldEnd, tiling)
 import           Hsed.Core.Record       (DecodedRecord (..), LayoutRecord (..), encodeRecord)
+import           Hsed.Core.Table        (Cell (..))
+import           Hsed.Gen.Core.TableDescs (spTableDesc)
+import           Hsed.Gen.Core.TableUIDs (uSPTable)
+import           Hsed.Gen.Core.UIDs     (uSP_Admin)
 import           Hsed.Gen.Opal.Features
 import           Hsed.Jig.Support       (isAsPrinted)
 import           Hsed.Level0            (Descriptor (..))
+import           Hsed.OpalUIDs          (uSP_Locking)
 import           Hsed.Sim.FeatureSets
 import           Hsed.Sim.Level0        (simDescriptors)
-import           Hsed.Sim.Types         (LifeCycle (..), SimParams (..), defaultSimParams, initialState)
+import           Hsed.Sim.State         (columnOf, updateRow)
+import           Hsed.Sim.Types         (LifeCycle (..), SimParams (..), defaultSimParams, initialState, lifeCycleValue)
 
 
 spec :: Spec
@@ -172,6 +178,15 @@ spec = describe "the hand-written feature descriptors" $ do
       let manufactured = simDescriptors (initialState defaultSimParams { spLockingOFS = Manufactured })
       fmap level0DiscoveryLockingFeatureLockingEnabled (decodedIn manufactured (Proxy :: Proxy Level0DiscoveryLockingFeature))
         `shouldBe` Just True
+    it "read the Locking SP's life cycle for LockingEnabled from its row of the Admin SP's SP table, where Core 4.1 records it (PDF 91), not from the parameters" $ do
+      let lockingEnabled st = fmap level0DiscoveryLockingFeatureLockingEnabled
+                                   (decodedIn (simDescriptors st) (Proxy :: Proxy Level0DiscoveryLockingFeature))
+          lifeCycleState    = columnOf spTableDesc "LifeCycleState"
+          living lc         = updateRow uSP_Admin uSPTable uSP_Locking
+                                (map (\(n, c) -> (n, if Just n == lifeCycleState then EnumCell "" (lifeCycleValue lc) else c)))
+      lockingEnabled (living Manufactured (initialState defaultSimParams)) `shouldBe` Just True
+      lockingEnabled (living ManufacturedInactive (initialState defaultSimParams { spLockingOFS = Manufactured })) `shouldBe` Just False
+      lockingEnabled (initialState defaultSimParams) `shouldBe` Just False
     it "take the base ComID, the ComIDs and the SSC minor version from the parameters" $ do
       let other = simDescriptors (initialState defaultSimParams { spBaseComId = 0x2000, spNComIds = 3, spSscMinor = 0x1 })
       fmap (\r -> ( level0DiscoveryOpalSSCV2FeatureBaseComID r, level0DiscoveryOpalSSCV2FeatureNumberOfComIDs r

@@ -14,7 +14,9 @@ six tables, every cell's column a column of the generated description; the
 C_PIN rows filled from the parameters (the MSID, the SID's PIN and
 TryLimit); the two ACEs' columns the C_PIN table's by number; the SP rows'
 life cycles, the Locking SP's the parameters'; Anybody's Operation None, as
-Opal 2.30 Table 24 (PDF 48) prints it.
+Opal 2.30 Table 24 (PDF 48) prints it. Since M4b's scaffold they are six
+preconfiguration tables of plain rows, which the simulator folds
+("Hsed.Sim.Preconfig"): the rows here are the fold's.
 -}
 module Hsed.Sim.AdminSPSpec (spec) where
 
@@ -23,7 +25,8 @@ import qualified RIO.Map                 as Map
 import           RIO
 import           Test.Hspec
 
-import           Hsed.Core.Table         (Cell (..), Col (..), Row, TableDesc (..), columnNamed)
+import           Hsed.Core.Preconfig     (PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..))
+import           Hsed.Core.Table         (Cell (..), Col (..), Pre (..), Row, TableDesc (..), columnNamed)
 import           Hsed.Core.Types         (enumValue)
 import           Hsed.Core.UID           (UID)
 import           Hsed.Gen.Core.Enums     (Core_auth_method (..))
@@ -32,12 +35,18 @@ import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc,
 import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uC_PIN_SID, uSP_Admin)
 import           Hsed.OpalUIDs           (uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uC_PIN_MSID, uSP_Locking)
 import           Hsed.Sim.AdminSP
+import           Hsed.Sim.Preconfig      (foldTables)
 import           Hsed.Sim.Types          (LifeCycle (..), SimParams (..), defaultSimParams)
 
 
+-- | The Admin SP's tables as the simulator folds the rows: each table's rows
+--   by the table's UID.
+folded :: SimParams -> Map UID [Row]
+folded p = snd (foldTables p (handTables p))
+
 -- | The rows of a table, by its description.
 rowsOf :: SimParams -> TableDesc -> [Row]
-rowsOf p desc = fromMaybe [] (Map.lookup (tdTableUID desc) (adminSPTables p))
+rowsOf p desc = fromMaybe [] (Map.lookup (tdTableUID desc) (folded p))
 
 -- | A table's row whose UID column holds a UID.
 rowWith :: SimParams -> TableDesc -> UID -> Maybe Row
@@ -57,13 +66,24 @@ spec = describe "the Admin SP's hand-written rows" $ do
     length (handRows defaultSimParams) `shouldBe` 14
     map (length . rowsOf defaultSimParams) [methodIDTableDesc, accessControlTableDesc, aceTableDesc, authorityTableDesc, c_PINTableDesc, spTableDesc]
       `shouldBe` [1, 2, 2, 4, 3, 2]
-    Map.size (adminSPTables defaultSimParams) `shouldBe` 6
+    Map.size (folded defaultSimParams) `shouldBe` 6
+  it "are six preconfiguration tables in the order of their first rows, of plain rows of printed cells, with no default and no access: the Admin SP's until M4b's generated ones" $ do
+    let tables = handTables defaultSimParams
+    map ptDesc tables `shouldBe` [methodIDTableDesc, accessControlTableDesc, aceTableDesc, authorityTableDesc, c_PINTableDesc, spTableDesc]
+    map (length . ptRows) tables `shouldBe` [1, 2, 2, 4, 3, 2]
+    concatMap ptDefaults tables `shouldBe` []
+    [ access pre | t <- tables, pre <- ptRows t, not (null (access pre)) ] `shouldBe` []
+    [ (prKind r, prOptional r, prNotes r) | t <- tables, r <- map row (ptRows t), (prKind r, prOptional r, prNotes r) /= (Plain, False, []) ] `shouldBe` []
+    [ c | t <- tables, r <- map row (ptRows t), (_, c@(VendorUnique _)) <- prCells r ] `shouldBe` []
+  it "fold into the six tables' descriptions, by the tables' UIDs" $
+    fst (foldTables defaultSimParams (handTables defaultSimParams))
+      `shouldBe` Map.fromList [ (tdTableUID d, d) | d <- [methodIDTableDesc, accessControlTableDesc, aceTableDesc, authorityTableDesc, c_PINTableDesc, spTableDesc] ]
   it "name a column of the generated description in every cell, each placed once, in column order" $ do
     [ (tdName desc, name) | (desc, cells) <- handRows defaultSimParams, (name, _) <- cells, isNothing (columnNamed name desc) ] `shouldBe` []
-    forM_ (concat (Map.elems (adminSPTables defaultSimParams))) $ \r -> do
+    forM_ (concat (Map.elems (folded defaultSimParams))) $ \r -> do
       map fst r `shouldBe` L.sort (map fst r)
       L.nub (map fst r) `shouldBe` map fst r
-    L.sort [ length r | r <- concat (Map.elems (adminSPTables defaultSimParams)) ] `shouldBe` L.sort [ length cells | (_, cells) <- handRows defaultSimParams ]
+    L.sort [ length r | r <- concat (Map.elems (folded defaultSimParams)) ] `shouldBe` L.sort [ length cells | (_, cells) <- handRows defaultSimParams ]
   it "give every object its UID in column 0x00, distinct within its table; the AccessControl rows none, as Opal prints none" $ do
     forM_ [methodIDTableDesc, aceTableDesc, authorityTableDesc, c_PINTableDesc, spTableDesc] $ \desc -> do
       let uids = [ u | r <- rowsOf defaultSimParams desc, Just (UIDCell u) <- [L.lookup 0 r] ]

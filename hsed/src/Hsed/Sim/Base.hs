@@ -24,8 +24,8 @@ What Get is invoked on is found among the tables the session's SP holds: an
 object, the row of a table whose UID column holds the InvokingID, or an
 object table, the InvokingID a table's UID (byte tables: none at M4a). The
 descriptions of those tables, which give a target its last column, are the
-generated ones of the Admin SP's hand-written rows ("Hsed.Sim.AdminSP",
-until M4b's generated preconfiguration).
+ones the SP holds with them ("Hsed.Sim.Types".@spsDescs@, its
+preconfiguration's: "Hsed.Sim.Preconfig").
 -}
 module Hsed.Sim.Base
   ( get
@@ -50,7 +50,6 @@ import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uMethodID_Get, uS
 import           Hsed.Jig.Catalogue       (CaseKey (..), TestId (..))
 import           Hsed.OpalUIDs            (uC_PIN_MSID)
 import           Hsed.Sim.Access          (grantedColumns)
-import           Hsed.Sim.AdminSP         (handRows)
 import           Hsed.Sim.Behaviour       (Behaviour (..), FailItem (..), Fails (..), Invoked (..), Reply (..), SomeBehaviour,
                                            forMethod)
 import           Hsed.Sim.State           (cellOf, openSession)
@@ -100,7 +99,7 @@ getReply iv cb st = case ivSession iv of
   Nothing  -> notAuthorized
   Just ses -> fromMaybe notAuthorized $ do
     sps             <- Map.lookup (sesSP ses) (tsSPs st)
-    (desc, found)   <- target (tsParams st) sps (ivInvoker iv)
+    (desc, found)   <- target sps (ivInvoker iv)
     granted         <- grantedColumns sps ses (ivInvoker iv) uMethodID_Get
     pure (either (const (ReplyResults [] INVALID_PARAMETER)) id (cells desc found granted))
   where
@@ -125,12 +124,14 @@ data Found
   | Table ![Row]
 
 -- | The table or object an InvokingID names among an SP's tables, if any,
---   and its description ('tableDescs').
-target :: SimParams -> SPState -> UID -> Maybe (TableDesc, Found)
-target p sps u = table <|> object
+--   and its description, the one the SP holds with the table
+--   ("Hsed.Sim.Types".@spsDescs@): a table the SP describes and holds rows
+--   of, by its UID, or the row of one whose UID column holds the UID.
+target :: SPState -> UID -> Maybe (TableDesc, Found)
+target sps u = table <|> object
   where
-    table  = (\desc -> (desc, Table (rowsOf desc))) <$> L.find (\desc -> tdTableUID desc == u && Map.member u (spsTables sps)) (tableDescs p)
-    object = listToMaybe [ (desc, Object row) | desc <- tableDescs p, row <- rowsOf desc, cellOf 0 row == Just (UIDCell u) ]
+    table  = (\desc rows -> (desc, Table rows)) <$> Map.lookup u (spsDescs sps) <*> Map.lookup u (spsTables sps)
+    object = listToMaybe [ (desc, Object row) | desc <- Map.elems (spsDescs sps), row <- rowsOf desc, cellOf 0 row == Just (UIDCell u) ]
     rowsOf desc = fromMaybe [] (Map.lookup (tdTableUID desc) (spsTables sps))
 
 -- | The cell_block target a table or an object is: its last column (Core
@@ -139,12 +140,6 @@ targetOf :: TableDesc -> Found -> CellTarget
 targetOf desc = \case
   Object _ -> OnObject (lastColumn desc)
   Table _  -> OnObjectTable (lastColumn desc)
-
--- | The descriptions of the tables an SP holds at M4a: those of the Admin
---   SP's hand-written rows ("Hsed.Sim.AdminSP"; M4b: the generated
---   preconfiguration's), each once.
-tableDescs :: SimParams -> [TableDesc]
-tableDescs = L.nubBy ((==) `on` tdTableUID) . map fst . handRows
 
 -- | A table's last column number, 0 for a table of one column.
 lastColumn :: TableDesc -> Int
@@ -187,7 +182,7 @@ absentObject :: Property
 absentObject = forAll absent $ \u -> forAll anyBlock $ \block -> getAsAnybody u block === ReplyResults [] NOT_AUTHORIZED
   where
     (_, st)  = asAnybody
-    absent   = arbitrary `suchThat` \u -> isNothing (Map.lookup uSP_Admin (tsSPs st) >>= \sps -> target (tsParams st) sps u)
+    absent   = arbitrary `suchThat` \u -> isNothing (Map.lookup uSP_Admin (tsSPs st) >>= \sps -> target sps u)
     anyBlock = oneof [pure noCells, columnRange <$> small <*> small]
     small    = fromIntegral <$> chooseInt (0, 3)
 

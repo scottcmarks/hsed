@@ -1,4 +1,3 @@
-{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -28,42 +27,55 @@ and this module goes):
 The columns are found by name in the generated table descriptions
 ("Hsed.Gen.Core.TableDescs"), the UIDs are Core's where Core assigns them
 ("Hsed.Gen.Core.UIDs") and Opal's otherwise ("Hsed.OpalUIDs"), an
-enumeration's value is the generated enumeration's ("Hsed.Gen.Core.Enums"),
-and the values a run chooses come from the parameters ("Hsed.Sim.Params":
-the MSID, the SID's PIN and TryLimit, the Locking SP's life cycle), which is
-why this module reads the parameters and not the state. Where Core and Opal
-disagree the rows follow Opal: Anybody's Operation is None (Table 24), not
-Core Table 209's Sign (PDF 211); the Admin SP's life cycle is Manufactured
-(Table 29), where Core 4.1 has only Issued; M4b settles which wins (the M4a
-plan's design corrections, design 11).
+enumeration's value is the generated enumeration's ("Hsed.Gen.Core.Enums";
+a life cycle's, "Hsed.Sim.Params".'lifeCycleValue'), and the values a run
+chooses come from the parameters ("Hsed.Sim.Params": the MSID, the SID's PIN
+and TryLimit, the Locking SP's life cycle), which is why this module reads
+the parameters and not the state. Where Core and Opal disagree the rows
+follow Opal: Anybody's Operation is None (Table 24), not Core Table 209's
+Sign (PDF 211); the Admin SP's life cycle is Manufactured (Table 29), where
+Core 4.1 has only Issued; M4b settles which wins (the M4a plan's design
+corrections, design 11).
+
+Since M4b's scaffold the rows are the Admin SP's preconfiguration tables
+('handTables', in the form the spec compiler generates them,
+"Hsed.Core.Preconfig"), the stand-in the simulator folds into the Admin SP's
+tables ("Hsed.Sim.Preconfig") until the generated ones replace them.
 -}
 module Hsed.Sim.AdminSP
-  ( adminSPTables
+  ( handTables
   , handRows
   ) where
 
 import qualified RIO.List                as L
-import qualified RIO.Map                 as Map
 import           RIO
 
-import           Hsed.Core.Table         (Cell (..), Col (..), Row, TableDesc (..), columnNamed)
+import           Hsed.Core.Preconfig     (PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..))
+import           Hsed.Core.Table         (Cell (..), Col (..), ColNum, Pre (..), TableDesc (..), columnNamed)
 import           Hsed.Core.Types         (Enumerated, enumValue)
-import           Hsed.Core.UID           (UID, uNull)
-import           Hsed.Gen.Core.Enums     (Core_auth_method (..), Core_boolean (..), Core_boolean_ACE (..),
-                                          Core_life_cycle_state (..))
+import           Hsed.Core.UID           (uNull)
+import           Hsed.Gen.Core.Enums     (Core_auth_method (..), Core_boolean (..), Core_boolean_ACE (..))
 import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc, authorityTableDesc, c_PINTableDesc,
                                           methodIDTableDesc, spTableDesc)
 import           Hsed.Gen.Core.UIDs      (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get,
                                           uSP_Admin)
 import           Hsed.OpalUIDs           (uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1, uC_PIN_Admin1,
                                           uC_PIN_MSID, uSP_Locking)
-import           Hsed.Sim.Params         (LifeCycle (..), SimParams (..))
+import           Hsed.Sim.Params         (LifeCycle (..), SimParams (..), lifeCycleValue)
 
 
--- | The Admin SP's tables as a run's parameters fill them: each table's rows
---   by the table's UID, in the order written.
-adminSPTables :: SimParams -> Map UID [Row]
-adminSPTables p = Map.fromListWith (flip (<>)) [ (tdTableUID desc, [rowOf desc cells]) | (desc, cells) <- handRows p ]
+-- | The fourteen rows as the Admin SP's preconfiguration tables, as a run's
+--   parameters fill them: one table for each description, in the order of
+--   its first row, its rows in the order written, each a plain row (one
+--   object, not optional, no notes) of the cells it gives ('Given'), placed
+--   by the description's column numbers in column order, with no access
+--   (the legend's, which the generated tables carry); no column has a
+--   default, so a row holds exactly the cells written.
+handTables :: SimParams -> [PreconfTable]
+handTables p =
+  [ PreconfTable desc [] [ Pre (PreconfRow Plain False (cellsOf desc cells) []) [] | (d, cells) <- rows, tdTableUID d == tdTableUID desc ]
+  | desc <- L.nubBy ((==) `on` tdTableUID) (map fst rows) ]
+  where rows = handRows p
 
 -- | The fourteen rows, each its table's description and its cells by column
 --   name, in column order. A column a row does not give is absent from the
@@ -125,11 +137,11 @@ handRows p =
                   , ("LifeCycleState", lifeCycleCell (spLockingOFS p)), ("Frozen", boolCell False) ])
   ]
 
--- | A row from its cells by column name, each placed by the description's
---   column number, in column order; a name the description lacks places no
---   cell (the test over 'handRows' finds every name).
-rowOf :: TableDesc -> [(Text, Cell)] -> Row
-rowOf desc cells = L.sortOn fst [ (colNumber col, cell) | (name, cell) <- cells, Just col <- [columnNamed name desc] ]
+-- | A row's cells from its cells by column name, each placed by the
+--   description's column number, in column order; a name the description
+--   lacks places no cell (the test over 'handRows' finds every name).
+cellsOf :: TableDesc -> [(Text, Cell)] -> [(ColNum, PreCell)]
+cellsOf desc cells = L.sortOn fst [ (colNumber col, Given cell) | (name, cell) <- cells, Just col <- [columnNamed name desc] ]
 
 -- | An ACE's Columns: the numbers of the C_PIN table's columns named (Core
 --   5.3.2.9.5, PDF 165).
@@ -145,10 +157,11 @@ enumCell label e = EnumCell label (enumValue e)
 boolCell :: Bool -> Cell
 boolCell b = if b then enumCell "True" Core_boolean_True else enumCell "False" Core_boolean_False
 
--- | An SP's LifeCycleState cell: Opal 2.30 Table 49 (PDF 98) assigns the
---   values Core Table 103 (PDF 113) reserves for SSC usage, 8 to
---   Manufactured-Inactive and 9 to Manufactured, as Table 29 prints them.
+-- | An SP's LifeCycleState cell, labelled as Table 29 prints it, its value
+--   Opal 2.30 Table 49's ('lifeCycleValue', PDF 98).
 lifeCycleCell :: LifeCycle -> Cell
-lifeCycleCell = \case
-  ManufacturedInactive -> enumCell "Manufactured-Inactive" Core_life_cycle_state_Reserved_for_SSC_Usage_8
-  Manufactured         -> enumCell "Manufactured" Core_life_cycle_state_Reserved_for_SSC_Usage_9
+lifeCycleCell lc = EnumCell label (lifeCycleValue lc)
+  where
+    label = case lc of
+      ManufacturedInactive -> "Manufactured-Inactive"
+      Manufactured         -> "Manufactured"

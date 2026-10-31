@@ -14,8 +14,10 @@ has it: a TPer with static ComIDs, each with its synchronous protocol state
 (Core 3.3.10, PDF 82-87), the host's properties it keeps (5.2.2.4, PDF
 144-145) and its ComID management buffer (3.3.4.7, PDF 62-66); its regular
 sessions, each on a ComID (3.3.7.1, PDF 72-75); and its SPs, each with its
-life cycle and its tables, the Admin SP's rows hand-written until M4b
-("Hsed.Sim.AdminSP").
+tables and their descriptions, the Admin SP's folded from its preconfiguration
+("Hsed.Sim.Preconfig"; its rows hand-written until M4b's generated ones,
+"Hsed.Sim.AdminSP"), an SP's life cycle the LifeCycleState cell of its row of
+the Admin SP's SP table ("Hsed.Sim.State".@spLifeCycle@).
 
 'SimParams' are what a run chooses ("Hsed.Sim.Params", re-exported here).
 'TPerState' is everything a step changes, and everything has 'Eq', so that a
@@ -48,12 +50,12 @@ module Hsed.Sim.Types
 import qualified RIO.Map            as Map
 import           RIO
 
-import           Hsed.Core.Table    (Row)
+import           Hsed.Core.Table    (Row, TableDesc)
 import           Hsed.Core.UID      (UID)
 import           Hsed.Gen.Core.UIDs (uSP_Admin)
 import           Hsed.OpalUIDs      (uSP_Locking)
-import           Hsed.Sim.AdminSP   (adminSPTables)
 import           Hsed.Sim.Params
+import qualified Hsed.Sim.Preconfig as Preconfig
 import           Hsed.Wire          (Event, IfStatus, Request, Response)
 
 
@@ -120,12 +122,16 @@ data Session = Session
   }
   deriving (Eq, Show)
 
--- | An SP: its UID (its row of the Admin SP's SP table), its life cycle and
---   its tables, each the rows it holds by the table's UID (Core Table 240's
---   @UID of Table@, "Hsed.Gen.Core.TableUIDs").
+-- | An SP: its UID (its row of the Admin SP's SP table, whose LifeCycleState
+--   cell records its life cycle, Core 4.1, PDF 91: "Hsed.Sim.State".@spLifeCycle@),
+--   the descriptions of the tables it holds and those tables, each the rows it
+--   holds, both by the table's UID (Core Table 240's @UID of Table@,
+--   "Hsed.Gen.Core.TableUIDs"), as its preconfiguration gives them
+--   ("Hsed.Sim.Preconfig".@foldTables@: the descriptions with an SSC's
+--   columns added).
 data SPState = SPState
   { spsUID    :: !UID
-  , spsLife   :: !LifeCycle
+  , spsDescs  :: !(Map UID TableDesc)
   , spsTables :: !(Map UID [Row])
   }
   deriving (Eq, Show)
@@ -153,12 +159,14 @@ data TPerState = TPerState
 --   each Issued, with extension 0, awaiting IF-SEND, with the host's initial
 --   properties and an empty management buffer; none past 0xFFFF or reserved
 --   (parameters with such a ComID are refused, 'simParamsProblems'); no
---   session, the first TSN to assign 'firstTSN'; the Admin SP, Manufactured
---   (Opal 2.30 Table 29, PDF 50), with its hand-written rows
---   ("Hsed.Sim.AdminSP"), and the Locking SP in its Original Factory State
---   ('spLockingOFS'), its tables M5's; the initial C_PIN_SID PIN the MSID's
---   unless the parameters give the SID a PIN of its own ('spSidPin' other
---   than the MSID, Opal 2.30 4.2.1.8, PDF 49).
+--   session, the first TSN to assign 'firstTSN'; the Admin SP folded from
+--   its preconfiguration tables ("Hsed.Sim.Preconfig": the hand-written rows
+--   of "Hsed.Sim.AdminSP" until M4b's generated ones), its SP table holding
+--   the Admin SP Manufactured (Opal 2.30 Table 29, PDF 50) and the Locking SP
+--   in its Original Factory State ('spLockingOFS'), and the Locking SP, whose
+--   tables are M5's; the initial C_PIN_SID PIN the MSID's unless the
+--   parameters give the SID a PIN of its own ('spSidPin' other than the MSID,
+--   Opal 2.30 4.2.1.8, PDF 49).
 initialState :: SimParams -> TPerState
 initialState p = TPerState
   { tsParams              = p
@@ -167,8 +175,8 @@ initialState p = TPerState
   , tsSessions            = mempty
   , tsNextTSN             = firstTSN
   , tsSPs                 = Map.fromList
-      [ (uSP_Admin, SPState uSP_Admin Manufactured (adminSPTables p))
-      , (uSP_Locking, SPState uSP_Locking (spLockingOFS p) mempty)
+      [ (uSP_Admin, uncurry (SPState uSP_Admin) (Preconfig.foldTables p (Preconfig.adminSPTables p)))
+      , (uSP_Locking, SPState uSP_Locking mempty mempty)
       ]
   , tsInitialSidPinIsMsid = maybe True (== spMsid p) (spSidPin p)
   }

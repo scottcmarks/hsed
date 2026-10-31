@@ -56,18 +56,18 @@ import           Hsed.Gen.Core.Codes      (StatusCode (..), pattern AUTHORITY_LO
                                            pattern SUCCESS)
 import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.Properties (initialAssumptions, properties)
-import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
-import           Hsed.Gen.Core.TableUIDs  (uAuthorityTable, uC_PINTable)
+import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, spTableDesc)
+import           Hsed.Gen.Core.TableUIDs  (uAuthorityTable, uC_PINTable, uSPTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uProperties,
                                            uSMUID, uSP_Admin, uStartSession, uThisSP)
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.OpalUIDs            (uAuthority_Admin1, uSP_Locking)
 import           Hsed.Sim.SessionManager  (answer)
-import           Hsed.Sim.State           (abortSessions, cellOf, columnOf, lifeOf, rowWithUID, sessionsOn)
+import           Hsed.Sim.State           (abortSessions, cellOf, columnOf, lifeOf, rowWithUID, sessionsOn, updateRow)
 import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), LifeCycle (..), SPState (..), Session (..), SimParams (..),
                                            TPerState (..), defaultSimParams, hostRequirements, initialHostProperties,
-                                           initialState, maxComPacketSizeName, maxIndTokenSizeName, maxMethodsName,
-                                           maxPacketSizeName, maxPacketsName, maxResponseComPacketSizeName,
+                                           initialState, lifeCycleValue, maxComPacketSizeName, maxIndTokenSizeName,
+                                           maxMethodsName, maxPacketSizeName, maxPacketsName, maxResponseComPacketSizeName,
                                            maxSessionsName, maxSubpacketsName, tperRequirements)
 
 
@@ -222,6 +222,13 @@ spec = describe "the simulated Session Manager" $ do
       st2 `shouldBe` st1
     it "the Locking SP, Manufactured-Inactive at the factory, is INVALID_PARAMETER (Opal 5.2.2.1 item 1; ETC-20)" $
       statusOf (startCall uSP_Locking Nothing Nothing) st0 `shouldBe` Just INVALID_PARAMETER
+    it "admits an SP by the LifeCycleState cell of its row of the Admin SP's SP table, where Core 4.1 records its life cycle (PDF 91), not by the parameters" $ do
+      let lifeCycleState = columnOf spTableDesc "LifeCycleState"
+          living lc      = updateRow uSP_Admin uSPTable uSP_Locking
+                             (map (\(n, c) -> (n, if Just n == lifeCycleState then EnumCell "" (lifeCycleValue lc) else c)))
+      statusOf (startCall uSP_Locking Nothing Nothing) (living Manufactured st0) `shouldBe` Just SUCCESS
+      statusOf (startCall uSP_Locking Nothing Nothing) (living ManufacturedInactive (initialState defaultSimParams { spLockingOFS = Manufactured }))
+        `shouldBe` Just INVALID_PARAMETER
     it "an SPID that is no row of the SP table, or no uid, is INVALID_PARAMETER (Core 5.1.5.11)" $ do
       statusOf (startCall (uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x09) Nothing Nothing) st0 `shouldBe` Just INVALID_PARAMETER
       statusOf (startCall uSP_Admin Nothing Nothing) { _parameters = Parameters [value (1 :: Natural), value (7 :: Natural), value (1 :: Natural)] [] } st0

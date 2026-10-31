@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -13,9 +14,13 @@ The parameters of the simulated TPer (design docs/spec-as-source.md section
 8.1): where the spec leaves a value to the vendor or a range, the default is a
 value the spec allows, each citing where (design 13.17: parameters, not
 comments). They sit below "Hsed.Sim.Types", which re-exports them, so that
-the hand-written Admin SP rows ("Hsed.Sim.AdminSP"), which the initial state
-folds in and which read the MSID, the SID's PIN and its TryLimit from the
-parameters, import no module that imports them.
+the fold of an SP's preconfiguration tables ("Hsed.Sim.Preconfig"), which the
+initial state runs, and the Admin SP's hand-written rows it folds until M4b's
+generated ones ("Hsed.Sim.AdminSP"), which read the MSID, the SID's PIN and
+its TryLimit from the parameters, import no module that imports them. A life
+cycle state is a parameter's ('LifeCycle', the Locking SP's Original Factory
+State) and a cell's value ('lifeCycleValue', what an SP's row of the Admin
+SP's SP table holds).
 
 Parameters out of range are refused, not wrapped or dropped
 ('simParamsProblems': a ComID past 0xFFFF or in Core Table 26's reserved
@@ -42,6 +47,7 @@ module Hsed.Sim.Params
     SimParams (..)
   , defaultSimParams
   , LifeCycle (..)
+  , lifeCycleValue
   , Geometry (..)
   , Level0Profile (..)
   , simParamsProblems
@@ -77,7 +83,11 @@ import qualified RIO.Text            as T
 import           Hsed.Core.Code           (CodeRow (..), codeRow)
 import           Hsed.Core.Properties     (Assumptions (..), Communicator (..), HostRequirement (..), PropertyRequirement (..),
                                            Requirement (..), TPerRequirement (..))
+import           Hsed.Core.Record         (encodeRecord)
+import           Hsed.Core.Types          (enumValue)
 import           Hsed.Gen.Core.Codes      (cComIDAssignments)
+import           Hsed.Gen.Core.Enums      (Core_life_cycle_state (..))
+import           Hsed.Gen.Core.Layouts    (GUDIDColumnContentsDescription (..))
 import           Hsed.Gen.Opal.Properties (initialAssumptions, propertyRequirements)
 import           Hsed.Level0              (Descriptor)
 import           Hsed.Wire                (Unit (..), hex)
@@ -91,6 +101,20 @@ data LifeCycle
   = ManufacturedInactive
   | Manufactured
   deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | A life cycle state as an SP's LifeCycleState cell holds it, the value of
+--   the life_cycle_state enumeration (the cell of the SP's row of the Admin
+--   SP's SP table, Core 4.1, PDF 91): Opal 2.30 Table 49 (PDF 98) assigns
+--   Manufactured-Inactive 8 and Manufactured 9, values Core Table 103 (PDF
+--   113) reserves for SSC usage, read from Core's generated enumeration until
+--   Opal's is generated (M4b).
+--
+-- >>> map lifeCycleValue [minBound .. maxBound]
+-- [8,9]
+lifeCycleValue :: LifeCycle -> Int
+lifeCycleValue = \case
+  ManufacturedInactive -> enumValue Core_life_cycle_state_Reserved_for_SSC_Usage_8
+  Manufactured         -> enumValue Core_life_cycle_state_Reserved_for_SSC_Usage_9
 
 -- | What the Geometry Reporting descriptor reports (Opal 2.30 Table 5 and
 --   3.1.1.4.2-5, PDF 21-22), which Opal takes from the LockingInfo table:
@@ -132,7 +156,11 @@ data SimParams = SimParams
   , spMsid                 :: !ByteString         -- ^ C_PIN_MSID's PIN, the MSID (Opal 2.30 Table 25, PDF 48: VU)
   , spSidPin               :: !(Maybe ByteString) -- ^ C_PIN_SID's PIN; 'Nothing', the MSID's (Opal 2.30 4.2.1.8, PDF 49)
   , spSidTryLimit          :: !Natural            -- ^ C_PIN_SID's TryLimit (Table 25: VU); 0 no limit (Core 5.3.4.1.1.2, PDF 210)
+  , spAdminSPAdmins        :: !Natural            -- ^ the Admin SP's Admin authorities, Admin1 and the ones after it, each with its C_PIN
+                                                  --   credential (Opal 2.30 Tables 24-25, PDF 47-49: Admin1 (M), any more (O))
   , spTPerResetEnabled     :: !Bool               -- ^ TPerInfo's ProgrammaticResetEnable: TPER_RESET enabled (Opal 2.30 Table 27, PDF 50)
+  , spGudid                :: !ByteString         -- ^ TPerInfo's GUDID, 12 bytes in Core Table 212's format (PDF 230; Opal 2.30
+                                                  --   Table 27 and its *TP1, PDF 50: VU)
   , spHostPropertyMax      :: ![(Text, Natural)]  -- ^ the most the TPer accepts of a host property, by name; none for the rest
                                                   --   (Opal 2.30 Table 17's maxima are VU, PDF 33-34)
   , spCloseSessionOnAbort  :: !Bool               -- ^ whether the TPer prepares CloseSession when it aborts a session, as it
@@ -176,8 +204,16 @@ data SimParams = SimParams
 --   ownership process is required);
 -- * C_PIN_SID's TryLimit 0, no limit (Opal 2.30 Table 25, PDF 48: VU; Core
 --   5.3.4.1.1.2, PDF 210: Tries counts only while TryLimit is not 0);
+-- * one Admin authority, Admin1, the one Opal 2.30 requires (PDF 47: Admin1
+--   (M), any additional Admin authority (O); Table 24's AdminXX template,
+--   PDF 48);
 -- * TPER_RESET disabled, TPerInfo's ProgrammaticResetEnable FALSE at the
 --   factory (Opal 2.30 Table 27, PDF 50);
+-- * the GUDID @02 23 00 08 50 00 00 00 48 53 45 44@: Core Table 212's NAA
+--   IEEE Registered format, encoded through its generated layout (PDF 230;
+--   Opal 2.30 *TP1, PDF 50), with an IEEE company ID of zeros and the
+--   vendor-specific identifier 0x48534544, @HSED@ in ASCII, a value VU
+--   (Table 27, PDF 50) that names the simulator, as the MSID does;
 -- * no maximum on a host property (Opal 2.30 Table 17: Maximum allowed VU,
 --   PDF 33-34);
 -- * CloseSession prepared when a session is aborted, as the TPer MAY (Core
@@ -205,7 +241,10 @@ defaultSimParams = SimParams
   , spMsid                 = "HSED-SIM-MSID-0123456789ABCDEF01"
   , spSidPin               = Nothing
   , spSidTryLimit          = 0
+  , spAdminSPAdmins        = 1
   , spTPerResetEnabled     = False
+  , spGudid                = either (\e -> error ("Hsed.Sim.Params: the default GUDID does not encode in Core Table 212's layout: " <> show e)) id
+                                    (encodeRecord (GUDIDColumnContentsDescription 0x000000 0x48534544))
   , spHostPropertyMax      = []
   , spCloseSessionOnAbort  = True
   }

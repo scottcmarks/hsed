@@ -16,44 +16,61 @@ The Session Manager's answers on the control session (Core 5.2), each a
 'Behaviour' of its method's generated record ("Hsed.Sim.Behaviour"), bound by
 a @behaviour@ comment on the method's heading (design 13.16): 'properties'
 (5.2.2.1, PDF 140), 'startSession' (5.2.3.1, PDF 149, answered by
-SyncSession, 5.2.3.2) and 'closeSession' (5.2.3.5, PDF 153). A Session
-Manager response is formatted as a method invocation (Core 3.2.4.2;
+SyncSession, 5.2.3.2, PDF 150) and 'closeSession' (5.2.3.5, PDF 153). A
+Session Manager response is formatted as a method invocation (Core 3.2.4.2;
 5.2.2.1.2, PDF 140), so a reply is a 'MethodCall'; 'answer' is what the
 synchronous protocol ("Hsed.Sim.Sync") calls for each invocation of a control
 session packet, threading the TPer's state.
 
-/At the M4a scaffold/ (group G2 fills the rest, design 11): Properties is
-M3's, stateless, answered from the parameters; StartSession goes unanswered
-as M3 left it; a host's CloseSession is ignored, as it always is (only the
-TPer transmits the method, 5.2.3.5), and 'closeSessionCall' is the TPer's
-own, which a session abort stages (3.3.7.1.5, PDF 75; 3.3.10.7 b, PDF 86).
+* Properties keeps the host's properties per ComID (5.2.2.1, PDF 140;
+  5.2.2.3-4, PDF 143-145): each supported host property the host sends
+  supersedes the value the ComID keeps, raised to the least Opal 2.30 Table
+  17 allows (PDF 33-34, "Hsed.Gen.Opal.Properties") unless it is 0, no limit
+  (Core Table 167, PDF 141-142: never raised, the lead's M4a decision, design
+  13.30), and bounded by the most the run accepts ('spHostPropertyMax'); a
+  property the host omits keeps its value, an unsupported name is ignored and
+  not returned; sessions already open keep the properties they started with
+  ("Hsed.Sim.State".@openSession@ snapshots them). The answer reports the
+  TPer's properties, each a property Core Table 167 gives the TPer, from the
+  parameters ("Hsed.Sim.Params".'SimParams': Table 17's minima by default,
+  DefSessionTimeout 0 among them) and, where the host sent HostProperties,
+  every host property the TPer supports with its current value (5.2.2.4, PDF
+  144).
+* StartSession opens a regular session or fails it with 5.1.5's statuses
+  (PDF 137-139), the resources checked before the authentication (3.3.7.1.4,
+  PDF 74), as 'startSession' lists; the answer is SyncSession with the
+  host's HostSessionID and the TPer's SPSessionID, the session open once it
+  is prepared (3.3.4.5, PDF 62), or, failing, with SPSessionID 0 and the
+  status (5.3.4.1.5, PDF 215; 3.2.4.2, PDF 49-50). An Opal TPer supports
+  HostSessionID, SPID, Write, HostChallenge and HostSigningAuthority (Opal
+  2.30 4.1.1.2, PDF 34): Write must be True, read-only sessions being
+  unsupported (and MaxReadSessions not reported, 5.2.2.2, PDF 141), the
+  optional SessionTimeout is accepted and ignored (MaxSessionTimeout
+  undefined), the other optional parameters are INVALID_PARAMETER (the
+  lead's answer 5).
+* A host's CloseSession is ignored, as it always is (only the TPer transmits
+  the method, 5.2.3.5), and 'closeSessionCall' is the TPer's own, which a
+  session abort stages (3.3.7.1.5, PDF 75; 3.3.10.7 b, PDF 86).
 
-* Properties, the TPer's half: the parameters' properties
-  ("Hsed.Sim.Params".'SimParams': Opal 2.30 Table 17's minima by default),
-  each a Named value, its name the property's as Core Table 167 prints it
-  ("Hsed.Gen.Core.Properties"), its value a uinteger; a parameter Table 167
-  does not give the TPer, or one no uinteger holds, is not reported.
-* The host's half, as far as the answer goes: each host property Opal 2.30
-  Table 17 has a TPer accept, the host's value where it sent one, raised to
-  the least Table 17 allows (Core 5.2.2.3, PDF 143), its initial assumption
-  where it sent none. Keeping them per ComID ("Hsed.Sim.Types".@cHostProps@)
-  is G2's.
+An invocation the host aborts, its status other than SUCCESS, is answered in
+the normal form with that status and its processing aborted, the TPer
+unchanged: a Session Manager method recognized but failing SHALL have its
+normal response format, and a host's abort SHALL be returned as the status
+(Core 3.2.4.2 item 1, PDF 49; the lead's answer 4): Properties with an empty
+list of the TPer's properties and no HostProperties, StartSession with
+SyncSession [HostSessionID, 0]. The status list's reserved values are
+ignored where it is read (item 2, "Hsed.Sim.Sync").
 
-A Properties invocation the host aborts, its status other than SUCCESS, is
-answered in the normal form with that status and its processing aborted, an
-empty list of the TPer's properties and no HostProperties: a Session Manager
-method recognized but failing SHALL have its normal response format, and a
-host's abort SHALL be returned as the status (Core 3.2.4.2 item 1, PDF 49).
-The status list's reserved values are ignored where it is read (item 2,
-"Hsed.Sim.Sync").
-
-Anything else is no answer, its payload discarded: a method invoked on
-another than SMUID, a Session Manager method the TPer does not answer (the
-host's SyncSession, CloseSession, the trusted-session pair), or a Properties
-invocation whose parameters are not Properties' (a required parameter, an
-optional one other than HostProperties, a HostProperties other than Named
-byte-string names with uinteger values), which a TPer may ignore rather than
-answer with INVALID_PARAMETER (Test Cases ETC-08, PDF 81; Core 3.2.4.2 MAY).
+Anything else is no answer, its payload discarded, the TPer unchanged
+(3.3.7.1.3, PDF 73-74): a method invoked on another than SMUID, a Session
+Manager method the TPer does not answer (the host's SyncSession,
+CloseSession, the trusted-session pair: Opal 2.30 4.1.1 supports no
+StartTrustedSession), an invocation whose parameters are not its method's
+(a required parameter missing or extra, an optional one misnamed, a
+HostProperties other than Named byte-string names with uinteger values, a
+HostSessionID that is no uinteger), which a TPer may ignore rather than
+answer with INVALID_PARAMETER (3.2.4.2 MAY, PDF 49-50; Test Cases ETC-08,
+PDF 81).
 -}
 module Hsed.Sim.SessionManager
   ( -- * The answer on the control session
@@ -66,23 +83,35 @@ module Hsed.Sim.SessionManager
   , closeSessionCall
   ) where
 
-import qualified RIO.List                 as L
+import qualified RIO.List                  as L
+import qualified RIO.Map                   as Map
 import           RIO
 
-import           Hsed.Core.Call           (MethodCall (..), MethodHeader (..), Parameters (..), optionalParameter)
-import           Hsed.Core.Method         (MethodSignature (..), Param (..), SigResponse (..), Signature (..),
-                                           invocation)
-import           Hsed.Core.Properties     (Communicator (..), Property (..))
-import           Hsed.Core.Token          (Token (..))
-import           Hsed.Core.Value          (Datum (..), IsValue (..), List (..), Name (..), NamedValue (..), Value (..),
-                                           (.:))
-import           Hsed.Gen.Core.Codes      (StatusCode (..), pattern SUCCESS)
-import qualified Hsed.Gen.Core.Methods    as Methods
-import qualified Hsed.Gen.Core.Properties as P
-import           Hsed.Gen.Core.UIDs       (uProperties, uSMUID)
-import           Hsed.Jig.Catalogue       (CaseKey (..), TestId (..))
-import           Hsed.Sim.Behaviour       (Behaviour (..), Invoked (..), Reply (..), SomeBehaviour, forMethod, runSome)
-import           Hsed.Sim.Types           (Session (..), SimParams (..), TPerState (..), hostRequirements)
+import           Hsed.Core.Call            (MethodCall (..), MethodHeader (..), Parameters (..))
+import           Hsed.Core.Method          (MethodSignature (..), Param (..), SigResponse (..), Signature (..), invocation,
+                                            invocationWith, responseParameters)
+import           Hsed.Core.Properties      (Communicator (..), HostRequirement (..), Property (..), PropertyRequirement (..))
+import           Hsed.Core.Table           (Cell (..), ColNum, Row, TableDesc)
+import           Hsed.Core.Token           (IsToken (..), Token (..))
+import           Hsed.Core.Types           (Enumerated, enumValue)
+import           Hsed.Core.UID             (UID)
+import           Hsed.Core.Value           (Datum (..), IsValue (..), List (..), Name (..), NamedValue (..), Value (..),
+                                            (.:))
+import           Hsed.Gen.Core.Codes       (StatusCode (..), pattern AUTHORITY_LOCKED_OUT, pattern INVALID_PARAMETER,
+                                            pattern NOT_AUTHORIZED, pattern NO_SESSIONS_AVAILABLE, pattern SP_BUSY,
+                                            pattern SUCCESS)
+import           Hsed.Gen.Core.Enums       (Core_auth_method (..), Core_boolean (..))
+import qualified Hsed.Gen.Core.Methods     as Methods
+import qualified Hsed.Gen.Core.Properties  as P
+import           Hsed.Gen.Core.TableDescs  (authorityTableDesc, c_PINTableDesc)
+import           Hsed.Gen.Core.TableUIDs   (uAuthorityTable, uC_PINTable, uSPTable)
+import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uProperties, uSMUID, uSP_Admin)
+import           Hsed.Jig.Catalogue        (CaseKey (..), TestId (..))
+import           Hsed.Sim.Behaviour        (Behaviour (..), Invoked (..), Reply (..), SomeBehaviour, forMethod, runSome)
+import           Hsed.Sim.State            (cellOf, columnOf, openSession, rowWithUID, tperProperty, updateRow)
+import           Hsed.Sim.Types            (ComIdState (..), LifeCycle (..), SPState (..), Session (..), SimParams (..),
+                                            TPerState (..), hostRequirements, initialHostProperties, maxSessionsName,
+                                            supportedHostProperties, tperRequirements)
 
 
 -- * The answer on the control session
@@ -90,20 +119,18 @@ import           Hsed.Sim.Types           (Session (..), SimParams (..), TPerSta
 -- | The Session Manager's answer to a method invocation on a ComID's
 --   control session, and the TPer after it: an invocation of SMUID whose
 --   method a behaviour runs (its parameters read against the record's
---   signature, a ParamError leaving it unanswered, 3.2.4.2 MAY), or a
---   Properties invocation the host aborted answered in its normal form with
---   the host's status (3.2.4.2 item 1); 'Nothing', the TPer unchanged, for
---   anything else.
+--   signature, a ParamError leaving it unanswered, 3.2.4.2 MAY); 'Nothing',
+--   the TPer unchanged, for anything else (an invoker other than SMUID, a
+--   method no behaviour answers, a behaviour that replies with nothing or
+--   with results, which no control session carries).
 answer :: Word16 -> MethodCall -> TPerState -> (Maybe MethodCall, TPerState)
-answer c mc@(MethodCall (MethodHeader invoker method) _ status) st
-  | invoker /= uSMUID                          = (Nothing, st)
-  | method == uProperties, status /= success  = (Just aborted, st)
+answer c mc@(MethodCall (MethodHeader invoker _) _ status) st
+  | invoker /= uSMUID = (Nothing, st)
   | otherwise = case mapMaybe (\b -> runSome b invoked mc st) behaviours of
       [Right (ReplyCall reply, st')] -> (Just reply, st')
       _                              -> (Nothing, st)
   where
     invoked = Invoked { ivComId = c, ivSession = Nothing, ivInvoker = invoker, ivStatus = status }
-    aborted = MethodCall (MethodHeader uSMUID uProperties) (Parameters [L (List [])] []) status
 
 -- | The status of a method that succeeded (Core Table 166).
 success :: Natural
@@ -113,35 +140,93 @@ success = statusValue SUCCESS
 -- * The behaviours
 
 -- | SMUID.Properties (Core 5.2.2.1, PDF 140; @behaviour
---   "SessionManager.properties"@): the TPer's properties, and the host's it
---   will use where the host sent its own; no answer where HostProperties is
---   not a list of Named byte-string names with uinteger values. UCT-02
---   reads it, ETC-02, ETC-03, ETC-08 and ETC-15 invoke it.
+--   "SessionManager.properties"@): the TPer's properties and, where the host
+--   sent its own, the host's it will use, kept on the invoking ComID
+--   (5.2.2.3-4, PDF 143-145); a host's abort echoed with an empty list; no
+--   answer where HostProperties is not a list of Named byte-string names
+--   with uinteger values. UCT-02 reads it, ETC-02, ETC-03, ETC-08 and ETC-15
+--   invoke it.
 properties :: Behaviour Methods.Properties
 properties = Behaviour
   { behName  = "SessionManager.properties"
   , behHash  = "4096cbe61646"
   , behCases = [whole (UCT 2), whole (ETC 2), whole (ETC 3), whole (ETC 8), whole (ETC 15)]
-  , behRun   = \_ (Methods.Properties host) st ->
-      (maybe NoReply (ReplyCall . respond (tsParams st)) (hostProperties host), st)
+  , behRun   = run
   }
   where
-    respond p host = MethodCall (MethodHeader uSMUID uProperties)
-                                (Parameters [L (List (tperProperties p))] (maybe [] hostResult host))
-                                success
+    run iv (Methods.Properties host) st
+      | ivStatus iv /= success = (ReplyCall (propertiesReply (ivStatus iv) [] Nothing), st)
+      | otherwise = case hostProperties host of
+          Nothing          -> (NoReply, st)
+          Just Nothing     -> (ReplyCall (propertiesReply success (tperProperties p) Nothing), st)
+          Just (Just sent) ->
+            let st'  = st { tsComIds = Map.adjust (\cs -> cs { cHostProps = acceptHostProperties p sent (cHostProps cs) }) (ivComId iv) (tsComIds st) }
+                kept = maybe initialHostProperties cHostProps (Map.lookup (ivComId iv) (tsComIds st'))
+            in (ReplyCall (propertiesReply success (tperProperties p) (Just (hostResult kept))), st')
+      where p = tsParams st
 
 -- | SMUID.StartSession (Core 5.2.3.1, PDF 149; @behaviour
 --   "SessionManager.startSession"@), answered by SyncSession (5.2.3.2, PDF
---   150). UCT-03 step 1a, ETC-04 and ETC-21/adminsp invoke it. /At the M4a
---   scaffold/ it is not answered, as M3 left it: group G2 opens the session
---   ("Hsed.Sim.State".@openSession@) or fails it with 5.1.5's statuses.
+--   150). UCT-03 step 1a, ETC-04 and ETC-21/adminsp invoke it. In order:
+--
+--   * HostSessionID a uinteger the packet header's HSN holds (5.2.3.1.1, PDF
+--     149; 3.3.7.1.1, PDF 72), else no answer: an identifying parameter of
+--     the wrong type, which the TPer MAY ignore (3.2.4.2, PDF 49-50); then a
+--     host's abort echoed, SyncSession [HostSessionID, 0] with its status
+--     (item 1, PDF 49);
+--   * SPID a row of the Admin SP's SP table (5.2.3.1.2), else
+--     INVALID_PARAMETER (5.1.5.11, PDF 139); an SP Manufactured-Inactive,
+--     to which no session can be opened (Opal 2.30 5.2.2.1 item 1, PDF 96;
+--     5.2.2.3.1, PDF 97; Test Cases ETC-20), INVALID_PARAMETER;
+--   * Write True (5.2.3.1.3), a read-only session unsupported (Opal 2.30
+--     4.1.1.2, PDF 34: it may or may not be), else INVALID_PARAMETER;
+--   * HostExchangeAuthority, HostExchangeCert, HostSigningCert, TransTimeout,
+--     InitialCredit and SignedHash unsupported (Opal 2.30 4.1.1.2 lists the
+--     five an Opal TPer supports), INVALID_PARAMETER; SessionTimeout accepted
+--     and ignored (4.1.1.2 a-c: MaxSessionTimeout undefined);
+--   * the resources, before the authentication (3.3.7.1.4, PDF 74): a
+--     session open to the SP on any ComID, SP_BUSY (5.1.5.3, PDF 138: one
+--     read-write session per SP, 3.3.7.1, PDF 72); as many sessions open
+--     across the ComIDs as the TPer's MaxSessions (Core Table 167, PDF 142;
+--     0 no limit), NO_SESSIONS_AVAILABLE (5.1.5.7);
+--   * HostSigningAuthority: none or Anybody, the session's authority Anybody
+--     and any HostChallenge ignored (5.3.4.1.2.1, PDF 211); no such row of
+--     the SP's Authority table, or a class authority (5.1.5.11, PDF 139),
+--     INVALID_PARAMETER; a disabled authority NOT_AUTHORIZED (5.3.4.1.4, PDF
+--     214); a Password authority (5.3.4.1.3 b, PDF 213) authenticated with
+--     the HostChallenge against its C_PIN credential's PIN (5.2.3.1.4, PDF
+--     149; 5.1.5.2, PDF 138): its Tries at a TryLimit other than 0,
+--     AUTHORITY_LOCKED_OUT (5.1.5.15, PDF 139, as the TPer MAY); the PIN,
+--     Tries 0; another challenge NOT_AUTHORIZED, Tries one more while TryLimit
+--     is not 0 and never past it (5.3.4.1.1.2, PDF 210-211), the C_PIN row
+--     changed on the SP named (3.3.7.1.3, PDF 73); any other Operation
+--     INVALID_PARAMETER (5.3.4.1.3: of M4a's rows only Anybody and the class
+--     Admins have None);
+--   * the session opened ("Hsed.Sim.State".@openSession@) with the authority
+--     and its classes authenticated (3.3.7.1.4, PDF 75; 3.4.2.2, PDF 89;
+--     5.3.4.1.2, PDF 211: a class's class too, one level), Anybody always
+--     among them, and SyncSession [HostSessionID, SPSessionID] status 0
+--     (3.3.4.5, PDF 62); failing, SyncSession [HostSessionID, 0] with the
+--     status (5.3.4.1.5, PDF 215; SPSessionID 0 the lead's answer 7).
 startSession :: Behaviour Methods.StartSession
 startSession = Behaviour
   { behName  = "SessionManager.startSession"
   , behHash  = "24fca697f37f"
   , behCases = [CaseKey (UCT 3) Nothing (Just "1a-1c") Nothing, whole (ETC 4), CaseKey (ETC 21) Nothing Nothing (Just "adminsp")]
-  , behRun   = \_ _ st -> (NoReply, st)
+  , behRun   = run
   }
+  where
+    run iv m st = case hostSessionId (Methods.startSessionHostSessionID m) of
+      Nothing -> (NoReply, st)
+      Just hsn
+        | ivStatus iv /= success -> (ReplyCall (syncSession (ivStatus iv) hsn 0), st)
+        | otherwise -> case admitted m st of
+            Left status -> (ReplyCall (syncSession (statusValue status) hsn 0), st)
+            Right spid  -> case authenticated spid m st of
+              (Left status, st')       -> (ReplyCall (syncSession (statusValue status) hsn 0), st')
+              (Right authorities, st') ->
+                let (session, st'') = openSession (ivComId iv) hsn spid True authorities st'
+                in (ReplyCall (syncSession success hsn (sesTSN session)), st'')
 
 -- | SMUID.CloseSession (Core 5.2.3.5, PDF 153; @behaviour
 --   "SessionManager.closeSession"@): a method only the TPer transmits, so a
@@ -176,6 +261,20 @@ whole t = CaseKey t Nothing Nothing Nothing
 
 -- * Properties' parts
 
+-- | The TPer's Properties invocation (5.2.2.1.2, PDF 140: the response is
+--   itself a Properties invocation): its Properties, its HostProperties
+--   where it answers them, and its status, the parameters placed as the
+--   generated signature's response names them (@=> SMUID.Properties [
+--   Properties : list, HostProperties = list ]@, HostProperties found by name
+--   among the optional ones, 3.2.4.1).
+propertiesReply :: Natural -> [Value] -> Maybe [Value] -> MethodCall
+propertiesReply status tper host = MethodCall (MethodHeader uSMUID uProperties) params status
+  where
+    params = case sigResponse (signature @Methods.Properties) of
+      Invocation _ reqs opts -> responseParameters reqs opts [L (List tper)]
+                                  [ if paramName o == "HostProperties" then L . List <$> host else Nothing | o <- opts ]
+      _                      -> Parameters [L (List tper)] []
+
 -- | The TPer's properties as the response carries them: each a Named value,
 --   a property Core Table 167 gives the TPer, a uinteger.
 tperProperties :: SimParams -> [Value]
@@ -198,19 +297,152 @@ hostProperties = \case
       either (const Nothing) (\t -> Just (t, n)) (decodeUtf8' name)
     namedUinteger _ = Nothing
 
--- | The HostProperties the TPer will use (5.2.2.1.2.2, PDF 141), as the
---   response's optional parameter: each of Table 17's host properties, the
---   host's value raised to the least allowed (5.2.2.3, PDF 143), or the
---   initial assumption where the host sent none.
-hostResult :: [(Text, Natural)] -> [NamedValue]
-hostResult sent =
-  [ optionalParameter i (List [ N (encodeUtf8 name .: max least (fromMaybe least (L.lookup name sent)))
-                              | (name, least) <- hostRequirements ])
-  | Just i <- [responseHostIndex] ]
+-- | A ComID's host properties after the HostProperties the host sent (Core
+--   5.2.2.3-4, PDF 143-145): each supported property sent supersedes the
+--   value kept, raised to the least Opal 2.30 Table 17 allows (its
+--   generated @hrMinimum@) unless it is 0, which means no limit wherever
+--   Core Table 167 says so (PDF 141-142) and is never raised (the lead's
+--   M4a decision, design 13.30), then bounded by the most accepted, Table
+--   17's where it gives one (@hrMaximum@, VU throughout) and the run's
+--   ('spHostPropertyMax'), which bound a 0 too; a property not sent keeps its
+--   value; an unsupported name is ignored (5.2.2.4, PDF 144).
+acceptHostProperties :: SimParams -> [(Text, Natural)] -> Map Text Natural -> Map Text Natural
+acceptHostProperties p sent kept = L.foldl' (\m (name, v) -> Map.insert name v m) kept
+  [ (name, bounded (reqName r) h (raised h v)) | (name, v) <- sent, Just (r, h) <- [L.find ((== name) . reqName . fst) supportedHostProperties] ]
+  where
+    raised h v
+      | v == 0    = 0
+      | otherwise = maybe v (max v) (hrMinimum h)
+    bounded name h v = case L.minimumMaybe (catMaybes [hrMaximum h, L.lookup name (spHostPropertyMax p)]) of
+      Nothing   -> v
+      Just most -> if v == 0 || v > most then most else v
 
--- | Where HostProperties is among the response's optional parameters (Core
---   5.2.2.1's signature, generated), which names it (3.2.4.1).
-responseHostIndex :: Maybe Natural
-responseHostIndex = case sigResponse (signature @Methods.Properties) of
-  Invocation _ _ optionals -> fromIntegral <$> L.findIndex ((== "HostProperties") . paramName) optionals
-  _                        -> Nothing
+-- | The HostProperties the TPer answers (5.2.2.4, PDF 144: every host
+--   property it supports, with its current value, in Opal 2.30 Table 17's
+--   order), from what the ComID keeps.
+hostResult :: Map Text Natural -> [Value]
+hostResult kept = [ N (encodeUtf8 name .: v) | (name, _) <- hostRequirements, Just v <- [Map.lookup name kept] ]
+
+
+-- * StartSession's parts
+
+-- | The TPer's SyncSession (5.2.3.2, PDF 150): HostSessionID the host's,
+--   SPSessionID the TSN assigned (0 where none was), nothing optional, with
+--   a status.
+syncSession :: Natural -> Word32 -> Word32 -> MethodCall
+syncSession status hsn tsn = invocationWith status uSMUID Methods.SyncSession
+  { Methods.syncSessionHostSessionID  = value (fromIntegral hsn :: Natural)
+  , Methods.syncSessionSPSessionID    = value (fromIntegral tsn :: Natural)
+  , Methods.syncSessionSPChallenge    = Nothing
+  , Methods.syncSessionSPExchangeCert = Nothing
+  , Methods.syncSessionSPSigningCert  = Nothing
+  , Methods.syncSessionTransTimeout   = Nothing
+  , Methods.syncSessionInitialCredit  = Nothing
+  , Methods.syncSessionSignedHash     = Nothing
+  }
+
+-- | The HostSessionID as the HSN it becomes (5.2.3.1.1, PDF 149): a
+--   uinteger the packet header's 4-byte HSN holds (3.3.7.1.1, PDF 72);
+--   anything else is no session number.
+hostSessionId :: Value -> Maybe Word32
+hostSessionId = \case
+  D (Datum (Unsigned n)) | n <= fromIntegral (maxBound :: Word32) -> Just (fromIntegral n)
+  _                                                              -> Nothing
+
+-- | A parameter as the UID it names (a uidref, the UID's eight bytes, Core
+--   5.1.2, PDF 99), if it is one.
+uidOf :: Value -> Maybe UID
+uidOf v = mtoken v >>= fromToken
+
+-- | Whether a cell is an enumeration's value (a boolean's True, an
+--   auth_method's Password).
+enumIs :: (Enumerated e, Enum e) => e -> Maybe Cell -> Bool
+enumIs e = \case
+  Just (EnumCell _ v) -> v == enumValue e
+  _                   -> False
+
+-- | A row's cell in a column named in a generated table description.
+cellNamed :: TableDesc -> Text -> Row -> Maybe Cell
+cellNamed desc name row = columnOf desc name >>= (`cellOf` row)
+
+-- | The SP a StartSession may open a session to, admitted before the
+--   authentication (3.3.7.1.4, PDF 74), or the status it fails with: the
+--   SP, Write, the optional parameters and the resources, in that order (see
+--   'startSession').
+admitted :: Methods.StartSession -> TPerState -> Either StatusCode UID
+admitted m st = do
+  spid <- maybe (Left INVALID_PARAMETER) Right (uidOf (Methods.startSessionSPID m))
+  -- a row of the Admin SP's SP table (5.2.3.1.2), and an SP in a life cycle state sessions open to: the SP's own
+  -- life ("Hsed.Sim.Types".SPState) is read, which the SP-table row's LifeCycleState cell mirrors (nothing changes
+  -- either at M4a; Activate and Revert, M5's, change both)
+  unless (isJust (rowWithUID uSP_Admin uSPTable spid st)) (Left INVALID_PARAMETER)
+  unless (fmap spsLife (Map.lookup spid (tsSPs st)) == Just Manufactured) (Left INVALID_PARAMETER)
+  -- Write True (5.2.3.1.3): the boolean's value as the generated enumeration assigns it (Core Table 59, PDF 103)
+  unless (Methods.startSessionWrite m == value (fromIntegral (enumValue Core_boolean_True) :: Natural)) (Left INVALID_PARAMETER)
+  -- the optional parameters an Opal TPer does not support (Opal 2.30 4.1.1.2, PDF 34); SessionTimeout it accepts
+  when (any isJust [ Methods.startSessionHostExchangeAuthority m, Methods.startSessionHostExchangeCert m
+                   , Methods.startSessionHostSigningCert m, Methods.startSessionTransTimeout m
+                   , Methods.startSessionInitialCredit m, Methods.startSessionSignedHash m ])
+       (Left INVALID_PARAMETER)
+  -- the resources: one read-write session per SP (3.3.7.1, PDF 72; 5.1.5.3), and the TPer's MaxSessions across
+  -- its ComIDs (Core Table 167, PDF 142: 0 no limit; 5.1.5.7)
+  when (any ((== spid) . sesSP) (Map.elems (tsSessions st))) (Left SP_BUSY)
+  when (maxSessions /= 0 && toInteger (Map.size (tsSessions st)) >= maxSessions) (Left NO_SESSIONS_AVAILABLE)
+  pure spid
+  where
+    maxSessions = fromMaybe (maybe 1 toInteger (L.lookup maxSessionsName tperRequirements)) (tperProperty maxSessionsName (tsParams st))
+
+-- | The authorities a StartSession authenticates on an SP, by its
+--   HostSigningAuthority and HostChallenge (see 'startSession'), or the
+--   status it fails with; and the TPer after it, the credential's Tries
+--   changed on the SP named (3.3.7.1.3, PDF 73).
+authenticated :: UID -> Methods.StartSession -> TPerState -> (Either StatusCode [UID], TPerState)
+authenticated spid m st = case Methods.startSessionHostSigningAuthority m of
+  Nothing -> (Right [uAuthority_Anybody], st)
+  Just v  -> case uidOf v of
+    Nothing   -> (Left INVALID_PARAMETER, st)
+    Just auth
+      | auth == uAuthority_Anybody -> (Right [uAuthority_Anybody], st)
+      | otherwise -> case rowWithUID spid uAuthorityTable auth st of
+          Nothing -> (Left INVALID_PARAMETER, st)
+          Just row
+            | enumIs Core_boolean_True (cellNamed authorityTableDesc "IsClass" row)              -> (Left INVALID_PARAMETER, st)
+            | not (enumIs Core_boolean_True (cellNamed authorityTableDesc "Enabled" row))        -> (Left NOT_AUTHORIZED, st)
+            | enumIs Core_auth_method_Password (cellNamed authorityTableDesc "Operation" row)   -> password auth row
+            | otherwise                                                                          -> (Left INVALID_PARAMETER, st)
+  where
+    -- a Password authority: its C_PIN credential (5.3.4.1.3 b, PDF 213; 5.2.3.1.7, PDF 149), the HostChallenge the
+    -- password (5.2.3.1.4), the Tries rule (5.3.4.1.1.2, PDF 210-211)
+    password auth row = case (cellNamed authorityTableDesc "Credential" row, challenge) of
+      (_, Left status) -> (Left status, st)
+      (Just (RefCell _ cred), Right given)
+        | Just pin <- rowWithUID spid uC_PINTable cred st -> attempt auth row cred pin given
+      _ -> (Left INVALID_PARAMETER, st)
+    attempt auth row cred pin given
+      | tryLimit /= 0 && tries >= tryLimit                 = (Left AUTHORITY_LOCKED_OUT, st)
+      | Just (BytesCell secret) <- pinCell "PIN", secret == given = (Right (L.nub (uAuthority_Anybody : auth : classesOf row)), setTries cred 0)
+      | tryLimit /= 0                                      = (Left NOT_AUTHORIZED, setTries cred (min tryLimit (tries + 1)))
+      | otherwise                                          = (Left NOT_AUTHORIZED, st)
+      where
+        pinCell  = \name -> cellNamed c_PINTableDesc name pin
+        tryLimit = uintOf (pinCell "TryLimit")
+        tries    = uintOf (pinCell "Tries")
+    -- the challenge as a password: bytes, none sent as a password of no bytes; a value of another type is no
+    -- password (5.1.5.11 d, PDF 139)
+    challenge = case Methods.startSessionHostChallenge m of
+      Nothing                    -> Right mempty
+      Just (D (Datum (Bytes b))) -> Right b
+      Just _                     -> Left INVALID_PARAMETER
+    uintOf = \case
+      Just (UIntCell n) -> n
+      _                 -> 0
+    -- the Tries cell of a C_PIN row of this SP set
+    setTries cred n = updateRow spid uC_PINTable cred (map (\(col, cell) -> (col, if Just col == triesColumn then UIntCell n else cell))) st
+    triesColumn = columnOf c_PINTableDesc "Tries" :: Maybe ColNum
+    -- the authority's classes, authenticated with it (3.4.2.2, PDF 89): its Class, and that class's, no further
+    -- (5.3.4.1.2, PDF 211: a single level); Anybody is always authenticated (5.3.4.1.2.1)
+    classesOf row = take 2 (L.unfoldr classAbove row)
+    classAbove row = do
+      RefCell _ cls <- cellNamed authorityTableDesc "Class" row
+      above         <- rowWithUID spid uAuthorityTable cls st
+      pure (cls, above)

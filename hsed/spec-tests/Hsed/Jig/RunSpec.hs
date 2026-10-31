@@ -15,7 +15,18 @@ in bytes and in 512-byte blocks, each with and without a response held for
 an IF-RECV; ETC-02's second IF-SEND is answered Synchronous Protocol
 Violation; SPF-02:1's IF-RECV in S1 (0, 0, 0); a held run shows an IF-RECV
 answered (0, 1, 0); the jig's extensions pass; the Markdown report prints
-the LockingManufactured waiver with PDF 29. Then a drive-like response
+the LockingManufactured waiver with PDF 29. M4a's acceptance (design 11):
+UCT-02, ETC-08 and ETC-15 pass on the scaffold's Session Manager now,
+UCT-02 observing both tables (DefSessionTimeout 0 met as no limit, the
+lead's decision) and its echo extension passing, ETC-08 and ETC-15
+observing (0, 0, 0); and, once the simulator's sessions land (groups G1 and
+G2: 'sessionsLanded', the waits the integrator removes), the ten cases pass
+in the four configurations, UCT-03 with its partial-verdict text and its
+extensions (NOT_AUTHORIZED, SP_BUSY, the MSID the simulator's), ETC-04
+observing (0, 0, 0), ETC-21/adminsp seeing NOT_AUTHORIZED, the MSID masked
+in every report unless @--show-msid@, UCT-03 skipped with @--sim-sid-pin@,
+and a session left open before a case established closed by STACK_RESET,
+noted. Then a drive-like response
 synthesized from disk6's sedutil query, replayed as a drive: UCT-01 passes,
 the cases that need more than Level 0 are skipped with their reasons, no
 IF-SEND is issued, and the waivers of SyncIdle, NoSessions and
@@ -33,8 +44,10 @@ carry (exit 2), a drive without root (exit 3).
 module Hsed.Jig.RunSpec (spec) where
 
 import qualified Data.Aeson             as A
+import           Numeric                (showHex)
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
+import qualified RIO.Map                as Map
 import           RIO
 import           RIO.Directory          (doesFileExist, listDirectory)
 import           RIO.FilePath           (takeExtension, (</>))
@@ -42,25 +55,40 @@ import qualified RIO.Text               as T
 import           Test.Hspec
 
 import           Hsed.Core.Feature      (Allowance (..), Feature (..))
+import           Hsed.Core.Method       (invocation)
+import           Hsed.Core.StreamItem   (StreamItem (..))
+import           Hsed.Core.Token        (IsToken (..))
+import           Hsed.Core.Value        (IsValue (..))
+import qualified Hsed.Gen.Core.Methods  as Methods
+import           Hsed.Gen.Core.UIDs     (uAuthority_Anybody, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
 import           Hsed.Jig.Catalogue     (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Files         (runningAsRoot)
 import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
+import           Hsed.Jig.Script        (controlComPacket)
 import           Hsed.Jig.Support       (at, atPath, disk6Like, silently)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..), parseQuery, synthesize)
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
-import           Hsed.Sim.Types         (SimParams (..), defaultSimParams)
+import           Hsed.Sim.Session       (sessionPayload)
+import           Hsed.Sim.SessionManager (answer)
+import           Hsed.Sim.Types         (Session (..), SimParams (..), TPerState (..), defaultSimParams, initialState)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..))
-import           Hsed.Transport.InProc  (InProcOpts (..), newInProc)
+import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..), newInProc)
 import           Hsed.Transport.Replay  (openReplay)
-import           Hsed.Wire.Internal     (Describe (..), IfStatus (..), Response (..), Transport (..), Unit (..))
+import           Hsed.Wire              (defaultExchangeOpts, exchangeComPacket, ifSend, newChannel)
+import           Hsed.Wire.Internal     (Describe (..), IfStatus (..), Request (comId, lenBytes, payload, proto), Response (..),
+                                         Transport (..), Unit (..))
 
 
 keys :: Text -> [CaseKey]
 keys = either (error . T.unpack) id . parseCaseKeys
+
+-- | The ten cases of M4a, in the catalogue's order.
+tenCases :: [CaseKey]
+tenCases = keys "UCT-01,UCT-02,UCT-03:1a-1c,SPF-02:1,ETC-02,ETC-03,ETC-04,ETC-08,ETC-15,ETC-21/adminsp"
 
 -- | The four cases of M3 on the simulator, in a unit, holding a response
 --   for so many IF-RECVs.
@@ -72,6 +100,14 @@ onSim u hold = defaultRunOptions
   , roHold   = hold
   }
 
+-- | The four configurations the acceptance runs in: bytes and blocks, a
+--   response released at once or held for an IF-RECV.
+configurations :: [(Unit, Int)]
+configurations = [(UnitBytes, 0), (UnitBlocks512, 0), (UnitBytes, 1), (UnitBlocks512, 1)]
+
+configured :: (Unit, Int) -> String
+configured (u, hold) = show u <> (if hold > 0 then ", a response held for an IF-RECV" else "")
+
 -- | A run into a temporary directory, quietly: its exit code, its JSON
 --   report and its Markdown, and what else the test does in the directory.
 jigIn :: FilePath -> RunOptions -> IO (ExitCode, A.Value, Text)
@@ -81,13 +117,25 @@ jigIn dir opts = do
   files <- listDirectory reports
   case ([ f | f <- files, takeExtension f == ".json" ], [ f | f <- files, takeExtension f == ".md" ]) of
     ([json], [md]) -> do
-      value <- readFileBinary (reports </> json) >>= either throwString pure . A.eitherDecodeStrict'
+      decoded <- readFileBinary (reports </> json) >>= either throwString pure . A.eitherDecodeStrict'
       text <- readFileUtf8 (reports </> md)
-      pure (code, value, text)
+      pure (code, decoded, text)
     _ -> throwString ("not one report in " <> reports <> ": " <> show files)
 
 jig :: RunOptions -> IO (ExitCode, A.Value, Text)
 jig opts = withSystemTempDirectory "hsed-jig" (`jigIn` opts)
+
+-- | A run into a temporary directory: its exit code and its three reports
+--   as text.
+jigTexts :: RunOptions -> IO (ExitCode, Text, Text, Text)
+jigTexts opts = withSystemTempDirectory "hsed-jig" $ \dir -> do
+  let reports = dir </> "report"
+  code <- silently (runJig opts { roReportDir = reports })
+  files <- listDirectory reports
+  let one ext = case [ f | f <- files, takeExtension f == ext ] of
+        [f] -> readFileUtf8 (reports </> f)
+        _   -> throwString ("not one " <> ext <> " report in " <> reports)
+  (,,,) code <$> one ".json" <*> one ".md" <*> one ".xml"
 
 -- | A JSON array's elements.
 elements :: Maybe A.Value -> [A.Value]
@@ -103,6 +151,16 @@ verdicts json = [ (at "key" c, at "verdict" c) | c <- elements (at "cases" json)
 extensionVerdicts :: A.Value -> [Maybe A.Value]
 extensionVerdicts json = [ at "verdict" x | c <- elements (at "cases" json), x <- elements (at "extensions" c) ]
 
+-- | A case's observations, by its key.
+observations :: A.Value -> Text -> [(Text, Text)]
+observations json key =
+  [ (n, v) | c <- elements (at "cases" json), at "key" c == str key, o <- elements (at "observations" c)
+           , Just (A.String n) <- [at "name" o], Just (A.String v) <- [at "value" o] ]
+
+-- | The transcript's notes.
+notes :: A.Value -> [Text]
+notes json = [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e] ]
+
 -- | The rows of Table 45 the IF-RECVs of the transcript were answered with.
 t45s :: A.Value -> [Text]
 t45s json = [ row | e <- elements (at "transcript" json), Just (A.String row) <- [atPath ["decode", "response", "t45"] e] ]
@@ -113,8 +171,58 @@ sendStatuses json =
   [ s | e <- elements (at "transcript" json), atPath ["request", "op"] e == Just "if_send"
       , Just (A.String s) <- [atPath ["response", "status"] e] ]
 
+-- | The method calls decoded in the transcript's IF-RECV answers: each
+--   method's name and status.
+answeredCalls :: A.Value -> [(Maybe A.Value, Maybe A.Value)]
+answeredCalls json =
+  [ (at "method" mc, at "status" mc)
+  | e <- elements (at "transcript" json), p <- elements (atPath ["decode", "response", "packets"] e)
+  , sp <- elements (at "subpackets" p), Just mc <- [at "method_call" sp] ]
+
 str :: Text -> Maybe A.Value
 str = Just . A.String
+
+-- | Bytes as hex, as a transcript prints them unmasked.
+hexOf :: ByteString -> Text
+hexOf = T.pack . concatMap (\w -> (if w < 16 then "0" else "") <> showHex w "") . B.unpack
+
+-- | StartSession to the Admin SP as Anybody, HSN 1, read-write (what the
+--   jig's UCT-03 1a sends), as tokens.
+startSessionCall :: ByteString
+startSessionCall = generate $ invocation uSMUID Methods.StartSession
+  { Methods.startSessionHostSessionID         = value (1 :: Natural)
+  , Methods.startSessionSPID                  = value (token uSP_Admin)
+  , Methods.startSessionWrite                 = value (1 :: Natural)
+  , Methods.startSessionHostChallenge         = Nothing
+  , Methods.startSessionHostExchangeAuthority = Nothing
+  , Methods.startSessionHostExchangeCert      = Nothing
+  , Methods.startSessionHostSigningAuthority  = Nothing
+  , Methods.startSessionHostSigningCert       = Nothing
+  , Methods.startSessionSessionTimeout        = Nothing
+  , Methods.startSessionTransTimeout          = Nothing
+  , Methods.startSessionInitialCredit         = Nothing
+  , Methods.startSessionSignedHash            = Nothing
+  }
+
+-- | Whether the simulator's sessions have landed (M4a's groups G1 and G2,
+--   design 11): its Session Manager answers a StartSession, and a session's
+--   payload is processed rather than stopped by a stub's error. The
+--   examples of the six M4a cases that open sessions wait on both; the
+--   integrator removes the waits once G1 and G2 are merged.
+sessionsLanded :: IO Bool
+sessionsLanded = do
+  let st = initialState defaultSimParams
+      call = either error id (parseByteString startSessionCall)
+      answered = isJust (fst (answer (spBaseComId defaultSimParams) call st))
+      session = Session (spBaseComId defaultSimParams) 4096 1 uSP_Admin True [uAuthority_Anybody] mempty
+  processed <- isRight <$> tryAny (evaluate (fst (sessionPayload session [] Nothing st)))
+  pure (answered && processed)
+
+-- | An example that needs the simulator's sessions: pending until they
+--   land, naming the groups that retire the wait.
+awaiting :: String -> Expectation -> Expectation
+awaiting what act = sessionsLanded >>= \landed ->
+  if landed then act else pendingWith ("needs groups G1 and G2 of M4a (the simulator's sessions and Session Manager): " <> what)
 
 spec :: Spec
 spec = do
@@ -148,8 +256,8 @@ spec = do
         `shouldBe` map (Just . Minimum) [1, 0xA0000, 1]
 
   describe "--target sim --tests UCT-01,ETC-02,ETC-03,SPF-02:1" $ do
-    for_ [(UnitBytes, 0), (UnitBlocks512, 0), (UnitBytes, 1), (UnitBlocks512, 1)] $ \(u, hold) ->
-      it ("passes in " <> show u <> (if hold > 0 then ", a response held for an IF-RECV" else "")) $ do
+    for_ configurations $ \c@(u, hold) ->
+      it ("passes in " <> configured c) $ do
         (code, json, md) <- jig (onSim u hold)
         verdicts json `shouldBe` [ (str k, str "pass") | k <- ["UCT-01", "SPF-02:1", "ETC-02", "ETC-03"] ]
         code `shouldBe` ExitSuccess
@@ -171,6 +279,92 @@ spec = do
       extensionVerdicts json `shouldBe` [str "pass", str "skipped"]
       t45s json `shouldSatisfy` notElem "responses_to_come"
 
+  describe "--target sim --tests UCT-02,ETC-08,ETC-15 (M4a's cases on the control session)" $ do
+    for_ configurations $ \c@(u, hold) ->
+      it ("passes in " <> configured c <> ": UCT-02 with both tables observed and its echo extension, ETC-08 and ETC-15 observing (0, 0, 0)") $ do
+        (code, json, md) <- jig (onSim u hold) { roTests = keys "UCT-02,ETC-08,ETC-15" }
+        verdicts json `shouldBe` [ (str k, str "pass") | k <- ["UCT-02", "ETC-08", "ETC-15"] ]
+        code `shouldBe` ExitSuccess
+        extensionVerdicts json `shouldBe` [str "pass"]
+        observations json "UCT-02" `shouldSatisfy` elem ("TPer MaxComPacketSize", "2048")
+        observations json "UCT-02" `shouldSatisfy` elem ("TPer DefSessionTimeout", "0")
+        observations json "UCT-02" `shouldSatisfy` elem ("2k", "DefSessionTimeout = 0 (no limit, Core Table 167); the Test Cases' minimum is met")
+        observations json "UCT-02" `shouldSatisfy` elem ("host MaxComPacketSize", "4096")
+        length (observations json "UCT-02") `shouldSatisfy` (>= 11 + 3)
+        for_ ["ETC-08", "ETC-15"] $ \k -> observations json k `shouldSatisfy` any (("(0, 0, 0)" `T.isInfixOf`) . snd)
+        observations json "ETC-15" `shouldSatisfy` elem ("step 1", "MaxSubpackets = 1")
+        md `shouldSatisfy` T.isInfixOf "- 2k: DefSessionTimeout = 0 (no limit, Core Table 167); the Test Cases' minimum is met"
+
+  describe "--target sim --tests <the ten cases of M4a>" $
+    for_ configurations $ \c@(u, hold) ->
+      it ("passes in " <> configured c) $ awaiting "the ten cases on the simulator" $ do
+        (code, json, _) <- jig (onSim u hold) { roTests = tenCases }
+        verdicts json `shouldBe` [ (str k, str "pass") | k <- ["UCT-01", "UCT-02", "UCT-03:1a-1c", "SPF-02:1", "ETC-02", "ETC-03", "ETC-04", "ETC-08", "ETC-15", "ETC-21/adminsp"] ]
+        code `shouldBe` ExitSuccess
+        extensionVerdicts json `shouldSatisfy` notElem (str "fail")
+
+  describe "UCT-03:1a-1c, ETC-04 and ETC-21/adminsp on the simulator" $ do
+    it "UCT-03 passes, its partial-verdict text observed, its extensions passing: NOT_AUTHORIZED, SP_BUSY, the MSID the simulator's" $
+      awaiting "UCT-03's session to the Admin SP" $ do
+        (code, json, md) <- jig (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c" }
+        verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "pass")]
+        code `shouldBe` ExitSuccess
+        observations json "UCT-03:1a-1c" `shouldSatisfy` elem ("step 1", "1a-1c of step 1; 1d-1f set the SID PIN and are not run")
+        extensionVerdicts json `shouldBe` [str "pass", str "pass", str "pass"]
+        md `shouldSatisfy` T.isInfixOf "1a-1c of step 1; 1d-1f set the SID PIN and are not run"
+        answeredCalls json `shouldSatisfy` elem (str "SyncSession", Just (A.Number 3))
+    it "ETC-04 observes (0, 0, 0) after its packet of another Session, and ETC-21/adminsp sees NOT_AUTHORIZED, its Tries extension passing" $
+      awaiting "ETC-04's and ETC-21's sessions" $ do
+        (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "ETC-04,ETC-21/adminsp" }
+        verdicts json `shouldBe` [(str "ETC-04", str "pass"), (str "ETC-21/adminsp", str "pass")]
+        code `shouldBe` ExitSuccess
+        observations json "ETC-04" `shouldSatisfy` any (("(0, 0, 0)" `T.isInfixOf`) . snd)
+        answeredCalls json `shouldSatisfy` elem (str "SyncSession", Just (A.Number 1))
+        extensionVerdicts json `shouldBe` [str "pass"]
+
+  describe "the secrets a run reads (design 9.3 item 5)" $ do
+    it "masks the MSID UCT-03 reads in every report, each giving its length and digest; --show-msid shows it" $
+      awaiting "UCT-03 step 1b's MSID" $ do
+        let msid = spMsid defaultSimParams
+        (code, json, md, xml) <- jigTexts (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c" }
+        code `shouldBe` ExitSuccess
+        for_ [json, md, xml] $ \report -> do
+          report `shouldNotSatisfy` T.isInfixOf (hexOf msid)
+          report `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient msid)
+          report `shouldSatisfy` T.isInfixOf "32 bytes, sha256 a6c4ca3911e4"
+        json `shouldSatisfy` T.isInfixOf "\"shown\":false"
+        (_, shownJson, _, _) <- jigTexts (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c", roShowMsid = True }
+        shownJson `shouldSatisfy` T.isInfixOf (hexOf msid)
+        shownJson `shouldSatisfy` T.isInfixOf "\"shown\":true"
+    it "with --sim-sid-pin, UCT-03:1a-1c is skipped: step 2 needs the vendor's SID PIN" $
+      awaiting "G2's Level 0 Initial C_PIN_SID PIN Indicator from the SID PIN" $ do
+        (code, json, _) <- jig (onSim UnitBytes 0) { roTests = keys "UCT-03:1a-1c", roSim = defaultSimParams { spSidPin = Just "SID!" } }
+        verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "skipped")]
+        [ r | c <- elements (at "cases" json), Just (A.String r) <- [at "reason" c] ] `shouldSatisfy` all ("step 2 needs the vendor's SID PIN" `T.isInfixOf`)
+        code `shouldBe` ExitFailure 1
+
+  describe "a case that stops with a session open" $
+    it "leaves the next case runnable: its NoSessions is established by STACK_RESET on the ComID, noted in the transcript" $
+      awaiting "StartSession and STACK_RESET on the simulator" $
+        withSystemTempDirectory "hsed-jig" $ \dir -> do
+          (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+          channel <- newChannel
+          let base = spBaseComId defaultSimParams
+              bytes = either (error . show) id (controlComPacket base startSessionCall)
+          opened <- exchangeComPacket defaultExchangeOpts (\q -> Right <$> ifSend sim (proto q) (comId q) (lenBytes q) (payload q)) channel sim base bytes
+          opened `shouldSatisfy` isRight
+          held <- scPeek control
+          Map.size (tsSessions held) `shouldBe` 1
+          code <- silently (runOpened defaultRunOptions { roTests = keys "UCT-02", roReportDir = dir </> "report" } (SimTarget sim control))
+          code `shouldBe` ExitSuccess
+          released <- scPeek control
+          Map.null (tsSessions released) `shouldBe` True
+          json <- listDirectory (dir </> "report") >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
+            [f] -> readFileBinary (dir </> "report" </> f) >>= either throwString pure . A.eitherDecodeStrict'
+            _   -> throwString "not one report"
+          notes json `shouldSatisfy` any (T.isPrefixOf "NoSessions: STACK_RESET on 0x1004")
+          verdicts json `shouldBe` [(str "UCT-02", str "pass")]
+
   describe "a drive-like response replayed as the drive" $ do
     it "passes UCT-01, skips the others with their reasons, issues no IF-SEND, prints the waivers" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
@@ -190,6 +384,14 @@ spec = do
         reports <- listDirectory (dir </> "report")
         for_ [ f | f <- reports, takeExtension f == ".json" ] $ \f ->
           silently (verifyTranscript (dir </> "report" </> f) True True) `shouldReturn` ExitSuccess
+    it "skips the six cases of M4a too, each for what it needs" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        let file = dir </> "disk6-like-level0.bin"
+        disk6Like >>= writeFileBinary file
+        (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-02,UCT-03:1a-1c,ETC-04,ETC-08,ETC-15,ETC-21/adminsp" }
+        map snd (verdicts json) `shouldBe` replicate 6 (str "skipped")
+        code `shouldBe` ExitFailure 1
+        at "if_send_issued" json `shouldBe` Just (A.Number 0)
     it "passes UCT-01 alone: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
@@ -203,8 +405,7 @@ spec = do
         writeFileBinary file (B.take 6 bytes <> B.pack [0x00, 0x02] <> B.drop 8 bytes)
         (code, json, md) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
         code `shouldBe` ExitSuccess
-        [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e], "Level 0 Discovery: " `T.isPrefixOf` t ]
-          `shouldSatisfy` any (T.isPrefixOf "Level 0 Discovery: allowed (Opal 2.30 Table 2, PDF 19): HeaderDiffers")
+        notes json `shouldSatisfy` any (T.isPrefixOf "Level 0 Discovery: allowed (Opal 2.30 Table 2, PDF 19): HeaderDiffers")
         md `shouldSatisfy` T.isInfixOf "- allowed (Opal 2.30 Table 2, PDF 19): HeaderDiffers"
     it "fails UCT-01's step 1c on a response whose Length of Parameter Data asks for more than 255 blocks" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
@@ -222,7 +423,7 @@ spec = do
         writeFileBinary file (synthesize q { sqFeatures = filter ((/= 0x0402) . sfCode) (sqFeatures q) })
         (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01" }
         code `shouldBe` ExitSuccess
-        [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e], "UCT-01 4c not evaluated" `T.isPrefixOf` t ]
+        [ t | t <- notes json, "UCT-01 4c not evaluated" `T.isPrefixOf` t ]
           `shouldSatisfy` any ("TCG Opal SSC Specification v2.00 (Opal 2.30 Table 7, PDF 24)" `T.isInfixOf`)
 
   describe "a replay standing in for the kext's drive, with what the IORegistry would say of disk6" $
@@ -243,8 +444,7 @@ spec = do
         json <- listDirectory reports >>= \fs -> case [ f | f <- fs, takeExtension f == ".json" ] of
           [f] -> readFileBinary (reports </> f) >>= either throwString pure . A.eitherDecodeStrict'
           _   -> throwString "not one report"
-        [ t | e <- elements (at "transcript" json), Just (A.String t) <- [at "text" e] ]
-          `shouldSatisfy` any ("a1 08 0e 01 04 00 01 00 00 5c 00 00" `T.isInfixOf`)
+        notes json `shouldSatisfy` any ("a1 08 0e 01 04 00 01 00 00 5c 00 00" `T.isInfixOf`)
         at "if_send_issued" json `shouldBe` Just (A.Number 0)
 
   describe "a drive whose Level 0 Discovery fails" $

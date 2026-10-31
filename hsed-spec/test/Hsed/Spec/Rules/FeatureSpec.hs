@@ -348,7 +348,7 @@ spec = do
         cr <- runIO (either (throwString . show) pure (compileIR (Just base) Scott opal))
         let text = fromMaybe "" (lookup "Hsed.Gen.Opal.Features" (crModules cr))
             lns = T.lines text
-            prov = Gen.Provenance (SpecId "opal-2.30") "T1" "Table 1" 1 1 1 "0/1" ""
+            prov = Gen.Provenance (SpecId "opal-2.30") "T1" "Table 1" 1 1 1 "ord" "0/1" ""
             importing xs = (Gen.decl prov "x" []) { Gen.declImports = [Gen.ImportSome "M" xs] }
             imported = L.nub [ T.takeWhileEnd C.isAlphaNum upTo | l <- lns, "import" `T.isPrefixOf` l, (upTo, _) <- DT.breakOnAll " (..)" l ]
         it "compiles to Hsed.Gen.Opal.Features alone: five records and their Feature instances, Opal's allowances among them" $ do

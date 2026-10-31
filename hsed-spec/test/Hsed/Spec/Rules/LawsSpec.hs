@@ -103,10 +103,10 @@ spec = withCore $ \pristine -> do
     cr <- runIO (compiled ir)
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Laws" (crModules cr)))
     it "declares laws :: [LawRef], one entry per unit, each under its provenance line" $ do
-      lns `shouldContain` ["laws :: [LawRef]", "laws =", "  [ -- core-2.01 3.3.10.2.1#3a list item 3a (PDF 82 / p.65, ord 911, sha256:37bedfb19343)", "    LawRef"]
+      lns `shouldContain` ["laws :: [LawRef]", "laws =", "  [ -- core-2.01 3.3.10.2.1#3a list item 3a (PDF 82 / p.65, paragraph 911, sha256:37bedfb19343)", "    LawRef"]
       [ l | l <- lns, "  , -- core-2.01 " `T.isPrefixOf` l ] `shouldBe`
-        [ "  , -- core-2.01 3.3.10.6#dc list item dc (PDF 86 / p.69, ord 953, sha256:cb4d5d489fc0)"
-        , "  , -- core-2.01 3.3.10.7#a list item a (PDF 86 / p.69, ord 970, sha256:cda4e92af591)"
+        [ "  , -- core-2.01 3.3.10.6#dc list item dc (PDF 86 / p.69, paragraph 953, sha256:cb4d5d489fc0)"
+        , "  , -- core-2.01 3.3.10.7#a list item a (PDF 86 / p.69, paragraph 970, sha256:cda4e92af591)"
         , "  , -- core-2.01 T45 IF-RECV ComPacket Field Values Summary (PDF 83 / p.66, ord 47, sha256:498ea00e3c6a)" ]
     it "gives each entry its anchor, PDF page, hash, name and the law that name refers to" $ do
       lns `shouldContain`

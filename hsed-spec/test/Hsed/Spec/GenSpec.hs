@@ -48,7 +48,7 @@ import           Hsed.Spec.Rules.TypeRow (TypeRowDecl (..), renderTypeRow, types
 prov :: Text -> Text -> Int -> Int -> Int -> Text -> Text -> Provenance
 prov tid cap pdf printed ord sp h = Provenance
   { spec = core, tableId = tid, caption = cap, pdfPage1 = pdf, printedPage = printed
-  , ordinal = ord, structPath = sp, cellsHash = h }
+  , ordinal = ord, ordinalOf = "ord", structPath = sp, cellsHash = h }
 
 typeRow :: Env -> Text -> [Word8] -> Text -> Provenance -> Decl
 typeRow env n bytes f p = renderTypeRow TypeRowDecl

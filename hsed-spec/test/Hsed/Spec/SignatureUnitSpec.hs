@@ -129,7 +129,7 @@ spec = withCore $ \pristine -> do
         `shouldBe` ["N-STUB core-2.01.pdf#page=201&5.3.3.6/sig: TableUID.Get, ObjectUID.Get"]
     it "gives its declarations the block's provenance" $
       [ T.takeWhile (/= ':') (Gen.provenanceComment d.declProvenance) | Emit d <- ruleCompile stub ctx [], d.declProvenance.tableId == "5.3.3.6/sig" ]
-        `shouldBe` ["-- | core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get (PDF 201 / p.184, ord 12, sha256"]
+        `shouldBe` ["-- | core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get (PDF 201 / p.184, block 12, sha256"]
     it "is checked by its exemplar, a signature block" $ do
       checkExemplarsWith [stub] ir `shouldBe` []
       map Cm.code (checkExemplarsWith [stub { exemplar = (SpecId "core-2.01", SigId "9.9") }] ir) `shouldBe` ["C-EXEMPLAR"]

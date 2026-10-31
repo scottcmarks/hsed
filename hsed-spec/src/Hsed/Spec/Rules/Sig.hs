@@ -504,20 +504,24 @@ data TypeEnv = TypeEnv
   }
   deriving (Eq, Show)
 
--- | The environment of a context: its own readings, or, where it has none of
---   its own, those of the spec it is read over (Opal's methods use Core's types).
+-- | The environment of a context: its own readings, then those of the spec
+--   it is read over that it does not name itself (Opal's methods use Core's
+--   types: a type row Opal adds or modifies, Table 30's or Table 49's once
+--   bound at M5, shadows Core's of the same name, and Core's other types
+--   still resolve), each list the context's own names first.
 typeEnv :: Context -> TypeEnv
 typeEnv ctx = TypeEnv
-  { teTypeRows = ownOrBase (\c -> [ trName tr | Right tr <- typeRowReads c ]) ctx
-  , teAbstract = ownOrBase abstractTypes ctx
-  , teTables   = ownOrBase tableNames ctx
-  , teTablesAt = ownOrBase (\c -> L.nub [ renderAnchorId (btAnchor (tuBound r)) | Right r <- tableUIDRows c ]) ctx }
+  { teTypeRows = ownThenBase (\c -> [ trName tr | Right tr <- typeRowReads c ]) ctx
+  , teAbstract = ownThenBase abstractTypes ctx
+  , teTables   = ownThenBase tableNames ctx
+  , teTablesAt = ownThenBase (\c -> L.nub [ renderAnchorId (btAnchor (tuBound r)) | Right r <- tableUIDRows c ]) ctx }
 
--- | A reading of a context, or of its base where the context gives none.
-ownOrBase :: (Context -> [a]) -> Context -> [a]
-ownOrBase f c = case f c of
-  [] -> maybe [] (ownOrBase f) (cxBase c)
-  xs -> xs
+-- | A reading of a context, then of its base: the context's own names, and
+--   after them the base's it does not have (the base's own and its base's,
+--   likewise).
+ownThenBase :: Eq a => (Context -> [a]) -> Context -> [a]
+ownThenBase f c = own <> filter (`notElem` own) (maybe [] (ownThenBase f) (cxBase c))
+  where own = f c
 
 -- | The abstract types of a spec: the titles of the subsections of the heading
 --   titled @Abstract Type Definitions@ (Core 5.1.4.2, PDF 128: 5.1.4.2.1

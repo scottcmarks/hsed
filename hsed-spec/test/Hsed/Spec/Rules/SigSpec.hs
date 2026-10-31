@@ -36,13 +36,14 @@ import           RIO
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor         (AnchorId (..))
-import           Hsed.Spec.Check          (checkIR, mkContext)
+import           Hsed.Spec.Check          (checkIR, mkContext, mkContextWith)
 import           Hsed.Spec.Common         (ErrataSet (..), RuleName (..), Severity (..), renderFinding)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.Compile        (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.DSL            (SomeBinding (..), sig)
 import           Hsed.Spec.IR             (SigIR (..), SpecIR (..))
+import           Hsed.Spec.Registry       (registry)
 import           Hsed.Spec.RuleDef        (BoundSig (..), Classification (..), Context)
 import           Hsed.Spec.Rules          (classifySignatures, explain)
 import           Hsed.Spec.Rules.Sig
@@ -228,6 +229,19 @@ spec = do
       it "joins each block's method to its UID: Get's uMethodID_Get, none for Stir" $ do
         (readOf ctx "5.3.3.6" >>= joinedUID ctx) `shouldBe` Just "uMethodID_Get"
         (readOf ctx "5.6.4.2" >>= joinedUID ctx) `shouldBe` Nothing
+      describe "over Core as the base (hsedc --base): a spec's own names first, then Core's it does not name" $
+        withOpal $ \opalPristine -> do
+          opalHsa <- runIO committedOpalHsa
+          opal <- runIO (annotated opalPristine (opalHsa <> "opal-2.30 | T30 | typeRow\n"))
+          let env' = typeEnv (mkContextWith registry (Just ctx) Scott opal)
+          it "an Opal type row bound (Table 30's data_removal_mechanism, M5's) joins Core's 100, which still resolve, uinteger among them" $ do
+            take 1 (teTypeRows env') `shouldBe` ["data_removal_mechanism"]
+            length (teTypeRows env') `shouldBe` 101
+            resolveLeaf env' NameLeaf "data_removal_mechanism" `shouldBe` Resolved ATypeRow
+            resolveLeaf env' NameLeaf "uinteger" `shouldBe` Resolved ATypeRow
+            (teAbstract env', teTables env', teTablesAt env') `shouldBe` (teAbstract env, teTables env, teTablesAt env)
+          it "with nothing of its own, the environment is Core's" $
+            typeEnv (mkContextWith registry (Just ctx) Scott opalPristine) `shouldBe` env
 
     describe "the generated module" $ do
       cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))
@@ -238,7 +252,7 @@ spec = do
         length [ l | l <- lns, "instance Method " `T.isPrefixOf` l ] `shouldBe` 52
         lns `shouldContain` ["-- no instance Method Stir: no one row of the UID tables names it (C-SIG-METHOD)"]
       it "gives Get its field and its UID as E9 does" $ do
-        lns `shouldContain` [ "-- | core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get (PDF 201 / p.184, ord 12, sha256:9d67d740e4cb)"
+        lns `shouldContain` [ "-- | core-2.01 5.3.3.6/sig TableUID.Get, ObjectUID.Get (PDF 201 / p.184, block 12, sha256:9d67d740e4cb)"
                             , "data Get = Get", "  { getCellblock :: Value", "  }", "  deriving (Eq, Show)" ]
         lns `shouldContain` [ "    , sigInvokers = [\"TableUID\", \"ObjectUID\"]", "    , sigRequired = [Param \"Cellblock\" (TypeName \"cell_block\" Nothing)]" ]
         lns `shouldContain` [ "  fromValues [r1] [] = Just (Get r1)", "  fromValues _ _ = Nothing" ]

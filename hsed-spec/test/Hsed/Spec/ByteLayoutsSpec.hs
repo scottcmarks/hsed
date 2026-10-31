@@ -133,7 +133,7 @@ spec = withCore $ \pristine -> do
       [ l | l <- T.lines layouts, "import" `T.isPrefixOf` l, Gen.recordModule `T.isInfixOf` l ] `shouldSatisfy` ((== 1) . length)
 
   describe "the names a generated layouts or features module imports (declScope, for C-GRID-NAME)" $ do
-    let prov = Gen.Provenance (SpecId "core-2.01") "T1" "Table 1" 1 1 1 "0/1" ""
+    let prov = Gen.Provenance (SpecId "core-2.01") "T1" "Table 1" 1 1 1 "ord" "0/1" ""
         importing xs = (Gen.decl prov "x" []) { Gen.declImports = [Gen.ImportSome "M" xs] }
         features = fromMaybe "" (lookup "Hsed.Gen.Core.Features" (crModules cr))
         imported = L.nub [ T.takeWhileEnd C.isAlphaNum upTo | l <- T.lines (layouts <> "\n" <> features), "import" `T.isPrefixOf` l

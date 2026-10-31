@@ -305,6 +305,7 @@ sigProvenanceOf ctx bs = Gen.Provenance
   , Gen.pdfPage1    = s.page + 1
   , Gen.printedPage = s.page + 1 - (cxIR ctx).labelOffset
   , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex s (cxIR ctx).sigs)
+  , Gen.ordinalOf   = "block"
   , Gen.structPath  = let StructPath sp = s.structPath in sp
   , Gen.cellsHash   = tshow (hashWith SHA256 (encodeUtf8 s.text)) }
   where s = bsSig bs
@@ -351,6 +352,7 @@ paraProvenanceOf ctx bp = Gen.Provenance
   , Gen.pdfPage1    = p.page + 1
   , Gen.printedPage = p.page + 1 - (cxIR ctx).labelOffset
   , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex p (cxIR ctx).paras)
+  , Gen.ordinalOf   = "paragraph"
   , Gen.structPath  = let StructPath sp = p.structPath in sp
   , Gen.cellsHash   = p.hash }
   where p = bpPara bp
@@ -394,6 +396,7 @@ headingProvenanceOf ctx bh = Gen.Provenance
   , Gen.pdfPage1    = h.page + 1
   , Gen.printedPage = h.page + 1 - (cxIR ctx).labelOffset
   , Gen.ordinal     = maybe 0 (+ 1) (L.elemIndex h (cxIR ctx).headings)
+  , Gen.ordinalOf   = "heading"
   , Gen.structPath  = let StructPath sp = h.structPath in sp
   , Gen.cellsHash   = headingHash h.title }
   where h = bhHeading bh
@@ -518,6 +521,7 @@ provenanceOf ctx aid t caption = Gen.Provenance
   , Gen.pdfPage1    = page
   , Gen.printedPage = page - (cxIR ctx).labelOffset
   , Gen.ordinal     = fromMaybe 0 t.ordinal
+  , Gen.ordinalOf   = "ord"
   , Gen.structPath  = let StructPath sp = t.structPath in sp
   , Gen.cellsHash   = cellsHash t }
   where page = fromMaybe 1 (tablePage t)

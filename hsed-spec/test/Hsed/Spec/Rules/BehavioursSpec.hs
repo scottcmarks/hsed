@@ -146,12 +146,12 @@ spec = withCore $ \pristine -> do
     let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Behaviours" (crModules cr)))
     it "declares behaviours :: [BehaviourRef], one entry per method heading, each under its heading's provenance line" $ do
       lns `shouldContain` [ "behaviours :: [BehaviourRef]", "behaviours ="
-                          , "  [ -- core-2.01 5.2.2.1 Properties (Method) (PDF 140 / p.123, ord 364, sha256:" <> T.take 12 (hashOf ctx "5.2.2.1") <> ")"
+                          , "  [ -- core-2.01 5.2.2.1 Properties (Method) (PDF 140 / p.123, heading 364, sha256:" <> T.take 12 (hashOf ctx "5.2.2.1") <> ")"
                           , "    BehaviourRef" ]
       [ l | l <- lns, "  , -- core-2.01 " `T.isPrefixOf` l ] `shouldBe`
-        [ "  , -- core-2.01 5.2.3.1 StartSession Method (PDF 149 / p.132, ord 390, sha256:" <> T.take 12 (hashOf ctx "5.2.3.1") <> ")"
-        , "  , -- core-2.01 5.2.3.5 CloseSession Method (PDF 153 / p.136, ord 426, sha256:" <> T.take 12 (hashOf ctx "5.2.3.5") <> ")"
-        , "  , -- core-2.01 5.3.3.6 Basic Table Method Group - Get (Table and Object Method) (PDF 201 / p.184, ord 799, sha256:" <> T.take 12 (hashOf ctx "5.3.3.6") <> ")" ]
+        [ "  , -- core-2.01 5.2.3.1 StartSession Method (PDF 149 / p.132, heading 390, sha256:" <> T.take 12 (hashOf ctx "5.2.3.1") <> ")"
+        , "  , -- core-2.01 5.2.3.5 CloseSession Method (PDF 153 / p.136, heading 426, sha256:" <> T.take 12 (hashOf ctx "5.2.3.5") <> ")"
+        , "  , -- core-2.01 5.3.3.6 Basic Table Method Group - Get (Table and Object Method) (PDF 201 / p.184, heading 799, sha256:" <> T.take 12 (hashOf ctx "5.3.3.6") <> ")" ]
       length [ l | l <- lns, T.strip l == "BehaviourRef" ] `shouldBe` 4
     it "gives each entry its anchor, PDF page, signature hash, name, and the behaviour that name refers to at its method's record" $ do
       lns `shouldContain`
@@ -165,7 +165,7 @@ spec = withCore $ \pristine -> do
       lns `shouldContain`
         [ "      { brAnchor    = \"core-2.01:5.3.3.6\"", "      , brPage      = 201", "      , brHash      = \"9d67d740e4cb\""
         , "      , brName      = \"Base.get\"", "      , brBehaviour = forMethod @Hsed.Gen.Core.Methods.Get Hsed.Sim.Base.get"
-        , "        -- core-2.01 5.3.3.6.3 Fails (PDF 201 / p.184, ord 804, sha256:" <> T.take 12 (hashOf ctx "5.3.3.6.3") <> ")"
+        , "        -- core-2.01 5.3.3.6.3 Fails (PDF 201 / p.184, heading 804, sha256:" <> T.take 12 (hashOf ctx "5.3.3.6.3") <> ")"
         , "      , brFails     = Just FailsRef"
         , "          { frAnchor = \"core-2.01:5.3.3.6.3\"", "          , frPage   = 201", "          , frName   = \"Base.getFails\""
         , "          , frItems  ="

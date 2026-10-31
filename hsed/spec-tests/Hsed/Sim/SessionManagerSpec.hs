@@ -159,7 +159,7 @@ spec = describe "the simulated Session Manager" $ do
       filter (`notElem` hostNames) (map fst hostRequirements) `shouldBe` []
       map fst hostRequirements `shouldBe` supportedNames
 
-  describe "what is no answer, the TPer unchanged (Core 3.3.7.1.3, 3.2.4.2 MAY)" $ do
+  describe "what is no answer, the TPer unchanged (Core 3.3.7.1.3; an invalid identifying parameter 3.2.4.2's MAY, PDF 50; parameters not the method's Opal 2.30 3.3.4.1.3's discard, PDF 31, the lead's answer 8)" $ do
     let call = invocation uSMUID (Methods.Properties Nothing)
         unanswered c = answer base c st0 `shouldBe` (Nothing, st0)
     it "a host's SyncSession, CloseSession or StartTrustedSession, the TPer's to send or unsupported (Opal 4.1.1)" $ do
@@ -183,7 +183,7 @@ spec = describe "the simulated Session Manager" $ do
     it "a StartSession of other than its three required parameters" $
       unanswered (startCall uSP_Admin Nothing Nothing) { _parameters = Parameters [value (1 :: Natural), value (token uSP_Admin)] [] }
 
-  describe "a host's abort, its status other than SUCCESS (Core 3.2.4.2 item 1; the lead's answer 4)" $ do
+  describe "a host's abort, its status other than SUCCESS (Core 3.2.4.2 item 5.1, PDF 49; the lead's answer 4)" $ do
     let call = invocation uSMUID (Methods.Properties Nothing)
     it "Properties is answered in its normal form with that status and an empty list, the TPer unchanged" $
       forM_ [1, 0x10, 0x3F] $ \s ->

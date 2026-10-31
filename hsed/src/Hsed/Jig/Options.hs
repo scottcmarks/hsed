@@ -12,10 +12,13 @@ Stability   : experimental
 The options of @hsed-jig run@ (design 9.2), apart from the command line
 that reads them (@app/hsed-jig@): the target ('TargetSpec': the simulator,
 a drive, a replay of a captured response, or the simulator paired with a
-drive), the cases, the simulator's parameters and options, the drive's
-(the serial it must have, where to capture its Level 0 response, the
-Level 0 transfer length), and where the reports go. Here, below
-"Hsed.Jig.Target" and "Hsed.Jig.Run", so that both can take them.
+drive), the cases, the simulator's parameters and options (among them, since
+M4a, the SID's PIN, @--sim-sid-pin HEX@, which 'parseSidPin' reads into
+"Hsed.Sim.Params".@spSidPin@), the drive's (the serial it must have, where to
+capture its Level 0 response, the Level 0 transfer length), whether the
+reports show the secrets a run read in clear (@--show-msid@, design 9.3 item
+5), and where the reports go. Here, below "Hsed.Jig.Target" and
+"Hsed.Jig.Run", so that both can take them.
 -}
 module Hsed.Jig.Options
   ( -- * Targets
@@ -24,13 +27,16 @@ module Hsed.Jig.Options
     -- * Options
   , RunOptions (..)
   , defaultRunOptions
+  , parseSidPin
   ) where
 
+import qualified Data.ByteString.Base16 as B16
+import qualified RIO.ByteString         as B
 import           RIO
-import qualified RIO.Text          as T
+import qualified RIO.Text               as T
 
-import           Hsed.Jig.Catalogue (CaseKey)
-import           Hsed.Sim.Types     (SimParams, defaultSimParams)
+import           Hsed.Jig.Catalogue     (CaseKey)
+import           Hsed.Sim.Types         (SimParams, defaultSimParams)
 
 
 -- $setup
@@ -73,7 +79,8 @@ parseTarget t
 data RunOptions = RunOptions
   { roTarget       :: !TargetSpec
   , roTests        :: ![CaseKey]          -- ^ the cases to run; none, every case of the catalogue
-  , roSim          :: !SimParams          -- ^ the simulator's parameters (@--units@, @--inactive-comid-discard@)
+  , roSim          :: !SimParams          -- ^ the simulator's parameters (@--units@, @--inactive-comid-discard@,
+                                          --   @--sim-sid-pin@)
   , roHold         :: !Int                -- ^ the IF-RECVs a prepared response is held for (@--hold-processing@)
   , roProfile      :: !(Maybe FilePath)   -- ^ a Level 0 response whose descriptors the simulator adds (@--profile@),
                                           --   read when the run starts
@@ -81,13 +88,15 @@ data RunOptions = RunOptions
   , roCapture      :: !(Maybe FilePath)   -- ^ where to write the drive's Level 0 response (@--capture-level0@)
   , roExpectSerial :: !(Maybe Text)       -- ^ the serial the drive must have (@--expect-serial@)
   , roLevel0Len    :: !Word32             -- ^ the Level 0 IF-RECV's transfer length (@--level0-len@)
+  , roShowMsid     :: !Bool               -- ^ the secrets a run read (the MSID) shown in clear in the reports
+                                          --   (@--show-msid@); masked otherwise (design 9.3 item 5)
   }
   deriving (Eq, Show)
 
 -- | The simulator, every case, the default parameters, no hold, reports in
---   @build/report@, and a Level 0 transfer of 2048 bytes, what the kext
+--   @build/report@, a Level 0 transfer of 2048 bytes, what the kext
 --   itself asks for when it attaches (@DISCOVERY0_RESPONSE_SIZE@,
---   UserKernelShared.h; design 7.2).
+--   UserKernelShared.h; design 7.2), and the secrets masked.
 defaultRunOptions :: RunOptions
 defaultRunOptions = RunOptions
   { roTarget       = TSim
@@ -99,4 +108,27 @@ defaultRunOptions = RunOptions
   , roCapture      = Nothing
   , roExpectSerial = Nothing
   , roLevel0Len    = 2048
+  , roShowMsid     = False
   }
+
+-- | @--sim-sid-pin HEX@: the simulator's C_PIN_SID PIN as hex digits, two a
+--   byte, 1 to 32 bytes (the PIN column's most, Core Table 122, password,
+--   PDF 118), or why not. The bytes go to "Hsed.Sim.Params".@spSidPin@, so
+--   that the simulated TPer's Initial C_PIN_SID PIN Indicator is other than
+--   the MSID's and UCT-03's step 1 does not apply (Test Cases PDF 33).
+--
+-- >>> parseSidPin "53494421"
+-- Right "SID!"
+-- >>> parseSidPin "5349442"
+-- Left "--sim-sid-pin 5349442: an even count of hex digits, two a byte"
+parseSidPin :: String -> Either String ByteString
+parseSidPin s = case B16.decode (fromString s) of
+  Right bytes
+    | B.null bytes          -> Left (prefix <> "no bytes")
+    | B.length bytes > most -> Left (prefix <> "more than " <> show most <> " bytes, the PIN column's most (Core Table 122, PDF 118)")
+    | otherwise             -> Right bytes
+  Left _ -> Left (prefix <> "an even count of hex digits, two a byte")
+  where
+    prefix = "--sim-sid-pin " <> s <> ": "
+    -- the size limitation of the password type (Core 5.1.3.63, Table 122, PDF 118: max_bytes, 32)
+    most = 32 :: Int

@@ -19,16 +19,21 @@ PDF 29); the simulator's options only where a simulator ran; the run's
 problems; the JUnit report failing the pair, each problem, an IF-SEND on a
 drive and the exit code wherever the exit code fails; the
 transcript with each IF-SEND's methods decoded and each command's end; the
-JUnit counts. @verify-transcript@ fails a report whose drive was issued an
-IF-SEND only when asked to, the simulator's IF-SENDs counting for nothing,
-and with @--level0-only@ one whose drive was issued anything but Level 0
-Discovery's IF-RECV; an entry of no end counts as a drive's, and one that
-does not read against both; a file that is no report fails; @diff@ compares two reports' Level 0 responses as the Pair
-runner does.
+JUnit counts. The secrets a run read are masked in every report, each
+given by its length and the first 12 hex digits of its SHA-256, in clear
+with @--show-msid@ alone (design 9.3 item 5), and the simulator's SID PIN
+is given the same way among the options. @verify-transcript@ fails a
+report whose drive was issued an IF-SEND only when asked to, the
+simulator's IF-SENDs counting for nothing, and with @--level0-only@ one
+whose drive was issued anything but Level 0 Discovery's IF-RECV; an entry
+of no end counts as a drive's, and one that does not read against both; a
+file that is no report fails; @diff@ compares two reports' Level 0
+responses as the Pair runner does.
 -}
 module Hsed.Jig.ReportSpec (spec) where
 
 import qualified Data.Aeson            as A
+import           Numeric               (showHex)
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
 import           RIO
@@ -37,8 +42,10 @@ import qualified RIO.Text              as T
 import           RIO.Time              (UTCTime (..), fromGregorian)
 import           Test.Hspec
 
+import           Hsed.Core.Call        (MethodResponse (..))
 import           Hsed.Core.Method      (invocation)
 import           Hsed.Core.StreamItem  (StreamItem (..))
+import           Hsed.Core.Value       (List (..), Value (..), (.:))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uSMUID)
 import           Hsed.Jig.Catalogue    (CaseKey (..), TestId (..))
@@ -46,10 +53,11 @@ import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), defaul
 import           Hsed.Jig.Pair         (PairReport (..))
 import           Hsed.Jig.Prereq       (lockingSPUntouched, noSessionOpened)
 import           Hsed.Jig.Report
-import           Hsed.Jig.Script       (Verdict (..), controlComPacket)
+import           Hsed.Jig.Script       (SessionHandle (..), Verdict (..), controlComPacket, sessionComPacket)
 import           Hsed.Jig.Support      (at, atPath, silently)
 import           Hsed.Jig.Transcript   (TEntry (..))
 import           Hsed.Level0           (Descriptor (..), Level0 (..))
+import           Hsed.Sim.Types        (SimParams (..), defaultSimParams)
 import           Hsed.Wire             (Describe (..), Dir (..), IfStatus (..), Request (Request), Response (Response), Unit (..))
 
 
@@ -84,6 +92,7 @@ sample = RunResult
   , rrLevel0     = []
   , rrPair       = Nothing
   , rrIfSends    = 0
+  , rrSecrets    = []
   , rrProblems   = []
   , rrExit       = ExitFailure 1
   }
@@ -121,6 +130,32 @@ onDrive = sample { rrTranscript = map toDrive (rrTranscript sample) }
 recvs :: [(Word8, Word16)] -> RunResult
 recvs cs = quiet { rrTranscript = [ Issued n "drive-replay" (Request IfRecv p c 512 mempty) (Response Good mempty) | (n, (p, c)) <- zip [1 ..] cs ] }
 
+-- | The simulator's default MSID, and its hex, as a transcript would print
+--   it unmasked.
+msid :: ByteString
+msid = spMsid defaultSimParams
+
+hexOf :: ByteString -> Text
+hexOf = T.pack . concatMap (\w -> (if w < 16 then "0" else "") <> showHex w "") . B.unpack
+
+-- | A run that read the MSID (UCT-03 step 1b): the Get's result in an
+--   IF-RECV's answer, a challenge holding it in an IF-SEND, the MSID among
+--   the secrets, the simulator's SID PIN given; the secrets shown or not.
+secretive :: Bool -> RunResult
+secretive showing = sample
+  { rrOptions    = defaultRunOptions { roShowMsid = showing, roSim = defaultSimParams { spSidPin = Just "SID!" } }
+  , rrSecrets    = [msid]
+  , rrTranscript =
+      [ Issued 1 "tper" (Request IfSend 1 0x1004 2048 (padded challenge)) (Response Good mempty)
+      , Issued 2 "tper" (Request IfRecv 1 0x1004 2048 mempty) (Response Good (padded result))
+      ]
+  }
+  where
+    h         = SessionHandle 0x1004 4096 1
+    result    = either (error . show) id (sessionComPacket h (generate (MethodResponse [L (List [N ((3 :: Natural) .: msid)])] 0)))
+    challenge = either (error . show) id (sessionComPacket h (msid <> "!"))
+    padded b  = b <> B.replicate (2048 - B.length b) 0
+
 -- | A report written, read back: its files, its JSON and its Markdown.
 written :: RunResult -> IO ([FilePath], A.Value, Text)
 written rr = withSystemTempDirectory "hsed-report" $ \dir -> do
@@ -128,6 +163,14 @@ written rr = withSystemTempDirectory "hsed-report" $ \dir -> do
   json <- readFileBinary (dir </> "jig-sim-20261030T120000Z.json") >>= either throwString pure . A.eitherDecodeStrict'
   md <- readFileUtf8 (dir </> "jig-sim-20261030T120000Z.md")
   pure (map (L.drop (length dir + 1)) paths, json, md)
+
+-- | The three reports as text.
+texts :: RunResult -> IO (Text, Text, Text)
+texts rr = withSystemTempDirectory "hsed-report" $ \dir -> do
+  _ <- writeReports dir rr
+  (,,) <$> readFileUtf8 (dir </> "jig-sim-20261030T120000Z.json")
+       <*> readFileUtf8 (dir </> "jig-sim-20261030T120000Z.md")
+       <*> readFileUtf8 (dir </> "jig-sim-20261030T120000Z.xml")
 
 spec :: Spec
 spec = do
@@ -147,13 +190,16 @@ spec = do
       md `shouldSatisfy` T.isInfixOf "LockingManufactured (Test Cases 5.2 item 2, PDF 29) waived: never touches the Locking SP (design 9.1)"
       md `shouldSatisfy` T.isInfixOf "LockingManufactured (Test Cases 6.2 item 2, PDF 49) waived"
       md `shouldSatisfy` T.isInfixOf "CredentialsKnown (Test Cases 5.2 item 3, PDF 29) waived: vacuous: the case opens no session"
-    it "gives each case's verdict, waivers and extensions in JSON" $ do
-      (_, json, _) <- written sample
+    it "gives each case's verdict, waivers, extensions and observations in JSON and Markdown" $ do
+      (_, json, md) <- written sample
       let cases' = maybe [] (\v -> case v of A.Array xs -> toList xs; _ -> []) (at "cases" json)
       map (at "verdict") cases' `shouldBe` map (Just . A.String) ["pass", "fail", "skipped"]
       map (atPath ["key"]) cases' `shouldBe` map (Just . A.String) ["UCT-01", "SPF-02:1", "ETC-02"]
       [ atPath ["pdf"] w | Just (A.Array ws) <- [at "waivers" =<< listToMaybe cases'], w <- toList ws ]
         `shouldBe` replicate 4 (Just (A.Number 29))
+      [ (at "name" o, at "value" o) | c <- cases', Just (A.Array os) <- [at "observations" c], o <- toList os ]
+        `shouldBe` [(Just "MaxComPacketSize", Just "2048")]
+      md `shouldSatisfy` T.isInfixOf "Observations:\n\n- MaxComPacketSize: 2048"
       (at "if_send_issued" json, at "exit" json) `shouldBe` (Just (A.Number 0), Just (A.Number 1))
     it "decodes each IF-SEND's ComPacket in the transcript to its method" $ do
       (_, json, _) <- written sample
@@ -204,6 +250,41 @@ spec = do
         versions <- for (filter (".json" `L.isSuffixOf`) (concat written')) $ \f ->
           readFileBinary f >>= either throwString (pure . at "hsed") . A.eitherDecodeStrict'
         L.sort versions `shouldBe` map (Just . A.String . tshow) [1 .. 6 :: Int]
+
+  describe "the secrets a run read (design 9.3 item 5)" $ do
+    it "gives a secret by its length and the first 12 hex digits of its SHA-256, never its bytes" $
+      describeSecret msid `shouldBe` "32 bytes, sha256 a6c4ca3911e4"
+    it "masks the MSID in the JSON transcript's bytes and decodes, in the Markdown and in the JUnit properties, each report giving its length and digest" $ do
+      (json, md, xml) <- texts (secretive False)
+      for_ [json, md, xml] $ \report -> do
+        report `shouldNotSatisfy` T.isInfixOf (hexOf msid)
+        report `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient msid)
+        report `shouldSatisfy` T.isInfixOf "a6c4ca3911e4"
+      json `shouldSatisfy` T.isInfixOf "\"secrets\":[{\"len\":32,\"sha256\":\"a6c4ca3911e4\",\"shown\":false}]"
+      json `shouldSatisfy` T.isInfixOf (T.replicate 32 "*")
+      json `shouldSatisfy` T.isInfixOf (hexOf (B.replicate 32 0x2A))
+      md `shouldSatisfy` T.isInfixOf "## Secrets"
+      md `shouldSatisfy` T.isInfixOf "- secret 1: 32 bytes, sha256 a6c4ca3911e4"
+      md `shouldSatisfy` T.isInfixOf "- secrets read: 1, masked as 0x2A in the transcript (--show-msid shows them)"
+      xml `shouldSatisfy` T.isInfixOf "<property name=\"secrets\" value=\"1\"/>"
+      xml `shouldSatisfy` T.isInfixOf "<property name=\"secret_1\" value=\"32 bytes, sha256 a6c4ca3911e4, masked as 0x2A in the transcript (--show-msid shows them)\"/>"
+    it "shows the secrets in clear with --show-msid, and says so" $ do
+      (json, md, xml) <- texts (secretive True)
+      json `shouldSatisfy` T.isInfixOf (hexOf msid)
+      json `shouldSatisfy` T.isInfixOf "\"shown\":true"
+      md `shouldSatisfy` T.isInfixOf "shown in clear (--show-msid)"
+      xml `shouldSatisfy` T.isInfixOf "32 bytes, sha256 a6c4ca3911e4, shown in clear (--show-msid)"
+    it "gives the simulator's SID PIN among the options by its length and digest alone, in JSON and Markdown" $ do
+      (json, md, _) <- texts (secretive False)
+      json `shouldSatisfy` T.isInfixOf "\"sim_sid_pin\":\"4 bytes, sha256 "
+      json `shouldNotSatisfy` T.isInfixOf "SID!"
+      json `shouldNotSatisfy` T.isInfixOf (hexOf "SID!")
+      md `shouldSatisfy` T.isInfixOf ", SID PIN given: 4 bytes, sha256 "
+      (defaultJson, _, _) <- texts sample
+      defaultJson `shouldSatisfy` T.isInfixOf "\"sim_sid_pin\":null"
+    it "says in the summary how many secrets were read and how they are printed" $ do
+      summary (secretive False) [] `shouldSatisfy` any (T.isPrefixOf "secrets read: 1, masked as 0x2A in the transcript")
+      summary sample [] `shouldNotSatisfy` any (T.isPrefixOf "secrets read")
 
   describe "verifyTranscript" $ do
     let report dir rr = writeReports dir rr <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)

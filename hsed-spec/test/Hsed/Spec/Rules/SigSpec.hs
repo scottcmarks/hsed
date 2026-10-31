@@ -18,6 +18,13 @@ invocations and references); it joins 52 of them to their UIDs in the
 Session Manager Method UIDs and the MethodID UIDs by name, and the one no row
 names (5.6.4.2 Stir) is a C-SIG-METHOD Warning with its page; the generated
 module has a record per method, its signature and, when joined, its UID.
+Since M4a (the plan's answer 2) the type join: every parameter's type text
+parses, its leaves resolve against the 100 type rows, the 18 abstract types
+read from 5.1.4.2's headings and Table 240's 46 tables, the ten braced
+placeholders nothing defines are C-SIG-TYPE Warnings at their blocks and
+the five types the spec leaves to context (Properties' @value@, Get's
+@Value@, Set's @\<type of column\>@) N-SIG-TYPE-CONTEXT Notes, each with its
+page; and nothing generated changes.
 -}
 module Hsed.Spec.Rules.SigSpec (spec) where
 
@@ -57,6 +64,10 @@ readOf ctx section = listToMaybe [ sr | Right sr <- sigReads ctx, bsAnchor (srBo
 sigFindings :: SpecIR -> [Text]
 sigFindings = map renderFinding . filter (\f -> any (`T.isPrefixOf` Cm.code f) ["C-SIG", "N-SIG"]) . checkIR Nothing Scott
 
+-- | The type join's findings alone, of one code.
+typeFindings :: Text -> SpecIR -> [Text]
+typeFindings code = map renderFinding . filter ((== code) . Cm.code) . checkIR Nothing Scott
+
 spec :: Spec
 spec = do
   describe "parseBlock" $ do
@@ -80,6 +91,28 @@ spec = do
       fmap fst (parseBlock "ThisSP.X [ Count uinteger ]") `shouldBe` Left "the invocation: \"Count uinteger\" is not Name : type or Name = type"
       fmap fst (parseBlock "ThisSP.X [ A = bytes, B : bytes ]")
         `shouldBe` Left "the invocation: the required parameter B follows an optional one (3.2.4.1)"
+
+  describe "parseType" $ do
+    it "reads a name, uidref with and without a table, a list, a Named list, typeOr and a type in angle brackets, the spacing free" $ do
+      parseType "uinteger" `shouldBe` Right (TName "uinteger")
+      parseType "uidref" `shouldBe` Right (TUidref Nothing)
+      parseType "uidref {SPObjectUID}" `shouldBe` Right (TUidref (Just "SPObjectUID"))
+      parseType "uidref { SP/table/object }" `shouldBe` Right (TUidref (Just "SP/table/object"))
+      parseType "list [ uidref ... ]" `shouldBe` Right (TList Nothing (TUidref Nothing))
+      parseType "list [ name = value ... ]" `shouldBe` Right (TList (Just "name") (TName "value"))
+      parseType "typeOr { Data : bytes, Buffer : cell_block}" `shouldBe` Right (TOr [("Data", TName "bytes"), ("Buffer", TName "cell_block")])
+      parseType "typeOr { Bytes : bytes, RowValues : list [ ColumnNumber = <type of column> ... ] }"
+        `shouldBe` Right (TOr [("Bytes", TName "bytes"), ("RowValues", TList (Just "ColumnNumber") (TContext "type of column"))])
+    it "refuses what is no type" $ do
+      parseType "list [ uidref ]" `shouldSatisfy` isLeft
+      parseType "typeOr { Data bytes }" `shouldSatisfy` isLeft
+      parseType "uinteger extra" `shouldSatisfy` isLeft
+      parseType "" `shouldSatisfy` isLeft
+    it "lists a type's leaves with their roles: a name, a uidref's table, a Named list's value type, a type said in words" $ do
+      typeLeaves (TOr [("Bytes", TName "bytes"), ("RowValues", TList (Just "ColumnNumber") (TName "Value"))]) `shouldBe` [(NameLeaf, "bytes"), (ElementLeaf, "Value")]
+      typeLeaves (TList Nothing (TUidref Nothing)) `shouldBe` [(NameLeaf, "uidref")]
+      typeLeaves (TList (Just "n") (TContext "type of column")) `shouldBe` [(ContextLeaf, "type of column")]
+      typeLeaves (TUidref (Just "ByteTable")) `shouldBe` [(TargetLeaf, "ByteTable")]
 
   withCore $ \pristine -> do
     hsa <- runIO committedHsa
@@ -127,8 +160,8 @@ spec = do
           `shouldBe` ["C-SIG-METHOD core-2.01.pdf#page=201&5.3.3.6/sig: Get is named by T242 row 20 and T242 row 34"]
 
     describe "C-SIG-PARSE" $ do
-      it "reads GetPackage's unclosed list and SetPackage's last comma, and nothing else is amiss" $
-        filter (not . ("C-SIG-METHOD" `T.isPrefixOf`)) (sigFindings ir) `shouldBe`
+      it "reads GetPackage's unclosed list and SetPackage's last comma, and nothing else is amiss (the type join's findings aside)" $
+        filter (\l -> not (any (`T.isPrefixOf` l) ["C-SIG-METHOD", "C-SIG-TYPE", "N-SIG-TYPE-CONTEXT"])) (sigFindings ir) `shouldBe`
           [ "C-SIG-PARSE core-2.01.pdf#page=208&5.3.3.17/sig: the invocation's parameter list is not closed before =>: read as closed there"
           , "N-SIG-NORMALISED core-2.01.pdf#page=209&5.3.3.18/sig: the invocation's parameter list ends with a comma before ]: read without it" ]
       it "is an Error at the block when a block does not parse, and the block is left out" $ do
@@ -145,6 +178,56 @@ spec = do
       it "finds SMUID and ThisSP word for word in the Special Purpose UIDs, and no other invoker" $ do
         [ (i, map (\r -> urRow r + 1) (invokerRows ctx i)) | i <- ["SMUID", "ThisSP", "TableUID", "ObjectUID"] ]
           `shouldBe` [("SMUID", [3]), ("ThisSP", [2]), ("TableUID", []), ("ObjectUID", [])]
+
+    describe "the type join (C-SIG-TYPE, N-SIG-TYPE-CONTEXT; the M4a plan's answer 2)" $ do
+      let env = typeEnv ctx
+          typeTexts = L.nub [ spType p | sr <- rows, (_, p) <- paramsOf sr ]
+      it "resolves against the 100 type rows, the 18 abstract types read from 5.1.4.2's headings (PDF 128-136), and Table 240's 46 tables" $ do
+        length (teTypeRows env) `shouldBe` 100
+        teAbstract env `shouldBe` [ "access_control_list", "boolean", "cell_block", "clock_kind", "clock_time", "columns", "date", "hash_protocol"
+                                  , "key_size", "lag", "name", "package", "package_purpose", "row_address", "row_data", "table_kind", "table_sizes", "uidref" ]
+        length (teTables env) `shouldBe` 46
+        teTablesAt env `shouldBe` ["T240"]
+      it "parses every distinct type text of the 53 blocks: 39, over 147 parameters and results" $ do
+        length typeTexts `shouldBe` 39
+        length [ p | sr <- rows, (_, p) <- paramsOf sr ] `shouldBe` 147
+        [ (t, why) | t <- typeTexts, Left why <- [parseType t] ] `shouldBe` []
+      it "lets a type row win over an abstract type of the same name, joins a uidref's table less its suffix, and leaves a Named list's value type to the context" $ do
+        resolveLeaf env NameLeaf "boolean" `shouldBe` Resolved ATypeRow
+        resolveLeaf env NameLeaf "cell_block" `shouldBe` Resolved AnAbstractType
+        resolveLeaf env NameLeaf "uidref" `shouldBe` Resolved AnAbstractType
+        resolveLeaf env TargetLeaf "SPObjectUID" `shouldBe` Resolved (ATable "SP")
+        resolveLeaf env TargetLeaf "MethodID" `shouldBe` Resolved (ATable "MethodID")
+        resolveLeaf env TargetLeaf "ByteTable" `shouldBe` Unresolved "no row of T240 names a table \"ByteTable\""
+        resolveLeaf env ElementLeaf "value" `shouldBe` ContextTyped
+        resolveLeaf env ElementLeaf "uinteger" `shouldBe` Resolved ATypeRow
+        resolveLeaf env ContextLeaf "type of column" `shouldBe` ContextTyped
+        resolveLeaf env NameLeaf "TemplateObjectUID" `shouldBe` Unresolved "no type row and no abstract type (5.1.4.2) is named \"TemplateObjectUID\""
+      it "gives exactly the ten C-SIG-TYPE Warnings, at their blocks with their pages: the braced placeholders and IssueSP's Templates" $
+        typeFindings "C-SIG-TYPE" ir `shouldBe`
+          [ "C-SIG-TYPE core-2.01.pdf#page=205&5.3.3.11/sig: the parameter InvokingID: the type \"uidref { SP/table/object }\" names \"SP/table/object\", which nothing defines: no row of T240 names a table \"SP/table/object\""
+          , "C-SIG-TYPE core-2.01.pdf#page=206&5.3.3.13/sig: the parameter InvokingID: the type \"uidref { SP/table/object }\" names \"SP/table/object\", which nothing defines: no row of T240 names a table \"SP/table/object\""
+          , "C-SIG-TYPE core-2.01.pdf#page=206&5.3.3.14/sig: the parameter InvokingID: the type \"uidref { SP/table/object }\" names \"SP/table/object\", which nothing defines: no row of T240 names a table \"SP/table/object\""
+          , "C-SIG-TYPE core-2.01.pdf#page=207&5.3.3.15/sig: the parameter InvokingID: the type \"uidref { SP/table/object }\" names \"SP/table/object\", which nothing defines: no row of T240 names a table \"SP/table/object\""
+          , "C-SIG-TYPE core-2.01.pdf#page=208&5.3.3.17/sig: the parameter SigningKey: the type \"uidref { CredentialObjectUID }\" names \"CredentialObjectUID\", which nothing defines: no row of T240 names a table \"Credential\" (\"CredentialObjectUID\" less its suffix)"
+          , "C-SIG-TYPE core-2.01.pdf#page=208&5.3.3.17/sig: the parameter WrappingKey: the type \"uidref { CredentialObjectUID }\" names \"CredentialObjectUID\", which nothing defines: no row of T240 names a table \"Credential\" (\"CredentialObjectUID\" less its suffix)"
+          , "C-SIG-TYPE core-2.01.pdf#page=209&5.3.3.18/sig: the parameter SigningKey: the type \"uidref { CredentialObjectUID }\" names \"CredentialObjectUID\", which nothing defines: no row of T240 names a table \"Credential\" (\"CredentialObjectUID\" less its suffix)"
+          , "C-SIG-TYPE core-2.01.pdf#page=209&5.3.3.18/sig: the parameter WrappingKey: the type \"uidref { CredentialObjectUID }\" names \"CredentialObjectUID\", which nothing defines: no row of T240 names a table \"Credential\" (\"CredentialObjectUID\" less its suffix)"
+          , "C-SIG-TYPE core-2.01.pdf#page=234&5.4.3.1/sig: the parameter Templates: the type \"list [ TemplateObjectUID ... ]\" names \"TemplateObjectUID\", which nothing defines: no type row and no abstract type (5.1.4.2) is named \"TemplateObjectUID\""
+          , "C-SIG-TYPE core-2.01.pdf#page=263&5.6.4.17/sig: the parameter PatternInput: the type \"uidref {ByteTable}\" names \"ByteTable\", which nothing defines: no row of T240 names a table \"ByteTable\"" ]
+      it "gives exactly the five N-SIG-TYPE-CONTEXT Notes: Properties' value three times, Get's Value, Set's <type of column>" $
+        typeFindings "N-SIG-TYPE-CONTEXT" ir `shouldBe`
+          [ "N-SIG-TYPE-CONTEXT core-2.01.pdf#page=140&5.2.2.1/sig: the parameter HostProperties: the type of each named value, \"value\", is the context's, given by the name beside it; no type row or abstract type is so named"
+          , "N-SIG-TYPE-CONTEXT core-2.01.pdf#page=140&5.2.2.1/sig: the response's parameter HostProperties: the type of each named value, \"value\", is the context's, given by the name beside it; no type row or abstract type is so named"
+          , "N-SIG-TYPE-CONTEXT core-2.01.pdf#page=140&5.2.2.1/sig: the response's parameter Properties: the type of each named value, \"value\", is the context's, given by the name beside it; no type row or abstract type is so named"
+          , "N-SIG-TYPE-CONTEXT core-2.01.pdf#page=201&5.3.3.6/sig: the result Result: the type of each named value, \"Value\", is the context's, given by the name beside it; no type row or abstract type is so named"
+          , "N-SIG-TYPE-CONTEXT core-2.01.pdf#page=202&5.3.3.7/sig: the parameter Values: the type <type of column> is the context's, said in words rather than named" ]
+      it "is a Warning at the block when a type text does not read as a type" $
+        typeFindings "C-SIG-TYPE" (withSigText "5.3.3.8" "TableUID.Next [\nWhere = uidref,\nCount = list [ uinteger ] ]\n=>\n[ Result : list [ uidref ... ] ]" ir)
+          `shouldSatisfy` any (T.isPrefixOf "C-SIG-TYPE core-2.01.pdf#page=203&5.3.3.8/sig: the parameter Count: the type \"list [ uinteger ]\" does not read as a type: list without ... at")
+      it "joins each block's method to its UID: Get's uMethodID_Get, none for Stir" $ do
+        (readOf ctx "5.3.3.6" >>= joinedUID ctx) `shouldBe` Just "uMethodID_Get"
+        (readOf ctx "5.6.4.2" >>= joinedUID ctx) `shouldBe` Nothing
 
     describe "the generated module" $ do
       cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))

@@ -63,6 +63,7 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Warning | C-LAYOUT-TILE | 1 |
 | Warning | C-SIG-METHOD | 1 |
 | Warning | C-SIG-PARSE | 1 |
+| Warning | C-SIG-TYPE | 10 |
 | Warning | C-UID-UNIQUE | 1 |
 | Warning | W-ENUM-LABEL-REPEATED | 3 |
 | Warning | W-ENUM-OVERLAP | 1 |
@@ -79,6 +80,7 @@ they report is among the findings below and in `build/report/ERRATA.md`.
 | Note | N-RANGE-NAME-NORMALISED | 2 |
 | Note | N-RANGE-ONE-CELL | 1 |
 | Note | N-SIG-NORMALISED | 1 |
+| Note | N-SIG-TYPE-CONTEXT | 5 |
 | Note | N-STATUS-NAME-SUFFIXED | 1 |
 | Note | N-STATUS-UNDESCRIBED | 1 |
 | Note | N-UID-RANGE-NO-TEMPLATE | 1 |

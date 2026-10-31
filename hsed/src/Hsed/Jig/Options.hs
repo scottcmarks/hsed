@@ -113,18 +113,25 @@ defaultRunOptions = RunOptions
   }
 
 -- | @--sim-sid-pin HEX@: the simulator's C_PIN_SID PIN as hex digits, two a
---   byte, an optional @0x@ before them, 1 to 32 bytes (the PIN column's
---   most, Core Table 122, password, PDF 118), or why not. The bytes go to
---   "Hsed.Sim.Params".@spSidPin@, so that the simulated TPer's Initial
---   C_PIN_SID PIN Indicator is other than the MSID's and UCT-03's step 1
---   does not apply (Test Cases PDF 33); a set SID PIN also fails UCT-01's
---   step 4c.ii, SID Value State 1 (PDF 30), the Test Cases taking the
---   drive at its original factory state (4.2, PDF 28).
+--   byte, an optional @0x@ before them, 4 to 32 bytes, or why not: at most
+--   the PIN column's (Core Table 122, password, PDF 118), and at least
+--   four, since the reports mask the PIN in their every text as well as in
+--   the transcript's bytes ("Hsed.Jig.Transcript".'maskText', design 9.3
+--   item 5) and a shorter one would be masked out of their own words (a
+--   3-byte @SID@ masks @C_PIN_SID@ and @MSID@, a 1-byte @1@ every 1 of a
+--   page number). The bytes go to "Hsed.Sim.Params".@spSidPin@, so that
+--   the simulated TPer's Initial C_PIN_SID PIN Indicator is other than the
+--   MSID's and UCT-03's step 1 does not apply (Test Cases PDF 33); a set
+--   SID PIN also fails UCT-01's step 4c.ii, SID Value State 1 (PDF 30),
+--   the Test Cases taking the drive at its original factory state (4.2,
+--   PDF 28).
 --
 -- >>> parseSidPin "53494421"
 -- Right "SID!"
 -- >>> parseSidPin "0x53494421"
 -- Right "SID!"
+-- >>> parseSidPin "534944"
+-- Left "--sim-sid-pin 534944: 3 bytes; at least 4, so that masking the PIN in the reports' texts rewrites none of their words (design 9.3 item 5)"
 -- >>> parseSidPin "5349442"
 -- Left "--sim-sid-pin 5349442: hex digits, two a byte (an even count)"
 -- >>> parseSidPin "zz"
@@ -132,12 +139,17 @@ defaultRunOptions = RunOptions
 parseSidPin :: String -> Either String ByteString
 parseSidPin s = case B16.decode (fromString digits) of
   Right bytes
-    | B.null bytes          -> Left (prefix <> "no bytes")
-    | B.length bytes > most -> Left (prefix <> "more than " <> show most <> " bytes, the PIN column's most (Core Table 122, PDF 118)")
-    | otherwise             -> Right bytes
+    | B.null bytes           -> Left (prefix <> "no bytes")
+    | B.length bytes < least -> Left (prefix <> show (B.length bytes) <> " bytes; at least " <> show least
+                                      <> ", so that masking the PIN in the reports' texts rewrites none of their words (design 9.3 item 5)")
+    | B.length bytes > most  -> Left (prefix <> "more than " <> show most <> " bytes, the PIN column's most (Core Table 122, PDF 118)")
+    | otherwise              -> Right bytes
   Left _ -> Left (prefix <> "hex digits, two a byte (an even count)")
   where
     digits = fromMaybe s (L.stripPrefix "0x" s <|> L.stripPrefix "0X" s)
     prefix = "--sim-sid-pin " <> s <> ": "
     -- the size limitation of the password type (Core 5.1.3.63, Table 122, PDF 118: max_bytes, 32)
     most = 32 :: Int
+    -- the jig's own floor: the PIN is masked wherever the reports' texts have it (design 9.3 item 5), and one under
+    -- four bytes is a word or a number of theirs
+    least = 4 :: Int

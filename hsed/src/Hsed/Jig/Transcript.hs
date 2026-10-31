@@ -163,9 +163,12 @@ maskSecrets secrets = \case
 --   "..."@, a fault's words), each occurrence replaced by as many asterisks
 --   as the secret has bytes, so that a verdict's reason, an observation, a
 --   note or a problem that quotes a secret never prints it (design 9.3 item
---   5); an empty secret masks nothing. A short secret masks its every
---   occurrence, a one-byte PIN's letter wherever the prose has it: the price
---   of never leaking one.
+--   5); an empty secret masks nothing. Every occurrence is masked, so a
+--   secret that is a word or a number of the prose takes it with it: the
+--   simulator's MSID is 32 bytes, and "Hsed.Jig.Options".'parseSidPin'
+--   takes no PIN under four, a 3-byte @SID@ masking @C_PIN_SID@ and @MSID@
+--   wherever the reports say them and a 1-byte @1@ every 1 of a page number
+--   (found at the M4a review's verification).
 --
 -- >>> maskText ["MSID1"] "read MSID1, its hex 4d53494431, shown as Bytes \"MSID1\""
 -- "read *****, its hex *****, shown as Bytes \"*****\""

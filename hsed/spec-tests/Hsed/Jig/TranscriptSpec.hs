@@ -17,8 +17,10 @@ exception goes on; the IF-SENDs issued are the issued entries' IF-SENDs,
 not a blocked one's. A secret is masked in an entry's bytes as so many
 asterisks, in a command's payload and its answer's alike, a blocked
 command's too, so that a byte-string atom carrying it keeps its length and
-the stream still reads; an empty secret and a note are left alone (design
-9.3 item 5).
+the stream still reads, and in a note's text and a blocked command's reason
+as text, hex or as shown, every occurrence, so that a short secret takes
+the prose's own words with it (what @--sim-sid-pin@'s floor of four bytes
+keeps out of a run); an empty secret is left alone (design 9.3 item 5).
 -}
 module Hsed.Jig.TranscriptSpec (spec) where
 
@@ -104,6 +106,11 @@ spec = do
     it "masks several secrets, each where it occurs" $
       maskSecrets ["MSID", "PIN!"] (Issued 1 "tper" send (Response Good "the MSID and the PIN!"))
         `shouldBe` Issued 1 "tper" send (Response Good ("the " <> stars 4 <> " and the " <> stars 4))
+    it "masks a short secret out of the prose's own words, a 3-byte SID from C_PIN_SID, MSID and a verdict, a 1-byte 1 from a page number: what --sim-sid-pin's floor of four bytes keeps out of a run (Hsed.Jig.Options.parseSidPin), a 4-byte SID! leaving them" $ do
+      let prose = "C_PIN_SID TryLimit 0; the MSID read; 4c.ii: SID Value State = 1, not 0 (PDF 210)"
+      maskText ["SID"] prose `shouldBe` "C_PIN_*** TryLimit 0; the M*** read; 4c.ii: *** Value State = 1, not 0 (PDF 210)"
+      maskText ["1"] "design 9.1, PDF 210" `shouldBe` "design 9.*, PDF 2*0"
+      maskText ["SID!"] prose `shouldBe` prose
     it "keeps a masked byte-string atom's length, so that a Get result carrying the MSID still reads, its PIN asterisks" $ do
       let result = MethodResponse [L (List [N ((3 :: Natural) .: msid)])] 0
       case maskSecrets [msid] (Issued 1 "tper" recv (Response Good (generate result))) of

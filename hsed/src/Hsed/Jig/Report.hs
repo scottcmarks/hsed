@@ -75,7 +75,7 @@ import qualified RIO.List               as L
 import           RIO
 import qualified RIO.Text               as T
 
-import           Hsed.Core.Call         (MethodCall (..), MethodHeader (..), MethodResponse)
+import           Hsed.Core.Call         (MethodCall (..), MethodHeader (..), MethodResponse (..))
 import           Hsed.Core.Feature      (Allowance (..))
 import           Hsed.Core.Layout       (Content (..))
 import           Hsed.Core.StreamItem   (StreamItem (..))
@@ -536,7 +536,9 @@ answerText q r = describeStatus (status r) <> ", " <> tshow (B.length (rpayload 
                                "" -> ""
                                t  -> "; " <> t
 
--- | A ComPacket's methods, or its tokens' count.
+-- | A ComPacket's methods, a method's results with its status (a regular
+--   session's answer, UCT-03's @[[3 = the MSID]]@ among them, its secrets
+--   masked as the JSON's decode has them), or its tokens' count.
 comPacketText :: ByteString -> Text
 comPacketText bytes = case decodeComPacket bytes of
   Left e -> "no ComPacket: " <> tshow e
@@ -545,9 +547,11 @@ comPacketText bytes = case decodeComPacket bytes of
     subText sp = let b = dataSubPacketPayload sp in case parseByteString b of
       Right call@(MethodCall (MethodHeader _ m) _ st)
         | generate call == b -> fromMaybe (tshow m) (methodName m) <> ", status " <> tshow st
-      _ -> let (ts, rest) = tokensOf b
-           in (if length ts <= 8 then T.unwords (map tshow ts) else tshow (length ts) <> " tokens")
-              <> (if B.null rest then "" else ", then bytes that are no token")
+      _ -> case parseByteString b :: Either String MethodResponse of
+        Right resp | generate resp == b -> "results " <> tshow (_results resp) <> ", status " <> tshow (_resultStatus resp)
+        _ -> let (ts, rest) = tokensOf b
+             in (if length ts <= 8 then T.unwords (map tshow ts) else tshow (length ts) <> " tokens")
+                <> (if B.null rest then "" else ", then bytes that are no token")
 
 
 -- * JUnit XML

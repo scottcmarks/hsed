@@ -33,7 +33,12 @@ its sentence, a list item or paragraph, as a unit of its own shape
 (@Sentence@, a paragraph unit), which takes no table. M4a's: a @behaviour@ or
 a @fails@ binds its heading, a method's or its Fails list's, as a unit of its
 own shape (@Method@, a heading unit), which takes no table; neither sits on a
-list item any more (design 13.16).
+list item any more (design 13.16). M4b's: @legend@ is a rule token (on the
+doc anchor, its exemplar Opal T1), and on Opal @Legend@ takes T1, @TypeRow@
+T30, @EnumValues@ T16 and T31 (enumValues fires on T31 alone), @Preconfig@ the
+26 preconfiguration tables, the description header T26, T32, T43 and T50
+(columnsAddition fires on T26, T43 and T50 by their captions, tableDesc on
+T32); T32's and T33's caption is read through the caption typo table.
 -}
 module Hsed.Spec.VocabularySpec (spec) where
 
@@ -46,13 +51,20 @@ import qualified RIO.Map           as Map
 import           RIO.Directory     (doesFileExist)
 
 import           Hsed.Spec.Anchor  (AnchorId (..))
-import           Hsed.Spec.Common  (RuleName (..), SpecId (..))
+import           Hsed.Spec.Check   (checkIR)
+import           Hsed.Spec.Common  (ErrataSet (..), RuleName (..), SpecId (..), renderFinding)
+import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.CoreIR  (withCore)
 import           Hsed.Spec.DSL     (SomeBinding (..), knownRules, someBindingShape)
 import           Hsed.Spec.Grammar (Payload (..), parsePayload, vocabulary)
 import           Hsed.Spec.IR      (SpecIR (..), TableIR (..), readIR)
-import           Hsed.Spec.RuleDef (numberedTables)
-import           Hsed.Spec.Rules   (anchorKindMismatch, covers, Section (..), tableSections)
+import           Hsed.Spec.RuleDef (RuleDef (..), numberedTables)
+import           Hsed.Spec.Rules   (anchorKindMismatch, checkExemplarsWith, covers, Section (..), tableSections)
+import           Hsed.Spec.Rules.ColumnsAddition (columnsAdditionRule)
+import           Hsed.Spec.Rules.EnumValues (enumValuesRule)
+import           Hsed.Spec.Rules.Legend (legendRule)
+import           Hsed.Spec.Rules.TableDesc (tableDescRule)
+import           Hsed.Spec.Rules.TypeRow (typeRowRule)
 import           Hsed.Spec.Shape   (CaptionKind (..), Form (..), Shape (..), UnitKind (..), gridCornerNormalisation, measure,
                                     shapeMismatch, shapeUnit)
 
@@ -160,6 +172,37 @@ spec = do
         (acceptedIn WholeDocument opal Codes, acceptedIn WholeDocument opal FieldValue) `shouldBe` ([7, 10, 11, 12, 14], [13])
         -- design 3.4: byteGrid Opal T2, feature T3-T6 and T8 (Opal has no byteFieldValue table)
         map (acceptedIn WholeDocument opal) [ByteGrid, Feature, ByteFieldValue] `shouldBe` [[2], [3, 4, 5, 6, 8], []]
+
+  describe "the vocabulary of M4b" $ do
+    it "parses legend as a rule token on the doc anchor and on a heading" $ do
+      RuleName "legend" `shouldSatisfy` (`elem` knownRules)
+      (accepted "doc core201 & rule legend", accepted "rule legend") `shouldBe` (["doc"], ["section"])
+    it "accepts with Opal's M4b shapes exactly the tables the M4b plan lists, and each rule fires on its own" $ do
+      let path = "../spec/ir/opal-2.30.json"
+      present <- doesFileExist path
+      if not present then pendingWith (path <> " is not checked out") else do
+        opal <- readIR path >>= either throwString pure
+        let sid = SpecId opal.spec
+            firedBy r = [ n | (TableId n, t) <- Map.toList (numberedTables opal), fires r sid t (measure sid t) ]
+        -- the legend, T1 (PDF 12); the type layer's T30, T31 (T16's caption names no enumeration) and T32
+        map (acceptedIn WholeDocument opal) [Legend, TypeRow, EnumValues] `shouldBe` [[1], [30], [16, 31]]
+        -- the 26 preconfiguration tables, the Admin SP's T18-T25, T27-T29, T33 and the Locking SP's
+        acceptedIn WholeDocument opal Preconfig `shouldBe` [18 .. 25] <> [27, 28, 29] <> [33 .. 42] <> [44 .. 48]
+        -- the description header: T32 a description, T26, T43 and T50 column additions by their captions
+        map (acceptedIn WholeDocument opal) [ColumnsAddition, TableDesc] `shouldBe` [[26, 32, 43, 50], [26, 32, 43, 50]]
+        map firedBy [legendRule, typeRowRule, enumValuesRule, tableDescRule, columnsAdditionRule]
+          `shouldBe` [[1], [30], [31], [32], [26, 43, 50]]
+        -- C-EXEMPLAR: legend on T1 and columnsAddition on T26, which their rules still fire on
+        checkExemplarsWith [legendRule, columnsAdditionRule] opal `shouldBe` []
+    it "reads Opal T32's and T33's caption through the caption typo table, a Note at each (PDF 51-52)" $ do
+      let path = "../spec/ir/opal-2.30.json"
+      present <- doesFileExist path
+      if not present then pendingWith (path <> " is not checked out") else do
+        opal <- readIR path >>= either throwString pure
+        let notes = [ f | f <- checkIR Nothing Scott opal, Cm.code f == "N-CAPTION-NORMALISED" ]
+        [ (Cm.anchor f, Cm.page f) | f <- notes ] `shouldBe` [(Just "T32", Just 51), (Just "T33", Just 52)]
+        take 1 (map renderFinding notes)
+          `shouldBe` ["N-CAPTION-NORMALISED opal-2.30.pdf#page=51&T32: caption \"DataRemovalMechansim Table Description\" read as \"DataRemovalMechanism Table Description\""]
 
   describe "the vocabulary of M3" $
     it "binds a law's sentence on a list item or paragraph alone, a unit of its own shape that takes no table" $ do

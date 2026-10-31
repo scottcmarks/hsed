@@ -96,6 +96,7 @@ module Hsed.Spec.RuleDef
   , boundBinding
     -- * The shared context
   , Context (..)
+  , ownThenBase
     -- * Bound units
   , BoundUnit (..)
   , SomeUnit (..)
@@ -150,6 +151,7 @@ import qualified Data.Text        as DT
 import qualified RIO.Char         as C
 import qualified RIO.List         as L
 import qualified RIO.Map          as Map
+import qualified RIO.Set          as Set
 import qualified RIO.Text         as T
 import           RIO
 
@@ -257,6 +259,19 @@ data Context = Context
     -- ^ the Context of the spec this one is read over, read-only (Core's for
     --   Opal, @hsedc --base@); none for a spec read alone
   }
+
+-- | A reading of a Context, then of its base: the Context's own items, then
+--   the base's (the base's own, then its base's, likewise) whose key no item
+--   of the Context's gives, each with the Context that owns it: Opal's type
+--   rows, enumerations, table UIDs and descriptions over Core's, Opal's own
+--   shadowing Core's of the same name. The sig rule's type environment reads
+--   its names through it (the M4b plan's union, made one).
+ownThenBase :: Ord k => (Context -> [a]) -> (a -> k) -> Context -> [(Context, a)]
+ownThenBase f key ctx = own <> [ ca | ca@(_, a) <- maybe [] (ownThenBase f key) (cxBase ctx), key a `Set.notMember` keys ]
+  where
+    own  = [ (ctx, a) | a <- f ctx ]
+    keys = Set.fromList (map (key . snd) own)
+
 
 -- * Bound units
 

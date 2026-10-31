@@ -70,9 +70,9 @@ import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.DSL            (SomeBinding (..), constValues)
 import qualified Hsed.Spec.Gen            as Gen
 import           Hsed.Spec.IR             (CellIR (..), TableIR (..))
+import           Hsed.Spec.Readers.Cell   (CellValue (..), ColKind (..), colKind, renderCell)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TableDesc (CellValue (..), ColKind (..), ColRead (..), DescRead (..), colKind,
-                                           colNumberLit, descReads, descSection, renderCell)
+import           Hsed.Spec.Rules.TableDesc (ColRead (..), DescRead (..), colNumberLit, descReads, descSection, typeEnv)
 import           Hsed.Spec.Scope          (Section (..), covers)
 import           Hsed.Spec.Shape          (Shape (..), captionTitle, shapeMismatch)
 
@@ -255,7 +255,7 @@ rowValue :: Context -> ConstRead -> DescRead -> ConstRow -> Either Finding (ColR
 rowValue ctx k d r = first (atCells ctx (kBound k) (cCells r) . finding Error "C-CONST-VALUE" . (rowLabel r <>)) $ do
   col <- maybe (Left ("names no column of " <> renderAnchorId (btAnchor (drBound d)) <> " " <> fromMaybe "" (drTable d))) Right
                (L.find ((== cColumn r) . crName) (drColumns d))
-  kind <- colKind ctx (crType col)
+  kind <- colKind (typeEnv ctx) (crType col)
   number <- parseConstNumber (kHex k) (cValue r)
   let digits = if kHex k then Just (T.length (T.filter C.isHexDigit (numberPart (cValue r)))) else Nothing
   case kind of

@@ -346,19 +346,25 @@ accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule 
 --                     last False only for a table its shape refuses) with the four records as instances, SomeUnit,
 --                     boundUnits (the one comprehension), allUnits (tables, signature blocks, paragraphs, headings),
 --                     atUnit, unitNamed, unitNoun; the per-kind names (boundTables, atSig, paraProvenanceOf, ...) kept,
---                     each the class's at its type, so no rule changed
+--                     each the class's at its type, so no rule changed; and ownThenBase, a reading of a Context then of its
+--                     base, each item with its owning Context (allTypeRows, allEnums, allTableUIDRows, allDescs; the sig rule's
+--                     type environment)
 -- Hsed.Spec.Scope     (M2a) sections (tableSections), scopeOf :: SpecIR -> RuleName -> [Section] (from anchors only), parseAnnots;
 --                     below the registry, so rule modules may import it; the Context carries the sections (cxSections)
 -- Hsed.Spec.Rules     rules = registry; checkExemplars; classify, classifySignatures (E-UNBOUND, E-AMBIGUOUS); re-exports Hsed.Spec.Scope
--- Hsed.Spec.Rules.<R> the rules, and the readers a comment names (stateTable, propsNames/propsInitial, propsReq, legend, decision),
---                     each a RuleDef; enumInDescription is a modifier enumValues reads, tokens the reader of tokenEncoding.
---                     M2b: TableDesc (with the column reader ColKind/readCell constValues and preconfig share), ConstValues,
+-- Hsed.Spec.Rules.<R> the rules, and the readers a comment names (stateTable, propsNames/propsInitial, propsReq, decision; legend
+--                     until M4b's scaffold made it a rule token), each a RuleDef; enumInDescription is a modifier enumValues
+--                     reads (since M4b's scaffold an enumeration in a Description column), tokens the reader of tokenEncoding.
+--                     M2b: TableDesc (with the column reader ColKind/readCell constValues and preconfig share, since M4b's
+--                     scaffold in Readers.Cell, read by TableDesc.typeEnv's types, a spec's own then its base's), ConstValues,
 --                     Preconfig, UidTable, Ranges, Sig, Codes, StatusCodes, FieldValue, FieldType, TokenEncoding, Terminology
 --                     (also the reader of the prose comments), StateTable, Props (one RuleDef for propsNames and propsInitial).
 --                     M2c: ByteGrid (GridRead: a Readers.Record Structure and its pins; gridStructures, gridDecls),
 --                     Feature (the template by the conforming sentence, the code from a code table; imports Codes),
 --                     ByteFieldValue (imports ByteGrid for the one layouts module's names and imports); the three print
---                     through Readers.Record (since the M2c review)
+--                     through Readers.Record (since the M2c review). M4b's scaffold: Legend (rule legend, exemplar Opal T1:
+--                     LegendClass, LegendScale, legendScale, cellAccess) and ColumnsAddition (exemplar Opal T26, refining
+--                     tableDesc: additionTarget, additions, allDescs), their records final, their checks the groups'
 -- Hsed.Spec.Document  (M2b) the checks of the document as a whole, generic and naming no rule: LOT-VS-BODY (IR lot against the
 --                     captions) and XREF-RESOLVES (IR xrefs against the tables), Warnings that report the PDF, run after E-SHAPE
 -- Hsed.Spec.Report    ledger, coverage, findings and ERRATA reports; catalogue says what each code's findings report, assembled
@@ -371,8 +377,10 @@ accepts :: Shape -> Form -> Maybe Finding            -- E-SHAPE (Error for rule 
 --                     criterion) and Layout (layoutsModule, the one GenModule of Hsed.Gen.Core.Layouts; gridFields, gridLayout;
 --                     layoutDecl, untiledNote; gridTiling, tileSeverity, tileFindings: C-LAYOUT-TILE by one policy, a gap a Warning,
 --                     anything else an Error); since the M2c review Record (Structure, structure, typeName, layoutValue, fieldIdent,
---                     recordNames, recordFieldsOf, haskellType, recordDecl; nameFindings, C-GRID-NAME, earlierNames, declScope); each
---                     claiming the codes several rules give through it; accessControl to come
+--                     recordNames, recordFieldsOf, haskellType, recordDecl; nameFindings, C-GRID-NAME, earlierNames, declScope); since
+--                     M4b's scaffold Cell (TypeEnv, ColKind, colKind, readCell, renderCell, moved from TableDesc) and AccessControl
+--                     (a skeleton, the AccessControl/ACE reader the preconfiguration group writes); each claiming the codes several
+--                     rules give through it
 -- Hsed.Spec.Format    parseFormat :: Env -> Text -> Either Finding TypeDef; corpus test = dev/Formats.txt (82 strings)
 -- Hsed.Spec.Check     Finding { severity :: Error|Warning|Note, code, anchor, page, message }; mkContext :: ErrataSet -> SpecIR -> Context;
 --                     since M3 mkContextWith rules (base :: Maybe Context), checkIR base and compileIR base: an Opal run over

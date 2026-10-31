@@ -16,14 +16,20 @@ annotations resolved into it ("Hsed.Spec.Sidecar"), the committed
 @spec\/annot\/core-2.01.hsa@ or a few lines of their own; the same IR the
 extractor gives for the annotated PDF. Since M3 the same for Opal
 (@spec\/ir\/opal-2.30.json@, @spec\/annot\/opal-2.30.hsa@), which is read over
-Core. Cells are edited through their JSON form, the one way to set a field
-several IR records share.
+Core. Since M4b's scaffold also Opal under the sidecar M4b commits at its
+integration ('m4bOpalHsa', the M4b plan's four lines), read over the
+committed Core run's Context ('withM4bOpal'): every M4b group tests its rule
+on it before the anchors land. Cells are edited through their JSON form, the
+one way to set a field several IR records share.
 -}
 module Hsed.Spec.CoreIR
   ( withCore
   , committedHsa
   , withOpal
   , committedOpalHsa
+  , m4bOpalHsa
+  , withM4bOpal
+  , opalOver
   , annotated
   , annotatedWith
   , setCell
@@ -43,9 +49,12 @@ import qualified RIO.Text          as T
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor  (AnchorId)
+import           Hsed.Spec.Check   (mkContext, mkContextWith)
 import           Hsed.Spec.Common  (ErrataSet (..), Finding, SpecId (..))
 import           Hsed.Spec.Compile (CompileResult (..), compileIR)
 import           Hsed.Spec.IR
+import           Hsed.Spec.Registry (registry)
+import           Hsed.Spec.RuleDef (Context)
 import           Hsed.Spec.Sidecar (withSidecar)
 
 
@@ -77,6 +86,35 @@ withOpal k = do
 -- | The committed Opal sidecar.
 committedOpalHsa :: IO Text
 committedOpalHsa = readFileUtf8 "../spec/annot/opal-2.30.hsa"
+
+-- | The Opal sidecar of M4b, the four lines its integration commits (the M4b
+--   plan's annotations): the type layer's and the legend's rule tokens on the
+--   doc line beside feature's, the preconfiguration at section 4.2 (PDF 35:
+--   the Admin SP's twelve tables, not the Locking SP's, which are M5's),
+--   Table 17's requirements, and Table 49's enumeration in its Description
+--   column, replacing Core's type and enumeration (Tables 102 and 103).
+m4bOpalHsa :: Text
+m4bOpalHsa = T.unlines
+  [ "opal-2.30 | doc | doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow & rule enumValues & rule tableDesc"
+  , "opal-2.30 | 4.2 | rule preconfig"
+  , "opal-2.30 | T17 | propsReq"
+  , "opal-2.30 | T49 | enumInDescription (replaces [core 102, core 103])" ]
+
+-- | The committed Core run's Context (the committed Core extraction under the
+--   committed sidecar, Scott's errata) and the committed Opal extraction under
+--   'm4bOpalHsa', read once for a group of tests; pending where either IR is
+--   not checked out. Read the Opal IR over the Core Context with 'opalOver',
+--   or edit it first ('setCell') and then read it.
+withM4bOpal :: (Context -> SpecIR -> Spec) -> Spec
+withM4bOpal k = withCore $ \corePristine -> withOpal $ \opalPristine -> do
+  coreIR <- runIO (committedHsa >>= annotated corePristine)
+  opal   <- runIO (annotated opalPristine m4bOpalHsa)
+  k (mkContext Scott coreIR) opal
+
+-- | An Opal IR read over a Core Context, as @hsedc --base@ reads it (the
+--   registry's rules, Scott's errata).
+opalOver :: Context -> SpecIR -> Context
+opalOver base = mkContextWith registry (Just base) Scott
 
 -- | The IR with a sidecar's annotations; a sidecar that does not resolve is a test failure.
 annotated :: SpecIR -> Text -> IO SpecIR

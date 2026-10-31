@@ -124,7 +124,7 @@ spec = withCore $ \pristine -> do
         [ "C-DESC-TABLE core-2.01.pdf#page=293&T234: the caption names Log, which T233 describes too" ]
 
   describe "colKind and readCell" $ do
-    let kind = colKind ctx
+    let kind = colKind (typeEnv ctx)
         noRefs _ _ = Left "no references here"
     it "reads a column's kind from its Type object's Format; uid is its own kind (Table 145), the other bytes types theirs" $ do
       kind "uid" `shouldBe` Right KUID
@@ -154,6 +154,22 @@ spec = withCore $ \pristine -> do
       renderCell (CvBytes [0, 0, 0, 2]) `shouldBe` "BytesCell \"\\NUL\\NUL\\NUL\\STX\""
       renderCell (CvBytes [0x4D, 0x53, 0x49, 0x44]) `shouldBe` "BytesCell \"MSID\""
       renderCell (CvBytes [0, 0, 0, 9, 0, 0, 0, 1]) `shouldBe` "BytesCell \"\\NUL\\NUL\\NUL\\t\\NUL\\NUL\\NUL\\SOH\""
+
+  describe "typeEnv, the types a column is read by" $ do
+    it "gives Core alone its own Type objects and enumeration labels" $ do
+      teType (typeEnv ctx) "uid" `shouldSatisfy` maybe False isRight
+      teType (typeEnv ctx) "log_kind" `shouldSatisfy` isNothing
+      lookup "Reserved for SSC Usage" (teLabels (typeEnv ctx) "life_cycle_state") `shouldBe` Just 8
+    withOpal $ \opalPristine ->
+      it "gives Opal under the M4b sidecar its own labels first, T49's life_cycle_state shadowing Core's T103, and Core's types beside its own" $ do
+        opal <- annotated opalPristine m4bOpalHsa
+        let env = typeEnv (opalOver ctx opal)
+        map (\l -> lookup l (teLabels env "life_cycle_state")) ["manufactured-inactive", "manufactured", "manufactured-disabled-frozen", "Reserved for SSC Usage"]
+          `shouldBe` [Just 8, Just 9, Just 12, Nothing]
+        colKind env "data_removal_mechanism" `shouldBe`
+          Right (KEnum "data_removal_mechanism" [(0, 7)] [("Overwrite Data Erase", 0), ("Block Erase", 1), ("Cryptographic Erase", 2), ("Reserved", 3), ("Vendor Specific Erase", 5)])
+        colKind env "uid" `shouldBe` Right KUID
+        colKind env "boolean" `shouldBe` colKind (typeEnv ctx) "boolean"
 
   describe "the generated module" $ do
     cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))

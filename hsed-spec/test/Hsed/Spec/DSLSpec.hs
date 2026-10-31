@@ -67,8 +67,9 @@ spec = do
         [ Doc, Heading, TypeRow, TypeRow, EnumValues, ColumnsAddition, Feature, Codes, EnumValues, Legend
         , PropsReq, StateTable, Sentence, Method, Method, Prose, Codes, Feature, Preconfig, Heading ]
 
-    it "names every rule of design section 3.4" $ do
-      length knownRules `shouldBe` 19
+    it "names every rule of design section 3.4, legend among them since M4b" $ do
+      length knownRules `shouldBe` 20
+      ruleNameOf legend `shouldBe` RuleName "legend"
       [ruleNameOf typeRow, ruleNameOf enumValues] `shouldBe` take 2 knownRules
       ruleNameOf tokenEncoding `shouldBe` RuleName "tokenEncoding"
       ruleNameOf byteGrid `shouldBe` RuleName "byteGrid"

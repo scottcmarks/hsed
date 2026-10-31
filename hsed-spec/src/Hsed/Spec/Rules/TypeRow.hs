@@ -51,6 +51,7 @@ module Hsed.Spec.Rules.TypeRow
     -- * Reading the bound tables
   , TypeRowRead (..)
   , typeRowReads
+  , allTypeRows
   , formatEnv
   , typeEnvFrom
   , typeIdent
@@ -137,6 +138,12 @@ data TypeRowRead = TypeRowRead
 --   not one row of three cells is a finding.
 typeRowReads :: Context -> [Either Finding TypeRowRead]
 typeRowReads ctx = readRows ctx (boundTables (Just TypeRow) ctx)
+
+-- | Every type row a spec reads: its own, then its base's whose name none of
+--   its own gives (Opal's Table 30 @data_removal_mechanism@ beside Core's
+--   hundred), each with the Context that owns it ('ownThenBase').
+allTypeRows :: Context -> [(Context, TypeRowRead)]
+allTypeRows = ownThenBase (rights . typeRowReads) trName
 
 readRows :: Context -> [BoundTable] -> [Either Finding TypeRowRead]
 readRows ctx = map readRow

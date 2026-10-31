@@ -27,12 +27,14 @@ import           Hsed.Spec.Rules.Behaviours    (behavioursRule)
 import           Hsed.Spec.Rules.ByteFieldValue (byteFieldValueRule)
 import           Hsed.Spec.Rules.ByteGrid      (byteGridRule)
 import           Hsed.Spec.Rules.Codes         (codesRule)
+import           Hsed.Spec.Rules.ColumnsAddition (columnsAdditionRule)
 import           Hsed.Spec.Rules.ConstValues   (constValuesRule)
 import           Hsed.Spec.Rules.EnumValues    (enumValuesRule)
 import           Hsed.Spec.Rules.Feature       (featureRule)
 import           Hsed.Spec.Rules.FieldType     (fieldTypeRule)
 import           Hsed.Spec.Rules.FieldValue    (fieldValueRule)
 import           Hsed.Spec.Rules.Laws          (lawsRule)
+import           Hsed.Spec.Rules.Legend        (legendRule)
 import           Hsed.Spec.Rules.Preconfig     (preconfigRule)
 import           Hsed.Spec.Rules.Props         (propsRule)
 import           Hsed.Spec.Rules.PropsReq      (propsReqRule)
@@ -55,12 +57,14 @@ registry =
   , byteFieldValueRule
   , byteGridRule
   , codesRule
+  , columnsAdditionRule
   , constValuesRule
   , enumValuesRule
   , featureRule
   , fieldTypeRule
   , fieldValueRule
   , lawsRule
+  , legendRule
   , preconfigRule
   , propsRule
   , propsReqRule

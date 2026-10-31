@@ -74,8 +74,12 @@ Some changes are generic and are made in a small commit of their own, before the
   three below). Each kind was cloned from the one before (its `UnitKind`, its bound record in
   `RuleDef`, its field in the `Context`, its `W-GEN-EXCLUDED` in `Compile`, its exemplar check in
   `Rules`); the IR already held what the fourth needed (the headings, and for a Fails list its
-  labelled items with their hashes), so no extractor work came with it. Generalising the four into
-  one bound-unit abstraction is M4b's first scaffold step (the M4a plan's answer 6).
+  labelled items with their hashes), so no extractor work came with it. M4b's first scaffold step
+  generalised the four into one bound-unit abstraction (the M4a plan's answer 6): `RuleDef`'s class
+  `BoundUnit`, the four records its instances, with `boundUnits`, `allUnits`, `atUnit`, `unitNamed`
+  and `unitNoun` (the per-kind names kept), one `commentUnits` in `Check`, one exclusion of a shape no
+  rule reads in `Compile` and one exemplar lookup in `Rules`; a fifth kind is an instance, its field in
+  the `Context` and its `UnitKind`.
 - **A milestone's anchors.** Every rule token and heading anchor the milestone's rules need goes into
   the `.hsa` in one commit, with the `.upd`, manifest and bindings `make gen` regenerates, so that the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
@@ -151,10 +155,12 @@ to its own codes, since the edit may fail another rule's check as well (`TypeRow
 
 One shape has one `RuleDef`. Where several bindings share a shape (`propsNames` and `propsInitial` both
 bind `Props`), the shape's rule reads every table bound with it and tells them apart by `btBinding`.
-A reader reached only by a comment (`stateTable`, `propsNames`/`propsInitial`, `propsReq`, `legend`,
-`decision`, and since M3 `law`, whose reader is `laws`, below) is such a `RuleDef`: its name is no rule
-token, `fires` is `\_ _ _ -> False`, and its exemplar is the table its comment sits on, or for a
-paragraph unit's reader the list item (only acceptance is checked).
+A reader reached only by a comment (`stateTable`, `propsNames`/`propsInitial`, `propsReq`, `decision`,
+and since M3 `law`, whose reader is `laws`, below) is such a `RuleDef`: its name is no rule token,
+`fires` is `\_ _ _ -> False`, and its exemplar is the table its comment sits on, or for a paragraph
+unit's reader the list item (only acceptance is checked). `legend` was one until M4b, whose scaffold
+made it a rule token (`knownRules`, `RuleToken (Binding 'Legend)`): `rule legend` on the doc line
+binds Opal T1, the one table whose first header cell mentions the legend, its exemplar.
 
 What rules may import besides each other: `Hsed.Spec.Scope` (sections, the scope the anchors give,
 the validated annotations; it sits below the registry, while `Hsed.Spec.Rules` imports the registry and
@@ -180,7 +186,12 @@ methods its instances define listed, `LayoutRecord (recordLayout, recordFields, 
 with `(..)`, whose constructors and fields `declScope` takes from the runtime's `Data` instance, so a new
 type imported so derives `Data` and is listed in `typeMembers`, which `ByteLayoutsSpec` holds the
 generated modules to; byteFieldValue also reports a byteGrid name only its own declarations import,
-which byteGrid, the rule below it, cannot see); `accessControl` to come. A reader returns data; a code several rules give through it
+which byteGrid, the rule below it, cannot see); since M4b's scaffold `Hsed.Spec.Readers.Cell` (the
+column reader `tableDesc` had, which `constValues` and `preconfig` share: `ColKind`, `colKind` over a
+`TypeEnv` of Type objects and enumeration labels, which `Hsed.Spec.Rules.TableDesc.typeEnv` gives a spec
+and its base, `readCell`, `renderCell`; `cellCodes`) and `Hsed.Spec.Readers.AccessControl` (the
+AccessControl and ACE reader of the preconfiguration tables, its codes `accessControlCodes`; a skeleton
+until the preconfiguration group writes it). A reader returns data; a code several rules give through it
 is the reader's (its `CodeDef`s, listed by `Hsed.Spec.Readers.readerCodes`), which no rule lists. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
 `boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
 `listDefinition`). A helper never goes under `Rules/`, where every module must be a registered rule.

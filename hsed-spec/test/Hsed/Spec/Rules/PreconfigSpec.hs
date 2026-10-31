@@ -36,6 +36,7 @@ import           Hsed.Spec.Common          (ErrataSet (..), RuleName (..), SpecI
 import qualified Hsed.Spec.Common          as Cm
 import           Hsed.Spec.Compile         (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
+import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), SpecIR (..), TableIR (..), readIR)
 import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..), RuleDef (..))
 import           Hsed.Spec.Rules           (classify, explain)
@@ -71,6 +72,20 @@ spec = do
     it "names the generated rows after the caption" $ do
       preDeclName "Default Base Template Authorities" `shouldBe` "defaultBaseTemplateAuthorities"
       preDeclName "Admin SP - Authority Table Preconfiguration" `shouldBe` "adminSPAuthorityTablePreconfiguration"
+
+  describe "spOf and preconfigModuleFor (M4b)" $ do
+    it "read the SP an Opal caption names before its dash, a hyphen or an en dash; Core's captions name none" $ do
+      spOf "Admin SP - C_PIN Table Preconfiguration" `shouldBe` Just "Admin SP"
+      spOf "Admin SP \x2013 DataRemovalMechanism Table Preconfiguration" `shouldBe` Just "Admin SP"
+      spOf "Locking SP - Locking Table Preconfiguration" `shouldBe` Just "Locking SP"
+      spOf "Default Base Template Authorities" `shouldBe` Nothing
+      spOf "Admin SP - TPerInfo Columns" `shouldBe` Nothing
+    it "give an SP's tables a module of their own beside Core's Preconfig: Hsed.Gen.Opal.Preconfig.AdminSP" $ do
+      let gm = preconfigModuleFor "Admin SP"
+      Gen.moduleName (SpecId "opal-2.30") gm `shouldBe` "Hsed.Gen.Opal.Preconfig.AdminSP"
+      Gen.modulePath "hsed/gen" (Gen.moduleName (SpecId "opal-2.30") gm) `shouldBe` "hsed/gen/Hsed/Gen/Opal/Preconfig/AdminSP.hs"
+      Gen.moduleName (SpecId "opal-2.30") (preconfigModuleFor "Locking SP") `shouldBe` "Hsed.Gen.Opal.Preconfig.LockingSP"
+      Gen.moduleName core preconfigModule `shouldBe` "Hsed.Gen.Core.Preconfig"
 
   describe "Opal Table 24, the design's exemplar" $ do
     let path = "../spec/ir/opal-2.30.json"

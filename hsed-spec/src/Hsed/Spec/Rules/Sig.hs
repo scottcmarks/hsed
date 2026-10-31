@@ -511,17 +511,14 @@ data TypeEnv = TypeEnv
 --   still resolve), each list the context's own names first.
 typeEnv :: Context -> TypeEnv
 typeEnv ctx = TypeEnv
-  { teTypeRows = ownThenBase (\c -> [ trName tr | Right tr <- typeRowReads c ]) ctx
-  , teAbstract = ownThenBase abstractTypes ctx
-  , teTables   = ownThenBase tableNames ctx
-  , teTablesAt = ownThenBase (\c -> L.nub [ renderAnchorId (btAnchor (tuBound r)) | Right r <- tableUIDRows c ]) ctx }
-
--- | A reading of a context, then of its base: the context's own names, and
---   after them the base's it does not have (the base's own and its base's,
---   likewise).
-ownThenBase :: Eq a => (Context -> [a]) -> Context -> [a]
-ownThenBase f c = own <> filter (`notElem` own) (maybe [] (ownThenBase f) (cxBase c))
-  where own = f c
+  { teTypeRows = ownNames (\c -> [ trName tr | Right tr <- typeRowReads c ])
+  , teAbstract = ownNames abstractTypes
+  , teTables   = ownNames tableNames
+  , teTablesAt = ownNames (\c -> L.nub [ renderAnchorId (btAnchor (tuBound r)) | Right r <- tableUIDRows c ]) }
+  where
+    -- a reading of the context, then of its base: the context's own names, and
+    -- after them the base's it does not have ("Hsed.Spec.RuleDef".'ownThenBase')
+    ownNames f = map snd (ownThenBase f id ctx)
 
 -- | The abstract types of a spec: the titles of the subsections of the heading
 --   titled @Abstract Type Definitions@ (Core 5.1.4.2, PDF 128: 5.1.4.2.1

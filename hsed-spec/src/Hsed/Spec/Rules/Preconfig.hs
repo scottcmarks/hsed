@@ -56,20 +56,26 @@ Checks, each with the code its findings carry:
 Compiled into 'preconfigModule': per table the caption's words in camel case
 (@defaultBaseTemplateAuthorities :: [Pre Row]@), one 'Hsed.Core.Table.Pre' per
 row giving its cells by column number; Core gives no access ('access' is
-@[]@).
+@[]@). A table whose caption names its SP (@Admin SP - C_PIN Table
+Preconfiguration@, 'spOf') goes to that SP's module ('preconfigModuleFor':
+@Hsed.Gen.Opal.Preconfig.AdminSP@), a @PreconfTable@ of "Hsed.Core.Preconfig"
+('preconfTableDecl', the preconfiguration group's, G2, at M4b's scaffold).
 -}
 module Hsed.Spec.Rules.Preconfig
   ( preconfigRule
   , preconfigModule
+  , preconfigModuleFor
     -- * Reading the bound tables
   , PreRead (..)
   , PreRow (..)
   , preReads
   , targetNoun
+  , spOf
   , captionTemplate
   , PreEntry (..)
   , preEntries
   , preDeclName
+  , preconfTableDecl
   ) where
 
 import qualified Data.Text                 as DT
@@ -87,9 +93,10 @@ import           Hsed.Spec.DSL             (SomeBinding (..), preconfig)
 import           Hsed.Spec.Format          (globMatch)
 import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
+import           Hsed.Spec.Readers.Cell    (CellValue (..), colKind, readCell, renderCell)
+import           Hsed.Spec.Readers.Text    (titleIdent)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TableDesc (CellValue (..), ColRead (..), DescRead (..), colKind, colNumberLit,
-                                            descReads, readCell, renderCell)
+import           Hsed.Spec.Rules.TableDesc (ColRead (..), DescRead (..), colNumberLit, descReads, typeEnv)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableUIDRows)
 import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), tableClaim, uidRows)
 import qualified Hsed.Spec.Rules.UidTable  as UidTable (rowLabel)
@@ -122,6 +129,14 @@ preconfigModule = Gen.GenModule
   { Gen.leaf        = "Preconfig"
   , Gen.description = "Preconfigured rows: the rows a template or an SSC gives a table, by column number"
   , Gen.notes       = [ "A column a row does not give keeps its default; template rows ((+XX)) are not generated yet." ] }
+
+-- | The module of an SP's preconfiguration tables, under 'preconfigModule':
+--   @Hsed.Gen.Opal.Preconfig.AdminSP@ for the @Admin SP@.
+preconfigModuleFor :: Text -> Gen.GenModule
+preconfigModuleFor sp = Gen.GenModule
+  { Gen.leaf        = preconfigModule.leaf <> "." <> titleIdent sp
+  , Gen.description = "The " <> sp <> "'s preconfiguration: each table's description, its columns' defaults and its rows"
+  , Gen.notes       = [] }
 
 
 -- * Reading the bound tables
@@ -196,6 +211,17 @@ targetNoun title
   | "Default " `T.isPrefixOf` title = lastWord title
   | otherwise = Nothing
   where lastWord = fmap T.strip . listToMaybe . reverse . T.words
+
+-- | The SP a preconfiguration caption's title names, the words before its
+--   first dash: @Admin SP@ in @Admin SP - C_PIN Table Preconfiguration@ (Opal
+--   prints a hyphen or an en dash, PDF 35-89); none in Core's
+--   @Default … Authorities@, which name no SP.
+spOf :: Text -> Maybe Text
+spOf title = do
+  before <- T.stripSuffix " Table Preconfiguration" title
+  listToMaybe (L.sortOn T.length
+    [ sp | sep <- [" - ", " \x2013 ", " \x2014 "], let (sp, rest) = DT.breakOn sep before
+         , not (T.null rest), not (T.null (T.strip sp)) ])
 
 -- | The template a Core caption names: @Base@ in @Default Base Template Authorities@.
 captionTemplate :: PreRead -> Maybe Text
@@ -287,10 +313,11 @@ halfOf ctx d = listToMaybe [ take 4 t | Right tu <- tableUIDRows ctx, Just (tuNa
 -- | Every printed cell of a row read as its column's type: the column and the value, or why not.
 rowCells :: Context -> [PreRead] -> DescRead -> PreRow -> [Either Text (ColRead, CellValue)]
 rowCells ctx ps d r =
-  [ do kind <- colKind ctx (crType col)
+  [ do kind <- colKind env (crType col)
        first (\why -> crName col <> ": " <> why) ((col,) <$> readCell resolve kind v)
   | (h, v) <- prValues r, not (T.null v), Just col <- [columnOf d h] ]
   where
+    env  = typeEnv ctx
     rows = index ps
     resolve name tables = case parseUIDCell name of
       Just uid -> Right uid
@@ -356,8 +383,17 @@ compile ctx bts = map one ps
       Right d | not (any Cm.isError (preFindings ctx ps p))
               , not (any ((== Just (renderAnchorId (btAnchor (pBound p)))) . Cm.anchor) unique)
               , Right rows <- traverse (\r -> (r,) <$> sequence (rowCells ctx ps d r)) [ r | r <- pRows p, not (prTemplate r) ] ->
-          Emit (preDecl ctx p d [ (r, [ (c, renderCell v) | (c, v) <- vs ]) | (r, vs) <- rows ])
+          case (btRead (pBound p)).caption >>= captionTitle >>= spOf of
+            Just sp -> EmitIn (preconfigModuleFor sp) (preconfTableDecl ctx p d sp)
+            Nothing -> Emit (preDecl ctx p d [ (r, [ (c, renderCell v) | (c, v) <- vs ]) | (r, vs) <- rows ])
       _ -> Excluded (btAnchor (pBound p)) "C-PRECONF-HEADER, C-UID-TABLE, C-UID-UNIQUE or C-PRECONF-CELL failed"
+
+-- | @adminSP\<T\>TablePreconfiguration :: PreconfTable@ ("Hsed.Core.Preconfig")
+--   for a table an SP's caption names (design example E12; the M4b plan's
+--   G2): its target's description, each column's default, its rows as data
+--   with their access, for 'preconfigModuleFor' the SP. [S G2]
+preconfTableDecl :: Context -> PreRead -> DescRead -> Text -> Gen.Decl
+preconfTableDecl _ _ _ _ = error "G2: preconfTableDecl"
 
 -- | @defaultBaseTemplateAuthorities@: the caption's words, the first in lower case.
 preDeclName :: Text -> Text

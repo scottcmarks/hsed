@@ -46,14 +46,18 @@ Table 171), the runtime 'Hsed.Core.Table.TableDesc' whose UIDs are Table 240's
 ("Hsed.Spec.Rules.TypeRow".'typeNameExpr'), both by name from the modules the
 two rules write.
 
-The module also reads, for the rules whose tables a description types
-(@constValues@'s default values, @preconfig@'s rows): what a column holds
-('ColKind', from its Type object's Format and, for an enumeration, its
-enumeration table, "Hsed.Spec.Rules.EnumValues"; a column of the @uid@ type,
-Core Table 145, PDF 123, is 'KUID', a uid cell, where any other @bytes@ type
-is 'KBytes'), a cell read as that kind ('readCell') and the runtime
-'Hsed.Core.Table.Cell' it prints as ('renderCell': a 'UIDCell', a
-'BytesCell' for bytes of any other type, since M4a).
+The rules whose tables a description types (@constValues@'s default values,
+@preconfig@'s rows) read a column through "Hsed.Spec.Readers.Cell" (since
+M4b's scaffold; this module re-exports it): what a column holds ('ColKind',
+from its Type object's Format and, for an enumeration, its enumeration
+table's labels; a column of the @uid@ type, Core Table 145, PDF 123, is
+'KUID', a uid cell, where any other @bytes@ type is 'KBytes'), a cell read as
+that kind ('readCell') and the runtime 'Hsed.Core.Table.Cell' it prints as
+('renderCell': a 'UIDCell', a 'BytesCell' for bytes of any other type, since
+M4a). The types it reads by are 'typeEnv''s: the spec's type rows and
+enumerations, then its base's ("Hsed.Spec.Rules.TypeRow".'allTypeRows',
+"Hsed.Spec.Rules.EnumValues".'allEnums'), as a column's Type object is read
+here ('crTypeRow': Opal's columns take Core's types).
 -}
 module Hsed.Spec.Rules.TableDesc
   ( tableDescRule
@@ -62,11 +66,14 @@ module Hsed.Spec.Rules.TableDesc
   , DescRead (..)
   , ColRead (..)
   , descReads
+  , readDescs
   , descIdent
   , descDeclName
   , descSection
   , parseColNumber
-    -- * What a column holds
+    -- * What a column holds ("Hsed.Spec.Readers.Cell")
+  , TypeEnv (..)
+  , typeEnv
   , ColKind (..)
   , colKind
   , CellValue (..)
@@ -75,10 +82,7 @@ module Hsed.Spec.Rules.TableDesc
   , colNumberLit
   ) where
 
-import qualified Data.Char                 as DC
-import qualified Data.Text                 as DT
 import qualified Data.Text.Read            as TR
-import qualified RIO.ByteString            as B
 import qualified RIO.Char                  as C
 import qualified RIO.List                  as L
 import qualified RIO.Map                   as Map
@@ -86,8 +90,6 @@ import qualified RIO.Text                  as T
 import           Numeric                   (showHex)
 import           RIO
 
-import           Hsed.Core.Types           (Operand (..), RestrictedKind (..), TableRef (..), TypeDef (..),
-                                            TypeRef (..), formatName)
 import           Hsed.Spec.Anchor          (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Common          (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common          as Cm
@@ -95,12 +97,13 @@ import           Hsed.Spec.DSL             (SomeBinding (..), tableDesc)
 import           Hsed.Spec.Format          (nearest)
 import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), TableIR (..))
+import           Hsed.Spec.Readers.Cell    (CellValue (..), ColKind (..), TypeEnv (..), colKind, readCell, renderCell)
 import           Hsed.Spec.Readers.Text    (lowerIdent)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.EnumValues (EnumRead (..), enumReads, parseEnumValue)
+import           Hsed.Spec.Rules.EnumValues (EnumRead (..), allEnums, parseEnumValue)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableObjectUIDName, tableUIDName, tableUIDRows, tableUIDsModule,
                                             tableUIDsNamed)
-import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeNameExpr, typeRowReads, typesModule)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeNameExpr, typeRowReads, typesModule)
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure,
                                             shapeMismatch)
 
@@ -165,10 +168,12 @@ data ColRead = ColRead
 descReads :: Context -> [DescRead]
 descReads ctx = readDescs ctx (boundTables (Just TableDesc) ctx)
 
+-- | Tables read as descriptions, under the errata set: each column's Type
+--   object the spec's type row of its name, else its base's ('allTypeRows').
 readDescs :: Context -> [BoundTable] -> [DescRead]
 readDescs ctx = map readDesc
   where
-    types = Map.fromListWith (\_ firstOne -> firstOne) [ (trName tr, tr) | tr <- rights (typeRowReads ctx) ]
+    types = Map.fromListWith (\_ firstOne -> firstOne) [ (trName tr, tr) | (_, tr) <- allTypeRows ctx ]
     readDesc bt = DescRead
       { drBound   = bt
       , drTable   = descIdent (measure (cxSpec ctx) (btRead bt))
@@ -276,122 +281,22 @@ isIdent n = case T.uncons n of
 
 -- * What a column holds
 
--- | What a column of a described table holds, as its Type object's Format says.
-data ColKind
-  = KUID                           -- ^ the @uid@ type (Core Table 145): a uid of eight bytes
-  | KBytes !Int                    -- ^ a Simple_Type of @bytes@ other than @uid@: that many bytes (@bytes_32@)
-  | KText !Int                     -- ^ a Simple_Type of @max_bytes@: text of at most that many bytes (@name@)
-  | KUInt !Int                     -- ^ a Simple_Type of @uinteger@: an unsigned integer of that many bytes
-  | KInt !Int                      -- ^ a Simple_Type of @integer@
-  | KEnum !Text ![(Int, Int)] ![(Text, Int)]
-    -- ^ an Enumeration_Type: its name, its ranges and, from its enumeration table, each label's first value
-  | KRef ![TableRef]               -- ^ a Restricted_Reference_Type{6}: an object of one of the tables
-  deriving (Eq, Show)
-
--- | What a column of a type holds, or why it is not read from a cell. A
---   Simple_Type's base is one of the four base types of Core 5.1.1 (@bytes@,
---   @max_bytes@, @uinteger@, @integer@), a Type object whose Format is
---   @Base_Type@.
-colKind :: Context -> Text -> Either Text ColKind
-colKind ctx name = do
-  tr <- maybe (Left (name <> " names no Type object")) Right (lookupType name)
-  td <- first (const (name <> "'s Format did not parse")) (trTypeDef tr)
-  case td of
-    SimpleType (Ref base) (Lit n) -> do
-      btr <- maybe (Left (name <> "'s base " <> base <> " names no Type object")) Right (lookupType base)
-      case trTypeDef btr of
-        Right BaseType -> case base of
-          "bytes"
-            | name == "uid" -> Right KUID
-            | otherwise     -> Right (KBytes n)
-          "max_bytes" -> Right (KText n)
-          "uinteger"  -> Right (KUInt n)
-          "integer"   -> Right (KInt n)
-          _           -> Left (name <> "'s base " <> base <> " is not a base type of Core 5.1.1")
-        _ -> Left (name <> "'s base " <> base <> " is not a Base_Type")
-    EnumType ranges -> do
-      rs <- maybe (Left (name <> "'s range is not literal")) Right (traverse lits ranges)
-      Right (KEnum name rs (labels name))
-    RestrictedRef ObjectTableUID tables -> Right (KRef tables)
-    other -> Left ("a column of type " <> name <> " (" <> formatName other <> ") is not read from a table cell")
+-- | The types a spec's columns are read by ("Hsed.Spec.Readers.Cell"): the
+--   Type objects of its type rows, then of its base's ('allTypeRows'), and
+--   the labels of its enumerations, then of its base's ('allEnums': Opal's
+--   Table 49 labels @life_cycle_state@, shadowing Core's Table 103), each
+--   label with the first value its enumeration gives it.
+typeEnv :: Context -> TypeEnv
+typeEnv ctx = TypeEnv
+  { teType   = \n -> first Cm.message . trTypeDef <$> Map.lookup n types
+  , teLabels = labels }
   where
-    types = rights (typeRowReads ctx)
-    lookupType n = L.find ((== n) . trName) types
-    lits (Lit a, Lit b) = Just (a, b)
-    lits _              = Nothing
-    -- each label of the type's enumeration table with the first value it is given
+    types = Map.fromListWith (\_ firstOne -> firstOne) [ (trName tr, tr) | (_, tr) <- allTypeRows ctx ]
+    enums = map snd (allEnums ctx)
     labels n = L.nubBy (\a b -> fst a == fst b)
       [ (T.strip label, v)
-      | er <- rights (enumReads ctx), erIdent er == Just n
+      | er <- enums, erIdent er == Just n
       , (cell, label) <- erRows er, Just (v : _) <- [parseEnumValue (erRangeWords er) cell] ]
-
--- | A cell read as what its column holds.
-data CellValue
-  = CvUID ![Word8]                 -- ^ a @uid@'s eight bytes
-  | CvBytes ![Word8]
-  | CvText !Text
-  | CvUInt !Integer !(Maybe Int)   -- ^ the value, and the hex digits it is printed with (Nothing: in decimal)
-  | CvInt !Integer
-  | CvEnum !Text !Int
-  | CvRef !Text ![Word8]           -- ^ an object named, and its UID
-  deriving (Eq, Show)
-
--- | Read a non-blank cell as a column of a kind holds it; an object reference
---   is resolved by the caller's function from the object's name and the tables
---   the type allows to the object's UID.
-readCell :: (Text -> [TableRef] -> Either Text [Word8]) -> ColKind -> Text -> Either Text CellValue
-readCell resolve kind raw = case kind of
-  KUID -> case bytesOf cell of
-    Just bs | length bs == 8 -> Right (CvUID bs)
-    _ -> Left (tshow cell <> " is not a uid of eight bytes in hex")
-  KBytes n -> case bytesOf cell of
-    Just bs | length bs == n -> Right (CvBytes bs)
-    _ -> Left (tshow cell <> " is not " <> tshow n <> " bytes in hex")
-  KText n
-    | T.null cell                    -> Left "the text is empty"
-    | B.length (encodeUtf8 cell) > n -> Left (tshow cell <> " is longer than " <> tshow n <> " bytes")
-    | otherwise                      -> Right (CvText cell)
-  KUInt n -> do
-    v <- maybe (Left (tshow cell <> " is not an unsigned integer")) Right (number cell)
-    if v < 256 ^ n then Right (CvUInt v (hexDigits cell)) else Left (tshow cell <> " does not fit in " <> tshow n <> " bytes")
-  KInt n -> do
-    v <- maybe (Left (tshow cell <> " is not an integer")) Right (signed cell)
-    let bound = 2 ^ (8 * n - 1)
-    if negate bound <= v && v < bound then Right (CvInt v) else Left (tshow cell <> " does not fit in " <> tshow n <> " bytes")
-  KEnum name ranges labelled -> case (lookup cell labelled, number cell) of
-    (Just v, _) -> Right (CvEnum cell v)
-    (Nothing, Just v)
-      | any (\(lo, hi) -> toInteger lo <= v && v <= toInteger hi) ranges -> Right (CvEnum (tshow v) (fromIntegral v))
-    _ -> Left (tshow cell <> " is no label of " <> name <> "'s enumeration ("
-               <> T.intercalate ", " (map fst labelled) <> ")")
-  KRef tables -> CvRef cell <$> resolve cell tables
-  where
-    cell = T.strip raw
-    hexDigits t = T.length <$> T.stripPrefix "0x" (T.toLower t)
-    number t = case T.stripPrefix "0x" (T.toLower t) of
-      Just h  -> either (const Nothing) (\(v, rest) -> if T.null rest then Just v else Nothing) (TR.hexadecimal h)
-      Nothing -> either (const Nothing) (\(v, rest) -> if T.null rest then Just v else Nothing) (TR.decimal t)
-    signed t = case T.stripPrefix "-" t of
-      Just rest -> negate <$> number rest
-      Nothing   -> number t
-    bytesOf t = let hex = T.filter (not . C.isSpace) t
-                in if even (T.length hex) && T.all C.isHexDigit hex
-                     then Just (map byte (DT.chunksOf 2 hex)) else Nothing
-    byte = T.foldl' (\acc c -> acc * 16 + fromIntegral (DC.digitToInt c)) 0
-
--- | The runtime 'Hsed.Core.Table.Cell' a value prints as: bytes of a type
---   other than @uid@ a @BytesCell@, its byte string a literal (the module's
---   OverloadedStrings), however many bytes.
-renderCell :: CellValue -> Text
-renderCell = \case
-  CvUID bs        -> "UIDCell (" <> Gen.uidExpr bs <> ")"
-  CvBytes bs      -> "BytesCell " <> tshow (B.pack bs)
-  CvText t        -> "TextCell " <> tshow t
-  CvUInt v digits -> "UIntCell " <> maybe (tshow v) (hexLiteral v) digits
-  CvInt v         -> "IntCell " <> if v < 0 then "(" <> tshow v <> ")" else tshow v
-  CvEnum l v      -> "EnumCell " <> tshow l <> " " <> tshow v
-  CvRef n bs      -> "RefCell " <> tshow n <> " (" <> Gen.uidExpr bs <> ")"
-  where hexLiteral v w = "0x" <> T.justifyRight w '0' (T.toUpper (T.pack (showHexInteger v)))
 
 showHexInteger :: Integer -> String
 showHexInteger v = showHex v ""

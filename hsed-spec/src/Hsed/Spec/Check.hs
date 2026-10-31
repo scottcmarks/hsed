@@ -45,10 +45,11 @@ table it reads corrected ('Hsed.Spec.RuleDef.btRead'); the rules fire on the
 text as printed. 'errataFindingsUnder' gives what the same corrections report
 under either set, for @build/report/ERRATA.md@ ("Hsed.Spec.Report").
 
-Normalisations, the same under both sets, are Notes: a caption printed
-@\<X\>_object _ref@ (@N-CAPTION-NORMALISED@), and a header cell in the typo table
-or a byte grid's corner read as @Byte\\Bit@ (@N-HEADER-NORMALISED@), on every
-numbered table.
+Normalisations, the same under both sets, are Notes: a caption read through
+the caption typo table (Core's @\<X\>_object _ref@, Opal's
+@DataRemovalMechansim@: @N-CAPTION-NORMALISED@), and a header cell in the typo
+table or a byte grid's corner read as @Byte\\Bit@ (@N-HEADER-NORMALISED@), on
+every numbered table.
 -}
 module Hsed.Spec.Check
   ( -- * The shared context

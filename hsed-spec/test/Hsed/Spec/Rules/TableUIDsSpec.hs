@@ -29,10 +29,11 @@ import           Test.Hspec
 
 import           Hsed.Spec.Anchor          (AnchorId (..))
 import           Hsed.Spec.Check           (checkIR, mkContext)
-import           Hsed.Spec.Common          (ErrataSet (..), RuleName (..), isError, renderFinding)
+import           Hsed.Spec.Common          (ErrataSet (..), RuleName (..), SpecId (..), isError, renderFinding)
 import           Hsed.Spec.Compile         (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
-import           Hsed.Spec.RuleDef         (Classification (..))
+import qualified Hsed.Spec.Gen             as Gen
+import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..), Context (..))
 import           Hsed.Spec.Rules           (classify, explain)
 import           Hsed.Spec.Rules.TableUIDs
 
@@ -44,6 +45,30 @@ spec = withCore $ \pristine -> do
   let ctx  = mkContext Scott ir
       rows = rights (tableUIDRows ctx)
       errorsOf ir' = map renderFinding (filter isError (checkIR Nothing Scott ir'))
+
+  describe "allTableUIDRows" $ do
+    it "reads Core alone as its own Table 240's rows" $
+      map (tuName . snd) (allTableUIDRows ctx) `shouldBe` map tuName rows
+    withOpal $ \opalPristine -> do
+      opal  <- runIO (annotated opalPristine m4bOpalHsa)
+      opal0 <- runIO (committedOpalHsa >>= annotated opalPristine)
+      let octx = opalOver ctx opal
+          alls = allTableUIDRows octx
+          drm  = [ r | (c, r) <- alls, cxSpec c == SpecId "opal-2.30" ]
+      it "gives Opal, under the M4b sidecar, the one table Table 240 does not name, from the Admin SP's Table table (T20 row 12, PDF 37), then Core's rows" $ do
+        map tuName drm `shouldBe` ["DataRemovalMechanism"]
+        [ (btAnchor (tuBound r), tuRow r + 1, tuObject r, tuTable r) | r <- drm ]
+          `shouldBe` [(TableId 20, 12, Just [0, 0, 0, 1, 0, 0, 0x11, 0x01], Just [0, 0, 0x11, 0x01, 0, 0, 0, 0])]
+        map (tuName . snd) (drop 1 alls) `shouldBe` map tuName rows
+        [ cxSpec c | (c, _) <- drop 1 alls ] `shouldSatisfy` all (== core)
+      it "prints its row's declarations as Table 240's are printed (rowDecl), citing T20's page 37 and row 12" $ do
+        let body = [ l | (c, r) <- take 1 alls, Just o <- [tuObject r], Just t <- [tuTable r], l <- (rowDecl c r o t).declBody ]
+        body `shouldContain` ["uDataRemovalMechanismTableObject :: UID", "uDataRemovalMechanismTableObject = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x11 0x01"]
+        body `shouldContain` ["uDataRemovalMechanismTable :: UID", "uDataRemovalMechanismTable = uid 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x00"]
+        body `shouldContain` ["hDataRemovalMechanism :: HalfUID", "hDataRemovalMechanism = halfUID 0x00 0x00 0x11 0x01"]
+        take 1 body `shouldBe` ["-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 12: DataRemovalMechanism"]
+      it "gives Opal under its committed sidecar, which binds no preconfiguration, Core's rows alone" $
+        map (\(c, r) -> (cxSpec c, tuName r)) (allTableUIDRows (opalOver ctx opal0)) `shouldBe` map (\r -> (core, tuName r)) rows
 
   describe "the tableUIDs rule" $ do
     it "binds Table 240, and no other table, by the doc anchor's rule token" $ do

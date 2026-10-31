@@ -31,6 +31,16 @@ Checks:
 Each row's definitions cite the page the row is printed on (Table 240 spans
 two), with the table's ordinal and cell hash.
 
+A spec read over another (Opal over Core) reads every table's UIDs as
+'allTableUIDRows': its own table of table UIDs' rows; then, for a table no
+such row of the spec or its base names, the row an SP's preconfiguration of
+the table of tables gives it (Opal Table 20 row 12, @DataRemovalMechanism@,
+PDF 37, which Core's Table 240 does not name): its descriptor object's UID
+that row's UID, the table's UID that UID's lower half followed by four zero
+bytes (Core 5.3.4.2.2, PDF 223; Core 3.2.5.3 b.i and b.ii, PDF 34-35, the
+halves 'C-T240-HALVES' checks); then the base's rows whose table the spec's do
+not name.
+
 Compiled into 'tableUIDsModule' in the shapes the hand transcription (the
 oracle's fixture, @Hand.TableUIDs@) has: @u\<T\>TableObject :: UID@, @u\<T\>Table ::
 UID@ and @h\<T\> :: HalfUID@ per row, @nameHalfUID :: Map HalfUID String@ and
@@ -45,7 +55,10 @@ module Hsed.Spec.Rules.TableUIDs
     -- * Reading the bound tables
   , TableUIDRow (..)
   , tableUIDRows
+  , allTableUIDRows
   , tableNames
+    -- * Declarations
+  , rowDecl
     -- * Generated names
   , tableUIDName
   , tableObjectUIDName
@@ -65,7 +78,7 @@ import           Hsed.Spec.DSL    (SomeBinding (..), tableUIDs)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Shape  (Shape (..), shapeMismatch)
+import           Hsed.Spec.Shape  (Shape (..), normHeader, shapeMismatch)
 
 
 -- | The rule.
@@ -125,6 +138,51 @@ readRows bts = [ row bt i cells | bt <- bts, (i, cells) <- zip [0 ..] (btRead bt
         { tuBound = bt, tuRow = i, tuName = T.strip name.text, tuObjectText = object.text, tuTableText = table.text
         , tuObject = parseUIDCell object.text, tuTable = parseUIDCell table.text, tuCells = [object, table, name, _template] }
       cells -> Left (bt, finding Error "C-T240-HALVES" ("row " <> tshow (i + 1) <> " has " <> tshow (length cells) <> " cells, not four"))
+
+-- | Every table's row a spec reads, each with the Context that owns it: the
+--   rows of its own table of table UIDs, then a row for each table only an
+--   SP's preconfiguration of the table of tables names, then the base's rows
+--   (its own, likewise) whose table the spec's do not name ('ownThenBase').
+allTableUIDRows :: Context -> [(Context, TableUIDRow)]
+allTableUIDRows = ownThenBase rowsOf tuName
+  where
+    rowsOf c = rights (tableUIDRows c) <> [ r | r <- preconfiguredRows c, tuName r `notElem` named c ]
+    -- the tables a table of table UIDs names, the spec's or a base's
+    named c = [ tuName r | c' <- chain c, Right r <- tableUIDRows c' ]
+    chain c = c : maybe [] chain (cxBase c)
+
+-- | The rows the preconfiguration tables of a spec give the table of tables
+--   (the one row of a table of table UIDs whose descriptor object lies in its
+--   own table: Core Table 240's @Table@, half-UID @00 00 00 01@), its own or
+--   its base's: each a row whose UID cell lies in that table, read as the
+--   row of the table its Name cell names (the cell's lines joined, quotes
+--   dropped: Opal Table 20 row 12 prints @DataRemovalMecha@ and @nism\x201D@).
+preconfiguredRows :: Context -> [TableUIDRow]
+preconfiguredRows ctx = case tablesHalf of
+  Nothing   -> []
+  Just half -> concatMap (rowsIn half) (boundTables (Just Preconfig) ctx)
+  where
+    chain c = c : maybe [] chain (cxBase c)
+    tablesHalf = listToMaybe [ h | c <- chain ctx, Right (_, h) <- [tablesTable (boundTables (Just TableUIDs) c)] ]
+    rowsIn half bt =
+      [ TableUIDRow
+          { tuBound = bt, tuRow = i, tuName = name, tuObjectText = uidText
+          , tuTableText = hexUID table, tuObject = Just uid, tuTable = Just table, tuCells = cells }
+      | (i, cells) <- zip [0 ..] (btRead bt).rows
+      , Just uidText <- [cellIn "uid" cells], Just uid <- [parseUIDCell uidText], take 4 uid == half
+      , Just nameCell <- [listToMaybe [ c | (h, c) <- zip header cells, h == "name" ]]
+      , let name = healed nameCell, isIdent name
+      , let table = drop 4 uid <> [0, 0, 0, 0] ]
+      where
+        header = map (normHeader . (.text)) (concat (take 1 (btRead bt).headerRows))
+        cellIn :: Text -> [CellIR] -> Maybe Text
+        cellIn h cells = listToMaybe [ c.text | (h', c) <- zip header cells, h' == h ]
+    -- an identifier split over lines and quoted: its lines joined, its quotes dropped
+    healed :: CellIR -> Text
+    healed c = T.filter (`notElem` ("\"\x201C\x201D\x2018\x2019" :: String)) (T.concat (map T.strip (if null c.lines then [c.text] else c.lines)))
+    isIdent n = case T.uncons n of
+      Just (ch, cs) -> (C.isAlpha ch || ch == '_') && T.all (\x -> C.isAlphaNum x || x == '_') cs
+      Nothing       -> False
 
 -- | The table names a @uidref{...}@ may name: the Table Name column of every
 --   table bound to the rule's shape.

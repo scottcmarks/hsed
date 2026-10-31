@@ -297,7 +297,7 @@ genericCodes =
   [ CodeDef "LOT-VS-BODY"          [Warning] (Defect "the List of Tables disagrees with the captions in the body")
   , CodeDef "XREF-RESOLVES"        [Warning] (Defect "a table reference in the prose names no table, or not the table its text means (one in a table cell is not read)")
   , CodeDef "E-FMT-RESOLVE"        [Error]   (Defect "a Format names a type no table defines")
-  , CodeDef "N-CAPTION-NORMALISED" [Note]    (AsPrinted "a caption read as one identifier where the PDF prints a space in it")
+  , CodeDef "N-CAPTION-NORMALISED" [Note]    (AsPrinted "a caption read through the caption typo table: one identifier where the PDF prints a space in it, or a name the PDF misspells")
   , CodeDef "N-HEADER-NORMALISED"  [Note]    (AsPrinted "a header cell read through the typo table, or a byte grid's corner read as Byte\\Bit")
   ]
   <> [ CodeDef c [Warning] Correction | c <- ["W-ERRATUM-APPLIED", "W-ERRATUM-KNOWN", "W-ERRATUM-UNUSED"] ]

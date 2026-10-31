@@ -37,6 +37,7 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 | Warning | W-FEATURE-UNLISTED | 3 |
 | Warning | W-PINS-NONE | 1 |
 | Warning | W-UNBOUND | 47 |
+| Note | N-CAPTION-NORMALISED | 2 |
 | Note | N-FEATURE-HEADER | 1 |
 | Note | N-FEATURE-LENGTH | 1 |
 | Note | N-HEADER-NORMALISED | 7 |

@@ -90,10 +90,15 @@ spec = do
       captionTitle "Table 01 Global Terminology" `shouldBe` Just "Global Terminology"
       captionTitle "Figure 3 Something" `shouldBe` Nothing
       captionTitle "Table 71 ACE_object _ref" `shouldBe` Just "ACE_object_ref"
-    it "normalise the _object _ref captions, which rawCaptionTitle leaves as printed" $ do
+    it "normalise the captions of the caption typo table (the _object _ref captions; since M4b Opal's DataRemovalMechansim), which rawCaptionTitle leaves as printed" $ do
       rawCaptionTitle "Table 72 Certificates_object _ref" `shouldBe` Just "Certificates_object _ref"
       normaliseCaption "Table 72 Certificates_object _ref" `shouldBe` "Table 72 Certificates_object_ref"
       normaliseCaption "Table 46 AC_element" `shouldBe` "Table 46 AC_element"
+      -- Opal's Tables 32 and 33 misspell the table Table 20 row 12 names (PDF 51-52, 37), a reading rule since M4b
+      normaliseCaption "Table 32 - DataRemovalMechansim Table Description" `shouldBe` "Table 32 - DataRemovalMechanism Table Description"
+      captionTitle "Table 33 - Admin SP \x2013 DataRemovalMechansim Table Preconfiguration"
+        `shouldBe` Just "Admin SP \x2013 DataRemovalMechanism Table Preconfiguration"
+      length captionTypos `shouldBe` 2
 
     it "classify the design's caption kinds" $
       map classifyCaption

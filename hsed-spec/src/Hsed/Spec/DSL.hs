@@ -533,6 +533,7 @@ instance RuleToken (Binding 'Feature)         where ruleNameOf _ = RuleName "fea
 instance RuleToken (Binding 'ConstValues)     where ruleNameOf _ = RuleName "constValues"
 instance RuleToken (Binding 'Ranges)          where ruleNameOf _ = RuleName "ranges"
 instance RuleToken (Binding 'Preconfig)       where ruleNameOf _ = RuleName "preconfig"
+instance RuleToken (Binding 'Legend)          where ruleNameOf _ = RuleName "legend"
 instance RuleToken (Binding 'Sig)             where ruleNameOf _ = RuleName "sig"
 
 -- | @rule typeRow@ on a heading or the document: the rule governs the subtree.
@@ -544,12 +545,14 @@ tokenEncoding, terminology :: RuleName
 tokenEncoding = RuleName "tokenEncoding"
 terminology   = RuleName "terminology"
 
--- | Every rule name of design section 3.4, as @rule@ accepts them.
+-- | Every rule name of design section 3.4, as @rule@ accepts them (@legend@
+--   one since M4b, a rule token on the document anchor, its exemplar Opal
+--   Table 1).
 knownRules :: [RuleName]
 knownRules = map RuleName
   [ "typeRow", "enumValues", "tableDesc", "columnsAddition", "tableUIDs", "uidTable"
   , "statusCodes", "codes", "fieldValue", "fieldType", "byteFieldValue", "byteGrid"
-  , "feature", "constValues", "ranges", "preconfig", "tokenEncoding", "terminology", "sig" ]
+  , "feature", "constValues", "ranges", "preconfig", "legend", "tokenEncoding", "terminology", "sig" ]
 
 typeRow :: Binding 'TypeRow
 typeRow = TypeRowB

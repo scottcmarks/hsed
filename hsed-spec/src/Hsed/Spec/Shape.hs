@@ -53,6 +53,7 @@ module Hsed.Spec.Shape
   , headerNormalisations
   , captionTitle
   , rawCaptionTitle
+  , captionTypos
   , normaliseCaption
   , classifyCaption
   , isGrid8
@@ -378,11 +379,23 @@ rawCaptionTitle caption = do
   guard (not (T.null number))
   pure (T.strip (T.dropWhile (`elem` ("-–— " :: String)) (T.stripStart afterNumber)))
 
--- | The seven Core captions printed @\<X\>_object _ref@ read as @\<X\>_object_ref@
---   (design example E3: normalised and reported, not an erratum; hsedc reports
---   each as @N-CAPTION-NORMALISED@).
+-- | The caption typo table, each piece of a caption's title as printed and as
+--   read: the seven Core captions printed @\<X\>_object _ref@, read as
+--   @\<X\>_object_ref@ (design example E3), and Opal's Tables 32 and 33,
+--   which print @DataRemovalMechansim@ for the table Table 20's row 12 names
+--   @DataRemovalMechanism@ (PDF 51-52, 37; a reading rule, not an erratum: the
+--   lead's answer 1 to the M4b plan).
+captionTypos :: [(Text, Text)]
+captionTypos =
+  [ ("_object _ref", "_object_ref")
+  , ("DataRemovalMechansim", "DataRemovalMechanism")
+  ]
+
+-- | A caption read through the caption typo table: normalised and reported,
+--   not an erratum (the same under both errata sets; hsedc reports each
+--   caption read so as @N-CAPTION-NORMALISED@).
 normaliseCaption :: Text -> Text
-normaliseCaption = DT.replace "_object _ref" "_object_ref"
+normaliseCaption t = foldl' (\acc (bad, good) -> DT.replace bad good acc) t captionTypos
 
 -- | Classify a caption's title (design section 3.4).
 classifyCaption :: Text -> CaptionKind

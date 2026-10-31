@@ -38,14 +38,14 @@ import           Test.Hspec
 import           Hsed.Core.Types         (Operand (..), TypeDef (..), TypeRef (..))
 import           Hsed.Spec.Anchor        (AnchorId (..))
 import           Hsed.Spec.Check         (checkIR, mkContext)
-import           Hsed.Spec.Common        (ErrataSet (..), Finding, RuleName (..), Severity (..), isError, renderFinding)
+import           Hsed.Spec.Common        (ErrataSet (..), Finding, RuleName (..), Severity (..), SpecId (..), isError, renderFinding)
 import qualified Hsed.Spec.Common        as Cm
 import           Hsed.Spec.Compile       (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.Format        (parseFormat)
 import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (SpecIR)
-import           Hsed.Spec.RuleDef       (Classification (..), Context, numberedTables)
+import           Hsed.Spec.RuleDef       (Classification (..), Context (..), numberedTables, ownThenBase)
 import           Hsed.Spec.Rules         (Section (..), classify, scopeOf)
 import           Hsed.Spec.Rules.TypeRow
 import           Hsed.Spec.Shape         (measure)
@@ -245,3 +245,22 @@ spec = do
       it "parses each to the TypeDef generated from the PDF's Format, the row's t<Name>" $
         [ (n, f) | (n, f) <- hand, either (const True) (\d -> Map.lookup n generated /= Just (Just d)) (parseFormat env f) ]
           `shouldBe` []
+
+  withM4bOpal $ \base opal -> do
+    let octx = opalOver base opal
+        alls = allTypeRows octx
+    describe "allTypeRows, on Opal under the M4b sidecar, read over Core (ownThenBase)" $ do
+      it "gives Opal's own type row first, Table 30's data_removal_mechanism (PDF 51), then Core's hundred, each with its spec" $ do
+        [ (cxSpec c, tr.trAnchor, tr.trName) | (c, tr) <- take 1 alls ] `shouldBe` [(SpecId "opal-2.30", TableId 30, "data_removal_mechanism")]
+        length alls `shouldBe` 101
+        [ cxSpec c | (c, _) <- drop 1 alls ] `shouldSatisfy` all (== core)
+        map ((.trName) . snd) (drop 1 alls) `shouldBe` [ tr.trName | Right tr <- typeRowReads base ]
+      it "names each type once, the spec's own first" $
+        L.nub (map ((.trName) . snd) alls) `shouldBe` map ((.trName) . snd) alls
+      it "reads Core alone as its own type rows" $
+        map ((.trAnchor) . snd) (allTypeRows base) `shouldBe` [ tr.trAnchor | Right tr <- typeRowReads base ]
+      it "leaves out a base's item whose key an own item gives, and keeps the base's base (ownThenBase)" $ do
+        let key = (.trName)
+            shadowing = ownThenBase (\c -> if cxSpec c == SpecId "opal-2.30" then [ tr | (_, tr) <- take 2 (allTypeRows base) ] else rights (typeRowReads c)) key octx
+        length shadowing `shouldBe` 100
+        [ cxSpec c | (c, _) <- take 2 shadowing ] `shouldBe` replicate 2 (SpecId "opal-2.30")

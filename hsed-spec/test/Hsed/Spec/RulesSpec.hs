@@ -145,12 +145,12 @@ spec = do
         ir' <- annotated pristine "core-2.01 | T47 | refines (opal 3)\n"
         fmap describeClassification (Map.lookup (TableId 47) (classify ir'))
           `shouldSatisfy` maybe False ("invalid: E-SHAPE core-2.01.pdf#page=100&T47" `T.isPrefixOf`)
-      it "reports a rule named but not implemented, whichever that is" $
-        case [ r | r <- knownRules, r `notElem` map ruleName rules ] of
-          [] -> pendingWith "every rule of the vocabulary is implemented"
-          r : _ -> do
-            ir' <- annotated pristine ("core-2.01 | doc | doc core201 & rule " <> ruleNameText r <> "\n")
-            codesOf (snd (classifyWith ir')) `shouldContain` ["W-RULE-UNIMPLEMENTED"]
+      it "reports a rule named but not implemented, whichever that is (every rule of the vocabulary is, since M4b: the registry less one)" $ do
+        [ r | r <- knownRules, r `notElem` map ruleName rules ] `shouldBe` []
+        forM_ (take 1 knownRules) $ \r -> do
+          ir' <- annotated pristine ("core-2.01 | doc | doc core201 & rule " <> ruleNameText r <> "\n")
+          codesOf (snd (classifyWithRules [ rl | rl <- rules, ruleName rl /= r ] ir')) `shouldContain` ["W-RULE-UNIMPLEMENTED"]
+          codesOf (snd (classifyWith ir')) `shouldNotContain` ["W-RULE-UNIMPLEMENTED"]
 
     describe "precedence" $ do
       ir' <- runIO (annotated pristine "core-2.01 | 5.1.3 | rule typeRow & rule tableDesc\n")

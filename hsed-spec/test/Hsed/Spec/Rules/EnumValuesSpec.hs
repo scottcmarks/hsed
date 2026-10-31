@@ -38,7 +38,7 @@ import           Hsed.Spec.Compile          (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.DSL              (SomeBinding (..), cols, enumValues, rangeWords)
 import           Hsed.Spec.IR               (SpecIR)
-import           Hsed.Spec.RuleDef          (Classification (..), Context, numberedTables)
+import           Hsed.Spec.RuleDef          (Classification (..), Context (..), numberedTables)
 import           Hsed.Spec.Rules            (Section (..), classify, scopeOf)
 import           Hsed.Spec.Rules.EnumValues
 import           Hsed.Spec.Rules.TypeRow    (typeRowReads)
@@ -71,6 +71,16 @@ spec = do
       parseEnumValue ["to"] "7 to 31" `shouldBe` Just [7 .. 31]
       parseEnumValue [] "7-2" `shouldBe` Nothing
       parseEnumValue [] "3 – – 4" `shouldBe` Nothing
+
+  describe "descriptionItems" $ do
+    it "reads the n = label items of a Description cell's lines, the sentence before them dropped" $
+      descriptionItems ["Used to represent the current life", "cycle state. The valid values", "are:", "0 = issued,", "1 = issued-disabled,", "5-7 = reserved,"]
+        `shouldBe` [("0", "issued"), ("1", "issued-disabled"), ("5-7", "reserved")]
+    it "joins a line ending in a hyphen to the next with no space (Opal T49's 12 = manufactured-disabled- frozen, PDF 98)" $
+      descriptionItems ["12 = manufactured-disabled-", "frozen,", "13 = manufactured-failed,", "14-15 = reserved"]
+        `shouldBe` [("12", "manufactured-disabled-frozen"), ("13", "manufactured-failed"), ("14-15", "reserved")]
+    it "keeps a range printed with an en dash, and reads no item from a piece without one" $
+      descriptionItems ["3 \x2013 4 = reserved, and more"] `shouldBe` [("3 \x2013 4", "reserved")]
 
   describe "enumTypeName" $
     it "prefixes the type's name with the spec's label" $ do
@@ -198,6 +208,36 @@ spec = do
         cr <- compiled ir
         T.lines (fromMaybe "" (lookup "Hsed.Gen.Core.Enums" (crModules cr))) `shouldSatisfy` elem "data Core_adv_key_mode"
         DT.count "data Core_" (fromMaybe "" (lookup "Hsed.Gen.Core.Enums" (crModules cr))) `shouldBe` 20
+  withM4bOpal $ \base opal -> do
+    let octx = opalOver base opal
+        t49  = [ e | Right e <- enumReads octx, e.erAnchor == TableId 49 ]
+        values :: EnumRead -> [(Int, Text)]
+        values e = concat [ [ (v, label) | v <- fromMaybe [] (parseEnumValue e.erRangeWords cell) ] | (cell, label) <- e.erRows ]
+    describe "an enumeration in a Description column, Opal Table 49 under enumInDescription (M4b sidecar, over Core)" $ do
+      it "is bound with the EnumValues shape by its comment, and read from its Description's lines (PDF 98)" $ do
+        length t49 `shouldBe` 1
+        map (.erIdent) t49 `shouldBe` [Just "life_cycle_state"]
+        map (length . (.erRows)) t49 `shouldBe` [13]
+        map (.erPages) t49 `shouldSatisfy` all (all (== Just 98))
+      it "gives its 16 values, 8 manufactured-inactive, 9 manufactured, 12 manufactured-disabled-frozen, reserved 5-7 and 14-15" $ do
+        map (map fst . values) t49 `shouldBe` [[0 .. 15]]
+        [ (lookup 8 vs, lookup 9 vs, lookup 12 vs) | e <- t49, let vs = values e ]
+          `shouldBe` [(Just "manufactured-inactive", Just "manufactured", Just "manufactured-disabled-frozen")]
+        [ [ v | (v, "reserved") <- values e ] | e <- t49 ] `shouldBe` [[5, 6, 7, 14, 15]]
+      it "keeps its own UID and Format cells, the type row it modifies (Core T102's UID, C-PATCH-UID's, G3's)" $
+        map (.erOwnType) t49 `shouldBe` [Just ("00 00 00 05 00 00 04 05", "Enumeration_Type, 0, 15")]
+      it "is read as one row with UID, Name, Format and Description cells, else C-ENUM-RANGE" $
+        [ Cm.code f | Left f <- enumReads (opalOver base (setHeaderCell "T49" 0 1 "Title" opal)) ] `shouldBe` ["C-ENUM-RANGE"]
+
+    describe "allEnums, on Opal under the M4b sidecar, over Core" $ do
+      let alls = allEnums octx
+      it "gives Opal's own first (T31, T49), then Core's whose type Opal's do not name: T49 shadows Core's T103" $ do
+        [ (c.cxSpec, e.erAnchor) | (c, e) <- take 2 alls ] `shouldBe` [(Cm.SpecId "opal-2.30", TableId 31), (Cm.SpecId "opal-2.30", TableId 49)]
+        [ e.erAnchor | (_, e) <- alls, e.erIdent == Just "life_cycle_state" ] `shouldBe` [TableId 49]
+        length alls `shouldBe` 2 + length [ () | Right e <- enumReads base, e.erIdent /= Just "life_cycle_state" ]
+        [ c.cxSpec | (c, _) <- drop 2 alls ] `shouldSatisfy` all (== core)
+      it "reads Core alone as its own enumerations" $
+        map (\(_, e) -> e.erAnchor) (allEnums base) `shouldBe` [ e.erAnchor | Right e <- enumReads base ]
   where
     advKeyMode     = [("Wait for AdvKey_Req", 0), ("Auto-advance keys", 1)] <> [ ("Reserved", v) | v <- [2 .. 7] ]
     paddingType    = [("None", 0), ("None", 1), ("RSAES-PKCS1-v1_5", 2), ("RSAES-OAEP", 3), ("RSASSA-PKCS1-v1_5", 4)] <> [ ("Reserved", v) | v <- [5 .. 15] ]

@@ -33,6 +33,16 @@ constructor). A finding about rows is located at the page the first of them
 is printed on (a table may span pages); one about the table as a whole (its
 range, a constructor defined twice, two labels merged) at the table.
 
+Under @enumInDescription@ an enumeration is printed in its type row's
+Description column (Opal Table 49, @life_cycle_state@, PDF 98, which modifies
+Core's type: @enumInDescription (replaces [core 102, core 103])@): the one
+row's Name cell names the type, its UID and Format cells are kept as its own
+('erOwnType'), and its values are the Description's @n = label@ items, read
+from the cell's lines, a line ending in a hyphen joined to the next
+('descriptionItems': @12 = manufactured-disabled-@ and @frozen@). A spec read
+over another reads the base's enumerations too, its own shadowing the base's
+of the same type ('allEnums').
+
 Compiled into 'enumsModule': @data Core_\<type\>@ (the spec's label,
 "Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with a constructor per
 value (the label scrubbed; a label that names several values, a range or
@@ -49,8 +59,10 @@ module Hsed.Spec.Rules.EnumValues
     -- * Reading the bound tables
   , EnumRead (..)
   , enumReads
+  , allEnums
   , enumIdent
   , parseEnumValue
+  , descriptionItems
     -- * The enumeration check
   , EnumCheck (..)
   , checkEnum
@@ -80,7 +92,7 @@ import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
-import           Hsed.Spec.Shape         (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption,
+import           Hsed.Spec.Shape         (CaptionKind (..), Form (..), Shape (..), measure, normHeader, normaliseCaption,
                                           shapeMismatch)
 
 
@@ -135,26 +147,88 @@ data EnumRead = EnumRead
   , erRows       :: ![(Text, Text)]       -- ^ value cell and label after errata, in the bound columns
   , erPages      :: ![Maybe Int]          -- ^ the 1-based page each row is printed on
   , erRangeWords :: ![Text]
+  , erOwnType    :: !(Maybe (Text, Text))
+    -- ^ under @enumInDescription@, the table's own UID and Format cells (Table
+    --   49's @00 00 00 05 00 00 04 05@ and @Enumeration_Type, 0, 15@)
   }
 
 -- | Every table bound as an enumeration, read under the errata set in its bound
---   columns (@cols a b@, else 0 and 1).
+--   columns (@cols a b@, else 0 and 1), or under @enumInDescription@ from its
+--   Description column.
 enumReads :: Context -> [Either Finding EnumRead]
 enumReads ctx = readEnums ctx (boundTables (Just EnumValues) ctx)
+
+-- | Every enumeration a spec reads: its own, then its base's whose type none
+--   of its own names (Opal's Table 49 @life_cycle_state@ shadowing Core's
+--   Table 103), each with the Context that owns it ('ownThenBase').
+allEnums :: Context -> [(Context, EnumRead)]
+allEnums = ownThenBase (rights . enumReads) erIdent
 
 readEnums :: Context -> [BoundTable] -> [Either Finding EnumRead]
 readEnums ctx = map readEnum
   where
-    readEnum bt =
-      let (a, b)    = fromMaybe (0, 1) (mCols (btMods bt))
-          cell :: Int -> [CellIR] -> Text
-          cell i r  = maybe "" (.text) (listToMaybe (drop i r))
-          t'        = btRead bt
-      in Right EnumRead
-           { erAnchor = btAnchor bt, erTable = btTable bt, erCaption = normaliseCaption (fromMaybe "" t'.caption)
-           , erIdent = enumIdent (measure (cxSpec ctx) t'), erRows = [ (cell a r, cell b r) | r <- t'.rows ]
-           , erPages = [ (+ 1) <$> listToMaybe (mapMaybe (.page) r) | r <- t'.rows ]
-           , erRangeWords = mRangeWords (btMods bt) }
+    readEnum bt
+      | mEnumInDescription (btMods bt) = inDescription bt
+      | otherwise =
+          let (a, b)    = fromMaybe (0, 1) (mCols (btMods bt))
+              cell :: Int -> [CellIR] -> Text
+              cell i r  = maybe "" (.text) (listToMaybe (drop i r))
+              t'        = btRead bt
+          in Right EnumRead
+               { erAnchor = btAnchor bt, erTable = btTable bt, erCaption = normaliseCaption (fromMaybe "" t'.caption)
+               , erIdent = enumIdent (measure (cxSpec ctx) t'), erRows = [ (cell a r, cell b r) | r <- t'.rows ]
+               , erPages = [ (+ 1) <$> listToMaybe (mapMaybe (.page) r) | r <- t'.rows ]
+               , erRangeWords = mRangeWords (btMods bt), erOwnType = Nothing }
+    -- the one type row of a table printing its enumeration in a Description
+    -- column: its Name the type, its UID and Format kept, its values the
+    -- Description's items, each on the Description's page
+    inDescription bt =
+      let t'       = btRead bt
+          header   = map (normHeader . (.text)) (concat (take 1 t'.headerRows))
+          column h = L.elemIndex h header
+          at :: Int -> [CellIR] -> Maybe CellIR
+          at i r   = listToMaybe (drop i r)
+      in case (t'.rows, traverse column ["uid", "name", "format", "description"]) of
+           ([r], Just [u, n, f, d]) | Just dc <- at d r ->
+             let items  = descriptionItems (if null dc.lines then [dc.text] else dc.lines)
+                 text i = maybe "" (T.strip . (.text)) (at i r)
+             in Right EnumRead
+                  { erAnchor = btAnchor bt, erTable = btTable bt, erCaption = normaliseCaption (fromMaybe "" t'.caption)
+                  , erIdent = identifier (text n), erRows = items
+                  , erPages = map (const ((+ 1) <$> dc.page)) items
+                  , erRangeWords = mRangeWords (btMods bt), erOwnType = Just (text u, text f) }
+           (rows, _) -> Left (atTable ctx bt (finding Error "C-ENUM-RANGE"
+                          ("an enumeration in a Description column is one row with UID, Name, Format and Description cells; this table has "
+                            <> tshow (length rows) <> " rows under the header " <> tshow header)))
+    identifier s = if not (T.null s) && T.all (\c -> C.isAlphaNum c || c == '_') s then Just s else Nothing
+
+-- | The @n = label@ items of an enumeration a Description cell prints (Opal
+--   Table 49, PDF 98: @… The valid values are: 0 = issued, 1 =
+--   issued-disabled, …, 14-15 = reserved@), from the cell's lines: a line
+--   ending in a hyphen is joined to the next with no space (@12 =
+--   manufactured-disabled-@ and @frozen,@), any other with one; the items are
+--   the comma-separated pieces holding an @=@, each item's value cell the
+--   number or range just before its @=@ (the words before it dropped) and its
+--   label the text after it.
+--
+-- >>> descriptionItems ["The values are:", "0 = issued,", "5-7 = reserved,", "12 = manufactured-disabled-", "frozen,", "14-15 = reserved"]
+-- [("0","issued"),("5-7","reserved"),("12","manufactured-disabled-frozen"),("14-15","reserved")]
+descriptionItems :: [Text] -> [(Text, Text)]
+descriptionItems ls = mapMaybe item (T.split (== ',') joined)
+  where
+    joined = foldl' glue "" (filter (not . T.null) (map T.strip ls))
+    glue acc l
+      | T.null acc             = l
+      | "-" `T.isSuffixOf` acc = acc <> l
+      | otherwise              = acc <> " " <> l
+    item piece = case DT.breakOn "=" piece of
+      (before, after)
+        | Just rest <- T.stripPrefix "=" after
+        , let value = T.unwords (reverse (takeWhile isValue (reverse (T.words before))))
+              label = T.dropWhileEnd (== '.') (T.strip rest)
+        , not (T.null value), not (T.null label) -> Just (value, label)
+      _ -> Nothing
+    isValue w = T.all (\c -> C.isDigit c || c `elem` ['-', '\x2013', '\x2014']) w
 
 -- | An enumeration's value cell: @n@, @a-b@ (a hyphen, an en dash or an em
 --   dash, spaced or not: Opal T31 prints @3 – 4@, Core T52 @2-7@), or @a W b@

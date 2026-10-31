@@ -28,13 +28,13 @@ import           Hsed.Core.Method       (invocation)
 import           Hsed.Core.StreamItem   (StreamItem (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import qualified Hsed.Gen.Core.Methods  as Methods
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq        (Section (..), lockingSPUntouched)
 import           Hsed.Jig.Script        (Script, SessionHandle (..), Verdict (..), adminSPAsAnybody, attempt, closingStep,
                                          exchangeOn, exchanged, expectNoResponse, namedColumn, observe, opened,
                                          sessionComPacket, startSession, unmet)
-import           Hsed.OpalUIDs          (uC_PIN_MSID)
 import           Hsed.Wire              (hex)
 
 

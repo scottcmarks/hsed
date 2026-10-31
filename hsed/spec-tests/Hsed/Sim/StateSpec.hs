@@ -45,7 +45,7 @@ import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, spTableDesc, tPerInfo
 import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uSPTable, uTPerInfoTable)
 import           Hsed.Gen.Core.Types (ubooleanType)
 import           Hsed.Gen.Core.UIDs  (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uSP_Admin)
-import           Hsed.OpalUIDs       (uC_PIN_MSID, uSP_Locking)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Sim.Preconfig  (foldTables)
 import           Hsed.Sim.State
 import           Hsed.Sim.Types

@@ -78,7 +78,7 @@ accessControlList sps invoker method =
 --
 -- >>> import qualified RIO.Map as Map
 -- >>> import Hsed.Gen.Core.UIDs (uAuthority_Admins, uSP_Admin)
--- >>> import Hsed.OpalUIDs (uAuthority_Admin1)
+-- >>> import Hsed.Gen.Opal.Preconfig.AdminSP (uAuthority_Admin1)
 -- >>> import Hsed.Sim.Types (TPerState (..), defaultSimParams, initialState)
 -- >>> let Just adminSP = Map.lookup uSP_Admin (tsSPs (initialState defaultSimParams))
 -- >>> authenticated adminSP [uAuthority_Admin1] == [uAuthority_Anybody, uAuthority_Admin1, uAuthority_Admins]

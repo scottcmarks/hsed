@@ -1,25 +1,28 @@
 {-# LANGUAGE NoImplicitPrelude #-}
 
 {-|
-Module      : Hsed.OpalUIDs
-Description : The Opal 2.30 UIDs the simulator and the Guard need before the Admin SP's preconfiguration compiles (M4b), hand-written with their pages
+Module      : Hand.OpalUIDs
+Description : The Opal 2.30 UIDs the simulator and the Guard needed before the Admin SP's preconfiguration compiled (M4b), hand-written with their pages, kept as a test fixture
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-Opal 2.30's Admin SP preconfiguration (its Tables 18-29) is read by no rule
-until M4b (design 11), so the few of its UIDs that M4a's simulator rows
-("Hsed.Sim.AdminSP"), the Guard's allow list ("Hsed.Jig.Guard") and the jig's
-UCT-03 need are written here by hand, each with the table and page it is
-printed on, as design 13.17 has hand-written values cite theirs. Core 2.01's
-own UIDs ("Hsed.Gen.Core.UIDs") are generated and not repeated: C_PIN_SID,
-the Admin SP, the Base Template authorities and Get. M4b replaces this
-module with the generated @Hsed.Gen.Opal@ preconfiguration, and a one-line
-test then holds the Guard's hand UID to the generated one before M4c's drive
-run (design 9.3).
+Opal 2.30's Admin SP preconfiguration (its Tables 18-29) was read by no rule
+until M4b (design 11), so the few of its UIDs that M4a's simulator rows (the
+hand-written Admin SP, gone at M4b), the Guard's allow list ("Hsed.Jig.Guard")
+and the jig's UCT-03 needed were written by hand, as @Hsed.OpalUIDs@, each
+with the table and page it is printed on, as design 13.17 has hand-written
+values cite theirs. Core 2.01's own UIDs ("Hsed.Gen.Core.UIDs") are generated
+and not repeated: C_PIN_SID, the Admin SP, the Base Template authorities and
+Get. Since M4b every one of its importers reads the generated values instead,
+the UIDs "Hsed.Gen.Opal.Preconfig.AdminSP"'s and TPER_RESET's ComID
+"Hsed.Wire"'s (read from Opal Table 13), and the module is kept here, its
+definitions as they were, as a test fixture: Hsed.Gen.Opal.PreconfigSpec
+holds each generated value to it by name before M4c's drive run (design
+9.3). Compiled only by hsed's test suite.
 -}
-module Hsed.OpalUIDs
+module Hand.OpalUIDs
   ( -- * Objects of the Admin SP
     uC_PIN_MSID
   , uC_PIN_Admin1

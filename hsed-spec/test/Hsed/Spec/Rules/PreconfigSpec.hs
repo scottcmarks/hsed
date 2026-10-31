@@ -444,7 +444,7 @@ spec = do
           , (24, ["1"]), (27, ["*TP1", "*TP2", "*TP3"]), (29, ["*SP1"]) ]
 
     describe "the UIDs the Admin SP's tables give" $ do
-      it "generates those Core does not name, equal to the hand transcription's (Hsed.OpalUIDs) and Revert's and Activate's (PDF 38-50)" $ do
+      it "generates those Core does not name, equal to the hand transcription's (hsed's test fixture Hand.OpalUIDs) and Revert's and Activate's (PDF 38-50)" $ do
         lns <- T.lines <$> adminSPOf opal
         filter (`elem` lns)
           [ "uC_PIN_MSID = uid 0x00 0x00 0x00 0x0b 0x00 0x00 0x84 0x02", "uC_PIN_Admin1 = uid 0x00 0x00 0x00 0x0b 0x00 0x00 0x02 0x01"

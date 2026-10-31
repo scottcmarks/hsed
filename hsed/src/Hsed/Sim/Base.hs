@@ -47,8 +47,8 @@ import           Hsed.Gen.Core.Codes      (pattern INVALID_PARAMETER, pattern NO
 import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uMethodID_Get, uSP_Admin)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Catalogue       (CaseKey (..), TestId (..))
-import           Hsed.OpalUIDs            (uC_PIN_MSID)
 import           Hsed.Sim.Access          (grantedColumns)
 import           Hsed.Sim.Behaviour       (Behaviour (..), FailItem (..), Fails (..), Invoked (..), Reply (..), SomeBehaviour,
                                            forMethod)

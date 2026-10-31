@@ -53,9 +53,9 @@ import           Hsed.Gen.Core.TableDescs (spTableDesc)
 import           Hsed.Gen.Core.TableUIDs (uSPTable)
 import           Hsed.Gen.Core.UIDs     (uSP_Admin)
 import           Hsed.Gen.Opal.Features
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Jig.Support       (isAsPrinted)
 import           Hsed.Level0            (Descriptor (..))
-import           Hsed.OpalUIDs          (uSP_Locking)
 import           Hsed.Sim.FeatureSets
 import           Hsed.Sim.Level0        (simDescriptors)
 import           Hsed.Sim.State         (columnOf, updateRow)

@@ -38,7 +38,7 @@ import           Hsed.Core.Token       (Token (Empty))
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uAuthority_Anybody, uAuthority_SID, uSMUID, uSP_Admin)
-import           Hsed.OpalUIDs         (uSP_Locking)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
 import           Hsed.Sim.Session      (packets)
 import           Hsed.Sim.State        (openSession, sessionsOn)

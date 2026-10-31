@@ -53,7 +53,7 @@ import           RIO
 import           Hsed.Core.Table    (Row, TableDesc)
 import           Hsed.Core.UID      (UID)
 import           Hsed.Gen.Core.UIDs (uSP_Admin)
-import           Hsed.OpalUIDs      (uSP_Locking)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Sim.Params
 import qualified Hsed.Sim.Preconfig as Preconfig
 import           Hsed.Wire          (Event, IfStatus, Request, Response)

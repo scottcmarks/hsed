@@ -31,7 +31,7 @@ used here, IF-RECV at any capability ('ifRecv'), IF-SEND and events only at
   again with a larger length when the TPer names a minimum transfer
   (sedutil stops there instead, design 6.1), within a bound on the whole.
 * The wire's constants, each defined here alone: the ComPacket and the ComID
-  management protocols, Level 0 Discovery's ComID, the Data subpacket's Kind, the extension of an inactive
+  management protocols, Level 0 Discovery's ComID, TPER_RESET's ComID, the Data subpacket's Kind, the extension of an inactive
   ComID, the ComPacket header's size, the most a transport carries; and
   'exactly', a transfer's bytes, and 'hex', a number as the jig prints it.
 -}
@@ -73,6 +73,7 @@ module Hsed.Wire
   , comPacketProtocol
   , comIdManagementProtocol
   , level0ComId
+  , tperResetComId
   , dataKind
   , staticExtension
   , inactiveExtension
@@ -85,7 +86,7 @@ module Hsed.Wire
   ) where
 
 import qualified Data.Aeson            as A
-import           Data.Bits             (FiniteBits (..))
+import           Data.Bits             (FiniteBits (..), shiftL, (.|.))
 import qualified GHC.Clock             as Clock
 import           Numeric               (showHex)
 import qualified RIO.ByteString        as B
@@ -94,10 +95,12 @@ import           RIO
 import qualified RIO.Text              as T
 
 import           Hsed.Core.Code        (CodeRow (..), Span (..), codeRowsNamed)
+import           Hsed.Core.Field       (FieldValue (..), constNamed)
 import           Hsed.Core.Layout      (Layout (..))
 import           Hsed.Core.Record      (LayoutRecord (..))
 import           Hsed.Gen.Core.Codes   (cComIDAssignments, cSubpacketTypes)
 import           Hsed.Gen.Core.Layouts (ComPacket, ComPacketHeader (..))
+import           Hsed.Gen.Opal.Fields  (vTPER_RESETCommand)
 import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame, decodeComPacket)
 import           Hsed.Wire.Internal
 
@@ -384,6 +387,22 @@ comIdManagementProtocol = 0x02
 --   templates carry ("Hsed.Transport.Cdb").
 level0ComId :: Word16
 level0ComId = fromMaybe 0 (assigned cComIDAssignments "Level 0 Device Discovery")
+
+-- | TPER_RESET's ComID: Opal 2.30 Table 13's row \"ComID\" (PDF 29), 0x0004,
+--   the two bytes the generated table gives it ("Hsed.Gen.Opal.Fields"),
+--   most significant first. Were the row ever missing, or not a ComID's two
+--   bytes, 0x0000, the reserved ComID, which no drive path admits, as
+--   'level0ComId' falls back (Hsed.Gen.Opal.PreconfigSpec holds it to the
+--   0x0004 M4a wrote by hand).
+--
+-- >>> hex tperResetComId
+-- "0x0004"
+tperResetComId :: Word16
+tperResetComId = fromMaybe 0 (constNamed vTPER_RESETCommand "ComID" >>= comIdOf)
+  where
+    comIdOf = \case
+      Constant [hi, lo] -> Just (fromIntegral hi `shiftL` 8 .|. fromIntegral lo)
+      _                 -> Nothing
 
 -- | The Kind of a Data subpacket: Core Table 19's row \"Data\" (PDF 43),
 --   which 3.2.3.4.1.1.2 (PDF 44) says is zeroes.

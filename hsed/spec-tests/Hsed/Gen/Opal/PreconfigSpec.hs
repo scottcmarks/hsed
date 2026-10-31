@@ -41,6 +41,11 @@ the UID and the PIN, Get on C_PIN_SID grants Admins OR SID every column but
 the PIN (Table 22 rows 23 and 25, PDF 42; Table 23, PDF 47). And the jig's
 and Level 0's readers find their rows: SID's credential, the SPs' life
 cycles, TPerInfo's ProgrammaticResetEnable.
+
+And the values M4a wrote by hand before the Admin SP was generated, kept as
+the test fixture "Hand.OpalUIDs", are the generated ones: its six UIDs, by
+name, and TPER_RESET's ComID, which "Hsed.Wire" reads from Opal Table 13
+(design 9.3: the Guard's C_PIN_MSID among them, before M4c's drive run).
 -}
 module Hsed.Gen.Opal.PreconfigSpec (spec) where
 
@@ -49,6 +54,7 @@ import qualified RIO.Map                         as Map
 import           RIO
 import           Test.Hspec
 
+import qualified Hand.OpalUIDs                   as H
 import           Hsed.Core.Preconfig             (PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..), instanceUID)
 import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNamed)
 import           Hsed.Core.UID                   (HalfUID, UID, halfUID, uidUpper)
@@ -57,13 +63,14 @@ import           Hsed.Gen.Core.TableUIDs         (uACETable, uAccessControlTable
 import           Hsed.Gen.Core.UIDs              (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get,
                                                   uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1,
-                                                  uC_PIN_MSID, uSP_Locking)
+                                                  uC_PIN_Admin1, uC_PIN_MSID, uSP_Locking)
 import           Hsed.Jig.Script                 (Credential (..), simCredential)
 import           Hsed.Sim.Access                 (accessControlList, aceGrant, authenticated)
 import           Hsed.Sim.Preconfig              (adminSPTables, instances, vendorCell)
 import           Hsed.Sim.State                  (programmaticResetEnabled, spLifeCycle)
 import           Hsed.Sim.Types                  (LifeCycle (..), SPState (..), SimParams (..), TPerState (..), defaultSimParams,
                                                   initialState, lifeCycleValue)
+import           Hsed.Wire                       (tperResetComId)
 
 
 -- * The generated tables
@@ -290,3 +297,15 @@ spec = describe "the generated Admin SP and the simulator's" $ do
     it "TPER_RESET's enabling, TPerInfo's ProgrammaticResetEnable: FALSE as Table 27 prints it (PDF 50), TRUE where the parameters enable it" $ do
       programmaticResetEnabled (initialState defaultSimParams) `shouldBe` Just False
       programmaticResetEnabled (initialState defaultSimParams { spTPerResetEnabled = True }) `shouldBe` Just True
+
+  describe "the values M4a wrote by hand, kept as the test fixture Hand.OpalUIDs (design 9.3)" $ do
+    it "are the generated UIDs, by name: C_PIN_MSID and C_PIN_Admin1, Admin1, UCT-03's two ACEs, the Locking SP (Tables 23-25 and 29, PDF 47-50)" $
+      ([ ("uC_PIN_MSID", H.uC_PIN_MSID), ("uC_PIN_Admin1", H.uC_PIN_Admin1), ("uAuthority_Admin1", H.uAuthority_Admin1)
+      , ("uACE_C_PIN_SID_Get_NOPIN", H.uACE_C_PIN_SID_Get_NOPIN), ("uACE_C_PIN_MSID_Get_PIN", H.uACE_C_PIN_MSID_Get_PIN)
+      , ("uSP_Locking", H.uSP_Locking) ] :: [(Text, UID)])
+        `shouldBe`
+      [ ("uC_PIN_MSID", uC_PIN_MSID), ("uC_PIN_Admin1", uC_PIN_Admin1), ("uAuthority_Admin1", uAuthority_Admin1)
+      , ("uACE_C_PIN_SID_Get_NOPIN", uACE_C_PIN_SID_Get_NOPIN), ("uACE_C_PIN_MSID_Get_PIN", uACE_C_PIN_MSID_Get_PIN)
+      , ("uSP_Locking", uSP_Locking) ]
+    it "is TPER_RESET's ComID, Hsed.Wire's, read from the generated Table 13's row (PDF 29)" $
+      tperResetComId `shouldBe` H.tperResetComId

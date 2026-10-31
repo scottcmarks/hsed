@@ -48,7 +48,7 @@ import           Hsed.Gen.Core.Layouts    (NoResponseAvailable (..), STACK_RESET
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uC_PIN_SID, uSP_Admin)
-import           Hsed.OpalUIDs            (tperResetComId, uSP_Locking)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Sim                 (step, syncOf)
 import           Hsed.Sim.State           (cellOf, columnOf, openSession, programmaticResetEnabled, rowWithUID, sessionsOn,
                                            updateRow)
@@ -56,7 +56,7 @@ import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), Inpu
                                            Output (..), SPState (..), SimParams (..), SyncState (..), TPerState (..),
                                            defaultSimParams, initialHostProperties, initialState, maxPacketsName)
 import           Hsed.Wire                (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
-                                           comIdManagementProtocol)
+                                           comIdManagementProtocol, tperResetComId)
 
 
 base :: Word16

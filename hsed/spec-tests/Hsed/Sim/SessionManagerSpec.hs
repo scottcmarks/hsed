@@ -60,8 +60,8 @@ import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, spTableDesc)
 import           Hsed.Gen.Core.TableUIDs  (uAuthorityTable, uC_PINTable, uSPTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uProperties,
                                            uSMUID, uSP_Admin, uStartSession, uThisSP)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uAuthority_Admin1, uSP_Locking)
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
-import           Hsed.OpalUIDs            (uAuthority_Admin1, uSP_Locking)
 import           Hsed.Sim.SessionManager  (answer)
 import           Hsed.Sim.State           (abortSessions, cellOf, columnOf, lifeOf, rowWithUID, sessionsOn, updateRow)
 import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), LifeCycle (..), SPState (..), Session (..), SimParams (..),

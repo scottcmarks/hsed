@@ -35,7 +35,7 @@ import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc,
 import           Hsed.Gen.Core.TableUIDs  (uACETable, uAccessControlTable, uAuthorityTable, uC_PINTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get,
                                            uMethodID_Next, uSP_Admin)
-import           Hsed.OpalUIDs            (uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1, uC_PIN_MSID)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1, uC_PIN_MSID)
 import           Hsed.Sim.Access
 import           Hsed.Sim.State           (columnOf)
 import           Hsed.Sim.Types

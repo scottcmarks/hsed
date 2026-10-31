@@ -61,9 +61,9 @@ import           Hsed.Core.Token           (IsToken (..))
 import           Hsed.Core.Value           (IsValue (..))
 import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uCloseSession, uProperties, uSMUID, uSP_Admin, uStartSession,
                                             uThisSP)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Law                  (Law (..))
 import qualified Hsed.Law.Sync             as Law
-import           Hsed.OpalUIDs             (uC_PIN_MSID)
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, decodePacket,
                                             encodeComPacket, encodePacket)
 import           Hsed.Sim                  (step)

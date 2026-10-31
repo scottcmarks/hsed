@@ -54,7 +54,7 @@ import           Hsed.Gen.Core.Codes     (StatusCode (..), pattern INVALID_PARAM
 import           Hsed.Gen.Core.Layouts   (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods   as Methods
 import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uC_PIN_SID, uCloseSession, uSMUID, uSP_Admin)
-import           Hsed.OpalUIDs           (uC_PIN_MSID)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Packet             (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, decodePacket,
                                           encodeComPacket)
 import           Hsed.Sim                (step)

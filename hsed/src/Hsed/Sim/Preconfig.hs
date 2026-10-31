@@ -64,9 +64,8 @@ import           Hsed.Gen.Core.Enums             (Core_boolean (..))
 import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable, uTemplateTable)
 import           Hsed.Gen.Core.UIDs              (uC_PIN_SID, uTemplate_Base)
 import           Hsed.Gen.Opal.Enums             (Opal_data_removal_mechanism (..))
-import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uSP_Locking)
 import           Hsed.Gen.Opal.TableUIDs         (uDataRemovalMechanismTable)
-import           Hsed.OpalUIDs                   (uSP_Locking)
 import           Hsed.Sim.Params                 (LifeCycle (..), SimParams (..), lifeCycleValue)
 
 

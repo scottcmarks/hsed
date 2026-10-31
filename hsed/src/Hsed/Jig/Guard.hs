@@ -20,8 +20,9 @@ written now for its test: an IF-SEND whose ComPacket parses to methods every
 one of which is allowed (SMUID.Properties; SMUID.StartSession to the Admin
 SP as Anybody or no one; Get on C_PIN_MSID of one cell_block within its UID
 and PIN columns; a bare EndOfSession), the UIDs those of
-"Hsed.Gen.Core.UIDs" and, for C_PIN_MSID until M4b generates it,
-"Hsed.OpalUIDs", the columns found by name in the generated C_PIN
+"Hsed.Gen.Core.UIDs" and, for C_PIN_MSID, Opal's generated Admin SP
+("Hsed.Gen.Opal.Preconfig.AdminSP", Opal 2.30 Table 25, PDF 48; since M4b),
+the columns found by name in the generated C_PIN
 description ("Hsed.Gen.Core.TableDescs"), and IF-RECV of protocol 1; ComID
 management (protocol 2) is refused but for STACK_RESET on a static ComID and
 its GET_COMID_RESPONSE under 'AllowStackReset' (@--recover@, design 9.3):
@@ -75,8 +76,8 @@ import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, uAuthority_Anybody, uMethodID_Get, uProperties,
                                         uSMUID, uSP_Admin, uStartSession)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Transcript   (TEntry (..), Transcript, record)
-import           Hsed.OpalUIDs         (uC_PIN_MSID)
 import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
 import           Hsed.Sim.Params       (reservedComId)
 import           Hsed.Wire             (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),

@@ -44,11 +44,11 @@ import qualified Hsed.Gen.Core.Methods   as Methods
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs (uC_PINTable)
 import           Hsed.Gen.Core.UIDs      (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uSMUID, uSP_Admin)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Guard
 import           Hsed.Jig.Transcript
-import           Hsed.OpalUIDs           (tperResetComId, uC_PIN_MSID)
 import           Hsed.Packet             (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
-import           Hsed.Wire               (comPacketProtocol, dataKind, level0ComId)
+import           Hsed.Wire               (comPacketProtocol, dataKind, level0ComId, tperResetComId)
 import           Hsed.Wire.Internal      (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
                                           Transport (..), Unit (..))
 

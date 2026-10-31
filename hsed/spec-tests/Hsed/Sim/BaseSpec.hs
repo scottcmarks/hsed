@@ -36,7 +36,7 @@ import qualified Hsed.Gen.Core.Methods    as Methods
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get, uSP_Admin)
-import           Hsed.OpalUIDs            (uC_PIN_MSID)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import qualified Hsed.Sim.Base            as Base
 import           Hsed.Sim.Behaviour       (FailItem (..), Fails (..), someUID)
 import           Hsed.Sim.Session         (dispatch)

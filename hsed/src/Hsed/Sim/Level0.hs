@@ -69,8 +69,8 @@ import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeatu
                                            Level0DiscoveryLockingFeature (..), Level0DiscoveryOpalSSCV2Feature (..),
                                            Level0DiscoverySupportedDataRemovalMechanismFeature (..),
                                            Level0DiscoveryTPerFeature)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Level0              (Descriptor (..), featureDescriptor, renderLevel0)
-import           Hsed.OpalUIDs            (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Sim.FeatureSets     (BlockSIDFeature (..), DataStoreFeature (..), SiisFeature (..))
 import           Hsed.Sim.State           (cellOf, columnOf, rowWithUID, spLifeCycle)
 import           Hsed.Sim.Types           (Geometry (..), Level0Profile (..), LifeCycle (..), SimParams (..),

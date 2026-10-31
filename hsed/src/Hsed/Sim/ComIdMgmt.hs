@@ -15,8 +15,8 @@ The commands of security protocol 0x02 ("Hsed.Wire".'Hsed.Wire.comIdManagementPr
 outside the synchronous protocol (Core 3.3.10.3 b, PDF 84: a ComID in any
 synchronous state takes them), routed here by "Hsed.Sim" by their ComID:
 
-* TPER_RESET, an IF-SEND on ComID 0x0004 ("Hsed.OpalUIDs".'tperResetComId';
-  Opal 2.30 3.2.3 and Table 13, PDF 28-29; Table 14, PDF 30): with the
+* TPER_RESET, an IF-SEND on ComID 0x0004 ("Hsed.Wire".'Hsed.Wire.tperResetComId',
+  read from Table 13; Opal 2.30 3.2.3 and Table 13, PDF 28-29; Table 14, PDF 30): with the
   command enabled (the ProgrammaticResetEnable cell of the Admin SP's
   TPerInfo row, "Hsed.Sim.State".'programmaticResetEnabled', TRUE; Opal
   Table 26, PDF 49; FALSE at the factory, Table 27, PDF 50, the fold seeding
@@ -90,13 +90,12 @@ import           Hsed.Core.Record      (DecodedRecord (..), LayoutRecord, decode
 import           Hsed.Gen.Core.Layouts (GET_COMIDPayload (..), NoResponseAvailable (..), STACK_RESETCommandRequest (..),
                                         STACK_RESETCommandResponse (..), VERIFY_COMID_VALIDCommandResponse (..),
                                         VERIFY_COMID_VALIDRequest (..))
-import           Hsed.OpalUIDs         (tperResetComId)
 import qualified Hsed.Sim.Reset        as Reset
 import           Hsed.Sim.State        (lifeOf, programmaticResetEnabled)
 import           Hsed.Sim.Types        (ComIdLife (..), ComIdState (..), MgmtBuffer (..), SimParams (..), TPerState (..),
                                         reservedComId)
 import           Hsed.Wire             (Dir (..), IfStatus (..), Request (..), Response (..), exactly, inactiveExtension,
-                                        staticExtension)
+                                        staticExtension, tperResetComId)
 
 
 -- | A command of protocol 0x02 answered, and the TPer after it, as the

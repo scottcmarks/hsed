@@ -39,10 +39,10 @@ import           Test.Hspec.QuickCheck (modifyMaxSuccess, prop)
 import           Test.QuickCheck       (counterexample, forAll, property, vectorOf)
 
 import qualified Hsed.Gen.Core.Laws    as Generated
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Jig.Catalogue    (CaseKey, CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Law              (Law (..), LawRef (..))
 import qualified Hsed.Law.Sync         as Sync
-import           Hsed.OpalUIDs         (uSP_Locking)
 import           Hsed.Sim.Gen          (genState)
 import           Hsed.Sim.Types        (LifeCycle (..), Session (..), SimParams (..), TPerState (..))
 

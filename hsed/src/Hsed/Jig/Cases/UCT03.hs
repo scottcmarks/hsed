@@ -44,6 +44,7 @@ import           Hsed.Gen.Core.Codes    (pattern NOT_AUTHORIZED, pattern NO_SESS
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs     (uC_PIN_SID)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq        (Section (..), lockingSPUntouched)
@@ -51,7 +52,6 @@ import           Hsed.Jig.Script        (MethodOutcome (..), RunCtx (..), RunEnv
                                          Verdict (..), adminSPAsAnybody, attempt, baseComId, closingStep, discover, endSession,
                                          exchanged, expectMethodStatus, getCells, namedColumn, note, observe, opalV2Of, opened,
                                          peekSim, properties, startSession, statusName, unmet, withSession)
-import           Hsed.OpalUIDs          (uC_PIN_MSID)
 import           Hsed.Sim.Types         (SimParams (..), TPerState (..), maxSessionsName)
 import           Hsed.Wire              (hex)
 

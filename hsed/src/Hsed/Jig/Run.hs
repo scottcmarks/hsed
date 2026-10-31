@@ -82,6 +82,7 @@ import           RIO.Time               (UTCTime, getCurrentTime)
 
 import           Hsed.Core.UID          (UID)
 import           Hsed.Gen.Core.UIDs     (uAuthority_SID)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Jig.Capture       (captureLevel0)
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Cases.ETC02   (etc02)
@@ -106,7 +107,6 @@ import           Hsed.Jig.Script        (Credential (..), RunCtx (..), RunEnv (.
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
 import           Hsed.Level0            (Level0)
-import           Hsed.OpalUIDs          (uSP_Locking)
 import           Hsed.Sim.Profile       (loadProfile)
 import           Hsed.Sim.State         (lifeOf, spLifeCycle)
 import           Hsed.Sim.Types         (ComIdLife (Associated), ComIdState (..), LifeCycle (..), SimParams (..),

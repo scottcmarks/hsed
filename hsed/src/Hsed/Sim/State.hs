@@ -1,8 +1,10 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 {-|
 Module      : Hsed.Sim.State
-Description : The simulated TPer's state read and changed: sessions, a ComID's life, an SP's rows and cells, the properties
+Description : The simulated TPer's state read and changed: sessions, a ComID's life, an SP's rows, cells and life cycle, the properties
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -18,9 +20,12 @@ regular sessions and the resets share (design 8.1-8.2, M4a):
   resolved from a packet's Session, TSN then HSN (3.3.7.1.2, PDF 73); and a
   ComID's life derived from them (3.3.3, PDF 56: Associated while a session
   is open, else what the ComID holds);
-* an SP's tables: a table's rows, the row of an object by its UID (column
-  0x00), a row changed, a cell by column number and a column by name in a
-  generated description;
+* an SP's tables: a table's rows and its description as the SP holds them,
+  the row of an object by its UID (column 0x00), a row changed, a cell by
+  column number and a column by name in a generated description;
+* an SP's life cycle: the LifeCycleState cell of the SP's row of the Admin
+  SP's SP table (Core 4.1, PDF 91), the one place the TPer keeps it, which
+  the Session Manager, Level 0's Locking descriptor and the jig read;
 * the properties: the TPer's by name from the parameters, the host's by
   name from what a ComID or a session keeps, and what a ComID starts with
   ('initialHostProperties', "Hsed.Sim.Params"').
@@ -35,22 +40,27 @@ module Hsed.Sim.State
   , lifeOf
     -- * Tables and cells
   , tableRows
+  , descOf
   , rowWithUID
   , updateRow
   , cellOf
   , columnOf
+    -- * Life cycles
+  , spLifeCycle
     -- * Properties
   , tperProperty
   , hostProperty
   , initialHostProperties
   ) where
 
-import qualified RIO.List        as L
-import qualified RIO.Map         as Map
+import qualified RIO.List                as L
+import qualified RIO.Map                 as Map
 import           RIO
 
-import           Hsed.Core.Table (Cell (..), Col (..), ColNum, Row, TableDesc, columnNamed)
-import           Hsed.Core.UID   (UID)
+import           Hsed.Core.Table         (Cell (..), Col (..), ColNum, Row, TableDesc, columnNamed)
+import           Hsed.Core.UID           (UID)
+import           Hsed.Gen.Core.TableUIDs (uSPTable)
+import           Hsed.Gen.Core.UIDs      (uSP_Admin)
 import           Hsed.Sim.Types
 
 
@@ -121,6 +131,12 @@ lifeOf c st = life <$> Map.lookup c (tsComIds st)
 tableRows :: UID -> UID -> TPerState -> [Row]
 tableRows sp table st = fromMaybe [] (Map.lookup sp (tsSPs st) >>= Map.lookup table . spsTables)
 
+-- | The description of an SP's table, by the SP's and the table's UIDs, as
+--   the SP holds it with the table ("Hsed.Sim.Types".@spsDescs@: with an
+--   SSC's columns added); none for a table or an SP the TPer lacks.
+descOf :: UID -> UID -> TPerState -> Maybe TableDesc
+descOf sp table st = Map.lookup sp (tsSPs st) >>= Map.lookup table . spsDescs
+
 -- | The row of an SP's table whose UID column (0x00) holds a UID.
 rowWithUID :: UID -> UID -> UID -> TPerState -> Maybe Row
 rowWithUID sp table u st = L.find ((== Just (UIDCell u)) . cellOf 0) (tableRows sp table st)
@@ -141,6 +157,30 @@ cellOf = L.lookup
 --   the description has one.
 columnOf :: TableDesc -> Text -> Maybe ColNum
 columnOf desc name = colNumber <$> columnNamed name desc
+
+
+-- * Life cycles
+
+-- | An SP's life cycle state, the value of the life_cycle_state enumeration
+--   (Opal 2.30 Table 49, PDF 98: Manufactured-Inactive 8, Manufactured 9;
+--   "Hsed.Sim.Params".'lifeCycleValue') that the LifeCycleState cell of its
+--   row of the Admin SP's SP table holds: life cycle states are recorded
+--   there, and the TPer changes that cell whenever an SP's state changes
+--   (Core 4.1, PDF 91; Opal 2.30 5.2.2.2.1-2, PDF 97: Activate and Revert,
+--   M5's), so the simulator keeps it nowhere else. The column is found by
+--   name in the Admin SP's description of its SP table ('descOf'). 'Nothing'
+--   where the Admin SP holds no row for the SP (no such SP) or the row no
+--   enumeration in that column.
+--
+-- >>> spLifeCycle uSP_Admin (initialState defaultSimParams)
+-- Just 9
+spLifeCycle :: UID -> TPerState -> Maybe Int
+spLifeCycle sp st = do
+  desc <- descOf uSP_Admin uSPTable st
+  col  <- columnOf desc "LifeCycleState"
+  rowWithUID uSP_Admin uSPTable sp st >>= cellOf col >>= \case
+    EnumCell _ v -> Just v
+    _            -> Nothing
 
 
 -- * Properties

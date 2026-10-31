@@ -119,9 +119,9 @@ import           Hsed.Gen.Core.TableUIDs   (uAuthorityTable, uC_PINTable, uSPTab
 import           Hsed.Gen.Core.UIDs        (uAuthority_Anybody, uProperties, uSMUID, uSP_Admin, uStartSession)
 import           Hsed.Jig.Catalogue        (CaseKey (..), TestId (..))
 import           Hsed.Sim.Behaviour        (Behaviour (..), Invoked (..), Reply (..), SomeBehaviour, forMethod, runSome)
-import           Hsed.Sim.State            (cellOf, columnOf, openSession, rowWithUID, tperProperty, updateRow)
-import           Hsed.Sim.Types            (ComIdState (..), LifeCycle (..), SPState (..), Session (..), SimParams (..),
-                                            TPerState (..), hostRequirements, initialHostProperties, maxSessionsName,
+import           Hsed.Sim.State            (cellOf, columnOf, openSession, rowWithUID, spLifeCycle, tperProperty, updateRow)
+import           Hsed.Sim.Types            (ComIdState (..), LifeCycle (..), Session (..), SimParams (..), TPerState (..),
+                                            hostRequirements, initialHostProperties, lifeCycleValue, maxSessionsName,
                                             supportedHostProperties, tperRequirements)
 
 
@@ -198,9 +198,11 @@ properties = Behaviour
 --     with its status, 'answer' echoes before any behaviour runs, item 5.1,
 --     PDF 49);
 --   * SPID a row of the Admin SP's SP table (5.2.3.1.2), else
---     INVALID_PARAMETER (5.1.5.11, PDF 139); an SP Manufactured-Inactive,
---     to which no session can be opened (Opal 2.30 5.2.2.1 item 1, PDF 96;
---     5.2.2.3.1, PDF 97; Test Cases ETC-20), INVALID_PARAMETER;
+--     INVALID_PARAMETER (5.1.5.11, PDF 139); an SP Manufactured-Inactive
+--     as that row's LifeCycleState cell records it
+--     ("Hsed.Sim.State".@spLifeCycle@), to which no session can be opened
+--     (Opal 2.30 5.2.2.1 item 1, PDF 96; 5.2.2.3.1, PDF 97; Test Cases
+--     ETC-20), INVALID_PARAMETER;
 --   * Write True (5.2.3.1.3), a read-only session unsupported (Opal 2.30
 --     4.1.1.2, PDF 34: it may or may not be), else INVALID_PARAMETER;
 --   * HostExchangeAuthority, HostExchangeCert, HostSigningCert, TransTimeout,
@@ -398,11 +400,12 @@ cellNamed desc name row = columnOf desc name >>= (`cellOf` row)
 admitted :: Methods.StartSession -> TPerState -> Either StatusCode UID
 admitted m st = do
   spid <- maybe (Left INVALID_PARAMETER) Right (uidOf (Methods.startSessionSPID m))
-  -- a row of the Admin SP's SP table (5.2.3.1.2), and an SP in a life cycle state sessions open to: the SP's own
-  -- life ("Hsed.Sim.Types".SPState) is read, which the SP-table row's LifeCycleState cell mirrors (nothing changes
-  -- either at M4a; Activate and Revert, M5's, change both)
+  -- a row of the Admin SP's SP table (5.2.3.1.2), an SP the TPer holds, and one in a life cycle state sessions open
+  -- to, as that row's LifeCycleState cell records it ("Hsed.Sim.State".spLifeCycle, the one place it is kept, Core
+  -- 4.1, PDF 91; Activate and Revert, M5's, change it): Manufactured, which behaves as Issued (Opal 2.30 5.2.2.3.2,
+  -- PDF 98)
   unless (isJust (rowWithUID uSP_Admin uSPTable spid st)) (Left INVALID_PARAMETER)
-  unless (fmap spsLife (Map.lookup spid (tsSPs st)) == Just Manufactured) (Left INVALID_PARAMETER)
+  unless (Map.member spid (tsSPs st) && spLifeCycle spid st == Just (lifeCycleValue Manufactured)) (Left INVALID_PARAMETER)
   -- Write True (5.2.3.1.3): the boolean's value as the generated enumeration assigns it (Core Table 59, PDF 103)
   unless (Methods.startSessionWrite m == value (fromIntegral (enumValue Core_boolean_True) :: Natural)) (Left INVALID_PARAMETER)
   -- the optional parameters an Opal TPer does not support (Opal 2.30 4.1.1.2, PDF 34); SessionTimeout it accepts

@@ -27,9 +27,12 @@ descriptor's allowances give it ("Hsed.Core.Feature".'Allowance': the
 version an 'AnyVersion' prints, the least a 'Minimum' allows, zero for a
 vendor unique value and for a present state, nothing being locked and no MBR
 shadowing enabled or done at M3) unless the parameters choose it
-("Hsed.Sim.Types".'SimParams': the Locking SP's life cycle, the geometry,
-the SIIS revision, the DataStore tables, the ComIDs, the SSC minor version,
-the data removal version) or the state does: the Opal SSC V2 descriptor's
+("Hsed.Sim.Types".'SimParams': the geometry, the SIIS revision, the
+DataStore tables, the ComIDs, the SSC minor version, the data removal
+version) or the state does: the Locking descriptor's LockingEnabled whether
+the Locking SP is past Manufactured-Inactive, its life cycle as its row of
+the Admin SP's SP table records it ("Hsed.Sim.State".@spLifeCycle@, which
+the parameters' Original Factory State seeds); the Opal SSC V2 descriptor's
 Initial C_PIN_SID PIN Indicator says whether the initial C_PIN_SID PIN was
 C_PIN_MSID's, a fact of manufacture the state holds
 ("Hsed.Sim.Types".@tsInitialSidPinIsMsid@, set from the parameters; Opal
@@ -67,11 +70,11 @@ import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeatu
                                            Level0DiscoverySupportedDataRemovalMechanismFeature (..),
                                            Level0DiscoveryTPerFeature)
 import           Hsed.Level0              (Descriptor (..), featureDescriptor, renderLevel0)
-import           Hsed.OpalUIDs            (uC_PIN_MSID)
+import           Hsed.OpalUIDs            (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Sim.FeatureSets     (BlockSIDFeature (..), DataStoreFeature (..), SiisFeature (..))
-import           Hsed.Sim.State           (cellOf, columnOf, rowWithUID)
+import           Hsed.Sim.State           (cellOf, columnOf, rowWithUID, spLifeCycle)
 import           Hsed.Sim.Types           (Geometry (..), Level0Profile (..), LifeCycle (..), SimParams (..),
-                                           TPerState (..))
+                                           TPerState (..), lifeCycleValue)
 
 
 -- | The response to a Level 0 IF-RECV of a transfer length: exactly that
@@ -95,7 +98,7 @@ simDescriptors st = L.sortOn dCode (own <> added)
       [ described (id :: Level0DiscoveryTPerFeature -> Level0DiscoveryTPerFeature)
         -- LockingEnabled is one once an SP of the Locking template is other than Nonexistent or
         -- Manufactured-Inactive (Opal 3.1.1.3.1, PDF 21)
-      , described (\r -> r { level0DiscoveryLockingFeatureLockingEnabled = spLockingOFS p /= ManufacturedInactive })
+      , described (\r -> r { level0DiscoveryLockingFeatureLockingEnabled = lockingEnabled })
       , featureDescriptor Level0DiscoveryGeometryReportingFeature
           { level0DiscoveryGeometryReportingFeatureALIGN                = gAlign geometry
           , level0DiscoveryGeometryReportingFeatureLogicalBlockSize     = gLogicalBlockSize geometry
@@ -122,6 +125,10 @@ simDescriptors st = L.sortOn dCode (own <> added)
       , described (\r -> r { level0DiscoverySupportedDataRemovalMechanismFeatureVersion = spDataRemovalVersion p
                            , level0DiscoverySupportedDataRemovalMechanismFeatureSupportedDataRemovalMechanism = bit 2 })
       ]
+    -- whether the Locking SP is other than Manufactured-Inactive, its life cycle as its row of the Admin SP's SP
+    -- table records it (Core 4.1, PDF 91), which the parameters' Original Factory State seeds and Activate and Revert
+    -- change (M5); no row, no Locking SP: Nonexistent
+    lockingEnabled = maybe False (/= lifeCycleValue ManufacturedInactive) (spLifeCycle uSP_Locking st)
     -- a profile's descriptors of codes the simulator lacks, the first of each code
     added = L.nubBy ((==) `on` dCode)
       [ d | d <- maybe [] lpDescriptors (spProfile p), dCode d `notElem` map dCode own ]

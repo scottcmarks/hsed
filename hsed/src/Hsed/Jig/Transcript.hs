@@ -23,6 +23,13 @@ none at M3), and the reports print the entries, decoded.
 
 'record' numbers what it adds itself, the next number in the run's order:
 the number an entry is given is replaced, so a caller writes @Note 0 "…"@.
+
+An entry carries the bytes as the wire had them, the secrets a run read
+among them (UCT-03 step 1b's MSID, Test Cases PDF 32); the reports print
+them masked ('maskSecrets': each secret's bytes as 0x2A, the asterisk, so
+that the token stream keeps its shape and still decodes, the report giving
+the secret's length and digest beside it, design 9.3 item 5) unless the run
+asked for them in clear (@--show-msid@, "Hsed.Jig.Options").
 -}
 module Hsed.Jig.Transcript
   ( TEntry (..)
@@ -32,14 +39,21 @@ module Hsed.Jig.Transcript
   , entries
   , recording
   , ifSendsIssued
+    -- * Secrets
+  , maskSecrets
+  , maskByte
   ) where
 
 import qualified Data.Aeson         as A
+import qualified RIO.ByteString     as B
 import           RIO
 
 import           Hsed.Wire          (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), ifStatusName)
 import           Hsed.Wire.Internal (Transport (..))
 
+
+-- $setup
+-- >>> :set -XOverloadedStrings
 
 -- | One entry, numbered in the run's order: a command and its answer, a
 --   command the Guard blocked and why, each with the end it went to (its
@@ -105,3 +119,38 @@ recording t tr = tr
 -- | How many IF-SENDs the entries issued.
 ifSendsIssued :: [TEntry] -> Int
 ifSendsIssued es = length [ () | Issued _ _ q _ <- es, dir q == IfSend ]
+
+
+-- * Secrets
+
+-- | The byte a masked secret's bytes become: 0x2A, the asterisk, as the
+--   serial's masking prints it ("Hsed.Transport.Drive".@maskSerial@).
+maskByte :: Word8
+maskByte = 0x2A
+
+-- | An entry with every occurrence of each secret in its command's payload
+--   and its answer's replaced by as many 'maskByte's, so that a byte string
+--   atom carrying the secret keeps its length and the stream around it its
+--   shape (the reports decode the masked bytes as they decode any); an empty
+--   secret masks nothing. A note is never masked: no verb writes a secret
+--   into one.
+--
+-- >>> let q = Request IfSend 1 0x1004 8 "ab-MSID1"
+-- >>> maskSecrets ["MSID1"] (Issued 1 "tper" q (Response Good "MSID1MSID1"))
+-- Issued 1 "tper" (Request {dir = IfSend, proto = 1, comId = 4100, lenBytes = 8, payload = "ab-*****"}) (Response {status = Good, rpayload = "**********"})
+maskSecrets :: [ByteString] -> TEntry -> TEntry
+maskSecrets secrets = \case
+  Issued n e q r  -> Issued n e (request q) r { rpayload = bytes (rpayload r) }
+  Blocked n e q w -> Blocked n e (request q) w
+  note            -> note
+  where
+    request q = q { payload = bytes (payload q) }
+    bytes     = foldr ((.) . maskAll) id (filter (not . B.null) secrets)
+
+-- | Every occurrence of a (non-empty) secret in bytes replaced by as many
+--   'maskByte's, left to right, occurrences not overlapping.
+maskAll :: ByteString -> ByteString -> ByteString
+maskAll secret bs = case B.breakSubstring secret bs of
+  (before, after)
+    | B.null after -> before
+    | otherwise    -> before <> B.replicate (B.length secret) maskByte <> maskAll secret (B.drop (B.length secret) after)

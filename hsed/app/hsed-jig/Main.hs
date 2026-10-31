@@ -24,7 +24,7 @@ import qualified RIO.Text            as T
 
 import           Hsed.Jig.Catalogue  (parseCaseKeys)
 import           Hsed.Jig.Cli        (Command (..), runCommand)
-import           Hsed.Jig.Options    (RunOptions (..), defaultRunOptions, parseTarget)
+import           Hsed.Jig.Options    (RunOptions (..), defaultRunOptions, parseSidPin, parseTarget)
 import           Hsed.Sim.Types      (SimParams (..))
 import           Hsed.Version        (hsedVersion)
 import           Hsed.Wire           (Unit (..), mostCarried)
@@ -92,7 +92,7 @@ runOptions = options <**> laterMilestones
              <> help "sim (the default), /dev/diskN, replay:FILE, sim+/dev/diskN or sim+replay:FILE")
       <*> option (eitherReader (first T.unpack . parseCaseKeys . T.pack))
             (long "tests" <> metavar "KEYS" <> value (roTests defaultRunOptions)
-             <> help "comma-separated case keys, UCT-01,ETC-02,ETC-03,SPF-02:1 (default: every case of the catalogue)")
+             <> help "comma-separated case keys, UCT-01,ETC-02,ETC-03,SPF-02:1,UCT-02,UCT-03:1a-1c,ETC-04,ETC-08,ETC-15,ETC-21/adminsp (default: every case of the catalogue)")
       <*> option (eitherReader units)
             (long "units" <> metavar "UNITS" <> value (spUnits sim0) <> showDefaultWith unitName
              <> help "simulator: what transfer lengths count, bytes or blocks512")
@@ -103,6 +103,9 @@ runOptions = options <**> laterMilestones
             <> help "simulator: add a Level 0 response's descriptors the simulator lacks"))
       <*> switch (long "inactive-comid-discard"
             <> help "simulator: discard a command to an inactive ComID rather than refuse it")
+      <*> optional (option (eitherReader parseSidPin) (long "sim-sid-pin" <> metavar "HEX"
+            <> help ("simulator: C_PIN_SID's PIN as hex digits, 1 to 32 bytes, other than the MSID's, so that Level 0's Initial "
+                     <> "C_PIN_SID PIN Indicator is not 0 and UCT-03 step 1 does not apply (Test Cases PDF 33)")))
       <*> optional (strOption (long "expect-serial" <> metavar "SERIAL"
             <> help "drive: the serial (trimmed IDENTIFY) the drive must have; required for a /dev target"))
       <*> optional (strOption (long "capture-level0" <> metavar "FILE"
@@ -113,16 +116,20 @@ runOptions = options <**> laterMilestones
                      <> show (mostCarried UnitBlocks512) <> " bytes: more is a usage error)"))
       <*> strOption (long "report-dir" <> metavar "DIR" <> value (roReportDir defaultRunOptions) <> showDefault
             <> help "where the reports go")
-    mk target tests u holding holdN profile discard serial capture len dir = defaultRunOptions
+      <*> switch (long "show-msid"
+            <> help ("show the secrets the run read (UCT-03's MSID) in clear in the reports; without it each is masked as 0x2A "
+                     <> "and given by its length and SHA-256 (design 9.3 item 5)"))
+    mk target tests u holding holdN profile discard sidPin serial capture len dir showMsid = defaultRunOptions
       { roTarget       = target
       , roTests        = tests
-      , roSim          = sim0 { spUnits = u, spInactiveComIdDiscard = discard }
+      , roSim          = sim0 { spUnits = u, spInactiveComIdDiscard = discard, spSidPin = sidPin }
       , roHold         = fromMaybe (if holding then 1 else 0) holdN
       , roProfile      = profile
       , roReportDir    = dir
       , roCapture      = capture
       , roExpectSerial = T.pack <$> serial
       , roLevel0Len    = len
+      , roShowMsid     = showMsid
       }
     -- a length some transport carries: none carries more than 1 MiB (Hsed.Wire.mostCarried)
     mostLevel0 = mostCarried UnitBytes
@@ -138,7 +145,8 @@ runOptions = options <**> laterMilestones
       UnitBlocks512 -> "blocks512"
 
 -- | The options of later milestones, read and refused (a usage error), each
---   naming its milestone (design 9.3, 11).
+--   naming its milestone (design 9.3, 11). @--show-msid@, M4c's at M3, is
+--   read since M4a (the MSID is read on the simulator).
 laterMilestones :: Parser (a -> a)
 laterMilestones = foldr (\r rest -> (.) <$> refused r <*> rest) (pure id)
   [ ("allow-write", "SERIAL", "M6: writes to a drive, with HSED_DRIVE_WRITE=1 (design 9.3)")
@@ -146,9 +154,8 @@ laterMilestones = foldr (\r rest -> (.) <$> refused r <*> rest) (pure id)
   , ("allow-mounted", "", "M4c: a mounted drive's pre-flight (design 9.3)")
   , ("allow-error-paths", "", "M4c: hardware error paths, opt-in (design 9.3, 13.8)")
   , ("sessions", "MODE", "M4c: read-only sessions on a drive (design 9.3, 13.7)")
-  , ("show-msid", "", "M4c: the MSID in clear (design 9.3)")
   ]
   where
     refused (name, var, milestone) = abortOption
-      (ErrorMsg ("--" <> name <> " is " <> milestone <> "; not at M3"))
-      (long name <> metavar var <> help ("refused at M3: " <> milestone))
+      (ErrorMsg ("--" <> name <> " is " <> milestone <> "; not at M4a"))
+      (long name <> metavar var <> help ("refused at M4a: " <> milestone))

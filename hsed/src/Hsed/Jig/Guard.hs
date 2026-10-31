@@ -18,14 +18,20 @@ and never issued. At M3 a drive's policy is 'Level0Only': IF-RECV of Level
 0 Discovery (protocol 1, ComID 1) and nothing else. 'AllowList' is M4c's,
 written now for its test: an IF-SEND whose ComPacket parses to methods every
 one of which is allowed (SMUID.Properties; SMUID.StartSession to the Admin
-SP as Anybody or no one; Get on C_PIN_MSID of its UID and PIN columns; a bare
-EndOfSession), the UIDs those of "Hsed.Gen.Core.UIDs" and, for C_PIN_MSID
-until M4b generates it, "Hsed.OpalUIDs", and IF-RECV of protocol 1; ComID
-management (protocol 2) is refused but for STACK_RESET on the base ComID and
-its GET_COMID_RESPONSE under 'AllowStackReset' (@--recover@, design 9.3),
-and anything that does not parse is refused. /At the M4a scaffold/ the
-checks behind 'AllowGetCPinMSID' and 'AllowStackReset' refuse, naming group
-G3, which writes them (design 11).
+SP as Anybody or no one; Get on C_PIN_MSID of one cell_block within its UID
+and PIN columns; a bare EndOfSession), the UIDs those of
+"Hsed.Gen.Core.UIDs" and, for C_PIN_MSID until M4b generates it,
+"Hsed.OpalUIDs", the columns found by name in the generated C_PIN
+description ("Hsed.Gen.Core.TableDescs"), and IF-RECV of protocol 1; ComID
+management (protocol 2) is refused but for STACK_RESET on a static ComID and
+its GET_COMID_RESPONSE under 'AllowStackReset' (@--recover@, design 9.3):
+the IF-SEND of Core Table 35's request (PDF 65), read strictly through the
+generated layout, for the Extended ComID of the ComID the command is on
+with a static ComID's extension, nothing after it but zeros, on a ComID
+Core Table 26 does not reserve (so never TPER_RESET's 0x0004 nor
+GET_COMID's 0x0000, PDF 55), and the IF-RECV of protocol 2 on such a ComID;
+VERIFY_COMID_VALID and every other request code read as a pin other than
+Table 35's and are refused, as is anything that does not parse.
 
 The Guard sends on a @'ReadOnly@ transport, which no other module can:
 'guardedSend' and 'guardedRecv' decide one command each; 'guarding' puts
@@ -47,26 +53,35 @@ module Hsed.Jig.Guard
   , guarding
   ) where
 
+import           Data.Bits             (shiftL, (.|.))
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
 import           RIO
 import qualified RIO.Text              as T
 
 import           Hsed.Core.Call        (MethodCall (..), MethodHeader (..), Parameters (..))
+import           Hsed.Core.CellBlock   (CellBlock (..), cellBlock)
+import           Hsed.Core.Layout      (LayoutError)
 import           Hsed.Core.Method      (MethodSignature (..), Param (..), Signature (..))
+import           Hsed.Core.Record      (DecodedRecord (..), decodeRecordStrict)
 import           Hsed.Core.StreamItem  (StreamItem (..))
+import           Hsed.Core.Table       (Col (..), TableDesc (..), columnNamed)
 import           Hsed.Core.Token       (IsToken (..), Token (..))
 import           Hsed.Core.UID         (UID)
 import           Hsed.Core.Value       (Datum (..), Name (..), NamedValue (..), Value)
-import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..))
+import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
+                                        STACK_RESETCommandRequest (..))
 import qualified Hsed.Gen.Core.Methods as Methods
+import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, uAuthority_Anybody, uMethodID_Get, uProperties,
                                         uSMUID, uSP_Admin, uStartSession)
 import           Hsed.Jig.Transcript   (TEntry (..), Transcript, record)
 import           Hsed.OpalUIDs         (uC_PIN_MSID)
 import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
+import           Hsed.Sim.Params       (reservedComId)
 import           Hsed.Wire             (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
-                                        comIdManagementProtocol, comPacketProtocol, dataKind, hex, level0ComId)
+                                        comIdManagementProtocol, comPacketProtocol, dataKind, hex, level0ComId,
+                                        staticExtension)
 import           Hsed.Wire.Internal    (Transport (..))
 
 
@@ -119,6 +134,10 @@ refuse t tr q why = Left why <$ record t (Blocked 0 (dRole (tDescribe tr)) q why
 -- | What a policy says of a command. Level0Only admits Level 0's IF-RECV on
 --   the ComID Core Table 26 gives it, and nothing on the reserved ComID
 --   0x0000, which "Hsed.Wire".'level0ComId' would read were the row lost.
+--   An allow list admits IF-RECV of protocol 1, an IF-SEND of protocol 1
+--   whose every method it lists ('allowedSend'), and, with
+--   'AllowStackReset' alone, ComID management's STACK_RESET and
+--   GET_COMID_RESPONSE ('stackResetAllowed').
 decide :: Policy -> Request -> Either Text ()
 decide policy q = case policy of
   Level0Only
@@ -128,11 +147,38 @@ decide policy q = case policy of
     | otherwise       -> Left ("Level0Only: IF-RECV of Level 0 Discovery alone (protocol " <> hex comPacketProtocol
                                <> ", ComID " <> hex level0ComId <> "), not protocol " <> hex (proto q) <> ", ComID " <> hex (comId q))
   AllowList allowed
-    | proto q == comIdManagementProtocol, AllowStackReset `elem` allowed ->
-        Left "AllowList: G3: AllowStackReset's check (STACK_RESET on the base ComID and its GET_COMID_RESPONSE alone) is not written: refused"
+    | proto q == comIdManagementProtocol, AllowStackReset `elem` allowed -> first ("AllowList: " <>) (stackResetAllowed q)
     | proto q /= comPacketProtocol -> Left ("AllowList: protocol " <> hex (proto q) <> " refused, ComID management among them")
     | dir q == IfRecv              -> Right ()
     | otherwise                    -> first ("AllowList: " <>) (allowedSend allowed q)
+
+-- | A ComID management command 'AllowStackReset' admits (Core 3.3.4.7.5,
+--   PDF 65-66; design 9.3's @--recover@): on a ComID Core Table 26 does not
+--   reserve (PDF 55: TPER_RESET's 0x0004 and GET_COMID's 0x0000 are
+--   reserved, so neither passes), an IF-RECV (GET_COMID_RESPONSE, which
+--   reads what the TPer holds and changes nothing but its buffer), or an
+--   IF-SEND whose payload is Table 35's STACK_RESET request and nothing
+--   else: read strictly through the generated layout (its Request Code a
+--   pin, 0x00000002, so VERIFY_COMID_VALID's 0x00000001 and every other
+--   code are refused), its Extended ComID the command's ComID with a static
+--   ComID's extension, its reserved bytes zeros to the end of the transfer.
+stackResetAllowed :: Request -> Either Text ()
+stackResetAllowed q
+  | reservedComId (comId q) =
+      Left ("ComID management on ComID " <> hex (comId q) <> ", which Core Table 26 reserves (TPER_RESET's 0x0004 among them): "
+            <> "STACK_RESET on a static ComID alone")
+  | dir q == IfRecv = Right ()
+  | otherwise = case decodeRecordStrict (payload q) :: Either LayoutError (DecodedRecord STACK_RESETCommandRequest) of
+      Left e -> Left ("the payload is no STACK_RESET request (Core Table 35, PDF 65): " <> tshow e)
+      Right (DecodedRecord request ds rest)
+        | not (null ds) -> Left ("a STACK_RESET request read with differences: " <> tshow ds)
+        | not (B.all (== 0) rest) -> Left "bytes other than zeros after the STACK_RESET request"
+        | stack_RESETCommandRequestExtendedComID request /= extended ->
+            Left ("a STACK_RESET request for Extended ComID " <> hex (stack_RESETCommandRequestExtendedComID request) <> ", not the command's "
+                  <> hex extended <> " (a static ComID's extension, Core 3.3.3.1, PDF 57)")
+        | otherwise -> Right ()
+  where
+    extended = (fromIntegral (comId q) `shiftL` 16) .|. fromIntegral staticExtension :: Word32
 
 -- | An IF-SEND's payload: one ComPacket on the command's ComID, read without
 --   a difference, then zeros, whose every subpacket is Data and holds one
@@ -165,8 +211,7 @@ allowedCall allowed (MethodCall (MethodHeader invoker method) ps _)
   | invoker == uSMUID && method == uStartSession =
       need allowed AllowStartSessionAdminSP "SMUID.StartSession" >> startSessionAllowed ps
   | invoker == uC_PIN_MSID && method == uMethodID_Get =
-      need allowed AllowGetCPinMSID "Get on C_PIN_MSID"
-        >> Left "G3: AllowGetCPinMSID's check (one cell_block naming the UID and PIN columns alone) is not written: refused"
+      need allowed AllowGetCPinMSID "Get on C_PIN_MSID" >> getCPinMSIDAllowed ps
   | otherwise = Left ("the method " <> named method <> " on " <> tshow invoker <> " is not allowed")
   where named u = maybe (tshow u) (\n -> T.pack n <> " (" <> tshow u <> ")") (L.lookup u (sessionManagerMethodUIDs <> methodIDUIDs))
 
@@ -188,6 +233,32 @@ startSessionAllowed (Parameters positional nameds) = do
     sig = signature @Methods.StartSession
     named n = (== n) . paramName
 
+-- | Get on C_PIN_MSID of its UID and PIN columns alone (UCT-03 step 1b,
+--   Test Cases PDF 32; the columns Opal 2.30's ACE_C_PIN_MSID_Get_PIN
+--   grants Anybody, Table 23, PDF 47): one cell_block
+--   ("Hsed.Core.CellBlock", Core 5.1.4.2.3, PDF 129-130) and no optional
+--   parameter, the cell_block giving neither Table, startRow nor endRow (on
+--   an object they are refused anyway, 5.1.4.2.3 a.b, b.c, c.b), and the
+--   columns from its startColumn (the first, omitted) to its endColumn (the
+--   last, omitted) each the UID or the PIN column, found by name in the
+--   generated C_PIN description.
+getCPinMSIDAllowed :: Parameters -> Either Text ()
+getCPinMSIDAllowed (Parameters positional nameds) = do
+  unless (null nameds) (Left "Get with an optional parameter, which its signature has none of")
+  cb <- case positional of
+    [v] -> first ("Get's cell_block: " <>) (cellBlock v)
+    _   -> Left ("Get with " <> tshow (length positional) <> " required parameters, not its one cell_block")
+  traverse_ (\(component, given) -> when given (Left ("Get on C_PIN_MSID with a cell_block naming " <> component <> ": its UID and PIN columns alone")))
+            [("Table", isJust (cbTable cb)), ("startRow", isJust (cbStartRow cb)), ("endRow", isJust (cbEndRow cb))]
+  let start = fromMaybe 0 (cbStartColumn cb)
+      end   = fromMaybe lastColumn (cbEndColumn cb)
+  unless (start <= end && all (`elem` allowedColumns) [start .. end]) $
+    Left ("Get on C_PIN_MSID of columns " <> tshow start <> " to " <> tshow end <> ": its UID and PIN columns alone ("
+          <> T.intercalate ", " (map tshow allowedColumns) <> ")")
+  where
+    allowedColumns = [ fromIntegral (colNumber col) | name <- ["UID", "PIN"], Just col <- [columnNamed name c_PINTableDesc] ] :: [Natural]
+    lastColumn     = fromIntegral (maybe 0 colNumber (L.lastMaybe (tdColumns c_PINTableDesc)))
+
 -- | Whether a parameter is a UID's bytes.
 isUid :: UID -> Value -> Bool
 isUid u v = mtoken v == Just (token u)
@@ -196,4 +267,3 @@ need :: [Allowed] -> Allowed -> Text -> Either Text ()
 need allowed a what
   | a `elem` allowed = Right ()
   | otherwise        = Left (what <> " is not in the allow list")
-

@@ -40,16 +40,27 @@ one name the transcript's entries carry, "Hsed.Jig.Transcript"); then the
 two Level 0 responses are compared
 ("Hsed.Jig.Pair"), discovered after the cases when UCT-01 did not. A drive
 is never asked for Level 0 again once it was asked (a failed kext command
-leaks a SCSI task in the kext), for the pair or for the capture.
+leaks a SCSI task in the kext), for the pair or for the capture. What a
+case observes ("Hsed.Jig.Script".@observe@) goes into its result, and the
+secrets the ends read (UCT-03's MSID, a PIN the run reads from the
+simulator's state) into the run's, masked in the reports unless
+@--show-msid@ (design 9.3 item 5).
 
 A case's prerequisites are its section's list, in order (Test Cases 3.2.3,
 PDF 25): one it waives is printed with its reason; on the simulator the run
 establishes the synchronous protocol idle (draining every static ComID not
-in Awaiting IF-SEND) and reads that no session is open from its state; on a
-drive, for a case that needs Level 0 alone, both are unobservable under
-Level0Only and waived as such, Level 0 being outside the synchronous
-protocol (Core 3.3.10.3 b, PDF 84) and answered whatever the sessions
-(3.3.6.2, PDF 67). A prerequisite neither waived nor met skips the case.
+in Awaiting IF-SEND), establishes that no session is open (STACK_RESET on
+every ComID whose sessions a case before left open, Core 3.3.4.7.5, PDF 65,
+noted in the transcript), takes the credentials known (vacuous for a case
+that authenticates no authority; for one that does, the authority's PIN
+read from the simulator's state, which the case may then send or vary), each
+HostChallenge the current PIN likewise, and every session read-write (every
+StartSession the jig sends has Write True, Test Cases 4.1 e, PDF 26); on a
+drive, for a case that needs Level 0 alone, SyncIdle and NoSessions are
+unobservable under Level0Only and waived as such, Level 0 being outside the
+synchronous protocol (Core 3.3.10.3 b, PDF 84) and answered whatever the
+sessions (3.3.6.2, PDF 67). A prerequisite neither waived nor met skips the
+case.
 -}
 module Hsed.Jig.Run
   ( RunOptions (..)
@@ -58,12 +69,15 @@ module Hsed.Jig.Run
   , cases
   ) where
 
+import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
 import qualified RIO.Map                as Map
 import           RIO
 import qualified RIO.Text               as T
 import           RIO.Time               (UTCTime, getCurrentTime)
 
+import           Hsed.Core.UID          (UID)
+import           Hsed.Gen.Core.UIDs     (uAuthority_SID)
 import           Hsed.Jig.Capture       (captureLevel0)
 import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Cases.ETC02   (etc02)
@@ -83,8 +97,8 @@ import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (pairFails, pairLevel0)
 import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common)
 import           Hsed.Jig.Report        (CaseResult (..), RunResult (..), renderTarget, summary, writeReports)
-import           Hsed.Jig.Script        (RunCtx (..), RunEnv (..), Script, Verdict (..), attempt, discover, drain,
-                                         drivePolicy, emptyRunCtx, verdictText)
+import           Hsed.Jig.Script        (Credential (..), RunCtx (..), RunEnv (..), Script, Verdict (..), attempt, discover,
+                                         drain, drivePolicy, emptyRunCtx, simCredential, stackReset, verdictText)
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
 import           Hsed.Level0            (Level0)
@@ -97,14 +111,22 @@ import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
 import           Hsed.Version           (hsedVersion)
 import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
-                                         comPacketProtocol, describeTransport, level0ComId, mostCarried, newChannel, roundUp,
-                                         transferLength)
+                                         comPacketProtocol, describeTransport, hex, level0ComId, mostCarried, newChannel,
+                                         roundUp, transferLength)
 
 
 -- | The cases the jig runs, one for each entry of the catalogue, in its
 --   order.
 cases :: [Case]
 cases = [uct01, uct02, uct03steps1a1c, spf02case1, etc02, etc03, etc04, etc08, etc15, etc21adminsp]
+
+-- | The authority a case authenticates at StartSession, by the case's key,
+--   with its name: ETC-21/adminsp alone, SID (Opal 2.30 Table 24, PDF 48);
+--   every other case opens its sessions as Anybody, with no authority, or
+--   none at all. What CredentialsKnown and HostChallengeIsCurrentPin are
+--   about (Test Cases 5.2 items 3 and 4, 7.2 item 3; PDF 29 and 76).
+authenticating :: [(CaseKey, (Text, UID))]
+authenticating = [(cKey etc21adminsp, ("SID", uAuthority_SID))]
 
 -- | Run the jig.
 runJig :: RunOptions -> IO ExitCode
@@ -230,7 +252,8 @@ endDescribe e = case reTarget (endEnv e) of
   PairTarget _ _   -> Nothing
 
 -- | Run the cases on the ends, then compare and capture Level 0, count the
---   IF-SENDs each drive was issued, write the reports.
+--   IF-SENDs each drive was issued, gather the secrets the ends read, write
+--   the reports.
 runOn :: RunOptions -> UTCTime -> [Case] -> Target -> IO ExitCode
 runOn opts started chosen tg = do
   t <- newTranscript
@@ -243,7 +266,9 @@ runOn opts started chosen tg = do
       a : b : _ -> Just <$> (liftA2 pairLevel0 <$> endLevel0 a <*> endLevel0 b)
       _         -> pure Nothing
     problems <- capture opts ends
-    level0s <- catMaybes <$> for ends (\e -> fmap ((,) (endName e)) . rcLevel0 <$> readIORef (reCtx (endEnv e)))
+    contexts <- for ends (readIORef . reCtx . endEnv)
+    let level0s = [ (endName e, l0) | (e, ctx) <- zip ends contexts, Just l0 <- [rcLevel0 ctx] ]
+        secrets = L.nub (filter (not . B.null) (concatMap rcSecrets contexts))
     ifSends <- sum <$> for [ own | e <- ends, Just (own, _) <- [endDrive e] ] (fmap ifSendsIssued . entries)
     transcript <- entries t
     let pairProblems = [ "pair: " <> e | Just (Left e) <- [pairing] ]
@@ -263,6 +288,7 @@ runOn opts started chosen tg = do
           , rrLevel0     = level0s
           , rrPair       = either (const Nothing) Just =<< pairing
           , rrIfSends    = ifSends
+          , rrSecrets    = secrets
           , rrProblems   = allProblems
           , rrExit       = exit
           }
@@ -315,13 +341,16 @@ joined named c rs
 
 -- | A case on one end: skipped if the end lacks what it needs or a
 --   prerequisite is unmet; else run to its verdict, then its extensions,
---   on the simulator alone.
+--   on the simulator alone; what the case and its extensions observed goes
+--   into its result, and the next case starts with none.
 runCase :: End -> Case -> IO CaseResult
 runCase e c = runRIO (endEnv e) $ do
   let heading = renderCaseKey (cKey c) <> " on the " <> endName e
   logInfo (display heading)
   note heading
   tg <- asks reTarget
+  ref <- asks reCtx
+  modifyIORef' ref (\x -> x { rcObservations = [] })
   case lacking tg (cNeeds c) of
     Just why -> pure (CaseResult (cKey c) (Skipped why) [] [] [] [])
     Nothing  -> prerequisites c >>= \case
@@ -331,7 +360,8 @@ runCase e c = runRIO (endEnv e) $ do
         xs <- for (cExtensions c) $ \(name, s) -> (,) name <$> case tg of
           SimTarget _ _ -> note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name) >> attempt s
           _             -> pure (Skipped "the simulator's alone")
-        pure (CaseResult (cKey c) v ws xs [] [])
+        observations <- rcObservations <$> readIORef ref
+        pure (CaseResult (cKey c) v ws xs observations [])
 
 -- | Why a target cannot run a case that needs these, if it cannot: a drive
 --   before M4c answers Level 0 Discovery alone, and after it the allow
@@ -364,10 +394,20 @@ prerequisites c = go (common (cSection c))
         Right mw -> fmap (maybe id (:) mw) <$> go rest
 
 -- | A prerequisite on this end: met (established if need be), waived as
---   unobservable, or why not.
+--   unobservable, or why not. On the simulator: SyncIdle drains every
+--   ComID not in Awaiting IF-SEND; NoSessions sends STACK_RESET on every
+--   ComID a session holds (Core 3.3.4.7.5 item 1, PDF 65: every session on
+--   it aborted, no CloseSession prepared), noted, and reads the state again;
+--   LockingManufactured reads the Locking SP's Original Factory State;
+--   CredentialsKnown is vacuous for a case that authenticates no authority
+--   ('authenticating'), and for one that does reads the authority's PIN from
+--   the state ("Hsed.Jig.Script".'simCredential'), a secret of the run;
+--   HostChallengeIsCurrentPin likewise (a case's challenge is that PIN, or a
+--   variation it makes on purpose); ReadWriteSessions is met, every session
+--   the jig opens being read-write (Test Cases 4.1 e, PDF 26).
 establish :: Case -> Prereq -> Script (Either Text (Maybe Waiver))
 establish c p = asks reTarget >>= \case
-  SimTarget _ control -> liftIO (scPeek control) >>= onSim
+  SimTarget _ control -> liftIO (scPeek control) >>= onSim control
   DriveTarget _ _
     | p `elem` [SyncIdle, NoSessions], all (== NeedLevel0) (cNeeds c) -> pure (Right (Just (Waiver p unobservable)))
     | otherwise -> pure (Left (tshow p <> ": not observable on a drive under Level0Only at M3"))
@@ -376,20 +416,44 @@ establish c p = asks reTarget >>= \case
     unobservable = "unobservable under Level0Only, which lets Level 0 Discovery alone reach the drive, and not needed: Level 0 "
                    <> "is outside the synchronous protocol (Core 3.3.10.3 b, PDF 84) and answered whatever the sessions "
                    <> "(3.3.6.2, PDF 67)"
-    onSim st = case p of
+    authority = L.lookup (cKey c) authenticating
+    met = pure (Right Nothing)
+    onSim control st = case p of
       SyncIdle -> do
         let busy = [ comid | (comid, s) <- Map.toList (tsComIds st), cSync s /= S1 ]
-        unless (null busy) (note ("SyncIdle: draining " <> T.unwords (map tshow busy)))
+        unless (null busy) (note ("SyncIdle: draining " <> T.unwords (map hex busy)))
         attempt (Pass <$ traverse_ drain busy) <&> \case
           Pass -> Right Nothing
           v    -> Left ("SyncIdle: " <> verdictText v)
-      NoSessions -> pure $ case [ comid | comid <- Map.keys (tsComIds st), lifeOf comid st == Just Associated ] of
-        []   -> Right Nothing
-        held -> Left ("NoSessions: sessions hold ComIDs " <> T.unwords (map tshow held))
+      NoSessions -> case holding st of
+        []   -> met
+        held -> do
+          note ("NoSessions: sessions hold ComIDs " <> T.unwords (map hex held) <> ": STACK_RESET on each (Core 3.3.4.7.5, PDF 65)")
+          for_ held $ \comid -> stackReset comid >>= \outcome ->
+            note ("NoSessions: STACK_RESET on " <> hex comid <> ": " <> either id (("Success/Failure " <>) . tshow) outcome)
+          asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing })
+          liftIO (scPeek control) <&> holding <&> \case
+            []    -> Right Nothing
+            still -> Left ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET")
       LockingManufactured
-        | spLockingOFS (tsParams st) == Manufactured -> pure (Right Nothing)
+        | spLockingOFS (tsParams st) == Manufactured -> met
         | otherwise -> pure (Left "LockingManufactured: the simulator's Locking SP is Manufactured-Inactive, its Original Factory State (design 9.1; M5)")
-      _ -> pure (Left (tshow p <> ": sessions are M4a's"))
+      CredentialsKnown -> case authority of
+        Nothing -> Right Nothing <$ note "CredentialsKnown: vacuous, the case authenticates no authority (a session as Anybody needs no credential, Core 5.3.4.1.2.1, PDF 211)"
+        Just (name, u) -> case simCredential u st of
+          Nothing -> pure (Left ("CredentialsKnown: the simulator's Admin SP holds no credential for " <> name))
+          Just cr -> do
+            asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSecrets = L.nub (rcSecrets x <> [crPIN cr]) })
+            note ("CredentialsKnown: " <> name <> "'s PIN read from the simulator's state, " <> tshow (B.length (crPIN cr))
+                  <> " bytes, TryLimit " <> tshow (crTryLimit cr) <> ", Tries " <> tshow (crTries cr) <> " (masked in the reports unless --show-msid)")
+            met
+      HostChallengeIsCurrentPin -> case authority of
+        Nothing        -> Right Nothing <$ note "HostChallengeIsCurrentPin: vacuous, the case sends no HostChallenge"
+        Just (name, _) -> Right Nothing <$ note ("HostChallengeIsCurrentPin: " <> name <> "'s current PIN is read from the simulator's state; a "
+                                                 <> "challenge other than it is the case's own doing")
+      ReadWriteSessions -> Right Nothing <$ note "ReadWriteSessions: every session the jig opens is read-write (StartSession's Write True, Test Cases 4.1 e, PDF 26)"
+    -- the ComIDs sessions hold
+    holding s = [ comid | comid <- Map.keys (tsComIds s), lifeOf comid s == Just Associated ]
 
 -- | Add a note to the run's transcript.
 note :: Text -> Script ()

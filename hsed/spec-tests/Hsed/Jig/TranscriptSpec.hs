@@ -14,17 +14,24 @@ A transcript numbers its entries itself, in the order added; a recording
 transport adds every command it exchanges with its answer, an event as a
 note, and a command whose transport threw as a transport failure before the
 exception goes on; the IF-SENDs issued are the issued entries' IF-SENDs,
-not a blocked one's.
+not a blocked one's. A secret is masked in an entry's bytes as so many
+asterisks, in a command's payload and its answer's alike, a blocked
+command's too, so that a byte-string atom carrying it keeps its length and
+the stream still reads; an empty secret and a note are left alone (design
+9.3 item 5).
 -}
 module Hsed.Jig.TranscriptSpec (spec) where
 
-import qualified RIO.ByteString      as B
+import qualified RIO.ByteString       as B
 import           RIO
 import           Test.Hspec
 
+import           Hsed.Core.Call       (MethodResponse (..))
+import           Hsed.Core.StreamItem (StreamItem (..))
+import           Hsed.Core.Value      (List (..), Value (..), (.:))
 import           Hsed.Jig.Transcript
-import           Hsed.Wire.Internal  (Cap (..), Describe (..), Dir (..), Event (..), IfStatus (..), Request (..),
-                                      Response (..), Transport (..), Unit (..))
+import           Hsed.Wire.Internal   (Cap (..), Describe (..), Dir (..), Event (..), IfStatus (..), Request (..),
+                                       Response (..), Transport (..), Unit (..))
 
 
 -- | A transport that answers every command Good with as many zeros as asked
@@ -42,6 +49,14 @@ fake throws = MkTransport
 recv, send :: Request
 recv = Request IfRecv 1 0x1004 64 mempty
 send = Request IfSend 1 0x1004 512 mempty
+
+-- | The simulator's default MSID, 32 bytes.
+msid :: ByteString
+msid = "HSED-SIM-MSID-0123456789ABCDEF01"
+
+-- | So many asterisks.
+stars :: Int -> ByteString
+stars n = B.replicate n maskByte
 
 spec :: Spec
 spec = do
@@ -74,3 +89,21 @@ spec = do
       ifSendsIssued [ Issued 1 "drive" recv (Response Good mempty), Blocked 2 "drive" send "no"
                     , Issued 3 "drive" send (Response Good mempty), Note 4 "x" ]
         `shouldBe` 1
+
+  describe "maskSecrets (design 9.3 item 5)" $ do
+    it "replaces each occurrence of a secret in a command's payload and in its answer with as many 0x2A bytes, and nothing else" $
+      maskSecrets [msid] (Issued 1 "tper" send { payload = "abc" <> msid <> "def" } (Response Good (msid <> "--" <> msid)))
+        `shouldBe` Issued 1 "tper" send { payload = "abc" <> stars 32 <> "def" } (Response Good (stars 32 <> "--" <> stars 32))
+    it "masks a blocked command's payload; leaves an empty secret, bytes without the secret, and a note alone" $ do
+      maskSecrets ["x"] (Blocked 2 "drive" send { payload = "axb" } "why") `shouldBe` Blocked 2 "drive" send { payload = "a*b" } "why"
+      maskSecrets [""] (Issued 1 "tper" send (Response Good "abc")) `shouldBe` Issued 1 "tper" send (Response Good "abc")
+      maskSecrets ["zz"] (Issued 1 "tper" send (Response Good "abc")) `shouldBe` Issued 1 "tper" send (Response Good "abc")
+      maskSecrets ["abc"] (Note 3 "abc") `shouldBe` Note 3 "abc"
+    it "masks several secrets, each where it occurs" $
+      maskSecrets ["MSID", "PIN!"] (Issued 1 "tper" send (Response Good "the MSID and the PIN!"))
+        `shouldBe` Issued 1 "tper" send (Response Good ("the " <> stars 4 <> " and the " <> stars 4))
+    it "keeps a masked byte-string atom's length, so that a Get result carrying the MSID still reads, its PIN asterisks" $ do
+      let result = MethodResponse [L (List [N ((3 :: Natural) .: msid)])] 0
+      case maskSecrets [msid] (Issued 1 "tper" recv (Response Good (generate result))) of
+        Issued _ _ _ r -> parseByteString (rpayload r) `shouldBe` Right (MethodResponse [L (List [N ((3 :: Natural) .: stars 32)])] 0)
+        other          -> expectationFailure ("not an issued entry: " <> show other)

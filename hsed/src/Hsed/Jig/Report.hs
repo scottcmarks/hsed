@@ -13,7 +13,8 @@ Stability   : experimental
 What a run writes (design 9.2): @build/report/jig-<target>-<UTC stamp>@ as
 JSON (the wire types' own, "Hsed.Wire.Internal"), as Markdown (the
 verdicts, each end's beside a pair's joined one, each waiver with its reason
-and page, the decodes, the pair comparison, the run's problems) and as JUnit
+and page, the observations, the decodes, the pair comparison, the run's
+problems) and as JUnit
 XML, through "Hsed.Jig.Files", the JSON's name claimed exclusively and the
 Markdown's and JUnit's following it, so that a run that started in the same
 second as another, or together with it, takes the next free suffix (@-2@,
@@ -32,9 +33,17 @@ The target's part of a report's name is @sim@, @dev-disk6@,
 is the run's start, @yyyymmddThhmmssZ@. Each transcript entry is printed
 with a decode: a Level 0 response's length and codes for ComID 1, otherwise
 the ComPacket, its packets and subpackets, and each subpacket's tokens read
-as a method invocation where they are one; an IF-RECV's ComPacket header
-also as the row of Core Table 45 it is. A waiver is printed with the item
-and page of its section's list ("Hsed.Jig.Prereq").
+as a method invocation or a method response where they are one; an
+IF-RECV's ComPacket header also as the row of Core Table 45 it is. A waiver
+is printed with the item and page of its section's list ("Hsed.Jig.Prereq").
+
+The secrets a run read ('rrSecrets': UCT-03's MSID, a PIN read from the
+simulator's state) are masked in every report (design 9.3 item 5): each
+occurrence in an entry's bytes becomes 0x2A bytes before the entry is
+printed or decoded ("Hsed.Jig.Transcript".'maskSecrets'), and each secret is
+given by its length and the first 12 hex digits of its SHA-256
+("Hsed.Jig.Sha256") in the JSON, the Markdown and the JUnit properties, never
+by its bytes; @--show-msid@ leaves the bytes in clear and says so.
 
 @verify-transcript@ and @diff@ read a report as JSON values (there is no
 FromJSON for the wire types): the transcript's entries, and the Level 0
@@ -51,6 +60,7 @@ module Hsed.Jig.Report
   , summary
   , renderTarget
   , exitNumber
+  , describeSecret
   ) where
 
 import qualified Data.Aeson             as A
@@ -79,7 +89,8 @@ import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairReport (..), judged, pairFails, pairLevel0)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
 import           Hsed.Jig.Script        (Verdict (..), describeStatus, t45Of, t45RowOf, verdictText)
-import           Hsed.Jig.Transcript    (TEntry (..))
+import           Hsed.Jig.Sha256        (sha256Hex)
+import           Hsed.Jig.Transcript    (TEntry (..), maskSecrets)
 import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, describeProblem,
                                          splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
@@ -89,6 +100,9 @@ import           Hsed.Transport.Drive   (maskSerial)
 import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
                                          comPacketProtocol, hex, level0ComId)
 
+
+-- $setup
+-- >>> :set -XOverloadedStrings
 
 -- | What one case came to: its verdict, what it waived, its extensions' and
 --   what it observed (a table a case reads, UCT-02's properties: name and
@@ -112,10 +126,12 @@ data RunResult = RunResult
   , rrStarted    :: !UTCTime
   , rrTargets    :: ![Describe]         -- ^ what each transport said it is (two for a pair)
   , rrCases      :: ![CaseResult]
-  , rrTranscript :: ![TEntry]
+  , rrTranscript :: ![TEntry]           -- ^ as the wire had it; printed masked ('rrSecrets') unless @--show-msid@
   , rrLevel0     :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name (its transport's role)
   , rrPair       :: !(Maybe PairReport)
   , rrIfSends    :: !Int                -- ^ the IF-SENDs issued on a drive (none at M3)
+  , rrSecrets    :: ![ByteString]       -- ^ the secrets the run read (the MSID, a PIN), each masked in the reports and
+                                        --   given by its length and digest alone, unless @--show-msid@
   , rrProblems   :: ![Text]             -- ^ what else failed the run: the capture, a pair not computed
   , rrExit       :: !ExitCode
   }
@@ -170,6 +186,34 @@ exitNumber = \case
   ExitFailure n -> n
 
 
+-- * Secrets
+
+-- | Whether a run's reports show its secrets in clear (@--show-msid@).
+shown :: RunResult -> Bool
+shown = roShowMsid . rrOptions
+
+-- | A transcript entry as the reports print it: its secrets masked unless
+--   the run shows them.
+masked :: RunResult -> TEntry -> TEntry
+masked rr
+  | shown rr  = id
+  | otherwise = maskSecrets (rrSecrets rr)
+
+-- | A secret as the reports give it (design 9.3 item 5): its length and
+--   the first 12 hex digits of its SHA-256, never its bytes.
+--
+-- >>> describeSecret "HSED-SIM-MSID-0123456789ABCDEF01"
+-- "32 bytes, sha256 a6c4ca3911e4"
+describeSecret :: ByteString -> Text
+describeSecret s = tshow (B.length s) <> " bytes, sha256 " <> T.take 12 (sha256Hex s)
+
+-- | How a run's secrets are printed, in words.
+secretsText :: RunResult -> Text
+secretsText rr
+  | shown rr  = "shown in clear (--show-msid)"
+  | otherwise = "masked as 0x2A in the transcript (--show-msid shows them)"
+
+
 -- * JSON
 
 instance A.ToJSON CaseResult where
@@ -197,18 +241,21 @@ instance A.ToJSON RunResult where
     , "options"        A..= optionsJSON (rrOptions rr)
     , "targets"        A..= rrTargets rr
     , "cases"          A..= rrCases rr
-    , "transcript"     A..= map entryJSON (rrTranscript rr)
+    , "transcript"     A..= map (entryJSON . masked rr) (rrTranscript rr)
     , "level0"         A..= [ A.object ["end" A..= end, "response" A..= l0, "decoded" A..= map decodedJSON (l0Descriptors l0)]
                             | (end, l0) <- rrLevel0 rr ]
     , "pair"           A..= rrPair rr
     , "if_send_issued" A..= rrIfSends rr
+    , "secrets"        A..= [ A.object ["len" A..= B.length s, "sha256" A..= T.take 12 (sha256Hex s), "shown" A..= shown rr]
+                            | s <- rrSecrets rr ]
     , "problems"       A..= rrProblems rr
     , "exit"           A..= exitNumber (rrExit rr)
     ]
     where
       decodedJSON d = A.object ["code" A..= dCode d, "decode" A..= decodeDescriptor d]
 
--- | The options a run was given, the expected serial masked.
+-- | The options a run was given, the expected serial masked and the
+--   simulator's SID PIN given by its length and digest alone.
 optionsJSON :: RunOptions -> A.Value
 optionsJSON o = A.object
   [ "target"                 A..= renderTarget (roTarget o)
@@ -216,11 +263,13 @@ optionsJSON o = A.object
   , "units"                  A..= spUnits (roSim o)
   , "hold"                   A..= roHold o
   , "inactive_comid_discard" A..= spInactiveComIdDiscard (roSim o)
+  , "sim_sid_pin"            A..= fmap describeSecret (spSidPin (roSim o))
   , "profile"                A..= roProfile o
   , "report_dir"             A..= roReportDir o
   , "capture"                A..= roCapture o
   , "expect_serial"          A..= fmap maskSerial (roExpectSerial o)
   , "level0_len"             A..= roLevel0Len o
+  , "show_msid"              A..= roShowMsid o
   ]
 
 -- | A waiver with the item and page of its section's list.
@@ -332,8 +381,10 @@ markdown rr = T.unlines $
   ]
   <> [ "- simulator: units " <> unitName (spUnits (roSim o)) <> ", hold " <> tshow (roHold o)
          <> maybe "" ((", profile " <>) . T.pack) (roProfile o)
+         <> maybe "" ((", SID PIN given: " <>) . describeSecret) (spSidPin (roSim o))
      | hasSimulator rr ]
   <> [ "- IF-SENDs issued on a drive: " <> tshow (rrIfSends rr)
+  , "- secrets read: " <> tshow (length (rrSecrets rr)) <> (if null (rrSecrets rr) then "" else ", " <> secretsText rr)
   , "- exit: " <> tshow (exitNumber (rrExit rr))
   , ""
   , "## Targets"
@@ -349,8 +400,17 @@ markdown rr = T.unlines $
   <> level0Lines (rrLevel0 rr)
   <> maybe [] pairLines (rrPair rr)
   <> concat [ ["## Problems", ""] <> map ("- " <>) (rrProblems rr) <> [""] | not (null (rrProblems rr)) ]
-  <> transcriptLines (rrTranscript rr)
+  <> secretLines rr
+  <> transcriptLines (map (masked rr) (rrTranscript rr))
   where o = rrOptions rr
+
+-- | The run's secrets, each by its length and digest (design 9.3 item 5).
+secretLines :: RunResult -> [Text]
+secretLines rr
+  | null (rrSecrets rr) = []
+  | otherwise = ["## Secrets", "", "Each " <> secretsText rr <> "; given here by length and SHA-256 alone:", ""]
+                <> [ "- secret " <> tshow i <> ": " <> describeSecret s | (i, s) <- zip [1 :: Int ..] (rrSecrets rr) ]
+                <> [""]
 
 -- | Whether a run had the simulator for an end: a target that says it is a
 --   TPer ("Hsed.Transport.InProc").
@@ -498,7 +558,8 @@ comPacketText bytes = case decodeComPacket bytes of
 --   (the capture, a pair not computed), failed; one for no IF-SEND issued on
 --   a drive, when there was a drive, failed if one was; and one for the exit
 --   code, failed when it is not 0, so that the failures never say less than
---   the exit code.
+--   the exit code. Its properties give the version, the IF-SENDs issued and
+--   each secret read by its length and digest.
 junit :: RunResult -> Text
 junit rr = T.unlines $
   [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -508,8 +569,11 @@ junit rr = T.unlines $
   , "    <properties>"
   , "      <property name=\"hsed\" value=\"" <> attr (rrVersion rr) <> "\"/>"
   , "      <property name=\"if_send_issued\" value=\"" <> tshow (rrIfSends rr) <> "\"/>"
-  , "    </properties>"
+  , "      <property name=\"secrets\" value=\"" <> tshow (length (rrSecrets rr)) <> "\"/>"
   ]
+  <> [ "      <property name=\"secret_" <> tshow i <> "\" value=\"" <> attr (describeSecret s <> ", " <> secretsText rr) <> "\"/>"
+     | (i, s) <- zip [1 :: Int ..] (rrSecrets rr) ]
+  <> [ "    </properties>" ]
   <> concatMap testcase tests
   <> [ "  </testsuite>", "</testsuites>" ]
   where
@@ -567,7 +631,8 @@ attr = T.concatMap $ \case
 
 -- | What a run prints when it ends: each target, each case's verdict with
 --   its waivers and extensions, the pair comparison, the IF-SENDs issued on
---   a drive, the reports written, the exit code.
+--   a drive, the secrets read (by length and digest), the reports written,
+--   the exit code.
 summary :: RunResult -> [FilePath] -> [Text]
 summary rr paths =
   [ "hsed-jig " <> renderTarget (roTarget (rrOptions rr)) <> ": " <> T.intercalate "; " (map targetText (rrTargets rr)) ]
@@ -575,6 +640,9 @@ summary rr paths =
   <> maybe [] (\r -> [ "pair: extra " <> codesText (prExtra r) <> "; missing " <> codesText (prMissing r) <> "; "
                        <> pairCounts r <> if pairFails r then ": fail" else ": pass" ]) (rrPair rr)
   <> [ "IF-SENDs issued on a drive: " <> tshow (rrIfSends rr) ]
+  <> [ "secrets read: " <> tshow (length (rrSecrets rr)) <> ", " <> secretsText rr <> ": "
+         <> T.intercalate "; " (map describeSecret (rrSecrets rr))
+     | not (null (rrSecrets rr)) ]
   <> [ "reports: " <> T.intercalate ", " (map T.pack paths) | not (null paths) ]
   <> [ "exit " <> tshow (exitNumber (rrExit rr)) ]
   where
@@ -583,6 +651,7 @@ summary rr paths =
       : [ "  on the " <> n <> ": " <> verdictText v | (n, v) <- crEnds cr ]
       <> map (("  " <>) . waiverLine (crKey cr)) (crWaivers cr)
       <> [ "  extension, " <> n <> ": " <> verdictText v | (n, v) <- crExtensions cr ]
+      <> [ "  observed, " <> n <> ": " <> v | (n, v) <- crObservations cr ]
 
 
 -- * Reading reports again

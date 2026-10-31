@@ -1,4 +1,7 @@
+{-# LANGUAGE DataKinds             #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE GADTs                 #-}
+{-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE NoImplicitPrelude     #-}
 {-# LANGUAGE OverloadedRecordDot   #-}
 {-# LANGUAGE OverloadedStrings     #-}
@@ -43,6 +46,19 @@ from the cell's lines, a line ending in a hyphen joined to the next
 over another reads the base's enumerations too, its own shadowing the base's
 of the same type ('allEnums').
 
+The type row an enumeration joins ('joinable', since M4b): under
+@enumInDescription@ the table's own UID, Name and Format cells, read as a
+type row is ('ownTypeRow': Table 49's @Enumeration_Type, 0, 15@ gives the
+range C-ENUM-RANGE checks); otherwise the spec's type row of its identifier,
+else its base's ("Hsed.Spec.Rules.TypeRow".'allTypeRows': Opal's Table 31
+joins its own Table 30). Check @C-PATCH-UID@ (an Error): a table that
+@replaces@ tables of a base names them there, each the base's type row of
+its type, with the table's own UID and Name (Core Table 102: @00 00 00 05 00
+00 04 05@, @life_cycle_state@, PDF 113), or the base's enumeration of that
+type (Core Table 103, PDF 113-114); a target in no spec it is read over, or
+no type row or enumeration there, is the same Error. Such a table is left
+out.
+
 Compiled into 'enumsModule': @data Core_\<type\>@ (the spec's label,
 "Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with a constructor per
 value (the label scrubbed; a label that names several values, a range or
@@ -51,7 +67,13 @@ included, @Core_adv_key_mode_Reserved_2@, and a label naming one value stays
 bare; @_NA@ fills the gaps of the range, each suffixed when there are several:
 design section 13.15, as decided at M2d), plus an
 'Hsed.Core.Types.Enumerated' instance naming the type row's @u\<type\>Type@
-and the range.
+and the range, imported from the generated module of the spec whose type row
+it is ('UIDRef', by origin): the spec's own @Types@ whole, a base's by name
+(Opal's @Opal_life_cycle_state@ takes @ulife_cycle_stateType@ from
+@Hsed.Gen.Core.Types@, the type row it replaces, whose UID C-PATCH-UID holds
+equal to Table 49's; its @Opal_data_removal_mechanism@ takes Table 30's from
+@Hsed.Gen.Opal.Types@); a table under @enumInDescription@ replacing no type
+row spells its UID out.
 -}
 module Hsed.Spec.Rules.EnumValues
   ( enumValuesRule
@@ -66,6 +88,9 @@ module Hsed.Spec.Rules.EnumValues
     -- * The enumeration check
   , EnumCheck (..)
   , checkEnum
+  , joinable
+  , ownTypeRow
+  , patchFindings
     -- * Declarations
   , EnumDecl (..)
   , enumDecl
@@ -87,11 +112,12 @@ import           Hsed.Core.Types         (Operand (..), TypeDef (..))
 import           Hsed.Spec.Anchor        (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Common        (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common        as Cm
-import           Hsed.Spec.DSL           (SomeBinding (..), enumValues)
+import           Hsed.Spec.DSL           (Binding (..), Ref (..), SomeBinding (..), enumValues)
+import           Hsed.Spec.Format        (parseFormat)
 import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Rules.TypeRow (TypeRowRead (..), allTypeRows, formatEnv, typeRowReads, typeUIDName, typesModule)
 import           Hsed.Spec.Shape         (CaptionKind (..), Form (..), Shape (..), measure, normHeader, normaliseCaption,
                                           shapeMismatch)
 
@@ -112,10 +138,30 @@ enumValuesRule = RuleDef
   , ruleCodes   =
       [ CodeDef "C-ENUM-RANGE"          [Error]          (Defect "an enumeration's values do not fit its type's range")
       , CodeDef "W-ENUM-OVERLAP"        [Warning]        (Defect "two rows of an enumeration assign one value")
-      , CodeDef "W-ENUM-LABEL-REPEATED" [Warning]        (Suspect "an enumeration gives one label to several rows") ]
-  , ruleChecks  = \ctx bts -> concatMap (either pure (ecFindings . checkEnum ctx (rights (typeRowReads ctx)))) (readEnums ctx bts)
+      , CodeDef "W-ENUM-LABEL-REPEATED" [Warning]        (Suspect "an enumeration gives one label to several rows")
+      , CodeDef "C-PATCH-UID"           [Error]
+          (Defect "a table that replaces a base's type row or enumeration is not that type's: another UID or name, or no such table") ]
+  , ruleChecks  = \ctx bts -> concatMap (findingsOf ctx) bts
   , ruleCompile = compile
   }
+
+-- | Every finding about one bound table: C-ENUM-RANGE and its Warnings
+--   against the type row it joins ('joinable'), the own type row's UID cell
+--   under @enumInDescription@ (C-UID-TABLE, as "Hsed.Spec.Rules.TypeRow"
+--   reads one) and C-PATCH-UID.
+findingsOf :: Context -> BoundTable -> [Finding]
+findingsOf ctx bt = case readEnum ctx bt of
+  Left f   -> [f]
+  Right er -> ecFindings (checkEnum ctx (joinable ctx er) er) <> ownUIDFindings ctx er <> patchFindings ctx bt er
+
+-- | C-UID-TABLE: the UID cell of the type row a Description column's table
+--   prints itself is eight bytes (the code is @typeRow@'s, which reads every
+--   other type row's).
+ownUIDFindings :: Context -> EnumRead -> [Finding]
+ownUIDFindings ctx er =
+  [ locatedAt (cxSpec ctx) (renderAnchorId (erAnchor er)) (fromMaybe 1 (tablePage (erTable er)))
+      (finding Error "C-UID-TABLE" ("the UID cell " <> tshow (trUIDText tr) <> " is not eight bytes"))
+  | Just tr <- [ownTypeRow ctx er], isNothing (trUID tr) ]
 
 -- | @Hsed.Gen.\<Spec\>.Enums@; it imports the type rows' module for each type's UID.
 enumsModule :: Gen.GenModule
@@ -165,9 +211,13 @@ allEnums :: Context -> [(Context, EnumRead)]
 allEnums = ownThenBase (rights . enumReads) erIdent
 
 readEnums :: Context -> [BoundTable] -> [Either Finding EnumRead]
-readEnums ctx = map readEnum
+readEnums ctx = map (readEnum ctx)
+
+-- | One table bound as an enumeration, read under the errata set ('enumReads').
+readEnum :: Context -> BoundTable -> Either Finding EnumRead
+readEnum ctx = readOne
   where
-    readEnum bt
+    readOne bt
       | mEnumInDescription (btMods bt) = inDescription bt
       | otherwise =
           let (a, b)    = fromMaybe (0, 1) (mCols (btMods bt))
@@ -320,6 +370,95 @@ checkEnum ctx rows e = case companion of
     lits (Lit a, Lit b) = Just (a, b)
     lits _              = Nothing
 
+-- | The type rows an enumeration may join by the identifier it names
+--   ('checkEnum'): under @enumInDescription@ the table's own ('ownTypeRow');
+--   otherwise the spec's type rows, then its base's ('allTypeRows': Opal's
+--   Table 31 joins its own Table 30; Core's enumerations join Core's).
+joinable :: Context -> EnumRead -> [TypeRowRead]
+joinable ctx e = maybe (map snd (allTypeRows ctx)) pure (ownTypeRow ctx e)
+
+-- | The type row an enumeration printed in a Description column prints
+--   itself (Opal Table 49's UID, Name and Format cells, PDF 98), read as
+--   "Hsed.Spec.Rules.TypeRow" reads a type row: its Format parsed against the
+--   spec's Format environment ('formatEnv'), a failure located at the table;
+--   none for any other enumeration.
+ownTypeRow :: Context -> EnumRead -> Maybe TypeRowRead
+ownTypeRow ctx e = typeRowOf <$> erOwnType e
+  where
+    typeRowOf (uidText, format) = TypeRowRead
+      { trAnchor  = erAnchor e
+      , trTable   = erTable e
+      , trCaption = erCaption e
+      , trIdent   = erIdent e
+      , trName    = fromMaybe "" (erIdent e)
+      , trUIDText = uidText
+      , trUID     = parseUIDCell uidText
+      , trFormat  = format
+      , trTypeDef = first (locatedAt (cxSpec ctx) (renderAnchorId (erAnchor e)) (fromMaybe 1 (tablePage (erTable e))))
+                          (parseFormat (fst (formatEnv ctx)) format)
+      , trWaivers = [] }
+
+-- | C-PATCH-UID, located at the table: each table a bound table's @replaces@
+--   names (Opal Table 49's @enumInDescription (replaces [core 102, core
+--   103])@) lies in a spec it is read over ('cxBase', and its base), and is
+--   there either the type row of the type the table enumerates, with the
+--   UID and the Name of the type row it joins (Core Table 102, @00 00 00 05
+--   00 00 04 05@ and @life_cycle_state@, PDF 113), or the enumeration of
+--   that type (Core Table 103, PDF 113-114). So the type the modified
+--   enumeration's instance names, the base's @u\<type\>Type@, is the UID the
+--   table prints. Nothing for a table that replaces nothing.
+patchFindings :: Context -> BoundTable -> EnumRead -> [Finding]
+patchFindings ctx bt e = map (atTable ctx bt . finding Error "C-PATCH-UID") (concatMap problems (replacesOf (btBinding bt)))
+  where
+    joined = erIdent e >>= \i -> L.find ((== Just i) . trIdent) (joinable ctx e)
+    named b aid = specIdText (cxSpec b) <> " " <> renderAnchorId aid
+    problems ref = case replacedIn ctx ref of
+      Left why -> [why]
+      Right (b, aid) -> case ( L.find ((== aid) . trAnchor) (rights (typeRowReads b))
+                             , L.find ((== aid) . erAnchor) (rights (enumReads b)) ) of
+        (Just tr, _) -> maybe [] (typeRowProblems b tr) joined
+        (_, Just er) -> [ named b aid <> ", which it replaces, enumerates " <> fromMaybe "no type" (erIdent er)
+                            <> ", not " <> fromMaybe "the type its caption names" (erIdent e)
+                        | erIdent er /= erIdent e ]
+        _            -> [ "it replaces " <> named b aid <> ", which is no type row or enumeration of " <> specIdText (cxSpec b) ]
+    typeRowProblems b tr own =
+      [ "the UID " <> uidOf own <> " is not " <> uidOf tr <> ", that of " <> named b (trAnchor tr) <> " " <> trName tr <> ", which it replaces"
+      | trUID own /= trUID tr ]
+      <> [ "the type " <> trName own <> " is not " <> named b (trAnchor tr) <> "'s " <> trName tr <> ", which it replaces"
+         | trName own /= trName tr ]
+    uidOf tr = maybe (tshow (trUIDText tr)) hexUID (trUID tr)
+
+-- | The tables a binding's @replaces@ names, through its modifiers.
+replacesOf :: SomeBinding -> [Ref]
+replacesOf = \case
+  SomeBinding b -> go b
+  PolyBinding b -> go (b :: Binding 'Prose)
+  where
+    go :: Binding s -> [Ref]
+    go = \case
+      Replaces rs             -> rs
+      WithEnumInDescription b -> go b
+      WithErratum _ _ b       -> go b
+      WithCols _ _ b          -> go b
+      WithRangeWords _ b      -> go b
+      WithAs b                -> go b
+      _                       -> []
+
+-- | The spec a reference names among those a Context is read over, its base
+--   and the base's base (@core 102@: the first whose name is Core's), with
+--   the table; or why there is none.
+replacedIn :: Context -> Ref -> Either Text (Context, AnchorId)
+replacedIn ctx = \case
+  Core n    -> inSpec "core" n
+  Opal n    -> inSpec "opal" n
+  Section s -> Left ("it replaces section " <> tshow s <> ", which is no table")
+  where
+    bases = maybe [] chain (cxBase ctx)
+    chain c = c : maybe [] chain (cxBase c)
+    inSpec family n = case L.find ((family `T.isPrefixOf`) . specIdText . cxSpec) bases of
+      Just b  -> Right (b, TableId n)
+      Nothing -> Left ("it replaces " <> family <> " " <> tshow n <> ", in no spec " <> specIdText (cxSpec ctx) <> " is read over")
+
 
 -- * Declarations
 
@@ -336,18 +475,51 @@ data EnumDecl = EnumDecl
 
 -- | How the 'Hsed.Core.Types.Enumerated' instance names its type's UID.
 data UIDRef
-  = SameModule      -- ^ @u\<type\>Type@, declared in the same module
-  | InModule !Text  -- ^ @u\<type\>Type@, imported from the named module
-  | Literal         -- ^ spelled out, @uid 0x00 ...@
+  = SameModule          -- ^ @u\<type\>Type@, declared in the same module
+  | InModule !Text      -- ^ @u\<type\>Type@, imported from the named module, the whole of it
+  | ImportedFrom !Text
+    -- ^ @u\<type\>Type@ alone imported from the named module: a base's
+    --   @Types@, beside which the spec's own is imported whole (Opal's
+    --   @life_cycle_state@ from @Hsed.Gen.Core.Types@)
+  | Literal             -- ^ spelled out, @uid 0x00 ...@
   deriving (Eq, Show)
 
+-- | Each bound table's declaration, or why it has none: an Error of
+--   C-ENUM-RANGE, of its own type row's UID cell (C-UID-TABLE) or of
+--   C-PATCH-UID leaves it out.
 compile :: Context -> [BoundTable] -> [Emitted]
-compile ctx bts =
-  [ either (Excluded (erAnchor er)) (Emit . renderEnum uidRef) (enumDecl ctx er (checkEnum ctx rows er))
-  | er <- rights (readEnums ctx bts) ]
+compile ctx = map one
   where
-    rows   = rights (typeRowReads ctx)
-    uidRef = if enumsModule == typesModule then SameModule else InModule (Gen.moduleName (cxSpec ctx) typesModule)
+    one bt = case readEnum ctx bt of
+      Left _   -> Excluded (btAnchor bt) "C-ENUM-RANGE failed"
+      Right er ->
+        let ec     = checkEnum ctx (joinable ctx er) er
+            failed = [ c | (c, fs) <- [ ("C-ENUM-RANGE", ecFindings ec), ("C-UID-TABLE", ownUIDFindings ctx er)
+                                      , ("C-PATCH-UID", patchFindings ctx bt er) ]
+                         , any Cm.isError fs ]
+        in case (failed, enumDecl ctx er ec) of
+             ([], Right d)  -> Emit (renderEnum (uidRefOf ctx bt er) d)
+             ([], Left why) -> Excluded (erAnchor er) why
+             (cs, _)        -> Excluded (erAnchor er) (T.intercalate " and " cs <> " failed")
+
+-- | Where an enumeration's instance takes its type's UID from, by the origin
+--   of the type row it joins: the spec's own @Types@ module, whole; a base's,
+--   the one name (Opal's Table 31 from @Hsed.Gen.Opal.Types@, Table 30's;
+--   Table 49 from @Hsed.Gen.Core.Types@, Core Table 102's, the type row it
+--   replaces); spelled out for a table under @enumInDescription@ that
+--   replaces no type row, whose type row no rule generates.
+uidRefOf :: Context -> BoundTable -> EnumRead -> UIDRef
+uidRefOf ctx bt er = maybe Literal fromSpec origin
+  where
+    sid = cxSpec ctx
+    fromSpec s
+      | s /= sid                   = ImportedFrom (Gen.moduleName s typesModule)
+      | enumsModule == typesModule = SameModule
+      | otherwise                  = InModule (Gen.moduleName sid typesModule)
+    origin = case erOwnType er of
+      Just _  -> listToMaybe [ cxSpec b | Right (b, aid) <- map (replacedIn ctx) (replacesOf (btBinding bt))
+                                        , any ((== aid) . trAnchor) (rights (typeRowReads b)) ]
+      Nothing -> listToMaybe [ cxSpec c | Just i <- [erIdent er], (c, tr) <- allTypeRows ctx, trIdent tr == Just i ]
 
 -- | An enumeration's declaration from its C-ENUM-RANGE result, or why it has none.
 enumDecl :: Context -> EnumRead -> EnumCheck -> Either Text EnumDecl
@@ -365,9 +537,10 @@ renderEnum :: UIDRef -> EnumDecl -> Gen.Decl
 renderEnum ref e = (Gen.decl e.provenance e.name body)
   { Gen.declImports = [ Gen.ImportAll Gen.coreTypesModule, Gen.ImportSome "Prelude" ["Bounded", "Enum", "Eq", "Ord", "Show"] ]
                       <> case ref of
-                           SameModule -> []
-                           InModule m -> [Gen.ImportAll m]
-                           Literal    -> [Gen.ImportSome Gen.uidModule ["uid"]] }
+                           SameModule     -> []
+                           InModule m     -> [Gen.ImportAll m]
+                           ImportedFrom m -> [Gen.ImportSome m [typeUIDName e.name]]
+                           Literal        -> [Gen.ImportSome Gen.uidModule ["uid"]] }
   where
     coreName = enumTypeName e.provenance.spec e.name
     doc = Gen.provenanceComment e.provenance

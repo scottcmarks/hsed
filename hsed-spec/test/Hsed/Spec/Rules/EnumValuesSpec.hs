@@ -20,7 +20,15 @@ fail by one edited cell (a value outside the range, a value cell that is no
 number, a constructor defined twice, two labels giving one constructor, a
 label giving the one the gaps take, a label with nothing to name a
 constructor), the overlap and repeated-label Warnings, and the declarations
-of T52, T87, T101 and T126.
+of T52, T87, T101 and T126. Then Opal under the M4b sidecar, read over Core:
+Table 49's enumeration in its Description column, its range its own Format's
+(C-ENUM-RANGE made to fail by narrowing it), held to the Core tables it
+replaces by C-PATCH-UID (made to fail by another UID, another type's name,
+other targets, or no base), its own UID cell eight bytes (C-UID-TABLE);
+Tables 31 and 49 each one W-ENUM-LABEL-REPEATED; and @Hsed.Gen.Opal.Enums@:
+@Opal_life_cycle_state@'s 16 constructors (manufactured-inactive 8,
+manufactured 9), its UID Core T102's imported by name, and
+@Opal_data_removal_mechanism@'s 8, its UID Opal T30's.
 -}
 module Hsed.Spec.Rules.EnumValuesSpec (spec) where
 
@@ -30,6 +38,7 @@ import qualified RIO.Text                   as T
 import           RIO
 import           Test.Hspec
 
+import           Hsed.Core.Types            (Operand (..), TypeDef (..))
 import           Hsed.Spec.Anchor           (AnchorId (..))
 import           Hsed.Spec.Check            (checkIR, mkContext)
 import           Hsed.Spec.Common           (ErrataSet (..), Finding, RuleName (..), isError, renderFinding)
@@ -41,7 +50,7 @@ import           Hsed.Spec.IR               (SpecIR)
 import           Hsed.Spec.RuleDef          (Classification (..), Context (..), numberedTables)
 import           Hsed.Spec.Rules            (Section (..), classify, scopeOf)
 import           Hsed.Spec.Rules.EnumValues
-import           Hsed.Spec.Rules.TypeRow    (typeRowReads)
+import           Hsed.Spec.Rules.TypeRow    (TypeRowRead (..), typeRowReads)
 import           Hsed.Spec.Shape            (measure)
 
 
@@ -238,6 +247,111 @@ spec = do
         [ c.cxSpec | (c, _) <- drop 2 alls ] `shouldSatisfy` all (== core)
       it "reads Core alone as its own enumerations" $
         map (\(_, e) -> e.erAnchor) (allEnums base) `shouldBe` [ e.erAnchor | Right e <- enumReads base ]
+
+    describe "the checks of Tables 31 and 49, on Opal under the M4b sidecar, over Core" $ do
+      let fs = checkIR (Just base) Scott opal
+          errorsAt a ir' = [ renderFinding f | f <- checkIR (Just base) Scott ir', isError f, Cm.anchor f == Just a ]
+          excludedOf a ir' = either (throwString . show) (\cr -> pure [ why | (aid, why) <- crExcluded cr, aid == a ])
+                                    (compileIR (Just base) Scott ir')
+      it "find no Error: T49's values lie in its own Format's 0..15, and C-PATCH-UID holds it to Core T102 and T103" $ do
+        [ renderFinding f | f <- fs, isError f, Cm.anchor f `elem` [Just "T31", Just "T49"] ] `shouldBe` []
+        [ renderFinding f | f <- fs, Cm.code f `elem` ["C-ENUM-RANGE", "C-PATCH-UID"] ] `shouldBe` []
+      it "give T31 and T49 one W-ENUM-LABEL-REPEATED each, for their reserved values (PDF 51, 98)" $
+        [ renderFinding f | f <- fs, Cm.code f == "W-ENUM-LABEL-REPEATED" ] `shouldBe`
+          [ "W-ENUM-LABEL-REPEATED opal-2.30.pdf#page=51&T31: the label \"Reserved\" is used by 2 rows; each of its values gets a suffixed constructor"
+          , "W-ENUM-LABEL-REPEATED opal-2.30.pdf#page=98&T49: the label \"reserved\" is used by 2 rows; each of its values gets a suffixed constructor" ]
+      it "join T49 to the type row it prints itself, its UID, Name and Format, and T31 to Opal's Table 30" $ do
+        [ (tr.trAnchor, tr.trName, tr.trUID, tr.trTypeDef) | e <- t49, Just tr <- [ownTypeRow octx e] ]
+          `shouldBe` [(TableId 49, "life_cycle_state", Just [0, 0, 0, 5, 0, 0, 4, 5], Right (EnumType [(Lit 0, Lit 15)]))]
+        [ [ tr.trAnchor | tr <- joinable octx e, tr.trIdent == e.erIdent ] | Right e <- enumReads octx, e.erAnchor == TableId 31 ]
+          `shouldBe` [[TableId 30]]
+      it "C-ENUM-RANGE: T49's values against its own Format, edited to 0..13, not Core T102's" $
+        errorsAt "T49" (setCell "T49" 0 2 "Enumeration_Type, 0, 13" opal) `shouldBe`
+          [ "C-ENUM-RANGE opal-2.30.pdf#page=98&T49: value 14 (\"reserved\") lies outside 0..13 of T49 life_cycle_state"
+          , "C-ENUM-RANGE opal-2.30.pdf#page=98&T49: value 15 (\"reserved\") lies outside 0..13 of T49 life_cycle_state" ]
+      it "C-PATCH-UID: T49 printing another UID than Core T102's, which it replaces, is left out" $ do
+        let moved = setCell "T49" 0 0 "00 00 00 05 00 00 04 06" opal
+        errorsAt "T49" moved `shouldBe`
+          [ "C-PATCH-UID opal-2.30.pdf#page=98&T49: the UID 00 00 00 05 00 00 04 06 is not 00 00 00 05 00 00 04 05, that of core-2.01 T102"
+            <> " life_cycle_state, which it replaces" ]
+        excludedOf (TableId 49) moved `shouldReturn` ["C-PATCH-UID failed"]
+      it "C-UID-TABLE: T49's own UID cell not eight bytes, no UID C-PATCH-UID can hold to Core T102's; left out for both" $ do
+        let short = setCell "T49" 0 0 "00 00 00 05 00 04 05" opal
+        errorsAt "T49" short `shouldBe`
+          [ "C-PATCH-UID opal-2.30.pdf#page=98&T49: the UID \"00 00 00 05 00 04 05\" is not 00 00 00 05 00 00 04 05, that of core-2.01 T102"
+            <> " life_cycle_state, which it replaces"
+          , "C-UID-TABLE opal-2.30.pdf#page=98&T49: the UID cell \"00 00 00 05 00 04 05\" is not eight bytes" ]
+        excludedOf (TableId 49) short `shouldReturn` ["C-UID-TABLE and C-PATCH-UID failed"]
+      it "C-PATCH-UID: T49 naming another type than Core T102's, which T103 then does not enumerate" $
+        errorsAt "T49" (setCell "T49" 0 1 "life_cycle_states" opal) `shouldBe`
+          [ "C-PATCH-UID opal-2.30.pdf#page=98&T49: core-2.01 T103, which it replaces, enumerates life_cycle_state, not life_cycle_states"
+          , "C-PATCH-UID opal-2.30.pdf#page=98&T49: the type life_cycle_states is not core-2.01 T102's life_cycle_state, which it replaces" ]
+      it "C-PATCH-UID: Opal read alone, over no base, has no Core to hold T49 to" $
+        [ renderFinding f | f <- checkIR Nothing Scott opal, Cm.code f == "C-PATCH-UID" ] `shouldBe`
+          [ "C-PATCH-UID opal-2.30.pdf#page=98&T49: it replaces core 102, in no spec opal-2.30 is read over"
+          , "C-PATCH-UID opal-2.30.pdf#page=98&T49: it replaces core 103, in no spec opal-2.30 is read over" ]
+      withOpal $ \opalPristine ->
+        it "C-PATCH-UID: a target that is no type row or enumeration of Core's, or the enumeration of another type, the table left out" $ do
+          let retarget refs = annotated opalPristine (withoutLine "T49" m4bOpalHsa <> "opal-2.30 | T49 | enumInDescription (replaces [" <> refs <> "])\n")
+          onT171 <- retarget "core 102, core 171"
+          errorsAt "T49" onT171 `shouldBe`
+            [ "C-PATCH-UID opal-2.30.pdf#page=98&T49: it replaces core-2.01 T171, which is no type row or enumeration of core-2.01" ]
+          excludedOf (TableId 49) onT171 `shouldReturn` ["C-PATCH-UID failed"]
+          onT101 <- retarget "core 102, core 101"
+          errorsAt "T49" onT101 `shouldBe`
+            [ "C-PATCH-UID opal-2.30.pdf#page=98&T49: core-2.01 T101, which it replaces, enumerates last_reenc_stat, not life_cycle_state" ]
+
+    describe "the declarations in Hsed.Gen.Opal.Enums, Opal under the M4b sidecar, over Core" $ do
+      cr <- runIO (either (throwString . show) pure (compileIR (Just base) Scott opal))
+      let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.Enums" (crModules cr)))
+          from l = takeWhile (/= "") (dropWhile (/= l) lns)
+          decls = [ d | Right e <- enumReads octx, Right d <- [enumDecl octx e (checkEnum octx (joinable octx e) e)] ]
+      it "declare Opal_life_cycle_state's 16 constructors in value order (T49, PDF 98)" $
+        from "data Opal_life_cycle_state" `shouldBe`
+          [ "data Opal_life_cycle_state"
+          , "  = Opal_life_cycle_state_issued"
+          , "  | Opal_life_cycle_state_issued_disabled"
+          , "  | Opal_life_cycle_state_issued_frozen"
+          , "  | Opal_life_cycle_state_issued_disabled_frozen"
+          , "  | Opal_life_cycle_state_issued_failed"
+          , "  | Opal_life_cycle_state_reserved_5"
+          , "  | Opal_life_cycle_state_reserved_6"
+          , "  | Opal_life_cycle_state_reserved_7"
+          , "  | Opal_life_cycle_state_manufactured_inactive"
+          , "  | Opal_life_cycle_state_manufactured"
+          , "  | Opal_life_cycle_state_manufactured_disabled"
+          , "  | Opal_life_cycle_state_manufactured_frozen"
+          , "  | Opal_life_cycle_state_manufactured_disabled_frozen"
+          , "  | Opal_life_cycle_state_manufactured_failed"
+          , "  | Opal_life_cycle_state_reserved_14"
+          , "  | Opal_life_cycle_state_reserved_15"
+          , "  deriving (Bounded, Enum, Eq, Ord, Show)" ]
+      it "give manufactured-inactive 8 and manufactured 9, the range 0..15 (enumValue: the constructor's place)" $ do
+        [ (n, v) | d <- decls, d.name == "life_cycle_state", (n, v) <- constructorNames "Opal_life_cycle_state" d.range d.ctors
+                 , n `elem` ["Opal_life_cycle_state_manufactured_inactive", "Opal_life_cycle_state_manufactured"] ]
+          `shouldBe` [("Opal_life_cycle_state_manufactured_inactive", 8), ("Opal_life_cycle_state_manufactured", 9)]
+        [ (d.range, map snd (constructorNames "Opal_life_cycle_state" d.range d.ctors)) | d <- decls, d.name == "life_cycle_state" ]
+          `shouldBe` [((0, 15), [0 .. 15])]
+      it "name Core T102's UID, the type row T49 replaces, imported by name from Hsed.Gen.Core.Types" $ do
+        from "instance Enumerated Opal_life_cycle_state where"
+          `shouldBe` ["instance Enumerated Opal_life_cycle_state where", "  typeUID = ulife_cycle_stateType", "  range   = (0, 15)"]
+        lns `shouldContain` ["import           Hsed.Gen.Core.Types (ulife_cycle_stateType)", "import           Hsed.Gen.Opal.Types"]
+      it "declare Opal_data_removal_mechanism's 8 constructors (T31, PDF 51), its UID Table 30's from Hsed.Gen.Opal.Types" $ do
+        from "data Opal_data_removal_mechanism" `shouldBe`
+          [ "data Opal_data_removal_mechanism"
+          , "  = Opal_data_removal_mechanism_Overwrite_Data_Erase"
+          , "  | Opal_data_removal_mechanism_Block_Erase"
+          , "  | Opal_data_removal_mechanism_Cryptographic_Erase"
+          , "  | Opal_data_removal_mechanism_Reserved_3"
+          , "  | Opal_data_removal_mechanism_Reserved_4"
+          , "  | Opal_data_removal_mechanism_Vendor_Specific_Erase"
+          , "  | Opal_data_removal_mechanism_Reserved_6"
+          , "  | Opal_data_removal_mechanism_Reserved_7"
+          , "  deriving (Bounded, Enum, Eq, Ord, Show)" ]
+        from "instance Enumerated Opal_data_removal_mechanism where"
+          `shouldBe` ["instance Enumerated Opal_data_removal_mechanism where", "  typeUID = udata_removal_mechanismType", "  range   = (0, 7)"]
+      it "declare those two and no other" $
+        [ l | l <- lns, "data " `T.isPrefixOf` l ] `shouldBe` ["data Opal_data_removal_mechanism", "data Opal_life_cycle_state"]
   where
     advKeyMode     = [("Wait for AdvKey_Req", 0), ("Auto-advance keys", 1)] <> [ ("Reserved", v) | v <- [2 .. 7] ]
     paddingType    = [("None", 0), ("None", 1), ("RSAES-PKCS1-v1_5", 2), ("RSAES-OAEP", 3), ("RSASSA-PKCS1-v1_5", 4)] <> [ ("Reserved", v) | v <- [5 .. 15] ]

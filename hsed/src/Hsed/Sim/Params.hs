@@ -219,7 +219,8 @@ data SimParams = SimParams
 --   octet, 0x02, has its low nibble 0010: the U/L bit set and the I/G bit
 --   clear, and the Y and Z bits clear, so that it lies in the Administratively
 --   Assigned Identifier quadrant of IEEE 802c's local space, where the IEEE
---   assigns no OUI and no CID (a CID's quadrant is 0xA, Y and Z set), and so
+--   assigns no OUI and no CID (a CID's low nibble is 1010: the U/L and Z bits
+--   set, Y clear, the Extended Local Identifier quadrant), and so
 --   names no real company (the lead's M4b decision, design 13.32 (17); a
 --   registry-conforming company ID would be some company's); and the
 --   vendor-specific identifier 0x48534544, @HSED@ in ASCII, a value VU

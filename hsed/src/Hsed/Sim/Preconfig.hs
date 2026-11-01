@@ -15,7 +15,7 @@ tables ("Hsed.Core.Preconfig"'s 'PreconfTable': Opal 2.30 4.2-4.3, PDF
 35-89) into the simulator's form ("Hsed.Sim.Types".@SPState@): each table's
 description and its rows, both by the table's UID (Core Table 240's UID of
 Table), every row its cells by column number (design docs/spec-as-source.md
-sections 8.1 and 8.3; M4b). 'foldTables' does it in five passes:
+sections 8.1 and 8.3; M4b). 'foldTables' does it in six passes:
 
 * (a) templates: a template row (@(+XX)@) is one row for each instance the
   TPer holds beyond the rows its table prints ('instances'), its UID, names
@@ -36,9 +36,10 @@ sections 8.1 and 8.3; M4b). 'foldTables' does it in five passes:
 * (f) the Table table's counts: each of its rows' NumColumns and Rows, which
   the preconfiguration leaves blank and Core states (5.3.2.3.7-5.3.2.3.8, PDF
   157: the number of columns in the table, the number of rows created), the
-  described table's columns and the rows the fold gives it (since the M4b
-  review; the CommonNames Core states, 5.3.2.3 and 5.3.2.6.3, PDF 156 and 161,
-  the issuing template's name, stay their defaults, design 13.31 (a)).
+  described table's columns and the rows the fold gives it, a byte table's
+  NumColumns 0x01 (since the M4b review; the CommonNames Core states, 5.3.2.3
+  and 5.3.2.6.3, PDF 156 and 161, the issuing template's name, stay their
+  defaults, design 13.31 (a) and 13.32 (22)).
 
 The fold reads a run's parameters and nothing of the state, so that the
 initial state can run it ("Hsed.Sim.Types".@initialState@), and a Revert can
@@ -66,7 +67,7 @@ import           Hsed.Core.Preconfig             (Placeholder (..), PreCell (..)
 import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNumbered, columnOf)
 import           Hsed.Core.Types                 (enumValue)
 import           Hsed.Core.UID                   (HalfUID, UID, uidLower, uidUpper)
-import           Hsed.Gen.Core.Enums             (Core_boolean (..))
+import           Hsed.Gen.Core.Enums             (Core_boolean (..), Core_table_kind (..))
 import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable, uTableTable, uTemplateTable)
 import           Hsed.Gen.Core.UIDs              (uC_PIN_SID, uTemplate_Base)
 import           Hsed.Gen.Opal.Enums             (Opal_data_removal_mechanism (..))
@@ -119,9 +120,13 @@ import           Hsed.Sim.Params                 (LifeCycle (..), SimParams (..)
 --     table whose half-UID is the row's UID's lower half, Core 3.2.5.3 b.i,
 --     PDF 51-52): its NumColumns the columns of the table's description and
 --     its Rows the rows (a) to (e) give it (Core 5.3.2.3.7-5.3.2.3.8, PDF
---     157), where the row leaves them their default; a table the fold does
---     not hold keeps 0. No row is created or deleted before M6, so the
---     counts the fold gives hold for a run.
+--     157), where the row leaves them their default; a byte table's
+--     NumColumns 0x01, whatever the fold holds of it (its Kind @Byte@, Core
+--     Table 138, PDF 122; 5.3.2.3.7: \"For byte tables this SHALL be
+--     0x01\", M5's MBR and DataStore, Opal Table 36, PDF 54, whose Rows its
+--     row prints); an object table the fold does not hold keeps 0. No row is
+--     created or deleted before M6, so the counts the fold gives hold for a
+--     run.
 --
 --   Every cell is evaluated as soon as the tables are, so that a cell the
 --   TPer would choose and 'vendorCell' does not name fails the fold, not a
@@ -282,18 +287,24 @@ everyObject t u cells = case columnOf (ptDesc t) "InvokingID" of
 
 -- | (f): the Table table's rows, each its NumColumns and Rows counted from
 --   the description and the rows of the table it describes, where it leaves
---   them their default (UIntCell 0).
+--   them their default (UIntCell 0); a byte table's NumColumns 0x01 (Core
+--   5.3.2.3.7, PDF 157).
 counted :: Map UID TableDesc -> Map UID [Row] -> Map UID [Row]
 counted descs rows = Map.adjust (map count) uTableTable rows
   where
     tableDesc = Map.lookup uTableTable descs
     count r = fromMaybe r $ do
-      d    <- tableDesc
-      u    <- L.lookup uidColumn r >>= uidIn
-      held <- L.find ((== uidLower u) . uidUpper . fst) (Map.toList descs)
-      let (table, desc) = held
-          put name v r' = maybe r' (\c -> if L.lookup c r' == Just (UIntCell 0) then putCell c (UIntCell v) r' else r') (columnOf d name)
-      pure (put "Rows" (toInteger (length (Map.findWithDefault [] table rows))) (put "NumColumns" (toInteger (length (tdColumns desc))) r))
+      d <- tableDesc
+      let put name v r' = maybe r' (\c -> if L.lookup c r' == Just (UIntCell 0) then putCell c (UIntCell v) r' else r') (columnOf d name)
+          byte          = case columnOf d "Kind" >>= (`L.lookup` r) of
+            Just (EnumCell _ v) -> v == enumValue Core_table_kind_Byte
+            _                   -> False
+      if byte
+        then pure (put "NumColumns" 1 r)
+        else do
+          u <- L.lookup uidColumn r >>= uidIn
+          (table, desc) <- L.find ((== uidLower u) . uidUpper . fst) (Map.toList descs)
+          pure (put "Rows" (toInteger (length (Map.findWithDefault [] table rows))) (put "NumColumns" (toInteger (length (tdColumns desc))) r))
 
 -- | (e): a table's rows, the printed ones all kept, each the fold adds kept
 --   where its object is none of those before it ('identity').

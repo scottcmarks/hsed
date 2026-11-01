@@ -395,9 +395,11 @@ level0ComId = fromMaybe 0 (assigned cComIDAssignments "Level 0 Device Discovery"
 --   path admits it, and the simulator answers GET_COMID's 0x0000 before
 --   TPER_RESET's ComID ("Hsed.Sim.ComIdMgmt".'Hsed.Sim.ComIdMgmt.commandWith'),
 --   so that the fallback would shadow GET_COMID nowhere and reset nothing;
---   three tests hold it at 0x0004 first (this doctest,
---   Hsed.Gen.Opal.PreconfigSpec against the 0x0004 M4a wrote by hand, and
---   ComIdMgmtSpec's GET_COMID).
+--   three tests hold it at 0x0004 (this doctest,
+--   Hsed.Gen.Opal.PreconfigSpec's fixture example against the 0x0004 M4a
+--   wrote by hand, and ComIdMgmtSpec's TPER_RESET examples, which send on
+--   it, four of the five failing were it 0x0000; its GET_COMID example holds
+--   the order the commands are answered in, not the value).
 --
 -- >>> hex tperResetComId
 -- "0x0004"

@@ -25,8 +25,9 @@ UID (Core 5.3.4.2.2, PDF 223; 5.3.2.7.1, PDF 162; design 13.31 (a)), a
 template's instances for each Admin authority past Admin1 (PDF 47), a row
 for every object of a table (*AC1-*AC7, PDF 38-39) and the parameters'
 overrides of the Locking SP's life cycle and of TPerInfo's
-ProgrammaticResetEnable; and the active data removal mechanism one Level 0
-reports.
+ProgrammaticResetEnable; the Table table's counts, a byte table's NumColumns
+0x01 (Core 5.3.2.3.7, PDF 157, M5's MBR and DataStore); and the active data
+removal mechanism one Level 0 reports.
 -}
 module Hsed.Sim.PreconfigSpec (spec) where
 
@@ -44,11 +45,13 @@ import           Hsed.Core.Preconfig     (Placeholder (..), PreCell (..), Precon
 import           Hsed.Core.Record        (DecodedRecord (..))
 import           Hsed.Core.Table         (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNamed)
 import           Hsed.Core.TypeName      (TypeName (..))
+import           Hsed.Core.Types         (enumValue)
 import           Hsed.Core.UID           (UID, halfUID, uNull, uid, uidUpper)
 import           Hsed.Gen.Core.TableDescs (accessControlTableDesc, authorityTableDesc, c_PINTableDesc, spTableDesc,
                                           tPerInfoTableDesc, templateTableDesc)
+import           Hsed.Gen.Core.Enums     (Core_table_kind (..))
 import           Hsed.Gen.Core.TableUIDs (uAccessControlTable, uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable,
-                                          uTemplateTable)
+                                          uTableTable, uTemplateTable)
 import           Hsed.Gen.Core.Types     (ubooleanType)
 import           Hsed.Gen.Core.UIDs      (uAuthority_Admins, uAuthority_Anybody, uAuthority_Makers, uAuthority_SID, uC_PIN_SID,
                                           uMethodID_Get, uMethodID_Set, uSP_Admin, uTemplate_Admin, uTemplate_Base,
@@ -346,6 +349,18 @@ spec = do
     it "of the Admin SP are Opal 2.30's as hsedc generates them (Hsed.Gen.Opal.Preconfig.AdminSP), folded whatever the parameters" $
       forM_ [defaultSimParams, admins 3, defaultSimParams { spLockingOFS = Manufactured, spTPerResetEnabled = True }] $ \p ->
         fmap (\held -> (spsDescs held, spsTables held)) (Map.lookup uSP_Admin (tsSPs (initialState p))) `shouldBe` Just (foldTables p Generated.adminSP)
+    it "count a byte table's NumColumns 0x01 in the Table table, whatever the fold holds of it (Core 5.3.2.3.7, PDF 157; M5's MBR, Opal T36, PDF 54), an object table it does not hold 0, and its own 15 and 14 (the M4b review's verification)" $ do
+      let tables  = Generated.adminSPTableTablePreconfiguration
+          mbr     = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x04
+          locking = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x08 0x02
+          byte    = EnumCell "Byte" (enumValue Core_table_kind_Byte)
+          object  = EnumCell "Object" (enumValue Core_table_kind_Object)
+          more    = tables { ptRows = ptRows tables <> [ plain [(0, UIDCell mbr), (1, TextCell "MBR"), (4, byte)]
+                                                        , plain [(0, UIDCell locking), (1, TextCell "Locking"), (4, object)] ] }
+          counts u = [ (cellNamed (ptDesc tables) "NumColumns" r, cellNamed (ptDesc tables) "Rows" r)
+                     | Just r <- [rowWith u (Map.findWithDefault [] uTableTable (snd (foldTables defaultSimParams [more])))] ]
+      map counts [mbr, locking, uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x01]
+        `shouldBe` [[(Just (UIntCell 1), Just (UIntCell 0))], [(Just (UIntCell 0), Just (UIntCell 0))], [(Just (UIntCell 15), Just (UIntCell 14))]]
 
   describe "the cells the TPer chooses (vendorCell)" $ do
     let pin    = cellNamed c_PINTableDesc "PIN"

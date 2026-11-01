@@ -32,16 +32,23 @@ Checks, each with the code its findings carry:
   another is an Error, as is a half that names no table of the spec's or its
   base's tables of table UIDs;
 * @C-UID-UNIQUE@: no two type rows share a UID, nor a spec's type row a UID
-  its base's give; a type row's @waive "C-UID-UNIQUE" "T\<n\> \<uid\>"
-  "\<reason\>"@ makes the Error a Warning for that table when it and table
-  @n@, and no other, print that UID, and a waiver that waives nothing is
-  @W-WAIVER-UNUSED@;
+  its base's give, but the row of a table its binding @replaces@; a type
+  row's @waive "C-UID-UNIQUE" "T\<n\> \<uid\>" "\<reason\>"@ makes the Error
+  a Warning for that table when it and table @n@, and no other, print that
+  UID, and a waiver that waives nothing is @W-WAIVER-UNUSED@;
 * @C-TYPE-SHADOW@: a spec's type row names no type its base's rows name,
   unless its binding @replaces@ that table (the spec's own would shadow the
   base's wherever a type is read by name);
+* @C-PATCH-UID@ (the @enumValues@ rule's code, which holds Opal Table 49 to
+  Core's): a type row whose binding @replaces@ a table of a spec it is read
+  over replaces a type row there, with that row's UID and Name, the Type
+  object it restates (since the M4b review's verification; no type row
+  replaces one at M4b);
 * @C-FMT-RESOLVE@: every Format cell parses, its findings carrying
   "Hsed.Spec.Format"'s codes (@E-FMT-RESOLVE@ and friends), its type names
-  resolving over the spec's Type objects and its base's ('formatEnv'), and a
+  resolving over the spec's Type objects and its base's ('formatEnv'; the
+  nearest name an unresolved one's hint gives cites its table, a base's with
+  its spec: @uinteger_2, core-2.01 T149@ in an Opal Format), and a
   Format cell's spacing at a brace or its table's @Table_UID@ or @Table@
   suffix is the Note @N-FORMAT-NORMALISED@;
 * @C-FMT-CYCLE@: no Format names its own type, directly or through other
@@ -88,7 +95,7 @@ import           Hsed.Spec.Anchor (AnchorId (..), parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Common (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common as Cm
 import           Hsed.Spec.DSL    (SomeBinding (..), typeRow)
-import           Hsed.Spec.Format (Env, formatNormalisations, mkEnv, parseFormat)
+import           Hsed.Spec.Format (Env, formatNormalisations, mkEnvAt, parseFormat)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
@@ -188,11 +195,13 @@ readRows ctx = map readRow
 --   the spec's own: @C-FMT-RESOLVE@ when there are type rows and no such table
 --   in the spec or its base.
 formatEnv :: Context -> (Env, [Finding])
-formatEnv ctx = (mkEnv types names, nameFindings)
+formatEnv ctx = (mkEnvAt types names, nameFindings)
   where
     -- the spec's Type objects, then its base's it does not name (since the M4b review: an SSC's Format may name
-    -- Core's types, as Key Per IO's Alternative_Type, bytes_16, bytes_32 does)
-    types = map snd (ownThenBase typeEnvFrom fst ctx)
+    -- Core's types, as Key Per IO's Alternative_Type, bytes_16, bytes_32 does), each with its table, a base's with
+    -- its spec for the nearest hint (since the review's verification: Opal has no T149)
+    types = [ (n, (owner c <>) . ("T" <>) . tshow <$> t) | (c, (n, t)) <- ownThenBase typeEnvFrom fst ctx ]
+    owner c = if cxSpec c == cxSpec ctx then "" else specIdText (cxSpec c) <> " "
     names = [ tuName r | (_, r) <- allTableUIDRows ctx, not (T.null (tuName r)) ]
     nameFindings =
       [ (finding Error "C-FMT-RESOLVE" ("no table bound by " <> tableUIDsNamed <> " to resolve uidref{...} against"))
@@ -222,18 +231,31 @@ checks ctx bts = snd (formatEnv ctx) <> lefts reads <> concatMap formatNote rows
                   <> maybe "" (\p -> " (PDF " <> tshow p <> ")") (tablePage (trTable tr))
 
     -- a spec's type row held to its base's (the M4b review): no UID the base's type rows give (C-UID-UNIQUE),
-    -- and no name of the base's unless the row's binding replaces that table (C-TYPE-SHADOW: the spec's own
-    -- would silently shadow it in every description, cell and signature read over both)
+    -- and no name of the base's (C-TYPE-SHADOW: the spec's own would silently shadow it in every description, cell
+    -- and signature read over both), unless the row's binding replaces that table; a replacing row is the type it
+    -- replaces, its UID and Name (C-PATCH-UID, as enumValues holds Opal T49's; since the review's verification,
+    -- which found the replacement refused its UID)
     baseClash tr =
       [ here tr (finding Error "C-UID-UNIQUE" ("the UID " <> hexUID u <> " of " <> trName tr <> " is also that of " <> inBase c btr))
-      | Just u <- [trUID tr], (c, btr) <- take 1 [ cb | cb@(_, btr) <- based, trUID btr == Just u ] ]
+      | Just u <- [trUID tr], (c, btr) <- take 1 [ cb | cb@(_, btr) <- based, trUID btr == Just u ], not (replaced c btr) ]
       <> [ here tr (finding Error "C-TYPE-SHADOW" ("the type " <> trName tr <> " is also " <> inBase c btr
                       <> ", which its binding does not replace: the spec's own would shadow it wherever a type is read by name"))
          | (c, btr) <- take 1 [ cb | cb@(_, btr) <- based, trName btr == trName tr ], not (replaced c btr) ]
+      <> map (here tr . finding Error "C-PATCH-UID") (concatMap replacement replacing)
       where
-        replaced c btr = or [ cxSpec b == cxSpec c && aid == trAnchor btr
-                            | bt <- take 1 [ bt | bt <- bts, btAnchor bt == trAnchor tr ]
-                            , Right (b, aid) <- map (replacedIn ctx) (replacesOf (btBinding bt)) ]
+        replacing = [ replacedIn ctx ref | bt <- take 1 [ bt | bt <- bts, btAnchor bt == trAnchor tr ], ref <- replacesOf (btBinding bt) ]
+        replaced c btr = or [ cxSpec b == cxSpec c && aid == trAnchor btr | Right (b, aid) <- replacing ]
+        named b aid = specIdText (cxSpec b) <> " " <> renderAnchorId aid
+        uidOf r = maybe (tshow (trUIDText r)) hexUID (trUID r)
+        replacement = \case
+          Left why -> [why]
+          Right (b, aid) -> case L.find ((== aid) . trAnchor) (rights (typeRowReads b)) of
+            Nothing  -> ["it replaces " <> named b aid <> ", which is no type row of " <> specIdText (cxSpec b)]
+            Just btr ->
+              [ "the UID " <> uidOf tr <> " is not " <> uidOf btr <> ", that of " <> named b aid <> " " <> trName btr <> ", which it replaces"
+              | trUID tr /= trUID btr ]
+              <> [ "the type " <> trName tr <> " is not " <> named b aid <> "'s " <> trName btr <> ", which it replaces"
+                 | trName tr /= trName btr ]
 
     -- C-FMT-CYCLE: a Format that names its own type, directly or through other types, a type no value can end
     defs = Map.fromList [ (trName tr, td) | (_, tr) <- allTypeRows ctx, Right td <- [trTypeDef tr] ]

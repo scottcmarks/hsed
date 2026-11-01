@@ -26,12 +26,15 @@ at a brace (spaces before or inside the braces, a table's @Table_UID@ or plain
 them and is not listed. Names are resolved against an 'Env' of the Type objects and the
 T240 tables; an unknown name is @E-FMT-RESOLVE@ with the nearest known name, so
 that under the published errata set Table 75's @Fractoin@ reads
-@unresolved type name Fractoin (nearest: Fraction, T84)@ (design example E3).
+@unresolved type name Fractoin (nearest: Fraction, T84)@ (design example E3), a
+base's type with its spec (@uinteger_2, core-2.01 T149@ for an SSC's Format,
+since the M4b review's verification).
 -}
 module Hsed.Spec.Format
   ( -- * Environment
     Env (..)
   , mkEnv
+  , mkEnvAt
     -- * Parsing
   , parseFormat
   , formatNormalisations
@@ -56,17 +59,25 @@ import           Hsed.Core.Types
 import           Hsed.Spec.Common
 
 
--- | What a Format cell may name: the Type objects (with their table number when
---   known, for the @nearest@ hint) and the tables of T240 that a @uidref{...}@
---   may point at.
+-- | What a Format cell may name: the Type objects (each with the table that
+--   defines it when known, as the @nearest@ hint places it: @T84@, a base's
+--   with its spec, @core-2.01 T149@) and the tables of T240 that a
+--   @uidref{...}@ may point at.
 data Env = Env
-  { envTypes  :: !(Map Text (Maybe Int))
+  { envTypes  :: !(Map Text (Maybe Text))
   , envTables :: !(Set Text)
   }
   deriving (Eq, Show)
 
+-- | An environment of the Type objects with their table numbers (the hint's
+--   @T84@) and the tables.
 mkEnv :: [(Text, Maybe Int)] -> [Text] -> Env
-mkEnv types tables = Env (Map.fromList types) (Set.fromList tables)
+mkEnv types = mkEnvAt [ (n, ("T" <>) . tshow <$> t) | (n, t) <- types ]
+
+-- | An environment of the Type objects, each with where the hint places it,
+--   and the tables.
+mkEnvAt :: [(Text, Maybe Text)] -> [Text] -> Env
+mkEnvAt types tables = Env (Map.fromList types) (Set.fromList tables)
 
 
 -- * Tokens
@@ -214,7 +225,7 @@ typeRef env n
   | n `Map.member` envTypes env = Right (Ref n)
   | otherwise = Left (unresolved "type" n (hint <$> nearest (Map.keys (envTypes env)) n))
   where
-    hint near = near <> maybe "" ((", T" <>) . tshow) (join (Map.lookup near (envTypes env)))
+    hint near = near <> maybe "" (", " <>) (join (Map.lookup near (envTypes env)))
 
 -- | Resolve a table's name, which may be a glob (@C_AES_*@).
 tableRef :: Env -> Text -> Either Finding TableRef

@@ -53,11 +53,13 @@ range C-ENUM-RANGE checks); otherwise the spec's type row of its identifier,
 else its base's ("Hsed.Spec.Rules.TypeRow".'allTypeRows': Opal's Table 31
 joins its own Table 30). Check @C-PATCH-UID@ (an Error): a table that
 @replaces@ tables of a base names them there, each the base's type row of
-its type, with the table's own UID and Name (Core Table 102: @00 00 00 05 00
-00 04 05@, @life_cycle_state@, PDF 113), or the base's enumeration of that
-type (Core Table 103, PDF 113-114); a target in no spec it is read over, or
-no type row or enumeration there, is the same Error. Such a table is left
-out.
+its type, with the table's own UID, Name and (since the M4b review) Format
+(Core Table 102: @00 00 00 05 00 00 04 05@, @life_cycle_state@,
+@Enumeration_Type, 0, 15@, PDF 113), or the base's enumeration of that type
+(Core Table 103, PDF 113-114); a target in no spec it is read over, or no
+type row or enumeration there, is the same Error. Such a table is left out.
+(The @typeRow@ rule gives the code too, to a type row that replaces a base's:
+"Hsed.Spec.Rules.TypeRow".)
 
 Compiled into 'enumsModule': @data Core_\<type\>@ (the spec's label,
 "Hsed.Spec.Gen".'Gen.specLabel', then the type's name) with a constructor per
@@ -144,7 +146,7 @@ enumValuesRule = RuleDef
       , CodeDef "W-ENUM-OVERLAP"        [Warning]        (Defect "two rows of an enumeration assign one value")
       , CodeDef "W-ENUM-LABEL-REPEATED" [Warning]        (Suspect "an enumeration gives one label to several rows")
       , CodeDef "C-PATCH-UID"           [Error]
-          (Defect "a table that replaces a base's type row or enumeration is not that type's: another UID or name, or no such table") ]
+          (Defect "a table that replaces a base's type row or enumeration is not that type's: another UID, name or Format, or no such table") ]
   , ruleChecks  = \ctx bts -> concatMap (findingsOf ctx) bts
   , ruleCompile = compile
   }

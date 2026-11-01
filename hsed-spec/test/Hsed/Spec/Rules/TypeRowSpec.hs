@@ -21,7 +21,12 @@ Format cell's text as the hand transcription states it, is tested on its own.
 On Opal under the M4b sidecar, read over Core: the Format environment's
 table names, Core's Table 240 and Opal's Table 20 row 12 (the lead's answer
 13 to the M4b plan; Core's names unchanged, Opal read alone still the
-Error), Table 30 declared in @Hsed.Gen.Opal.Types@, and 'allTypeRows'.
+Error), Table 30 declared in @Hsed.Gen.Opal.Types@, and 'allTypeRows'; since
+the M4b review, Opal's type rows held to Core's (C-UID-UNIQUE, C-UID-TABLE,
+C-TYPE-SHADOW, C-FMT-CYCLE, a Format naming a Core type resolved), and since
+its verification a row its binding lets replace a Core type (C-PATCH-UID
+holding it to that type's UID and Name) and an unresolved name's hint citing
+a Core type with its spec.
 
 The Format column of the hand transcription, the oracle's test fixture
 (hsed/fixture/Hand/TypeUIDs.hs, design 5.5), is compared here since M2d
@@ -301,6 +306,23 @@ spec = do
         checked (setCell "T30" 0 1 "boolean" opal) `shouldBe`
           [ "C-TYPE-SHADOW opal-2.30.pdf#page=51&T30: the type boolean is also core-2.01 T58 boolean (PDF 103), which its binding does not"
             <> " replace: the spec's own would shadow it wherever a type is read by name" ]
+      it "E-FMT-RESOLVE: the nearest name an unresolved one's hint gives cites its table, a Core type's with its spec, Opal having no T149 (the review's verification)" $ do
+        let resolve ir' = L.nub [ f | f <- checked ir', "E-FMT-RESOLVE" `T.isPrefixOf` f ]
+        resolve (setCell "T30" 0 2 "List_Type, 4, uintegr_2" opal) `shouldBe`
+          [ "E-FMT-RESOLVE opal-2.30.pdf#page=51&T30: unresolved type name uintegr_2 (nearest: uinteger_2, core-2.01 T149)" ]
+        resolve (setCell "T30" 0 2 "List_Type, 4, data_removal_mechanisn" opal) `shouldBe`
+          [ "E-FMT-RESOLVE opal-2.30.pdf#page=51&T30: unresolved type name data_removal_mechanisn (nearest: data_removal_mechanism, T30)" ]
+      it "C-UID-UNIQUE and C-TYPE-SHADOW pass a row restating the Core type its binding replaces, which C-PATCH-UID holds to that type's UID and Name (the review's verification)" $ do
+        replacing <- annotated opal (m4bOpalHsa <> "opal-2.30 | T30 | as @'TypeRow (replaces [core 58])\n")
+        let held ir' = [ f | f <- checked ir', any (`T.isPrefixOf` f) ["C-UID-UNIQUE", "C-TYPE-SHADOW", "C-PATCH-UID"] ]
+            boolean  = setCell "T30" 0 1 "boolean"
+            restated = setCell "T30" 0 0 "00 00 00 05 00 00 04 01" (boolean (setCell "T30" 0 2 "Enumeration_Type, 0, 1" replacing))
+            uidMoved = "C-PATCH-UID opal-2.30.pdf#page=51&T30: the UID 00 00 00 05 00 00 04 20 is not 00 00 00 05 00 00 04 01, that of"
+                       <> " core-2.01 T58 boolean, which it replaces"
+        held restated `shouldBe` []
+        held (boolean replacing) `shouldBe` [uidMoved]
+        held replacing `shouldBe`
+          [ uidMoved, "C-PATCH-UID opal-2.30.pdf#page=51&T30: the type data_removal_mechanism is not core-2.01 T58's boolean, which it replaces" ]
       it "find a cycle through other types, the shortest, and none where a name ends in a base type" $ do
         typeCycle (`lookup` [("a", AltType [Ref "b"]), ("b", AltType [Ref "a", Ref "c"]), ("c", BaseType)]) "a" `shouldBe` Just ["a", "b", "a"]
         typeCycle (`lookup` [("a", ListType (Lit 4) (Ref "a"))]) "a" `shouldBe` Just ["a", "a"]

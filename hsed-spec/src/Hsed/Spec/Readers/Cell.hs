@@ -83,7 +83,12 @@ zeroes; @\<t\>_def_\<v\>@ its @v@. These agree with Core's stated defaults:
 TryLimit 0 (PDF 171), Tries 0 (PDF 210), CharSet the NULL UID (PDF 171,
 210), Frozen False (PDF 233), ClockStart and ClockEnd an empty struct
 without the Clock template (PDF 168-169), the Log columns 0 and LogTo the
-NULL UID without the Log template (PDF 163-164).
+NULL UID without the Log template (PDF 163-164). A column whose content
+Core states rather than defaults is no default's: the Table table's
+NumColumns and Rows (Core 5.3.2.3.7-5.3.2.3.8, PDF 157) the simulator's fold
+counts, and the CommonNames of the Table and MethodID tables (the issuing
+template's name, PDF 156, 161) are a recorded deviation (design 13.31 (a),
+since the M4b review).
 
 Codes ('cellCodes', claimed here, given by the rule that reads the cell from
 its remarks): @N-PRECONF-LABEL@ (a Note) and @W-PRECONF-NAME-LENGTH@ (a

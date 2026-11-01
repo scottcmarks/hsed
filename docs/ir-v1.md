@@ -60,10 +60,12 @@ names, sorted), `color` only where some glyph is not black, and `fill_rgb` with 
 non-thin filled rect under the centre of its first fragment, `[r, g, b]` on 0-255 (Opal's two greys
 measure 231 and 180-181 where its Table 1 prints 230 and 179), or null where there is none; a cell over
 several pages carries its `fragments` (each a page and a bbox). A cell with no ink has a null `bbox`,
-`bold`, `underline` and `fill_rgb` and no `fonts`; where its row and column place it on one page it
-carries that `page` and `est_bbox`, the rectangle their extents give it, with the `fill_rgb` and
-`fill_bbox` found under its centre. `hsedc` reads a null or missing `bold` or `underline` as false and a
-missing `fonts` as none, so a cell with text and no fonts is one whose style the IR does not record (the
+`bold` and `underline` and no `fonts`; where its row and column place it on one page it carries that
+`page` and `est_bbox`, the rectangle their extents give it, and its `fill_rgb` and `fill_bbox` are those
+found under that rectangle's centre, null where there is none or where it has no `est_bbox` (Opal 2.30:
+4449 cells, 2565 with no ink, 579 of them with a fill under their `est_bbox`; *corrected at the M4b
+review*, which found this paragraph listing `fill_rgb` among the nulls before giving it a value).
+`hsedc` reads a null or missing `bold` or `underline` as false and a missing `fonts` as none, so a cell with text and no fonts is one whose style the IR does not record (the
 legend's C-LEGEND-TOTAL). `lines` are a cell's visual lines as printed, which `text` joins with a space; a
 reader that needs a word broken across lines joined reads them (since M4b the preconfiguration's cell
 reader, which joins an identifier's line break with nothing: design §5.1 step 5).

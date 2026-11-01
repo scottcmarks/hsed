@@ -88,7 +88,13 @@ Some changes are generic and are made in a small commit of their own, before the
   `unitReadable`, False only for a table its binding's shape refuses), the four records its instances,
   with `boundUnits`, `allUnits`, `atUnit`, `unitNamed` and `unitNoun` (the per-kind names kept), one
   `commentUnits` in `Check`, one exclusion of a shape no rule reads in `Compile` and one exemplar lookup
-  in `Rules`; a fifth kind is an instance, its field in the `Context` and its `UnitKind`.
+  in `Rules`. A fifth kind needs (*corrected at the M4b review*, which found "an instance, its field in
+  the `Context` and its `UnitKind`" short): the `BoundUnit` instance; its field in the `Context`; its
+  `UnitKind`; its entry in `allUnits`' hand-written list (`RuleDef`), which nothing checks, so that
+  leaving it out compiles and `Compile`'s exclusion, `W-GEN-EXCLUDED` and `unitNamed` never see the kind;
+  its `unitNoun` case (a missing one is `-Wincomplete-patterns`, an error under `make werror`); for a
+  kind a comment binds, its `commentUnits` field in `Check.mkContextWith`; and, for a kind with an
+  `AnchorId` constructor of its own, `Rules.unitInIR`'s case (the catch-all hides a missing one).
 - **A milestone's anchors.** Every rule token and heading anchor the milestone's rules need goes into
   the `.hsa` in one commit, with the `.upd`, manifest and bindings `make gen` regenerates, so that the
   tail budget (below) is checked once on the whole set. A token for a rule not yet registered is only
@@ -148,13 +154,18 @@ own), and what it finds there is located in the base's spec (`atTable base bt`).
 reading over a spec and its base is one function, `RuleDef.ownThenBase :: Ord k => (Context -> [a]) -> (a
 -> k) -> Context -> [(Context, a)]`: the spec's own items, then its base's (recursively) whose key the
 spec does not give, each with the Context that owns it, so that a finding or a declaration about an item
-is located and named in its own spec. Four readings are built on it: `TypeRow.allTypeRows` (by name:
+is located and named in its own spec. Three readings are built on it: `TypeRow.allTypeRows` (by name:
 Opal's T30, then Core's 100), `EnumValues.allEnums` (by type: Opal's T31 and T49, then Core's less T103,
-which T49 replaces), `TableUIDs.allTableUIDRows` (the spec's Table 240 rows, then the rows of its
+which T49 replaces) and `TableUIDs.allTableUIDRows` (the spec's Table 240 rows, then the rows of its
 preconfigured Table table for tables no Table 240 in the chain names, Opal T20 row 12's
-DataRemovalMechanism, then the base's) and `ColumnsAddition.allDescs` (the spec's own descriptions, then
-the base's it extends, its additions appended and owned by the spec, then the rest of the base's); a rule
-reads another spec's data through these, never through a Context of its own. A rule that
+DataRemovalMechanism, then the base's); so are the sig rule's type environment and, since the M4b review,
+the Format environment's Type objects (`TypeRow.formatEnv`). `ColumnsAddition.allDescs` is its own
+reading over the base (the spec's own descriptions, then the base's it extends, its additions appended and
+owned by the spec, then the rest of the base's), which `ownThenBase` cannot express (*corrected at the M4b
+review*, which found it counted among the four); a rule reads another spec's data through these, never
+through a Context of its own. `RuleDef.contextChain` is a Context and its bases, nearest first, and
+`RuleDef.replacesOf` and `replacedIn` a binding's `replaces` and the base table each names (since the M4b
+review, which found six copies of the chain and the two helpers in one rule). A rule that
 needs another rule's reading (an
 enumeration's range from its type row; a table description's UID from Table 240) imports that rule's
 module and calls its reader on the same `Context`; it never adds fields to the `Context`. A rule
@@ -229,8 +240,9 @@ footnote markers, `(O)`, placeholder, quotes and line breaks, and `zeroValue`, a
 N-PRECONF-LABEL and W-PRECONF-NAME-LENGTH, which `preconfig` gives from the remarks) and
 `Hsed.Spec.Readers.AccessControl` (since M4b the AccessControl and ACE reader of an SP's preconfiguration
 tables, which it tells by their columns' kinds, never by name: invoking IDs and the every-object rows, the
-tables an ACE applies to; its codes `accessControlCodes`, C-ACL-REFS and C-ACL-EXPR, which `preconfig` gives
-through `aclCode`).
+tables an ACE applies to, since the M4b review by the Get and Set rows' ACLs alone (`columnDependent`,
+`aceHalves`, and `aceNamedHalves` for an ACE only other rows name); its codes `accessControlCodes`,
+C-ACL-REFS and C-ACL-EXPR, which `preconfig` gives through `aclCode`).
 A reader returns data; a code several rules give through it
 is the reader's (its `CodeDef`s, listed by `Hsed.Spec.Readers.readerCodes`), which no rule lists. What every rule needs is in `Hsed.Spec.RuleDef` (`atTable`, `atCells`,
 `boundProvenance`, `provenanceOf`, `atRow`) and `Hsed.Spec.Gen` (`listLines`, `listBlock`,
@@ -421,11 +433,15 @@ own: the law reader's `import qualified Hsed.Law.Sync`), declarations sorted by 
 name. A declaration goes to the rule's module (`Emit`) or to
 another one (`EmitIn`, for a rule that writes several: since M4b `preconfig` writes an SSC's tables into
 its SP's module, `Preconfig.preconfigModuleFor`, `Hsed.Gen.Opal.Preconfig.AdminSP`, a dotted leaf nesting a
-directory, and `tableDesc` the table UIDs an SSC's Table table gives into the spec's `TableUIDs`). A
-declaration imports by origin (since M4b): the modules of its own spec whole (`Gen.ImportAll`), a base's
-names by list (`Gen.ImportSome`), so that a name both specs define (Opal's `tPerInfoTableDesc` and
-Core's) is never ambiguous; `TableDesc.tableDescDecl` imports each UID and type name from the module of
-the spec that defines it, and an enumeration's `typeUID` comes from the `Types` module of the spec whose
+directory, and `tableDesc` the table UIDs an SSC's Table table gives into the spec's `TableUIDs`; since the
+M4b review `tableDesc` and `columnsAddition` write every description through `TableDesc.tableDescsModuleFor`
+and the table UIDs go through `TableUIDs.tableUIDsModuleFor`, so that each spec's module note names its
+own ledger, `Gen.ledgerFile`, in its own words). The type and table names a declaration prints import by
+origin (since M4b): a base's names by list (`Gen.ImportSome`), so that a name both specs define (Opal's
+`tPerInfoTableDesc` and Core's) is never ambiguous, and a spec's own whole (`Gen.ImportAll`) or by list,
+either being unambiguous (*corrected at the M4b review*, which found "the modules of its own spec whole"
+stated as a rule that `preconfig`, importing its own spec's descriptions by list, does not keep);
+`TableDesc.tableDescDecl` imports each UID and type name from the module of the spec that defines it, and an enumeration's `typeUID` comes from the `Types` module of the spec whose
 type row it is (`EnumValues.UIDRef`: `SameModule`, `InModule`, `Literal`, and since M4b `ImportedFrom`,
 Opal's life_cycle_state taking Core's `ulife_cycle_stateType`). Rules naming one module must give it one
 description; their notes are united. A module is written when it has a declaration, and `hsedc compile`

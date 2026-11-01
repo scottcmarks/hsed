@@ -32,7 +32,7 @@ import qualified RIO.Text                  as T
 import           RIO
 import           Test.Hspec
 
-import           Hsed.Core.Types           (TableRef (..))
+import           Hsed.Core.Types           (Operand (..), TableRef (..), TypeDef (..), TypeRef (..))
 import           Hsed.Spec.Check           (mkContext)
 import           Hsed.Spec.Common          (ErrataSet (..))
 import qualified Hsed.Spec.Common          as Cm
@@ -195,6 +195,13 @@ spec = do
       readWith expr "Admins OR SID)" `shouldBe` Left (BadExpr "a closing parenthesis closes no group")
       readWith expr "Admins Not SID" `shouldBe` Left (BadExpr "\"Not\", which takes one operand, follows an authority")
       readWith expr "Admins OR Nobody" `shouldBe` Left (Unresolved "\"Nobody\" names no row")
+
+  describe "colKind through a Format that names its own type (the M4b review)" $
+    it "refuses it, naming the types it went through, where it once read for ever" $ do
+      let env' = TypeEnv (`lookup` [ ("loop", Right (ListType (Lit 4) (Ref "loop")))
+                                   , ("a", Right (ListType (Lit 4) (Ref "b"))), ("b", Right (ListType (Lit 2) (Ref "a"))) ]) (const [])
+      colKind env' "loop" `shouldBe` Left "loop's Format names its own type, through loop -> loop"
+      colKind env' "a" `shouldBe` Left "a's Format names its own type, through a -> b -> a"
 
   describe "readCellWith: an ACE's Columns (Core 5.3.2.9.5, PDF 165)" $ do
     it "reads All as the empty set, every column" $

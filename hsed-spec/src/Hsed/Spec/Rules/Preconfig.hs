@@ -182,7 +182,7 @@ import           Hsed.Spec.Rules.ColumnsAddition (allDescs)
 import           Hsed.Spec.Rules.Legend          (LegendScale, cellAccess, legendScale)
 import           Hsed.Spec.Rules.TableDesc       (ColRead (..), DescRead (..), colNumberLit, descDeclName, descReads,
                                                   tableDescsModule, typeEnv)
-import           Hsed.Spec.Rules.TableUIDs       (TableUIDRow (..), allTableUIDRows)
+import           Hsed.Spec.Rules.TableUIDs       (TableUIDRow (..), allTableUIDRows, tableUIDRows)
 import           Hsed.Spec.Rules.TypeRow         (TypeRowRead (..), allTypeRows)
 import           Hsed.Spec.Rules.UidTable        (UidRow (..), UidValue (..), asName, tableClaim, uidRows)
 import qualified Hsed.Spec.Rules.UidTable        as UidTable (rowLabel)
@@ -822,13 +822,25 @@ uidDeclName :: Text -> Text -> Text
 uidDeclName t n = "u" <> (if (t <> "_") `T.isPrefixOf` n then n else t <> "_" <> n)
 
 -- | C-PRECONF-UID: every table of UIDs the @uidTable@ rule reads that claims
---   its rows for a table something preconfigures, against those rows.
+--   its rows for a table something preconfigures, against those rows; and
+--   every row an SP's preconfiguration gives the Table table against the
+--   descriptor object a table of table UIDs of the spec or its base gives the
+--   table its Name names (Core 3.2.5.3 b.i, PDF 51-52: a table's descriptor
+--   object's UID is fixed, so Opal Table 20's rows are Core Table 240's, PDF
+--   36-37, 302-304), at the row (since the M4b review).
 preconfUID :: Context -> [PreRead] -> [Finding]
 preconfUID ctx ps =
   [ f
   | bt <- boundTables (Just UidTable) ctx, Just t <- [tableClaim bt]
   , let es = [ e | e <- entriesOf ps, peTarget e == t ], not (null es)
   , f <- preconfDifferences ctx bt t [ r | r <- uidRows ctx, btAnchor (urBound r) == btAnchor bt ] es ]
+  <> [ atCells ctx (pBound p) (prCells r) (finding Error "C-PRECONF-UID"
+         (rowLabel r <> "the UID " <> hexUID uid <> " is not " <> hexUID o <> ", the " <> tn <> " table's descriptor object, as "
+            <> specIdText (cxSpec c) <> " " <> renderAnchorId (btAnchor (tuBound tu)) <> " row " <> tshow (tuRow tu + 1)
+            <> " gives it (Core 3.2.5.3 b.i, PDF 51-52)"))
+     | (tn', tn, uid, p, r) <- index ps, tn' == "Table", isJust (pSP p)
+     , (c, tu, o) <- take 1 [ (c, tu, o) | c <- contextChain ctx, Right tu <- tableUIDRows c, tuName tu == tn, Just o <- [tuObject tu] ]
+     , o /= uid ]
 
 -- | How the rows of the table of a table's UIDs differ from the rows
 --   preconfigured for that table: a UID one side has and the other lacks, or
@@ -895,7 +907,6 @@ preconfTableDecl ctx p d sp = (Gen.decl prov name body)
     tname    = fromMaybe "" (drTable d)
     descSpec = fromMaybe (cxSpec ctx) (pDescSpec p)
     extended = if describedIn ctx d /= descSpec then ", with " <> specIdText descSpec <> "'s columns" else ""
-    types    = preconfTypeEnv ctx
     scale    = legendScale ctx
     defaults = [ (n, c, v) | (n, c, Right v) <- columnDefaults ctx d ]
     rows     = zip (pRows p) (pReads p)

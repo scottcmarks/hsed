@@ -239,9 +239,18 @@ spec = do
             length (teTypeRows env') `shouldBe` 101
             resolveLeaf env' NameLeaf "data_removal_mechanism" `shouldBe` Resolved ATypeRow
             resolveLeaf env' NameLeaf "uinteger" `shouldBe` Resolved ATypeRow
-            (teAbstract env', teTables env', teTablesAt env') `shouldBe` (teAbstract env, teTables env, teTablesAt env)
-          it "with nothing of its own, the environment is Core's" $
-            typeEnv (mkContextWith registry (Just ctx) Scott opalPristine) `shouldBe` env
+            teAbstract env' `shouldBe` teAbstract env
+          it "its tables every table's UIDs Opal reads names, Table 20 row 12's DataRemovalMechanism first, then Core's, a base's anchor named with its spec (the M4b review)" $ do
+            (teTables env', teTablesAt env') `shouldBe` ("DataRemovalMechanism" : teTables env, ["T20", "core-2.01 T240"])
+            resolveLeaf env' TargetLeaf "DataRemovalMechanismObjectUID" `shouldBe` Resolved (ATable "DataRemovalMechanism")
+          it "with nothing of its own, the environment is Core's, its anchors named with Core's spec" $
+            typeEnv (mkContextWith registry (Just ctx) Scott opalPristine) `shouldBe` env { teTablesAt = ["core-2.01 T240"] }
+          it "types a parameter by a Core type row, its UID imported from Core's Types (Opal's RevertSP, PDF 94, under rule sig at M5)" $ do
+            withSig <- annotated opalPristine (DT.replace "& rule tableDesc" "& rule tableDesc & rule sig" opalHsa)
+            cr <- either (throwString . show) pure (compileIR (Just ctx) Scott withSig)
+            let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.Methods" (crModules cr)))
+            lns `shouldContain` ["    , sigOptional = [Param \"KeepGlobalRangeKey\" (TypeName \"boolean\" (Just ubooleanType))]"]
+            lns `shouldSatisfy` any (\l -> "import" `T.isPrefixOf` l && "Hsed.Gen.Core.Types" `T.isInfixOf` l && "ubooleanType" `T.isInfixOf` l)
 
     describe "the generated module" $ do
       cr <- runIO (either (throwString . show) pure (compileIR Nothing Scott ir))

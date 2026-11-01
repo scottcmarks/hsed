@@ -428,6 +428,12 @@ spec = do
         [ cr | Just p <- [listToMaybe [ p | p <- preReads (opalOver base byUID), btAnchor (pBound p) == TableId 22 ]]
              , (r, rd) <- zip (pRows p) (pReads p), prRow r == 22, (_, c, cr) <- rdCells rd, crName c == "MethodID" ]
           `shouldBe` [ReadValue (CvRef "Get" [0, 0, 0, 6, 0, 0, 0, 0x16]) []]
+      it "fails C-PRECONF-UID on a Table table row whose UID is not the descriptor object Core T240 gives the table it names (Core 3.2.5.3 b.i, PDF 51-52)" $ do
+        let moved = setCell "T20" 7 0 "00 00 00 01 00 00 00 0C" opal
+        [ renderFinding f | f <- checkIR (Just base) Scott moved, Cm.code f == "C-PRECONF-UID" ] `shouldBe`
+          [ "C-PRECONF-UID opal-2.30.pdf#page=37&T20: row 8 C_PIN: the UID 00 00 00 01 00 00 00 0C is not 00 00 00 01 00 00 00 0B, the C_PIN"
+            <> " table's descriptor object, as core-2.01 T240 row 11 gives it (Core 3.2.5.3 b.i, PDF 51-52)" ]
+        [ renderFinding f | f <- checkIR (Just base) Scott opal, Cm.code f == "C-PRECONF-UID" ] `shouldBe` []
       it "fails C-PRECONF-CELL on a reference in any other table printed as the UID of no row (Table 19's TemplateID, PDF 35)" $
         codeOf "C-PRECONF-CELL" (setCell "T19" 0 1 "00 00 02 04 00 00 00 09" opal) `shouldBe`
           [ "C-PRECONF-CELL opal-2.30.pdf#page=35&T19: row 1 Base: TemplateID: \"00 00 02 04 00 00 00 09\" is the UID of no row preconfigured for Template" ]

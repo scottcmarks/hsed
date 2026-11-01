@@ -124,8 +124,8 @@ import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (HeadingIR (..), SigIR (..), SpecIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Readers.Text    (lowerIdent)
-import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), tableNames, tableUIDRows, tableUIDsNamed)
-import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), typeNameExpr, typeRowReads, typeUIDName, typesModule)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, tableUIDsNamed)
+import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeNameExpr, typeRowReads, typeUIDName, typesModule)
 import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), rowPage, rowRef, rowText, uidHeaders, uidRows, uidsModule)
 
 
@@ -401,7 +401,8 @@ checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck row
     joinCheck sr = case joins ctx sr of
       [_] -> []
       []  -> [ atSig ctx (srBound sr) (finding Warning "C-SIG-METHOD"
-                 (srMethod sr <> " has no UID: no row of " <> T.intercalate " or " tables <> " names it")) ]
+                 (srMethod sr <> " has no UID: " <> if null tables then "the spec binds no table of method UIDs to name it"
+                                                    else "no row of " <> T.intercalate " or " tables <> " names it")) ]
       rs  -> [ atSig ctx (srBound sr) (finding Error "C-SIG-METHOD"
                  (srMethod sr <> " is named by " <> T.intercalate " and " [ rowRef r | r <- rs ])) ]
     defined = map srMethod rows
@@ -508,17 +509,22 @@ data TypeEnv = TypeEnv
 --   it is read over that it does not name itself (Opal's methods use Core's
 --   types: a type row Opal adds or modifies, Table 30's or Table 49's once
 --   bound at M5, shadows Core's of the same name, and Core's other types
---   still resolve), each list the context's own names first.
+--   still resolve), each list the context's own names first; the tables
+--   every table's UIDs the spec reads names, its own and its base's, an SP's
+--   Table table rows among them ("Hsed.Spec.Rules.TableUIDs".'allTableUIDRows',
+--   since the M4b review), a base's anchor named with its spec.
 typeEnv :: Context -> TypeEnv
 typeEnv ctx = TypeEnv
   { teTypeRows = ownNames (\c -> [ trName tr | Right tr <- typeRowReads c ])
   , teAbstract = ownNames abstractTypes
-  , teTables   = ownNames tableNames
-  , teTablesAt = ownNames (\c -> L.nub [ renderAnchorId (btAnchor (tuBound r)) | Right r <- tableUIDRows c ]) }
+  , teTables   = L.nub [ tuName r | (_, r) <- allTableUIDRows ctx, not (T.null (tuName r)) ]
+  , teTablesAt = L.nub [ anchorIn c (btAnchor (tuBound r)) | (c, r) <- allTableUIDRows ctx ] }
   where
     -- a reading of the context, then of its base: the context's own names, and
     -- after them the base's it does not have ("Hsed.Spec.RuleDef".'ownThenBase')
     ownNames f = map snd (ownThenBase f id ctx)
+    -- an anchor of the context's own, or of a spec it is read over, by that spec
+    anchorIn c a = (if cxSpec c == cxSpec ctx then "" else specIdText (cxSpec c) <> " ") <> renderAnchorId a
 
 -- | The abstract types of a spec: the titles of the subsections of the heading
 --   titled @Abstract Type Definitions@ (Core 5.1.4.2, PDF 128: 5.1.4.2.1
@@ -600,7 +606,9 @@ compile ctx = map (EmitIn uidsModule . invokerDecl ctx) invokers
   where
     reads    = rights (sigReads ctx)
     invokers = [ (i, r) | i <- L.nub (concatMap srInvokers reads), [r] <- [invokerRows ctx i] ]
-    types    = Map.fromListWith (\_ earlier -> earlier) [ (trName tr, tr) | tr <- rights (typeRowReads ctx) ]
+    -- every type row the spec reads, its own and then its base's, with the Context that owns it (since the M4b
+    -- review: Opal's signature blocks, bound at M5, take Core's types, their UIDs from Core's module)
+    types    = Map.fromListWith (\_ earlier -> earlier) [ (trName tr, ctr) | ctr@(_, tr) <- allTypeRows ctx ]
 
 -- | @uSMUID :: UID@, from the row that describes it.
 invokerDecl :: Context -> (Text, UidRow) -> Gen.Decl
@@ -633,8 +641,10 @@ methodsDecl ctx = \case
       , "methods :: [SomeMethod]" ]
       <> Gen.listDefinition "methods =" [ "SomeMethod (Proxy :: Proxy " <> srMethod sr <> ")" | (sr, _) <- joined ]
 
--- | A block's record and instances.
-methodDecls :: Context -> Map Text TypeRowRead -> SigRead -> [UidRow] -> [Gen.Decl]
+-- | A block's record and instances, each parameter's type the type row of
+--   its name the spec or its base reads, its UID imported from the module of
+--   the spec that defines it.
+methodDecls :: Context -> Map Text (Context, TypeRowRead) -> SigRead -> [UidRow] -> [Gen.Decl]
 methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Gen.declImports = imports } ]
   where
     bs   = srBound sr
@@ -653,9 +663,9 @@ methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordin
       f : fs -> [ "data " <> m <> " = " <> m, "  { " <> f ] <> map ("  , " <>) fs <> [ "  }", "  deriving (Eq, Show)" ]
     -- a parameter's type: the whole collapsed text a type row's name, or not
     typeRow prm = Map.lookup (spType prm) types
-    paramExpr prm = "Param " <> tshow (spName prm) <> " " <> typeNameExpr (spType prm) (typeRow prm)
+    paramExpr prm = "Param " <> tshow (spName prm) <> " " <> typeNameExpr (spType prm) (snd <$> typeRow prm)
     everyParam = map snd (paramsOf sr)
-    typeUIDs = L.nub [ typeUIDName (trName tr) | prm <- everyParam, Just tr <- [typeRow prm] ]
+    typeUIDs = Map.fromListWith (flip (<>)) [ (cxSpec c, [typeUIDName (trName tr)]) | prm <- everyParam, Just (c, tr) <- [typeRow prm] ]
     listExpr indent = \case
       []     -> ["[]"]
       [x]    -> ["[" <> x <> "]"]
@@ -718,7 +728,7 @@ methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordin
                                        <> [ "Method (..)" | hasMethod ])
       , Gen.ImportSome "Prelude" ["Eq", "Maybe (..)", "Show"] ]
       <> [ Gen.ImportSome Gen.typeNameModule ["TypeName (..)"] | usesParam ]
-      <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) typesModule) typeUIDs | not (null typeUIDs) ]
+      <> [ Gen.ImportSome (Gen.moduleName spec typesModule) (L.nub names) | (spec, names) <- Map.toList typeUIDs ]
       <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) uidsModule) [i] | [r] <- [joined], Just i <- [urIdent r] ]
     hasMethod = case joined of
       [r] -> isJust (urIdent r)

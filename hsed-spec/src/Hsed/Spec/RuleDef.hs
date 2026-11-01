@@ -98,6 +98,8 @@ module Hsed.Spec.RuleDef
   , Context (..)
   , ownThenBase
   , contextChain
+  , replacesOf
+  , replacedIn
     -- * Bound units
   , BoundUnit (..)
   , SomeUnit (..)
@@ -159,7 +161,7 @@ import           RIO
 import           Hsed.Spec.Anchor (AnchorId (..), naturalKey, parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Common (CodeDef (..), ErrataSet (..), Finding, Reports (..), RuleName, SpecId (..))
 import qualified Hsed.Spec.Common as Cm
-import           Hsed.Spec.DSL    (Binding (..), Modifier, SomeBinding (..), bindingAccepts, someBindingShape)
+import           Hsed.Spec.DSL    (Binding (..), Modifier, Ref (..), SomeBinding (..), bindingAccepts, someBindingShape)
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), HeadingIR (..), ParaIR (..), ParaKind (..), SigIR (..), SpecIR (..),
                                    StructPath (..), TableIR (..))
@@ -277,6 +279,38 @@ ownThenBase f key ctx = own <> [ ca | ca@(_, a) <- maybe [] (ownThenBase f key) 
 --   Core's ('cxBase', and its base).
 contextChain :: Context -> [Context]
 contextChain c = c : maybe [] contextChain (cxBase c)
+
+-- | The tables a binding's @replaces@ names, through its modifiers (Opal
+--   Table 49's @enumInDescription (replaces [core 102, core 103])@): what an
+--   SSC's table modifies of its base's, which the rule reading it holds it to.
+replacesOf :: SomeBinding -> [Ref]
+replacesOf = \case
+  SomeBinding b -> go b
+  PolyBinding b -> go (b :: Binding 'Prose)
+  where
+    go :: Binding s -> [Ref]
+    go = \case
+      Replaces rs             -> rs
+      WithEnumInDescription b -> go b
+      WithErratum _ _ b       -> go b
+      WithCols _ _ b          -> go b
+      WithRangeWords _ b      -> go b
+      WithAs b                -> go b
+      _                       -> []
+
+-- | The spec a reference names among those a Context is read over, its base
+--   and the base's base (@core 102@: the first whose name is Core's), with
+--   the table; or why there is none.
+replacedIn :: Context -> Ref -> Either Text (Context, AnchorId)
+replacedIn ctx = \case
+  Core n    -> inSpec "core" n
+  Opal n    -> inSpec "opal" n
+  Section s -> Left ("it replaces section " <> tshow s <> ", which is no table")
+  where
+    bases = maybe [] contextChain (cxBase ctx)
+    inSpec family n = case L.find ((family `T.isPrefixOf`) . Cm.specIdText . cxSpec) bases of
+      Just b  -> Right (b, TableId n)
+      Nothing -> Left ("it replaces " <> family <> " " <> tshow n <> ", in no spec " <> Cm.specIdText (cxSpec ctx) <> " is read over")
 
 
 -- * Bound units

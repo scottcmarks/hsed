@@ -56,6 +56,7 @@ module Hsed.Spec.Rules.TypeRow
   , formatEnv
   , typeEnvFrom
   , typeIdent
+  , typeCycle
     -- * Declarations
   , TypeRowDecl (..)
   , typeRowDecl
@@ -68,10 +69,11 @@ module Hsed.Spec.Rules.TypeRow
 import qualified Data.Text        as DT
 import qualified RIO.List         as L
 import qualified RIO.Map          as Map
+import qualified RIO.Set          as Set
 import qualified RIO.Text         as T
 import           RIO
 
-import           Hsed.Core.Types  (TypeDef)
+import           Hsed.Core.Types  (TypeDef (..), TypeRef (..))
 import           Hsed.Spec.Anchor (AnchorId (..), parseAnchorId, renderAnchorId)
 import           Hsed.Spec.Common (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common as Cm
@@ -80,7 +82,7 @@ import           Hsed.Spec.Format (Env, formatNormalisations, mkEnv, parseFormat
 import qualified Hsed.Spec.Gen    as Gen
 import           Hsed.Spec.IR     (CellIR (..), TableIR (..))
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, tableUIDRows, tableUIDsNamed)
+import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, tableUIDsNamed)
 import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption, shapeMismatch)
 
 
@@ -100,7 +102,9 @@ typeRowRule = RuleDef
       , CodeDef "C-UID-UNIQUE"        [Error, Warning] (Defect "a UID printed twice, in one table or in two")
       , CodeDef "C-FMT-RESOLVE"       [Error, Warning] (Defect "a Format or a column's type names a type no table defines")
       , CodeDef "N-FORMAT-NORMALISED" [Note]           (AsPrinted "a Format cell read with its spacing or spelling normalised")
-      , CodeDef "W-WAIVER-UNUSED"     [Warning]        Bookkeeping ]
+      , CodeDef "W-WAIVER-UNUSED"     [Warning]        Bookkeeping
+      , CodeDef "C-FMT-CYCLE"         [Error]          (Defect "a Format names its own type, directly or through other types")
+      , CodeDef "C-TYPE-SHADOW"       [Error]          (Defect "a type row of a spec read over another names a type of the other, which it does not replace") ]
   , ruleChecks  = checks
   , ruleCompile = compile
   }
@@ -161,7 +165,8 @@ readRows ctx = map readRow
                 ("a type row table holds one row of three cells; this one has " <> tshow (map length rows))))
 
 -- | The environment the Format cells resolve against: the Type objects of the
---   type rows and the table names a @uidref{...}@ may name, those of the tables
+--   type rows, the spec's and then its base's it does not name (since the M4b
+--   review), and the table names a @uidref{...}@ may name, those of the tables
 --   bound by @tableUIDs@ ("Hsed.Spec.Rules.TableUIDs"), the spec's and then its
 --   base's ('allTableUIDRows': Opal, which binds Table 30 and has no table of
 --   table UIDs, resolves against Core's Table 240 and its own Table 20 row 12;
@@ -171,12 +176,14 @@ readRows ctx = map readRow
 formatEnv :: Context -> (Env, [Finding])
 formatEnv ctx = (mkEnv types names, nameFindings)
   where
-    types = typeEnvFrom ctx
+    -- the spec's Type objects, then its base's it does not name (since the M4b review: an SSC's Format may name
+    -- Core's types, as Key Per IO's Alternative_Type, bytes_16, bytes_32 does)
+    types = map snd (ownThenBase typeEnvFrom fst ctx)
     names = [ tuName r | (_, r) <- allTableUIDRows ctx, not (T.null (tuName r)) ]
     nameFindings =
       [ (finding Error "C-FMT-RESOLVE" ("no table bound by " <> tableUIDsNamed <> " to resolve uidref{...} against"))
           { Cm.spec = Just (cxSpec ctx) }
-      | null names, not (null types) ]
+      | null names, not (null (typeEnvFrom ctx)) ]
 
 -- | The Type objects: the Name cell of every table bound as a type row (read
 --   under the errata set), with its table number.
@@ -190,11 +197,35 @@ typeEnvFrom ctx =
 
 checks :: Context -> [BoundTable] -> [Finding]
 checks ctx bts = snd (formatEnv ctx) <> lefts reads <> concatMap formatNote rows <> concatMap uidTable rows <> typesTable
-                 <> uidUnique rows <> lefts (map trTypeDef rows)
+                 <> uidUnique rows <> lefts (map trTypeDef rows) <> concatMap baseClash rows <> concatMap cycleOf rows
   where
     reads = readRows ctx bts
     rows  = rights reads
     here tr = locatedAt (cxSpec ctx) (renderAnchorId (trAnchor tr)) (fromMaybe 1 (tablePage (trTable tr)))
+    -- the base's type rows, each with the Context that owns it (none for a spec read alone)
+    based = maybe [] allTypeRows (cxBase ctx)
+    inBase c tr = specIdText (cxSpec c) <> " " <> renderAnchorId (trAnchor tr) <> " " <> trName tr
+                  <> maybe "" (\p -> " (PDF " <> tshow p <> ")") (tablePage (trTable tr))
+
+    -- a spec's type row held to its base's (the M4b review): no UID the base's type rows give (C-UID-UNIQUE),
+    -- and no name of the base's unless the row's binding replaces that table (C-TYPE-SHADOW: the spec's own
+    -- would silently shadow it in every description, cell and signature read over both)
+    baseClash tr =
+      [ here tr (finding Error "C-UID-UNIQUE" ("the UID " <> hexUID u <> " of " <> trName tr <> " is also that of " <> inBase c btr))
+      | Just u <- [trUID tr], (c, btr) <- take 1 [ cb | cb@(_, btr) <- based, trUID btr == Just u ] ]
+      <> [ here tr (finding Error "C-TYPE-SHADOW" ("the type " <> trName tr <> " is also " <> inBase c btr
+                      <> ", which its binding does not replace: the spec's own would shadow it wherever a type is read by name"))
+         | (c, btr) <- take 1 [ cb | cb@(_, btr) <- based, trName btr == trName tr ], not (replaced c btr) ]
+      where
+        replaced c btr = or [ cxSpec b == cxSpec c && aid == trAnchor btr
+                            | bt <- take 1 [ bt | bt <- bts, btAnchor bt == trAnchor tr ]
+                            , Right (b, aid) <- map (replacedIn ctx) (replacesOf (btBinding bt)) ]
+
+    -- C-FMT-CYCLE: a Format that names its own type, directly or through other types, a type no value can end
+    defs = Map.fromList [ (trName tr, td) | (_, tr) <- allTypeRows ctx, Right td <- [trTypeDef tr] ]
+    cycleOf tr = [ here tr (finding Error "C-FMT-CYCLE" ("the Format of " <> trName tr <> " names its own type, through "
+                                                          <> T.intercalate " -> " path))
+                 | Just path <- [typeCycle (`Map.lookup` defs) (trName tr)] ]
 
     -- N-FORMAT-NORMALISED: a Format cell whose spacing at a brace or table suffix the parser reads past
     formatNote tr = case formatNormalisations (trFormat tr) of
@@ -202,15 +233,17 @@ checks ctx bts = snd (formatEnv ctx) <> lefts reads <> concatMap formatNote rows
       pairs -> [ here tr (finding Note "N-FORMAT-NORMALISED"
                    ("Format read with " <> T.intercalate ", " [ tshow a <> " as " <> tshow b | (a, b) <- pairs ])) ]
 
-    typesHalf = typeTableHalf rows
+    -- the Type table's half-UID, over the spec's type rows and its base's (since the M4b review: an SSC's own few
+    -- held to Core's 00 00 00 05, Core 3.2.5.3 b.iii, PDF 52)
+    typesHalf = typeTableHalf (map snd (allTypeRows ctx))
     uidTable tr = map (here tr) $ case trUID tr of
       Nothing -> [finding Error "C-UID-TABLE" ("the UID cell " <> tshow (trUIDText tr) <> " is not eight bytes")]
       Just bs
         | Just (take 4 bs) == typesHalf -> []
         | otherwise -> [finding Error "C-UID-TABLE" ("the UID " <> hexUID bs <> " of " <> trName tr <> " is not a Type object's (upper half "
                                                        <> maybe "unknown" hexUID typesHalf <> ")")]
-    -- the type rows' table must be a table of Table 240, when tableUIDs binds one
-    halves = [ take 4 t | Right r <- tableUIDRows ctx, Just t <- [tuTable r] ]
+    -- the type rows' table must be a table of Table 240, when tableUIDs binds one in the spec or its base
+    halves = [ take 4 t | (_, r) <- allTableUIDRows ctx, Just t <- [tuTable r] ]
     typesTable = case (typesHalf, filter ((== typesHalf) . fmap (take 4) . trUID) rows) of
       (Just h, tr : _) | not (null halves), h `notElem` halves ->
         [ here tr (finding Error "C-UID-TABLE" ("the type rows' upper half " <> hexUID h <> " is the half-UID of no table of those tableUIDs binds")) ]
@@ -254,6 +287,38 @@ typeTableHalf rows = listToMaybe (L.sortOn (Down . count) (L.nub halves))
   where
     halves  = [ take 4 bs | tr <- rows, Just bs <- [trUID tr] ]
     count h = length (filter (== h) halves)
+
+-- | The types a TypeDef names: a Simple_Type's base, an alternative's, a
+--   list's element, a named value's type, a struct's components.
+typeRefs :: TypeDef -> [Text]
+typeRefs = \case
+  SimpleType (Ref b) _          -> [b]
+  AltType rs                    -> [ n | Ref n <- rs ]
+  ListType _ (Ref e)            -> [e]
+  NamedValueName _ (Ref t)      -> [t]
+  NamedValueInteger _ (Ref t)   -> [t]
+  NamedValueUinteger _ (Ref t)  -> [t]
+  StructType rs                 -> [ n | Ref n <- rs ]
+  _                             -> []
+
+-- | The shortest way a type's Format names the type again, from it back to
+--   it (@[boolean, boolean]@ for @boolean@ printed @List_Type, 4, boolean@),
+--   through the Type objects a name finds; Nothing where it does not.
+--
+-- >>> typeCycle (\n -> lookup n [("a", AltType [Ref "b"]), ("b", AltType [Ref "a", Ref "c"]), ("c", BaseType)]) "a"
+-- Just ["a","b","a"]
+-- >>> typeCycle (\n -> lookup n [("c", BaseType)]) "c"
+-- Nothing
+typeCycle :: (Text -> Maybe TypeDef) -> Text -> Maybe [Text]
+typeCycle defOf start = go (Set.singleton start) [[start]]
+  where
+    go _ [] = Nothing
+    go seen (path : rest) = case path of
+      [] -> go seen rest
+      n : _ | start `elem` next n -> Just (reverse (start : path))
+            | otherwise           -> let fresh = L.nub [ m | m <- next n, m `Set.notMember` seen ]
+                                     in go (seen <> Set.fromList fresh) (rest <> [ m : path | m <- fresh ])
+    next n = maybe [] typeRefs (defOf n)
 
 -- | The subject of a C-UID-UNIQUE waiver: the other table of the clash and
 --   the UID, @T94 00 00 00 05 00 00 02 15@.

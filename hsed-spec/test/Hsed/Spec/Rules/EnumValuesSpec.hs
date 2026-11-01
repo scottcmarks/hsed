@@ -24,7 +24,7 @@ of T52, T87, T101 and T126. Then Opal under the M4b sidecar, read over Core:
 Table 49's enumeration in its Description column, its range its own Format's
 (C-ENUM-RANGE made to fail by narrowing it), held to the Core tables it
 replaces by C-PATCH-UID (made to fail by another UID, another type's name,
-other targets, or no base), its own UID cell eight bytes (C-UID-TABLE);
+another Format since the M4b review, other targets, or no base), its own UID cell eight bytes (C-UID-TABLE);
 Tables 31 and 49 each one W-ENUM-LABEL-REPEATED; and @Hsed.Gen.Opal.Enums@:
 @Opal_life_cycle_state@'s 16 constructors (manufactured-inactive 8,
 manufactured 9), its UID Core T102's imported by name, and
@@ -265,10 +265,18 @@ spec = do
           `shouldBe` [(TableId 49, "life_cycle_state", Just [0, 0, 0, 5, 0, 0, 4, 5], Right (EnumType [(Lit 0, Lit 15)]))]
         [ [ tr.trAnchor | tr <- joinable octx e, tr.trIdent == e.erIdent ] | Right e <- enumReads octx, e.erAnchor == TableId 31 ]
           `shouldBe` [[TableId 30]]
-      it "C-ENUM-RANGE: T49's values against its own Format, edited to 0..13, not Core T102's" $
+      it "C-ENUM-RANGE: T49's values against its own Format, edited to 0..13, not Core T102's, which C-PATCH-UID holds it to" $
         errorsAt "T49" (setCell "T49" 0 2 "Enumeration_Type, 0, 13" opal) `shouldBe`
           [ "C-ENUM-RANGE opal-2.30.pdf#page=98&T49: value 14 (\"reserved\") lies outside 0..13 of T49 life_cycle_state"
-          , "C-ENUM-RANGE opal-2.30.pdf#page=98&T49: value 15 (\"reserved\") lies outside 0..13 of T49 life_cycle_state" ]
+          , "C-ENUM-RANGE opal-2.30.pdf#page=98&T49: value 15 (\"reserved\") lies outside 0..13 of T49 life_cycle_state"
+          , "C-PATCH-UID opal-2.30.pdf#page=98&T49: the Format \"Enumeration_Type, 0, 13\" is not core-2.01 T102's \"Enumeration_Type, 0, 15\","
+            <> " which it replaces: a cell of the type is read by the replaced Format, the enumeration by this one" ]
+      it "C-PATCH-UID: T49's Format widened to 0..31, which the cell reader, reading Core T102's, would refuse past 15 (the M4b review)" $ do
+        let widened = setCell "T49" 0 2 "Enumeration_Type, 0, 31" opal
+        errorsAt "T49" widened `shouldBe`
+          [ "C-PATCH-UID opal-2.30.pdf#page=98&T49: the Format \"Enumeration_Type, 0, 31\" is not core-2.01 T102's \"Enumeration_Type, 0, 15\","
+            <> " which it replaces: a cell of the type is read by the replaced Format, the enumeration by this one" ]
+        excludedOf (TableId 49) widened `shouldReturn` ["C-PATCH-UID failed"]
       it "C-PATCH-UID: T49 printing another UID than Core T102's, which it replaces, is left out" $ do
         let moved = setCell "T49" 0 0 "00 00 00 05 00 00 04 06" opal
         errorsAt "T49" moved `shouldBe`

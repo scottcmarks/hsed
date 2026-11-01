@@ -181,12 +181,20 @@ data ColKind
 --   @Base_Type@; @uid@, @password@ and @ACE_columns@ are read by their names,
 --   the other kinds by their Formats.
 colKind :: TypeEnv -> Text -> Either Text ColKind
-colKind env name = case teType env name of
-  Nothing -> case defaulted name of
-    Just (t, v) | isJust (teType env t) -> KDefault v <$> colKind env t
-    _                                   -> Left (name <> " names no Type object")
-  Just (Left _)   -> Left (name <> "'s Format did not parse")
-  Just (Right td) -> kindOf td
+colKind env = kindVia env []
+
+-- | 'colKind' through the types already followed to it, so that a Format
+--   naming its own type (@List_Type, 4, boolean@ as boolean's) is refused,
+--   not followed for ever (typeRow's C-FMT-CYCLE reports it).
+kindVia :: TypeEnv -> [Text] -> Text -> Either Text ColKind
+kindVia env seen name
+  | name `elem` seen = Left (name <> "'s Format names its own type, through " <> T.intercalate " -> " (reverse (name : seen)))
+  | otherwise = case teType env name of
+      Nothing -> case defaulted name of
+        Just (t, v) | isJust (teType env t) -> KDefault v <$> kindVia env (name : seen) t
+        _                                   -> Left (name <> " names no Type object")
+      Just (Left _)   -> Left (name <> "'s Format did not parse")
+      Just (Right td) -> kindOf td
   where
     kindOf = \case
       SimpleType (Ref base) (Lit n) -> do
@@ -210,7 +218,7 @@ colKind env name = case teType env name of
       AltType alts | not (null alts), all generalUID alts -> Right KUIDRef
       ListType _ (Ref e) -> case typeOf e of
         Just (AltType alts) | Just k <- expression alts -> Right k
-        _                                               -> KList <$> colKind env e
+        _                                               -> KList <$> kindVia env (name : seen) e
       SetType _ | name == "ACE_columns" -> Right KColumns
       GeneralRefTable ByteTable -> Right KByteTableRef
       StructType _ -> Right (KStruct name)

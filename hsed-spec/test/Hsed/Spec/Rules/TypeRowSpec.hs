@@ -279,6 +279,33 @@ spec = do
         lns `shouldSatisfy` any ("-- | opal-2.30 T30 - data_removal_mechanism Type Table Addition (PDF 51 / p.50, ord 32, sha256:" `T.isPrefixOf`)
         [ l | l <- lns, " :: UID" `T.isSuffixOf` l ] `shouldBe` ["udata_removal_mechanismType :: UID"]
 
+    describe "Opal's type rows held to Core's (the M4b review)" $ do
+      let checked ir' = about "T30" (checkIR (Just base) Scott ir')
+      it "resolve a Format naming a Core type, as Key Per IO's Alternative_Type, bytes_16, bytes_32 does: no E-FMT-RESOLVE" $ do
+        let simple = setCell "T30" 0 2 "Simple_Type, uinteger, 1" opal
+        [ tr.trTypeDef | Right tr <- typeRowReads (opalOver base simple) ] `shouldBe` [Right (SimpleType (Ref "uinteger") (Lit 1))]
+        checked simple `shouldBe` []
+        [ n | (n, _) <- typeEnvFrom octx ] `shouldBe` ["data_removal_mechanism"]
+        Map.member "uinteger" (envTypes (fst (formatEnv octx))) `shouldBe` True
+      it "C-FMT-CYCLE: a Format naming its own type is an Error, not a read that never ends" $
+        checked (setCell "T30" 0 2 "List_Type, 4, data_removal_mechanism" opal) `shouldBe`
+          [ "C-FMT-CYCLE opal-2.30.pdf#page=51&T30: the Format of data_removal_mechanism names its own type, through"
+            <> " data_removal_mechanism -> data_removal_mechanism" ]
+      it "C-UID-UNIQUE: a UID a Core type row gives, Core T58 boolean's" $
+        checked (setCell "T30" 0 0 "00 00 00 05 00 00 04 01" opal) `shouldBe`
+          [ "C-UID-UNIQUE opal-2.30.pdf#page=51&T30: the UID 00 00 00 05 00 00 04 01 of data_removal_mechanism is also that of core-2.01 T58 boolean (PDF 103)" ]
+      it "C-UID-TABLE: a UID outside the Type table's half-UID over Core's type rows too, 00 00 00 05 (Core 3.2.5.3 b.iii, PDF 52)" $
+        checked (setCell "T30" 0 0 "00 00 00 06 00 00 04 20" opal) `shouldBe`
+          [ "C-UID-TABLE opal-2.30.pdf#page=51&T30: the UID 00 00 00 06 00 00 04 20 of data_removal_mechanism is not a Type object's (upper half 00 00 00 05)" ]
+      it "C-TYPE-SHADOW: a name a Core type row gives, which the row's binding does not replace" $
+        checked (setCell "T30" 0 1 "boolean" opal) `shouldBe`
+          [ "C-TYPE-SHADOW opal-2.30.pdf#page=51&T30: the type boolean is also core-2.01 T58 boolean (PDF 103), which its binding does not"
+            <> " replace: the spec's own would shadow it wherever a type is read by name" ]
+      it "find a cycle through other types, the shortest, and none where a name ends in a base type" $ do
+        typeCycle (`lookup` [("a", AltType [Ref "b"]), ("b", AltType [Ref "a", Ref "c"]), ("c", BaseType)]) "a" `shouldBe` Just ["a", "b", "a"]
+        typeCycle (`lookup` [("a", ListType (Lit 4) (Ref "a"))]) "a" `shouldBe` Just ["a", "a"]
+        typeCycle (`lookup` [("a", ListType (Lit 4) (Ref "c")), ("c", BaseType)]) "a" `shouldBe` Nothing
+
     describe "allTypeRows, on Opal under the M4b sidecar, read over Core (ownThenBase)" $ do
       it "gives Opal's own type row first, Table 30's data_removal_mechanism (PDF 51), then Core's hundred, each with its spec" $ do
         [ (cxSpec c, tr.trAnchor, tr.trName) | (c, tr) <- take 1 alls ] `shouldBe` [(SpecId "opal-2.30", TableId 30, "data_removal_mechanism")]

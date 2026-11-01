@@ -112,7 +112,7 @@ import           Hsed.Core.Types         (Operand (..), TypeDef (..))
 import           Hsed.Spec.Anchor        (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Common        (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common        as Cm
-import           Hsed.Spec.DSL           (Binding (..), Ref (..), SomeBinding (..), enumValues)
+import           Hsed.Spec.DSL           (SomeBinding (..), enumValues)
 import           Hsed.Spec.Format        (parseFormat)
 import qualified Hsed.Spec.Gen           as Gen
 import           Hsed.Spec.IR            (CellIR (..), TableIR (..))
@@ -402,11 +402,14 @@ ownTypeRow ctx e = typeRowOf <$> erOwnType e
 --   names (Opal Table 49's @enumInDescription (replaces [core 102, core
 --   103])@) lies in a spec it is read over ('cxBase', and its base), and is
 --   there either the type row of the type the table enumerates, with the
---   UID and the Name of the type row it joins (Core Table 102, @00 00 00 05
---   00 00 04 05@ and @life_cycle_state@, PDF 113), or the enumeration of
---   that type (Core Table 103, PDF 113-114). So the type the modified
---   enumeration's instance names, the base's @u\<type\>Type@, is the UID the
---   table prints. Nothing for a table that replaces nothing.
+--   UID, the Name and (since the M4b review) the Format of the type row it
+--   joins (Core Table 102, @00 00 00 05 00 00 04 05@, @life_cycle_state@ and
+--   @Enumeration_Type, 0, 15@, PDF 113; Opal prints the same Format, PDF 98),
+--   or the enumeration of that type (Core Table 103, PDF 113-114). So the
+--   type the modified enumeration's instance names, the base's
+--   @u\<type\>Type@, is the UID the table prints, and a cell of the type,
+--   which the replaced row's Format reads, reads the range the generated
+--   enumeration has. Nothing for a table that replaces nothing.
 patchFindings :: Context -> BoundTable -> EnumRead -> [Finding]
 patchFindings ctx bt e = map (atTable ctx bt . finding Error "C-PATCH-UID") (concatMap problems (replacesOf (btBinding bt)))
   where
@@ -426,38 +429,10 @@ patchFindings ctx bt e = map (atTable ctx bt . finding Error "C-PATCH-UID") (con
       | trUID own /= trUID tr ]
       <> [ "the type " <> trName own <> " is not " <> named b (trAnchor tr) <> "'s " <> trName tr <> ", which it replaces"
          | trName own /= trName tr ]
+      <> [ "the Format " <> tshow (T.strip (trFormat own)) <> " is not " <> named b (trAnchor tr) <> "'s " <> tshow (T.strip (trFormat tr))
+             <> ", which it replaces: a cell of the type is read by the replaced Format, the enumeration by this one"
+         | Right mine <- [trTypeDef own], Right theirs <- [trTypeDef tr], mine /= theirs ]
     uidOf tr = maybe (tshow (trUIDText tr)) hexUID (trUID tr)
-
--- | The tables a binding's @replaces@ names, through its modifiers.
-replacesOf :: SomeBinding -> [Ref]
-replacesOf = \case
-  SomeBinding b -> go b
-  PolyBinding b -> go (b :: Binding 'Prose)
-  where
-    go :: Binding s -> [Ref]
-    go = \case
-      Replaces rs             -> rs
-      WithEnumInDescription b -> go b
-      WithErratum _ _ b       -> go b
-      WithCols _ _ b          -> go b
-      WithRangeWords _ b      -> go b
-      WithAs b                -> go b
-      _                       -> []
-
--- | The spec a reference names among those a Context is read over, its base
---   and the base's base (@core 102@: the first whose name is Core's), with
---   the table; or why there is none.
-replacedIn :: Context -> Ref -> Either Text (Context, AnchorId)
-replacedIn ctx = \case
-  Core n    -> inSpec "core" n
-  Opal n    -> inSpec "opal" n
-  Section s -> Left ("it replaces section " <> tshow s <> ", which is no table")
-  where
-    bases = maybe [] contextChain (cxBase ctx)
-    inSpec family n = case L.find ((family `T.isPrefixOf`) . specIdText . cxSpec) bases of
-      Just b  -> Right (b, TableId n)
-      Nothing -> Left ("it replaces " <> family <> " " <> tshow n <> ", in no spec " <> specIdText (cxSpec ctx) <> " is read over")
-
 
 -- * Declarations
 

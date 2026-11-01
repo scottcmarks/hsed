@@ -246,8 +246,8 @@ spec = do
           it "with nothing of its own, the environment is Core's, its anchors named with Core's spec" $
             typeEnv (mkContextWith registry (Just ctx) Scott opalPristine) `shouldBe` env { teTablesAt = ["core-2.01 T240"] }
           it "types a parameter by a Core type row, its UID imported from Core's Types (Opal's RevertSP, PDF 94, under rule sig at M5)" $ do
-            withSig <- annotated opalPristine (DT.replace "& rule tableDesc" "& rule tableDesc & rule sig" opalHsa)
-            cr <- either (throwString . show) pure (compileIR (Just ctx) Scott withSig)
+            sigBound <- annotated opalPristine (DT.replace "& rule tableDesc" "& rule tableDesc & rule sig" opalHsa)
+            cr <- either (throwString . show) pure (compileIR (Just ctx) Scott sigBound)
             let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.Methods" (crModules cr)))
             lns `shouldContain` ["    , sigOptional = [Param \"KeepGlobalRangeKey\" (TypeName \"boolean\" (Just ubooleanType))]"]
             lns `shouldSatisfy` any (\l -> "import" `T.isPrefixOf` l && "Hsed.Gen.Core.Types" `T.isInfixOf` l && "ubooleanType" `T.isInfixOf` l)

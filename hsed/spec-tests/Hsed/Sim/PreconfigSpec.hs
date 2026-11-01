@@ -345,7 +345,7 @@ spec = do
       rowsIn [c_PIN, sp] spTableDesc `shouldBe` [[(0, UIDCell (uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x01)), (1, TextCell "Admin")]]
     it "of the Admin SP are Opal 2.30's as hsedc generates them (Hsed.Gen.Opal.Preconfig.AdminSP), folded whatever the parameters" $
       forM_ [defaultSimParams, admins 3, defaultSimParams { spLockingOFS = Manufactured, spTPerResetEnabled = True }] $ \p ->
-        fmap (\sps -> (spsDescs sps, spsTables sps)) (Map.lookup uSP_Admin (tsSPs (initialState p))) `shouldBe` Just (foldTables p Generated.adminSP)
+        fmap (\held -> (spsDescs held, spsTables held)) (Map.lookup uSP_Admin (tsSPs (initialState p))) `shouldBe` Just (foldTables p Generated.adminSP)
 
   describe "the cells the TPer chooses (vendorCell)" $ do
     let pin    = cellNamed c_PINTableDesc "PIN"

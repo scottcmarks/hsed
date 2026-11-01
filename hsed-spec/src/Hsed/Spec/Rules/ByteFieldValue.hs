@@ -114,6 +114,10 @@ import           Hsed.Spec.Rules.ByteGrid (gridDecls, gridStructures, structureN
 import           Hsed.Spec.Shape          (Shape (ByteFieldValue), captionTitle, shapeMismatch)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | The rule.
 byteFieldValueRule :: RuleDef
 byteFieldValueRule = RuleDef

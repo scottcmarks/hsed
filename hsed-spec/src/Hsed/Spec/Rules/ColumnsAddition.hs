@@ -82,6 +82,10 @@ import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..))
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure, shapeMismatch)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | The rule.
 columnsAdditionRule :: RuleDef
 columnsAdditionRule = RuleDef

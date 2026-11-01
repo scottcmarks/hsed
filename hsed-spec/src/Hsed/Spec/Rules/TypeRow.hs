@@ -96,6 +96,10 @@ import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, t
 import           Hsed.Spec.Shape  (CaptionKind (..), Form (..), Shape (..), measure, normaliseCaption, shapeMismatch)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | The rule.
 typeRowRule :: RuleDef
 typeRowRule = RuleDef

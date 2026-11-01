@@ -105,6 +105,10 @@ import           Hsed.Spec.Rules.Laws (qualifiedLaw)
 import           Hsed.Spec.Rules.Sig  (SigRead (..), joinedUID, methodsModule, sigReads)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | The reader: reached only by a @behaviour@ comment, or a @fails@ one.
 behavioursRule :: RuleDef
 behavioursRule = RuleDef

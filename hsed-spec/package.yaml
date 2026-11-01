@@ -75,6 +75,35 @@ tests:
     - -rtsopts
     - -with-rtsopts=-N
 
+  # doctest over every module under src that holds an example (a `-- >>>` line), listed when the suite
+  # runs, as hsed's and hsed-core's suites list theirs (design 12; since the M4b review). The suite
+  # interprets the library's sources (src on its path), so it needs the library's dependencies, listed
+  # here again: a dependency added to the library above is added here too.
+  hsed-spec-doc-test:
+    main:                DocTest.hs
+    source-dirs:         doc-tests
+    dependencies:
+    - hsed-core
+    - aeson
+    - attoparsec
+    - bytestring
+    - containers
+    - cryptonite
+    - directory
+    - doctest
+    - filepath
+    - megaparsec
+    - mtl
+    - prettyprinter
+    - text
+    - unordered-containers
+    - vector
+
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
   # The only component that compiles the committed, generated bindings
   # (design section 4.2): a wrong comment in the spec breaks this and nothing else.
   bindings:

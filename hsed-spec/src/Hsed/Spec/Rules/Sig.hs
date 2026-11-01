@@ -129,6 +129,10 @@ import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeN
 import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), rowPage, rowRef, rowText, uidHeaders, uidRows, uidsModule)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | The rule.
 sigRule :: RuleDef
 sigRule = RuleDef

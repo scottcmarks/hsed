@@ -76,6 +76,10 @@ import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.StateTable (StateTableRead (..), stateTableReads, stateTableRule)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | The reader: reached only by a @law@ comment (or, for a table, a @stateTable@ one).
 lawsRule :: RuleDef
 lawsRule = RuleDef

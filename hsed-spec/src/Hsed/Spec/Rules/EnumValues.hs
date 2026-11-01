@@ -122,6 +122,10 @@ import           Hsed.Spec.Shape         (CaptionKind (..), Form (..), Shape (..
                                           shapeMismatch)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | The rule.
 enumValuesRule :: RuleDef
 enumValuesRule = RuleDef

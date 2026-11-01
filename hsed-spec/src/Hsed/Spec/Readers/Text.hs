@@ -47,6 +47,10 @@ import           RIO
 import           Numeric   (showHex)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | An identifier from a caption's title: its words, each capitalised, joined,
 --   every character but a letter, a digit or an underscore dropped:
 --   @ComID Assignments@ gives @ComIDAssignments@, @GET_COMID Command Block@

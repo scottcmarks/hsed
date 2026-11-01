@@ -168,6 +168,10 @@ import           Hsed.Spec.IR     (CellIR (..), HeadingIR (..), ParaIR (..), Par
 import           Hsed.Spec.Shape  (Form, Shape (..), UnitKind (..), measure, normaliseCaption)
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- * Rules
 
 -- | Everything one rule is (design section 4.2's @Rule@ and @Compile'@ in one record).

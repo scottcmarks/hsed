@@ -89,6 +89,10 @@ import qualified RIO.Set          as Set
 import           Hsed.Spec.Common (SpecId (..))
 
 
+-- $setup
+-- >>> :set -XOverloadedStrings
+
+
 -- | Where a definition comes from, printed on its Haddock line.
 data Provenance = Provenance
   { spec        :: !SpecId

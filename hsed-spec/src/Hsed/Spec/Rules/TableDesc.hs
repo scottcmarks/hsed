@@ -88,6 +88,7 @@ module Hsed.Spec.Rules.TableDesc
   , descSection
   , parseColNumber
   , tableUIDRowNamed
+  , declaredTableObjects
     -- * Checking a table's columns
   , ColumnsFrom (..)
   , columnFindings
@@ -124,7 +125,7 @@ import           Hsed.Spec.Readers.Text    (lowerIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), allEnums, parseEnumValue)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, rowDecl, tableObjectUIDName, tableUIDName,
-                                            tableUIDsModule, tableUIDsModuleFor, tableUIDsNamed)
+                                            tableUIDRows, tableUIDsModule, tableUIDsModuleFor, tableUIDsNamed)
 import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeNameExpr, typeUIDName, typesModule)
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure,
                                             shapeMismatch)
@@ -355,6 +356,29 @@ repeats ds = concat
 tableUIDRowNamed :: Context -> Text -> Maybe (Context, TableUIDRow)
 tableUIDRowNamed ctx n = L.find ((== n) . tuName . snd) (allTableUIDRows ctx)
 
+-- | The descriptor objects the generated TableUIDs modules of a spec and its
+--   bases declare, @u\<T\>TableObject@: every row of a table of table UIDs
+--   ("Hsed.Spec.Rules.TableUIDs"' own declarations: Core Table 240's), and
+--   the row an SP's preconfiguration of the table of tables gives a table no
+--   such table names, where the spec describes the table ('compile' here,
+--   'declaresRow': Opal Table 20 row 12's DataRemovalMechanism, which Table
+--   32 describes, PDF 37, 51), the first row naming it. A table only an SP's
+--   Table table names and no spec describes has none (M5's DataStore, Opal
+--   Table 36, PDF 54), nor has a second row naming one table.
+declaredTableObjects :: Context -> [[Word8]]
+declaredTableObjects ctx = concatMap declared (contextChain ctx)
+  where
+    declared c =
+      [ o | Right tu <- tableUIDRows c, Just o <- [tuObject tu] ]
+      <> [ o | d <- descReads c, Just row@(_, tu) <- [drTable d >>= tableUIDRowNamed c], declaresRow c row, Just o <- [tuObject tu] ]
+
+-- | Whether a spec's TableUIDs module declares a description's row of a
+--   table of table UIDs beside the description ('compile'): a row the
+--   spec's own preconfiguration of the table of tables gives, which no table
+--   of table UIDs of the spec writes.
+declaresRow :: Context -> (Context, TableUIDRow) -> Bool
+declaresRow ctx (owner, tu) = cxSpec owner == cxSpec ctx && someBindingShape (btBinding (tuBound tu)) /= Just TableUIDs
+
 isIdent :: Text -> Bool
 isIdent n = case T.uncons n of
   Just (c, cs) -> C.isAlpha c && T.all (\x -> C.isAlphaNum x || x == '_') cs
@@ -403,9 +427,8 @@ compile ctx bts = concatMap one ds
     one d = case (drTable d >>= tableUIDRowNamed ctx, any Cm.isError (descFindings ctx d)) of
       (Just row@(owner, tu), False) | Just o <- tuObject tu, Just t <- tuTable tu, btAnchor (drBound d) `notElem` later ->
         EmitIn (tableDescsModuleFor (cxSpec ctx)) (tableDescDecl ctx (boundProvenance ctx (drBound d)) [] d row)
-          : [ EmitIn (tableUIDsModuleFor ctx) (rowDecl owner tu o t) | cxSpec owner == cxSpec ctx, not (fromTableUIDs tu) ]
+          : [ EmitIn (tableUIDsModuleFor ctx) (rowDecl owner tu o t) | declaresRow ctx row ]
       _ -> [Excluded (btAnchor (drBound d)) "C-COL-CONTIG, C-COL-CELL or C-DESC-TABLE failed"]
-    fromTableUIDs tu = someBindingShape (btBinding (tuBound tu)) == Just TableUIDs
 
 -- | @\<t\>TableDesc :: TableDesc@ for a description read in a spec's
 --   Context, under a provenance and the comment lines that follow it: its

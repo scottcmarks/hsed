@@ -34,6 +34,7 @@ module Hsed.Spec.CoreIR
   , annotatedWith
   , setCell
   , setHeaderCell
+  , duplicateRow
   , dropTable
   , withoutLine
   , newlyExcluded
@@ -145,6 +146,15 @@ setHeaderCell tid row col txt ir = ir { tables = map table ir.tables }
   where
     table t
       | t.id == Just tid = t { headerRows = zipWith (\i r -> if i == row then zipWith (\j c -> if j == col then cellWithText txt c else c) [0 :: Int ..] r else r) [0 ..] t.headerRows }
+      | otherwise        = t
+
+-- | A numbered table with one of its data rows (0-based) printed twice, the
+--   copy after it, for an edit to make it a row of its own ('setCell').
+duplicateRow :: Text -> Int -> SpecIR -> SpecIR
+duplicateRow tid row ir = ir { tables = map table ir.tables }
+  where
+    table t
+      | t.id == Just tid = t { rows = concat (zipWith (\i r -> if i == row then [r, r] else [r]) [0 :: Int ..] t.rows) }
       | otherwise        = t
 
 -- | A sidecar without the line of one anchor (@withoutLine "T75"@).

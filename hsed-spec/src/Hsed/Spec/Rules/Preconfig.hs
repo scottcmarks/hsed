@@ -46,10 +46,14 @@ row optional, quotes removed, line breaks joined as its column's kind reads
 them, @VU@ and @MSID@ values the TPer chooses) and then as its column's type
 says ('Hsed.Spec.Readers.Cell.readCellWith'), a reference naming the object
 by the Name column of a row of the SP preconfigured for a table the type
-allows (case and spaces aside), or by its UID; a blank cell keeps the column's
-default. A type with no enumeration table of its own takes the labels its
-section cross-references, read by the @codes@ rule (Core's @messaging_type@,
-section 5.1.3.55, PDF 116: Table 179, PDF 167; 'preconfTypeEnv'). A row
+allows (case and spaces aside), or by its UID; where the SP preconfigures no
+row of those tables, a row another SP preconfigures (Core 5.1.3.78, PDF 123:
+a Template_object_ref is \"a uidref to an object in the Admin SP's Template
+table\", which the Locking SP's SPTemplates rows print, Opal Table 35, PDF
+53, at M5); a blank cell keeps the column's default. A type with no
+enumeration table of its own takes the labels its section cross-references,
+read by the @codes@ rule (Core's @messaging_type@, section 5.1.3.55, PDF
+116: Table 179, PDF 167; 'preconfTypeEnv'). A row
 carrying @(+XX)@ is a template, one row for each instance the TPer holds, its
 columns that carry the placeholder listed (its UID or InvokingID, names and
 references carrying the placeholder's letters: Table 24's AdminXX, PDF 48);
@@ -82,8 +86,9 @@ Checks, each with the code its findings carry:
   expressions are "Hsed.Spec.Readers.AccessControl"'s @C-ACL-REFS@ and
   @C-ACL-EXPR@; a label printed otherwise is @N-PRECONF-LABEL@ and a name
   longer than its type @W-PRECONF-NAME-LENGTH@ ("Hsed.Spec.Readers.Cell"'s);
-  a header that fails C-PRECONF-HEADER still has the cells of the columns it
-  does name read and reported;
+  a header that fails C-PRECONF-HEADER hides nothing of the columns it does
+  name: their cells are read, and every finding about them (these, the
+  UIDs', the templates', the legend's) reported as a passing header's;
 * @W-PRECONF-TEMPLATE-NAME@: a template row whose Name does not carry its
   placeholder's letters, which would give every instance one Name (Opal
   Table 39 row 13, PDF 79, at M5: @(+NN NN)@ and @ACE_UserMMMM_Set_CommonName@);
@@ -105,7 +110,11 @@ Checks, each with the code its findings carry:
   preconfiguration's caption names; one finding per difference, at the table
   of UIDs (at its row, where the difference is one). Rows are matched by
   UID: their order is not compared (Table 243 lists Table 209's rows, then
-  Table 216's, but a reordering would pass).
+  Table 216's, but a reordering would pass). And each row an SP's
+  preconfiguration gives the Table table is the descriptor object of the
+  table its Name names, the one a table of table UIDs of the spec or its
+  base gives it, else the first row an SP's Table table gives a table no
+  such table names, so that no table has two (Core 3.2.5.3 b.i, PDF 51-52).
 
 Compiled into 'preconfigModule' for a table whose caption names no SP (Core):
 per table the caption's words in camel case (@defaultBaseTemplateAuthorities
@@ -122,8 +131,10 @@ its kept cells); with the SP's index of its tables in table order
 @u\<T\>_\<Name\>@ ('uidDeclName'), one generated name for each object: none
 for a row whose object a generated module of the spec or its base names
 already, under the same name or under its table's (a table's descriptor
-object, a single-row table's row); a row at a UID the base gives another
-object's Name keeps its own, its comment naming the other ('uidNames').
+object a TableUIDs module declares, a single-row table's row); a Table table
+row of a table no module describes keeps its own (M5's DataStore, Opal Table
+36, PDF 54), and a row at a UID the base gives another object's Name keeps
+its own, its comment naming the other ('uidNames').
 -}
 module Hsed.Spec.Rules.Preconfig
   ( preconfigRule
@@ -180,9 +191,9 @@ import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.Codes           (CodeRead (..), CodeRowRead (..), cellSpan, codeReads)
 import           Hsed.Spec.Rules.ColumnsAddition (allDescs)
 import           Hsed.Spec.Rules.Legend          (LegendScale, cellAccess, legendScale)
-import           Hsed.Spec.Rules.TableDesc       (ColRead (..), DescRead (..), colNumberLit, descDeclName, descReads,
-                                                  tableDescsModule, typeEnv)
-import           Hsed.Spec.Rules.TableUIDs       (TableUIDRow (..), allTableUIDRows, tableUIDRows)
+import           Hsed.Spec.Rules.TableDesc       (ColRead (..), DescRead (..), colNumberLit, declaredTableObjects, descDeclName,
+                                                  descReads, tableDescsModule, typeEnv)
+import           Hsed.Spec.Rules.TableUIDs       (TableUIDRow (..), allTableUIDRows)
 import           Hsed.Spec.Rules.TypeRow         (TypeRowRead (..), allTypeRows)
 import           Hsed.Spec.Rules.UidTable        (UidRow (..), UidValue (..), asName, tableClaim, uidRows)
 import qualified Hsed.Spec.Rules.UidTable        as UidTable (rowLabel)
@@ -300,15 +311,18 @@ preReads :: Context -> [PreRead]
 preReads ctx = readPres ctx (boundTables (Just Preconfig) ctx)
 
 -- | The tables read, in anchor order: each against its target, then each row
---   against the names, the invocations and the tables of its SP's tables.
+--   against the names, the invocations and the tables of its SP's tables
+--   (and the other SPs' rows, for a reference to a table its SP
+--   preconfigures no row of: 'resolveRef').
 readPres :: Context -> [BoundTable] -> [PreRead]
 readPres ctx bts = [ p { pReads = map (readRow (envOf (pSP p)) p) (pRows p) } | p <- firsts ]
   where
     types    = preconfTypeEnv ctx
     descs    = allDescs ctx
     firsts   = map (readTable types descs) bts
-    envs     = Map.fromList [ (sp, groupEnv ctx [ p | p <- firsts, pSP p == sp ]) | sp <- L.nub (map pSP firsts) ]
-    envOf sp = Map.findWithDefault (groupEnv ctx []) sp envs
+    envs     = Map.fromList [ (sp, groupEnv ctx [ p | p <- firsts, pSP p == sp ] [ p | p <- firsts, pSP p /= sp ])
+                            | sp <- L.nub (map pSP firsts) ]
+    envOf sp = Map.findWithDefault (groupEnv ctx [] firsts) sp envs
 
 -- | One table against its target: its kept columns, its rows and their cells' conventions.
 readTable :: TypeEnv -> [(Context, DescRead)] -> BoundTable -> PreRead
@@ -461,35 +475,49 @@ xrefLabels ctx n = L.nubBy (\a b -> fst a == fst b)
 -- * An SP's tables read together
 
 -- | What reading a row needs of its SP's tables (Core's are one group): every
---   row with a UID (its table, its Name, blank without one, its UID), the
---   half-UIDs of the tables the SP holds, every access control row's
---   invocation, each table's name by its half-UID, and every table
---   description, the spec's and its base's.
+--   row with a UID (its table, its Name, blank without one, its UID), every
+--   such row of the other SPs, the half-UIDs of the tables the SP holds,
+--   every access control row's invocation, each table's name by its
+--   half-UID, and every table description, the spec's and its base's.
 data GroupEnv = GroupEnv
   { geRows        :: ![(Text, Text, [Word8])]
+  , geElsewhere   :: ![(Text, Text, [Word8])]
   , geTableHalves :: ![[Word8]]
   , geInvocations :: ![Invocation]
   , geTables      :: !(Map [Word8] Text)
   , geDescs       :: ![DescRead]
   }
 
-groupEnv :: Context -> [PreRead] -> GroupEnv
-groupEnv ctx ps = GroupEnv
-  { geRows        = [ (tn, name, uid) | (tn, name, uid, _, _) <- index ps ]
+-- | An SP's tables read together, beside the other SPs' tables.
+groupEnv :: Context -> [PreRead] -> [PreRead] -> GroupEnv
+groupEnv ctx ps others = GroupEnv
+  { geRows        = own
+  , geElsewhere   = elsewhere
   , geTableHalves = if null spTables then L.nub [ take 4 t | (_, tu) <- allTableUIDRows ctx, Just t <- [tuTable tu] ] else spTables
   , geInvocations = [ invocation p r | p <- ps, isAccessControl (rights (map kcKind (pColumns p))), r <- pRows p ]
   , geTables      = Map.fromListWith (\_ old -> old) [ (take 4 t, tuName tu) | (_, tu) <- allTableUIDRows ctx, Just t <- [tuTable tu] ]
   , geDescs       = map snd (allDescs ctx) }
   where
+    own       = [ (tn, name, uid) | (tn, name, uid, _, _) <- index ps ]
+    elsewhere = [ (tn, name, uid) | (tn, name, uid, _, _) <- index others ]
     -- the tables the SP's Table table holds, each row's lower half (Core 3.2.5.3 b.i-b.ii, PDF 51-52); the
     -- tables the spec and its base name, where the SP preconfigures no Table table
     spTables = L.nub [ drop 4 uid | (tn, _, uid, _, _) <- index ps, tn == "Table" ]
     invocation p r = Invocation
       { ivHalf     = listToMaybe [ h | (kc, _, pc) <- printedIn p r, kcKind kc == Right KUIDRef, Just h <- [invokedHalf (printedText pc)] ]
-      , ivColumns  = or [ columnDependent (printedText pc) | (_, c, pc) <- printedIn p r, crName c == "MethodID" ]
+      , ivColumns  = or [ columnDependent (methodName k pc) | (kc, c, pc) <- printedIn p r, crName c == "MethodID", Right k <- [kcKind kc] ]
       , ivACEs     = concat [ listItems k (printedText pc) | (kc, c, pc) <- printedIn p r, Right k <- [kcKind kc], aclColumn k, crName c == "ACL" ]
       , ivMetaACEs = concat [ listItems k (printedText pc) | (kc, c, pc) <- printedIn p r, Right k <- [kcKind kc], aclColumn k, crName c /= "ACL" ] }
     printedIn p r = [ (kc, c, pc) | kc <- pColumns p, Just (c, _) <- [kcColumn kc], Just pc <- [lookup (kcIndex kc) (prPrinted r)] ]
+    -- a MethodID by the Name of the row it names, printed as that Name or as its UID (since the M4b review's
+    -- verification: Get printed as 00 00 00 06 00 00 00 16 holds its ACEs' Columns as Get does), else as printed
+    methodName k pc = case refTables k of
+      Just tables | Right (n, _) <- resolveAmong own elsewhere (printedText pc) tables -> n
+      _                                                                                -> printedText pc
+    refTables = \case
+      KRef tables  -> Just tables
+      KDefault _ k -> refTables k
+      _            -> Nothing
 
 -- | Whether a UID is one an access control row of the SP may invoke on
 --   (Core 5.3.2.7.2, PDF 162: the SP, a table or an object): ThisSP, a
@@ -547,17 +575,34 @@ readRow ge p r = RowRead shape [ (kc, c, readOne kc pc) | (kc, c, pc) <- given, 
 -- | The object a name or a UID names among the SP's rows of the tables a type
 --   allows: by its Name, case and spaces aside (the name kept as printed), or
 --   by its UID, the UID of a row of one of those tables (the name its row
---   gives, else the UID as printed).
+--   gives, else the UID as printed); where the SP preconfigures no row of
+--   those tables, among the other SPs' rows of them ('resolveAmong').
 resolveRef :: GroupEnv -> Text -> [TableRef] -> Either Text (Text, [Word8])
-resolveRef ge name tables = case parseUIDCell name of
-  Just uid -> case [ n | (tn, n, u) <- geRows ge, u == uid, any (allows tn) tables ] of
+resolveRef ge = resolveAmong (geRows ge) (geElsewhere ge)
+
+-- | 'resolveRef' among an SP's rows and the other SPs' (each its table, its
+--   Name, blank without one, and its UID). The other SPs' rows of the tables
+--   a type allows are read only where the SP preconfigures none, so that a
+--   name the SP gives is its own (the Locking SP's Admin1 never the Admin
+--   SP's), and a table only another SP holds is that SP's (Core 5.1.3.78,
+--   PDF 123: a Template_object_ref is \"a uidref to an object in the Admin
+--   SP's Template table\"; the Locking SP's SPTemplates rows print the Admin
+--   SP's Template UIDs, Opal Table 35, PDF 53, at M5, its SP having no
+--   Template table).
+resolveAmong :: [(Text, Text, [Word8])] -> [(Text, Text, [Word8])] -> Text -> [TableRef] -> Either Text (Text, [Word8])
+resolveAmong own elsewhere name tables = case parseUIDCell name of
+  Just uid -> case [ n | (_, n, u) <- rows, u == uid ] of
     n : _ -> Right (if T.null n then name else n, uid)
     []    -> Left (tshow name <> " is the UID of no row preconfigured for " <> T.intercalate " or " (map tableRefText tables))
-  Nothing  -> case L.nub [ u | (tn, n, u) <- geRows ge, not (T.null n), nameKey n == nameKey name, any (allows tn) tables ] of
+  Nothing  -> case L.nub [ u | (_, n, u) <- rows, not (T.null n), nameKey n == nameKey name ] of
     [uid] -> Right (name, uid)
     []    -> Left (tshow name <> " names no row preconfigured for " <> T.intercalate " or " (map tableRefText tables))
     uids  -> Left (tshow name <> " names " <> tshow (length uids) <> " rows with different UIDs")
   where
+    allowed rs = [ r | r@(tn, _, _) <- rs, any (allows tn) tables ]
+    rows = case allowed own of
+      []    -> allowed elsewhere
+      mine  -> mine
     allows tn = \case
       Table t     -> t == tn
       TableGlob g -> globMatch g tn
@@ -641,10 +686,10 @@ rowLabel r = "row " <> tshow (prRow r + 1) <> maybe "" (" " <>) (lookup "Name" (
 preFindings :: Context -> PreRead -> [Finding]
 preFindings ctx p = case pTarget p of
   Left why -> [atTable ctx bt (finding Error "C-PRECONF-HEADER" why)]
-  Right d  -> case headerProblems d of
-    []    -> headerNotes d <> tperNote <> defaultFindings d <> concat (zipWith (rowFindings d) (pRows p) (pReads p)) <> labelNotes
-    -- a header that fails hides nothing the columns it does name read (the M4b review): their cells' findings follow
-    probs -> map (atTable ctx bt . finding Error "C-PRECONF-HEADER") probs <> concat (zipWith readFindings (pRows p) (pReads p))
+  -- a header that fails hides nothing of the columns it does name (the M4b review, and its verification): every
+  -- finding about them follows, as a passing header's would, the UIDs' where it names the UID column
+  Right d  -> map (atTable ctx bt . finding Error "C-PRECONF-HEADER") (headerProblems d)
+              <> headerNotes d <> tperNote <> defaultFindings d <> concat (zipWith (rowFindings d) (pRows p) (pReads p)) <> labelNotes
   where
     bt = pBound p
     target d = renderAnchorId (btAnchor (drBound d)) <> " " <> fromMaybe "" (drTable d)
@@ -672,7 +717,7 @@ preFindings ctx p = case pTarget p of
                | tperAssigned ]
     accessControl = isAccessControl (rights (map kcKind (pColumns p)))
     rowFindings d r rd =
-      [ f | not tperAssigned, f <- uidTable d r ]
+      [ f | not tperAssigned, isJust uidColumn, f <- uidTable d r ]
       <> readFindings r rd
       <> [ atCells ctx bt (prCells r) (finding Warning "W-PRECONF-NAME-LENGTH"
              (rowLabel r <> crName c <> ": " <> tshow txt <> " is " <> tshow len <> " bytes, longer than the " <> tshow n
@@ -756,17 +801,18 @@ uidUnique ctx ps = concat
 --     row of the table (@u\<T\>TableObject@, "Hsed.Spec.Rules.TableUIDs":
 --     its UID fixed for every SP, Core 3.2.5.3 b.i, PDF 51-52, so that
 --     Opal Table 20's rows, PDF 36-37, are the objects Core Table 240 and
---     Opal's own DataRemovalMechanism row name), or a row a table of UIDs
---     names by its table and no name (a single-row table's row, Core Table
---     244's @uSPInfo_Row@, PDF 305: the SPInfo row whatever its SP's name).
+--     Opal's own DataRemovalMechanism row name), where a generated module
+--     declares it, or a row a table of UIDs names by its table and no name
+--     (a single-row table's row, Core Table 244's @uSPInfo_Row@, PDF 305:
+--     the SPInfo row whatever its SP's name).
 --
 --   A UID the spec or its base gives under another object's Name is another
 --   object at that UID, which the SP's row replaces: the row keeps its own
 --   name, its comment naming the other ('shadowsOf'): Opal Table 24's Admin1
---   (PDF 48), an authority of no class, at the UID Core Table 243 gives
---   Issuers (PDF 305), the Admin template's class authority (Table 216, PDF
---   236). A list entry with no name (Core Table 242's @Reserved for SSC
---   Usage@, PDF 303-304) names nothing.
+--   (PDF 48), an individual authority (IsClass F) of the class Admins, at
+--   the UID Core Table 243 gives Issuers (PDF 305), the Admin template's
+--   class authority (Table 216, PDF 236). A list entry with no name (Core
+--   Table 242's @Reserved for SSC Usage@, PDF 303-304) names nothing.
 uidNames :: Context -> [PreRead] -> ([(Text, [Word8], PreRead, PreRow)], [Finding])
 uidNames ctx ps = (fresh, baseClashes <> ownClashes)
   where
@@ -800,13 +846,16 @@ baseUIDNames ctx = [ (i, bs, c, r) | c <- contextChain ctx, r <- uidRows c, Just
 
 -- | The UIDs a generated module of the spec or its base names by what the
 --   object is, not by a Name of its own, an object the same in every SP
---   ('uidNames'): every table's descriptor object ('allTableUIDRows': Core
---   Table 240's rows and an SP's Table table rows of the tables it adds),
---   and every row a table of UIDs names with no name cell (Core Table 244's
---   single-row tables' rows, by their table).
+--   ('uidNames'): every table's descriptor object a TableUIDs module
+--   declares ("Hsed.Spec.Rules.TableDesc".'declaredTableObjects': Core
+--   Table 240's rows, and the row an SP's Table table gives a table it adds
+--   and the spec describes, Opal's DataRemovalMechanism, not one no module
+--   describes, M5's DataStore, nor a second row naming one table, which
+--   C-PRECONF-UID refuses), and every row a table of UIDs names with no
+--   name cell (Core Table 244's single-row tables' rows, by their table).
 sameObjectUIDs :: Context -> Set [Word8]
 sameObjectUIDs ctx = Set.fromList
-  ([ o | (_, tu) <- allTableUIDRows ctx, Just o <- [tuObject tu] ] <> [ bs | (_, bs, _, r) <- baseUIDNames ctx, isNothing (urName r) ])
+  (declaredTableObjects ctx <> [ bs | (_, bs, _, r) <- baseUIDNames ctx, isNothing (urName r) ])
 
 -- | The rows of the tables of UIDs of the spec or its base that give a UID
 --   under another object's Name than the generated name's ('uidNames'): the
@@ -824,10 +873,14 @@ uidDeclName t n = "u" <> (if (t <> "_") `T.isPrefixOf` n then n else t <> "_" <>
 -- | C-PRECONF-UID: every table of UIDs the @uidTable@ rule reads that claims
 --   its rows for a table something preconfigures, against those rows; and
 --   every row an SP's preconfiguration gives the Table table against the
---   descriptor object a table of table UIDs of the spec or its base gives the
---   table its Name names (Core 3.2.5.3 b.i, PDF 51-52: a table's descriptor
---   object's UID is fixed, so Opal Table 20's rows are Core Table 240's, PDF
---   36-37, 302-304), at the row (since the M4b review).
+--   descriptor object of the table its Name names, the one a table of table
+--   UIDs of the spec or its base gives it, else the first row an SP's Table
+--   table gives a table no such table names ('allTableUIDRows': since the M4b
+--   review's verification, so that a second row naming Opal's
+--   DataRemovalMechanism at another UID is refused as a second C_PIN row is)
+--   (Core 3.2.5.3 b.i, PDF 51-52: a table's descriptor object's UID is fixed,
+--   so Opal Table 20's rows are Core Table 240's, PDF 36-37, 302-303), at the
+--   row (since the M4b review).
 preconfUID :: Context -> [PreRead] -> [Finding]
 preconfUID ctx ps =
   [ f
@@ -839,7 +892,7 @@ preconfUID ctx ps =
             <> specIdText (cxSpec c) <> " " <> renderAnchorId (btAnchor (tuBound tu)) <> " row " <> tshow (tuRow tu + 1)
             <> " gives it (Core 3.2.5.3 b.i, PDF 51-52)"))
      | (tn', tn, uid, p, r) <- index ps, tn' == "Table", isJust (pSP p)
-     , (c, tu, o) <- take 1 [ (c, tu, o) | c <- contextChain ctx, Right tu <- tableUIDRows c, tuName tu == tn, Just o <- [tuObject tu] ]
+     , (c, tu, o) <- take 1 [ (c, tu, o) | (c, tu) <- allTableUIDRows ctx, tuName tu == tn, Just o <- [tuObject tu] ]
      , o /= uid ]
 
 -- | How the rows of the table of a table's UIDs differ from the rows

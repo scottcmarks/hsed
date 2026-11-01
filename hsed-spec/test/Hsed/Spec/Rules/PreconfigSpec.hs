@@ -37,7 +37,13 @@ reference printed as a UID held to the SP, a Columns number held to the
 ACE's table, an ACE's Columns held to the tables of the Get and Set rows
 whose ACL names it alone, a UID-only row kept, an unquoted PIN refused, a
 template's Name held to its letters, every column's default, and a failing
-header's cells still read; Tables 29, 27, 20 and 24 as the plan lists them; the eight cells
+header's cells still read; since its verification, a reference to a table
+its SP preconfigures no row of read among the other SPs' rows (the Locking
+SP's T35 TemplateIDs, M5's), a Get or Set printed as its UID holding its
+ACEs' Columns as by name, a second Table table row naming one table refused
+(C-PRECONF-UID), a Table table row of a table no module describes named, and
+a failing header hiding nothing of the columns it names; Tables 29, 27, 20
+and 24 as the plan lists them; the eight cells
 the TPer chooses; the templates; the notes, warnings and the label read
 otherwise; the generated module, its twelve PreconfTables, the adminSP
 index, the Opal-only UIDs (equal to the hand transcription's), one name for
@@ -404,7 +410,7 @@ spec = do
         refs (setCell "T22" 21 2 "00 00 00 0F 00 00 00 00" opal) `shouldBe` [" the InvokingID 00 00 00 0F 00 00 00 00"]
         refs (setCell "T22" 36 2 "00 00 00 00 00 00 00 02" opal) `shouldBe` [" the InvokingID 00 00 00 00 00 00 00 02"]
         excludedOf (setCell "T22" 22 2 "00 00 00 0B 00 00 99 99" opal) `shouldReturn` [(TableId 22, spExcluded)]
-      it "reads ThisSP and the InvokingIDs of objects with no Name, TPerInfo's and DataRemovalMechanism's (rows 31, 32, 37, 44, 45, PDF 45-46), as printed" $
+      it "reads ThisSP and the InvokingIDs of objects with no Name, TPerInfo's and DataRemovalMechanism's (rows 31, 32, 37, 44, 45, PDF 43-46), as printed" $
         [ (prRow r + 1, cr) | Just p <- [readOf 22], (r, rd) <- zip (pRows p) (pReads p), prRow r `elem` [30, 31, 36, 43, 44]
                             , (_, c, cr) <- rdCells rd, crName c == "InvokingID" ]
           `shouldBe` [ (n, ReadValue (CvUID u) []) | (n, u) <- [ (31, tperInfo), (32, tperInfo), (37, [0, 0, 0, 0, 0, 0, 0, 1])
@@ -428,12 +434,25 @@ spec = do
         [ cr | Just p <- [listToMaybe [ p | p <- preReads (opalOver base byUID), btAnchor (pBound p) == TableId 22 ]]
              , (r, rd) <- zip (pRows p) (pReads p), prRow r == 22, (_, c, cr) <- rdCells rd, crName c == "MethodID" ]
           `shouldBe` [ReadValue (CvRef "Get" [0, 0, 0, 6, 0, 0, 0, 0x16]) []]
+      it "reads a reference to a table its SP preconfigures no row of among the other SPs' rows: the Locking SP's SPTemplates TemplateIDs the Admin SP's Template rows (Core 5.1.3.78, PDF 123; Opal T35, PDF 53, at M5)" $ do
+        t35 <- annotated opal (m4bOpalHsa <> "opal-2.30 | 4.3.1.2 | rule preconfig\n")
+        [ (prRow r + 1, cr) | p <- preReads (opalOver base t35), btAnchor (pBound p) == TableId 35, (r, rd) <- zip (pRows p) (pReads p)
+                            , (_, c, cr) <- rdCells rd, crName c == "TemplateID" ]
+          `shouldBe` [ (1, ReadValue (CvRef "Base" [0, 0, 2, 4, 0, 0, 0, 1]) []), (2, ReadValue (CvRef "Locking" [0, 0, 2, 4, 0, 0, 0, 6]) []) ]
+        [ renderFinding f | f <- checkIR (Just base) Scott t35, Cm.code f == "C-PRECONF-CELL" ] `shouldBe` []
+        [ renderFinding f | f <- checkIR (Just base) Scott (setCell "T35" 0 1 "00 00 02 04 00 00 00 09" t35), Cm.code f == "C-PRECONF-CELL" ]
+          `shouldBe` [ "C-PRECONF-CELL opal-2.30.pdf#page=53&T35: row 1 Base: TemplateID: \"00 00 02 04 00 00 00 09\" is the UID of no row preconfigured for Template" ]
       it "fails C-PRECONF-UID on a Table table row whose UID is not the descriptor object Core T240 gives the table it names (Core 3.2.5.3 b.i, PDF 51-52)" $ do
         let moved = setCell "T20" 7 0 "00 00 00 01 00 00 00 0C" opal
         [ renderFinding f | f <- checkIR (Just base) Scott moved, Cm.code f == "C-PRECONF-UID" ] `shouldBe`
           [ "C-PRECONF-UID opal-2.30.pdf#page=37&T20: row 8 C_PIN: the UID 00 00 00 01 00 00 00 0C is not 00 00 00 01 00 00 00 0B, the C_PIN"
             <> " table's descriptor object, as core-2.01 T240 row 11 gives it (Core 3.2.5.3 b.i, PDF 51-52)" ]
         [ renderFinding f | f <- checkIR (Just base) Scott opal, Cm.code f == "C-PRECONF-UID" ] `shouldBe` []
+      it "fails C-PRECONF-UID on a second Table table row naming a table only the SP's Table table names, at another UID (Opal T20 row 12's DataRemovalMechanism, PDF 37)" $ do
+        let twice = setCell "T20" 12 0 "00 00 00 01 00 00 11 02" (duplicateRow "T20" 11 opal)
+        map renderFinding (filter isError (found twice)) `shouldBe`
+          [ "C-PRECONF-UID opal-2.30.pdf#page=37&T20: row 13 DataRemovalMechanism: the UID 00 00 00 01 00 00 11 02 is not 00 00 00 01 00 00 11 01,"
+            <> " the DataRemovalMechanism table's descriptor object, as opal-2.30 T20 row 12 gives it (Core 3.2.5.3 b.i, PDF 51-52)" ]
       it "fails C-PRECONF-CELL on a reference in any other table printed as the UID of no row (Table 19's TemplateID, PDF 35)" $
         codeOf "C-PRECONF-CELL" (setCell "T19" 0 1 "00 00 02 04 00 00 00 09" opal) `shouldBe`
           [ "C-PRECONF-CELL opal-2.30.pdf#page=35&T19: row 1 Base: TemplateID: \"00 00 02 04 00 00 00 09\" is the UID of no row preconfigured for Template" ]
@@ -447,6 +466,18 @@ spec = do
       it "holds an ACE's Columns to the tables of the Get and Set rows whose ACL names it, not a meta-ACL's or a Next row's (Core 5.3.2.9.5, PDF 165)" $ do
         codeOf "C-ACL-REFS" (setCell "T22" 4 10 "ACE_Set_Enabled" opal) `shouldBe` []
         codeOf "C-ACL-REFS" (setCell "T22" 6 6 "ACE_Set_Enabled" opal) `shouldBe` []
+      it "holds the ACEs of a Get or a Set printed as its UID to the table the row invokes on, as one printed by its Name (Core 5.3.2.9.5, PDF 165)" $ do
+        let getEnabled = setCell "T22" 22 6 "ACE_Set_Enabled" opal
+            setColour  = setCell "T23" 11 5 "Colour" opal
+            refs       = codeOf "C-ACL-REFS"
+        refs getEnabled `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=47&T23: row 5 ACE_Set_Enabled: Columns: \"Enabled\" names no column of the C_PIN table (T181),"
+            <> " which ACE_Set_Enabled applies to" ]
+        refs (setCell "T22" 22 4 "00 00 00 06 00 00 00 16" getEnabled) `shouldBe` refs getEnabled
+        refs setColour `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=47&T23: row 12 ACE_TPerInfo_Set_ProgrammaticResetEnable: Columns: \"Colour\" names no column of the"
+            <> " TPerInfo table (T211), which ACE_TPerInfo_Set_ProgrammaticResetEnable applies to" ]
+        refs (setCell "T22" 31 4 "00 00 00 06 00 00 00 17" setColour) `shouldBe` refs setColour
       it "reads the Columns of an ACE that only a method reading no columns names in the first table such a row invokes on that has them" $ do
         let onlyNext = setCell "T22" 15 6 "ACE_Set_Enabled" (foldr (\i -> setCell "T22" i 6 "ACE_Anybody") opal [17, 18, 19])
         codeOf "C-ACL-REFS" onlyNext `shouldBe` []
@@ -484,6 +515,14 @@ spec = do
           [ "C-PRECONF-HEADER opal-2.30.pdf#page=48&T24: the header \"Secured\" names no column of T178 Authority" ]
         codeOf "C-PRECONF-CELL" broken `shouldBe`
           [ "C-PRECONF-CELL opal-2.30.pdf#page=48&T24: row 1 Anybody: Class: \"Admin\" names no row preconfigured for Authority" ]
+      it "hides nothing of the columns a failing header does name: their UIDs', names', labels' and legend's findings too, as a passing header's (the M4b review's verification)" $ do
+        let edits = setCell "T24" 0 0 "00 00 00 0B 00 00 00 01" . setCell "T24" 2 1 ("\"" <> T.replicate 40 "A" <> "\"")
+            passing = edits opal
+            broken  = edits (setHeaderCell "T24" 0 6 "Secured" opal)
+            aboutT24 ir' = L.sort [ renderFinding f | f <- found ir', Cm.anchor f == Just "T24", Cm.code f /= "C-PRECONF-HEADER" ]
+        aboutT24 broken `shouldBe` [ f | f <- aboutT24 passing, not ("Secure: " `T.isInfixOf` f) ]
+        L.nub (map (T.takeWhile (/= ' ')) (aboutT24 broken)) `shouldBe`
+          ["C-UID-NAME", "C-UID-TABLE", "N-PRECONF-LABEL", "W-LEGEND-OFFSCALE", "W-PRECONF-NAME-LENGTH"]
 
     describe "Tables 29, 24 and the labels" $ do
       it "reads Table 29's LifeCycle as LifeCycleState (N-PRECONF-HEADER), its values Table 49's, Frozen a boolean defaulting to False (PDF 50, 98, 233)" $ do
@@ -549,6 +588,11 @@ spec = do
         lns <- T.lines <$> adminSPOf opal
         let uids = [ T.takeWhile (/= ' ') l | l <- lns, " :: UID" `T.isSuffixOf` l ]
         filter (\u -> "uTable_" `T.isPrefixOf` u || "uSPInfo_" `T.isPrefixOf` u) uids `shouldBe` []
+      it "names a Table table row of a table no module describes, whose descriptor object no generated module declares (M5's DataStore, Opal T36, PDF 54)" $ do
+        let foo = setCell "T20" 12 1 "\"Foo\"" (setCell "T20" 12 0 "00 00 00 01 00 00 12 01" (duplicateRow "T20" 11 opal))
+        map renderFinding (filter isError (found foo)) `shouldBe` []
+        lns <- T.lines <$> adminSPOf foo
+        filter ("uTable_" `T.isPrefixOf`) lns `shouldBe` ["uTable_Foo :: UID", "uTable_Foo = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x12 0x01"]
       it "keeps Admin1's own name at the UID Core T243 gives Issuers, another object (Opal T24, PDF 48; Core T216, PDF 236), its comment naming Core's" $ do
         lns <- T.lines <$> adminSPOf opal
         let admin1 = takeWhile (/= "") (dropWhile (not . ("row 5: Admin1" `T.isSuffixOf`)) lns)

@@ -30,7 +30,10 @@ twelve tables read against Core's descriptions, Opal's and Core's with
 Opal's columns, with no Error and none left out; Table 22's 34 rows (22
 plain, 9 for every object, 3 templates) and their references, C-ACL-REFS
 and C-ACL-EXPR made to fail by edited cells; Table 23's expressions and
-columns; Tables 29, 27, 20 and 24 as the plan lists them; the eight cells
+columns; since the M4b review, every InvokingID, every-object half and
+reference printed as a UID held to the SP, a Columns number held to the
+ACE's table, and an ACE's Columns held to the tables of the Get and Set rows
+whose ACL names it alone; Tables 29, 27, 20 and 24 as the plan lists them; the eight cells
 the TPer chooses; the templates; the notes, warnings and the label read
 otherwise; the generated module, its twelve PreconfTables, the adminSP
 index, the Opal-only UIDs (equal to the hand transcription's), one name for
@@ -282,6 +285,11 @@ spec = do
         excludedOf ir' = (\cr -> [ (a, w) | (a, w) <- crExcluded cr, a `elem` anchors ]) <$> compiled ir'
         spExcluded = "C-PRECONF-HEADER, C-UID-TABLE, C-UID-UNIQUE, C-UID-NAME, C-PRECONF-CELL, C-ACL-REFS, C-ACL-EXPR or C-LEGEND-TOTAL failed"
         nullUID = replicate 8 0 :: [Word8]
+        tperInfo = [0, 0, 2, 1, 0, 3, 0, 1] :: [Word8]
+        removal = [0, 0, 0x11, 1, 0, 0, 0, 1] :: [Word8]
+        -- a table's rows read in an edited IR, as rowsOf reads the committed one's
+        rowsOf' ir' n = [ (fromMaybe "" (lookup "Name" (prValues r)), [ (crName c, cr) | (_, c, cr) <- rdCells rd ])
+                        | p <- preReads (opalOver base ir'), btAnchor (pBound p) == TableId n, (r, rd) <- zip (pRows p) (pReads p) ]
         boolean = KEnum "boolean" [(0, 1)] [("False", 0), ("True", 1)]
 
     describe "Opal's Admin SP, under the M4b sidecar at section 4.2 (PDF 35-52), read over Core" $ do
@@ -380,6 +388,59 @@ spec = do
         codeOf "C-ACL-REFS" (setCell "T23" 8 5 "UID, Colour" opal) `shouldBe`
           [ "C-ACL-REFS opal-2.30.pdf#page=47&T23: row 9 ACE_C_PIN_MSID_Get_PIN: Columns: \"Colour\" names no column of the C_PIN"
             <> " table (T181), which ACE_C_PIN_MSID_Get_PIN applies to" ]
+
+    describe "every reference held to the SP (the M4b review)" $ do
+      it "fails C-ACL-REFS on an InvokingID that is not ThisSP, a table the SP's Table table holds or an object of the SP (Core 5.3.2.7.2, PDF 162)" $ do
+        let refs ir' = [ T.takeWhileEnd (/= ':') (T.dropEnd (T.length suffix) f) | f <- codeOf "C-ACL-REFS" ir', suffix `T.isSuffixOf` f ]
+            suffix = " is not ThisSP, nor a table the SP's Table table holds, nor an object the SP's preconfiguration gives (Core 5.3.2.7.2, PDF 162)"
+        refs (setCell "T22" 22 2 "00 00 00 0B 00 00 99 99" opal) `shouldBe` [" the InvokingID 00 00 00 0B 00 00 99 99"]
+        refs (setCell "T22" 21 2 "00 00 00 0F 00 00 00 00" opal) `shouldBe` [" the InvokingID 00 00 00 0F 00 00 00 00"]
+        refs (setCell "T22" 36 2 "00 00 00 00 00 00 00 02" opal) `shouldBe` [" the InvokingID 00 00 00 00 00 00 00 02"]
+        excludedOf (setCell "T22" 22 2 "00 00 00 0B 00 00 99 99" opal) `shouldReturn` [(TableId 22, spExcluded)]
+      it "reads ThisSP and the InvokingIDs of objects with no Name, TPerInfo's and DataRemovalMechanism's (rows 31, 32, 37, 44, 45, PDF 45-46), as printed" $
+        [ (prRow r + 1, cr) | Just p <- [readOf 22], (r, rd) <- zip (pRows p) (pReads p), prRow r `elem` [30, 31, 36, 43, 44]
+                            , (_, c, cr) <- rdCells rd, crName c == "InvokingID" ]
+          `shouldBe` [ (n, ReadValue (CvUID u) []) | (n, u) <- [ (31, tperInfo), (32, tperInfo), (37, [0, 0, 0, 0, 0, 0, 0, 1])
+                                                                 , (44, removal), (45, removal) ] ]
+      it "fails C-ACL-REFS on an every-object row whose half-UID is no table's the SP holds (*AC1-*AC7, PDF 38-39), and leaves the table out" $ do
+        let wild = setCell "T22" 2 2 "00 00 00 0F TT TT TT TT *AC1" opal
+        codeOf "C-ACL-REFS" wild `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=39&T22: row 3: InvokingID: the InvokingID \"00 00 00 0F TT TT TT TT\" stands for every object of the"
+            <> " table of the half-UID 00 00 00 0F, which the SP's Table table does not hold (Opal *AC1-*AC7, PDF 38-39)" ]
+        excludedOf wild `shouldReturn` [(TableId 22, spExcluded)]
+      it "fails C-ACL-REFS on a MethodID or an ACL item printed as the UID of no row of the table its type allows" $ do
+        codeOf "C-ACL-REFS" (setCell "T22" 22 4 "00 00 00 06 00 00 99 99" opal) `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=42&T22: row 23: MethodID: \"00 00 00 06 00 00 99 99\" is the UID of no row preconfigured for MethodID" ]
+        codeOf "C-ACL-REFS" (setCell "T22" 22 4 "00 00 00 08 00 00 00 01" opal) `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=42&T22: row 23: MethodID: \"00 00 00 08 00 00 00 01\" is the UID of no row preconfigured for MethodID" ]
+        codeOf "C-ACL-REFS" (setCell "T22" 22 6 "00 00 00 08 00 00 99 99" opal) `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=42&T22: row 23: ACL: \"00 00 00 08 00 00 99 99\" is the UID of no row preconfigured for ACE" ]
+      it "reads a reference printed as the UID of a row of the table its type allows as that row, under its Name" $ do
+        let byUID = setCell "T22" 22 4 "00 00 00 06 00 00 00 16" opal
+        codeOf "C-ACL-REFS" byUID `shouldBe` []
+        [ cr | Just p <- [listToMaybe [ p | p <- preReads (opalOver base byUID), btAnchor (pBound p) == TableId 22 ]]
+             , (r, rd) <- zip (pRows p) (pReads p), prRow r == 22, (_, c, cr) <- rdCells rd, crName c == "MethodID" ]
+          `shouldBe` [ReadValue (CvRef "Get" [0, 0, 0, 6, 0, 0, 0, 0x16]) []]
+      it "fails C-PRECONF-CELL on a reference in any other table printed as the UID of no row (Table 19's TemplateID, PDF 35)" $
+        codeOf "C-PRECONF-CELL" (setCell "T19" 0 1 "00 00 02 04 00 00 00 09" opal) `shouldBe`
+          [ "C-PRECONF-CELL opal-2.30.pdf#page=35&T19: row 1 Base: TemplateID: \"00 00 02 04 00 00 00 09\" is the UID of no row preconfigured for Template" ]
+      it "holds a Columns number to the columns of the ACE's table: 5 is Authority's Enabled, 99 none (Core Table 178, PDF 165-166)" $ do
+        cellAt 23 "ACE_Set_Enabled" "Columns" `shouldBe` Just (ReadValue (CvList [CvUInt 5 Nothing]) [])
+        [ c | Just (ReadValue (CvList vs) _) <- [ listToMaybe [ cr | (n, cs) <- rowsOf' (setCell "T23" 4 5 "5" opal) 23, n == "ACE_Set_Enabled", ("Columns", cr) <- cs ] ], CvUInt c _ <- vs ]
+          `shouldBe` [5]
+        codeOf "C-ACL-REFS" (setCell "T23" 4 5 "99" opal) `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=47&T23: row 5 ACE_Set_Enabled: Columns: \"99\" is no column number of the Authority table (T178),"
+            <> " which ACE_Set_Enabled applies to" ]
+      it "holds an ACE's Columns to the tables of the Get and Set rows whose ACL names it, not a meta-ACL's or a Next row's (Core 5.3.2.9.5, PDF 165)" $ do
+        codeOf "C-ACL-REFS" (setCell "T22" 4 10 "ACE_Set_Enabled" opal) `shouldBe` []
+        codeOf "C-ACL-REFS" (setCell "T22" 6 6 "ACE_Set_Enabled" opal) `shouldBe` []
+      it "reads the Columns of an ACE that only a method reading no columns names in the first table such a row invokes on that has them" $ do
+        let onlyNext = setCell "T22" 15 6 "ACE_Set_Enabled" (foldr (\i -> setCell "T22" i 6 "ACE_Anybody") opal [17, 18, 19])
+        codeOf "C-ACL-REFS" onlyNext `shouldBe` []
+        [ vs | (n, cs) <- rowsOf' onlyNext 23, n == "ACE_Set_Enabled", ("Columns", ReadValue (CvList vs) _) <- cs ] `shouldBe` [[CvUInt 5 Nothing]]
+        codeOf "C-ACL-REFS" (setCell "T23" 4 5 "Colour" onlyNext) `shouldBe`
+          [ "C-ACL-REFS opal-2.30.pdf#page=47&T23: row 5 ACE_Set_Enabled: Columns: \"Colour\" is no column of the tables the rows naming"
+            <> " ACE_Set_Enabled invoke on (Authority), none of whose methods reads Columns" ]
 
     describe "Tables 29, 24 and the labels" $ do
       it "reads Table 29's LifeCycle as LifeCycleState (N-PRECONF-HEADER), its values Table 49's, Frozen a boolean defaulting to False (PDF 50, 98, 233)" $ do

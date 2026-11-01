@@ -62,11 +62,13 @@ aceSPSID = [0, 0, 0, 8, 0, 3, 0, 2]
 aceAdmin = [0, 0, 0, 8, 0, 0, 0, 2]
 nullUID  = replicate 8 0
 
--- | A few authorities and ACEs by name, and two of C_PIN's columns.
+-- | A few authorities and ACEs by name, and two of C_PIN's columns, by
+--   name or by number (the reader asks the resolver for both since the M4b
+--   review, so that a number too is held to the ACE's table).
 resolver :: Resolver
 resolver = Resolver
   { rvRef    = \n _ -> maybe (Left (tshow n <> " names no row")) (\u -> Right (n, u)) (lookup n rows)
-  , rvColumn = \n -> maybe (Left (tshow n <> " names no column")) Right (lookup n [("UID", 0), ("PIN", 3)]) }
+  , rvColumn = \n -> maybe (Left (tshow n <> " names no column")) Right (lookup n [("UID", 0), ("PIN", 3), ("0x00", 0), ("0x03", 3)]) }
   where rows = [ ("Admins", admins), ("SID", sid), ("Anybody", anybody), ("User1", user1)
                , ("ACE_SP_SID", aceSPSID), ("ACE_Admin", aceAdmin) ]
 
@@ -197,10 +199,11 @@ spec = do
   describe "readCellWith: an ACE's Columns (Core 5.3.2.9.5, PDF 165)" $ do
     it "reads All as the empty set, every column" $
       readWith KColumns "All" `shouldBe` Right (CvList [], [])
-    it "reads column names, joined over line breaks, as the numbers the column resolver gives, or a number as itself" $ do
+    it "reads column names and numbers, joined over line breaks, as the numbers the column resolver gives, which holds a number to the table too" $ do
       readWith KColumns "UID,\nPIN" `shouldBe` Right (CvList [CvUInt 0 Nothing, CvUInt 3 Nothing], [])
       readWith KColumns "0x03" `shouldBe` Right (CvList [CvUInt 3 Nothing], [])
       readWith KColumns "Colour" `shouldBe` Left (Unresolved "\"Colour\" names no column")
+      readWith KColumns "0x63" `shouldBe` Left (Unresolved "\"0x63\" names no column")
 
   describe "readCell, the reader without remarks" $
     it "reads as readCellWith does, references by the caller's function" $ do
@@ -208,6 +211,7 @@ spec = do
       readCell (\_ _ -> Right admins) (KRef [Table "Authority"]) "Admins" `shouldBe` Right (CvRef "Admins" admins)
       readCell (\_ _ -> Left "no references here") (KRef [Table "Authority"]) "Admins" `shouldBe` Left "no references here"
       readCell (\_ _ -> Left "no references here") KColumns "PIN" `shouldSatisfy` isLeft
+      readCell (\_ _ -> Left "no references here") KColumns "0x03" `shouldBe` Right (CvList [CvUInt 3 Nothing])
 
   describe "zeroValue, a column's default (design 13.31 (a))" $ do
     it "is 0, an empty text or password, zero bytes, the NULL UID for a reference" $ do

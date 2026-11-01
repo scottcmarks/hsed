@@ -266,15 +266,16 @@ readCell resolve kind raw = bimap problemText fst (readCellWith rv kind raw)
   where
     rv = Resolver
       { rvRef    = \n tables -> (n,) <$> resolve n tables
-      , rvColumn = \n -> Left (tshow n <> " names a column, and no table is given to read it in") }
+      , rvColumn = \n -> maybe (Left (tshow n <> " names a column, and no table is given to read it in")) (Right . fromInteger) (readNumber n) }
 
 
 -- * Reading a cell with its names, its columns and its remarks
 
 -- | What reading a cell needs from outside it: the object a name or a UID
 --   names among the tables its type allows (the name it is kept under, and
---   its UID), and the number of a column a name names, in the table an ACE
---   applies to.
+--   its UID), and the number of a column an item of an ACE's Columns names,
+--   by its name or its number, in the table an ACE applies to ('readCell'
+--   takes a number as it is, there being no table to hold it to).
 data Resolver = Resolver
   { rvRef    :: Text -> [TableRef] -> Either Text (Text, [Word8])
   , rvColumn :: Text -> Either Text Int
@@ -368,9 +369,7 @@ readCellWith rv kind raw = case kind of
         Just (label, v, byPrefix) -> Right (CvEnum tight v, [LabelRead name tight label byPrefix])
         Nothing -> Left (Unread (tshow flat <> " is no label of " <> name <> "'s enumeration ("
                                  <> T.intercalate ", " (map fst labelled) <> ")"))
-    column item = case readNumber item of
-      Just n  -> Right (fromInteger n)
-      Nothing -> first Unresolved (rvColumn rv item)
+    column item = first Unresolved (rvColumn rv item)
     -- infix to postfix (Core 5.3.4.3.2 and Table 210, PDF 226-227), each operand an object's reference
     expression opType ops tables = do
       items <- first BadExpr (postfix ops (exprWords ops raw))

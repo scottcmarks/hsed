@@ -156,13 +156,13 @@ import           Hsed.Spec.DSL                   (SomeBinding (..), preconfig)
 import           Hsed.Spec.Format                (globMatch)
 import qualified Hsed.Spec.Gen                   as Gen
 import           Hsed.Spec.IR                    (CellIR (..), SpecIR (..), TableIR (..), XrefIR (..))
-import           Hsed.Spec.Readers.AccessControl (Invocation (..), aceHalves, aclCode, aclColumn, everyObject, invokedHalf,
-                                                  isAccessControl)
+import           Hsed.Spec.Readers.AccessControl (Invocation (..), aceHalves, aceNamedHalves, aclCode, aclColumn, columnDependent,
+                                                  everyObject, invokedHalf, isAccessControl, thisSP)
 import           Hsed.Spec.Readers.Cell          (CellValue (..), ColKind (..), PrintedCell (..), Problem (..), Remark (..),
                                                   Resolver (..), TypeEnv (..), colKind, hasValue, joinedText, listItems,
                                                   printedCell, printedText, problemText, readCellWith, renderCell,
                                                   vendorMarker, zeroValue)
-import           Hsed.Spec.Readers.Text          (lowerIdent, nameKey, titleIdent)
+import           Hsed.Spec.Readers.Text          (lowerIdent, nameKey, readNumber, titleIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.Codes           (CodeRead (..), CodeRowRead (..), cellSpan, codeReads)
 import           Hsed.Spec.Rules.ColumnsAddition (allDescs)
@@ -443,11 +443,13 @@ xrefLabels ctx n = L.nubBy (\a b -> fst a == fst b)
 -- * An SP's tables read together
 
 -- | What reading a row needs of its SP's tables (Core's are one group): every
---   row with a UID and a Name (its table, its Name, its UID), every access
---   control row's invocation, each table's name by its half-UID, and every
---   table description, the spec's and its base's.
+--   row with a UID (its table, its Name, blank without one, its UID), the
+--   half-UIDs of the tables the SP holds, every access control row's
+--   invocation, each table's name by its half-UID, and every table
+--   description, the spec's and its base's.
 data GroupEnv = GroupEnv
-  { geNamed       :: ![(Text, Text, [Word8])]
+  { geRows        :: ![(Text, Text, [Word8])]
+  , geTableHalves :: ![[Word8]]
   , geInvocations :: ![Invocation]
   , geTables      :: !(Map [Word8] Text)
   , geDescs       :: ![DescRead]
@@ -455,24 +457,42 @@ data GroupEnv = GroupEnv
 
 groupEnv :: Context -> [PreRead] -> GroupEnv
 groupEnv ctx ps = GroupEnv
-  { geNamed       = [ (tn, name, uid) | (tn, name, uid, _, _) <- index ps, not (T.null name) ]
+  { geRows        = [ (tn, name, uid) | (tn, name, uid, _, _) <- index ps ]
+  , geTableHalves = if null spTables then L.nub [ take 4 t | (_, tu) <- allTableUIDRows ctx, Just t <- [tuTable tu] ] else spTables
   , geInvocations = [ invocation p r | p <- ps, isAccessControl (rights (map kcKind (pColumns p))), r <- pRows p ]
   , geTables      = Map.fromListWith (\_ old -> old) [ (take 4 t, tuName tu) | (_, tu) <- allTableUIDRows ctx, Just t <- [tuTable tu] ]
   , geDescs       = map snd (allDescs ctx) }
   where
+    -- the tables the SP's Table table holds, each row's lower half (Core 3.2.5.3 b.i-b.ii, PDF 51-52); the
+    -- tables the spec and its base name, where the SP preconfigures no Table table
+    spTables = L.nub [ drop 4 uid | (tn, _, uid, _, _) <- index ps, tn == "Table" ]
     invocation p r = Invocation
-      { ivHalf = listToMaybe [ h | (kc, pc) <- printedIn p r, kcKind kc == Right KUIDRef, Just h <- [invokedHalf (printedText pc)] ]
-      , ivACEs = concat [ listItems k (printedText pc) | (kc, pc) <- printedIn p r, Right k <- [kcKind kc], aclColumn k ] }
-    printedIn p r = [ (kc, pc) | kc <- pColumns p, Just pc <- [lookup (kcIndex kc) (prPrinted r)] ]
+      { ivHalf     = listToMaybe [ h | (kc, _, pc) <- printedIn p r, kcKind kc == Right KUIDRef, Just h <- [invokedHalf (printedText pc)] ]
+      , ivColumns  = or [ columnDependent (printedText pc) | (_, c, pc) <- printedIn p r, crName c == "MethodID" ]
+      , ivACEs     = concat [ listItems k (printedText pc) | (kc, c, pc) <- printedIn p r, Right k <- [kcKind kc], aclColumn k, crName c == "ACL" ]
+      , ivMetaACEs = concat [ listItems k (printedText pc) | (kc, c, pc) <- printedIn p r, Right k <- [kcKind kc], aclColumn k, crName c /= "ACL" ] }
+    printedIn p r = [ (kc, c, pc) | kc <- pColumns p, Just (c, _) <- [kcColumn kc], Just pc <- [lookup (kcIndex kc) (prPrinted r)] ]
+
+-- | Whether a UID is one an access control row of the SP may invoke on
+--   (Core 5.3.2.7.2, PDF 162: the SP, a table or an object): ThisSP, a
+--   table's UID, the half of a table the SP holds and four zero bytes, or
+--   the UID of an object the SP's preconfiguration gives, a template's base
+--   among them.
+invocable :: GroupEnv -> [Word8] -> Bool
+invocable ge u = u == thisSP || (drop 4 u == [0, 0, 0, 0] && take 4 u `elem` geTableHalves ge) || u `elem` [ v | (_, _, v) <- geRows ge ]
 
 -- | One row read: its shape, then each kept column with a value as its kind
---   holds it (an every-object row's InvokingID left out).
+--   holds it (an every-object row's InvokingID left out, but where its half
+--   is no table's of the SP); an access control row's InvokingID held to the
+--   SP ('invocable').
 readRow :: GroupEnv -> PreRead -> PreRow -> RowRead
-readRow ge p r = RowRead shape [ (kc, c, readOne kc pc) | (kc, c, pc) <- given, hasValue pc, not (wildcardCell kc pc) ]
+readRow ge p r = RowRead shape [ (kc, c, readOne kc pc) | (kc, c, pc) <- given, hasValue pc, not (wildcardCell kc pc) || not halfHeld ]
   where
     given = [ (kc, c, pc) | kc <- pColumns p, Just (c, _) <- [kcColumn kc], Just pc <- [lookup (kcIndex kc) (prPrinted r)] ]
     wildcard = listToMaybe [ h | (kc, _, pc) <- given, kcKind kc == Right KUIDRef, Just h <- [everyObject (printedText pc)] ]
     wildcardCell kc pc = isJust wildcard && kcKind kc == Right KUIDRef && isJust (everyObject (printedText pc))
+    halfHeld = maybe True (`elem` geTableHalves ge) wildcard
+    accessControl = isAccessControl (rights (map kcKind (pColumns p)))
     shape = case (prPlaceholder r, wildcard) of
       (Just ph, _)      -> TemplateRow ph (L.sort [ n | (_, c, pc) <- given, Just n <- [crNumber c], carries ph pc ])
       (Nothing, Just h) -> EveryObjectRow h
@@ -482,16 +502,32 @@ readRow ge p r = RowRead shape [ (kc, c, readOne kc pc) | (kc, c, pc) <- given, 
     readOne kc pc = case (vendorMarker pc, kcKind kc) of
       (Just m, _) | isJust (pSP p) -> ReadVendor m
       (_, Left why)                -> ReadFailed (Unread why)
+      (_, Right KUIDRef)
+        | wildcardCell kc pc         -> ReadFailed (Unresolved (wildcardText pc))
+        | accessControl              -> either ReadFailed (uncurry ReadValue) (readCellWith resolver KUIDRef (printedText pc) >>= heldToSP)
       (_, Right k)                 -> either ReadFailed (uncurry ReadValue) (readCellWith resolver k (printedText pc))
     resolver = Resolver { rvRef = resolveRef ge, rvColumn = resolveColumn ge (valueAt p r "Name") }
+    heldToSP read'@(v, _) = case uidOf v of
+      Just u | invocable ge u -> Right read'
+      held -> Left (Unresolved ("the InvokingID " <> maybe (renderCell v) hexUID held <> " is not ThisSP, nor a table the SP's"
+                                <> " Table table holds, nor an object the SP's preconfiguration gives (Core 5.3.2.7.2, PDF 162)"))
+    uidOf = \case
+      CvUID u   -> Just u
+      CvRef _ u -> Just u
+      _         -> Nothing
+    wildcardText pc = "the InvokingID " <> tshow (T.unwords (pcLines pc)) <> " stands for every object of the table of the half-UID "
+                      <> maybe "" hexUID wildcard <> ", which the SP's Table table does not hold (Opal *AC1-*AC7, PDF 38-39)"
 
 -- | The object a name or a UID names among the SP's rows of the tables a type
 --   allows: by its Name, case and spaces aside (the name kept as printed), or
---   by its UID (the name its row gives, else the UID as printed).
+--   by its UID, the UID of a row of one of those tables (the name its row
+--   gives, else the UID as printed).
 resolveRef :: GroupEnv -> Text -> [TableRef] -> Either Text (Text, [Word8])
 resolveRef ge name tables = case parseUIDCell name of
-  Just uid -> Right (fromMaybe name (listToMaybe [ n | (tn, n, u) <- geNamed ge, u == uid, any (allows tn) tables ]), uid)
-  Nothing  -> case L.nub [ u | (tn, n, u) <- geNamed ge, nameKey n == nameKey name, any (allows tn) tables ] of
+  Just uid -> case [ n | (tn, n, u) <- geRows ge, u == uid, any (allows tn) tables ] of
+    n : _ -> Right (if T.null n then name else n, uid)
+    []    -> Left (tshow name <> " is the UID of no row preconfigured for " <> T.intercalate " or " (map tableRefText tables))
+  Nothing  -> case L.nub [ u | (tn, n, u) <- geRows ge, not (T.null n), nameKey n == nameKey name, any (allows tn) tables ] of
     [uid] -> Right (name, uid)
     []    -> Left (tshow name <> " names no row preconfigured for " <> T.intercalate " or " (map tableRefText tables))
     uids  -> Left (tshow name <> " names " <> tshow (length uids) <> " rows with different UIDs")
@@ -505,12 +541,20 @@ resolveRef ge name tables = case parseUIDCell name of
       TableGlob g -> g
       TableStar   -> "*"
 
--- | The number of a column an ACE's Columns names in each table the access
---   control rows naming the ACE invoke on (Core 5.3.2.9.5, PDF 165): one
---   number, the same in them all.
+-- | The number of a column an ACE's Columns names, by its name or its
+--   number, in each table an access control row of Get or Set whose ACL
+--   names the ACE invokes on (Core 5.3.2.9.5, PDF 165): one number, the same
+--   in them all. An ACE no such row names, but others do (a meta-ACL's, a
+--   column-independent method's ACL), has Columns no method reads (PDF 165):
+--   a name is read in the first table a row naming it invokes on that has it.
 resolveColumn :: GroupEnv -> Text -> Text -> Either Text Int
 resolveColumn ge ace item = case aceHalves (geInvocations ge) ace of
-  []     -> Left (tshow ace <> " is in no access control row's ACL, so no table holds the columns its Columns name")
+  [] -> case aceNamedHalves (geInvocations ge) ace of
+    []    -> Left (tshow ace <> " is in no access control row's ACL, so no table holds the columns its Columns name")
+    named -> case [ n | Right n <- map columnIn named ] of
+      n : _ -> Right n
+      []    -> Left (tshow item <> " is no column of the tables the rows naming " <> ace <> " invoke on ("
+                     <> T.intercalate ", " (map tableName named) <> "), none of whose methods reads Columns")
   halves -> do
     ns <- traverse columnIn halves
     case L.nub ns of
@@ -523,10 +567,13 @@ resolveColumn ge ace item = case aceHalves (geInvocations ge) ace of
       let tname = tableName h
       d <- maybe (Left (tshow ace <> " applies to the " <> tname <> " table, which no table description describes")) Right
                  (L.find ((== Just tname) . drTable) (geDescs ge))
-      maybe (Left (tshow item <> " names no column of the " <> tname <> " table (" <> renderAnchorId (btAnchor (drBound d))
-                   <> "), which " <> ace <> " applies to"))
-            Right
-            (listToMaybe [ n | c <- drColumns d, normHeader (crName c) == normHeader item, Just n <- [crNumber c] ])
+      let numbered = [ (n, c) | c <- drColumns d, Just n <- [crNumber c] ]
+          where' = " of the " <> tname <> " table (" <> renderAnchorId (btAnchor (drBound d)) <> "), which " <> ace <> " applies to"
+      case readNumber item of
+        Just n | fromInteger n `elem` map fst numbered -> Right (fromInteger n)
+               | otherwise -> Left (tshow item <> " is no column number" <> where')
+        Nothing -> maybe (Left (tshow item <> " names no column" <> where')) Right
+                         (listToMaybe [ n | (n, c) <- numbered, normHeader (crName c) == normHeader item ])
 
 -- | Every row with a UID of a table with a target, by the target's name: its
 --   Name column's value (blank without one), its UID, its table and row.

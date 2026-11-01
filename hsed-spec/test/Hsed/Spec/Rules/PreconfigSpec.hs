@@ -33,9 +33,13 @@ and C-ACL-EXPR made to fail by edited cells; Table 23's expressions and
 columns; Tables 29, 27, 20 and 24 as the plan lists them; the eight cells
 the TPer chooses; the templates; the notes, warnings and the label read
 otherwise; the generated module, its twelve PreconfTables, the adminSP
-index, the Opal-only UIDs (equal to the hand transcription's), C-UID-NAME,
-and the module type-checked under -Wall -Werror against a stand-in Opal
-TableDescs (the lead's answer 16); and the legend's classes by column with a
+index, the Opal-only UIDs (equal to the hand transcription's), one name for
+each object (none for the Table table's rows or the SPInfo row, which Core
+and Opal's TableUIDs name; Admin1 its own at the UID Core gives Issuers, the
+lead's decision at the M4b review), C-UID-NAME, and the module type-checked
+under -Wall -Werror against the committed generated modules (since the M4b
+review: the stand-in Opal TableDescs of the lead's answer 16, which shadowed
+the generated one, retired); and the legend's classes by column with a
 hand-built scale (G1's classifier).
 -}
 module Hsed.Spec.Rules.PreconfigSpec (spec) where
@@ -87,8 +91,9 @@ block :: Text -> [Text] -> [Text]
 block n = takeWhile (/= "") . dropWhile (/= (n <> " :: [Pre Row]"))
 
 -- | @ghc -fno-code@ under hsed's warnings and -Werror on a printed module
---   against hsed-core and Core's generated modules (PropsReqSpec's helper,
---   with @-i../hsed/gen@ and containers), beside the modules given.
+--   against hsed-core and the committed generated modules (PropsReqSpec's
+--   helper, with @-i../hsed/gen@ and containers), beside the modules given,
+--   which shadow the committed ones of their names.
 compiles :: [(Text, Text)] -> Text -> Text -> Expectation
 compiles beside modName text = withSystemTempDirectory "hsed-preconfig" $ \dir -> do
   let path m = dir </> T.unpack (DT.replace "." "/" m) <> ".hs"
@@ -106,31 +111,6 @@ compiles beside modName text = withSystemTempDirectory "hsed-preconfig" $ \dir -
     Left (e :: IOException)         -> pendingWith ("cannot run " <> prog <> " here: " <> show e)
     Right (ExitSuccess, _, _)       -> pure ()
     Right (ExitFailure _, out, err) -> expectationFailure (prog <> " rejected the module:\n" <> out <> err)
-
--- | A stand-in for G3's @Hsed.Gen.Opal.TableDescs@, which M4b's integration
---   generates (the lead's answer 16): the three descriptions Opal owns, of
---   the type the generated module imports, so that the Admin SP's module
---   type-checks alone. Its values are not Opal's: only their type is held.
-opalTableDescs :: Text
-opalTableDescs = T.unlines
-  [ "{-# LANGUAGE NoImplicitPrelude #-}"
-  , "{-# LANGUAGE OverloadedStrings #-}"
-  , "-- | A stand-in for the generated Hsed.Gen.Opal.TableDescs, for a type check alone."
-  , "module Hsed.Gen.Opal.TableDescs (dataRemovalMechanismTableDesc, tableTableDesc, tPerInfoTableDesc) where"
-  , ""
-  , "import           Hsed.Core.Table          (TableDesc (..))"
-  , "import           Hsed.Core.UID            (uid)"
-  , "import qualified Hsed.Gen.Core.TableDescs as Core"
-  , ""
-  , "tPerInfoTableDesc :: TableDesc"
-  , "tPerInfoTableDesc = Core.tPerInfoTableDesc"
-  , ""
-  , "tableTableDesc :: TableDesc"
-  , "tableTableDesc = Core.tableTableDesc"
-  , ""
-  , "dataRemovalMechanismTableDesc :: TableDesc"
-  , "dataRemovalMechanismTableDesc ="
-  , "  TableDesc \"DataRemovalMechanism\" (uid 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x00) (uid 0x00 0x00 0x00 0x01 0x00 0x00 0x11 0x01) []" ]
 
 spec :: Spec
 spec = do
@@ -328,9 +308,9 @@ spec = do
           , "adminSPMethodIDTablePreconfiguration", "adminSPAccessControlTablePreconfiguration", "adminSPACETablePreconfiguration"
           , "adminSPAuthorityTablePreconfiguration", "adminSPCPINTablePreconfiguration", "adminSPTPerInfoTablePreconfiguration"
           , "adminSPTemplateTablePreconfiguration", "adminSPSPTablePreconfiguration", "adminSPDataRemovalMechanismTablePreconfiguration" ]
-      it "prints a module that type-checks under hsed's warnings and -Werror, beside a stand-in Opal TableDescs (the lead's answer 16)" $ do
+      it "prints a module that type-checks under hsed's warnings and -Werror against the committed generated modules, Opal's TableDescs among them" $ do
         text <- adminSPOf opal
-        compiles [("Hsed.Gen.Opal.TableDescs", opalTableDescs)] "Hsed.Gen.Opal.Preconfig.AdminSP" text
+        compiles [] "Hsed.Gen.Opal.Preconfig.AdminSP" text
 
     describe "Table 22, AccessControl (PDF 39-46)" $ do
       let shapes = [ rdShape rd | Just p <- [readOf 22], rd <- pReads p ]
@@ -453,15 +433,26 @@ spec = do
           , "uACE_C_PIN_MSID_Get_PIN = uid 0x00 0x00 0x00 0x08 0x00 0x00 0x8c 0x04", "uSP_Locking = uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x02"
           , "uMethodID_Revert = uid 0x00 0x00 0x00 0x06 0x00 0x00 0x02 0x02", "uMethodID_Activate = uid 0x00 0x00 0x00 0x06 0x00 0x00 0x02 0x03" ]
           `shouldSatisfy` ((== 8) . length)
-      it "names 29 UIDs, u<T>_<Name>, a Name beginning <T>_ alone; none Core names the same (uAuthority_Anybody, uSP_Admin, uMethodID_Get)" $ do
+      it "names 16 UIDs, u<T>_<Name>, a Name beginning <T>_ alone; none Core names the same (uAuthority_Anybody, uSP_Admin, uMethodID_Get)" $ do
         lns <- T.lines <$> adminSPOf opal
         let uids = [ T.takeWhile (/= ' ') l | l <- lns, " :: UID" `T.isSuffixOf` l ]
-        length uids `shouldBe` 29
+        length uids `shouldBe` 16
         filter (`elem` uids) ["uAuthority_Anybody", "uSP_Admin", "uC_PIN_SID", "uMethodID_Get", "uTemplate_Base", "uSPTemplates_Admin"] `shouldBe` []
-        filter ("uTable_" `T.isPrefixOf`) uids `shouldSatisfy` ((== 12) . length)
         filter ("uACE_" `T.isPrefixOf`) uids `shouldSatisfy` ((== 10) . length)
         uidDeclName "C_PIN" "C_PIN_MSID" `shouldBe` "uC_PIN_MSID"
         uidDeclName "Authority" "Admin1" `shouldBe` "uAuthority_Admin1"
+      it "gives one name to each object: none to the Table table's twelve rows, the objects u<T>TableObject names (Core 3.2.5.3 b.i, PDF 51-52), or to the SPInfo row, Core T244's uSPInfo_Row (PDF 305)" $ do
+        lns <- T.lines <$> adminSPOf opal
+        let uids = [ T.takeWhile (/= ' ') l | l <- lns, " :: UID" `T.isSuffixOf` l ]
+        filter (\u -> "uTable_" `T.isPrefixOf` u || "uSPInfo_" `T.isPrefixOf` u) uids `shouldBe` []
+      it "keeps Admin1's own name at the UID Core T243 gives Issuers, another object (Opal T24, PDF 48; Core T216, PDF 236), its comment naming Core's" $ do
+        lns <- T.lines <$> adminSPOf opal
+        let admin1 = takeWhile (/= "") (dropWhile (not . ("row 5: Admin1" `T.isSuffixOf`)) lns)
+        take 1 admin1 `shouldSatisfy` all ("-- | opal-2.30 T24 - Admin SP - Authority Table Preconfiguration (PDF 48 / p.47," `T.isPrefixOf`)
+        drop 1 admin1 `shouldBe`
+          [ "--   another object than core-2.01 T243 row 10's Issuers (the Admin template's), uAuthority_Issuers, at the same UID"
+          , "uAuthority_Admin1 :: UID"
+          , "uAuthority_Admin1 = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x01" ]
       it "fails C-UID-NAME on a Name whose UID name Core gives another UID, and leaves the table out" $ do
         let renamed = setCell "T24" 4 1 "\"Editors\"" opal
         codeOf "C-UID-NAME" renamed `shouldBe`

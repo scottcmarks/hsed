@@ -37,21 +37,24 @@ such row of the spec or its base names, the row an SP's preconfiguration of
 the table of tables gives it (Opal Table 20 row 12, @DataRemovalMechanism@,
 PDF 37, which Core's Table 240 does not name): its descriptor object's UID
 that row's UID, the table's UID that UID's lower half followed by four zero
-bytes (Core 5.3.4.2.2, PDF 223; Core 3.2.5.3 b.i and b.ii, PDF 34-35, the
-halves 'C-T240-HALVES' checks); then the base's rows whose table the spec's do
-not name.
+bytes (Core 3.2.5.3 b.i and b.ii, PDF 51-52, the halves 'C-T240-HALVES'
+checks; Core 5.3.4.2.1, PDF 222: a table is referred to by a UID derived from
+its Table table row's); then the base's rows whose table the spec's do not
+name.
 
-Compiled into 'tableUIDsModule' in the shapes the hand transcription (the
-oracle's fixture, @Hand.TableUIDs@) has: @u\<T\>TableObject :: UID@, @u\<T\>Table ::
-UID@ and @h\<T\> :: HalfUID@ per row, @nameHalfUID :: Map HalfUID String@ and
-@nameUID :: Map UID String@ (@"\<T\> Table"@, @"\<T\> Table Object"@). The typed
-half-UIDs @oth\<T\>@ and @bth\<T\>@ need each table's kind (byte or object
-table), which Core does not give as data; they wait for Opal's Kind column
-(design M5) and are listed in @spec/expected-diff.txt@.
+Compiled into 'tableUIDsModuleFor' the spec in the shapes the hand
+transcription (the oracle's fixture, @Hand.TableUIDs@) has: @u\<T\>TableObject
+:: UID@, @u\<T\>Table :: UID@ and @h\<T\> :: HalfUID@ per row, @nameHalfUID ::
+Map HalfUID String@ and @nameUID :: Map UID String@ (@"\<T\> Table"@, @"\<T\>
+Table Object"@). The typed half-UIDs @oth\<T\>@ and @bth\<T\>@ need each
+table's kind (byte or object table), which Core does not give as data; they
+wait for Opal's Kind column (design M5) and are listed in
+@spec/expected-diff.txt@; the module's note says so in each spec's words.
 -}
 module Hsed.Spec.Rules.TableUIDs
   ( tableUIDsRule
   , tableUIDsModule
+  , tableUIDsModuleFor
     -- * Reading the bound tables
   , TableUIDRow (..)
   , tableUIDRows
@@ -100,14 +103,31 @@ tableUIDsRule = RuleDef
   , ruleCompile = compile
   }
 
--- | @Hsed.Gen.\<Spec\>.TableUIDs@.
+-- | @Hsed.Gen.\<Spec\>.TableUIDs@: its name and description, which the
+--   rules importing a table's UIDs name it by; the declarations go to
+--   'tableUIDsModuleFor' the spec.
 tableUIDsModule :: Gen.GenModule
 tableUIDsModule = Gen.GenModule
   { Gen.leaf        = "TableUIDs"
   , Gen.description = "Table UIDs: each table's UID, its descriptor object's UID and its half-UID"
-  , Gen.notes       = [ "The typed half-UIDs of the hand transcription's TableUIDs (oth\\<T\\>, bth\\<T\\>;"
-                      , "the oracle's test fixture, Hand.TableUIDs) need each table's kind, which Core does"
-                      , "not give as data; they are not generated here." ] }
+  , Gen.notes       = [] }
+
+-- | 'tableUIDsModule' for a spec, its note saying why the typed half-UIDs
+--   are not generated in the spec's words: a spec read alone (Core) does not
+--   give a table's kind as data; a spec read over another (Opal) prints it,
+--   in its preconfiguration of an SP's Table table (Opal Table 20's Kind,
+--   PDF 36-37), which the rule reading it does not keep until M5 (design
+--   section 11).
+tableUIDsModuleFor :: Context -> Gen.GenModule
+tableUIDsModuleFor ctx = tableUIDsModule { Gen.notes = intro <> why }
+  where
+    intro = [ "The typed half-UIDs of the hand transcription's TableUIDs (oth\\<T\\>, bth\\<T\\>;"
+            , "the oracle's test fixture, Hand.TableUIDs) need each table's kind," ]
+    why = case cxBase ctx of
+      Nothing -> [ "which " <> Gen.specLabel (cxSpec ctx) <> " does not give as data; they are not generated here." ]
+      Just _  -> [ "which " <> Gen.specLabel (cxSpec ctx) <> " prints in its preconfiguration of an SP's Table table"
+                 , "(its Kind column); hsedc does not read it into these until M5 (design section 11),"
+                 , "so they are not generated here." ]
 
 
 -- * Reading the bound tables
@@ -148,8 +168,7 @@ allTableUIDRows = ownThenBase rowsOf tuName
   where
     rowsOf c = rights (tableUIDRows c) <> [ r | r <- preconfiguredRows c, tuName r `notElem` named c ]
     -- the tables a table of table UIDs names, the spec's or a base's
-    named c = [ tuName r | c' <- chain c, Right r <- tableUIDRows c' ]
-    chain c = c : maybe [] chain (cxBase c)
+    named c = [ tuName r | c' <- contextChain c, Right r <- tableUIDRows c' ]
 
 -- | The rows the preconfiguration tables of a spec give the table of tables
 --   (the one row of a table of table UIDs whose descriptor object lies in its
@@ -162,8 +181,7 @@ preconfiguredRows ctx = case tablesHalf of
   Nothing   -> []
   Just half -> concatMap (rowsIn half) (boundTables (Just Preconfig) ctx)
   where
-    chain c = c : maybe [] chain (cxBase c)
-    tablesHalf = listToMaybe [ h | c <- chain ctx, Right (_, h) <- [tablesTable (boundTables (Just TableUIDs) c)] ]
+    tablesHalf = listToMaybe [ h | c <- contextChain ctx, Right (_, h) <- [tablesTable (boundTables (Just TableUIDs) c)] ]
     rowsIn half bt =
       [ TableUIDRow
           { tuBound = bt, tuRow = i, tuName = name, tuObjectText = uidText
@@ -264,12 +282,12 @@ compile ctx bts = map one rows <> maps
     named  = [ (btAnchor (tuBound r), tuRow r) | (r, _) <- nameProblems rows ]
     good r = null (halvesProblems (tablesTable bts) r) && (btAnchor (tuBound r), tuRow r) `notElem` named
     one r
-      | good r, Just o <- tuObject r, Just t <- tuTable r = Emit (rowDecl ctx r o t)
+      | good r, Just o <- tuObject r, Just t <- tuTable r = EmitIn (tableUIDsModuleFor ctx) (rowDecl ctx r o t)
       | otherwise = Excluded (btAnchor (tuBound r)) (label r <> "C-T240-HALVES or C-T240-NAME failed")
     kept   = [ r | r <- rows, good r ]
     maps   = case kept of
       []      -> []
-      r0 : _  -> [Emit (mapsDecl (provenance ctx r0) (length rows) kept)]
+      r0 : _  -> [EmitIn (tableUIDsModuleFor ctx) (mapsDecl (provenance ctx r0) (length rows) kept)]
 
 provenance :: Context -> TableUIDRow -> Gen.Provenance
 provenance ctx r = let bt = tuBound r in boundProvenance ctx bt

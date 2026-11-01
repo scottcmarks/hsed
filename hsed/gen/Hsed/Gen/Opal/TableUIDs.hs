@@ -14,8 +14,9 @@ block's, a paragraph's or a heading's among the IR's, so named) and the sha256
 of its cells (docs/spec-as-source.md section 3.5). The tables are TCG's text:
 see tcg/TCG-NOTICE.txt. The typed half-UIDs of the hand transcription's
 TableUIDs (oth\<T\>, bth\<T\>; the oracle's test fixture, Hand.TableUIDs) need
-each table's kind, which Core does not give as data; they are not generated
-here.
+each table's kind, which Opal prints in its preconfiguration of an SP's Table
+table (its Kind column); hsedc does not read it into these until M5 (design
+section 11), so they are not generated here.
 -}
 module Hsed.Gen.Opal.TableUIDs where
 

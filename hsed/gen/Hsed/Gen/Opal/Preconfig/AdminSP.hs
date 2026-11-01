@@ -50,10 +50,6 @@ adminSPSPInfoTablePreconfiguration = PreconfTable
       ]
   }
 
--- | opal-2.30 T18 - Admin SP - SPInfo Table Preconfiguration (PDF 35 / p.34, ord 20, sha256:1b4c4102e576), row 1: Admin
-uSPInfo_Admin :: UID
-uSPInfo_Admin = uid 0x00 0x00 0x00 0x02 0x00 0x00 0x00 0x01
-
 -- | opal-2.30 T19 - Admin SP - SPTemplates Table Preconfiguration (PDF 35 / p.34, ord 21, sha256:64fd7d86056e): the SPTemplates table (core-2.01 T170) as the Admin SP holds it
 adminSPSPTemplatesTablePreconfiguration :: PreconfTable
 adminSPSPTemplatesTablePreconfiguration = PreconfTable
@@ -278,54 +274,6 @@ adminSPTableTablePreconfiguration = PreconfTable
           ]
       ]
   }
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 1: Table
-uTable_Table :: UID
-uTable_Table = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x01
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 2: SPInfo
-uTable_SPInfo :: UID
-uTable_SPInfo = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x02
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 3: SPTemplates
-uTable_SPTemplates :: UID
-uTable_SPTemplates = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x03
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 4: MethodID
-uTable_MethodID :: UID
-uTable_MethodID = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x06
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 5: AccessControl
-uTable_AccessControl :: UID
-uTable_AccessControl = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x07
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 6: ACE
-uTable_ACE :: UID
-uTable_ACE = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x08
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 7: Authority
-uTable_Authority :: UID
-uTable_Authority = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x09
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 8: C_PIN
-uTable_C_PIN :: UID
-uTable_C_PIN = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x00 0x0b
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 9: TPerInfo
-uTable_TPerInfo :: UID
-uTable_TPerInfo = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x02 0x01
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 10: Template
-uTable_Template :: UID
-uTable_Template = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x02 0x04
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 11: SP
-uTable_SP :: UID
-uTable_SP = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x02 0x05
-
--- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 12: DataRemovalMechanism
-uTable_DataRemovalMechanism :: UID
-uTable_DataRemovalMechanism = uid 0x00 0x00 0x00 0x01 0x00 0x00 0x11 0x01
 
 -- | opal-2.30 T21 - Admin SP - MethodID Table Preconfiguration (PDF 38 / p.37, ord 23, sha256:c7f3ce64ce2d): the MethodID table (core-2.01 T174) as the Admin SP holds it
 adminSPMethodIDTablePreconfiguration :: PreconfTable
@@ -1194,6 +1142,7 @@ adminSPAuthorityTablePreconfiguration = PreconfTable
   }
 
 -- | opal-2.30 T24 - Admin SP - Authority Table Preconfiguration (PDF 48 / p.47, ord 26, sha256:8ee705ff067e), row 5: Admin1
+--   another object than core-2.01 T243 row 10's Issuers (the Admin template's), uAuthority_Issuers, at the same UID
 uAuthority_Admin1 :: UID
 uAuthority_Admin1 = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x01
 

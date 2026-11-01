@@ -46,7 +46,8 @@ The column checks are 'columnFindings', which @columnsAddition@
 another's description, their numbers running on from that description's
 ('ColumnsFrom').
 
-Compiled into 'tableDescsModule': @\<t\>TableDesc :: TableDesc@ per description
+Compiled into 'tableDescsModuleFor' the spec, whose note names the spec's own
+ledger: @\<t\>TableDesc :: TableDesc@ per description
 (the table's name with its first letter in lower case, @tableTableDesc@ for
 Table 171), the runtime 'Hsed.Core.Table.TableDesc' whose UIDs are Table 240's
 @u\<T\>Table@ and @u\<T\>TableObject@ and whose columns' types are
@@ -58,7 +59,7 @@ M4b: Opal's descriptions take Core's types from @Hsed.Gen.Core.Types@ and
 their own from @Hsed.Gen.Opal.Types@). A table whose UIDs only an SP's
 preconfiguration of the table of tables gives (Opal's DataRemovalMechanism,
 Table 20 row 12, PDF 37) has them declared beside its description, in the
-spec's 'tableUIDsModule' ("Hsed.Spec.Rules.TableUIDs".'rowDecl').
+spec's 'tableUIDsModuleFor' ("Hsed.Spec.Rules.TableUIDs".'rowDecl').
 
 The rules whose tables a description types (@constValues@'s default values,
 @preconfig@'s rows) read a column through "Hsed.Spec.Readers.Cell" (since
@@ -76,6 +77,7 @@ here ('crTypeRow': Opal's columns take Core's types).
 module Hsed.Spec.Rules.TableDesc
   ( tableDescRule
   , tableDescsModule
+  , tableDescsModuleFor
     -- * Reading the bound tables
   , DescRead (..)
   , ColRead (..)
@@ -122,7 +124,7 @@ import           Hsed.Spec.Readers.Text    (lowerIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.EnumValues (EnumRead (..), allEnums, parseEnumValue)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, rowDecl, tableObjectUIDName, tableUIDName,
-                                            tableUIDsModule, tableUIDsNamed)
+                                            tableUIDsModule, tableUIDsModuleFor, tableUIDsNamed)
 import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeNameExpr, typeUIDName, typesModule)
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure,
                                             shapeMismatch)
@@ -147,13 +149,24 @@ tableDescRule = RuleDef
   , ruleCompile = compile
   }
 
--- | @Hsed.Gen.\<Spec\>.TableDescs@.
+-- | @Hsed.Gen.\<Spec\>.TableDescs@: its name and description, which the
+--   rules importing a description name it by; the declarations go to
+--   'tableDescsModuleFor' the spec.
 tableDescsModule :: Gen.GenModule
 tableDescsModule = Gen.GenModule
   { Gen.leaf        = "TableDescs"
   , Gen.description = "Table descriptions: each table's UIDs and columns"
-  , Gen.notes       = [ "A column whose type no Type table row defines has its type's name and no UID"
-                      , "(C-FMT-RESOLVE in docs/LEDGER.md)." ] }
+  , Gen.notes       = [] }
+
+-- | 'tableDescsModule' for a spec, its note naming the spec's own ledger
+--   ('Gen.ledgerFile': @docs/LEDGER.md@ for Core, @docs/LEDGER-opal.md@ for
+--   Opal; the lead's decision at the M4b review, design 13.32 (22)), where a
+--   column's C-FMT-RESOLVE is counted: the module every description of the
+--   spec goes to, this rule's and @columnsAddition@'s.
+tableDescsModuleFor :: SpecId -> Gen.GenModule
+tableDescsModuleFor sid = tableDescsModule
+  { Gen.notes = [ "A column whose type no Type table row defines has its type's name and no UID"
+                , "(C-FMT-RESOLVE in " <> Gen.ledgerFile sid <> ")." ] }
 
 -- | The table a description's caption names: @Authority@ for @Authority Table Description@.
 descIdent :: Form -> Maybe Text
@@ -380,7 +393,7 @@ colNumberLit n = "0x" <> T.justifyRight 2 '0' (T.toUpper (T.pack (showHexInteger
 -- | Each description's declaration, or why it has none; with it, for a
 --   table whose UIDs only the spec's preconfiguration of the table of tables
 --   gives (Opal's DataRemovalMechanism, Table 20 row 12, PDF 37), those
---   UIDs' declarations in the spec's 'tableUIDsModule', which no table of
+--   UIDs' declarations in the spec's 'tableUIDsModuleFor', which no table of
 --   table UIDs of the spec writes ("Hsed.Spec.Rules.TableUIDs".'rowDecl').
 compile :: Context -> [BoundTable] -> [Emitted]
 compile ctx bts = concatMap one ds
@@ -389,8 +402,8 @@ compile ctx bts = concatMap one ds
     later = [ btAnchor (drBound d) | (_, _, d) <- repeats ds ]
     one d = case (drTable d >>= tableUIDRowNamed ctx, any Cm.isError (descFindings ctx d)) of
       (Just row@(owner, tu), False) | Just o <- tuObject tu, Just t <- tuTable tu, btAnchor (drBound d) `notElem` later ->
-        Emit (tableDescDecl ctx (boundProvenance ctx (drBound d)) [] d row)
-          : [ EmitIn tableUIDsModule (rowDecl owner tu o t) | cxSpec owner == cxSpec ctx, not (fromTableUIDs tu) ]
+        EmitIn (tableDescsModuleFor (cxSpec ctx)) (tableDescDecl ctx (boundProvenance ctx (drBound d)) [] d row)
+          : [ EmitIn (tableUIDsModuleFor ctx) (rowDecl owner tu o t) | cxSpec owner == cxSpec ctx, not (fromTableUIDs tu) ]
       _ -> [Excluded (btAnchor (drBound d)) "C-COL-CONTIG, C-COL-CELL or C-DESC-TABLE failed"]
     fromTableUIDs tu = someBindingShape (btBinding (tuBound tu)) == Just TableUIDs
 

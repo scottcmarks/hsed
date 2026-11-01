@@ -42,6 +42,12 @@ the PIN (Table 22 rows 23 and 25, PDF 42; Table 23, PDF 47). And the jig's
 and Level 0's readers find their rows: SID's credential, the SPs' life
 cycles, TPerInfo's ProgrammaticResetEnable.
 
+One generated name for each object: @uAuthority_Admin1@ is Admin1's own,
+another object than the Issuers Core Table 243 gives the same UID (Opal Table
+24, PDF 48; Core Table 216, PDF 236), where the Table table's rows and the
+SPInfo row keep the names Core's and Opal's generated modules give them
+(@u\<T\>TableObject@, @uSPInfo_Row@) and get no second.
+
 And the values M4a wrote by hand before the Admin SP was generated, kept as
 the test fixture "Hand.OpalUIDs", are the generated ones: its six UIDs, by
 name, and TPER_RESET's ComID, which "Hsed.Wire" reads from Opal Table 13
@@ -58,10 +64,10 @@ import qualified Hand.OpalUIDs                   as H
 import           Hsed.Core.Preconfig             (PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..), instanceUID)
 import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNamed)
 import           Hsed.Core.UID                   (HalfUID, UID, halfUID, uidUpper)
-import           Hsed.Gen.Core.TableDescs        (aceTableDesc, accessControlTableDesc)
-import           Hsed.Gen.Core.TableUIDs         (uACETable, uAccessControlTable)
-import           Hsed.Gen.Core.UIDs              (uAuthority_Admins, uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uMethodID_Get,
-                                                  uSP_Admin)
+import           Hsed.Gen.Core.TableDescs        (aceTableDesc, accessControlTableDesc, authorityTableDesc)
+import           Hsed.Gen.Core.TableUIDs         (uACETable, uAccessControlTable, uAuthorityTable)
+import           Hsed.Gen.Core.UIDs              (uAuthority_Admins, uAuthority_Anybody, uAuthority_Issuers, uAuthority_SID, uC_PIN_SID,
+                                                  uMethodID_Get, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1,
                                                   uC_PIN_Admin1, uC_PIN_MSID, uSP_Locking)
 import           Hsed.Jig.Script                 (Credential (..), simCredential)
@@ -297,6 +303,12 @@ spec = describe "the generated Admin SP and the simulator's" $ do
     it "TPER_RESET's enabling, TPerInfo's ProgrammaticResetEnable: FALSE as Table 27 prints it (PDF 50), TRUE where the parameters enable it" $ do
       programmaticResetEnabled (initialState defaultSimParams) `shouldBe` Just False
       programmaticResetEnabled (initialState defaultSimParams { spTPerResetEnabled = True }) `shouldBe` Just True
+
+  describe "one generated name for each object (the lead's decision at the M4b review, design 13.32 (22))" $
+    it "names Admin1 itself at the UID Core Table 243 gives Issuers: another object there, an individual authority of the class Admins (Opal Table 24, PDF 48), where Core's Admin template has its class authority Issuers (Table 216, PDF 236)" $ do
+      uAuthority_Admin1 `shouldBe` uAuthority_Issuers
+      let admin1 column = heldRow sps0 uAuthorityTable uAuthority_Admin1 >>= cellNamed authorityTableDesc column
+      map admin1 ["Name", "IsClass", "Class"] `shouldBe` [Just (TextCell "Admin1"), Just (EnumCell "F" 0), Just (RefCell "Admins" uAuthority_Admins)]
 
   describe "the values M4a wrote by hand, kept as the test fixture Hand.OpalUIDs (design 9.3)" $ do
     it "are the generated UIDs, by name: C_PIN_MSID and C_PIN_Admin1, Admin1, UCT-03's two ACEs, the Locking SP (Tables 23-25 and 29, PDF 47-50)" $

@@ -42,7 +42,7 @@ Checks, each with the code its findings carry:
   type @uniteger_8@ (PDF 85), which no type row defines: C-FMT-RESOLVE, a
   Warning, the column generated with its type's name and no UID.
 
-Compiled into 'tableDescsModule' (@Hsed.Gen.Opal.TableDescs@): for each
+Compiled into 'tableDescsModuleFor' the spec (@Hsed.Gen.Opal.TableDescs@): for each
 table the additions extend, the base's description with the added columns
 appended, under its name (@tPerInfoTableDesc@, 9 columns; @tableTableDesc@,
 15; @lockingInfoTableDesc@, 11), by "Hsed.Spec.Rules.TableDesc".'tableDescDecl'
@@ -76,7 +76,8 @@ import           Hsed.Spec.DSL             (SomeBinding (..), columnsAddition)
 import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.TableDesc (ColRead (..), ColumnsFrom (..), DescRead (..), columnFindings, descReads,
-                                            readDescs, tableDescDecl, tableDescRule, tableDescsModule, tableUIDRowNamed)
+                                            readDescs, tableDescDecl, tableDescRule, tableDescsModule, tableDescsModuleFor,
+                                            tableUIDRowNamed)
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..))
 import           Hsed.Spec.Shape           (CaptionKind (..), Form (..), Shape (..), measure, shapeMismatch)
 
@@ -213,8 +214,7 @@ extensionFindings ctx e = targetFindings <> columnFindings ctx bt from (drShort 
     from = case (exTarget e, exDesc e) of
       (Just n, Just _) -> After n (exSources e) (exBefore e)
       _                -> Unplaced
-    specs = "of " <> T.intercalate " or " (map (specIdText . cxSpec) (chain ctx))
-    chain c = c : maybe [] chain (cxBase c)
+    specs = "of " <> T.intercalate " or " (map (specIdText . cxSpec) (contextChain ctx))
     targetFindings = case (exTarget e, exDesc e) of
       (Nothing, _)      -> [atTable ctx bt (finding Error "C-COLS-TARGET" "the caption names no table (\"<T> [Table] [Additional] Columns\")")]
       (Just n, Nothing) -> [atTable ctx bt (finding Error "C-COLS-TARGET"
@@ -240,7 +240,7 @@ compile ctx bts = concatMap one (L.nub (map exTarget exts))
              | cxSpec owner == cxSpec ctx ->
                  leaveOut (n <> " is described by " <> specIdText (cxSpec ctx) <> " itself, which hsedc compiles with no columns added")
              | Just row@(_, tu) <- tableUIDRowNamed ctx n, isJust (tuObject tu), isJust (tuTable tu) ->
-                 [ Emit (tableDescDecl ctx (boundProvenance ctx (drBound (exRead e0)))
+                 [ EmitIn (tableDescsModuleFor (cxSpec ctx)) (tableDescDecl ctx (boundProvenance ctx (drBound (exRead e0)))
                            (citing "extends" (boundProvenance owner (drBound d))
                               : map (citing "with" . boundProvenance ctx . drBound . exRead) more)
                            d { drColumns = drColumns d <> concatMap (drColumns . exRead) es } row) ]

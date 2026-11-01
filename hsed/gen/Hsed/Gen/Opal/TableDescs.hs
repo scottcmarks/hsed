@@ -13,7 +13,7 @@ printed page, its ordinal (a table's in the structure tree, ord; a signature
 block's, a paragraph's or a heading's among the IR's, so named) and the sha256
 of its cells (docs/spec-as-source.md section 3.5). The tables are TCG's text:
 see tcg/TCG-NOTICE.txt. A column whose type no Type table row defines has its
-type's name and no UID (C-FMT-RESOLVE in docs/LEDGER.md).
+type's name and no UID (C-FMT-RESOLVE in docs/LEDGER-opal.md).
 -}
 module Hsed.Gen.Opal.TableDescs where
 

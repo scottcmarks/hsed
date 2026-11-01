@@ -97,6 +97,7 @@ module Hsed.Spec.RuleDef
     -- * The shared context
   , Context (..)
   , ownThenBase
+  , contextChain
     -- * Bound units
   , BoundUnit (..)
   , SomeUnit (..)
@@ -271,6 +272,11 @@ ownThenBase f key ctx = own <> [ ca | ca@(_, a) <- maybe [] (ownThenBase f key) 
   where
     own  = [ (ctx, a) | a <- f ctx ]
     keys = Set.fromList (map (key . snd) own)
+
+-- | A Context and the specs it is read over, nearest first: Opal's, then
+--   Core's ('cxBase', and its base).
+contextChain :: Context -> [Context]
+contextChain c = c : maybe [] contextChain (cxBase c)
 
 
 -- * Bound units

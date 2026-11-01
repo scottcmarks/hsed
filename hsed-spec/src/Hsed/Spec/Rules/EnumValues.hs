@@ -453,8 +453,7 @@ replacedIn ctx = \case
   Opal n    -> inSpec "opal" n
   Section s -> Left ("it replaces section " <> tshow s <> ", which is no table")
   where
-    bases = maybe [] chain (cxBase ctx)
-    chain c = c : maybe [] chain (cxBase c)
+    bases = maybe [] contextChain (cxBase ctx)
     inSpec family n = case L.find ((family `T.isPrefixOf`) . specIdText . cxSpec) bases of
       Just b  -> Right (b, TableId n)
       Nothing -> Left ("it replaces " <> family <> " " <> tshow n <> ", in no spec " <> specIdText (cxSpec ctx) <> " is read over")

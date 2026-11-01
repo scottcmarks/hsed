@@ -51,6 +51,7 @@ module Hsed.Spec.Gen
   , Decl (..)
   , decl
   , specLabel
+  , ledgerFile
   , moduleName
   , specModuleDir
   , modulePath
@@ -138,6 +139,18 @@ decl p n body = Decl { declProvenance = p, declRank = 0, declName = n, declBody 
 specLabel :: SpecId -> Text
 specLabel sid = capitalise (T.takeWhile C.isAlpha (specIdText sid))
   where capitalise t = maybe t (\(c, cs) -> T.cons (C.toUpper c) (T.toLower cs)) (T.uncons t)
+
+-- | The ledger a spec's run is committed as, the Makefile's copy of the
+--   report's @ledger.md@ ("Hsed.Spec.Report"): @docs/LEDGER.md@ for Core,
+--   @docs/LEDGER-\<spec\>.md@ for any other (@docs/LEDGER-opal.md@), which a
+--   module's note names where it sends a reader to the spec's findings.
+--
+-- >>> map (ledgerFile . SpecId) ["core-2.01", "opal-2.30"]
+-- ["docs/LEDGER.md","docs/LEDGER-opal.md"]
+ledgerFile :: SpecId -> Text
+ledgerFile sid = case specLabel sid of
+  "Core" -> "docs/LEDGER.md"
+  label  -> "docs/LEDGER-" <> T.toLower label <> ".md"
 
 -- | @Hsed.Gen.Core.Types@ for @core-2.01@ and a module whose leaf is @Types@.
 moduleName :: SpecId -> GenModule -> Text

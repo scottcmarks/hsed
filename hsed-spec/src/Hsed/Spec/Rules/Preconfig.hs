@@ -83,7 +83,7 @@ Checks, each with the code its findings carry:
 * @C-UID-NAME@ (the @uidTable@ rule's): an SSC row's generated UID name
   ('uidDeclName') is no other row's of the SP (the SP's module defines it),
   nor one the spec or its base names another UID
-  ("Hsed.Spec.Rules.UidTable");
+  ("Hsed.Spec.Rules.UidTable"; 'uidNames');
 * @C-PRECONF-UID@: the table of a table's UIDs, which the @uidTable@ rule
   reads ("Hsed.Spec.Rules.UidTable": its header or caption claims every row
   for that table, Core Table 243 for the Authority table), gives exactly the
@@ -106,8 +106,11 @@ UID's from its kind, 'Hsed.Spec.Readers.Cell.zeroValue', every row with its
 kind, its optional mark, its cells and its notes, and the legend's access of
 its kept cells); with the SP's index of its tables in table order
 (@adminSP :: [PreconfTable]@) and a UID for each plain row with a Name,
-@u\<T\>_\<Name\>@ ('uidDeclName'), but those its spec and its base already
-give under the same name.
+@u\<T\>_\<Name\>@ ('uidDeclName'), one generated name for each object: none
+for a row whose object a generated module of the spec or its base names
+already, under the same name or under its table's (a table's descriptor
+object, a single-row table's row); a row at a UID the base gives another
+object's Name keeps its own, its comment naming the other ('uidNames').
 -}
 module Hsed.Spec.Rules.Preconfig
   ( preconfigRule
@@ -644,16 +647,36 @@ uidUnique ctx ps = concat
   | ((_, _, uid), (p0, r0) : rest) <- Map.toList (Map.fromListWith (flip (<>))
       [ ((pSP p, tn, uid), [(p, r)]) | (tn, _, uid, p, r) <- index ps, not (prTemplate r) ]) ]
 
--- | The UID an SSC's plain row with a Name is generated as, @u\<T\>_\<Name\>@
---   ('uidDeclName'), and C-UID-NAME: a name the spec or its base gives another
---   UID ("Hsed.Spec.Rules.UidTable"), or two rows of the SP give, defines
---   nothing; one the spec or its base gives the same UID is left out.
+-- | The UIDs an SSC's plain rows with a Name are generated as, @u\<T\>_\<Name\>@
+--   ('uidDeclName'), one generated name for each object (the lead's decision
+--   at the M4b review, design 13.32 (22)), and C-UID-NAME: a name the spec or
+--   its base gives another UID ("Hsed.Spec.Rules.UidTable"), or two rows of
+--   the SP give, defines nothing. A row defines no name of its own where a
+--   generated module of the spec or its base names its object already:
+--
+--   * under the same name, at the same UID (Core's @uAuthority_Anybody@,
+--     @uSP_Admin@, @uMethodID_Get@);
+--   * under a name of what the object is rather than a Name of its own
+--     ('sameObjectUIDs'): a table's descriptor object, the Table table's
+--     row of the table (@u\<T\>TableObject@, "Hsed.Spec.Rules.TableUIDs":
+--     its UID fixed for every SP, Core 3.2.5.3 b.i, PDF 51-52, so that
+--     Opal Table 20's rows, PDF 36-37, are the objects Core Table 240 and
+--     Opal's own DataRemovalMechanism row name), or a row a table of UIDs
+--     names by its table and no name (a single-row table's row, Core Table
+--     244's @uSPInfo_Row@, PDF 305: the SPInfo row whatever its SP's name).
+--
+--   A UID the spec or its base gives under another object's Name is another
+--   object at that UID, which the SP's row replaces: the row keeps its own
+--   name, its comment naming the other ('shadowsOf'): Opal Table 24's Admin1
+--   (PDF 48), an authority of no class, at the UID Core Table 243 gives
+--   Issuers (PDF 305), the Admin template's class authority (Table 216, PDF
+--   236). A list entry with no name (Core Table 242's @Reserved for SSC
+--   Usage@, PDF 303-304) names nothing.
 uidNames :: Context -> [PreRead] -> ([(Text, [Word8], PreRead, PreRow)], [Finding])
 uidNames ctx ps = (fresh, baseClashes <> ownClashes)
   where
-    chain c = c : maybe [] chain (cxBase c)
-    based = Map.fromListWith (\_ old -> old)
-      [ (i, (bs, c, r)) | c <- chain ctx, r <- uidRows c, Just i <- [urIdent r], Exact bs <- [urValue r] ]
+    based = Map.fromListWith (\_ old -> old) [ (i, (bs, c, r)) | (i, bs, c, r) <- baseUIDNames ctx ]
+    same  = sameObjectUIDs ctx
     candidates =
       [ (uidDeclName tn piece, uid, p, r)
       | p <- ps, isJust (pSP p), Right d <- [pTarget p], Just tn <- [drTable d]
@@ -665,12 +688,37 @@ uidNames ctx ps = (fresh, baseClashes <> ownClashes)
                 <> " row " <> tshow (urRow br + 1) <> " is, for the UID " <> hexUID bs)
       | (i, uid, p, r) <- candidates, Just (bs, c, br) <- [Map.lookup i based], bs /= uid ]
     -- the names each SP's module would define, by SP (an SP's names are its module's)
-    unknown = Map.fromListWith (flip (<>)) [ ((pSP p, i), [cand]) | cand@(i, _, p, _) <- candidates, Map.notMember i based ]
+    unknown = Map.fromListWith (flip (<>))
+      [ ((pSP p, i), [cand]) | cand@(i, uid, p, _) <- candidates, Map.notMember i based, uid `Set.notMember` same ]
     fresh = [ cand | [cand] <- Map.elems unknown ]
     ownClashes =
       [ at p r ("it is generated as " <> i <> ", as " <> renderAnchorId (btAnchor (pBound p0)) <> " row " <> tshow (prRow r0 + 1) <> " is")
       | (_, p0, r0) : rest <- [ [ (i, p, r) | (i, _, p, r) <- cands ] | cands@(_ : _ : _) <- Map.elems unknown ]
       , (i, p, r) <- rest ]
+
+-- | Every UID a table of UIDs of the spec or its base names, with the name it
+--   generates, its Context and its row, the spec's first: the rows with a
+--   name ('urIdent'), a list entry with none (@Reserved for SSC Usage@) left
+--   out.
+baseUIDNames :: Context -> [(Text, [Word8], Context, UidRow)]
+baseUIDNames ctx = [ (i, bs, c, r) | c <- contextChain ctx, r <- uidRows c, Just i <- [urIdent r], Exact bs <- [urValue r] ]
+
+-- | The UIDs a generated module of the spec or its base names by what the
+--   object is, not by a Name of its own, an object the same in every SP
+--   ('uidNames'): every table's descriptor object ('allTableUIDRows': Core
+--   Table 240's rows and an SP's Table table rows of the tables it adds),
+--   and every row a table of UIDs names with no name cell (Core Table 244's
+--   single-row tables' rows, by their table).
+sameObjectUIDs :: Context -> Set [Word8]
+sameObjectUIDs ctx = Set.fromList
+  ([ o | (_, tu) <- allTableUIDRows ctx, Just o <- [tuObject tu] ] <> [ bs | (_, bs, _, r) <- baseUIDNames ctx, isNothing (urName r) ])
+
+-- | The rows of the tables of UIDs of the spec or its base that give a UID
+--   under another object's Name than the generated name's ('uidNames'): the
+--   object an SSC's row replaces at that UID, with its Context and its
+--   generated name.
+shadowsOf :: Context -> Text -> [Word8] -> [(Context, UidRow, Text)]
+shadowsOf ctx i uid = [ (c, r, i') | (i', bs, c, r) <- baseUIDNames ctx, bs == uid, i' /= i, isJust (urName r) ]
 
 -- | @u\<T\>_\<Name\>@, the name of an SSC row's generated UID, a Name that
 --   begins @\<T\>_@ standing alone: @uAuthority_Admin1@, @uC_PIN_MSID@,
@@ -810,9 +858,8 @@ preconfTableDecl ctx p d sp = (Gen.decl prov name body)
 --   its bases that reads it among its own (Core T211 for Opal's TPerInfo, to
 --   which Opal adds a column).
 describedIn :: Context -> DescRead -> SpecId
-describedIn ctx d = fromMaybe (cxSpec ctx) (listToMaybe [ cxSpec c | c <- chain ctx, any same (descReads c) ])
+describedIn ctx d = fromMaybe (cxSpec ctx) (listToMaybe [ cxSpec c | c <- contextChain ctx, any same (descReads c) ])
   where
-    chain c = c : maybe [] chain (cxBase c)
     same d' = btAnchor (drBound d') == btAnchor (drBound d) && drTable d' == drTable d
 
 -- | The legend's class of each kept cell of a row by column number, in
@@ -863,15 +910,21 @@ indexDecl ctx sp lastOne ps = (Gen.decl prov name body)
            , name <> " :: [PreconfTable]" ]
            <> Gen.listDefinition (name <> " =") (map tableName ps)
 
--- | One SSC row's UID, @u\<T\>_\<Name\>@, citing the page the row is printed on.
+-- | One SSC row's UID, @u\<T\>_\<Name\>@, citing the page the row is printed
+--   on, and the object of another Name a table of UIDs gives the same UID,
+--   which the row replaces ('shadowsOf').
 uidDecl :: Context -> Text -> [Word8] -> PreRead -> PreRow -> Gen.Decl
 uidDecl ctx i uid p r = (Gen.decl prov i body)
   { Gen.declRank    = 1 + prRow r
   , Gen.declImports = [Gen.ImportSome Gen.uidModule ["UID", "uid"]] }
   where
     prov = atRow ctx (prCells r) (boundProvenance ctx (pBound p))
-    body = [ Gen.provenanceComment prov <> ", row " <> tshow (prRow r + 1) <> ": " <> Gen.ascii (valueAt p r "Name")
-           , i <> " :: UID", i <> " = " <> Gen.uidExpr uid ]
+    body = [ Gen.provenanceComment prov <> ", row " <> tshow (prRow r + 1) <> ": " <> Gen.ascii (valueAt p r "Name") ]
+           <> [ "--   another object than " <> specIdText (cxSpec c) <> " " <> renderAnchorId (btAnchor (urBound br)) <> " row "
+                  <> tshow (urRow br + 1) <> "'s " <> Gen.ascii (fromMaybe "" (urName br))
+                  <> maybe "" (\t -> " (the " <> Gen.ascii t <> " template's)") (urTemplate br) <> ", " <> i' <> ", at the same UID"
+              | (c, br, i') <- shadowsOf ctx i uid ]
+           <> [ i <> " :: UID", i <> " = " <> Gen.uidExpr uid ]
 
 -- | @defaultBaseTemplateAuthorities@: the caption's words, the first in lower case.
 preDeclName :: Text -> Text

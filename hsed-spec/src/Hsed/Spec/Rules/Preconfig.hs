@@ -29,9 +29,12 @@ description, the spec's or its base's, with the spec's column additions
 Opal's TPerInfo with Table 26's ProgrammaticResetEnable, PDF 49). An Opal
 caption names its SP before a dash ('spOf'); the SP scopes the rows, their
 names and their UIDs, so that at M5 the Locking SP's Admin1 never meets the
-Admin SP's. A column whose header mentions @informative@ is dropped; a row
-whose first cell alone is printed is a group row, the context of the rows
-below it (Opal T22, T23, T38, T39), not a row of the target. A header names
+Admin SP's. A column whose header mentions @informative@ is dropped; where
+that is the first column, a row whose first cell alone is printed is a group
+row, the context of the rows below it (Opal T22, T23, T38, T39), not a row of
+the target; elsewhere a row of one printed cell is a row of the target, its
+blank cells their defaults (since the M4b review: a UID-only row is never
+dropped unread). A header names
 its target's column as the headers compare (whitespace and case aside), else
 the one column whose name it begins (Opal Table 29's @LifeCycle@ for Core
 Table 215's LifeCycleState, PDF 50, 232: @N-PRECONF-HEADER@; the lead's
@@ -72,11 +75,21 @@ Checks, each with the code its findings carry:
 * @C-UID-UNIQUE@: no two rows of an SP preconfigured for one table share a
   UID (a template's base, which is no instance's, aside);
 * @C-PRECONF-CELL@: every printed cell reads as its column's type (an
-  enumeration's label, a name's text, a reference to a preconfigured row);
-  an access control or ACE row's references and expressions are
-  "Hsed.Spec.Readers.AccessControl"'s @C-ACL-REFS@ and @C-ACL-EXPR@; a label
-  printed otherwise is @N-PRECONF-LABEL@ and a name longer than its type
-  @W-PRECONF-NAME-LENGTH@ ("Hsed.Spec.Readers.Cell"'s);
+  enumeration's label, a name's text, a reference to a preconfigured row by
+  its Name or its UID; a credential's PIN printed in quotes, unless it is
+  @VU@ or @MSID@, so that Opal Table 41's @SID or MSID@, PDF 84, is never
+  read as its letters); an access control or ACE row's references and
+  expressions are "Hsed.Spec.Readers.AccessControl"'s @C-ACL-REFS@ and
+  @C-ACL-EXPR@; a label printed otherwise is @N-PRECONF-LABEL@ and a name
+  longer than its type @W-PRECONF-NAME-LENGTH@ ("Hsed.Spec.Readers.Cell"'s);
+  a header that fails C-PRECONF-HEADER still has the cells of the columns it
+  does name read and reported;
+* @W-PRECONF-TEMPLATE-NAME@: a template row whose Name does not carry its
+  placeholder's letters, which would give every instance one Name (Opal
+  Table 39 row 13, PDF 79, at M5: @(+NN NN)@ and @ACE_UserMMMM_Set_CommonName@);
+* @W-PRECONF-DEFAULT@: a column of an SSC's table whose type gives no
+  default ('columnDefaults'; Opal Table 43's @uniteger_8@, PDF 85, at M5),
+  which a row that leaves it blank would hold no value in;
 * the legend's classes and findings for each kept cell of an SSC's table
   ("Hsed.Spec.Rules.Legend".'Hsed.Spec.Rules.Legend.cellAccess': its codes,
   located at the cell), where the spec has a legend;
@@ -192,7 +205,9 @@ preconfigRule = RuleDef
       , CodeDef "C-PRECONF-CELL"     [Error]          (Defect "a preconfigured cell does not read as its column's type")
       , CodeDef "C-PRECONF-UID"      [Error]          (Defect "the table of a table's UIDs disagrees with the rows preconfigured for that table")
       , CodeDef "N-PRECONF-HEADER"   [Note]           (AsPrinted "a header read as the one column of its table whose name it begins (LifeCycle as LifeCycleState)")
-      , CodeDef "N-PRECONF-UID-TPER" [Note]           (AsPrinted "a preconfiguration table that prints no UID in any row, its UIDs read as the TPer's to assign") ]
+      , CodeDef "N-PRECONF-UID-TPER" [Note]           (AsPrinted "a preconfiguration table that prints no UID in any row, its UIDs read as the TPer's to assign")
+      , CodeDef "W-PRECONF-TEMPLATE-NAME" [Warning]   (Defect "a template row whose Name does not carry its placeholder's letters, so that its instances share one Name")
+      , CodeDef "W-PRECONF-DEFAULT"  [Warning]        (Defect "a column of an SSC's preconfiguration table whose type gives it no default") ]
   , ruleChecks  = \ctx bts -> let ps = readPres ctx bts
                               in concatMap (preFindings ctx) ps <> uidUnique ctx ps <> snd (uidNames ctx ps) <> preconfUID ctx ps
   , ruleCompile = compile
@@ -318,8 +333,11 @@ readTable types descs bt = PreRead
     step grp (i, cells)
       | isGroup cells = (Just (groupText cells), Nothing)
       | otherwise     = (grp, Just (preRow cols i cells grp))
+    -- a group row prints its first cell alone, in an informative first column the table drops (Opal T22, T23,
+    -- T38, T39); elsewhere a row of one printed cell is a row of the target, its blank cells their defaults
+    informativeFirst = maybe False isInformative (listToMaybe header)
     isGroup :: [CellIR] -> Bool
-    isGroup cells = case map (T.strip . (.text)) cells of
+    isGroup cells = informativeFirst && case map (T.strip . (.text)) cells of
       firstCell : rest@(_ : _) -> not (T.null firstCell) && all T.null rest
       _                        -> False
 
@@ -505,8 +523,16 @@ readRow ge p r = RowRead shape [ (kc, c, readOne kc pc) | (kc, c, pc) <- given, 
       (_, Right KUIDRef)
         | wildcardCell kc pc         -> ReadFailed (Unresolved (wildcardText pc))
         | accessControl              -> either ReadFailed (uncurry ReadValue) (readCellWith resolver KUIDRef (printedText pc) >>= heldToSP)
-      (_, Right k)                 -> either ReadFailed (uncurry ReadValue) (readCellWith resolver k (printedText pc))
+      (_, Right k)
+        | isPassword k, not (pcQuoted pc) -> ReadFailed (Unread (tshow (T.unwords (pcLines pc)) <> " is a credential printed unquoted:"
+                                                <> " a preconfiguration prints a PIN in quotes, or VU or MSID for one the TPer chooses"
+                                                <> " (Opal Table 25, PDF 48-49)"))
+        | otherwise -> either ReadFailed (uncurry ReadValue) (readCellWith resolver k (printedText pc))
     resolver = Resolver { rvRef = resolveRef ge, rvColumn = resolveColumn ge (valueAt p r "Name") }
+    isPassword = \case
+      KPassword _  -> True
+      KDefault _ k -> isPassword k
+      _            -> False
     heldToSP read'@(v, _) = case uidOf v of
       Just u | invocable ge u -> Right read'
       held -> Left (Unresolved ("the InvokingID " <> maybe (renderCell v) hexUID held <> " is not ThisSP, nor a table the SP's"
@@ -616,8 +642,9 @@ preFindings :: Context -> PreRead -> [Finding]
 preFindings ctx p = case pTarget p of
   Left why -> [atTable ctx bt (finding Error "C-PRECONF-HEADER" why)]
   Right d  -> case headerProblems d of
-    []    -> headerNotes d <> tperNote <> concat (zipWith (rowFindings d) (pRows p) (pReads p)) <> labelNotes
-    probs -> map (atTable ctx bt . finding Error "C-PRECONF-HEADER") probs
+    []    -> headerNotes d <> tperNote <> defaultFindings d <> concat (zipWith (rowFindings d) (pRows p) (pReads p)) <> labelNotes
+    -- a header that fails hides nothing the columns it does name read (the M4b review): their cells' findings follow
+    probs -> map (atTable ctx bt . finding Error "C-PRECONF-HEADER") probs <> concat (zipWith readFindings (pRows p) (pReads p))
   where
     bt = pBound p
     target d = renderAnchorId (btAnchor (drBound d)) <> " " <> fromMaybe "" (drTable d)
@@ -646,13 +673,34 @@ preFindings ctx p = case pTarget p of
     accessControl = isAccessControl (rights (map kcKind (pColumns p)))
     rowFindings d r rd =
       [ f | not tperAssigned, f <- uidTable d r ]
-      <> [ atCells ctx bt (prCells r) (finding Error (codeOf kc prob) (rowLabel r <> crName c <> ": " <> problemText prob))
-         | (kc, c, ReadFailed prob) <- rdCells rd ]
+      <> readFindings r rd
       <> [ atCells ctx bt (prCells r) (finding Warning "W-PRECONF-NAME-LENGTH"
              (rowLabel r <> crName c <> ": " <> tshow txt <> " is " <> tshow len <> " bytes, longer than the " <> tshow n
                <> " its type (" <> crType c <> ") allows; kept as printed"))
          | (_, c, ReadValue _ remarks) <- rdCells rd, OverLength txt len n <- remarks ]
+      <> templateName d r rd
       <> legendFindings r
+    readFindings r rd =
+      [ atCells ctx bt (prCells r) (finding Error (codeOf kc prob) (rowLabel r <> crName c <> ": " <> problemText prob))
+      | (kc, c, ReadFailed prob) <- rdCells rd ]
+    -- W-PRECONF-TEMPLATE-NAME: a template whose Name does not carry its placeholder's letters gives every instance
+    -- that one Name, instantiate renaming only the cells that carry them (Opal Table 39 row 13's (+NN NN) and
+    -- ACE_UserMMMM_Set_CommonName, PDF 79, at M5)
+    templateName d r rd = case rdShape rd of
+      TemplateRow ph _
+        | any ((== "Name") . crName) (drColumns d), let name = valueAt p r "Name", not (T.null name)
+        , not (phLetters ph `T.isInfixOf` name) ->
+            [ atCells ctx bt (prCells r) (finding Warning "W-PRECONF-TEMPLATE-NAME"
+                (rowLabel r <> "the template's Name " <> tshow name <> " does not carry its placeholder's letters "
+                  <> phLetters ph <> ", so every instance would take that one Name"))
+            ]
+      _ -> []
+    -- W-PRECONF-DEFAULT: a column of an SSC's table with no default, which a row that leaves it blank holds no value in
+    defaultFindings d =
+      [ atTable ctx bt (finding Warning "W-PRECONF-DEFAULT"
+          ("the column " <> crName c <> " (" <> colNumberLit n <> ", type " <> crType c <> ") of " <> target d <> " has no default: " <> why
+            <> "; a row that leaves it blank holds no value there (design 13.31 (a))"))
+      | isJust (pSP p), (n, c, Left why) <- columnDefaults ctx d ]
     codeOf kc prob = fromMaybe "C-PRECONF-CELL" (either (const Nothing) (\k -> aclCode accessControl k prob) (kcKind kc))
     -- C-UID-TABLE: the UID's upper half is the target's half-UID
     uidTable d r = map (atCells ctx bt (prCells r) . finding Error "C-UID-TABLE" . (rowLabel r <>)) $
@@ -849,7 +897,7 @@ preconfTableDecl ctx p d sp = (Gen.decl prov name body)
     extended = if describedIn ctx d /= descSpec then ", with " <> specIdText descSpec <> "'s columns" else ""
     types    = preconfTypeEnv ctx
     scale    = legendScale ctx
-    defaults = [ (n, c, v) | c <- drColumns d, Just n <- [crNumber c], n /= 0, Right k <- [colKind types (crType c)], Just v <- [zeroValue k] ]
+    defaults = [ (n, c, v) | (n, c, Right v) <- columnDefaults ctx d ]
     rows     = zip (pRows p) (pReads p)
     shapes   = map (rdShape . snd) rows
     hasRows  = not (null rows)
@@ -900,6 +948,16 @@ preconfTableDecl ctx p d sp = (Gen.decl prov name body)
       ReadVendor m  -> Just ("VendorUnique " <> tshow m)
       ReadValue v _ -> Just ("Given (" <> renderCell v <> ")")
       ReadFailed _  -> Nothing
+
+-- | Each column's default but the UID's, from its kind ('zeroValue'), or why
+--   it has none: the value a column takes where a row of an SSC's table
+--   leaves it blank (design 13.31 (a)), and @W-PRECONF-DEFAULT@ where there
+--   is none (Opal Table 43's @uniteger_8@, PDF 85, at M5).
+columnDefaults :: Context -> DescRead -> [(Int, ColRead, Either Text CellValue)]
+columnDefaults ctx d =
+  [ (n, c, colKind types (crType c) >>= \k -> maybe (Left ("its kind gives none (" <> tshow k <> ")")) Right (zeroValue k))
+  | c <- drColumns d, Just n <- [crNumber c], n /= 0 ]
+  where types = preconfTypeEnv ctx
 
 -- | The spec whose table describes a description: the first of the spec and
 --   its bases that reads it among its own (Core T211 for Opal's TPerInfo, to

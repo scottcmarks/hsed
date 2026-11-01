@@ -20,9 +20,11 @@ the Authority table (T178), their 17 rows read as the description types their
 columns; C-PRECONF-HEADER, C-UID-TABLE, C-UID-UNIQUE and C-PRECONF-CELL made to
 fail by one edited cell; Table 243, which the uidTable rule reads, gives the
 17 authorities the two tables preconfigure (C-PRECONF-UID); an informative
-column dropped, a group row read as context, a template row read as one and
-left out of Core's rows; the generated rows, Core's text as it was. Opal's
-Table 24, the design's exemplar, fires too.
+column dropped, a row of one printed cell, under a first column that is not
+informative, a row of the target (since the M4b review; group rows are
+Opal's, T22's below), a template row read as one and left out of Core's
+rows; the generated rows, Core's text
+as it was. Opal's Table 24, the design's exemplar, fires too.
 
 Then, since M4b, Opal's Admin SP (section 4.2, PDF 35-52) on the committed
 Opal extraction under the M4b sidecar, read over the committed Core run: the
@@ -32,8 +34,10 @@ plain, 9 for every object, 3 templates) and their references, C-ACL-REFS
 and C-ACL-EXPR made to fail by edited cells; Table 23's expressions and
 columns; since the M4b review, every InvokingID, every-object half and
 reference printed as a UID held to the SP, a Columns number held to the
-ACE's table, and an ACE's Columns held to the tables of the Get and Set rows
-whose ACL names it alone; Tables 29, 27, 20 and 24 as the plan lists them; the eight cells
+ACE's table, an ACE's Columns held to the tables of the Get and Set rows
+whose ACL names it alone, a UID-only row kept, an unquoted PIN refused, a
+template's Name held to its letters, every column's default, and a failing
+header's cells still read; Tables 29, 27, 20 and 24 as the plan lists them; the eight cells
 the TPer chooses; the templates; the notes, warnings and the label read
 otherwise; the generated module, its twelve PreconfTables, the adminSP
 index, the Opal-only UIDs (equal to the hand transcription's), one name for
@@ -228,12 +232,10 @@ spec = do
         [ pDropped p | p <- preReads (mkContext Scott informative) ] `shouldBe` [["Operation - informative text"], []]
         lns <- generated informative
         filter ("(0x09," `T.isInfixOf`) (block "defaultBaseTemplateAuthorities" lns) `shouldBe` []
-      it "reads a row whose first cell alone is printed as the context of the rows below it" $ do
-        let grouped = foldr (\c -> setCell "T209" 0 c "") ir [1 .. 5]
-        errorsOf grouped `shouldBe` []
-        length [ e | e <- preEntries (mkContext Scott grouped), peTarget e == "Authority" ] `shouldBe` 16
-        lns <- generated grouped
-        take 1 (drop 2 (block "defaultBaseTemplateAuthorities" lns)) `shouldBe` ["  [ Pre  -- row 2 Admins (group Anybody)"]
+      it "reads a row of one printed cell in a column that is not informative as a row of the target, never dropped unread (the M4b review; group rows: Opal T22 below)" $ do
+        let uidless = foldr (\c -> setCell "T209" 0 c "") ir [1 .. 5]
+        errorsOf uidless `shouldBe` [ "C-UID-TABLE core-2.01.pdf#page=211&T209: row 1 Anybody: the UID cell \"\" is not eight bytes" ]
+        [ length (pRows p) | p <- preReads (mkContext Scott uidless), btAnchor (pBound p) == TableId 209 ] `shouldBe` [9]
       it "reads a row carrying (+XX) as a template, with no finding, which a table of rows leaves out (M4b)" $ do
         let templated = setCell "T216" 7 1 "00 00 00 09 00 00 02 08 (+XX)" ir
         errorsOf templated `shouldBe` []
@@ -328,6 +330,11 @@ spec = do
         [ h | EveryObjectRow h <- shapes ]
           `shouldBe` [[0, 0, 0, 1], [0, 0, 0, 3], [0, 0, 0, 6], [0, 0, 0, 8], [0, 0, 0, 9], [0, 0, 2, 4], [0, 0, 2, 5], [0, 0, 2, 5], [0, 0, 2, 5]]
         [ s' | s'@(TemplateRow _ _) <- shapes ] `shouldBe` replicate 3 (TemplateRow (Placeholder "XX" 1) [0x01])
+      it "reads each row whose first cell alone is printed, in its informative first column, as the group of the rows below it: eleven groups" $ do
+        [ g | Just p <- [readOf 22], Just g <- L.nub (map prGroup (pRows p)) ] `shouldBe`
+          [ "Table", "SPInfo", "SPTemplates", "MethodID", "ACE", "Authority", "C_PIN", "TPerInfo", "Template", "SP", "DataRemovalMechanism" ]
+        lns <- T.lines <$> adminSPOf opal
+        filter ("Pre  -- row 2 (group Table)" `T.isInfixOf`) lns `shouldSatisfy` ((== 1) . length)
       it "gives an every-object row no InvokingID cell, and every other row's InvokingID a UID as printed" $
         [ (isEvery, [ () | ("InvokingID", ReadValue (CvUID _) _) <- cs ] == [()])
         | (rd, (_, cs)) <- zip [ rd | Just p <- [readOf 22], rd <- pReads p ] (rowsOf 22)
@@ -441,6 +448,36 @@ spec = do
         codeOf "C-ACL-REFS" (setCell "T23" 4 5 "Colour" onlyNext) `shouldBe`
           [ "C-ACL-REFS opal-2.30.pdf#page=47&T23: row 5 ACE_Set_Enabled: Columns: \"Colour\" is no column of the tables the rows naming"
             <> " ACE_Set_Enabled invoke on (Authority), none of whose methods reads Columns" ]
+
+    describe "rows, cells and columns read whole (the M4b review)" $ do
+      it "keeps a row whose UID alone is printed as a row of its table, its other cells their defaults (Table 33 with its VU blanked, PDF 52)" $ do
+        let uidOnly = setCell "T33" 0 1 "" opal
+        map renderFinding (filter isError (found uidOnly)) `shouldBe` []
+        [ (prRow r, rdShape rd, [ crName c | (_, c, _) <- rdCells rd ])
+          | p <- preReads (opalOver base uidOnly), btAnchor (pBound p) == TableId 33, (r, rd) <- zip (pRows p) (pReads p) ]
+          `shouldBe` [(0, PlainRow, ["UID"])]
+      it "fails C-PRECONF-CELL on a PIN printed unquoted that is neither VU nor MSID (Table 41's SID or MSID, PDF 84, at M5), and reads a quoted one as its bytes" $ do
+        codeOf "C-PRECONF-CELL" (setCell "T25" 2 3 "SID or MSID1" opal) `shouldBe`
+          [ "C-PRECONF-CELL opal-2.30.pdf#page=49&T25: row 3 C_PIN_Admin1: PIN: \"SID or MSID1\" is a credential printed unquoted:"
+            <> " a preconfiguration prints a PIN in quotes, or VU or MSID for one the TPer chooses (Opal Table 25, PDF 48-49)" ]
+        [ cr | (n, cs) <- rowsOf' (setCell "T25" 2 3 "\"abc\"" opal) 25, n == "C_PIN_Admin1", ("PIN", cr) <- cs ]
+          `shouldBe` [ReadValue (CvBytes [0x61, 0x62, 0x63]) []]
+      it "warns W-PRECONF-TEMPLATE-NAME at a template whose Name does not carry its placeholder's letters (Table 39 row 13, PDF 79, at M5)" $ do
+        codeOf "W-PRECONF-TEMPLATE-NAME" opal `shouldBe` []
+        codeOf "W-PRECONF-TEMPLATE-NAME" (setCell "T24" 5 1 "\"AdminYY\"" opal) `shouldBe`
+          [ "W-PRECONF-TEMPLATE-NAME opal-2.30.pdf#page=48&T24: row 6 AdminYY: the template's Name \"AdminYY\" does not carry its"
+            <> " placeholder's letters XX, so every instance would take that one Name" ]
+      it "warns W-PRECONF-DEFAULT at a column whose type gives no default (Table 43's uniteger_8, PDF 85, at M5), none at M4b's twelve tables" $ do
+        codeOf "W-PRECONF-DEFAULT" opal `shouldBe` []
+        codeOf "W-PRECONF-DEFAULT" (setCell "T26" 0 3 "uniteger_8" opal) `shouldBe`
+          [ "W-PRECONF-DEFAULT opal-2.30.pdf#page=50&T27: the column ProgrammaticResetEnable (0x08, type uniteger_8) of T211 TPerInfo has no"
+            <> " default: uniteger_8 names no Type object; a row that leaves it blank holds no value there (design 13.31 (a))" ]
+      it "reads and reports the cells of the columns a failing header does name (Table 45's hidden reads at M5)" $ do
+        let broken = setCell "T24" 0 4 "Admin" (setHeaderCell "T24" 0 6 "Secured" opal)
+        codeOf "C-PRECONF-HEADER" broken `shouldBe`
+          [ "C-PRECONF-HEADER opal-2.30.pdf#page=48&T24: the header \"Secured\" names no column of T178 Authority" ]
+        codeOf "C-PRECONF-CELL" broken `shouldBe`
+          [ "C-PRECONF-CELL opal-2.30.pdf#page=48&T24: row 1 Anybody: Class: \"Admin\" names no row preconfigured for Authority" ]
 
     describe "Tables 29, 24 and the labels" $ do
       it "reads Table 29's LifeCycle as LifeCycleState (N-PRECONF-HEADER), its values Table 49's, Frozen a boolean defaulting to False (PDF 50, 98, 233)" $ do

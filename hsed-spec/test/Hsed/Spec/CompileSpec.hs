@@ -161,7 +161,7 @@ spec = do
           ir' <- annotated pristine (others <> T.unlines [ "core-2.01 | T" <> tshow n <> " | " <> payload | (n, payload, _) <- unreadShapes ])
           cr <- either (throwString . T.unpack . renderFinding) pure (compileIR Nothing Scott ir')
           crExcluded cr `shouldSatisfy` \ex -> all (`elem` ex)
-            [ (TableId n, "hsedc generates nothing for a " <> shapeName shape <> " table yet (no rule of the registry reads one)")
+            [ (TableId n, "hsedc generates nothing for a " <> shapeName shape <> " table yet (no rule of the rule set reads one)")
             | (n, _, shape) <- unreadShapes ]
           forM_ unreadShapes $ \(n, _, _) ->
             [ Cm.code f | f <- crFindings cr, Cm.anchor f == Just ("T" <> tshow n), Cm.code f == "W-GEN-EXCLUDED" ] `shouldBe` ["W-GEN-EXCLUDED"]

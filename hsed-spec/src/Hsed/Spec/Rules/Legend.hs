@@ -35,7 +35,14 @@ normative, and an empty or blank cell is not specified "regardless of
 shading" (PDF 12). Get access on three shaded read-only AccessControl columns
 (InvokingID, MethodID, GetACLACL) is @(N)@ (section 4.2.1.5, PDF 39): the
 classes are documentation in the generated @access@ lists and gate nothing
-(the lead's answer 2 to the M4b plan); the ACL alone decides access.
+(the lead's answer 2 to the M4b plan); the ACL alone decides access. A class
+follows a cell's fill and style alone, even where its normative content
+says otherwise: Opal Table 27's GUDID prints @VU@ on a shade the legend does
+not print (218, PDF 50) and is classed 'ReadOnlySpecified' with
+@W-LEGEND-OFFSCALE@, and Table 33's ActiveDataRemovalMechanism prints @VU@
+unshaded (PDF 52) and is classed 'Unspecified'; what the TPer holds there is
+the cell's content, which the preconfig rule reads (a value the TPer
+chooses), not its class.
 
 'legendScale' reads the scale from the spec's own legend table, under the
 errata set: each row's grey is the RGB value it prints (three equal

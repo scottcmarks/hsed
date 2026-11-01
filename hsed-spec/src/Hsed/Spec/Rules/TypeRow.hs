@@ -26,17 +26,27 @@ Checks, each with the code its findings carry:
 * @E-SHAPE@: the table is one row of three cells;
 * @C-UID-TABLE@: the UID is eight bytes, and every type row's UID lies in one
   table, a table of Table 240: the type rows' table is the one whose half-UID
-  (@00 00 00 05@ in Core) most of their upper halves carry, and a row whose
-  upper half is another is an Error, as is a half that names no table of
-  Table 240;
-* @C-UID-UNIQUE@: no two type rows share a UID; a type row's @waive
-  "C-UID-UNIQUE" "T\<n\> \<uid\>" "\<reason\>"@ makes the Error a Warning for
-  that table when it and table @n@, and no other, print that UID, and a waiver
-  that waives nothing is @W-WAIVER-UNUSED@;
+  (@00 00 00 05@ in Core) most of their upper halves carry, the spec's and
+  its base's together (since the M4b review: an SSC's few rows are held to
+  Core's half, Core 3.2.5.3 b.iii, PDF 52), and a row whose upper half is
+  another is an Error, as is a half that names no table of the spec's or its
+  base's tables of table UIDs;
+* @C-UID-UNIQUE@: no two type rows share a UID, nor a spec's type row a UID
+  its base's give; a type row's @waive "C-UID-UNIQUE" "T\<n\> \<uid\>"
+  "\<reason\>"@ makes the Error a Warning for that table when it and table
+  @n@, and no other, print that UID, and a waiver that waives nothing is
+  @W-WAIVER-UNUSED@;
+* @C-TYPE-SHADOW@: a spec's type row names no type its base's rows name,
+  unless its binding @replaces@ that table (the spec's own would shadow the
+  base's wherever a type is read by name);
 * @C-FMT-RESOLVE@: every Format cell parses, its findings carrying
-  "Hsed.Spec.Format"'s codes (@E-FMT-RESOLVE@ and friends), and a Format
-  cell's spacing at a brace or its table's @Table_UID@ or @Table@ suffix is the
-  Note @N-FORMAT-NORMALISED@.
+  "Hsed.Spec.Format"'s codes (@E-FMT-RESOLVE@ and friends), its type names
+  resolving over the spec's Type objects and its base's ('formatEnv'), and a
+  Format cell's spacing at a brace or its table's @Table_UID@ or @Table@
+  suffix is the Note @N-FORMAT-NORMALISED@;
+* @C-FMT-CYCLE@: no Format names its own type, directly or through other
+  types ('typeCycle'), a type no value could end, which a reader following
+  it would follow for ever.
 
 Compiled into 'typesModule': @u\<Name\>Type :: UID@ and, when the Format
 parsed, @t\<Name\> :: TypeDef@. (The Format strings @f\<Name\>Type :: String@,

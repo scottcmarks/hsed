@@ -149,7 +149,7 @@ spec = withCore $ \pristine -> do
       cr <- either (throwString . show) pure (compileIRWith ruleSet Nothing Scott ir)
       [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
         `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=201&" <> aid
-                     <> ": hsedc generates nothing for a Method heading yet (no rule of the registry reads one)"
+                     <> ": hsedc generates nothing for a Method heading yet (no rule of the rule set reads one)"
                    | aid <- ["5.3.3.6", "5.3.3.6.3"] ]
       [ aid | (aid@(SectionId _), _) <- crExcluded cr ] `shouldBe` map bhAnchor units
       cr' <- either (throwString . show) pure (compileIR Nothing Scott ir)

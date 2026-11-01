@@ -33,7 +33,8 @@ import           Hsed.Spec.Readers.Record (recordCodes)
 -- | The codes the shared readers claim, reader by reader: the byte grid's
 --   (C-LAYOUT-EXTENT, C-LAYOUT-ENDIAN, N-LAYOUT-BITS, W-LAYOUT-BITS-UNUSED), the
 --   layouts' (C-LAYOUT-TILE), the pins' (W-PINS-NONE, C-PINS-WORDS), the
---   records' (C-GRID-NAME), the column reader's and the AccessControl
---   reader's (none at M4b's scaffold).
+--   records' (C-GRID-NAME), the column reader's (N-PRECONF-LABEL,
+--   W-PRECONF-NAME-LENGTH) and the AccessControl reader's (C-ACL-REFS,
+--   C-ACL-EXPR), each since M4b.
 readerCodes :: [CodeDef]
 readerCodes = gridCodes <> layoutCodes <> pinsCodes <> recordCodes <> cellCodes <> accessControlCodes

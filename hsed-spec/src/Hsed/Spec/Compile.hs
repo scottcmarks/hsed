@@ -20,17 +20,19 @@ table number. A module is written when some rule emits a declaration for it;
 ("Hsed.Spec.Cli"). Rules naming one module must give it one description; their
 notes are united, in registry order (@E-GEN-MODULE@ otherwise).
 
-A unit a rule leaves out, a bound table (at the table), a paragraph unit (at
-its paragraph) or a heading unit (at its heading), is the Warning
-@W-GEN-EXCLUDED@ saying why (its Error is already among the findings); so is
-any unit a binding holds whose shape no rule of the registry reads (a table a
-comment binds, a paragraph unit, a sentence a @law@ binds, or a heading unit,
-a heading a @behaviour@ or a @fails@ binds), at the unit
-("Hsed.Spec.RuleDef".'Hsed.Spec.RuleDef.allUnits', in its order: the tables,
-then the paragraphs, then the headings); each counts among the units left
-out. A table of a shape with nothing to generate
-('Hsed.Spec.Shape.shapeGenerates') is not counted. 'compileIRWith' does the
-same under another set of rules than the registry.
+A unit a rule leaves out, a bound table (at the table), a signature unit (at
+its block), a paragraph unit (at its paragraph) or a heading unit (at its
+heading), is the Warning @W-GEN-EXCLUDED@ saying why (its Error is already
+among the findings); so is any unit a binding holds whose shape no rule of
+the rule set reads (a table a comment binds, a signature block in a spec
+whose rule set has no @sig@ rule, a paragraph unit, a sentence a @law@
+binds, or a heading unit, a heading a @behaviour@ or a @fails@ binds), at
+the unit ("Hsed.Spec.RuleDef".'Hsed.Spec.RuleDef.allUnits', in its order: the
+tables, then the signature blocks, then the paragraphs, then the headings);
+each counts among the units left out. A table of a shape with nothing to
+generate ('Hsed.Spec.Shape.shapeGenerates') is not counted. 'compileIRWith'
+does the same under another set of rules than the registry, the rule set its
+messages name.
 -}
 module Hsed.Spec.Compile
   ( CompileResult (..)
@@ -93,7 +95,7 @@ compileIRWith ruleSet base es ir = do
             <> [ ((unitAnchor u, why), atUnit ctx u (finding Warning "W-GEN-EXCLUDED" why))
                | SomeUnit u <- allUnits ctx, Just shape <- [unread (unitBinding u)]
                , let why = "hsedc generates nothing for a " <> shapeName shape <> " " <> unitNoun (unitKind (proxyOf u))
-                             <> " yet (no rule of the registry reads one)" ]
+                             <> " yet (no rule of the rule set reads one)" ]
     -- the shape of a binding no rule of the set reads, when it has something to generate
     unread sb = mfilter (\shape -> shapeGenerates shape && Just shape `notElem` map ruleShape ruleSet) (someBindingShape sb)
     -- at the unit the rule left out (a table, a paragraph, a heading)

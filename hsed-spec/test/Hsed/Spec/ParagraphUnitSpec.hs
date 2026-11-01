@@ -120,7 +120,7 @@ spec = withCore $ \pristine -> do
       cr <- either (throwString . show) pure (compileIRWith ruleSet Nothing Scott ir)
       [ renderFinding f | f <- crFindings cr, Cm.code f == "W-GEN-EXCLUDED", Cm.severity f == Warning ]
         `shouldBe` [ "W-GEN-EXCLUDED core-2.01.pdf#page=" <> pg <> "&" <> aid
-                     <> ": hsedc generates nothing for a Sentence paragraph yet (no rule of the registry reads one)"
+                     <> ": hsedc generates nothing for a Sentence paragraph yet (no rule of the rule set reads one)"
                    | (pg, aid) <- [("82", "3.3.10.2.1#3a"), ("86", "3.3.10.6#dc"), ("86", "3.3.10.7#a")] ]
       [ aid | (aid@(ItemId _ _), _) <- crExcluded cr ] `shouldBe` map bpAnchor paras
       cr' <- either (throwString . show) pure (compileIR Nothing Scott ir)

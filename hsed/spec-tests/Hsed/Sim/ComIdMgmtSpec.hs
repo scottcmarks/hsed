@@ -50,6 +50,7 @@ import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs       (uAuthority_Anybody, uC_PIN_SID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Sim                 (step, syncOf)
+import qualified Hsed.Sim.ComIdMgmt       as ComIdMgmt
 import           Hsed.Sim.State           (cellOf, columnOf, openSession, programmaticResetEnabled, rowWithUID, sessionsOn,
                                            updateRow)
 import           Hsed.Sim.Types           (ComIdLife (..), ComIdState (..), Input (..), LifeCycle (..), MgmtBuffer (..),
@@ -236,6 +237,10 @@ spec = describe "protocol 0x02, ComID management, through a step of the simulato
         command (recv 0x0000 len) busy `shouldBe` (Response Good (B.replicate (fromIntegral len) 0), busy)
     it "an IF-SEND on 0x0000, a reserved ComID with no command, is Other Invalid Command Parameter" $
       command (send 0x0000 (B.replicate 8 0)) busy `shouldBe` (Response OtherInvalidCommandParameter mempty, busy)
+    it "is answered before TPER_RESET's ComID: were that to fall back to 0x0000 (Hsed.Wire.tperResetComId), GET_COMID still answers, and an IF-SEND there resets nothing (the M4b review)" $ do
+      ComIdMgmt.commandWith 0x0000 (recv 0x0000 4) busy `shouldBe` (Response Good (B.replicate 4 0), busy)
+      ComIdMgmt.commandWith 0x0000 (send 0x0000 "\x00") busy `shouldBe` (Response OtherInvalidCommandParameter mempty, busy)
+      programmaticResetEnabled busy `shouldBe` Just True
 
   describe "the other ComIDs (Core 3.3.3.2-3)" $ do
     it "a reserved ComID the TPer does not support is Other Invalid Command Parameter" $ do

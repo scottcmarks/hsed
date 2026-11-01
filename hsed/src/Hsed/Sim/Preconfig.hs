@@ -32,18 +32,25 @@ sections 8.1 and 8.3; M4b). 'foldTables' does it in five passes:
   give, ordered by UID (Opal 2.30 *AC1-*AC7, PDF 38-39);
 * (e) the result: the descriptions and the rows by the table's UID, the rows
   in the tables' order, the fold adding no object a table holds already,
-  and every cell evaluated as soon as the tables are.
+  and every cell evaluated as soon as the tables are;
+* (f) the Table table's counts: each of its rows' NumColumns and Rows, which
+  the preconfiguration leaves blank and Core states (5.3.2.3.7-5.3.2.3.8, PDF
+  157: the number of columns in the table, the number of rows created), the
+  described table's columns and the rows the fold gives it (since the M4b
+  review; the CommonNames Core states, 5.3.2.3 and 5.3.2.6.3, PDF 156 and 161,
+  the issuing template's name, stay their defaults, design 13.31 (a)).
 
 The fold reads a run's parameters and nothing of the state, so that the
 initial state can run it ("Hsed.Sim.Types".@initialState@), and a Revert can
-run it again (M5); it imports the parameters ("Hsed.Sim.Params"), hsed-core
-and the generated modules, the Admin SP's preconfiguration among them
+run it again (M6, but C_PIN_SID's PIN on an Admin SP Revert, Opal 5.1.2.2.1,
+PDF 93); it imports the parameters ("Hsed.Sim.Params"), hsed-core and the
+generated modules, the Admin SP's preconfiguration among them
 ("Hsed.Gen.Opal.Preconfig.AdminSP": Opal 2.30's Admin SP tables as hsedc
-generates them, since M4b), never a module that imports the state's types.
+generates them, since M4b, which "Hsed.Sim.Types".@initialState@ folds),
+never a module that imports the state's types.
 -}
 module Hsed.Sim.Preconfig
-  ( adminSPTables
-  , foldTables
+  ( foldTables
   , vendorCell
   , instances
   ) where
@@ -56,15 +63,14 @@ import qualified RIO.Text                        as T
 
 import           Hsed.Core.Preconfig             (Placeholder (..), PreCell (..), PreconfRow (..), PreconfTable (..),
                                                   RowKind (..), instanceUID, instantiate)
-import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNamed,
-                                                  columnNumbered)
+import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNumbered, columnOf)
 import           Hsed.Core.Types                 (enumValue)
-import           Hsed.Core.UID                   (HalfUID, UID, uidUpper)
+import           Hsed.Core.UID                   (HalfUID, UID, uidLower, uidUpper)
 import           Hsed.Gen.Core.Enums             (Core_boolean (..))
-import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable, uTemplateTable)
+import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable, uTableTable, uTemplateTable)
 import           Hsed.Gen.Core.UIDs              (uC_PIN_SID, uTemplate_Base)
 import           Hsed.Gen.Opal.Enums             (Opal_data_removal_mechanism (..))
-import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uSP_Locking)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Gen.Opal.TableUIDs         (uDataRemovalMechanismTable)
 import           Hsed.Sim.Params                 (LifeCycle (..), SimParams (..), lifeCycleValue)
 
@@ -72,14 +78,6 @@ import           Hsed.Sim.Params                 (LifeCycle (..), SimParams (..)
 -- $setup
 -- >>> :set -XOverloadedStrings
 
-
--- | The Admin SP's preconfiguration tables for a run: Opal 2.30's, Tables
---   18-25, 27-29 and 33 (PDF 35-52), as hsedc generates them
---   ("Hsed.Gen.Opal.Preconfig.AdminSP".'adminSP'), whatever the parameters:
---   what a run chooses ('vendorCell', 'instances' and the overrides) the fold
---   fills in ('foldTables').
-adminSPTables :: SimParams -> [PreconfTable]
-adminSPTables = const adminSP
 
 -- | An SP's tables folded from its preconfiguration tables: each table's
 --   description and its rows, both by the table's UID ('tdTableUID'), the
@@ -117,15 +115,24 @@ adminSPTables = const adminSP
 --     MethodID, Core Table 175, PDF 162). So the fold adds no object a table
 --     holds, and no InvokingID and MethodID pair twice.
 --
+--   * (f) The Table table's rows each count the table they describe (the
+--     table whose half-UID is the row's UID's lower half, Core 3.2.5.3 b.i,
+--     PDF 51-52): its NumColumns the columns of the table's description and
+--     its Rows the rows (a) to (e) give it (Core 5.3.2.3.7-5.3.2.3.8, PDF
+--     157), where the row leaves them their default; a table the fold does
+--     not hold keeps 0. No row is created or deleted before M6, so the
+--     counts the fold gives hold for a run.
+--
 --   Every cell is evaluated as soon as the tables are, so that a cell the
 --   TPer would choose and 'vendorCell' does not name fails the fold, not a
 --   later Get of it.
 foldTables :: SimParams -> [PreconfTable] -> (Map UID TableDesc, Map UID [Row])
 foldTables p tables =
-  ( Map.fromList [ (tdTableUID (ptDesc t), ptDesc t) | t <- tables ]
-  , everyCell (Map.fromListWith (flip (<>)) [ (tdTableUID (ptDesc t), finish t staged) | (t, staged) <- stagedTables ])
+  ( descs
+  , everyCell (counted descs (Map.fromListWith (flip (<>)) [ (tdTableUID (ptDesc t), finish t staged) | (t, staged) <- stagedTables ]))
   )
   where
+    descs = Map.fromList [ (tdTableUID (ptDesc t), ptDesc t) | t <- tables ]
     -- (a) to (c): each table's rows as printed and as its templates' instances, complete; its every-object rows kept
     stagedTables = [ (t, concatMap (stage p tables t . row) (ptRows t)) | t <- tables ]
     -- the objects (a) to (c) give, by UID, in order
@@ -273,6 +280,21 @@ everyObject t u cells = case columnOf (ptDesc t) "InvokingID" of
   Nothing -> error . T.unpack $
     "Hsed.Sim.Preconfig: the " <> tdName (ptDesc t) <> " table has a row for every object of a table, and no InvokingID column to name them in"
 
+-- | (f): the Table table's rows, each its NumColumns and Rows counted from
+--   the description and the rows of the table it describes, where it leaves
+--   them their default (UIntCell 0).
+counted :: Map UID TableDesc -> Map UID [Row] -> Map UID [Row]
+counted descs rows = Map.adjust (map count) uTableTable rows
+  where
+    tableDesc = Map.lookup uTableTable descs
+    count r = fromMaybe r $ do
+      d    <- tableDesc
+      u    <- L.lookup uidColumn r >>= uidIn
+      held <- L.find ((== uidLower u) . uidUpper . fst) (Map.toList descs)
+      let (table, desc) = held
+          put name v r' = maybe r' (\c -> if L.lookup c r' == Just (UIntCell 0) then putCell c (UIntCell v) r' else r') (columnOf d name)
+      pure (put "Rows" (toInteger (length (Map.findWithDefault [] table rows))) (put "NumColumns" (toInteger (length (tdColumns desc))) r))
+
 -- | (e): a table's rows, the printed ones all kept, each the fold adds kept
 --   where its object is none of those before it ('identity').
 distinctObjects :: TableDesc -> [(Bool, Row)] -> [Row]
@@ -317,10 +339,6 @@ uidIn = \case
   UIDCell u   -> Just u
   RefCell _ u -> Just u
   _           -> Nothing
-
--- | The number of a column of a name in a description.
-columnOf :: TableDesc -> Text -> Maybe ColNum
-columnOf desc name = colNumber <$> columnNamed name desc
 
 -- | A row with a cell put in a column, in column order; a cell there that
 --   holds the same value already (an enumeration's, whatever its label) is

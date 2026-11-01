@@ -57,8 +57,9 @@ import           Hsed.Gen.Opal.Features  (Level0DiscoverySupportedDataRemovalMec
 import qualified Hsed.Gen.Opal.Preconfig.AdminSP as Generated
 import           Hsed.Level0             (Descriptor (..))
 import           Hsed.Sim.Level0         (simDescriptors)
-import           Hsed.Sim.Preconfig      (adminSPTables, foldTables, instances, vendorCell)
-import           Hsed.Sim.Types          (LifeCycle (..), SimParams (..), defaultSimParams, initialState, lifeCycleValue)
+import           Hsed.Sim.Preconfig      (foldTables, instances, vendorCell)
+import           Hsed.Sim.Types          (LifeCycle (..), SPState (..), SimParams (..), TPerState (..), defaultSimParams, initialState,
+                                          lifeCycleValue)
 
 
 -- * The scaffold's tables
@@ -148,27 +149,34 @@ nullG  = refG "Null" uNull
 falseG = Given (EnumCell "False" 0)
 trueG  = Given (EnumCell "True" 1)
 
--- | UIDs Opal 2.30 prints that no generated Core module holds: Admin1 and
---   the AdminXX template's base (Table 24, PDF 48), their credentials and
---   C_PIN_MSID (Table 25, PDF 48-49), the ACEs (Table 23, PDF 46-47), the
---   Locking SP (Table 29, PDF 50), TPerInfo's row (Table 27, PDF 50) and
---   DataRemovalMechanism's table and row (Table 20, PDF 37; Table 33, PDF 52).
-uAdmin1, uAdminXX, uC_PIN_Admin1, uC_PIN_AdminXX, uC_PIN_MSID, uLocking, uTPerInfoRow, uDataRemovalRow :: UID
-uAdmin1         = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x01
-uAdminXX        = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x00
-uC_PIN_Admin1   = uid 0x00 0x00 0x00 0x0B 0x00 0x00 0x02 0x01
-uC_PIN_AdminXX  = uid 0x00 0x00 0x00 0x0B 0x00 0x00 0x02 0x00
-uC_PIN_MSID     = uid 0x00 0x00 0x00 0x0B 0x00 0x00 0x84 0x02
-uLocking        = uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x02
-uTPerInfoRow    = uid 0x00 0x00 0x02 0x01 0x00 0x03 0x00 0x01
-uDataRemovalRow = uid 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x01
+-- | UIDs of Opal 2.30's Admin SP that no generated Core module holds, the
+--   generated Admin SP's where it names them ("Hsed.Gen.Opal.Preconfig.AdminSP":
+--   Admin1, its credential and C_PIN_MSID, Tables 24-25, PDF 48-49; the ACEs,
+--   Table 23, PDF 46-47; the Locking SP, Table 29, PDF 50; since the M4b
+--   review, so that these tables are held to the PDF's values).
+uAdmin1, uC_PIN_Admin1, uC_PIN_MSID, uLocking :: UID
+uAdmin1       = Generated.uAuthority_Admin1
+uC_PIN_Admin1 = Generated.uC_PIN_Admin1
+uC_PIN_MSID   = Generated.uC_PIN_MSID
+uLocking      = Generated.uSP_Locking
 
 uACE_Anybody, uACE_Set_Enabled, uACE_C_PIN_SID_Get_NOPIN, uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_Admins_Set_PIN :: UID
-uACE_Anybody               = uid 0x00 0x00 0x00 0x08 0x00 0x00 0x00 0x01
-uACE_Set_Enabled           = uid 0x00 0x00 0x00 0x08 0x00 0x03 0x00 0x01
-uACE_C_PIN_SID_Get_NOPIN   = uid 0x00 0x00 0x00 0x08 0x00 0x00 0x8C 0x02
-uACE_C_PIN_MSID_Get_PIN    = uid 0x00 0x00 0x00 0x08 0x00 0x00 0x8C 0x04
-uACE_C_PIN_Admins_Set_PIN  = uid 0x00 0x00 0x00 0x08 0x00 0x03 0xA0 0x01
+uACE_Anybody               = Generated.uACE_Anybody
+uACE_Set_Enabled           = Generated.uACE_Set_Enabled
+uACE_C_PIN_SID_Get_NOPIN   = Generated.uACE_C_PIN_SID_Get_NOPIN
+uACE_C_PIN_MSID_Get_PIN    = Generated.uACE_C_PIN_MSID_Get_PIN
+uACE_C_PIN_Admins_Set_PIN  = Generated.uACE_C_PIN_Admins_Set_PIN
+
+-- | The UIDs no generated module names, hand-written with their pages: the
+--   AdminXX template's base and its credential's (Tables 24-25, PDF 48-49: a
+--   template's base is no object's, and has no name), TPerInfo's row (Table
+--   27, PDF 50) and DataRemovalMechanism's row (Table 33, PDF 52), rows with
+--   no Name.
+uAdminXX, uC_PIN_AdminXX, uTPerInfoRow, uDataRemovalRow :: UID
+uAdminXX        = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x00
+uC_PIN_AdminXX  = uid 0x00 0x00 0x00 0x0B 0x00 0x00 0x02 0x00
+uTPerInfoRow    = uid 0x00 0x00 0x02 0x01 0x00 0x03 0x00 0x01
+uDataRemovalRow = uid 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x01
 
 -- | Table 24, the Admin SP's Authority table (PDF 48): its six rows, AdminXX
 --   the template, its UID, Name and Credential carrying the placeholder.
@@ -335,9 +343,9 @@ spec = do
       Map.keys tables `shouldBe` Map.keys descs
       map (L.lookup 0) (rowsIn [c_PIN, sp] c_PINTableDesc) `shouldBe` [Just (UIDCell msid), Just (UIDCell sid)]
       rowsIn [c_PIN, sp] spTableDesc `shouldBe` [[(0, UIDCell (uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x01)), (1, TextCell "Admin")]]
-    it "of the Admin SP are Opal 2.30's as hsedc generates them (Hsed.Gen.Opal.Preconfig.AdminSP), whatever the parameters" $
+    it "of the Admin SP are Opal 2.30's as hsedc generates them (Hsed.Gen.Opal.Preconfig.AdminSP), folded whatever the parameters" $
       forM_ [defaultSimParams, admins 3, defaultSimParams { spLockingOFS = Manufactured, spTPerResetEnabled = True }] $ \p ->
-        adminSPTables p `shouldBe` Generated.adminSP
+        fmap (\sps -> (spsDescs sps, spsTables sps)) (Map.lookup uSP_Admin (tsSPs (initialState p))) `shouldBe` Just (foldTables p Generated.adminSP)
 
   describe "the cells the TPer chooses (vendorCell)" $ do
     let pin    = cellNamed c_PINTableDesc "PIN"

@@ -53,7 +53,7 @@ import           RIO
 import           Hsed.Core.Table    (Row, TableDesc)
 import           Hsed.Core.UID      (UID)
 import           Hsed.Gen.Core.UIDs (uSP_Admin)
-import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uSP_Locking)
 import           Hsed.Sim.Params
 import qualified Hsed.Sim.Preconfig as Preconfig
 import           Hsed.Wire          (Event, IfStatus, Request, Response)
@@ -143,7 +143,7 @@ data SPState = SPState
 --   PIN value is equal to the C_PIN_MSID PIN value", a fact of manufacture
 --   that a Set of the PIN does not change and only a Revert of the Admin SP
 --   after SID authenticated sets to 0x00, Opal 5.1.2.2.1 item 2 a, PDF 93,
---   M5's), apart from the live C_PIN_SID row, which the Block SID
+--   M6's), apart from the live C_PIN_SID row, which the Block SID
 --   descriptor's SID Value State follows ("Hsed.Sim.Level0").
 data TPerState = TPerState
   { tsParams              :: !SimParams
@@ -160,8 +160,9 @@ data TPerState = TPerState
 --   properties and an empty management buffer; none past 0xFFFF or reserved
 --   (parameters with such a ComID are refused, 'simParamsProblems'); no
 --   session, the first TSN to assign 'firstTSN'; the Admin SP folded from
---   its preconfiguration tables ("Hsed.Sim.Preconfig": Opal 2.30's, generated,
---   "Hsed.Gen.Opal.Preconfig.AdminSP"), its SP table holding the Admin SP
+--   its preconfiguration tables ("Hsed.Sim.Preconfig".'Preconfig.foldTables'
+--   of Opal 2.30's, generated, "Hsed.Gen.Opal.Preconfig.AdminSP".'adminSP',
+--   whatever the parameters, which the fold reads), its SP table holding the Admin SP
 --   Manufactured (Opal 2.30 Table 29, PDF 50) and the Locking SP
 --   in its Original Factory State ('spLockingOFS'), and the Locking SP, whose
 --   tables are M5's; the initial C_PIN_SID PIN the MSID's unless the
@@ -175,7 +176,7 @@ initialState p = TPerState
   , tsSessions            = mempty
   , tsNextTSN             = firstTSN
   , tsSPs                 = Map.fromList
-      [ (uSP_Admin, uncurry (SPState uSP_Admin) (Preconfig.foldTables p (Preconfig.adminSPTables p)))
+      [ (uSP_Admin, uncurry (SPState uSP_Admin) (Preconfig.foldTables p adminSP))
       , (uSP_Locking, SPState uSP_Locking mempty mempty)
       ]
   , tsInitialSidPinIsMsid = maybe True (== spMsid p) (spSidPin p)

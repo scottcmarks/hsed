@@ -36,7 +36,7 @@ the parameters' Original Factory State seeds); the Opal SSC V2 descriptor's
 Initial C_PIN_SID PIN Indicator says whether the initial C_PIN_SID PIN was
 C_PIN_MSID's, a fact of manufacture the state holds
 ("Hsed.Sim.Types".@tsInitialSidPinIsMsid@, set from the parameters; Opal
-Table 6's bullets, PDF 23; changed by no Set, only by M5's Revert of the
+Table 6's bullets, PDF 23; changed by no Set, only by M6's Revert of the
 Admin SP after SID authenticated, Opal 5.1.2.2.1 item 2 a, PDF 93), and the
 Block SID descriptor's SID Value State whether C_PIN_SID's PIN is C_PIN_MSID's
 now, read from the Admin SP's C_PIN rows (Test Cases UCT-01 step 4c, PDF 30,
@@ -127,13 +127,13 @@ simDescriptors st = L.sortOn dCode (own <> added)
       ]
     -- whether the Locking SP is other than Manufactured-Inactive, its life cycle as its row of the Admin SP's SP
     -- table records it (Core 4.1, PDF 91), which the parameters' Original Factory State seeds and Activate and Revert
-    -- change (M5); no row, no Locking SP: Nonexistent
+    -- change (M6); no row, no Locking SP: Nonexistent
     lockingEnabled = maybe False (/= lifeCycleValue ManufacturedInactive) (spLifeCycle uSP_Locking st)
     -- a profile's descriptors of codes the simulator lacks, the first of each code
     added = L.nubBy ((==) `on` dCode)
       [ d | d <- maybe [] lpDescriptors (spProfile p), dCode d `notElem` map dCode own ]
     -- whether C_PIN_SID's PIN is C_PIN_MSID's now, read from the Admin SP's C_PIN rows (Opal Table 25, PDF 48-49),
-    -- which the parameters fill (spSidPin, spMsid) and a Set may later change (M5); a row without a PIN cell holds
+    -- which the parameters fill (spSidPin, spMsid) and a Set may later change (M6); a row without a PIN cell holds
     -- the parameters' value
     sidPinIsMsid = pinOf uC_PIN_SID (fromMaybe (spMsid p) (spSidPin p)) == pinOf uC_PIN_MSID (spMsid p)
     pinOf u fallback = case rowWithUID uSP_Admin uC_PINTable u st >>= \row -> columnOf c_PINTableDesc "PIN" >>= (`cellOf` row) of

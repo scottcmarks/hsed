@@ -63,7 +63,7 @@ import qualified RIO.List                as L
 import qualified RIO.Map                 as Map
 import           RIO
 
-import           Hsed.Core.Table         (Cell (..), Col (..), ColNum, Row, TableDesc, columnNamed)
+import           Hsed.Core.Table         (Cell (..), ColNum, Row, TableDesc, columnOf)
 import           Hsed.Core.Types         (enumFromValue)
 import           Hsed.Core.UID           (UID)
 import           Hsed.Gen.Core.Enums     (Core_boolean (..))
@@ -161,11 +161,6 @@ updateRow sp table u f st = st { tsSPs = Map.adjust changed sp (tsSPs st) }
 cellOf :: ColNum -> Row -> Maybe Cell
 cellOf = L.lookup
 
--- | The number of the column of a name in a generated table description, if
---   the description has one.
-columnOf :: TableDesc -> Text -> Maybe ColNum
-columnOf desc name = colNumber <$> columnNamed name desc
-
 -- | A row's cell in the column of a name, the column found in the
 --   description an SP holds of the row's table, by the table's UID
 --   ("Hsed.Sim.Types".@spsDescs@: the description with an SSC's columns
@@ -184,7 +179,7 @@ cellNamedIn sps table name r = Map.lookup table (spsDescs sps) >>= \desc -> colu
 --   row of the Admin SP's SP table holds: life cycle states are recorded
 --   there, and the TPer changes that cell whenever an SP's state changes
 --   (Core 4.1, PDF 91; Opal 2.30 5.2.2.2.1-2, PDF 97: Activate and Revert,
---   M5's), so the simulator keeps it nowhere else. The column is found by
+--   M6's), so the simulator keeps it nowhere else. The column is found by
 --   name in the Admin SP's description of its SP table ('descOf'). 'Nothing'
 --   where the Admin SP holds no row for the SP (no such SP) or the row no
 --   enumeration in that column.

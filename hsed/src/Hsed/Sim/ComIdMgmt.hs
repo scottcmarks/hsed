@@ -79,6 +79,7 @@ response (Table 37) is never staged, and a STACK_RESET never fails.
 -}
 module Hsed.Sim.ComIdMgmt
   ( command
+  , commandWith
   ) where
 
 import           Data.Bits             (shiftL, shiftR, (.&.), (.|.))
@@ -99,11 +100,21 @@ import           Hsed.Wire             (Dir (..), IfStatus (..), Request (..), R
 
 
 -- | A command of protocol 0x02 answered, and the TPer after it, as the
---   module's description says.
+--   module's description says: 'commandWith' TPER_RESET's ComID, Opal Table
+--   13's ("Hsed.Wire".'tperResetComId').
 command :: Request -> TPerState -> (Response, TPerState)
-command r st
-  | c == tperResetComId = tperReset
+command = commandWith tperResetComId
+
+-- | 'command' with TPER_RESET at the ComID given. GET_COMID's ComID, the
+--   reserved 0x0000 (Core Table 27, PDF 61), is answered first, so that a
+--   TPER_RESET ComID that had fallen back to 0x0000 (were Opal Table 13's
+--   row ever missing, "Hsed.Wire".'tperResetComId') could neither shadow
+--   GET_COMID nor make an IF-SEND on 0x0000 a reset (the M4b review); at
+--   0x0004 the order changes nothing.
+commandWith :: Word16 -> Request -> TPerState -> (Response, TPerState)
+commandWith resetComId r st
   | c == getComIdComId  = getComId
+  | c == resetComId     = tperReset
   | Just cs <- Map.lookup c (tsComIds st), cLife cs /= Inactive = static cs
   | reservedComId c     = refused OtherInvalidCommandParameter
   | spInactiveComIdDiscard p = case dir r of

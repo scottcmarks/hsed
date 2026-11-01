@@ -52,8 +52,10 @@ uC_PIN_Admin1 = uid 0x00 0x00 0x00 0x0B 0x00 0x00 0x02 0x01
 uAuthority_Admin1 :: UID
 uAuthority_Admin1 = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02 0x01
 
--- | ACE_C_PIN_SID_Get_NOPIN: Admins or SID may Get C_PIN_SID's columns other
---   than its PIN (Opal 2.30 Table 23, PDF 47).
+-- | ACE_C_PIN_SID_Get_NOPIN: Admins or SID may Get C_PIN_SID's UID, CharSet,
+--   TryLimit, Tries and Persistence, not its Name, CommonName or PIN (Opal
+--   2.30 Table 23, PDF 47; reworded at the M4b review, which found "its
+--   columns other than its PIN" too broad).
 uACE_C_PIN_SID_Get_NOPIN :: UID
 uACE_C_PIN_SID_Get_NOPIN = uid 0x00 0x00 0x00 0x08 0x00 0x00 0x8C 0x02
 

@@ -216,11 +216,14 @@ data SimParams = SimParams
 -- * the GUDID @02 23 00 08 50 20 00 00 48 53 45 44@: Core Table 212's NAA
 --   IEEE Registered format, encoded through its generated layout (PDF 230;
 --   Opal 2.30 *TP1, PDF 50), with the IEEE company ID 0x020000, whose first
---   octet, 0x02, has the U/L bit set: a locally administered ID, which no
---   OUI the IEEE assigns carries, so that it names no real company (the
---   lead's M4b decision, design 13.32); and the vendor-specific identifier
---   0x48534544, @HSED@ in ASCII, a value VU (Table 27, PDF 50) that names
---   the simulator, as the MSID does;
+--   octet, 0x02, has its low nibble 0010: the U/L bit set and the I/G bit
+--   clear, and the Y and Z bits clear, so that it lies in the Administratively
+--   Assigned Identifier quadrant of IEEE 802c's local space, where the IEEE
+--   assigns no OUI and no CID (a CID's quadrant is 0xA, Y and Z set), and so
+--   names no real company (the lead's M4b decision, design 13.32 (17); a
+--   registry-conforming company ID would be some company's); and the
+--   vendor-specific identifier 0x48534544, @HSED@ in ASCII, a value VU
+--   (Table 27, PDF 50) that names the simulator, as the MSID does;
 -- * no maximum on a host property (Opal 2.30 Table 17: Maximum allowed VU,
 --   PDF 33-34);
 -- * CloseSession prepared when a session is aborted, as the TPer MAY (Core
@@ -272,6 +275,8 @@ defaultSimParams = SimParams
 -- * an MSID of no bytes (UCT-03 step 1b reads a PIN of some, Test Cases PDF
 --   32), or an MSID or a SID PIN of more than the 32 the PIN column holds
 --   (Core Table 122, password, PDF 118);
+-- * a SID TryLimit past 0xFFFFFFFF, which C_PIN's TryLimit column, a
+--   uinteger_4, cannot hold (Core Table 181, PDF 170; since the M4b review);
 -- * no Admin authority (Opal 2.30 PDF 47: Admin1 (M) is required), or more
 --   than Table 24's @AdminXX@ numbers, its placeholder one byte past the
 --   base @00 00 00 09 00 00 02 00@, so 255 at most (PDF 48);
@@ -291,6 +296,8 @@ simParamsProblems p = concat
   , [ "an MSID of no bytes: UCT-03 step 1b reads a PIN of some (Test Cases PDF 32)" | B.null (spMsid p) ]
   , [ what <> " of " <> tshow (B.length pin) <> " bytes: the PIN column holds at most " <> tshow pinMost <> " (Core Table 122, password, PDF 118)"
     | (what, pin) <- [("the MSID", spMsid p)] <> [ ("the SID's PIN", sid) | Just sid <- [spSidPin p] ], B.length pin > pinMost ]
+  , [ "a SID TryLimit of " <> tshow (spSidTryLimit p) <> ": C_PIN's TryLimit is a uinteger_4, 0xFFFFFFFF at most (Core Table 181, PDF 170)"
+    | spSidTryLimit p > tryLimitMost ]
   , [ "no Admin authority: Opal 2.30 requires Admin1 (PDF 47)" | spAdminSPAdmins p == 0 ]
   , [ tshow (spAdminSPAdmins p) <> " Admin authorities: Opal 2.30 Table 24's AdminXX numbers them in one byte, 255 at most (PDF 48)"
     | spAdminSPAdmins p > adminsMost ]
@@ -303,6 +310,8 @@ simParamsProblems p = concat
     pinMost = 32
     -- Table 24's AdminXX, 00 00 00 09 00 00 02 00 (+XX): the instance's number added in one byte (Opal 2.30, PDF 48)
     adminsMost = 255
+    -- C_PIN's TryLimit, a uinteger_4 (Core Table 181, PDF 170)
+    tryLimitMost = 0xFFFFFFFF
     -- Core Table 212's GUDID, read strictly through its generated layout (PDF 230)
     gudidBytes = layoutSize gudidColumnContentsDescriptionLayout
     gudid      = decodeRecordStrict (spGudid p) :: Either LayoutError (DecodedRecord GUDIDColumnContentsDescription)

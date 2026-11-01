@@ -30,15 +30,22 @@ LawsSpec hold the generated behaviours and laws to the dispatch):
 * 12 tables and 116 rows at the defaults (T22's 22 printed rows and 46 for
   every object of seven tables, PDF 39-46), 128 with three Admin
   authorities;
-* every cell the one the table prints, the TPer's where the table leaves it
-  to the TPer (the eight @VU@ and @MSID@ cells, PDF 48-52,
-  "Hsed.Sim.Preconfig".@vendorCell@, which answers for no other column), or
-  the column's default (Core 5.3.4.2.2, PDF 223), in every column but an
-  AccessControl row's UID, the TPer's to assign (Core 5.3.2.7.1, PDF 162).
+* every cell of every row the SP holds, printed, a template's instance or
+  one for every object (since the M4b review, which found the cells of the
+  printed rows alone held), the one the table prints, the TPer's where the
+  table leaves it to the TPer (the eight @VU@ and @MSID@ cells, PDF 48-52,
+  "Hsed.Sim.Preconfig".@vendorCell@, which answers for no other column), the
+  column's default (Core 5.3.4.2.2, PDF 223), or, in the Table table's rows,
+  the described table's NumColumns and Rows (Core 5.3.2.3.7-5.3.2.3.8, PDF
+  157), in every column but an AccessControl row's UID, the TPer's to assign
+  (Core 5.3.2.7.1, PDF 162), at the defaults and with three Admin
+  authorities; every every-object half and template base a table the SP
+  holds.
 
 UCT-03's pair holds on the generated rows: Get on C_PIN_MSID grants Anybody
-the UID and the PIN, Get on C_PIN_SID grants Admins OR SID every column but
-the PIN (Table 22 rows 23 and 25, PDF 42; Table 23, PDF 47). And the jig's
+the UID and the PIN, Get on C_PIN_SID grants Admins OR SID its UID, CharSet,
+TryLimit, Tries and Persistence, not its Name, CommonName or PIN (Table 22
+rows 23 and 25, PDF 42; Table 23, PDF 47). And the jig's
 and Level 0's readers find their rows: SID's credential, the SPs' life
 cycles, TPerInfo's ProgrammaticResetEnable.
 
@@ -61,18 +68,18 @@ import           RIO
 import           Test.Hspec
 
 import qualified Hand.OpalUIDs                   as H
-import           Hsed.Core.Preconfig             (PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..), instanceUID)
+import           Hsed.Core.Preconfig             (PreCell (..), PreconfRow (..), PreconfTable (..), RowKind (..), instanceUID, instantiate)
 import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNamed)
-import           Hsed.Core.UID                   (HalfUID, UID, halfUID, uidUpper)
+import           Hsed.Core.UID                   (HalfUID, UID, halfUID, uidLower, uidUpper)
 import           Hsed.Gen.Core.TableDescs        (aceTableDesc, accessControlTableDesc, authorityTableDesc)
-import           Hsed.Gen.Core.TableUIDs         (uACETable, uAccessControlTable, uAuthorityTable)
+import           Hsed.Gen.Core.TableUIDs         (uACETable, uAccessControlTable, uAuthorityTable, uTableTable)
 import           Hsed.Gen.Core.UIDs              (uAuthority_Admins, uAuthority_Anybody, uAuthority_Issuers, uAuthority_SID, uC_PIN_SID,
                                                   uMethodID_Get, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uACE_C_PIN_MSID_Get_PIN, uACE_C_PIN_SID_Get_NOPIN, uAuthority_Admin1,
                                                   uC_PIN_Admin1, uC_PIN_MSID, uSP_Locking)
 import           Hsed.Jig.Script                 (Credential (..), simCredential)
 import           Hsed.Sim.Access                 (accessControlList, aceGrant, authenticated)
-import           Hsed.Sim.Preconfig              (adminSPTables, instances, vendorCell)
+import           Hsed.Sim.Preconfig              (instances, vendorCell)
 import           Hsed.Sim.State                  (programmaticResetEnabled, spLifeCycle)
 import           Hsed.Sim.Types                  (LifeCycle (..), SPState (..), SimParams (..), TPerState (..), defaultSimParams,
                                                   initialState, lifeCycleValue)
@@ -155,6 +162,59 @@ accessOf p = L.nubBy ((==) `on` fst) (printed <> concatMap added accessRows)
                                                , n <- instances p d ph, Just u <- [instanceUID ph base n] ]
       EveryObject half -> [ ((u, m), aclOf r) | Just m <- [methodOf r], u <- objects, uidUpper u == half ]
 
+-- | Every row the SP holds under some parameters, derived from the generated
+--   tables apart from the fold (the M4b review's model, its skeptic's S2):
+--   each printed row complete (its cells, the TPer's where it leaves them to
+--   the TPer, every other column's default but the UID's), a template's
+--   instances likewise (numbered by the table of its base, its UID or its
+--   InvokingID), an every-object row once for each object whose UID begins
+--   with its half, among the objects the others give, in UID order, a row of
+--   an object or pair the table holds already left out, and the Table
+--   table's NumColumns and Rows the described table's columns and rows (Core
+--   5.3.2.3.7-5.3.2.3.8, PDF 157); the parameters' two overrides aside, which
+--   at these parameters keep the cells the tables print.
+expectedTables :: SimParams -> Map UID [Row]
+expectedTables p = counts (Map.fromList [ (tdTableUID (ptDesc t), dedup t (concatMap (rowsFor t) (rowsOf t))) | t <- adminSP ])
+  where
+    complete t cells = L.sortOn fst (given <> chosen <> defaults)
+      where
+        given    = [ (c, x) | (c, Given x) <- cells ]
+        chosen   = [ (c, x) | (c, VendorUnique m) <- cells, Just x <- [vendorCell p (ptDesc t) given c m] ]
+        defaults = [ x | x@(c, _) <- ptDefaults t, c /= 0, c `notElem` map fst cells ]
+    invoking t = colNumber <$> columnNamed "InvokingID" (ptDesc t)
+    baseOf t r = (L.lookup 0 (givenOf r) <|> (invoking t >>= (`L.lookup` givenOf r))) >>= refOf
+    instancesOf t r ph cols =
+      [ complete t (instantiate ph cols n (prCells r))
+      | Just b <- [baseOf t r], Just d <- [tableOfHalf (uidUpper b)], n <- instances p d ph, Just _ <- [instanceUID ph b n] ]
+    objects = L.sort (L.nub [ u | t <- adminSP, r <- rowsOf t, built <- objectRows t r, Just (UIDCell u) <- [L.lookup 0 built] ])
+    objectRows t r = case prKind r of
+      Plain            -> [complete t (prCells r)]
+      Template ph cols -> instancesOf t r ph cols
+      EveryObject _    -> []
+    rowsFor t r = case prKind r of
+      Plain            -> [(True, complete t (prCells r))]
+      Template ph cols -> map ((,) False) (instancesOf t r ph cols)
+      EveryObject half -> [ (False, complete t ((c, Given (UIDCell u)) : filter ((/= c) . fst) (prCells r)))
+                          | Just c <- [invoking t], u <- objects, uidUpper u == half ]
+    identity t built = case L.lookup 0 built of
+      Just x  -> [refOf x]
+      Nothing -> [ L.lookup (colNumber col) built >>= refOf | col <- tdColumns (ptDesc t), colUnique col ]
+    dedup t rows = go [ identity t r | (True, r) <- rows ] rows
+      where
+        go _ [] = []
+        go seen ((printed', r) : more)
+          | printed'                = r : go seen more
+          | identity t r `elem` seen = go seen more
+          | otherwise               = r : go (identity t r : seen) more
+    counts held = Map.adjust (map count) uTableTable held
+      where
+        column name = maybe 0 colNumber (generated uTableTable >>= columnNamed name . ptDesc)
+        count r = case L.lookup 0 r >>= refOf >>= \u -> L.find ((== uidLower u) . uidUpper . tdTableUID) (map ptDesc adminSP) of
+          Just d  -> L.sortOn fst [ (c, if c == column "NumColumns" then UIntCell (toInteger (length (tdColumns d)))
+                                       else if c == column "Rows" then UIntCell (toInteger (length (Map.findWithDefault [] (tdTableUID d) held)))
+                                       else cell) | (c, cell) <- r ]
+          Nothing -> r
+
 -- | Each cell a generated table leaves to the TPer: its table, its row, its
 --   column, the marker printed.
 vendorCells :: [(PreconfTable, PreconfRow, ColNum, Text)]
@@ -175,10 +235,6 @@ heldRows sps table = fromMaybe [] (Map.lookup table (spsTables sps))
 heldRow :: SPState -> UID -> UID -> Maybe Row
 heldRow sps table u = L.find ((== Just (UIDCell u)) . L.lookup 0) (heldRows sps table)
 
--- | The AccessControl row the SP holds of an InvokingID and MethodID.
-heldAccess :: SPState -> (UID, UID) -> Maybe Row
-heldAccess sps pr = L.find ((== Just pr) . pairOf) (heldRows sps uAccessControlTable)
-
 -- | An AccessControl row's InvokingID and MethodID.
 pairOf :: Row -> Maybe (UID, UID)
 pairOf r = (,) <$> (cellNamed accessControlTableDesc "InvokingID" r >>= refOf) <*> (cellNamed accessControlTableDesc "MethodID" r >>= refOf)
@@ -194,6 +250,11 @@ refOf = \case
   RefCell _ u -> Just u
   _           -> Nothing
 
+-- | The Table table's row of a table, its descriptor object: 00 00 00 01
+--   and the table's half-UID (Core 3.2.5.3 b.i, PDF 51-52).
+halfObject :: UID -> UID
+halfObject table = fromMaybe table (L.find ((== uidUpper table) . uidLower) [ u | r <- maybe [] rowsOf (generated uTableTable), Just u <- [L.lookup 0 (givenOf r) >>= refOf] ])
+
 -- | The parameters with so many Admin authorities.
 admins :: Natural -> SimParams
 admins n = defaultSimParams { spAdminSPAdmins = n }
@@ -204,12 +265,10 @@ spec = describe "the generated Admin SP and the simulator's" $ do
   let sps0 = adminSPOf defaultSimParams
 
   describe "the tables and their rows, both ways" $ do
-    it "are the simulator's Admin SP's: adminSPTables gives the generated tables, whatever the parameters" $
-      forM_ [defaultSimParams, admins 3, defaultSimParams { spLockingOFS = Manufactured, spTPerResetEnabled = True }] $ \p ->
-        adminSPTables p `shouldBe` adminSP
-    it "hold every generated table, by its UID, with its description, and no other" $ do
-      spsDescs sps0 `shouldBe` Map.fromList [ (tdTableUID (ptDesc t), ptDesc t) | t <- adminSP ]
-      Map.keys (spsTables sps0) `shouldBe` Map.keys (spsDescs sps0)
+    it "hold every generated table, by its UID, with its description, and no other, whatever the parameters" $
+      forM_ [defaultSimParams, admins 3, defaultSimParams { spLockingOFS = Manufactured, spTPerResetEnabled = True }] $ \p -> do
+        spsDescs (adminSPOf p) `shouldBe` Map.fromList [ (tdTableUID (ptDesc t), ptDesc t) | t <- adminSP ]
+        Map.keys (spsTables (adminSPOf p)) `shouldBe` Map.keys (spsDescs (adminSPOf p))
     it "hold every object the generated rows give, a printed row's or a template's instance's, by its UID, and no other" $
       forM_ [defaultSimParams, admins 3] $ \p ->
         Map.map L.sort (Map.delete uAccessControlTable (Map.map (map (\r -> L.lookup 0 r >>= refOf)) (spsTables (adminSPOf p))))
@@ -252,18 +311,23 @@ spec = describe "the generated Admin SP and the simulator's" $ do
           let columns = maybe [] (map colNumber . tdColumns . ptDesc) (generated table)
               wanted  = if table == uAccessControlTable then filter (/= 0) columns else columns
           map (map fst) rows `shouldBe` map (const wanted) rows
-    it "are, in a printed row, each cell printed, the TPer's where the table leaves it to the TPer, and every other column's default" $
-      forM_ adminSP $ \t -> forM_ [ r | r <- rowsOf t, Plain <- [prKind r] ] $ \r -> do
-        let desc   = ptDesc t
-            given  = givenOf r
-            held   = if tdTableUID desc == uAccessControlTable
-                       then pairOf given >>= heldAccess sps0
-                       else L.lookup 0 given >>= refOf >>= heldRow sps0 (tdTableUID desc)
-            wanted = L.sortOn fst
-              ( given
-             <> [ (c, cell) | (c, VendorUnique m) <- prCells r, Just cell <- [vendorCell defaultSimParams desc given c m] ]
-             <> [ d | d@(c, _) <- ptDefaults t, c `notElem` map fst (prCells r) ] )
-        (tdName desc, nameOf t r, held) `shouldBe` (tdName desc, nameOf t r, Just wanted)
+    it "are, in every row the SP holds, printed, a template's instance or one for every object, each cell printed, the TPer's, its column's default or the Table table's count, in order (the M4b review)" $
+      forM_ [defaultSimParams, admins 3] $ \p ->
+        forM_ (Map.toList (expectedTables p)) $ \(table, rows) ->
+          (table, Map.lookup table (spsTables (adminSPOf p))) `shouldBe` (table, Just rows)
+    it "count, in the Table table's rows, each table's columns and rows: NumColumns and Rows, which the preconfiguration leaves blank and Core states (5.3.2.3.7-5.3.2.3.8, PDF 157)" $ do
+      let counted sps table = do
+            desc <- ptDesc <$> generated uTableTable
+            held <- heldRow sps uTableTable (halfObject table)
+            (,) <$> cellNamed desc "NumColumns" held <*> cellNamed desc "Rows" held
+      map (counted sps0) [uAccessControlTable, uTableTable, uAuthorityTable]
+        `shouldBe` [Just (UIntCell 15, UIntCell 68), Just (UIntCell 15, UIntCell 12), Just (UIntCell 19, UIntCell 5)]
+      counted (adminSPOf (admins 3)) uAuthorityTable `shouldBe` Just (UIntCell 19, UIntCell 7)
+    it "name, in every every-object row's half and every template's base, a table the SP holds, so that none expands to nothing unread" $ do
+      [ h | r <- concatMap rowsOf adminSP, EveryObject h <- [prKind r], isNothing (tableOfHalf h) ] `shouldBe` []
+      [ (tdName (ptDesc t), b) | t <- adminSP, r <- rowsOf t, Template _ _ <- [prKind r]
+                               , Just b <- [L.lookup 0 (givenOf r) <|> (columnNamed "InvokingID" (ptDesc t) >>= \c -> L.lookup (colNumber c) (givenOf r)) >>= refOf]
+                               , isNothing (tableOfHalf (uidUpper b)) ] `shouldBe` []
     it "leave nothing to the TPer: the eight VU and MSID cells the tables print (PDF 48-52) are each vendorCell's" $ do
       [ (tdName (ptDesc t), nameOf t r, maybe "" colName (L.find ((== c) . colNumber) (tdColumns (ptDesc t))), m) | (t, r, c, m) <- vendorCells ]
         `shouldBe` [ ("C_PIN", "C_PIN_SID", "PIN", "VU"), ("C_PIN", "C_PIN_SID", "TryLimit", "VU"), ("C_PIN", "C_PIN_SID", "Tries", "VU")
@@ -284,7 +348,7 @@ spec = describe "the generated Admin SP and the simulator's" $ do
       accessControlList sps0 uC_PIN_MSID uMethodID_Get `shouldBe` Just [uACE_C_PIN_MSID_Get_PIN]
       booleanExpr uACE_C_PIN_MSID_Get_PIN `shouldBe` Just (ListCell [RefCell "Anybody" uAuthority_Anybody])
       aceGrant sps0 (authenticated sps0 []) uACE_C_PIN_MSID_Get_PIN `shouldBe` Just [0, 3]
-    it "Get on C_PIN_SID: ACE_C_PIN_SID_Get_NOPIN, which grants Admins OR SID every column but the PIN, [0, 4, 5, 6, 7], and Anybody none" $ do
+    it "Get on C_PIN_SID: ACE_C_PIN_SID_Get_NOPIN, which grants Admins OR SID its UID, CharSet, TryLimit, Tries and Persistence, [0, 4, 5, 6, 7], not its Name, CommonName or PIN, and Anybody none" $ do
       accessControlList sps0 uC_PIN_SID uMethodID_Get `shouldBe` Just [uACE_C_PIN_SID_Get_NOPIN]
       booleanExpr uACE_C_PIN_SID_Get_NOPIN `shouldBe` Just (ListCell [RefCell "Admins" uAuthority_Admins, RefCell "SID" uAuthority_SID, EnumCell "OR" 1])
       aceGrant sps0 (authenticated sps0 []) uACE_C_PIN_SID_Get_NOPIN `shouldBe` Nothing

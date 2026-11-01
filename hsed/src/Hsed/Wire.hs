@@ -391,9 +391,13 @@ level0ComId = fromMaybe 0 (assigned cComIDAssignments "Level 0 Device Discovery"
 -- | TPER_RESET's ComID: Opal 2.30 Table 13's row \"ComID\" (PDF 29), 0x0004,
 --   the two bytes the generated table gives it ("Hsed.Gen.Opal.Fields"),
 --   most significant first. Were the row ever missing, or not a ComID's two
---   bytes, 0x0000, the reserved ComID, which no drive path admits, as
---   'level0ComId' falls back (Hsed.Gen.Opal.PreconfigSpec holds it to the
---   0x0004 M4a wrote by hand).
+--   bytes, 0x0000, the reserved ComID, as 'level0ComId' falls back: no drive
+--   path admits it, and the simulator answers GET_COMID's 0x0000 before
+--   TPER_RESET's ComID ("Hsed.Sim.ComIdMgmt".'Hsed.Sim.ComIdMgmt.commandWith'),
+--   so that the fallback would shadow GET_COMID nowhere and reset nothing;
+--   three tests hold it at 0x0004 first (this doctest,
+--   Hsed.Gen.Opal.PreconfigSpec against the 0x0004 M4a wrote by hand, and
+--   ComIdMgmtSpec's GET_COMID).
 --
 -- >>> hex tperResetComId
 -- "0x0004"

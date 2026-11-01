@@ -37,6 +37,7 @@ module Hsed.Core.Table
   , Col (..)
   , columnNumbered
   , columnNamed
+  , columnOf
     -- * Rows
   , Cell (..)
   , cellValue
@@ -84,6 +85,11 @@ columnNumbered n = L.find ((== n) . colNumber) . tdColumns
 -- | The column of a description with a name.
 columnNamed :: Text -> TableDesc -> Maybe Col
 columnNamed n = L.find ((== n) . colName) . tdColumns
+
+-- | The number of the column of a name in a description, if it has one: how
+--   the simulator and the jig find a cell they read by its column's name.
+columnOf :: TableDesc -> Text -> Maybe ColNum
+columnOf desc name = colNumber <$> columnNamed name desc
 
 
 -- * Rows

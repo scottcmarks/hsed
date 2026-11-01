@@ -402,7 +402,7 @@ admitted m st = do
   spid <- maybe (Left INVALID_PARAMETER) Right (uidOf (Methods.startSessionSPID m))
   -- a row of the Admin SP's SP table (5.2.3.1.2), an SP the TPer holds, and one in a life cycle state sessions open
   -- to, as that row's LifeCycleState cell records it ("Hsed.Sim.State".spLifeCycle, the one place it is kept, Core
-  -- 4.1, PDF 91; Activate and Revert, M5's, change it): Manufactured, which behaves as Issued (Opal 2.30 5.2.2.3.2,
+  -- 4.1, PDF 91; Activate and Revert, M6's, change it): Manufactured, which behaves as Issued (Opal 2.30 5.2.2.3.2,
   -- PDF 98)
   unless (isJust (rowWithUID uSP_Admin uSPTable spid st)) (Left INVALID_PARAMETER)
   unless (Map.member spid (tsSPs st) && spLifeCycle spid st == Just (lifeCycleValue Manufactured)) (Left INVALID_PARAMETER)

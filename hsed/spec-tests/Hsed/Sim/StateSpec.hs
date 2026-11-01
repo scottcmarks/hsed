@@ -23,12 +23,13 @@ column's name in the description the SP holds; and the limits a ComID's host
 properties give follow Core Table 167's 0, no limit, and Opal 2.30 Table
 17's initial assumptions. The parameters M4b adds have defaults the spec
 allows and are refused out of range: one Admin authority, 1 to 255 (PDF
-47-48), and a GUDID in Core Table 212's format, its company ID locally
-administered (PDF 230).
+47-48), and a GUDID in Core Table 212's format, its company ID in IEEE 802c's
+AAI quadrant, no real company's (PDF 230); and, since the M4b review, a SID
+TryLimit C_PIN's uinteger_4 holds (Core Table 181, PDF 170).
 -}
 module Hsed.Sim.StateSpec (spec) where
 
-import           Data.Bits           (shiftR, testBit)
+import           Data.Bits           (shiftR, (.&.))
 import qualified RIO.ByteString      as B
 import qualified RIO.List            as L
 import qualified RIO.Map             as Map
@@ -243,9 +244,13 @@ spec = do
         `shouldBe` Right (GUDIDColumnContentsDescription 0x020000 0x48534544, "")
       spGudid defaultSimParams `shouldBe` B.pack [0x02, 0x23, 0x00, 0x08, 0x50, 0x20, 0x00, 0x00, 0x48, 0x53, 0x45, 0x44]
       B.drop 8 (spGudid defaultSimParams) `shouldBe` "HSED"
-    it "give the GUDID a company ID no real company has: its first octet's U/L bit set, a locally administered ID, which no OUI the IEEE assigns carries" $
-      fmap (\d -> testBit (gudidColumnContentsDescriptionIEEECOMPANYID (drRecord d) `shiftR` 16) 1) (decodeRecordStrict (spGudid defaultSimParams))
-        `shouldBe` Right True
+    it "give the GUDID a company ID no real company has: its first octet's low nibble 0010, U/L set, I/G, Y and Z clear, IEEE 802c's AAI quadrant, where the IEEE assigns neither OUIs nor CIDs (a CID's nibble is 1010)" $
+      fmap (\d -> (gudidColumnContentsDescriptionIEEECOMPANYID (drRecord d) `shiftR` 16) .&. 0x0F) (decodeRecordStrict (spGudid defaultSimParams))
+        `shouldBe` Right 0x02
+    it "refuse a SID TryLimit C_PIN's uinteger_4 TryLimit cannot hold (Core Table 181, PDF 170; the M4b review)" $ do
+      simParamsProblems defaultSimParams { spSidTryLimit = 0x100000000 } `shouldSatisfy` (not . null)
+      simParamsProblems defaultSimParams { spSidTryLimit = 2 ^ (70 :: Int) } `shouldSatisfy` (not . null)
+      map (\n -> simParamsProblems defaultSimParams { spSidTryLimit = n }) [0, 3, 0xFFFFFFFF] `shouldBe` [[], [], []]
     it "refuse no Admin authority, and more than the 255 Opal 2.30 Table 24's AdminXX numbers in its one byte (PDF 47-48)" $ do
       simParamsProblems defaultSimParams { spAdminSPAdmins = 0 } `shouldSatisfy` (not . null)
       simParamsProblems defaultSimParams { spAdminSPAdmins = 256 } `shouldSatisfy` (not . null)

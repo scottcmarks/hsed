@@ -1,4 +1,5 @@
 {-# LANGUAGE DataKinds         #-}
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications  #-}
@@ -13,10 +14,13 @@ Stability   : experimental
 
 The run-time half of the jig's safety against the attached drive (design
 9.3.2): before a command reaches a drive's transport, the Guard decides by
-the run's policy, and a refused command is recorded ('Hsed.Jig.Transcript')
-and never issued. At M3 a drive's policy is 'Level0Only': IF-RECV of Level
-0 Discovery (protocol 1, ComID 1) and nothing else. 'AllowList' is M4c's,
-written now for its test: an IF-SEND whose ComPacket parses to methods every
+the drive's policy, and a refused command is recorded ('Hsed.Jig.Transcript')
+and never issued. A drive's policy is 'Level0Only' until its base ComID is
+bound: IF-RECV of Level 0 Discovery (protocol 1, ComID 1) and nothing else.
+'AllowList' is M4c's, the base ComID bound from the drive's own Level 0
+beside the methods it admits ('readOnlyMethods', 'recoverMethods'); until
+M4c's group G2 tightens 'decide' to the base, it decides as at M4b, the
+base unread: an IF-SEND whose ComPacket parses to methods every
 one of which is allowed (SMUID.Properties; SMUID.StartSession to the Admin
 SP as Anybody or no one; Get on C_PIN_MSID of one cell_block within its UID
 and PIN columns; a bare EndOfSession), the UIDs those of
@@ -38,7 +42,14 @@ The Guard sends on a @'ReadOnly@ transport, which no other module can:
 'guardedSend' and 'guardedRecv' decide one command each; 'guarding' puts
 the Guard in front of every command a transport is given, so that a drive's
 transport refuses what its policy does whoever asks (the host's exchange of
-a ComPacket among them).
+a ComPacket among them). A drive reaches a run only as a 'GuardedDrive'
+(design 13.29 (l)): "Hsed.Jig.Target" wraps the opener's 'RawDrive' at
+once ('guardDrive'), every command then decided under the drive's policy,
+held in the drive and 'Level0Only' until 'driveBind' binds its base ComID,
+and each command issued recorded in the run's transcript and in the drive's
+own ('driveIssued'), in the order and with the entries M4b's run recorded;
+its constructor is not exported, so that no module reaches the raw
+transport past it.
 
 Level 0 Discovery's ComID and the Data subpacket's Kind are the generated
 code tables' (Core Tables 26 and 19) and the security protocol of ComPackets
@@ -47,13 +58,31 @@ defined once, in "Hsed.Wire". Were Table 26 ever to lose Level 0's row, its
 ComID would read 0x0000, the reserved ComID, which 'Level0Only' refuses.
 -}
 module Hsed.Jig.Guard
-  ( Policy (..)
+  ( -- * Policies
+    Policy (..)
   , Allowed (..)
+  , decide
+  , readOnlyMethods
+  , recoverMethods
+    -- * A drive behind the Guard
+  , GuardedDrive
+  , guardDrive
+  , driveTransport
+  , driveSend
+  , driveRecv
+  , drivePolicy
+  , driveAllowed
+  , driveBind
+  , driveIssued
+  , driveInfo
+  , driveClose
+    -- * One command, one transport
   , guardedSend
   , guardedRecv
   , guarding
   ) where
 
+import qualified Data.Aeson            as A
 import           Data.Bits             (shiftL, (.|.))
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
@@ -77,19 +106,23 @@ import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, uAuthority_Anybody, uMethodID_Get, uProperties,
                                         uSMUID, uSP_Admin, uStartSession)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
-import           Hsed.Jig.Transcript   (TEntry (..), Transcript, record)
+import           Hsed.Jig.Transcript   (TEntry (..), Transcript, entries, newTranscript, record, recording)
 import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
 import           Hsed.Sim.Params       (reservedComId)
+import           Hsed.Transport.Drive  (DriveInfo, RawDrive (..))
 import           Hsed.Wire             (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
                                         comIdManagementProtocol, comPacketProtocol, dataKind, hex, level0ComId,
                                         staticExtension)
 import           Hsed.Wire.Internal    (Transport (..))
 
 
+-- * Policies
+
 -- | What a drive's commands may be.
 data Policy
-  = Level0Only           -- ^ IF-RECV of Level 0 Discovery alone (M3)
-  | AllowList ![Allowed]  -- ^ IF-SENDs of these methods, and IF-RECV (M4c)
+  = Level0Only                    -- ^ IF-RECV of Level 0 Discovery alone: a drive until its base ComID is bound
+  | AllowList !Word16 ![Allowed]  -- ^ on the drive's base ComID, bound from its own Level 0, IF-SENDs of these
+                                  --   methods, and IF-RECV (M4c)
   deriving (Eq, Show)
 
 -- | A method an 'AllowList' admits.
@@ -101,8 +134,150 @@ data Allowed
   | AllowStackReset           -- ^ STACK_RESET on the base ComID and its GET_COMID_RESPONSE, protocol 2 (@--recover@)
   deriving (Eq, Ord, Show, Enum, Bounded)
 
+-- | A policy as the reports print it: @{"policy": "level0_only"}@, or
+--   @{"policy": "allow_list", "base_comid": 4100, "allowed": [...]}@.
+instance A.ToJSON Policy where
+  toJSON = \case
+    Level0Only            -> A.object ["policy" A..= ("level0_only" :: Text)]
+    AllowList base admits -> A.object ["policy" A..= ("allow_list" :: Text), "base_comid" A..= base, "allowed" A..= admits]
 
--- * Deciding
+-- | A method admitted, by name.
+instance A.ToJSON Allowed where
+  toJSON = A.String . \case
+    AllowProperties          -> "properties"
+    AllowStartSessionAdminSP -> "start_session_admin_sp"
+    AllowGetCPinMSID         -> "get_c_pin_msid"
+    AllowEndOfSession        -> "end_of_session"
+    AllowStackReset          -> "stack_reset"
+
+-- | What a drive run of design 9.3's drive cases admits once its base
+--   ComID is bound, read-only at the method level (design 13.7, Scott's
+--   answer of 2026-11-02): SMUID.Properties, StartSession to the Admin SP
+--   as Anybody, Get on C_PIN_MSID of its UID and PIN columns, and End of
+--   Session, so that no method that writes can reach the drive.
+readOnlyMethods :: [Allowed]
+readOnlyMethods = [AllowProperties, AllowStartSessionAdminSP, AllowGetCPinMSID, AllowEndOfSession]
+
+-- | What @--recover@ admits once the base ComID is bound: STACK_RESET and
+--   its GET_COMID_RESPONSE (Core 3.3.4.7.5, PDF 65-66), then StartSession
+--   to the Admin SP as Anybody and its End of Session, the probe that no
+--   session survived the reset (Core 5.1.5.3, PDF 138).
+recoverMethods :: [Allowed]
+recoverMethods = [AllowStartSessionAdminSP, AllowEndOfSession, AllowStackReset]
+
+
+-- * A drive behind the Guard
+
+-- | A drive as a run has it (design 13.29 (l)): the opener's 'RawDrive'
+--   behind the Guard, what binding its base ComID admits, its policy
+--   ('Level0Only' until bound), the run's transcript and the drive's own,
+--   and what the IORegistry says of it (none for a replay). Abstract: its
+--   constructor is not exported, so that the raw transport is reached
+--   through the Guard alone.
+data GuardedDrive = GuardedDrive
+  { gdTranscript :: !Transcript              -- ^ the run's
+  , gdOwn        :: !Transcript              -- ^ the drive's own: what reached its raw transport
+  , gdAllowed    :: ![Allowed]               -- ^ what binding admits; none keeps the drive Level0Only for the run
+  , gdInfo       :: !(Maybe DriveInfo)
+  , gdRaw        :: !RawDrive
+  , gdRecorded   :: !(Transport 'ReadOnly)    -- ^ the raw transport, recording into the drive's own transcript, then
+                                             --   the run's
+  , gdPolicy     :: !(IORef Policy)
+  }
+
+-- | A drive put behind the Guard, as "Hsed.Jig.Target" opens one: the
+--   Guard's decision first, under the drive's policy ('Level0Only' until
+--   'driveBind'), over a transport recording into the run's transcript,
+--   over one recording into the drive's own, over the raw transport; so
+--   that a command refused is recorded Blocked in the run's transcript and
+--   never issued, and one issued is recorded in the drive's own transcript,
+--   then in the run's, as M4b's run recorded a drive's (each entry the same).
+guardDrive :: Transcript -> [Allowed] -> Maybe DriveInfo -> RawDrive -> IO GuardedDrive
+guardDrive t admits di raw = do
+  own <- newTranscript
+  policy <- newIORef Level0Only
+  pure GuardedDrive
+    { gdTranscript = t
+    , gdOwn        = own
+    , gdAllowed    = admits
+    , gdInfo       = di
+    , gdRaw        = raw
+    , gdRecorded   = recording t (recording own (rdTransport raw))
+    , gdPolicy     = policy
+    }
+
+-- | The drive as a transport: every command decided under the drive's
+--   policy as it stands when the command is given, one refused recorded,
+--   never issued, and answered 'Unsupported' with the reason; one admitted
+--   issued and recorded in the run's transcript and the drive's own. The
+--   host's exchange of a ComPacket takes its IF-RECVs here.
+driveTransport :: GuardedDrive -> Transport 'ReadOnly
+driveTransport g = (gdRecorded g) { tExchange = \q -> either blocked id <$> current g q }
+  where blocked why = Response (Unsupported ("blocked by the Guard: " <> why)) mempty
+
+-- | An IF-SEND on the drive, if its policy admits it ('guardedSend').
+driveSend :: GuardedDrive -> Request -> IO (Either Text Response)
+driveSend g q = drivePolicy g >>= \p -> guardedSend (gdTranscript g) p (gdRecorded g) q
+
+-- | An IF-RECV on the drive, if its policy admits it ('guardedRecv').
+driveRecv :: GuardedDrive -> Request -> IO (Either Text Response)
+driveRecv g q = drivePolicy g >>= \p -> guardedRecv (gdTranscript g) p (gdRecorded g) q
+
+-- | A command under the drive's policy as it stands.
+current :: GuardedDrive -> Request -> IO (Either Text Response)
+current g q = drivePolicy g >>= \p -> pass (gdTranscript g) p (gdRecorded g) q
+
+-- | The drive's policy: 'Level0Only' until its base ComID is bound, then
+--   'AllowList' of the base and what binding admits.
+drivePolicy :: GuardedDrive -> IO Policy
+drivePolicy = readIORef . gdPolicy
+
+-- | What binding the drive's base ComID admits; none keeps the drive
+--   'Level0Only' for the run (no case selected needs more of it).
+driveAllowed :: GuardedDrive -> [Allowed]
+driveAllowed = gdAllowed
+
+-- | Bind the drive's base ComID, the one its own Level 0 Discovery names
+--   (the Opal SSC V2 descriptor's, Opal 2.30 Table 6, PDF 23), or why not:
+--   refused where binding admits nothing ('driveAllowed' empty), where Core
+--   Table 26 reserves the ComID ("Hsed.Sim.Params".'reservedComId', read
+--   from the generated table: 0x0000 to 0x0FFF, PDF 55-56, so never Level
+--   0's 0x0001 nor TPER_RESET's 0x0004), and where another base is bound
+--   already, a drive binding one base once; the same base again is bound
+--   already. Otherwise the opener's bind first (the kext shim's
+--   @hsed_kext_bind@, which checks again; a replay's refuses), then the
+--   policy 'AllowList' of the base and what binding admits.
+driveBind :: GuardedDrive -> Word16 -> IO (Either Text ())
+driveBind g base
+  | null (gdAllowed g) =
+      pure (Left ("base ComID " <> hex base <> " not bound: this run admits Level 0 Discovery alone on the drive (design 9.3)"))
+  | reservedComId base =
+      pure (Left ("base ComID " <> hex base <> " not bound: Core Table 26 reserves it (PDF 55-56); a drive's base ComID is "
+                  <> "a non-reserved one, 0x1000 or above"))
+  | otherwise = drivePolicy g >>= \case
+      AllowList bound _
+        | bound == base -> pure (Right ())
+        | otherwise     -> pure (Left ("base ComID " <> hex base <> " not bound: the drive is bound to " <> hex bound
+                                       <> " already, and a drive binds one base ComID"))
+      Level0Only -> rdBind (gdRaw g) base >>= \case
+        Left why -> pure (Left ("base ComID " <> hex base <> " not bound: " <> why))
+        Right () -> Right () <$ writeIORef (gdPolicy g) (AllowList base (gdAllowed g))
+
+-- | The commands that reached the drive's raw transport, with their
+--   answers, in order: its own transcript.
+driveIssued :: GuardedDrive -> IO [TEntry]
+driveIssued = entries . gdOwn
+
+-- | What the IORegistry says of the drive; none for a replay.
+driveInfo :: GuardedDrive -> Maybe DriveInfo
+driveInfo = gdInfo
+
+-- | Close the drive's raw transport.
+driveClose :: GuardedDrive -> IO ()
+driveClose = tClose . rdTransport . gdRaw
+
+
+-- * One command, one transport
 
 -- | An IF-SEND on a drive, if the policy allows it; otherwise the reason,
 --   recorded, and the transport never called.
@@ -138,7 +313,8 @@ refuse t tr q why = Left why <$ record t (Blocked 0 (dRole (tDescribe tr)) q why
 --   An allow list admits IF-RECV of protocol 1, an IF-SEND of protocol 1
 --   whose every method it lists ('allowedSend'), and, with
 --   'AllowStackReset' alone, ComID management's STACK_RESET and
---   GET_COMID_RESPONSE ('stackResetAllowed').
+--   GET_COMID_RESPONSE ('stackResetAllowed'); its base ComID is not read
+--   yet (M4b's decision, until M4c's group G2 holds each command to it).
 decide :: Policy -> Request -> Either Text ()
 decide policy q = case policy of
   Level0Only
@@ -147,7 +323,7 @@ decide policy q = case policy of
     | dir q == IfSend -> Left "Level0Only: no IF-SEND reaches a drive at M3 (design 9.3)"
     | otherwise       -> Left ("Level0Only: IF-RECV of Level 0 Discovery alone (protocol " <> hex comPacketProtocol
                                <> ", ComID " <> hex level0ComId <> "), not protocol " <> hex (proto q) <> ", ComID " <> hex (comId q))
-  AllowList allowed
+  AllowList _ allowed
     | proto q == comIdManagementProtocol, AllowStackReset `elem` allowed -> first ("AllowList: " <>) (stackResetAllowed q)
     | proto q /= comPacketProtocol -> Left ("AllowList: protocol " <> hex (proto q) <> " refused, ComID management among them")
     | dir q == IfRecv              -> Right ()

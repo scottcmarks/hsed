@@ -21,13 +21,23 @@ UID and PIN columns, and a bare EndOfSession, and refuses everything else,
 what does not parse and ComID management, but for STACK_RESET on a static
 ComID and its GET_COMID_RESPONSE under AllowStackReset, which still refuses
 TPER_RESET (ComID 0x0004) and VERIFY_COMID_VALID; a transport behind the
-Guard answers what it refuses 'Unsupported'. The protocol, ComID and Kind
-the Guard reads are Core's (Tables 25, 26 and 19).
+Guard answers what it refuses 'Unsupported'. A drive behind the Guard
+('guardDrive', M4c) records each command in the run's transcript and the
+drive's own exactly as M4b's run did, Level0Only before its base ComID is
+bound and under its allow list after, and before a bind refuses every
+IF-SEND without its raw transport called; 'driveBind' binds nothing where
+binding admits nothing, refuses a base Core Table 26 reserves, binds 0x1004
+once (again idempotently) and refuses another base after it, and leaves
+the drive Level0Only where the opener's bind refuses (a replay's); a
+policy prints with its base and its methods by name. The protocol, ComID
+and Kind the Guard reads are Core's (Tables 25, 26 and 19).
 -}
 module Hsed.Jig.GuardSpec (spec) where
 
+import qualified Data.Aeson              as A
 import qualified RIO.ByteString          as B
 import           RIO
+import qualified RIO.Text                as T
 import           Test.Hspec
 
 import           Hsed.Core.CellBlock     (CellBlock (..), cellBlockValue, columnRange, noCells)
@@ -48,6 +58,7 @@ import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Guard
 import           Hsed.Jig.Transcript
 import           Hsed.Packet             (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
+import           Hsed.Transport.Drive    (RawDrive (..))
 import           Hsed.Wire               (comPacketProtocol, dataKind, level0ComId, tperResetComId)
 import           Hsed.Wire.Internal      (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
                                           Transport (..), Unit (..))
@@ -128,15 +139,56 @@ lockingSP :: UID
 lockingSP = uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x02
 
 allowAll :: Policy
-allowAll = AllowList [minBound .. maxBound]
+allowAll = AllowList 0x1004 [minBound .. maxBound]
 
 -- | The list UCT-03's verbs need (design 9.3; the plan's acceptance).
 uct03List :: Policy
-uct03List = AllowList [AllowProperties, AllowStartSessionAdminSP, AllowGetCPinMSID, AllowEndOfSession]
+uct03List = AllowList 0x1004 [AllowProperties, AllowStartSessionAdminSP, AllowGetCPinMSID, AllowEndOfSession]
 
 -- | The recovery list, STACK_RESET alone (@--recover@).
 recovery :: Policy
-recovery = AllowList [AllowStackReset]
+recovery = AllowList 0x1004 [AllowStackReset]
+
+-- | A raw drive over a counting transport whose bind records each base it
+--   is asked for and answers as told: what reached the transport, the binds
+--   asked, and the drive.
+rawDrive :: Either Text () -> IO (IORef Int, IORef [Word16], RawDrive)
+rawDrive answer = do
+  (n, tr) <- counting
+  binds <- newIORef []
+  pure (n, binds, RawDrive tr (\b -> answer <$ modifyIORef' binds (<> [b])))
+
+-- | Commands given to a drive two ways, each on fresh transcripts and a
+--   fresh counting transport: as M4b's run gave them (the Guard of
+--   "Hsed.Jig.Script" over the Guard of 'guarding', over a transport
+--   recording into the run's transcript, over one recording into the
+--   drive's own, under one policy), and through a 'GuardedDrive' bound to
+--   0x1004 (with these methods) or not: the run's entries, the drive's
+--   own, and how many commands reached the transport, each way. Each
+--   command is given through the verb of its direction, then again through
+--   the drive's transport.
+bothWays :: Maybe [Allowed] -> [Request] -> IO (([TEntry], [TEntry], Int), ([TEntry], [TEntry], Int))
+bothWays bound qs = do
+  m4b <- do
+    t <- newTranscript
+    own <- newTranscript
+    (n, tr) <- counting
+    let policy  = maybe Level0Only (AllowList 0x1004) bound
+        guarded = guarding t policy (recording t (recording own tr))
+    for_ qs $ \q -> do
+      _ <- (if dir q == IfSend then guardedSend else guardedRecv) t policy guarded q
+      tExchange guarded q
+    (,,) <$> entries t <*> entries own <*> readIORef n
+  m4c <- do
+    t <- newTranscript
+    (n, _, raw) <- rawDrive (Right ())
+    g <- guardDrive t (fromMaybe readOnlyMethods bound) Nothing raw
+    for_ bound $ \_ -> driveBind g 0x1004 >>= either (throwString . show) pure
+    for_ qs $ \q -> do
+      _ <- (if dir q == IfSend then driveSend else driveRecv) g q
+      tExchange (driveTransport g) q
+    (,,) <$> entries t <*> driveIssued g <*> readIORef n
+  pure (m4b, m4c)
 
 -- | A command through the Guard: its decision, how many commands reached
 --   the transport, and how many entries the transcript blocked.
@@ -185,10 +237,10 @@ spec = do
     it "admits a bare EndOfSession" $
       through guardedSend allowAll (sendOf (generate EndOfSession)) >>= (`shouldSatisfy` passed)
     it "admits only the methods it lists" $ do
-      through guardedSend (AllowList [AllowEndOfSession]) (sendOf props) >>= (`shouldSatisfy` refused)
-      through guardedSend (AllowList [AllowProperties]) (sendOf (generate EndOfSession)) >>= (`shouldSatisfy` refused)
-      through guardedSend (AllowList [AllowProperties]) (sendOf (startSession uSP_Admin Nothing)) >>= (`shouldSatisfy` refused)
-      through guardedSend (AllowList [AllowProperties]) (sendOf (getOf uC_PIN_MSID (columnRange pinColumn pinColumn))) >>= (`shouldSatisfy` refused)
+      through guardedSend (AllowList 0x1004 [AllowEndOfSession]) (sendOf props) >>= (`shouldSatisfy` refused)
+      through guardedSend (AllowList 0x1004 [AllowProperties]) (sendOf (generate EndOfSession)) >>= (`shouldSatisfy` refused)
+      through guardedSend (AllowList 0x1004 [AllowProperties]) (sendOf (startSession uSP_Admin Nothing)) >>= (`shouldSatisfy` refused)
+      through guardedSend (AllowList 0x1004 [AllowProperties]) (sendOf (getOf uC_PIN_MSID (columnRange pinColumn pinColumn))) >>= (`shouldSatisfy` refused)
     it "refuses what does not parse: no ComPacket, two methods in a subpacket, a ComPacket for another ComID, a credit subpacket" $ do
       through guardedSend allowAll (Request IfSend 1 0x1004 512 (B.replicate 512 0xFF)) >>= (`shouldSatisfy` refused)
       through guardedSend allowAll (sendOf (props <> props)) >>= (`shouldSatisfy` refused)
@@ -255,6 +307,61 @@ spec = do
         _             -> False
       es <- entries t
       length [ () | Blocked {} <- es ] `shouldBe` 1
+
+  describe "a drive behind the Guard (guardDrive, design 13.29 (l))" $ do
+    it "records every command in the run's transcript and the drive's own as M4b's run did, Level0Only before a bind" $ do
+      let qs = [Request IfRecv 1 1 2048 mempty, sendOf props, Request IfRecv 1 0x1004 2048 mempty, sendOf setPin]
+      (m4b, m4c) <- bothWays Nothing qs
+      m4c `shouldBe` m4b
+      let (runEntries, own, reached) = m4c
+      (length [ () | Issued {} <- runEntries ], length [ () | Blocked {} <- runEntries ], length own, reached) `shouldBe` (2, 6, 2, 2)
+    it "records as M4b's run did under the allow list, once bound" $ do
+      let qs = [Request IfRecv 1 1 2048 mempty, sendOf props, Request IfRecv 1 0x1004 2048 mempty, sendOf setPin]
+      (m4b, m4c) <- bothWays (Just readOnlyMethods) qs
+      m4c `shouldBe` m4b
+      let (_, own, reached) = m4c
+      (length own, reached) `shouldBe` (6, 6)
+    it "before a bind refuses every IF-SEND, records it Blocked, and never calls the raw transport" $ do
+      t <- newTranscript
+      (n, _, raw) <- rawDrive (Right ())
+      g <- guardDrive t readOnlyMethods Nothing raw
+      decisions <- for [sendOf props, sendOf (generate EndOfSession), mgmtSend 0x1004 (stackResetRequest 0x10040000)] (driveSend g)
+      map isLeft decisions `shouldBe` [True, True, True]
+      readIORef n `shouldReturn` 0
+      entries t >>= \es -> length [ () | Blocked {} <- es ] `shouldBe` 3
+      drivePolicy g `shouldReturn` Level0Only
+    it "driveBind: refuses every base where binding admits nothing, its raw bind never asked" $ do
+      t <- newTranscript
+      (_, binds, raw) <- rawDrive (Right ())
+      g <- guardDrive t [] Nothing raw
+      driveBind g 0x1004 >>= (`shouldSatisfy` isLeft)
+      readIORef binds `shouldReturn` []
+      drivePolicy g `shouldReturn` Level0Only
+    it "driveBind: refuses a base Core Table 26 reserves (0x0000, 0x0004, 0x0800, 0x0FFF); binds 0x1004 once, again idempotently, then refuses 0x1005" $ do
+      t <- newTranscript
+      (_, binds, raw) <- rawDrive (Right ())
+      g <- guardDrive t readOnlyMethods Nothing raw
+      for [0x0000, 0x0004, 0x0800, 0x0FFF] (driveBind g) >>= (`shouldSatisfy` all isLeft)
+      drivePolicy g `shouldReturn` Level0Only
+      driveBind g 0x1004 `shouldReturn` Right ()
+      drivePolicy g `shouldReturn` AllowList 0x1004 readOnlyMethods
+      driveBind g 0x1004 `shouldReturn` Right ()
+      driveBind g 0x1005 >>= (`shouldSatisfy` isLeft)
+      readIORef binds `shouldReturn` [0x1004]
+      drivePolicy g `shouldReturn` AllowList 0x1004 readOnlyMethods
+    it "driveBind: a raw bind that refuses leaves the drive Level0Only, its reason given" $ do
+      t <- newTranscript
+      (_, binds, raw) <- rawDrive (Left "a replay answers Level 0 Discovery alone (Hsed.Transport.Replay)")
+      g <- guardDrive t recoverMethods Nothing raw
+      driveBind g 0x1004 >>= (`shouldSatisfy` either ("a replay answers Level 0 Discovery alone" `T.isInfixOf`) (const False))
+      readIORef binds `shouldReturn` [0x1004]
+      drivePolicy g `shouldReturn` Level0Only
+    it "prints a policy as {policy, base_comid, allowed}, each method by name" $ do
+      A.toJSON Level0Only `shouldBe` A.object ["policy" A..= ("level0_only" :: Text)]
+      A.toJSON (AllowList 0x1004 (readOnlyMethods <> [AllowStackReset])) `shouldBe` A.object
+        [ "policy" A..= ("allow_list" :: Text), "base_comid" A..= (4100 :: Int)
+        , "allowed" A..= (["properties", "start_session_admin_sp", "get_c_pin_msid", "end_of_session", "stack_reset"] :: [Text]) ]
+      recoverMethods `shouldBe` [AllowStartSessionAdminSP, AllowEndOfSession, AllowStackReset]
 
   describe "the protocol, ComID and Kind it reads (Hsed.Wire's)" $
     it "are Core's: protocol 0x01 (Table 25), Level 0 Discovery's ComID 0x0001 (Table 26), the Data Kind 0x0000 (Table 19)" $

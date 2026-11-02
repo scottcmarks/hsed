@@ -20,7 +20,7 @@ targets.
 'openTarget' puts a drive behind the Guard the moment it is opened
 ("Hsed.Jig.Guard".'GuardedDrive', design 13.29 (l)): the opener's
 'RawDrive' wrapped at once, every command then decided under the drive's
-policy, 'Level0Only' until the run binds the drive's base ComID with what
+policy, Level0Only until the run binds the drive's base ComID with what
 the run admits on it (the allowed list given), and recorded into the run's
 transcript (given) and the drive's own; a replay binds nothing, answering
 Level 0 Discovery alone. This module alone imports the kext transport and

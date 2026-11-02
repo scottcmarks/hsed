@@ -21,7 +21,13 @@ second as another, or together with it, takes the next free suffix (@-2@,
 @-3@) and neither writes over the other's. The JUnit report holds a test case for each case and extension, for the
 pair, for each problem (a capture, the pair not computed), for no IF-SEND on
 a drive, and one for the exit code, so that its failures never say less
-than the exit code does. And the commands
+than the exit code does. The JSON report also gives, since M4c, each
+drive's policy ("Hsed.Jig.Guard"), the commands a drive was issued outside
+it, the commands the Guard refused, why a run was stopped, a drive's
+pre-flight notes, what @--recover@ did, each end's Properties exchange with
+the host's properties, and a pair's comparison of them
+("Hsed.Jig.PairProperties"), which the Markdown and JUnit reports do not
+print yet (M4c's group G3's). And the commands
 that read a report back without privilege: @verify-transcript@ (the
 commands issued, each with its end; a failure if a drive's end was issued
 an IF-SEND, or anything but Level 0 Discovery's IF-RECV, when asked) and

@@ -729,7 +729,8 @@ expectSyncStatus name expected = \case
 --   or Table 31's No Response Available, each told by its constants
 --   ("Hsed.Core.Record".'decodeRecordStrict'); or why none came. On a drive
 --   the Guard decides both commands (Level0Only refuses them; an allow list
---   takes them with 'AllowStackReset', on the base ComID).
+--   takes them with 'AllowStackReset', on a ComID Core Table 26 does not
+--   reserve).
 stackReset :: Word16 -> Script (Either Text Word32)
 stackReset c = do
   u <- endUnit
@@ -824,9 +825,10 @@ closingStep name h v = do
 -- | The base ComID: the one recorded (UCT-01's), else the Opal SSC V2
 --   descriptor's of the Level 0 response, discovered if need be (Test Cases
 --   4.1 g and Table 5, PDF 26: a static ComID the descriptor reports). On a
---   drive where the run admits more than Level 0 Discovery ("Hsed.Jig.Guard".'driveAllowed'
---   not empty), the base is bound ("Hsed.Jig.Guard".'driveBind': once, from
---   the drive's own Level 0), so that the Guard admits the allowed list's
+--   drive where the run admits more than Level 0 Discovery
+--   ("Hsed.Jig.Guard".'Hsed.Jig.Guard.driveAllowed' not empty), the base is
+--   bound ("Hsed.Jig.Guard".'Hsed.Jig.Guard.driveBind': once, from the
+--   drive's own Level 0), so that the Guard admits the allowed list's
 --   commands on it; a bind refused stops the script, saying why.
 baseComId :: Script Word16
 baseComId = do

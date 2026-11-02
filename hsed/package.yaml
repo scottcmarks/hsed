@@ -15,15 +15,18 @@ copyright:           Magnolia Heights R&D
 # common to point users to the README.md file.
 description:         Please see the README on Github at <https://github.com/scottcmarks/hsed#readme>
 
-# the kext shim's header, compiled into the library only under the kext flag
+# the C headers: the drive's CDBs' (cbits/hsed_cdb.h, every build) and the kext shim's (cbits/hsed_kext.h,
+# only under the kext flag)
 extra-source-files:
 - cbits/*.h
 
 flags:
-  # The macOS drive transport (Hsed.Transport.MacKext): the C shim cbits/hsed_kext.c over IOKit, which can
-  # issue Level 0 IF-RECV alone (design 7.2, 9.3). Manual and off: CI's tests build without it, and one
-  # macOS step of CI compiles it, never running it; on with stack build hsed --flag hsed:kext, built as
-  # yourself, never with sudo stack.
+  # The macOS drive transport (Hsed.Transport.MacKext): the C shim cbits/hsed_kext.c over IOKit, which
+  # issues design 9.3's five commands and nothing else (Level 0 Discovery's IF-RECV and, on the drive's
+  # base ComID once bound, a ComPacket's IF-SEND and IF-RECV and STACK_RESET's pair), each CDB built by
+  # cbits/hsed_cdb.c, which every build compiles (design 7.2, 9.3). Manual and off: CI's tests build
+  # without it, and one macOS step of CI compiles it, never running it; on with stack build hsed --flag
+  # hsed:kext, built as yourself, never with sudo stack.
   kext:
     description: Build the kext transport's C shim (macOS only)
     manual: true
@@ -63,6 +66,15 @@ library:
   - template-haskell   # GitHash.Extras.GitVersion
   - text               # Hsed.Gen.Core.Tokens (generated code imports Data.Text, not RIO)
   - time               # the reports' UTC stamps (M3)
+  # the CDBs of the five commands a drive transport carries (M4c): portable C99 compiled in every build, so
+  # that the tests run it through FFI wherever CI builds; no -Werror for C (gcc and clang warn differently)
+  c-sources:
+  - cbits/hsed_cdb.c
+  include-dirs:
+  - cbits
+  cc-options:
+  - -Wall
+  - -Wextra
   when:
   # Hsed.Jig.Files: files written under sudo handed to SUDO_UID/SUDO_GID; the euid 0 gate
   - condition: '!os(windows)'
@@ -72,8 +84,6 @@ library:
   - condition: flag(kext) && os(darwin)
     c-sources:
     - cbits/hsed_kext.c
-    include-dirs:
-    - cbits
     frameworks:
     - IOKit
     - CoreFoundation

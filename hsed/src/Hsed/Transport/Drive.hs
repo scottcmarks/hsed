@@ -1,10 +1,11 @@
+{-# LANGUAGE DataKinds         #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 {-|
 Module      : Hsed.Transport.Drive
-Description : What the jig knows of an attached drive: its interface and the identity it is held to
+Description : What the jig knows of an attached drive: its interface, the identity it is held to, its raw transport and bind
 Copyright   : (c) Magnolia Heights R&D, 2026
 License     : BSD3
 Maintainer  : scott@magnolia-heights.com
@@ -14,20 +15,29 @@ The portable half of the kext transport ("Hsed.Transport.MacKext"): what the
 IORegistry says of the TPer a BSD device sits on, read before anything is
 opened (design 7.2). The interface type decides the CDB that carries an
 interface command ("Hsed.Transport.Cdb": SAT's ATA PASS-THROUGH A1h, or
-SCSI's SECURITY PROTOCOL IN A2h); the serial is the one the jig holds the
-drive to (@--expect-serial@), the IDENTIFY serial with its padding trimmed;
-the kext's build is recorded beside every capture (the safety posture of
-design 13 depends on it). Reports print the serial masked ('maskSerial').
+SCSI's SECURITY PROTOCOL IN A2h and OUT B5h); the serial is the one the jig
+holds the drive to (@--expect-serial@), the IDENTIFY serial with its padding
+trimmed; the kext's build is recorded beside every capture (the safety
+posture of design 13 depends on it). Reports print the serial masked
+('maskSerial').
+
+What a drive's opener hands the jig is a 'RawDrive': the transport as the
+opener built it and the action that binds the drive's base ComID, which the
+jig's target puts behind the Guard before anything is issued (design 9.3;
+13.29 (l)).
 -}
 module Hsed.Transport.Drive
   ( InterfaceType (..)
   , DriveInfo (..)
   , maskSerial
+  , RawDrive (..)
   ) where
 
 import qualified Data.Aeson as A
 import           RIO
 import qualified RIO.Text   as T
+
+import           Hsed.Wire  (Cap (..), Transport)
 
 
 -- $setup
@@ -57,6 +67,18 @@ data DriveInfo = DriveInfo
 maskSerial :: Text -> Text
 maskSerial s = T.replicate (T.length s - shown) "*" <> T.takeEnd shown s
   where shown = min 4 (T.length s)
+
+-- | A drive as its opener hands it over, before the Guard: its transport,
+--   @'ReadOnly@, and the bind of its base ComID, a non-reserved ComID (Core
+--   Table 26, PDF 55-56) that the drive's own Level 0 Discovery names, after
+--   which the transport carries the commands on that ComID besides Level 0's
+--   ("Hsed.Transport.Cdb".'Hsed.Transport.Cdb.shapeOf'); a bind refused says
+--   why. The kext's bind is the shim's (@hsed_kext_bind@); a replay, which
+--   answers Level 0 Discovery alone, binds nothing.
+data RawDrive = RawDrive
+  { rdTransport :: !(Transport 'ReadOnly)
+  , rdBind      :: !(Word16 -> IO (Either Text ()))
+  }
 
 instance A.ToJSON InterfaceType where
   toJSON = A.String . \case

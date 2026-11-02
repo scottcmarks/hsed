@@ -50,6 +50,10 @@ evidence for design 13.29 (d), never as a capture
 stderr: the CDB, the @kern_return_t@, the bytes transferred. Closing it
 closes the user client, once.
 
+'openKext' hands the transport over as a 'RawDrive' beside the DriveInfo,
+with the bind of the drive's base ComID, which refuses until the shim has
+one (@hsed_kext_bind@, M4c), so that the transport carries Level 0 alone.
+
 Built without the flag (the default, and CI's), 'openKext' refuses, and the
 shim is neither compiled nor linked.
 -}
@@ -74,14 +78,13 @@ import qualified RIO.Text                 as T
 import           System.Posix.User        (getEffectiveUserID)
 
 import           Hsed.Transport.Cdb       (level0Blocks)
-import           Hsed.Transport.Drive     (DriveInfo (..), InterfaceType (..))
+import           Hsed.Transport.Drive     (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.Kext      (InfoLayout (..), Located (..), admit, diskName, ifRecvBuffer, infoLayout,
                                            judgeLevel0, kernReturn, level0Line)
 import           Hsed.Wire.Internal       (Cap (..), Describe (..), IfStatus (..), Request (lenBytes),
                                            Response (..), Transport (..), Unit (..))
 #else
-import           Hsed.Transport.Drive     (DriveInfo)
-import           Hsed.Wire                (Cap (..), Transport)
+import           Hsed.Transport.Drive     (DriveInfo, RawDrive)
 #endif
 
 
@@ -94,8 +97,9 @@ data KextOpts = KextOpts
   }
   deriving (Eq, Show)
 
--- | The drive's transport and what the IORegistry says of it, or why not.
-openKext :: KextOpts -> IO (Either Text (Transport 'ReadOnly, DriveInfo))
+-- | The drive, its transport and the bind of its base ComID, and what the
+--   IORegistry says of it, or why not.
+openKext :: KextOpts -> IO (Either Text (RawDrive, DriveInfo))
 #ifdef HSED_KEXT
 openKext opts = do
   euid <- getEffectiveUserID
@@ -105,7 +109,7 @@ openKext opts = do
     else either (pure . Left) (openDisk opts) (diskName (koBsd opts))
 
 -- | Locate, admit and open a whole disk's TPer.
-openDisk :: KextOpts -> Text -> IO (Either Text (Transport 'ReadOnly, DriveInfo))
+openDisk :: KextOpts -> Text -> IO (Either Text (RawDrive, DriveInfo))
 openDisk opts disk = do
   info <- mallocForeignPtrAlignedBytes (ilBytes infoLayout) (ilAlignment infoLayout)
   located <- withForeignPtr info $ \p -> do
@@ -125,7 +129,7 @@ openDisk opts disk = do
                     <> ", registry id 0x" <> T.pack (showHex (diRegistryId di) "")
                     <> ", kext build " <> diKextBuild di <> ")")
           state <- newMVar Ready
-          pure (Right (kextTransport disk di info state, di))
+          pure (Right (RawDrive (kextTransport disk di info state) (\_ -> pure (Left "G1: hsed_kext_bind")), di))
 
 -- | Whether the transport may still issue a command.
 data KextState

@@ -38,7 +38,7 @@ import qualified RIO.Text              as T
 import           Hsed.Jig.Files        (runningAsRoot)
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), parseTarget)
 import           Hsed.Sim.Types        (SimParams (..), simParamsProblems)
-import           Hsed.Transport.Drive  (DriveInfo)
+import           Hsed.Transport.Drive  (DriveInfo, RawDrive (..))
 import           Hsed.Transport.InProc (InProcOpts (..), SimControl, newInProc)
 import           Hsed.Transport.MacKext (KextOpts (..), openKext)
 import           Hsed.Transport.Replay (openReplay)
@@ -70,7 +70,7 @@ openTarget opts = open (roTarget opts)
         case roExpectSerial opts of
           _ | not root -> pure (Left (dev <> " needs root (sudo): hsed's own gate, the kext checking no privilege (design 9.3)"))
           Nothing      -> pure (Left (dev <> " needs --expect-serial SERIAL: a drive is opened only as the one named"))
-          Just serial  -> fmap (\(tr, di) -> DriveTarget tr (Just di)) <$> openKext (KextOpts (bsdName dev) serial)
+          Just serial  -> fmap (\(raw, di) -> DriveTarget (rdTransport raw) (Just di)) <$> openKext (KextOpts (bsdName dev) serial)
       TPair a b -> open a >>= \case
         Left e   -> pure (Left e)
         Right ta -> open b >>= \case

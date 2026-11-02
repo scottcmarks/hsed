@@ -151,7 +151,8 @@ data Unit
 
 -- | A transport's capability, the index of 'Transport' (promoted).
 data Cap
-  = ReadOnly   -- ^ IF-RECV only: the attached drive at M3
+  = ReadOnly   -- ^ the attached drive: IF-SEND only through the Guard ("Hsed.Jig.Guard".'Hsed.Jig.Guard.GuardedDrive'),
+               --   on the drive's base ComID once it is bound
   | ReadWrite  -- ^ IF-SEND, IF-RECV and events: the simulator
   deriving (Eq, Ord, Show, Enum, Bounded)
 

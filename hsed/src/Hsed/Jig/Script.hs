@@ -36,8 +36,8 @@ drive behind when it opens it) under the drive's policy, Level0Only until
 Level 0 Discovery on it, so that a refused command is recorded and answered
 'Unsupported', never issued. A run's stop flag ('reStop') and 'Interrupted'
 are how a run is stopped between commands, 'stopIfAsked' the check
-(M4c's group G2's); 'admitsStackReset' says whether the end's policy takes
-STACK_RESET.
+(M4c's group G2's); 'admitsStackReset' says whether the end takes
+STACK_RESET once its base ComID is bound.
 
 An expectation that does not hold ends the script ('unmet'); 'attempt'
 turns what a script comes to into its 'Verdict'; 'note' adds a line to the
@@ -343,11 +343,13 @@ observe name value' = modifyCtx (\c -> c { rcObservations = rcObservations c <> 
 stopIfAsked :: Script ()
 stopIfAsked = pure ()
 
--- | Whether the end's policy takes STACK_RESET: on the simulator, always;
---   on a drive, where what binding its base ComID admits holds
---   'AllowStackReset' (@--recover@, or STACK_RESET before each case,
---   "Hsed.Jig.Options".@roStackResetBeforeCases@), the drive's Level0Only
---   before the bind taking none ('stackReset' binds first).
+-- | Whether the end takes STACK_RESET: on the simulator, always; on a
+--   drive, where what binding its base ComID admits holds 'AllowStackReset'
+--   (@--recover@, or STACK_RESET before each case,
+--   "Hsed.Jig.Options".@roStackResetBeforeCases@), whether or not the base
+--   is bound yet. Its policy takes STACK_RESET only once the base is bound,
+--   Level0Only before the bind taking none; 'stackReset' binds nothing
+--   itself, so a reset on a drive comes after 'baseComId', which binds.
 admitsStackReset :: Script Bool
 admitsStackReset = theEnd <&> \case
   SimEnd _   -> True

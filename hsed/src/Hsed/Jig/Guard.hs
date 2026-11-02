@@ -29,7 +29,8 @@ and PIN columns; a bare EndOfSession), the UIDs those of
 the columns found by name in the generated C_PIN
 description ("Hsed.Gen.Core.TableDescs"), and IF-RECV of protocol 1; ComID
 management (protocol 2) is refused but for STACK_RESET on a static ComID and
-its GET_COMID_RESPONSE under 'AllowStackReset' (@--recover@, design 9.3):
+its GET_COMID_RESPONSE under 'AllowStackReset' (@--recover@, and the
+STACK_RESET before each drive case, design 9.3, 13.7):
 the IF-SEND of Core Table 35's request (PDF 65), read strictly through the
 generated layout, for the Extended ComID of the ComID the command is on
 with a static ComID's extension, nothing after it but zeros, on a ComID
@@ -131,7 +132,8 @@ data Allowed
   | AllowStartSessionAdminSP  -- ^ SMUID.StartSession to the Admin SP, as Anybody or no one
   | AllowGetCPinMSID          -- ^ Get on C_PIN_MSID, of its UID and PIN columns alone (UCT-03 step 1b)
   | AllowEndOfSession         -- ^ a bare EndOfSession
-  | AllowStackReset           -- ^ STACK_RESET on the base ComID and its GET_COMID_RESPONSE, protocol 2 (@--recover@)
+  | AllowStackReset           -- ^ STACK_RESET on the base ComID and its GET_COMID_RESPONSE, protocol 2 (@--recover@, and
+                              --   before each drive case, "Hsed.Jig.Options".@roStackResetBeforeCases@)
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 -- | A policy as the reports print it: @{"policy": "level0_only"}@, or
@@ -330,7 +332,8 @@ decide policy q = case policy of
     | otherwise                    -> first ("AllowList: " <>) (allowedSend allowed q)
 
 -- | A ComID management command 'AllowStackReset' admits (Core 3.3.4.7.5,
---   PDF 65-66; design 9.3's @--recover@): on a ComID Core Table 26 does not
+--   PDF 65-66; design 9.3's @--recover@, and 13.7's STACK_RESET before each
+--   drive case): on a ComID Core Table 26 does not
 --   reserve (PDF 55: TPER_RESET's 0x0004 and GET_COMID's 0x0000 are
 --   reserved, so neither passes), an IF-RECV (GET_COMID_RESPONSE, which
 --   reads what the TPer holds and changes nothing but its buffer), or an

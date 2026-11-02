@@ -28,8 +28,10 @@ that the tests can run them:
   sedutil's values, with disk6's Configurable Namespace Locking descriptor
   added (of zeros but its pins), a test aid until the drive's own is
   captured;
-* @verify-transcript REPORT.json [--no-if-send] [--level0-only]@ and
-  @diff A.json B.json@: a run's report read back ("Hsed.Jig.Report").
+* @verify-transcript REPORT.json [--no-if-send] [--level0-only]
+  [--allow-list]@ and @diff A.json B.json@: a run's report read back
+  ("Hsed.Jig.Report"); @--allow-list@, each command a drive was issued
+  re-decided by the Guard, is read and not yet acted on (M4c's group G3's).
 
 Each gives the process's exit code: 0 success, 1 a failure, 2 a usage
 error, and for @run@ 3 a safety violation. The first of @run@'s safety
@@ -66,19 +68,20 @@ data Command
   = Run RunOptions
   | Level0Decode FilePath (Maybe FilePath)    -- ^ the response, sedutil's printed query to compare it with
   | Level0Synthesize FilePath FilePath        -- ^ sedutil's printed query, the response to write
-  | VerifyTranscript FilePath Bool Bool       -- ^ the report, whether a drive's IF-SEND fails it, whether a drive's
-                                              --   command other than Level 0's IF-RECV does
+  | VerifyTranscript FilePath Bool Bool Bool  -- ^ the report, whether a drive's IF-SEND fails it, whether a drive's
+                                              --   command other than Level 0's IF-RECV does, whether one its allow list
+                                              --   does not admit does (@--allow-list@: G3's, not yet acted on)
   | Diff FilePath FilePath
   deriving (Eq, Show)
 
 -- | Run a command: the exit code.
 runCommand :: Command -> IO ExitCode
 runCommand = \case
-  Run opts                             -> run opts
-  Level0Decode file against            -> level0Decode file against
-  Level0Synthesize query out           -> level0Synthesize query out
-  VerifyTranscript report noIfs level0 -> verifyTranscript report noIfs level0
-  Diff a b                             -> diffReports a b
+  Run opts                               -> run opts
+  Level0Decode file against              -> level0Decode file against
+  Level0Synthesize query out             -> level0Synthesize query out
+  VerifyTranscript report noIfs level0 _ -> verifyTranscript report noIfs level0
+  Diff a b                               -> diffReports a b
 
 
 -- * run

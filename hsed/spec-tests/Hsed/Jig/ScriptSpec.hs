@@ -79,6 +79,7 @@ import           Hsed.Jig.Cases.ETC02      (etc02)
 import           Hsed.Jig.Cases.ETC08      (etc08Payload)
 import           Hsed.Jig.Cases.ETC15      (etc15)
 import           Hsed.Jig.Cases.UCT02      (hostProperties, tperExpected, uct02)
+import           Hsed.Jig.Guard            (guardDrive)
 import           Hsed.Jig.Options          (defaultRunOptions)
 import           Hsed.Jig.Script
 import           Hsed.Jig.Target           (Target (..))
@@ -89,6 +90,7 @@ import           Hsed.Sim.Level0           (level0Response)
 import           Hsed.Sim.SessionManager   (closeSessionCall)
 import           Hsed.Sim.Sync             (T45Row (..))
 import           Hsed.Sim.Types            (Session (..), SimParams (..), defaultSimParams, initialState)
+import           Hsed.Transport.Drive      (RawDrive (..))
 import           Hsed.Transport.InProc     (SimControl (..))
 import           Hsed.Wire                 (ExchangeError (..), newChannel)
 import           Hsed.Wire.Internal        (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Transport (..),
@@ -105,18 +107,20 @@ counted n = MkTransport
   , tClose    = pure ()
   }
 
--- | A script on the simulator's end or a drive's, over counting transports:
---   what it came to, how many commands reached the transport, the
---   transcript.
+-- | A script on the simulator's end or a drive's, over counting transports
+--   (the drive's behind the Guard, binding nothing): what it came to, how
+--   many commands reached the transport, the transcript.
 scripted :: Bool -> Script a -> IO (a, Int, [TEntry])
 scripted sim s = do
   n <- newIORef 0
   t <- newTranscript
   channel <- newChannel
   ctx <- newIORef emptyRunCtx
-  let target | sim       = SimTarget (counted n) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
-             | otherwise = DriveTarget (counted n) Nothing
-  a <- runRIO (RunEnv target t channel ctx defaultRunOptions (mkLogFunc (\_ _ _ _ -> pure ()))) s
+  stop <- newIORef Nothing
+  target <- if sim
+    then pure (SimTarget (counted n) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams))))
+    else DriveTarget <$> guardDrive t [] Nothing (RawDrive (counted n) (\_ -> pure (Left "a test drive binds nothing")))
+  a <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
   (,,) a <$> readIORef n <*> entries t
 
 -- | A response holding a ComPacket header: Length bytes of payload,
@@ -140,6 +144,7 @@ harness sends recvs s = do
   t <- newTranscript
   channel <- newChannel
   ctx <- newIORef emptyRunCtx { rcBaseComId = Just 0x1004 }
+  stop <- newIORef Nothing
   let next ref end = atomicModifyIORef' ref (\xs -> (drop 1 xs, fromMaybe end (listToMaybe xs)))
       tr = MkTransport
         { tExchange = \q -> do
@@ -153,7 +158,7 @@ harness sends recvs s = do
         , tClose    = pure ()
         }
       target = SimTarget tr (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams)))
-  a <- runRIO (RunEnv target t channel ctx defaultRunOptions (mkLogFunc (\_ _ _ _ -> pure ()))) s
+  a <- runRIO (RunEnv target t channel ctx defaultRunOptions stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
   (,,) a <$> readIORef seen <*> entries t
 
 -- | 'harness' counting the IF-RECVs alone.

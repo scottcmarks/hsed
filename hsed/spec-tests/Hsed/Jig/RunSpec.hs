@@ -67,16 +67,18 @@ import           Hsed.Gen.Core.UIDs     (uAuthority_SID, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
 import           Hsed.Jig.Catalogue     (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Files         (runningAsRoot)
+import           Hsed.Jig.Guard         (guardDrive)
 import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
 import           Hsed.Jig.Script        (controlComPacket)
 import           Hsed.Jig.Support       (at, atPath, disk6Like, silently)
 import           Hsed.Jig.Target        (Target (..))
+import           Hsed.Jig.Transcript    (newTranscript)
 import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..), parseQuery, synthesize)
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.Types         (SimParams (..), TPerState (..), defaultSimParams)
-import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..))
+import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..), newInProc)
 import           Hsed.Transport.Replay  (openReplay)
 import           Hsed.Wire              (defaultExchangeOpts, exchangeComPacket, ifSend, newChannel)
@@ -359,7 +361,8 @@ spec = do
               bytes = either (error . show) id (controlComPacket base wrongSidCall)
           failed <- exchangeComPacket defaultExchangeOpts (\q -> Right <$> ifSend sim (proto q) (comId q) (lenBytes q) (payload q)) channel sim base bytes
           failed `shouldSatisfy` isRight
-          code <- silently (runOpened defaultRunOptions { roTests = keys "ETC-21/adminsp", roReportDir = dir </> "report" } (SimTarget sim control))
+          t <- newTranscript
+          code <- silently (runOpened defaultRunOptions { roTests = keys "ETC-21/adminsp", roReportDir = dir </> "report" } t (SimTarget sim control))
           code `shouldBe` ExitFailure 1
           json <- reportIn dir
           verdicts json `shouldBe` [(str "ETC-21/adminsp", str "skipped")]
@@ -379,7 +382,8 @@ spec = do
           opened `shouldSatisfy` isRight
           held <- scPeek control
           Map.size (tsSessions held) `shouldBe` 1
-          code <- silently (runOpened defaultRunOptions { roTests = keys "UCT-02", roReportDir = dir </> "report" } (SimTarget sim control))
+          t <- newTranscript
+          code <- silently (runOpened defaultRunOptions { roTests = keys "UCT-02", roReportDir = dir </> "report" } t (SimTarget sim control))
           code `shouldBe` ExitSuccess
           released <- scPeek control
           Map.null (tsSessions released) `shouldBe` True
@@ -457,9 +461,11 @@ spec = do
             reports = dir </> "report"
         writeFileBinary file bytes
         tr <- openReplay file >>= either (throwString . T.unpack) pure
+        t <- newTranscript
+        g <- guardDrive t [] (Just (DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0)) (RawDrive tr (\_ -> pure (Left "a replay binds nothing")))
         code <- silently $ runOpened
           defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01", roCapture = Just capture, roReportDir = reports }
-          (DriveTarget tr (Just (DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0)))
+          t (DriveTarget g)
         code `shouldBe` ExitSuccess
         readFileBinary capture `shouldReturn` bytes
         doesFileExist (dir </> "capture" </> "disk6-level0.json") `shouldReturn` True
@@ -482,10 +488,12 @@ spec = do
               }
             capture = dir </> "capture" </> "disk6-level0.bin"
         (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+        t <- newTranscript
+        g <- guardDrive t [] (Just (DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0)) (RawDrive failing (\_ -> pure (Left "a test drive binds nothing")))
         code <- silently $ runOpened
           defaultRunOptions { roTarget = TPair TSim (TReplay "a failing drive"), roTests = keys "UCT-01"
                             , roCapture = Just capture, roReportDir = dir </> "report" }
-          (PairTarget (SimTarget sim control) (DriveTarget failing (Just (DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0))))
+          t (PairTarget (SimTarget sim control) (DriveTarget g))
         code `shouldBe` ExitFailure 1
         readIORef asked `shouldReturn` 1
         doesFileExist capture `shouldReturn` False

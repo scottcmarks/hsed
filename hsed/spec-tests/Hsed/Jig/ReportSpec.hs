@@ -24,7 +24,12 @@ each in order; the JUnit counts. The secrets a run read are masked in every
 report, in the transcript's bytes and in every text a case came to, each
 given by its length and the first 12 hex digits of its SHA-256, in clear
 with @--show-msid@ alone (design 9.3 item 5), and the simulator's SID PIN
-is given the same way among the options. @verify-transcript@ fails a
+is given the same way among the options. M4c's keys (each drive's policy,
+the commands outside it, those the Guard blocked, why a run stopped, a
+pre-flight's notes, @--recover@'s outcome, each end's Properties with the
+host's, the pair's comparison of them) are empty or null for a run without
+them and given as they are otherwise, a secret their texts or a command
+outside the policy quote masked. @verify-transcript@ fails a
 report whose drive was issued an IF-SEND only when asked to, the
 simulator's IF-SENDs counting for nothing, and with @--level0-only@ one
 whose drive was issued anything but Level 0 Discovery's IF-RECV; an entry
@@ -52,11 +57,13 @@ import           Hsed.Core.Value       (List (..), Value (..), (.:))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uSMUID)
 import           Hsed.Jig.Catalogue    (CaseKey (..), TestId (..))
+import           Hsed.Jig.Guard        (Policy (..), readOnlyMethods)
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Pair         (PairReport (..))
+import           Hsed.Jig.PairProperties (PropertiesPair (..))
 import           Hsed.Jig.Prereq       (Waiver (..), lockingSPUntouched, noSessionOpened)
 import           Hsed.Jig.Report
-import           Hsed.Jig.Script       (SessionHandle (..), Verdict (..), controlComPacket, sessionComPacket)
+import           Hsed.Jig.Script       (PropertiesAnswer (..), SessionHandle (..), Verdict (..), controlComPacket, sessionComPacket)
 import           Hsed.Jig.Support      (at, atPath, silently)
 import           Hsed.Jig.Transcript   (TEntry (..))
 import           Hsed.Level0           (Descriptor (..), Level0 (..))
@@ -77,27 +84,35 @@ propertiesSend = Request IfSend 1 0x1004 512 (bytes <> B.replicate (512 - B.leng
 --   extension passed, ETC-02 skipped; a note, an IF-SEND issued, one blocked.
 sample :: RunResult
 sample = RunResult
-  { rrOptions    = defaultRunOptions
-  , rrVersion    = "Version 0.1.0.1 [test]"
-  , rrStarted    = noon
-  , rrTargets    = [Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing]
-  , rrCases      =
+  { rrOptions        = defaultRunOptions
+  , rrVersion        = "Version 0.1.0.1 [test]"
+  , rrStarted        = noon
+  , rrTargets        = [Describe "tper" "hsed-sim test" UnitBytes (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing]
+  , rrCases          =
       [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) Pass (lockingSPUntouched : noSessionOpened) [] [] [] True
       , CaseResult (CaseKey (SPF 2) (Just 1) Nothing Nothing) (Fail ["step 1: not so"]) [lockingSPUntouched] [("an extension", Pass)]
           [("MaxComPacketSize", "2048")] [] True
       , CaseResult (CaseKey (ETC 2) Nothing Nothing Nothing) (Skipped "needs IF-SEND") [] [] [] [] False
       ]
-  , rrTranscript =
+  , rrTranscript     =
       [ Note 1 "UCT-01 on the tper"
       , Issued 2 "tper" propertiesSend (Response Good mempty)
       , Blocked 3 "drive" propertiesSend "Level0Only: no IF-SEND reaches a drive at M3 (design 9.3)"
       ]
-  , rrLevel0     = []
-  , rrPair       = Nothing
-  , rrIfSends    = 0
-  , rrSecrets    = []
-  , rrProblems   = []
-  , rrExit       = ExitFailure 1
+  , rrLevel0         = []
+  , rrPair           = Nothing
+  , rrIfSends        = 0
+  , rrSecrets        = []
+  , rrProblems       = []
+  , rrExit           = ExitFailure 1
+  , rrPolicies       = []
+  , rrOutsidePolicy  = []
+  , rrBlocked        = 0
+  , rrInterrupted    = Nothing
+  , rrPreflight      = []
+  , rrRecover        = Nothing
+  , rrProperties     = []
+  , rrPairProperties = Nothing
   }
 
 -- | A pair of the simulator and a replay: UCT-01 passed on the simulator,
@@ -158,6 +173,23 @@ secretive showing = sample
     result    = either (error . show) id (sessionComPacket h (generate (MethodResponse [L (List [N ((3 :: Natural) .: msid)])] 0)))
     challenge = either (error . show) id (sessionComPacket h (msid <> "!"))
     padded b  = b <> B.replicate (2048 - B.length b) 0
+
+-- | The sample with M4c's fields given: a drive bound under the read-only
+--   list, a command outside it, one blocked, a stopped run, a pre-flight's
+--   note, a recovery, the drive's Properties with the host's, the pair's
+--   not compared.
+m4cFields :: RunResult
+m4cFields = sample
+  { rrPolicies       = [("drive", AllowList 0x1004 readOnlyMethods)]
+  , rrOutsidePolicy  = [("drive", propertiesSend)]
+  , rrBlocked        = 1
+  , rrInterrupted    = Just "SIGINT"
+  , rrPreflight      = ["/dev/disk22s1 on /Volumes/SED NVME (msdos), allowed"]
+  , rrRecover        = Just (Right "STACK_RESET on 0x1004: Success")
+  , rrProperties     = [("drive", [("MaxComPacketSize", 4096)], PropertiesAnswer [("MaxComPacketSize", 2048), ("MaxSessions", 1)]
+                                                                                 (Just [("MaxComPacketSize", 4096)]))]
+  , rrPairProperties = Just (NotCompared "one end ran no UCT-02")
+  }
 
 -- | A JSON array's elements.
 arr :: Maybe A.Value -> [A.Value]
@@ -282,6 +314,35 @@ spec = do
         versions <- for (filter (".json" `L.isSuffixOf`) (concat written')) $ \f ->
           readFileBinary f >>= either throwString (pure . at "hsed") . A.eitherDecodeStrict'
         L.sort versions `shouldBe` map (Just . A.String . tshow) [1 .. 6 :: Int]
+
+  describe "M4c's keys (the scaffold's: their JSON final, their Markdown and JUnit group G3's)" $ do
+    it "are empty or null where a run had none of them" $ do
+      (_, json, _) <- written sample
+      [ at k json | k <- ["policies", "outside_policy", "blocked", "interrupted", "preflight", "recover", "properties", "pair_properties"] ]
+        `shouldBe` [Just (A.Array mempty), Just (A.Array mempty), Just (A.Number 0), Just A.Null, Just (A.Array mempty), Just A.Null
+                   , Just (A.Array mempty), Just A.Null]
+    it "give each drive's policy, the commands outside it, those blocked, why the run stopped, the pre-flight's notes, --recover's outcome, each end's Properties with the host's, and the pair's" $ do
+      (_, json, _) <- written m4cFields
+      at "policies" json `shouldBe` Just (A.toJSON [A.object
+        [ "end" A..= ("drive" :: Text), "policy" A..= ("allow_list" :: Text), "base_comid" A..= (4100 :: Int)
+        , "allowed" A..= (["properties", "start_session_admin_sp", "get_c_pin_msid", "end_of_session"] :: [Text]) ]])
+      [ (at "end" o, atPath ["request", "op"] o, atPath ["request", "comid"] o) | o <- arr (at "outside_policy" json) ]
+        `shouldBe` [(Just "drive", Just "if_send", Just (A.Number 4100))]
+      (at "blocked" json, at "interrupted" json, at "preflight" json)
+        `shouldBe` (Just (A.Number 1), Just "SIGINT", Just (A.toJSON ["/dev/disk22s1 on /Volumes/SED NVME (msdos), allowed" :: Text]))
+      at "recover" json `shouldBe` Just (A.object ["ok" A..= True, "text" A..= ("STACK_RESET on 0x1004: Success" :: Text)])
+      at "properties" json `shouldBe` Just (A.toJSON [A.object
+        [ "end" A..= ("drive" :: Text), "host_sent" A..= A.object ["MaxComPacketSize" A..= (4096 :: Int)]
+        , "tper" A..= A.object ["MaxComPacketSize" A..= (2048 :: Int), "MaxSessions" A..= (1 :: Int)]
+        , "host" A..= A.object ["MaxComPacketSize" A..= (4096 :: Int)] ]])
+      (atPath ["pair_properties", "compared"] json, atPath ["pair_properties", "reason"] json)
+        `shouldBe` (Just (A.Bool False), Just "one end ran no UCT-02")
+    it "mask a secret the new texts quote, and one in a command outside the policy" $ do
+      let quoting = m4cFields { rrSecrets = [msid], rrInterrupted = Just ("stopped reading " <> decodeUtf8Lenient msid)
+                              , rrOutsidePolicy = [("drive", Request IfSend 1 0x1004 512 (msid <> B.replicate (512 - B.length msid) 0))] }
+      (json, _, _) <- texts quoting
+      json `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient msid)
+      json `shouldNotSatisfy` T.isInfixOf (hexOf msid)
 
   describe "the secrets a run read (design 9.3 item 5)" $ do
     it "gives a secret by its length and the first 12 hex digits of its SHA-256, never its bytes" $

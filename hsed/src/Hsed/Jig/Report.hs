@@ -74,6 +74,7 @@ module Hsed.Jig.Report
   ) where
 
 import qualified Data.Aeson             as A
+import qualified Data.Aeson.Key         as K
 import qualified Data.Aeson.KeyMap      as KM
 import qualified Data.Aeson.Types       as A (Parser, parseEither, parseFail)
 import qualified Data.ByteString.Base16 as B16
@@ -94,10 +95,12 @@ import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..
 import           Hsed.Gen.Core.UIDs     (methodIDUIDs, sessionManagerMethodUIDs)
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (createOwned, writeOwned)
+import           Hsed.Jig.Guard         (Policy)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairReport (..), judged, pairFails, pairLevel0)
+import           Hsed.Jig.PairProperties (PropertiesPair)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
-import           Hsed.Jig.Script        (Verdict (..), describeStatus, t45Of, t45RowOf, verdictText)
+import           Hsed.Jig.Script        (PropertiesAnswer (..), Verdict (..), describeStatus, t45Of, t45RowOf, verdictText)
 import           Hsed.Jig.Sha256        (sha256Hex)
 import           Hsed.Jig.Transcript    (TEntry (..), maskSecrets, maskText)
 import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, describeProblem,
@@ -134,19 +137,32 @@ data CaseResult = CaseResult
 
 -- | What a run came to.
 data RunResult = RunResult
-  { rrOptions    :: !RunOptions
-  , rrVersion    :: !Text               -- ^ "Hsed.Version"'s
-  , rrStarted    :: !UTCTime
-  , rrTargets    :: ![Describe]         -- ^ what each transport said it is (two for a pair)
-  , rrCases      :: ![CaseResult]
-  , rrTranscript :: ![TEntry]           -- ^ as the wire had it; printed masked ('rrSecrets') unless @--show-msid@
-  , rrLevel0     :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name (its transport's role)
-  , rrPair       :: !(Maybe PairReport)
-  , rrIfSends    :: !Int                -- ^ the IF-SENDs issued on a drive (none at M3)
-  , rrSecrets    :: ![ByteString]       -- ^ the secrets the run read (the MSID, a PIN), each masked in the reports and
-                                        --   given by its length and digest alone, unless @--show-msid@
-  , rrProblems   :: ![Text]             -- ^ what else failed the run: the capture, a pair not computed
-  , rrExit       :: !ExitCode
+  { rrOptions        :: !RunOptions
+  , rrVersion        :: !Text               -- ^ "Hsed.Version"'s
+  , rrStarted        :: !UTCTime
+  , rrTargets        :: ![Describe]         -- ^ what each transport said it is (two for a pair)
+  , rrCases          :: ![CaseResult]
+  , rrTranscript     :: ![TEntry]           -- ^ as the wire had it; printed masked ('rrSecrets') unless @--show-msid@
+  , rrLevel0         :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name (its transport's role)
+  , rrPair           :: !(Maybe PairReport)
+  , rrIfSends        :: !Int                -- ^ the IF-SENDs issued on a drive (none at M3)
+  , rrSecrets        :: ![ByteString]       -- ^ the secrets the run read (the MSID, a PIN), each masked in the reports and
+                                            --   given by its length and digest alone, unless @--show-msid@
+  , rrProblems       :: ![Text]             -- ^ what else failed the run: the capture, a pair not computed
+  , rrExit           :: !ExitCode
+  , rrPolicies       :: ![(Text, Policy)]   -- ^ each drive's policy as the run ended, by the end's name ("Hsed.Jig.Guard")
+  , rrOutsidePolicy  :: ![(Text, Request)]  -- ^ the commands a drive's own transcript holds that its policy does not admit,
+                                            --   by the end's name: a safety violation (design 9.3)
+  , rrBlocked        :: !Int                -- ^ the commands the Guard refused, each Blocked in the transcript
+  , rrInterrupted    :: !(Maybe Text)       -- ^ why the run stopped short, if it was stopped (a signal, @--interrupt-in-session@)
+  , rrPreflight      :: ![Text]             -- ^ what a drive's pre-flight noted (the mounts @--allow-mounted@ let by)
+  , rrRecover        :: !(Maybe (Either Text Text))
+                                            -- ^ what @--recover@ did, or why it did not recover; none without it
+  , rrProperties     :: ![(Text, [(Text, Natural)], PropertiesAnswer)]
+                                            -- ^ each end's Properties with the host's properties (UCT-02's), by the end's
+                                            --   name: the host properties sent, and the TPer's answer
+  , rrPairProperties :: !(Maybe PropertiesPair)
+                                            -- ^ a pair's Properties compared ("Hsed.Jig.PairProperties", design 13.32 (6))
   }
   deriving (Eq, Show)
 
@@ -208,19 +224,28 @@ shown = roShowMsid . rrOptions
 
 -- | A run's result as the reports and the summary print it: as it is where
 --   the run shows its secrets (@--show-msid@); else each transcript entry
---   with its secrets masked in its bytes ("Hsed.Jig.Transcript".'maskSecrets')
---   and every text a case or the run came to, a verdict's reasons, an
---   extension's, an observation, a waiver's reason, a problem, with them
---   masked as text, hex or as shown ('maskText'), so that a reason quoting
---   an answer that did not read never prints one (design 9.3 item 5).
+--   with its secrets masked in its bytes ("Hsed.Jig.Transcript".'maskSecrets'),
+--   and each command a drive was issued outside its policy as the
+--   transcript's entries are, and every text a case or the run came to, a
+--   verdict's reasons, an extension's, an observation, a waiver's reason, a
+--   problem, why the run was stopped, a pre-flight's note, what @--recover@
+--   did, with them masked as text, hex or as shown ('maskText'), so that a
+--   reason quoting an answer that did not read never prints one (design 9.3
+--   item 5).
 printable :: RunResult -> RunResult
 printable rr
   | shown rr  = rr
   | otherwise = rr { rrCases = map maskCase (rrCases rr), rrTranscript = map (maskSecrets secrets) (rrTranscript rr)
-                   , rrProblems = map text (rrProblems rr) }
+                   , rrProblems = map text (rrProblems rr), rrOutsidePolicy = map (second request) (rrOutsidePolicy rr)
+                   , rrInterrupted = fmap text (rrInterrupted rr), rrPreflight = map text (rrPreflight rr)
+                   , rrRecover = fmap (bimap text text) (rrRecover rr) }
   where
     secrets = rrSecrets rr
     text    = maskText secrets
+    -- a command's payload masked as a blocked entry's is
+    request q = case maskSecrets secrets (Blocked 0 "" q "") of
+      Blocked _ _ masked _ -> masked
+      _                    -> q
     maskCase cr = cr
       { crVerdict      = verdict (crVerdict cr)
       , crWaivers      = map (\w -> w { wReason = text (wReason w) }) (crWaivers cr)
@@ -273,23 +298,39 @@ instance A.ToJSON CaseResult where
 -- | A run's result as given: 'writeReports' prints 'printable'.
 instance A.ToJSON RunResult where
   toJSON rr = A.object
-    [ "hsed"           A..= rrVersion rr
-    , "started"        A..= rrStarted rr
-    , "options"        A..= optionsJSON (rrOptions rr)
-    , "targets"        A..= rrTargets rr
-    , "cases"          A..= rrCases rr
-    , "transcript"     A..= map entryJSON (rrTranscript rr)
-    , "level0"         A..= [ A.object ["end" A..= end, "response" A..= l0, "decoded" A..= map decodedJSON (l0Descriptors l0)]
-                            | (end, l0) <- rrLevel0 rr ]
-    , "pair"           A..= rrPair rr
-    , "if_send_issued" A..= rrIfSends rr
-    , "secrets"        A..= [ A.object ["len" A..= B.length s, "sha256" A..= T.take 12 (sha256Hex s), "shown" A..= shown rr]
-                            | s <- rrSecrets rr ]
-    , "problems"       A..= rrProblems rr
-    , "exit"           A..= exitNumber (rrExit rr)
+    [ "hsed"            A..= rrVersion rr
+    , "started"         A..= rrStarted rr
+    , "options"         A..= optionsJSON (rrOptions rr)
+    , "targets"         A..= rrTargets rr
+    , "cases"           A..= rrCases rr
+    , "transcript"      A..= map entryJSON (rrTranscript rr)
+    , "level0"          A..= [ A.object ["end" A..= end, "response" A..= l0, "decoded" A..= map decodedJSON (l0Descriptors l0)]
+                             | (end, l0) <- rrLevel0 rr ]
+    , "pair"            A..= rrPair rr
+    , "if_send_issued"  A..= rrIfSends rr
+    , "secrets"         A..= [ A.object ["len" A..= B.length s, "sha256" A..= T.take 12 (sha256Hex s), "shown" A..= shown rr]
+                             | s <- rrSecrets rr ]
+    , "problems"        A..= rrProblems rr
+    , "exit"            A..= exitNumber (rrExit rr)
+    , "policies"        A..= [ A.Object (KM.fromList ["end" A..= end] <> objectOf (A.toJSON p)) | (end, p) <- rrPolicies rr ]
+    , "outside_policy"  A..= [ A.object ["end" A..= end, "request" A..= q] | (end, q) <- rrOutsidePolicy rr ]
+    , "blocked"         A..= rrBlocked rr
+    , "interrupted"     A..= rrInterrupted rr
+    , "preflight"       A..= rrPreflight rr
+    , "recover"         A..= fmap (either (outcome False) (outcome True)) (rrRecover rr)
+    , "properties"      A..= [ A.object [ "end" A..= end, "host_sent" A..= named (map (second toInteger) sent)
+                                        , "tper" A..= named (paTPer answer), "host" A..= fmap named (paHost answer) ]
+                             | (end, sent, answer) <- rrProperties rr ]
+    , "pair_properties" A..= rrPairProperties rr
     ]
     where
       decodedJSON d = A.object ["code" A..= dCode d, "decode" A..= decodeDescriptor d]
+      outcome ok text = A.object ["ok" A..= (ok :: Bool), "text" A..= (text :: Text)]
+      -- properties as an object of their names
+      named ps = A.object [ K.fromText name A..= (v :: Integer) | (name, v) <- ps ]
+      objectOf v = case v of
+        A.Object o -> o
+        _          -> mempty
 
 -- | The options a run was given, the expected serial masked and the
 --   simulator's SID PIN given by its length and digest alone.

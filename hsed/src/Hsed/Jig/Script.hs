@@ -30,8 +30,14 @@ case has open, the secrets it read, and what it observed for the report).
 A script runs on one end of a run, the simulator or a drive (the runner
 steps a pair's ends one after the other, "Hsed.Jig.Run"). On the simulator
 the verbs use its transport as it is; on a drive every command goes through
-the Guard under M3's policy ('drivePolicy', Level0Only), so that a refused
-one is recorded and answered 'Unsupported', never issued.
+the Guard ("Hsed.Jig.Guard".'GuardedDrive', which "Hsed.Jig.Target" puts the
+drive behind when it opens it) under the drive's policy, Level0Only until
+'baseComId' binds the drive's base ComID where the run admits more than
+Level 0 Discovery on it, so that a refused command is recorded and answered
+'Unsupported', never issued. A run's stop flag ('reStop') and 'Interrupted'
+are how a run is stopped between commands, 'stopIfAsked' the check
+(M4c's group G2's); 'admitsStackReset' says whether the end's policy takes
+STACK_RESET.
 
 An expectation that does not hold ends the script ('unmet'); 'attempt'
 turns what a script comes to into its 'Verdict'; 'note' adds a line to the
@@ -71,12 +77,15 @@ module Hsed.Jig.Script
   , emptyRunCtx
   , RunEnv (..)
   , Script
+  , Interrupted (..)
     -- * Verdicts
   , Verdict (..)
   , attempt
   , unmet
   , note
   , observe
+  , stopIfAsked
+  , admitsStackReset
     -- * Verbs
   , discover
   , ifRecvOn
@@ -105,7 +114,6 @@ module Hsed.Jig.Script
   , opalV2Of
   , withSession
     -- * What the verbs build on
-  , drivePolicy
   , baseComId
   , featureIn
   , transferFor
@@ -165,7 +173,8 @@ import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Gen.Core.TableDescs (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs     (uCloseSession, uProperties, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
-import           Hsed.Jig.Guard         (Policy (..), guardedRecv, guardedSend)
+import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, driveAllowed, driveBind, driveInfo, driveRecv, driveSend,
+                                         driveTransport)
 import           Hsed.Jig.Options       (RunOptions (..))
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, record)
@@ -196,6 +205,9 @@ data RunCtx = RunCtx
   , rcSecrets          :: ![ByteString]             -- ^ the secrets read (the MSID), masked in every report unless @--show-msid@
   , rcTPerProperties   :: !(Maybe [(Text, Integer)]) -- ^ the TPer's properties, once Properties reported them
   , rcHostProperties   :: !(Maybe [(Text, Integer)]) -- ^ the host's, as the TPer answered them
+  , rcNegotiated       :: !(Maybe ([(Text, Natural)], PropertiesAnswer))
+                                                    -- ^ the host properties a Properties sent (UCT-02's), and the TPer's
+                                                    --   answer: the Pair's Properties comparison (design 13.32 (6))
   , rcObservations     :: ![(Text, Text)]           -- ^ what the case running has observed ('observe'), in order; the
                                                     --   runner takes them for the case's report and starts the next
                                                     --   case with none
@@ -204,16 +216,18 @@ data RunCtx = RunCtx
 
 -- | What a run starts knowing: nothing.
 emptyRunCtx :: RunCtx
-emptyRunCtx = RunCtx Nothing Nothing Nothing Nothing [] Nothing Nothing []
+emptyRunCtx = RunCtx Nothing Nothing Nothing Nothing [] Nothing Nothing Nothing []
 
 -- | A script's environment: the run's target, transcript, channel, what it
---   has learned, its options, and where it logs.
+--   has learned, its options, its stop flag, and where it logs.
 data RunEnv = RunEnv
   { reTarget     :: !Target
   , reTranscript :: !Transcript
   , reChannel    :: !Channel
   , reCtx        :: !(IORef RunCtx)
   , reOpts       :: !RunOptions
+  , reStop       :: !(IORef (Maybe Text))  -- ^ why the run is to stop, once asked (a signal's name,
+                                           --   @--interrupt-in-session@): nothing new is issued after it
   , reLogFunc    :: !LogFunc
   }
 
@@ -222,6 +236,13 @@ instance HasLogFunc RunEnv where
 
 -- | A case's steps.
 type Script = RIO RunEnv
+
+-- | A script stopped because the run was asked to stop, and why: thrown
+--   between commands, never in the middle of an exchange begun (M4c).
+newtype Interrupted = Interrupted Text
+  deriving (Show)
+
+instance Exception Interrupted
 
 
 -- * Verdicts
@@ -268,46 +289,39 @@ attempt s = tryAny s <&> \case
 
 -- * The end a script talks to
 
--- | One end of a run: the simulator, or a drive and what the IORegistry
---   says of it.
+-- | One end of a run: the simulator, or a drive behind the Guard.
 data End
   = SimEnd !(Transport 'ReadWrite)
-  | DriveEnd !(Transport 'ReadOnly) !(Maybe DriveInfo)
+  | DriveEnd !GuardedDrive
 
 theEnd :: Script End
 theEnd = asks reTarget >>= \case
-  SimTarget tr _    -> pure (SimEnd tr)
-  DriveTarget tr di -> pure (DriveEnd tr di)
-  PairTarget _ _    -> unmet "a script runs on one end of a pair at a time (Hsed.Jig.Run)"
+  SimTarget tr _ -> pure (SimEnd tr)
+  DriveTarget g  -> pure (DriveEnd g)
+  PairTarget _ _ -> unmet "a script runs on one end of a pair at a time (Hsed.Jig.Run)"
 
 -- | The unit of the end's transfer lengths.
 endUnit :: Script Unit
 endUnit = theEnd <&> \case
-  SimEnd tr     -> unitOf tr
-  DriveEnd tr _ -> unitOf tr
+  SimEnd tr  -> unitOf tr
+  DriveEnd g -> unitOf (driveTransport g)
 
--- | The policy a drive's commands pass at M3: Level 0 Discovery alone
---   (design 9.3.2).
-drivePolicy :: Policy
-drivePolicy = Level0Only
-
--- | IF-RECV on the end: the simulator's transport, or the Guard's.
+-- | IF-RECV on the end: the simulator's transport, or the drive's through
+--   the Guard, under its policy.
 recvOn :: Word8 -> Word16 -> Word32 -> Script Response
 recvOn p c len = theEnd >>= \case
-  SimEnd tr     -> liftIO (ifRecv tr p c len)
-  DriveEnd tr _ -> do
-    t <- asks reTranscript
-    liftIO (either blocked id <$> guardedRecv t drivePolicy tr (Request IfRecv p c len mempty))
+  SimEnd tr  -> liftIO (ifRecv tr p c len)
+  DriveEnd g -> liftIO (either blocked id <$> driveRecv g (Request IfRecv p c len mempty))
 
 -- | IF-SEND on the end, the payload zero-padded to the transfer length: the
---   simulator's transport, or the Guard's.
+--   simulator's transport, or the drive's through the Guard, under its
+--   policy.
 sendOn :: Word8 -> Word16 -> Word32 -> ByteString -> Script Response
 sendOn p c len bytes = theEnd >>= \case
-  SimEnd tr     -> liftIO (ifSend tr p c len bytes)
-  DriveEnd tr _ -> do
-    t <- asks reTranscript
+  SimEnd tr  -> liftIO (ifSend tr p c len bytes)
+  DriveEnd g -> do
     let padded = bytes <> B.replicate (fromIntegral len - B.length bytes) 0
-    liftIO (either blocked id <$> guardedSend t drivePolicy tr (Request IfSend p c len padded))
+    liftIO (either blocked id <$> driveSend g (Request IfSend p c len padded))
 
 -- | A command the Guard refused, as the transport's answer.
 blocked :: Text -> Response
@@ -322,6 +336,22 @@ note t = asks reTranscript >>= \tr -> liftIO (record tr (Note 0 t))
 --   verdict).
 observe :: Text -> Text -> Script ()
 observe name value' = modifyCtx (\c -> c { rcObservations = rcObservations c <> [(name, value')] })
+
+-- | Stop the script if the run was asked to stop ('reStop'), throwing
+--   'Interrupted' with why, before a verb issues a command. M4c's group
+--   G2's: at the scaffold it stops nothing.
+stopIfAsked :: Script ()
+stopIfAsked = pure ()
+
+-- | Whether the end's policy takes STACK_RESET: on the simulator, always;
+--   on a drive, where what binding its base ComID admits holds
+--   'AllowStackReset' (@--recover@, or STACK_RESET before each case,
+--   "Hsed.Jig.Options".@roStackResetBeforeCases@), the drive's Level0Only
+--   before the bind taking none ('stackReset' binds first).
+admitsStackReset :: Script Bool
+admitsStackReset = theEnd <&> \case
+  SimEnd _   -> True
+  DriveEnd g -> AllowStackReset `elem` driveAllowed g
 
 readCtx :: Script RunCtx
 readCtx = asks reCtx >>= readIORef
@@ -358,10 +388,10 @@ discover = do
 level0Of :: Word32 -> Script Level0
 level0Of len = do
   theEnd >>= \case
-    DriveEnd _ (Just di) -> note ("Level 0 Discovery, " <> tshow len <> " bytes: "
-                                  <> either ("no CDB: " <>) (("the CDB, as the kext's shim builds it, " <>) . spacedHex)
-                                            (level0Cdb (diInterface di) (len `div` blockBytes)))
-    _                    -> pure ()
+    DriveEnd g | Just di <- driveInfo g -> note ("Level 0 Discovery, " <> tshow len <> " bytes: "
+                                                <> either ("no CDB: " <>) (("the CDB, as the kext's shim builds it, " <>) . spacedHex)
+                                                          (level0Cdb (diInterface di) (len `div` blockBytes)))
+    _                                   -> pure ()
   r <- recvOn comPacketProtocol level0ComId len
   unless (status r == Good) (unmet ("Level 0 Discovery: the IF-RECV answered " <> describeStatus (status r)))
   either (unmet . ("Level 0 Discovery: the response does not split: " <>) . tshow) pure (splitLevel0 (rpayload r))
@@ -401,7 +431,7 @@ properties = fmap paTPer <$> propertiesWith Nothing
 --   expecting another status there is unobservable.
 expectStatus :: Text -> IfStatus -> Response -> Script ()
 expectStatus name expected r = unless (status r == expected) $ theEnd >>= \case
-  DriveEnd _ _ | TransportFailure t <- status r, expected /= Good ->
+  DriveEnd _ | TransportFailure t <- status r, expected /= Good ->
     throwIO (Unseen (name <> ": " <> ifStatusName expected <> " expected; the transport answered a failure (" <> t
                      <> "), which carries no interface status (design 6.2)"))
   _ -> unmet (name <> ": " <> describeStatus (status r) <> ", not " <> describeStatus expected)
@@ -511,8 +541,9 @@ data MethodOutcome = MethodOutcome
 --   host's answered, read against the generated signature's response
 --   (@=> SMUID.Properties [ Properties : …, HostProperties = … ]@,
 --   "Hsed.Core.Method".'positional'), both kept in the run's context, and
---   MaxComPacketSize for the exchanges after it. A property that is no name
---   with a number is left out, as M3 read them.
+--   MaxComPacketSize for the exchanges after it; where the host's were
+--   sent, they and the answer too, for the Pair's Properties comparison. A
+--   property that is no name with a number is left out, as M3 read them.
 propertiesWith :: Maybe [(Text, Natural)] -> Script (Either ExchangeError PropertiesAnswer)
 propertiesWith host = do
   c <- baseComId
@@ -522,6 +553,7 @@ propertiesWith host = do
     { rcTPerProperties   = Just (paTPer pa)
     , rcHostProperties   = paHost pa
     , rcMaxComPacketSize = (fromInteger <$> L.lookup maxComPacketSizeName (paTPer pa)) <|> rcMaxComPacketSize x
+    , rcNegotiated       = fmap (\sent -> (sent, pa)) host <|> rcNegotiated x
     }
   pure answer
   where
@@ -696,8 +728,8 @@ expectSyncStatus name expected = \case
 --   Pending (asked again, as many times as the host's timeout holds polls),
 --   or Table 31's No Response Available, each told by its constants
 --   ("Hsed.Core.Record".'decodeRecordStrict'); or why none came. On a drive
---   the Guard decides both commands (Level0Only refuses them until M4c's
---   @--recover@).
+--   the Guard decides both commands (Level0Only refuses them; an allow list
+--   takes them with 'AllowStackReset', on the base ComID).
 stackReset :: Word16 -> Script (Either Text Word32)
 stackReset c = do
   u <- endUnit
@@ -791,11 +823,15 @@ closingStep name h v = do
 
 -- | The base ComID: the one recorded (UCT-01's), else the Opal SSC V2
 --   descriptor's of the Level 0 response, discovered if need be (Test Cases
---   4.1 g and Table 5, PDF 26: a static ComID the descriptor reports).
+--   4.1 g and Table 5, PDF 26: a static ComID the descriptor reports). On a
+--   drive where the run admits more than Level 0 Discovery ("Hsed.Jig.Guard".'driveAllowed'
+--   not empty), the base is bound ("Hsed.Jig.Guard".'driveBind': once, from
+--   the drive's own Level 0), so that the Guard admits the allowed list's
+--   commands on it; a bind refused stops the script, saying why.
 baseComId :: Script Word16
 baseComId = do
   ctx <- readCtx
-  case rcBaseComId ctx of
+  c <- case rcBaseComId ctx of
     Just c  -> pure c
     Nothing -> do
       l0 <- maybe discover pure (rcLevel0 ctx)
@@ -804,6 +840,10 @@ baseComId = do
                           in c <$ modifyCtx (\x -> x { rcBaseComId = Just c })
         Just (Left e)  -> unmet ("the Opal SSC V2 Feature descriptor does not decode: " <> tshow e)
         Nothing        -> unmet "no Opal SSC V2 Feature descriptor in Level 0 Discovery: no base ComID to use"
+  theEnd >>= \case
+    DriveEnd g | not (null (driveAllowed g)) -> liftIO (driveBind g c) >>= either (unmet . ("the drive's " <>)) pure
+    _                                        -> pure ()
+  pure c
 
 -- | The descriptor of a feature's code in a response, decoded leniently (a
 --   pin read otherwise is a difference, not an error).
@@ -833,19 +873,19 @@ propertiesCall = generate (invocation uSMUID (Methods.Properties Nothing))
 
 -- | The host's whole exchange of a ComPacket on a ComID
 --   ("Hsed.Wire".'exchangeComPacket'): the IF-SEND through the end's path
---   (the simulator's transport, or the Guard's under 'drivePolicy'), then
---   IF-RECV, with the length Properties reported or the default, until the
---   TPer has returned everything; the packets of the answer, none for Table
---   45's (0, 0, 0).
+--   (the simulator's transport, or the drive's through the Guard, under its
+--   policy), then IF-RECV, with the length Properties reported or the
+--   default, until the TPer has returned everything; the packets of the
+--   answer, none for Table 45's (0, 0, 0).
 exchangeOn :: Word16 -> ByteString -> Script (Either ExchangeError [PacketFrame])
 exchangeOn c bytes = do
   len <- recvLength
   env <- ask
   let opts = defaultExchangeOpts { xRecvLen = len }
   theEnd >>= \case
-    SimEnd tr     -> liftIO (exchangeComPacket opts (\q -> Right <$> ifSend tr (proto q) (comId q) (lenBytes q) (payload q))
-                                               (reChannel env) tr c bytes)
-    DriveEnd tr _ -> liftIO (exchangeComPacket opts (guardedSend (reTranscript env) drivePolicy tr) (reChannel env) tr c bytes)
+    SimEnd tr  -> liftIO (exchangeComPacket opts (\q -> Right <$> ifSend tr (proto q) (comId q) (lenBytes q) (payload q))
+                                            (reChannel env) tr c bytes)
+    DriveEnd g -> liftIO (exchangeComPacket opts (driveSend g) (reChannel env) (driveTransport g) c bytes)
 
 -- | What a TPer's answer holds, read as the host reads it: the data
 --   subpackets' tokens, in order, under the host's atom policy

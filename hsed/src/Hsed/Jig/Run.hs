@@ -30,10 +30,20 @@ drive target without root, or an IF-SEND issued on a drive).
 The cases run in the catalogue's order, whatever the order of @--tests@ (the
 Test Cases run section 5's in sequence, 3.1, PDF 25); a key naming a whole
 test selects every case of it the catalogue has. Every command of the run
-goes into one transcript: each end's transport records what it exchanges,
-and a drive's is put behind the Guard (Level0Only), every command it is
-given checked first, and also records into a transcript of its own, from
-which the IF-SENDs issued on the drive are counted. A pair's ends run each
+goes into one transcript, created before the target is opened: the
+simulator's transport records what it exchanges, and a drive comes behind
+the Guard ("Hsed.Jig.Target", "Hsed.Jig.Guard".'GuardedDrive'), every
+command it is given checked first under its policy, Level0Only until its
+base ComID is bound with what the run admits on it ('driveAllowedFor':
+design 9.3's drive cases, 'driveCases', that need more than Level 0
+Discovery, or @--recover@), and recorded in a transcript of its own too,
+from which the IF-SENDs issued on the drive are counted. The run's end
+reports each drive's policy, the commands its own transcript holds that
+the policy does not admit ('outsidePolicy', M4c's group G2's), the
+commands the Guard refused, each end's Properties exchange with the host's
+properties and, for a pair, the two compared ("Hsed.Jig.PairProperties").
+With @--recover@ the target's one end runs "Hsed.Jig.Recover" in place of
+the cases. A pair's ends run each
 case in turn, the simulator first, each case's verdicts joined, each with
 its end's name, its transport's role (@tper@, @drive@, @drive-replay@: the
 one name the transcript's entries carry, "Hsed.Jig.Transcript"); then the
@@ -71,6 +81,11 @@ module Hsed.Jig.Run
   , runJig
   , runOpened
   , cases
+  , selectedCases
+    -- * A drive's run
+  , driveCases
+  , driveAllowedFor
+  , outsidePolicy
   ) where
 
 import qualified RIO.ByteString         as B
@@ -97,13 +112,16 @@ import           Hsed.Jig.Cases.UCT02   (uct02)
 import           Hsed.Jig.Cases.UCT03   (uct03steps1a1c)
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (runningAsRoot)
-import           Hsed.Jig.Guard         (guarding)
+import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, Policy, driveInfo, driveIssued, drivePolicy, driveTransport,
+                                         readOnlyMethods, recoverMethods)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (pairFails, pairLevel0)
+import           Hsed.Jig.PairProperties (pairProperties, propertiesFail)
 import           Hsed.Jig.Prereq        (Prereq (..), Waiver (..), common)
+import           Hsed.Jig.Recover       (recoverScript)
 import           Hsed.Jig.Report        (CaseResult (..), RunResult (..), renderTarget, summary, writeReports)
 import           Hsed.Jig.Script        (Credential (..), RunCtx (..), RunEnv (..), Script, Verdict (..), attempt, discover,
-                                         drain, drivePolicy, emptyRunCtx, simCredential, stackReset, verdictText)
+                                         drain, emptyRunCtx, simCredential, stackReset, verdictText)
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, ifSendsIssued, newTranscript, record, recording)
 import           Hsed.Level0            (Level0)
@@ -133,12 +151,13 @@ cases = [uct01, uct02, uct03steps1a1c, spf02case1, etc02, etc03, etc04, etc08, e
 authenticating :: [(CaseKey, (Text, UID))]
 authenticating = [(cKey etc21adminsp, ("SID", uAuthority_SID))]
 
--- | Run the jig.
+-- | Run the jig: the run's transcript and stop flag made before the target
+--   is opened, the drive's allowed list the selected cases' ('driveAllowedFor').
 runJig :: RunOptions -> IO ExitCode
 runJig opts0 = do
   started <- getCurrentTime
   root <- runningAsRoot
-  case selected (roTests opts0) of
+  case selectedCases (roTests opts0) of
     Left e -> complain e $> ExitFailure 2
     Right chosen
       | devs@(_ : _) <- devices (roTarget opts0), isNothing (roExpectSerial opts0) -> do
@@ -152,20 +171,28 @@ runJig opts0 = do
           pure (ExitFailure 3)
       | otherwise -> withProfile opts0 >>= \case
           Left e     -> complain e $> ExitFailure 1
-          Right opts -> tryAny (openTarget opts) >>= \case
-            Left e           -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> tshow e) $> ExitFailure 1
-            Right (Left e)   -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> e) $> ExitFailure 1
-            Right (Right tg) -> runOn opts started chosen tg `finally` closeTarget tg
+          Right opts -> do
+            t <- newTranscript
+            stop <- newIORef Nothing
+            tryAny (openTarget opts (driveAllowedFor opts chosen) t) >>= \case
+              Left e           -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> tshow e) $> ExitFailure 1
+              Right (Left e)   -> complain ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": " <> e) $> ExitFailure 1
+              Right (Right tg) -> runOn opts started chosen t stop tg `finally` closeTarget tg
 
 -- | Run the selected cases on a target the caller opened and closes: what
 --   'runJig' does once its target is open, without its gates (root, the
 --   profile), which the caller answers for; a test's drive that is a replay
---   with what the IORegistry would say of a drive. A key the catalogue lacks
---   is still exit 2.
-runOpened :: RunOptions -> Target -> IO ExitCode
-runOpened opts tg = case selected (roTests opts) of
+--   with what the IORegistry would say of a drive, or the simulator as a
+--   drive. The transcript is the run's: the one a drive of the target
+--   records into ("Hsed.Jig.Guard".'Hsed.Jig.Guard.guardDrive'). A key the
+--   catalogue lacks is still exit 2.
+runOpened :: RunOptions -> Transcript -> Target -> IO ExitCode
+runOpened opts t tg = case selectedCases (roTests opts) of
   Left e       -> complain e $> ExitFailure 2
-  Right chosen -> getCurrentTime >>= \started -> runOn opts started chosen tg
+  Right chosen -> do
+    started <- getCurrentTime
+    stop <- newIORef Nothing
+    runOn opts started chosen t stop tg
 
 -- | The drives a target names.
 devices :: TargetSpec -> [Text]
@@ -201,8 +228,8 @@ level0LenProblem opts
 
 -- | The cases @--tests@ selects, in the catalogue's order: all of them for
 --   none; a key naming a whole test, every case of it.
-selected :: [CaseKey] -> Either Text [Case]
-selected keys = do
+selectedCases :: [CaseKey] -> Either Text [Case]
+selectedCases keys = do
   wanted <- if null keys then Right (map ceKey catalogue) else concat <$> traverse matching keys
   traverse caseOf [ ceKey e | e <- catalogue, ceKey e `elem` wanted ]
   where
@@ -221,81 +248,132 @@ withProfile opts = case roProfile opts of
                                           (\p -> opts { roSim = (roSim opts) { spProfile = Just p } })
 
 
+-- * A drive's run
+
+-- | The cases a drive runs at M4c, design 9.3's list: UCT-01, UCT-02,
+--   UCT-03:1a-1c and SPF-02:1 (Level 0 Discovery, Properties, the MSID
+--   read in a session to the Admin SP as Anybody, an IF-RECV with nothing
+--   to return).
+driveCases :: [CaseKey]
+driveCases = map cKey [uct01, uct02, uct03steps1a1c, spf02case1]
+
+-- | What a drive's base ComID, once bound, admits for a run of these cases
+--   ("Hsed.Jig.Guard".'Hsed.Jig.Guard.driveBind'): with @--recover@, the
+--   recovery's methods; where a case selected from 'driveCases' needs more
+--   than Level 0 Discovery, the read-only methods (design 13.7), and
+--   STACK_RESET where each case's SyncIdle and NoSessions are established by
+--   one ("Hsed.Jig.Options".@roStackResetBeforeCases@, Scott's answer of
+--   2026-11-02); otherwise nothing, the drive Level0Only for the run.
+driveAllowedFor :: RunOptions -> [Case] -> [Allowed]
+driveAllowedFor opts chosen
+  | roRecover opts = recoverMethods
+  | any needsMore [ c | c <- chosen, cKey c `elem` driveCases ] = readOnlyMethods <> [ AllowStackReset | roStackResetBeforeCases opts ]
+  | otherwise = []
+  where needsMore c = any (`elem` cNeeds c) [NeedIfRecv, NeedIfSend]
+
+-- | The commands a drive's own transcript holds that its policy does not
+--   admit, re-decided by the Guard: what makes a run's exit 3 (design 9.3).
+--   M4c's group G2's: none until then.
+outsidePolicy :: Policy -> [TEntry] -> [Request]
+outsidePolicy _ _ = []
+
+
 -- * The ends of a run
 
 -- | One end of a run: its name (its transport's role, the name the
 --   transcript's entries carry: @tper@, @drive@, @drive-replay@), its
---   environment, and for a drive the transcript of what was issued to it
---   and what the IORegistry says of it.
+--   environment, and for a drive the drive behind the Guard, which holds
+--   the transcript of what was issued to it and what the IORegistry says
+--   of it.
 data End = End
   { endName  :: !Text
   , endEnv   :: !RunEnv
-  , endDrive :: !(Maybe (Transcript, Maybe DriveInfo))
+  , endDrive :: !(Maybe GuardedDrive)
   }
 
--- | A target's ends, each transport recording into the run's transcript; a
---   drive's also into its own, behind the Guard.
-endsOf :: RunOptions -> Transcript -> LogFunc -> Target -> IO [End]
-endsOf opts t lf = \case
+-- | A target's ends: the simulator's transport recording into the run's
+--   transcript; a drive as the target opened it, behind the Guard and
+--   recording into the run's transcript and its own already.
+endsOf :: RunOptions -> Transcript -> LogFunc -> IORef (Maybe Text) -> Target -> IO [End]
+endsOf opts t lf stop = \case
   SimTarget tr control -> pure <$> end (roleOf tr) (SimTarget (recording t tr) control) Nothing
-  DriveTarget tr di    -> do
-    own <- newTranscript
-    pure <$> end (roleOf tr) (DriveTarget (guarding t drivePolicy (recording t (recording own tr))) di) (Just (own, di))
-  PairTarget a b       -> (<>) <$> endsOf opts t lf a <*> endsOf opts t lf b
+  DriveTarget g        -> pure <$> end (roleOf (driveTransport g)) (DriveTarget g) (Just g)
+  PairTarget a b       -> (<>) <$> endsOf opts t lf stop a <*> endsOf opts t lf stop b
   where
     roleOf tr = dRole (describeTransport tr)
     end name tg drive = do
       channel <- newChannel
       ctx <- newIORef emptyRunCtx
-      pure (End name (RunEnv tg t channel ctx opts lf) drive)
+      pure (End name (RunEnv tg t channel ctx opts stop lf) drive)
 
 -- | What an end's transport says it is.
 endDescribe :: End -> Maybe Describe
 endDescribe e = case reTarget (endEnv e) of
-  SimTarget tr _   -> Just (describeTransport tr)
-  DriveTarget tr _ -> Just (describeTransport tr)
-  PairTarget _ _   -> Nothing
+  SimTarget tr _ -> Just (describeTransport tr)
+  DriveTarget g  -> Just (describeTransport (driveTransport g))
+  PairTarget _ _ -> Nothing
 
--- | Run the cases on the ends, then compare and capture Level 0, count the
---   IF-SENDs each drive was issued, gather the secrets the ends read, write
---   the reports.
-runOn :: RunOptions -> UTCTime -> [Case] -> Target -> IO ExitCode
-runOn opts started chosen tg = do
-  t <- newTranscript
+-- | Run the cases on the ends (with @--recover@, the recovery on the one
+--   end in their place), then compare and capture Level 0, count the
+--   IF-SENDs each drive was issued, gather each drive's policy, the
+--   commands it was issued outside it and those the Guard refused, each
+--   end's Properties with the host's and, for a pair, the two compared, and
+--   the secrets the ends read; write the reports.
+runOn :: RunOptions -> UTCTime -> [Case] -> Transcript -> IORef (Maybe Text) -> Target -> IO ExitCode
+runOn opts started chosen t stop tg = do
   logOptions <- logOptionsHandle stderr False
   withLogFunc (setLogMinLevel LevelInfo logOptions) $ \lf -> do
-    ends <- endsOf opts t lf tg
+    ends <- endsOf opts t lf stop tg
     let named = length ends > 1
-    results <- for chosen $ \c -> joined named c <$> for ends (\e -> (,) (endName e) <$> runCase e c)
+    (results, recovered) <-
+      if roRecover opts
+        then (,) [] . Just <$> recoverOn ends
+        else (\rs -> (rs, Nothing)) <$> for chosen (\c -> joined named c <$> for ends (\e -> (,) (endName e) <$> runCase e c))
     pairing <- case ends of
-      a : b : _ -> Just <$> (liftA2 pairLevel0 <$> endLevel0 a <*> endLevel0 b)
-      _         -> pure Nothing
+      a : b : _ | not (roRecover opts) -> Just <$> (liftA2 pairLevel0 <$> endLevel0 a <*> endLevel0 b)
+      _                                -> pure Nothing
     problems <- capture opts ends
     contexts <- for ends (readIORef . reCtx . endEnv)
     let level0s = [ (endName e, l0) | (e, ctx) <- zip ends contexts, Just l0 <- [rcLevel0 ctx] ]
         secrets = L.nub (filter (not . B.null) (concatMap rcSecrets contexts))
-    ifSends <- sum <$> for [ own | e <- ends, Just (own, _) <- [endDrive e] ] (fmap ifSendsIssued . entries)
+        drives  = [ (endName e, g) | e <- ends, Just g <- [endDrive e] ]
+    policies <- for drives (traverse drivePolicy)
+    issued <- for drives (traverse driveIssued)
     transcript <- entries t
-    let pairProblems = [ "pair: " <> e | Just (Left e) <- [pairing] ]
+    let ifSends    = sum (map (ifSendsIssued . snd) issued)
+        outside    = concat [ map ((,) n) (outsidePolicy p es) | ((n, p), (_, es)) <- zip policies issued ]
+        negotiated = [ (endName e, sent, answer) | (e, ctx) <- zip ends contexts, Just (sent, answer) <- [rcNegotiated ctx] ]
+        pairProps  = case contexts of
+          a : b : _ | not (roRecover opts) -> Just (pairProperties (rcNegotiated a) (rcNegotiated b))
+          _                                -> Nothing
+        pairProblems = [ "pair: " <> e | Just (Left e) <- [pairing] ]
         allProblems  = pairProblems <> problems
         failed = any (not . passed) results || any pairFails [ r | Just (Right r) <- [pairing] ]
-                 || not (null allProblems)
+                 || any propertiesFail pairProps || any isLeft recovered || not (null allProblems)
         exit | ifSends > 0 = ExitFailure 3
              | failed      = ExitFailure 1
              | otherwise   = ExitSuccess
         rr = RunResult
-          { rrOptions    = opts
-          , rrVersion    = hsedVersion
-          , rrStarted    = started
-          , rrTargets    = mapMaybe endDescribe ends
-          , rrCases      = results
-          , rrTranscript = transcript
-          , rrLevel0     = level0s
-          , rrPair       = either (const Nothing) Just =<< pairing
-          , rrIfSends    = ifSends
-          , rrSecrets    = secrets
-          , rrProblems   = allProblems
-          , rrExit       = exit
+          { rrOptions        = opts
+          , rrVersion        = hsedVersion
+          , rrStarted        = started
+          , rrTargets        = mapMaybe endDescribe ends
+          , rrCases          = results
+          , rrTranscript     = transcript
+          , rrLevel0         = level0s
+          , rrPair           = either (const Nothing) Just =<< pairing
+          , rrIfSends        = ifSends
+          , rrSecrets        = secrets
+          , rrProblems       = allProblems
+          , rrExit           = exit
+          , rrPolicies       = policies
+          , rrOutsidePolicy  = outside
+          , rrBlocked        = length [ () | Blocked {} <- transcript ]
+          , rrInterrupted    = Nothing
+          , rrPreflight      = []
+          , rrRecover        = recovered
+          , rrProperties     = negotiated
+          , rrPairProperties = pairProps
           }
     traverse_ complain allProblems
     when (ifSends > 0) $
@@ -310,6 +388,18 @@ runOn opts started chosen tg = do
 -- | Whether a case passed: its verdict, and no extension failed.
 passed :: CaseResult -> Bool
 passed cr = crVerdict cr == Pass && null [ () | (_, Fail _) <- crExtensions cr ]
+
+-- | @--recover@ on a target's one end ("Hsed.Jig.Recover"): what it did, or
+--   why it did not recover, a script stopped short (a bind refused) saying
+--   why; a target of two ends is not recovered.
+recoverOn :: [End] -> IO (Either Text Text)
+recoverOn = \case
+  [e] -> runRIO (endEnv e) $ do
+    outcome <- newIORef (Left "--recover: no outcome")
+    attempt (Pass <$ (recoverScript >>= writeIORef outcome)) >>= \case
+      Pass -> readIORef outcome
+      v    -> pure (Left ("--recover: " <> verdictText v))
+  ends -> pure (Left ("--recover runs on a target of one end, not " <> tshow (length ends) <> " (design 9.3)"))
 
 -- | A case's results on a run's ends as one: alone, as it is; on a pair, a
 --   pass where every end passed, else the failures (or the first other
@@ -394,7 +484,7 @@ lacking tg needs = listToMaybe [ why | n <- [NeedSimOnly, NeedErrorPath, NeedIfS
   where
     lack n = case tg of
       SimTarget _ _   -> Nothing
-      DriveTarget _ _ -> case n of
+      DriveTarget _   -> case n of
         NeedLevel0     -> Nothing
         NeedIfRecv     -> Just "needs IF-RECV beyond Level 0 Discovery, outside Level0Only, a drive's policy before M4c (design 9.3)"
         NeedIfSend     -> Just "needs IF-SEND; the drive is 'ReadOnly before M4c (design 9.3)"
@@ -432,7 +522,7 @@ prerequisites c = go (common (cSection c))
 establish :: Case -> Prereq -> Script (Either Text (Maybe Waiver))
 establish c p = asks reTarget >>= \case
   SimTarget _ control -> liftIO (scPeek control) >>= onSim control
-  DriveTarget _ _
+  DriveTarget _
     | p `elem` [SyncIdle, NoSessions], all (== NeedLevel0) (cNeeds c) -> pure (Right (Just (Waiver p unobservable)))
     | otherwise -> pure (Left (tshow p <> ": not observable on a drive under Level0Only at M3"))
   PairTarget _ _ -> pure (Left "a pair's ends run a case one at a time")
@@ -493,7 +583,7 @@ endLevel0 :: End -> IO (Either Text Level0)
 endLevel0 e = readIORef (reCtx (endEnv e)) >>= \ctx -> case rcLevel0 ctx of
   Just l0 -> pure (Right l0)
   Nothing -> do
-    asked <- maybe (pure False) (fmap (any level0Issued) . entries . fst) (endDrive e)
+    asked <- maybe (pure False) (fmap (any level0Issued) . driveIssued) (endDrive e)
     if asked
       then pure (Left (endName e <> ": its Level 0 Discovery did not succeed, and a drive is not asked again"))
       else runRIO (endEnv e) $ do
@@ -513,19 +603,19 @@ endLevel0 e = readIORef (reCtx (endEnv e)) >>= \ctx -> case rcLevel0 ctx of
 capture :: RunOptions -> [End] -> IO [Text]
 capture opts ends = case roCapture opts of
   Nothing   -> pure []
-  Just file -> case [ (e, own, di) | e <- ends, Just (own, Just di) <- [endDrive e] ] of
+  Just file -> case [ (e, g, di) | e <- ends, Just g <- [endDrive e], Just di <- [driveInfo g] ] of
     [] -> pure ["--capture-level0 " <> T.pack file <> ": no drive to capture (the simulator and a replay have none)"]
-    (e, own, di) : _ -> do
-      found <- lastLevel0 own >>= \case
+    (e, g, di) : _ -> do
+      found <- lastLevel0 g >>= \case
         Just x  -> pure (Just x)
-        Nothing -> endLevel0 e >> lastLevel0 own
+        Nothing -> endLevel0 e >> lastLevel0 g
       case found of
         Nothing     -> pure ["--capture-level0 " <> T.pack file <> ": the drive answered no Level 0 Discovery that succeeded"]
         Just (q, r) -> case level0Cdb (diInterface di) (lenBytes q `div` transferLength UnitBlocks512 1) of
           Left why  -> pure ["--capture-level0 " <> T.pack file <> ": no CDB for the IF-RECV: " <> why]
           Right cdb -> tryAny (captureLevel0 file di cdb r) <&> either (\ex -> ["--capture-level0 " <> T.pack file <> ": " <> tshow ex]) (const [])
   where
-    lastLevel0 own = entries own <&> \es -> L.lastMaybe [ (q, r) | Issued _ _ q r <- es, isLevel0 q, status r == Good ]
+    lastLevel0 g = driveIssued g <&> \es -> L.lastMaybe [ (q, r) | Issued _ _ q r <- es, isLevel0 q, status r == Good ]
 
 -- | Whether a command is Level 0 Discovery's IF-RECV.
 isLevel0 :: Request -> Bool

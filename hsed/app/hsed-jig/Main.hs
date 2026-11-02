@@ -64,6 +64,9 @@ commands = hsubparser
       <*> switch (long "no-if-send" <> help "fail (exit 1) if a drive's end was issued an IF-SEND (the simulator's are its own)")
       <*> switch (long "level0-only"
             <> help "fail (exit 1) if a drive's end was issued anything but Level 0 Discovery's IF-RECV (protocol 0x01, ComID 0x0001)")
+      <*> switch (long "allow-list"
+            <> help ("re-decide each command a drive's end was issued by the Guard's allow list, its base ComID the drive's Level 0's "
+                     <> "(design 9.3; read, and not yet acted on at M4c's scaffold)"))
     diffReports = Diff
       <$> strArgument (metavar "A.json" <> help "a run's JSON report")
       <*> strArgument (metavar "B.json" <> help "another")

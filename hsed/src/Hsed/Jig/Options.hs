@@ -17,8 +17,11 @@ M4a, the SID's PIN, @--sim-sid-pin HEX@, which 'parseSidPin' reads into
 "Hsed.Sim.Params".@spSidPin@), the drive's (the serial it must have, where to
 capture its Level 0 response, the Level 0 transfer length), whether the
 reports show the secrets a run read in clear (@--show-msid@, design 9.3 item
-5), and where the reports go. Here, below "Hsed.Jig.Target" and
-"Hsed.Jig.Run", so that both can take them.
+5), and where the reports go; and M4c's, for a drive the jig sends to
+(design 9.3, 11): @--recover@, a mounted drive allowed (@--allow-mounted@),
+the deliberately interrupted run (@--interrupt-in-session@), and how a
+drive's SyncIdle and NoSessions are established, which no flag sets. Here,
+below "Hsed.Jig.Target" and "Hsed.Jig.Run", so that both can take them.
 -}
 module Hsed.Jig.Options
   ( -- * Targets
@@ -78,38 +81,60 @@ parseTarget t
 
 -- | What a run is asked to do.
 data RunOptions = RunOptions
-  { roTarget       :: !TargetSpec
-  , roTests        :: ![CaseKey]          -- ^ the cases to run; none, every case of the catalogue
-  , roSim          :: !SimParams          -- ^ the simulator's parameters (@--units@, @--inactive-comid-discard@,
-                                          --   @--sim-sid-pin@)
-  , roHold         :: !Int                -- ^ the IF-RECVs a prepared response is held for (@--hold-processing@)
-  , roProfile      :: !(Maybe FilePath)   -- ^ a Level 0 response whose descriptors the simulator adds (@--profile@),
-                                          --   read when the run starts
-  , roReportDir    :: !FilePath
-  , roCapture      :: !(Maybe FilePath)   -- ^ where to write the drive's Level 0 response (@--capture-level0@)
-  , roExpectSerial :: !(Maybe Text)       -- ^ the serial the drive must have (@--expect-serial@)
-  , roLevel0Len    :: !Word32             -- ^ the Level 0 IF-RECV's transfer length (@--level0-len@)
-  , roShowMsid     :: !Bool               -- ^ the secrets a run read (the MSID) shown in clear in the reports
-                                          --   (@--show-msid@); masked otherwise (design 9.3 item 5)
+  { roTarget                :: !TargetSpec
+  , roTests                 :: ![CaseKey]        -- ^ the cases to run; none, every case of the catalogue
+  , roSim                   :: !SimParams        -- ^ the simulator's parameters (@--units@, @--inactive-comid-discard@,
+                                                 --   @--sim-sid-pin@)
+  , roHold                  :: !Int              -- ^ the IF-RECVs a prepared response is held for (@--hold-processing@)
+  , roProfile               :: !(Maybe FilePath) -- ^ a Level 0 response whose descriptors the simulator adds (@--profile@),
+                                                 --   read when the run starts
+  , roReportDir             :: !FilePath
+  , roCapture               :: !(Maybe FilePath) -- ^ where to write the drive's Level 0 response (@--capture-level0@)
+  , roExpectSerial          :: !(Maybe Text)     -- ^ the serial the drive must have (@--expect-serial@)
+  , roLevel0Len             :: !Word32           -- ^ the Level 0 IF-RECV's transfer length (@--level0-len@)
+  , roShowMsid              :: !Bool             -- ^ the secrets a run read (the MSID) shown in clear in the reports
+                                                 --   (@--show-msid@); masked otherwise (design 9.3 item 5)
+  , roRecover               :: !Bool             -- ^ @--recover@: STACK_RESET on the drive's base ComID and the checks after it,
+                                                 --   alone, no case run ("Hsed.Jig.Recover"; refused with @--tests@ or a pair,
+                                                 --   design 9.3)
+  , roAllowMounted          :: !Bool             -- ^ @--allow-mounted@: a run that may send to a drive goes ahead with a slice of
+                                                 --   it mounted, the mounts noted (design 9.3 item 4)
+  , roInterruptInSession    :: !Bool             -- ^ @--interrupt-in-session@: the run stops once StartSession has opened a
+                                                 --   session on the drive, the session left open and the reports written, for
+                                                 --   @--recover@ to clear (design 11, M4c's interrupted run)
+  , roStackResetBeforeCases :: !Bool             -- ^ no flag: on a drive, a case's SyncIdle and NoSessions established by one
+                                                 --   STACK_RESET on the base ComID, logged (Core 3.3.4.7.5, PDF 65); false,
+                                                 --   SyncIdle probed by an IF-RECV and NoSessions waived as unobservable (design
+                                                 --   13.7)
   }
   deriving (Eq, Show)
 
 -- | The simulator, every case, the default parameters, no hold, reports in
 --   @build/report@, a Level 0 transfer of 2048 bytes, what the kext
 --   itself asks for when it attaches (@DISCOVERY0_RESPONSE_SIZE@,
---   UserKernelShared.h; design 7.2), and the secrets masked.
+--   UserKernelShared.h; design 7.2), the secrets masked, neither
+--   @--recover@, @--allow-mounted@ nor @--interrupt-in-session@; and on a
+--   drive, STACK_RESET on its base ComID before each case that needs no
+--   session open, automatic and logged: Scott's decision of 2026-11-02
+--   (design 13.7), which no flag changes. The other branch, SyncIdle probed
+--   by one IF-RECV and NoSessions waived as unobservable, is kept built and
+--   tested in both modes, so that a flip is this one field.
 defaultRunOptions :: RunOptions
 defaultRunOptions = RunOptions
-  { roTarget       = TSim
-  , roTests        = []
-  , roSim          = defaultSimParams
-  , roHold         = 0
-  , roProfile      = Nothing
-  , roReportDir    = "build/report"
-  , roCapture      = Nothing
-  , roExpectSerial = Nothing
-  , roLevel0Len    = 2048
-  , roShowMsid     = False
+  { roTarget                = TSim
+  , roTests                 = []
+  , roSim                   = defaultSimParams
+  , roHold                  = 0
+  , roProfile               = Nothing
+  , roReportDir             = "build/report"
+  , roCapture               = Nothing
+  , roExpectSerial          = Nothing
+  , roLevel0Len             = 2048
+  , roShowMsid              = False
+  , roRecover               = False
+  , roAllowMounted          = False
+  , roInterruptInSession    = False
+  , roStackResetBeforeCases = True
   }
 
 -- | @--sim-sid-pin HEX@: the simulator's C_PIN_SID PIN as hex digits, two a

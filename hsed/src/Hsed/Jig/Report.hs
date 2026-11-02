@@ -295,18 +295,22 @@ instance A.ToJSON RunResult where
 --   simulator's SID PIN given by its length and digest alone.
 optionsJSON :: RunOptions -> A.Value
 optionsJSON o = A.object
-  [ "target"                 A..= renderTarget (roTarget o)
-  , "tests"                  A..= roTests o
-  , "units"                  A..= spUnits (roSim o)
-  , "hold"                   A..= roHold o
-  , "inactive_comid_discard" A..= spInactiveComIdDiscard (roSim o)
-  , "sim_sid_pin"            A..= fmap describeSecret (spSidPin (roSim o))
-  , "profile"                A..= roProfile o
-  , "report_dir"             A..= roReportDir o
-  , "capture"                A..= roCapture o
-  , "expect_serial"          A..= fmap maskSerial (roExpectSerial o)
-  , "level0_len"             A..= roLevel0Len o
-  , "show_msid"              A..= roShowMsid o
+  [ "target"                   A..= renderTarget (roTarget o)
+  , "tests"                    A..= roTests o
+  , "units"                    A..= spUnits (roSim o)
+  , "hold"                     A..= roHold o
+  , "inactive_comid_discard"   A..= spInactiveComIdDiscard (roSim o)
+  , "sim_sid_pin"              A..= fmap describeSecret (spSidPin (roSim o))
+  , "profile"                  A..= roProfile o
+  , "report_dir"               A..= roReportDir o
+  , "capture"                  A..= roCapture o
+  , "expect_serial"            A..= fmap maskSerial (roExpectSerial o)
+  , "level0_len"               A..= roLevel0Len o
+  , "show_msid"                A..= roShowMsid o
+  , "recover"                  A..= roRecover o
+  , "allow_mounted"            A..= roAllowMounted o
+  , "interrupt_in_session"     A..= roInterruptInSession o
+  , "stack_reset_before_cases" A..= roStackResetBeforeCases o
   ]
 
 -- | A waiver with the item and page of its section's list.

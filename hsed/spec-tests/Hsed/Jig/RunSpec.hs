@@ -37,6 +37,10 @@ missing without a profile and the comparison passes with it; standing in
 for the kext's drive, the replay's transcript notes the hardware run's CDB
 and the capture is written; a drive whose Level 0 Discovery fails is asked
 once and never again; a header revision Opal allows is noted as allowed.
+The simulator as the drive (Support's fakeDrive, M4c), behind the Guard as
+a run opens a drive: UCT-01 passes, the drive's policy Level0Only throughout
+and its base ComID never bound, Level 0 Discovery the one command it is
+issued.
 On a pair each end's verdicts and Level 0 are named by its transport's
 role, as the transcript's entries are. And what the run refuses before it
 opens anything: a key the catalogue lacks (exit 2), a drive without the
@@ -72,7 +76,7 @@ import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
 import           Hsed.Jig.Script        (controlComPacket)
-import           Hsed.Jig.Support       (at, atPath, disk6Like, silently)
+import           Hsed.Jig.Support       (at, atPath, disk6Like, fakeDrive, onFakeDrive, silently)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (newTranscript)
 import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..), parseQuery, synthesize)
@@ -497,6 +501,20 @@ spec = do
         code `shouldBe` ExitFailure 1
         readIORef asked `shouldReturn` 1
         doesFileExist capture `shouldReturn` False
+
+  describe "the simulator as the drive, behind the Guard as a run opens a drive (Support.fakeDrive, M4c)" $
+    it "passes UCT-01, the drive's policy Level0Only throughout and its base ComID never bound, Level 0 Discovery the one command issued" $ do
+      (raw, di, control) <- fakeDrive defaultSimParams
+      binds <- newIORef []
+      let counted = raw { rdBind = \b -> modifyIORef' binds (<> [b]) >> rdBind raw b }
+      (code, json) <- onFakeDrive defaultRunOptions { roTests = keys "UCT-01" } (counted, di, control)
+      code `shouldBe` ExitSuccess
+      verdicts json `shouldBe` [(str "UCT-01", str "pass")]
+      at "policies" json `shouldBe` Just (A.toJSON [A.object ["end" A..= ("drive" :: Text), "policy" A..= ("level0_only" :: Text)]])
+      readIORef binds `shouldReturn` ([] :: [Word16])
+      [ (atPath ["request", "op"] e, atPath ["request", "comid"] e) | e <- elements (at "transcript" json), at "entry" e == str "issued" ]
+        `shouldBe` [(str "if_recv", Just (A.Number 1))]
+      (at "blocked" json, at "if_send_issued" json) `shouldBe` (Just (A.Number 0), Just (A.Number 0))
 
   describe "the simulator paired with the replay (the Pair runner)" $ do
     it "finds 0x0403 missing without a profile: exit 1" $

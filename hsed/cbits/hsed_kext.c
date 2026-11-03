@@ -11,19 +11,23 @@
  * open and close the user client; hsed_kext_bind binds the drive's base
  * ComID; and hsed_kext_command issues one of the five commands of
  * hsed_cdb.h. This file writes no CDB byte, no direction, no security
- * protocol and no ComID: a command's CDB, the direction the kext copies the
- * buffer by and the length it moves come from one hsed_cdb_build, and an
- * IF-SEND's payload is checked by hsed_cdb_check_payload on the very
- * buffer handed to the kernel, before the one call that issues it
- * (hsed_cdb.c; Hsed.Transport.KextSourceSpec reads this file to hold it
- * so).
+ * protocol, no ComID and no scalar, and decides no bind: a command's six
+ * scalars (the CDB, the buffer, its size, the direction the kext copies
+ * the buffer by and the length it moves) and the CDB it echoes come from
+ * one hsed_cdb_scalars, which also checks the buffer and an IF-SEND's
+ * payload in it, and a bind's checks are hsed_cdb_bind_check's, on what
+ * this file reads of the TPer (hsed_cdb.c, portable C that every build
+ * compiles and the tests run through FFI); this file makes the IOKit calls
+ * around them. Hsed.Transport.KextSourceSpec reads this file as text, a
+ * check of its tokens against drift (the calls, their arguments, their
+ * order), not a proof of what it does: it never runs.
  *
  * The loaded kext (build 625) checks no privilege and no command: the
  * gates are hsed's (design 9.3), and this file is the one that holds
  * whatever the Haskell above it does: root before the user client is
  * opened; the base ComID, the user client alone on the TPer and the
- * drive's serial before the base is bound; the shape, the length and the
- * payload before each command.
+ * drive's serial before the base is bound; the shape, the length, the
+ * buffer and the payload before each command.
  */
 #include <stddef.h>
 #include <stdint.h>
@@ -260,18 +264,15 @@ int hsed_kext_bind(hsed_kext_info *info, uint16_t base)
     CFMutableDictionaryRef matching = NULL;
     io_service_t tper = IO_OBJECT_NULL;
     char serial[sizeof ((hsed_kext_info *)NULL)->serial] = { 0 };
-    int clients = 0;
+    int clients = -1;
+    int checked = HSED_CDB_OK;
 
     if (info == NULL)
         return kIOReturnBadArgument;
     if (info->conn == IO_OBJECT_NULL)
         return kIOReturnNotOpen;
-    /* a ComID Core Table 26 does not reserve (hsed_cdb.c), bound once: the
-       same base again is bound already, another is refused */
-    if (!hsed_cdb_base_ok(base) || (info->base_comid != 0 && info->base_comid != base))
-        return kIOReturnBadArgument;
     /* the TPer this process opened, found again by its registry id, and
-       still the kext's */
+       still the kext's: its user clients counted, its serial read again */
     matching = IORegistryEntryIDMatching(info->registry_id);
     if (matching == NULL)
         return kIOReturnNoMemory;
@@ -285,16 +286,15 @@ int hsed_kext_bind(hsed_kext_info *info, uint16_t base)
     clients = count_user_clients(tper);
     read_serial(tper, serial, sizeof serial);
     IOObjectRelease(tper);
-    /* its user clients exactly one, the one this process opened: another
-       could be sending to the drive between hsed's commands, and none
-       counted means the count is not what it seems (design 13.29 (d)), so
-       either fails closed */
-    if (clients != 1)
-        return kIOReturnExclusiveAccess;
-    /* its IDENTIFY serial, as the registry holds it, the one read when it
-       was located and admitted */
-    if (serial[0] == '\0' || strncmp(serial, info->serial, sizeof serial) != 0)
-        return kIOReturnNoDevice;
+    /* the checks in the portable C (hsed_cdb.c): a base hsed_cdb_base_ok
+       takes, bound once; the TPer's user clients exactly one, this
+       process's (another could be sending to the drive between hsed's
+       commands, and none counted means the count is not what it seems,
+       design 13.29 (d)); its IDENTIFY serial the one read when it was
+       located and admitted; each failing closed */
+    checked = hsed_cdb_bind_check(base, info->base_comid, clients, serial, info->serial, sizeof serial);
+    if (checked != HSED_CDB_OK)
+        return checked == HSED_CDB_E_CLIENTS ? kIOReturnExclusiveAccess : checked == HSED_CDB_E_SERIAL ? kIOReturnNoDevice : kIOReturnBadArgument;
     info->base_comid = base;
     return KERN_SUCCESS;
 }
@@ -302,12 +302,9 @@ int hsed_kext_bind(hsed_kext_info *info, uint16_t base)
 int hsed_kext_command(const hsed_kext_info *info, int shape, uint8_t blocks, void *buf, uint64_t bufsize,
                       uint8_t cdb_out[16], uint64_t *xfer)
 {
-    uint8_t cdb[16] = { 0 };
-    uint64_t quads[2] = { 0, 0 };
+    uint64_t input[6] = { 0, 0, 0, 0, 0, 0 };
     uint64_t output[1] = { 0 };
     uint32_t outputs = 1;
-    uint32_t direction = 0;
-    uint64_t requested = 0;
     long page = 0;
     int built = HSED_CDB_OK;
     kern_return_t ret = KERN_SUCCESS;
@@ -315,46 +312,22 @@ int hsed_kext_command(const hsed_kext_info *info, int shape, uint8_t blocks, voi
     if (info == NULL || info->conn == IO_OBJECT_NULL || buf == NULL || cdb_out == NULL || xfer == NULL)
         return kIOReturnBadArgument;
     *xfer = 0;
-
-    /* the CDB, the direction and the length asked, from one build on the
-       base bound: the kext reads an A1h's direction from its PROTOCOL field
-       and its size from its COUNT (ATAProtocolDirections.cpp,
-       CDBAccess.cpp:37-50), and copies the buffer in or out by the
-       direction given (UserClient.cpp:165-171 and 188-192), so the three
-       agree only when they come from the same place */
-    built = hsed_cdb_build(info->sat, shape, info->base_comid, blocks, cdb, &direction, &requested);
-    if (built == HSED_CDB_E_COMID && info->base_comid == 0)
-        return kIOReturnNotReady;     /* a command on the base before it is bound */
-    if (built != HSED_CDB_OK)
-        return kIOReturnBadArgument;
-    if (bufsize < requested)
-        return kIOReturnNoSpace;
-    /* page-aligned, as the kext's own user library requires (TPerKernelInterface.c) */
     page = sysconf(_SC_PAGESIZE);
-    if (page <= 0 || (uintptr_t)buf % (uintptr_t)page != 0)
+    if (page <= 0)
         return kIOReturnNotAligned;
-    /* the bytes of this very buffer that the kernel copies in for an
-       IF-SEND, as many as asked, checked: STACK_RESET's request for the
-       base, or a ComPacket on the base with nothing after it; a receive's
-       buffer sends nothing, and its check passes */
-    if (hsed_cdb_check_payload(shape, info->base_comid, (const uint8_t *)buf, requested) != HSED_CDB_OK)
-        return kIOReturnBadArgument;
-
-    memcpy(cdb_out, cdb, sizeof cdb);
-    memcpy(quads, cdb, sizeof quads);
-    {
-        const uint64_t input[6] = {
-            [0] = quads[0],
-            [1] = quads[1],
-            [2] = (uint64_t)(uintptr_t)buf,
-            [3] = bufsize,
-            [4] = direction,
-            [5] = requested,
-        };
-        ret = IOConnectCallScalarMethod((io_connect_t)info->conn, HSED_KEXT_SELECTOR_SCSI, input, 6, output, &outputs);
-        if (outputs >= 1)
-            *xfer = output[0];
-    }
+    /* the six scalars and the CDB echoed, all from one build on the base
+       bound, in the portable C (hsed_cdb.c): the buffer as long as asked
+       and on a page, an IF-SEND's payload in it checked; the echo the
+       scalars' own first bytes, the CDB the kernel is given */
+    built = hsed_cdb_scalars(info->sat, shape, info->base_comid, blocks, buf, bufsize, (uint64_t)page, input, cdb_out);
+    if (built != HSED_CDB_OK)
+        return built == HSED_CDB_E_COMID && info->base_comid == 0 ? kIOReturnNotReady  /* a command on the base before the bind */
+             : built == HSED_CDB_E_SPACE ? kIOReturnNoSpace
+             : built == HSED_CDB_E_ALIGN ? kIOReturnNotAligned
+             : kIOReturnBadArgument;
+    ret = IOConnectCallScalarMethod((io_connect_t)info->conn, HSED_KEXT_SELECTOR_SCSI, input, 6, output, &outputs);
+    if (outputs >= 1)
+        *xfer = output[0];
     return ret;
 }
 

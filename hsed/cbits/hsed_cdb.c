@@ -5,13 +5,17 @@
  * Portable C99 with no IOKit, compiled into the hsed library in every
  * build, Linux CI's included, and run there through FFI by the tests
  * (Hsed.Transport.CdbCSpec), which hold every CDB it builds to
- * Hsed.Transport.Cdb.cdbFor, written apart from it in Haskell. It is the one
- * file of the shim that writes a CDB byte, a direction, a security protocol
- * or a ComID: four templates, one for each interface and direction, and a
- * table of the five shapes. The kext shim (hsed_kext.c) takes every CDB,
- * direction and length it issues from one hsed_cdb_build, and checks every
- * IF-SEND's payload with hsed_cdb_check_payload on the very buffer it
- * passes to the kernel.
+ * Hsed.Transport.Cdb.cdbFor, written apart from it in Haskell, and every
+ * scalar the kext is given to the CDB, the buffer and the length. It is the
+ * one file of the shim that writes a CDB byte, a direction, a security
+ * protocol, a ComID or a scalar, and that decides a bind: four templates,
+ * one for each interface and direction, a table of the five shapes, the
+ * six scalars of a command and the CDB echoed (hsed_cdb_scalars), and the
+ * bind's checks (hsed_cdb_bind_check). The kext shim (hsed_kext.c) passes
+ * the kernel the scalars of one hsed_cdb_scalars, which builds them with
+ * hsed_cdb_build and checks an IF-SEND's payload with hsed_cdb_check_payload
+ * on the very buffer it passes, and binds a base only where
+ * hsed_cdb_bind_check takes what it read of the TPer.
  *
  * Each template's variable bytes (the security protocol, the count of
  * blocks, the ComID) are left zero, and hsed_cdb_build writes them at the
@@ -53,15 +57,23 @@
 
 /* Where the variable bytes lie in SAT's CDB: FEATURES (the security
    protocol), COUNT (the blocks), LBA 15 to 8 and LBA 23 to 16 (the ComID,
-   low byte first) (SIIS 1.20 Tables 16-17, PDF 40-41). */
+   low byte first): ATA PASS-THROUGH (12)'s bytes as SAT-5 lays them out,
+   TRUSTED RECEIVE's and SEND's registers as ACS-5 gives them (SIIS 1.20's
+   references [21] and [22], PDF 17); SIIS 1.20 Tables 16-17 (PDF 40-41)
+   give the fields' values alone. The kext's own attach-time CDB
+   (TPerDriver.cpp:1527-1557) and sedutil's (DtaOS.h:258-268) put them at
+   these bytes. */
 #define HSED_SAT_PROTOCOL 3
 #define HSED_SAT_COUNT 4
 #define HSED_SAT_COMID_LO 6
 #define HSED_SAT_COMID_HI 7
 
 /* Where they lie in SCSI's: SECURITY PROTOCOL, SECURITY PROTOCOL SPECIFIC
-   (the ComID, high byte first), the length's low byte (SIIS 1.20 Tables
-   12-13, PDF 30-31). */
+   (the ComID, high byte first), the length's low byte: SECURITY PROTOCOL
+   IN's and OUT's bytes as SPC-5 lays them out (SIIS 1.20's reference [10],
+   PDF 16); SIIS 1.20 Tables 12-13 (PDF 30-31) give the fields' values
+   alone. The kext's own attach-time CDB (TPerDriver.cpp:1506-1524) and
+   sedutil's DtaScsiDrive.cpp put them at these bytes. */
 #define HSED_SCSI_PROTOCOL 1
 #define HSED_SCSI_COMID_HI 2
 #define HSED_SCSI_COMID_LO 3
@@ -69,7 +81,9 @@
 
 /* SAT's ATA PASS-THROUGH (12), opcode A1h, carrying ACS's TRUSTED RECEIVE,
    5Ch, or TRUSTED SEND, 5Eh, PIO, the length counted in 512-byte blocks in
-   COUNT (SIIS 1.20 Tables 17 and 16, PDF 41 and 40; sedutil DtaOS.h:258-268).
+   COUNT (SAT-5 and ACS-5, SIIS 1.20's references [21] and [22], PDF 17;
+   the fields' values SIIS 1.20 Tables 17 and 16, PDF 41 and 40; sedutil
+   DtaOS.h:258-268).
    The receive is the kext's own attach-time CDB with its count and its
    ComID left to be written (TPerDriver.cpp:1527-1557). The kext reads an
    A1h's direction from its PROTOCOL field alone, 4 In and 5 Out
@@ -105,8 +119,9 @@ static const uint8_t hsed_sat_out[12] = {
 };
 
 /* SCSI's SECURITY PROTOCOL IN, opcode A2h, and SECURITY PROTOCOL OUT, opcode
-   B5h, INC_512 set, the length counted in 512-byte blocks (SIIS 1.20
-   Tables 13 and 12, PDF 31 and 30). The IN is the kext's own attach-time
+   B5h, INC_512 set, the length counted in 512-byte blocks (SPC-5, SIIS
+   1.20's reference [10], PDF 16; the fields' values SIIS 1.20 Tables 13
+   and 12, PDF 31 and 30). The IN is the kext's own attach-time
    CDB with its count and its ComID left to be written
    (TPerDriver.cpp:1506-1524). The kext reads the direction from the opcode
    and the length from the length asked. */
@@ -282,4 +297,69 @@ int hsed_cdb_check_payload(int shape, uint16_t base, const uint8_t *buf, uint64_
     default:
         return HSED_CDB_E_PAYLOAD;
     }
+}
+
+int hsed_cdb_scalars(int sat, int shape, uint16_t base, uint8_t blocks, const void *buf, uint64_t bufsize, uint64_t page,
+                     uint64_t scalars[6], uint8_t cdb_out[16])
+{
+    uint8_t cdb[16] = { 0 };
+    uint32_t direction = 0;
+    uint64_t requested = 0;
+    int checked = HSED_CDB_OK;
+
+    /* zeroed first, so that a refusal leaves nothing else */
+    if (scalars != NULL)
+        memset(scalars, 0, HSED_SCALARS * sizeof scalars[0]);
+    if (cdb_out != NULL)
+        memset(cdb_out, 0, 16);
+    if (buf == NULL || scalars == NULL || cdb_out == NULL || page == 0)
+        return HSED_CDB_E_ARGUMENT;
+    /* the CDB, the direction and the length asked from one build on the
+       base: the kext reads an A1h's direction from its PROTOCOL field and
+       its size from its COUNT (ATAProtocolDirections.cpp, CDBAccess.cpp:37-50),
+       and copies the buffer in or out by the direction given
+       (UserClient.cpp:165-171 and 188-192), so the three agree only when
+       they come from the same place */
+    checked = hsed_cdb_build(sat, shape, base, blocks, cdb, &direction, &requested);
+    if (checked != HSED_CDB_OK)
+        return checked;
+    if (bufsize < requested)
+        return HSED_CDB_E_SPACE;
+    /* page-aligned, as the kext's own user library requires (TPerKernelInterface.c) */
+    if ((uint64_t)(uintptr_t)buf % page != 0)
+        return HSED_CDB_E_ALIGN;
+    /* the bytes of this very buffer that the kernel copies in for an
+       IF-SEND, as many as asked: STACK_RESET's request for the base, or a
+       ComPacket on the base with nothing after it; a receive's buffer
+       sends nothing, and its check passes */
+    checked = hsed_cdb_check_payload(shape, base, (const uint8_t *)buf, requested);
+    if (checked != HSED_CDB_OK)
+        return checked;
+    /* the scalars as the user client reads them, then the echo: their
+       first 16 bytes, the CDB the kernel is given */
+    memcpy(&scalars[HSED_SCALAR_CDB], cdb, sizeof cdb);
+    scalars[HSED_SCALAR_BUFFER] = (uint64_t)(uintptr_t)buf;
+    scalars[HSED_SCALAR_SIZE] = bufsize;
+    scalars[HSED_SCALAR_DIRECTION] = direction;
+    scalars[HSED_SCALAR_LENGTH] = requested;
+    memcpy(cdb_out, &scalars[HSED_SCALAR_CDB], 16);
+    return HSED_CDB_OK;
+}
+
+int hsed_cdb_bind_check(uint16_t base, uint16_t bound, int clients, const char *serial, const char *located, size_t size)
+{
+    if (serial == NULL || located == NULL || size == 0)
+        return HSED_CDB_E_ARGUMENT;
+    /* a ComID Core Table 26 does not reserve, bound once: the same base
+       again is bound already, another is refused */
+    if (!hsed_cdb_base_ok(base) || (bound != 0 && bound != base))
+        return HSED_CDB_E_COMID;
+    /* the TPer's user clients exactly one, the one this process opened */
+    if (clients != 1)
+        return HSED_CDB_E_CLIENTS;
+    /* its IDENTIFY serial, as the registry holds it, the one read when it
+       was located and admitted */
+    if (serial[0] == '\0' || strncmp(serial, located, size) != 0)
+        return HSED_CDB_E_SERIAL;
+    return HSED_CDB_OK;
 }

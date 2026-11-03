@@ -8,7 +8,7 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The three functions of @cbits/hsed_cdb.h@ through FFI, for the tests alone:
+The five functions of @cbits/hsed_cdb.h@ through FFI, for the tests alone:
 no module under src, gen or app imports them (the kext shim calls them in
 C, and hsed-doc-test, which interprets those modules, links no C), so the
 test executable is the one build that links @hsed_cdb.o@ without the flag
@@ -16,14 +16,18 @@ test executable is the one build that links @hsed_cdb.o@ without the flag
 neither blocks nor calls back.
 
 Each wrapper writes known bytes where the C is to write (the CDB 0xAA, the
-direction and the length 'unwritten32' and 'unwritten64'), so that a test
-sees what the C wrote and what it left.
+direction and the length 'unwritten32' and 'unwritten64', the scalars and
+the echo 0xAA), so that a test sees what the C wrote and what it left. The
+serials a bind compares are given as @hsed_kext_info@ holds its own, a
+64-byte array of chars, NUL-padded.
 -}
 module Hsed.Transport.CdbFFI
   ( -- * The C functions
     hsedCdbBaseOk
   , hsedCdbBuild
   , hsedCdbCheckPayload
+  , hsedCdbScalars
+  , hsedCdbBindCheck
     -- * Their return codes (cbits/hsed_cdb.h)
   , cdbOk
   , cdbEArgument
@@ -31,6 +35,10 @@ module Hsed.Transport.CdbFFI
   , cdbEBlocks
   , cdbEComId
   , cdbEPayload
+  , cdbESpace
+  , cdbEAlign
+  , cdbEClients
+  , cdbESerial
     -- * Wrapped
   , Built (..)
   , unwritten32
@@ -43,10 +51,17 @@ module Hsed.Transport.CdbFFI
   , cdbCheckPayloadAt
   , cdbCheckPayloadNull
   , cdbCheckEachByte
+  , Scalars (..)
+  , cdbScalarsInto
+  , cdbScalarsAt
+  , scalarCdb
+  , cdbBindCheck
   ) where
 
-import           Foreign.C.Types       (CInt (..))
+import           Foreign.C.String      (CString)
+import           Foreign.C.Types       (CInt (..), CSize (..))
 import           Foreign.Marshal.Alloc (alloca, allocaBytes)
+import           Foreign.Marshal.Array (peekArray, pokeArray)
 import           Foreign.Marshal.Utils (copyBytes, fillBytes)
 import           Foreign.Ptr           (Ptr, castPtr, nullPtr)
 import           Foreign.Storable      (peek, peekByteOff, poke, pokeByteOff)
@@ -70,15 +85,30 @@ foreign import ccall unsafe "hsed_cdb_build"
 foreign import ccall unsafe "hsed_cdb_check_payload"
   hsedCdbCheckPayload :: CInt -> Word16 -> Ptr Word8 -> Word64 -> IO CInt
 
+-- | @int hsed_cdb_scalars(int sat, int shape, uint16_t base, uint8_t blocks,
+--   const void *buf, uint64_t bufsize, uint64_t page, uint64_t scalars[6],
+--   uint8_t cdb_out[16])@.
+foreign import ccall unsafe "hsed_cdb_scalars"
+  hsedCdbScalars :: CInt -> CInt -> Word16 -> Word8 -> Ptr Word8 -> Word64 -> Word64 -> Ptr Word64 -> Ptr Word8 -> IO CInt
+
+-- | @int hsed_cdb_bind_check(uint16_t base, uint16_t bound, int clients,
+--   const char *serial, const char *located, size_t size)@.
+foreign import ccall unsafe "hsed_cdb_bind_check"
+  hsedCdbBindCheck :: Word16 -> Word16 -> CInt -> CString -> CString -> CSize -> IO CInt
+
 -- | @HSED_CDB_OK@ and the refusals, as cbits/hsed_cdb.h defines them
 --   ("Hsed.Transport.CdbCSpec" reads them from it).
-cdbOk, cdbEArgument, cdbEShape, cdbEBlocks, cdbEComId, cdbEPayload :: Int
+cdbOk, cdbEArgument, cdbEShape, cdbEBlocks, cdbEComId, cdbEPayload, cdbESpace, cdbEAlign, cdbEClients, cdbESerial :: Int
 cdbOk        = 0
 cdbEArgument = 1
 cdbEShape    = 2
 cdbEBlocks   = 3
 cdbEComId    = 4
 cdbEPayload  = 5
+cdbESpace    = 6
+cdbEAlign    = 7
+cdbEClients  = 8
+cdbESerial   = 9
 
 -- | What @hsed_cdb_build@ answered, and the CDB, direction and length as
 --   it left them.
@@ -163,3 +193,54 @@ cdbCheckEachByte shape base bytes =
       pokeByteOff p i was
       pure (map ((,) i) taken)
   where len = B.length bytes
+
+-- | What @hsed_cdb_scalars@ answered, the six scalars as it left them, and
+--   the 16 bytes of CDB it echoed.
+data Scalars = Scalars
+  { sCode    :: !Int
+  , sScalars :: ![Word64]
+  , sEcho    :: !ByteString
+  }
+  deriving (Eq, Show)
+
+-- | @hsed_cdb_scalars@ of a @sat@, a shape's number, a base and blocks, for
+--   a buffer at a pointer of a size, with a page size, its echo written at
+--   the pointer given (as @hsed_kext_command@ passes the caller's): what it
+--   answered, and the six scalars as it left them (each 0xAA bytes before).
+cdbScalarsInto :: Int -> Int -> Word16 -> Word8 -> Ptr Word8 -> Word64 -> Word64 -> Ptr Word8 -> IO (Int, [Word64])
+cdbScalarsInto sat shape base blocks buf size page echo =
+  allocaBytes 48 $ \pScalars -> do
+    fillBytes pScalars 0xAA 48
+    code <- hsedCdbScalars (fromIntegral sat) (fromIntegral shape) base blocks buf size page (castPtr pScalars) echo
+    (,) (fromIntegral code) <$> peekArray 6 (castPtr pScalars)
+
+-- | 'cdbScalarsInto' with an echo of its own (0xAA bytes before): the
+--   answer, the scalars and the echo as the C left them.
+cdbScalarsAt :: Int -> Int -> Word16 -> Word8 -> Ptr Word8 -> Word64 -> Word64 -> IO Scalars
+cdbScalarsAt sat shape base blocks buf size page =
+  allocaBytes 16 $ \pEcho -> do
+    fillBytes pEcho 0xAA 16
+    (code, scalars) <- cdbScalarsInto sat shape base blocks buf size page pEcho
+    Scalars code scalars <$> B.packCStringLen (castPtr pEcho, 16)
+
+-- | The CDB the first two scalars carry: their 16 bytes as they lie in
+--   memory, which the kext reads as the CDB (UserClient.cpp:83).
+scalarCdb :: [Word64] -> IO ByteString
+scalarCdb ws = allocaBytes 16 $ \p -> do
+  pokeArray (castPtr p) (take 2 (ws <> [0, 0]))
+  B.packCStringLen (castPtr p, 16)
+
+-- | @hsed_cdb_bind_check@ of a base, the base bound (0 for none), the user
+--   clients counted, the serial as the registry holds it now and the one
+--   read when the TPer was located, each in a 64-byte array as
+--   @hsed_kext_info@ holds a serial (its first 63 bytes, NUL-padded), and
+--   the size compared.
+cdbBindCheck :: Word16 -> Word16 -> Int -> ByteString -> ByteString -> Int -> IO Int
+cdbBindCheck base bound clients serial located size =
+  serialArray serial $ \pSerial -> serialArray located $ \pLocated ->
+    fromIntegral <$> hsedCdbBindCheck base bound (fromIntegral clients) pSerial pLocated (fromIntegral size)
+  where
+    serialArray bytes act = allocaBytes 64 $ \p -> do
+      fillBytes p 0 64
+      B.useAsCStringLen (B.take 63 bytes) (\(src, n) -> copyBytes p (castPtr src) n)
+      act (castPtr p)

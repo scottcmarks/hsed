@@ -8,10 +8,12 @@
  * DtaStructures.h). The shim issues the five commands of hsed_cdb.h and
  * nothing else: Level 0 Discovery's IF-RECV and, once the drive's base
  * ComID is bound, a ComPacket's IF-SEND and IF-RECV and STACK_RESET's two
- * on that ComID. Every CDB, direction and length it issues comes from
- * hsed_cdb_build, and every IF-SEND's payload is checked by
- * hsed_cdb_check_payload (hsed_cdb.c, portable C that every build
- * compiles); this shim writes none of them.
+ * on that ComID. The six scalars of every command it issues, and the CDB
+ * it echoes, come from one hsed_cdb_scalars, which builds the CDB, the
+ * direction and the length with hsed_cdb_build and checks an IF-SEND's
+ * payload with hsed_cdb_check_payload on the very buffer, and its bind's
+ * checks are hsed_cdb_bind_check's (hsed_cdb.c, portable C that every
+ * build compiles and the tests run); this shim writes none of them.
  *
  * Each returns a kern_return_t: KERN_SUCCESS, or the IOKit error.
  */
@@ -43,17 +45,18 @@ int hsed_kext_locate(const char *bsd, hsed_kext_info *out);
 int hsed_kext_open(hsed_kext_info *info);
 
 /* Bind the drive's base ComID, the one its own Level 0 Discovery names,
-   once: a ComID hsed_cdb_base_ok takes, on the TPer opened (found again by
-   its registry id), whose user clients are exactly this one, and whose
-   serial is still the one read when it was located. */
+   once: the TPer opened found again by its registry id, then, as
+   hsed_cdb_bind_check decides, a ComID hsed_cdb_base_ok takes, the TPer's
+   user clients exactly this one, and its serial still the one read when it
+   was located. */
 int hsed_kext_bind(hsed_kext_info *info, uint16_t base);
 
 /* One of the five commands (enum hsed_shape) of a number of 512-byte
-   blocks, the base-carrying ones only once bound: its CDB, direction and
-   length from hsed_cdb_build; an IF-SEND's payload, the first bytes of the
-   page-aligned buffer of bufsize bytes, checked by hsed_cdb_check_payload;
-   then the one call that issues it. The CDB issued written to cdb_out, the
-   bytes the kext says it moved to xfer. */
+   blocks, the base-carrying ones only once bound: its six scalars and the
+   CDB echoed to cdb_out from one hsed_cdb_scalars (the buffer of bufsize
+   bytes as long as asked and page-aligned, an IF-SEND's payload, its first
+   bytes, checked); then the one call that issues it. The bytes the kext
+   says it moved written to xfer. */
 int hsed_kext_command(const hsed_kext_info *info, int shape, uint8_t blocks, void *buf, uint64_t bufsize,
                       uint8_t cdb_out[16], uint64_t *xfer);
 

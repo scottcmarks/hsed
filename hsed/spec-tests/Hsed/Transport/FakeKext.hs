@@ -22,32 +22,36 @@ do in C around their IOKit calls, calling the real portable C for the rest
 and the drive.
 
 The fake shim, in @hsed_kext_command@'s order: the user client open; the
-CDB, the direction and the length from one @hsed_cdb_build@ on the base it
-has bound (a command on the base before the bind is
-@kIOReturnNotReady@, any other refusal @kIOReturnBadArgument@); the buffer
-as long as the length asked (@kIOReturnNoSpace@) and page-aligned
-(@kIOReturnNotAligned@); the payload, the buffer's first bytes, checked by
-@hsed_cdb_check_payload@ (@kIOReturnBadArgument@); then the CDB written
-back and the command issued. Its bind, in @hsed_kext_bind@'s: the user
-client open (@kIOReturnNotOpen@), a base @hsed_cdb_base_ok@ takes and none
-other bound (@kIOReturnBadArgument@); the TPer, its one user client and its
-serial are the simulator's, and hold by construction.
+six scalars and the CDB echoed from one @hsed_cdb_scalars@ on the base it
+has bound, with the page 'pageBytes' (a command on the base before the
+bind is @kIOReturnNotReady@, a buffer shorter than asked
+@kIOReturnNoSpace@, one off the page @kIOReturnNotAligned@, any other
+refusal, a payload refused among them, @kIOReturnBadArgument@); then the
+command issued, from those scalars alone, as the kernel takes them. Its
+bind, in @hsed_kext_bind@'s: the user client open (@kIOReturnNotOpen@),
+then @hsed_cdb_bind_check@ on what the shim would read of the TPer, its
+one user client and its serial the simulator's, by construction (a base
+refused @kIOReturnBadArgument@, as the shim maps the C's answers).
 
-The kernel and the drive ('kernelRead'): the command the CDB says, read as
-the kext reads it (TPerDriver.cpp's PerformSCSICommand: an A1h's direction
-from its PROTOCOL field, ATAProtocolDirections.cpp, and its size from its
-COUNT, CDBAccess.cpp:46-50; A2h In and B5h Out) and as the drive reads it
-(the security protocol, the ComID, the blocks), which must agree with the
-direction and the length the shim passed beside it; an IF-SEND's bytes, as
-many as asked, given to the simulator, or an IF-RECV of that length whose
-answer is written into the buffer; a status other than Good failing the
-command as the kext fails a CHECK CONDITION, @kIOReturnError@; the bytes
-moved those asked. Every CDB issued is recorded, its 12 bytes (what the
-kext sends of an A1h, an A2h or a B5h), in order.
+The kernel and the drive ('kernelRead'): the command the CDB in the first
+two scalars says, read as the kext reads it (TPerDriver.cpp's
+PerformSCSICommand: an A1h's direction from its PROTOCOL field,
+ATAProtocolDirections.cpp, and its size from its COUNT, CDBAccess.cpp:46-50;
+A2h In and B5h Out) and as the drive reads it (the security protocol, the
+ComID, the blocks), which must agree with the direction and the length the
+scalars carry beside it; the buffer the one at the scalars' address, as
+long as their size says; an IF-SEND's bytes there, as many as asked, given
+to the simulator, or an IF-RECV of that length whose answer is written
+there; a status other than Good failing the command as the kext fails a
+CHECK CONDITION, @kIOReturnError@; the bytes moved those asked. Every CDB
+issued is recorded, its 12 bytes (what the kext sends of an A1h, an A2h or
+a B5h), in order.
 
 'FakeFaults' fail the nth command of a shape that reaches the kext with a
-@kern_return_t@ (the simulator not asked), or say it moved no bytes (the
-simulator asked).
+@kern_return_t@ (the simulator not asked), say it moved no bytes (the
+simulator asked), or answer it only after a while (the simulator asked: a
+kext slower than the host's wait, the call uninterruptible as the
+transport makes it).
 
 'fakeKextDrive' is shaped like "Hsed.Jig.Support".'Hsed.Jig.Support.fakeDrive',
 so that its drive goes to "Hsed.Jig.Support".'Hsed.Jig.Support.onFakeDrive'
@@ -70,7 +74,7 @@ module Hsed.Transport.FakeKext
 
 import           Data.Bits             (shiftL, shiftR, (.&.), (.|.))
 import           Foreign.Marshal.Utils (copyBytes)
-import           Foreign.Ptr           (Ptr, castPtr, nullPtr, ptrToWordPtr)
+import           Foreign.Ptr           (Ptr, castPtr, nullPtr, wordPtrToPtr)
 import           Foreign.Storable      (poke)
 import qualified RIO.ByteString        as B
 import qualified RIO.Map               as Map
@@ -78,7 +82,8 @@ import           RIO
 
 import           Hsed.Sim.Types        (SimParams (..))
 import           Hsed.Transport.Cdb    (Shape (..), shapeCode)
-import           Hsed.Transport.CdbFFI (Built (..), cdbBaseOk, cdbBuild, cdbCheckPayloadAt, cdbEComId, cdbOk, satFlag)
+import           Hsed.Transport.CdbFFI (cdbBindCheck, cdbEAlign, cdbEClients, cdbEComId, cdbESerial, cdbESpace, cdbOk, cdbScalarsInto,
+                                        satFlag, scalarCdb)
 import           Hsed.Transport.Drive  (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.InProc (InProcOpts (..), SimControl, newInProc)
 import           Hsed.Transport.Kext   (ShimCommand, kextBind, kextClose, kextExchange, newKextHandle, pageBytes)
@@ -94,12 +99,14 @@ import           Hsed.Wire.Internal    (Cap (..), Describe (..), Dir (..), IfSta
 data FakeFaults = FakeFaults
   { ffKernReturn :: !(Maybe (Shape, Int, Word32))  -- ^ answered with this @kern_return_t@, the simulator not asked
   , ffMoveNone   :: !(Maybe (Shape, Int))          -- ^ the simulator asked, and no bytes said to be moved
+  , ffSlow       :: !(Maybe (Shape, Int, Int))     -- ^ the simulator asked, its answer given after this many microseconds,
+                                                   --   as a kext would keep a command it waits on
   }
   deriving (Eq, Show)
 
 -- | No failure injected.
 noFaults :: FakeFaults
-noFaults = FakeFaults Nothing Nothing
+noFaults = FakeFaults Nothing Nothing Nothing
 
 
 -- * The fake drive
@@ -143,16 +150,21 @@ fakeKextOn iface sim faults cdbs = do
         }
   pure (RawDrive transport (kextBind (fakeBind open base) h))
 
--- | What @hsed_kext_bind@ checks that the fake can fail: the user client
---   open, a base the C takes and none other bound.
+-- | @hsed_kext_bind@ over the fake: the user client open, then the real
+--   @hsed_cdb_bind_check@ on what the shim would read of the TPer (one user
+--   client, its own; the serial it was located with), its answer mapped to
+--   a @kern_return_t@ as the shim maps it.
 fakeBind :: IORef Bool -> IORef Word16 -> Word16 -> IO Word32
 fakeBind open base b = do
   isOpen <- readIORef open
-  taken <- cdbBaseOk b
   bound <- readIORef base
-  if | not isOpen                               -> pure kIOReturnNotOpen
-     | not taken || (bound /= 0 && bound /= b)  -> pure kIOReturnBadArgument
-     | otherwise                                -> 0 <$ writeIORef base b
+  checked <- cdbBindCheck b bound 1 serial serial 64
+  if | not isOpen              -> pure kIOReturnNotOpen
+     | checked == cdbOk        -> 0 <$ writeIORef base b
+     | checked == cdbEClients  -> pure kIOReturnExclusiveAccess
+     | checked == cdbESerial   -> pure kIOReturnNoDevice
+     | otherwise               -> pure kIOReturnBadArgument
+  where serial = encodeUtf8 (diSerial fakeDriveInfo)
 
 -- | @hsed_kext_close@: the user client closed, nothing bound.
 fakeClose :: IORef Bool -> IORef Word16 -> IO Word32
@@ -172,47 +184,41 @@ fakeShim iface sim faults cdbs open base counts shape blocks buf size pCdb pMove
     else do
       poke pMoved 0
       b <- readIORef base
-      built <- cdbBuild (satFlag iface) (shapeCode shape) b blocks
-      let asked = bRequested built
-      checked <- if bCode built == cdbOk && size >= asked && aligned buf
-                   then cdbCheckPayloadAt (shapeCode shape) b buf asked
-                   else pure cdbOk
-      if | bCode built == cdbEComId && b == 0 -> pure kIOReturnNotReady
-         | bCode built /= cdbOk                -> pure kIOReturnBadArgument
-         | size < asked                        -> pure kIOReturnNoSpace
-         | not (aligned buf)                   -> pure kIOReturnNotAligned
-         | checked /= cdbOk                    -> pure kIOReturnBadArgument
-         | otherwise                           -> do
-             pokeBytes pCdb (bCdb built)
-             issued shape (bCdb built) (bDirection built) asked buf pMoved
+      (code, scalars) <- cdbScalarsInto (satFlag iface) (shapeCode shape) b blocks buf size (fromIntegral pageBytes) pCdb
+      if | code == cdbEComId && b == 0 -> pure kIOReturnNotReady
+         | code == cdbESpace           -> pure kIOReturnNoSpace
+         | code == cdbEAlign           -> pure kIOReturnNotAligned
+         | code /= cdbOk               -> pure kIOReturnBadArgument
+         | otherwise                   -> issued shape scalars pMoved
   where
-    aligned p = ptrToWordPtr p `mod` fromIntegral pageBytes == 0
-
-    -- the selector-2 call: the CDB recorded, the faults, the kernel and the drive
-    issued s cdb direction asked p pMoved' = do
+    -- the selector-2 call, from the six scalars alone, as the kernel takes them: the CDB recorded, the faults, the
+    -- kernel and the drive
+    issued s scalars pMoved' = do
+      cdb <- scalarCdb scalars
+      let (p, room, direction, asked) = case drop 2 scalars of
+            pAt : n : d : a : _ -> (wordPtrToPtr (fromIntegral pAt) :: Ptr Word8, n, d, a)
+            _                   -> (nullPtr, 0, 0, 0)
       n <- atomicModifyIORef' counts (\m -> let k = Map.findWithDefault 0 s m + 1 in (Map.insert s k m, k))
       modifyIORef' cdbs (<> [B.take 12 cdb])
       case ffKernReturn faults of
         Just (fs, fn, kr) | fs == s, fn == n -> kr <$ poke pMoved' asked
         _ -> case kernelRead cdb direction asked of
           Left _  -> pure kIOReturnUnsupported
-          Right q -> do
-            r <- case dir q of
-              IfSend -> do
-                sent <- B.packCStringLen (castPtr p, fromIntegral asked)
-                tExchange sim q { payload = sent }
-              IfRecv -> do
-                answer <- tExchange sim q
-                when (status answer == Good) $
-                  B.useAsCStringLen (B.take (fromIntegral asked) (rpayload answer)) (\(src, len) -> copyBytes p (castPtr src) len)
-                pure answer
-            poke pMoved' (if ffMoveNone faults == Just (s, n) then 0 else asked)
-            pure (if status r == Good then 0 else kIOReturnError)
-
--- | Sixteen bytes written at a pointer.
-pokeBytes :: Ptr Word8 -> ByteString -> IO ()
-pokeBytes p bytes = B.useAsCStringLen (B.take 16 (bytes <> B.replicate 16 0)) (\(src, n) -> copyBytes p (castPtr src) n)
-
+          Right q
+            | p == nullPtr || asked > room -> pure kIOReturnBadArgument
+            | otherwise -> do
+                r <- case dir q of
+                  IfSend -> do
+                    sent <- B.packCStringLen (castPtr p, fromIntegral asked)
+                    tExchange sim q { payload = sent }
+                  IfRecv -> do
+                    answer <- tExchange sim q
+                    when (status answer == Good) $
+                      B.useAsCStringLen (B.take (fromIntegral asked) (rpayload answer)) (\(src, len) -> copyBytes p (castPtr src) len)
+                    pure answer
+                poke pMoved' (if ffMoveNone faults == Just (s, n) then 0 else asked)
+                for_ (ffSlow faults) $ \(fs, fn, micros) -> when (fs == s && fn == n) (threadDelay micros)
+                pure (if status r == Good then 0 else kIOReturnError)
 
 -- * The kernel and the drive
 
@@ -226,16 +232,18 @@ pokeBytes p bytes = B.useAsCStringLen (B.take 16 (bytes <> B.replicate 16 0)) (\
 --   TRUSTED RECEIVE (5Ch) with Data-In and T_DIR from the device, TRUSTED
 --   SEND (5Eh) with Data-Out and T_DIR to it, alone, BYTE_BLOCK set and
 --   T_LENGTH in COUNT; FEATURES the protocol, LBA 23 to 8 the ComID, LBA 7
---   to 0 zero (SIIS 1.20 Tables 16-17, PDF 40-41);
+--   to 0 zero (the bytes SAT-5's and ACS-5's, SIIS 1.20's references [21]
+--   and [22], PDF 17; the fields' values SIIS 1.20 Tables 16-17, PDF 40-41);
 -- * A2h and B5h, SCSI's SECURITY PROTOCOL IN and OUT: In and Out; INC_512
---   set, the length in blocks; the protocol and the ComID (Tables 12-13,
+--   set, the length in blocks; the protocol and the ComID (the bytes
+--   SPC-5's, SIIS 1.20's reference [10], PDF 16; the values Tables 12-13,
 --   PDF 30-31);
 --
 -- and the direction scalar the CDB's (the kext copies the buffer in for
 -- Out and out for In, UserClient.cpp:165-171 and 188-192), the length
 -- asked the CDB's. The request's payload is left empty, for the caller to
 -- fill with the bytes copied in.
-kernelRead :: ByteString -> Word32 -> Word64 -> Either Text Request
+kernelRead :: ByteString -> Word64 -> Word64 -> Either Text Request
 kernelRead cdb direction asked = do
   (d, p, c, n) <- case B.unpack (B.take 12 cdb) of
     [0xA1, b1, b2, p, n, 0x00, lo, hi, _, command, _, _] -> do
@@ -260,10 +268,12 @@ kernelRead cdb direction asked = do
 
 -- * kern_return_t
 
-kIOReturnError, kIOReturnBadArgument, kIOReturnUnsupported, kIOReturnNotOpen, kIOReturnNotAligned, kIOReturnNotReady,
-  kIOReturnNoSpace :: Word32
+kIOReturnError, kIOReturnNoDevice, kIOReturnBadArgument, kIOReturnExclusiveAccess, kIOReturnUnsupported, kIOReturnNotOpen,
+  kIOReturnNotAligned, kIOReturnNotReady, kIOReturnNoSpace :: Word32
 kIOReturnError       = 0xe00002bc
+kIOReturnNoDevice    = 0xe00002c0
 kIOReturnBadArgument = 0xe00002c2
+kIOReturnExclusiveAccess = 0xe00002c5
 kIOReturnUnsupported = 0xe00002c7
 kIOReturnNotOpen     = 0xe00002cd
 kIOReturnNotAligned  = 0xe00002d0

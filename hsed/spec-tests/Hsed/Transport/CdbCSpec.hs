@@ -9,11 +9,12 @@ License     : BSD3
 Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
-The portable C the kext shim takes every CDB, direction and length from,
-and every IF-SEND's payload check, run here through FFI
+The portable C the kext shim takes every scalar it passes the kernel
+from, every CDB, direction and length among them, every IF-SEND's payload
+check and every bind's checks, run here through FFI
 ("Hsed.Transport.CdbFFI") on whatever builds the suite, so that the code
-that writes the bytes a drive is sent runs before any drive does (design
-9.3, M4c):
+that writes the bytes a drive is sent, and decides what may be sent, runs
+before any drive does (design 9.3, M4c):
 
 * @hsed_cdb_build@ against "Hsed.Transport.Cdb".'cdbFor', written apart
   from it in Haskell, over 5 shapes, 2 interfaces, 256 counts of blocks and
@@ -33,11 +34,26 @@ that writes the bytes a drive is sent runs before any drive does (design
   refused on another; a ComPacket with a reserved byte, an extension,
   OutstandingData, MinTransfer, a Length past the transfer or a byte after
   it refused; a receive's buffer anything; NULL refused;
+* @hsed_cdb_scalars@, what @hsed_kext_command@ passes the kernel, over the
+  25,600 cases on a page-aligned buffer holding what each send carries:
+  scalars 0 and 1 cdbFor's CDB as the kernel reads them (their 16 bytes in
+  memory, UserClient.cpp:83), the buffer's address, its size, the
+  direction the shape's and the length its blocks', the direction and the
+  length the ones the kext reads from that CDB, and the CDB echoed those 16
+  bytes; or the build's refusal; a buffer short of the length, off the
+  page, a payload its shape does not carry, NULL and no page refused; each
+  refusal writing nothing but zeros;
+* @hsed_cdb_bind_check@, what @hsed_kext_bind@ decides, against a model
+  over 972 binds: a base @hsed_cdb_base_ok@ takes, none bound or the
+  same, exactly one user client, the serial unchanged and not empty;
 * the return codes, as cbits/hsed_cdb.h defines them.
 -}
 module Hsed.Transport.CdbCSpec (spec) where
 
 import           Data.Bits             (shiftL, shiftR, (.&.), (.|.))
+import           Foreign.ForeignPtr    (withForeignPtr)
+import           Foreign.Marshal.Utils (copyBytes, fillBytes)
+import           Foreign.Ptr           (Ptr, castPtr, nullPtr, plusPtr, ptrToWordPtr)
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
 import           RIO
@@ -62,6 +78,7 @@ import           Hsed.Transport.Cdb    (Shape (..), cdbFor, shapeCode, shapeDir,
 import           Hsed.Transport.CdbFFI
 import           Hsed.Transport.Drive  (InterfaceType (..))
 import           Hsed.Transport.InProc (InProcOpts (..), newInProc)
+import           Hsed.Transport.Kext   (ifRecvBuffer, pageBytes)
 import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comIdManagementProtocol, comPacketProtocol)
 
 
@@ -188,6 +205,46 @@ jigKinds =
 holds :: ByteString -> ByteString -> Bool
 holds = B.isInfixOf
 
+-- | What a send of a shape carries on a base, that the C takes:
+--   STACK_RESET's request for it, or a ComPacket on it of no payload (its
+--   header, then zeros); nothing for a receive.
+carried :: Shape -> Word16 -> ByteString
+carried s b = case s of
+  ResetSend  -> stackResetRequest b
+  PacketSend -> B.pack [0, 0, 0, 0, fromIntegral (b `shiftR` 8), fromIntegral b] <> B.replicate 14 0
+  _          -> ""
+
+-- | Bytes written at a pointer, after 512 zeros there.
+place :: Ptr Word8 -> ByteString -> IO ()
+place p bytes = do
+  fillBytes p 0 512
+  B.useAsCStringLen bytes (\(src, n) -> copyBytes p (castPtr src) n)
+
+-- | Whether the C's scalars agree with cdbFor's CDB of a case for a buffer
+--   at an address of a size: the CDB in scalars 0 and 1 as the kernel reads
+--   them, the address, the size, the shape's direction and the blocks'
+--   length, the echo those 16 bytes; or both refuse, the C's code as for
+--   'agrees', and nothing written but zeros.
+scalarsAgree :: Word64 -> Word64 -> ((Shape, InterfaceType, Word8, Word16), Scalars, ByteString) -> Bool
+scalarsAgree address size ((s, i, n, b), r, inScalars) = case cdbFor i s b n of
+  Right bytes ->
+    sCode r == cdbOk && inScalars == bytes <> B.replicate 4 0 && sEcho r == inScalars
+      && drop 2 (sScalars r) == [address, size, fromIntegral (directionOf (shapeDir s)), fromIntegral n * 512]
+  Left _ ->
+    sCode r == (if n == 0 || (shapeProto s == comIdManagementProtocol && n /= 1) then cdbEBlocks else cdbEComId)
+      && sScalars r == replicate 6 0 && sEcho r == B.replicate 16 0
+
+-- | What hsed_cdb_bind_check should answer, given the base, the base bound
+--   (0 for none), the user clients counted, the serial now and the one
+--   located (each as a C string, to its first NUL, of at most 63 bytes).
+bindModel :: Word16 -> Word16 -> Int -> ByteString -> ByteString -> Int
+bindModel base bound clients serial located
+  | base < 0x1000 || (bound /= 0 && bound /= base) = cdbEComId
+  | clients /= 1                                   = cdbEClients
+  | B.null now || now /= B.takeWhile (/= 0) (B.take 63 located) = cdbESerial
+  | otherwise                                      = cdbOk
+  where now = B.takeWhile (/= 0) (B.take 63 serial)
+
 spec :: Spec
 spec = describe "cbits/hsed_cdb.c, through FFI" $ do
   describe "hsed_cdb_build" $ do
@@ -269,9 +326,68 @@ spec = describe "cbits/hsed_cdb.c, through FFI" $ do
       answers <- traverse (\b -> cdbCheckPayload (shapeCode ResetSend) b (stackResetRequest b)) [0x0000, 0x0004, 0x0FFF]
       answers `shouldBe` replicate 3 cdbEComId
 
+  describe "hsed_cdb_scalars" $ do
+    it "gives the kext the six scalars and the echo from one build, the CDB cdbFor's as the kernel reads it, or refuses where cdbFor does: 25,600 cases" $ do
+      (buf, size) <- ifRecvBuffer (255 * 512)
+      results <- withForeignPtr buf $ \p -> for cases $ \c@(s, i, n, b) -> do
+        place p (carried s b)
+        r <- cdbScalarsAt (satFlag i) (shapeCode s) b n p (fromIntegral size) (fromIntegral pageBytes)
+        inScalars <- scalarCdb (sScalars r)
+        pure (c, r, inScalars, fromIntegral (ptrToWordPtr p))
+      length results `shouldBe` 25600
+      [ c | (c, r, inScalars, address) <- results, not (scalarsAgree address (fromIntegral size) (c, r, inScalars)) ] `shouldBe` []
+      length [ () | (_, r, _, _) <- results, sCode r == cdbOk ] `shouldBe` 2 * 255 * 10 + 2 * 2 * 255 * 4 + 2 * 2 * 1 * 4
+    it "gives the kext the direction and the length it reads from the CDB in scalars 0 and 1 (TPerDriver.cpp, CDBAccess.cpp)" $ do
+      (buf, size) <- ifRecvBuffer (255 * 512)
+      results <- withForeignPtr buf $ \p -> for cases $ \(s, i, n, b) -> do
+        place p (carried s b)
+        r <- cdbScalarsAt (satFlag i) (shapeCode s) b n p (fromIntegral size) (fromIntegral pageBytes)
+        (,) r <$> scalarCdb (sScalars r)
+      [ r | (r, inScalars) <- results, sCode r == cdbOk
+          , fmap (\(d, l) -> [fromIntegral d, l]) (kextReads inScalars) /= Just (drop 4 (sScalars r)) ] `shouldBe` []
+    it "refuses a buffer shorter than the length asked, one off the page, a payload its shape does not carry, NULL and no page, writing nothing but zeros" $ do
+      (buf, size) <- ifRecvBuffer 4096
+      answers <- withForeignPtr buf $ \p -> do
+        place p (stackResetRequest 0x1004)
+        sequence
+          [ cdbScalarsAt 1 (shapeCode ResetSend) 0x1004 1 p 511 (fromIntegral pageBytes)
+          , cdbScalarsAt 1 (shapeCode ResetRecv) 0x1004 1 (p `plusPtr` 512) 1024 (fromIntegral pageBytes)
+          , cdbScalarsAt 1 (shapeCode PacketSend) 0x1004 1 p (fromIntegral size) (fromIntegral pageBytes)
+          , cdbScalarsAt 1 (shapeCode ResetSend) 0x1005 1 p (fromIntegral size) (fromIntegral pageBytes)
+          , cdbScalarsAt 1 (shapeCode ResetSend) 0x1004 1 nullPtr (fromIntegral size) (fromIntegral pageBytes)
+          , cdbScalarsAt 1 (shapeCode ResetSend) 0x1004 1 p (fromIntegral size) 0 ]
+      map sCode answers `shouldBe` [cdbESpace, cdbEAlign, cdbEPayload, cdbEPayload, cdbEArgument, cdbEArgument]
+      [ a | a <- answers, sScalars a /= replicate 6 0 || sEcho a /= B.replicate 16 0 ] `shouldBe` []
+    it "checks the payload in the very buffer passed: a STACK_RESET request one page on is not the buffer's" $ do
+      (buf, size) <- ifRecvBuffer 32768
+      answers <- withForeignPtr buf $ \p -> do
+        place p ""
+        place (p `plusPtr` pageBytes) (stackResetRequest 0x1004)
+        sequence [ cdbScalarsAt 1 (shapeCode ResetSend) 0x1004 1 p (fromIntegral size) (fromIntegral pageBytes)
+                 , cdbScalarsAt 1 (shapeCode ResetSend) 0x1004 1 (p `plusPtr` pageBytes) (fromIntegral size - fromIntegral pageBytes)
+                                (fromIntegral pageBytes) ]
+      map sCode answers `shouldBe` [cdbEPayload, cdbOk]
+
+  describe "hsed_cdb_bind_check" $ do
+    it "takes a base hsed_cdb_base_ok takes, none bound or the same, exactly one user client, the serial unchanged; refuses each other, as a model says: 972 binds" $ do
+      let serials = [ ("S59BNM0RA15802W     ", "S59BNM0RA15802W     "), ("S59BNM0RA15802W", "S59BNM0RA15802X"), ("", "")
+                    , ("S59BNM0RA15802W", "S59BNM0RA15802W     "), ("S59BNM0RA1580", "S59BNM0RA15802W"), ("", "S59BNM0RA15802W") ]
+          binds   = [ (b, bound, n, sn) | b <- [0x0000, 0x0004, 0x0FFF, 0x1000, 0x1004, 0xFFFF], bound <- [0, 0x1004, 0x1005, 0x0FFF, b]
+                                        , n <- [-1, 0, 1, 2, 3, 100], sn <- serials ]
+          bindsUnique = L.nub binds
+      answers <- for bindsUnique $ \(b, bound, n, (now, located)) -> (,) (b, bound, n, now, located) <$> cdbBindCheck b bound n now located 64
+      length answers `shouldBe` 972
+      [ (c, got) | (c@(b, bound, n, now, located), got) <- answers, got /= bindModel b bound n now located ] `shouldBe` []
+      length [ () | (_, got) <- answers, got == cdbOk ] `shouldSatisfy` (> 0)
+    it "refuses no size to compare in (an argument), and compares no further than the size" $ do
+      cdbBindCheck 0x1004 0 1 "S59BNM0RA15802W" "S59BNM0RA15802W" 0 `shouldReturn` cdbEArgument
+      cdbBindCheck 0x1004 0 1 "S59BNM0RA15802W" "S59BNM0RA15802X" 14 `shouldReturn` cdbOk
+      cdbBindCheck 0x1004 0 1 "S59BNM0RA15802W" "S59BNM0RA15802X" 15 `shouldReturn` cdbESerial
+
   describe "the return codes" $
     it "are cbits/hsed_cdb.h's" $ do
       header <- decodeUtf8Lenient <$> readFileBinary "cbits/hsed_cdb.h"
       let defines = [ (n, v) | l <- T.lines header, "#define" : n : v : _ <- [T.words l], "HSED_CDB_" `T.isPrefixOf` n ]
-      defines `shouldBe` zip ["HSED_CDB_OK", "HSED_CDB_E_ARGUMENT", "HSED_CDB_E_SHAPE", "HSED_CDB_E_BLOCKS", "HSED_CDB_E_COMID", "HSED_CDB_E_PAYLOAD"]
-                             (map tshow [cdbOk, cdbEArgument, cdbEShape, cdbEBlocks, cdbEComId, cdbEPayload])
+      defines `shouldBe` zip [ "HSED_CDB_OK", "HSED_CDB_E_ARGUMENT", "HSED_CDB_E_SHAPE", "HSED_CDB_E_BLOCKS", "HSED_CDB_E_COMID", "HSED_CDB_E_PAYLOAD"
+                             , "HSED_CDB_E_SPACE", "HSED_CDB_E_ALIGN", "HSED_CDB_E_CLIENTS", "HSED_CDB_E_SERIAL" ]
+                             (map tshow [cdbOk, cdbEArgument, cdbEShape, cdbEBlocks, cdbEComId, cdbEPayload, cdbESpace, cdbEAlign, cdbEClients, cdbESerial])

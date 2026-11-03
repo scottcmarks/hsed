@@ -79,6 +79,11 @@ jobs:
           restore-keys: stack-kext-v1-${{ runner.os }}-
       - if: runner.os == 'macOS'
         run: stack --system-ghc --no-install-ghc --work-dir .stack-work-kext build hsed --flag hsed:kext --ghc-options=-Werror
+      # The shim's object held to what it may import (design 7.2; the M4c review): nm -u of hsed_kext.o, its one IOConnect
+      # call IOConnectCallScalarMethod, its calls into the portable C the scalars and the bind's checks alone. nm reads the
+      # object; nothing runs.
+      - if: runner.os == 'macOS'
+        run: tools/kext-imports.sh .stack-work-kext
       # The hsedc side of gate b (docs/spec-as-source.md sections 5.2, 5.4): annotate the pristine
       # Core and Opal PDFs from the committed sidecars, extract the annotated PDFs, then hsedc bind,
       # check and compile each (Opal over Core's Context, its unbound units Warnings until M5); the

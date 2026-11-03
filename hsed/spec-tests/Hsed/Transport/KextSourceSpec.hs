@@ -14,8 +14,12 @@ The third of the jig's safeties against the attached drive (design 9.3),
 the one that holds whatever the Haskell above it does: the C shim, read here
 as text (@cbits/hsed_kext.{c,h}@, compiled only under the flag @kext@, and
 @cbits/hsed_cdb.{c,h}@, which "Hsed.Transport.CdbCSpec" runs), issues
-exactly design 9.3's five commands, and every byte of what it issues comes
-from the portable C.
+exactly design 9.3's five commands, and every byte of what it issues, and
+every decision of a bind, comes from the portable C. A check of the
+source's tokens against drift, not a proof of what it does: @hsed_kext.c@
+never runs here, and what decides is in @hsed_cdb.c@, which the tests run
+through FFI (the M4c review found one-line edits of the earlier shim that
+these checks, then keyed on exact spellings, let by).
 
 * The kext shim names no CDB byte, no send token and no template: none of
   the opcodes 0x5E, 0xB5, 0xA1, 0xA2 or 0x5C written as hex, nor
@@ -24,14 +28,18 @@ from the portable C.
 * Its calls into the kext are exactly three, Open, Close and the SCSI
   command, by the dispatch table's selectors 0, 1 and 2, no other method
   (not the fourth, which has the kernel issue commands of its own, nor any
-  struct, asynchronous, mapping or trap call); only the SCSI command
-  passes scalars, its direction and its length @hsed_cdb_build@'s outputs.
-* In @hsed_kext_command@, @hsed_cdb_build@ and @hsed_cdb_check_payload@,
-  on the very buffer handed to the kernel, come before that one call.
+  struct, asynchronous, mapping or trap call): its code names an IOConnect
+  function three times, each time called (spaces or none before the
+  parenthesis), never taken by address; only the SCSI command passes
+  scalars, all six of them the array @hsed_cdb_scalars@ fills, which the
+  shim neither writes nor copies itself.
+* In @hsed_kext_command@, @hsed_cdb_scalars@ (the scalars, the echo, the
+  buffer and an IF-SEND's payload in it, all in the portable C) comes
+  before that one call, which is made only once it answered OK.
 * @hsed_kext_open@ tests the effective user id before it opens anything;
-  @hsed_kext_bind@ takes only a base @hsed_cdb_base_ok@ takes, finds the
-  TPer again by its registry id, requires exactly one user client and the
-  serial unchanged, before it binds.
+  @hsed_kext_bind@ finds the TPer again by its registry id, counts its user
+  clients and reads its serial, and binds only once @hsed_cdb_bind_check@
+  took them and the base.
 * @cbits/hsed_cdb.c@ holds exactly four templates, each
   "Hsed.Transport.Cdb".'cdbFor''s with its protocol, count and ComID bytes
   zeroed, at the offsets it writes them; 5Eh and B5h once each; no IOKit;
@@ -76,10 +84,12 @@ cdbC   = source "cbits/hsed_cdb.c"
 cdbH   = source "cbits/hsed_cdb.h"
 
 -- | The text of each call of a function: its arguments, to the parenthesis
---   that closes them.
+--   that closes them. A call is the function's name as a whole word, then
+--   any white space, then the parenthesis that opens its arguments.
 callsOf :: Text -> Text -> [Text]
-callsOf fn = map (T.pack . arguments (0 :: Int) . T.unpack) . drop 1 . T'.splitOn (fn <> "(")
+callsOf fn src = [ T.pack (arguments (0 :: Int) (T.unpack rest)) | Just rest <- map called (namedAt fn src) ]
   where
+    called rest = T.stripPrefix "(" (T.stripStart rest)
     arguments depth = \case
       ')' : _ | depth == 0 -> []
       c : cs               -> c : arguments (depth + nesting c) cs
@@ -88,6 +98,48 @@ callsOf fn = map (T.pack . arguments (0 :: Int) . T.unpack) . drop 1 . T'.splitO
       '(' -> 1
       ')' -> -1
       _   -> 0
+
+-- | What follows each place a name stands in a text as a whole word (no
+--   identifier character before or after it).
+namedAt :: Text -> Text -> [Text]
+namedAt name src =
+  [ following
+  | (preceding, at') <- T'.breakOnAll name src
+  , let following = T.drop (T.length name) at'
+  , maybe True (not . identifier) (lastChar preceding)
+  , maybe True (not . identifier . fst) (T.uncons following) ]
+
+-- | A text's last character, if it has one.
+lastChar :: Text -> Maybe Char
+lastChar t = if T.null t then Nothing else Just (T'.last t)
+
+-- | Whether a character may be part of a C identifier.
+identifier :: Char -> Bool
+identifier c = C.isAlphaNum c || c == '_'
+
+-- | Every identifier of a text that begins with a prefix, as many times as
+--   it stands there.
+identifiersFrom :: Text -> Text -> [Text]
+identifiersFrom prefix src =
+  [ prefix <> T.takeWhile identifier following
+  | (preceding, at') <- T'.breakOnAll prefix src
+  , maybe True (not . identifier) (lastChar preceding)
+  , let following = T.drop (T.length prefix) at' ]
+
+-- | C source without its comments, each one a space, so that the checks of
+--   its code read its code alone.
+code :: Text -> Text
+code = T.pack . go . T.unpack
+  where
+    go = \case
+      '/' : '*' : rest -> ' ' : go (closing rest)
+      '/' : '/' : rest -> go (dropWhile (/= '\n') rest)
+      c : rest         -> c : go rest
+      []               -> []
+    closing = \case
+      '*' : '/' : rest -> rest
+      _ : rest         -> closing rest
+      []               -> []
 
 -- | A call's arguments, split at the commas, trimmed.
 argumentsOf :: Text -> [Text]
@@ -127,7 +179,7 @@ assertedOffsets src =
 bodyOf :: Text -> Text -> Text
 bodyOf fn = T.unlines . takeWhile (/= "}") . drop 1 . dropWhile (not . (("int " <> fn <> "(") `T.isPrefixOf`)) . T.lines
 
--- | Where a text first appears in another, if it does.
+-- | Where a text first appears in another, if it does, as a whole word or not.
 position :: Text -> Text -> Maybe Int
 position needle hay = case T'.breakOn needle hay of
   (ahead, rest) | not (T.null rest) -> Just (T.length ahead)
@@ -181,7 +233,7 @@ spec = describe "the C shim, cbits/" $ do
             , tok `T.isInfixOf` T.toLower text ]
         `shouldBe` []
     it "call the kext's Open, Close and SCSI command, three calls by the dispatch table's selectors 0, 1, 2, and no other method" $ do
-      src <- shim
+      src <- code <$> shim
       let selectors = mapMaybe (listToMaybe . drop 1 . argumentsOf) (callsOf "IOConnectCallScalarMethod" src)
       L.sort selectors `shouldBe` ["HSED_KEXT_SELECTOR_CLOSE", "HSED_KEXT_SELECTOR_OPEN", "HSED_KEXT_SELECTOR_SCSI"]
       [ (n, defined n src) | n <- defines src, "SELECTOR" `T.isInfixOf` n ]
@@ -191,30 +243,45 @@ spec = describe "the C shim, cbits/" $ do
                                     , "IOConnectMapMemory", "IOConnectTrap", "UpdatePropertiesInIORegistry" ]
             , T.toLower tok `T.isInfixOf` T.toLower text ]
         `shouldBe` []
-    it "pass scalars to the SCSI command alone, its direction and length hsed_cdb_build's outputs" $ do
-      src <- shim
+    it "name an IOConnect function three times in their code, each a call of IOConnectCallScalarMethod, whatever the spacing, never its address" $ do
+      src <- code <$> shim
+      identifiersFrom "IOConnect" src `shouldBe` replicate 3 "IOConnectCallScalarMethod"
+      length (namedAt "IOConnectCallScalarMethod" src) `shouldBe` 3
+      length (callsOf "IOConnectCallScalarMethod" src) `shouldBe` 3
+      h <- code <$> header
+      identifiersFrom "IOConnect" h `shouldBe` []
+    it "pass scalars to the SCSI command alone, the six hsed_cdb_scalars fills, which the shim neither writes nor copies" $ do
+      src <- code <$> shim
       [ drop 2 (argumentsOf c) | c <- callsOf "IOConnectCallScalarMethod" src ]
         `shouldMatchList` [ ["NULL", "0", "NULL", "NULL"], ["NULL", "0", "NULL", "NULL"], ["input", "6", "output", "&outputs"] ]
-      [ T.strip l | l <- T.lines src, any (`T.isPrefixOf` T.strip l) ["[4]", "[5]"] ] `shouldBe` ["[4] = direction,", "[5] = requested,"]
-      map (drop 5 . argumentsOf) (callsOf "hsed_cdb_build" src) `shouldBe` [["&direction", "&requested"]]
+      body <- code . bodyOf "hsed_kext_command" <$> shim
+      [ T.strip l | l <- T.lines body, "input" `elem` T.words (T.map (\c -> if identifier c then c else ' ') l) ]
+        `shouldBe` [ "uint64_t input[6] = { 0, 0, 0, 0, 0, 0 };"
+                   , "built = hsed_cdb_scalars(info->sat, shape, info->base_comid, blocks, buf, bufsize, (uint64_t)page, input, cdb_out);"
+                   , "ret = IOConnectCallScalarMethod((io_connect_t)info->conn, HSED_KEXT_SELECTOR_SCSI, input, 6, output, &outputs);" ]
+      let block = T.drop 1 (snd (T'.breakOn "{" body))
+      [ tok | tok <- ["memcpy", "memmove", "memset", "cdb_out[", "input[0]", "input[1]", "input[2]", "input[3]", "input[4]", "input[5]"]
+            , tok `T.isInfixOf` block ] `shouldBe` []
       [ n | n <- defines src, "DIRECTION" `T.isInfixOf` n ] `shouldBe` []
-    it "build and check before the one call in hsed_kext_command: hsed_cdb_build, hsed_cdb_check_payload on the very buffer, then selector 2" $ do
-      body <- bodyOf "hsed_kext_command" <$> shim
-      map (`position` body) ["hsed_cdb_build(", "hsed_cdb_check_payload(", "IOConnectCallScalarMethod("]
+    it "fill the scalars and check before the one call in hsed_kext_command: hsed_cdb_scalars, its answer OK, then selector 2" $ do
+      body <- code . bodyOf "hsed_kext_command" <$> shim
+      map (`position` body) ["hsed_cdb_scalars(", "if (built != HSED_CDB_OK)", "IOConnectCallScalarMethod("]
         `shouldSatisfy` \ps -> all isJust ps && ps == L.sort ps
-      map argumentsOf (callsOf "hsed_cdb_check_payload" body) `shouldBe` [["shape", "info->base_comid", "(const uint8_t *)buf", "requested"]]
-      map argumentsOf (callsOf "hsed_cdb_build" body)
-        `shouldBe` [["info->sat", "shape", "info->base_comid", "blocks", "cdb", "&direction", "&requested"]]
-      [ T.strip l | l <- T.lines body, "[2]" `T.isPrefixOf` T.strip l ] `shouldBe` ["[2] = (uint64_t)(uintptr_t)buf,"]
+      map argumentsOf (callsOf "hsed_cdb_scalars" body)
+        `shouldBe` [["info->sat", "shape", "info->base_comid", "blocks", "buf", "bufsize", "(uint64_t)page", "input", "cdb_out"]]
       length (callsOf "IOConnectCallScalarMethod" body) `shouldBe` 1
+      [ c | c <- ["hsed_cdb_build", "hsed_cdb_check_payload", "hsed_cdb_base_ok"], not (null (namedAt c body)) ] `shouldBe` []
     it "open as root only: hsed_kext_open tests geteuid() before IOServiceOpen" $ do
-      body <- bodyOf "hsed_kext_open" <$> shim
+      body <- code . bodyOf "hsed_kext_open" <$> shim
       map (`position` body) ["geteuid() != 0", "IOServiceOpen("] `shouldSatisfy` \ps -> all isJust ps && ps == L.sort ps
-    it "bind after the checks: hsed_kext_bind takes a base hsed_cdb_base_ok takes, finds the TPer again, requires one user client and the serial" $ do
-      body <- bodyOf "hsed_kext_bind" <$> shim
-      let steps = [ "hsed_cdb_base_ok(base)", "IORegistryEntryIDMatching(info->registry_id)", "count_user_clients(tper)"
-                  , "clients != 1", "strncmp(serial, info->serial", "info->base_comid = base;" ]
+    it "bind after the checks: hsed_kext_bind finds the TPer again, counts its user clients, reads its serial, and binds once hsed_cdb_bind_check took them" $ do
+      body <- code . bodyOf "hsed_kext_bind" <$> shim
+      let steps = [ "IORegistryEntryIDMatching(info->registry_id)", "count_user_clients(tper)", "read_serial(tper, serial, sizeof serial)"
+                  , "checked = hsed_cdb_bind_check(base, info->base_comid, clients, serial, info->serial, sizeof serial);"
+                  , "if (checked != HSED_CDB_OK)", "info->base_comid = base;", "return KERN_SUCCESS;" ]
       map (`position` body) steps `shouldSatisfy` \ps -> all isJust ps && ps == L.sort ps
+      length (T'.breakOnAll "info->base_comid =" body) `shouldBe` 1
+      [ c | c <- ["hsed_cdb_base_ok", "strncmp", "strcmp", "memcmp"], not (null (namedAt c body)) ] `shouldBe` []
 
   describe "hsed_cdb.c and hsed_cdb.h: the portable C" $ do
     it "holds exactly four templates, each cdbFor's with its protocol, count and ComID zeroed at the offsets it writes them" $ do

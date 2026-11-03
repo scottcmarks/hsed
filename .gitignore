@@ -4,8 +4,10 @@ tarballs/
 .stack-work/
 # make werror's work dir, in the root and in each package (a directory, or a link to one elsewhere)
 .stack-work-werror
-# the kext-enabled build's work dir (tools/m3-hw.sh step 1, CI's kext step), in the root and in each package
+# the kext-enabled build's work dir (tools/m3-hw.sh step 1, tools/m4c-hw.sh's H1, CI's kext step), in the root and in each
+# package; and the flag-on compile-and-link check's, compiled and deleted unrun (design 11, M4c)
 .stack-work-kext
+.stack-work-kextcheck
 *.lock
 !stack.yaml.lock
 dist-newstyle

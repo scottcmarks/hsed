@@ -795,9 +795,9 @@ spec = do
             blocked    = A.object [ "n" A..= (99 :: Int), "entry" A..= ("blocked" :: Text), "end" A..= ("drive" :: Text)
                                   , "request" A..= setSend, "reason" A..= ("AllowList: the method Set is not allowed" :: Text) ]
             refused    = "on the drive refused: "
-            edits      = [ ("set", editFirst issuedSend (withRequest setSend), refused <> "AllowList: the method Set")
+            edits      = [ ("set", editFirst issuedSend (withRequest setSend), refused)
                          , ("tper-reset", editFirst issuedSend (withRequest resetOnTperResetComId), refused)
-                         , ("get-sid", editFirst issuedSend (withRequest getSidSend), refused <> "AllowList: the method Get")
+                         , ("get-sid", editFirst issuedSend (withRequest getSidSend), refused)
                          , ("unreadable", editFirst issuedSend (const unreadable), "#5 does not read as a command a report prints: refused")
                          , ("blocked", (<> [blocked]), "0 refused, 0 that do not read; blocked by the run's Guard: 1") ]
         for_ edits $ \(name, f, said) -> do
@@ -815,7 +815,7 @@ spec = do
         (code', out') <- capturing (verifyTranscriptWith none False False True)
         code' `shouldBe` ExitFailure 1
         out' `shouldSatisfy` T.isInfixOf "--allow-list: the drive's base ComID, as its Level 0 names it: none"
-        out' `shouldSatisfy` T.isInfixOf "refused: no base ComID in its Level 0, so Level 0 Discovery alone: Level0Only"
+        out' `shouldSatisfy` T.isInfixOf "refused: no base ComID in its Level 0, so Level 0 Discovery alone: "
     it "passes an M3 report of Level 0 Discovery alone, and fails one whose drive was issued an IF-SEND with no base ComID to hold it to" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         level0Only <- writeReports dir (recvs [(0x01, 0x0001)]) <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)

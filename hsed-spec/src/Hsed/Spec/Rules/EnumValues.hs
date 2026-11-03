@@ -36,6 +36,17 @@ constructor). A finding about rows is located at the page the first of them
 is printed on (a table may span pages); one about the table as a whole (its
 range, a constructor defined twice, two labels merged) at the table.
 
+A table bound by @replaces@ to a base's enumeration (Opal Table 16,
+@reset_types@, PDF 32: @replaces [core 128]@, which takes the shape Core's
+Table 128 is bound to, PDF 119, "Hsed.Spec.Rules".'Hsed.Spec.Rules.classifyOver') may
+name its type by its caption alone (@Table 16 - reset_types@): its type is
+then the caption's identifier ('replacingIdent'), its range the base's type
+row's (Core Table 127, @Set_Type, 0, 31@, PDF 119), and C-PATCH-UID holds it
+to the enumeration it replaces. Opal's Table 16 assigns 3 Programmatic, which
+Core's Table 128 leaves in its Reserved 3-15, so @Opal_reset_types@ is
+generated beside @Core_reset_types@, from @Hsed.Gen.Core.Types@'s
+@ureset_typesType@.
+
 Under @enumInDescription@ an enumeration is printed in its type row's
 Description column (Opal Table 49, @life_cycle_state@, PDF 98, which modifies
 Core's type: @enumInDescription (replaces [core 102, core 103])@): the one
@@ -230,9 +241,10 @@ readEnum ctx = readOne
               cell :: Int -> [CellIR] -> Text
               cell i r  = maybe "" (.text) (listToMaybe (drop i r))
               t'        = btRead bt
+              form      = measure (cxSpec ctx) t'
           in Right EnumRead
                { erAnchor = btAnchor bt, erTable = btTable bt, erCaption = normaliseCaption (fromMaybe "" t'.caption)
-               , erIdent = enumIdent (measure (cxSpec ctx) t'), erRows = [ (cell a r, cell b r) | r <- t'.rows ]
+               , erIdent = enumIdent form <|> replacingIdent bt form, erRows = [ (cell a r, cell b r) | r <- t'.rows ]
                , erPages = [ (+ 1) <$> listToMaybe (mapMaybe (.page) r) | r <- t'.rows ]
                , erRangeWords = mRangeWords (btMods bt), erOwnType = Nothing }
     -- the one type row of a table printing its enumeration in a Description
@@ -257,6 +269,29 @@ readEnum ctx = readOne
                           ("an enumeration in a Description column is one row with UID, Name, Format and Description cells; this table has "
                             <> tshow (length rows) <> " rows under the header " <> tshow header)))
     identifier s = if not (T.null s) && T.all (\c -> C.isAlphaNum c || c == '_') s then Just s else Nothing
+
+-- | The type a table that replaces a base's enumeration names by its caption
+--   alone, @Table 16 - reset_types@ (Opal Table 16, PDF 32, @replaces [core
+--   128]@): the caption's identifier, for a table whose binding @replaces@
+--   tables (C-PATCH-UID holds it to the enumeration it replaces, Core Table
+--   128 @reset_types Set Values@, PDF 119); Nothing for any other, whose
+--   caption must name an enumeration ('enumIdent').
+--
+-- >>> import Hsed.Spec.Shape (CaptionKind (..))
+-- >>> captionIdentOf (CaptionIdent "reset_types")
+-- Just "reset_types"
+-- >>> captionIdentOf (CaptionOther "ComID Assignments")
+-- Nothing
+replacingIdent :: BoundTable -> Form -> Maybe Text
+replacingIdent bt form
+  | null (replacesOf (btBinding bt)) = Nothing
+  | otherwise                        = captionIdentOf (fCaptionKind form)
+
+-- | The identifier a caption of one identifier names.
+captionIdentOf :: CaptionKind -> Maybe Text
+captionIdentOf = \case
+  CaptionIdent s -> Just s
+  _              -> Nothing
 
 -- | The @n = label@ items of an enumeration a Description cell prints (Opal
 --   Table 49, PDF 98: @… The valid values are: 0 = issued, 1 =

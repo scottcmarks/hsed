@@ -57,7 +57,9 @@ import           Hsed.Sim.Types           (Geometry (..), SimParams (..), TPerSt
 
 -- | Parameters in range: every field the descriptors carry any value its
 --   field holds, the versions 4 bits, the ComIDs non-reserved and within
---   0xFFFF.
+--   0xFFFF, the DataStore's total size at least the 0x00A00000 the Locking
+--   SP's DataStore table holds (Opal 2.30 Table 36, PDF 54; 4.3.8.1, PDF 90;
+--   since M5a, "Hsed.Sim.Params".@lockingBounds@).
 inRange :: Gen SimParams
 inRange = do
   base     <- choose (0x1000, 0xFFF0)
@@ -65,7 +67,7 @@ inRange = do
   minor    <- choose (0, 0xF)
   removal  <- choose (0, 0xF)
   siis     <- arbitrary
-  store    <- (,,) <$> arbitrary <*> arbitrary <*> arbitrary
+  store    <- (,,) <$> arbitrary <*> choose (0x00A00000, maxBound) <*> arbitrary
   geometry <- Geometry <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary
   ofs      <- elements [minBound .. maxBound]
   pure defaultSimParams

@@ -24,8 +24,9 @@ host property not sent and answered differently is unchecked; (j) an end
 without the exchange, or two ends sending different host properties, are
 not compared, failing nothing. Then the rules beyond those ten: a
 mandatory host property one end leaves out, sent or not; MaxResponseComPacketSize's
-(N); a host value sent as 0 or below the initial assumption; a TPer
-property outside the table; every TPer row by the minimum Table 17 prints
+(N); a host value sent as 0 or below the initial assumption; a host
+property whose row requires nothing of the host (N/A, MaxSessions), which
+is unchecked; a TPer property outside the table; every TPer row by the minimum Table 17 prints
 for it; and the generated host column holding what the host rule reads of
 it. The rules follow the requirements they are given: one rebound, the
 judgement follows. Then the JSON and the lines the reports print, and two
@@ -228,6 +229,16 @@ spec = do
       low 2048 `shouldBe` Compared [] [] []
       map (oneJudgement . low) [1000, 4096] `shouldBe` [Just NotAllowed, Just NotAllowed]
       rules (low 1000) `shouldBe` ["host 2048, the initial assumption, in place of the 1000 sent below it (Core 5.2.2.4, PDF 145; Opal 2.30 Table 17, PDF 33-34)"]
+
+    it "leaves unchecked a host property whose Table 17 row requires nothing of the host (its host column N/A): MaxSessions, the TPer's own, answered by one end or by both" $ do
+      let answered v = hostSet "MaxSessions" (Just v) simAnswer
+          notHost = "no host requirement in Opal 2.30 Table 17, its host column N/A, not a host property (PDF 33-34)"
+      [ (reqName r, isNothing (reqHost r)) | r <- propertyRequirements, reqName r == "MaxSessions" ] `shouldBe` [("MaxSessions", True)]
+      against (answered 1) `shouldBe` Compared [PropDiff "MaxSessions" HostSide Nothing (Just 1) notHost Unchecked] [] []
+      propertiesFail (against (answered 1)) `shouldBe` False
+      pairProperties (uct02 (answered 1)) (uct02 (answered 2))
+        `shouldBe` Compared [PropDiff "MaxSessions" HostSide (Just 1) (Just 2) notHost Unchecked] [] []
+      propertiesFail (pairProperties (uct02 (answered 1)) (uct02 (answered 2))) `shouldBe` False
 
     it "leaves unchecked a TPer property outside Table 17 that the ends report differently" $
       pairProperties (uct02 (tperSet "MaxReadSessions" (Just 1) simAnswer)) (uct02 (tperSet "MaxReadSessions" (Just 2) simAnswer))

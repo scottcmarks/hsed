@@ -384,7 +384,8 @@ supportedHostProperties = [ (r, h) | r <- propertyRequirements, Just h <- [reqHo
 --   17's Initial Assumption cells (PDF 33-34), as generated
 --   ("Hsed.Gen.Opal.Properties".@initialAssumptions@, the TPer's about the
 --   host), those of the host properties the TPer supports
---   ('supportedHostProperties': the others it never reads nor returns, 5.2.2.4).
+--   ('supportedHostProperties': the others it ignores and never returns,
+--   5.2.2.3, PDF 144).
 initialHostProperties :: Map Text Natural
 initialHostProperties = Map.fromList
   [ (name, v) | Assumptions TPer Host vs <- initialAssumptions, (name, v) <- vs, name `elem` map fst hostRequirements ]

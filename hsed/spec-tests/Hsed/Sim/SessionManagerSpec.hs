@@ -136,7 +136,7 @@ spec = describe "the simulated Session Manager" $ do
       fmap (fmap (L.lookup maxComPacketSizeName) . hostProperties) r `shouldBe` Just (Just (Just 8192))
       fmap (fmap (L.lookup maxPacketSizeName) . hostProperties) r `shouldBe` Just (Just (Just 0))
       fmap (fmap (L.lookup maxComPacketSizeName) . hostProperties) r' `shouldBe` Just (Just (Just 8192))
-    it "ignores an unsupported name, MaxResponseComPacketSize (N) among them, and does not return it (Core 5.2.2.4; Opal Table 17)" $ do
+    it "ignores an unsupported name, MaxResponseComPacketSize (N) among them, and does not return it (Core 5.2.2.3, PDF 144; Opal Table 17)" $ do
       let (r, st') = answer base (propertiesWith [("NoSuchProperty", 7), (maxResponseComPacketSizeName, 4096), (maxMethodsName, 3)]) st0
       fmap hostProperties r `shouldBe` Just (Just (zip supportedNames [2048, 2028, 1992, 1, 1, 3]))
       Map.keys (hostPropsOn base st') `shouldBe` L.sort supportedNames

@@ -423,14 +423,15 @@ spec = do
            , hostProps [("AckNak", value (2 :: Natural))] ] $ \tokens ->
         through guardedSend readOnly (sendOf tokens) >>= (`shouldSatisfy` refused)
 
-  describe "the rules of decide the M4c review's mutants removed unnoticed (Core 3.2.3, PDF 40-42; 3.3.3.1, PDF 57)" $ do
+  describe "the rules of decide the M4c review's mutants removed unnoticed (Core 3.2.3, PDF 40-44; 3.3.3.1, PDF 57)" $ do
     it "refuses an IF-RECV or IF-SEND of protocol 0x00, 0x03 or 0xEE on the base" $
       for_ [0x00, 0x03, 0xEE] $ \p -> do
         through guardedRecv readOnlyAndReset (Request IfRecv p 0x1004 512 mempty) >>= (`shouldSatisfy` refused)
         through guardedSend readOnlyAndReset ((sendOf props) { proto = p }) >>= (`shouldSatisfy` refused)
     it "refuses Properties whose ComPacket, packet or subpacket has a reserved byte set, or whose pad is not zero: read with a difference" $ do
-      -- the ComPacket's Reserved, bytes 0-3; the packet's Reserved, 32-33 (Table 18); the subpacket's Reserved, 44-49 (Table
-      -- 19); the pad after the subpacket's payload, to a multiple of four (3.2.3.4, PDF 42)
+      -- the ComPacket's Reserved, bytes 0-3 (Table 17, PDF 40); the packet's Reserved, 32-33 (Table 18, PDF 41); the
+      -- subpacket's Reserved, 44-49 (Table 20, PDF 44); the pad after the subpacket's payload, to a multiple of four
+      -- (3.2.3.4.1.2.2, PDF 44)
       let padAt = 56 + B.length props
       B.length props `mod` 4 `shouldNotBe` 0
       for_ [1, 32, 45, padAt] $ \k -> do

@@ -46,8 +46,9 @@ NoSessions waived, the way kept built.
   recovered.
 * A kext that says it moved none of the 512 bytes of the first ComPacket's
   IF-SEND, its kern_return success: the command is judged a residue that
-  reached the drive, design 13.29 (d) named in the report, nothing more
-  reaches the kext, and the run exits 1.
+  reached the drive, design 13.29 (d) named in the report; the commands
+  after it are answered transport failures, none reaching the kext; and the
+  run exits 1.
 
 The golden CDBs are ATA PASS-THROUGH (12), A1h: TRUSTED RECEIVE (5Ch, PIO
 Data-In, bytes 1-2 08h 0Eh) or TRUSTED SEND (5Eh, PIO Data-Out, 0Ah 06h),
@@ -156,10 +157,10 @@ resetRecvCdb = "a1 08 0e 02 01 00 04 10 00 5c 00 00"
 beforeCase :: Bool -> [Text]
 beforeCase reset = if reset then [resetSendCdb, resetRecvCdb] else [recvCdb]
 
--- | The acceptance's CDBs: Level 0; before UCT-02, Properties sent and
---   received; before UCT-03:1a-1c, StartSession, Get and End of Session,
---   each sent and received; before SPF-02:1, its IF-RECV. 16 with
---   STACK_RESET before each case, 13 without.
+-- | The acceptance's CDBs: Level 0; then each case after what comes before
+--   it ('beforeCase'): UCT-02's Properties, sent and received; UCT-03:1a-1c's
+--   StartSession, Get and End of Session, each sent and received; SPF-02:1's
+--   IF-RECV. 16 with STACK_RESET before each case, 13 without.
 golden :: Bool -> [Text]
 golden reset = concat
   [ [level0Cdb]
@@ -336,5 +337,6 @@ spec = describe "a drive's path without the drive: hsed-jig over the fake kext, 
           for_ [ "the kext moved 0 of the 512 bytes of a ComPacket's IF-SEND", "the command reached the drive, but not as hsed asked it"
                , "(design 13.29 (d))", "settle design 13.29 (d) before another run" ] $ \words' ->
             residue `shouldSatisfy` holding words'
+          later `shouldNotBe` []
           later `shouldSatisfy` all (\(st, why) -> st == Just "transport_failure" && holding "a command failed before (" why)
         other -> expectationFailure ("not the residue, then failures: " <> show other)

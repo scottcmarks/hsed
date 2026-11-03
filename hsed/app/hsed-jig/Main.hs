@@ -181,6 +181,7 @@ laterMilestones = foldr (\r rest -> (.) <$> refused r <*> rest) (pure id)
   , ("sessions", "MODE", "not built: drive sessions are read-write under the method-level allow list (design 9.3 item 3, 13.7; Scott, 2026-11-02)")
   ]
   where
-    refused (name, var, why) = abortOption
-      (ErrorMsg ("--" <> name <> ": refused: " <> why))
-      (long name <> metavar var <> help ("refused: " <> why))
+    -- optparse-applicative's abortOption, with one message for the option given an argument (which it prints after
+    -- "option --NAME: ") and one for it given none (which it prints alone)
+    refused (name, var, why) = option (readerAbort (ErrorMsg ("refused: " <> why)))
+      (long name <> metavar var <> help ("refused: " <> why) <> value id <> noArgError (ErrorMsg ("--" <> name <> ": refused: " <> why)))

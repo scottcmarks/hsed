@@ -16,10 +16,15 @@ command is recorded with the end it went to, its transport's role
 ("Hsed.Wire".'Describe': @tper@ the simulator, @drive@, @drive-replay@), so
 that a pair's transcript tells the simulator's commands from the drive's. A
 transport decorated by 'recording' adds every command it exchanges, so that
-nothing reaches a drive unrecorded (a command whose transport threw is
-recorded too, as a transport failure, before the exception goes on); the
-run's end checks the count of IF-SENDs issued on a drive ('ifSendsIssued',
-none at M3), and the reports print the entries, decoded.
+nothing reaches a drive unrecorded: the exchange and its record are one
+step, asynchronous exceptions masked (a timeout, or a signal's stop, that
+falls while a command is in flight waits until the command is recorded),
+and a command whose transport threw is recorded too, as a transport
+failure, before the exception goes on (M4c). The run's end counts the
+IF-SENDs a drive was issued ('ifSendsIssued') and decides again, under the
+policy the drive ended with, every command the drive's own transcript holds
+("Hsed.Jig.Run".'Hsed.Jig.Run.outsidePolicy'); the reports print the
+entries, decoded.
 
 'record' numbers what it adds itself, the next number in the run's order:
 the number an entry is given is replaced, so a caller writes @Note 0 "…"@.
@@ -39,6 +44,7 @@ module Hsed.Jig.Transcript
   , newTranscript
   , record
   , entries
+  , numberOf
   , recording
   , ifSendsIssued
     -- * Secrets
@@ -47,6 +53,7 @@ module Hsed.Jig.Transcript
   , maskByte
   ) where
 
+import qualified Control.Exception      as E
 import qualified Data.Aeson             as A
 import qualified Data.ByteString.Base16 as B16
 import qualified Data.Text              as DT (replace)
@@ -71,7 +78,8 @@ data TEntry
   | Note !Int !Text
   deriving (Eq, Show)
 
--- | An entry's number.
+-- | An entry's number, its place in the run's order: a mark that the
+--   entries recorded after it pass ("Hsed.Jig.Script".@transcriptMark@).
 numberOf :: TEntry -> Int
 numberOf = \case
   Issued n _ _ _  -> n
@@ -109,14 +117,22 @@ entries :: Transcript -> IO [TEntry]
 entries (Transcript ref) = reverse <$> readIORef ref
 
 -- | A transport that adds every command it exchanges to the transcript, with
---   the transport's role, and a note of every event it causes. A command
---   whose transport throws is added as issued with a transport failure, then
---   the exception rethrown: it may have reached the drive.
+--   the transport's role, and a note of every event it causes. The exchange
+--   and its record are one step, asynchronous exceptions masked: one thrown
+--   to the run while a command is in flight (a timeout's, a signal's) is
+--   delivered once the command is recorded, so that nothing reaches a drive
+--   unrecorded. A command whose transport throws, an asynchronous exception
+--   delivered while the transport waits among them, is added as issued with
+--   a transport failure, then the exception rethrown as it was: it may have
+--   reached the drive.
 recording :: Transcript -> Transport c -> Transport c
 recording t tr = tr
-  { tExchange = \q -> tryAny (tExchange tr q) >>= \case
+  { tExchange = \q -> mask_ $ E.try (tExchange tr q) >>= \case
       Right r -> r <$ record t (Issued 0 end q r)
-      Left e  -> record t (Issued 0 end q (Response (TransportFailure ("threw: " <> tshow e)) mempty)) >> throwIO e
+      Left e  -> do
+        record t (Issued 0 end q (Response (TransportFailure ("threw: " <> tshow (e :: SomeException))) mempty))
+        -- base's throwIO, which rethrows an asynchronous exception as one (RIO's would wrap it as synchronous)
+        E.throwIO e
   , tInject = \ev -> do
       s <- tInject tr ev
       s <$ record t (Note 0 ("event " <> tshow ev <> ": " <> ifStatusName s))

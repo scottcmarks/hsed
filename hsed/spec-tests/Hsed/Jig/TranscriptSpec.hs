@@ -13,7 +13,12 @@ Stability   : experimental
 A transcript numbers its entries itself, in the order added; a recording
 transport adds every command it exchanges with its answer, an event as a
 note, and a command whose transport threw as a transport failure before the
-exception goes on; the IF-SENDs issued are the issued entries' IF-SENDs,
+exception goes on; the exchange and its record are one step, asynchronous
+exceptions masked (M4c): a command whose exchange outlasts a timeout, the
+exchange unable to be interrupted (the kext's call), is recorded with its
+answer before the timeout is delivered, and one whose exchange a timeout
+interrupts is recorded as issued with a transport failure, the timeout
+going on as a timeout; the IF-SENDs issued are the issued entries' IF-SENDs,
 not a blocked one's. A secret is masked in an entry's bytes as so many
 asterisks, in a command's payload and its answer's alike, a blocked
 command's too, so that a byte-string atom carrying it keeps its length and
@@ -24,8 +29,11 @@ keeps out of a run); an empty secret is left alone (design 9.3 item 5).
 -}
 module Hsed.Jig.TranscriptSpec (spec) where
 
+import qualified Control.Exception    as E
 import qualified RIO.ByteString       as B
 import           RIO
+import qualified RIO.Text             as T
+import qualified System.Timeout       as Timeout
 import           Test.Hspec
 
 import           Hsed.Core.Call       (MethodResponse (..))
@@ -85,6 +93,18 @@ spec = do
       entries t >>= \es -> case es of
         [Issued 1 "tper" q (Response (TransportFailure _) _)] -> q `shouldBe` send
         other                                          -> expectationFailure ("not one failed IF-SEND: " <> show other)
+    it "records a command whose exchange outlasts a timeout, the exchange not interruptible (as a safe FFI call is not), with its answer, then the timeout (M4c)" $ do
+      t <- newTranscript
+      let slow = (fake False) { tExchange = \_ -> E.uninterruptibleMask_ (threadDelay 200000) $> Response Good "late" }
+      Timeout.timeout 20000 (tExchange (recording t slow) recv) `shouldReturn` Nothing
+      entries t `shouldReturn` [Issued 1 "tper" recv (Response Good "late")]
+    it "records a command whose exchange a timeout interrupts as issued with a transport failure, the timeout going on as one" $ do
+      t <- newTranscript
+      let waiting = (fake False) { tExchange = \_ -> threadDelay 1000000 $> Response Good "never" }
+      Timeout.timeout 20000 (tExchange (recording t waiting) recv) `shouldReturn` Nothing
+      entries t >>= \es -> case es of
+        [Issued 1 "tper" q (Response (TransportFailure why) _)] -> (q, "threw: " `T.isPrefixOf` why) `shouldBe` (recv, True)
+        other                                                   -> expectationFailure ("not one interrupted command: " <> show other)
 
   describe "ifSendsIssued" $
     it "counts the issued IF-SENDs, not an IF-RECV or a blocked IF-SEND" $

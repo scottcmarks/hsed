@@ -10,7 +10,9 @@ Maintainer  : scott@magnolia-heights.com
 Stability   : experimental
 
 What the laws of "Hsed.Law.Sync" quantify over: states of the simulated
-TPer, with sessions open and the host's properties kept per ComID; requests
+TPer, with sessions open and the host's properties kept per ComID, and the
+rows the resets change varied (the Locking SP's Locking and MBRControl rows,
+every SP's C_PIN Tries and Persistence: M5a, for "Hsed.Law.Reset"); requests
 on their static ComIDs; and IF-SEND payloads that ask nothing, name no
 session the TPer has, or break a control session packet's requirements.
 Generators ('Gen' values), not 'Test.QuickCheck.Arbitrary' instances, so
@@ -25,16 +27,24 @@ module Hsed.Sim.Gen
     -- * Parts the specs quantify over too
   , genHostProperties
   , genStagedPackets
+  , genResetColumns
+  , genResetSet
   ) where
 
 import qualified RIO.ByteString        as B
+import qualified RIO.List              as L
 import qualified RIO.Map               as Map
 import           RIO
-import           Test.QuickCheck       (Gen, arbitrary, chooseInt, elements, oneof, suchThat, suchThatMap, vectorOf)
+import           Test.QuickCheck       (Gen, arbitrary, chooseInt, elements, oneof, sublistOf, suchThat, suchThatMap, vectorOf)
 
 import           Hsed.Core.Method      (invocation)
 import           Hsed.Core.StreamItem  (StreamItem (generate))
+import           Hsed.Core.Table       (Cell (..), columnOf)
 import           Hsed.Core.Token       (Token (Empty))
+import           Hsed.Core.Types       (enumValue)
+import           Hsed.Core.UID         (UID)
+import           Hsed.Gen.Core.Enums   (Core_boolean (..))
+import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uLockingTable, uMBRControlTable)
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import qualified Hsed.Gen.Core.Methods as Methods
 import           Hsed.Gen.Core.UIDs    (uAuthority_Anybody, uAuthority_SID, uSMUID, uSP_Admin)
@@ -42,7 +52,8 @@ import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Packet           (ComPacketFrame (..), PacketFrame (..), encodeComPacket, encodePacket)
 import           Hsed.Sim.Session      (packets)
 import           Hsed.Sim.State        (openSession, sessionsOn)
-import           Hsed.Sim.Types        (ComIdState (..), LifeCycle (..), Limits (..), Session (..), SimParams (..), SyncState (..),
+import           Hsed.Sim.Types        (ComIdState (..), LifeCycle (..), Limits (..), SPState (..), Session (..), SimParams (..),
+                                        SyncState (..),
                                         TPerState (..), comIdHostLimits, defaultSimParams, initialHostProperties, initialState,
                                         maxComPacketSizeName, maxMethodsName, maxPacketSizeName, maxPacketsName, maxSubpacketsName,
                                         tperLimits)
@@ -66,7 +77,8 @@ import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comPa
 --   on its ComIDs ("Hsed.Sim.State".'openSession'), one per SP, the Admin
 --   SP's first, as Anybody or as SID, with any HSN (a second read-write
 --   session to one SP is SP_BUSY, Core 5.1.5.3, PDF 138, so no state the
---   protocol reaches holds two on one SP).
+--   protocol reaches holds two on one SP). Its SPs' rows that the resets
+--   change are varied ('genResetColumns'), the Locking SP's at either life.
 genState :: Gen TPerState
 genState = do
   units    <- elements [minBound .. maxBound]
@@ -79,7 +91,9 @@ genState = do
              { spUnits = units, spNComIds = fromIntegral n, spInactiveComIdDiscard = discard, spLockingOFS = locking
              , spTPerProperties = [ (name, if roomier && name == maxComPacketSizeName then 2 * v else v)
                                   | (name, v) <- spTPerProperties defaultSimParams ] }
-      st = initialState p
+      st0 = initialState p
+  sps    <- traverse genResetColumns (tsSPs st0)
+  let st = st0 { tsSPs = sps }
   comIds <- traverse (\cs -> genHostProperties >>= \props -> (\s -> cs { cSync = s, cHostProps = props }) <$> genSync p props) (tsComIds st)
   foldM opened st { tsComIds = comIds } (take sessions [uSP_Admin, uSP_Locking])
   where
@@ -236,3 +250,40 @@ controlHeader = PacketHeader 0 0 0 0 0
 -- | A data subpacket of a payload: Core Table 19's Data Kind (PDF 43).
 dataSubPacket :: ByteString -> DataSubPacket
 dataSubPacket = DataSubPacket (DataSubPacketHeader dataKind)
+
+-- | An SP with the columns the resets read and write varied, each found by
+--   name in the SP's description of its table: every Locking row's
+--   ReadLockEnabled, WriteLockEnabled, ReadLocked and WriteLocked (Core
+--   5.7.2.2.6-9, PDF 274) and its LockOnReset ('genResetSet'; 5.7.2.2.10,
+--   PDF 275), and every MBRControl row's Enable, Done and MBRDoneOnReset
+--   (5.7.2.5.2-4, PDF 277-278), put whether or not the row printed them; and
+--   every C_PIN row's Tries (0 to 5) and Persistence (5.3.4.1.1.2, PDF 210)
+--   where the row holds them (C_PIN_MSID holds no Tries, Opal 2.30 Table 25,
+--   PDF 48). Other tables and an SP without these are as they were.
+genResetColumns :: SPState -> Gen SPState
+genResetColumns sps = (\tables -> sps { spsTables = tables }) <$> Map.traverseWithKey varied (spsTables sps)
+  where
+    varied table rows = case (Map.lookup table (spsDescs sps), L.lookup table columns) of
+      (Just desc, Just (always, gens)) -> traverse (row always [ (c, g) | (name, g) <- gens, Just c <- [columnOf desc name] ]) rows
+      _                                -> pure rows
+    row always gens r = foldM (\r' (c, g) -> if always || isJust (L.lookup c r') then (\cell -> put c cell r') <$> g else pure r') r gens
+    put c cell r = L.sortOn fst ((c, cell) : filter ((/= c) . fst) r)
+    columns :: [(UID, (Bool, [(Text, Gen Cell)]))]
+    columns =
+      [ (uLockingTable,    (True,  [ ("ReadLockEnabled", boolean), ("WriteLockEnabled", boolean), ("ReadLocked", boolean)
+                                   , ("WriteLocked", boolean), ("LockOnReset", genResetSet) ]))
+      , (uMBRControlTable, (True,  [ ("Enable", boolean), ("Done", boolean), ("MBRDoneOnReset", genResetSet) ]))
+      , (uC_PINTable,      (False, [ ("Tries", UIntCell . toInteger <$> chooseInt (0, 5)), ("Persistence", boolean) ]))
+      ]
+    boolean = (\b -> EnumCell (if b then "True" else "False") (enumValue (if b then Core_boolean_True else Core_boolean_False))) <$> arbitrary
+
+-- | A reset_types set (Core Table 128, PDF 119; Opal 2.30 Table 16, PDF 32,
+--   which replaces it: Power Cycle 0, Hardware 1, HotPlug 2, Programmatic
+--   3), as a set cell holds it: one of the sets Opal 4.3.5.2.2 names (PDF 88:
+--   {0} and {0, 3} SHALL be supported) or the empty set, or any subset of the
+--   four.
+genResetSet :: Gen Cell
+genResetSet = ListCell . map typed <$> oneof [elements [[], [0], [0, 3]], sublistOf [0 .. 3]]
+  where
+    typed v = EnumCell (fromMaybe "Reserved" (L.lookup v names)) v
+    names   = [(0, "Power Cycle"), (1, "Hardware"), (2, "HotPlug"), (3, "Programmatic")]

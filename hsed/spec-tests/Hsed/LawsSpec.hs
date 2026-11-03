@@ -16,14 +16,17 @@ compiler lists what the comments bind to hand-written laws
 and Table 45, PDF 83, under its @stateTable@ comment), each entry referring to
 its law by its qualified name, so that a law a comment names and the code
 lacks fails to compile. This test holds the generated list and the
-hand-written laws ("Hsed.Law.Sync".@laws@, and since M5a "Hsed.Law.Reset".@laws@) to each other: by name, both ways;
-each entry's law is the law of its name, and states the hash its paragraph or
-table has in the IR (the first 12 hex digits the entry carries). Then it runs
-each law's property under QuickCheck, over the simulator, and finds each case
-a law names in the jig's catalogue; a case a later milestone's jig runs would
-pend with that milestone (none since M4a's catalogue took ETC-04 and ETC-15,
-design section 11). A law without a property fails, as does a case that
-neither the catalogue nor a later milestone has. The states the laws
+hand-written laws the comments bind ("Hsed.Law.Sync".@laws@) to each other:
+by name, both ways; each entry's law is the law of its name, and states the
+hash its paragraph or table has in the IR (the first 12 hex digits the entry
+carries). The resets' laws ("Hsed.Law.Reset".@laws@, M5a) are bound by no
+comment yet, their paragraphs unlabelled prose no anchor names (design 13.29
+(j); the plan's D7): each is held to the paragraph its code cites, by name,
+page and hash, and its binding pends. Then it runs each law's property under
+QuickCheck, over the simulator, the resets' 1000 cases each, and finds each
+case a law names in the jig's catalogue; a case a later rung's jig runs
+pends with that rung (design section 11). A law without a property fails, as
+does a case that neither the catalogue nor a later rung has. The states the laws
 quantify over ("Hsed.Sim.Gen".@genState@) open at most one session per SP,
 the Locking SP Manufactured where one is open to it and in either life
 else, the shipping default Manufactured-Inactive among them.
@@ -36,27 +39,63 @@ import qualified RIO.Text              as T
 import           RIO
 import           Test.Hspec
 import           Test.Hspec.QuickCheck (modifyMaxSuccess, prop)
-import           Test.QuickCheck       (counterexample, forAll, property, vectorOf)
+import           Test.QuickCheck       (conjoin, counterexample, forAll, property, vectorOf)
 
+import           Hsed.Core.Table       (Cell (..), columnOf)
+import           Hsed.Core.Types       (enumValue)
+import           Hsed.Gen.Core.Enums   (Core_boolean (..))
 import qualified Hsed.Gen.Core.Laws    as Generated
+import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, lockingTableDesc, mbrControlTableDesc)
+import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uLockingTable, uMBRControlTable)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
-import           Hsed.Jig.Catalogue    (CaseKey, CatalogueEntry (..), catalogue, renderCaseKey)
+import           Hsed.Jig.Catalogue    (CaseKey (..), CatalogueEntry (..), TestId (..), catalogue, renderCaseKey)
 import           Hsed.Law              (Law (..), LawRef (..))
 import qualified Hsed.Law.Reset        as Reset
 import qualified Hsed.Law.Sync         as Sync
 import           Hsed.Sim.Gen          (genState)
-import           Hsed.Sim.Types        (LifeCycle (..), Session (..), SimParams (..), TPerState (..))
+import           Hsed.Sim.Reset        (ResetKind (..), resetListed)
+import           Hsed.Sim.Types        (LifeCycle (..), SPState (..), Session (..), SimParams (..), TPerState (..))
 
 
 -- | Every hand-written law: those of each module of "Hsed.Law" (M3: Sync's;
---   M5a: Reset's, none until its group G4).
+--   M5a: Reset's).
 handWritten :: [Law]
-handWritten = Sync.laws <> Reset.laws
+handWritten = bound <> unbound
 
--- | The cases a law names that a later milestone's jig runs, with that
---   milestone (design section 11): none since M4a's catalogue.
+-- | The laws the comments bind (M3: Sync's).
+bound :: [Law]
+bound = Sync.laws
+
+-- | The laws no comment binds yet, their paragraphs unlabelled prose
+--   (design 13.29 (j)): the resets' (M5a).
+unbound :: [Law]
+unbound = Reset.laws
+
+-- | The paragraph each unbound law cites, by its spec, section, PDF page
+--   (1-based) and the first 12 hex digits of its hash in the IR
+--   (@spec/ir/*.json@'s @paras@, the sha256 of the paragraph's normalised
+--   words), as its comment would bind it.
+cited :: [(Text, (Text, Int, Text))]
+cited =
+  [ ("Reset.lockOnReset",    ("core-2.01 5.7.2.2.10, its first paragraph", 275, "9594d522ccb0"))
+  , ("Reset.mbrDoneOnReset", ("core-2.01 5.7.2.5.4, its second paragraph", 278, "7e253a3ed3e0"))
+  , ("Reset.properties",     ("core-2.01 5.2.2.4.4", 148, "759d1a8f5208"))
+  , ("Reset.tries",          ("core-2.01 5.3.4.1.1.2, its sixth paragraph", 210, "5431c0205778"))
+  , ("Reset.comIdIssued",    ("opal-2.30 3.3.5.1 item 1", 31, "6c1ce772d278"))
+  ]
+
+-- | The cases a law names that a later rung's jig runs, with that rung
+--   (design section 11; the M5 plan's rungs): SPF-12's first case at M5b
+--   (its steps 1-5, no media); what needs the medium, the MBR's shadowing or
+--   a power cycle the jig cannot yet issue at M6.
 later :: [(CaseKey, String)]
-later = []
+later =
+  [ (CaseKey (SPF 12) (Just 1) Nothing Nothing, "M5b")
+  , (CaseKey (SPF 12) (Just 2) Nothing Nothing, "M6")
+  , (CaseKey (UCT 10) Nothing Nothing Nothing, "M6")
+  , (CaseKey (UCT 11) Nothing Nothing Nothing, "M6")
+  , (CaseKey (SPF 5) Nothing Nothing Nothing, "M6")
+  ]
 
 -- | No name twice.
 distinct :: [Text] -> Bool
@@ -66,12 +105,19 @@ distinct xs = L.nub xs == xs
 catalogueKeys :: [CaseKey]
 catalogueKeys = map ceKey catalogue
 
+-- | A law's property run, or a failure where it has none.
+lawHolds :: Law -> Spec
+lawHolds l = case lawProp l of
+  Just p  -> it (T.unpack (lawName l) <> " holds") (property p)
+  Nothing -> it (T.unpack (lawName l) <> " holds") $
+    expectationFailure (T.unpack (lawName l) <> " has no property")
+
 spec :: Spec
 spec = do
   describe "what the comments bind to laws (Hsed.Gen.Core.Laws)" $ do
-    it "is the hand-written laws, by name, both ways" $ do
-      [ lrName r | r <- Generated.laws, lrName r `notElem` map lawName handWritten ] `shouldBe` []
-      [ lawName l | l <- handWritten, lawName l `notElem` map lrName Generated.laws ] `shouldBe` []
+    it "is the hand-written laws the comments bind, by name, both ways" $ do
+      [ lrName r | r <- Generated.laws, lrName r `notElem` map lawName bound ] `shouldBe` []
+      [ lawName l | l <- bound, lawName l `notElem` map lrName Generated.laws ] `shouldBe` []
       map lawName handWritten `shouldSatisfy` distinct
       map lrName Generated.laws `shouldSatisfy` distinct
     it "refers each name to the law of that name" $
@@ -83,11 +129,20 @@ spec = do
       [ (lrAnchor r, lrPage r) | r <- Generated.laws ] `shouldBe`
         [ ("core-2.01:3.3.10.2.1#3a", 82), ("core-2.01:3.3.10.6#dc", 86), ("core-2.01:3.3.10.7#a", 86), ("core-2.01:T45", 83) ]
 
-  describe "each law's property, over the simulator" $
-    forM_ handWritten $ \l -> case lawProp l of
-      Just p  -> it (T.unpack (lawName l) <> " holds") (property p)
-      Nothing -> it (T.unpack (lawName l) <> " holds") $
-        expectationFailure (T.unpack (lawName l) <> " has no property (Hsed.Law.Sync)")
+  describe "the laws no comment binds yet (Hsed.Law.Reset, design 13.29 (j))" $ do
+    it "are the five the M5 plan names, each citing its paragraph: Core 5.7.2.2.10 (PDF 275), 5.7.2.5.4 (PDF 278), 5.2.2.4.4 (PDF 148), 5.3.4.1.1.2 (PDF 210), Opal 3.3.5.1 item 1 (PDF 31)" $
+      [ (lawName l, lawHash l) | l <- unbound ] `shouldBe` [ (n, h) | (n, (_, _, h)) <- cited ]
+    it "are named in no comment, and none shares a hash with a bound law" $ do
+      [ lawName l | l <- unbound, lawName l `elem` map lrName Generated.laws ] `shouldBe` []
+      [ lawName l | l <- unbound, lawHash l `elem` map lawHash bound ] `shouldBe` []
+      [ lawName l | l <- unbound, T.length (lawHash l) /= 12 ] `shouldBe` []
+    forM_ cited $ \(n, (paragraph, page, _)) ->
+      it (T.unpack n <> " (" <> T.unpack paragraph <> ", PDF " <> show page <> ") is bound by a comment") $
+        pendingWith "the paragraph is unlabelled prose, which no anchor names yet (design 13.29 (j); the M5 plan's D7)"
+
+  describe "each law's property, over the simulator" $ do
+    forM_ bound lawHolds
+    modifyMaxSuccess (const 1000) $ forM_ unbound lawHolds
 
   describe "each case a law names, in the jig's catalogue" $
     forM_ [ (l, k) | l <- handWritten, k <- lawCases l ] $ \(l, k) ->
@@ -96,7 +151,7 @@ spec = do
           Just m  -> pendingWith (T.unpack (renderCaseKey k) <> " is run by the jig of " <> m <> " (design section 11)")
           Nothing -> expectationFailure (T.unpack (renderCaseKey k) <> " is not in the jig's catalogue")
 
-  describe "the states the laws quantify over (Hsed.Sim.Gen.genState)" $ modifyMaxSuccess (const 20) $
+  describe "the states the laws quantify over (Hsed.Sim.Gen.genState)" $ modifyMaxSuccess (const 20) $ do
     prop "open at most one session per SP, the Locking SP Manufactured where one is open to it and in either life else, the shipping default Manufactured-Inactive among them" $
       forAll (vectorOf 60 genState) $ \sts ->
         let sps st         = map sesSP (Map.elems (tsSessions st))
@@ -106,3 +161,23 @@ spec = do
         in counterexample (show [ (sps st, locking st) | st <- sts ])
              (all (\st -> onePerSP st && (not (lockingOpen st) || locking st == Manufactured)) sts
               && any ((== ManufacturedInactive) . locking) sts && any lockingOpen sts)
+    prop "vary what the resets read and write: some Locking row lock-enabled and locked, some LockOnReset listing Programmatic (3, Opal Table 16, PDF 32), some MBRControl Done, some C_PIN Tries above 0, at either life" $
+      forAll (vectorOf 60 genState) $ \sts ->
+        let rows table st   = concat [ Map.findWithDefault [] table (spsTables sps) | sps <- Map.elems (tsSPs st) ]
+            holds table p   = any (any p . rows table) sts
+            cell desc name r = columnOf desc name >>= (`lookup` r)
+            true desc name r = case cell desc name r of
+              Just (EnumCell _ v) -> v == enumValue Core_boolean_True
+              _                   -> False
+        in conjoin
+             [ counterexample "a Locking row ReadLockEnabled and ReadLocked" $
+                 holds uLockingTable (\r -> true lockingTableDesc "ReadLockEnabled" r && true lockingTableDesc "ReadLocked" r)
+             , counterexample "a LockOnReset listing Programmatic" $
+                 holds uLockingTable (maybe False (resetListed OnTPerReset) . cell lockingTableDesc "LockOnReset")
+             , counterexample "an MBRControl row Done" $ holds uMBRControlTable (true mbrControlTableDesc "Done")
+             , counterexample "a C_PIN row's Tries above 0" $
+                 holds uC_PINTable (\r -> case cell c_PINTableDesc "Tries" r of
+                                           Just (UIntCell n) -> n > 0
+                                           _                 -> False)
+             , counterexample "both lives" $ length (L.nub (map (spLockingOFS . tsParams) sts)) == 2
+             ]

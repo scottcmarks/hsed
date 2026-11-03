@@ -36,7 +36,6 @@ and DataStore sizes and the byte tables they give.
 -}
 module Hsed.Sim.PreconfigSpec (spec) where
 
-import           Control.Exception       (ErrorCall (..))
 import           Data.Bits               (testBit)
 import qualified RIO.List                as L
 import qualified RIO.Map                 as Map
@@ -52,11 +51,11 @@ import           Hsed.Core.Table         (Cell (..), Col (..), ColNum, Pre (..),
 import           Hsed.Core.TypeName      (TypeName (..))
 import           Hsed.Core.Types         (enumValue)
 import           Hsed.Core.UID           (UID, halfUID, uNull, uid, uidUpper)
-import           Hsed.Gen.Core.TableDescs (accessControlTableDesc, authorityTableDesc, c_PINTableDesc, lockingTableDesc,
+import           Hsed.Gen.Core.TableDescs (aceTableDesc, accessControlTableDesc, authorityTableDesc, c_PINTableDesc, lockingTableDesc,
                                           spTableDesc, tPerInfoTableDesc, templateTableDesc)
 import           Hsed.Gen.Core.Enums     (Core_table_kind (..))
-import           Hsed.Gen.Core.TableUIDs (uAccessControlTable, uAuthorityTable, uC_PINTable, uLockingInfoTable, uLockingTable,
-                                          uMBRTable, uMBRTableObject, uSPTable, uTPerInfoTable, uTableTable, uTemplateTable)
+import           Hsed.Gen.Core.TableUIDs (uAccessControlTable, uAuthorityTable, uC_PINTable, uK_AES_128Table, uLockingInfoTable,
+                                          uLockingTable, uMBRTable, uMBRTableObject, uSPTable, uTPerInfoTable, uTableTable, uTemplateTable)
 import           Hsed.Gen.Core.Types     (ubooleanType)
 import           Hsed.Gen.Core.UIDs      (uAuthority_Admins, uAuthority_Anybody, uAuthority_Makers, uAuthority_SID, uC_PIN_SID,
                                           uLocking_GlobalRange, uMethodID_Get, uMethodID_Set, uSP_Admin, uTemplate_Admin,
@@ -64,10 +63,11 @@ import           Hsed.Gen.Core.UIDs      (uAuthority_Admins, uAuthority_Anybody,
 import           Hsed.Gen.Opal.Features  (Level0DiscoverySupportedDataRemovalMechanismFeature (..))
 import qualified Hsed.Gen.Opal.Preconfig.AdminSP as Generated
 import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
+import           Hsed.Gen.Opal.TableDescs (lockingInfoTableDesc, tableTableDesc)
 import           Hsed.Level0             (Descriptor (..))
 import           Hsed.Sim.Level0         (simDescriptors)
-import           Hsed.Sim.Preconfig      (PreconfSP (..), foldTables, instances, vendorCell)
-import           Hsed.Sim.Types          (ByteTable (..), LifeCycle (..), LockingKeys (..), SPState (..), SimParams (..), TPerState (..),
+import           Hsed.Sim.Preconfig      (FoldProblem (..), PreconfSP (..), foldTables, instances, vendorCell)
+import           Hsed.Sim.Types          (ByteTable (..), Geometry (..), LifeCycle (..), LockingKeys (..), SPState (..), SimParams (..), TPerState (..),
                                           defaultSimParams, initialState, initialStateProblems, lifeCycleValue)
 
 
@@ -95,8 +95,8 @@ sp :: PreconfTable
 sp = PreconfTable spTableDesc [] [plain [(0, UIDCell (uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x01)), (1, TextCell "Admin")]]
 
 -- | The fold of tables as the Admin SP's preconfiguration, its problems an
---   error: since M5a's scaffold 'foldTables' takes an SP's preconfiguration
---   whole and returns what keeps it from folding, none yet.
+--   error: since M5a 'foldTables' takes an SP's preconfiguration whole and
+--   returns every problem that keeps it from folding.
 foldOf :: SimParams -> [PreconfTable] -> (Map UID TableDesc, Map UID [Row])
 foldOf p tables = either (error . show) id (foldTables p (PreconfSP uSP_Admin tables))
 
@@ -338,10 +338,6 @@ adminUID, credentialUID :: Word8 -> UID
 adminUID      = uid 0x00 0x00 0x00 0x09 0x00 0x00 0x02
 credentialUID = uid 0x00 0x00 0x00 0x0B 0x00 0x00 0x02
 
--- | Whether forcing a value throws an error whose message names each text.
-throwsNaming :: [Text] -> a -> Expectation
-throwsNaming names x = evaluate x `shouldThrow` \(ErrorCall msg) -> all (`T.isInfixOf` T.pack msg) names
-
 
 spec :: Spec
 spec = do
@@ -396,21 +392,30 @@ spec = do
       (listToMaybe (foldedWith defaultSimParams (tdTableUID dataRemovalDesc)) >>= cellNamed dataRemovalDesc "ActiveDataRemovalMechanism")
         `shouldBe` Just (EnumCell "Cryptographic Erase" 2)
     it "name no cell but those: another column or another marker is Nothing" $ do
-      vendorCell defaultSimParams c_PINTableDesc [(0, UIDCell uC_PIN_SID)] (number c_PINTableDesc "Persistence") "VU" `shouldBe` Nothing
-      vendorCell defaultSimParams c_PINTableDesc [(0, UIDCell uC_PIN_SID)] (number c_PINTableDesc "PIN") "VU*" `shouldBe` Nothing
-      vendorCell defaultSimParams c_PINTableDesc [(0, UIDCell uC_PIN_Admin1)] (number c_PINTableDesc "TryLimit") "VU" `shouldBe` Nothing
-      vendorCell defaultSimParams c_PINTableDesc [] 0x20 "VU" `shouldBe` Nothing
-    it "fill every cell the Admin SP's tables leave to the TPer, and a cell no entry names is an error naming the table, the row and the column" $ do
+      vendorCell defaultSimParams uSP_Admin c_PINTableDesc [(0, UIDCell uC_PIN_SID)] (number c_PINTableDesc "Persistence") "VU" `shouldBe` Nothing
+      vendorCell defaultSimParams uSP_Admin c_PINTableDesc [(0, UIDCell uC_PIN_SID)] (number c_PINTableDesc "PIN") "VU*" `shouldBe` Nothing
+      vendorCell defaultSimParams uSP_Admin c_PINTableDesc [(0, UIDCell uC_PIN_Admin1)] (number c_PINTableDesc "TryLimit") "VU" `shouldBe` Nothing
+      vendorCell defaultSimParams uSP_Admin c_PINTableDesc [] 0x20 "VU" `shouldBe` Nothing
+    it "fill every cell the Admin SP's tables leave to the TPer, and a cell no entry names is a problem naming the SP, the table, the row and the column" $ do
       T.length (tshow (foldOf defaultSimParams adminSP)) `shouldSatisfy` (> 0)
       let unnamed = cPIN { ptRows = [printed c_PINTableDesc [("UID", uidG uC_PIN_SID), ("Name", textG "C_PIN_SID"), ("Persistence", vu)]] }
-      throwsNaming ["C_PIN", "C_PIN_SID", "Persistence", "VU"] (snd (foldOf defaultSimParams [unnamed]))
+      either id (const []) (foldTables defaultSimParams (PreconfSP uSP_Admin [unnamed]))
+        `shouldBe` [UnansweredVU uSP_Admin "C_PIN" "C_PIN_SID" "Persistence"]
+    it "answer each SP's cells alone: the Admin SP's C_PIN_SID PIN is no cell of the Locking SP's, whose C_PIN_Admin1 PIN is none of the Admin SP's" $ do
+      let unanswered spu row' = either id (const []) (foldTables defaultSimParams (PreconfSP spu [cPIN { ptRows = [row'] }]))
+          sidPIN    = printed c_PINTableDesc [("UID", uidG uC_PIN_SID), ("Name", textG "C_PIN_SID"), ("PIN", vu)]
+          admin1PIN = printed c_PINTableDesc [ ("UID", uidG LockingSP.uC_PIN_Admin1), ("Name", textG "C_PIN_Admin1")
+                                             , ("PIN", NoteMarked 1 (VendorUnique "SID or MSID")) ]
+      map length [unanswered uSP_Admin sidPIN, unanswered uLocking admin1PIN] `shouldBe` [0, 0]
+      unanswered uLocking sidPIN `shouldBe` [UnansweredVU uLocking "C_PIN" "C_PIN_SID" "PIN"]
+      unanswered uSP_Admin admin1PIN `shouldBe` [UnansweredVU uSP_Admin "C_PIN" "C_PIN_Admin1" "PIN"]
     it "make active a data removal mechanism the simulator's Level 0 descriptor reports as supported (Opal 2.30 Table 10, PDF 27; design 13.32)" $ do
       let proxy     = Proxy :: Proxy Level0DiscoverySupportedDataRemovalMechanismFeature
           reported  = do
             d <- L.find ((== fromInteger (featureCode proxy)) . dCode) (simDescriptors (initialState defaultSimParams))
             either (const Nothing) (Just . level0DiscoverySupportedDataRemovalMechanismFeatureSupportedDataRemovalMechanism . drRecord)
                    (decodeFeatureStrict (dBytes d) :: Either LayoutError (DecodedRecord Level0DiscoverySupportedDataRemovalMechanismFeature))
-          active    = vendorCell defaultSimParams dataRemovalDesc [(0, UIDCell uDataRemovalRow)] 1 "VU"
+          active    = vendorCell defaultSimParams uSP_Admin dataRemovalDesc [(0, UIDCell uDataRemovalRow)] 1 "VU"
       case (reported, active) of
         (Just bits, Just (EnumCell _ v)) -> (v, testBit bits v) `shouldBe` (v, True)
         other                            -> expectationFailure ("no mechanism, or none reported: " <> show other)
@@ -436,11 +441,11 @@ spec = do
   describe "a template's instances" $ do
     let names p table desc = mapMaybe (cellNamed desc "Name") (foldedWith p table)
     it "are numbered 2 to spAdminSPAdmins in the Admin SP's Authority and C_PIN tables under XX (Opal 2.30 PDF 47-49), and none elsewhere" $ do
-      instances (admins 3) authorityTableDesc xx `shouldBe` [2, 3]
-      instances (admins 3) c_PINTableDesc xx `shouldBe` [2, 3]
-      instances (admins 1) authorityTableDesc xx `shouldBe` []
-      instances (admins 3) templateTableDesc xx `shouldBe` []
-      instances (admins 3) authorityTableDesc (Placeholder "XXXX" 2) `shouldBe` []
+      instances (admins 3) uSP_Admin authorityTableDesc xx `shouldBe` [2, 3]
+      instances (admins 3) uSP_Admin c_PINTableDesc xx `shouldBe` [2, 3]
+      instances (admins 1) uSP_Admin authorityTableDesc xx `shouldBe` []
+      instances (admins 3) uSP_Admin templateTableDesc xx `shouldBe` []
+      instances (admins 3) uSP_Admin authorityTableDesc (Placeholder "XXXX" 2) `shouldBe` []
     it "are none with one Admin authority: Admin1 printed, AdminXX standing for no row, nor any AccessControl row of it" $ do
       names (admins 1) uAuthorityTable authorityTableDesc `shouldBe` map TextCell ["Anybody", "Admins", "Makers", "SID", "Admin1"]
       names (admins 1) uC_PINTable c_PINTableDesc `shouldBe` map TextCell ["C_PIN_SID", "C_PIN_MSID", "C_PIN_Admin1"]
@@ -494,10 +499,11 @@ spec = do
       [ cellNamed accessControlTableDesc "ACL" r | r <- acl, pair r == (Just uTemplate_Admin, Just uMethodID_Get) ]
         `shouldBe` [Just (ListCell [RefCell "ACE_Admin" (uid 0x00 0x00 0x00 0x08 0x00 0x00 0x00 0x02)])]
       length [ () | (Just u, Just m) <- pairs, m == uMethodID_Get, uidUpper u == halfUID 0x00 0x00 0x02 0x05 ] `shouldBe` 2
-    it "are none, as a template's instances are, for a table the SP does not hold: the AccessControl table alone keeps its five fixed rows" $
-      map pair (fromMaybe [] (Map.lookup uAccessControlTable (snd (foldOf (admins 3) [accessControl]))))
-        `shouldBe` [ (Just uAdmin1, Just uMethodID_Set), (Just uC_PIN_SID, Just uMethodID_Get), (Just uC_PIN_MSID, Just uMethodID_Get)
-                   , (Just uC_PIN_Admin1, Just uMethodID_Get), (Just uC_PIN_Admin1, Just uMethodID_Set) ]
+    it "are a problem, as a template's base is, for a table the SP does not hold: the AccessControl table alone names three every-object tables and two bases it lacks (M5a)" $
+      either id (const []) (foldTables (admins 3) (PreconfSP uSP_Admin [accessControl]))
+        `shouldBe` [ UnknownEveryObject uSP_Admin (tshow (halfUID 0x00 0x00 0x00 0x09)), UnresolvedBase uSP_Admin uAdminXX
+                   , UnresolvedBase uSP_Admin uC_PIN_AdminXX, UnresolvedBase uSP_Admin uC_PIN_AdminXX
+                   , UnknownEveryObject uSP_Admin (tshow (halfUID 0x00 0x00 0x02 0x04)), UnknownEveryObject uSP_Admin (tshow (halfUID 0x00 0x00 0x02 0x05)) ]
 
   describe "the Locking SP's tables (M5a's scaffold: its stand-in preconfiguration, Opal 2.30 Tables 34-42 and 44-48, PDF 52-89)" $ do
     let lockingSP      = PreconfSP uLocking LockingSP.lockingSP
@@ -510,10 +516,11 @@ spec = do
       [ either Just (const Nothing) (foldTables p lockingSP) | p <- every ] `shouldBe` map (const Nothing) every
       map initialStateProblems every `shouldBe` map (const []) every
       forM_ every $ \p -> fmap (\held -> (spsDescs held, spsTables held)) (heldLocking p) `shouldBe` Just (lockingOf p)
-    it "are the same tables at either Original Factory State, one for each of its preconfiguration tables (Opal 2.30 5.2.2.1, PDF 96)" $ do
-      let at o = fmap spsTables (heldLocking defaultSimParams { spLockingOFS = o })
-      at Manufactured `shouldBe` at ManufacturedInactive
-      fmap Map.size (at ManufacturedInactive) `shouldBe` Just (length LockingSP.lockingSP)
+    it "are the same tables at either Original Factory State, one for each of its preconfiguration tables but the key table the TPer does not hold (Opal 2.30 5.2.2.1, PDF 96; Table 36's *TT1, PDF 54)" $ do
+      let at o k = fmap spsTables (heldLocking defaultSimParams { spLockingOFS = o, spLockingKeys = k })
+      forM_ [minBound .. maxBound] $ \k -> at Manufactured k `shouldBe` at ManufacturedInactive k
+      map (fmap Map.size . at ManufacturedInactive) [KeysAES128, KeysAES256, KeysBoth]
+        `shouldBe` map Just [length LockingSP.lockingSP - 1, length LockingSP.lockingSP - 1, length LockingSP.lockingSP]
     it "read a value printed with a note's number after it as the value: LockingInfo's MaxRanges 8 (Table 44 and its note 1, PDF 86)" $
       (listToMaybe (lockingRows defaultSimParams uLockingInfoTable) >>= \r -> L.lookup 0x04 r) `shouldBe` Just (UIntCell 8)
     it "reference the K_AES_256 key with K_AES_256 alone or both, the K_AES_128 key with K_AES_128 alone (Table 45's *LT1, PDF 86)" $ do
@@ -530,9 +537,64 @@ spec = do
       fmap spsBytes (heldLocking defaultSimParams { spMbrSize = 0x10000000 })
         `shouldBe` Just (Map.fromList [(uMBRTable, ByteTable 0x10000000 0 mempty), (dataStore, ByteTable 0xA00000 0 mempty)])
       fmap spsBytes (Map.lookup uSP_Admin (tsSPs (initialState defaultSimParams))) `shouldBe` Just mempty
-    it "give the Locking SP's C_PIN_Admin1, printed SID or MSID with its note 1, the MSID (Table 41, PDF 83-84)" $
+    it "give the Locking SP's C_PIN_Admin1, printed SID or MSID with its note 1, the MSID (Table 41, PDF 83-84), at either OFS (M5's D3)" $ do
       (rowWith LockingSP.uC_PIN_Admin1 (lockingRows defaultSimParams uC_PINTable) >>= cellNamed c_PINTableDesc "PIN")
         `shouldBe` Just (BytesCell (spMsid defaultSimParams))
+      (rowWith LockingSP.uC_PIN_Admin1 (lockingRows defaultSimParams { spLockingOFS = Manufactured } uC_PINTable) >>= cellNamed c_PINTableDesc "PIN")
+        `shouldBe` Just (BytesCell (spMsid defaultSimParams))
+    it "number the templates by the parameters: Admin5 on past the four printed, User2 on to the Users, Range2 on to the ranges (Tables 40-41 and 45, PDF 82-86)" $ do
+      let p        = defaultSimParams { spLockingAdmins = 6, spLockingUsers = 9, spLockingRanges = 9 }
+          names t d = mapMaybe (cellNamed d "Name") (lockingRows p t)
+      names uAuthorityTable authorityTableDesc
+        `shouldBe` map TextCell (["Anybody", "Admins"] <> [ "Admin" <> tshow n | n <- [1 .. 6 :: Int] ] <> ["Users"] <> [ "User" <> tshow n | n <- [1 .. 9 :: Int] ])
+      names uC_PINTable c_PINTableDesc
+        `shouldBe` map TextCell ([ "C_PIN_Admin" <> tshow n | n <- [1 .. 6 :: Int] ] <> [ "C_PIN_User" <> tshow n | n <- [1 .. 9 :: Int] ])
+      names uLockingTable lockingTableDesc `shouldBe` map TextCell ("Locking_GlobalRange" : [ "Locking_Range" <> tshow n | n <- [1 .. 9 :: Int] ])
+      instances p uLocking authorityTableDesc (Placeholder "XXXX" 2) `shouldBe` [5, 6]
+      instances p uLocking aceTableDesc (Placeholder "MMMM" 2) `shouldBe` [2 .. 9]
+      instances p uLocking aceTableDesc (Placeholder "NNNN" 2) `shouldBe` [2 .. 9]
+      instances p uLocking templateTableDesc (Placeholder "NNNN" 2) `shouldBe` []
+    it "instantiate a range's ActiveKey from the key the parameters choose: Locking_Range2's K_AES_256_Range2_Key (Table 45's *LT1, PDF 86)" $
+      (rowWith (uid 0x00 0x00 0x08 0x02 0x00 0x03 0x00 0x02) (lockingRows defaultSimParams uLockingTable) >>= cellNamed lockingTableDesc "ActiveKey")
+        `shouldBe` Just (RefCell "K_AES_256_Range2_Key" (uid 0x00 0x00 0x08 0x06 0x00 0x03 0x00 0x02))
+    it "leave out the key table the TPer does not hold and every row naming it: its Table row, SecretProtect's, its ACEs and its objects' AccessControl rows (Table 36's *TT1, PDF 54; *AC6, PDF 55)" $ do
+      let named k n = [ r | rows <- Map.elems (snd (lockingOf defaultSimParams { spLockingKeys = k })), r <- rows
+                          , any (\(_, cell) -> n `T.isInfixOf` tshow cell || n == "K_AES_128" && "0x08 0x05 0x00" `T.isInfixOf` tshow cell
+                                                 || n == "K_AES_256" && "0x08 0x06 0x00" `T.isInfixOf` tshow cell) r ]
+      map (\k -> length (named k "K_AES_128")) [KeysAES128, KeysAES256, KeysBoth] `shouldSatisfy` \case
+        [a, 0, b] -> a > 0 && b > 0
+        _         -> False
+      map (\k -> length (named k "K_AES_256")) [KeysAES128, KeysAES256, KeysBoth] `shouldSatisfy` \case
+        [0, a, b] -> a > 0 && b > 0
+        _         -> False
+      Map.member uK_AES_128Table (snd (lockingOf defaultSimParams)) `shouldBe` False
+    it "make LockingInfo's MaxRanges the parameters' ranges and its geometry the parameters' (Table 44, PDF 85-86; 3.1.1.4.2-5, PDF 22)" $ do
+      let info p = listToMaybe (lockingRows p uLockingInfoTable) <&> \r ->
+                     map (\n -> cellNamed lockingInfoTableDesc n r) ["MaxRanges", "AlignmentRequired", "LogicalBlockSize", "AlignmentGranularity", "LowestAlignedLBA"]
+      info defaultSimParams `shouldBe` Just [Just (UIntCell 8), Just (EnumCell "True" 1), Just (UIntCell 512), Just (UIntCell 8), Just (UIntCell 0)]
+      info defaultSimParams { spLockingRanges = 20, spGeometry = Geometry False 4096 1 3 }
+        `shouldBe` Just [Just (UIntCell 20), Just (EnumCell "False" 0), Just (UIntCell 4096), Just (UIntCell 1), Just (UIntCell 3)]
+    it "refuse, before folding, a parameter out of its bounds, each named with its value and bounds; the Admin SP's fold reads none of them" $ do
+      let problems p = either id (const []) (foldTables p lockingSP)
+      problems defaultSimParams { spLockingAdmins = 3 } `shouldBe` [OutOfBounds "the Locking SP's Admins" 3 (4, 255)]
+      problems defaultSimParams { spLockingUsers = 256, spLockingRanges = 7 }
+        `shouldBe` [OutOfBounds "the Locking SP's Users" 256 (8, 255), OutOfBounds "the Locking SP's ranges" 7 (8, 255)]
+      problems defaultSimParams { spMbrSize = 0x07FFFFFF } `shouldBe` [OutOfBounds "the MBR's size" 0x07FFFFFF (0x08000000, 0xFFFFFFFF)]
+      problems defaultSimParams { spDataStore = (1, 0x9FFFFF, 1) } `shouldBe` [OutOfBounds "the DataStore's size" 0x9FFFFF (0xA00000, 0xFFFFFFFF)]
+      problems defaultSimParams { spMandatoryWriteGranularity = 2 }
+        `shouldBe` [OutOfBounds "the byte tables' MandatoryWriteGranularity" 2 (1, 1)]
+      problems defaultSimParams { spMandatoryWriteGranularity = 8193, spRecommendedAccessGranularity = 16384 }
+        `shouldBe` [OutOfBounds "the byte tables' MandatoryWriteGranularity" 8193 (1, 8192)]
+      initialStateProblems defaultSimParams { spLockingAdmins = 3 } `shouldBe` [OutOfBounds "the Locking SP's Admins" 3 (4, 255)]
+      map (\p -> either id (const []) (foldTables p (PreconfSP uSP_Admin Generated.adminSP))) [defaultSimParams { spLockingAdmins = 3 }] `shouldBe` [[]]
+    it "refuse a size the TPer chooses below the least the table prints (0x08000000 min, Table 36, PDF 54)" $ do
+      let mbrRow = rowOf tableTableDesc Plain [("UID", uidG uMBRTableObject), ("Name", textG "MBR"), ("Rows", VendorAtLeast 0x10000000 "0x08000000 min")]
+      either id (const []) (foldTables defaultSimParams (PreconfSP uLocking [tableOf tableTableDesc [mbrRow]]))
+        `shouldBe` [OutOfBounds "the Table table's row MBR's Rows" 0x08000000 (0x10000000, 0xFFFFFFFF)]
+    it "fold at the bounds, 255 Admins, Users and ranges with both key tables, in under a second" $ do
+      let p = defaultSimParams { spLockingAdmins = 255, spLockingUsers = 255, spLockingRanges = 255, spLockingKeys = KeysBoth }
+      done <- timeout 1000000 (evaluate (either (const 0) (sum . map length . Map.elems . snd) (foldTables p lockingSP)))
+      done `shouldSatisfy` maybe False (> 451)
 
   describe "the parameters' overrides" $ do
     let lifeCycle p = rowWith uLocking (foldedWith p uSPTable) >>= cellNamed spTableDesc "LifeCycleState"

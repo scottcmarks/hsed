@@ -24,9 +24,10 @@ sections 8.1 and 8.3; M4b). 'foldTables' does it in six passes:
   choice where the table leaves the value to it ('vendorCell': @VU@, @MSID@),
   and every other column's default but the UID's, so that every column a Get
   may return holds a value (Core 5.3.4.2.2, PDF 223; design 13.31 (a));
-* (c) overrides: the parameters choose two cells the Admin SP's tables
-  print, the Locking SP's life cycle state and TPerInfo's
-  ProgrammaticResetEnable;
+* (c) overrides: the parameters choose cells the tables print, the Locking
+  SP's life cycle state and TPerInfo's ProgrammaticResetEnable in the Admin
+  SP's, and since M5a LockingInfo's MaxRanges and geometry in the Locking
+  SP's;
 * (d) every object: a row printed @TT TT TT TT@ after a half-UID is one
   AccessControl row for each object of that table, over the rows (a) to (c)
   give, ordered by UID (Opal 2.30 *AC1-*AC7, PDF 38-39);
@@ -35,7 +36,7 @@ sections 8.1 and 8.3; M4b). 'foldTables' does it in six passes:
   and every cell evaluated as soon as the tables are;
 * (f) the Table table's counts: each of its rows' NumColumns and Rows, which
   the preconfiguration leaves blank and Core states (5.3.2.3.7-5.3.2.3.8, PDF
-  157: the number of columns in the table, the number of rows created), the
+  157): the number of columns in the table, the number of rows created), the
   described table's columns and the rows the fold gives it, a byte table's
   NumColumns 0x01 (since the M4b review; the CommonNames Core states, 5.3.2.3
   and 5.3.2.6.3, PDF 156 and 161, the issuing template's name, stay their
@@ -50,16 +51,18 @@ generated modules, the Admin SP's preconfiguration among them
 generates them, since M4b, which "Hsed.Sim.Types".@initialState@ folds),
 never a module that imports the state's types.
 
-Since M5a's scaffold the fold takes an SP's preconfiguration whole
-('PreconfSP': the SP's UID and its tables) and gives the SP's tables or what
+Since M5a the fold takes an SP's preconfiguration whole ('PreconfSP': the
+SP's UID and its tables) and gives the SP's tables or every problem that
 keeps them from folding ('FoldProblem'), and it folds the Locking SP's
 (Opal 2.30 Tables 34-42 and 44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP",
-a stand-in until M5a's integration) as it does the Admin SP's, reading the
-cells those tables print beside the Admin SP's ("Hsed.Core.Preconfig":
-a value marked with a note's number, one of two key references, a value
-the TPer chooses with a least) and answering the TPer's choices there
-('vendorCell'). The Locking SP's template instances, its LockingInfo
-geometry and the problems the fold reports are its group G3's.
+a stand-in until M5a's integration) as it does the Admin SP's: the cells
+those tables print beside the Admin SP's ("Hsed.Core.Preconfig": a value
+marked with a note's number, one of two key references, a value the TPer
+chooses with a least) read and the TPer's choices answered ('vendorCell',
+by SP), its templates numbered by the parameters ('instances', by SP,
+placeholder and table), the key table the TPer does not hold left out with
+every row that names it (Table 36's *TT1, PDF 54), and its LockingInfo row
+the parameters' ranges and geometry.
 -}
 module Hsed.Sim.Preconfig
   ( -- * An SP's preconfiguration, folded
@@ -83,20 +86,24 @@ import           Hsed.Core.Preconfig             (Placeholder (..), PreCell (..)
                                                   RowKind (..), instanceUID, instantiate, unmarked)
 import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNumbered, columnOf)
 import           Hsed.Core.Types                 (enumValue)
-import           Hsed.Core.UID                   (HalfUID, UID, uidLower, uidUpper)
+import           Hsed.Core.UID                   (HalfUID, UID, uNull, uidLower, uidUpper)
 import           Hsed.Gen.Core.Enums             (Core_boolean (..), Core_symmetric_mode (..), Core_table_kind (..))
-import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uK_AES_128Table, uK_AES_256Table, uMBRTableObject, uSPTable,
-                                                  uSecretProtectTable, uTPerInfoTable, uTableTable, uTemplateTable)
-import           Hsed.Gen.Core.UIDs              (uC_PIN_SID, uTemplate_Base)
+import           Hsed.Gen.Core.TableDescs        (k_AES_128TableDesc, k_AES_256TableDesc)
+import           Hsed.Gen.Core.TableUIDs         (uACETable, uAuthorityTable, uC_PINTable, uK_AES_128Table, uK_AES_256Table,
+                                                  uLockingInfoTable, uLockingTable, uMBRTableObject, uSPTable, uSecretProtectTable,
+                                                  uTPerInfoTable, uTableTable, uTemplateTable)
+import           Hsed.Gen.Core.UIDs              (uC_PIN_SID, uSP_Admin, uTemplate_Base)
 import           Hsed.Gen.Opal.Enums             (Opal_data_removal_mechanism (..))
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Gen.Opal.TableUIDs         (uDataRemovalMechanismTable)
-import           Hsed.Sim.Params                 (LifeCycle (..), LockingKeys (..), SimParams (..), lifeCycleValue)
+import           Hsed.Sim.Params                 (Geometry (..), LifeCycle (..), LockingKeys (..), SimParams (..), lifeCycleValue,
+                                                  lockingBounds)
 
 
 -- $setup
 -- >>> :set -XOverloadedStrings
+-- >>> import Hsed.Sim.Params (defaultSimParams)
 
 
 -- | An SP's tables folded from its preconfiguration tables: each table's
@@ -104,26 +111,35 @@ import           Hsed.Sim.Params                 (LifeCycle (..), LockingKeys (.
 --   rows in the order the tables give them, each its cells in column order.
 --
 --   * (a) A template row is a row for each of the instances 'instances'
---     gives the table its object lies in (its own, or for an AccessControl
---     row the table its InvokingID names), its cells instantiated; an
---     instance whose UID does not fit the placeholder's bytes, or whose
---     object a row the table prints already is, is left out.
+--     gives the SP, its placeholder and the table its object lies in (its
+--     own, or for an AccessControl row the table its InvokingID names), its
+--     cells instantiated; an instance whose UID does not fit the
+--     placeholder's bytes, or whose object a row the table prints already
+--     is, is left out.
 --   * (b) A row keeps the cells it prints ('Given'), takes the TPer's value
---     where it leaves one to the TPer ('VendorUnique', 'vendorCell'; one
---     'vendorCell' does not name is an error naming the table, the row and
---     the column), and every column it leaves blank takes its default
+--     where it leaves one to the TPer ('VendorUnique', 'VendorAtLeast',
+--     'vendorCell'), and every column it leaves blank takes its default
 --     ('ptDefaults', Core 5.3.4.2.2, PDF 223: a column a Get does not return
 --     reads as one the host may not read), but the UID: a UID names a row's
 --     object, which no default can, and an AccessControl row's is the TPer's
---     to assign, which Opal prints none of (Core 5.3.2.7.1, PDF 162).
---   * (c) The parameters override two cells: the Locking SP's LifeCycleState
---     is its Original Factory State ('spLockingOFS'; Opal 2.30 Table 29
---     prints Manufactured-Inactive, the OFS 5.2.2 makes normative, PDF 96,
---     whose informative comment allows Manufactured), and TPerInfo's
---     ProgrammaticResetEnable is 'spTPerResetEnabled' (Table 27 prints FALSE,
---     PDF 50), in the table's one row (Core 5.4.2.1, PDF 229), whatever its
---     UID. A cell that holds the parameter's value already is kept as
---     printed.
+--     to assign, which Opal prints none of (Core 5.3.2.7.1, PDF 162). A
+--     value with a note's number after it is the value ('unmarked'), and of
+--     two key references the one to the key table the TPer holds
+--     ('spLockingKeys': K_AES_128's with 'KeysAES128', else K_AES_256's;
+--     Opal 2.30 Table 45's *LT1, PDF 86).
+--   * (c) The parameters override cells the tables print: the Locking SP's
+--     LifeCycleState is its Original Factory State ('spLockingOFS'; Opal
+--     2.30 Table 29 prints Manufactured-Inactive, the OFS 5.2.2 makes
+--     normative, PDF 96, whose informative comment allows Manufactured);
+--     TPerInfo's ProgrammaticResetEnable is 'spTPerResetEnabled' (Table 27
+--     prints FALSE, PDF 50), in the table's one row (Core 5.4.2.1, PDF 229),
+--     whatever its UID; and LockingInfo's MaxRanges is 'spLockingRanges'
+--     (Table 44 prints 8 and its note 1, at least 8, PDF 86), its
+--     AlignmentRequired, LogicalBlockSize, AlignmentGranularity and
+--     LowestAlignedLBA the geometry's ('spGeometry'; Table 44 leaves them
+--     blank, 4.3.5.1, PDF 85, and the Geometry Reporting descriptor reports
+--     the same columns, 3.1.1.4.2-5, PDF 22). A cell that holds the
+--     parameter's value already is kept as printed.
 --   * (d) An every-object row ('EveryObject') is one row for each object
 --     whose UID begins with its half-UID, in UID order, among the rows (a) to
 --     (c) give, its InvokingID the object (Opal 2.30 *AC1-*AC7, PDF 38-39),
@@ -147,23 +163,40 @@ import           Hsed.Sim.Params                 (LifeCycle (..), LockingKeys (.
 --     created or deleted before M6, so the counts the fold gives hold for a
 --     run.
 --
---   Every cell is evaluated as soon as the tables are, so that a cell the
---   TPer would choose and 'vendorCell' does not name fails the fold, not a
---   later Get of it.
+--   Before the passes, the key table the TPer does not hold ('spLockingKeys';
+--   Opal 2.30 Table 36's *TT1, PDF 54: only one of the two K_AES tables is
+--   required; 4.3.5.5, PDF 89) is left out, and with it every row that
+--   names it: its row of the Table table and SecretProtect's (Tables 36 and
+--   42, PDF 54 and 84), the ACEs named for it (Table 39, PDF 79-80) and the
+--   AccessControl rows of its objects (Table 38's *AC6, PDF 55: only the
+--   K_AES_128 or the K_AES_256 related rows are mandatory). A cell that
+--   names it is a reference to its objects or its Table row, or a name that
+--   holds the table's name; a choice between the two tables ('OneOf') names
+--   neither.
 --
---   The result is the SP's tables, or what keeps the fold from giving them
---   ('FoldProblem'). Since M5a's scaffold the fold takes an SP's
---   preconfiguration whole ('PreconfSP') and returns its problems as a
---   list; until its group G3 it finds none, a cell it cannot fill still an
---   error naming it, as above. Of the cells the Locking SP's tables print
---   since M5a ("Hsed.Core.Preconfig"), a value with a note's number after
---   it is the value ('unmarked'); one of two key references is the one the
---   parameters' key tables decide ('spLockingKeys': K_AES_128's alone with
---   'KeysAES128', else K_AES_256's; Opal 2.30 Table 45's *LT1, PDF 86); and a
---   value the TPer chooses with a least printed is 'vendorCell''s for the
---   cell as printed (Table 36's MBR and DataStore Rows, PDF 54).
+--   Every cell is evaluated as soon as the tables are. The result is the
+--   SP's tables, or every problem that keeps the fold from giving them
+--   ('FoldProblem'): for the Locking SP, a parameter out of the bounds Opal
+--   2.30 and the simulator give it ("Hsed.Sim.Params".'lockingBounds'), which
+--   the fold reports before it starts; a cell left to the TPer that
+--   'vendorCell' does not answer, or a choice of key no alternative of which
+--   is the key table the TPer holds; a value chosen below the least the
+--   table prints ('VendorAtLeast', as a Table row's Rows, a uinteger_4,
+--   Core Table 171, PDF 156); an every-object row whose half-UID is no table
+--   the SP holds; and a template whose base is no table's the SP holds.
+--
+-- >>> import Hsed.Gen.Core.UIDs (uSP_Admin)
+-- >>> either (map foldProblemText) (const []) (foldTables defaultSimParams { spLockingUsers = 7 } (PreconfSP uSP_Locking []))
+-- ["the Locking SP's Users 7: out of 8 to 255"]
+-- >>> either (map foldProblemText) (const []) (foldTables defaultSimParams { spLockingUsers = 7 } (PreconfSP uSP_Admin []))
+-- []
 foldTables :: SimParams -> PreconfSP -> Either [FoldProblem] (Map UID TableDesc, Map UID [Row])
-foldTables p sp = Right (folded p (pspTables sp))
+foldTables p sp = case bounds of
+  [] -> folded p (pspUID sp) (heldKeys p (pspTables sp))
+  _  -> Left bounds
+  where
+    bounds = [ OutOfBounds what v range | pspUID sp == uSP_Locking, (what, v, range@(least, most), _) <- lockingBounds p
+                                        , v < least || v > most ]
 
 -- | An SP's preconfiguration: its UID (its row of the Admin SP's SP table,
 --   Opal 2.30 Table 29, PDF 50) and its preconfiguration tables, as hsedc
@@ -175,14 +208,14 @@ data PreconfSP = PreconfSP
   }
   deriving (Eq, Show)
 
--- | What keeps an SP's preconfiguration from folding (M5a's scaffold; the
---   fold reports them from its group G3 on, before the transport opens,
---   "Hsed.Transport.InProc"): in an SP, a cell the TPer chooses that no
---   'vendorCell' entry answers (its table, row and column); in an SP, a
---   table whose every object a row stands for where the SP holds no such
---   table; a value out of the bounds the spec gives it (what, the value,
---   the least and the most); in an SP, a template's base UID no instance
---   resolves.
+-- | What keeps an SP's preconfiguration from folding, which the fold
+--   reports before the transport opens ("Hsed.Transport.InProc"): in an SP,
+--   a cell the TPer chooses that no 'vendorCell' entry answers (its table,
+--   row and column); in an SP, a table whose every object a row stands for
+--   where the SP holds no such table (the table's half-UID); a value out of
+--   the bounds the spec gives it (what, the value, the least and the most);
+--   in an SP, a template's base UID that is no object of a table the SP
+--   holds, so that no instance of it resolves.
 data FoldProblem
   = UnansweredVU !UID !Text !Text !Text
   | UnknownEveryObject !UID !Text
@@ -206,35 +239,41 @@ foldProblemText = \case
   UnresolvedBase sp base -> inSP sp <> "no instance resolves the template base " <> tshow base
   where inSP sp = "SP " <> tshow sp <> ": "
 
--- | 'foldTables' of a list of tables, its six passes.
-folded :: SimParams -> [PreconfTable] -> (Map UID TableDesc, Map UID [Row])
-folded p tables =
-  ( descs
-  , everyCell (counted descs (Map.fromListWith (flip (<>)) [ (tdTableUID (ptDesc t), finish t staged) | (t, staged) <- stagedTables ]))
-  )
+-- | 'foldTables' of an SP's tables, its six passes, every problem of every
+--   pass reported.
+folded :: SimParams -> UID -> [PreconfTable] -> Either [FoldProblem] (Map UID TableDesc, Map UID [Row])
+folded p spu tables = do
+  stagedTables <- allOf [ (,) t . concat <$> allOf (map (stage p spu tables t . row) (ptRows t)) | t <- tables ]
+  let -- the objects (a) to (c) give, by UID, in order
+      objects = Set.toAscList (Set.fromList [ u | (_, staged) <- stagedTables, Just r <- map builtRow staged
+                                                , Just (UIDCell u) <- [L.lookup uidColumn r] ])
+      -- (d): a staged row, each every-object row expanded
+      expanded t = \case
+        Printed r        -> Right [(True, r)]
+        Instance r       -> Right [(False, r)]
+        Every half cells -> map ((,) False) <$> allOf [ built p spu t (everyObject t u cells) | u <- objects, uidUpper u == half ]
+  finished <- allOf [ (,) (tdTableUID (ptDesc t)) . distinctObjects (ptDesc t) . concat <$> allOf (map (expanded t) staged)
+                    | (t, staged) <- stagedTables ]
+  -- (e) and (f): the tables by UID, the Table table counted, each cell evaluated
+  pure (descs, everyCell (counted descs (Map.fromListWith (flip (<>)) finished)))
   where
     descs = Map.fromList [ (tdTableUID (ptDesc t), ptDesc t) | t <- tables ]
-    -- (a) to (c): each table's rows as printed and as its templates' instances, complete; its every-object rows kept
-    stagedTables = [ (t, concatMap (stage p tables t . row) (ptRows t)) | t <- tables ]
-    -- the objects (a) to (c) give, by UID, in order
-    objects = Set.toAscList (Set.fromList [ u | (_, staged) <- stagedTables, Just r <- map builtRow staged
-                                              , Just (UIDCell u) <- [L.lookup uidColumn r] ])
-    -- (d) and (e): a table's rows, each every-object row expanded, no object added twice
-    finish t staged = distinctObjects (ptDesc t) (concatMap (expanded t) staged)
-    expanded t = \case
-      Printed r         -> [(True, r)]
-      Instance r        -> [(False, r)]
-      Every half cells  -> [ (False, built p t (everyObject t u cells)) | u <- objects, uidUpper u == half ]
-    -- the tables, each of their cells evaluated first
     everyCell rows = L.foldl' (flip seq) () [ cell | rs <- Map.elems rows, r <- rs, (_, cell) <- r ] `seq` rows
+
+-- | Each of a list's results, or every problem any of them has, in order.
+allOf :: [Either [FoldProblem] a] -> Either [FoldProblem] [a]
+allOf xs = case partitionEithers xs of
+  ([], as) -> Right as
+  (es, _)  -> Left (concat es)
 
 -- | The cell the TPer chooses where a preconfiguration table leaves a value
 --   to it ('VendorUnique': @VU@, Opal 2.30 Table 1, PDF 12, or @MSID@, Table
---   25, PDF 48), from the run's parameters: in a table of a description, in
---   a row (the cells it prints, which name its object), in a column, for the
---   marker printed; 'Nothing' for a cell no entry names. The entries, each
---   with its source (design 13.17; the values the lead decided for M4b,
---   design 13.32):
+--   25, PDF 48; 'VendorAtLeast': a value with its least, Table 36, PDF 54),
+--   from the run's parameters: in an SP, in a table of a description, in a
+--   row (the cells it prints, which name its object), in a column, for the
+--   marker printed; 'Nothing' for a cell no entry names. The Admin SP's
+--   entries, each with its source (design 13.17; the values the lead
+--   decided for M4b, design 13.32):
 --
 --   * C_PIN_SID's PIN (@VU@): the SID's PIN the parameters give, else the
 --     MSID, as automated take ownership needs it (Opal 2.30 4.2.1.8, PDF 49);
@@ -257,14 +296,15 @@ folded p tables =
 --     PDF 27; Table 33 and 4.2.6.1.2, PDF 51-52). The table's UID is Opal's
 --     (Table 20 row 12, PDF 37), generated in "Hsed.Gen.Opal.TableUIDs".
 --
---   The Locking SP's (M5a's scaffold, the cells of its stand-in module, by
---   table and not yet by SP; its group G3 keys them by SP and bounds them):
+--   The Locking SP's (since M5a; S2's values, kept by G3):
 --
 --   * the MBR table's Rows (@0x08000000 min@): the parameters' MBR size
---     (Opal 2.30 Table 36, PDF 54; 4.3.5.4, PDF 89);
+--     (Opal 2.30 Table 36, PDF 54; 4.3.5.4, PDF 89), which their bounds hold
+--     to that least ("Hsed.Sim.Params".'lockingBounds');
 --   * the DataStore table's Rows (@0x00A00000 min@): the parameters'
 --     DataStore size, the one Level 0's Additional DataStore Table
---     descriptor reports (Table 36, PDF 54; 4.3.8.1, PDF 90);
+--     descriptor reports (Table 36, PDF 54; 4.3.8.1, PDF 90), held to that
+--     least likewise;
 --   * the MBR's and the DataStore's MandatoryWriteGranularity and
 --     RecommendedAccessGranularity (@VU@): the parameters' (Table 36, PDF
 --     54; 5.3.1.1.2 and 5.3.1.2.2, PDF 99-100);
@@ -275,42 +315,107 @@ folded p tables =
 --     type allows, 16 or 32 bytes (Core Tables 95-96, key_128 and key_256,
 --     PDF 112), the simulator holding no medium to encrypt; its Mode (@VU@):
 --     XTS (Core Table 134, symmetric_mode, PDF 120);
---   * the Locking SP's C_PIN_Admin1 PIN (@SID or MSID@ and its note 1): the
---     MSID, the initial value with a Manufactured OFS (Table 41 note 1, PDF
---     83), which Activate replaces from a Manufactured-Inactive one (5.1.1.2,
---     M6).
+--   * C_PIN_Admin1's PIN (@SID or MSID@ and its note 1), the Locking SP's
+--     own object (00 00 00 0B 00 01 00 01, Table 41, PDF 83; the Admin SP's
+--     C_PIN_Admin1 is 00 00 00 0B 00 00 02 01, Table 25, PDF 48): the MSID at
+--     either Original Factory State, the initial value with a Manufactured
+--     OFS (Table 41 note 1, PDF 83-84), and the placeholder under
+--     Manufactured-Inactive that Activate replaces with SID's PIN (5.1.1.2,
+--     PDF 91; M5's D3, M6's Activate).
 --
 -- >>> import Hsed.Gen.Core.TableDescs (c_PINTableDesc)
--- >>> import Hsed.Sim.Params (defaultSimParams)
--- >>> vendorCell defaultSimParams c_PINTableDesc [(0, UIDCell uC_PIN_SID)] 6 "VU"
+-- >>> import Hsed.Gen.Core.UIDs (uSP_Admin)
+-- >>> vendorCell defaultSimParams uSP_Admin c_PINTableDesc [(0, UIDCell uC_PIN_SID)] 6 "VU"
 -- Just (UIntCell 0)
--- >>> vendorCell defaultSimParams c_PINTableDesc [(0, UIDCell uC_PIN_SID)] 7 "VU"
+-- >>> vendorCell defaultSimParams uSP_Admin c_PINTableDesc [(0, UIDCell uC_PIN_SID)] 7 "VU"
 -- Nothing
-vendorCell :: SimParams -> TableDesc -> Row -> ColNum -> Text -> Maybe Cell
-vendorCell p desc r c marker = do
-  column <- colName <$> columnNumbered c desc
-  listToMaybe [ vValue v p | v <- vendorCells, vTable v desc, vRow v r, vColumn v == column, vMarker v == marker ]
-
--- | The instances a template row of a table takes beside the rows its
---   table prints, by number, for the placeholder it prints: the Admin SP's
---   Authority and C_PIN tables under @XX@ (Opal 2.30 Tables 24-25, PDF
---   48-49: @00 00 00 09 00 00 02 00 (+XX)@, @AdminXX@) the Admin authorities
---   after Admin1 and their credentials, 2 to 'spAdminSPAdmins' (PDF 47:
---   Admin1 (M), any additional Admin authority (O)); none for any other, until
---   a parameter numbers it (the Locking SP's @XXXX@, @MMMM@ and @NNNN@ are
---   M5a's group G3's: until then a Locking SP template stands for no row).
 --
--- >>> import Hsed.Gen.Core.TableDescs (authorityTableDesc)
--- >>> import Hsed.Sim.Params (defaultSimParams)
--- >>> map (\n -> instances defaultSimParams { spAdminSPAdmins = n } authorityTableDesc (Placeholder "XX" 1)) [1, 3]
+--   An entry answers in its own SP alone: the Admin SP's C_PIN_SID has no
+--   row in the Locking SP's C_PIN table, and SID's PIN is none of its.
+--
+-- >>> import Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+-- >>> vendorCell defaultSimParams uSP_Locking c_PINTableDesc [(0, UIDCell uC_PIN_SID)] 3 "VU"
+-- Nothing
+vendorCell :: SimParams -> UID -> TableDesc -> Row -> ColNum -> Text -> Maybe Cell
+vendorCell p spu desc r c marker = do
+  column <- colName <$> columnNumbered c desc
+  listToMaybe [ vValue v p | v <- vendorCells, vSP v == spu, vTable v desc, vRow v r, vColumn v == column, vMarker v == marker ]
+
+-- | The instances a template row of an SP's table takes beside the rows its
+--   table prints, by number, for the placeholder it prints:
+--
+--   * in the Admin SP, its Authority and C_PIN tables under @XX@ (Opal 2.30
+--     Tables 24-25, PDF 48-49: @00 00 00 09 00 00 02 00 (+XX)@, @AdminXX@)
+--     the Admin authorities after Admin1 and their credentials, 2 to
+--     'spAdminSPAdmins' (PDF 47: Admin1 (M), any additional Admin authority
+--     (O));
+--   * in the Locking SP (since M5a), its Authority and C_PIN tables under
+--     @XXXX@ (Tables 40-41, PDF 82-84: @(+XX XX)@, @AdminXXXX@) the Admin
+--     authorities after the four printed, 5 to 'spLockingAdmins' (Table 40
+--     note 1, PDF 82: Admin1 to Admin4 required, any more optional); its
+--     Authority, C_PIN and ACE tables under @MMMM@ (Tables 39-41, PDF 79-84:
+--     @UserMMMM@, @ACE_C_PIN_UserMMMM_Set_PIN@, @ACE_UserMMMM_Set_CommonName@)
+--     the User authorities after User1, 2 to 'spLockingUsers'; its Locking,
+--     K_AES_128, K_AES_256 and ACE tables under @NNNN@ (Tables 39, 45 and
+--     47-48, PDF 79-89: @Locking_RangeNNNN@, @K_AES_256_RangeNNNN_Key@, the
+--     range's ACEs) the ranges after Range1, 2 to 'spLockingRanges';
+--
+--   none for any other placeholder, table or SP. An AccessControl row's
+--   instances are those of the table its InvokingID lies in.
+--
+-- >>> import Hsed.Gen.Core.TableDescs (authorityTableDesc, lockingTableDesc)
+-- >>> import Hsed.Gen.Core.UIDs (uSP_Admin)
+-- >>> import Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+-- >>> map (\n -> instances defaultSimParams { spAdminSPAdmins = n } uSP_Admin authorityTableDesc (Placeholder "XX" 1)) [1, 3]
 -- [[],[2,3]]
-instances :: SimParams -> TableDesc -> Placeholder -> [Natural]
-instances p desc ph
-  | ph == adminXX && tdTableUID desc `elem` [uAuthorityTable, uC_PINTable] = [2 .. spAdminSPAdmins p]
-  | otherwise                                                               = []
+-- >>> instances defaultSimParams { spLockingAdmins = 6 } uSP_Locking authorityTableDesc (Placeholder "XXXX" 2)
+-- [5,6]
+-- >>> instances defaultSimParams uSP_Locking lockingTableDesc (Placeholder "NNNN" 2)
+-- [2,3,4,5,6,7,8]
+-- >>> instances defaultSimParams uSP_Admin lockingTableDesc (Placeholder "NNNN" 2)
+-- []
+instances :: SimParams -> UID -> TableDesc -> Placeholder -> [Natural]
+instances p spu desc ph = fromMaybe [] (L.lookup (spu, ph, tdTableUID desc) numbered)
   where
-    -- Table 24's and Table 25's placeholder: one byte, printed XX (PDF 48-49)
-    adminXX = Placeholder "XX" 1
+    numbered =
+      [ ((uSP_Admin, Placeholder "XX" 1, t), [2 .. spAdminSPAdmins p]) | t <- [uAuthorityTable, uC_PINTable] ]
+        <> [ ((uSP_Locking, Placeholder "XXXX" 2, t), [5 .. spLockingAdmins p]) | t <- [uAuthorityTable, uC_PINTable] ]
+        <> [ ((uSP_Locking, Placeholder "MMMM" 2, t), [2 .. spLockingUsers p]) | t <- [uAuthorityTable, uC_PINTable, uACETable] ]
+        <> [ ((uSP_Locking, Placeholder "NNNN" 2, t), [2 .. spLockingRanges p])
+           | t <- [uLockingTable, uK_AES_128Table, uK_AES_256Table, uACETable] ]
+
+
+-- * The key tables
+
+-- | The tables without the key table the TPer does not hold, and without
+--   every row that names it ('foldTables'; Opal 2.30 Table 36's *TT1, PDF
+--   54; Table 38's *AC6, PDF 55): K_AES_256 with 'KeysAES128', K_AES_128
+--   with 'KeysAES256', neither with 'KeysBoth'. A row names the table where
+--   a cell it prints references the table's objects or its Table row, or
+--   holds the table's name; and a row whose object (its UID, or its
+--   InvokingID) is that of a row left out is left out too: the
+--   AccessControl rows of the ACEs named for the table (Table 38's ACE rows
+--   marked *AC6 (PDF 55), which print the ACE by its UID alone).
+heldKeys :: SimParams -> [PreconfTable] -> [PreconfTable]
+heldKeys p tables = [ t { ptRows = filter (not . leftOut (ptDesc t) . row) (ptRows t) }
+                    | t <- tables, tdTableUID (ptDesc t) `notElem` map tdTableUID unheld ]
+  where
+    unheld = case spLockingKeys p of
+      KeysAES128 -> [k_AES_256TableDesc]
+      KeysAES256 -> [k_AES_128TableDesc]
+      KeysBoth   -> []
+    leftOut desc r = named r || maybe False (`Set.member` namedObjects) (objectOf desc (printedOf r))
+    namedObjects   = Set.fromList [ u | t <- tables, Pre r _ <- ptRows t, named r, Just u <- [objectOf (ptDesc t) (printedOf r)] ]
+    printedOf r    = [ (c, cell) | (c, Given cell) <- map (second unmarked) (prCells r) ]
+    named r        = any (namesTable . snd) (printedOf r)
+    namesTable = \case
+      UIDCell u   -> unheldObject u
+      RefCell n u -> unheldObject u || unheldName n
+      TextCell n  -> unheldName n
+      ListCell cs -> any namesTable cs
+      _           -> False
+    unheldObject u = any (\d -> uidUpper u == uidUpper (tdTableUID d) || u == tdObjectUID d) unheld
+    unheldName n   = any ((`T.isInfixOf` n) . tdName) unheld
 
 
 -- * The passes
@@ -334,68 +439,87 @@ builtRow = \case
 --   row complete, a template's instances complete, an every-object row as
 --   printed. A template's instances are those of the table its object (its
 --   UID, or its InvokingID) lies in, among the tables folded, each one whose
---   object the placeholder's bytes can number.
-stage :: SimParams -> [PreconfTable] -> PreconfTable -> PreconfRow -> [Staged]
-stage p tables t pr = case prKind pr of
-  Plain            -> [Printed (built p t (prCells pr))]
-  EveryObject half -> [Every half (prCells pr)]
-  Template ph cols -> [ Instance (built p t (instantiate ph cols n (prCells pr))) | n <- numbered ph, fits ph n ]
+--   object the placeholder's bytes can number; a template whose object lies
+--   in no table folded, and an every-object row whose half is no table's,
+--   are problems.
+stage :: SimParams -> UID -> [PreconfTable] -> PreconfTable -> PreconfRow -> Either [FoldProblem] [Staged]
+stage p spu tables t pr = case prKind pr of
+  Plain            -> pure . Printed <$> built p spu t (prCells pr)
+  EveryObject half
+    | isJust (tableOf half) -> Right [Every half (prCells pr)]
+    | otherwise             -> Left [UnknownEveryObject spu (tshow half)]
+  Template ph cols -> case base >>= \b -> (,) b <$> tableOf (uidUpper b) of
+    Nothing     -> Left [UnresolvedBase spu (fromMaybe uNull base)]
+    Just (b, d) -> map Instance <$> allOf [ built p spu t (instantiate ph cols n (prCells pr))
+                                          | n <- instances p spu d ph, isJust (instanceUID ph b n) ]
   where
-    base         = objectOf (ptDesc t) [ (c, cell) | (c, Given cell) <- prCells pr ]
-    numbered ph  = maybe [] (\d -> instances p d ph) (base >>= tableOf . uidUpper)
-    fits ph n    = maybe False (\u -> isJust (instanceUID ph u n)) base
+    base         = objectOf (ptDesc t) [ (c, cell) | (c, Given cell) <- map (second unmarked) (prCells pr) ]
     tableOf half = L.find ((== half) . uidUpper . tdTableUID) (map ptDesc tables)
 
 -- | (b) and (c): a row's cells complete, then the parameters' overrides.
-built :: SimParams -> PreconfTable -> [(ColNum, PreCell)] -> Row
-built p t = override p (ptDesc t) . complete p t
+built :: SimParams -> UID -> PreconfTable -> [(ColNum, PreCell)] -> Either [FoldProblem] Row
+built p spu t = fmap (override p (ptDesc t)) . complete p spu t
 
 -- | (b): a row's cells, in column order: those it prints, the TPer's where
---   it leaves the value to the TPer ('vendorCell'), and every other column's
---   default but the UID's.
---   A cell marked with a note is its value ('unmarked'), and of two key
---   references the one the parameters' key tables decide ('keyChosen').
-complete :: SimParams -> PreconfTable -> [(ColNum, PreCell)] -> Row
-complete p t printed = L.sortOn fst (given <> chosen <> defaults)
+--   it leaves the value to the TPer ('vendorCell', no less than the least a
+--   'VendorAtLeast' cell prints), and every other column's default but the
+--   UID's. A cell marked with a note is its value ('unmarked'), and of two
+--   key references the one the parameters' key tables decide ('keyChosen').
+--   A cell no entry answers, or a key no alternative of which is the TPer's,
+--   is a problem naming the SP, the table, the row and the column.
+complete :: SimParams -> UID -> PreconfTable -> [(ColNum, PreCell)] -> Either [FoldProblem] Row
+complete p spu t printed = L.sortOn fst . (<> defaults) . (given <>) <$> allOf (keys <> chosen)
   where
     desc     = ptDesc t
     cells    = [ (c, unmarked pc) | (c, pc) <- printed ]
-    given    = [ (c, cell) | (c, Given cell) <- cells ] <> [ (c, keyChosen p desc c pcs) | (c, OneOf pcs) <- cells ]
-    chosen   = [ (c, fromMaybe (unnamed c marker) (vendorCell p desc given c marker))
-               | (c, marker) <- [ (c, m) | (c, VendorUnique m) <- cells ] <> [ (c, m) | (c, VendorAtLeast _ m) <- cells ] ]
+    given    = [ (c, cell) | (c, Given cell) <- cells ]
+    keys     = [ maybe (unanswered c) (Right . (,) c) (keyChosen p pcs) | (c, OneOf pcs) <- cells ]
+    chosen   = [ maybe (unanswered c) (atLeast c least) (vendorCell p spu desc given c marker)
+               | (c, least, marker) <- [ (c, 0, m) | (c, VendorUnique m) <- cells ] <> [ (c, n, m) | (c, VendorAtLeast n m) <- cells ] ]
     defaults = [ d | d@(c, _) <- ptDefaults t, c /= uidColumn, c `notElem` map fst cells ]
-    unnamed c marker = error . T.unpack $
-      "Hsed.Sim.Preconfig: the " <> tdName desc <> " table's row " <> rowNamed desc given <> " leaves its "
-        <> maybe ("column " <> tshow c) colName (columnNumbered c desc) <> " to the TPer (" <> marker
-        <> "), and vendorCell names no value for it"
+    unanswered c = Left [UnansweredVU spu (tdName desc) (rowNamed desc given) (columnName c)]
+    atLeast c least = \case
+      UIntCell v | v < toInteger least -> Left [OutOfBounds (inRow c) (fromInteger (max 0 v)) (least, uinteger4Most)]
+      cell                             -> Right (c, cell)
+    inRow c = "the " <> tdName desc <> " table's row " <> rowNamed desc given <> "'s " <> columnName c
+    columnName c = maybe ("column " <> tshow c) colName (columnNumbered c desc)
+    -- a Table row's Rows, a uinteger_4 (Core Table 171, PDF 156): the cells Opal prints a least for
+    uinteger4Most = 0xFFFFFFFF
 
 -- | Of a cell's alternatives ('OneOf'), the reference to the key table the
 --   TPer holds: K_AES_128's with 'KeysAES128', K_AES_256's with
 --   'KeysAES256' and 'KeysBoth' (Opal 2.30 Table 36's *TT1, PDF 54; Table
---   45's *LT1, PDF 86). Alternatives none of which references that table
---   are an error naming the table and the column.
-keyChosen :: SimParams -> TableDesc -> ColNum -> [PreCell] -> Cell
-keyChosen p desc c pcs = fromMaybe noneChosen (listToMaybe [ cell | Given cell <- map unmarked pcs, Just u <- [uidIn cell], uidUpper u == half ])
-  where
-    half = uidUpper (if spLockingKeys p == KeysAES128 then uK_AES_128Table else uK_AES_256Table)
-    noneChosen = error . T.unpack $
-      "Hsed.Sim.Preconfig: the " <> tdName desc <> " table's " <> maybe ("column " <> tshow c) colName (columnNumbered c desc)
-        <> " is one of " <> tshow pcs <> ", none a reference to the key table the TPer holds (" <> tshow (spLockingKeys p) <> ")"
+--   45's *LT1, PDF 86; with both, M5a's decision); 'Nothing' where none of
+--   them references that table.
+keyChosen :: SimParams -> [PreCell] -> Maybe Cell
+keyChosen p pcs = listToMaybe [ cell | Given cell <- map unmarked pcs, Just u <- [uidIn cell], uidUpper u == half ]
+  where half = uidUpper (if spLockingKeys p == KeysAES128 then uK_AES_128Table else uK_AES_256Table)
 
 -- | (c): the parameters' overrides of a row: the Locking SP's row of the SP
 --   table, its LifeCycleState; TPerInfo's row, its ProgrammaticResetEnable;
---   each column found by name in the table's description.
+--   LockingInfo's row, its MaxRanges and its geometry; each column found by
+--   name in the table's description.
 override :: SimParams -> TableDesc -> Row -> Row
 override p desc r
-  | tdTableUID desc == uSPTable && objectOf desc r == Just uSP_Locking = put "LifeCycleState" (lifeCycleCell (spLockingOFS p))
-  | tdTableUID desc == uTPerInfoTable                                  = put "ProgrammaticResetEnable" (booleanCell (spTPerResetEnabled p))
+  | tdTableUID desc == uSPTable && objectOf desc r == Just uSP_Locking = puts [("LifeCycleState", lifeCycleCell (spLockingOFS p))]
+  | tdTableUID desc == uTPerInfoTable                                  = puts [("ProgrammaticResetEnable", booleanCell (spTPerResetEnabled p))]
+  | tdTableUID desc == uLockingInfoTable                               = puts
+      [ ("MaxRanges", UIntCell (toInteger (spLockingRanges p)))
+      , ("AlignmentRequired", booleanCell (gAlign geometry))
+      , ("LogicalBlockSize", UIntCell (toInteger (gLogicalBlockSize geometry)))
+      , ("AlignmentGranularity", UIntCell (toInteger (gGranularity geometry)))
+      , ("LowestAlignedLBA", UIntCell (toInteger (gLowestAligned geometry)))
+      ]
   | otherwise                                                          = r
   where
-    put name new = maybe r (\c -> putCell c new r) (columnOf desc name)
+    geometry = spGeometry p
+    puts     = L.foldl' (\r' (name, new) -> maybe r' (\c -> putCell c new r') (columnOf desc name)) r
 
 -- | (d): the row an every-object row stands for, for one object: its cells
 --   with the object as its InvokingID. An every-object row of a table with no
---   InvokingID column is an error naming the table.
+--   InvokingID column is an error naming the table: a generated table no
+--   preconfiguration prints (Opal's every-object rows are AccessControl's
+--   alone, *AC1-*AC7, PDF 38-39).
 everyObject :: PreconfTable -> UID -> [(ColNum, PreCell)] -> [(ColNum, PreCell)]
 everyObject t u cells = case columnOf (ptDesc t) "InvokingID" of
   Just c  -> (c, Given (UIDCell u)) : filter ((/= c) . fst) cells
@@ -424,13 +548,14 @@ counted descs rows = Map.adjust (map count) uTableTable rows
           pure (put "Rows" (toInteger (length (Map.findWithDefault [] table rows))) (put "NumColumns" (toInteger (length (tdColumns desc))) r))
 
 -- | (e): a table's rows, the printed ones all kept, each the fold adds kept
---   where its object is none of those before it ('identity').
+--   where its object is none of those before it ('identity'), the objects
+--   seen held in a set.
 distinctObjects :: TableDesc -> [(Bool, Row)] -> [Row]
 distinctObjects desc rows = catMaybes (snd (L.mapAccumL keep printed rows))
   where
-    printed = [ k | (True, r) <- rows, Just k <- [identity desc r] ]
+    printed = Set.fromList [ k | (True, r) <- rows, Just k <- [identity desc r] ]
     keep seen (isPrinted, r) = case identity desc r of
-      Just k | not isPrinted -> if k `elem` seen then (seen, Nothing) else (k : seen, Just r)
+      Just k | not isPrinted -> if k `Set.member` seen then (seen, Nothing) else (Set.insert k seen, Just r)
       _                      -> (seen, Just r)
 
 
@@ -450,16 +575,16 @@ objectOf desc r = (L.lookup uidColumn r >>= uidIn) <|> (columnOf desc "InvokingI
 
 -- | What a row of a table is: its UID, or, for a row with none, its cells in
 --   the table's unique columns (an AccessControl row's InvokingID and
---   MethodID, Core Table 175, PDF 162), a reference by the UID it holds;
---   'Nothing' where neither is there.
-identity :: TableDesc -> Row -> Maybe [Either Cell UID]
+--   MethodID, Core Table 175, PDF 162), a reference by the UID it holds, any
+--   other cell as it shows; 'Nothing' where neither is there.
+identity :: TableDesc -> Row -> Maybe [Either Text UID]
 identity desc r = case L.lookup uidColumn r of
   Just cell -> Just [key cell]
   Nothing   -> case [ key cell | col <- tdColumns desc, colUnique col, Just cell <- [L.lookup (colNumber col) r] ] of
     [] -> Nothing
     ks -> Just ks
   where
-    key cell = maybe (Left cell) Right (uidIn cell)
+    key cell = maybe (Left (tshow cell)) Right (uidIn cell)
 
 -- | The UID a cell holds or references.
 uidIn :: Cell -> Maybe UID
@@ -480,7 +605,7 @@ putCell c new r
       Just (EnumCell _ v) | EnumCell _ v' <- new -> v == v'
       old                                        -> old == Just new
 
--- | How an error names a row: its Name, else its object's UID, else its
+-- | How a problem names a row: its Name, else its object's UID, else its
 --   cells.
 rowNamed :: TableDesc -> Row -> Text
 rowNamed desc r = fromMaybe ("with the cells " <> tshow r) (named <|> (tshow <$> objectOf desc r))
@@ -505,40 +630,41 @@ booleanCell b = if b then EnumCell "True" (enumValue Core_boolean_True) else Enu
 
 -- * The cells the TPer chooses
 
--- | One cell the TPer chooses: its table, its row, its column by name, the
---   marker the table prints there, and its value for a run.
+-- | One cell the TPer chooses: its SP, its table, its row, its column by
+--   name, the marker the table prints there, and its value for a run.
 data Vendor = Vendor
-  { vTable  :: TableDesc -> Bool
+  { vSP     :: UID
+  , vTable  :: TableDesc -> Bool
   , vRow    :: Row -> Bool
   , vColumn :: Text
   , vMarker :: Text
   , vValue  :: SimParams -> Cell
   }
 
--- | The cells the TPer chooses in the Admin SP's preconfiguration
---   ('vendorCell', which cites each).
+-- | The cells the TPer chooses in the Admin SP's and the Locking SP's
+--   preconfiguration ('vendorCell', which cites each).
 vendorCells :: [Vendor]
 vendorCells =
-  [ Vendor (isTable uC_PINTable) (isObject uC_PIN_SID) "PIN" "VU" (\p -> BytesCell (fromMaybe (spMsid p) (spSidPin p)))
-  , Vendor (isTable uC_PINTable) anyRow "PIN" "MSID" (BytesCell . spMsid)
-  , Vendor (isTable uC_PINTable) (isObject uC_PIN_SID) "TryLimit" "VU" (UIntCell . toInteger . spSidTryLimit)
-  , Vendor (isTable uC_PINTable) anyRow "Tries" "VU" (const (UIntCell 0))
-  , Vendor (isTable uTPerInfoTable) anyRow "GUDID" "VU" (BytesCell . spGudid)
-  , Vendor (isTable uTemplateTable) (isObject uTemplate_Base) "Instances" "VU" (const (UIntCell 2))
-  , Vendor (isTable uTemplateTable) (isObject uTemplate_Base) "MaxInstances" "VU" (const (UIntCell 2))
-  , Vendor (isTable uDataRemovalMechanismTable) anyRow "ActiveDataRemovalMechanism" "VU"
+  [ Vendor uSP_Admin (isTable uC_PINTable) (isObject uC_PIN_SID) "PIN" "VU" (\p -> BytesCell (fromMaybe (spMsid p) (spSidPin p)))
+  , Vendor uSP_Admin (isTable uC_PINTable) anyRow "PIN" "MSID" (BytesCell . spMsid)
+  , Vendor uSP_Admin (isTable uC_PINTable) (isObject uC_PIN_SID) "TryLimit" "VU" (UIntCell . toInteger . spSidTryLimit)
+  , Vendor uSP_Admin (isTable uC_PINTable) anyRow "Tries" "VU" (const (UIntCell 0))
+  , Vendor uSP_Admin (isTable uTPerInfoTable) anyRow "GUDID" "VU" (BytesCell . spGudid)
+  , Vendor uSP_Admin (isTable uTemplateTable) (isObject uTemplate_Base) "Instances" "VU" (const (UIntCell 2))
+  , Vendor uSP_Admin (isTable uTemplateTable) (isObject uTemplate_Base) "MaxInstances" "VU" (const (UIntCell 2))
+  , Vendor uSP_Admin (isTable uDataRemovalMechanismTable) anyRow "ActiveDataRemovalMechanism" "VU"
       (const (EnumCell "Cryptographic Erase" (enumValue Opal_data_removal_mechanism_Cryptographic_Erase)))
-  , Vendor (isTable uTableTable) (isObject uMBRTableObject) "Rows" "0x08000000 min" (UIntCell . toInteger . spMbrSize)
-  , Vendor (isTable uTableTable) (isObject LockingSP.uTable_DataStore) "Rows" "0x00A00000 min"
+  , Vendor uSP_Locking (isTable uTableTable) (isObject uMBRTableObject) "Rows" "0x08000000 min" (UIntCell . toInteger . spMbrSize)
+  , Vendor uSP_Locking (isTable uTableTable) (isObject LockingSP.uTable_DataStore) "Rows" "0x00A00000 min"
       (\p -> let (_, size, _) = spDataStore p in UIntCell (toInteger size))
-  , Vendor (isTable uTableTable) byteTableRow "MandatoryWriteGranularity" "VU" (UIntCell . toInteger . spMandatoryWriteGranularity)
-  , Vendor (isTable uTableTable) byteTableRow "RecommendedAccessGranularity" "VU" (UIntCell . toInteger . spRecommendedAccessGranularity)
-  , Vendor (isTable uSecretProtectTable) anyRow "ProtectMechanisms" "VU" (const (ListCell []))
-  , Vendor (isTable uK_AES_128Table) anyRow "Key" "VU" (const (BytesCell (B.replicate 16 0)))
-  , Vendor (isTable uK_AES_256Table) anyRow "Key" "VU" (const (BytesCell (B.replicate 32 0)))
-  , Vendor (\desc -> isTable uK_AES_128Table desc || isTable uK_AES_256Table desc) anyRow "Mode" "VU"
+  , Vendor uSP_Locking (isTable uTableTable) byteTableRow "MandatoryWriteGranularity" "VU" (UIntCell . toInteger . spMandatoryWriteGranularity)
+  , Vendor uSP_Locking (isTable uTableTable) byteTableRow "RecommendedAccessGranularity" "VU" (UIntCell . toInteger . spRecommendedAccessGranularity)
+  , Vendor uSP_Locking (isTable uSecretProtectTable) anyRow "ProtectMechanisms" "VU" (const (ListCell []))
+  , Vendor uSP_Locking (isTable uK_AES_128Table) anyRow "Key" "VU" (const (BytesCell (B.replicate 16 0)))
+  , Vendor uSP_Locking (isTable uK_AES_256Table) anyRow "Key" "VU" (const (BytesCell (B.replicate 32 0)))
+  , Vendor uSP_Locking (\desc -> isTable uK_AES_128Table desc || isTable uK_AES_256Table desc) anyRow "Mode" "VU"
       (const (EnumCell "XTS" (enumValue Core_symmetric_mode_XTS)))
-  , Vendor (isTable uC_PINTable) (isObject LockingSP.uC_PIN_Admin1) "PIN" "SID or MSID" (BytesCell . spMsid)
+  , Vendor uSP_Locking (isTable uC_PINTable) (isObject LockingSP.uC_PIN_Admin1) "PIN" "SID or MSID" (BytesCell . spMsid)
   ]
   where
     isTable u desc = tdTableUID desc == u

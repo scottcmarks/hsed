@@ -32,12 +32,21 @@ Checks, each with the code its findings carry:
   not closed before @=>@ is read as closed there, a Warning (5.3.3.17
   GetPackage); a comma before the closing bracket is the Note
   @N-SIG-NORMALISED@ (5.3.3.18 SetPackage);
-* @C-SIG-METHOD@: the method is joined by name to exactly one row of the UID
-  tables that list methods (their name column @Method Name@: the MethodID UIDs
-  and the Session Manager Method UIDs, "Hsed.Spec.Rules.UidTable"); a block
-  no row names is a Warning at the block (the PDF names the method one way in
-  its signature and another, or not at all, in the tables), two rows an
-  Error; a method row no block defines is a Note at its row;
+* @C-SIG-METHOD@: the method is joined by name to exactly one row naming a
+  method's UID ('joinableMethods'): a row of the UID tables that list methods
+  (their name column @Method Name@: the MethodID UIDs and the Session Manager
+  Method UIDs, "Hsed.Spec.Rules.UidTable"), the spec's own and then its
+  base's (Core's, for Opal), and then, since M5a, a plain row of an SP's
+  preconfiguration of the MethodID table ("Hsed.Spec.Rules.Preconfig": Opal's
+  Admin SP's Table 21 rows 6-7, Revert and Activate, PDF 38, and the Locking
+  SP's Table 37 row 4, RevertSP, PDF 55), the rows deduplicated by UID, the
+  first kept (Get, which Tables 21 and 37 preconfigure, is Core Table 242's
+  row); a block no row names is a Warning at the block (the PDF names the
+  method one way in its signature and another, or not at all, in the
+  tables), two rows an Error; a row of the spec's own UID tables that no
+  block defines is a Note at its row (only those: a base's methods are its
+  own spec's to sign, and an SP's MethodID rows preconfigure methods the
+  spec need not define);
 * @C-SIG-TYPE@ and @N-SIG-TYPE-CONTEXT@, the type join (M4a, the plan's
   answer 2): each parameter's and result's type is read as printed
   ('parseType': a name, @uidref@ with or without a table in braces, @list [ X
@@ -70,7 +79,11 @@ the whole text is a type row's Name, that Type object's UID, printed through
 groupings are checked by the type join above and stay untyped, @Value@,
 until M6 gives each Type object a Haskell type) and @fromValues@, the record
 from values of its arity, and, when joined, an @instance Method@ whose
-@methodUID@ is the joined row's generated UID; a block whose heads name
+@methodUID@ is the joined row's generated UID, imported from the module that
+declares it (the spec's or its base's UIDs module, or an SP's preconfiguration
+module: Opal's @uMethodID_Revert@ and @uMethodID_Activate@ from
+@Hsed.Gen.Opal.Preconfig.AdminSP@, @uMethodID_RevertSP@ from
+@Hsed.Gen.Opal.Preconfig.LockingSP@); a block whose heads name
 another method than the one it defines (SyncSession's, headed
 @SMUID.StartSession@) says which in its provenance line; and @methods ::
 [SomeMethod]@, every joined record once, in the blocks' order, declared
@@ -93,6 +106,8 @@ module Hsed.Spec.Rules.Sig
   , paramsOf
   , joinedUID
   , methodRows
+  , MethodRow (..)
+  , joinableMethods
   , invokerRows
     -- * Parsing a block
   , Part (..)
@@ -121,12 +136,16 @@ import           Hsed.Spec.Common          (Finding, RuleName (..), Severity (..
 import qualified Hsed.Spec.Common          as Cm
 import           Hsed.Spec.DSL             (SomeBinding (..), sig)
 import qualified Hsed.Spec.Gen             as Gen
-import           Hsed.Spec.IR              (HeadingIR (..), SigIR (..), SpecIR (..))
+import           Hsed.Spec.IR              (CellIR (..), HeadingIR (..), SigIR (..), SpecIR (..))
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Readers.Text    (lowerIdent)
+import           Hsed.Spec.Rules.Preconfig (PreRead (..), PreRow (..), RowRead (..), RowShape (..), preReads,
+                                            preconfigModuleFor, uidDeclName)
+import           Hsed.Spec.Rules.TableDesc (DescRead (..))
 import           Hsed.Spec.Rules.TableUIDs (TableUIDRow (..), allTableUIDRows, tableUIDsNamed)
 import           Hsed.Spec.Rules.TypeRow   (TypeRowRead (..), allTypeRows, typeNameExpr, typeRowReads, typeUIDName, typesModule)
-import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), rowPage, rowRef, rowText, uidHeaders, uidRows, uidsModule)
+import           Hsed.Spec.Rules.UidTable  (UidRow (..), UidValue (..), asName, rowPage, rowRef, rowText, uidHeaders, uidRows,
+                                            uidsModule)
 
 
 -- $setup
@@ -365,19 +384,71 @@ paramsOf sr = [ ("the parameter", p) | p <- srRequired sr <> srOptional sr ] <> 
   _                 -> []
 
 -- | The generated UID a block's method joins to, @uMethodID_Get@: the identifier
---   of the one row of the UID tables that names it (@C-SIG-METHOD@), under
---   which the record gets its @instance Method@; Nothing for none or several
---   (5.6.4.2 Stir).
+--   of the one row naming a method's UID that names it (@C-SIG-METHOD@,
+--   'joinableMethods'), under which the record gets its @instance Method@;
+--   Nothing for none or several (5.6.4.2 Stir).
 joinedUID :: Context -> SigRead -> Maybe Text
 joinedUID ctx sr = case joins ctx sr of
-  [r] -> urIdent r
+  [r] -> mrIdent r
   _   -> Nothing
 
--- | The rows of the UID tables that list methods (their name column is
---   @Method Name@), each with its method name.
+-- | The rows of the spec's own UID tables that list methods (their name
+--   column is @Method Name@), each with its method name.
 methodRows :: Context -> [(Text, UidRow)]
 methodRows ctx = [ (n, r) | r <- uidRows ctx, Just n <- [urName r], isMethodTable r ]
   where isMethodTable r = "methodname" `elem` snd (uidHeaders (urBound r))
+
+-- | A row that names a method's UID, which a signature block joins by the
+--   method's name ('joinableMethods').
+data MethodRow = MethodRow
+  { mrName   :: !Text
+  , mrUID    :: ![Word8]
+  , mrIdent  :: !(Maybe Text)   -- ^ the name it is generated under
+  , mrModule :: !Text           -- ^ the generated module that declares it
+  , mrTable  :: !Text           -- ^ its table, @T242@ (a base's with its spec: @core-2.01 T242@)
+  , mrRow    :: !Int            -- ^ 1-based among its table's rows
+  , mrPage   :: !Int            -- ^ the 1-based PDF page it is printed on
+  }
+  deriving (Eq, Show)
+
+-- | Where a method row is printed, @T21 row 7@.
+methodRowRef :: MethodRow -> Text
+methodRowRef r = mrTable r <> " row " <> tshow (mrRow r)
+
+-- | Every row a signature block may join, deduplicated by UID, the first
+--   kept: the rows of the UID tables that list methods ('methodRows'), the
+--   spec's and then each base's ('contextChain'), each of a single UID under
+--   a name of its own (not a list entry such as Core Table 242's @Reserved
+--   for SSC Usage@ at @00 00 00 06 00 00 02 02@, PDF 304, the UID Opal's
+--   Revert takes); then
+--   the plain rows of the spec's preconfigurations of the MethodID table, in
+--   anchor order, each with its Name and its UID, under the name the
+--   preconfiguration rule generates for it, @u\<T\>_\<Name\>@ in its SP's
+--   module ("Hsed.Spec.Rules.Preconfig".'uidDeclName', 'preconfigModuleFor'),
+--   which it does for a UID no table of UIDs of the spec or its base gives
+--   (a UID one gives is that table's row, earlier in the list). Opal's are
+--   Core Tables 241 and 242's rows, then the Admin SP's Table 21 rows 6-7
+--   (@uMethodID_Revert@ and @uMethodID_Activate@, PDF 38) and the Locking
+--   SP's Table 37 row 4 (@uMethodID_RevertSP@, PDF 55); Core's are its own
+--   tables' rows alone.
+joinableMethods :: Context -> [MethodRow]
+joinableMethods ctx = L.nubBy (\a b -> mrUID a == mrUID b) (fromTables <> fromPreconfig)
+  where
+    fromTables =
+      [ MethodRow n bs (urIdent r) (Gen.moduleName (cxSpec c) uidsModule)
+                  (inSpec c (renderAnchorId (btAnchor (urBound r)))) (urRow r + 1) (rowPage r)
+      | c <- contextChain ctx, (n, r) <- methodRows c, isJust (urIdent r), Exact bs <- [urValue r] ]
+    fromPreconfig =
+      [ MethodRow n bs (Just (uidDeclName t n)) (Gen.moduleName (cxSpec ctx) (preconfigModuleFor sp))
+                  (renderAnchorId (btAnchor (pBound p))) (prRow r + 1)
+                  (fromMaybe (fromMaybe 1 (tablePage (btTable (pBound p)))) (listToMaybe (mapMaybe (fmap (+ 1) . (.page)) (prCells r))))
+      | p <- preReads ctx, Just sp <- [pSP p], Right d <- [pTarget p], Just t <- [drTable d], t == "MethodID"
+      , (r, rd) <- zip (pRows p) (pReads p), rdShape rd == PlainRow
+      , Just n <- [lookup "Name" (prValues r) >>= asName . unquoted], Just bs <- [lookup "UID" (prValues r) >>= parseUIDCell . beforeNote] ]
+    inSpec c ref = if cxSpec c == cxSpec ctx then ref else specIdText (cxSpec c) <> " " <> ref
+    unquoted = T.filter (`notElem` ("\"\x201C\x201D" :: String))
+    -- a UID cell up to a note marker after its eight bytes (Table 21's @00 00 00 06 00 00 02 02 *MT1@, PDF 38)
+    beforeNote = T.unwords . takeWhile (not . ("*" `T.isPrefixOf`)) . T.words
 
 -- | The rows of the UID tables with no names (a Purpose describes them) that
 --   an invoking ID names word for word: @ThisSP@ is row 2's @"This SP"@.
@@ -391,9 +462,9 @@ invokerRows ctx invoker =
 
 -- * Checks
 
--- | A block's join: the method rows that name its method.
-joins :: Context -> SigRead -> [UidRow]
-joins ctx sr = [ r | (n, r) <- methodRows ctx, n == srMethod sr, Exact _ <- [urValue r] ]
+-- | A block's join: the rows naming a method's UID that name its method ('joinableMethods').
+joins :: Context -> SigRead -> [MethodRow]
+joins ctx sr = [ r | r <- joinableMethods ctx, mrName r == srMethod sr ]
 
 checks :: Context -> [Finding]
 checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck rows <> unsigned <> concatMap (typeChecks ctx env) rows
@@ -401,14 +472,14 @@ checks ctx = lefts reads <> concatMap srFindings rows <> concatMap joinCheck row
     reads = sigReads ctx
     rows  = rights reads
     env   = typeEnv ctx
-    tables = L.nub [ renderAnchorId (btAnchor (urBound r)) | (_, r) <- methodRows ctx ]
+    tables = L.nub (map mrTable (joinableMethods ctx))
     joinCheck sr = case joins ctx sr of
       [_] -> []
       []  -> [ atSig ctx (srBound sr) (finding Warning "C-SIG-METHOD"
                  (srMethod sr <> " has no UID: " <> if null tables then "the spec binds no table of method UIDs to name it"
                                                     else "no row of " <> T.intercalate " or " tables <> " names it")) ]
       rs  -> [ atSig ctx (srBound sr) (finding Error "C-SIG-METHOD"
-                 (srMethod sr <> " is named by " <> T.intercalate " and " [ rowRef r | r <- rs ])) ]
+                 (srMethod sr <> " is named by " <> T.intercalate " and " (map methodRowRef rs))) ]
     defined = map srMethod rows
     unsigned =
       [ locatedAt (cxSpec ctx) (renderAnchorId (btAnchor (urBound r))) (rowPage r)
@@ -606,7 +677,7 @@ typeChecks ctx env sr = concatMap one (paramsOf sr)
 compile :: Context -> [Emitted]
 compile ctx = map (EmitIn uidsModule . invokerDecl ctx) invokers
   <> concat [ map Emit (methodDecls ctx types sr (joins ctx sr)) | sr <- reads ]
-  <> map Emit (maybeToList (methodsDecl ctx [ (sr, i) | sr <- reads, [r] <- [joins ctx sr], Just i <- [urIdent r] ]))
+  <> map Emit (maybeToList (methodsDecl ctx [ (sr, i) | sr <- reads, [r] <- [joins ctx sr], Just i <- [mrIdent r] ]))
   where
     reads    = rights (sigReads ctx)
     invokers = [ (i, r) | i <- L.nub (concatMap srInvokers reads), [r] <- [invokerRows ctx i] ]
@@ -648,7 +719,7 @@ methodsDecl ctx = \case
 -- | A block's record and instances, each parameter's type the type row of
 --   its name the spec or its base reads, its UID imported from the module of
 --   the spec that defines it.
-methodDecls :: Context -> Map Text (Context, TypeRowRead) -> SigRead -> [UidRow] -> [Gen.Decl]
+methodDecls :: Context -> Map Text (Context, TypeRowRead) -> SigRead -> [MethodRow] -> [Gen.Decl]
 methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordinal, Gen.declImports = imports } ]
   where
     bs   = srBound sr
@@ -720,8 +791,8 @@ methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordin
       <> accessors "requiredValues" (srRequired sr) <> accessors "optionalValues" (srOptional sr)
       <> fromValuesLines
     methodInstance = case joined of
-      [r] | Just i <- urIdent r ->
-        [ "", "-- the UID of " <> m <> ", " <> rowRef r <> " (PDF " <> tshow (rowPage r) <> ")"
+      [r] | Just i <- mrIdent r ->
+        [ "", "-- the UID of " <> m <> ", " <> methodRowRef r <> " (PDF " <> tshow (mrPage r) <> ")"
         , "instance Method " <> m <> " where", "  methodUID = " <> i ]
       _ -> [ "", "-- no instance Method " <> m <> ": no one row of the UID tables names it (C-SIG-METHOD)" ]
     body = [doc] <> record <> signatureInstance <> methodInstance
@@ -733,9 +804,9 @@ methodDecls ctx types sr joined = [ (Gen.decl p m body) { Gen.declRank = p.ordin
       , Gen.ImportSome "Prelude" ["Eq", "Maybe (..)", "Show"] ]
       <> [ Gen.ImportSome Gen.typeNameModule ["TypeName (..)"] | usesParam ]
       <> [ Gen.ImportSome (Gen.moduleName spec typesModule) (L.nub names) | (spec, names) <- Map.toList typeUIDs ]
-      <> [ Gen.ImportSome (Gen.moduleName (cxSpec ctx) uidsModule) [i] | [r] <- [joined], Just i <- [urIdent r] ]
+      <> [ Gen.ImportSome (mrModule r) [i] | [r] <- [joined], Just i <- [mrIdent r] ]
     hasMethod = case joined of
-      [r] -> isJust (urIdent r)
+      [r] -> isJust (mrIdent r)
       _   -> False
     usesParam = not (null (srRequired sr <> srOptional sr)) || case srResponse sr of
       SResults a b      -> not (null (a <> b))

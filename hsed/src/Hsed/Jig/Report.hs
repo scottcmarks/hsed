@@ -979,7 +979,7 @@ verifyTranscriptWith path noIfSend level0Only allowList = readReport path >>= \c
           unread    = length [ () | ReUnread _ <- rereads ]
           sends     = length [ () | q <- issued, dir q == IfSend ]
           notLevel0 = length [ () | q <- issued, not (isLevel0Recv q) ]
-      say ("IF-SENDs issued on a drive's end: " <> tshow sends)
+      say ("IF-SENDs passed to a drive's transport: " <> tshow sends)
       when level0Only $
         say ("commands issued on a drive other than Level 0 Discovery's IF-RECV: " <> tshow notLevel0)
       when (unread > 0) $
@@ -1065,6 +1065,10 @@ allowListCheck report rereads = do
       blocked  = length [ () | ReBlocked <- rereads ]
       unparsed = [ (end, why) | (end, Left why) <- reported ]
       mismatch = [ (end, bound, L.lookup end bases) | (end, Right (AllowList bound _)) <- reported, join (L.lookup end bases) /= Just bound ]
+      -- whether the report gives an end an allow list
+      allowedListed e = case e >>= (`L.lookup` reported) of
+        Just (Right (AllowList _ _)) -> True
+        _                            -> False
   for_ bases $ \(end, base) -> say ("--allow-list: the " <> end <> "'s base ComID, as its Level 0 names it: "
                                      <> maybe "none (no Opal SSC V2 descriptor that decodes): Level 0 Discovery alone admitted" hex base)
   for_ reported $ \(end, policy) -> say ("--allow-list: the " <> end <> "'s policy, as the report gives it: " <> either id policyText policy)
@@ -1107,10 +1111,6 @@ allowListCheck report rereads = do
     allowedName a = case A.toJSON a of
       A.String t -> t
       _          -> ""
-    -- whether the report gives an end an allow list
-    allowedListed e = case e >>= (`L.lookup` either (const []) id (A.parseEither policiesOf report)) of
-      Just (Right (AllowList _ _)) -> True
-      _                            -> False
     -- the drive ends the transcript issued commands on
     drives = L.nub [ fromMaybe "an end unnamed" end | ReIssued _ end _ <- rereads ]
 

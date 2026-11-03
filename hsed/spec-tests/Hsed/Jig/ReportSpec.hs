@@ -768,6 +768,8 @@ spec = do
           out `shouldSatisfy` T.isInfixOf "--allow-list: the drive's base ComID, as its Level 0 names it: 0x1004"
           out `shouldSatisfy` T.isInfixOf (if resets then " 16 admitted, 0 refused, 0 that do not read; blocked by the run's Guard: 0"
                                                     else " 13 admitted, 0 refused, 0 that do not read; blocked by the run's Guard: 0")
+          -- the run's own counter's name (the M4c review, finding 14; its verification)
+          out `shouldSatisfy` T.isInfixOf ("\nIF-SENDs passed to a drive's transport: " <> (if resets then "7" else "4") <> "\n")
     it "fails the same report with one drive command a Set, a STACK_RESET on 0x0004, a Get on C_PIN_SID, an entry that does not read, or a Blocked entry added" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         (report, _, _) <- acceptanceReport True dir

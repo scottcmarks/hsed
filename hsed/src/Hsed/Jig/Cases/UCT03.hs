@@ -21,7 +21,9 @@ Opal SSC V2 descriptor says the SID's PIN is the MSID's (byte 13, the
 Initial C_PIN_SID PIN Indicator, 0x00; Opal 2.30 Table 6, PDF 23), else the
 case is skipped, step 2 needing the vendor's SID PIN. The MSID read goes
 among the run's secrets, masked in every report unless @--show-msid@
-(design 9.3 item 5), and is never written into a verdict or a note. The
+(design 9.3 item 5), and is never written into a verdict or a note; an
+answer to the Get that does not read as the MSID, which may hold it
+nonetheless, goes there too, and the step's reason says so (M4c). The
 jig's extensions on the simulator: Get on C_PIN_SID's PIN as Anybody is
 NOT_AUTHORIZED with an empty result (no Test Case covers it); a second
 StartSession while the first is open is SP_BUSY, or NO_SESSIONS_AVAILABLE
@@ -49,9 +51,10 @@ import           Hsed.Jig.Case          (Case (..), Need (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), TestId (..))
 import           Hsed.Jig.Prereq        (Section (..), lockingSPUntouched)
 import           Hsed.Jig.Script        (MethodOutcome (..), RunCtx (..), RunEnv (..), Script, SessionHandle, SyncAnswer (..),
-                                         Verdict (..), adminSPAsAnybody, attempt, baseComId, closingStep, discover, endSession,
-                                         exchanged, expectMethodStatus, getCells, namedColumn, note, observe, opalV2Of, opened,
-                                         peekSim, properties, startSession, statusName, unmet, withSession)
+                                         Verdict (..), adminSPAsAnybody, attempt, baseComId, closingStep, describeExchange, discover,
+                                         endSession, exchanged, expectMethodStatus, getCells, maskAnswersSince, namedColumn, note,
+                                         observe, opalV2Of, opened, peekSim, properties, startSession, statusName,
+                                         transcriptMark, unmet, withSession)
 import           Hsed.Sim.Types         (SimParams (..), TPerState (..), maxSessionsName)
 import           Hsed.Wire              (hex)
 
@@ -109,13 +112,25 @@ step1b h = do
   observe "1b" ("the MSID read, " <> tshow (B.length msid) <> " bytes (a secret: masked in the reports unless --show-msid)")
 
 -- | Get on C_PIN_MSID of its PIN column in a session, the step named: the
---   PIN's bytes, kept among the run's secrets.
+--   PIN's bytes, kept among the run's secrets. Where the Get fails once its
+--   exchange has begun (the exchange failed, the method answered other than
+--   SUCCESS, or the result is no @[[3 = bytes]]@), every answer the end was
+--   given since is made a secret of the run before the step fails
+--   ("Hsed.Jig.Script".'maskAnswersSince'), such an answer perhaps holding
+--   the MSID where the step did not find it, and the reason says so (design
+--   9.3 item 5).
 msidRead :: Text -> SessionHandle -> Script ByteString
 msidRead name h = do
   pin <- pinColumn
-  outcome <- getCells h uC_PIN_MSID (columnRange pin pin) >>= exchanged name
-  expectMethodStatus name SUCCESS outcome
-  msid <- either (unmet . ((name <> ": ") <>)) pure (pinRead pin (moResults outcome))
+  mark <- transcriptMark
+  let failing :: Text -> Script a
+      failing why = do
+        maskAnswersSince mark name
+        unmet (name <> ": " <> why <> "; any answer to it masked in the reports as a secret (design 9.3 item 5)")
+  outcome <- getCells h uC_PIN_MSID (columnRange pin pin) >>= either (failing . describeExchange) pure
+  unless (moStatus outcome == SUCCESS) $
+    failing ("the method answered " <> statusName (moStatus outcome) <> ", not " <> statusName SUCCESS)
+  msid <- either failing pure (pinRead pin (moResults outcome))
   asks reCtx >>= \ref -> modifyIORef' ref (\c -> c { rcSecrets = L.nub (rcSecrets c <> [msid]) })
   pure msid
 

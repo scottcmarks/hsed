@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -30,9 +31,11 @@ masked in every report unless @--show-msid@, UCT-03 skipped with
 and a session left open before a case established closed by STACK_RESET,
 noted. Then a drive-like response
 synthesized from disk6's sedutil query, replayed as a drive: UCT-01 passes,
-the cases that need more than Level 0 are skipped with their reasons, no
-IF-SEND is issued, and the waivers of SyncIdle, NoSessions and
-LockingManufactured are printed; paired with the simulator, 0x0403 is
+the cases that need more than Level 0 are skipped with their reasons (a
+replay answers Level 0 Discovery alone, whatever the run admits), no
+IF-SEND is issued, and the waivers of SyncIdle, NoSessions (not needed, Level
+0 Discovery outside the synchronous protocol) and LockingManufactured are
+printed; paired with the simulator, 0x0403 is
 missing without a profile and the comparison passes with it; standing in
 for the kext's drive, the replay's transcript notes the hardware run's CDB
 and the capture is written; a drive whose Level 0 Discovery fails is asked
@@ -40,16 +43,35 @@ once and never again; a header revision Opal allows is noted as allowed.
 The simulator as the drive (Support's fakeDrive, M4c), behind the Guard as
 a run opens a drive: UCT-01 passes, the drive's policy Level0Only throughout
 and its base ComID never bound, Level 0 Discovery the one command it is
-issued.
+issued, its SyncIdle and NoSessions waived as not needed. M4c's acceptance
+on it, @--tests UCT-02,UCT-03:1a-1c,SPF-02:1@, in both ways a drive's
+SyncIdle and NoSessions are had: with STACK_RESET before each case (the
+default, Scott's decision of 2026-11-02), 16 commands, 7 IF-SENDs, three
+STACK_RESETs noted, no NoSessions waived; without it, 13 commands, 4
+IF-SENDs, none of protocol 2, SyncIdle probed and NoSessions waived as
+unobservable; either way exit 0, the policy AllowList 0x1004 of what the
+run admits, nothing outside it and nothing refused, the MSID one secret
+masked in every report; and again on a drive whose TPer reports a
+MaxComPacketSize more than the kext carries, every IF-RECV asking for 2048.
+@--interrupt-in-session@ stops a run after StartSession, exit 130, the
+session left open on purpose and the case skipped as interrupted; the run
+after it fails 1a with SP_BUSY and @--recover@'s hint without STACK_RESET,
+and passes with it. A case off design 9.3's drive list is skipped on a
+drive; the Guard's refusal is a problem of the run (exit 1); a command
+outside the policy is a safety violation (exit 3, 'runExit'). UCT-03's
+MSID read answered with what does not read as the MSID is masked in every
+report.
 On a pair each end's verdicts and Level 0 are named by its transport's
 role, as the transcript's entries are. And what the run refuses before it
-opens anything: a key the catalogue lacks (exit 2), a drive without the
-serial it must have (exit 2), a Level 0 length a drive or a replay cannot
-carry (exit 2), a drive without root (exit 3).
+opens anything: a key the catalogue lacks (exit 2), @--recover@ with
+@--tests@ or a pair (exit 2), a drive without the serial it must have (exit
+2), a Level 0 length a drive or a replay cannot carry (exit 2), a drive
+without root (exit 3).
 -}
 module Hsed.Jig.RunSpec (spec) where
 
 import qualified Data.Aeson             as A
+import qualified Data.Aeson.KeyMap      as KM
 import           Numeric                (showHex)
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
@@ -58,36 +80,44 @@ import           RIO
 import           RIO.Directory          (doesFileExist, listDirectory)
 import           RIO.FilePath           (takeExtension, (</>))
 import qualified RIO.Text               as T
+import           System.Posix.Signals   (raiseSignal, sigHUP)
 import           Test.Hspec
 
+import           Hsed.Core.Call         (MethodCall (..), MethodHeader (..), MethodResponse (..))
 import           Hsed.Core.Feature      (Allowance (..), Feature (..))
 import           Hsed.Core.Method       (invocation)
 import           Hsed.Core.StreamItem   (StreamItem (..))
 import           Hsed.Core.Token        (IsToken (..))
 import           Hsed.Core.UID          (UID)
-import           Hsed.Core.Value        (IsValue (..))
+import           Hsed.Core.Value        (IsValue (..), List (..), Value (..), (.:))
+import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..))
 import qualified Hsed.Gen.Core.Methods  as Methods
-import           Hsed.Gen.Core.UIDs     (uAuthority_SID, uSMUID, uSP_Admin)
+import           Hsed.Gen.Core.UIDs     (methodIDUIDs, uAuthority_SID, uC_PIN_SID, uMethodID_Get, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID)
 import           Hsed.Jig.Catalogue     (CaseKey, parseCaseKeys)
 import           Hsed.Jig.Files         (runningAsRoot)
-import           Hsed.Jig.Guard         (guardDrive)
+import           Hsed.Jig.Guard         (Allowed (..), Policy (..), driveClose, guardDrive, readOnlyMethods)
 import           Hsed.Jig.Options       (TargetSpec (..), defaultRunOptions)
+import           Hsed.Jig.Prereq        (level0OutsideSync, sessionsUnobservable)
 import           Hsed.Jig.Report        (verifyTranscript)
 import           Hsed.Jig.Run
 import           Hsed.Jig.Script        (controlComPacket)
 import           Hsed.Jig.Support       (at, atPath, disk6Like, fakeDrive, onFakeDrive, silently)
 import           Hsed.Jig.Target        (Target (..))
-import           Hsed.Jig.Transcript    (newTranscript)
+import           Hsed.Jig.Transcript    (TEntry (..), newTranscript)
 import           Hsed.Level0.Sedutil    (SedutilFeature (..), SedutilQuery (..), parseQuery, synthesize)
+import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
 import           Hsed.Sim.FeatureSets   (DataStoreFeature)
-import           Hsed.Sim.Types         (SimParams (..), TPerState (..), defaultSimParams)
+import           Hsed.Sim.State         (lifeOf)
+import           Hsed.Sim.Types         (ComIdLife (Associated), SimParams (..), TPerState (..), defaultSimParams, maxComPacketSizeName)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..), newInProc)
 import           Hsed.Transport.Replay  (openReplay)
 import           Hsed.Wire              (defaultExchangeOpts, exchangeComPacket, ifSend, newChannel)
-import           Hsed.Wire.Internal     (Describe (..), IfStatus (..), Request (comId, lenBytes, payload, proto), Response (..),
-                                         Transport (..), Unit (..))
+import           Hsed.Wire.Internal     (Describe (..), Dir (..), IfStatus (..), Request (Request, comId, lenBytes, payload, proto),
+                                         Response (..), Transport (..), Unit (..))
+import qualified Hsed.Wire.Internal     as Wire
 
 
 keys :: Text -> [CaseKey]
@@ -193,6 +223,37 @@ str = Just . A.String
 hexOf :: ByteString -> Text
 hexOf = T.pack . concatMap (\w -> (if w < 16 then "0" else "") <> showHex w "") . B.unpack
 
+-- | The message of design 9.3 item 6's error paths, which no drive runs.
+errorPath :: Text
+errorPath = "needs an IF-SEND off the allow list, an error path: the simulator's until a drive run opts in (design 9.3 item 6; M4c)"
+
+-- | An IF-SEND of protocol 1 on 0x1004 of tokens in a ComPacket of the
+--   control session, padded to a 512-byte block.
+blockOf :: ByteString -> Request
+blockOf tokens = Request IfSend 1 0x1004 512 (bytes <> B.replicate (512 - B.length bytes) 0)
+  where bytes = either (error . show) id (controlComPacket 0x1004 tokens)
+
+-- | Whether an IF-SEND's ComPacket carries Get on C_PIN_MSID.
+getsMsid :: Request -> Bool
+getsMsid q = case decodeComPacket (payload q) of
+  Right (DecodedFrame (ComPacketFrame _ ps) _ _) ->
+    or [ i == uC_PIN_MSID && m == uMethodID_Get
+       | p <- ps, sp <- pfSubPackets p, Right (MethodCall (MethodHeader i m) _ _) <- [parseByteString (dataSubPacketPayload sp)] ]
+  Left _ -> False
+
+-- | A TPer's answer to a Get, its packet's Session kept, holding a result
+--   that is no @[[3 = bytes]]@ but carries bytes in column 4: a result
+--   UCT-03's 1b cannot read as the MSID; padded to the length asked.
+answerHolding :: ByteString -> Response -> Int -> ByteString
+answerHolding bytes r len = framedAnswer <> B.replicate (len - B.length framedAnswer) 0
+  where
+    result = generate (MethodResponse [L (List [N ((4 :: Natural) .: bytes)])] 0)
+    packetHeader = case decodeComPacket (rpayload r) of
+      Right (DecodedFrame (ComPacketFrame _ (p : _)) _ _) -> pfHeader p
+      _                                                    -> error "the simulator's answer holds no packet"
+    framedAnswer = either (error . show) id $ encodeComPacket $
+      ComPacketFrame (ComPacketHeader 0x1004 0 0 0) [PacketFrame packetHeader [DataSubPacket (DataSubPacketHeader 0) result]]
+
 -- | StartSession to the Admin SP as Anybody, HSN 1, read-write (what the
 --   jig's UCT-03 1a sends), as tokens.
 startSessionCall :: ByteString
@@ -218,6 +279,74 @@ startAs authority challenge = generate $ invocation uSMUID Methods.StartSession
   , Methods.startSessionInitialCredit         = Nothing
   , Methods.startSessionSignedHash            = Nothing
   }
+
+-- | A run over a drive behind the Guard as a run opens one (as
+--   "Hsed.Jig.Support".'onFakeDrive' does: a new transcript, the run's target
+--   named as the drive's device), the drive admitting on its bind what the
+--   selected cases admit ('driveAllowedFor'), or what is given: its exit
+--   code, its JSON report, and its Markdown and JUnit reports as text.
+onDriveReports :: RunOptions -> Maybe [Allowed] -> (RawDrive, DriveInfo, SimControl) -> IO (ExitCode, A.Value, Text, Text)
+onDriveReports opts admits (raw, di, _) = withSystemTempDirectory "hsed-jig" $ \dir -> do
+  t <- newTranscript
+  g <- guardDrive t (fromMaybe (either (const []) (driveAllowedFor opts) (selectedCases (roTests opts))) admits) (Just di) raw
+  let reports = dir </> "report"
+  code <- silently (runOpened opts { roTarget = TDevice ("/dev/" <> diBsd di), roReportDir = reports } t (DriveTarget g))
+            `finally` driveClose g
+  files <- listDirectory reports
+  let one ext = case [ f | f <- files, takeExtension f == ext ] of
+        [f] -> readFileUtf8 (reports </> f)
+        _   -> throwString ("not one " <> ext <> " report in " <> reports)
+  json <- one ".json" >>= either throwString pure . A.eitherDecodeStrict' . encodeUtf8
+  (,,,) code json <$> one ".md" <*> one ".xml"
+
+-- | The commands a report's transcript issued, in order: each one's op,
+--   protocol and ComID.
+issuedOps :: A.Value -> [(Maybe A.Value, Maybe A.Value, Maybe A.Value)]
+issuedOps json = [ (atPath ["request", "op"] e, atPath ["request", "proto"] e, atPath ["request", "comid"] e)
+                 | e <- elements (at "transcript" json), at "entry" e == str "issued" ]
+
+-- | Level 0 Discovery's IF-RECV; an IF-RECV and an IF-SEND of protocol 1 on
+--   0x1004; STACK_RESET's IF-SEND and GET_COMID_RESPONSE's IF-RECV.
+level0Op, recvOp, sendOp, resetSendOp, resetRecvOp :: (Maybe A.Value, Maybe A.Value, Maybe A.Value)
+level0Op    = (str "if_recv", num 1, num 1)
+recvOp      = (str "if_recv", num 1, num 4100)
+sendOp      = (str "if_send", num 1, num 4100)
+resetSendOp = (str "if_send", num 2, num 4100)
+resetRecvOp = (str "if_recv", num 2, num 4100)
+
+num :: Integer -> Maybe A.Value
+num = Just . A.Number . fromInteger
+
+-- | The methods the IF-SENDs of protocol 1 a report's transcript issued
+--   carry, in order, each by its name, a bare End of Session as
+--   @EndOfSession@.
+sentMethods :: A.Value -> [Text]
+sentMethods json =
+  [ m | e <- elements (at "transcript" json), at "entry" e == str "issued", atPath ["request", "op"] e == str "if_send"
+      , p <- elements (atPath ["decode", "request", "packets"] e), sp <- elements (at "subpackets" p)
+      , m <- [ n | Just (A.String n) <- [atPath ["method_call", "method"] sp] ]
+             <> [ "EndOfSession" | i <- elements (at "items" sp), at "end_of_session" i == Just (A.Bool True) ] ]
+
+-- | Get's name as a report prints a method, the generated MethodID table's
+--   (Core Table 242).
+getName :: Text
+getName = maybe "Get" T.pack (L.lookup uMethodID_Get methodIDUIDs)
+
+-- | Each case's waivers: its key, and each waiver's prerequisite and reason.
+waiversOf :: A.Value -> [(Text, Text, Text)]
+waiversOf json = [ (k, w, r) | c <- elements (at "cases" json), Just (A.String k) <- [at "key" c], x <- elements (at "waivers" c)
+                             , Just (A.String w) <- [at "prereq" x], Just (A.String r) <- [at "reason" x] ]
+
+-- | Each case's reasons: a failure's, or a skip's.
+reasonsOf :: A.Value -> [(Text, [Text])]
+reasonsOf json = [ (k, [ r | A.String r <- elements (at "reasons" c) ] <> [ r | Just (A.String r) <- [at "reason" c] ])
+                 | c <- elements (at "cases" json), Just (A.String k) <- [at "key" c] ]
+
+-- | A policy as a report's "policies" prints the drive's.
+drivePolicyJSON :: Policy -> A.Value
+drivePolicyJSON p = case A.toJSON p of
+  A.Object o -> A.Object (o <> KM.fromList ["end" A..= ("drive" :: Text)])
+  v          -> v
 
 -- | The one JSON report a run wrote under a directory's @report@.
 reportIn :: FilePath -> IO A.Value
@@ -246,6 +375,11 @@ spec = do
         else do
           silently (runJig named { roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 3
           silently (runJig named { roTarget = TPair TSim (TDevice "/dev/disk99") }) `shouldReturn` ExitFailure 3
+          silently (runJig named { roTarget = TDevice "/dev/disk99", roRecover = True }) `shouldReturn` ExitFailure 3
+    it "--recover with --tests, or with a pair: exit 2 (it runs alone, on one end)" $ do
+      silently (runJig defaultRunOptions { roRecover = True, roTests = keys "UCT-02" }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roRecover = True, roTarget = TPair TSim (TReplay "nowhere.bin") }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roRecover = True, roTests = keys "UCT-02", roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 2
 
   describe "UCT-01's minima" $
     it "are the ones Opal and the DataStore feature set allow, the Test Cases' (PDF 30): 1, 4, 8; 1, 0xA0000, 1" $ do
@@ -402,26 +536,31 @@ spec = do
         disk6Like >>= writeFileBinary file
         (code, json, md) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-01,ETC-02,ETC-03,SPF-02:1" }
         verdicts json `shouldBe` [ (str "UCT-01", str "pass"), (str "SPF-02:1", str "skipped"), (str "ETC-02", str "skipped"), (str "ETC-03", str "skipped") ]
-        [ r | c <- elements (at "cases" json), Just (A.String r) <- [at "reason" c] ] `shouldSatisfy` \rs ->
-          length rs == 3 && all (\r -> "Level0Only" `T.isInfixOf` r || "IF-SEND" `T.isInfixOf` r) rs
+        [ r | c <- elements (at "cases" json), Just (A.String r) <- [at "reason" c] ] `shouldBe`
+          [ "needs IF-RECV beyond Level 0 Discovery: a replay answers Level 0 Discovery alone (Hsed.Transport.Replay)", errorPath, errorPath ]
         code `shouldBe` ExitFailure 1
         at "if_send_issued" json `shouldBe` Just (A.Number 0)
         sendStatuses json `shouldBe` []
-        for_ ["SyncIdle (Test Cases 5.2 item 1, PDF 29) waived: unobservable under Level0Only"
-             , "NoSessions (Test Cases 5.2 item 6, PDF 29) waived: unobservable under Level0Only"
+        for_ ["SyncIdle (Test Cases 5.2 item 1, PDF 29) waived: " <> level0OutsideSync
+             , "NoSessions (Test Cases 5.2 item 6, PDF 29) waived: " <> level0OutsideSync
              , "LockingManufactured (Test Cases 5.2 item 2, PDF 29) waived"] $ \w ->
           md `shouldSatisfy` T.isInfixOf w
         reports <- listDirectory (dir </> "report")
         for_ [ f | f <- reports, takeExtension f == ".json" ] $ \f ->
           silently (verifyTranscript (dir </> "report" </> f) True True) `shouldReturn` ExitSuccess
-    it "skips the six cases of M4a too, each for what it needs" $
+    it "skips the six cases of M4a too, each for what it needs: UCT-02, UCT-03:1a-1c and ETC-04 as a replay answers Level 0 Discovery alone, whatever the run admits" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
+            replayed = "needs IF-SEND: a replay answers Level 0 Discovery alone (Hsed.Transport.Replay)"
         disk6Like >>= writeFileBinary file
         (code, json, _) <- jigIn dir defaultRunOptions { roTarget = TReplay file, roTests = keys "UCT-02,UCT-03:1a-1c,ETC-04,ETC-08,ETC-15,ETC-21/adminsp" }
         map snd (verdicts json) `shouldBe` replicate 6 (str "skipped")
+        reasonsOf json `shouldBe`
+          [ ("UCT-02", [replayed]), ("UCT-03:1a-1c", [replayed]), ("ETC-04", [replayed]), ("ETC-08", [errorPath]), ("ETC-15", [errorPath])
+          , ("ETC-21/adminsp", ["the simulator's alone: no drive policy admits it (design 9.3)"]) ]
         code `shouldBe` ExitFailure 1
         at "if_send_issued" json `shouldBe` Just (A.Number 0)
+        (at "policies" json, at "blocked" json) `shouldBe` (Just (A.toJSON [A.object ["end" A..= ("drive-replay" :: Text), "policy" A..= ("level0_only" :: Text)]]), num 0)
     it "passes UCT-01 alone: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
         let file = dir </> "disk6-like-level0.bin"
@@ -507,14 +646,186 @@ spec = do
       (raw, di, control) <- fakeDrive defaultSimParams
       binds <- newIORef []
       let counted = raw { rdBind = \b -> modifyIORef' binds (<> [b]) >> rdBind raw b }
-      (code, json) <- onFakeDrive defaultRunOptions { roTests = keys "UCT-01" } (counted, di, control)
+      for_ [False, True] $ \reset -> do
+        (code, json) <- onFakeDrive defaultRunOptions { roTests = keys "UCT-01", roStackResetBeforeCases = reset } (counted, di, control)
+        code `shouldBe` ExitSuccess
+        verdicts json `shouldBe` [(str "UCT-01", str "pass")]
+        at "policies" json `shouldBe` Just (A.toJSON [A.object ["end" A..= ("drive" :: Text), "policy" A..= ("level0_only" :: Text)]])
+        readIORef binds `shouldReturn` ([] :: [Word16])
+        issuedOps json `shouldBe` [level0Op]
+        (at "blocked" json, at "if_send_issued" json, at "outside_policy" json) `shouldBe` (num 0, num 0, Just (A.toJSON ([] :: [A.Value])))
+        [ (w, r) | (_, w, r) <- waiversOf json, w `elem` ["SyncIdle", "NoSessions"] ]
+          `shouldBe` [("SyncIdle", level0OutsideSync), ("NoSessions", level0OutsideSync)]
+
+  describe "M4c's acceptance on the simulator as the drive (Support.fakeDrive): --tests UCT-02,UCT-03:1a-1c,SPF-02:1" $ do
+    let acceptance reset = defaultRunOptions { roTests = keys "UCT-02,UCT-03:1a-1c,SPF-02:1", roStackResetBeforeCases = reset }
+        msid = spMsid defaultSimParams
+        noSecretIn report = do
+          report `shouldNotSatisfy` T.isInfixOf (hexOf msid)
+          report `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient msid)
+        allPass json = verdicts json `shouldBe` [ (str k, str "pass") | k <- ["UCT-02", "UCT-03:1a-1c", "SPF-02:1"] ]
+    it "without STACK_RESET before the cases: exit 0; AllowList 0x1004 of the read-only methods; 13 commands, each IF-SEND followed by its IF-RECV, 4 IF-SENDs, none of protocol 2; SyncIdle probed, NoSessions waived as unobservable" $ do
+      drive <- fakeDrive defaultSimParams
+      (code, json, md, xml) <- onDriveReports (acceptance False) Nothing drive
       code `shouldBe` ExitSuccess
-      verdicts json `shouldBe` [(str "UCT-01", str "pass")]
+      allPass json
+      at "policies" json `shouldBe` Just (A.toJSON [drivePolicyJSON (AllowList 0x1004 readOnlyMethods)])
+      issuedOps json `shouldBe` [ level0Op, recvOp, sendOp, recvOp, recvOp, sendOp, recvOp, sendOp, recvOp, sendOp, recvOp, recvOp, recvOp ]
+      sentMethods json `shouldBe` ["Properties", "StartSession", getName, "EndOfSession"]
+      (at "if_send_issued" json, at "blocked" json, at "outside_policy" json) `shouldBe` (num 4, num 0, Just (A.toJSON ([] :: [A.Value])))
+      waiversOf json `shouldBe`
+        [ ("UCT-02", "LockingManufactured", "never touches the Locking SP (design 9.1)")
+        , ("UCT-02", "CredentialsKnown", "vacuous: the case opens no session")
+        , ("UCT-02", "HostChallengeIsCurrentPin", "vacuous: the case opens no session")
+        , ("UCT-02", "ReadWriteSessions", "vacuous: the case opens no session")
+        , ("UCT-02", "NoSessions", sessionsUnobservable)
+        , ("UCT-03:1a-1c", "LockingManufactured", "never touches the Locking SP (design 9.1)")
+        , ("UCT-03:1a-1c", "NoSessions", sessionsUnobservable)
+        , ("SPF-02:1", "LockingManufactured", "never touches the Locking SP (design 9.1)")
+        , ("SPF-02:1", "CredentialsKnown", "vacuous: the case opens no session")
+        , ("SPF-02:1", "HostChallengeIsCurrentPin", "vacuous: the case opens no session")
+        , ("SPF-02:1", "ReadWriteSessions", "vacuous: the case opens no session")
+        , ("SPF-02:1", "NoSessions", sessionsUnobservable) ]
+      for_ [ "CredentialsKnown: vacuous, the case authenticates no authority", "HostChallengeIsCurrentPin: vacuous, the case sends no HostChallenge"
+           , "ReadWriteSessions: every session the jig opens is read-write" ] $ \n ->
+        notes json `shouldSatisfy` any (n `T.isPrefixOf`)
+      notes json `shouldSatisfy` not . any ("STACK_RESET" `T.isInfixOf`)
+      json `shouldSatisfy` (== Just (A.toJSON [A.object ["len" A..= (32 :: Int), "sha256" A..= ("a6c4ca3911e4" :: Text), "shown" A..= False]])) . at "secrets"
+      for_ [md, xml] $ \report -> report `shouldSatisfy` T.isInfixOf "32 bytes, sha256 a6c4ca3911e4"
+      for_ [decodeUtf8Lenient (toStrictBytes (A.encode json)), md, xml] noSecretIn
+    it "with STACK_RESET before each case, the default: exit 0; AllowList 0x1004 of the read-only methods and STACK_RESET; 16 commands, 7 IF-SENDs, a STACK_RESET pair before each case, noted; no NoSessions waived" $ do
+      drive <- fakeDrive defaultSimParams
+      (code, json, md, xml) <- onDriveReports defaultRunOptions { roTests = keys "UCT-02,UCT-03:1a-1c,SPF-02:1" } Nothing drive
+      code `shouldBe` ExitSuccess
+      allPass json
+      at "policies" json `shouldBe` Just (A.toJSON [drivePolicyJSON (AllowList 0x1004 (readOnlyMethods <> [AllowStackReset]))])
+      issuedOps json `shouldBe`
+        [ level0Op, resetSendOp, resetRecvOp, sendOp, recvOp
+        , resetSendOp, resetRecvOp, sendOp, recvOp, sendOp, recvOp, sendOp, recvOp
+        , resetSendOp, resetRecvOp, recvOp ]
+      sentMethods json `shouldBe` ["Properties", "StartSession", getName, "EndOfSession"]
+      (at "if_send_issued" json, at "blocked" json, at "outside_policy" json) `shouldBe` (num 7, num 0, Just (A.toJSON ([] :: [A.Value])))
+      [ t | t <- notes json, "SyncIdle and NoSessions: STACK_RESET on 0x1004: " `T.isPrefixOf` t ] `shouldBe` replicate 3
+        ("SyncIdle and NoSessions: STACK_RESET on 0x1004: Success/Failure 0: every session on it aborted, its stack in its initial state, its host "
+         <> "properties back to their defaults (Core 3.3.4.7.5 items 1, 4, 6 and 7, PDF 65)")
+      length [ () | t <- notes json, "NoSessions: met by the same STACK_RESET on 0x1004" `T.isPrefixOf` t ] `shouldBe` 3
+      [ k | (k, "NoSessions", _) <- waiversOf json ] `shouldBe` []
+      json `shouldSatisfy` (== Just (A.toJSON [A.object ["len" A..= (32 :: Int), "sha256" A..= ("a6c4ca3911e4" :: Text), "shown" A..= False]])) . at "secrets"
+      for_ [decodeUtf8Lenient (toStrictBytes (A.encode json)), md, xml] noSecretIn
+    it "passes on a drive whose TPer reports MaxComPacketSize 131072, more than the 130,560 bytes a kext command carries: every IF-RECV of protocol 1 on 0x1004 asks for 2048" $
+      for_ [False, True] $ \reset -> do
+        let large = defaultSimParams { spTPerProperties = [ (n, if n == maxComPacketSizeName then 131072 else v) | (n, v) <- spTPerProperties defaultSimParams ] }
+        (code, json) <- fakeDrive large >>= onFakeDrive (acceptance reset)
+        code `shouldBe` ExitSuccess
+        allPass json
+        observations json "UCT-02" `shouldSatisfy` elem ("TPer MaxComPacketSize", "131072")
+        let lengths = [ n | e <- elements (at "transcript" json), at "entry" e == str "issued", atPath ["request", "op"] e == str "if_recv"
+                          , atPath ["request", "proto"] e == num 1, atPath ["request", "comid"] e == num 4100
+                          , Just (A.Number n) <- [atPath ["request", "len"] e] ]
+        (length lengths, all (== 2048) lengths) `shouldBe` (if reset then 5 else 8, True)
+    it "skips ETC-04 selected with UCT-02, a case off design 9.3's drive list, its needs met: exit 1" $ do
+      (code, json) <- fakeDrive defaultSimParams >>= onFakeDrive defaultRunOptions { roTests = keys "UCT-02,ETC-04" }
+      verdicts json `shouldBe` [(str "UCT-02", str "pass"), (str "ETC-04", str "skipped")]
+      L.lookup "ETC-04" (reasonsOf json) `shouldBe` Just ["not among the cases a drive runs at M4c (design 9.3: UCT-01, UCT-02, UCT-03:1a-1c, SPF-02:1)"]
+      code `shouldBe` ExitFailure 1
+    it "skips ETC-04 selected alone, the drive admitting Level 0 Discovery alone (no case selected from the list needs more), never bound: exit 1" $ do
+      (code, json) <- fakeDrive defaultSimParams >>= onFakeDrive defaultRunOptions { roTests = keys "ETC-04" }
+      reasonsOf json `shouldBe` [("ETC-04", ["needs IF-SEND: this run admits Level 0 Discovery alone on the drive: no case it selected from design 9.3's drive list needs more"])]
       at "policies" json `shouldBe` Just (A.toJSON [A.object ["end" A..= ("drive" :: Text), "policy" A..= ("level0_only" :: Text)]])
-      readIORef binds `shouldReturn` ([] :: [Word16])
-      [ (atPath ["request", "op"] e, atPath ["request", "comid"] e) | e <- elements (at "transcript" json), at "entry" e == str "issued" ]
-        `shouldBe` [(str "if_recv", Just (A.Number 1))]
-      (at "blocked" json, at "if_send_issued" json) `shouldBe` (Just (A.Number 0), Just (A.Number 0))
+      issuedOps json `shouldBe` []
+      code `shouldBe` ExitFailure 1
+    it "fails a run whose drive the Guard refused a command: UCT-02's Properties off its allow list, Blocked, a problem of the run, exit 1" $ do
+      drive <- fakeDrive defaultSimParams
+      (code, json, _, _) <- onDriveReports defaultRunOptions { roTests = keys "UCT-02" } (Just [AllowEndOfSession]) drive
+      code `shouldBe` ExitFailure 1
+      verdicts json `shouldBe` [(str "UCT-02", str "fail")]
+      (at "blocked" json, at "outside_policy" json) `shouldBe` (num 1, Just (A.toJSON ([] :: [A.Value])))
+      at "problems" json `shouldBe` Just (A.toJSON ["the Guard refused 1 command(s) (each Blocked in the transcript)" :: Text])
+
+  describe "--interrupt-in-session on the simulator as the drive (M4c)" $ do
+    let uct03 reset = defaultRunOptions { roTests = keys "UCT-03:1a-1c", roStackResetBeforeCases = reset }
+        interrupted json = [ t | Just (A.String t) <- [at "interrupted" json] ]
+    for_ [False, True] $ \reset ->
+      it ("stops the run once StartSession has opened a session" <> (if reset then ", with STACK_RESET before each case" else "")
+          <> ": exit 130, the session left open on 0x1004, no End of Session, the case skipped as interrupted, the reports written") $ do
+        drive@(_, _, control) <- fakeDrive defaultSimParams
+        (code, json) <- onFakeDrive (uct03 reset) { roInterruptInSession = True } drive
+        code `shouldBe` ExitFailure 130
+        interrupted json `shouldSatisfy` \case
+          [t] -> all (`T.isInfixOf` t) [ "--interrupt-in-session: stopped after StartSession opened TSN ", " on 0x1004; the session is left open on purpose"
+                                        , "; session TSN ", " on ComID 0x1004 left open (End of Session not sent): hsed-jig --recover" ]
+          _   -> False
+        (lifeOf 0x1004 <$> scPeek control) `shouldReturn` Just Associated
+        sentMethods json `shouldBe` ["StartSession"]
+        reasonsOf json `shouldSatisfy` \case
+          [("UCT-03:1a-1c", [r])] -> "interrupted: --interrupt-in-session: stopped after StartSession opened TSN " `T.isPrefixOf` r
+          _                       -> False
+        at "exit" json `shouldBe` num 130
+    it "leaves the next run without STACK_RESET to fail 1a with SP_BUSY and --recover's hint: exit 1" $ do
+      drive@(_, _, control) <- fakeDrive defaultSimParams
+      (stopped, _) <- onFakeDrive (uct03 False) { roInterruptInSession = True } drive
+      stopped `shouldBe` ExitFailure 130
+      (code, json) <- onFakeDrive (uct03 False) drive
+      code `shouldBe` ExitFailure 1
+      reasonsOf json `shouldBe`
+        [("UCT-03:1a-1c", ["1a: StartSession to the Admin SP: SyncSession answered SP_BUSY (3), not SUCCESS (0); a read-write session to the Admin SP "
+                           <> "was open before this one (Core 5.1.5.3, PDF 138): hsed-jig --recover clears it (Core 3.3.4.7.5 item 1, PDF 65)"])]
+      (lifeOf 0x1004 <$> scPeek control) `shouldReturn` Just Associated
+    it "leaves the next run with STACK_RESET before each case to clear the session itself: exit 0" $ do
+      drive@(_, _, control) <- fakeDrive defaultSimParams
+      (stopped, _) <- onFakeDrive (uct03 True) { roInterruptInSession = True } drive
+      stopped `shouldBe` ExitFailure 130
+      (code, json) <- onFakeDrive (uct03 True) drive
+      code `shouldBe` ExitSuccess
+      verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "pass")]
+      (lifeOf 0x1004 <$> scPeek control) `shouldNotReturn` Just Associated
+
+  describe "the stop signals (M4c, design 9.3)" $
+    it "caught for the run's length, SIGINT, SIGTERM or SIGHUP writes its name into the run's stop flag, and says so, the command in flight left to complete" $ do
+      stop <- newIORef Nothing
+      let settled n = readIORef stop >>= \was -> if isJust was || n <= (0 :: Int) then pure was else threadDelay 10000 >> settled (n - 1)
+      silently (withStopSignals stop (raiseSignal sigHUP >> settled 200)) `shouldReturn` Just "SIGHUP"
+
+  describe "the exit code, and what a drive's own transcript holds outside its policy (M4c)" $ do
+    it "outsidePolicy decides each command again: a forged Set on 0x1004 and an IF-RECV on 0x1005 are outside AllowList 0x1004 of the read-only methods, a run's own commands are not; the exit from them is 3" $ do
+      let answer = Response Good mempty
+          setPin = blockOf (generate (invocation uC_PIN_SID (Methods.Set Nothing (Just (L (List [N ((3 :: Natural) .: ("forged" :: ByteString))]))))))
+          recvElsewhere = Request IfRecv 1 0x1005 2048 mempty
+          own = [ Request IfRecv 1 1 2048 mempty, blockOf (generate (invocation uSMUID (Methods.Properties Nothing))), Request IfRecv 1 0x1004 2048 mempty ]
+          forged = [ Issued n "drive" q answer | (n, q) <- zip [1 ..] (own <> [setPin, recvElsewhere]) ]
+                   <> [Blocked 6 "drive" setPin "refused", Note 7 "a note"]
+          policy = AllowList 0x1004 readOnlyMethods
+      outsidePolicy policy forged `shouldBe` [setPin, recvElsewhere]
+      outsidePolicy policy (take 3 forged) `shouldBe` []
+      runExit [ ("drive", q) | q <- outsidePolicy policy forged ] Nothing False `shouldBe` ExitFailure 3
+      runExit [ ("drive", q) | q <- outsidePolicy policy forged ] (Just "SIGINT") True `shouldBe` ExitFailure 3
+    it "is 130 for a run stopped, outranking a failure; 1 for a failure; else 0" $ do
+      runExit [] (Just "SIGINT") True `shouldBe` ExitFailure 130
+      runExit [] Nothing True `shouldBe` ExitFailure 1
+      runExit [] Nothing False `shouldBe` ExitSuccess
+
+  describe "UCT-03's MSID read answered with what does not read as the MSID (M4c, design 9.3 item 5)" $
+    it "masks that answer in every report, a known byte string in it, and the step's reason says so" $ do
+      (raw, di, control) <- fakeDrive defaultSimParams
+      forging <- newIORef False
+      let known = "A-KNOWN-BYTE-STRING-NOT-THE-PIN" :: ByteString
+          inner = rdTransport raw
+          forged = raw { rdTransport = inner { tExchange = \q -> do
+            r <- tExchange inner q
+            when (Wire.dir q == IfSend) (writeIORef forging (getsMsid q))
+            readIORef forging >>= \case
+              True | Wire.dir q == IfRecv, proto q == 1 -> writeIORef forging False $> r { rpayload = answerHolding known r (fromIntegral (lenBytes q)) }
+              _                                    -> pure r } }
+      (code, json, md, xml) <- onDriveReports defaultRunOptions { roTests = keys "UCT-03:1a-1c" } Nothing (forged, di, control)
+      code `shouldBe` ExitFailure 1
+      reasonsOf json `shouldBe`
+        [("UCT-03:1a-1c", ["1b: Get C_PIN_MSID's PIN: no PIN (column 3, a byte string) among the result's 1 cells; any answer to it masked in the "
+                           <> "reports as a secret (design 9.3 item 5)"])]
+      notes json `shouldSatisfy` any ("1b: Get C_PIN_MSID's PIN: 1 IF-RECV answer(s) on the drive after entry " `T.isPrefixOf`)
+      length (elements (at "secrets" json)) `shouldBe` 1
+      for_ [decodeUtf8Lenient (toStrictBytes (A.encode json)), md, xml] $ \report -> do
+        report `shouldNotSatisfy` T.isInfixOf (hexOf known)
+        report `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient known)
 
   describe "the simulator paired with the replay (the Pair runner)" $ do
     it "finds 0x0403 missing without a profile: exit 1" $

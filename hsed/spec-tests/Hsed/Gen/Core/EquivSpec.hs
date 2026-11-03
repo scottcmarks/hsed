@@ -26,7 +26,12 @@ its value column equal to what this module computes for the difference
 * @range-from-1@: an enumeration whose range starts at 1, the hand-written one
   with @_NA@ fillers from 0; the constructors only on either side;
 * @typed-half-uid@: a hand-written @oth\<T\>@ or @bth\<T\>@ with no generated
-  counterpart, its bytes those of the generated @h\<T\>@; the hand-written value;
+  counterpart, its bytes those of the generated @h\<T\>@; the hand-written value.
+  Since M5a the generated side includes the typed half-UIDs Opal's Kind
+  column gives (@gen/Hsed/Gen/Opal/TableUIDs.hs@, imported as @O@: Opal
+  Table 20's, PDF 36-37, and, once the sidecar binds it, Table 36's, PDF
+  53-54) of the tables whose @h\<T\>@ the hand transcription has, compared
+  by value alone (their tables are Opal's, not Table 240);
 * @new@: a generated definition the hand transcription lacks; its value (an
   enumeration's size, range and a digest of its constructor names, so that a
   binding that names other constructors cannot pass);
@@ -96,6 +101,7 @@ import qualified Hsed.Gen.Core.TableUIDs                   as G
 import qualified Hsed.Gen.Core.Types                       as G
 import qualified Hsed.Gen.Core.UIDRanges                   as G
 import qualified Hsed.Gen.Core.UIDs                        as G
+import qualified Hsed.Gen.Opal.TableUIDs                   as O
 
 
 -- | Every generated definition a hand-written module could have.
@@ -105,6 +111,13 @@ generated = $(generatedDefs "gen/Hsed/Gen/Core" "G")
 -- | Every generated list of a table's UIDs: the table, and each UID shown.
 generatedLists :: [(String, [String])]
 generatedLists = $(generatedUIDLists "gen/Hsed/Gen/Core" "G")
+
+-- | The typed half-UIDs Opal's Kind column gives (M5a), of the tables the
+--   hand transcription has.
+generatedTyped :: [Def]
+generatedTyped = [ d | d <- $(generatedTypedHalfUIDs "gen/Hsed/Gen/Opal/TableUIDs.hs" "O")
+                     , [t] <- [mapMaybe (`stripPrefix` dName d) ["oth", "bth"]]
+                     , ("h" ++ t) `elem` map dName handWritten ]
 
 -- | Every hand-written definition the fixture's quasiquoters make, and its special purpose UIDs.
 handWritten :: [Def]
@@ -147,15 +160,16 @@ byName ds = Map.fromList [ (dName d, d) | d <- ds ]
 differences :: [Difference]
 differences = valueDifferences ++ captionDifferences
   where
-    gens  = byName generated
+    gens  = byName (generated ++ generatedTyped)
     hands = byName handWritten
     valueDifferences =
       [ Difference n g h Nothing
       | n <- Map.keys (Map.union gens hands), let g = Map.lookup n gens; h = Map.lookup n hands
       , fmap dValue g /= fmap dValue h ]
-    -- each generated table's caption against those of its definitions' hand-written counterparts
+    -- each generated table's caption against those of its definitions' hand-written counterparts (Core's: the
+    -- typed half-UIDs Opal gives come from its own tables)
     tables = Map.fromListWith (\(c, hs) (_, hs') -> (c, hs' ++ hs))
-      [ (dTable g, (dCaption g, [dCaption h])) | (n, g) <- Map.toList gens, Just h <- [Map.lookup n hands] ]
+      [ (dTable g, (dCaption g, [dCaption h])) | (n, g) <- Map.toList (byName generated), Just h <- [Map.lookup n hands] ]
     captionDifferences =
       [ Difference t Nothing Nothing (Just (gc, hc))
       | (t, (gc, hcs)) <- Map.toList tables, hc <- nub (map normal hcs), normal gc /= hc ]
@@ -315,6 +329,13 @@ spec = do
         `shouldBe` asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_reencrypt_state], x /= H.Core_reencrypt_state_NA ]
       [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_table_kind] ]
         `shouldBe` asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_table_kind], x /= H.Core_table_kind_NA ]
+    it "has the typed half-UIDs Opal Table 20's Kind column gives (PDF 36-37), each the hand-written value" $ do
+      sort (map dName generatedTyped) `shouldBe`
+        [ "othACE", "othAccessControl", "othAuthority", "othC_PIN", "othMethodID", "othSP", "othSPInfo", "othSPTemplates"
+        , "othTPerInfo", "othTable", "othTemplate" ]
+      [ dName g | g <- generatedTyped, fmap dValue (Map.lookup (dName g) hands) /= Just (dValue g) ] `shouldBe` []
+    it "reads the fixture's byte tables from the generated Kind, MBR kept until the sidecar binds Opal Table 36" $
+      ("MBR" : O.byteTables, Map.member "bthMBR" hands) `shouldBe` (["MBR"], True)
     it "finds every typed half-UID's table among the generated half-UIDs" $
       [ dName h | h <- Map.elems (hands Map.\\ gens), any (`isPrefixOf` dName h) ["oth", "bth"], isNothing (lookup' h) ] `shouldBe` []
 

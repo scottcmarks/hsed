@@ -28,7 +28,12 @@ another Format since the M4b review, other targets, or no base), its own UID cel
 Tables 31 and 49 each one W-ENUM-LABEL-REPEATED; and @Hsed.Gen.Opal.Enums@:
 @Opal_life_cycle_state@'s 16 constructors (manufactured-inactive 8,
 manufactured 9), its UID Core T102's imported by name, and
-@Opal_data_removal_mechanism@'s 8, its UID Opal T30's.
+@Opal_data_removal_mechanism@'s 8, its UID Opal T30's. Then Opal under the
+M5a sidecar: Table 16 (@reset_types@, PDF 32), bound @replaces [core
+128]@, an enumeration as Core's Table 128 is (PDF 119), its type its
+caption's identifier, its range Core Table 127's 0..31, held to Core's
+Table 128 by C-PATCH-UID (made to fail by another target); generated as
+@Opal_reset_types@, 3 Programmatic where @Core_reset_types@ keeps 3 Reserved.
 -}
 module Hsed.Spec.Rules.EnumValuesSpec (spec) where
 
@@ -360,9 +365,46 @@ spec = do
           `shouldBe` ["instance Enumerated Opal_data_removal_mechanism where", "  typeUID = udata_removal_mechanismType", "  range   = (0, 7)"]
       it "declare those two and no other" $
         [ l | l <- lns, "data " `T.isPrefixOf` l ] `shouldBe` ["data Opal_data_removal_mechanism", "data Opal_life_cycle_state"]
+  withM5aOpal $ \base opal -> do
+    let octx = opalOver base opal
+        t16  = [ e | Right e <- enumReads octx, e.erAnchor == TableId 16 ]
+        -- each declaration from the type rows it joins, Core's among them
+        joinedDecls = rights [ enumDecl octx er (checkEnum octx (joinable octx er) er) | er <- t16 ]
+        errorsAt a ir' = [ renderFinding f | f <- checkIR (Just base) Scott ir', isError f, Cm.anchor f == Just a ]
+    describe "an enumeration replacing a base's, Opal Table 16 under replaces [core 128] (M5a sidecar, over Core)" $ do
+      it "names its type by its caption, Table 16 - reset_types (PDF 32), and reads its six rows" $ do
+        map (.erIdent) t16 `shouldBe` [Just "reset_types"]
+        map (.erRows) t16 `shouldBe`
+          [[("0", "Power Cycle"), ("1", "Hardware"), ("2", "HotPlug"), ("3", "Programmatic"), ("4-15", "Reserved"), ("16-31", "Vendor Unique")]]
+      it "takes Core Table 127's range and UID (Set_Type, 0, 31; 00 00 00 05 00 00 1A 01, PDF 119), held to Core's Table 128 by C-PATCH-UID" $ do
+        [ (d.name, d.typeUID, d.range) | d <- joinedDecls, d.name == "reset_types" ] `shouldBe` [("reset_types", [0, 0, 0, 5, 0, 0, 0x1a, 1], (0, 31))]
+        errorsAt "T16" opal `shouldBe` []
+      it "gives 3 Programmatic, which Core's Table 128 leaves Reserved, and 32 constructors" $ do
+        let opalCtors = concat [ constructorNames "Opal_reset_types" d.range d.ctors | d <- joinedDecls, d.name == "reset_types" ]
+        take 5 opalCtors `shouldBe` [ ("Opal_reset_types_Power_Cycle", 0), ("Opal_reset_types_Hardware", 1), ("Opal_reset_types_HotPlug", 2)
+                                , ("Opal_reset_types_Programmatic", 3), ("Opal_reset_types_Reserved_4", 4) ]
+        length opalCtors `shouldBe` 32
+        lookup "Core_reset_types_Reserved_3" (concat [ constructorNames "Core_reset_types" d.range d.ctors | d <- enumsOf base, d.name == "reset_types" ])
+          `shouldBe` Just 3
+      it "C-PATCH-UID: replacing another enumeration (Core's Table 52, adv_key_mode) is an Error" $ do
+        ir' <- annotated opal (DT.replace "replaces [core 128]" "replaces [core 52]" m5aOpalHsa)
+        errorsAt "T16" ir' `shouldBe`
+          ["C-PATCH-UID opal-2.30.pdf#page=32&T16: core-2.01 T52, which it replaces, enumerates adv_key_mode, not reset_types"]
+      it "names no type by its caption when it replaces nothing: bound enumValues alone, C-ENUM-RANGE finds no type row" $ do
+        ir' <- annotated opal (DT.replace "replaces [core 128]" "enumValues" m5aOpalHsa)
+        errorsAt "T16" ir' `shouldBe` ["C-ENUM-RANGE opal-2.30.pdf#page=32&T16: no type row for the caption's type to take the range from"]
+      it "is generated in Hsed.Gen.Opal.Enums, its UID Core's ureset_typesType imported by name" $ do
+        cr <- either (throwString . show) pure (compileIR (Just base) Scott opal)
+        let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.Enums" (crModules cr)))
+        lns `shouldContain` ["data Opal_reset_types", "  = Opal_reset_types_Power_Cycle", "  | Opal_reset_types_Hardware", "  | Opal_reset_types_HotPlug"
+                            , "  | Opal_reset_types_Programmatic", "  | Opal_reset_types_Reserved_4"]
+        lns `shouldContain` ["instance Enumerated Opal_reset_types where", "  typeUID = ureset_typesType", "  range   = (0, 31)"]
+        lns `shouldSatisfy` any (\l -> "import" `T.isPrefixOf` l && "Hsed.Gen.Core.Types" `T.isInfixOf` l && "ureset_typesType" `T.isInfixOf` l)
+
   where
     advKeyMode     = [("Wait for AdvKey_Req", 0), ("Auto-advance keys", 1)] <> [ ("Reserved", v) | v <- [2 .. 7] ]
     paddingType    = [("None", 0), ("None", 1), ("RSAES-PKCS1-v1_5", 2), ("RSAES-OAEP", 3), ("RSASSA-PKCS1-v1_5", 4)] <> [ ("Reserved", v) | v <- [5 .. 15] ]
     lifeCycleState = [("Issued", 0), ("Issued-Disabled", 1), ("Issued-Frozen", 2), ("Issued-Disabled-Frozen", 3), ("Issued-Failed", 4)]
                      <> [ ("Unassigned", v) | v <- [5 .. 7] ] <> [ ("Reserved for SSC Usage", v) | v <- [8 .. 13] ] <> [ ("Unassigned", v) | v <- [14, 15] ]
     reencryptState = [("Idle", 1), ("Pending", 2), ("Active", 3), ("Completed", 4), ("Paused", 5)] <> [ ("Reserved", v) | v <- [6 .. 16] ]
+

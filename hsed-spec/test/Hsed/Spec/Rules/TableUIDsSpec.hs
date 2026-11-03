@@ -18,7 +18,12 @@ edited cell, each of its relations in turn (the descriptor's low half and the
 table's high half, the table's zero low half, the descriptor in the table of
 tables); C-T240-NAME refuses a name that is no identifier or that two rows
 give; the generated module has the hand-written module's shapes, each row
-citing the page it is printed on.
+citing the page it is printed on. Since M5a, Opal's typed half-UIDs from the
+Kind column of an SP's Table table (Table 20, PDF 36-37; Table 36, PDF
+53-54): every row read (@Obje ct@, a note marker after a UID), the kinds
+held to agree (C-TABLE-KIND), and @oth\<T\>@, @bth\<T\>@ and @byteTables@
+generated in Opal's TableUIDs module, under the M4b sidecar (the Admin SP's
+twelve object tables) and the M5a sidecar (MBR and DataStore byte tables).
 -}
 module Hsed.Spec.Rules.TableUIDsSpec (spec) where
 
@@ -28,18 +33,66 @@ import           RIO
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor          (AnchorId (..))
-import           Hsed.Spec.Check           (checkIR, mkContext)
+import           Hsed.Spec.Check           (checkIR, mkContext, mkContextWith)
 import           Hsed.Spec.Common          (ErrataSet (..), RuleName (..), SpecId (..), isError, renderFinding)
+import qualified Hsed.Spec.Common          as Cm
 import           Hsed.Spec.Compile         (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
 import qualified Hsed.Spec.Gen             as Gen
+import           Hsed.Spec.Registry        (registry)
 import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..), Context (..))
 import           Hsed.Spec.Rules           (classify, explain)
 import           Hsed.Spec.Rules.TableUIDs
 
 
 spec :: Spec
-spec = withCore $ \pristine -> do
+spec = do
+  coreSpec
+  opalSpec
+
+-- | Opal's typed half-UIDs, under the M4b and the M5a sidecars, over Core.
+opalSpec :: Spec
+opalSpec = do
+  withM4bOpal $ \base opal -> do
+    let kinds = tableKinds (mkContextWith registry (Just base) Scott opal)
+        errorsOf ir' = [ renderFinding f | f <- checkIR (Just base) Scott ir', Cm.code f == "C-TABLE-KIND" ]
+    describe "tableKinds, Opal under the M4b sidecar (Table 20, PDF 36-37)" $ do
+      it "reads the Admin SP's twelve tables, each an object table, Obje ct read as Object" $ do
+        [ (r.tkName, r.tkKind) | Right r <- kinds ] `shouldBe`
+          [ (n, ObjectTable) | n <- [ "Table", "SPInfo", "SPTemplates", "MethodID", "AccessControl", "ACE", "Authority", "C_PIN"
+                                    , "TPerInfo", "Template", "SP", "DataRemovalMechanism" ] ]
+        [ r.tkHalf | Right r <- kinds, r.tkName == "DataRemovalMechanism" ] `shouldBe` [[0, 0, 0x11, 1]]
+        errorsOf opal `shouldBe` []
+      it "is C-TABLE-KIND for a Kind neither Object nor Byte" $
+        errorsOf (setCell "T20" 0 4 "VU" opal) `shouldBe`
+          ["C-TABLE-KIND opal-2.30.pdf#page=36&T20: row 1 Table: the Kind \"VU\" is neither Object nor Byte"]
+      it "generates oth<T> for each in Opal's TableUIDs module, and byteTables empty" $ do
+        cr <- either (throwString . show) pure (compileIR (Just base) Scott opal)
+        let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.TableUIDs" (crModules cr)))
+        length [ l | l <- lns, " :: Object_Table_HalfUID" `T.isSuffixOf` l ] `shouldBe` 12
+        lns `shouldContain` ["othACE :: Object_Table_HalfUID", "othACE = otHalfUID 0x00 0x00 0x00 0x08"]
+        lns `shouldContain` ["byteTables :: [String]", "byteTables = []"]
+  withM5aOpal $ \base opal -> do
+    let kinds = tableKinds (mkContextWith registry (Just base) Scott opal)
+        errorsOf ir' = [ renderFinding f | f <- checkIR (Just base) Scott ir', Cm.code f == "C-TABLE-KIND" ]
+    describe "tableKinds, Opal under the M5a sidecar (Tables 20 and 36, PDF 36-37 and 53-54)" $ do
+      it "reads the Locking SP's sixteen tables too, MBR and DataStore byte tables, K_AES_128's UID before its note marker" $ do
+        length [ () | Right r <- kinds, btAnchor r.tkBound == TableId 36 ] `shouldBe` 16
+        [ r.tkName | Right r <- kinds, r.tkKind == ByteTable ] `shouldBe` ["MBR", "DataStore"]
+        [ r.tkHalf | Right r <- kinds, r.tkName == "K_AES_128" ] `shouldBe` [[0, 0, 8, 5]]
+        errorsOf opal `shouldBe` []
+      it "is C-TABLE-KIND where two SPs give one table two kinds, at the later row" $
+        errorsOf (setCell "T36" 0 4 "Byte" opal) `shouldBe`
+          ["C-TABLE-KIND opal-2.30.pdf#page=53&T36: row 1 Table: Byte, where T20 row 1 gives Object"]
+      it "generates each table once, bth<T> for the byte tables, and names them in byteTables" $ do
+        cr <- either (throwString . show) pure (compileIR (Just base) Scott opal)
+        let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.TableUIDs" (crModules cr)))
+        length [ l | l <- lns, " :: Object_Table_HalfUID" `T.isSuffixOf` l ] `shouldBe` 18
+        lns `shouldContain` ["bthMBR :: Byte_Table_HalfUID", "bthMBR = btHalfUID 0x00 0x00 0x08 0x04"]
+        lns `shouldContain` ["byteTables :: [String]", "byteTables =", "  [ \"MBR\"", "  , \"DataStore\"", "  ]"]
+
+coreSpec :: Spec
+coreSpec = withCore $ \pristine -> do
   hsa <- runIO committedHsa
   ir  <- runIO (annotated pristine hsa)
   let ctx  = mkContext Scott ir

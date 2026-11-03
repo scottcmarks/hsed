@@ -12,6 +12,13 @@ Stability   : experimental
 
 TableUIDs Template Haskell.
 
+Which tables are byte tables (@bth\<T\>@ rather than @oth\<T\>@) the 2019
+transcription hard-coded as MBR alone. Since M5a it reads the generated
+@Hsed.Gen.Opal.TableUIDs.byteTables@, the tables an SP's Table table
+preconfiguration gives the Kind Byte (Opal Table 36, PDF 53-54: MBR and
+DataStore), with MBR kept beside them until the committed Opal sidecar binds
+Table 36 (M5a's integration, which drops the fallback).
+
 -}
 
 module Hand.TableUIDs.TH (t240)
@@ -65,6 +72,7 @@ import           Hsed.Core.UID                          (HalfUID (..), UID (..),
                                                          uidLower, uidUpper)
 import           Hsed.Core.Util                         (hexUID,
                                                          trimTrailingWhitespace)
+import qualified Hsed.Gen.Opal.TableUIDs                as Opal
 
 -- | Bespoke QuasiQuoter for Table 240
 t240 :: QuasiQuoter
@@ -216,7 +224,8 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
         u = "u"   `tn` "Table"
         o = "u"   `tn` "TableObject"
         isByteTable = table `elem` byteTables
-        byteTables = ["MBR"]
+        -- the generated Kind's byte tables, and MBR until the committed sidecar binds Opal Table 36
+        byteTables = "MBR" : Opal.byteTables
 
 data UIDRowDecs = UIDRowDecs [Dec] [Exp] [Exp]
     deriving(Eq,Show)

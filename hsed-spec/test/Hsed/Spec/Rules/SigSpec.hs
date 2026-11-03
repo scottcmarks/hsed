@@ -24,7 +24,12 @@ read from 5.1.4.2's headings and Table 240's 46 tables, the ten braced
 placeholders nothing defines are C-SIG-TYPE Warnings at their blocks and
 the five types the spec leaves to context (Properties' @value@, Get's
 @Value@, Set's @\<type of column\>@) N-SIG-TYPE-CONTEXT Notes, each with its
-page; and nothing generated changes.
+page; and nothing generated changes. Since M5a, Opal's three blocks (5.1.1
+Activate and 5.1.2 Revert, PDF 91; 5.1.3 RevertSP, PDF 94) under the M5a
+sidecar, over Core, join the SPs' MethodID preconfiguration (Table 21 rows
+6-7, PDF 38; Table 37 row 4, PDF 55), deduplicated by UID with Core's
+method UIDs, and their records' @instance Method@ take the UIDs the SPs'
+modules generate.
 -}
 module Hsed.Spec.Rules.SigSpec (spec) where
 
@@ -297,3 +302,28 @@ spec = do
         uids `shouldContain` ["uThisSP :: UID", "uThisSP = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x01"]
         uids `shouldContain` ["uSMUID :: UID", "uSMUID = uid 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0xff"]
         filter (\l -> "uThisSP" `T.isPrefixOf` l || "uSMUID" `T.isPrefixOf` l) lns `shouldBe` []
+
+  withM5aOpal $ \base opal -> do
+    let octx = mkContextWith registry (Just base) Scott opal
+    describe "Opal's blocks joined to the SPs' MethodID preconfiguration (M5a sidecar, over Core)" $ do
+      it "joins Activate and Revert to the Admin SP's Table 21 rows 7 and 6 (PDF 38), RevertSP to the Locking SP's Table 37 row 4 (PDF 55)" $
+        [ (sec, joinedUID octx =<< readOf octx sec) | sec <- ["5.1.1", "5.1.2", "5.1.3"] ] `shouldBe`
+          [("5.1.1", Just "uMethodID_Activate"), ("5.1.2", Just "uMethodID_Revert"), ("5.1.3", Just "uMethodID_RevertSP")]
+      it "finds no C-SIG-METHOD, where the M5a scratch check found three Warnings" $
+        [ renderFinding f | f <- checkIR (Just base) Scott opal, Cm.code f == "C-SIG-METHOD" ] `shouldBe` []
+      it "deduplicates by UID: Get, which Tables 21 and 37 preconfigure, is Core Table 242's row; the SPs' own rows follow Core's" $ do
+        let rows = joinableMethods octx
+        [ (mrTable r, mrIdent r) | r <- rows, mrName r == "Get" ] `shouldBe` [("core-2.01 T242", Just "uMethodID_Get")]
+        [ (mrName r, mrTable r, mrRow r, mrModule r) | r <- rows, mrTable r `elem` ["T21", "T37"] ] `shouldBe`
+          [ ("Revert", "T21", 6, "Hsed.Gen.Opal.Preconfig.AdminSP"), ("Activate", "T21", 7, "Hsed.Gen.Opal.Preconfig.AdminSP")
+          , ("RevertSP", "T37", 4, "Hsed.Gen.Opal.Preconfig.LockingSP") ]
+      it "gives the records an instance Method, its UID imported from the SP's module" $ do
+        cr <- either (throwString . show) pure (compileIR (Just base) Scott opal)
+        let lns = T.lines (fromMaybe "" (lookup "Hsed.Gen.Opal.Methods" (crModules cr)))
+        lns `shouldContain` ["instance Method Activate where", "  methodUID = uMethodID_Activate"]
+        lns `shouldContain` ["-- the UID of RevertSP, T37 row 4 (PDF 55)", "instance Method RevertSP where", "  methodUID = uMethodID_RevertSP"]
+        lns `shouldSatisfy` any (\l -> "import" `T.isPrefixOf` l && "Hsed.Gen.Opal.Preconfig.AdminSP" `T.isInfixOf` l && "uMethodID_Activate" `T.isInfixOf` l)
+        lns `shouldSatisfy` any (\l -> "import" `T.isPrefixOf` l && "Hsed.Gen.Opal.Preconfig.LockingSP" `T.isInfixOf` l && "uMethodID_RevertSP" `T.isInfixOf` l)
+        lns `shouldContain` ["methods :: [SomeMethod]"]
+      it "keeps the Notes of unsigned method rows to the spec's own UID tables: Opal has none" $
+        [ renderFinding f | f <- checkIR (Just base) Scott opal, Cm.code f == "C-SIG-METHOD", Cm.severity f == Note ] `shouldBe` []

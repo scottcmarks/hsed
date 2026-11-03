@@ -49,6 +49,14 @@ Checks, each with the code its findings carry:
   3.2.2.3.1.2 permits length 0 only for a byte sequence that is not
   continued).
 
+Since M5a, an SSC's list of the tokens it supports, @[Token, Acronym]@ (Opal
+Table 15, PDF 30-31), takes the shape bound @narrows (core 4)@: no token
+table itself, it is held to the one it narrows ('narrowedFindings'), each
+row a token of the target named by its Meaning (case and the word @of@
+aside: Opal's @End of transaction@ is Core's @End transaction@, PDF 32, the
+Note @N-TOKEN-NARROWS@) with its Acronym, @N/A@ for an atom's row, which has
+none; any other row is the Error @C-TOKEN-NARROWS@.
+
 Compiled into 'tokensModule': @codecTables@, the SpecRef and title of every
 table bound with the shape, each under its provenance, so that a change of a
 diagram in the PDF changes the generated module (and asks for a look at the
@@ -105,8 +113,11 @@ tokenEncodingRule = RuleDef
   , ruleModule  = tokensModule
   , ruleCodes   =
       [ CodeDef "C-TOKEN-TABLE" [Error]          (Defect "the token table covers a byte twice or not at all, or a row's bit pattern and hex range disagree")
-      , CodeDef "C-TOKEN-CODEC" [Error]          (Suspect "the token table and hsed's hand-written codec disagree") ]
+      , CodeDef "C-TOKEN-CODEC" [Error]          (Suspect "the token table and hsed's hand-written codec disagree")
+      , CodeDef "C-TOKEN-NARROWS" [Error]        (Defect "a token list bound narrows (core N) names a token its target does not")
+      , CodeDef "N-TOKEN-NARROWS" [Note]         (AsPrinted "a token list bound narrows (core N) names a token otherwise than its target, a word more") ]
   , ruleChecks  = \ctx bts -> concat [ map (atTable ctx bt) (tokenFindings rows) | (bt, rows) <- readTables ctx bts ]
+                               <> concatMap (narrowedFindings ctx) bts
   , ruleCompile = \ctx bts -> case bts of
       first' : _ -> [Emit (codecTablesDecl ctx first' bts)]
       []         -> []
@@ -166,6 +177,31 @@ readTokenRow i cells = case reverse cells of
     row h lo hi acronym rest meaning = TokenRow
       { tkRow = i, tkHex = h, tkLo = lo, tkHi = hi, tkBits = filter (not . T.null) (reverse rest)
       , tkAcronym = acronym, tkMeaning = meaning }
+
+-- | @C-TOKEN-NARROWS@ and @N-TOKEN-NARROWS@ for a table bound @narrows
+--   (core N)@ ("Hsed.Spec.RuleDef".'narrowsOf'), each row @[Token, Acronym]@
+--   against the target's token table, the spec's or a base's ('narrowedIn');
+--   nothing for any other table.
+narrowedFindings :: Context -> BoundTable -> [Finding]
+narrowedFindings ctx bt = case narrowsOf (btBinding bt) >>= narrowedIn ctx of
+  Nothing -> []
+  Just (b, target) -> case L.find ((== target) . btAnchor . fst) (tokenRows b) of
+    Nothing          -> []
+    Just (_, theirs) -> concat (zipWith (row (named b target) (rights theirs)) [1 :: Int ..] (btRead bt).rows)
+  where
+    named b target = (if cxSpec b == cxSpec ctx then "" else specIdText (cxSpec b) <> " ") <> renderAnchorId target
+    row name theirs i cells = case map (T.unwords . T.words . (.text)) cells of
+      [token, acronym] -> case L.find (\t -> meaning (tkMeaning t) == meaning token && acronymOf t == acronym) theirs of
+        Nothing -> [ atCells ctx bt cells (finding Error "C-TOKEN-NARROWS"
+                       ("row " <> tshow i <> ": " <> tshow token <> " (" <> acronym <> ") names no token of " <> name)) ]
+        Just t
+          | T.toLower (tkMeaning t) == T.toLower token -> []
+          | otherwise -> [ atCells ctx bt cells (finding Note "N-TOKEN-NARROWS"
+                             ("row " <> tshow i <> ": " <> tshow token <> " (" <> acronym <> ") read as " <> name <> "'s " <> tshow (tkMeaning t))) ]
+      _ -> [ atCells ctx bt cells (finding Error "C-TOKEN-NARROWS" ("row " <> tshow i <> " is not two cells, a Token and its Acronym")) ]
+    -- a name's words, lower case, punctuation and the word "of" dropped
+    meaning = filter (/= "of") . T.words . T.map (\c -> if C.isAlphaNum c then C.toLower c else ' ')
+    acronymOf t = fromMaybe "N/A" (tkAcronym t)
 
 -- | @F0@ or @00..7F@.
 hexRange :: Text -> Maybe (Word8, Word8)

@@ -13,7 +13,8 @@ Stability   : experimental
 
 The rules of design section 3.4 on the committed Core extraction: scope only from
 the anchors, every numbered table classified once, precedence by @refines@, the
-bare modifier chain of Table 75, bindings shaped by their target, the
+bare modifier chain of Table 75, bindings shaped by their target (since M5a
+across specs: Opal Tables 14-16 over Core, and their @narrows@ checks), the
 exemplars, and the validation of every annotation: an anchor of the payload's
 kind, naming something in the IR, alone on its anchor; @hsedc check@ and
 @hsedc bind@ refusing exactly the same annotations. The tests hold invariants
@@ -30,7 +31,8 @@ import           RIO               hiding ((&))
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor  (AnchorId (..), renderAnchorId)
-import           Hsed.Spec.Bind    (bindEntries)
+import           Hsed.Spec.Bind    (bindEntries, bindEntriesOver)
+import           Hsed.Spec.Check   (checkIR)
 import           Hsed.Spec.Common  (Finding, Severity (..), isError, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.CoreIR  hiding (core)
@@ -254,3 +256,41 @@ spec = do
         L.nub (map renderFinding (filter isError (snd (classifyWith ir')))) `shouldSatisfy` elem want
         map renderFinding (fst (bindEntries ir')) `shouldSatisfy` elem want
         scopeOf ir' (RuleName "typeRow") `shouldBe` []
+
+  withM5aOpal $ \base opalM5 -> do
+    let overCore = classifyOver (Just base) opalM5
+        shapeAt n cs = Map.lookup (TableId n) cs >>= boundBinding >>= someBindingShape
+        narrowing ir' = [ renderFinding f | f <- checkIR (Just base) Scott ir', "NARROWS" `T.isSuffixOf` Cm.code f ]
+        cellsOf n = maybe [] (map (map (.text)) . (.rows)) (Map.lookup (TableId n) (numberedTables opalM5))
+    describe "a binding shaped by a target in the spec it is read over (classifyOver, M5a: Opal Tables 14-16, PDF 30-32)" $ do
+      it "takes the shapes Core binds its Tables 26 (codes, PDF 55-56), 4 (tokens, PDF 32) and 128 (an enumeration, PDF 119) to" $
+        map (`shapeAt` overCore) [14, 15, 16] `shouldBe` [Just Codes, Just Tokens, Just EnumValues]
+      it "is E-SHAPE read alone, as it was before M5a" $
+        fmap describeClassification (Map.lookup (TableId 16) (classify opalM5)) `shouldBe`
+          Just "invalid: E-SHAPE opal-2.30.pdf#page=32&T16: the shape comes from Core 128, which is not in opal-2.30; resolve it with that spec's IR"
+      it "is E-SHAPE for a table of the base nothing binds, named with the base's spec" $ do
+        ir' <- annotated opalM5 (m5aOpalHsa <> "opal-2.30 | T13 | narrows (core 9999)\n")
+        fmap describeClassification (Map.lookup (TableId 13) (classifyOver (Just base) ir')) `shouldBe`
+          Just "invalid: E-SHAPE opal-2.30.pdf#page=29&T13: the shape comes from core-2.01 T9999, which nothing binds"
+      it "binds as it classifies: bind over the base prints Table 16's entry, bind alone refuses it" $ do
+        [ (printSomeBinding sb, someBindingShape sb) | (_, TableId 16, _, _, sb) <- snd (bindEntriesOver (Just base) opalM5) ]
+          `shouldBe` [("replaces [core 128]", Just EnumValues)]
+        map renderFinding (fst (bindEntriesOver (Just base) opalM5)) `shouldSatisfy` all (not . ("&T16:" `T.isInfixOf`))
+        map renderFinding (fst (bindEntries opalM5)) `shouldSatisfy` any ("E-SHAPE opal-2.30.pdf#page=32&T16:" `T.isPrefixOf`)
+      it "explains as it classifies" $
+        explainOver (Just base) opalM5 (TableId 14) `shouldBe` "comment: narrows (core 26)"
+
+    describe "narrows (core N): the rows of the target, restricted (the codes and tokenEncoding rules' C-/N-CODE-NARROWS, C-/N-TOKEN-NARROWS)" $ do
+      it "reads Table 14 against Core's Table 26 and Table 15 against Core's Table 4: one ComID assigned of a reserved range, one token named with a word more" $
+        narrowing opalM5 `shouldBe`
+          [ "N-CODE-NARROWS opal-2.30.pdf#page=30&T14: row 4: 0x0004 TPER_RESET command assigns codes core-2.01 T26 row 3 reserves (0x0002-0x07FF Reserved for TCG)"
+          , "N-TOKEN-NARROWS opal-2.30.pdf#page=31&T15: row 13: \"End of transaction\" (ET) read as core-2.01 T4's \"End transaction\"" ]
+      it "has Table 14's assignment where Table 13 puts TPER_RESET's ComID (PDF 29-30)" $ do
+        [ v | [f, v] <- cellsOf 13, f == "ComID" ] `shouldBe` ["0x0004"]
+        [ c | [c, d] <- cellsOf 14, d == "TPER_RESET command" ] `shouldBe` ["0x0004"]
+      it "is an Error for a row its target does not have" $ do
+        let errors ir' = filter ("C-" `T.isPrefixOf`) (narrowing ir')
+        errors (setCell "T14" 5 1 "Vendor Specific" opalM5) `shouldBe`
+          ["C-CODE-NARROWS opal-2.30.pdf#page=30&T14: row 6: 0x0800-0x0FFF Vendor Specific is not core-2.01 T26 row 4's 0x0800-0x0FFF Vendor Unique"]
+        errors (setCell "T15" 4 1 "SLX" opalM5) `shouldBe`
+          ["C-TOKEN-NARROWS opal-2.30.pdf#page=30&T15: row 5: \"Start List\" (SLX) names no token of core-2.01 T4"]

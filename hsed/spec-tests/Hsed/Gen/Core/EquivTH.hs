@@ -23,6 +23,11 @@ time:
   no enumeration), each with the caption of the table its provenance line
   names (a definition under the provenance of a signature block,
   @5.3.3.6/sig@, names no table and is not read);
+* 'generatedTypedHalfUIDs' reads one module of an SSC's (since M5a, Opal's
+  @gen/Hsed/Gen/Opal/TableUIDs.hs@): its typed half-UIDs, @oth\<T\> ::
+  Object_Table_HalfUID@ and @bth\<T\> :: Byte_Table_HalfUID@, which the Kind
+  column of an SP's Table table preconfiguration gives, each with the table
+  its provenance line names (the SSC's: Opal Table 20 or 36);
 * 'generatedUIDLists' reads the same modules' lists of a table's UIDs
   (@name :: [(UID, String)]@), each with its table: what a hand-written UID of
   a table whose rows the PDF names nowhere is found in;
@@ -54,6 +59,7 @@ module Hsed.Gen.Core.EquivTH
   , Value (..)
   , generatedDefs
   , generatedUIDLists
+  , generatedTypedHalfUIDs
   , handDefs
   , handEnumerations
   , asGenerated
@@ -121,6 +127,31 @@ generatedUIDLists dir g = do
       Nothing -> fail ("the generated module declares " ++ n ++ " but " ++ g ++ " does not export it")
       Just nm -> [| (table, map (show . fst) $(varE nm)) |]
   listE (map pure lists)
+
+-- | @$(generatedTypedHalfUIDs "gen/Hsed/Gen/Opal/TableUIDs.hs" "O")@: the
+--   module's typed half-UIDs, the module imported qualified as @O@.
+generatedTypedHalfUIDs :: FilePath -> String -> Q Exp
+generatedTypedHalfUIDs path g = do
+  addDependentFile path
+  src <- runIO (readFile path)
+  defs <- forM (typedNames (lines src)) $ \(n, table, caption) -> do
+    found <- lookupValueName (g ++ "." ++ n)
+    case found of
+      Nothing -> fail ("the generated module declares " ++ n ++ " but " ++ g ++ " does not export it")
+      Just nm -> [| Def n table caption (Scalar (show $(varE nm))) |]
+  listE (map pure defs)
+  where
+    typedNames = go Nothing
+    go _ [] = []
+    go prov (l : ls)
+      | Just rest <- stripPrefix "-- | " l, " (PDF " `isInfixOf` rest = go (provenance rest) ls
+      | Just (table, caption) <- prov, [n, "::", ty] <- words l, ty `elem` ["Object_Table_HalfUID", "Byte_Table_HalfUID"]
+      = (n, table, caption) : go prov ls
+      | otherwise = go prov ls
+    provenance rest = case words rest of
+      _spec : table@('T' : number) : more | all isDigit number ->
+        Just (table, unwords (["Table", number] ++ takeWhile (/= "(PDF") more))
+      _ -> Nothing
 
 -- | What a generated declaration is to the comparison.
 data DeclKind = Scalar' | Enumeration | UIDList

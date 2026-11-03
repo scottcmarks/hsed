@@ -162,6 +162,16 @@ spec = do
         [ Just ("E-SHAPE core-2.01.pdf#page=100&T46: Method does not accept this table: it binds a method's heading, never a table;"
                 <> " measured 3 columns, header [\"uid\",\"name\",\"format\"], caption CaptionIdent \"AC_element\"") ]
 
+    it "Tokens accepts an SSC's list of supported tokens, [Token, Acronym] (Opal Table 15, PDF 30-31, M5a), and no other two headed columns" $ do
+      let opal = SpecId "opal-2.30"
+          t15  = mkTable "T15" "Table 15 - Supported Tokens" ["Token", "Acronym"] [["Tiny atom", "N/A"], ["Start List", "SL"]]
+          tm   = mkTable "T15" "Table 15 - Supported Tokens" ["Token", "Meaning"] [["Tiny atom", "N/A"]]
+      accepts Tokens (measure opal t15) `shouldBe` Nothing
+      fmap renderFinding (accepts Tokens (measure opal tm)) `shouldBe`
+        Just ("E-SHAPE opal-2.30.pdf#page=100&T15: Tokens does not accept this table: expects the header [Byte, Hex, Acronym, Meaning]"
+              <> " or [Token, Acronym], a first header cell naming an atom's Header, or two columns with no header row;"
+              <> " measured 2 columns, header [\"token\",\"meaning\"], caption CaptionOther \"Supported Tokens\"")
+
     it "projectColumns refuses a column the table lacks" $
       either (const True) (const False) (projectColumns 0 3 form87) `shouldBe` True
 

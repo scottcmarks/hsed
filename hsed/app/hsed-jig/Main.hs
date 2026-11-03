@@ -48,7 +48,7 @@ hsedJig = info (commands <**> helper <**> versionOption)
     versionOption = infoOption (T.unpack hsedVersion) (long "version" <> help "Show the version")
 
 exitCodes :: String
-exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed), no simulator extension failed, a pair found only allowed or unchecked differences in Level 0 and in Properties, and a capture asked for was written; with --recover, the base ComID reset, found idle, and a session to the Admin SP opened and ended on it; 1 a failure: a case failed or was skipped or unobservable without a waiver, an extension failed, the pair found a code missing or a difference not allowed (its Properties judged by Opal 2.30 Table 17), the capture failed, the Guard refused a command, --recover did not recover, or a profile or target named could not be read or opened; 2 a usage error (a key the catalogue lacks, a drive target without --expect-serial, a --level0-len a drive or a replay cannot carry, --recover with --tests or a pair, an option refused); 3 a safety violation (a drive target without root, a drive command its policy does not admit, re-decided from the drive's own transcript, or a mounted drive without --allow-mounted where the run may send to it); 130 interrupted (SIGINT, SIGTERM, SIGHUP, or --interrupt-in-session): nothing issued after the command in flight, the reports written, naming any session left open."
+exitCodes = "Exit codes: 0 every selected case passed (waived prerequisites printed), no simulator extension failed, a pair found only allowed or unchecked differences in Level 0 and in Properties, and a capture asked for was written; with --recover, the base ComID reset, found idle, and a session to the Admin SP opened and ended on it; 1 a failure: a case failed or was skipped or unobservable without a waiver, an extension failed, the pair found a code missing or a difference not allowed (its Properties judged by Opal 2.30 Table 17), the capture failed, the Guard refused a command, --recover did not recover, or a profile or target named could not be read or opened; 2 a usage error (a key the catalogue lacks, a drive target without --expect-serial, a --level0-len a drive or a replay cannot carry, --recover with --tests, a pair or --interrupt-in-session, an option refused); 3 a safety violation (a drive target without root, a drive command its policy does not admit, re-decided from the drive's own transcript, or a mounted drive without --allow-mounted where the run may send to it); 130 interrupted (SIGINT, SIGTERM, SIGHUP, or --interrupt-in-session): nothing issued after the command in flight, the reports written, naming any session left open. Where more than one applies, 3 outranks 130, 130 outranks 1, and 1 outranks 0; and for a /dev target the command line checks --expect-serial (2) and then root (3) before anything else, so that a drive run as yourself exits 3 whatever else is wrong with it."
 
 -- | A subcommand: its parser and its description (hsubparser gives it
 --   --help), a usage error exiting 2.
@@ -60,7 +60,8 @@ commands = hsubparser
   ( subcommand "run" "Run the selected cases against a target (the default command)" (Run <$> runOptions)
  <> subcommand "level0" "Decode or synthesize a Level 0 Discovery response" level0Commands
  <> subcommand "verify-transcript" "Print the commands a report's transcript issued" verifyTranscript
- <> subcommand "diff" "Compare two reports' Level 0 decodes as the Pair runner does" diffReports )
+ <> subcommand "diff" ("Compare two reports' Level 0 decodes and, where both carry them, their Properties exchanges, judged by "
+                        <> "Opal 2.30 Table 17, as the Pair runner does: A's as the simulator's, B's as the drive's") diffReports )
   <|> Run <$> runOptions
   where
     verifyTranscript = VerifyTranscript
@@ -69,10 +70,11 @@ commands = hsubparser
       <*> switch (long "level0-only"
             <> help "fail (exit 1) if a drive's end was issued anything but Level 0 Discovery's IF-RECV (protocol 0x01, ComID 0x0001)")
       <*> switch (long "allow-list"
-            <> help ("fail (exit 1) unless the Guard admits each command a drive's end was issued under the allow list of every method "
-                     <> "a drive run admits (Level 0 Discovery, Properties, StartSession to the Admin SP as Anybody, Get on C_PIN_MSID's "
-                     <> "UID and PIN, End of Session, STACK_RESET), on the base ComID the drive's Level 0 in the report names, its "
-                     <> "Guard blocked nothing, and its policy is bound to that base (design 9.3)"))
+            <> help ("fail (exit 1) unless the Guard admits each command a drive's end was issued under that end's own policy as the "
+                     <> "report gives it (an allow list's methods, of Level 0 Discovery, Properties, StartSession to the Admin SP as "
+                     <> "Anybody, Get on C_PIN_MSID's UID and PIN, End of Session and STACK_RESET; Level 0 Discovery alone where it "
+                     <> "gives level0_only or none), on the base ComID the drive's Level 0 in the report names, an allow list bound "
+                     <> "to that base, and its Guard blocked nothing (design 9.3)"))
     diffReports = Diff
       <$> strArgument (metavar "A.json" <> help "a run's JSON report")
       <*> strArgument (metavar "B.json" <> help "another")
@@ -132,7 +134,7 @@ runOptions = options <**> laterMilestones
       <*> switch (long "recover"
             <> help ("STACK_RESET on the target's base ComID (Core 3.3.4.7.5, PDF 65), then an IF-RECV that finds it idle and a "
                      <> "StartSession to the Admin SP as Anybody with its End of Session, alone: no case runs, and it is refused with "
-                     <> "--tests or a pair (design 9.3); on a drive, under the Guard's recovery list"))
+                     <> "--tests, a pair or --interrupt-in-session (design 9.3); on a drive, under the Guard's recovery list"))
       <*> switch (long "allow-mounted"
             <> help ("drive: a run that may send to the drive goes ahead with a slice of it mounted, each mount noted in the "
                      <> "reports; check the volume unchanged afterwards, tools/m4c-hw.sh snapshot and compare (design 9.3 item 4)"))

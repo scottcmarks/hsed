@@ -172,7 +172,7 @@ compareAnswers reqs sent sim drive = Compared
   { ppDiffs     = [ PropDiff n TPerSide sv dv rule j | (n, sv, dv, Just (rule, j)) <- tper ]
                   <> [ PropDiff n HostSide sv dv rule j
                      | (n, sv, dv) <- differing (hostOf sim) (hostOf drive)
-                     , let (rule, j) = hostRule (row n >>= reqHost) (L.lookup n sent) sv dv ]
+                     , let (rule, j) = hostRule (row n) (L.lookup n sent) sv dv ]
   , ppSimOnly   = [ n | (n, Just _, Nothing, Nothing) <- tper ]
   , ppDriveOnly = [ n | (n, Nothing, Just _, Nothing) <- tper ]
   }
@@ -217,11 +217,14 @@ tperRule req sv dv = case (req, sv, dv) of
 --   unchecked, its value what the ComID keeps from earlier exchanges (Core
 --   5.2.2.3, PDF 143); a row (M) left out not allowed, an Opal TPer
 --   answering every host property it supports (Core 5.2.2.3, PDF 144); a
---   row (O) left out allowed; one outside the table unchecked.
-hostRule :: Maybe HostRequirement -> Maybe Natural -> Maybe Integer -> Maybe Integer -> (Text, Judgement)
-hostRule req sent sv dv = case req of
-  Nothing -> ("host not in Opal 2.30 Table 17 (PDF 33-34)", Unchecked)
-  Just h  -> case (hrRequired h, sent, sv, dv) of
+--   row (O) left out allowed; a row whose host column requires nothing (N/A,
+--   not a host property: MaxSessions and the TPer's other own) unchecked,
+--   and one outside the table unchecked, each saying which.
+hostRule :: Maybe PropertyRequirement -> Maybe Natural -> Maybe Integer -> Maybe Integer -> (Text, Judgement)
+hostRule row sent sv dv = case reqHost <$> row of
+  Nothing      -> ("host not in Opal 2.30 Table 17 (PDF 33-34)", Unchecked)
+  Just Nothing -> ("no host requirement in Opal 2.30 Table 17, its host column N/A, not a host property (PDF 33-34)", Unchecked)
+  Just (Just h) -> case (hrRequired h, sent, sv, dv) of
     (NotRequired, _, Just _, Just _) -> ("host (N), no value required " <> table17, Unchecked)
     (NotRequired, _, _, _)           -> ("host (N), which a TPer MAY leave out of its answer " <> table17, Allowed)
     (_, Just s, Just _, Just v)      -> sentRule h s v

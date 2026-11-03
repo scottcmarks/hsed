@@ -102,6 +102,10 @@ Checks, each with the code its findings carry:
   ('uidDeclName') is no other row's of the SP (the SP's module defines it),
   nor one the spec or its base names another UID
   ("Hsed.Spec.Rules.UidTable"; 'uidNames');
+* @N-PRECONF-HOMONYM@: two SPs' rows of one Name at different UIDs, each
+  SP's module generating its own @u\<T\>_\<Name\>@ (the Admin SP's and the
+  Locking SP's Admin1, Opal Tables 24 and 40, PDF 48 and 82); reserved at
+  M5a's scaffold, given from M5a's G1;
 * @C-PRECONF-UID@: the table of a table's UIDs, which the @uidTable@ rule
   reads ("Hsed.Spec.Rules.UidTable": its header or caption claims every row
   for that table, Core Table 243 for the Authority table), gives exactly the
@@ -217,6 +221,8 @@ preconfigRule = RuleDef
       , CodeDef "C-PRECONF-UID"      [Error]          (Defect "the table of a table's UIDs disagrees with the rows preconfigured for that table")
       , CodeDef "N-PRECONF-HEADER"   [Note]           (AsPrinted "a header read as the one column of its table whose name it begins (LifeCycle as LifeCycleState)")
       , CodeDef "N-PRECONF-UID-TPER" [Note]           (AsPrinted "a preconfiguration table that prints no UID in any row, its UIDs read as the TPer's to assign")
+        -- reserved at M5a's scaffold; G1 gives it, where two SPs' modules generate one u<T>_<Name> for two UIDs ('uidNames')
+      , CodeDef "N-PRECONF-HOMONYM"  [Note]           (AsPrinted "two SPs' rows of one name at different UIDs, each generated as u<T>_<Name> in its SP's module, imported qualified")
       , CodeDef "W-PRECONF-TEMPLATE-NAME" [Warning]   (Defect "a template row whose Name does not carry its placeholder's letters, so that its instances share one Name")
       , CodeDef "W-PRECONF-DEFAULT"  [Warning]        (Defect "a column of an SSC's preconfiguration table whose type gives it no default") ]
   , ruleChecks  = \ctx bts -> let ps = readPres ctx bts

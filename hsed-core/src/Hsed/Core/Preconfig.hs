@@ -27,7 +27,12 @@ table of values ("Hsed.Core.Table"'s 'Row') can say:
   shorthand for the lower bytes of every object of that table (Table 22's
   footnotes *AC1-*AC7, PDF 38-39): one AccessControl row for each object;
 * a row marked @(O)@ is optional (Tables 22 and 23, PDF 38 and 46), and a
-  row's footnote markers (@*AC1@, @*ACE1@, …) are its notes.
+  row's footnote markers (@*AC1@, @*ACE1@, …) are its notes;
+* the Locking SP's tables (since M5a) print a value the TPer chooses with a
+  least value, @0x08000000 min@ ('VendorAtLeast', Table 36, PDF 54), one
+  of two values the TPer's key table decides, @K_AES_128[256]_Range1_Key@
+  ('OneOf', Table 45, PDF 86), and a value with a note's number printed
+  after it, Table 44's MaxRanges @8@ and note 1 ('NoteMarked', PDF 86).
 
 A 'PreconfTable' is one such table: the description of the table it
 preconfigures, each column's default, which a row that does not give the
@@ -52,6 +57,8 @@ module Hsed.Core.Preconfig
     -- * Template instances
   , instanceUID
   , instantiate
+    -- * Marked cells
+  , unmarked
   ) where
 
 import qualified GHC.Exts                   as Exts (toList)
@@ -73,10 +80,27 @@ import           Hsed.Core.UID              (HalfUID, UID)
 
 -- * Cells
 
--- | One cell of a preconfiguration table.
+-- | One cell of a preconfiguration table. Its 'Show' is the Haskell a
+--   generated module writes it as:
+--
+-- >>> VendorAtLeast 0x08000000 "0x08000000 min"
+-- VendorAtLeast 134217728 "0x08000000 min"
+--
+-- >>> NoteMarked 1 (Given (UIntCell 8))
+-- NoteMarked 1 (Given (UIntCell 8))
+--
+-- >>> OneOf [Given (RefCell "K_AES_128_Range1_Key" (uid 0x00 0x00 0x08 0x05 0x00 0x03 0x00 0x01)), Given (RefCell "K_AES_256_Range1_Key" (uid 0x00 0x00 0x08 0x06 0x00 0x03 0x00 0x01))]
+-- OneOf [Given (RefCell "K_AES_128_Range1_Key" uid 0x00 0x00 0x08 0x05 0x00 0x03 0x00 0x01),Given (RefCell "K_AES_256_Range1_Key" uid 0x00 0x00 0x08 0x06 0x00 0x03 0x00 0x01)]
 data PreCell
-  = Given !Cell          -- ^ the value the table prints, read as its column's type says
-  | VendorUnique !Text   -- ^ a value the TPer chooses, the marker as printed: @VU@ (Opal Table 1, PDF 12), or @MSID@ (C_PIN_MSID's PIN, Table 25, PDF 48)
+  = Given !Cell                   -- ^ the value the table prints, read as its column's type says
+  | VendorUnique !Text            -- ^ a value the TPer chooses, the marker as printed: @VU@ (Opal Table 1, PDF 12), or @MSID@ (C_PIN_MSID's PIN, Table 25, PDF 48)
+  | VendorAtLeast !Natural !Text  -- ^ a value the TPer chooses, no less than this one, and the cell as printed: the Locking SP's
+                                  --   MBR and DataStore Rows, @0x08000000 min@ and @0x00A00000 min@ (Opal Table 36, PDF 54)
+  | OneOf ![PreCell]              -- ^ one of these, the one the TPer's configuration decides: the Locking SP's ActiveKey,
+                                  --   @K_AES_128[256]_Range1_Key@, a reference to the K_AES_128 or the K_AES_256 table's
+                                  --   object, whichever the TPer holds (Table 45 and its note *LT1, PDF 86)
+  | NoteMarked !Int !PreCell      -- ^ a cell and the number of the note printed after its value, split off it: Table 44's
+                                  --   MaxRanges @8@ and note 1, which the extractor joins as @81@ (PDF 86)
   deriving (Eq, Show)
 
 
@@ -175,12 +199,21 @@ bigEndian width v = [ fromIntegral ((v `div` (256 ^ i)) `mod` 256) | i <- [width
 -- >>> let credential = Given (RefCell "C_PIN_AdminXX" (uid 0x00 0x00 0x00 0x0B 0x00 0x00 0x02 0x00))
 -- >>> instantiate (Placeholder "XX" 1) [0x01, 0x0A] 2 [(0x01, Given (TextCell "AdminXX")), (0x0A, credential)]
 -- [(1,Given (TextCell "Admin2")),(10,Given (RefCell "C_PIN_Admin2" uid 0x00 0x00 0x00 0x0b 0x00 0x00 0x02 0x02))]
+--
+--   Each value of a choice is the instance's, and so is a value with a
+--   note: Table 45's Locking_RangeNNNN's ActiveKey, @(+NN NN)@ (PDF 86), at 2:
+--
+-- >>> let key b = Given (RefCell ("K_AES_" <> b <> "_RangeNNNN_Key") (uid 0x00 0x00 0x08 (if b == "128" then 0x05 else 0x06) 0x00 0x03 0x00 0x00))
+-- >>> instantiate (Placeholder "NNNN" 2) [0x0A] 2 [(0x0A, NoteMarked 1 (OneOf [key "128", key "256"]))]
+-- [(10,NoteMarked 1 (OneOf [Given (RefCell "K_AES_128_Range2_Key" uid 0x00 0x00 0x08 0x05 0x00 0x03 0x00 0x02),Given (RefCell "K_AES_256_Range2_Key" uid 0x00 0x00 0x08 0x06 0x00 0x03 0x00 0x02)]))]
 instantiate :: Placeholder -> [ColNum] -> Natural -> [(ColNum, PreCell)] -> [(ColNum, PreCell)]
 instantiate ph cols n = map (\(c, pc) -> (c, if c `elem` cols then inColumn pc else pc))
   where
     inColumn = \case
-      Given cell -> Given (carried cell)
-      vu         -> vu
+      Given cell      -> Given (carried cell)
+      OneOf pcs       -> OneOf (map inColumn pcs)
+      NoteMarked k pc -> NoteMarked k (inColumn pc)
+      vu              -> vu
     -- a cell of a column that carries the placeholder
     carried = \case
       UIDCell u   -> UIDCell (step u)
@@ -199,3 +232,20 @@ instantiate ph cols n = map (\(c, pc) -> (c, if c `elem` cols then inColumn pc e
       | carries t = T.replace (phLetters ph) (tshow n) t
       | otherwise = t
     step u = fromMaybe u (instanceUID ph u n)
+
+
+-- * Marked cells
+
+-- | A cell without the note numbers printed after its value
+--   ('NoteMarked'), the value the table gives: Table 44's MaxRanges, @8@
+--   (PDF 86).
+--
+-- >>> unmarked (NoteMarked 1 (Given (UIntCell 8)))
+-- Given (UIntCell 8)
+--
+-- >>> unmarked (VendorUnique "VU")
+-- VendorUnique "VU"
+unmarked :: PreCell -> PreCell
+unmarked = \case
+  NoteMarked _ pc -> unmarked pc
+  pc              -> pc

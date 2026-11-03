@@ -120,6 +120,10 @@ module Hsed.Spec.Readers.Cell
   , printedText
   , joinedText
   , vendorMarker
+    -- * Reviewed readings of the Locking SP's tables (M5a)
+  , noteMarkerCells
+  , cellTypos
+  , setKind
     -- * Codes
   , cellCodes
   ) where
@@ -136,7 +140,8 @@ import           RIO
 
 import           Hsed.Core.Types        (GeneralKind (..), Operand (..), RestrictedKind (..), TableKind (..), TableRef (..),
                                          TypeDef (..), TypeRef (..), formatName)
-import           Hsed.Spec.Common       (CodeDef (..), Reports (..), Severity (..))
+import           Hsed.Spec.Anchor       (AnchorId)
+import           Hsed.Spec.Common       (CodeDef (..), Reports (..), Severity (..), SpecId)
 import qualified Hsed.Spec.Gen          as Gen
 import           Hsed.Spec.IR           (CellIR (..))
 import           Hsed.Spec.Readers.Text (nameKey, readNumber)
@@ -624,6 +629,42 @@ vendorMarker :: PrintedCell -> Maybe Text
 vendorMarker pc = case pcLines pc of
   [l] | l `elem` ["VU", "MSID"], not (pcQuoted pc) -> Just l
   _ -> Nothing
+
+
+-- * Reviewed readings of the Locking SP's tables (M5a)
+
+-- | The reviewed cells whose last digit is the number of a note printed
+--   after the value, which the extractor joins to it: the spec, the table,
+--   the row (1-based, as findings count them), the column's header, the
+--   cell as the IR prints it, and the note's number. Each is read as its
+--   value and the note ('Hsed.Core.Preconfig.NoteMarked').
+--
+--   G1: a working stub, empty, so that no cell is read otherwise yet. G1
+--   fills it with Opal Table 41 row 1's PIN, @SID or MSID1@ (PDF 84), and
+--   Table 44 row 1's MaxRanges, @81@ (PDF 86), each read with a Note.
+noteMarkerCells :: [(SpecId, AnchorId, Int, Text, Text, Int)]
+noteMarkerCells = []
+
+-- | The reviewed misspellings of a cell, each as printed and as read, as
+--   'Hsed.Spec.Shape.headerTypos' is for a header.
+--
+--   G1: a working stub, empty. G1 adds Opal Table 43's @uniteger_8@ for
+--   @uinteger_8@ (PDF 85), read with a Note.
+cellTypos :: [(Text, Text)]
+cellTypos = []
+
+-- | The enumeration whose labels name the values of a Set_Type (Core
+--   5.1.1 m., PDF 98: a set of unsigned integers in a range, more than one
+--   of the options selected), by the Set_Type's name: @reset_types@, whose
+--   Set Values Core Table 128 labels (PDF 119), and @gen_status@ and
+--   @protect_types@, in the Locking SP's tables (Opal Tables 42, 45 and 46,
+--   PDF 84-88), the column then read as a set of those labels (@Power
+--   Cycle@).
+--
+--   G1: a working stub, Nothing for every type, so that a Set_Type column
+--   is read as it is today, by no kind ('colKind').
+setKind :: TypeEnv -> Text -> Maybe Text
+setKind _ _ = Nothing
 
 
 -- * Codes

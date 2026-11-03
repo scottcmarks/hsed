@@ -74,8 +74,8 @@ spec = do
     it "applies the typo table, strips whitespace and lower-cases" $
       map normHeader ["Enumeration Value", "Colum Type", "M axSize", "MandatoryWrite  Granularity", " UID ", "Byte\\Bit"]
         `shouldBe` ["enumerationvalue", "columntype", "maxsize", "mandatorywritegranularity", "uid", "byte\\bit"]
-    it "needs the typo table only for Colum Type: the design's other two typos are whitespace" $
-      headerTypos `shouldBe` [("Colum Type", "Column Type")]
+    it "needs the typo table for Colum Type and Opal T45's two (PDF 86): the design's other two typos are whitespace" $
+      headerTypos `shouldBe` [("Colum Type", "Column Type"), ("ReEncyptRequest", "ReEncryptRequest"), ("LastReEncState", "LastReEncStat")]
 
   describe "headerNormalisations" $
     it "lists each typo a table's header cells contain, as printed and as read" $ do

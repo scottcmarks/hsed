@@ -347,9 +347,14 @@ measure sid t = Form
 --   The design's other two entries, @M axSize@ and @MandatoryWrite  Granularity@,
 --   differ from the right spelling only in whitespace, which 'normHeader' strips
 --   anyway; @Colum Type@ (Opal T26) is the one a typo table is needed for.
+--   Since M5a, Opal Table 45's @ReEncyptRequest@ and @LastReEncState@ (PDF
+--   86), the Locking table's ReEncryptRequest and LastReEncStat (Core Table
+--   226, PDF 273).
 headerTypos :: [(Text, Text)]
 headerTypos =
   [ ("Colum Type", "Column Type")
+  , ("ReEncyptRequest", "ReEncryptRequest")
+  , ("LastReEncState", "LastReEncStat")
   ]
 
 -- | Header normalisation: the typo table, then every whitespace character

@@ -53,7 +53,7 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 | Note | N-CAPTION-NORMALISED | 2 |
 | Note | N-FEATURE-HEADER | 1 |
 | Note | N-FEATURE-LENGTH | 1 |
-| Note | N-HEADER-NORMALISED | 7 |
+| Note | N-HEADER-NORMALISED | 9 |
 | Note | N-PRECONF-HEADER | 1 |
 | Note | N-PRECONF-LABEL | 9 |
 | Note | N-PRECONF-UID-TPER | 1 |

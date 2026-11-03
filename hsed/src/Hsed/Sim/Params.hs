@@ -378,10 +378,13 @@ simParamsProblems p = concat
 -- | What is out of range in the Locking SP's parameters: none yet. A stub
 --   of M5a's scaffold, whose clauses its group G3 writes: at least 4 Admins
 --   and 8 Users (Table 40's notes, PDF 82), at least 8 ranges (Table 44
---   note 1, PDF 86), each at most what its template's placeholder numbers
---   (@(+XX XX)@, @(+MM MM)@, @(+NN NN)@, PDF 82-86), an MBR of at
---   least 0x08000000 bytes (Table 36, PDF 54), MandatoryWriteGranularity at
---   most 8192 and at most RecommendedAccessGranularity (5.3.1.1.2, PDF 99).
+--   note 1, PDF 86), each at most 255, the simulator's bound, as the Admin
+--   SP's Admins are (its templates' placeholders, @(+XX XX)@, @(+MM MM)@
+--   and @(+NN NN)@, PDF 82-86, would number up to 0xFFFF, a fold too large
+--   for a state QuickCheck copies), an MBR of at least 0x08000000 bytes
+--   (Table 36, PDF 54) and a DataStore of at least 0x00A00000 (the same
+--   table; 4.3.8.1, PDF 90), MandatoryWriteGranularity at most 8192 and at
+--   most RecommendedAccessGranularity (5.3.1.1.2, PDF 99).
 --
 -- >>> lockingProblems defaultSimParams
 -- []

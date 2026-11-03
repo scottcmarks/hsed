@@ -148,9 +148,10 @@ simDescriptors st = L.sortOn dCode (own <> added)
       _                    -> fallback
 
 -- | The Locking descriptor's Locked bit (Opal 2.30 3.1.1.3, PDF 21; Core
---   3.3.6.5.3, PDF 71): whether a Locking row is read or write locked. A
---   stub of M5a's scaffold, False as at M3 (nothing locked); its group G4
---   reads the Locking SP's rows.
+--   3.3.6.5.3, PDF 71): one when LockingEnabled is one and some Locking
+--   row is ReadLockEnabled and ReadLocked, or WriteLockEnabled and
+--   WriteLocked. A stub of M5a's scaffold, False as at M3 (nothing locked);
+--   its group G4 reads the Locking SP's rows.
 --
 -- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
 -- >>> map ($ initialState defaultSimParams) [lockedBit, mbrEnabledBit, mbrDoneBit]
@@ -159,14 +160,16 @@ lockedBit :: TPerState -> Bool
 lockedBit _ = False
 
 -- | The Locking descriptor's MBREnabled bit (Opal 2.30 3.1.1.3, PDF 21; Core
---   3.3.6.5.5, PDF 71): MBRControl's Enable. A stub of M5a's scaffold,
---   False as at M3; its group G4 reads the MBRControl row.
+--   3.3.6.5.5, PDF 71): one when LockingEnabled is one, the MBRControl and
+--   MBR tables are implemented and MBRControl's Enable is True. A stub of
+--   M5a's scaffold, False as at M3; its group G4 reads the MBRControl row.
 mbrEnabledBit :: TPerState -> Bool
 mbrEnabledBit _ = False
 
 -- | The Locking descriptor's MBRDone bit (Opal 2.30 3.1.1.3, PDF 21; Core
---   3.3.6.5.6, PDF 71): MBRControl's Done. A stub of M5a's scaffold, False
---   as at M3; its group G4 reads the MBRControl row.
+--   3.3.6.5.6, PDF 71): one when MBREnabled is one and MBRControl's Done is
+--   True. A stub of M5a's scaffold, False as at M3; its group G4 reads the
+--   MBRControl row.
 mbrDoneBit :: TPerState -> Bool
 mbrDoneBit _ = False
 

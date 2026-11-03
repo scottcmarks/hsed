@@ -193,8 +193,8 @@ data FoldProblem
 -- | A fold problem as a report or an error says it.
 --
 -- >>> import Hsed.Core.UID (uid)
--- >>> foldProblemText (OutOfBounds "the Locking SP's Users" 7 (8, 0xFFFF))
--- "the Locking SP's Users 7: out of 8 to 65535"
+-- >>> foldProblemText (OutOfBounds "the Locking SP's Users" 7 (8, 255))
+-- "the Locking SP's Users 7: out of 8 to 255"
 -- >>> foldProblemText (UnansweredVU (uid 0 0 2 5 0 0 0 2) "C_PIN" "C_PIN_Admin1" "PIN")
 -- "SP uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x02: the C_PIN table's row C_PIN_Admin1 leaves its PIN to the TPer, and no value is named for it"
 foldProblemText :: FoldProblem -> Text

@@ -17,7 +17,8 @@ IF-SEND while a response is held a Synchronous Protocol Violation (3.3.10.2.1
 item 3 a, PDF 82); a response held for N IF-RECVs answered (0, 1, 0) N times
 (Table 45 row 1, PDF 83); an IF-SEND of Empty atoms or on a session the TPer
 does not have discarded, the ComID still awaiting IF-SEND (3.3.10.6 S2:S1 d,
-3.3.10.7 a, PDF 85-86); the lengths, protocols and ComIDs the TPer refuses
+3.3.10.7 a, PDF 85-86); parameters the SPs' preconfiguration does not fold
+with refused before it opens (M5a); the lengths, protocols and ComIDs the TPer refuses
 (SIIS 1.20 4.3, PDF 30-31; Core 3.3.3.2-3, PDF 58-59; 3.3.10.7 c, PDF 86).
 The Properties examples rest on the Session Manager's answer
 ("Hsed.Sim.SessionManager".@answer@), without which a Properties IF-SEND is
@@ -40,7 +41,7 @@ import qualified Hsed.Gen.Core.Methods   as Methods
 import           Hsed.Gen.Core.UIDs      (uSMUID)
 import           Hsed.Packet             (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket, encodeComPacket)
 import           Hsed.Sim                (syncOf)
-import           Hsed.Sim.Types          (SimParams (..), SyncState (..), defaultSimParams)
+import           Hsed.Sim.Types          (FoldProblem (..), LifeCycle (..), SimParams (..), SyncState (..), defaultSimParams)
 import           Hsed.Transport.InProc
 import           Hsed.Transport.Opened   (openedInProc)
 import           Hsed.Version            (hsedVersion)
@@ -113,13 +114,20 @@ isS3 = \s -> case s of Just (S3 _) -> True; _ -> False
 
 spec :: Spec
 spec = do
-  describe "the transport" $
+  describe "the transport" $ do
     it "says it is the simulator of this build, of Opal 2.30, with the parameters' ComIDs, in the unit asked" $
       forM_ [UnitBytes, UnitBlocks512] $ \u -> do
         (t, _) <- simulator u 0
         unitOf t `shouldBe` u
         describeTransport t `shouldBe`
           Describe "tper" ("hsed-sim " <> hsedVersion) u (Just "opal-2.30") (Just 0x1004) (Just 1) Nothing
+    it "is refused before it opens where the SPs do not fold: a Locking SP parameter out of its bounds, OutOfBounds (M5a; Opal 2.30 Table 40 note 2, PDF 82)" $ do
+      opened <- newInProc defaultSimParams { spLockingUsers = 7, spLockingRanges = 256 } (InProcOpts UnitBytes 0)
+      either id (const []) opened `shouldBe` [OutOfBounds "the Locking SP's Users" 7 (8, 255), OutOfBounds "the Locking SP's ranges" 256 (8, 255)]
+    it "opens at either Original Factory State, the Locking SP's tables folded (M5a; Opal 2.30 5.2.2, PDF 96)" $
+      forM_ [ManufacturedInactive, Manufactured] $ \o -> do
+        opened <- newInProc defaultSimParams { spLockingOFS = o } (InProcOpts UnitBytes 0)
+        either (const False) (const True) opened `shouldBe` True
 
   describe "Level 0 Discovery" $ do
     it "answers IF-RECV with exactly the bytes asked, its header first, in bytes (100 truncated, 4096 padded)" $ do

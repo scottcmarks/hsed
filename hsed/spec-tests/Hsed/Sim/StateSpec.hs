@@ -43,7 +43,7 @@ import           Hsed.Core.TypeName  (TypeName (..))
 import           Hsed.Core.UID       (uid)
 import           Hsed.Gen.Core.Layouts (GUDIDColumnContentsDescription (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, spTableDesc, tPerInfoTableDesc)
-import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uSPTable, uTPerInfoTable)
+import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uLockingTable, uMBRControlTable, uMBRTable, uSPTable, uTPerInfoTable)
 import           Hsed.Gen.Core.Types (ubooleanType)
 import           Hsed.Gen.Core.UIDs  (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
@@ -87,17 +87,17 @@ spec = do
       map (\cs -> (cLife cs, cSync cs, cHostProps cs, cMgmt cs)) (Map.elems (tsComIds st0))
         `shouldBe` [(Issued, S1, initialHostProperties, MgmtBuffer False Nothing)]
       initialHostProperties `shouldBe` Map.fromList hostRequirements
-    it "has the Admin SP Manufactured with its twelve generated tables (Opal 2.30 Tables 18-25, 27-29 and 33), and the Locking SP in its Original Factory State with its fourteen (Tables 34-42 and 44-48, since M5a)" $ do
+    it "has the Admin SP Manufactured with its twelve generated tables (Opal 2.30 Tables 18-25, 27-29 and 33), and the Locking SP in its Original Factory State with its thirteen, the K_AES_256 key table alone of the two (Tables 34-42 and 44-48, Table 36's *TT1, PDF 54; since M5a)" $ do
       spLifeCycle uSP_Admin st0 `shouldBe` Just (lifeCycleValue Manufactured)
       fmap (Map.size . spsTables) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` Just 12
       spLifeCycle uSP_Locking st0 `shouldBe` Just (lifeCycleValue ManufacturedInactive)
       spLifeCycle uSP_Locking (initialState defaultSimParams { spLockingOFS = Manufactured }) `shouldBe` Just (lifeCycleValue Manufactured)
-      fmap (Map.size . spsTables) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just 14
+      fmap (Map.size . spsTables) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just 13
     it "describes each table an SP holds, and no other, by the table's UID" $ do
       fmap (Map.keys . spsDescs) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` fmap (Map.keys . spsTables) (Map.lookup uSP_Admin (tsSPs st0))
       fmap (\sps -> and [ k == tdTableUID d | (k, d) <- Map.toList (spsDescs sps) ]) (Map.lookup uSP_Admin (tsSPs st0)) `shouldBe` Just True
       fmap (Map.keys . spsDescs) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` fmap (Map.keys . spsTables) (Map.lookup uSP_Locking (tsSPs st0))
-      fmap (Map.size . spsDescs) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just 14
+      fmap (Map.size . spsDescs) (Map.lookup uSP_Locking (tsSPs st0)) `shouldBe` Just 13
     it "records a life cycle state by the value Opal 2.30 Table 49 gives it (PDF 98): Manufactured-Inactive 8, Manufactured 9" $
       map lifeCycleValue [ManufacturedInactive, Manufactured] `shouldBe` [8, 9]
 
@@ -148,7 +148,7 @@ spec = do
         tries = maybe (-1) colNumber (columnNamed "Tries" c_PINTableDesc)
     it "are read by the SP's and the table's UIDs, and an object's row by its UID" $ do
       length (tableRows uSP_Admin uC_PINTable st0) `shouldBe` 3
-      length (tableRows uSP_Locking uC_PINTable st0) `shouldBe` 5  -- Admin1 to Admin4 and User1; the templates' instances are M5a's G3's
+      length (tableRows uSP_Locking uC_PINTable st0) `shouldBe` 12  -- Admin1 to Admin4 and User1 to User8 (Opal 2.30 Table 41, PDF 83-84)
       tableRows uSP_Locking uSPTable st0 `shouldBe` []
       tableRows uSP_Admin uSP_Admin st0 `shouldBe` []
       (rowWithUID uSP_Admin uC_PINTable uC_PIN_MSID st0 >>= cellOf pin) `shouldBe` Just (BytesCell (spMsid defaultSimParams))
@@ -182,6 +182,21 @@ spec = do
         `shouldBe` Just (EnumCell "True" 1)
       cellNamedIn (adminSP (withTPerInfo tPerInfoTableDesc [tPerInfoRow True] st0)) uTPerInfoTable "ProgrammaticResetEnable" (tPerInfoRow True)
         `shouldBe` Nothing
+
+  describe "the Locking SP's tables (M5a)" $ do
+    it "give the Locking table's rows, the global range and the eight ranges after it, as many as the parameters' ranges (Opal 2.30 Table 45, PDF 86)" $ do
+      length (lockingRows st0) `shouldBe` 9
+      length (lockingRows (initialState defaultSimParams { spLockingRanges = 12 })) `shouldBe` 13
+      lockingRows st0 `shouldBe` tableRows uSP_Locking uLockingTable st0
+    it "give MBRControl's one row (Table 46, PDF 87), none for a TPer without the Locking SP" $ do
+      mbrControl st0 `shouldBe` listToMaybe (tableRows uSP_Locking uMBRControlTable st0)
+      isJust (mbrControl st0) `shouldBe` True
+      mbrControl st0 { tsSPs = Map.delete uSP_Locking (tsSPs st0) } `shouldBe` Nothing
+    it "give a byte table's size, the MBR's and the DataStore's the parameters' (Table 36, PDF 54), none for an object table" $ do
+      byteTableSize uSP_Locking uMBRTable (initialState defaultSimParams { spMbrSize = 0x10000000 }) `shouldBe` Just 0x10000000
+      byteTableSize uSP_Locking (uid 0x00 0x00 0x10 0x01 0x00 0x00 0x00 0x00) st0 `shouldBe` Just 0xA00000
+      byteTableSize uSP_Locking uC_PINTable st0 `shouldBe` Nothing
+      byteTableSize uSP_Admin uMBRTable st0 `shouldBe` Nothing
 
   describe "an SP's life cycle (Core 4.1, PDF 91)" $ do
     let lifeCycleState = maybe (-1) colNumber (columnNamed "LifeCycleState" spTableDesc)

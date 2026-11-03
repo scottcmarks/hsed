@@ -26,7 +26,8 @@ Parameters out of range are refused, not wrapped or dropped
 range, a version past its 4-bit field, a TPer property below the least Opal
 2.30 Table 17 has a TPer report, a PIN longer than its column holds, no
 Admin authority or more than Table 24's template numbers, a GUDID not in
-Core Table 212's format), so that every descriptor the simulator sends
+Core Table 212's format, the Locking SP's authorities, ranges, byte tables'
+sizes and granularities out of Opal 2.30's bounds or the simulator's), so that every descriptor the simulator sends
 encodes, every static ComID is one a TPer may have, every limit is one an
 Opal TPer may report, every PIN fits its column and every Admin authority the
 preconfiguration's fold instantiates has a UID of its own; the in-process
@@ -54,6 +55,7 @@ module Hsed.Sim.Params
   , Geometry (..)
   , Level0Profile (..)
   , simParamsProblems
+  , lockingBounds
   , staticComIds
   , reservedComId
     -- * Properties, and what each end takes
@@ -339,9 +341,10 @@ defaultSimParams = SimParams
 --   *TP1, PDF 50: the GUDID SHALL be in that format), its four constant
 --   bytes and its NAA among them, as the generated layout reads them
 --   strictly;
--- * the Locking SP's parameters out of what Opal 2.30 allows of them
---   ('lockingProblems': M5a's scaffold names the place, its group G3 the
---   bounds).
+-- * the Locking SP's parameters out of what Opal 2.30 and the simulator
+--   allow of them ('lockingBounds': its Admins, Users and ranges, its MBR's
+--   and DataStore's sizes and its byte tables' granularities), which the
+--   Locking SP's fold refuses as well ("Hsed.Sim.Preconfig".@foldTables@).
 simParamsProblems :: SimParams -> [Text]
 simParamsProblems p = concat
   [ [ "no static ComID (Number of ComIDs is 0x0001 or larger, Opal 2.30 Table 6)" | spNComIds p == 0 ]
@@ -375,21 +378,62 @@ simParamsProblems p = concat
     gudidBytes = layoutSize gudidColumnContentsDescriptionLayout
     gudid      = decodeRecordStrict (spGudid p) :: Either LayoutError (DecodedRecord GUDIDColumnContentsDescription)
 
--- | What is out of range in the Locking SP's parameters: none yet. A stub
---   of M5a's scaffold, whose clauses its group G3 writes: at least 4 Admins
---   and 8 Users (Table 40's notes, PDF 82), at least 8 ranges (Table 44
---   note 1, PDF 86), each at most 255, the simulator's bound, as the Admin
---   SP's Admins are (its templates' placeholders, @(+XX XX)@, @(+MM MM)@
---   and @(+NN NN)@, PDF 82-86, would number up to 0xFFFF, a fold too large
---   for a state QuickCheck copies), an MBR of at least 0x08000000 bytes
---   (Table 36, PDF 54) and a DataStore of at least 0x00A00000 (the same
---   table; 4.3.8.1, PDF 90), MandatoryWriteGranularity at most 8192 and at
---   most RecommendedAccessGranularity (5.3.1.1.2, PDF 99).
+-- | What is out of range in the Locking SP's parameters ('lockingBounds'):
+--   each bound broken, the value, the bounds and where they come from.
 --
 -- >>> lockingProblems defaultSimParams
 -- []
+-- >>> lockingProblems defaultSimParams { spLockingRanges = 7 }
+-- ["the Locking SP's ranges 7: out of 8 to 255 (Opal 2.30 Table 44 note 1, PDF 86: MaxRanges at least 8; at most the simulator's 255)"]
 lockingProblems :: SimParams -> [Text]
-lockingProblems _ = []
+lockingProblems p =
+  [ what <> " " <> tshow v <> ": out of " <> tshow least <> " to " <> tshow most <> " (" <> source <> ")"
+  | (what, v, (least, most), source) <- lockingBounds p, v < least || v > most ]
+
+-- | The Locking SP's parameters and their bounds, each with its source:
+--   what, the value, the least and the most, and where they come from.
+--
+--   * the Admin authorities, at least the 4 Opal 2.30 requires (Table 40
+--     note 1, PDF 82: Admin1 to Admin4), the Users at least 8 (note 2, PDF
+--     82: User1 through User8), the ranges besides the global range at
+--     least 8 (Table 44 note 1, PDF 86: MaxRanges), each at most 255, the
+--     simulator's bound, as the Admin SP's Admins are (its templates'
+--     placeholders, @(+XX XX)@, @(+MM MM)@ and @(+NN NN)@, PDF 82-86, would
+--     number up to 0xFFFF, a fold too large for a state QuickCheck copies);
+--   * the MBR's size at least 0x08000000 (Table 36, PDF 54; 4.3.5.4, PDF
+--     89), and the DataStore's at least 0x00A00000 (Table 36, PDF 54;
+--     4.3.8.1, PDF 90), each at most a Table row's Rows, a uinteger_4 (Core
+--     Table 171, PDF 156);
+--   * RecommendedAccessGranularity at least 1, a byte table's with no
+--     recommended alignment (5.3.1.2.2, PDF 100), and at most a uinteger_4
+--     (Core Table 171, PDF 156); MandatoryWriteGranularity at least 1, with
+--     no mandatory alignment (5.3.1.1.2, PDF 99: a Set's offset and length
+--     are taken modulo it), and at most 8192 and at most
+--     RecommendedAccessGranularity (the same, PDF 99).
+--
+-- >>> [ (what, v) | (what, v, _, _) <- lockingBounds defaultSimParams ]
+-- [("the Locking SP's Admins",4),("the Locking SP's Users",8),("the Locking SP's ranges",8),("the MBR's size",134217728),("the DataStore's size",10485760),("the byte tables' RecommendedAccessGranularity",1),("the byte tables' MandatoryWriteGranularity",1)]
+lockingBounds :: SimParams -> [(Text, Natural, (Natural, Natural), Text)]
+lockingBounds p =
+  [ ("the Locking SP's Admins", spLockingAdmins p, (4, simMost), "Opal 2.30 Table 40 note 1, PDF 82: Admin1 to Admin4" <> simulator)
+  , ("the Locking SP's Users", spLockingUsers p, (8, simMost), "Opal 2.30 Table 40 note 2, PDF 82: User1 through User8" <> simulator)
+  , ("the Locking SP's ranges", spLockingRanges p, (8, simMost), "Opal 2.30 Table 44 note 1, PDF 86: MaxRanges at least 8" <> simulator)
+  , ("the MBR's size", spMbrSize p, (0x08000000, uinteger4Most), "Opal 2.30 Table 36, PDF 54, and 4.3.5.4, PDF 89" <> rows)
+  , ("the DataStore's size", dataStoreSize, (0x00A00000, uinteger4Most), "Opal 2.30 Table 36, PDF 54, and 4.3.8.1, PDF 90" <> rows)
+  , ("the byte tables' RecommendedAccessGranularity", recommended, (1, uinteger4Most), "Opal 2.30 5.3.1.2.2, PDF 100" <> rows)
+  , ("the byte tables' MandatoryWriteGranularity", spMandatoryWriteGranularity p, (1, min 8192 recommended)
+    , "Opal 2.30 5.3.1.1.2, PDF 99: at most 8192 and at most RecommendedAccessGranularity")
+  ]
+  where
+    (_, dataStoreSize32, _) = spDataStore p
+    dataStoreSize = fromIntegral dataStoreSize32
+    recommended   = spRecommendedAccessGranularity p
+    -- the simulator's bound on the Locking SP's authorities and ranges, as on the Admin SP's Admins (adminsMost)
+    simMost       = 255
+    simulator     = "; at most the simulator's 255"
+    -- a Table row's Rows and granularities, uinteger_4 (Core Table 171, PDF 156)
+    uinteger4Most = 0xFFFFFFFF
+    rows          = "; a uinteger_4, Core Table 171, PDF 156"
 
 -- | The static ComIDs parameters name: the base and the ones after it, as
 --   far as 0xFFFF, counted in Integer so that none wraps.

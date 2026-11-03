@@ -24,6 +24,10 @@ regular sessions and the resets share (design 8.1-8.2, M4a):
   the row of an object by its UID (column 0x00), a row changed, a cell by
   column number, a column by name in a generated description, and a row's
   cell by its column's name in the description the SP holds;
+* the Locking SP's tables (since M5a): its Locking table's rows, the
+  global range and each range after it, its MBRControl row, and the size of
+  a byte table it holds, the MBR or the DataStore (Opal 2.30 Tables 36, 45
+  and 46, PDF 54 and 86-87);
 * an SP's life cycle: the LifeCycleState cell of the SP's row of the Admin
   SP's SP table (Core 4.1, PDF 91), the one place the TPer keeps it, which
   the Session Manager, Level 0's Locking descriptor and the jig read;
@@ -49,6 +53,10 @@ module Hsed.Sim.State
   , cellOf
   , columnOf
   , cellNamedIn
+    -- * The Locking SP's tables
+  , lockingRows
+  , mbrControl
+  , byteTableSize
     -- * Life cycles
   , spLifeCycle
     -- * TPER_RESET
@@ -67,8 +75,9 @@ import           Hsed.Core.Table         (Cell (..), ColNum, Row, TableDesc, col
 import           Hsed.Core.Types         (enumFromValue)
 import           Hsed.Core.UID           (UID)
 import           Hsed.Gen.Core.Enums     (Core_boolean (..))
-import           Hsed.Gen.Core.TableUIDs (uSPTable, uTPerInfoTable)
+import           Hsed.Gen.Core.TableUIDs (uLockingTable, uMBRControlTable, uSPTable, uTPerInfoTable)
 import           Hsed.Gen.Core.UIDs      (uSP_Admin)
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Sim.Types
 
 
@@ -169,6 +178,42 @@ cellOf = L.lookup
 --   describes no such table or column, or the row gives no cell in it.
 cellNamedIn :: SPState -> UID -> Text -> Row -> Maybe Cell
 cellNamedIn sps table name r = Map.lookup table (spsDescs sps) >>= \desc -> columnOf desc name >>= (`cellOf` r)
+
+
+-- * The Locking SP's tables
+
+-- | The rows of the Locking SP's Locking table, the global range and each
+--   range after it (Opal 2.30 Table 45, PDF 86: Locking_GlobalRange,
+--   Locking_Range1 and Locking_RangeNNNN, a row for each range
+--   'spLockingRanges' gives), in the order the fold gives them; none for a
+--   TPer without the table.
+--
+-- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
+-- >>> length (lockingRows (initialState defaultSimParams))
+-- 9
+lockingRows :: TPerState -> [Row]
+lockingRows = tableRows uSP_Locking uLockingTable
+
+-- | The Locking SP's MBRControl row, its one row (Opal 2.30 Table 46, PDF
+--   87); none for a TPer without it.
+--
+-- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
+-- >>> isJust (mbrControl (initialState defaultSimParams))
+-- True
+mbrControl :: TPerState -> Maybe Row
+mbrControl = listToMaybe . tableRows uSP_Locking uMBRControlTable
+
+-- | The size in bytes of an SP's byte table, by the SP's and the table's
+--   UIDs ("Hsed.Sim.Types".@spsBytes@: its Table row's Rows, Core
+--   5.3.2.3.8, PDF 157); none for a table the SP does not hold as a byte
+--   table.
+--
+-- >>> import Hsed.Gen.Core.TableUIDs (uMBRTable)
+-- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
+-- >>> byteTableSize uSP_Locking uMBRTable (initialState defaultSimParams)
+-- Just 134217728
+byteTableSize :: UID -> UID -> TPerState -> Maybe Natural
+byteTableSize sp table st = Map.lookup sp (tsSPs st) >>= fmap btSize . Map.lookup table . spsBytes
 
 
 -- * Life cycles

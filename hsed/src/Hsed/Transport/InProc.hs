@@ -34,7 +34,7 @@ import qualified RIO.Map            as Map
 import           RIO
 
 import           Hsed.Sim           (step, syncOf)
-import           Hsed.Sim.Types     (FoldProblem, Input (..), Output (..), SimParams (..), SyncState (..), TPerState, initialState,
+import           Hsed.Sim.Types     (FoldProblem, Input (..), Output (..), SimParams (..), SyncState (..), TPerState (..), initialState,
                                      initialStateProblems)
 import           Hsed.Version       (hsedVersion)
 import           Hsed.Wire          (mostCarried)
@@ -71,7 +71,11 @@ data Sim = Sim !TPerState !(Map Word16 Int)
 --   transport says it is a TPer, the simulator of this build, of Opal 2.30,
 --   with the parameters' ComIDs. Parameters its SPs' preconfiguration does
 --   not fold with are refused before anything opens, with what keeps them
---   from folding ("Hsed.Sim.Types".'initialStateProblems'; M5a).
+--   from folding ("Hsed.Sim.Types".'initialStateProblems'; M5a): a
+--   Locking SP parameter out of its bounds among them ('OutOfBounds'). The
+--   TPer's state is evaluated, every SP's tables with every cell, before
+--   the transport is given, so that the fold's cost is the open's, not the
+--   first command's.
 newInProc :: SimParams -> InProcOpts -> IO (Either [FoldProblem] (Transport 'ReadWrite, SimControl))
 newInProc params opts = case initialStateProblems p of
   []       -> Right <$> opened
@@ -79,7 +83,9 @@ newInProc params opts = case initialStateProblems p of
   where
     p = params { spUnits = ioUnits opts }
     opened = do
-      var <- newMVar (Sim (initialState p) mempty)
+      st0 <- evaluate (initialState p)
+      evaluate (foldr seq () (tsSPs st0))
+      var <- newMVar (Sim st0 mempty)
       let transport = MkTransport
             { tExchange = \r -> if lenBytes r > mostCarried (ioUnits opts)
                                     then pure (Response OtherInvalidCommandParameter mempty)

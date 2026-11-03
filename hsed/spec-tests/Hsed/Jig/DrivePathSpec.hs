@@ -49,17 +49,19 @@ NoSessions waived, the way kept built.
   reached the drive, design 13.29 (d) named in the report; the commands
   after it are answered transport failures, none reaching the kext; and the
   run exits 1.
-* A kext that answers UCT-03's Get only after the host has given up on it
-  (the M4c review): the answer judged and recorded, the exchange given up
-  all the same, and the drive latched, so that nothing more reaches the
-  kext, End of Session and STACK_RESET included, each command after noted
-  as not issued; the run exits 1, naming the session the drive may still
-  hold for @--recover@.
+* A kext that answers UCT-03's Get a second after it was asked, the host
+  waiting 50 ms for each of the drive's commands (the M4c review): the
+  answer judged and recorded, the exchange given up all the same, and the
+  drive latched, so that nothing more reaches the kext, End of Session and
+  STACK_RESET included, each command after noted as not issued; the run
+  exits 1, naming the session the drive may still hold for @--recover@.
 
 The golden CDBs are ATA PASS-THROUGH (12), A1h: TRUSTED RECEIVE (5Ch, PIO
 Data-In, bytes 1-2 08h 0Eh) or TRUSTED SEND (5Eh, PIO Data-Out, 0Ah 06h),
 byte 3 the security protocol, byte 4 the 512-byte blocks, bytes 6 and 7
-the ComID's low and high byte (SIIS 1.20 Tables 16-17, PDF 40-41): Level 0
+the ComID's low and high byte (the bytes SAT-5's and ACS-5's, SIIS 1.20's
+references [21] and [22], PDF 17; the fields' values its Tables 16-17, PDF
+40-41): Level 0
 Discovery, 4 blocks on ComID 0x0001 (Core Table 26, PDF 55; 3.3.6, PDF
 67); a ComPacket's IF-SEND, one block on the base 0x1004, and an IF-RECV
 there of 2048 bytes, the host's MaxComPacketSize as Opal assumes it before
@@ -338,7 +340,8 @@ spec = describe "a drive's path without the drive: hsed-jig over the fake kext, 
 
     it "a kext answering UCT-03's Get after the host gave up on it: the answer recorded, the drive latched, nothing more reaching the kext (no End of Session, no STACK_RESET), each command after noted not issued; exit 1, the session named for --recover" $ do
       -- the Get's answer is the second ComPacket IF-RECV with STACK_RESET before the case, the third after the idle probe
-      let slow = noFaults { ffSlow = Just (PacketRecv, if reset then 2 else 3, 300000) }
+      -- a second against 50 ms, so that a loaded runner's timer has the rest to fire in
+      let slow = noFaults { ffSlow = Just (PacketRecv, if reset then 2 else 3, 1000000) }
       tper@(_, control) <- newTPer
       (code, json, cdbs) <- overKext slow tper (impatient reset)
       code `shouldBe` ExitFailure 1

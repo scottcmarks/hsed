@@ -90,9 +90,25 @@ counts, and the CommonNames of the Table and MethodID tables (the issuing
 template's name, PDF 156, 161) are a recorded deviation (design 13.31 (a),
 since the M4b review).
 
+Since M5a the reader reads the Locking SP's tables (Opal Tables 34-48, PDF
+52-89), where Opal prints some cells otherwise, by readings in the reader,
+not errata (Scott's answer 1 to the M5 plan; design 13.33): a Set_Type
+column is a set of its enumeration's labels ('setKind': Table 45's
+LockOnReset @Power Cycle@, PDF 86, Core Table 128, PDF 119); a template's
+UID may print its placeholder's letters for its last bytes, @00 00 08 02 00
+03 NN NN@, with no @(+…)@ (Tables 45, 47 and 48, PDF 87-89: 'pcBare'); a
+value the TPer chooses may print a least value, @0x08000000 min@ (Table 36,
+PDF 54: 'vendorAtLeast'), or @SID or MSID@ (Table 41, PDF 84:
+'vendorMarker'); a reference may print one of two names, @K_AES_128[256]_Range1_Key@
+(Table 45 and its note *LT1, PDF 86: 'alternativeNames'); and two reviewed
+lists read what no convention reads: the cells whose note's number the
+extractor joins to the value ('noteMarkerCells': Table 41's @SID or MSID1@
+and Table 44's @81@, PDF 84, 86) and the misspelt cells ('cellTypos': Table
+43's @uniteger_8@, PDF 85).
+
 Codes ('cellCodes', claimed here, given by the rule that reads the cell from
-its remarks): @N-PRECONF-LABEL@ (a Note) and @W-PRECONF-NAME-LENGTH@ (a
-Warning).
+its remarks): @N-PRECONF-LABEL@, @N-PRECONF-NOTE@ and @N-CELL-NORMALISED@
+(Notes) and @W-PRECONF-NAME-LENGTH@ (a Warning).
 -}
 module Hsed.Spec.Readers.Cell
   ( -- * The types a column is read by
@@ -120,8 +136,11 @@ module Hsed.Spec.Readers.Cell
   , printedText
   , joinedText
   , vendorMarker
+  , vendorAtLeast
+  , alternativeNames
     -- * Reviewed readings of the Locking SP's tables (M5a)
   , noteMarkerCells
+  , noteMarked
   , cellTypos
   , setKind
     -- * Codes
@@ -140,11 +159,15 @@ import           RIO
 
 import           Hsed.Core.Types        (GeneralKind (..), Operand (..), RestrictedKind (..), TableKind (..), TableRef (..),
                                          TypeDef (..), TypeRef (..), formatName)
-import           Hsed.Spec.Anchor       (AnchorId)
-import           Hsed.Spec.Common       (CodeDef (..), Reports (..), Severity (..), SpecId)
+import           Hsed.Spec.Anchor       (AnchorId (..))
+import           Hsed.Spec.Common       (CodeDef (..), Reports (..), Severity (..), SpecId (..))
 import qualified Hsed.Spec.Gen          as Gen
 import           Hsed.Spec.IR           (CellIR (..))
 import           Hsed.Spec.Readers.Text (nameKey, readNumber)
+
+
+-- $setup
+-- >>> :set -XOverloadedStrings
 
 
 -- * The types a column is read by
@@ -189,7 +212,10 @@ data ColKind
 --   Simple_Type's base is one of the four base types of Core 5.1.1 (@bytes@,
 --   @max_bytes@, @uinteger@, @integer@), a Type object whose Format is
 --   @Base_Type@; @uid@, @password@ and @ACE_columns@ are read by their names,
---   the other kinds by their Formats.
+--   the other kinds by their Formats. Since M5a a Set_Type but ACE_columns
+--   is a list of the values of its range, each read as a label of the
+--   enumeration 'setKind' gives it, or as a number (Core 5.1.1 m., PDF 98);
+--   and a type name 'cellTypos' lists is read as the name it misspells.
 colKind :: TypeEnv -> Text -> Either Text ColKind
 colKind env = kindVia env []
 
@@ -200,9 +226,11 @@ kindVia :: TypeEnv -> [Text] -> Text -> Either Text ColKind
 kindVia env seen name
   | name `elem` seen = Left (name <> "'s Format names its own type, through " <> T.intercalate " -> " (reverse (name : seen)))
   | otherwise = case teType env name of
-      Nothing -> case defaulted name of
-        Just (t, v) | isJust (teType env t) -> KDefault v <$> kindVia env (name : seen) t
-        _                                   -> Left (name <> " names no Type object")
+      Nothing
+        | Just t <- lookup name cellTypos, isJust (teType env t) -> kindVia env (name : seen) t
+        | otherwise -> case defaulted name of
+            Just (t, v) | isJust (teType env t) -> KDefault v <$> kindVia env (name : seen) t
+            _                                   -> Left (name <> " names no Type object")
       Just (Left _)   -> Left (name <> "'s Format did not parse")
       Just (Right td) -> kindOf td
   where
@@ -229,7 +257,12 @@ kindVia env seen name
       ListType _ (Ref e) -> case typeOf e of
         Just (AltType alts) | Just k <- expression alts -> Right k
         _                                               -> KList <$> kindVia env (name : seen) e
-      SetType _ | name == "ACE_columns" -> Right KColumns
+      SetType ranges
+        | name == "ACE_columns" -> Right KColumns
+        | otherwise -> do
+            rs <- maybe (Left (name <> "'s range is not literal")) Right (traverse lits ranges)
+            let enum = fromMaybe name (setKind env name)
+            Right (KList (KEnum enum rs (teLabels env enum)))
       GeneralRefTable ByteTable -> Right KByteTableRef
       StructType _ -> Right (KStruct name)
       other -> Left ("a column of type " <> name <> " (" <> formatName other <> ") is not read from a table cell")
@@ -284,7 +317,7 @@ readCell resolve kind raw = bimap problemText fst (readCellWith rv kind raw)
   where
     rv = Resolver
       { rvRef    = \n tables -> (n,) <$> resolve n tables
-      , rvColumn = \n -> maybe (Left (tshow n <> " names a column, and no table is given to read it in")) (Right . fromInteger) (readNumber n) }
+      , rvColumn = \n -> maybe (Left (tshow n <> " names a column, and no table is given to read it in")) (Right . (, Nothing) . fromInteger) (readNumber n) }
 
 
 -- * Reading a cell with its names, its columns and its remarks
@@ -293,10 +326,12 @@ readCell resolve kind raw = bimap problemText fst (readCellWith rv kind raw)
 --   names among the tables its type allows (the name it is kept under, and
 --   its UID), and the number of a column an item of an ACE's Columns names,
 --   by its name or its number, in the table an ACE applies to ('readCell'
---   takes a number as it is, there being no table to hold it to).
+--   takes a number as it is, there being no table to hold it to), with the
+--   column's name where the item names it otherwise than as printed (since
+--   M5a: by the end of its name, 'ColumnRead').
 data Resolver = Resolver
   { rvRef    :: Text -> [TableRef] -> Either Text (Text, [Word8])
-  , rvColumn :: Text -> Either Text Int
+  , rvColumn :: Text -> Either Text (Int, Maybe Text)
   }
 
 -- | Why a cell does not read.
@@ -320,6 +355,9 @@ data Remark
     --   enumeration's label, and whether it was read by its first letters (else case and spaces aside)
   | OverLength !Text !Int !Int
     -- ^ a text longer than its type allows, kept as printed: the text, its bytes, the type's
+  | ColumnRead !Text !Text
+    -- ^ an item of an ACE's Columns read as the one column whose name it ends: the item as
+    --   printed and the column's name (Opal Table 39's @DoneOnReset@ for MBRDoneOnReset, PDF 81)
   deriving (Eq, Show)
 
 -- | Read a non-blank cell, its line breaks as @\\n@, as a column of a kind
@@ -360,7 +398,7 @@ readCellWith rv kind raw = case kind of
     | nameKey tight == "all" -> Right (CvList [], [])
     | otherwise -> do
         ns <- traverse column (commaItems tight)
-        Right (CvList [ CvUInt (toInteger n) Nothing | n <- ns ], [])
+        Right (CvList [ CvUInt (toInteger n) Nothing | (_, n, _) <- ns ], [ ColumnRead item c | (item, _, Just c) <- ns ])
   KByteTableRef
     | isNull tight -> Right (nullRef tight, [])
     | otherwise    -> Left (Unread (tshow tight <> " is no byte table's reference: a preconfiguration prints Null, the NULL UID"))
@@ -387,7 +425,7 @@ readCellWith rv kind raw = case kind of
         Just (label, v, byPrefix) -> Right (CvEnum tight v, [LabelRead name tight label byPrefix])
         Nothing -> Left (Unread (tshow flat <> " is no label of " <> name <> "'s enumeration ("
                                  <> T.intercalate ", " (map fst labelled) <> ")"))
-    column item = first Unresolved (rvColumn rv item)
+    column item = bimap Unresolved (\(n, c) -> (item, n, c)) (rvColumn rv item)
     -- infix to postfix (Core 5.3.4.3.2 and Table 210, PDF 226-227), each operand an object's reference
     expression opType ops tables = do
       items <- first BadExpr (postfix ops (exprWords ops raw))
@@ -566,13 +604,19 @@ data PrintedCell = PrintedCell
   , pcNotes       :: ![Text]         -- ^ its footnote markers as printed (@*AC1@), and a digit after its placeholder
   , pcOptional    :: !Bool           -- ^ it printed @(O)@
   , pcPlaceholder :: !(Maybe Text)   -- ^ what its @(+…)@ holds, its words single-spaced: @XX@, @XX XX@, @MMMM@
+  , pcBare        :: !Bool           -- ^ its placeholder printed for the UID's last bytes with no @(+…)@,
+                                     --   @00 00 08 02 00 03 NN NN@, those bytes read as zeroes (since M5a)
   }
   deriving (Eq, Show)
 
 -- | A cell's conventions read: its text by its IR lines while they give it
 --   (an edited or corrected text by itself), its placeholder (one per cell)
 --   and the digits after it, its markers and @(O)@ word by word, its quotes
---   character by character.
+--   character by character. A UID that prints its placeholder's letters for
+--   its last bytes and no @(+…)@ (Opal Table 45's Locking_RangeNNNN, @00 00
+--   08 02 00 03 NN NN@, PDF 87, and Tables 47 and 48's, PDF 89, where Tables
+--   38-41 print @(+NN NN)@ after a base) is that template, its base those
+--   bytes zero ('pcBare').
 printedCell :: CellIR -> PrintedCell
 printedCell c = PrintedCell
   { pcLines       = filter (not . T.null) (map (T.strip . T.filter (not . isQuote)) kept)
@@ -580,10 +624,13 @@ printedCell c = PrintedCell
   , pcNotes       = superscript <> filter isMarker (concatMap T.words lns)
   , pcOptional    = "(O)" `elem` concatMap T.words lns
   , pcPlaceholder = placeholder
+  , pcBare        = bare
   }
   where
     source = if not (null c.lines) && T.intercalate " " c.lines == c.text then c.lines else [c.text]
-    (placeholder, superscript, rest) = takePlaceholder (T.intercalate "\n" source)
+    (placeholder, superscript, rest, bare) = case takePlaceholder (T.intercalate "\n" source) of
+      (Nothing, _, t) | Just (letters, t') <- bareTemplate t -> (Just letters, [], t', True)
+      (p, digits, t)                                         -> (p, digits, t, False)
     lns  = T.lines rest
     kept = [ T.unwords [ w | w <- T.words l, not (isMarker w), w /= "(O)" ] | l <- lns ]
 
@@ -596,6 +643,25 @@ takePlaceholder t = case DT.breakOn "(+" t of
         let (digits, after) = T.span C.isDigit (T.drop 1 close)
         in (Just (T.unwords (T.words inside)), [ digits | not (T.null digits) ], before <> after)
   _ -> (Nothing, [], t)
+
+-- | A UID of eight bytes whose last one or two print a placeholder's
+--   letters, a letter twice for each byte (@NN NN@; never @TT TT TT TT@,
+--   every object's): the letters single-spaced, and the
+--   text with those bytes zero; markers and @(O)@ aside.
+bareTemplate :: Text -> Maybe (Text, Text)
+bareTemplate t = case L.span (isJust . readHexByte') value of
+  (hex, letters@(l : _))
+    | length hex + length letters == 8, length letters <= 2, all (== l) letters, isLetters l ->
+        Just (T.unwords letters, T.intercalate "\n" (map (T.unwords . map zeroed . T.words) (T.lines t)))
+  _ -> Nothing
+  where
+    value = [ w | w <- T.words t, not (isMarker w), w /= "(O)" ]
+    readHexByte' w = if T.length w == 2 && T.all C.isHexDigit w then Just w else Nothing
+    -- a placeholder's letters, not the TT of every object's shorthand (Opal *AC1-*AC7, PDF 38-39)
+    isLetters w = case T.unpack w of
+      [a, b] -> a == b && C.isAsciiUpper a && not (C.isHexDigit a) && a /= 'T'
+      _      -> False
+    zeroed w = if isLetters w && Just w == listToMaybe (reverse value) then "00" else w
 
 -- | A footnote marker: an asterisk, capitals, digits (@*AC1@, @*ACE1@).
 isMarker :: Text -> Bool
@@ -623,12 +689,52 @@ joinedText kind pc
   | maybe False identifierKind kind = T.concat (pcLines pc)
   | otherwise                       = T.unwords (pcLines pc)
 
--- | A value the TPer chooses: @VU@ (vendor unique, Opal Table 1, PDF 12) or
---   @MSID@ (C_PIN_MSID's PIN, Table 25, PDF 48), printed alone and unquoted.
+-- | A value the TPer chooses: @VU@ (vendor unique, Opal Table 1, PDF 12),
+--   @MSID@ (C_PIN_MSID's PIN, Table 25, PDF 48), or, since M5a, @SID or
+--   MSID@ (the Locking SP's C_PIN_Admin1's PIN, Opal Table 41 and its note 1,
+--   PDF 84: the SID's PIN where Activate copies it, the MSID under a
+--   Manufactured OFS, 5.1.1.2, PDF 91), printed alone and unquoted.
 vendorMarker :: PrintedCell -> Maybe Text
-vendorMarker pc = case pcLines pc of
-  [l] | l `elem` ["VU", "MSID"], not (pcQuoted pc) -> Just l
+vendorMarker pc
+  | not (pcQuoted pc), l `elem` ["VU", "MSID", "SID or MSID"] = Just l
+  | otherwise                                                 = Nothing
+  where l = T.unwords (pcLines pc)
+
+-- | A value the TPer chooses no less than the one printed before @min@,
+--   unquoted: the Locking SP's MBR and DataStore Rows (Opal Table 36, PDF
+--   54; 4.3.5.4 and 4.3.8.1, PDF 89-90), the value and the cell as printed
+--   (since M5a).
+--
+-- >>> let c t = PrintedCell [t] False [] False Nothing False
+-- >>> map (vendorAtLeast . c) ["0x08000000 min", "0x00A00000 min", "0x08000000", "min"]
+-- [Just (134217728,"0x08000000 min"),Just (10485760,"0x00A00000 min"),Nothing,Nothing]
+vendorAtLeast :: PrintedCell -> Maybe (Natural, Text)
+vendorAtLeast pc = case T.words printed of
+  [n, "min"] | not (pcQuoted pc), Just v <- readNumber n, v >= 0 -> Just (fromInteger v, printed)
+  _                                                               -> Nothing
+  where printed = T.unwords (pcLines pc)
+
+-- | The two names a reference printing one of them prints, the second's
+--   differing characters in brackets after the first's: the Locking SP's
+--   ActiveKey, a K_AES_128 or a K_AES_256 key, whichever table the TPer
+--   holds (Opal Table 45 and its note *LT1, PDF 86; since M5a).
+--
+-- >>> map alternativeNames ["K_AES_128[256]_Range1_Key", "K_AES_128[256]_RangeNNNN_Key", "Admins", "K_[256]"]
+-- [Just ["K_AES_128_Range1_Key","K_AES_256_Range1_Key"],Just ["K_AES_128_RangeNNNN_Key","K_AES_256_RangeNNNN_Key"],Nothing,Nothing]
+alternativeNames :: Text -> Maybe [Text]
+alternativeNames t = case DT.breakOn "[" t of
+  (before, rest)
+    | Just (inside, after) <- bracketed rest, not (T.null inside), T.length before > T.length inside
+    , T.all C.isAlphaNum (T.takeEnd (T.length inside) before) ->
+        Just [before <> after, T.dropEnd (T.length inside) before <> inside <> after]
   _ -> Nothing
+  where
+    bracketed r = do
+      body <- T.stripPrefix "[" r
+      let (inside, close) = DT.breakOn "]" body
+      after <- T.stripPrefix "]" close
+      guard (not (T.any (`elem` ("[]" :: String)) after))
+      pure (inside, after)
 
 
 -- * Reviewed readings of the Locking SP's tables (M5a)
@@ -637,34 +743,61 @@ vendorMarker pc = case pcLines pc of
 --   after the value, which the extractor joins to it: the spec, the table,
 --   the row (1-based, as findings count them), the column's header, the
 --   cell as the IR prints it, and the note's number. Each is read as its
---   value and the note ('Hsed.Core.Preconfig.NoteMarked').
+--   value and the note ('Hsed.Core.Preconfig.NoteMarked', 'noteMarked'),
+--   with the Note @N-PRECONF-NOTE@; a cell printed otherwise than listed is
+--   read as printed, so that a corrected extraction is not read twice.
 --
---   G1: a working stub, empty, so that no cell is read otherwise yet. G1
---   fills it with Opal Table 41 row 1's PIN, @SID or MSID1@ (PDF 84), and
---   Table 44 row 1's MaxRanges, @81@ (PDF 86), each read with a Note.
+--   * Opal Table 41 row 1, C_PIN_Admin1's PIN, @SID or MSID1@ (PDF 84): @SID
+--     or MSID@, a value the TPer chooses ('vendorMarker'), and note 1, which
+--     the table's foot gives (\"SID or MSID\": the MSID under a Manufactured
+--     OFS, the SID's PIN where Activate copies it, 5.1.1.2, PDF 91).
+--   * Opal Table 44 row 1, LockingInfo's MaxRanges, @81@ (PDF 86): @8@ and
+--     note 1, which the table's foot gives (an SSC's least, 4.3.5.2, PDF 88).
 noteMarkerCells :: [(SpecId, AnchorId, Int, Text, Text, Int)]
-noteMarkerCells = []
+noteMarkerCells =
+  [ (SpecId "opal-2.30", TableId 41, 1, "PIN", "SID or MSID1", 1)
+  , (SpecId "opal-2.30", TableId 44, 1, "MaxRanges", "81", 1) ]
+
+-- | A cell 'noteMarkerCells' lists, by its spec, its table, its 1-based row
+--   and its column's header, printed as listed: the note's number and the
+--   cell with the number taken off its value.
+--
+-- >>> let c t = PrintedCell [t] False [] False Nothing False
+-- >>> noteMarked (SpecId "opal-2.30") (TableId 44) 1 "MaxRanges" (c "81")
+-- Just (1,PrintedCell {pcLines = ["8"], pcQuoted = False, pcNotes = [], pcOptional = False, pcPlaceholder = Nothing, pcBare = False})
+-- >>> fmap (pcLines . snd) (noteMarked (SpecId "opal-2.30") (TableId 41) 1 "PIN" (c "SID or MSID1"))
+-- Just ["SID or MSID"]
+-- >>> noteMarked (SpecId "opal-2.30") (TableId 44) 1 "MaxRanges" (c "8")
+-- Nothing
+noteMarked :: SpecId -> AnchorId -> Int -> Text -> PrintedCell -> Maybe (Int, PrintedCell)
+noteMarked sid table row header pc = listToMaybe
+  [ (note, pc { pcLines = reverse (T.stripEnd l' : earlier) })
+  | (s, t, r, h, printed, note) <- noteMarkerCells, s == sid, t == table, r == row, nameKey h == nameKey header
+  , T.unwords (pcLines pc) == printed
+  , l : earlier <- [reverse (pcLines pc)], Just l' <- [T.stripSuffix (tshow note) l], not (T.null (T.strip l')) ]
 
 -- | The reviewed misspellings of a cell, each as printed and as read, as
---   'Hsed.Spec.Shape.headerTypos' is for a header.
---
---   G1: a working stub, empty. G1 adds Opal Table 43's @uniteger_8@ for
---   @uinteger_8@ (PDF 85), read with a Note.
+--   'Hsed.Spec.Shape.headerTypos' is for a header, each read with the Note
+--   @N-CELL-NORMALISED@: Opal Table 43's Column Type @uniteger_8@ for
+--   LowestAlignedLBA, @uinteger_8@ (PDF 85; Core Table 161, PDF 126, and
+--   Core Table 225's column, PDF 272). 'colKind' reads a type it lists by
+--   the name it misspells.
 cellTypos :: [(Text, Text)]
-cellTypos = []
+cellTypos = [("uniteger_8", "uinteger_8")]
 
 -- | The enumeration whose labels name the values of a Set_Type (Core
 --   5.1.1 m., PDF 98: a set of unsigned integers in a range, more than one
---   of the options selected), by the Set_Type's name: @reset_types@, whose
---   Set Values Core Table 128 labels (PDF 119), and @gen_status@ and
---   @protect_types@, in the Locking SP's tables (Opal Tables 42, 45 and 46,
---   PDF 84-88), the column then read as a set of those labels (@Power
---   Cycle@).
---
---   G1: a working stub, Nothing for every type, so that a Set_Type column
---   is read as it is today, by no kind ('colKind').
+--   of the options selected), by the Set_Type's name: the enumeration of its
+--   own name where the spec or its base labels one (@reset_types@, whose Set
+--   Values Core Table 128 labels, PDF 119, and Opal Table 16 since it
+--   replaces it, PDF 32; @gen_status@, Core Table 87, PDF 109-110), so that
+--   the Locking SP's LockOnReset, ContOnReset, GeneralStatus and
+--   MBRDoneOnReset (Opal Tables 45 and 46, PDF 86-88) read @Power Cycle@ as
+--   a label; Nothing where none labels it (@protect_types@, Core Table 123,
+--   PDF 118, of which Opal Table 42 prints VU, PDF 84), its values then read
+--   as numbers ('colKind').
 setKind :: TypeEnv -> Text -> Maybe Text
-setKind _ _ = Nothing
+setKind env name = name <$ listToMaybe (teLabels env name)
 
 
 -- * Codes
@@ -675,4 +808,6 @@ setKind _ _ = Nothing
 cellCodes :: [CodeDef]
 cellCodes =
   [ CodeDef "N-PRECONF-LABEL"       [Note]    (AsPrinted "an enumeration's label printed in another case or spacing, or by its first letters (T for True), read as the label")
+  , CodeDef "N-PRECONF-NOTE"        [Note]    (AsPrinted "a reviewed cell whose last digit is the number of a note printed after its value (SID or MSID1, 81), read as the value and the note")
+  , CodeDef "N-CELL-NORMALISED"     [Note]    (AsPrinted "a reviewed misspelt cell (uniteger_8) read as the word it misspells")
   , CodeDef "W-PRECONF-NAME-LENGTH" [Warning] (Defect "a text longer than its type allows (a name of more than 32 bytes), kept as printed") ]

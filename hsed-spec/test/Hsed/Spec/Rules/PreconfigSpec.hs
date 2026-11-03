@@ -54,6 +54,20 @@ under -Wall -Werror against the committed generated modules (since the M4b
 review: the stand-in Opal TableDescs of the lead's answer 16, which shadowed
 the generated one, retired); and the legend's classes by column with a
 hand-built scale (G1's classifier).
+
+Then, since M5a, Opal's Locking SP (Tables 34-42 and 44-48, PDF 52-89) under
+the M5a sidecar ('m5aOpalHsa', the scratch sidecar's doc line with @rule
+preconfig@ and @rule sig@, T17, T49 and the prose lines; T14-T16 are G2's),
+read over Core: no Error at any of its tables and none left out; each
+reading with the cells it reads (Scott's answer 1: readings, not errata):
+T35's own SPTemplates row (N-PRECONF-UID-SP), T36's least values, T38's
+template bases held, T39's DoneOnReset and row 13's letters, T41's SID or
+MSID and T44's 81 with their notes (N-PRECONF-NOTE), T42's UID (name), T43's
+uniteger_8 (N-CELL-NORMALISED), T45's ActiveKey of two and LockOnReset a
+set, T46's header, the bare NN NN templates of T45, T47 and T48
+(N-PRECONF-TEMPLATE-UID), the homonyms of the two SPs (N-PRECONF-HOMONYM);
+the generated LockingSP module, type-checked, and the Admin SP's module
+unchanged by it.
 -}
 module Hsed.Spec.Rules.PreconfigSpec (spec) where
 
@@ -78,7 +92,7 @@ import           Hsed.Spec.Compile         (CompileResult (..), compileIR)
 import           Hsed.Spec.CoreIR
 import qualified Hsed.Spec.Gen             as Gen
 import           Hsed.Spec.IR              (CellIR (..), SpecIR (..), TableIR (..), readIR)
-import           Hsed.Spec.Readers.Cell    (CellValue (..), ColKind (..), Remark (..), TypeEnv (..))
+import           Hsed.Spec.Readers.Cell    (CellValue (..), ColKind (..), Problem (..), Remark (..), TypeEnv (..))
 import           Hsed.Spec.RuleDef         (BoundTable (..), Classification (..), RuleDef (..))
 import           Hsed.Spec.Rules           (classify, explain)
 import           Hsed.Spec.Rules.Legend    (LegendClass (..), LegendScale (..))
@@ -124,6 +138,18 @@ compiles beside modName text = withSystemTempDirectory "hsed-preconfig" $ \dir -
     Left (e :: IOException)         -> pendingWith ("cannot run " <> prog <> " here: " <> show e)
     Right (ExitSuccess, _, _)       -> pure ()
     Right (ExitFailure _, out, err) -> expectationFailure (prog <> " rejected the module:\n" <> out <> err)
+
+-- | The M5a sidecar (the scratch sidecar of M5a's scaffold, build-scratch/opal-2.30.m5a.hsa, without its
+--   T14-T16 lines, G2's, whose 'core N' Opal resolves only once G2 merges): every preconfiguration table of
+--   sections 4.2 and 4.3 bound by the doc line's rule token, the Locking SP's among them.
+m5aOpalHsa :: Text
+m5aOpalHsa = T.unlines
+  [ "opal-2.30 | doc | doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow"
+      <> " & rule enumValues & rule tableDesc & rule preconfig & rule sig"
+  , "opal-2.30 | T17 | propsReq"
+  , "opal-2.30 | T49 | enumInDescription (replaces [core 102, core 103])"
+  , "opal-2.30 | T2 | prose", "opal-2.30 | T7 | prose", "opal-2.30 | T9 | prose", "opal-2.30 | T10 | prose"
+  , "opal-2.30 | T11 | prose", "opal-2.30 | T12 | prose" ]
 
 spec :: Spec
 spec = do
@@ -504,11 +530,16 @@ spec = do
         codeOf "W-PRECONF-TEMPLATE-NAME" (setCell "T24" 5 1 "\"AdminYY\"" opal) `shouldBe`
           [ "W-PRECONF-TEMPLATE-NAME opal-2.30.pdf#page=48&T24: row 6 AdminYY: the template's Name \"AdminYY\" does not carry its"
             <> " placeholder's letters XX, so every instance would take that one Name" ]
-      it "warns W-PRECONF-DEFAULT at a column whose type gives no default (Table 43's uniteger_8, PDF 85, at M5), none at M4b's twelve tables" $ do
+      it "warns W-PRECONF-DEFAULT at a column whose type gives no default (a misspelt type cellTypos does not list), none at M4b's twelve tables" $ do
         codeOf "W-PRECONF-DEFAULT" opal `shouldBe` []
-        codeOf "W-PRECONF-DEFAULT" (setCell "T26" 0 3 "uniteger_8" opal) `shouldBe`
-          [ "W-PRECONF-DEFAULT opal-2.30.pdf#page=50&T27: the column ProgrammaticResetEnable (0x08, type uniteger_8) of T211 TPerInfo has no"
-            <> " default: uniteger_8 names no Type object; a row that leaves it blank holds no value there (design 13.31 (a))" ]
+        codeOf "W-PRECONF-DEFAULT" (setCell "T26" 0 3 "uintger_8" opal) `shouldBe`
+          [ "W-PRECONF-DEFAULT opal-2.30.pdf#page=50&T27: the column ProgrammaticResetEnable (0x08, type uintger_8) of T211 TPerInfo has no"
+            <> " default: uintger_8 names no Type object; a row that leaves it blank holds no value there (design 13.31 (a))" ]
+      it "reads a type cellTypos lists as the type it misspells, with a Note and no W-PRECONF-DEFAULT (M5a: Table 43's uniteger_8, PDF 85)" $ do
+        codeOf "W-PRECONF-DEFAULT" (setCell "T26" 0 3 "uniteger_8" opal) `shouldBe` []
+        codeOf "N-CELL-NORMALISED" (setCell "T26" 0 3 "uniteger_8" opal) `shouldBe`
+          [ "N-CELL-NORMALISED opal-2.30.pdf#page=50&T27: the column ProgrammaticResetEnable (0x08) of T211 TPerInfo: its type \"uniteger_8\""
+            <> " is read as uinteger_8, a reviewed misspelling (Hsed.Spec.Readers.Cell.cellTypos)" ]
       it "reads and reports the cells of the columns a failing header does name (Table 45's hidden reads at M5)" $ do
         let broken = setCell "T24" 0 4 "Admin" (setHeaderCell "T24" 0 6 "Secured" opal)
         codeOf "C-PRECONF-HEADER" broken `shouldBe`
@@ -614,3 +645,121 @@ spec = do
                                 , LegendClass 179 True WritePersonalizable, LegendClass 179 False WriteFixed ] "(N)" 3
         [ map fst (cellClasses scale p r) | Just p <- [readOf 25], r <- pRows p ] `shouldBe` replicate 4 [0 .. 7]
         [ map fst (cellClasses scale p r) | Just p <- [readOf 22], r <- take 1 (pRows p) ] `shouldBe` [[0 .. 14]]
+
+  withCore $ \corePristine -> withOpal $ \opalPristine -> do
+    base <- runIO (mkContext Scott <$> (committedHsa >>= annotated corePristine))
+    opal <- runIO (annotated opalPristine m5aOpalHsa)
+    m4bOpal <- runIO (annotated opalPristine m4bOpalHsa)
+    let octx = opalOver base opal
+        ps = preReads octx
+        locking = [34 .. 42] <> [44 .. 48] :: [Int]
+        anchors = map TableId locking
+        found = [ f | f <- checkIR (Just base) Scott opal, Cm.anchor f `elem` map (Just . renderAnchorId) anchors ]
+        codeOf c = [ renderFinding f | f <- found, Cm.code f == c ]
+        readOf n = listToMaybe [ p | p <- ps, btAnchor (pBound p) == TableId n ]
+        rowsOf n = [ (fromMaybe "" (lookup "Name" (prValues r)), prRow r + 1, [ (crName c, cr) | (_, c, cr) <- rdCells rd ])
+                   | Just p <- [readOf n], (r, rd) <- zip (pRows p) (pReads p) ]
+        cellAt n row col = listToMaybe [ cr | (_, i, cs) <- rowsOf n, i == row, (cn, cr) <- cs, cn == col ]
+        shapeAt n row = listToMaybe [ rdShape rd | Just p <- [readOf n], (r, rd) <- zip (pRows p) (pReads p), prRow r + 1 == row ]
+        compiled = either (throwString . show) pure (compileIR (Just base) Scott opal)
+        moduleOf m = fromMaybe "" . lookup m . crModules <$> compiled
+        ref n bs = ReadValue (CvRef n bs) []
+        rowsOf' ir' n = [ (fromMaybe "" (lookup "Name" (prValues r)), prRow r + 1, [ (crName c, cr) | (_, c, cr) <- rdCells rd ])
+                        | p <- preReads (opalOver base ir'), btAnchor (pBound p) == TableId n, (r, rd) <- zip (pRows p) (pReads p) ]
+        powerCycle = ReadValue (CvList [CvEnum "Power Cycle" 0]) []
+
+    describe "Opal's Locking SP (M5a), Tables 34-42 and 44-48 (PDF 52-89), read over Core" $ do
+      it "binds the fourteen tables under the M5a sidecar, each read against its table's description" $
+        [ n | p <- ps, TableId n <- [btAnchor (pBound p)], n `elem` locking ] `shouldBe` locking
+      it "finds no Error at them, and compile leaves none of them out" $ do
+        filter (T.isPrefixOf "C-") (map (T.takeWhile (/= ' ')) (codeOf "C-PRECONF-CELL" <> codeOf "C-ACL-REFS" <> codeOf "C-UID-NAME"
+                                                                <> codeOf "C-UID-TABLE" <> codeOf "C-PRECONF-HEADER")) `shouldBe` []
+        [ renderFinding f | f <- found, isError f ] `shouldBe` []
+        cr <- compiled
+        [ a | (a, _) <- crExcluded cr, a `elem` anchors ] `shouldBe` []
+
+    describe "the Locking SP's readings (Scott's answer 1 to the M5 plan: readings in hsedc, no errata)" $ do
+      it "T35: keeps the printed 00 00 00 03 00 00 00 02 of the SP's own SPTemplates row Locking, naming no UID for it (PDF 53; Core T247, PDF 305-306)" $ do
+        cellAt 35 2 "UID" `shouldBe` Just (ReadValue (CvUID [0, 0, 0, 3, 0, 0, 0, 2]) [])
+        codeOf "N-PRECONF-UID-SP" `shouldBe`
+          [ "N-PRECONF-UID-SP opal-2.30.pdf#page=53&T35: row 2 Locking: the Locking SP's own SPTemplates row at 00 00 00 03 00 00 00 02,"
+            <> " which core-2.01 T247 row 2 gives Admin, where core-2.01 T247 row 6 gives uSPTemplates_Locking 00 00 00 03 00 00 00 06:"
+            <> " an SP's SPTemplates rows are its own, so no name is generated for it" ]
+        lns <- T.lines <$> moduleOf "Hsed.Gen.Opal.Preconfig.LockingSP"
+        filter ("uSPTemplates_" `T.isPrefixOf`) lns `shouldBe` []
+      it "T36: reads the MBR's and the DataStore's Rows, 0x08000000 min and 0x00A00000 min, as least values the TPer chooses (PDF 54)" $
+        map (\row -> cellAt 36 row "Rows") [13, 16] `shouldBe`
+          [Just (ReadAtLeast 0x08000000 "0x08000000 min"), Just (ReadAtLeast 0x00A00000 "0x00A00000 min")]
+      it "T38: holds the InvokingIDs of rows 70, 73, 83, 86, 90 and 93 to the template bases T45, T47 and T48 print as NN NN (PDF 71-77, 87-89)" $ do
+        filter (\f -> any (\r -> ("T38: row " <> tshow r <> ":") `T.isInfixOf` f) [70, 73, 83, 86, 90, 93 :: Int]) (codeOf "C-ACL-REFS") `shouldBe` []
+        map (\row -> cellAt 38 row "InvokingID") [70, 83, 90] `shouldBe`
+          map (\b -> Just (ReadValue (CvUID [0, 0, 8, b, 0, 3, 0, 0]) [])) [2, 5, 6]
+      it "T45, T47, T48: read a UID printing NN NN for its last bytes as the template (+NN NN) at its base (PDF 87-89)" $ do
+        map (`shapeAt` 3) [45, 47, 48] `shouldBe`
+          map (Just . TemplateRow (Placeholder "NNNN" 2)) [[0x00, 0x01, 0x0A], [0x00, 0x01], [0x00, 0x01]]
+        length (codeOf "N-PRECONF-TEMPLATE-UID") `shouldBe` 3
+        take 1 (codeOf "N-PRECONF-TEMPLATE-UID") `shouldBe`
+          [ "N-PRECONF-TEMPLATE-UID opal-2.30.pdf#page=87&T45: row 3 Locking_RangeNNNN: the UID \"00 00 08 02 00 03 NN NN\" prints its"
+            <> " placeholder's letters for its last bytes: read as the template (+NN NN) at its base 00 00 08 02 00 03 00 00" ]
+      it "T39: reads Columns' DoneOnReset as MBRDoneOnReset, the one column of MBRControl whose name it ends (rows 42 and 43, PDF 81; Core T229, PDF 278)" $ do
+        cellAt 39 42 "Columns" `shouldBe` Just (ReadValue (CvList (map (`CvUInt` Nothing) [1, 2, 3])) [ColumnRead "DoneOnReset" "MBRDoneOnReset"])
+        cellAt 39 43 "Columns" `shouldBe` Just (ReadValue (CvList (map (`CvUInt` Nothing) [2, 3])) [ColumnRead "DoneOnReset" "MBRDoneOnReset"])
+      it "T39 row 13: reads (+NN NN) with the letters MMMM its Name carries and T38 row 24 prints at its base (PDF 79, 59), no W-PRECONF-TEMPLATE-NAME" $ do
+        shapeAt 39 13 `shouldBe` Just (TemplateRow (Placeholder "MMMM" 2) [0x00, 0x01])
+        codeOf "W-PRECONF-TEMPLATE-NAME" `shouldBe` []
+        codeOf "N-PRECONF-TEMPLATE-LETTERS" `shouldBe`
+          [ "N-PRECONF-TEMPLATE-LETTERS opal-2.30.pdf#page=79&T39: row 13 ACE_UserMMMM_Set_CommonName: the template prints (+NN NN) and its"
+            <> " Name \"ACE_UserMMMM_Set_CommonName\" carries MMMM, as the access control rows invoking on its base print it: read as MMMM" ]
+      it "T41 row 1: reads C_PIN_Admin1's PIN, SID or MSID1, as SID or MSID, a value the TPer chooses, and note 1 (PDF 84)" $
+        cellAt 41 1 "PIN" `shouldBe` Just (ReadNoted 1 (ReadVendor "SID or MSID"))
+      it "T44 row 1: reads MaxRanges, 81, as UIntCell 8 and note 1 (PDF 86), where it once read silently as 81" $ do
+        cellAt 44 1 "MaxRanges" `shouldBe` Just (ReadNoted 1 (ReadValue (CvUInt 8 Nothing) []))
+        codeOf "N-PRECONF-NOTE" `shouldBe`
+          [ "N-PRECONF-NOTE opal-2.30.pdf#page=84&T41: row 1 C_PIN_Admin1: PIN: \"SID or MSID1\" is read as \"SID or MSID\" and note 1, the"
+            <> " note's number printed after the value (a reviewed reading, Hsed.Spec.Readers.Cell.noteMarkerCells)"
+          , "N-PRECONF-NOTE opal-2.30.pdf#page=86&T44: row 1: MaxRanges: \"81\" is read as \"8\" and note 1, the note's number printed"
+            <> " after the value (a reviewed reading, Hsed.Spec.Readers.Cell.noteMarkerCells)" ]
+      it "T42: reads Table's 00 00 00 01 00 00 08 05 (K_AES_128) by the UID, held to the name (PDF 84), and refuses another name" $ do
+        map (\row -> cellAt 42 row "Table") [1, 2] `shouldBe`
+          [Just (ref "K_AES_128" [0, 0, 0, 1, 0, 0, 8, 5]), Just (ref "K_AES_256" [0, 0, 0, 1, 0, 0, 8, 6])]
+        [ cr | (_, i, cs) <- rowsOf' (setCell "T42" 0 1 "00 00 00 01 00 00 08 05 (K_AES_256)" opal) 42, i == 1, ("Table", cr) <- cs ] `shouldBe`
+          [ReadFailed (Unresolved "\"00 00 00 01 00 00 08 05 (K_AES_256)\": 00 00 00 01 00 00 08 05 is the UID of K_AES_128, not of K_AES_256, the name it prints")]
+      it "T43/T44: reads LowestAlignedLBA's uniteger_8 as uinteger_8, giving the column its default (N-CELL-NORMALISED; PDF 85)" $ do
+        codeOf "N-CELL-NORMALISED" `shouldBe`
+          [ "N-CELL-NORMALISED opal-2.30.pdf#page=85&T44: the column LowestAlignedLBA (0x0A) of T225 LockingInfo: its type \"uniteger_8\""
+            <> " is read as uinteger_8, a reviewed misspelling (Hsed.Spec.Readers.Cell.cellTypos)" ]
+        filter ("LowestAlignedLBA" `T.isInfixOf`) (codeOf "W-PRECONF-DEFAULT") `shouldBe` []
+      it "T45: reads ActiveKey's K_AES_128[256]_Range1_Key as one of the two keys (*LT1, PDF 86), and LockOnReset's Power Cycle as a set (Core T128, PDF 119)" $ do
+        cellAt 45 2 "ActiveKey" `shouldBe`
+          Just (ReadOneOf [ref "K_AES_128_Range1_Key" [0, 0, 8, 5, 0, 3, 0, 1], ref "K_AES_256_Range1_Key" [0, 0, 8, 6, 0, 3, 0, 1]])
+        cellAt 45 3 "ActiveKey" `shouldBe`
+          Just (ReadOneOf [ref "K_AES_128_RangeNNNN_Key" [0, 0, 8, 5, 0, 3, 0, 0], ref "K_AES_256_RangeNNNN_Key" [0, 0, 8, 6, 0, 3, 0, 0]])
+        map (\row -> cellAt 45 row "LockOnReset") [1, 2, 3] `shouldBe` replicate 3 (Just powerCycle)
+        [ w | w <- codeOf "W-PRECONF-DEFAULT", any (`T.isInfixOf` w) ["LockOnReset", "ContOnReset", "GeneralStatus", "ProtectMechanisms", "MBRDoneOnReset"] ]
+          `shouldBe` []
+      it "T46: reads the header DoneOnReset as MBRDoneOnReset, the one column of MBRControl whose name it ends, and its Power Cycle as a set (PDF 88)" $ do
+        cellAt 46 1 "MBRDoneOnReset" `shouldBe` Just powerCycle
+        filter ("&T46:" `T.isInfixOf`) (codeOf "N-PRECONF-HEADER") `shouldBe`
+          [ "N-PRECONF-HEADER opal-2.30.pdf#page=88&T46: the header \"DoneOnReset\" is read as MBRDoneOnReset, the one column of T229"
+            <> " MBRControl whose name it ends" ]
+      it "notes the two names both SPs' modules generate at different UIDs (N-PRECONF-HOMONYM; Opal T24, T25, T40, T41, PDF 48-49, 82-84)" $
+        map (T.takeWhile (/= ':')) (codeOf "N-PRECONF-HOMONYM") `shouldBe`
+          [ "N-PRECONF-HOMONYM opal-2.30.pdf#page=82&T40", "N-PRECONF-HOMONYM opal-2.30.pdf#page=84&T41" ]
+
+    describe "the generated Locking SP (M5a)" $ do
+      it "writes the readings as hsed-core's preconfiguration cells" $ do
+        lns <- T.lines <$> moduleOf "Hsed.Gen.Opal.Preconfig.LockingSP"
+        let has t = any (t `T.isInfixOf`) lns
+        map has [ "(0x07, VendorAtLeast 0x08000000 \"0x08000000 min\")", "(0x03, NoteMarked 1 (VendorUnique \"SID or MSID\"))"
+                , "(0x04, NoteMarked 1 (Given (UIntCell 8)))", "(0x09, Given (ListCell [EnumCell \"Power Cycle\" 0]))"
+                , "(0x03, Given (ListCell [EnumCell \"Power Cycle\" 0]))  -- MBRDoneOnReset", "(0x09, ListCell [])  -- LockOnReset"
+                , "(0x0A, OneOf [Given (RefCell \"K_AES_128_GlobalRange_Key\" (uid 0x00 0x00 0x08 0x05 0x00 0x00 0x00 0x01)), Given (RefCell \"K_AES_256_GlobalRange_Key\" (uid 0x00 0x00 0x08 0x06 0x00 0x00 0x00 0x01))])" ]
+          `shouldBe` replicate 7 True
+        length [ () | l <- lns, " :: PreconfTable" `T.isSuffixOf` l ] `shouldBe` 14
+      it "prints a module that type-checks under hsed's warnings and -Werror against the committed generated modules" $ do
+        text <- moduleOf "Hsed.Gen.Opal.Preconfig.LockingSP"
+        compiles [] "Hsed.Gen.Opal.Preconfig.LockingSP" text
+      it "leaves the Admin SP's module as the M4b sidecar generates it" $ do
+        m5a <- moduleOf "Hsed.Gen.Opal.Preconfig.AdminSP"
+        m4b <- either (throwString . show) pure (compileIR (Just base) Scott m4bOpal)
+        m5a `shouldBe` fromMaybe "" (lookup "Hsed.Gen.Opal.Preconfig.AdminSP" (crModules m4b))

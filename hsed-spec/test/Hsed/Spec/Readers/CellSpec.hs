@@ -22,7 +22,15 @@ ACE's column names); the old 'readCell' over it; each kind's default
 ('zeroValue'); a list printed; and a printed cell's conventions on cells as
 Opal prints them (PDF 35-52): footnote markers, @(O)@, a placeholder and the
 digit after it, quotes, an empty pair, VU and MSID, an edited text over its
-IR lines. TableDescSpec holds the M2b kinds.
+IR lines. TableDescSpec holds the M2b kinds. Since M5a, the Locking SP's
+readings (Opal Tables 34-48, PDF 52-89): a Set_Type a list of its
+enumeration's labels (Table 45's LockOnReset, PDF 86), a misspelt type read
+as the type (Table 43's uniteger_8, PDF 85), an ACE's column read by the end
+of its name (Table 39's DoneOnReset, PDF 81), a bare NN NN template UID
+(Tables 45, 47, 48, PDF 87-89), SID or MSID (Table 41, PDF 84), a least value
+(Table 36, PDF 54), one of two names (Table 45's ActiveKey, PDF 86), and the
+reviewed cells whose note's number is joined to the value (Tables 41 and 44,
+PDF 84, 86).
 -}
 module Hsed.Spec.Readers.CellSpec (spec) where
 
@@ -34,7 +42,8 @@ import           Test.Hspec
 
 import           Hsed.Core.Types           (Operand (..), TableRef (..), TypeDef (..), TypeRef (..))
 import           Hsed.Spec.Check           (mkContext)
-import           Hsed.Spec.Common          (ErrataSet (..))
+import           Hsed.Spec.Anchor          (AnchorId (..))
+import           Hsed.Spec.Common          (ErrataSet (..), SpecId (..))
 import qualified Hsed.Spec.Common          as Cm
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.IR              (CellIR)
@@ -68,7 +77,11 @@ nullUID  = replicate 8 0
 resolver :: Resolver
 resolver = Resolver
   { rvRef    = \n _ -> maybe (Left (tshow n <> " names no row")) (\u -> Right (n, u)) (lookup n rows)
-  , rvColumn = \n -> maybe (Left (tshow n <> " names no column")) Right (lookup n [("UID", 0), ("PIN", 3), ("0x00", 0), ("0x03", 3)]) }
+  , rvColumn = \n -> case lookup n [("UID", 0), ("PIN", 3), ("0x00", 0), ("0x03", 3)] of
+                      Just c -> Right (c, Nothing)
+                      Nothing
+                        | n == "DoneOnReset" -> Right (3, Just "MBRDoneOnReset")
+                        | otherwise          -> Left (tshow n <> " names no column") }
   where rows = [ ("Admins", admins), ("SID", sid), ("Anybody", anybody), ("User1", user1)
                , ("ACE_SP_SID", aceSPSID), ("ACE_Admin", aceAdmin) ]
 
@@ -108,10 +121,27 @@ spec = do
         kind "boolean_def_false" `shouldBe` Right (KDefault "false" boolean)
         kind "boolean_def_true" `shouldBe` Right (KDefault "true" boolean)
         kind "int_1_def_0" `shouldBe` Left "int_1_def_0 names no Type object"
-      it "still refuses what it does not read: an alternative that is not of references, a set other than ACE_columns" $ do
+      it "still refuses what it does not read: an alternative that is not of references" $ do
         kind "ACE_expression" `shouldBe` Left "a column of type ACE_expression (Alternative_Type) is not read from a table cell"
-        kind "attr_flags" `shouldBe` Left "a column of type attr_flags (Set_Type) is not read from a table cell"
         kind "log_kind" `shouldBe` Left "log_kind names no Type object"
+      it "reads a Set_Type as a list of its range's values, labelled by its enumeration (M5a: reset_types, Core Tables 127-128, PDF 119)" $ do
+        fmap (\case KList (KEnum n rs ls) -> (n, rs, take 3 ls); k -> (tshow k, [], [])) (kind "reset_types")
+          `shouldBe` Right ("reset_types", [(0, 31)], [("Power Cycle", 0), ("Hardware", 1), ("HotPlug", 2)])
+        fmap (\case KList (KEnum n rs ls) -> (n, rs, take 2 ls); k -> (tshow k, [], [])) (kind "gen_status")
+          `shouldBe` Right ("gen_status", [(0, 63)], [("None", 0), ("pending_tper_error", 1)])
+        kind "protect_types" `shouldBe` Right (KList (KEnum "protect_types" [(0, 255)] []))
+        setKind (typeEnv (mkContext Scott ir)) "reset_types" `shouldBe` Just "reset_types"
+        setKind (typeEnv (mkContext Scott ir)) "protect_types" `shouldBe` Nothing
+      it "reads a type cellTypos lists as the type it misspells (M5a: Opal Table 43's uniteger_8, PDF 85)" $ do
+        cellTypos `shouldBe` [("uniteger_8", "uinteger_8")]
+        kind "uniteger_8" `shouldBe` kind "uinteger_8"
+        kind "uinteger_8" `shouldBe` Right (KUInt 8)
+      it "reads Opal Table 45's LockOnReset, Power Cycle (PDF 86), as a set of one label, its default the empty set" $ do
+        let resetTypes = either (const KUID) id (kind "reset_types")
+        readWith resetTypes "Power Cycle" `shouldBe` Right (CvList [CvEnum "Power Cycle" 0], [])
+        readWith resetTypes "Power Cycle, HotPlug" `shouldBe` Right (CvList [CvEnum "Power Cycle" 0, CvEnum "HotPlug" 2], [])
+        fmap (renderCell . fst) (readWith resetTypes "Power Cycle") `shouldBe` Right "ListCell [EnumCell \"Power Cycle\" 0]"
+        zeroValue resetTypes `shouldBe` Just (CvList [])
 
   describe "readCellWith: labels" $ do
     it "reads a label as printed, a number its ranges hold, and no remark" $ do
@@ -211,6 +241,8 @@ spec = do
       readWith KColumns "0x03" `shouldBe` Right (CvList [CvUInt 3 Nothing], [])
       readWith KColumns "Colour" `shouldBe` Left (Unresolved "\"Colour\" names no column")
       readWith KColumns "0x63" `shouldBe` Left (Unresolved "\"0x63\" names no column")
+    it "remarks a column the resolver reads by the end of its name (M5a: Opal Table 39's DoneOnReset, PDF 81)" $
+      readWith KColumns "UID, DoneOnReset" `shouldBe` Right (CvList [CvUInt 0 Nothing, CvUInt 3 Nothing], [ColumnRead "DoneOnReset" "MBRDoneOnReset"])
 
   describe "readCell, the reader without remarks" $
     it "reads as readCellWith does, references by the caller's function" $ do
@@ -244,11 +276,16 @@ spec = do
   describe "printedCell, an SSC's cell conventions (Opal 2.30, PDF 35-52)" $ do
     it "keeps a template's placeholder, the digit printed after it and (O) apart from the UID (Table 24's AdminXX, PDF 48)" $
       printedCell (cell ["00 00 00 09", "00 00 02 00", "(+XX)1", "(O)"])
-        `shouldBe` PrintedCell ["00 00 00 09", "00 00 02 00"] False ["1"] True (Just "XX")
+        `shouldBe` PrintedCell ["00 00 00 09", "00 00 02 00"] False ["1"] True (Just "XX") False
     it "keeps a footnote marker apart, a wildcard's TT TT TT TT in the value (Table 22's *AC1, PDF 39)" $
-      printedCell (cell ["00 00 00 01", "TT TT TT TT", "*AC1"]) `shouldBe` PrintedCell ["00 00 00 01", "TT TT TT TT"] False ["*AC1"] False Nothing
+      printedCell (cell ["00 00 00 01", "TT TT TT TT", "*AC1"]) `shouldBe` PrintedCell ["00 00 00 01", "TT TT TT TT"] False ["*AC1"] False Nothing False
     it "reads M5's two-byte placeholders as printed (Table 39's (+NN NN), PDF 79)" $
       pcPlaceholder (printedCell (cell ["00 00 00 08", "00 04 40 00", "(+NN NN)"])) `shouldBe` Just "NN NN"
+    it "reads a UID printing its placeholder's letters for its last bytes as that template at its base (M5a: Tables 45, 47, 48, PDF 87-89)" $ do
+      printedCell (cell ["00 00 08 05 00 03 NN NN (O)"]) `shouldBe` PrintedCell ["00 00 08 05 00 03 00 00"] False [] True (Just "NN NN") True
+      printedCell (cell ["00 00 08 02", "00 03 NN NN"]) `shouldBe` PrintedCell ["00 00 08 02", "00 03 00 00"] False [] False (Just "NN NN") True
+      map (pcBare . printedCell . cell) [["00 00 00 01 TT TT TT TT"], ["00 00 08 02 00 03 NN MM"], ["NN NN"], ["00 00 08 02 00 03 AA AA"]]
+        `shouldBe` [False, False, False, False]
     it "removes quotes, an unbalanced one too (Table 20 row 12, PDF 37), and keeps an empty pair as an empty value (Table 25, PDF 49)" $ do
       joinedText (Just (KText 32)) (printedCell (cell ["DataRemovalMecha", "nism\x201D"])) `shouldBe` "DataRemovalMechanism"
       let empty = printedCell (cell ["\x201C\x201D"])
@@ -259,6 +296,25 @@ spec = do
       pcNotes (printedCell (cell ["*ACE1"])) `shouldBe` ["*ACE1"]
     it "reads VU and MSID, unquoted and alone, as values the TPer chooses (Table 1, PDF 12; Table 25, PDF 48)" $
       map (vendorMarker . printedCell . cell) [["VU", "*TP1"], ["MSID"], ["\"VU\""], ["VU VU"]] `shouldBe` [Just "VU", Just "MSID", Nothing, Nothing]
+    it "reads SID or MSID as a value the TPer chooses (M5a: the Locking SP's C_PIN_Admin1, Opal Table 41 note 1, PDF 84)" $
+      map (vendorMarker . printedCell . cell) [["SID or", "MSID"], ["SID or MSID1"], ["\"SID or MSID\""]] `shouldBe` [Just "SID or MSID", Nothing, Nothing]
+    it "reads a least value before min as one the TPer chooses (M5a: Opal Table 36's MBR and DataStore Rows, PDF 54)" $ do
+      map (vendorAtLeast . printedCell . cell) [["0x08000000 min"], ["0x00A00000", "min"]]
+        `shouldBe` [Just (0x08000000, "0x08000000 min"), Just (0x00A00000, "0x00A00000 min")]
+      map (vendorAtLeast . printedCell . cell) [["0x08000000"], ["\"0x08000000 min\""], ["VU min"]] `shouldBe` [Nothing, Nothing, Nothing]
+    it "reads a name with bracketed characters as two names (M5a: Opal Table 45's ActiveKey, PDF 86)" $ do
+      alternativeNames "K_AES_128[256]_GlobalRange_Key" `shouldBe` Just ["K_AES_128_GlobalRange_Key", "K_AES_256_GlobalRange_Key"]
+      map alternativeNames ["Admins", "[256]", "K_AES_128[256]_[1]"] `shouldBe` [Nothing, Nothing, Nothing]
+    it "splits the note's number off the two reviewed cells, and off no other (M5a: Opal Tables 41 and 44, PDF 84, 86)" $ do
+      let opal = SpecId "opal-2.30"
+          noted t r h = fmap (\(k, pc) -> (k, pcLines pc)) (noteMarked opal (TableId t) r h (printedCell (cell [h'])))
+            where h' = fromMaybe "" (listToMaybe [ x | (_, TableId t', r', hd, x, _) <- noteMarkerCells, t' == t, r' == r, hd == h ])
+      noteMarkerCells `shouldBe` [(opal, TableId 41, 1, "PIN", "SID or MSID1", 1), (opal, TableId 44, 1, "MaxRanges", "81", 1)]
+      noted 41 1 "PIN" `shouldBe` Just (1, ["SID or MSID"])
+      noted 44 1 "MaxRanges" `shouldBe` Just (1, ["8"])
+      noteMarked opal (TableId 44) 2 "MaxRanges" (printedCell (cell ["81"])) `shouldBe` Nothing
+      noteMarked opal (TableId 44) 1 "MaxRanges" (printedCell (cell ["8"])) `shouldBe` Nothing
+      noteMarked (SpecId "core-2.01") (TableId 44) 1 "MaxRanges" (printedCell (cell ["81"])) `shouldBe` Nothing
     it "reads an edited text, not the IR lines it no longer joins" $
       pcLines (printedCell (cellWith "ACE_Nobody" ["ACE_C_PIN_SID_Get_NOPIN"])) `shouldBe` ["ACE_Nobody"]
     it "joins its lines as a kind does: an identifier's with nothing, anything else's with a space" $ do
@@ -268,7 +324,7 @@ spec = do
 
   describe "cellCodes" $
     it "claims the cell reader's remarks' codes" $
-      map Cm.codeName cellCodes `shouldBe` ["N-PRECONF-LABEL", "W-PRECONF-NAME-LENGTH"]
+      map Cm.codeName cellCodes `shouldBe` ["N-PRECONF-LABEL", "N-PRECONF-NOTE", "N-CELL-NORMALISED", "W-PRECONF-NAME-LENGTH"]
   where
     labelOf = \case
       CvRef n _  -> n

@@ -22,17 +22,29 @@ M4c review its steps begin once M4c has landed, eject the drive before any
 replug, tell a latched transport from the TPer's own answer at H6, verify
 the volume before H4's snapshot, run the Pair's Properties (H12, its offline
 simulator given the drive's Level 0 descriptors) before H13 closes the
-window, and key a snapshot by the slice a replug keeps. Nothing
+window, and key a snapshot by the slice a replug keeps; since its
+verification, H0, H6 and H10 order a replug: the snapshot before it while
+the drive is attached, the eject, the replug, the snapshot after. Nothing
 here runs either script: their pre-flights read the IORegistry, which the
 suite does not, and a snapshot reads the drive's volume.
+
+@tools/kext-imports.sh@, CI's check of the flag-on shim's imports (design
+7.2), runs here, a copy of it in a directory of its own against a fake
+@nm@: it passes an object whose imports are all on its list, and fails one
+that imports more, one @nm@ cannot read, @nm@ missing, an object nm reads
+no import of, and a work dir with no object (the M4c review's
+verification found the earlier one passing an object @nm@ could not read).
 -}
 module Hsed.ToolsSpec (spec) where
 
 import qualified RIO.Char         as C
 import           RIO
+import           RIO.Directory    (createDirectoryIfMissing, getPermissions, setOwnerExecutable, setPermissions)
+import           RIO.FilePath     ((</>))
 import           RIO.Process      (proc, readProcess, withProcessContextNoLogging)
 import qualified RIO.Text         as T
 import qualified RIO.Text.Partial as T'
+import           System.Environment (lookupEnv)
 import           Test.Hspec
 
 
@@ -103,6 +115,12 @@ spec = describe "the hardware scripts" $ do
       stepOf 0 text `shouldSatisfy` T.isInfixOf "H0. After M4c lands on feature/types with CI green"
       [ n | n <- [0, 6, 10], not ("diskutil eject" `T.isInfixOf` stepOf n text || "eject the drive" `T.isInfixOf` stepOf n text) ] `shouldBe` []
       stepOf 0 text `shouldSatisfy` T.isInfixOf "diskutil eject /dev/\\$DISK"
+    it "orders a replug in H0, H6 and H10: the snapshot pre-replug while the drive is attached, then the eject, then the snapshot post-replug (the M4c review's verification)" $ do
+      text <- script "../tools/m4c-hw.sh"
+      let at' needle hay = T.length (fst (T'.breakOn needle hay))
+          ordered step = at' "snapshot pre-replug" step < at' "eject" step && at' "eject" step < at' "snapshot post-replug" step
+                         && at' "snapshot post-replug" step < T.length step
+      [ n | n <- [0, 6, 10], not (ordered (stepOf n text)) ] `shouldBe` []
     it "tells H6's kern_return failure, which latches the transport, from the TPer's own Success/Failure 1 or No Response Available" $ do
       h6 <- stepOf 6 <$> script "../tools/m4c-hw.sh"
       for_ ["a kern_return failure on the STACK_RESET: the transport latched", "'Success/Failure 1' or 'No Response Available': the TPer's own"] $ \l ->
@@ -131,3 +149,35 @@ spec = describe "the hardware scripts" $ do
       for_ [ "for s in _hsed_kext_command _hsed_kext_bind _hsed_cdb_scalars _hsed_cdb_bind_check; do"
            , "grep -q '_hsed_kext_' <<<\"$symbols\"" ] $ \l ->
         text `shouldSatisfy` T.isInfixOf l
+
+  describe "tools/kext-imports.sh, a copy in a directory of its own, against a fake nm (the M4c review's verification)" $ do
+    it "parses (bash -n)" $ do
+      (code, _, err) <- withProcessContextNoLogging (proc "bash" ["-n", "../tools/kext-imports.sh"] readProcess)
+      (code, decodeUtf8Lenient (toStrictBytes err)) `shouldBe` (ExitSuccess, "")
+    it "passes an object whose imports are all on its list, and fails one importing more, one nm cannot read, nm missing, no import read, no object; exit 2 for a usage error" $
+      withSystemTempDirectory "hsed-kext-imports" $ \dir -> do
+        for_ ["tools", "w" </> "x", "bin"] (createDirectoryIfMissing True . (dir </>))
+        readFileBinary "../tools/kext-imports.sh" >>= writeFileBinary (dir </> "tools" </> "kext-imports.sh")
+        writeFileBinary (dir </> "w" </> "x" </> "hsed_kext.o") "no object at all"
+        path <- fromMaybe "/usr/bin:/bin" <$> lookupEnv "PATH"
+        let nm body = do
+              let f = dir </> "bin" </> "nm"
+              writeFileUtf8 f ("#!/bin/sh\n" <> body <> "\n")
+              getPermissions f >>= setPermissions f . setOwnerExecutable True
+            imports args = do
+              (code, out, err) <- withProcessContextNoLogging $
+                proc "env" (("PATH=" <> (dir </> "bin") <> ":" <> path) : "bash" : (dir </> "tools" </> "kext-imports.sh") : args) readProcess
+              pure (code, decodeUtf8Lenient (toStrictBytes out), decodeUtf8Lenient (toStrictBytes err))
+            object = "./w/x/hsed_kext.o"
+        nm "printf '_IOConnectCallScalarMethod\\n_hsed_cdb_scalars\\n_hsed_cdb_bind_check\\n___stack_chk_guard\\n'"
+        imports ["w"] `shouldReturn` (ExitSuccess, "kext-imports: " <> object <> " imports only what the shim may\n", "")
+        nm "printf '_IOConnectCallScalarMethod\\n_IOConnectCallMethod\\n'"
+        imports ["w"] `shouldReturn` (ExitFailure 1, "", "kext-imports: " <> object <> " imports _IOConnectCallMethod, which the shim may not\n")
+        nm "echo 'nm: error: the file was not recognized as a valid object file' >&2; exit 1"
+        imports ["w"] >>= (`shouldSatisfy` \(code, out, err) -> code == ExitFailure 1 && T.null out && T.isInfixOf ("nm cannot read " <> object) err)
+        nm "echo 'nm: command not found' >&2; exit 127"
+        imports ["w"] >>= (`shouldSatisfy` \(code, _, err) -> code == ExitFailure 1 && T.isInfixOf ("nm cannot read " <> object) err)
+        nm "exit 0"
+        imports ["w"] >>= (`shouldSatisfy` \(code, _, err) -> code == ExitFailure 1 && T.isInfixOf "imports no _IOConnectCallScalarMethod" err)
+        imports ["nowhere"] >>= (`shouldSatisfy` \(code, _, err) -> code == ExitFailure 1 && T.isInfixOf "no hsed_kext.o under nowhere" err)
+        imports [] >>= (`shouldSatisfy` \(code, _, _) -> code == ExitFailure 2)

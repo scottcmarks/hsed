@@ -8,11 +8,13 @@
 #
 #   tools/kext-imports.sh WORKDIR     WORKDIR the flag-on build's (.stack-work-kext, .stack-work-kextcheck)
 #
-# Exit status: 0 when at least one hsed_kext.o is found and each imports only these, 1 otherwise, 2 a usage error.
+# Exit status: 0 when at least one hsed_kext.o is found and nm reads each as the shim's (its IOConnectCallScalarMethod
+# among its imports) importing only these; 1 otherwise: an object nm cannot read, or nm itself failing, fails the check
+# (the M4c review's verification); 2 a usage error. WORKDIR is found under the directory above tools/, the repo's top.
 set -euo pipefail
 
 [ $# -eq 1 ] || { echo "usage: tools/kext-imports.sh WORKDIR" >&2; exit 2; }
-cd "$(git -C "$(dirname "$0")/.." rev-parse --show-toplevel)"
+cd "$(dirname "$0")/.."
 
 allowed='_CFArrayCreate _CFDictionaryGetTypeID _CFDictionaryGetValue _CFGetTypeID _CFRelease _CFStringCompare
 _CFStringGetCString _CFStringGetTypeID _IOBSDNameMatching _IOConnectCallScalarMethod _IOIteratorNext _IOObjectConformsTo
@@ -26,14 +28,28 @@ compilers='^(___stack_chk_(fail|guard)|_mem(set|cpy|move)|___bzero|_bzero|___mem
 
 objs=$(find . -path "*/$1/*" -name hsed_kext.o -type f 2>/dev/null || true)
 [ -n "$objs" ] || { echo "kext-imports: no hsed_kext.o under $1: build it flag-on first" >&2; exit 1; }
+listed=$(tr ' \n' '\n\n' <<<"$allowed")
 failed=0
 for o in $objs; do
+    # nm's own failure fails the check: in a condition, which set -e leaves alone, never in a here-string, which hides it
+    if ! syms=$(nm -u "$o"); then
+        echo "kext-imports: nm cannot read $o" >&2
+        failed=1
+        continue
+    fi
+    # the shim's one IOConnect call among its imports, or what nm read is not the shim's object
+    if ! grep -qxF _IOConnectCallScalarMethod <<<"$syms"; then
+        echo "kext-imports: $o imports no _IOConnectCallScalarMethod: nm did not read it as the shim's object" >&2
+        failed=1
+        continue
+    fi
+    refused=0
     while read -r sym; do
         [ -n "$sym" ] || continue
-        if grep -qxF -- "$sym" <<<"$(tr ' \n' '\n\n' <<<"$allowed")" || [[ $sym =~ $compilers ]]; then continue; fi
+        if grep -qxF -- "$sym" <<<"$listed" || [[ $sym =~ $compilers ]]; then continue; fi
         echo "kext-imports: $o imports $sym, which the shim may not" >&2
-        failed=1
-    done <<<"$(nm -u "$o")"
-    [ "$failed" -ne 0 ] || echo "kext-imports: $o imports only what the shim may"
+        refused=1
+    done <<<"$syms"
+    if [ "$refused" -eq 0 ]; then echo "kext-imports: $o imports only what the shim may"; else failed=1; fi
 done
 exit "$failed"

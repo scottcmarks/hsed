@@ -260,12 +260,13 @@ base ComID with STACK_RESET before each case, automatic and logged (Scott's deci
 
 H0. After M4c lands on feature/types with CI green (before that, ~/hsed has no tools/m4c-hw.sh, and H2's pre-flight
     fails): name the drive by its serial, never by a number typed from memory: the BSD number is assigned at each
-    attach, and hsed-jig refuses a disk whose TPer or serial is wrong, but sedutil-cli does not. Eject the drive before
-    any replug (diskutil eject /dev/\$DISK: it unmounts every slice and flushes the drive's write cache; if it fails or
-    hangs, the replug is a surprise removal, and the next attach may run fsck_msdos -y on the volume), and derive DISK
-    again after it. A replug also makes the block driver anew, whose write counters H4's and H13's snapshots compare:
-    take 'tools/m4c-hw.sh snapshot pre-replug "\$SERIAL"' before it if you can and 'snapshot post-replug' right after,
-    then compare before with pre-replug and post-replug with after, never before with after.
+    attach, and hsed-jig refuses a disk whose TPer or serial is wrong, but sedutil-cli does not. Any replug, in this
+    order: 'tools/m4c-hw.sh snapshot pre-replug "\$SERIAL"' while the drive is still attached and its volume mounted
+    (once H4's 'before' exists); then eject the drive (diskutil eject /dev/\$DISK: it unmounts every slice and flushes
+    the drive's write cache; if it fails or hangs, the replug is a surprise removal, and the next attach may run
+    fsck_msdos -y on the volume); replug; derive DISK again; and, once the volume is mounted again,
+    'tools/m4c-hw.sh snapshot post-replug "\$SERIAL"'. A replug makes the block driver anew, whose write counters H4's
+    and H13's snapshots compare: compare before with pre-replug and post-replug with after, never before with after.
       cd ~/hsed && git pull
       SERIAL=${serial}
       DISK=\$(tools/m4c-hw.sh disk "\$SERIAL") && echo "\$DISK"
@@ -331,10 +332,11 @@ H6. STACK_RESET alone, on the idle drive: protocol 2's first crossing of the bri
     StartSession a1 0a 06 01 01 00 04 10 00 5e 00 00 and its IF-RECV; End of Session and its IF-RECV. The summary:
     'recover: STACK_RESET on 0x1004: Success; the ComID idle; the Admin SP took a read-write session (TSN n) and ended it'.
     On failure: a kern_return failure on the STACK_RESET: the transport latched for that run, nothing more reaching the
-    drive; keep the report, eject the drive and replug the bridge (H0), derive DISK again, and STOP here: every drive
-    case resets its ComID first, so H7 cannot pass. 'Success/Failure 1' or 'No Response Available': the TPer's own
-    answer, read through a transport that did not latch; keep the report and STOP here, for the same reason; replug
-    (ejecting first, H0) only to power-cycle a session away (Core PDF 76). Either way an agent then sets
+    drive; keep the report, replug as H0 orders it (snapshot pre-replug, eject the drive, replug the bridge, derive DISK
+    again, snapshot post-replug), and STOP here: every drive case resets its ComID first, so H7 cannot pass.
+    'Success/Failure 1' or 'No Response Available': the TPer's own answer, read through a transport that did not latch;
+    keep the report and STOP here, for the same reason; replug (as H0 orders it) only to power-cycle a session away
+    (Core PDF 76). Either way an agent then sets
     Hsed.Jig.Options.roStackResetBeforeCases back to False (the probe-and-waive mode, built and tested) and records the
     --recover clause as unmet on this bridge.
     'moved N of 512 bytes' on the IF-SEND: it reached the drive; 13.29 (d) is yours. Stop.
@@ -377,9 +379,9 @@ H9. The deliberately interrupted run:
 
 H10. Recovery: H6's command again. Expect exit 0: the StartSession after the reset answering SUCCESS shows the Admin SP
     free of the orphan, since a second read-write session would answer SP_BUSY (Core 5.1.5.3, PDF 138).
-    On failure: STACK_RESET failing: eject the drive, then replug (a power cycle aborts every session, Core PDF 76),
-    derive DISK again, and run H10 again for the record; the replug voids the write counters' comparison across it
-    (H0: snapshot pre-replug before it, post-replug after). SP_BUSY after Success: the TPer kept a session through
+    On failure: STACK_RESET failing: replug as H0 orders it (snapshot pre-replug, eject the drive, replug, derive DISK
+    again, snapshot post-replug; a power cycle aborts every session, Core PDF 76), and run H10 again for the record; the
+    replug voids the write counters' comparison across it. SP_BUSY after Success: the TPer kept a session through
     STACK_RESET (Core 3.3.4.7.5 item 1 says it must not): stop and report. If the drive timed the session out first
     (DefSessionTimeout, PDF 76), H10 still passes; run H9 and H10 back to back.
 

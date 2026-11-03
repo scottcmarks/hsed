@@ -76,6 +76,7 @@ module Hsed.Wire
   , tperResetComId
   , dataKind
   , staticExtension
+  , extendedComId
   , inactiveExtension
   , comPacketHeaderSize
   , mostCarried
@@ -425,6 +426,15 @@ assigned rows name = case [ v | CodeRow (One v) _ <- codeRowsNamed rows name ] o
 --   one (Core 3.3.3.1, PDF 57; Opal 2.30 3.3.3, PDF 30).
 staticExtension :: Word16
 staticExtension = 0x0000
+
+-- | A static ComID's Extended ComID, as ComID management's payloads carry it
+--   (Core 3.3.4.7, PDF 62): the ComID in the upper two bytes, the static
+--   extension, 'staticExtension', in the lower.
+--
+-- >>> hex (extendedComId 0x1004)
+-- "0x10040000"
+extendedComId :: Word16 -> Word32
+extendedComId c = (fromIntegral c `shiftL` 16) .|. fromIntegral staticExtension
 
 -- | The ComID extension that tells the host its ComID is inactive (Core
 --   3.3.3.1, PDF 57; 3.3.3.3 a.i.1, PDF 58).

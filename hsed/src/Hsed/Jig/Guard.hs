@@ -45,12 +45,19 @@ Under it ('decide') a drive is given:
   extension (Core 3.3.3.1, PDF 57) and the host's OutstandingData and
   MinTransfer, zero (3.2.3.2.1.4-5, PDF 41), read without a difference,
   nothing after it but zeros, every subpacket Data and holding one allowed
-  method invocation in its canonical encoding or a bare EndOfSession:
-  SMUID.Properties; SMUID.StartSession to the Admin SP with no optional
-  parameter but HostSigningAuthority = Anybody (Core 5.2.3.1, PDF 149: no
-  HostChallenge, so that no credential is tried and no Tries counter
-  moves); Get on C_PIN_MSID of one cell_block within its UID and PIN
-  columns (Opal 2.30 Table 23, PDF 47); the UIDs those of
+  method invocation in its canonical encoding or a bare EndOfSession, its
+  parameters read against the method's generated signature
+  ("Hsed.Core.Method".'Hsed.Core.Method.decodeParameters', Core 3.2.4.1, PDF
+  47-48: the required ones positional, exactly as many as it has, the
+  optional ones Named by their index): SMUID.Properties with no
+  HostProperties or with a list of host properties, each Named by a name
+  Core Table 167 gives a host property and a uinteger (PDF 140-143);
+  SMUID.StartSession to the Admin SP, its HostSessionID a uinteger and its
+  Write 1, read-write (design 13.7), with no optional parameter but
+  HostSigningAuthority = Anybody (Core 5.2.3.1, PDF 149: no HostChallenge,
+  so that no credential is tried and no Tries counter moves); Get on
+  C_PIN_MSID of one cell_block within its UID and PIN columns (Opal 2.30
+  Table 23, PDF 47); the UIDs those of
   "Hsed.Gen.Core.UIDs" and, for C_PIN_MSID, Opal's generated Admin SP
   ("Hsed.Gen.Opal.Preconfig.AdminSP", Table 25, PDF 48; since M4b), the
   columns found by name in the generated C_PIN description
@@ -71,9 +78,14 @@ The Guard sends on a @'ReadOnly@ transport, which no other module can:
 'guardedSend' and 'guardedRecv' decide one command each; 'guarding' puts
 the Guard in front of every command a transport is given, so that a drive's
 transport refuses what its policy does whoever asks (the host's exchange of
-a ComPacket among them). The drive's transport ('driveTransport') and its
-two verbs ('driveSend', 'driveRecv') decide each command under the policy
-as it stands when the command is given.
+a ComPacket among them), each refusal answered 'blockedResponse'. The
+drive's transport ('driveTransport') and its two verbs ('driveSend',
+'driveRecv') decide each command under the policy as it stands when the
+command is given, unless the run latched the drive ('driveLatch': it gave
+up on an answer, so that what the drive did with its command is no longer
+known), when nothing more reaches it: each command after is answered a
+'TransportFailure' saying why, noted in the run's transcript, never
+issued.
 
 Level 0 Discovery's ComID and the Data subpacket's Kind are the generated
 code tables' (Core Tables 26 and 19) and the security protocol of ComPackets
@@ -99,15 +111,17 @@ module Hsed.Jig.Guard
   , driveBind
   , driveIssued
   , driveInfo
+  , driveLatch
+  , driveLatched
   , driveClose
     -- * One command, one transport
   , guardedSend
   , guardedRecv
   , guarding
+  , blockedResponse
   ) where
 
 import qualified Data.Aeson            as A
-import           Data.Bits             (shiftL, (.|.))
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
 import           RIO
@@ -116,16 +130,19 @@ import qualified RIO.Text              as T
 import           Hsed.Core.Call        (MethodCall (..), MethodHeader (..), Parameters (..))
 import           Hsed.Core.CellBlock   (CellBlock (..), cellBlock)
 import           Hsed.Core.Layout      (LayoutError)
-import           Hsed.Core.Method      (MethodSignature (..), Param (..), Signature (..))
+import           Hsed.Core.Method      (MethodSignature (..), Param (..), Signature (..), decodeParameters, paramErrorText)
+import           Hsed.Core.Properties  (Communicator (..), Property (..))
+import           Hsed.Core.TypeName    (TypeName (..))
 import           Hsed.Core.Record      (DecodedRecord (..), decodeRecordStrict)
 import           Hsed.Core.StreamItem  (StreamItem (..))
 import           Hsed.Core.Table       (Col (..), TableDesc (..), columnNamed)
 import           Hsed.Core.Token       (IsToken (..), Token (..))
 import           Hsed.Core.UID         (UID)
-import           Hsed.Core.Value       (Datum (..), Name (..), NamedValue (..), Value)
+import           Hsed.Core.Value       (Datum (..), List (..), Name (..), NamedValue (..), Value (..))
 import           Hsed.Gen.Core.Layouts (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
                                         STACK_RESETCommandRequest (..))
 import qualified Hsed.Gen.Core.Methods as Methods
+import           Hsed.Gen.Core.Properties (properties)
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs    (methodIDUIDs, sessionManagerMethodUIDs, uAuthority_Anybody, uMethodID_Get, uProperties,
                                         uSMUID, uSP_Admin, uStartSession)
@@ -135,7 +152,7 @@ import           Hsed.Packet           (ComPacketFrame (..), DecodedFrame (..), 
 import           Hsed.Sim.Params       (reservedComId)
 import           Hsed.Transport.Drive  (DriveInfo, RawDrive (..))
 import           Hsed.Wire             (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
-                                        comIdManagementProtocol, comPacketProtocol, dataKind, hex, level0ComId,
+                                        comIdManagementProtocol, comPacketProtocol, dataKind, extendedComId, hex, level0ComId,
                                         staticExtension)
 import           Hsed.Wire.Internal    (Transport (..))
 
@@ -195,10 +212,10 @@ recoverMethods = [AllowStartSessionAdminSP, AllowEndOfSession, AllowStackReset]
 
 -- | A drive as a run has it (design 13.29 (l)): the opener's 'RawDrive'
 --   behind the Guard, what binding its base ComID admits, its policy
---   ('Level0Only' until bound), the run's transcript and the drive's own,
---   and what the IORegistry says of it (none for a replay). Abstract: its
---   constructor is not exported, so that the raw transport is reached
---   through the Guard alone.
+--   ('Level0Only' until bound), whether the run latched it, the run's
+--   transcript and the drive's own, and what the IORegistry says of it
+--   (none for a replay). Abstract: its constructor is not exported, so that
+--   the raw transport is reached through the Guard alone.
 data GuardedDrive = GuardedDrive
   { gdTranscript :: !Transcript              -- ^ the run's
   , gdOwn        :: !Transcript              -- ^ the drive's own: what reached its raw transport
@@ -208,6 +225,7 @@ data GuardedDrive = GuardedDrive
   , gdRecorded   :: !(Transport 'ReadOnly)    -- ^ the raw transport, recording into the drive's own transcript, then
                                              --   the run's
   , gdPolicy     :: !(IORef Policy)
+  , gdLatched    :: !(IORef (Maybe Text))    -- ^ why nothing more reaches the drive, once the run latched it
   }
 
 -- | A drive put behind the Guard, as "Hsed.Jig.Target" opens one: the
@@ -221,6 +239,7 @@ guardDrive :: Transcript -> [Allowed] -> Maybe DriveInfo -> RawDrive -> IO Guard
 guardDrive t admits di raw = do
   own <- newTranscript
   policy <- newIORef Level0Only
+  latch <- newIORef Nothing
   pure GuardedDrive
     { gdTranscript = t
     , gdOwn        = own
@@ -229,28 +248,56 @@ guardDrive t admits di raw = do
     , gdRaw        = raw
     , gdRecorded   = recording t (recording own (rdTransport raw))
     , gdPolicy     = policy
+    , gdLatched    = latch
     }
 
 -- | The drive as a transport: every command decided under the drive's
 --   policy as it stands when the command is given, one refused recorded,
---   never issued, and answered 'Unsupported' with the reason; one admitted
---   issued and recorded in the run's transcript and the drive's own. The
---   host's exchange of a ComPacket takes its IF-RECVs here.
+--   never issued, and answered 'blockedResponse'; one admitted issued and
+--   recorded in the run's transcript and the drive's own; on a drive the
+--   run latched, none ('driveLatch'). The host's exchange of a ComPacket
+--   takes its IF-RECVs here.
 driveTransport :: GuardedDrive -> Transport 'ReadOnly
-driveTransport g = (gdRecorded g) { tExchange = \q -> either blocked id <$> current g q }
-  where blocked why = Response (Unsupported ("blocked by the Guard: " <> why)) mempty
+driveTransport g = (gdRecorded g) { tExchange = \q -> either blockedResponse id <$> current g q }
 
--- | An IF-SEND on the drive, if its policy admits it ('guardedSend').
+-- | An IF-SEND on the drive, if its policy admits it ('guardedSend') and
+--   the run has not latched it.
 driveSend :: GuardedDrive -> Request -> IO (Either Text Response)
-driveSend g q = drivePolicy g >>= \p -> guardedSend (gdTranscript g) p (gdRecorded g) q
+driveSend g q = unlatched g q (drivePolicy g >>= \p -> guardedSend (gdTranscript g) p (gdRecorded g) q)
 
--- | An IF-RECV on the drive, if its policy admits it ('guardedRecv').
+-- | An IF-RECV on the drive, if its policy admits it ('guardedRecv') and
+--   the run has not latched it.
 driveRecv :: GuardedDrive -> Request -> IO (Either Text Response)
-driveRecv g q = drivePolicy g >>= \p -> guardedRecv (gdTranscript g) p (gdRecorded g) q
+driveRecv g q = unlatched g q (drivePolicy g >>= \p -> guardedRecv (gdTranscript g) p (gdRecorded g) q)
 
--- | A command under the drive's policy as it stands.
+-- | A command under the drive's policy as it stands, unless the run latched
+--   it.
 current :: GuardedDrive -> Request -> IO (Either Text Response)
-current g q = drivePolicy g >>= \p -> pass (gdTranscript g) p (gdRecorded g) q
+current g q = unlatched g q (drivePolicy g >>= \p -> pass (gdTranscript g) p (gdRecorded g) q)
+
+-- | A command given to the drive: on a drive the run latched, not issued,
+--   answered a 'TransportFailure' saying why and noted in the run's
+--   transcript; otherwise as the action decides.
+unlatched :: GuardedDrive -> Request -> IO (Either Text Response) -> IO (Either Text Response)
+unlatched g q act = readIORef (gdLatched g) >>= \case
+  Nothing  -> act
+  Just why -> do
+    record (gdTranscript g) (Note 0 ("not issued on the " <> dRole (tDescribe (gdRecorded g)) <> ", " <> command <> ": " <> why))
+    pure (Right (Response (TransportFailure ("not issued: " <> why)) mempty))
+  where
+    command = (if dir q == IfSend then "an IF-SEND" else "an IF-RECV") <> " of protocol " <> hex (proto q) <> " on ComID "
+              <> hex (comId q)
+
+-- | Latch the drive for the rest of the run, saying why (the run gave up on
+--   an answer: what the drive did with its command is no longer known), so
+--   that nothing more reaches it; a drive latched already keeps its first
+--   reason.
+driveLatch :: GuardedDrive -> Text -> IO ()
+driveLatch g why = atomicModifyIORef' (gdLatched g) (\was -> (was <|> Just why, ()))
+
+-- | Why the run latched the drive, if it did.
+driveLatched :: GuardedDrive -> IO (Maybe Text)
+driveLatched = readIORef . gdLatched
 
 -- | The drive's policy: 'Level0Only' until its base ComID is bound, then
 --   'AllowList' of the base and what binding admits.
@@ -318,11 +365,14 @@ guardedRecv t policy tr q
   | otherwise       = pass t policy tr q
 
 -- | A transport whose every command passes the Guard first: one the policy
---   refuses is recorded, never issued, and answered 'Unsupported' with the
---   reason.
+--   refuses is recorded, never issued, and answered 'blockedResponse'.
 guarding :: Transcript -> Policy -> Transport c -> Transport c
-guarding t policy tr = tr { tExchange = fmap (either blocked id) . pass t policy tr }
-  where blocked why = Response (Unsupported ("blocked by the Guard: " <> why)) mempty
+guarding t policy tr = tr { tExchange = fmap (either blockedResponse id) . pass t policy tr }
+
+-- | A command the Guard refused, as its transport's answer: 'Unsupported',
+--   with the reason.
+blockedResponse :: Text -> Response
+blockedResponse why = Response (Unsupported ("blocked by the Guard: " <> why)) mempty
 
 -- | A command through the policy: issued, or refused and recorded.
 pass :: Transcript -> Policy -> Transport c -> Request -> IO (Either Text Response)
@@ -403,7 +453,7 @@ stackResetAllowed q
                   <> hex extended <> " (a static ComID's extension, Core 3.3.3.1, PDF 57)")
         | otherwise -> Right ()
   where
-    extended = (fromIntegral (comId q) `shiftL` 16) .|. fromIntegral staticExtension :: Word32
+    extended = extendedComId (comId q)
 
 -- | An IF-SEND's payload: one ComPacket on the command's ComID, with a
 --   static ComID's extension (Core 3.3.3.1, PDF 57) and the OutstandingData
@@ -442,7 +492,7 @@ allowedSubPacket allowed sp
 
 allowedCall :: [Allowed] -> MethodCall -> Either Text ()
 allowedCall allowed (MethodCall (MethodHeader invoker method) ps _)
-  | invoker == uSMUID && method == uProperties   = need allowed AllowProperties "SMUID.Properties"
+  | invoker == uSMUID && method == uProperties   = need allowed AllowProperties "SMUID.Properties" >> propertiesAllowed ps
   | invoker == uSMUID && method == uStartSession =
       need allowed AllowStartSessionAdminSP "SMUID.StartSession" >> startSessionAllowed ps
   | invoker == uC_PIN_MSID && method == uMethodID_Get =
@@ -450,34 +500,61 @@ allowedCall allowed (MethodCall (MethodHeader invoker method) ps _)
   | otherwise = Left ("the method " <> named method <> " on " <> tshow invoker <> " is not allowed")
   where named u = maybe (tshow u) (\n -> T.pack n <> " (" <> tshow u <> ")") (L.lookup u (sessionManagerMethodUIDs <> methodIDUIDs))
 
--- | StartSession's SPID the Admin SP's, and no optional parameter but its
---   HostSigningAuthority, Anybody, if that (Core 5.2.3.1, PDF 149): no
---   HostChallenge, HostExchangeAuthority, HostExchangeCert, HostSigningCert,
+-- | Properties' parameters read against its generated signature (Core
+--   5.2.2.1, PDF 140: no required parameter, one optional, HostProperties):
+--   none, or HostProperties a list of host properties, each a Named value
+--   whose name Core Table 167 gives a host property (the generated
+--   'properties', PDF 141-143) and whose value is a uinteger (a boolean
+--   property's 0 or 1), so that nothing but the host's communication
+--   properties reaches the drive (each of which STACK_RESET puts back to its
+--   default, Core 3.3.4.7.5 item 7, PDF 65).
+propertiesAllowed :: Parameters -> Either Text ()
+propertiesAllowed ps = do
+  call <- first (("Properties' parameters are not its signature's: " <>) . paramErrorText) (decodeParameters @Methods.Properties ps)
+  for_ (Methods.propertiesHostProperties call) $ \case
+    L (List items) -> traverse_ hostProperty items
+    other          -> Left ("Properties' HostProperties is no list but " <> tshow other <> " (Core 5.2.2.1, PDF 140)")
+  where
+    hostProperty = \case
+      N (NamedValue (Name (Datum (Bytes n))) (D (Datum (Unsigned v))))
+        | Just p <- L.find ((== decodeUtf8Lenient n) . propertyName) properties, Host `elem` appliesTo p ->
+            unless (not (boolean p) || v <= 1) (Left ("Properties with the boolean host property " <> propertyName p <> " = " <> tshow v
+                                                       <> ", not 0 or 1 (Core Table 167, PDF 143)"))
+        | otherwise -> Left ("Properties with a host property " <> tshow n <> " that Core Table 167 gives no host (PDF 141-143)")
+      other -> Left ("Properties' HostProperties holds " <> tshow other <> ", no name = uinteger (Core 5.2.2.1, PDF 140)")
+    boolean p = typeNameText (propertyType p) == "boolean"
+
+-- | StartSession's parameters read against its generated signature (Core
+--   5.2.3.1, PDF 149; 3.2.4.1, PDF 47-48: exactly its three required ones,
+--   positional, the optional ones Named by their 0-based index among them):
+--   HostSessionID a uinteger; SPID the Admin SP's; Write 1, a read-write
+--   session, the jig's every session (Test Cases 4.1 e, PDF 26; design 13.7,
+--   Scott's answer of 2026-11-02); and no optional parameter but its
+--   HostSigningAuthority, Anybody, if that: no HostChallenge,
+--   HostExchangeAuthority, HostExchangeCert, HostSigningCert,
 --   SessionTimeout, TransTimeout, InitialCredit nor SignedHash, so that a
 --   session to the Admin SP opens as Anybody, who authenticates without a
---   credential (5.3.4.1.2.1, PDF 211), and no credential is tried. Each
---   parameter is found by its name in the generated signature, a required
---   one by position, an optional one by its 0-based index among the
---   optional ones (3.2.4.1).
+--   credential (5.3.4.1.2.1, PDF 211), and no credential is tried.
 startSessionAllowed :: Parameters -> Either Text ()
-startSessionAllowed (Parameters positional nameds) = do
-  spid <- maybe (Left "StartSession without its SPID") Right (listToMaybe . (`drop` positional) =<< L.findIndex (named "SPID") (sigRequired sig))
-  unless (isUid uSP_Admin spid) (Left "StartSession to an SP other than the Admin SP")
-  signing <- maybe (Left "StartSession's signature names no HostSigningAuthority") Right (L.findIndex (named "HostSigningAuthority") (sigOptional sig))
-  case nameds of
+startSessionAllowed ps = do
+  call <- first (("StartSession's parameters are not its signature's: " <>) . paramErrorText) (decodeParameters @Methods.StartSession ps)
+  unless (isJust (uintegerOf (Methods.startSessionHostSessionID call))) $
+    Left "StartSession whose HostSessionID is no uinteger (Core 5.2.3.1, PDF 149)"
+  unless (isUid uSP_Admin (Methods.startSessionSPID call)) (Left "StartSession to an SP other than the Admin SP")
+  unless (uintegerOf (Methods.startSessionWrite call) == Just 1) $
+    Left "StartSession whose Write is not 1: a drive's sessions are read-write under the allow list (design 13.7)"
+  case [ (paramName p, v) | (p, Just v) <- zip (sigOptional (signature @Methods.StartSession)) (optionalValues call) ] of
     [] -> Right ()
-    [NamedValue (Name (Datum n)) v]
-      | n == Unsigned (fromIntegral signing) ->
-          unless (isUid uAuthority_Anybody v) (Left "StartSession with a HostSigningAuthority other than Anybody")
-    _ -> Left ("StartSession with " <> T.intercalate ", " (map optionalName nameds) <> ": no optional parameter but "
-               <> "HostSigningAuthority = Anybody (Core 5.2.3.1, PDF 149)")
-  where
-    sig = signature @Methods.StartSession
-    named n = (== n) . paramName
-    optionalName = \case
-      NamedValue (Name (Datum (Unsigned i))) _ ->
-        maybe ("an optional parameter " <> tshow i <> " its signature lacks") paramName (listToMaybe (drop (fromIntegral i) (sigOptional sig)))
-      _ -> "a parameter named other than by its number"
+    [("HostSigningAuthority", v)] ->
+      unless (isUid uAuthority_Anybody v) (Left "StartSession with a HostSigningAuthority other than Anybody")
+    given -> Left ("StartSession with " <> T.intercalate ", " (map fst given) <> ": no optional parameter but "
+                   <> "HostSigningAuthority = Anybody (Core 5.2.3.1, PDF 149)")
+
+-- | A value that is a uinteger.
+uintegerOf :: Value -> Maybe Natural
+uintegerOf = \case
+  D (Datum (Unsigned n)) -> Just n
+  _                      -> Nothing
 
 -- | Get on C_PIN_MSID of its UID and PIN columns alone (UCT-03 step 1b,
 --   Test Cases PDF 32; the columns Opal 2.30's ACE_C_PIN_MSID_Get_PIN

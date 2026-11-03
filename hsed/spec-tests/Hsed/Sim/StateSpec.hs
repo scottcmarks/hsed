@@ -43,7 +43,7 @@ import           Hsed.Core.TypeName  (TypeName (..))
 import           Hsed.Core.UID       (uid)
 import           Hsed.Gen.Core.Layouts (GUDIDColumnContentsDescription (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc, spTableDesc, tPerInfoTableDesc)
-import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uSPTable, uTPerInfoTable)
+import           Hsed.Gen.Core.TableUIDs (uC_PINTable, uLockingTable, uMBRControlTable, uMBRTable, uSPTable, uTPerInfoTable)
 import           Hsed.Gen.Core.Types (ubooleanType)
 import           Hsed.Gen.Core.UIDs  (uAuthority_Anybody, uAuthority_SID, uC_PIN_SID, uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
@@ -182,6 +182,21 @@ spec = do
         `shouldBe` Just (EnumCell "True" 1)
       cellNamedIn (adminSP (withTPerInfo tPerInfoTableDesc [tPerInfoRow True] st0)) uTPerInfoTable "ProgrammaticResetEnable" (tPerInfoRow True)
         `shouldBe` Nothing
+
+  describe "the Locking SP's tables (M5a)" $ do
+    it "give the Locking table's rows, the global range and the eight ranges after it, as many as the parameters' ranges (Opal 2.30 Table 45, PDF 86)" $ do
+      length (lockingRows st0) `shouldBe` 9
+      length (lockingRows (initialState defaultSimParams { spLockingRanges = 12 })) `shouldBe` 13
+      lockingRows st0 `shouldBe` tableRows uSP_Locking uLockingTable st0
+    it "give MBRControl's one row (Table 46, PDF 87), none for a TPer without the Locking SP" $ do
+      mbrControl st0 `shouldBe` listToMaybe (tableRows uSP_Locking uMBRControlTable st0)
+      isJust (mbrControl st0) `shouldBe` True
+      mbrControl st0 { tsSPs = Map.delete uSP_Locking (tsSPs st0) } `shouldBe` Nothing
+    it "give a byte table's size, the MBR's and the DataStore's the parameters' (Table 36, PDF 54), none for an object table" $ do
+      byteTableSize uSP_Locking uMBRTable (initialState defaultSimParams { spMbrSize = 0x10000000 }) `shouldBe` Just 0x10000000
+      byteTableSize uSP_Locking (uid 0x00 0x00 0x10 0x01 0x00 0x00 0x00 0x00) st0 `shouldBe` Just 0xA00000
+      byteTableSize uSP_Locking uC_PINTable st0 `shouldBe` Nothing
+      byteTableSize uSP_Admin uMBRTable st0 `shouldBe` Nothing
 
   describe "an SP's life cycle (Core 4.1, PDF 91)" $ do
     let lifeCycleState = maybe (-1) colNumber (columnNamed "LifeCycleState" spTableDesc)

@@ -41,11 +41,19 @@ puts back (Core 3.3.4.7.5 item 7, PDF 65), and within what the kext's
 command carries; a longer answer is asked for again at its MinTransfer
 (Table 45, PDF 83). The host's exchange on a drive waits 15 s for each
 command, past the kext's own 10 s, so that the kext always answers first
-('exchangeOn'). 'admitsStackReset' says whether the end takes STACK_RESET
-once its base ComID is bound: the simulator always, a drive where the run
-admits it (@--recover@, or STACK_RESET before each case), and then
-'closingStep' sends one after a step that failed, so that no session
-outlives its case.
+('exchangeOn'); where the host gives up all the same, what the drive did
+with the command is no longer known, and the drive is latched for the rest
+of the run ("Hsed.Jig.Guard".'Hsed.Jig.Guard.driveLatch'): nothing more
+reaches it, End of Session and STACK_RESET included. 'admitsStackReset'
+says whether the end takes STACK_RESET once its base ComID is bound: the
+simulator always, a drive where the run admits it (@--recover@, or
+STACK_RESET before each case) and has not latched it; and then
+'closingStep' sends one after a step that failed, and 'startSession' one
+after a StartSession whose SyncSession it could not read, so that no
+session the TPer opened outlives its case unknown. Where the end takes
+none, such a session is kept in the run's context ('rcSessionUnread'), for
+the next case's NoSessions and for the reports, which name it with
+@--recover@'s hint.
 
 A run is stopped between commands, never in one (M4c): its stop flag
 ('reStop') holds why (a signal's name; or @--interrupt-in-session@, which
@@ -172,7 +180,6 @@ module Hsed.Jig.Script
   ) where
 
 import qualified Data.Aeson             as A
-import           Data.Bits              (shiftL, (.|.))
 import           Numeric                (showHex)
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
@@ -205,9 +212,9 @@ import           Hsed.Gen.Core.TableDescs (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs     (uCloseSession, uProperties, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
-import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, driveAllowed, driveBind, driveInfo, driveRecv, driveSend,
-                                         driveTransport)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
+import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, blockedResponse, driveAllowed, driveBind, driveInfo, driveLatch,
+                                         driveLatched, driveRecv, driveSend, driveTransport)
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
@@ -221,7 +228,7 @@ import           Hsed.Transport.InProc  (SimControl (..))
 import           Hsed.Wire              (Cap (..), Channel, Describe (..), Dir (..), ExchangeError (..), ExchangeOpts (..),
                                          IfStatus (..), Request (..), Response (..), Transport, Unit (..),
                                          comIdManagementProtocol, comPacketProtocol, dataKind, defaultExchangeOpts,
-                                         describeTransport, exchangeComPacket, hex, ifRecv, ifSend, ifStatusDetail,
+                                         describeTransport, exchangeComPacket, extendedComId, hex, ifRecv, ifSend, ifStatusDetail,
                                          ifStatusName, level0ComId, mostCarried, roundUp, staticExtension, transferLength,
                                          unitOf)
 
@@ -244,12 +251,15 @@ data RunCtx = RunCtx
   , rcObservations     :: ![(Text, Text)]           -- ^ what the case running has observed ('observe'), in order; the
                                                     --   runner takes them for the case's report and starts the next
                                                     --   case with none
+  , rcSessionUnread    :: !(Maybe (Word16, Text))   -- ^ a session the TPer may have opened on a ComID that no STACK_RESET
+                                                    --   has cleared since: a StartSession issued whose SyncSession the
+                                                    --   host could not read, and why ('startSession')
   }
   deriving (Eq, Show)
 
 -- | What a run starts knowing: nothing.
 emptyRunCtx :: RunCtx
-emptyRunCtx = RunCtx Nothing Nothing Nothing Nothing [] Nothing Nothing Nothing []
+emptyRunCtx = RunCtx Nothing Nothing Nothing Nothing [] Nothing Nothing Nothing [] Nothing
 
 -- | A script's environment: the run's target, transcript, channel, what it
 --   has learned, its options, its stop flag, and where it logs.
@@ -348,7 +358,7 @@ endUnit = theEnd <&> \case
 recvOn :: Word8 -> Word16 -> Word32 -> Script Response
 recvOn p c len = theEnd >>= \case
   SimEnd tr  -> liftIO (ifRecv tr p c len)
-  DriveEnd g -> liftIO (either blocked id <$> driveRecv g (Request IfRecv p c len mempty))
+  DriveEnd g -> liftIO (either blockedResponse id <$> driveRecv g (Request IfRecv p c len mempty))
 
 -- | IF-SEND on the end, the payload zero-padded to the transfer length: the
 --   simulator's transport, or the drive's through the Guard, under its
@@ -358,11 +368,7 @@ sendOn p c len bytes = theEnd >>= \case
   SimEnd tr  -> liftIO (ifSend tr p c len bytes)
   DriveEnd g -> do
     let padded = bytes <> B.replicate (fromIntegral len - B.length bytes) 0
-    liftIO (either blocked id <$> driveSend g (Request IfSend p c len padded))
-
--- | A command the Guard refused, as the transport's answer.
-blocked :: Text -> Response
-blocked why = Response (Unsupported ("blocked by the Guard: " <> why)) mempty
+    liftIO (either blockedResponse id <$> driveSend g (Request IfSend p c len padded))
 
 -- | Add a note to the run's transcript.
 note :: Text -> Script ()
@@ -385,13 +391,14 @@ stopIfAsked = asks reStop >>= readIORef >>= traverse_ (throwIO . Interrupted)
 --   drive, where what binding its base ComID admits holds 'AllowStackReset'
 --   (@--recover@, or STACK_RESET before each case,
 --   "Hsed.Jig.Options".@roStackResetBeforeCases@), whether or not the base
---   is bound yet. Its policy takes STACK_RESET only once the base is bound,
---   Level0Only before the bind taking none; 'stackReset' binds nothing
---   itself, so a reset on a drive comes after 'baseComId', which binds.
+--   is bound yet, unless the run latched it ('driveLatch'). Its policy takes
+--   STACK_RESET only once the base is bound, Level0Only before the bind
+--   taking none; 'stackReset' binds nothing itself, so a reset on a drive
+--   comes after 'baseComId', which binds.
 admitsStackReset :: Script Bool
-admitsStackReset = theEnd <&> \case
-  SimEnd _   -> True
-  DriveEnd g -> AllowStackReset `elem` driveAllowed g
+admitsStackReset = theEnd >>= \case
+  SimEnd _   -> pure True
+  DriveEnd g -> liftIO (driveLatched g) <&> \latched -> AllowStackReset `elem` driveAllowed g && isNothing latched
 
 readCtx :: Script RunCtx
 readCtx = asks reCtx >>= readIORef
@@ -513,12 +520,16 @@ expectT45 name c row r = do
 --   come (rows 1 and 4), asked again after the host's poll interval. So an
 --   answer Core 3.3.10.2.1 3.d.ii allows an SSC (OutstandingData the total,
 --   or MinTransfer zero, PDF 83) drains as well. It gives up after as many
---   polls as the host's timeout holds ('defaultExchangeOpts').
+--   polls as the host's timeout holds (the run's @roExchange@,
+--   'defaultExchangeOpts' unless a test shortens it).
 drain :: Word16 -> Script ()
-drain c = stopIfAsked >> recvLength >>= go 0
+drain c = do
+  stopIfAsked
+  x <- asks (roExchange . reOpts)
+  recvLength >>= go x 0
   where
-    go n len
-      | n > polls = unmet ("drain " <> hex c <> ": still not idle after " <> tshow polls <> " IF-RECVs")
+    go x n len
+      | n > pollsOf x = unmet ("drain " <> hex c <> ": still not idle after " <> tshow (pollsOf x) <> " IF-RECVs")
       | otherwise = do
           r <- recvOn comPacketProtocol c len
           unless (status r == Good) (unmet ("drain " <> hex c <> ": the IF-RECV answered " <> describeStatus (status r)))
@@ -528,14 +539,14 @@ drain c = stopIfAsked >> recvLength >>= go 0
           if | minTransfer /= 0, returned == 0, longer <= len ->
                  unmet ("drain " <> hex c <> ": answered " <> showAnswer answer <> ", a MinTransfer no larger than the request with "
                         <> "no packets: no row of Table 45")
-             | minTransfer /= 0 -> go (n + 1) longer
+             | minTransfer /= 0 -> go x (n + 1) longer
              | outstanding == 0 -> pure ()
-             | otherwise        -> threadDelay (xPollMicros defaultExchangeOpts) >> go (n + 1) len
+             | otherwise        -> threadDelay (xPollMicros x) >> go x (n + 1) len
 
 -- | How many times the host asks again while the TPer is busy: as many as
---   its timeout holds polls ('defaultExchangeOpts').
-polls :: Int
-polls = xTimeoutMicros defaultExchangeOpts `div` max 1 (xPollMicros defaultExchangeOpts)
+--   its timeout holds polls.
+pollsOf :: ExchangeOpts -> Int
+pollsOf x = xTimeoutMicros x `div` max 1 (xPollMicros x)
 
 -- | Run a step on the simulator alone: 'Nothing' on a drive.
 simOnly :: Script a -> Script (Maybe a)
@@ -650,17 +661,29 @@ propertiesAnswerOf packets = do
 --   With @--interrupt-in-session@, a session opened on the drive's end (or
 --   the run's one end) stops the run ('reStop', why said), the session left
 --   open on purpose, for @--recover@ to clear (design 11, M4c).
+--
+--   A StartSession issued whose SyncSession the host could not read (an
+--   exchange that failed past its IF-SEND, or an answer with no SyncSession
+--   but the TPer's own word that none opened: its CloseSession, Core
+--   3.3.7.1.5, PDF 75) may have left a session open, which the TPer holds
+--   once it returns SyncSession (Core 3.3.4.5, PDF 62): on an end that takes
+--   STACK_RESET ('admitsStackReset') one is sent on the ComID and noted,
+--   which aborts it (3.3.4.7.5 item 1, PDF 65); where the end takes none,
+--   or the reset does not answer Success, the run's context keeps it
+--   ('rcSessionUnread'), and the next case's NoSessions and the reports
+--   find it.
 startSession :: StartArgs -> Script (Either ExchangeError SyncAnswer)
 startSession (StartArgs sp authority challenge write) = do
   c <- baseComId
   bytes <- framed "the StartSession ComPacket" (controlComPacket c (generate call))
-  answer <- fmap (syncAnswerOf c) <$> exchangeOn c bytes
+  exchange <- exchangeOn c bytes
+  let answer = syncAnswerOf c <$> exchange
   case answer of
     Right (Synced h) -> do
       modifyCtx (\x -> x { rcSession = Just h })
       here <- interruptsHere
       when here $ asks reStop >>= \ref -> atomicModifyIORef' ref (\was -> (was <|> Just (interruptedIn h), ()))
-    _ -> pure ()
+    _ -> for_ (unreadSession exchange answer) (uncurry (sessionUnread c))
   pure answer
   where
     call = invocation uSMUID Methods.StartSession
@@ -677,6 +700,48 @@ startSession (StartArgs sp authority challenge write) = do
       , Methods.startSessionInitialCredit         = Nothing
       , Methods.startSessionSignedHash            = Nothing
       }
+
+-- | Why a StartSession's exchange may have left a session the host does not
+--   know of, and whether a command of it failed in the transport or went
+--   unanswered: its IF-SEND issued (not refused before it) and no
+--   SyncSession read back, the TPer not having said that it opened none (a
+--   SyncSession of an error status, its CloseSession); or none.
+unreadSession :: Either ExchangeError [PacketFrame] -> Either ExchangeError SyncAnswer -> Maybe (Text, Bool)
+unreadSession exchange answer = case (exchange, answer) of
+  (_, Right (Synced _))        -> Nothing
+  (_, Right (SyncFailed _))    -> Nothing
+  (Right packets, Right (NoSync why))
+    | aborted packets          -> Nothing
+    | otherwise                -> Just (why, False)
+  (Left (Refused _), _)        -> Nothing
+  (Left e, _)                  -> Just (describeExchange e, gone e)
+  _                            -> Nothing
+  where
+    aborted = either (const False) (any closeSessionReturned) . returnedOf
+    gone = \case
+      IfError (TransportFailure _) -> True
+      TimedOut                     -> True
+      _                            -> False
+
+-- | A session StartSession may have opened on a ComID, unread, and whether
+--   a command of its exchange failed in the transport or went unanswered:
+--   kept in the run's context first; then, on an end that takes STACK_RESET,
+--   where on a drive the transport neither failed nor went unanswered (the
+--   kext transport latches on a failure, and the run on a host that gave
+--   up: neither issues anything more), STACK_RESET on the ComID, noted,
+--   which clears it where it answers Success/Failure 0.
+sessionUnread :: Word16 -> Text -> Bool -> Script ()
+sessionUnread c why gone = do
+  modifyCtx (\x -> x { rcSessionUnread = Just (c, why) })
+  admits <- admitsStackReset
+  failed <- theEnd <&> \case
+    DriveEnd _ -> gone
+    SimEnd _   -> False
+  when (admits && not failed) $ do
+    outcome <- stackReset c
+    when (outcome == Right 0) (modifyCtx (\x -> x { rcSession = Nothing, rcSessionUnread = Nothing }))
+    note ("StartSession on " <> hex c <> ": no SyncSession read (" <> why <> "), so a session it may have opened is not known: "
+          <> "STACK_RESET on " <> hex c <> ": " <> either id (\n -> "Success/Failure " <> tshow n) outcome)
 
 -- | The HSN the jig opens every session with: 0x00000001 (Test Cases 4.1
 --   h, PDF 26; SPF-07, the one test of other values, is not the jig's).
@@ -829,25 +894,27 @@ sessionLeftOpen = "a read-write session to the Admin SP was open before this one
 --   takes them with 'AllowStackReset', on its base ComID alone), and the
 --   base must be bound first ('baseComId'): this verb binds nothing. Once
 --   its IF-SEND is out, its polls run to their end, a stop asked for or not
---   ('stopIfAsked').
+--   ('stopIfAsked'): as many as the host's timeout holds (the run's
+--   @roExchange@), Pending each time.
 stackReset :: Word16 -> Script (Either Text Word32)
 stackReset c = do
   stopIfAsked
   u <- endUnit
+  x <- asks (roExchange . reOpts)
   case encodeRecord (STACK_RESETCommandRequest (extendedComId c)) of
     Left e        -> pure (Left ("the STACK_RESET request does not encode: " <> tshow e))
     Right request -> do
       sent <- sendOn comIdManagementProtocol c (roundUp u (fromIntegral (B.length request))) request
       if status sent /= Good
         then pure (Left ("HANDLE_COMID_REQUEST of STACK_RESET on " <> hex c <> " answered " <> describeStatus (status sent)))
-        else retrieve (0 :: Int) (roundUp u (fromIntegral (layoutSize (recordLayout (Proxy :: Proxy STACK_RESETCommandResponse)))))
+        else retrieve x (0 :: Int) (roundUp u (fromIntegral (layoutSize (recordLayout (Proxy :: Proxy STACK_RESETCommandResponse)))))
   where
-    retrieve n len = recvOn comIdManagementProtocol c len >>= \r -> case stackResetAnswer c r of
+    retrieve x n len = recvOn comIdManagementProtocol c len >>= \r -> case stackResetAnswer c r of
       Right outcome -> pure (Right outcome)
       Left (False, why) -> pure (Left why)
       Left (True, why)
-        | n < polls -> threadDelay (xPollMicros defaultExchangeOpts) >> retrieve (n + 1) len
-        | otherwise -> pure (Left (why <> " after " <> tshow polls <> " polls"))
+        | n < pollsOf x -> threadDelay (xPollMicros x) >> retrieve x (n + 1) len
+        | otherwise     -> pure (Left (why <> " after " <> tshow (pollsOf x) <> " polls"))
 
 -- | A GET_COMID_RESPONSE answer after STACK_RESET on a ComID: Table 36's
 --   Success/Failure; or why not, and whether to ask again (Pending).
@@ -865,12 +932,6 @@ stackResetAnswer c r
       Left (False, "No Response Available to GET_COMID_RESPONSE on " <> hex c <> " (Core Table 31, PDF 63): the TPer holds no STACK_RESET response")
   | otherwise = Left (False, "GET_COMID_RESPONSE on " <> hex c <> " answered neither a STACK_RESET response, nor Pending, nor No Response Available "
                              <> "(Core Tables 31, 36 and 37)")
-
--- | A static ComID's Extended ComID as the ComID management payloads carry
---   it (Core 3.3.4.7, PDF 62): the ComID in the upper two bytes, the
---   extension (a static ComID's 0x0000, 3.3.3.1, PDF 57) in the lower.
-extendedComId :: Word16 -> Word32
-extendedComId c = (fromIntegral c `shiftL` 16) .|. fromIntegral staticExtension
 
 -- | The Opal SSC V2 descriptor of a Level 0 response, decoded (Opal 2.30
 --   Table 6, PDF 23), if it has one that decodes.
@@ -917,7 +978,7 @@ closingStep name h v = do
   where
     recover = admitsStackReset >>= \admits -> when admits $ do
       outcome <- stackReset (shComId h)
-      modifyCtx (\x -> x { rcSession = Nothing })
+      modifyCtx (\x -> x { rcSession = Nothing, rcSessionUnread = if outcome == Right 0 then Nothing else rcSessionUnread x })
       note (name <> ": after a failure, STACK_RESET on " <> hex (shComId h) <> ": "
             <> either id (\n -> "Success/Failure " <> tshow n) outcome)
 
@@ -980,27 +1041,44 @@ propertiesCall = generate (invocation uSMUID (Methods.Properties Nothing))
 --   ('stopIfAsked'): the IF-SEND through the end's path (the simulator's
 --   transport, or the drive's through the Guard, under its policy), then
 --   IF-RECV at 'recvLength' until the TPer has returned everything; the
---   packets of the answer, none for Table 45's (0, 0, 0). On a drive each
---   command is given 'driveTimeoutMicros'.
+--   packets of the answer, none for Table 45's (0, 0, 0). The host polls and
+--   waits as the run's @roExchange@ says, and on a drive gives each command
+--   @roDriveTimeoutMicros@ ('driveTimeoutMicros' unless a test shortens it).
+--
+--   On a drive an exchange the host gave up on ('TimedOut') latches the
+--   drive for the rest of the run ("Hsed.Jig.Guard".'driveLatch'): every
+--   command of it was given under its recording's mask
+--   ("Hsed.Jig.Transcript".'Hsed.Jig.Transcript.recording'), so the
+--   transport judged and kept the answer it lost, and what the drive did
+--   with the command, the exchange left where it was, is no longer known;
+--   nothing more reaches the drive, End of Session and STACK_RESET
+--   included.
 exchangeOn :: Word16 -> ByteString -> Script (Either ExchangeError [PacketFrame])
 exchangeOn c bytes = do
   stopIfAsked
   len <- recvLength
   env <- ask
-  let opts = defaultExchangeOpts { xRecvLen = len }
+  let opts = (roExchange (reOpts env)) { xRecvLen = len }
+      waited = roDriveTimeoutMicros (reOpts env)
   theEnd >>= \case
     SimEnd tr  -> liftIO (exchangeComPacket opts (\q -> Right <$> ifSend tr (proto q) (comId q) (lenBytes q) (payload q))
                                             (reChannel env) tr c bytes)
-    DriveEnd g -> liftIO (exchangeComPacket opts { xTimeoutMicros = driveTimeoutMicros } (driveSend g) (reChannel env)
-                                            (driveTransport g) c bytes)
+    DriveEnd g -> liftIO $ do
+      answer <- exchangeComPacket opts { xTimeoutMicros = waited } (driveSend g) (reChannel env) (driveTransport g) c bytes
+      case answer of
+        Left TimedOut -> driveLatch g ("the host gave up on an exchange on " <> hex c <> " (no answer within "
+                                       <> tshow (waited `div` 1000) <> " ms a command, or the exchange's own bound): what the drive "
+                                       <> "did with its last command is not known, so nothing more is issued on this drive in this run")
+        _             -> pure ()
+      pure answer
 
--- | How long the host's exchange waits for a drive's command: 15 s, past
---   the kext's own 10 s (@SED_TIMEOUT@, macos-driver UserKernelShared.h:71,
---   which TPerDriver.cpp:318 gives each command), so that the kext always
---   answers first and no command is left running in it when the host gives
---   up.
+-- | How long the host's exchange waits for a drive's command, unless a test
+--   shortens it: 15 s, past the kext's own 10 s (@SED_TIMEOUT@,
+--   macos-driver UserKernelShared.h:71, which TPerDriver.cpp:318 gives each
+--   command), so that the kext always answers first and no command is left
+--   running in it when the host gives up ("Hsed.Jig.Options".@roDriveTimeoutMicros@).
 driveTimeoutMicros :: Int
-driveTimeoutMicros = 15000000
+driveTimeoutMicros = roDriveTimeoutMicros defaultRunOptions
 
 -- | A mark in the run's transcript: the number of its newest entry, so that
 --   'maskAnswersSince' takes what was issued after it.

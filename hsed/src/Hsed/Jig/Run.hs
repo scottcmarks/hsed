@@ -22,17 +22,22 @@ the reports. With @--recover@ the target's one end runs "Hsed.Jig.Recover"
 in place of the cases.
 
 What is refused first, in order ('runJig'): a key the catalogue lacks;
-@--recover@ with @--tests@ or with a pair, @--recover@ running alone on one
-end; a drive target without the serial it must have; a Level 0 transfer
-length a drive or a replay cannot carry: each a usage error; a drive target
-without root, hsed's own gate (design 9.3); a profile that cannot be read;
-then, for a drive the run may send to (its allowed list not empty,
-'driveAllowedFor'), a slice of it mounted, unless @--allow-mounted@, whose
-mounts are noted in the reports (design 9.3 item 4). Then SIGINT, SIGTERM
-and SIGHUP are each caught once, for the run's length: the signal stops the
-run ('Hsed.Jig.Script.reStop'), the command in flight completing, and a
-second of it kills the process (the kernel then closes the kext's user
-client; nothing more reaches the drive).
+@--recover@ with @--tests@, with a pair or with @--interrupt-in-session@,
+@--recover@ running alone on one end and never stopping itself; a drive
+target without the serial it must have; a Level 0 transfer length a drive
+or a replay cannot carry: each a usage error; a drive target without root,
+hsed's own gate (design 9.3); a profile that cannot be read; then, for a
+drive the run may send to (its allowed list not empty, 'driveAllowedFor'),
+a slice of it mounted, unless @--allow-mounted@, whose mounts are noted in
+the reports (design 9.3 item 4). Through hsed-jig's command line
+("Hsed.Jig.Cli") a drive target meets two of these first, before anything
+else is read: without @--expect-serial@ (2), then without root (3); so a
+drive run as yourself with a key the catalogue lacks exits 3. Then SIGINT,
+SIGTERM and SIGHUP are each caught once, for the run's length: the signal
+stops the run ('Hsed.Jig.Script.reStop'), the command in flight completing,
+and a second of it kills the process (the kernel then closes the kext's
+user client; nothing more reaches the drive); after the run the handlers
+it found are put back, whatever they were.
 
 The exit code ('runExit'): 0 every selected case passed (waived
 prerequisites printed), no extension failed, a pair found only allowed
@@ -49,7 +54,8 @@ target without root, a drive mounted where the run may send to it without
 run ended, does not admit ('outsidePolicy'); 130 the run was stopped (a
 signal, @--interrupt-in-session@): the command in flight completed, nothing
 more was issued, no End of Session was sent, the reports were written. A
-safety violation outranks a stop, and a stop a failure.
+safety violation outranks a stop, and a stop a failure: 3, then 130, then
+1, then 0.
 
 The cases run in the catalogue's order, whatever the order of @--tests@ (the
 Test Cases run section 5's in sequence, 3.1, PDF 25); a key naming a whole
@@ -117,14 +123,22 @@ read-write, and LockingManufactured, which every drive case waives, is not
 observable. A prerequisite neither waived nor met skips the case.
 
 A stopped run ('Hsed.Jig.Script.Interrupted'): the case in flight is
-skipped as interrupted, each case after it skipped, not run; no Level 0
+skipped as interrupted (on the simulator, a case stopped in one of its
+extensions keeps its TCG verdict, the extension skipped as interrupted and
+those after it not run), each case after it skipped, not run; no Level 0
 Discovery after the cases, no pair and no capture follow; the reports say
-why it stopped, and name a session it left open, for @--recover@.
+why it stopped, and name a session it left open, for @--recover@. A session
+a StartSession may have opened whose SyncSession the host could not read,
+and which no STACK_RESET has cleared since ("Hsed.Jig.Script".@rcSessionUnread@),
+is a problem of the run, named with @--recover@'s hint, stopped or not; so
+is a session a run that was not stopped left open (its End of Session
+unanswered or, on a drive the run latched, not sent).
 -}
 module Hsed.Jig.Run
   ( RunOptions (..)
   , runJig
   , runOpened
+  , runOpenedStopping
   , cases
   , selectedCases
     -- * A drive's run
@@ -188,6 +202,8 @@ import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..),
                                          comPacketProtocol, describeTransport, hex, level0ComId, mostCarried, newChannel,
                                          roundUp, transferLength)
 #if !defined(mingw32_HOST_OS)
+import           Data.Dynamic           (fromDynamic, toDyn)
+import qualified GHC.Conc.Signal        as Conc
 import           System.Posix.Signals   (Handler (..), installHandler, sigHUP, sigINT, sigTERM)
 #endif
 
@@ -252,20 +268,29 @@ runJig opts0 = do
 --   records into ("Hsed.Jig.Guard".'Hsed.Jig.Guard.guardDrive'). A key the
 --   catalogue lacks is still exit 2.
 runOpened :: RunOptions -> Transcript -> Target -> IO ExitCode
-runOpened opts t tg = case selectedCases (roTests opts) of
+runOpened opts t tg = newIORef Nothing >>= \stop -> runOpenedStopping opts t stop tg
+
+-- | 'runOpened' with the run's stop flag given ("Hsed.Jig.Script".@reStop@),
+--   so that a test stops the run as a signal would, at a moment it
+--   chooses.
+runOpenedStopping :: RunOptions -> Transcript -> IORef (Maybe Text) -> Target -> IO ExitCode
+runOpenedStopping opts t stop tg = case selectedCases (roTests opts) of
   Left e       -> complain e $> ExitFailure 2
   Right chosen -> do
     started <- getCurrentTime
-    stop <- newIORef Nothing
     runOn opts started chosen [] t stop tg
 
 -- | Why @--recover@ cannot run as asked, if it cannot: it runs alone (no
---   case with it) and on one end (no pair), design 9.3. A usage error.
+--   case with it), on one end (no pair), and to its end (no
+--   @--interrupt-in-session@, which would leave its own probe's session
+--   open), design 9.3. A usage error.
 recoverProblem :: RunOptions -> Maybe Text
 recoverProblem opts
   | not (roRecover opts)      = Nothing
   | not (null (roTests opts)) = Just "hsed-jig: --recover runs alone: no --tests with it (design 9.3)"
   | paired (roTarget opts)    = Just "hsed-jig: --recover runs on one end, not on a pair (design 9.3)"
+  | roInterruptInSession opts = Just ("hsed-jig: --recover runs to its end: no --interrupt-in-session with it, which would leave "
+                                      <> "its own session open (design 9.3)")
   | otherwise                 = Nothing
   where
     paired = \case
@@ -292,7 +317,13 @@ preflight opts admits
 --   M4c): the signal's name written into the run's stop flag, unless one is
 --   there, and said, the command in flight left to complete; a second of
 --   the same signal takes its default action, which ends the process. The
---   handlers before them are put back after. On Windows, none.
+--   handlers before them are put back after, whatever they were: base's
+--   signal table's own entry for each (GHC's handler of SIGINT among them,
+--   which System.Posix.Signals cannot give back, it being no 'Handler'),
+--   swapped for the run's and swapped back ("GHC.Conc.Signal"), and the
+--   signal's action as it was (the default, ignored, or handled: once, as
+--   GHC's SIGINT handler is, or every time, as a 'Handler' says). On
+--   Windows, none.
 withStopSignals :: IORef (Maybe Text) -> IO a -> IO a
 #if defined(mingw32_HOST_OS)
 withStopSignals _ act = act
@@ -300,8 +331,25 @@ withStopSignals _ act = act
 withStopSignals stop act = bracket (traverse install signals) (traverse_ restore) (const act)
   where
     signals = [(sigINT, "SIGINT"), (sigTERM, "SIGTERM"), (sigHUP, "SIGHUP")]
-    install (sig, name) = (,) sig <$> installHandler sig (CatchOnce (caught name)) Nothing
-    restore (sig, before) = void (installHandler sig before Nothing)
+    -- the table's entry before, whatever its type, swapped for the run's at once; then the signal's action set,
+    -- installHandler saying whether it was the default or ignored (else it gives back the run's own, now in the table)
+    install (sig, name) = do
+      let ours = CatchOnce (caught name)
+      table <- Conc.setHandler sig (Just (const (caught name), toDyn ours))
+      before <- installHandler sig ours Nothing
+      pure (sig, table, before)
+    -- the action as it was, then the table's very entry
+    restore (sig, table, before) = do
+      void (installHandler sig (actionOf before table) Nothing)
+      void (Conc.setHandler sig table)
+    actionOf before table = case before of
+      Default -> Default
+      Ignore  -> Ignore
+      _       -> case table of
+        Just (_, dyn)
+          | Just h <- fromDynamic dyn  -> h
+          | Just io <- fromDynamic dyn -> CatchOnce io   -- base's own (GHC.TopHandler's SIGINT), handled once
+        _ -> Default
     caught name = do
       atomicModifyIORef' stop (\was -> (was <|> Just name, ()))
       complain ("hsed-jig: " <> name <> ": the command in flight completes; nothing more is issued; a second " <> name <> " kills")
@@ -475,6 +523,12 @@ runOn opts started chosen preflightNotes t stop tg = do
     transcript <- entries t
     let ifSends    = sum (map (ifSendsIssued . snd) issued)
         outside    = concat [ map ((,) n) (outsidePolicy p es) | ((n, p), (_, es)) <- zip policies issued ]
+        unread     = [ "the " <> endName e <> " may hold a session on ComID " <> hex c <> " that a StartSession opened and the host "
+                       <> "could not read (" <> why <> "), which no STACK_RESET has cleared: hsed-jig --recover"
+                     | (e, ctx) <- zip ends contexts, Just (c, why) <- [rcSessionUnread ctx] ]
+                     <> [ "the " <> endName e <> " may hold session TSN " <> tshow (shTSN h) <> " on ComID " <> hex (shComId h)
+                          <> ", its End of Session unanswered or not sent: hsed-jig --recover"
+                        | isNothing stopped, (e, ctx) <- zip ends contexts, Just h <- [rcSession ctx] ]
         negotiated = [ (endName e, sent, answer) | (e, ctx) <- zip ends contexts, Just (sent, answer) <- [rcNegotiated ctx] ]
         pairProps  = case contexts of
           a : b : _ | not (roRecover opts), isNothing stopped -> Just (pairProperties (rcNegotiated a) (rcNegotiated b))
@@ -483,6 +537,7 @@ runOn opts started chosen preflightNotes t stop tg = do
         pairProblems = [ "pair: " <> e | Just (Left e) <- [pairing] ]
         allProblems  = pairProblems <> problems
                        <> [ "the Guard refused " <> tshow blocked <> " command(s) (each Blocked in the transcript)" | blocked > 0 ]
+                       <> unread
         interrupted  = (<> mconcat (map leftOpen (mapMaybe rcSession contexts))) <$> stopped
         failed = any (not . passed) results || any pairFails [ r | Just (Right r) <- [pairing] ]
                  || any propertiesFail pairProps || any isLeft recovered || not (null allProblems)
@@ -594,7 +649,10 @@ joined named c rs
 --   with none.
 --   A run stopped before the case skips it, not run; one stopped while the
 --   case runs ('Interrupted', thrown before a command) skips it as
---   interrupted, its extensions not run either.
+--   interrupted, its extensions not run either. One stopped in an extension
+--   keeps the case's verdict and what it observed: that extension is
+--   skipped as interrupted and each after it not run, and the run stops
+--   after the case.
 runCase :: End -> Case -> IO CaseResult
 runCase e c = runRIO (endEnv e) $ asks reStop >>= readIORef >>= \case
   Just why -> pure (notRun (Skipped ("not run: the run was interrupted (" <> why <> ")")))
@@ -616,13 +674,17 @@ runCase e c = runRIO (endEnv e) $ asks reStop >>= readIORef >>= \case
             xs <- for (cExtensions c) $ \(name, s) -> case (v, tg) of
               (Skipped _, _)        -> pure ((name, unrun v), [])
               (Unobservable _, _)   -> pure ((name, unrun v), [])
-              (_, SimTarget _ _)    -> do
-                note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name)
-                xv <- attempt s
-                obs <- observed
-                pure ((name, xv), map (first ((name <> ": ") <>)) obs)
+              (_, SimTarget _ _)    -> asks reStop >>= readIORef >>= \case
+                Just why -> pure ((name, Skipped ("not run: the run was interrupted (" <> why <> ")")), [])
+                Nothing  -> extension name s `catch` \(Interrupted why) -> ((name, Skipped ("interrupted: " <> why)), []) <$ observed
               _                     -> pure ((name, Skipped "the simulator's alone"), [])
             pure (CaseResult (cKey c) v ws (map fst xs) (own <> concatMap snd xs) [] True)
+    -- an extension run, its verdict and what it observed, under its name
+    extension name s = do
+      note (renderCaseKey (cKey c) <> " extension on the " <> endName e <> ", " <> name)
+      xv <- attempt s
+      obs <- observed
+      pure ((name, xv), map (first ((name <> ": ") <>)) obs)
     -- an extension not run, the case's verdict its reason
     unrun v = Skipped ("not run, the case " <> verdictText v)
     -- a case not run at all: its extensions not run either, its prerequisites not reached
@@ -649,7 +711,7 @@ lacking tg c = listToMaybe ([ why | n <- [NeedSimOnly, NeedErrorPath, NeedIfSend
         NeedLevel0     -> Nothing
         NeedIfRecv     -> beyondLevel0 g "needs IF-RECV beyond Level 0 Discovery"
         NeedIfSend     -> beyondLevel0 g "needs IF-SEND"
-        NeedErrorPath  -> Just "needs an IF-SEND off the allow list, an error path: the simulator's until a drive run opts in (design 9.3 item 6; M4c)"
+        NeedErrorPath  -> Just "needs an IF-SEND off the allow list, an error path: hardware error paths stay off a drive (design 9.3 item 6 and 13.8, Scott's)"
         NeedSimOnly    -> Just "the simulator's alone: no drive policy admits it (design 9.3)"
         NeedSimControl -> Just "needs the simulator's control"
       PairTarget _ _  -> Just "a pair's ends run a case one at a time"
@@ -739,7 +801,7 @@ establish c p = asks reTarget >>= \case
           note ("NoSessions: sessions hold ComIDs " <> T.unwords (map hex held) <> ": STACK_RESET on each (Core 3.3.4.7.5, PDF 65)")
           for_ held $ \comid -> stackReset comid >>= \outcome ->
             note ("NoSessions: STACK_RESET on " <> hex comid <> ": " <> either id (("Success/Failure " <>) . tshow) outcome)
-          asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing })
+          asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing, rcSessionUnread = Nothing })
           liftIO (scPeek control) <&> holding <&> \case
             []    -> Right Nothing
             still -> Left ("NoSessions: sessions still hold ComIDs " <> T.unwords (map hex still) <> " after STACK_RESET")
@@ -789,7 +851,7 @@ establish c p = asks reTarget >>= \case
           let named = T.intercalate " and " (map tshow resettable) <> ": STACK_RESET on " <> hex base <> ": "
           stackReset base >>= \case
             Right 0 -> do
-              asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing })
+              asks reCtx >>= \ref -> modifyIORef' ref (\x -> x { rcSession = Nothing, rcSessionUnread = Nothing })
               Right Nothing <$ note (named <> "Success/Failure 0: every session on it aborted, its stack in its initial state, its host "
                                      <> "properties back to their defaults (Core 3.3.4.7.5 items 1, 4, 6 and 7, PDF 65)")
             Right n  -> pure (Left (named <> "Success/Failure " <> tshow n <> ": the stack not reset (Core Table 36, PDF 66)"))
@@ -815,10 +877,12 @@ establish c p = asks reTarget >>= \case
         (Good, Right (l, o, m)) -> busy ("(" <> tshow l <> ", " <> tshow o <> ", " <> tshow m <> ")")
         (Good, Left why)        -> busy why
         (st, _)                 -> pure (Left ("SyncIdle: the IF-RECV on " <> hex base <> " answered " <> describeStatus st))
-    sessionsNow = asks reCtx >>= readIORef <&> \ctx -> case rcSession ctx of
-      Just h  -> Left ("NoSessions: this run left session TSN " <> tshow (shTSN h) <> " open on " <> hex (shComId h)
-                       <> " (its End of Session unanswered): hsed-jig --recover")
-      Nothing -> Right (Just (Waiver NoSessions sessionsUnobservable))
+    sessionsNow = asks reCtx >>= readIORef <&> \ctx -> case (rcSession ctx, rcSessionUnread ctx) of
+      (Just h, _)          -> Left ("NoSessions: this run left session TSN " <> tshow (shTSN h) <> " open on " <> hex (shComId h)
+                                    <> " (its End of Session unanswered): hsed-jig --recover")
+      (_, Just (cid, why)) -> Left ("NoSessions: this run may have left a session open on " <> hex cid <> ", a StartSession's answer "
+                                    <> "unread (" <> why <> "): hsed-jig --recover")
+      _                    -> Right (Just (Waiver NoSessions sessionsUnobservable))
 
 -- | Add a note to the run's transcript.
 note :: Text -> Script ()

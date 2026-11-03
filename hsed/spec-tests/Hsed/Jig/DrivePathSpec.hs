@@ -49,6 +49,12 @@ NoSessions waived, the way kept built.
   reached the drive, design 13.29 (d) named in the report; the commands
   after it are answered transport failures, none reaching the kext; and the
   run exits 1.
+* A kext that answers UCT-03's Get only after the host has given up on it
+  (the M4c review): the answer judged and recorded, the exchange given up
+  all the same, and the drive latched, so that nothing more reaches the
+  kext, End of Session and STACK_RESET included, each command after noted
+  as not issued; the run exits 1, naming the session the drive may still
+  hold for @--recover@.
 
 The golden CDBs are ATA PASS-THROUGH (12), A1h: TRUSTED RECEIVE (5Ch, PIO
 Data-In, bytes 1-2 08h 0Eh) or TRUSTED SEND (5Eh, PIO Data-Out, 0Ah 06h),
@@ -108,6 +114,10 @@ acceptance reset = defaultRunOptions { roTests = keys "UCT-02,UCT-03:1a-1c,SPF-0
 -- | UCT-03:1a-1c stopped once StartSession has opened its session.
 interrupting :: Bool -> RunOptions
 interrupting reset = defaultRunOptions { roTests = keys "UCT-03:1a-1c", roStackResetBeforeCases = reset, roInterruptInSession = True }
+
+-- | UCT-03:1a-1c, the host waiting 50 ms for each of the drive's commands.
+impatient :: Bool -> RunOptions
+impatient reset = defaultRunOptions { roTests = keys "UCT-03:1a-1c", roStackResetBeforeCases = reset, roDriveTimeoutMicros = 50000 }
 
 -- | @--recover@, alone on the drive.
 recovering :: Bool -> RunOptions
@@ -325,6 +335,22 @@ spec = describe "a drive's path without the drive: hsed-jig over the fake kext, 
       (recovered, report, cdbs') <- newTPer >>= \tper -> overKext failing tper (recovering reset)
       (recovered, cdbs', atPath ["recover", "ok"] report) `shouldBe` (ExitFailure 1, [level0Cdb, resetSendCdb], Just (A.Bool False))
       atPath ["recover", "text"] report `shouldSatisfy` holding "kIOReturnError (0xe00002bc)"
+
+    it "a kext answering UCT-03's Get after the host gave up on it: the answer recorded, the drive latched, nothing more reaching the kext (no End of Session, no STACK_RESET), each command after noted not issued; exit 1, the session named for --recover" $ do
+      -- the Get's answer is the second ComPacket IF-RECV with STACK_RESET before the case, the third after the idle probe
+      let slow = noFaults { ffSlow = Just (PacketRecv, if reset then 2 else 3, 300000) }
+      tper@(_, control) <- newTPer
+      (code, json, cdbs) <- overKext slow tper (impatient reset)
+      code `shouldBe` ExitFailure 1
+      cdbs `shouldBe` [level0Cdb] <> beforeCase reset <> [sendCdb, recvCdb, sendCdb, recvCdb]
+      answers json `shouldBe` replicate (length cdbs) (Just "good", Nothing)
+      let notesOf = [ t | e <- elements (at "transcript" json), at "entry" e == Just "note", Just (A.String t) <- [at "text" e] ]
+      [ t | t <- notesOf, "not issued on the drive, an IF-SEND of protocol 0x01 on ComID 0x1004: the host gave up on an exchange on 0x1004" `T.isPrefixOf` t ]
+        `shouldSatisfy` (not . null)
+      [ r | c <- elements (at "cases" json), A.String r <- elements (at "reasons" c) ] `shouldSatisfy` any ("1b: " `T.isPrefixOf`)
+      [ p | A.String p <- elements (at "problems" json) ]
+        `shouldSatisfy` any (\p -> "the drive may hold session TSN " `T.isPrefixOf` p && "hsed-jig --recover" `T.isSuffixOf` p)
+      held control `shouldReturn` True
 
     it "a kext saying it moved none of the 512 bytes of the first ComPacket's IF-SEND, kern_return success: a residue that reached the drive, design 13.29 (d) named; nothing more reaches the kext; exit 1" $ do
       (code, json, cdbs) <- newTPer >>= \tper -> overKext noFaults { ffMoveNone = Just (PacketSend, 1) } tper (acceptance reset)

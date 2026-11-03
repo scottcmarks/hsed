@@ -41,6 +41,7 @@ import qualified RIO.Text               as T
 
 import           Hsed.Jig.Catalogue     (CaseKey)
 import           Hsed.Sim.Types         (SimParams, defaultSimParams)
+import           Hsed.Wire              (ExchangeOpts, defaultExchangeOpts)
 
 
 -- $setup
@@ -106,6 +107,12 @@ data RunOptions = RunOptions
                                                  --   STACK_RESET on the base ComID, logged (Core 3.3.4.7.5, PDF 65); false,
                                                  --   SyncIdle probed by an IF-RECV and NoSessions waived as unobservable (design
                                                  --   13.7)
+  , roExchange              :: !ExchangeOpts     -- ^ no flag: how the host polls and how long it waits (the host's exchange,
+                                                 --   a drain's and STACK_RESET's polls; "Hsed.Wire".'defaultExchangeOpts'),
+                                                 --   which only a test shortens
+  , roDriveTimeoutMicros    :: !Int              -- ^ no flag: how long the host's exchange waits for each of a drive's
+                                                 --   commands, past the kext's own limit ("Hsed.Jig.Script".@driveTimeoutMicros@),
+                                                 --   which only a test shortens
   }
   deriving (Eq, Show)
 
@@ -118,7 +125,11 @@ data RunOptions = RunOptions
 --   session open, automatic and logged: Scott's decision of 2026-11-02
 --   (design 13.7), which no flag changes. The other branch, SyncIdle probed
 --   by one IF-RECV and NoSessions waived as unobservable, is kept built and
---   tested in both modes, so that a flip is this one field.
+--   tested in both modes, so that a flip is this one field. The host polls
+--   and waits as "Hsed.Wire".'defaultExchangeOpts' says, and gives each of
+--   a drive's commands 15 s, past the kext's own 10 s (@SED_TIMEOUT@,
+--   macos-driver UserKernelShared.h:71, which TPerDriver.cpp:318 gives each
+--   command), so that the kext always answers first.
 defaultRunOptions :: RunOptions
 defaultRunOptions = RunOptions
   { roTarget                = TSim
@@ -135,6 +146,8 @@ defaultRunOptions = RunOptions
   , roAllowMounted          = False
   , roInterruptInSession    = False
   , roStackResetBeforeCases = True
+  , roExchange              = defaultExchangeOpts
+  , roDriveTimeoutMicros    = 15000000
   }
 
 -- | @--sim-sid-pin HEX@: the simulator's C_PIN_SID PIN as hex digits, two a

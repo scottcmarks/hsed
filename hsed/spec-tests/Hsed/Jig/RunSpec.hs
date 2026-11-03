@@ -64,9 +64,20 @@ report.
 On a pair each end's verdicts and Level 0 are named by its transport's
 role, as the transcript's entries are. And what the run refuses before it
 opens anything: a key the catalogue lacks (exit 2), @--recover@ with
-@--tests@ or a pair (exit 2), a drive without the serial it must have (exit
-2), a Level 0 length a drive or a replay cannot carry (exit 2), a drive
-without root (exit 3).
+@--tests@, a pair or @--interrupt-in-session@ (exit 2), a drive without the
+serial it must have (exit 2), a Level 0 length a drive or a replay cannot
+carry (exit 2), a drive without root (exit 3).
+
+Since the M4c review: the stop signals' handlers put back as they were
+found, base's own SIGINT handler among them; a StartSession whose
+SyncSession does not read cleared by STACK_RESET where the run admits it
+and otherwise kept for the next case's NoSessions and the reports, in both
+modes; a STACK_RESET before a case that answers Success/Failure 1, or
+Pending for ever (the host's polls shortened, @roExchange@), an unmet
+prerequisite; @--interrupt-in-session@ with SPF-02:1 after UCT-03 and
+@--capture-level0@: SPF-02:1 not run, no capture, no Level 0 after the
+cases; on the simulator a stop during a case's extension keeps the case's
+TCG verdict, the extension skipped as interrupted.
 -}
 module Hsed.Jig.RunSpec (spec) where
 
@@ -80,7 +91,9 @@ import           RIO
 import           RIO.Directory          (doesFileExist, listDirectory)
 import           RIO.FilePath           (takeExtension, (</>))
 import qualified RIO.Text               as T
-import           System.Posix.Signals   (raiseSignal, sigHUP)
+import           Data.Dynamic           (dynTypeRep)
+import qualified GHC.Conc.Signal        as Conc
+import           System.Posix.Signals   (Handler (..), installHandler, raiseSignal, sigHUP, sigINT)
 import           Test.Hspec
 
 import           Hsed.Core.Call         (MethodCall (..), MethodHeader (..), MethodResponse (..))
@@ -89,8 +102,11 @@ import           Hsed.Core.Method       (invocation)
 import           Hsed.Core.StreamItem   (StreamItem (..))
 import           Hsed.Core.Token        (IsToken (..))
 import           Hsed.Core.UID          (UID)
+import           Hsed.Core.Layout       (LayoutError)
+import           Hsed.Core.Record       (DecodedRecord (..), decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Value        (IsValue (..), List (..), Value (..), (.:))
-import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..))
+import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
+                                         STACK_RESETCommandResponse (..), STACK_RESETPending (..))
 import qualified Hsed.Gen.Core.Methods  as Methods
 import           Hsed.Gen.Core.UIDs     (methodIDUIDs, uAuthority_SID, uC_PIN_SID, uMethodID_Get, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature)
@@ -114,7 +130,7 @@ import           Hsed.Sim.Types         (ComIdLife (Associated), SimParams (..),
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..), newInProc)
 import           Hsed.Transport.Replay  (openReplay)
-import           Hsed.Wire              (defaultExchangeOpts, exchangeComPacket, ifSend, newChannel)
+import           Hsed.Wire              (ExchangeOpts (..), defaultExchangeOpts, exchangeComPacket, extendedComId, ifSend, newChannel)
 import           Hsed.Wire.Internal     (Describe (..), Dir (..), IfStatus (..), Request (Request, comId, lenBytes, payload, proto),
                                          Response (..), Transport (..), Unit (..))
 import qualified Hsed.Wire.Internal     as Wire
@@ -225,7 +241,7 @@ hexOf = T.pack . concatMap (\w -> (if w < 16 then "0" else "") <> showHex w "") 
 
 -- | The message of design 9.3 item 6's error paths, which no drive runs.
 errorPath :: Text
-errorPath = "needs an IF-SEND off the allow list, an error path: the simulator's until a drive run opts in (design 9.3 item 6; M4c)"
+errorPath = "needs an IF-SEND off the allow list, an error path: hardware error paths stay off a drive (design 9.3 item 6 and 13.8, Scott's)"
 
 -- | An IF-SEND of protocol 1 on 0x1004 of tokens in a ComPacket of the
 --   control session, padded to a 512-byte block.
@@ -380,6 +396,9 @@ spec = do
       silently (runJig defaultRunOptions { roRecover = True, roTests = keys "UCT-02" }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roRecover = True, roTarget = TPair TSim (TReplay "nowhere.bin") }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roRecover = True, roTests = keys "UCT-02", roTarget = TDevice "/dev/disk99" }) `shouldReturn` ExitFailure 2
+    it "--recover with --interrupt-in-session: exit 2 (it runs to its end; its own probe's session would be left open)" $ do
+      silently (runJig defaultRunOptions { roRecover = True, roInterruptInSession = True }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roRecover = True }) `shouldReturn` ExitSuccess
 
   describe "UCT-01's minima" $
     it "are the ones Opal and the DataStore feature set allow, the Test Cases' (PDF 30): 1, 4, 8; 1, 0xA0000, 1" $ do
@@ -807,11 +826,28 @@ spec = do
       verdicts json `shouldBe` [(str "UCT-03:1a-1c", str "pass")]
       (lifeOf 0x1004 <$> scPeek control) `shouldNotReturn` Just Associated
 
-  describe "the stop signals (M4c, design 9.3)" $
+  describe "the stop signals (M4c, design 9.3)" $ do
     it "caught for the run's length, SIGINT, SIGTERM or SIGHUP writes its name into the run's stop flag, and says so, the command in flight left to complete" $ do
       stop <- newIORef Nothing
       let settled n = readIORef stop >>= \was -> if isJust was || n <= (0 :: Int) then pure was else threadDelay 10000 >> settled (n - 1)
       silently (withStopSignals stop (raiseSignal sigHUP >> settled 200)) `shouldReturn` Just "SIGHUP"
+    it "puts back the handlers it found after the run: a Haskell handler of SIGHUP runs again, and base's own SIGINT handler is in base's table again (the lead, the M4c review)" $ do
+      stop <- newIORef Nothing
+      seen <- newIORef False
+      -- the entry base's signal table holds for a signal, read by swapping it out and back
+      let entryType sig = do
+            entry <- Conc.setHandler sig Nothing
+            _ <- Conc.setHandler sig entry
+            pure (dynTypeRep . snd <$> entry)
+          settled n = readIORef seen >>= \was -> if was || n <= (0 :: Int) then pure was else threadDelay 10000 >> settled (n - 1)
+      bracket (installHandler sigHUP (Catch (writeIORef seen True)) Nothing) (\old -> installHandler sigHUP old Nothing) $ \_ -> do
+        intBefore <- entryType sigINT
+        withStopSignals stop (pure ())
+        intAfter <- entryType sigINT
+        (intAfter, isJust intBefore) `shouldBe` (intBefore, True)
+        raiseSignal sigHUP
+        settled 200 `shouldReturn` True
+        readIORef stop `shouldReturn` Nothing
 
   describe "the exit code, and what a drive's own transcript holds outside its policy (M4c)" $ do
     it "outsidePolicy decides each command again: a forged Set on 0x1004 and an IF-RECV on 0x1005 are outside AllowList 0x1004 of the read-only methods, a run's own commands are not; the exit from them is 3" $ do
@@ -853,6 +889,106 @@ spec = do
       for_ [decodeUtf8Lenient (toStrictBytes (A.encode json)), md, xml] $ \report -> do
         report `shouldNotSatisfy` T.isInfixOf (hexOf known)
         report `shouldNotSatisfy` T.isInfixOf (decodeUtf8Lenient known)
+
+  describe "a StartSession whose SyncSession the host could not read (the M4c review; Core 3.3.4.5, PDF 62)" $ do
+    -- the drive's answer to StartSession with SyncSession's MethodID (..FF03) made another (..FF7F)
+    let garbling raw = do
+          answering <- newIORef False
+          let inner = rdTransport raw
+              syncSession = B.pack [0xA8, 0, 0, 0, 0, 0, 0, 0xFF, 0x03]
+          pure raw { rdTransport = inner { tExchange = \q -> do
+            r <- tExchange inner q
+            when (Wire.dir q == IfSend) (writeIORef answering (B.isInfixOf (B.pack [0xA8, 0, 0, 0, 0, 0, 0, 0xFF, 0x02]) (payload q)))
+            readIORef answering >>= \case
+              True | Wire.dir q == IfRecv, proto q == 1 ->
+                let (ahead, rest) = B.breakSubstring syncSession (rpayload r)
+                in writeIORef answering False $> if B.null rest then r
+                                                  else r { rpayload = ahead <> B.pack [0xA8, 0, 0, 0, 0, 0, 0, 0xFF, 0x7F] <> B.drop 9 rest }
+              _ -> pure r } }
+    it "with STACK_RESET before each case: the case fails at 1a, STACK_RESET clears the session the TPer opened, noted: exit 1, nothing open" $ do
+      (raw, di, control) <- fakeDrive defaultSimParams
+      garbled <- garbling raw
+      (code, json, _, _) <- onDriveReports defaultRunOptions { roTests = keys "UCT-03:1a-1c" } Nothing (garbled, di, control)
+      code `shouldBe` ExitFailure 1
+      reasonsOf json `shouldSatisfy` \case
+        [("UCT-03:1a-1c", [r])] -> "1a: StartSession to the Admin SP: no SyncSession" `T.isPrefixOf` r
+        _                       -> False
+      notes json `shouldSatisfy` any (\t -> "StartSession on 0x1004: no SyncSession read (" `T.isPrefixOf` t && "STACK_RESET on 0x1004: Success/Failure 0" `T.isSuffixOf` t)
+      issuedOps json `shouldBe` [level0Op, resetSendOp, resetRecvOp, sendOp, recvOp, resetSendOp, resetRecvOp]
+      (lifeOf 0x1004 <$> scPeek control) `shouldNotReturn` Just Associated
+      [ p | A.String p <- elements (at "problems" json) ] `shouldBe` []
+    it "without STACK_RESET: the session kept, the next case's NoSessions unmet, the reports naming it for --recover: exit 1" $ do
+      (raw, di, control) <- fakeDrive defaultSimParams
+      garbled <- garbling raw
+      (code, json, _, _) <- onDriveReports defaultRunOptions { roTests = keys "UCT-03:1a-1c,SPF-02:1", roStackResetBeforeCases = False }
+                                           Nothing (garbled, di, control)
+      code `shouldBe` ExitFailure 1
+      reasonsOf json `shouldSatisfy` \case
+        [("UCT-03:1a-1c", [_]), ("SPF-02:1", [r])] ->
+          "prerequisite unmet: NoSessions: this run may have left a session open on 0x1004, a StartSession's answer unread (" `T.isPrefixOf` r
+        _ -> False
+      [ p | A.String p <- elements (at "problems" json) ]
+        `shouldSatisfy` any (\p -> "the drive may hold a session on ComID 0x1004 that a StartSession opened" `T.isPrefixOf` p
+                                   && "hsed-jig --recover" `T.isSuffixOf` p)
+      (lifeOf 0x1004 <$> scPeek control) `shouldReturn` Just Associated
+
+  describe "STACK_RESET before a case that does not reset (the M4c review; Core Tables 36-37, PDF 66)" $ do
+    -- the drive's GET_COMID_RESPONSE answers edited
+    let answering edit raw = raw { rdTransport = (rdTransport raw) { tExchange = \q -> do
+          r <- tExchange (rdTransport raw) q
+          pure (if Wire.dir q == IfRecv && proto q == 2 then r { rpayload = edit (rpayload r) } else r) } }
+        padded b = b <> B.replicate (512 - B.length b) 0
+        failing bytes = case decodeRecordStrict bytes :: Either LayoutError (DecodedRecord STACK_RESETCommandResponse) of
+          Right (DecodedRecord response _ _) -> either (const bytes) padded (encodeRecord response { stack_RESETCommandResponseSuccessFailure = 1 })
+          Left _                             -> bytes
+        stillPending = const (either (const "") padded (encodeRecord (STACK_RESETPending (extendedComId 0x1004))))
+    it "answered Success/Failure 1: the case's SyncIdle and NoSessions unmet, the case skipped, exit 1" $ do
+      (raw, di, control) <- fakeDrive defaultSimParams
+      (code, json, _, _) <- onDriveReports defaultRunOptions { roTests = keys "UCT-02" } Nothing (answering failing raw, di, control)
+      code `shouldBe` ExitFailure 1
+      reasonsOf json `shouldBe`
+        [("UCT-02", ["prerequisite unmet: SyncIdle and NoSessions: STACK_RESET on 0x1004: Success/Failure 1: the stack not reset (Core Table 36, PDF 66)"])]
+    it "answered Pending for ever: as many polls as the host's timeout holds, then unmet, the case skipped, exit 1" $ do
+      (raw, di, control) <- fakeDrive defaultSimParams
+      let quick = defaultExchangeOpts { xPollMicros = 1000, xTimeoutMicros = 20000 }
+      (code, json, _, _) <- onDriveReports defaultRunOptions { roTests = keys "UCT-02", roExchange = quick } Nothing (answering stillPending raw, di, control)
+      code `shouldBe` ExitFailure 1
+      reasonsOf json `shouldSatisfy` \case
+        [("UCT-02", [r])] -> "prerequisite unmet: SyncIdle and NoSessions: STACK_RESET on 0x1004: STACK_RESET on 0x1004 still pending" `T.isPrefixOf` r
+                             && "after 20 polls" `T.isSuffixOf` r
+        _                 -> False
+      length (filter (== resetRecvOp) (issuedOps json)) `shouldBe` 21
+
+  describe "--interrupt-in-session before a later case and a capture (the M4c review)" $
+    it "stops the run in UCT-03: SPF-02:1 not run, no capture written, no Level 0 after the cases: exit 130" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        drive <- fakeDrive defaultSimParams
+        let capture = dir </> "capture.bin"
+        (code, json) <- onFakeDrive defaultRunOptions { roTests = keys "UCT-03:1a-1c,SPF-02:1", roInterruptInSession = True, roCapture = Just capture } drive
+        code `shouldBe` ExitFailure 130
+        reasonsOf json `shouldSatisfy` \case
+          [("UCT-03:1a-1c", [r]), ("SPF-02:1", [r'])] -> "interrupted: --interrupt-in-session" `T.isPrefixOf` r
+                                                         && "not run: the run was interrupted (--interrupt-in-session" `T.isPrefixOf` r'
+          _ -> False
+        doesFileExist capture `shouldReturn` False
+        length (filter (== level0Op) (issuedOps json)) `shouldBe` 1
+
+  describe "a stop during a case's extension, on the simulator (the M4c review)" $
+    it "keeps the case's TCG verdict, skips that extension as interrupted and the cases after it as not run: exit 130" $
+      withSystemTempDirectory "hsed-jig" $ \dir -> do
+        (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+        stop <- newIORef Nothing
+        -- the run stopped as a signal would, while SPF-02:1's extension sends its IF-SEND (its case sends none)
+        let stopping = sim { tExchange = \q -> when (Wire.dir q == IfSend) (writeIORef stop (Just "SIGINT")) >> tExchange sim q }
+        t <- newTranscript
+        code <- silently (runOpenedStopping defaultRunOptions { roTests = keys "SPF-02:1,ETC-04", roReportDir = dir </> "report" } t stop
+                                            (SimTarget stopping control))
+        json <- reportIn dir
+        code `shouldBe` ExitFailure 130
+        verdicts json `shouldBe` [(str "SPF-02:1", str "pass"), (str "ETC-04", str "skipped")]
+        [ (at "verdict" x, at "reason" x) | c <- take 1 (elements (at "cases" json)), x <- elements (at "extensions" c) ]
+          `shouldBe` [(str "skipped", str "interrupted: SIGINT")]
+        reasonsOf json `shouldSatisfy` elem ("ETC-04", ["not run: the run was interrupted (SIGINT)"])
 
   describe "the simulator paired with the replay (the Pair runner)" $ do
     it "finds 0x0403 missing without a profile: exit 1" $

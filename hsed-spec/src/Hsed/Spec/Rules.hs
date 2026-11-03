@@ -80,13 +80,17 @@ module Hsed.Spec.Rules
     -- * Classification
   , Classification (..)
   , classify
+  , classifyOver
   , classifyWith
+  , classifyWithOver
   , classifyWithRules
+  , classifyOverWithRules
   , classifySignatures
   , classifySignaturesWith
   , boundBinding
   , describeClassification
   , explain
+  , explainOver
   , numberedTables
   , tablePage
   , locatedAt
@@ -113,8 +117,8 @@ import           Hsed.Spec.DSL     (Binding (..), Modifier (..), Ref (..), SomeB
 import           Hsed.Spec.Grammar (Payload (..), printSomeBinding)
 import           Hsed.Spec.IR      (AnnotIR (..), SigIR (..), SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
-import           Hsed.Spec.RuleDef (Classification (..), RuleDef (..), boundBinding, locatedAt, numberedTables,
-                                    ruleShape, signatureUnits, tablePage)
+import           Hsed.Spec.RuleDef (Classification (..), Context (..), RuleDef (..), boundBinding, contextChain, locatedAt,
+                                    numberedTables, ruleShape, signatureUnits, tablePage)
 import           Hsed.Spec.Scope
 import           Hsed.Spec.Shape   (KnownShape, SShape, Shape (Doc), SomeShape (..), UnitKind (..),
                                     measure, projectColumns, shapeUnit, toSomeShape)
@@ -147,7 +151,13 @@ describeClassification = \case
 --   a bare modifier comment's @typeRow (exemplar core T46), binding erratum
 --   scott [...] typeRow@.
 explain :: SpecIR -> AnchorId -> Text
-explain ir aid = case Map.lookup aid (classes aid) of
+explain = explainOver Nothing
+
+-- | 'explain' over a base or none: a binding shaped by its target in the
+--   base (Opal Table 16's @replaces [core 128]@) is explained as the target's
+--   shape takes it ('classifyOver').
+explainOver :: Maybe Context -> SpecIR -> AnchorId -> Text
+explainOver base ir aid = case Map.lookup aid (classes aid) of
   Nothing -> "no " <> unit aid <> " " <> renderAnchorId aid <> " in " <> ir.spec
   Just c@(RuleBound r _ sb) -> case ruleNamed r of
     Just rl -> ruleNameText r <> " (exemplar " <> prefix (fst (exemplar rl)) <> " " <> renderAnchorId (snd (exemplar rl)) <> ")"
@@ -158,7 +168,7 @@ explain ir aid = case Map.lookup aid (classes aid) of
     prefix = T.toLower . T.takeWhile C.isAlpha . specIdText
     classes = \case
       SigId _ -> fst (classifySignatures ir)
-      _       -> classify ir
+      _       -> classifyOver base ir
     unit = \case
       SigId _ -> "signature block"
       _       -> "table"
@@ -166,14 +176,39 @@ explain ir aid = case Map.lookup aid (classes aid) of
 classify :: SpecIR -> Map AnchorId Classification
 classify = fst . classifyWith
 
+-- | 'classify' over the Context of the spec it is read over, or none
+--   (@hsedc --base@): a binding shaped by a target of the base (Opal Table
+--   14's @narrows (core 26)@) takes the shape the base's classification gives
+--   the target ('classifyOverWithRules').
+classifyOver :: Maybe Context -> SpecIR -> Map AnchorId Classification
+classifyOver base = fst . classifyWithOver base
+
 -- | The classification and its findings: parse failures, @E-AMBIGUOUS@,
 --   @E-UNBOUND@, rule names hsedc does not implement yet.
 classifyWith :: SpecIR -> (Map AnchorId Classification, [Finding])
 classifyWith = classifyWithRules rules
 
--- | 'classifyWith' under another set of rules (the tests' ambiguous pairs).
+-- | 'classifyWith' over a base or none.
+classifyWithOver :: Maybe Context -> SpecIR -> (Map AnchorId Classification, [Finding])
+classifyWithOver = classifyOverWithRules rules
+
+-- | 'classifyWith' under another set of rules (the tests' ambiguous pairs), read alone.
 classifyWithRules :: [RuleDef] -> SpecIR -> (Map AnchorId Classification, [Finding])
-classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatMap located (Map.toList final))
+classifyWithRules ruleSet = classifyOverWithRules ruleSet Nothing
+
+-- | The classification under a set of rules, over the Context of the spec
+--   the IR is read over or none. A binding shaped by its target (@refines@,
+--   @narrows@, @replaces@) takes the shape its target is bound to: a target
+--   of the spec itself (@opal 26@ in Opal) in this classification, one of
+--   another spec (@core 26@ in Opal) in the classification of the first
+--   Context of the base's chain whose spec is of that family ('contextChain':
+--   Core's, for an Opal run over Core, design 13.26 (g)). The scratch M5a
+--   sidecar's Opal Tables 14, 15 and 16 so take the shapes Core gives its
+--   Tables 26 (@codes@), 4 (@tokens@, rule @tokenEncoding@) and 128
+--   (@enumValues@). A target in no spec of the chain, or one nothing binds
+--   there, is @E-SHAPE@, as it is read alone.
+classifyOverWithRules :: [RuleDef] -> Maybe Context -> SpecIR -> (Map AnchorId Classification, [Finding])
+classifyOverWithRules ruleSet base ir = (final, annotFindings <> unimplemented <> concatMap located (Map.toList final))
   where
     sid      = SpecId ir.spec
     parsed   = parseAnnots ir
@@ -228,18 +263,28 @@ classifyWithRules ruleSet ir = (final, annotFindings <> unimplemented <> concatM
       c -> c
     resolveAgainst :: Map AnchorId Classification -> (forall s. KnownShape s => Binding s) -> Either Finding SomeBinding
     resolveAgainst m b = do
-      targets <- traverse target (polyTargets (b :: Binding 'Doc))
-      shapes  <- traverse (\aid -> maybe (Left (unresolved aid)) Right (Map.lookup aid m >>= boundBinding >>= someBindingShape)) targets
+      targets <- traverse (target m) (polyTargets (b :: Binding 'Doc))
+      shapes  <- traverse (\(classes, aid, named) -> maybe (Left (unresolved named)) Right
+                                                      (Map.lookup aid classes >>= boundBinding >>= someBindingShape)) targets
       case L.nub shapes of
         [s] -> case toSomeShape s of
           SomeShape (_ :: SShape t) -> maybe (Left (unresolvedShape s)) Right (SomeBinding <$> atShape @t (PolyBinding b))
         []  -> Left (finding Error "E-SHAPE" "a cross-spec binding names no target")
         ss  -> Left (finding Error "E-SHAPE" ("the targets have different shapes: " <> T.intercalate ", " (map tshow ss)))
-    target = \case
-      Core n | "core" `T.isPrefixOf` ir.spec -> Right (TableId n)
-      Opal n | "opal" `T.isPrefixOf` ir.spec -> Right (TableId n)
-      r -> Left (finding Error "E-SHAPE" ("the shape comes from " <> tshow r <> ", which is not in " <> ir.spec <> "; resolve it with that spec's IR"))
-    unresolved aid = finding Error "E-SHAPE" ("the shape comes from " <> renderAnchorId aid <> ", which nothing binds")
+    -- the classification a reference's table is read in, the table, and its name in a message
+    target m r = case refFamily r of
+      Just (family, n)
+        | family `T.isPrefixOf` ir.spec -> Right (m, TableId n, renderAnchorId (TableId n))
+        | Just b <- L.find ((family `T.isPrefixOf`) . Cm.specIdText . cxSpec) bases ->
+            Right (cxClasses b, TableId n, Cm.specIdText (cxSpec b) <> " " <> renderAnchorId (TableId n))
+      _ -> Left (finding Error "E-SHAPE" ("the shape comes from " <> tshow r <> ", which is not in " <> ir.spec
+                   <> if null bases then "; resolve it with that spec's IR" else " nor in a spec it is read over"))
+    bases = maybe [] contextChain base
+    refFamily = \case
+      Core n    -> Just ("core" :: Text, n)
+      Opal n    -> Just ("opal", n)
+      Section _ -> Nothing
+    unresolved named = finding Error "E-SHAPE" ("the shape comes from " <> named <> ", which nothing binds")
     unresolvedShape s = finding Error "E-SHAPE" ("cannot take the shape " <> tshow s)
 
     located (aid, c) = case (c, Map.lookup aid tables) of

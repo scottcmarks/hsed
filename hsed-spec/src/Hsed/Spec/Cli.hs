@@ -20,18 +20,23 @@ can be checked without annotating and re-extracting the PDF. @ledger@ takes
 several IRs and one sidecar: the sidecar replaces the annotations of the IRs
 whose spec its lines name, and the others are read as they are.
 
-A spec annotated only in part until its last binding milestone (Opal until
-M5) is named by @--partial SPEC@ ('Options', repeatable, on every command that
-reads an IR): each of its units nothing binds yet is reported as the Warning
-@W-UNBOUND@ rather than the Error @E-UNBOUND@
-("Hsed.Spec.Check".'Hsed.Spec.Check.partially', design 13.26 (k)). A spec read
-over another (Opal over Core) names the other's IR by @--base IR@ (the
-annotated extraction, @build/core-2.01.hsed.json@): @check@ and @compile@,
-which run the rules, read it under the run's errata set as the base Context
-of the run, read-only ("Hsed.Spec.Check".'Hsed.Spec.Check.mkContextWith',
-design 13.26 (g)); the other commands take it too, so that one argument list
-serves every command of a spec, and read nothing of it until a classification
-resolves through it.
+A spec annotated only in part is named by @--partial SPEC@ ('Options',
+repeatable, on every command that reads an IR): each of its units nothing
+binds yet is reported as the Warning @W-UNBOUND@ rather than the Error
+@E-UNBOUND@ ("Hsed.Spec.Check".'Hsed.Spec.Check.partially', design 13.26
+(k)). Opal is so named until M5a's integration, whose sidecar binds every
+unit of it and whose Makefile stops passing it; the option stays, for the
+next spec annotated in part (an SSC after M5). A spec read over another (Opal over
+Core) names the other's IR by @--base IR@ (the annotated extraction,
+@build/core-2.01.hsed.json@): @check@ and @compile@, which run the rules, read
+it under the run's errata set as the base Context of the run, read-only
+("Hsed.Spec.Check".'Hsed.Spec.Check.mkContextWith', design 13.26 (g)); every
+command classifies over it ("Hsed.Spec.Rules".'Hsed.Spec.Rules.classifyOver'),
+so that a binding shaped by a target of the base (Opal Table 16's @replaces
+[core 128]@) is bound, explained, counted and reported alike by @bind@,
+@explain@, @orphans@, @ledger@ and @compile@'s reports. A classification does
+not depend on the errata set, so the commands that take none read the base
+under Scott's.
 
 Findings print in 'renderFinding' form on stdout, errors first; a one-line
 summary goes to stderr. @compile@ writes the reports of "Hsed.Spec.Report" beside
@@ -67,7 +72,7 @@ import qualified RIO.Map                  as Map
 import qualified RIO.Text                 as T
 
 import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
-import           Hsed.Spec.Bind           (bindModule)
+import           Hsed.Spec.Bind           (bindModuleOver)
 import           Hsed.Spec.Check          (checkIR, mkContext, partially, sortFindings)
 import qualified Hsed.Spec.Common         as Cm
 import           Hsed.Spec.Common         (ErrataSet (..), Finding, RuleName (..), SpecId (..), errataSetName,
@@ -76,9 +81,9 @@ import           Hsed.Spec.Compile
 import           Hsed.Spec.Gen            (modulePath, specModuleDir)
 import           Hsed.Spec.IR
 import           Hsed.Spec.Report
-import           Hsed.Spec.RuleDef        (Context, signatureUnits)
-import           Hsed.Spec.Rules          (Classification (..), Section (..), classify, classifySignatures, classifyWith,
-                                           explain, numberedTables, scopeOf, tablePage)
+import           Hsed.Spec.RuleDef        (Context (..), signatureUnits)
+import           Hsed.Spec.Rules          (Classification (..), Section (..), classifyOver, classifySignatures,
+                                           classifyWithOver, explainOver, numberedTables, scopeOf, tablePage)
 import           Hsed.Spec.Shape          (captionTitle)
 import           Hsed.Spec.Sidecar        (withSidecar, withSidecarOn)
 
@@ -122,7 +127,8 @@ runWith out err = \case
   CmdIrSummary path -> readIR path >>= either (failWith err . fromString) (say out . summary)
   CmdBind o inp file -> do
     (ir, sideFs) <- load err inp
-    let (fs, result) = bindModule ir
+    base <- loadBase err o Scott
+    let (fs, result) = bindModuleOver base ir
         found = sortFindings (partially (optPartial o) (sideFs <> fs <> either pure (const []) result))
     report out found
     case result of
@@ -160,9 +166,9 @@ runWith out err = \case
         mapM_ removeFile stale
         createDirectoryIfMissing True reportTo
         writeFileUtf8 (reportTo </> "findings.md") (findingsMarkdown sid es fs)
-        writeFileUtf8 (reportTo </> "coverage.md") (coverageMarkdown ir)
+        writeFileUtf8 (reportTo </> "coverage.md") (coverageMarkdownOver base ir)
         writeFileUtf8 (reportTo </> "ERRATA.md") (errataMarkdown (reportTo </> "ERRATA.md") (mkContext es ir) fs)
-        writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown (reportTo </> "ledger.md") es [(ledger ir, fs)])
+        writeFileUtf8 (reportTo </> "ledger.md") (ledgerMarkdown (reportTo </> "ledger.md") es [(ledgerOver base ir, fs)])
         say err ("hsedc compile: wrote " <> (if null paths then "no module" else display (T.intercalate ", " (map (T.pack . fst) paths))) <> " ("
                     <> display (length (crDecls cr)) <> " declarations, "
                     <> display (length (crExcluded cr)) <> " units left out)"
@@ -173,8 +179,9 @@ runWith out err = \case
     (ir, sideFs) <- load err inp
     unless (matchesSpec specName (SpecId ir.spec)) $
       failWith err ("hsedc explain: the IR is " <> display ir.spec <> ", not " <> display specName)
+    base <- loadBase err o Scott
     let (sigClasses, sigFs) = classifySignatures ir
-        errs = sortFindings (sideFs <> filter isError (partially (optPartial o) (snd (classifyWith ir) <> sigFs)))
+        errs = sortFindings (sideFs <> filter isError (partially (optPartial o) (snd (classifyWithOver base ir) <> sigFs)))
         -- the unit's own Errors (and the sidecar's), the rest counted: a partly annotated spec's other units
         -- would bury it (Opal's 53 E-UNBOUND before M3)
         (ours, others) = L.partition (\f -> f `elem` sideFs || Cm.anchor f == Just (renderAnchorId aid)) errs
@@ -185,21 +192,22 @@ runWith out err = \case
     report out ours
     unless (null others) $
       say err ("hsedc explain: " <> display (length others) <> " Errors at other units of " <> display ir.spec <> " (hsedc check lists them)\n")
-    say out (display (explain ir aid) <> "\n")
+    say out (display (explainOver base ir aid) <> "\n")
     case aid of
       SigId _ -> case (Map.lookup aid sigClasses, Map.lookup aid (signatureUnits ir)) of
         (Just c, Just s) -> say out ("  " <> sigWhere ir aid s <> how c <> "\n")
         _                -> exitFailure
-      _ -> case (Map.lookup aid (classify ir), Map.lookup aid (numberedTables ir)) of
+      _ -> case (Map.lookup aid (classifyOver base ir), Map.lookup aid (numberedTables ir)) of
         (Just c, Just t) -> say out ("  " <> where' ir aid t <> how c <> "\n")
         _                -> exitFailure
     exitOnErrors errs
   CmdOrphans o inp -> do
     (ir, sideFs) <- load err inp
-    let os  = orphans ir
+    base <- loadBase err o Scott
+    let os  = orphansOver base ir
         (sigOs, tableOs) = L.partition (isSigId . fst) os
-        fs  = sortFindings (partially (optPartial o) (sideFs <> map snd os <> otherErrors ir (map snd os)))
-        n c = length [ () | (aid, _) <- tableOs, Map.lookup aid (classify ir) & maybe False c ]
+        fs  = sortFindings (partially (optPartial o) (sideFs <> map snd os <> otherErrors base ir (map snd os)))
+        n c = length [ () | (aid, _) <- tableOs, Map.lookup aid (classifyOver base ir) & maybe False c ]
     report out fs
     say err ("hsedc orphans: " <> display (length tableOs) <> " of " <> display (Map.size (numberedTables ir))
                 <> " numbered tables of " <> display ir.spec <> " are bound by nothing ("
@@ -210,11 +218,15 @@ runWith out err = \case
   CmdLedger o paths hsa -> do
     irs  <- traverse (readOrFail err) (if null paths then [defaultIR] else paths)
     side <- traverse readFileUtf8 hsa
+    base <- loadBase err o Scott
     let (sideFs, irs') = maybe ([], irs) (withSidecarOn irs) side
-        errs = sortFindings (sideFs <> concat [ filter isError (partially (optPartial o) (snd (classifyWith ir) <> snd (classifySignatures ir)))
+        -- the base is read under each IR but its own
+        baseOf :: SpecIR -> Maybe Context
+        baseOf ir = base >>= \b -> if cxSpec b == SpecId ir.spec then Nothing else Just b
+        errs = sortFindings (sideFs <> concat [ filter isError (partially (optPartial o) (snd (classifyWithOver (baseOf ir) ir) <> snd (classifySignatures ir)))
                                               | ir <- irs' ])
     report out errs
-    say out (display (renderLedger (map ledger irs')))
+    say out (display (renderLedger [ ledgerOver (baseOf ir) ir | ir <- irs' ]))
     exitOnErrors errs
   CmdNotImplemented name _ -> failWith err ("hsedc " <> display name <> ": not implemented")
   where
@@ -237,7 +249,7 @@ runWith out err = \case
       SigId _ -> True
       _       -> False
     -- the classification's Errors that are not about a numbered table (an annotation on a heading, say)
-    otherErrors ir shown = [ f | f <- snd (classifyWith ir) <> snd (classifySignatures ir), isError f, f `notElem` shown ]
+    otherErrors base ir shown = [ f | f <- snd (classifyWithOver base ir) <> snd (classifySignatures ir), isError f, f `notElem` shown ]
 
 -- | The IR, with a sidecar's annotations in place of its own when one is given,
 --   and what resolving the sidecar found.
@@ -252,7 +264,8 @@ load err (Input path hsa) = do
       pure (ir', fs)
 
 -- | The base Context of a run (@--base IR@): the IR read, under the run's
---   errata set; none without one.
+--   errata set (Scott's for a command that takes none: a classification is
+--   the same under either); none without one.
 loadBase :: Handle -> Options -> ErrataSet -> IO (Maybe Context)
 loadBase err o es = traverse (fmap (mkContext es) . readOrFail err) (optBase o)
 

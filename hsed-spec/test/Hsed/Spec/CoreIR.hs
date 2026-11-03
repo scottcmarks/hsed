@@ -29,6 +29,8 @@ module Hsed.Spec.CoreIR
   , committedOpalHsa
   , m4bOpalHsa
   , withM4bOpal
+  , m5aOpalHsa
+  , withM5aOpal
   , opalOver
   , annotated
   , annotatedWith
@@ -110,6 +112,29 @@ withM4bOpal :: (Context -> SpecIR -> Spec) -> Spec
 withM4bOpal k = withCore $ \corePristine -> withOpal $ \opalPristine -> do
   coreIR <- runIO (committedHsa >>= annotated corePristine)
   opal   <- runIO (annotated opalPristine m4bOpalHsa)
+  k (mkContext Scott coreIR) opal
+
+-- | The Opal sidecar of M5a, as its scratch copy stands
+--   (@build-scratch/opal-2.30.m5a.hsa@, the plan's annotations, A3): the rule
+--   tokens of M4b's doc line with @rule preconfig@ (the Admin SP's tables and
+--   the Locking SP's, Tables 34-48) and @rule sig@, the units nothing else
+--   binds as @prose@, Tables 14 and 15 narrowing Core's 26 and 4 and Table 16
+--   replacing Core's 128 (PDF 30-32), and M4b's Tables 17 and 49.
+m5aOpalHsa :: Text
+m5aOpalHsa = T.unlines
+  ( "opal-2.30 | doc | doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow & rule enumValues & rule tableDesc & rule preconfig & rule sig"
+  : [ "opal-2.30 | T17 | propsReq"
+    , "opal-2.30 | T49 | enumInDescription (replaces [core 102, core 103])" ]
+  <> [ "opal-2.30 | T" <> tshow n <> " | prose" | n <- [2, 7, 9, 10, 11, 12 :: Int] ]
+  <> [ "opal-2.30 | T14 | narrows (core 26)"
+     , "opal-2.30 | T15 | narrows (core 4)"
+     , "opal-2.30 | T16 | replaces [core 128]" ] )
+
+-- | 'withM4bOpal' with the Opal IR under 'm5aOpalHsa'.
+withM5aOpal :: (Context -> SpecIR -> Spec) -> Spec
+withM5aOpal k = withCore $ \corePristine -> withOpal $ \opalPristine -> do
+  coreIR <- runIO (committedHsa >>= annotated corePristine)
+  opal   <- runIO (annotated opalPristine m5aOpalHsa)
   k (mkContext Scott coreIR) opal
 
 -- | An Opal IR read over a Core Context, as @hsedc --base@ reads it (the

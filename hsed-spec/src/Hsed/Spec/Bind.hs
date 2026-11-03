@@ -27,7 +27,9 @@ check@ does.
 -}
 module Hsed.Spec.Bind
   ( bindEntries
+  , bindEntriesOver
   , bindModule
+  , bindModuleOver
   ) where
 
 import qualified RIO.List                 as L
@@ -39,17 +41,25 @@ import           Hsed.Spec.Bindings.Print (Entry, printBindingsModule)
 import           Hsed.Spec.Common         (Finding, Severity (..), SpecId (..), finding)
 import           Hsed.Spec.Grammar        (Payload (..))
 import           Hsed.Spec.IR             (AnnotIR (..), SpecIR (..))
+import           Hsed.Spec.RuleDef        (Context)
 import           Hsed.Spec.Rules
 
 
 -- | One entry per annotation that resolves, in canonical order (kind, then the
 --   anchor id's natural order); the findings of those that do not.
 bindEntries :: SpecIR -> ([Finding], [Entry])
-bindEntries ir = (L.nub (lefts results), map snd (L.sortOn fst (rights results)))
+bindEntries = bindEntriesOver Nothing
+
+-- | 'bindEntries' over the Context of the spec the IR is read over, or none
+--   (@hsedc bind --base@): a binding shaped by a target of the base takes the
+--   target's shape there ("Hsed.Spec.Rules".'classifyOver'), so that Opal
+--   Table 16's @replaces [core 128]@ prints as an enumeration's binding.
+bindEntriesOver :: Maybe Context -> SpecIR -> ([Finding], [Entry])
+bindEntriesOver base ir = (L.nub (lefts results), map snd (L.sortOn fst (rights results)))
   where
     sid              = SpecId ir.spec
     parsed           = parseAnnots ir
-    classes          = classify ir
+    classes          = classifyOver base ir
     results          = map entry parsed
     entry pa = do
       let a    = paAnnot pa
@@ -73,5 +83,9 @@ bindEntries ir = (L.nub (lefts results), map snd (L.sortOn fst (rights results))
 -- | The text of @Hsed.Bindings.\<Spec\>@ for an IR, or the finding that stops it,
 --   with the findings of the annotations left out.
 bindModule :: SpecIR -> ([Finding], Either Finding Text)
-bindModule ir = (fs, printBindingsModule (SpecId ir.spec) entries)
-  where (fs, entries) = bindEntries ir
+bindModule = bindModuleOver Nothing
+
+-- | 'bindModule' over a base or none ('bindEntriesOver').
+bindModuleOver :: Maybe Context -> SpecIR -> ([Finding], Either Finding Text)
+bindModuleOver base ir = (fs, printBindingsModule (SpecId ir.spec) entries)
+  where (fs, entries) = bindEntriesOver base ir

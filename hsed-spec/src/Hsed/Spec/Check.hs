@@ -80,7 +80,7 @@ import           Hsed.Spec.Grammar (Payload (..))
 import           Hsed.Spec.IR      (HeadingIR (..), ParaIR, SpecIR (..), TableIR (..))
 import           Hsed.Spec.Registry (registry)
 import           Hsed.Spec.RuleDef
-import           Hsed.Spec.Rules   (checkExemplarsWith, checkRuleAnchors, classifySignaturesWith, classifyWithRules)
+import           Hsed.Spec.Rules   (checkExemplarsWith, checkRuleAnchors, classifyOverWithRules, classifySignaturesWith)
 import           Hsed.Spec.Scope   (ParsedAnnot (..), parseAnnots, tableSections)
 import           Hsed.Spec.Shape   (UnitKind (..), gridCornerNormalisation, headerNormalisations, measure,
                                     normaliseCaption, rawCaptionTitle, shapeUnit)
@@ -95,7 +95,10 @@ mkContext = mkContextWith registry Nothing
 -- | 'mkContext' with the units classified by a set of rules (a test's stub
 --   rule beside the registry's), over a base or none: the Context of the
 --   spec this one is read over, read-only (Core's for an Opal run, @hsedc
---   --base@), where a rule's lookup this spec does not answer runs.
+--   --base@), where a rule's lookup this spec does not answer runs, and in
+--   whose classification a binding shaped by a target of the base takes its
+--   shape ("Hsed.Spec.Rules".'Hsed.Spec.Rules.classifyOverWithRules': Opal
+--   Table 16's @replaces [core 128]@ is an enumeration as Core's Table 128 is).
 mkContextWith :: [RuleDef] -> Maybe Context -> ErrataSet -> SpecIR -> Context
 mkContextWith ruleSet base es ir = Context
   { cxIR             = ir
@@ -116,7 +119,7 @@ mkContextWith ruleSet base es ir = Context
   where
     sid                       = SpecId ir.spec
     tables                    = numberedTables ir
-    (classes, classFindings)  = classifyWithRules ruleSet ir
+    (classes, classFindings)  = classifyOverWithRules ruleSet base ir
     (sigClasses, sigFindings) = classifySignaturesWith ruleSet ir
     corrected                 = correctedUnder es sid tables classes
     -- a list item or paragraph the id names once

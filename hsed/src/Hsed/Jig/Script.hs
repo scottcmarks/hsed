@@ -34,10 +34,35 @@ the Guard ("Hsed.Jig.Guard".'GuardedDrive', which "Hsed.Jig.Target" puts the
 drive behind when it opens it) under the drive's policy, Level0Only until
 'baseComId' binds the drive's base ComID where the run admits more than
 Level 0 Discovery on it, so that a refused command is recorded and answered
-'Unsupported', never issued. A run's stop flag ('reStop') and 'Interrupted'
-are how a run is stopped between commands, 'stopIfAsked' the check
-(M4c's group G2's); 'admitsStackReset' says whether the end takes
-STACK_RESET once its base ComID is bound.
+'Unsupported', never issued. On a drive an IF-RECV asks for 2048 bytes
+whatever the TPer reports ('recvLength'): the host's MaxComPacketSize as
+Opal 2.30 Table 17 has the TPer assume it (PDF 33), the value STACK_RESET
+puts back (Core 3.3.4.7.5 item 7, PDF 65), and within what the kext's
+command carries; a longer answer is asked for again at its MinTransfer
+(Table 45, PDF 83). The host's exchange on a drive waits 15 s for each
+command, past the kext's own 10 s, so that the kext always answers first
+('exchangeOn'). 'admitsStackReset' says whether the end takes STACK_RESET
+once its base ComID is bound: the simulator always, a drive where the run
+admits it (@--recover@, or STACK_RESET before each case), and then
+'closingStep' sends one after a step that failed, so that no session
+outlives its case.
+
+A run is stopped between commands, never in one (M4c): its stop flag
+('reStop') holds why (a signal's name; or @--interrupt-in-session@, which
+'startSession' sets once it has opened a session on the drive's end, the
+session left open on purpose), and 'stopIfAsked', which every verb that
+issues a command checks first, throws 'Interrupted' with it: 'discover',
+'ifRecvOn', 'rawIfSend', 'drain', 'stackReset' and the host's exchange
+('exchangeOn', and with it Properties, StartSession, Get and End of
+Session). What a verb has begun runs to its end (an exchange's IF-RECVs, a
+drain's, STACK_RESET's polls check nothing), and 'attempt' makes no
+verdict of 'Interrupted', which goes on to the runner. An answer a step
+could not read, which may carry a secret where the step did not find it
+(UCT-03's MSID read, a drive's SyncIdle probe), is masked in every report
+as one ('transcriptMark', 'maskAnswersSince'; design 9.3 item 5); and on a
+drive, SP_BUSY or NO_SESSIONS_AVAILABLE answered where a session was
+expected to open says that a session an earlier run left open holds the
+Admin SP, which @hsed-jig --recover@ clears ('expectSyncStatus').
 
 An expectation that does not hold ends the script ('unmet'); 'attempt'
 turns what a script comes to into its 'Verdict'; 'note' adds a line to the
@@ -95,7 +120,7 @@ module Hsed.Jig.Script
   , expectT45
   , drain
   , simOnly
-    -- * Session verbs (group G3's)
+    -- * Session verbs
   , PropertiesAnswer (..)
   , StartArgs (..)
   , SessionHandle (..)
@@ -115,6 +140,11 @@ module Hsed.Jig.Script
   , withSession
     -- * What the verbs build on
   , baseComId
+  , recvLength
+  , driveRecvLength
+  , driveTimeoutMicros
+  , transcriptMark
+  , maskAnswersSince
   , featureIn
   , transferFor
   , sendLength
@@ -156,6 +186,7 @@ import           Hsed.Core.Feature      (Feature (..), decodeFeature)
 import           Hsed.Core.Layout       (Layout (..), LayoutError)
 import           Hsed.Core.Method       (MethodSignature (..), SigResponse (..), Signature (..), fromCall, invocation,
                                          paramErrorText, positional)
+import           Hsed.Core.Properties   (HostRequirement (..), PropertyRequirement (..), requirement)
 import           Hsed.Core.Record       (DecodedRecord (..), LayoutRecord (..), decodeRecord, decodeRecordStrict, encodeRecord)
 import           Hsed.Core.Stream       (Atom (..), Fault (..), Returned (..), atoms, hostPolicy, returnedItems)
 import           Hsed.Core.StreamItem   (StreamItem (..))
@@ -164,7 +195,7 @@ import           Hsed.Core.Table        (Cell (..), Col (..), TableDesc (..), co
 import           Hsed.Core.Token        (IsToken (..), Token (..))
 import           Hsed.Core.UID          (UID)
 import           Hsed.Core.Value        (Datum (..), IsValue (..), List (..), Name (..), NamedValue (..), Value (..), (.:))
-import           Hsed.Gen.Core.Codes    (StatusCode (..), cStatusCodes, pattern SUCCESS)
+import           Hsed.Gen.Core.Codes    (StatusCode (..), cStatusCodes, pattern NO_SESSIONS_AVAILABLE, pattern SP_BUSY, pattern SUCCESS)
 import           Hsed.Gen.Core.Layouts  (ComPacket (..), ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
                                          NoResponseAvailable (..), PacketHeader (..), STACK_RESETCommandRequest (..),
                                          STACK_RESETCommandResponse (..), STACK_RESETPending (..))
@@ -173,11 +204,12 @@ import           Hsed.Gen.Core.StateTables (table45)
 import           Hsed.Gen.Core.TableDescs (authorityTableDesc, c_PINTableDesc)
 import           Hsed.Gen.Core.UIDs     (uCloseSession, uProperties, uSMUID, uSP_Admin)
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
+import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, driveAllowed, driveBind, driveInfo, driveRecv, driveSend,
                                          driveTransport)
-import           Hsed.Jig.Options       (RunOptions (..))
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Target        (Target (..))
-import           Hsed.Jig.Transcript    (TEntry (..), Transcript, record)
+import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
 import           Hsed.Level0            (Descriptor (..), Level0 (..), Level0Problem (..), describeProblem, splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), PacketFrame (..), encodeComPacket)
 import           Hsed.Sim.State         (cellOf, columnOf, rowWithUID)
@@ -186,11 +218,12 @@ import           Hsed.Sim.Types         (TPerState, maxComPacketSizeName)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
-import           Hsed.Wire              (Cap (..), Channel, Dir (..), ExchangeError (..), ExchangeOpts (..), IfStatus (..),
-                                         Request (..), Response (..), Transport, Unit (..), comIdManagementProtocol,
-                                         comPacketProtocol, dataKind, defaultExchangeOpts, exchangeComPacket, hex, ifRecv,
-                                         ifSend, ifStatusDetail, ifStatusName, level0ComId, mostCarried, roundUp,
-                                         staticExtension, transferLength, unitOf)
+import           Hsed.Wire              (Cap (..), Channel, Describe (..), Dir (..), ExchangeError (..), ExchangeOpts (..),
+                                         IfStatus (..), Request (..), Response (..), Transport, Unit (..),
+                                         comIdManagementProtocol, comPacketProtocol, dataKind, defaultExchangeOpts,
+                                         describeTransport, exchangeComPacket, hex, ifRecv, ifSend, ifStatusDetail,
+                                         ifStatusName, level0ComId, mostCarried, roundUp, staticExtension, transferLength,
+                                         unitOf)
 
 
 -- * The run's environment
@@ -277,14 +310,18 @@ unmet = throwIO . Unmet
 
 -- | What a script comes to: its own verdict; 'Fail' where an expectation
 --   did not hold ('unmet'); 'Unobservable' where this target cannot show
---   what it expects; and 'Fail' naming any other exception it threw.
+--   what it expects; and 'Fail' naming any other exception it threw, but
+--   'Interrupted', which is no verdict of the script's: rethrown, for the
+--   runner to take (M4c).
 attempt :: Script Verdict -> Script Verdict
-attempt s = tryAny s <&> \case
-  Right v -> v
-  Left e  -> case fromException e of
-    Just (Unmet t)  -> Fail [t]
-    Just (Unseen t) -> Unobservable t
-    Nothing         -> Fail ["exception: " <> T.pack (displayException e)]
+attempt s = tryAny s >>= \case
+  Right v -> pure v
+  Left e
+    | Just stop@(Interrupted _) <- fromException e -> throwIO stop
+    | otherwise -> pure $ case fromException e of
+        Just (Unmet t)  -> Fail [t]
+        Just (Unseen t) -> Unobservable t
+        Nothing         -> Fail ["exception: " <> T.pack (displayException e)]
 
 
 -- * The end a script talks to
@@ -338,10 +375,11 @@ observe :: Text -> Text -> Script ()
 observe name value' = modifyCtx (\c -> c { rcObservations = rcObservations c <> [(name, value')] })
 
 -- | Stop the script if the run was asked to stop ('reStop'), throwing
---   'Interrupted' with why, before a verb issues a command. M4c's group
---   G2's: at the scaffold it stops nothing.
+--   'Interrupted' with why: what each verb that issues a command does
+--   first, so that nothing new is issued once a run is stopped, and a
+--   command or an exchange begun completes (design 9.3, M4c).
 stopIfAsked :: Script ()
-stopIfAsked = pure ()
+stopIfAsked = asks reStop >>= readIORef >>= traverse_ (throwIO . Interrupted)
 
 -- | Whether the end takes STACK_RESET: on the simulator, always; on a
 --   drive, where what binding its base ComID admits holds 'AllowStackReset'
@@ -375,6 +413,7 @@ modifyCtx f = asks reCtx >>= (`modifyIORef'` f)
 --   Opal allows said so ("Hsed.Level0".'describeProblem').
 discover :: Script Level0
 discover = do
+  stopIfAsked
   u <- endUnit
   len <- roundUp u . roLevel0Len <$> asks reOpts
   firstTry <- level0Of len
@@ -405,21 +444,35 @@ blockBytes, level0Most :: Word32
 blockBytes = transferLength UnitBlocks512 1
 level0Most = mostCarried UnitBlocks512
 
--- | IF-RECV of the run's transfer length on a ComID: the MaxComPacketSize
---   Properties reported, or the least an Opal TPer reports
---   ('defaultExchangeOpts'), in the end's unit.
+-- | IF-RECV of the run's transfer length on a ComID ('recvLength').
 ifRecvOn :: Word16 -> Script Response
-ifRecvOn c = recvLength >>= recvOn comPacketProtocol c
+ifRecvOn c = stopIfAsked >> recvLength >>= recvOn comPacketProtocol c
 
+-- | The length an IF-RECV of protocol 1 asks for, in the end's unit: on the
+--   simulator the MaxComPacketSize Properties reported, or the least an
+--   Opal TPer reports ('defaultExchangeOpts'); on a drive
+--   'driveRecvLength', whatever the TPer reports.
 recvLength :: Script Word32
-recvLength = do
-  u <- endUnit
-  roundUp u . fromMaybe (xRecvLen defaultExchangeOpts) . rcMaxComPacketSize <$> readCtx
+recvLength = theEnd >>= \case
+  DriveEnd g -> pure (roundUp (unitOf (driveTransport g)) driveRecvLength)
+  SimEnd tr  -> roundUp (unitOf tr) . fromMaybe (xRecvLen defaultExchangeOpts) . rcMaxComPacketSize <$> readCtx
+
+-- | A drive's IF-RECV length: the host's MaxComPacketSize as the TPer
+--   assumes it until Properties has succeeded, Opal 2.30 Table 17's Initial
+--   Assumption, 2048 (row 1, PDF 33; the generated 'propertyRequirements',
+--   else 'defaultExchangeOpts''s 2048), the value STACK_RESET puts back
+--   (Core 3.3.4.7.5 item 7, PDF 65), whatever the TPer reports: a TPer's
+--   MaxComPacketSize may be more than the 255 blocks of 512 bytes the
+--   kext's command carries (130,560), and a longer answer is asked for again
+--   at its MinTransfer (Core Table 45 rows 2-3, PDF 83).
+driveRecvLength :: Word32
+driveRecvLength = maybe (xRecvLen defaultExchangeOpts) fromIntegral
+                        (requirement maxComPacketSizeName propertyRequirements >>= reqHost >>= hrInitial)
 
 -- | IF-SEND of a payload on a ComID with a transfer length, past the run's
 --   channel.
 rawIfSend :: Word16 -> Word32 -> ByteString -> Script Response
-rawIfSend = sendOn comPacketProtocol
+rawIfSend c len bytes = stopIfAsked >> sendOn comPacketProtocol c len bytes
 
 -- | SMUID.Properties, a whole exchange on the base ComID: the TPer's
 --   properties by name ('propertiesWith' no host properties). The host's
@@ -462,7 +515,7 @@ expectT45 name c row r = do
 --   or MinTransfer zero, PDF 83) drains as well. It gives up after as many
 --   polls as the host's timeout holds ('defaultExchangeOpts').
 drain :: Word16 -> Script ()
-drain c = recvLength >>= go 0
+drain c = stopIfAsked >> recvLength >>= go 0
   where
     go n len
       | n > polls = unmet ("drain " <> hex c <> ": still not idle after " <> tshow polls <> " IF-RECVs")
@@ -491,7 +544,7 @@ simOnly s = asks reTarget >>= \case
   _             -> pure Nothing
 
 
--- * Session verbs (group G3's)
+-- * Session verbs
 
 -- | What Properties answered: the TPer's properties, and the host's where
 --   the host sent its own (Core 5.2.2.1, PDF 140).
@@ -594,14 +647,20 @@ propertiesAnswerOf packets = do
 --   is not (5.3.4.1.5, PDF 215: SyncSession with the identifying parameters
 --   and the error); no SyncSession where the TPer answered CloseSession (an
 --   abort, 3.3.7.1.5, PDF 75), nothing, or something else.
+--   With @--interrupt-in-session@, a session opened on the drive's end (or
+--   the run's one end) stops the run ('reStop', why said), the session left
+--   open on purpose, for @--recover@ to clear (design 11, M4c).
 startSession :: StartArgs -> Script (Either ExchangeError SyncAnswer)
 startSession (StartArgs sp authority challenge write) = do
   c <- baseComId
   bytes <- framed "the StartSession ComPacket" (controlComPacket c (generate call))
   answer <- fmap (syncAnswerOf c) <$> exchangeOn c bytes
   case answer of
-    Right (Synced h) -> modifyCtx (\x -> x { rcSession = Just h })
-    _                -> pure ()
+    Right (Synced h) -> do
+      modifyCtx (\x -> x { rcSession = Just h })
+      here <- interruptsHere
+      when here $ asks reStop >>= \ref -> atomicModifyIORef' ref (\was -> (was <|> Just (interruptedIn h), ()))
+    _ -> pure ()
   pure answer
   where
     call = invocation uSMUID Methods.StartSession
@@ -623,6 +682,27 @@ startSession (StartArgs sp authority challenge write) = do
 --   h, PDF 26; SPF-07, the one test of other values, is not the jig's).
 hostSessionNumber :: Word32
 hostSessionNumber = 1
+
+-- | Whether @--interrupt-in-session@ stops the run on this end: on a drive's
+--   end, or on the run's one end (the simulator alone, for a run without a
+--   drive); never on a pair's simulator.
+interruptsHere :: Script Bool
+interruptsHere = do
+  opts <- asks reOpts
+  onDrive <- theEnd <&> \case
+    DriveEnd _ -> True
+    SimEnd _   -> False
+  pure (roInterruptInSession opts && (onDrive || not (paired (roTarget opts))))
+  where
+    paired = \case
+      TPair _ _ -> True
+      _         -> False
+
+-- | Why @--interrupt-in-session@ stopped the run, the session it left open
+--   named.
+interruptedIn :: SessionHandle -> Text
+interruptedIn h = "--interrupt-in-session: stopped after StartSession opened TSN " <> tshow (shTSN h) <> " on " <> hex (shComId h)
+                  <> "; the session is left open on purpose"
 
 -- | What a StartSession's answer on a ComID holds.
 syncAnswerOf :: Word16 -> [PacketFrame] -> SyncAnswer
@@ -709,6 +789,10 @@ expectMethodStatus name expected outcome = unless (moStatus outcome == expected)
 --   expected, no SyncSession at all (the TPer aborted the startup, with or
 --   without its CloseSession) is accepted and noted (Test Cases 7.1, PDF
 --   76: session abort is an acceptable response to every error case).
+--   On a drive, SP_BUSY or NO_SESSIONS_AVAILABLE where SUCCESS is expected
+--   says why, and what clears it: a session an earlier run left open to the
+--   Admin SP (Core 5.1.5.3, PDF 138), which @--recover@'s STACK_RESET
+--   aborts (3.3.4.7.5 item 1, PDF 65).
 expectSyncStatus :: Text -> StatusCode -> SyncAnswer -> Script ()
 expectSyncStatus name expected = \case
   Synced _
@@ -716,11 +800,22 @@ expectSyncStatus name expected = \case
     | otherwise           -> unmet (name <> ": SyncSession answered " <> statusName SUCCESS <> ", a session open, not " <> statusName expected)
   SyncFailed st
     | st == expected -> pure ()
-    | otherwise      -> unmet (name <> ": SyncSession answered " <> statusName st <> ", not " <> statusName expected)
+    | otherwise      -> do
+        onDrive <- asks reTarget <&> \case
+          DriveTarget _ -> True
+          _             -> False
+        unmet (name <> ": SyncSession answered " <> statusName st <> ", not " <> statusName expected
+               <> (if onDrive && expected == SUCCESS && st `elem` [SP_BUSY, NO_SESSIONS_AVAILABLE] then "; " <> sessionLeftOpen else ""))
   NoSync why
     | expected /= SUCCESS -> note (name <> ": no SyncSession, " <> why <> ": accepted as a session abort, which Test Cases 7.1 (PDF 76) "
                                    <> "allows where " <> statusName expected <> " is expected")
     | otherwise           -> unmet (name <> ": no SyncSession: " <> why)
+
+-- | Why a drive answers a StartSession SP_BUSY or NO_SESSIONS_AVAILABLE
+--   where no session of this run is open, and what clears it.
+sessionLeftOpen :: Text
+sessionLeftOpen = "a read-write session to the Admin SP was open before this one (Core 5.1.5.3, PDF 138): hsed-jig --recover clears it "
+                  <> "(Core 3.3.4.7.5 item 1, PDF 65)"
 
 -- | STACK_RESET on a ComID (Core 3.3.4.7.5, PDF 65-66): HANDLE_COMID_REQUEST,
 --   an IF-SEND of protocol 2 carrying Table 35's request for the ComID's
@@ -731,10 +826,13 @@ expectSyncStatus name expected = \case
 --   or Table 31's No Response Available, each told by its constants
 --   ("Hsed.Core.Record".'decodeRecordStrict'); or why none came. On a drive
 --   the Guard decides both commands (Level0Only refuses them; an allow list
---   takes them with 'AllowStackReset', on a ComID Core Table 26 does not
---   reserve).
+--   takes them with 'AllowStackReset', on its base ComID alone), and the
+--   base must be bound first ('baseComId'): this verb binds nothing. Once
+--   its IF-SEND is out, its polls run to their end, a stop asked for or not
+--   ('stopIfAsked').
 stackReset :: Word16 -> Script (Either Text Word32)
 stackReset c = do
+  stopIfAsked
   u <- endUnit
   case encodeRecord (STACK_RESETCommandRequest (extendedComId c)) of
     Left e        -> pure (Left ("the STACK_RESET request does not encode: " <> tshow e))
@@ -784,9 +882,10 @@ opalV2Of l0 = case featureIn l0 of
 -- | A session opened ('startSession', a startup that fails or goes
 --   unanswered stopping the script), the steps run in it, the session ended
 --   on the way out ('endSession'); a step that failed, or an End of Session
---   the TPer did not answer, is followed on the simulator by STACK_RESET on
---   the session's ComID (noted), so that the next case finds no session
---   (Core 3.3.4.7.5, PDF 65: every session on the ComID aborted).
+--   the TPer did not answer, is followed by STACK_RESET on the session's
+--   ComID where the end takes it ('closingStep', noted), so that the next
+--   case finds no session (Core 3.3.4.7.5, PDF 65: every session on the
+--   ComID aborted).
 withSession :: StartArgs -> (SessionHandle -> Script Verdict) -> Script Verdict
 withSession args body = startSession args >>= exchanged "StartSession" >>= opened "StartSession" >>= \h ->
   attempt (body h) >>= closingStep "End of Session" h
@@ -795,10 +894,12 @@ withSession args body = startSession args >>= exchanged "StartSession" >>= opene
 --   (UCT-03's 1c, ETC-04's step 3): the steps' verdict, with a failure
 --   added where the TPer did not answer the End of Session with its own
 --   (Core 3.2.2.3.3.3, PDF 37) or the exchange gave nothing; after a step
---   that failed or an End of Session unanswered, on the simulator,
---   STACK_RESET on the session's ComID (noted), so that the next case finds
---   no session (Core 3.3.4.7.5 item 1, PDF 65: every session on the ComID
---   aborted).
+--   that failed or an End of Session unanswered, on an end that takes
+--   STACK_RESET ('admitsStackReset': the simulator, a drive whose run admits
+--   it), STACK_RESET on the session's ComID (noted), so that the next case
+--   finds no session (Core 3.3.4.7.5 item 1, PDF 65: every session on the
+--   ComID aborted); on a drive whose run admits none, the session is left,
+--   for the next case's NoSessions to find.
 closingStep :: Text -> SessionHandle -> Verdict -> Script Verdict
 closingStep name h v = do
   closed <- endSession h
@@ -814,12 +915,11 @@ closingStep name h v = do
     Fail rs -> Fail (rs <> unanswered)
     other   -> other
   where
-    recover = simOnly (stackReset (shComId h)) >>= \case
-      Nothing      -> pure ()
-      Just outcome -> do
-        modifyCtx (\x -> x { rcSession = Nothing })
-        note (name <> ": after a failure, STACK_RESET on " <> hex (shComId h) <> ": "
-              <> either id (\n -> "Success/Failure " <> tshow n) outcome)
+    recover = admitsStackReset >>= \admits -> when admits $ do
+      outcome <- stackReset (shComId h)
+      modifyCtx (\x -> x { rcSession = Nothing })
+      note (name <> ": after a failure, STACK_RESET on " <> hex (shComId h) <> ": "
+            <> either id (\n -> "Success/Failure " <> tshow n) outcome)
 
 
 -- * What the verbs build on
@@ -876,20 +976,54 @@ propertiesCall :: ByteString
 propertiesCall = generate (invocation uSMUID (Methods.Properties Nothing))
 
 -- | The host's whole exchange of a ComPacket on a ComID
---   ("Hsed.Wire".'exchangeComPacket'): the IF-SEND through the end's path
---   (the simulator's transport, or the drive's through the Guard, under its
---   policy), then IF-RECV, with the length Properties reported or the
---   default, until the TPer has returned everything; the packets of the
---   answer, none for Table 45's (0, 0, 0).
+--   ("Hsed.Wire".'exchangeComPacket'), unless the run was asked to stop
+--   ('stopIfAsked'): the IF-SEND through the end's path (the simulator's
+--   transport, or the drive's through the Guard, under its policy), then
+--   IF-RECV at 'recvLength' until the TPer has returned everything; the
+--   packets of the answer, none for Table 45's (0, 0, 0). On a drive each
+--   command is given 'driveTimeoutMicros'.
 exchangeOn :: Word16 -> ByteString -> Script (Either ExchangeError [PacketFrame])
 exchangeOn c bytes = do
+  stopIfAsked
   len <- recvLength
   env <- ask
   let opts = defaultExchangeOpts { xRecvLen = len }
   theEnd >>= \case
     SimEnd tr  -> liftIO (exchangeComPacket opts (\q -> Right <$> ifSend tr (proto q) (comId q) (lenBytes q) (payload q))
                                             (reChannel env) tr c bytes)
-    DriveEnd g -> liftIO (exchangeComPacket opts (driveSend g) (reChannel env) (driveTransport g) c bytes)
+    DriveEnd g -> liftIO (exchangeComPacket opts { xTimeoutMicros = driveTimeoutMicros } (driveSend g) (reChannel env)
+                                            (driveTransport g) c bytes)
+
+-- | How long the host's exchange waits for a drive's command: 15 s, past
+--   the kext's own 10 s (@SED_TIMEOUT@, macos-driver UserKernelShared.h:71,
+--   which TPerDriver.cpp:318 gives each command), so that the kext always
+--   answers first and no command is left running in it when the host gives
+--   up.
+driveTimeoutMicros :: Int
+driveTimeoutMicros = 15000000
+
+-- | A mark in the run's transcript: the number of its newest entry, so that
+--   'maskAnswersSince' takes what was issued after it.
+transcriptMark :: Script Int
+transcriptMark = asks reTranscript >>= liftIO . entries <&> maybe 0 numberOf . L.lastMaybe
+
+-- | The answers this end's IF-RECVs brought since a mark ('transcriptMark')
+--   made secrets of the run, why named: each answer's bytes up to its zero
+--   padding, so that an answer a step could not read, which may carry a
+--   secret where the step did not find it (UCT-03's MSID, Opal 2.30 Table
+--   25, PDF 48), is printed masked in every report (design 9.3 item 5);
+--   noted, with how many.
+maskAnswersSince :: Int -> Text -> Script ()
+maskAnswersSince mark why = do
+  role <- theEnd <&> \case
+    SimEnd tr  -> dRole (describeTransport tr)
+    DriveEnd g -> dRole (describeTransport (driveTransport g))
+  es <- asks reTranscript >>= liftIO . entries
+  let answers = [ bytes | Issued n end q r <- es, n > mark, end == role, dir q == IfRecv
+                        , let bytes = fst (B.spanEnd (== 0) (rpayload r)), not (B.null bytes) ]
+  modifyCtx (\x -> x { rcSecrets = L.nub (rcSecrets x <> answers) })
+  note (why <> ": " <> tshow (length answers) <> " IF-RECV answer(s) on the " <> role <> " after entry " <> tshow mark
+        <> " masked in the reports as secrets (design 9.3 item 5)")
 
 -- | What a TPer's answer holds, read as the host reads it: the data
 --   subpackets' tokens, in order, under the host's atom policy

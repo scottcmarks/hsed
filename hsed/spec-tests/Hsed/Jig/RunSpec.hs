@@ -723,6 +723,33 @@ spec = do
                           , atPath ["request", "proto"] e == num 1, atPath ["request", "comid"] e == num 4100
                           , Just (A.Number n) <- [atPath ["request", "len"] e] ]
         (length lengths, all (== 2048) lengths) `shouldBe` (if reset then 5 else 8, True)
+    it "without STACK_RESET, finds 0x1004 not idle where an exchange was left on it before the run: the probe's answer masked as a secret, the case skipped with --recover's hint; with it, the reset clears the exchange" $ do
+      for_ [False, True] $ \reset -> do
+        drive@(raw, _, _) <- fakeDrive defaultSimParams
+        _ <- tExchange (rdTransport raw) (blockOf (generate (invocation uSMUID (Methods.Properties Nothing))))
+        (code, json) <- onFakeDrive (acceptance reset) { roTests = keys "UCT-02" } drive
+        if reset
+          then (code, verdicts json) `shouldBe` (ExitSuccess, [(str "UCT-02", str "pass")])
+          else do
+            code `shouldBe` ExitFailure 1
+            reasonsOf json `shouldSatisfy` \case
+              [("UCT-02", [r])] -> "prerequisite unmet: SyncIdle: ComID 0x1004 answered (" `T.isPrefixOf` r
+                                   && "), not idle: an exchange left from before this run; hsed-jig --recover resets it (STACK_RESET, Core 3.3.4.7.5, PDF 65)" `T.isSuffixOf` r
+              _                 -> False
+            length (elements (at "secrets" json)) `shouldBe` 1
+            notes json `shouldSatisfy` any ("SyncIdle: 1 IF-RECV answer(s) on the drive after entry " `T.isPrefixOf`)
+    it "without STACK_RESET, takes a probe's (0, 0, 0) in a ComPacket naming another ComID as idle, noted, SPF-02:1 judging the ComID" $ do
+      (raw, di, control) <- fakeDrive defaultSimParams
+      renamed <- newIORef False
+      let inner = rdTransport raw
+          idle bytes = B.take 4 bytes <> B.pack [0, 0] <> B.drop 6 bytes
+          zeroComId = raw { rdTransport = inner { tExchange = \q -> do
+            r <- tExchange inner q
+            first' <- if Wire.dir q == IfRecv && proto q == 1 && comId q == 0x1004 then atomicModifyIORef' renamed (\was -> (True, not was)) else pure False
+            pure (if first' then r { rpayload = idle (rpayload r) } else r) } }
+      (code, json) <- onFakeDrive (acceptance False) { roTests = keys "UCT-02" } (zeroComId, di, control)
+      (code, verdicts json) `shouldBe` (ExitSuccess, [(str "UCT-02", str "pass")])
+      notes json `shouldSatisfy` elem "SyncIdle: ComID 0x1004 answered (0, 0, 0), nothing to return, in a ComPacket of ComID 0x0000, not 0x1004: idle; SPF-02:1 judges the ComID (Core 3.3.10.5 S1 b, PDF 84)"
     it "skips ETC-04 selected with UCT-02, a case off design 9.3's drive list, its needs met: exit 1" $ do
       (code, json) <- fakeDrive defaultSimParams >>= onFakeDrive defaultRunOptions { roTests = keys "UCT-02,ETC-04" }
       verdicts json `shouldBe` [(str "UCT-02", str "pass"), (str "ETC-04", str "skipped")]

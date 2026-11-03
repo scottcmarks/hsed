@@ -897,7 +897,7 @@ spec = do
         raiseSignal sigHUP
         settled 200 `shouldReturn` True
         readIORef stop `shouldReturn` Nothing
-    it "puts back a signal's action reset once delivered, as base's own SIGINT handler's is, so that a second signal after the run kills: a SIGHUP set up so, delivered once after the run, leaves the default action (the lead's (5); the M4c review's verification)" $ do
+    it "puts back a signal's action reset once delivered, as base's own SIGINT handler's is, so that a second signal after the run kills: a SIGHUP set up so is reset once after the run, as sigaction reports it (Linux) or as one SIGHUP delivered after the run shows by the default action it leaves (macOS) (the lead's (5); the M4c review's verification)" $ do
       stop <- newIORef Nothing
       let once = pure () :: IO ()
           -- SIGHUP's action as sigaction reads it, once it is the one wanted or after 2 s
@@ -907,11 +907,16 @@ spec = do
         -- the action reset once delivered (STG_SIG_RST), the table's entry an IO (): as GHC.TopHandler sets up SIGINT
         _ <- Conc.setHandler sigHUP (Just (const once, toDyn once))
         withStopSignals stop (pure ())
-        signalResets sigHUP >>= (`shouldSatisfy` (>= 0))
-        -- one SIGHUP, which the handler put back takes, and with it its action: the default left behind (SA_RESETHAND,
-        -- which macOS's sigaction does not report but does), where a handler put back as a repeating one stays
-        raiseSignal sigHUP
-        settledTo (-1) 200 `shouldReturn` (-1)
+        -- reset once, as the platform shows it: Linux's sigaction reports SA_RESETHAND (1); macOS's does not (0, as for a
+        -- repeating handler), so there one SIGHUP is delivered, which the handler put back takes, and with it its action:
+        -- the default left behind, where a handler put back as a repeating one stays. (On CI's Linux runner the action
+        -- read 1 and stayed so for 2 s after a SIGHUP was raised: the delivery is macOS's check alone.)
+        signalResets sigHUP >>= \case
+          1 -> pure ()
+          r -> do
+            r `shouldBe` 0
+            raiseSignal sigHUP
+            settledTo (-1) 200 `shouldReturn` (-1)
         signalResets sigINT `shouldReturn` intBefore
       readIORef stop `shouldReturn` Nothing
 

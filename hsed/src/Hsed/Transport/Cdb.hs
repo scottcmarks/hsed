@@ -34,9 +34,10 @@ Level 0 Discovery's IF-RECV is carried only while Core Table 26 gives Level
 0 the ComID the shim's Level 0 CDB carries ('shimComId',
 "Hsed.Wire".'level0ComId'): were the table's row lost, the command is
 refused before the shim is called, not sent as ComID 1 and judged after.
-'level0Blocks' is M3's one command, which a replay of a captured Level 0
-response ("Hsed.Transport.Replay") carries alone, refusing every other in
-M3's words.
+'level0Blocks' is M3's one command, in M3's words; since M4c a replay of a
+captured Level 0 response ("Hsed.Transport.Replay") refuses every other
+command by 'shapeOf' with no base bound, as the kext's transport does
+before its bind, and nothing in the library calls 'level0Blocks'.
 -}
 module Hsed.Transport.Cdb
   ( -- * The five commands a drive transport carries
@@ -49,7 +50,7 @@ module Hsed.Transport.Cdb
     -- * Level 0 Discovery's CDB
   , level0Cdb
   , cdbHex
-    -- * M3's one command, a replay's
+    -- * The shim's Level 0 ComID, the block, and M3's one command
   , shimComId
   , blockBytes
   , maxLevel0Blocks
@@ -258,12 +259,14 @@ cdbHex = T.unwords . map byte . B.unpack
   where byte w = T.pack ((if w < 0x10 then ('0' :) else id) (showHex w ""))
 
 
--- * M3's one command, a replay's
+-- * The shim's Level 0 ComID, the block, and M3's one command
 
 -- | The ComID of the shim's Level 0 IF-RECV, 0x0001, which its C writes
---   (cbits/; "Hsed.Transport.KextSourceSpec" holds the shim's CDBs to
---   'level0Cdb', which writes "Hsed.Wire".'level0ComId'): the one ComID on
---   which a drive transport carries a command before a base is bound.
+--   (cbits/hsed_cdb.c's @HSED_LEVEL0_COMID@; "Hsed.Transport.CdbCSpec" holds
+--   every CDB @hsed_cdb_build@ makes to 'cdbFor', which writes
+--   "Hsed.Wire".'level0ComId', and "Hsed.Transport.KextSourceSpec" its
+--   templates): the one ComID on which a drive transport carries a command
+--   before a base is bound.
 shimComId :: Word16
 shimComId = 0x0001
 
@@ -282,10 +285,11 @@ maxLevel0Blocks :: Word32
 maxLevel0Blocks = mostCarried UnitBlocks512 `div` blockBytes
 
 -- | The blocks a request asks for when it is the one command a drive
---   transport carried at M3, which a replay carries alone: IF-RECV of Level
---   0 Discovery, protocol 1 and ComID 1, in whole 512-byte blocks, 1 to 255
---   of them. Any other is refused with why, in M3's words, the detail of
---   the replay's 'Hsed.Wire.Unsupported'.
+--   transport carried at M3: IF-RECV of Level 0 Discovery, protocol 1 and
+--   ComID 1, in whole 512-byte blocks, 1 to 255 of them. Any other is
+--   refused with why, in M3's words, which a replay's
+--   'Hsed.Wire.Unsupported' carried until M4c (it refuses by 'shapeOf'
+--   now).
 level0Blocks :: Request -> Either Text Word8
 level0Blocks = level0BlocksOf level0ComId
 

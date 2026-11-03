@@ -47,9 +47,22 @@ transcription (the oracle's fixture, @Hand.TableUIDs@) has: @u\<T\>TableObject
 :: UID@, @u\<T\>Table :: UID@ and @h\<T\> :: HalfUID@ per row, @nameHalfUID ::
 Map HalfUID String@ and @nameUID :: Map UID String@ (@"\<T\> Table"@, @"\<T\>
 Table Object"@). The typed half-UIDs @oth\<T\>@ and @bth\<T\>@ need each
-table's kind (byte or object table), which Core does not give as data; they
-wait for Opal's Kind column (design M5) and are listed in
-@spec/expected-diff.txt@; the module's note says so in each spec's words.
+table's kind (byte or object table), which Core does not give as data: an
+SSC prints it, in the Kind column of its preconfiguration of an SP's Table
+table (Opal Table 20, PDF 36-37, the Admin SP's; Table 36, PDF 53-54, the
+Locking SP's), and since M5a that column gives them ('tableKinds'): for every
+table such a row names (its Name cell), @oth\<T\> :: Object_Table_HalfUID@ for
+the Kind @Object@ and @bth\<T\> :: Byte_Table_HalfUID@ for @Byte@, the
+half-UID the row's own UID's lower half (the descriptor object's, Core
+3.2.5.3 b.i, PDF 51), in the spec's module beside its other table UIDs, and
+@byteTables :: [String]@, the names of the byte tables, which the oracle's
+fixture reads (@Hand.TableUIDs.TH@). Check @C-TABLE-KIND@ (an Error): a Kind
+cell reads @Object@ or @Byte@ (its spaces dropped: Table 20 prints
+@Obje ct@), and the SPs that list one table agree on its kind (its UID is
+C-PRECONF-UID's, "Hsed.Spec.Rules.Preconfig"; the first row's half-UID is
+generated).
+Core prints no such column, so its module has none; the typed half-UIDs it
+lacks are listed in @spec/expected-diff.txt@ until an SSC gives them.
 -}
 module Hsed.Spec.Rules.TableUIDs
   ( tableUIDsRule
@@ -60,6 +73,11 @@ module Hsed.Spec.Rules.TableUIDs
   , tableUIDRows
   , allTableUIDRows
   , tableNames
+    -- * Table kinds
+  , TableKind (..)
+  , TableKindRow (..)
+  , tableKinds
+  , readKind
     -- * Declarations
   , rowDecl
     -- * Generated names
@@ -97,9 +115,10 @@ tableUIDsRule = RuleDef
   , ruleModule  = tableUIDsModule
   , ruleCodes   =
       [ CodeDef "C-T240-HALVES" [Error]          (Defect "a table's UIDs disagree with its descriptor object's")
-      , CodeDef "C-T240-NAME"   [Error]          (Defect "a table name is no identifier, or names two tables") ]
+      , CodeDef "C-T240-NAME"   [Error]          (Defect "a table name is no identifier, or names two tables")
+      , CodeDef "C-TABLE-KIND"  [Error]          (Defect "an SP's Table table gives a table a Kind that is neither Object nor Byte, or two SPs give one table two kinds") ]
   , ruleChecks  = \ctx bts -> concatMap (either (\(bt, f) -> [atTable ctx bt f]) (rowChecks ctx (tablesTable bts))) (readRows bts)
-                               <> tablesTableChecks ctx bts <> nameChecks ctx bts
+                               <> tablesTableChecks ctx bts <> nameChecks ctx bts <> kindChecks ctx
   , ruleCompile = compile
   }
 
@@ -126,8 +145,8 @@ tableUIDsModuleFor ctx = tableUIDsModule { Gen.notes = intro <> why }
     why = case cxBase ctx of
       Nothing -> [ "which " <> Gen.specLabel (cxSpec ctx) <> " does not give as data; they are not generated here." ]
       Just _  -> [ "which " <> Gen.specLabel (cxSpec ctx) <> " prints in its preconfiguration of an SP's Table table"
-                 , "(its Kind column); hsedc does not read it into these until M5 (design section 11),"
-                 , "so they are not generated here." ]
+                 , "(its Kind column): they are generated here for every table such a row names, with" ]
+                 <> [ "byteTables, the names of the byte tables." ]
 
 
 -- * Reading the bound tables
@@ -177,11 +196,10 @@ allTableUIDRows = ownThenBase rowsOf tuName
 --   row of the table its Name cell names (the cell's lines joined, quotes
 --   dropped: Opal Table 20 row 12 prints @DataRemovalMecha@ and @nism\x201D@).
 preconfiguredRows :: Context -> [TableUIDRow]
-preconfiguredRows ctx = case tablesHalf of
+preconfiguredRows ctx = case tablesHalf ctx of
   Nothing   -> []
   Just half -> concatMap (rowsIn half) (boundTables (Just Preconfig) ctx)
   where
-    tablesHalf = listToMaybe [ h | c <- contextChain ctx, Right (_, h) <- [tablesTable (boundTables (Just TableUIDs) c)] ]
     rowsIn half bt =
       [ TableUIDRow
           { tuBound = bt, tuRow = i, tuName = name, tuObjectText = uidText
@@ -189,18 +207,98 @@ preconfiguredRows ctx = case tablesHalf of
       | (i, cells) <- zip [0 ..] (btRead bt).rows
       , Just uidText <- [cellIn "uid" cells], Just uid <- [parseUIDCell uidText], take 4 uid == half
       , Just nameCell <- [listToMaybe [ c | (h, c) <- zip header cells, h == "name" ]]
-      , let name = healed nameCell, isIdent name
+      , let name = healed nameCell, isIdentifier name
       , let table = drop 4 uid <> [0, 0, 0, 0] ]
       where
         header = map (normHeader . (.text)) (concat (take 1 (btRead bt).headerRows))
         cellIn :: Text -> [CellIR] -> Maybe Text
         cellIn h cells = listToMaybe [ c.text | (h', c) <- zip header cells, h' == h ]
-    -- an identifier split over lines and quoted: its lines joined, its quotes dropped
-    healed :: CellIR -> Text
-    healed c = T.filter (`notElem` ("\"\x201C\x201D\x2018\x2019" :: String)) (T.concat (map T.strip (if null c.lines then [c.text] else c.lines)))
-    isIdent n = case T.uncons n of
-      Just (ch, cs) -> (C.isAlpha ch || ch == '_') && T.all (\x -> C.isAlphaNum x || x == '_') cs
-      Nothing       -> False
+
+-- | A table's kind, as the Kind column of an SP's Table table gives it
+--   (Core's @table_kind@, Table 138, PDF 122: 1 Object, 2 Byte).
+data TableKind = ObjectTable | ByteTable
+  deriving (Eq, Ord, Show)
+
+-- | One row of an SP's preconfiguration of the table of tables, its table's
+--   kind read.
+data TableKindRow = TableKindRow
+  { tkBound :: !BoundTable
+  , tkRow   :: !Int               -- ^ 0-based among the data rows
+  , tkName  :: !Text              -- ^ the table it describes (its Name cell, healed)
+  , tkHalf  :: ![Word8]           -- ^ that table's half-UID: the row's UID's lower half
+  , tkKind  :: !TableKind
+  , tkCells :: ![CellIR]
+  }
+
+-- | A Kind cell, its spaces dropped, case aside: Opal Table 20 prints
+--   @Obje ct@ (PDF 36-37), Table 36 @Object@ and @Byte@ (PDF 53-54).
+--
+-- >>> map readKind ["Obje ct", "Byte", "VU"]
+-- [Just ObjectTable,Just ByteTable,Nothing]
+readKind :: Text -> Maybe TableKind
+readKind cell = case T.toLower (T.filter (not . C.isSpace) cell) of
+  "object" -> Just ObjectTable
+  "byte"   -> Just ByteTable
+  _        -> Nothing
+
+-- | The rows of the spec's own preconfigurations of the table of tables
+--   (each row's UID in the table whose half-UID a table of table UIDs of the
+--   spec or its base gives the table of tables, Core Table 240's @Table@)
+--   that print a Kind: each row whose Kind reads, or the @C-TABLE-KIND@
+--   Error at its row. A UID cell is read up to a note marker after its eight
+--   bytes (Opal Table 36 row 14, @00 00 00 01 00 00 08 05 *TT1@, PDF 54).
+tableKinds :: Context -> [Either Finding TableKindRow]
+tableKinds ctx = case tablesHalf ctx of
+  Nothing   -> []
+  Just half -> concatMap (rowsIn half) (boundTables (Just Preconfig) ctx)
+  where
+    rowsIn half bt =
+      [ maybe (Left (atCells ctx bt cells (finding Error "C-TABLE-KIND"
+                       ("row " <> tshow (i + 1) <> " " <> name <> ": the Kind " <> tshow kindText <> " is neither Object nor Byte"))))
+              (\k -> Right (TableKindRow bt i name (drop 4 uid) k cells)) (readKind kindText)
+      | header <- [map (normHeader . (.text)) (concat (take 1 (btRead bt).headerRows))], "kind" `elem` header
+      , (i, cells) <- zip [0 ..] (btRead bt).rows
+      , let cellIn h = listToMaybe [ c | (h', c) <- zip header cells, h' == h ]
+      , Just uidCell <- [cellIn "uid"], Just uid <- [parseUIDCell (beforeNote uidCell.text)], take 4 uid == half
+      , Just nameCell <- [cellIn "name"], let name = healed nameCell, isIdentifier name
+      , Just kindCell <- [cellIn "kind"], let kindText = T.unwords (T.words kindCell.text) ]
+    beforeNote = T.unwords . takeWhile (not . ("*" `T.isPrefixOf`)) . T.words
+
+-- | @C-TABLE-KIND@: a Kind that does not read, and a table the spec's SPs
+--   give two kinds, at the later row.
+kindChecks :: Context -> [Finding]
+kindChecks ctx = lefts kinds <> concatMap clashes (Map.elems byName)
+  where
+    kinds  = tableKinds ctx
+    byName = Map.fromListWith (flip (<>)) [ (tkName r, [r]) | Right r <- kinds ]
+    clashes = \case
+      first' : rest ->
+        [ atCells ctx (tkBound r) (tkCells r) (finding Error "C-TABLE-KIND"
+            ("row " <> tshow (tkRow r + 1) <> " " <> tkName r <> ": " <> describe r <> ", where "
+              <> renderAnchorId (btAnchor (tkBound first')) <> " row " <> tshow (tkRow first' + 1) <> " gives " <> describe first'))
+        | r <- rest, tkKind r /= tkKind first' ]
+      [] -> []
+    describe r = kindWord (tkKind r)
+
+kindWord :: TableKind -> Text
+kindWord = \case
+  ObjectTable -> "Object"
+  ByteTable   -> "Byte"
+
+-- | The half-UID of the table of tables: the one row of a table of table
+--   UIDs of the spec or its base whose descriptor object lies in its own
+--   table (Core Table 240's @Table@, @00 00 00 01@).
+tablesHalf :: Context -> Maybe [Word8]
+tablesHalf ctx = listToMaybe [ h | c <- contextChain ctx, Right (_, h) <- [tablesTable (boundTables (Just TableUIDs) c)] ]
+
+-- | An identifier split over lines and quoted: its lines joined, its quotes dropped.
+healed :: CellIR -> Text
+healed c = T.filter (`notElem` ("\"\x201C\x201D\x2018\x2019" :: String)) (T.concat (map T.strip (if null c.lines then [c.text] else c.lines)))
+
+isIdentifier :: Text -> Bool
+isIdentifier n = case T.uncons n of
+  Just (ch, cs) -> (C.isAlpha ch || ch == '_') && T.all (\x -> C.isAlphaNum x || x == '_') cs
+  Nothing       -> False
 
 -- | The table names a @uidref{...}@ may name: the Table Name column of every
 --   table bound to the rule's shape.
@@ -276,8 +374,16 @@ label r = "row " <> tshow (tuRow r + 1) <> " " <> tuName r <> ": "
 -- * Declarations
 
 compile :: Context -> [BoundTable] -> [Emitted]
-compile ctx bts = map one rows <> maps
+compile ctx bts = map one rows <> maps <> typed
   where
+    -- the typed half-UIDs, each table once (its first row) unless its SPs disagree (C-TABLE-KIND), and the byte
+    -- tables' names
+    allKinds = rights (tableKinds ctx)
+    firstOf  = Map.fromListWith (\_ earlier -> earlier) [ (tkName k, k) | k <- allKinds ]
+    clashing = L.nub [ tkName k | k <- allKinds, Just k0 <- [Map.lookup (tkName k) firstOf], tkKind k /= tkKind k0 ]
+    kinds    = [ k | k <- L.nubBy (\a b -> tkName a == tkName b) allKinds, tkName k `notElem` clashing ]
+    typed    = map (EmitIn (tableUIDsModuleFor ctx) . typedDecl ctx) kinds
+               <> [ EmitIn (tableUIDsModuleFor ctx) (byteTablesDecl ctx k0 kinds) | k0 <- take 1 allKinds ]
     rows   = [ r | Right r <- readRows bts ]
     named  = [ (btAnchor (tuBound r), tuRow r) | (r, _) <- nameProblems rows ]
     good r = null (halvesProblems (tablesTable bts) r) && (btAnchor (tuBound r), tuRow r) `notElem` named
@@ -319,6 +425,37 @@ rowDecl ctx r object table = (Gen.decl p n body)
       [ doc, tableObjectUIDName n <> " :: UID", tableObjectUIDName n <> " = " <> Gen.uidExpr object
       , "", doc, tableUIDName n <> " :: UID", tableUIDName n <> " = " <> Gen.uidExpr table
       , "", doc, "h" <> n <> " :: HalfUID", "h" <> n <> " = " <> Gen.bytesExpr "halfUID" (take 4 table) ]
+
+-- | @oth\<T\> :: Object_Table_HalfUID@ or @bth\<T\> :: Byte_Table_HalfUID@
+--   for one row of an SP's Table table, citing the page it is printed on.
+typedDecl :: Context -> TableKindRow -> Gen.Decl
+typedDecl ctx k = (Gen.decl p n body)
+  { Gen.declRank    = tkRow k
+  , Gen.declImports = [Gen.ImportSome referenceTypesModule [ty, fn]] }
+  where
+    p  = atRow ctx (tkCells k) (boundProvenance ctx (tkBound k))
+    (prefix, ty, fn) = case tkKind k of
+      ObjectTable -> ("oth", "Object_Table_HalfUID", "otHalfUID")
+      ByteTable   -> ("bth", "Byte_Table_HalfUID", "btHalfUID")
+    n    = prefix <> tkName k
+    body = [ Gen.provenanceComment p <> ", row " <> tshow (tkRow k + 1) <> ": " <> tkName k <> ", Kind " <> kindWord (tkKind k)
+           , n <> " :: " <> ty, n <> " = " <> Gen.bytesExpr fn (tkHalf k) ]
+
+-- | @byteTables :: [String]@, the names of the tables whose kind is Byte,
+--   under the provenance of the first table kind's row, after every row.
+byteTablesDecl :: Context -> TableKindRow -> [TableKindRow] -> Gen.Decl
+byteTablesDecl ctx k0 ks = (Gen.decl p "byteTables" body)
+  { Gen.declRank    = maxBound
+  , Gen.declImports = [Gen.ImportSome "Prelude" ["String"]] }
+  where
+    p    = boundProvenance ctx (tkBound k0)
+    body = [ Gen.provenanceComment p <> ": the tables an SP's Table table gives the Kind Byte, by name"
+           , "byteTables :: [String]" ]
+           <> Gen.listDefinition "byteTables =" [ tshow (tkName k) | k <- ks, tkKind k == ByteTable ]
+
+-- | The runtime module of the typed half-UIDs.
+referenceTypesModule :: Text
+referenceTypesModule = "Hsed.Core.Reference_Types"
 
 -- | @nameHalfUID@ and @nameUID@, after every row.
 mapsDecl :: Gen.Provenance -> Int -> [TableUIDRow] -> Gen.Decl

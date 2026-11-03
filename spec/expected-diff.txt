@@ -47,11 +47,11 @@ T161 | caption | Table 161 uinteger_8 / Table 160 uinteger_8 | hsed numbers Tabl
 # newly generated
 Core_gen_status | new | 64 constructors, values 0..63, names fnv1a64:f39dd06ee2026dbb | T87: generated through its rangeWords comment; hsed has only a FIXME
 
-# the typed half-UIDs the hand transcription derives from a hard-coded table kind
+# the typed half-UIDs the hand transcription derives from a hard-coded table kind, of the tables Opal's Kind
+# column does not give yet (since M5a, hsed/gen/Hsed/Gen/Opal/TableUIDs.hs generates those of Opal Table 20's
+# tables, PDF 36-37, and EquivSpec compares them; Table 36's, PDF 53-54, bthMBR and six oth<T> among them, at
+# M5a's integration)
 bthMBR | typed-half-uid | btHalfUID 0x00 0x00 0x08 0x04 | T240: hsed hard-codes MBR as the one byte table; Core gives no table kind (Opal's Kind column, M5)
-othACE | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x08 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othAccessControl | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x07 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othAuthority | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x09 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othC_AES_128 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0e | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othC_AES_256 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0f | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othC_EC_160 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x10 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
@@ -67,7 +67,6 @@ othC_HMAC_160 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x19 | T240: object ta
 othC_HMAC_256 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1a | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othC_HMAC_384 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1b | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othC_HMAC_512 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1c | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othC_PIN | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0b | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othC_RSA_1024 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0c | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othC_RSA_2048 | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0d | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othCertificates | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x0a | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
@@ -85,14 +84,7 @@ othLockingInfo | typed-half-uid | otHalfUID 0x00 0x00 0x08 0x01 | T240: object t
 othLog | typed-half-uid | otHalfUID 0x00 0x00 0x0a 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othLogList | typed-half-uid | otHalfUID 0x00 0x00 0x0a 0x02 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othMBRControl | typed-half-uid | otHalfUID 0x00 0x00 0x08 0x03 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othMethodID | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x06 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othSP | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x05 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othSPInfo | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x02 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othSPTemplates | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x03 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othSecretProtect | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x1d | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othTPerInfo | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othTable | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x01 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
-othTemplate | typed-half-uid | otHalfUID 0x00 0x00 0x02 0x04 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 othType | typed-half-uid | otHalfUID 0x00 0x00 0x00 0x05 | T240: object table by hsed's default; Core gives no table kind (Opal's Kind column, M5)
 
 # M2b: the UIDs of the tables the hand transcription leaves out (uidTable, Tables 242-248; T241's six

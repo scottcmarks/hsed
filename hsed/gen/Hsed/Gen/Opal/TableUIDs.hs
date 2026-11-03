@@ -15,12 +15,58 @@ of its cells (docs/spec-as-source.md section 3.5). The tables are TCG's text:
 see tcg/TCG-NOTICE.txt. The typed half-UIDs of the hand transcription's
 TableUIDs (oth\<T\>, bth\<T\>; the oracle's test fixture, Hand.TableUIDs) need
 each table's kind, which Opal prints in its preconfiguration of an SP's Table
-table (its Kind column); hsedc does not read it into these until M5 (design
-section 11), so they are not generated here.
+table (its Kind column): they are generated here for every table such a row
+names, with byteTables, the names of the byte tables.
 -}
 module Hsed.Gen.Opal.TableUIDs where
 
-import           Hsed.Core.UID (HalfUID, halfUID, UID, uid)
+import           Hsed.Core.Reference_Types (Object_Table_HalfUID, otHalfUID)
+import           Hsed.Core.UID             (HalfUID, halfUID, UID, uid)
+import           Prelude                   (String)
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 1: Table, Kind Object
+othTable :: Object_Table_HalfUID
+othTable = otHalfUID 0x00 0x00 0x00 0x01
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 2: SPInfo, Kind Object
+othSPInfo :: Object_Table_HalfUID
+othSPInfo = otHalfUID 0x00 0x00 0x00 0x02
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 3: SPTemplates, Kind Object
+othSPTemplates :: Object_Table_HalfUID
+othSPTemplates = otHalfUID 0x00 0x00 0x00 0x03
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 4: MethodID, Kind Object
+othMethodID :: Object_Table_HalfUID
+othMethodID = otHalfUID 0x00 0x00 0x00 0x06
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777), row 5: AccessControl, Kind Object
+othAccessControl :: Object_Table_HalfUID
+othAccessControl = otHalfUID 0x00 0x00 0x00 0x07
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 6: ACE, Kind Object
+othACE :: Object_Table_HalfUID
+othACE = otHalfUID 0x00 0x00 0x00 0x08
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 7: Authority, Kind Object
+othAuthority :: Object_Table_HalfUID
+othAuthority = otHalfUID 0x00 0x00 0x00 0x09
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 8: C_PIN, Kind Object
+othC_PIN :: Object_Table_HalfUID
+othC_PIN = otHalfUID 0x00 0x00 0x00 0x0b
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 9: TPerInfo, Kind Object
+othTPerInfo :: Object_Table_HalfUID
+othTPerInfo = otHalfUID 0x00 0x00 0x02 0x01
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 10: Template, Kind Object
+othTemplate :: Object_Table_HalfUID
+othTemplate = otHalfUID 0x00 0x00 0x02 0x04
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 11: SP, Kind Object
+othSP :: Object_Table_HalfUID
+othSP = otHalfUID 0x00 0x00 0x02 0x05
 
 -- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 12: DataRemovalMechanism
 uDataRemovalMechanismTableObject :: UID
@@ -33,3 +79,11 @@ uDataRemovalMechanismTable = uid 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x00
 -- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 12: DataRemovalMechanism
 hDataRemovalMechanism :: HalfUID
 hDataRemovalMechanism = halfUID 0x00 0x00 0x11 0x01
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 12: DataRemovalMechanism, Kind Object
+othDataRemovalMechanism :: Object_Table_HalfUID
+othDataRemovalMechanism = otHalfUID 0x00 0x00 0x11 0x01
+
+-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777): the tables an SP's Table table gives the Kind Byte, by name
+byteTables :: [String]
+byteTables = []

@@ -56,8 +56,8 @@ the generated one, retired); and the legend's classes by column with a
 hand-built scale (G1's classifier).
 
 Then, since M5a, Opal's Locking SP (Tables 34-42 and 44-48, PDF 52-89) under
-the M5a sidecar ('m5aOpalHsa', the scratch sidecar's doc line with @rule
-preconfig@ and @rule sig@, T17, T49 and the prose lines; T14-T16 are G2's),
+the M5a sidecar (CoreIR's 'm5aOpalHsa': the doc line with @rule preconfig@
+and @rule sig@, T17, T49, the prose lines and Tables 14-16 over Core),
 read over Core: no Error at any of its tables and none left out; each
 reading with the cells it reads (Scott's answer 1: readings, not errata):
 T35's own SPTemplates row (N-PRECONF-UID-SP), T36's least values, T38's
@@ -138,18 +138,6 @@ compiles beside modName text = withSystemTempDirectory "hsed-preconfig" $ \dir -
     Left (e :: IOException)         -> pendingWith ("cannot run " <> prog <> " here: " <> show e)
     Right (ExitSuccess, _, _)       -> pure ()
     Right (ExitFailure _, out, err) -> expectationFailure (prog <> " rejected the module:\n" <> out <> err)
-
--- | The M5a sidecar (the scratch sidecar of M5a's scaffold, build-scratch/opal-2.30.m5a.hsa, without its
---   T14-T16 lines, G2's, whose 'core N' Opal resolves only once G2 merges): every preconfiguration table of
---   sections 4.2 and 4.3 bound by the doc line's rule token, the Locking SP's among them.
-m5aOpalHsa :: Text
-m5aOpalHsa = T.unlines
-  [ "opal-2.30 | doc | doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow"
-      <> " & rule enumValues & rule tableDesc & rule preconfig & rule sig"
-  , "opal-2.30 | T17 | propsReq"
-  , "opal-2.30 | T49 | enumInDescription (replaces [core 102, core 103])"
-  , "opal-2.30 | T2 | prose", "opal-2.30 | T7 | prose", "opal-2.30 | T9 | prose", "opal-2.30 | T10 | prose"
-  , "opal-2.30 | T11 | prose", "opal-2.30 | T12 | prose" ]
 
 spec :: Spec
 spec = do

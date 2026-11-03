@@ -17,13 +17,18 @@ transfer length as a TPer pads it (Core 3.3.6.2, PDF 67), and refuses
 every other command. The jig's drive-side runs, its Pair runner and the
 fixture's tests run on it without root or hardware.
 
-It stands in for the kext's transport ("Hsed.Transport.MacKext") command
-for command: the same unit (512-byte blocks), the same one command carried
-("Hsed.Transport.Cdb".'level0Blocks': IF-RECV on protocol 1, ComID 1, of 1
-to 255 whole blocks), the same refusal of any other ('Unsupported'
-@M3: Level 0 only@), so that a run that passes on a replay asks the drive
-nothing the kext would refuse. It keeps no state: the same request has the
-same answer.
+It stands in for the kext's transport ("Hsed.Transport.Kext"'s
+'Hsed.Transport.Kext.kextExchange') as that transport is before a base
+ComID is bound, command for command: the same unit (512-byte blocks), the
+one command carried, Level 0 Discovery's IF-RECV, decided the same way
+("Hsed.Transport.Cdb".'shapeOf' with no base: protocol 1, ComID 1, 1 to
+255 whole blocks), and every other refused ('Unsupported') with the same
+reason, which says it is a replay's. A replay binds no base ComID (the
+jig's target gives its 'Hsed.Transport.Drive.RawDrive' a bind that
+refuses), so that it carries Level 0 Discovery alone for the whole of a
+run, and a run that passes on a replay asks the drive nothing the kext's
+transport would refuse before its bind. It keeps no state: the same
+request has the same answer.
 -}
 module Hsed.Transport.Replay
   ( openReplay
@@ -35,7 +40,7 @@ import qualified RIO.Text              as T
 
 import           Hsed.Core.Layout      (Layout (..))
 import           Hsed.Gen.Core.Layouts (level0DiscoveryHeaderLayout)
-import           Hsed.Transport.Cdb    (level0Blocks)
+import           Hsed.Transport.Cdb    (shapeOf)
 import           Hsed.Version          (hsedVersion)
 import           Hsed.Wire.Internal    (Cap (..), Describe (..), IfStatus (..), Request (lenBytes),
                                         Response (..), Transport (..), Unit (..))
@@ -72,7 +77,8 @@ replay file bytes = MkTransport
   , tClose    = pure ()
   }
   where
-    answer r = case level0Blocks r of
-      Left why -> Response (Unsupported why) mempty
+    answer r = case shapeOf Nothing r of
+      Left why -> Response (Unsupported ("a replay answers Level 0 Discovery alone, as the kext's transport does before "
+                                         <> "its base ComID is bound: " <> why)) mempty
       Right _  -> Response Good (B.take n (bytes <> B.replicate n 0))
         where n = fromIntegral (lenBytes r)

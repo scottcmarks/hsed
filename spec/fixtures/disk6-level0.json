@@ -1,0 +1,15 @@
+{
+  "capture": "disk6-level0.bin",
+  "captured": "2026-11-03T08:52:31Z",
+  "hsed_jig": "Version 0.1.0.1 [no git info: GHECouldn'tReadFile \"../.git/modules/hsed/HEAD\" ../.git/modules/hsed/HEAD: withBinaryFile: inappropriate type (Not a directory)]",
+  "bsd": "disk22",
+  "serial": "***********802W",
+  "kext_build": "625",
+  "interface": "sat",
+  "registry_id": 4294974269,
+  "cdb": "a1 08 0e 01 04 00 01 00 00 5c 00 00",
+  "len_bytes": 2048,
+  "transferred": 2048,
+  "sha256": "cfb74a68025153763eee7a1a9146afd0aaca3668ed31eacb6684fb91f21a5718",
+  "length_of_parameter_data": 180
+}

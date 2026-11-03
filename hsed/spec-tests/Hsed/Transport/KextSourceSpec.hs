@@ -17,9 +17,13 @@ as text (@cbits/hsed_kext.{c,h}@, compiled only under the flag @kext@, and
 exactly design 9.3's five commands, and every byte of what it issues, and
 every decision of a bind, comes from the portable C. A check of the
 source's tokens against drift, not a proof of what it does: @hsed_kext.c@
-never runs here, and what decides is in @hsed_cdb.c@, which the tests run
-through FFI (the M4c review found one-line edits of the earlier shim that
-these checks, then keyed on exact spellings, let by).
+never runs here (it runs in "Hsed.Transport.KextShimSpec", against a stub
+IOKit, since the M4c review's verification), and what decides is in
+@hsed_cdb.c@, which the tests run through FFI (the M4c review found
+one-line edits of the earlier shim that these checks, then keyed on exact
+spellings, let by; its verification found four more, the root gate's
+condition or return and the bind's answer or count forced, which the
+statements pinned below now catch).
 
 * The kext shim names no CDB byte, no send token and no template: none of
   the opcodes 0x5E, 0xB5, 0xA1, 0xA2 or 0x5C written as hex, nor
@@ -36,10 +40,19 @@ these checks, then keyed on exact spellings, let by).
 * In @hsed_kext_command@, @hsed_cdb_scalars@ (the scalars, the echo, the
   buffer and an IF-SEND's payload in it, all in the portable C) comes
   before that one call, which is made only once it answered OK.
-* @hsed_kext_open@ tests the effective user id before it opens anything;
-  @hsed_kext_bind@ finds the TPer again by its registry id, counts its user
-  clients and reads its serial, and binds only once @hsed_cdb_bind_check@
-  took them and the base.
+* @hsed_kext_open@ tests the effective user id before it opens anything,
+  the test's statement @if (geteuid() != 0) return kIOReturnNotPrivileged;@
+  as it stands, and names @geteuid@ there alone; @hsed_kext_bind@ finds the
+  TPer again by its registry id, counts its user clients and reads its
+  serial, and binds only once @hsed_cdb_bind_check@ took them and the base,
+  @clients@ and @checked@ each set by its declaration and by that one call
+  alone, never through an address; and @hsed_kext_command@ names its buffer
+  twice, in the check for NULL and in the call of @hsed_cdb_scalars@, so
+  writes nothing into it. Each check's refusal returns at once
+  (@if (... != HSED_CDB_OK) return@).
+* The shim defines its two classes and three selectors and nothing else,
+  and has no conditional or other directive but its includes: no macro of
+  its own can stand in for a call.
 * @cbits/hsed_cdb.c@ holds exactly four templates, each
   "Hsed.Transport.Cdb".'cdbFor''s with its protocol, count and ComID bytes
   zeroed, at the offsets it writes them; 5Eh and B5h once each; no IOKit;
@@ -179,6 +192,27 @@ assertedOffsets src =
 bodyOf :: Text -> Text -> Text
 bodyOf fn = T.unlines . takeWhile (/= "}") . drop 1 . dropWhile (not . (("int " <> fn <> "(") `T.isPrefixOf`)) . T.lines
 
+-- | C code with each run of white space one space, so that a statement is
+--   read however it is spaced.
+spaced :: Text -> Text
+spaced = T.unwords . T.words
+
+-- | How many times a name is assigned in some code, a declaration's
+--   initialiser among them: the name as a whole word followed by an
+--   assignment operator (not @==@), or by @++@ or @--@, or preceded by
+--   them; and how many times its address is taken.
+assignments :: Text -> Text -> (Int, Int)
+assignments name src =
+  ( length [ () | (ahead, behind) <- occurrences, assigned (T.stripStart behind) || any (`T.isSuffixOf` T.stripEnd ahead) ["++", "--"] ]
+  , length [ () | (ahead, _) <- occurrences, "&" `T.isSuffixOf` T.stripEnd ahead, not ("&&" `T.isSuffixOf` T.stripEnd ahead) ] )
+  where
+    occurrences = [ (preceding, T.drop (T.length name) at')
+                  | (preceding, at') <- T'.breakOnAll name src
+                  , maybe True (not . identifier) (lastChar preceding)
+                  , maybe True (not . identifier . fst) (T.uncons (T.drop (T.length name) at')) ]
+    assigned rest = not ("==" `T.isPrefixOf` rest)
+                    && any (`T.isPrefixOf` rest) ["=", "+=", "-=", "*=", "/=", "%=", "|=", "&=", "^=", "<<=", ">>=", "++", "--"]
+
 -- | Where a text first appears in another, if it does, as a whole word or not.
 position :: Text -> Text -> Maybe Int
 position needle hay = case T'.breakOn needle hay of
@@ -271,9 +305,14 @@ spec = describe "the C shim, cbits/" $ do
         `shouldBe` [["info->sat", "shape", "info->base_comid", "blocks", "buf", "bufsize", "(uint64_t)page", "input", "cdb_out"]]
       length (callsOf "IOConnectCallScalarMethod" body) `shouldBe` 1
       [ c | c <- ["hsed_cdb_build", "hsed_cdb_check_payload", "hsed_cdb_base_ok"], not (null (namedAt c body)) ] `shouldBe` []
-    it "open as root only: hsed_kext_open tests geteuid() before IOServiceOpen" $ do
-      body <- code . bodyOf "hsed_kext_open" <$> shim
-      map (`position` body) ["geteuid() != 0", "IOServiceOpen("] `shouldSatisfy` \ps -> all isJust ps && ps == L.sort ps
+    it "open as root only: hsed_kext_open tests geteuid() before IOServiceOpen, its statement as it stands, and the shim names geteuid there alone" $ do
+      body <- spaced . code . bodyOf "hsed_kext_open" <$> shim
+      let gate = "if (geteuid() != 0) return kIOReturnNotPrivileged;"
+      map (`position` body) [gate, "IOServiceOpen("] `shouldSatisfy` \ps -> all isJust ps && ps == L.sort ps
+      length (T'.breakOnAll gate body) `shouldBe` 1
+      src <- code <$> shim
+      length (namedAt "geteuid" src) `shouldBe` 1
+      length (namedAt "kIOReturnNotPrivileged" src) `shouldBe` 1
     it "bind after the checks: hsed_kext_bind finds the TPer again, counts its user clients, reads its serial, and binds once hsed_cdb_bind_check took them" $ do
       body <- code . bodyOf "hsed_kext_bind" <$> shim
       let steps = [ "IORegistryEntryIDMatching(info->registry_id)", "count_user_clients(tper)", "read_serial(tper, serial, sizeof serial)"
@@ -282,6 +321,26 @@ spec = describe "the C shim, cbits/" $ do
       map (`position` body) steps `shouldSatisfy` \ps -> all isJust ps && ps == L.sort ps
       length (T'.breakOnAll "info->base_comid =" body) `shouldBe` 1
       [ c | c <- ["hsed_cdb_base_ok", "strncmp", "strcmp", "memcmp"], not (null (namedAt c body)) ] `shouldBe` []
+    it "set clients and checked in hsed_kext_bind by their declarations and the one call each, never through an address, and return at once on a refusal" $ do
+      body <- spaced . code . bodyOf "hsed_kext_bind" <$> shim
+      map (`assignments` body) ["clients", "checked"] `shouldBe` [(2, 0), (2, 0)]
+      for_ [ "int clients = -1;", "int checked = HSED_CDB_OK;", "clients = count_user_clients(tper);"
+           , "if (checked != HSED_CDB_OK) return checked == HSED_CDB_E_CLIENTS ? kIOReturnExclusiveAccess : checked == HSED_CDB_E_SERIAL ? kIOReturnNoDevice : kIOReturnBadArgument;" ] $ \l ->
+        body `shouldSatisfy` T.isInfixOf l
+    it "name the buffer in hsed_kext_command twice, its check for NULL and its place among hsed_cdb_scalars' arguments, so write nothing into it; and return at once on hsed_cdb_scalars' refusal" $ do
+      body <- spaced . code . bodyOf "hsed_kext_command" <$> shim
+      length (namedAt "buf" body) `shouldBe` 2
+      for_ [ "|| buf == NULL ||", ", blocks, buf, bufsize, (uint64_t)page, input, cdb_out);", "if (built != HSED_CDB_OK) return built == HSED_CDB_E_COMID" ] $ \l ->
+        body `shouldSatisfy` T.isInfixOf l
+      map (`assignments` body) ["built", "cdb_out"] `shouldBe` [(2, 0), (0, 0)]
+    it "define their classes and selectors and nothing else, and hold no directive but includes and the header's guard" $ do
+      src <- shim
+      h <- header
+      defines src `shouldBe` [ "HSED_KEXT_TPER_CLASS", "HSED_KEXT_USER_CLIENT_CLASS", "HSED_KEXT_SELECTOR_OPEN", "HSED_KEXT_SELECTOR_CLOSE"
+                             , "HSED_KEXT_SELECTOR_SCSI" ]
+      [ l | l <- T.lines (code src), "#" `T.isPrefixOf` T.stripStart l, not (any (`T.isPrefixOf` T.stripStart l) ["#include", "#define"]) ] `shouldBe` []
+      [ T.strip l | l <- T.lines (code h), "#" `T.isPrefixOf` T.stripStart l, not ("#include" `T.isPrefixOf` T.stripStart l) ]
+        `shouldBe` ["#ifndef HSED_KEXT_H", "#define HSED_KEXT_H", "#endif"]
 
   describe "hsed_cdb.c and hsed_cdb.h: the portable C" $ do
     it "holds exactly four templates, each cdbFor's with its protocol, count and ComID zeroed at the offsets it writes them" $ do

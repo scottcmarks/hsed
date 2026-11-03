@@ -16,16 +16,18 @@ copyright:           Magnolia Heights R&D
 description:         Please see the README on Github at <https://github.com/scottcmarks/hsed#readme>
 
 # the C headers: the drive's CDBs' (cbits/hsed_cdb.h, every build) and the kext shim's (cbits/hsed_kext.h,
-# only under the kext flag)
+# under the kext flag, and in hsed-test against its stub IOKit); the stub's (spec-tests/cbits/stub)
 extra-source-files:
 - cbits/*.h
+- spec-tests/cbits/stub/**/*.h
 
 flags:
   # The macOS drive transport (Hsed.Transport.MacKext): the C shim cbits/hsed_kext.c over IOKit, which
   # issues design 9.3's five commands and nothing else (Level 0 Discovery's IF-RECV and, on the drive's
   # base ComID once bound, a ComPacket's IF-SEND and IF-RECV and STACK_RESET's pair), each CDB built by
   # cbits/hsed_cdb.c, which every build compiles (design 7.2, 9.3). Manual and off: CI's tests build
-  # without it, and one macOS step of CI compiles it, never running it; on with stack build hsed --flag
+  # without it (hsed-test compiles the shim's own code against a stub IOKit and runs it, nothing of IOKit
+  # linked), and one macOS step of CI compiles it, never running it; on with stack build hsed --flag
   # hsed:kext, built as yourself, never with sudo stack.
   kext:
     description: Build the kext transport's C shim (macOS only)
@@ -146,6 +148,26 @@ tests:
       - unix
     build-tools:
     - hspec-discover
+    # The C the tests alone compile (the M4c review's verification): the kext shim, cbits/hsed_kext.c itself,
+    # against a stub of what it calls of Mach, CoreFoundation and IOKit (spec-tests/cbits/stub, whose headers
+    # stand in for the system's, every function the shim calls a macro for one named hsed_stub_*), its five
+    # functions renamed hsed_stubbed_kext_* and its geteuid the stub's, so that the shim's own code runs with
+    # nothing of IOKit linked and no call reaching a kext (Hsed.Transport.KextShimSpec). Listed as itself, so
+    # that an edit of hsed_kext.c recompiles it here.
+    c-sources:
+    - cbits/hsed_kext.c
+    - spec-tests/cbits/hsed_kext_stub.c
+    include-dirs:
+    - spec-tests/cbits/stub
+    cc-options:
+    - -Wall
+    - -Wextra
+    - -Dhsed_kext_locate=hsed_stubbed_kext_locate
+    - -Dhsed_kext_open=hsed_stubbed_kext_open
+    - -Dhsed_kext_bind=hsed_stubbed_kext_bind
+    - -Dhsed_kext_command=hsed_stubbed_kext_command
+    - -Dhsed_kext_close=hsed_stubbed_kext_close
+    - -Dgeteuid=hsed_stub_geteuid
 
     ghc-options:
     - -threaded

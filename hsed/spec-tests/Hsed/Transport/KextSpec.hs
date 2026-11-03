@@ -368,12 +368,13 @@ spec = describe "Hsed.Transport.Kext" $ do
       length ls `shouldBe` 2
       filter (\l -> any (`T.isInfixOf` T.toLower l) ["msid", "4d 53 49 44", "4d534944"]) ls `shouldBe` []
     it "waits, uninterruptible, for a slow shim: a timeout shorter returns after the shim, and the answer lost latches it" $ do
+      -- the shim half a second, the timeout a fiftieth: a loaded runner's timer has the rest to fire in
       r <- newRig
-      writeIORef (rKnobs r) straight { kDelay = 300000 }
+      writeIORef (rKnobs r) straight { kDelay = 500000 }
       started <- Clock.getMonotonicTime
       outcome <- timeout 20000 (exchange r level0)
       ended <- Clock.getMonotonicTime
-      (isNothing outcome, ended - started >= 0.3) `shouldBe` (True, True)
+      (isNothing outcome, ended - started >= 0.5) `shouldBe` (True, True)
       readIORef (rCalls r) `shouldReturn` 1
       writeIORef (rKnobs r) straight
       exchange r level0 >>= (`shouldSatisfy` failsWith "was lost to an interruption, after the shim returned")

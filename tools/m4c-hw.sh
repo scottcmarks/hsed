@@ -6,8 +6,9 @@
 #   tools/m4c-hw.sh disk SERIAL            the whole disk (diskN) under the kext TPer whose trimmed IDENTIFY serial is
 #                                          SERIAL, alone on stdout; exit 1 unless exactly one TPer carries it
 #   tools/m4c-hw.sh [SERIAL]               the pre-flight, then the steps (SERIAL S59BNM0RA15802W if none is given)
-#   tools/m4c-hw.sh snapshot NAME SERIAL   build/m4c/NAME.manifest, NAME.volume and NAME.writes (Scott's, H4 and H12:
-#                                          it reads the files of the drive's mounted volumes)
+#   tools/m4c-hw.sh snapshot NAME SERIAL   build/m4c/NAME.manifest, NAME.volume and NAME.writes (Scott's, H4 and H13:
+#                                          it reads the files of the drive's mounted volumes), each volume keyed by its
+#                                          slice (s1), never by the disk's number, which a replug may change
 #   tools/m4c-hw.sh compare A B            two snapshots compared: exit 1 unless the volume is unchanged
 #
 # It runs nothing privileged and nothing that reaches the drive: it reads the IORegistry (ioreg), the loaded kexts
@@ -27,9 +28,9 @@
 # 2026-11-02, design 13.7): a drive run resets its base ComID with STACK_RESET before each case, logged.
 #
 # The checks of build/bin/hsed-jig, the kext-enabled jig Scott builds at H1, ask it for the kext shim's
-# _hsed_kext_command and _hsed_kext_bind and the portable _hsed_cdb_build; of the shared .stack-work's hsed-jig, the
-# flag-off build the agents run, only that it has no _hsed_kext_ symbol (a static link leaves the unreferenced
-# hsed_cdb.o out of it).
+# _hsed_kext_command and _hsed_kext_bind and the portable _hsed_cdb_scalars and _hsed_cdb_bind_check they take every
+# scalar and every bind's decision from; of the shared .stack-work's hsed-jig, the flag-off build the agents run, only
+# that it has no _hsed_kext_ symbol (a static link leaves the unreferenced hsed_cdb.o out of it).
 #
 # Exit status: 0 when every check passes, 1 when one fails (the pre-flight prints the steps either way), 2 a usage
 # error.
@@ -85,10 +86,19 @@ writes_of() {
 }
 
 # The mounts of a whole disk ($1, diskN) and its slices, a line each: the device and the mount point, tab-separated.
-# A mount line is "DEVICE on MOUNT POINT (TYPE, options)": the device exactly the disk or one of its slices, the mount
-# point whatever lies between " on " and the last " (", spaces and all (Hsed.Jig.Preflight reads it the same way).
+# A mount line is "DEVICE on MOUNT POINT (TYPE, options)": the device exactly the disk or one of its slices, or a
+# snapshot of one named before an '@' (NAME@/dev/diskNsM), the mount point whatever lies between " on " and the last
+# " (", spaces and all (Hsed.Jig.Preflight reads it the same way).
 mounts_of() {
-    /sbin/mount | sed -n -E "s#^(/dev/$1(s[0-9]+)*) on (.*) \([^()]*\)\$#\1"$'\t'"\3#p"
+    /sbin/mount | sed -n -E "s#^(([^ @]*@)?/dev/$1(s[0-9]+)*) on (.*) \([^()]*\)\$#\1"$'\t'"\4#p"
+}
+
+# Where a mounted device ($2) lies on the whole disk $1: its slice (s1, s1s1), or 'whole' for the disk itself, a
+# snapshot's name before its '@' left out: what keys a snapshot's rows, the same across a replug that renumbers the disk.
+slice_of() {
+    local dev=${2##*@}
+    dev=${dev#/dev/$1}
+    printf '%s' "${dev:-whole}"
 }
 
 # The whole disk of the drive whose serial is $1 on stdout, or why not on stderr (exit 1): exactly one kext TPer must
@@ -198,12 +208,12 @@ preflight() {
     else
         symbols=$(nm "$jig" 2>/dev/null || true)
         missing=""
-        for s in _hsed_kext_command _hsed_kext_bind _hsed_cdb_build; do
+        for s in _hsed_kext_command _hsed_kext_bind _hsed_cdb_scalars _hsed_cdb_bind_check; do
             grep -Eq "^[0-9a-f]+ [Tt] $s\$" <<<"$symbols" || missing="$missing $s"
         done
-        if [ -n "$missing" ]; then fail "$jig lacks$missing: built without --flag hsed:kext, or before M4c's shim (H1)"
+        if [ -n "$missing" ]; then fail "$jig lacks$missing: built without --flag hsed:kext, or before the M4c review's shim (H1)"
         elif [ "$(stat -f %u "$jig")" != "$(id -u)" ]; then fail "$jig is $(stat -f %Su "$jig")'s, not yours: build it as yourself (H1)"
-        else ok "$jig is yours and carries the kext shim's _hsed_kext_command and _hsed_kext_bind and _hsed_cdb_build"; fi
+        else ok "$jig is yours and carries the kext shim's _hsed_kext_command and _hsed_kext_bind, and _hsed_cdb_scalars and _hsed_cdb_bind_check"; fi
     fi
 
     # The shared .stack-work's hsed-jig, which stack exec hsed-jig and the agents run: flag-off, no kext code.
@@ -248,8 +258,14 @@ Scott's hardware steps for M4c (docs/spec-as-source.md 11), written for the defa
 base ComID with STACK_RESET before each case, automatic and logged (Scott's decision of 2026-11-02, design 13.7). In
 ~/hsed, in order, least exposure first. Never run sedutil-cli and hsed-jig at the same time.
 
-H0. Name the drive by its serial, never by a number typed from memory: the BSD number is assigned at each attach, and
-    hsed-jig refuses a disk whose TPer or serial is wrong, but sedutil-cli does not. Derive DISK again after any replug.
+H0. After M4c lands on feature/types with CI green (before that, ~/hsed has no tools/m4c-hw.sh, and H2's pre-flight
+    fails): name the drive by its serial, never by a number typed from memory: the BSD number is assigned at each
+    attach, and hsed-jig refuses a disk whose TPer or serial is wrong, but sedutil-cli does not. Eject the drive before
+    any replug (diskutil eject /dev/\$DISK: it unmounts every slice and flushes the drive's write cache; if it fails or
+    hangs, the replug is a surprise removal, and the next attach may run fsck_msdos -y on the volume), and derive DISK
+    again after it. A replug also makes the block driver anew, whose write counters H4's and H13's snapshots compare:
+    take 'tools/m4c-hw.sh snapshot pre-replug "\$SERIAL"' before it if you can and 'snapshot post-replug' right after,
+    then compare before with pre-replug and post-replug with after, never before with after.
       cd ~/hsed && git pull
       SERIAL=${serial}
       DISK=\$(tools/m4c-hw.sh disk "\$SERIAL") && echo "\$DISK"
@@ -282,17 +298,19 @@ H3. M3's Level 0 capture, while FixtureSpec's six examples still pend: one IF-RE
     kIOReturnExclusiveAccess: H2 names the holder. kIOReturnNoDevice or a serial refused: derive DISK again.
     level0 decode failing only on 0x0403's Length is 13.29 (i): commit nothing, hand it to an agent.
 
-H4. The volume's baseline, as yourself, the volume left mounted:
+H4. The volume's baseline, as yourself, the volume left mounted. Optionally, first, a check of the volume, before the
+    snapshot and never after it (it may unmount and remount the volume, which writes to it and moves the write counters
+    H13 compares; never use repairVolume):
+      diskutil verifyVolume /dev/${DISK}s1
+    expecting 'File system check exit code is 0'. Then the snapshot:
       mkdir -p build/m4c && tools/m4c-hw.sh snapshot before "$SERIAL"
     It writes build/m4c/before.manifest (the sha256 of every file on the drive's mounted volumes but macOS's metadata:
     .fseventsd, .Spotlight-V100, .Trashes, .TemporaryItems, .DocumentRevisions-V100, ._* and .DS_Store; the mount is
     noatime, so reading writes nothing), before.volume (VolumeUUID, VolumeName, FilesystemType, TotalSize, FreeSpace)
-    and before.writes (the block driver's Operations (Write) and Bytes (Write)). Optionally, a baseline check:
-      diskutil verifyVolume /dev/${DISK}s1
-    expecting 'File system check exit code is 0' (it may unmount and remount the volume; never use repairVolume).
+    and before.writes (the block driver's Operations (Write) and Bytes (Write)), each volume by its slice, s1.
     Or unmount the volume instead, before this snapshot (the lead's answer 6): diskutil unmount /dev/${DISK}s1. Then
-    H6, H7, H9, H10, H11 and H13 need no --allow-mounted, the manifest is empty and the write counters stay silent;
-    mount it again after H12's snapshot (diskutil mount /dev/${DISK}s1).
+    H6, H7, H9, H10, H11 and H12 need no --allow-mounted, the manifest is empty and the write counters stay silent;
+    mount it again after H13's snapshot (diskutil mount /dev/${DISK}s1).
     On failure: a verify error predates hsed. Stop.
 
 H5. sedutil's MSID, the oracle: the first IF-SEND through this bridge and kext 625, by an established tool. Only its
@@ -312,10 +330,13 @@ H6. STACK_RESET alone, on the idle drive: protocol 2's first crossing of the bri
     GET_COMID_RESPONSE a1 08 0e 02 01 00 04 10 00 5c 00 00; the idle IF-RECV a1 08 0e 01 04 00 04 10 00 5c 00 00;
     StartSession a1 0a 06 01 01 00 04 10 00 5e 00 00 and its IF-RECV; End of Session and its IF-RECV. The summary:
     'recover: STACK_RESET on 0x1004: Success; the ComID idle; the Admin SP took a read-write session (TSN n) and ended it'.
-    On failure: a kern_return failure on the STACK_RESET, 'Success/Failure 1' or 'No Response Available': the transport
-    latched for that run; replug the bridge, derive DISK again, keep the report, and STOP here: every drive case resets
-    its ComID first, so H7 cannot pass. An agent then sets Hsed.Jig.Options.roStackResetBeforeCases back to False (the
-    probe-and-waive mode, built and tested) and records the --recover clause as unmet on this bridge.
+    On failure: a kern_return failure on the STACK_RESET: the transport latched for that run, nothing more reaching the
+    drive; keep the report, eject the drive and replug the bridge (H0), derive DISK again, and STOP here: every drive
+    case resets its ComID first, so H7 cannot pass. 'Success/Failure 1' or 'No Response Available': the TPer's own
+    answer, read through a transport that did not latch; keep the report and STOP here, for the same reason; replug
+    (ejecting first, H0) only to power-cycle a session away (Core PDF 76). Either way an agent then sets
+    Hsed.Jig.Options.roStackResetBeforeCases back to False (the probe-and-waive mode, built and tested) and records the
+    --recover clause as unmet on this bridge.
     'moved N of 512 bytes' on the IF-SEND: it reached the drive; 13.29 (d) is yours. Stop.
 
 H7. The acceptance run:
@@ -356,14 +377,27 @@ H9. The deliberately interrupted run:
 
 H10. Recovery: H6's command again. Expect exit 0: the StartSession after the reset answering SUCCESS shows the Admin SP
     free of the orphan, since a second read-write session would answer SP_BUSY (Core 5.1.5.3, PDF 138).
-    On failure: STACK_RESET failing: replug (a power cycle aborts every session, Core PDF 76), derive DISK again, run
-    H10 again for the record. SP_BUSY after Success: the TPer kept a session through STACK_RESET (Core 3.3.4.7.5 item 1
-    says it must not): stop and report. If the drive timed the session out first (DefSessionTimeout, PDF 76), H10 still
-    passes; run H9 and H10 back to back.
+    On failure: STACK_RESET failing: eject the drive, then replug (a power cycle aborts every session, Core PDF 76),
+    derive DISK again, and run H10 again for the record; the replug voids the write counters' comparison across it
+    (H0: snapshot pre-replug before it, post-replug after). SP_BUSY after Success: the TPer kept a session through
+    STACK_RESET (Core 3.3.4.7.5 item 1 says it must not): stop and report. If the drive timed the session out first
+    (DefSessionTimeout, PDF 76), H10 still passes; run H9 and H10 back to back.
 
 H11. The acceptance run again, H7's command: exit 0. The drive is fully usable after the recovery.
 
-H12. Close the window:
+H12. Optional, the Pair's Properties, live, while the window H13 closes is still open:
+      sudo build/bin/hsed-jig --target sim+/dev/$DISK --tests UCT-02 --expect-serial "$SERIAL" --allow-mounted \
+          --profile spec/fixtures/disk6-level0.bin --report-dir build/report
+    exit 0: Level 0 differences allowed or unchecked only, and pair_properties' every difference judged by Opal 2.30
+    Table 17. Or offline, without sudo, the simulator given the drive's own Level 0 descriptors as the live run is:
+      build/bin/hsed-jig --target sim --tests UCT-02 --profile spec/fixtures/disk6-level0.bin --report-dir build/report
+      build/bin/hsed-jig diff "$(ls -t build/report/jig-sim-*.json | head -1)" "$R7"
+    On failure: a 'missing, the drive's alone' code is a Level 0 difference, not a Properties one (the simulator lacks
+    a descriptor the drive reports: it was run without --profile); a difference not allowed names its rule (a TPer
+    value below Table 17's minimum, or a host value outside [minimum, sent]): the drive's answer, recorded; hand the
+    report to an agent.
+
+H13. Close the window:
       tools/m4c-hw.sh snapshot after "$SERIAL" && tools/m4c-hw.sh compare before after
       sudo sedutil-cli --query /dev/$DISK > build/m4c/query-after.txt; diff spec/fixtures/disk6-query.txt build/m4c/query-after.txt
       tools/m4c-hw.sh "$SERIAL"
@@ -371,21 +405,13 @@ H12. Close the window:
     printed; the write counters equal (no host block write in the window: TCG commands never pass that driver). The
     query: only line 2's device path differs. The pre-flight: no user client left open. Optionally, last of all:
     diskutil verifyVolume /dev/${DISK}s1 (it may remount). If you unmounted the volume at H4, mount it again now.
+    After a replug in the window, compare across it as H0 says: the counters are the new block driver's.
     On failure: a manifest difference outside macOS's metadata: stop and keep everything (none of the five commands
     addresses an LBA). Write counters that moved: macOS wrote to the mounted volume in the window; compare the .writes
     files, and unmount for a rerun if you want them silent.
 
-H13. Optional, the Pair's Properties, live:
-      sudo build/bin/hsed-jig --target sim+/dev/$DISK --tests UCT-02 --expect-serial "$SERIAL" --allow-mounted \
-          --profile spec/fixtures/disk6-level0.bin --report-dir build/report
-    exit 0: Level 0 differences allowed or unchecked only, and pair_properties' every difference judged by Opal 2.30
-    Table 17. Or offline, without sudo:
-      build/bin/hsed-jig --target sim --tests UCT-02 --report-dir build/report
-      build/bin/hsed-jig diff "$(ls -t build/report/jig-sim-*.json | head -1)" "$R7"
-    On failure: a difference not allowed names its rule (a TPer value below Table 17's minimum, or a host value outside
-    [minimum, sent]): the drive's answer, recorded; hand the report to an agent.
-
-H14. Keep build/report and build/m4c. Send the lead the reports of H3, H6, H7, H9, H10 and H11, and compare's output.
+H14. Keep build/report and build/m4c. Send the lead the reports of H3, H6, H7, H9, H10 and H11 (and H12's, if you ran
+    it), and compare's output.
     Committing them under docs/evidence/ is your call: the manifests name the volume's files. The kext rebuild (13.12)
     stays open; if you rebuild, add its UUID to tools/m4c-hw.sh's known list and repeat H2 and H6 before anything else.
 EOF
@@ -402,10 +428,10 @@ snapshot() {
     mounted=$(mounts_of "$disk" || true)
     {
         if [ -z "$mounted" ]; then
-            printf '# nothing of /dev/%s is mounted\n' "$disk"
+            printf '# nothing of the drive is mounted\n'
         else
             while IFS=$'\t' read -r dev mp; do
-                printf '# %s on %s\n' "$dev" "$mp"
+                printf '# %s on %s\n' "$(slice_of "$disk" "$dev")" "$mp"
                 ( cd "$mp" && find . \( -name .fseventsd -o -name .Spotlight-V100 -o -name .Trashes -o -name .TemporaryItems \
                         -o -name .DocumentRevisions-V100 \) -prune -o -type f ! -name '._*' ! -name .DS_Store -print0 \
                     | LC_ALL=C sort -z | xargs -0 shasum -a 256 )
@@ -415,7 +441,7 @@ snapshot() {
     for slice in $(slices_of "$serial"); do
         plist=$(diskutil info -plist "/dev/$slice" 2>/dev/null || true)
         for key in VolumeUUID VolumeName FilesystemType TotalSize FreeSpace; do
-            printf '%s\t%s\t%s\n' "$slice" "$key" "$(plutil -extract "$key" raw -o - - <<<"$plist" 2>/dev/null || true)"
+            printf '%s\t%s\t%s\n' "$(slice_of "$disk" "/dev/$slice")" "$key" "$(plutil -extract "$key" raw -o - - <<<"$plist" 2>/dev/null || true)"
         done
     done > "$out/$name.volume"
     writes_of "$serial" > "$out/$name.writes"

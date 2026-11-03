@@ -16,8 +16,9 @@ drive (design 9.3 item 4): @/sbin/mount@'s lines read ('readMounts',
 'parseMounts': the device before the first @ on @, the mount point from
 there to the last @ (@, spaces, @ on @ and parentheses and all, the file
 system's type the first word inside those last parentheses), those on the
-whole disk and its slices alone ('mountsOn': @disk22@ and @disk22s1@, never
-@disk2@'s nor @disk220s1@), and the gate ('mountGate'): clear where the run
+whole disk and its slices alone ('mountsOn': @disk22@ and @disk22s1@, and a
+snapshot of one, @NAME\@\/dev\/disk22s1@, never @disk2@'s nor
+@disk220s1@), and the gate ('mountGate'): clear where the run
 cannot send or nothing is mounted; with @--allow-mounted@, allowed, each
 mount noted in the reports, the volume to be checked unchanged afterwards
 (@tools/m4c-hw.sh snapshot@ and @compare@); otherwise refused, the run
@@ -30,7 +31,10 @@ since M3: Level 0 reads no media and is answered whatever the sessions
 A gap, recorded: a volume the system synthesizes over a slice (an APFS
 container's volumes, mounted from a @diskN@ of their own over the drive's
 @disk22s2@) is mounted from no device of the drive's, and is not found.
-The drive's FAT32 volume has none.
+The drive's FAT32 volume has none. A snapshot mounted from a slice of the
+drive (Time Machine's local snapshots, @com.apple.TimeMachine.….backup\@\/dev\/disk5s2@
+on this Mac) names the slice after an @\@@, and is found (since the M4c
+review; an msdos volume has none).
 -}
 module Hsed.Jig.Preflight
   ( Mounted (..)
@@ -87,18 +91,25 @@ mountLine line = do
 
 -- | The mounts on a whole disk (its BSD name, @disk22@, or its device,
 --   @\/dev\/disk22@) and its slices (@disk22s1@, and a slice's own, a
---   volume's snapshot's @disk22s1s1@) alone: so @disk2@'s are never
---   @disk22s1@, nor @disk22@'s @disk220s1@.
+--   volume's snapshot's @disk22s1s1@) alone, a snapshot mounted from one
+--   of them, named before an @\@@ (@NAME\@\/dev\/disk22s1@), among them:
+--   so @disk2@'s are never @disk22s1@, nor @disk22@'s @disk220s1@.
 --
 -- >>> let m d = Mounted d "/Volumes/x" "msdos"
 -- >>> map mDevice (mountsOn "disk22" [m "/dev/disk22", m "/dev/disk22s1", m "/dev/disk22s1s1", m "/dev/disk220s1", m "/dev/disk2s1"])
 -- ["/dev/disk22","/dev/disk22s1","/dev/disk22s1s1"]
 -- >>> mountsOn "disk2" [m "/dev/disk22s1"]
 -- []
+-- >>> map mDevice (mountsOn "disk5" [m "com.apple.TimeMachine.2026-11-01-215852.backup@/dev/disk5s2", m "x@/dev/disk55s2"])
+-- ["com.apple.TimeMachine.2026-11-01-215852.backup@/dev/disk5s2"]
 mountsOn :: Text -> [Mounted] -> [Mounted]
-mountsOn disk = filter (maybe False slices . T.stripPrefix whole . mDevice)
+mountsOn disk = filter (maybe False slices . T.stripPrefix whole . device . mDevice)
   where
     whole = "/dev/" <> fromMaybe disk (T.stripPrefix "/dev/" disk)
+    -- the device a mount names, after the last @ of a snapshot's name (none, the whole)
+    device d = case T'.breakOnEnd "@" d of
+      (named, rest) | not (T.null named), "/dev/" `T.isPrefixOf` rest -> rest
+      _                                                               -> d
     -- nothing after the whole disk's name, or slices: s and a number, as many times as they nest
     slices t = T.null t || case T.stripPrefix "s" t of
       Just r  -> let (n, more) = T.span C.isDigit r in not (T.null n) && slices more

@@ -24,11 +24,21 @@ Opal 2.30 allows a data structure revision other than Core's. At M4a (group
 G2) the simulator's Opal SSC V2 descriptor says whether C_PIN_SID's PIN is
 still C_PIN_MSID's (Initial C_PIN_SID PIN Indicator, Opal Table 6's bullets,
 PDF 23) and its Block SID descriptor's SID Value State says the same, both
-from the Admin SP's C_PIN rows.
+from the Admin SP's C_PIN rows. At M5a (group G4) the Locking descriptor's
+Locked, MBREnabled and MBRDone come from the Locking SP's rows, each
+needing LockingEnabled (Core 3.3.6.5.3, .5 and .6, PDF 71): the default
+byte 4 is the captured drive's, 0x09 (Locking Supported and Media
+Encryption, @spec/fixtures/disk6-level0.bin@, its Locking SP
+Manufactured-Inactive), 0x0B at @--locking-ofs manufactured@, and a range
+lock enabled and locked sets Locked at Manufactured alone; HW Reset for
+LOR/DOR Supported and the Opal SSC V2 Admin and User counts are the
+parameters'; the Geometry Reporting fields are LockingInfo's columns
+(Opal 3.1.1.4.2-5, PDF 22).
 -}
 module Hsed.Level0Spec (spec) where
 
 import qualified RIO.ByteString         as B
+import           RIO.Directory          (doesFileExist)
 import qualified RIO.List               as L
 import           RIO
 import           Test.Hspec
@@ -42,17 +52,25 @@ import           Hsed.Core.Layout         (Content (..), Difference (..), Field 
 import           Hsed.Core.Table          (Cell (..))
 import           Hsed.Gen.Core.Features   (LockingFeature, TPerFeature)
 import           Hsed.Gen.Core.Layouts    (featureDescriptorTemplateLayout, level0DiscoveryHeaderLayout)
+import           Hsed.Core.Types          (enumValue)
+import           Hsed.Core.UID            (UID)
+import           Hsed.Gen.Core.Enums      (Core_boolean (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
-import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
-import           Hsed.Gen.Core.UIDs       (uC_PIN_SID, uSP_Admin)
+import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uLockingInfoTable, uLockingTable, uMBRControlTable)
+import           Hsed.Gen.Core.UIDs       (uC_PIN_SID, uLockingInfo_Row, uLocking_GlobalRange, uMBRControl_Row, uSP_Admin)
 import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeature (..), Level0DiscoveryTPerFeature (..))
+import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Jig.Support         (isAsPrinted)
 import           Hsed.Level0
 import           Hsed.Sim.FeatureSets     (geometryAllowances)
-import           Hsed.Sim.Level0          (level0Response, simDescriptors)
-import           Hsed.Sim.State           (columnOf, updateRow)
-import           Hsed.Sim.Types           (Geometry (..), SimParams (..), TPerState (..), defaultSimParams, initialState,
-                                           simParamsProblems)
+import           Hsed.Sim                 (step)
+import           Hsed.Sim.Level0          (level0Response, lockedBit, lockingInfoGeometry, mbrDoneBit, mbrEnabledBit,
+                                           simDescriptors)
+import           Hsed.Sim.State           (columnOf, descOf, updateRow)
+import           Hsed.Sim.Types           (Geometry (..), Input (..), LifeCycle (..), SimParams (..), TPerState (..),
+                                           defaultSimParams, initialState, simParamsProblems)
+import           Hsed.Wire                (Event (..))
 
 
 -- | Parameters in range: every field the descriptors carry any value its
@@ -258,6 +276,52 @@ spec = describe "a Level 0 Discovery response" $ do
       indicators reset `shouldBe` (Just (Number 0x00), Just (Number 1))
       indicators st { tsInitialSidPinIsMsid = False } `shouldBe` (Just (Number 0xFF), Just (Number 0))
 
+  describe "the Locking descriptor's byte 4 and the counts the parameters give (M5a)" $ do
+    let inactive    = initialState defaultSimParams
+        manufactured = initialState defaultSimParams { spLockingOFS = Manufactured }
+    it "is by default the captured drive's, 0x09: Locking Supported and Media Encryption, its Locking SP Manufactured-Inactive (spec/fixtures/disk6-level0.bin)" $ do
+      lockingByte inactive `shouldBe` Just 0x09
+      there <- doesFileExist capture
+      if there
+        then readFileBinary capture >>= \bytes -> withSplit bytes $ \l0 ->
+               (L.find ((== 0x0002) . dCode) (l0Descriptors l0) >>= (`byteAt` 4) . dBytes) `shouldBe` lockingByte inactive
+        else pendingWith "spec/fixtures/disk6-level0.bin not captured"
+    it "is 0x0B at --locking-ofs manufactured: LockingEnabled (Opal 3.1.1.3.1, PDF 21; T49, PDF 98)" $
+      lockingByte manufactured `shouldBe` Just 0x0B
+    it "sets Locked for a range read- or write-lock enabled and locked, at Manufactured alone (Core 3.3.6.5.3, PDF 71)" $ do
+      let readLocked  = seeded uLockingTable LockingSP.uLocking_Range1 [("ReadLockEnabled", true), ("ReadLocked", true)]
+          writeLocked = seeded uLockingTable uLocking_GlobalRange [("WriteLockEnabled", true), ("WriteLocked", true)]
+      map (lockingByte . readLocked) [manufactured, inactive] `shouldBe` [Just 0x0F, Just 0x09]
+      map (lockingByte . writeLocked) [manufactured, inactive] `shouldBe` [Just 0x0F, Just 0x09]
+      map (lockedBit . readLocked) [manufactured, inactive] `shouldBe` [True, False]
+    it "leaves Locked 0 for a range locked and not lock enabled, as LockOnReset may leave one (Core 5.7.2.2.10, PDF 275)" $
+      lockingByte (seeded uLockingTable uLocking_GlobalRange [("ReadLocked", true), ("WriteLocked", true)] manufactured)
+        `shouldBe` Just 0x0B
+    it "sets Locked after a power cycle locks a lock-enabled range whose LockOnReset lists Power Cycle" $ do
+      let armed = seeded uLockingTable uLocking_GlobalRange
+                    [("ReadLockEnabled", true), ("LockOnReset", ListCell [EnumCell "Power Cycle" 0])] manufactured
+      lockingByte armed `shouldBe` Just 0x0B
+      lockingByte (snd (step (Ev PowerCycle) armed)) `shouldBe` Just 0x0F
+    it "sets MBREnabled where MBRControl's Enable is True and MBRDone where Done is too, at Manufactured alone (Core 3.3.6.5.5-6, PDF 71)" $ do
+      let enabled = seeded uMBRControlTable uMBRControl_Row [("Enable", true)]
+          done    = seeded uMBRControlTable uMBRControl_Row [("Enable", true), ("Done", true)]
+          doneOff = seeded uMBRControlTable uMBRControl_Row [("Done", true)]
+      map lockingByte [enabled manufactured, done manufactured, doneOff manufactured] `shouldBe` [Just 0x1B, Just 0x3B, Just 0x0B]
+      map lockingByte [enabled inactive, done inactive] `shouldBe` [Just 0x09, Just 0x09]
+      map (\st -> (mbrEnabledBit st, mbrDoneBit st)) [done manufactured, doneOff manufactured] `shouldBe` [(True, True), (False, False)]
+    it "sets HW Reset for LOR/DOR Supported (byte 4 bit 7, VU, Opal 3.1.1.3, PDF 21) as the parameters say" $
+      lockingByte (initialState defaultSimParams { spHwResetLorDor = True }) `shouldBe` Just 0x89
+    it "gives the Opal SSC V2 descriptor the Locking SP's Admin and User counts the parameters give (Opal 3.1.1.5, PDF 23)" $ do
+      let counts st = ( fieldOf 0x0203 "Number of Locking SP Admin Authorities Supported" (simDescriptors st)
+                      , fieldOf 0x0203 "Number of Locking SP User Authorities Supported" (simDescriptors st) )
+      counts inactive `shouldBe` (Just (Number 4), Just (Number 8))
+      counts (initialState defaultSimParams { spLockingAdmins = 6, spLockingUsers = 12 }) `shouldBe` (Just (Number 6), Just (Number 12))
+    it "reads Geometry Reporting's fields from a LockingInfo row (Opal 3.1.1.4.2-5, PDF 22; Table 43's columns, PDF 85)" $
+      lockingInfoGeometry (seeded uLockingInfoTable uLockingInfo_Row
+                             [ ("AlignmentRequired", true), ("LogicalBlockSize", UIntCell 4096)
+                             , ("AlignmentGranularity", UIntCell 8), ("LowestAlignedLBA", UIntCell 0) ] manufactured)
+        `shouldBe` Just (Geometry True 4096 8 0)
+
   describe "a feature record as a descriptor" $
     it "has its code, its version and its bytes, Length counting those after the header" $ do
       let geometry = Level0DiscoveryGeometryReportingFeature True 512 8 0
@@ -265,6 +329,30 @@ spec = describe "a Level 0 Discovery response" $ do
         `shouldBe` Right (0x0003, 0x1, 32, 0x1C)
       fmap dCode (featureDescriptor (Level0DiscoveryTPerFeature 0x1 False False False False)) `shouldBe` Right 0x0001
 
+
+-- | The captured drive's Level 0 response, from the package's directory.
+capture :: FilePath
+capture = "../spec/fixtures/disk6-level0.bin"
+
+-- | The simulator's Locking descriptor's byte 4: its flags.
+lockingByte :: TPerState -> Maybe Word8
+lockingByte st = L.find ((== 0x0002) . dCode) (simDescriptors st) >>= (`byteAt` 4) . dBytes
+
+-- | A byte of a string, if it has one there.
+byteAt :: ByteString -> Int -> Maybe Word8
+byteAt bytes i = if i < B.length bytes then Just (B.index bytes i) else Nothing
+
+-- | A boolean True cell (Core Table 59, PDF 103).
+true :: Cell
+true = EnumCell "True" (enumValue Core_boolean_True)
+
+-- | A state with cells of a row of a Locking SP table put, each column by
+--   name in the SP's description of the table.
+seeded :: UID -> UID -> [(Text, Cell)] -> TPerState -> TPerState
+seeded table row cells st = updateRow uSP_Locking table row put st
+  where
+    put r = L.foldl' (\r' (name, cell) -> maybe r' (\c -> L.sortOn fst ((c, cell) : filter ((/= c) . fst) r')) (column name)) r cells
+    column name = descOf uSP_Locking table st >>= (`columnOf` name)
 
 -- | Run an expectation on a response split, failing if it is refused.
 withSplit :: ByteString -> (Level0 -> Expectation) -> Expectation

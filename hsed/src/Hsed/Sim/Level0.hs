@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE NoImplicitPrelude   #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -25,14 +26,17 @@ DataStore and Block SID feature sets mandatory (2.10, PDF 18), and UCT-01
 reads both (steps 4b-4c, Test Cases PDF 30). Each field holds what its
 descriptor's allowances give it ("Hsed.Core.Feature".'Allowance': the
 version an 'AnyVersion' prints, the least a 'Minimum' allows, zero for a
-vendor unique value and for a present state, nothing being locked and no MBR
-shadowing enabled or done at M3) unless the parameters choose it
+vendor unique value and for a present state) unless the parameters choose it
 ("Hsed.Sim.Types".'SimParams': the geometry, the SIIS revision, the
-DataStore tables, the ComIDs, the SSC minor version, the data removal
-version) or the state does: the Locking descriptor's LockingEnabled whether
-the Locking SP is past Manufactured-Inactive, its life cycle as its row of
-the Admin SP's SP table records it ("Hsed.Sim.State".@spLifeCycle@, which
-the parameters' Original Factory State seeds); the Opal SSC V2 descriptor's
+DataStore tables, the ComIDs, the SSC minor version, the Locking SP's Admin
+and User authorities, whether a hardware reset may be listed in LockOnReset
+and DoneOnReset, the data removal version) or the state does: the Locking
+descriptor's LockingEnabled whether the Locking SP is past
+Manufactured-Inactive, its life cycle as its row of the Admin SP's SP table
+records it ("Hsed.Sim.State".@spLifeCycle@, which the parameters' Original
+Factory State seeds), and since M5a its Locked, MBREnabled and MBRDone from
+the Locking SP's Locking and MBRControl rows ('lockedBit', 'mbrEnabledBit',
+'mbrDoneBit'; Core 3.3.6.5.3, .5 and .6, PDF 71); the Opal SSC V2 descriptor's
 Initial C_PIN_SID PIN Indicator says whether the initial C_PIN_SID PIN was
 C_PIN_MSID's, a fact of manufacture the state holds
 ("Hsed.Sim.Types".@tsInitialSidPinIsMsid@, set from the parameters; Opal
@@ -55,19 +59,25 @@ module Hsed.Sim.Level0
   , lockedBit
   , mbrEnabledBit
   , mbrDoneBit
+    -- * The Geometry Reporting descriptor from LockingInfo
+  , lockingInfoGeometry
   ) where
 
 import           Data.Bits              (bit)
 import qualified RIO.ByteString         as B
 import qualified RIO.List               as L
+import qualified RIO.Map                as Map
 import           RIO
 
 import           Hsed.Core.Feature        (Allowance (..), Feature (..))
 import           Hsed.Core.Layout         (Content (..), Field (..), FieldKind (..), Layout (..), LayoutError)
 import           Hsed.Core.Record         (LayoutRecord (..))
-import           Hsed.Core.Table          (Cell (..))
+import           Hsed.Core.Table          (Cell (..), Row)
+import           Hsed.Core.Types          (enumValue)
+import           Hsed.Core.UID            (UID)
+import           Hsed.Gen.Core.Enums      (Core_boolean (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
-import           Hsed.Gen.Core.TableUIDs  (uC_PINTable)
+import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uLockingInfoTable, uLockingTable, uMBRControlTable, uMBRTable)
 import           Hsed.Gen.Core.UIDs       (uC_PIN_SID, uSP_Admin)
 import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeature (..),
                                            Level0DiscoveryLockingFeature (..), Level0DiscoveryOpalSSCV2Feature (..),
@@ -76,8 +86,8 @@ import           Hsed.Gen.Opal.Features   (Level0DiscoveryGeometryReportingFeatu
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uC_PIN_MSID, uSP_Locking)
 import           Hsed.Level0              (Descriptor (..), featureDescriptor, renderLevel0)
 import           Hsed.Sim.FeatureSets     (BlockSIDFeature (..), DataStoreFeature (..), SiisFeature (..))
-import           Hsed.Sim.State           (cellOf, columnOf, rowWithUID, spLifeCycle)
-import           Hsed.Sim.Types           (Geometry (..), Level0Profile (..), LifeCycle (..), SimParams (..),
+import           Hsed.Sim.State           (cellNamedIn, cellOf, columnOf, rowWithUID, spLifeCycle, tableRows)
+import           Hsed.Sim.Types           (Geometry (..), Level0Profile (..), LifeCycle (..), SPState (..), SimParams (..),
                                            TPerState (..), lifeCycleValue)
 
 
@@ -96,16 +106,20 @@ simDescriptors st = L.sortOn dCode (own <> added)
   where
     p = tsParams st
     (tables, size, alignment) = spDataStore p
+    -- the parameters' geometry, which the fold puts in the Locking SP's LockingInfo row (Opal 3.1.1.4.2-5, PDF 22:
+    -- each field is that row's column); 'lockingInfoGeometry' reads the row
     geometry = spGeometry p
     own = either (\e -> error ("Hsed.Sim.Level0: an own descriptor does not encode, the parameters out of range: " <> show e)) id
         $ sequence
       [ described (id :: Level0DiscoveryTPerFeature -> Level0DiscoveryTPerFeature)
         -- LockingEnabled is one once an SP of the Locking template is other than Nonexistent or
         -- Manufactured-Inactive (Opal 3.1.1.3.1, PDF 21)
-      , described (\r -> r { level0DiscoveryLockingFeatureLockingEnabled = lockingEnabled
-                           , level0DiscoveryLockingFeatureLocked         = lockedBit st
-                           , level0DiscoveryLockingFeatureMBREnabled     = mbrEnabledBit st
-                           , level0DiscoveryLockingFeatureMBRDone        = mbrDoneBit st })
+        -- HW Reset for LOR/DOR Supported, VU (Opal 3.1.1.3, PDF 21): the parameters' choice
+      , described (\r -> r { level0DiscoveryLockingFeatureLockingEnabled             = lockingEnabled st
+                           , level0DiscoveryLockingFeatureLocked                     = lockedBit st
+                           , level0DiscoveryLockingFeatureMBREnabled                 = mbrEnabledBit st
+                           , level0DiscoveryLockingFeatureMBRDone                    = mbrDoneBit st
+                           , level0DiscoveryLockingFeatureHWResetForLORDORSupported = spHwResetLorDor p })
       , featureDescriptor Level0DiscoveryGeometryReportingFeature
           { level0DiscoveryGeometryReportingFeatureALIGN                = gAlign geometry
           , level0DiscoveryGeometryReportingFeatureLogicalBlockSize     = gLogicalBlockSize geometry
@@ -123,6 +137,11 @@ simDescriptors st = L.sortOn dCode (own <> added)
       , described (\r -> r { level0DiscoveryOpalSSCV2FeatureSSCMinorVersionNumber    = spSscMinor p
                            , level0DiscoveryOpalSSCV2FeatureBaseComID                = spBaseComId p
                            , level0DiscoveryOpalSSCV2FeatureNumberOfComIDs           = spNComIds p
+                             -- the Locking SP's Admin and User authorities (Opal 3.1.1.5, PDF 23: 4 or larger, 8 or
+                             -- larger), as many as the fold's AdminXXXX and UserMMMM instances; the parameters' bounds
+                             -- (255) fit the two-byte fields
+                           , level0DiscoveryOpalSSCV2FeatureNumberOfLockingSPAdminAuthoritiesSupported = fromIntegral (spLockingAdmins p)
+                           , level0DiscoveryOpalSSCV2FeatureNumberOfLockingSPUserAuthoritiesSupported  = fromIntegral (spLockingUsers p)
                            , level0DiscoveryOpalSSCV2FeatureInitialC_PIN_SIDPINIndicator = if tsInitialSidPinIsMsid st then 0x00 else 0xFF })
         -- SID Value State (byte 4 bit 0): 0 while C_PIN_SID's PIN is MSID's, as UCT-01 step 4c asks of a drive at
         -- its factory state (Test Cases PDF 30), 1 once it is another: the present state, from the live rows
@@ -132,10 +151,6 @@ simDescriptors st = L.sortOn dCode (own <> added)
       , described (\r -> r { level0DiscoverySupportedDataRemovalMechanismFeatureVersion = spDataRemovalVersion p
                            , level0DiscoverySupportedDataRemovalMechanismFeatureSupportedDataRemovalMechanism = bit 2 })
       ]
-    -- whether the Locking SP is other than Manufactured-Inactive, its life cycle as its row of the Admin SP's SP
-    -- table records it (Core 4.1, PDF 91), which the parameters' Original Factory State seeds and Activate and Revert
-    -- change (M6); no row, no Locking SP: Nonexistent
-    lockingEnabled = maybe False (/= lifeCycleValue ManufacturedInactive) (spLifeCycle uSP_Locking st)
     -- a profile's descriptors of codes the simulator lacks, the first of each code
     added = L.nubBy ((==) `on` dCode)
       [ d | d <- maybe [] lpDescriptors (spProfile p), dCode d `notElem` map dCode own ]
@@ -147,31 +162,88 @@ simDescriptors st = L.sortOn dCode (own <> added)
       Just (BytesCell pin) -> pin
       _                    -> fallback
 
+-- | The Locking descriptor's LockingEnabled bit (Opal 2.30 3.1.1.3.1, PDF
+--   21): one when the Locking SP is other than Nonexistent or
+--   Manufactured-Inactive, its life cycle as its row of the Admin SP's SP
+--   table records it (Core 4.1, PDF 91), which the parameters' Original
+--   Factory State seeds and Activate and Revert change (M6); no row, no
+--   Locking SP: Nonexistent.
+lockingEnabled :: TPerState -> Bool
+lockingEnabled st = maybe False (/= lifeCycleValue ManufacturedInactive) (spLifeCycle uSP_Locking st)
+
 -- | The Locking descriptor's Locked bit (Opal 2.30 3.1.1.3, PDF 21; Core
---   3.3.6.5.3, PDF 71): one when LockingEnabled is one and some Locking
---   row is ReadLockEnabled and ReadLocked, or WriteLockEnabled and
---   WriteLocked. A stub of M5a's scaffold, False as at M3 (nothing locked);
---   its group G4 reads the Locking SP's rows.
+--   3.3.6.5.3, PDF 71): one when LockingEnabled is one and some row of the
+--   Locking SP's Locking table is ReadLockEnabled and ReadLocked, or
+--   WriteLockEnabled and WriteLocked; zero otherwise, as at the factory,
+--   where nothing is lock enabled (Opal 2.30 Table 45, PDF 86).
 --
 -- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
 -- >>> map ($ initialState defaultSimParams) [lockedBit, mbrEnabledBit, mbrDoneBit]
 -- [False,False,False]
+-- >>> map ($ initialState defaultSimParams { spLockingOFS = Manufactured }) [lockedBit, mbrEnabledBit, mbrDoneBit]
+-- [False,False,False]
 lockedBit :: TPerState -> Bool
-lockedBit _ = False
+lockedBit st = lockingEnabled st && any locked (lockingRows uLockingTable st)
+  where
+    locked r = (flag "ReadLockEnabled" r && flag "ReadLocked" r) || (flag "WriteLockEnabled" r && flag "WriteLocked" r)
+    flag     = booleanNamed st uLockingTable
 
 -- | The Locking descriptor's MBREnabled bit (Opal 2.30 3.1.1.3, PDF 21; Core
---   3.3.6.5.5, PDF 71): one when LockingEnabled is one, the MBRControl and
---   MBR tables are implemented and MBRControl's Enable is True. A stub of
---   M5a's scaffold, False as at M3; its group G4 reads the MBRControl row.
+--   3.3.6.5.5, PDF 71): one when LockingEnabled is one, the Locking SP
+--   implements the MBRControl and MBR tables (holds MBRControl's
+--   description and the MBR byte table, Opal 2.30 Table 36, PDF 54) and
+--   MBRControl's Enable is True; zero otherwise.
 mbrEnabledBit :: TPerState -> Bool
-mbrEnabledBit _ = False
+mbrEnabledBit st = lockingEnabled st && implemented && any (booleanNamed st uMBRControlTable "Enable") (lockingRows uMBRControlTable st)
+  where implemented = maybe False (\sps -> Map.member uMBRControlTable (spsDescs sps) && Map.member uMBRTable (spsBytes sps))
+                                (Map.lookup uSP_Locking (tsSPs st))
 
 -- | The Locking descriptor's MBRDone bit (Opal 2.30 3.1.1.3, PDF 21; Core
 --   3.3.6.5.6, PDF 71): one when MBREnabled is one and MBRControl's Done is
---   True. A stub of M5a's scaffold, False as at M3; its group G4 reads the
---   MBRControl row.
+--   True; zero otherwise.
 mbrDoneBit :: TPerState -> Bool
-mbrDoneBit _ = False
+mbrDoneBit st = mbrEnabledBit st && any (booleanNamed st uMBRControlTable "Done") (lockingRows uMBRControlTable st)
+
+-- | The Geometry Reporting descriptor's fields as the Locking SP's
+--   LockingInfo row holds them (Opal 2.30 3.1.1.4.2-5, PDF 22: ALIGN is
+--   AlignmentRequired, and LogicalBlockSize, AlignmentGranularity and
+--   LowestAlignedLBA are the columns of those names; Table 44, PDF 85-86),
+--   the columns found by name in the SP's description of the table, which
+--   adds Opal's (Table 43, PDF 85); 'Nothing' where the TPer has no Locking SP
+--   or no LockingInfo row, or the row lacks one of the four. The fold puts the
+--   parameters' geometry in the row; until it does, Level 0 reads the
+--   parameters ('simDescriptors').
+--
+-- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
+-- >>> isJust (lockingInfoGeometry (initialState defaultSimParams))
+-- True
+lockingInfoGeometry :: TPerState -> Maybe Geometry
+lockingInfoGeometry st = do
+  sps <- Map.lookup uSP_Locking (tsSPs st)
+  r   <- listToMaybe (tableRows uSP_Locking uLockingInfoTable st)
+  let named name = cellNamedIn sps uLockingInfoTable name r
+  align <- named "AlignmentRequired" >>= \case
+    EnumCell _ v -> Just (v == enumValue Core_boolean_True)
+    _            -> Nothing
+  Geometry align <$> (named "LogicalBlockSize" >>= number) <*> (named "AlignmentGranularity" >>= number)
+                 <*> (named "LowestAlignedLBA" >>= number)
+  where
+    number :: Num n => Cell -> Maybe n
+    number = \case
+      UIntCell v -> Just (fromInteger v)
+      _          -> Nothing
+
+-- | The rows of a table of the Locking SP.
+lockingRows :: UID -> TPerState -> [Row]
+lockingRows = tableRows uSP_Locking
+
+-- | Whether a row of a Locking SP table holds True in a boolean column of a
+--   name (Core Table 59, PDF 103), the column found in the SP's description;
+--   False where it holds no such cell.
+booleanNamed :: TPerState -> UID -> Text -> Row -> Bool
+booleanNamed st table name r = case Map.lookup uSP_Locking (tsSPs st) >>= \sps -> cellNamedIn sps table name r of
+  Just (EnumCell _ v) -> v == enumValue Core_boolean_True
+  _                   -> False
 
 -- | A descriptor whose fields hold what its allowances give them, then what
 --   the simulator chooses of them.

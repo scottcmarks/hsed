@@ -54,6 +54,7 @@ import           Hsed.Gen.Core.TableUIDs (uSPTable)
 import           Hsed.Gen.Core.UIDs     (uSP_Admin)
 import           Hsed.Gen.Opal.Features
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+import qualified Hsed.Gen.Opal.TableDescs as Opal
 import           Hsed.Jig.Support       (isAsPrinted)
 import           Hsed.Level0            (Descriptor (..))
 import           Hsed.Sim.FeatureSets
@@ -122,11 +123,16 @@ spec = describe "the hand-written feature descriptors" $ do
     it "allow its Version nothing: Table 9 prints 0x02 alone" $
       L.lookup "Version" dataRemovalAllowances `shouldBe` Nothing
 
-  describe "Geometry Reporting's allowances, until M5" $
+  describe "Geometry Reporting's allowances, from LockingInfo" $ do
     it "name each of Table 5's value fields, as the LockingInfo table has it (3.1.1.4.2-5, PDF 22)" $ do
       map fst geometryAllowances `shouldBe`
         [ fieldName f | f <- layoutFields level0DiscoveryGeometryReportingFeatureLayout, fieldKind f `elem` [Flag, Unsigned] ]
       [ () | (_, AsPrinted t) <- geometryAllowances, "LockingInfo table" `T.isInfixOf` t ] `shouldBe` [(), (), (), ()]
+    it "name, each, a column Opal adds to LockingInfo (Table 43, PDF 85): ALIGN AlignmentRequired, the rest their own" $
+      [ (n, isJust (columnOf Opal.lockingInfoTableDesc c)) | (n, AsPrinted t) <- geometryAllowances
+                                                            , let c = if n == "ALIGN" then "AlignmentRequired" else n
+                                                            , c `T.isInfixOf` t ]
+        `shouldBe` [("ALIGN", True), ("LogicalBlockSize", True), ("AlignmentGranularity", True), ("LowestAlignedLBA", True)]
 
   describe "each descriptor's instance" $ do
     instanceFacts "SIIS" (Proxy :: Proxy SiisFeature)

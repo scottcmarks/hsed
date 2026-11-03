@@ -29,7 +29,8 @@ other fields ("Hsed.Core.Record"), and an instance of 'Feature' with its
 code, version, length, Core Table 41's general header (as the generated
 descriptors have it) and what its source allows the fields
 ('featureAllowances'). 'geometryAllowances' is what the simulator allows
-Opal's Geometry Reporting descriptor until LockingInfo is simulated (M5).
+Opal's Geometry Reporting descriptor: its LockingInfo table's columns, which
+the Locking SP folded since M5a holds ("Hsed.Sim.Level0".@lockingInfoGeometry@).
 
 One table of Opal's that is no descriptor is hand-written here too, with
 its page, until Opal's tables other than its descriptors are compiled (M5):
@@ -72,7 +73,7 @@ module Hsed.Sim.FeatureSets
     -- * Configurable Namespace Locking (0x0403)
   , NamespaceLockingFeature (..)
   , namespaceLockingFeatureLayout
-    -- * Geometry Reporting, until M5
+    -- * Geometry Reporting, from LockingInfo
   , geometryAllowances
     -- * Supported Data Removal Mechanism
   , dataRemovalAllowances
@@ -348,15 +349,17 @@ instance Feature NamespaceLockingFeature where
   featureAllowances _ = [("Feature Set Minor Version Number", AsPrinted "a value as specified in Table 7")]
 
 
--- * Geometry Reporting, until M5
+-- * Geometry Reporting, from LockingInfo
 
 -- | What the simulator allows Opal's Geometry Reporting descriptor (Opal
 --   2.30 Table 5): ALIGN, LogicalBlockSize, AlignmentGranularity and
 --   LowestAlignedLBA as the LockingInfo table has them (3.1.1.4.2-5, PDF 22),
 --   by the field names of the generated Opal layout. Table 5's bullets pin
 --   only its header (PDF 22), so the generated instance allows nothing; each
---   value is the LockingInfo table's, which the simulator's parameters stand
---   in for until M5, and a drive's own LockingInfo may differ.
+--   value is the LockingInfo table's (Opal Table 43's columns, PDF 85), which
+--   the simulator's Locking SP holds since M5a, folded from the parameters'
+--   geometry ("Hsed.Sim.Level0".@lockingInfoGeometry@), and a drive's own
+--   LockingInfo may differ.
 geometryAllowances :: [(Text, Allowance)]
 geometryAllowances =
   [ ("ALIGN", AsPrinted "the AlignmentRequired column of the LockingInfo table")                                -- 3.1.1.4.2

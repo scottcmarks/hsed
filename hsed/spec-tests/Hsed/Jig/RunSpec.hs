@@ -433,6 +433,11 @@ spec = do
       silently (runJig defaultRunOptions { roTarget = TReplay "nowhere.bin", roLevel0Len = 130561 }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roTarget = TPair TSim (TReplay "nowhere.bin"), roLevel0Len = 1048576 }) `shouldReturn` ExitFailure 2
       silently (runJig defaultRunOptions { roTarget = TReplay "nowhere.bin", roLevel0Len = 130560 }) `shouldReturn` ExitFailure 1
+    it "simulator parameters out of range, the Locking SP's bounds among them (M5a; Opal 2.30 Table 40 note 2, PDF 82), alone or paired: exit 2; a replay alone reads none" $ do
+      let outOfBounds = defaultSimParams { spLockingUsers = 7 }
+      silently (runJig defaultRunOptions { roSim = outOfBounds }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roSim = outOfBounds, roTarget = TPair TSim (TReplay "nowhere.bin") }) `shouldReturn` ExitFailure 2
+      silently (runJig defaultRunOptions { roSim = outOfBounds, roTarget = TReplay "nowhere.bin" }) `shouldReturn` ExitFailure 1
     it "a drive without root, alone or paired: exit 3" $ do
       root <- runningAsRoot
       let named = defaultRunOptions { roExpectSerial = Just "S0000000000000" }

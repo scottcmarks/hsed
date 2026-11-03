@@ -194,7 +194,7 @@ import           Hsed.Level0            (Level0)
 import           Hsed.Sim.Profile       (loadProfile)
 import           Hsed.Sim.State         (lifeOf, spLifeCycle)
 import           Hsed.Sim.Types         (ComIdLife (Associated), ComIdState (..), LifeCycle (..), SimParams (..),
-                                         SyncState (..), TPerState (..), lifeCycleValue)
+                                         SyncState (..), TPerState (..), lifeCycleValue, simParamsProblems)
 import           Hsed.Transport.Cdb     (level0Cdb)
 import           Hsed.Transport.Drive   (DriveInfo (..))
 import           Hsed.Transport.InProc  (SimControl (..))
@@ -225,7 +225,7 @@ authenticating = [(cKey etc21adminsp, ("SID", uAuthority_SID))]
 
 -- | Run the jig: its gates in order (a key the catalogue lacks, @--recover@
 --   with cases or a pair, a drive without @--expect-serial@, a Level 0 length
---   a drive cannot carry: exit 2; a drive without root: exit 3; a profile
+--   a drive cannot carry, simulator parameters out of range: exit 2; a drive without root: exit 3; a profile
 --   that cannot be read: exit 1; a drive the run may send to with a slice
 --   mounted, unless @--allow-mounted@: exit 3), then the run's transcript
 --   and stop flag, made before the target is opened, the stop signals
@@ -244,6 +244,7 @@ runJig opts0 = do
                                       <> "the one named")) devs
           pure (ExitFailure 2)
       | Just why <- level0LenProblem opts0 -> complain why $> ExitFailure 2
+      | Just why <- simParamsProblem opts0 -> complain why $> ExitFailure 2
       | not root, devs@(_ : _) <- devices (roTarget opts0) -> do
           traverse_ (\d -> complain ("hsed-jig: --target " <> d <> " needs root (sudo), hsed's own gate: the kext checks no "
                                       <> "privilege (design 9.3)")) devs
@@ -388,6 +389,23 @@ level0LenProblem opts
   where
     len  = roLevel0Len opts
     most = mostCarried UnitBlocks512
+
+-- | Why the simulator cannot run with the run's parameters, if the target
+--   has a simulator's end and they are out of range
+--   ("Hsed.Sim.Types".'simParamsProblems': the Locking SP's bounds among
+--   them since M5a, which its fold refuses too, "Hsed.Sim.Preconfig"). A
+--   usage error, found before anything opens; "Hsed.Jig.Target".@openTarget@
+--   refuses them again for a caller that opens the target itself.
+simParamsProblem :: RunOptions -> Maybe Text
+simParamsProblem opts = case simParamsProblems (roSim opts) of
+  problems@(_ : _) | hasSimEnd (roTarget opts) ->
+    Just ("hsed-jig: --target " <> renderTarget (roTarget opts) <> ": the simulator's parameters: " <> T.intercalate "; " problems)
+  _ -> Nothing
+  where
+    hasSimEnd = \case
+      TSim      -> True
+      TPair a b -> hasSimEnd a || hasSimEnd b
+      _         -> False
 
 -- | The cases @--tests@ selects, in the catalogue's order: all of them for
 --   none; a key naming a whole test, every case of it.

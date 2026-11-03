@@ -33,11 +33,18 @@ and the jig judges by these the CDB the shim says it sent.
 Level 0 Discovery's IF-RECV is carried only while Core Table 26 gives Level
 0 the ComID the shim's Level 0 CDB carries ('shimComId',
 "Hsed.Wire".'level0ComId'): were the table's row lost, the command is
-refused before the shim is called, not sent as ComID 1 and judged after.
-'level0Blocks' is M3's one command, in M3's words; since M4c a replay of a
-captured Level 0 response ("Hsed.Transport.Replay") refuses every other
-command by 'shapeOf' with no base bound, as the kext's transport does
-before its bind, and nothing in the library calls 'level0Blocks'.
+refused before the shim is called, not sent as ComID 1 and judged after. A
+replay of a captured Level 0 response ("Hsed.Transport.Replay") refuses
+every other command by 'shapeOf' with no base bound, as the kext's
+transport does before its bind.
+
+The bytes each field of a CDB lies at are the command standards' (SAT-5's
+ATA PASS-THROUGH (12) carrying ACS-5's TRUSTED RECEIVE and SEND, and
+SPC-5's SECURITY PROTOCOL IN and OUT: SIIS 1.20's references [21], [22]
+and [10], PDF 16-17); SIIS 1.20 Tables 12-13 and 16-17 (PDF 30-31, 40-41)
+give the fields' values (the protocol, the ComID, INC_512, the length in
+512-byte units). The kext's own attach-time CDBs (TPerDriver.cpp:1506-1557)
+and sedutil's (DtaOS.h:258-268, DtaScsiDrive.cpp) witness the bytes.
 -}
 module Hsed.Transport.Cdb
   ( -- * The five commands a drive transport carries
@@ -50,12 +57,10 @@ module Hsed.Transport.Cdb
     -- * Level 0 Discovery's CDB
   , level0Cdb
   , cdbHex
-    -- * The shim's Level 0 ComID, the block, and M3's one command
+    -- * The shim's Level 0 ComID, and the block
   , shimComId
   , blockBytes
   , maxLevel0Blocks
-  , level0Blocks
-  , level0BlocksOf
   ) where
 
 import           Data.Bits            (shiftR)
@@ -156,8 +161,8 @@ shapeOf base q = do
 
     blocksOf s
       | len == 0 || len `mod` blockBytes /= 0 || len > maxLevel0Blocks * blockBytes =
-          refused ("not 1 to 255 whole 512-byte blocks (SIIS 1.20 Tables 12-13 and 16-17, PDF 30-31 and 40-41; "
-                   <> "the kext's count byte)")
+          refused ("not 1 to 255 whole 512-byte blocks (SIIS 1.20 Tables 12-13 and 16-17, PDF 30-31 and 40-41: a length in "
+                   <> "512-byte units; the kext's count byte)")
       | shapeProto s == comIdManagementProtocol && len /= blockBytes =
           refused "not ComID management's one 512-byte block (Core Tables 29-30, PDF 62-63)"
       | otherwise = Right (fromIntegral (len `div` blockBytes))
@@ -183,15 +188,17 @@ shapeOf base q = do
 --   a base Core Table 26 reserves (PDF 55-56). Level 0 Discovery's shape
 --   takes no base: its ComID is "Hsed.Wire".'level0ComId', 0x0001.
 --
--- * SAT (SAT's ATA PASS-THROUGH (12) carrying ACS's TRUSTED RECEIVE or
---   TRUSTED SEND; SIIS 1.20 Tables 17 and 16, PDF 41 and 40): @A1@;
+-- * SAT (SAT-5's ATA PASS-THROUGH (12) carrying ACS-5's TRUSTED RECEIVE or
+--   TRUSTED SEND, SIIS 1.20's references [21] and [22], PDF 17; the fields'
+--   values SIIS 1.20 Tables 17 and 16, PDF 41 and 40): @A1@;
 --   PROTOCOL 4, PIO Data-In, or 5, PIO Data-Out, in bits 4 to 1; T_DIR
 --   from the device or to it, BYTE_BLOCK, T_LENGTH in COUNT; FEATURES the
 --   protocol; COUNT the blocks; LBA 7 to 0 zero (the length's high byte);
 --   LBA 15 to 8 and 23 to 16 the ComID, low byte first; DEVICE 0; @5C@ or
 --   @5E@; reserved; CONTROL.
--- * SCSI (SPC's SECURITY PROTOCOL IN or OUT; SIIS 1.20 Tables 13 and 12,
---   PDF 31 and 30): @A2@ or @B5@; the protocol; the ComID, high byte first;
+-- * SCSI (SPC-5's SECURITY PROTOCOL IN or OUT, SIIS 1.20's reference [10],
+--   PDF 16; the fields' values SIIS 1.20 Tables 13 and 12, PDF 31 and 30):
+--   @A2@ or @B5@; the protocol; the ComID, high byte first;
 --   INC_512; reserved; ALLOCATION or TRANSFER LENGTH, the blocks in its low
 --   byte; reserved; CONTROL.
 --
@@ -259,7 +266,7 @@ cdbHex = T.unwords . map byte . B.unpack
   where byte w = T.pack ((if w < 0x10 then ('0' :) else id) (showHex w ""))
 
 
--- * The shim's Level 0 ComID, the block, and M3's one command
+-- * The shim's Level 0 ComID, and the block
 
 -- | The ComID of the shim's Level 0 IF-RECV, 0x0001, which its C writes
 --   (cbits/hsed_cdb.c's @HSED_LEVEL0_COMID@; "Hsed.Transport.CdbCSpec" holds
@@ -283,26 +290,3 @@ blockBytes = 512
 --   "Hsed.Wire".'mostCarried''s, in blocks.
 maxLevel0Blocks :: Word32
 maxLevel0Blocks = mostCarried UnitBlocks512 `div` blockBytes
-
--- | The blocks a request asks for when it is the one command a drive
---   transport carried at M3: IF-RECV of Level 0 Discovery, protocol 1 and
---   ComID 1, in whole 512-byte blocks, 1 to 255 of them. Any other is
---   refused with why, in M3's words, which a replay's
---   'Hsed.Wire.Unsupported' carried until M4c (it refuses by 'shapeOf'
---   now).
-level0Blocks :: Request -> Either Text Word8
-level0Blocks = level0BlocksOf level0ComId
-
--- | 'level0Blocks' given the ComID Core Table 26 gives Level 0 Discovery:
---   every request is refused unless that ComID is the shim's ('shimComId'),
---   so that a table that lost its row (0x0000) fails closed.
-level0BlocksOf :: Word16 -> Request -> Either Text Word8
-level0BlocksOf level0 r
-  | level0 /= shimComId =
-      Left ("M3: Level 0 only, and Core Table 26 gives Level 0 the ComID " <> hex level0 <> ", not the "
-            <> hex shimComId <> " the kext shim's CDB carries: nothing is carried")
-  | dir r /= IfRecv || proto r /= comPacketProtocol || comId r /= level0 = Left "M3: Level 0 only"
-  | len == 0 || len `mod` blockBytes /= 0 || len > maxLevel0Blocks * blockBytes =
-      Left ("M3: Level 0 only, of 1 to 255 whole 512-byte blocks, not " <> tshow len <> " bytes")
-  | otherwise = Right (fromIntegral (len `div` blockBytes))
-  where len = lenBytes r

@@ -23,9 +23,10 @@ the CDBs the kext sends when it attaches (macos-driver TPerDriver.cpp:1506-1524
 for SCSI's SECURITY PROTOCOL IN, :1527-1557 for SAT's ATA PASS-THROUGH of
 TRUSTED RECEIVE), byte for byte; for 1 to 255 blocks the same with the count
 changed, every one of them 'cdbFor''s; no blocks and more than 255 refused.
-M3's one command, a replay's: Level 0 Discovery's protocol (Core 3.3.6.2,
-PDF 67) and ComID (Core Table 26, PDF 55), of whole 512-byte blocks; every
-other request refused.
+Before a base is bound, a replay's one command and the kext transport's
+('shapeOf' with no base): Level 0 Discovery's protocol (Core 3.3.6.2, PDF
+67) and ComID (Core Table 26, PDF 55), of whole 512-byte blocks, 1 to 255;
+every other request refused, saying which.
 -}
 module Hsed.Transport.CdbSpec (spec) where
 
@@ -65,8 +66,10 @@ base :: Word16
 base = 0x1004
 
 -- | The ten CDBs of design 9.3's drive on its base ComID, each with the
---   request the jig makes of it: SAT's (SIIS 1.20 Tables 16-17, PDF 40-41),
---   then SCSI's (Tables 12-13, PDF 30-31).
+--   request the jig makes of it: SAT's (the bytes SAT-5's and ACS-5's, SIIS
+--   1.20's references [21] and [22], PDF 17; the values its Tables 16-17,
+--   PDF 40-41), then SCSI's (SPC-5's, its reference [10], PDF 16; Tables
+--   12-13, PDF 30-31).
 golden :: [(InterfaceType, Shape, Word16, Word8, Request, Text)]
 golden =
   [ (IfSAT,  Level0Recv, 0x0001, 4, recv 0x01 0x0001 2048, "a1 08 0e 01 04 00 01 00 00 5c 00 00")
@@ -210,31 +213,28 @@ spec = describe "Hsed.Transport.Cdb" $ do
       [ (iface, n) | iface <- [IfSAT, IfSCSI], n <- [0, 256, 4096, maxBound], isRight (level0Cdb iface n) ]
         `shouldBe` []
 
-  describe "the one command a drive transport carried at M3, a replay's" $ do
+  describe "Level 0 Discovery before a base is bound: a replay's one command, and the kext transport's (shapeOf with no base)" $ do
     it "is Level 0 Discovery's: protocol 0x01 (Core 3.3.6.2, PDF 67) and ComID 0x0001 (Core Table 26, PDF 55), the shim's" $
       (comPacketProtocol, level0ComId, shimComId) `shouldBe` (0x01, 0x0001, 0x0001)
-    it "is nothing at all were Core Table 26 to give Level 0 another ComID (a lost row reads 0x0000): it fails closed" $
-      filter isRight [ level0BlocksOf other (recv 0x01 c 2048) | other <- [0x0000, 0x0002], c <- [0x0000, 0x0001, 0x0002] ]
-        `shouldBe` []
-    it "counts 512-byte blocks, at most 255 of them (SIIS 1.20 Tables 13 and 17, PDF 31 and 41; the kext's count byte)" $
+    it "counts 512-byte blocks, at most 255 of them (SIIS 1.20 Tables 13 and 17, PDF 31 and 41: a length in 512-byte units; the kext's count byte)" $
       (blockBytes, maxLevel0Blocks) `shouldBe` (512, 255)
     it "is IF-RECV on protocol 1, ComID 1, of whole blocks: their count" $
-      map (level0Blocks . recv 0x01 0x0001) [512, 2048, 130560] `shouldBe` [Right 1, Right 4, Right 255]
+      map (shapeOf Nothing . recv 0x01 0x0001) [512, 2048, 130560] `shouldBe` map Right [(Level0Recv, 1), (Level0Recv, 4), (Level0Recv, 255)]
     prop "takes every whole number of blocks from 1 to 255" $
       forAll (choose (1, 255)) $ \n ->
-        level0Blocks (recv 0x01 0x0001 (n * 512)) `shouldBe` Right (fromIntegral n)
-    it "refuses IF-SEND, another protocol, another ComID: M3: Level 0 only" $
-      map level0Blocks
+        shapeOf Nothing (recv 0x01 0x0001 (n * 512)) `shouldBe` Right (Level0Recv, fromIntegral n)
+    it "refuses IF-SEND, another protocol, another ComID" $
+      filter isRight (map (shapeOf Nothing)
         [ (recv 0x01 0x0001 2048) { dir = IfSend, payload = B.replicate 2048 0 }
         , recv 0x02 0x0001 2048
         , recv 0x01 0x1004 2048
         , recv 0x00 0x0000 2048
-        ]
-        `shouldBe` replicate 4 (Left "M3: Level 0 only")
+        ])
+        `shouldBe` []
     it "refuses a length of no blocks, part of one, or more than 255, saying which" $
-      [ n | n <- [0, 1, 511, 513, 1000, 2047, 131072, maxBound], not (refusedSaying n (level0Blocks (recv 0x01 0x0001 n))) ]
+      [ n | n <- [0, 1, 511, 513, 1000, 2047, 131072, maxBound], not (refusedSaying n (shapeOf Nothing (recv 0x01 0x0001 n))) ]
         `shouldBe` []
 
--- | A refusal of the one command's kind that names the length refused.
-refusedSaying :: Word32 -> Either Text Word8 -> Bool
-refusedSaying n = either (\t -> "M3: Level 0 only" `T.isPrefixOf` t && tshow n `T.isInfixOf` t) (const False)
+-- | A refusal that names the length refused and why: not whole blocks of 512 bytes.
+refusedSaying :: Word32 -> Either Text (Shape, Word8) -> Bool
+refusedSaying n = either (\t -> (tshow n <> " bytes: not 1 to 255 whole 512-byte blocks") `T.isInfixOf` t) (const False)

@@ -15,48 +15,71 @@ Stability   : experimental
 The run-time half of the jig's safety against the attached drive (design
 9.3.2): before a command reaches a drive's transport, the Guard decides by
 the drive's policy, and a refused command is recorded ('Hsed.Jig.Transcript')
-and never issued. A drive's policy is 'Level0Only' until its base ComID is
-bound: IF-RECV of Level 0 Discovery (protocol 1, ComID 1) and nothing else.
-'AllowList' is M4c's, the base ComID bound from the drive's own Level 0
-beside the methods it admits ('readOnlyMethods', 'recoverMethods'); until
-M4c's group G2 tightens 'decide' to the base, it decides as at M4b, the
-base unread: an IF-SEND whose ComPacket parses to methods every
-one of which is allowed (SMUID.Properties; SMUID.StartSession to the Admin
-SP as Anybody or no one; Get on C_PIN_MSID of one cell_block within its UID
-and PIN columns; a bare EndOfSession), the UIDs those of
-"Hsed.Gen.Core.UIDs" and, for C_PIN_MSID, Opal's generated Admin SP
-("Hsed.Gen.Opal.Preconfig.AdminSP", Opal 2.30 Table 25, PDF 48; since M4b),
-the columns found by name in the generated C_PIN
-description ("Hsed.Gen.Core.TableDescs"), and IF-RECV of protocol 1; ComID
-management (protocol 2) is refused but for STACK_RESET on a static ComID and
-its GET_COMID_RESPONSE under 'AllowStackReset' (@--recover@, and the
-STACK_RESET before each drive case, design 9.3, 13.7):
-the IF-SEND of Core Table 35's request (PDF 65), read strictly through the
-generated layout, for the Extended ComID of the ComID the command is on
-with a static ComID's extension, nothing after it but zeros, on a ComID
-Core Table 26 does not reserve (so never TPER_RESET's 0x0004 nor
-GET_COMID's 0x0000, PDF 55), and the IF-RECV of protocol 2 on such a ComID;
-VERIFY_COMID_VALID and every other request code read as a pin other than
-Table 35's and are refused, as is anything that does not parse.
+and never issued.
+
+A drive reaches a run only as a 'GuardedDrive' (design 13.29 (l), closed at
+M4c): "Hsed.Jig.Target" wraps the opener's 'RawDrive' the moment it opens it
+('guardDrive'), and the constructor is not exported, so that no module
+reaches the raw transport past it. Every command is then decided under the
+drive's policy, which the drive holds; one refused is recorded Blocked in
+the run's transcript and never issued, and one issued is recorded in the
+run's transcript and in the drive's own ('driveIssued'), in the order and
+with the entries M4b's run recorded, so that the run, at its end, decides
+again every command the drive was issued under the policy it ended with
+("Hsed.Jig.Run".'Hsed.Jig.Run.outsidePolicy').
+
+A drive's policy is 'Level0Only' until its base ComID is bound: the IF-RECV
+of Level 0 Discovery (protocol 1, ComID 1) and nothing else. 'driveBind'
+binds the base ComID the drive's own Level 0 Discovery names (the Opal SSC
+V2 descriptor's, Opal 2.30 Table 6, PDF 23), once, never one Core Table 26
+reserves (PDF 55-56), and only where the run admits more than Level 0 on the
+drive; the policy is then 'AllowList' of that literal base (design 13.31
+(c)) and the methods the run admits ('readOnlyMethods', 'recoverMethods'),
+read-only at the method level (design 13.7, Scott's answer of 2026-11-02).
+Under it ('decide') a drive is given:
+
+* Level 0 Discovery's IF-RECV still, and an IF-RECV of protocol 1 on the
+  base: on no other ComID;
+* an IF-SEND of protocol 1 on the base alone, its payload exactly its
+  transfer length, one ComPacket on the base with a static ComID's
+  extension (Core 3.3.3.1, PDF 57) and the host's OutstandingData and
+  MinTransfer, zero (3.2.3.2.1.4-5, PDF 41), read without a difference,
+  nothing after it but zeros, every subpacket Data and holding one allowed
+  method invocation in its canonical encoding or a bare EndOfSession:
+  SMUID.Properties; SMUID.StartSession to the Admin SP with no optional
+  parameter but HostSigningAuthority = Anybody (Core 5.2.3.1, PDF 149: no
+  HostChallenge, so that no credential is tried and no Tries counter
+  moves); Get on C_PIN_MSID of one cell_block within its UID and PIN
+  columns (Opal 2.30 Table 23, PDF 47); the UIDs those of
+  "Hsed.Gen.Core.UIDs" and, for C_PIN_MSID, Opal's generated Admin SP
+  ("Hsed.Gen.Opal.Preconfig.AdminSP", Table 25, PDF 48; since M4b), the
+  columns found by name in the generated C_PIN description
+  ("Hsed.Gen.Core.TableDescs");
+* ComID management (protocol 2) under 'AllowStackReset' alone (@--recover@,
+  and the STACK_RESET before each drive case, design 9.3, 13.7), on the base
+  alone: its IF-RECV (GET_COMID_RESPONSE), and an IF-SEND whose payload,
+  exactly its transfer length, is Core Table 35's STACK_RESET request (PDF
+  65), read strictly through the generated layout, for the base's Extended
+  ComID (a static ComID's extension), nothing after it but zeros;
+  VERIFY_COMID_VALID and every other request code read as a pin other than
+  Table 35's and are refused, as is anything that does not parse. TPER_RESET
+  is on ComID 0x0004 (Opal 2.30 Table 13, PDF 29), which Core Table 26
+  reserves and so no base is: no policy admits it;
+* nothing else: no other protocol, ComID or method.
 
 The Guard sends on a @'ReadOnly@ transport, which no other module can:
 'guardedSend' and 'guardedRecv' decide one command each; 'guarding' puts
 the Guard in front of every command a transport is given, so that a drive's
 transport refuses what its policy does whoever asks (the host's exchange of
-a ComPacket among them). A drive reaches a run only as a 'GuardedDrive'
-(design 13.29 (l)): "Hsed.Jig.Target" wraps the opener's 'RawDrive' at
-once ('guardDrive'), every command then decided under the drive's policy,
-held in the drive and 'Level0Only' until 'driveBind' binds its base ComID,
-and each command issued recorded in the run's transcript and in the drive's
-own ('driveIssued'), in the order and with the entries M4b's run recorded;
-its constructor is not exported, so that no module reaches the raw
-transport past it.
+a ComPacket among them). The drive's transport ('driveTransport') and its
+two verbs ('driveSend', 'driveRecv') decide each command under the policy
+as it stands when the command is given.
 
 Level 0 Discovery's ComID and the Data subpacket's Kind are the generated
 code tables' (Core Tables 26 and 19) and the security protocol of ComPackets
 is written by hand, Core Table 25 naming protocols 1 and 2 alike, each
 defined once, in "Hsed.Wire". Were Table 26 ever to lose Level 0's row, its
-ComID would read 0x0000, the reserved ComID, which 'Level0Only' refuses.
+ComID would read 0x0000, the reserved ComID, which every policy refuses.
 -}
 module Hsed.Jig.Guard
   ( -- * Policies
@@ -123,7 +146,7 @@ import           Hsed.Wire.Internal    (Transport (..))
 data Policy
   = Level0Only                    -- ^ IF-RECV of Level 0 Discovery alone: a drive until its base ComID is bound
   | AllowList !Word16 ![Allowed]  -- ^ on the drive's base ComID, bound from its own Level 0, IF-SENDs of these
-                                  --   methods, and IF-RECV (M4c)
+                                  --   methods and IF-RECV; besides, Level 0 Discovery's IF-RECV (M4c)
   deriving (Eq, Show)
 
 -- | A method an 'AllowList' admits.
@@ -312,43 +335,65 @@ refuse t tr q why = Left why <$ record t (Blocked 0 (dRole (tDescribe tr)) q why
 -- | What a policy says of a command. Level0Only admits Level 0's IF-RECV on
 --   the ComID Core Table 26 gives it, and nothing on the reserved ComID
 --   0x0000, which "Hsed.Wire".'level0ComId' would read were the row lost.
---   An allow list admits IF-RECV of protocol 1, an IF-SEND of protocol 1
---   whose every method it lists ('allowedSend'), and, with
---   'AllowStackReset' alone, ComID management's STACK_RESET and
---   GET_COMID_RESPONSE ('stackResetAllowed'); its base ComID is not read
---   yet (M4b's decision, until M4c's group G2 holds each command to it).
+--   An allow list admits that IF-RECV too, and, on its base ComID alone, a
+--   ComID Core Table 26 does not reserve: IF-RECV of protocol 1, an IF-SEND
+--   of protocol 1 whose payload is exactly its transfer length and whose
+--   every method it lists ('allowedSend'), and, with 'AllowStackReset'
+--   alone, ComID management's STACK_RESET and GET_COMID_RESPONSE
+--   ('stackResetAllowed'); nothing else (design 9.3, 13.31 (c)).
 decide :: Policy -> Request -> Either Text ()
 decide policy q = case policy of
   Level0Only
     | level0ComId == 0x0000 -> Left "Level0Only: Core Table 26 gives Level 0 Discovery no ComID: nothing reaches a drive"
-    | dir q == IfRecv && proto q == comPacketProtocol && comId q == level0ComId -> Right ()
-    | dir q == IfSend -> Left "Level0Only: no IF-SEND reaches a drive at M3 (design 9.3)"
-    | otherwise       -> Left ("Level0Only: IF-RECV of Level 0 Discovery alone (protocol " <> hex comPacketProtocol
-                               <> ", ComID " <> hex level0ComId <> "), not protocol " <> hex (proto q) <> ", ComID " <> hex (comId q))
-  AllowList _ allowed
-    | proto q == comIdManagementProtocol, AllowStackReset `elem` allowed -> first ("AllowList: " <>) (stackResetAllowed q)
-    | proto q /= comPacketProtocol -> Left ("AllowList: protocol " <> hex (proto q) <> " refused, ComID management among them")
-    | dir q == IfRecv              -> Right ()
-    | otherwise                    -> first ("AllowList: " <>) (allowedSend allowed q)
+    | level0Recv            -> Right ()
+    | dir q == IfSend       -> Left "Level0Only: no IF-SEND reaches a drive before its base ComID is bound (design 9.3)"
+    | otherwise             -> Left ("Level0Only: IF-RECV of Level 0 Discovery alone (protocol " <> hex comPacketProtocol
+                                     <> ", ComID " <> hex level0ComId <> "), not protocol " <> hex (proto q) <> ", ComID " <> hex (comId q))
+  AllowList base allowed
+    | level0ComId /= 0x0000, level0Recv -> Right ()
+    | reservedComId base ->
+        Left ("AllowList: its base ComID " <> hex base <> " is one Core Table 26 reserves (PDF 55-56), so no drive's: "
+              <> "Level 0 Discovery's IF-RECV alone")
+    | comId q /= base ->
+        Left ("AllowList: " <> command <> " on ComID " <> hex (comId q) <> ", not the base ComID " <> hex base
+              <> " the drive's Level 0 named (design 13.31 (c))")
+    | proto q == comIdManagementProtocol, AllowStackReset `notElem` allowed ->
+        Left ("AllowList: ComID management (protocol " <> hex comIdManagementProtocol <> ") refused: the allow list holds no STACK_RESET")
+    | proto q == comIdManagementProtocol -> first ("AllowList: " <>) (stackResetAllowed q)
+    | proto q /= comPacketProtocol ->
+        Left ("AllowList: protocol " <> hex (proto q) <> " refused: protocols " <> hex comPacketProtocol <> " and "
+              <> hex comIdManagementProtocol <> " alone")
+    | dir q == IfRecv -> Right ()
+    | otherwise -> first ("AllowList: " <>) (exactTransfer q >> allowedSend allowed q)
+  where
+    level0Recv = dir q == IfRecv && proto q == comPacketProtocol && comId q == level0ComId
+    command    = (if dir q == IfSend then "an IF-SEND" else "an IF-RECV") <> " of protocol " <> hex (proto q)
 
--- | A ComID management command 'AllowStackReset' admits (Core 3.3.4.7.5,
---   PDF 65-66; design 9.3's @--recover@, and 13.7's STACK_RESET before each
---   drive case): on a ComID Core Table 26 does not
---   reserve (PDF 55: TPER_RESET's 0x0004 and GET_COMID's 0x0000 are
---   reserved, so neither passes), an IF-RECV (GET_COMID_RESPONSE, which
---   reads what the TPer holds and changes nothing but its buffer), or an
---   IF-SEND whose payload is Table 35's STACK_RESET request and nothing
---   else: read strictly through the generated layout (its Request Code a
---   pin, 0x00000002, so VERIFY_COMID_VALID's 0x00000001 and every other
---   code are refused), its Extended ComID the command's ComID with a static
---   ComID's extension, its reserved bytes zeros to the end of the transfer.
+-- | An IF-SEND's payload exactly its transfer length, as the drive is given
+--   it: the kext's shim carries the one buffer and checks it whole
+--   ("Hsed.Transport.Cdb".'Hsed.Transport.Cdb.shapeOf'; cbits/hsed_cdb.c), so
+--   that no byte past what the Guard read, nor one short of it, reaches the
+--   drive.
+exactTransfer :: Request -> Either Text ()
+exactTransfer q
+  | B.length (payload q) == fromIntegral (lenBytes q) = Right ()
+  | otherwise = Left ("an IF-SEND of " <> tshow (B.length (payload q)) <> " bytes on a transfer of " <> tshow (lenBytes q)
+                      <> ": the payload is the transfer, exactly")
+
+-- | A ComID management command 'AllowStackReset' admits on the base ComID
+--   (Core 3.3.4.7.5, PDF 65-66; design 9.3's @--recover@, and 13.7's
+--   STACK_RESET before each drive case): an IF-RECV (GET_COMID_RESPONSE,
+--   which reads what the TPer holds and changes nothing but its buffer), or
+--   an IF-SEND whose payload, exactly its transfer length, is Table 35's
+--   STACK_RESET request and nothing else: read strictly through the
+--   generated layout (its Request Code a pin, 0x00000002, so
+--   VERIFY_COMID_VALID's 0x00000001 and every other code are refused), its
+--   Extended ComID the command's ComID with a static ComID's extension, its
+--   reserved bytes zeros to the end of the transfer.
 stackResetAllowed :: Request -> Either Text ()
 stackResetAllowed q
-  | reservedComId (comId q) =
-      Left ("ComID management on ComID " <> hex (comId q) <> ", which Core Table 26 reserves (TPER_RESET's 0x0004 among them): "
-            <> "STACK_RESET on a static ComID alone")
   | dir q == IfRecv = Right ()
-  | otherwise = case decodeRecordStrict (payload q) :: Either LayoutError (DecodedRecord STACK_RESETCommandRequest) of
+  | otherwise = exactTransfer q >> case decodeRecordStrict (payload q) :: Either LayoutError (DecodedRecord STACK_RESETCommandRequest) of
       Left e -> Left ("the payload is no STACK_RESET request (Core Table 35, PDF 65): " <> tshow e)
       Right (DecodedRecord request ds rest)
         | not (null ds) -> Left ("a STACK_RESET request read with differences: " <> tshow ds)
@@ -360,16 +405,26 @@ stackResetAllowed q
   where
     extended = (fromIntegral (comId q) `shiftL` 16) .|. fromIntegral staticExtension :: Word32
 
--- | An IF-SEND's payload: one ComPacket on the command's ComID, read without
---   a difference, then zeros, whose every subpacket is Data and holds one
---   allowed method invocation (in its canonical encoding) or a bare
---   EndOfSession.
+-- | An IF-SEND's payload: one ComPacket on the command's ComID, with a
+--   static ComID's extension (Core 3.3.3.1, PDF 57) and the OutstandingData
+--   and MinTransfer a host sends, zero (3.2.3.2.1.4-5, PDF 41: reserved in a
+--   host's ComPacket), read without a difference (so its reserved bytes 0-3
+--   zero too, 3.2.3.2.1.1, PDF 40), then zeros, whose every subpacket is
+--   Data and holds one allowed method invocation (in its canonical
+--   encoding) or a bare EndOfSession.
 allowedSend :: [Allowed] -> Request -> Either Text ()
 allowedSend allowed q = do
   DecodedFrame (ComPacketFrame h packets) ds rest <- first (("the payload is no ComPacket: " <>) . tshow) (decodeComPacket (payload q))
   unless (null ds) (Left ("the ComPacket reads with differences: " <> tshow ds))
   unless (B.all (== 0) rest) (Left "bytes other than zeros after the ComPacket")
   unless (comPacketComID h == comId q) (Left ("the ComPacket's ComID " <> hex (comPacketComID h) <> " is not the command's"))
+  unless (comPacketComIDExtension h == staticExtension) $
+    Left ("the ComPacket's ComID extension " <> hex (comPacketComIDExtension h) <> ", not a static ComID's " <> hex staticExtension
+          <> " (Core 3.3.3.1, PDF 57)")
+  unless (comPacketOutstandingData h == 0) $
+    Left ("the ComPacket's OutstandingData " <> tshow (comPacketOutstandingData h) <> ", not the host's 0 (Core 3.2.3.2.1.4, PDF 41)")
+  unless (comPacketMinTransfer h == 0) $
+    Left ("the ComPacket's MinTransfer " <> tshow (comPacketMinTransfer h) <> ", not the host's 0 (Core 3.2.3.2.1.5, PDF 41)")
   case concatMap pfSubPackets packets of
     []  -> Left "a ComPacket with no subpacket"
     sps -> traverse_ (allowedSubPacket allowed) sps
@@ -395,23 +450,34 @@ allowedCall allowed (MethodCall (MethodHeader invoker method) ps _)
   | otherwise = Left ("the method " <> named method <> " on " <> tshow invoker <> " is not allowed")
   where named u = maybe (tshow u) (\n -> T.pack n <> " (" <> tshow u <> ")") (L.lookup u (sessionManagerMethodUIDs <> methodIDUIDs))
 
--- | StartSession's SPID the Admin SP's, and its HostSigningAuthority none or
---   Anybody: each parameter found by its name in the generated signature
---   (Core 5.2.3.1), a required one by position, an optional one by its
---   0-based index among the optional ones (3.2.4.1).
+-- | StartSession's SPID the Admin SP's, and no optional parameter but its
+--   HostSigningAuthority, Anybody, if that (Core 5.2.3.1, PDF 149): no
+--   HostChallenge, HostExchangeAuthority, HostExchangeCert, HostSigningCert,
+--   SessionTimeout, TransTimeout, InitialCredit nor SignedHash, so that a
+--   session to the Admin SP opens as Anybody, who authenticates without a
+--   credential (5.3.4.1.2.1, PDF 211), and no credential is tried. Each
+--   parameter is found by its name in the generated signature, a required
+--   one by position, an optional one by its 0-based index among the
+--   optional ones (3.2.4.1).
 startSessionAllowed :: Parameters -> Either Text ()
 startSessionAllowed (Parameters positional nameds) = do
   spid <- maybe (Left "StartSession without its SPID") Right (listToMaybe . (`drop` positional) =<< L.findIndex (named "SPID") (sigRequired sig))
   unless (isUid uSP_Admin spid) (Left "StartSession to an SP other than the Admin SP")
-  case L.findIndex (named "HostSigningAuthority") (sigOptional sig) of
-    Nothing -> Left "StartSession's signature names no HostSigningAuthority"
-    Just i  -> case [ v | NamedValue (Name (Datum n)) v <- nameds, n == Unsigned (fromIntegral i) ] of
-      []                                -> Right ()
-      [v] | isUid uAuthority_Anybody v -> Right ()
-      _                                 -> Left "StartSession with a HostSigningAuthority other than Anybody"
+  signing <- maybe (Left "StartSession's signature names no HostSigningAuthority") Right (L.findIndex (named "HostSigningAuthority") (sigOptional sig))
+  case nameds of
+    [] -> Right ()
+    [NamedValue (Name (Datum n)) v]
+      | n == Unsigned (fromIntegral signing) ->
+          unless (isUid uAuthority_Anybody v) (Left "StartSession with a HostSigningAuthority other than Anybody")
+    _ -> Left ("StartSession with " <> T.intercalate ", " (map optionalName nameds) <> ": no optional parameter but "
+               <> "HostSigningAuthority = Anybody (Core 5.2.3.1, PDF 149)")
   where
     sig = signature @Methods.StartSession
     named n = (== n) . paramName
+    optionalName = \case
+      NamedValue (Name (Datum (Unsigned i))) _ ->
+        maybe ("an optional parameter " <> tshow i <> " its signature lacks") paramName (listToMaybe (drop (fromIntegral i) (sigOptional sig)))
+      _ -> "a parameter named other than by its number"
 
 -- | Get on C_PIN_MSID of its UID and PIN columns alone (UCT-03 step 1b,
 --   Test Cases PDF 32; the columns Opal 2.30's ACE_C_PIN_MSID_Get_PIN

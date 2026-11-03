@@ -16,12 +16,19 @@ scripted Set (built with "Hsed.Core.Method".'Hsed.Core.Method.invocation',
 framed by "Hsed.Packet" on ComID 0x1004) is refused under both policies,
 recorded as blocked, and never reaches the transport; Level0Only admits
 the Level 0 IF-RECV alone; the M4c allow list admits Properties,
-StartSession to the Admin SP as Anybody or no one, Get on C_PIN_MSID of its
-UID and PIN columns, and a bare EndOfSession, and refuses everything else,
-what does not parse and ComID management, but for STACK_RESET on a static
-ComID and its GET_COMID_RESPONSE under AllowStackReset, which still refuses
-TPER_RESET (ComID 0x0004) and VERIFY_COMID_VALID; a transport behind the
-Guard answers what it refuses 'Unsupported'. A drive behind the Guard
+StartSession to the Admin SP with no optional parameter but
+HostSigningAuthority = Anybody, Get on C_PIN_MSID of its UID and PIN
+columns, and a bare EndOfSession, and refuses everything else, what does
+not parse and ComID management, but for STACK_RESET and its
+GET_COMID_RESPONSE under AllowStackReset, which still refuses TPER_RESET
+(ComID 0x0004) and VERIFY_COMID_VALID; and it holds every command to its
+literal base ComID, 0x1004 here (design 13.31 (c)): IF-RECV of protocol 1
+there or on Level 0's ComID alone, IF-SEND and ComID management there
+alone, an IF-SEND's payload exactly its transfer length, its ComPacket's
+extension a static ComID's and its OutstandingData and MinTransfer the
+host's zero (Core 3.3.3.1, PDF 57; 3.2.3.2.1.4-5, PDF 41); a policy whose
+base Core Table 26 reserves admits Level 0 Discovery alone. A transport
+behind the Guard answers what it refuses 'Unsupported'. A drive behind the Guard
 ('guardDrive', M4c) records each command in the run's transcript and the
 drive's own exactly as M4b's run did, Level0Only before its base ComID is
 bound and under its allow list after, and before a bind refuses every
@@ -82,13 +89,27 @@ counting = do
 -- | Tokens in one data subpacket of one packet of the control session, in a
 --   ComPacket on a ComID.
 framed :: Word16 -> ByteString -> ByteString
-framed c tokens = either (error . show) id $ encodeComPacket $
-  ComPacketFrame (ComPacketHeader c 0 0 0) [PacketFrame (PacketHeader 0 0 0 0 0) [DataSubPacket (DataSubPacketHeader 0) tokens]]
+framed c = framedUnder (ComPacketHeader c 0 0 0)
+
+-- | The same under a ComPacket header given: its ComID, extension,
+--   OutstandingData and MinTransfer.
+framedUnder :: ComPacketHeader -> ByteString -> ByteString
+framedUnder h tokens = either (error . show) id $ encodeComPacket $
+  ComPacketFrame h [PacketFrame (PacketHeader 0 0 0 0 0) [DataSubPacket (DataSubPacketHeader 0) tokens]]
 
 -- | An IF-SEND of tokens so framed on 0x1004, padded to a 512-byte block.
 sendOf :: ByteString -> Request
-sendOf tokens = Request IfSend 1 0x1004 512 (bytes <> B.replicate (512 - B.length bytes) 0)
-  where bytes = framed 0x1004 tokens
+sendOf = sendOn 0x1004
+
+-- | An IF-SEND of tokens so framed on a ComID, on that ComID, padded to a
+--   512-byte block.
+sendOn :: Word16 -> ByteString -> Request
+sendOn c = blockOn c . framed c
+
+-- | An IF-SEND of protocol 1 of bytes on a ComID, padded to a 512-byte
+--   block.
+blockOn :: Word16 -> ByteString -> Request
+blockOn c bytes = Request IfSend 1 c 512 (bytes <> B.replicate (512 - B.length bytes) 0)
 
 -- | An IF-SEND of protocol 2 on a ComID carrying bytes, padded to a block.
 mgmtSend :: Word16 -> ByteString -> Request
@@ -104,7 +125,16 @@ props = generate (invocation uSMUID (Methods.Properties Nothing))
 
 -- | SMUID.StartSession to an SP, as an authority or no one.
 startSession :: UID -> Maybe UID -> ByteString
-startSession sp authority = generate $ invocation uSMUID Methods.StartSession
+startSession sp authority = startCall (startArgs sp authority)
+
+-- | SMUID.StartSession of these parameters, as tokens.
+startCall :: Methods.StartSession -> ByteString
+startCall = generate . invocation uSMUID
+
+-- | StartSession's parameters to an SP, as an authority or no one: HSN 1,
+--   read-write, no other optional parameter.
+startArgs :: UID -> Maybe UID -> Methods.StartSession
+startArgs sp authority = Methods.StartSession
   { Methods.startSessionHostSessionID         = value (1 :: Natural)
   , Methods.startSessionSPID                  = value (token sp)
   , Methods.startSessionWrite                 = value (1 :: Natural)
@@ -144,6 +174,12 @@ allowAll = AllowList 0x1004 [minBound .. maxBound]
 -- | The list UCT-03's verbs need (design 9.3; the plan's acceptance).
 uct03List :: Policy
 uct03List = AllowList 0x1004 [AllowProperties, AllowStartSessionAdminSP, AllowGetCPinMSID, AllowEndOfSession]
+
+-- | A drive run's read-only methods on the base ComID 0x1004, with
+--   STACK_RESET or without (design 13.7).
+readOnly, readOnlyAndReset :: Policy
+readOnly         = AllowList 0x1004 readOnlyMethods
+readOnlyAndReset = AllowList 0x1004 (readOnlyMethods <> [AllowStackReset])
 
 -- | The recovery list, STACK_RESET alone (@--recover@).
 recovery :: Policy
@@ -215,7 +251,7 @@ spec = do
       for [Level0Only, allowAll] (\p -> through guardedSend p (sendOf setPin)) >>= \rs -> do
         map (\(d, r, b) -> (isLeft d, r, b)) rs `shouldBe` [(True, 0, 1), (True, 0, 1)]
 
-  describe "Level0Only" $ do
+  describe "Level0Only (unchanged at M4c)" $ do
     it "admits the IF-RECV of Level 0 Discovery (protocol 1, ComID 1)" $
       through guardedRecv Level0Only (Request IfRecv 1 1 2048 mempty) >>= (`shouldSatisfy` passed)
     it "refuses an IF-RECV on 0x1004, and one of protocol 2" $ do
@@ -267,6 +303,55 @@ spec = do
         through guardedSend uct03List (sendOf tokens) >>= (`shouldSatisfy` refused)
     it "reads the UID and PIN columns from the generated C_PIN description: 0 and 3 (Core Table 181, PDF 171)" $
       [ colNumber col | name <- ["UID", "PIN"], Just col <- [columnNamed name c_PINTableDesc] ] `shouldBe` [0, 3]
+
+  describe "the allow list holds every command to its base ComID, 0x1004 (M4c, design 13.31 (c))" $ do
+    it "admits IF-RECV of protocol 1 on the base ComID and on Level 0 Discovery's alone: 0x1004 and 0x0001, not 0x1005, 0x0800 or 0x0000" $ do
+      for_ [0x1004, 0x0001] $ \c -> through guardedRecv readOnly (Request IfRecv 1 c 2048 mempty) >>= (`shouldSatisfy` passed)
+      for_ [0x1005, 0x0800, 0x0000] $ \c -> through guardedRecv readOnly (Request IfRecv 1 c 2048 mempty) >>= (`shouldSatisfy` refused)
+    it "refuses Properties on 0x1005, its ComPacket on that ComID too" $ do
+      through guardedSend readOnly (sendOn 0x1005 props) >>= (`shouldSatisfy` refused)
+      through guardedSend readOnly (sendOn 0x1004 props) >>= (`shouldSatisfy` passed)
+    it "refuses an IF-SEND whose payload is longer or shorter than its transfer length, of either protocol" $ do
+      let q = sendOf props
+          reset = mgmtSend 0x1004 (stackResetRequest 0x10040000)
+      for_ [q { payload = payload q <> B.replicate 512 0 }, q { lenBytes = 1024 }, q { payload = B.take 511 (payload q) }
+           , reset { lenBytes = 1024 }, reset { payload = payload reset <> "\x00" }] $ \bad ->
+        through guardedSend readOnlyAndReset bad >>= (`shouldSatisfy` refused)
+      for_ [q, reset] $ \good -> through guardedSend readOnlyAndReset good >>= (`shouldSatisfy` passed)
+    it "refuses a ComPacket of extension 0x0001, of OutstandingData 1 or of MinTransfer 1, the host's being 0 (Core 3.3.3.1, PDF 57; 3.2.3.2.1.4-5, PDF 41)" $ do
+      for_ [ComPacketHeader 0x1004 0x0001 0 0, ComPacketHeader 0x1004 0 1 0, ComPacketHeader 0x1004 0 0 1] $ \h ->
+        through guardedSend readOnly (blockOn 0x1004 (framedUnder h props)) >>= (`shouldSatisfy` refused)
+      through guardedSend readOnly (blockOn 0x1004 (framedUnder (ComPacketHeader 0x1004 0 0 0) props)) >>= (`shouldSatisfy` passed)
+    it "admits StartSession with no optional parameter or with HostSigningAuthority = Anybody alone; refuses one with HostChallenge, SessionTimeout or HostExchangeAuthority (Core 5.2.3.1, PDF 149)" $ do
+      for_ [startSession uSP_Admin Nothing, startSession uSP_Admin (Just uAuthority_Anybody)] $ \tokens ->
+        through guardedSend readOnly (sendOf tokens) >>= (`shouldSatisfy` passed)
+      let anybody = startArgs uSP_Admin (Just uAuthority_Anybody)
+          noOne   = startArgs uSP_Admin Nothing
+      for_ [ anybody { Methods.startSessionHostChallenge = Just (value ("a password" :: ByteString)) }
+           , noOne { Methods.startSessionHostChallenge = Just (value ("a password" :: ByteString)) }
+           , anybody { Methods.startSessionSessionTimeout = Just (value (60000 :: Natural)) }
+           , noOne { Methods.startSessionHostExchangeAuthority = Just (value (token uAuthority_Anybody)) } ] $ \args ->
+        through guardedSend readOnly (sendOf (startCall args)) >>= (`shouldSatisfy` refused)
+    it "takes STACK_RESET and GET_COMID_RESPONSE on the base ComID alone, and only with AllowStackReset" $ do
+      through guardedSend readOnlyAndReset (mgmtSend 0x1004 (stackResetRequest 0x10040000)) >>= (`shouldSatisfy` passed)
+      through guardedRecv readOnlyAndReset (Request IfRecv 2 0x1004 512 mempty) >>= (`shouldSatisfy` passed)
+      through guardedSend readOnlyAndReset (mgmtSend 0x1005 (stackResetRequest 0x10050000)) >>= (`shouldSatisfy` refused)
+      through guardedRecv readOnlyAndReset (Request IfRecv 2 0x1005 512 mempty) >>= (`shouldSatisfy` refused)
+      through guardedSend readOnly (mgmtSend 0x1004 (stackResetRequest 0x10040000)) >>= (`shouldSatisfy` refused)
+      through guardedRecv readOnly (Request IfRecv 2 0x1004 512 mempty) >>= (`shouldSatisfy` refused)
+    it "admits Level 0 Discovery alone under a policy whose base ComID Core Table 26 reserves (no drive's: driveBind refuses it)" $ do
+      let reservedBase = AllowList 0x0004 [minBound .. maxBound]
+      through guardedRecv reservedBase (Request IfRecv 1 1 2048 mempty) >>= (`shouldSatisfy` passed)
+      through guardedRecv reservedBase (Request IfRecv 1 0x0004 2048 mempty) >>= (`shouldSatisfy` refused)
+      through guardedSend reservedBase (sendOn 0x0004 props) >>= (`shouldSatisfy` refused)
+      through guardedSend reservedBase (mgmtSend 0x0004 (stackResetRequest 0x00040000)) >>= (`shouldSatisfy` refused)
+    it "says why it refuses, naming the ComID and the base, the lengths, the field" $ do
+      let reasonOf p q = either id (const "admitted") (decide p q)
+      reasonOf readOnly (Request IfRecv 1 0x1005 2048 mempty) `shouldSatisfy` T.isInfixOf "on ComID 0x1005, not the base ComID 0x1004"
+      reasonOf readOnly ((sendOf props) { lenBytes = 1024 }) `shouldSatisfy` T.isInfixOf "an IF-SEND of 512 bytes on a transfer of 1024"
+      reasonOf readOnly (blockOn 0x1004 (framedUnder (ComPacketHeader 0x1004 0 0 1) props)) `shouldSatisfy` T.isInfixOf "MinTransfer 1"
+      reasonOf readOnly (sendOf (startCall (startArgs uSP_Admin Nothing) { Methods.startSessionSessionTimeout = Just (value (1 :: Natural)) }))
+        `shouldSatisfy` T.isInfixOf "SessionTimeout: no optional parameter but HostSigningAuthority = Anybody"
 
   describe "AllowStackReset (--recover, design 9.3)" $ do
     it "admits exactly STACK_RESET on the base ComID, Table 35's request for its Extended ComID, and the protocol-2 IF-RECV of its GET_COMID_RESPONSE" $ do

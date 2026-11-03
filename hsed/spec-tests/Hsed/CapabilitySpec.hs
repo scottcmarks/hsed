@@ -20,8 +20,16 @@ its type errors deferred to run time); the constructor, "Hsed.Wire.Internal",
 is imported only by "Hsed.Wire" and the modules that build or decorate
 transports (@Hsed.Transport.*@, "Hsed.Jig.Guard", "Hsed.Jig.Transcript"),
 and "Hsed.Wire" exports 'Transport' without it; and no module of the
-library or the executables names unsafeCoerce. The sources are read when the
-suite runs (stack runs it in the package's directory).
+library or the executables names unsafeCoerce. A drive reaches a run only
+behind the Guard (design 13.29 (l), M4c): the drive's transports, the kext's
+("Hsed.Transport.MacKext") and the replay's ("Hsed.Transport.Replay"), are
+imported by "Hsed.Jig.Target" alone, which puts each behind the Guard as
+it opens it, and "Hsed.Jig.Guard" exports 'Hsed.Jig.Guard.GuardedDrive'
+abstract, without its constructor; and no module of the library, the
+generated code or the executables imports a function of the portable C
+(cbits/hsed_cdb.c, compiled into every build), which hsed's doctests,
+interpreting the library's sources, could not link. The sources are read
+when the suite runs (stack runs it in the package's directory).
 -}
 module Hsed.CapabilitySpec (spec) where
 
@@ -63,6 +71,22 @@ spec = do
       exports `shouldSatisfy` (not . T.null)
       filter (`T.isInfixOf` exports) ["MkTransport", "Transport (..)", "Transport(..)", internal] `shouldBe` []
 
+  describe "a drive's transports (design 13.29 (l), M4c)" $ do
+    it "are imported under src, gen and app by Hsed.Jig.Target alone: Hsed.Transport.MacKext and Hsed.Transport.Replay" $ do
+      sources <- concat <$> traverse modulesUnder sourceDirs
+      [ (name, m) | (name, text) <- sources, m <- importsOf text, m `elem` driveTransports ]
+        `shouldBe` [ ("Hsed.Jig.Target", m) | m <- driveTransports ]
+    it "reach a run as Hsed.Jig.Guard's GuardedDrive, which its export list names without (..)" $ do
+      exports <- exportList . decodeUtf8Lenient <$> readFileBinary ("src" </> "Hsed" </> "Jig" </> "Guard.hs")
+      [ w | w <- T.words (T.map (\c -> if c == ',' then ' ' else c) exports), "GuardedDrive" `T.isPrefixOf` w ] `shouldBe` ["GuardedDrive"]
+      filter (`T.isInfixOf` exports) ["GuardedDrive (..)", "GuardedDrive(..)", "GuardedDrive ("] `shouldBe` []
+
+  describe "the portable C (cbits/hsed_cdb.c)" $
+    it "is foreign-imported by no module of the library, the generated code or the executables" $ do
+      sources <- concat <$> traverse modulesUnder sourceDirs
+      [ (name, line) | (name, text) <- sources, line <- T.lines text, "foreign import" `T.isPrefixOf` T.stripStart line
+                     , "hsed_cdb" `T.isInfixOf` line ] `shouldBe` []
+
   describe "unsafeCoerce" $
     it "is named by no module of the library, the generated code or the executables" $ do
       sources <- concat <$> traverse modulesUnder sourceDirs
@@ -83,6 +107,11 @@ mayImportInternal :: Text -> Bool
 mayImportInternal name =
   name `elem` [internal, "Hsed.Wire", "Hsed.Jig.Guard", "Hsed.Jig.Transcript"]
   || "Hsed.Transport." `T.isPrefixOf` name
+
+-- | The modules of the drive's transports, which Hsed.Jig.Target alone
+--   imports, in the order it imports them.
+driveTransports :: [Text]
+driveTransports = ["Hsed.Transport.MacKext", "Hsed.Transport.Replay"]
 
 -- | The library's, the generated code's and the executables' source directories.
 sourceDirs :: [FilePath]

@@ -43,6 +43,20 @@ abort is accepted where an error status is expected (Test Cases 7.1, PDF
 Guard on a drive; the simulator's Opal SSC V2 descriptor and SID's
 credential are read from its state; a session is opened and ended around
 a step, STACK_RESET following a failure on the simulator.
+
+A run on a drive (M4c), over a drive behind the Guard whose transport
+answers from lists: an IF-RECV asks for 2048 bytes whatever MaxComPacketSize
+the run has learned, Opal 2.30 Table 17's initial assumption (PDF 33), and
+again at a MinTransfer of 4096 (Core Table 45 row 2, PDF 83); after a step
+that failed, STACK_RESET follows only where the drive takes it; SP_BUSY
+where a session was to open says, on a drive alone, that @--recover@ clears
+the session an earlier run left. A run asked to stop: each verb that issues
+a command throws 'Interrupted' before it, on the simulator and on a drive,
+and 'attempt' makes no verdict of it; STACK_RESET's polls, once its IF-SEND
+is out, run to their end; @--interrupt-in-session@ stops a run once
+StartSession opens a session on its drive's end or its one end, never on a
+pair's simulator. The answers an end's IF-RECVs brought after a mark are
+made secrets of the run, each up to its zero padding, and noted.
 -}
 module Hsed.Jig.ScriptSpec (spec) where
 
@@ -63,8 +77,8 @@ import           Hsed.Core.StreamItem      (StreamItem (..))
 import           Hsed.Core.Sync            (StateTable (..))
 import           Hsed.Core.Token           (IsToken (..), Token (..))
 import           Hsed.Core.Value           (IsValue (..), List (..), Value (..), (.:))
-import           Hsed.Gen.Core.Codes       (StatusCode (..), pattern INVALID_PARAMETER, pattern NOT_AUTHORIZED, pattern SP_BUSY,
-                                            pattern SUCCESS, statusValue)
+import           Hsed.Gen.Core.Codes       (StatusCode (..), pattern INVALID_PARAMETER, pattern NOT_AUTHORIZED,
+                                            pattern NO_SESSIONS_AVAILABLE, pattern SP_BUSY, pattern SUCCESS, statusValue)
 import           Hsed.Gen.Core.Layouts     (ComPacket (..), ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..),
                                             NoResponseAvailable (..), PacketHeader (..), STACK_RESETCommandRequest (..),
                                             STACK_RESETCommandResponse (..), STACK_RESETPending (..))
@@ -79,11 +93,11 @@ import           Hsed.Jig.Cases.ETC02      (etc02)
 import           Hsed.Jig.Cases.ETC08      (etc08Payload)
 import           Hsed.Jig.Cases.ETC15      (etc15)
 import           Hsed.Jig.Cases.UCT02      (hostProperties, tperExpected, uct02)
-import           Hsed.Jig.Guard            (guardDrive)
-import           Hsed.Jig.Options          (defaultRunOptions)
+import           Hsed.Jig.Guard            (Allowed (..), guardDrive, readOnlyMethods)
+import           Hsed.Jig.Options          (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Script
 import           Hsed.Jig.Target           (Target (..))
-import           Hsed.Jig.Transcript       (TEntry (..), entries, newTranscript)
+import           Hsed.Jig.Transcript       (TEntry (..), entries, newTranscript, recording)
 import           Hsed.Level0               (splitLevel0)
 import           Hsed.Packet               (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
 import           Hsed.Sim.Level0           (level0Response)
@@ -92,7 +106,7 @@ import           Hsed.Sim.Sync             (T45Row (..))
 import           Hsed.Sim.Types            (Session (..), SimParams (..), defaultSimParams, initialState)
 import           Hsed.Transport.Drive      (RawDrive (..))
 import           Hsed.Transport.InProc     (SimControl (..))
-import           Hsed.Wire                 (ExchangeError (..), newChannel)
+import           Hsed.Wire                 (ExchangeError (..), ExchangeOpts (..), defaultExchangeOpts, newChannel)
 import           Hsed.Wire.Internal        (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Transport (..),
                                             Unit (..))
 
@@ -164,6 +178,61 @@ harness sends recvs s = do
 -- | 'harness' counting the IF-RECVs alone.
 replying :: [IfStatus] -> [Response] -> Script a -> IO (a, Int, [TEntry])
 replying sends recvs s = harness sends recvs s <&> \(a, qs, es) -> (a, length [ () | q <- qs, dir q == IfRecv ], es)
+
+-- | One end of a run over a transport that calls back on each request,
+--   then answers IF-SENDs from one list of statuses and IF-RECVs from one of
+--   responses (past either, Good and nothing), recording into the run's
+--   transcript as a run's end does: the simulator's end (role @tper@, in
+--   bytes), or with what binding admits a drive's behind the Guard (role
+--   @drive@, in 512-byte blocks, its bind taking any base). The base ComID
+--   0x1004 recorded, not bound; the run's options and stop flag given. What
+--   a script came to, every request the transport saw, and the transcript.
+endOver :: Maybe [Allowed] -> RunOptions -> IORef (Maybe Text) -> (Request -> IO ()) -> [IfStatus] -> [Response] -> Script a
+        -> IO (a, [Request], [TEntry])
+endOver drive opts stop hook sends recvs s = do
+  sent <- newIORef sends
+  rcvd <- newIORef recvs
+  seen <- newIORef []
+  t <- newTranscript
+  channel <- newChannel
+  ctx <- newIORef emptyRunCtx { rcBaseComId = Just 0x1004 }
+  let next ref end = atomicModifyIORef' ref (\xs -> (drop 1 xs, fromMaybe end (listToMaybe xs)))
+      scriptedAs :: Text -> Unit -> Transport c
+      scriptedAs role u = MkTransport
+        { tExchange = \q -> do
+            modifyIORef' seen (<> [q])
+            hook q
+            case dir q of
+              IfSend -> (`Response` mempty) <$> next sent Good
+              IfRecv -> next rcvd (Response Good mempty)
+        , tInject   = \_ -> pure Good
+        , tUnit     = u
+        , tDescribe = Describe role "a test" u Nothing Nothing Nothing Nothing
+        , tClose    = pure ()
+        }
+  target <- case drive of
+    Nothing     -> pure (SimTarget (recording t (scriptedAs "tper" UnitBytes)) (SimControl (\_ -> pure ()) (pure (initialState defaultSimParams))))
+    Just admits -> DriveTarget <$> guardDrive t admits Nothing (RawDrive (scriptedAs "drive" UnitBlocks512) (\_ -> pure (Right ())))
+  a <- runRIO (RunEnv target t channel ctx opts stop (mkLogFunc (\_ _ _ _ -> pure ()))) s
+  (,,) a <$> readIORef seen <*> entries t
+
+-- | 'endOver' with the default options, no stop flag set and no callback.
+onEnd :: Maybe [Allowed] -> [IfStatus] -> [Response] -> Script a -> IO (a, [Request], [TEntry])
+onEnd drive sends recvs s = newIORef Nothing >>= \stop -> endOver drive defaultRunOptions stop (const (pure ())) sends recvs s
+
+-- | A drive whose run admits the read-only methods and STACK_RESET, or the
+--   read-only methods alone (design 13.7).
+withReset, withoutReset :: Maybe [Allowed]
+withReset    = Just (readOnlyMethods <> [AllowStackReset])
+withoutReset = Just readOnlyMethods
+
+-- | Ask the run to stop, as a signal's handler does.
+stopping :: Text -> Script ()
+stopping why = asks reStop >>= (`writeIORef` Just why)
+
+-- | Why a script was interrupted, if it was.
+interruptedBy :: Either Interrupted a -> Maybe Text
+interruptedBy = either (\(Interrupted why) -> Just why) (const Nothing)
 
 -- | An IF-RECV's answer on 0x1004 holding tokens in one packet of the
 --   control session, or of a session, everything returned (OutstandingData
@@ -548,6 +617,89 @@ spec = do
       v1 `shouldBe` Fail ["StartSession: SyncSession answered SP_BUSY (3), not SUCCESS (0)"]
       (v2, _, _) <- harness [Good] [answerOf 0 0 0] (attempt (withSession adminSPAsAnybody (\_ -> pure Pass)))
       v2 `shouldSatisfy` isFail
+
+  describe "on a drive (M4c)" $ do
+    it "asks an IF-RECV for 2048 bytes whatever MaxComPacketSize the run has learned (Opal 2.30 Table 17, PDF 33); the simulator for what it reported" $ do
+      let learned :: Word32 -> Script ()
+          learned n = asks reCtx >>= \ref -> modifyIORef' ref (\c -> c { rcMaxComPacketSize = Just n })
+      (onDrive, _, _) <- onEnd withoutReset [] [] (learned 131072 >> recvLength)
+      (onSim, _, _) <- onEnd Nothing [] [] (learned 4096 >> recvLength)
+      (onDrive, onSim, driveRecvLength) `shouldBe` (2048, 4096, 2048)
+      (_, qs, _) <- onEnd withoutReset [] [] (learned 131072 >> baseComId >>= ifRecvOn)
+      map lenBytes qs `shouldBe` [2048]
+    it "asks again at 4096 when a 2048-byte IF-RECV is answered with MinTransfer 4096 (Core Table 45 row 2, PDF 83)" $ do
+      let bytes = either (error . show) id (controlComPacket 0x1004 propertiesCall)
+      (r, qs, _) <- onEnd withoutReset [Good] [answerOf 0 4096 4096, controlAnswer (generate EndOfSession)] (baseComId >>= \c -> exchangeOn c bytes)
+      r `shouldSatisfy` isRight
+      [ (dir q, lenBytes q) | q <- qs ] `shouldBe` [(IfSend, 512), (IfRecv, 2048), (IfRecv, 4096)]
+      t45RowOf (0, 4096, 4096) `shouldBe` Just InsufficientLength
+    it "gives the host's exchange 15 s a command, past the kext's own 10 s (SED_TIMEOUT, UserKernelShared.h:71)" $
+      (driveTimeoutMicros, xTimeoutMicros defaultExchangeOpts) `shouldBe` (15000000, 10000000)
+    it "after a step that failed, ends the session, then sends STACK_RESET only where the drive takes it" $ do
+      let closing = baseComId >> closingStep "1c" first' (Fail ["not so"])
+      (v1, qs1, es1) <- onEnd withReset [Good, Good] [sessionAnswer first' (generate EndOfSession), stackResponse] closing
+      v1 `shouldBe` Fail ["not so"]
+      map (\q -> (dir q, proto q)) qs1 `shouldBe` [(IfSend, 1), (IfRecv, 1), (IfSend, 2), (IfRecv, 2)]
+      [ t | Note _ t <- es1 ] `shouldSatisfy` any ("1c: after a failure, STACK_RESET on 0x1004: Success/Failure 0" `T.isInfixOf`)
+      (v2, qs2, es2) <- onEnd withoutReset [Good] [sessionAnswer first' (generate EndOfSession)] closing
+      v2 `shouldBe` Fail ["not so"]
+      map (\q -> (dir q, proto q)) qs2 `shouldBe` [(IfSend, 1), (IfRecv, 1)]
+      length [ () | Blocked {} <- es2 ] `shouldBe` 0
+    it "says, on a drive alone, that SP_BUSY or NO_SESSIONS_AVAILABLE where a session was to open is a session an earlier run left, which --recover clears" $ do
+      let hint = "; a read-write session to the Admin SP was open before this one (Core 5.1.5.3, PDF 138): hsed-jig --recover clears it (Core 3.3.4.7.5 item 1, PDF 65)"
+      (v1, _, _) <- onEnd withoutReset [] [] (attempt (Pass <$ opened "1a" (SyncFailed SP_BUSY)))
+      (v2, _, _) <- onEnd withoutReset [] [] (attempt (Pass <$ opened "1a" (SyncFailed NO_SESSIONS_AVAILABLE)))
+      (v3, _, _) <- onEnd Nothing [] [] (attempt (Pass <$ opened "1a" (SyncFailed SP_BUSY)))
+      (v4, _, _) <- onEnd withoutReset [] [] (attempt (Pass <$ opened "1a" (SyncFailed NOT_AUTHORIZED)))
+      v1 `shouldBe` Fail ["1a: SyncSession answered SP_BUSY (3), not SUCCESS (0)" <> hint]
+      v2 `shouldBe` Fail ["1a: SyncSession answered " <> statusName NO_SESSIONS_AVAILABLE <> ", not SUCCESS (0)" <> hint]
+      v3 `shouldBe` Fail ["1a: SyncSession answered SP_BUSY (3), not SUCCESS (0)"]
+      v4 `shouldBe` Fail ["1a: SyncSession answered NOT_AUTHORIZED (1), not SUCCESS (0)"]
+
+  describe "a run asked to stop (reStop, M4c)" $ do
+    it "stops discover, ifRecvOn, rawIfSend, drain, exchangeOn and stackReset before any command, each throwing Interrupted with why, on the simulator and on a drive" $ do
+      let bytes = either (error . show) id (controlComPacket 0x1004 propertiesCall)
+          verbs = [ () <$ discover, () <$ ifRecvOn 0x1004, () <$ rawIfSend 0x1004 512 bytes, drain 0x1004, () <$ exchangeOn 0x1004 bytes
+                  , () <$ stackReset 0x1004 ]
+      for_ [Nothing, withReset] $ \end -> for_ verbs $ \verb -> do
+        (r, qs, es) <- onEnd end [] [] (baseComId >> stopping "SIGINT" >> try verb)
+        (interruptedBy r, qs, [ e | e@Blocked {} <- es ]) `shouldBe` (Just "SIGINT", [], [])
+    it "attempt rethrows Interrupted: it is no verdict of the script's" $ do
+      (r, _, _) <- onEnd Nothing [] [] (stopping "SIGTERM" >> try (attempt (Pass <$ ifRecvOn 0x1004)))
+      interruptedBy r `shouldBe` Just "SIGTERM"
+      (r2, _, _) <- onEnd Nothing [] [] (try (attempt (Pass <$ throwIO (Interrupted "--interrupt-in-session: a test"))))
+      interruptedBy r2 `shouldBe` Just "--interrupt-in-session: a test"
+    it "lets STACK_RESET's polls run to their end once its IF-SEND is out, a stop asked for at the IF-SEND" $ do
+      stop <- newIORef Nothing
+      let askedAtSend q = when (dir q == IfSend) (writeIORef stop (Just "SIGINT"))
+      (r, qs, _) <- endOver withReset defaultRunOptions stop askedAtSend [Good] [stackPending, stackPending, stackResponse] (baseComId >>= stackReset)
+      r `shouldBe` Right 0
+      map (\q -> (dir q, proto q)) qs `shouldBe` [(IfSend, 2), (IfRecv, 2), (IfRecv, 2), (IfRecv, 2)]
+      readIORef stop `shouldReturn` Just "SIGINT"
+    it "--interrupt-in-session stops the run once StartSession opens a session on a drive's end or a run's one end, never on a pair's simulator" $ do
+      let interrupting target = defaultRunOptions { roInterruptInSession = True, roTarget = target }
+          opening end opts = do
+            stop <- newIORef Nothing
+            (answer, _, _) <- endOver end opts stop (const (pure ())) [Good] [controlAnswer (syncSession 1 4096 SUCCESS)] (startSession adminSPAsAnybody)
+            (,) answer <$> readIORef stop
+      opening withoutReset (interrupting (TDevice "/dev/disk6")) `shouldReturn`
+        (Right (Synced first'), Just "--interrupt-in-session: stopped after StartSession opened TSN 4096 on 0x1004; the session is left open on purpose")
+      opening Nothing (interrupting TSim) >>= (`shouldSatisfy` isJust . snd)
+      opening Nothing (interrupting (TPair TSim (TDevice "/dev/disk6"))) >>= (`shouldBe` Nothing) . snd
+      opening withoutReset defaultRunOptions >>= (`shouldBe` Nothing) . snd
+
+  describe "transcriptMark and maskAnswersSince (design 9.3 item 5)" $ do
+    it "make secrets of the answers the end's IF-RECVs brought after the mark, each up to its zero padding, and note how many" $ do
+      let marked = ifRecvOn 0x1004 >> transcriptMark
+          masked mark = replicateM_ 3 (ifRecvOn 0x1004) >> maskAnswersSince mark "a step" >> (asks reCtx >>= readIORef)
+      (ctx, _, es) <- onEnd Nothing [] [Response Good "before", Response Good "after-1\0\0\0", Response Good "\0\0", Response Good "after-2"]
+                            (marked >>= masked)
+      rcSecrets ctx `shouldBe` ["after-1", "after-2"]
+      [ t | Note _ t <- es ] `shouldBe` ["a step: 2 IF-RECV answer(s) on the tper after entry 1 masked in the reports as secrets (design 9.3 item 5)"]
+    it "take a drive's answers on a drive, after a mark taken where the drive was given nothing" $ do
+      (ctx, _, _) <- onEnd withoutReset [] [Response Good "on the drive\0"]
+                           (transcriptMark >>= \mark -> baseComId >>= ifRecvOn >> maskAnswersSince mark "a step" >> (asks reCtx >>= readIORef))
+      rcSecrets ctx `shouldBe` ["on the drive"]
 
   describe "Table 45" $ do
     it "reads an IF-RECV's header as its Length, OutstandingData and MinTransfer" $

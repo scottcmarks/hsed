@@ -1,13 +1,17 @@
 /*
  * hsed_kext.h: the C shim between hsed and the BrightPlaza TPer kext's user
- * client (design docs/spec-as-source.md 7.2, M3; compiled only under the
- * hsed package's manual flag kext, on macOS).
+ * client (design docs/spec-as-source.md 7.2 and 9.3, M4c; compiled only
+ * under the hsed package's manual flag kext, on macOS).
  *
- * Four functions over IOKit and CoreFoundation alone (no
+ * Five functions over IOKit and CoreFoundation alone (no
  * SEDKernelInterface.framework: its header needs sedutil's uninstalled
- * DtaStructures.h). The shim can issue one command, IF-RECV of Level 0
- * Discovery (protocol 1, ComID 1), whose CDB it builds itself: there is no
- * IF-SEND, no Security Protocol Out and no data-out direction here.
+ * DtaStructures.h). The shim issues the five commands of hsed_cdb.h and
+ * nothing else: Level 0 Discovery's IF-RECV and, once the drive's base
+ * ComID is bound, a ComPacket's IF-SEND and IF-RECV and STACK_RESET's two
+ * on that ComID. Every CDB, direction and length it issues comes from
+ * hsed_cdb_build, and every IF-SEND's payload is checked by
+ * hsed_cdb_check_payload (hsed_cdb.c, portable C that every build
+ * compiles); this shim writes none of them.
  *
  * Each returns a kern_return_t: KERN_SUCCESS, or the IOKit error.
  */
@@ -16,8 +20,9 @@
 
 #include <stdint.h>
 
-/* What hsed_kext_locate reads of a TPer from the IORegistry, and the user
-   client's connection once hsed_kext_open has opened it. */
+/* What hsed_kext_locate reads of a TPer from the IORegistry, the user
+   client's connection once hsed_kext_open has opened it, and the drive's
+   base ComID once hsed_kext_bind has bound it. */
 typedef struct {
     uint32_t conn;            /* the io_connect_t; 0 until opened */
     uint64_t registry_id;     /* the TPer's IORegistry entry id */
@@ -25,21 +30,32 @@ typedef struct {
     char     serial[64];      /* 'Identify Device Characteristics' -> 'Serial Number', as the registry holds it */
     char     kext_build[32];  /* the loaded kext's CFBundleVersion */
     int      other_clients;   /* user clients already open on the TPer */
+    uint16_t base_comid;      /* the drive's base ComID; 0 until bound, and again once closed */
 } hsed_kext_info;
 
-/* Find the TPer under a BSD device (disk6) and read its registry entry;
-   opens nothing. */
+/* Find the TPer under a BSD device, a whole disk (diskN), and read its
+   registry entry; opens nothing. */
 int hsed_kext_locate(const char *bsd, hsed_kext_info *out);
 
-/* Open the TPer's user client: IOServiceOpen, then the kext's Open
-   (selector 0); exclusive, so a second opener gets kIOReturnExclusiveAccess. */
+/* Open the TPer's user client, as root only (hsed's gate: the kext checks
+   no privilege): IOServiceOpen, then the kext's Open (selector 0);
+   exclusive, so a second opener gets kIOReturnExclusiveAccess. */
 int hsed_kext_open(hsed_kext_info *info);
 
-/* IF-RECV of Level 0 Discovery, blocks * 512 bytes (1 to 255 blocks) into a
-   page-aligned buffer of bufsize bytes: the CDB the shim built written to
-   cdb_out, the bytes transferred to xfer. */
-int hsed_kext_level0(const hsed_kext_info *info, uint8_t blocks, void *buf, uint64_t bufsize,
-                     uint8_t cdb_out[16], uint64_t *xfer);
+/* Bind the drive's base ComID, the one its own Level 0 Discovery names,
+   once: a ComID hsed_cdb_base_ok takes, on the TPer opened (found again by
+   its registry id), whose user clients are exactly this one, and whose
+   serial is still the one read when it was located. */
+int hsed_kext_bind(hsed_kext_info *info, uint16_t base);
+
+/* One of the five commands (enum hsed_shape) of a number of 512-byte
+   blocks, the base-carrying ones only once bound: its CDB, direction and
+   length from hsed_cdb_build; an IF-SEND's payload, the first bytes of the
+   page-aligned buffer of bufsize bytes, checked by hsed_cdb_check_payload;
+   then the one call that issues it. The CDB issued written to cdb_out, the
+   bytes the kext says it moved to xfer. */
+int hsed_kext_command(const hsed_kext_info *info, int shape, uint8_t blocks, void *buf, uint64_t bufsize,
+                      uint8_t cdb_out[16], uint64_t *xfer);
 
 /* Close the user client: the kext's Close (selector 1), then IOServiceClose. */
 int hsed_kext_close(hsed_kext_info *info);

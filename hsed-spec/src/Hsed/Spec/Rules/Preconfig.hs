@@ -19,7 +19,8 @@ Authorities@ (section 5.3.4.1.2) and Table 216 @Default Admin Template
 Authorities@ (5.4.4.4). Their captions are theirs alone across Core, so the
 rule rides on the @doc@ anchor (design 13.24). In Opal 2.30 since M4b it is
 anchored at section 4.2 (PDF 35) and binds the Admin SP's twelve tables,
-Tables 18-25, 27-29 and 33 (PDF 35-52); the Locking SP's are M5's.
+Tables 18-25, 27-29 and 33 (PDF 35-52); the Locking SP's are M5's (read
+since M5a, bound when the integration's sidecar binds them).
 
 A table's target is the table its caption names (@Authority@ in @… Authority
 Table Preconfiguration@; in @Default … Authorities@ the last word, a plural:
@@ -63,6 +64,26 @@ no InvokingID cell ("Hsed.Spec.Readers.AccessControl"). The AccessControl
 and ACE tables are read through "Hsed.Spec.Readers.AccessControl": each
 ACE's Columns in each table the rows naming it invoke on, each BooleanExpr
 in postfix.
+
+Since M5a the rule reads the Locking SP's tables too (Opal Tables 34-42 and
+44-48, PDF 52-89), where Opal prints some cells otherwise, by readings, not
+errata (Scott's answer 1 to the M5 plan), each with the page it cites and,
+where it reads what is printed otherwise, a Note: a header or an ACE's
+Columns item naming a column by the end of its name (Table 46's and Table
+39's @DoneOnReset@, PDF 81, 88: 'columnOf', 'resolveColumn'); a UID with its
+row's name in parentheses (Table 42, PDF 84: 'uidNamed'); a template UID
+printing @NN NN@ for its last bytes (Tables 45, 47, 48, PDF 87-89:
+@N-PRECONF-TEMPLATE-UID@); a template whose Name carries the letters an
+access control row invoking on its base prints (Table 39 row 13, PDF 79:
+@N-PRECONF-TEMPLATE-LETTERS@); a least value, @0x08000000 min@, and @SID or
+MSID@, values the TPer chooses (Tables 36 and 41, PDF 54, 84); one of two
+keys, @K_AES_128[256]_Range1_Key@ (Table 45, PDF 86); the reviewed note
+numbers and misspellings of "Hsed.Spec.Readers.Cell" (@N-PRECONF-NOTE@,
+@N-CELL-NORMALISED@); an SP's own SPTemplates row (Table 35, PDF 53:
+@N-PRECONF-UID-SP@); and one name in two SPs' modules
+(@N-PRECONF-HOMONYM@). Each is generated as the
+'Hsed.Core.Preconfig.PreCell' it is: 'Hsed.Core.Preconfig.VendorAtLeast',
+'Hsed.Core.Preconfig.OneOf', 'Hsed.Core.Preconfig.NoteMarked'.
 
 Checks, each with the code its findings carry:
 
@@ -187,9 +208,9 @@ import           Hsed.Spec.IR                    (CellIR (..), SpecIR (..), Tabl
 import           Hsed.Spec.Readers.AccessControl (Invocation (..), aceHalves, aceNamedHalves, aclCode, aclColumn, columnDependent,
                                                   everyObject, invokedHalf, isAccessControl, thisSP)
 import           Hsed.Spec.Readers.Cell          (CellValue (..), ColKind (..), PrintedCell (..), Problem (..), Remark (..),
-                                                  Resolver (..), TypeEnv (..), colKind, hasValue, joinedText, listItems,
-                                                  printedCell, printedText, problemText, readCellWith, renderCell,
-                                                  vendorMarker, zeroValue)
+                                                  Resolver (..), TypeEnv (..), alternativeNames, cellTypos, colKind, hasValue,
+                                                  joinedText, listItems, noteMarked, printedCell, printedText, problemText,
+                                                  readCellWith, renderCell, vendorAtLeast, vendorMarker, zeroValue)
 import           Hsed.Spec.Readers.Text          (lowerIdent, nameKey, readNumber, titleIdent)
 import           Hsed.Spec.RuleDef
 import           Hsed.Spec.Rules.Codes           (CodeRead (..), CodeRowRead (..), cellSpan, codeReads)
@@ -219,10 +240,12 @@ preconfigRule = RuleDef
       [ CodeDef "C-PRECONF-HEADER"   [Error]          (Defect "a preconfiguration table's columns are not its table's")
       , CodeDef "C-PRECONF-CELL"     [Error]          (Defect "a preconfigured cell does not read as its column's type")
       , CodeDef "C-PRECONF-UID"      [Error]          (Defect "the table of a table's UIDs disagrees with the rows preconfigured for that table")
-      , CodeDef "N-PRECONF-HEADER"   [Note]           (AsPrinted "a header read as the one column of its table whose name it begins (LifeCycle as LifeCycleState)")
+      , CodeDef "N-PRECONF-HEADER"   [Note]           (AsPrinted "a header, or an ACE's Columns item, read as the one column of its table whose name it begins or ends (LifeCycle as LifeCycleState, DoneOnReset as MBRDoneOnReset)")
       , CodeDef "N-PRECONF-UID-TPER" [Note]           (AsPrinted "a preconfiguration table that prints no UID in any row, its UIDs read as the TPer's to assign")
-        -- reserved at M5a's scaffold; G1 gives it, where two SPs' modules generate one u<T>_<Name> for two UIDs ('uidNames')
       , CodeDef "N-PRECONF-HOMONYM"  [Note]           (AsPrinted "two SPs' rows of one name at different UIDs, each generated as u<T>_<Name> in its SP's module, imported qualified")
+      , CodeDef "N-PRECONF-UID-SP"   [Note]           (AsPrinted "an SP's own SPTemplates row at a UID its base gives another template's row, generated with no name of its own")
+      , CodeDef "N-PRECONF-TEMPLATE-UID" [Note]       (AsPrinted "a template's UID printing its placeholder's letters for its last bytes (NN NN), read as the template at its base")
+      , CodeDef "N-PRECONF-TEMPLATE-LETTERS" [Note]   (AsPrinted "a template's placeholder read with the letters its Name carries, as the access control rows invoking on its base print them")
       , CodeDef "W-PRECONF-TEMPLATE-NAME" [Warning]   (Defect "a template row whose Name does not carry its placeholder's letters, so that its instances share one Name")
       , CodeDef "W-PRECONF-DEFAULT"  [Warning]        (Defect "a column of an SSC's preconfiguration table whose type gives it no default") ]
   , ruleChecks  = \ctx bts -> let ps = readPres ctx bts
@@ -305,12 +328,28 @@ data RowShape
   | EveryObjectRow ![Word8]          -- ^ one row for each object of the table of this half-UID (its InvokingID not a cell)
   deriving (Eq, Show)
 
--- | One printed cell read.
+-- | One printed cell read: as "Hsed.Core.Preconfig"'s 'Hsed.Core.Preconfig.PreCell'
+--   forms, a failure only outermost.
 data CellRead
-  = ReadVendor !Text                 -- ^ a value the TPer chooses, as printed (an SSC's table's @VU@ or @MSID@)
+  = ReadVendor !Text                 -- ^ a value the TPer chooses, as printed (an SSC's table's @VU@, @MSID@ or @SID or MSID@)
+  | ReadAtLeast !Natural !Text       -- ^ a value the TPer chooses no less than this, and the cell as printed (@0x08000000 min@, since M5a)
   | ReadValue !CellValue ![Remark]
+  | ReadOneOf ![CellRead]            -- ^ one of these, the TPer's key table deciding (@K_AES_128[256]_Range1_Key@, since M5a)
+  | ReadNoted !Int !CellRead         -- ^ a cell and the note's number split off its value ('noteMarkerCells', since M5a)
   | ReadFailed !Problem
   deriving (Eq, Show)
+
+-- | The values a cell read gives, its choices' and a noted one's included.
+readValues :: CellRead -> [(CellValue, [Remark])]
+readValues = \case
+  ReadValue v rs -> [(v, rs)]
+  ReadOneOf cs   -> concatMap readValues cs
+  ReadNoted _ c  -> readValues c
+  _              -> []
+
+-- | What reading a cell found besides its values, its choices' included.
+remarksOf :: CellRead -> [Remark]
+remarksOf = concatMap snd . readValues
 
 -- | Every table bound to the rule's shape, read under the errata set.
 preReads :: Context -> [PreRead]
@@ -321,7 +360,7 @@ preReads ctx = readPres ctx (boundTables (Just Preconfig) ctx)
 --   (and the other SPs' rows, for a reference to a table its SP
 --   preconfigures no row of: 'resolveRef').
 readPres :: Context -> [BoundTable] -> [PreRead]
-readPres ctx bts = [ p { pReads = map (readRow (envOf (pSP p)) p) (pRows p) } | p <- firsts ]
+readPres ctx bts = [ p { pReads = map (readRow (cxSpec ctx) (envOf (pSP p)) p) (pRows p) } | p <- firsts ]
   where
     types    = preconfTypeEnv ctx
     descs    = allDescs ctx
@@ -430,17 +469,26 @@ captionTemplate p = do
   pure template
 
 -- | The target's column a header cell names: the one its name is, whitespace
---   and case aside; else the one column whose name it begins (True).
+--   and case aside; else the one column whose name it begins (True); else,
+--   since M5a, the one column whose name it ends (True: Opal Table 46's
+--   @DoneOnReset@ for MBRControl's MBRDoneOnReset, PDF 88, Core Table 229,
+--   PDF 278).
 columnOf :: DescRead -> Text -> Maybe (ColRead, Bool)
 columnOf d h = case L.find ((== normHeader h) . normHeader . crName) (drColumns d) of
   Just c  -> Just (c, False)
-  Nothing -> case beginning d h of
-    [c] -> Just (c, True)
-    _   -> Nothing
+  Nothing -> case (beginning d h, ending (drColumns d) h) of
+    ([c], _)  -> Just (c, True)
+    ([], [c]) -> Just (c, True)
+    _         -> Nothing
 
 -- | The target's columns whose names a header cell begins.
 beginning :: DescRead -> Text -> [ColRead]
 beginning d h = [ c | not (T.null key), c <- drColumns d, key `T.isPrefixOf` normHeader (crName c) ]
+  where key = normHeader h
+
+-- | The columns whose names a name ends, whitespace and case aside.
+ending :: [ColRead] -> Text -> [ColRead]
+ending cs h = [ c | not (T.null key), c <- cs, key `T.isSuffixOf` normHeader (crName c) ]
   where key = normHeader h
 
 -- | A row's value in the target's column of a name (@UID@, @Name@), blank without one.
@@ -492,6 +540,8 @@ data GroupEnv = GroupEnv
   , geInvocations :: ![Invocation]
   , geTables      :: !(Map [Word8] Text)
   , geDescs       :: ![DescRead]
+  , geTemplates   :: ![([Word8], Placeholder)]
+    -- ^ each template an access control row of the SP invokes on: its base UID and its placeholder
   }
 
 -- | An SP's tables read together, beside the other SPs' tables.
@@ -502,7 +552,10 @@ groupEnv ctx ps others = GroupEnv
   , geTableHalves = if null spTables then L.nub [ take 4 t | (_, tu) <- allTableUIDRows ctx, Just t <- [tuTable tu] ] else spTables
   , geInvocations = [ invocation p r | p <- ps, isAccessControl (rights (map kcKind (pColumns p))), r <- pRows p ]
   , geTables      = Map.fromListWith (\_ old -> old) [ (take 4 t, tuName tu) | (_, tu) <- allTableUIDRows ctx, Just t <- [tuTable tu] ]
-  , geDescs       = map snd (allDescs ctx) }
+  , geDescs       = map snd (allDescs ctx)
+  , geTemplates   = L.nub [ (base, ph) | p <- ps, isAccessControl (rights (map kcKind (pColumns p))), r <- pRows p
+                                       , (kc, _, pc) <- printedIn p r, kcKind kc == Right KUIDRef
+                                       , Just ph <- [pcPlaceholder pc >>= placeholderOf], Just base <- [parseUIDCell (printedText pc)] ] }
   where
     own       = [ (tn, name, uid) | (tn, name, uid, _, _) <- index ps ]
     elsewhere = [ (tn, name, uid) | (tn, name, uid, _, _) <- index others ]
@@ -537,8 +590,8 @@ invocable ge u = u == thisSP || (drop 4 u == [0, 0, 0, 0] && take 4 u `elem` geT
 --   holds it (an every-object row's InvokingID left out, but where its half
 --   is no table's of the SP); an access control row's InvokingID held to the
 --   SP ('invocable').
-readRow :: GroupEnv -> PreRead -> PreRow -> RowRead
-readRow ge p r = RowRead shape [ (kc, c, readOne kc pc) | (kc, c, pc) <- given, hasValue pc, not (wildcardCell kc pc) || not halfHeld ]
+readRow :: SpecId -> GroupEnv -> PreRead -> PreRow -> RowRead
+readRow sid ge p r = RowRead shape [ (kc, c, readNoted kc pc) | (kc, c, pc) <- given, hasValue pc, not (wildcardCell kc pc) || not halfHeld ]
   where
     given = [ (kc, c, pc) | kc <- pColumns p, Just (c, _) <- [kcColumn kc], Just pc <- [lookup (kcIndex kc) (prPrinted r)] ]
     wildcard = listToMaybe [ h | (kc, _, pc) <- given, kcKind kc == Right KUIDRef, Just h <- [everyObject (printedText pc)] ]
@@ -546,22 +599,48 @@ readRow ge p r = RowRead shape [ (kc, c, readOne kc pc) | (kc, c, pc) <- given, 
     halfHeld = maybe True (`elem` geTableHalves ge) wildcard
     accessControl = isAccessControl (rights (map kcKind (pColumns p)))
     shape = case (prPlaceholder r, wildcard) of
-      (Just ph, _)      -> TemplateRow ph (L.sort [ n | (_, c, pc) <- given, Just n <- [crNumber c], carries ph pc ])
+      (Just printed, _) -> let ph = lettersOf printed
+                           in TemplateRow ph (L.sort [ n | (_, c, pc) <- given, Just n <- [crNumber c], carries ph pc ])
       (Nothing, Just h) -> EveryObjectRow h
       _                 -> PlainRow
     -- a cell printing the placeholder, or a name or reference carrying its letters (AdminXX, C_PIN_AdminXX)
     carries ph pc = isJust (pcPlaceholder pc) || phLetters ph `T.isInfixOf` T.concat (pcLines pc)
-    readOne kc pc = case (vendorMarker pc, kcKind kc) of
-      (Just m, _) | isJust (pSP p) -> ReadVendor m
-      (_, Left why)                -> ReadFailed (Unread why)
-      (_, Right KUIDRef)
+    -- since M5a: a template whose Name carries other letters than its placeholder prints takes the letters
+    -- an access control row invoking on its base prints, where those are its Name's (Opal Table 39 row 13's
+    -- (+NN NN) and ACE_UserMMMM_Set_CommonName, PDF 79, as Table 38 row 24 prints (+MMMM), PDF 59)
+    lettersOf printed = case [ ph | let name = valueAt p r "Name", not (T.null name), not (phLetters printed `T.isInfixOf` name)
+                                  , Just base <- [parseUIDCell (valueAt p r "UID")]
+                                  , ph <- L.nub [ ph | (b, ph) <- geTemplates ge, b == base ]
+                                  , phBytes ph == phBytes printed, phLetters ph `T.isInfixOf` name ] of
+      [ph] -> ph
+      _    -> printed
+    -- a cell 'noteMarkerCells' lists read without its note's number, then with it (since M5a)
+    readNoted kc pc = case noteMarked sid (btAnchor (pBound p)) (prRow r + 1) (kcHeader kc) pc of
+      Just (k, pc') -> case readOne kc pc' of
+        ReadFailed e -> ReadFailed e
+        cr           -> ReadNoted k cr
+      Nothing -> readOne kc pc
+    readOne kc pc = case (vendorMarker pc, vendorAtLeast pc, kcKind kc) of
+      (Just m, _, _) | isJust (pSP p)     -> ReadVendor m
+      (_, Just (n, t), _) | isJust (pSP p) -> ReadAtLeast n t
+      (_, _, Left why)                     -> ReadFailed (Unread why)
+      (_, _, Right KUIDRef)
         | wildcardCell kc pc         -> ReadFailed (Unresolved (wildcardText pc))
         | accessControl              -> either ReadFailed (uncurry ReadValue) (readCellWith resolver KUIDRef (printedText pc) >>= heldToSP)
-      (_, Right k)
+      (_, _, Right k)
         | isPassword k, not (pcQuoted pc) -> ReadFailed (Unread (tshow (T.unwords (pcLines pc)) <> " is a credential printed unquoted:"
                                                 <> " a preconfiguration prints a PIN in quotes, or VU or MSID for one the TPer chooses"
                                                 <> " (Opal Table 25, PDF 48-49)"))
+        -- since M5a: one of two references, the TPer's key table deciding (Opal Table 45's ActiveKey and *LT1, PDF 86)
+        | isRef k, Just alts <- alternativeNames (T.concat (pcLines pc)) ->
+            case traverse (readCellWith resolver k) alts of
+              Right reads' -> ReadOneOf (map (uncurry ReadValue) reads')
+              Left e       -> ReadFailed e
         | otherwise -> either ReadFailed (uncurry ReadValue) (readCellWith resolver k (printedText pc))
+    isRef = \case
+      KRef _       -> True
+      KDefault _ k -> isRef k
+      _            -> False
     resolver = Resolver { rvRef = resolveRef ge, rvColumn = resolveColumn ge (valueAt p r "Name") }
     isPassword = \case
       KPassword _  -> True
@@ -596,15 +675,22 @@ resolveRef ge = resolveAmong (geRows ge) (geElsewhere ge)
 --   SP's Template UIDs, Opal Table 35, PDF 53, at M5, its SP having no
 --   Template table).
 resolveAmong :: [(Text, Text, [Word8])] -> [(Text, Text, [Word8])] -> Text -> [TableRef] -> Either Text (Text, [Word8])
-resolveAmong own elsewhere name tables = case parseUIDCell name of
-  Just uid -> case [ n | (_, n, u) <- rows, u == uid ] of
-    n : _ -> Right (if T.null n then name else n, uid)
-    []    -> Left (tshow name <> " is the UID of no row preconfigured for " <> T.intercalate " or " (map tableRefText tables))
-  Nothing  -> case L.nub [ u | (_, n, u) <- rows, not (T.null n), nameKey n == nameKey name ] of
+resolveAmong own elsewhere name tables = case (parseUIDCell name, uidNamed name) of
+  (Just uid, _) -> byUID uid
+  -- since M5a: a UID and the name of its row in parentheses (Opal Table 42's Table, @00 00 00 01 00 00 08 05
+  -- (K_AES_128)@, PDF 84), read by the UID and held to the name
+  (_, Just (uid, held)) -> do
+    (n, u) <- byUID uid
+    if nameKey n == nameKey held then Right (n, u)
+      else Left (tshow name <> ": " <> hexUID uid <> " is the UID of " <> n <> ", not of " <> held <> ", the name it prints")
+  _ -> case L.nub [ u | (_, n, u) <- rows, not (T.null n), nameKey n == nameKey name ] of
     [uid] -> Right (name, uid)
     []    -> Left (tshow name <> " names no row preconfigured for " <> T.intercalate " or " (map tableRefText tables))
     uids  -> Left (tshow name <> " names " <> tshow (length uids) <> " rows with different UIDs")
   where
+    byUID uid = case [ n | (_, n, u) <- rows, u == uid ] of
+      n : _ -> Right (if T.null n then name else n, uid)
+      []    -> Left (tshow name <> " is the UID of no row preconfigured for " <> T.intercalate " or " (map tableRefText tables))
     allowed rs = [ r | r@(tn, _, _) <- rs, any (allows tn) tables ]
     rows = case allowed own of
       []    -> allowed elsewhere
@@ -618,13 +704,28 @@ resolveAmong own elsewhere name tables = case parseUIDCell name of
       TableGlob g -> g
       TableStar   -> "*"
 
+-- | A UID with the name of its row after it in parentheses, @00 00 00 01 00
+--   00 08 05 (K_AES_128)@ (Opal Table 42, PDF 84): the UID and the name.
+uidNamed :: Text -> Maybe ([Word8], Text)
+uidNamed t = do
+  body <- T.stripSuffix ")" (T.strip t)
+  let (before, inside) = DT.breakOnEnd "(" body
+  uidText <- T.stripSuffix "(" before
+  uid <- parseUIDCell uidText
+  guard (not (T.null (T.strip inside)))
+  pure (uid, T.strip inside)
+
 -- | The number of a column an ACE's Columns names, by its name or its
 --   number, in each table an access control row of Get or Set whose ACL
 --   names the ACE invokes on (Core 5.3.2.9.5, PDF 165): one number, the same
 --   in them all. An ACE no such row names, but others do (a meta-ACL's, a
 --   column-independent method's ACL), has Columns no method reads (PDF 165):
 --   a name is read in the first table a row naming it invokes on that has it.
-resolveColumn :: GroupEnv -> Text -> Text -> Either Text Int
+--   A name no column has is read, since M5a, as the one column whose name it
+--   ends, that column's name returned (Opal Table 39 rows 42 and 43's
+--   @DoneOnReset@ for MBRControl's MBRDoneOnReset, PDF 81, Core Table 229,
+--   PDF 278).
+resolveColumn :: GroupEnv -> Text -> Text -> Either Text (Int, Maybe Text)
 resolveColumn ge ace item = case aceHalves (geInvocations ge) ace of
   [] -> case aceNamedHalves (geInvocations ge) ace of
     []    -> Left (tshow ace <> " is in no access control row's ACL, so no table holds the columns its Columns name")
@@ -634,10 +735,10 @@ resolveColumn ge ace item = case aceHalves (geInvocations ge) ace of
                      <> T.intercalate ", " (map tableName named) <> "), none of whose methods reads Columns")
   halves -> do
     ns <- traverse columnIn halves
-    case L.nub ns of
-      [n] -> Right n
-      _   -> Left (tshow item <> " is not one column of the tables " <> ace <> " applies to: "
-                   <> T.intercalate ", " [ tableName h <> "'s " <> colNumberLit n | (h, n) <- zip halves ns ])
+    case (L.nub (map fst ns), ns) of
+      ([_], n : _) -> Right n
+      _            -> Left (tshow item <> " is not one column of the tables " <> ace <> " applies to: "
+                            <> T.intercalate ", " [ tableName h <> "'s " <> colNumberLit n | (h, (n, _)) <- zip halves ns ])
   where
     tableName h = Map.findWithDefault (hexUID h) h (geTables ge)
     columnIn h = do
@@ -647,10 +748,13 @@ resolveColumn ge ace item = case aceHalves (geInvocations ge) ace of
       let numbered = [ (n, c) | c <- drColumns d, Just n <- [crNumber c] ]
           where' = " of the " <> tname <> " table (" <> renderAnchorId (btAnchor (drBound d)) <> "), which " <> ace <> " applies to"
       case readNumber item of
-        Just n | fromInteger n `elem` map fst numbered -> Right (fromInteger n)
+        Just n | fromInteger n `elem` map fst numbered -> Right (fromInteger n, Nothing)
                | otherwise -> Left (tshow item <> " is no column number" <> where')
-        Nothing -> maybe (Left (tshow item <> " names no column" <> where')) Right
-                         (listToMaybe [ n | (n, c) <- numbered, normHeader (crName c) == normHeader item ])
+        Nothing -> case ( [ n | (n, c) <- numbered, normHeader (crName c) == normHeader item ]
+                        , [ (n, crName c) | (n, c) <- numbered, let k = normHeader item, not (T.null k), k `T.isSuffixOf` normHeader (crName c) ] ) of
+          (n : _, _)    -> Right (n, Nothing)
+          ([], [(n, c)]) -> Right (n, Just c)
+          _             -> Left (tshow item <> " names no column" <> where')
 
 -- | Every row with a UID of a table with a target, by the target's name: its
 --   Name column's value (blank without one), its UID, its table and row.
@@ -684,8 +788,9 @@ entriesOf ps =
 -- * Checks
 
 rowLabel :: PreRow -> Text
-rowLabel r = "row " <> tshow (prRow r + 1) <> maybe "" (" " <>) (lookup "Name" (prValues r) <|> nameLike) <> ": "
-  where nameLike = listToMaybe [ v | (h, v) <- prValues r, normHeader h == "name", not (T.null v) ]
+rowLabel r = "row " <> tshow (prRow r + 1) <> maybe "" (" " <>) (named (lookup "Name" (prValues r)) <|> nameLike) <> ": "
+  where named = mfilter (not . T.null)
+        nameLike = listToMaybe [ v | (h, v) <- prValues r, normHeader h == "name", not (T.null v) ]
 
 -- | Every finding about one table: its target and header, then each row, then
 --   the labels it reads otherwise.
@@ -710,8 +815,13 @@ preFindings ctx p = case pTarget p of
       <> [ "the header gives no UID column of " <> target d | all ((/= Just "UID") . fmap (crName . fst) . kcColumn) (pColumns p) ]
     headerNotes d =
       [ atTable ctx bt (finding Note "N-PRECONF-HEADER"
-          ("the header " <> tshow (kcHeader kc) <> " is read as " <> crName c <> ", the one column of " <> target d <> " whose name it begins"))
+          ("the header " <> tshow (kcHeader kc) <> " is read as " <> crName c <> ", the one column of " <> target d <> " whose name it "
+            <> (if normHeader (kcHeader kc) `T.isPrefixOf` normHeader (crName c) then "begins" else "ends")))
       | kc <- pColumns p, Just (c, True) <- [kcColumn kc] ]
+      <> [ atTable ctx bt (finding Note "N-CELL-NORMALISED"
+             ("the column " <> crName c <> " (" <> colNumberLit n <> ") of " <> target d <> ": its type " <> tshow (crType c)
+               <> " is read as " <> t <> ", a reviewed misspelling (Hsed.Spec.Readers.Cell.cellTypos)"))
+         | isJust (pSP p), c <- drColumns d, Just n <- [crNumber c], Just t <- [lookup (crType c) cellTypos] ]
     -- N-PRECONF-UID-TPER: no row prints a UID
     uidColumn = listToMaybe [ kc | kc <- pColumns p, Just (c, _) <- [kcColumn kc], crName c == "UID" ]
     tperAssigned = case uidColumn of
@@ -728,7 +838,25 @@ preFindings ctx p = case pTarget p of
       <> [ atCells ctx bt (prCells r) (finding Warning "W-PRECONF-NAME-LENGTH"
              (rowLabel r <> crName c <> ": " <> tshow txt <> " is " <> tshow len <> " bytes, longer than the " <> tshow n
                <> " its type (" <> crType c <> ") allows; kept as printed"))
-         | (_, c, ReadValue _ remarks) <- rdCells rd, OverLength txt len n <- remarks ]
+         | (_, c, cr) <- rdCells rd, OverLength txt len n <- remarksOf cr ]
+      <> [ atCells ctx bt (prCells r) (finding Note "N-PRECONF-HEADER"
+             (rowLabel r <> crName c <> ": " <> tshow item <> " is read as " <> col <> ", the one column of the table the ACE"
+               <> " applies to whose name it ends"))
+         | (_, c, cr) <- rdCells rd, ColumnRead item col <- remarksOf cr ]
+      <> [ atCells ctx bt (prCells r) (finding Note "N-PRECONF-NOTE"
+             (rowLabel r <> crName c <> ": " <> tshow printed <> " is read as " <> tshow (fromMaybe printed (T.stripSuffix (tshow k) printed))
+               <> " and note " <> tshow k <> ", the note's number printed after the value (a reviewed reading,"
+               <> " Hsed.Spec.Readers.Cell.noteMarkerCells)"))
+         | (kc, c, ReadNoted k _) <- rdCells rd, Just pc <- [lookup (kcIndex kc) (prPrinted r)], let printed = T.unwords (pcLines pc) ]
+      <> [ atCells ctx bt (prCells r) (finding Note "N-PRECONF-TEMPLATE-UID"
+             (rowLabel r <> "the UID " <> tshow (T.strip cell.text) <> " prints its placeholder's letters for its last bytes: read as"
+               <> " the template (+" <> fromMaybe "" (pcPlaceholder pc) <> ") at its base " <> T.unwords (pcLines pc)))
+         | (i, pc) <- prPrinted r, pcBare pc, cell <- take 1 (drop i (prCells r)) ]
+      <> [ atCells ctx bt (prCells r) (finding Note "N-PRECONF-TEMPLATE-LETTERS"
+             (rowLabel r <> "the template prints (+" <> fromMaybe (phLetters printed) (listToMaybe (mapMaybe (pcPlaceholder . snd) (prPrinted r))) <> ") and its Name "
+               <> tshow (valueAt p r "Name") <> " carries " <> phLetters ph <> ", as the access control rows invoking on its base"
+               <> " print it: read as " <> phLetters ph))
+         | Just printed <- [prPlaceholder r], TemplateRow ph _ <- [rdShape rd], phLetters ph /= phLetters printed ]
       <> templateName d r rd
       <> legendFindings r
     readFindings r rd =
@@ -775,7 +903,7 @@ preFindings ctx p = case pTarget p of
           (tshow printed <> " is read as " <> ty <> "'s " <> label <> (if byPrefix then ", the one label it begins" else ", case and spaces aside")))
       | ((ty, printed, label, byPrefix), r) <- L.nubBy (\a b -> fst a == fst b)
           [ ((ty, printed, label, byPrefix), r)
-          | (r, rd) <- zip (pRows p) (pReads p), (_, _, ReadValue _ remarks) <- rdCells rd, LabelRead ty printed label byPrefix <- remarks ] ]
+          | (r, rd) <- zip (pRows p) (pReads p), (_, _, cr) <- rdCells rd, LabelRead ty printed label byPrefix <- remarksOf cr ] ]
 
 -- | The half-UID the table of table UIDs gives a described table, the spec's or its base's.
 halfOf :: Context -> DescRead -> Maybe [Word8]
@@ -819,8 +947,20 @@ uidUnique ctx ps = concat
 --   the UID Core Table 243 gives Issuers (PDF 305), the Admin template's
 --   class authority (Table 216, PDF 236). A list entry with no name (Core
 --   Table 242's @Reserved for SSC Usage@, PDF 303-304) names nothing.
+--
+--   Since M5a: an SP's own SPTemplates row at a UID the base gives another
+--   template's row, whose name the base gives another UID, defines no name
+--   and is no C-UID-NAME but the Note @N-PRECONF-UID-SP@ (Opal Table 35 row
+--   2, the Locking SP's Locking at @00 00 00 03 00 00 00 02@, PDF 53, which
+--   Core Table 247 gives Admin, its Locking at @… 00 06@, PDF 305-306: each SP's
+--   SPTemplates table lists the templates it was made from, numbered in the
+--   SP, Core 5.3.2.2, PDF 155, Table 170, PDF 156); and two SPs' rows of one name at different
+--   UIDs, each its own module's, are the Note @N-PRECONF-HOMONYM@ at the
+--   later SP's row (the Admin SP's and the Locking SP's Admin1, Opal Tables
+--   24 and 40, PDF 48 and 82), the simulator importing the modules
+--   qualified.
 uidNames :: Context -> [PreRead] -> ([(Text, [Word8], PreRead, PreRow)], [Finding])
-uidNames ctx ps = (fresh, baseClashes <> ownClashes)
+uidNames ctx ps = (fresh, baseClashes <> ownNumbered <> ownClashes <> homonyms)
   where
     based = Map.fromListWith (\_ old -> old) [ (i, (bs, c, r)) | (i, bs, c, r) <- baseUIDNames ctx ]
     same  = sameObjectUIDs ctx
@@ -830,10 +970,21 @@ uidNames ctx ps = (fresh, baseClashes <> ownClashes)
       , (r, rd) <- zip (pRows p) (pReads p), rdShape rd == PlainRow
       , Just piece <- [asName (valueAt p r "Name")], Just uid <- [parseUIDCell (valueAt p r "UID")] ]
     at p r why = atCells ctx (pBound p) (prCells r) (finding Error "C-UID-NAME" (rowLabel r <> why))
+    clashes = [ (i, uid, p, r, bs, c, br) | (i, uid, p, r) <- candidates, Just (bs, c, br) <- [Map.lookup i based], bs /= uid ]
+    tableOf p = either (const Nothing) drTable (pTarget p)
+    spNumbered (i, uid, p, _, _, _, _) = tableOf p == Just "SPTemplates" && not (null (shadowsOf ctx i uid))
     baseClashes =
       [ at p r ("it is generated as " <> i <> ", as " <> specIdText (cxSpec c) <> " " <> renderAnchorId (btAnchor (urBound br))
                 <> " row " <> tshow (urRow br + 1) <> " is, for the UID " <> hexUID bs)
-      | (i, uid, p, r) <- candidates, Just (bs, c, br) <- [Map.lookup i based], bs /= uid ]
+      | cl@(i, _, p, r, bs, c, br) <- clashes, not (spNumbered cl) ]
+    ownNumbered =
+      [ atCells ctx (pBound p) (prCells r) (finding Note "N-PRECONF-UID-SP"
+          (rowLabel r <> "the " <> fromMaybe "" (pSP p) <> "'s own SPTemplates row at " <> hexUID uid <> ", which "
+            <> T.intercalate " and " [ specIdText (cxSpec c') <> " " <> renderAnchorId (btAnchor (urBound br')) <> " row "
+                                         <> tshow (urRow br' + 1) <> " gives " <> fromMaybe "" (urName br') | (c', br', _) <- shadowsOf ctx i uid ]
+            <> ", where " <> specIdText (cxSpec c) <> " " <> renderAnchorId (btAnchor (urBound br)) <> " row " <> tshow (urRow br + 1)
+            <> " gives " <> i <> " " <> hexUID bs <> ": an SP's SPTemplates rows are its own, so no name is generated for it"))
+      | cl@(i, uid, p, r, bs, c, br) <- clashes, spNumbered cl ]
     -- the names each SP's module would define, by SP (an SP's names are its module's)
     unknown = Map.fromListWith (flip (<>))
       [ ((pSP p, i), [cand]) | cand@(i, uid, p, _) <- candidates, Map.notMember i based, uid `Set.notMember` same ]
@@ -842,6 +993,14 @@ uidNames ctx ps = (fresh, baseClashes <> ownClashes)
       [ at p r ("it is generated as " <> i <> ", as " <> renderAnchorId (btAnchor (pBound p0)) <> " row " <> tshow (prRow r0 + 1) <> " is")
       | (_, p0, r0) : rest <- [ [ (i, p, r) | (i, _, p, r) <- cands ] | cands@(_ : _ : _) <- Map.elems unknown ]
       , (i, p, r) <- rest ]
+    -- N-PRECONF-HOMONYM: one name in two SPs' modules at different UIDs, at each later SP's row
+    homonyms =
+      [ atCells ctx (pBound p) (prCells r) (finding Note "N-PRECONF-HOMONYM"
+          (rowLabel r <> "it is generated as " <> i <> " in the " <> fromMaybe "" (pSP p) <> "'s module at " <> hexUID uid <> ", and "
+            <> renderAnchorId (btAnchor (pBound p0)) <> " row " <> tshow (prRow r0 + 1) <> " as " <> i <> " in the "
+            <> fromMaybe "" (pSP p0) <> "'s at " <> hexUID uid0 <> ": each SP's module defines its own, imported qualified"))
+      | (i, uid0, p0, r0) : rest <- Map.elems (Map.fromListWith (flip (<>)) [ (i, [cand]) | cand@(i, _, _, _) <- fresh ])
+      , (_, uid, p, r) <- rest, pSP p /= pSP p0, uid /= uid0 ]
 
 -- | Every UID a table of UIDs of the spec or its base names, with the name it
 --   generates, its Context and its row, the spec's first: the rows with a
@@ -974,7 +1133,7 @@ preconfTableDecl ctx p d sp = (Gen.decl prov name body)
     -- each cell a row prints, by column number: a value given, or one the TPer chooses (a failed one leaves the table out)
     given rd = [ (n, c, e) | (_, c, cr) <- rdCells rd, Just n <- [crNumber c], Just e <- [preCellExpr cr] ]
     hasCells = any (not . null . given . snd) rows
-    values   = [ v | (_, _, v) <- defaults ] <> [ v | (_, rd) <- rows, (_, _, ReadValue v _) <- rdCells rd ]
+    values   = [ v | (_, _, v) <- defaults ] <> [ v | (_, rd) <- rows, (_, _, cr) <- rdCells rd, (v, _) <- readValues cr ]
     accesses = map (access . fst) rows
     access r = maybe [] (\s -> cellClasses s p r) scale
     isTemplate = \case
@@ -1015,9 +1174,16 @@ preconfTableDecl ctx p d sp = (Gen.decl prov name body)
                               <> T.intercalate ", " (map colNumberLit ns) <> "])"
       EveryObjectRow h   -> "(EveryObject (" <> Gen.bytesExpr "halfUID" h <> "))"
     preCellExpr = \case
-      ReadVendor m  -> Just ("VendorUnique " <> tshow m)
-      ReadValue v _ -> Just ("Given (" <> renderCell v <> ")")
-      ReadFailed _  -> Nothing
+      ReadVendor m    -> Just ("VendorUnique " <> tshow m)
+      ReadAtLeast n t -> Just ("VendorAtLeast " <> atLeastLit n t <> " " <> tshow t)
+      ReadValue v _   -> Just ("Given (" <> renderCell v <> ")")
+      ReadOneOf cs    -> (\es -> "OneOf [" <> T.intercalate ", " es <> "]") <$> traverse preCellExpr cs
+      ReadNoted k cr  -> (\e -> "NoteMarked " <> tshow k <> " (" <> e <> ")") <$> preCellExpr cr
+      ReadFailed _    -> Nothing
+    -- the least value as printed, where it is a hex literal Haskell reads as the same number
+    atLeastLit n t = case T.words t of
+      w : _ | "0x" `T.isPrefixOf` T.toLower w, readNumber w == Just (toInteger n) -> "0x" <> T.drop 2 w
+      _                                                                          -> tshow n
 
 -- | Each column's default but the UID's, from its kind ('zeroValue'), or why
 --   it has none: the value a column takes where a row of an SSC's table

@@ -39,7 +39,13 @@ module Hsed.Sim.Types
   , MgmtBuffer (..)
   , Session (..)
   , SPState (..)
+  , ByteTable (..)
+  , byteTables
   , initialState
+  , initialStateProblems
+  , preconfiguredSPs
+  , FoldProblem (..)
+  , foldProblemText
   , firstTSN
     -- * A step
   , Input (..)
@@ -47,14 +53,21 @@ module Hsed.Sim.Types
   , Outcome (..)
   ) where
 
+import qualified RIO.List           as L
 import qualified RIO.Map            as Map
 import           RIO
+import qualified RIO.Text           as T
 
-import           Hsed.Core.Table    (Row, TableDesc)
-import           Hsed.Core.UID      (UID)
+import           Hsed.Core.Table    (Cell (..), Row, TableDesc, columnOf)
+import           Hsed.Core.Types    (enumValue)
+import           Hsed.Core.UID      (UID, hNull, uidLower, (+:+))
+import           Hsed.Gen.Core.Enums (Core_table_kind (..))
+import           Hsed.Gen.Core.TableUIDs (uTableTable)
 import           Hsed.Gen.Core.UIDs (uSP_Admin)
 import           Hsed.Gen.Opal.Preconfig.AdminSP (adminSP, uSP_Locking)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Sim.Params
+import           Hsed.Sim.Preconfig (FoldProblem (..), PreconfSP (..), foldProblemText)
 import qualified Hsed.Sim.Preconfig as Preconfig
 import           Hsed.Wire          (Event, IfStatus, Request, Response)
 
@@ -128,13 +141,49 @@ data Session = Session
 --   holds, both by the table's UID (Core Table 240's @UID of Table@,
 --   "Hsed.Gen.Core.TableUIDs"), as its preconfiguration gives them
 --   ("Hsed.Sim.Preconfig".@foldTables@: the descriptions with an SSC's
---   columns added).
+--   columns added), and its byte tables, by the table's UID ('byteTables':
+--   the Locking SP's MBR and DataStore since M5a, Opal 2.30 Table 36, PDF
+--   54), which no object table's rows hold.
 data SPState = SPState
   { spsUID    :: !UID
   , spsDescs  :: !(Map UID TableDesc)
   , spsTables :: !(Map UID [Row])
+  , spsBytes  :: !(Map UID ByteTable)
   }
   deriving (Eq, Show)
+
+-- | A byte table (Core 3.2.5.2, PDF 51: rows of one unnamed byte each),
+--   held sparsely: its size in bytes (its Table row's Rows, Core 5.3.2.3.8,
+--   PDF 157), the byte every byte not written reads as, and what was
+--   written, by offset, each extent's bytes. Since M5a's scaffold; the
+--   methods that read and write one are M5b's.
+data ByteTable = ByteTable
+  { btSize    :: !Natural
+  , btFill    :: !Word8
+  , btWritten :: !(IntMap ByteString)
+  }
+  deriving (Eq, Show)
+
+-- | An SP's byte tables as its folded tables give them: one for each row of
+--   its Table table whose Kind is Byte (Core Table 138, PDF 122), by the UID
+--   of the table it describes (the row's UID's lower half, then 00 00 00 00,
+--   Core 3.2.5.3 b.i, PDF 51-52), its size the row's Rows, nothing written,
+--   each byte zero: the MBR's initial contents being VU (Opal 2.30 4.3.5.4,
+--   PDF 89), and the DataStore's unspecified until the host writes it
+--   (4.3.8.1, PDF 90).
+byteTables :: Map UID TableDesc -> Map UID [Row] -> Map UID ByteTable
+byteTables descs tables = Map.fromList
+  [ (uidLower u +:+ hNull, ByteTable (fromInteger n) 0 mempty)
+  | Just desc <- [Map.lookup uTableTable descs]
+  , Just kindColumn <- [columnOf desc "Kind"]
+  , Just rowsColumn <- [columnOf desc "Rows"]
+  , r <- Map.findWithDefault [] uTableTable tables
+  , Just (UIDCell u) <- [L.lookup 0 r]
+  , Just (EnumCell _ kind) <- [L.lookup kindColumn r]
+  , kind == enumValue Core_table_kind_Byte
+  , Just (UIntCell n) <- [L.lookup rowsColumn r]
+  , n >= 0
+  ]
 
 -- | The TPer: its parameters, its ComIDs, its sessions by ComID and TSN,
 --   the next TSN it assigns, its SPs by UID, and whether the initial
@@ -159,15 +208,20 @@ data TPerState = TPerState
 --   each Issued, with extension 0, awaiting IF-SEND, with the host's initial
 --   properties and an empty management buffer; none past 0xFFFF or reserved
 --   (parameters with such a ComID are refused, 'simParamsProblems'); no
---   session, the first TSN to assign 'firstTSN'; the Admin SP folded from
---   its preconfiguration tables ("Hsed.Sim.Preconfig".'Preconfig.foldTables'
---   of Opal 2.30's, generated, "Hsed.Gen.Opal.Preconfig.AdminSP".'adminSP',
---   whatever the parameters, which the fold reads), its SP table holding the Admin SP
---   Manufactured (Opal 2.30 Table 29, PDF 50) and the Locking SP
---   in its Original Factory State ('spLockingOFS'), and the Locking SP, whose
---   tables are M5's; the initial C_PIN_SID PIN the MSID's unless the
---   parameters give the SID a PIN of its own ('spSidPin' other than the MSID,
---   Opal 2.30 4.2.1.8, PDF 49).
+--   session, the first TSN to assign 'firstTSN'; its SPs folded from their
+--   preconfiguration tables ('preconfiguredSPs', "Hsed.Sim.Preconfig".'Preconfig.foldTables',
+--   whatever the parameters, which the fold reads): the Admin SP, its SP
+--   table holding the Admin SP Manufactured (Opal 2.30 Table 29, PDF 50)
+--   and the Locking SP in its Original Factory State ('spLockingOFS'), and
+--   the Locking SP, its tables folded at either OFS since M5a (Opal 2.30
+--   5.2.2.1 item 1, PDF 96: the templates of an SP Manufactured-Inactive
+--   exist and are counted, though no session opens to it; Activate, M6,
+--   changes its life cycle, not its tables), each SP with its byte tables
+--   ('byteTables'); the initial C_PIN_SID PIN the MSID's unless the
+--   parameters give the SID a PIN of its own ('spSidPin' other than the
+--   MSID, Opal 2.30 4.2.1.8, PDF 49). Parameters an SP's fold has problems
+--   with ('initialStateProblems', which the transport is opened only
+--   without) are an error naming them.
 initialState :: SimParams -> TPerState
 initialState p = TPerState
   { tsParams              = p
@@ -175,12 +229,33 @@ initialState p = TPerState
                                          | c <- staticComIds p, not (reservedComId c) ]
   , tsSessions            = mempty
   , tsNextTSN             = firstTSN
-  , tsSPs                 = Map.fromList
-      [ (uSP_Admin, uncurry (SPState uSP_Admin) (Preconfig.foldTables p adminSP))
-      , (uSP_Locking, SPState uSP_Locking mempty mempty)
-      ]
+  , tsSPs                 = Map.fromList [ (pspUID sp, either refused (spState sp) (Preconfig.foldTables p sp)) | sp <- preconfiguredSPs ]
   , tsInitialSidPinIsMsid = maybe True (== spMsid p) (spSidPin p)
   }
+  where
+    spState sp (descs, tables) = SPState (pspUID sp) descs tables (byteTables descs tables)
+    refused problems = error . T.unpack $
+      "Hsed.Sim.Types.initialState: the parameters' SPs do not fold: " <> T.intercalate "; " (map foldProblemText problems)
+
+-- | The SPs a TPer is manufactured with, each its preconfiguration as hsedc
+--   generates it from Opal 2.30: the Admin SP's (Tables 18-33, PDF 34-52,
+--   "Hsed.Gen.Opal.Preconfig.AdminSP") and the Locking SP's (Tables 34-42
+--   and 44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP", a stand-in
+--   until M5a's integration).
+preconfiguredSPs :: [PreconfSP]
+preconfiguredSPs =
+  [ PreconfSP uSP_Admin adminSP
+  , PreconfSP uSP_Locking LockingSP.lockingSP
+  ]
+
+-- | What keeps a run's parameters from a TPer: every problem of every SP's
+--   fold ('preconfiguredSPs'), in their order; none, and 'initialState'
+--   gives the TPer.
+--
+-- >>> initialStateProblems defaultSimParams
+-- []
+initialStateProblems :: SimParams -> [FoldProblem]
+initialStateProblems p = concat [ either id (const []) (Preconfig.foldTables p sp) | sp <- preconfiguredSPs ]
 
 -- | The first TSN a TPer assigns a regular session: 4096, the TSNs 0 to 4095
 --   being reserved for special sessions, the control session (0) among them

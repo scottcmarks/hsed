@@ -10,7 +10,8 @@ Runs doctest over every Haskell source file under @src@ that holds an
 example (a line that, after its indentation, begins @-- >>>@), the list read
 when the suite runs, as hsed-core's suite reads its (a list compiled into the
 main goes stale without a rebuild: design docs/spec-as-source.md section 12).
-The modules are interpreted with @src@ and @gen@ on the path, so that the
+The modules are interpreted with @src@, @gen@ and @stand-in@ (M5a's
+Locking SP until hsedc generates it) on the path, so that the
 generated modules they import are found; none of those holds an example, and
 the modules without one are left out, which keeps the run to the examples'
 closure. That closure reaches @Hsed.Version@ and its @Paths_hsed@, which no
@@ -33,7 +34,7 @@ import           Test.DocTest          (doctest)
 main :: IO ()
 main = do
   files <- haskellFiles "src" >>= filterM holdsExample
-  doctest ("-isrc" : "-igen" : files)
+  doctest ("-isrc" : "-igen" : "-istand-in" : files)
 
 -- | Whether a source file holds an example: a line that, after its
 --   indentation, begins @-- >>>@.

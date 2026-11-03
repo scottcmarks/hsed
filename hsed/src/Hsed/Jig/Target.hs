@@ -46,7 +46,7 @@ import           Hsed.Jig.Files        (runningAsRoot)
 import           Hsed.Jig.Guard        (Allowed, GuardedDrive, driveClose, guardDrive)
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), parseTarget)
 import           Hsed.Jig.Transcript   (Transcript)
-import           Hsed.Sim.Types        (SimParams (..), simParamsProblems)
+import           Hsed.Sim.Types        (SimParams (..), foldProblemText, simParamsProblems)
 import           Hsed.Transport.Drive  (RawDrive (..))
 import           Hsed.Transport.InProc (InProcOpts (..), SimControl, newInProc)
 import           Hsed.Transport.MacKext (KextOpts (..), openKext)
@@ -61,7 +61,8 @@ data Target
   | PairTarget !Target !Target  -- ^ the simulator, then the drive
 
 -- | Open a run's target, or why not: the simulator with the run's
---   parameters (refused out of range), units and hold; a replay of a file; a drive by its BSD name,
+--   parameters (refused out of range, or where its SPs' preconfiguration
+--   does not fold with them), units and hold; a replay of a file; a drive by its BSD name,
 --   held to the serial the run expects (which it must name), as root alone;
 --   both ends of a pair, the first closed again when the second cannot be
 --   opened. A drive or a replay is put behind the Guard at once, recording
@@ -72,7 +73,9 @@ openTarget opts admits t = open (roTarget opts)
   where
     open = \case
       TSim -> case simParamsProblems sim of
-        []       -> Right . uncurry SimTarget <$> newInProc sim (InProcOpts (spUnits sim) (roHold opts))
+        []       -> newInProc sim (InProcOpts (spUnits sim) (roHold opts)) <&> \case
+          Right (tr, control) -> Right (SimTarget tr control)
+          Left folds          -> Left ("the simulator's SPs do not fold: " <> T.intercalate "; " (map foldProblemText folds))
         problems -> pure (Left ("the simulator's parameters: " <> T.intercalate "; " problems))
         where sim = roSim opts
       TReplay file -> openReplay file >>= traverse (\tr -> DriveTarget <$> guardDrive t admits Nothing (RawDrive tr replayBind))

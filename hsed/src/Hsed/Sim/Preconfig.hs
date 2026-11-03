@@ -49,13 +49,30 @@ generated modules, the Admin SP's preconfiguration among them
 ("Hsed.Gen.Opal.Preconfig.AdminSP": Opal 2.30's Admin SP tables as hsedc
 generates them, since M4b, which "Hsed.Sim.Types".@initialState@ folds),
 never a module that imports the state's types.
+
+Since M5a's scaffold the fold takes an SP's preconfiguration whole
+('PreconfSP': the SP's UID and its tables) and gives the SP's tables or what
+keeps them from folding ('FoldProblem'), and it folds the Locking SP's
+(Opal 2.30 Tables 34-42 and 44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP",
+a stand-in until M5a's integration) as it does the Admin SP's, reading the
+cells those tables print beside the Admin SP's ("Hsed.Core.Preconfig":
+a value marked with a note's number, one of two key references, a value
+the TPer chooses with a least) and answering the TPer's choices there
+('vendorCell'). The Locking SP's template instances, its LockingInfo
+geometry and the problems the fold reports are its group G3's.
 -}
 module Hsed.Sim.Preconfig
-  ( foldTables
+  ( -- * An SP's preconfiguration, folded
+    PreconfSP (..)
+  , FoldProblem (..)
+  , foldProblemText
+  , foldTables
+    -- * The TPer's choices
   , vendorCell
   , instances
   ) where
 
+import qualified RIO.ByteString                  as B
 import qualified RIO.List                        as L
 import qualified RIO.Map                         as Map
 import           RIO
@@ -63,17 +80,19 @@ import qualified RIO.Set                         as Set
 import qualified RIO.Text                        as T
 
 import           Hsed.Core.Preconfig             (Placeholder (..), PreCell (..), PreconfRow (..), PreconfTable (..),
-                                                  RowKind (..), instanceUID, instantiate)
+                                                  RowKind (..), instanceUID, instantiate, unmarked)
 import           Hsed.Core.Table                 (Cell (..), Col (..), ColNum, Pre (..), Row, TableDesc (..), columnNumbered, columnOf)
 import           Hsed.Core.Types                 (enumValue)
 import           Hsed.Core.UID                   (HalfUID, UID, uidLower, uidUpper)
-import           Hsed.Gen.Core.Enums             (Core_boolean (..), Core_table_kind (..))
-import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uSPTable, uTPerInfoTable, uTableTable, uTemplateTable)
+import           Hsed.Gen.Core.Enums             (Core_boolean (..), Core_symmetric_mode (..), Core_table_kind (..))
+import           Hsed.Gen.Core.TableUIDs         (uAuthorityTable, uC_PINTable, uK_AES_128Table, uK_AES_256Table, uMBRTableObject, uSPTable,
+                                                  uSecretProtectTable, uTPerInfoTable, uTableTable, uTemplateTable)
 import           Hsed.Gen.Core.UIDs              (uC_PIN_SID, uTemplate_Base)
 import           Hsed.Gen.Opal.Enums             (Opal_data_removal_mechanism (..))
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
+import qualified Hsed.Gen.Opal.Preconfig.LockingSP as LockingSP
 import           Hsed.Gen.Opal.TableUIDs         (uDataRemovalMechanismTable)
-import           Hsed.Sim.Params                 (LifeCycle (..), SimParams (..), lifeCycleValue)
+import           Hsed.Sim.Params                 (LifeCycle (..), LockingKeys (..), SimParams (..), lifeCycleValue)
 
 
 -- $setup
@@ -131,8 +150,65 @@ import           Hsed.Sim.Params                 (LifeCycle (..), SimParams (..)
 --   Every cell is evaluated as soon as the tables are, so that a cell the
 --   TPer would choose and 'vendorCell' does not name fails the fold, not a
 --   later Get of it.
-foldTables :: SimParams -> [PreconfTable] -> (Map UID TableDesc, Map UID [Row])
-foldTables p tables =
+--
+--   The result is the SP's tables, or what keeps the fold from giving them
+--   ('FoldProblem'). Since M5a's scaffold the fold takes an SP's
+--   preconfiguration whole ('PreconfSP') and returns its problems as a
+--   list; until its group G3 it finds none, a cell it cannot fill still an
+--   error naming it, as above. Of the cells the Locking SP's tables print
+--   since M5a ("Hsed.Core.Preconfig"), a value with a note's number after
+--   it is the value ('unmarked'); one of two key references is the one the
+--   parameters' key tables decide ('spLockingKeys': K_AES_128's alone with
+--   'KeysAES128', else K_AES_256's; Opal 2.30 Table 45's *LT1, PDF 86); and a
+--   value the TPer chooses with a least printed is 'vendorCell''s for the
+--   cell as printed (Table 36's MBR and DataStore Rows, PDF 54).
+foldTables :: SimParams -> PreconfSP -> Either [FoldProblem] (Map UID TableDesc, Map UID [Row])
+foldTables p sp = Right (folded p (pspTables sp))
+
+-- | An SP's preconfiguration: its UID (its row of the Admin SP's SP table,
+--   Opal 2.30 Table 29, PDF 50) and its preconfiguration tables, as hsedc
+--   generates them (the Admin SP's "Hsed.Gen.Opal.Preconfig.AdminSP".@adminSP@,
+--   the Locking SP's "Hsed.Gen.Opal.Preconfig.LockingSP".@lockingSP@).
+data PreconfSP = PreconfSP
+  { pspUID    :: !UID
+  , pspTables :: ![PreconfTable]
+  }
+  deriving (Eq, Show)
+
+-- | What keeps an SP's preconfiguration from folding (M5a's scaffold; the
+--   fold reports them from its group G3 on, before the transport opens,
+--   "Hsed.Transport.InProc"): in an SP, a cell the TPer chooses that no
+--   'vendorCell' entry answers (its table, row and column); in an SP, a
+--   table whose every object a row stands for where the SP holds no such
+--   table; a value out of the bounds the spec gives it (what, the value,
+--   the least and the most); in an SP, a template's base UID no instance
+--   resolves.
+data FoldProblem
+  = UnansweredVU !UID !Text !Text !Text
+  | UnknownEveryObject !UID !Text
+  | OutOfBounds !Text !Natural !(Natural, Natural)
+  | UnresolvedBase !UID !UID
+  deriving (Eq, Show)
+
+-- | A fold problem as a report or an error says it.
+--
+-- >>> import Hsed.Core.UID (uid)
+-- >>> foldProblemText (OutOfBounds "the Locking SP's Users" 7 (8, 0xFFFF))
+-- "the Locking SP's Users 7: out of 8 to 65535"
+-- >>> foldProblemText (UnansweredVU (uid 0 0 2 5 0 0 0 2) "C_PIN" "C_PIN_Admin1" "PIN")
+-- "SP uid 0x00 0x00 0x02 0x05 0x00 0x00 0x00 0x02: the C_PIN table's row C_PIN_Admin1 leaves its PIN to the TPer, and no value is named for it"
+foldProblemText :: FoldProblem -> Text
+foldProblemText = \case
+  UnansweredVU sp table named column ->
+    inSP sp <> "the " <> table <> " table's row " <> named <> " leaves its " <> column <> " to the TPer, and no value is named for it"
+  UnknownEveryObject sp table -> inSP sp <> "a row for every object of the " <> table <> " table, which the SP does not hold"
+  OutOfBounds what v (least, most) -> what <> " " <> tshow v <> ": out of " <> tshow least <> " to " <> tshow most
+  UnresolvedBase sp base -> inSP sp <> "no instance resolves the template base " <> tshow base
+  where inSP sp = "SP " <> tshow sp <> ": "
+
+-- | 'foldTables' of a list of tables, its six passes.
+folded :: SimParams -> [PreconfTable] -> (Map UID TableDesc, Map UID [Row])
+folded p tables =
   ( descs
   , everyCell (counted descs (Map.fromListWith (flip (<>)) [ (tdTableUID (ptDesc t), finish t staged) | (t, staged) <- stagedTables ]))
   )
@@ -181,6 +257,29 @@ foldTables p tables =
 --     PDF 27; Table 33 and 4.2.6.1.2, PDF 51-52). The table's UID is Opal's
 --     (Table 20 row 12, PDF 37), generated in "Hsed.Gen.Opal.TableUIDs".
 --
+--   The Locking SP's (M5a's scaffold, the cells of its stand-in module, by
+--   table and not yet by SP; its group G3 keys them by SP and bounds them):
+--
+--   * the MBR table's Rows (@0x08000000 min@): the parameters' MBR size
+--     (Opal 2.30 Table 36, PDF 54; 4.3.5.4, PDF 89);
+--   * the DataStore table's Rows (@0x00A00000 min@): the parameters'
+--     DataStore size, the one Level 0's Additional DataStore Table
+--     descriptor reports (Table 36, PDF 54; 4.3.8.1, PDF 90);
+--   * the MBR's and the DataStore's MandatoryWriteGranularity and
+--     RecommendedAccessGranularity (@VU@): the parameters' (Table 36, PDF
+--     54; 5.3.1.1.2 and 5.3.1.2.2, PDF 99-100);
+--   * SecretProtect's ProtectMechanisms (@VU@): the empty set, reporting no
+--     mechanism, which Table 42's note allows (PDF 84: no specific value
+--     required);
+--   * a K_AES_128 or K_AES_256 Key (@VU@): zeros, of the first length its
+--     type allows, 16 or 32 bytes (Core Tables 95-96, key_128 and key_256,
+--     PDF 112), the simulator holding no medium to encrypt; its Mode (@VU@):
+--     XTS (Core Table 134, symmetric_mode, PDF 120);
+--   * the Locking SP's C_PIN_Admin1 PIN (@SID or MSID@ and its note 1): the
+--     MSID, the initial value with a Manufactured OFS (Table 41 note 1, PDF
+--     83), which Activate replaces from a Manufactured-Inactive one (5.1.1.2,
+--     M6).
+--
 -- >>> import Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 -- >>> import Hsed.Sim.Params (defaultSimParams)
 -- >>> vendorCell defaultSimParams c_PINTableDesc [(0, UIDCell uC_PIN_SID)] 6 "VU"
@@ -198,7 +297,8 @@ vendorCell p desc r c marker = do
 --   48-49: @00 00 00 09 00 00 02 00 (+XX)@, @AdminXX@) the Admin authorities
 --   after Admin1 and their credentials, 2 to 'spAdminSPAdmins' (PDF 47:
 --   Admin1 (M), any additional Admin authority (O)); none for any other, until
---   a parameter numbers it (the Locking SP's @XXXX@ and @MMMM@ are M5's).
+--   a parameter numbers it (the Locking SP's @XXXX@, @MMMM@ and @NNNN@ are
+--   M5a's group G3's: until then a Locking SP template stands for no row).
 --
 -- >>> import Hsed.Gen.Core.TableDescs (authorityTableDesc)
 -- >>> import Hsed.Sim.Params (defaultSimParams)
@@ -253,17 +353,34 @@ built p t = override p (ptDesc t) . complete p t
 -- | (b): a row's cells, in column order: those it prints, the TPer's where
 --   it leaves the value to the TPer ('vendorCell'), and every other column's
 --   default but the UID's.
+--   A cell marked with a note is its value ('unmarked'), and of two key
+--   references the one the parameters' key tables decide ('keyChosen').
 complete :: SimParams -> PreconfTable -> [(ColNum, PreCell)] -> Row
-complete p t cells = L.sortOn fst (given <> chosen <> defaults)
+complete p t printed = L.sortOn fst (given <> chosen <> defaults)
   where
     desc     = ptDesc t
-    given    = [ (c, cell) | (c, Given cell) <- cells ]
-    chosen   = [ (c, fromMaybe (unnamed c marker) (vendorCell p desc given c marker)) | (c, VendorUnique marker) <- cells ]
+    cells    = [ (c, unmarked pc) | (c, pc) <- printed ]
+    given    = [ (c, cell) | (c, Given cell) <- cells ] <> [ (c, keyChosen p desc c pcs) | (c, OneOf pcs) <- cells ]
+    chosen   = [ (c, fromMaybe (unnamed c marker) (vendorCell p desc given c marker))
+               | (c, marker) <- [ (c, m) | (c, VendorUnique m) <- cells ] <> [ (c, m) | (c, VendorAtLeast _ m) <- cells ] ]
     defaults = [ d | d@(c, _) <- ptDefaults t, c /= uidColumn, c `notElem` map fst cells ]
     unnamed c marker = error . T.unpack $
       "Hsed.Sim.Preconfig: the " <> tdName desc <> " table's row " <> rowNamed desc given <> " leaves its "
         <> maybe ("column " <> tshow c) colName (columnNumbered c desc) <> " to the TPer (" <> marker
         <> "), and vendorCell names no value for it"
+
+-- | Of a cell's alternatives ('OneOf'), the reference to the key table the
+--   TPer holds: K_AES_128's with 'KeysAES128', K_AES_256's with
+--   'KeysAES256' and 'KeysBoth' (Opal 2.30 Table 36's *TT1, PDF 54; Table
+--   45's *LT1, PDF 86). Alternatives none of which references that table
+--   are an error naming the table and the column.
+keyChosen :: SimParams -> TableDesc -> ColNum -> [PreCell] -> Cell
+keyChosen p desc c pcs = fromMaybe noneChosen (listToMaybe [ cell | Given cell <- map unmarked pcs, Just u <- [uidIn cell], uidUpper u == half ])
+  where
+    half = uidUpper (if spLockingKeys p == KeysAES128 then uK_AES_128Table else uK_AES_256Table)
+    noneChosen = error . T.unpack $
+      "Hsed.Sim.Preconfig: the " <> tdName desc <> " table's " <> maybe ("column " <> tshow c) colName (columnNumbered c desc)
+        <> " is one of " <> tshow pcs <> ", none a reference to the key table the TPer holds (" <> tshow (spLockingKeys p) <> ")"
 
 -- | (c): the parameters' overrides of a row: the Locking SP's row of the SP
 --   table, its LifeCycleState; TPerInfo's row, its ProgrammaticResetEnable;
@@ -411,8 +528,21 @@ vendorCells =
   , Vendor (isTable uTemplateTable) (isObject uTemplate_Base) "MaxInstances" "VU" (const (UIntCell 2))
   , Vendor (isTable uDataRemovalMechanismTable) anyRow "ActiveDataRemovalMechanism" "VU"
       (const (EnumCell "Cryptographic Erase" (enumValue Opal_data_removal_mechanism_Cryptographic_Erase)))
+  , Vendor (isTable uTableTable) (isObject uMBRTableObject) "Rows" "0x08000000 min" (UIntCell . toInteger . spMbrSize)
+  , Vendor (isTable uTableTable) (isObject LockingSP.uTable_DataStore) "Rows" "0x00A00000 min"
+      (\p -> let (_, size, _) = spDataStore p in UIntCell (toInteger size))
+  , Vendor (isTable uTableTable) byteTableRow "MandatoryWriteGranularity" "VU" (UIntCell . toInteger . spMandatoryWriteGranularity)
+  , Vendor (isTable uTableTable) byteTableRow "RecommendedAccessGranularity" "VU" (UIntCell . toInteger . spRecommendedAccessGranularity)
+  , Vendor (isTable uSecretProtectTable) anyRow "ProtectMechanisms" "VU" (const (ListCell []))
+  , Vendor (isTable uK_AES_128Table) anyRow "Key" "VU" (const (BytesCell (B.replicate 16 0)))
+  , Vendor (isTable uK_AES_256Table) anyRow "Key" "VU" (const (BytesCell (B.replicate 32 0)))
+  , Vendor (\desc -> isTable uK_AES_128Table desc || isTable uK_AES_256Table desc) anyRow "Mode" "VU"
+      (const (EnumCell "XTS" (enumValue Core_symmetric_mode_XTS)))
+  , Vendor (isTable uC_PINTable) (isObject LockingSP.uC_PIN_Admin1) "PIN" "SID or MSID" (BytesCell . spMsid)
   ]
   where
     isTable u desc = tdTableUID desc == u
     isObject u r   = L.lookup uidColumn r == Just (UIDCell u)
     anyRow         = const True
+    -- the Locking SP's Table rows of its byte tables, the MBR's and the DataStore's (Opal 2.30 Table 36, PDF 54)
+    byteTableRow r = isObject uMBRTableObject r || isObject LockingSP.uTable_DataStore r

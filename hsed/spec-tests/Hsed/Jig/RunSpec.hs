@@ -138,7 +138,8 @@ import           Hsed.Sim.FeatureSets   (DataStoreFeature)
 import           Hsed.Sim.State         (lifeOf)
 import           Hsed.Sim.Types         (ComIdLife (Associated), SimParams (..), TPerState (..), defaultSimParams, maxComPacketSizeName)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..), RawDrive (..))
-import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..), newInProc)
+import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..))
+import           Hsed.Transport.Opened  (openedInProc)
 import           Hsed.Transport.Replay  (openReplay)
 import           Hsed.Wire              (ExchangeOpts (..), defaultExchangeOpts, exactly, exchangeComPacket, extendedComId, ifSend,
                                          newChannel)
@@ -561,7 +562,7 @@ spec = do
         observations json "ETC-21/adminsp" `shouldSatisfy` any (\(n, v) -> "the Tries rule" `T.isPrefixOf` n && ": Tries" `T.isSuffixOf` n && v == "1 before, 2 after, TryLimit 3")
     it "ETC-21/adminsp with Tries at its TryLimit is skipped, its own prerequisite unmet, the common ones established, its extension skipped with the case's reason" $
         withSystemTempDirectory "hsed-jig" $ \dir -> do
-          (sim, control) <- newInProc defaultSimParams { spSidTryLimit = 1 } (InProcOpts UnitBytes 0)
+          (sim, control) <- openedInProc defaultSimParams { spSidTryLimit = 1 } (InProcOpts UnitBytes 0)
           channel <- newChannel
           let base = spBaseComId defaultSimParams
               bytes = either (error . show) id (controlComPacket base wrongSidCall)
@@ -580,7 +581,7 @@ spec = do
   describe "a case that stops with a session open" $
     it "leaves the next case runnable: its NoSessions is established by STACK_RESET on the ComID, noted in the transcript" $
         withSystemTempDirectory "hsed-jig" $ \dir -> do
-          (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+          (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
           channel <- newChannel
           let base = spBaseComId defaultSimParams
               bytes = either (error . show) id (controlComPacket base startSessionCall)
@@ -698,7 +699,7 @@ spec = do
               , tClose    = pure ()
               }
             capture = dir </> "capture" </> "disk6-level0.bin"
-        (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+        (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
         t <- newTranscript
         g <- guardDrive t [] (Just (DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0)) (RawDrive failing (\_ -> pure (Left "a test drive binds nothing")))
         code <- silently $ runOpened
@@ -1108,7 +1109,7 @@ spec = do
   describe "a stop during a case's extension, on the simulator (the M4c review)" $ do
     it "keeps the case's TCG verdict, skips that extension as interrupted and the cases after it as not run: exit 130" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
-        (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+        (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
         stop <- newIORef Nothing
         -- the run stopped as a signal would, while SPF-02:1's extension sends its IF-SEND (its case sends none)
         let stopping = sim { tExchange = \q -> when (Wire.dir q == IfSend) (writeIORef stop (Just "SIGINT")) >> tExchange sim q }
@@ -1123,7 +1124,7 @@ spec = do
         reasonsOf json `shouldSatisfy` elem ("ETC-04", ["not run: the run was interrupted (SIGINT)"])
     it "stopped in the first of UCT-03's three extensions: that one interrupted, the two after it not run, the run having been interrupted; the case's verdict kept: exit 130 (the M4c review's verification)" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
-        (sim, control) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+        (sim, control) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
         stop <- newIORef Nothing
         starts <- newIORef (0 :: Int)
         -- the run stopped as a signal would, while the first extension's StartSession is sent (the case's own is the first)

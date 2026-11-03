@@ -85,8 +85,9 @@ import           Hsed.Transport.Cdb    (Shape (..), shapeCode)
 import           Hsed.Transport.CdbFFI (cdbBindCheck, cdbEAlign, cdbEClients, cdbEComId, cdbESerial, cdbESpace, cdbOk, cdbScalarsInto,
                                         satFlag, scalarCdb)
 import           Hsed.Transport.Drive  (DriveInfo (..), InterfaceType (..), RawDrive (..))
-import           Hsed.Transport.InProc (InProcOpts (..), SimControl, newInProc)
+import           Hsed.Transport.InProc (InProcOpts (..), SimControl)
 import           Hsed.Transport.Kext   (ShimCommand, kextBind, kextClose, kextExchange, newKextHandle, pageBytes)
+import           Hsed.Transport.Opened (openedInProc)
 import           Hsed.Wire.Internal    (Cap (..), Describe (..), Dir (..), IfStatus (..), Request (..), Response (..),
                                         Transport (..), Unit (..))
 
@@ -123,7 +124,7 @@ fakeDriveInfo = DriveInfo "disk6" "TESTSERIAL0001" "625" IfSAT 0
 --   simulator's control, and the CDBs the fake kext issues, in order.
 fakeKextDrive :: SimParams -> FakeFaults -> IO (RawDrive, DriveInfo, SimControl, IORef [ByteString])
 fakeKextDrive params faults = do
-  (sim, control) <- newInProc params { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
+  (sim, control) <- openedInProc params { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
   cdbs <- newIORef []
   raw <- fakeKextOn IfSAT sim faults cdbs
   pure (raw, fakeDriveInfo, control, cdbs)

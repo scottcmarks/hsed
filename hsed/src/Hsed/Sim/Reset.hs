@@ -32,6 +32,7 @@ list have nothing to do.
 -}
 module Hsed.Sim.Reset
   ( ResetKind (..)
+  , resetType
   , event
   , resetTPer
   , stackReset
@@ -60,6 +61,17 @@ data ResetKind
   | OnHotPlug
   | OnTPerReset
   deriving (Eq, Ord, Show, Enum, Bounded)
+
+-- | A reset's kind as a reset_types value, what a LockOnReset or an
+--   MBRDoneOnReset cell holds of it (Opal 2.30 Table 16, PDF 32: Power Cycle
+--   0, Hardware 1, Hotplug 2, Programmatic 3). A stub of M5a's scaffold,
+--   from the constructors' order; its integration reads Opal's generated
+--   reset_types (Table 16, which replaces Core Table 128, PDF 119) instead.
+--
+-- >>> map resetType [minBound .. maxBound]
+-- [0,1,2,3]
+resetType :: ResetKind -> Natural
+resetType = fromIntegral . fromEnum
 
 -- | An interface event (Opal 2.30 3.3.5.1, PDF 31-32): the reset of its
 --   kind.

@@ -77,8 +77,9 @@ import           Hsed.Sim.Types        (SimParams (..))
 import           Hsed.Transport.Cdb    (Shape (..), cdbFor, shapeCode, shapeDir, shapeProto)
 import           Hsed.Transport.CdbFFI
 import           Hsed.Transport.Drive  (InterfaceType (..))
-import           Hsed.Transport.InProc (InProcOpts (..), newInProc)
+import           Hsed.Transport.InProc (InProcOpts (..))
 import           Hsed.Transport.Kext   (ifRecvBuffer, pageBytes)
+import           Hsed.Transport.Opened (openedInProc)
 import           Hsed.Wire             (Dir (..), Request (..), Unit (..), comIdManagementProtocol, comPacketProtocol)
 
 
@@ -179,7 +180,7 @@ packetWith k v = B.take k bytes <> B.singleton v <> B.drop (k + 1) bytes
 jigSends :: IO [Request]
 jigSends = withSystemTempDirectory "hsed-cdbc" $ \reports -> do
   let params = defaultSimParams { spUnits = UnitBlocks512 }
-  (sim, control) <- newInProc params (InProcOpts UnitBlocks512 0)
+  (sim, control) <- openedInProc params (InProcOpts UnitBlocks512 0)
   t <- newTranscript
   _ <- silently (runOpened defaultRunOptions { roTests = driveCases, roSim = params, roReportDir = reports } t
                            (SimTarget sim control))

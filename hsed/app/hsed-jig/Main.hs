@@ -28,7 +28,7 @@ import qualified RIO.Text            as T
 
 import           Hsed.Jig.Catalogue  (parseCaseKeys)
 import           Hsed.Jig.Cli        (Command (..), runCommand)
-import           Hsed.Jig.Options    (RunOptions (..), defaultRunOptions, parseSidPin, parseTarget)
+import           Hsed.Jig.Options    (RunOptions (..), defaultRunOptions, lockingOFSName, parseLockingOFS, parseSidPin, parseTarget)
 import           Hsed.Sim.Types      (SimParams (..))
 import           Hsed.Version        (hsedVersion)
 import           Hsed.Wire           (Unit (..), mostCarried)
@@ -118,6 +118,11 @@ runOptions = options <**> laterMilestones
             <> help ("simulator: C_PIN_SID's PIN as hex digits, two a byte (an optional 0x before them), 4 to 32 bytes, other than "
                      <> "the MSID's, so that Level 0's Initial C_PIN_SID PIN Indicator is 0xFF and SID Value State 1: UCT-03 step 1 "
                      <> "does not apply and UCT-01 step 4c.ii fails, the drive being past its factory state (Test Cases PDF 30, 33)")))
+      <*> option (eitherReader parseLockingOFS) (long "locking-ofs" <> metavar "OFS" <> value (spLockingOFS sim0)
+            <> showDefaultWith (T.unpack . lockingOFSName)
+            <> help ("simulator: the Locking SP's Original Factory State, manufactured-inactive (what Opal 2.30 5.2.2 says it "
+                     <> "SHALL be, PDF 96) or manufactured (outside that SHALL, which its informative comment allows; the reports "
+                     <> "say so)"))
       <*> optional (strOption (long "expect-serial" <> metavar "SERIAL"
             <> help "drive: the serial (trimmed IDENTIFY) the drive must have; required for a /dev target"))
       <*> optional (strOption (long "capture-level0" <> metavar "FILE"
@@ -141,10 +146,10 @@ runOptions = options <**> laterMilestones
       <*> switch (long "interrupt-in-session"
             <> help ("stop the run once StartSession has opened a session, the session left open, nothing issued after it, the "
                      <> "reports written, exit 130: the deliberately interrupted run --recover clears (design 11)"))
-    mk target tests u holding holdN profile discard sidPin serial capture len dir showMsid recover allowMounted interrupt = defaultRunOptions
+    mk target tests u holding holdN profile discard sidPin ofs serial capture len dir showMsid recover allowMounted interrupt = defaultRunOptions
       { roTarget             = target
       , roTests              = tests
-      , roSim                = sim0 { spUnits = u, spInactiveComIdDiscard = discard, spSidPin = sidPin }
+      , roSim                = sim0 { spUnits = u, spInactiveComIdDiscard = discard, spSidPin = sidPin, spLockingOFS = ofs }
       , roHold               = fromMaybe (if holding then 1 else 0) holdN
       , roProfile            = profile
       , roReportDir          = dir

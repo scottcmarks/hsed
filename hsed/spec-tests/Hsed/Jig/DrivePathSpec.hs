@@ -99,7 +99,8 @@ import           Hsed.Sim.Types          (ComIdLife (Associated), SimParams (..)
 import           Hsed.Transport.Cdb      (Shape (..), cdbHex)
 import           Hsed.Transport.Drive    (InterfaceType (..))
 import           Hsed.Transport.FakeKext (FakeFaults (..), fakeDriveInfo, fakeKextOn, noFaults)
-import           Hsed.Transport.InProc   (InProcOpts (..), SimControl (..), newInProc)
+import           Hsed.Transport.InProc   (InProcOpts (..), SimControl (..))
+import           Hsed.Transport.Opened   (openedInProc)
 import           Hsed.Wire.Internal      (Cap (..), Dir (..), Request (..), Transport, Unit (..))
 
 
@@ -134,7 +135,7 @@ way = \case
 -- | A TPer of the simulator, in 512-byte blocks as the kext's transport
 --   counts them.
 newTPer :: IO (Transport 'ReadWrite, SimControl)
-newTPer = newInProc defaultSimParams { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
+newTPer = openedInProc defaultSimParams { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
 
 -- | A run over the fake kext's user client, opened anew over a TPer with
 --   some faults, as a run opens a drive (Support's 'onFakeDrive'): its exit

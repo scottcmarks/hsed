@@ -34,7 +34,8 @@ import qualified RIO.Map            as Map
 import           RIO
 
 import           Hsed.Sim           (step, syncOf)
-import           Hsed.Sim.Types     (Input (..), Output (..), SimParams (..), SyncState (..), TPerState, initialState)
+import           Hsed.Sim.Types     (FoldProblem, Input (..), Output (..), SimParams (..), SyncState (..), TPerState, initialState,
+                                     initialStateProblems)
 import           Hsed.Version       (hsedVersion)
 import           Hsed.Wire          (mostCarried)
 import           Hsed.Wire.Internal (Cap (..), Describe (..), Dir (..), Event, IfStatus (..), Request (..), Response (..),
@@ -68,33 +69,39 @@ data Sim = Sim !TPerState !(Map Word16 Int)
 --   answered Response(s) to come (0, 1, 0), before the next one. An event
 --   resets the TPer ("Hsed.Sim".'step') and drops what is held. The
 --   transport says it is a TPer, the simulator of this build, of Opal 2.30,
---   with the parameters' ComIDs.
-newInProc :: SimParams -> InProcOpts -> IO (Transport 'ReadWrite, SimControl)
-newInProc params opts = do
-  let p = params { spUnits = ioUnits opts }
-  var <- newMVar (Sim (initialState p) mempty)
-  let transport = MkTransport
-        { tExchange = \r -> if lenBytes r > mostCarried (ioUnits opts)
-                                then pure (Response OtherInvalidCommandParameter mempty)
-                                else modifyMVar var (pure . exchange (ioHoldIfRecvs opts) r)
-        , tInject   = \e -> modifyMVar var (pure . event e)
-        , tUnit     = ioUnits opts
-        , tDescribe = Describe
-            { dRole      = "tper"
-            , dImpl      = "hsed-sim " <> hsedVersion
-            , dUnits     = ioUnits opts
-            , dSsc       = Just "opal-2.30"
-            , dBaseComId = Just (spBaseComId p)
-            , dNComIds   = Just (spNComIds p)
-            , dDevice    = Nothing
+--   with the parameters' ComIDs. Parameters its SPs' preconfiguration does
+--   not fold with are refused before anything opens, with what keeps them
+--   from folding ("Hsed.Sim.Types".'initialStateProblems'; M5a).
+newInProc :: SimParams -> InProcOpts -> IO (Either [FoldProblem] (Transport 'ReadWrite, SimControl))
+newInProc params opts = case initialStateProblems p of
+  []       -> Right <$> opened
+  problems -> pure (Left problems)
+  where
+    p = params { spUnits = ioUnits opts }
+    opened = do
+      var <- newMVar (Sim (initialState p) mempty)
+      let transport = MkTransport
+            { tExchange = \r -> if lenBytes r > mostCarried (ioUnits opts)
+                                    then pure (Response OtherInvalidCommandParameter mempty)
+                                    else modifyMVar var (pure . exchange (ioHoldIfRecvs opts) r)
+            , tInject   = \e -> modifyMVar var (pure . event e)
+            , tUnit     = ioUnits opts
+            , tDescribe = Describe
+                { dRole      = "tper"
+                , dImpl      = "hsed-sim " <> hsedVersion
+                , dUnits     = ioUnits opts
+                , dSsc       = Just "opal-2.30"
+                , dBaseComId = Just (spBaseComId p)
+                , dNComIds   = Just (spNComIds p)
+                , dDevice    = Nothing
+                }
+            , tClose    = pure ()
             }
-        , tClose    = pure ()
-        }
-      control = SimControl
-        { scRelease = \c -> modifyMVar_ var (\(Sim st held) -> pure (Sim (tick c st) (Map.delete c held)))
-        , scPeek    = (\(Sim st _) -> st) <$> readMVar var
-        }
-  pure (transport, control)
+          control = SimControl
+            { scRelease = \c -> modifyMVar_ var (\(Sim st held) -> pure (Sim (tick c st) (Map.delete c held)))
+            , scPeek    = (\(Sim st _) -> st) <$> readMVar var
+            }
+      pure (transport, control)
 
 -- | One command against the simulator, holding or releasing a ComID's
 --   prepared response as the transport's hold says: an IF-SEND that

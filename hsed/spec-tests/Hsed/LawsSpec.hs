@@ -16,7 +16,7 @@ compiler lists what the comments bind to hand-written laws
 and Table 45, PDF 83, under its @stateTable@ comment), each entry referring to
 its law by its qualified name, so that a law a comment names and the code
 lacks fails to compile. This test holds the generated list and the
-hand-written laws ("Hsed.Law.Sync".@laws@) to each other: by name, both ways;
+hand-written laws ("Hsed.Law.Sync".@laws@, and since M5a "Hsed.Law.Reset".@laws@) to each other: by name, both ways;
 each entry's law is the law of its name, and states the hash its paragraph or
 table has in the IR (the first 12 hex digits the entry carries). Then it runs
 each law's property under QuickCheck, over the simulator, and finds each case
@@ -42,14 +42,16 @@ import qualified Hsed.Gen.Core.Laws    as Generated
 import           Hsed.Gen.Opal.Preconfig.AdminSP (uSP_Locking)
 import           Hsed.Jig.Catalogue    (CaseKey, CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Law              (Law (..), LawRef (..))
+import qualified Hsed.Law.Reset        as Reset
 import qualified Hsed.Law.Sync         as Sync
 import           Hsed.Sim.Gen          (genState)
 import           Hsed.Sim.Types        (LifeCycle (..), Session (..), SimParams (..), TPerState (..))
 
 
--- | Every hand-written law: those of each module of "Hsed.Law" (M3: Sync's).
+-- | Every hand-written law: those of each module of "Hsed.Law" (M3: Sync's;
+--   M5a: Reset's, none until its group G4).
 handWritten :: [Law]
-handWritten = Sync.laws
+handWritten = Sync.laws <> Reset.laws
 
 -- | The cases a law names that a later milestone's jig runs, with that
 --   milestone (design section 11): none since M4a's catalogue.

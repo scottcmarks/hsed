@@ -57,7 +57,8 @@ import           Hsed.Jig.Transcript    (newTranscript)
 import           Hsed.Sim.State         (lifeOf)
 import           Hsed.Sim.Types         (ComIdLife (Associated), SimParams (..), TPerState (..), defaultSimParams)
 import           Hsed.Transport.Drive   (DriveInfo, RawDrive (..))
-import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..), newInProc)
+import           Hsed.Transport.InProc  (InProcOpts (..), SimControl (..))
+import           Hsed.Transport.Opened  (openedInProc)
 import           Hsed.Wire              (newChannel)
 import           Hsed.Wire.Internal     (Cap (..), Dir (..), IfStatus (..), Request (..), Response (..), Transport (..), Unit (..))
 
@@ -151,7 +152,7 @@ spec = describe "--recover (Hsed.Jig.Recover through Hsed.Jig.Run.runOpened)" $ 
     withSystemTempDirectory "hsed-recover" $ \tmp -> do
       let params = defaultSimParams { spUnits = UnitBlocks512 }
           opts   = defaultRunOptions { roSim = params, roRecover = True, roReportDir = tmp </> "report" }
-      (tr, control) <- newInProc params (InProcOpts UnitBlocks512 0)
+      (tr, control) <- openedInProc params (InProcOpts UnitBlocks512 0)
       held <- onSim tr control (startSession adminSPAsAnybody)
       held `shouldSatisfy` either (const False) (\case Synced _ -> True; _ -> False)
       associated control `shouldReturn` [0x1004]

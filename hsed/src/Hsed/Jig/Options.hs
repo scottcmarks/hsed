@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -14,7 +15,8 @@ that reads them (@app/hsed-jig@): the target ('TargetSpec': the simulator,
 a drive, a replay of a captured response, or the simulator paired with a
 drive), the cases, the simulator's parameters and options (among them, since
 M4a, the SID's PIN, @--sim-sid-pin HEX@, which 'parseSidPin' reads into
-"Hsed.Sim.Params".@spSidPin@), the drive's (the serial it must have, where to
+"Hsed.Sim.Params".@spSidPin@, and since M5a the Locking SP's Original
+Factory State, @--locking-ofs@, 'parseLockingOFS'), the drive's (the serial it must have, where to
 capture its Level 0 response, the Level 0 transfer length), whether the
 reports show the secrets a run read in clear (@--show-msid@, design 9.3 item
 5), and where the reports go; and M4c's, for a drive the jig sends to
@@ -31,6 +33,8 @@ module Hsed.Jig.Options
   , RunOptions (..)
   , defaultRunOptions
   , parseSidPin
+  , parseLockingOFS
+  , lockingOFSName
   ) where
 
 import qualified Data.ByteString.Base16 as B16
@@ -40,7 +44,7 @@ import           RIO
 import qualified RIO.Text               as T
 
 import           Hsed.Jig.Catalogue     (CaseKey)
-import           Hsed.Sim.Types         (SimParams, defaultSimParams)
+import           Hsed.Sim.Types         (LifeCycle (..), SimParams, defaultSimParams)
 import           Hsed.Wire              (ExchangeOpts, defaultExchangeOpts)
 
 
@@ -85,7 +89,7 @@ data RunOptions = RunOptions
   { roTarget                :: !TargetSpec
   , roTests                 :: ![CaseKey]        -- ^ the cases to run; none, every case of the catalogue
   , roSim                   :: !SimParams        -- ^ the simulator's parameters (@--units@, @--inactive-comid-discard@,
-                                                 --   @--sim-sid-pin@)
+                                                 --   @--sim-sid-pin@, @--locking-ofs@)
   , roHold                  :: !Int              -- ^ the IF-RECVs a prepared response is held for (@--hold-processing@)
   , roProfile               :: !(Maybe FilePath) -- ^ a Level 0 response whose descriptors the simulator adds (@--profile@),
                                                  --   read when the run starts
@@ -152,6 +156,30 @@ defaultRunOptions = RunOptions
   , roExchange              = defaultExchangeOpts
   , roDriveTimeoutMicros    = 15000000
   }
+
+-- | @--locking-ofs manufactured-inactive|manufactured@: the simulated
+--   Locking SP's Original Factory State ("Hsed.Sim.Params".@spLockingOFS@),
+--   or why not. Manufactured-Inactive is the default and the one Opal 2.30
+--   5.2.2 says a Manufactured Locking SP SHALL have (PDF 96); Manufactured,
+--   which its informative comment allows, is outside that SHALL, and the
+--   reports say so ("Hsed.Jig.Report").
+--
+-- >>> map parseLockingOFS ["manufactured-inactive", "manufactured"]
+-- [Right ManufacturedInactive,Right Manufactured]
+-- >>> parseLockingOFS "inactive"
+-- Left "--locking-ofs inactive: manufactured-inactive or manufactured"
+parseLockingOFS :: String -> Either String LifeCycle
+parseLockingOFS s = maybe (Left ("--locking-ofs " <> s <> ": manufactured-inactive or manufactured")) Right
+  (L.lookup s [ (T.unpack (lockingOFSName lc), lc) | lc <- [minBound .. maxBound] ])
+
+-- | An Original Factory State as @--locking-ofs@ and the reports name it.
+--
+-- >>> map lockingOFSName [minBound .. maxBound]
+-- ["manufactured-inactive","manufactured"]
+lockingOFSName :: LifeCycle -> Text
+lockingOFSName = \case
+  ManufacturedInactive -> "manufactured-inactive"
+  Manufactured         -> "manufactured"
 
 -- | @--sim-sid-pin HEX@: the simulator's C_PIN_SID PIN as hex digits, two a
 --   byte, an optional @0x@ before them, 4 to 32 bytes, or why not: at most

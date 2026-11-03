@@ -50,7 +50,8 @@ import           Hsed.Jig.Transcript      (newTranscript)
 import           Hsed.Level0.Sedutil      (parseQuery, synthesize)
 import           Hsed.Sim.Types           (SimParams (..))
 import           Hsed.Transport.Drive     (DriveInfo (..), InterfaceType (..), RawDrive (..))
-import           Hsed.Transport.InProc    (InProcOpts (..), SimControl, newInProc)
+import           Hsed.Transport.InProc    (InProcOpts (..), SimControl)
+import           Hsed.Transport.Opened    (openedInProc)
 import           Hsed.Wire                (hex)
 import           Hsed.Wire.Internal       (Describe (..), IfStatus (..), Transport (..), Unit (..))
 
@@ -105,7 +106,7 @@ disk6Like = do
 --   at its state.
 fakeDrive :: SimParams -> IO (RawDrive, DriveInfo, SimControl)
 fakeDrive params = do
-  (sim, control) <- newInProc params { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
+  (sim, control) <- openedInProc params { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
   bound <- newIORef Nothing
   let drive = MkTransport
         { tExchange = tExchange sim

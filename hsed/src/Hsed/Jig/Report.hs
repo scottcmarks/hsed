@@ -134,7 +134,7 @@ import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (createOwned, writeOwned)
 import           Hsed.Jig.Guard         (Allowed (..), Policy (..), decide)
-import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
+import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), lockingOFSName)
 import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairReport (..), judged, pairFails, pairLevel0)
 import           Hsed.Jig.PairProperties (PropDiff (..), PropertiesPair (..), Side (..), pairProperties, propertiesFail, propertiesLines)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
@@ -145,7 +145,7 @@ import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..)
                                          splitLevel0)
 import           Hsed.Packet            (ComPacketFrame (..), DecodedFrame (..), PacketFrame (..), decodeComPacket)
 import           Hsed.Sim.Sync          (T45Row (..))
-import           Hsed.Sim.Types         (SimParams (..))
+import           Hsed.Sim.Types         (LifeCycle (..), SimParams (..))
 import           Hsed.Transport.Drive   (maskSerial)
 import           Hsed.Wire              (Describe (..), Dir (..), IfStatus (..), Request (..), Response (..), Unit (..),
                                          comPacketProtocol, hex, level0ComId)
@@ -407,6 +407,7 @@ optionsJSON o = A.object
   , "hold"                     A..= roHold o
   , "inactive_comid_discard"   A..= spInactiveComIdDiscard (roSim o)
   , "sim_sid_pin"              A..= fmap describeSecret (spSidPin (roSim o))
+  , "locking_ofs"              A..= lockingOFSName (spLockingOFS (roSim o))
   , "profile"                  A..= roProfile o
   , "report_dir"               A..= roReportDir o
   , "capture"                  A..= roCapture o
@@ -418,6 +419,18 @@ optionsJSON o = A.object
   , "interrupt_in_session"     A..= roInterruptInSession o
   , "stack_reset_before_cases" A..= roStackResetBeforeCases o
   ]
+
+-- | The simulator line's word on the Locking SP's Original Factory State
+--   (@--locking-ofs@): none for Manufactured-Inactive, the default and what
+--   Opal 2.30 5.2.2 says a Manufactured Locking SP SHALL have (PDF 96); for
+--   Manufactured, that it is outside that SHALL.
+--
+-- >>> map lockingOFSNote [minBound .. maxBound]
+-- ["",", Locking SP Manufactured: outside Opal 2.30 5.2.2's SHALL, Manufactured-Inactive (PDF 96), which its informative comment allows"]
+lockingOFSNote :: LifeCycle -> Text
+lockingOFSNote = \case
+  ManufacturedInactive -> ""
+  Manufactured         -> ", Locking SP Manufactured: outside Opal 2.30 5.2.2's SHALL, Manufactured-Inactive (PDF 96), which its informative comment allows"
 
 -- | A waiver with the item and page of its section's list.
 waiverJSON :: CaseKey -> Waiver -> A.Value
@@ -539,6 +552,7 @@ markdown rr = T.unlines $
   <> [ "- simulator: units " <> unitName (spUnits (roSim o)) <> ", hold " <> tshow (roHold o)
          <> maybe "" ((", profile " <>) . T.pack) (roProfile o)
          <> maybe "" ((", SID PIN given: " <>) . describeSecret) (spSidPin (roSim o))
+         <> lockingOFSNote (spLockingOFS (roSim o))
      | hasSimulator rr ]
   <> [ "- IF-SENDs passed to a drive's transport: " <> tshow (rrIfSends rr)
   , "- secrets read: " <> tshow (length (rrSecrets rr)) <> (if null (rrSecrets rr) then "" else ", " <> secretsText rr)

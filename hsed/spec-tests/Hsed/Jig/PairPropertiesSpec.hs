@@ -56,7 +56,8 @@ import           Hsed.Jig.Support         (at, silently)
 import           Hsed.Jig.Target          (Target (..))
 import           Hsed.Jig.Transcript      (newTranscript)
 import           Hsed.Sim.Types           (SimParams (..), defaultSimParams)
-import           Hsed.Transport.InProc    (InProcOpts (..), newInProc)
+import           Hsed.Transport.InProc    (InProcOpts (..))
+import           Hsed.Transport.Opened    (openedInProc)
 import           Hsed.Wire                (Unit (..))
 
 
@@ -339,10 +340,10 @@ spec = do
   describe "a pair of two simulators through UCT-02, the second standing for a drive (Hsed.Jig.Run's wiring)" $
     it "compares the first end's exchange as the simulator's and the second's as the drive's, the report carrying the comparison: exit 0" $
       withSystemTempDirectory "hsed-jig" $ \dir -> do
-        (sim, simControl) <- newInProc defaultSimParams (InProcOpts UnitBytes 0)
+        (sim, simControl) <- openedInProc defaultSimParams (InProcOpts UnitBytes 0)
         let roomier = defaultSimParams
               { spTPerProperties = setProperty "MaxAggTokenSize" (Just 65480) (setProperty "MaxComPacketSize" (Just 65536) (spTPerProperties defaultSimParams)) }
-        (drive, driveControl) <- newInProc roomier (InProcOpts UnitBytes 0)
+        (drive, driveControl) <- openedInProc roomier (InProcOpts UnitBytes 0)
         t <- newTranscript
         let reports = dir </> "report"
             opts    = defaultRunOptions { roTarget = TPair TSim TSim, roTests = either (error . T.unpack) id (parseCaseKeys "UCT-02"), roReportDir = reports }

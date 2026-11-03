@@ -67,8 +67,9 @@ import           Hsed.Transport.Cdb     (Shape (..), cdbFor, cdbHex, shapeCode, 
 import           Hsed.Transport.CdbFFI  (Built (..), cdbBuild, cdbCheckPayloadAt, cdbOk)
 import           Hsed.Transport.Drive   (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.FakeKext (FakeFaults (..), fakeKextDrive, fakeKextOn, noFaults)
-import           Hsed.Transport.InProc  (InProcOpts (..), newInProc)
+import           Hsed.Transport.InProc  (InProcOpts (..))
 import           Hsed.Transport.Kext
+import           Hsed.Transport.Opened  (openedInProc)
 import           Hsed.Wire              (Dir (..), IfStatus (..), Request (..), Response (..), Unit (..), defaultExchangeOpts,
                                          exchangeComPacket, newChannel)
 import           Hsed.Wire.Internal     (Transport (..))
@@ -496,7 +497,7 @@ spec = describe "Hsed.Transport.Kext" $ do
       (raw, di, _, cdbs) <- fakeKextDrive defaultSimParams noFaults
       roundTrip raw cdbs (diInterface di)
     it "round-trips on SCSI's CDBs the same" $ do
-      (sim, _) <- newInProc defaultSimParams { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
+      (sim, _) <- openedInProc defaultSimParams { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
       cdbs <- newIORef []
       raw <- fakeKextOn IfSCSI sim noFaults cdbs
       roundTrip raw cdbs IfSCSI
@@ -521,7 +522,7 @@ spec = describe "Hsed.Transport.Kext" $ do
       rdBind raw 0x0004 >>= (`shouldSatisfy` either ("kIOReturnBadArgument" `T.isInfixOf`) (const False))
       readIORef cdbs `shouldReturn` []
     it "closes its user client once; opened again over the same simulator, it carries Level 0 again" $ do
-      (sim, _) <- newInProc defaultSimParams { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
+      (sim, _) <- openedInProc defaultSimParams { spUnits = UnitBlocks512 } (InProcOpts UnitBlocks512 0)
       cdbs <- newIORef []
       first' <- fakeKextOn IfSAT sim noFaults cdbs
       tClose (rdTransport first')

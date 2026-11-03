@@ -51,6 +51,10 @@ never a descriptor left out.
 module Hsed.Sim.Level0
   ( level0Response
   , simDescriptors
+    -- * The Locking descriptor's live bits
+  , lockedBit
+  , mbrEnabledBit
+  , mbrDoneBit
   ) where
 
 import           Data.Bits              (bit)
@@ -98,7 +102,10 @@ simDescriptors st = L.sortOn dCode (own <> added)
       [ described (id :: Level0DiscoveryTPerFeature -> Level0DiscoveryTPerFeature)
         -- LockingEnabled is one once an SP of the Locking template is other than Nonexistent or
         -- Manufactured-Inactive (Opal 3.1.1.3.1, PDF 21)
-      , described (\r -> r { level0DiscoveryLockingFeatureLockingEnabled = lockingEnabled })
+      , described (\r -> r { level0DiscoveryLockingFeatureLockingEnabled = lockingEnabled
+                           , level0DiscoveryLockingFeatureLocked         = lockedBit st
+                           , level0DiscoveryLockingFeatureMBREnabled     = mbrEnabledBit st
+                           , level0DiscoveryLockingFeatureMBRDone        = mbrDoneBit st })
       , featureDescriptor Level0DiscoveryGeometryReportingFeature
           { level0DiscoveryGeometryReportingFeatureALIGN                = gAlign geometry
           , level0DiscoveryGeometryReportingFeatureLogicalBlockSize     = gLogicalBlockSize geometry
@@ -139,6 +146,29 @@ simDescriptors st = L.sortOn dCode (own <> added)
     pinOf u fallback = case rowWithUID uSP_Admin uC_PINTable u st >>= \row -> columnOf c_PINTableDesc "PIN" >>= (`cellOf` row) of
       Just (BytesCell pin) -> pin
       _                    -> fallback
+
+-- | The Locking descriptor's Locked bit (Opal 2.30 3.1.1.3, PDF 21; Core
+--   3.3.6.5.3, PDF 71): whether a Locking row is read or write locked. A
+--   stub of M5a's scaffold, False as at M3 (nothing locked); its group G4
+--   reads the Locking SP's rows.
+--
+-- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
+-- >>> map ($ initialState defaultSimParams) [lockedBit, mbrEnabledBit, mbrDoneBit]
+-- [False,False,False]
+lockedBit :: TPerState -> Bool
+lockedBit _ = False
+
+-- | The Locking descriptor's MBREnabled bit (Opal 2.30 3.1.1.3, PDF 21; Core
+--   3.3.6.5.5, PDF 71): MBRControl's Enable. A stub of M5a's scaffold,
+--   False as at M3; its group G4 reads the MBRControl row.
+mbrEnabledBit :: TPerState -> Bool
+mbrEnabledBit _ = False
+
+-- | The Locking descriptor's MBRDone bit (Opal 2.30 3.1.1.3, PDF 21; Core
+--   3.3.6.5.6, PDF 71): MBRControl's Done. A stub of M5a's scaffold, False
+--   as at M3; its group G4 reads the MBRControl row.
+mbrDoneBit :: TPerState -> Bool
+mbrDoneBit _ = False
 
 -- | A descriptor whose fields hold what its allowances give them, then what
 --   the simulator chooses of them.

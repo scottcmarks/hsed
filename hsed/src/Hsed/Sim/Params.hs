@@ -50,6 +50,7 @@ module Hsed.Sim.Params
   , defaultSimParams
   , LifeCycle (..)
   , lifeCycleValue
+  , LockingKeys (..)
   , Geometry (..)
   , Level0Profile (..)
   , simParamsProblems
@@ -120,6 +121,18 @@ lifeCycleValue = \case
   ManufacturedInactive -> enumValue Opal_life_cycle_state_manufactured_inactive
   Manufactured         -> enumValue Opal_life_cycle_state_manufactured
 
+-- | Which of the Locking SP's two key tables the TPer holds: K_AES_128,
+--   K_AES_256 or both (Opal 2.30 Table 36's *TT1, PDF 54: "only one of the
+--   two K_AES* tables is required"), and so which table a Locking row's
+--   ActiveKey references (Table 45's *LT1, PDF 86: a K_AES_128 or a K_AES_256
+--   object; with both, the simulator's ActiveKey is K_AES_256's, M5a's
+--   decision).
+data LockingKeys
+  = KeysAES128
+  | KeysAES256
+  | KeysBoth
+  deriving (Eq, Ord, Show, Enum, Bounded)
+
 -- | What the Geometry Reporting descriptor reports (Opal 2.30 Table 5 and
 --   3.1.1.4.2-5, PDF 21-22), which Opal takes from the LockingInfo table:
 --   until that table is simulated (M5), parameters.
@@ -169,6 +182,23 @@ data SimParams = SimParams
                                                   --   (Opal 2.30 Table 17's maxima are VU, PDF 33-34)
   , spCloseSessionOnAbort  :: !Bool               -- ^ whether the TPer prepares CloseSession when it aborts a session, as it
                                                   --   MAY (Core 3.3.10.7 b, PDF 86; 3.3.7.1.5, PDF 75)
+  , spLockingAdmins        :: !Natural            -- ^ the Locking SP's Admin authorities, Admin1 and the ones after it, each
+                                                  --   with its C_PIN credential (Opal 2.30 Table 40 note 1, PDF 82: Admin1 to
+                                                  --   Admin4 required, any more (O); Table 41, PDF 84)
+  , spLockingUsers         :: !Natural            -- ^ the Locking SP's User authorities, User1 and the ones after it, each with
+                                                  --   its C_PIN credential (Table 40 note 2, PDF 82: User1 through User8 SHALL)
+  , spLockingRanges        :: !Natural            -- ^ the Locking ranges besides the global range, Range1 and the ones after it:
+                                                  --   LockingInfo's MaxRanges (Table 44 note 1, PDF 86: at least 8)
+  , spLockingKeys          :: !LockingKeys        -- ^ the key tables the TPer holds (Table 36's *TT1, PDF 54)
+  , spMbrSize              :: !Natural            -- ^ the MBR table's size in bytes, its Table row's Rows (Table 36, PDF 54:
+                                                  --   @0x08000000 min@; 4.3.5.4, PDF 89: at least 128 MB)
+  , spMandatoryWriteGranularity    :: !Natural    -- ^ a byte table's MandatoryWriteGranularity (Opal 2.30 5.3.1.1.2, PDF 99;
+                                                  --   Table 36, PDF 54: VU)
+  , spRecommendedAccessGranularity :: !Natural    -- ^ a byte table's RecommendedAccessGranularity (5.3.1.2.2, PDF 100; Table
+                                                  --   36, PDF 54: VU)
+  , spHwResetLorDor        :: !Bool               -- ^ the Locking descriptor's HW Reset for LOR/DOR Supported (Opal 2.30
+                                                  --   3.1.1.3, PDF 21: VU), the Hardware reset type among LockOnReset's
+                                                  --   and MBRDoneOnReset's (Table 16, PDF 32)
   }
   deriving (Eq, Show)
 
@@ -229,7 +259,23 @@ data SimParams = SimParams
 --   PDF 33-34);
 -- * CloseSession prepared when a session is aborted, as the TPer MAY (Core
 --   3.3.10.7 b, PDF 86; Opal 2.30 4.1.1.4 (O), PDF 35), so that the host
---   sees the abort (Test Cases 7.1, PDF 76, accepts either).
+--   sees the abort (Test Cases 7.1, PDF 76, accepts either);
+-- * the Locking SP's four Admin authorities and eight User authorities, the
+--   ones Opal 2.30 requires (Table 40 notes 1 and 2, PDF 82: Admin1 to
+--   Admin4, User1 through User8), none of the optional ones beyond them;
+-- * eight Locking ranges besides the global range, the least MaxRanges
+--   allows (Table 44 note 1, PDF 86);
+-- * the K_AES_256 table alone, one of the two Table 36's *TT1 requires
+--   (PDF 54);
+-- * an MBR of 0x08000000 bytes, the least Opal allows (Table 36, PDF 54;
+--   4.3.5.4, PDF 89);
+-- * no granularity on a byte table: MandatoryWriteGranularity and
+--   RecommendedAccessGranularity 1, what a TPer with no alignment
+--   requirement reports (5.3.1.1.2, PDF 99) and what Opal v1.00 backward
+--   compatibility needs (3.1.1.5, PDF 24);
+-- * HW Reset for LOR/DOR not supported, as disk6 reports it (Level 0 Locking
+--   byte 0x09, spec/fixtures/disk6-level0.bin; Opal 2.30 3.1.1.3, PDF 21:
+--   VU).
 defaultSimParams :: SimParams
 defaultSimParams = SimParams
   { spBaseComId            = 0x1004
@@ -258,6 +304,14 @@ defaultSimParams = SimParams
                                     (encodeRecord (GUDIDColumnContentsDescription 0x020000 0x48534544))
   , spHostPropertyMax      = []
   , spCloseSessionOnAbort  = True
+  , spLockingAdmins        = 4
+  , spLockingUsers         = 8
+  , spLockingRanges        = 8
+  , spLockingKeys          = KeysAES256
+  , spMbrSize              = 0x08000000
+  , spMandatoryWriteGranularity    = 1
+  , spRecommendedAccessGranularity = 1
+  , spHwResetLorDor        = False
   }
 
 -- | What is out of range in a run's parameters; none for parameters the
@@ -284,7 +338,10 @@ defaultSimParams = SimParams
 -- * a GUDID that is not Core Table 212's 12 bytes (PDF 230; Opal 2.30
 --   *TP1, PDF 50: the GUDID SHALL be in that format), its four constant
 --   bytes and its NAA among them, as the generated layout reads them
---   strictly.
+--   strictly;
+-- * the Locking SP's parameters out of what Opal 2.30 allows of them
+--   ('lockingProblems': M5a's scaffold names the place, its group G3 the
+--   bounds).
 simParamsProblems :: SimParams -> [Text]
 simParamsProblems p = concat
   [ [ "no static ComID (Number of ComIDs is 0x0001 or larger, Opal 2.30 Table 6)" | spNComIds p == 0 ]
@@ -304,6 +361,7 @@ simParamsProblems p = concat
     | spAdminSPAdmins p > adminsMost ]
   , [ "a GUDID of " <> tshow (B.length (spGudid p)) <> " bytes: Core Table 212's format has 12 (PDF 230)" | B.length (spGudid p) /= gudidBytes ]
   , [ "a GUDID not in Core Table 212's format (PDF 230): " <> tshow e | B.length (spGudid p) == gudidBytes, Left e <- [gudid] ]
+  , lockingProblems p
   ]
   where
     lastComId = toInteger (spBaseComId p) + toInteger (spNComIds p) - 1 :: Integer
@@ -316,6 +374,19 @@ simParamsProblems p = concat
     -- Core Table 212's GUDID, read strictly through its generated layout (PDF 230)
     gudidBytes = layoutSize gudidColumnContentsDescriptionLayout
     gudid      = decodeRecordStrict (spGudid p) :: Either LayoutError (DecodedRecord GUDIDColumnContentsDescription)
+
+-- | What is out of range in the Locking SP's parameters: none yet. A stub
+--   of M5a's scaffold, whose clauses its group G3 writes: at least 4 Admins
+--   and 8 Users (Table 40's notes, PDF 82), at least 8 ranges (Table 44
+--   note 1, PDF 86), each at most what its template's placeholder numbers
+--   (@(+XX XX)@, @(+MM MM)@, @(+NN NN)@, PDF 82-86), an MBR of at
+--   least 0x08000000 bytes (Table 36, PDF 54), MandatoryWriteGranularity at
+--   most 8192 and at most RecommendedAccessGranularity (5.3.1.1.2, PDF 99).
+--
+-- >>> lockingProblems defaultSimParams
+-- []
+lockingProblems :: SimParams -> [Text]
+lockingProblems _ = []
 
 -- | The static ComIDs parameters name: the base and the ones after it, as
 --   far as 0xFFFF, counted in Integer so that none wraps.

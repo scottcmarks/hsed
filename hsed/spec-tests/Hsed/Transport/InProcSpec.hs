@@ -42,6 +42,7 @@ import           Hsed.Packet             (ComPacketFrame (..), DecodedFrame (..)
 import           Hsed.Sim                (syncOf)
 import           Hsed.Sim.Types          (SimParams (..), SyncState (..), defaultSimParams)
 import           Hsed.Transport.InProc
+import           Hsed.Transport.Opened   (openedInProc)
 import           Hsed.Version            (hsedVersion)
 import           Hsed.Wire
 
@@ -103,7 +104,7 @@ allReturnedWithData (l, od, mt) = l > 0 && od == 0 && mt == 0
 
 -- | A simulator in a unit, holding responses for so many IF-RECVs.
 simulator :: Unit -> Int -> IO (Transport 'ReadWrite, SimControl)
-simulator u hold = newInProc defaultSimParams (InProcOpts u hold)
+simulator u hold = openedInProc defaultSimParams (InProcOpts u hold)
 
 isS2, isS3 :: Maybe SyncState -> Bool
 isS2 = \s -> case s of Just (S2 _) -> True; _ -> False
@@ -239,7 +240,7 @@ spec = do
       (t, _) <- simulator UnitBytes 0
       ifRecv t 0x01 0x2000 2048 `shouldReturn` Response OtherInvalidCommandParameter mempty
       ifSend t 0x01 0x2000 2048 properties `shouldReturn` Response OtherInvalidCommandParameter mempty
-      (d, _) <- newInProc defaultSimParams { spInactiveComIdDiscard = True } (InProcOpts UnitBytes 0)
+      (d, _) <- openedInProc defaultSimParams { spInactiveComIdDiscard = True } (InProcOpts UnitBytes 0)
       ifSend d 0x01 0x2000 2048 properties `shouldReturn` Response Good mempty
       r <- ifRecv d 0x01 0x2000 2048
       status r `shouldBe` Good

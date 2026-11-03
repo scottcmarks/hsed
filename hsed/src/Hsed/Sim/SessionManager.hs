@@ -34,7 +34,7 @@ session packet, threading the TPer's state.
   TPer's properties, each a property Core Table 167 gives the TPer, from the
   parameters ("Hsed.Sim.Params".'SimParams': Table 17's minima by default,
   DefSessionTimeout 0 among them) and, where the host sent HostProperties,
-  every host property the TPer supports with its current value (5.2.2.4, PDF
+  every host property the TPer supports with its current value (5.2.2.3, PDF
   144).
 * StartSession opens a regular session or fails it with 5.1.5's statuses
   (PDF 137-139), the resources checked before the authentication (3.3.7.1.4,
@@ -332,7 +332,7 @@ hostProperties = \case
 --   M4a decision, design 13.30), then bounded by the most accepted, Table
 --   17's where it gives one (@hrMaximum@, VU throughout) and the run's
 --   ('spHostPropertyMax'), which bound a 0 too; a property not sent keeps its
---   value; an unsupported name is ignored (5.2.2.4, PDF 144).
+--   value; an unsupported name is ignored (5.2.2.3, PDF 144).
 acceptHostProperties :: SimParams -> [(Text, Natural)] -> Map Text Natural -> Map Text Natural
 acceptHostProperties p sent kept = L.foldl' (\m (name, v) -> Map.insert name v m) kept
   [ (name, bounded (reqName r) h (raised h v)) | (name, v) <- sent, Just (r, h) <- [L.find ((== name) . reqName . fst) supportedHostProperties] ]
@@ -344,7 +344,7 @@ acceptHostProperties p sent kept = L.foldl' (\m (name, v) -> Map.insert name v m
       Nothing   -> v
       Just most -> if v == 0 || v > most then most else v
 
--- | The HostProperties the TPer answers (5.2.2.4, PDF 144: every host
+-- | The HostProperties the TPer answers (5.2.2.3, PDF 144: every host
 --   property it supports, with its current value, in Opal 2.30 Table 17's
 --   order), from what the ComID keeps.
 hostResult :: Map Text Natural -> [Value]

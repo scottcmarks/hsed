@@ -117,8 +117,8 @@ listAt = \case
 
 -- | The Locking SP need not be Manufactured for a case that never touches
 --   it (design 9.1): UCT-01, SPF-02 case 1, ETC-02 and ETC-03 all waive it,
---   or every run would be skipped on the simulator before M5 and on disk6
---   (Manufactured-Inactive).
+--   or every run would be skipped on the simulator before M5 and on the
+--   drive (Manufactured-Inactive).
 lockingSPUntouched :: Waiver
 lockingSPUntouched = Waiver LockingManufactured "never touches the Locking SP (design 9.1)"
 

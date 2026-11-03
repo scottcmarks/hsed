@@ -164,7 +164,7 @@ spec = describe "Hsed.Jig.Capture" $ do
       `shouldBe` ["spec/fixtures/disk6-level0.json", "build/capture.json"]
   it "writes nothing for a response that is not good" $
     withSystemTempDirectory "hsed-capture" $ \tmp -> do
-      let refused = [ Response (TransportFailure "hsed_kext_level0: kIOReturnError (0xe00002bc)") ""
+      let refused = [ Response (TransportFailure "hsed_kext_command answered kIOReturnError (0xe00002bc) for Level 0 Discovery's IF-RECV") ""
                     , Response (Unsupported "M3: Level 0 only") "" ]
       forM_ refused $ \r -> captureLevel0 (captureFile tmp) disk6 cdb r `shouldThrow` anyException
       doesDirectoryExist (tmp </> "fixtures") `shouldReturn` False

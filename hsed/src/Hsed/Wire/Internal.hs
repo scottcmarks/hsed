@@ -168,7 +168,7 @@ data Describe = Describe
   , dSsc       :: !(Maybe Text)    -- ^ the SSC it claims, @opal-2.30@
   , dBaseComId :: !(Maybe Word16)
   , dNComIds   :: !(Maybe Word16)
-  , dDevice    :: !(Maybe Text)    -- ^ the device, @/dev/disk6@, or the file a replay reads
+  , dDevice    :: !(Maybe Text)    -- ^ the device, @/dev/diskN@, or the file a replay reads
   }
   deriving (Eq, Show)
 

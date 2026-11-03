@@ -45,13 +45,13 @@ import           Hsed.Wire  (Cap (..), Transport)
 
 -- | How the kext reaches the drive's TPer: its IORegistry @TPer Interface Type@.
 data InterfaceType
-  = IfSAT   -- ^ ATA commands through SCSI-ATA Translation (the RTL9210 bridge of disk6)
+  = IfSAT   -- ^ ATA commands through SCSI-ATA Translation (the RTL9210 bridge of the SED, serial S59BNM0RA15802W)
   | IfSCSI  -- ^ SCSI commands
   deriving (Eq, Ord, Show, Enum, Bounded)
 
 -- | A drive's TPer as the IORegistry describes it.
 data DriveInfo = DriveInfo
-  { diBsd        :: !Text           -- ^ the BSD name, @disk6@
+  { diBsd        :: !Text           -- ^ the BSD name, @diskN@ (@disk22@ on 2026-11-02: it changes at each attach)
   , diSerial     :: !Text           -- ^ the IDENTIFY serial, trimmed
   , diKextBuild  :: !Text           -- ^ the loaded kext's build (its CFBundleVersion)
   , diInterface  :: !InterfaceType

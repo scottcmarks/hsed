@@ -1,9 +1,20 @@
 #!/bin/bash
 # tools/m3-hw.sh: the hardware half of milestone M3 (docs/spec-as-source.md
 # section 11): the pre-flight checks anyone may run as themselves, then the
-# commands Scott runs, the one privileged run among them.
+# commands Scott runs, the one privileged run among them. Superseded for M4c
+# by tools/m4c-hw.sh, which names the drive by its serial alone and gives
+# M4c's steps (M3's Level 0 capture among them, its H3); this one is kept for
+# M3's capture as it was planned.
 #
-#   tools/m3-hw.sh [DISK [SERIAL]]      (default: disk6 S59BNM0RA15802W)
+#   tools/m3-hw.sh [DISK [SERIAL]]      (default: the whole disk under the kext
+#                                        TPer of serial S59BNM0RA15802W)
+#
+# With no DISK, the disk is the one the IORegistry puts under the kext TPer
+# whose trimmed IDENTIFY serial is SERIAL: the BSD number is assigned at each
+# attach (disk6 on 2026-10-25, disk22 on 2026-11-02), so it is never typed
+# from memory. The fixture keeps the name spec/fixtures/disk6-level0.bin
+# whatever the disk is now: it names the drive as first seen, and FixtureSpec
+# reads it by that name.
 #
 # It runs nothing privileged and nothing that reaches the drive: it reads the
 # IORegistry (ioreg), the process table (pgrep), the loaded kexts (kmutil),
@@ -22,7 +33,7 @@
 # are printed either way.
 set -euo pipefail
 
-disk=${1:-disk6}
+disk=${1:-}
 serial=${2:-S59BNM0RA15802W}
 jig=build/bin/hsed-jig
 kext=com.brightplaza.BrightPlazaTPer
@@ -36,6 +47,20 @@ die()  { printf 'm3-hw.sh: %s\n' "$*" >&2; exit 2; }
 cd "$(git -C "$(dirname "$0")/.." rev-parse --show-toplevel)"
 [ "$(id -u)" -ne 0 ] || die "run it as yourself: it only reads, and prints the commands that need root"
 [ "$(uname -s)" = Darwin ] || die "the kext transport is macOS's"
+# No DISK: the whole disk under the kext TPer whose trimmed IDENTIFY serial is SERIAL (ioreg prints a TPer's own
+# properties before its children's, its serial before its whole disk's IOMedia).
+if [ -z "$disk" ]; then
+    disk=$(ioreg -r -c com_brightplaza_BrightPlazaTPer -l -w0 2>/dev/null | awk -v want="$serial" '
+        /^\+-o com_brightplaza_BrightPlazaTPer / { s = ""; done = 0 }
+        /"Identify Device Characteristics" = / && match($0, /"Serial Number"="[^"]*"/) {
+            s = substr($0, RSTART + 17, RLENGTH - 18); gsub(/^ +| +$/, "", s) }
+        /"BSD Name" = "disk[0-9]+"/ && s == want && !done {
+            match($0, /"disk[0-9]+"/); print substr($0, RSTART + 1, RLENGTH - 2); done = 1 }')
+    if [ "$(grep -c . <<<"$disk" || true)" -ne 1 ]; then
+        printf 'm3-hw.sh: no one kext TPer with IDENTIFY serial %s has a whole disk under it: the drive is absent; or name DISK\n' "$serial" >&2
+        exit 1
+    fi
+fi
 [[ $disk =~ ^disk[0-9]+$ ]] || die "$disk: not a whole disk (diskN)"
 
 printf 'M3 hardware pre-flight: /dev/%s, serial %s\n\n' "$disk" "$serial"
@@ -62,16 +87,20 @@ if [ -z "$build" ]; then
 else
     ok "the kext $kext is loaded, build $build, UUID ${uuid:-unread}"
     binary=""
+    # each command's output read whole before grep -q looks at it: grep -q leaving a pipe early would end the command
+    # with SIGPIPE, which pipefail turns into the pipeline's failure
     for k in /Library/Extensions/*.kext; do
         [ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$k/Contents/Info.plist" 2>/dev/null)" = "$kext" ] || continue
-        exe=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$k/Contents/Info.plist" 2>/dev/null)
-        if [ -n "$uuid" ] && otool -arch all -l "$k/Contents/MacOS/$exe" 2>/dev/null | grep -q "uuid $uuid"; then
+        exe=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$k/Contents/Info.plist" 2>/dev/null || true)
+        loads=$(otool -arch all -l "$k/Contents/MacOS/$exe" 2>/dev/null || true)
+        if [ -n "$uuid" ] && grep -q "uuid $uuid" <<<"$loads"; then
             binary="$k/Contents/MacOS/$exe"
         fi
     done
+    imports=$( [ -z "$binary" ] || nm -u "$binary" 2>/dev/null || true)
     if [ -z "$binary" ]; then
         note "no installed kext's binary carries the loaded UUID: its checks are unread; treat it as checking nothing"
-    elif nm -u "$binary" 2>/dev/null | grep -q 'clientHasPrivilege'; then
+    elif grep -q 'clientHasPrivilege' <<<"$imports"; then
         ok "the loaded kext ($binary) checks the caller's privilege (IOUserClient::clientHasPrivilege)"
         note "whether it also refuses ATA commands other than TRUSTED RECEIVE, TRUSTED SEND and IDENTIFY (macos-driver 7856c9c) shows only in a disassembly"
     else
@@ -107,10 +136,12 @@ for p in sedutil-cli sedd; do
     if pgrep -x "$p" >/dev/null; then fail "$p is running"; else ok "$p is not running"; fi
 done
 
-# The jig: built as Scott, with the kext transport in it (never run here).
+# The jig: built as Scott, with the kext transport in it (never run here): M4c's shim, whose command replaced M3's
+# Level 0 call.
+jig_symbols=$( [ ! -x "$jig" ] || nm "$jig" 2>/dev/null || true)
 if [ ! -x "$jig" ]; then
     fail "$jig is not built (step 1)"
-elif ! nm "$jig" 2>/dev/null | grep -q '_hsed_kext_level0$'; then
+elif ! grep -q '_hsed_kext_command$' <<<"$jig_symbols"; then
     fail "$jig has no kext transport: built without --flag hsed:kext, or before the jig opened the kext (step 1)"
 elif [ "$(stat -f %u "$jig")" -eq 0 ]; then
     fail "$jig is root's: build as yourself, never with stack under root"
@@ -122,7 +153,8 @@ fi
 shared=0
 for b in .stack-work/install/*/*/*/bin/hsed-jig hsed/.stack-work/dist/*/*/build/hsed-jig/hsed-jig; do
     [ -x "$b" ] || continue
-    if nm "$b" 2>/dev/null | grep -q '_hsed_kext_'; then
+    shared_symbols=$(nm "$b" 2>/dev/null || true)
+    if grep -q '_hsed_kext_' <<<"$shared_symbols"; then
         fail "$b carries the kext transport: rebuild it flag-off (stack build hsed) before anything else runs"
         shared=1
     fi
@@ -147,37 +179,37 @@ cat <<EOF
    flag-off hsed-jig the agents run: the shim compiles and links against IOKit.
      cd ~/hsed && stack --work-dir .stack-work-kext build hsed:exe:hsed-jig --flag hsed:kext --copy-bins --local-bin-path build/bin
 2. Run this script again: every pre-flight should pass.
-     tools/m3-hw.sh ${disk} ${serial}
+     tools/m3-hw.sh "" ${serial}
 3. Optional oracle before the run (never at the same time as hsed-jig):
      sudo sedutil-cli --query /dev/${disk} > build/sedutil-query-before.txt
-     diff spec/fixtures/${disk}-query.txt build/sedutil-query-before.txt
+     diff spec/fixtures/disk6-query.txt build/sedutil-query-before.txt
 4. The drive run: one Level 0 IF-RECV, UCT-01, the capture. Expect exit 0, and on stderr the CDB
    a1 08 0e 01 04 00 01 00 00 5c 00 00, kIOReturnSuccess, 2048 bytes transferred, the sha256 and the
    Length of Parameter Data; the files written stay yours. --expect-serial is required. If it says the kext
    moved another count of bytes than the 2048 asked, stop there: it captured nothing, its JSON report keeps the
    bytes, and design 13.29 (d) is yours to settle before another run.
      cd ~/hsed && sudo build/bin/hsed-jig --target /dev/${disk} --tests UCT-01 --expect-serial ${serial} \\
-         --capture-level0 spec/fixtures/${disk}-level0.bin --report-dir build/report
+         --capture-level0 spec/fixtures/disk6-level0.bin --report-dir build/report
 5. Optional live Pair run, one more Level 0 IF-RECV: expect extra 0x0005 and 0x0404, none missing,
    allowed differences only.
-     sudo build/bin/hsed-jig --target sim+/dev/${disk} --tests UCT-01 --profile spec/fixtures/${disk}-level0.bin \\
+     sudo build/bin/hsed-jig --target sim+/dev/${disk} --tests UCT-01 --profile spec/fixtures/disk6-level0.bin \\
          --expect-serial ${serial} --report-dir build/report
 6. Unprivileged checks: the drive issued Level 0 Discovery's IF-RECV alone, the decode equal to sedutil's,
    the replay Pair.
      build/bin/hsed-jig verify-transcript \$(ls -t build/report/jig-dev-${disk}-*.json | head -1) --no-if-send --level0-only
-     build/bin/hsed-jig level0 decode spec/fixtures/${disk}-level0.bin --against spec/fixtures/${disk}-query.txt
-     build/bin/hsed-jig --target sim+replay:spec/fixtures/${disk}-level0.bin --tests UCT-01 --profile spec/fixtures/${disk}-level0.bin
+     build/bin/hsed-jig level0 decode spec/fixtures/disk6-level0.bin --against spec/fixtures/disk6-query.txt
+     build/bin/hsed-jig --target sim+replay:spec/fixtures/disk6-level0.bin --tests UCT-01 --profile spec/fixtures/disk6-level0.bin
 7. Optional oracle after the run: the drive is unchanged.
      sudo sedutil-cli --query /dev/${disk} > build/sedutil-query-after.txt
      diff build/sedutil-query-before.txt build/sedutil-query-after.txt
 8. Run this script once more: no user client should remain open.
-     tools/m3-hw.sh ${disk} ${serial}
+     tools/m3-hw.sh "" ${serial}
 9. Test the capture, then commit it (or have an agent do it): FixtureSpec stops pending, and holds the
    sidecar to the .bin. If FixtureSpec fails only on 0x0403 (a descriptor shorter than CNL 1.30's, design
    13.29 (i)), commit nothing and hand it to an agent.
      stack test hsed
-     git add spec/fixtures/${disk}-level0.bin spec/fixtures/${disk}-level0.json
-     git commit -m 'Fixture: Level 0 of /dev/${disk} through the kext'
+     git add spec/fixtures/disk6-level0.bin spec/fixtures/disk6-level0.json
+     git commit -m 'Fixture: Level 0 of the drive (serial ${serial}) through the kext, as /dev/${disk}'
      tools/land.sh
 EOF
 

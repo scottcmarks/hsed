@@ -131,8 +131,10 @@ why it stopped, and name a session it left open, for @--recover@. A session
 a StartSession may have opened whose SyncSession the host could not read,
 and which no STACK_RESET has cleared since ("Hsed.Jig.Script".@rcSessionUnread@),
 is a problem of the run, named with @--recover@'s hint, stopped or not; so
-is a session a run that was not stopped left open (its End of Session
-unanswered or, on a drive the run latched, not sent).
+is a session a run that was not stopped left open: its End of Session
+unanswered and no STACK_RESET answering Success/Failure 0 since (none
+sent, or the closing one answering otherwise, "Hsed.Jig.Script".@closingStep@),
+or, on a drive the run latched, not sent.
 -}
 module Hsed.Jig.Run
   ( RunOptions (..)
@@ -527,7 +529,8 @@ runOn opts started chosen preflightNotes t stop tg = do
                        <> "could not read (" <> why <> "), which no STACK_RESET has cleared: hsed-jig --recover"
                      | (e, ctx) <- zip ends contexts, Just (c, why) <- [rcSessionUnread ctx] ]
                      <> [ "the " <> endName e <> " may hold session TSN " <> tshow (shTSN h) <> " on ComID " <> hex (shComId h)
-                          <> ", its End of Session unanswered or not sent: hsed-jig --recover"
+                          <> ", its End of Session unanswered or not sent, and no STACK_RESET answering Success since: "
+                          <> "hsed-jig --recover"
                         | isNothing stopped, (e, ctx) <- zip ends contexts, Just h <- [rcSession ctx] ]
         negotiated = [ (endName e, sent, answer) | (e, ctx) <- zip ends contexts, Just (sent, answer) <- [rcNegotiated ctx] ]
         pairProps  = case contexts of

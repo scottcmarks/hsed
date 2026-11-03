@@ -21,8 +21,11 @@ MinTransfer and its length, with or without packets in that ComPacket
 (rows 2 and 3), polls past Response(s) to come (row 1), and gives up after
 its timeout, or past the bounds on the whole exchange (its time, the bytes it
 collects) against a TPer that never stops answering; an answer of another
-extension than the one sent is malformed. And the wire's constants, each
-defined once.
+extension than the one sent is malformed; a MinTransfer the transport
+cannot carry leaves the answer uncollected, the IF-SEND issued, where a
+length it cannot carry for the IF-SEND or the first IF-RECV is refused
+before anything is issued (the M4c review's verification). And the wire's
+constants, each defined once.
 -}
 module Hsed.WireSpec (spec) where
 
@@ -193,9 +196,18 @@ spec = do
       ch <- newChannel
       exchangeComPacket quick (const (pure (Left "the Guard refuses it"))) ch t 0x1004 "\x00" `shouldReturn` Left (Refused "the Guard refuses it")
       seen `shouldReturn` []
-    it "refuses a MinTransfer more than the transport carries" $ do
-      (t, _) <- scripted UnitBlocks512 [\h -> comPacket h { comPacketOutstandingData = 0x200000, comPacketMinTransfer = 0x200000 } []]
-      exchanged quick t >>= (`shouldSatisfy` isRefused)
+    it "leaves uncollected an answer whose MinTransfer is more than the transport carries, the IF-SEND issued: not a refusal" $ do
+      (t, seen) <- scripted UnitBlocks512 [\h -> comPacket h { comPacketOutstandingData = 0x200000, comPacketMinTransfer = 0x200000 } []]
+      exchanged quick t `shouldReturn` Left (Uncollected "MinTransfer 2097152 asks a transfer of 2097152 bytes, which the transport cannot carry")
+      map (\r -> (dir r, lenBytes r)) <$> seen `shouldReturn` [(IfSend, 512), (IfRecv, 2048)]
+    it "refuses an IF-SEND or a first IF-RECV the transport cannot carry, before anything is issued" $ do
+      (t, seen) <- scripted UnitBlocks512 []
+      ch <- newChannel
+      exchangeComPacket quick { xRecvLen = 255 * 512 + 1 } (\q -> Right <$> ifSend t (proto q) (comId q) (lenBytes q) (payload q)) ch t 0x1004 "\x00"
+        >>= (`shouldSatisfy` isRefused)
+      exchangeComPacket quick (\q -> Right <$> ifSend t (proto q) (comId q) (lenBytes q) (payload q)) ch t 0x1004 (B.replicate (255 * 512 + 1) 0)
+        >>= (`shouldSatisfy` isRefused)
+      seen `shouldReturn` []
     it "calls an answer no ComPacket of the ComID, or of an inactive one, malformed" $ do
       (other, _) <- scripted UnitBytes [\_ -> comPacket (ComPacketHeader 0x1005 0 0 0) []]
       exchanged quick other >>= (`shouldSatisfy` isMalformed)

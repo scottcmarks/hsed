@@ -127,9 +127,12 @@ data RunOptions = RunOptions
 --   by one IF-RECV and NoSessions waived as unobservable, is kept built and
 --   tested in both modes, so that a flip is this one field. The host polls
 --   and waits as "Hsed.Wire".'defaultExchangeOpts' says, and gives each of
---   a drive's commands 15 s, past the kext's own 10 s (@SED_TIMEOUT@,
---   macos-driver UserKernelShared.h:71, which TPerDriver.cpp:318 gives each
---   command), so that the kext always answers first.
+--   a drive's commands 15 s, past the kext's own 10 s on its SCSI task
+--   (@SED_TIMEOUT@, macos-driver UserKernelShared.h:71, which
+--   TPerDriver.cpp:318 gives each command), which makes the host's timeout
+--   unlikely to end a wait; it never cuts a command short (the run gives
+--   each under its recording's mask), and a host that gives up all the same
+--   latches the drive ("Hsed.Jig.Script".@exchangeOn@).
 defaultRunOptions :: RunOptions
 defaultRunOptions = RunOptions
   { roTarget                = TSim

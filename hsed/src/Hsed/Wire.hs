@@ -238,18 +238,22 @@ defaultExchangeOpts = ExchangeOpts
 
 -- | Why an exchange did not return the TPer's packets.
 data ExchangeError
-  = IfError !IfStatus  -- ^ a command answered with a status other than 'Good'
-  | Malformed !Text    -- ^ a response that is no ComPacket of the ComID, or more than 'xResponseBytes' of packets
-  | TimedOut           -- ^ no answer within 'xTimeoutMicros', or the exchange past 'xTotalMicros'
-  | Refused !Text      -- ^ the IF-SEND path refused the payload (the Guard), or a length the transport cannot carry
+  = IfError !IfStatus    -- ^ a command answered with a status other than 'Good'
+  | Malformed !Text      -- ^ a response that is no ComPacket of the ComID, or more than 'xResponseBytes' of packets
+  | TimedOut             -- ^ no answer within 'xTimeoutMicros', or the exchange past 'xTotalMicros'
+  | Refused !Text        -- ^ before the IF-SEND, nothing issued: the IF-SEND path refused the payload (the Guard), or
+                         --   the IF-SEND's or the IF-RECV's length is one the transport cannot carry
+  | Uncollected !Text    -- ^ after the IF-SEND, which the TPer took: an answer's MinTransfer asks for a length the
+                         --   transport cannot carry, so the rest of the TPer's answer is not collected
   deriving (Eq, Show)
 
 instance A.ToJSON ExchangeError where
   toJSON = \case
-    IfError s   -> A.object ["error" A..= ("if_error" :: Text), "status" A..= s]
-    Malformed t -> A.object ["error" A..= ("malformed" :: Text), "detail" A..= t]
-    TimedOut    -> A.object ["error" A..= ("timed_out" :: Text)]
-    Refused t   -> A.object ["error" A..= ("refused" :: Text), "detail" A..= t]
+    IfError s     -> A.object ["error" A..= ("if_error" :: Text), "status" A..= s]
+    Malformed t   -> A.object ["error" A..= ("malformed" :: Text), "detail" A..= t]
+    TimedOut      -> A.object ["error" A..= ("timed_out" :: Text)]
+    Refused t     -> A.object ["error" A..= ("refused" :: Text), "detail" A..= t]
+    Uncollected t -> A.object ["error" A..= ("uncollected" :: Text), "detail" A..= t]
 
 -- | Send a ComPacket's bytes on a ComID and collect the packets of the
 --   TPer's response: the IF-SEND through the path given (the transport's
@@ -264,8 +268,10 @@ instance A.ToJSON ExchangeError where
 --   * MinTransfer not zero (row 2, or row 3 with this ComPacket's packets):
 --     ask again at once, for that many bytes if more than were asked,
 --     rounded up to the unit; a length the transport cannot carry is
---     'Refused', and a MinTransfer no larger than the length asked, with no
---     packets, is no row of the table ('Malformed');
+--     'Uncollected', the IF-SEND having gone (a length it cannot carry for
+--     the IF-SEND itself, or for the first IF-RECV, is 'Refused', before
+--     anything is issued), and a MinTransfer no larger than the length
+--     asked, with no packets, is no row of the table ('Malformed');
 --   * OutstandingData zero (rows 5 and 6): done, the packets so far
 --     returned (none, on row 6 at once);
 --   * otherwise (rows 1 and 4): the TPer is still processing; ask again
@@ -335,7 +341,8 @@ exchangeComPacket opts send chan t c bytes = withComId chan c $
           in if null ps && len' <= len
                then pure (Left (Malformed ("MinTransfer " <> tshow (comPacketMinTransfer h) <> " with no packets, to a request of "
                                            <> tshow len <> " bytes: no row of Core Table 45")))
-               else either (pure . Left . Refused) (const (Clock.getMonotonicTime >>= receive started acc' held' len'))
+               else either (pure . Left . Uncollected . (("MinTransfer " <> tshow (comPacketMinTransfer h) <> " asks ") <>))
+                           (const (Clock.getMonotonicTime >>= receive started acc' held' len'))
                            (carriable len')
       | comPacketOutstandingData h == 0 = pure (Right acc')
       | otherwise = do

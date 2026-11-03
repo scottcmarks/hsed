@@ -240,8 +240,11 @@ type ShimCommand = Shape -> Word8 -> Ptr Word8 -> Word64 -> Ptr Word8 -> Ptr Wor
 --   From the latch's check to the latch set again, the command is
 --   uninterruptible: an asynchronous exception (a 'timeout', a signal
 --   thrown as one) waits for the shim and for the command's answer to be
---   judged and kept, the kext's own limit, 10 s a command, bounding the
---   wait. One that arrived meanwhile is then raised, the answer lost to the
+--   judged and kept, however long the kext takes: its own limit, 10 s
+--   (@SED_TIMEOUT@), bounds the SCSI task alone (build 625's user-client
+--   path adds 27 sleeps of 1 ms around it, and a USB bridge's recovery
+--   after a task's timeout has no bound the kext sets). One that arrived
+--   meanwhile is then raised, the answer lost to the
 --   caller, and so the transport latches before it is: what the drive did
 --   with the command is no longer known. That is so for a caller that gives
 --   the command unmasked; a run gives every command of a drive under its

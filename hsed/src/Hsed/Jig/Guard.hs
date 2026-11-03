@@ -119,6 +119,8 @@ module Hsed.Jig.Guard
   , guardedRecv
   , guarding
   , blockedResponse
+    -- * What the Guard reads a value as
+  , uintegerOf
   ) where
 
 import qualified Data.Aeson            as A
@@ -550,7 +552,8 @@ startSessionAllowed ps = do
     given -> Left ("StartSession with " <> T.intercalate ", " (map fst given) <> ": no optional parameter but "
                    <> "HostSigningAuthority = Anybody (Core 5.2.3.1, PDF 149)")
 
--- | A value that is a uinteger.
+-- | A value that is a uinteger: the Guard's reading, which
+--   "Hsed.Jig.Script" reads a SyncSession's session numbers by as well.
 uintegerOf :: Value -> Maybe Natural
 uintegerOf = \case
   D (Datum (Unsigned n)) -> Just n

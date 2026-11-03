@@ -40,19 +40,24 @@ Opal 2.30 Table 17 has the TPer assume it (PDF 33), the value STACK_RESET
 puts back (Core 3.3.4.7.5 item 7, PDF 65), and within what the kext's
 command carries; a longer answer is asked for again at its MinTransfer
 (Table 45, PDF 83). The host's exchange on a drive waits 15 s for each
-command, past the kext's own 10 s, so that the kext always answers first
-('exchangeOn'); where the host gives up all the same, what the drive did
-with the command is no longer known, and the drive is latched for the rest
-of the run ("Hsed.Jig.Guard".'Hsed.Jig.Guard.driveLatch'): nothing more
-reaches it, End of Session and STACK_RESET included. 'admitsStackReset'
+command ('exchangeOn'), past the kext's own 10 s on its SCSI task, which
+makes the host's giving up unlikely; the wait never cuts a command short
+(every command of a drive is given under its recording's mask, so the
+transport judges and keeps its answer whenever it comes); and where the
+host gives up all the same, what the drive did with the command is no
+longer known, and the drive is latched for the rest of the run
+("Hsed.Jig.Guard".'Hsed.Jig.Guard.driveLatch'): nothing more reaches it,
+End of Session and STACK_RESET included. 'admitsStackReset'
 says whether the end takes STACK_RESET once its base ComID is bound: the
 simulator always, a drive where the run admits it (@--recover@, or
 STACK_RESET before each case) and has not latched it; and then
 'closingStep' sends one after a step that failed, and 'startSession' one
 after a StartSession whose SyncSession it could not read, so that no
 session the TPer opened outlives its case unknown. Where the end takes
-none, such a session is kept in the run's context ('rcSessionUnread'), for
-the next case's NoSessions and for the reports, which name it with
+none, or the reset does not answer Success/Failure 0, such a session is
+kept in the run's context (a session whose End of Session went unanswered
+as 'rcSession', one whose SyncSession was not read as 'rcSessionUnread'),
+for the next case's NoSessions and for the reports, which name it with
 @--recover@'s hint.
 
 A run is stopped between commands, never in one (M4c): its stop flag
@@ -213,7 +218,7 @@ import           Hsed.Gen.Core.UIDs     (uCloseSession, uProperties, uSMUID, uSP
 import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
 import           Hsed.Gen.Opal.Properties (propertyRequirements)
 import           Hsed.Jig.Guard         (Allowed (..), GuardedDrive, blockedResponse, driveAllowed, driveBind, driveInfo, driveLatch,
-                                         driveLatched, driveRecv, driveSend, driveTransport)
+                                         driveLatched, driveRecv, driveSend, driveTransport, uintegerOf)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
 import           Hsed.Jig.Target        (Target (..))
 import           Hsed.Jig.Transcript    (TEntry (..), Transcript, entries, numberOf, record)
@@ -663,10 +668,11 @@ propertiesAnswerOf packets = do
 --   open on purpose, for @--recover@ to clear (design 11, M4c).
 --
 --   A StartSession issued whose SyncSession the host could not read (an
---   exchange that failed past its IF-SEND, or an answer with no SyncSession
---   but the TPer's own word that none opened: its CloseSession, Core
---   3.3.7.1.5, PDF 75) may have left a session open, which the TPer holds
---   once it returns SyncSession (Core 3.3.4.5, PDF 62): on an end that takes
+--   exchange that failed past its IF-SEND, an answer whose MinTransfer the
+--   transport cannot carry among them, or an answer with no SyncSession but
+--   the TPer's own word that none opened: its CloseSession, Core 3.3.7.1.5,
+--   PDF 75) may have left a session open, which the TPer holds once it
+--   returns SyncSession (Core 3.3.4.5, PDF 62): on an end that takes
 --   STACK_RESET ('admitsStackReset') one is sent on the ComID and noted,
 --   which aborts it (3.3.4.7.5 item 1, PDF 65); where the end takes none,
 --   or the reset does not answer Success, the run's context keeps it
@@ -703,9 +709,11 @@ startSession (StartArgs sp authority challenge write) = do
 
 -- | Why a StartSession's exchange may have left a session the host does not
 --   know of, and whether a command of it failed in the transport or went
---   unanswered: its IF-SEND issued (not refused before it) and no
---   SyncSession read back, the TPer not having said that it opened none (a
---   SyncSession of an error status, its CloseSession); or none.
+--   unanswered: its IF-SEND issued (any exchange error but 'Refused', which
+--   comes before it: an answer the transport cannot carry the rest of,
+--   'Uncollected', among them) and no SyncSession read back, the TPer not
+--   having said that it opened none (a SyncSession of an error status, its
+--   CloseSession); or none.
 unreadSession :: Either ExchangeError [PacketFrame] -> Either ExchangeError SyncAnswer -> Maybe (Text, Bool)
 unreadSession exchange answer = case (exchange, answer) of
   (_, Right (Synced _))        -> Nothing
@@ -776,7 +784,7 @@ syncAnswerOf c packets = case returnedOf packets of
   Right items -> case [ (mc, r) | ReturnedCall mc <- items, Just r <- [fromCall @Methods.SyncSession mc] ] of
     (mc, Right s) : _
       | _statusCode mc /= statusValue SUCCESS -> SyncFailed (StatusCode (_statusCode mc))
-      | otherwise -> case (uinteger (Methods.syncSessionHostSessionID s), uinteger (Methods.syncSessionSPSessionID s)) of
+      | otherwise -> case (uintegerOf (Methods.syncSessionHostSessionID s), uintegerOf (Methods.syncSessionSPSessionID s)) of
           (Just hsn, Just tsn) -> Synced (SessionHandle c (fromIntegral tsn) (fromIntegral hsn))
           _                    -> NoSync "SyncSession's HostSessionID or SPSessionID is no uinteger (Core 5.2.3.2, PDF 150)"
     (_, Left e) : _ -> NoSync ("SyncSession's parameters do not read: " <> paramErrorText e)
@@ -960,7 +968,12 @@ withSession args body = startSession args >>= exchanged "StartSession" >>= opene
 --   it), STACK_RESET on the session's ComID (noted), so that the next case
 --   finds no session (Core 3.3.4.7.5 item 1, PDF 65: every session on the
 --   ComID aborted); on a drive whose run admits none, the session is left,
---   for the next case's NoSessions to find.
+--   for the next case's NoSessions to find. A session whose End of Session
+--   went unanswered stays in the run's context ('rcSession') until a
+--   STACK_RESET answers Success/Failure 0: one that answers otherwise, or
+--   none sent, leaves it there for the next case's reset or NoSessions and,
+--   after the run's last case, for the reports, which name it with
+--   @--recover@'s hint (the M4c review's verification).
 closingStep :: Text -> SessionHandle -> Verdict -> Script Verdict
 closingStep name h v = do
   closed <- endSession h
@@ -978,7 +991,7 @@ closingStep name h v = do
   where
     recover = admitsStackReset >>= \admits -> when admits $ do
       outcome <- stackReset (shComId h)
-      modifyCtx (\x -> x { rcSession = Nothing, rcSessionUnread = if outcome == Right 0 then Nothing else rcSessionUnread x })
+      when (outcome == Right 0) (modifyCtx (\x -> x { rcSession = Nothing, rcSessionUnread = Nothing }))
       note (name <> ": after a failure, STACK_RESET on " <> hex (shComId h) <> ": "
             <> either id (\n -> "Success/Failure " <> tshow n) outcome)
 
@@ -1073,10 +1086,13 @@ exchangeOn c bytes = do
       pure answer
 
 -- | How long the host's exchange waits for a drive's command, unless a test
---   shortens it: 15 s, past the kext's own 10 s (@SED_TIMEOUT@,
---   macos-driver UserKernelShared.h:71, which TPerDriver.cpp:318 gives each
---   command), so that the kext always answers first and no command is left
---   running in it when the host gives up ("Hsed.Jig.Options".@roDriveTimeoutMicros@).
+--   shortens it ("Hsed.Jig.Options".@roDriveTimeoutMicros@): 15 s, past the
+--   kext's own 10 s on its SCSI task (@SED_TIMEOUT@, macos-driver
+--   UserKernelShared.h:71, which TPerDriver.cpp:318 gives each command), so
+--   that the host's timeout is unlikely to end a wait. It never cuts a
+--   command short: the run gives each command under its recording's mask,
+--   and the transport judges and keeps the answer whenever it comes; a host
+--   that gives up all the same latches the drive ('exchangeOn').
 driveTimeoutMicros :: Int
 driveTimeoutMicros = roDriveTimeoutMicros defaultRunOptions
 
@@ -1221,12 +1237,6 @@ namedNumbers = \case
       Signed i   -> Just i
       _          -> Nothing
 
--- | A value that is a uinteger.
-uinteger :: Value -> Maybe Natural
-uinteger = \case
-  D (Datum (Unsigned n)) -> Just n
-  _                      -> Nothing
-
 -- | Bytes that must encode: a ComPacket the jig sends, else the script
 --   stops naming what did not.
 framed :: Text -> Either LayoutError ByteString -> Script ByteString
@@ -1278,10 +1288,11 @@ describeStatus s = ifStatusName s <> maybe "" (\d -> " (" <> d <> ")") (ifStatus
 -- | Why an exchange returned no packets, in words.
 describeExchange :: ExchangeError -> Text
 describeExchange = \case
-  IfError s   -> "a command answered " <> describeStatus s
-  Malformed t -> "an answer that does not read: " <> t
-  TimedOut    -> "no answer within the host's timeout"
-  Refused t   -> "refused: " <> t
+  IfError s     -> "a command answered " <> describeStatus s
+  Malformed t   -> "an answer that does not read: " <> t
+  TimedOut      -> "no answer within the host's timeout"
+  Refused t     -> "refused: " <> t
+  Uncollected t -> "an answer not collected: " <> t
 
 -- | A verdict in words: what it is, and why.
 verdictText :: Verdict -> Text

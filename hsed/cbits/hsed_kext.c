@@ -1,21 +1,29 @@
 /*
  * hsed_kext.c: the C shim between hsed and the BrightPlaza TPer kext's user
- * client (hsed_kext.h; design docs/spec-as-source.md 7.2, M3).
+ * client (hsed_kext.h; design docs/spec-as-source.md 7.2 and 9.3, M4c).
  *
  * IOKit and CoreFoundation alone, the kext's user-client ABI written out
  * here: its classes (macos-driver UserKernelShared.h) and three of its
  * methods (TPerDriverDispatchTable.inc, unchanged since its 2023 initial
- * commit). hsed_kext_locate reads the IORegistry and opens nothing;
- * hsed_kext_open and hsed_kext_close open and close the user client; and
- * hsed_kext_level0 issues the one command the shim can, IF-RECV of Level 0
- * Discovery, through a CDB it builds itself from the two below, with the
- * data moving in from the drive. Nothing in this file sends: no command
- * that carries data to the drive, no direction but In, no CDB a caller
- * hands in (Hsed.Transport.KextSourceSpec reads this file to hold it so).
+ * commit; build 625's dispatch table and the direction logic of its SCSI
+ * command were read byte for byte on 2026-11-02). hsed_kext_locate reads
+ * the IORegistry and opens nothing; hsed_kext_open and hsed_kext_close
+ * open and close the user client; hsed_kext_bind binds the drive's base
+ * ComID; and hsed_kext_command issues one of the five commands of
+ * hsed_cdb.h. This file writes no CDB byte, no direction, no security
+ * protocol and no ComID: a command's CDB, the direction the kext copies the
+ * buffer by and the length it moves come from one hsed_cdb_build, and an
+ * IF-SEND's payload is checked by hsed_cdb_check_payload on the very
+ * buffer handed to the kernel, before the one call that issues it
+ * (hsed_cdb.c; Hsed.Transport.KextSourceSpec reads this file to hold it
+ * so).
  *
- * The loaded kext (build 625) checks no privilege: the gates are hsed's
- * (design 9.3), and this file is the one that holds whatever the Haskell
- * above it does.
+ * The loaded kext (build 625) checks no privilege and no command: the
+ * gates are hsed's (design 9.3), and this file is the one that holds
+ * whatever the Haskell above it does: root before the user client is
+ * opened; the base ComID, the user client alone on the TPer and the
+ * drive's serial before the base is bound; the shape, the length and the
+ * payload before each command.
  */
 #include <stddef.h>
 #include <stdint.h>
@@ -30,11 +38,12 @@
 #include <IOKit/storage/IOBlockStorageDriver.h>
 #include <IOKit/storage/IOMedia.h>
 
+#include "hsed_cdb.h"
 #include "hsed_kext.h"
 
 /* hsed_kext_info as Hsed.Transport.MacKext reads it, by these offsets
    (Hsed.Transport.Kext.infoLayout; Hsed.Transport.KextSourceSpec compares the two). */
-_Static_assert(sizeof(hsed_kext_info) == 120, "hsed_kext_info is 120 bytes");
+_Static_assert(sizeof(hsed_kext_info) == 128, "hsed_kext_info is 128 bytes");
 _Static_assert(_Alignof(hsed_kext_info) == 8, "hsed_kext_info is aligned to 8");
 _Static_assert(offsetof(hsed_kext_info, conn) == 0, "conn at 0");
 _Static_assert(offsetof(hsed_kext_info, registry_id) == 8, "registry_id at 8");
@@ -42,6 +51,7 @@ _Static_assert(offsetof(hsed_kext_info, sat) == 16, "sat at 16");
 _Static_assert(offsetof(hsed_kext_info, serial) == 20, "serial at 20");
 _Static_assert(offsetof(hsed_kext_info, kext_build) == 84, "kext_build at 84");
 _Static_assert(offsetof(hsed_kext_info, other_clients) == 116, "other_clients at 116");
+_Static_assert(offsetof(hsed_kext_info, base_comid) == 120, "base_comid at 120");
 _Static_assert(sizeof(((hsed_kext_info *)NULL)->serial) == 64, "serial is 64 bytes");
 _Static_assert(sizeof(((hsed_kext_info *)NULL)->kext_build) == 32, "kext_build is 32 bytes");
 
@@ -52,56 +62,12 @@ _Static_assert(sizeof(((hsed_kext_info *)NULL)->kext_build) == 32, "kext_build i
 /* The user client's methods this file calls, by selector
    (TPerDriverDispatchTable.inc): Open and Close take no scalars; the SCSI
    command takes six in (the CDB as two native quads, the buffer, its size,
-   the direction, the length asked) and gives one out (the bytes moved). */
+   the direction, the length asked; UserClient.cpp:83-88) and gives one out
+   (the bytes moved). The fourth method, which has the kernel issue
+   commands of its own, is never called. */
 #define HSED_KEXT_SELECTOR_OPEN  0u
 #define HSED_KEXT_SELECTOR_CLOSE 1u
 #define HSED_KEXT_SELECTOR_SCSI  2u
-
-/* The direction scalar: IODirection's In, the user land's read
-   (IOMemoryDescriptor.h; UserClient.cpp copies the kernel's buffer out to
-   the caller's for it). The only direction this file names. */
-#define HSED_KEXT_DIRECTION_IN 1u
-
-/* An IF-RECV's transfer counts 512-byte blocks (SIIS 1.20 Table 17, PDF 41;
-   Table 13 with INC_512 set, PDF 31). */
-#define HSED_KEXT_BLOCK_BYTES 512u
-
-/* IF-RECV of Level 0 Discovery: Protocol ID 1, ComID 1 (Core 2.01 3.3.6.2,
-   PDF 67). Each is the kext's own attach-time CDB (TPerDriver.cpp:1506-1557)
-   with its count of blocks left zero, which hsed_kext_level0 writes at
-   HSED_SAT_COUNT or HSED_SCSI_LENGTH; Hsed.Transport.Cdb builds the same
-   bytes, and Hsed.Transport.KextSourceSpec holds these two to it. */
-static const uint8_t hsed_level0_sat[12] = {
-    0xA1,  /* ATA PASS-THROUGH (12) */
-    0x08,  /* PROTOCOL 4, PIO Data-In, in bits 4 to 1 */
-    0x0E,  /* T_DIR from the device, BYTE_BLOCK in blocks, T_LENGTH in COUNT */
-    0x01,  /* FEATURES: the security protocol */
-    0x00,  /* COUNT: the blocks */
-    0x00,  /* LBA 7 to 0: the transfer length's high byte, zero up to 255 blocks */
-    0x01,  /* LBA 15 to 8: the ComID's low byte */
-    0x00,  /* LBA 23 to 16: the ComID's high byte */
-    0x00,  /* DEVICE */
-    0x5C,  /* COMMAND: TRUSTED RECEIVE */
-    0x00,  /* reserved */
-    0x00,  /* CONTROL */
-};
-static const uint8_t hsed_level0_scsi[12] = {
-    0xA2,  /* SECURITY PROTOCOL IN */
-    0x01,  /* SECURITY PROTOCOL */
-    0x00,  /* SECURITY PROTOCOL SPECIFIC: the ComID's high byte */
-    0x01,  /*   and its low byte */
-    0x80,  /* INC_512: the length counts 512-byte blocks */
-    0x00,  /* reserved */
-    0x00,  /* ALLOCATION LENGTH: its high bytes, zero up to 255 blocks */
-    0x00,
-    0x00,
-    0x00,  /*   and its low byte: the blocks */
-    0x00,  /* reserved */
-    0x00,  /* CONTROL */
-};
-#define HSED_SAT_COUNT   4
-#define HSED_SCSI_LENGTH 9
-_Static_assert(sizeof hsed_level0_sat == 12 && sizeof hsed_level0_scsi == 12, "12-byte CDBs");
 
 
 /* A registry entry's parent in the service plane, if it is of a class; the
@@ -257,6 +223,10 @@ int hsed_kext_open(hsed_kext_info *info)
     io_connect_t conn = IO_OBJECT_NULL;
     kern_return_t ret = KERN_SUCCESS;
 
+    /* root first, hsed's own gate: build 625 grants its user client to any
+       process (design 9.3), so this is the one check of privilege there is */
+    if (geteuid() != 0)
+        return kIOReturnNotPrivileged;
     if (info == NULL || info->conn != IO_OBJECT_NULL)
         return kIOReturnBadArgument;
     /* the entry hsed_kext_locate read, by its id, and still the kext's TPer */
@@ -281,48 +251,106 @@ int hsed_kext_open(hsed_kext_info *info)
         return ret;
     }
     info->conn = conn;
+    info->base_comid = 0;
     return KERN_SUCCESS;
 }
 
-int hsed_kext_level0(const hsed_kext_info *info, uint8_t blocks, void *buf, uint64_t bufsize,
-                     uint8_t cdb_out[16], uint64_t *xfer)
+int hsed_kext_bind(hsed_kext_info *info, uint16_t base)
+{
+    CFMutableDictionaryRef matching = NULL;
+    io_service_t tper = IO_OBJECT_NULL;
+    char serial[sizeof ((hsed_kext_info *)NULL)->serial] = { 0 };
+    int clients = 0;
+
+    if (info == NULL)
+        return kIOReturnBadArgument;
+    if (info->conn == IO_OBJECT_NULL)
+        return kIOReturnNotOpen;
+    /* a ComID Core Table 26 does not reserve (hsed_cdb.c), bound once: the
+       same base again is bound already, another is refused */
+    if (!hsed_cdb_base_ok(base) || (info->base_comid != 0 && info->base_comid != base))
+        return kIOReturnBadArgument;
+    /* the TPer this process opened, found again by its registry id, and
+       still the kext's */
+    matching = IORegistryEntryIDMatching(info->registry_id);
+    if (matching == NULL)
+        return kIOReturnNoMemory;
+    tper = IOServiceGetMatchingService(MACH_PORT_NULL, matching);  /* consumes matching */
+    if (tper == IO_OBJECT_NULL)
+        return kIOReturnNoDevice;
+    if (!IOObjectConformsTo(tper, HSED_KEXT_TPER_CLASS)) {
+        IOObjectRelease(tper);
+        return kIOReturnNoDevice;
+    }
+    clients = count_user_clients(tper);
+    read_serial(tper, serial, sizeof serial);
+    IOObjectRelease(tper);
+    /* its user clients exactly one, the one this process opened: another
+       could be sending to the drive between hsed's commands, and none
+       counted means the count is not what it seems (design 13.29 (d)), so
+       either fails closed */
+    if (clients != 1)
+        return kIOReturnExclusiveAccess;
+    /* its IDENTIFY serial, as the registry holds it, the one read when it
+       was located and admitted */
+    if (serial[0] == '\0' || strncmp(serial, info->serial, sizeof serial) != 0)
+        return kIOReturnNoDevice;
+    info->base_comid = base;
+    return KERN_SUCCESS;
+}
+
+int hsed_kext_command(const hsed_kext_info *info, int shape, uint8_t blocks, void *buf, uint64_t bufsize,
+                      uint8_t cdb_out[16], uint64_t *xfer)
 {
     uint8_t cdb[16] = { 0 };
     uint64_t quads[2] = { 0, 0 };
     uint64_t output[1] = { 0 };
     uint32_t outputs = 1;
+    uint32_t direction = 0;
     uint64_t requested = 0;
     long page = 0;
+    int built = HSED_CDB_OK;
     kern_return_t ret = KERN_SUCCESS;
 
-    if (info == NULL || info->conn == IO_OBJECT_NULL || buf == NULL || cdb_out == NULL || xfer == NULL || blocks == 0)
+    if (info == NULL || info->conn == IO_OBJECT_NULL || buf == NULL || cdb_out == NULL || xfer == NULL)
         return kIOReturnBadArgument;
-    requested = (uint64_t)blocks * HSED_KEXT_BLOCK_BYTES;
+    *xfer = 0;
+
+    /* the CDB, the direction and the length asked, from one build on the
+       base bound: the kext reads an A1h's direction from its PROTOCOL field
+       and its size from its COUNT (ATAProtocolDirections.cpp,
+       CDBAccess.cpp:37-50), and copies the buffer in or out by the
+       direction given (UserClient.cpp:165-171 and 188-192), so the three
+       agree only when they come from the same place */
+    built = hsed_cdb_build(info->sat, shape, info->base_comid, blocks, cdb, &direction, &requested);
+    if (built == HSED_CDB_E_COMID && info->base_comid == 0)
+        return kIOReturnNotReady;     /* a command on the base before it is bound */
+    if (built != HSED_CDB_OK)
+        return kIOReturnBadArgument;
     if (bufsize < requested)
         return kIOReturnNoSpace;
     /* page-aligned, as the kext's own user library requires (TPerKernelInterface.c) */
     page = sysconf(_SC_PAGESIZE);
     if (page <= 0 || (uintptr_t)buf % (uintptr_t)page != 0)
         return kIOReturnNotAligned;
+    /* the bytes of this very buffer that the kernel copies in for an
+       IF-SEND, as many as asked, checked: STACK_RESET's request for the
+       base, or a ComPacket on the base with nothing after it; a receive's
+       buffer sends nothing, and its check passes */
+    if (hsed_cdb_check_payload(shape, info->base_comid, (const uint8_t *)buf, requested) != HSED_CDB_OK)
+        return kIOReturnBadArgument;
 
-    /* the CDB, built here and nowhere else: a template above, its count the
-       blocks, 16 bytes with the last 4 zero; the kext sizes the transfer
-       from the count (CDBAccess.cpp:46-50), so the length asked is the same */
-    memcpy(cdb, info->sat ? hsed_level0_sat : hsed_level0_scsi, sizeof hsed_level0_sat);
-    cdb[info->sat ? HSED_SAT_COUNT : HSED_SCSI_LENGTH] = blocks;
     memcpy(cdb_out, cdb, sizeof cdb);
     memcpy(quads, cdb, sizeof quads);
-
     {
         const uint64_t input[6] = {
             [0] = quads[0],
             [1] = quads[1],
             [2] = (uint64_t)(uintptr_t)buf,
             [3] = bufsize,
-            [4] = HSED_KEXT_DIRECTION_IN,
+            [4] = direction,
             [5] = requested,
         };
-        *xfer = 0;
         ret = IOConnectCallScalarMethod((io_connect_t)info->conn, HSED_KEXT_SELECTOR_SCSI, input, 6, output, &outputs);
         if (outputs >= 1)
             *xfer = output[0];
@@ -340,6 +368,7 @@ int hsed_kext_close(hsed_kext_info *info)
         return kIOReturnNotOpen;
     conn = (io_connect_t)info->conn;
     info->conn = IO_OBJECT_NULL;
+    info->base_comid = 0;
     closed = IOConnectCallScalarMethod(conn, HSED_KEXT_SELECTOR_CLOSE, NULL, 0, NULL, NULL);
     released = IOServiceClose(conn);
     return closed != KERN_SUCCESS ? closed : released;

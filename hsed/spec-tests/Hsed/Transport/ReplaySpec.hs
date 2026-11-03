@@ -15,11 +15,14 @@ A captured Level 0 response replayed as a drive: IF-RECV of Level 0
 Discovery answered with the capture truncated or zero-padded to the length
 asked (Core 3.3.6.2, PDF 67), of 512 and 2048 bytes and of 255 blocks; every
 other request (another ComID, 0x1004 among them; another protocol; IF-SEND;
-a length the kext could not carry) Unsupported, as the kext's transport
-answers; the same answer every time; what it says it is. A file that is no
-Level 0 response is refused. And the same on the disk6-like response
-"Hsed.Level0.Sedutil" synthesizes from sedutil's printed query
-(@spec/fixtures/disk6-query.txt@).
+any of the other four commands a drive transport carries on its base; a
+length the kext could not carry) Unsupported, as the kext's transport
+answers before its base ComID is bound, the reason saying it is a replay's
+and naming the request ("Hsed.Transport.Cdb".'Hsed.Transport.Cdb.shapeOf'):
+a replay carries Level 0 alone; the same answer every time; what it says it
+is. A file that is no Level 0 response is refused. And the same on the
+disk6-like response "Hsed.Level0.Sedutil" synthesizes from sedutil's printed
+query (@spec/fixtures/disk6-query.txt@).
 
 The transport's own exchange is called (its constructor's field, as the
 suite may), so that these hold of the transport whatever the host's verbs
@@ -37,6 +40,7 @@ import           Test.Hspec
 import           Hsed.Core.Record      (encodeRecord)
 import           Hsed.Gen.Core.Layouts (Level0DiscoveryHeader (..))
 import           Hsed.Level0.Sedutil   (parseQuery, synthesize)
+import           Hsed.Transport.Cdb    (shapeOf)
 import           Hsed.Transport.Replay (openReplay)
 import           Hsed.Version          (hsedVersion)
 import           Hsed.Wire.Internal    (Cap (..), Describe (..), Dir (..), Event (..), IfStatus (..), Request (..),
@@ -77,12 +81,24 @@ spec = describe "Hsed.Transport.Replay" $ do
       tExchange t (level0 2048) `shouldReturn` Response Good (response <> B.replicate (2048 - 600) 0)
     it "answers Level 0 IF-RECV of 255 blocks, the most the kext asks for" $ withReplay response $ \_ t ->
       tExchange t (level0 130560) `shouldReturn` Response Good (padded 130560 response)
-    it "refuses IF-RECV on another ComID (0x1004, the drive's base) or protocol, and IF-SEND: Unsupported" $
+    it "refuses IF-RECV on another ComID (0x1004, the drive's base) or protocol, and IF-SEND: Unsupported, a replay's reason" $
       withReplay response $ \_ t -> do
-        answers <- traverse (tExchange t)
-          [ recv 0x01 0x1004 2048, recv 0x02 0x0001 2048, recv 0x02 0x1004 512
-          , (level0 2048) { dir = IfSend, payload = B.replicate 2048 0 } ]
-        answers `shouldBe` replicate 4 (Response (Unsupported "M3: Level 0 only") "")
+        let refusedAll = [ recv 0x01 0x1004 2048, recv 0x02 0x0001 2048, recv 0x02 0x1004 512
+                         , (level0 2048) { dir = IfSend, payload = B.replicate 2048 0 } ]
+        answers <- traverse (tExchange t) refusedAll
+        answers `shouldBe` map (\q -> Response (Unsupported (replayRefusal q)) "") refusedAll
+    it "refuses the four commands a drive transport carries on its base once bound: a replay binds none" $
+      withReplay response $ \_ t -> do
+        let onBase = [ (level0 512) { dir = IfSend, comId = 0x1004, payload = B.replicate 512 0 }, recv 0x01 0x1004 2048
+                     , (recv 0x02 0x1004 512) { dir = IfSend, payload = B.replicate 512 0 }, recv 0x02 0x1004 512 ]
+        answers <- traverse (tExchange t) onBase
+        answers `shouldBe` map (\q -> Response (Unsupported (replayRefusal q)) "") onBase
+    it "says so in words: a replay's, then the request named and why" $
+      withReplay response $ \_ t ->
+        tExchange t (recv 0x01 0x1004 2048) `shouldReturn` Response (Unsupported
+          ("a replay answers Level 0 Discovery alone, as the kext's transport does before its base ComID is bound: "
+           <> "an IF-RECV of protocol 0x01 on ComID 0x1004, 2048 bytes: no base ComID is bound, and until the drive's "
+           <> "is, Level 0 Discovery's IF-RECV alone is carried")) ""
     it "refuses a length the kext could not carry: none, part of a block, more than 255 blocks" $
       withReplay response $ \_ t -> do
         answers <- traverse (tExchange t . level0) [0, 100, 1000, 131072]
@@ -118,7 +134,13 @@ spec = describe "Hsed.Transport.Replay" $ do
         answers <- traverse (tExchange t) [level0 512, level0 2048, recv 0x01 0x1004 2048]
         answers `shouldBe`
           [ Response Good (padded 512 bytes), Response Good (padded 2048 bytes)
-          , Response (Unsupported "M3: Level 0 only") "" ]
+          , Response (Unsupported (replayRefusal (recv 0x01 0x1004 2048))) "" ]
+
+-- | Why a replay refuses a request: a replay's words, then the kext
+--   transport's before its bind ('shapeOf' with no base).
+replayRefusal :: Request -> Text
+replayRefusal q = "a replay answers Level 0 Discovery alone, as the kext's transport does before its base ComID is bound: "
+                  <> either id (const "") (shapeOf Nothing q)
 
 -- | Whether a status is a refusal to carry the command.
 unsupported :: IfStatus -> Bool

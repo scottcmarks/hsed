@@ -19,20 +19,40 @@ XML, through "Hsed.Jig.Files", the JSON's name claimed exclusively and the
 Markdown's and JUnit's following it, so that a run that started in the same
 second as another, or together with it, takes the next free suffix (@-2@,
 @-3@) and neither writes over the other's. The JUnit report holds a test case for each case and extension, for the
-pair, for each problem (a capture, the pair not computed), for no IF-SEND on
-a drive, and one for the exit code, so that its failures never say less
-than the exit code does. The JSON report also gives, since M4c, each
-drive's policy ("Hsed.Jig.Guard"), the commands a drive was issued outside
-it, the commands the Guard refused, why a run was stopped, a drive's
-pre-flight notes, what @--recover@ did, each end's Properties exchange with
-the host's properties, and a pair's comparison of them
-("Hsed.Jig.PairProperties"), which the Markdown and JUnit reports do not
-print yet (M4c's group G3's). And the commands
-that read a report back without privilege: @verify-transcript@ (the
-commands issued, each with its end; a failure if a drive's end was issued
-an IF-SEND, or anything but Level 0 Discovery's IF-RECV, when asked) and
-@diff@ (two reports' Level 0 decodes compared as the Pair runner compares
-them).
+pair, for each problem (a capture, the pair not computed), and one for the
+exit code, so that its failures never say less than the exit code does.
+
+Since M4c the reports give what a run that may send to a drive did besides
+its cases (design 9.3): each drive's policy as the run ended
+("Hsed.Jig.Guard", @Level0Only@, or the base ComID and the methods its
+allow list admits), the commands its own transcript holds that the policy
+does not admit (exit 3), the commands the Guard refused (blocked in the
+transcript), why the run was stopped (exit 130), the pre-flight's notes
+(the mounts @--allow-mounted@ let by, "Hsed.Jig.Preflight"), what
+@--recover@ did ("Hsed.Jig.Recover"), each end's Properties exchange with
+the host's properties (the JSON's alone: UCT-02's observations print them),
+and a pair's comparison of them ("Hsed.Jig.PairProperties", judged by Opal
+2.30 Table 17). The Markdown prints each in a section of its own where the
+run had it (Interrupted, Pre-flight, Recover, Pair: Properties, and
+Policies where a drive was an end); the JUnit report has a test case for no
+drive command outside its policy and one for no command the Guard refused
+wherever a drive was an end, each failed where there was one, one for
+@--recover@ where it ran, one for an interruption (failed) where the run
+was stopped, and one for a pair's Properties where they were compared; the
+exit code's test case names each of them that fails the run, and the
+summary prints them all.
+
+And the commands that read a report back without privilege:
+@verify-transcript@ (the commands issued, each with its end; a failure if a
+drive's end was issued an IF-SEND, or anything but Level 0 Discovery's
+IF-RECV, when asked; and with @--allow-list@, each command a drive's end
+was issued re-decided by the Guard ('Hsed.Jig.Guard.decide') under the
+allow list of every method a drive run admits, on the base ComID that end's
+Level 0 in the report names, a failure for any it refuses or cannot read,
+for any command the Guard blocked, and for a policy bound to another base)
+and @diff@ (two reports' Level 0 decodes compared as the Pair runner
+compares them, and, where both carry them, their Properties exchanges as
+the Pair's Properties are).
 
 The target's part of a report's name is @sim@, @dev-disk6@,
 @replay-<file>@, or the two ends' joined by @+@ (@sim+dev-disk6@); the stamp
@@ -53,7 +73,10 @@ a note or a problem is masked as text, hex or as Haskell shows it
 print it), and each secret is given by its length and the first 12 hex
 digits of its SHA-256 ("Hsed.Jig.Sha256") in the JSON, the Markdown and the
 JUnit properties, never by its bytes; @--show-msid@ leaves everything in
-clear and says so.
+clear and says so. A secret is masked wherever its bytes stand, so one
+shorter than four bytes (a drive's MSID has no floor) takes the reports'
+own words and numbers with it: the reports and the summary say so beside
+it, and its JSON entry is marked @short@.
 
 A subpacket's tokens are decoded as the host reads a TPer's stream
 ("Hsed.Core.Stream": the atoms under the host's policy, then its returned
@@ -61,9 +84,12 @@ items, which read a host's invocations too): one invocation or one method
 response as such, anything else as its items in order, with any fault.
 
 @verify-transcript@ and @diff@ read a report as JSON values (there is no
-FromJSON for the wire types): the transcript's entries, and the Level 0
-descriptors of a report's last end (a pair's drive), their bytes restored
-from the hex and length printed.
+FromJSON for the wire types): the transcript's entries, each command's
+request rebuilt from its op, protocol, ComID, length and an IF-SEND's
+payload (its hex, trailing zeros left out, padded again to the length);
+each end's Level 0 descriptors, their bytes restored from the hex and
+length printed; and each end's Properties exchange, its tables read back
+by name.
 -}
 module Hsed.Jig.Report
   ( CaseResult (..)
@@ -71,7 +97,9 @@ module Hsed.Jig.Report
   , printable
   , writeReports
   , verifyTranscript
+  , verifyTranscriptWith
   , diffReports
+  , reportProperties
     -- * What a run prints
   , summary
   , renderTarget
@@ -99,14 +127,15 @@ import           Hsed.Core.Stream       (Atom (..), Fault (..), Returned (..), a
 import           Hsed.Core.UID          (UID)
 import           Hsed.Gen.Core.Layouts  (ComPacketHeader (..), DataSubPacket (..), DataSubPacketHeader (..), PacketHeader (..))
 import           Hsed.Gen.Core.UIDs     (methodIDUIDs, sessionManagerMethodUIDs)
+import           Hsed.Gen.Opal.Features (Level0DiscoveryOpalSSCV2Feature (..))
 import           Hsed.Jig.Catalogue     (CaseKey (..), CatalogueEntry (..), catalogue, renderCaseKey)
 import           Hsed.Jig.Files         (createOwned, writeOwned)
-import           Hsed.Jig.Guard         (Policy)
+import           Hsed.Jig.Guard         (Allowed (..), Policy (..), decide, readOnlyMethods)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..))
 import           Hsed.Jig.Pair          (FieldDiff (..), Judgement (..), PairReport (..), judged, pairFails, pairLevel0)
-import           Hsed.Jig.PairProperties (PropertiesPair)
+import           Hsed.Jig.PairProperties (PropDiff (..), PropertiesPair (..), Side (..), pairProperties, propertiesFail, propertiesLines)
 import           Hsed.Jig.Prereq        (Prereq, Waiver (..), common, listAt, sectionOf)
-import           Hsed.Jig.Script        (PropertiesAnswer (..), Verdict (..), describeStatus, t45Of, t45RowOf, verdictText)
+import           Hsed.Jig.Script        (PropertiesAnswer (..), Verdict (..), describeStatus, opalV2Of, t45Of, t45RowOf, verdictText)
 import           Hsed.Jig.Sha256        (sha256Hex)
 import           Hsed.Jig.Transcript    (TEntry (..), maskSecrets, maskText)
 import           Hsed.Level0            (DecodedDescriptor (..), Descriptor (..), Level0 (..), decodeDescriptor, describeProblem,
@@ -151,7 +180,8 @@ data RunResult = RunResult
   , rrTranscript     :: ![TEntry]           -- ^ as the wire had it; printed masked ('rrSecrets') unless @--show-msid@
   , rrLevel0         :: ![(Text, Level0)]   -- ^ each end's Level 0 response, by the end's name (its transport's role)
   , rrPair           :: !(Maybe PairReport)
-  , rrIfSends        :: !Int                -- ^ the IF-SENDs issued on a drive (none at M3)
+  , rrIfSends        :: !Int                -- ^ the IF-SENDs issued on a drive, each within its policy but those
+                                            --   'rrOutsidePolicy' names (M4c; none at M3)
   , rrSecrets        :: ![ByteString]       -- ^ the secrets the run read (the MSID, a PIN), each masked in the reports and
                                             --   given by its length and digest alone, unless @--show-msid@
   , rrProblems       :: ![Text]             -- ^ what else failed the run: the capture, a pair not computed
@@ -235,19 +265,27 @@ shown = roShowMsid . rrOptions
 --   transcript's entries are, and every text a case or the run came to, a
 --   verdict's reasons, an extension's, an observation, a waiver's reason, a
 --   problem, why the run was stopped, a pre-flight's note, what @--recover@
---   did, with them masked as text, hex or as shown ('maskText'), so that a
---   reason quoting an answer that did not read never prints one (design 9.3
---   item 5).
+--   did, the names of the properties an end's Properties exchange reported
+--   and the pair's comparison of them, with them masked as text, hex or as
+--   shown ('maskText'), so that a reason quoting an answer that did not
+--   read never prints one (design 9.3 item 5).
 printable :: RunResult -> RunResult
 printable rr
   | shown rr  = rr
   | otherwise = rr { rrCases = map maskCase (rrCases rr), rrTranscript = map (maskSecrets secrets) (rrTranscript rr)
                    , rrProblems = map text (rrProblems rr), rrOutsidePolicy = map (second request) (rrOutsidePolicy rr)
                    , rrInterrupted = fmap text (rrInterrupted rr), rrPreflight = map text (rrPreflight rr)
-                   , rrRecover = fmap (bimap text text) (rrRecover rr) }
+                   , rrRecover = fmap (bimap text text) (rrRecover rr)
+                   , rrProperties = [ (end, map (first text) sent, maskAnswer answer) | (end, sent, answer) <- rrProperties rr ]
+                   , rrPairProperties = fmap maskPair (rrPairProperties rr) }
   where
     secrets = rrSecrets rr
     text    = maskText secrets
+    maskAnswer (PropertiesAnswer tper host) = PropertiesAnswer (map (first text) tper) (fmap (map (first text)) host)
+    maskPair = \case
+      NotCompared why             -> NotCompared (text why)
+      Compared ds simOnly driveOnly ->
+        Compared [ d { pdName = text (pdName d), pdRule = text (pdRule d) } | d <- ds ] (map text simOnly) (map text driveOnly)
     -- a command's payload masked as a blocked entry's is
     request q = case maskSecrets secrets (Blocked 0 "" q "") of
       Blocked _ _ masked _ -> masked
@@ -278,6 +316,21 @@ secretsText :: RunResult -> Text
 secretsText rr
   | shown rr  = "shown in clear (--show-msid)"
   | otherwise = "masked as 0x2A in the transcript (--show-msid shows them)"
+
+-- | Whether a secret is short: under four bytes, the floor
+--   "Hsed.Jig.Options".'Hsed.Jig.Options.parseSidPin' sets the simulator's
+--   SID PIN, so that its masking rewrites none of the reports' short words
+--   or page numbers; a drive's MSID has none (design 9.3 item 5).
+shortSecret :: ByteString -> Bool
+shortSecret s = B.length s < 4
+
+-- | What the reports say beside a short secret.
+shortWarning :: Text
+shortWarning = "short: masked wherever its bytes stand, the reports' own words and numbers among them (design 9.3 item 5)"
+
+-- | A secret as the reports give it, with the warning a short one carries.
+secretLine :: ByteString -> Text
+secretLine s = describeSecret s <> (if shortSecret s then "; " <> shortWarning else "")
 
 
 -- * JSON
@@ -314,7 +367,8 @@ instance A.ToJSON RunResult where
                              | (end, l0) <- rrLevel0 rr ]
     , "pair"            A..= rrPair rr
     , "if_send_issued"  A..= rrIfSends rr
-    , "secrets"         A..= [ A.object ["len" A..= B.length s, "sha256" A..= T.take 12 (sha256Hex s), "shown" A..= shown rr]
+    , "secrets"         A..= [ A.object (["len" A..= B.length s, "sha256" A..= T.take 12 (sha256Hex s), "shown" A..= shown rr]
+                                         <> [ "short" A..= True | shortSecret s ])
                              | s <- rrSecrets rr ]
     , "problems"        A..= rrProblems rr
     , "exit"            A..= exitNumber (rrExit rr)
@@ -464,7 +518,12 @@ t45Name = \case
 
 -- * Markdown
 
--- | The Markdown report.
+-- | The Markdown report: the run's header; why it was stopped, if it was,
+--   and the drive's pre-flight notes; the targets; what @--recover@ did;
+--   the cases; each end's Level 0; the pair's comparisons, of Level 0 and of
+--   Properties; each drive's policy, the commands outside it and those the
+--   Guard refused; the problems; the secrets; the transcript. A section the
+--   run has nothing for is left out.
 markdown :: RunResult -> Text
 markdown rr = T.unlines $
   [ "# hsed-jig run: " <> renderTarget (roTarget o)
@@ -480,7 +539,10 @@ markdown rr = T.unlines $
   , "- secrets read: " <> tshow (length (rrSecrets rr)) <> (if null (rrSecrets rr) then "" else ", " <> secretsText rr)
   , "- exit: " <> tshow (exitNumber (rrExit rr))
   , ""
-  , "## Targets"
+  ]
+  <> mdSection "Interrupted" [ "- " <> why | Just why <- [rrInterrupted rr] ]
+  <> mdSection "Pre-flight" (map ("- " <>) (rrPreflight rr))
+  <> [ "## Targets"
   , ""
   , "| role | impl | units | ssc | base ComID | ComIDs | device |"
   , "|---|---|---|---|---|---|---|"
@@ -488,21 +550,87 @@ markdown rr = T.unlines $
   <> [ row [ dRole d, dImpl d, unitName (dUnits d), fromMaybe "" (dSsc d), maybe "" hex (dBaseComId d)
            , maybe "" tshow (dNComIds d), fromMaybe "" (dDevice d) ]
      | d <- rrTargets rr ]
-  <> ["", "## Cases", ""]
+  <> [""]
+  <> mdSection "Recover: STACK_RESET on the base ComID (design 9.3)" (either (\why -> ["- not recovered: " <> why]) (\t -> ["- recovered: " <> t])
+                                                                            =<< maybeToList (rrRecover rr))
+  <> ["## Cases", ""]
   <> concatMap caseLines (rrCases rr)
   <> level0Lines (rrLevel0 rr)
   <> maybe [] pairLines (rrPair rr)
+  <> mdSection "Pair: Properties, the simulator's against the drive's (Opal 2.30 Table 17)"
+             (concatMap (map listItem . propertiesText) (maybeToList (rrPairProperties rr)))
+  <> policyLines rr
   <> concat [ ["## Problems", ""] <> map ("- " <>) (rrProblems rr) <> [""] | not (null (rrProblems rr)) ]
   <> secretLines rr
   <> transcriptLines (rrTranscript rr)
-  where o = rrOptions rr
+  where
+    o = rrOptions rr
+    -- a line as a list item, unless it is one, or a table's row
+    listItem l = if any (`T.isPrefixOf` l) ["- ", "|"] then l else "- " <> l
 
--- | The run's secrets, each by its length and digest (design 9.3 item 5).
+-- | A section of the Markdown report: its heading and its lines; none where
+--   it has no lines.
+mdSection :: Text -> [Text] -> [Text]
+mdSection _ []       = []
+mdSection title body = ["## " <> title, ""] <> body <> [""]
+
+-- | Each drive's policy as the run ended, the commands its own transcript
+--   holds that the policy does not admit, and how many the Guard refused
+--   (design 9.3); none where the run had no drive.
+policyLines :: RunResult -> [Text]
+policyLines rr
+  | null (rrPolicies rr) && null (rrOutsidePolicy rr) && rrBlocked rr == 0 = []
+  | otherwise = mdSection "Policies" $
+      [ "Each drive's policy as the run ended, the commands its own transcript holds that the policy does not admit, and the "
+          <> "commands the Guard refused (design 9.3):", "" ]
+      <> [ "- " <> end <> ": " <> policyText p | (end, p) <- rrPolicies rr ]
+      <> (if null (rrOutsidePolicy rr) then ["- outside a drive's policy: none"]
+          else [ "- outside its policy, on the " <> end <> ": " <> commandText q | (end, q) <- rrOutsidePolicy rr ])
+      <> [ "- commands the Guard refused: " <> tshow (rrBlocked rr) ]
+
+-- | A policy in words: Level0Only, or the base ComID and each method the
+--   allow list admits.
+policyText :: Policy -> Text
+policyText = \case
+  Level0Only            -> "Level0Only: IF-RECV of Level 0 Discovery alone"
+  AllowList base admits -> "AllowList on base ComID " <> hex base <> ": " <> T.intercalate ", " (map allowedText admits)
+
+-- | A method an allow list admits, in words.
+allowedText :: Allowed -> Text
+allowedText = \case
+  AllowProperties          -> "Properties"
+  AllowStartSessionAdminSP -> "StartSession to the Admin SP as Anybody"
+  AllowGetCPinMSID         -> "Get on C_PIN_MSID's UID and PIN"
+  AllowEndOfSession        -> "End of Session"
+  AllowStackReset          -> "STACK_RESET and its GET_COMID_RESPONSE"
+
+-- | A pair's Properties as the reports print them: not compared, and why;
+--   or how many differences of each judgement, each difference and the
+--   properties one end alone reported ("Hsed.Jig.PairProperties".'propertiesLines'),
+--   and whether the comparison passes.
+propertiesText :: PropertiesPair -> [Text]
+propertiesText = \case
+  NotCompared why -> ["not compared: " <> why]
+  pp@(Compared ds _ _) ->
+    [ "differences: " <> count Allowed <> " allowed, " <> count Unchecked <> " unchecked (outside Table 17), " <> count NotAllowed <> " not allowed" ]
+    <> propertiesLines pp
+    <> [ if propertiesFailing pp then "fail" else "pass" ]
+    where count j = tshow (length [ () | d <- ds, pdJudged d == j ])
+
+-- | Whether a pair's Properties fail the run: a difference judged not
+--   allowed, as "Hsed.Jig.PairProperties".'propertiesFail' says.
+propertiesFailing :: PropertiesPair -> Bool
+propertiesFailing pp = propertiesFail pp || case pp of
+  Compared ds _ _ -> any ((== NotAllowed) . pdJudged) ds
+  NotCompared _   -> False
+
+-- | The run's secrets, each by its length and digest, a short one warned
+--   of (design 9.3 item 5).
 secretLines :: RunResult -> [Text]
 secretLines rr
   | null (rrSecrets rr) = []
   | otherwise = ["## Secrets", "", "Each " <> secretsText rr <> "; given here by length and SHA-256 alone:", ""]
-                <> [ "- secret " <> tshow i <> ": " <> describeSecret s | (i, s) <- zip [1 :: Int ..] (rrSecrets rr) ]
+                <> [ "- secret " <> tshow i <> ": " <> secretLine s | (i, s) <- zip [1 :: Int ..] (rrSecrets rr) ]
                 <> [""]
 
 -- | Whether a run had the simulator for an end: a target that says it is a
@@ -656,12 +784,18 @@ comPacketText bytes = case decodeComPacket bytes of
 
 -- | The JUnit report: a test case for each case and for each extension, a
 --   skip or an unobservable verdict skipped, a failure failed; one for the
---   pair, when there was one, failed where it fails; one for each problem
---   (the capture, a pair not computed), failed; one for no IF-SEND issued on
---   a drive, when there was a drive, failed if one was; and one for the exit
---   code, failed when it is not 0, so that the failures never say less than
---   the exit code. Its properties give the version, the IF-SENDs issued and
---   each secret read by its length and digest.
+--   pair, when there was one, failed where it fails, and one for its
+--   Properties where they were compared, failed where a difference is not
+--   allowed; one for each problem (the capture, a pair not computed),
+--   failed; where a drive was an end, one for no drive command outside its
+--   policy and one for no command the Guard refused (design 9.3), each
+--   failed where there was one; one for @--recover@ where it ran, failed
+--   where it did not recover; one for an interruption, failed, where the
+--   run was stopped; and one for the exit code, failed when it is not 0, so
+--   that the failures never say less than the exit code. Its properties
+--   give the version, the IF-SENDs issued on a drive, the drive commands
+--   outside their policy, the commands the Guard refused, and each secret
+--   read by its length and digest.
 junit :: RunResult -> Text
 junit rr = T.unlines $
   [ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -671,21 +805,29 @@ junit rr = T.unlines $
   , "    <properties>"
   , "      <property name=\"hsed\" value=\"" <> attr (rrVersion rr) <> "\"/>"
   , "      <property name=\"if_send_issued\" value=\"" <> tshow (rrIfSends rr) <> "\"/>"
+  , "      <property name=\"outside_policy\" value=\"" <> tshow (length (rrOutsidePolicy rr)) <> "\"/>"
+  , "      <property name=\"blocked\" value=\"" <> tshow (rrBlocked rr) <> "\"/>"
   , "      <property name=\"secrets\" value=\"" <> tshow (length (rrSecrets rr)) <> "\"/>"
   ]
-  <> [ "      <property name=\"secret_" <> tshow i <> "\" value=\"" <> attr (describeSecret s <> ", " <> secretsText rr) <> "\"/>"
+  <> [ "      <property name=\"secret_" <> tshow i <> "\" value=\"" <> attr (secretOf s) <> "\"/>"
      | (i, s) <- zip [1 :: Int ..] (rrSecrets rr) ]
   <> [ "    </properties>" ]
   <> concatMap testcase tests
   <> [ "  </testsuite>", "</testsuites>" ]
   where
     target = slug (roTarget (rrOptions rr))
+    secretOf s = describeSecret s <> ", " <> secretsText rr <> (if shortSecret s then "; " <> shortWarning else "")
     tests  = [ (caseTitle (crKey cr), crVerdict cr) | cr <- rrCases rr ]
              <> [ (renderCaseKey (crKey cr) <> " extension: " <> n, v) | cr <- rrCases rr, (n, v) <- crExtensions cr ]
              <> [ ("Pair: the simulator's Level 0 against the drive's", pairVerdict r) | Just r <- [rrPair rr] ]
+             <> [ ("Pair: the simulator's Properties against the drive's (Opal 2.30 Table 17)", propertiesVerdict pp)
+                | Just pp@(Compared {}) <- [rrPairProperties rr] ]
              <> [ ("problem " <> tshow i, Fail [p]) | (i, p) <- zip [1 :: Int ..] (rrProblems rr) ]
-             <> [ ("no IF-SEND issued on a drive (design 9.3)", if rrIfSends rr > 0 then Fail [tshow (rrIfSends rr) <> " issued"] else Pass)
+             <> [ ("no drive command outside its policy (design 9.3)", if null (rrOutsidePolicy rr) then Pass else Fail [outsideText rr])
                 | hasDrive rr ]
+             <> [ ("the Guard refused no command (design 9.3)", if rrBlocked rr == 0 then Pass else Fail [refusedText rr]) | hasDrive rr ]
+             <> [ ("recover: STACK_RESET", either (\why -> Fail [why]) (const Pass) outcome) | Just outcome <- [rrRecover rr] ]
+             <> [ ("interrupted", Fail [why]) | Just why <- [rrInterrupted rr] ]
              <> [ ("exit code", case rrExit rr of
                      ExitSuccess -> Pass
                      code        -> Fail ["exit " <> tshow (exitNumber code) <> ": " <> T.intercalate "; " (exitReasons rr)]) ]
@@ -693,6 +835,15 @@ junit rr = T.unlines $
       | pairFails r = Fail ([ "missing " <> codesText (prMissing r) | not (null (prMissing r)) ]
                             <> [ hex (fdCode fd) <> " " <> fdField fd <> " not allowed" | fd <- prDiffs r ])
       | otherwise   = Pass
+    propertiesVerdict pp
+      | propertiesFailing pp = Fail (if null notAllowed then ["the comparison fails"] else notAllowed)
+      | otherwise            = Pass
+      where notAllowed = [ pdName d <> " (" <> sideName (pdSide d) <> "): the drive's " <> maybe "absent" tshow (pdDrive d)
+                           <> ", not allowed by " <> pdRule d
+                         | Compared ds _ _ <- [pp], d <- ds, pdJudged d == NotAllowed ]
+    sideName = \case
+      TPerSide -> "tper" :: Text
+      HostSide -> "host"
     counts = "tests=\"" <> tshow (length tests) <> "\" failures=\"" <> tshow (length [ () | (_, Fail _) <- tests ])
              <> "\" skipped=\"" <> tshow (length [ () | (_, v) <- tests, skipped v ]) <> "\""
     skipped = \case
@@ -707,16 +858,31 @@ junit rr = T.unlines $
         Skipped r      -> [open <> ">", "      <skipped message=\"" <> attr r <> "\"/>", "    </testcase>"]
         Unobservable r -> [open <> ">", "      <skipped message=\"unobservable: " <> attr r <> "\"/>", "    </testcase>"]
 
--- | Why a run's exit code is not 0: each case not passed, each extension
---   failed, the pair's failure, the problems, the IF-SENDs issued on a
---   drive.
+-- | Why a run's exit code is not 0: the interruption (130); the drive
+--   commands outside their policy (3); each case not passed, each extension
+--   failed, the pair's failure, its Properties', the problems, the commands
+--   the Guard refused, @--recover@ not recovering (1).
 exitReasons :: RunResult -> [Text]
 exitReasons rr =
-  [ renderCaseKey (crKey cr) <> " " <> verdictWord (crVerdict cr) | cr <- rrCases rr, crVerdict cr /= Pass ]
+  [ "interrupted: " <> why | Just why <- [rrInterrupted rr] ]
+  <> [ outsideText rr | not (null (rrOutsidePolicy rr)) ]
+  <> [ renderCaseKey (crKey cr) <> " " <> verdictWord (crVerdict cr) | cr <- rrCases rr, crVerdict cr /= Pass ]
   <> [ renderCaseKey (crKey cr) <> " extension " <> n <> " failed" | cr <- rrCases rr, (n, Fail _) <- crExtensions cr ]
   <> [ "the pair fails" | Just r <- [rrPair rr], pairFails r ]
+  <> [ "the pair's Properties fail (Opal 2.30 Table 17)" | Just pp <- [rrPairProperties rr], propertiesFailing pp ]
   <> rrProblems rr
-  <> [ tshow (rrIfSends rr) <> " IF-SENDs issued on a drive" | rrIfSends rr > 0 ]
+  <> [ refusedText rr | rrBlocked rr > 0 ]
+  <> [ "--recover did not recover: " <> why | Just (Left why) <- [rrRecover rr] ]
+
+-- | The commands a drive was issued outside its policy, in words (design
+--   9.3: exit 3).
+outsideText :: RunResult -> Text
+outsideText rr = "drive commands outside their policy (design 9.3): " <> tshow (length (rrOutsidePolicy rr)) <> ": "
+                 <> T.intercalate "; " [ "on the " <> end <> ", " <> commandText q | (end, q) <- rrOutsidePolicy rr ]
+
+-- | How many commands the Guard refused, in words.
+refusedText :: RunResult -> Text
+refusedText rr = "commands the Guard refused, each blocked in the transcript (design 9.3): " <> tshow (rrBlocked rr)
 
 -- | Text as an XML attribute's value.
 attr :: Text -> Text
@@ -731,19 +897,29 @@ attr = T.concatMap $ \case
 
 -- * What a run prints
 
--- | What a run prints when it ends: each target, each case's verdict with
---   its waivers and extensions, the pair comparison, the IF-SENDs issued on
---   a drive, the secrets read (by length and digest), the reports written,
---   the exit code.
+-- | What a run prints when it ends: each target; why the run was stopped,
+--   if it was; the drive's pre-flight notes; what @--recover@ did; each
+--   case's verdict with its waivers and extensions; the pair's comparisons,
+--   of Level 0 and of Properties; each drive's policy; the IF-SENDs issued
+--   on a drive, the drive commands outside their policy (each named) and
+--   the commands the Guard refused; the secrets read (by length and digest,
+--   a short one warned of); the reports written; the exit code.
 summary :: RunResult -> [FilePath] -> [Text]
 summary rr0 paths =
   [ "hsed-jig " <> renderTarget (roTarget (rrOptions rr)) <> ": " <> T.intercalate "; " (map targetText (rrTargets rr)) ]
+  <> [ "interrupted: " <> why | Just why <- [rrInterrupted rr] ]
+  <> [ "pre-flight: " <> n | n <- rrPreflight rr ]
+  <> [ "recover: " <> either ("not recovered: " <>) id outcome | Just outcome <- [rrRecover rr] ]
   <> concatMap caseText (rrCases rr)
   <> maybe [] (\r -> [ "pair: extra " <> codesText (prExtra r) <> "; missing " <> codesText (prMissing r) <> "; "
                        <> pairCounts r <> if pairFails r then ": fail" else ": pass" ]) (rrPair rr)
-  <> [ "IF-SENDs issued on a drive: " <> tshow (rrIfSends rr) ]
+  <> [ "pair properties: " <> T.intercalate "; " (propertiesText pp) | Just pp <- [rrPairProperties rr] ]
+  <> [ "policy on the " <> end <> ": " <> policyText p | (end, p) <- rrPolicies rr ]
+  <> [ "IF-SENDs issued on a drive: " <> tshow (rrIfSends rr) <> "; drive commands outside their policy: "
+         <> tshow (length (rrOutsidePolicy rr)) <> "; refused by the Guard: " <> tshow (rrBlocked rr) ]
+  <> [ "  outside its policy, on the " <> end <> ": " <> commandText q | (end, q) <- rrOutsidePolicy rr ]
   <> [ "secrets read: " <> tshow (length (rrSecrets rr)) <> ", " <> secretsText rr <> ": "
-         <> T.intercalate "; " (map describeSecret (rrSecrets rr))
+         <> T.intercalate "; " (map secretLine (rrSecrets rr))
      | not (null (rrSecrets rr)) ]
   <> [ "reports: " <> T.intercalate ", " (map T.pack paths) | not (null paths) ]
   <> [ "exit " <> tshow (exitNumber (rrExit rr)) ]
@@ -769,9 +945,29 @@ summary rr0 paths =
 --   report from before ends were recorded) counts as a drive's. An entry
 --   that does not read as a report prints one (no kind it has, an issued
 --   command whose request does not read) may have been anything, so it
---   counts against both checks: either fails on it.
+--   counts against both checks: either fails on it. 'verifyTranscriptWith'
+--   without @--allow-list@.
 verifyTranscript :: FilePath -> Bool -> Bool -> IO ExitCode
-verifyTranscript path noIfSend level0Only = readReport path >>= \case
+verifyTranscript path noIfSend level0Only = verifyTranscriptWith path noIfSend level0Only False
+
+-- | @verify-transcript REPORT.json [--no-if-send] [--level0-only]
+--   [--allow-list]@: 'verifyTranscript', and with @--allow-list@ each
+--   command a drive's end was issued re-decided offline by the Guard
+--   ("Hsed.Jig.Guard".'decide') under the allow list of every method a
+--   drive run admits (Properties, StartSession to the Admin SP as Anybody,
+--   Get on C_PIN_MSID's UID and PIN, End of Session, and STACK_RESET), on
+--   the base ComID that end's Level 0 response in the report names (its
+--   Opal SSC V2 descriptor's Base ComID, Opal 2.30 Table 6, PDF 23); an end
+--   whose Level 0 names none is held to Level 0 Discovery alone. It fails
+--   (exit 1) where the Guard refuses a command, an entry does not read (a
+--   command whose request, an IF-SEND's payload among it, cannot be
+--   rebuilt), the run's Guard blocked any command, or a drive's policy is
+--   bound to another base ComID than its Level 0 names (design 9.3; the M4c
+--   acceptance's check of the Guard's log). A report's IF-SEND whose
+--   payload carries a secret is masked there (design 9.3 item 5), so reads
+--   as another command: the M4c drive cases send none.
+verifyTranscriptWith :: FilePath -> Bool -> Bool -> Bool -> IO ExitCode
+verifyTranscriptWith path noIfSend level0Only allowList = readReport path >>= \case
   Left e       -> failWith ("verify-transcript: " <> e)
   Right report -> case A.parseEither (A.withObject "report" (A..: "transcript")) report of
     Left e   -> failWith ("verify-transcript: " <> T.pack path <> ": " <> T.pack e)
@@ -786,7 +982,8 @@ verifyTranscript path noIfSend level0Only = readReport path >>= \case
         say ("commands issued on a drive other than Level 0 Discovery's IF-RECV: " <> tshow notLevel0)
       when (unread > 0) $
         say ("entries that do not read as a report prints them, each counted against both checks: " <> tshow unread)
-      pure (if noIfSend && sends + unread > 0 || level0Only && notLevel0 + unread > 0 then ExitFailure 1 else ExitSuccess)
+      allowed <- if allowList then allowListCheck report es else pure True
+      pure (if noIfSend && sends + unread > 0 || level0Only && notLevel0 + unread > 0 || not allowed then ExitFailure 1 else ExitSuccess)
   where
     entryLine v = either (const ("an entry not as a report prints one: " <> decodeUtf8Lenient (toStrictBytes (A.encode v))))
                          id (A.parseEither entryText v)
@@ -822,29 +1019,95 @@ verifyTranscript path noIfSend level0Only = readReport path >>= \case
               (\op p c -> Just (Just (op :: Text, p :: Word8, c :: Word16))) <$> q A..: "op" <*> q A..: "proto" <*> q A..: "comid")
         _         -> A.parseFail "an entry of no kind a report prints"
 
--- | @diff A.json B.json@: two reports' Level 0 decodes compared as the Pair
---   runner compares them, A's as the simulator's and B's as the drive's,
---   each report's last end (a pair's drive); a failure where the
---   comparison fails.
-diffReports :: FilePath -> FilePath -> IO ExitCode
-diffReports a b = do
-  la <- level0Of a
-  lb <- level0Of b
-  case (,) <$> la <*> lb of
-    Left e       -> failWith ("diff: " <> e)
-    Right (x, y) -> do
-      let r = pairLevel0 x y
-      traverse_ say (pairLines r)
-      pure (if pairFails r then ExitFailure 1 else ExitSuccess)
+-- | What a transcript entry is to @--allow-list@.
+data Recheck
+  = NotRechecked                 -- ^ a note, or a command issued on the simulator's end
+  | BlockedEntry                 -- ^ a command the run's Guard refused
+  | Unreadable !Int              -- ^ an entry that does not read, by its number (0 where it has none)
+  | Rechecked !Int !(Maybe Text) !Request
+                                 -- ^ a command issued on a drive's end: its number, its end (none named), its request
+
+-- | @--allow-list@ over a report's transcript: each drive end's base ComID
+--   from its Level 0, each drive's policy held to it, each command a
+--   drive's end was issued re-decided under the allow list of every method
+--   on that base; whether all is well, each finding printed.
+allowListCheck :: A.Value -> [A.Value] -> IO Bool
+allowListCheck report es = do
+  let bases    = either (const []) id (A.parseEither endBases report)
+      policies = either (const []) id (A.parseEither policyBases report)
+      entries' = map recheckOf es
+      baseOf e = join (e >>= (`L.lookup` bases))
+      verdicts = [ (n, end, decide (maybe Level0Only (`AllowList` everyMethod) (baseOf end)) q) | Rechecked n end q <- entries' ]
+      refused  = [ (n, end, why) | (n, end, Left why) <- verdicts ]
+      unread   = [ n | Unreadable n <- entries' ]
+      blocked  = length [ () | BlockedEntry <- entries' ]
+      mismatch = [ (end, bound, L.lookup end bases) | (end, bound) <- policies, join (L.lookup end bases) /= Just bound ]
+  for_ bases $ \(end, base) -> say ("--allow-list: the " <> end <> "'s base ComID, as its Level 0 names it: "
+                                     <> maybe "none (no Opal SSC V2 descriptor that decodes): Level 0 Discovery alone admitted" hex base)
+  for_ mismatch $ \(end, bound, base) -> say ("--allow-list: the " <> end <> "'s policy is bound to " <> hex bound <> ", not "
+                                               <> maybe "the base ComID its Level 0 names: it names none" (("the " <>) . (<> " its Level 0 names") . hex) (join base))
+  for_ refused $ \(n, end, why) -> say ("--allow-list: #" <> tshow n <> " on the " <> fromMaybe "an end unnamed" end <> " refused: "
+                                        <> maybe "no base ComID in its Level 0, so Level 0 Discovery alone: " (const "") (baseOf end) <> why)
+  for_ unread $ \n -> say ("--allow-list: #" <> tshow n <> " does not read as a command a report prints: refused")
+  say ("--allow-list: the commands issued on a drive, re-decided by the Guard under AllowList base ["
+       <> T.intercalate ", " (map allowedText everyMethod) <> "]: " <> tshow (length verdicts - length refused) <> " admitted, "
+       <> tshow (length refused) <> " refused, " <> tshow (length unread) <> " that do not read; blocked by the run's Guard: " <> tshow blocked)
+  pure (null refused && null unread && blocked == 0 && null mismatch)
   where
-    level0Of path = readReport path <&> (>>= first (((T.pack path <> ": ") <>) . T.pack) . A.parseEither lastEnd)
-    lastEnd = A.withObject "report" $ \o -> do
-      ends <- o A..: "level0"
-      case L.lastMaybe ends of
-        Nothing  -> A.parseFail "the report holds no Level 0 response"
-        Just end -> do
-          ds <- A.withObject "end" (A..: "response") end >>= A.withObject "response" (A..: "descriptors") >>= traverse descriptor
-          pure (Level0 mempty 0 ds mempty [])
+    -- every method a drive run admits: the read-only methods, and STACK_RESET
+    everyMethod = readOnlyMethods <> [AllowStackReset]
+    -- each end's base ComID, by its Level 0 in the report (none for the simulator's)
+    endBases = A.withObject "report" $ \o -> do
+      ends <- fromMaybe [] <$> o A..:? "level0"
+      fmap catMaybes . for ends $ A.withObject "end" $ \e -> do
+        end <- e A..: "end"
+        if end == ("tper" :: Text) then pure Nothing else do
+          l0 <- e A..: "response" >>= level0Parser
+          pure (Just (end, level0DiscoveryOpalSSCV2FeatureBaseComID <$> opalV2Of l0))
+    -- each drive's policy's base ComID, where it is an allow list's
+    policyBases = A.withObject "report" $ \o -> do
+      ps <- fromMaybe [] <$> o A..:? "policies"
+      fmap catMaybes . for ps $ A.withObject "policy" $ \p -> do
+        end <- p A..: "end"
+        fmap ((,) (end :: Text)) <$> (p A..:? "base_comid" :: A.Parser (Maybe Word16))
+    recheckOf v = either (const (Unreadable (numberOf v))) id $ flip A.parseEither v $ A.withObject "entry" $ \o -> do
+      n    <- fromMaybe 0 <$> o A..:? "n"
+      kind <- o A..: "entry"
+      end  <- o A..:? "end"
+      case kind :: Text of
+        "note"    -> pure NotRechecked
+        "blocked" -> pure BlockedEntry
+        "issued"
+          | end == Just "tper" -> pure NotRechecked
+          | otherwise          -> Rechecked n end <$> (o A..: "request" >>= requestParser)
+        _         -> A.parseFail "an entry of no kind a report prints"
+    numberOf = either (const 0) id . A.parseEither (A.withObject "entry" (\o -> fromMaybe 0 <$> o A..:? "n"))
+
+-- | A command as a report prints it, rebuilt: its op, protocol, ComID and
+--   length, and an IF-SEND's payload from its hex ("Hsed.Wire".'trimmedHex',
+--   trailing zeros left out) padded with zeros to the length.
+requestParser :: A.Value -> A.Parser Request
+requestParser = A.withObject "request" $ \q -> do
+  op     <- q A..: "op"
+  d      <- case op :: Text of
+    "if_send" -> pure IfSend
+    "if_recv" -> pure IfRecv
+    _         -> A.parseFail ("an op of no kind a report prints: " <> T.unpack op)
+  p      <- q A..: "proto"
+  c      <- q A..: "comid"
+  len    <- q A..: "len"
+  digits <- if d == IfSend then q A..: "payload" else pure ""
+  bytes  <- either A.parseFail pure (B16.decode (encodeUtf8 digits))
+  pure (Request d p c len (bytes <> B.replicate (fromIntegral len - B.length bytes) 0))
+
+-- | A Level 0 response as a report prints it, its descriptors' bytes
+--   restored from the hex and length printed (the rest of the response is
+--   not needed by those who read it back).
+level0Parser :: A.Value -> A.Parser Level0
+level0Parser = A.withObject "response" $ \r -> do
+  ds <- r A..: "descriptors" >>= traverse descriptor
+  pure (Level0 mempty 0 ds mempty [])
+  where
     descriptor = A.withObject "descriptor" $ \d -> do
       code    <- d A..: "code"
       version <- d A..: "version"
@@ -852,6 +1115,64 @@ diffReports a b = do
       digits  <- d A..: "bytes"
       bytes   <- either A.parseFail pure (B16.decode (encodeUtf8 digits))
       pure (Descriptor code version (bytes <> B.replicate (len - B.length bytes) 0))
+
+-- | A report's Properties exchanges ("properties"), each end's read back:
+--   the host properties sent, and the TPer's answer, its own properties and
+--   the host's as it answered them; each table by name, in the names'
+--   order (the JSON's objects keep no other, and a name once).
+--
+--   'Nothing' for a report that carries none (one from before M4c).
+reportProperties :: A.Value -> Either Text (Maybe [(Text, [(Text, Natural)], PropertiesAnswer)])
+reportProperties = first T.pack . A.parseEither (A.withObject "report" $ \o -> o A..:? "properties" >>= traverse (traverse exchange))
+  where
+    exchange = A.withObject "properties" $ \e -> do
+      end  <- e A..: "end"
+      sent <- e A..: "host_sent" >>= named
+      tper <- e A..: "tper" >>= named
+      host <- e A..:? "host" >>= traverse named
+      pure (end, sent, PropertiesAnswer tper host)
+    named :: A.FromJSON n => A.Value -> A.Parser [(Text, n)]
+    named = A.withObject "properties" $ \ps -> for (KM.toList ps) $ \(k, v) -> (,) (K.toText k) <$> A.parseJSON v
+
+-- | @diff A.json B.json@: two reports' Level 0 decodes compared as the Pair
+--   runner compares them, A's as the simulator's and B's as the drive's,
+--   each report's last end (a pair's drive); and where both reports carry
+--   Properties exchanges (M4c's), each report's last end's compared as the
+--   Pair's Properties are ("Hsed.Jig.PairProperties", Opal 2.30 Table 17),
+--   an end that ran none not compared; a failure where either comparison
+--   fails.
+diffReports :: FilePath -> FilePath -> IO ExitCode
+diffReports a b = do
+  ra <- readReport a
+  rb <- readReport b
+  case (,) <$> (ra >>= read' a) <*> (rb >>= read' b) of
+    Left e -> failWith ("diff: " <> e)
+    Right ((x, px), (y, py)) -> do
+      let r = pairLevel0 x y
+      traverse_ say (pairLines r)
+      propertiesFailed <- case (px, py) of
+        (Just ea, Just eb) -> do
+          let pp = pairProperties ea eb
+          say "## Pair: Properties, A's simulator's against B's drive's (Opal 2.30 Table 17)"
+          say ""
+          traverse_ (say . ("- " <>)) (propertiesText pp)
+          pure (propertiesFailing pp)
+        _ -> pure False
+      pure (if pairFails r || propertiesFailed then ExitFailure 1 else ExitSuccess)
+  where
+    read' path v = first ((T.pack path <> ": ") <>) $ (,) <$> first T.pack (A.parseEither lastLevel0 v) <*> lastProperties v
+    lastLevel0 = A.withObject "report" $ \o -> do
+      ends <- o A..: "level0"
+      case L.lastMaybe ends of
+        Nothing  -> A.parseFail "the report holds no Level 0 response"
+        Just end -> A.withObject "end" (A..: "response") end >>= level0Parser
+    -- the last end's Properties exchange, if the report carries them: that end's, if it ran one
+    lastProperties v = reportProperties v <&> fmap (\exchanges ->
+      listToMaybe [ (sent, answer) | Just end <- [lastEndOf v], (end', sent, answer) <- exchanges, end' == end ])
+    -- the report's last end: its last target's role
+    lastEndOf = either (const Nothing) id . A.parseEither (A.withObject "report" $ \o -> do
+      targets <- fromMaybe [] <$> o A..:? "targets"
+      traverse (A.withObject "target" (A..: "role")) (L.lastMaybe targets))
 
 -- | A report read as JSON, or why not.
 readReport :: FilePath -> IO (Either Text A.Value)

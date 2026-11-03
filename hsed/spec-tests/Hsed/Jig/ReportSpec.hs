@@ -17,8 +17,8 @@ case with its verdict and waivers, a pair's each end's verdict beside it, a
 waiver with its item and page (LockingManufactured, Test Cases 5.2 item 2,
 PDF 29), each prerequisite established or not reached; the simulator's
 options only where a simulator ran; the run's problems; the JUnit report
-failing the pair, each problem, an IF-SEND on a drive and the exit code
-wherever the exit code fails; the transcript with each IF-SEND's methods
+failing the pair, each problem and the exit code wherever the exit code
+fails; the transcript with each IF-SEND's methods
 decoded and each command's end, a subpacket of several items decoded as
 each in order; the JUnit counts. The secrets a run read are masked in every
 report, in the transcript's bytes and in every text a case came to, each
@@ -29,17 +29,42 @@ the commands outside it, those the Guard blocked, why a run stopped, a
 pre-flight's notes, @--recover@'s outcome, each end's Properties with the
 host's, the pair's comparison of them) are empty or null for a run without
 them and given as they are otherwise, a secret their texts or a command
-outside the policy quote masked. @verify-transcript@ fails a
-report whose drive was issued an IF-SEND only when asked to, the
-simulator's IF-SENDs counting for nothing, and with @--level0-only@ one
-whose drive was issued anything but Level 0 Discovery's IF-RECV; an entry
-of no end counts as a drive's, and one that does not read against both; a
-file that is no report fails; @diff@ compares two reports' Level 0
-responses as the Pair runner does.
+outside the policy quote masked; each end's Properties read back by name.
+
+M4c's renderings (design 9.3): a drive's policy, the commands outside it
+and those the Guard refused in the Markdown's Policies, in JUnit (a drive's
+two test cases, renamed and added: no drive command outside its policy, the
+Guard refused no command; the exit code's 3 naming the commands) and in the
+summary; a run stopped (its section, its failed test case, exit 130 and why
+in the summary); the pre-flight's notes; @--recover@'s outcome, recovered
+or not (its section, its test case, the exit code's reason); the pair's
+Properties not compared, with why, or compared, each judgement counted and
+its test case failed where a difference is not allowed; a secret under four
+bytes marked short in the JSON and warned of in the Markdown, the JUnit
+properties and the summary.
+
+@verify-transcript@ fails a report whose drive was issued an IF-SEND only
+when asked to, the simulator's IF-SENDs counting for nothing, and with
+@--level0-only@ one whose drive was issued anything but Level 0 Discovery's
+IF-RECV; an entry of no end counts as a drive's, and one that does not read
+against both; a file that is no report fails. With @--allow-list@: the
+report of the M4c acceptance's cases on the simulator as a drive
+(Support's fakeDrive), bound to 0x1004 by its own Level 0, passes in both
+modes (STACK_RESET before each case, or an idle IF-RECV), the base read from
+the report's Level 0; the same report with one drive command made a Set, a
+STACK_RESET on TPER_RESET's ComID 0x0004, a Get on C_PIN_SID, or an entry
+that does not read, or with a Blocked entry added, fails, under the
+scaffold's Guard as under M4c's; so does one whose Level 0 names another
+base than its policy is bound to, or none; an M3 report of Level 0 alone
+passes. @diff@ compares two reports' Level 0 responses as the Pair runner
+does, and their last ends' Properties exchanges as the Pair's Properties
+are, where both carry them.
 -}
 module Hsed.Jig.ReportSpec (spec) where
 
 import qualified Data.Aeson            as A
+import qualified Data.Aeson.KeyMap     as KM
+import           GHC.IO.Handle         (hDuplicate, hDuplicateTo)
 import           Numeric               (showHex)
 import qualified RIO.ByteString        as B
 import qualified RIO.List              as L
@@ -50,25 +75,35 @@ import           RIO.Time              (UTCTime (..), fromGregorian)
 import           Test.Hspec
 
 import           Hsed.Core.Call        (MethodResponse (..))
+import           Hsed.Core.CellBlock   (cellBlockValue, columnRange)
 import           Hsed.Core.Method      (invocation)
+import           Hsed.Core.Record      (encodeRecord)
 import           Hsed.Core.StreamItem  (StreamItem (..))
 import           Hsed.Core.Token       (Token (..))
 import           Hsed.Core.Value       (List (..), Value (..), (.:))
+import           Hsed.Gen.Core.Layouts (STACK_RESETCommandRequest (..))
 import qualified Hsed.Gen.Core.Methods as Methods
-import           Hsed.Gen.Core.UIDs    (uSMUID)
-import           Hsed.Jig.Catalogue    (CaseKey (..), TestId (..))
-import           Hsed.Jig.Guard        (Policy (..), readOnlyMethods)
+import           Hsed.Gen.Core.UIDs    (uC_PIN_SID, uSMUID)
+import           Hsed.Jig.Case         (Case (..))
+import           Hsed.Jig.Catalogue    (CaseKey (..), TestId (..), parseCaseKeys)
+import           Hsed.Jig.Guard        (Allowed (..), Policy (..), drivePolicy, driveIssued, driveTransport, guardDrive, readOnlyMethods)
 import           Hsed.Jig.Options      (RunOptions (..), TargetSpec (..), defaultRunOptions)
-import           Hsed.Jig.Pair         (PairReport (..))
-import           Hsed.Jig.PairProperties (PropertiesPair (..))
+import           Hsed.Jig.Pair         (Judgement (..), PairReport (..))
+import           Hsed.Jig.PairProperties (PropDiff (..), PropertiesPair (..), Side (..), pairProperties, propertiesLines)
 import           Hsed.Jig.Prereq       (Waiver (..), lockingSPUntouched, noSessionOpened)
 import           Hsed.Jig.Report
-import           Hsed.Jig.Script       (PropertiesAnswer (..), SessionHandle (..), Verdict (..), controlComPacket, sessionComPacket)
-import           Hsed.Jig.Support      (at, atPath, silently)
-import           Hsed.Jig.Transcript   (TEntry (..))
+import           Hsed.Jig.Run          (driveAllowedFor, selectedCases)
+import           Hsed.Jig.Script       (PropertiesAnswer (..), RunCtx (..), RunEnv (..), SessionHandle (..), Verdict (..), attempt, baseComId,
+                                        controlComPacket, emptyRunCtx, ifRecvOn, sessionComPacket, stackReset)
+import qualified Hsed.Jig.Script       as Script (note)
+import           Hsed.Jig.Support      (at, atPath, fakeDrive, silently)
+import           Hsed.Jig.Target       (Target (..))
+import           Hsed.Jig.Transcript   (TEntry (..), entries, ifSendsIssued, newTranscript)
 import           Hsed.Level0           (Descriptor (..), Level0 (..))
 import           Hsed.Sim.Types        (SimParams (..), defaultSimParams)
-import           Hsed.Wire             (Describe (..), Dir (..), IfStatus (..), Request (Request), Response (Response), Unit (..))
+import           Hsed.Transport.Drive  (DriveInfo (..))
+import           Hsed.Wire             (Describe (..), Dir (..), IfStatus (..), Request (Request), Response (Response), Unit (..),
+                                        describeTransport, newChannel)
 
 
 -- | 2026-10-30 12:00:00 UTC.
@@ -117,17 +152,19 @@ sample = RunResult
 
 -- | A pair of the simulator and a replay: UCT-01 passed on the simulator,
 --   skipped on the replay; the pair failing on a missing code; a capture
---   problem; an IF-SEND issued on the drive.
+--   problem; an IF-SEND issued on the drive outside its policy.
 paired :: RunResult
 paired = sample
-  { rrOptions  = defaultRunOptions { roTarget = TPair TSim (TReplay "disk6.bin") }
-  , rrTargets  = rrTargets sample <> [Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin")]
-  , rrCases    = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "drive-replay: no Level 0") [] [] []
-                     [("tper", Pass), ("drive-replay", Skipped "no Level 0")] False ]
-  , rrPair     = Just (PairReport [0x0005] [0x0403] [] [] [])
-  , rrIfSends  = 1
-  , rrProblems = ["--capture-level0 x.bin: no drive to capture"]
-  , rrExit     = ExitFailure 3
+  { rrOptions       = defaultRunOptions { roTarget = TPair TSim (TReplay "disk6.bin") }
+  , rrTargets       = rrTargets sample <> [Describe "drive-replay" "hsed replay test" UnitBlocks512 Nothing Nothing Nothing (Just "disk6.bin")]
+  , rrCases         = [ CaseResult (CaseKey (UCT 1) Nothing Nothing Nothing) (Skipped "drive-replay: no Level 0") [] [] []
+                          [("tper", Pass), ("drive-replay", Skipped "no Level 0")] False ]
+  , rrPair          = Just (PairReport [0x0005] [0x0403] [] [] [])
+  , rrIfSends       = 1
+  , rrProblems      = ["--capture-level0 x.bin: no drive to capture"]
+  , rrExit          = ExitFailure 3
+  , rrPolicies      = [("drive-replay", Level0Only)]
+  , rrOutsidePolicy = [("drive-replay", propertiesSend)]
   }
 
 -- | The same with the transcript's IF-SEND not issued.
@@ -213,6 +250,173 @@ texts rr = withSystemTempDirectory "hsed-report" $ \dir -> do
        <*> readFileUtf8 (dir </> "jig-sim-20261030T120000Z.md")
        <*> readFileUtf8 (dir </> "jig-sim-20261030T120000Z.xml")
 
+-- | A run's three reports written and read back, whatever its target: its
+--   JSON, its Markdown and its JUnit.
+reportsOf :: RunResult -> IO (A.Value, Text, Text)
+reportsOf rr = withSystemTempDirectory "hsed-report" $ \dir -> do
+  paths <- writeReports dir rr
+  let named ext = maybe (throwString ("no " <> ext <> " report")) pure (L.find (ext `L.isSuffixOf`) paths)
+  json <- named ".json" >>= readFileBinary >>= either throwString pure . A.eitherDecodeStrict'
+  (,,) json <$> (named ".md" >>= readFileUtf8) <*> (named ".xml" >>= readFileUtf8)
+
+-- | What an action prints to stdout, with what it prints to stderr thrown
+--   away; and what it came to.
+capturing :: IO a -> IO (a, Text)
+capturing act = withSystemTempFile "hsed-stdout" $ \path h ->
+  withFile "/dev/null" WriteMode $ \devNull -> do
+    hFlush stdout >> hFlush stderr
+    r <- bracket ((,) <$> hDuplicate stdout <*> hDuplicate stderr)
+                 (\(out, err) -> do
+                    hFlush stdout >> hFlush stderr
+                    hDuplicateTo out stdout >> hDuplicateTo err stderr
+                    hClose out >> hClose err)
+                 (\_ -> hDuplicateTo h stdout >> hDuplicateTo devNull stderr >> act)
+    hClose h
+    (,) r <$> readFileUtf8 path
+
+-- | A JSON array's elements.
+elements :: Maybe A.Value -> [A.Value]
+elements = \v -> case v of
+  Just (A.Array xs) -> toList xs
+  _                 -> []
+
+-- | A Set of C_PIN_SID's PIN, the command the Guard is there to stop, and
+--   Get on C_PIN_SID's PIN, a read it does not admit: each an IF-SEND on
+--   0x1004 of one control packet, padded to a block.
+setSend, getSidSend :: Request
+setSend    = blockOf (generate (invocation uC_PIN_SID (Methods.Set Nothing (Just (L (List [N ((3 :: Natural) .: ("not the PIN" :: ByteString))]))))))
+getSidSend = blockOf (generate (invocation uC_PIN_SID (Methods.Get (cellBlockValue (columnRange 3 3)))))
+
+-- | STACK_RESET on TPER_RESET's ComID, 0x0004, which Core Table 26
+--   reserves (PDF 55): an IF-SEND of protocol 2 carrying Table 35's request
+--   for its Extended ComID.
+resetOnTperResetComId :: Request
+resetOnTperResetComId = Request IfSend 2 0x0004 512 (bytes <> B.replicate (512 - B.length bytes) 0)
+  where bytes = either (error . show) id (encodeRecord (STACK_RESETCommandRequest 0x00040000))
+
+-- | Tokens in one control packet on 0x1004, as an IF-SEND of a block.
+blockOf :: ByteString -> Request
+blockOf tokens = Request IfSend 1 0x1004 512 (bytes <> B.replicate (512 - B.length bytes) 0)
+  where bytes = either (error . show) id (controlComPacket 0x1004 tokens)
+
+-- | The sample as a drive's run under the read-only list and STACK_RESET,
+--   bound to 0x1004: a Set issued outside it, a command the Guard refused.
+onDriveM4c :: RunResult
+onDriveM4c = sample
+  { rrOptions       = defaultRunOptions { roTarget = TDevice "/dev/disk22" }
+  , rrTargets       = [Describe "drive" "kext test" UnitBlocks512 Nothing Nothing Nothing (Just "/dev/disk22")]
+  , rrPolicies      = [("drive", AllowList 0x1004 (readOnlyMethods <> [AllowStackReset]))]
+  , rrOutsidePolicy = [("drive", setSend)]
+  , rrBlocked       = 1
+  , rrExit          = ExitFailure 3
+  }
+
+-- | The keys of the M4c acceptance's drive cases.
+acceptanceKeys :: [CaseKey]
+acceptanceKeys = either (error . T.unpack) id (parseCaseKeys "UCT-02,UCT-03:1a-1c,SPF-02:1")
+
+-- | The M4c acceptance's cases on the simulator as a drive (Support's
+--   fakeDrive), as a run of either mode issues them: each case's script on
+--   the drive behind the Guard as a run opens one, bound to 0x1004 from its
+--   own Level 0, and before each case STACK_RESET on the base (the shipped
+--   default, @roStackResetBeforeCases@) or an IF-RECV that finds it idle
+--   (the other mode's probe); the run's reports written into a directory:
+--   the JSON's path, and each case's verdict. Until M4c's group G2 merges,
+--   the runner itself skips these cases on a drive (M4b's way); the
+--   integration's DrivePathSpec repeats the check on whole runs.
+acceptanceReport :: Bool -> FilePath -> IO (FilePath, [Verdict])
+acceptanceReport resets dir = do
+  (raw, di, _) <- fakeDrive defaultSimParams
+  t <- newTranscript
+  let opts = defaultRunOptions { roTarget = TDevice ("/dev/" <> diBsd di), roTests = acceptanceKeys, roStackResetBeforeCases = resets
+                               , roReportDir = dir }
+  chosen <- either (throwString . T.unpack) pure (selectedCases acceptanceKeys)
+  g <- guardDrive t (driveAllowedFor opts chosen) (Just di) raw
+  channel <- newChannel
+  ctx <- newIORef emptyRunCtx
+  stop <- newIORef Nothing
+  verdicts <- runRIO (RunEnv (DriveTarget g) t channel ctx opts stop (mkLogFunc (\_ _ _ _ -> pure ()))) $ do
+    base <- baseComId
+    for chosen $ \c -> do
+      if resets
+        then stackReset base >>= Script.note . ("SyncIdle and NoSessions: STACK_RESET on 0x1004: " <>) . either id (("Success/Failure " <>) . tshow)
+        else void (ifRecvOn base)
+      attempt (cRun c)
+  final <- readIORef ctx
+  policy <- drivePolicy g
+  issued <- driveIssued g
+  transcript <- entries t
+  paths <- writeReports dir RunResult
+    { rrOptions        = opts
+    , rrVersion        = "Version 0.1.0.1 [test]"
+    , rrStarted        = noon
+    , rrTargets        = [describeTransport (driveTransport g)]
+    , rrCases          = [ CaseResult (cKey c) v [] [] [] [] True | (c, v) <- zip chosen verdicts ]
+    , rrTranscript     = transcript
+    , rrLevel0         = [ ("drive", l0) | Just l0 <- [rcLevel0 final] ]
+    , rrPair           = Nothing
+    , rrIfSends        = ifSendsIssued issued
+    , rrSecrets        = rcSecrets final
+    , rrProblems       = []
+    , rrExit           = if all (== Pass) verdicts then ExitSuccess else ExitFailure 1
+    , rrPolicies       = [("drive", policy)]
+    , rrOutsidePolicy  = []
+    , rrBlocked        = length [ () | Blocked {} <- transcript ]
+    , rrInterrupted    = Nothing
+    , rrPreflight      = []
+    , rrRecover        = Nothing
+    , rrProperties     = [ ("drive", sent, answer) | Just (sent, answer) <- [rcNegotiated final] ]
+    , rrPairProperties = Nothing
+    }
+  json <- maybe (throwString "no JSON report") pure (L.find (".json" `L.isSuffixOf`) paths)
+  pure (json, verdicts)
+
+-- | A report's JSON, edited and written to a file of its own: its path.
+edited :: FilePath -> (A.Value -> A.Value) -> FilePath -> IO FilePath
+edited out f json = do
+  v <- readFileBinary json >>= either throwString pure . A.eitherDecodeStrict'
+  out <$ writeFileBinary out (toStrictBytes (A.encode (f v)))
+
+-- | A report's key edited.
+editKey :: Text -> (A.Value -> A.Value) -> A.Value -> A.Value
+editKey k f = \v -> case v of
+  A.Object o -> A.Object (KM.insert (fromString (T.unpack k)) (f (fromMaybe A.Null (KM.lookup (fromString (T.unpack k)) o))) o)
+  _          -> v
+
+-- | Each element of a JSON array edited.
+editEach :: ([A.Value] -> [A.Value]) -> A.Value -> A.Value
+editEach f = A.toJSON . f . elements . Just
+
+-- | The first element that holds edited.
+editFirst :: (A.Value -> Bool) -> (A.Value -> A.Value) -> [A.Value] -> [A.Value]
+editFirst p f vs = case break p vs of
+  (earlier, v : later) -> earlier <> (f v : later)
+  (earlier, [])        -> earlier
+
+-- | Whether a transcript entry is a command issued on the drive's end, the
+--   first IF-SEND of protocol 1 (UCT-02's Properties) among them.
+issuedSend :: A.Value -> Bool
+issuedSend e = at "entry" e == Just "issued" && at "end" e == Just "drive" && atPath ["request", "op"] e == Just "if_send"
+               && atPath ["request", "proto"] e == Just (A.Number 1)
+
+-- | A transcript entry's command replaced by another, as the report prints
+--   one.
+withRequest :: Request -> A.Value -> A.Value
+withRequest q = editKey "request" (const (A.toJSON q))
+
+-- | A report's Level 0 descriptors edited, each end's.
+editDescriptors :: ([A.Value] -> [A.Value]) -> A.Value -> A.Value
+editDescriptors f = editKey "level0" (editEach (map (editKey "response" (editKey "descriptors" (editEach f)))))
+
+-- | The Opal SSC V2 descriptor (0x0203) with its Base ComID (bytes 4 to 5,
+--   Opal 2.30 Table 6, PDF 23) another.
+rebased :: Text -> [A.Value] -> [A.Value]
+rebased base = map $ \d -> if at "code" d == Just (A.Number 0x0203) then editKey "bytes" rebase d else d
+  where
+    rebase = \v -> case v of
+      A.String hex' -> A.String (T.take 8 hex' <> base <> T.drop 12 hex')
+      _             -> v
+
 spec :: Spec
 spec = do
   describe "writeReports" $ do
@@ -279,13 +483,14 @@ spec = do
         xml `shouldSatisfy` T.isInfixOf "<testsuites name=\"hsed-jig\" tests=\"5\" failures=\"2\" skipped=\"1\">"
         xml `shouldSatisfy` T.isInfixOf "<failure message=\"step 1: not so\"/>"
         xml `shouldSatisfy` T.isInfixOf "<failure message=\"exit 1: SPF-02:1 fail; ETC-02 skipped\"/>"
-    it "fails in JUnit the pair, each problem, an IF-SEND on a drive and the exit code, as the exit code does" $
+    it "fails in JUnit the pair, each problem, a drive command outside its policy and the exit code, as the exit code does" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         paths <- writeReports dir paired
         xml <- readFileUtf8 (fromMaybe "" (L.find (".xml" `L.isSuffixOf`) paths))
-        xml `shouldSatisfy` T.isInfixOf "tests=\"5\" failures=\"4\" skipped=\"1\""
+        xml `shouldSatisfy` T.isInfixOf "tests=\"6\" failures=\"4\" skipped=\"1\""
         for_ [ "<failure message=\"missing 0x0403\"/>", "<failure message=\"--capture-level0 x.bin: no drive to capture\"/>"
-             , "<failure message=\"1 issued\"/>" ] $ \f -> xml `shouldSatisfy` T.isInfixOf f
+             , "<failure message=\"drive commands outside their policy (design 9.3): 1: on the drive-replay, if_send protocol 0x01 ComID 0x1004, 512 bytes: Properties" ]
+          $ \f -> xml `shouldSatisfy` T.isInfixOf f
     it "gives a pair's each end's verdict, and the problems, in JSON and Markdown; the simulator's options only where it ran" $
       withSystemTempDirectory "hsed-report" $ \dir -> do
         paths <- writeReports dir paired
@@ -315,7 +520,7 @@ spec = do
           readFileBinary f >>= either throwString (pure . at "hsed") . A.eitherDecodeStrict'
         L.sort versions `shouldBe` map (Just . A.String . tshow) [1 .. 6 :: Int]
 
-  describe "M4c's keys (the scaffold's: their JSON final, their Markdown and JUnit group G3's)" $ do
+  describe "M4c's keys in the JSON" $ do
     it "are empty or null where a run had none of them" $ do
       (_, json, _) <- written sample
       [ at k json | k <- ["policies", "outside_policy", "blocked", "interrupted", "preflight", "recover", "properties", "pair_properties"] ]
@@ -465,3 +670,182 @@ spec = do
         silently (diffReports sim sim) `shouldReturn` ExitSuccess
         silently (diffReports sim drive) `shouldReturn` ExitFailure 1
         silently (diffReports sim fewer) `shouldReturn` ExitSuccess
+
+  describe "M4c's renderings: a drive's policy, the commands outside it and those the Guard refused (design 9.3)" $ do
+    it "prints each drive's policy, each command outside it and the Guard's refusals in the Markdown's Policies" $ do
+      (_, md, _) <- reportsOf onDriveM4c
+      for_ [ "## Policies"
+           , "- drive: AllowList on base ComID 0x1004: Properties, StartSession to the Admin SP as Anybody, Get on C_PIN_MSID's UID and PIN, End of Session, STACK_RESET and its GET_COMID_RESPONSE"
+           , "- outside its policy, on the drive: if_send protocol 0x01 ComID 0x1004, 512 bytes: Set"
+           , "- commands the Guard refused: 1" ] $ \l -> md `shouldSatisfy` T.isInfixOf l
+    it "fails JUnit's drive cases, renamed and added, and names the commands outside the policy for the exit code's 3" $ do
+      (_, _, xml) <- reportsOf onDriveM4c
+      xml `shouldNotSatisfy` T.isInfixOf "no IF-SEND issued on a drive"
+      for_ [ "name=\"no drive command outside its policy (design 9.3)\">"
+           , "<failure message=\"drive commands outside their policy (design 9.3): 1: on the drive, if_send protocol 0x01 ComID 0x1004, 512 bytes: Set"
+           , "name=\"the Guard refused no command (design 9.3)\">"
+           , "<failure message=\"commands the Guard refused, each blocked in the transcript (design 9.3): 1\"/>"
+           , "<failure message=\"exit 3: drive commands outside their policy (design 9.3): 1: on the drive, if_send"
+           , "<property name=\"outside_policy\" value=\"1\"/>", "<property name=\"blocked\" value=\"1\"/>" ]
+        $ \l -> xml `shouldSatisfy` T.isInfixOf l
+    it "passes JUnit's drive cases where nothing was outside the policy or refused, and prints none outside it" $ do
+      (_, md, xml) <- reportsOf onDriveM4c { rrOutsidePolicy = [], rrBlocked = 0, rrExit = ExitSuccess }
+      for_ ["name=\"no drive command outside its policy (design 9.3)\"/>", "name=\"the Guard refused no command (design 9.3)\"/>"] $ \l ->
+        xml `shouldSatisfy` T.isInfixOf l
+      md `shouldSatisfy` T.isInfixOf "- outside a drive's policy: none\n- commands the Guard refused: 0\n"
+    it "prints no Policies and no drive case where no drive was an end" $ do
+      (_, md, xml) <- reportsOf sample
+      md `shouldNotSatisfy` T.isInfixOf "## Policies"
+      xml `shouldNotSatisfy` T.isInfixOf "outside its policy"
+    it "says in the summary each drive's policy, the IF-SENDs, the commands outside it, each named, and the refusals" $ do
+      let printed = summary onDriveM4c []
+      for_ [ "policy on the drive: AllowList on base ComID 0x1004: Properties, StartSession to the Admin SP as Anybody, Get on C_PIN_MSID's UID and PIN, End of Session, STACK_RESET and its GET_COMID_RESPONSE"
+           , "IF-SENDs issued on a drive: 0; drive commands outside their policy: 1; refused by the Guard: 1" ] $ \l ->
+        printed `shouldSatisfy` elem l
+      printed `shouldSatisfy` any (T.isPrefixOf "  outside its policy, on the drive: if_send protocol 0x01 ComID 0x1004, 512 bytes: Set")
+
+  describe "M4c's renderings: a run stopped, the pre-flight's notes, --recover" $ do
+    let why     = "SIGINT: session TSN 4097 on ComID 0x1004 left open (End of Session not sent): hsed-jig --recover"
+        stopped = onDriveM4c { rrOutsidePolicy = [], rrBlocked = 0, rrInterrupted = Just why, rrExit = ExitFailure 130 }
+    it "prints why a run was stopped: its Markdown section, a failed JUnit case, the exit code's 130, the summary" $ do
+      (json, md, xml) <- reportsOf stopped
+      at "interrupted" json `shouldBe` Just (A.String why)
+      md `shouldSatisfy` T.isInfixOf ("- exit: 130\n\n## Interrupted\n\n- " <> why <> "\n\n## Targets")
+      xml `shouldSatisfy` T.isInfixOf ("name=\"interrupted\">\n      <failure message=\"" <> why <> "\"/>")
+      xml `shouldSatisfy` T.isInfixOf ("<failure message=\"exit 130: interrupted: " <> why <> "; SPF-02:1 fail")
+      summary stopped [] `shouldSatisfy` elem ("interrupted: " <> why)
+      (_, _, unstopped) <- reportsOf onDriveM4c
+      unstopped `shouldNotSatisfy` T.isInfixOf "name=\"interrupted\""
+    it "prints the pre-flight's notes, and what --recover did: recovered, or not, its JUnit case failed and the exit code's reason" $ do
+      let note'     = "/dev/disk22s1 mounted on /Volumes/SED NVME (msdos): allowed by --allow-mounted (design 9.3 item 4)"
+          recovered = "STACK_RESET on 0x1004: Success; the ComID idle; the Admin SP took a read-write session (TSN 4097) and ended it"
+          notReset  = "STACK_RESET on 0x1004: Success/Failure 1, the stack not reset (Core Table 36, PDF 66)"
+          ran o     = onDriveM4c { rrOutsidePolicy = [], rrBlocked = 0, rrCases = [], rrPreflight = [note'], rrRecover = Just o
+                                 , rrExit = either (const (ExitFailure 1)) (const ExitSuccess) o }
+      (_, md, xml) <- reportsOf (ran (Right recovered))
+      md `shouldSatisfy` T.isInfixOf ("## Pre-flight\n\n- " <> note' <> "\n\n## Targets")
+      md `shouldSatisfy` T.isInfixOf ("## Recover: STACK_RESET on the base ComID (design 9.3)\n\n- recovered: " <> recovered <> "\n\n## Cases")
+      xml `shouldSatisfy` T.isInfixOf "name=\"recover: STACK_RESET\"/>"
+      summary (ran (Right recovered)) [] `shouldSatisfy` \ls -> ("pre-flight: " <> note') `elem` ls && ("recover: " <> recovered) `elem` ls
+      (_, mdFailed, xmlFailed) <- reportsOf (ran (Left notReset))
+      mdFailed `shouldSatisfy` T.isInfixOf ("- not recovered: " <> notReset)
+      xmlFailed `shouldSatisfy` T.isInfixOf ("name=\"recover: STACK_RESET\">\n      <failure message=\"" <> notReset <> "\"/>")
+      xmlFailed `shouldSatisfy` T.isInfixOf ("<failure message=\"exit 1: --recover did not recover: " <> notReset <> "\"/>")
+      summary (ran (Left notReset)) [] `shouldSatisfy` elem ("recover: not recovered: " <> notReset)
+
+  describe "M4c's renderings: the pair's Properties (design 13.32 (6))" $ do
+    let allowed  = PropDiff "MaxComPacketSize" TPerSide (Just 2048) (Just 65536) "TPer minimum 2048 (Opal 2.30 Table 17, PDF 33)" Allowed
+        compared = Compared [allowed, PropDiff "MaxPacketSize" TPerSide (Just 2028) (Just 2000) "TPer minimum 2028 (Opal 2.30 Table 17, PDF 33)" NotAllowed]
+                            [] ["MaxReadSessions"]
+        title = "## Pair: Properties, the simulator's against the drive's (Opal 2.30 Table 17)"
+    it "prints a comparison not made with why, in the Markdown and the summary, with no JUnit case" $ do
+      let rr = paired { rrPairProperties = Just (NotCompared "one end ran no UCT-02") }
+      (_, md, xml) <- reportsOf rr
+      md `shouldSatisfy` T.isInfixOf (title <> "\n\n- not compared: one end ran no UCT-02\n\n")
+      xml `shouldNotSatisfy` T.isInfixOf "Properties against"
+      summary rr [] `shouldSatisfy` elem "pair properties: not compared: one end ran no UCT-02"
+    it "prints a comparison made: each judgement counted, the verdict; a JUnit case failed by a difference not allowed, and the exit code's reason" $ do
+      let rr = paired { rrPairProperties = Just compared, rrOutsidePolicy = [], rrExit = ExitFailure 1 }
+      (json, md, xml) <- reportsOf rr
+      atPath ["pair_properties", "compared"] json `shouldBe` Just (A.Bool True)
+      for_ [title, "- differences: 1 allowed, 0 unchecked (outside Table 17), 1 not allowed", "- fail\n"] $ \l -> md `shouldSatisfy` T.isInfixOf l
+      for_ [ "name=\"Pair: the simulator&apos;s Properties against the drive&apos;s (Opal 2.30 Table 17)\">"
+           , "<failure message=\"MaxPacketSize (tper): the drive&apos;s 2000, not allowed by TPer minimum 2028 (Opal 2.30 Table 17, PDF 33)\"/>"
+           , "the pair&apos;s Properties fail (Opal 2.30 Table 17)" ] $ \l -> xml `shouldSatisfy` T.isInfixOf l
+      summary rr [] `shouldSatisfy` any (T.isPrefixOf "pair properties: differences: 1 allowed, 0 unchecked (outside Table 17), 1 not allowed")
+    it "passes the JUnit case where every difference is allowed" $ do
+      (_, _, xml) <- reportsOf paired { rrPairProperties = Just (Compared [allowed] [] ["MaxReadSessions"]) }
+      xml `shouldSatisfy` T.isInfixOf "name=\"Pair: the simulator&apos;s Properties against the drive&apos;s (Opal 2.30 Table 17)\"/>"
+
+  describe "M4c's renderings: a secret under four bytes (design 9.3 item 5)" $
+    it "is marked short in the JSON and warned of in the Markdown, the JUnit properties and the summary; a longer one is not" $ do
+      let short = "SID" :: ByteString
+          warning = "short: masked wherever its bytes stand, the reports' own words and numbers among them (design 9.3 item 5)"
+          rr = sample { rrSecrets = [msid, short] }
+      (json, md, xml) <- reportsOf rr
+      [ at "short" e | e <- elements (at "secrets" json) ] `shouldBe` [Nothing, Just (A.Bool True)]
+      md `shouldSatisfy` T.isInfixOf ("- secret 2: " <> describeSecret short <> "; " <> warning)
+      md `shouldNotSatisfy` T.isInfixOf ("- secret 1: " <> describeSecret msid <> ";")
+      xml `shouldSatisfy` T.isInfixOf "; short: masked wherever its bytes stand, the reports&apos; own words and numbers among them (design 9.3 item 5)\"/>"
+      summary rr [] `shouldSatisfy` any (\l -> "secrets read: 2" `T.isPrefixOf` l && (describeSecret short <> "; " <> warning) `T.isSuffixOf` l)
+
+  describe "reportProperties" $
+    it "reads each end's Properties exchange back from a report, each table by name; none from a report without them" $ do
+      (json, _, _) <- reportsOf m4cFields
+      reportProperties json `shouldBe` Right (Just [ ("drive", [("MaxComPacketSize", 4096)]
+                                                     , PropertiesAnswer [("MaxComPacketSize", 2048), ("MaxSessions", 1)] (Just [("MaxComPacketSize", 4096)])) ])
+      reportProperties (A.object []) `shouldBe` Right Nothing
+
+  describe "verifyTranscript with --allow-list (verifyTranscriptWith)" $ do
+    for_ [(True, "STACK_RESET before each case (the shipped default)"), (False, "an idle IF-RECV before each case")] $ \(resets, mode) ->
+      it ("passes the M4c acceptance's cases on the simulator as a drive, " <> mode <> ", the base read from the report's Level 0") $
+        withSystemTempDirectory "hsed-report" $ \dir -> do
+          (report, verdicts) <- acceptanceReport resets dir
+          verdicts `shouldBe` [Pass, Pass, Pass]
+          (code, out) <- capturing (verifyTranscriptWith report False False True)
+          code `shouldBe` ExitSuccess
+          out `shouldSatisfy` T.isInfixOf "--allow-list: the drive's base ComID, as its Level 0 names it: 0x1004"
+          out `shouldSatisfy` T.isInfixOf (if resets then " 16 admitted, 0 refused, 0 that do not read; blocked by the run's Guard: 0"
+                                                    else " 13 admitted, 0 refused, 0 that do not read; blocked by the run's Guard: 0")
+    it "fails the same report with one drive command a Set, a STACK_RESET on 0x0004, a Get on C_PIN_SID, an entry that does not read, or a Blocked entry added" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        (report, _) <- acceptanceReport True dir
+        silently (verifyTranscriptWith report False False True) `shouldReturn` ExitSuccess
+        let unreadable = A.object ["n" A..= (5 :: Int), "entry" A..= ("issued" :: Text), "end" A..= ("drive" :: Text)]
+            blocked    = A.object [ "n" A..= (99 :: Int), "entry" A..= ("blocked" :: Text), "end" A..= ("drive" :: Text)
+                                  , "request" A..= setSend, "reason" A..= ("AllowList: the method Set is not allowed" :: Text) ]
+            refused    = "on the drive refused: "
+            edits      = [ ("set", editFirst issuedSend (withRequest setSend), refused <> "AllowList: the method Set")
+                         , ("tper-reset", editFirst issuedSend (withRequest resetOnTperResetComId), refused)
+                         , ("get-sid", editFirst issuedSend (withRequest getSidSend), refused <> "AllowList: the method Get")
+                         , ("unreadable", editFirst issuedSend (const unreadable), "#5 does not read as a command a report prints: refused")
+                         , ("blocked", (<> [blocked]), "0 refused, 0 that do not read; blocked by the run's Guard: 1") ]
+        for_ edits $ \(name, f, said) -> do
+          path <- edited (dir </> (name <> ".json")) (editKey "transcript" (editEach f)) report
+          (code, out) <- capturing (verifyTranscriptWith path False False True)
+          (name, code, said `T.isInfixOf` out) `shouldBe` (name, ExitFailure 1, True)
+    it "fails a report whose Level 0 names another base than the drive's policy is bound to, or none" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        (report, _) <- acceptanceReport True dir
+        other <- edited (dir </> "other-base.json") (editDescriptors (rebased "1005")) report
+        (code, out) <- capturing (verifyTranscriptWith other False False True)
+        code `shouldBe` ExitFailure 1
+        out `shouldSatisfy` T.isInfixOf "--allow-list: the drive's policy is bound to 0x1004, not the 0x1005 its Level 0 names"
+        none <- edited (dir </> "no-base.json") (editDescriptors (filter ((/= Just (A.Number 0x0203)) . at "code"))) report
+        (code', out') <- capturing (verifyTranscriptWith none False False True)
+        code' `shouldBe` ExitFailure 1
+        out' `shouldSatisfy` T.isInfixOf "--allow-list: the drive's base ComID, as its Level 0 names it: none"
+        out' `shouldSatisfy` T.isInfixOf "refused: no base ComID in its Level 0, so Level 0 Discovery alone: Level0Only"
+    it "passes an M3 report of Level 0 Discovery alone, and fails one whose drive was issued an IF-SEND with no base ComID to hold it to" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        level0Only <- writeReports dir (recvs [(0x01, 0x0001)]) <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)
+        silently (verifyTranscriptWith level0Only True True True) `shouldReturn` ExitSuccess
+        sending <- writeReports dir onDrive <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)
+        silently (verifyTranscriptWith sending False False True) `shouldReturn` ExitFailure 1
+        silently (verifyTranscriptWith sending False False False) `shouldReturn` ExitSuccess
+
+  describe "diffReports with M4c's Properties exchanges" $
+    it "compares the reports' last ends' Properties as the Pair's Properties are, where both carry them, and prints nothing of them where one does not" $
+      withSystemTempDirectory "hsed-report" $ \dir -> do
+        let level0 = Level0 mempty 0 [Descriptor 0x0001 1 (B.replicate 12 1)] mempty []
+            exchange tperMax = ( [("MaxComPacketSize", 4096)]
+                               , PropertiesAnswer [("MaxComPacketSize", tperMax), ("MaxPacketSize", 2028)] (Just [("MaxComPacketSize", 4096)]) )
+            report sub end ex = writeReports (dir </> sub) quiet
+              { rrTargets    = [Describe end "a test" UnitBlocks512 Nothing Nothing Nothing Nothing]
+              , rrLevel0     = [(end, level0)]
+              , rrProperties = [(end, fst ex, snd ex)] }
+              <&> fromMaybe "" . L.find (".json" `L.isSuffixOf`)
+            title = "## Pair: Properties, A's simulator's against B's drive's (Opal 2.30 Table 17)"
+        sim <- report "a" "tper" (exchange 2048)
+        drive <- report "b" "drive" (exchange 65536)
+        (code, out) <- capturing (diffReports sim drive)
+        code `shouldBe` ExitSuccess
+        out `shouldSatisfy` T.isInfixOf title
+        let expected = case pairProperties (Just (exchange 2048)) (Just (exchange 65536)) of
+              NotCompared why -> ["not compared: " <> why]
+              pp              -> propertiesLines pp
+        for_ expected $ \l -> out `shouldSatisfy` T.isInfixOf l
+        older <- edited (dir </> "older.json") (\v -> case v of A.Object o -> A.Object (KM.delete "properties" o); _ -> v) sim
+        (code', out') <- capturing (diffReports older drive)
+        code' `shouldBe` ExitSuccess
+        out' `shouldNotSatisfy` T.isInfixOf "Properties"

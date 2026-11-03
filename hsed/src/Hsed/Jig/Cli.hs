@@ -30,16 +30,18 @@ that the tests can run them:
   captured;
 * @verify-transcript REPORT.json [--no-if-send] [--level0-only]
   [--allow-list]@ and @diff A.json B.json@: a run's report read back
-  ("Hsed.Jig.Report"); @--allow-list@, each command a drive was issued
-  re-decided by the Guard, is read and not yet acted on (M4c's group G3's).
+  ("Hsed.Jig.Report"); with @--allow-list@, each command a drive was issued
+  re-decided offline by the Guard on the base ComID the drive's Level 0 in
+  the report names (design 9.3, M4c).
 
 Each gives the process's exit code: 0 success, 1 a failure, 2 a usage
-error, and for @run@ 3 a safety violation. The first of @run@'s safety
-gates are here, before anything else runs: a drive target (@/dev/diskN@,
-alone or paired) needs @--expect-serial@ (a usage error without it), and
-root, which hsed itself requires, the loaded kext (build 625) checking no
-privilege (design 9.3); the run itself checks that no IF-SEND was issued on
-a drive.
+error, and for @run@ 3 a safety violation and 130 a run interrupted. The
+first of @run@'s safety gates are here, before anything else runs: a drive
+target (@/dev/diskN@, alone or paired) needs @--expect-serial@ (a usage
+error without it), and root, which hsed itself requires, the loaded kext
+(build 625) checking no privilege (design 9.3); the run itself checks the
+drive's mounts where it may send ("Hsed.Jig.Preflight"), and that no
+command reached a drive outside its policy.
 -}
 module Hsed.Jig.Cli
   ( Command (..)
@@ -55,7 +57,7 @@ import           Hsed.Core.Feature    (Allowance (..), Feature (featureCode))
 import           Hsed.Core.Layout     (Content (..))
 import           Hsed.Jig.Files       (runningAsRoot, writeOwned)
 import           Hsed.Jig.Options     (TargetSpec (..))
-import           Hsed.Jig.Report      (diffReports, verifyTranscript)
+import           Hsed.Jig.Report      (diffReports, verifyTranscriptWith)
 import           Hsed.Jig.Run         (RunOptions (..), runJig)
 import           Hsed.Level0          (DecodedDescriptor (..), Descriptor (..), Level0 (..), allowedByOpal,
                                        decodeDescriptor, describeProblem, splitLevel0)
@@ -69,19 +71,20 @@ data Command
   | Level0Decode FilePath (Maybe FilePath)    -- ^ the response, sedutil's printed query to compare it with
   | Level0Synthesize FilePath FilePath        -- ^ sedutil's printed query, the response to write
   | VerifyTranscript FilePath Bool Bool Bool  -- ^ the report, whether a drive's IF-SEND fails it, whether a drive's
-                                              --   command other than Level 0's IF-RECV does, whether one its allow list
-                                              --   does not admit does (@--allow-list@: G3's, not yet acted on)
+                                              --   command other than Level 0's IF-RECV does, whether one the Guard's
+                                              --   allow list does not admit on the drive's base ComID does
+                                              --   (@--allow-list@)
   | Diff FilePath FilePath
   deriving (Eq, Show)
 
 -- | Run a command: the exit code.
 runCommand :: Command -> IO ExitCode
 runCommand = \case
-  Run opts                               -> run opts
-  Level0Decode file against              -> level0Decode file against
-  Level0Synthesize query out             -> level0Synthesize query out
-  VerifyTranscript report noIfs level0 _ -> verifyTranscript report noIfs level0
-  Diff a b                               -> diffReports a b
+  Run opts                                       -> run opts
+  Level0Decode file against                      -> level0Decode file against
+  Level0Synthesize query out                     -> level0Synthesize query out
+  VerifyTranscript report noIfs level0 allowList -> verifyTranscriptWith report noIfs level0 allowList
+  Diff a b                                       -> diffReports a b
 
 
 -- * run

@@ -26,8 +26,10 @@ five after it, each CDB cdbFor's; a command none of the five refused before
 the shim; the latch on a @kern_return_t@, a CDB not hsed's, a residue (an
 IF-RECV's bytes kept as evidence, an IF-SEND said to have reached the
 drive), a shim that throws, a lost answer; the lines printed, never the
-payload; the command uninterruptible, a 'timeout' returning only after the
-shim, the transport latched. 'kextBind' and 'kextClose' with it.
+payload, after the judgement and apart from it (a printer that throws loses
+its line alone); the command uninterruptible, a 'timeout' returning only
+after the shim, the transport latched. 'kextBind' and 'kextClose' with it,
+a close closed whatever its printer or the shim's close does.
 
 'judgeCommand' and 'commandLine' on values; @kern_return_t@ codes named as
 IOReturn.h names them; @hsed_kext_info@ laid out as cbits/hsed_kext.h
@@ -170,9 +172,13 @@ newRig = Rig <$> newKextHandle "disk22" IfSAT <*> newIORef 0 <*> newIORef 0 <*> 
 -- | A command through the rig: the test's shim, as @hsed_kext_command@
 --   does it, builds the CDB with the real C on the base its bind was given
 --   (a refusal is kIOReturnBadArgument), checks a send's payload with the
---   real C, then answers as the knobs say.
+--   real C, then answers as the knobs say; its line kept.
 exchange :: Rig -> Request -> IO Response
-exchange r = kextExchange (\l -> modifyIORef' (rLines r) (<> [l])) shim (rHandle r)
+exchange r = exchangePrinting (\l -> modifyIORef' (rLines r) (<> [l])) r
+
+-- | 'exchange' with a printer of the test's.
+exchangePrinting :: (Text -> IO ()) -> Rig -> Request -> IO Response
+exchangePrinting printer r = kextExchange printer shim (rHandle r)
   where
     shim shape blocks buf size pCdb pMoved = do
       modifyIORef' (rCalls r) (+ 1)
@@ -379,6 +385,15 @@ spec = describe "Hsed.Transport.Kext" $ do
       writeIORef (rKnobs r) straight
       exchange r level0 >>= (`shouldSatisfy` failsWith "was lost to an interruption, after the shim returned")
       readIORef (rCalls r) `shouldReturn` 1
+    it "prints a command's line after judging it and apart from it: a printer that throws loses the line, never the answer, nor latches" $ do
+      r <- newRig
+      let answer = B.pack (take 2048 (L.cycle [0x41 .. 0x5A]))
+      writeIORef (rKnobs r) straight { kAnswer = answer }
+      a <- exchangePrinting (\_ -> throwString "stderr: resource vanished") r level0
+      (status a, rpayload a) `shouldBe` (Good, answer)
+      exchange r level0 >>= (`shouldSatisfy` (== Good) . status)
+      readIORef (rCalls r) `shouldReturn` 2
+      length <$> readIORef (rLines r) `shouldReturn` 1
     it "answers within a timeout longer than the shim, and stays ready" $ do
       r <- newRig
       writeIORef (rKnobs r) straight { kDelay = 1000 }
@@ -408,13 +423,26 @@ spec = describe "Hsed.Transport.Kext" $ do
       traverse (bindRig r) [0x1004, 0x1004] `shouldReturn` [Right (), Right ()]
       readIORef (khBase (rHandle r)) `shouldReturn` Just 0x1004
 
-  describe "kextClose" $
+  describe "kextClose" $ do
     it "closes once, the shim's close called once; a closed transport issues nothing, the shim not called" $ do
       r <- newRig
       closes <- newIORef (0 :: Int)
       replicateM_ 2 (kextClose (const (pure ())) (0 <$ modifyIORef' closes (+ 1)) (rHandle r))
       readIORef closes `shouldReturn` 1
       exchange r level0 >>= (`shouldSatisfy` failsWith "the kext transport is closed")
+      readIORef (rCalls r) `shouldReturn` 0
+    it "closes whatever its printer does, and whatever the shim's close does: a printer that throws, a close that throws, the transport closed" $ do
+      r <- newRig
+      closes <- newIORef (0 :: Int)
+      kextClose (\_ -> throwString "stderr: resource vanished") (0 <$ modifyIORef' closes (+ 1)) (rHandle r)
+      kextClose (const (pure ())) (0 <$ modifyIORef' closes (+ 1)) (rHandle r)
+      readIORef closes `shouldReturn` 1
+      exchange r level0 >>= (`shouldSatisfy` failsWith "the kext transport is closed")
+      throwing <- newRig
+      said <- newIORef []
+      kextClose (\l -> modifyIORef' said (<> [l])) (throwString "the close throws") (rHandle throwing)
+      exchange throwing level0 >>= (`shouldSatisfy` failsWith "the kext transport is closed")
+      readIORef said >>= (`shouldSatisfy` any ("hsed_kext_close threw" `T.isInfixOf`))
       readIORef (rCalls r) `shouldReturn` 0
 
   describe "judgeCommand" $ do

@@ -53,6 +53,7 @@ module Hsed.Transport.Kext
   , kextExchange
   , kextBind
   , kextClose
+  , quietly
     -- * One command through the shim
   , pageBytes
   , bufferBytes
@@ -225,42 +226,51 @@ type ShimCommand = Shape -> Word8 -> Ptr Word8 -> Word64 -> Ptr Word8 -> Ptr Wor
 --   bound ("Hsed.Transport.Cdb".'shapeOf'; Level 0 Discovery's IF-RECV
 --   alone while none is), or 'Unsupported' with why, the shim not called.
 --   Otherwise, while the transport is ready, the shim is called once over
---   'commandBuffer', the line 'commandLine' printed and the answer judged
---   ('judgeCommand'): 'Good' with an IF-RECV's payload (none for an
---   IF-SEND), or a 'TransportFailure' saying why, which latches the
---   transport: every command after is a 'TransportFailure' and the shim is
---   not called again (a command the kext failed leaves its SCSI task
---   unreleased, which a retry would leak again, and a drive that answered
---   other than hsed asked is not asked again); a shim that throws latches it
---   too.
+--   'commandBuffer' and the answer judged ('judgeCommand'): 'Good' with an
+--   IF-RECV's payload (none for an IF-SEND), or a 'TransportFailure' saying
+--   why, which latches the transport: every command after is a
+--   'TransportFailure' and the shim is not called again (a command the kext
+--   failed leaves its SCSI task unreleased, which a retry would leak again,
+--   and a drive that answered other than hsed asked is not asked again); a
+--   shim that throws latches it too. Then the line 'commandLine' is
+--   printed, after the judgement and apart from it: a printer that fails
+--   (a closed stderr) loses the line, never the command's answer, nor
+--   latches the transport.
 --
 --   From the latch's check to the latch set again, the command is
 --   uninterruptible: an asynchronous exception (a 'timeout', a signal
 --   thrown as one) waits for the shim and for the command's answer to be
 --   judged and kept, the kext's own limit, 10 s a command, bounding the
---   wait. One that arrived meanwhile is then raised, the answer lost to
---   the caller, and so the transport latches before it is: what the drive
---   did with the command is no longer known.
+--   wait. One that arrived meanwhile is then raised, the answer lost to the
+--   caller, and so the transport latches before it is: what the drive did
+--   with the command is no longer known. That is so for a caller that gives
+--   the command unmasked; a run gives every command of a drive under its
+--   recording's mask ("Hsed.Jig.Transcript".'Hsed.Jig.Transcript.recording'),
+--   so that an asynchronous exception is raised only once the answer is
+--   judged, kept and recorded, and the run's own exchange latches the drive
+--   when it gives up on an answer ("Hsed.Jig.Guard".'Hsed.Jig.Guard.driveLatch',
+--   the host's timeout on a drive, "Hsed.Jig.Script".@exchangeOn@).
 kextExchange :: (Text -> IO ()) -> ShimCommand -> KextHandle -> Request -> IO Response
 kextExchange complain shim h q = do
   base <- readIORef (khBase h)
   case shapeOf base q of
     Left why              -> pure (Response (Unsupported why) mempty)
     Right (shape, blocks) -> uninterruptibleMask $ \restore -> do
-      answer <- modifyMVar (khState h) (command shape blocks)
+      (answer, line) <- modifyMVar (khState h) (command shape blocks)
+      traverse_ (quietly complain) line
       restore (pure answer) `onException` lost shape
   where
     command shape blocks = \case
-      Closed     -> pure (Closed, failure "the kext transport is closed")
-      Failed why -> pure (Failed why, failure ("a command failed before (" <> why <> "); nothing more is issued"))
+      Closed     -> pure (Closed, (failure "the kext transport is closed", Nothing))
+      Failed why -> pure (Failed why, (failure ("a command failed before (" <> why <> "); nothing more is issued"), Nothing))
       Ready      -> tryAny (issue shape blocks) <&> \case
-        Left e                   -> let why = threw shape e in (Failed why, failure why)
-        Right (Left (why, kept)) -> (Failed why, Response (TransportFailure why) kept)
-        Right (Right received)   -> (Ready, Response Good received)
+        Left e                          -> let why = threw shape e in (Failed why, (failure why, Nothing))
+        Right (Left (why, kept), line)  -> (Failed why, (Response (TransportFailure why) kept, Just line))
+        Right (Right received, line)    -> (Ready, (Response Good received, Just line))
 
     failure why = Response (TransportFailure why) mempty
 
-    -- the command through the shim, judged
+    -- the command through the shim, judged, and the line to print of it
     issue shape blocks = do
       (buf, size) <- commandBuffer q
       withForeignPtr buf $ \pBuf -> allocaBytes 16 $ \pCdb -> alloca $ \pMoved -> do
@@ -270,8 +280,8 @@ kextExchange complain shim h q = do
         cdb      <- B.packCStringLen (castPtr pCdb, 16)
         moved    <- peek pMoved
         received <- if shapeDir shape == IfRecv then B.packCStringLen (castPtr pBuf, fromIntegral (lenBytes q)) else pure mempty
-        complain (commandLine (khDisk h) shape (comId q) blocks cdb kr moved)
-        pure (judgeCommand (khInterface h) shape (comId q) blocks kr cdb moved received)
+        pure ( judgeCommand (khInterface h) shape (comId q) blocks kr cdb moved received
+             , commandLine (khDisk h) shape (comId q) blocks cdb kr moved )
 
     threw shape e =
       "the shim threw on " <> shapeName shape <> ": " <> tshow e <> "; whether it reached the drive is not known, so "
@@ -316,16 +326,25 @@ kextBind bind h base = uninterruptibleMask_ $ modifyMVar (khState h) $ \case
       _          -> ": nothing more is issued"
 
 -- | Close the transport, once, given the shim's close (@hsed_kext_close@):
---   the user client closed, failed or not, and a @kern_return_t@ other than
---   success printed; a closed transport issues nothing more.
+--   the user client closed, failed or not (a close that throws is closed
+--   too: the C forgets the connection before it calls the kext), then a
+--   line printed, a @kern_return_t@ other than success named, a printer
+--   that fails losing the line alone; a closed transport issues nothing
+--   more.
 kextClose :: (Text -> IO ()) -> IO Word32 -> KextHandle -> IO ()
-kextClose complain close h = uninterruptibleMask_ $ modifyMVar_ (khState h) $ \case
-  Closed -> pure Closed
-  _      -> do
-    kr <- close
-    complain ("kext " <> khDisk h <> ": closed the TPer's user client"
-              <> (if kr == 0 then "" else ": hsed_kext_close: " <> kernReturn kr))
-    pure Closed
+kextClose complain close h = uninterruptibleMask_ $ do
+  line <- modifyMVar (khState h) $ \case
+    Closed -> pure (Closed, Nothing)
+    _      -> tryAny close <&> \closed -> (Closed, Just ("kext " <> khDisk h <> ": closed the TPer's user client" <> case closed of
+      Right 0  -> ""
+      Right kr -> ": hsed_kext_close: " <> kernReturn kr
+      Left e   -> ": hsed_kext_close threw: " <> tshow e))
+  traverse_ (quietly complain) line
+
+-- | A line printed, a printer's own failure (a closed stderr) ignored: the
+--   transport's lines are reports of what it did, never part of it.
+quietly :: (Text -> IO ()) -> Text -> IO ()
+quietly complain line = void (tryAny (complain line))
 
 
 -- * One command through the shim

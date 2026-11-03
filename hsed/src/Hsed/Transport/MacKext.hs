@@ -47,19 +47,22 @@ target puts it behind the Guard at once ("Hsed.Jig.Guard"'s
   the base is bound, then, on the base, a ComPacket's IF-SEND and IF-RECV
   and STACK_RESET's HANDLE_COMID_REQUEST and GET_COMID_RESPONSE, each in
   whole 512-byte blocks, and refuses anything else before the shim is
-  called ('Unsupported'). The shim builds each CDB itself from the shape
-  and the base it bound, and checks an IF-SEND's payload in the very
-  buffer it passes to the kernel. A @kern_return_t@ other than success, a
-  CDB other than hsed's, or another count of bytes moved than asked (design
-  13.29 (d)) is a 'TransportFailure' naming it, and after one the transport
-  issues nothing more. Each command it issues it prints on stderr: the
-  command, the CDB, the @kern_return_t@, the bytes transferred, never the
-  payload.
+  called ('Unsupported'). The shim takes each command's six scalars, its
+  CDB among them, from the portable C, built from the shape and the base
+  it bound, and checks an IF-SEND's payload in the very
+  buffer it passes to the kernel, and echoes the scalars' CDB, the bytes
+  the kernel is given. A @kern_return_t@ other than success, a CDB other
+  than hsed's, or another count of bytes moved than asked (design 13.29
+  (d)) is a 'TransportFailure' naming it, and after one the transport
+  issues nothing more. Each command it issues it prints on stderr, after
+  the judgement and apart from it: the command, the CDB, the
+  @kern_return_t@, the bytes transferred, never the payload.
 * the bind ("Hsed.Transport.Kext".'Hsed.Transport.Kext.kextBind' over
-  @hsed_kext_bind@) checks again, in C, that the base is a ComID Core Table
-  26 does not reserve, bound once, that the TPer is still the one opened,
-  with this user client alone on it, and that its serial is unchanged; a
-  bind refused issues nothing more.
+  @hsed_kext_bind@) checks again, in C (@hsed_cdb_bind_check@ on what the
+  shim reads of the TPer), that the base is a ComID Core Table 26 does not
+  reserve, bound once, that the TPer is still the one opened, with this
+  user client alone on it, and that its serial is unchanged; a bind
+  refused issues nothing more.
 
 Closing the transport closes the user client, once.
 
@@ -88,7 +91,7 @@ import           System.Posix.User        (getEffectiveUserID)
 import           Hsed.Transport.Cdb       (shapeCode)
 import           Hsed.Transport.Drive     (DriveInfo (..), InterfaceType (..), RawDrive (..))
 import           Hsed.Transport.Kext      (InfoLayout (..), KextHandle, Located (..), ShimCommand, admit, diskName,
-                                           infoLayout, kernReturn, kextBind, kextClose, kextExchange, newKextHandle)
+                                           infoLayout, kernReturn, kextBind, kextClose, kextExchange, newKextHandle, quietly)
 import           Hsed.Wire.Internal       (Cap (..), Describe (..), IfStatus (..), Transport (..), Unit (..))
 #else
 import           Hsed.Transport.Drive     (DriveInfo, RawDrive)
@@ -132,11 +135,14 @@ openDisk opts disk = do
       if kr /= 0
         then pure (Left (disk <> ": hsed_kext_open: " <> kernReturn (fromIntegral kr)))
         else do
-          complain ("kext " <> disk <> ": opened the TPer's user client (" <> interfaceName (diInterface di)
-                    <> ", registry id 0x" <> T.pack (showHex (diRegistryId di) "")
-                    <> ", kext build " <> diKextBuild di <> ")")
+          -- the drive handed over before anything is printed, so that a printer that fails (a closed stderr) never
+          -- leaves the user client open with no transport to close it
           h <- newKextHandle disk (diInterface di)
-          pure (Right (RawDrive (kextTransport info h di) (kextBind (shimBind info) h), di))
+          let raw = RawDrive (kextTransport info h di) (kextBind (shimBind info) h)
+          quietly complain ("kext " <> disk <> ": opened the TPer's user client (" <> interfaceName (diInterface di)
+                            <> ", registry id 0x" <> T.pack (showHex (diRegistryId di) "")
+                            <> ", kext build " <> diKextBuild di <> ")")
+          pure (Right (raw, di))
 
 -- | The transport over an opened user client: each command through
 --   @hsed_kext_command@ ("Hsed.Transport.Kext".'kextExchange'), no events,

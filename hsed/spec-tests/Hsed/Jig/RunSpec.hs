@@ -83,7 +83,10 @@ carry, the IF-SEND issued, treated as one whose SyncSession does not read,
 in both modes; a session whose End of Session goes unanswered and whose
 closing STACK_RESET answers Success/Failure 1, in the run's last case, kept
 for the reports; a stop in the first of UCT-03's three extensions, the two
-after it not run.
+after it not run; a SIGHUP set up as base sets up SIGINT, its action reset
+once delivered, put back so after a run, which one SIGHUP delivered then
+shows by the default action it leaves (sigaction read through
+spec-tests/cbits/hsed_test_signals.c).
 -}
 module Hsed.Jig.RunSpec (spec) where
 
@@ -97,7 +100,8 @@ import           RIO
 import           RIO.Directory          (doesFileExist, listDirectory)
 import           RIO.FilePath           (takeExtension, (</>))
 import qualified RIO.Text               as T
-import           Data.Dynamic           (dynTypeRep)
+import           Data.Dynamic           (dynTypeRep, toDyn)
+import           Foreign.C.Types        (CInt (..))
 import qualified GHC.Conc.Signal        as Conc
 import           System.Posix.Signals   (Handler (..), installHandler, raiseSignal, sigHUP, sigINT)
 import           Test.Hspec
@@ -145,6 +149,11 @@ import qualified Hsed.Wire.Internal     as Wire
 
 keys :: Text -> [CaseKey]
 keys = either (error . T.unpack) id . parseCaseKeys
+
+-- | Whether a signal's handler is reset to the default once delivered (1), stays (0), or there is none, the
+--   default action or ignored (-1): what System.Posix.Signals does not give back (spec-tests/cbits/hsed_test_signals.c).
+foreign import ccall unsafe "hsed_test_signal_resets"
+  signalResets :: CInt -> IO CInt
 
 -- | The ten cases of M4a, in the catalogue's order.
 tenCases :: [CaseKey]
@@ -888,6 +897,23 @@ spec = do
         raiseSignal sigHUP
         settled 200 `shouldReturn` True
         readIORef stop `shouldReturn` Nothing
+    it "puts back a signal's action reset once delivered, as base's own SIGINT handler's is, so that a second signal after the run kills: a SIGHUP set up so, delivered once after the run, leaves the default action (the lead's (5); the M4c review's verification)" $ do
+      stop <- newIORef Nothing
+      let once = pure () :: IO ()
+          -- SIGHUP's action as sigaction reads it, once it is the one wanted or after 2 s
+          settledTo want n = signalResets sigHUP >>= \r -> if r == want || n <= (0 :: Int) then pure r else threadDelay 10000 >> settledTo want (n - 1)
+      intBefore <- signalResets sigINT
+      bracket (installHandler sigHUP (CatchOnce once) Nothing) (\old -> installHandler sigHUP old Nothing) $ \_ -> do
+        -- the action reset once delivered (STG_SIG_RST), the table's entry an IO (): as GHC.TopHandler sets up SIGINT
+        _ <- Conc.setHandler sigHUP (Just (const once, toDyn once))
+        withStopSignals stop (pure ())
+        signalResets sigHUP >>= (`shouldSatisfy` (>= 0))
+        -- one SIGHUP, which the handler put back takes, and with it its action: the default left behind (SA_RESETHAND,
+        -- which macOS's sigaction does not report but does), where a handler put back as a repeating one stays
+        raiseSignal sigHUP
+        settledTo (-1) 200 `shouldReturn` (-1)
+        signalResets sigINT `shouldReturn` intBefore
+      readIORef stop `shouldReturn` Nothing
 
   describe "the exit code, and what a drive's own transcript holds outside its policy (M4c)" $ do
     it "outsidePolicy decides each command again: a forged Set on 0x1004 and an IF-RECV on 0x1005 are outside AllowList 0x1004 of the read-only methods, a run's own commands are not; the exit from them is 3" $ do

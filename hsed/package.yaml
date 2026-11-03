@@ -152,11 +152,12 @@ tests:
     # against a stub of what it calls of Mach, CoreFoundation and IOKit (spec-tests/cbits/stub, whose headers
     # stand in for the system's, every function the shim calls a macro for one named hsed_stub_*), its five
     # functions renamed hsed_stubbed_kext_* and its geteuid the stub's, so that the shim's own code runs with
-    # nothing of IOKit linked and no call reaching a kext (Hsed.Transport.KextShimSpec). Listed as itself, so
-    # that an edit of hsed_kext.c recompiles it here.
+    # nothing of IOKit linked and no call reaching a kext (Hsed.Transport.KextShimSpec); and a signal's action as
+    # sigaction reads it (Hsed.Jig.RunSpec). Listed as itself, so that an edit of hsed_kext.c recompiles it here.
     c-sources:
     - cbits/hsed_kext.c
     - spec-tests/cbits/hsed_kext_stub.c
+    - spec-tests/cbits/hsed_test_signals.c
     include-dirs:
     - spec-tests/cbits/stub
     cc-options:

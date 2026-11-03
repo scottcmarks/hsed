@@ -28,11 +28,10 @@ GET_COMID_RESPONSE Success/Failure 1: not recovered, nothing sent after
 it, exit 1; on one that answers Pending twice, then Success: asked three
 times, recovered, exit 0.
 
-A drive's exit is M4c's rule's (exit 3 for a drive command its policy does
-not admit), which group G2's "Hsed.Jig.Run" brings: until it merges, the
-scaffold's rule exits 3 for any IF-SEND issued to a drive, so each drive
-example meets its other expectations and pends on its exit alone
-('exitsUnderM4cRule'), retiring by itself once G2's 'outsidePolicy' is in.
+A drive's exit is M4c's rule's ("Hsed.Jig.Run".'Hsed.Jig.Run.runExit'):
+the STACK_RESET and the session --recover issues on it are within its
+policy, so it exits 0 recovered and 1 not, never 3, which is for a command
+its policy does not admit.
 -}
 module Hsed.Jig.RecoverSpec (spec) where
 
@@ -48,13 +47,13 @@ import           Test.Hspec
 import           Hsed.Core.Record       (encodeRecord)
 import           Hsed.Gen.Core.Codes    (pattern SP_BUSY)
 import           Hsed.Gen.Core.Layouts  (STACK_RESETCommandResponse (..), STACK_RESETPending (..))
-import           Hsed.Jig.Guard         (Policy (..), recoverMethods)
+import           Hsed.Jig.Guard         (recoverMethods)
 import           Hsed.Jig.Options       (RunOptions (..), TargetSpec (..), defaultRunOptions)
-import           Hsed.Jig.Run           (driveAllowedFor, outsidePolicy, runOpened, selectedCases)
+import           Hsed.Jig.Run           (driveAllowedFor, runOpened, selectedCases)
 import           Hsed.Jig.Script        (RunEnv (..), Script, SyncAnswer (..), adminSPAsAnybody, emptyRunCtx, startSession)
 import           Hsed.Jig.Support       (at, atPath, disk6Like, fakeDrive, onFakeDrive, silently)
 import           Hsed.Jig.Target        (Target (..), closeTarget, openTarget)
-import           Hsed.Jig.Transcript    (TEntry (..), newTranscript)
+import           Hsed.Jig.Transcript    (newTranscript)
 import           Hsed.Sim.State         (lifeOf)
 import           Hsed.Sim.Types         (ComIdLife (Associated), SimParams (..), TPerState (..), defaultSimParams)
 import           Hsed.Transport.Drive   (DriveInfo, RawDrive (..))
@@ -146,24 +145,6 @@ failure1, pendingAnswer :: ByteString
 failure1 = either (error . show) id (encodeRecord (STACK_RESETCommandResponse extended 1))
 pendingAnswer = either (error . show) id (encodeRecord (STACK_RESETPending extended))
 
--- | Whether the run's exit rule is M4c's, group G2's ("Hsed.Jig.Run": exit
---   3 for a drive command its policy does not admit, re-decided by
---   'outsidePolicy'): the scaffold's stub finds nothing outside a policy,
---   not even a command that is no ComPacket.
-m4cExitRule :: Bool
-m4cExitRule = not (null (outsidePolicy (AllowList 0x1004 recoverMethods) [Issued 1 "drive" junk (Response Good mempty)]))
-  where junk = Request IfSend 1 0x1004 512 (B.replicate 512 0xFF)
-
--- | A drive run's exit, as M4c's rule gives it; until group G2 merges, the
---   scaffold's rule exits 3 for any IF-SEND issued to a drive, which every
---   --recover run issues, and the example pends here, its other
---   expectations met.
-exitsUnderM4cRule :: ExitCode -> ExitCode -> Expectation
-exitsUnderM4cRule expected code
-  | m4cExitRule = code `shouldBe` expected
-  | otherwise   = pendingWith ("exit " <> show code <> " under the scaffold's rule (exit 3 for any IF-SEND issued to a drive); " <> show expected
-                               <> " under M4c's, once group G2's Hsed.Jig.Run merges (outsidePolicy and the exit rule)")
-
 spec :: Spec
 spec = describe "--recover (Hsed.Jig.Recover through Hsed.Jig.Run.runOpened)" $ do
   it "on the simulator, a session held: STACK_RESET, the ComID idle, a session opened and ended, none left open; exit 0" $
@@ -198,7 +179,7 @@ spec = describe "--recover (Hsed.Jig.Recover through Hsed.Jig.Run.runOpened)" $ 
     (at "blocked" json, at "outside_policy" json) `shouldBe` (Just (A.Number 0), Just (A.Array mempty))
     issued json `shouldBe` recovering "drive"
     atPath ["recover", "ok"] json `shouldBe` Just (A.Bool True)
-    exitsUnderM4cRule ExitSuccess code
+    code `shouldBe` ExitSuccess
 
   it "on a replay: Level 0 alone, the bind refused, nothing sent; exit 1" $
     withSystemTempDirectory "hsed-recover" $ \tmp -> do
@@ -223,7 +204,7 @@ spec = describe "--recover (Hsed.Jig.Recover through Hsed.Jig.Run.runOpened)" $ 
     atPath ["recover", "text"] json `shouldSatisfy` holding "STACK_RESET on 0x1004: Success/Failure 1, the stack not reset (Core Table 36, PDF 66)"
     readIORef asked `shouldReturn` 1
     issued json `shouldBe` take 3 (recovering "drive")
-    exitsUnderM4cRule (ExitFailure 1) code
+    code `shouldBe` ExitFailure 1
 
   it "on a TPer answering Pending twice, then Success: asked three times, recovered; exit 0" $ do
     (drive, asked) <- resetAnswering [pendingAnswer, pendingAnswer]
@@ -231,4 +212,4 @@ spec = describe "--recover (Hsed.Jig.Recover through Hsed.Jig.Run.runOpened)" $ 
     readIORef asked `shouldReturn` 3
     atPath ["recover", "ok"] json `shouldBe` Just (A.Bool True)
     issued json `shouldBe` take 2 (recovering "drive") <> replicate 2 (command "drive" "if_recv" 2 0x1004 512) <> drop 2 (recovering "drive")
-    exitsUnderM4cRule ExitSuccess code
+    code `shouldBe` ExitSuccess

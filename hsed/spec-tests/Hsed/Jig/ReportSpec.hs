@@ -53,12 +53,13 @@ report of the M4c acceptance's cases on the simulator as a drive
 modes (STACK_RESET before each case, or an idle IF-RECV), the base read from
 the report's Level 0; the same report with one drive command made a Set, a
 STACK_RESET on TPER_RESET's ComID 0x0004, a Get on C_PIN_SID, or an entry
-that does not read, or with a Blocked entry added, fails, under the
-scaffold's Guard as under M4c's; so does one whose Level 0 names another
-base than its policy is bound to, or none; an M3 report of Level 0 alone
-passes. @diff@ compares two reports' Level 0 responses as the Pair runner
-does, and their last ends' Properties exchanges as the Pair's Properties
-are, where both carry them.
+that does not read, or with a Blocked entry added, fails, each edit one
+the Guard refuses whether or not it reads the base ComID (DrivePathSpec
+edits an IF-RECV onto another base, which only M4c's Guard refuses); so
+does one whose Level 0 names another base than its policy is bound to, or
+none; an M3 report of Level 0 alone passes. @diff@ compares two reports'
+Level 0 responses as the Pair runner does, and their last ends' Properties
+exchanges as the Pair's Properties are, where both carry them.
 -}
 module Hsed.Jig.ReportSpec (spec) where
 
@@ -321,9 +322,10 @@ acceptanceKeys = either (error . T.unpack) id (parseCaseKeys "UCT-02,UCT-03:1a-1
 --   own Level 0, and before each case STACK_RESET on the base (the shipped
 --   default, @roStackResetBeforeCases@) or an IF-RECV that finds it idle
 --   (the other mode's probe); the run's reports written into a directory:
---   the JSON's path, and each case's verdict. Until M4c's group G2 merges,
---   the runner itself skips these cases on a drive (M4b's way); the
---   integration's DrivePathSpec repeats the check on whole runs.
+--   the JSON's path, and each case's verdict. Built by hand while the
+--   runner still skipped these cases on a drive (M4b's way); since M4c the
+--   runner runs them (RunSpec), and DrivePathSpec repeats this check on
+--   whole runs over the fake kext.
 acceptanceReport :: Bool -> FilePath -> IO (FilePath, [Verdict])
 acceptanceReport resets dir = do
   (raw, di, _) <- fakeDrive defaultSimParams

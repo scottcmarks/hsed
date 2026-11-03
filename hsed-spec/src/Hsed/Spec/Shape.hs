@@ -486,7 +486,9 @@ describe form = T.concat
 --   the three of T28, T31-T33 and T35-T37.
 --   'Tokens' takes the token table of Core Table 4 and the atom diagrams that
 --   follow it (a first header cell naming the atom's header, or two columns
---   with no header row). 'StateTable' takes a table whose first column names
+--   with no header row), and, since M5a, an SSC's list of the tokens it
+--   supports, headed @[Token, Acronym]@ (Opal Table 15, PDF 30-31, bound
+--   @narrows (core 4)@). 'StateTable' takes a table whose first column names
 --   states and whose other header cells name fields, each a @… Field Value@
 --   (Core Table 45), so that a @stateTable@ comment on any other table is
 --   @E-SHAPE@ rather than a table silently read as states. 'Sentence' takes
@@ -513,7 +515,7 @@ shapeMismatch shape form = case shape of
   ConstValues     -> header ["column", "value"]
   Ranges          -> columns 3 <|> cells "[<X> Name, … Start, … End]" ranges
   Preconfig       -> atLeast 2 <|> caption
-  Tokens          -> (atLeast 4 <|> prefix ["byte", "hex", "acronym", "meaning"]) >> atomDiagram
+  Tokens          -> (atLeast 4 <|> prefix ["byte", "hex", "acronym", "meaning"]) >> header ["token", "acronym"] >> atomDiagram
   StateTable      -> atLeast 2 <|> restSuch "header cells after the first naming fields, each ending Field Value"
                                               ("fieldvalue" `T.isSuffixOf`)
   Props           -> atLeast 3 <|> firstSuch "a first header cell starting with Property" ("property" `T.isPrefixOf`)
@@ -584,7 +586,7 @@ shapeMismatch shape form = case shape of
     atomDiagram = case hs of
       h : _ | "header" `T.isPrefixOf` h -> Nothing
       [] | fCols form == 2              -> Nothing
-      _ -> Just "expects the header [Byte, Hex, Acronym, Meaning], a first header cell naming an atom's Header, or two columns with no header row"
+      _ -> Just "expects the header [Byte, Hex, Acronym, Meaning] or [Token, Acronym], a first header cell naming an atom's Header, or two columns with no header row"
     -- the tables another shape takes are not this shape's
     notAlso others = case [ o | o <- others, isNothing (shapeMismatch o form) ] of
       o : _ -> Just ("the table is a " <> shapeName o <> " table, which that shape takes")

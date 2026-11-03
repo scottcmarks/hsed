@@ -39,7 +39,18 @@ Checks:
   kept, as 'Hsed.Core.Code.codeRow' reads the table);
 * @C-CODE-TYPE@ (Error): a code column's header that names its values' type
   in parentheses (@Start Transaction Status Code (uinteger)@) names a Type
-  object of the spec (a table "Hsed.Spec.Rules.TypeRow" binds).
+  object of the spec (a table "Hsed.Spec.Rules.TypeRow" binds);
+* @C-CODE-NARROWS@ (Error) and @N-CODE-NARROWS@ (Note), since M5a
+  ('narrowedFindings'): a table bound @narrows (core N)@ (Opal Table 14,
+  PDF 30, over Core Table 26, PDF 55-56) holds the target's rows, restricted:
+  each row's codes lie within one row of the target, whose description its
+  own is or begins, punctuation and case aside (Opal's @ComID management
+  (Protocol ID=0x01 and 0x02)@ begins Core's @ComID management (Protocol
+  ID=0x01, and 0x02) - these are non-reserved ComIDs.@); a row assigning
+  codes a row of the target reserves (@Reserved@ …) is the Note, the
+  table's assignment of what its target leaves to it (Opal's @0x0004
+  TPER_RESET command@ within Core's @0x0002-0x07FF Reserved for TCG@, the
+  ComID Opal Table 13 gives TPER_RESET, PDF 29); any other row is the Error.
 
 Compiled into 'codesModule': for each table @c\<Title\> :: [CodeRow]@ (the
 caption's words joined, @cComIDAssignments@), one 'Hsed.Core.Code.CodeRow' per
@@ -74,7 +85,7 @@ import qualified RIO.Text          as T
 import           RIO
 
 import           Hsed.Core.Code    (Span (..))
-import           Hsed.Spec.Anchor  (AnchorId (..))
+import           Hsed.Spec.Anchor  (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Common  (Finding, RuleName (..), Severity (..), SpecId (..), finding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.DSL     (SomeBinding (..), codes)
@@ -100,8 +111,11 @@ codesRule = RuleDef
   , ruleCodes   =
       [ CodeDef "C-CODE-VALUE"   [Error]          (Defect "a code table has no code column, a row of another width, a downward range or two catch-alls")
       , CodeDef "W-CODE-OVERLAP" [Warning]        (Defect "two rows of a code table assign one value")
-      , CodeDef "C-CODE-TYPE"    [Error]          (Defect "a code column's type names no Type object") ]
-  , ruleChecks  = \ctx bts -> concatMap (either pure (checkCodes ctx)) (readCodes ctx bts)
+      , CodeDef "C-CODE-TYPE"    [Error]          (Defect "a code column's type names no Type object")
+      , CodeDef "C-CODE-NARROWS" [Error]          (Defect "a code table bound narrows (core N) holds a row its target does not")
+      , CodeDef "N-CODE-NARROWS" [Note]           (AsPrinted "a code table bound narrows (core N) assigns codes its target reserves") ]
+  , ruleChecks  = \ctx bts -> let reads = readCodes ctx bts
+                              in concatMap (either pure (checkCodes ctx)) reads <> concatMap (narrowedFindings ctx) (rights reads)
   , ruleCompile = compile
   }
 
@@ -224,6 +238,43 @@ readCodes ctx = map readOne
 
 
 -- * Checks
+
+-- | @C-CODE-NARROWS@ and @N-CODE-NARROWS@ for a code table bound @narrows
+--   (core N)@ ("Hsed.Spec.RuleDef".'narrowsOf'), against the target's code
+--   table, the spec's or a base's ('narrowedIn'); nothing for any other
+--   table, or a target that is no code table (the classification gave the
+--   binding its shape from the target, so a code table's is one).
+narrowedFindings :: Context -> CodeRead -> [Finding]
+narrowedFindings ctx own = case narrowsOf (btBinding (crBound own)) >>= narrowedIn ctx of
+  Nothing -> []
+  Just (b, target) -> case L.find ((== target) . btAnchor . crBound) (rights (codeReads b)) of
+    Nothing     -> []
+    Just theirs -> concatMap (row (named b target) theirs) (crRows own)
+  where
+    named b target = (if cxSpec b == cxSpec ctx then "" else Cm.specIdText (cxSpec b) <> " ") <> renderAnchorId target
+    row name theirs r = case [ t | t <- crRows theirs, within (cellSpan (rrCode r)) (cellSpan (rrCode t)) ] of
+      [] -> [ at r (finding Error "C-CODE-NARROWS" (rowNo r <> ": " <> codeText r <> " lies within no row of " <> name)) ]
+      t : _
+        | description r `L.isPrefixOf` description t -> []
+        | take 1 (description t) == ["reserved"] ->
+            [ at r (finding Note "N-CODE-NARROWS" (rowNo r <> ": " <> codeText r <> " assigns codes " <> name <> " "
+                                                    <> rowNo t <> " reserves (" <> codeText t <> ")")) ]
+        | otherwise ->
+            [ at r (finding Error "C-CODE-NARROWS" (rowNo r <> ": " <> codeText r <> " is not " <> name <> " "
+                                                     <> rowNo t <> "'s " <> codeText t)) ]
+    at r = atCells ctx (crBound own) (rrRow r)
+    rowNo r = "row " <> tshow (rrIndex r + 1)
+    codeText r = T.unwords (map (T.unwords . T.words . (.text)) (rrRow r))
+    -- a row's other cells' words, lower case, punctuation dropped
+    description r = concatMap (T.words . T.map (\c -> if C.isAlphaNum c then C.toLower c else ' ')) (rrCells r)
+    within inner outer = case (bounds inner, bounds outer) of
+      (Just (a, z), Just (lo, hi)) -> lo <= a && z <= hi
+      _                            -> False
+    bounds = \case
+      One a       -> Just (a, a)
+      Between a z -> Just (a, z)
+      Above a     -> Just (a + 1, 2 ^ (64 :: Int))
+      Others      -> Nothing
 
 checkCodes :: Context -> CodeRead -> [Finding]
 checkCodes ctx cr = reversed <> others <> overlaps <> map (atTable ctx (crBound cr)) typeNamed

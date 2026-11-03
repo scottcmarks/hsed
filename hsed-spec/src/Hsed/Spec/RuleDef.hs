@@ -100,6 +100,8 @@ module Hsed.Spec.RuleDef
   , contextChain
   , replacesOf
   , replacedIn
+  , narrowsOf
+  , narrowedIn
     -- * Bound units
   , BoundUnit (..)
   , SomeUnit (..)
@@ -315,6 +317,33 @@ replacedIn ctx = \case
     inSpec family n = case L.find ((family `T.isPrefixOf`) . Cm.specIdText . cxSpec) bases of
       Just b  -> Right (b, TableId n)
       Nothing -> Left ("it replaces " <> family <> " " <> tshow n <> ", in no spec " <> Cm.specIdText (cxSpec ctx) <> " is read over")
+
+-- | The table a binding narrows, through its modifiers: Opal Table 14's
+--   @narrows (core 26)@ (since M5a; the rule whose shape the binding takes
+--   holds the table's rows to the target's).
+narrowsOf :: SomeBinding -> Maybe Ref
+narrowsOf = \case
+  SomeBinding b -> go b
+  PolyBinding b -> go (b :: Binding 'Prose)
+  where
+    go :: Binding s -> Maybe Ref
+    go = \case
+      Narrows r         -> Just r
+      WithErratum _ _ b -> go b
+      WithAs b          -> go b
+      _                 -> Nothing
+
+-- | The table a reference names among the Context's spec and those it is
+--   read over, nearest first (@core 26@ in an Opal run: Core's Table 26),
+--   with the Context that owns it; Nothing for a section, or a family no
+--   spec of the chain is.
+narrowedIn :: Context -> Ref -> Maybe (Context, AnchorId)
+narrowedIn ctx = \case
+  Core n    -> inSpec "core" n
+  Opal n    -> inSpec "opal" n
+  Section _ -> Nothing
+  where
+    inSpec family n = (\c -> (c, TableId n)) <$> L.find ((family `T.isPrefixOf`) . Cm.specIdText . cxSpec) (contextChain ctx)
 
 
 -- * Bound units

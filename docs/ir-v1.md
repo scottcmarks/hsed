@@ -58,7 +58,7 @@ A cell's style (design §5.1 step 6), which the legend of an SSC's preconfigurat
 `underline` (every inked glyph over a thin filled rect at its baseline), each judged over the glyphs of its
 value: a note's glyphs left out, a superscript (at most 0.85 of its line's largest size and raised by more
 than 0.15 of it) and a footnote marker word (`*MC1`), unless the cell has nothing else (*since the M5a
-review*, which found a plain note beside a bold and underlined value leaving nine of Opal's Locking SP
+review*, which found a plain note beside a bold and underlined value leaving eight of Opal's Locking SP
 cells, T44's MaxRanges `8` with its superscript 1, T46's `Power Cycle *MC1` and six `VU *K1`, PDF 86-89,
 and T27's GUDID `VU *TP1`, PDF 50, unstyled; Core's extraction unchanged by it), `fonts` (its inked glyphs' font
 names, sorted), `color` only where some glyph is not black, and `fill_rgb` with `fill_bbox`, the top-most

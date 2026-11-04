@@ -26,7 +26,7 @@ PINs, PDF 48-49, and T27's GUDID, bold, PDF 50, since the M5a review's
 extractor judges a cell's style without its note marker), no C-LEGEND-TOTAL.
 The Locking SP's fourteen tables (M5's, which no annotation binds at M4b) are
 classed here only: 4 W-LEGEND-OFFSCALE (T40's fill 235, PDF 82-83) and 2
-W-LEGEND-STYLE (T41's bold PINs, PDF 84); the nine cells a superscript or a
+W-LEGEND-STYLE (T41's bold PINs, PDF 84); the eight cells a superscript or a
 note marker beside a bold and underlined value left plain until the M5a
 review (T44's MaxRanges, T46's MBRDoneOnReset, the six Keys of T47 and T48,
 PDF 86-89) in the bold and underlined classes of their greys.
@@ -333,12 +333,12 @@ spec = do
           , (TableId 40, 2, "CommonName", Just 82), (TableId 40, 8, "CommonName", Just 83) ]
         foundAt "W-LEGEND-STYLE" locking `shouldBe` [(TableId 41, 6, "PIN", Just 84), (TableId 41, 7, "PIN", Just 84)]
         foundAt "C-LEGEND-TOTAL" locking `shouldBe` []
-      it "classes a bold and underlined value by its style whatever note it prints: T44's MaxRanges, T46's DoneOnReset, T47's and T48's Keys (PDF 86-89)" $ do
+      it "classes a bold and underlined value by its style whatever note it prints, eight cells: T44's MaxRanges, T46's DoneOnReset, T47's and T48's six Keys (PDF 86-89)" $ do
         let locking = classed opalScale (lockingTables octx)
-            at t r h = [ clAccess c | c <- locking, clTable c == TableId t, clRow c == r, clColumn c == h ]
-        at 44 1 "MaxRanges" `shouldBe` [ReadOnlyVU]
-        at 46 1 "DoneOnReset" `shouldBe` [WritePersonalizable]
-        concat [ at t r "Key" | t <- [47, 48], r <- [1 .. 3] ] `shouldBe` replicate 6 WritePersonalizable
+            at (t, r, h) = [ clAccess c | c <- locking, clTable c == TableId t, clRow c == r, clColumn c == h ]
+            noted = [(44, 1, "MaxRanges"), (46, 1, "DoneOnReset")] <> [ (t, r, "Key") | t <- [47, 48], r <- [1 .. 3] ]
+        length noted `shouldBe` 8
+        concatMap at noted `shouldBe` ReadOnlyVU : replicate 7 WritePersonalizable
 
     describe "cellAccess over edited Admin SP tables" $ do
       it "gives C-LEGEND-TOTAL for a printed cell whose fonts are nulled (T25 row 2's MSID, PDF 48), read as Unspecified" $ do

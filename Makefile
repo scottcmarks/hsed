@@ -22,12 +22,13 @@ OPAL_PAGES      := 1,20,23
 # then bind, check and compile; what it writes under hsed-spec/bindings and hsed/gen is committed, and
 # so are its ledgers (docs/LEDGER.md for Core, docs/LEDGER-opal.md for Opal: the binding and finding
 # totals the tests do not pin). Opal is read over Core, Core's Context its base (--base, design 13.26
-# (g)), and annotated in part until M5, its units nothing binds yet Warnings (--partial, 13.26 (k)).
+# (g)), and annotated in full since M5a: every unit bound, so --partial (13.26 (k), an option still) is
+# not given, and a unit nothing binds is an Error.
 HSEDC       := stack exec -- hsedc
 CORE_IR     := build/core-2.01.hsed.json
 OPAL_IR     := build/opal-2.30.hsed.json
 BINDINGS    := hsed-spec/bindings/Hsed/Bindings
-OPAL_RUN    := --base $(CORE_IR) --partial opal-2.30
+OPAL_RUN    := --base $(CORE_IR)
 BIND_CMD    := $(HSEDC) bind $(CORE_IR) -o $(BINDINGS)/Core.hs \
                && $(HSEDC) bind $(OPAL_IR) $(OPAL_RUN) -o $(BINDINGS)/Opal.hs
 CHECK_CMD   := $(HSEDC) check $(CORE_IR) --errata scott \
@@ -130,7 +131,7 @@ bind: ir-annotated hsedc
 	$(BIND_CMD)
 
 ## classify every numbered table of each spec and run the checks under Scott's errata (non-zero exit on
-## an Error; Opal's unbound units are Warnings until M5)
+## an Error, an unbound unit of either spec among them since M5a)
 hsedc-check: ir-annotated hsedc
 	$(CHECK_CMD)
 

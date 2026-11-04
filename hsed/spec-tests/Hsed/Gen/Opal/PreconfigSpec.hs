@@ -43,7 +43,7 @@ LawsSpec hold the generated behaviours and laws to the dispatch):
   holds.
 
 Since M5a the Locking SP's preconfiguration (Opal 2.30 Tables 34-42 and
-44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP", a stand-in until M5a's
+44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP", generated since M5a's
 integration) is held to the simulator's Locking SP the same ways, at either
 Original Factory State and with each choice of key tables, the key table the
 parameters do not hold read apart from the fold (Table 36's *TT1, PDF 54;
@@ -322,15 +322,6 @@ vendorCells g = [ (t, r, c, m) | t <- gTables g, r <- rowsOf t, (c, pc) <- prCel
       _                 -> Nothing
 
 
--- | The columns of the Locking SP's tables to which the stand-in module
---   gives neither a default nor a printed cell, by table UID: the set-typed
---   reset columns hsedc cannot yet read (G1's Set_Type readings, Core Table
---   128's reset_types, PDF 119; M5a's integration replaces the stand-in).
---   Pending: an empty list once the generated module lands.
-standInGaps :: [(UID, [ColNum])]
-standInGaps = [(uLockingTable, [0x09, 0x10, 0x13]), (uMBRControlTable, [0x03])]
-
-
 -- * The simulator's SPs
 
 -- | The SP a run starts with, by its UID.
@@ -445,19 +436,18 @@ spec = describe "the generated Admin and Locking SPs and the simulator's" $ do
       map (length . tablesAt) [KeysAES128, KeysAES256, KeysBoth] `shouldBe` [13, 13, 14]
 
   describe "the cells" $ do
-    it "are every column of the row's table, but an AccessControl row's UID, which the TPer assigns (Core 5.3.2.7.1, PDF 162), and the columns the Locking SP's stand-in gives no default" $
+    it "are every column of the row's table, but an AccessControl row's UID, which the TPer assigns (Core 5.3.2.7.1, PDF 162)" $
       forM_ bothWays $ \(what, p, g) ->
         forM_ (Map.toList (spsTables (spOf (gSP g) p))) $ \(table, rows) -> do
           let columns = maybe [] (map colNumber . tdColumns . ptDesc) (generated g table)
-              gaps    = if gSP g == uSP_Locking then fromMaybe [] (L.lookup table standInGaps) else []
-              wanted  = filter (`notElem` gaps) (if table == uAccessControlTable then filter (/= 0) columns else columns)
+              wanted  = if table == uAccessControlTable then filter (/= 0) columns else columns
           (what, map (map fst) rows) `shouldBe` (what, map (const wanted) rows)
-    it "lack, in the Locking SP's stand-in, only the set-typed reset columns no row prints and no default gives (Table 45's LockOnReset, ContOnReset and GeneralStatus; Table 46's DoneOnReset, PDF 86-87): G1's Set_Type readings and the generated module retire them" $
+    it "lack, in the Locking SP's generated module, no column: each printed or its default given, the set-typed reset columns (Table 45's LockOnReset, ContOnReset and GeneralStatus; Table 46's MBRDoneOnReset, PDF 86-87) an empty set by default since G1's Set_Type readings" $
       [ (tdTableUID (ptDesc t), missing) | t <- LockingSP.lockingSP
                                          , let printed = L.nub (map fst (ptDefaults t) <> [ c | r <- rowsOf t, (c, _) <- prCells r ])
                                                missing = [ colNumber c | c <- tdColumns (ptDesc t), colNumber c /= 0, colNumber c `notElem` printed ]
                                          , not (null missing) ]
-        `shouldBe` standInGaps
+        `shouldBe` []
     it "are, in every row the SP holds, printed, a template's instance or one for every object, each cell printed, the TPer's, its column's default, the parameters' or the Table table's count, in order (the M4b review; both SPs since M5a)" $
       forM_ bothWays $ \(what, p, g) ->
         forM_ (Map.toList (expectedTables p g)) $ \(table, rows) ->

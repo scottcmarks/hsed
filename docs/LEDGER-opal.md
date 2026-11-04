@@ -7,13 +7,13 @@ tables bound through a bare modifier comment on the rule default.
 
 | spec | tables | rule-bound | through a modifier comment | comment-bound | unbound | ambiguous | invalid |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| opal-2.30 | 50 | 25 | 0 | 2 | 23 | 0 | 0 |
+| opal-2.30 | 50 | 39 | 0 | 11 | 0 | 0 | 0 |
 
 The method signature blocks (signature units, docs/ir-v1.md) carry no comment: a rule binds them by its scope.
 
 | spec | signature blocks | rule-bound | unbound | ambiguous |
 |---|---:|---:|---:|---:|
-| opal-2.30 | 3 | 0 | 3 | 0 |
+| opal-2.30 | 3 | 3 | 0 | 0 |
 
 What the document checks read (docs/ir-v1.md): LOT-VS-BODY compares each List of Tables entry with
 the caption it names, XREF-RESOLVES each table reference in the prose with the table it names; what
@@ -27,16 +27,25 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 
 | binding | tables |
 |---|---:|
-| comment EnumValues | 1 |
+| comment Codes | 1 |
+| comment EnumValues | 2 |
 | comment PropsReq | 1 |
+| comment Prose | 6 |
+| comment Tokens | 1 |
 | rule columnsAddition | 3 |
 | rule enumValues | 1 |
 | rule feature | 5 |
 | rule fieldValue | 1 |
 | rule legend | 1 |
-| rule preconfig | 12 |
+| rule preconfig | 26 |
 | rule tableDesc | 1 |
 | rule typeRow | 1 |
+
+## opal-2.30: what binds the signature blocks
+
+| binding | signature blocks |
+|---|---:|
+| rule sig | 3 |
 
 ## opal-2.30: findings under --errata scott
 
@@ -44,16 +53,23 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 |---|---|---:|
 | Warning | W-ENUM-LABEL-REPEATED | 2 |
 | Warning | W-FEATURE-UNLISTED | 3 |
-| Warning | W-LEGEND-OFFSCALE | 10 |
-| Warning | W-LEGEND-STYLE | 3 |
+| Warning | W-LEGEND-OFFSCALE | 14 |
+| Warning | W-LEGEND-STYLE | 5 |
 | Warning | W-PINS-NONE | 1 |
-| Warning | W-PRECONF-NAME-LENGTH | 2 |
-| Warning | W-UNBOUND | 26 |
+| Warning | W-PRECONF-DEFAULT | 2 |
+| Warning | W-PRECONF-NAME-LENGTH | 10 |
 | Note | N-CAPTION-NORMALISED | 2 |
-| Note | N-CELL-NORMALISED | 1 |
+| Note | N-CELL-NORMALISED | 2 |
+| Note | N-CODE-NARROWS | 1 |
 | Note | N-FEATURE-HEADER | 1 |
 | Note | N-FEATURE-LENGTH | 1 |
 | Note | N-HEADER-NORMALISED | 9 |
-| Note | N-PRECONF-HEADER | 1 |
-| Note | N-PRECONF-LABEL | 9 |
-| Note | N-PRECONF-UID-TPER | 1 |
+| Note | N-PRECONF-HEADER | 6 |
+| Note | N-PRECONF-HOMONYM | 2 |
+| Note | N-PRECONF-LABEL | 15 |
+| Note | N-PRECONF-NOTE | 2 |
+| Note | N-PRECONF-TEMPLATE-LETTERS | 1 |
+| Note | N-PRECONF-TEMPLATE-UID | 3 |
+| Note | N-PRECONF-UID-SP | 1 |
+| Note | N-PRECONF-UID-TPER | 2 |
+| Note | N-TOKEN-NARROWS | 1 |

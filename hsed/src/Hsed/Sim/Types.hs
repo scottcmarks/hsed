@@ -240,8 +240,8 @@ initialState p = TPerState
 -- | The SPs a TPer is manufactured with, each its preconfiguration as hsedc
 --   generates it from Opal 2.30: the Admin SP's (Tables 18-33, PDF 34-52,
 --   "Hsed.Gen.Opal.Preconfig.AdminSP") and the Locking SP's (Tables 34-42
---   and 44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP", a stand-in
---   until M5a's integration).
+--   and 44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP", generated
+--   since M5a's integration).
 preconfiguredSPs :: [PreconfSP]
 preconfiguredSPs =
   [ PreconfSP uSP_Admin adminSP

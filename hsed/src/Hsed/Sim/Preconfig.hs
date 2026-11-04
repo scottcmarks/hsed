@@ -55,7 +55,7 @@ Since M5a the fold takes an SP's preconfiguration whole ('PreconfSP': the
 SP's UID and its tables) and gives the SP's tables or every problem that
 keeps them from folding ('FoldProblem'), and it folds the Locking SP's
 (Opal 2.30 Tables 34-42 and 44-48, PDF 52-89, "Hsed.Gen.Opal.Preconfig.LockingSP",
-a stand-in until M5a's integration) as it does the Admin SP's: the cells
+generated since M5a's integration) as it does the Admin SP's: the cells
 those tables print beside the Admin SP's ("Hsed.Core.Preconfig": a value
 marked with a note's number, one of two key references, a value the TPer
 chooses with a least) read and the TPer's choices answered ('vendorCell',

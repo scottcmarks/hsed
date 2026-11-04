@@ -47,13 +47,11 @@ ghc-options:
 - -optP-Wno-nonportable-include-path # workaround [Filename case on macOS · Issue #4739 · haskell/cabal](https://github.com/haskell/cabal/issues/4739)
 
 library:
-  # gen/ holds the modules hsedc compile writes (Hsed.Gen.*; generated, committed); stand-in/ the M5a scaffold's
-  # Hsed.Gen.Opal.Preconfig.LockingSP until hsedc emits it (outside gen/, which compile empties of what it did not
-  # write), removed at M5a's integration
+  # gen/ holds the modules hsedc compile writes (Hsed.Gen.*; generated, committed), the Locking SP's
+  # Hsed.Gen.Opal.Preconfig.LockingSP among them since M5a's integration
   source-dirs:
   - src
   - gen
-  - stand-in
   # mirrored by hsed-doc-test's list below, which interprets these sources: a dependency added here is added there
   dependencies:
   - hsed-core

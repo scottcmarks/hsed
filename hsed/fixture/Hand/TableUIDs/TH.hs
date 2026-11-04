@@ -16,8 +16,8 @@ Which tables are byte tables (@bth\<T\>@ rather than @oth\<T\>@) the 2019
 transcription hard-coded as MBR alone. Since M5a it reads the generated
 @Hsed.Gen.Opal.TableUIDs.byteTables@, the tables an SP's Table table
 preconfiguration gives the Kind Byte (Opal Table 36, PDF 53-54: MBR and
-DataStore), with MBR kept beside them until the committed Opal sidecar binds
-Table 36 (M5a's integration, which drops the fallback).
+DataStore), since M5a's integration bound Table 36 in the committed sidecar
+with no fallback.
 
 -}
 
@@ -224,8 +224,8 @@ dUIDRow (UIDRow objectUID tableUID tableHalfUID (TableName tableName) (TemplateN
         u = "u"   `tn` "Table"
         o = "u"   `tn` "TableObject"
         isByteTable = table `elem` byteTables
-        -- the generated Kind's byte tables, and MBR until the committed sidecar binds Opal Table 36
-        byteTables = "MBR" : Opal.byteTables
+        -- the generated Kind's byte tables (Opal Table 36, PDF 53-54: MBR and DataStore)
+        byteTables = Opal.byteTables
 
 data UIDRowDecs = UIDRowDecs [Dec] [Exp] [Exp]
     deriving(Eq,Show)

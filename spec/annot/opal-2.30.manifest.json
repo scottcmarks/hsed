@@ -23,26 +23,247 @@
    "title": null
   },
   {
-   "hash": "ca1d3093791618c006a5cedf5a602eb592846d84dde7457bfbda423362eba612",
-   "header": null,
-   "id": "4.2",
-   "kind": "Rule",
-   "label": 34,
-   "ordinal": null,
-   "page": 34,
+   "hash": "8ea362599452921edb71c578d614db838639058ca881c9127538cc87c7da4e38",
+   "header": [
+    "bitbyte",
+    "7",
+    "6",
+    "5",
+    "4",
+    "3",
+    "2",
+    "1",
+    "0"
+   ],
+   "id": "T2",
+   "kind": "Bind",
+   "label": 18,
+   "ordinal": 4,
+   "page": 18,
    "rects": [
     [
-     34,
+     18,
      [
-      36.0,
-      552.08,
-      134.48,
-      572.1
+      61.62,
+      190.09,
+      550.38,
+      424.2
      ]
     ]
    ],
-   "struct": "0/378",
-   "title": "Admin SP"
+   "struct": "0/189",
+   "title": "- Level 0 Discovery Header"
+  },
+  {
+   "hash": "d5e8863fc810d3e9f70d35ea233f48014083ddecafaa156d810aec8566ae3f25",
+   "header": [
+    "sscminorversionnumber",
+    "specificationreferenced"
+   ],
+   "id": "T7",
+   "kind": "Bind",
+   "label": 23,
+   "ordinal": 9,
+   "page": 23,
+   "rects": [
+    [
+     23,
+     [
+      131.04,
+      486.91,
+      358.34,
+      588.24
+     ]
+    ]
+   ],
+   "struct": "0/237",
+   "title": "- SSC Minor Versions"
+  },
+  {
+   "hash": "2de2230e0c5548b138122285751cbe492d1d81dcc2afad4a07efb7f274465755",
+   "header": [
+    "parameter",
+    "value",
+    "details"
+   ],
+   "id": "T9",
+   "kind": "Bind",
+   "label": 25,
+   "ordinal": 11,
+   "page": 25,
+   "rects": [
+    [
+     25,
+     [
+      60.42,
+      441.79,
+      384.54,
+      674.45
+     ]
+    ]
+   ],
+   "struct": "0/255",
+   "title": "- Parameter explanation"
+  },
+  {
+   "hash": "f2757a6f2bdb98e4533b9f0942f6071214d653524a9d92d341fdd1bb37ec052c",
+   "header": [
+    "bit",
+    "name",
+    "conditionofuserdataafterdataremoval"
+   ],
+   "id": "T10",
+   "kind": "Bind",
+   "label": 26,
+   "ordinal": 12,
+   "page": 26,
+   "rects": [
+    [
+     26,
+     [
+      87.41,
+      90.24,
+      524.59,
+      564.29
+     ]
+    ]
+   ],
+   "struct": "0/273",
+   "title": "- Supported Data Removal Mechanism"
+  },
+  {
+   "hash": "4aad6109712b4a5a0e4f4d6a8b706ec18d3b2b4fd5a356e47a2a08b4cf5d477f",
+   "header": [
+    "value",
+    "time"
+   ],
+   "id": "T11",
+   "kind": "Bind",
+   "label": 27,
+   "ordinal": 13,
+   "page": 27,
+   "rects": [
+    [
+     27,
+     [
+      201.9,
+      478.93,
+      372.84,
+      549.17
+     ]
+    ]
+   ],
+   "struct": "0/281",
+   "title": "- Data Removal Time (Data Removal Time Format bit= 0)"
+  },
+  {
+   "hash": "0ae3638925efcdf2c271ee21f88cf8a8e2798800225d935508001c315b1d0c05",
+   "header": [
+    "value",
+    "time"
+   ],
+   "id": "T12",
+   "kind": "Bind",
+   "label": 27,
+   "ordinal": 14,
+   "page": 27,
+   "rects": [
+    [
+     27,
+     [
+      201.9,
+      365.59,
+      370.56,
+      435.83
+     ]
+    ]
+   ],
+   "struct": "0/284",
+   "title": "- Data Removal Time (Data Removal Time Format bit= 1)"
+  },
+  {
+   "hash": "e9e77afffce26502758ea70995b29847abf1f6f6297ebd0ec7be8a77b6149563",
+   "header": [
+    "comid",
+    "description"
+   ],
+   "id": "T14",
+   "kind": "Bind",
+   "label": 29,
+   "ordinal": 16,
+   "page": 29,
+   "rects": [
+    [
+     29,
+     [
+      134.7,
+      322.68,
+      468.98,
+      473.75
+     ]
+    ]
+   ],
+   "struct": "0/322",
+   "title": "- ComID Assignments"
+  },
+  {
+   "hash": "baa66379d0fc050400981a0dc3f46c9ec1260fb23776f3f94507f87016e3a0a3",
+   "header": [
+    "token",
+    "acronym"
+   ],
+   "id": "T15",
+   "kind": "Bind",
+   "label": 29,
+   "ordinal": 17,
+   "page": 29,
+   "rects": [
+    [
+     29,
+     [
+      197.22,
+      62.59,
+      414.72,
+      184.73
+     ]
+    ],
+    [
+     30,
+     [
+      197.22,
+      505.21,
+      337.64,
+      691.8
+     ]
+    ]
+   ],
+   "struct": "0/330",
+   "title": "- Supported Tokens"
+  },
+  {
+   "hash": "49135f05aa792f366a73bb07330236804d803578def2e1f5ff1207b3d6a42c3f",
+   "header": [
+    "enumerationvalue",
+    "associatedvalue"
+   ],
+   "id": "T16",
+   "kind": "Bind",
+   "label": 31,
+   "ordinal": 18,
+   "page": 31,
+   "rects": [
+    [
+     31,
+     [
+      189.42,
+      473.11,
+      396.24,
+      599.09
+     ]
+    ]
+   ],
+   "struct": "0/349",
+   "title": "- reset_types"
   },
   {
    "hash": "4bd794e9b123e237711cb3785d5ce1976a02800dd6b077d91ac5216ce44cc2ee",

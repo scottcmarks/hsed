@@ -28,7 +28,7 @@ overrides of the Locking SP's life cycle and of TPerInfo's
 ProgrammaticResetEnable; the Table table's counts, a byte table's NumColumns
 0x01 (Core 5.3.2.3.7, PDF 157, M5's MBR and DataStore); and the active data
 removal mechanism one Level 0 reports. Since M5a's scaffold, the Locking
-SP's tables, folded from its stand-in preconfiguration (Opal 2.30 Tables
+SP's tables, folded from its generated preconfiguration (Opal 2.30 Tables
 34-42 and 44-48, PDF 52-89) at either Original Factory State and with each
 choice of key tables: no problem, the same tables either way, a value
 marked with a note its value, the ActiveKey the key tables decide, the MBR
@@ -505,7 +505,7 @@ spec = do
                    , UnresolvedBase uSP_Admin uC_PIN_AdminXX, UnresolvedBase uSP_Admin uC_PIN_AdminXX
                    , UnknownEveryObject uSP_Admin (tshow (halfUID 0x00 0x00 0x02 0x04)), UnknownEveryObject uSP_Admin (tshow (halfUID 0x00 0x00 0x02 0x05)) ]
 
-  describe "the Locking SP's tables (M5a's scaffold: its stand-in preconfiguration, Opal 2.30 Tables 34-42 and 44-48, PDF 52-89)" $ do
+  describe "the Locking SP's tables (M5a: its generated preconfiguration, Opal 2.30 Tables 34-42 and 44-48, PDF 52-89)" $ do
     let lockingSP      = PreconfSP uLocking LockingSP.lockingSP
         lockingOf p    = either (error . show) id (foldTables p lockingSP)
         lockingRows p table = Map.findWithDefault [] table (snd (lockingOf p))

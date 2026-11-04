@@ -20,7 +20,7 @@ names, with byteTables, the names of the byte tables.
 -}
 module Hsed.Gen.Opal.TableUIDs where
 
-import           Hsed.Core.Reference_Types (Object_Table_HalfUID, otHalfUID)
+import           Hsed.Core.Reference_Types (btHalfUID, Byte_Table_HalfUID, Object_Table_HalfUID, otHalfUID)
 import           Hsed.Core.UID             (HalfUID, halfUID, UID, uid)
 import           Prelude                   (String)
 
@@ -86,4 +86,39 @@ othDataRemovalMechanism = otHalfUID 0x00 0x00 0x11 0x01
 
 -- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 36 / p.35, ord 22, sha256:98a412fc6777): the tables an SP's Table table gives the Kind Byte, by name
 byteTables :: [String]
-byteTables = []
+byteTables =
+  [ "MBR"
+  , "DataStore"
+  ]
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 9: SecretProtect, Kind Object
+othSecretProtect :: Object_Table_HalfUID
+othSecretProtect = otHalfUID 0x00 0x00 0x00 0x1d
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 10: LockingInfo, Kind Object
+othLockingInfo :: Object_Table_HalfUID
+othLockingInfo = otHalfUID 0x00 0x00 0x08 0x01
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 11: Locking, Kind Object
+othLocking :: Object_Table_HalfUID
+othLocking = otHalfUID 0x00 0x00 0x08 0x02
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 12: MBRControl, Kind Object
+othMBRControl :: Object_Table_HalfUID
+othMBRControl = otHalfUID 0x00 0x00 0x08 0x03
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 13: MBR, Kind Byte
+bthMBR :: Byte_Table_HalfUID
+bthMBR = btHalfUID 0x00 0x00 0x08 0x04
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 14: K_AES_128, Kind Object
+othK_AES_128 :: Object_Table_HalfUID
+othK_AES_128 = otHalfUID 0x00 0x00 0x08 0x05
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 15: K_AES_256, Kind Object
+othK_AES_256 :: Object_Table_HalfUID
+othK_AES_256 = otHalfUID 0x00 0x00 0x08 0x06
+
+-- | opal-2.30 T36 - Locking SP - Table Table Preconfiguration (PDF 54 / p.53, ord 38, sha256:4e081ba72ba0), row 16: DataStore, Kind Byte
+bthDataStore :: Byte_Table_HalfUID
+bthDataStore = btHalfUID 0x00 0x00 0x10 0x01

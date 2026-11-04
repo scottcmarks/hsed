@@ -245,8 +245,8 @@ spec = do
             resolveLeaf env' NameLeaf "data_removal_mechanism" `shouldBe` Resolved ATypeRow
             resolveLeaf env' NameLeaf "uinteger" `shouldBe` Resolved ATypeRow
             teAbstract env' `shouldBe` teAbstract env
-          it "its tables every table's UIDs Opal reads names, Table 20 row 12's DataRemovalMechanism first, then Core's, a base's anchor named with its spec (the M4b review)" $ do
-            (teTables env', teTablesAt env') `shouldBe` ("DataRemovalMechanism" : teTables env, ["T20", "core-2.01 T240"])
+          it "its tables every table's UIDs Opal reads names, Table 20 row 12's DataRemovalMechanism and (since M5a's sidecar) Table 36 row 16's DataStore first, then Core's, a base's anchor named with its spec (the M4b review)" $ do
+            (teTables env', teTablesAt env') `shouldBe` ("DataRemovalMechanism" : "DataStore" : teTables env, ["T20", "T36", "core-2.01 T240"])
             resolveLeaf env' TargetLeaf "DataRemovalMechanismObjectUID" `shouldBe` Resolved (ATable "DataRemovalMechanism")
           it "with nothing of its own, the environment is Core's, its anchors named with Core's spec" $
             typeEnv (mkContextWith registry (Just ctx) Scott opalPristine) `shouldBe` env { teTablesAt = ["core-2.01 T240"] }

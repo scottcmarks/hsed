@@ -38,7 +38,7 @@ import           RIO.FilePath      (dropExtension, makeRelative, takeExtension, 
 import           Test.Hspec
 
 import           Hsed.Spec.Anchor  (AnchorId (..))
-import           Hsed.Spec.Check   (mkContext, partially)
+import           Hsed.Spec.Check   (mkContext)
 import           Hsed.Spec.Common  (ErrataSet (..), isError, renderFinding)
 import qualified Hsed.Spec.Common  as Cm
 import           Hsed.Spec.Compile
@@ -46,7 +46,7 @@ import           Hsed.Spec.CoreIR
 import qualified Hsed.Spec.Gen     as Gen
 import           Hsed.Spec.IR      (SpecIR (..))
 import           Hsed.Spec.Registry (registry)
-import           Hsed.Spec.Report  (ledger, ledgerMarkdown)
+import           Hsed.Spec.Report  (ledger, ledgerMarkdown, ledgerOver)
 import           Hsed.Spec.DSL     (someBindingShape)
 import           Hsed.Spec.RuleDef (BoundHeading (..), BoundPara (..), Context (..), boundBinding, headingUnits, paragraphUnits,
                                     ruleShape)
@@ -118,12 +118,13 @@ spec = do
         cr' <- either (throwString . T.unpack . renderFinding) pure (compileIR Nothing Scott ir { tables = reverse ir.tables })
         crModules cr' `shouldBe` crModules cr
 
-    describe "compileIR of Opal over Core's base, Opal annotated in part (hsedc --base, --partial)" $
+    describe "compileIR of Opal over Core's base, Opal annotated in full since M5a (hsedc --base, no --partial)" $
       withOpal $ \opalPristine -> do
         opal <- runIO (committedOpalHsa >>= annotated opalPristine)
         cr <- runIO (either (throwString . T.unpack . renderFinding) pure (compileIR (Just (mkContext Scott ir)) Scott opal))
-        let fs = partially ["opal-2.30"] (crFindings cr)
-        it "finds no Error once its unbound units are Warnings" $
+        let base = mkContext Scott ir
+            fs = crFindings cr
+        it "finds no Error, every unit bound" $
           filter isError fs `shouldBe` []
         it "writes the committed hsed/gen/Hsed/Gen/Opal modules, and only those" $ do
           committed <- committedModules "../hsed/gen" (Gen.specModuleDir "../hsed/gen" (Cm.SpecId "opal-2.30"))
@@ -133,7 +134,7 @@ spec = do
             text `shouldBe` file
         it "writes the committed ledger docs/LEDGER-opal.md" $ do
           committed <- readFileUtf8 "../docs/LEDGER-opal.md"
-          ledgerMarkdown "build/report/opal/ledger.md" Scott [(ledger opal, fs)] `shouldBe` committed
+          ledgerMarkdown "build/report/opal/ledger.md" Scott [(ledgerOver (Just base) opal, fs)] `shouldBe` committed
 
     describe "the per-table annotations" $ do
       cr <- runIO (compiled Scott)

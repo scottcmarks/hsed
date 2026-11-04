@@ -9,11 +9,43 @@ import Hsed.Spec.DSL
 
 {-# LINE 1 "opal-2.30.pdf#page=1&doc" #-}
 b_opal_doc :: Bound
-b_opal_doc = at (anchor @'Doc "opal-2.30" "doc" "" 1) (doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow & rule enumValues & rule tableDesc)
+b_opal_doc = at (anchor @'Doc "opal-2.30" "doc" "" 1) (doc opal230 & rule feature & rule legend & rule fieldValue & rule columnsAddition & rule typeRow & rule enumValues & rule tableDesc & rule preconfig & rule sig)
 
-{-# LINE 1 "opal-2.30.pdf#page=35&4.2" #-}
-b_opal_4_2 :: Bound
-b_opal_4_2 = at (anchor @'Heading "opal-2.30" "4.2" "0/378" 35) (rule preconfig)
+{-# LINE 1 "opal-2.30.pdf#page=19&T2" #-}
+b_opal_T2 :: Bound
+b_opal_T2 = at (anchor @'Prose "opal-2.30" "T2" "0/189" 19) prose
+
+{-# LINE 1 "opal-2.30.pdf#page=24&T7" #-}
+b_opal_T7 :: Bound
+b_opal_T7 = at (anchor @'Prose "opal-2.30" "T7" "0/237" 24) prose
+
+{-# LINE 1 "opal-2.30.pdf#page=26&T9" #-}
+b_opal_T9 :: Bound
+b_opal_T9 = at (anchor @'Prose "opal-2.30" "T9" "0/255" 26) prose
+
+{-# LINE 1 "opal-2.30.pdf#page=27&T10" #-}
+b_opal_T10 :: Bound
+b_opal_T10 = at (anchor @'Prose "opal-2.30" "T10" "0/273" 27) prose
+
+{-# LINE 1 "opal-2.30.pdf#page=28&T11" #-}
+b_opal_T11 :: Bound
+b_opal_T11 = at (anchor @'Prose "opal-2.30" "T11" "0/281" 28) prose
+
+{-# LINE 1 "opal-2.30.pdf#page=28&T12" #-}
+b_opal_T12 :: Bound
+b_opal_T12 = at (anchor @'Prose "opal-2.30" "T12" "0/284" 28) prose
+
+{-# LINE 1 "opal-2.30.pdf#page=30&T14" #-}
+b_opal_T14 :: Bound
+b_opal_T14 = at (anchor @'Codes "opal-2.30" "T14" "0/322" 30) (narrows (core 26))
+
+{-# LINE 1 "opal-2.30.pdf#page=30&T15" #-}
+b_opal_T15 :: Bound
+b_opal_T15 = at (anchor @'Tokens "opal-2.30" "T15" "0/330" 30) (narrows (core 4))
+
+{-# LINE 1 "opal-2.30.pdf#page=32&T16" #-}
+b_opal_T16 :: Bound
+b_opal_T16 = at (anchor @'EnumValues "opal-2.30" "T16" "0/349" 32) (replaces [core 128])
 
 {-# LINE 1 "opal-2.30.pdf#page=33&T17" #-}
 b_opal_T17 :: Bound
@@ -23,11 +55,19 @@ b_opal_T17 = at (anchor @'PropsReq "opal-2.30" "T17" "0/360" 33) propsReq
 b_opal_T49 :: Bound
 b_opal_T49 = at (anchor @'EnumValues "opal-2.30" "T49" "0/842" 98) (enumInDescription (replaces [core 102, core 103]))
 
-{-# LINE 27 "Hsed/Bindings/Opal.hs" #-}
+{-# LINE 59 "Hsed/Bindings/Opal.hs" #-}
 bindings :: [Bound]
 bindings =
   [ b_opal_doc
-  , b_opal_4_2
+  , b_opal_T2
+  , b_opal_T7
+  , b_opal_T9
+  , b_opal_T10
+  , b_opal_T11
+  , b_opal_T12
+  , b_opal_T14
+  , b_opal_T15
+  , b_opal_T16
   , b_opal_T17
   , b_opal_T49
   ]

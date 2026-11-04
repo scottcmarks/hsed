@@ -329,13 +329,14 @@ spec = do
         `shouldBe` asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_reencrypt_state], x /= H.Core_reencrypt_state_NA ]
       [ (show x, enumValue x) | x <- [minBound .. maxBound :: G.Core_table_kind] ]
         `shouldBe` asGenerated [ (show x, fromEnum x) | x <- [minBound .. maxBound :: H.Core_table_kind], x /= H.Core_table_kind_NA ]
-    it "has the typed half-UIDs Opal Table 20's Kind column gives (PDF 36-37), each the hand-written value" $ do
+    it "has the typed half-UIDs Opal Tables 20 and 36's Kind columns give (PDF 36-37, 53-54), each the hand-written value" $ do
       sort (map dName generatedTyped) `shouldBe`
-        [ "othACE", "othAccessControl", "othAuthority", "othC_PIN", "othMethodID", "othSP", "othSPInfo", "othSPTemplates"
+        [ "bthMBR", "othACE", "othAccessControl", "othAuthority", "othC_PIN", "othK_AES_128", "othK_AES_256", "othLocking"
+        , "othLockingInfo", "othMBRControl", "othMethodID", "othSP", "othSPInfo", "othSPTemplates", "othSecretProtect"
         , "othTPerInfo", "othTable", "othTemplate" ]
       [ dName g | g <- generatedTyped, fmap dValue (Map.lookup (dName g) hands) /= Just (dValue g) ] `shouldBe` []
-    it "reads the fixture's byte tables from the generated Kind, MBR kept until the sidecar binds Opal Table 36" $
-      ("MBR" : O.byteTables, Map.member "bthMBR" hands) `shouldBe` (["MBR"], True)
+    it "reads the fixture's byte tables from the generated Kind, Opal Table 36's MBR and DataStore (PDF 53-54)" $
+      (O.byteTables, Map.member "bthMBR" hands) `shouldBe` (["MBR", "DataStore"], True)
     it "finds every typed half-UID's table among the generated half-UIDs" $
       [ dName h | h <- Map.elems (hands Map.\\ gens), any (`isPrefixOf` dName h) ["oth", "bth"], isNothing (lookup' h) ] `shouldBe` []
 

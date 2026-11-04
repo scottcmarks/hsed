@@ -27,6 +27,7 @@ twelve object tables) and the M5a sidecar (MBR and DataStore byte tables).
 -}
 module Hsed.Spec.Rules.TableUIDsSpec (spec) where
 
+import qualified RIO.List                  as L
 import qualified RIO.Map                   as Map
 import qualified RIO.Text                  as T
 import           RIO
@@ -105,7 +106,7 @@ coreSpec = withCore $ \pristine -> do
     withOpal $ \opalPristine -> do
       opal  <- runIO (annotated opalPristine m4bOpalHsa)
       ohsa  <- runIO committedOpalHsa
-      opal0 <- runIO (annotated opalPristine (withoutLine "4.2" ohsa))
+      opal0 <- runIO (annotated opalPristine (withoutLine "4.2" m4bOpalHsa))
       let octx = opalOver ctx opal
           alls = allTableUIDRows octx
           drm  = [ r | (c, r) <- alls, cxSpec c == SpecId "opal-2.30" ]
@@ -121,9 +122,9 @@ coreSpec = withCore $ \pristine -> do
         body `shouldContain` ["uDataRemovalMechanismTable :: UID", "uDataRemovalMechanismTable = uid 0x00 0x00 0x11 0x01 0x00 0x00 0x00 0x00"]
         body `shouldContain` ["hDataRemovalMechanism :: HalfUID", "hDataRemovalMechanism = halfUID 0x00 0x00 0x11 0x01"]
         take 1 body `shouldBe` ["-- | opal-2.30 T20 - Admin SP - Table Table Preconfiguration (PDF 37 / p.36, ord 22, sha256:98a412fc6777), row 12: DataRemovalMechanism"]
-      it "is the committed sidecar's since M4b's integration: the M4b sidecar is the committed one" $
-        ohsa `shouldBe` m4bOpalHsa
-      it "gives Opal under a sidecar that binds no preconfiguration (the committed one without its 4.2 line), Core's rows alone" $
+      it "is the committed sidecar's since M5a's integration: the M5a sidecar, line for line, is the committed one" $
+        L.sort (T.lines ohsa) `shouldBe` L.sort (T.lines m5aOpalHsa)
+      it "gives Opal under a sidecar that binds no preconfiguration (the M4b sidecar without its 4.2 line), Core's rows alone" $
         map (\(c, r) -> (cxSpec c, tuName r)) (allTableUIDRows (opalOver ctx opal0)) `shouldBe` map (\r -> (core, tuName r)) rows
 
   describe "the tableUIDs rule" $ do

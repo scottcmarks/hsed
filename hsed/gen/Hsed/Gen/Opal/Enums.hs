@@ -20,9 +20,50 @@ the gaps of the range (each suffixed when there are several).
 module Hsed.Gen.Opal.Enums where
 
 import           Hsed.Core.Types
-import           Hsed.Gen.Core.Types (ulife_cycle_stateType)
+import           Hsed.Gen.Core.Types (ulife_cycle_stateType, ureset_typesType)
 import           Hsed.Gen.Opal.Types
 import           Prelude             (Bounded, Enum, Eq, Ord, Show)
+
+-- | opal-2.30 T16 - reset_types (PDF 32 / p.31, ord 18, sha256:49135f05aa79)
+data Opal_reset_types
+  = Opal_reset_types_Power_Cycle
+  | Opal_reset_types_Hardware
+  | Opal_reset_types_HotPlug
+  | Opal_reset_types_Programmatic
+  | Opal_reset_types_Reserved_4
+  | Opal_reset_types_Reserved_5
+  | Opal_reset_types_Reserved_6
+  | Opal_reset_types_Reserved_7
+  | Opal_reset_types_Reserved_8
+  | Opal_reset_types_Reserved_9
+  | Opal_reset_types_Reserved_10
+  | Opal_reset_types_Reserved_11
+  | Opal_reset_types_Reserved_12
+  | Opal_reset_types_Reserved_13
+  | Opal_reset_types_Reserved_14
+  | Opal_reset_types_Reserved_15
+  | Opal_reset_types_Vendor_Unique_16
+  | Opal_reset_types_Vendor_Unique_17
+  | Opal_reset_types_Vendor_Unique_18
+  | Opal_reset_types_Vendor_Unique_19
+  | Opal_reset_types_Vendor_Unique_20
+  | Opal_reset_types_Vendor_Unique_21
+  | Opal_reset_types_Vendor_Unique_22
+  | Opal_reset_types_Vendor_Unique_23
+  | Opal_reset_types_Vendor_Unique_24
+  | Opal_reset_types_Vendor_Unique_25
+  | Opal_reset_types_Vendor_Unique_26
+  | Opal_reset_types_Vendor_Unique_27
+  | Opal_reset_types_Vendor_Unique_28
+  | Opal_reset_types_Vendor_Unique_29
+  | Opal_reset_types_Vendor_Unique_30
+  | Opal_reset_types_Vendor_Unique_31
+  deriving (Bounded, Enum, Eq, Ord, Show)
+
+-- | opal-2.30 T16 - reset_types (PDF 32 / p.31, ord 18, sha256:49135f05aa79)
+instance Enumerated Opal_reset_types where
+  typeUID = ureset_typesType
+  range   = (0, 31)
 
 -- | opal-2.30 T31 - data_removal_mechanism Enumeration Values (PDF 51 / p.50, ord 33, sha256:1096d8d0abe2)
 data Opal_data_removal_mechanism

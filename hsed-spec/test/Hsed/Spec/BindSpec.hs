@@ -14,7 +14,8 @@ Stability   : experimental
 canonical order, a bare modifier chain printed on its rule default, a binding
 shaped by its target printed at the target's shape, a law at its paragraph's
 shape, and the committed bindings modules, Core's and Opal's, exactly what the
-committed annotations give.
+committed annotations give (Opal's read over Core, as @hsedc bind --base@
+reads it since M5a: its Tables 14-16 take Core's shapes).
 -}
 module Hsed.Spec.BindSpec (spec) where
 
@@ -24,7 +25,8 @@ import           Test.Hspec
 
 import           Hsed.Spec.Anchor         (AnchorId (..), renderAnchorId)
 import           Hsed.Spec.Bind
-import           Hsed.Spec.Common         (isError, renderFinding)
+import           Hsed.Spec.Check          (mkContext)
+import           Hsed.Spec.Common         (ErrataSet (..), isError, renderFinding)
 import           Hsed.Spec.CoreIR
 import           Hsed.Spec.Grammar        (printSomeBinding)
 import           Hsed.Spec.IR             (AnnotIR (..), SpecIR (..), StructPath (..))
@@ -87,9 +89,9 @@ spec = withCore $ \pristine -> do
       filter isError fs `shouldBe` []
       result `shouldBe` Right committed
     withOpal $ \opalPristine ->
-      it "prints the committed hsed-spec/bindings/Hsed/Bindings/Opal.hs from the committed Opal sidecar" $ do
+      it "prints the committed hsed-spec/bindings/Hsed/Bindings/Opal.hs from the committed Opal sidecar, read over Core" $ do
         opal <- committedOpalHsa >>= annotated opalPristine
         committed <- readFileUtf8 "bindings/Hsed/Bindings/Opal.hs"
-        let (fs, result) = bindModule opal
+        let (fs, result) = bindModuleOver (Just (mkContext Scott ir)) opal
         filter isError fs `shouldBe` []
         result `shouldBe` Right committed

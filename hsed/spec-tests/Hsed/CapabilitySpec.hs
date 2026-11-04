@@ -113,10 +113,9 @@ mayImportInternal name =
 driveTransports :: [Text]
 driveTransports = ["Hsed.Transport.MacKext", "Hsed.Transport.Replay"]
 
--- | The library's, the generated code's (M5a's stand-in for a generated module among it) and the executables'
---   source directories.
+-- | The library's, the generated code's and the executables' source directories.
 sourceDirs :: [FilePath]
-sourceDirs = ["src", "gen", "stand-in", "app"]
+sourceDirs = ["src", "gen", "app"]
 
 -- | Every Haskell module under a directory, at any depth: its name (from its
 --   path) and its text.

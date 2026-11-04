@@ -500,7 +500,11 @@ To add one:
    still read here until the IR records it (design §13.35).
 2. Prefer a list entry to new logic: add the slip as printed and as read to the list above that fits, with
    a comment citing the table, the PDF page and, where another table says what is meant, that one too. A
-   list entry applies wherever its key matches, so key it as narrowly as the list allows.
+   list entry applies wherever its key matches, so key it as narrowly as the list allows. The misspelling
+   lists (`cellTypos`, `Shape.headerTypos`, `captionTypos`) are global on purpose: a misspelling means the
+   same wherever it recurs, and Pyrite's and Ruby's print some of Opal's (`uniteger`, `ReEncyptRequest`).
+   `noteMarkerCells` is keyed by spec, table, row and printed text, because a note number belongs to one
+   cell; until the IR records superscripts (design §13.35) each SSC needs its own entries.
 3. Give the Note its list already gives, or add a `CodeDef` to the codes of the module that owns the
    reading (`cellCodes`, the rule's `ruleCodes`), kind `AsPrinted` or the catalogue's nearest; `RegistrySpec`
    holds each code to one owner.

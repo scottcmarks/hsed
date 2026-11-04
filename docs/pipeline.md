@@ -253,8 +253,23 @@ token to the `doc` line, or add a table annotation if the rule cannot find the t
 2. Add a sidecar `spec/annot/<spec>.hsa` with a `doc` line naming its rules.
 3. Add extraction and annotation targets to the Makefile, as Opal's (`--page-offset`, `--check-against`
    Core's IR).
-4. Run its `hsedc` commands over Core with `--base`, giving a new `--target` for its generated modules.
-5. Expect findings where the PDF's tables differ from Opal's, and decide each as a reading in a rule or an
-   erratum.
+4. Teach hsedc its name: add its `SpecId` to `DSL.knownSpecs` (beside `core201` and `opal230`; the
+   grammar answers any other doc line "unknown specification"), and, where its sidecar must name its own
+   tables in a binding (`narrows (<family> N)`, `replaces [...]`), a `Ref` constructor for its family,
+   which `RuleDef.refTable` reads (the one place a `Ref` becomes a spec family, matched exactly against the
+   `SpecId` up to its `-version`).
+5. Run its `hsedc` commands over Core with `--base`, giving a new `--target` for its generated modules.
+6. Expect findings where the PDF's tables differ from Opal's, and decide each as a reading in a rule or an
+   erratum. Opal's readings are keyed to `opal-2.30` where they are per cell (`Readers.Cell.noteMarkerCells`)
+   and global where they are a misspelling (`cellTypos`, `Shape.headerTypos`), so expect some to carry
+   over and some to need entries of its own; Pyrite 2.01 and Ruby 1.00 print markers Opal's readers do not
+   know (`(ALR O)` and `(MBR O)`, a bare `SID` PIN; design §13.35).
+7. Give the simulator a profile of it: today `Hsed.Sim.Types.preconfiguredSPs` is Opal's two SPs, and the
+   resets take their types from `Opal_reset_types`; the record a second SSC needs (its preconfigured SPs,
+   vendor cells, parameter bounds, Level 0 descriptors and reset types) is designed before the first SSC
+   after M5 (design §11, *After M5*).
 
 Scott's plan is every SSC after M5: Pyrite 2.01, Ruby 1.00, Enterprise 1.01 and Key Per I/O (design §11).
+Enterprise 1.01 is no SSC over Core 2.01 as Opal is: it is built on a draft Core 1.0, which `tcg/` does not
+hold, and captions its preconfiguration tables `<SP> <T> table`, which rule preconfig does not take (design
+§11).

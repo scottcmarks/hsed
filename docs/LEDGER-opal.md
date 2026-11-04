@@ -54,7 +54,7 @@ they report is among the findings below and in `build/report/opal/ERRATA.md`.
 | Warning | W-ENUM-LABEL-REPEATED | 2 |
 | Warning | W-FEATURE-UNLISTED | 3 |
 | Warning | W-LEGEND-OFFSCALE | 14 |
-| Warning | W-LEGEND-STYLE | 5 |
+| Warning | W-LEGEND-STYLE | 6 |
 | Warning | W-PINS-NONE | 1 |
 | Warning | W-PRECONF-DEFAULT | 2 |
 | Warning | W-PRECONF-NAME-LENGTH | 10 |

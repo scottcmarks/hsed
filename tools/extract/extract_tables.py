@@ -227,6 +227,39 @@ def underlined_chars(line: list[dict], thin_rects) -> list[bool]:
     return [any(a <= m <= b for a, b in spans) for m in mids]
 
 
+NOTE_MARKER = re.compile(r"\*[A-Z]+[0-9]+")
+
+
+def superscript_glyphs(line: list[dict]) -> set[int]:
+    """The ids of a visual line's superscript glyphs: set at most 0.85 of the line's largest size and
+    raised above that glyph's baseline by more than 0.15 of it (the XML MuPDF gives keeps no span
+    flags; Opal T44's MaxRanges prints its note 1 at 7.02 pt, 2.5 pt above the 10.5 pt `8`, PDF 86)."""
+    big = max(line, key=lambda ch: ch["size"])
+    proj = frame(big)
+    return {id(ch) for ch in line
+            if ch["size"] <= 0.85 * big["size"] and proj(*ch["origin"])[1] < -0.15 * big["size"]}
+
+
+def note_glyphs(line: list[dict]) -> set[int]:
+    """The ids of a visual line's note glyphs: a superscript glyph (`superscript_glyphs`), and every
+    glyph of a word that is a footnote marker (`*MC1`, `*K1`), which an SSC prints beside a value."""
+    words = [list(run) for space, run in groupby(line_chars(line), key=lambda cg: cg[0].isspace()) if not space]
+    marked = {id(g) for w in words if NOTE_MARKER.fullmatch("".join(c for c, _ in w)) for _, g in w if g}
+    return marked | superscript_glyphs(line)
+
+
+def style_glyphs(vlines: list[list[dict]], thin: dict) -> list[tuple[dict, bool]]:
+    """A cell's ink glyphs, each with whether it is underlined, that its bold and underline are judged
+    over: its value's, without the note glyphs (`note_glyphs`), so that a plain superscript or marker
+    beside a bold-underlined value does not undo its legend style (Opal T44's MaxRanges `8` with its
+    superscript 1, PDF 86); every ink glyph where the cell has nothing else."""
+    pairs = [(ch, u, id(ch) in notes)
+             for vl in vlines for notes in [note_glyphs(vl)]
+             for ch, u in zip(vl, underlined_chars(vl, thin[vl[0]["__page"]])) if ch["c"].strip()]
+    value = [(ch, u) for ch, u, note in pairs if not note]
+    return value or [(ch, u) for ch, u, _ in pairs]
+
+
 def is_bold(ch) -> bool:
     return bool(ch["flags"] & 8) or "Bold" in ch["font"] or "bold" in ch["font"].lower()
 
@@ -394,9 +427,9 @@ def record_from_chars(cache: PageCache, kind: str, recs: list[tuple[int, dict]],
         rec["fragments"] = [{"page": p, "bbox": to_pdf_space(r, cache.inv(p))} for p, r in frags]
     if ink:
         thin = {p: cache.fills(p)[0] for p in by_page}
-        under = [u for vl in vlines for ch, u in zip(vl, underlined_chars(vl, thin[vl[0]["__page"]])) if ch["c"].strip()]
-        rec["bold"] = all(is_bold(ch) for _, ch in ink)
-        rec["underline"] = all(under)
+        styled = style_glyphs(vlines, thin)
+        rec["bold"] = all(is_bold(ch) for ch, _ in styled)
+        rec["underline"] = all(u for _, u in styled)
         rec["fonts"] = sorted({ch["font"] for _, ch in ink})
         colors = {ch["color"] for _, ch in ink}
         if colors != {"#000000"}:

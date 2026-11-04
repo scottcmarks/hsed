@@ -66655,7 +66655,7 @@
        253.67,
        482.52
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        233.22,
        459.72,
@@ -143839,7 +143839,7 @@
        311.3,
        685.5
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        295.44,
        662.7,
@@ -143861,7 +143861,7 @@
       ],
       "page": 85,
       "text": "81",
-      "underline": false
+      "underline": true
      },
      {
       "bbox": null,
@@ -147045,7 +147045,7 @@
        443.09,
        182.28
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        385.32,
        167.52,
@@ -147068,7 +147068,7 @@
       ],
       "page": 87,
       "text": "Power Cycle *MC1",
-      "underline": false
+      "underline": true
      }
     ]
    ],
@@ -147339,7 +147339,7 @@
        444.32,
        431.94
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        411.0,
        417.12,
@@ -147362,7 +147362,7 @@
       ],
       "page": 88,
       "text": "VU *K1",
-      "underline": false
+      "underline": true
      },
      {
       "bbox": [
@@ -147471,7 +147471,7 @@
        444.32,
        397.32
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        411.0,
        382.56,
@@ -147494,7 +147494,7 @@
       ],
       "page": 88,
       "text": "VU *K1",
-      "underline": false
+      "underline": true
      },
      {
       "bbox": [
@@ -147604,7 +147604,7 @@
        444.32,
        362.82
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        411.0,
        340.02,
@@ -147627,7 +147627,7 @@
       ],
       "page": 88,
       "text": "VU *K1",
-      "underline": false
+      "underline": true
      },
      {
       "bbox": [
@@ -147928,7 +147928,7 @@
        444.32,
        212.76
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        411.0,
        189.96,
@@ -147951,7 +147951,7 @@
       ],
       "page": 88,
       "text": "VU *K1",
-      "underline": false
+      "underline": true
      },
      {
       "bbox": [
@@ -148061,7 +148061,7 @@
        444.32,
        170.22
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        411.0,
        147.42,
@@ -148084,7 +148084,7 @@
       ],
       "page": 88,
       "text": "VU *K1",
-      "underline": false
+      "underline": true
      },
      {
       "bbox": [
@@ -148195,7 +148195,7 @@
        444.32,
        121.2
       ],
-      "bold": false,
+      "bold": true,
       "fill_bbox": [
        411.0,
        98.4,
@@ -148218,7 +148218,7 @@
       ],
       "page": 88,
       "text": "VU *K1",
-      "underline": false
+      "underline": true
      },
      {
       "bbox": [

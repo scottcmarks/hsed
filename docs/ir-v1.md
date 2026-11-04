@@ -55,7 +55,12 @@ the repair flags (`split_from_merged`, `recovered_by_geometry`, `adopted_from`, 
 
 A cell's style (design §5.1 step 6), which the legend of an SSC's preconfiguration tables reads since M4b
 (design E11): a cell with ink carries `bold` (every inked glyph bold, by its font's flag or name),
-`underline` (every inked glyph over a thin filled rect at its baseline), `fonts` (its inked glyphs' font
+`underline` (every inked glyph over a thin filled rect at its baseline), each judged over the glyphs of its
+value: a note's glyphs left out, a superscript (at most 0.85 of its line's largest size and raised by more
+than 0.15 of it) and a footnote marker word (`*MC1`), unless the cell has nothing else (*since the M5a
+review*, which found a plain note beside a bold and underlined value leaving nine of Opal's Locking SP
+cells, T44's MaxRanges `8` with its superscript 1, T46's `Power Cycle *MC1` and six `VU *K1`, PDF 86-89,
+and T27's GUDID `VU *TP1`, PDF 50, unstyled; Core's extraction unchanged by it), `fonts` (its inked glyphs' font
 names, sorted), `color` only where some glyph is not black, and `fill_rgb` with `fill_bbox`, the top-most
 non-thin filled rect under the centre of its first fragment, `[r, g, b]` on 0-255 (Opal's two greys
 measure 231 and 180-181 where its Table 1 prints 230 and 179), or null where there is none; a cell over

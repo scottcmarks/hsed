@@ -2470,7 +2470,7 @@ lockingSPLockingInfoTablePreconfiguration = PreconfTable
             ]
             [])
           [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, ReadOnlySpecified)
-          , (0x04, ReadOnlySpecified), (0x05, Unspecified), (0x06, Unspecified), (0x07, Unspecified)
+          , (0x04, ReadOnlyVU), (0x05, Unspecified), (0x06, Unspecified), (0x07, Unspecified)
           , (0x08, Unspecified), (0x09, Unspecified), (0x0A, Unspecified)
           ]
       ]
@@ -2590,7 +2590,7 @@ lockingSPMBRControlTablePreconfiguration = PreconfTable
             , (0x03, Given (ListCell [EnumCell "Power Cycle" 0]))  -- MBRDoneOnReset
             ]
             ["*MC1"])
-          [ (0x00, ReadOnlySpecified), (0x01, WriteFixed), (0x02, WritePersonalizable), (0x03, WriteFixed)
+          [ (0x00, ReadOnlySpecified), (0x01, WriteFixed), (0x02, WritePersonalizable), (0x03, WritePersonalizable)
           ]
       ]
   }
@@ -2613,7 +2613,7 @@ lockingSPKAES128TablePreconfiguration = PreconfTable
             , (0x04, VendorUnique "VU")  -- Mode
             ]
             ["*K1"])
-          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WriteFixed)
+          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WritePersonalizable)
           , (0x04, ReadOnlyVU)
           ]
       , Pre  -- row 2 K_AES_128_Range1_Key; notes *K1
@@ -2624,7 +2624,7 @@ lockingSPKAES128TablePreconfiguration = PreconfTable
             , (0x04, VendorUnique "VU")  -- Mode
             ]
             ["*K1"])
-          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WriteFixed)
+          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WritePersonalizable)
           , (0x04, ReadOnlyVU)
           ]
       , Pre  -- row 3 K_AES_128_RangeNNNN_Key; a template, NNNN; optional; notes *K1
@@ -2635,7 +2635,7 @@ lockingSPKAES128TablePreconfiguration = PreconfTable
             , (0x04, VendorUnique "VU")  -- Mode
             ]
             ["*K1"])
-          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WriteFixed)
+          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WritePersonalizable)
           , (0x04, ReadOnlyVU)
           ]
       ]
@@ -2667,7 +2667,7 @@ lockingSPKAES256TablePreconfiguration = PreconfTable
             , (0x04, VendorUnique "VU")  -- Mode
             ]
             ["*K1"])
-          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WriteFixed)
+          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WritePersonalizable)
           , (0x04, ReadOnlyVU)
           ]
       , Pre  -- row 2 K_AES_256_Range1_Key; notes *K1
@@ -2678,7 +2678,7 @@ lockingSPKAES256TablePreconfiguration = PreconfTable
             , (0x04, VendorUnique "VU")  -- Mode
             ]
             ["*K1"])
-          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WriteFixed)
+          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WritePersonalizable)
           , (0x04, ReadOnlyVU)
           ]
       , Pre  -- row 3 K_AES_256_RangeNNNN_Key; a template, NNNN; optional; notes *K1
@@ -2689,7 +2689,7 @@ lockingSPKAES256TablePreconfiguration = PreconfTable
             , (0x04, VendorUnique "VU")  -- Mode
             ]
             ["*K1"])
-          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WriteFixed)
+          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, Unspecified), (0x03, WritePersonalizable)
           , (0x04, ReadOnlyVU)
           ]
       ]

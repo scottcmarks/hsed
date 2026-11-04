@@ -19,12 +19,17 @@ the M4b sidecar read over the committed Core run, the scale 'legendScale'
 reads from Table 1, the rule's checks, and the 975 kept body cells of the
 Admin SP's twelve preconfiguration tables classed by it (bound by
 @boundTables (Just Preconfig)@, informative columns and group rows left out,
-as the preconfig rule keeps them): 320 ReadOnlySpecified, 9 ReadOnlyVU, 3
+as the preconfig rule keeps them): 319 ReadOnlySpecified, 10 ReadOnlyVU, 3
 WritePersonalizable, 4 WriteFixed, 639 Unspecified, no NotDefined; 10
-W-LEGEND-OFFSCALE (fill 218, PDF 48-50), 3 W-LEGEND-STYLE (T25's underlined
-PINs, PDF 48-49), no C-LEGEND-TOTAL. The Locking SP's fourteen tables (M5's,
-which no annotation binds at M4b) are classed here only: 4 W-LEGEND-OFFSCALE
-(T40's fill 235, PDF 82-83) and 2 W-LEGEND-STYLE (T41's bold PINs, PDF 84).
+W-LEGEND-OFFSCALE (fill 218, PDF 48-50), 4 W-LEGEND-STYLE (T25's underlined
+PINs, PDF 48-49, and T27's GUDID, bold, PDF 50, since the M5a review's
+extractor judges a cell's style without its note marker), no C-LEGEND-TOTAL.
+The Locking SP's fourteen tables (M5's, which no annotation binds at M4b) are
+classed here only: 4 W-LEGEND-OFFSCALE (T40's fill 235, PDF 82-83) and 2
+W-LEGEND-STYLE (T41's bold PINs, PDF 84); the nine cells a superscript or a
+note marker beside a bold and underlined value left plain until the M5a
+review (T44's MaxRanges, T46's MBRDoneOnReset, the six Keys of T47 and T48,
+PDF 86-89) in the bold and underlined classes of their greys.
 Edited IRs: a row of Table 1 removed, a printed cell's fonts nulled (the
 IR's form of a cell whose style signals are null, the lead's answer 15) and
 a cell's fill set to 200 give C-LEGEND-TOTAL, C-LEGEND-TOTAL and
@@ -287,10 +292,10 @@ spec = do
       it "keeps 975 body cells of T18-T25, T27-T29 and T33, informative columns and group rows left out" $ do
         map fst (adminTables octx) `shouldBe` map TableId ([18 .. 25] <> [27, 28, 29, 33])
         length cells `shouldBe` 975
-      it "classes them ReadOnlySpecified 320, ReadOnlyVU 9, WritePersonalizable 3, WriteFixed 4, NotDefined 0, Unspecified 639" $
+      it "classes them ReadOnlySpecified 319, ReadOnlyVU 10, WritePersonalizable 3, WriteFixed 4, NotDefined 0, Unspecified 639" $
         histogram cells `shouldBe`
-          [ (ReadOnlySpecified, 320), (ReadOnlyVU, 9), (WritePersonalizable, 3), (WriteFixed, 4), (NotDefined, 0), (Unspecified, 639) ]
-      it "classes each table's cells (T22 136/374; T24 63, 3 WriteFixed, 48; T25 6, 7 VU, 3 WritePersonalizable, 16; T28 10, 2 VU, 3)" $
+          [ (ReadOnlySpecified, 319), (ReadOnlyVU, 10), (WritePersonalizable, 3), (WriteFixed, 4), (NotDefined, 0), (Unspecified, 639) ]
+      it "classes each table's cells (T22 136/374; T24 63, 3 WriteFixed, 48; T25 6, 7 VU, 3 WritePersonalizable, 16; T27's GUDID VU; T28 10, 2 VU, 3)" $
         perTable cells `shouldBe`
           [ (TableId 18, [(ReadOnlySpecified, 3), (Unspecified, 4)])
           , (TableId 19, [(ReadOnlySpecified, 6), (Unspecified, 2)])
@@ -300,7 +305,7 @@ spec = do
           , (TableId 23, [(ReadOnlySpecified, 30), (Unspecified, 20)])
           , (TableId 24, [(ReadOnlySpecified, 63), (WriteFixed, 3), (Unspecified, 48)])
           , (TableId 25, [(ReadOnlySpecified, 6), (ReadOnlyVU, 7), (WritePersonalizable, 3), (Unspecified, 16)])
-          , (TableId 27, [(ReadOnlySpecified, 4), (WriteFixed, 1), (Unspecified, 4)])
+          , (TableId 27, [(ReadOnlySpecified, 3), (ReadOnlyVU, 1), (WriteFixed, 1), (Unspecified, 4)])
           , (TableId 28, [(ReadOnlySpecified, 10), (ReadOnlyVU, 2), (Unspecified, 3)])
           , (TableId 29, [(ReadOnlySpecified, 6), (Unspecified, 10)])
           , (TableId 33, [(Unspecified, 2)]) ]
@@ -313,12 +318,13 @@ spec = do
         take 1 (messagesOf "W-LEGEND-OFFSCALE" cells) `shouldBe`
           [ "\"T\" at [205.5, 388.76, 210.76, 403.38] is shaded (218, 218, 218), not within 3 of a grey the legend prints, "
             <> "(230, 230, 230) or (179, 179, 179): read as the nearest, (230, 230, 230), ReadOnlySpecified" ]
-      it "finds 3 W-LEGEND-STYLE, T25's underlined PINs, rows 1, 3 and 4 (PDF 48-49), and no C-LEGEND-TOTAL" $ do
+      it "finds 4 W-LEGEND-STYLE, T25's underlined PINs, rows 1, 3 and 4 (PDF 48-49), and T27's bold GUDID (PDF 50), and no C-LEGEND-TOTAL" $ do
         foundAt "W-LEGEND-STYLE" cells `shouldBe`
-          [(TableId 25, 1, "PIN", Just 48), (TableId 25, 3, "PIN", Just 49), (TableId 25, 4, "PIN", Just 49)]
+          [ (TableId 25, 1, "PIN", Just 48), (TableId 25, 3, "PIN", Just 49), (TableId 25, 4, "PIN", Just 49)
+          , (TableId 27, 1, "GUDID", Just 50) ]
         foundAt "C-LEGEND-TOTAL" cells `shouldBe` []
 
-    describe "cellAccess over the Locking SP's tables (M5's: classed here only)" $
+    describe "cellAccess over the Locking SP's tables (M5's: classed here only)" $ do
       it "finds 4 W-LEGEND-OFFSCALE, T40's cells at 235 (PDF 82-83), and 2 W-LEGEND-STYLE, T41's bold PINs (PDF 84)" $ do
         let locking = classed opalScale (lockingTables octx)
         map fst (lockingTables octx) `shouldBe` map TableId ([34 .. 42] <> [44 .. 48])
@@ -327,6 +333,12 @@ spec = do
           , (TableId 40, 2, "CommonName", Just 82), (TableId 40, 8, "CommonName", Just 83) ]
         foundAt "W-LEGEND-STYLE" locking `shouldBe` [(TableId 41, 6, "PIN", Just 84), (TableId 41, 7, "PIN", Just 84)]
         foundAt "C-LEGEND-TOTAL" locking `shouldBe` []
+      it "classes a bold and underlined value by its style whatever note it prints: T44's MaxRanges, T46's DoneOnReset, T47's and T48's Keys (PDF 86-89)" $ do
+        let locking = classed opalScale (lockingTables octx)
+            at t r h = [ clAccess c | c <- locking, clTable c == TableId t, clRow c == r, clColumn c == h ]
+        at 44 1 "MaxRanges" `shouldBe` [ReadOnlyVU]
+        at 46 1 "DoneOnReset" `shouldBe` [WritePersonalizable]
+        concat [ at t r "Key" | t <- [47, 48], r <- [1 .. 3] ] `shouldBe` replicate 6 WritePersonalizable
 
     describe "cellAccess over edited Admin SP tables" $ do
       it "gives C-LEGEND-TOTAL for a printed cell whose fonts are nulled (T25 row 2's MSID, PDF 48), read as Unspecified" $ do
@@ -335,7 +347,7 @@ spec = do
         messagesOf "C-LEGEND-TOTAL" edited `shouldBe`
           [ "\"MSID\" at [304.92, 60.86, 326.5, 75.72] is shaded (231, 231, 231), but the IR records no font for it, so no style: "
             <> "the legend cannot class it" ]
-        lookup ReadOnlyVU (histogram edited) `shouldBe` Just 8
+        lookup ReadOnlyVU (histogram edited) `shouldBe` Just 9
       it "gives W-LEGEND-OFFSCALE naming the nearest grey for a cell shaded 200 (T18 row 1's UID, PDF 35), read as its class" $ do
         let edited = adminCells (opalOver base (editCell "T18" 1 "UID" (KM.insert "fill_rgb" (toJSON [200, 200, 200 :: Int])) opal))
         length (foundAt "W-LEGEND-OFFSCALE" edited) `shouldBe` 11

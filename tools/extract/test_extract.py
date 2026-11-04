@@ -165,6 +165,39 @@ class ParaChars(unittest.TestCase):
         self.assertEqual(X.item_body_chars(chars, None), chars)
 
 
+def styled(text, font, x=100.0, y=100.0, size=10.0, gap_after=()):
+    """Glyphs as `glyphs` gives them, in a font, at a size and baseline, on page 0."""
+    return [dict(ch, font=font, flags=0, size=size, __page=0) for _, ch in glyphs(text, x, y, gap_after=gap_after)]
+
+
+class CellStyle(unittest.TestCase):
+    """A cell's bold and underline are judged over its value's glyphs, not its note's (Opal T44's
+    MaxRanges, a bold underlined `8` with a plain superscript 1, PDF 86; T46's `Power Cycle *MC1`)."""
+
+    def bold_of(self, line):
+        return all(X.is_bold(ch) for ch, _ in X.style_glyphs([line], {0: []}))
+
+    def test_a_superscript_is_a_note(self):
+        line = styled("8", "ArialNarrow-Bold", size=10.5) + styled("1", "ArialNarrow", x=105.0, y=97.5, size=7.02)
+        self.assertEqual({id(line[1])}, X.superscript_glyphs(line))
+        self.assertTrue(self.bold_of(line))
+
+    def test_a_marker_word_is_a_note(self):
+        line = styled("Power Cycle", "ArialNarrow-Bold", gap_after={10}) + styled("*MC1", "ArialNarrow", x=160.0)
+        self.assertEqual({id(ch) for ch in line[11:]}, X.note_glyphs(line))
+        self.assertTrue(self.bold_of(line))
+
+    def test_plain_value_glyphs_still_count(self):
+        line = styled("VU", "ArialNarrow-Bold") + styled("x", "ArialNarrow", x=110.0)
+        self.assertEqual(set(), X.note_glyphs(line))
+        self.assertFalse(self.bold_of(line))
+
+    def test_a_note_alone_is_judged(self):
+        line = styled("*K1", "ArialNarrow")
+        self.assertFalse(self.bold_of(line))
+        self.assertTrue(self.bold_of(styled("*K1", "Arial-Bold")))
+
+
 def item(k, text, kind="P", section="5.3.3.6", page=200, parent=(0,)):
     return {"path": parent + (k,), "kind": kind, "text": text, "section": section, "page": page, "rect": [90.0, 700.0 - 10 * k, 300.0, 710.0 - 10 * k]}
 

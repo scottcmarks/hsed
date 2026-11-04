@@ -1247,7 +1247,7 @@ adminSPTPerInfoTablePreconfiguration = PreconfTable
             , (0x08, Given (EnumCell "FALSE" 0))  -- ProgrammaticResetEnable
             ]
             ["*TP1", "*TP2", "*TP3"])
-          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, ReadOnlySpecified), (0x03, Unspecified)
+          [ (0x00, ReadOnlySpecified), (0x01, Unspecified), (0x02, ReadOnlyVU), (0x03, Unspecified)
           , (0x04, Unspecified), (0x05, ReadOnlySpecified), (0x06, Unspecified), (0x07, ReadOnlySpecified)
           , (0x08, WriteFixed)
           ]

@@ -106,9 +106,9 @@ simDescriptors st = L.sortOn dCode (own <> added)
   where
     p = tsParams st
     (tables, size, alignment) = spDataStore p
-    -- the parameters' geometry, which the fold puts in the Locking SP's LockingInfo row (Opal 3.1.1.4.2-5, PDF 22:
-    -- each field is that row's column); 'lockingInfoGeometry' reads the row
-    geometry = spGeometry p
+    -- the Locking SP's LockingInfo row's (Opal 3.1.1.4.2-5, PDF 22: each field is that row's column), where the
+    -- fold puts the parameters' geometry; the parameters' where the TPer has no such row
+    geometry = fromMaybe (spGeometry p) (lockingInfoGeometry st)
     own = either (\e -> error ("Hsed.Sim.Level0: an own descriptor does not encode, the parameters out of range: " <> show e)) id
         $ sequence
       [ described (id :: Level0DiscoveryTPerFeature -> Level0DiscoveryTPerFeature)
@@ -211,8 +211,8 @@ mbrDoneBit st = mbrEnabledBit st && any (booleanNamed st uMBRControlTable "Done"
 --   the columns found by name in the SP's description of the table, which
 --   adds Opal's (Table 43, PDF 85); 'Nothing' where the TPer has no Locking SP
 --   or no LockingInfo row, or the row lacks one of the four. The fold puts the
---   parameters' geometry in the row; until it does, Level 0 reads the
---   parameters ('simDescriptors').
+--   parameters' geometry in the row, and Level 0 reads it here
+--   ('simDescriptors', since M5a's integration).
 --
 -- >>> import Hsed.Sim.Types (defaultSimParams, initialState)
 -- >>> isJust (lockingInfoGeometry (initialState defaultSimParams))

@@ -57,6 +57,7 @@ import           Hsed.Core.Types          (enumValue)
 import           Hsed.Gen.Core.Enums      (Core_boolean (..))
 import           Hsed.Gen.Core.TableDescs (c_PINTableDesc)
 import           Hsed.Gen.Core.TableUIDs  (uC_PINTable, uLockingTable, uMBRControlTable)
+import           Hsed.Gen.Opal.Enums      (Opal_reset_types (..))
 import           Hsed.Sim.State           (abortSessions, cellOf, columnOf, initialHostProperties)
 import           Hsed.Sim.Types           (ComIdState (..), MgmtBuffer (..), SPState (..), Session (..), SyncState (..),
                                            TPerState (..))
@@ -78,14 +79,18 @@ data ResetKind
 
 -- | A reset's kind as a reset_types value, what a LockOnReset or an
 --   MBRDoneOnReset cell holds of it (Opal 2.30 Table 16, PDF 32: Power Cycle
---   0, Hardware 1, HotPlug 2, Programmatic 3). A stub of M5a's scaffold,
---   from the constructors' order; its integration reads Opal's generated
---   reset_types (Table 16, which replaces Core Table 128, PDF 119) instead.
+--   0, Hardware 1, HotPlug 2, Programmatic 3), the value Opal's generated
+--   reset_types gives its constructor (Table 16, which replaces Core Table
+--   128's, PDF 119, where 3 is Reserved; since M5a's integration).
 --
 -- >>> map resetType [minBound .. maxBound]
 -- [0,1,2,3]
 resetType :: ResetKind -> Natural
-resetType = fromIntegral . fromEnum
+resetType = fromIntegral . enumValue . \case
+  OnPowerCycle    -> Opal_reset_types_Power_Cycle
+  OnHardwareReset -> Opal_reset_types_Hardware
+  OnHotPlug       -> Opal_reset_types_HotPlug
+  OnTPerReset     -> Opal_reset_types_Programmatic
 
 -- | An interface event (Opal 2.30 3.3.5.1, PDF 31-32): the reset of its
 --   kind.
